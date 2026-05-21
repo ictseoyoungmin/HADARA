@@ -9,6 +9,7 @@ import { appendEvidence, EvidenceRecord } from '../evidence/evidence';
 import { updateHandoff } from '../handoff/handoff';
 import { classifyShellCommand, PermissionMode } from '../policy/policy';
 import { detectHermesContext, exportHadaraContext } from '../hermes/context-export';
+import { validateTaskCapsule } from '../harness/validate';
 
 function printHelp(): void {
   console.log(`HADARA bootstrap CLI
@@ -22,6 +23,7 @@ Usage:
   hadara evidence collect --task <task-id> [--kind note|test-log|command-log|diff-summary|screenshot] [--path <path>] [--summary <text>] [--result passed|failed|blocked|unknown] [--private]
   hadara handoff update --task <task-id> [--summary <text>] [--next <text>]
   hadara policy check-shell <command> [--mode readonly|assisted|trusted|auto|release]
+  hadara harness validate --task <task-id> [--json]
   hadara hermes detect
   hadara hermes export-context
   hadara mcp serve
@@ -88,6 +90,7 @@ async function main(): Promise<void> {
   }
 
   const paths = resolveHadaraPaths({ projectRoot: getOption(args, '--project') });
+  const jsonOutput = args.includes('--json');
 
   switch (command) {
     case 'init': {
@@ -183,6 +186,28 @@ async function main(): Promise<void> {
       if (sub === 'export-context') {
         const filePath = exportHadaraContext(paths.projectRoot);
         console.log(`[HADARA] Exported Hermes/Harness context: ${filePath}`);
+        return;
+      }
+      break;
+    }
+
+    case 'harness': {
+      const sub = args[1];
+      if (sub === 'validate') {
+        const taskId = getOption(args, '--task');
+        if (!taskId) throw new Error('harness validate requires --task <task-id>');
+        const result = validateTaskCapsule(paths.projectRoot, taskId);
+        if (jsonOutput) {
+          console.log(JSON.stringify(result, null, 2));
+        } else if (result.ok) {
+          console.log(`[HADARA] Harness validation passed: ${result.task.id}`);
+        } else {
+          console.log(`[HADARA] Harness validation failed: ${result.task.id}`);
+          for (const issue of result.issues) {
+            console.log(`- ${issue.code}: ${issue.message}${issue.path ? ` (${issue.path})` : ''}`);
+          }
+        }
+        if (!result.ok) process.exitCode = 6;
         return;
       }
       break;

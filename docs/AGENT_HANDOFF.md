@@ -10,7 +10,8 @@ main
 - Completed T-0004 ProviderClient Contract hardening with ScriptedProvider.
 - Completed T-0005 Evidence Store expansion with `evidence.jsonl` and public/private evidence handling.
 - Completed T-0008 Policy Evaluator Shell Parser.
-- Verified Docker `npm ci && npm run check`: 5 test files passed, 24 tests passed.
+- Completed T-0009 Harness Validate JSON with `hadara harness validate --task <id> --json`.
+- Verified Docker `npm ci && npm run check`: 6 test files passed, 29 tests passed.
 
 ## In Progress
 
@@ -32,12 +33,13 @@ No active implementation task.
 - GitHub Actions has been added but has not yet been observed on a remote push/PR.
 - Policy parser is still intentionally minimal; it is safer than before, but not a full POSIX or PowerShell parser.
 - Evidence Store does not yet copy binary/log artifacts into managed storage or encrypt private evidence.
+- First Docker validation on the mounted `/mnt/f` workspace failed because npm could not create symlinks in `node_modules`; copying the repo into the container filesystem before `npm ci` is the working validation pattern.
 
 ## Next Recommended Step
 
 1. Push branch and confirm GitHub Actions CI passes with Node 22.
 2. Track npm audit findings separately.
-3. Add harness replay command or continue CLI `--json` output stabilization before ShellTool execution.
+3. Add `hadara harness replay ... --json` skeleton using ScriptedProvider scenarios, or continue normalizing JSON envelopes for core CLI commands.
 4. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy loop is stronger.
 
 ## Evidence
@@ -46,4 +48,5 @@ No active implementation task.
 - `tasks/T-0004-providerclient-contract/EVIDENCE.md`
 - `tasks/T-0005-evidence-store/EVIDENCE.md`
 - `tasks/T-0008-policy-evaluator-shell-parser/EVIDENCE.md`
-- Docker check: 5 test files passed, 24 tests passed.
+- `tasks/T-0009-harness-validate-json/EVIDENCE.md`
+- Docker check: 6 test files passed, 29 tests passed.

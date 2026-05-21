@@ -10,3 +10,4 @@
 | T-0006 | Implement Hermes Agent Compatibility | Draft | tasks/T-0006-hermes-agent-compatibility | Context export, MCP bridge, file contract. |
 | T-0007 | Bootstrap Validation Pass | Done | tasks/T-0007-bootstrap-validation-pass | Docker npm ci/check and seed CLI loop passed. |
 | T-0008 | Policy Evaluator Shell Parser | Done | tasks/T-0008-policy-evaluator-shell-parser | Tokenizer, safe allowlist, and dangerous command tests added. |
+| T-0009 | Harness Validate JSON | Done | tasks/T-0009-harness-validate-json | Docker check and CLI JSON smoke passed. |

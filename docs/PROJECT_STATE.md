@@ -20,6 +20,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Evidence append writes Markdown summaries and `evidence.jsonl` indexes.
 - Handoff update exists.
 - Hermes/Agent Harness context export exists as a seed command.
+- Harness Task Capsule validation exists as `hadara harness validate --task <id> --json`.
 - Config/path resolver has realpath containment, environment priority, Windows path normalization, and project data boundary tests.
 - Policy evaluator has a minimal tokenizer, safe command allowlist, and destructive command denial tests.
 - Real provider adapters are not implemented.
