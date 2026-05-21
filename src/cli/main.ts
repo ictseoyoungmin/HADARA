@@ -13,6 +13,7 @@ import { replayScenario } from '../harness/replay';
 import { createDoctorReport, formatDoctorReport } from './doctor';
 import { createTaskListReport, createTaskShowReport, formatTaskListReport } from './task-json';
 import { createPolicyCheckReport, extractPolicyCommandText } from './policy-json';
+import { createHermesDetectReport, createHermesExportContextReport } from './hermes-json';
 
 function printHelp(): void {
   console.log(`HADARA bootstrap CLI
@@ -200,12 +201,20 @@ async function main(): Promise<void> {
     case 'hermes': {
       const sub = args[1];
       if (sub === 'detect') {
-        console.log(JSON.stringify(detectHermesContext(paths.projectRoot), null, 2));
+        if (jsonOutput) {
+          console.log(JSON.stringify(createHermesDetectReport(paths.projectRoot), null, 2));
+        } else {
+          console.log(JSON.stringify(detectHermesContext(paths.projectRoot), null, 2));
+        }
         return;
       }
       if (sub === 'export-context') {
-        const filePath = exportHadaraContext(paths.projectRoot);
-        console.log(`[HADARA] Exported Hermes/Harness context: ${filePath}`);
+        if (jsonOutput) {
+          console.log(JSON.stringify(createHermesExportContextReport(paths.projectRoot), null, 2));
+        } else {
+          const filePath = exportHadaraContext(paths.projectRoot);
+          console.log(`[HADARA] Exported Hermes/Harness context: ${filePath}`);
+        }
         return;
       }
       break;
