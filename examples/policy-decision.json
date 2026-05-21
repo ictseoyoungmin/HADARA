@@ -1,0 +1,5 @@
+{
+  "action": "ask",
+  "risk": "medium",
+  "reason": "Assisted mode requires approval for shell execution."
+}

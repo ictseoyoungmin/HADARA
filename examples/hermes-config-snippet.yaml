@@ -1,0 +1,11 @@
+# Example only. Adapt to the current Hermes Agent configuration format.
+context_files:
+  - AGENTS.md
+  - .hermes.md
+  - HERMES.md
+  - .hadara/context/HADARA_CONTEXT.md
+
+mcp_servers:
+  hadara:
+    command: "npm"
+    args: ["run", "dev", "--", "mcp", "serve"]

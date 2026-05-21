@@ -1,0 +1,20 @@
+node_modules/
+dist/
+coverage/
+*.log
+
+# HADARA portable/local state
+data/
+.hadara/tmp/
+.hadara/cache/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+
+# dev only
+.env
+docs/specs/
+.dockerignore
