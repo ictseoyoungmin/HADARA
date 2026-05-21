@@ -6,13 +6,11 @@ main
 
 ## Last Completed
 
-- Created T-0007 Bootstrap Validation Pass and marked it Done with evidence.
-- Fixed Task Capsule `EVIDENCE.md` template to use the same 4-column schema as `appendEvidence`.
-- Added harness coverage that appends evidence without breaking the Markdown table.
-- Added `package-lock.json` and a minimal GitHub Actions CI workflow.
-- Fixed strict TypeScript handling for the CLI evidence summary fallback.
-- Verified `npm ci` and `npm run check` inside Docker.
-- Verified seed CLI loop in Docker: doctor, init, task create/list/show, evidence collect, handoff update.
+- Completed T-0002 Config and Path Resolver hardening.
+- Completed T-0004 ProviderClient Contract hardening with ScriptedProvider.
+- Completed T-0005 Evidence Store expansion with `evidence.jsonl` and public/private evidence handling.
+- Completed T-0008 Policy Evaluator Shell Parser.
+- Verified Docker `npm ci && npm run check`: 5 test files passed, 24 tests passed.
 
 ## In Progress
 
@@ -32,14 +30,20 @@ No active implementation task.
 - Docker is the working validation path for now.
 - `npm ci` reports 5 moderate audit findings from current dev dependencies; do not run `npm audit fix --force` without reviewing version impact.
 - GitHub Actions has been added but has not yet been observed on a remote push/PR.
+- Policy parser is still intentionally minimal; it is safer than before, but not a full POSIX or PowerShell parser.
+- Evidence Store does not yet copy binary/log artifacts into managed storage or encrypt private evidence.
 
 ## Next Recommended Step
 
 1. Push branch and confirm GitHub Actions CI passes with Node 22.
 2. Track npm audit findings separately.
-3. Continue with T-0002/T-0005 hardening before provider or dashboard work.
+3. Add harness replay command or continue CLI `--json` output stabilization before ShellTool execution.
+4. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy loop is stronger.
 
 ## Evidence
 
-- `tasks/T-0007-bootstrap-validation-pass/EVIDENCE.md`
-- Docker check: 5 test files passed, 10 tests passed.
+- `tasks/T-0002-config-and-path-resolver/EVIDENCE.md`
+- `tasks/T-0004-providerclient-contract/EVIDENCE.md`
+- `tasks/T-0005-evidence-store/EVIDENCE.md`
+- `tasks/T-0008-policy-evaluator-shell-parser/EVIDENCE.md`
+- Docker check: 5 test files passed, 24 tests passed.

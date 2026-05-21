@@ -6,12 +6,18 @@ Finalize ProviderClient contract before real provider adapters.
 
 ## Scope
 
-TBD.
+- Keep MockProvider contract tests passing.
+- Add provider error code vocabulary.
+- Allow request-level timeout, retry, and fallback model metadata.
+- Add ScriptedProvider for deterministic harness and replay scenarios.
+- Preserve stream event invariants: start first, finish or error terminal.
 
 ## Out of Scope
 
-TBD.
+- Real network provider adapters.
+- Provider fallback executor.
+- Cost accounting.
 
 ## Status
 
-Draft
+Done

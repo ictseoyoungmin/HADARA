@@ -5,6 +5,7 @@ coverage/
 
 # HADARA portable/local state
 data/
+.hadara/local/
 .hadara/tmp/
 .hadara/cache/
 

@@ -1,0 +1,1 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-21T08:44:36.257Z","taskId":"T-0002","kind":"test-log","summary":"Path resolver hardened: realpath containment, symlink escape, Windows normalization, env priority, and project data boundary tests pass","result":"passed","visibility":"public"}

@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 
 export interface HadaraPaths {
@@ -22,10 +23,13 @@ export interface ResolveHadaraPathsInput {
 }
 
 export function resolveHadaraPaths(input: ResolveHadaraPathsInput = {}): HadaraPaths {
-  const portableRoot = path.resolve(input.portableRoot ?? process.env.HADARA_HOME ?? process.cwd());
-  const projectRoot = path.resolve(input.projectRoot ?? process.env.HADARA_PROJECT_ROOT ?? process.cwd());
+  const projectRoot = normalizeHadaraPath(input.projectRoot ?? process.env.HADARA_PROJECT_ROOT ?? process.cwd());
+  const portableRoot = normalizeHadaraPath(
+    input.portableRoot ?? process.env.HADARA_HOME ?? path.join(projectRoot, '.hadara', 'local', 'portable')
+  );
   const dataRoot = path.join(portableRoot, 'data');
   const projectHadaraDir = path.join(projectRoot, '.hadara');
+  assertProjectStoreBoundary({ dataRoot, projectRoot });
 
   return {
     portableRoot,
@@ -45,6 +49,30 @@ export function resolveHadaraPaths(input: ResolveHadaraPathsInput = {}): HadaraP
 }
 
 export function isInside(parent: string, child: string): boolean {
-  const relative = path.relative(path.resolve(parent), path.resolve(child));
+  const normalizedParent = normalizeHadaraPath(parent);
+  const normalizedChild = normalizeHadaraPath(child);
+  const relative = path.relative(realpathIfExists(normalizedParent), realpathIfExists(normalizedChild));
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+export function normalizeHadaraPath(value: string): string {
+  if (/^[A-Za-z]:[\\/]/.test(value)) {
+    return path.win32.normalize(value);
+  }
+  return path.resolve(value);
+}
+
+export function assertProjectStoreBoundary(paths: Pick<HadaraPaths, 'dataRoot' | 'projectRoot'>): void {
+  const projectDataDir = path.join(paths.projectRoot, 'data');
+  if (isInside(projectDataDir, paths.dataRoot)) {
+    throw new Error('HADARA dataRoot must not use projectRoot/data. Set HADARA_HOME outside the repo or use .hadara/local.');
+  }
+}
+
+function realpathIfExists(value: string): string {
+  try {
+    return fs.realpathSync.native(value);
+  } catch {
+    return value;
+  }
 }

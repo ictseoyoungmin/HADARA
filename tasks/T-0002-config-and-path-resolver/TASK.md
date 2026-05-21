@@ -6,12 +6,17 @@ Stabilize portable USB store and project repo store resolution.
 
 ## Scope
 
-TBD.
+- Resolve project and portable roots with explicit input overriding environment, and environment overriding defaults.
+- Keep default HADARA data out of `projectRoot/data`.
+- Normalize Windows drive paths without collapsing drive boundaries.
+- Use real paths for containment checks so symlink escapes are detected.
 
 ## Out of Scope
 
-TBD.
+- Encrypted secret store.
+- Workspace registry management.
+- Full cross-machine path migration.
 
 ## Status
 
-Draft
+Done

@@ -5,7 +5,7 @@ import { resolveHadaraPaths } from '../core/paths';
 import { ensureDir, writeFileIfMissing } from '../core/fs';
 import { writeAuditEvent } from '../core/audit';
 import { createTaskCapsule, listTaskCapsules } from '../task/task-capsule';
-import { appendEvidence } from '../evidence/evidence';
+import { appendEvidence, EvidenceRecord } from '../evidence/evidence';
 import { updateHandoff } from '../handoff/handoff';
 import { classifyShellCommand, PermissionMode } from '../policy/policy';
 import { detectHermesContext, exportHadaraContext } from '../hermes/context-export';
@@ -19,7 +19,7 @@ Usage:
   hadara task create <title>
   hadara task list
   hadara task show <task-id>
-  hadara evidence collect --task <task-id> [--summary <text>] [--result passed|failed|blocked|unknown]
+  hadara evidence collect --task <task-id> [--kind note|test-log|command-log|diff-summary|screenshot] [--path <path>] [--summary <text>] [--result passed|failed|blocked|unknown] [--private]
   hadara handoff update --task <task-id> [--summary <text>] [--next <text>]
   hadara policy check-shell <command> [--mode readonly|assisted|trusted|auto|release]
   hadara hermes detect
@@ -137,9 +137,12 @@ async function main(): Promise<void> {
       if (sub === 'collect') {
         const taskId = getOption(args, '--task');
         if (!taskId) throw new Error('evidence collect requires --task <task-id>');
+        const kind = parseEvidenceKind(getOption(args, '--kind', 'note') ?? 'note');
         const summary = getOption(args, '--summary') ?? 'Manual evidence collection placeholder.';
         const result = (getOption(args, '--result', 'unknown') ?? 'unknown') as 'passed' | 'failed' | 'blocked' | 'unknown';
-        const filePath = appendEvidence(paths.projectRoot, { taskId, kind: 'note', summary, result });
+        const evidenceFile = getOption(args, '--path');
+        const visibility = args.includes('--private') ? 'private' : 'public';
+        const filePath = appendEvidence(paths.projectRoot, { taskId, kind, path: evidenceFile, summary, result, visibility });
         console.log(`[HADARA] Evidence updated: ${filePath}`);
         return;
       }
@@ -205,6 +208,13 @@ async function main(): Promise<void> {
 
   printHelp();
   process.exitCode = 1;
+}
+
+function parseEvidenceKind(value: string): EvidenceRecord['kind'] {
+  if (['test-log', 'command-log', 'diff-summary', 'screenshot', 'note'].includes(value)) {
+    return value as EvidenceRecord['kind'];
+  }
+  throw new Error(`unsupported evidence kind: ${value}`);
 }
 
 main().catch((error) => {

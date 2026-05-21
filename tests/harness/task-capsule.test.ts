@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { appendEvidence } from '../../src/evidence/evidence';
+import { appendEvidence, createSessionEvidenceDirs } from '../../src/evidence/evidence';
 import { createTaskCapsule, listTaskCapsules } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -34,10 +34,13 @@ describe('Task Capsule harness', () => {
   it('keeps evidence table schema valid after appending evidence', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Collect evidence');
+    const logPath = path.join(root, 'test-output.log');
+    fs.writeFileSync(logPath, 'ok', 'utf8');
 
     appendEvidence(root, {
       taskId: task.id,
-      kind: 'note',
+      kind: 'test-log',
+      path: 'test-output.log',
       summary: 'Created evidence row',
       result: 'passed'
     });
@@ -46,6 +49,48 @@ describe('Task Capsule harness', () => {
     expect(evidence[2]).toBe('| Time | Kind | Summary | Result |');
     expect(evidence[3]).toBe('|---|---|---|---|');
     expect(evidence[4].split('|')).toHaveLength(6);
+
+    const index = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+    expect(index[0]).toMatchObject({
+      schemaVersion: 'hadara.evidence.v1',
+      kind: 'test-log',
+      evidencePath: '../../test-output.log',
+      visibility: 'public',
+      result: 'passed'
+    });
+  });
+
+  it('separates private evidence paths from public summaries', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Collect private evidence');
+
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      path: '/tmp/private-command.log',
+      summary: 'token=super-secret',
+      result: 'unknown',
+      visibility: 'private'
+    });
+
+    const evidence = fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8');
+    expect(evidence).toContain('token=[REDACTED]');
+    expect(evidence).not.toContain('/tmp/private-command.log');
+    expect(evidence).not.toContain('super-secret');
+
+    const index = JSON.parse(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8').trim());
+    expect(index.visibility).toBe('private');
+    expect(index.evidencePath).toBeUndefined();
+  });
+
+  it('creates session evidence directories by evidence kind', () => {
+    const root = tempProject();
+    const evidenceDir = createSessionEvidenceDirs(root, 'S-0001');
+
+    expect(fs.existsSync(path.join(evidenceDir, 'command-logs'))).toBe(true);
+    expect(fs.existsSync(path.join(evidenceDir, 'test-results'))).toBe(true);
+    expect(fs.existsSync(path.join(evidenceDir, 'diff-summary'))).toBe(true);
+    expect(fs.existsSync(path.join(evidenceDir, 'screenshots'))).toBe(true);
   });
 
   it('lists task capsules', () => {

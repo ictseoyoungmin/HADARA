@@ -18,6 +18,12 @@ export interface ChatRequest {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  timeoutMs?: number;
+  retry?: {
+    maxAttempts: number;
+    backoffMs: number;
+  };
+  fallbackModels?: string[];
 }
 
 export interface ChatResponse {
@@ -37,9 +43,20 @@ export type ProviderStreamEvent =
   | { type: 'finish'; finishReason: ChatResponse['finishReason'] }
   | { type: 'error'; message: string; retriable: boolean };
 
+export type ProviderErrorCode =
+  | 'PROVIDER_AUTH'
+  | 'PROVIDER_RATE_LIMIT'
+  | 'PROVIDER_TIMEOUT'
+  | 'PROVIDER_NETWORK'
+  | 'PROVIDER_BAD_REQUEST'
+  | 'PROVIDER_UNAVAILABLE'
+  | 'PROVIDER_UNKNOWN'
+  | 'MOCK_PROVIDER_ERROR'
+  | 'SCRIPTED_PROVIDER_ERROR';
+
 export interface ProviderError {
   provider: string;
-  code: string;
+  code: ProviderErrorCode;
   message: string;
   retriable: boolean;
 }
