@@ -11,6 +11,7 @@ import { classifyShellCommand, PermissionMode } from '../policy/policy';
 import { detectHermesContext, exportHadaraContext } from '../hermes/context-export';
 import { validateTaskCapsule } from '../harness/validate';
 import { replayScenario } from '../harness/replay';
+import { createDoctorReport, formatDoctorReport } from './doctor';
 
 function printHelp(): void {
   console.log(`HADARA bootstrap CLI
@@ -101,14 +102,13 @@ async function main(): Promise<void> {
     }
 
     case 'doctor': {
-      console.log('[HADARA] Doctor');
-      console.log(`portableRoot: ${paths.portableRoot}`);
-      console.log(`dataRoot:     ${paths.dataRoot}`);
-      console.log(`projectRoot:  ${paths.projectRoot}`);
-      console.log(`Node:         ${process.version}`);
-      console.log(`docs/:        ${fs.existsSync(paths.projectDocsDir) ? 'ok' : 'missing'}`);
-      console.log(`tasks/:       ${fs.existsSync(paths.projectTasksDir) ? 'ok' : 'missing'}`);
-      console.log(`.hadara/:     ${fs.existsSync(paths.projectHadaraDir) ? 'ok' : 'missing'}`);
+      const report = createDoctorReport(paths);
+      if (jsonOutput) {
+        console.log(JSON.stringify(report, null, 2));
+      } else {
+        console.log(formatDoctorReport(report));
+      }
+      if (!report.ok) process.exitCode = 7;
       return;
     }
 

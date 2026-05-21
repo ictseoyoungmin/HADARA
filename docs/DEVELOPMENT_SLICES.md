@@ -6,7 +6,7 @@ HADARA development should proceed in small, evidence-backed slices. Each slice m
 |---|---|---|---|---|
 | 1 | Harness validate JSON | T-0009 | Stabilize `hadara harness validate --task <id> --json` for external agents and CI. | Build/tests pass, CLI JSON sample recorded. |
 | 2 | Harness replay skeleton | T-0010 | Add deterministic replay schema and ScriptedProvider-backed no-op scenario checks. | Done: 7 test files passed, 34 tests passed, replay JSON smoke recorded. |
-| 3 | CLI JSON normalization | TBD | Apply common JSON envelope and exit codes to core CLI commands. | CLI contract tests for success and failure paths. |
+| 3 | CLI JSON normalization | T-0011 | Apply common JSON envelope and exit codes to core CLI commands. | Done: `doctor --json` envelope, text output, and exit code 7 smoke recorded. |
 | 4 | Evidence artifact handling | TBD | Copy public artifacts into managed task/session evidence storage without leaking private paths. | Artifact copy tests and redaction checks. |
 | 5 | Policy execution preflight | TBD | Connect policy evaluator to ShellTool design before shell execution exists. | Deny/approval tests for command plans. |
 | 6 | Provider fallback executor | TBD | Add fallback orchestration on top of the existing ProviderClient contract. | Contract tests with MockProvider/ScriptedProvider. |
