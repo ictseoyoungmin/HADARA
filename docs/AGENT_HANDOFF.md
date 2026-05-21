@@ -16,7 +16,9 @@ main
 - Completed T-0012 CLI Task JSON with `hadara task list/show --json`.
 - Completed T-0013 CLI Policy JSON with `hadara policy check-shell <command> --json`.
 - Completed T-0014 CLI Hermes JSON with `hadara hermes detect/export-context --json`.
-- Verified Docker `npm ci && npm run check`: 11 test files passed, 44 tests passed.
+- Completed T-0015 CLI Evidence JSON with `hadara evidence collect --json`.
+- Completed T-0016 Evidence Artifact Copy with managed public artifact storage.
+- Verified Docker `npm ci && npm run check`: 12 test files passed, 47 tests passed.
 
 ## In Progress
 
@@ -37,14 +39,14 @@ No active implementation task.
 - `npm ci` reports 5 moderate audit findings from current dev dependencies; do not run `npm audit fix --force` without reviewing version impact.
 - GitHub Actions has been added but has not yet been observed on a remote push/PR.
 - Policy parser is still intentionally minimal; it is safer than before, but not a full POSIX or PowerShell parser.
-- Evidence Store does not yet copy binary/log artifacts into managed storage or encrypt private evidence.
+- Evidence Store copies public attached artifacts into Task Capsule managed storage, but does not yet encrypt private evidence.
 - First Docker validation on the mounted `/mnt/f` workspace failed because npm could not create symlinks in `node_modules`; copying the repo into the container filesystem before `npm ci` is the working validation pattern.
 
 ## Next Recommended Step
 
 1. Push branch and confirm GitHub Actions CI passes with Node 22.
 2. Track npm audit findings separately.
-3. Continue CLI JSON normalization for Evidence commands, or add Evidence Store artifact handling.
+3. Add policy execution preflight before ShellTool execution, or continue Evidence Store hardening with session-level artifacts/encrypted private evidence.
 4. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy loop is stronger.
 
 ## Evidence
@@ -59,4 +61,6 @@ No active implementation task.
 - `tasks/T-0012-cli-task-json/EVIDENCE.md`
 - `tasks/T-0013-cli-policy-json/EVIDENCE.md`
 - `tasks/T-0014-cli-hermes-json/EVIDENCE.md`
-- Docker check: 11 test files passed, 44 tests passed.
+- `tasks/T-0015-cli-evidence-json/EVIDENCE.md`
+- `tasks/T-0016-evidence-artifact-copy/EVIDENCE.md`
+- Docker check: 12 test files passed, 47 tests passed.

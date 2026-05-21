@@ -1,0 +1,103 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
+import { createEvidenceCollectReport } from '../../src/cli/evidence-json';
+import { createTaskCapsule } from '../../src/task/task-capsule';
+
+const roots: string[] = [];
+
+function tempProject(): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-evidence-json-'));
+  roots.push(dir);
+  return dir;
+}
+
+afterEach(() => {
+  for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
+});
+
+describe('CLI evidence JSON reports', () => {
+  it('returns a stable collect envelope with the appended evidence index record', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Collect JSON evidence');
+    fs.writeFileSync(path.join(root, 'result.log'), 'ok', 'utf8');
+
+    const report = createEvidenceCollectReport(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      path: 'result.log',
+      summary: 'Recorded test output',
+      result: 'passed',
+      visibility: 'public'
+    });
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.evidence.collect.v1',
+      command: 'evidence.collect',
+      ok: true,
+      evidence: {
+        schemaVersion: 'hadara.evidence.v1',
+        taskId: task.id,
+        kind: 'test-log',
+        summary: 'Recorded test output',
+        result: 'passed',
+        visibility: 'public',
+        evidencePath: expect.stringMatching(/^artifacts\/test-log\/.+-result\.log$/),
+        markdownPath: `tasks/${task.id}-collect-json-evidence/EVIDENCE.md`
+      },
+      issues: []
+    });
+    expect(report.evidence?.evidencePath ? fs.existsSync(path.join(task.dir, report.evidence.evidencePath)) : false).toBe(true);
+    expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain('Recorded test output');
+  });
+
+  it('suppresses private evidence paths and redacts public summaries', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Private JSON evidence');
+
+    const report = createEvidenceCollectReport(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      path: '/tmp/private-command.log',
+      summary: 'token=super-secret',
+      result: 'unknown',
+      visibility: 'private'
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.evidence).toMatchObject({
+      summary: 'token=[REDACTED]',
+      visibility: 'private'
+    });
+    expect(report.evidence).not.toHaveProperty('evidencePath');
+    expect(fs.existsSync(path.join(task.dir, 'artifacts'))).toBe(false);
+    expect(JSON.stringify(report)).not.toContain('/tmp/private-command.log');
+    expect(JSON.stringify(report)).not.toContain('super-secret');
+  });
+
+  it('returns a stable missing task envelope', () => {
+    const root = tempProject();
+
+    const report = createEvidenceCollectReport(root, {
+      taskId: 'T-9999',
+      kind: 'note',
+      summary: 'Missing task',
+      result: 'blocked',
+      visibility: 'public'
+    });
+
+    expect(report).toEqual({
+      schemaVersion: 'hadara.evidence.collect.v1',
+      command: 'evidence.collect',
+      ok: false,
+      issues: [
+        {
+          severity: 'error',
+          code: 'TASK_NOT_FOUND',
+          message: 'Task Capsule not found: T-9999'
+        }
+      ]
+    });
+  });
+});

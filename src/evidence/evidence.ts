@@ -33,7 +33,7 @@ export function appendEvidence(projectRoot: string, record: Omit<EvidenceRecord,
   const time = new Date().toISOString();
   const visibility = record.visibility ?? 'public';
   const summary = redactSecrets(record.summary.replace(/\|/g, '/'));
-  const attachedPath = record.path ? path.relative(taskDir, path.resolve(projectRoot, record.path)) : undefined;
+  const attachedPath = copyPublicEvidenceArtifact({ projectRoot, taskDir, kind: record.kind, sourcePath: record.path, time, visibility });
   const markdownPath = path.join(taskDir, 'EVIDENCE.md');
   const rowSummary = visibility === 'private' || !attachedPath ? summary : `${summary} (${attachedPath})`;
   const row = `| ${time} | ${record.kind} | ${rowSummary} | ${record.result} |\n`;
@@ -59,6 +59,26 @@ function appendEvidenceIndex(taskDir: string, record: EvidenceIndexRecord): void
   fs.appendFileSync(path.join(taskDir, 'evidence.jsonl'), `${JSON.stringify(record)}\n`, 'utf8');
 }
 
+function copyPublicEvidenceArtifact(input: {
+  projectRoot: string;
+  taskDir: string;
+  kind: EvidenceRecord['kind'];
+  sourcePath?: string;
+  time: string;
+  visibility: NonNullable<EvidenceRecord['visibility']>;
+}): string | undefined {
+  if (!input.sourcePath || input.visibility === 'private') return undefined;
+
+  const sourcePath = path.resolve(input.projectRoot, input.sourcePath);
+  if (!fs.existsSync(sourcePath) || !fs.statSync(sourcePath).isFile()) return undefined;
+
+  const artifactsDir = path.join(input.taskDir, 'artifacts', input.kind);
+  ensureDir(artifactsDir);
+  const targetPath = path.join(artifactsDir, `${safeFilePart(input.time)}-${safeFilePart(path.basename(sourcePath))}`);
+  fs.copyFileSync(sourcePath, targetPath);
+  return toPortablePath(path.relative(input.taskDir, targetPath));
+}
+
 function findTaskDir(projectRoot: string, taskId: string): string | null {
   const tasksDir = path.join(projectRoot, 'tasks');
   if (!fs.existsSync(tasksDir)) return null;
@@ -72,4 +92,12 @@ export function createSessionEvidenceDirs(dataRoot: string, sessionId: string): 
     ensureDir(path.join(evidenceDir, child));
   }
   return evidenceDir;
+}
+
+function safeFilePart(value: string): string {
+  return value.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'artifact';
+}
+
+function toPortablePath(value: string): string {
+  return value.split(path.sep).join('/');
 }

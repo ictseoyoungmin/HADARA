@@ -16,3 +16,5 @@
 | T-0012 | CLI Task JSON | Done | tasks/T-0012-cli-task-json | Docker check and task JSON/text CLI smokes passed. |
 | T-0013 | CLI Policy JSON | Done | tasks/T-0013-cli-policy-json | Docker check and policy JSON/non-JSON CLI smokes passed. |
 | T-0014 | CLI Hermes JSON | Done | tasks/T-0014-cli-hermes-json | Docker check and Hermes JSON/non-JSON CLI smokes passed. |
+| T-0015 | CLI Evidence JSON | Done | tasks/T-0015-cli-evidence-json | Docker check and evidence JSON/non-JSON CLI smokes passed. |
+| T-0016 | Evidence Artifact Copy | Done | tasks/T-0016-evidence-artifact-copy | Docker check and public/private artifact CLI smokes passed. |

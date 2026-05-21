@@ -54,10 +54,11 @@ describe('Task Capsule harness', () => {
     expect(index[0]).toMatchObject({
       schemaVersion: 'hadara.evidence.v1',
       kind: 'test-log',
-      evidencePath: '../../test-output.log',
+      evidencePath: expect.stringMatching(/^artifacts\/test-log\/.+-test-output\.log$/),
       visibility: 'public',
       result: 'passed'
     });
+    expect(fs.existsSync(path.join(task.dir, index[0].evidencePath))).toBe(true);
   });
 
   it('separates private evidence paths from public summaries', () => {

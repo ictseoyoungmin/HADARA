@@ -14,6 +14,7 @@ import { createDoctorReport, formatDoctorReport } from './doctor';
 import { createTaskListReport, createTaskShowReport, formatTaskListReport } from './task-json';
 import { createPolicyCheckReport, extractPolicyCommandText } from './policy-json';
 import { createHermesDetectReport, createHermesExportContextReport } from './hermes-json';
+import { createEvidenceCollectReport } from './evidence-json';
 
 function printHelp(): void {
   console.log(`HADARA bootstrap CLI
@@ -160,8 +161,21 @@ async function main(): Promise<void> {
         const result = (getOption(args, '--result', 'unknown') ?? 'unknown') as 'passed' | 'failed' | 'blocked' | 'unknown';
         const evidenceFile = getOption(args, '--path');
         const visibility = args.includes('--private') ? 'private' : 'public';
-        const filePath = appendEvidence(paths.projectRoot, { taskId, kind, path: evidenceFile, summary, result, visibility });
-        console.log(`[HADARA] Evidence updated: ${filePath}`);
+        if (jsonOutput) {
+          const report = createEvidenceCollectReport(paths.projectRoot, {
+            taskId,
+            kind,
+            path: evidenceFile,
+            summary,
+            result,
+            visibility
+          });
+          console.log(JSON.stringify(report, null, 2));
+          if (!report.ok) process.exitCode = 6;
+        } else {
+          const filePath = appendEvidence(paths.projectRoot, { taskId, kind, path: evidenceFile, summary, result, visibility });
+          console.log(`[HADARA] Evidence updated: ${filePath}`);
+        }
         return;
       }
       break;
