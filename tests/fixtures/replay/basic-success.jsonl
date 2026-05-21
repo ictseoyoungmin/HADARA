@@ -1,0 +1,3 @@
+{"type":"user","content":"fix failing test"}
+{"type":"assistant_response","match":"fix failing test","content":"Test passed. Evidence written."}
+{"type":"expect_final","content":"Test passed. Evidence written."}

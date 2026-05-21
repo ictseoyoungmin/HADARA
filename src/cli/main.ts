@@ -10,6 +10,7 @@ import { updateHandoff } from '../handoff/handoff';
 import { classifyShellCommand, PermissionMode } from '../policy/policy';
 import { detectHermesContext, exportHadaraContext } from '../hermes/context-export';
 import { validateTaskCapsule } from '../harness/validate';
+import { replayScenario } from '../harness/replay';
 
 function printHelp(): void {
   console.log(`HADARA bootstrap CLI
@@ -24,6 +25,7 @@ Usage:
   hadara handoff update --task <task-id> [--summary <text>] [--next <text>]
   hadara policy check-shell <command> [--mode readonly|assisted|trusted|auto|release]
   hadara harness validate --task <task-id> [--json]
+  hadara harness replay <scenario.jsonl> [--json]
   hadara hermes detect
   hadara hermes export-context
   hadara mcp serve
@@ -205,6 +207,23 @@ async function main(): Promise<void> {
           console.log(`[HADARA] Harness validation failed: ${result.task.id}`);
           for (const issue of result.issues) {
             console.log(`- ${issue.code}: ${issue.message}${issue.path ? ` (${issue.path})` : ''}`);
+          }
+        }
+        if (!result.ok) process.exitCode = 6;
+        return;
+      }
+      if (sub === 'replay') {
+        const scenarioPath = args[2];
+        if (!scenarioPath || scenarioPath.startsWith('--')) throw new Error('harness replay requires <scenario.jsonl>');
+        const result = await replayScenario(paths.projectRoot, scenarioPath);
+        if (jsonOutput) {
+          console.log(JSON.stringify(result, null, 2));
+        } else if (result.ok) {
+          console.log(`[HADARA] Harness replay passed: ${result.scenario}`);
+        } else {
+          console.log(`[HADARA] Harness replay failed: ${result.scenario}`);
+          for (const issue of result.issues) {
+            console.log(`- ${issue.code}: ${issue.message}${issue.line ? ` (line ${issue.line})` : ''}`);
           }
         }
         if (!result.ok) process.exitCode = 6;
