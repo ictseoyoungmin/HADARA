@@ -18,7 +18,7 @@ const TASK_FILES: Record<string, (task: TaskCapsule) => string> = {
   'TESTS.md': () => `# Tests\n\n## Required\n\n- npm test\n\n## Optional\n\n- npm run check\n`,
   'RISKS.md': () => `# Risks\n\n| Risk | Mitigation |\n|---|---|\n`,
   'DECISIONS.md': () => `# Decisions\n\nRecord task-local design decisions here.\n`,
-  'EVIDENCE.md': () => `# Evidence\n\n| Time | Evidence | Result |\n|---|---|---|\n`,
+  'EVIDENCE.md': () => `# Evidence\n\n| Time | Kind | Summary | Result |\n|---|---|---|---|\n`,
   'HANDOFF.md': () => `# Handoff\n\n## Last Completed\n\nTBD.\n\n## Next Recommended Step\n\nTBD.\n`
 };
 

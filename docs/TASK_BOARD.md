@@ -8,3 +8,4 @@
 | T-0004 | Implement ProviderClient Contract | Draft | tasks/T-0004-providerclient-contract | MockProvider first, real providers later. |
 | T-0005 | Implement Evidence Store | Draft | tasks/T-0005-evidence-store | Attach logs, diff summaries, and test results. |
 | T-0006 | Implement Hermes Agent Compatibility | Draft | tasks/T-0006-hermes-agent-compatibility | Context export, MCP bridge, file contract. |
+| T-0007 | Bootstrap Validation Pass | Done | tasks/T-0007-bootstrap-validation-pass | Docker npm ci/check and seed CLI loop passed. |

@@ -137,7 +137,7 @@ async function main(): Promise<void> {
       if (sub === 'collect') {
         const taskId = getOption(args, '--task');
         if (!taskId) throw new Error('evidence collect requires --task <task-id>');
-        const summary = getOption(args, '--summary', 'Manual evidence collection placeholder.');
+        const summary = getOption(args, '--summary') ?? 'Manual evidence collection placeholder.';
         const result = (getOption(args, '--result', 'unknown') ?? 'unknown') as 'passed' | 'failed' | 'blocked' | 'unknown';
         const filePath = appendEvidence(paths.projectRoot, { taskId, kind: 'note', summary, result });
         console.log(`[HADARA] Evidence updated: ${filePath}`);

@@ -2,20 +2,21 @@
 
 ## Current Branch
 
-TBD.
+main
 
 ## Last Completed
 
-- Generated HADARA bootstrap skeleton repository.
-- Added TypeScript/Node project structure.
-- Added seed CLI commands: init, doctor, task, evidence, handoff, policy, hermes, mcp, run stub.
-- Added MockProvider and tests.
-- Added docs and initial Task Capsules.
+- Created T-0007 Bootstrap Validation Pass and marked it Done with evidence.
+- Fixed Task Capsule `EVIDENCE.md` template to use the same 4-column schema as `appendEvidence`.
+- Added harness coverage that appends evidence without breaking the Markdown table.
+- Added `package-lock.json` and a minimal GitHub Actions CI workflow.
+- Fixed strict TypeScript handling for the CLI evidence summary fallback.
+- Verified `npm ci` and `npm run check` inside Docker.
+- Verified seed CLI loop in Docker: doctor, init, task create/list/show, evidence collect, handoff update.
 
 ## In Progress
 
-- Phase 1: HADARA Seed CLI.
-- Focus: make HADARA manage its own development state before implementing full coding-agent behavior.
+No active implementation task.
 
 ## Do Not Change Without Updating Tests
 
@@ -26,20 +27,19 @@ TBD.
 
 ## Known Problems
 
-- Dashboard is not implemented.
-- Real provider adapters are not implemented.
-- MCP server is a stub.
-- `policy check-shell` parser is intentionally minimal and should be replaced with a real command parser.
+- Host WSL environment does not currently expose a usable Linux `node` binary.
+- Windows Node/npm shims are on PATH but fail under this WSL sandbox.
+- Docker is the working validation path for now.
+- `npm ci` reports 5 moderate audit findings from current dev dependencies; do not run `npm audit fix --force` without reviewing version impact.
+- GitHub Actions has been added but has not yet been observed on a remote push/PR.
 
 ## Next Recommended Step
 
-1. Run `npm install`.
-2. Run `npm run check`.
-3. Create a new task for the first real implementation slice.
-4. Update this handoff before stopping.
+1. Push branch and confirm GitHub Actions CI passes with Node 22.
+2. Track npm audit findings separately.
+3. Continue with T-0002/T-0005 hardening before provider or dashboard work.
 
 ## Evidence
 
-- `tests/unit`
-- `tests/contract`
-- `tests/harness`
+- `tasks/T-0007-bootstrap-validation-pass/EVIDENCE.md`
+- Docker check: 5 test files passed, 10 tests passed.
