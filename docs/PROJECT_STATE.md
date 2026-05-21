@@ -21,6 +21,8 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Handoff update exists.
 - Hermes/Agent Harness context export exists as a seed command.
 - Doctor CLI JSON output exists as `hadara doctor --json`.
+- Task list/show CLI JSON output exists as `hadara task list --json` and `hadara task show <task-id> --json`.
+- Policy check CLI JSON output exists as `hadara policy check-shell <command> --json`.
 - Harness Task Capsule validation exists as `hadara harness validate --task <id> --json`.
 - Harness replay skeleton exists as `hadara harness replay <scenario.jsonl> --json`.
 - Config/path resolver has realpath containment, environment priority, Windows path normalization, and project data boundary tests.

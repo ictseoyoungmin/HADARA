@@ -1,17 +1,18 @@
 #!/usr/bin/env node
-import fs from 'node:fs';
 import path from 'node:path';
 import { resolveHadaraPaths } from '../core/paths';
 import { ensureDir, writeFileIfMissing } from '../core/fs';
 import { writeAuditEvent } from '../core/audit';
-import { createTaskCapsule, listTaskCapsules } from '../task/task-capsule';
+import { createTaskCapsule } from '../task/task-capsule';
 import { appendEvidence, EvidenceRecord } from '../evidence/evidence';
 import { updateHandoff } from '../handoff/handoff';
-import { classifyShellCommand, PermissionMode } from '../policy/policy';
+import { PermissionMode } from '../policy/policy';
 import { detectHermesContext, exportHadaraContext } from '../hermes/context-export';
 import { validateTaskCapsule } from '../harness/validate';
 import { replayScenario } from '../harness/replay';
 import { createDoctorReport, formatDoctorReport } from './doctor';
+import { createTaskListReport, createTaskShowReport, formatTaskListReport } from './task-json';
+import { createPolicyCheckReport, extractPolicyCommandText } from './policy-json';
 
 function printHelp(): void {
   console.log(`HADARA bootstrap CLI
@@ -123,15 +124,26 @@ async function main(): Promise<void> {
         return;
       }
       if (sub === 'list') {
-        const tasks = listTaskCapsules(paths.projectRoot);
-        for (const task of tasks) console.log(`${task.id}\t${task.title}\t${path.relative(paths.projectRoot, task.dir)}`);
+        const report = createTaskListReport(paths.projectRoot);
+        if (jsonOutput) {
+          console.log(JSON.stringify(report, null, 2));
+        } else {
+          console.log(formatTaskListReport(report));
+        }
         return;
       }
       if (sub === 'show') {
         const id = args[2];
-        const task = listTaskCapsules(paths.projectRoot).find((item) => item.id === id);
-        if (!task) throw new Error(`task not found: ${id}`);
-        console.log(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8'));
+        if (!id) throw new Error('task show requires <task-id>');
+        const report = createTaskShowReport(paths.projectRoot, id);
+        if (jsonOutput) {
+          console.log(JSON.stringify(report, null, 2));
+        } else if (report.ok && report.task) {
+          console.log(report.task.taskMarkdown);
+        } else {
+          console.log(`[HADARA] Task not found: ${id}`);
+        }
+        if (!report.ok) process.exitCode = 6;
         return;
       }
       break;
@@ -171,9 +183,15 @@ async function main(): Promise<void> {
       const sub = args[1];
       if (sub === 'check-shell') {
         const mode = (getOption(args, '--mode', 'assisted') ?? 'assisted') as PermissionMode;
-        const commandText = args.slice(2).filter((item) => item !== '--mode' && item !== mode).join(' ');
-        const decision = classifyShellCommand(commandText, mode);
-        console.log(JSON.stringify(decision, null, 2));
+        const commandText = extractPolicyCommandText(args, mode);
+        if (!commandText) throw new Error('policy check-shell requires <command>');
+        const report = createPolicyCheckReport(commandText, mode);
+        if (jsonOutput) {
+          console.log(JSON.stringify(report, null, 2));
+        } else {
+          console.log(JSON.stringify(report.decision, null, 2));
+        }
+        if (!report.ok) process.exitCode = 2;
         return;
       }
       break;

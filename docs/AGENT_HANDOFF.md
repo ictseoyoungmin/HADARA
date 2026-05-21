@@ -13,7 +13,9 @@ main
 - Completed T-0009 Harness Validate JSON with `hadara harness validate --task <id> --json`.
 - Completed T-0010 Harness Replay Skeleton with `hadara harness replay <scenario.jsonl> --json`.
 - Completed T-0011 CLI Doctor JSON with `hadara doctor --json`.
-- Verified Docker `npm ci && npm run check`: 8 test files passed, 36 tests passed.
+- Completed T-0012 CLI Task JSON with `hadara task list/show --json`.
+- Completed T-0013 CLI Policy JSON with `hadara policy check-shell <command> --json`.
+- Verified Docker `npm ci && npm run check`: 10 test files passed, 42 tests passed.
 
 ## In Progress
 
@@ -41,7 +43,7 @@ No active implementation task.
 
 1. Push branch and confirm GitHub Actions CI passes with Node 22.
 2. Track npm audit findings separately.
-3. Continue CLI JSON normalization for more core commands, or add Evidence Store artifact handling.
+3. Continue CLI JSON normalization for Hermes/Evidence commands, or add Evidence Store artifact handling.
 4. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy loop is stronger.
 
 ## Evidence
@@ -53,4 +55,6 @@ No active implementation task.
 - `tasks/T-0009-harness-validate-json/EVIDENCE.md`
 - `tasks/T-0010-harness-replay-skeleton/EVIDENCE.md`
 - `tasks/T-0011-cli-doctor-json/EVIDENCE.md`
-- Docker check: 8 test files passed, 36 tests passed.
+- `tasks/T-0012-cli-task-json/EVIDENCE.md`
+- `tasks/T-0013-cli-policy-json/EVIDENCE.md`
+- Docker check: 10 test files passed, 42 tests passed.

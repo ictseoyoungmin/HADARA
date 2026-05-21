@@ -13,3 +13,5 @@
 | T-0009 | Harness Validate JSON | Done | tasks/T-0009-harness-validate-json | Docker check and CLI JSON smoke passed. |
 | T-0010 | Harness Replay Skeleton | Done | tasks/T-0010-harness-replay-skeleton | Docker check and replay CLI JSON smoke passed. |
 | T-0011 | CLI Doctor JSON | Done | tasks/T-0011-cli-doctor-json | Docker check and doctor JSON/text CLI smokes passed. |
+| T-0012 | CLI Task JSON | Done | tasks/T-0012-cli-task-json | Docker check and task JSON/text CLI smokes passed. |
+| T-0013 | CLI Policy JSON | Done | tasks/T-0013-cli-policy-json | Docker check and policy JSON/non-JSON CLI smokes passed. |
