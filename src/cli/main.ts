@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import { resolveHadaraPaths } from '../core/paths';
 import { resolveProjectFile, WorkspaceFileError } from '../core/workspace';
 import { createTaskCapsule } from '../task/task-capsule';
-import { appendEvidence, EvidenceRecord } from '../evidence/evidence';
 import { updateHandoff } from '../handoff/handoff';
 import { PermissionMode } from '../policy/policy';
 import { createShellExecutionPreflight } from '../policy/preflight';
@@ -16,10 +15,10 @@ import { createDoctorReport, formatDoctorReport } from './doctor';
 import { createTaskListReport, createTaskShowReport, formatTaskListReport } from './task-json';
 import { createPolicyCheckReport, extractPolicyCommandText } from './policy-json';
 import { createHermesDetectReport, createHermesExportContextReport } from './hermes-json';
-import { createEvidenceCollectReport } from './evidence-json';
 import { initProject, parseInitProfile } from './init';
 import { scaffoldRunScenario } from './run-scaffold';
 import { handleHarnessCommand } from './harness';
+import { handleEvidenceCommand } from './evidence';
 import { getFlag, getIntegerOption, getRequiredStringOption, getStringOption } from './args';
 
 function printHelp(): void {
@@ -115,31 +114,7 @@ async function main(): Promise<void> {
     }
 
     case 'evidence': {
-      const sub = args[1];
-      if (sub === 'collect') {
-        const taskId = getRequiredStringOption(args, '--task');
-        const kind = parseEvidenceKind(getStringOption(args, '--kind', 'note') ?? 'note');
-        const summary = getStringOption(args, '--summary') ?? 'Manual evidence collection placeholder.';
-        const result = (getStringOption(args, '--result', 'unknown') ?? 'unknown') as 'passed' | 'failed' | 'blocked' | 'unknown';
-        const evidenceFile = getStringOption(args, '--path');
-        const visibility = getFlag(args, '--private') ? 'private' : 'public';
-        if (jsonOutput) {
-          const report = createEvidenceCollectReport(paths.projectRoot, {
-            taskId,
-            kind,
-            path: evidenceFile,
-            summary,
-            result,
-            visibility
-          });
-          console.log(JSON.stringify(report, null, 2));
-          if (!report.ok) process.exitCode = 6;
-        } else {
-          const filePath = appendEvidence(paths.projectRoot, { taskId, kind, path: evidenceFile, summary, result, visibility });
-          console.log(`[HADARA] Evidence updated: ${filePath}`);
-        }
-        return;
-      }
+      if (handleEvidenceCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
@@ -309,13 +284,6 @@ export function attachRunEvidence(projectRoot: string, result: AgentLoopResult):
       ]
     };
   }
-}
-
-function parseEvidenceKind(value: string): EvidenceRecord['kind'] {
-  if (['test-log', 'command-log', 'diff-summary', 'screenshot', 'note'].includes(value)) {
-    return value as EvidenceRecord['kind'];
-  }
-  throw new Error(`unsupported evidence kind: ${value}`);
 }
 
 function extractRunRequest(args: string[]): string {
