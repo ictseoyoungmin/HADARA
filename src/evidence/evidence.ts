@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDir } from '../core/fs';
 import { redactSecrets } from '../core/redaction';
+import { resolveProjectFile } from '../core/workspace';
 
 export interface EvidenceRecord {
   time: string;
@@ -69,13 +70,12 @@ function copyPublicEvidenceArtifact(input: {
 }): string | undefined {
   if (!input.sourcePath || input.visibility === 'private') return undefined;
 
-  const sourcePath = path.resolve(input.projectRoot, input.sourcePath);
-  if (!fs.existsSync(sourcePath) || !fs.statSync(sourcePath).isFile()) return undefined;
+  const sourceFile = resolveProjectFile(input.projectRoot, input.sourcePath);
 
   const artifactsDir = path.join(input.taskDir, 'artifacts', input.kind);
   ensureDir(artifactsDir);
-  const targetPath = path.join(artifactsDir, `${safeFilePart(input.time)}-${safeFilePart(path.basename(sourcePath))}`);
-  fs.copyFileSync(sourcePath, targetPath);
+  const targetPath = path.join(artifactsDir, `${safeFilePart(input.time)}-${safeFilePart(path.basename(sourceFile.absolutePath))}`);
+  fs.copyFileSync(sourceFile.absolutePath, targetPath);
   return toPortablePath(path.relative(input.taskDir, targetPath));
 }
 

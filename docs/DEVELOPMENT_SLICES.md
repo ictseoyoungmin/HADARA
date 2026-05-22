@@ -13,6 +13,7 @@ HADARA development should proceed in small, evidence-backed slices. Each slice m
 | 7 | Shell preflight harness | T-0019 | Add deterministic fake shell observations gated by policy preflight before real shell execution. | Done: Docker check and fake shell policy gate tests. |
 | 8 | Task Capsule format validation | T-0020 | Enforce Markdown format markers so handoff/context compression cannot silently drift capsule structure. | Done: Docker check and format drift regression tests. |
 | 9 | Agent loop minimal harness | T-0021 | Implement a bounded deterministic loop using ScriptedProvider responses and fake shell observations first. | Done: Docker check, CLI run smoke, evidence index validation, and T-0021 harness validation. |
-| 10 | Hermes/MCP bridge expansion | TBD | Expose stable read/write contracts after CLI harness surfaces are reliable. | Harness validate through external-agent contract. |
-| 11 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
-| 12 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |
+| 10 | Workspace file boundary | T-0023 | Ensure CLI file inputs are confined to project-root realpaths before broader tool/file surfaces grow. | Done: Docker check passed, 18 test files passed, 74 tests passed, T-0023 harness validation passed. |
+| 11 | Hermes/MCP bridge expansion | TBD | Expose stable read/write contracts after CLI harness surfaces are reliable. | Harness validate through external-agent contract. |
+| 12 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
+| 13 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |

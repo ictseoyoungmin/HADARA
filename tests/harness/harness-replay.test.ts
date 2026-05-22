@@ -119,5 +119,22 @@ describe('Harness replay skeleton', () => {
       })
     ]);
   });
-});
 
+  it('returns a replay envelope when the scenario path escapes the workspace', async () => {
+    const parent = tempProject();
+    const root = path.join(parent, 'repo');
+    fs.mkdirSync(root);
+    fs.writeFileSync(path.join(parent, 'outside.jsonl'), '{"type":"user","content":"nope"}', 'utf8');
+
+    const result = await replayScenario(root, '../outside.jsonl');
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toEqual([
+      expect.objectContaining({
+        severity: 'error',
+        code: 'WORKSPACE_FILE_OUTSIDE',
+        message: 'Workspace file input must be inside the project root.'
+      })
+    ]);
+  });
+});

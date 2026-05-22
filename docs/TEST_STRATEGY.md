@@ -1,15 +1,66 @@
 # TEST_STRATEGY
 
+## Current Validation Environment
+
+Docker is the primary validation path in this repository.
+
+The host WSL environment does not currently expose a reliable Linux `node` binary, and Windows Node/npm shims on PATH fail under this sandbox. Direct `npm ci` on the `/mnt/f` workspace has also failed because npm could not create symlinks in `node_modules`.
+
+For reliable validation, copy the repository into the container filesystem before running npm commands:
+
+```bash
+docker run --rm -v /mnt/f/NowWorking/HADARA-dev:/src:ro -w /tmp node:22-bullseye sh -lc 'cp -a /src /tmp/work && cd /tmp/work && npm ci && npm run check'
+```
+
+This pattern keeps the source mount read-only and runs dependency installation/build/test work in `/tmp/work` inside the container.
+
 ## Suites
 
 | Suite | Command | Purpose |
 |---|---|---|
-| Unit | `npm run test:unit` | Core functions and schemas |
-| Contract | `npm run test:contract` | Provider/tool interface compatibility |
-| Harness | `npm run test:harness` | Task capsule and fake workflow |
-| Full | `npm test` | All tests |
-| Check | `npm run check` | TypeScript build + tests |
+| Unit | `npm run test:unit` | Core functions and schemas. |
+| Contract | `npm run test:contract` | Provider/tool interface compatibility. |
+| Harness | `npm run test:harness` | Task Capsule validation, replay, and fake workflow checks. |
+| Full | `npm test` | All Vitest suites. |
+| Check | `npm run check` | TypeScript build plus all tests. |
+
+Run these commands inside the Docker copy-to-`/tmp/work` pattern unless `docs/AGENT_HANDOFF.md` says the host Node environment has been fixed.
+
+## Required Session Checks
+
+Before marking a development Task Capsule Done:
+
+1. Run Docker `npm ci && npm run check`.
+2. Run `hadara harness validate --task <task-id> --json` after building the CLI.
+3. Record meaningful results in the Task Capsule `EVIDENCE.md` and `evidence.jsonl`.
+4. Update `docs/AGENT_HANDOFF.md` with the validation outcome and next step.
+
+Example Task Capsule validation:
+
+```bash
+docker run --rm -v /mnt/f/NowWorking/HADARA-dev:/src:ro -w /tmp node:22-bullseye sh -lc 'cp -a /src /tmp/work && cd /tmp/work && npm ci >/tmp/npm-ci.log && npm run build >/tmp/build.log && node dist/cli/main.js harness validate --task T-0023 --json'
+```
+
+## JSON CLI Smoke Checks
+
+When a slice changes a CLI JSON surface, include at least one Docker-based smoke command that exercises the generated `dist/cli/main.js` command with `--json`.
+
+Examples:
+
+```bash
+node dist/cli/main.js doctor --json
+node dist/cli/main.js task list --json
+node dist/cli/main.js policy preflight-shell "npm run check" --mode auto --json
+node dist/cli/main.js harness validate --task <task-id> --json
+```
+
+## Known Constraints
+
+- `npm ci` currently reports 5 moderate audit findings from dev dependencies. Do not run `npm audit fix --force` without reviewing version impact.
+- GitHub Actions exists but has not yet been observed on a remote push or PR.
+- Host validation is not the source of truth until the Node/npm environment is fixed and recorded in `docs/AGENT_HANDOFF.md`.
+- Do not commit `node_modules`, machine-local logs, secrets, or private state produced during validation.
 
 ## Harness-First Rule
 
-Real provider integration must not be implemented until MockProvider and ScriptedProvider workflows are stable.
+Real provider integration must not be implemented until MockProvider, ScriptedProvider, policy preflight, fake tool harnesses, Task Capsule validation, and evidence recording workflows are stable.

@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import path from 'node:path';
+import { resolveProjectFile, WorkspaceFileError } from '../core/workspace';
 import { ScriptedProvider, ScriptedProviderStep } from '../providers/scripted-provider';
 
 export interface HarnessReplayIssue {
@@ -32,10 +32,35 @@ type ReplayEvent =
   | { type: 'expect_final'; content: string };
 
 export async function replayScenario(projectRoot: string, scenarioPath: string): Promise<HarnessReplayResult> {
-  const resolvedScenarioPath = path.resolve(projectRoot, scenarioPath);
-  const scenario = toPortablePath(path.relative(projectRoot, resolvedScenarioPath));
+  let scenario = scenarioPath;
   const issues: HarnessReplayIssue[] = [];
   const steps: HarnessReplayStep[] = [];
+  let resolvedScenarioPath: string;
+
+  try {
+    const scenarioFile = resolveProjectFile(projectRoot, scenarioPath);
+    resolvedScenarioPath = scenarioFile.absolutePath;
+    scenario = scenarioFile.relativePath;
+  } catch (error) {
+    return {
+      schemaVersion: 'hadara.harness.replay.v1',
+      command: 'harness.replay',
+      ok: false,
+      scenario,
+      eventsRead: 0,
+      steps,
+      issues: [
+        {
+          severity: 'error',
+          code: error instanceof WorkspaceFileError && error.code !== 'WORKSPACE_FILE_NOT_FOUND' ? error.code : 'SCENARIO_NOT_FOUND',
+          message:
+            error instanceof WorkspaceFileError && error.code !== 'WORKSPACE_FILE_NOT_FOUND'
+              ? error.message
+              : `Replay scenario not found: ${scenario}`
+        }
+      ]
+    };
+  }
 
   if (!fs.existsSync(resolvedScenarioPath)) {
     return {
@@ -220,8 +245,3 @@ function toScriptedProviderStep(event: Extract<ReplayEvent, { type: 'assistant_r
 function isFinishReason(value: unknown): value is Extract<ReplayEvent, { type: 'assistant_response' }>['finishReason'] {
   return value === 'stop' || value === 'length' || value === 'tool_call' || value === 'error';
 }
-
-function toPortablePath(value: string): string {
-  return value.split(path.sep).join('/');
-}
-

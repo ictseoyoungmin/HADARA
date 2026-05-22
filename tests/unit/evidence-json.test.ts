@@ -100,4 +100,35 @@ describe('CLI evidence JSON reports', () => {
       ]
     });
   });
+
+  it('returns a JSON issue when public artifact path escapes the workspace', () => {
+    const parent = tempProject();
+    const root = path.join(parent, 'repo');
+    fs.mkdirSync(root);
+    const task = createTaskCapsule(root, 'Reject escaped evidence');
+    fs.writeFileSync(path.join(parent, 'outside.log'), 'secret', 'utf8');
+
+    const report = createEvidenceCollectReport(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      path: '../outside.log',
+      summary: 'Attempt escaped artifact copy',
+      result: 'blocked',
+      visibility: 'public'
+    });
+
+    expect(report).toEqual({
+      schemaVersion: 'hadara.evidence.collect.v1',
+      command: 'evidence.collect',
+      ok: false,
+      issues: [
+        {
+          severity: 'error',
+          code: 'WORKSPACE_FILE_OUTSIDE',
+          message: 'Workspace file input must be inside the project root.'
+        }
+      ]
+    });
+    expect(fs.existsSync(path.join(task.dir, 'artifacts'))).toBe(false);
+  });
 });

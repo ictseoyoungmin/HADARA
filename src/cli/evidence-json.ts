@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { appendEvidence, EvidenceIndexRecord, EvidenceRecord } from '../evidence/evidence';
 import { listTaskCapsules } from '../task/task-capsule';
+import { WorkspaceFileError } from '../core/workspace';
 
 export interface EvidenceCollectInput {
   taskId: string;
@@ -43,14 +44,33 @@ export function createEvidenceCollectReport(projectRoot: string, input: Evidence
     };
   }
 
-  const markdownPath = appendEvidence(projectRoot, {
-    taskId: input.taskId,
-    kind: input.kind,
-    path: input.path,
-    summary: input.summary,
-    result: input.result,
-    visibility: input.visibility
-  });
+  let markdownPath: string;
+  try {
+    markdownPath = appendEvidence(projectRoot, {
+      taskId: input.taskId,
+      kind: input.kind,
+      path: input.path,
+      summary: input.summary,
+      result: input.result,
+      visibility: input.visibility
+    });
+  } catch (error) {
+    if (error instanceof WorkspaceFileError) {
+      return {
+        schemaVersion: 'hadara.evidence.collect.v1',
+        command: 'evidence.collect',
+        ok: false,
+        issues: [
+          {
+            severity: 'error',
+            code: error.code,
+            message: error.message
+          }
+        ]
+      };
+    }
+    throw error;
+  }
   const indexRecord = readLastEvidenceIndexRecord(task.dir);
 
   return {
@@ -74,4 +94,3 @@ function readLastEvidenceIndexRecord(taskDir: string): EvidenceIndexRecord {
 function toPortablePath(value: string): string {
   return value.split(path.sep).join('/');
 }
-

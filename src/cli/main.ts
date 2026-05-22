@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { resolveHadaraPaths } from '../core/paths';
 import { ensureDir, writeFileIfMissing } from '../core/fs';
+import { resolveProjectFile, WorkspaceFileError } from '../core/workspace';
 import { writeAuditEvent } from '../core/audit';
 import { createTaskCapsule } from '../task/task-capsule';
 import { appendEvidence, EvidenceRecord } from '../evidence/evidence';
@@ -12,7 +13,7 @@ import { createShellExecutionPreflight } from '../policy/preflight';
 import { detectHermesContext, exportHadaraContext } from '../hermes/context-export';
 import { validateTaskCapsule } from '../harness/validate';
 import { replayScenario } from '../harness/replay';
-import { runAgentLoop } from '../agent/loop';
+import { AgentLoopResult, runAgentLoop } from '../agent/loop';
 import { ScriptedProvider, ScriptedProviderStep } from '../providers/scripted-provider';
 import { FakeShellFixtures } from '../tools/fake-shell';
 import { createDoctorReport, formatDoctorReport } from './doctor';
@@ -305,23 +306,29 @@ async function main(): Promise<void> {
     }
 
     case 'run': {
-      const scriptPath = getOption(args, '--script');
-      if (!scriptPath) throw new Error('run requires --script <script.json> in bootstrap harness mode');
       const taskId = getOption(args, '--task');
       const mode = (getOption(args, '--mode', 'assisted') ?? 'assisted') as PermissionMode;
-      const maxSteps = Number(getOption(args, '--max-steps', '6'));
-      const fixturesPath = getOption(args, '--fake-shell-fixtures');
       const request = extractRunRequest(args) || (taskId ? `Run task ${taskId}` : 'Run HADARA deterministic harness task.');
-      const script = readScriptedProviderSteps(paths.projectRoot, scriptPath);
-      const fakeShellFixtures = fixturesPath ? readFakeShellFixtures(paths.projectRoot, fixturesPath) : {};
-      const result = await runAgentLoop({
-        taskId,
-        request,
-        provider: new ScriptedProvider(script),
-        mode,
-        maxSteps,
-        fakeShellFixtures
-      });
+      let result;
+      try {
+        const scriptPath = getOption(args, '--script');
+        if (!scriptPath) throw new Error('run requires --script <script.json> in bootstrap harness mode');
+        const maxSteps = parseRunMaxSteps(getOption(args, '--max-steps', '6') ?? '6');
+        const fixturesPath = getOption(args, '--fake-shell-fixtures');
+        const script = readScriptedProviderSteps(paths.projectRoot, scriptPath);
+        const fakeShellFixtures = fixturesPath ? readFakeShellFixtures(paths.projectRoot, fixturesPath) : {};
+        result = await runAgentLoop({
+          taskId,
+          request,
+          provider: new ScriptedProvider(script),
+          mode,
+          maxSteps,
+          fakeShellFixtures
+        });
+      } catch (error) {
+        if (!jsonOutput) throw error;
+        result = createRunErrorReport({ taskId, request, mode, error });
+      }
       if (jsonOutput) {
         console.log(JSON.stringify(result, null, 2));
       } else if (result.ok) {
@@ -364,7 +371,7 @@ function extractRunRequest(args: string[]): string {
   return requestParts.join(' ').trim();
 }
 
-function readScriptedProviderSteps(projectRoot: string, scriptPath: string): ScriptedProviderStep[] {
+export function readScriptedProviderSteps(projectRoot: string, scriptPath: string): ScriptedProviderStep[] {
   const parsed = readJsonFile(projectRoot, scriptPath);
   if (!Array.isArray(parsed)) throw new Error('run --script must point to a JSON array');
   return parsed.map((item, index) => {
@@ -383,7 +390,7 @@ function readScriptedProviderSteps(projectRoot: string, scriptPath: string): Scr
   });
 }
 
-function readFakeShellFixtures(projectRoot: string, fixturesPath: string): FakeShellFixtures {
+export function readFakeShellFixtures(projectRoot: string, fixturesPath: string): FakeShellFixtures {
   const parsed = readJsonFile(projectRoot, fixturesPath);
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error('run --fake-shell-fixtures must point to a JSON object');
@@ -408,15 +415,49 @@ function readFakeShellFixtures(projectRoot: string, fixturesPath: string): FakeS
 }
 
 function readJsonFile(projectRoot: string, filePath: string): unknown {
-  const resolvedPath = path.resolve(projectRoot, filePath);
-  return JSON.parse(fs.readFileSync(resolvedPath, 'utf8')) as unknown;
+  const resolvedFile = resolveProjectFile(projectRoot, filePath);
+  return JSON.parse(fs.readFileSync(resolvedFile.absolutePath, 'utf8')) as unknown;
+}
+
+export function parseRunMaxSteps(value: string): number {
+  if (!/^\d+$/.test(value)) {
+    throw new Error('run --max-steps must be an integer from 1 to 32');
+  }
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > 32) {
+    throw new Error('run --max-steps must be an integer from 1 to 32');
+  }
+  return parsed;
+}
+
+function createRunErrorReport(input: { taskId?: string; request: string; mode: PermissionMode; error: unknown }): AgentLoopResult {
+  const code = input.error instanceof WorkspaceFileError ? input.error.code : 'RUN_INPUT_INVALID';
+  const message = input.error instanceof Error ? input.error.message : String(input.error);
+  return {
+    schemaVersion: 'hadara.agent.loop.v1',
+    command: 'agent.loop',
+    ok: false,
+    ...(input.taskId ? { taskId: input.taskId } : {}),
+    mode: input.mode,
+    request: input.request,
+    steps: [],
+    issues: [
+      {
+        severity: 'error',
+        code,
+        message
+      }
+    ]
+  };
 }
 
 function isScriptedFinishReason(value: unknown): value is ScriptedProviderStep['finishReason'] {
   return value === 'stop' || value === 'length' || value === 'tool_call' || value === 'error';
 }
 
-main().catch((error) => {
-  console.error(`[HADARA] ERROR: ${error instanceof Error ? error.message : String(error)}`);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(`[HADARA] ERROR: ${error instanceof Error ? error.message : String(error)}`);
+    process.exitCode = 1;
+  });
+}

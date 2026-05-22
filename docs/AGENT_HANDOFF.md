@@ -26,12 +26,15 @@ main
 - Completed T-0021 Agent Loop Minimal Harness with deterministic `hadara run --script ... --fake-shell-fixtures ... --json`.
 - Hardened harness validation to require `evidence.jsonl` and cover missing evidence indexes with regression tests.
 - Completed T-0022 Protocol Instruction Consolidation by moving reusable first-session rules into AGENTS.md and IMPLEMENTATION_SOP.
+- Completed T-0023 Workspace File Boundary with shared realpath workspace file resolution for evidence, replay, and deterministic run inputs.
 - Verified Docker `npm ci && npm run check`: 16 test files passed, 64 tests passed.
 - Verified Docker `hadara harness validate --task T-0019 --json`: `ok: true` after capsule doc normalization.
 - Verified Docker `hadara harness validate --task T-0020 --json`: `ok: true`.
 - Verified Docker `hadara run ... --json`: `ok: true` with fake shell observation.
 - Verified Docker `hadara harness validate --task T-0021 --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
 - Verified Docker `hadara harness validate --task T-0022 --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
+- Verified Docker read-only mount `npm ci && npm run check`: 18 test files passed, 74 tests passed.
+- Verified Docker `node dist/cli/main.js harness validate --task T-0023 --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
 
 ## In Progress
 
@@ -58,10 +61,10 @@ No active implementation task.
 
 ## Next Recommended Step
 
-1. Push branch and confirm GitHub Actions CI passes with Node 22.
+1. Start T-0024 Evidence Artifact Redaction next.
 2. Track npm audit findings separately.
 3. Extend minimal agent loop scenarios, such as JSONL replay coverage for tool-using runs or evidence attachment from loop outputs.
-4. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy loop is stronger.
+4. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy/evidence gates are stronger.
 
 ## Evidence
 
@@ -83,4 +86,5 @@ No active implementation task.
 - `tasks/T-0020-task-capsule-format-validation/EVIDENCE.md`
 - `tasks/T-0021-agent-loop-minimal-harness/EVIDENCE.md`
 - `tasks/T-0022-protocol-instruction-consolidation/EVIDENCE.md`
-- Docker check: 16 test files passed, 64 tests passed.
+- `tasks/T-0023-workspace-file-boundary/EVIDENCE.md`
+- Docker check: 18 test files passed, 74 tests passed.
