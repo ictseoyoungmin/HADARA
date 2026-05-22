@@ -9,3 +9,4 @@ export * from './evidence/evidence';
 export * from './handoff/handoff';
 export * from './tools/fake-shell';
 export * from './agent/loop';
+export * from './agent/evidence';

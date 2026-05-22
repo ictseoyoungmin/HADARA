@@ -13,6 +13,7 @@ import { createShellExecutionPreflight } from '../policy/preflight';
 import { detectHermesContext, exportHadaraContext } from '../hermes/context-export';
 import { validateTaskCapsule } from '../harness/validate';
 import { replayScenario } from '../harness/replay';
+import { attachAgentLoopEvidence } from '../agent/evidence';
 import { AgentLoopResult, runAgentLoop } from '../agent/loop';
 import { ScriptedProvider, ScriptedProviderStep } from '../providers/scripted-provider';
 import { FakeShellFixtures } from '../tools/fake-shell';
@@ -321,6 +322,7 @@ async function main(): Promise<void> {
         if (!jsonOutput) throw error;
         result = createRunErrorReport({ taskId, request, mode, error });
       }
+      result = attachRunEvidence(paths.projectRoot, result);
       if (jsonOutput) {
         console.log(JSON.stringify(result, null, 2));
       } else if (result.ok) {
@@ -338,6 +340,30 @@ async function main(): Promise<void> {
 
   printHelp();
   process.exitCode = 1;
+}
+
+export function attachRunEvidence(projectRoot: string, result: AgentLoopResult): AgentLoopResult {
+  try {
+    const evidence = attachAgentLoopEvidence(projectRoot, result);
+    if (evidence.length === 0) return result;
+    return {
+      ...result,
+      evidence: [...(result.evidence ?? []), ...evidence]
+    };
+  } catch (error) {
+    return {
+      ...result,
+      ok: false,
+      issues: [
+        ...result.issues,
+        {
+          severity: 'error',
+          code: 'AGENT_LOOP_EVIDENCE_FAILED',
+          message: error instanceof Error ? error.message : String(error)
+        }
+      ]
+    };
+  }
 }
 
 function parseEvidenceKind(value: string): EvidenceRecord['kind'] {

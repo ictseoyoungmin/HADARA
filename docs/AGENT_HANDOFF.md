@@ -45,7 +45,9 @@ main
 
 ## In Progress
 
-No active implementation task.
+- T-0026 Agent Loop Evidence Attachment.
+- Implementation staged for generated public text evidence artifacts, fake-shell observation attachment, and run JSON evidence metadata.
+- Required Docker validation is pending because Docker socket access required escalation and approval was unavailable in this session.
 
 ## Do Not Change Without Updating Tests
 
@@ -68,10 +70,11 @@ No active implementation task.
 
 ## Next Recommended Step
 
-1. Start T-0026 Agent Loop Evidence Attachment next.
-2. Track npm audit findings separately.
-3. Extend minimal agent loop scenarios, such as JSONL replay coverage for tool-using runs or evidence attachment from loop outputs.
-4. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy/evidence gates are stronger.
+1. Run T-0026 required Docker validation: `npm ci && npm run check`.
+2. Run T-0026 harness validation: `node dist/cli/main.js harness validate --task T-0026 --json`.
+3. If validation passes, mark T-0026 Done and update evidence, task board, project state, development slices, and handoff.
+4. Track npm audit findings separately.
+5. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy/evidence gates are stronger.
 
 ## Evidence
 
@@ -96,4 +99,5 @@ No active implementation task.
 - `tasks/T-0023-workspace-file-boundary/EVIDENCE.md`
 - `tasks/T-0024-evidence-artifact-redaction/EVIDENCE.md`
 - `tasks/T-0025-cli-args-parser/EVIDENCE.md`
-- Docker check: 19 test files passed, 84 tests passed.
+- `tasks/T-0026-agent-loop-evidence-attachment/EVIDENCE.md`
+- Last completed Docker check, before T-0026: 19 test files passed, 84 tests passed.

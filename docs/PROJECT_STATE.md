@@ -41,6 +41,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Workspace file boundary hardening is complete with a shared realpath resolver applied to evidence artifact copy, harness replay, and deterministic run file inputs.
 - Evidence artifact redaction baseline exists: public artifacts must be UTF-8 text and pass secret-pattern scanning before committed copy.
 - Strict CLI argument helper parsing exists for string, required string, integer, and boolean flag options.
+- Agent loop evidence attachment is in progress: fake-shell observations can be staged as managed evidence artifacts, pending required Docker validation.
 - Real provider adapters are not implemented.
 - Dashboard is not implemented.
 - MCP server is not implemented.

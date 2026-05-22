@@ -18,6 +18,14 @@ export interface AgentLoopIssue {
   step?: number;
 }
 
+export interface AgentLoopEvidenceRecord {
+  kind: 'command-log';
+  summary: string;
+  result: 'passed' | 'failed';
+  evidencePath: string;
+  markdownPath: string;
+}
+
 export type AgentLoopStep =
   | {
       step: number;
@@ -42,6 +50,7 @@ export interface AgentLoopResult {
   request: string;
   finalResponse?: string;
   steps: AgentLoopStep[];
+  evidence?: AgentLoopEvidenceRecord[];
   issues: AgentLoopIssue[];
 }
 

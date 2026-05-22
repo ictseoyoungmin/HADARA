@@ -25,6 +25,11 @@ export interface EvidenceIndexRecord {
   evidencePath?: string;
 }
 
+export interface EvidenceAppendResult {
+  markdownPath: string;
+  evidence: EvidenceIndexRecord;
+}
+
 export type EvidenceArtifactPolicyErrorCode = 'PUBLIC_ARTIFACT_BINARY_REJECTED' | 'PUBLIC_ARTIFACT_SECRET_DETECTED';
 
 export class EvidenceArtifactPolicyError extends Error {
@@ -42,31 +47,69 @@ export function appendEvidence(projectRoot: string, record: Omit<EvidenceRecord,
 
   const time = new Date().toISOString();
   const visibility = record.visibility ?? 'public';
-  const summary = redactSecrets(record.summary.replace(/\|/g, '/'));
   const attachedPath = copyPublicEvidenceArtifact({ projectRoot, taskDir, kind: record.kind, sourcePath: record.path, time, visibility });
-  const markdownPath = path.join(taskDir, 'EVIDENCE.md');
-  const rowSummary = visibility === 'private' || !attachedPath ? summary : `${summary} (${attachedPath})`;
-  const row = `| ${time} | ${record.kind} | ${rowSummary} | ${record.result} |\n`;
+  return appendEvidenceRecord({ taskDir, time, record, visibility, attachedPath }).markdownPath;
+}
+
+export function appendEvidenceTextArtifact(
+  projectRoot: string,
+  record: Omit<EvidenceRecord, 'time' | 'path'>,
+  artifact: { fileName: string; content: string }
+): EvidenceAppendResult {
+  const taskDir = findTaskDir(projectRoot, record.taskId);
+  if (!taskDir) {
+    throw new Error(`Task capsule not found: ${record.taskId}`);
+  }
+
+  const time = new Date().toISOString();
+  const visibility = record.visibility ?? 'public';
+  const attachedPath =
+    visibility === 'public'
+      ? writePublicEvidenceTextArtifact({
+          taskDir,
+          kind: record.kind,
+          time,
+          fileName: artifact.fileName,
+          content: artifact.content
+        })
+      : undefined;
+  return appendEvidenceRecord({ taskDir, time, record, visibility, attachedPath });
+}
+
+function appendEvidenceIndex(taskDir: string, record: EvidenceIndexRecord): void {
+  fs.appendFileSync(path.join(taskDir, 'evidence.jsonl'), `${JSON.stringify(record)}\n`, 'utf8');
+}
+
+function appendEvidenceRecord(input: {
+  taskDir: string;
+  time: string;
+  record: Omit<EvidenceRecord, 'time'>;
+  visibility: NonNullable<EvidenceRecord['visibility']>;
+  attachedPath?: string;
+}): EvidenceAppendResult {
+  const summary = redactSecrets(input.record.summary.replace(/\|/g, '/'));
+  const markdownPath = path.join(input.taskDir, 'EVIDENCE.md');
+  const rowSummary = input.visibility === 'private' || !input.attachedPath ? summary : `${summary} (${input.attachedPath})`;
+  const row = `| ${input.time} | ${input.record.kind} | ${rowSummary} | ${input.record.result} |\n`;
 
   if (!fs.existsSync(markdownPath)) {
     fs.writeFileSync(markdownPath, '# Evidence\n\n| Time | Kind | Summary | Result |\n|---|---|---|---|\n', 'utf8');
   }
   fs.appendFileSync(markdownPath, row, 'utf8');
-  appendEvidenceIndex(taskDir, {
-    schemaVersion: 'hadara.evidence.v1',
-    time,
-    taskId: record.taskId,
-    kind: record.kind,
-    summary,
-    result: record.result,
-    visibility,
-    ...(visibility === 'public' && attachedPath ? { evidencePath: attachedPath } : {})
-  });
-  return markdownPath;
-}
 
-function appendEvidenceIndex(taskDir: string, record: EvidenceIndexRecord): void {
-  fs.appendFileSync(path.join(taskDir, 'evidence.jsonl'), `${JSON.stringify(record)}\n`, 'utf8');
+  const evidence: EvidenceIndexRecord = {
+    schemaVersion: 'hadara.evidence.v1',
+    time: input.time,
+    taskId: input.record.taskId,
+    kind: input.record.kind,
+    summary,
+    result: input.record.result,
+    visibility: input.visibility,
+    ...(input.visibility === 'public' && input.attachedPath ? { evidencePath: input.attachedPath } : {})
+  };
+  appendEvidenceIndex(input.taskDir, evidence);
+
+  return { markdownPath, evidence };
 }
 
 function copyPublicEvidenceArtifact(input: {
@@ -92,6 +135,27 @@ function copyPublicEvidenceArtifact(input: {
   ensureDir(artifactsDir);
   const targetPath = path.join(artifactsDir, `${safeFilePart(input.time)}-${safeFilePart(path.basename(sourceFile.absolutePath))}`);
   fs.writeFileSync(targetPath, artifactText, 'utf8');
+  return toPortablePath(path.relative(input.taskDir, targetPath));
+}
+
+function writePublicEvidenceTextArtifact(input: {
+  taskDir: string;
+  kind: EvidenceRecord['kind'];
+  time: string;
+  fileName: string;
+  content: string;
+}): string {
+  if (containsSecret(input.content)) {
+    throw new EvidenceArtifactPolicyError(
+      'PUBLIC_ARTIFACT_SECRET_DETECTED',
+      'Public evidence artifact contains secret-like content; collect it as private evidence or redact the source file first.'
+    );
+  }
+
+  const artifactsDir = path.join(input.taskDir, 'artifacts', input.kind);
+  ensureDir(artifactsDir);
+  const targetPath = path.join(artifactsDir, `${safeFilePart(input.time)}-${safeFilePart(input.fileName)}`);
+  fs.writeFileSync(targetPath, input.content, 'utf8');
   return toPortablePath(path.relative(input.taskDir, targetPath));
 }
 

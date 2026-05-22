@@ -2,8 +2,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { parseRunMaxSteps, readFakeShellFixtures, readScriptedProviderSteps } from '../../src/cli/main';
+import { attachRunEvidence, parseRunMaxSteps, readFakeShellFixtures, readScriptedProviderSteps } from '../../src/cli/main';
 import { WorkspaceFileError } from '../../src/core/workspace';
+import { runAgentLoop } from '../../src/agent/loop';
+import { ScriptedProvider } from '../../src/providers/scripted-provider';
+import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
 
@@ -53,5 +56,44 @@ describe('run CLI input validation', () => {
     fs.symlinkSync(outside, path.join(root, 'linked-outside'), 'dir');
 
     expect(() => readFakeShellFixtures(root, 'linked-outside/fixtures.json')).toThrow(WorkspaceFileError);
+  });
+
+  it('adds evidence metadata to run JSON results with fake-shell observations', async () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Run evidence metadata');
+
+    const loopResult = await runAgentLoop({
+      taskId: task.id,
+      request: 'run check',
+      provider: new ScriptedProvider([
+        {
+          match: 'run check',
+          response: JSON.stringify({ type: 'tool_request', tool: 'fake_shell', command: 'npm run check' }),
+          finishReason: 'tool_call'
+        },
+        {
+          match: 'ok',
+          response: 'done'
+        }
+      ]),
+      mode: 'auto',
+      fakeShellFixtures: {
+        'npm run check': {
+          exitCode: 0,
+          stdout: 'ok'
+        }
+      }
+    });
+    const result = attachRunEvidence(root, loopResult);
+
+    expect(result.ok).toBe(true);
+    expect(result.evidence).toEqual([
+      expect.objectContaining({
+        kind: 'command-log',
+        result: 'passed',
+        evidencePath: expect.stringMatching(/^artifacts\/command-log\/.+\.jsonl$/),
+        markdownPath: `tasks/${task.id}-run-evidence-metadata/EVIDENCE.md`
+      })
+    ]);
   });
 });
