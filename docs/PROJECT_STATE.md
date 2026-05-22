@@ -39,6 +39,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Tool runtime work has started with fake shell observations gated by policy preflight.
 - Agent loop work has started with bounded deterministic `hadara run --script ... --fake-shell-fixtures ... --json`.
 - Workspace file boundary hardening is complete with a shared realpath resolver applied to evidence artifact copy, harness replay, and deterministic run file inputs.
+- Evidence artifact redaction baseline exists: public artifacts must be UTF-8 text and pass secret-pattern scanning before committed copy.
 - Real provider adapters are not implemented.
 - Dashboard is not implemented.
 - MCP server is not implemented.

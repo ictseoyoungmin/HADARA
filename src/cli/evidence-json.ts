@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { appendEvidence, EvidenceIndexRecord, EvidenceRecord } from '../evidence/evidence';
+import { appendEvidence, EvidenceArtifactPolicyError, EvidenceIndexRecord, EvidenceRecord } from '../evidence/evidence';
 import { listTaskCapsules } from '../task/task-capsule';
 import { WorkspaceFileError } from '../core/workspace';
 
@@ -55,7 +55,7 @@ export function createEvidenceCollectReport(projectRoot: string, input: Evidence
       visibility: input.visibility
     });
   } catch (error) {
-    if (error instanceof WorkspaceFileError) {
+    if (error instanceof WorkspaceFileError || error instanceof EvidenceArtifactPolicyError) {
       return {
         schemaVersion: 'hadara.evidence.collect.v1',
         command: 'evidence.collect',

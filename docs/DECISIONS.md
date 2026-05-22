@@ -18,3 +18,9 @@ Reason:
 Reason:
 - USB/portable state should not pollute project history.
 - Project handoff state must be committed so external agents can continue.
+
+## D-0004: Public evidence artifact baseline policy
+
+Reason:
+- Public Task Capsule artifacts are committed project state, so they must not copy secret-like content.
+- Binary evidence needs a dedicated sanitized/private workflow; until then, public artifacts are limited to UTF-8 text.

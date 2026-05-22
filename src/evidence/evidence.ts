@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDir } from '../core/fs';
-import { redactSecrets } from '../core/redaction';
+import { containsSecret, redactSecrets } from '../core/redaction';
 import { resolveProjectFile } from '../core/workspace';
 
 export interface EvidenceRecord {
@@ -23,6 +23,15 @@ export interface EvidenceIndexRecord {
   result: EvidenceRecord['result'];
   visibility: NonNullable<EvidenceRecord['visibility']>;
   evidencePath?: string;
+}
+
+export type EvidenceArtifactPolicyErrorCode = 'PUBLIC_ARTIFACT_BINARY_REJECTED' | 'PUBLIC_ARTIFACT_SECRET_DETECTED';
+
+export class EvidenceArtifactPolicyError extends Error {
+  constructor(public readonly code: EvidenceArtifactPolicyErrorCode, message: string) {
+    super(message);
+    this.name = 'EvidenceArtifactPolicyError';
+  }
 }
 
 export function appendEvidence(projectRoot: string, record: Omit<EvidenceRecord, 'time'>): string {
@@ -71,12 +80,35 @@ function copyPublicEvidenceArtifact(input: {
   if (!input.sourcePath || input.visibility === 'private') return undefined;
 
   const sourceFile = resolveProjectFile(input.projectRoot, input.sourcePath);
+  const artifactText = readPublicTextArtifact(sourceFile.absolutePath);
+  if (containsSecret(artifactText)) {
+    throw new EvidenceArtifactPolicyError(
+      'PUBLIC_ARTIFACT_SECRET_DETECTED',
+      'Public evidence artifact contains secret-like content; collect it as private evidence or redact the source file first.'
+    );
+  }
 
   const artifactsDir = path.join(input.taskDir, 'artifacts', input.kind);
   ensureDir(artifactsDir);
   const targetPath = path.join(artifactsDir, `${safeFilePart(input.time)}-${safeFilePart(path.basename(sourceFile.absolutePath))}`);
-  fs.copyFileSync(sourceFile.absolutePath, targetPath);
+  fs.writeFileSync(targetPath, artifactText, 'utf8');
   return toPortablePath(path.relative(input.taskDir, targetPath));
+}
+
+function readPublicTextArtifact(filePath: string): string {
+  const content = fs.readFileSync(filePath);
+  if (!isTextBuffer(content)) {
+    throw new EvidenceArtifactPolicyError(
+      'PUBLIC_ARTIFACT_BINARY_REJECTED',
+      'Public evidence artifacts must be UTF-8 text; collect binary evidence as private evidence until binary policy is implemented.'
+    );
+  }
+  return content.toString('utf8');
+}
+
+function isTextBuffer(content: Buffer): boolean {
+  if (content.includes(0)) return false;
+  return !content.toString('utf8').includes('\uFFFD');
 }
 
 function findTaskDir(projectRoot: string, taskId: string): string | null {

@@ -131,4 +131,34 @@ describe('CLI evidence JSON reports', () => {
     });
     expect(fs.existsSync(path.join(task.dir, 'artifacts'))).toBe(false);
   });
+
+  it('returns a JSON issue when a public artifact contains secret-like content', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Reject secret JSON evidence');
+    fs.writeFileSync(path.join(root, 'secret.log'), 'api_key=sk-abcdefghijklmnopqrstuvwxyz', 'utf8');
+
+    const report = createEvidenceCollectReport(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      path: 'secret.log',
+      summary: 'Attempt secret artifact copy',
+      result: 'blocked',
+      visibility: 'public'
+    });
+
+    expect(report).toEqual({
+      schemaVersion: 'hadara.evidence.collect.v1',
+      command: 'evidence.collect',
+      ok: false,
+      issues: [
+        {
+          severity: 'error',
+          code: 'PUBLIC_ARTIFACT_SECRET_DETECTED',
+          message: 'Public evidence artifact contains secret-like content; collect it as private evidence or redact the source file first.'
+        }
+      ]
+    });
+    expect(fs.existsSync(path.join(task.dir, 'artifacts'))).toBe(false);
+    expect(JSON.stringify(report)).not.toContain('sk-abcdefghijklmnopqrstuvwxyz');
+  });
 });

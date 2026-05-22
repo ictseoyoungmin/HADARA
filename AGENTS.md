@@ -26,3 +26,4 @@ This repository must be developed using the HADARA protocol.
 - Update `docs/TASK_BOARD.md`, `docs/PROJECT_STATE.md`, and `docs/DEVELOPMENT_SLICES.md` when their tracked state changes.
 - Update `docs/AGENT_HANDOFF.md` before stopping.
 - Respect prerequisite order in `docs/DEVELOPMENT_SLICES.md`; do not jump to deferred dashboard, real provider, MCP, or full agent-controller work before the required harness, policy, and evidence gates are ready.
+- Project-specific specifics or roadmap documents may exist in subfolders added as optional in `docs/`.

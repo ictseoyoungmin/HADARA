@@ -25,3 +25,4 @@
 | T-0021 | Agent Loop Minimal Harness | Done | tasks/T-0021-agent-loop-minimal-harness | Docker check, CLI run smoke, and harness validation passed. |
 | T-0022 | Protocol Instruction Consolidation | Done | tasks/T-0022-protocol-instruction-consolidation | Reusable first-session HADARA protocol consolidated into AGENTS and SOP docs. |
 | T-0023 | Workspace File Boundary | Done | tasks/T-0023-workspace-file-boundary | Realpath workspace resolver and boundary regression tests passed Docker validation. |
+| T-0024 | Evidence Artifact Redaction | Done | tasks/T-0024-evidence-artifact-redaction | Public text artifact secret scan and binary rejection passed Docker validation. |

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { redactSecrets } from '../../src/core/redaction';
+import { containsSecret, redactSecrets } from '../../src/core/redaction';
 
 describe('redactSecrets', () => {
   it('redacts common secret-like values', () => {
@@ -7,5 +7,10 @@ describe('redactSecrets', () => {
     const output = redactSecrets(input);
     expect(output).toContain('[REDACTED]');
     expect(output).not.toContain('super-secret');
+  });
+
+  it('detects common secret-like values without changing clean text', () => {
+    expect(containsSecret('Authorization: Bearer abcdefghijklmnop')).toBe(true);
+    expect(containsSecret('test output is clean')).toBe(false);
   });
 });

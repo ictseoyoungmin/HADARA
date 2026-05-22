@@ -61,6 +61,41 @@ describe('Task Capsule harness', () => {
     expect(fs.existsSync(path.join(task.dir, index[0].evidencePath))).toBe(true);
   });
 
+  it('rejects public artifact copies when text contains secret-like values', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Reject secret artifact');
+    fs.writeFileSync(path.join(root, 'secret.log'), 'token=super-secret', 'utf8');
+
+    expect(() =>
+      appendEvidence(root, {
+        taskId: task.id,
+        kind: 'test-log',
+        path: 'secret.log',
+        summary: 'Should reject',
+        result: 'blocked'
+      })
+    ).toThrow(/secret-like content/);
+    expect(fs.existsSync(path.join(task.dir, 'artifacts'))).toBe(false);
+    expect(fs.existsSync(path.join(task.dir, 'evidence.jsonl'))).toBe(false);
+  });
+
+  it('rejects public binary artifact copies', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Reject binary artifact');
+    fs.writeFileSync(path.join(root, 'binary.bin'), Buffer.from([0x48, 0x00, 0x49]));
+
+    expect(() =>
+      appendEvidence(root, {
+        taskId: task.id,
+        kind: 'screenshot',
+        path: 'binary.bin',
+        summary: 'Binary artifact',
+        result: 'blocked'
+      })
+    ).toThrow(/UTF-8 text/);
+    expect(fs.existsSync(path.join(task.dir, 'artifacts'))).toBe(false);
+  });
+
   it('separates private evidence paths from public summaries', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Collect private evidence');

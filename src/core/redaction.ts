@@ -10,3 +10,10 @@ const SECRET_PATTERNS: RegExp[] = [
 export function redactSecrets(input: string): string {
   return SECRET_PATTERNS.reduce((text, pattern) => text.replace(pattern, '$1[REDACTED]'), input);
 }
+
+export function containsSecret(input: string): boolean {
+  return SECRET_PATTERNS.some((pattern) => {
+    pattern.lastIndex = 0;
+    return pattern.test(input);
+  });
+}

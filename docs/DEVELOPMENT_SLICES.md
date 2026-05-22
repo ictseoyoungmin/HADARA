@@ -14,6 +14,9 @@ HADARA development should proceed in small, evidence-backed slices. Each slice m
 | 8 | Task Capsule format validation | T-0020 | Enforce Markdown format markers so handoff/context compression cannot silently drift capsule structure. | Done: Docker check and format drift regression tests. |
 | 9 | Agent loop minimal harness | T-0021 | Implement a bounded deterministic loop using ScriptedProvider responses and fake shell observations first. | Done: Docker check, CLI run smoke, evidence index validation, and T-0021 harness validation. |
 | 10 | Workspace file boundary | T-0023 | Ensure CLI file inputs are confined to project-root realpaths before broader tool/file surfaces grow. | Done: Docker check passed, 18 test files passed, 74 tests passed, T-0023 harness validation passed. |
-| 11 | Hermes/MCP bridge expansion | TBD | Expose stable read/write contracts after CLI harness surfaces are reliable. | Harness validate through external-agent contract. |
-| 12 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
-| 13 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |
+| 11 | Evidence artifact redaction | T-0024 | Prevent public committed artifacts from carrying secrets or binary private data. | Done: Docker check passed, 18 test files passed, 78 tests passed, T-0024 harness validation passed. |
+| 12 | CLI args parser | T-0025 | Split growing option parsing into strict reusable helpers. | Strict parser tests and CLI regression checks. |
+| 13 | Agent loop evidence attachment | T-0026 | Attach deterministic fake-shell loop outputs as evidence without real shell execution. | Fake observation evidence records and JSON smoke. |
+| 14 | Hermes/MCP bridge expansion | TBD | Expose stable read/write contracts after CLI harness surfaces are reliable. | Harness validate through external-agent contract. |
+| 15 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
+| 16 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |
