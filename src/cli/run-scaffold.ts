@@ -1,4 +1,5 @@
 import path from 'node:path';
+import fs from 'node:fs';
 import { ensureDir, writeFileIfMissing } from '../core/fs';
 import { ScriptedProviderStep } from '../providers/scripted-provider';
 import { FakeShellFixtures } from '../tools/fake-shell';
@@ -48,8 +49,20 @@ export function scaffoldRunScenario(projectRoot: string, input: RunScenarioScaff
     }
   };
 
-  writeFileIfMissing(scriptPath, `${JSON.stringify(script, null, 2)}\n`);
-  writeFileIfMissing(fixturesPath, `${JSON.stringify(fixtures, null, 2)}\n`);
+  const portableScriptPath = toPortablePath(path.relative(projectRoot, scriptPath));
+  const portableFixturesPath = toPortablePath(path.relative(projectRoot, fixturesPath));
+  if (fs.existsSync(scriptPath)) {
+    throw new Error(`scenario already exists: ${portableScriptPath}`);
+  }
+  if (fs.existsSync(fixturesPath)) {
+    throw new Error(`scenario already exists: ${portableFixturesPath}`);
+  }
+  if (!writeFileIfMissing(scriptPath, `${JSON.stringify(script, null, 2)}\n`)) {
+    throw new Error(`scenario already exists: ${portableScriptPath}`);
+  }
+  if (!writeFileIfMissing(fixturesPath, `${JSON.stringify(fixtures, null, 2)}\n`)) {
+    throw new Error(`scenario already exists: ${portableFixturesPath}`);
+  }
 
   return {
     schemaVersion: 'hadara.run.scaffold.v1',
@@ -57,8 +70,8 @@ export function scaffoldRunScenario(projectRoot: string, input: RunScenarioScaff
     ok: true,
     taskId: input.taskId,
     shellCommand: input.command,
-    scriptPath: toPortablePath(path.relative(projectRoot, scriptPath)),
-    fixturesPath: toPortablePath(path.relative(projectRoot, fixturesPath))
+    scriptPath: portableScriptPath,
+    fixturesPath: portableFixturesPath
   };
 }
 

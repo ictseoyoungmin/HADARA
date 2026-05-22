@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createTaskListReport, createTaskShowReport, formatTaskListReport } from '../../src/cli/task-json';
 import { createTaskCapsule } from '../../src/task/task-capsule';
+import { extractTaskCreateTitle } from '../../src/cli/task';
 
 const roots: string[] = [];
 
@@ -86,5 +87,8 @@ describe('CLI task JSON reports', () => {
       ]
     });
   });
-});
 
+  it('extracts task create title without global flags', () => {
+    expect(extractTaskCreateTitle(['task', 'create', 'Foo', '--project', '/tmp/repo', '--json'])).toBe('Foo');
+  });
+});

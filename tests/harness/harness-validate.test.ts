@@ -205,6 +205,34 @@ describe('Harness Task Capsule validation', () => {
     expect(result.issues).toEqual([]);
   });
 
+  it('reports unsupported evidence index enum values', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Bad evidence enum');
+    fs.writeFileSync(
+      path.join(task.dir, 'evidence.jsonl'),
+      `${JSON.stringify({
+        schemaVersion: 'hadara.evidence.v1',
+        time: '2026-05-22T00:00:00.000Z',
+        taskId: task.id,
+        kind: 'note',
+        summary: 'Bad enum',
+        result: 'success',
+        visibility: 'public'
+      })}\n`,
+      'utf8'
+    );
+
+    const result = validateTaskCapsule(root, task.id);
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'error',
+        code: 'EVIDENCE_INDEX_ENUM_INVALID'
+      })
+    );
+  });
+
   it('returns a validation envelope when the task is missing', () => {
     const root = tempProject();
 

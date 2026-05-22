@@ -139,4 +139,25 @@ describe('run CLI input validation', () => {
       issues: []
     });
   });
+
+  it('rejects duplicate run scaffold files instead of keeping stale output', () => {
+    const root = tempProject();
+    scaffoldRunScenario(root, {
+      taskId: 'T-0001',
+      command: 'npm test',
+      stdout: 'first',
+      stderr: '',
+      exitCode: 0
+    });
+
+    expect(() =>
+      scaffoldRunScenario(root, {
+        taskId: 'T-0001',
+        command: 'npm test',
+        stdout: 'second',
+        stderr: '',
+        exitCode: 1
+      })
+    ).toThrow(/scenario already exists: \.hadara\/scenarios\/t-0001-npm-test\.script\.json/);
+  });
 });

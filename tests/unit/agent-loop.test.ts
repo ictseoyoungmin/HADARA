@@ -23,6 +23,16 @@ describe('Agent loop minimal harness', () => {
     expect(result.steps[0]).toMatchObject({ type: 'assistant', ok: true });
   });
 
+  it('rejects unsupported permission modes before loop execution', async () => {
+    await expect(
+      runAgentLoop({
+        request: 'summarize task',
+        provider: new ScriptedProvider([{ response: 'never reached' }]),
+        mode: 'asistted' as never
+      })
+    ).rejects.toThrow(/unsupported permission mode/);
+  });
+
   it('executes a fake shell request and feeds the observation back to the provider', async () => {
     const result = await runAgentLoop({
       taskId: 'T-0021',
@@ -106,6 +116,40 @@ describe('Agent loop minimal harness', () => {
         }
       }
     });
+  });
+
+  it('fails the loop when a fake shell command exits non-zero', async () => {
+    const result = await runAgentLoop({
+      request: 'please run failing check',
+      provider: new ScriptedProvider([
+        {
+          match: 'please run failing check',
+          response: JSON.stringify({ type: 'tool_request', tool: 'fake_shell', command: 'npm test' }),
+          finishReason: 'tool_call'
+        },
+        {
+          match: 'tests failed',
+          response: 'Continuing after failed command.'
+        }
+      ]),
+      mode: 'auto',
+      fakeShellFixtures: {
+        'npm test': {
+          exitCode: 1,
+          stdout: 'tests failed'
+        }
+      }
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.finalResponse).toBe('Continuing after failed command.');
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'error',
+        code: 'FAKE_SHELL_COMPLETED',
+        step: 1
+      })
+    );
   });
 
   it('stops when tool requests exceed maxSteps', async () => {

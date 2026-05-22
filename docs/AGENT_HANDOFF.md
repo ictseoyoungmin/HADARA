@@ -40,6 +40,7 @@ main
 - Completed T-0034 CLI Policy Handler Extraction by moving policy check/preflight CLI handling to `src/cli/policy.ts`.
 - Completed T-0035 CLI Hermes and Handoff Handler Extraction by moving Hermes handling to `src/cli/hermes.ts` and handoff handling to `src/cli/handoff.ts`.
 - Completed T-0036 CLI Remaining Handler Extraction by moving init, doctor, task, mcp, and run handling out of `src/cli/main.ts`.
+- Completed T-0037 Runtime Validation and Harness Semantics by hardening permission modes, evidence enums, fake-shell failure outcomes, scaffold reuse, and task title parsing.
 - Verified Docker `npm ci && npm run check`: 16 test files passed, 64 tests passed.
 - Verified Docker `hadara harness validate --task T-0019 --json`: `ok: true` after capsule doc normalization.
 - Verified Docker `hadara harness validate --task T-0020 --json`: `ok: true`.
@@ -139,3 +140,6 @@ No active implementation task.
 - Docker check after T-0036: 21 test files passed, 97 tests passed.
 - Built CLI init, doctor, task, mcp, run scaffold, and scaffolded run smokes passed after extraction.
 - Docker `node dist/cli/main.js harness validate --task T-0036 --level done --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
+- Docker check after T-0037: 21 test files passed, 105 tests passed.
+- Built CLI hardening smokes passed for invalid mode, invalid evidence result, duplicate scaffold, and non-zero fake-shell run failure.
+- Docker `node dist/cli/main.js harness validate --task T-0037 --level done --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { resolveProjectFile, WorkspaceFileError } from '../core/workspace';
-import { PermissionMode } from '../policy/policy';
+import { parsePermissionMode, PermissionMode } from '../policy/policy';
 import { attachAgentLoopEvidence } from '../agent/evidence';
 import { AgentLoopResult, runAgentLoop } from '../agent/loop';
 import { ScriptedProvider, ScriptedProviderStep } from '../providers/scripted-provider';
@@ -34,7 +34,7 @@ export async function handleRunCommand(input: RunCommandInput): Promise<boolean>
   }
 
   const taskId = getStringOption(input.args, '--task');
-  const mode = (getStringOption(input.args, '--mode', 'assisted') ?? 'assisted') as PermissionMode;
+  const mode = parsePermissionMode(getStringOption(input.args, '--mode', 'assisted') ?? 'assisted');
   const request = extractRunRequest(input.args) || (taskId ? `Run task ${taskId}` : 'Run HADARA deterministic harness task.');
   let result;
   try {

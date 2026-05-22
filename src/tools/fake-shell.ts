@@ -1,4 +1,4 @@
-import { PermissionMode } from '../policy/policy';
+import { parsePermissionMode, PermissionMode } from '../policy/policy';
 import { createShellExecutionPreflight, ShellExecutionPreflight } from '../policy/preflight';
 
 export interface FakeShellCommandResult {
@@ -34,10 +34,11 @@ export function runFakeShellCommand(input: {
   mode: PermissionMode;
   fixtures: FakeShellFixtures;
 }): FakeShellObservation {
-  const preflight = createShellExecutionPreflight(input.command, input.mode);
+  const mode = parsePermissionMode(input.mode);
+  const preflight = createShellExecutionPreflight(input.command, mode);
 
   if (preflight.execution.status === 'denied') {
-    return toObservation(input.command, input.mode, preflight, {
+    return toObservation(input.command, mode, preflight, {
       status: 'policy_denied',
       exitCode: preflight.execution.exitCodeIfBlocked ?? 2,
       stdout: '',
@@ -47,7 +48,7 @@ export function runFakeShellCommand(input: {
   }
 
   if (preflight.execution.status === 'requires_approval') {
-    return toObservation(input.command, input.mode, preflight, {
+    return toObservation(input.command, mode, preflight, {
       status: 'requires_approval',
       exitCode: 0,
       stdout: '',
@@ -58,7 +59,7 @@ export function runFakeShellCommand(input: {
 
   const result = input.fixtures[input.command];
   if (!result) {
-    return toObservation(input.command, input.mode, preflight, {
+    return toObservation(input.command, mode, preflight, {
       status: 'not_configured',
       exitCode: 127,
       stdout: '',
@@ -67,7 +68,7 @@ export function runFakeShellCommand(input: {
     });
   }
 
-  return toObservation(input.command, input.mode, preflight, {
+  return toObservation(input.command, mode, preflight, {
     status: 'completed',
     exitCode: result.exitCode,
     stdout: result.stdout ?? '',

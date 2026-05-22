@@ -1,4 +1,4 @@
-import { classifyShellCommand, PermissionMode, PolicyDecision, ShellCommandAst, tokenizeShellCommand } from './policy';
+import { classifyShellCommand, parsePermissionMode, PermissionMode, PolicyDecision, ShellCommandAst, tokenizeShellCommand } from './policy';
 
 export type ShellExecutionStatus = 'allowed' | 'requires_approval' | 'denied';
 
@@ -22,8 +22,9 @@ export interface ShellExecutionPreflight {
 }
 
 export function createShellExecutionPreflight(command: string, mode: PermissionMode): ShellExecutionPreflight {
+  const normalizedMode = parsePermissionMode(mode);
   const shell = tokenizeShellCommand(command);
-  const decision = classifyShellCommand(command, mode);
+  const decision = classifyShellCommand(command, normalizedMode);
   const execution = toExecutionGate(decision);
 
   return {
@@ -31,7 +32,7 @@ export function createShellExecutionPreflight(command: string, mode: PermissionM
     command: 'policy.preflight-shell',
     ok: execution.status !== 'denied',
     input: {
-      mode,
+      mode: normalizedMode,
       command
     },
     shell,
@@ -65,4 +66,3 @@ function toExecutionGate(decision: PolicyDecision): ShellExecutionPreflight['exe
     exitCodeIfBlocked: 2
   };
 }
-

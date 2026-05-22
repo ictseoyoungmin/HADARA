@@ -10,7 +10,7 @@ export interface TaskCommandInput {
 export function handleTaskCommand(input: TaskCommandInput): boolean {
   const sub = input.args[1];
   if (sub === 'create') {
-    const title = input.args.slice(2).join(' ').trim();
+    const title = extractTaskCreateTitle(input.args);
     if (!title) throw new Error('task create requires a title');
     const task = createTaskCapsule(input.projectRoot, title);
     console.log(`[HADARA] Created ${task.id}: ${task.title}`);
@@ -44,4 +44,20 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   return false;
+}
+
+export function extractTaskCreateTitle(args: string[]): string {
+  const optionsWithValues = new Set(['--project']);
+  const titleParts: string[] = [];
+  for (let index = 2; index < args.length; index += 1) {
+    const value = args[index];
+    if (value === '--json') continue;
+    if (optionsWithValues.has(value)) {
+      index += 1;
+      continue;
+    }
+    if (value.startsWith('--')) continue;
+    titleParts.push(value);
+  }
+  return titleParts.join(' ').trim();
 }

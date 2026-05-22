@@ -40,6 +40,10 @@ const REQUIRED_TASK_FILES = [
   'HANDOFF.md'
 ];
 
+const EVIDENCE_KINDS = new Set(['test-log', 'command-log', 'diff-summary', 'screenshot', 'note']);
+const EVIDENCE_RESULTS = new Set(['passed', 'failed', 'blocked', 'unknown']);
+const EVIDENCE_VISIBILITIES = new Set(['public', 'private']);
+
 export interface HarnessValidateOptions {
   level?: HarnessValidationLevel;
 }
@@ -201,7 +205,13 @@ function validateEvidenceIndex(projectRoot: string, task: TaskCapsule, issues: H
 
   content.split(/\r?\n/).forEach((line, index) => {
     try {
-      const record = JSON.parse(line) as { schemaVersion?: unknown; taskId?: unknown; kind?: unknown; result?: unknown };
+      const record = JSON.parse(line) as {
+        schemaVersion?: unknown;
+        taskId?: unknown;
+        kind?: unknown;
+        result?: unknown;
+        visibility?: unknown;
+      };
       if (record.schemaVersion !== 'hadara.evidence.v1') {
         issues.push({
           severity: 'error',
@@ -215,6 +225,18 @@ function validateEvidenceIndex(projectRoot: string, task: TaskCapsule, issues: H
           severity: 'error',
           code: 'EVIDENCE_INDEX_RECORD_INVALID',
           message: `evidence.jsonl line ${index + 1} is missing required evidence fields.`,
+          path: relativePath
+        });
+      }
+      if (
+        (typeof record.kind === 'string' && !EVIDENCE_KINDS.has(record.kind)) ||
+        (typeof record.result === 'string' && !EVIDENCE_RESULTS.has(record.result)) ||
+        (typeof record.visibility === 'string' && !EVIDENCE_VISIBILITIES.has(record.visibility))
+      ) {
+        issues.push({
+          severity: 'error',
+          code: 'EVIDENCE_INDEX_ENUM_INVALID',
+          message: `evidence.jsonl line ${index + 1} has an unsupported evidence enum value.`,
           path: relativePath
         });
       }

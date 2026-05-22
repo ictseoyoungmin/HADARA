@@ -1,4 +1,4 @@
-import { PermissionMode } from '../policy/policy';
+import { parsePermissionMode, PermissionMode } from '../policy/policy';
 import { ChatMessage, ChatResponse, ProviderClient, ProviderError } from '../providers/provider-contract';
 import { FakeShellFixtures, FakeShellObservation, runFakeShellCommand } from '../tools/fake-shell';
 
@@ -61,7 +61,7 @@ interface FakeShellToolRequest {
 }
 
 export async function runAgentLoop(input: AgentLoopInput): Promise<AgentLoopResult> {
-  const mode = input.mode ?? 'assisted';
+  const mode = parsePermissionMode(input.mode ?? 'assisted');
   const maxSteps = input.maxSteps ?? 6;
   const fixtures = input.fakeShellFixtures ?? {};
   const steps: AgentLoopStep[] = [];
@@ -102,10 +102,11 @@ export async function runAgentLoop(input: AgentLoopInput): Promise<AgentLoopResu
 
     const toolRequest = parseFakeShellToolRequest(response.content);
     if (!toolRequest) {
+      const toolFailed = steps.some((item) => item.type === 'tool' && !item.ok);
       return {
         schemaVersion: 'hadara.agent.loop.v1',
         command: 'agent.loop',
-        ok: issues.every((issue) => issue.severity !== 'error') && response.finishReason !== 'error',
+        ok: !toolFailed && issues.every((issue) => issue.severity !== 'error') && response.finishReason !== 'error',
         ...(input.taskId ? { taskId: input.taskId } : {}),
         mode,
         request: input.request,
@@ -131,7 +132,7 @@ export async function runAgentLoop(input: AgentLoopInput): Promise<AgentLoopResu
 
     if (!observation.ok) {
       issues.push({
-        severity: observation.result.status === 'policy_denied' ? 'error' : 'warning',
+        severity: 'error',
         code: `FAKE_SHELL_${observation.result.status.toUpperCase()}`,
         message: observation.result.reason ?? observation.result.stderr,
         step

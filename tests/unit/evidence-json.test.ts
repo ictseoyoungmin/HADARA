@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEvidenceCollectReport } from '../../src/cli/evidence-json';
+import { parseEvidenceResult } from '../../src/cli/evidence';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -160,5 +161,9 @@ describe('CLI evidence JSON reports', () => {
     });
     expect(fs.existsSync(path.join(task.dir, 'artifacts'))).toBe(false);
     expect(JSON.stringify(report)).not.toContain('sk-abcdefghijklmnopqrstuvwxyz');
+  });
+
+  it('rejects unsupported evidence result values at runtime', () => {
+    expect(() => parseEvidenceResult('success')).toThrow(/unsupported evidence result/);
   });
 });

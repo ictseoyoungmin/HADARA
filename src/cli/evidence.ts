@@ -15,7 +15,7 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
   const taskId = getRequiredStringOption(input.args, '--task');
   const kind = parseEvidenceKind(getStringOption(input.args, '--kind', 'note') ?? 'note');
   const summary = getStringOption(input.args, '--summary') ?? 'Manual evidence collection placeholder.';
-  const result = (getStringOption(input.args, '--result', 'unknown') ?? 'unknown') as EvidenceRecord['result'];
+  const result = parseEvidenceResult(getStringOption(input.args, '--result', 'unknown') ?? 'unknown');
   const evidenceFile = getStringOption(input.args, '--path');
   const visibility = getFlag(input.args, '--private') ? 'private' : 'public';
 
@@ -43,4 +43,11 @@ export function parseEvidenceKind(value: string): EvidenceRecord['kind'] {
     return value as EvidenceRecord['kind'];
   }
   throw new Error(`unsupported evidence kind: ${value}`);
+}
+
+export function parseEvidenceResult(value: string): EvidenceRecord['result'] {
+  if (value === 'passed' || value === 'failed' || value === 'blocked' || value === 'unknown') {
+    return value;
+  }
+  throw new Error(`unsupported evidence result: ${value}`);
 }

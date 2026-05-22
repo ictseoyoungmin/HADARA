@@ -97,4 +97,14 @@ describe('fake shell harness', () => {
       reason: 'Fake shell fixtures must explicitly define allowed command outputs.'
     });
   });
+
+  it('rejects unsupported permission modes before policy fallback', () => {
+    expect(() =>
+      runFakeShellCommand({
+        command: 'npm run check',
+        mode: 'asistted' as never,
+        fixtures: {}
+      })
+    ).toThrow(/unsupported permission mode/);
+  });
 });

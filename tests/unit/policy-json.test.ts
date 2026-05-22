@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createPolicyCheckReport, extractPolicyCommandText } from '../../src/cli/policy-json';
+import { classifyShellCommand, parsePermissionMode } from '../../src/policy/policy';
 
 describe('CLI policy JSON reports', () => {
   it('returns a stable envelope for safe assisted commands that require approval', () => {
@@ -44,5 +45,9 @@ describe('CLI policy JSON reports', () => {
 
     expect(command).toBe('npm run check');
   });
-});
 
+  it('rejects unsupported permission modes at runtime', () => {
+    expect(() => parsePermissionMode('asistted')).toThrow(/unsupported permission mode/);
+    expect(() => classifyShellCommand('npm run check', 'asistted' as never)).toThrow(/unsupported permission mode/);
+  });
+});
