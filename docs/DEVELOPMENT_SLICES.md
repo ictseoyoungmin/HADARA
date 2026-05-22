@@ -19,6 +19,7 @@ HADARA development should proceed in small, evidence-backed slices. Each slice m
 | 13 | Agent loop evidence attachment | T-0026 | Attach deterministic fake-shell loop outputs as evidence without real shell execution. | Done: Docker check passed, T-0026 harness validation passed, run JSON smoke recorded evidence metadata. |
 | 14 | Deterministic ScriptedProvider and Capsule Evidence Index | T-0027 | Ensure deterministic scripts are consumed in order and new capsules include required evidence indexes. | Done: Docker check passed, T-0027 harness validation passed, task-create smoke confirmed empty `evidence.jsonl`. |
 | 15 | Init profiles protocol docs | T-0028 | Improve first-use HADARA initialization with protocol docs and profile selection. | Done: Docker check passed, T-0028 harness validation passed, full-profile Hermes export smoke passed. |
-| 16 | Hermes/MCP bridge expansion | TBD | Expose stable read/write contracts after CLI harness surfaces are reliable. | Harness validate through external-agent contract. |
-| 17 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
-| 18 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |
+| 16 | Done-level harness validation | T-0029 | Add completion gates beyond structural Task Capsule validation. | Done: Docker check passed, done-level harness validation passed. |
+| 17 | Hermes/MCP bridge expansion | TBD | Expose stable read/write contracts after CLI harness surfaces are reliable. | Harness validate through external-agent contract. |
+| 18 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
+| 19 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |

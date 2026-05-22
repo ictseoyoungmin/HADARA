@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { appendEvidence } from '../../src/evidence/evidence';
 import { validateTaskCapsule } from '../../src/harness/validate';
 import { createTaskCapsule } from '../../src/task/task-capsule';
+import { parseHarnessValidationLevel } from '../../src/cli/main';
 
 const roots: string[] = [];
 
@@ -35,6 +36,7 @@ describe('Harness Task Capsule validation', () => {
       schemaVersion: 'hadara.harness.validate.v1',
       command: 'harness.validate',
       ok: true,
+      level: 'draft',
       task: {
         id: task.id,
         title: 'Validate capsule',
@@ -45,6 +47,56 @@ describe('Harness Task Capsule validation', () => {
     expect(result.checkedFiles).toContain(`tasks/${task.id}-validate-capsule/TASK.md`);
     expect(result.checkedFiles).toContain(`tasks/${task.id}-validate-capsule/EVIDENCE.md`);
     expect(result.checkedFiles).toContain(`tasks/${task.id}-validate-capsule/evidence.jsonl`);
+  });
+
+  it('keeps draft-level validation structural for incomplete capsules', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Draft level');
+
+    const result = validateTaskCapsule(root, task.id, { level: 'draft' });
+
+    expect(result.ok).toBe(true);
+    expect(result.level).toBe('draft');
+    expect(result.issues).toEqual([]);
+  });
+
+  it('reports done-level completion gaps', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Incomplete done');
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(false);
+    expect(result.level).toBe('done');
+    expect(result.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(['TASK_STATUS_NOT_DONE', 'ACCEPTANCE_INCOMPLETE', 'EVIDENCE_REQUIRED', 'HANDOFF_PLACEHOLDER'])
+    );
+  });
+
+  it('accepts done-level validation for completed capsules', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Completed capsule');
+    markTaskDone(root, task.id);
+    markAcceptanceDone(task.dir);
+    writeHandoffDone(task.dir);
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'note',
+      summary: 'Done-level validation evidence',
+      result: 'passed'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(true);
+    expect(result.level).toBe('done');
+    expect(result.issues).toEqual([]);
+  });
+
+  it('rejects unsupported harness validation levels', () => {
+    expect(parseHarnessValidationLevel('draft')).toBe('draft');
+    expect(parseHarnessValidationLevel('done')).toBe('done');
+    expect(() => parseHarnessValidationLevel('release')).toThrow(/unsupported harness validation level/);
   });
 
   it('reports missing required capsule files as schema errors', () => {
@@ -167,3 +219,25 @@ describe('Harness Task Capsule validation', () => {
     ]);
   });
 });
+
+function markTaskDone(projectRoot: string, taskId: string): void {
+  const taskDir = fs
+    .readdirSync(path.join(projectRoot, 'tasks'))
+    .find((entry) => entry.startsWith(`${taskId}-`));
+  if (!taskDir) throw new Error(`Missing task dir for ${taskId}`);
+  const taskPath = path.join(projectRoot, 'tasks', taskDir, 'TASK.md');
+  fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace(/\nDraft\n$/, '\nDone\n'), 'utf8');
+}
+
+function markAcceptanceDone(taskDir: string): void {
+  const acceptancePath = path.join(taskDir, 'ACCEPTANCE.md');
+  fs.writeFileSync(acceptancePath, fs.readFileSync(acceptancePath, 'utf8').replace(/- \[ \]/g, '- [x]'), 'utf8');
+}
+
+function writeHandoffDone(taskDir: string): void {
+  fs.writeFileSync(
+    path.join(taskDir, 'HANDOFF.md'),
+    '# Handoff\n\n## Last Completed\n\nDone-level validation fixture completed.\n\n## Next Recommended Step\n\nContinue with the next task.\n',
+    'utf8'
+  );
+}

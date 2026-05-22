@@ -3,6 +3,7 @@ import path from 'node:path';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 
 export type HarnessValidationSeverity = 'error' | 'warning';
+export type HarnessValidationLevel = 'draft' | 'done';
 
 export interface HarnessValidationIssue {
   severity: HarnessValidationSeverity;
@@ -15,6 +16,7 @@ export interface HarnessValidateResult {
   schemaVersion: 'hadara.harness.validate.v1';
   command: 'harness.validate';
   ok: boolean;
+  level: HarnessValidationLevel;
   task: {
     id: string;
     title: string;
@@ -38,13 +40,19 @@ const REQUIRED_TASK_FILES = [
   'HANDOFF.md'
 ];
 
-export function validateTaskCapsule(projectRoot: string, taskId: string): HarnessValidateResult {
+export interface HarnessValidateOptions {
+  level?: HarnessValidationLevel;
+}
+
+export function validateTaskCapsule(projectRoot: string, taskId: string, options: HarnessValidateOptions = {}): HarnessValidateResult {
+  const level = options.level ?? 'draft';
   const task = findTask(projectRoot, taskId);
   if (!task) {
     return {
       schemaVersion: 'hadara.harness.validate.v1',
       command: 'harness.validate',
       ok: false,
+      level,
       task: { id: taskId, title: '', capsule: '' },
       checkedFiles: [],
       issues: [
@@ -78,11 +86,15 @@ export function validateTaskCapsule(projectRoot: string, taskId: string): Harnes
   validateCapsuleFormatMarkdown(projectRoot, task, issues);
   validateEvidenceMarkdown(projectRoot, task, issues);
   validateEvidenceIndex(projectRoot, task, issues);
+  if (level === 'done') {
+    validateDoneLevel(projectRoot, task, issues);
+  }
 
   return {
     schemaVersion: 'hadara.harness.validate.v1',
     command: 'harness.validate',
     ok: !issues.some((issue) => issue.severity === 'error'),
+    level,
     task: {
       id: task.id,
       title: task.title,
@@ -215,6 +227,94 @@ function validateEvidenceIndex(projectRoot: string, task: TaskCapsule, issues: H
       });
     }
   });
+}
+
+function validateDoneLevel(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+  validateTaskStatusDone(projectRoot, task, issues);
+  validateAcceptanceDone(projectRoot, task, issues);
+  validateEvidenceIndexHasRecords(projectRoot, task, issues);
+  validateHandoffDone(projectRoot, task, issues);
+}
+
+function validateTaskStatusDone(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+  const taskPath = path.join(task.dir, 'TASK.md');
+  if (!fs.existsSync(taskPath)) return;
+
+  const relativePath = toPortablePath(path.relative(projectRoot, taskPath));
+  const status = readSectionBody(taskPath, '## Status');
+  if (!/^Done\b/i.test(status.trim())) {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_STATUS_NOT_DONE',
+      message: 'Done-level validation requires TASK.md status to be Done.',
+      path: relativePath
+    });
+  }
+}
+
+function validateAcceptanceDone(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+  const acceptancePath = path.join(task.dir, 'ACCEPTANCE.md');
+  if (!fs.existsSync(acceptancePath)) return;
+
+  const relativePath = toPortablePath(path.relative(projectRoot, acceptancePath));
+  const checklistLines = fs
+    .readFileSync(acceptancePath, 'utf8')
+    .split(/\r?\n/)
+    .filter((line) => /^-\s+\[[ xX]\]/.test(line.trim()));
+  if (checklistLines.length === 0 || checklistLines.some((line) => /^-\s+\[\s\]/.test(line.trim()))) {
+    issues.push({
+      severity: 'error',
+      code: 'ACCEPTANCE_INCOMPLETE',
+      message: 'Done-level validation requires all acceptance checkboxes to be checked.',
+      path: relativePath
+    });
+  }
+}
+
+function validateEvidenceIndexHasRecords(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+  const indexPath = path.join(task.dir, 'evidence.jsonl');
+  if (!fs.existsSync(indexPath)) return;
+
+  const relativePath = toPortablePath(path.relative(projectRoot, indexPath));
+  if (!fs.readFileSync(indexPath, 'utf8').trim()) {
+    issues.push({
+      severity: 'error',
+      code: 'EVIDENCE_REQUIRED',
+      message: 'Done-level validation requires at least one evidence.jsonl record.',
+      path: relativePath
+    });
+  }
+}
+
+function validateHandoffDone(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+  const handoffPath = path.join(task.dir, 'HANDOFF.md');
+  if (!fs.existsSync(handoffPath)) return;
+
+  const relativePath = toPortablePath(path.relative(projectRoot, handoffPath));
+  const lastCompleted = readSectionBody(handoffPath, '## Last Completed').trim();
+  const nextStep = readSectionBody(handoffPath, '## Next Recommended Step').trim();
+  if (isPlaceholderSection(lastCompleted) || isPlaceholderSection(nextStep)) {
+    issues.push({
+      severity: 'error',
+      code: 'HANDOFF_PLACEHOLDER',
+      message: 'Done-level validation requires non-placeholder handoff sections.',
+      path: relativePath
+    });
+  }
+}
+
+function readSectionBody(filePath: string, heading: string): string {
+  const content = fs.readFileSync(filePath, 'utf8');
+  const start = content.indexOf(heading);
+  if (start < 0) return '';
+  const afterHeading = content.slice(start + heading.length);
+  const nextHeading = afterHeading.search(/\n##\s+/);
+  return nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading;
+}
+
+function isPlaceholderSection(value: string): boolean {
+  const normalized = value.trim();
+  return normalized.length === 0 || /^TBD\.?$/i.test(normalized);
 }
 
 function toPortablePath(value: string): string {

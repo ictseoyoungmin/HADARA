@@ -11,7 +11,7 @@ import { updateHandoff } from '../handoff/handoff';
 import { PermissionMode } from '../policy/policy';
 import { createShellExecutionPreflight } from '../policy/preflight';
 import { detectHermesContext, exportHadaraContext } from '../hermes/context-export';
-import { validateTaskCapsule } from '../harness/validate';
+import { HarnessValidationLevel, validateTaskCapsule } from '../harness/validate';
 import { replayScenario } from '../harness/replay';
 import { attachAgentLoopEvidence } from '../agent/evidence';
 import { AgentLoopResult, runAgentLoop } from '../agent/loop';
@@ -37,7 +37,7 @@ Usage:
   hadara handoff update --task <task-id> [--summary <text>] [--next <text>]
   hadara policy check-shell <command> [--mode readonly|assisted|trusted|auto|release]
   hadara policy preflight-shell <command> [--mode readonly|assisted|trusted|auto|release] [--json]
-  hadara harness validate --task <task-id> [--json]
+  hadara harness validate --task <task-id> [--level draft|done] [--json]
   hadara harness replay <scenario.jsonl> [--json]
   hadara hermes detect
   hadara hermes export-context
@@ -265,7 +265,8 @@ async function main(): Promise<void> {
       const sub = args[1];
       if (sub === 'validate') {
         const taskId = getRequiredStringOption(args, '--task');
-        const result = validateTaskCapsule(paths.projectRoot, taskId);
+        const level = parseHarnessValidationLevel(getStringOption(args, '--level', 'draft') ?? 'draft');
+        const result = validateTaskCapsule(paths.projectRoot, taskId, { level });
         if (jsonOutput) {
           console.log(JSON.stringify(result, null, 2));
         } else if (result.ok) {
@@ -379,6 +380,11 @@ export function attachRunEvidence(projectRoot: string, result: AgentLoopResult):
 export function parseInitProfile(value: string): InitProfile {
   if (value === 'minimal' || value === 'full' || value === 'hadara-protocol') return value;
   throw new Error(`unsupported init profile: ${value}`);
+}
+
+export function parseHarnessValidationLevel(value: string): HarnessValidationLevel {
+  if (value === 'draft' || value === 'done') return value;
+  throw new Error(`unsupported harness validation level: ${value}`);
 }
 
 function createArchitectureDoc(profile: InitProfile): string {

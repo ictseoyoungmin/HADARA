@@ -1,0 +1,2 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-22T07:28:04.149Z","taskId":"T-0029","kind":"test-log","summary":"Docker `npm ci && npm run check` passed: 21 test files passed, 96 tests passed.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-22T07:29:46.772Z","taskId":"T-0029","kind":"command-log","summary":"Docker built CLI `harness validate --task T-0029 --level done --json` returned `ok: true`.","result":"passed","visibility":"public"}

@@ -32,6 +32,7 @@ main
 - Completed T-0026 Agent Loop Evidence Attachment with fake-shell observation command-log artifacts and run JSON evidence metadata.
 - Completed T-0027 Deterministic Scripted Provider and Capsule Evidence Index with sequential script consumption and empty `evidence.jsonl` scaffolding.
 - Completed T-0028 Init Profiles Protocol Docs with `minimal`, `full`, and `hadara-protocol` init profiles and baseline protocol docs.
+- Completed T-0029 Done-Level Harness Validation with `--level draft|done` and completion gates for Done status, acceptance, evidence, and handoff.
 - Verified Docker `npm ci && npm run check`: 16 test files passed, 64 tests passed.
 - Verified Docker `hadara harness validate --task T-0019 --json`: `ok: true` after capsule doc normalization.
 - Verified Docker `hadara harness validate --task T-0020 --json`: `ok: true`.
@@ -71,7 +72,7 @@ No active implementation task.
 
 ## Next Recommended Step
 
-1. Consider P1 done-level harness validation next.
+1. Consider P2 run scenario scaffold helper next: `hadara run scaffold --task <id> --command "npm test"`.
 2. Track npm audit findings separately.
 3. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy/evidence gates are stronger.
 
@@ -101,10 +102,12 @@ No active implementation task.
 - `tasks/T-0026-agent-loop-evidence-attachment/EVIDENCE.md`
 - `tasks/T-0027-deterministic-scripted-provider-capsule-index/EVIDENCE.md`
 - `tasks/T-0028-init-profiles-protocol-docs/EVIDENCE.md`
-- Docker check: 21 test files passed, 92 tests passed.
+- `tasks/T-0029-done-level-harness-validation/EVIDENCE.md`
+- Docker check: 21 test files passed, 96 tests passed.
 - Docker `node dist/cli/main.js harness validate --task T-0026 --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
 - Docker built CLI `hadara run --task T-0026 ... --json`: `ok: true`, with one command-log evidence attachment.
 - Docker `node dist/cli/main.js harness validate --task T-0027 --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
 - Docker built CLI task-create smoke: new capsule had an empty `evidence.jsonl` and validated with `ok: true`.
 - Docker `node dist/cli/main.js harness validate --task T-0028 --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
 - Docker built CLI `hadara init --profile full` plus `hermes export-context --json`: `ok: true`.
+- Docker `node dist/cli/main.js harness validate --task T-0029 --level done --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
