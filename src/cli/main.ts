@@ -3,21 +3,20 @@ import fs from 'node:fs';
 import { resolveHadaraPaths } from '../core/paths';
 import { resolveProjectFile, WorkspaceFileError } from '../core/workspace';
 import { createTaskCapsule } from '../task/task-capsule';
-import { updateHandoff } from '../handoff/handoff';
 import { PermissionMode } from '../policy/policy';
-import { detectHermesContext, exportHadaraContext } from '../hermes/context-export';
 import { attachAgentLoopEvidence } from '../agent/evidence';
 import { AgentLoopResult, runAgentLoop } from '../agent/loop';
 import { ScriptedProvider, ScriptedProviderStep } from '../providers/scripted-provider';
 import { FakeShellFixtures } from '../tools/fake-shell';
 import { createDoctorReport, formatDoctorReport } from './doctor';
 import { createTaskListReport, createTaskShowReport, formatTaskListReport } from './task-json';
-import { createHermesDetectReport, createHermesExportContextReport } from './hermes-json';
 import { initProject, parseInitProfile } from './init';
 import { scaffoldRunScenario } from './run-scaffold';
 import { handleHarnessCommand } from './harness';
 import { handleEvidenceCommand } from './evidence';
 import { handlePolicyCommand } from './policy';
+import { handleHermesCommand } from './hermes';
+import { handleHandoffCommand } from './handoff';
 import { getFlag, getIntegerOption, getRequiredStringOption, getStringOption } from './args';
 
 function printHelp(): void {
@@ -118,15 +117,7 @@ async function main(): Promise<void> {
     }
 
     case 'handoff': {
-      const sub = args[1];
-      if (sub === 'update') {
-        const taskId = getStringOption(args, '--task');
-        const summary = getStringOption(args, '--summary');
-        const nextStep = getStringOption(args, '--next');
-        const filePath = updateHandoff({ projectRoot: paths.projectRoot, taskId, summary, nextStep });
-        console.log(`[HADARA] Handoff updated: ${filePath}`);
-        return;
-      }
+      if (handleHandoffCommand({ args, projectRoot: paths.projectRoot })) return;
       break;
     }
 
@@ -136,24 +127,7 @@ async function main(): Promise<void> {
     }
 
     case 'hermes': {
-      const sub = args[1];
-      if (sub === 'detect') {
-        if (jsonOutput) {
-          console.log(JSON.stringify(createHermesDetectReport(paths.projectRoot), null, 2));
-        } else {
-          console.log(JSON.stringify(detectHermesContext(paths.projectRoot), null, 2));
-        }
-        return;
-      }
-      if (sub === 'export-context') {
-        if (jsonOutput) {
-          console.log(JSON.stringify(createHermesExportContextReport(paths.projectRoot), null, 2));
-        } else {
-          const filePath = exportHadaraContext(paths.projectRoot);
-          console.log(`[HADARA] Exported Hermes/Harness context: ${filePath}`);
-        }
-        return;
-      }
+      if (handleHermesCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 

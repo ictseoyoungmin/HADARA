@@ -50,6 +50,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - CLI handler extraction has started: init profile logic lives in `src/cli/init.ts`, run scaffold logic lives in `src/cli/run-scaffold.ts`, harness CLI handling lives in `src/cli/harness.ts`, and `src/cli/main.ts` remains the dispatcher.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
+- Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.
 - Real provider adapters are not implemented.
 - Dashboard is not implemented.
 - MCP server is not implemented.

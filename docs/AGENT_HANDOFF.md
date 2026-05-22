@@ -38,6 +38,7 @@ main
 - Completed T-0032 CLI Harness Handler Extraction by moving harness validate/replay CLI handling to `src/cli/harness.ts`.
 - Completed T-0033 CLI Evidence Handler Extraction by moving evidence collect CLI handling to `src/cli/evidence.ts`.
 - Completed T-0034 CLI Policy Handler Extraction by moving policy check/preflight CLI handling to `src/cli/policy.ts`.
+- Completed T-0035 CLI Hermes and Handoff Handler Extraction by moving Hermes handling to `src/cli/hermes.ts` and handoff handling to `src/cli/handoff.ts`.
 - Verified Docker `npm ci && npm run check`: 16 test files passed, 64 tests passed.
 - Verified Docker `hadara harness validate --task T-0019 --json`: `ok: true` after capsule doc normalization.
 - Verified Docker `hadara harness validate --task T-0020 --json`: `ok: true`.
@@ -77,7 +78,7 @@ No active implementation task.
 
 ## Next Recommended Step
 
-1. Continue command handler extraction by moving another cohesive command group, such as Hermes or handoff, out of `src/cli/main.ts`.
+1. Continue command handler extraction by moving another cohesive command group, such as task commands, out of `src/cli/main.ts`.
 2. Track npm audit findings separately.
 3. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy/evidence gates are stronger.
 
@@ -131,3 +132,6 @@ No active implementation task.
 - Docker check after T-0034: 21 test files passed, 97 tests passed.
 - Built CLI policy check-shell/preflight-shell JSON/text smokes passed after extraction.
 - Docker `node dist/cli/main.js harness validate --task T-0034 --level done --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
+- Docker check after T-0035: 21 test files passed, 97 tests passed.
+- Built CLI Hermes detect/export-context JSON/text smokes and handoff update smoke passed after extraction.
+- Docker `node dist/cli/main.js harness validate --task T-0035 --level done --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
