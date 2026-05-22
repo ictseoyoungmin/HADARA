@@ -42,6 +42,7 @@ Usage:
   hadara hermes detect
   hadara hermes export-context
   hadara mcp serve
+  hadara run scaffold --task <task-id> --command <command> [--stdout <text>] [--stderr <text>] [--exit-code <n>] [--json]
   hadara run [request] --script <script.json> [--task <task-id>] [--fake-shell-fixtures <fixtures.json>] [--mode readonly|assisted|trusted|auto|release] [--max-steps <n>] [--json]
 
 Environment:
@@ -311,6 +312,24 @@ async function main(): Promise<void> {
     }
 
     case 'run': {
+      const sub = args[1];
+      if (sub === 'scaffold') {
+        const report = scaffoldRunScenario(paths.projectRoot, {
+          taskId: getRequiredStringOption(args, '--task'),
+          command: getRequiredStringOption(args, '--command'),
+          stdout: getStringOption(args, '--stdout', 'scaffolded fake-shell output') ?? 'scaffolded fake-shell output',
+          stderr: getStringOption(args, '--stderr', '') ?? '',
+          exitCode: getIntegerOption(args, '--exit-code', { fallback: 0, min: 0, max: 255 }) ?? 0
+        });
+        if (jsonOutput) {
+          console.log(JSON.stringify(report, null, 2));
+        } else {
+          console.log(`[HADARA] Run scenario scaffolded: ${report.scriptPath}`);
+          console.log(`[HADARA] Fake shell fixtures: ${report.fixturesPath}`);
+        }
+        return;
+      }
+
       const taskId = getStringOption(args, '--task');
       const mode = (getStringOption(args, '--mode', 'assisted') ?? 'assisted') as PermissionMode;
       const request = extractRunRequest(args) || (taskId ? `Run task ${taskId}` : 'Run HADARA deterministic harness task.');
@@ -375,6 +394,77 @@ export function attachRunEvidence(projectRoot: string, result: AgentLoopResult):
       ]
     };
   }
+}
+
+export interface RunScenarioScaffoldInput {
+  taskId: string;
+  command: string;
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+}
+
+export interface RunScenarioScaffoldReport {
+  schemaVersion: 'hadara.run.scaffold.v1';
+  command: 'run.scaffold';
+  ok: true;
+  taskId: string;
+  shellCommand: string;
+  scriptPath: string;
+  fixturesPath: string;
+}
+
+export function scaffoldRunScenario(projectRoot: string, input: RunScenarioScaffoldInput): RunScenarioScaffoldReport {
+  const scenarioDir = path.join(projectRoot, '.hadara', 'scenarios');
+  ensureDir(scenarioDir);
+  const fileBase = `${safeScenarioPart(input.taskId)}-${safeScenarioPart(input.command)}`;
+  const scriptPath = path.join(scenarioDir, `${fileBase}.script.json`);
+  const fixturesPath = path.join(scenarioDir, `${fileBase}.fixtures.json`);
+  const matchText = `Run ${input.taskId} scaffolded command`;
+
+  const script: ScriptedProviderStep[] = [
+    {
+      match: matchText,
+      response: JSON.stringify({ type: 'tool_request', tool: 'fake_shell', command: input.command }),
+      finishReason: 'tool_call'
+    },
+    {
+      match: input.stdout,
+      response: `Scaffolded fake-shell command completed: ${input.command}`
+    }
+  ];
+  const fixtures: FakeShellFixtures = {
+    [input.command]: {
+      exitCode: input.exitCode,
+      stdout: input.stdout,
+      stderr: input.stderr
+    }
+  };
+
+  writeFileIfMissing(scriptPath, `${JSON.stringify(script, null, 2)}\n`);
+  writeFileIfMissing(fixturesPath, `${JSON.stringify(fixtures, null, 2)}\n`);
+
+  return {
+    schemaVersion: 'hadara.run.scaffold.v1',
+    command: 'run.scaffold',
+    ok: true,
+    taskId: input.taskId,
+    shellCommand: input.command,
+    scriptPath: toPortablePath(path.relative(projectRoot, scriptPath)),
+    fixturesPath: toPortablePath(path.relative(projectRoot, fixturesPath))
+  };
+}
+
+function safeScenarioPart(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'scenario';
+}
+
+function toPortablePath(value: string): string {
+  return value.split(path.sep).join('/');
 }
 
 export function parseInitProfile(value: string): InitProfile {

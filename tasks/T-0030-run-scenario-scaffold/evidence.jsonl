@@ -1,0 +1,3 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-22T07:38:47.182Z","taskId":"T-0030","kind":"test-log","summary":"Docker `npm ci && npm run check` passed: 21 test files passed, 97 tests passed.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-22T07:38:47.182Z","taskId":"T-0030","kind":"command-log","summary":"Docker built CLI smoke generated a run scaffold and executed it with `hadara run`, returning `ok: true`.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-22T07:41:07.806Z","taskId":"T-0030","kind":"command-log","summary":"Docker built CLI `harness validate --task T-0030 --level done --json` returned `ok: true`.","result":"passed","visibility":"public"}

@@ -2,7 +2,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { attachRunEvidence, parseRunMaxSteps, readFakeShellFixtures, readScriptedProviderSteps } from '../../src/cli/main';
+import {
+  attachRunEvidence,
+  parseRunMaxSteps,
+  readFakeShellFixtures,
+  readScriptedProviderSteps,
+  scaffoldRunScenario
+} from '../../src/cli/main';
 import { WorkspaceFileError } from '../../src/core/workspace';
 import { runAgentLoop } from '../../src/agent/loop';
 import { ScriptedProvider } from '../../src/providers/scripted-provider';
@@ -95,5 +101,42 @@ describe('run CLI input validation', () => {
         markdownPath: `tasks/${task.id}-run-evidence-metadata/EVIDENCE.md`
       })
     ]);
+  });
+
+  it('scaffolds deterministic run script and fake shell fixtures', async () => {
+    const root = tempProject();
+    const report = scaffoldRunScenario(root, {
+      taskId: 'T-0001',
+      command: 'npm test',
+      stdout: 'tests passed',
+      stderr: '',
+      exitCode: 0
+    });
+
+    expect(report).toEqual({
+      schemaVersion: 'hadara.run.scaffold.v1',
+      command: 'run.scaffold',
+      ok: true,
+      taskId: 'T-0001',
+      shellCommand: 'npm test',
+      scriptPath: '.hadara/scenarios/t-0001-npm-test.script.json',
+      fixturesPath: '.hadara/scenarios/t-0001-npm-test.fixtures.json'
+    });
+
+    const script = readScriptedProviderSteps(root, report.scriptPath);
+    const fixtures = readFakeShellFixtures(root, report.fixturesPath);
+    const result = await runAgentLoop({
+      taskId: 'T-0001',
+      request: 'Run T-0001 scaffolded command',
+      provider: new ScriptedProvider(script),
+      mode: 'auto',
+      fakeShellFixtures: fixtures
+    });
+
+    expect(result).toMatchObject({
+      ok: true,
+      finalResponse: 'Scaffolded fake-shell command completed: npm test',
+      issues: []
+    });
   });
 });

@@ -31,3 +31,4 @@
 | T-0027 | Deterministic Scripted Provider and Capsule Evidence Index | Done | tasks/T-0027-deterministic-scripted-provider-capsule-index | Sequential scripts and empty evidence indexes passed Docker validation. |
 | T-0028 | Init Profiles Protocol Docs | Done | tasks/T-0028-init-profiles-protocol-docs | Init profiles and protocol doc scaffolding passed Docker validation. |
 | T-0029 | Done-Level Harness Validation | Done | tasks/T-0029-done-level-harness-validation | Draft/done validation levels passed Docker validation. |
+| T-0030 | Run Scenario Scaffold | Done | tasks/T-0030-run-scenario-scaffold | Deterministic run scaffold helper passed Docker validation. |

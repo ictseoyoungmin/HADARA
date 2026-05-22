@@ -20,6 +20,7 @@ HADARA development should proceed in small, evidence-backed slices. Each slice m
 | 14 | Deterministic ScriptedProvider and Capsule Evidence Index | T-0027 | Ensure deterministic scripts are consumed in order and new capsules include required evidence indexes. | Done: Docker check passed, T-0027 harness validation passed, task-create smoke confirmed empty `evidence.jsonl`. |
 | 15 | Init profiles protocol docs | T-0028 | Improve first-use HADARA initialization with protocol docs and profile selection. | Done: Docker check passed, T-0028 harness validation passed, full-profile Hermes export smoke passed. |
 | 16 | Done-level harness validation | T-0029 | Add completion gates beyond structural Task Capsule validation. | Done: Docker check passed, done-level harness validation passed. |
-| 17 | Hermes/MCP bridge expansion | TBD | Expose stable read/write contracts after CLI harness surfaces are reliable. | Harness validate through external-agent contract. |
-| 18 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
-| 19 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |
+| 17 | Run scenario scaffold | T-0030 | Generate deterministic run script and fake-shell fixture files for demo/task workflows. | Done: Docker check passed, built CLI scaffold/run smoke returned `ok: true`. |
+| 18 | Hermes/MCP bridge expansion | TBD | Expose stable read/write contracts after CLI harness surfaces are reliable. | Harness validate through external-agent contract. |
+| 19 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
+| 20 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |

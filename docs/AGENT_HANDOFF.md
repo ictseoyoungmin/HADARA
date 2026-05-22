@@ -33,6 +33,7 @@ main
 - Completed T-0027 Deterministic Scripted Provider and Capsule Evidence Index with sequential script consumption and empty `evidence.jsonl` scaffolding.
 - Completed T-0028 Init Profiles Protocol Docs with `minimal`, `full`, and `hadara-protocol` init profiles and baseline protocol docs.
 - Completed T-0029 Done-Level Harness Validation with `--level draft|done` and completion gates for Done status, acceptance, evidence, and handoff.
+- Completed T-0030 Run Scenario Scaffold with deterministic script/fixture generation under `.hadara/scenarios/`.
 - Verified Docker `npm ci && npm run check`: 16 test files passed, 64 tests passed.
 - Verified Docker `hadara harness validate --task T-0019 --json`: `ok: true` after capsule doc normalization.
 - Verified Docker `hadara harness validate --task T-0020 --json`: `ok: true`.
@@ -72,7 +73,7 @@ No active implementation task.
 
 ## Next Recommended Step
 
-1. Consider P2 run scenario scaffold helper next: `hadara run scaffold --task <id> --command "npm test"`.
+1. Consider Hermes/MCP bridge expansion if the current CLI/harness contracts are sufficient.
 2. Track npm audit findings separately.
 3. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy/evidence gates are stronger.
 
@@ -103,7 +104,8 @@ No active implementation task.
 - `tasks/T-0027-deterministic-scripted-provider-capsule-index/EVIDENCE.md`
 - `tasks/T-0028-init-profiles-protocol-docs/EVIDENCE.md`
 - `tasks/T-0029-done-level-harness-validation/EVIDENCE.md`
-- Docker check: 21 test files passed, 96 tests passed.
+- `tasks/T-0030-run-scenario-scaffold/EVIDENCE.md`
+- Docker check: 21 test files passed, 97 tests passed.
 - Docker `node dist/cli/main.js harness validate --task T-0026 --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
 - Docker built CLI `hadara run --task T-0026 ... --json`: `ok: true`, with one command-log evidence attachment.
 - Docker `node dist/cli/main.js harness validate --task T-0027 --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
@@ -111,3 +113,5 @@ No active implementation task.
 - Docker `node dist/cli/main.js harness validate --task T-0028 --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
 - Docker built CLI `hadara init --profile full` plus `hermes export-context --json`: `ok: true`.
 - Docker `node dist/cli/main.js harness validate --task T-0029 --level done --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
+- Docker built CLI `hadara run scaffold ...` followed by scaffolded `hadara run ... --json`: `ok: true`.
+- Docker `node dist/cli/main.js harness validate --task T-0030 --level done --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
