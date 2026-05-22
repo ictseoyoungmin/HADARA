@@ -6,9 +6,9 @@ import {
   attachRunEvidence,
   parseRunMaxSteps,
   readFakeShellFixtures,
-  readScriptedProviderSteps,
-  scaffoldRunScenario
+  readScriptedProviderSteps
 } from '../../src/cli/main';
+import { scaffoldRunScenario } from '../../src/cli/run-scaffold';
 import { WorkspaceFileError } from '../../src/core/workspace';
 import { runAgentLoop } from '../../src/agent/loop';
 import { ScriptedProvider } from '../../src/providers/scripted-provider';

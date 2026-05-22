@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { initProject, parseInitProfile } from '../../src/cli/main';
+import { initProject, parseInitProfile } from '../../src/cli/init';
 
 const roots: string[] = [];
 let logSpy: ReturnType<typeof vi.spyOn>;
