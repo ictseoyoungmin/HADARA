@@ -44,6 +44,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Agent loop evidence attachment exists: deterministic fake-shell observations from `hadara run --task ...` can be attached as managed public command-log artifacts and reported in run JSON output.
 - ScriptedProvider now consumes scripted steps in order for deterministic replay semantics.
 - Task Capsule creation now includes an empty `evidence.jsonl` required by harness validation.
+- Init profiles exist as `hadara init --profile minimal|full|hadara-protocol`; default/minimal init creates core HADARA protocol docs for Hermes/export-context readiness.
 - Real provider adapters are not implemented.
 - Dashboard is not implemented.
 - MCP server is not implemented.

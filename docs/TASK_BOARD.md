@@ -29,3 +29,4 @@
 | T-0025 | CLI Args Parser | Done | tasks/T-0025-cli-args-parser | Strict option helpers and malformed value regressions passed Docker validation. |
 | T-0026 | Agent Loop Evidence Attachment | Done | tasks/T-0026-agent-loop-evidence-attachment | Fake-shell observation evidence attachments passed Docker validation. |
 | T-0027 | Deterministic Scripted Provider and Capsule Evidence Index | Done | tasks/T-0027-deterministic-scripted-provider-capsule-index | Sequential scripts and empty evidence indexes passed Docker validation. |
+| T-0028 | Init Profiles Protocol Docs | Done | tasks/T-0028-init-profiles-protocol-docs | Init profiles and protocol doc scaffolding passed Docker validation. |
