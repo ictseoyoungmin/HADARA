@@ -34,6 +34,7 @@ const REQUIRED_TASK_FILES = [
   'RISKS.md',
   'DECISIONS.md',
   'EVIDENCE.md',
+  'evidence.jsonl',
   'HANDOFF.md'
 ];
 

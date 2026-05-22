@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import fs from 'node:fs';
 import path from 'node:path';
 import { resolveHadaraPaths } from '../core/paths';
 import { ensureDir, writeFileIfMissing } from '../core/fs';
@@ -11,6 +12,9 @@ import { createShellExecutionPreflight } from '../policy/preflight';
 import { detectHermesContext, exportHadaraContext } from '../hermes/context-export';
 import { validateTaskCapsule } from '../harness/validate';
 import { replayScenario } from '../harness/replay';
+import { runAgentLoop } from '../agent/loop';
+import { ScriptedProvider, ScriptedProviderStep } from '../providers/scripted-provider';
+import { FakeShellFixtures } from '../tools/fake-shell';
 import { createDoctorReport, formatDoctorReport } from './doctor';
 import { createTaskListReport, createTaskShowReport, formatTaskListReport } from './task-json';
 import { createPolicyCheckReport, extractPolicyCommandText } from './policy-json';
@@ -35,7 +39,7 @@ Usage:
   hadara hermes detect
   hadara hermes export-context
   hadara mcp serve
-  hadara run <request>
+  hadara run [request] --script <script.json> [--task <task-id>] [--fake-shell-fixtures <fixtures.json>] [--mode readonly|assisted|trusted|auto|release] [--max-steps <n>] [--json]
 
 Environment:
   HADARA_HOME           Portable/USB root. Defaults to current working directory.
@@ -301,9 +305,34 @@ async function main(): Promise<void> {
     }
 
     case 'run': {
-      console.log('[HADARA] Agent execution is not implemented in bootstrap skeleton.');
-      console.log(`Request: ${args.slice(1).join(' ')}`);
-      console.log('Use task/evidence/handoff commands to dogfood the HADARA protocol manually first.');
+      const scriptPath = getOption(args, '--script');
+      if (!scriptPath) throw new Error('run requires --script <script.json> in bootstrap harness mode');
+      const taskId = getOption(args, '--task');
+      const mode = (getOption(args, '--mode', 'assisted') ?? 'assisted') as PermissionMode;
+      const maxSteps = Number(getOption(args, '--max-steps', '6'));
+      const fixturesPath = getOption(args, '--fake-shell-fixtures');
+      const request = extractRunRequest(args) || (taskId ? `Run task ${taskId}` : 'Run HADARA deterministic harness task.');
+      const script = readScriptedProviderSteps(paths.projectRoot, scriptPath);
+      const fakeShellFixtures = fixturesPath ? readFakeShellFixtures(paths.projectRoot, fixturesPath) : {};
+      const result = await runAgentLoop({
+        taskId,
+        request,
+        provider: new ScriptedProvider(script),
+        mode,
+        maxSteps,
+        fakeShellFixtures
+      });
+      if (jsonOutput) {
+        console.log(JSON.stringify(result, null, 2));
+      } else if (result.ok) {
+        console.log(`[HADARA] Agent loop passed: ${result.finalResponse ?? ''}`);
+      } else {
+        console.log('[HADARA] Agent loop failed.');
+        for (const issue of result.issues) {
+          console.log(`- ${issue.code}: ${issue.message}${issue.step ? ` (step ${issue.step})` : ''}`);
+        }
+      }
+      if (!result.ok) process.exitCode = 6;
       return;
     }
   }
@@ -317,6 +346,74 @@ function parseEvidenceKind(value: string): EvidenceRecord['kind'] {
     return value as EvidenceRecord['kind'];
   }
   throw new Error(`unsupported evidence kind: ${value}`);
+}
+
+function extractRunRequest(args: string[]): string {
+  const optionsWithValues = new Set(['--project', '--task', '--script', '--fake-shell-fixtures', '--mode', '--max-steps']);
+  const requestParts: string[] = [];
+  for (let index = 1; index < args.length; index += 1) {
+    const value = args[index];
+    if (value === '--json') continue;
+    if (optionsWithValues.has(value)) {
+      index += 1;
+      continue;
+    }
+    if (value.startsWith('--')) continue;
+    requestParts.push(value);
+  }
+  return requestParts.join(' ').trim();
+}
+
+function readScriptedProviderSteps(projectRoot: string, scriptPath: string): ScriptedProviderStep[] {
+  const parsed = readJsonFile(projectRoot, scriptPath);
+  if (!Array.isArray(parsed)) throw new Error('run --script must point to a JSON array');
+  return parsed.map((item, index) => {
+    if (!item || typeof item !== 'object') {
+      throw new Error(`run --script item ${index + 1} must be an object`);
+    }
+    const record = item as Record<string, unknown>;
+    if (typeof record.response !== 'string') {
+      throw new Error(`run --script item ${index + 1} requires a string response`);
+    }
+    return {
+      response: record.response,
+      ...(typeof record.match === 'string' ? { match: record.match } : {}),
+      ...(isScriptedFinishReason(record.finishReason) ? { finishReason: record.finishReason } : {})
+    };
+  });
+}
+
+function readFakeShellFixtures(projectRoot: string, fixturesPath: string): FakeShellFixtures {
+  const parsed = readJsonFile(projectRoot, fixturesPath);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('run --fake-shell-fixtures must point to a JSON object');
+  }
+
+  const fixtures: FakeShellFixtures = {};
+  for (const [command, value] of Object.entries(parsed)) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      throw new Error(`fake shell fixture for ${command} must be an object`);
+    }
+    const record = value as Record<string, unknown>;
+    if (typeof record.exitCode !== 'number') {
+      throw new Error(`fake shell fixture for ${command} requires numeric exitCode`);
+    }
+    fixtures[command] = {
+      exitCode: record.exitCode,
+      ...(typeof record.stdout === 'string' ? { stdout: record.stdout } : {}),
+      ...(typeof record.stderr === 'string' ? { stderr: record.stderr } : {})
+    };
+  }
+  return fixtures;
+}
+
+function readJsonFile(projectRoot: string, filePath: string): unknown {
+  const resolvedPath = path.resolve(projectRoot, filePath);
+  return JSON.parse(fs.readFileSync(resolvedPath, 'utf8')) as unknown;
+}
+
+function isScriptedFinishReason(value: unknown): value is ScriptedProviderStep['finishReason'] {
+  return value === 'stop' || value === 'length' || value === 'tool_call' || value === 'error';
 }
 
 main().catch((error) => {

@@ -18,6 +18,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - ScriptedProvider exists for deterministic harness/replay provider behavior.
 - Provider fallback executor exists for deterministic chat fallback orchestration.
 - Fake shell preflight harness exists for deterministic tool observations without real shell execution.
+- Minimal deterministic agent loop harness exists for ScriptedProvider responses plus fake shell observations.
 - Task Capsule creation exists.
 - Evidence append writes Markdown summaries, `evidence.jsonl` indexes, and managed public artifact copies.
 - Handoff update exists.
@@ -30,10 +31,12 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Evidence collect CLI JSON output exists as `hadara evidence collect --json`.
 - Harness Task Capsule validation exists as `hadara harness validate --task <id> --json`.
 - Harness Task Capsule validation enforces core Markdown format markers for Task Capsule continuity.
+- Harness Task Capsule validation requires `evidence.jsonl` so completed work cannot miss the evidence index.
 - Harness replay skeleton exists as `hadara harness replay <scenario.jsonl> --json`.
 - Config/path resolver has realpath containment, environment priority, Windows path normalization, and project data boundary tests.
 - Policy evaluator has a minimal tokenizer, safe command allowlist, destructive command denial tests, and shell execution preflight.
 - Tool runtime work has started with fake shell observations gated by policy preflight.
+- Agent loop work has started with bounded deterministic `hadara run --script ... --fake-shell-fixtures ... --json`.
 - Real provider adapters are not implemented.
 - Dashboard is not implemented.
 - MCP server is not implemented.

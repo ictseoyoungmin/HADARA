@@ -23,9 +23,13 @@ main
 - Completed T-0019 Shell Preflight Harness with deterministic fake shell observations gated by policy preflight.
 - Normalized T-0019 Task Capsule Markdown format to match neighboring capsules.
 - Completed T-0020 Task Capsule Format Validation to detect Markdown format drift in harness validation.
-- Verified Docker `npm ci && npm run check`: 15 test files passed, 59 tests passed.
+- Completed T-0021 Agent Loop Minimal Harness with deterministic `hadara run --script ... --fake-shell-fixtures ... --json`.
+- Hardened harness validation to require `evidence.jsonl` and cover missing evidence indexes with regression tests.
+- Verified Docker `npm ci && npm run check`: 16 test files passed, 64 tests passed.
 - Verified Docker `hadara harness validate --task T-0019 --json`: `ok: true` after capsule doc normalization.
 - Verified Docker `hadara harness validate --task T-0020 --json`: `ok: true`.
+- Verified Docker `hadara run ... --json`: `ok: true` with fake shell observation.
+- Verified Docker `hadara harness validate --task T-0021 --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
 
 ## In Progress
 
@@ -54,7 +58,7 @@ No active implementation task.
 
 1. Push branch and confirm GitHub Actions CI passes with Node 22.
 2. Track npm audit findings separately.
-3. Begin a minimal agent loop harness that combines ScriptedProvider responses with fake tool observations.
+3. Extend minimal agent loop scenarios, such as JSONL replay coverage for tool-using runs or evidence attachment from loop outputs.
 4. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy loop is stronger.
 
 ## Evidence
@@ -75,4 +79,5 @@ No active implementation task.
 - `tasks/T-0018-provider-fallback-executor/EVIDENCE.md`
 - `tasks/T-0019-shell-preflight-harness/EVIDENCE.md`
 - `tasks/T-0020-task-capsule-format-validation/EVIDENCE.md`
-- Docker check: 15 test files passed, 59 tests passed.
+- `tasks/T-0021-agent-loop-minimal-harness/EVIDENCE.md`
+- Docker check: 16 test files passed, 64 tests passed.

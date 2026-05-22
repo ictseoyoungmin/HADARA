@@ -22,6 +22,12 @@ describe('Harness Task Capsule validation', () => {
   it('returns a stable successful JSON envelope for a complete capsule', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Validate capsule');
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'note',
+      summary: 'Validation evidence row',
+      result: 'passed'
+    });
 
     const result = validateTaskCapsule(root, task.id);
 
@@ -38,11 +44,18 @@ describe('Harness Task Capsule validation', () => {
     });
     expect(result.checkedFiles).toContain(`tasks/${task.id}-validate-capsule/TASK.md`);
     expect(result.checkedFiles).toContain(`tasks/${task.id}-validate-capsule/EVIDENCE.md`);
+    expect(result.checkedFiles).toContain(`tasks/${task.id}-validate-capsule/evidence.jsonl`);
   });
 
   it('reports missing required capsule files as schema errors', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Broken capsule');
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'note',
+      summary: 'Validation evidence row',
+      result: 'passed'
+    });
     fs.rmSync(path.join(task.dir, 'TESTS.md'));
 
     const result = validateTaskCapsule(root, task.id);
@@ -53,6 +66,23 @@ describe('Harness Task Capsule validation', () => {
         severity: 'error',
         code: 'MISSING_TASK_FILE',
         path: `tasks/${task.id}-broken-capsule/TESTS.md`
+      })
+    );
+  });
+
+  it('reports a missing evidence index as a schema error', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Missing evidence index');
+
+    const result = validateTaskCapsule(root, task.id);
+
+    expect(result.ok).toBe(false);
+    expect(result.checkedFiles).toContain(`tasks/${task.id}-missing-evidence-index/evidence.jsonl`);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'error',
+        code: 'MISSING_TASK_FILE',
+        path: `tasks/${task.id}-missing-evidence-index/evidence.jsonl`
       })
     );
   });
@@ -79,6 +109,12 @@ describe('Harness Task Capsule validation', () => {
   it('reports Task Capsule Markdown format drift', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Format drift');
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'note',
+      summary: 'Validation evidence row',
+      result: 'passed'
+    });
     fs.writeFileSync(path.join(task.dir, 'ACCEPTANCE.md'), '# Acceptance\n\n- done\n', 'utf8');
     fs.writeFileSync(path.join(task.dir, 'FILES.md'), '# Files\n\n- src/example.ts\n', 'utf8');
     fs.writeFileSync(path.join(task.dir, 'TESTS.md'), '# Tests\n\n- npm test\n', 'utf8');
