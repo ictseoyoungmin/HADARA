@@ -73,6 +73,7 @@ describe('Harness Task Capsule validation', () => {
   it('reports a missing evidence index as a schema error', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Missing evidence index');
+    fs.rmSync(path.join(task.dir, 'evidence.jsonl'));
 
     const result = validateTaskCapsule(root, task.id);
 

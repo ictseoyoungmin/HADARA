@@ -30,6 +30,7 @@ main
 - Completed T-0024 Evidence Artifact Redaction with public text artifact scanning, binary rejection, and JSON policy issues.
 - Completed T-0025 CLI Args Parser with strict reusable option helpers and malformed option value rejection.
 - Completed T-0026 Agent Loop Evidence Attachment with fake-shell observation command-log artifacts and run JSON evidence metadata.
+- Completed T-0027 Deterministic Scripted Provider and Capsule Evidence Index with sequential script consumption and empty `evidence.jsonl` scaffolding.
 - Verified Docker `npm ci && npm run check`: 16 test files passed, 64 tests passed.
 - Verified Docker `hadara harness validate --task T-0019 --json`: `ok: true` after capsule doc normalization.
 - Verified Docker `hadara harness validate --task T-0020 --json`: `ok: true`.
@@ -69,7 +70,7 @@ No active implementation task.
 
 ## Next Recommended Step
 
-1. Start the next development slice after T-0026.
+1. Consider P1 feedback next: init profiles (`minimal`/`full`) or done-level harness validation.
 2. Track npm audit findings separately.
 3. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy/evidence gates are stronger.
 
@@ -97,6 +98,9 @@ No active implementation task.
 - `tasks/T-0024-evidence-artifact-redaction/EVIDENCE.md`
 - `tasks/T-0025-cli-args-parser/EVIDENCE.md`
 - `tasks/T-0026-agent-loop-evidence-attachment/EVIDENCE.md`
-- Docker check: 20 test files passed, 87 tests passed.
+- `tasks/T-0027-deterministic-scripted-provider-capsule-index/EVIDENCE.md`
+- Docker check: 20 test files passed, 89 tests passed.
 - Docker `node dist/cli/main.js harness validate --task T-0026 --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
 - Docker built CLI `hadara run --task T-0026 ... --json`: `ok: true`, with one command-log evidence attachment.
+- Docker `node dist/cli/main.js harness validate --task T-0027 --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
+- Docker built CLI task-create smoke: new capsule had an empty `evidence.jsonl` and validated with `ok: true`.

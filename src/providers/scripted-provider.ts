@@ -26,15 +26,23 @@ export class ScriptedProvider implements ProviderClient {
     costProfile: 'free'
   };
 
+  private currentIndex = 0;
+
   constructor(private readonly script: ScriptedProviderStep[]) {}
 
   async chat(request: ChatRequest): Promise<ChatResponse> {
     const last = request.messages.at(-1)?.content ?? '';
-    const step = this.script.find((item) => !item.match || last.includes(item.match));
+    const step = this.script[this.currentIndex];
     if (!step) {
-      throw this.normalizeError(new Error(`No scripted response matched: ${last}`));
+      throw this.normalizeError(new Error(`ScriptedProvider exhausted after ${this.currentIndex} step(s). Last message: ${last}`));
+    }
+    if (step.match && !last.includes(step.match)) {
+      throw this.normalizeError(
+        new Error(`ScriptedProvider step ${this.currentIndex + 1} expected message containing "${step.match}". Last message: ${last}`)
+      );
     }
 
+    this.currentIndex += 1;
     return {
       provider: this.id,
       model: request.model ?? 'scripted-model',

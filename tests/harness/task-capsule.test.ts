@@ -25,6 +25,7 @@ describe('Task Capsule harness', () => {
     expect(task.id).toBe('T-0001');
     expect(fs.existsSync(path.join(task.dir, 'TASK.md'))).toBe(true);
     expect(fs.existsSync(path.join(task.dir, 'ACCEPTANCE.md'))).toBe(true);
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe('');
     expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain(
       '| Time | Kind | Summary | Result |\n|---|---|---|---|'
     );
@@ -76,7 +77,7 @@ describe('Task Capsule harness', () => {
       })
     ).toThrow(/secret-like content/);
     expect(fs.existsSync(path.join(task.dir, 'artifacts'))).toBe(false);
-    expect(fs.existsSync(path.join(task.dir, 'evidence.jsonl'))).toBe(false);
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe('');
   });
 
   it('rejects public binary artifact copies', () => {

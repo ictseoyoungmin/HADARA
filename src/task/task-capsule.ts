@@ -19,6 +19,7 @@ const TASK_FILES: Record<string, (task: TaskCapsule) => string> = {
   'RISKS.md': () => `# Risks\n\n| Risk | Mitigation |\n|---|---|\n`,
   'DECISIONS.md': () => `# Decisions\n\nRecord task-local design decisions here.\n`,
   'EVIDENCE.md': () => `# Evidence\n\n| Time | Kind | Summary | Result |\n|---|---|---|---|\n`,
+  'evidence.jsonl': () => '',
   'HANDOFF.md': () => `# Handoff\n\n## Last Completed\n\nTBD.\n\n## Next Recommended Step\n\nTBD.\n`
 };
 

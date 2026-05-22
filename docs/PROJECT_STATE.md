@@ -42,6 +42,8 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Evidence artifact redaction baseline exists: public artifacts must be UTF-8 text and pass secret-pattern scanning before committed copy.
 - Strict CLI argument helper parsing exists for string, required string, integer, and boolean flag options.
 - Agent loop evidence attachment exists: deterministic fake-shell observations from `hadara run --task ...` can be attached as managed public command-log artifacts and reported in run JSON output.
+- ScriptedProvider now consumes scripted steps in order for deterministic replay semantics.
+- Task Capsule creation now includes an empty `evidence.jsonl` required by harness validation.
 - Real provider adapters are not implemented.
 - Dashboard is not implemented.
 - MCP server is not implemented.

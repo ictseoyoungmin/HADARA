@@ -74,6 +74,6 @@ describe('agent loop evidence attachment', () => {
     });
 
     expect(attachAgentLoopEvidence(root, result)).toEqual([]);
-    expect(fs.existsSync(path.join(task.dir, 'evidence.jsonl'))).toBe(false);
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe('');
   });
 });

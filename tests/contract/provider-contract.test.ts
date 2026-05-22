@@ -40,6 +40,37 @@ describe('Provider contract', () => {
     expect(response.usage).toBeUndefined();
   });
 
+  it('ScriptedProvider consumes matching steps in order', async () => {
+    const provider = new ScriptedProvider([
+      { match: 'repeat', response: 'first response' },
+      { match: 'repeat', response: 'second response' }
+    ]);
+
+    await expect(provider.chat({ messages: [{ role: 'user', content: 'repeat' }] })).resolves.toMatchObject({
+      content: 'first response'
+    });
+    await expect(provider.chat({ messages: [{ role: 'user', content: 'repeat' }] })).resolves.toMatchObject({
+      content: 'second response'
+    });
+  });
+
+  it('ScriptedProvider fails when the current step does not match', async () => {
+    const provider = new ScriptedProvider([
+      { match: 'first', response: 'first response' },
+      { match: 'second', response: 'second response' }
+    ]);
+
+    await expect(provider.chat({ messages: [{ role: 'user', content: 'first' }] })).resolves.toMatchObject({
+      content: 'first response'
+    });
+    await expect(provider.chat({ messages: [{ role: 'user', content: 'first' }] })).rejects.toMatchObject({
+      provider: 'scripted',
+      code: 'SCRIPTED_PROVIDER_ERROR',
+      retriable: false,
+      message: expect.stringContaining('step 2 expected message containing "second"')
+    });
+  });
+
   it('ScriptedProvider emits start before terminal stream events', async () => {
     const provider = new ScriptedProvider([{ match: 'stream', response: 'scripted stream' }]);
     const events = [];
