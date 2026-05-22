@@ -35,6 +35,7 @@ main
 - Completed T-0029 Done-Level Harness Validation with `--level draft|done` and completion gates for Done status, acceptance, evidence, and handoff.
 - Completed T-0030 Run Scenario Scaffold with deterministic script/fixture generation under `.hadara/scenarios/`.
 - Completed T-0031 CLI Handler Extraction by moving init profile logic to `src/cli/init.ts` and run scaffold logic to `src/cli/run-scaffold.ts`.
+- Completed T-0032 CLI Harness Handler Extraction by moving harness validate/replay CLI handling to `src/cli/harness.ts`.
 - Verified Docker `npm ci && npm run check`: 16 test files passed, 64 tests passed.
 - Verified Docker `hadara harness validate --task T-0019 --json`: `ok: true` after capsule doc normalization.
 - Verified Docker `hadara harness validate --task T-0020 --json`: `ok: true`.
@@ -74,7 +75,7 @@ No active implementation task.
 
 ## Next Recommended Step
 
-1. Continue command handler extraction by moving another cohesive command group, such as evidence or harness, out of `src/cli/main.ts`.
+1. Continue command handler extraction by moving another cohesive command group, such as evidence or policy, out of `src/cli/main.ts`.
 2. Track npm audit findings separately.
 3. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy/evidence gates are stronger.
 
@@ -107,6 +108,7 @@ No active implementation task.
 - `tasks/T-0029-done-level-harness-validation/EVIDENCE.md`
 - `tasks/T-0030-run-scenario-scaffold/EVIDENCE.md`
 - `tasks/T-0031-cli-handler-extraction/EVIDENCE.md`
+- `tasks/T-0032-cli-harness-handler-extraction/EVIDENCE.md`
 - Docker check: 21 test files passed, 97 tests passed.
 - Docker `node dist/cli/main.js harness validate --task T-0026 --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
 - Docker built CLI `hadara run --task T-0026 ... --json`: `ok: true`, with one command-log evidence attachment.
@@ -119,3 +121,5 @@ No active implementation task.
 - Docker `node dist/cli/main.js harness validate --task T-0030 --level done --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
 - Built CLI smoke after extraction: `init --profile full`, `run scaffold`, and scaffolded `run` returned `ok: true`.
 - Docker `node dist/cli/main.js harness validate --task T-0031 --level done --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
+- Built CLI harness validate and replay smokes passed after extraction.
+- Docker `node dist/cli/main.js harness validate --task T-0032 --level done --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.

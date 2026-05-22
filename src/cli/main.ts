@@ -8,8 +8,6 @@ import { updateHandoff } from '../handoff/handoff';
 import { PermissionMode } from '../policy/policy';
 import { createShellExecutionPreflight } from '../policy/preflight';
 import { detectHermesContext, exportHadaraContext } from '../hermes/context-export';
-import { HarnessValidationLevel, validateTaskCapsule } from '../harness/validate';
-import { replayScenario } from '../harness/replay';
 import { attachAgentLoopEvidence } from '../agent/evidence';
 import { AgentLoopResult, runAgentLoop } from '../agent/loop';
 import { ScriptedProvider, ScriptedProviderStep } from '../providers/scripted-provider';
@@ -21,6 +19,7 @@ import { createHermesDetectReport, createHermesExportContextReport } from './her
 import { createEvidenceCollectReport } from './evidence-json';
 import { initProject, parseInitProfile } from './init';
 import { scaffoldRunScenario } from './run-scaffold';
+import { handleHarnessCommand } from './harness';
 import { getFlag, getIntegerOption, getRequiredStringOption, getStringOption } from './args';
 
 function printHelp(): void {
@@ -213,41 +212,7 @@ async function main(): Promise<void> {
     }
 
     case 'harness': {
-      const sub = args[1];
-      if (sub === 'validate') {
-        const taskId = getRequiredStringOption(args, '--task');
-        const level = parseHarnessValidationLevel(getStringOption(args, '--level', 'draft') ?? 'draft');
-        const result = validateTaskCapsule(paths.projectRoot, taskId, { level });
-        if (jsonOutput) {
-          console.log(JSON.stringify(result, null, 2));
-        } else if (result.ok) {
-          console.log(`[HADARA] Harness validation passed: ${result.task.id}`);
-        } else {
-          console.log(`[HADARA] Harness validation failed: ${result.task.id}`);
-          for (const issue of result.issues) {
-            console.log(`- ${issue.code}: ${issue.message}${issue.path ? ` (${issue.path})` : ''}`);
-          }
-        }
-        if (!result.ok) process.exitCode = 6;
-        return;
-      }
-      if (sub === 'replay') {
-        const scenarioPath = args[2];
-        if (!scenarioPath || scenarioPath.startsWith('--')) throw new Error('harness replay requires <scenario.jsonl>');
-        const result = await replayScenario(paths.projectRoot, scenarioPath);
-        if (jsonOutput) {
-          console.log(JSON.stringify(result, null, 2));
-        } else if (result.ok) {
-          console.log(`[HADARA] Harness replay passed: ${result.scenario}`);
-        } else {
-          console.log(`[HADARA] Harness replay failed: ${result.scenario}`);
-          for (const issue of result.issues) {
-            console.log(`- ${issue.code}: ${issue.message}${issue.line ? ` (line ${issue.line})` : ''}`);
-          }
-        }
-        if (!result.ok) process.exitCode = 6;
-        return;
-      }
+      if (await handleHarnessCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
@@ -344,11 +309,6 @@ export function attachRunEvidence(projectRoot: string, result: AgentLoopResult):
       ]
     };
   }
-}
-
-export function parseHarnessValidationLevel(value: string): HarnessValidationLevel {
-  if (value === 'draft' || value === 'done') return value;
-  throw new Error(`unsupported harness validation level: ${value}`);
 }
 
 function parseEvidenceKind(value: string): EvidenceRecord['kind'] {

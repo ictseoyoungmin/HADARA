@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { appendEvidence } from '../../src/evidence/evidence';
 import { validateTaskCapsule } from '../../src/harness/validate';
 import { createTaskCapsule } from '../../src/task/task-capsule';
-import { parseHarnessValidationLevel } from '../../src/cli/main';
+import { parseHarnessValidationLevel } from '../../src/cli/harness';
 
 const roots: string[] = [];
 

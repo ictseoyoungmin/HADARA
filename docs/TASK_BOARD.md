@@ -33,3 +33,4 @@
 | T-0029 | Done-Level Harness Validation | Done | tasks/T-0029-done-level-harness-validation | Draft/done validation levels passed Docker validation. |
 | T-0030 | Run Scenario Scaffold | Done | tasks/T-0030-run-scenario-scaffold | Deterministic run scaffold helper passed Docker validation. |
 | T-0031 | CLI Handler Extraction | Done | tasks/T-0031-cli-handler-extraction | Extracted init and run scaffold helpers from CLI dispatcher. |
+| T-0032 | CLI Harness Handler Extraction | Done | tasks/T-0032-cli-harness-handler-extraction | Extracted harness command group from CLI dispatcher. |
