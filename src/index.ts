@@ -1,6 +1,7 @@
 export * from './core/paths';
 export * from './core/redaction';
 export * from './core/workspace';
+export * from './cli/args';
 export * from './providers/provider-contract';
 export * from './providers/mock-provider';
 export * from './task/task-capsule';

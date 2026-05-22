@@ -19,14 +19,19 @@ afterEach(() => {
 
 describe('run CLI input validation', () => {
   it('accepts maxSteps within the bounded deterministic harness range', () => {
-    expect(parseRunMaxSteps('1')).toBe(1);
-    expect(parseRunMaxSteps('32')).toBe(32);
+    expect(parseRunMaxSteps(['run', '--max-steps', '1'])).toBe(1);
+    expect(parseRunMaxSteps(['run', '--max-steps', '32'])).toBe(32);
+    expect(parseRunMaxSteps(['run'])).toBe(6);
   });
 
   it('rejects invalid maxSteps values', () => {
     for (const value of ['NaN', '-1', '0', '33', '999999', '1.5']) {
-      expect(() => parseRunMaxSteps(value)).toThrow(/integer from 1 to 32/);
+      expect(() => parseRunMaxSteps(['run', '--max-steps', value])).toThrow(/integer from 1 to 32/);
     }
+  });
+
+  it('rejects maxSteps when another flag is passed as its value', () => {
+    expect(() => parseRunMaxSteps(['run', '--max-steps', '--json'])).toThrow(/value must not look like a flag/);
   });
 
   it('rejects run --script paths outside the workspace', () => {

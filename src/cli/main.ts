@@ -21,6 +21,7 @@ import { createTaskListReport, createTaskShowReport, formatTaskListReport } from
 import { createPolicyCheckReport, extractPolicyCommandText } from './policy-json';
 import { createHermesDetectReport, createHermesExportContextReport } from './hermes-json';
 import { createEvidenceCollectReport } from './evidence-json';
+import { getFlag, getIntegerOption, getRequiredStringOption, getStringOption } from './args';
 
 function printHelp(): void {
   console.log(`HADARA bootstrap CLI
@@ -46,12 +47,6 @@ Environment:
   HADARA_HOME           Portable/USB root. Defaults to current working directory.
   HADARA_PROJECT_ROOT   Project repo root. Defaults to current working directory.
 `);
-}
-
-function getOption(args: string[], name: string, fallback?: string): string | undefined {
-  const idx = args.indexOf(name);
-  if (idx >= 0 && args[idx + 1]) return args[idx + 1];
-  return fallback;
 }
 
 function initProject(projectRoot: string): void {
@@ -102,8 +97,8 @@ async function main(): Promise<void> {
     return;
   }
 
-  const paths = resolveHadaraPaths({ projectRoot: getOption(args, '--project') });
-  const jsonOutput = args.includes('--json');
+  const paths = resolveHadaraPaths({ projectRoot: getStringOption(args, '--project') });
+  const jsonOutput = getFlag(args, '--json');
 
   switch (command) {
     case 'init': {
@@ -161,13 +156,12 @@ async function main(): Promise<void> {
     case 'evidence': {
       const sub = args[1];
       if (sub === 'collect') {
-        const taskId = getOption(args, '--task');
-        if (!taskId) throw new Error('evidence collect requires --task <task-id>');
-        const kind = parseEvidenceKind(getOption(args, '--kind', 'note') ?? 'note');
-        const summary = getOption(args, '--summary') ?? 'Manual evidence collection placeholder.';
-        const result = (getOption(args, '--result', 'unknown') ?? 'unknown') as 'passed' | 'failed' | 'blocked' | 'unknown';
-        const evidenceFile = getOption(args, '--path');
-        const visibility = args.includes('--private') ? 'private' : 'public';
+        const taskId = getRequiredStringOption(args, '--task');
+        const kind = parseEvidenceKind(getStringOption(args, '--kind', 'note') ?? 'note');
+        const summary = getStringOption(args, '--summary') ?? 'Manual evidence collection placeholder.';
+        const result = (getStringOption(args, '--result', 'unknown') ?? 'unknown') as 'passed' | 'failed' | 'blocked' | 'unknown';
+        const evidenceFile = getStringOption(args, '--path');
+        const visibility = getFlag(args, '--private') ? 'private' : 'public';
         if (jsonOutput) {
           const report = createEvidenceCollectReport(paths.projectRoot, {
             taskId,
@@ -191,9 +185,9 @@ async function main(): Promise<void> {
     case 'handoff': {
       const sub = args[1];
       if (sub === 'update') {
-        const taskId = getOption(args, '--task');
-        const summary = getOption(args, '--summary');
-        const nextStep = getOption(args, '--next');
+        const taskId = getStringOption(args, '--task');
+        const summary = getStringOption(args, '--summary');
+        const nextStep = getStringOption(args, '--next');
         const filePath = updateHandoff({ projectRoot: paths.projectRoot, taskId, summary, nextStep });
         console.log(`[HADARA] Handoff updated: ${filePath}`);
         return;
@@ -204,7 +198,7 @@ async function main(): Promise<void> {
     case 'policy': {
       const sub = args[1];
       if (sub === 'check-shell') {
-        const mode = (getOption(args, '--mode', 'assisted') ?? 'assisted') as PermissionMode;
+        const mode = (getStringOption(args, '--mode', 'assisted') ?? 'assisted') as PermissionMode;
         const commandText = extractPolicyCommandText(args, mode);
         if (!commandText) throw new Error('policy check-shell requires <command>');
         const report = createPolicyCheckReport(commandText, mode);
@@ -217,7 +211,7 @@ async function main(): Promise<void> {
         return;
       }
       if (sub === 'preflight-shell') {
-        const mode = (getOption(args, '--mode', 'assisted') ?? 'assisted') as PermissionMode;
+        const mode = (getStringOption(args, '--mode', 'assisted') ?? 'assisted') as PermissionMode;
         const commandText = extractPolicyCommandText(args, mode);
         if (!commandText) throw new Error('policy preflight-shell requires <command>');
         const report = createShellExecutionPreflight(commandText, mode);
@@ -259,8 +253,7 @@ async function main(): Promise<void> {
     case 'harness': {
       const sub = args[1];
       if (sub === 'validate') {
-        const taskId = getOption(args, '--task');
-        if (!taskId) throw new Error('harness validate requires --task <task-id>');
+        const taskId = getRequiredStringOption(args, '--task');
         const result = validateTaskCapsule(paths.projectRoot, taskId);
         if (jsonOutput) {
           console.log(JSON.stringify(result, null, 2));
@@ -306,15 +299,14 @@ async function main(): Promise<void> {
     }
 
     case 'run': {
-      const taskId = getOption(args, '--task');
-      const mode = (getOption(args, '--mode', 'assisted') ?? 'assisted') as PermissionMode;
+      const taskId = getStringOption(args, '--task');
+      const mode = (getStringOption(args, '--mode', 'assisted') ?? 'assisted') as PermissionMode;
       const request = extractRunRequest(args) || (taskId ? `Run task ${taskId}` : 'Run HADARA deterministic harness task.');
       let result;
       try {
-        const scriptPath = getOption(args, '--script');
-        if (!scriptPath) throw new Error('run requires --script <script.json> in bootstrap harness mode');
-        const maxSteps = parseRunMaxSteps(getOption(args, '--max-steps', '6') ?? '6');
-        const fixturesPath = getOption(args, '--fake-shell-fixtures');
+        const scriptPath = getRequiredStringOption(args, '--script');
+        const maxSteps = parseRunMaxSteps(args);
+        const fixturesPath = getStringOption(args, '--fake-shell-fixtures');
         const script = readScriptedProviderSteps(paths.projectRoot, scriptPath);
         const fakeShellFixtures = fixturesPath ? readFakeShellFixtures(paths.projectRoot, fixturesPath) : {};
         result = await runAgentLoop({
@@ -419,15 +411,8 @@ function readJsonFile(projectRoot: string, filePath: string): unknown {
   return JSON.parse(fs.readFileSync(resolvedFile.absolutePath, 'utf8')) as unknown;
 }
 
-export function parseRunMaxSteps(value: string): number {
-  if (!/^\d+$/.test(value)) {
-    throw new Error('run --max-steps must be an integer from 1 to 32');
-  }
-  const parsed = Number(value);
-  if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > 32) {
-    throw new Error('run --max-steps must be an integer from 1 to 32');
-  }
-  return parsed;
+export function parseRunMaxSteps(args: string[]): number {
+  return getIntegerOption(args, '--max-steps', { fallback: 6, min: 1, max: 32 }) ?? 6;
 }
 
 function createRunErrorReport(input: { taskId?: string; request: string; mode: PermissionMode; error: unknown }): AgentLoopResult {
