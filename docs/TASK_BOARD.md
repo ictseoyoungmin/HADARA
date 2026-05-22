@@ -23,3 +23,4 @@
 | T-0019 | Shell Preflight Harness | Done | tasks/T-0019-shell-preflight-harness | Docker check and fake shell policy-gated harness tests passed. |
 | T-0020 | Task Capsule Format Validation | Done | tasks/T-0020-task-capsule-format-validation | Docker check and Task Capsule Markdown format drift regression tests passed. |
 | T-0021 | Agent Loop Minimal Harness | Done | tasks/T-0021-agent-loop-minimal-harness | Docker check, CLI run smoke, and harness validation passed. |
+| T-0022 | Protocol Instruction Consolidation | Done | tasks/T-0022-protocol-instruction-consolidation | Reusable first-session HADARA protocol consolidated into AGENTS and SOP docs. |

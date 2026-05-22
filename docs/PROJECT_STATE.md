@@ -22,6 +22,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Task Capsule creation exists.
 - Evidence append writes Markdown summaries, `evidence.jsonl` indexes, and managed public artifact copies.
 - Handoff update exists.
+- AGENTS.md and IMPLEMENTATION_SOP now capture reusable HADARA session protocol rules.
 - Hermes/Agent Harness context export exists as a seed command.
 - Doctor CLI JSON output exists as `hadara doctor --json`.
 - Task list/show CLI JSON output exists as `hadara task list --json` and `hadara task show <task-id> --json`.

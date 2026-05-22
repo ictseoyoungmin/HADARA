@@ -25,11 +25,13 @@ main
 - Completed T-0020 Task Capsule Format Validation to detect Markdown format drift in harness validation.
 - Completed T-0021 Agent Loop Minimal Harness with deterministic `hadara run --script ... --fake-shell-fixtures ... --json`.
 - Hardened harness validation to require `evidence.jsonl` and cover missing evidence indexes with regression tests.
+- Completed T-0022 Protocol Instruction Consolidation by moving reusable first-session rules into AGENTS.md and IMPLEMENTATION_SOP.
 - Verified Docker `npm ci && npm run check`: 16 test files passed, 64 tests passed.
 - Verified Docker `hadara harness validate --task T-0019 --json`: `ok: true` after capsule doc normalization.
 - Verified Docker `hadara harness validate --task T-0020 --json`: `ok: true`.
 - Verified Docker `hadara run ... --json`: `ok: true` with fake shell observation.
 - Verified Docker `hadara harness validate --task T-0021 --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
+- Verified Docker `hadara harness validate --task T-0022 --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
 
 ## In Progress
 
@@ -80,4 +82,5 @@ No active implementation task.
 - `tasks/T-0019-shell-preflight-harness/EVIDENCE.md`
 - `tasks/T-0020-task-capsule-format-validation/EVIDENCE.md`
 - `tasks/T-0021-agent-loop-minimal-harness/EVIDENCE.md`
+- `tasks/T-0022-protocol-instruction-consolidation/EVIDENCE.md`
 - Docker check: 16 test files passed, 64 tests passed.
