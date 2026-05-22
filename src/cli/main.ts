@@ -7,6 +7,7 @@ import { createTaskCapsule } from '../task/task-capsule';
 import { appendEvidence, EvidenceRecord } from '../evidence/evidence';
 import { updateHandoff } from '../handoff/handoff';
 import { PermissionMode } from '../policy/policy';
+import { createShellExecutionPreflight } from '../policy/preflight';
 import { detectHermesContext, exportHadaraContext } from '../hermes/context-export';
 import { validateTaskCapsule } from '../harness/validate';
 import { replayScenario } from '../harness/replay';
@@ -28,6 +29,7 @@ Usage:
   hadara evidence collect --task <task-id> [--kind note|test-log|command-log|diff-summary|screenshot] [--path <path>] [--summary <text>] [--result passed|failed|blocked|unknown] [--private]
   hadara handoff update --task <task-id> [--summary <text>] [--next <text>]
   hadara policy check-shell <command> [--mode readonly|assisted|trusted|auto|release]
+  hadara policy preflight-shell <command> [--mode readonly|assisted|trusted|auto|release] [--json]
   hadara harness validate --task <task-id> [--json]
   hadara harness replay <scenario.jsonl> [--json]
   hadara hermes detect
@@ -205,6 +207,21 @@ async function main(): Promise<void> {
           console.log(JSON.stringify(report, null, 2));
         } else {
           console.log(JSON.stringify(report.decision, null, 2));
+        }
+        if (!report.ok) process.exitCode = 2;
+        return;
+      }
+      if (sub === 'preflight-shell') {
+        const mode = (getOption(args, '--mode', 'assisted') ?? 'assisted') as PermissionMode;
+        const commandText = extractPolicyCommandText(args, mode);
+        if (!commandText) throw new Error('policy preflight-shell requires <command>');
+        const report = createShellExecutionPreflight(commandText, mode);
+        if (jsonOutput) {
+          console.log(JSON.stringify(report, null, 2));
+        } else {
+          console.log(
+            `[HADARA] Shell preflight: ${report.execution.status} (${report.decision.risk}) - ${report.decision.reason}`
+          );
         }
         if (!report.ok) process.exitCode = 2;
         return;

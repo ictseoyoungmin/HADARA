@@ -18,7 +18,8 @@ main
 - Completed T-0014 CLI Hermes JSON with `hadara hermes detect/export-context --json`.
 - Completed T-0015 CLI Evidence JSON with `hadara evidence collect --json`.
 - Completed T-0016 Evidence Artifact Copy with managed public artifact storage.
-- Verified Docker `npm ci && npm run check`: 12 test files passed, 47 tests passed.
+- Completed T-0017 Policy Execution Preflight with `hadara policy preflight-shell <command> --json`.
+- Verified Docker `npm ci && npm run check`: 13 test files passed, 50 tests passed.
 
 ## In Progress
 
@@ -46,7 +47,7 @@ No active implementation task.
 
 1. Push branch and confirm GitHub Actions CI passes with Node 22.
 2. Track npm audit findings separately.
-3. Add policy execution preflight before ShellTool execution, or continue Evidence Store hardening with session-level artifacts/encrypted private evidence.
+3. Add provider fallback executor or continue toward a minimal ShellTool/TestTool harness using the new policy preflight.
 4. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy loop is stronger.
 
 ## Evidence
@@ -63,4 +64,5 @@ No active implementation task.
 - `tasks/T-0014-cli-hermes-json/EVIDENCE.md`
 - `tasks/T-0015-cli-evidence-json/EVIDENCE.md`
 - `tasks/T-0016-evidence-artifact-copy/EVIDENCE.md`
-- Docker check: 12 test files passed, 47 tests passed.
+- `tasks/T-0017-policy-execution-preflight/EVIDENCE.md`
+- Docker check: 13 test files passed, 50 tests passed.

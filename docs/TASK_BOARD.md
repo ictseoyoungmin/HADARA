@@ -18,3 +18,4 @@
 | T-0014 | CLI Hermes JSON | Done | tasks/T-0014-cli-hermes-json | Docker check and Hermes JSON/non-JSON CLI smokes passed. |
 | T-0015 | CLI Evidence JSON | Done | tasks/T-0015-cli-evidence-json | Docker check and evidence JSON/non-JSON CLI smokes passed. |
 | T-0016 | Evidence Artifact Copy | Done | tasks/T-0016-evidence-artifact-copy | Docker check and public/private artifact CLI smokes passed. |
+| T-0017 | Policy Execution Preflight | Done | tasks/T-0017-policy-execution-preflight | Docker check and allowed/approval/denied preflight CLI smokes passed. |
