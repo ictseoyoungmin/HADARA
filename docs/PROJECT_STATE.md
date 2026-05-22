@@ -47,7 +47,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Init profiles exist as `hadara init --profile minimal|full|hadara-protocol`; default/minimal init creates core HADARA protocol docs for Hermes/export-context readiness.
 - Harness validation supports `--level draft|done`; done-level validation requires Done status, completed acceptance, evidence records, and updated handoff sections.
 - Run scenario scaffolding exists as `hadara run scaffold --task <id> --command <command>`, generating deterministic ScriptedProvider and fake-shell fixture JSON files under `.hadara/scenarios/`.
-- CLI handler extraction has started: init profile logic lives in `src/cli/init.ts`, run scaffold logic lives in `src/cli/run-scaffold.ts`, harness CLI handling lives in `src/cli/harness.ts`, and `src/cli/main.ts` remains the dispatcher.
+- CLI handler extraction pass is complete: `src/cli/main.ts` is a top-level dispatcher and command groups live in focused `src/cli/*` modules.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.

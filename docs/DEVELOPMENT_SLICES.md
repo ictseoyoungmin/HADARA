@@ -26,6 +26,7 @@ HADARA development should proceed in small, evidence-backed slices. Each slice m
 | 20 | CLI evidence handler extraction | T-0033 | Continue CLI dispatcher reduction by extracting evidence collect handling. | Done: Docker check passed, evidence collect JSON/text smokes passed, `main.ts` reduced from 419 to 387 LOC. |
 | 21 | CLI policy handler extraction | T-0034 | Continue CLI dispatcher reduction by extracting policy check/preflight handling. | Done: Docker check passed, policy check/preflight JSON/text smokes passed, `main.ts` reduced from 387 to 358 LOC. |
 | 22 | CLI Hermes and handoff handler extraction | T-0035 | Continue CLI dispatcher reduction by extracting Hermes and handoff handling. | Done: Docker check passed, Hermes JSON/text and handoff smokes passed, `main.ts` reduced from 358 to 332 LOC. |
-| 23 | Hermes/MCP bridge expansion | TBD | Expose stable read/write contracts after CLI harness surfaces are reliable. | Harness validate through external-agent contract. |
-| 24 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
-| 25 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |
+| 23 | CLI remaining handler extraction | T-0036 | Finish current CLI dispatcher extraction pass by moving init, doctor, task, mcp, and run handling. | Done: Docker check passed, remaining command smokes passed, `main.ts` reduced from 332 to 115 LOC. |
+| 24 | Hermes/MCP bridge expansion | TBD | Expose stable read/write contracts after CLI harness surfaces are reliable. | Harness validate through external-agent contract. |
+| 25 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
+| 26 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |

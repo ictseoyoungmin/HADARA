@@ -2,6 +2,7 @@ import path from 'node:path';
 import { resolveHadaraPaths } from '../core/paths';
 import { ensureDir, writeFileIfMissing } from '../core/fs';
 import { writeAuditEvent } from '../core/audit';
+import { getStringOption } from './args';
 
 export type InitProfile = 'minimal' | 'full' | 'hadara-protocol';
 
@@ -55,6 +56,16 @@ export function initProject(projectRoot: string, profile: InitProfile = 'minimal
 export function parseInitProfile(value: string): InitProfile {
   if (value === 'minimal' || value === 'full' || value === 'hadara-protocol') return value;
   throw new Error(`unsupported init profile: ${value}`);
+}
+
+export interface InitCommandInput {
+  args: string[];
+  projectRoot: string;
+}
+
+export function handleInitCommand(input: InitCommandInput): boolean {
+  initProject(input.projectRoot, parseInitProfile(getStringOption(input.args, '--profile', 'minimal') ?? 'minimal'));
+  return true;
 }
 
 function createArchitectureDoc(profile: InitProfile): string {

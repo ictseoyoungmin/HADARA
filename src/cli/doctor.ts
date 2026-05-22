@@ -59,6 +59,22 @@ export function formatDoctorReport(report: DoctorReport): string {
   ].join('\n');
 }
 
+export interface DoctorCommandInput {
+  paths: HadaraPaths;
+  jsonOutput: boolean;
+}
+
+export function handleDoctorCommand(input: DoctorCommandInput): boolean {
+  const report = createDoctorReport(input.paths);
+  if (input.jsonOutput) {
+    console.log(JSON.stringify(report, null, 2));
+  } else {
+    console.log(formatDoctorReport(report));
+  }
+  if (!report.ok) process.exitCode = 7;
+  return true;
+}
+
 function pathCheck(id: string, targetPath: string): DoctorCheck {
   return {
     id,

@@ -7,7 +7,7 @@ import {
   parseRunMaxSteps,
   readFakeShellFixtures,
   readScriptedProviderSteps
-} from '../../src/cli/main';
+} from '../../src/cli/run';
 import { scaffoldRunScenario } from '../../src/cli/run-scaffold';
 import { WorkspaceFileError } from '../../src/core/workspace';
 import { runAgentLoop } from '../../src/agent/loop';
