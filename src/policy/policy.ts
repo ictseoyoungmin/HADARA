@@ -142,5 +142,5 @@ function isDangerousShellCommand(command: ShellCommandAst): boolean {
 function isSafeShellCommand(command: ShellCommandAst): boolean {
   if (command.operators.length > 0) return false;
   const tokens = command.tokens.map((token) => token.toLowerCase());
-  return SAFE_COMMANDS.some((safe) => safe.every((part, index) => tokens[index] === part));
+  return SAFE_COMMANDS.some((safe) => tokens.length === safe.length && safe.every((part, index) => tokens[index] === part));
 }

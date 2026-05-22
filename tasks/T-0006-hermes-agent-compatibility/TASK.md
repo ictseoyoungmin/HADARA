@@ -6,12 +6,15 @@ Make HADARA readable and writable by nousresearch/hermes-agent and broader exter
 
 ## Scope
 
-TBD.
+- Historical Hermes compatibility seed capsule.
+- Detect/export-context compatibility has been implemented by later CLI work.
+- Remaining bridge/server compatibility scope continues under the Hermes/MCP bridge roadmap slice.
 
 ## Out of Scope
 
-TBD.
+- Marking Hermes compatibility as fully Done.
+- Implementing MCP bridge/server behavior in this capsule.
 
 ## Status
 
-Draft
+Partial

@@ -48,9 +48,13 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Harness validation supports `--level draft|done`; done-level validation requires Done status, completed acceptance, evidence records, and updated handoff sections.
 - Run scenario scaffolding exists as `hadara run scaffold --task <id> --command <command>`, generating deterministic ScriptedProvider and fake-shell fixture JSON files under `.hadara/scenarios/`.
 - Runtime validation now rejects unsupported permission modes and evidence result values; harness validation enforces evidence JSONL enum values.
+- JSON-mode CLI parse and validation failures return a shared `hadara.cli.error.v1` fallback envelope.
+- Policy safe command classification requires exact token matches; suffixes are not implicitly safe.
 - Agent loop run results now fail when fake-shell observations fail, including non-zero fake-shell exit codes.
 - Run scenario scaffolding now rejects duplicate scenario files instead of silently reusing stale content.
 - CLI handler extraction pass is complete: `src/cli/main.ts` is a top-level dispatcher and command groups live in focused `src/cli/*` modules.
+- Project handoff is compacted: current state lives in `docs/AGENT_HANDOFF.md`, with historical task and validation history in dedicated history docs.
+- Old Draft task capsules have been reclassified: T-0003 is Superseded, and T-0006 is Partial with remaining Hermes/MCP bridge scope deferred to the roadmap.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.

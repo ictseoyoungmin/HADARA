@@ -1,0 +1,3 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-22T14:00:00.000Z","taskId":"T-0041","kind":"note","summary":"Reclassified T-0003 as Superseded and T-0006 as Partial; kept Hermes/MCP bridge as the next implementation roadmap item.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-22T14:00:00.000Z","taskId":"T-0041","kind":"test-log","summary":"Docker npm ci && npm run check passed with 22 test files and 109 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-22T14:00:00.000Z","taskId":"T-0041","kind":"command-log","summary":"Docker harness validate --task T-0041 --level done --json passed.","result":"passed","visibility":"public"}

@@ -28,6 +28,10 @@ HADARA development should proceed in small, evidence-backed slices. Each slice m
 | 22 | CLI Hermes and handoff handler extraction | T-0035 | Continue CLI dispatcher reduction by extracting Hermes and handoff handling. | Done: Docker check passed, Hermes JSON/text and handoff smokes passed, `main.ts` reduced from 358 to 332 LOC. |
 | 23 | CLI remaining handler extraction | T-0036 | Finish current CLI dispatcher extraction pass by moving init, doctor, task, mcp, and run handling. | Done: Docker check passed, remaining command smokes passed, `main.ts` reduced from 332 to 115 LOC. |
 | 24 | Runtime validation and harness semantics | T-0037 | Harden reviewed runtime validation gaps before expanding external bridge surfaces. | Done: Docker check passed, hardening smokes passed, 105 tests passed. |
-| 25 | Hermes/MCP bridge expansion | TBD | Expose stable read/write contracts after CLI harness surfaces are reliable. | Harness validate through external-agent contract. |
-| 26 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
-| 27 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |
+| 25 | CLI JSON error envelope | T-0038 | Return stable JSON envelopes for early CLI parse and validation failures. | Done: Docker check passed, JSON error smokes passed, 108 tests passed. |
+| 26 | Policy safe command exactness | T-0039 | Prevent safe command prefix matches from being classified as safe. | Done: Docker check passed, exactness smoke passed, 109 tests passed. |
+| 27 | Handoff compaction policy | T-0040 | Keep project handoff current by moving old history into dedicated history docs. | Done: Docker check passed, compact handoff and history docs added. |
+| 28 | Old Draft task reclassification | T-0041 | Mark overtaken early Draft tasks so external agents follow the current roadmap instead. | Done: T-0003 Superseded, T-0006 Partial, validation passed. |
+| 29 | Hermes/MCP bridge expansion | TBD | Next implementation roadmap item: expose stable read/write contracts after CLI harness surfaces are reliable. | Harness validate through external-agent contract. |
+| 30 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
+| 31 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |

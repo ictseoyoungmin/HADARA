@@ -11,6 +11,7 @@ import { handleTaskCommand } from './task';
 import { handleMcpCommand } from './mcp';
 import { handleRunCommand } from './run';
 import { getFlag, getStringOption } from './args';
+import { cliErrorExitCode, createCliErrorReport } from './errors';
 
 function printHelp(): void {
   console.log(`HADARA bootstrap CLI
@@ -39,8 +40,7 @@ Environment:
 `);
 }
 
-async function main(): Promise<void> {
-  const args = process.argv.slice(2);
+async function main(args = process.argv.slice(2)): Promise<void> {
   const command = args[0];
 
   if (!command || command === '--help' || command === '-h') {
@@ -108,8 +108,14 @@ async function main(): Promise<void> {
 }
 
 if (require.main === module) {
-  main().catch((error) => {
+  const args = process.argv.slice(2);
+  main(args).catch((error) => {
+    if (args.includes('--json')) {
+      console.log(JSON.stringify(createCliErrorReport(args, error), null, 2));
+      process.exitCode = cliErrorExitCode(args, error);
+      return;
+    }
     console.error(`[HADARA] ERROR: ${error instanceof Error ? error.message : String(error)}`);
-    process.exitCode = 1;
+    process.exitCode = cliErrorExitCode(args, error);
   });
 }

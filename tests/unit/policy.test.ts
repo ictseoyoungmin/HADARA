@@ -22,7 +22,20 @@ describe('policy', () => {
   it('allows known safe commands in release mode', () => {
     expect(classifyShellCommand('npm run check', 'release').action).toBe('allow');
     expect(classifyShellCommand('pytest', 'release').action).toBe('allow');
-    expect(classifyShellCommand('git diff -- src', 'release').action).toBe('allow');
+    expect(classifyShellCommand('git diff', 'release').action).toBe('allow');
+  });
+
+  it('does not classify safe command prefixes with suffixes as safe', () => {
+    expect(classifyShellCommand('npm run check extra', 'auto')).toEqual({
+      action: 'allow',
+      risk: 'medium',
+      reason: 'auto mode allows non-dangerous shell execution.'
+    });
+    expect(classifyShellCommand('git status --short', 'release')).toEqual({
+      action: 'ask',
+      risk: 'high',
+      reason: 'Release mode requires approval for non-release commands.'
+    });
   });
 
   it('blocks pipe-to-shell download execution', () => {

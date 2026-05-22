@@ -1,0 +1,3 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-22T13:54:57.114Z","taskId":"T-0040","kind":"test-log","summary":"Docker `npm ci && npm run check` passed: 22 test files passed, 109 tests passed.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-22T13:54:57.114Z","taskId":"T-0040","kind":"diff-summary","summary":"Compacted `docs/AGENT_HANDOFF.md` and moved historical task and validation entries to dedicated history docs.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-22T13:56:33.134Z","taskId":"T-0040","kind":"command-log","summary":"Docker built CLI `harness validate --task T-0040 --level done --json` returned `ok: true`.","result":"passed","visibility":"public"}

@@ -4,10 +4,10 @@
 |---|---|---|---|---|
 | T-0001 | Bootstrap repository skeleton | Done | tasks/T-0001-bootstrap-repository-skeleton | Initial skeleton generated. |
 | T-0002 | Implement Config and Path Resolver | Done | tasks/T-0002-config-and-path-resolver | realpath containment, env priority, Windows normalization, and data boundary hardened. |
-| T-0003 | Expand CLI Command Specification | Draft | tasks/T-0003-cli-command-specification | Add strict options and exit codes. |
+| T-0003 | Expand CLI Command Specification | Superseded | tasks/T-0003-cli-command-specification | Superseded by T-0011~T-0039 CLI JSON, strict args, handler extraction, and runtime hardening work. |
 | T-0004 | Implement ProviderClient Contract | Done | tasks/T-0004-providerclient-contract | ScriptedProvider and provider contract metadata added. |
 | T-0005 | Implement Evidence Store | Done | tasks/T-0005-evidence-store | Markdown plus JSONL evidence index and private/public split added. |
-| T-0006 | Implement Hermes Agent Compatibility | Draft | tasks/T-0006-hermes-agent-compatibility | Context export, MCP bridge, file contract. |
+| T-0006 | Implement Hermes Agent Compatibility | Partial | tasks/T-0006-hermes-agent-compatibility | Detect/export-context implemented; remaining bridge/server scope continues under Hermes/MCP bridge TBD slice. |
 | T-0007 | Bootstrap Validation Pass | Done | tasks/T-0007-bootstrap-validation-pass | Docker npm ci/check and seed CLI loop passed. |
 | T-0008 | Policy Evaluator Shell Parser | Done | tasks/T-0008-policy-evaluator-shell-parser | Tokenizer, safe allowlist, and dangerous command tests added. |
 | T-0009 | Harness Validate JSON | Done | tasks/T-0009-harness-validate-json | Docker check and CLI JSON smoke passed. |
@@ -39,3 +39,7 @@
 | T-0035 | CLI Hermes and Handoff Handler Extraction | Done | tasks/T-0035-cli-hermes-handoff-handler-extraction | Extracted Hermes and handoff command groups from CLI dispatcher. |
 | T-0036 | CLI Remaining Handler Extraction | Done | tasks/T-0036-cli-remaining-handler-extraction | Extracted remaining command groups from CLI dispatcher. |
 | T-0037 | Runtime Validation and Harness Semantics | Done | tasks/T-0037-runtime-validation-harness-semantics | Hardened mode parsing, evidence enums, fake-shell failures, scaffold reuse, and task title parsing. |
+| T-0038 | CLI JSON Error Envelope | Done | tasks/T-0038-cli-json-error-envelope | Added fallback JSON error envelope for CLI parse and validation failures. |
+| T-0039 | Policy Safe Command Exactness | Done | tasks/T-0039-policy-safe-command-exactness | Required exact token matching for policy safe commands. |
+| T-0040 | Handoff Compaction Policy | Done | tasks/T-0040-handoff-compaction-policy | Compacted current handoff and moved old history into dedicated docs. |
+| T-0041 | Old Draft Task Reclassification | Done | tasks/T-0041-old-draft-task-reclassification | Reclassified T-0003 as Superseded and T-0006 as Partial. |

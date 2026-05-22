@@ -1,0 +1,52 @@
+# HANDOFF_HISTORY
+
+Historical completed-task handoff entries moved out of `docs/AGENT_HANDOFF.md` during T-0040 handoff compaction.
+
+## Completed Task History
+
+- Completed T-0002 Config and Path Resolver hardening.
+- Completed T-0004 ProviderClient Contract hardening with ScriptedProvider.
+- Completed T-0005 Evidence Store expansion with `evidence.jsonl` and public/private evidence handling.
+- Completed T-0008 Policy Evaluator Shell Parser.
+- Completed T-0009 Harness Validate JSON with `hadara harness validate --task <id> --json`.
+- Completed T-0010 Harness Replay Skeleton with `hadara harness replay <scenario.jsonl> --json`.
+- Completed T-0011 CLI Doctor JSON with `hadara doctor --json`.
+- Completed T-0012 CLI Task JSON with `hadara task list/show --json`.
+- Completed T-0013 CLI Policy JSON with `hadara policy check-shell <command> --json`.
+- Completed T-0014 CLI Hermes JSON with `hadara hermes detect/export-context --json`.
+- Completed T-0015 CLI Evidence JSON with `hadara evidence collect --json`.
+- Completed T-0016 Evidence Artifact Copy with managed public artifact storage.
+- Completed T-0017 Policy Execution Preflight with `hadara policy preflight-shell <command> --json`.
+- Completed T-0018 Provider Fallback Executor for deterministic chat fallback orchestration.
+- Completed T-0019 Shell Preflight Harness with deterministic fake shell observations gated by policy preflight.
+- Normalized T-0019 Task Capsule Markdown format to match neighboring capsules.
+- Completed T-0020 Task Capsule Format Validation to detect Markdown format drift in harness validation.
+- Completed T-0021 Agent Loop Minimal Harness with deterministic `hadara run --script ... --fake-shell-fixtures ... --json`.
+- Hardened harness validation to require `evidence.jsonl` and cover missing evidence indexes with regression tests.
+- Completed T-0022 Protocol Instruction Consolidation by moving reusable first-session rules into AGENTS.md and IMPLEMENTATION_SOP.
+- Completed T-0023 Workspace File Boundary with shared realpath workspace file resolution for evidence, replay, and deterministic run inputs.
+- Completed T-0024 Evidence Artifact Redaction with public text artifact scanning, binary rejection, and JSON policy issues.
+- Completed T-0025 CLI Args Parser with strict reusable option helpers and malformed option value rejection.
+- Completed T-0026 Agent Loop Evidence Attachment with fake-shell observation command-log artifacts and run JSON evidence metadata.
+- Completed T-0027 Deterministic Scripted Provider and Capsule Evidence Index with sequential script consumption and empty `evidence.jsonl` scaffolding.
+- Completed T-0028 Init Profiles Protocol Docs with `minimal`, `full`, and `hadara-protocol` init profiles and baseline protocol docs.
+- Completed T-0029 Done-Level Harness Validation with `--level draft|done` and completion gates for Done status, acceptance, evidence, and handoff.
+- Completed T-0030 Run Scenario Scaffold with deterministic script/fixture generation under `.hadara/scenarios/`.
+- Completed T-0031 CLI Handler Extraction by moving init profile logic to `src/cli/init.ts` and run scaffold logic to `src/cli/run-scaffold.ts`.
+- Completed T-0032 CLI Harness Handler Extraction by moving harness validate/replay CLI handling to `src/cli/harness.ts`.
+- Completed T-0033 CLI Evidence Handler Extraction by moving evidence collect CLI handling to `src/cli/evidence.ts`.
+- Completed T-0034 CLI Policy Handler Extraction by moving policy check/preflight CLI handling to `src/cli/policy.ts`.
+- Completed T-0035 CLI Hermes and Handoff Handler Extraction by moving Hermes handling to `src/cli/hermes.ts` and handoff handling to `src/cli/handoff.ts`.
+- Completed T-0036 CLI Remaining Handler Extraction by moving init, doctor, task, mcp, and run handling out of `src/cli/main.ts`.
+- Completed T-0037 Runtime Validation and Harness Semantics by hardening permission modes, evidence enums, fake-shell failure outcomes, scaffold reuse, and task title parsing.
+- Completed T-0038 CLI JSON Error Envelope by adding a shared fallback JSON error envelope for CLI parse and validation failures.
+- Completed T-0039 Policy Safe Command Exactness by requiring exact token matches for safe shell commands.
+- Completed T-0040 Handoff Compaction Policy by keeping `docs/AGENT_HANDOFF.md` current and moving older history to dedicated history docs.
+- Completed T-0041 Old Draft Task Reclassification by marking T-0003 Superseded and T-0006 Partial.
+
+## Source Documents
+
+- Current state: `docs/PROJECT_STATE.md`
+- Work queue: `docs/TASK_BOARD.md`
+- Roadmap slices: `docs/DEVELOPMENT_SLICES.md`
+- Task evidence: `tasks/T-*/EVIDENCE.md`

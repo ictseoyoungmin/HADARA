@@ -43,5 +43,13 @@ HADARA development follows the core philosophy: Unbroken Context, Verified Devel
 6. Update `docs/DEVELOPMENT_SLICES.md` when a roadmap slice starts, completes, or changes classification.
 7. Update `docs/DECISIONS.md` if architecture changed.
 8. Update `docs/REFACTOR_LOG.md` if code was removed or replaced.
-9. Update `docs/AGENT_HANDOFF.md` before stopping.
+9. Update `docs/AGENT_HANDOFF.md` before stopping, keeping it compact and current.
 10. Report results with changed files, validation evidence, and known follow-up work.
+
+## Handoff Compaction
+
+1. `docs/AGENT_HANDOFF.md` should describe current handoff state, not the full project history.
+2. Keep only the last three completed tasks in `docs/AGENT_HANDOFF.md`.
+3. Move older completed-task summaries to `docs/HANDOFF_HISTORY.md`.
+4. Move accumulated validation evidence lines to `docs/VALIDATION_HISTORY.md`.
+5. Keep authoritative per-task evidence in Task Capsules and state tracking in `docs/TASK_BOARD.md` and `docs/DEVELOPMENT_SLICES.md`.
