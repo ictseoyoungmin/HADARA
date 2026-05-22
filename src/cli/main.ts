@@ -5,7 +5,6 @@ import { resolveProjectFile, WorkspaceFileError } from '../core/workspace';
 import { createTaskCapsule } from '../task/task-capsule';
 import { updateHandoff } from '../handoff/handoff';
 import { PermissionMode } from '../policy/policy';
-import { createShellExecutionPreflight } from '../policy/preflight';
 import { detectHermesContext, exportHadaraContext } from '../hermes/context-export';
 import { attachAgentLoopEvidence } from '../agent/evidence';
 import { AgentLoopResult, runAgentLoop } from '../agent/loop';
@@ -13,12 +12,12 @@ import { ScriptedProvider, ScriptedProviderStep } from '../providers/scripted-pr
 import { FakeShellFixtures } from '../tools/fake-shell';
 import { createDoctorReport, formatDoctorReport } from './doctor';
 import { createTaskListReport, createTaskShowReport, formatTaskListReport } from './task-json';
-import { createPolicyCheckReport, extractPolicyCommandText } from './policy-json';
 import { createHermesDetectReport, createHermesExportContextReport } from './hermes-json';
 import { initProject, parseInitProfile } from './init';
 import { scaffoldRunScenario } from './run-scaffold';
 import { handleHarnessCommand } from './harness';
 import { handleEvidenceCommand } from './evidence';
+import { handlePolicyCommand } from './policy';
 import { getFlag, getIntegerOption, getRequiredStringOption, getStringOption } from './args';
 
 function printHelp(): void {
@@ -132,35 +131,7 @@ async function main(): Promise<void> {
     }
 
     case 'policy': {
-      const sub = args[1];
-      if (sub === 'check-shell') {
-        const mode = (getStringOption(args, '--mode', 'assisted') ?? 'assisted') as PermissionMode;
-        const commandText = extractPolicyCommandText(args, mode);
-        if (!commandText) throw new Error('policy check-shell requires <command>');
-        const report = createPolicyCheckReport(commandText, mode);
-        if (jsonOutput) {
-          console.log(JSON.stringify(report, null, 2));
-        } else {
-          console.log(JSON.stringify(report.decision, null, 2));
-        }
-        if (!report.ok) process.exitCode = 2;
-        return;
-      }
-      if (sub === 'preflight-shell') {
-        const mode = (getStringOption(args, '--mode', 'assisted') ?? 'assisted') as PermissionMode;
-        const commandText = extractPolicyCommandText(args, mode);
-        if (!commandText) throw new Error('policy preflight-shell requires <command>');
-        const report = createShellExecutionPreflight(commandText, mode);
-        if (jsonOutput) {
-          console.log(JSON.stringify(report, null, 2));
-        } else {
-          console.log(
-            `[HADARA] Shell preflight: ${report.execution.status} (${report.decision.risk}) - ${report.decision.reason}`
-          );
-        }
-        if (!report.ok) process.exitCode = 2;
-        return;
-      }
+      if (handlePolicyCommand({ args, jsonOutput })) return;
       break;
     }
 

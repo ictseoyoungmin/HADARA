@@ -24,6 +24,7 @@ HADARA development should proceed in small, evidence-backed slices. Each slice m
 | 18 | CLI handler extraction | T-0031 | Reduce `src/cli/main.ts` density by extracting cohesive command helpers. | Done: Docker check passed, init/run scaffold smoke passed, `main.ts` reduced from 667 to 459 LOC. |
 | 19 | CLI harness handler extraction | T-0032 | Continue CLI dispatcher reduction by extracting harness validate/replay handling. | Done: Docker check passed, harness validate/replay smokes passed, `main.ts` reduced from 459 to 419 LOC. |
 | 20 | CLI evidence handler extraction | T-0033 | Continue CLI dispatcher reduction by extracting evidence collect handling. | Done: Docker check passed, evidence collect JSON/text smokes passed, `main.ts` reduced from 419 to 387 LOC. |
-| 21 | Hermes/MCP bridge expansion | TBD | Expose stable read/write contracts after CLI harness surfaces are reliable. | Harness validate through external-agent contract. |
-| 22 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
-| 23 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |
+| 21 | CLI policy handler extraction | T-0034 | Continue CLI dispatcher reduction by extracting policy check/preflight handling. | Done: Docker check passed, policy check/preflight JSON/text smokes passed, `main.ts` reduced from 387 to 358 LOC. |
+| 22 | Hermes/MCP bridge expansion | TBD | Expose stable read/write contracts after CLI harness surfaces are reliable. | Harness validate through external-agent contract. |
+| 23 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
+| 24 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |
