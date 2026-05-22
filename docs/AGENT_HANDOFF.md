@@ -29,6 +29,7 @@ main
 - Completed T-0023 Workspace File Boundary with shared realpath workspace file resolution for evidence, replay, and deterministic run inputs.
 - Completed T-0024 Evidence Artifact Redaction with public text artifact scanning, binary rejection, and JSON policy issues.
 - Completed T-0025 CLI Args Parser with strict reusable option helpers and malformed option value rejection.
+- Completed T-0026 Agent Loop Evidence Attachment with fake-shell observation command-log artifacts and run JSON evidence metadata.
 - Verified Docker `npm ci && npm run check`: 16 test files passed, 64 tests passed.
 - Verified Docker `hadara harness validate --task T-0019 --json`: `ok: true` after capsule doc normalization.
 - Verified Docker `hadara harness validate --task T-0020 --json`: `ok: true`.
@@ -45,9 +46,7 @@ main
 
 ## In Progress
 
-- T-0026 Agent Loop Evidence Attachment.
-- Implementation staged for generated public text evidence artifacts, fake-shell observation attachment, and run JSON evidence metadata.
-- Required Docker validation is pending because Docker socket access required escalation and approval was unavailable in this session.
+No active implementation task.
 
 ## Do Not Change Without Updating Tests
 
@@ -70,11 +69,9 @@ main
 
 ## Next Recommended Step
 
-1. Run T-0026 required Docker validation: `npm ci && npm run check`.
-2. Run T-0026 harness validation: `node dist/cli/main.js harness validate --task T-0026 --json`.
-3. If validation passes, mark T-0026 Done and update evidence, task board, project state, development slices, and handoff.
-4. Track npm audit findings separately.
-5. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy/evidence gates are stronger.
+1. Start the next development slice after T-0026.
+2. Track npm audit findings separately.
+3. Defer dashboard, real provider adapters, MCP server body, and full agent controller until the harness/policy/evidence gates are stronger.
 
 ## Evidence
 
@@ -100,4 +97,6 @@ main
 - `tasks/T-0024-evidence-artifact-redaction/EVIDENCE.md`
 - `tasks/T-0025-cli-args-parser/EVIDENCE.md`
 - `tasks/T-0026-agent-loop-evidence-attachment/EVIDENCE.md`
-- Last completed Docker check, before T-0026: 19 test files passed, 84 tests passed.
+- Docker check: 20 test files passed, 87 tests passed.
+- Docker `node dist/cli/main.js harness validate --task T-0026 --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
+- Docker built CLI `hadara run --task T-0026 ... --json`: `ok: true`, with one command-log evidence attachment.

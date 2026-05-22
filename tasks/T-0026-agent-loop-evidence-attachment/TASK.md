@@ -21,4 +21,4 @@ Attach deterministic fake-shell agent loop observations to Task Capsule evidence
 
 ## Status
 
-In Progress
+Done

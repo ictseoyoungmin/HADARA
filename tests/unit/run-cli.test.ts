@@ -64,10 +64,10 @@ describe('run CLI input validation', () => {
 
     const loopResult = await runAgentLoop({
       taskId: task.id,
-      request: 'run check',
+      request: 'please use fake shell',
       provider: new ScriptedProvider([
         {
-          match: 'run check',
+          match: 'please use fake shell',
           response: JSON.stringify({ type: 'tool_request', tool: 'fake_shell', command: 'npm run check' }),
           finishReason: 'tool_call'
         },
