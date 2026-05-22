@@ -74,6 +74,7 @@ export function validateTaskCapsule(projectRoot: string, taskId: string): Harnes
   }
 
   validateTaskMarkdown(projectRoot, task, issues);
+  validateCapsuleFormatMarkdown(projectRoot, task, issues);
   validateEvidenceMarkdown(projectRoot, task, issues);
   validateEvidenceIndex(projectRoot, task, issues);
 
@@ -107,6 +108,53 @@ function validateTaskMarkdown(projectRoot: string, task: TaskCapsule, issues: Ha
         severity: 'error',
         code: 'TASK_SECTION_MISSING',
         message: `TASK.md is missing required section: ${heading}`,
+        path: relativePath
+      });
+    }
+  }
+}
+
+function validateCapsuleFormatMarkdown(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+  validateMarkdownFile(projectRoot, task, issues, 'ACCEPTANCE.md', [
+    { code: 'ACCEPTANCE_HEADING_INVALID', anyText: ['# Acceptance Criteria'] },
+    { code: 'ACCEPTANCE_CHECKLIST_MISSING', anyText: ['- [ ]', '- [x]'] }
+  ]);
+  validateMarkdownFile(projectRoot, task, issues, 'FILES.md', [
+    { code: 'FILES_TABLE_INVALID', anyText: ['| Path | Action | Reason |'] },
+    { code: 'FILES_TABLE_INVALID', anyText: ['|---|---|---|'] }
+  ]);
+  validateMarkdownFile(projectRoot, task, issues, 'TESTS.md', [
+    { code: 'TESTS_SECTION_MISSING', anyText: ['## Required'] },
+    { code: 'TESTS_SECTION_MISSING', anyText: ['## Optional'] }
+  ]);
+  validateMarkdownFile(projectRoot, task, issues, 'RISKS.md', [
+    { code: 'RISKS_TABLE_INVALID', anyText: ['| Risk | Mitigation |'] },
+    { code: 'RISKS_TABLE_INVALID', anyText: ['|---|---|'] }
+  ]);
+  validateMarkdownFile(projectRoot, task, issues, 'HANDOFF.md', [
+    { code: 'HANDOFF_SECTION_MISSING', anyText: ['## Last Completed'] },
+    { code: 'HANDOFF_SECTION_MISSING', anyText: ['## Next Recommended Step'] }
+  ]);
+}
+
+function validateMarkdownFile(
+  projectRoot: string,
+  task: TaskCapsule,
+  issues: HarnessValidationIssue[],
+  fileName: string,
+  checks: Array<{ code: string; anyText: string[] }>
+): void {
+  const filePath = path.join(task.dir, fileName);
+  if (!fs.existsSync(filePath)) return;
+
+  const relativePath = toPortablePath(path.relative(projectRoot, filePath));
+  const content = fs.readFileSync(filePath, 'utf8');
+  for (const check of checks) {
+    if (!check.anyText.some((text) => content.includes(text))) {
+      issues.push({
+        severity: 'error',
+        code: check.code,
+        message: `${fileName} is missing standard Task Capsule format marker: ${check.anyText.join(' or ')}`,
         path: relativePath
       });
     }

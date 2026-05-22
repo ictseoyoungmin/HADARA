@@ -76,6 +76,30 @@ describe('Harness Task Capsule validation', () => {
     );
   });
 
+  it('reports Task Capsule Markdown format drift', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Format drift');
+    fs.writeFileSync(path.join(task.dir, 'ACCEPTANCE.md'), '# Acceptance\n\n- done\n', 'utf8');
+    fs.writeFileSync(path.join(task.dir, 'FILES.md'), '# Files\n\n- src/example.ts\n', 'utf8');
+    fs.writeFileSync(path.join(task.dir, 'TESTS.md'), '# Tests\n\n- npm test\n', 'utf8');
+    fs.writeFileSync(path.join(task.dir, 'RISKS.md'), '# Risks\n\n- Risk: drift\n', 'utf8');
+    fs.writeFileSync(path.join(task.dir, 'HANDOFF.md'), '# Handoff\n\nContinue later.\n', 'utf8');
+
+    const result = validateTaskCapsule(root, task.id);
+
+    expect(result.ok).toBe(false);
+    expect(result.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining([
+        'ACCEPTANCE_HEADING_INVALID',
+        'ACCEPTANCE_CHECKLIST_MISSING',
+        'FILES_TABLE_INVALID',
+        'TESTS_SECTION_MISSING',
+        'RISKS_TABLE_INVALID',
+        'HANDOFF_SECTION_MISSING'
+      ])
+    );
+  });
+
   it('accepts evidence index records produced by the evidence store', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Indexed evidence');
@@ -106,4 +130,3 @@ describe('Harness Task Capsule validation', () => {
     ]);
   });
 });
-

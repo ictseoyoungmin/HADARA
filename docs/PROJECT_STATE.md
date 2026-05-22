@@ -16,6 +16,8 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Seed CLI exists.
 - MockProvider contract exists.
 - ScriptedProvider exists for deterministic harness/replay provider behavior.
+- Provider fallback executor exists for deterministic chat fallback orchestration.
+- Fake shell preflight harness exists for deterministic tool observations without real shell execution.
 - Task Capsule creation exists.
 - Evidence append writes Markdown summaries, `evidence.jsonl` indexes, and managed public artifact copies.
 - Handoff update exists.
@@ -27,9 +29,11 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Hermes detect/export CLI JSON output exists as `hadara hermes detect --json` and `hadara hermes export-context --json`.
 - Evidence collect CLI JSON output exists as `hadara evidence collect --json`.
 - Harness Task Capsule validation exists as `hadara harness validate --task <id> --json`.
+- Harness Task Capsule validation enforces core Markdown format markers for Task Capsule continuity.
 - Harness replay skeleton exists as `hadara harness replay <scenario.jsonl> --json`.
 - Config/path resolver has realpath containment, environment priority, Windows path normalization, and project data boundary tests.
 - Policy evaluator has a minimal tokenizer, safe command allowlist, destructive command denial tests, and shell execution preflight.
+- Tool runtime work has started with fake shell observations gated by policy preflight.
 - Real provider adapters are not implemented.
 - Dashboard is not implemented.
 - MCP server is not implemented.

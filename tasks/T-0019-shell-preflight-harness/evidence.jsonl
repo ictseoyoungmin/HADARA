@@ -1,0 +1,3 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-22T00:54:54Z","taskId":"T-0019","kind":"test-log","summary":"Docker `npm ci && npm run check` passed: 15 test files, 58 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-22T00:54:54Z","taskId":"T-0019","kind":"command-log","summary":"Docker `hadara harness validate --task T-0019 --json` returned `ok: true`.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-22T01:03:57Z","taskId":"T-0019","kind":"note","summary":"Normalized T-0019 capsule Markdown files to match neighboring Task Capsule formats.","result":"passed","visibility":"public"}
