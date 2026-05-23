@@ -5,6 +5,7 @@ import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 export interface TaskJsonSummary {
   id: string;
   title: string;
+  status: string;
   slug: string;
   capsule: string;
 }
@@ -79,12 +80,20 @@ function summarizeTask(projectRoot: string, task: TaskCapsule): TaskJsonSummary 
   return {
     id: task.id,
     title: task.title,
+    status: readTaskStatus(task),
     slug: task.slug,
     capsule: toPortablePath(path.relative(projectRoot, task.dir))
   };
 }
 
+function readTaskStatus(task: TaskCapsule): string {
+  const taskPath = path.join(task.dir, 'TASK.md');
+  if (!fs.existsSync(taskPath)) return 'Unknown';
+  const content = fs.readFileSync(taskPath, 'utf8');
+  const match = content.match(/^## Status\s*\n+([\s\S]*?)(?:\n## |\s*$)/m);
+  return match?.[1]?.trim().split(/\r?\n/)[0]?.trim() || 'Unknown';
+}
+
 function toPortablePath(value: string): string {
   return value.split(path.sep).join('/');
 }
-

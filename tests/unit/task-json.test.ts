@@ -35,12 +35,14 @@ describe('CLI task JSON reports', () => {
         {
           id: 'T-0001',
           title: 'First task',
+          status: 'Draft',
           slug: 'first-task',
           capsule: 'tasks/T-0001-first-task'
         },
         {
           id: 'T-0002',
           title: 'Second task',
+          status: 'Draft',
           slug: 'second-task',
           capsule: 'tasks/T-0002-second-task'
         }
@@ -62,6 +64,7 @@ describe('CLI task JSON reports', () => {
       task: {
         id: task.id,
         title: 'Show me',
+        status: 'Draft',
         capsule: `tasks/${task.id}-show-me`
       },
       issues: []

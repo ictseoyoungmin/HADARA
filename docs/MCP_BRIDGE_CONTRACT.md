@@ -29,6 +29,25 @@ The first implementation should use stdio JSON-RPC MCP server behavior.
 
 Future server implementations should expose `hadara mcp serve` as the local entry point.
 
+## MCP Tool Result Payload
+
+All HADARA MCP read tools return one JSON text payload. The MCP protocol envelope belongs to MCP; the payload text, when parsed as JSON, must be the HADARA command/report schema described by this contract and `docs/CLI_JSON_CONTRACT.md`.
+
+For example, an MCP tool result should carry one text content item whose `text` value is a serialized HADARA report:
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"schemaVersion\":\"hadara.task.list.v1\",\"command\":\"task.list\",\"ok\":true,\"count\":1,\"tasks\":[]}"
+    }
+  ]
+}
+```
+
+Server internals may use typed payloads, but the external MCP tool result payload is JSON text. Do not wrap HADARA reports in a second custom JSON object inside the text payload.
+
 ## General Tool Rules
 
 - Tool names are namespaced with `hadara.`.
@@ -62,6 +81,7 @@ Output schema:
   "schemaVersion": "hadara.task.list.v1",
   "command": "task.list",
   "ok": true,
+  "count": 1,
   "tasks": [
     {
       "id": "T-0042",
@@ -113,8 +133,19 @@ Output schema:
     "RISKS.md": "...",
     "DECISIONS.md": "...",
     "EVIDENCE.md": "...",
+    "evidence.jsonl": "...",
     "HANDOFF.md": "..."
   },
+  "evidenceIndex": [
+    {
+      "schemaVersion": "hadara.evidence.v1",
+      "taskId": "T-0042",
+      "kind": "test-log",
+      "summary": "...",
+      "result": "passed",
+      "visibility": "public"
+    }
+  ],
   "issues": []
 }
 ```
@@ -130,7 +161,8 @@ Input schema:
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "includeHistory": { "type": "boolean", "default": false }
+    "includeHistory": { "type": "boolean", "default": false },
+    "historyLimit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
   }
 }
 ```
@@ -151,7 +183,7 @@ Output schema:
 }
 ```
 
-If `includeHistory` is true, `history` and `validationHistory` may include `docs/HANDOFF_HISTORY.md` and `docs/VALIDATION_HISTORY.md` content.
+If `includeHistory` is true, `history` and `validationHistory` should return compact tail history by default, limited by `historyLimit`. Full unbounded history is out of scope until a later paginated API exists.
 
 ### `hadara.project.state.read`
 
@@ -163,7 +195,10 @@ Input schema:
 {
   "type": "object",
   "additionalProperties": false,
-  "properties": {}
+  "properties": {
+    "includeDocuments": { "type": "boolean", "default": true },
+    "summaryOnly": { "type": "boolean", "default": false }
+  }
 }
 ```
 
@@ -180,6 +215,8 @@ Output schema:
   "issues": []
 }
 ```
+
+If `summaryOnly` is true, the tool may return extracted current-state and next-step fields instead of full document text. If `includeDocuments` is false, full Markdown document bodies should be omitted while preserving enough metadata for agent orientation.
 
 ### `hadara.policy.evaluate`
 

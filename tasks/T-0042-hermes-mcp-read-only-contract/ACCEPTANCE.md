@@ -6,6 +6,8 @@
 - [x] Write tools, shell execution, provider calls, and server implementation are explicitly out of scope.
 - [x] Hermes integration/export guidance points agents at the MCP bridge contract.
 - [x] AGENTS/SOP clarify compact handoff and Historical Index usage.
-- [x] Required Docker validation passes.
-- [x] Done-level capsule validation passes.
+- [x] MCP tool result payload, task status, evidence index, history limit, and project-state sizing rules are documented.
+- [x] Task list/show JSON summaries include task status.
+- [x] Required Docker validation passes after the follow-up contract/schema changes.
+- [x] Done-level capsule validation passes after the follow-up contract/schema changes.
 - [x] Evidence and handoff documents are updated.

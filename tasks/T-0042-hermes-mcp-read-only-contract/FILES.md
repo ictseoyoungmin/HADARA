@@ -4,6 +4,8 @@
 |---|---|---|
 | docs/CLI_JSON_CONTRACT.md | Add | Document CLI JSON schemas and failure envelope policy. |
 | docs/MCP_BRIDGE_CONTRACT.md | Add | Define first read-only MCP bridge tool surface. |
+| src/cli/task-json.ts | Update | Include task status in task list/show JSON summaries for MCP parity. |
+| tests/unit/task-json.test.ts | Update | Cover task status in task JSON output. |
 | docs/HERMES_INTEGRATION.md | Update | Align planned MCP surface with read-only contract. |
 | AGENTS.md | Update | Clarify compact handoff and Historical Index expectations. |
 | docs/IMPLEMENTATION_SOP.md | Update | Clarify compact handoff reading behavior. |
