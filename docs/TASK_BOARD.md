@@ -64,3 +64,4 @@
 | T-0060 | Dashboard Serve Boundary Hardening | Done | tasks/T-0060-dashboard-serve-boundary-hardening | Restricts dashboard serving to safe methods, security headers, and traversal-resistant allowlisted routes. |
 | T-0061 | Evidence Index Schema Hardening | Done | tasks/T-0061-evidence-index-schema-hardening | Requires canonical `time`, `summary`, and `visibility` evidence index fields and migrates recent timestamp drift. |
 | T-0062 | Dashboard Server Failure Semantics | Done | tasks/T-0062-dashboard-server-failure-semantics | Makes static dashboard server failures predictable for missing roots/files and unexpected response generation errors. |
+| T-0063 | Architecture/Roadmap State Reconciliation | Done | tasks/T-0063-architecture-roadmap-state-reconciliation | Aligns architecture and roadmap docs with implemented, partial, and deferred HADARA capabilities. |

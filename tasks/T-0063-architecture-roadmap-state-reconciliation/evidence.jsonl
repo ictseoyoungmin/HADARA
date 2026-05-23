@@ -1,0 +1,2 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-23T14:59:04Z","taskId":"T-0063","kind":"test-log","summary":"Text scan confirmed ARCHITECTURE.md no longer lists stale full-unimplemented Dashboard or MCP server bullets.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-23T15:04:05Z","taskId":"T-0063","kind":"test-log","summary":"Docker npm run build passed and done-level harness validation for T-0063 returned ok true with no issues.","result":"passed","visibility":"public"}

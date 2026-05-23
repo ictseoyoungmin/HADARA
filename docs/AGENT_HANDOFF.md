@@ -22,13 +22,14 @@
 - T-0060 is complete: dashboard serving is hardened with GET/HEAD-only responses, basic security headers, and traversal-like route regressions.
 - T-0061 is complete: `evidence.jsonl` validation now rejects missing `time`, `summary`, and `visibility`, and recent dashboard timestamp-only evidence records were migrated to canonical `time`.
 - T-0062 is complete: static dashboard server failures now return safe 404/500 responses for missing roots/files and unexpected static response generation errors.
+- T-0063 is complete: `docs/ARCHITECTURE.md` and `docs/ROADMAP.md` now distinguish implemented, partial, and deferred capabilities in line with `docs/PROJECT_STATE.md`.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0060 Dashboard Serve Boundary Hardening: restricted dashboard serving to safe methods, security headers, and traversal-resistant static routes.
 - T-0061 Evidence Index Schema Hardening: required canonical evidence `time`, `summary`, and `visibility` fields and migrated recent timestamp drift.
 - T-0062 Dashboard Server Failure Semantics: added safe 404/500 behavior for missing static dashboard roots/files and unexpected response generation errors.
+- T-0063 Architecture/Roadmap State Reconciliation: aligned high-level docs with current implemented, partial, and deferred HADARA capabilities.
 
 ## Current Known Problems
 
@@ -50,8 +51,8 @@
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
 - Latest full check: Docker `npm ci && npm run check` passed with 29 test files and 158 tests after T-0062.
-- Latest focused schema/server smoke: Docker `npm test -- tests/harness/harness-validate.test.ts tests/unit/evidence-json.test.ts tests/unit/dashboard-static.test.ts` passed with 3 test files and 28 tests.
-- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0061/T-0062 --level done --json` returned `ok: true` for both tasks.
+- Latest focused doc/state check: text scan confirmed `ARCHITECTURE.md` no longer lists Dashboard or MCP server as fully unimplemented.
+- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0063 --level done --json` returned `ok: true`.
 
 ## Historical Index
 

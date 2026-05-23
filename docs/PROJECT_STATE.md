@@ -76,6 +76,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Dashboard serving is hardened for GET/HEAD-only static responses, no-store/no-sniff/content-security headers, and traversal-like route rejection.
 - Harness evidence index validation now requires canonical `hadara.evidence.v1` records to include non-empty `time`, `summary`, and `visibility`, and recent timestamp-only dashboard evidence records have been migrated.
 - Static dashboard server responses now fail predictably for missing project roots or allowlisted files, returning safe 404 responses, and request handling catches unexpected response generation errors as 500 responses.
+- Architecture and roadmap docs now distinguish implemented bootstrap capabilities, partial self-hosting surfaces, and deferred full-dogfooding work.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.
