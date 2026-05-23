@@ -24,7 +24,10 @@ export function initProject(projectRoot: string, profile: InitProfile = 'minimal
     ensureDir(dir);
   }
 
-  writeFileIfMissing(path.join(projectRoot, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\nStatus: Bootstrap initialized.\n');
+  writeFileIfMissing(
+    path.join(projectRoot, 'docs', 'PROJECT_STATE.md'),
+    '# PROJECT_STATE\n\nStatus: Bootstrap initialized.\nPhase: bootstrap-development.\n\n## Current Phase\n\nbootstrap-development\n'
+  );
   writeFileIfMissing(path.join(projectRoot, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n');
   writeFileIfMissing(path.join(projectRoot, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\nRead PROJECT_STATE.md and TASK_BOARD.md before continuing.\n');
   writeFileIfMissing(path.join(projectRoot, 'docs', 'ARCHITECTURE.md'), createArchitectureDoc(normalizedProfile));

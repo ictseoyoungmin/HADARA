@@ -48,6 +48,14 @@ describe('Operations Status JSON', () => {
           done: 1,
           draft: 1,
           partial: 1,
+          superseded: 1,
+          inProgress: 0,
+          unknown: 0
+        },
+        rawStatusCounts: {
+          done: 1,
+          draft: 1,
+          partial: 1,
           superseded: 1
         },
         lastCompleted: ['T-0050', 'T-0051', 'T-0052'],
@@ -73,6 +81,98 @@ describe('Operations Status JSON', () => {
       },
       issues: []
     });
+  });
+
+  it('keeps stable task count keys and reports raw status counts separately', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+    const active = createTaskCapsule(root, 'Active task');
+    const custom = createTaskCapsule(root, 'Custom task');
+    setTaskStatus(active.dir, 'In Progress');
+    setTaskStatus(custom.dir, 'Needs Review');
+
+    const report = createOpsStatusReport(root);
+
+    expect(report.tasks.counts).toEqual({
+      done: 0,
+      draft: 0,
+      partial: 0,
+      superseded: 0,
+      inProgress: 1,
+      unknown: 1
+    });
+    expect(report.tasks.rawStatusCounts).toEqual({
+      inProgress: 1,
+      needsReview: 1
+    });
+  });
+
+  it('reports warning issues for missing source documents and validation baseline', () => {
+    const root = tempProject();
+
+    const report = createOpsStatusReport(root);
+
+    expect(report.ok).toBe(true);
+    expect(report.project.phase).toBe('unknown');
+    expect(report.issues).toEqual([
+      {
+        severity: 'warning',
+        code: 'PROJECT_STATE_MISSING',
+        message: 'docs/PROJECT_STATE.md is missing.'
+      },
+      {
+        severity: 'warning',
+        code: 'AGENT_HANDOFF_MISSING',
+        message: 'docs/AGENT_HANDOFF.md is missing.'
+      },
+      {
+        severity: 'warning',
+        code: 'TASK_BOARD_MISSING',
+        message: 'docs/TASK_BOARD.md is missing.'
+      },
+      {
+        severity: 'warning',
+        code: 'DEVELOPMENT_SLICES_MISSING',
+        message: 'docs/DEVELOPMENT_SLICES.md is missing.'
+      },
+      {
+        severity: 'warning',
+        code: 'VALIDATION_BASELINE_MISSING',
+        message: 'No latest validation baseline was found in handoff or validation history.'
+      }
+    ]);
+  });
+
+  it('parses explicit phase markers and falls back to validation history', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Phase\n\nPhase: release-hardening\n', 'utf8');
+    fs.writeFileSync(
+      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
+      '# AGENT_HANDOFF\n\n## Current State\n\n- Handoff exists.\n',
+      'utf8'
+    );
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
+    fs.writeFileSync(
+      path.join(root, 'docs', 'VALIDATION_HISTORY.md'),
+      [
+        '# VALIDATION_HISTORY',
+        '',
+        '- Docker check after T-0053: 28 test files passed, 144 tests passed.',
+        '- Docker node dist/cli/main.js harness validate --task T-0053 --level done --json returned ok true.'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const report = createOpsStatusReport(root);
+
+    expect(report.project.phase).toBe('release-hardening');
+    expect(report.validation).toEqual({
+      latestFullCheck: 'Docker check after T-0053: 28 test files passed, 144 tests passed',
+      latestDoneLevelValidation: 'Docker node dist/cli/main.js harness validate --task T-0053 --level done --json returned ok true'
+    });
+    expect(report.issues).toEqual([]);
   });
 
   it('prints JSON for both status command forms', () => {
@@ -133,6 +233,8 @@ Phase 0 / Phase 1 boundary.
 `,
     'utf8'
   );
+  fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
+  fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
 }
 
 function writeGitBranch(root: string, branch: string): void {

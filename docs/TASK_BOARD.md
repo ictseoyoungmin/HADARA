@@ -55,3 +55,4 @@
 | T-0051 | MCP Phase/Mode Config | Done | tasks/T-0051-mcp-phase-mode-config | Initialize metadata and instructions now reflect default read-only vs evidence attach-enabled mode. |
 | T-0052 | MCP Evidence Attach Approval Record | Done | tasks/T-0052-mcp-evidence-attach-approval-record | Requires per-call approval actor/reason for opt-in MCP evidence attach writes. |
 | T-0053 | Operations Status JSON | Done | tasks/T-0053-operations-status-json | Adds `hadara status --json` and `hadara ops status --json` as dashboard/external-agent read models. |
+| T-0054 | Operations Status JSON Cleanup | Done | tasks/T-0054-operations-status-json-cleanup | Hardens status JSON warnings, stable task counts, raw status counts, phase parsing, and validation fallback. |

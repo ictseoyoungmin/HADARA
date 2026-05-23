@@ -59,3 +59,6 @@ Historical validation entries moved out of `docs/AGENT_HANDOFF.md` during T-0040
 - Docker check after T-0053: 28 test files passed, 144 tests passed.
 - Docker built CLI `status --json` and `ops status --json` returned `hadara.ops.status.v1`.
 - Docker `node dist/cli/main.js harness validate --task T-0053 --level done --json` returned `ok: true`.
+- Docker check after T-0054: 28 test files passed, 147 tests passed.
+- Docker built CLI `status --json` returned stable counts, `rawStatusCounts`, and `issues`.
+- Docker `node dist/cli/main.js harness validate --task T-0054 --level done --json` returned `ok: true`.

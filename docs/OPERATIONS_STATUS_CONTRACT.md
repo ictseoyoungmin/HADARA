@@ -38,6 +38,13 @@ Example:
       "done": 52,
       "draft": 0,
       "partial": 1,
+      "superseded": 1,
+      "inProgress": 0,
+      "unknown": 0
+    },
+    "rawStatusCounts": {
+      "done": 52,
+      "partial": 1,
       "superseded": 1
     },
     "lastCompleted": ["T-0050", "T-0051", "T-0052"],
@@ -69,13 +76,34 @@ Example:
 
 - `schemaVersion`, `command`, and `ok` are stable fields.
 - `project.branch` is read from the local Git metadata when available; otherwise it is `unknown`.
-- `project.phase` is derived from `docs/PROJECT_STATE.md`.
-- `tasks.counts` is derived from Task Capsule status values.
+- `project.phase` is derived from `docs/PROJECT_STATE.md`; explicit `Phase: ...` markers or a simple `## Current Phase` value are preferred.
+- `tasks.counts` keeps stable dashboard-facing keys: `done`, `draft`, `partial`, `superseded`, `inProgress`, and `unknown`.
+- `tasks.rawStatusCounts` preserves normalized source status values for diagnostics.
 - `tasks.lastCompleted` is derived from `docs/AGENT_HANDOFF.md`.
 - `tasks.nextRecommended` is derived from the handoff next-step section when available.
 - `handoff.*` arrays are compact excerpts from `docs/AGENT_HANDOFF.md`.
-- `validation.*` fields are compact latest validation summaries from `docs/AGENT_HANDOFF.md`.
-- `mcp.evidenceAttach` documents the current operational guard state.
+- `validation.*` fields are compact latest validation summaries from `docs/AGENT_HANDOFF.md`, falling back to `docs/VALIDATION_HISTORY.md` when needed.
+- `mcp.evidenceAttach` documents configured operational guard state. It is not live MCP server process inspection.
+- `issues` may include warnings when source documents are missing or validation baseline details are unavailable. Warning-only reports keep `ok: true` so dashboards can render degraded snapshots.
+
+## Warning Issue Codes
+
+| Code | Meaning |
+|---|---|
+| `PROJECT_STATE_MISSING` | `docs/PROJECT_STATE.md` was not found. |
+| `AGENT_HANDOFF_MISSING` | `docs/AGENT_HANDOFF.md` was not found. |
+| `TASK_BOARD_MISSING` | `docs/TASK_BOARD.md` was not found. |
+| `DEVELOPMENT_SLICES_MISSING` | `docs/DEVELOPMENT_SLICES.md` was not found. |
+| `VALIDATION_BASELINE_MISSING` | No latest validation baseline was found in handoff or validation history. |
+
+## MCP Runtime Boundary
+
+The `mcp` object is a configured capability snapshot. T-0054 does not inspect:
+
+- current server process status
+- live read-only versus evidence attach-enabled process state
+- latest MCP smoke result beyond documented validation summaries
+- latest MCP audit event
 
 ## Non-Goals
 

@@ -44,7 +44,8 @@ HADARA development should proceed in small, evidence-backed slices. Each slice m
 | 38 | MCP phase/mode config | T-0051 | Keep MCP initialize metadata aligned with default read-only and evidence attach-enabled modes. | Done: Docker check passed, 27 test files passed, 142 tests passed, done-level harness validation passed. |
 | 39 | MCP evidence attach approval record | T-0052 | Require per-call approval actor and reason for opt-in MCP evidence attach writes. | Done: Docker check passed, 27 test files passed, 142 tests passed, done-level harness validation passed. |
 | 40 | Operations Status JSON | T-0053 | Provide a single dashboard/external-agent JSON snapshot before implementing UI. | Done: Docker check passed, status JSON tests and CLI smokes passed, done-level harness validation passed. |
-| 41 | Dashboard read model contract | TBD | Define dashboard consumption contract after Operations Status JSON exists. | Contract tests and sample status fixture. |
-| 42 | Minimal static dashboard | TBD | Build a minimal static dashboard consuming sample status JSON. | Static UI smoke plus read-model fixture tests. |
-| 43 | Dashboard served from HADARA CLI | TBD | Serve the static dashboard through a HADARA CLI entry point. | CLI smoke and asset-serving tests. |
-| 44 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |
+| 41 | Operations Status JSON cleanup | T-0054 | Harden status JSON degradation signals and stable dashboard-facing task count fields. | Done: Docker check passed, 28 test files passed, 147 tests passed, done-level harness validation passed. |
+| 42 | Dashboard read model contract | TBD | Define dashboard consumption contract after Operations Status JSON exists. | Contract tests and sample status fixture. |
+| 43 | Minimal static dashboard | TBD | Build a minimal static dashboard consuming sample status JSON. | Static UI smoke plus read-model fixture tests. |
+| 44 | Dashboard served from HADARA CLI | TBD | Serve the static dashboard through a HADARA CLI entry point. | CLI smoke and asset-serving tests. |
+| 45 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |
