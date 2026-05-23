@@ -3,6 +3,8 @@
 ## Current Reference
 
 - `docs/design/mockups/HADARA_web_ui_v0.1_comfort_dark.html`
+- `docs/design/dashboard/index.html`
+- `docs/design/fixtures/hadara.ops.status.sample.json`
 
 ## Intent
 
@@ -16,10 +18,9 @@ The mockup captures future dashboard direction for:
 
 ## Scope Boundary
 
-T-0053 does not implement dashboard UI. It only creates the Operations Status JSON/read model that a future dashboard can consume.
+T-0056 provides a minimal static dashboard reference that consumes the sample Operations Status JSON fixture. It has no backend, live CLI execution, MCP connection, file writes, or build step.
 
 Recommended next slices:
 
-1. T-0054 Dashboard Read Model Contract
-2. T-0055 Minimal Static Dashboard consuming sample status JSON
-3. T-0056 Dashboard served from HADARA CLI
+1. T-0057 Dashboard Fixture Smoke
+2. T-0058 Dashboard served from HADARA CLI

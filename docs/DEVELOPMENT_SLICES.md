@@ -46,6 +46,7 @@ HADARA development should proceed in small, evidence-backed slices. Each slice m
 | 40 | Operations Status JSON | T-0053 | Provide a single dashboard/external-agent JSON snapshot before implementing UI. | Done: Docker check passed, status JSON tests and CLI smokes passed, done-level harness validation passed. |
 | 41 | Operations Status JSON cleanup | T-0054 | Harden status JSON degradation signals and stable dashboard-facing task count fields. | Done: Docker check passed, 28 test files passed, 147 tests passed, done-level harness validation passed. |
 | 42 | Dashboard read model contract | T-0055 | Define dashboard consumption contract after Operations Status JSON exists. | Done: Docker check passed, 28 test files passed, 148 tests passed, sample fixture and field mapping added. |
-| 43 | Minimal static dashboard | TBD | Build a minimal static dashboard consuming sample status JSON. | Static UI smoke plus read-model fixture tests. |
-| 44 | Dashboard served from HADARA CLI | TBD | Serve the static dashboard through a HADARA CLI entry point. | CLI smoke and asset-serving tests. |
-| 45 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |
+| 43 | Minimal static dashboard | T-0056 | Build a minimal static dashboard consuming sample status JSON. | Done: Docker check passed, 29 test files passed, 150 tests passed, static fixture/dashboard smoke added. |
+| 44 | Dashboard fixture smoke | TBD | Add browser/file fixture smoke for the static dashboard before CLI serving. | Static asset and fixture load checks. |
+| 45 | Dashboard served from HADARA CLI | TBD | Serve the static dashboard through a HADARA CLI entry point. | CLI smoke and asset-serving tests. |
+| 46 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |

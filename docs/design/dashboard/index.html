@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HADARA Operations Dashboard</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111318;
+      --panel: #181c22;
+      --panel-2: #20262e;
+      --border: #303946;
+      --text: #edf1f6;
+      --muted: #aab4c1;
+      --soft: #788493;
+      --success: #64d39b;
+      --warning: #f5bd5f;
+      --danger: #f07178;
+      --info: #6db7e8;
+      --accent: #d7c27a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 244px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: #14171d;
+      padding: 24px 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--accent);
+      background: var(--panel);
+      font-weight: 700;
+    }
+
+    .brand-title {
+      display: grid;
+      gap: 2px;
+    }
+
+    .brand-title strong {
+      font-size: 15px;
+    }
+
+    .brand-title span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 6px;
+    }
+
+    .nav a {
+      color: var(--muted);
+      text-decoration: none;
+      padding: 9px 10px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    .nav a[aria-current="page"] {
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--border);
+    }
+
+    .main {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      min-height: 72px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 24px;
+      background: #151922;
+    }
+
+    .title-block {
+      min-width: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 650;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 3px;
+    }
+
+    .top-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 28px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: var(--panel);
+      padding: 4px 10px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--soft);
+    }
+
+    .dot.ok {
+      background: var(--success);
+    }
+
+    .dot.degraded {
+      background: var(--warning);
+    }
+
+    .dot.error {
+      background: var(--danger);
+    }
+
+    .content {
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .banner {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 13px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .banner strong {
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .metrics {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .two-col {
+      grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+    }
+
+    .three-col {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 8px;
+      min-width: 0;
+    }
+
+    .metric {
+      padding: 15px 14px;
+      display: grid;
+      gap: 8px;
+      min-height: 112px;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric strong {
+      font-size: 28px;
+      line-height: 1;
+      font-weight: 700;
+    }
+
+    .metric small {
+      color: var(--soft);
+      font-size: 12px;
+    }
+
+    .section {
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 650;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .list li {
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      border-radius: 6px;
+      padding: 11px 12px;
+      color: var(--text);
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .kv {
+      display: grid;
+      gap: 10px;
+    }
+
+    .kv-row {
+      display: grid;
+      grid-template-columns: 128px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+
+    .kv-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .kv-row span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .kv-row strong {
+      font-size: 13px;
+      font-weight: 600;
+      overflow-wrap: anywhere;
+    }
+
+    .issue {
+      border-color: rgba(245, 189, 95, 0.5);
+    }
+
+    .empty {
+      color: var(--muted);
+      border-style: dashed;
+    }
+
+    .guard-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .guard {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--panel-2);
+      padding: 11px 12px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .guard span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .guard strong {
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .status-text.ok {
+      color: var(--success);
+    }
+
+    .status-text.degraded {
+      color: var(--warning);
+    }
+
+    .status-text.error {
+      color: var(--danger);
+    }
+
+    @media (max-width: 1100px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .metrics,
+      .three-col {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .top-meta {
+        justify-content: flex-start;
+      }
+
+      .content {
+        padding: 16px;
+      }
+
+      .metrics,
+      .three-col,
+      .guard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .banner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .kv-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Dashboard navigation">
+      <div class="brand">
+        <div class="brand-mark">H</div>
+        <div class="brand-title">
+          <strong>HADARA</strong>
+          <span>Operations</span>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="#" aria-current="page">Overview</a>
+        <a href="#">Tasks</a>
+        <a href="#">Evidence</a>
+        <a href="#">Handoff</a>
+        <a href="#">MCP</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="title-block">
+          <h1>Operations Home</h1>
+          <div class="subtitle" id="project-summary">Loading status snapshot...</div>
+        </div>
+        <div class="top-meta">
+          <span class="pill"><span class="dot" id="health-dot"></span><span id="health-label">loading</span></span>
+          <span class="pill" id="phase-pill">phase: unknown</span>
+          <span class="pill" id="branch-pill">branch: unknown</span>
+        </div>
+      </header>
+
+      <section class="content" aria-live="polite">
+        <div class="banner">
+          <span><strong id="fixture-kind">Sample snapshot</strong> <span id="fixture-note">Static design data. Not live repository state.</span></span>
+          <span id="schema-label">hadara.ops.status.v1</span>
+        </div>
+
+        <section class="grid metrics" id="task-metrics" aria-label="Task metrics"></section>
+
+        <section class="grid two-col">
+          <article class="card section">
+            <div class="section-header">
+              <h2>Work Queue</h2>
+              <span class="muted" id="last-completed-count"></span>
+            </div>
+            <div class="kv">
+              <div class="kv-row">
+                <span>Next</span>
+                <strong id="next-recommended">No recommendation available</strong>
+              </div>
+              <div class="kv-row">
+                <span>Completed</span>
+                <strong id="last-completed">None</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="card section">
+            <div class="section-header">
+              <h2>Validation</h2>
+              <span class="muted">latest</span>
+            </div>
+            <div class="kv">
+              <div class="kv-row">
+                <span>Full check</span>
+                <strong id="validation-full">No full check recorded</strong>
+              </div>
+              <div class="kv-row">
+                <span>Done level</span>
+                <strong id="validation-done">No done-level validation recorded</strong>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="grid three-col">
+          <article class="card section">
+            <div class="section-header">
+              <h2>Current State</h2>
+            </div>
+            <ul class="list" id="current-state"></ul>
+          </article>
+
+          <article class="card section">
+            <div class="section-header">
+              <h2>Known Problems</h2>
+            </div>
+            <ul class="list" id="known-problems"></ul>
+          </article>
+
+          <article class="card section">
+            <div class="section-header">
+              <h2>Issues</h2>
+              <span class="muted" id="issue-count"></span>
+            </div>
+            <ul class="list" id="issues"></ul>
+          </article>
+        </section>
+
+        <section class="grid two-col">
+          <article class="card section">
+            <div class="section-header">
+              <h2>MCP Guard</h2>
+              <span class="muted">configured</span>
+            </div>
+            <div class="guard-grid" id="mcp-guard"></div>
+          </article>
+
+          <article class="card section">
+            <div class="section-header">
+              <h2>Status Counts</h2>
+              <span class="muted">source labels</span>
+            </div>
+            <div class="kv" id="raw-counts"></div>
+          </article>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script type="application/json" id="fallback-status-json">
+{
+  "schemaVersion": "hadara.ops.status.v1",
+  "command": "ops.status",
+  "fixtureMeta": {
+    "kind": "sample",
+    "notLiveData": true,
+    "note": "Static sample data for dashboard design; it may not match the repository's current state."
+  },
+  "ok": true,
+  "health": "ok",
+  "project": {
+    "branch": "main",
+    "phase": "bootstrap-development"
+  },
+  "tasks": {
+    "counts": {
+      "done": 53,
+      "draft": 0,
+      "partial": 1,
+      "superseded": 1,
+      "inProgress": 0,
+      "unknown": 0
+    },
+    "rawStatusCounts": {
+      "Done": 53,
+      "Partial": 1,
+      "Superseded": 1
+    },
+    "normalizedStatusCounts": {
+      "done": 53,
+      "partial": 1,
+      "superseded": 1
+    },
+    "lastCompleted": ["T-0052", "T-0053", "T-0054"],
+    "nextRecommended": "Continue with Dashboard Read Model Contract before implementing dashboard UI."
+  },
+  "handoff": {
+    "currentState": [
+      "Operations Status JSON is available for dashboards and external agents.",
+      "Dashboard UI remains deferred."
+    ],
+    "knownProblems": [
+      "Docker is the working validation path for now."
+    ],
+    "nextRecommendedStep": [
+      "Continue with Dashboard Read Model Contract before any dashboard implementation."
+    ]
+  },
+  "validation": {
+    "latestFullCheck": "Docker npm ci && npm run check passed with 28 test files and 147 tests",
+    "latestDoneLevelValidation": "Docker node dist/cli/main.js harness validate --task T-0054 --level done --json returned ok true"
+  },
+  "mcp": {
+    "defaultMode": "read-only",
+    "evidenceAttach": {
+      "enabledByDefault": false,
+      "requiresFlag": "--enable-evidence-attach",
+      "requiresApproval": true,
+      "audited": true
+    }
+  },
+  "issues": []
+}
+  </script>
+
+  <script>
+    const fixtureUrl = '../fixtures/hadara.ops.status.sample.json';
+
+    async function loadStatus() {
+      try {
+        const response = await fetch(fixtureUrl, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`fixture fetch failed: ${response.status}`);
+        return await response.json();
+      } catch (_error) {
+        return JSON.parse(document.getElementById('fallback-status-json').textContent);
+      }
+    }
+
+    function text(value, fallback) {
+      if (value === undefined || value === null || value === '') return fallback;
+      return String(value);
+    }
+
+    function setText(id, value) {
+      document.getElementById(id).textContent = value;
+    }
+
+    function renderMetrics(counts) {
+      const labels = [
+        ['done', 'Done'],
+        ['draft', 'Draft'],
+        ['partial', 'Partial'],
+        ['superseded', 'Superseded'],
+        ['inProgress', 'In progress'],
+        ['unknown', 'Unknown']
+      ];
+      const root = document.getElementById('task-metrics');
+      root.innerHTML = labels.map(([key, label]) => `
+        <article class="card metric">
+          <span>${label}</span>
+          <strong>${Number(counts?.[key] ?? 0)}</strong>
+          <small>tasks.${key}</small>
+        </article>
+      `).join('');
+    }
+
+    function renderList(id, items, emptyText) {
+      const root = document.getElementById(id);
+      const values = Array.isArray(items) ? items : [];
+      if (values.length === 0) {
+        root.innerHTML = `<li class="empty">${emptyText}</li>`;
+        return;
+      }
+      root.innerHTML = values.map((item) => `<li>${text(item, emptyText)}</li>`).join('');
+    }
+
+    function renderMcpGuard(status) {
+      const attach = status?.mcp?.evidenceAttach ?? {};
+      const values = [
+        ['Default mode', status?.mcp?.defaultMode ?? 'unknown'],
+        ['Evidence attach default', attach.enabledByDefault === false ? 'disabled' : 'unknown'],
+        ['Required flag', attach.requiresFlag ?? 'unavailable'],
+        ['Approval', attach.requiresApproval ? 'required' : 'unavailable'],
+        ['Audit', attach.audited ? 'enabled' : 'unavailable']
+      ];
+      document.getElementById('mcp-guard').innerHTML = values.map(([label, value]) => `
+        <div class="guard">
+          <span>${label}</span>
+          <strong>${value}</strong>
+        </div>
+      `).join('');
+    }
+
+    function renderRawCounts(counts) {
+      const entries = Object.entries(counts ?? {});
+      const root = document.getElementById('raw-counts');
+      if (entries.length === 0) {
+        root.innerHTML = '<div class="kv-row"><span>Status</span><strong>No source status labels</strong></div>';
+        return;
+      }
+      root.innerHTML = entries.map(([label, count]) => `
+        <div class="kv-row">
+          <span>${label}</span>
+          <strong>${count}</strong>
+        </div>
+      `).join('');
+    }
+
+    function renderIssues(issues) {
+      const values = Array.isArray(issues) ? issues : [];
+      setText('issue-count', `${values.length} total`);
+      const root = document.getElementById('issues');
+      if (values.length === 0) {
+        root.innerHTML = '<li class="empty">No issues</li>';
+        return;
+      }
+      root.innerHTML = values.map((issue) => `
+        <li class="issue"><strong>${text(issue.code, 'ISSUE')}</strong><br><span class="muted">${text(issue.message, 'No details')}</span></li>
+      `).join('');
+    }
+
+    function render(status) {
+      const health = status.health ?? 'degraded';
+      document.getElementById('health-dot').className = `dot ${health}`;
+      document.getElementById('health-label').className = `status-text ${health}`;
+      setText('health-label', health);
+      setText('phase-pill', `phase: ${text(status.project?.phase, 'unknown')}`);
+      setText('branch-pill', `branch: ${text(status.project?.branch, 'unknown')}`);
+      setText('project-summary', `${text(status.project?.phase, 'unknown')} on ${text(status.project?.branch, 'unknown')}`);
+      setText('schema-label', status.schemaVersion ?? 'unknown schema');
+      setText('fixture-kind', status.fixtureMeta?.notLiveData ? 'Sample snapshot' : 'Status snapshot');
+      setText('fixture-note', status.fixtureMeta?.note ?? 'Static design data. Not live repository state.');
+
+      renderMetrics(status.tasks?.counts);
+      setText('next-recommended', text(status.tasks?.nextRecommended, 'No recommendation available'));
+      setText('last-completed', (status.tasks?.lastCompleted ?? []).join(', ') || 'None');
+      setText('last-completed-count', `${(status.tasks?.lastCompleted ?? []).length} items`);
+      setText('validation-full', text(status.validation?.latestFullCheck, 'No full check recorded'));
+      setText('validation-done', text(status.validation?.latestDoneLevelValidation, 'No done-level validation recorded'));
+      renderList('current-state', status.handoff?.currentState, 'No current state found');
+      renderList('known-problems', status.handoff?.knownProblems, 'No known problems listed');
+      renderIssues(status.issues);
+      renderMcpGuard(status);
+      renderRawCounts(status.tasks?.rawStatusCounts);
+    }
+
+    loadStatus().then(render);
+  </script>
+</body>
+</html>

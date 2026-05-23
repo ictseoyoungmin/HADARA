@@ -28,6 +28,11 @@ Example:
 {
   "schemaVersion": "hadara.ops.status.v1",
   "command": "ops.status",
+  "fixtureMeta": {
+    "kind": "sample",
+    "notLiveData": true,
+    "note": "Static sample data for dashboard design; it may not match the repository's current state."
+  },
   "ok": true,
   "health": "ok",
   "project": {
@@ -101,7 +106,7 @@ Example:
 |---|---|
 | `ok` | Report was generated and no issues were found. |
 | `degraded` | Report was generated, but one or more warning issues indicate incomplete source state. |
-| `error` | Reserved for future report-generation failures that still return a structured status report. |
+| `error` | Reserved for future report-generation failures that still return a structured status report; the current CLI rarely emits it. |
 
 ## Warning Issue Codes
 

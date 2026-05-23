@@ -1,8 +1,8 @@
 # DASHBOARD_READ_MODEL_CONTRACT
 
-This document defines how a future HADARA dashboard consumes `hadara.ops.status.v1`.
+This document defines how a HADARA dashboard consumes `hadara.ops.status.v1`.
 
-T-0055 is contract-only for dashboard data consumption. It does not implement dashboard UI.
+T-0055 introduced this contract for dashboard data consumption. Later dashboard slices may consume it without changing the contract.
 
 ## Data Source
 
@@ -21,6 +21,8 @@ hadara ops status --json
 Sample fixture:
 
 - `docs/design/fixtures/hadara.ops.status.sample.json`
+
+The fixture is static sample data and may not match the repository's current state. Dashboards should treat `fixtureMeta.notLiveData: true` as non-live provenance.
 
 Visual reference:
 
@@ -57,7 +59,7 @@ The mockup is visual direction only. The read model is authoritative for dashboa
 |---|---|---|
 | `health: "ok"` | success | Report generated with complete source state. |
 | `health: "degraded"` | warning | Report generated, but one or more source documents or validation baseline details are missing. |
-| `health: "error"` | danger | Reserved for future structured report-generation failures. |
+| `health: "error"` | danger | Reserved for future structured report-generation failures; the current CLI rarely emits it. |
 | `issues[].severity: "warning"` | warning | Dashboard should remain usable and show partial data. |
 | `issues[].severity: "error"` | danger | Reserved for future hard failures. |
 
@@ -74,9 +76,10 @@ Use the comfort dark mockup to guide placement only:
 - handoff panels map to `handoff.currentState`, `handoff.knownProblems`, and `handoff.nextRecommendedStep`
 - operational notices map to `issues`
 
-## Non-Goals
+## Non-Goals For This Contract
 
-- Rendering HTML, React, or Vite UI.
+- Requiring a dashboard implementation. A separate static reference dashboard may consume this contract without changing it.
+- React or Vite UI.
 - Live MCP stream connection.
 - Current MCP process discovery.
 - Provider/run/queue UI.

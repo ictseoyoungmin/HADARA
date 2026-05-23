@@ -65,3 +65,6 @@ Historical validation entries moved out of `docs/AGENT_HANDOFF.md` during T-0040
 - Docker check after T-0055: 28 test files passed, 148 tests passed.
 - Docker built CLI `status --json` returned `health`, `rawStatusCounts`, and `normalizedStatusCounts`.
 - Docker `node dist/cli/main.js harness validate --task T-0055 --level done --json` returned `ok: true`.
+- Docker focused dashboard/status tests after T-0056: 2 test files passed, 8 tests passed.
+- Docker check after T-0056: 29 test files passed, 150 tests passed.
+- Docker `node dist/cli/main.js harness validate --task T-0056 --level done --json` returned `ok: true` after correcting the T-0056 evidence index schema.
