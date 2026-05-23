@@ -17,13 +17,16 @@
 - T-0055 is complete: Dashboard read model contract maps dashboard cards/panels to `hadara.ops.status.v1`, adds `health`, true raw status counts, normalized status counts, and a sample fixture.
 - T-0056 is complete: minimal static dashboard reference consumes the sample status fixture with an inline fallback and keeps backend, live CLI, MCP, file writes, and build steps out of scope.
 - T-0057 is complete: comfort dark mockup is promoted to dashboard visual baseline, with `docs/design/dashboard/index.html` binding values from `hadara.ops.status.v1` fixture/fallback data and retaining static boundary tests.
+- T-0058 is complete: static dashboard fixture binding smoke coverage verifies `data-field` attributes map to fixture-backed or derived `hadara.ops.status.v1` values.
+- T-0059 is complete: `hadara dashboard serve` serves the static sample-backed dashboard and fixture through allowlisted routes.
+- T-0060 is complete: dashboard serving is hardened with GET/HEAD-only responses, basic security headers, and traversal-like route regressions.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0055 Dashboard Read Model Contract: documented dashboard field mapping, empty/degraded behavior, status semantics, mockup mapping, and sample fixture.
-- T-0056 Minimal Static Dashboard: added static Operations Home dashboard, non-live sample fixture metadata, inline fallback, and static scope smoke tests.
-- T-0057 Dashboard Mockup Adoption: adopted comfort dark shell baseline while preserving `hadara.ops.status.v1` fixture binding, fallback parity, and static no-live-integration boundary.
+- T-0058 Dashboard Fixture Binding Smoke: added static smoke coverage for dashboard `data-field` fixture and derived value bindings.
+- T-0059 Dashboard Served from HADARA CLI: added `hadara dashboard serve` for the static sample-backed dashboard and fixture allowlist.
+- T-0060 Dashboard Serve Boundary Hardening: restricted dashboard serving to safe methods, security headers, and traversal-resistant static routes.
 
 ## Current Known Problems
 
@@ -37,16 +40,16 @@
 
 ## Next Recommended Step
 
-1. Continue with T-0058 Dashboard Fixture Binding Smoke before CLI serving or live integrations.
+1. Plan the next dashboard slice before any live status integration; keep live CLI/MCP/dashboard writes deferred until an explicit contract and evidence gate exist.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm ci && npm run check` passed with 29 test files and 152 tests after T-0057.
-- Latest static dashboard smoke: Docker `npm test -- tests/unit/dashboard-static.test.ts tests/unit/status-json.test.ts` passed with 2 test files and 10 tests.
-- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0057 --level done --json` returned `ok: true`.
+- Latest full check: Docker `npm ci && npm run check` passed with 29 test files and 155 tests after T-0060.
+- Latest static dashboard smoke: Docker `npm test -- tests/unit/dashboard-static.test.ts tests/unit/status-json.test.ts` passed with 2 test files and 13 tests.
+- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0058/T-0059/T-0060 --level done --json` returned `ok: true` for all three tasks.
 
 ## Historical Index
 
