@@ -23,13 +23,15 @@
 - T-0061 is complete: `evidence.jsonl` validation now rejects missing `time`, `summary`, and `visibility`, and recent dashboard timestamp-only evidence records were migrated to canonical `time`.
 - T-0062 is complete: static dashboard server failures now return safe 404/500 responses for missing roots/files and unexpected static response generation errors.
 - T-0063 is complete: `docs/ARCHITECTURE.md` and `docs/ROADMAP.md` now distinguish implemented, partial, and deferred capabilities in line with `docs/PROJECT_STATE.md`.
+- T-0064 is complete: `docs/ROADMAP.md` now freezes v0.3 as the current read-only Operations Layer, lists explicit in/out-of-scope boundaries, separates v0.3-v1.0 candidate scopes, and adds an Operational Debt Track.
+- T-0065 is complete: context export now includes roadmap/slice ordering and instructs external agents to prefer HADARA CLI JSON or read-only MCP surfaces before falling back to raw repository documents.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0061 Evidence Index Schema Hardening: required canonical evidence `time`, `summary`, and `visibility` fields and migrated recent timestamp drift.
-- T-0062 Dashboard Server Failure Semantics: added safe 404/500 behavior for missing static dashboard roots/files and unexpected response generation errors.
 - T-0063 Architecture/Roadmap State Reconciliation: aligned high-level docs with current implemented, partial, and deferred HADARA capabilities.
+- T-0064 Roadmap v0.3 Operations Layer Freeze: froze v0.3 as the read-only Operations Layer, deferred provider/live/MCP-write scope, and added Operational Debt Track.
+- T-0065 Context Export MCP Instructions: added roadmap/slice context and MCP/CLI-first read-surface instructions for external agents.
 
 ## Current Known Problems
 
@@ -43,16 +45,16 @@
 
 ## Next Recommended Step
 
-1. Plan the next dashboard slice before any live status integration; keep live CLI/MCP/dashboard writes deferred until an explicit contract and evidence gate exist.
+1. Start T-0066 Compatibility Fixture to prove a Hermes-like external agent can follow the exported guidance through read-only MCP/CLI JSON.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
-3. Keep shell execution, provider calls, and broad write-capable MCP behavior deferred.
+3. Keep shell execution, provider calls, live dashboard streaming, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm ci && npm run check` passed with 29 test files and 158 tests after T-0062.
-- Latest focused doc/state check: text scan confirmed `ARCHITECTURE.md` no longer lists Dashboard or MCP server as fully unimplemented.
-- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0063 --level done --json` returned `ok: true`.
+- Latest full check: Docker `npm ci && npm run check` passed with 29 test files and 159 tests after T-0065.
+- Latest focused context export check: Docker `npm test -- tests/unit/hermes-json.test.ts` passed with 3 tests.
+- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0064 --level done --json` and `node dist/cli/main.js harness validate --task T-0065 --level done --json` returned `ok: true`.
 
 ## Historical Index
 

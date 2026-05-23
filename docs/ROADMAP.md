@@ -1,37 +1,125 @@
 # ROADMAP
 
-## Phase 0 - Manual HADARA Protocol
+## Current Freeze: v0.3 Operations Layer
 
-- Docs and Task Capsules are maintained manually.
-- External agents read/write HADARA-compatible files.
+### Goal
 
-Status: mostly complete for this repository. The protocol is captured in `AGENTS.md`, `docs/IMPLEMENTATION_SOP.md`, Task Capsules, and compact handoff/history documents.
+External agents can read HADARA project state, task capsules, handoff, evidence, policy decisions, and harness validation results through stable CLI JSON and read-only MCP surfaces.
 
-## Phase 1 - HADARA Seed CLI
+### In Scope
 
-- `init`
-- `doctor`
-- `task`
-- `evidence`
-- `handoff`
-- `policy`
-- `hermes export-context`
+- Single active agent/session model.
+- CLI JSON contracts.
+- Read-only MCP tool surface.
+- Task Capsule validation.
+- Evidence index validation.
+- Handoff continuity.
+- Policy evaluate / preflight.
+- Context export with MCP usage instructions.
+- Compatibility fixture for Hermes-like external agent flow.
+- Static Operations Dashboard backed by status JSON / fixture.
 
-Status: mostly complete. Core commands have JSON envelopes, strict argument handling, and Docker-backed regression coverage.
+### Out of Scope
 
-## Phase 2 - Partial Self-Hosting
+- Multi-agent concurrent execution.
+- MCP write tools.
+- MCP shell execution.
+- MCP release/package execution.
+- Real provider execution as the default path.
+- Live MCP dashboard stream.
+- Cloud worker/queue system.
 
-- Provider contract
-- Tool runtime
-- Policy gate
-- Evidence store
-- Handoff automation
+### Current Status
 
-Status: partially complete. Provider contracts, MockProvider/ScriptedProvider, provider fallback, policy preflight, deterministic fake-shell observations, evidence storage, and done-level harness validation exist. Real provider adapters and real shell/tool execution remain deferred.
+Most v0.3 foundations exist: Task Capsules, evidence indexing, done-level harness validation, CLI JSON read surfaces, read-only MCP tools, policy evaluation/preflight, Operations Status JSON, and the static sample-backed dashboard server. The remaining v0.3 freeze work is to tighten external-agent guidance, prove compatibility against a Hermes-like read-only flow, reduce CLI/MCP read-model duplication, and record single-active-run state without queue or multi-agent assumptions.
 
-## Phase 3 - Full Dogfooding
+## v0.4 Single-Agent Run State
 
-- HADARA can run agentic coding loops against its own repository.
-- Dashboard and MCP bridge become operational.
+Track the active task/run explicitly so agents do not infer current work only from the last visible capsule or compact handoff.
 
-Status: started but not complete. A bounded deterministic agent loop, read-only MCP server/tools, opt-in MCP evidence attach, Operations Status JSON, and a static sample-backed dashboard server exist. Full autonomous dogfooding, live dashboard integration, real provider calls, real shell execution, broad MCP writes, and release packaging remain deferred.
+Candidate scope:
+
+- Single active run manifest.
+- Stale handoff detection against active run state.
+- Resume projection for the active task/run.
+- No queue, worker lane, or concurrent multi-agent execution.
+
+## v0.5 CLI/MCP Service Parity
+
+Move duplicated CLI/MCP read logic into shared services and read models so external surfaces stay consistent.
+
+Candidate scope:
+
+- Shared project state read model.
+- Shared task list/read service.
+- Shared handoff read service.
+- Shared policy and harness response adapters.
+- CLI/MCP parity regressions.
+
+## v0.6 Safe CLI Write Boundary
+
+Keep write behavior CLI-owned and policy/evidence-gated before any broader automation.
+
+Candidate scope:
+
+- Clear separation between read models and write commands.
+- Structured write preflight decisions.
+- Stronger acceptance/evidence completion guards.
+- No MCP file-write, shell, task mutation, or release/package execution.
+
+## v0.7 Provider Adapter Preparation
+
+Prepare real provider adapter contracts only after the operations layer is stable.
+
+Candidate scope:
+
+- Provider schema and adapter contract.
+- Secrets-excluded contract tests.
+- Explicit provider fallback behavior.
+- No real provider execution as a default path.
+
+## v0.8 Release/Packaging Track
+
+Make HADARA easier to install and validate without weakening the local evidence model.
+
+Candidate scope:
+
+- Packaging layout.
+- CI/release checks.
+- Portable store migration checks.
+- CLI distribution smoke tests.
+
+## v1.0 Candidate
+
+HADARA becomes a portable, evidence-backed agentic development workbench suitable for long-running single-project development.
+
+Candidate scope:
+
+- Stable Task Capsule lifecycle.
+- Stable CLI JSON and read-only MCP operations surfaces.
+- Static or product-served operations dashboard with clear read/write boundaries.
+- Documented provider adapter path.
+- Operational debt gates connected to product risk.
+
+## Operational Debt Track
+
+HADARA development must track operational pain points discovered while dogfooding HADARA itself. These are not ordinary bugs; they indicate weaknesses in HADARA's continuity, validation, or scope-control model.
+
+### Current Operational Debt
+
+- Capsule size is not yet measured or controlled.
+- Large capsule changes are not surfaced as risk signals.
+- AGENTS/HANDOFF can overfit to the last completed capsule and miss the broader roadmap.
+- `ACCEPTANCE.md` can be checked prematurely without sufficient implementation evidence.
+- LOC/complexity growth is not yet connected to task risk.
+- Handoff freshness is not yet structurally validated against roadmap state.
+- Long files can accumulate too many functions before refactoring pressure is visible.
+
+### Target Capabilities
+
+- Capsule size indicator.
+- Changed LOC / touched files / complexity utility.
+- Roadmap-aware handoff validation.
+- Premature acceptance guard.
+- Stale handoff detection.
+- Active run state summary.

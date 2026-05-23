@@ -54,4 +54,10 @@ HADARA development should proceed in small, evidence-backed slices. Each slice m
 | 48 | Evidence index schema hardening | T-0061 | Prevent manual evidence records from drifting away from `hadara.evidence.v1`. | Done: Docker check passed, 29 test files passed, 158 tests passed, required-field regressions added. |
 | 49 | Dashboard server failure semantics | T-0062 | Make static dashboard server failures predictable before live dashboard work. | Done: Docker check passed, 29 test files passed, 158 tests passed, missing-root and internal-error regressions added. |
 | 50 | Architecture/roadmap state reconciliation | T-0063 | Align high-level docs with current implemented, partial, and deferred capabilities. | Done: architecture and roadmap docs updated; build and done-level validation passed. |
-| 51 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |
+| 51 | Roadmap v0.3 Operations Layer Freeze | T-0064 | Freeze v0.3 as a read-only operations layer before product-wide v1.0 expansion. | Done: ROADMAP and DEVELOPMENT_SLICES updated; exclusions explicit; validation passed. |
+| 52 | Context Export MCP Instructions | T-0065 | Ensure exported context instructs external agents to use HADARA CLI/MCP surfaces first. | Done: context export source docs and instruction regression tests pass. |
+| 53 | Compatibility Fixture | T-0066 | Prove Hermes-like external agent read-only workflow against HADARA MCP/CLI JSON. | Fixture replay/contract test passes. |
+| 54 | CLI/MCP Service Parity Refactor | T-0067 | Move duplicated CLI/MCP read logic into shared services/read models. | CLI and MCP parity tests pass. |
+| 55 | Single Active Run State | T-0068 | Track active task/run without queue or multi-agent assumptions. | Active run manifest, stale handoff detection, and resume projection tests pass. |
+| 56 | Operational Debt Track | T-0069 | Convert known_issue.log into structured product/development debt track. | Debt schema, capsule-size indicators, and premature acceptance checks pass. |
+| 57 | Real Provider Adapter Preparation | TBD | Prepare provider schema and adapter contract only after the operations layer freeze and service/read-model parity work. | Contract tests with secrets excluded. |

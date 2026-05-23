@@ -77,6 +77,8 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Harness evidence index validation now requires canonical `hadara.evidence.v1` records to include non-empty `time`, `summary`, and `visibility`, and recent timestamp-only dashboard evidence records have been migrated.
 - Static dashboard server responses now fail predictably for missing project roots or allowlisted files, returning safe 404 responses, and request handling catches unexpected response generation errors as 500 responses.
 - Architecture and roadmap docs now distinguish implemented bootstrap capabilities, partial self-hosting surfaces, and deferred full-dogfooding work.
+- Roadmap is frozen around the v0.3 Operations Layer: single active agent/session, stable CLI JSON, read-only MCP, evidence/handoff continuity, context export, compatibility fixture, and static operations dashboard remain in scope while multi-agent concurrency, broad MCP writes, MCP shell/release/package execution, live dashboard streaming, and real provider execution as the default path remain out of scope.
+- Context export now includes roadmap and development slice ordering and instructs external agents to prefer HADARA CLI JSON or read-only MCP surfaces before falling back to raw repository documents.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.

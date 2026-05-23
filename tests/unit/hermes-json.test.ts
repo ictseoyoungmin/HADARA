@@ -52,5 +52,29 @@ describe('CLI Hermes JSON reports', () => {
     });
     expect(fs.existsSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'))).toBe(true);
   });
-});
 
+  it('exports MCP and CLI read-surface instructions for external agents', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'ROADMAP.md'), '# ROADMAP\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
+
+    createHermesExportContextReport(root);
+
+    const output = fs.readFileSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'), 'utf8');
+    expect(output).toContain('## docs/ROADMAP.md');
+    expect(output).toContain('## docs/DEVELOPMENT_SLICES.md');
+    expect(output).toContain('hadara.project.state.read');
+    expect(output).toContain('hadara status --json');
+    expect(output).toContain('hadara.task.list');
+    expect(output).toContain('hadara.task.read');
+    expect(output).toContain('hadara.handoff.read');
+    expect(output).toContain('hadara.policy.evaluate');
+    expect(output).toContain('hadara.harness.validate');
+    expect(output).toContain('Treat MCP default mode as read-only');
+    expect(output).toContain('do not assume MCP task mutation, file writes, shell execution, or release/package execution exists');
+    expect(output).toContain('If MCP is unavailable, fall back to CLI JSON commands');
+    expect(output).toContain('single active agent/session model');
+  });
+});

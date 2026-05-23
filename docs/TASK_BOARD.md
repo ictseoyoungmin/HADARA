@@ -65,3 +65,5 @@
 | T-0061 | Evidence Index Schema Hardening | Done | tasks/T-0061-evidence-index-schema-hardening | Requires canonical `time`, `summary`, and `visibility` evidence index fields and migrates recent timestamp drift. |
 | T-0062 | Dashboard Server Failure Semantics | Done | tasks/T-0062-dashboard-server-failure-semantics | Makes static dashboard server failures predictable for missing roots/files and unexpected response generation errors. |
 | T-0063 | Architecture/Roadmap State Reconciliation | Done | tasks/T-0063-architecture-roadmap-state-reconciliation | Aligns architecture and roadmap docs with implemented, partial, and deferred HADARA capabilities. |
+| T-0064 | Roadmap v0.3 Operations Layer Freeze | Done | tasks/T-0064-roadmap-v0-3-operations-layer-freeze | Freezes v0.3 as the current read-only operations layer and moves provider work behind external-agent readiness slices. |
+| T-0065 | Context Export MCP Instructions | Done | tasks/T-0065-context-export-mcp-instructions | Updates context export to include roadmap/slice ordering and MCP/CLI-first external-agent guidance. |

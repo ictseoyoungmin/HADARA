@@ -30,6 +30,8 @@ export function exportHadaraContext(projectRoot: string): string {
     'docs/PROJECT_STATE.md',
     'docs/TASK_BOARD.md',
     'docs/AGENT_HANDOFF.md',
+    'docs/ROADMAP.md',
+    'docs/DEVELOPMENT_SLICES.md',
     'docs/CLI_JSON_CONTRACT.md',
     'docs/MCP_BRIDGE_CONTRACT.md',
     'docs/MCP_EVIDENCE_ATTACH_CONTRACT.md',
@@ -54,9 +56,14 @@ Agents must:
 4. Update AGENT_HANDOFF.md before stopping.
 5. Respect policy decisions for shell/file/git operations.
 6. Treat AGENT_HANDOFF.md as compact current state and follow its Historical Index for older history.
-7. Use the read-only MCP bridge contract before assuming write-capable MCP behavior exists.
-8. Treat policy.evaluate as policy evaluation only, not MCP execution authorization.
-9. Treat MCP evidence attachment as disabled by default; it requires explicit server opt-in, per-call approval metadata, and private audit logging.
+7. Prefer stable HADARA read surfaces before scraping raw files: use hadara.project.state.read or hadara status --json for project state.
+8. Use hadara.task.list and hadara.task.read, or hadara task list --json and hadara task show <task-id> --json, for task state.
+9. Use hadara.handoff.read, hadara.policy.evaluate, and hadara.harness.validate, or their CLI JSON equivalents, for handoff, policy, and validation state.
+10. Treat MCP default mode as read-only; do not assume MCP task mutation, file writes, shell execution, or release/package execution exists.
+11. If MCP is unavailable, fall back to CLI JSON commands and then to repository documents.
+12. Respect the single active agent/session model; do not assume queues, worker lanes, or multi-agent concurrent execution.
+13. Treat policy.evaluate as policy evaluation only, not MCP execution authorization.
+14. Treat MCP evidence attachment as disabled by default; it requires explicit server opt-in, per-call approval metadata, and private audit logging.
 
 ${sections.join('\n\n---\n\n')}
 `;
