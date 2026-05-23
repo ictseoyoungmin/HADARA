@@ -33,7 +33,7 @@ HADARA development should proceed in small, evidence-backed slices. Each slice m
 | 27 | Handoff compaction policy | T-0040 | Keep project handoff current by moving old history into dedicated history docs. | Done: Docker check passed, compact handoff and history docs added. |
 | 28 | Old Draft task reclassification | T-0041 | Mark overtaken early Draft tasks so external agents follow the current roadmap instead. | Done: T-0003 Superseded, T-0006 Partial, validation passed. |
 | 29 | Hermes/MCP read-only contract | T-0042 | Define CLI JSON and read-only MCP bridge contracts before server implementation. | Done: contract docs added, Hermes guidance updated, validation passed. |
-| 30 | MCP JSON-RPC server skeleton | T-0043 | Add stdio MCP server skeleton with no write tools, shell execution, provider calls, or file mutation. | Server starts and reports read-only capability metadata. |
+| 30 | MCP JSON-RPC server skeleton | T-0043 | Add stdio MCP server skeleton with no write tools, shell execution, provider calls, or file mutation. | Done: Docker check passed, 23 test files passed, 115 tests passed, built CLI initialize smoke returned read-only metadata. |
 | 31 | MCP read tools implementation | T-0044 | Implement read-only tools from `docs/MCP_BRIDGE_CONTRACT.md`. | Contract tests for task, handoff, project state, policy, and harness read/evaluate tools. |
 | 32 | MCP bridge harness tests | T-0045 | Validate MCP tool outputs against existing CLI JSON contracts. | Harness/contract tests pass with no writes or shell execution. |
 | 33 | Evidence attach tool contract | T-0046 | Define a future write-capable evidence attach contract, still without shell execution. | Contract doc and safety acceptance pass. |

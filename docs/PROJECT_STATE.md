@@ -57,12 +57,13 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Project handoff is compacted: current state lives in `docs/AGENT_HANDOFF.md`, with historical task and validation history in dedicated history docs.
 - Old Draft task capsules have been reclassified: T-0003 is Superseded, and T-0006 is Partial with remaining Hermes/MCP bridge scope deferred to the roadmap.
 - Read-only Hermes/MCP bridge contract is documented in `docs/MCP_BRIDGE_CONTRACT.md`; server and tools are not implemented.
+- MCP JSON-RPC stdio server skeleton exists as `hadara mcp serve`; it supports discovery/lifecycle requests and reports read-only capability metadata, but tool execution is not implemented.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.
 - Real provider adapters are not implemented.
 - Dashboard is not implemented.
-- MCP server is not implemented.
+- MCP read tools are not implemented.
 
 ## Single Source of Truth
 
