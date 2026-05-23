@@ -19,3 +19,6 @@ Thumbs.db
 .env
 docs/specs/
 .dockerignore
+
+.mokup/
+.agent_alpha_test/

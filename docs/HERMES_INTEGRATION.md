@@ -6,7 +6,7 @@ This document describes HADARA compatibility with `nousresearch/hermes-agent` an
 
 - Export HADARA project context into files Hermes can read.
 - Keep context files small, stable, and evidence-oriented.
-- Allow future MCP bridge between Hermes and HADARA.
+- Allow a future read-only MCP bridge between Hermes and HADARA before write-capable tooling.
 
 ## Context Files
 
@@ -31,7 +31,7 @@ Generates `.hadara/context/HADARA_CONTEXT.md`.
 
 ### HADARA as MCP Server
 
-Planned:
+Planned read-only first step:
 
 ```bash
 hadara mcp serve
@@ -39,13 +39,14 @@ hadara mcp serve
 
 Tool surface:
 
-- `task.list`
-- `task.read`
-- `task.create`
-- `evidence.attach`
-- `handoff.update`
-- `policy.evaluate`
-- `release.status`
+- `hadara.task.list`
+- `hadara.task.read`
+- `hadara.handoff.read`
+- `hadara.project.state.read`
+- `hadara.policy.evaluate`
+- `hadara.harness.validate`
+
+Write tools, shell execution, provider calls, and release gates are out of scope for the first MCP bridge. See `docs/MCP_BRIDGE_CONTRACT.md`.
 
 ### Hermes as External Agent
 
@@ -56,6 +57,8 @@ Hermes should read:
 3. `.hadara/context/HADARA_CONTEXT.md`
 4. `docs/AGENT_HANDOFF.md`
 5. active `tasks/T-*/`
+6. `docs/CLI_JSON_CONTRACT.md`
+7. `docs/MCP_BRIDGE_CONTRACT.md`
 
 And must update:
 
@@ -63,6 +66,8 @@ And must update:
 2. `tasks/T-*/HANDOFF.md`
 3. `docs/AGENT_HANDOFF.md`
 4. `docs/TASK_BOARD.md`
+
+Until write-capable MCP tools exist, Hermes must perform updates through normal repository edits and HADARA validation, not through MCP.
 
 ## Compatibility Beyond Hermes
 

@@ -32,6 +32,10 @@ HADARA development should proceed in small, evidence-backed slices. Each slice m
 | 26 | Policy safe command exactness | T-0039 | Prevent safe command prefix matches from being classified as safe. | Done: Docker check passed, exactness smoke passed, 109 tests passed. |
 | 27 | Handoff compaction policy | T-0040 | Keep project handoff current by moving old history into dedicated history docs. | Done: Docker check passed, compact handoff and history docs added. |
 | 28 | Old Draft task reclassification | T-0041 | Mark overtaken early Draft tasks so external agents follow the current roadmap instead. | Done: T-0003 Superseded, T-0006 Partial, validation passed. |
-| 29 | Hermes/MCP bridge expansion | TBD | Next implementation roadmap item: expose stable read/write contracts after CLI harness surfaces are reliable. | Harness validate through external-agent contract. |
-| 30 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
-| 31 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |
+| 29 | Hermes/MCP read-only contract | T-0042 | Define CLI JSON and read-only MCP bridge contracts before server implementation. | Done: contract docs added, Hermes guidance updated, validation passed. |
+| 30 | MCP JSON-RPC server skeleton | T-0043 | Add stdio MCP server skeleton with no write tools, shell execution, provider calls, or file mutation. | Server starts and reports read-only capability metadata. |
+| 31 | MCP read tools implementation | T-0044 | Implement read-only tools from `docs/MCP_BRIDGE_CONTRACT.md`. | Contract tests for task, handoff, project state, policy, and harness read/evaluate tools. |
+| 32 | MCP bridge harness tests | T-0045 | Validate MCP tool outputs against existing CLI JSON contracts. | Harness/contract tests pass with no writes or shell execution. |
+| 33 | Evidence attach tool contract | T-0046 | Define a future write-capable evidence attach contract, still without shell execution. | Contract doc and safety acceptance pass. |
+| 34 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
+| 35 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |

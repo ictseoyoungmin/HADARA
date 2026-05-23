@@ -6,13 +6,14 @@
 - CLI dispatcher extraction pass is complete.
 - Runtime validation hardening is complete for permission modes, evidence result enums, fake-shell failure semantics, stale scaffold reuse, task title parsing, JSON-mode error envelopes, and policy safe command exactness.
 - Old Draft task cleanup is complete: T-0003 is Superseded, and T-0006 is Partial with remaining bridge/server work moved to the Hermes/MCP roadmap.
+- CLI JSON and read-only MCP bridge contracts are documented.
 - Real provider adapters, dashboard, and MCP server body remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0039 Policy Safe Command Exactness: safe shell commands now require exact token matches.
 - T-0040 Handoff Compaction Policy: compacted this handoff and moved historical entries into dedicated history docs.
 - T-0041 Old Draft Task Reclassification: marked T-0003 Superseded and T-0006 Partial so agents follow the current roadmap.
+- T-0042 Hermes/MCP Read-Only Contract: documented CLI JSON output policy and the read-only MCP bridge tool contract.
 
 ## Current Known Problems
 
@@ -26,14 +27,15 @@
 
 ## Next Recommended Step
 
-1. Continue with the Hermes/MCP bridge expansion roadmap slice.
-2. Continue deferring dashboard, real provider adapters, MCP server body, and full agent controller until harness/policy/evidence gates are stronger.
+1. Continue with T-0043 MCP JSON-RPC Server Skeleton.
+2. Keep T-0043 stdio/read-only with no file writes, shell execution, provider calls, or write-capable tools.
+3. Continue deferring dashboard, real provider adapters, MCP write tools, and full agent controller until harness/policy/evidence gates are stronger.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm ci && npm run check` passed with 22 test files and 109 tests during T-0041.
-- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0041 --level done --json` returned `ok: true`.
+- Latest full check: Docker `npm ci && npm run check` passed with 22 test files and 109 tests during T-0042.
+- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0042 --level done --json` returned `ok: true`.
 
 ## Historical Index
 

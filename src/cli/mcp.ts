@@ -7,6 +7,8 @@ export function handleMcpCommand(input: McpCommandInput): boolean {
   if (sub !== 'serve') return false;
 
   console.log('[HADARA] MCP server is not implemented in bootstrap skeleton.');
-  console.log('Planned tool surface: task.list, task.read, evidence.attach, handoff.update, policy.evaluate, release.status.');
+  console.log(
+    'Planned read-only tool surface: hadara.task.list, hadara.task.read, hadara.handoff.read, hadara.project.state.read, hadara.policy.evaluate, hadara.harness.validate.'
+  );
   return true;
 }

@@ -8,12 +8,14 @@ HADARA development follows the core philosophy: Unbroken Context, Verified Devel
 2. Read `docs/AGENT_HANDOFF.md`.
 3. Read `docs/TASK_BOARD.md`.
 4. Read `docs/DEVELOPMENT_SLICES.md` when the work may start, complete, or reclassify a roadmap slice.
-5. Pick or create one Task Capsule.
-6. Read `TASK.md`, `PLAN.md`, `CONTEXT.md`, `ACCEPTANCE.md`, `FILES.md`, `TESTS.md`, `RISKS.md`, and `HANDOFF.md` for the active Task Capsule.
-7. Read project-specific specs or roadmap documents referenced by the current task.
-8. Summarize the current state from the required docs.
-9. Identify the active Task Capsule and explain why it fits the work.
-10. Propose or choose the smallest useful implementation slice.
+5. Follow the Historical Index in `docs/AGENT_HANDOFF.md` when older completed-task or validation history is needed.
+6. Pick or create one Task Capsule.
+7. Read `TASK.md`, `PLAN.md`, `CONTEXT.md`, `ACCEPTANCE.md`, `FILES.md`, `TESTS.md`, `RISKS.md`, and `HANDOFF.md` for the active Task Capsule.
+8. Read project-specific specs or roadmap documents referenced by the current task.
+9. For MCP/Hermes work, read `docs/CLI_JSON_CONTRACT.md` and `docs/MCP_BRIDGE_CONTRACT.md`.
+10. Summarize the current state from the required docs.
+11. Identify the active Task Capsule and explain why it fits the work.
+12. Propose or choose the smallest useful implementation slice.
 
 ## Implementation
 
@@ -25,6 +27,7 @@ HADARA development follows the core philosophy: Unbroken Context, Verified Devel
 6. Do not start deferred dashboard, real provider adapter, MCP full implementation, or full agent-controller work until prerequisite harness, policy, and evidence gates are ready.
 7. Make the smallest coherent change that satisfies the Task Capsule acceptance criteria.
 8. Update `FILES.md`, `DECISIONS.md`, and task-local docs when the implementation scope changes.
+9. Do not add MCP write tools, shell execution, provider calls, or server behavior before the read-only bridge contract and follow-up implementation slices allow them.
 
 ## Validation
 
@@ -53,3 +56,4 @@ HADARA development follows the core philosophy: Unbroken Context, Verified Devel
 3. Move older completed-task summaries to `docs/HANDOFF_HISTORY.md`.
 4. Move accumulated validation evidence lines to `docs/VALIDATION_HISTORY.md`.
 5. Keep authoritative per-task evidence in Task Capsules and state tracking in `docs/TASK_BOARD.md` and `docs/DEVELOPMENT_SLICES.md`.
+6. Agents should not infer missing history from `docs/AGENT_HANDOFF.md`; they should follow its Historical Index instead.
