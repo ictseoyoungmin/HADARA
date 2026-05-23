@@ -10,6 +10,7 @@ import { handleHandoffCommand } from './handoff';
 import { handleTaskCommand } from './task';
 import { handleMcpCommand } from './mcp';
 import { handleRunCommand } from './run';
+import { handleOpsCommand, handleStatusCommand } from './status';
 import { getFlag, getStringOption } from './args';
 import { cliErrorExitCode, createCliErrorReport } from './errors';
 
@@ -31,6 +32,8 @@ Usage:
   hadara hermes detect
   hadara hermes export-context
   hadara mcp serve [--enable-evidence-attach]
+  hadara status [--json]
+  hadara ops status [--json]
   hadara run scaffold --task <task-id> --command <command> [--stdout <text>] [--stderr <text>] [--exit-code <n>] [--json]
   hadara run [request] --script <script.json> [--task <task-id>] [--fake-shell-fixtures <fixtures.json>] [--mode readonly|assisted|trusted|auto|release] [--max-steps <n>] [--json]
 
@@ -94,6 +97,16 @@ async function main(args = process.argv.slice(2)): Promise<void> {
 
     case 'mcp': {
       if (handleMcpCommand({ args, projectRoot: paths.projectRoot })) return;
+      break;
+    }
+
+    case 'status': {
+      if (handleStatusCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
+      break;
+    }
+
+    case 'ops': {
+      if (handleOpsCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 

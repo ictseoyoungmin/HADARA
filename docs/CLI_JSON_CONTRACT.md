@@ -28,6 +28,7 @@ Examples include:
 - `hadara.harness.validate.v1`
 - `hadara.harness.replay.v1`
 - `hadara.agent.loop.v1`
+- `hadara.ops.status.v1`
 
 Agents should treat `issues` as the primary machine-readable failure detail when present.
 

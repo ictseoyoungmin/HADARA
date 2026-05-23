@@ -43,5 +43,8 @@ HADARA development should proceed in small, evidence-backed slices. Each slice m
 | 37 | MCP write audit log | T-0050 | Add private portable audit records for opt-in MCP evidence attach write attempts. | Done: Docker check passed, 27 test files passed, 142 tests passed, done-level harness validation passed. |
 | 38 | MCP phase/mode config | T-0051 | Keep MCP initialize metadata aligned with default read-only and evidence attach-enabled modes. | Done: Docker check passed, 27 test files passed, 142 tests passed, done-level harness validation passed. |
 | 39 | MCP evidence attach approval record | T-0052 | Require per-call approval actor and reason for opt-in MCP evidence attach writes. | Done: Docker check passed, 27 test files passed, 142 tests passed, done-level harness validation passed. |
-| 40 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
-| 41 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |
+| 40 | Operations Status JSON | T-0053 | Provide a single dashboard/external-agent JSON snapshot before implementing UI. | Done: Docker check passed, status JSON tests and CLI smokes passed, done-level harness validation passed. |
+| 41 | Dashboard read model contract | TBD | Define dashboard consumption contract after Operations Status JSON exists. | Contract tests and sample status fixture. |
+| 42 | Minimal static dashboard | TBD | Build a minimal static dashboard consuming sample status JSON. | Static UI smoke plus read-model fixture tests. |
+| 43 | Dashboard served from HADARA CLI | TBD | Serve the static dashboard through a HADARA CLI entry point. | CLI smoke and asset-serving tests. |
+| 44 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |

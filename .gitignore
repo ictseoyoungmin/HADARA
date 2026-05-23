@@ -18,6 +18,8 @@ Thumbs.db
 # dev only
 .env
 docs/specs/
+docs/design/mockups/*
+!docs/design/mockups/HADARA_web_ui_v0.1_comfort_dark.html
 .dockerignore
 
 .mokup/

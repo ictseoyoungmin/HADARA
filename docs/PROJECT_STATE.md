@@ -65,11 +65,13 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - MCP initialize metadata now reflects default read-only mode versus evidence attach-enabled mode, including `hadara/evidenceAttach`, `hadara/writes`, and disabled shell/provider flags.
 - MCP evidence attach now requires per-call approval metadata with an actor and reason before writing evidence.
 - MCP evidence attach write attempts are audited to the private portable audit store on both success and report-level failure.
+- Operations Status JSON exists as `hadara status --json` and `hadara ops status --json` with schema `hadara.ops.status.v1` for future dashboards and external agents.
+- Dashboard design references live under `docs/design/`; the current mockup is reference-only and does not implement UI behavior.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.
 - Real provider adapters are not implemented.
-- Dashboard is not implemented.
+- Dashboard is not implemented; only its status JSON/read model and design references exist.
 - Broad MCP write tools are not implemented beyond the explicitly enabled, approval-recorded, audited evidence attach tool.
 
 ## Single Source of Truth
