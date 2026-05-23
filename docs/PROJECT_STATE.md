@@ -56,18 +56,21 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - CLI handler extraction pass is complete: `src/cli/main.ts` is a top-level dispatcher and command groups live in focused `src/cli/*` modules.
 - Project handoff is compacted: current state lives in `docs/AGENT_HANDOFF.md`, with historical task and validation history in dedicated history docs.
 - Old Draft task capsules have been reclassified: T-0003 is Superseded, and T-0006 is Partial with remaining Hermes/MCP bridge scope deferred to the roadmap.
-- Read-only Hermes/MCP bridge contract is documented in `docs/MCP_BRIDGE_CONTRACT.md`; server and tools are not implemented.
+- Read-only Hermes/MCP bridge contract is documented in `docs/MCP_BRIDGE_CONTRACT.md`; stdio server and read tools are implemented.
 - MCP JSON-RPC stdio server exists as `hadara mcp serve`; it supports discovery/lifecycle requests and read-only tools for task list/read, handoff read, project state read, policy evaluate, and harness validate.
 - MCP bridge contract tests validate JSON text payload wrapping, notification no-response behavior, dispatch issue-code mapping, and CLI JSON parity for task list, policy evaluate, and harness validate.
-- Future MCP evidence attach contract is documented in `docs/MCP_EVIDENCE_ATTACH_CONTRACT.md`; it is contract-only and not implemented or advertised.
+- MCP evidence attach contract is documented in `docs/MCP_EVIDENCE_ATTACH_CONTRACT.md`; the tool is implemented only for explicit opt-in mode.
 - MCP evidence attach can be enabled explicitly with `hadara mcp serve --enable-evidence-attach`; default MCP startup remains read-only and does not advertise the tool.
 - MCP evidence attach safety tests cover JSON payload shape, safe public artifact copies, workspace boundary rejection, public artifact secret rejection, and invalid input mapping.
+- MCP initialize metadata now reflects default read-only mode versus evidence attach-enabled mode, including `hadara/evidenceAttach`, `hadara/writes`, and disabled shell/provider flags.
+- MCP evidence attach now requires per-call approval metadata with an actor and reason before writing evidence.
+- MCP evidence attach write attempts are audited to the private portable audit store on both success and report-level failure.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.
 - Real provider adapters are not implemented.
 - Dashboard is not implemented.
-- MCP write tools are not implemented.
+- Broad MCP write tools are not implemented beyond the explicitly enabled, approval-recorded, audited evidence attach tool.
 
 ## Single Source of Truth
 

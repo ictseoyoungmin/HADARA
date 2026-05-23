@@ -54,9 +54,9 @@ Agents must:
 4. Update AGENT_HANDOFF.md before stopping.
 5. Respect policy decisions for shell/file/git operations.
 6. Treat AGENT_HANDOFF.md as compact current state and follow its Historical Index for older history.
-7. Use the read-only MCP bridge contract before assuming write-capable MCP tools exist.
+7. Use the read-only MCP bridge contract before assuming write-capable MCP behavior exists.
 8. Treat policy.evaluate as policy evaluation only, not MCP execution authorization.
-9. Treat MCP evidence attachment as contract-only until an implementation capsule explicitly enables it.
+9. Treat MCP evidence attachment as disabled by default; it requires explicit server opt-in, per-call approval metadata, and private audit logging.
 
 ${sections.join('\n\n---\n\n')}
 `;

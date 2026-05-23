@@ -51,3 +51,6 @@
 | T-0047 | Evidence Attach Guard Tests | Done | tasks/T-0047-evidence-attach-guard-tests | Guarded against premature MCP evidence attach advertisement or execution. |
 | T-0048 | Gated MCP Evidence Attach Implementation | Done | tasks/T-0048-gated-mcp-evidence-attach-implementation | Implemented evidence attach behind explicit MCP opt-in. |
 | T-0049 | MCP Evidence Attach Safety Tests | Done | tasks/T-0049-mcp-evidence-attach-safety-tests | Validated opt-in MCP evidence attach safety gates. |
+| T-0050 | MCP Write Audit Log | Done | tasks/T-0050-mcp-write-audit-log | Audits opt-in MCP evidence attach success and failure attempts to the private portable audit store. |
+| T-0051 | MCP Phase/Mode Config | Done | tasks/T-0051-mcp-phase-mode-config | Initialize metadata and instructions now reflect default read-only vs evidence attach-enabled mode. |
+| T-0052 | MCP Evidence Attach Approval Record | Done | tasks/T-0052-mcp-evidence-attach-approval-record | Requires per-call approval actor/reason for opt-in MCP evidence attach writes. |

@@ -1,14 +1,14 @@
 # MCP_EVIDENCE_ATTACH_CONTRACT
 
-This document defines a future HADARA MCP evidence attach contract.
+This document defines the HADARA MCP evidence attach contract.
 
-T-0046 is contract-only. It does not implement, advertise, or enable `hadara.evidence.attach`.
+T-0046 was contract-only. T-0048 implemented `hadara.evidence.attach` only for explicit opt-in mode, and T-0050 through T-0052 added private audit logging, accurate initialize metadata, and per-call approval records.
 
 ## Phase
 
-Phase: future write-capable evidence contract.
+Phase: narrow opt-in write-capable evidence contract.
 
-The default MCP runtime remains read-only. `hadara.evidence.attach` may only be advertised when the operator explicitly starts MCP with evidence attach enabled.
+The default MCP runtime remains read-only. `hadara.evidence.attach` may only be advertised when the operator explicitly starts MCP with evidence attach enabled. Enabled evidence attach mode must be reflected in `initialize` metadata.
 
 ## Non-Goals
 
@@ -44,7 +44,7 @@ Input schema:
 ```json
 {
   "type": "object",
-  "required": ["taskId", "kind", "summary", "result"],
+  "required": ["taskId", "kind", "summary", "result", "approval"],
   "additionalProperties": false,
   "properties": {
     "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
@@ -64,9 +64,47 @@ Input schema:
     },
     "artifactPath": {
       "type": "string",
+      "minLength": 1,
       "description": "Optional project-relative path for an existing evidence artifact."
+    },
+    "approval": {
+      "type": "object",
+      "required": ["actor", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "actor": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 }
+      }
     }
   }
+}
+```
+
+Initialize metadata:
+
+Default read-only startup must report:
+
+```json
+{
+  "hadara/phase": "read-only-bridge",
+  "hadara/readOnly": true,
+  "hadara/writes": false,
+  "hadara/evidenceAttach": false,
+  "hadara/shellExecution": false,
+  "hadara/providerCalls": false
+}
+```
+
+Evidence attach-enabled startup must report:
+
+```json
+{
+  "hadara/phase": "evidence-attach-enabled",
+  "hadara/readOnly": false,
+  "hadara/writes": true,
+  "hadara/evidenceAttach": true,
+  "hadara/shellExecution": false,
+  "hadara/providerCalls": false
 }
 ```
 
@@ -98,11 +136,13 @@ A future implementation must:
 
 - Reject the tool unless the HADARA MCP phase explicitly allows write-capable evidence tools.
 - Validate the full input schema before writing.
+- Require per-call approval metadata before writing.
 - Require `taskId` to resolve to an existing Task Capsule.
 - Preserve the portable/project store boundary.
 - Resolve `artifactPath` through the workspace boundary resolver before reading.
 - Apply public artifact text/binary and secret redaction policy before creating committed public copies.
 - Avoid writing secrets, private logs, or machine-local paths into committed files.
+- Audit successful and failed write attempts to the private portable audit store.
 - Never execute shell commands.
 - Never call model providers.
 - Return the existing evidence collect JSON report shape when evidence append succeeds or fails at command-report level.

@@ -1,2 +1,2 @@
-{"schemaVersion":"hadara.evidence.v1","taskId":"T-0050","kind":"test-log","summary":"Docker npm ci && npm run check passed with MCP write audit coverage.","result":"passed","visibility":"public","timestamp":"2026-05-23T00:00:00Z"}
-{"schemaVersion":"hadara.evidence.v1","taskId":"T-0050","kind":"test-log","summary":"Docker built CLI harness validate --task T-0050 --level done --json returned ok true.","result":"passed","visibility":"public","timestamp":"2026-05-23T00:00:00Z"}
+{"schemaVersion":"hadara.evidence.v1","taskId":"T-0050","kind":"test-log","summary":"Docker npm ci && npm run check passed with 27 test files and 142 tests.","result":"passed","visibility":"public","timestamp":"2026-05-23T13:30:05+09:00"}
+{"schemaVersion":"hadara.evidence.v1","taskId":"T-0050","kind":"test-log","summary":"Docker built CLI harness validate --task T-0050 --level done --json returned ok true.","result":"passed","visibility":"public","timestamp":"2026-05-23T13:30:05+09:00"}

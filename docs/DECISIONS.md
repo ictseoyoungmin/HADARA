@@ -24,3 +24,10 @@ Reason:
 Reason:
 - Public Task Capsule artifacts are committed project state, so they must not copy secret-like content.
 - Binary evidence needs a dedicated sanitized/private workflow; until then, public artifacts are limited to UTF-8 text.
+
+## D-0005: MCP evidence attach operational gates
+
+Reason:
+- `hadara.evidence.attach` is the first narrow write-capable MCP tool and remains disabled by default.
+- When enabled, each write requires per-call approval metadata and records success or failure in the private portable audit log.
+- MCP initialize metadata must reflect whether the current server process is default read-only or evidence attach-enabled.

@@ -53,3 +53,6 @@ Historical validation entries moved out of `docs/AGENT_HANDOFF.md` during T-0040
 - Docker `node dist/cli/main.js harness validate --task T-0042 --level done --json`: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
 - Docker check after T-0042 follow-up contract/schema changes: 22 test files passed, 109 tests passed.
 - Docker `node dist/cli/main.js harness validate --task T-0042 --level done --json` after follow-up changes: `ok: true`, including `evidence.jsonl` in `checkedFiles`.
+- Docker check after T-0050/T-0051/T-0052: 27 test files passed, 142 tests passed.
+- Docker focused MCP tests after T-0050/T-0051/T-0052: guard, safety, and server metadata suites passed with 20 tests.
+- Docker `node dist/cli/main.js harness validate --task T-0050 --level done --json`, `--task T-0051 --level done --json`, and `--task T-0052 --level done --json` returned `ok: true`.

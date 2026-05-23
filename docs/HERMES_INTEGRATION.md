@@ -45,12 +45,13 @@ Tool surface:
 - `hadara.project.state.read`
 - `hadara.policy.evaluate`
 - `hadara.harness.validate`
+- `hadara.evidence.attach` only when the MCP server process is started with explicit evidence attach enablement
 
-Write tools, shell execution, provider calls, and release gates are out of scope for the first MCP bridge. See `docs/MCP_BRIDGE_CONTRACT.md`.
+Shell execution, provider calls, broad write tools, and release gates are out of scope for the current MCP bridge. See `docs/MCP_BRIDGE_CONTRACT.md`.
 
 `hadara.policy.evaluate` reports policy evaluation only. It is not permission for Hermes or any MCP client to execute commands through HADARA.
 
-Future evidence attachment over MCP is contract-only in `docs/MCP_EVIDENCE_ATTACH_CONTRACT.md` until a later implementation capsule explicitly enables it.
+MCP evidence attachment is disabled by default. When a server process is explicitly started with evidence attach enabled, each `hadara.evidence.attach` call must include approval metadata and is audited to the private portable audit store.
 
 ### Hermes as External Agent
 
@@ -63,7 +64,7 @@ Hermes should read:
 5. active `tasks/T-*/`
 6. `docs/CLI_JSON_CONTRACT.md`
 7. `docs/MCP_BRIDGE_CONTRACT.md`
-8. `docs/MCP_EVIDENCE_ATTACH_CONTRACT.md` when considering future evidence attachment over MCP
+8. `docs/MCP_EVIDENCE_ATTACH_CONTRACT.md` before considering opt-in evidence attachment over MCP
 
 And must update:
 
@@ -72,7 +73,7 @@ And must update:
 3. `docs/AGENT_HANDOFF.md`
 4. `docs/TASK_BOARD.md`
 
-Until write-capable MCP tools exist, Hermes must perform updates through normal repository edits and HADARA validation, not through MCP.
+Except for explicitly enabled, approval-recorded, audited MCP evidence attachment, Hermes must perform updates through normal repository edits and HADARA validation, not through MCP.
 
 ## Compatibility Beyond Hermes
 
