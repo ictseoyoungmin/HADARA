@@ -93,7 +93,7 @@ async function main(args = process.argv.slice(2)): Promise<void> {
     }
 
     case 'mcp': {
-      if (handleMcpCommand({ args })) return;
+      if (handleMcpCommand({ args, projectRoot: paths.projectRoot })) return;
       break;
     }
 

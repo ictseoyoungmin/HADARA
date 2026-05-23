@@ -29,6 +29,8 @@ The first implementation should use stdio JSON-RPC MCP server behavior.
 
 Future server implementations should expose `hadara mcp serve` as the local entry point.
 
+JSON-RPC requests with no `id` are notifications. Notifications produce no response.
+
 ## MCP Tool Result Payload
 
 All HADARA MCP read tools return one JSON text payload. The MCP protocol envelope belongs to MCP; the payload text, when parsed as JSON, must be the HADARA command/report schema described by this contract and `docs/CLI_JSON_CONTRACT.md`.
@@ -57,6 +59,28 @@ Server internals may use typed payloads, but the external MCP tool result payloa
 - Tools must not execute shell commands in this phase.
 - Tools must not call model providers in this phase.
 - Tools should report validation issues using existing HADARA issue shapes where possible.
+
+## Tool Dispatch Errors
+
+`tools/call` input must have this shape:
+
+```json
+{
+  "name": "hadara.task.list",
+  "arguments": {}
+}
+```
+
+Tool dispatch failures use JSON-RPC errors for transport-level failure and include a HADARA issue object under `error.data.issue`.
+
+Initial HADARA issue codes:
+
+| Code | Meaning |
+|---|---|
+| `TOOL_NOT_FOUND` | The requested MCP tool name is not registered. |
+| `TOOL_INPUT_INVALID` | `tools/call` params or tool arguments failed schema validation. |
+| `TOOL_NOT_IMPLEMENTED` | The tool is registered but has no handler in the current implementation. |
+| `TOOL_FORBIDDEN_BY_PHASE` | The tool exists but is forbidden by the current HADARA phase. |
 
 ## Tools
 

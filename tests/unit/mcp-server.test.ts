@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { HADARA_MCP_TOOLS, handleMcpJsonRpcMessage } from '../../src/mcp/server';
+import { handleMcpJsonRpcMessage } from '../../src/mcp/server';
+import { HADARA_MCP_TOOL_SCHEMAS } from '../../src/mcp/tool-schemas';
 
 function request(method: string, id: string | number = 1, params?: unknown): string {
   return JSON.stringify({
@@ -60,29 +61,27 @@ describe('MCP JSON-RPC server skeleton', () => {
       expect(tool.annotations).toEqual({ readOnlyHint: true });
       expect(tool._meta).toEqual({
         'hadara/readOnly': true,
-        'hadara/implemented': false
+        'hadara/implemented': true
       });
     }
   });
 
-  it('keeps tool execution unimplemented in the skeleton phase', () => {
+  it('returns HADARA issue codes for invalid tool call params', () => {
     const response = parseResponse(
       request('tools/call', 7, {
-        name: 'hadara.task.list',
-        arguments: {}
+        name: 'hadara.task.list'
       })
     );
 
-    expect(response).toEqual({
+    expect(response).toMatchObject({
       jsonrpc: '2.0',
       id: 7,
       error: {
-        code: -32601,
-        message: 'MCP tool execution is not implemented in this skeleton',
+        code: -32602,
         data: {
-          phase: 'read-only-skeleton',
-          implementedIn: 'T-0044',
-          readOnly: true
+          issue: {
+            code: 'TOOL_INPUT_INVALID'
+          }
         }
       }
     });
@@ -109,7 +108,7 @@ describe('MCP JSON-RPC server skeleton', () => {
   });
 
   it('exports metadata for all documented read-only tools', () => {
-    expect(HADARA_MCP_TOOLS).toHaveLength(6);
-    expect(HADARA_MCP_TOOLS.every((tool) => tool.name.startsWith('hadara.'))).toBe(true);
+    expect(HADARA_MCP_TOOL_SCHEMAS).toHaveLength(6);
+    expect(HADARA_MCP_TOOL_SCHEMAS.every((tool) => tool.name.startsWith('hadara.'))).toBe(true);
   });
 });

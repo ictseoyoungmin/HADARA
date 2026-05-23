@@ -1,0 +1,207 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
+import { handleMcpJsonRpcMessage } from '../../src/mcp/server';
+import { createTaskCapsule } from '../../src/task/task-capsule';
+
+const roots: string[] = [];
+
+function tempProject(): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-mcp-tools-'));
+  roots.push(dir);
+  fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\n## Current State\n\n- Ready\n', 'utf8');
+  fs.writeFileSync(path.join(dir, 'docs', 'HANDOFF_HISTORY.md'), '# HANDOFF_HISTORY\n\n- Old task\n', 'utf8');
+  fs.writeFileSync(path.join(dir, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n\n- Old validation\n', 'utf8');
+  fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Status\n\n- Skeleton\n', 'utf8');
+  fs.writeFileSync(path.join(dir, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n\n| ID | Title |\n|---|---|\n', 'utf8');
+  fs.writeFileSync(path.join(dir, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n\n| Order | Slice |\n|---|---|\n', 'utf8');
+  return dir;
+}
+
+afterEach(() => {
+  for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
+});
+
+function callTool(projectRoot: string, name: string, args: Record<string, unknown> = {}): any {
+  const response = handleMcpJsonRpcMessage(
+    JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'tools/call',
+      params: {
+        name,
+        arguments: args
+      }
+    }),
+    { projectRoot }
+  );
+  expect(response).not.toBeNull();
+  return JSON.parse(response as string);
+}
+
+function parseToolPayload(response: any): any {
+  expect(response.error).toBeUndefined();
+  expect(response.result.content).toHaveLength(1);
+  expect(response.result.content[0].type).toBe('text');
+  return JSON.parse(response.result.content[0].text);
+}
+
+describe('MCP read tools', () => {
+  it('returns task list reports as one JSON text payload', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'MCP task list');
+
+    const payload = parseToolPayload(callTool(root, 'hadara.task.list'));
+
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.task.list.v1',
+      command: 'task.list',
+      ok: true,
+      count: 1,
+      tasks: [
+        {
+          id: 'T-0001',
+          title: 'MCP task list',
+          status: 'Draft',
+          capsule: 'tasks/T-0001-mcp-task-list'
+        }
+      ],
+      issues: []
+    });
+  });
+
+  it('reads Task Capsule files and evidence index records', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'MCP task read');
+    fs.appendFileSync(
+      path.join(task.dir, 'evidence.jsonl'),
+      '{"schemaVersion":"hadara.evidence.v1","taskId":"T-0001","kind":"note","summary":"read me","result":"passed","visibility":"public"}\n',
+      'utf8'
+    );
+
+    const payload = parseToolPayload(callTool(root, 'hadara.task.read', { taskId: task.id }));
+
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.task.read.v1',
+      command: 'task.read',
+      ok: true,
+      task: {
+        id: task.id,
+        status: 'Draft'
+      },
+      evidenceIndex: [
+        {
+          schemaVersion: 'hadara.evidence.v1',
+          taskId: task.id,
+          kind: 'note'
+        }
+      ],
+      issues: []
+    });
+    expect(payload.files['TASK.md']).toContain('# T-0001 MCP task read');
+    expect(payload.files['FILES.md']).toContain('| Path | Action | Reason |');
+  });
+
+  it('reads handoff state with bounded optional history', () => {
+    const root = tempProject();
+
+    const payload = parseToolPayload(callTool(root, 'hadara.handoff.read', { includeHistory: true, historyLimit: 1 }));
+
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.handoff.read.v1',
+      command: 'handoff.read',
+      ok: true,
+      handoff: {
+        current: expect.stringContaining('# AGENT_HANDOFF'),
+        history: '- Old task',
+        validationHistory: '- Old validation'
+      },
+      issues: []
+    });
+  });
+
+  it('reads project state documents and summary variants', () => {
+    const root = tempProject();
+
+    const full = parseToolPayload(callTool(root, 'hadara.project.state.read'));
+    expect(full).toMatchObject({
+      schemaVersion: 'hadara.project.state.read.v1',
+      command: 'project.state.read',
+      ok: true,
+      projectState: expect.stringContaining('# PROJECT_STATE'),
+      taskBoard: expect.stringContaining('# TASK_BOARD'),
+      developmentSlices: expect.stringContaining('# DEVELOPMENT_SLICES'),
+      issues: []
+    });
+
+    const summary = parseToolPayload(callTool(root, 'hadara.project.state.read', { summaryOnly: true }));
+    expect(summary.summary.projectState).toContain('- Skeleton');
+  });
+
+  it('evaluates policy without executing commands', () => {
+    const root = tempProject();
+
+    const payload = parseToolPayload(callTool(root, 'hadara.policy.evaluate', { command: 'npm run check', mode: 'assisted' }));
+
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.policy.preflight.v1',
+      command: 'policy.preflight-shell',
+      ok: true,
+      input: {
+        command: 'npm run check',
+        mode: 'assisted'
+      },
+      execution: {
+        status: 'requires_approval',
+        willExecute: false
+      }
+    });
+  });
+
+  it('validates Task Capsules without mutating them', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'MCP harness validate');
+
+    const payload = parseToolPayload(callTool(root, 'hadara.harness.validate', { taskId: task.id }));
+
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.harness.validate.v1',
+      command: 'harness.validate',
+      ok: true,
+      level: 'draft',
+      task: {
+        id: task.id,
+        title: 'MCP harness validate'
+      },
+      issues: []
+    });
+  });
+
+  it('maps tool dispatch failures to JSON-RPC errors with HADARA issue codes', () => {
+    const root = tempProject();
+
+    expect(callTool(root, 'hadara.nope')).toMatchObject({
+      error: {
+        code: -32602,
+        data: {
+          issue: {
+            code: 'TOOL_NOT_FOUND'
+          }
+        }
+      }
+    });
+
+    expect(callTool(root, 'hadara.task.read', { taskId: 'bad' })).toMatchObject({
+      error: {
+        code: -32602,
+        data: {
+          issue: {
+            code: 'TOOL_INPUT_INVALID'
+          }
+        }
+      }
+    });
+  });
+});

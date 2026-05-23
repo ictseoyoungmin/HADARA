@@ -45,3 +45,5 @@
 | T-0041 | Old Draft Task Reclassification | Done | tasks/T-0041-old-draft-task-reclassification | Reclassified T-0003 as Superseded and T-0006 as Partial. |
 | T-0042 | Hermes/MCP Read-Only Contract | Done | tasks/T-0042-hermes-mcp-read-only-contract | Defined read-only MCP contract, CLI JSON policy, and task status schema alignment. |
 | T-0043 | MCP JSON-RPC Server Skeleton | Done | tasks/T-0043-mcp-json-rpc-server-skeleton | Stdio read-only MCP server lifecycle/discovery skeleton added. |
+| T-0044 | MCP Read Tools Implementation | Done | tasks/T-0044-mcp-read-tools-implementation | Implemented read-only MCP tools from the bridge contract. |
+| T-0045 | MCP Bridge Harness Tests | Done | tasks/T-0045-mcp-bridge-harness-tests | Validated MCP bridge payloads against CLI JSON contracts. |
