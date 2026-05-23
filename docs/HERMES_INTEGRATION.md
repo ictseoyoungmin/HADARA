@@ -48,6 +48,10 @@ Tool surface:
 
 Write tools, shell execution, provider calls, and release gates are out of scope for the first MCP bridge. See `docs/MCP_BRIDGE_CONTRACT.md`.
 
+`hadara.policy.evaluate` reports policy evaluation only. It is not permission for Hermes or any MCP client to execute commands through HADARA.
+
+Future evidence attachment over MCP is contract-only in `docs/MCP_EVIDENCE_ATTACH_CONTRACT.md` until a later implementation capsule explicitly enables it.
+
 ### Hermes as External Agent
 
 Hermes should read:
@@ -59,6 +63,7 @@ Hermes should read:
 5. active `tasks/T-*/`
 6. `docs/CLI_JSON_CONTRACT.md`
 7. `docs/MCP_BRIDGE_CONTRACT.md`
+8. `docs/MCP_EVIDENCE_ATTACH_CONTRACT.md` when considering future evidence attachment over MCP
 
 And must update:
 

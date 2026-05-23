@@ -36,6 +36,7 @@ HADARA development should proceed in small, evidence-backed slices. Each slice m
 | 30 | MCP JSON-RPC server skeleton | T-0043 | Add stdio MCP server skeleton with no write tools, shell execution, provider calls, or file mutation. | Done: Docker check passed, 23 test files passed, 115 tests passed, built CLI initialize smoke returned read-only metadata. |
 | 31 | MCP read tools implementation | T-0044 | Implement read-only tools from `docs/MCP_BRIDGE_CONTRACT.md`. | Done: Docker check passed, 24 test files passed, 122 tests passed, built CLI tools/call smoke returned MCP JSON text payload. |
 | 32 | MCP bridge harness tests | T-0045 | Validate MCP tool outputs against existing CLI JSON contracts. | Done: Docker check passed, 25 test files passed, 128 tests passed, MCP bridge contract tests added. |
-| 33 | Evidence attach tool contract | T-0046 | Define a future write-capable evidence attach contract, still without shell execution. | Contract doc and safety acceptance pass. |
-| 34 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
-| 35 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |
+| 33 | Evidence attach tool contract | T-0046 | Define a future write-capable evidence attach contract, still without shell execution. | Done: contract doc added, policy/evidence safety gates documented, Docker check passed. |
+| 34 | Evidence attach guard tests | T-0047 | Ensure future evidence attach contract does not accidentally advertise write-capable MCP behavior before implementation. | Done: Docker check passed, 26 test files passed, 131 tests passed, evidence attach remains unadvertised and unimplemented. |
+| 35 | Dashboard read model | TBD | Build dashboard only after state, harness, and evidence contracts are stable. | UI smoke plus read-model tests. |
+| 36 | Real provider adapters | TBD | Add network adapters after provider fallback, policy, and evidence gates are mature. | Adapter contract tests with secrets excluded. |

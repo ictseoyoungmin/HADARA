@@ -1,0 +1,2 @@
+{"schemaVersion":"hadara.evidence.v1","taskId":"T-0047","kind":"test-log","summary":"Docker npm ci && npm run check passed with 26 test files and 131 tests.","result":"passed","visibility":"public","timestamp":"2026-05-23T12:29:27+09:00"}
+{"schemaVersion":"hadara.evidence.v1","taskId":"T-0047","kind":"test-log","summary":"Docker built CLI harness validate --task T-0047 --level done --json returned ok true.","result":"passed","visibility":"public","timestamp":"2026-05-23T12:29:27+09:00"}

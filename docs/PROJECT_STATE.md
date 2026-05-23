@@ -59,6 +59,8 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Read-only Hermes/MCP bridge contract is documented in `docs/MCP_BRIDGE_CONTRACT.md`; server and tools are not implemented.
 - MCP JSON-RPC stdio server exists as `hadara mcp serve`; it supports discovery/lifecycle requests and read-only tools for task list/read, handoff read, project state read, policy evaluate, and harness validate.
 - MCP bridge contract tests validate JSON text payload wrapping, notification no-response behavior, dispatch issue-code mapping, and CLI JSON parity for task list, policy evaluate, and harness validate.
+- Future MCP evidence attach contract is documented in `docs/MCP_EVIDENCE_ATTACH_CONTRACT.md`; it is contract-only and not implemented or advertised.
+- MCP evidence attach guard tests reserve future write-tool issue codes and verify `hadara.evidence.attach` is not advertised or callable yet.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.

@@ -9,13 +9,14 @@
 - T-0042 is complete with follow-up MCP contract/schema clarifications.
 - T-0043 is complete with a stdio JSON-RPC MCP server skeleton for lifecycle/discovery only.
 - T-0044 and T-0045 are complete: MCP read tools are implemented and bridge contract tests validate payload wrapping, selected CLI JSON parity, notification handling, and dispatch issue mapping.
+- T-0046 and T-0047 are complete: future MCP evidence attach contract is documented, write-tool issue codes are reserved, and guard tests prove evidence attach is not advertised or callable yet.
 - Real provider adapters, dashboard, MCP write tools, and write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0043 MCP JSON-RPC Server Skeleton: added `hadara mcp serve` stdio JSON-RPC lifecycle/discovery skeleton with read-only capability metadata and unimplemented tool calls.
-- T-0044 MCP Read Tools Implementation: implemented read-only MCP tools for task list/read, handoff read, project state read, policy evaluate, and harness validate.
 - T-0045 MCP Bridge Harness Tests: added contract tests for MCP JSON text payload wrapping, selected CLI JSON parity, notification behavior, and dispatch issue mapping.
+- T-0046 Evidence Attach Tool Contract: documented future `hadara.evidence.attach`, safety gates, write-tool error taxonomy, and policy.evaluate clarification.
+- T-0047 Evidence Attach Guard Tests: reserved future write-tool issue codes and proved `hadara.evidence.attach` is not advertised or callable in the current runtime.
 
 ## Current Known Problems
 
@@ -29,16 +30,16 @@
 
 ## Next Recommended Step
 
-1. Continue with T-0046 Evidence Attach Tool Contract.
-2. Keep T-0046 contract-only unless a separate accepted implementation capsule is created.
-3. Continue deferring dashboard, real provider adapters, MCP write tools, and full agent controller until harness/policy/evidence gates are stronger.
+1. Plan a future MCP evidence attach implementation capsule only after accepting the T-0046 contract and T-0047 guards.
+2. Keep dashboard, real provider adapters, shell execution, provider calls, and broad write-capable MCP behavior deferred.
+3. If implementing evidence attach next, limit scope to `hadara.evidence.attach` and preserve all safety gates from `docs/MCP_EVIDENCE_ATTACH_CONTRACT.md`.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm ci && npm run check` passed with 25 test files and 128 tests after T-0045.
+- Latest full check: Docker `npm ci && npm run check` passed with 26 test files and 131 tests after T-0047.
 - Latest MCP smoke: Docker built CLI `hadara mcp serve` `tools/call` returned `hadara.task.list` as one MCP JSON text payload after T-0044.
-- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0045 --level done --json` returned `ok: true`.
+- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0047 --level done --json` returned `ok: true`.
 
 ## Historical Index
 

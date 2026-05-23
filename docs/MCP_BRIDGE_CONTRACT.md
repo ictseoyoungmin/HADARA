@@ -10,6 +10,8 @@ Phase: read-only bridge contract.
 
 The first implementation must be safe for external agents to call while preserving HADARA's Task Capsule, evidence, policy, and harness discipline.
 
+Future write-capable evidence attachment is documented separately in `docs/MCP_EVIDENCE_ATTACH_CONTRACT.md`. It is not part of the read-only bridge.
+
 ## Non-Goals
 
 The following are explicitly out of scope for the first bridge:
@@ -81,6 +83,8 @@ Initial HADARA issue codes:
 | `TOOL_INPUT_INVALID` | `tools/call` params or tool arguments failed schema validation. |
 | `TOOL_NOT_IMPLEMENTED` | The tool is registered but has no handler in the current implementation. |
 | `TOOL_FORBIDDEN_BY_PHASE` | The tool exists but is forbidden by the current HADARA phase. |
+
+Future write-capable tool errors such as `TOOL_POLICY_DENIED`, `TOOL_WRITE_FORBIDDEN`, `TOOL_WORKSPACE_BOUNDARY`, `TOOL_ARTIFACT_REDACTION_FAILED`, and `TOOL_SCHEMA_VERSION_MISMATCH` are reserved by `docs/MCP_EVIDENCE_ATTACH_CONTRACT.md`.
 
 ## Tools
 
@@ -287,7 +291,7 @@ Output schema:
 }
 ```
 
-This tool does not execute the command.
+This tool does not execute the command. Its output is a policy evaluation result, not execution authorization for MCP. Even if CLI policy would allow a command, MCP tools must not execute it unless a separate write/execution-capable contract and implementation explicitly allow that behavior.
 
 ### `hadara.harness.validate`
 
@@ -335,6 +339,7 @@ Output schema:
 2. T-0044 MCP Read Tools Implementation.
 3. T-0045 MCP Bridge Harness Tests.
 4. T-0046 Evidence Attach Tool Contract, still no shell execution.
+5. T-0047 Evidence Attach Guard Tests, still no evidence attach implementation.
 
 ## Relationship To CLI JSON
 

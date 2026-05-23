@@ -1,6 +1,18 @@
 import { McpInputSchema, McpToolMetadata } from './tool-schemas';
 
-export type McpToolIssueCode = 'TOOL_NOT_FOUND' | 'TOOL_INPUT_INVALID' | 'TOOL_NOT_IMPLEMENTED' | 'TOOL_FORBIDDEN_BY_PHASE';
+export const MCP_TOOL_ISSUE_CODES = [
+  'TOOL_NOT_FOUND',
+  'TOOL_INPUT_INVALID',
+  'TOOL_NOT_IMPLEMENTED',
+  'TOOL_FORBIDDEN_BY_PHASE',
+  'TOOL_POLICY_DENIED',
+  'TOOL_WRITE_FORBIDDEN',
+  'TOOL_WORKSPACE_BOUNDARY',
+  'TOOL_ARTIFACT_REDACTION_FAILED',
+  'TOOL_SCHEMA_VERSION_MISMATCH'
+] as const;
+
+export type McpToolIssueCode = (typeof MCP_TOOL_ISSUE_CODES)[number];
 
 export interface McpToolIssue {
   severity: 'error';
