@@ -39,6 +39,7 @@ describe('Operations Status JSON', () => {
       schemaVersion: 'hadara.ops.status.v1',
       command: 'ops.status',
       ok: true,
+      health: 'ok',
       project: {
         branch: 'main',
         phase: 'bootstrap-development'
@@ -53,6 +54,12 @@ describe('Operations Status JSON', () => {
           unknown: 0
         },
         rawStatusCounts: {
+          Done: 1,
+          Draft: 1,
+          Partial: 1,
+          Superseded: 1
+        },
+        normalizedStatusCounts: {
           done: 1,
           draft: 1,
           partial: 1,
@@ -83,7 +90,7 @@ describe('Operations Status JSON', () => {
     });
   });
 
-  it('keeps stable task count keys and reports raw status counts separately', () => {
+  it('keeps stable task count keys and reports raw and normalized status counts separately', () => {
     const root = tempProject();
     writeProjectDocs(root);
     const active = createTaskCapsule(root, 'Active task');
@@ -102,6 +109,10 @@ describe('Operations Status JSON', () => {
       unknown: 1
     });
     expect(report.tasks.rawStatusCounts).toEqual({
+      'In Progress': 1,
+      'Needs Review': 1
+    });
+    expect(report.tasks.normalizedStatusCounts).toEqual({
       inProgress: 1,
       needsReview: 1
     });
@@ -113,6 +124,7 @@ describe('Operations Status JSON', () => {
     const report = createOpsStatusReport(root);
 
     expect(report.ok).toBe(true);
+    expect(report.health).toBe('degraded');
     expect(report.project.phase).toBe('unknown');
     expect(report.issues).toEqual([
       {
@@ -189,6 +201,30 @@ describe('Operations Status JSON', () => {
     expect(second.schemaVersion).toBe('hadara.ops.status.v1');
     expect(first.command).toBe('ops.status');
     expect(second.command).toBe('ops.status');
+  });
+
+  it('keeps the dashboard sample fixture aligned with the status schema', () => {
+    const fixture = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'docs', 'design', 'fixtures', 'hadara.ops.status.sample.json'), 'utf8'));
+
+    expect(fixture).toMatchObject({
+      schemaVersion: 'hadara.ops.status.v1',
+      command: 'ops.status',
+      ok: true,
+      health: expect.stringMatching(/^(ok|degraded|error)$/),
+      tasks: {
+        counts: {
+          done: expect.any(Number),
+          draft: expect.any(Number),
+          partial: expect.any(Number),
+          superseded: expect.any(Number),
+          inProgress: expect.any(Number),
+          unknown: expect.any(Number)
+        },
+        rawStatusCounts: expect.any(Object),
+        normalizedStatusCounts: expect.any(Object)
+      },
+      issues: expect.any(Array)
+    });
   });
 });
 

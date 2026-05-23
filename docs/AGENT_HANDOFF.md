@@ -14,13 +14,14 @@
 - T-0050, T-0051, and T-0052 are complete: opt-in MCP evidence attach write attempts are privately audited, initialize metadata reflects read-only vs evidence attach-enabled mode, and each evidence attach call requires approval actor/reason metadata.
 - T-0053 is complete: `hadara status --json` and `hadara ops status --json` provide a dashboard/external-agent Operations Status JSON snapshot, with design mockups documented as reference-only.
 - T-0054 is complete: Operations Status JSON now reports degraded-source warning issues, stable task counts, raw status counts, explicit phase parsing, and validation history fallback.
+- T-0055 is complete: Dashboard read model contract maps dashboard cards/panels to `hadara.ops.status.v1`, adds `health`, true raw status counts, normalized status counts, and a sample fixture.
 - Real provider adapters, dashboard, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0052 MCP Evidence Attach Approval Record: required per-call approval actor/reason for opt-in MCP evidence attach writes and recorded approval metadata in audit events.
 - T-0053 Operations Status JSON: added `hadara.ops.status.v1` through `hadara status --json` and `hadara ops status --json`, plus reference-only dashboard design docs.
 - T-0054 Operations Status JSON Cleanup: hardened warnings, stable counts, raw status counts, phase parsing, and validation fallback.
+- T-0055 Dashboard Read Model Contract: documented dashboard field mapping, empty/degraded behavior, status semantics, mockup mapping, and sample fixture.
 
 ## Current Known Problems
 
@@ -34,16 +35,16 @@
 
 ## Next Recommended Step
 
-1. Continue with Dashboard Read Model Contract before any dashboard implementation.
+1. Continue with Minimal Static Dashboard consuming the sample status JSON before CLI serving or live integrations.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm ci && npm run check` passed with 28 test files and 147 tests after T-0054.
-- Latest status JSON smoke: Docker built CLI `status --json` returned stable counts, `rawStatusCounts`, and `issues`.
-- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0054 --level done --json` returned `ok: true`.
+- Latest full check: Docker `npm ci && npm run check` passed with 28 test files and 148 tests after T-0055.
+- Latest status JSON smoke: Docker built CLI `status --json` returned `health`, `rawStatusCounts`, and `normalizedStatusCounts`.
+- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0055 --level done --json` returned `ok: true`.
 
 ## Historical Index
 

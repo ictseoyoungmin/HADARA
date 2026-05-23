@@ -67,6 +67,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - MCP evidence attach write attempts are audited to the private portable audit store on both success and report-level failure.
 - Operations Status JSON exists as `hadara status --json` and `hadara ops status --json` with schema `hadara.ops.status.v1` for future dashboards and external agents.
 - Operations Status JSON reports warning issues for missing source documents or validation baselines, keeps stable dashboard-facing task count keys, exposes raw status counts separately, and parses explicit project phase markers.
+- Operations Status JSON now includes dashboard-facing `health`, true raw status counts, and normalized status counts; `docs/DASHBOARD_READ_MODEL_CONTRACT.md` maps dashboard panels to field paths.
 - Dashboard design references live under `docs/design/`; the current mockup is reference-only and does not implement UI behavior.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.

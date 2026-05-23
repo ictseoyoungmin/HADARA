@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "hadara.ops.status.v1",
+  "command": "ops.status",
+  "ok": true,
+  "health": "ok",
+  "project": {
+    "branch": "main",
+    "phase": "bootstrap-development"
+  },
+  "tasks": {
+    "counts": {
+      "done": 53,
+      "draft": 0,
+      "partial": 1,
+      "superseded": 1,
+      "inProgress": 0,
+      "unknown": 0
+    },
+    "rawStatusCounts": {
+      "Done": 53,
+      "Partial": 1,
+      "Superseded": 1
+    },
+    "normalizedStatusCounts": {
+      "done": 53,
+      "partial": 1,
+      "superseded": 1
+    },
+    "lastCompleted": ["T-0052", "T-0053", "T-0054"],
+    "nextRecommended": "Continue with Dashboard Read Model Contract before implementing dashboard UI."
+  },
+  "handoff": {
+    "currentState": [
+      "Operations Status JSON is available for dashboards and external agents.",
+      "Dashboard UI remains deferred."
+    ],
+    "knownProblems": [
+      "Docker is the working validation path for now."
+    ],
+    "nextRecommendedStep": [
+      "Continue with Dashboard Read Model Contract before any dashboard implementation."
+    ]
+  },
+  "validation": {
+    "latestFullCheck": "Docker npm ci && npm run check passed with 28 test files and 147 tests",
+    "latestDoneLevelValidation": "Docker node dist/cli/main.js harness validate --task T-0054 --level done --json returned ok true"
+  },
+  "mcp": {
+    "defaultMode": "read-only",
+    "evidenceAttach": {
+      "enabledByDefault": false,
+      "requiresFlag": "--enable-evidence-attach",
+      "requiresApproval": true,
+      "audited": true
+    }
+  },
+  "issues": []
+}

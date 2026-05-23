@@ -6,6 +6,7 @@ export interface OpsStatusReport {
   schemaVersion: 'hadara.ops.status.v1';
   command: 'ops.status';
   ok: boolean;
+  health: 'ok' | 'degraded' | 'error';
   project: {
     branch: string;
     phase: string;
@@ -20,6 +21,7 @@ export interface OpsStatusReport {
       unknown: number;
     };
     rawStatusCounts: Record<string, number>;
+    normalizedStatusCounts: Record<string, number>;
     lastCompleted: string[];
     nextRecommended: string | null;
   };
@@ -76,6 +78,7 @@ export function createOpsStatusReport(projectRoot: string): OpsStatusReport {
     schemaVersion: 'hadara.ops.status.v1',
     command: 'ops.status',
     ok: true,
+    health: issues.some((issue) => issue.severity === 'error') ? 'error' : issues.length > 0 ? 'degraded' : 'ok',
     project: {
       branch: readGitBranch(projectRoot),
       phase: extractProjectPhase(sources.projectState.content)
@@ -83,6 +86,7 @@ export function createOpsStatusReport(projectRoot: string): OpsStatusReport {
     tasks: {
       counts: taskCounts.counts,
       rawStatusCounts: taskCounts.rawStatusCounts,
+      normalizedStatusCounts: taskCounts.normalizedStatusCounts,
       lastCompleted: extractLastCompletedTaskIds(sources.handoff.content),
       nextRecommended: handoffSections.nextRecommendedStep[0] ?? null
     },
@@ -156,6 +160,7 @@ function extractProjectPhase(projectState: string): string {
 function countTaskStatuses(tasks: TaskCapsule[]): {
   counts: OpsStatusReport['tasks']['counts'];
   rawStatusCounts: Record<string, number>;
+  normalizedStatusCounts: Record<string, number>;
 } {
   const counts: OpsStatusReport['tasks']['counts'] = {
     done: 0,
@@ -166,13 +171,16 @@ function countTaskStatuses(tasks: TaskCapsule[]): {
     unknown: 0
   };
   const rawStatusCounts: Record<string, number> = {};
+  const normalizedStatusCounts: Record<string, number> = {};
   for (const task of tasks) {
-    const rawStatus = normalizeRawStatus(readTaskStatus(task));
-    const aggregate = aggregateStatus(rawStatus);
+    const rawStatus = readTaskStatus(task);
+    const normalizedStatus = normalizeStatus(rawStatus);
+    const aggregate = aggregateStatus(normalizedStatus);
     counts[aggregate] += 1;
     rawStatusCounts[rawStatus] = (rawStatusCounts[rawStatus] ?? 0) + 1;
+    normalizedStatusCounts[normalizedStatus] = (normalizedStatusCounts[normalizedStatus] ?? 0) + 1;
   }
-  return { counts, rawStatusCounts };
+  return { counts, rawStatusCounts, normalizedStatusCounts };
 }
 
 function readTaskStatus(task: TaskCapsule): string {
@@ -183,7 +191,7 @@ function readTaskStatus(task: TaskCapsule): string {
   return match?.[1]?.trim().split(/\r?\n/)[0]?.trim() || 'Unknown';
 }
 
-function normalizeRawStatus(status: string): string {
+function normalizeStatus(status: string): string {
   const value = status.trim().toLowerCase().replace(/[\s_-]+(.)/g, (_match, letter: string) => letter.toUpperCase());
   return value || 'unknown';
 }
