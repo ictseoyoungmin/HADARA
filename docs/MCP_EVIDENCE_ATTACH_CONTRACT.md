@@ -8,12 +8,11 @@ T-0046 is contract-only. It does not implement, advertise, or enable `hadara.evi
 
 Phase: future write-capable evidence contract.
 
-The current MCP runtime remains read-only. A later implementation capsule must explicitly opt into this write-capable tool and must include contract tests before it can be advertised.
+The default MCP runtime remains read-only. `hadara.evidence.attach` may only be advertised when the operator explicitly starts MCP with evidence attach enabled.
 
 ## Non-Goals
 
-- Implementing `hadara.evidence.attach`.
-- Advertising write-capable MCP tools in `tools/list`.
+- Advertising write-capable MCP tools by default.
 - Shell execution.
 - Provider calls.
 - Task creation or mutation outside evidence append behavior.
@@ -31,6 +30,14 @@ Even when policy output says a command would be allowed by CLI policy, MCP tools
 ### `hadara.evidence.attach`
 
 Attach evidence to an existing Task Capsule using HADARA evidence store semantics.
+
+Runtime availability:
+
+```bash
+hadara mcp serve --enable-evidence-attach
+```
+
+Without this explicit flag, `hadara.evidence.attach` must not appear in `tools/list` and must not be callable.
 
 Input schema:
 

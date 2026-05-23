@@ -1,12 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { createEvidenceCollectReport } from '../cli/evidence-json';
 import { createTaskListReport, TaskJsonSummary } from '../cli/task-json';
 import { validateTaskCapsule } from '../harness/validate';
 import { createShellExecutionPreflight } from '../policy/preflight';
 import { parsePermissionMode } from '../policy/policy';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 import { McpToolDefinition } from './tool-dispatch';
-import { HADARA_MCP_TOOL_SCHEMAS } from './tool-schemas';
+import { HADARA_MCP_EVIDENCE_ATTACH_SCHEMA, HADARA_MCP_TOOL_SCHEMAS } from './tool-schemas';
 
 const TASK_CAPSULE_FILES = [
   'TASK.md',
@@ -22,12 +23,25 @@ const TASK_CAPSULE_FILES = [
   'HANDOFF.md'
 ];
 
-export function createMcpToolRegistry(projectRoot: string): McpToolDefinition[] {
-  return HADARA_MCP_TOOL_SCHEMAS.map((metadata) => ({
+export interface McpToolRegistryOptions {
+  enableEvidenceAttach?: boolean;
+}
+
+export function createMcpToolRegistry(projectRoot: string, options: McpToolRegistryOptions = {}): McpToolDefinition[] {
+  const readTools: McpToolDefinition[] = HADARA_MCP_TOOL_SCHEMAS.map((metadata) => ({
     metadata,
     phaseAllowed: true,
     handler: (args) => handleReadOnlyTool(projectRoot, metadata.name, args)
   }));
+  if (!options.enableEvidenceAttach) return readTools;
+  return [
+    ...readTools,
+    {
+      metadata: HADARA_MCP_EVIDENCE_ATTACH_SCHEMA,
+      phaseAllowed: true,
+      handler: (args: Record<string, unknown>) => handleEvidenceAttachTool(projectRoot, args)
+    }
+  ];
 }
 
 function handleReadOnlyTool(projectRoot: string, name: string, args: Record<string, unknown>): unknown {
@@ -58,6 +72,17 @@ function handleReadOnlyTool(projectRoot: string, name: string, args: Record<stri
     default:
       throw new Error(`unregistered MCP tool handler: ${name}`);
   }
+}
+
+function handleEvidenceAttachTool(projectRoot: string, args: Record<string, unknown>): unknown {
+  return createEvidenceCollectReport(projectRoot, {
+    taskId: String(args.taskId),
+    kind: parseEvidenceKind(String(args.kind)),
+    summary: String(args.summary),
+    result: parseEvidenceResult(String(args.result)),
+    visibility: parseEvidenceVisibility(typeof args.visibility === 'string' ? args.visibility : 'public'),
+    path: typeof args.artifactPath === 'string' ? args.artifactPath : undefined
+  });
 }
 
 interface TaskReadReport {
@@ -241,4 +266,19 @@ function extractSection(content: string, heading: string): string {
 
 function toPortablePath(value: string): string {
   return value.split(path.sep).join('/');
+}
+
+function parseEvidenceKind(value: string): 'test-log' | 'command-log' | 'diff-summary' | 'screenshot' | 'note' {
+  if (value === 'test-log' || value === 'command-log' || value === 'diff-summary' || value === 'screenshot' || value === 'note') return value;
+  throw new Error(`unsupported evidence kind: ${value}`);
+}
+
+function parseEvidenceResult(value: string): 'passed' | 'failed' | 'blocked' | 'unknown' {
+  if (value === 'passed' || value === 'failed' || value === 'blocked' || value === 'unknown') return value;
+  throw new Error(`unsupported evidence result: ${value}`);
+}
+
+function parseEvidenceVisibility(value: string): 'public' | 'private' {
+  if (value === 'public' || value === 'private') return value;
+  throw new Error(`unsupported evidence visibility: ${value}`);
 }

@@ -3,10 +3,10 @@ export interface McpToolMetadata {
   description: string;
   inputSchema: McpInputSchema;
   annotations: {
-    readOnlyHint: true;
+    readOnlyHint: boolean;
   };
   _meta: {
-    'hadara/readOnly': true;
+    'hadara/readOnly': boolean;
     'hadara/implemented': boolean;
   };
 }
@@ -108,3 +108,23 @@ export const HADARA_MCP_TOOL_SCHEMAS: McpToolMetadata[] = [
     _meta: { 'hadara/readOnly': true, 'hadara/implemented': true }
   }
 ];
+
+export const HADARA_MCP_EVIDENCE_ATTACH_SCHEMA: McpToolMetadata = {
+  name: 'hadara.evidence.attach',
+  description: 'Attach evidence to an existing Task Capsule using HADARA evidence store semantics.',
+  inputSchema: {
+    type: 'object',
+    required: ['taskId', 'kind', 'summary', 'result'],
+    additionalProperties: false,
+    properties: {
+      taskId: { type: 'string', pattern: '^T-[0-9]{4}$' },
+      kind: { type: 'string', enum: ['test-log', 'command-log', 'diff-summary', 'screenshot', 'note'] },
+      summary: { type: 'string', minLength: 1 },
+      result: { type: 'string', enum: ['passed', 'failed', 'blocked', 'unknown'] },
+      visibility: { type: 'string', enum: ['public', 'private'], default: 'public' },
+      artifactPath: { type: 'string' }
+    }
+  },
+  annotations: { readOnlyHint: false },
+  _meta: { 'hadara/readOnly': false, 'hadara/implemented': true }
+};

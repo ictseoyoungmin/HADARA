@@ -30,6 +30,7 @@ interface JsonRpcError {
 
 export interface McpServerOptions {
   projectRoot?: string;
+  enableEvidenceAttach?: boolean;
 }
 
 export function handleMcpJsonRpcMessage(message: string, options: McpServerOptions = {}): string | null {
@@ -63,7 +64,7 @@ export function startMcpStdioServer(options: McpServerOptions = {}, input: Reada
 
 function handleMcpRequest(request: JsonRpcRequest, options: McpServerOptions): JsonRpcSuccess | JsonRpcError {
   const projectRoot = options.projectRoot ?? process.cwd();
-  const tools = createMcpToolRegistry(projectRoot);
+  const tools = createMcpToolRegistry(projectRoot, { enableEvidenceAttach: options.enableEvidenceAttach });
   switch (request.method) {
     case 'initialize':
       return success(request.id ?? null, {

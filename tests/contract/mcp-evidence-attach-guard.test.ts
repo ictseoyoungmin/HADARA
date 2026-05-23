@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { handleMcpJsonRpcMessage } from '../../src/mcp/server';
 import { MCP_TOOL_ISSUE_CODES } from '../../src/mcp/tool-dispatch';
+import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
 
@@ -17,7 +18,7 @@ afterEach(() => {
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
 });
 
-function request(projectRoot: string, method: string, params?: unknown): any {
+function request(projectRoot: string, method: string, params?: unknown, options: { enableEvidenceAttach?: boolean } = {}): any {
   const response = handleMcpJsonRpcMessage(
     JSON.stringify({
       jsonrpc: '2.0',
@@ -25,7 +26,7 @@ function request(projectRoot: string, method: string, params?: unknown): any {
       method,
       ...(params === undefined ? {} : { params })
     }),
-    { projectRoot }
+    { projectRoot, enableEvidenceAttach: options.enableEvidenceAttach }
   );
   expect(response).not.toBeNull();
   return JSON.parse(response as string);
@@ -61,6 +62,53 @@ describe('MCP evidence attach guard', () => {
         }
       }
     });
+  });
+
+  it('advertises and executes hadara.evidence.attach only when explicitly enabled', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'MCP evidence attach');
+
+    const toolsResponse = request(root, 'tools/list', undefined, { enableEvidenceAttach: true });
+    expect(toolsResponse.result.tools.map((tool: { name: string }) => tool.name)).toContain('hadara.evidence.attach');
+
+    const attachResponse = request(
+      root,
+      'tools/call',
+      {
+        name: 'hadara.evidence.attach',
+        arguments: {
+          taskId: task.id,
+          kind: 'note',
+          summary: 'MCP evidence attach works',
+          result: 'passed'
+        }
+      },
+      { enableEvidenceAttach: true }
+    );
+
+    expect(attachResponse.error).toBeUndefined();
+    expect(attachResponse.result.content).toEqual([
+      {
+        type: 'text',
+        text: expect.any(String)
+      }
+    ]);
+    expect(JSON.parse(attachResponse.result.content[0].text)).toMatchObject({
+      schemaVersion: 'hadara.evidence.collect.v1',
+      command: 'evidence.collect',
+      ok: true,
+      evidence: {
+        schemaVersion: 'hadara.evidence.v1',
+        taskId: task.id,
+        kind: 'note',
+        summary: 'MCP evidence attach works',
+        result: 'passed',
+        visibility: 'public',
+        markdownPath: 'tasks/T-0001-mcp-evidence-attach/EVIDENCE.md'
+      },
+      issues: []
+    });
+    expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain('MCP evidence attach works');
   });
 
   it('reserves future write-tool issue codes in contract and code', () => {

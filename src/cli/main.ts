@@ -30,7 +30,7 @@ Usage:
   hadara harness replay <scenario.jsonl> [--json]
   hadara hermes detect
   hadara hermes export-context
-  hadara mcp serve
+  hadara mcp serve [--enable-evidence-attach]
   hadara run scaffold --task <task-id> --command <command> [--stdout <text>] [--stderr <text>] [--exit-code <n>] [--json]
   hadara run [request] --script <script.json> [--task <task-id>] [--fake-shell-fixtures <fixtures.json>] [--mode readonly|assisted|trusted|auto|release] [--max-steps <n>] [--json]
 
