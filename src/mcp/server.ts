@@ -65,6 +65,7 @@ export function startMcpStdioServer(options: McpServerOptions = {}, input: Reada
 function handleMcpRequest(request: JsonRpcRequest, options: McpServerOptions): JsonRpcSuccess | JsonRpcError {
   const projectRoot = options.projectRoot ?? process.cwd();
   const tools = createMcpToolRegistry(projectRoot, { enableEvidenceAttach: options.enableEvidenceAttach });
+  const writeEnabled = options.enableEvidenceAttach === true;
   switch (request.method) {
     case 'initialize':
       return success(request.id ?? null, {
@@ -78,14 +79,17 @@ function handleMcpRequest(request: JsonRpcRequest, options: McpServerOptions): J
             listChanged: false
           },
           _meta: {
-            'hadara/phase': 'read-only-skeleton',
-            'hadara/readOnly': true,
-            'hadara/writes': false,
+            'hadara/phase': writeEnabled ? 'evidence-attach-enabled' : 'read-only-bridge',
+            'hadara/readOnly': !writeEnabled,
+            'hadara/writes': writeEnabled,
+            'hadara/evidenceAttach': writeEnabled,
             'hadara/shellExecution': false,
             'hadara/providerCalls': false
           }
         },
-        instructions: 'HADARA MCP skeleton exposes read-only discovery only. Tool execution is implemented in later slices.'
+        instructions: writeEnabled
+          ? 'HADARA MCP evidence attach is enabled only for this server process. Evidence writes require per-call approval metadata, are audited privately, and never execute shell commands or call providers.'
+          : 'HADARA MCP is running in default read-only mode. Evidence attach, shell execution, and provider calls are disabled for this server process.'
       });
 
     case 'tools/list':

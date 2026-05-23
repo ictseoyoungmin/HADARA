@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { handleMcpJsonRpcMessage } from '../../src/mcp/server';
+import { resolveHadaraPaths } from '../../src/core/paths';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -34,6 +35,16 @@ function callEvidenceAttach(projectRoot: string, args: Record<string, unknown>):
   return JSON.parse(response as string);
 }
 
+function approved(args: Record<string, unknown>): Record<string, unknown> {
+  return {
+    ...args,
+    approval: {
+      actor: 'operator',
+      reason: 'test approval'
+    }
+  };
+}
+
 function parsePayload(response: any): any {
   expect(response.error).toBeUndefined();
   expect(response.result.content).toEqual([
@@ -51,12 +62,12 @@ describe('MCP evidence attach safety', () => {
     const task = createTaskCapsule(root, 'Evidence attach note');
 
     const payload = parsePayload(
-      callEvidenceAttach(root, {
+      callEvidenceAttach(root, approved({
         taskId: task.id,
         kind: 'note',
         summary: 'safe note',
         result: 'passed'
-      })
+      }))
     );
 
     expect(payload).toMatchObject({
@@ -82,13 +93,13 @@ describe('MCP evidence attach safety', () => {
     fs.writeFileSync(path.join(root, 'safe.log'), 'plain build output\n', 'utf8');
 
     const payload = parsePayload(
-      callEvidenceAttach(root, {
+      callEvidenceAttach(root, approved({
         taskId: task.id,
         kind: 'test-log',
         summary: 'safe artifact',
         result: 'passed',
         artifactPath: 'safe.log'
-      })
+      }))
     );
 
     expect(payload.ok).toBe(true);
@@ -104,13 +115,13 @@ describe('MCP evidence attach safety', () => {
     createTaskCapsule(root, 'Evidence attach boundary');
 
     const payload = parsePayload(
-      callEvidenceAttach(root, {
+      callEvidenceAttach(root, approved({
         taskId: 'T-0001',
         kind: 'test-log',
         summary: 'boundary check',
         result: 'blocked',
         artifactPath: '../outside.log'
-      })
+      }))
     );
 
     expect(payload).toMatchObject({
@@ -132,13 +143,13 @@ describe('MCP evidence attach safety', () => {
     fs.writeFileSync(path.join(root, 'secret.log'), 'OPENAI_API_KEY=sk-test-secret\n', 'utf8');
 
     const payload = parsePayload(
-      callEvidenceAttach(root, {
+      callEvidenceAttach(root, approved({
         taskId: 'T-0001',
         kind: 'test-log',
         summary: 'secret artifact',
         result: 'blocked',
         artifactPath: 'secret.log'
-      })
+      }))
     );
 
     expect(payload).toMatchObject({
@@ -160,7 +171,11 @@ describe('MCP evidence attach safety', () => {
       taskId: 'T-0001',
       kind: 'note',
       summary: 'bad result',
-      result: 'banana'
+      result: 'banana',
+      approval: {
+        actor: 'operator',
+        reason: 'test approval'
+      }
     });
 
     expect(response).toMatchObject({
@@ -174,4 +189,154 @@ describe('MCP evidence attach safety', () => {
       }
     });
   });
+
+  it('rejects missing approval before evidence collection', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Evidence attach approval');
+    const response = callEvidenceAttach(root, {
+      taskId: task.id,
+      kind: 'note',
+      summary: 'missing approval',
+      result: 'blocked'
+    });
+
+    expect(response).toMatchObject({
+      error: {
+        code: -32602,
+        data: {
+          issue: {
+            code: 'TOOL_INPUT_INVALID',
+            message: expect.stringContaining('requires argument: approval')
+          }
+        }
+      }
+    });
+    expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).not.toContain('missing approval');
+  });
+
+  it('rejects empty artifact paths before evidence collection', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Evidence attach empty artifact path');
+    const response = callEvidenceAttach(
+      root,
+      approved({
+        taskId: task.id,
+        kind: 'test-log',
+        summary: 'empty artifact',
+        result: 'blocked',
+        artifactPath: ''
+      })
+    );
+
+    expect(response).toMatchObject({
+      error: {
+        code: -32602,
+        data: {
+          issue: {
+            code: 'TOOL_INPUT_INVALID',
+            message: expect.stringContaining('artifactPath must be at least 1 character')
+          }
+        }
+      }
+    });
+    expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).not.toContain('empty artifact');
+  });
+
+  it('writes private audit events for successful evidence attach calls', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Evidence attach audit success');
+
+    parsePayload(
+      callEvidenceAttach(
+        root,
+        approved({
+          taskId: task.id,
+          kind: 'note',
+          summary: 'audit success',
+          result: 'passed'
+        })
+      )
+    );
+
+    const events = readAuditEvents(root);
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        actor: 'agent',
+        task_id: task.id,
+        event_type: 'mcp.evidence.attach.succeeded',
+        risk: 'medium',
+        payload: expect.objectContaining({
+          approval: {
+            actor: 'operator',
+            reason: 'test approval'
+          },
+          ok: true,
+          input: expect.objectContaining({
+            taskId: task.id,
+            artifactPathProvided: false
+          })
+        })
+      })
+    );
+  });
+
+  it('writes private audit events for failed evidence attach calls', () => {
+    const parent = tempProject();
+    const root = path.join(parent, 'repo');
+    fs.mkdirSync(root);
+    fs.writeFileSync(path.join(parent, 'outside.log'), 'outside\n', 'utf8');
+    createTaskCapsule(root, 'Evidence attach audit failure');
+
+    parsePayload(
+      callEvidenceAttach(
+        root,
+        approved({
+          taskId: 'T-0001',
+          kind: 'test-log',
+          summary: 'audit failure',
+          result: 'blocked',
+          artifactPath: '../outside.log'
+        })
+      )
+    );
+
+    const events = readAuditEvents(root);
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        event_type: 'mcp.evidence.attach.failed',
+        risk: 'blocked',
+        payload: expect.objectContaining({
+          approval: {
+            actor: 'operator',
+            reason: 'test approval'
+          },
+          ok: false,
+          input: expect.objectContaining({
+            artifactPathProvided: true
+          }),
+          issues: [
+            {
+              severity: 'error',
+              code: 'WORKSPACE_FILE_OUTSIDE'
+            }
+          ]
+        })
+      })
+    );
+  });
 });
+
+function readAuditEvents(projectRoot: string): any[] {
+  const auditDir = resolveHadaraPaths({ projectRoot }).auditDir;
+  return fs
+    .readdirSync(auditDir)
+    .filter((fileName) => fileName.endsWith('.jsonl'))
+    .flatMap((fileName) =>
+      fs
+        .readFileSync(path.join(auditDir, fileName), 'utf8')
+        .trim()
+        .split(/\r?\n/)
+        .filter(Boolean)
+        .map((line) => JSON.parse(line))
+    );
+}

@@ -119,36 +119,66 @@ function validateToolArguments(toolName: string, args: Record<string, unknown>, 
     }
   }
 
-  for (const [name, property] of Object.entries(schema.properties)) {
+  validateSchemaProperties(toolName, args, schema.properties, schema.required ?? []);
+}
+
+function validateSchemaProperties(
+  toolName: string,
+  args: Record<string, unknown>,
+  properties: Record<string, McpInputSchema['properties'][string]>,
+  required: string[],
+  pathPrefix = ''
+): void {
+  for (const name of required) {
+    if (!(name in args)) {
+      throw invalidInput(`${toolName} requires argument: ${pathPrefix}${name}`);
+    }
+  }
+
+  for (const [name, property] of Object.entries(properties)) {
     const value = args[name];
     if (value === undefined) continue;
+    const argumentName = `${pathPrefix}${name}`;
     if (property.type === 'boolean' && typeof value !== 'boolean') {
-      throw invalidInput(`${toolName} argument ${name} must be a boolean.`);
+      throw invalidInput(`${toolName} argument ${argumentName} must be a boolean.`);
     }
     if (property.type === 'integer') {
       if (typeof value !== 'number' || !Number.isInteger(value)) {
-        throw invalidInput(`${toolName} argument ${name} must be an integer.`);
+        throw invalidInput(`${toolName} argument ${argumentName} must be an integer.`);
       }
       if (property.minimum !== undefined && value < property.minimum) {
-        throw invalidInput(`${toolName} argument ${name} must be greater than or equal to ${property.minimum}.`);
+        throw invalidInput(`${toolName} argument ${argumentName} must be greater than or equal to ${property.minimum}.`);
       }
       if (property.maximum !== undefined && value > property.maximum) {
-        throw invalidInput(`${toolName} argument ${name} must be less than or equal to ${property.maximum}.`);
+        throw invalidInput(`${toolName} argument ${argumentName} must be less than or equal to ${property.maximum}.`);
       }
     }
     if (property.type === 'string') {
       if (typeof value !== 'string') {
-        throw invalidInput(`${toolName} argument ${name} must be a string.`);
+        throw invalidInput(`${toolName} argument ${argumentName} must be a string.`);
       }
       if (property.minLength !== undefined && value.length < property.minLength) {
-        throw invalidInput(`${toolName} argument ${name} must be at least ${property.minLength} character(s).`);
+        throw invalidInput(`${toolName} argument ${argumentName} must be at least ${property.minLength} character(s).`);
       }
       if (property.pattern !== undefined && !new RegExp(property.pattern).test(value)) {
-        throw invalidInput(`${toolName} argument ${name} must match ${property.pattern}.`);
+        throw invalidInput(`${toolName} argument ${argumentName} must match ${property.pattern}.`);
       }
       if (property.enum !== undefined && !property.enum.includes(value)) {
-        throw invalidInput(`${toolName} argument ${name} must be one of: ${property.enum.join(', ')}.`);
+        throw invalidInput(`${toolName} argument ${argumentName} must be one of: ${property.enum.join(', ')}.`);
       }
+    }
+    if (property.type === 'object') {
+      if (!isPlainObject(value)) {
+        throw invalidInput(`${toolName} argument ${argumentName} must be an object.`);
+      }
+      if (!property.additionalProperties) {
+        for (const childName of Object.keys(value)) {
+          if (!(childName in property.properties)) {
+            throw invalidInput(`${toolName} argument ${argumentName} does not accept property: ${childName}`);
+          }
+        }
+      }
+      validateSchemaProperties(toolName, value, property.properties, property.required ?? [], `${argumentName}.`);
     }
   }
 }

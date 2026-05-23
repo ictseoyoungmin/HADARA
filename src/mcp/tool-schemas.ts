@@ -21,7 +21,8 @@ export interface McpInputSchema {
 export type McpSchemaProperty =
   | { type: 'boolean'; default?: boolean }
   | { type: 'integer'; minimum?: number; maximum?: number; default?: number }
-  | { type: 'string'; minLength?: number; pattern?: string; enum?: string[]; default?: string };
+  | { type: 'string'; minLength?: number; pattern?: string; enum?: string[]; default?: string }
+  | { type: 'object'; additionalProperties: boolean; required?: string[]; properties: Record<string, McpSchemaProperty> };
 
 export const HADARA_MCP_TOOL_SCHEMAS: McpToolMetadata[] = [
   {
@@ -114,7 +115,7 @@ export const HADARA_MCP_EVIDENCE_ATTACH_SCHEMA: McpToolMetadata = {
   description: 'Attach evidence to an existing Task Capsule using HADARA evidence store semantics.',
   inputSchema: {
     type: 'object',
-    required: ['taskId', 'kind', 'summary', 'result'],
+    required: ['taskId', 'kind', 'summary', 'result', 'approval'],
     additionalProperties: false,
     properties: {
       taskId: { type: 'string', pattern: '^T-[0-9]{4}$' },
@@ -122,7 +123,16 @@ export const HADARA_MCP_EVIDENCE_ATTACH_SCHEMA: McpToolMetadata = {
       summary: { type: 'string', minLength: 1 },
       result: { type: 'string', enum: ['passed', 'failed', 'blocked', 'unknown'] },
       visibility: { type: 'string', enum: ['public', 'private'], default: 'public' },
-      artifactPath: { type: 'string' }
+      artifactPath: { type: 'string', minLength: 1 },
+      approval: {
+        type: 'object',
+        required: ['actor', 'reason'],
+        additionalProperties: false,
+        properties: {
+          actor: { type: 'string', minLength: 1 },
+          reason: { type: 'string', minLength: 1 }
+        }
+      }
     }
   },
   annotations: { readOnlyHint: false },

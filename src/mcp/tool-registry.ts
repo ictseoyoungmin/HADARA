@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createEvidenceCollectReport } from '../cli/evidence-json';
+import { writeAuditEvent } from '../core/audit';
+import { resolveHadaraPaths } from '../core/paths';
 import { createTaskListReport, TaskJsonSummary } from '../cli/task-json';
 import { validateTaskCapsule } from '../harness/validate';
 import { createShellExecutionPreflight } from '../policy/preflight';
@@ -75,7 +77,8 @@ function handleReadOnlyTool(projectRoot: string, name: string, args: Record<stri
 }
 
 function handleEvidenceAttachTool(projectRoot: string, args: Record<string, unknown>): unknown {
-  return createEvidenceCollectReport(projectRoot, {
+  const approval = parseApproval(args.approval);
+  const report = createEvidenceCollectReport(projectRoot, {
     taskId: String(args.taskId),
     kind: parseEvidenceKind(String(args.kind)),
     summary: String(args.summary),
@@ -83,6 +86,60 @@ function handleEvidenceAttachTool(projectRoot: string, args: Record<string, unkn
     visibility: parseEvidenceVisibility(typeof args.visibility === 'string' ? args.visibility : 'public'),
     path: typeof args.artifactPath === 'string' ? args.artifactPath : undefined
   });
+  auditEvidenceAttach(projectRoot, args, approval, report);
+  return report;
+}
+
+interface EvidenceAttachApproval {
+  actor: string;
+  reason: string;
+}
+
+function parseApproval(value: unknown): EvidenceAttachApproval {
+  const approval = value as { actor?: unknown; reason?: unknown };
+  return {
+    actor: String(approval.actor),
+    reason: String(approval.reason)
+  };
+}
+
+function auditEvidenceAttach(
+  projectRoot: string,
+  args: Record<string, unknown>,
+  approval: EvidenceAttachApproval,
+  report: unknown
+): void {
+  const result = isEvidenceCollectReport(report) && report.ok ? 'succeeded' : 'failed';
+  const issues = isEvidenceCollectReport(report) ? report.issues.map((issue) => ({ code: issue.code, severity: issue.severity })) : [];
+  writeAuditEvent(resolveHadaraPaths({ projectRoot }).auditDir, {
+    actor: 'agent',
+    task_id: typeof args.taskId === 'string' ? args.taskId : undefined,
+    event_type: `mcp.evidence.attach.${result}`,
+    risk: result === 'succeeded' ? 'medium' : 'blocked',
+    summary: `MCP evidence attach ${result} for ${String(args.taskId)}`,
+    payload: {
+      tool: 'hadara.evidence.attach',
+      approval,
+      input: {
+        taskId: args.taskId,
+        kind: args.kind,
+        result: args.result,
+        visibility: typeof args.visibility === 'string' ? args.visibility : 'public',
+        artifactPathProvided: typeof args.artifactPath === 'string'
+      },
+      ok: result === 'succeeded',
+      issues
+    }
+  });
+}
+
+function isEvidenceCollectReport(value: unknown): value is {
+  ok: boolean;
+  issues: Array<{ severity: 'error'; code: string; message: string }>;
+} {
+  if (typeof value !== 'object' || value === null) return false;
+  const candidate = value as { ok?: unknown; issues?: unknown };
+  return typeof candidate.ok === 'boolean' && Array.isArray(candidate.issues);
 }
 
 interface TaskReadReport {

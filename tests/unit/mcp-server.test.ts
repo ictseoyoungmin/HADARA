@@ -11,8 +11,8 @@ function request(method: string, id: string | number = 1, params?: unknown): str
   });
 }
 
-function parseResponse(message: string): any {
-  const response = handleMcpJsonRpcMessage(message);
+function parseResponse(message: string, options?: Parameters<typeof handleMcpJsonRpcMessage>[1]): any {
+  const response = handleMcpJsonRpcMessage(message, options);
   expect(response).not.toBeNull();
   return JSON.parse(response as string);
 }
@@ -35,15 +35,39 @@ describe('MCP JSON-RPC server skeleton', () => {
             listChanged: false
           },
           _meta: {
-            'hadara/phase': 'read-only-skeleton',
+            'hadara/phase': 'read-only-bridge',
             'hadara/readOnly': true,
             'hadara/writes': false,
+            'hadara/evidenceAttach': false,
             'hadara/shellExecution': false,
             'hadara/providerCalls': false
           }
         }
       }
     });
+    expect(response.result.instructions).toContain('default read-only mode');
+  });
+
+  it('returns write-aware server metadata when evidence attach is enabled', () => {
+    const response = parseResponse(request('initialize'), { enableEvidenceAttach: true });
+
+    expect(response).toMatchObject({
+      jsonrpc: '2.0',
+      id: 1,
+      result: {
+        capabilities: {
+          _meta: {
+            'hadara/phase': 'evidence-attach-enabled',
+            'hadara/readOnly': false,
+            'hadara/writes': true,
+            'hadara/evidenceAttach': true,
+            'hadara/shellExecution': false,
+            'hadara/providerCalls': false
+          }
+        }
+      }
+    });
+    expect(response.result.instructions).toContain('Evidence writes require per-call approval metadata');
   });
 
   it('advertises only the read-only contract tool names', () => {

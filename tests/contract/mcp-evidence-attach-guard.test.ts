@@ -80,7 +80,11 @@ describe('MCP evidence attach guard', () => {
           taskId: task.id,
           kind: 'note',
           summary: 'MCP evidence attach works',
-          result: 'passed'
+          result: 'passed',
+          approval: {
+            actor: 'operator',
+            reason: 'guard test approval'
+          }
         }
       },
       { enableEvidenceAttach: true }
