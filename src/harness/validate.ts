@@ -207,8 +207,10 @@ function validateEvidenceIndex(projectRoot: string, task: TaskCapsule, issues: H
     try {
       const record = JSON.parse(line) as {
         schemaVersion?: unknown;
+        time?: unknown;
         taskId?: unknown;
         kind?: unknown;
+        summary?: unknown;
         result?: unknown;
         visibility?: unknown;
       };
@@ -225,6 +227,30 @@ function validateEvidenceIndex(projectRoot: string, task: TaskCapsule, issues: H
           severity: 'error',
           code: 'EVIDENCE_INDEX_RECORD_INVALID',
           message: `evidence.jsonl line ${index + 1} is missing required evidence fields.`,
+          path: relativePath
+        });
+      }
+      if (typeof record.time !== 'string' || !record.time.trim()) {
+        issues.push({
+          severity: 'error',
+          code: 'EVIDENCE_INDEX_TIME_MISSING',
+          message: `evidence.jsonl line ${index + 1} is missing required time.`,
+          path: relativePath
+        });
+      }
+      if (typeof record.summary !== 'string' || !record.summary.trim()) {
+        issues.push({
+          severity: 'error',
+          code: 'EVIDENCE_INDEX_SUMMARY_MISSING',
+          message: `evidence.jsonl line ${index + 1} is missing required summary.`,
+          path: relativePath
+        });
+      }
+      if (typeof record.visibility !== 'string') {
+        issues.push({
+          severity: 'error',
+          code: 'EVIDENCE_INDEX_VISIBILITY_MISSING',
+          message: `evidence.jsonl line ${index + 1} is missing required visibility.`,
           path: relativePath
         });
       }

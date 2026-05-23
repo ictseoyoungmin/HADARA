@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
-import { createDashboardStaticResponse } from '../../src/cli/dashboard';
+import { describe, expect, it, vi } from 'vitest';
+import { createDashboardServerResponse, createDashboardStaticResponse } from '../../src/cli/dashboard';
 
 const dashboardPath = path.join(process.cwd(), 'docs', 'design', 'dashboard', 'index.html');
 const fixturePath = path.join(process.cwd(), 'docs', 'design', 'fixtures', 'hadara.ops.status.sample.json');
@@ -157,5 +157,40 @@ describe('static dashboard reference', () => {
 
     expect(encodedTraversal.statusCode).toBe(404);
     expect(unknownAsset.statusCode).toBe(404);
+  });
+
+  it('returns safe failures when allowlisted dashboard files are unavailable', () => {
+    const missingRoot = path.join(process.cwd(), 'missing-dashboard-root');
+    const dashboard = createDashboardStaticResponse(missingRoot, '/dashboard/');
+    const fixture = createDashboardStaticResponse(missingRoot, '/fixtures/hadara.ops.status.sample.json');
+
+    expect(dashboard.statusCode).toBe(404);
+    expect(dashboard.headers['cache-control']).toBe('no-store');
+    expect(dashboard.headers['x-content-type-options']).toBe('nosniff');
+    expect(dashboard.body).toBe('Not found');
+
+    expect(fixture.statusCode).toBe(404);
+    expect(fixture.body).toBe('Not found');
+  });
+
+  it('returns a safe internal error if static response generation throws unexpectedly', () => {
+    const readFile = fs.readFileSync;
+    const spy = vi.spyOn(fs, 'readFileSync').mockImplementation(((filePath: fs.PathOrFileDescriptor, ...args: unknown[]) => {
+      if (String(filePath).endsWith(path.join('docs', 'design', 'dashboard', 'index.html'))) {
+        throw new Error('unexpected read failure');
+      }
+      return Reflect.apply(readFile, fs, [filePath, ...args]);
+    }) as typeof fs.readFileSync);
+
+    try {
+      const response = createDashboardServerResponse(process.cwd(), '/dashboard/');
+
+      expect(response.statusCode).toBe(500);
+      expect(response.headers['cache-control']).toBe('no-store');
+      expect(response.headers['x-content-type-options']).toBe('nosniff');
+      expect(response.body).toBe('Internal server error');
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

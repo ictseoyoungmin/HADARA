@@ -62,3 +62,5 @@
 | T-0058 | Dashboard Fixture Binding Smoke | Done | tasks/T-0058-dashboard-fixture-binding-smoke | Adds static smoke coverage that dashboard `data-field` attributes map to fixture-backed or derived `hadara.ops.status.v1` values. |
 | T-0059 | Dashboard Served from HADARA CLI | Done | tasks/T-0059-dashboard-served-from-hadara-cli | Adds `hadara dashboard serve` for the static sample-backed dashboard with allowlisted asset routes. |
 | T-0060 | Dashboard Serve Boundary Hardening | Done | tasks/T-0060-dashboard-serve-boundary-hardening | Restricts dashboard serving to safe methods, security headers, and traversal-resistant allowlisted routes. |
+| T-0061 | Evidence Index Schema Hardening | Done | tasks/T-0061-evidence-index-schema-hardening | Requires canonical `time`, `summary`, and `visibility` evidence index fields and migrates recent timestamp drift. |
+| T-0062 | Dashboard Server Failure Semantics | Done | tasks/T-0062-dashboard-server-failure-semantics | Makes static dashboard server failures predictable for missing roots/files and unexpected response generation errors. |

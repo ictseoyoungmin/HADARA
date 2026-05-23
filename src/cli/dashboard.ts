@@ -35,7 +35,12 @@ export function serveDashboard(projectRoot: string, options: DashboardServeOptio
   const host = options.host ?? '127.0.0.1';
   const port = options.port ?? 4173;
   const server = http.createServer((request, response) => {
-    const staticResponse = createDashboardStaticResponse(projectRoot, request.url ?? '/', request.method ?? 'GET');
+    let staticResponse: DashboardStaticResponse;
+    try {
+      staticResponse = createDashboardServerResponse(projectRoot, request.url ?? '/', request.method ?? 'GET');
+    } catch {
+      staticResponse = internalError();
+    }
     response.writeHead(staticResponse.statusCode, staticResponse.headers);
     response.end(staticResponse.body);
   });
@@ -67,6 +72,14 @@ export function createDashboardStaticResponse(projectRoot: string, requestUrl: s
   return notFound();
 }
 
+export function createDashboardServerResponse(projectRoot: string, requestUrl: string, method = 'GET'): DashboardStaticResponse {
+  try {
+    return createDashboardStaticResponse(projectRoot, requestUrl, method);
+  } catch {
+    return internalError();
+  }
+}
+
 function safePathname(requestUrl: string): string | null {
   if (/(^|\/)\.\.?($|[/?#])|%2e|%2f|\\/i.test(requestUrl)) return null;
   try {
@@ -79,6 +92,7 @@ function safePathname(requestUrl: string): string | null {
 
 function fileResponse(projectRoot: string, relativePath: string, contentType: string, headOnly: boolean): DashboardStaticResponse {
   const filePath = path.join(projectRoot, relativePath);
+  if (!fs.existsSync(filePath)) return notFound();
   const body = fs.readFileSync(filePath, 'utf8');
   return {
     statusCode: 200,
@@ -106,6 +120,14 @@ function methodNotAllowed(): DashboardStaticResponse {
       allow: 'GET, HEAD'
     }),
     body: 'Method not allowed'
+  };
+}
+
+function internalError(): DashboardStaticResponse {
+  return {
+    statusCode: 500,
+    headers: securityHeaders({ 'content-type': 'text/plain; charset=utf-8' }),
+    body: 'Internal server error'
   };
 }
 

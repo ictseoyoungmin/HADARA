@@ -233,6 +233,29 @@ describe('Harness Task Capsule validation', () => {
     );
   });
 
+  it('rejects evidence index records missing canonical required fields', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Evidence schema drift');
+    fs.writeFileSync(
+      path.join(task.dir, 'evidence.jsonl'),
+      `${JSON.stringify({
+        schemaVersion: 'hadara.evidence.v1',
+        timestamp: '2026-05-22T00:00:00.000Z',
+        taskId: task.id,
+        kind: 'note',
+        result: 'passed'
+      })}\n`,
+      'utf8'
+    );
+
+    const result = validateTaskCapsule(root, task.id);
+
+    expect(result.ok).toBe(false);
+    expect(result.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(['EVIDENCE_INDEX_TIME_MISSING', 'EVIDENCE_INDEX_SUMMARY_MISSING', 'EVIDENCE_INDEX_VISIBILITY_MISSING'])
+    );
+  });
+
   it('returns a validation envelope when the task is missing', () => {
     const root = tempProject();
 

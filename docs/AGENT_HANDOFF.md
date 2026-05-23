@@ -20,13 +20,15 @@
 - T-0058 is complete: static dashboard fixture binding smoke coverage verifies `data-field` attributes map to fixture-backed or derived `hadara.ops.status.v1` values.
 - T-0059 is complete: `hadara dashboard serve` serves the static sample-backed dashboard and fixture through allowlisted routes.
 - T-0060 is complete: dashboard serving is hardened with GET/HEAD-only responses, basic security headers, and traversal-like route regressions.
+- T-0061 is complete: `evidence.jsonl` validation now rejects missing `time`, `summary`, and `visibility`, and recent dashboard timestamp-only evidence records were migrated to canonical `time`.
+- T-0062 is complete: static dashboard server failures now return safe 404/500 responses for missing roots/files and unexpected static response generation errors.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0058 Dashboard Fixture Binding Smoke: added static smoke coverage for dashboard `data-field` fixture and derived value bindings.
-- T-0059 Dashboard Served from HADARA CLI: added `hadara dashboard serve` for the static sample-backed dashboard and fixture allowlist.
 - T-0060 Dashboard Serve Boundary Hardening: restricted dashboard serving to safe methods, security headers, and traversal-resistant static routes.
+- T-0061 Evidence Index Schema Hardening: required canonical evidence `time`, `summary`, and `visibility` fields and migrated recent timestamp drift.
+- T-0062 Dashboard Server Failure Semantics: added safe 404/500 behavior for missing static dashboard roots/files and unexpected response generation errors.
 
 ## Current Known Problems
 
@@ -47,9 +49,9 @@
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm ci && npm run check` passed with 29 test files and 155 tests after T-0060.
-- Latest static dashboard smoke: Docker `npm test -- tests/unit/dashboard-static.test.ts tests/unit/status-json.test.ts` passed with 2 test files and 13 tests.
-- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0058/T-0059/T-0060 --level done --json` returned `ok: true` for all three tasks.
+- Latest full check: Docker `npm ci && npm run check` passed with 29 test files and 158 tests after T-0062.
+- Latest focused schema/server smoke: Docker `npm test -- tests/harness/harness-validate.test.ts tests/unit/evidence-json.test.ts tests/unit/dashboard-static.test.ts` passed with 3 test files and 28 tests.
+- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0061/T-0062 --level done --json` returned `ok: true` for both tasks.
 
 ## Historical Index
 
