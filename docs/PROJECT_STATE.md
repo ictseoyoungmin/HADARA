@@ -70,11 +70,12 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Operations Status JSON now includes dashboard-facing `health`, true raw status counts, and normalized status counts; `docs/DASHBOARD_READ_MODEL_CONTRACT.md` maps dashboard panels to field paths.
 - Dashboard design references live under `docs/design/`; the current mockup is reference-only and does not implement UI behavior.
 - A minimal static dashboard reference exists at `docs/design/dashboard/index.html`; it consumes the static sample status fixture with an inline fallback and has no backend, live CLI execution, MCP connection, file writes, or build step.
+- The comfort dark mockup is now the preferred dashboard visual baseline for shell layout, visual hierarchy, palette, card grouping, and navigation feel; `hadara.ops.status.v1` remains the authoritative data contract.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.
 - Real provider adapters are not implemented.
-- Dashboard is not product-served or live-integrated; only its status JSON/read model, design references, and minimal static sample dashboard exist.
+- Dashboard is not product-served or live-integrated; only its status JSON/read model, design references, and static fixture-bound mockup shell exist.
 - Broad MCP write tools are not implemented beyond the explicitly enabled, approval-recorded, audited evidence attach tool.
 
 ## Single Source of Truth

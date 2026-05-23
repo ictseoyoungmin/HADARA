@@ -31,3 +31,10 @@ Reason:
 - `hadara.evidence.attach` is the first narrow write-capable MCP tool and remains disabled by default.
 - When enabled, each write requires per-call approval metadata and records success or failure in the private portable audit log.
 - MCP initialize metadata must reflect whether the current server process is default read-only or evidence attach-enabled.
+
+## D-0006: Dashboard visual baseline uses comfort dark mockup
+
+Reason:
+- The comfort dark mockup is the strongest current expression of HADARA dashboard layout, visual hierarchy, palette, card grouping, and navigation feel.
+- The mockup is a visual shell baseline only; it does not define data schema, live integration, write behavior, MCP behavior, or state persistence.
+- The authoritative dashboard data contract remains `hadara.ops.status.v1`.

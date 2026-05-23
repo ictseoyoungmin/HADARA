@@ -7,326 +7,541 @@
   <style>
     :root {
       color-scheme: dark;
-      --bg: #111318;
-      --panel: #181c22;
-      --panel-2: #20262e;
-      --border: #303946;
-      --text: #edf1f6;
-      --muted: #aab4c1;
-      --soft: #788493;
-      --success: #64d39b;
-      --warning: #f5bd5f;
-      --danger: #f07178;
-      --info: #6db7e8;
-      --accent: #d7c27a;
+      --bg: #101a22;
+      --bg-2: #152126;
+      --panel: #19272d;
+      --panel-2: #203037;
+      --panel-3: #253840;
+      --border: rgba(206, 196, 164, 0.22);
+      --border-strong: rgba(166, 142, 91, 0.42);
+      --text: #ece8d5;
+      --muted: #adbaa9;
+      --soft: #77877d;
+      --teal: #77d2de;
+      --teal-2: #4da9b6;
+      --gold: #c9a66b;
+      --gold-2: #a68e5b;
+      --green: #7fd49b;
+      --amber: #f0c267;
+      --red: #f07f7c;
+      --navy: #0d1419;
+      --shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
       min-width: 320px;
-      background: var(--bg);
+      background:
+        radial-gradient(circle at 18% 0%, rgba(119, 210, 222, 0.10), transparent 30%),
+        linear-gradient(180deg, #0f171d 0%, var(--bg) 42%, #0d151b 100%);
       color: var(--text);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: var(--sans);
       line-height: 1.45;
     }
 
-    button,
-    input,
-    select,
-    textarea {
-      font: inherit;
-    }
+    button { font: inherit; }
 
-    .shell {
+    .root {
       min-height: 100vh;
-      display: grid;
-      grid-template-columns: 244px minmax(0, 1fr);
-    }
-
-    .sidebar {
-      border-right: 1px solid var(--border);
-      background: #14171d;
-      padding: 24px 18px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 28px;
-    }
-
-    .brand-mark {
-      width: 34px;
-      height: 34px;
-      display: grid;
-      place-items: center;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--accent);
-      background: var(--panel);
-      font-weight: 700;
-    }
-
-    .brand-title {
-      display: grid;
-      gap: 2px;
-    }
-
-    .brand-title strong {
-      font-size: 15px;
-    }
-
-    .brand-title span {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .nav {
-      display: grid;
-      gap: 6px;
-    }
-
-    .nav a {
-      color: var(--muted);
-      text-decoration: none;
-      padding: 9px 10px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-    }
-
-    .nav a[aria-current="page"] {
-      color: var(--text);
-      background: var(--panel);
-      border: 1px solid var(--border);
-    }
-
-    .main {
-      min-width: 0;
       display: grid;
       grid-template-rows: auto 1fr;
     }
 
     .topbar {
-      min-height: 72px;
-      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      min-height: 62px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      padding: 16px 24px;
-      background: #151922;
+      padding: 13px 18px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(21, 29, 34, 0.96);
+      backdrop-filter: blur(9px);
+      box-shadow: 0 1px 0 rgba(206, 196, 164, 0.10);
     }
 
-    .title-block {
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
       min-width: 0;
     }
 
-    h1 {
-      margin: 0;
-      font-size: 20px;
-      font-weight: 650;
+    .logo-mark {
+      width: 28px;
+      height: 28px;
+      flex: 0 0 auto;
     }
 
-    .subtitle {
-      color: var(--muted);
-      font-size: 13px;
-      margin-top: 3px;
+    .logo-name {
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: var(--text);
     }
 
-    .top-meta {
+    .logo-dia { color: var(--gold); font-size: 12px; }
+
+    .top-badges {
       display: flex;
       align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge,
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 26px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 8px;
+      color: var(--muted);
+      background: rgba(236, 232, 213, 0.035);
+      font-family: var(--mono);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .badge.active,
+    .pill.good {
+      color: var(--teal);
+      border-color: rgba(119, 210, 222, 0.36);
+      background: rgba(119, 210, 222, 0.08);
+    }
+
+    .pill.warn {
+      color: var(--amber);
+      border-color: rgba(240, 194, 103, 0.36);
+      background: rgba(240, 194, 103, 0.08);
+    }
+
+    .pill.danger {
+      color: var(--red);
+      border-color: rgba(240, 127, 124, 0.40);
+      background: rgba(240, 127, 124, 0.08);
+    }
+
+    .body {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      min-width: 0;
+      border-right: 1px solid var(--border);
+      background: rgba(21, 29, 34, 0.96);
+      padding: 18px 14px;
+    }
+
+    .side-brand { display: grid; gap: 12px; margin-bottom: 20px; }
+
+    .brand-card {
+      position: relative;
+      min-height: 154px;
+      overflow: hidden;
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      background:
+        linear-gradient(145deg, rgba(119, 210, 222, 0.12), transparent 42%),
+        linear-gradient(0deg, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.06)),
+        var(--navy);
+      box-shadow: var(--shadow);
+    }
+
+    .brand-card svg {
+      position: absolute;
+      inset: 15px 18px auto auto;
+      width: 92px;
+      opacity: 0.86;
+    }
+
+    .brand-caption {
+      position: absolute;
+      left: 13px;
+      right: 13px;
+      bottom: 12px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .brand-caption strong { font-size: 15px; }
+    .brand-caption span { color: var(--muted); font-size: 11px; }
+
+    .side-status {
+      display: grid;
+      gap: 7px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: rgba(236, 232, 213, 0.035);
+      padding: 10px;
+    }
+
+    .side-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11px;
+    }
+
+    .side-row span { color: var(--muted); font-family: var(--mono); }
+    .side-row strong { color: var(--text); font-size: 12px; overflow-wrap: anywhere; }
+
+    .nav-group {
+      display: grid;
+      gap: 5px;
+      margin-bottom: 18px;
+    }
+
+    .nav-label {
+      color: var(--soft);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin: 0 3px 3px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 32px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      padding: 7px 9px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 12px;
+    }
+
+    .nav-item[aria-current="page"] {
+      color: var(--text);
+      border-color: var(--border);
+      background: rgba(236, 232, 213, 0.045);
+    }
+
+    .nav-count {
+      color: var(--teal);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    .main {
+      min-width: 0;
+      padding: 18px;
+    }
+
+    .page-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .page-title {
+      margin: 0;
+      font-size: 21px;
+      font-weight: 680;
+      letter-spacing: 0.01em;
+    }
+
+    .page-subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .actions {
+      display: flex;
       gap: 8px;
       flex-wrap: wrap;
       justify-content: flex-end;
     }
 
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      min-height: 28px;
-      border-radius: 999px;
+    .btn {
+      min-height: 30px;
       border: 1px solid var(--border);
+      border-radius: 4px;
       color: var(--muted);
-      background: var(--panel);
-      padding: 4px 10px;
-      font-size: 12px;
-      white-space: nowrap;
+      background: rgba(236, 232, 213, 0.035);
+      padding: 6px 10px;
+      font-family: var(--mono);
+      font-size: 11px;
     }
 
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--soft);
+    .btn.teal {
+      color: var(--teal);
+      border-color: rgba(119, 210, 222, 0.32);
+      background: rgba(119, 210, 222, 0.08);
     }
 
-    .dot.ok {
-      background: var(--success);
+    .btn.gold {
+      color: var(--gold);
+      border-color: rgba(201, 166, 107, 0.34);
+      background: rgba(201, 166, 107, 0.08);
     }
 
-    .dot.degraded {
-      background: var(--warning);
-    }
-
-    .dot.error {
-      background: var(--danger);
-    }
-
-    .content {
-      padding: 24px;
+    .metrics,
+    .gate-grid,
+    .command-grid,
+    .wide-grid {
       display: grid;
-      gap: 18px;
-      align-content: start;
-    }
-
-    .banner {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--panel);
-      padding: 13px 14px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .banner strong {
-      color: var(--text);
-      font-weight: 650;
-    }
-
-    .grid {
-      display: grid;
-      gap: 18px;
+      gap: 10px;
     }
 
     .metrics {
       grid-template-columns: repeat(6, minmax(0, 1fr));
+      margin-bottom: 14px;
     }
 
-    .two-col {
-      grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
-    }
-
-    .three-col {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .card {
-      border: 1px solid var(--border);
-      background: var(--panel);
-      border-radius: 8px;
+    .metric,
+    .card,
+    .gate-card,
+    .signal-card {
       min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: linear-gradient(180deg, rgba(236, 232, 213, 0.045), rgba(236, 232, 213, 0.022));
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
     }
 
     .metric {
-      padding: 15px 14px;
+      min-height: 106px;
+      padding: 12px 14px;
       display: grid;
+      align-content: space-between;
       gap: 8px;
-      min-height: 112px;
     }
 
-    .metric span {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .metric strong {
-      font-size: 28px;
-      line-height: 1;
-      font-weight: 700;
-    }
-
-    .metric small {
+    .m-label,
+    .ct,
+    .gate-head,
+    .signal-title,
+    .parser-key {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
       color: var(--soft);
-      font-size: 12px;
     }
 
-    .section {
-      padding: 16px;
-      display: grid;
-      gap: 14px;
+    .m-val {
+      font-size: 29px;
+      line-height: 1;
+      font-weight: 720;
+      color: var(--text);
     }
 
-    .section-header {
+    .m-sub {
+      color: var(--muted);
+      font-size: 11px;
+      overflow-wrap: anywhere;
+    }
+
+    .m-sub.ok { color: var(--green); }
+    .m-sub.warn { color: var(--amber); }
+    .m-sub.fail { color: var(--red); }
+
+    .command-dock {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      background: rgba(119, 210, 222, 0.055);
+      padding: 12px;
+      margin-bottom: 14px;
     }
 
-    h2 {
-      margin: 0;
-      font-size: 15px;
-      font-weight: 650;
+    .command-dock-title {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--soft);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
     }
 
-    .muted {
-      color: var(--muted);
+    .source-strip,
+    .action-strip {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
     }
 
-    .list {
-      display: grid;
-      gap: 10px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .list li {
+    .source-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
       border: 1px solid var(--border);
-      background: var(--panel-2);
-      border-radius: 6px;
-      padding: 11px 12px;
-      color: var(--text);
-      min-width: 0;
-      overflow-wrap: anywhere;
-    }
-
-    .kv {
-      display: grid;
-      gap: 10px;
-    }
-
-    .kv-row {
-      display: grid;
-      grid-template-columns: 128px minmax(0, 1fr);
-      gap: 12px;
-      align-items: start;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 10px;
-    }
-
-    .kv-row:last-child {
-      border-bottom: 0;
-      padding-bottom: 0;
-    }
-
-    .kv-row span {
+      border-radius: 4px;
+      padding: 4px 8px;
       color: var(--muted);
-      font-size: 12px;
+      background: rgba(0, 0, 0, 0.13);
+      font-family: var(--mono);
+      font-size: 10px;
     }
 
-    .kv-row strong {
-      font-size: 13px;
-      font-weight: 600;
+    .source-chip.ok { color: var(--teal); }
+    .source-chip.warn { color: var(--amber); }
+
+    .command-grid { grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr) minmax(320px, 0.82fr); }
+    .wide-grid { grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr); margin-top: 10px; }
+
+    .card { padding: 14px; }
+
+    .ct {
+      margin-bottom: 12px;
+      color: var(--gold);
+    }
+
+    .gate-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-bottom: 12px;
+    }
+
+    .gate-card {
+      padding: 12px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .gate-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .gate-main {
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--text);
       overflow-wrap: anywhere;
     }
 
-    .issue {
-      border-color: rgba(245, 189, 95, 0.5);
+    .gate-sub,
+    .signal-note {
+      color: var(--muted);
+      font-size: 11px;
+      overflow-wrap: anywhere;
+    }
+
+    .task-list,
+    .timeline,
+    .handoff-list,
+    .kv-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .task-row,
+    .timeline-row,
+    .handoff-block,
+    .parser-row {
+      min-width: 0;
+      border: 1px solid rgba(206, 196, 164, 0.14);
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.13);
+      padding: 9px 10px;
+    }
+
+    .task-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 9px;
+      align-items: center;
+    }
+
+    .tid {
+      color: var(--teal);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
+    .ttitle {
+      color: var(--text);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .parser-row {
+      display: grid;
+      grid-template-columns: 118px minmax(0, 1fr);
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .parser-val {
+      color: var(--text);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .handoff-block {
+      border-left: 2px solid var(--gold-2);
+      background: rgba(201, 166, 107, 0.055);
+    }
+
+    .hl {
+      color: var(--gold);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .ht {
+      color: var(--text);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .timeline-row {
+      display: grid;
+      gap: 4px;
+    }
+
+    .timeline-title {
+      color: var(--text);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .timeline-meta {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      overflow-wrap: anywhere;
+    }
+
+    .signal-card {
+      padding: 10px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .signal-value {
+      font-size: 18px;
+      color: var(--text);
+      overflow-wrap: anywhere;
     }
 
     .empty {
@@ -334,212 +549,181 @@
       border-style: dashed;
     }
 
-    .guard-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    .guard {
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--panel-2);
-      padding: 11px 12px;
-      display: grid;
-      gap: 4px;
-    }
-
-    .guard span {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .guard strong {
-      font-size: 13px;
-      overflow-wrap: anywhere;
-    }
-
-    .status-text.ok {
-      color: var(--success);
-    }
-
-    .status-text.degraded {
-      color: var(--warning);
-    }
-
-    .status-text.error {
-      color: var(--danger);
-    }
-
-    @media (max-width: 1100px) {
-      .shell {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar {
-        display: none;
-      }
-
-      .metrics,
-      .three-col {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .two-col {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 1180px) {
+      .body { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .command-grid,
+      .wide-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 720px) {
-      .topbar {
+      .topbar,
+      .page-head,
+      .command-dock {
         align-items: flex-start;
         flex-direction: column;
       }
 
-      .top-meta {
-        justify-content: flex-start;
-      }
-
-      .content {
-        padding: 16px;
-      }
-
+      .top-badges,
+      .actions { justify-content: flex-start; }
+      .main { padding: 14px; }
       .metrics,
-      .three-col,
-      .guard-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .banner {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-
-      .kv-row {
-        grid-template-columns: 1fr;
-      }
+      .gate-grid { grid-template-columns: 1fr; }
+      .parser-row { grid-template-columns: 1fr; gap: 4px; }
+      .hide-sm { display: none; }
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <aside class="sidebar" aria-label="Dashboard navigation">
-      <div class="brand">
-        <div class="brand-mark">H</div>
-        <div class="brand-title">
-          <strong>HADARA</strong>
-          <span>Operations</span>
-        </div>
+  <div class="root">
+    <header class="topbar">
+      <div class="logo" aria-label="HADARA">
+        <svg class="logo-mark" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+          <path d="M11 2C8 2 5.5 4.5 5.5 7c0 1.8.9 3.2 2.2 4L6.5 18h9l-1.2-7c1.3-.8 2.2-2.2 2.2-4C16.5 4.5 14 2 11 2z" fill="#77d2de" opacity=".58"/>
+          <ellipse cx="11" cy="11" rx="2.5" ry="3.5" fill="#c9a66b" opacity=".82"/>
+          <path d="M9.4 6.6 11 3.2l1.6 3.4" fill="#ece8d5" opacity=".88"/>
+        </svg>
+        <span class="logo-name">HADARA</span>
+        <span class="logo-dia">◆</span>
       </div>
-      <nav class="nav">
-        <a href="#" aria-current="page">Overview</a>
-        <a href="#">Tasks</a>
-        <a href="#">Evidence</a>
-        <a href="#">Handoff</a>
-        <a href="#">MCP</a>
+      <div class="top-badges">
+        <span class="badge active" data-field="health">loading</span>
+        <span class="badge hide-sm" data-field="schemaVersion">hadara.ops.status.v1</span>
+        <span class="badge" data-field="project.phase">phase: unknown</span>
+        <span class="badge" data-field="project.branch">branch: unknown</span>
+      </div>
+    </header>
+
+    <div class="body">
+      <nav class="sidebar" aria-label="Dashboard navigation">
+        <div class="side-brand">
+          <div class="brand-card" aria-label="HADARA dashboard visual baseline">
+            <svg viewBox="0 0 120 120" fill="none" aria-hidden="true">
+              <path d="M58 18c-14 8-22 20-20 35 1 10 8 18 18 22l-5 23h33l-7-25c9-5 15-13 15-24 0-15-12-26-34-31z" fill="#77d2de" opacity=".23"/>
+              <path d="M60 31c-6 14-11 25-11 34 0 10 5 17 12 17s12-7 12-17c0-9-5-20-13-34z" fill="#c9a66b" opacity=".78"/>
+              <path d="M35 91h53" stroke="#ece8d5" stroke-width="2" opacity=".52"/>
+              <path d="M42 101h39" stroke="#77d2de" stroke-width="2" opacity=".46"/>
+            </svg>
+            <div class="brand-caption">
+              <strong>Operations shell</strong>
+              <span>handoff · evidence · gates</span>
+            </div>
+          </div>
+          <div class="side-status">
+            <div class="side-row"><span>workspace</span><strong>HADARA-dev</strong></div>
+            <div class="side-row"><span>source</span><strong data-field="fixtureMeta.kind">sample</strong></div>
+            <div class="side-row"><span>mode</span><strong data-field="mcp.defaultMode">read-only</strong></div>
+          </div>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-label">workspace</div>
+          <a class="nav-item" href="#" aria-current="page"><span>Home</span><span class="nav-count" data-field="health">ok</span></a>
+          <a class="nav-item" href="#"><span>Task Board</span><span class="nav-count" data-field="tasks.counts.done">0</span></a>
+        </div>
+        <div class="nav-group">
+          <div class="nav-label">capsule detail</div>
+          <a class="nav-item" href="#"><span>Task Capsule</span><span class="nav-count" data-field="tasks.lastCompleted.length">0</span></a>
+          <a class="nav-item" href="#"><span>Evidence</span><span class="nav-count">fixture</span></a>
+          <a class="nav-item" href="#"><span>Handoff</span><span class="nav-count" data-field="handoff.nextRecommendedStep.length">0</span></a>
+        </div>
+        <div class="nav-group">
+          <div class="nav-label">operations</div>
+          <a class="nav-item" href="#"><span>Harness Lab</span><span class="nav-count">read</span></a>
+          <a class="nav-item" href="#"><span>MCP Guard</span><span class="nav-count" data-field="mcp.evidenceAttach.requiresApproval">guard</span></a>
+          <a class="nav-item" href="#"><span>Release Gate</span><span class="nav-count">defer</span></a>
+        </div>
       </nav>
-    </aside>
 
-    <main class="main">
-      <header class="topbar">
-        <div class="title-block">
-          <h1>Operations Home</h1>
-          <div class="subtitle" id="project-summary">Loading status snapshot...</div>
-        </div>
-        <div class="top-meta">
-          <span class="pill"><span class="dot" id="health-dot"></span><span id="health-label">loading</span></span>
-          <span class="pill" id="phase-pill">phase: unknown</span>
-          <span class="pill" id="branch-pill">branch: unknown</span>
-        </div>
-      </header>
-
-      <section class="content" aria-live="polite">
-        <div class="banner">
-          <span><strong id="fixture-kind">Sample snapshot</strong> <span id="fixture-note">Static design data. Not live repository state.</span></span>
-          <span id="schema-label">hadara.ops.status.v1</span>
-        </div>
-
-        <section class="grid metrics" id="task-metrics" aria-label="Task metrics"></section>
-
-        <section class="grid two-col">
-          <article class="card section">
-            <div class="section-header">
-              <h2>Work Queue</h2>
-              <span class="muted" id="last-completed-count"></span>
+      <main class="main">
+        <section class="page" aria-live="polite">
+          <div class="page-head">
+            <div>
+              <h1 class="page-title">Command Center</h1>
+              <div class="page-subtitle" data-field="fixtureMeta.note">Loading status snapshot...</div>
             </div>
-            <div class="kv">
-              <div class="kv-row">
-                <span>Next</span>
-                <strong id="next-recommended">No recommendation available</strong>
-              </div>
-              <div class="kv-row">
-                <span>Completed</span>
-                <strong id="last-completed">None</strong>
+            <div class="actions">
+              <button class="btn teal" type="button" data-action="fixture.refresh">Refresh fixture</button>
+              <button class="btn gold" type="button" data-action="task.plan">Plan next</button>
+              <button class="btn" type="button" data-action="status.inspect">Inspect JSON</button>
+            </div>
+          </div>
+
+          <div class="metrics" id="task-metrics" aria-label="Task metrics"></div>
+
+          <div class="command-dock">
+            <div>
+              <div class="command-dock-title">Operations Status Source</div>
+              <div class="source-strip">
+                <span class="source-chip ok">hadara.ops.status.v1</span>
+                <span class="source-chip ok">fixture-backed</span>
+                <span class="source-chip warn">not live data</span>
               </div>
             </div>
-          </article>
+            <div class="action-strip">
+              <span class="source-chip" data-field="project.phase">phase: unknown</span>
+              <span class="source-chip" data-field="project.branch">branch: unknown</span>
+              <span class="source-chip" data-field="command">ops.status</span>
+            </div>
+          </div>
 
-          <article class="card section">
-            <div class="section-header">
-              <h2>Validation</h2>
-              <span class="muted">latest</span>
-            </div>
-            <div class="kv">
-              <div class="kv-row">
-                <span>Full check</span>
-                <strong id="validation-full">No full check recorded</strong>
+          <div class="command-grid">
+            <article class="card">
+              <div class="ct">Capsule Index</div>
+              <div class="task-list" id="last-completed-list"></div>
+            </article>
+
+            <article class="card">
+              <div class="ct">Operating State</div>
+              <div class="gate-grid">
+                <div class="gate-card">
+                  <div class="gate-head"><span>health</span><span class="pill good" data-field="health">ok</span></div>
+                  <div class="gate-main" data-field="health">ok</div>
+                  <div class="gate-sub" data-field="issues.length">0 issues</div>
+                </div>
+                <div class="gate-card">
+                  <div class="gate-head"><span>next slice</span><span class="pill warn">next</span></div>
+                  <div class="gate-main">Queued</div>
+                  <div class="gate-sub" data-field="tasks.nextRecommended">No recommendation available</div>
+                </div>
               </div>
-              <div class="kv-row">
-                <span>Done level</span>
-                <strong id="validation-done">No done-level validation recorded</strong>
+              <div class="parser-row">
+                <div class="parser-key">full check</div>
+                <div class="parser-val" data-field="validation.latestFullCheck">No full check recorded</div>
               </div>
-            </div>
-          </article>
+              <div class="parser-row">
+                <div class="parser-key">done level</div>
+                <div class="parser-val" data-field="validation.latestDoneLevelValidation">No done-level validation recorded</div>
+              </div>
+              <div class="parser-row">
+                <div class="parser-key">contract</div>
+                <div class="parser-val">visual shell follows the mockup; data contract remains authoritative</div>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="ct">Handoff Beacon</div>
+              <div class="handoff-list" id="handoff-list"></div>
+            </article>
+          </div>
+
+          <div class="wide-grid">
+            <article class="card">
+              <div class="ct">Evidence Timeline — derived from status</div>
+              <div class="timeline" id="evidence-timeline"></div>
+            </article>
+
+            <article class="card">
+              <div class="ct">MCP Guard</div>
+              <div class="gate-grid" id="mcp-guard"></div>
+              <div class="ct">Source Status Counts</div>
+              <div class="kv-list" id="raw-counts"></div>
+            </article>
+          </div>
         </section>
-
-        <section class="grid three-col">
-          <article class="card section">
-            <div class="section-header">
-              <h2>Current State</h2>
-            </div>
-            <ul class="list" id="current-state"></ul>
-          </article>
-
-          <article class="card section">
-            <div class="section-header">
-              <h2>Known Problems</h2>
-            </div>
-            <ul class="list" id="known-problems"></ul>
-          </article>
-
-          <article class="card section">
-            <div class="section-header">
-              <h2>Issues</h2>
-              <span class="muted" id="issue-count"></span>
-            </div>
-            <ul class="list" id="issues"></ul>
-          </article>
-        </section>
-
-        <section class="grid two-col">
-          <article class="card section">
-            <div class="section-header">
-              <h2>MCP Guard</h2>
-              <span class="muted">configured</span>
-            </div>
-            <div class="guard-grid" id="mcp-guard"></div>
-          </article>
-
-          <article class="card section">
-            <div class="section-header">
-              <h2>Status Counts</h2>
-              <span class="muted">source labels</span>
-            </div>
-            <div class="kv" id="raw-counts"></div>
-          </article>
-        </section>
-      </section>
-    </main>
+      </main>
+    </div>
   </div>
 
   <script type="application/json" id="fallback-status-json">
@@ -621,110 +805,183 @@
       }
     }
 
-    function text(value, fallback) {
+    function text(value, fallback = '') {
       if (value === undefined || value === null || value === '') return fallback;
       return String(value);
     }
 
-    function setText(id, value) {
-      document.getElementById(id).textContent = value;
+    function setField(field, value) {
+      document.querySelectorAll(`[data-field="${field}"]`).forEach((node) => {
+        node.textContent = value;
+      });
+    }
+
+    function clear(node) {
+      while (node.firstChild) node.removeChild(node.firstChild);
+    }
+
+    function el(tag, className, value) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (value !== undefined) node.textContent = value;
+      return node;
+    }
+
+    function appendEmpty(root, message) {
+      const row = el('div', 'task-row empty');
+      row.append(el('span', 'tid', '-'));
+      row.append(el('span', 'ttitle', message));
+      root.append(row);
     }
 
     function renderMetrics(counts) {
       const labels = [
-        ['done', 'Done'],
-        ['draft', 'Draft'],
-        ['partial', 'Partial'],
-        ['superseded', 'Superseded'],
-        ['inProgress', 'In progress'],
-        ['unknown', 'Unknown']
+        ['done', 'Done', 'ok'],
+        ['draft', 'Draft', ''],
+        ['partial', 'Partial', 'warn'],
+        ['superseded', 'Superseded', ''],
+        ['inProgress', 'In progress', 'warn'],
+        ['unknown', 'Unknown', 'fail']
       ];
       const root = document.getElementById('task-metrics');
-      root.innerHTML = labels.map(([key, label]) => `
-        <article class="card metric">
-          <span>${label}</span>
-          <strong>${Number(counts?.[key] ?? 0)}</strong>
-          <small>tasks.${key}</small>
-        </article>
-      `).join('');
+      clear(root);
+      labels.forEach(([key, label, tone]) => {
+        const card = el('article', 'metric');
+        card.dataset.field = `tasks.counts.${key}`;
+        card.append(el('div', 'm-label', label));
+        card.append(el('div', 'm-val', String(Number(counts?.[key] ?? 0))));
+        card.append(el('div', `m-sub ${tone}`, `tasks.counts.${key}`));
+        root.append(card);
+      });
     }
 
-    function renderList(id, items, emptyText) {
-      const root = document.getElementById(id);
+    function renderLastCompleted(items) {
+      const root = document.getElementById('last-completed-list');
+      clear(root);
       const values = Array.isArray(items) ? items : [];
       if (values.length === 0) {
-        root.innerHTML = `<li class="empty">${emptyText}</li>`;
+        appendEmpty(root, 'No completed tasks in fixture');
         return;
       }
-      root.innerHTML = values.map((item) => `<li>${text(item, emptyText)}</li>`).join('');
+      values.forEach((taskId) => {
+        const row = el('div', 'task-row');
+        row.append(el('span', 'tid', text(taskId, 'T-????')));
+        row.append(el('span', 'ttitle', 'completed capsule from status snapshot'));
+        root.append(row);
+      });
+    }
+
+    function renderHandoff(status) {
+      const root = document.getElementById('handoff-list');
+      clear(root);
+      const blocks = [
+        ['current state', status.handoff?.currentState?.[0] ?? 'No current state found'],
+        ['known problem', status.handoff?.knownProblems?.[0] ?? 'No known problems listed'],
+        ['next recommended step', status.handoff?.nextRecommendedStep?.[0] ?? status.tasks?.nextRecommended ?? 'No recommendation available']
+      ];
+      blocks.forEach(([label, value]) => {
+        const block = el('div', 'handoff-block');
+        block.append(el('div', 'hl', label));
+        block.append(el('div', 'ht', text(value, 'Unavailable')));
+        root.append(block);
+      });
+    }
+
+    function renderTimeline(status) {
+      const root = document.getElementById('evidence-timeline');
+      clear(root);
+      const rows = [
+        ['full-check', status.validation?.latestFullCheck ?? 'No full check recorded'],
+        ['done-level', status.validation?.latestDoneLevelValidation ?? 'No done-level validation recorded'],
+        ['issues', `${Array.isArray(status.issues) ? status.issues.length : 0} status issues`]
+      ];
+      rows.forEach(([kind, summary]) => {
+        const row = el('div', 'timeline-row');
+        row.append(el('div', 'timeline-title', text(summary, 'Unavailable')));
+        row.append(el('div', 'timeline-meta', kind));
+        root.append(row);
+      });
     }
 
     function renderMcpGuard(status) {
-      const attach = status?.mcp?.evidenceAttach ?? {};
+      const attach = status.mcp?.evidenceAttach ?? {};
       const values = [
-        ['Default mode', status?.mcp?.defaultMode ?? 'unknown'],
-        ['Evidence attach default', attach.enabledByDefault === false ? 'disabled' : 'unknown'],
-        ['Required flag', attach.requiresFlag ?? 'unavailable'],
-        ['Approval', attach.requiresApproval ? 'required' : 'unavailable'],
-        ['Audit', attach.audited ? 'enabled' : 'unavailable']
+        ['default', status.mcp?.defaultMode ?? 'unknown', 'configured capability'],
+        ['attach', attach.enabledByDefault === false ? 'disabled' : 'unknown', 'disabled by default'],
+        ['approval', attach.requiresApproval ? 'required' : 'unavailable', 'per-call approval'],
+        ['audit', attach.audited ? 'enabled' : 'unavailable', 'private audit trail']
       ];
-      document.getElementById('mcp-guard').innerHTML = values.map(([label, value]) => `
-        <div class="guard">
-          <span>${label}</span>
-          <strong>${value}</strong>
-        </div>
-      `).join('');
+      const root = document.getElementById('mcp-guard');
+      clear(root);
+      values.forEach(([label, value, note]) => {
+        const card = el('div', 'gate-card');
+        const head = el('div', 'gate-head');
+        head.append(el('span', '', label));
+        head.append(el('span', 'pill good', value));
+        card.append(head);
+        card.append(el('div', 'gate-main', value));
+        card.append(el('div', 'gate-sub', note));
+        root.append(card);
+      });
     }
 
     function renderRawCounts(counts) {
-      const entries = Object.entries(counts ?? {});
       const root = document.getElementById('raw-counts');
+      clear(root);
+      const entries = Object.entries(counts ?? {});
       if (entries.length === 0) {
-        root.innerHTML = '<div class="kv-row"><span>Status</span><strong>No source status labels</strong></div>';
+        const row = el('div', 'parser-row');
+        row.append(el('div', 'parser-key', 'status'));
+        row.append(el('div', 'parser-val', 'No source status labels'));
+        root.append(row);
         return;
       }
-      root.innerHTML = entries.map(([label, count]) => `
-        <div class="kv-row">
-          <span>${label}</span>
-          <strong>${count}</strong>
-        </div>
-      `).join('');
+      entries.forEach(([label, count]) => {
+        const row = el('div', 'parser-row');
+        row.append(el('div', 'parser-key', label));
+        row.append(el('div', 'parser-val', String(count)));
+        root.append(row);
+      });
     }
 
-    function renderIssues(issues) {
-      const values = Array.isArray(issues) ? issues : [];
-      setText('issue-count', `${values.length} total`);
-      const root = document.getElementById('issues');
-      if (values.length === 0) {
-        root.innerHTML = '<li class="empty">No issues</li>';
-        return;
-      }
-      root.innerHTML = values.map((issue) => `
-        <li class="issue"><strong>${text(issue.code, 'ISSUE')}</strong><br><span class="muted">${text(issue.message, 'No details')}</span></li>
-      `).join('');
+    function healthPillClass(health) {
+      if (health === 'error') return 'pill danger';
+      if (health === 'degraded') return 'pill warn';
+      return 'pill good';
     }
 
     function render(status) {
-      const health = status.health ?? 'degraded';
-      document.getElementById('health-dot').className = `dot ${health}`;
-      document.getElementById('health-label').className = `status-text ${health}`;
-      setText('health-label', health);
-      setText('phase-pill', `phase: ${text(status.project?.phase, 'unknown')}`);
-      setText('branch-pill', `branch: ${text(status.project?.branch, 'unknown')}`);
-      setText('project-summary', `${text(status.project?.phase, 'unknown')} on ${text(status.project?.branch, 'unknown')}`);
-      setText('schema-label', status.schemaVersion ?? 'unknown schema');
-      setText('fixture-kind', status.fixtureMeta?.notLiveData ? 'Sample snapshot' : 'Status snapshot');
-      setText('fixture-note', status.fixtureMeta?.note ?? 'Static design data. Not live repository state.');
+      const health = text(status.health, 'degraded');
+      const issues = Array.isArray(status.issues) ? status.issues : [];
+      const lastCompleted = Array.isArray(status.tasks?.lastCompleted) ? status.tasks.lastCompleted : [];
+      const nextSteps = Array.isArray(status.handoff?.nextRecommendedStep) ? status.handoff.nextRecommendedStep : [];
+
+      setField('health', health);
+      document.querySelectorAll('[data-field="health"]').forEach((node) => {
+        if (node.classList.contains('pill') || node.classList.contains('badge')) {
+          node.className = node.className.includes('badge') ? `badge active` : healthPillClass(health);
+        }
+      });
+      setField('schemaVersion', text(status.schemaVersion, 'unknown schema'));
+      setField('command', text(status.command, 'unknown command'));
+      setField('project.phase', `phase: ${text(status.project?.phase, 'unknown')}`);
+      setField('project.branch', `branch: ${text(status.project?.branch, 'unknown')}`);
+      setField('fixtureMeta.kind', text(status.fixtureMeta?.kind, 'unknown'));
+      setField('fixtureMeta.note', text(status.fixtureMeta?.note, 'Status snapshot loaded.'));
+      setField('mcp.defaultMode', text(status.mcp?.defaultMode, 'unknown'));
+      setField('tasks.counts.done', String(Number(status.tasks?.counts?.done ?? 0)));
+      setField('tasks.lastCompleted.length', String(lastCompleted.length));
+      setField('handoff.nextRecommendedStep.length', String(nextSteps.length));
+      setField('mcp.evidenceAttach.requiresApproval', status.mcp?.evidenceAttach?.requiresApproval ? 'approval' : 'guard');
+      setField('issues.length', `${issues.length} issues`);
+      setField('tasks.nextRecommended', text(status.tasks?.nextRecommended, 'No recommendation available'));
+      setField('validation.latestFullCheck', text(status.validation?.latestFullCheck, 'No full check recorded'));
+      setField('validation.latestDoneLevelValidation', text(status.validation?.latestDoneLevelValidation, 'No done-level validation recorded'));
 
       renderMetrics(status.tasks?.counts);
-      setText('next-recommended', text(status.tasks?.nextRecommended, 'No recommendation available'));
-      setText('last-completed', (status.tasks?.lastCompleted ?? []).join(', ') || 'None');
-      setText('last-completed-count', `${(status.tasks?.lastCompleted ?? []).length} items`);
-      setText('validation-full', text(status.validation?.latestFullCheck, 'No full check recorded'));
-      setText('validation-done', text(status.validation?.latestDoneLevelValidation, 'No done-level validation recorded'));
-      renderList('current-state', status.handoff?.currentState, 'No current state found');
-      renderList('known-problems', status.handoff?.knownProblems, 'No known problems listed');
-      renderIssues(status.issues);
+      renderLastCompleted(lastCompleted);
+      renderHandoff(status);
+      renderTimeline(status);
       renderMcpGuard(status);
       renderRawCounts(status.tasks?.rawStatusCounts);
     }

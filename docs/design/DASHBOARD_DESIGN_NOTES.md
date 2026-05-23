@@ -18,9 +18,13 @@ The mockup captures future dashboard direction for:
 
 ## Scope Boundary
 
-T-0056 provides a minimal static dashboard reference that consumes the sample Operations Status JSON fixture. It has no backend, live CLI execution, MCP connection, file writes, or build step.
+T-0057 promotes the comfort dark mockup to the preferred dashboard visual baseline. The baseline covers layout direction, hierarchy, palette, card grouping, and navigation feel.
+
+It does not define data schema, live integration, write behavior, MCP behavior, or dashboard state persistence. The authoritative data contract remains `hadara.ops.status.v1`.
+
+The static dashboard consumes the sample Operations Status JSON fixture and has no backend, live CLI execution, MCP connection, file writes, state persistence, or build step.
 
 Recommended next slices:
 
-1. T-0057 Dashboard Fixture Smoke
-2. T-0058 Dashboard served from HADARA CLI
+1. T-0058 Dashboard Fixture Binding Smoke
+2. T-0059 Dashboard served from HADARA CLI

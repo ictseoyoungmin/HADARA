@@ -37,9 +37,13 @@ describe('static dashboard reference', () => {
 
     expect(html).toContain('../fixtures/hadara.ops.status.sample.json');
     expect(html).toContain('fallback-status-json');
-    expect(html).toContain('Operations Home');
+    expect(html).toContain('Command Center');
     expect(html).toContain('MCP Guard');
     expect(html).toContain('notLiveData');
+    expect(html).toContain('data-field="health"');
+    expect(html).toContain('data-field="tasks.nextRecommended"');
+    expect(html).toContain('data-field="validation.latestFullCheck"');
+    expect(html).toContain('data-field="mcp.defaultMode"');
 
     const forbiddenTokens = [
       'child_process',
@@ -49,11 +53,38 @@ describe('static dashboard reference', () => {
       'EventSource',
       'hadara mcp serve',
       'localStorage.setItem',
-      'indexedDB'
+      'localStorage',
+      'indexedDB',
+      'innerHTML',
+      'data:image',
+      'base64,'
     ];
 
     for (const token of forbiddenTokens) {
       expect(html).not.toContain(token);
     }
+  });
+
+  it('keeps the inline fallback fixture aligned with the sample fixture', () => {
+    const html = fs.readFileSync(dashboardPath, 'utf8');
+    const fixture = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+    const match = html.match(/<script type="application\/json" id="fallback-status-json">\s*([\s\S]*?)\s*<\/script>/);
+
+    expect(match).not.toBeNull();
+    const fallback = JSON.parse(match?.[1] ?? '{}');
+
+    expect(fallback).toEqual(fixture);
+  });
+
+  it('adopts the comfort dark mockup shell without adopting mockup behavior', () => {
+    const html = fs.readFileSync(dashboardPath, 'utf8');
+
+    expect(html).toContain('topbar');
+    expect(html).toContain('sidebar');
+    expect(html).toContain('metrics');
+    expect(html).toContain('Handoff Beacon');
+    expect(html).toContain('Evidence Timeline');
+    expect(html).toContain('visual shell follows the mockup; data contract remains authoritative');
+    expect(html).toContain('fixture-backed');
   });
 });

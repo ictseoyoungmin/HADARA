@@ -58,3 +58,4 @@
 | T-0054 | Operations Status JSON Cleanup | Done | tasks/T-0054-operations-status-json-cleanup | Hardens status JSON warnings, stable task counts, raw status counts, phase parsing, and validation fallback. |
 | T-0055 | Dashboard Read Model Contract | Done | tasks/T-0055-dashboard-read-model-contract | Maps dashboard cards/panels to `hadara.ops.status.v1` and adds a sample fixture. |
 | T-0056 | Minimal Static Dashboard | Done | tasks/T-0056-minimal-static-dashboard | Adds a static Operations Home dashboard consuming the sample status fixture without backend, live CLI, MCP, writes, or build step. |
+| T-0057 | Dashboard Mockup Adoption | Done | tasks/T-0057-dashboard-mockup-adoption | Promotes the comfort dark mockup to dashboard visual baseline while preserving `hadara.ops.status.v1` fixture binding and static boundaries. |

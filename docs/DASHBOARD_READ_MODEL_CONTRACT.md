@@ -28,7 +28,7 @@ Visual reference:
 
 - `docs/design/mockups/HADARA_web_ui_v0.1_comfort_dark.html`
 
-The mockup is visual direction only. The read model is authoritative for dashboard data fields.
+The comfort dark mockup is the preferred visual baseline for the dashboard shell. It defines layout direction, visual hierarchy, palette, card grouping, and navigation feel. It does not define schema, live integration, write behavior, MCP behavior, or persisted dashboard state. The read model is authoritative for dashboard data fields.
 
 ## Operations Home Mapping
 
