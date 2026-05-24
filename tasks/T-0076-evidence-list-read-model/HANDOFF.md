@@ -2,7 +2,7 @@
 
 ## Last Completed
 
-T-0076 Evidence List Read Model added the shared `hadara.evidence.list.v1` report builder, CLI JSON command, and read-only MCP tool.
+T-0076 Evidence List Read Model added the shared `hadara.evidence.list.v1` report builder, CLI JSON command, read-only MCP tool, and read-safety hotfix normalization for drifted evidence index records.
 
 ## Next Recommended Step
 

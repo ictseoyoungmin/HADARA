@@ -35,14 +35,14 @@
 - T-0072 is complete: v1.0 planning docs now explicitly separate T-0066 through T-0070 current implementation from future expansion targets, including fixture location, service parity scope, active-run schema/path, debt persistence caveats, and degraded-read robustness scope.
 - T-0074 is complete: redaction now uses a registry/report model with pattern ids, severities, byte counts, finding counts, and broader high-risk token coverage while preserving existing evidence/audit redaction APIs.
 - T-0075 is complete: public evidence artifact policy now uses `hasBlockingRedactionFinding(report, 'high')`, `containsSecret()` remains an any-finding compatibility wrapper, redaction count overlap semantics are documented, blocking policy errors retain internal redaction reports without exposing them in evidence collect output, non-blocking findings are diagnostics only, future active-run MCP tool names use dot-separated segments, and context export MCP planning shows memory-mode output with `contextPath: null`.
-- T-0076 is complete: evidence list reads now use shared `hadara.evidence.list.v1`, `hadara evidence list --json`, and read-only MCP `hadara.evidence.list`, with malformed JSONL degraded to warning issues.
+- T-0076 is complete: evidence list reads now use shared `hadara.evidence.list.v1`, `hadara evidence list --json`, and read-only MCP `hadara.evidence.list`, with malformed JSONL degraded to warning issues, normalized output records, private path stripping, defensive summary redaction, and taskId mismatch drops.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
 - T-0074 Redaction Hardening: added a redaction registry/report model and broader public evidence secret detection.
 - T-0075 Redaction Policy Follow-up: separated redaction reports from public artifact policy blocking, added internal policy-error redaction reports, and aligned MCP planning names.
-- T-0076 Evidence List Read Model: added shared evidence list report builder, CLI JSON, and read-only MCP evidence list degraded reads.
+- T-0076 Evidence List Read Model: added shared evidence list report builder, CLI JSON, read-only MCP evidence list degraded reads, and hotfix normalization for external read safety.
 
 ## Current Known Problems
 
@@ -63,7 +63,7 @@
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm run check` passed with 34 test files and 189 tests after T-0076.
+- Latest full check: Docker `npm run check` passed with 34 test files and 192 tests after the T-0076 read-safety hotfix.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
 - Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0076 --level done --json --project /workspace` returned `ok: true`.
 

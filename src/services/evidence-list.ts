@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { redactSecrets } from '../core/redaction';
 import { EvidenceIndexRecord } from '../evidence/evidence';
 import { listTaskCapsules } from '../task/task-capsule';
 
@@ -47,7 +48,7 @@ export function createEvidenceListReport(projectRoot: string, input: EvidenceLis
     };
   }
 
-  const parsed = parseEvidenceIndexFile(path.join(task.dir, 'evidence.jsonl'));
+  const parsed = parseEvidenceIndexFile(path.join(task.dir, 'evidence.jsonl'), input.taskId);
   const limit = normalizeLimit(input.limit);
   const includePrivate = input.includePrivate === true;
   const records = parsed.records.filter((record) => includePrivate || record.visibility !== 'private').slice(0, limit);
@@ -63,7 +64,7 @@ export function createEvidenceListReport(projectRoot: string, input: EvidenceLis
   };
 }
 
-function parseEvidenceIndexFile(indexPath: string): {
+function parseEvidenceIndexFile(indexPath: string, taskId: string): {
   records: EvidenceIndexRecord[];
   issues: EvidenceListIssue[];
 } {
@@ -89,7 +90,15 @@ function parseEvidenceIndexFile(indexPath: string): {
     try {
       const record = JSON.parse(line);
       if (isEvidenceIndexRecord(record)) {
-        records.push(record);
+        if (record.taskId !== taskId) {
+          issues.push({
+            severity: 'warning',
+            code: 'EVIDENCE_RECORD_TASK_MISMATCH',
+            message: `evidence.jsonl line ${index + 1} has taskId ${record.taskId}, expected ${taskId}.`
+          });
+          return;
+        }
+        records.push(normalizeEvidenceIndexRecord(record));
         return;
       }
       issues.push({
@@ -121,6 +130,22 @@ function isEvidenceIndexRecord(value: unknown): value is EvidenceIndexRecord {
     isEvidenceVisibility(record.visibility) &&
     (record.evidencePath === undefined || typeof record.evidencePath === 'string')
   );
+}
+
+function normalizeEvidenceIndexRecord(record: EvidenceIndexRecord): EvidenceIndexRecord {
+  const normalized: EvidenceIndexRecord = {
+    schemaVersion: 'hadara.evidence.v1',
+    time: record.time,
+    taskId: record.taskId,
+    kind: record.kind,
+    summary: redactSecrets(record.summary),
+    result: record.result,
+    visibility: record.visibility
+  };
+  if (record.visibility === 'public' && record.evidencePath) {
+    normalized.evidencePath = record.evidencePath;
+  }
+  return normalized;
 }
 
 function isEvidenceKind(value: unknown): value is EvidenceIndexRecord['kind'] {

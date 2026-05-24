@@ -106,6 +106,105 @@ describe('evidence list read model', () => {
     expect(report.records.map((record) => record.summary)).toEqual(['one', 'two']);
   });
 
+  it('allows limit zero as an explicit empty read', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Evidence list zero limit');
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'note',
+      summary: 'not returned',
+      result: 'passed',
+      visibility: 'public'
+    });
+
+    const report = createEvidenceListReport(root, { taskId: task.id, limit: 0 });
+
+    expect(report.count).toBe(0);
+    expect(report.records).toEqual([]);
+    expect(report.issues).toEqual([]);
+  });
+
+  it('normalizes records by dropping unknown fields, private paths, and read-time secrets', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Evidence list sanitize drift');
+    fs.writeFileSync(
+      path.join(task.dir, 'evidence.jsonl'),
+      JSON.stringify({
+        schemaVersion: 'hadara.evidence.v1',
+        time: '2026-05-24T00:00:00.000Z',
+        taskId: task.id,
+        kind: 'command-log',
+        summary: 'token=secret-value',
+        result: 'passed',
+        visibility: 'private',
+        evidencePath: 'artifacts/command-log/private.log',
+        absolutePath: '/tmp/private.log',
+        rawToken: 'secret-value'
+      }) + '\n',
+      'utf8'
+    );
+
+    const report = createEvidenceListReport(root, { taskId: task.id, includePrivate: true });
+
+    expect(report.records).toEqual([
+      {
+        schemaVersion: 'hadara.evidence.v1',
+        time: '2026-05-24T00:00:00.000Z',
+        taskId: task.id,
+        kind: 'command-log',
+        summary: 'token=[REDACTED]',
+        result: 'passed',
+        visibility: 'private'
+      }
+    ]);
+    expect(JSON.stringify(report)).not.toContain('evidencePath');
+    expect(JSON.stringify(report)).not.toContain('absolutePath');
+    expect(JSON.stringify(report)).not.toContain('rawToken');
+    expect(JSON.stringify(report)).not.toContain('secret-value');
+  });
+
+  it('drops taskId mismatch records with a warning issue', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Evidence list task mismatch');
+    fs.writeFileSync(
+      path.join(task.dir, 'evidence.jsonl'),
+      [
+        JSON.stringify({
+          schemaVersion: 'hadara.evidence.v1',
+          time: '2026-05-24T00:00:00.000Z',
+          taskId: 'T-9999',
+          kind: 'note',
+          summary: 'wrong task',
+          result: 'passed',
+          visibility: 'public'
+        }),
+        JSON.stringify({
+          schemaVersion: 'hadara.evidence.v1',
+          time: '2026-05-24T00:01:00.000Z',
+          taskId: task.id,
+          kind: 'note',
+          summary: 'right task',
+          result: 'passed',
+          visibility: 'public'
+        })
+      ].join('\n') + '\n',
+      'utf8'
+    );
+
+    const report = createEvidenceListReport(root, { taskId: task.id });
+
+    expect(report.ok).toBe(true);
+    expect(report.count).toBe(1);
+    expect(report.records[0].summary).toBe('right task');
+    expect(report.issues).toEqual([
+      {
+        severity: 'warning',
+        code: 'EVIDENCE_RECORD_TASK_MISMATCH',
+        message: `evidence.jsonl line 1 has taskId T-9999, expected ${task.id}.`
+      }
+    ]);
+  });
+
   it('returns warning issues for malformed JSONL lines without dropping valid records', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Evidence list degraded');

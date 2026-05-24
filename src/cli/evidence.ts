@@ -18,7 +18,16 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
       limit: getIntegerOption(input.args, '--limit', { min: 0, max: 500 }),
       includePrivate: getFlag(input.args, '--include-private')
     });
-    console.log(JSON.stringify(report, null, 2));
+    if (input.jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      for (const record of report.records) {
+        console.log(`${record.time} | ${record.kind} | ${record.result} | ${record.visibility} | ${record.summary}`);
+      }
+      for (const issue of report.issues) {
+        console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
+      }
+    }
     if (!report.ok) process.exitCode = 6;
     return true;
   }
