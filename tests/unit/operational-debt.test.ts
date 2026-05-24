@@ -73,4 +73,57 @@ describe('operational debt track', () => {
       path: 'tasks/T-0001-premature-acceptance/ACCEPTANCE.md'
     });
   });
+
+  it('warns when Done acceptance has no valid evidence record', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Done without evidence');
+    fs.writeFileSync(path.join(task.dir, 'TASK.md'), fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8').replace('Draft', 'Done'), 'utf8');
+    fs.writeFileSync(path.join(task.dir, 'ACCEPTANCE.md'), '- [x] Complete\n', 'utf8');
+    fs.writeFileSync(path.join(task.dir, 'evidence.jsonl'), 'not json\n', 'utf8');
+
+    const report = createOperationalDebtReport(root);
+
+    expect(report.issues).toContainEqual({
+      severity: 'warning',
+      code: 'PREMATURE_ACCEPTANCE_CHECKED',
+      message: 'T-0001 has checked acceptance boxes before Done status or evidence records.',
+      path: 'tasks/T-0001-done-without-evidence/ACCEPTANCE.md'
+    });
+  });
+
+  it('warns when non-Done acceptance is checked even with valid evidence', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Draft with evidence');
+    fs.writeFileSync(path.join(task.dir, 'ACCEPTANCE.md'), '- [x] Complete\n', 'utf8');
+    fs.writeFileSync(
+      path.join(task.dir, 'evidence.jsonl'),
+      '{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T02:20:00Z","taskId":"T-0001","kind":"note","summary":"valid","result":"passed","visibility":"public"}\n',
+      'utf8'
+    );
+
+    const report = createOperationalDebtReport(root);
+
+    expect(report.issues).toContainEqual({
+      severity: 'warning',
+      code: 'PREMATURE_ACCEPTANCE_CHECKED',
+      message: 'T-0001 has checked acceptance boxes before Done status or evidence records.',
+      path: 'tasks/T-0001-draft-with-evidence/ACCEPTANCE.md'
+    });
+  });
+
+  it('does not warn when Done acceptance has a valid evidence record', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Done with evidence');
+    fs.writeFileSync(path.join(task.dir, 'TASK.md'), fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8').replace('Draft', 'Done'), 'utf8');
+    fs.writeFileSync(path.join(task.dir, 'ACCEPTANCE.md'), '- [x] Complete\n', 'utf8');
+    fs.writeFileSync(
+      path.join(task.dir, 'evidence.jsonl'),
+      '{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T02:21:00Z","taskId":"T-0001","kind":"note","summary":"valid","result":"passed","visibility":"public"}\n',
+      'utf8'
+    );
+
+    const report = createOperationalDebtReport(root);
+
+    expect(report.issues).toEqual([]);
+  });
 });

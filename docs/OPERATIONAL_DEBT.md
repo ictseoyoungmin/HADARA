@@ -32,4 +32,4 @@ Operational debt records track weaknesses discovered while dogfooding HADARA its
 
 - structured debt records;
 - capsule size indicators using file count, line count, byte count, and `tiny|standard|large` size;
-- warning issues for premature acceptance checks before Done status or evidence records.
+- warning issues for checked acceptance when the task is not Done or has no valid `hadara.evidence.v1` records.

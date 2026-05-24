@@ -155,6 +155,39 @@ describe('Operations Status JSON', () => {
     ]);
   });
 
+  it('degrades instead of failing when active run local state is malformed', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+    const activeRunPath = path.join(root, '.hadara', 'local', 'state', 'active-run.json');
+    fs.mkdirSync(path.dirname(activeRunPath), { recursive: true });
+    fs.writeFileSync(activeRunPath, '{not json', 'utf8');
+
+    const report = createOpsStatusReport(root);
+
+    expect(report.ok).toBe(true);
+    expect(report.health).toBe('degraded');
+    expect(report.activeRun).toMatchObject({
+      schemaVersion: 'hadara.active_run.projection.v1',
+      activeRun: null,
+      handoff: {
+        fresh: false,
+        staleReason: '.hadara/local/state/active-run.json could not be read.'
+      },
+      issues: [
+        {
+          severity: 'warning',
+          code: 'ACTIVE_RUN_MANIFEST_INVALID'
+        }
+      ]
+    });
+    expect(report.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'warning',
+        code: 'ACTIVE_RUN_MANIFEST_INVALID'
+      })
+    );
+  });
+
   it('parses explicit phase markers and falls back to validation history', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });

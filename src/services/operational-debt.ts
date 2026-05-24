@@ -149,8 +149,8 @@ function detectPrematureAcceptance(
   const taskStatus = readTaskStatus(taskPath);
   const acceptance = fs.readFileSync(acceptancePath, 'utf8');
   const checkedCount = acceptance.match(/-\s+\[[xX]\]/g)?.length ?? 0;
-  const evidenceCount = fs.existsSync(evidencePath) ? fs.readFileSync(evidencePath, 'utf8').trim().split(/\r?\n/).filter(Boolean).length : 0;
-  if (taskStatus !== 'Done' && checkedCount > 0 && evidenceCount === 0) {
+  const evidenceCount = countValidEvidenceRecords(evidencePath);
+  if (checkedCount > 0 && (taskStatus !== 'Done' || evidenceCount === 0)) {
     return [
       {
         severity: 'warning',
@@ -173,6 +173,31 @@ function readTaskStatus(taskPath: string): string {
   const content = fs.readFileSync(taskPath, 'utf8');
   const match = content.match(/^## Status\s*\n+([\s\S]*?)(?:\n## |\s*$)/m);
   return match?.[1]?.trim().split(/\r?\n/)[0]?.trim() || 'Unknown';
+}
+
+function countValidEvidenceRecords(evidencePath: string): number {
+  if (!fs.existsSync(evidencePath)) return 0;
+  return fs
+    .readFileSync(evidencePath, 'utf8')
+    .trim()
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .filter((line) => {
+      try {
+        const record = JSON.parse(line);
+        return (
+          record &&
+          typeof record === 'object' &&
+          record.schemaVersion === 'hadara.evidence.v1' &&
+          typeof record.time === 'string' &&
+          typeof record.taskId === 'string' &&
+          typeof record.summary === 'string' &&
+          typeof record.visibility === 'string'
+        );
+      } catch {
+        return false;
+      }
+    }).length;
 }
 
 function countLines(content: string): number {

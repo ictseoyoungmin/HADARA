@@ -83,6 +83,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - CLI/MCP read-model parity has started: project and handoff read logic now lives in a shared service used by Operations Status JSON and MCP project/handoff tools, with contract tests comparing MCP payloads against shared services and CLI/domain report builders.
 - Single active run state exists as a local project manifest at `.hadara/local/state/active-run.json`; Operations Status JSON exposes a read projection with resume guidance and a stale handoff warning when the active task id is missing from `docs/AGENT_HANDOFF.md`.
 - Operational debt tracking exists in `docs/OPERATIONAL_DEBT.md` and `src/services/operational-debt.ts`; it promotes `known_issue.log` themes into structured records, reports capsule size indicators, and warns on premature acceptance checks before Done status or evidence.
+- Operations state robustness is hardened: malformed active run local state degrades status JSON with warnings instead of throwing, active runs referencing missing Task Capsules are reported, premature acceptance uses valid evidence records, and shared Markdown section extraction matches heading lines only.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.

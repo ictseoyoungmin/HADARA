@@ -60,4 +60,5 @@ HADARA development should proceed in small, evidence-backed slices. Each slice m
 | 54 | CLI/MCP Service Parity Refactor | T-0067 | Move duplicated CLI/MCP read logic into shared services/read models. | Done: project/handoff read services are shared and CLI/MCP parity tests pass. |
 | 55 | Single Active Run State | T-0068 | Track active task/run without queue or multi-agent assumptions. | Done: active run manifest, stale handoff detection, status projection, and resume projection tests pass. |
 | 56 | Operational Debt Track | T-0069 | Convert known_issue.log into structured product/development debt track. | Done: debt schema, capsule-size indicators, and premature acceptance checks pass. |
-| 57 | Real Provider Adapter Preparation | TBD | Prepare provider schema and adapter contract only after the operations layer freeze and service/read-model parity work. | Contract tests with secrets excluded. |
+| 57 | Operations State Robustness Fix | T-0070 | Harden local operations state and debt checks before provider preparation. | Done: active-run corruption, missing task, premature acceptance, and section extraction regressions pass. |
+| 58 | Real Provider Adapter Preparation | TBD | Prepare provider schema and adapter contract only after the operations layer freeze and service/read-model parity work. | Contract tests with secrets excluded. |

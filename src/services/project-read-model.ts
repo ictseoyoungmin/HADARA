@@ -144,9 +144,13 @@ export function tailLines(content: string, limit: number): string {
 }
 
 export function extractSection(content: string, heading: string): string {
-  const start = content.indexOf(heading);
-  if (start < 0) return '';
-  const afterHeading = content.slice(start + heading.length);
+  const match = new RegExp(`^${escapeRegExp(heading)}\\s*$`, 'm').exec(content);
+  if (!match || match.index === undefined) return '';
+  const afterHeading = content.slice(match.index + match[0].length);
   const nextHeading = afterHeading.search(/\n##\s+/);
   return (nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading).trim();
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

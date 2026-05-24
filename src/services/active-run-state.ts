@@ -89,12 +89,20 @@ export function createActiveRunProjection(projectRoot: string): ActiveRunProject
   const activeRun = readActiveRunManifest(projectRoot);
   const issues: ActiveRunProjection['issues'] = [];
   const staleReason = activeRun ? findStaleHandoffReason(projectRoot, activeRun) : null;
+  const taskMissing = activeRun ? !listTaskCapsules(projectRoot).some((task) => task.id === activeRun.taskId) : false;
 
   if (staleReason) {
     issues.push({
       severity: 'warning',
       code: 'ACTIVE_RUN_HANDOFF_STALE',
       message: staleReason
+    });
+  }
+  if (activeRun && taskMissing) {
+    issues.push({
+      severity: 'warning',
+      code: 'ACTIVE_RUN_TASK_NOT_FOUND',
+      message: `Active run ${activeRun.taskId} has no matching Task Capsule.`
     });
   }
 
@@ -112,11 +120,40 @@ export function createActiveRunProjection(projectRoot: string): ActiveRunProject
       ? {
           taskId: activeRun.taskId,
           capsule: activeRun.capsule,
-          nextAction: `Resume ${activeRun.taskId} from ${activeRun.capsule || activeRunManifestPortablePath()}.`
+          nextAction: taskMissing
+            ? `Resolve missing Task Capsule for ${activeRun.taskId} before resuming.`
+            : `Resume ${activeRun.taskId} from ${activeRun.capsule || activeRunManifestPortablePath()}.`
         }
       : null,
     issues
   };
+}
+
+export function safeCreateActiveRunProjection(projectRoot: string): ActiveRunProjection {
+  try {
+    return createActiveRunProjection(projectRoot);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      schemaVersion: 'hadara.active_run.projection.v1',
+      command: 'active-run.projection',
+      ok: true,
+      path: activeRunManifestPortablePath(),
+      activeRun: null,
+      handoff: {
+        fresh: false,
+        staleReason: `${activeRunManifestPortablePath()} could not be read.`
+      },
+      resume: null,
+      issues: [
+        {
+          severity: 'warning',
+          code: 'ACTIVE_RUN_MANIFEST_INVALID',
+          message
+        }
+      ]
+    };
+  }
 }
 
 function findStaleHandoffReason(projectRoot: string, activeRun: ActiveRunManifest): string | null {

@@ -29,13 +29,14 @@
 - T-0067 is complete: project/handoff read-model logic now lives in a shared service used by Operations Status JSON and MCP project/handoff tools, with parity tests against shared services and CLI/domain report builders.
 - T-0068 is complete: single active run state now uses `.hadara/local/state/active-run.json`, exposes an Operations Status JSON projection, provides resume guidance, and warns when handoff omits the active task id.
 - T-0069 is complete: `known_issue.log` themes now exist as structured operational debt records with capsule size indicators and premature acceptance warning checks.
+- T-0070 is complete: operations state robustness now degrades malformed active run local state into status warnings, reports missing active Task Capsules, validates evidence records for premature acceptance, and matches shared Markdown sections by heading line.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0067 CLI/MCP Service Parity Refactor: moved project/handoff read models into shared services and added CLI/MCP parity coverage.
 - T-0068 Single Active Run State: added local active run manifest, resume projection, stale handoff warning, and status JSON exposure.
 - T-0069 Operational Debt Track: added structured debt records, capsule size indicators, and premature acceptance warning checks.
+- T-0070 Operations State Robustness Fix: hardened active-run corruption handling, missing-task warnings, premature acceptance evidence checks, and shared section extraction.
 
 ## Current Known Problems
 
@@ -56,9 +57,9 @@
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm ci && npm run check` passed with 33 test files and 169 tests after T-0069.
-- Latest focused operational debt check: Docker `npm test -- tests/unit/operational-debt.test.ts` passed with 3 tests.
-- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0069 --level done --json` returned `ok: true`.
+- Latest full check: Docker `npm ci && npm run check` passed with 33 test files and 176 tests after T-0070.
+- Latest focused operations robustness check: Docker `npm test -- tests/unit/active-run-state.test.ts tests/unit/status-json.test.ts tests/unit/operational-debt.test.ts tests/contract/cli-mcp-service-parity.test.ts` passed with 21 tests.
+- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0070 --level done --json` returned `ok: true`.
 
 ## Historical Index
 

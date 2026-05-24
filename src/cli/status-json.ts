@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { ActiveRunProjection, createActiveRunProjection } from '../services/active-run-state';
+import { ActiveRunProjection, safeCreateActiveRunProjection } from '../services/active-run-state';
 import { extractSection, ProjectReadSources, readProjectSources } from '../services/project-read-model';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 
@@ -69,7 +69,7 @@ export function createOpsStatusReport(projectRoot: string): OpsStatusReport {
       extractValidationLine(sources.handoff.content, 'Latest done-level validation') ??
       extractValidationHistoryLine(sources.validationHistory.content, 'harness validate')
   };
-  const activeRun = createActiveRunProjection(projectRoot);
+  const activeRun = safeCreateActiveRunProjection(projectRoot);
   const issues = [...collectIssues(sources, validation), ...activeRun.issues];
 
   return {

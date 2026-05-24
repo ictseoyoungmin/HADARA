@@ -80,4 +80,16 @@ describe('CLI/MCP service parity', () => {
       validateTaskCapsule(root, task.id, { level: 'draft' })
     );
   });
+
+  it('extracts project sections from heading lines only', () => {
+    const root = tempProject();
+    fs.writeFileSync(
+      path.join(root, 'docs', 'PROJECT_STATE.md'),
+      '# PROJECT_STATE\n\nA body mention of ## Current Status should not start the section.\n\n## Current Status\n\n- Real status\n',
+      'utf8'
+    );
+
+    expect(createProjectStateReadReport(root, { includeDocuments: true, summaryOnly: true }).summary?.projectState).toBe('- Real status');
+    expect(mcpToolPayload(root, 'hadara.project.state.read', { summaryOnly: true }).summary.projectState).toBe('- Real status');
+  });
 });
