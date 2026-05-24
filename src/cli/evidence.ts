@@ -1,6 +1,7 @@
 import { appendEvidence, EvidenceRecord } from '../evidence/evidence';
 import { createEvidenceCollectReport } from './evidence-json';
-import { getFlag, getRequiredStringOption, getStringOption } from './args';
+import { createEvidenceListReport } from '../services/evidence-list';
+import { getFlag, getIntegerOption, getRequiredStringOption, getStringOption } from './args';
 
 export interface EvidenceCommandInput {
   args: string[];
@@ -10,6 +11,18 @@ export interface EvidenceCommandInput {
 
 export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
   const sub = input.args[1];
+  if (sub === 'list') {
+    const taskId = getRequiredStringOption(input.args, '--task');
+    const report = createEvidenceListReport(input.projectRoot, {
+      taskId,
+      limit: getIntegerOption(input.args, '--limit', { min: 0, max: 500 }),
+      includePrivate: getFlag(input.args, '--include-private')
+    });
+    console.log(JSON.stringify(report, null, 2));
+    if (!report.ok) process.exitCode = 6;
+    return true;
+  }
+
   if (sub !== 'collect') return false;
 
   const taskId = getRequiredStringOption(input.args, '--task');

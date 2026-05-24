@@ -13,6 +13,7 @@ The first implementation must be safe for external agents to call while preservi
 Future write-capable evidence attachment is documented separately in `docs/MCP_EVIDENCE_ATTACH_CONTRACT.md`. It is not part of the read-only bridge.
 
 Planned v1.0 read-only MCP extensions are tracked in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`. They are not part of the current default tool contract until their individual Task Capsules complete.
+T-0076 completed `hadara.evidence.list` as a read-only extension.
 
 ## Non-Goals
 
@@ -99,13 +100,13 @@ hadara.handoff.read
 hadara.project.state.read
 hadara.policy.evaluate
 hadara.harness.validate
+hadara.evidence.list
 ```
 
 Planned v1.0 read-only candidates:
 
 ```text
 hadara.context.export
-hadara.evidence.list
 hadara.tools.list
 hadara.active.run.read
 hadara.active.run.resume
@@ -193,6 +194,49 @@ Output schema:
   "evidenceIndex": [
     {
       "schemaVersion": "hadara.evidence.v1",
+      "taskId": "T-0042",
+      "kind": "test-log",
+      "summary": "...",
+      "result": "passed",
+      "visibility": "public"
+    }
+  ],
+  "issues": []
+}
+```
+
+### `hadara.evidence.list`
+
+List evidence index records for one Task Capsule without reading artifact contents.
+
+Input schema:
+
+```json
+{
+  "type": "object",
+  "required": ["taskId"],
+  "additionalProperties": false,
+  "properties": {
+    "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+    "limit": { "type": "integer", "minimum": 0, "maximum": 500, "default": 50 },
+    "includePrivate": { "type": "boolean", "default": false }
+  }
+}
+```
+
+Output schema:
+
+```json
+{
+  "schemaVersion": "hadara.evidence.list.v1",
+  "command": "evidence.list",
+  "ok": true,
+  "taskId": "T-0042",
+  "count": 1,
+  "records": [
+    {
+      "schemaVersion": "hadara.evidence.v1",
+      "time": "2026-05-24T00:00:00.000Z",
       "taskId": "T-0042",
       "kind": "test-log",
       "summary": "...",

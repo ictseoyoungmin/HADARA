@@ -76,3 +76,5 @@
 | T-0072 | Core v1.0 Technical Plan Refresh | Done | tasks/T-0072-core-v1-0-technical-plan-refresh | Clarifies T-0066 through T-0070 implementation/design mismatches in v1.0 planning docs. |
 | T-0074 | Redaction Hardening | Done | tasks/T-0074-redaction-hardening | Adds redaction registry/report model and broadens high-risk public evidence secret detection. |
 | T-0075 | Redaction Policy Follow-up | Done | tasks/T-0075-redaction-policy-follow-up | Separates redaction report findings from severity-threshold public artifact blocking and aligns future MCP planning names. |
+| T-0076 | Evidence List Read Model | Done | tasks/T-0076-evidence-list-read-model | Adds shared `hadara.evidence.list.v1`, CLI JSON evidence list, and read-only MCP evidence list with degraded JSONL warnings. |
+| T-0076 | Evidence List Read Model | Draft | tasks/T-0076-evidence-list-read-model | |

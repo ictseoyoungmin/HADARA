@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { handleEvidenceCommand } from '../../src/cli/evidence';
 import { createEvidenceCollectReport } from '../../src/cli/evidence-json';
 import { parseEvidenceResult } from '../../src/cli/evidence';
 import { appendEvidence, EvidenceArtifactPolicyError } from '../../src/evidence/evidence';
@@ -20,6 +21,43 @@ afterEach(() => {
 });
 
 describe('CLI evidence JSON reports', () => {
+  it('prints evidence list JSON through the CLI evidence handler', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'List JSON evidence');
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'note',
+      summary: 'Listed through CLI',
+      result: 'passed',
+      visibility: 'public'
+    });
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+
+    try {
+      expect(handleEvidenceCommand({ args: ['evidence', 'list', '--task', task.id, '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    expect(JSON.parse(output.join('\n'))).toMatchObject({
+      schemaVersion: 'hadara.evidence.list.v1',
+      command: 'evidence.list',
+      ok: true,
+      taskId: task.id,
+      count: 1,
+      records: [
+        {
+          summary: 'Listed through CLI'
+        }
+      ],
+      issues: []
+    });
+  });
+
   it('returns a stable collect envelope with the appended evidence index record', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Collect JSON evidence');

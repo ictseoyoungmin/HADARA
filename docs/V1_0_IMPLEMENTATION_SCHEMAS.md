@@ -485,11 +485,11 @@ Degraded-read rules:
 
 ## MCP V1 Read Tools
 
-Candidate default read-only tools:
+Current and candidate default read-only tools:
 
 ```text
-hadara.context.export
 hadara.evidence.list
+hadara.context.export
 hadara.tools.list
 hadara.active.run.read
 hadara.active.run.resume

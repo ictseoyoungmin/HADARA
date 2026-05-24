@@ -25,6 +25,7 @@ Usage:
   hadara task list
   hadara task show <task-id>
   hadara evidence collect --task <task-id> [--kind note|test-log|command-log|diff-summary|screenshot] [--path <path>] [--summary <text>] [--result passed|failed|blocked|unknown] [--private]
+  hadara evidence list --task <task-id> [--limit <n>] [--include-private] [--json]
   hadara handoff update --task <task-id> [--summary <text>] [--next <text>]
   hadara policy check-shell <command> [--mode readonly|assisted|trusted|auto|release]
   hadara policy preflight-shell <command> [--mode readonly|assisted|trusted|auto|release] [--json]

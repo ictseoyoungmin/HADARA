@@ -8,6 +8,7 @@ import { validateTaskCapsule } from '../harness/validate';
 import { createShellExecutionPreflight } from '../policy/preflight';
 import { parsePermissionMode } from '../policy/policy';
 import { createHandoffReadReport, createProjectStateReadReport } from '../services/project-read-model';
+import { createEvidenceListReport } from '../services/evidence-list';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 import { McpToolDefinition } from './tool-dispatch';
 import { HADARA_MCP_EVIDENCE_ATTACH_SCHEMA, HADARA_MCP_TOOL_SCHEMAS } from './tool-schemas';
@@ -71,6 +72,12 @@ function handleReadOnlyTool(projectRoot: string, name: string, args: Record<stri
     case 'hadara.harness.validate':
       return validateTaskCapsule(projectRoot, String(args.taskId), {
         level: args.level === 'done' ? 'done' : 'draft'
+      });
+    case 'hadara.evidence.list':
+      return createEvidenceListReport(projectRoot, {
+        taskId: String(args.taskId),
+        limit: typeof args.limit === 'number' ? args.limit : undefined,
+        includePrivate: args.includePrivate === true
       });
     default:
       throw new Error(`unregistered MCP tool handler: ${name}`);

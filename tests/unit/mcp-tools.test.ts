@@ -204,4 +204,41 @@ describe('MCP read tools', () => {
       }
     });
   });
+
+  it('lists evidence records through a read-only MCP payload', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'MCP evidence list');
+    fs.appendFileSync(
+      path.join(task.dir, 'evidence.jsonl'),
+      [
+        '{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T00:00:00.000Z","taskId":"T-0001","kind":"note","summary":"read me","result":"passed","visibility":"public"}',
+        'not-json'
+      ].join('\n') + '\n',
+      'utf8'
+    );
+
+    const payload = parseToolPayload(callTool(root, 'hadara.evidence.list', { taskId: task.id }));
+
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.evidence.list.v1',
+      command: 'evidence.list',
+      ok: true,
+      taskId: task.id,
+      count: 1,
+      records: [
+        {
+          schemaVersion: 'hadara.evidence.v1',
+          taskId: task.id,
+          kind: 'note',
+          summary: 'read me'
+        }
+      ],
+      issues: [
+        {
+          severity: 'warning',
+          code: 'EVIDENCE_INDEX_JSON_INVALID'
+        }
+      ]
+    });
+  });
 });

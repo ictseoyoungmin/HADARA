@@ -107,6 +107,22 @@ export const HADARA_MCP_TOOL_SCHEMAS: McpToolMetadata[] = [
     },
     annotations: { readOnlyHint: true },
     _meta: { 'hadara/readOnly': true, 'hadara/implemented': true }
+  },
+  {
+    name: 'hadara.evidence.list',
+    description: 'List evidence index records for one Task Capsule without reading artifact contents.',
+    inputSchema: {
+      type: 'object',
+      required: ['taskId'],
+      additionalProperties: false,
+      properties: {
+        taskId: { type: 'string', pattern: '^T-[0-9]{4}$' },
+        limit: { type: 'integer', minimum: 0, maximum: 500, default: 50 },
+        includePrivate: { type: 'boolean', default: false }
+      }
+    },
+    annotations: { readOnlyHint: true },
+    _meta: { 'hadara/readOnly': true, 'hadara/implemented': true }
   }
 ];
 
