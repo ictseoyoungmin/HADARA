@@ -50,6 +50,7 @@ Historical completed-task handoff entries moved out of `docs/AGENT_HANDOFF.md` d
 - Completed T-0078 Tools List Read Model by adding neutral capability registry, shared tools discovery report, CLI JSON tools list, and read-only MCP tools list with availability/risk metadata.
 - Completed T-0079 Schema Layer Planning by adding schema registry docs, schema index fixture, and initial JSON Schema fixtures for stable read models.
 - Completed T-0080 Service Parity Expansion first increment by moving task list/show/read reports into a shared task read-model service.
+- Completed T-0081 Policy Service Parity by moving policy check/evaluate reports into a shared policy service.
 
 ## Source Documents
 

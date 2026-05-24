@@ -3,8 +3,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createTaskListReport } from '../../src/cli/task-json';
-import { validateTaskCapsule } from '../../src/harness/validate';
 import { handleMcpJsonRpcMessage } from '../../src/mcp/server';
+import { createHarnessValidateReport } from '../../src/services/harness-service';
 import { createShellExecutionPreflight } from '../../src/policy/preflight';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
@@ -87,7 +87,7 @@ describe('MCP bridge contract', () => {
     const task = createTaskCapsule(root, 'Contract harness validate');
 
     expect(mcpToolPayload(root, 'hadara.harness.validate', { taskId: task.id, level: 'draft' })).toEqual(
-      validateTaskCapsule(root, task.id, { level: 'draft' })
+      createHarnessValidateReport(root, task.id, { level: 'draft' })
     );
   });
 

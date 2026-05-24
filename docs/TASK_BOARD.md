@@ -84,4 +84,6 @@
 | T-0081 | Policy Service Parity | Done | tasks/T-0081-policy-service-parity | Moves policy check/evaluate report builders into a shared policy service and routes CLI preflight plus MCP policy evaluate through it. |
 | T-0082 | Cleanup Follow-up Notes | Done | tasks/T-0082-cleanup-follow-up-notes | Captures redaction/schema/task.read/policy cleanup gaps and aligns policy check mode input with policy evaluate. |
 | T-0083 | Task Read Evidence Normalization | Done | tasks/T-0083-task-read-evidence-normalization | Reuses evidence-list normalization for task.read evidenceIndex and sanitized evidence.jsonl file view. |
+| T-0084 | Harness Validate Service Parity | Done | tasks/T-0084-harness-validate-service-parity | Routes CLI and MCP harness validate through a shared harness validation report service. |
 | T-0083 | Task Read Evidence Normalization | Draft | tasks/T-0083-task-read-evidence-normalization | |
+| T-0084 | Harness Validate Service Parity | Draft | tasks/T-0084-harness-validate-service-parity | |

@@ -110,6 +110,7 @@ Completed increments:
 - T-0080 moved task list/show/read report builders into `src/services/task-read-model.ts`.
 - T-0081 moved policy check/evaluate report builders into `src/services/policy-service.ts`.
 - T-0083 updated `task.read` embedded evidence data to reuse evidence-list normalization.
+- T-0084 moved harness validate report access behind `src/services/harness-service.ts`.
 
 Remaining consistency cleanup:
 

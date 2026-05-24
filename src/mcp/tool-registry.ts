@@ -1,10 +1,10 @@
 import { createEvidenceCollectReport } from '../cli/evidence-json';
 import { writeAuditEvent } from '../core/audit';
 import { resolveHadaraPaths } from '../core/paths';
-import { validateTaskCapsule } from '../harness/validate';
 import { createContextExportReport } from '../hermes/context-export';
 import { createHandoffReadReport, createProjectStateReadReport } from '../services/project-read-model';
 import { createEvidenceListReport } from '../services/evidence-list';
+import { createHarnessValidateReport } from '../services/harness-service';
 import { createPolicyEvaluateReport } from '../services/policy-service';
 import { createTaskListReport, createTaskReadReport } from '../services/task-read-model';
 import { createToolsListReport } from '../services/tools-list';
@@ -54,7 +54,7 @@ function handleReadOnlyTool(projectRoot: string, name: string, args: Record<stri
     case 'hadara.policy.evaluate':
       return createPolicyEvaluateReport(String(args.command), typeof args.mode === 'string' ? args.mode : 'assisted');
     case 'hadara.harness.validate':
-      return validateTaskCapsule(projectRoot, String(args.taskId), {
+      return createHarnessValidateReport(projectRoot, String(args.taskId), {
         level: args.level === 'done' ? 'done' : 'draft'
       });
     case 'hadara.evidence.list':

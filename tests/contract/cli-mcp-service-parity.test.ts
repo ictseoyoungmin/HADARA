@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { validateTaskCapsule } from '../../src/harness/validate';
 import { handleMcpJsonRpcMessage } from '../../src/mcp/server';
+import { createHarnessValidateReport } from '../../src/services/harness-service';
 import { createHandoffReadReport, createProjectStateReadReport } from '../../src/services/project-read-model';
 import { createPolicyEvaluateReport } from '../../src/services/policy-service';
 import { createTaskListReport, createTaskReadReport } from '../../src/services/task-read-model';
@@ -78,7 +78,7 @@ describe('CLI/MCP service parity', () => {
       createPolicyEvaluateReport('npm run check', 'assisted')
     );
     expect(mcpToolPayload(root, 'hadara.harness.validate', { taskId: task.id, level: 'draft' })).toEqual(
-      validateTaskCapsule(root, task.id, { level: 'draft' })
+      createHarnessValidateReport(root, task.id, { level: 'draft' })
     );
   });
 
