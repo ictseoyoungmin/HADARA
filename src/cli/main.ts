@@ -12,6 +12,7 @@ import { handleMcpCommand } from './mcp';
 import { handleRunCommand } from './run';
 import { handleOpsCommand, handleStatusCommand } from './status';
 import { handleDashboardCommand } from './dashboard';
+import { handleToolsCommand } from './tools';
 import { getFlag, getStringOption } from './args';
 import { cliErrorExitCode, createCliErrorReport } from './errors';
 
@@ -26,6 +27,7 @@ Usage:
   hadara task show <task-id>
   hadara evidence collect --task <task-id> [--kind note|test-log|command-log|diff-summary|screenshot] [--path <path>] [--summary <text>] [--result passed|failed|blocked|unknown] [--private]
   hadara evidence list --task <task-id> [--limit <n>] [--include-private] [--json]
+  hadara tools list [--json]
   hadara handoff update --task <task-id> [--summary <text>] [--next <text>]
   hadara policy check-shell <command> [--mode readonly|assisted|trusted|auto|release]
   hadara policy preflight-shell <command> [--mode readonly|assisted|trusted|auto|release] [--json]
@@ -75,6 +77,11 @@ async function main(args = process.argv.slice(2)): Promise<void> {
 
     case 'evidence': {
       if (handleEvidenceCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
+      break;
+    }
+
+    case 'tools': {
+      if (handleToolsCommand({ args, jsonOutput })) return;
       break;
     }
 

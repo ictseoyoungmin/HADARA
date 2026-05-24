@@ -15,6 +15,7 @@ Future write-capable evidence attachment is documented separately in `docs/MCP_E
 Planned v1.0 read-only MCP extensions are tracked in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`. They are not part of the current default tool contract until their individual Task Capsules complete.
 T-0076 completed `hadara.evidence.list` as a read-only extension.
 T-0077 completed `hadara.context.export` as a read-only memory-payload extension.
+T-0078 completed `hadara.tools.list` as a read-only capability discovery extension.
 
 ## Non-Goals
 
@@ -103,12 +104,12 @@ hadara.policy.evaluate
 hadara.harness.validate
 hadara.evidence.list
 hadara.context.export
+hadara.tools.list
 ```
 
 Planned v1.0 read-only candidates:
 
 ```text
-hadara.tools.list
 hadara.active.run.read
 hadara.active.run.resume
 hadara.debt.list
@@ -150,6 +151,69 @@ Output schema:
 ```
 
 If `summaryOnly` is true before summary generation exists, the tool returns the full context and includes warning issue code `SUMMARY_ONLY_NOT_IMPLEMENTED`.
+
+### `hadara.tools.list`
+
+List current HADARA CLI/MCP capabilities and disabled surfaces for external-agent discovery.
+
+Input schema:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Output schema:
+
+```json
+{
+  "schemaVersion": "hadara.tools.list.v1",
+  "command": "tools.list",
+  "ok": true,
+  "surfaces": {
+    "cli": [
+      {
+        "name": "hadara task list --json",
+        "category": "read",
+        "stable": true,
+        "readOnly": true,
+        "enabledByDefault": true,
+        "schemaVersion": "hadara.task.list.v1"
+      }
+    ],
+    "mcp": [
+      {
+        "name": "hadara.task.list",
+        "category": "read",
+        "stable": true,
+        "readOnly": true,
+        "enabledByDefault": true
+      },
+      {
+        "name": "hadara.evidence.attach",
+        "category": "write",
+        "stable": true,
+        "readOnly": false,
+        "enabledByDefault": false,
+        "schemaVersion": "hadara.evidence.collect.v1"
+      }
+    ]
+  },
+  "disabled": [
+    {
+      "name": "mcp.shell.execute",
+      "category": "execute",
+      "reason": "MCP shell execution is out of scope for the current read-only bridge."
+    }
+  ],
+  "issues": []
+}
+```
+
+The report is discovery-only. It must not enable disabled tools, execute commands, call providers, or mutate files.
 
 ### `hadara.task.list`
 

@@ -576,6 +576,12 @@ The recommended MCP behavior is option 2.
 }
 ```
 
+Implemented notes:
+
+- `hadara.tools.list.v1` is shared by `hadara tools list --json` and read-only MCP `hadara.tools.list`.
+- The report includes default read MCP tools, the opt-in `hadara.evidence.attach` write surface, and disabled shell/provider/release/broad-write MCP surfaces.
+- It is a discovery report only; it does not enable disabled surfaces.
+
 ## Policy Matrix Refactor
 
 Current implementation:

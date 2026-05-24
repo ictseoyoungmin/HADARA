@@ -71,3 +71,8 @@ Historical validation entries moved out of `docs/AGENT_HANDOFF.md` during T-0040
 - Docker focused dashboard/status tests after T-0057: 2 test files passed, 10 tests passed.
 - Docker check after T-0057: 29 test files passed, 152 tests passed.
 - Docker `node dist/cli/main.js harness validate --task T-0057 --level done --json` returned `ok: true` after correcting the T-0057 TESTS.md markers.
+- Docker check after T-0077: 34 test files passed, 196 tests passed.
+- Docker `node dist/cli/main.js harness validate --task T-0077 --level done --json --project /workspace` returned `ok: true`.
+- Docker check after T-0078: 35 test files passed, 200 tests passed.
+- Docker built CLI `tools list --json --project /workspace` returned `hadara.tools.list.v1`; built MCP `hadara.tools.list` returned `ok: true`, `mcpCount: 10`, `disabledCount: 4`, and opt-in evidence attach disabled by default.
+- Docker `node dist/cli/main.js harness validate --task T-0078 --level done --json --project /workspace` returned `ok: true`.

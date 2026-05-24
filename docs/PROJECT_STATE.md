@@ -42,6 +42,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Evidence artifact redaction registry exists: public artifacts must be UTF-8 text and pass severity-threshold high-risk secret-pattern scanning before committed copy, with `hadara.redaction.report.v1` findings available from the core redaction service.
 - Evidence list read model exists as `hadara.evidence.list.v1`, with a shared report builder used by `hadara evidence list --json` and read-only MCP `hadara.evidence.list`; malformed JSONL lines degrade to warnings, parsed records are normalized before output, private evidence paths are stripped, and taskId mismatches are dropped with warnings.
 - Context export read model exists as `hadara.context.export.v1`; read-only MCP `hadara.context.export` returns an in-memory payload with `contextPath: null` and does not write `.hadara/context/HADARA_CONTEXT.md`, while CLI `hadara hermes export-context` remains the file-writing path. Context export includes `docs/IMPLEMENTATION_SOP.md` as the authoritative workflow source, and `summaryOnly` currently returns a warning instead of silently pretending to summarize.
+- Tools list read model exists as `hadara.tools.list.v1`; `hadara tools list --json` and read-only MCP `hadara.tools.list` report stable CLI/MCP surfaces, opt-in evidence attach status, and disabled shell/provider/release/broad-write MCP surfaces.
 - Strict CLI argument helper parsing exists for string, required string, integer, and boolean flag options.
 - Agent loop evidence attachment exists: deterministic fake-shell observations from `hadara run --task ...` can be attached as managed public command-log artifacts and reported in run JSON output.
 - ScriptedProvider now consumes scripted steps in order for deterministic replay semantics.
@@ -59,7 +60,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Project handoff is compacted: current state lives in `docs/AGENT_HANDOFF.md`, with historical task and validation history in dedicated history docs.
 - Old Draft task capsules have been reclassified: T-0003 is Superseded, and T-0006 is Partial with remaining Hermes/MCP bridge scope deferred to the roadmap.
 - Read-only Hermes/MCP bridge contract is documented in `docs/MCP_BRIDGE_CONTRACT.md`; stdio server and read tools are implemented.
-- MCP JSON-RPC stdio server exists as `hadara mcp serve`; it supports discovery/lifecycle requests and read-only tools for task list/read, handoff read, project state read, policy evaluate, and harness validate.
+- MCP JSON-RPC stdio server exists as `hadara mcp serve`; it supports discovery/lifecycle requests and read-only tools for task list/read, handoff read, project state read, policy evaluate, harness validate, evidence list, context export, and tools list.
 - MCP bridge contract tests validate JSON text payload wrapping, notification no-response behavior, dispatch issue-code mapping, and CLI JSON parity for task list, policy evaluate, and harness validate.
 - MCP evidence attach contract is documented in `docs/MCP_EVIDENCE_ATTACH_CONTRACT.md`; the tool is implemented only for explicit opt-in mode.
 - MCP evidence attach can be enabled explicitly with `hadara mcp serve --enable-evidence-attach`; default MCP startup remains read-only and does not advertise the tool.

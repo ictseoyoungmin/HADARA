@@ -10,6 +10,7 @@ import { createShellExecutionPreflight } from '../policy/preflight';
 import { parsePermissionMode } from '../policy/policy';
 import { createHandoffReadReport, createProjectStateReadReport } from '../services/project-read-model';
 import { createEvidenceListReport } from '../services/evidence-list';
+import { createToolsListReport } from '../services/tools-list';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 import { McpToolDefinition } from './tool-dispatch';
 import { HADARA_MCP_EVIDENCE_ATTACH_SCHEMA, HADARA_MCP_TOOL_SCHEMAS } from './tool-schemas';
@@ -36,7 +37,7 @@ export function createMcpToolRegistry(projectRoot: string, options: McpToolRegis
   const readTools: McpToolDefinition[] = HADARA_MCP_TOOL_SCHEMAS.map((metadata) => ({
     metadata,
     phaseAllowed: true,
-    handler: (args) => handleReadOnlyTool(projectRoot, metadata.name, args)
+    handler: (args) => handleReadOnlyTool(projectRoot, metadata.name, args, options)
   }));
   if (!options.enableEvidenceAttach) return readTools;
   return [
@@ -49,7 +50,7 @@ export function createMcpToolRegistry(projectRoot: string, options: McpToolRegis
   ];
 }
 
-function handleReadOnlyTool(projectRoot: string, name: string, args: Record<string, unknown>): unknown {
+function handleReadOnlyTool(projectRoot: string, name: string, args: Record<string, unknown>, options: McpToolRegistryOptions): unknown {
   switch (name) {
     case 'hadara.task.list':
       return {
@@ -85,6 +86,8 @@ function handleReadOnlyTool(projectRoot: string, name: string, args: Record<stri
         format: args.format === 'json' ? 'json' : 'markdown',
         summaryOnly: args.summaryOnly === true
       });
+    case 'hadara.tools.list':
+      return createToolsListReport({ enableEvidenceAttach: options.enableEvidenceAttach });
     default:
       throw new Error(`unregistered MCP tool handler: ${name}`);
   }

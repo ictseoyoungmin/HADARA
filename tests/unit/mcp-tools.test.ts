@@ -284,4 +284,51 @@ describe('MCP read tools', () => {
     });
     expect(payload.content).toContain('## docs/PROJECT_STATE.md');
   });
+
+  it('lists current CLI and MCP capabilities plus disabled surfaces', () => {
+    const root = tempProject();
+
+    const payload = parseToolPayload(callTool(root, 'hadara.tools.list'));
+
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.tools.list.v1',
+      command: 'tools.list',
+      ok: true,
+      issues: []
+    });
+    expect(payload.surfaces.cli).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'hadara evidence list --task <task-id> --json',
+          category: 'read',
+          readOnly: true,
+          stable: true,
+          schemaVersion: 'hadara.evidence.list.v1'
+        })
+      ])
+    );
+    expect(payload.surfaces.mcp).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'hadara.context.export',
+          category: 'read',
+          readOnly: true,
+          enabledByDefault: true
+        }),
+        expect.objectContaining({
+          name: 'hadara.evidence.attach',
+          category: 'write',
+          readOnly: false,
+          enabledByDefault: false
+        })
+      ])
+    );
+    expect(payload.disabled).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'mcp.shell.execute', category: 'execute' }),
+        expect.objectContaining({ name: 'mcp.provider.call', category: 'provider' }),
+        expect.objectContaining({ name: 'mcp.write.*', category: 'write' })
+      ])
+    );
+  });
 });

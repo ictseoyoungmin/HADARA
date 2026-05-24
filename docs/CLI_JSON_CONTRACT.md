@@ -26,6 +26,7 @@ Examples include:
 - `hadara.hermes.export-context.v1`
 - `hadara.evidence.collect.v1`
 - `hadara.evidence.list.v1`
+- `hadara.tools.list.v1`
 - `hadara.harness.validate.v1`
 - `hadara.harness.replay.v1`
 - `hadara.agent.loop.v1`
@@ -93,7 +94,6 @@ The MCP bridge should preserve these CLI semantics where it delegates to existin
 
 The following schemas are planned or partial and should not be treated as stable until their Task Capsules complete:
 
-- `hadara.tools.list.v1`
 - `hadara.active_run.projection.v1` as a direct CLI/MCP read surface
 - `hadara.operational_debt.v1` as a CLI/MCP read surface
 - `hadara.redaction.report.v1`

@@ -137,6 +137,17 @@ export const HADARA_MCP_TOOL_SCHEMAS: McpToolMetadata[] = [
     },
     annotations: { readOnlyHint: true },
     _meta: { 'hadara/readOnly': true, 'hadara/implemented': true }
+  },
+  {
+    name: 'hadara.tools.list',
+    description: 'List current HADARA CLI/MCP capabilities and disabled surfaces.',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {}
+    },
+    annotations: { readOnlyHint: true },
+    _meta: { 'hadara/readOnly': true, 'hadara/implemented': true }
   }
 ];
 
