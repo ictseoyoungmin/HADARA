@@ -97,6 +97,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Task read evidence embedding now reuses evidence-list normalization; `task.read` returns normalized `evidenceIndex` records and a sanitized `files["evidence.jsonl"]` view instead of raw private evidence paths or unredacted summaries.
 - Read-only MCP `hadara.task.read` excludes private evidence metadata by default; callers must pass `includePrivate: true` to receive sanitized private evidence metadata. `files["evidence.jsonl"]` is a sanitized read-model view, not raw file bytes.
 - Harness validation report logic now has shared `src/services/harness-service.ts`; CLI `harness validate` and read-only MCP `hadara.harness.validate` both use the shared service boundary.
+- Operations Status JSON report logic now has shared `src/services/operations-status-service.ts`; CLI `hadara status` and `hadara ops status` use the shared service boundary while `src/cli/status-json.ts` remains a compatibility export.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.

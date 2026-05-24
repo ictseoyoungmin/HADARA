@@ -85,3 +85,4 @@
 | T-0082 | Cleanup Follow-up Notes | Done | tasks/T-0082-cleanup-follow-up-notes | Captures redaction/schema/task.read/policy cleanup gaps and aligns policy check mode input with policy evaluate. |
 | T-0083 | Task Read Evidence Normalization | Done | tasks/T-0083-task-read-evidence-normalization | Reuses evidence-list normalization for task.read evidenceIndex and sanitized evidence.jsonl file view. |
 | T-0084 | Harness Validate Service Parity | Done | tasks/T-0084-harness-validate-service-parity | Routes CLI/MCP harness validate through a shared service and makes task.read private evidence opt-in. |
+| T-0085 | Operations Status Service Parity | Done | tasks/T-0085-operations-status-service-parity | Moves Operations Status JSON report creation into a shared service while preserving CLI status output. |

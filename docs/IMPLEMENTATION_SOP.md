@@ -27,7 +27,7 @@ HADARA development follows the core philosophy: Unbroken Context, Verified Devel
 5. Respect prerequisite order in `docs/DEVELOPMENT_SLICES.md`.
 6. Do not start deferred dashboard, real provider adapter, MCP full implementation, or full agent-controller work until prerequisite harness, policy, and evidence gates are ready.
 7. Make the smallest coherent change that satisfies the Task Capsule acceptance criteria.
-8. Update `FILES.md`, `DECISIONS.md`, and task-local docs when the implementation scope changes.
+8. Update `PLAN.md`, `FILES.md`, `DECISIONS.md`, and task-local docs when the implementation scope changes.
 9. Do not add MCP write tools, shell execution, provider calls, or server behavior before the read-only bridge contract and follow-up implementation slices allow them.
 
 ## Reusable Docker Workflow

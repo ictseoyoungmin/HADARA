@@ -1,4 +1,4 @@
-import { createOpsStatusReport, formatOpsStatusReport } from './status-json';
+import { createOpsStatusReport, formatOpsStatusReport } from '../services/operations-status-service';
 
 export interface StatusCommandInput {
   args: string[];

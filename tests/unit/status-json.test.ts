@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createOpsStatusReport } from '../../src/cli/status-json';
 import { handleOpsCommand, handleStatusCommand } from '../../src/cli/status';
+import { createOpsStatusReport } from '../../src/services/operations-status-service';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
