@@ -38,3 +38,12 @@ Reason:
 - The comfort dark mockup is the strongest current expression of HADARA dashboard layout, visual hierarchy, palette, card grouping, and navigation feel.
 - The mockup is a visual shell baseline only; it does not define data schema, live integration, write behavior, MCP behavior, or state persistence.
 - The authoritative dashboard data contract remains `hadara.ops.status.v1`.
+
+## D-0007: Separate v1.0 planning from capsule implementation details
+
+Reason:
+- `docs/specs/HADARA_Core_v1.0_Technical_Development_Plan.md` is the broad technical plan and may include target designs that are ahead of implementation.
+- Future Task Capsules need smaller, concrete references so schema details, file candidates, and acceptance notes are not lost.
+- `docs/V1_0_CAPSULE_BACKLOG.md` tracks candidate slices and ordering.
+- `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` tracks detailed schemas, file candidates, and implementation notes.
+- Existing contract docs remain authoritative for implemented stable surfaces; v1.0 reference docs describe planned or partial surfaces until promoted.

@@ -114,6 +114,7 @@ Example:
 - `activeRun.handoff.fresh` is false when an active run exists but `docs/AGENT_HANDOFF.md` does not mention the active task id.
 - `mcp.evidenceAttach` documents configured operational guard state. It is not live MCP server process inspection.
 - `issues` may include warnings when source documents are missing or validation baseline details are unavailable. Warning-only reports keep `ok: true` and set `health: "degraded"` so dashboards can render degraded snapshots.
+- Future evidence/debt/dashboard read models should follow the T-0070 robustness rule: local mutable state or malformed optional indexes should degrade with structured warnings instead of crashing the whole read report.
 
 ## Health Semantics
 
@@ -149,3 +150,15 @@ The `mcp` object is a configured capability snapshot. T-0054 does not inspect:
 - Provider calls.
 - Shell execution.
 - MCP write expansion.
+
+## Planned V1.0 Extensions
+
+The v1.0 technical plan expects Operations Status or adjacent read models to eventually include:
+
+- evidence list summaries;
+- operational debt aggregate counts;
+- richer active-run resume projections;
+- release-gate validation summaries;
+- schema-validation status for core JSON surfaces.
+
+Detailed target schemas live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.

@@ -86,3 +86,17 @@ The MCP bridge should preserve these CLI semantics where it delegates to existin
 - MCP tool success should wrap a valid HADARA command report.
 - MCP tool failure should preserve the underlying `schemaVersion`, `command`, `ok`, and `issues` fields when available.
 - Early adapter validation failures may use MCP protocol errors, but the response payload should still prefer HADARA issue codes when possible.
+
+## Planned v1.0 JSON Surfaces
+
+The following schemas are planned or partial and should not be treated as stable until their Task Capsules complete:
+
+- `hadara.evidence.list.v1`
+- `hadara.context.export.v1`
+- `hadara.tools.list.v1`
+- `hadara.active_run.projection.v1` as a direct CLI/MCP read surface
+- `hadara.operational_debt.v1` as a CLI/MCP read surface
+- `hadara.redaction.report.v1`
+- `hadara.releaseGate.v1`
+
+Detailed target schemas live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.

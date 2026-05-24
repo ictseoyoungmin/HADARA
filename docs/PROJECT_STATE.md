@@ -85,6 +85,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Operational debt tracking exists in `docs/OPERATIONAL_DEBT.md` and `src/services/operational-debt.ts`; it promotes `known_issue.log` themes into structured records, reports capsule size indicators, and warns on premature acceptance checks before Done status or evidence.
 - Operations state robustness is hardened: malformed active run local state degrades status JSON with warnings instead of throwing, active runs referencing missing Task Capsules are reported, premature acceptance uses valid evidence records, and shared Markdown section extraction matches heading lines only.
 - Reusable Docker development workflow is documented: the `hadara-dev` container can stay running, dependency-heavy work happens in `/tmp/hadara`, and new Task Capsules should be created through the HADARA CLI with `--project /workspace`.
+- V1.0 planning has been split into concrete references: `docs/V1_0_CAPSULE_BACKLOG.md` tracks future capsule candidates and `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` preserves detailed schema/file/test notes from the v1.0 technical plan.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.

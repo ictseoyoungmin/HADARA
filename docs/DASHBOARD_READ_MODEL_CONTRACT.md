@@ -24,6 +24,8 @@ Sample fixture:
 
 The fixture is static sample data and may not match the repository's current state. Dashboards should treat `fixtureMeta.notLiveData: true` as non-live provenance.
 
+Planned v1.0 local dashboard read APIs are tracked in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`. They are not part of the current static dashboard contract until their Task Capsules complete.
+
 Visual reference:
 
 - `docs/design/mockups/HADARA_web_ui_v0.1_comfort_dark.html`
@@ -84,3 +86,18 @@ Use the comfort dark mockup to guide placement only:
 - Current MCP process discovery.
 - Provider/run/queue UI.
 - Persisting dashboard state.
+
+## Planned V1.0 Read API Candidates
+
+Future dashboard integration may add local read-only routes:
+
+```text
+GET /api/status
+GET /api/tasks
+GET /api/tasks/:taskId
+GET /api/evidence?taskId=T-00NN
+GET /api/active-run
+GET /api/debt
+```
+
+These routes must not execute shell commands, call providers, mutate tasks, perform MCP writes, or persist browser state.

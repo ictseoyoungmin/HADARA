@@ -13,9 +13,10 @@ HADARA development follows the core philosophy: Unbroken Context, Verified Devel
 7. Read `TASK.md`, `PLAN.md`, `CONTEXT.md`, `ACCEPTANCE.md`, `FILES.md`, `TESTS.md`, `RISKS.md`, and `HANDOFF.md` for the active Task Capsule.
 8. Read project-specific specs or roadmap documents referenced by the current task.
 9. For MCP/Hermes work, read `docs/CLI_JSON_CONTRACT.md` and `docs/MCP_BRIDGE_CONTRACT.md`.
-10. Summarize the current state from the required docs.
-11. Identify the active Task Capsule and explain why it fits the work.
-12. Propose or choose the smallest useful implementation slice.
+10. For v1.0 hardening work, read `docs/V1_0_CAPSULE_BACKLOG.md` and `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
+11. Summarize the current state from the required docs.
+12. Identify the active Task Capsule and explain why it fits the work.
+13. Propose or choose the smallest useful implementation slice.
 
 ## Implementation
 

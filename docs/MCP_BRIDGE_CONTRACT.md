@@ -12,6 +12,8 @@ The first implementation must be safe for external agents to call while preservi
 
 Future write-capable evidence attachment is documented separately in `docs/MCP_EVIDENCE_ATTACH_CONTRACT.md`. It is not part of the read-only bridge.
 
+Planned v1.0 read-only MCP extensions are tracked in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`. They are not part of the current default tool contract until their individual Task Capsules complete.
+
 ## Non-Goals
 
 The following are explicitly out of scope for the first bridge:
@@ -87,6 +89,30 @@ Initial HADARA issue codes:
 Future write-capable tool errors such as `TOOL_POLICY_DENIED`, `TOOL_WRITE_FORBIDDEN`, `TOOL_WORKSPACE_BOUNDARY`, `TOOL_ARTIFACT_REDACTION_FAILED`, and `TOOL_SCHEMA_VERSION_MISMATCH` are reserved by `docs/MCP_EVIDENCE_ATTACH_CONTRACT.md`.
 
 ## Tools
+
+Current default read-only tools:
+
+```text
+hadara.task.list
+hadara.task.read
+hadara.handoff.read
+hadara.project.state.read
+hadara.policy.evaluate
+hadara.harness.validate
+```
+
+Planned v1.0 read-only candidates:
+
+```text
+hadara.context.export
+hadara.evidence.list
+hadara.tools.list
+hadara.activeRun.read
+hadara.resume.projection
+hadara.debt.list
+```
+
+These candidates must remain read-only. `hadara.context.export` must return a memory payload if implemented through MCP; it must not generate or mutate `.hadara/context/HADARA_CONTEXT.md`.
 
 ### `hadara.task.list`
 

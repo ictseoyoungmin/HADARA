@@ -31,7 +31,13 @@ External agents can read HADARA project state, task capsules, handoff, evidence,
 
 ### Current Status
 
-Most v0.3 foundations exist: Task Capsules, evidence indexing, done-level harness validation, CLI JSON read surfaces, read-only MCP tools, policy evaluation/preflight, Operations Status JSON, and the static sample-backed dashboard server. The remaining v0.3 freeze work is to tighten external-agent guidance, prove compatibility against a Hermes-like read-only flow, reduce CLI/MCP read-model duplication, and record single-active-run state without queue or multi-agent assumptions.
+Most v0.3 foundations exist: Task Capsules, evidence indexing, done-level harness validation, CLI JSON read surfaces, read-only MCP tools, policy evaluation/preflight, Operations Status JSON, and the static sample-backed dashboard server.
+
+T-0066 through T-0070 moved several v0.3/v0.4/v0.5 ideas from design into implementation: the Hermes-like compatibility fixture exists, project/handoff read-model parity has started, single active run state exists, operational debt tracking exists, and operations state robustness now degrades local-state failures into warnings.
+
+Remaining work is now v1.0 hardening rather than v0.3 proof of concept: redaction hardening, evidence list/read models, broader service parity, active-run CLI/MCP surfaces, operational debt release gates, schema validation, dashboard read APIs, provider adapter contracts, and release/packaging.
+
+Detailed capsule candidates live in `docs/V1_0_CAPSULE_BACKLOG.md`. Detailed schemas and implementation notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
 
 ## v0.4 Single-Agent Run State
 
@@ -42,7 +48,11 @@ Candidate scope:
 - Single active run manifest.
 - Stale handoff detection against active run state.
 - Resume projection for the active task/run.
+- CLI run-state commands.
+- Read-only MCP `hadara.activeRun.read` and `hadara.resume.projection` tools.
 - No queue, worker lane, or concurrent multi-agent execution.
+
+Status: foundational implementation exists; CLI/MCP surface completion remains.
 
 ## v0.5 CLI/MCP Service Parity
 
@@ -54,7 +64,10 @@ Candidate scope:
 - Shared task list/read service.
 - Shared handoff read service.
 - Shared policy and harness response adapters.
+- Shared evidence list and context export read models.
 - CLI/MCP parity regressions.
+
+Status: project/handoff parity exists; task read, evidence, policy, harness, context export, and status service boundaries remain.
 
 ## v0.6 Safe CLI Write Boundary
 
@@ -65,6 +78,8 @@ Candidate scope:
 - Clear separation between read models and write commands.
 - Structured write preflight decisions.
 - Stronger acceptance/evidence completion guards.
+- Private evidence manifest.
+- Operational debt gate integration.
 - No MCP file-write, shell, task mutation, or release/package execution.
 
 ## v0.7 Provider Adapter Preparation
@@ -77,6 +92,7 @@ Candidate scope:
 - Secrets-excluded contract tests.
 - Explicit provider fallback behavior.
 - No real provider execution as a default path.
+- Provider-originated actions normalized into policy-gated intents before any execution.
 
 ## v0.8 Release/Packaging Track
 
@@ -88,6 +104,8 @@ Candidate scope:
 - CI/release checks.
 - Portable store migration checks.
 - CLI distribution smoke tests.
+- Release checklist report.
+- Remote CI observation after local Docker validation.
 
 ## v1.0 Candidate
 
@@ -100,6 +118,8 @@ Candidate scope:
 - Static or product-served operations dashboard with clear read/write boundaries.
 - Documented provider adapter path.
 - Operational debt gates connected to product risk.
+- Runtime schema validation for core JSON reports.
+- Evidence list/read model and private evidence manifest.
 
 ## Operational Debt Track
 

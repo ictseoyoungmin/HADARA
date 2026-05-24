@@ -33,3 +33,17 @@ Operational debt records track weaknesses discovered while dogfooding HADARA its
 - structured debt records;
 - capsule size indicators using file count, line count, byte count, and `tiny|standard|large` size;
 - warning issues for checked acceptance when the task is not Done or has no valid `hadara.evidence.v1` records.
+
+## V1.0 Follow-Up
+
+The current implementation is a foundational report, not the final v1.0 debt system.
+
+Planned follow-up details are tracked in `docs/V1_0_CAPSULE_BACKLOG.md` and `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
+
+Future work should add:
+
+- persisted or extensible debt records;
+- severity, impact, recommended fix, linked tasks, and timestamps;
+- `hadara debt list --json` and `hadara debt show <id> --json`;
+- Operations Status aggregate counts for high/open debt;
+- release-gate warnings or blocking semantics for high-severity debt.
