@@ -102,8 +102,11 @@ export function readActiveRunManifest(projectRoot: string): ActiveRunManifest | 
 export function createActiveRunProjection(projectRoot: string): ActiveRunProjection {
   const activeRun = readActiveRunManifest(projectRoot);
   const issues: ActiveRunProjection['issues'] = [];
+  const task = activeRun ? listTaskCapsules(projectRoot).find((item) => item.id === activeRun.taskId) : undefined;
+  const canonicalCapsule = task ? toPortablePath(path.relative(projectRoot, task.dir)) : null;
   const staleReason = activeRun ? findStaleHandoffReason(projectRoot, activeRun) : null;
-  const taskMissing = activeRun ? !listTaskCapsules(projectRoot).some((task) => task.id === activeRun.taskId) : false;
+  const taskMissing = activeRun ? !task : false;
+  const capsuleMismatch = activeRun && canonicalCapsule !== null && activeRun.capsule !== canonicalCapsule;
 
   if (staleReason) {
     issues.push({
@@ -119,6 +122,15 @@ export function createActiveRunProjection(projectRoot: string): ActiveRunProject
       message: `Active run ${activeRun.taskId} has no matching Task Capsule.`
     });
   }
+  if (activeRun && capsuleMismatch) {
+    issues.push({
+      severity: 'warning',
+      code: 'ACTIVE_RUN_CAPSULE_MISMATCH',
+      message: `Active run ${activeRun.taskId} points to ${activeRun.capsule || '(empty capsule)'}, but the canonical Task Capsule path is ${canonicalCapsule}.`
+    });
+  }
+
+  const resumeCapsule = canonicalCapsule ?? activeRun?.capsule ?? '';
 
   return {
     schemaVersion: 'hadara.active_run.projection.v1',
@@ -133,10 +145,10 @@ export function createActiveRunProjection(projectRoot: string): ActiveRunProject
     resume: activeRun
       ? {
           taskId: activeRun.taskId,
-          capsule: activeRun.capsule,
+          capsule: resumeCapsule,
           nextAction: taskMissing
             ? `Resolve missing Task Capsule for ${activeRun.taskId} before resuming.`
-            : `Resume ${activeRun.taskId} from ${activeRun.capsule || activeRunManifestPortablePath()}.`
+            : `Resume ${activeRun.taskId} from ${resumeCapsule || activeRunManifestPortablePath()}.`
         }
       : null,
     issues
@@ -174,7 +186,7 @@ export function createActiveRunResumeReport(projectRoot: string): ActiveRunResum
   const projection = safeCreateActiveRunProjection(projectRoot);
   const activeRun = projection.activeRun;
   const taskId = activeRun?.taskId ?? null;
-  const capsule = activeRun?.capsule || (taskId ? `tasks/${taskId}` : null);
+  const capsule = projection.resume?.capsule || activeRun?.capsule || (taskId ? `tasks/${taskId}` : null);
 
   return {
     schemaVersion: 'hadara.active_run.resume.v1',

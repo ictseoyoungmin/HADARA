@@ -24,6 +24,8 @@ describe('schema fixtures', () => {
 
     expect(index.schemaVersion).toBe('hadara.schema.index.v1');
     expect(index.schemas.map((entry) => entry.id).sort()).toEqual([
+      'hadara.active_run.projection.v1',
+      'hadara.active_run.resume.v1',
       'hadara.context.export.v1',
       'hadara.evidence.list.v1',
       'hadara.tools.list.v1'

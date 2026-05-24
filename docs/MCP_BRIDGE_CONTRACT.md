@@ -272,6 +272,7 @@ Output schema:
 ```
 
 Malformed local active-run state must degrade into warning issues instead of throwing transport errors.
+When the manifest `capsule` path differs from the canonical Task Capsule path resolved by `taskId`, the report should include warning issue code `ACTIVE_RUN_CAPSULE_MISMATCH` and use the canonical path in resume guidance.
 
 ### `hadara.debt.list`
 
@@ -353,7 +354,7 @@ Output schema:
 
 ### `hadara.active.run.resume`
 
-Read resume guidance derived from the active-run projection. Despite the name, this is a read-only guidance report; it must not mutate active-run state, update handoff, execute commands, or call providers.
+Read resume guidance derived from the active-run projection. Despite the name, this is a read-only guidance report; it must not mutate active-run state, update handoff, execute commands, call providers, or resume an agent process.
 
 Input schema:
 

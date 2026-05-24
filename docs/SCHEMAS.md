@@ -31,6 +31,8 @@ Initial fixtures:
 | `hadara.evidence.list.v1` | `src/schemas/evidence-list.schema.json` | fixture | Mirrors the shared evidence list read model. |
 | `hadara.context.export.v1` | `src/schemas/context-export.schema.json` | fixture | Documents MCP memory-mode context export. |
 | `hadara.tools.list.v1` | `src/schemas/tools-list.schema.json` | fixture | Documents capability discovery surfaces and disabled surfaces. |
+| `hadara.active_run.projection.v1` | `src/schemas/active-run-projection.schema.json` | fixture | Documents active-run projection and degraded local-state warnings. |
+| `hadara.active_run.resume.v1` | `src/schemas/active-run-resume.schema.json` | fixture | Documents read-only resume guidance. |
 
 ## Versioning
 

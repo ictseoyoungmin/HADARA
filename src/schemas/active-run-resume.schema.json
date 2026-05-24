@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.active_run.resume.v1",
+  "x-hadara-schema-id": "hadara.active_run.resume.v1",
+  "title": "HADARA Active Run Resume Guidance Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "activeRun", "resumePrompt", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.active_run.resume.v1" },
+    "command": { "const": "active-run.resume" },
+    "ok": { "const": true },
+    "activeRun": {
+      "oneOf": [{ "$ref": "#/$defs/activeRunManifest" }, { "type": "null" }]
+    },
+    "resumePrompt": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["summary", "mustRead", "nextActions", "constraints"],
+      "properties": {
+        "summary": { "type": "string", "minLength": 1 },
+        "mustRead": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "nextActions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "activeRunManifest": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["schemaVersion", "runId", "taskId", "capsule", "status", "startedAt", "updatedAt", "summary"],
+      "properties": {
+        "schemaVersion": { "const": "hadara.active_run.v1" },
+        "runId": { "type": "string", "minLength": 1 },
+        "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+        "capsule": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "paused"] },
+        "startedAt": { "type": "string", "minLength": 1 },
+        "updatedAt": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string" }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

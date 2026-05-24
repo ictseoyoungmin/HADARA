@@ -88,4 +88,6 @@
 | T-0085 | Operations Status Service Parity | Done | tasks/T-0085-operations-status-service-parity | Moves Operations Status JSON report creation into a shared service while preserving CLI status output. |
 | T-0086 | Active Run Read Surfaces | Done | tasks/T-0086-active-run-read-surfaces | Adds read-only CLI/MCP active-run projection and resume guidance surfaces. |
 | T-0087 | Operational Debt Release Gates | Done | tasks/T-0087-operational-debt-release-gates | Adds debt list/show read surfaces, ops debt aggregates, and warning-only release-gate debt checks. |
+| T-0088 | Active Run Resume Hardening | Done | tasks/T-0088-active-run-resume-hardening | Canonicalizes active-run resume paths, warns on capsule mismatches, adds active-run schema fixtures, and clarifies read-only resume guidance. |
 | T-0087 | Operational Debt Release Gates | Draft | tasks/T-0087-operational-debt-release-gates | |
+| T-0088 | Active Run Resume Hardening | Draft | tasks/T-0088-active-run-resume-hardening | |

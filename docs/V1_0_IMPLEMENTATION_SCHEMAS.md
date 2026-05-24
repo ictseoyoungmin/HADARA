@@ -173,6 +173,8 @@ hadara run-state show --json
 hadara run-state resume --json
 ```
 
+`hadara run-state resume --json` is read-only resume guidance. It does not update active-run state, execute commands, call providers, or resume an agent process.
+
 Future CLI writes:
 
 ```bash
@@ -187,7 +189,9 @@ Implementation notes:
 
 - Keep active run state under `.hadara/local/state/`; it is local mutable state, not committed portable project evidence.
 - All active-run read surfaces must degrade with warnings on malformed local state.
+- Active-run resume guidance resolves the canonical Task Capsule path from `taskId`; if the local manifest `capsule` differs, read surfaces warn with `ACTIVE_RUN_CAPSULE_MISMATCH` and prefer the canonical path in `resume` and `resumePrompt.mustRead`.
 - Do not introduce queue, worker lane, or multi-agent scheduling concepts.
+- Schema fixtures exist for `hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` at `src/schemas/active-run-projection.schema.json` and `src/schemas/active-run-resume.schema.json`.
 
 Future richer manifest target from the v1.0 plan:
 

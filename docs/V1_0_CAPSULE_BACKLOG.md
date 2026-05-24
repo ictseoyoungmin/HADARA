@@ -26,6 +26,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 - T-0083 Task Read Evidence Normalization: done; task.read embedded evidenceIndex and files["evidence.jsonl"] now reuse evidence-list normalization and sanitized JSONL output.
 - T-0084 Harness Validate Service Parity: done; CLI and MCP harness validate now use shared `src/services/harness-service.ts`.
 - T-0087 Operational Debt Release Gates: done; operational debt now has CLI/MCP read surfaces, ops aggregate counts, and warning-only release-gate debt checks.
+- T-0088 Active Run Resume Hardening: done; active-run resume guidance now canonicalizes Task Capsule paths, warns on capsule mismatches, and has active-run schema fixtures.
 
 ## Immediate P0 Capsules
 
@@ -47,6 +48,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 | 7b | Task read evidence normalization | T-0083 | Align task.read embedded evidence data with evidence-list normalization. | Done: task.read evidenceIndex and files["evidence.jsonl"] sanitize private paths, unknown fields, mismatches, malformed lines, and read-time secrets. |
 | 7c | Harness validate service parity | T-0084 | Route harness validate report generation through a shared service and tighten task.read private evidence defaults. | Done: CLI/MCP harness validate use shared service; task.read private evidence is opt-in via `includePrivate`; parity and bridge contract tests pass. |
 | 8 | Active run CLI/MCP surface | TBD | Formalize run-state CLI writes and read-only MCP active-run/resume tools. | `hadara run-state ... --json`, `hadara.active.run.read`, and `hadara.active.run.resume` tests pass. |
+| 8a | Active run resume hardening | T-0088 | Harden active-run resume guidance after review. | Done: canonical capsule paths, mismatch warnings, schema fixtures, and read-only resume wording pass. |
 | 9 | Operational debt release gates | T-0087 | Promote operational debt into CLI/MCP read surfaces and release-gate warnings. | Done: debt list/show reports, ops aggregate counts, and release-gate debt warning checks pass. |
 | 10 | Policy matrix refactor | TBD | Split tokenizer, command risk, permission matrix, presets, and preflight policy. | Existing exact-match safety tests pass plus matrix regressions for read/test/build/write/network/destructive/release. |
 | 11 | Private evidence manifest | TBD | Track private evidence metadata, hashes, retention, and context-export exclusion. | Private evidence manifest tests pass and private evidence never enters public context export. |

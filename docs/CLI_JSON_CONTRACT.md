@@ -40,6 +40,8 @@ Examples include:
 
 Agents should treat `issues` as the primary machine-readable failure detail when present.
 
+`hadara run-state resume --json` returns read-only resume guidance. It does not update active-run state, execute commands, call providers, or resume an agent process.
+
 ## Early Failure Fallback
 
 If parsing or validation fails before a command-specific report can be built, JSON mode returns:

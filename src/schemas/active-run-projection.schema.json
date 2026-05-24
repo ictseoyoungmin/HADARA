@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.active_run.projection.v1",
+  "x-hadara-schema-id": "hadara.active_run.projection.v1",
+  "title": "HADARA Active Run Projection Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "path", "activeRun", "handoff", "resume", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.active_run.projection.v1" },
+    "command": { "const": "active-run.projection" },
+    "ok": { "const": true },
+    "path": { "const": ".hadara/local/state/active-run.json" },
+    "activeRun": {
+      "oneOf": [{ "$ref": "#/$defs/activeRunManifest" }, { "type": "null" }]
+    },
+    "handoff": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["fresh", "staleReason"],
+      "properties": {
+        "fresh": { "type": "boolean" },
+        "staleReason": { "type": ["string", "null"] }
+      }
+    },
+    "resume": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["taskId", "capsule", "nextAction"],
+          "properties": {
+            "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+            "capsule": { "type": "string" },
+            "nextAction": { "type": "string", "minLength": 1 }
+          }
+        },
+        { "type": "null" }
+      ]
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "activeRunManifest": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["schemaVersion", "runId", "taskId", "capsule", "status", "startedAt", "updatedAt", "summary"],
+      "properties": {
+        "schemaVersion": { "const": "hadara.active_run.v1" },
+        "runId": { "type": "string", "minLength": 1 },
+        "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+        "capsule": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "paused"] },
+        "startedAt": { "type": "string", "minLength": 1 },
+        "updatedAt": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string" }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

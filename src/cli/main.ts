@@ -44,7 +44,7 @@ Usage:
   hadara status [--json]
   hadara ops status [--json]
   hadara run-state show [--json]
-  hadara run-state resume [--json]
+  hadara run-state resume [--json]  # read-only guidance; does not resume a process
   hadara release gate [--json]
   hadara dashboard serve [--host <host>] [--port <port>]
   hadara run scaffold --task <task-id> --command <command> [--stdout <text>] [--stderr <text>] [--exit-code <n>] [--json]

@@ -162,6 +162,73 @@ describe('single active run state', () => {
     });
   });
 
+  it('warns and uses canonical capsule paths when the manifest capsule is stale', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Canonical active run');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\n## Current State\n\n- ${task.id} is active.\n`, 'utf8');
+    writeActiveRunManifest(root, {
+      schemaVersion: 'hadara.active_run.v1',
+      runId: 'run-stale-capsule',
+      taskId: task.id,
+      capsule: 'tasks/T-0001-old-title',
+      status: 'active',
+      startedAt: '2026-05-24T02:08:30Z',
+      updatedAt: '2026-05-24T02:08:30Z',
+      summary: 'Stale capsule path.'
+    });
+
+    const projection = createActiveRunProjection(root);
+    const report = createActiveRunResumeReport(root);
+
+    expect(projection.resume).toEqual({
+      taskId: task.id,
+      capsule: 'tasks/T-0001-canonical-active-run',
+      nextAction: 'Resume T-0001 from tasks/T-0001-canonical-active-run.'
+    });
+    expect(projection.issues).toContainEqual({
+      severity: 'warning',
+      code: 'ACTIVE_RUN_CAPSULE_MISMATCH',
+      message:
+        'Active run T-0001 points to tasks/T-0001-old-title, but the canonical Task Capsule path is tasks/T-0001-canonical-active-run.'
+    });
+    expect(report.resumePrompt.mustRead).toEqual([
+      'docs/AGENT_HANDOFF.md',
+      'tasks/T-0001-canonical-active-run/TASK.md',
+      'tasks/T-0001-canonical-active-run/HANDOFF.md'
+    ]);
+    expect(report.issues).toContainEqual(
+      expect.objectContaining({
+        code: 'ACTIVE_RUN_CAPSULE_MISMATCH'
+      })
+    );
+  });
+
+  it('warns when an existing task has an empty manifest capsule path', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Empty capsule active run');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\n## Current State\n\n- ${task.id} is active.\n`, 'utf8');
+    writeActiveRunManifest(root, {
+      schemaVersion: 'hadara.active_run.v1',
+      runId: 'run-empty-capsule',
+      taskId: task.id,
+      capsule: '',
+      status: 'active',
+      startedAt: '2026-05-24T02:08:45Z',
+      updatedAt: '2026-05-24T02:08:45Z',
+      summary: 'Empty capsule path.'
+    });
+
+    const projection = createActiveRunProjection(root);
+
+    expect(projection.resume?.capsule).toBe('tasks/T-0001-empty-capsule-active-run');
+    expect(projection.issues).toContainEqual({
+      severity: 'warning',
+      code: 'ACTIVE_RUN_CAPSULE_MISMATCH',
+      message:
+        'Active run T-0001 points to (empty capsule), but the canonical Task Capsule path is tasks/T-0001-empty-capsule-active-run.'
+    });
+  });
+
   it('creates read-only resume guidance from the active run projection', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Resume active run');

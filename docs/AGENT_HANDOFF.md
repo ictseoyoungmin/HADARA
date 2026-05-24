@@ -47,13 +47,14 @@
 - T-0085 is complete: Operations Status JSON report access now lives behind shared `src/services/operations-status-service.ts`, with CLI `hadara status` and `hadara ops status` routed through it while `src/cli/status-json.ts` remains a compatibility export.
 - T-0086 is complete: active-run read surfaces now include CLI `hadara run-state show --json`, CLI `hadara run-state resume --json`, read-only MCP `hadara.active.run.read`, and read-only MCP `hadara.active.run.resume`; active-run writes remain deferred.
 - T-0087 is complete: operational debt read surfaces now include CLI `hadara debt list/show --json`, read-only MCP `hadara.debt.list/show`, Operations Status debt aggregate counts, and warning-only `hadara release gate --json` checks for open high-severity debt.
+- T-0088 is complete: active-run resume guidance now canonicalizes Task Capsule paths from `taskId`, warns with `ACTIVE_RUN_CAPSULE_MISMATCH` on stale manifest capsule paths, registers active-run projection/resume schema fixtures, and clarifies `run-state resume` as read-only guidance.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0085 Operations Status Service Parity: moved Operations Status JSON report creation into a shared service and preserved CLI status behavior.
 - T-0086 Active Run Read Surfaces: added read-only CLI/MCP active-run projection and resume guidance surfaces.
 - T-0087 Operational Debt Release Gates: added debt read surfaces, ops aggregate counts, and warning-only release-gate debt checks.
+- T-0088 Active Run Resume Hardening: canonicalized active-run resume paths, added capsule mismatch warnings, added schema fixtures, and strengthened read-only resume wording.
 
 ## Current Known Problems
 
@@ -74,11 +75,11 @@
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm run check` passed with 36 test files and 215 tests after the T-0087 operational debt release gates.
-- Latest focused operational debt release-gate check: Docker `npx vitest run tests/unit/operational-debt.test.ts tests/unit/status-json.test.ts tests/unit/mcp-tools.test.ts tests/contract/mcp-bridge-contract.test.ts tests/unit/tools-list.test.ts` passed with 5 files and 43 tests.
-- Latest CLI smoke: built CLI `debt list --json`, `debt show OD-0008 --json`, `release gate --json`, and `ops status --json` returned expected schemas and high-open debt warning/count signals.
+- Latest full check: Docker `npm run check` passed with 36 test files and 217 tests after the T-0088 active-run resume hardening.
+- Latest focused active-run hardening check: Docker `npx vitest run tests/unit/active-run-state.test.ts tests/unit/schema-fixtures.test.ts tests/unit/mcp-tools.test.ts tests/contract/mcp-bridge-contract.test.ts` passed with 4 files and 32 tests.
+- Latest CLI smoke: built CLI `run-state resume --json` returned `hadara.active_run.resume.v1`, `ok: true`, and a valid `resumePrompt.mustRead` array.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0087 --level done --json --project /workspace` returned `ok: true`.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0088 --level done --json --project /workspace` returned `ok: true`.
 
 ## Historical Index
 

@@ -216,7 +216,7 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     ...DEFAULT_READ,
     name: 'hadara run-state resume --json',
     schemaVersion: 'hadara.active_run.resume.v1',
-    notes: 'Read-only resume guidance derived from the active-run projection.'
+    notes: 'Read-only resume guidance derived from the active-run projection; does not update state or resume an agent process.'
   },
   {
     name: 'hadara release gate --json',

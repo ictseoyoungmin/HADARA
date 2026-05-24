@@ -21,6 +21,20 @@
       "status": "fixture",
       "owner": "services/tools-list",
       "notes": "Documents CLI/MCP capability discovery, availability metadata, and disabled surfaces."
+    },
+    {
+      "id": "hadara.active_run.projection.v1",
+      "path": "src/schemas/active-run-projection.schema.json",
+      "status": "fixture",
+      "owner": "services/active-run-state",
+      "notes": "Documents read-only active-run projection with degraded warnings for local mutable state."
+    },
+    {
+      "id": "hadara.active_run.resume.v1",
+      "path": "src/schemas/active-run-resume.schema.json",
+      "status": "fixture",
+      "owner": "services/active-run-state",
+      "notes": "Documents read-only resume guidance; it does not mutate active-run state or resume a process."
     }
   ]
 }
