@@ -36,14 +36,14 @@
 - T-0074 is complete: redaction now uses a registry/report model with pattern ids, severities, byte counts, finding counts, and broader high-risk token coverage while preserving existing evidence/audit redaction APIs.
 - T-0075 is complete: public evidence artifact policy now uses `hasBlockingRedactionFinding(report, 'high')`, `containsSecret()` remains an any-finding compatibility wrapper, redaction count overlap semantics are documented, blocking policy errors retain internal redaction reports without exposing them in evidence collect output, non-blocking findings are diagnostics only, future active-run MCP tool names use dot-separated segments, and context export MCP planning shows memory-mode output with `contextPath: null`.
 - T-0076 is complete: evidence list reads now use shared `hadara.evidence.list.v1`, `hadara evidence list --json`, and read-only MCP `hadara.evidence.list`, with malformed JSONL degraded to warning issues, normalized output records, private path stripping, defensive summary redaction, and taskId mismatch drops.
-- T-0077 is complete: read-only MCP `hadara.context.export` now returns `hadara.context.export.v1` as an in-memory payload with `contextPath: null` and no `.hadara/context/HADARA_CONTEXT.md` mutation; CLI `hadara hermes export-context` remains the file-writing path.
+- T-0077 is complete: read-only MCP `hadara.context.export` now returns `hadara.context.export.v1` as an in-memory payload with `contextPath: null` and no `.hadara/context/HADARA_CONTEXT.md` mutation; CLI `hadara hermes export-context` remains the file-writing path. Context export includes `docs/IMPLEMENTATION_SOP.md` as the authoritative workflow source and warns with `SUMMARY_ONLY_NOT_IMPLEMENTED` when `summaryOnly` is requested.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
 - T-0075 Redaction Policy Follow-up: separated redaction reports from public artifact policy blocking, added internal policy-error redaction reports, and aligned MCP planning names.
 - T-0076 Evidence List Read Model: added shared evidence list report builder, CLI JSON, read-only MCP evidence list degraded reads, and hotfix normalization for external read safety.
-- T-0077 Context Export MCP Read Tool: added read-only MCP context export as a memory payload while preserving CLI-only context file generation.
+- T-0077 Context Export MCP Read Tool: added read-only MCP context export as a memory payload while preserving CLI-only context file generation and authoritative SOP context.
 
 ## Current Known Problems
 
@@ -64,7 +64,7 @@
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm run check` passed with 34 test files and 194 tests after T-0077 added read-only MCP context export.
+- Latest full check: Docker `npm run check` passed with 34 test files and 196 tests after the T-0077 context export SOP source hotfix.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
 - Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0077 --level done --json --project /workspace` returned `ok: true`.
 

@@ -259,8 +259,29 @@ describe('MCP read tools', () => {
       issues: []
     });
     expect(payload.content).toContain('# HADARA_CONTEXT');
+    expect(payload.content).toContain('Follow docs/IMPLEMENTATION_SOP.md for implementation, validation, and session-end procedure.');
+    expect(payload.content).toContain('## docs/IMPLEMENTATION_SOP.md');
     expect(payload.content).toContain('## docs/ROADMAP.md');
     expect(payload.content).toContain('hadara.project.state.read');
     expect(fs.existsSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'))).toBe(false);
+  });
+
+  it('surfaces summaryOnly as an explicit forward-compatibility warning', () => {
+    const root = tempProject();
+
+    const payload = parseToolPayload(callTool(root, 'hadara.context.export', { summaryOnly: true }));
+
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.context.export.v1',
+      command: 'context.export',
+      ok: true,
+      issues: [
+        {
+          severity: 'warning',
+          code: 'SUMMARY_ONLY_NOT_IMPLEMENTED'
+        }
+      ]
+    });
+    expect(payload.content).toContain('## docs/PROJECT_STATE.md');
   });
 });

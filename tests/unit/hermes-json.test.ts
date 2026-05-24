@@ -64,6 +64,8 @@ describe('CLI Hermes JSON reports', () => {
     createHermesExportContextReport(root);
 
     const output = fs.readFileSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'), 'utf8');
+    expect(output).toContain('Follow docs/IMPLEMENTATION_SOP.md for implementation, validation, and session-end procedure.');
+    expect(output).toContain('## docs/IMPLEMENTATION_SOP.md');
     expect(output).toContain('## docs/ROADMAP.md');
     expect(output).toContain('## docs/DEVELOPMENT_SLICES.md');
     expect(output).toContain('hadara.project.state.read');
@@ -100,6 +102,24 @@ describe('CLI Hermes JSON reports', () => {
     });
     expect(report.content).toContain('# HADARA_CONTEXT');
     expect(report.content).toContain('## docs/PROJECT_STATE.md');
+    expect(report.content).toContain('## docs/IMPLEMENTATION_SOP.md');
     expect(fs.existsSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'))).toBe(false);
+  });
+
+  it('warns that summaryOnly is accepted but still returns full context', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
+
+    const report = createContextExportReport(root, { summaryOnly: true });
+
+    expect(report.issues).toEqual([
+      {
+        severity: 'warning',
+        code: 'SUMMARY_ONLY_NOT_IMPLEMENTED',
+        message: 'summaryOnly is accepted for forward compatibility but currently returns the full context.'
+      }
+    ]);
+    expect(report.content).toContain('## docs/PROJECT_STATE.md');
   });
 });

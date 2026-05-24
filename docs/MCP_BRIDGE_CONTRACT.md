@@ -149,6 +149,8 @@ Output schema:
 }
 ```
 
+If `summaryOnly` is true before summary generation exists, the tool returns the full context and includes warning issue code `SUMMARY_ONLY_NOT_IMPLEMENTED`.
+
 ### `hadara.task.list`
 
 List Task Capsules known to the project.

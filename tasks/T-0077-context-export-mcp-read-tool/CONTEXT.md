@@ -7,3 +7,4 @@ Relevant documents, files, assumptions, and constraints.
 - `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` defines the planned input/output shape with `format`, `summaryOnly`, `mode: "memory"`, `contextPath: null`, and `wouldWritePath`.
 - `docs/MCP_BRIDGE_CONTRACT.md` keeps default MCP read-only and states that `hadara.context.export` must not generate or mutate `.hadara/context/HADARA_CONTEXT.md`.
 - Existing `src/hermes/context-export.ts` generates the context content and writes the CLI output file; this task should separate those concerns without breaking the CLI path.
+- Hotfix note: context export must include `docs/IMPLEMENTATION_SOP.md` so the generated context references, rather than replaces, the authoritative HADARA workflow.
