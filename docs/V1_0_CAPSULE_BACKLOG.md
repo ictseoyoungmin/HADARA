@@ -13,12 +13,13 @@ Use this file when creating the next capsule after T-0072. Detailed schemas and 
 - T-0070 Operations State Robustness Fix: done; active-run/debt/status robustness gaps were hardened.
 - T-0071 Reusable Docker Development Container: done; use the reusable container for future capsule creation and validation.
 - T-0072 Core v1.0 Technical Plan Refresh: done; T-0066 through T-0070 design mismatch notes now distinguish current implementation from future expansion targets.
+- T-0074 Redaction Hardening: done; redaction now has a registry/report model with broader high-risk pattern coverage.
 
 ## Immediate P0 Capsules
 
 | Order | Candidate Slice | Capsule | Purpose | Key Done Evidence |
 |---:|---|---|---|---|
-| 1 | Redaction hardening | TBD | Replace the simple secret regex list with a registry/report model for public evidence safety. | Redaction registry tests cover AWS, GitHub, JWT, private key, npm, and no-capture replacement cases. |
+| 1 | Redaction hardening | T-0074 | Replace the simple secret regex list with a registry/report model for public evidence safety. | Done: Redaction registry tests cover AWS, GitHub, JWT, private key, npm, and no-capture replacement cases. |
 | 2 | Evidence list read model | TBD | Add a stable read model for task evidence records for CLI/MCP/dashboard use. | `hadara.evidence.list.v1` report builder and malformed/degraded evidence tests pass. |
 | 3 | Context export MCP read tool | TBD | Provide MCP read-only context export as memory payload, not a file-writing operation. | `hadara.context.export` appears in MCP read tools and writes no files. |
 | 4 | Tools list read model | TBD | Let external agents discover current CLI/MCP capabilities and disabled surfaces. | `hadara.tools.list.v1` lists stable CLI/MCP tools and disabled shell/release/write surfaces. |

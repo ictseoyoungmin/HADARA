@@ -33,13 +33,14 @@
 - T-0071 is complete: reusable Docker workflow is documented, `hadara-dev` is running, and new Task Capsules should be created through HADARA CLI by default.
 - V1.0 planning is now split into concrete implementation references: `docs/V1_0_CAPSULE_BACKLOG.md` tracks future capsule candidates and `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` preserves detailed schema/file/test notes from the v1.0 technical plan.
 - T-0072 is complete: v1.0 planning docs now explicitly separate T-0066 through T-0070 current implementation from future expansion targets, including fixture location, service parity scope, active-run schema/path, debt persistence caveats, and degraded-read robustness scope.
+- T-0074 is complete: redaction now uses a registry/report model with pattern ids, severities, byte counts, finding counts, and broader high-risk token coverage while preserving existing evidence/audit redaction APIs.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0070 Operations State Robustness Fix: hardened active-run corruption handling, missing-task warnings, premature acceptance evidence checks, and shared section extraction.
 - T-0071 Reusable Docker Development Container: documented persistent Docker workflow and CLI-based Task Capsule creation.
 - T-0072 Core v1.0 Technical Plan Refresh: aligned v1.0 planning docs with T-0066 through T-0070 implementation/design mismatch notes.
+- T-0074 Redaction Hardening: added a redaction registry/report model and broader public evidence secret detection.
 
 ## Current Known Problems
 
@@ -53,16 +54,16 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then pick the next slice from `docs/V1_0_CAPSULE_BACKLOG.md`; Redaction hardening is the first listed P0 candidate.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then pick the next slice from `docs/V1_0_CAPSULE_BACKLOG.md`; Evidence list read model is the next listed P0 candidate.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm run check` passed with 33 test files and 176 tests after T-0072.
+- Latest full check: Docker `npm run check` passed with 33 test files and 180 tests after T-0074.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0072 --level done --json --project /workspace` returned `ok: true`.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0074 --level done --json --project /workspace` returned `ok: true`.
 
 ## Historical Index
 
