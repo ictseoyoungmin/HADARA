@@ -19,6 +19,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 - T-0076 Evidence List Read Model: done; `hadara.evidence.list.v1` is shared by CLI JSON and read-only MCP, with malformed JSONL degraded-read warnings.
 - T-0077 Context Export MCP Read Tool: done; `hadara.context.export.v1` returns an in-memory MCP payload with `contextPath: null` and does not write `.hadara/context/HADARA_CONTEXT.md`.
 - T-0078 Tools List Read Model: done; `hadara.tools.list.v1` is shared by CLI JSON and read-only MCP through a neutral capability registry, with fuller CLI surface discovery, availability/risk metadata, opt-in evidence attach, and disabled shell/provider/release/broad-write MCP surfaces reported.
+- T-0079 Schema Layer Planning: done; `docs/SCHEMAS.md`, `src/schemas/schema-index.json`, and first JSON Schema fixtures exist for evidence list, context export, and tools list read models.
 
 ## Immediate P0 Capsules
 
@@ -29,7 +30,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 | 3 | Evidence list read model | T-0076 | Add a stable read model for task evidence records for CLI/MCP/dashboard use. | Done: `hadara.evidence.list.v1` report builder and malformed/degraded evidence tests pass. |
 | 4 | Context export MCP read tool | T-0077 | Provide MCP read-only context export as memory payload, not a file-writing operation. | Done: `hadara.context.export` appears in MCP read tools and writes no files. |
 | 5 | Tools list read model | T-0078 | Let external agents discover current CLI/MCP capabilities and disabled surfaces. | Done: `hadara.tools.list.v1` lists CLI/MCP tools from a neutral capability registry, opt-in evidence attach, availability/risk metadata, and disabled shell/provider/release/broad-write surfaces. |
-| 6 | Schema layer planning | TBD | Introduce schema registry boundaries before broad JSON schema validation. | `docs/SCHEMAS.md` and first schema fixtures exist for core read models. |
+| 6 | Schema layer planning | T-0079 | Introduce schema registry boundaries before broad JSON schema validation. | Done: `docs/SCHEMAS.md` and first schema fixtures exist for core read models. |
 
 ## P1 Core Solidification Capsules
 

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.tools.list.v1",
+  "x-hadara-schema-id": "hadara.tools.list.v1",
+  "title": "HADARA Tools List Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "surfaces", "disabled", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.tools.list.v1" },
+    "command": { "const": "tools.list" },
+    "ok": { "const": true },
+    "surfaces": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["cli", "mcp"],
+      "properties": {
+        "cli": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/surface" }
+        },
+        "mcp": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/surface" }
+        }
+      }
+    },
+    "disabled": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/disabledSurface" }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "surface": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "category", "stable", "readOnly", "enabledByDefault", "availability", "risk"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "category": { "type": "string", "enum": ["read", "write", "execute", "provider", "release"] },
+        "stable": { "type": "boolean" },
+        "readOnly": { "type": "boolean" },
+        "enabledByDefault": { "type": "boolean" },
+        "availability": { "type": "string", "enum": ["default", "opt-in", "disabled", "deferred"] },
+        "risk": { "type": "string", "enum": ["low", "medium", "high"] },
+        "requiresApproval": { "type": "boolean" },
+        "schemaVersion": { "type": "string", "minLength": 1 },
+        "notes": { "type": "string", "minLength": 1 }
+      }
+    },
+    "disabledSurface": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "category", "availability", "risk", "reason"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "category": { "type": "string", "enum": ["read", "write", "execute", "provider", "release"] },
+        "availability": { "type": "string", "enum": ["disabled", "deferred"] },
+        "risk": { "type": "string", "enum": ["low", "medium", "high"] },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

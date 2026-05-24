@@ -45,6 +45,7 @@ Historical completed-task handoff entries moved out of `docs/AGENT_HANDOFF.md` d
 - Completed T-0041 Old Draft Task Reclassification by marking T-0003 Superseded and T-0006 Partial.
 - Completed T-0042 Hermes/MCP Read-Only Contract by documenting CLI JSON output policy, the read-only MCP bridge tool contract, MCP JSON text payload policy, and task status schema alignment.
 - Completed T-0075 Redaction Policy Follow-up by separating public artifact blocking from redaction report details, preserving internal policy reports, documenting overlap semantics, and aligning near-term MCP planning names.
+- Completed T-0076 Evidence List Read Model by adding shared evidence list report builder, CLI JSON evidence list, read-only MCP evidence list, degraded JSONL warnings, normalized output records, private path stripping, and taskId mismatch drops.
 
 ## Source Documents
 

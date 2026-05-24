@@ -90,6 +90,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Reusable Docker development workflow is documented: the `hadara-dev` container can stay running, dependency-heavy work happens in `/tmp/hadara`, and new Task Capsules should be created through the HADARA CLI with `--project /workspace`.
 - V1.0 planning has been split into concrete references: `docs/V1_0_CAPSULE_BACKLOG.md` tracks future capsule candidates and `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` preserves detailed schema/file/test notes from the v1.0 technical plan.
 - V1.0 planning docs now explicitly separate T-0066 through T-0070 current implementation from future expansion targets, including compatibility fixture location, partial service parity, active-run local schema/path, operational debt persistence caveats, and degraded-read robustness scope.
+- Schema layer planning exists in `docs/SCHEMAS.md`; `src/schemas/schema-index.json` registers initial JSON Schema fixtures for `hadara.evidence.list.v1`, `hadara.context.export.v1`, and `hadara.tools.list.v1`. Runtime schema validation and release gates remain deferred.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.

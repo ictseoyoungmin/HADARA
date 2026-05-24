@@ -79,3 +79,6 @@ Historical validation entries moved out of `docs/AGENT_HANDOFF.md` during T-0040
 - Docker check after T-0078 review fixes: 35 test files passed, 200 tests passed.
 - Docker built CLI and MCP `hadara.tools.list` smokes after review fixes returned `hadara.tools.list.v1`, `cliCount: 21`, `mcpCount: 10`, `availability` metadata, and opt-in evidence attach requiring approval.
 - Docker `node dist/cli/main.js harness validate --task T-0078 --level done --json --project /workspace` returned `ok: true` after T-0078 review fixes.
+- Docker focused schema fixture test after T-0079: 1 test file passed, 1 test passed.
+- Docker check after T-0079: 36 test files passed, 201 tests passed.
+- Docker `node dist/cli/main.js harness validate --task T-0079 --level done --json --project /workspace` returned `ok: true`.

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "hadara.schema.index.v1",
+  "schemas": [
+    {
+      "id": "hadara.evidence.list.v1",
+      "path": "src/schemas/evidence-list.schema.json",
+      "status": "fixture",
+      "owner": "services/evidence-list",
+      "notes": "Shared by CLI evidence list and read-only MCP hadara.evidence.list."
+    },
+    {
+      "id": "hadara.context.export.v1",
+      "path": "src/schemas/context-export.schema.json",
+      "status": "fixture",
+      "owner": "hermes/context-export",
+      "notes": "Documents read-only MCP memory-mode context export; CLI export-context remains file-writing."
+    },
+    {
+      "id": "hadara.tools.list.v1",
+      "path": "src/schemas/tools-list.schema.json",
+      "status": "fixture",
+      "owner": "services/tools-list",
+      "notes": "Documents CLI/MCP capability discovery, availability metadata, and disabled surfaces."
+    }
+  ]
+}

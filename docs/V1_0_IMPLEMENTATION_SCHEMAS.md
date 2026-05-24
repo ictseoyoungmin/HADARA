@@ -716,6 +716,17 @@ Acceptance notes:
 
 ## Schema Layer
 
+Current implementation:
+
+- `docs/SCHEMAS.md`
+- `src/schemas/schema-index.json`
+- `src/schemas/evidence-list.schema.json`
+- `src/schemas/context-export.schema.json`
+- `src/schemas/tools-list.schema.json`
+- `tests/unit/schema-fixtures.test.ts`
+
+T-0079 is planning and fixture registration only. Runtime validation, schema loading APIs, and release gates remain future work.
+
 Candidate files:
 
 ```text

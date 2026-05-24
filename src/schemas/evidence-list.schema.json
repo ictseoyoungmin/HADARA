@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.evidence.list.v1",
+  "x-hadara-schema-id": "hadara.evidence.list.v1",
+  "title": "HADARA Evidence List Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "taskId", "count", "records", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.evidence.list.v1" },
+    "command": { "const": "evidence.list" },
+    "ok": { "type": "boolean" },
+    "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+    "count": { "type": "integer", "minimum": 0 },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["schemaVersion", "time", "taskId", "kind", "summary", "result", "visibility"],
+        "properties": {
+          "schemaVersion": { "const": "hadara.evidence.v1" },
+          "time": { "type": "string", "minLength": 1 },
+          "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+          "kind": { "type": "string", "enum": ["test-log", "command-log", "diff-summary", "screenshot", "note"] },
+          "summary": { "type": "string", "minLength": 1 },
+          "result": { "type": "string", "enum": ["passed", "failed", "blocked", "unknown"] },
+          "visibility": { "type": "string", "enum": ["public", "private"] }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.context.export.v1",
+  "x-hadara-schema-id": "hadara.context.export.v1",
+  "title": "HADARA Context Export Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "format", "mode", "content", "contextPath", "wouldWritePath", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.context.export.v1" },
+    "command": { "const": "context.export" },
+    "ok": { "type": "boolean" },
+    "format": { "type": "string", "enum": ["markdown", "json"] },
+    "mode": { "const": "memory" },
+    "content": { "type": "string" },
+    "contextPath": { "type": "null" },
+    "wouldWritePath": { "const": ".hadara/context/HADARA_CONTEXT.md" },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
