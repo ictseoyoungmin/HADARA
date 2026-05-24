@@ -440,6 +440,12 @@ If `summaryOnly` is true, the tool may return extracted current-state and next-s
 
 Evaluate policy for a shell-like command without executing it.
 
+Terminology:
+
+- `policy.check-shell` is the shell command risk/decision read model.
+- `policy.preflight-shell` is the execution preflight report; it includes execution gate fields such as `willExecute: false`.
+- `hadara.policy.evaluate` is the MCP tool name. It returns the `hadara.policy.preflight.v1` / `policy.preflight-shell` report and must not execute the command.
+
 Input schema:
 
 ```json

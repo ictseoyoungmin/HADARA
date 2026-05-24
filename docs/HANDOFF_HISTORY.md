@@ -48,6 +48,7 @@ Historical completed-task handoff entries moved out of `docs/AGENT_HANDOFF.md` d
 - Completed T-0076 Evidence List Read Model by adding shared evidence list report builder, CLI JSON evidence list, read-only MCP evidence list, degraded JSONL warnings, normalized output records, private path stripping, and taskId mismatch drops.
 - Completed T-0077 Context Export MCP Read Tool by adding read-only MCP context export as an in-memory payload without writing generated context files.
 - Completed T-0078 Tools List Read Model by adding neutral capability registry, shared tools discovery report, CLI JSON tools list, and read-only MCP tools list with availability/risk metadata.
+- Completed T-0079 Schema Layer Planning by adding schema registry docs, schema index fixture, and initial JSON Schema fixtures for stable read models.
 
 ## Source Documents
 

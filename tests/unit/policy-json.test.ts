@@ -37,6 +37,13 @@ describe('CLI policy JSON reports', () => {
     });
   });
 
+  it('normalizes string permission modes through the shared policy service', () => {
+    const report = createPolicyCheckReport('npm run check');
+
+    expect(report.input.mode).toBe('assisted');
+    expect(() => createPolicyCheckReport('npm run check', 'asistted')).toThrow(/unsupported permission mode/);
+  });
+
   it('extracts command text without CLI options', () => {
     const command = extractPolicyCommandText(
       ['policy', 'check-shell', 'npm', 'run', 'check', '--mode', 'assisted', '--json'],

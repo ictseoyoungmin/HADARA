@@ -41,13 +41,14 @@
 - T-0079 is complete: schema layer planning now has `docs/SCHEMAS.md`, `src/schemas/schema-index.json`, and initial JSON Schema fixtures for `hadara.evidence.list.v1`, `hadara.context.export.v1`, and `hadara.tools.list.v1`; runtime schema validation and release gates remain deferred.
 - T-0080 is complete: task list/show/read report logic now lives in shared `src/services/task-read-model.ts`, CLI task JSON imports remain compatible, and read-only MCP task list/read route through the shared service with parity coverage.
 - T-0081 is complete: policy check/evaluate report logic now lives in shared `src/services/policy-service.ts`, CLI policy JSON imports remain compatible, and CLI preflight plus read-only MCP policy evaluate route through the shared service with parity coverage.
+- T-0082 is complete: cleanup follow-up notes now document redaction policy observability, schema strictness levels, task.read embedded evidence normalization, and PolicyService authorization limitations; `createPolicyCheckReport()` now accepts string/default mode input consistently with policy evaluate.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0079 Schema Layer Planning: added schema registry docs, schema index fixture, and initial JSON Schema fixtures for stable read models.
 - T-0080 Service Parity Expansion: moved task list/show/read reports into a shared task read-model service and routed MCP task list/read through it.
 - T-0081 Policy Service Parity: moved policy check/evaluate reports into a shared policy service and routed CLI preflight plus MCP policy evaluate through it.
+- T-0082 Cleanup Follow-up Notes: captured redaction/schema/task.read/policy cleanup gaps and aligned policy check mode input with policy evaluate.
 
 ## Current Known Problems
 
@@ -61,17 +62,17 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then continue Service Parity Expansion by moving harness validate or operations status behind a named shared service.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then continue with either harness validate service parity or the `task.read` evidenceIndex normalization cleanup.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm run check` passed with 36 test files and 201 tests after T-0081.
-- Latest focused service parity check: Docker `npx vitest run tests/contract/cli-mcp-service-parity.test.ts tests/unit/policy-json.test.ts tests/unit/policy-preflight.test.ts tests/unit/mcp-tools.test.ts` passed with 4 files and 21 tests.
+- Latest full check: Docker `npm run check` passed with 36 test files and 202 tests after T-0082.
+- Latest focused cleanup check: Docker `npx vitest run tests/unit/policy-json.test.ts` passed with 1 file and 5 tests.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0081 --level done --json --project /workspace` returned `ok: true`.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0082 --level done --json --project /workspace` returned `ok: true`.
 
 ## Historical Index
 

@@ -45,6 +45,16 @@ Initial schemas require stable envelope fields such as `schemaVersion`, `command
 
 Initial schemas allow additive properties. This keeps the fixtures useful for documentation and future loader design without prematurely blocking read-model extension work.
 
+Future schema validation should distinguish three strictness levels:
+
+| Level | Purpose | Unknown fields | Typical use |
+|---|---|---|---|
+| `fixture` | Documentation and implementation guidance. | Allowed for additive evolution. | Current T-0079 schema fixtures. |
+| `contract` | External-agent compatibility checks for stable read models. | Allowed only outside core envelope and documented contract fields. | CLI/MCP parity and compatibility fixtures. |
+| `releaseGate` | Pre-release blocking validation. | Policy must be explicit per schema. | Future release/package checks. |
+
+The current `additionalProperties: true` posture is only a fixture-level policy. Do not treat the initial fixtures as release gates until a later capsule defines core-field strictness, required/enum enforcement, and unknown-field handling.
+
 ## Future Runtime API
 
 The planned runtime API remains deferred:

@@ -105,6 +105,16 @@ Priority order:
 3. Wrap policy preflight in a named service before provider adapter work.
 4. Keep CLI and MCP transport envelopes separate from shared read models.
 
+Completed increments:
+
+- T-0080 moved task list/show/read report builders into `src/services/task-read-model.ts`.
+- T-0081 moved policy check/evaluate report builders into `src/services/policy-service.ts`.
+
+Remaining consistency cleanup:
+
+- `task.read` still embeds `evidenceIndex` as raw parsed JSON objects. Before treating it as a hardened external-agent evidence surface, reuse the evidence-list normalization path for private path stripping, taskId mismatch drops, unknown-field handling, and malformed-line warning/error policy.
+- Policy service parity is report-builder parity only. It is not yet the v1.0 single source of authorization for actor/surface-aware provider-originated actions.
+
 ## Active Run State
 
 Current manifest schema:
@@ -344,6 +354,12 @@ Current implementation:
 - `findings.count` is a per-pattern match count and may overlap across patterns when multiple detectors match the same input span
 - blocking `EvidenceArtifactPolicyError` instances may carry an internal `redactionReport`; user-facing outputs must not echo raw report content unless intentionally reduced to safe fields such as pattern ids, severities, and counts
 - non-blocking redaction findings are diagnostics only. Public artifact content is copied as-is when it passes the blocking threshold; it is not automatically rewritten unless a future sanitizing mode explicitly changes that policy.
+
+Follow-up cleanup:
+
+- Evidence policy tests currently prove helper behavior more strongly than the full evidence artifact policy path.
+- Before adding a security CLI or broader evidence inspection surface, make policy decisions more observable by either injecting a test redaction registry with medium-severity findings or exposing safe `EvidenceArtifactPolicyError` metadata such as finding ids/severities.
+- A future test should prove medium findings can appear in a report without blocking public artifact collection while high/critical findings still block.
 
 Target registry shape:
 
@@ -622,6 +638,13 @@ Current implementation:
 
 - `src/policy/policy.ts` contains tokenizer, safe command checks, dangerous command checks, and mode decision logic.
 - `src/policy/preflight.ts` wraps policy decisions in `hadara.policy.preflight.v1`.
+- `src/services/policy-service.ts` provides shared policy check/evaluate report builders for CLI/MCP parity.
+
+Current limitations:
+
+- PolicyService is not yet the single source of authorization for provider-originated `ActionIntent` or `ToolRequest` values.
+- Policy decisions do not yet record `policy_version`, actor, surface, or structured authorization audit events.
+- CLI target-command parsing still relies on simple option stripping; future work should support a `--` delimiter so command arguments like `--mode` are not confused with HADARA CLI options.
 
 Target module split:
 
@@ -726,6 +749,14 @@ Current implementation:
 - `tests/unit/schema-fixtures.test.ts`
 
 T-0079 is planning and fixture registration only. Runtime validation, schema loading APIs, and release gates remain future work.
+
+Strictness plan:
+
+- `fixture`: documentation and implementation guidance; additive properties allowed.
+- `contract`: external-agent compatibility checks; core fields strict while documented extension fields remain possible.
+- `releaseGate`: pre-release validation; required fields, enums, and unknown-field handling must be explicit.
+
+The current schema fixtures are `fixture` level only. They should not block releases until a later capsule introduces schema loading and strictness-aware validation.
 
 Candidate files:
 

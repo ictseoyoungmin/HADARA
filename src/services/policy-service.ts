@@ -22,7 +22,7 @@ export interface PolicyCheckReport {
 
 export type PolicyEvaluateReport = ShellExecutionPreflight;
 
-export function createPolicyCheckReport(command: string, mode: PermissionMode): PolicyCheckReport {
+export function createPolicyCheckReport(command: string, mode: PermissionMode | string = 'assisted'): PolicyCheckReport {
   const normalizedMode = parsePermissionMode(mode);
   const shell = tokenizeShellCommand(command);
   const decision = classifyShellCommand(command, normalizedMode);
