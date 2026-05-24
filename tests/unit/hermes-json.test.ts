@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createHermesDetectReport, createHermesExportContextReport } from '../../src/cli/hermes-json';
+import { createContextExportReport } from '../../src/hermes/context-export';
 
 const roots: string[] = [];
 
@@ -72,9 +73,33 @@ describe('CLI Hermes JSON reports', () => {
     expect(output).toContain('hadara.handoff.read');
     expect(output).toContain('hadara.policy.evaluate');
     expect(output).toContain('hadara.harness.validate');
+    expect(output).toContain('hadara.context.export');
+    expect(output).toContain('only hadara hermes export-context writes .hadara/context/HADARA_CONTEXT.md');
     expect(output).toContain('Treat MCP default mode as read-only');
     expect(output).toContain('do not assume MCP task mutation, file writes, shell execution, or release/package execution exists');
     expect(output).toContain('If MCP is unavailable, fall back to CLI JSON commands');
     expect(output).toContain('single active agent/session model');
+  });
+
+  it('builds a read-only memory context export report without writing files', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
+
+    const report = createContextExportReport(root);
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.context.export.v1',
+      command: 'context.export',
+      ok: true,
+      format: 'markdown',
+      mode: 'memory',
+      contextPath: null,
+      wouldWritePath: '.hadara/context/HADARA_CONTEXT.md',
+      issues: []
+    });
+    expect(report.content).toContain('# HADARA_CONTEXT');
+    expect(report.content).toContain('## docs/PROJECT_STATE.md');
+    expect(fs.existsSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'))).toBe(false);
   });
 });

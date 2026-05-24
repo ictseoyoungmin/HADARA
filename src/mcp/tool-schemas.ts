@@ -123,6 +123,20 @@ export const HADARA_MCP_TOOL_SCHEMAS: McpToolMetadata[] = [
     },
     annotations: { readOnlyHint: true },
     _meta: { 'hadara/readOnly': true, 'hadara/implemented': true }
+  },
+  {
+    name: 'hadara.context.export',
+    description: 'Export HADARA context as an in-memory read-only payload without writing files.',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        format: { type: 'string', enum: ['markdown', 'json'], default: 'markdown' },
+        summaryOnly: { type: 'boolean', default: false }
+      }
+    },
+    annotations: { readOnlyHint: true },
+    _meta: { 'hadara/readOnly': true, 'hadara/implemented': true }
   }
 ];
 

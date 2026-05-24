@@ -9,6 +9,7 @@
     "hadara.handoff.read",
     "hadara.policy.evaluate",
     "hadara.harness.validate",
+    "hadara.context.export",
     "docs/ROADMAP.md",
     "docs/DEVELOPMENT_SLICES.md",
     "Treat MCP default mode as read-only"
@@ -66,6 +67,17 @@
         "schemaVersion": "hadara.harness.validate.v1",
         "command": "harness.validate",
         "ok": true
+      }
+    },
+    {
+      "tool": "hadara.context.export",
+      "arguments": {},
+      "expect": {
+        "schemaVersion": "hadara.context.export.v1",
+        "command": "context.export",
+        "ok": true,
+        "mode": "memory",
+        "contextPath": null
       }
     }
   ],

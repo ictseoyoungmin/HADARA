@@ -14,6 +14,7 @@ Future write-capable evidence attachment is documented separately in `docs/MCP_E
 
 Planned v1.0 read-only MCP extensions are tracked in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`. They are not part of the current default tool contract until their individual Task Capsules complete.
 T-0076 completed `hadara.evidence.list` as a read-only extension.
+T-0077 completed `hadara.context.export` as a read-only memory-payload extension.
 
 ## Non-Goals
 
@@ -101,19 +102,52 @@ hadara.project.state.read
 hadara.policy.evaluate
 hadara.harness.validate
 hadara.evidence.list
+hadara.context.export
 ```
 
 Planned v1.0 read-only candidates:
 
 ```text
-hadara.context.export
 hadara.tools.list
 hadara.active.run.read
 hadara.active.run.resume
 hadara.debt.list
 ```
 
-These candidates must remain read-only. `hadara.context.export` must return a memory payload if implemented through MCP; it must not generate or mutate `.hadara/context/HADARA_CONTEXT.md`.
+These candidates must remain read-only. `hadara.context.export` returns a memory payload through MCP; it must not generate or mutate `.hadara/context/HADARA_CONTEXT.md`.
+
+### `hadara.context.export`
+
+Export HADARA context as an in-memory read-only payload without writing files.
+
+Input schema:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "format": { "type": "string", "enum": ["markdown", "json"], "default": "markdown" },
+    "summaryOnly": { "type": "boolean", "default": false }
+  }
+}
+```
+
+Output schema:
+
+```json
+{
+  "schemaVersion": "hadara.context.export.v1",
+  "command": "context.export",
+  "ok": true,
+  "format": "markdown",
+  "mode": "memory",
+  "content": "# HADARA_CONTEXT...",
+  "contextPath": null,
+  "wouldWritePath": ".hadara/context/HADARA_CONTEXT.md",
+  "issues": []
+}
+```
 
 ### `hadara.task.list`
 

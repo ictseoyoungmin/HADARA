@@ -5,6 +5,7 @@ import { writeAuditEvent } from '../core/audit';
 import { resolveHadaraPaths } from '../core/paths';
 import { createTaskListReport, TaskJsonSummary } from '../cli/task-json';
 import { validateTaskCapsule } from '../harness/validate';
+import { createContextExportReport } from '../hermes/context-export';
 import { createShellExecutionPreflight } from '../policy/preflight';
 import { parsePermissionMode } from '../policy/policy';
 import { createHandoffReadReport, createProjectStateReadReport } from '../services/project-read-model';
@@ -78,6 +79,11 @@ function handleReadOnlyTool(projectRoot: string, name: string, args: Record<stri
         taskId: String(args.taskId),
         limit: typeof args.limit === 'number' ? args.limit : undefined,
         includePrivate: args.includePrivate === true
+      });
+    case 'hadara.context.export':
+      return createContextExportReport(projectRoot, {
+        format: args.format === 'json' ? 'json' : 'markdown',
+        summaryOnly: args.summaryOnly === true
       });
     default:
       throw new Error(`unregistered MCP tool handler: ${name}`);

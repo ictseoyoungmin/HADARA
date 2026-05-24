@@ -17,6 +17,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 - T-0074 Redaction Hardening: done; redaction now has a registry/report model with broader high-risk pattern coverage.
 - T-0075 Redaction Policy Follow-up: done; public artifact blocking now uses a redaction severity threshold and future active-run/context-export MCP planning names are aligned.
 - T-0076 Evidence List Read Model: done; `hadara.evidence.list.v1` is shared by CLI JSON and read-only MCP, with malformed JSONL degraded-read warnings.
+- T-0077 Context Export MCP Read Tool: done; `hadara.context.export.v1` returns an in-memory MCP payload with `contextPath: null` and does not write `.hadara/context/HADARA_CONTEXT.md`.
 
 ## Immediate P0 Capsules
 
@@ -25,7 +26,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 | 1 | Redaction hardening | T-0074 | Replace the simple secret regex list with a registry/report model for public evidence safety. | Done: Redaction registry tests cover AWS, GitHub, JWT, private key, npm, and no-capture replacement cases. |
 | 2 | Redaction policy follow-up | T-0075 | Separate redaction reports from severity-threshold public evidence blocking and align near-term MCP planning names. | Done: threshold helper, public artifact policy update, planning docs, and Docker checks passed. |
 | 3 | Evidence list read model | T-0076 | Add a stable read model for task evidence records for CLI/MCP/dashboard use. | Done: `hadara.evidence.list.v1` report builder and malformed/degraded evidence tests pass. |
-| 4 | Context export MCP read tool | TBD | Provide MCP read-only context export as memory payload, not a file-writing operation. | `hadara.context.export` appears in MCP read tools and writes no files. |
+| 4 | Context export MCP read tool | T-0077 | Provide MCP read-only context export as memory payload, not a file-writing operation. | Done: `hadara.context.export` appears in MCP read tools and writes no files. |
 | 5 | Tools list read model | TBD | Let external agents discover current CLI/MCP capabilities and disabled surfaces. | `hadara.tools.list.v1` lists stable CLI/MCP tools and disabled shell/release/write surfaces. |
 | 6 | Schema layer planning | TBD | Introduce schema registry boundaries before broad JSON schema validation. | `docs/SCHEMAS.md` and first schema fixtures exist for core read models. |
 

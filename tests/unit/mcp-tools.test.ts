@@ -241,4 +241,26 @@ describe('MCP read tools', () => {
       ]
     });
   });
+
+  it('exports context through MCP as memory without writing the context file', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'docs', 'ROADMAP.md'), '# ROADMAP\n\n- Read model\n', 'utf8');
+
+    const payload = parseToolPayload(callTool(root, 'hadara.context.export'));
+
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.context.export.v1',
+      command: 'context.export',
+      ok: true,
+      format: 'markdown',
+      mode: 'memory',
+      contextPath: null,
+      wouldWritePath: '.hadara/context/HADARA_CONTEXT.md',
+      issues: []
+    });
+    expect(payload.content).toContain('# HADARA_CONTEXT');
+    expect(payload.content).toContain('## docs/ROADMAP.md');
+    expect(payload.content).toContain('hadara.project.state.read');
+    expect(fs.existsSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'))).toBe(false);
+  });
 });

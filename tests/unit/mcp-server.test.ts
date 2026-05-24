@@ -80,7 +80,8 @@ describe('MCP JSON-RPC server skeleton', () => {
       'hadara.project.state.read',
       'hadara.policy.evaluate',
       'hadara.harness.validate',
-      'hadara.evidence.list'
+      'hadara.evidence.list',
+      'hadara.context.export'
     ]);
     for (const tool of response.result.tools) {
       expect(tool.annotations).toEqual({ readOnlyHint: true });
@@ -133,7 +134,7 @@ describe('MCP JSON-RPC server skeleton', () => {
   });
 
   it('exports metadata for all documented read-only tools', () => {
-    expect(HADARA_MCP_TOOL_SCHEMAS).toHaveLength(7);
+    expect(HADARA_MCP_TOOL_SCHEMAS).toHaveLength(8);
     expect(HADARA_MCP_TOOL_SCHEMAS.every((tool) => tool.name.startsWith('hadara.'))).toBe(true);
   });
 });
