@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createTaskListReport, createTaskShowReport, formatTaskListReport } from '../../src/cli/task-json';
+import { createTaskListReport, createTaskReadReport, createTaskShowReport, formatTaskListReport } from '../../src/cli/task-json';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { extractTaskCreateTitle } from '../../src/cli/task';
 
@@ -70,6 +70,71 @@ describe('CLI task JSON reports', () => {
       issues: []
     });
     expect(report.task?.taskMarkdown).toContain(`# ${task.id} Show me`);
+  });
+
+  it('normalizes task read embedded evidence records through the evidence list parser', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Read evidence normalization');
+    fs.writeFileSync(
+      path.join(task.dir, 'evidence.jsonl'),
+      [
+        JSON.stringify({
+          schemaVersion: 'hadara.evidence.v1',
+          time: '2026-05-24T00:00:00.000Z',
+          taskId: task.id,
+          kind: 'command-log',
+          summary: 'token=secret-value',
+          result: 'passed',
+          visibility: 'private',
+          evidencePath: 'artifacts/command-log/private.log',
+          absolutePath: '/tmp/private.log'
+        }),
+        JSON.stringify({
+          schemaVersion: 'hadara.evidence.v1',
+          time: '2026-05-24T00:01:00.000Z',
+          taskId: 'T-9999',
+          kind: 'note',
+          summary: 'wrong task',
+          result: 'passed',
+          visibility: 'public'
+        }),
+        'not-json'
+      ].join('\n') + '\n',
+      'utf8'
+    );
+
+    const report = createTaskReadReport(root, task.id);
+
+    expect(report.ok).toBe(true);
+    expect(report.evidenceIndex).toEqual([
+      {
+        schemaVersion: 'hadara.evidence.v1',
+        time: '2026-05-24T00:00:00.000Z',
+        taskId: task.id,
+        kind: 'command-log',
+        summary: 'token=[REDACTED]',
+        result: 'passed',
+        visibility: 'private'
+      }
+    ]);
+    expect(report.issues).toEqual([
+      {
+        severity: 'warning',
+        code: 'EVIDENCE_RECORD_TASK_MISMATCH',
+        message: `evidence.jsonl line 2 has taskId T-9999, expected ${task.id}.`
+      },
+      {
+        severity: 'warning',
+        code: 'EVIDENCE_INDEX_JSON_INVALID',
+        message: 'evidence.jsonl line 3 is not valid JSON.'
+      }
+    ]);
+    expect(report.files?.['evidence.jsonl']).toBe(
+      '{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T00:00:00.000Z","taskId":"T-0001","kind":"command-log","summary":"token=[REDACTED]","result":"passed","visibility":"private"}\n'
+    );
+    expect(JSON.stringify(report)).not.toContain('private.log');
+    expect(JSON.stringify(report)).not.toContain('secret-value');
+    expect(JSON.stringify(report)).not.toContain('absolutePath');
   });
 
   it('returns a stable missing task envelope', () => {

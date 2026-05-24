@@ -77,7 +77,7 @@ describe('MCP read tools', () => {
     const task = createTaskCapsule(root, 'MCP task read');
     fs.appendFileSync(
       path.join(task.dir, 'evidence.jsonl'),
-      '{"schemaVersion":"hadara.evidence.v1","taskId":"T-0001","kind":"note","summary":"read me","result":"passed","visibility":"public"}\n',
+      '{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T00:00:00.000Z","taskId":"T-0001","kind":"note","summary":"read me","result":"passed","visibility":"public"}\n',
       'utf8'
     );
 

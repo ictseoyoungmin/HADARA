@@ -1,0 +1,3 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T09:15:35.962Z","taskId":"T-0083","kind":"test-log","summary":"Focused Docker task-read evidence normalization checks passed: 4 files, 27 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T09:15:36.094Z","taskId":"T-0083","kind":"test-log","summary":"Docker npm run check passed: 36 test files, 203 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T09:16:38.625Z","taskId":"T-0083","kind":"test-log","summary":"Done-level harness validation passed for T-0083 with ok true.","result":"passed","visibility":"public"}

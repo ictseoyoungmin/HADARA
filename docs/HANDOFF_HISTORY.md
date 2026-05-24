@@ -49,6 +49,7 @@ Historical completed-task handoff entries moved out of `docs/AGENT_HANDOFF.md` d
 - Completed T-0077 Context Export MCP Read Tool by adding read-only MCP context export as an in-memory payload without writing generated context files.
 - Completed T-0078 Tools List Read Model by adding neutral capability registry, shared tools discovery report, CLI JSON tools list, and read-only MCP tools list with availability/risk metadata.
 - Completed T-0079 Schema Layer Planning by adding schema registry docs, schema index fixture, and initial JSON Schema fixtures for stable read models.
+- Completed T-0080 Service Parity Expansion first increment by moving task list/show/read reports into a shared task read-model service.
 
 ## Source Documents
 

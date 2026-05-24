@@ -94,6 +94,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Task read-model logic now lives in shared `src/services/task-read-model.ts`; CLI task JSON compatibility exports and read-only MCP task list/read both use the shared service.
 - Policy report logic now lives in shared `src/services/policy-service.ts`; CLI policy check/preflight compatibility exports and read-only MCP policy evaluate use the shared service.
 - Cleanup follow-up notes now document redaction policy observability gaps, schema strictness levels, task.read embedded evidence normalization gaps, and PolicyService authorization limitations before release-gate work.
+- Task read evidence embedding now reuses evidence-list normalization; `task.read` returns normalized `evidenceIndex` records and a sanitized `files["evidence.jsonl"]` view instead of raw private evidence paths or unredacted summaries.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.

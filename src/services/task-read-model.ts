@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { EvidenceIndexRecord } from '../evidence/evidence';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
+import { EvidenceListIssue, parseEvidenceIndexFile } from './evidence-list';
 
 const TASK_CAPSULE_FILES = [
   'TASK.md',
@@ -52,12 +54,8 @@ export interface TaskReadReport {
   ok: boolean;
   task?: TaskJsonSummary;
   files?: Record<string, string>;
-  evidenceIndex?: unknown[];
-  issues: Array<{
-    severity: 'error';
-    code: string;
-    message: string;
-  }>;
+  evidenceIndex?: EvidenceIndexRecord[];
+  issues: EvidenceListIssue[];
 }
 
 export function createTaskListReport(projectRoot: string): TaskListReport {
@@ -123,11 +121,12 @@ export function createTaskReadReport(projectRoot: string, taskId: string): TaskR
       return [fileName, fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : ''];
     })
   );
-  const evidenceParse = parseEvidenceIndex(files['evidence.jsonl']);
+  const evidenceParse = parseEvidenceIndexFile(path.join(task.dir, 'evidence.jsonl'), task.id);
+  files['evidence.jsonl'] = formatEvidenceIndexFile(evidenceParse.records);
   return {
     schemaVersion: 'hadara.task.read.v1',
     command: 'task.read',
-    ok: evidenceParse.issues.length === 0,
+    ok: !evidenceParse.issues.some((issue) => issue.severity === 'error'),
     task: summarizeTask(projectRoot, task),
     files,
     evidenceIndex: evidenceParse.records,
@@ -139,27 +138,9 @@ export function formatTaskListReport(report: TaskListReport): string {
   return report.tasks.map((task) => `${task.id}\t${task.title}\t${task.capsule}`).join('\n');
 }
 
-function parseEvidenceIndex(content: string): {
-  records: unknown[];
-  issues: TaskReadReport['issues'];
-} {
-  const trimmed = content.trim();
-  if (!trimmed) return { records: [], issues: [] };
-
-  const records: unknown[] = [];
-  const issues: TaskReadReport['issues'] = [];
-  trimmed.split(/\r?\n/).forEach((line, index) => {
-    try {
-      records.push(JSON.parse(line));
-    } catch {
-      issues.push({
-        severity: 'error',
-        code: 'EVIDENCE_INDEX_JSON_INVALID',
-        message: `evidence.jsonl line ${index + 1} is not valid JSON.`
-      });
-    }
-  });
-  return { records, issues };
+function formatEvidenceIndexFile(records: EvidenceIndexRecord[]): string {
+  if (records.length === 0) return '';
+  return `${records.map((record) => JSON.stringify(record)).join('\n')}\n`;
 }
 
 function summarizeTask(projectRoot: string, task: TaskCapsule): TaskJsonSummary {

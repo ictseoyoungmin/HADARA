@@ -109,10 +109,10 @@ Completed increments:
 
 - T-0080 moved task list/show/read report builders into `src/services/task-read-model.ts`.
 - T-0081 moved policy check/evaluate report builders into `src/services/policy-service.ts`.
+- T-0083 updated `task.read` embedded evidence data to reuse evidence-list normalization.
 
 Remaining consistency cleanup:
 
-- `task.read` still embeds `evidenceIndex` as raw parsed JSON objects. Before treating it as a hardened external-agent evidence surface, reuse the evidence-list normalization path for private path stripping, taskId mismatch drops, unknown-field handling, and malformed-line warning/error policy.
 - Policy service parity is report-builder parity only. It is not yet the v1.0 single source of authorization for actor/surface-aware provider-originated actions.
 
 ## Active Run State

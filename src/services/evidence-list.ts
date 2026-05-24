@@ -64,7 +64,7 @@ export function createEvidenceListReport(projectRoot: string, input: EvidenceLis
   };
 }
 
-function parseEvidenceIndexFile(indexPath: string, taskId: string): {
+export function parseEvidenceIndexFile(indexPath: string, taskId: string): {
   records: EvidenceIndexRecord[];
   issues: EvidenceListIssue[];
 } {

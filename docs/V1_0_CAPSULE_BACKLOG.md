@@ -23,6 +23,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 - T-0080 Service Parity Expansion: first increment done; task list/show/read reports now live in `src/services/task-read-model.ts`, with MCP task list/read routed through the shared service.
 - T-0081 Policy Service Parity: done; policy check/evaluate report builders now live in `src/services/policy-service.ts`, with CLI preflight and MCP policy evaluate routed through the shared service.
 - T-0082 Cleanup Follow-up Notes: done; cleanup notes captured redaction policy observability, schema strictness levels, task.read evidenceIndex normalization gaps, and PolicyService authorization limitations; policy check report mode input now matches policy evaluate input behavior.
+- T-0083 Task Read Evidence Normalization: done; task.read embedded evidenceIndex and files["evidence.jsonl"] now reuse evidence-list normalization and sanitized JSONL output.
 
 ## Immediate P0 Capsules
 
@@ -41,6 +42,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 |---:|---|---|---|---|
 | 7 | Service parity expansion | T-0080, T-0081 | Move task/evidence/policy/harness/context read logic into shared services/read models. | Task and policy increments done: task read-model service and policy service parity pass. Remaining harness and status service expansion should continue in follow-up capsules. |
 | 7a | Read-model cleanup hardening notes | T-0082 | Track cleanup gaps before release gates: redaction policy observability, schema strictness levels, task.read evidence normalization, and PolicyService authorization boundaries. | Done: cleanup notes captured in schema/planning/contract docs; policy check mode input accepts the same string/default convention as policy evaluate. |
+| 7b | Task read evidence normalization | T-0083 | Align task.read embedded evidence data with evidence-list normalization. | Done: task.read evidenceIndex and files["evidence.jsonl"] sanitize private paths, unknown fields, mismatches, malformed lines, and read-time secrets. |
 | 8 | Active run CLI/MCP surface | TBD | Formalize run-state CLI writes and read-only MCP active-run/resume tools. | `hadara run-state ... --json`, `hadara.active.run.read`, and `hadara.active.run.resume` tests pass. |
 | 9 | Operational debt release gates | TBD | Promote operational debt into CLI/MCP read surfaces and release-gate warnings. | debt list/show reports, ops aggregate counts, and release-gate debt checks pass. |
 | 10 | Policy matrix refactor | TBD | Split tokenizer, command risk, permission matrix, presets, and preflight policy. | Existing exact-match safety tests pass plus matrix regressions for read/test/build/write/network/destructive/release. |
