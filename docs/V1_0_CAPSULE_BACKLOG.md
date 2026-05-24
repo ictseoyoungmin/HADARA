@@ -12,6 +12,7 @@ Use this file when creating the next capsule after T-0072. Detailed schemas and 
 - T-0069 Operational Debt Track: foundational done; static records, capsule size indicators, and premature acceptance warnings exist.
 - T-0070 Operations State Robustness Fix: done; active-run/debt/status robustness gaps were hardened.
 - T-0071 Reusable Docker Development Container: done; use the reusable container for future capsule creation and validation.
+- T-0072 Core v1.0 Technical Plan Refresh: done; T-0066 through T-0070 design mismatch notes now distinguish current implementation from future expansion targets.
 
 ## Immediate P0 Capsules
 

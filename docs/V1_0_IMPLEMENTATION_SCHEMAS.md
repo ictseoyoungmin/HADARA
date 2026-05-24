@@ -13,9 +13,11 @@ Current implementation:
 
 Future optional files:
 
+These are expansion candidates, not current T-0066 acceptance requirements. Keep the existing `tests/fixtures/compatibility/` location unless a product-level runner needs a separate fixture directory.
+
 ```text
 docs/COMPATIBILITY_FIXTURE.md
-fixtures/compatibility/hermes-readonly-flow.expected.json
+tests/fixtures/compatibility/hermes-readonly-flow.expected.json
 src/compatibility/fixture-runner.ts
 src/compatibility/hermes-like-agent.ts
 ```
@@ -171,14 +173,16 @@ Implementation notes:
 
 Future richer manifest target from the v1.0 plan:
 
+The canonical implemented contract is `hadara.active_run.v1` at `.hadara/local/state/active-run.json`. Future richer manifests should extend that contract or document an explicit migration; do not silently switch to the older camelCase `hadara.activeRun.v1` draft.
+
 ```json
 {
-  "schemaVersion": "hadara.activeRun.v1",
+  "schemaVersion": "hadara.active_run.v1",
   "runId": "run_20260524_001",
   "status": "active",
   "taskId": "T-00NN",
-  "taskCapsule": "tasks/T-00NN-example",
-  "createdAt": "2026-05-24T00:00:00.000Z",
+  "capsule": "tasks/T-00NN-example",
+  "startedAt": "2026-05-24T00:00:00.000Z",
   "updatedAt": "2026-05-24T00:00:00.000Z",
   "agent": {
     "kind": "external",
@@ -212,6 +216,8 @@ Future richer manifest target from the v1.0 plan:
 ```
 
 Future resume projection target:
+
+The current implemented projection is `hadara.active_run.projection.v1` with a compact `resume` object. A standalone `hadara.resume.projection` MCP tool should define a new schema deliberately instead of implying this target already exists.
 
 ```json
 {
@@ -274,6 +280,8 @@ export interface OperationalDebtReport {
 ```
 
 Future persisted record schema:
+
+Current T-0069 records are static in `src/services/operational-debt.ts` and documented in `docs/OPERATIONAL_DEBT.md`; no `.hadara/state/debt.jsonl` store exists. Choose the portable/project-store boundary before adding persistence.
 
 ```json
 {
