@@ -1,0 +1,2 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T03:08:25Z","taskId":"T-0071","kind":"command-log","summary":"docker ps --filter name=^/hadara-dev$ showed hadara-dev running.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T03:09:31Z","taskId":"T-0071","kind":"test-log","summary":"Reusable container node dist/cli/main.js harness validate --task T-0071 --level done --json --project /workspace returned ok true with no issues.","result":"passed","visibility":"public"}

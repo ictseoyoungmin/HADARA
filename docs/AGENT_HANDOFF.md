@@ -30,13 +30,14 @@
 - T-0068 is complete: single active run state now uses `.hadara/local/state/active-run.json`, exposes an Operations Status JSON projection, provides resume guidance, and warns when handoff omits the active task id.
 - T-0069 is complete: `known_issue.log` themes now exist as structured operational debt records with capsule size indicators and premature acceptance warning checks.
 - T-0070 is complete: operations state robustness now degrades malformed active run local state into status warnings, reports missing active Task Capsules, validates evidence records for premature acceptance, and matches shared Markdown sections by heading line.
+- T-0071 is complete: reusable Docker workflow is documented, `hadara-dev` is running, and new Task Capsules should be created through HADARA CLI by default.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0068 Single Active Run State: added local active run manifest, resume projection, stale handoff warning, and status JSON exposure.
 - T-0069 Operational Debt Track: added structured debt records, capsule size indicators, and premature acceptance warning checks.
 - T-0070 Operations State Robustness Fix: hardened active-run corruption handling, missing-task warnings, premature acceptance evidence checks, and shared section extraction.
+- T-0071 Reusable Docker Development Container: documented persistent Docker workflow and CLI-based Task Capsule creation.
 
 ## Current Known Problems
 
@@ -50,7 +51,7 @@
 
 ## Next Recommended Step
 
-1. Review the completed v0.3 Operations Layer follow-up sequence before starting Real Provider Adapter Preparation; keep provider execution non-default and secrets excluded.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then review the v0.3 operations-layer state before provider preparation.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
@@ -58,8 +59,8 @@
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
 - Latest full check: Docker `npm ci && npm run check` passed with 33 test files and 176 tests after T-0070.
-- Latest focused operations robustness check: Docker `npm test -- tests/unit/active-run-state.test.ts tests/unit/status-json.test.ts tests/unit/operational-debt.test.ts tests/contract/cli-mcp-service-parity.test.ts` passed with 21 tests.
-- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0070 --level done --json` returned `ok: true`.
+- Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0071 --level done --json --project /workspace` returned `ok: true`.
 
 ## Historical Index
 

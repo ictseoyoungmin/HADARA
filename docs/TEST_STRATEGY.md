@@ -14,6 +14,24 @@ docker run --rm -v /mnt/f/NowWorking/HADARA-dev:/src:ro -w /tmp node:22-bullseye
 
 This pattern keeps the source mount read-only and runs dependency installation/build/test work in `/tmp/work` inside the container.
 
+For repeated local development, a reusable container can stay running:
+
+```bash
+docker run -dit --name hadara-dev -v /mnt/f/NowWorking/HADARA-dev:/workspace -w /tmp node:22-bookworm bash
+```
+
+Run dependency-heavy work in `/tmp/hadara` inside that container, not directly on the mounted workspace:
+
+```bash
+docker exec hadara-dev bash -lc 'rm -rf /tmp/hadara && mkdir -p /tmp/hadara && tar --exclude=node_modules --exclude=dist -cf - -C /workspace . | tar -xf - -C /tmp/hadara && cd /tmp/hadara && npm ci && npm run check'
+```
+
+To create a Task Capsule through the built HADARA CLI while writing to the workspace:
+
+```bash
+docker exec hadara-dev bash -lc 'cd /tmp/hadara && npm run build >/dev/null && node dist/cli/main.js task create "<title>" --project /workspace'
+```
+
 ## Suites
 
 | Suite | Command | Purpose |

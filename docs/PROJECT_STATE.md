@@ -84,6 +84,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Single active run state exists as a local project manifest at `.hadara/local/state/active-run.json`; Operations Status JSON exposes a read projection with resume guidance and a stale handoff warning when the active task id is missing from `docs/AGENT_HANDOFF.md`.
 - Operational debt tracking exists in `docs/OPERATIONAL_DEBT.md` and `src/services/operational-debt.ts`; it promotes `known_issue.log` themes into structured records, reports capsule size indicators, and warns on premature acceptance checks before Done status or evidence.
 - Operations state robustness is hardened: malformed active run local state degrades status JSON with warnings instead of throwing, active runs referencing missing Task Capsules are reported, premature acceptance uses valid evidence records, and shared Markdown section extraction matches heading lines only.
+- Reusable Docker development workflow is documented: the `hadara-dev` container can stay running, dependency-heavy work happens in `/tmp/hadara`, and new Task Capsules should be created through the HADARA CLI with `--project /workspace`.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.
