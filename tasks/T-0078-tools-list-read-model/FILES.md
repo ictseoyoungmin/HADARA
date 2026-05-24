@@ -3,6 +3,7 @@
 | Path | Action | Reason |
 |---|---|---|
 | `src/services/tools-list.ts` | Add | Shared tools-list read model. |
+| `src/services/capability-registry.ts` | Add | Neutral source of truth for CLI/MCP capability metadata. |
 | `src/cli/tools.ts` | Add | CLI handler for `hadara tools list`. |
 | `src/cli/main.ts` | Update | Register CLI command and help text. |
 | `src/mcp/tool-schemas.ts` | Update | Advertise read-only `hadara.tools.list`. |

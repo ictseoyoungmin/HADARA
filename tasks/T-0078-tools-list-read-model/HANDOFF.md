@@ -2,7 +2,7 @@
 
 ## Last Completed
 
-T-0078 is complete. Added shared `hadara.tools.list.v1`, `hadara tools list --json`, read-only MCP `hadara.tools.list`, contract docs, and focused tests.
+T-0078 is complete. Added shared `hadara.tools.list.v1`, `hadara tools list --json`, read-only MCP `hadara.tools.list`, neutral capability registry metadata, fuller CLI surface discovery, availability/risk fields, contract docs, and focused tests.
 
 ## Next Recommended Step
 

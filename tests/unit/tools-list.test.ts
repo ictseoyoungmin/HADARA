@@ -18,13 +18,38 @@ describe('tools list read model', () => {
           name: 'hadara tools list --json',
           category: 'read',
           readOnly: true,
-          stable: true
+          stable: true,
+          availability: 'default',
+          risk: 'low'
         }),
         expect.objectContaining({
           name: 'hadara hermes export-context --json',
           category: 'write',
           readOnly: false,
-          stable: true
+          stable: true,
+          availability: 'default',
+          risk: 'medium'
+        }),
+        expect.objectContaining({
+          name: 'hadara evidence collect --task <task-id> ... --json',
+          category: 'write',
+          readOnly: false,
+          schemaVersion: 'hadara.evidence.collect.v1'
+        }),
+        expect.objectContaining({
+          name: 'hadara mcp serve [--enable-evidence-attach]',
+          category: 'read',
+          readOnly: true
+        }),
+        expect.objectContaining({
+          name: 'hadara dashboard serve [--host <host>] [--port <port>]',
+          category: 'read',
+          readOnly: true
+        }),
+        expect.objectContaining({
+          name: 'hadara run scaffold --task <task-id> --command <command> --json',
+          category: 'write',
+          readOnly: false
         })
       ])
     );
@@ -34,22 +59,25 @@ describe('tools list read model', () => {
           name: 'hadara.tools.list',
           category: 'read',
           readOnly: true,
-          enabledByDefault: true
+          enabledByDefault: true,
+          availability: 'default'
         }),
         expect.objectContaining({
           name: 'hadara.evidence.attach',
           category: 'write',
           readOnly: false,
-          enabledByDefault: false
+          enabledByDefault: false,
+          availability: 'opt-in',
+          requiresApproval: true
         })
       ])
     );
     expect(report.disabled).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ name: 'mcp.shell.execute' }),
-        expect.objectContaining({ name: 'mcp.provider.call' }),
-        expect.objectContaining({ name: 'mcp.release.execute' }),
-        expect.objectContaining({ name: 'mcp.write.*' })
+        expect.objectContaining({ name: 'mcp.shell.execute', availability: 'disabled' }),
+        expect.objectContaining({ name: 'mcp.provider.call', availability: 'deferred' }),
+        expect.objectContaining({ name: 'mcp.release.execute', availability: 'deferred' }),
+        expect.objectContaining({ name: 'mcp.write.*', availability: 'disabled' })
       ])
     );
   });
@@ -61,7 +89,9 @@ describe('tools list read model', () => {
       expect.arrayContaining([
         expect.objectContaining({
           name: 'hadara.evidence.attach',
-          enabledByDefault: true
+          enabledByDefault: true,
+          availability: 'default',
+          requiresApproval: true
         })
       ])
     );

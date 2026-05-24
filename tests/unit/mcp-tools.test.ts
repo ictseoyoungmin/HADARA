@@ -313,13 +313,16 @@ describe('MCP read tools', () => {
           name: 'hadara.context.export',
           category: 'read',
           readOnly: true,
-          enabledByDefault: true
+          enabledByDefault: true,
+          availability: 'default'
         }),
         expect.objectContaining({
           name: 'hadara.evidence.attach',
           category: 'write',
           readOnly: false,
-          enabledByDefault: false
+          enabledByDefault: false,
+          availability: 'opt-in',
+          requiresApproval: true
         })
       ])
     );

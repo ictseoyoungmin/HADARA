@@ -181,7 +181,20 @@ Output schema:
         "stable": true,
         "readOnly": true,
         "enabledByDefault": true,
+        "availability": "default",
+        "risk": "low",
         "schemaVersion": "hadara.task.list.v1"
+      },
+      {
+        "name": "hadara evidence collect --task <task-id> ... --json",
+        "category": "write",
+        "stable": true,
+        "readOnly": false,
+        "enabledByDefault": true,
+        "availability": "default",
+        "risk": "medium",
+        "schemaVersion": "hadara.evidence.collect.v1",
+        "notes": "CLI-owned evidence write; public artifacts pass workspace boundary and redaction policy."
       }
     ],
     "mcp": [
@@ -190,7 +203,9 @@ Output schema:
         "category": "read",
         "stable": true,
         "readOnly": true,
-        "enabledByDefault": true
+        "enabledByDefault": true,
+        "availability": "default",
+        "risk": "low"
       },
       {
         "name": "hadara.evidence.attach",
@@ -198,6 +213,9 @@ Output schema:
         "stable": true,
         "readOnly": false,
         "enabledByDefault": false,
+        "availability": "opt-in",
+        "risk": "medium",
+        "requiresApproval": true,
         "schemaVersion": "hadara.evidence.collect.v1"
       }
     ]
@@ -206,6 +224,8 @@ Output schema:
     {
       "name": "mcp.shell.execute",
       "category": "execute",
+      "availability": "disabled",
+      "risk": "high",
       "reason": "MCP shell execution is out of scope for the current read-only bridge."
     }
   ],
@@ -213,7 +233,7 @@ Output schema:
 }
 ```
 
-The report is discovery-only. It must not enable disabled tools, execute commands, call providers, or mutate files.
+The report is discovery-only. It must not enable disabled tools, execute commands, call providers, or mutate files. `availability` is the machine-readable status: `default` means usable in the normal CLI or MCP profile, `opt-in` means an explicit profile or flag is required, `disabled` means intentionally unavailable, and `deferred` means planned for later work. `enabledByDefault` is retained as a compatibility boolean derived from `availability`.
 
 ### `hadara.task.list`
 

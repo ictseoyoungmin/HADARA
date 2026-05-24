@@ -554,7 +554,22 @@ The recommended MCP behavior is option 2.
       {
         "name": "hadara task list --json",
         "category": "read",
-        "stable": true
+        "stable": true,
+        "readOnly": true,
+        "enabledByDefault": true,
+        "availability": "default",
+        "risk": "low",
+        "schemaVersion": "hadara.task.list.v1"
+      },
+      {
+        "name": "hadara evidence collect --task <task-id> ... --json",
+        "category": "write",
+        "stable": true,
+        "readOnly": false,
+        "enabledByDefault": true,
+        "availability": "default",
+        "risk": "medium",
+        "schemaVersion": "hadara.evidence.collect.v1"
       }
     ],
     "mcp": [
@@ -562,13 +577,30 @@ The recommended MCP behavior is option 2.
         "name": "hadara.task.list",
         "category": "read",
         "stable": true,
-        "readOnly": true
+        "readOnly": true,
+        "enabledByDefault": true,
+        "availability": "default",
+        "risk": "low"
+      },
+      {
+        "name": "hadara.evidence.attach",
+        "category": "write",
+        "stable": true,
+        "readOnly": false,
+        "enabledByDefault": false,
+        "availability": "opt-in",
+        "risk": "medium",
+        "requiresApproval": true,
+        "schemaVersion": "hadara.evidence.collect.v1"
       }
     ]
   },
   "disabled": [
     {
       "name": "mcp.shell.execute",
+      "category": "execute",
+      "availability": "disabled",
+      "risk": "high",
       "reason": "Out of scope for v1.0."
     }
   ],
@@ -579,7 +611,9 @@ The recommended MCP behavior is option 2.
 Implemented notes:
 
 - `hadara.tools.list.v1` is shared by `hadara tools list --json` and read-only MCP `hadara.tools.list`.
-- The report includes default read MCP tools, the opt-in `hadara.evidence.attach` write surface, and disabled shell/provider/release/broad-write MCP surfaces.
+- The report is generated from `src/services/capability-registry.ts`, a neutral registry used by both the tools-list read model and MCP tool schema generation.
+- The report includes read and write-capable CLI commands from the current CLI help surface, default read MCP tools, the opt-in `hadara.evidence.attach` write surface, and disabled shell/provider/release/broad-write MCP surfaces.
+- `availability` is an enum: `default`, `opt-in`, `disabled`, or `deferred`; `enabledByDefault` remains as a compatibility boolean.
 - It is a discovery report only; it does not enable disabled surfaces.
 
 ## Policy Matrix Refactor
