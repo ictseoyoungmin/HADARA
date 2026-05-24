@@ -1,0 +1,4 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T14:42:19.995Z","taskId":"T-0087","kind":"test-log","summary":"Focused operational debt, status, MCP, and tools tests passed: 5 files, 43 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T14:42:20.580Z","taskId":"T-0087","kind":"test-log","summary":"Docker npm run check passed: 36 test files, 215 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T14:42:21.178Z","taskId":"T-0087","kind":"command-log","summary":"Built CLI smokes passed for debt list, debt show, release gate, and ops status JSON.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T14:44:25.196Z","taskId":"T-0087","kind":"test-log","summary":"Done-level harness validation passed for T-0087.","result":"passed","visibility":"public"}

@@ -336,6 +336,13 @@ describe('MCP read tools', () => {
           readOnly: true,
           stable: true,
           schemaVersion: 'hadara.evidence.list.v1'
+        }),
+        expect.objectContaining({
+          name: 'hadara debt list --json',
+          category: 'read',
+          readOnly: true,
+          stable: true,
+          schemaVersion: 'hadara.operational_debt.v1'
         })
       ])
     );
@@ -350,6 +357,13 @@ describe('MCP read tools', () => {
         }),
         expect.objectContaining({
           name: 'hadara.active.run.read',
+          category: 'read',
+          readOnly: true,
+          enabledByDefault: true,
+          availability: 'default'
+        }),
+        expect.objectContaining({
+          name: 'hadara.debt.list',
           category: 'read',
           readOnly: true,
           enabledByDefault: true,
@@ -410,6 +424,40 @@ describe('MCP read tools', () => {
       },
       resumePrompt: {
         mustRead: ['docs/AGENT_HANDOFF.md', 'tasks/T-0001-mcp-active-run/TASK.md', 'tasks/T-0001-mcp-active-run/HANDOFF.md']
+      },
+      issues: []
+    });
+  });
+
+  it('reads operational debt list and show reports without mutating state', () => {
+    const root = tempProject();
+
+    const listPayload = parseToolPayload(callTool(root, 'hadara.debt.list'));
+    const showPayload = parseToolPayload(callTool(root, 'hadara.debt.show', { id: 'OD-0008' }));
+
+    expect(listPayload).toMatchObject({
+      schemaVersion: 'hadara.operational_debt.v1',
+      command: 'operational-debt.report',
+      ok: true,
+      aggregate: {
+        total: 8,
+        highOpen: 2
+      },
+      records: expect.arrayContaining([
+        expect.objectContaining({
+          id: 'OD-0008',
+          severity: 'high'
+        })
+      ])
+    });
+    expect(showPayload).toMatchObject({
+      schemaVersion: 'hadara.operational_debt.show.v1',
+      command: 'operational-debt.show',
+      ok: true,
+      id: 'OD-0008',
+      record: {
+        id: 'OD-0008',
+        severity: 'high'
       },
       issues: []
     });

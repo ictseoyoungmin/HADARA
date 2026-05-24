@@ -1,8 +1,15 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
-import { createOperationalDebtReport, OPERATIONAL_DEBT_RECORDS } from '../../src/services/operational-debt';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { handleDebtCommand } from '../../src/cli/debt';
+import { handleReleaseGateCommand } from '../../src/cli/release-gate';
+import {
+  createOperationalDebtReport,
+  createOperationalDebtShowReport,
+  createReleaseGateReport,
+  OPERATIONAL_DEBT_RECORDS
+} from '../../src/services/operational-debt';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -15,6 +22,7 @@ function tempProject(): string {
 }
 
 afterEach(() => {
+  vi.restoreAllMocks();
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -33,7 +41,110 @@ describe('operational debt track', () => {
     ]);
     expect(OPERATIONAL_DEBT_RECORDS.find((record) => record.id === 'OD-0008')).toMatchObject({
       category: 'validation',
+      severity: 'high',
       targetCapability: 'Premature acceptance guard'
+    });
+  });
+
+  it('reports aggregate debt counts for operations and release gates', () => {
+    const root = tempProject();
+
+    const report = createOperationalDebtReport(root);
+
+    expect(report.aggregate).toEqual({
+      total: 8,
+      open: 6,
+      tracked: 4,
+      mitigated: 2,
+      candidate: 2,
+      highOpen: 2,
+      bySeverity: {
+        high: 2,
+        medium: 4,
+        low: 2
+      }
+    });
+  });
+
+  it('shows one operational debt record by id', () => {
+    const root = tempProject();
+
+    expect(createOperationalDebtShowReport(root, 'OD-0008')).toMatchObject({
+      schemaVersion: 'hadara.operational_debt.show.v1',
+      command: 'operational-debt.show',
+      ok: true,
+      id: 'OD-0008',
+      record: {
+        id: 'OD-0008',
+        severity: 'high'
+      },
+      issues: []
+    });
+  });
+
+  it('returns a structured not-found report for unknown debt ids', () => {
+    const root = tempProject();
+
+    expect(createOperationalDebtShowReport(root, 'OD-9999')).toEqual({
+      schemaVersion: 'hadara.operational_debt.show.v1',
+      command: 'operational-debt.show',
+      ok: false,
+      id: 'OD-9999',
+      record: null,
+      issues: [
+        {
+          severity: 'error',
+          code: 'OPERATIONAL_DEBT_NOT_FOUND',
+          message: 'Operational debt record not found: OD-9999'
+        }
+      ]
+    });
+  });
+
+  it('warns release gates when high severity operational debt remains open', () => {
+    const root = tempProject();
+
+    expect(createReleaseGateReport(root)).toEqual({
+      schemaVersion: 'hadara.releaseGate.v1',
+      command: 'release.gate',
+      ok: true,
+      checks: [
+        {
+          name: 'No high severity operational debt',
+          status: 'warning',
+          summary: 'OD-0003, OD-0008 remain open.'
+        }
+      ],
+      issues: [
+        {
+          severity: 'warning',
+          code: 'OPEN_HIGH_OPERATIONAL_DEBT',
+          message: '2 open high-severity operational debt record(s) remain.'
+        }
+      ]
+    });
+  });
+
+  it('prints JSON through debt and release-gate CLI handlers', () => {
+    const root = tempProject();
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    expect(handleDebtCommand({ args: ['debt', 'list', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+    expect(handleDebtCommand({ args: ['debt', 'show', 'OD-0008', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+    expect(handleReleaseGateCommand({ args: ['release', 'gate', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+
+    expect(JSON.parse(String(log.mock.calls[0]?.[0]))).toMatchObject({
+      schemaVersion: 'hadara.operational_debt.v1',
+      command: 'operational-debt.report'
+    });
+    expect(JSON.parse(String(log.mock.calls[1]?.[0]))).toMatchObject({
+      schemaVersion: 'hadara.operational_debt.show.v1',
+      command: 'operational-debt.show',
+      id: 'OD-0008'
+    });
+    expect(JSON.parse(String(log.mock.calls[2]?.[0]))).toMatchObject({
+      schemaVersion: 'hadara.releaseGate.v1',
+      command: 'release.gate'
     });
   });
 

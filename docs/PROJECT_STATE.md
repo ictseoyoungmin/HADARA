@@ -100,12 +100,16 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Harness validation report logic now has shared `src/services/harness-service.ts`; CLI `harness validate` and read-only MCP `hadara.harness.validate` both use the shared service boundary.
 - Operations Status JSON report logic now has shared `src/services/operations-status-service.ts`; CLI `hadara status` and `hadara ops status` use the shared service boundary while `src/cli/status-json.ts` remains a compatibility export.
 - Active-run projection and resume guidance reuse `src/services/active-run-state.ts` across Operations Status, CLI run-state reads, and read-only MCP active-run tools.
+- Operational debt read surfaces exist as `hadara debt list --json`, `hadara debt show <id> --json`, read-only MCP `hadara.debt.list`, and read-only MCP `hadara.debt.show`.
+- Operations Status JSON includes operational debt aggregate counts for total/open/status/severity/high-open debt.
+- A warning-only release-gate report exists as `hadara release gate --json`; it warns on open high-severity operational debt and does not execute release, packaging, shell, provider, or deployment actions.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.
 - Real provider adapters are not implemented.
 - Dashboard is locally servable through a static CLI helper, but it is not live-integrated; only its status JSON/read model, design references, static fixture-bound mockup shell, and sample-backed static server exist.
 - Broad MCP write tools are not implemented beyond the explicitly enabled, approval-recorded, audited evidence attach tool.
+- Operational debt records remain static and non-persisted; debt mutation and blocking release gates remain deferred.
 
 ## Single Source of Truth
 

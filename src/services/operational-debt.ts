@@ -8,7 +8,22 @@ export interface OperationalDebtRecord {
   source: string;
   category: 'continuity' | 'validation' | 'scope-control' | 'complexity' | 'visibility' | 'environment';
   status: 'tracked' | 'mitigated' | 'candidate';
+  severity: 'low' | 'medium' | 'high';
   targetCapability: string;
+}
+
+export interface OperationalDebtAggregate {
+  total: number;
+  open: number;
+  tracked: number;
+  mitigated: number;
+  candidate: number;
+  highOpen: number;
+  bySeverity: {
+    high: number;
+    medium: number;
+    low: number;
+  };
 }
 
 export interface CapsuleSizeIndicator {
@@ -25,12 +40,42 @@ export interface OperationalDebtReport {
   command: 'operational-debt.report';
   ok: true;
   records: OperationalDebtRecord[];
+  aggregate: OperationalDebtAggregate;
   capsuleSizeIndicators: CapsuleSizeIndicator[];
   issues: Array<{
     severity: 'warning';
     code: string;
     message: string;
     path?: string;
+  }>;
+}
+
+export interface OperationalDebtShowReport {
+  schemaVersion: 'hadara.operational_debt.show.v1';
+  command: 'operational-debt.show';
+  ok: boolean;
+  id: string;
+  record: OperationalDebtRecord | null;
+  issues: Array<{
+    severity: 'error';
+    code: string;
+    message: string;
+  }>;
+}
+
+export interface ReleaseGateReport {
+  schemaVersion: 'hadara.releaseGate.v1';
+  command: 'release.gate';
+  ok: true;
+  checks: Array<{
+    name: string;
+    status: 'passed' | 'warning';
+    summary: string;
+  }>;
+  issues: Array<{
+    severity: 'warning';
+    code: string;
+    message: string;
   }>;
 }
 
@@ -41,6 +86,7 @@ export const OPERATIONAL_DEBT_RECORDS: OperationalDebtRecord[] = [
     source: 'known_issue.log#1',
     category: 'validation',
     status: 'mitigated',
+    severity: 'medium',
     targetCapability: 'Task Capsule format validation'
   },
   {
@@ -49,6 +95,7 @@ export const OPERATIONAL_DEBT_RECORDS: OperationalDebtRecord[] = [
     source: 'known_issue.log#2',
     category: 'environment',
     status: 'mitigated',
+    severity: 'medium',
     targetCapability: 'Validation environment handoff'
   },
   {
@@ -57,6 +104,7 @@ export const OPERATIONAL_DEBT_RECORDS: OperationalDebtRecord[] = [
     source: 'known_issue.log#3',
     category: 'continuity',
     status: 'tracked',
+    severity: 'high',
     targetCapability: 'Roadmap-aware handoff validation'
   },
   {
@@ -65,6 +113,7 @@ export const OPERATIONAL_DEBT_RECORDS: OperationalDebtRecord[] = [
     source: 'known_issue.log#4',
     category: 'complexity',
     status: 'tracked',
+    severity: 'medium',
     targetCapability: 'LOC and complexity risk indicators'
   },
   {
@@ -73,6 +122,7 @@ export const OPERATIONAL_DEBT_RECORDS: OperationalDebtRecord[] = [
     source: 'known_issue.log#5',
     category: 'complexity',
     status: 'candidate',
+    severity: 'low',
     targetCapability: 'Changed LOC utility'
   },
   {
@@ -81,6 +131,7 @@ export const OPERATIONAL_DEBT_RECORDS: OperationalDebtRecord[] = [
     source: 'known_issue.log#6',
     category: 'scope-control',
     status: 'tracked',
+    severity: 'medium',
     targetCapability: 'Capsule size indicator'
   },
   {
@@ -89,6 +140,7 @@ export const OPERATIONAL_DEBT_RECORDS: OperationalDebtRecord[] = [
     source: 'known_issue.log#7',
     category: 'visibility',
     status: 'candidate',
+    severity: 'low',
     targetCapability: 'Changed-size dashboard signal'
   },
   {
@@ -97,6 +149,7 @@ export const OPERATIONAL_DEBT_RECORDS: OperationalDebtRecord[] = [
     source: 'known_issue.log#8',
     category: 'validation',
     status: 'tracked',
+    severity: 'high',
     targetCapability: 'Premature acceptance guard'
   }
 ];
@@ -108,9 +161,85 @@ export function createOperationalDebtReport(projectRoot: string): OperationalDeb
     command: 'operational-debt.report',
     ok: true,
     records: OPERATIONAL_DEBT_RECORDS,
+    aggregate: createOperationalDebtAggregate(OPERATIONAL_DEBT_RECORDS),
     capsuleSizeIndicators: tasks.map((task) => measureCapsuleSize(projectRoot, task)),
     issues: tasks.flatMap((task) => detectPrematureAcceptance(projectRoot, task))
   };
+}
+
+export function createOperationalDebtShowReport(projectRoot: string, id: string): OperationalDebtShowReport {
+  const record = createOperationalDebtReport(projectRoot).records.find((candidate) => candidate.id === id) ?? null;
+  return {
+    schemaVersion: 'hadara.operational_debt.show.v1',
+    command: 'operational-debt.show',
+    ok: record !== null,
+    id,
+    record,
+    issues: record
+      ? []
+      : [
+          {
+            severity: 'error',
+            code: 'OPERATIONAL_DEBT_NOT_FOUND',
+            message: `Operational debt record not found: ${id}`
+          }
+        ]
+  };
+}
+
+export function createReleaseGateReport(projectRoot: string): ReleaseGateReport {
+  const debt = createOperationalDebtReport(projectRoot);
+  const highOpen = debt.records.filter((record) => isOpenDebt(record) && record.severity === 'high');
+  const issues: ReleaseGateReport['issues'] =
+    highOpen.length > 0
+      ? [
+          {
+            severity: 'warning',
+            code: 'OPEN_HIGH_OPERATIONAL_DEBT',
+            message: `${highOpen.length} open high-severity operational debt record(s) remain.`
+          }
+        ]
+      : [];
+  return {
+    schemaVersion: 'hadara.releaseGate.v1',
+    command: 'release.gate',
+    ok: true,
+    checks: [
+      {
+        name: 'No high severity operational debt',
+        status: highOpen.length > 0 ? 'warning' : 'passed',
+        summary: highOpen.length > 0 ? `${highOpen.map((record) => record.id).join(', ')} remain open.` : 'No open high-severity operational debt records.'
+      }
+    ],
+    issues
+  };
+}
+
+export function createOperationalDebtAggregate(records: OperationalDebtRecord[]): OperationalDebtAggregate {
+  const aggregate: OperationalDebtAggregate = {
+    total: records.length,
+    open: 0,
+    tracked: 0,
+    mitigated: 0,
+    candidate: 0,
+    highOpen: 0,
+    bySeverity: {
+      high: 0,
+      medium: 0,
+      low: 0
+    }
+  };
+  for (const record of records) {
+    aggregate[record.status] += 1;
+    aggregate.bySeverity[record.severity] += 1;
+    if (isOpenDebt(record)) aggregate.open += 1;
+    if (isOpenDebt(record) && record.severity === 'high') aggregate.highOpen += 1;
+  }
+  return aggregate;
+}
+
+function isOpenDebt(record: OperationalDebtRecord): boolean {
+  return record.status !== 'mitigated';
 }
 
 function measureCapsuleSize(projectRoot: string, task: TaskCapsule): CapsuleSizeIndicator {

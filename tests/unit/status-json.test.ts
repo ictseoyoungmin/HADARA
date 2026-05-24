@@ -77,6 +77,14 @@ describe('Operations Status JSON', () => {
         latestFullCheck: 'Docker npm ci && npm run check passed with 27 test files and 142 tests',
         latestDoneLevelValidation: 'T-0052 ok'
       },
+      debt: {
+        total: 8,
+        open: 6,
+        tracked: 4,
+        mitigated: 2,
+        candidate: 2,
+        highOpen: 2
+      },
       mcp: {
         defaultMode: 'read-only',
         evidenceAttach: {
@@ -255,6 +263,19 @@ describe('Operations Status JSON', () => {
         },
         rawStatusCounts: expect.any(Object),
         normalizedStatusCounts: expect.any(Object)
+      },
+      debt: {
+        total: expect.any(Number),
+        open: expect.any(Number),
+        tracked: expect.any(Number),
+        mitigated: expect.any(Number),
+        candidate: expect.any(Number),
+        highOpen: expect.any(Number),
+        bySeverity: {
+          high: expect.any(Number),
+          medium: expect.any(Number),
+          low: expect.any(Number)
+        }
       },
       issues: expect.any(Array)
     });

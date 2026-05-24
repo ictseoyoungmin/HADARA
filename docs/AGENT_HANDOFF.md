@@ -46,13 +46,14 @@
 - T-0084 is complete: harness validate report access now lives behind shared `src/services/harness-service.ts`, with CLI `harness validate` and read-only MCP `hadara.harness.validate` routed through it. MCP `hadara.task.read` now excludes private evidence metadata by default and supports explicit `includePrivate`; `files["evidence.jsonl"]` is documented as a sanitized read-model view.
 - T-0085 is complete: Operations Status JSON report access now lives behind shared `src/services/operations-status-service.ts`, with CLI `hadara status` and `hadara ops status` routed through it while `src/cli/status-json.ts` remains a compatibility export.
 - T-0086 is complete: active-run read surfaces now include CLI `hadara run-state show --json`, CLI `hadara run-state resume --json`, read-only MCP `hadara.active.run.read`, and read-only MCP `hadara.active.run.resume`; active-run writes remain deferred.
+- T-0087 is complete: operational debt read surfaces now include CLI `hadara debt list/show --json`, read-only MCP `hadara.debt.list/show`, Operations Status debt aggregate counts, and warning-only `hadara release gate --json` checks for open high-severity debt.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0084 Harness Validate Service Parity: routed CLI and MCP harness validate through a shared harness validation report service, and tightened task.read private evidence defaults.
 - T-0085 Operations Status Service Parity: moved Operations Status JSON report creation into a shared service and preserved CLI status behavior.
 - T-0086 Active Run Read Surfaces: added read-only CLI/MCP active-run projection and resume guidance surfaces.
+- T-0087 Operational Debt Release Gates: added debt read surfaces, ops aggregate counts, and warning-only release-gate debt checks.
 
 ## Current Known Problems
 
@@ -66,17 +67,18 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then continue with Operational Debt Release Gates or redaction policy observability tests before adding security/evidence inspection surfaces.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then continue with Policy Matrix Refactor or the next evidence/security hardening slice before provider or dashboard integration work.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm run check` passed with 36 test files and 208 tests after the T-0086 active-run read surfaces.
-- Latest focused active-run read surface check: Docker `npx vitest run tests/unit/active-run-state.test.ts tests/unit/mcp-tools.test.ts tests/unit/tools-list.test.ts tests/contract/mcp-bridge-contract.test.ts` passed with 4 files and 30 tests.
+- Latest full check: Docker `npm run check` passed with 36 test files and 215 tests after the T-0087 operational debt release gates.
+- Latest focused operational debt release-gate check: Docker `npx vitest run tests/unit/operational-debt.test.ts tests/unit/status-json.test.ts tests/unit/mcp-tools.test.ts tests/contract/mcp-bridge-contract.test.ts tests/unit/tools-list.test.ts` passed with 5 files and 43 tests.
+- Latest CLI smoke: built CLI `debt list --json`, `debt show OD-0008 --json`, `release gate --json`, and `ops status --json` returned expected schemas and high-open debt warning/count signals.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0086 --level done --json --project /workspace` returned `ok: true`.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0087 --level done --json --project /workspace` returned `ok: true`.
 
 ## Historical Index
 

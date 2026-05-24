@@ -347,10 +347,11 @@ release
 
 Future debt commands and aggregate requirements:
 
-- `hadara debt list --json`
-- `hadara debt show OD-0001 --json`
-- `ops status --json` should expose high/open debt counts.
-- v1.0 release gates should warn or block when high/open debt remains.
+- T-0087 implemented `hadara debt list --json`.
+- T-0087 implemented `hadara debt show OD-0001 --json`.
+- T-0087 implemented read-only MCP `hadara.debt.list` and `hadara.debt.show`.
+- T-0087 added `ops status --json` high/open debt counts.
+- T-0087 added warning-only release-gate behavior for open high-severity debt; blocking remains future work.
 
 ## Redaction Hardening
 

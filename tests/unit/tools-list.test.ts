@@ -56,6 +56,18 @@ describe('tools list read model', () => {
           category: 'read',
           readOnly: true,
           schemaVersion: 'hadara.active_run.projection.v1'
+        }),
+        expect.objectContaining({
+          name: 'hadara debt list --json',
+          category: 'read',
+          readOnly: true,
+          schemaVersion: 'hadara.operational_debt.v1'
+        }),
+        expect.objectContaining({
+          name: 'hadara release gate --json',
+          category: 'release',
+          readOnly: true,
+          schemaVersion: 'hadara.releaseGate.v1'
         })
       ])
     );
@@ -73,6 +85,12 @@ describe('tools list read model', () => {
           category: 'read',
           readOnly: true,
           schemaVersion: 'hadara.active_run.resume.v1'
+        }),
+        expect.objectContaining({
+          name: 'hadara.debt.show',
+          category: 'read',
+          readOnly: true,
+          schemaVersion: 'hadara.operational_debt.show.v1'
         }),
         expect.objectContaining({
           name: 'hadara.evidence.attach',

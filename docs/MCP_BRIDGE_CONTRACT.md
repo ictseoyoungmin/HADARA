@@ -17,6 +17,7 @@ T-0076 completed `hadara.evidence.list` as a read-only extension.
 T-0077 completed `hadara.context.export` as a read-only memory-payload extension.
 T-0078 completed `hadara.tools.list` as a read-only capability discovery extension.
 T-0086 completed `hadara.active.run.read` and `hadara.active.run.resume` as read-only active-run projection extensions.
+T-0087 completed `hadara.debt.list` and `hadara.debt.show` as read-only operational-debt extensions.
 
 ## Non-Goals
 
@@ -108,12 +109,14 @@ hadara.context.export
 hadara.tools.list
 hadara.active.run.read
 hadara.active.run.resume
+hadara.debt.list
+hadara.debt.show
 ```
 
 Planned v1.0 read-only candidates:
 
 ```text
-hadara.debt.list
+none
 ```
 
 These candidates must remain read-only. `hadara.context.export` returns a memory payload through MCP; it must not generate or mutate `.hadara/context/HADARA_CONTEXT.md`.
@@ -269,6 +272,84 @@ Output schema:
 ```
 
 Malformed local active-run state must degrade into warning issues instead of throwing transport errors.
+
+### `hadara.debt.list`
+
+List operational debt records, aggregate counts, capsule size indicators, and debt-related warnings without mutating state.
+
+Input schema:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Output schema:
+
+```json
+{
+  "schemaVersion": "hadara.operational_debt.v1",
+  "command": "operational-debt.report",
+  "ok": true,
+  "records": [],
+  "aggregate": {
+    "total": 0,
+    "open": 0,
+    "tracked": 0,
+    "mitigated": 0,
+    "candidate": 0,
+    "highOpen": 0,
+    "bySeverity": {
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    }
+  },
+  "capsuleSizeIndicators": [],
+  "issues": []
+}
+```
+
+### `hadara.debt.show`
+
+Read one operational debt record by id without mutating state.
+
+Input schema:
+
+```json
+{
+  "type": "object",
+  "required": ["id"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^OD-[0-9]{4}$" }
+  }
+}
+```
+
+Output schema:
+
+```json
+{
+  "schemaVersion": "hadara.operational_debt.show.v1",
+  "command": "operational-debt.show",
+  "ok": true,
+  "id": "OD-0001",
+  "record": {
+    "id": "OD-0001",
+    "title": "Example",
+    "source": "known_issue.log#1",
+    "category": "validation",
+    "status": "mitigated",
+    "severity": "medium",
+    "targetCapability": "Task Capsule format validation"
+  },
+  "issues": []
+}
+```
 
 ### `hadara.active.run.resume`
 

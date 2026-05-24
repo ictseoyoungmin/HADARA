@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ActiveRunProjection, safeCreateActiveRunProjection } from './active-run-state';
+import { createOperationalDebtReport, OperationalDebtAggregate } from './operational-debt';
 import { extractSection, ProjectReadSources, readProjectSources } from './project-read-model';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 
@@ -37,6 +38,7 @@ export interface OpsStatusReport {
     latestDoneLevelValidation: string | null;
   };
   activeRun: ActiveRunProjection;
+  debt: OperationalDebtAggregate;
   mcp: {
     defaultMode: 'read-only';
     evidenceAttach: {
@@ -70,6 +72,7 @@ export function createOpsStatusReport(projectRoot: string): OpsStatusReport {
       extractValidationHistoryLine(sources.validationHistory.content, 'harness validate')
   };
   const activeRun = safeCreateActiveRunProjection(projectRoot);
+  const debt = createOperationalDebtReport(projectRoot);
   const issues = [...collectIssues(sources, validation), ...activeRun.issues];
 
   return {
@@ -91,6 +94,7 @@ export function createOpsStatusReport(projectRoot: string): OpsStatusReport {
     handoff: handoffSections,
     validation,
     activeRun,
+    debt: debt.aggregate,
     mcp: {
       defaultMode: 'read-only',
       evidenceAttach: {
@@ -113,6 +117,7 @@ export function formatOpsStatusReport(report: OpsStatusReport): string {
     `phase: ${report.project.phase}`,
     `branch: ${report.project.branch}`,
     `tasks: ${counts}`,
+    `debt: open ${report.debt.open}, highOpen ${report.debt.highOpen}`,
     `lastCompleted: ${report.tasks.lastCompleted.join(', ') || 'none'}`,
     `nextRecommended: ${report.tasks.nextRecommended ?? 'none'}`
   ].join('\n');

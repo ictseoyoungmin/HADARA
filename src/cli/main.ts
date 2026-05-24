@@ -14,6 +14,8 @@ import { handleRunStateCommand } from './run-state';
 import { handleOpsCommand, handleStatusCommand } from './status';
 import { handleDashboardCommand } from './dashboard';
 import { handleToolsCommand } from './tools';
+import { handleDebtCommand } from './debt';
+import { handleReleaseGateCommand } from './release-gate';
 import { getFlag, getStringOption } from './args';
 import { cliErrorExitCode, createCliErrorReport } from './errors';
 
@@ -28,6 +30,8 @@ Usage:
   hadara task show <task-id>
   hadara evidence collect --task <task-id> [--kind note|test-log|command-log|diff-summary|screenshot] [--path <path>] [--summary <text>] [--result passed|failed|blocked|unknown] [--private]
   hadara evidence list --task <task-id> [--limit <n>] [--include-private] [--json]
+  hadara debt list [--json]
+  hadara debt show <id> [--json]
   hadara tools list [--json]
   hadara handoff update --task <task-id> [--summary <text>] [--next <text>]
   hadara policy check-shell <command> [--mode readonly|assisted|trusted|auto|release]
@@ -41,6 +45,7 @@ Usage:
   hadara ops status [--json]
   hadara run-state show [--json]
   hadara run-state resume [--json]
+  hadara release gate [--json]
   hadara dashboard serve [--host <host>] [--port <port>]
   hadara run scaffold --task <task-id> --command <command> [--stdout <text>] [--stderr <text>] [--exit-code <n>] [--json]
   hadara run [request] --script <script.json> [--task <task-id>] [--fake-shell-fixtures <fixtures.json>] [--mode readonly|assisted|trusted|auto|release] [--max-steps <n>] [--json]
@@ -85,6 +90,11 @@ async function main(args = process.argv.slice(2)): Promise<void> {
 
     case 'tools': {
       if (handleToolsCommand({ args, jsonOutput })) return;
+      break;
+    }
+
+    case 'debt': {
+      if (handleDebtCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
@@ -135,6 +145,11 @@ async function main(args = process.argv.slice(2)): Promise<void> {
 
     case 'run-state': {
       if (handleRunStateCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
+      break;
+    }
+
+    case 'release': {
+      if (handleReleaseGateCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
   }

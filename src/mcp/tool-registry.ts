@@ -6,6 +6,7 @@ import { createHandoffReadReport, createProjectStateReadReport } from '../servic
 import { createActiveRunResumeReport, safeCreateActiveRunProjection } from '../services/active-run-state';
 import { createEvidenceListReport } from '../services/evidence-list';
 import { createHarnessValidateReport } from '../services/harness-service';
+import { createOperationalDebtReport, createOperationalDebtShowReport } from '../services/operational-debt';
 import { createPolicyEvaluateReport } from '../services/policy-service';
 import { createTaskListReport, createTaskReadReport } from '../services/task-read-model';
 import { createToolsListReport } from '../services/tools-list';
@@ -77,6 +78,10 @@ function handleReadOnlyTool(projectRoot: string, name: string, args: Record<stri
       return safeCreateActiveRunProjection(projectRoot);
     case 'hadara.active.run.resume':
       return createActiveRunResumeReport(projectRoot);
+    case 'hadara.debt.list':
+      return createOperationalDebtReport(projectRoot);
+    case 'hadara.debt.show':
+      return createOperationalDebtShowReport(projectRoot, String(args.id));
     default:
       throw new Error(`unregistered MCP tool handler: ${name}`);
   }

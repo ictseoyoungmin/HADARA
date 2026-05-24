@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createTaskListReport } from '../../src/cli/task-json';
 import { handleMcpJsonRpcMessage } from '../../src/mcp/server';
 import { createHarnessValidateReport } from '../../src/services/harness-service';
+import { createOperationalDebtReport, createOperationalDebtShowReport } from '../../src/services/operational-debt';
 import { createActiveRunManifest, createActiveRunResumeReport, safeCreateActiveRunProjection, writeActiveRunManifest } from '../../src/services/active-run-state';
 import { createShellExecutionPreflight } from '../../src/policy/preflight';
 import { createTaskCapsule } from '../../src/task/task-capsule';
@@ -108,6 +109,13 @@ describe('MCP bridge contract', () => {
 
     expect(mcpToolPayload(root, 'hadara.active.run.read')).toEqual(safeCreateActiveRunProjection(root));
     expect(mcpToolPayload(root, 'hadara.active.run.resume')).toEqual(createActiveRunResumeReport(root));
+  });
+
+  it('matches operational debt MCP payloads to shared debt services', () => {
+    const root = tempProject();
+
+    expect(mcpToolPayload(root, 'hadara.debt.list')).toEqual(createOperationalDebtReport(root));
+    expect(mcpToolPayload(root, 'hadara.debt.show', { id: 'OD-0008' })).toEqual(createOperationalDebtShowReport(root, 'OD-0008'));
   });
 
   it('covers read-only bridge-specific payload shapes', () => {
