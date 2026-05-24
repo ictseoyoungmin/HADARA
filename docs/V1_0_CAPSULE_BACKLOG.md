@@ -2,7 +2,8 @@
 
 This document turns `docs/specs/HADARA_Core_v1.0_Technical_Development_Plan.md` into concrete future Task Capsule candidates.
 
-Use this file when creating the next capsule after T-0072. Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
+Use this file when creating the next v1.0 capsule after the latest completed baseline.
+Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
 
 ## Current Baseline
 

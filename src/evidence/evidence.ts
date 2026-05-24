@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDir } from '../core/fs';
-import { createRedactionReport, hasBlockingRedactionFinding, redactSecrets } from '../core/redaction';
+import { createRedactionReport, hasBlockingRedactionFinding, redactSecrets, RedactionReport } from '../core/redaction';
 import { resolveProjectFile } from '../core/workspace';
 
 export interface EvidenceRecord {
@@ -33,7 +33,11 @@ export interface EvidenceAppendResult {
 export type EvidenceArtifactPolicyErrorCode = 'PUBLIC_ARTIFACT_BINARY_REJECTED' | 'PUBLIC_ARTIFACT_SECRET_DETECTED';
 
 export class EvidenceArtifactPolicyError extends Error {
-  constructor(public readonly code: EvidenceArtifactPolicyErrorCode, message: string) {
+  constructor(
+    public readonly code: EvidenceArtifactPolicyErrorCode,
+    message: string,
+    public readonly redactionReport?: RedactionReport
+  ) {
     super(message);
     this.name = 'EvidenceArtifactPolicyError';
   }
@@ -128,7 +132,8 @@ function copyPublicEvidenceArtifact(input: {
   if (hasBlockingRedactionFinding(report, 'high')) {
     throw new EvidenceArtifactPolicyError(
       'PUBLIC_ARTIFACT_SECRET_DETECTED',
-      'Public evidence artifact contains secret-like content; collect it as private evidence or redact the source file first.'
+      'Public evidence artifact contains secret-like content; collect it as private evidence or redact the source file first.',
+      report
     );
   }
 
@@ -150,7 +155,8 @@ function writePublicEvidenceTextArtifact(input: {
   if (hasBlockingRedactionFinding(report, 'high')) {
     throw new EvidenceArtifactPolicyError(
       'PUBLIC_ARTIFACT_SECRET_DETECTED',
-      'Public evidence artifact contains secret-like content; collect it as private evidence or redact the source file first.'
+      'Public evidence artifact contains secret-like content; collect it as private evidence or redact the source file first.',
+      report
     );
   }
 

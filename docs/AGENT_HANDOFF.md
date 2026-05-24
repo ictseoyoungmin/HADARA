@@ -34,14 +34,14 @@
 - V1.0 planning is now split into concrete implementation references: `docs/V1_0_CAPSULE_BACKLOG.md` tracks future capsule candidates and `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` preserves detailed schema/file/test notes from the v1.0 technical plan.
 - T-0072 is complete: v1.0 planning docs now explicitly separate T-0066 through T-0070 current implementation from future expansion targets, including fixture location, service parity scope, active-run schema/path, debt persistence caveats, and degraded-read robustness scope.
 - T-0074 is complete: redaction now uses a registry/report model with pattern ids, severities, byte counts, finding counts, and broader high-risk token coverage while preserving existing evidence/audit redaction APIs.
-- T-0075 is complete: public evidence artifact policy now uses `hasBlockingRedactionFinding(report, 'high')`, `containsSecret()` remains an any-finding compatibility wrapper, redaction count overlap semantics are documented, future active-run MCP tool names use dot-separated segments, and context export MCP planning shows memory-mode output with `contextPath: null`.
+- T-0075 is complete: public evidence artifact policy now uses `hasBlockingRedactionFinding(report, 'high')`, `containsSecret()` remains an any-finding compatibility wrapper, redaction count overlap semantics are documented, blocking policy errors retain internal redaction reports without exposing them in evidence collect output, non-blocking findings are diagnostics only, future active-run MCP tool names use dot-separated segments, and context export MCP planning shows memory-mode output with `contextPath: null`.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
 - T-0072 Core v1.0 Technical Plan Refresh: aligned v1.0 planning docs with T-0066 through T-0070 implementation/design mismatch notes.
 - T-0074 Redaction Hardening: added a redaction registry/report model and broader public evidence secret detection.
-- T-0075 Redaction Policy Follow-up: separated redaction reports from public artifact policy blocking and aligned MCP planning names.
+- T-0075 Redaction Policy Follow-up: separated redaction reports from public artifact policy blocking, added internal policy-error redaction reports, and aligned MCP planning names.
 
 ## Current Known Problems
 
@@ -62,9 +62,9 @@
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm run check` passed with 33 test files and 181 tests after T-0075.
+- Latest full check: Docker `npm run check` passed with 33 test files and 182 tests after T-0075.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0075 --level done --json --project /workspace` returned `ok: true`.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0075 --level done --json --project /workspace` returned `ok: true` after the policy-error report follow-up.
 
 ## Historical Index
 

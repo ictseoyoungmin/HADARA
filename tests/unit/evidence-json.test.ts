@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEvidenceCollectReport } from '../../src/cli/evidence-json';
 import { parseEvidenceResult } from '../../src/cli/evidence';
+import { appendEvidence, EvidenceArtifactPolicyError } from '../../src/evidence/evidence';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -159,8 +160,52 @@ describe('CLI evidence JSON reports', () => {
         }
       ]
     });
+    expect(report.issues[0]).not.toHaveProperty('redactionReport');
     expect(fs.existsSync(path.join(task.dir, 'artifacts'))).toBe(false);
     expect(JSON.stringify(report)).not.toContain('sk-abcdefghijklmnopqrstuvwxyz');
+  });
+
+  it('keeps redaction report details on internal artifact policy errors', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Inspect secret policy error');
+    fs.writeFileSync(path.join(root, 'secret.log'), 'api_key=sk-abcdefghijklmnopqrstuvwxyz', 'utf8');
+
+    expect(() =>
+      appendEvidence(root, {
+        taskId: 'T-0001',
+        kind: 'test-log',
+        path: 'secret.log',
+        summary: 'Attempt secret artifact copy',
+        result: 'blocked',
+        visibility: 'public'
+      })
+    ).toThrow(EvidenceArtifactPolicyError);
+
+    try {
+      appendEvidence(root, {
+        taskId: 'T-0001',
+        kind: 'test-log',
+        path: 'secret.log',
+        summary: 'Attempt secret artifact copy',
+        result: 'blocked',
+        visibility: 'public'
+      });
+    } catch (error) {
+      expect(error).toBeInstanceOf(EvidenceArtifactPolicyError);
+      const policyError = error as EvidenceArtifactPolicyError;
+      expect(policyError.redactionReport).toMatchObject({
+        schemaVersion: 'hadara.redaction.report.v1',
+        ok: false,
+        findings: expect.arrayContaining([
+          expect.objectContaining({
+            patternId: expect.any(String),
+            severity: expect.stringMatching(/high|critical/),
+            count: expect.any(Number)
+          })
+        ])
+      });
+      expect(JSON.stringify(policyError.redactionReport)).not.toContain('sk-abcdefghijklmnopqrstuvwxyz');
+    }
   });
 
   it('rejects unsupported evidence result values at runtime', () => {

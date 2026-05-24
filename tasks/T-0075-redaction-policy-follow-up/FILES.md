@@ -5,6 +5,7 @@
 | `src/core/redaction.ts` | Update | Add threshold helper and document finding count semantics. |
 | `src/evidence/evidence.ts` | Update | Use report threshold helper for public artifact rejection. |
 | `tests/unit/redaction.test.ts` | Update | Cover threshold helper behavior and compatibility wrapper behavior. |
+| `tests/unit/evidence-json.test.ts` | Update | Cover internal redaction report retention and user-facing report suppression. |
 | `docs/MCP_BRIDGE_CONTRACT.md` | Update | Align future active-run MCP tool names. |
 | `docs/ROADMAP.md` | Update | Align roadmap future active-run MCP tool names. |
 | `docs/DEVELOPMENT_SLICES.md` | Update | Align active-run slice done evidence with canonical tool names. |

@@ -342,6 +342,8 @@ Current implementation:
 - registry/report model with compatibility wrappers
 - public evidence artifact rejection through `hasBlockingRedactionFinding(report, 'high')`
 - `findings.count` is a per-pattern match count and may overlap across patterns when multiple detectors match the same input span
+- blocking `EvidenceArtifactPolicyError` instances may carry an internal `redactionReport`; user-facing outputs must not echo raw report content unless intentionally reduced to safe fields such as pattern ids, severities, and counts
+- non-blocking redaction findings are diagnostics only. Public artifact content is copied as-is when it passes the blocking threshold; it is not automatically rewritten unless a future sanitizing mode explicitly changes that policy.
 
 Target registry shape:
 

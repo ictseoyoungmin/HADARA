@@ -2,7 +2,7 @@
 
 ## Last Completed
 
-T-0075 separated redaction reports from public artifact policy blocking with a high-severity threshold helper, preserved `containsSecret()` compatibility, and aligned future active-run/context-export MCP planning names and memory-mode output examples.
+T-0075 separated redaction reports from public artifact policy blocking with a high-severity threshold helper, preserved `containsSecret()` compatibility, kept internal redaction report details on blocking artifact policy errors, documented non-blocking findings as diagnostics only, and aligned future active-run/context-export MCP planning names and memory-mode output examples.
 
 ## Next Recommended Step
 
