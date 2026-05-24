@@ -92,6 +92,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - V1.0 planning docs now explicitly separate T-0066 through T-0070 current implementation from future expansion targets, including compatibility fixture location, partial service parity, active-run local schema/path, operational debt persistence caveats, and degraded-read robustness scope.
 - Schema layer planning exists in `docs/SCHEMAS.md`; `src/schemas/schema-index.json` registers initial JSON Schema fixtures for `hadara.evidence.list.v1`, `hadara.context.export.v1`, and `hadara.tools.list.v1`. Runtime schema validation and release gates remain deferred.
 - Task read-model logic now lives in shared `src/services/task-read-model.ts`; CLI task JSON compatibility exports and read-only MCP task list/read both use the shared service.
+- Policy report logic now lives in shared `src/services/policy-service.ts`; CLI policy check/preflight compatibility exports and read-only MCP policy evaluate use the shared service.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.

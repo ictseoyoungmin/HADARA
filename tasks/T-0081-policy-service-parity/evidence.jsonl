@@ -1,0 +1,3 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T08:49:02.888Z","taskId":"T-0081","kind":"test-log","summary":"Focused Docker policy service parity checks passed: 4 files, 21 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T08:49:03.065Z","taskId":"T-0081","kind":"test-log","summary":"Docker npm run check passed: 36 test files, 201 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T08:49:55.856Z","taskId":"T-0081","kind":"test-log","summary":"Done-level harness validation passed for T-0081 with ok true.","result":"passed","visibility":"public"}

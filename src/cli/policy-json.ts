@@ -1,38 +1,6 @@
-import {
-  classifyShellCommand,
-  PermissionMode,
-  PolicyDecision,
-  ShellCommandAst,
-  tokenizeShellCommand
-} from '../policy/policy';
-
-export interface PolicyCheckReport {
-  schemaVersion: 'hadara.policy.check-shell.v1';
-  command: 'policy.check-shell';
-  ok: boolean;
-  input: {
-    mode: PermissionMode;
-    command: string;
-  };
-  shell: ShellCommandAst;
-  decision: PolicyDecision;
-}
-
-export function createPolicyCheckReport(command: string, mode: PermissionMode): PolicyCheckReport {
-  const shell = tokenizeShellCommand(command);
-  const decision = classifyShellCommand(command, mode);
-  return {
-    schemaVersion: 'hadara.policy.check-shell.v1',
-    command: 'policy.check-shell',
-    ok: decision.action !== 'deny',
-    input: {
-      mode,
-      command
-    },
-    shell,
-    decision
-  };
-}
+import { PermissionMode } from '../policy/policy';
+export { createPolicyCheckReport } from '../services/policy-service';
+export type { PolicyCheckReport } from '../services/policy-service';
 
 export function extractPolicyCommandText(args: string[], mode: PermissionMode): string {
   const commandParts: string[] = [];
@@ -48,4 +16,3 @@ export function extractPolicyCommandText(args: string[], mode: PermissionMode): 
   }
   return commandParts.join(' ').trim();
 }
-

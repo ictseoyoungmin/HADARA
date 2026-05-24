@@ -1,5 +1,5 @@
 import { parsePermissionMode } from '../policy/policy';
-import { createShellExecutionPreflight } from '../policy/preflight';
+import { createPolicyEvaluateReport } from '../services/policy-service';
 import { getStringOption } from './args';
 import { createPolicyCheckReport, extractPolicyCommandText } from './policy-json';
 
@@ -28,7 +28,7 @@ export function handlePolicyCommand(input: PolicyCommandInput): boolean {
     const mode = parsePermissionMode(getStringOption(input.args, '--mode', 'assisted') ?? 'assisted');
     const commandText = extractPolicyCommandText(input.args, mode);
     if (!commandText) throw new Error('policy preflight-shell requires <command>');
-    const report = createShellExecutionPreflight(commandText, mode);
+    const report = createPolicyEvaluateReport(commandText, mode);
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {

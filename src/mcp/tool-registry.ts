@@ -3,10 +3,9 @@ import { writeAuditEvent } from '../core/audit';
 import { resolveHadaraPaths } from '../core/paths';
 import { validateTaskCapsule } from '../harness/validate';
 import { createContextExportReport } from '../hermes/context-export';
-import { createShellExecutionPreflight } from '../policy/preflight';
-import { parsePermissionMode } from '../policy/policy';
 import { createHandoffReadReport, createProjectStateReadReport } from '../services/project-read-model';
 import { createEvidenceListReport } from '../services/evidence-list';
+import { createPolicyEvaluateReport } from '../services/policy-service';
 import { createTaskListReport, createTaskReadReport } from '../services/task-read-model';
 import { createToolsListReport } from '../services/tools-list';
 import { McpToolDefinition } from './tool-dispatch';
@@ -53,7 +52,7 @@ function handleReadOnlyTool(projectRoot: string, name: string, args: Record<stri
         summaryOnly: args.summaryOnly === true
       });
     case 'hadara.policy.evaluate':
-      return createShellExecutionPreflight(String(args.command), parsePermissionMode(typeof args.mode === 'string' ? args.mode : 'assisted'));
+      return createPolicyEvaluateReport(String(args.command), typeof args.mode === 'string' ? args.mode : 'assisted');
     case 'hadara.harness.validate':
       return validateTaskCapsule(projectRoot, String(args.taskId), {
         level: args.level === 'done' ? 'done' : 'draft'
