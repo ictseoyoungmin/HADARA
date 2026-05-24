@@ -50,6 +50,12 @@ describe('tools list read model', () => {
           name: 'hadara run scaffold --task <task-id> --command <command> --json',
           category: 'write',
           readOnly: false
+        }),
+        expect.objectContaining({
+          name: 'hadara run-state show --json',
+          category: 'read',
+          readOnly: true,
+          schemaVersion: 'hadara.active_run.projection.v1'
         })
       ])
     );
@@ -61,6 +67,12 @@ describe('tools list read model', () => {
           readOnly: true,
           enabledByDefault: true,
           availability: 'default'
+        }),
+        expect.objectContaining({
+          name: 'hadara.active.run.resume',
+          category: 'read',
+          readOnly: true,
+          schemaVersion: 'hadara.active_run.resume.v1'
         }),
         expect.objectContaining({
           name: 'hadara.evidence.attach',

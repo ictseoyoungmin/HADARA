@@ -16,6 +16,7 @@ Planned v1.0 read-only MCP extensions are tracked in `docs/V1_0_IMPLEMENTATION_S
 T-0076 completed `hadara.evidence.list` as a read-only extension.
 T-0077 completed `hadara.context.export` as a read-only memory-payload extension.
 T-0078 completed `hadara.tools.list` as a read-only capability discovery extension.
+T-0086 completed `hadara.active.run.read` and `hadara.active.run.resume` as read-only active-run projection extensions.
 
 ## Non-Goals
 
@@ -105,13 +106,13 @@ hadara.harness.validate
 hadara.evidence.list
 hadara.context.export
 hadara.tools.list
+hadara.active.run.read
+hadara.active.run.resume
 ```
 
 Planned v1.0 read-only candidates:
 
 ```text
-hadara.active.run.read
-hadara.active.run.resume
 hadara.debt.list
 ```
 
@@ -234,6 +235,72 @@ Output schema:
 ```
 
 The report is discovery-only. It must not enable disabled tools, execute commands, call providers, or mutate files. `availability` is the machine-readable status: `default` means usable in the normal CLI or MCP profile, `opt-in` means an explicit profile or flag is required, `disabled` means intentionally unavailable, and `deferred` means planned for later work. `enabledByDefault` is retained as a compatibility boolean derived from `availability`.
+
+### `hadara.active.run.read`
+
+Read the single active-run projection without mutating local state.
+
+Input schema:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Output schema:
+
+```json
+{
+  "schemaVersion": "hadara.active_run.projection.v1",
+  "command": "active-run.projection",
+  "ok": true,
+  "path": ".hadara/local/state/active-run.json",
+  "activeRun": null,
+  "handoff": {
+    "fresh": true,
+    "staleReason": null
+  },
+  "resume": null,
+  "issues": []
+}
+```
+
+Malformed local active-run state must degrade into warning issues instead of throwing transport errors.
+
+### `hadara.active.run.resume`
+
+Read resume guidance derived from the active-run projection. Despite the name, this is a read-only guidance report; it must not mutate active-run state, update handoff, execute commands, or call providers.
+
+Input schema:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Output schema:
+
+```json
+{
+  "schemaVersion": "hadara.active_run.resume.v1",
+  "command": "active-run.resume",
+  "ok": true,
+  "activeRun": null,
+  "resumePrompt": {
+    "summary": "No active run is currently recorded.",
+    "mustRead": ["docs/AGENT_HANDOFF.md", "docs/TASK_BOARD.md"],
+    "nextActions": ["Pick or create one Task Capsule before implementation."],
+    "constraints": ["Do not assume multi-agent queues."]
+  },
+  "issues": []
+}
+```
 
 ### `hadara.task.list`
 

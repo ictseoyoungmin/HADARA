@@ -85,6 +85,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - A Hermes-like compatibility fixture exists for the v0.3 external-agent flow; it replays exported context expectations and read-only MCP calls for project state, task list/read, handoff read, policy evaluate, and harness validate while confirming write/execution-like MCP tools are unavailable.
 - CLI/MCP read-model parity has started: project and handoff read logic now lives in a shared service used by Operations Status JSON and MCP project/handoff tools, with contract tests comparing MCP payloads against shared services and CLI/domain report builders.
 - Single active run state exists as a local project manifest at `.hadara/local/state/active-run.json`; Operations Status JSON exposes a read projection with resume guidance and a stale handoff warning when the active task id is missing from `docs/AGENT_HANDOFF.md`.
+- Active run read surfaces exist as `hadara run-state show --json`, `hadara run-state resume --json`, read-only MCP `hadara.active.run.read`, and read-only MCP `hadara.active.run.resume`; active-run writes remain deferred.
 - Operational debt tracking exists in `docs/OPERATIONAL_DEBT.md` and `src/services/operational-debt.ts`; it promotes `known_issue.log` themes into structured records, reports capsule size indicators, and warns on premature acceptance checks before Done status or evidence.
 - Operations state robustness is hardened: malformed active run local state degrades status JSON with warnings instead of throwing, active runs referencing missing Task Capsules are reported, premature acceptance uses valid evidence records, and shared Markdown section extraction matches heading lines only.
 - Reusable Docker development workflow is documented: the `hadara-dev` container can stay running, dependency-heavy work happens in `/tmp/hadara`, and new Task Capsules should be created through the HADARA CLI with `--project /workspace`.
@@ -98,6 +99,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Read-only MCP `hadara.task.read` excludes private evidence metadata by default; callers must pass `includePrivate: true` to receive sanitized private evidence metadata. `files["evidence.jsonl"]` is a sanitized read-model view, not raw file bytes.
 - Harness validation report logic now has shared `src/services/harness-service.ts`; CLI `harness validate` and read-only MCP `hadara.harness.validate` both use the shared service boundary.
 - Operations Status JSON report logic now has shared `src/services/operations-status-service.ts`; CLI `hadara status` and `hadara ops status` use the shared service boundary while `src/cli/status-json.ts` remains a compatibility export.
+- Active-run projection and resume guidance reuse `src/services/active-run-state.ts` across Operations Status, CLI run-state reads, and read-only MCP active-run tools.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.

@@ -3,6 +3,7 @@ import { writeAuditEvent } from '../core/audit';
 import { resolveHadaraPaths } from '../core/paths';
 import { createContextExportReport } from '../hermes/context-export';
 import { createHandoffReadReport, createProjectStateReadReport } from '../services/project-read-model';
+import { createActiveRunResumeReport, safeCreateActiveRunProjection } from '../services/active-run-state';
 import { createEvidenceListReport } from '../services/evidence-list';
 import { createHarnessValidateReport } from '../services/harness-service';
 import { createPolicyEvaluateReport } from '../services/policy-service';
@@ -72,6 +73,10 @@ function handleReadOnlyTool(projectRoot: string, name: string, args: Record<stri
       });
     case 'hadara.tools.list':
       return createToolsListReport({ enableEvidenceAttach: options.enableEvidenceAttach });
+    case 'hadara.active.run.read':
+      return safeCreateActiveRunProjection(projectRoot);
+    case 'hadara.active.run.resume':
+      return createActiveRunResumeReport(projectRoot);
     default:
       throw new Error(`unregistered MCP tool handler: ${name}`);
   }

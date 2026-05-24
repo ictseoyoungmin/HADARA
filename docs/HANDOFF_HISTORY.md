@@ -52,6 +52,7 @@ Historical completed-task handoff entries moved out of `docs/AGENT_HANDOFF.md` d
 - Completed T-0080 Service Parity Expansion first increment by moving task list/show/read reports into a shared task read-model service.
 - Completed T-0081 Policy Service Parity by moving policy check/evaluate reports into a shared policy service.
 - Completed T-0082 Cleanup Follow-up Notes by documenting redaction/schema/task.read/policy cleanup gaps and aligning policy check mode input with policy evaluate.
+- Completed T-0083 Task Read Evidence Normalization by reusing evidence-list normalization for task.read embedded evidenceIndex and sanitized evidence.jsonl views.
 
 ## Source Documents
 

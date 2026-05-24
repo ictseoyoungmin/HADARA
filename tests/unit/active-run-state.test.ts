@@ -5,11 +5,13 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   activeRunManifestPath,
   createActiveRunManifest,
+  createActiveRunResumeReport,
   createActiveRunProjection,
   readActiveRunManifest,
   safeCreateActiveRunProjection,
   writeActiveRunManifest
 } from '../../src/services/active-run-state';
+import { handleRunStateCommand } from '../../src/cli/run-state';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -157,6 +159,73 @@ describe('single active run state', () => {
       severity: 'warning',
       code: 'ACTIVE_RUN_TASK_NOT_FOUND',
       message: 'Active run T-9999 has no matching Task Capsule.'
+    });
+  });
+
+  it('creates read-only resume guidance from the active run projection', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Resume active run');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\n## Current State\n\n- ${task.id} is active.\n`, 'utf8');
+    writeActiveRunManifest(
+      root,
+      createActiveRunManifest(root, {
+        runId: 'run-resume',
+        taskId: task.id,
+        startedAt: '2026-05-24T02:09:00Z',
+        summary: 'Continue read surfaces.'
+      })
+    );
+
+    const report = createActiveRunResumeReport(root);
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.active_run.resume.v1',
+      command: 'active-run.resume',
+      ok: true,
+      activeRun: {
+        taskId: task.id
+      },
+      resumePrompt: {
+        summary: `Continue ${task.id}: Continue read surfaces.`,
+        mustRead: ['docs/AGENT_HANDOFF.md', 'tasks/T-0001-resume-active-run/TASK.md', 'tasks/T-0001-resume-active-run/HANDOFF.md'],
+        nextActions: [expect.stringContaining(task.id), 'Run required validation before marking the task Done.'],
+        constraints: expect.arrayContaining(['Do not use MCP write tools for active-run mutation.'])
+      },
+      issues: []
+    });
+  });
+
+  it('prints active run projection JSON through run-state show', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Run state show');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\n## Current State\n\n- ${task.id} is active.\n`, 'utf8');
+    writeActiveRunManifest(
+      root,
+      createActiveRunManifest(root, {
+        runId: 'run-show',
+        taskId: task.id,
+        startedAt: '2026-05-24T02:10:00Z',
+        summary: 'Show active state.'
+      })
+    );
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+
+    try {
+      expect(handleRunStateCommand({ args: ['run-state', 'show', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    expect(JSON.parse(output.join('\n'))).toMatchObject({
+      schemaVersion: 'hadara.active_run.projection.v1',
+      command: 'active-run.projection',
+      activeRun: {
+        taskId: task.id
+      }
     });
   });
 });

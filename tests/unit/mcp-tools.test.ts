@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { handleMcpJsonRpcMessage } from '../../src/mcp/server';
+import { createActiveRunManifest, writeActiveRunManifest } from '../../src/services/active-run-state';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -348,6 +349,13 @@ describe('MCP read tools', () => {
           availability: 'default'
         }),
         expect.objectContaining({
+          name: 'hadara.active.run.read',
+          category: 'read',
+          readOnly: true,
+          enabledByDefault: true,
+          availability: 'default'
+        }),
+        expect.objectContaining({
           name: 'hadara.evidence.attach',
           category: 'write',
           readOnly: false,
@@ -364,5 +372,46 @@ describe('MCP read tools', () => {
         expect.objectContaining({ name: 'mcp.write.*', category: 'write' })
       ])
     );
+  });
+
+  it('reads active run projection and resume guidance without mutating state', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'MCP active run');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\n## Current State\n\n- ${task.id} is active.\n`, 'utf8');
+    writeActiveRunManifest(
+      root,
+      createActiveRunManifest(root, {
+        runId: 'run-mcp',
+        taskId: task.id,
+        startedAt: '2026-05-24T02:11:00Z',
+        summary: 'MCP read active run.'
+      })
+    );
+
+    const readPayload = parseToolPayload(callTool(root, 'hadara.active.run.read'));
+    const resumePayload = parseToolPayload(callTool(root, 'hadara.active.run.resume'));
+
+    expect(readPayload).toMatchObject({
+      schemaVersion: 'hadara.active_run.projection.v1',
+      command: 'active-run.projection',
+      ok: true,
+      activeRun: {
+        taskId: task.id,
+        capsule: 'tasks/T-0001-mcp-active-run'
+      },
+      issues: []
+    });
+    expect(resumePayload).toMatchObject({
+      schemaVersion: 'hadara.active_run.resume.v1',
+      command: 'active-run.resume',
+      ok: true,
+      activeRun: {
+        taskId: task.id
+      },
+      resumePrompt: {
+        mustRead: ['docs/AGENT_HANDOFF.md', 'tasks/T-0001-mcp-active-run/TASK.md', 'tasks/T-0001-mcp-active-run/HANDOFF.md']
+      },
+      issues: []
+    });
   });
 });

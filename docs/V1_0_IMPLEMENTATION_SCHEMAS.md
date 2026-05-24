@@ -159,11 +159,18 @@ export interface ActiveRunProjection {
 }
 ```
 
-Future read-only MCP tools:
+Implemented read-only MCP tools:
 
 ```text
 hadara.active.run.read
 hadara.active.run.resume
+```
+
+Current CLI read surfaces:
+
+```bash
+hadara run-state show --json
+hadara run-state resume --json
 ```
 
 Future CLI writes:

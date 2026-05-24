@@ -198,6 +198,17 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     notes: 'Writes deterministic scenario files under .hadara/scenarios/.'
   },
   {
+    ...DEFAULT_READ,
+    name: 'hadara run-state show --json',
+    schemaVersion: 'hadara.active_run.projection.v1'
+  },
+  {
+    ...DEFAULT_READ,
+    name: 'hadara run-state resume --json',
+    schemaVersion: 'hadara.active_run.resume.v1',
+    notes: 'Read-only resume guidance derived from the active-run projection.'
+  },
+  {
     name: 'hadara run --script <script.json> --json',
     category: 'execute',
     stable: true,
@@ -327,6 +338,26 @@ export const HADARA_MCP_READ_CAPABILITIES: McpCapabilityDefinition[] = [
       properties: {}
     },
     surface: { ...DEFAULT_READ, name: 'hadara.tools.list', schemaVersion: 'hadara.tools.list.v1' }
+  },
+  {
+    name: 'hadara.active.run.read',
+    description: 'Read the single active-run projection without mutating local state.',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {}
+    },
+    surface: { ...DEFAULT_READ, name: 'hadara.active.run.read', schemaVersion: 'hadara.active_run.projection.v1' }
+  },
+  {
+    name: 'hadara.active.run.resume',
+    description: 'Read resume guidance derived from the active-run projection without mutating local state.',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {}
+    },
+    surface: { ...DEFAULT_READ, name: 'hadara.active.run.resume', schemaVersion: 'hadara.active_run.resume.v1' }
   }
 ];
 

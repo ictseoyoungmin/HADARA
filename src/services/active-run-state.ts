@@ -37,6 +37,20 @@ export interface ActiveRunProjection {
   }>;
 }
 
+export interface ActiveRunResumeReport {
+  schemaVersion: 'hadara.active_run.resume.v1';
+  command: 'active-run.resume';
+  ok: true;
+  activeRun: ActiveRunManifest | null;
+  resumePrompt: {
+    summary: string;
+    mustRead: string[];
+    nextActions: string[];
+    constraints: string[];
+  };
+  issues: ActiveRunProjection['issues'];
+}
+
 export function activeRunManifestPath(projectRoot: string): string {
   return path.join(projectRoot, '.hadara', 'local', 'state', 'active-run.json');
 }
@@ -154,6 +168,35 @@ export function safeCreateActiveRunProjection(projectRoot: string): ActiveRunPro
       ]
     };
   }
+}
+
+export function createActiveRunResumeReport(projectRoot: string): ActiveRunResumeReport {
+  const projection = safeCreateActiveRunProjection(projectRoot);
+  const activeRun = projection.activeRun;
+  const taskId = activeRun?.taskId ?? null;
+  const capsule = activeRun?.capsule || (taskId ? `tasks/${taskId}` : null);
+
+  return {
+    schemaVersion: 'hadara.active_run.resume.v1',
+    command: 'active-run.resume',
+    ok: true,
+    activeRun,
+    resumePrompt: {
+      summary: activeRun ? `Continue ${activeRun.taskId}: ${activeRun.summary}` : 'No active run is currently recorded.',
+      mustRead: activeRun
+        ? ['docs/AGENT_HANDOFF.md', `${capsule}/TASK.md`, `${capsule}/HANDOFF.md`]
+        : ['docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md'],
+      nextActions: activeRun
+        ? [projection.resume?.nextAction ?? `Resume ${activeRun.taskId}.`, 'Run required validation before marking the task Done.']
+        : ['Pick or create one Task Capsule before implementation.', 'Follow docs/AGENT_HANDOFF.md for the next recommended step.'],
+      constraints: [
+        'Do not assume multi-agent queues.',
+        'Do not use MCP write tools for active-run mutation.',
+        'Attach evidence before marking work Done.'
+      ]
+    },
+    issues: projection.issues
+  };
 }
 
 function findStaleHandoffReason(projectRoot: string, activeRun: ActiveRunManifest): string | null {

@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createTaskListReport } from '../../src/cli/task-json';
 import { handleMcpJsonRpcMessage } from '../../src/mcp/server';
 import { createHarnessValidateReport } from '../../src/services/harness-service';
+import { createActiveRunManifest, createActiveRunResumeReport, safeCreateActiveRunProjection, writeActiveRunManifest } from '../../src/services/active-run-state';
 import { createShellExecutionPreflight } from '../../src/policy/preflight';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
@@ -89,6 +90,24 @@ describe('MCP bridge contract', () => {
     expect(mcpToolPayload(root, 'hadara.harness.validate', { taskId: task.id, level: 'draft' })).toEqual(
       createHarnessValidateReport(root, task.id, { level: 'draft' })
     );
+  });
+
+  it('matches active run MCP payloads to shared active-run services', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Contract active run');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\n## Current State\n\n- ${task.id} is active.\n`, 'utf8');
+    writeActiveRunManifest(
+      root,
+      createActiveRunManifest(root, {
+        runId: 'run-contract',
+        taskId: task.id,
+        startedAt: '2026-05-24T02:12:00Z',
+        summary: 'Contract read.'
+      })
+    );
+
+    expect(mcpToolPayload(root, 'hadara.active.run.read')).toEqual(safeCreateActiveRunProjection(root));
+    expect(mcpToolPayload(root, 'hadara.active.run.resume')).toEqual(createActiveRunResumeReport(root));
   });
 
   it('covers read-only bridge-specific payload shapes', () => {

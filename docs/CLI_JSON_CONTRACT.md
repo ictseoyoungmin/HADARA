@@ -31,6 +31,8 @@ Examples include:
 - `hadara.harness.replay.v1`
 - `hadara.agent.loop.v1`
 - `hadara.ops.status.v1`
+- `hadara.active_run.projection.v1`
+- `hadara.active_run.resume.v1`
 - `hadara.context.export.v1` (MCP read-only memory payload)
 
 Agents should treat `issues` as the primary machine-readable failure detail when present.
@@ -94,7 +96,6 @@ The MCP bridge should preserve these CLI semantics where it delegates to existin
 
 The following schemas are planned or partial and should not be treated as stable until their Task Capsules complete:
 
-- `hadara.active_run.projection.v1` as a direct CLI/MCP read surface
 - `hadara.operational_debt.v1` as a CLI/MCP read surface
 - `hadara.redaction.report.v1`
 - `hadara.releaseGate.v1`
