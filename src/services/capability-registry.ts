@@ -230,7 +230,8 @@ export const HADARA_MCP_READ_CAPABILITIES: McpCapabilityDefinition[] = [
       required: ['taskId'],
       additionalProperties: false,
       properties: {
-        taskId: { type: 'string', pattern: '^T-[0-9]{4}$' }
+        taskId: { type: 'string', pattern: '^T-[0-9]{4}$' },
+        includePrivate: { type: 'boolean', default: false }
       }
     },
     surface: { ...DEFAULT_READ, name: 'hadara.task.read' }

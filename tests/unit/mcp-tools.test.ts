@@ -104,6 +104,37 @@ describe('MCP read tools', () => {
     expect(payload.files['FILES.md']).toContain('| Path | Action | Reason |');
   });
 
+  it('excludes private task read evidence unless explicitly requested', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'MCP task read private');
+    fs.writeFileSync(
+      path.join(task.dir, 'evidence.jsonl'),
+      '{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T00:00:00.000Z","taskId":"T-0001","kind":"note","summary":"private note","result":"passed","visibility":"private","evidencePath":"artifacts/private.log"}\n',
+      'utf8'
+    );
+
+    const defaultPayload = parseToolPayload(callTool(root, 'hadara.task.read', { taskId: task.id }));
+    expect(defaultPayload.evidenceIndex).toEqual([]);
+    expect(defaultPayload.files['evidence.jsonl']).toBe('');
+    expect(JSON.stringify(defaultPayload)).not.toContain('private note');
+    expect(JSON.stringify(defaultPayload)).not.toContain('private.log');
+
+    const privatePayload = parseToolPayload(callTool(root, 'hadara.task.read', { taskId: task.id, includePrivate: true }));
+    expect(privatePayload.evidenceIndex).toEqual([
+      {
+        schemaVersion: 'hadara.evidence.v1',
+        time: '2026-05-24T00:00:00.000Z',
+        taskId: task.id,
+        kind: 'note',
+        summary: 'private note',
+        result: 'passed',
+        visibility: 'private'
+      }
+    ]);
+    expect(privatePayload.files['evidence.jsonl']).toContain('"visibility":"private"');
+    expect(JSON.stringify(privatePayload)).not.toContain('private.log');
+  });
+
   it('reads handoff state with bounded optional history', () => {
     const root = tempProject();
 

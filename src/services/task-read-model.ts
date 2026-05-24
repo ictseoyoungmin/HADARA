@@ -58,6 +58,10 @@ export interface TaskReadReport {
   issues: EvidenceListIssue[];
 }
 
+export interface TaskReadOptions {
+  includePrivate?: boolean;
+}
+
 export function createTaskListReport(projectRoot: string): TaskListReport {
   const tasks = listTaskCapsules(projectRoot).map((task) => summarizeTask(projectRoot, task));
   return {
@@ -98,7 +102,7 @@ export function createTaskShowReport(projectRoot: string, taskId: string): TaskS
   };
 }
 
-export function createTaskReadReport(projectRoot: string, taskId: string): TaskReadReport {
+export function createTaskReadReport(projectRoot: string, taskId: string, options: TaskReadOptions = {}): TaskReadReport {
   const task = listTaskCapsules(projectRoot).find((item) => item.id === taskId);
   if (!task) {
     return {
@@ -122,14 +126,16 @@ export function createTaskReadReport(projectRoot: string, taskId: string): TaskR
     })
   );
   const evidenceParse = parseEvidenceIndexFile(path.join(task.dir, 'evidence.jsonl'), task.id);
-  files['evidence.jsonl'] = formatEvidenceIndexFile(evidenceParse.records);
+  const includePrivate = options.includePrivate === true;
+  const evidenceRecords = evidenceParse.records.filter((record) => includePrivate || record.visibility !== 'private');
+  files['evidence.jsonl'] = formatEvidenceIndexFile(evidenceRecords);
   return {
     schemaVersion: 'hadara.task.read.v1',
     command: 'task.read',
     ok: !evidenceParse.issues.some((issue) => issue.severity === 'error'),
     task: summarizeTask(projectRoot, task),
     files,
-    evidenceIndex: evidenceParse.records,
+    evidenceIndex: evidenceRecords,
     issues: evidenceParse.issues
   };
 }

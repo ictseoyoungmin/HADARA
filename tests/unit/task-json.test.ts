@@ -106,17 +106,8 @@ describe('CLI task JSON reports', () => {
     const report = createTaskReadReport(root, task.id);
 
     expect(report.ok).toBe(true);
-    expect(report.evidenceIndex).toEqual([
-      {
-        schemaVersion: 'hadara.evidence.v1',
-        time: '2026-05-24T00:00:00.000Z',
-        taskId: task.id,
-        kind: 'command-log',
-        summary: 'token=[REDACTED]',
-        result: 'passed',
-        visibility: 'private'
-      }
-    ]);
+    expect(report.evidenceIndex).toEqual([]);
+    expect(report.files?.['evidence.jsonl']).toBe('');
     expect(report.issues).toEqual([
       {
         severity: 'warning',
@@ -129,12 +120,40 @@ describe('CLI task JSON reports', () => {
         message: 'evidence.jsonl line 3 is not valid JSON.'
       }
     ]);
-    expect(report.files?.['evidence.jsonl']).toBe(
-      '{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T00:00:00.000Z","taskId":"T-0001","kind":"command-log","summary":"token=[REDACTED]","result":"passed","visibility":"private"}\n'
-    );
     expect(JSON.stringify(report)).not.toContain('private.log');
     expect(JSON.stringify(report)).not.toContain('secret-value');
     expect(JSON.stringify(report)).not.toContain('absolutePath');
+
+    const privateReport = createTaskReadReport(root, task.id, { includePrivate: true });
+    expect(privateReport.evidenceIndex).toEqual([
+      {
+        schemaVersion: 'hadara.evidence.v1',
+        time: '2026-05-24T00:00:00.000Z',
+        taskId: task.id,
+        kind: 'command-log',
+        summary: 'token=[REDACTED]',
+        result: 'passed',
+        visibility: 'private'
+      }
+    ]);
+    expect(privateReport.issues).toEqual([
+      {
+        severity: 'warning',
+        code: 'EVIDENCE_RECORD_TASK_MISMATCH',
+        message: `evidence.jsonl line 2 has taskId T-9999, expected ${task.id}.`
+      },
+      {
+        severity: 'warning',
+        code: 'EVIDENCE_INDEX_JSON_INVALID',
+        message: 'evidence.jsonl line 3 is not valid JSON.'
+      }
+    ]);
+    expect(privateReport.files?.['evidence.jsonl']).toBe(
+      '{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T00:00:00.000Z","taskId":"T-0001","kind":"command-log","summary":"token=[REDACTED]","result":"passed","visibility":"private"}\n'
+    );
+    expect(JSON.stringify(privateReport)).not.toContain('private.log');
+    expect(JSON.stringify(privateReport)).not.toContain('secret-value');
+    expect(JSON.stringify(privateReport)).not.toContain('absolutePath');
   });
 
   it('returns a stable missing task envelope', () => {

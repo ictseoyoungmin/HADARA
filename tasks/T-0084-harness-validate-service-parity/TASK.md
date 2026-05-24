@@ -10,6 +10,8 @@ Continue Service Parity Expansion by routing harness validation report creation 
 - Route CLI `harness validate` through the shared harness service.
 - Route read-only MCP `hadara.harness.validate` through the shared harness service.
 - Update parity/contract tests to compare MCP harness validate payloads against the shared service.
+- Apply conservative `task.read` evidence exposure policy: private evidence metadata is excluded by default and only included when `includePrivate` is true.
+- Document that `task.read` `files["evidence.jsonl"]` is a sanitized read-model view, not raw file bytes.
 
 ## Out of Scope
 
@@ -17,6 +19,7 @@ Continue Service Parity Expansion by routing harness validation report creation 
 - No replay service refactor.
 - No schema runtime validation or release gates.
 - No MCP writes, shell execution, provider calls, or dashboard APIs.
+- No full redaction scan for all Task Capsule Markdown files.
 
 ## Status
 

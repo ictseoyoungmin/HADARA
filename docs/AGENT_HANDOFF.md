@@ -43,14 +43,14 @@
 - T-0081 is complete: policy check/evaluate report logic now lives in shared `src/services/policy-service.ts`, CLI policy JSON imports remain compatible, and CLI preflight plus read-only MCP policy evaluate route through the shared service with parity coverage.
 - T-0082 is complete: cleanup follow-up notes now document redaction policy observability, schema strictness levels, task.read embedded evidence normalization, and PolicyService authorization limitations; `createPolicyCheckReport()` now accepts string/default mode input consistently with policy evaluate.
 - T-0083 is complete: `task.read` embedded evidence now reuses evidence-list normalization for `evidenceIndex` and `files["evidence.jsonl"]`, stripping private paths and unknown fields, dropping taskId mismatches, warning on malformed lines, and redacting summaries.
-- T-0084 is complete: harness validate report access now lives behind shared `src/services/harness-service.ts`, with CLI `harness validate` and read-only MCP `hadara.harness.validate` routed through it.
+- T-0084 is complete: harness validate report access now lives behind shared `src/services/harness-service.ts`, with CLI `harness validate` and read-only MCP `hadara.harness.validate` routed through it. MCP `hadara.task.read` now excludes private evidence metadata by default and supports explicit `includePrivate`; `files["evidence.jsonl"]` is documented as a sanitized read-model view.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
 - T-0082 Cleanup Follow-up Notes: captured redaction/schema/task.read/policy cleanup gaps and aligned policy check mode input with policy evaluate.
 - T-0083 Task Read Evidence Normalization: reused evidence-list normalization for task.read embedded evidenceIndex and sanitized evidence.jsonl view.
-- T-0084 Harness Validate Service Parity: routed CLI and MCP harness validate through a shared harness validation report service.
+- T-0084 Harness Validate Service Parity: routed CLI and MCP harness validate through a shared harness validation report service, and tightened task.read private evidence defaults.
 
 ## Current Known Problems
 
@@ -71,8 +71,8 @@
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm run check` passed with 36 test files and 203 tests after T-0084.
-- Latest focused harness service parity check: Docker `npx vitest run tests/contract/cli-mcp-service-parity.test.ts tests/contract/mcp-bridge-contract.test.ts tests/harness/harness-validate.test.ts tests/unit/mcp-tools.test.ts` passed with 4 files and 33 tests.
+- Latest full check: Docker `npm run check` passed with 36 test files and 204 tests after the T-0084 task.read private evidence policy update.
+- Latest focused task.read policy check: Docker `npx vitest run tests/unit/task-json.test.ts tests/unit/mcp-tools.test.ts tests/contract/cli-mcp-service-parity.test.ts tests/unit/tools-list.test.ts` passed with 4 files and 23 tests.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
 - Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0084 --level done --json --project /workspace` returned `ok: true`.
 

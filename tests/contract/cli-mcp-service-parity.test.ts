@@ -74,6 +74,9 @@ describe('CLI/MCP service parity', () => {
       issues: []
     });
     expect(mcpToolPayload(root, 'hadara.task.read', { taskId: task.id })).toEqual(createTaskReadReport(root, task.id));
+    expect(mcpToolPayload(root, 'hadara.task.read', { taskId: task.id, includePrivate: true })).toEqual(
+      createTaskReadReport(root, task.id, { includePrivate: true })
+    );
     expect(mcpToolPayload(root, 'hadara.policy.evaluate', { command: 'npm run check', mode: 'assisted' })).toEqual(
       createPolicyEvaluateReport('npm run check', 'assisted')
     );

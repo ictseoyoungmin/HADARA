@@ -281,10 +281,15 @@ Input schema:
   "required": ["taskId"],
   "additionalProperties": false,
   "properties": {
-    "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" }
+    "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+    "includePrivate": { "type": "boolean", "default": false }
   }
 }
 ```
+
+By default, `task.read` excludes private evidence records from `evidenceIndex` and from `files["evidence.jsonl"]`. Set `includePrivate: true` to include sanitized private evidence metadata. Private artifact paths and artifact contents are never returned.
+
+In `task.read`, `files["evidence.jsonl"]` is a sanitized read-model view, not a byte-for-byte copy of the underlying file. Other Task Capsule Markdown files are currently returned as committed file content and must follow the project rule that secrets, private logs, and machine-local state are not written to committed files.
 
 Output schema:
 

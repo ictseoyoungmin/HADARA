@@ -40,7 +40,9 @@ function handleReadOnlyTool(projectRoot: string, name: string, args: Record<stri
         issues: []
       };
     case 'hadara.task.read':
-      return createTaskReadReport(projectRoot, String(args.taskId));
+      return createTaskReadReport(projectRoot, String(args.taskId), {
+        includePrivate: args.includePrivate === true
+      });
     case 'hadara.handoff.read':
       return createHandoffReadReport(projectRoot, {
         includeHistory: args.includeHistory === true,
