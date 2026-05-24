@@ -25,13 +25,17 @@
 - T-0063 is complete: `docs/ARCHITECTURE.md` and `docs/ROADMAP.md` now distinguish implemented, partial, and deferred capabilities in line with `docs/PROJECT_STATE.md`.
 - T-0064 is complete: `docs/ROADMAP.md` now freezes v0.3 as the current read-only Operations Layer, lists explicit in/out-of-scope boundaries, separates v0.3-v1.0 candidate scopes, and adds an Operational Debt Track.
 - T-0065 is complete: context export now includes roadmap/slice ordering and instructs external agents to prefer HADARA CLI JSON or read-only MCP surfaces before falling back to raw repository documents.
+- T-0066 is complete: a Hermes-like compatibility fixture now replays exported context expectations and read-only MCP calls for project/task/handoff/policy/harness state, while proving write/execution-like MCP tools remain unavailable.
+- T-0067 is complete: project/handoff read-model logic now lives in a shared service used by Operations Status JSON and MCP project/handoff tools, with parity tests against shared services and CLI/domain report builders.
+- T-0068 is complete: single active run state now uses `.hadara/local/state/active-run.json`, exposes an Operations Status JSON projection, provides resume guidance, and warns when handoff omits the active task id.
+- T-0069 is complete: `known_issue.log` themes now exist as structured operational debt records with capsule size indicators and premature acceptance warning checks.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0063 Architecture/Roadmap State Reconciliation: aligned high-level docs with current implemented, partial, and deferred HADARA capabilities.
-- T-0064 Roadmap v0.3 Operations Layer Freeze: froze v0.3 as the read-only Operations Layer, deferred provider/live/MCP-write scope, and added Operational Debt Track.
-- T-0065 Context Export MCP Instructions: added roadmap/slice context and MCP/CLI-first read-surface instructions for external agents.
+- T-0067 CLI/MCP Service Parity Refactor: moved project/handoff read models into shared services and added CLI/MCP parity coverage.
+- T-0068 Single Active Run State: added local active run manifest, resume projection, stale handoff warning, and status JSON exposure.
+- T-0069 Operational Debt Track: added structured debt records, capsule size indicators, and premature acceptance warning checks.
 
 ## Current Known Problems
 
@@ -45,16 +49,16 @@
 
 ## Next Recommended Step
 
-1. Start T-0066 Compatibility Fixture to prove a Hermes-like external agent can follow the exported guidance through read-only MCP/CLI JSON.
+1. Review the completed v0.3 Operations Layer follow-up sequence before starting Real Provider Adapter Preparation; keep provider execution non-default and secrets excluded.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm ci && npm run check` passed with 29 test files and 159 tests after T-0065.
-- Latest focused context export check: Docker `npm test -- tests/unit/hermes-json.test.ts` passed with 3 tests.
-- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0064 --level done --json` and `node dist/cli/main.js harness validate --task T-0065 --level done --json` returned `ok: true`.
+- Latest full check: Docker `npm ci && npm run check` passed with 33 test files and 169 tests after T-0069.
+- Latest focused operational debt check: Docker `npm test -- tests/unit/operational-debt.test.ts` passed with 3 tests.
+- Latest done-level validation: Docker `node dist/cli/main.js harness validate --task T-0069 --level done --json` returned `ok: true`.
 
 ## Historical Index
 

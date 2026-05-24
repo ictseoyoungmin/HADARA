@@ -79,6 +79,10 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Architecture and roadmap docs now distinguish implemented bootstrap capabilities, partial self-hosting surfaces, and deferred full-dogfooding work.
 - Roadmap is frozen around the v0.3 Operations Layer: single active agent/session, stable CLI JSON, read-only MCP, evidence/handoff continuity, context export, compatibility fixture, and static operations dashboard remain in scope while multi-agent concurrency, broad MCP writes, MCP shell/release/package execution, live dashboard streaming, and real provider execution as the default path remain out of scope.
 - Context export now includes roadmap and development slice ordering and instructs external agents to prefer HADARA CLI JSON or read-only MCP surfaces before falling back to raw repository documents.
+- A Hermes-like compatibility fixture exists for the v0.3 external-agent flow; it replays exported context expectations and read-only MCP calls for project state, task list/read, handoff read, policy evaluate, and harness validate while confirming write/execution-like MCP tools are unavailable.
+- CLI/MCP read-model parity has started: project and handoff read logic now lives in a shared service used by Operations Status JSON and MCP project/handoff tools, with contract tests comparing MCP payloads against shared services and CLI/domain report builders.
+- Single active run state exists as a local project manifest at `.hadara/local/state/active-run.json`; Operations Status JSON exposes a read projection with resume guidance and a stale handoff warning when the active task id is missing from `docs/AGENT_HANDOFF.md`.
+- Operational debt tracking exists in `docs/OPERATIONAL_DEBT.md` and `src/services/operational-debt.ts`; it promotes `known_issue.log` themes into structured records, reports capsule size indicators, and warns on premature acceptance checks before Done status or evidence.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.

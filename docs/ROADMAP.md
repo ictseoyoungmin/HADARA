@@ -105,6 +105,8 @@ Candidate scope:
 
 HADARA development must track operational pain points discovered while dogfooding HADARA itself. These are not ordinary bugs; they indicate weaknesses in HADARA's continuity, validation, or scope-control model.
 
+Structured records live in `docs/OPERATIONAL_DEBT.md`.
+
 ### Current Operational Debt
 
 - Capsule size is not yet measured or controlled.

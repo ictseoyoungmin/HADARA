@@ -1,5 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { ActiveRunProjection, createActiveRunProjection } from '../services/active-run-state';
+import { extractSection, ProjectReadSources, readProjectSources } from '../services/project-read-model';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 
 export interface OpsStatusReport {
@@ -34,6 +36,7 @@ export interface OpsStatusReport {
     latestFullCheck: string | null;
     latestDoneLevelValidation: string | null;
   };
+  activeRun: ActiveRunProjection;
   mcp: {
     defaultMode: 'read-only';
     evidenceAttach: {
@@ -51,13 +54,7 @@ export interface OpsStatusReport {
 }
 
 export function createOpsStatusReport(projectRoot: string): OpsStatusReport {
-  const sources = {
-    projectState: readProjectFile(projectRoot, 'docs/PROJECT_STATE.md'),
-    handoff: readProjectFile(projectRoot, 'docs/AGENT_HANDOFF.md'),
-    taskBoard: readProjectFile(projectRoot, 'docs/TASK_BOARD.md'),
-    developmentSlices: readProjectFile(projectRoot, 'docs/DEVELOPMENT_SLICES.md'),
-    validationHistory: readProjectFile(projectRoot, 'docs/VALIDATION_HISTORY.md')
-  };
+  const sources = readProjectSources(projectRoot);
   const tasks = listTaskCapsules(projectRoot);
   const taskCounts = countTaskStatuses(tasks);
   const handoffSections = {
@@ -72,7 +69,8 @@ export function createOpsStatusReport(projectRoot: string): OpsStatusReport {
       extractValidationLine(sources.handoff.content, 'Latest done-level validation') ??
       extractValidationHistoryLine(sources.validationHistory.content, 'harness validate')
   };
-  const issues = collectIssues(sources, validation);
+  const activeRun = createActiveRunProjection(projectRoot);
+  const issues = [...collectIssues(sources, validation), ...activeRun.issues];
 
   return {
     schemaVersion: 'hadara.ops.status.v1',
@@ -92,6 +90,7 @@ export function createOpsStatusReport(projectRoot: string): OpsStatusReport {
     },
     handoff: handoffSections,
     validation,
+    activeRun,
     mcp: {
       defaultMode: 'read-only',
       evidenceAttach: {
@@ -117,22 +116,6 @@ export function formatOpsStatusReport(report: OpsStatusReport): string {
     `lastCompleted: ${report.tasks.lastCompleted.join(', ') || 'none'}`,
     `nextRecommended: ${report.tasks.nextRecommended ?? 'none'}`
   ].join('\n');
-}
-
-interface ProjectFileRead {
-  path: string;
-  exists: boolean;
-  content: string;
-}
-
-function readProjectFile(projectRoot: string, relativePath: string): ProjectFileRead {
-  const filePath = path.join(projectRoot, relativePath);
-  const exists = fs.existsSync(filePath);
-  return {
-    path: relativePath,
-    exists,
-    content: exists ? fs.readFileSync(filePath, 'utf8') : ''
-  };
 }
 
 function readGitBranch(projectRoot: string): string {
@@ -227,13 +210,7 @@ function extractValidationHistoryLine(validationHistory: string, pattern: string
 }
 
 function collectIssues(
-  sources: {
-    projectState: ProjectFileRead;
-    handoff: ProjectFileRead;
-    taskBoard: ProjectFileRead;
-    developmentSlices: ProjectFileRead;
-    validationHistory: ProjectFileRead;
-  },
+  sources: ProjectReadSources,
   validation: OpsStatusReport['validation']
 ): OpsStatusReport['issues'] {
   const issues: OpsStatusReport['issues'] = [];
@@ -262,12 +239,4 @@ function extractListSection(content: string, heading: string): string[] {
     .filter(Boolean)
     .map((line) => line.replace(/^[-*]\s+/, '').replace(/^\d+\.\s+/, '').trim())
     .filter(Boolean);
-}
-
-function extractSection(content: string, heading: string): string {
-  const start = content.indexOf(heading);
-  if (start < 0) return '';
-  const afterHeading = content.slice(start + heading.length);
-  const nextHeading = afterHeading.search(/\n##\s+/);
-  return (nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading).trim();
 }

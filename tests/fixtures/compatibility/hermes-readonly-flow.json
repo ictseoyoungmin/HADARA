@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "hadara.compatibility.fixture.v1",
+  "name": "hermes-readonly-external-agent-flow",
+  "description": "A Hermes-like external agent orients through exported context, then reads HADARA project/task/handoff/policy/harness state through read-only MCP tools.",
+  "contextMustContain": [
+    "hadara.project.state.read",
+    "hadara.task.list",
+    "hadara.task.read",
+    "hadara.handoff.read",
+    "hadara.policy.evaluate",
+    "hadara.harness.validate",
+    "docs/ROADMAP.md",
+    "docs/DEVELOPMENT_SLICES.md",
+    "Treat MCP default mode as read-only"
+  ],
+  "mcpFlow": [
+    {
+      "tool": "hadara.project.state.read",
+      "arguments": { "includeDocuments": false },
+      "expect": {
+        "schemaVersion": "hadara.project.state.read.v1",
+        "command": "project.state.read",
+        "ok": true
+      }
+    },
+    {
+      "tool": "hadara.task.list",
+      "arguments": {},
+      "expect": {
+        "schemaVersion": "hadara.task.list.v1",
+        "command": "task.list",
+        "ok": true
+      }
+    },
+    {
+      "tool": "hadara.task.read",
+      "arguments": { "taskId": "$TASK_ID" },
+      "expect": {
+        "schemaVersion": "hadara.task.read.v1",
+        "command": "task.read",
+        "ok": true
+      }
+    },
+    {
+      "tool": "hadara.handoff.read",
+      "arguments": { "includeHistory": true, "historyLimit": 1 },
+      "expect": {
+        "schemaVersion": "hadara.handoff.read.v1",
+        "command": "handoff.read",
+        "ok": true
+      }
+    },
+    {
+      "tool": "hadara.policy.evaluate",
+      "arguments": { "command": "npm run check", "mode": "assisted" },
+      "expect": {
+        "schemaVersion": "hadara.policy.preflight.v1",
+        "command": "policy.preflight-shell",
+        "ok": true
+      }
+    },
+    {
+      "tool": "hadara.harness.validate",
+      "arguments": { "taskId": "$TASK_ID", "level": "draft" },
+      "expect": {
+        "schemaVersion": "hadara.harness.validate.v1",
+        "command": "harness.validate",
+        "ok": true
+      }
+    }
+  ],
+  "forbiddenMcpTools": [
+    "hadara.task.create",
+    "hadara.file.write",
+    "hadara.shell.execute",
+    "hadara.release.package"
+  ]
+}

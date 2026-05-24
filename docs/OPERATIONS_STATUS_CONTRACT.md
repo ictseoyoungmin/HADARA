@@ -70,6 +70,19 @@ Example:
     "latestFullCheck": "Docker npm ci && npm run check passed with 27 test files and 142 tests",
     "latestDoneLevelValidation": "T-0052 ok"
   },
+  "activeRun": {
+    "schemaVersion": "hadara.active_run.projection.v1",
+    "command": "active-run.projection",
+    "ok": true,
+    "path": ".hadara/local/state/active-run.json",
+    "activeRun": null,
+    "handoff": {
+      "fresh": true,
+      "staleReason": null
+    },
+    "resume": null,
+    "issues": []
+  },
   "mcp": {
     "defaultMode": "read-only",
     "evidenceAttach": {
@@ -97,6 +110,8 @@ Example:
 - `tasks.nextRecommended` is derived from the handoff next-step section when available.
 - `handoff.*` arrays are compact excerpts from `docs/AGENT_HANDOFF.md`.
 - `validation.*` fields are compact latest validation summaries from `docs/AGENT_HANDOFF.md`, falling back to `docs/VALIDATION_HISTORY.md` when needed.
+- `activeRun` is a read projection of `.hadara/local/state/active-run.json`; it is local project state and must not imply queues, worker lanes, or concurrent multi-agent execution.
+- `activeRun.handoff.fresh` is false when an active run exists but `docs/AGENT_HANDOFF.md` does not mention the active task id.
 - `mcp.evidenceAttach` documents configured operational guard state. It is not live MCP server process inspection.
 - `issues` may include warnings when source documents are missing or validation baseline details are unavailable. Warning-only reports keep `ok: true` and set `health: "degraded"` so dashboards can render degraded snapshots.
 
