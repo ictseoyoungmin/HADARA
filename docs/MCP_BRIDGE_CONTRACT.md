@@ -107,8 +107,8 @@ Planned v1.0 read-only candidates:
 hadara.context.export
 hadara.evidence.list
 hadara.tools.list
-hadara.activeRun.read
-hadara.resume.projection
+hadara.active.run.read
+hadara.active.run.resume
 hadara.debt.list
 ```
 

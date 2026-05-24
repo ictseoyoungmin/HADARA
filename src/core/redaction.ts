@@ -12,6 +12,10 @@ export interface RedactionPattern {
 export interface RedactionFinding {
   patternId: string;
   severity: RedactionSeverity;
+  /**
+   * Per-pattern match count. Counts may overlap when multiple patterns match
+   * the same input span.
+   */
   count: number;
 }
 
@@ -147,6 +151,14 @@ export function containsSecret(input: string): boolean {
   return createRedactionReport(input).findings.length > 0;
 }
 
+export function hasBlockingRedactionFinding(
+  report: RedactionReport,
+  minimumSeverity: RedactionSeverity = 'high'
+): boolean {
+  const minimumRank = redactionSeverityRank(minimumSeverity);
+  return report.findings.some((finding) => redactionSeverityRank(finding.severity) >= minimumRank);
+}
+
 export function createRedactionReport(
   input: string,
   options: { includeRedactedText?: boolean } = {}
@@ -184,6 +196,19 @@ function scanRedactionFindings(input: string, patterns: RedactionPattern[]): Red
 
 function redactWithPatterns(input: string, patterns: RedactionPattern[]): string {
   return patterns.reduce((text, pattern) => text.replace(cloneGlobalRegex(pattern.regex), pattern.replacement), input);
+}
+
+function redactionSeverityRank(severity: RedactionSeverity): number {
+  switch (severity) {
+    case 'low':
+      return 1;
+    case 'medium':
+      return 2;
+    case 'high':
+      return 3;
+    case 'critical':
+      return 4;
+  }
 }
 
 function cloneGlobalRegex(regex: RegExp): RegExp {

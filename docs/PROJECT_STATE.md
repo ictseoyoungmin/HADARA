@@ -39,7 +39,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Tool runtime work has started with fake shell observations gated by policy preflight.
 - Agent loop work has started with bounded deterministic `hadara run --script ... --fake-shell-fixtures ... --json`.
 - Workspace file boundary hardening is complete with a shared realpath resolver applied to evidence artifact copy, harness replay, and deterministic run file inputs.
-- Evidence artifact redaction registry exists: public artifacts must be UTF-8 text and pass high-risk secret-pattern scanning before committed copy, with `hadara.redaction.report.v1` findings available from the core redaction service.
+- Evidence artifact redaction registry exists: public artifacts must be UTF-8 text and pass severity-threshold high-risk secret-pattern scanning before committed copy, with `hadara.redaction.report.v1` findings available from the core redaction service.
 - Strict CLI argument helper parsing exists for string, required string, integer, and boolean flag options.
 - Agent loop evidence attachment exists: deterministic fake-shell observations from `hadara run --task ...` can be attached as managed public command-log artifacts and reported in run JSON output.
 - ScriptedProvider now consumes scripted steps in order for deterministic replay semantics.

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { containsSecret, createRedactionReport, redactSecrets } from '../../src/core/redaction';
+import {
+  containsSecret,
+  createRedactionReport,
+  hasBlockingRedactionFinding,
+  redactSecrets,
+  type RedactionReport
+} from '../../src/core/redaction';
 
 describe('redactSecrets', () => {
   it('redacts common secret-like values', () => {
@@ -63,5 +69,19 @@ describe('redactSecrets', () => {
     expect(report.redactedText).toBe('password=[REDACTED]');
     expect(report.inputBytes).toBeGreaterThan(0);
     expect(report.outputBytes).toBeGreaterThan(0);
+  });
+
+  it('separates report findings from policy blocking severity', () => {
+    const report: RedactionReport = {
+      schemaVersion: 'hadara.redaction.report.v1',
+      ok: false,
+      inputBytes: 12,
+      outputBytes: 12,
+      findings: [{ patternId: 'future-heuristic', severity: 'medium', count: 1 }]
+    };
+
+    expect(hasBlockingRedactionFinding(report, 'high')).toBe(false);
+    expect(hasBlockingRedactionFinding(report, 'medium')).toBe(true);
+    expect(containsSecret('password=super-secret')).toBe(true);
   });
 });

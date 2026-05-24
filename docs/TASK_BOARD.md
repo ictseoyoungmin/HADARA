@@ -75,3 +75,4 @@
 | T-0071 | Reusable Docker Development Container | Done | tasks/T-0071-reusable-docker-development-container | Documents reusable Docker workflow and CLI-based Task Capsule creation. |
 | T-0072 | Core v1.0 Technical Plan Refresh | Done | tasks/T-0072-core-v1-0-technical-plan-refresh | Clarifies T-0066 through T-0070 implementation/design mismatches in v1.0 planning docs. |
 | T-0074 | Redaction Hardening | Done | tasks/T-0074-redaction-hardening | Adds redaction registry/report model and broadens high-risk public evidence secret detection. |
+| T-0075 | Redaction Policy Follow-up | Done | tasks/T-0075-redaction-policy-follow-up | Separates redaction report findings from severity-threshold public artifact blocking and aligns future MCP planning names. |

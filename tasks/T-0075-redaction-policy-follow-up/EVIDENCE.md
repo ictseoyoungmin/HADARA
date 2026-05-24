@@ -1,0 +1,8 @@
+# Evidence
+
+| Time | Kind | Summary | Result |
+|---|---|---|---|
+| 2026-05-24T05:14:57Z | test-log | Docker `npx vitest run tests/unit/redaction.test.ts` passed with 1 test file and 7 tests. | passed |
+| 2026-05-24T05:15:12Z | test-log | Docker `npm run check` passed with 33 test files and 181 tests. | passed |
+| 2026-05-24T05:18:15Z | test-log | Docker done-level harness validation for T-0075 returned `ok: false` because final acceptance evidence/handoff checkboxes were not yet checked. | failed |
+| 2026-05-24T05:18:57Z | test-log | Docker done-level harness validation for T-0075 returned `ok: true` with no issues. | passed |

@@ -49,7 +49,7 @@ Candidate scope:
 - Stale handoff detection against active run state.
 - Resume projection for the active task/run.
 - CLI run-state commands.
-- Read-only MCP `hadara.activeRun.read` and `hadara.resume.projection` tools.
+- Read-only MCP `hadara.active.run.read` and `hadara.active.run.resume` tools.
 - No queue, worker lane, or concurrent multi-agent execution.
 
 Status: foundational implementation exists; CLI/MCP surface completion remains.

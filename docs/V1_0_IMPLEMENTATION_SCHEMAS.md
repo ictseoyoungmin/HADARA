@@ -151,8 +151,8 @@ export interface ActiveRunProjection {
 Future read-only MCP tools:
 
 ```text
-hadara.activeRun.read
-hadara.resume.projection
+hadara.active.run.read
+hadara.active.run.resume
 ```
 
 Future CLI writes:
@@ -217,7 +217,7 @@ The canonical implemented contract is `hadara.active_run.v1` at `.hadara/local/s
 
 Future resume projection target:
 
-The current implemented projection is `hadara.active_run.projection.v1` with a compact `resume` object. A standalone `hadara.resume.projection` MCP tool should define a new schema deliberately instead of implying this target already exists.
+The current implemented projection is `hadara.active_run.projection.v1` with a compact `resume` object. Future MCP tool names should use dot-separated noun/action segments: `hadara.active.run.read` for the read projection and `hadara.active.run.resume` for resume guidance. Keep schema versions snake_case; do not revive the older camelCase `hadara.activeRun.read` or standalone `hadara.resume.projection` drafts.
 
 ```json
 {
@@ -339,8 +339,9 @@ Future debt commands and aggregate requirements:
 Current implementation:
 
 - `src/core/redaction.ts`
-- simple regex list
-- public evidence artifact rejection through `containsSecret()`
+- registry/report model with compatibility wrappers
+- public evidence artifact rejection through `hasBlockingRedactionFinding(report, 'high')`
+- `findings.count` is a per-pattern match count and may overlap across patterns when multiple detectors match the same input span
 
 Target registry shape:
 
@@ -488,8 +489,8 @@ Candidate default read-only tools:
 hadara.context.export
 hadara.evidence.list
 hadara.tools.list
-hadara.activeRun.read
-hadara.resume.projection
+hadara.active.run.read
+hadara.active.run.resume
 hadara.debt.list
 ```
 
@@ -523,8 +524,10 @@ hadara.debt.list
   "command": "context.export",
   "ok": true,
   "format": "markdown",
-  "contextPath": ".hadara/context/HADARA_CONTEXT.md",
+  "mode": "memory",
   "content": "# HADARA_CONTEXT...",
+  "contextPath": null,
+  "wouldWritePath": ".hadara/context/HADARA_CONTEXT.md",
   "issues": []
 }
 ```

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDir } from '../core/fs';
-import { containsSecret, redactSecrets } from '../core/redaction';
+import { createRedactionReport, hasBlockingRedactionFinding, redactSecrets } from '../core/redaction';
 import { resolveProjectFile } from '../core/workspace';
 
 export interface EvidenceRecord {
@@ -124,7 +124,8 @@ function copyPublicEvidenceArtifact(input: {
 
   const sourceFile = resolveProjectFile(input.projectRoot, input.sourcePath);
   const artifactText = readPublicTextArtifact(sourceFile.absolutePath);
-  if (containsSecret(artifactText)) {
+  const report = createRedactionReport(artifactText);
+  if (hasBlockingRedactionFinding(report, 'high')) {
     throw new EvidenceArtifactPolicyError(
       'PUBLIC_ARTIFACT_SECRET_DETECTED',
       'Public evidence artifact contains secret-like content; collect it as private evidence or redact the source file first.'
@@ -145,7 +146,8 @@ function writePublicEvidenceTextArtifact(input: {
   fileName: string;
   content: string;
 }): string {
-  if (containsSecret(input.content)) {
+  const report = createRedactionReport(input.content);
+  if (hasBlockingRedactionFinding(report, 'high')) {
     throw new EvidenceArtifactPolicyError(
       'PUBLIC_ARTIFACT_SECRET_DETECTED',
       'Public evidence artifact contains secret-like content; collect it as private evidence or redact the source file first.'
