@@ -1,33 +1,16 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import { createEvidenceCollectReport } from '../cli/evidence-json';
 import { writeAuditEvent } from '../core/audit';
 import { resolveHadaraPaths } from '../core/paths';
-import { createTaskListReport, TaskJsonSummary } from '../cli/task-json';
 import { validateTaskCapsule } from '../harness/validate';
 import { createContextExportReport } from '../hermes/context-export';
 import { createShellExecutionPreflight } from '../policy/preflight';
 import { parsePermissionMode } from '../policy/policy';
 import { createHandoffReadReport, createProjectStateReadReport } from '../services/project-read-model';
 import { createEvidenceListReport } from '../services/evidence-list';
+import { createTaskListReport, createTaskReadReport } from '../services/task-read-model';
 import { createToolsListReport } from '../services/tools-list';
-import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 import { McpToolDefinition } from './tool-dispatch';
 import { HADARA_MCP_EVIDENCE_ATTACH_SCHEMA, HADARA_MCP_TOOL_SCHEMAS } from './tool-schemas';
-
-const TASK_CAPSULE_FILES = [
-  'TASK.md',
-  'PLAN.md',
-  'CONTEXT.md',
-  'ACCEPTANCE.md',
-  'FILES.md',
-  'TESTS.md',
-  'RISKS.md',
-  'DECISIONS.md',
-  'EVIDENCE.md',
-  'evidence.jsonl',
-  'HANDOFF.md'
-];
 
 export interface McpToolRegistryOptions {
   enableEvidenceAttach?: boolean;
@@ -157,100 +140,6 @@ function isEvidenceCollectReport(value: unknown): value is {
   if (typeof value !== 'object' || value === null) return false;
   const candidate = value as { ok?: unknown; issues?: unknown };
   return typeof candidate.ok === 'boolean' && Array.isArray(candidate.issues);
-}
-
-interface TaskReadReport {
-  schemaVersion: 'hadara.task.read.v1';
-  command: 'task.read';
-  ok: boolean;
-  task?: TaskJsonSummary;
-  files?: Record<string, string>;
-  evidenceIndex?: unknown[];
-  issues: Array<{
-    severity: 'error';
-    code: string;
-    message: string;
-  }>;
-}
-
-function createTaskReadReport(projectRoot: string, taskId: string): TaskReadReport {
-  const task = listTaskCapsules(projectRoot).find((item) => item.id === taskId);
-  if (!task) {
-    return {
-      schemaVersion: 'hadara.task.read.v1',
-      command: 'task.read',
-      ok: false,
-      issues: [
-        {
-          severity: 'error',
-          code: 'TASK_NOT_FOUND',
-          message: `Task Capsule not found: ${taskId}`
-        }
-      ]
-    };
-  }
-
-  const files = Object.fromEntries(
-    TASK_CAPSULE_FILES.map((fileName) => {
-      const filePath = path.join(task.dir, fileName);
-      return [fileName, fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : ''];
-    })
-  );
-  const evidenceParse = parseEvidenceIndex(files['evidence.jsonl']);
-  return {
-    schemaVersion: 'hadara.task.read.v1',
-    command: 'task.read',
-    ok: evidenceParse.issues.length === 0,
-    task: summarizeTask(projectRoot, task),
-    files,
-    evidenceIndex: evidenceParse.records,
-    issues: evidenceParse.issues
-  };
-}
-
-function parseEvidenceIndex(content: string): {
-  records: unknown[];
-  issues: TaskReadReport['issues'];
-} {
-  const trimmed = content.trim();
-  if (!trimmed) return { records: [], issues: [] };
-
-  const records: unknown[] = [];
-  const issues: TaskReadReport['issues'] = [];
-  trimmed.split(/\r?\n/).forEach((line, index) => {
-    try {
-      records.push(JSON.parse(line));
-    } catch {
-      issues.push({
-        severity: 'error',
-        code: 'EVIDENCE_INDEX_JSON_INVALID',
-        message: `evidence.jsonl line ${index + 1} is not valid JSON.`
-      });
-    }
-  });
-  return { records, issues };
-}
-
-function summarizeTask(projectRoot: string, task: TaskCapsule): TaskJsonSummary {
-  return {
-    id: task.id,
-    title: task.title,
-    status: readTaskStatus(task),
-    slug: task.slug,
-    capsule: toPortablePath(path.relative(projectRoot, task.dir))
-  };
-}
-
-function readTaskStatus(task: TaskCapsule): string {
-  const taskPath = path.join(task.dir, 'TASK.md');
-  if (!fs.existsSync(taskPath)) return 'Unknown';
-  const content = fs.readFileSync(taskPath, 'utf8');
-  const match = content.match(/^## Status\s*\n+([\s\S]*?)(?:\n## |\s*$)/m);
-  return match?.[1]?.trim().split(/\r?\n/)[0]?.trim() || 'Unknown';
-}
-
-function toPortablePath(value: string): string {
-  return value.split(path.sep).join('/');
 }
 
 function parseEvidenceKind(value: string): 'test-log' | 'command-log' | 'diff-summary' | 'screenshot' | 'note' {

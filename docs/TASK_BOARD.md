@@ -80,3 +80,4 @@
 | T-0077 | Context Export MCP Read Tool | Done | tasks/T-0077-context-export-mcp-read-tool | Adds read-only MCP `hadara.context.export` memory payload without writing context files. |
 | T-0078 | Tools List Read Model | Done | tasks/T-0078-tools-list-read-model | Adds shared `hadara.tools.list.v1`, CLI JSON tools list, read-only MCP capability discovery, neutral capability registry, availability/risk metadata, and disabled surfaces. |
 | T-0079 | Schema Layer Planning | Done | tasks/T-0079-schema-layer-planning | Adds `docs/SCHEMAS.md`, schema index fixture, and initial JSON Schema fixtures for evidence list, context export, and tools list read models. |
+| T-0080 | Service Parity Expansion | Done | tasks/T-0080-service-parity-expansion | Moves task list/show/read reports into a shared task read-model service and routes MCP task list/read through it. |

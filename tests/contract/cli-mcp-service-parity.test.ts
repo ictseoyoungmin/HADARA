@@ -2,11 +2,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createTaskListReport } from '../../src/cli/task-json';
 import { validateTaskCapsule } from '../../src/harness/validate';
 import { handleMcpJsonRpcMessage } from '../../src/mcp/server';
 import { createShellExecutionPreflight } from '../../src/policy/preflight';
 import { createHandoffReadReport, createProjectStateReadReport } from '../../src/services/project-read-model';
+import { createTaskListReport, createTaskReadReport } from '../../src/services/task-read-model';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -73,6 +73,7 @@ describe('CLI/MCP service parity', () => {
       ...createTaskListReport(root),
       issues: []
     });
+    expect(mcpToolPayload(root, 'hadara.task.read', { taskId: task.id })).toEqual(createTaskReadReport(root, task.id));
     expect(mcpToolPayload(root, 'hadara.policy.evaluate', { command: 'npm run check', mode: 'assisted' })).toEqual(
       createShellExecutionPreflight('npm run check', 'assisted')
     );

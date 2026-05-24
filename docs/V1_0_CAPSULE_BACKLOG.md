@@ -20,6 +20,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 - T-0077 Context Export MCP Read Tool: done; `hadara.context.export.v1` returns an in-memory MCP payload with `contextPath: null` and does not write `.hadara/context/HADARA_CONTEXT.md`.
 - T-0078 Tools List Read Model: done; `hadara.tools.list.v1` is shared by CLI JSON and read-only MCP through a neutral capability registry, with fuller CLI surface discovery, availability/risk metadata, opt-in evidence attach, and disabled shell/provider/release/broad-write MCP surfaces reported.
 - T-0079 Schema Layer Planning: done; `docs/SCHEMAS.md`, `src/schemas/schema-index.json`, and first JSON Schema fixtures exist for evidence list, context export, and tools list read models.
+- T-0080 Service Parity Expansion: first increment done; task list/show/read reports now live in `src/services/task-read-model.ts`, with MCP task list/read routed through the shared service.
 
 ## Immediate P0 Capsules
 
@@ -36,7 +37,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 
 | Order | Candidate Slice | Capsule | Purpose | Key Done Evidence |
 |---:|---|---|---|---|
-| 7 | Service parity expansion | TBD | Move task/evidence/policy/harness/context read logic into shared services/read models. | CLI/MCP parity tests pass for task read, evidence list, policy evaluate, harness validate, and context export. |
+| 7 | Service parity expansion | T-0080 | Move task/evidence/policy/harness/context read logic into shared services/read models. | First increment done: task read-model service and MCP task read/list parity pass. Remaining policy, harness, and status service expansion should continue in follow-up capsules. |
 | 8 | Active run CLI/MCP surface | TBD | Formalize run-state CLI writes and read-only MCP active-run/resume tools. | `hadara run-state ... --json`, `hadara.active.run.read`, and `hadara.active.run.resume` tests pass. |
 | 9 | Operational debt release gates | TBD | Promote operational debt into CLI/MCP read surfaces and release-gate warnings. | debt list/show reports, ops aggregate counts, and release-gate debt checks pass. |
 | 10 | Policy matrix refactor | TBD | Split tokenizer, command risk, permission matrix, presets, and preflight policy. | Existing exact-match safety tests pass plus matrix regressions for read/test/build/write/network/destructive/release. |

@@ -39,13 +39,14 @@
 - T-0077 is complete: read-only MCP `hadara.context.export` now returns `hadara.context.export.v1` as an in-memory payload with `contextPath: null` and no `.hadara/context/HADARA_CONTEXT.md` mutation; CLI `hadara hermes export-context` remains the file-writing path. Context export includes `docs/IMPLEMENTATION_SOP.md` as the authoritative workflow source and warns with `SUMMARY_ONLY_NOT_IMPLEMENTED` when `summaryOnly` is requested.
 - T-0078 is complete: tools discovery now uses a neutral capability registry, shared `hadara.tools.list.v1`, `hadara tools list --json`, and read-only MCP `hadara.tools.list`, reporting fuller CLI/MCP surfaces, `availability`/`risk` metadata, opt-in evidence attach, and disabled shell/provider/release/broad-write MCP surfaces.
 - T-0079 is complete: schema layer planning now has `docs/SCHEMAS.md`, `src/schemas/schema-index.json`, and initial JSON Schema fixtures for `hadara.evidence.list.v1`, `hadara.context.export.v1`, and `hadara.tools.list.v1`; runtime schema validation and release gates remain deferred.
+- T-0080 is complete: task list/show/read report logic now lives in shared `src/services/task-read-model.ts`, CLI task JSON imports remain compatible, and read-only MCP task list/read route through the shared service with parity coverage.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0077 Context Export MCP Read Tool: added read-only MCP context export as a memory payload while preserving CLI-only context file generation and authoritative SOP context.
 - T-0078 Tools List Read Model: added neutral capability registry, shared tools discovery report, CLI JSON tools list, and read-only MCP tools list with availability/risk and opt-in/disabled surface metadata.
 - T-0079 Schema Layer Planning: added schema registry docs, schema index fixture, and initial JSON Schema fixtures for stable read models.
+- T-0080 Service Parity Expansion: moved task list/show/read reports into a shared task read-model service and routed MCP task list/read through it.
 
 ## Current Known Problems
 
@@ -59,17 +60,17 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then continue the next slice from `docs/V1_0_CAPSULE_BACKLOG.md`; Service Parity Expansion is next.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then continue Service Parity Expansion by moving the next read surface, likely policy evaluate or harness validate, behind a named shared service.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm run check` passed with 36 test files and 201 tests after T-0079.
-- Latest focused schema check: Docker `npx vitest run tests/unit/schema-fixtures.test.ts` passed.
+- Latest full check: Docker `npm run check` passed with 36 test files and 201 tests after T-0080.
+- Latest focused service parity check: Docker `npx vitest run tests/contract/cli-mcp-service-parity.test.ts tests/unit/task-json.test.ts tests/unit/mcp-tools.test.ts` passed with 3 files and 18 tests.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0079 --level done --json --project /workspace` returned `ok: true`.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0080 --level done --json --project /workspace` returned `ok: true`.
 
 ## Historical Index
 
