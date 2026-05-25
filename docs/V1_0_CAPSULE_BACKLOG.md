@@ -28,6 +28,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 - T-0087 Operational Debt Release Gates: done; operational debt now has CLI/MCP read surfaces, ops aggregate counts, advisory release-gate warnings, and strict high-open debt blocking reports.
 - T-0088 Active Run Resume Hardening: done; active-run resume guidance now canonicalizes Task Capsule paths, warns on capsule mismatches, and has active-run schema fixtures.
 - T-0090 Policy Matrix Refactor: done; shell policy internals now split tokenizer, safe presets, command-risk classification, and permission-matrix decisions, with release-risk commands blocked outside release mode, auto/trusted network risk approval-gated, and strict release-gate CLI failures returning a non-zero exit code.
+- T-0091 Private Evidence Manifest: done; private evidence with readable source artifacts now writes raw bytes only to the ignored private portable store, records `hadara.privateEvidence.v1` manifests with SHA-256 hashes, retention, and deferred encryption metadata, and audits manifest writes.
 
 ## Immediate P0 Capsules
 
@@ -54,7 +55,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 | 9 | Operational debt release gates | T-0087 | Promote operational debt into CLI/MCP read surfaces and release-gate modes. | Done: debt list/show reports, ops aggregate counts, advisory warnings, and strict high-open debt blocking reports pass. |
 | 9a | Redaction policy observability tests | T-0089 | Prove redaction policy diagnostics expose safe pattern/severity/count metadata without leaking raw secret material. | Done: public artifact policy path tests cover medium non-blocking diagnostics, high/critical blocking, and safe user-facing output. |
 | 10 | Policy matrix refactor | T-0090 | Split tokenizer, command risk, permission matrix, presets, and preflight policy. | Done: existing exact-match safety tests pass plus matrix regressions for read/test/build/write/network/destructive/release, release-risk blocking, network approval, and strict release-gate exit codes. |
-| 11 | Private evidence manifest | TBD | Track private evidence metadata, hashes, retention, and context-export exclusion. | Private evidence manifest tests pass and private evidence never enters public context export. |
+| 11 | Private evidence manifest | T-0091 | Track private evidence metadata, hashes, retention, and context-export exclusion. | Done: private evidence manifest tests pass and private evidence never enters committed Task Capsule files or public context export. |
 | 12 | Logger and audit event model | TBD | Add structured event schema and clarify stdout/stderr/audit/debug log boundaries. | `hadara.event.v1` tests pass and write/policy/evidence audit records remain structured. |
 
 ## P2 Productization Capsules

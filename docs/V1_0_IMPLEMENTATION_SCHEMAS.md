@@ -433,7 +433,9 @@ hadara security redact <path> --json
 Current implementation:
 
 - `visibility: private` evidence skips public artifact copy.
-- No structured private evidence manifest, hash, retention, or encryption metadata exists yet.
+- Private evidence with a readable source artifact writes raw bytes only to the ignored private portable store under `.hadara/local/portable/data/private-evidence`.
+- `src/evidence/private-manifest.ts` records `hadara.privateEvidence.v1` manifests with SHA-256 hashes, byte counts, retention metadata, and explicit deferred encryption metadata.
+- Private evidence manifest writes are audited to the private portable audit store.
 
 Target manifest schema:
 
@@ -467,6 +469,10 @@ Minimum v1.0 requirements:
 - public and private artifacts remain separated;
 - private evidence writes are audited;
 - encryption is either implemented or explicitly deferred with manifest metadata.
+
+Completed increment:
+
+- T-0091 added private portable-store manifests, SHA-256 hashes, retention/deferred-encryption metadata, private audit events, and tests proving committed Task Capsule files plus context export exclude private evidence content, private source paths, and private store paths.
 
 ## Evidence List Read Model
 

@@ -3,7 +3,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createHermesDetectReport, createHermesExportContextReport } from '../../src/cli/hermes-json';
+import { createEvidenceCollectReport } from '../../src/cli/evidence-json';
 import { createContextExportReport } from '../../src/hermes/context-export';
+import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
 
@@ -121,5 +123,30 @@ describe('CLI Hermes JSON reports', () => {
       }
     ]);
     expect(report.content).toContain('## docs/PROJECT_STATE.md');
+  });
+
+  it('excludes private evidence content and private store metadata from context export', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
+    const task = createTaskCapsule(root, 'Private context export evidence');
+    const privateSourcePath = path.join(root, 'private-context.log');
+    fs.writeFileSync(privateSourcePath, 'context export secret sk-abcdefghijklmnopqrstuvwxyz', 'utf8');
+
+    const collect = createEvidenceCollectReport(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      path: privateSourcePath,
+      summary: 'Private context export evidence',
+      result: 'passed',
+      visibility: 'private'
+    });
+    const report = createContextExportReport(root);
+
+    expect(collect.ok).toBe(true);
+    expect(report.content).not.toContain('sk-abcdefghijklmnopqrstuvwxyz');
+    expect(report.content).not.toContain(privateSourcePath);
+    expect(report.content).not.toContain('private-evidence');
+    expect(report.content).not.toContain('.hadara/local/portable');
   });
 });

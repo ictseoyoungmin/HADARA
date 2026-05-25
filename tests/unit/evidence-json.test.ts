@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -12,6 +13,8 @@ import {
   EvidenceArtifactPolicyError
 } from '../../src/evidence/evidence';
 import type { RedactionPattern } from '../../src/core/redaction';
+import { resolveHadaraPaths } from '../../src/core/paths';
+import { listPrivateEvidenceManifests } from '../../src/evidence/private-manifest';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -129,6 +132,71 @@ describe('CLI evidence JSON reports', () => {
     expect(fs.existsSync(path.join(task.dir, 'artifacts'))).toBe(false);
     expect(JSON.stringify(report)).not.toContain('/tmp/private-command.log');
     expect(JSON.stringify(report)).not.toContain('super-secret');
+  });
+
+  it('writes private evidence manifests, hashes, and audit records outside committed capsule files', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Private manifest evidence');
+    const privateSourcePath = path.join(root, 'private-source.log');
+    const privateContent = 'private raw output api_key=sk-abcdefghijklmnopqrstuvwxyz';
+    fs.writeFileSync(privateSourcePath, privateContent, 'utf8');
+
+    const report = createEvidenceCollectReport(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      path: privateSourcePath,
+      summary: 'Private api_key=sk-abcdefghijklmnopqrstuvwxyz',
+      result: 'passed',
+      visibility: 'private'
+    });
+
+    const manifests = listPrivateEvidenceManifests(root, task.id);
+    const paths = resolveHadaraPaths({ projectRoot: root });
+    const committedEvidence = `${fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')}\n${fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')}`;
+    const auditText = fs
+      .readdirSync(paths.auditDir)
+      .map((fileName) => fs.readFileSync(path.join(paths.auditDir, fileName), 'utf8'))
+      .join('\n');
+
+    expect(report.ok).toBe(true);
+    expect(report.evidence).toMatchObject({
+      visibility: 'private',
+      summary: 'Private api_key=[REDACTED]'
+    });
+    expect(report.evidence).not.toHaveProperty('evidencePath');
+    expect(manifests).toHaveLength(1);
+    expect(manifests[0]).toMatchObject({
+      schemaVersion: 'hadara.privateEvidence.v1',
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Private api_key=[REDACTED]',
+      result: 'passed',
+      storage: {
+        kind: 'portable-store',
+        encrypted: false,
+        hash: `sha256:${crypto.createHash('sha256').update(privateContent).digest('hex')}`,
+        byteLength: Buffer.byteLength(privateContent)
+      },
+      retention: {
+        policy: 'local-only',
+        includeInContextExport: false
+      },
+      encryption: {
+        status: 'deferred'
+      }
+    });
+    expect(manifests[0].storage.relativePath).toMatch(/^data\/private-evidence\/T-0001\//);
+    expect(fs.readFileSync(path.join(paths.portableRoot, manifests[0].storage.relativePath), 'utf8')).toBe(privateContent);
+    expect(fs.existsSync(path.join(task.dir, 'artifacts'))).toBe(false);
+    expect(committedEvidence).not.toContain(privateContent);
+    expect(committedEvidence).not.toContain(privateSourcePath);
+    expect(committedEvidence).not.toContain('private-evidence');
+    expect(JSON.stringify(report)).not.toContain(privateContent);
+    expect(JSON.stringify(report)).not.toContain(privateSourcePath);
+    expect(auditText).toContain('evidence.private_manifest.created');
+    expect(auditText).toContain(manifests[0].storage.hash);
+    expect(auditText).not.toContain(privateContent);
+    expect(auditText).not.toContain(privateSourcePath);
   });
 
   it('returns a stable missing task envelope', () => {

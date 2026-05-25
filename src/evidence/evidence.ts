@@ -3,6 +3,7 @@ import path from 'node:path';
 import { ensureDir } from '../core/fs';
 import { createRedactionReport, hasBlockingRedactionFinding, redactSecrets, RedactionPattern, RedactionReport } from '../core/redaction';
 import { resolveProjectFile } from '../core/workspace';
+import { writePrivateEvidenceManifest } from './private-manifest';
 
 export interface EvidenceRecord {
   time: string;
@@ -69,7 +70,7 @@ export function appendEvidence(projectRoot: string, record: Omit<EvidenceRecord,
   const time = new Date().toISOString();
   const visibility = record.visibility ?? 'public';
   const attachedPath = copyPublicEvidenceArtifact({ projectRoot, taskDir, kind: record.kind, sourcePath: record.path, time, visibility });
-  return appendEvidenceRecord({ taskDir, time, record, visibility, attachedPath }).markdownPath;
+  return appendEvidenceRecord({ projectRoot, taskDir, time, record, visibility, attachedPath }).markdownPath;
 }
 
 export function appendEvidenceTextArtifact(
@@ -96,7 +97,7 @@ export function appendEvidenceTextArtifact(
           policyOptions: options
         })
       : undefined;
-  return appendEvidenceRecord({ taskDir, time, record, visibility, attachedPath });
+  return appendEvidenceRecord({ projectRoot, taskDir, time, record, visibility, attachedPath });
 }
 
 export function createPublicEvidenceArtifactPolicyReport(
@@ -128,6 +129,7 @@ function appendEvidenceIndex(taskDir: string, record: EvidenceIndexRecord): void
 }
 
 function appendEvidenceRecord(input: {
+  projectRoot: string;
   taskDir: string;
   time: string;
   record: Omit<EvidenceRecord, 'time'>;
@@ -155,6 +157,17 @@ function appendEvidenceRecord(input: {
     ...(input.visibility === 'public' && input.attachedPath ? { evidencePath: input.attachedPath } : {})
   };
   appendEvidenceIndex(input.taskDir, evidence);
+  if (input.visibility === 'private') {
+    writePrivateEvidenceManifest({
+      projectRoot: input.projectRoot,
+      taskId: input.record.taskId,
+      kind: input.record.kind,
+      summary,
+      result: input.record.result,
+      sourcePath: input.record.path,
+      time: input.time
+    });
+  }
 
   return { markdownPath, evidence };
 }

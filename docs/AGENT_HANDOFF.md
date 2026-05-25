@@ -50,13 +50,14 @@
 - T-0088 is complete: active-run resume guidance now canonicalizes Task Capsule paths from `taskId`, warns with `ACTIVE_RUN_CAPSULE_MISMATCH` on stale manifest capsule paths, registers active-run projection/resume schema fixtures, and clarifies `run-state resume` as read-only guidance.
 - T-0089 is complete: public evidence artifact policy now has safe internal observability via `hadara.evidence_artifact_policy.v1`, reporting redaction pattern ids, severities, counts, and byte counts while keeping medium diagnostics non-blocking and high/critical findings blocking.
 - T-0090 is complete: shell policy internals now split tokenizer, exact safe presets, command-risk classification, and permission-matrix decisions while preserving existing public imports. Release-risk commands are denied outside release mode and require explicit approval in release mode; auto/trusted network-risk commands require approval. Strict release-gate CLI failures now set exit code 6.
+- T-0091 is complete: private evidence with readable source artifacts now writes raw bytes only to the ignored private portable store, records `hadara.privateEvidence.v1` manifests with SHA-256 hashes, retention, byte counts, and deferred encryption metadata, audits manifest writes privately, and keeps committed Task Capsule files plus context export free of private raw content, source paths, and private store paths.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0088 Active Run Resume Hardening: canonicalized active-run resume paths, added capsule mismatch warnings, added schema fixtures, and strengthened read-only resume wording.
 - T-0089 Redaction Policy Observability Tests: added safe public artifact policy diagnostics and regressions for medium non-blocking findings plus high/critical blocking behavior.
 - T-0090 Policy Matrix Refactor: split shell policy internals into tokenizer, presets, command-risk, and permission-matrix modules; added release/network safety regressions and strict release-gate exit-code behavior.
+- T-0091 Private Evidence Manifest: added private portable-store manifests with hashes, retention/deferred-encryption metadata, private audit events, and context-export exclusion coverage.
 
 ## Current Known Problems
 
@@ -66,11 +67,11 @@
 - `npm ci` reports 5 moderate audit findings from current dev dependencies; do not run `npm audit fix --force` without reviewing version impact.
 - GitHub Actions has been added but has not yet been observed on a remote push/PR.
 - Policy parser is intentionally minimal; it is safer than before, but not a full POSIX or PowerShell parser.
-- Evidence Store copies public attached artifacts into Task Capsule managed storage, but does not yet encrypt private evidence.
+- Private evidence encryption remains deferred; private evidence manifests record this explicitly.
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then continue with Private Evidence Manifest or Active Run Runtime Schema Validation before provider or dashboard integration work.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then continue with Logger and Audit Event Model or Active Run Runtime Schema Validation before provider or dashboard integration work.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
@@ -78,9 +79,12 @@
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
 - Latest full check: Docker `npm run check` passed with 36 test files and 224 tests after T-0090 policy matrix review follow-up.
+- Latest private evidence full check: Docker `npm run check` passed with 36 test files and 226 tests after T-0091 private evidence manifest.
+- Latest focused private evidence check: Docker `npx vitest run tests/unit/evidence-json.test.ts tests/unit/evidence-list.test.ts tests/unit/hermes-json.test.ts` passed with 3 files and 24 tests.
+- Latest private evidence CLI smoke: built CLI private `evidence collect` returned `ok: true`, sanitized private summary, no `evidencePath`, and created private portable-store artifact plus manifest files.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0091 --level done --json --project /workspace` returned `ok: true`.
 - Latest focused policy/release-gate check: Docker `npx vitest run tests/unit/policy.test.ts tests/unit/policy-preflight.test.ts tests/unit/policy-json.test.ts tests/unit/fake-shell.test.ts tests/unit/operational-debt.test.ts` passed with 5 files and 37 tests.
 - Latest policy/release CLI smoke: built CLI `policy check-shell` confirmed `npm publish` is denied in auto/trusted, asks in release mode, auto network asks, and strict `release gate --mode strict` exits 6.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0090 --level done --json --project /workspace` returned `ok: true` after the policy matrix review follow-up.
 - Latest focused security follow-up check: Docker `npx vitest run tests/unit/operational-debt.test.ts tests/unit/tools-list.test.ts` passed with 2 files and 16 tests after advisory/strict release-gate mode separation.
 - Latest CLI smoke: built CLI `release gate --mode advisory --json` returned `ok: true` with warning status, and `release gate --mode strict --json` returned `ok: false` with error status.
 - Latest focused active-run hardening check: Docker `npx vitest run tests/unit/active-run-state.test.ts tests/unit/schema-fixtures.test.ts tests/unit/mcp-tools.test.ts tests/contract/mcp-bridge-contract.test.ts` passed with 4 files and 32 tests.
