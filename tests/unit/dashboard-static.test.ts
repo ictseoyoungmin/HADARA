@@ -141,6 +141,69 @@ describe('static dashboard reference', () => {
     expect(missing.body).toBe('Not found');
   });
 
+  it('serves read-only dashboard API routes from shared read models', () => {
+    const status = createDashboardServerResponse(process.cwd(), '/api/status');
+    const tasks = createDashboardServerResponse(process.cwd(), '/api/tasks');
+    const evidence = createDashboardServerResponse(process.cwd(), '/api/evidence?taskId=T-0097');
+    const activeRun = createDashboardServerResponse(process.cwd(), '/api/active-run');
+    const debt = createDashboardServerResponse(process.cwd(), '/api/debt');
+
+    expect(status.statusCode).toBe(200);
+    expect(status.headers['content-type']).toBe('application/json; charset=utf-8');
+    expect(status.headers['cache-control']).toBe('no-store');
+    expect(status.headers['x-content-type-options']).toBe('nosniff');
+    expect(JSON.parse(status.body)).toMatchObject({
+      schemaVersion: 'hadara.ops.status.v1',
+      command: 'ops.status'
+    });
+
+    expect(JSON.parse(tasks.body)).toMatchObject({
+      schemaVersion: 'hadara.task.list.v1',
+      command: 'task.list',
+      tasks: expect.arrayContaining([expect.objectContaining({ id: 'T-0097' })])
+    });
+    expect(JSON.parse(evidence.body)).toMatchObject({
+      schemaVersion: 'hadara.evidence.list.v1',
+      command: 'evidence.list',
+      taskId: 'T-0097'
+    });
+    expect(JSON.parse(activeRun.body)).toMatchObject({
+      schemaVersion: 'hadara.active_run.projection.v1',
+      command: 'active-run.projection'
+    });
+    expect(JSON.parse(debt.body)).toMatchObject({
+      schemaVersion: 'hadara.operational_debt.v1',
+      command: 'operational-debt.report'
+    });
+  });
+
+  it('keeps dashboard API routes read-only and safely bounded', () => {
+    const head = createDashboardServerResponse(process.cwd(), '/api/status', 'HEAD');
+    const post = createDashboardServerResponse(process.cwd(), '/api/status', 'POST');
+    const missingTaskId = createDashboardServerResponse(process.cwd(), '/api/evidence');
+    const unknownApi = createDashboardServerResponse(process.cwd(), '/api/unknown');
+    const traversalLikeApi = createDashboardServerResponse(process.cwd(), '/api/%2e%2e/status');
+
+    expect(head.statusCode).toBe(200);
+    expect(head.headers['content-length']).not.toBe('0');
+    expect(head.body).toBe('');
+
+    expect(post.statusCode).toBe(405);
+    expect(post.headers.allow).toBe('GET, HEAD');
+    expect(post.body).toBe('Method not allowed');
+
+    expect(missingTaskId.statusCode).toBe(400);
+    expect(JSON.parse(missingTaskId.body)).toMatchObject({
+      schemaVersion: 'hadara.dashboard.api.error.v1',
+      ok: false,
+      issues: [expect.objectContaining({ code: 'TASK_ID_REQUIRED' })]
+    });
+
+    expect(unknownApi.statusCode).toBe(404);
+    expect(unknownApi.body).toBe('Not found');
+    expect(traversalLikeApi.statusCode).toBe(404);
+  });
+
   it('hardens served dashboard routes against unsafe methods and traversal-like paths', () => {
     const head = createDashboardStaticResponse(process.cwd(), '/dashboard/index.html', 'HEAD');
     const post = createDashboardStaticResponse(process.cwd(), '/dashboard/index.html', 'POST');

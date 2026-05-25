@@ -1,6 +1,11 @@
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
+import { safeCreateActiveRunProjection } from '../services/active-run-state';
+import { createEvidenceListReport } from '../services/evidence-list';
+import { createOperationalDebtReport } from '../services/operational-debt';
+import { createOpsStatusReport } from '../services/operations-status-service';
+import { createTaskListReport } from '../services/task-read-model';
 import { getIntegerOption, getStringOption } from './args';
 
 export interface DashboardCommandInput {
@@ -74,17 +79,61 @@ export function createDashboardStaticResponse(projectRoot: string, requestUrl: s
 
 export function createDashboardServerResponse(projectRoot: string, requestUrl: string, method = 'GET'): DashboardStaticResponse {
   try {
+    const apiResponse = createDashboardApiResponse(projectRoot, requestUrl, method);
+    if (apiResponse) return apiResponse;
     return createDashboardStaticResponse(projectRoot, requestUrl, method);
   } catch {
     return internalError();
   }
 }
 
+function createDashboardApiResponse(projectRoot: string, requestUrl: string, method: string): DashboardStaticResponse | null {
+  const normalizedMethod = method.toUpperCase();
+  if (normalizedMethod !== 'GET' && normalizedMethod !== 'HEAD') return null;
+
+  const url = safeUrl(requestUrl);
+  if (!url || !url.pathname.startsWith('/api/')) return null;
+
+  const headOnly = normalizedMethod === 'HEAD';
+  if (url.pathname === '/api/status') return jsonResponse(createOpsStatusReport(projectRoot), headOnly);
+  if (url.pathname === '/api/tasks') return jsonResponse(createTaskListReport(projectRoot), headOnly);
+  if (url.pathname === '/api/active-run') return jsonResponse(safeCreateActiveRunProjection(projectRoot), headOnly);
+  if (url.pathname === '/api/debt') return jsonResponse(createOperationalDebtReport(projectRoot), headOnly);
+  if (url.pathname === '/api/evidence') {
+    const taskId = url.searchParams.get('taskId')?.trim();
+    if (!taskId) {
+      return jsonResponse(
+        {
+          schemaVersion: 'hadara.dashboard.api.error.v1',
+          command: 'dashboard.api',
+          ok: false,
+          issues: [
+            {
+              severity: 'error',
+              code: 'TASK_ID_REQUIRED',
+              message: 'Missing required query parameter: taskId.'
+            }
+          ]
+        },
+        headOnly,
+        400
+      );
+    }
+    return jsonResponse(createEvidenceListReport(projectRoot, { taskId }), headOnly);
+  }
+
+  return notFound();
+}
+
 function safePathname(requestUrl: string): string | null {
+  const url = safeUrl(requestUrl);
+  return url?.pathname ?? null;
+}
+
+function safeUrl(requestUrl: string): URL | null {
   if (/(^|\/)\.\.?($|[/?#])|%2e|%2f|\\/i.test(requestUrl)) return null;
   try {
-    const url = new URL(requestUrl, 'http://hadara.local');
-    return url.pathname;
+    return new URL(requestUrl, 'http://hadara.local');
   } catch {
     return null;
   }
@@ -98,6 +147,18 @@ function fileResponse(projectRoot: string, relativePath: string, contentType: st
     statusCode: 200,
     headers: securityHeaders({
       'content-type': contentType,
+      'content-length': String(Buffer.byteLength(body))
+    }),
+    body: headOnly ? '' : body
+  };
+}
+
+function jsonResponse(bodyValue: unknown, headOnly: boolean, statusCode = 200): DashboardStaticResponse {
+  const body = `${JSON.stringify(bodyValue, null, 2)}\n`;
+  return {
+    statusCode,
+    headers: securityHeaders({
+      'content-type': 'application/json; charset=utf-8',
       'content-length': String(Buffer.byteLength(body))
     }),
     body: headOnly ? '' : body

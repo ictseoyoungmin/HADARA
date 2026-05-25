@@ -97,3 +97,4 @@
 | T-0094 | Security Schema Follow-up Cleanup | Done | tasks/T-0094-security-schema-follow-up-cleanup | Restricts private evidence source copies to project-boundary files, adds `--visibility` evidence alias, separates active-run schema warnings, and adds privateEvidence/releaseGate schema fixtures. |
 | T-0095 | Logger and Audit Event Model | Done | tasks/T-0095-logger-and-audit-event-model | Adds `hadara.event.v1`, structured event helpers/schema, and compatibility-preserving audit event records. |
 | T-0096 | Real Provider Adapter Preparation | Done | tasks/T-0096-real-provider-adapter-preparation | Adds provider config/call schema fixtures, runtime schema assertions, unknown-field denial, and safe preparation helpers without real provider execution. |
+| T-0097 | Dashboard Read Integration | Done | tasks/T-0097-dashboard-read-integration | Adds read-only dashboard API routes for status, tasks, evidence, active-run, and debt without shell/write/provider behavior. |

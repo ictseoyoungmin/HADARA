@@ -79,6 +79,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - The comfort dark mockup is now the preferred dashboard visual baseline for shell layout, visual hierarchy, palette, card grouping, and navigation feel; `hadara.ops.status.v1` remains the authoritative data contract.
 - Static dashboard fixture binding smoke coverage verifies dashboard `data-field` attributes map to sample fixture-backed or derived `hadara.ops.status.v1` values.
 - `hadara dashboard serve` serves the static sample-backed dashboard and fixture through allowlisted routes only; it does not execute live status commands, connect to MCP, write files, stream events, or persist browser state.
+- `hadara dashboard serve` now exposes read-only local dashboard API routes for `/api/status`, `/api/tasks`, `/api/evidence?taskId=<task-id>`, `/api/active-run`, and `/api/debt`, backed by existing shared read-model services and still without shell execution, provider calls, MCP writes, task mutation, evidence writes, live streaming, or browser-state persistence.
 - Dashboard serving is hardened for GET/HEAD-only static responses, no-store/no-sniff/content-security headers, and traversal-like route rejection.
 - Harness evidence index validation now requires canonical `hadara.evidence.v1` records to include non-empty `time`, `summary`, and `visibility`, and recent timestamp-only dashboard evidence records have been migrated.
 - Static dashboard server responses now fail predictably for missing project roots or allowlisted files, returning safe 404 responses, and request handling catches unexpected response generation errors as 500 responses.
@@ -118,7 +119,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.
 - Real provider adapters are not implemented; only schema-backed preparation contracts and safe report helpers exist.
-- Dashboard is locally servable through a static CLI helper, but it is not live-integrated; only its status JSON/read model, design references, static fixture-bound mockup shell, and sample-backed static server exist.
+- Dashboard is locally servable through a static CLI helper with read-only local API routes, but the dashboard HTML still consumes the static sample fixture and is not live-rendering repository data.
 - Broad MCP write tools are not implemented beyond the explicitly enabled, approval-recorded, audited evidence attach tool.
 - Operational debt records remain static and non-persisted; debt mutation and executable release automation remain deferred.
 

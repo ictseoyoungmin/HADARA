@@ -87,14 +87,13 @@ Use the comfort dark mockup to guide placement only:
 - Provider/run/queue UI.
 - Persisting dashboard state.
 
-## Planned V1.0 Read API Candidates
+## Local Read API Routes
 
-Future dashboard integration may add local read-only routes:
+T-0097 added local read-only routes behind `hadara dashboard serve`:
 
 ```text
 GET /api/status
 GET /api/tasks
-GET /api/tasks/:taskId
 GET /api/evidence?taskId=T-00NN
 GET /api/active-run
 GET /api/debt
