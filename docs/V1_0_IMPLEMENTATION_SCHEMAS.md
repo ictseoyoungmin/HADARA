@@ -433,9 +433,10 @@ hadara security redact <path> --json
 Current implementation:
 
 - `visibility: private` evidence skips public artifact copy.
-- Private evidence with a readable source artifact writes raw bytes only to the ignored private portable store under `.hadara/local/portable/data/private-evidence`.
+- Private evidence with a readable project-boundary source artifact writes raw bytes only to the ignored private portable store under `.hadara/local/portable/data/private-evidence`.
 - `src/evidence/private-manifest.ts` records `hadara.privateEvidence.v1` manifests with SHA-256 hashes, byte counts, retention metadata, and explicit deferred encryption metadata.
 - Private evidence manifest writes are audited to the private portable audit store.
+- External absolute private source paths can still produce sanitized committed evidence metadata, but they do not create raw private portable-store copies or manifests unless a future explicit override policy is added.
 
 Target manifest schema:
 
@@ -473,6 +474,7 @@ Minimum v1.0 requirements:
 Completed increment:
 
 - T-0091 added private portable-store manifests, SHA-256 hashes, retention/deferred-encryption metadata, private audit events, and tests proving committed Task Capsule files plus context export exclude private evidence content, private source paths, and private store paths.
+- T-0094 limited private evidence source artifact copying to project-boundary files by default and added the `hadara.privateEvidence.v1` schema fixture.
 
 ## Evidence List Read Model
 
@@ -776,6 +778,8 @@ Current implementation:
 - `src/schemas/tools-list.schema.json`
 - `src/schemas/active-run-projection.schema.json`
 - `src/schemas/active-run-resume.schema.json`
+- `src/schemas/private-evidence.schema.json`
+- `src/schemas/release-gate.schema.json`
 - `tests/unit/schema-runtime.test.ts`
 - `tests/unit/schema-fixtures.test.ts`
 

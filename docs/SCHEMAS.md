@@ -33,6 +33,8 @@ Initial fixtures:
 | `hadara.tools.list.v1` | `src/schemas/tools-list.schema.json` | fixture | Documents capability discovery surfaces and disabled surfaces. |
 | `hadara.active_run.projection.v1` | `src/schemas/active-run-projection.schema.json` | fixture | Documents active-run projection and degraded local-state warnings. |
 | `hadara.active_run.resume.v1` | `src/schemas/active-run-resume.schema.json` | fixture | Documents read-only resume guidance. |
+| `hadara.privateEvidence.v1` | `src/schemas/private-evidence.schema.json` | fixture | Documents private portable-store manifest records without private raw content or source paths. |
+| `hadara.releaseGate.v1` | `src/schemas/release-gate.schema.json` | fixture | Documents advisory and strict release gate reports. |
 
 ## Versioning
 
@@ -43,7 +45,7 @@ Initial fixtures:
 
 ## Fixture Strictness
 
-Initial schemas require stable envelope fields such as `schemaVersion`, `command`, `ok`, primary arrays, and `issues`.
+Initial report schemas require stable envelope fields such as `schemaVersion`, `command`, `ok`, primary arrays, and `issues`. Record schemas such as `hadara.privateEvidence.v1` require their domain fields instead.
 
 Initial schemas allow additive properties. This keeps the fixtures useful for documentation and future loader design without prematurely blocking read-model extension work.
 

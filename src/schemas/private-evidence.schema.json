@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.privateEvidence.v1",
+  "x-hadara-schema-id": "hadara.privateEvidence.v1",
+  "title": "HADARA Private Evidence Manifest Record",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "taskId", "evidenceId", "kind", "summary", "result", "storage", "createdAt", "retention", "encryption"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.privateEvidence.v1" },
+    "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+    "evidenceId": { "type": "string", "minLength": 1 },
+    "kind": { "type": "string", "enum": ["test-log", "command-log", "diff-summary", "screenshot", "note"] },
+    "summary": { "type": "string" },
+    "result": { "type": "string", "enum": ["passed", "failed", "blocked", "unknown"] },
+    "storage": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "relativePath", "encrypted", "hash", "byteLength"],
+      "properties": {
+        "kind": { "const": "portable-store" },
+        "relativePath": { "type": "string", "pattern": "^data/private-evidence/" },
+        "encrypted": { "const": false },
+        "hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "byteLength": { "type": "integer" }
+      }
+    },
+    "createdAt": { "type": "string", "minLength": 1 },
+    "retention": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["policy", "includeInContextExport"],
+      "properties": {
+        "policy": { "const": "local-only" },
+        "includeInContextExport": { "const": false }
+      }
+    },
+    "encryption": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["status", "reason"],
+      "properties": {
+        "status": { "const": "deferred" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

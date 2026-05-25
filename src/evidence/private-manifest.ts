@@ -5,6 +5,7 @@ import { writeAuditEvent } from '../core/audit';
 import { ensureDir, writeJsonl } from '../core/fs';
 import { redactSecrets } from '../core/redaction';
 import { resolveHadaraPaths } from '../core/paths';
+import { resolveProjectFile, WorkspaceFileError } from '../core/workspace';
 import type { EvidenceRecord } from './evidence';
 
 export interface PrivateEvidenceManifestRecord {
@@ -113,12 +114,11 @@ export function listPrivateEvidenceManifests(projectRoot: string, taskId: string
 
 function readPrivateEvidenceSource(projectRoot: string, sourcePath?: string): Buffer | null {
   if (!sourcePath) return null;
-  const absolutePath = path.isAbsolute(sourcePath) ? sourcePath : path.resolve(projectRoot, sourcePath);
   try {
-    const stat = fs.statSync(absolutePath);
-    if (!stat.isFile()) return null;
-    return fs.readFileSync(absolutePath);
-  } catch {
+    const sourceFile = resolveProjectFile(projectRoot, sourcePath);
+    return fs.readFileSync(sourceFile.absolutePath);
+  } catch (error) {
+    if (error instanceof WorkspaceFileError) return null;
     return null;
   }
 }

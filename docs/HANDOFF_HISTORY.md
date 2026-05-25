@@ -55,6 +55,7 @@ Historical completed-task handoff entries moved out of `docs/AGENT_HANDOFF.md` d
 - Completed T-0083 Task Read Evidence Normalization by reusing evidence-list normalization for task.read embedded evidenceIndex and sanitized evidence.jsonl views.
 - Completed T-0089 Redaction Policy Observability Tests by adding safe public artifact policy diagnostics and regressions for medium non-blocking findings plus high/critical blocking behavior.
 - Completed T-0090 Policy Matrix Refactor by splitting shell policy internals, blocking release-risk commands outside release mode, approval-gating network commands in auto/trusted modes, and making strict release gates return exit code 6.
+- Completed T-0091 Private Evidence Manifest by adding private portable-store manifests with hashes, retention/deferred-encryption metadata, private audit events, and context-export exclusion coverage.
 
 ## Source Documents
 

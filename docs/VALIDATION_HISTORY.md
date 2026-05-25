@@ -98,3 +98,7 @@ Historical validation entries moved out of `docs/AGENT_HANDOFF.md` during T-0040
 - Docker CLI smokes after T-0093 confirmed `npm publish` auto/trusted deny blocked, `npm publish` release asks high, `curl` auto/trusted asks high, and strict release gate exits 6.
 - Docker check after T-0093: 37 test files passed, 231 tests passed.
 - Docker `node dist/cli/main.js harness validate --task T-0093 --level done --json --project /workspace` returned `ok: true`.
+- Docker focused security/schema follow-up tests after T-0094: 5 files passed, 41 tests passed.
+- Docker check after T-0094: 37 test files passed, 234 tests passed.
+- Docker private evidence CLI smoke after T-0094 confirmed project-local private source created one private artifact, external absolute private source created no additional artifact, and both JSON reports stayed private without `evidencePath`.
+- Docker `node dist/cli/main.js harness validate --task T-0094 --level done --json --project /workspace` returned `ok: true`.

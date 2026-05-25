@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDir } from '../core/fs';
-import { assertSchema } from '../core/schema';
+import { assertSchema, SchemaValidationError } from '../core/schema';
 import { listTaskCapsules } from '../task/task-capsule';
 import { readProjectSources } from './project-read-model';
 
@@ -52,6 +52,13 @@ export interface ActiveRunResumeReport {
   issues: ActiveRunProjection['issues'];
 }
 
+class ActiveRunManifestReadError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ActiveRunManifestReadError';
+  }
+}
+
 export function activeRunManifestPath(projectRoot: string): string {
   return path.join(projectRoot, '.hadara', 'local', 'state', 'active-run.json');
 }
@@ -93,9 +100,15 @@ export function writeActiveRunManifest(projectRoot: string, manifest: ActiveRunM
 export function readActiveRunManifest(projectRoot: string): ActiveRunManifest | null {
   const filePath = activeRunManifestPath(projectRoot);
   if (!fs.existsSync(filePath)) return null;
-  const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new ActiveRunManifestReadError(message);
+  }
   if (!isActiveRunManifest(parsed)) {
-    throw new Error(`${activeRunManifestPortablePath()} is not a valid active run manifest.`);
+    throw new ActiveRunManifestReadError(`${activeRunManifestPortablePath()} is not a valid active run manifest.`);
   }
   return parsed;
 }
@@ -163,6 +176,11 @@ export function safeCreateActiveRunProjection(projectRoot: string): ActiveRunPro
     return createActiveRunProjection(projectRoot);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    const code = error instanceof ActiveRunManifestReadError ? 'ACTIVE_RUN_MANIFEST_INVALID' : 'ACTIVE_RUN_REPORT_SCHEMA_INVALID';
+    const staleReason =
+      error instanceof ActiveRunManifestReadError
+        ? `${activeRunManifestPortablePath()} could not be read.`
+        : `${activeRunManifestPortablePath()} produced an invalid active-run report.`;
     const report: ActiveRunProjection = {
       schemaVersion: 'hadara.active_run.projection.v1',
       command: 'active-run.projection',
@@ -171,13 +189,13 @@ export function safeCreateActiveRunProjection(projectRoot: string): ActiveRunPro
       activeRun: null,
       handoff: {
         fresh: false,
-        staleReason: `${activeRunManifestPortablePath()} could not be read.`
+        staleReason
       },
       resume: null,
       issues: [
         {
           severity: 'warning',
-          code: 'ACTIVE_RUN_MANIFEST_INVALID',
+          code,
           message
         }
       ]

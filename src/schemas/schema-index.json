@@ -35,6 +35,20 @@
       "status": "fixture",
       "owner": "services/active-run-state",
       "notes": "Documents read-only resume guidance; it does not mutate active-run state or resume a process."
+    },
+    {
+      "id": "hadara.privateEvidence.v1",
+      "path": "src/schemas/private-evidence.schema.json",
+      "status": "fixture",
+      "owner": "evidence/private-manifest",
+      "notes": "Documents private portable-store manifest records without private raw content or source paths."
+    },
+    {
+      "id": "hadara.releaseGate.v1",
+      "path": "src/schemas/release-gate.schema.json",
+      "status": "fixture",
+      "owner": "services/operational-debt",
+      "notes": "Documents advisory and strict release gate reports."
     }
   ]
 }

@@ -199,6 +199,35 @@ describe('CLI evidence JSON reports', () => {
     expect(auditText).not.toContain(privateSourcePath);
   });
 
+  it('does not copy private evidence source artifacts from outside the project boundary by default', () => {
+    const parent = tempProject();
+    const root = path.join(parent, 'repo');
+    fs.mkdirSync(root);
+    const task = createTaskCapsule(root, 'External private evidence');
+    const externalPath = path.join(parent, 'outside-private.log');
+    fs.writeFileSync(externalPath, 'external private content', 'utf8');
+
+    const report = createEvidenceCollectReport(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      path: externalPath,
+      summary: 'External private evidence',
+      result: 'passed',
+      visibility: 'private'
+    });
+    const paths = resolveHadaraPaths({ projectRoot: root });
+
+    expect(report.ok).toBe(true);
+    expect(report.evidence).toMatchObject({
+      visibility: 'private',
+      summary: 'External private evidence'
+    });
+    expect(report.evidence).not.toHaveProperty('evidencePath');
+    expect(listPrivateEvidenceManifests(root, task.id)).toEqual([]);
+    expect(fs.existsSync(path.join(paths.dataRoot, 'private-evidence', task.id))).toBe(false);
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).not.toContain(externalPath);
+  });
+
   it('returns a stable missing task envelope', () => {
     const root = tempProject();
 

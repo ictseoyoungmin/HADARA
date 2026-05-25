@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.releaseGate.v1",
+  "x-hadara-schema-id": "hadara.releaseGate.v1",
+  "title": "HADARA Release Gate Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "mode", "ok", "checks", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.releaseGate.v1" },
+    "command": { "const": "release.gate" },
+    "mode": { "type": "string", "enum": ["advisory", "strict"] },
+    "ok": { "type": "boolean" },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["name", "status", "summary"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "enum": ["passed", "warning", "error"] },
+          "summary": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "type": "string", "enum": ["warning", "error"] },
+          "code": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

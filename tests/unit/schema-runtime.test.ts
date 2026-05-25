@@ -54,6 +54,58 @@ describe('runtime schema validation', () => {
     expect(validateSchema('hadara.active_run.resume.v1', report).ok).toBe(true);
   });
 
+  it('validates private evidence manifest and release gate fixtures', () => {
+    expect(
+      validateSchema('hadara.privateEvidence.v1', {
+        schemaVersion: 'hadara.privateEvidence.v1',
+        taskId: 'T-0094',
+        evidenceId: 'ev_2026-05-25T00-00-00Z_abcd1234',
+        kind: 'command-log',
+        summary: 'Private evidence summary',
+        result: 'passed',
+        storage: {
+          kind: 'portable-store',
+          relativePath: 'data/private-evidence/T-0094/example.bin',
+          encrypted: false,
+          hash: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+          byteLength: 42
+        },
+        createdAt: '2026-05-25T00:00:00.000Z',
+        retention: {
+          policy: 'local-only',
+          includeInContextExport: false
+        },
+        encryption: {
+          status: 'deferred',
+          reason: 'Encryption is deferred.'
+        }
+      }).ok
+    ).toBe(true);
+
+    expect(
+      validateSchema('hadara.releaseGate.v1', {
+        schemaVersion: 'hadara.releaseGate.v1',
+        command: 'release.gate',
+        mode: 'strict',
+        ok: false,
+        checks: [
+          {
+            name: 'No high severity operational debt',
+            status: 'error',
+            summary: 'OD-0003 remains open.'
+          }
+        ],
+        issues: [
+          {
+            severity: 'error',
+            code: 'OPEN_HIGH_OPERATIONAL_DEBT',
+            message: '1 open high-severity operational debt record remains.'
+          }
+        ]
+      }).ok
+    ).toBe(true);
+  });
+
   it('reports clear issues for invalid active-run reports', () => {
     const result = validateSchema('hadara.active_run.projection.v1', {
       schemaVersion: 'hadara.active_run.projection.v1',

@@ -28,6 +28,8 @@ describe('schema fixtures', () => {
       'hadara.active_run.resume.v1',
       'hadara.context.export.v1',
       'hadara.evidence.list.v1',
+      'hadara.privateEvidence.v1',
+      'hadara.releaseGate.v1',
       'hadara.tools.list.v1'
     ]);
 
@@ -40,7 +42,10 @@ describe('schema fixtures', () => {
       expect(schema['x-hadara-schema-id']).toBe(entry.id);
       expect(schema.properties?.schemaVersion?.const).toBe(entry.id);
       expect(schema.required).toContain('schemaVersion');
-      expect(schema.required).toContain('issues');
+      if (schema.properties?.command) {
+        expect(schema.required).toContain('command');
+        expect(schema.required).toContain('issues');
+      }
       expect(entry.status).toBe('fixture');
       expect(entry.owner).toMatch(/^[a-z-]+\/[a-z-]+/);
     }

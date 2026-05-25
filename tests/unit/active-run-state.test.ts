@@ -140,6 +140,39 @@ describe('single active run state', () => {
     expect(validateSchema('hadara.active_run.resume.v1', createActiveRunResumeReport(root)).ok).toBe(true);
   });
 
+  it('separates active-run report schema assertion failures from malformed local state', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\n## Current State\n\n- T-999 is active.\n', 'utf8');
+    writeActiveRunManifest(root, {
+      schemaVersion: 'hadara.active_run.v1',
+      runId: 'run-schema-invalid',
+      taskId: 'T-999',
+      capsule: 'tasks/T-999-invalid',
+      status: 'active',
+      startedAt: '2026-05-24T02:07:30Z',
+      updatedAt: '2026-05-24T02:07:30Z',
+      summary: 'Schema-invalid report.'
+    });
+
+    const projection = safeCreateActiveRunProjection(root);
+
+    expect(projection).toMatchObject({
+      activeRun: null,
+      handoff: {
+        fresh: false,
+        staleReason: '.hadara/local/state/active-run.json produced an invalid active-run report.'
+      },
+      issues: [
+        {
+          severity: 'warning',
+          code: 'ACTIVE_RUN_REPORT_SCHEMA_INVALID',
+          message: expect.stringContaining('Schema validation failed for hadara.active_run.projection.v1')
+        }
+      ]
+    });
+    expect(validateSchema('hadara.active_run.projection.v1', projection).ok).toBe(true);
+  });
+
   it('warns when active run task id has no matching Task Capsule', () => {
     const root = tempProject();
     fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\n## Current State\n\n- T-9999 is active.\n', 'utf8');

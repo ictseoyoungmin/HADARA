@@ -3,6 +3,8 @@ import activeRunProjectionSchemaJson from '../schemas/active-run-projection.sche
 import activeRunResumeSchemaJson from '../schemas/active-run-resume.schema.json';
 import contextExportSchemaJson from '../schemas/context-export.schema.json';
 import evidenceListSchemaJson from '../schemas/evidence-list.schema.json';
+import privateEvidenceSchemaJson from '../schemas/private-evidence.schema.json';
+import releaseGateSchemaJson from '../schemas/release-gate.schema.json';
 import toolsListSchemaJson from '../schemas/tools-list.schema.json';
 
 export interface SchemaValidationIssue {
@@ -15,6 +17,17 @@ export interface SchemaValidationResult {
   ok: boolean;
   schemaId: string;
   issues: SchemaValidationIssue[];
+}
+
+export class SchemaValidationError extends Error {
+  constructor(
+    public readonly schemaId: string,
+    public readonly issues: SchemaValidationIssue[]
+  ) {
+    const firstIssue = issues[0];
+    super(`Schema validation failed for ${schemaId}: ${firstIssue.path} ${firstIssue.message}`);
+    this.name = 'SchemaValidationError';
+  }
 }
 
 type JsonObject = Record<string, unknown>;
@@ -37,6 +50,8 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.active_run.resume.v1': activeRunResumeSchemaJson as JsonObject,
   'hadara.context.export.v1': contextExportSchemaJson as JsonObject,
   'hadara.evidence.list.v1': evidenceListSchemaJson as JsonObject,
+  'hadara.privateEvidence.v1': privateEvidenceSchemaJson as JsonObject,
+  'hadara.releaseGate.v1': releaseGateSchemaJson as JsonObject,
   'hadara.tools.list.v1': toolsListSchemaJson as JsonObject
 };
 
@@ -63,8 +78,7 @@ export function validateSchema(schemaId: string, value: unknown): SchemaValidati
 export function assertSchema(schemaId: string, value: unknown): void {
   const result = validateSchema(schemaId, value);
   if (!result.ok) {
-    const firstIssue = result.issues[0];
-    throw new Error(`Schema validation failed for ${schemaId}: ${firstIssue.path} ${firstIssue.message}`);
+    throw new SchemaValidationError(schemaId, result.issues);
   }
 }
 

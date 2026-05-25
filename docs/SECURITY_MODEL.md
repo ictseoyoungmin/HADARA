@@ -13,6 +13,8 @@ Assisted mode.
 - Keep reproducible project state under `docs/`, `tasks/`, `.hadara/`, and context files.
 - Public Task Capsule artifacts must be UTF-8 text and pass secret-pattern scanning before they are copied.
 - Binary evidence and secret-bearing evidence must stay private until a dedicated sanitized artifact policy exists.
+- Private evidence source artifacts are copied into the private portable store only when the source resolves inside the project boundary by default.
+- External absolute private evidence paths may be recorded only as sanitized committed evidence metadata unless a future explicit override policy is added.
 
 ## Blocked by Default
 
