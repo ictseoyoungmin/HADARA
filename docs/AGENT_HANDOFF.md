@@ -49,14 +49,14 @@
 - T-0087 is complete: operational debt read surfaces now include CLI `hadara debt list/show --json`, read-only MCP `hadara.debt.list/show`, Operations Status debt aggregate counts, and read-only `hadara release gate --mode advisory|strict --json` checks for open high-severity debt.
 - T-0088 is complete: active-run resume guidance now canonicalizes Task Capsule paths from `taskId`, warns with `ACTIVE_RUN_CAPSULE_MISMATCH` on stale manifest capsule paths, registers active-run projection/resume schema fixtures, and clarifies `run-state resume` as read-only guidance.
 - T-0089 is complete: public evidence artifact policy now has safe internal observability via `hadara.evidence_artifact_policy.v1`, reporting redaction pattern ids, severities, counts, and byte counts while keeping medium diagnostics non-blocking and high/critical findings blocking.
-- T-0090 is complete: shell policy internals now split tokenizer, exact safe presets, command-risk classification, and permission-matrix decisions while preserving existing public imports and CLI/MCP/fake-shell behavior.
+- T-0090 is complete: shell policy internals now split tokenizer, exact safe presets, command-risk classification, and permission-matrix decisions while preserving existing public imports. Release-risk commands are denied outside release mode and require explicit approval in release mode; auto/trusted network-risk commands require approval. Strict release-gate CLI failures now set exit code 6.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
 - T-0088 Active Run Resume Hardening: canonicalized active-run resume paths, added capsule mismatch warnings, added schema fixtures, and strengthened read-only resume wording.
 - T-0089 Redaction Policy Observability Tests: added safe public artifact policy diagnostics and regressions for medium non-blocking findings plus high/critical blocking behavior.
-- T-0090 Policy Matrix Refactor: split shell policy internals into tokenizer, presets, command-risk, and permission-matrix modules with read/test/build/write/network/destructive/release regressions.
+- T-0090 Policy Matrix Refactor: split shell policy internals into tokenizer, presets, command-risk, and permission-matrix modules; added release/network safety regressions and strict release-gate exit-code behavior.
 
 ## Current Known Problems
 
@@ -77,10 +77,10 @@
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm run check` passed with 36 test files and 222 tests after T-0090 policy matrix refactor.
-- Latest focused policy check: Docker `npx vitest run tests/unit/policy.test.ts tests/unit/policy-preflight.test.ts tests/unit/policy-json.test.ts tests/unit/fake-shell.test.ts` passed with 4 files and 22 tests.
-- Latest policy CLI smoke: built CLI `policy check-shell` confirmed safe auto allow, release network approval, and destructive denial behavior; the destructive denial exited 2 as expected.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0090 --level done --json --project /workspace` returned `ok: true`.
+- Latest full check: Docker `npm run check` passed with 36 test files and 224 tests after T-0090 policy matrix review follow-up.
+- Latest focused policy/release-gate check: Docker `npx vitest run tests/unit/policy.test.ts tests/unit/policy-preflight.test.ts tests/unit/policy-json.test.ts tests/unit/fake-shell.test.ts tests/unit/operational-debt.test.ts` passed with 5 files and 37 tests.
+- Latest policy/release CLI smoke: built CLI `policy check-shell` confirmed `npm publish` is denied in auto/trusted, asks in release mode, auto network asks, and strict `release gate --mode strict` exits 6.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0090 --level done --json --project /workspace` returned `ok: true` after the policy matrix review follow-up.
 - Latest focused security follow-up check: Docker `npx vitest run tests/unit/operational-debt.test.ts tests/unit/tools-list.test.ts` passed with 2 files and 16 tests after advisory/strict release-gate mode separation.
 - Latest CLI smoke: built CLI `release gate --mode advisory --json` returned `ok: true` with warning status, and `release gate --mode strict --json` returned `ok: false` with error status.
 - Latest focused active-run hardening check: Docker `npx vitest run tests/unit/active-run-state.test.ts tests/unit/schema-fixtures.test.ts tests/unit/mcp-tools.test.ts tests/contract/mcp-bridge-contract.test.ts` passed with 4 files and 32 tests.

@@ -27,7 +27,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 - T-0084 Harness Validate Service Parity: done; CLI and MCP harness validate now use shared `src/services/harness-service.ts`.
 - T-0087 Operational Debt Release Gates: done; operational debt now has CLI/MCP read surfaces, ops aggregate counts, advisory release-gate warnings, and strict high-open debt blocking reports.
 - T-0088 Active Run Resume Hardening: done; active-run resume guidance now canonicalizes Task Capsule paths, warns on capsule mismatches, and has active-run schema fixtures.
-- T-0090 Policy Matrix Refactor: done; shell policy internals now split tokenizer, safe presets, command-risk classification, and permission-matrix decisions while preserving existing caller behavior.
+- T-0090 Policy Matrix Refactor: done; shell policy internals now split tokenizer, safe presets, command-risk classification, and permission-matrix decisions, with release-risk commands blocked outside release mode, auto/trusted network risk approval-gated, and strict release-gate CLI failures returning a non-zero exit code.
 
 ## Immediate P0 Capsules
 
@@ -53,7 +53,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 | 8b | Active run runtime schema validation | TBD | Validate active-run projection/resume read models from mutable local state before stricter release gates rely on them. | Runtime schema validation covers `hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` with malformed local-state regressions. |
 | 9 | Operational debt release gates | T-0087 | Promote operational debt into CLI/MCP read surfaces and release-gate modes. | Done: debt list/show reports, ops aggregate counts, advisory warnings, and strict high-open debt blocking reports pass. |
 | 9a | Redaction policy observability tests | T-0089 | Prove redaction policy diagnostics expose safe pattern/severity/count metadata without leaking raw secret material. | Done: public artifact policy path tests cover medium non-blocking diagnostics, high/critical blocking, and safe user-facing output. |
-| 10 | Policy matrix refactor | T-0090 | Split tokenizer, command risk, permission matrix, presets, and preflight policy. | Done: existing exact-match safety tests pass plus matrix regressions for read/test/build/write/network/destructive/release. |
+| 10 | Policy matrix refactor | T-0090 | Split tokenizer, command risk, permission matrix, presets, and preflight policy. | Done: existing exact-match safety tests pass plus matrix regressions for read/test/build/write/network/destructive/release, release-risk blocking, network approval, and strict release-gate exit codes. |
 | 11 | Private evidence manifest | TBD | Track private evidence metadata, hashes, retention, and context-export exclusion. | Private evidence manifest tests pass and private evidence never enters public context export. |
 | 12 | Logger and audit event model | TBD | Add structured event schema and clarify stdout/stderr/audit/debug log boundaries. | `hadara.event.v1` tests pass and write/policy/evidence audit records remain structured. |
 

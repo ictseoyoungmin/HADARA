@@ -27,8 +27,18 @@ export function evaluatePermissionMatrix(mode: PermissionMode, risk: CommandRisk
     return { action: 'deny', risk: 'blocked', reason: 'Dangerous shell command is blocked by policy.' };
   }
 
+  if (risk === 'release') {
+    return mode === 'release'
+      ? { action: 'ask', risk: 'high', reason: 'Release mode requires explicit approval for release commands.' }
+      : { action: 'deny', risk: 'blocked', reason: 'Release commands are only available in release mode.' };
+  }
+
   if (mode === 'readonly') {
     return { action: 'deny', risk: 'medium', reason: 'Readonly mode does not allow shell execution.' };
+  }
+
+  if (risk === 'network' && (mode === 'auto' || mode === 'trusted')) {
+    return { action: 'ask', risk: 'high', reason: `${mode} mode requires approval for network commands.` };
   }
 
   if (mode === 'assisted') {

@@ -18,6 +18,7 @@ export function handleReleaseGateCommand(input: ReleaseGateCommandInput): boolea
       console.log(`${check.status} | ${check.name} | ${check.summary}`);
     }
   }
+  if (!report.ok) process.exitCode = 6;
   return true;
 }
 

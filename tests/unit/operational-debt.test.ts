@@ -23,6 +23,7 @@ function tempProject(): string {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  process.exitCode = undefined;
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -181,6 +182,7 @@ describe('operational debt track', () => {
       mode: 'strict',
       ok: false
     });
+    expect(process.exitCode).toBe(6);
   });
 
   it('rejects unsupported release gate modes instead of silently falling back', () => {

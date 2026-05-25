@@ -661,7 +661,7 @@ Current limitations:
 - PolicyService is not yet the single source of authorization for provider-originated `ActionIntent` or `ToolRequest` values.
 - Policy decisions do not yet record `policy_version`, actor, surface, or structured authorization audit events.
 - CLI target-command parsing still relies on simple option stripping; future work should support a `--` delimiter so command arguments like `--mode` are not confused with HADARA CLI options.
-- The current matrix intentionally preserves legacy auto/trusted/release behavior; future actor/surface-aware authorization may tighten write/network/release categories.
+- The current matrix blocks release-risk commands outside release mode, requires explicit approval for release-risk commands in release mode, and approval-gates network-risk commands in auto/trusted mode. Future actor/surface-aware authorization may further tighten write categories.
 
 Target module split:
 
@@ -676,7 +676,7 @@ src/policy/presets.ts
 
 Completed increment:
 
-- T-0090 split policy internals into the target modules while keeping existing public exports and behavior compatible.
+- T-0090 split policy internals into the target modules while keeping existing public exports compatible; review follow-up blocked release-risk commands outside release mode, approval-gated auto/trusted network risk, and made strict release-gate CLI failures set exit code 6.
 
 Target types:
 

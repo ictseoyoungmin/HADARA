@@ -40,9 +40,41 @@ describe('policy', () => {
     expect(evaluatePermissionMatrix('assisted', 'test')).toMatchObject({ action: 'ask', risk: 'low' });
     expect(evaluatePermissionMatrix('trusted', 'build')).toMatchObject({ action: 'allow', risk: 'low' });
     expect(evaluatePermissionMatrix('auto', 'write')).toMatchObject({ action: 'allow', risk: 'medium' });
-    expect(evaluatePermissionMatrix('auto', 'network')).toMatchObject({ action: 'allow', risk: 'medium' });
+    expect(evaluatePermissionMatrix('auto', 'network')).toMatchObject({ action: 'ask', risk: 'high' });
+    expect(evaluatePermissionMatrix('trusted', 'network')).toMatchObject({ action: 'ask', risk: 'high' });
     expect(evaluatePermissionMatrix('auto', 'destructive')).toMatchObject({ action: 'deny', risk: 'blocked' });
     expect(evaluatePermissionMatrix('release', 'release')).toMatchObject({ action: 'ask', risk: 'high' });
+  });
+
+  it('blocks release commands outside release mode and requires approval in release mode', () => {
+    expect(classifyShellCommand('npm publish', 'auto')).toMatchObject({
+      action: 'deny',
+      risk: 'blocked',
+      reason: 'Release commands are only available in release mode.'
+    });
+    expect(classifyShellCommand('npm publish', 'trusted')).toMatchObject({
+      action: 'deny',
+      risk: 'blocked',
+      reason: 'Release commands are only available in release mode.'
+    });
+    expect(classifyShellCommand('npm publish', 'release')).toMatchObject({
+      action: 'ask',
+      risk: 'high',
+      reason: 'Release mode requires explicit approval for release commands.'
+    });
+  });
+
+  it('requires approval for network commands in auto and trusted modes', () => {
+    expect(classifyShellCommand('curl https://example.test/archive.tgz', 'auto')).toMatchObject({
+      action: 'ask',
+      risk: 'high',
+      reason: 'auto mode requires approval for network commands.'
+    });
+    expect(classifyShellCommand('curl https://example.test/archive.tgz', 'trusted')).toMatchObject({
+      action: 'ask',
+      risk: 'high',
+      reason: 'trusted mode requires approval for network commands.'
+    });
   });
 
   it('does not classify safe command prefixes with suffixes as safe', () => {
