@@ -9,6 +9,7 @@ import providerCallSchemaJson from '../schemas/provider-call.schema.json';
 import providerConfigSchemaJson from '../schemas/provider-config.schema.json';
 import releaseGateSchemaJson from '../schemas/release-gate.schema.json';
 import toolsListSchemaJson from '../schemas/tools-list.schema.json';
+import writePreflightSchemaJson from '../schemas/write-preflight.schema.json';
 
 export interface SchemaValidationIssue {
   path: string;
@@ -58,7 +59,8 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.provider.call.v1': providerCallSchemaJson as JsonObject,
   'hadara.provider.config.v1': providerConfigSchemaJson as JsonObject,
   'hadara.releaseGate.v1': releaseGateSchemaJson as JsonObject,
-  'hadara.tools.list.v1': toolsListSchemaJson as JsonObject
+  'hadara.tools.list.v1': toolsListSchemaJson as JsonObject,
+  'hadara.write.preflight.v1': writePreflightSchemaJson as JsonObject
 };
 
 export function loadSchema(schemaId: string): JsonObject {

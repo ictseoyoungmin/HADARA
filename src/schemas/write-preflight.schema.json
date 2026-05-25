@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.write.preflight.v1",
+  "x-hadara-schema-id": "hadara.write.preflight.v1",
+  "title": "HADARA CLI Write Preflight Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "ok", "command", "risk", "requiresApproval", "workspaceBoundary", "writes", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.write.preflight.v1" },
+    "ok": { "type": "boolean" },
+    "command": {
+      "type": "string",
+      "enum": [
+        "task.create",
+        "evidence.collect",
+        "handoff.update",
+        "run-state.start",
+        "run-state.update",
+        "run-state.complete",
+        "debt.add",
+        "debt.update",
+        "unknown"
+      ]
+    },
+    "risk": { "type": "string", "enum": ["low", "medium", "high"] },
+    "requiresApproval": { "type": "boolean" },
+    "workspaceBoundary": { "type": "string", "enum": ["project", "project+private-portable"] },
+    "writes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "type": "string", "enum": ["warning", "error"] },
+          "code": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

@@ -115,6 +115,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Policy matrix feedback verification confirms `npm publish` is denied in auto/trusted modes, asks in release mode, auto/trusted network commands ask with high risk, and strict release-gate failures exit 6.
 - Structured event records exist as `hadara.event.v1`; private audit JSONL writes now keep existing compatibility fields and include a nested redacted structured event for future audit/debug read surfaces, and event helpers expose optional schema assertion.
 - Provider preparation helpers exist for schema-backed provider config references and provider call reports; they deny unknown runtime config input fields, assert registered schemas before returning, and do not load secrets, call provider SDKs, perform network calls, or create provider execution surfaces.
+- CLI write-boundary preflight exists as `hadara write preflight <command...> --json` with schema `hadara.write.preflight.v1`; it reports expected project/private-portable write paths for task create, evidence collect, handoff update, planned run-state writes, and planned debt writes without executing the target command.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.

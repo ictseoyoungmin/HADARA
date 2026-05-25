@@ -33,7 +33,8 @@ describe('schema fixtures', () => {
       'hadara.provider.call.v1',
       'hadara.provider.config.v1',
       'hadara.releaseGate.v1',
-      'hadara.tools.list.v1'
+      'hadara.tools.list.v1',
+      'hadara.write.preflight.v1'
     ]);
 
     for (const entry of index.schemas) {

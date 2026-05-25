@@ -70,6 +70,13 @@
       "status": "fixture",
       "owner": "providers/preparation",
       "notes": "Documents provider call summary reports without prompt, response, or secret content."
+    },
+    {
+      "id": "hadara.write.preflight.v1",
+      "path": "src/schemas/write-preflight.schema.json",
+      "status": "fixture",
+      "owner": "services/write-preflight",
+      "notes": "Documents read-only CLI write-boundary preflight reports for expected project/portable write paths."
     }
   ]
 }

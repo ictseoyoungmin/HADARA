@@ -68,7 +68,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 |---:|---|---|---|---|
 | 13 | Provider adapter preparation | T-0096 | Document and scaffold provider adapters without making real provider execution the default. | Done: provider config/call report contract tests pass with secrets excluded. |
 | 14 | Dashboard read integration | T-0097 | Add local read APIs behind `hadara dashboard serve` without write or shell behavior. | Done: `/api/status`, `/api/tasks`, `/api/evidence?taskId=<task-id>`, `/api/active-run`, and `/api/debt` route tests pass. |
-| 15 | CLI write boundary preflight | TBD | Add expected-write preflight reports for CLI-owned write commands. | write-preflight tests list files before task/evidence/handoff/run-state/debt writes. |
+| 15 | CLI write boundary preflight | T-0098 | Add expected-write preflight reports for CLI-owned write commands. | Done: schema-backed `hadara write preflight <command...> --json` reports list files before task/evidence/handoff/run-state/debt writes. |
 | 16 | Release and packaging track | TBD | Define install, CI, clean-checkout, and release-gate behavior. | release checklist report and clean checkout smoke pass in Docker. |
 | 17 | Dogfooding E2E fixture | TBD | Replay a HADARA-on-HADARA workflow from context export to done-level validation. | E2E fixture proves context, capsule, evidence, handoff, policy, and harness continuity. |
 | 18 | Remote CI/release observation | TBD | Confirm remote CI behavior after local Docker validation and before v1.0 release gate freeze. | Remote workflow/check status is recorded and release-gate docs distinguish local vs remote validation. |

@@ -53,7 +53,8 @@ export function serveDashboard(projectRoot: string, options: DashboardServeOptio
   server.listen(port, host, () => {
     const address = server.address();
     const actualPort = typeof address === 'object' && address ? address.port : port;
-    console.log(`[HADARA] Dashboard serving sample fixture at http://${host}:${actualPort}/dashboard/`);
+    // console.log(`[HADARA] Dashboard serving sample fixture at http://${host}:${actualPort}/dashboard/`);
+    console.log(`[HADARA] Dashboard serving at http://${host}:${actualPort}/dashboard/ with read-only APIs under /api/.`);
   });
   return server;
 }

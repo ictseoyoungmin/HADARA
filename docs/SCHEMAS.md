@@ -4,9 +4,9 @@ HADARA JSON schemas are contract fixtures for stable external read models. They 
 
 ## Current Phase
 
-Schema layer status: planning and fixture registration, with limited active-run runtime validation.
+Schema layer status: planning and fixture registration, with limited active-run and write-preflight runtime validation.
 
-T-0079 added fixture registration only. T-0092 added a lightweight runtime validation API for `hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` because those read models are backed by mutable local state. Broad schema validation and release gates remain deferred.
+T-0079 added fixture registration only. T-0092 added a lightweight runtime validation API for `hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` because those read models are backed by mutable local state. T-0098 registers and validates `hadara.write.preflight.v1` reports before returning CLI write-boundary preflight output. Broad schema validation and release gates remain deferred.
 
 ## Registry
 
@@ -36,6 +36,7 @@ Initial fixtures:
 | `hadara.releaseGate.v1` | `src/schemas/release-gate.schema.json` | fixture | Documents advisory and strict release gate reports. |
 | `hadara.privateEvidence.v1` | `src/schemas/private-evidence.schema.json` | fixture | Documents private portable-store manifest records without private raw content or source paths. |
 | `hadara.event.v1` | `src/schemas/event.schema.json` | fixture | Documents structured redacted event records embedded in private audit JSONL. |
+| `hadara.write.preflight.v1` | `src/schemas/write-preflight.schema.json` | fixture | Documents read-only CLI write-boundary preflight reports. |
 
 ## Versioning
 
@@ -79,7 +80,7 @@ export function validateSchema(schemaId: string, value: unknown): SchemaValidati
 export function loadSchema(schemaId: string): unknown;
 ```
 
-Current runtime usage is intentionally narrow: active-run projection/resume reports validate against the fixture subset before shared service builders return them. Future work should keep CLI/MCP transport envelopes separate from shared read-model schemas.
+Current runtime usage is intentionally narrow: active-run projection/resume reports and write-preflight reports validate against the fixture subset before shared service builders return them. Future work should keep CLI/MCP transport envelopes separate from shared read-model schemas.
 
 The validator currently covers the JSON Schema keywords used by registered fixtures, including required fields, const, enum, primitive type checks, arrays, object properties, local `$ref`, `oneOf`, string `minLength`, and regex `pattern`.
 

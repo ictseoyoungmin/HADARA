@@ -16,6 +16,7 @@ import { handleDashboardCommand } from './dashboard';
 import { handleToolsCommand } from './tools';
 import { handleDebtCommand } from './debt';
 import { handleReleaseGateCommand } from './release-gate';
+import { handleWriteCommand } from './write-preflight';
 import { getFlag, getStringOption } from './args';
 import { cliErrorExitCode, createCliErrorReport } from './errors';
 
@@ -34,6 +35,7 @@ Usage:
   hadara debt show <id> [--json]
   hadara tools list [--json]
   hadara handoff update --task <task-id> [--summary <text>] [--next <text>]
+  hadara write preflight <command...> [--json]
   hadara policy check-shell <command> [--mode readonly|assisted|trusted|auto|release]
   hadara policy preflight-shell <command> [--mode readonly|assisted|trusted|auto|release] [--json]
   hadara harness validate --task <task-id> [--level draft|done] [--json]
@@ -100,6 +102,11 @@ async function main(args = process.argv.slice(2)): Promise<void> {
 
     case 'handoff': {
       if (handleHandoffCommand({ args, projectRoot: paths.projectRoot })) return;
+      break;
+    }
+
+    case 'write': {
+      if (handleWriteCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 

@@ -57,13 +57,14 @@
 - T-0095 is complete: structured `hadara.event.v1` helpers and schema fixture exist, private audit JSONL writes keep existing compatibility fields and embed a nested redacted structured event, and focused event/schema plus full Docker checks passed.
 - T-0096 is complete: provider adapter preparation contracts now exist as `hadara.provider.config.v1` and `hadara.provider.call.v1`, with helper APIs that reject stored secret values, deny unknown config input fields, schema-assert helper outputs, omit prompt/response content from call reports, and keep real provider execution deferred. Structured event helpers also expose optional schema assertion.
 - T-0097 is complete: `hadara dashboard serve` response helpers now expose read-only local API routes for `/api/status`, `/api/tasks`, `/api/evidence?taskId=<task-id>`, `/api/active-run`, and `/api/debt`, backed by existing shared read-model services and preserving no shell, provider, MCP write, task mutation, evidence write, live streaming, or browser-state persistence behavior.
+- T-0098 is complete: `hadara write preflight <command...> --json` now returns schema-backed `hadara.write.preflight.v1` reports for task create, evidence collect, handoff update, planned run-state writes, and planned debt writes without executing target write commands.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0095 Logger and Audit Event Model: added `hadara.event.v1` helpers/schema and embedded structured redacted events into existing private audit JSONL records without breaking compatibility fields.
 - T-0096 Real Provider Adapter Preparation: added provider config/call schema fixtures, runtime schema assertions, unknown-field denial, event schema assertion helper, and preparation helpers without real provider SDKs, network calls, secret loading, or provider execution surfaces.
 - T-0097 Dashboard Read Integration: added read-only dashboard API routes for status, tasks, evidence, active-run, and debt using shared read-model services without write, shell, provider, streaming, or persistence behavior.
+- T-0098 CLI Write Boundary Preflight: added schema-backed read-only write preflight reports and CLI output for expected CLI-owned write paths without executing target writes.
 
 ## Current Known Problems
 
@@ -77,16 +78,16 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. The next roadmap slice is CLI Write Boundary Preflight, limited to reporting expected CLI-owned writes before task/evidence/handoff/run-state/debt mutations.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. The next roadmap slice is Release and Packaging Track, limited first to checklist/report behavior and clean-checkout validation planning.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest focused dashboard check: Docker `npx vitest run tests/unit/dashboard-static.test.ts` passed with 1 file and 11 tests.
-- Latest full check: Docker `npm run check` passed with 39 test files and 251 tests after T-0097 dashboard read integration.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0097 --level done --json --project /workspace` returned `ok: true` after docs/evidence updates.
+- Latest focused write-preflight check: Docker `npx vitest run tests/unit/write-preflight.test.ts` passed with 1 file and 5 tests.
+- Latest full check: Docker `npm run check` passed with 40 test files and 256 tests after T-0098 CLI write boundary preflight.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0098 --level done --json --project /workspace` returned `ok: true` after docs/evidence updates.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
 
 ## Historical Index
