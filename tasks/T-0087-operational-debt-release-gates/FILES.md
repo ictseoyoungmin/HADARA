@@ -2,9 +2,9 @@
 
 | Path | Action | Reason |
 |---|---|---|
-| `src/services/operational-debt.ts` | Update | Add debt severity/aggregate/show report and release-gate debt checks. |
+| `src/services/operational-debt.ts` | Update | Add debt severity/aggregate/show report and release-gate debt checks, including advisory/strict mode behavior. |
 | `src/cli/debt.ts` | Add | Provide CLI debt list/show read surface. |
-| `src/cli/release-gate.ts` | Add | Provide read-only release-gate warning report. |
+| `src/cli/release-gate.ts` | Add | Provide read-only release-gate readiness report with advisory/strict modes. |
 | `src/cli/main.ts` | Update | Route debt and release-gate commands. |
 | `src/services/operations-status-service.ts` | Update | Include debt aggregates in operations status. |
 | `src/services/capability-registry.ts` | Update | Register CLI/MCP debt and release-gate read surfaces. |

@@ -78,6 +78,8 @@ export function loadSchema(schemaId: string): unknown;
 
 Future work should introduce this behind a Task Capsule and keep CLI/MCP transport envelopes separate from shared read-model schemas.
 
+`hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` are priority candidates for this future runtime API because they describe mutable local project state from `.hadara/local/state/active-run.json`. Release-readiness work should validate those read models before relying on active-run guidance in stricter gates.
+
 ## Non-Goals
 
 - No schema-based release gate is active yet.

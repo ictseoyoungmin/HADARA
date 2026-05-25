@@ -107,6 +107,7 @@ describe('operational debt track', () => {
     expect(createReleaseGateReport(root)).toEqual({
       schemaVersion: 'hadara.releaseGate.v1',
       command: 'release.gate',
+      mode: 'advisory',
       ok: true,
       checks: [
         {
@@ -125,6 +126,31 @@ describe('operational debt track', () => {
     });
   });
 
+  it('blocks release gates in strict mode when high severity operational debt remains open', () => {
+    const root = tempProject();
+
+    expect(createReleaseGateReport(root, 'strict')).toEqual({
+      schemaVersion: 'hadara.releaseGate.v1',
+      command: 'release.gate',
+      mode: 'strict',
+      ok: false,
+      checks: [
+        {
+          name: 'No high severity operational debt',
+          status: 'error',
+          summary: 'OD-0003, OD-0008 remain open.'
+        }
+      ],
+      issues: [
+        {
+          severity: 'error',
+          code: 'OPEN_HIGH_OPERATIONAL_DEBT',
+          message: '2 open high-severity operational debt record(s) remain.'
+        }
+      ]
+    });
+  });
+
   it('prints JSON through debt and release-gate CLI handlers', () => {
     const root = tempProject();
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -132,6 +158,7 @@ describe('operational debt track', () => {
     expect(handleDebtCommand({ args: ['debt', 'list', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
     expect(handleDebtCommand({ args: ['debt', 'show', 'OD-0008', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
     expect(handleReleaseGateCommand({ args: ['release', 'gate', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+    expect(handleReleaseGateCommand({ args: ['release', 'gate', '--mode', 'strict', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
 
     expect(JSON.parse(String(log.mock.calls[0]?.[0]))).toMatchObject({
       schemaVersion: 'hadara.operational_debt.v1',
@@ -144,8 +171,24 @@ describe('operational debt track', () => {
     });
     expect(JSON.parse(String(log.mock.calls[2]?.[0]))).toMatchObject({
       schemaVersion: 'hadara.releaseGate.v1',
-      command: 'release.gate'
+      command: 'release.gate',
+      mode: 'advisory',
+      ok: true
     });
+    expect(JSON.parse(String(log.mock.calls[3]?.[0]))).toMatchObject({
+      schemaVersion: 'hadara.releaseGate.v1',
+      command: 'release.gate',
+      mode: 'strict',
+      ok: false
+    });
+  });
+
+  it('rejects unsupported release gate modes instead of silently falling back', () => {
+    const root = tempProject();
+
+    expect(() => handleReleaseGateCommand({ args: ['release', 'gate', '--mode', 'blocking', '--json'], projectRoot: root, jsonOutput: true })).toThrow(
+      'unsupported release gate mode: blocking'
+    );
   });
 
   it('reports capsule size indicators', () => {

@@ -219,7 +219,7 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     notes: 'Read-only resume guidance derived from the active-run projection; does not update state or resume an agent process.'
   },
   {
-    name: 'hadara release gate --json',
+    name: 'hadara release gate --mode advisory|strict --json',
     category: 'release',
     stable: true,
     readOnly: true,
@@ -227,7 +227,7 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     availability: 'default',
     risk: 'medium',
     schemaVersion: 'hadara.releaseGate.v1',
-    notes: 'Read-only release readiness report; does not package, deploy, or execute release actions.'
+    notes: 'Read-only release readiness report; advisory mode warns, strict mode blocks on open high-severity debt, and neither mode packages, deploys, or executes release actions.'
   },
   {
     name: 'hadara run --script <script.json> --json',

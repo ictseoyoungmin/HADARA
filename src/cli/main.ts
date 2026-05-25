@@ -45,7 +45,7 @@ Usage:
   hadara ops status [--json]
   hadara run-state show [--json]
   hadara run-state resume [--json]  # read-only guidance; does not resume a process
-  hadara release gate [--json]
+  hadara release gate [--mode advisory|strict] [--json]
   hadara dashboard serve [--host <host>] [--port <port>]
   hadara run scaffold --task <task-id> --command <command> [--stdout <text>] [--stderr <text>] [--exit-code <n>] [--json]
   hadara run [request] --script <script.json> [--task <task-id>] [--fake-shell-fixtures <fixtures.json>] [--mode readonly|assisted|trusted|auto|release] [--max-steps <n>] [--json]

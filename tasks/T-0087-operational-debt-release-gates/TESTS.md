@@ -12,3 +12,4 @@
 ## Optional
 
 - Built CLI smokes for debt list/show, release gate, and ops status.
+- Focused regression: `createReleaseGateReport(root, 'strict')` returns `ok: false` and error status when high-severity debt remains open.

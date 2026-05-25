@@ -355,7 +355,7 @@ Future debt commands and aggregate requirements:
 - T-0087 implemented `hadara debt show OD-0001 --json`.
 - T-0087 implemented read-only MCP `hadara.debt.list` and `hadara.debt.show`.
 - T-0087 added `ops status --json` high/open debt counts.
-- T-0087 added warning-only release-gate behavior for open high-severity debt; blocking remains future work.
+- T-0087 added release-gate modes for open high-severity debt: `advisory` warns with `ok: true`, while `strict` reports an error with `ok: false`. Both modes remain read-only and do not execute release/package actions.
 
 ## Redaction Hardening
 
@@ -771,6 +771,8 @@ Strictness plan:
 
 The current schema fixtures are `fixture` level only. They should not block releases until a later capsule introduces schema loading and strictness-aware validation.
 
+Active-run projection and resume fixtures are priority runtime-validation candidates because they read mutable local project state from `.hadara/local/state/active-run.json`.
+
 Candidate files:
 
 ```text
@@ -782,6 +784,8 @@ src/schemas/evidence.schema.json
 src/schemas/evidence-list.schema.json
 src/schemas/harness-validate.schema.json
 src/schemas/active-run.schema.json
+src/schemas/active-run-projection.schema.json
+src/schemas/active-run-resume.schema.json
 src/schemas/compatibility-fixture.schema.json
 docs/SCHEMAS.md
 ```
@@ -1038,6 +1042,7 @@ Functional:
 - Compatibility fixture passes.
 - Active run resume projection is available.
 - Done-level harness validation is included in the release gate.
+- Release-gate mode is explicit: `advisory` keeps high-open debt warning-only, while `strict` blocks with `ok: false`.
 
 Security:
 

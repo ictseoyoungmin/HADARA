@@ -43,7 +43,10 @@ Read-only surfaces:
 - MCP `hadara.debt.list`
 - MCP `hadara.debt.show`
 - `hadara ops status --json` includes debt aggregate counts.
-- `hadara release gate --json` emits a warning check when open high-severity debt remains; it does not execute release, packaging, deployment, shell, or provider actions.
+- `hadara release gate --mode advisory --json` is the default current release gate. Open high-severity debt emits a warning check and `ok: true`.
+- `hadara release gate --mode strict --json` is a read-only blocking readiness report. Open high-severity debt emits an error check and `ok: false`.
+
+Both release-gate modes are read-only reports. They do not execute release, packaging, deployment, shell, or provider actions.
 
 ## V1.0 Follow-Up
 
@@ -56,4 +59,4 @@ Future work should add:
 - persisted or extensible debt records;
 - impact, recommended fix, linked tasks, and timestamps;
 - persisted or externally editable records;
-- blocking semantics for high-severity debt after false-positive risk is low.
+- richer strict-mode inputs after false-positive risk is lower.

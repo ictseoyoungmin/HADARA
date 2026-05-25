@@ -66,14 +66,15 @@ export interface OperationalDebtShowReport {
 export interface ReleaseGateReport {
   schemaVersion: 'hadara.releaseGate.v1';
   command: 'release.gate';
-  ok: true;
+  mode: 'advisory' | 'strict';
+  ok: boolean;
   checks: Array<{
     name: string;
-    status: 'passed' | 'warning';
+    status: 'passed' | 'warning' | 'error';
     summary: string;
   }>;
   issues: Array<{
-    severity: 'warning';
+    severity: 'warning' | 'error';
     code: string;
     message: string;
   }>;
@@ -187,14 +188,15 @@ export function createOperationalDebtShowReport(projectRoot: string, id: string)
   };
 }
 
-export function createReleaseGateReport(projectRoot: string): ReleaseGateReport {
+export function createReleaseGateReport(projectRoot: string, mode: ReleaseGateReport['mode'] = 'advisory'): ReleaseGateReport {
   const debt = createOperationalDebtReport(projectRoot);
   const highOpen = debt.records.filter((record) => isOpenDebt(record) && record.severity === 'high');
+  const blocking = mode === 'strict' && highOpen.length > 0;
   const issues: ReleaseGateReport['issues'] =
     highOpen.length > 0
       ? [
           {
-            severity: 'warning',
+            severity: blocking ? 'error' : 'warning',
             code: 'OPEN_HIGH_OPERATIONAL_DEBT',
             message: `${highOpen.length} open high-severity operational debt record(s) remain.`
           }
@@ -203,11 +205,12 @@ export function createReleaseGateReport(projectRoot: string): ReleaseGateReport 
   return {
     schemaVersion: 'hadara.releaseGate.v1',
     command: 'release.gate',
-    ok: true,
+    mode,
+    ok: !blocking,
     checks: [
       {
         name: 'No high severity operational debt',
-        status: highOpen.length > 0 ? 'warning' : 'passed',
+        status: highOpen.length > 0 ? (blocking ? 'error' : 'warning') : 'passed',
         summary: highOpen.length > 0 ? `${highOpen.map((record) => record.id).join(', ')} remain open.` : 'No open high-severity operational debt records.'
       }
     ],

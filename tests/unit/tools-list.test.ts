@@ -64,7 +64,7 @@ describe('tools list read model', () => {
           schemaVersion: 'hadara.operational_debt.v1'
         }),
         expect.objectContaining({
-          name: 'hadara release gate --json',
+          name: 'hadara release gate --mode advisory|strict --json',
           category: 'release',
           readOnly: true,
           schemaVersion: 'hadara.releaseGate.v1'
