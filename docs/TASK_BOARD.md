@@ -92,3 +92,4 @@
 | T-0089 | Redaction Policy Observability Tests | Done | tasks/T-0089-redaction-policy-observability-tests | Adds safe public artifact policy diagnostics and medium-finding non-blocking coverage. |
 | T-0090 | Policy Matrix Refactor | Done | tasks/T-0090-policy-matrix-refactor | Splits shell policy internals and blocks release-risk commands outside release mode while approval-gating auto/trusted network risk. |
 | T-0091 | Private Evidence Manifest | Done | tasks/T-0091-private-evidence-manifest | Adds private portable-store manifests with hashes, deferred encryption metadata, audit events, and context-export exclusion tests. |
+| T-0092 | Active Run Runtime Schema Validation | Done | tasks/T-0092-active-run-runtime-schema-validation | Adds runtime schema validation for active-run projection/resume reports and malformed-state degraded outputs. |

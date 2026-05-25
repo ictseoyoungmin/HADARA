@@ -4,9 +4,9 @@ HADARA JSON schemas are contract fixtures for stable external read models. They 
 
 ## Current Phase
 
-Schema layer status: planning and fixture registration.
+Schema layer status: planning and fixture registration, with limited active-run runtime validation.
 
-T-0079 does not add runtime validation. The current source of truth for behavior remains the TypeScript report builders and existing CLI/MCP contract tests. Schema fixtures are intentionally lightweight until the validation API exists.
+T-0079 added fixture registration only. T-0092 added a lightweight runtime validation API for `hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` because those read models are backed by mutable local state. Broad schema validation and release gates remain deferred.
 
 ## Registry
 
@@ -47,7 +47,7 @@ Initial schemas require stable envelope fields such as `schemaVersion`, `command
 
 Initial schemas allow additive properties. This keeps the fixtures useful for documentation and future loader design without prematurely blocking read-model extension work.
 
-Future schema validation should distinguish three strictness levels:
+Schema validation should distinguish three strictness levels:
 
 | Level | Purpose | Unknown fields | Typical use |
 |---|---|---|---|
@@ -57,9 +57,9 @@ Future schema validation should distinguish three strictness levels:
 
 The current `additionalProperties: true` posture is only a fixture-level policy. Do not treat the initial fixtures as release gates until a later capsule defines core-field strictness, required/enum enforcement, and unknown-field handling.
 
-## Future Runtime API
+## Runtime API
 
-The planned runtime API remains deferred:
+The lightweight runtime API exists in `src/core/schema.ts`:
 
 ```ts
 export interface SchemaValidationResult {
@@ -76,9 +76,9 @@ export function validateSchema(schemaId: string, value: unknown): SchemaValidati
 export function loadSchema(schemaId: string): unknown;
 ```
 
-Future work should introduce this behind a Task Capsule and keep CLI/MCP transport envelopes separate from shared read-model schemas.
+Current runtime usage is intentionally narrow: active-run projection/resume reports validate against the fixture subset before shared service builders return them. Future work should keep CLI/MCP transport envelopes separate from shared read-model schemas.
 
-`hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` are priority candidates for this future runtime API because they describe mutable local project state from `.hadara/local/state/active-run.json`. Release-readiness work should validate those read models before relying on active-run guidance in stricter gates.
+The validator currently covers the JSON Schema keywords used by registered fixtures, including required fields, const, enum, primitive type checks, arrays, object properties, local `$ref`, `oneOf`, string `minLength`, and regex `pattern`.
 
 ## Non-Goals
 

@@ -770,12 +770,16 @@ Current implementation:
 
 - `docs/SCHEMAS.md`
 - `src/schemas/schema-index.json`
+- `src/core/schema.ts`
 - `src/schemas/evidence-list.schema.json`
 - `src/schemas/context-export.schema.json`
 - `src/schemas/tools-list.schema.json`
+- `src/schemas/active-run-projection.schema.json`
+- `src/schemas/active-run-resume.schema.json`
+- `tests/unit/schema-runtime.test.ts`
 - `tests/unit/schema-fixtures.test.ts`
 
-T-0079 is planning and fixture registration only. Runtime validation, schema loading APIs, and release gates remain future work.
+T-0079 was planning and fixture registration only. T-0092 added limited runtime validation for active-run projection/resume reports. Broad schema validation and release gates remain future work.
 
 Strictness plan:
 
@@ -783,9 +787,9 @@ Strictness plan:
 - `contract`: external-agent compatibility checks; core fields strict while documented extension fields remain possible.
 - `releaseGate`: pre-release validation; required fields, enums, and unknown-field handling must be explicit.
 
-The current schema fixtures are `fixture` level only. They should not block releases until a later capsule introduces schema loading and strictness-aware validation.
+The current schema fixtures are `fixture` level. Active-run projection/resume use them for runtime checks, but they should not block releases until a later capsule introduces strictness-aware release-gate policy.
 
-Active-run projection and resume fixtures are priority runtime-validation candidates because they read mutable local project state from `.hadara/local/state/active-run.json`.
+Active-run projection and resume fixtures now have runtime validation because they read mutable local project state from `.hadara/local/state/active-run.json`.
 
 Candidate files:
 

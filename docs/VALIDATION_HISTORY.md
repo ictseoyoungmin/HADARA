@@ -90,3 +90,7 @@ Historical validation entries moved out of `docs/AGENT_HANDOFF.md` during T-0040
 - Docker check after T-0086: 36 test files passed, 208 tests passed.
 - Docker built CLI `run-state show --json` and `run-state resume --json` smokes after T-0086 returned active-run projection and resume schemas.
 - Docker `node dist/cli/main.js harness validate --task T-0086 --level done --json --project /workspace` returned `ok: true`.
+- Docker focused active-run runtime schema checks after T-0092: 3 files passed, 14 tests passed.
+- Docker check after T-0092: 37 test files passed, 230 tests passed.
+- Docker built CLI `run-state show --json` and `run-state resume --json` smokes after T-0092 returned active-run projection/resume schemas with `ok: true`.
+- Docker `node dist/cli/main.js harness validate --task T-0092 --level done --json --project /workspace` returned `ok: true`.

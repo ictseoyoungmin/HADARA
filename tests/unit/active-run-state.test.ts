@@ -12,6 +12,7 @@ import {
   writeActiveRunManifest
 } from '../../src/services/active-run-state';
 import { handleRunStateCommand } from '../../src/cli/run-state';
+import { validateSchema } from '../../src/core/schema';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -135,6 +136,8 @@ describe('single active run state', () => {
         }
       ]
     });
+    expect(validateSchema('hadara.active_run.projection.v1', safeCreateActiveRunProjection(root)).ok).toBe(true);
+    expect(validateSchema('hadara.active_run.resume.v1', createActiveRunResumeReport(root)).ok).toBe(true);
   });
 
   it('warns when active run task id has no matching Task Capsule', () => {

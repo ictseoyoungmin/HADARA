@@ -38,7 +38,7 @@
 - T-0076 is complete: evidence list reads now use shared `hadara.evidence.list.v1`, `hadara evidence list --json`, and read-only MCP `hadara.evidence.list`, with malformed JSONL degraded to warning issues, normalized output records, private path stripping, defensive summary redaction, and taskId mismatch drops.
 - T-0077 is complete: read-only MCP `hadara.context.export` now returns `hadara.context.export.v1` as an in-memory payload with `contextPath: null` and no `.hadara/context/HADARA_CONTEXT.md` mutation; CLI `hadara hermes export-context` remains the file-writing path. Context export includes `docs/IMPLEMENTATION_SOP.md` as the authoritative workflow source and warns with `SUMMARY_ONLY_NOT_IMPLEMENTED` when `summaryOnly` is requested.
 - T-0078 is complete: tools discovery now uses a neutral capability registry, shared `hadara.tools.list.v1`, `hadara tools list --json`, and read-only MCP `hadara.tools.list`, reporting fuller CLI/MCP surfaces, `availability`/`risk` metadata, opt-in evidence attach, and disabled shell/provider/release/broad-write MCP surfaces.
-- T-0079 is complete: schema layer planning now has `docs/SCHEMAS.md`, `src/schemas/schema-index.json`, and initial JSON Schema fixtures for `hadara.evidence.list.v1`, `hadara.context.export.v1`, and `hadara.tools.list.v1`; runtime schema validation and release gates remain deferred.
+- T-0079 is complete: schema layer planning now has `docs/SCHEMAS.md`, `src/schemas/schema-index.json`, and initial JSON Schema fixtures for stable read models; broad runtime schema validation and release gates remain deferred.
 - T-0080 is complete: task list/show/read report logic now lives in shared `src/services/task-read-model.ts`, CLI task JSON imports remain compatible, and read-only MCP task list/read route through the shared service with parity coverage.
 - T-0081 is complete: policy check/evaluate report logic now lives in shared `src/services/policy-service.ts`, CLI policy JSON imports remain compatible, and CLI preflight plus read-only MCP policy evaluate route through the shared service with parity coverage.
 - T-0082 is complete: cleanup follow-up notes now document redaction policy observability, schema strictness levels, task.read embedded evidence normalization, and PolicyService authorization limitations; `createPolicyCheckReport()` now accepts string/default mode input consistently with policy evaluate.
@@ -51,13 +51,14 @@
 - T-0089 is complete: public evidence artifact policy now has safe internal observability via `hadara.evidence_artifact_policy.v1`, reporting redaction pattern ids, severities, counts, and byte counts while keeping medium diagnostics non-blocking and high/critical findings blocking.
 - T-0090 is complete: shell policy internals now split tokenizer, exact safe presets, command-risk classification, and permission-matrix decisions while preserving existing public imports. Release-risk commands are denied outside release mode and require explicit approval in release mode; auto/trusted network-risk commands require approval. Strict release-gate CLI failures now set exit code 6.
 - T-0091 is complete: private evidence with readable source artifacts now writes raw bytes only to the ignored private portable store, records `hadara.privateEvidence.v1` manifests with SHA-256 hashes, retention, byte counts, and deferred encryption metadata, audits manifest writes privately, and keeps committed Task Capsule files plus context export free of private raw content, source paths, and private store paths.
+- T-0092 is complete: active-run projection/resume reports now validate against registered runtime schemas via `src/core/schema.ts`, and malformed active-run local state still degrades to schema-valid warning reports.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0089 Redaction Policy Observability Tests: added safe public artifact policy diagnostics and regressions for medium non-blocking findings plus high/critical blocking behavior.
 - T-0090 Policy Matrix Refactor: split shell policy internals into tokenizer, presets, command-risk, and permission-matrix modules; added release/network safety regressions and strict release-gate exit-code behavior.
 - T-0091 Private Evidence Manifest: added private portable-store manifests with hashes, retention/deferred-encryption metadata, private audit events, and context-export exclusion coverage.
+- T-0092 Active Run Runtime Schema Validation: added lightweight registered schema validation for active-run projection/resume reports and malformed-local-state degraded outputs.
 
 ## Current Known Problems
 
@@ -71,18 +72,17 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then continue with Logger and Audit Event Model or Active Run Runtime Schema Validation before provider or dashboard integration work.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then continue with Logger and Audit Event Model before provider or dashboard integration work.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm run check` passed with 36 test files and 224 tests after T-0090 policy matrix review follow-up.
-- Latest private evidence full check: Docker `npm run check` passed with 36 test files and 226 tests after T-0091 private evidence manifest.
-- Latest focused private evidence check: Docker `npx vitest run tests/unit/evidence-json.test.ts tests/unit/evidence-list.test.ts tests/unit/hermes-json.test.ts` passed with 3 files and 24 tests.
-- Latest private evidence CLI smoke: built CLI private `evidence collect` returned `ok: true`, sanitized private summary, no `evidencePath`, and created private portable-store artifact plus manifest files.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0091 --level done --json --project /workspace` returned `ok: true`.
+- Latest full check: Docker `npm run check` passed with 37 test files and 230 tests after T-0092 active-run runtime schema validation.
+- Latest focused active-run schema check: Docker `npx vitest run tests/unit/schema-runtime.test.ts tests/unit/active-run-state.test.ts tests/unit/schema-fixtures.test.ts` passed with 3 files and 14 tests.
+- Latest active-run CLI smoke: built CLI `run-state show --json` returned `hadara.active_run.projection.v1`, and `run-state resume --json` returned `hadara.active_run.resume.v1`, both `ok: true`.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0092 --level done --json --project /workspace` returned `ok: true`.
 - Latest focused policy/release-gate check: Docker `npx vitest run tests/unit/policy.test.ts tests/unit/policy-preflight.test.ts tests/unit/policy-json.test.ts tests/unit/fake-shell.test.ts tests/unit/operational-debt.test.ts` passed with 5 files and 37 tests.
 - Latest policy/release CLI smoke: built CLI `policy check-shell` confirmed `npm publish` is denied in auto/trusted, asks in release mode, auto network asks, and strict `release gate --mode strict` exits 6.
 - Latest focused security follow-up check: Docker `npx vitest run tests/unit/operational-debt.test.ts tests/unit/tools-list.test.ts` passed with 2 files and 16 tests after advisory/strict release-gate mode separation.

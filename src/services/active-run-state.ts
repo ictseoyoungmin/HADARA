@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDir } from '../core/fs';
+import { assertSchema } from '../core/schema';
 import { listTaskCapsules } from '../task/task-capsule';
 import { readProjectSources } from './project-read-model';
 
@@ -132,7 +133,7 @@ export function createActiveRunProjection(projectRoot: string): ActiveRunProject
 
   const resumeCapsule = canonicalCapsule ?? activeRun?.capsule ?? '';
 
-  return {
+  const report: ActiveRunProjection = {
     schemaVersion: 'hadara.active_run.projection.v1',
     command: 'active-run.projection',
     ok: true,
@@ -153,6 +154,8 @@ export function createActiveRunProjection(projectRoot: string): ActiveRunProject
       : null,
     issues
   };
+  assertActiveRunProjectionSchema(report);
+  return report;
 }
 
 export function safeCreateActiveRunProjection(projectRoot: string): ActiveRunProjection {
@@ -160,7 +163,7 @@ export function safeCreateActiveRunProjection(projectRoot: string): ActiveRunPro
     return createActiveRunProjection(projectRoot);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return {
+    const report: ActiveRunProjection = {
       schemaVersion: 'hadara.active_run.projection.v1',
       command: 'active-run.projection',
       ok: true,
@@ -179,6 +182,8 @@ export function safeCreateActiveRunProjection(projectRoot: string): ActiveRunPro
         }
       ]
     };
+    assertActiveRunProjectionSchema(report);
+    return report;
   }
 }
 
@@ -188,7 +193,7 @@ export function createActiveRunResumeReport(projectRoot: string): ActiveRunResum
   const taskId = activeRun?.taskId ?? null;
   const capsule = projection.resume?.capsule || activeRun?.capsule || (taskId ? `tasks/${taskId}` : null);
 
-  return {
+  const report: ActiveRunResumeReport = {
     schemaVersion: 'hadara.active_run.resume.v1',
     command: 'active-run.resume',
     ok: true,
@@ -209,6 +214,16 @@ export function createActiveRunResumeReport(projectRoot: string): ActiveRunResum
     },
     issues: projection.issues
   };
+  assertActiveRunResumeSchema(report);
+  return report;
+}
+
+export function assertActiveRunProjectionSchema(report: ActiveRunProjection): void {
+  assertSchema('hadara.active_run.projection.v1', report);
+}
+
+export function assertActiveRunResumeSchema(report: ActiveRunResumeReport): void {
+  assertSchema('hadara.active_run.resume.v1', report);
 }
 
 function findStaleHandoffReason(projectRoot: string, activeRun: ActiveRunManifest): string | null {
