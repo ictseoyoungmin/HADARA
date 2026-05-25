@@ -49,6 +49,13 @@
       "status": "fixture",
       "owner": "services/operational-debt",
       "notes": "Documents advisory and strict release gate reports."
+    },
+    {
+      "id": "hadara.event.v1",
+      "path": "src/schemas/event.schema.json",
+      "status": "fixture",
+      "owner": "core/events",
+      "notes": "Documents structured HADARA event records used by private audit JSONL and future debug/read surfaces."
     }
   ]
 }

@@ -54,13 +54,14 @@
 - T-0092 is complete: active-run projection/resume reports now validate against registered runtime schemas via `src/core/schema.ts`, and malformed active-run local state still degrades to schema-valid warning reports.
 - T-0093 is complete: policy matrix/release-gate feedback was verified against current code; production policy behavior was already present, and strict release-gate exit-code regression coverage was sharpened.
 - T-0094 is complete: private evidence source artifact copying is project-boundary-limited by default, `hadara evidence collect` accepts `--visibility public|private`, active-run schema/report failure warnings are split by code, and `hadara.privateEvidence.v1` plus `hadara.releaseGate.v1` schema fixtures are registered.
+- T-0095 is complete: structured `hadara.event.v1` helpers and schema fixture exist, private audit JSONL writes keep existing compatibility fields and embed a nested redacted structured event, and focused event/schema plus full Docker checks passed.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0092 Active Run Runtime Schema Validation: added lightweight registered schema validation for active-run projection/resume reports and malformed-local-state degraded outputs.
 - T-0093 Policy Matrix Release Gate Feedback: verified release/network policy behavior, strict release-gate exit code 6, and added a sharper exit-code regression test.
 - T-0094 Security Schema Follow-up Cleanup: limited private evidence raw source copying to project-boundary files, added evidence `--visibility` CLI alias, split active-run warning codes, and added privateEvidence/releaseGate schema fixtures.
+- T-0095 Logger and Audit Event Model: added `hadara.event.v1` helpers/schema and embedded structured redacted events into existing private audit JSONL records without breaking compatibility fields.
 
 ## Current Known Problems
 
@@ -74,29 +75,16 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then continue with Logger and Audit Event Model before provider or dashboard integration work.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. The next roadmap slice is Real Provider Adapter Preparation, limited to contracts/schema/scaffolding with no provider calls as the default path.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm run check` passed with 37 test files and 236 tests after T-0094 evidence visibility alias cleanup.
-- Latest evidence visibility alias check: Docker `npx vitest run tests/unit/evidence-json.test.ts tests/unit/cli-errors.test.ts tests/unit/schema-fixtures.test.ts tests/unit/schema-runtime.test.ts` passed with 4 files and 22 tests.
-- Latest `--visibility private` CLI smoke: built CLI confirmed project-local private source created one private artifact, external absolute private source created no additional artifact, and both JSON reports stayed private without `evidencePath`.
-- Latest focused security/schema follow-up check: Docker `npx vitest run tests/unit/evidence-json.test.ts tests/unit/active-run-state.test.ts tests/unit/schema-fixtures.test.ts tests/unit/schema-runtime.test.ts tests/unit/operational-debt.test.ts` passed with 5 files and 41 tests.
-- Latest private evidence CLI smoke: built CLI private evidence collection confirmed project-local private source created one private artifact, external absolute private source created no additional artifact, and both JSON reports stayed private without `evidencePath`.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0094 --level done --json --project /workspace` returned `ok: true` after evidence visibility alias cleanup.
-- Latest focused policy feedback check: Docker `npx vitest run tests/unit/policy.test.ts tests/unit/operational-debt.test.ts tests/unit/policy-preflight.test.ts tests/unit/policy-json.test.ts` passed with 4 files and 33 tests.
-- Latest policy/release CLI smoke: built CLI confirmed `npm publish` auto/trusted deny blocked, `npm publish` release asks high, `curl` auto/trusted asks high, and strict release gate exits 6.
-- Latest focused active-run schema check: Docker `npx vitest run tests/unit/schema-runtime.test.ts tests/unit/active-run-state.test.ts tests/unit/schema-fixtures.test.ts` passed with 3 files and 14 tests.
-- Latest active-run CLI smoke: built CLI `run-state show --json` returned `hadara.active_run.projection.v1`, and `run-state resume --json` returned `hadara.active_run.resume.v1`, both `ok: true`.
-- Latest focused policy/release-gate check: Docker `npx vitest run tests/unit/policy.test.ts tests/unit/policy-preflight.test.ts tests/unit/policy-json.test.ts tests/unit/fake-shell.test.ts tests/unit/operational-debt.test.ts` passed with 5 files and 37 tests.
-- Latest policy/release CLI smoke: built CLI `policy check-shell` confirmed `npm publish` is denied in auto/trusted, asks in release mode, auto network asks, and strict `release gate --mode strict` exits 6.
-- Latest focused security follow-up check: Docker `npx vitest run tests/unit/operational-debt.test.ts tests/unit/tools-list.test.ts` passed with 2 files and 16 tests after advisory/strict release-gate mode separation.
-- Latest CLI smoke: built CLI `release gate --mode advisory --json` returned `ok: true` with warning status, and `release gate --mode strict --json` returned `ok: false` with error status.
-- Latest focused active-run hardening check: Docker `npx vitest run tests/unit/active-run-state.test.ts tests/unit/schema-fixtures.test.ts tests/unit/mcp-tools.test.ts tests/contract/mcp-bridge-contract.test.ts` passed with 4 files and 32 tests.
-- Latest CLI smoke: built CLI `run-state resume --json` returned `hadara.active_run.resume.v1`, `ok: true`, and a valid `resumePrompt.mustRead` array.
+- Latest focused event/schema check: Docker `npx vitest run tests/unit/events.test.ts tests/unit/schema-fixtures.test.ts tests/unit/schema-runtime.test.ts` passed with 3 files and 9 tests.
+- Latest full check: Docker `npm run check` passed with 38 test files and 239 tests after T-0095.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0095 --level done --json --project /workspace` returned `ok: true`.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
 
 ## Historical Index

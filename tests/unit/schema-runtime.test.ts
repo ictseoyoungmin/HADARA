@@ -106,6 +106,24 @@ describe('runtime schema validation', () => {
     ).toBe(true);
   });
 
+  it('validates structured event fixtures', () => {
+    expect(
+      validateSchema('hadara.event.v1', {
+        schemaVersion: 'hadara.event.v1',
+        time: '2026-05-25T00:00:00.000Z',
+        level: 'info',
+        eventType: 'harness.validate.completed',
+        actor: 'cli',
+        taskId: 'T-0095',
+        summary: 'Done-level validation passed.',
+        payload: {
+          ok: true,
+          level: 'done'
+        }
+      }).ok
+    ).toBe(true);
+  });
+
   it('reports clear issues for invalid active-run reports', () => {
     const result = validateSchema('hadara.active_run.projection.v1', {
       schemaVersion: 'hadara.active_run.projection.v1',

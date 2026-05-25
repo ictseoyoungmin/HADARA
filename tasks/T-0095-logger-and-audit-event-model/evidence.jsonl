@@ -1,0 +1,3 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-25T04:17:32.701Z","taskId":"T-0095","kind":"test-log","summary":"Focused event/schema tests passed: events, schema-fixtures, schema-runtime; 3 files, 9 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-25T04:17:32.827Z","taskId":"T-0095","kind":"test-log","summary":"Docker npm run check passed: 38 test files, 239 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-25T04:19:36.704Z","taskId":"T-0095","kind":"command-log","summary":"Docker built CLI done-level harness validation for T-0095 returned ok true with no issues.","result":"passed","visibility":"public"}

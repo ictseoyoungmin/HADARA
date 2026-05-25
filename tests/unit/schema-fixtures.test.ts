@@ -27,6 +27,7 @@ describe('schema fixtures', () => {
       'hadara.active_run.projection.v1',
       'hadara.active_run.resume.v1',
       'hadara.context.export.v1',
+      'hadara.event.v1',
       'hadara.evidence.list.v1',
       'hadara.privateEvidence.v1',
       'hadara.releaseGate.v1',

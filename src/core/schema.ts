@@ -3,6 +3,7 @@ import activeRunProjectionSchemaJson from '../schemas/active-run-projection.sche
 import activeRunResumeSchemaJson from '../schemas/active-run-resume.schema.json';
 import contextExportSchemaJson from '../schemas/context-export.schema.json';
 import evidenceListSchemaJson from '../schemas/evidence-list.schema.json';
+import eventSchemaJson from '../schemas/event.schema.json';
 import privateEvidenceSchemaJson from '../schemas/private-evidence.schema.json';
 import releaseGateSchemaJson from '../schemas/release-gate.schema.json';
 import toolsListSchemaJson from '../schemas/tools-list.schema.json';
@@ -50,6 +51,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.active_run.resume.v1': activeRunResumeSchemaJson as JsonObject,
   'hadara.context.export.v1': contextExportSchemaJson as JsonObject,
   'hadara.evidence.list.v1': evidenceListSchemaJson as JsonObject,
+  'hadara.event.v1': eventSchemaJson as JsonObject,
   'hadara.privateEvidence.v1': privateEvidenceSchemaJson as JsonObject,
   'hadara.releaseGate.v1': releaseGateSchemaJson as JsonObject,
   'hadara.tools.list.v1': toolsListSchemaJson as JsonObject

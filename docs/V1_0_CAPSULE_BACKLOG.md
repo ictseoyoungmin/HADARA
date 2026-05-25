@@ -32,6 +32,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 - T-0092 Active Run Runtime Schema Validation: done; active-run projection/resume reports validate against registered schemas at runtime, including malformed-local-state degraded warning reports.
 - T-0093 Policy Matrix Release Gate Feedback: done; verified release/network policy behavior and strict release-gate exit-code handling.
 - T-0094 Security Schema Follow-up Cleanup: done; private evidence raw-copy sources are project-boundary-limited by default, active-run schema warnings are split by failure class, and privateEvidence/releaseGate schema fixtures are registered.
+- T-0095 Logger and Audit Event Model: done; `hadara.event.v1` helpers/schema exist and audit JSONL writes embed structured redacted events while preserving compatibility fields.
 
 ## Immediate P0 Capsules
 
@@ -59,7 +60,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 | 9a | Redaction policy observability tests | T-0089 | Prove redaction policy diagnostics expose safe pattern/severity/count metadata without leaking raw secret material. | Done: public artifact policy path tests cover medium non-blocking diagnostics, high/critical blocking, and safe user-facing output. |
 | 10 | Policy matrix refactor | T-0090 | Split tokenizer, command risk, permission matrix, presets, and preflight policy. | Done: existing exact-match safety tests pass plus matrix regressions for read/test/build/write/network/destructive/release, release-risk blocking, network approval, and strict release-gate exit codes. |
 | 11 | Private evidence manifest | T-0091, T-0094 | Track private evidence metadata, hashes, retention, and context-export exclusion. | Done: private evidence manifest tests pass, private evidence never enters committed Task Capsule files or public context export, and raw private source copying is project-boundary-limited by default. |
-| 12 | Logger and audit event model | TBD | Add structured event schema and clarify stdout/stderr/audit/debug log boundaries. | `hadara.event.v1` tests pass and write/policy/evidence audit records remain structured. |
+| 12 | Logger and audit event model | T-0095 | Add structured event schema and clarify stdout/stderr/audit/debug log boundaries. | Done: `hadara.event.v1` tests pass and write/evidence audit records retain compatibility fields while embedding structured events. |
 
 ## P2 Productization Capsules
 

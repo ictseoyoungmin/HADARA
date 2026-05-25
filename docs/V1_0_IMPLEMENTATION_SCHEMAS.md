@@ -846,7 +846,10 @@ MCP tools/call payload text
 Current implementation:
 
 - `src/core/audit.ts` exists.
-- General logger and structured event model are still weak.
+- `src/core/events.ts` defines `hadara.event.v1` normalization, redaction, and JSONL-safe serialization helpers.
+- `src/core/audit.ts` preserves existing audit JSONL compatibility fields and embeds a nested structured event.
+- `src/schemas/event.schema.json` is registered as a fixture for `hadara.event.v1`.
+- General debug log persistence remains deferred.
 
 Candidate files:
 

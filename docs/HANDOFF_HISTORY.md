@@ -56,6 +56,7 @@ Historical completed-task handoff entries moved out of `docs/AGENT_HANDOFF.md` d
 - Completed T-0089 Redaction Policy Observability Tests by adding safe public artifact policy diagnostics and regressions for medium non-blocking findings plus high/critical blocking behavior.
 - Completed T-0090 Policy Matrix Refactor by splitting shell policy internals, blocking release-risk commands outside release mode, approval-gating network commands in auto/trusted modes, and making strict release gates return exit code 6.
 - Completed T-0091 Private Evidence Manifest by adding private portable-store manifests with hashes, retention/deferred-encryption metadata, private audit events, and context-export exclusion coverage.
+- Completed T-0092 Active Run Runtime Schema Validation by adding registered runtime schema validation for active-run projection/resume reports while preserving degraded warning behavior for malformed local state.
 
 ## Source Documents
 
