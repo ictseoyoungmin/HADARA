@@ -17,7 +17,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - MockProvider contract exists.
 - ScriptedProvider exists for deterministic harness/replay provider behavior.
 - Provider fallback executor exists for deterministic chat fallback orchestration.
-- Provider adapter preparation contracts exist as `hadara.provider.config.v1` and `hadara.provider.call.v1`, with schema fixtures and helper APIs that reject stored secret values and summarize provider calls without prompt/response content.
+- Provider adapter preparation contracts exist as `hadara.provider.config.v1` and `hadara.provider.call.v1`, with schema fixtures and helper APIs that reject stored secret values, deny unknown config input fields, schema-assert outputs, and summarize provider calls without prompt/response content.
 - Fake shell preflight harness exists for deterministic tool observations without real shell execution.
 - Minimal deterministic agent loop harness exists for ScriptedProvider responses plus fake shell observations.
 - Task Capsule creation exists.
@@ -112,8 +112,8 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Shell policy internals now have focused tokenizer, exact safe command preset, command-risk, and permission-matrix modules while preserving the existing `src/policy/policy.ts` compatibility surface. Release-risk commands are denied outside release mode and require explicit approval in release mode; auto/trusted network-risk commands require approval.
 - Strict `hadara release gate --mode strict --json` failures set process exit code 6 when the release-gate report is not ok.
 - Policy matrix feedback verification confirms `npm publish` is denied in auto/trusted modes, asks in release mode, auto/trusted network commands ask with high risk, and strict release-gate failures exit 6.
-- Structured event records exist as `hadara.event.v1`; private audit JSONL writes now keep existing compatibility fields and include a nested redacted structured event for future audit/debug read surfaces.
-- Provider preparation helpers exist for schema-backed provider config references and provider call reports; they do not load secrets, call provider SDKs, perform network calls, or create provider execution surfaces.
+- Structured event records exist as `hadara.event.v1`; private audit JSONL writes now keep existing compatibility fields and include a nested redacted structured event for future audit/debug read surfaces, and event helpers expose optional schema assertion.
+- Provider preparation helpers exist for schema-backed provider config references and provider call reports; they deny unknown runtime config input fields, assert registered schemas before returning, and do not load secrets, call provider SDKs, perform network calls, or create provider execution surfaces.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.

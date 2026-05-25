@@ -1,4 +1,5 @@
 import { redactSecrets } from '../core/redaction';
+import { validateSchema } from '../core/schema';
 import { ChatRequest, ChatResponse, ProviderCapabilities, ProviderError } from './provider-contract';
 
 export type ProviderAdapterKind = 'openai-compatible' | 'ollama' | 'llama-cpp';
@@ -73,39 +74,65 @@ export class ProviderConfigError extends Error {
   }
 }
 
+export class ProviderCallReportError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ProviderCallReportError';
+  }
+}
+
 const SECRET_VALUE_KEYS = new Set(['apiKey', 'apiKeyValue', 'token', 'secret', 'password', 'authorization']);
+const PROVIDER_CONFIG_INPUT_KEYS = new Set(['providers', 'defaultProvider']);
+const PROVIDER_ADAPTER_CONFIG_INPUT_KEYS = new Set([
+  'id',
+  'kind',
+  'enabled',
+  'baseUrlEnv',
+  'apiKeyEnv',
+  'model',
+  'capabilities',
+  'localOnly',
+  'costProfile'
+]);
+const PROVIDER_CAPABILITY_INPUT_KEYS = new Set(['supportsStreaming', 'supportsToolCalling', 'supportsReasoning', 'supportsVision']);
+const PROVIDER_KIND_VALUES = new Set<ProviderAdapterKind>(['openai-compatible', 'ollama', 'llama-cpp']);
+const COST_PROFILE_VALUES = new Set<ProviderCapabilities['costProfile']>(['free', 'low', 'medium', 'high', 'unknown']);
+const PROVIDER_ID_PATTERN = /^[A-Za-z0-9_.:-]+$/;
 const ENV_NAME_PATTERN = /^[A-Z_][A-Z0-9_]*$/;
 
 export function createProviderConfig(input: ProviderConfigInput): ProviderConfig {
+  rejectUnknownFields(input as unknown, PROVIDER_CONFIG_INPUT_KEYS, 'provider config');
+  if (!Array.isArray(input.providers)) {
+    throw new ProviderConfigError('provider config providers must be an array.');
+  }
   const providers = input.providers.map(normalizeProviderConfig);
   const defaultProvider = input.defaultProvider ?? null;
   if (defaultProvider && !providers.some((provider) => provider.id === defaultProvider)) {
     throw new ProviderConfigError(`Default provider "${defaultProvider}" is not configured.`);
   }
-  return {
+  const config: ProviderConfig = {
     schemaVersion: 'hadara.provider.config.v1',
     providers,
     defaultProvider
   };
+  return assertProviderConfigSchema(config);
 }
 
 export function normalizeProviderConfig(input: ProviderAdapterConfigInput): ProviderAdapterConfig {
+  rejectUnknownFields(input as unknown, PROVIDER_ADAPTER_CONFIG_INPUT_KEYS, 'provider adapter config');
   rejectSecretValueFields(input);
-  const id = requireNonEmptyString(input.id, 'provider id');
-  const model = requireNonEmptyString(input.model, 'provider model');
+  const id = normalizeProviderId(input.id, 'provider id', ProviderConfigError);
+  const kind = normalizeProviderKind(input.kind);
+  const model = requireNonEmptyString(input.model, 'provider model', ProviderConfigError);
+  const capabilities = normalizeCapabilities(input.capabilities);
   const config: ProviderAdapterConfig = {
     id,
-    kind: input.kind,
-    enabled: input.enabled ?? false,
+    kind,
+    enabled: optionalBoolean(input.enabled, 'enabled') ?? false,
     model,
-    capabilities: {
-      streaming: input.capabilities?.supportsStreaming ?? false,
-      toolCalling: input.capabilities?.supportsToolCalling ?? false,
-      reasoning: input.capabilities?.supportsReasoning ?? false,
-      vision: input.capabilities?.supportsVision ?? false
-    },
-    localOnly: input.localOnly ?? input.kind !== 'openai-compatible',
-    costProfile: input.costProfile ?? 'unknown'
+    capabilities,
+    localOnly: optionalBoolean(input.localOnly, 'localOnly') ?? kind !== 'openai-compatible',
+    costProfile: normalizeCostProfile(input.costProfile)
   };
   if (input.baseUrlEnv) config.baseUrlEnv = normalizeEnvName(input.baseUrlEnv, 'baseUrlEnv');
   if (input.apiKeyEnv) config.apiKeyEnv = normalizeEnvName(input.apiKeyEnv, 'apiKeyEnv');
@@ -119,10 +146,10 @@ export function createProviderCallReport(input: {
   response?: ChatResponse;
   error?: ProviderError | Error | unknown;
 }): ProviderCallReport {
-  const provider = requireNonEmptyString(input.provider, 'provider');
+  const provider = normalizeProviderId(input.provider, 'provider', ProviderCallReportError);
   const model = input.model ?? input.response?.model;
   const issues = input.error ? [normalizeProviderCallIssue(input.error)] : [];
-  return {
+  const report: ProviderCallReport = {
     schemaVersion: 'hadara.provider.call.v1',
     provider,
     ...(model ? { model } : {}),
@@ -141,6 +168,23 @@ export function createProviderCallReport(input: {
       : {}),
     issues
   };
+  return assertProviderCallSchema(report);
+}
+
+export function assertProviderConfigSchema(config: ProviderConfig): ProviderConfig {
+  const result = validateSchema('hadara.provider.config.v1', config);
+  if (!result.ok) {
+    throw new ProviderConfigError(formatSchemaIssues('Provider config', result.issues));
+  }
+  return config;
+}
+
+export function assertProviderCallSchema(report: ProviderCallReport): ProviderCallReport {
+  const result = validateSchema('hadara.provider.call.v1', report);
+  if (!result.ok) {
+    throw new ProviderCallReportError(formatSchemaIssues('Provider call report', result.issues));
+  }
+  return report;
 }
 
 function normalizeProviderCallIssue(error: ProviderError | Error | unknown): ProviderCallIssue {
@@ -169,17 +213,74 @@ function rejectSecretValueFields(input: ProviderAdapterConfigInput): void {
   }
 }
 
+function rejectUnknownFields(input: unknown, allowedKeys: Set<string>, label: string): void {
+  if (!isPlainObject(input)) {
+    throw new ProviderConfigError(`${label} must be an object.`);
+  }
+  const unknownKeys = Object.keys(input).filter((key) => !allowedKeys.has(key));
+  if (unknownKeys.length > 0) {
+    throw new ProviderConfigError(`${label} contains unsupported field(s): ${unknownKeys.join(', ')}.`);
+  }
+}
+
+function normalizeProviderId<T extends Error>(
+  value: string,
+  label: string,
+  ErrorClass: new (message: string) => T
+): string {
+  const id = requireNonEmptyString(value, label, ErrorClass);
+  if (!PROVIDER_ID_PATTERN.test(id)) {
+    throw new ErrorClass(`${label} must match ${PROVIDER_ID_PATTERN.source}.`);
+  }
+  return id;
+}
+
+function normalizeProviderKind(value: ProviderAdapterKind): ProviderAdapterKind {
+  if (!PROVIDER_KIND_VALUES.has(value)) {
+    throw new ProviderConfigError(`provider kind must be one of ${Array.from(PROVIDER_KIND_VALUES).join(', ')}.`);
+  }
+  return value;
+}
+
+function normalizeCostProfile(value: ProviderCapabilities['costProfile'] | undefined): ProviderCapabilities['costProfile'] {
+  const costProfile = value ?? 'unknown';
+  if (!COST_PROFILE_VALUES.has(costProfile)) {
+    throw new ProviderConfigError(`costProfile must be one of ${Array.from(COST_PROFILE_VALUES).join(', ')}.`);
+  }
+  return costProfile;
+}
+
+function normalizeCapabilities(input: ProviderAdapterConfigInput['capabilities']): ProviderAdapterConfig['capabilities'] {
+  if (input !== undefined) {
+    rejectUnknownFields(input as unknown, PROVIDER_CAPABILITY_INPUT_KEYS, 'provider capabilities');
+  }
+  return {
+    streaming: optionalBoolean(input?.supportsStreaming, 'supportsStreaming') ?? false,
+    toolCalling: optionalBoolean(input?.supportsToolCalling, 'supportsToolCalling') ?? false,
+    reasoning: optionalBoolean(input?.supportsReasoning, 'supportsReasoning') ?? false,
+    vision: optionalBoolean(input?.supportsVision, 'supportsVision') ?? false
+  };
+}
+
+function optionalBoolean(value: boolean | undefined, label: string): boolean | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'boolean') {
+    throw new ProviderConfigError(`${label} must be a boolean.`);
+  }
+  return value;
+}
+
 function normalizeEnvName(value: string, fieldName: string): string {
-  const envName = requireNonEmptyString(value, fieldName);
+  const envName = requireNonEmptyString(value, fieldName, ProviderConfigError);
   if (!ENV_NAME_PATTERN.test(envName)) {
     throw new ProviderConfigError(`${fieldName} must be an environment variable name.`);
   }
   return envName;
 }
 
-function requireNonEmptyString(value: string, label: string): string {
+function requireNonEmptyString<T extends Error>(value: string, label: string, ErrorClass: new (message: string) => T): string {
   if (typeof value !== 'string' || value.trim().length === 0) {
-    throw new ProviderConfigError(`${label} must be a non-empty string.`);
+    throw new ErrorClass(`${label} must be a non-empty string.`);
   }
   return value.trim();
 }
@@ -190,4 +291,14 @@ function approximateTokens(input: string): number {
 
 function isProviderError(error: unknown): error is ProviderError {
   return Boolean(error && typeof error === 'object' && 'provider' in error && 'code' in error && 'retriable' in error);
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function formatSchemaIssues(label: string, issues: Array<{ path: string; code: string; message: string }>): string {
+  const firstIssue = issues[0];
+  if (!firstIssue) return `${label} failed schema validation.`;
+  return `${label} failed schema validation: ${firstIssue.path} ${firstIssue.code} ${firstIssue.message}`;
 }

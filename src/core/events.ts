@@ -1,4 +1,5 @@
 import { redactSecrets } from './redaction';
+import { validateSchema } from './schema';
 
 export type HadaraEventLevel = 'debug' | 'info' | 'warn' | 'error';
 export type HadaraEventActor = 'cli' | 'mcp' | 'system' | 'agent' | 'user';
@@ -24,7 +25,18 @@ export interface HadaraEventInput {
   payload?: unknown;
 }
 
-export function createHadaraEvent(input: HadaraEventInput): HadaraEvent {
+export interface HadaraEventOptions {
+  assertSchema?: boolean;
+}
+
+export class HadaraEventSchemaError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'HadaraEventSchemaError';
+  }
+}
+
+export function createHadaraEvent(input: HadaraEventInput, options: HadaraEventOptions = {}): HadaraEvent {
   const event: HadaraEvent = {
     schemaVersion: 'hadara.event.v1',
     time: input.time ?? new Date().toISOString(),
@@ -36,6 +48,19 @@ export function createHadaraEvent(input: HadaraEventInput): HadaraEvent {
   if (input.taskId) event.taskId = input.taskId;
   const payload = sanitizePayload(input.payload);
   if (payload !== undefined) event.payload = payload;
+  return options.assertSchema ? assertHadaraEventSchema(event) : event;
+}
+
+export function assertHadaraEventSchema(event: HadaraEvent): HadaraEvent {
+  const result = validateSchema('hadara.event.v1', event);
+  if (!result.ok) {
+    const firstIssue = result.issues[0];
+    throw new HadaraEventSchemaError(
+      firstIssue
+        ? `HADARA event failed schema validation: ${firstIssue.path} ${firstIssue.code} ${firstIssue.message}`
+        : 'HADARA event failed schema validation.'
+    );
+  }
   return event;
 }
 

@@ -2,7 +2,7 @@
 
 ## Required
 
-- Docker `npx vitest run tests/contract/provider-preparation.test.ts tests/unit/schema-fixtures.test.ts tests/unit/schema-runtime.test.ts`
+- Docker `npx vitest run tests/contract/provider-preparation.test.ts tests/unit/events.test.ts tests/unit/schema-fixtures.test.ts tests/unit/schema-runtime.test.ts`
 - Docker `npm run check`
 
 ## Optional

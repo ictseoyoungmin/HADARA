@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { validateSchema } from '../../src/core/schema';
 import {
+  assertProviderCallSchema,
+  assertProviderConfigSchema,
   createProviderCallReport,
   createProviderConfig,
   normalizeProviderConfig,
+  ProviderCallReportError,
   ProviderConfigError
 } from '../../src/providers/provider-preparation';
 
@@ -44,6 +47,64 @@ describe('provider adapter preparation contracts', () => {
         apiKey: 'sk-testtesttesttesttest'
       } as any)
     ).toThrow(ProviderConfigError);
+  });
+
+  it('rejects unknown provider config fields instead of copying or warning later', () => {
+    expect(() =>
+      createProviderConfig({
+        providers: [],
+        defaultProvider: null,
+        apiKey: 'sk-testtesttesttesttest'
+      } as any)
+    ).toThrow('provider config contains unsupported field(s): apiKey');
+
+    expect(() =>
+      normalizeProviderConfig({
+        id: 'bad-provider',
+        kind: 'openai-compatible',
+        model: 'model',
+        capabilities: {
+          supportsStreaming: true,
+          token: 'sk-testtesttesttesttest'
+        }
+      } as any)
+    ).toThrow('provider capabilities contains unsupported field(s): token');
+  });
+
+  it('rejects invalid provider ids, kinds, booleans, and cost profiles at runtime', () => {
+    expect(() =>
+      normalizeProviderConfig({
+        id: 'bad provider',
+        kind: 'openai-compatible',
+        model: 'model'
+      })
+    ).toThrow('provider id must match');
+
+    expect(() =>
+      normalizeProviderConfig({
+        id: 'bad-provider',
+        kind: 'mystery-provider',
+        model: 'model'
+      } as any)
+    ).toThrow('provider kind must be one of');
+
+    expect(() =>
+      normalizeProviderConfig({
+        id: 'bad-provider',
+        kind: 'openai-compatible',
+        model: 'model',
+        enabled: 'yes'
+      } as any)
+    ).toThrow('enabled must be a boolean');
+
+    expect(() =>
+      normalizeProviderConfig({
+        id: 'bad-provider',
+        kind: 'openai-compatible',
+        model: 'model',
+        costProfile: 'expensive'
+      } as any)
+    ).toThrow('costProfile must be one of');
   });
 
   it('rejects invalid environment variable references', () => {
@@ -119,5 +180,43 @@ describe('provider adapter preparation contracts', () => {
       retriable: false
     });
     expect(validateSchema('hadara.provider.call.v1', report).ok).toBe(true);
+  });
+
+  it('exposes explicit schema assertion helpers for provider config and call reports', () => {
+    expect(() =>
+      assertProviderConfigSchema({
+        schemaVersion: 'hadara.provider.config.v1',
+        providers: [
+          {
+            id: 'bad provider',
+            kind: 'openai-compatible',
+            enabled: false,
+            model: 'model',
+            capabilities: {
+              streaming: false,
+              toolCalling: false,
+              reasoning: false,
+              vision: false
+            },
+            localOnly: true,
+            costProfile: 'unknown'
+          }
+        ],
+        defaultProvider: null
+      } as any)
+    ).toThrow(ProviderConfigError);
+
+    expect(() =>
+      assertProviderCallSchema({
+        schemaVersion: 'hadara.provider.call.v1',
+        provider: 'bad provider',
+        ok: true,
+        input: {
+          messages: 1,
+          approxTokens: 1
+        },
+        issues: []
+      } as any)
+    ).toThrow(ProviderCallReportError);
   });
 });

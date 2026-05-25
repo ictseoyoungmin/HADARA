@@ -961,12 +961,50 @@ Provider call report:
 }
 ```
 
+Current T-0096 status:
+
+- `hadara.provider.config.v1` and `hadara.provider.call.v1` are registered schema fixtures.
+- Provider preparation helpers deny unknown config input fields, reject stored secret values, and assert schema-valid outputs before returning.
+- Provider call reports summarize counts, approximate tokens, finish reason, and redacted issues without prompt or response content.
+
 Policy rule:
 
 - Provider adapters may not directly execute FileWrite, Shell, Git, Test, Release, Network, or Evidence mutation actions.
 - Provider-originated actions must become `ActionIntent` or `ToolRequest` values and pass through the shared PolicyService.
 - CLI policy preflight and MCP `hadara.policy.evaluate` must return decisions from the same PolicyService.
 - Every allow/ask/deny decision should record actor, surface, policy_version, mode, risk, reason, and timestamp.
+
+Deferred provider-originated ActionIntent contract sketch:
+
+```json
+{
+  "schemaVersion": "hadara.provider.actionIntent.v1",
+  "provider": "openai-compatible-local",
+  "model": "local-model",
+  "intentId": "intent_2026-05-25T00-00-00Z_abcd1234",
+  "action": {
+    "kind": "shell",
+    "summary": "Run focused tests",
+    "command": "npm test -- tests/unit/example.test.ts"
+  },
+  "origin": {
+    "providerCallId": "call_2026-05-25T00-00-00Z_abcd1234",
+    "taskId": "T-0096"
+  },
+  "policy": {
+    "required": true,
+    "decision": null
+  },
+  "issues": []
+}
+```
+
+ActionIntent constraints:
+
+- ActionIntent records are proposals only; they do not execute shell, write files, call providers, mutate evidence, or dispatch MCP writes.
+- Provider-originated shell/file/git/test/release/network/evidence actions must be normalized into an ActionIntent and then evaluated by the shared policy service before any future executor can act.
+- Actual provider adapters remain explicit opt-in and policy-gated. No adapter should be enabled by default.
+- Provider call audit integration is a future step and should record redacted provider call reports plus ActionIntent ids, not prompt/response content or secret values.
 
 ## CLI Write Boundary
 

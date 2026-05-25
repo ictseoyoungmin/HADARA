@@ -112,3 +112,6 @@ Historical validation entries moved out of `docs/AGENT_HANDOFF.md` during T-0040
 - Docker focused provider/schema tests after T-0096: 3 files passed, 13 tests passed.
 - Docker check after T-0096: 39 test files passed, 245 tests passed.
 - Docker `node dist/cli/main.js harness validate --task T-0096 --level done --json --project /workspace` returned `ok: true`.
+- Docker focused provider/event/schema hardening tests after T-0096 follow-up: 4 files passed, 19 tests passed.
+- Docker check after T-0096 follow-up hardening: 39 test files passed, 249 tests passed.
+- Docker `node dist/cli/main.js harness validate --task T-0096 --level done --json --project /workspace` returned `ok: true` after follow-up hardening docs/evidence updates.

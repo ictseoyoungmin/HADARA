@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { writeAuditEvent } from '../../src/core/audit';
-import { createHadaraEvent, serializeHadaraEvent } from '../../src/core/events';
+import { assertHadaraEventSchema, createHadaraEvent, HadaraEventSchemaError, serializeHadaraEvent } from '../../src/core/events';
 
 const roots: string[] = [];
 
@@ -44,6 +44,26 @@ describe('HADARA events', () => {
     expect(event.summary).not.toContain('ghp_123456789012345678901234567890123456');
     expect(JSON.stringify(event.payload)).not.toContain('ghp_123456789012345678901234567890123456');
     expect(() => JSON.parse(serializeHadaraEvent(event))).not.toThrow();
+  });
+
+  it('optionally asserts structured events against the registered schema', () => {
+    const event = createHadaraEvent(
+      {
+        time: '2026-05-25T00:00:00.000Z',
+        actor: 'system',
+        eventType: 'provider.config.checked',
+        summary: 'Provider config checked.'
+      },
+      { assertSchema: true }
+    );
+
+    expect(assertHadaraEventSchema(event)).toBe(event);
+    expect(() =>
+      assertHadaraEventSchema({
+        ...event,
+        taskId: 'not-a-task'
+      })
+    ).toThrow(HadaraEventSchemaError);
   });
 
   it('writes audit records with compatibility fields plus a structured event', () => {
