@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classifyShellCommand, tokenizeShellCommand } from '../../src/policy/policy';
+import { classifyCommandRisk, classifyShellCommand, evaluatePermissionMatrix, tokenizeShellCommand } from '../../src/policy/policy';
 
 describe('policy', () => {
   it('blocks dangerous shell commands', () => {
@@ -23,6 +23,26 @@ describe('policy', () => {
     expect(classifyShellCommand('npm run check', 'release').action).toBe('allow');
     expect(classifyShellCommand('pytest', 'release').action).toBe('allow');
     expect(classifyShellCommand('git diff', 'release').action).toBe('allow');
+  });
+
+  it('classifies command risk categories for the permission matrix', () => {
+    expect(classifyCommandRisk(tokenizeShellCommand('git diff'))).toBe('read');
+    expect(classifyCommandRisk(tokenizeShellCommand('npm test'))).toBe('test');
+    expect(classifyCommandRisk(tokenizeShellCommand('npm run build'))).toBe('build');
+    expect(classifyCommandRisk(tokenizeShellCommand('touch output.txt'))).toBe('write');
+    expect(classifyCommandRisk(tokenizeShellCommand('curl https://example.test/archive.tgz'))).toBe('network');
+    expect(classifyCommandRisk(tokenizeShellCommand('rm -rf dist'))).toBe('destructive');
+    expect(classifyCommandRisk(tokenizeShellCommand('npm publish'))).toBe('release');
+  });
+
+  it('maps command risk through the current permission matrix', () => {
+    expect(evaluatePermissionMatrix('readonly', 'read')).toMatchObject({ action: 'deny', risk: 'medium' });
+    expect(evaluatePermissionMatrix('assisted', 'test')).toMatchObject({ action: 'ask', risk: 'low' });
+    expect(evaluatePermissionMatrix('trusted', 'build')).toMatchObject({ action: 'allow', risk: 'low' });
+    expect(evaluatePermissionMatrix('auto', 'write')).toMatchObject({ action: 'allow', risk: 'medium' });
+    expect(evaluatePermissionMatrix('auto', 'network')).toMatchObject({ action: 'allow', risk: 'medium' });
+    expect(evaluatePermissionMatrix('auto', 'destructive')).toMatchObject({ action: 'deny', risk: 'blocked' });
+    expect(evaluatePermissionMatrix('release', 'release')).toMatchObject({ action: 'ask', risk: 'high' });
   });
 
   it('does not classify safe command prefixes with suffixes as safe', () => {

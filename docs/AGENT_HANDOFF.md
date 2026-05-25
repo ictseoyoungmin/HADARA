@@ -49,13 +49,14 @@
 - T-0087 is complete: operational debt read surfaces now include CLI `hadara debt list/show --json`, read-only MCP `hadara.debt.list/show`, Operations Status debt aggregate counts, and read-only `hadara release gate --mode advisory|strict --json` checks for open high-severity debt.
 - T-0088 is complete: active-run resume guidance now canonicalizes Task Capsule paths from `taskId`, warns with `ACTIVE_RUN_CAPSULE_MISMATCH` on stale manifest capsule paths, registers active-run projection/resume schema fixtures, and clarifies `run-state resume` as read-only guidance.
 - T-0089 is complete: public evidence artifact policy now has safe internal observability via `hadara.evidence_artifact_policy.v1`, reporting redaction pattern ids, severities, counts, and byte counts while keeping medium diagnostics non-blocking and high/critical findings blocking.
+- T-0090 is complete: shell policy internals now split tokenizer, exact safe presets, command-risk classification, and permission-matrix decisions while preserving existing public imports and CLI/MCP/fake-shell behavior.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0087 Operational Debt Release Gates: added debt read surfaces, ops aggregate counts, advisory warning checks, and strict high-open debt blocking reports.
 - T-0088 Active Run Resume Hardening: canonicalized active-run resume paths, added capsule mismatch warnings, added schema fixtures, and strengthened read-only resume wording.
 - T-0089 Redaction Policy Observability Tests: added safe public artifact policy diagnostics and regressions for medium non-blocking findings plus high/critical blocking behavior.
+- T-0090 Policy Matrix Refactor: split shell policy internals into tokenizer, presets, command-risk, and permission-matrix modules with read/test/build/write/network/destructive/release regressions.
 
 ## Current Known Problems
 
@@ -69,16 +70,17 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then continue with Policy Matrix Refactor or Private Evidence Manifest before provider or dashboard integration work.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then continue with Private Evidence Manifest or Active Run Runtime Schema Validation before provider or dashboard integration work.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm run check` passed with 36 test files and 220 tests after T-0089 redaction policy observability tests.
-- Latest focused redaction check: Docker `npx vitest run tests/unit/redaction.test.ts tests/unit/evidence-json.test.ts` passed with 2 files and 16 tests.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0089 --level done --json --project /workspace` returned `ok: true`.
+- Latest full check: Docker `npm run check` passed with 36 test files and 222 tests after T-0090 policy matrix refactor.
+- Latest focused policy check: Docker `npx vitest run tests/unit/policy.test.ts tests/unit/policy-preflight.test.ts tests/unit/policy-json.test.ts tests/unit/fake-shell.test.ts` passed with 4 files and 22 tests.
+- Latest policy CLI smoke: built CLI `policy check-shell` confirmed safe auto allow, release network approval, and destructive denial behavior; the destructive denial exited 2 as expected.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0090 --level done --json --project /workspace` returned `ok: true`.
 - Latest focused security follow-up check: Docker `npx vitest run tests/unit/operational-debt.test.ts tests/unit/tools-list.test.ts` passed with 2 files and 16 tests after advisory/strict release-gate mode separation.
 - Latest CLI smoke: built CLI `release gate --mode advisory --json` returned `ok: true` with warning status, and `release gate --mode strict --json` returned `ok: false` with error status.
 - Latest focused active-run hardening check: Docker `npx vitest run tests/unit/active-run-state.test.ts tests/unit/schema-fixtures.test.ts tests/unit/mcp-tools.test.ts tests/contract/mcp-bridge-contract.test.ts` passed with 4 files and 32 tests.

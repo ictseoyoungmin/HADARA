@@ -648,7 +648,11 @@ Implemented notes:
 
 Current implementation:
 
-- `src/policy/policy.ts` contains tokenizer, safe command checks, dangerous command checks, and mode decision logic.
+- `src/policy/tokenizer.ts` contains shell tokenization.
+- `src/policy/presets.ts` contains exact safe command presets with risk metadata.
+- `src/policy/command-risk.ts` classifies shell commands as read/test/build/write/network/destructive/release.
+- `src/policy/permission-matrix.ts` maps permission mode plus command risk to the current allow/ask/deny decisions.
+- `src/policy/policy.ts` remains the compatibility facade for current callers.
 - `src/policy/preflight.ts` wraps policy decisions in `hadara.policy.preflight.v1`.
 - `src/services/policy-service.ts` provides shared policy check/evaluate report builders for CLI/MCP parity.
 
@@ -657,6 +661,7 @@ Current limitations:
 - PolicyService is not yet the single source of authorization for provider-originated `ActionIntent` or `ToolRequest` values.
 - Policy decisions do not yet record `policy_version`, actor, surface, or structured authorization audit events.
 - CLI target-command parsing still relies on simple option stripping; future work should support a `--` delimiter so command arguments like `--mode` are not confused with HADARA CLI options.
+- The current matrix intentionally preserves legacy auto/trusted/release behavior; future actor/surface-aware authorization may tighten write/network/release categories.
 
 Target module split:
 
@@ -668,6 +673,10 @@ src/policy/policy.ts
 src/policy/preflight.ts
 src/policy/presets.ts
 ```
+
+Completed increment:
+
+- T-0090 split policy internals into the target modules while keeping existing public exports and behavior compatible.
 
 Target types:
 
