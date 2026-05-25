@@ -53,14 +53,14 @@
 - T-0091 is complete: private evidence with readable source artifacts now writes raw bytes only to the ignored private portable store, records `hadara.privateEvidence.v1` manifests with SHA-256 hashes, retention, byte counts, and deferred encryption metadata, audits manifest writes privately, and keeps committed Task Capsule files plus context export free of private raw content, source paths, and private store paths.
 - T-0092 is complete: active-run projection/resume reports now validate against registered runtime schemas via `src/core/schema.ts`, and malformed active-run local state still degrades to schema-valid warning reports.
 - T-0093 is complete: policy matrix/release-gate feedback was verified against current code; production policy behavior was already present, and strict release-gate exit-code regression coverage was sharpened.
-- T-0094 is complete: private evidence source artifact copying is project-boundary-limited by default, active-run schema/report failure warnings are split by code, and `hadara.privateEvidence.v1` plus `hadara.releaseGate.v1` schema fixtures are registered.
+- T-0094 is complete: private evidence source artifact copying is project-boundary-limited by default, `hadara evidence collect` accepts `--visibility public|private`, active-run schema/report failure warnings are split by code, and `hadara.privateEvidence.v1` plus `hadara.releaseGate.v1` schema fixtures are registered.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
 - T-0092 Active Run Runtime Schema Validation: added lightweight registered schema validation for active-run projection/resume reports and malformed-local-state degraded outputs.
 - T-0093 Policy Matrix Release Gate Feedback: verified release/network policy behavior, strict release-gate exit code 6, and added a sharper exit-code regression test.
-- T-0094 Security Schema Follow-up Cleanup: limited private evidence raw source copying to project-boundary files, split active-run warning codes, and added privateEvidence/releaseGate schema fixtures.
+- T-0094 Security Schema Follow-up Cleanup: limited private evidence raw source copying to project-boundary files, added evidence `--visibility` CLI alias, split active-run warning codes, and added privateEvidence/releaseGate schema fixtures.
 
 ## Current Known Problems
 
@@ -81,10 +81,12 @@
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm run check` passed with 37 test files and 234 tests after T-0094 security/schema cleanup.
+- Latest full check: Docker `npm run check` passed with 37 test files and 236 tests after T-0094 evidence visibility alias cleanup.
+- Latest evidence visibility alias check: Docker `npx vitest run tests/unit/evidence-json.test.ts tests/unit/cli-errors.test.ts tests/unit/schema-fixtures.test.ts tests/unit/schema-runtime.test.ts` passed with 4 files and 22 tests.
+- Latest `--visibility private` CLI smoke: built CLI confirmed project-local private source created one private artifact, external absolute private source created no additional artifact, and both JSON reports stayed private without `evidencePath`.
 - Latest focused security/schema follow-up check: Docker `npx vitest run tests/unit/evidence-json.test.ts tests/unit/active-run-state.test.ts tests/unit/schema-fixtures.test.ts tests/unit/schema-runtime.test.ts tests/unit/operational-debt.test.ts` passed with 5 files and 41 tests.
 - Latest private evidence CLI smoke: built CLI private evidence collection confirmed project-local private source created one private artifact, external absolute private source created no additional artifact, and both JSON reports stayed private without `evidencePath`.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0094 --level done --json --project /workspace` returned `ok: true`.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0094 --level done --json --project /workspace` returned `ok: true` after evidence visibility alias cleanup.
 - Latest focused policy feedback check: Docker `npx vitest run tests/unit/policy.test.ts tests/unit/operational-debt.test.ts tests/unit/policy-preflight.test.ts tests/unit/policy-json.test.ts` passed with 4 files and 33 tests.
 - Latest policy/release CLI smoke: built CLI confirmed `npm publish` auto/trusted deny blocked, `npm publish` release asks high, `curl` auto/trusted asks high, and strict release gate exits 6.
 - Latest focused active-run schema check: Docker `npx vitest run tests/unit/schema-runtime.test.ts tests/unit/active-run-state.test.ts tests/unit/schema-fixtures.test.ts` passed with 3 files and 14 tests.

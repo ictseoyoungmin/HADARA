@@ -30,6 +30,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Policy execution preflight exists as `hadara policy preflight-shell <command> --json`.
 - Hermes detect/export CLI JSON output exists as `hadara hermes detect --json` and `hadara hermes export-context --json`.
 - Evidence collect CLI JSON output exists as `hadara evidence collect --json`.
+- Evidence collect visibility can be selected with `--private` or `--visibility public|private`.
 - Harness Task Capsule validation exists as `hadara harness validate --task <id> --json`.
 - Harness Task Capsule validation enforces core Markdown format markers for Task Capsule continuity.
 - Harness Task Capsule validation requires `evidence.jsonl` so completed work cannot miss the evidence index.

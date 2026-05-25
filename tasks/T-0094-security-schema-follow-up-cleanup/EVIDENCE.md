@@ -6,3 +6,7 @@
 | 2026-05-25T03:30:29.340Z | test-log | Docker npm run check passed: 37 test files, 234 tests. | passed |
 | 2026-05-25T03:30:29.556Z | command-log | Built CLI private evidence smoke confirmed project-local private source created one private artifact, external absolute private source created no additional artifact, and both JSON reports stayed private without evidencePath. | passed |
 | 2026-05-25T03:34:24.920Z | command-log | Docker built CLI done-level harness validation for T-0094 returned ok true with no issues. | passed |
+| 2026-05-25T03:56:33.885Z | test-log | Focused evidence visibility alias tests passed: evidence-json, cli-errors, schema-fixtures, and schema-runtime; 4 files, 22 tests. | passed |
+| 2026-05-25T03:56:34.161Z | command-log | Built CLI --visibility private smoke confirmed project-local private source created one private artifact, external absolute private source created no additional artifact, and both JSON reports stayed private without evidencePath. | passed |
+| 2026-05-25T03:56:34.335Z | test-log | Docker npm run check passed after visibility alias: 37 test files, 236 tests. | passed |
+| 2026-05-25T03:57:58.017Z | command-log | Docker built CLI done-level harness validation for T-0094 after visibility alias returned ok true with no issues. | passed |

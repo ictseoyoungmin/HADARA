@@ -39,7 +39,7 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
   const summary = getStringOption(input.args, '--summary') ?? 'Manual evidence collection placeholder.';
   const result = parseEvidenceResult(getStringOption(input.args, '--result', 'unknown') ?? 'unknown');
   const evidenceFile = getStringOption(input.args, '--path');
-  const visibility = getFlag(input.args, '--private') ? 'private' : 'public';
+  const visibility = parseEvidenceVisibility(getStringOption(input.args, '--visibility', 'public') ?? 'public', getFlag(input.args, '--private'));
 
   if (input.jsonOutput) {
     const report = createEvidenceCollectReport(input.projectRoot, {
@@ -72,4 +72,10 @@ export function parseEvidenceResult(value: string): EvidenceRecord['result'] {
     return value;
   }
   throw new Error(`unsupported evidence result: ${value}`);
+}
+
+export function parseEvidenceVisibility(value: string, privateFlag = false): NonNullable<EvidenceRecord['visibility']> {
+  if (privateFlag) return 'private';
+  if (value === 'public' || value === 'private') return value;
+  throw new Error(`unsupported evidence visibility: ${value}`);
 }

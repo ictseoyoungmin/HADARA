@@ -71,6 +71,7 @@ Known fallback issue codes include:
 |---|---|
 | `PERMISSION_MODE_UNSUPPORTED` | `--mode` is not one of `readonly`, `assisted`, `trusted`, `auto`, or `release`. |
 | `EVIDENCE_RESULT_UNSUPPORTED` | `--result` is not one of `passed`, `failed`, `blocked`, or `unknown`. |
+| `EVIDENCE_VISIBILITY_UNSUPPORTED` | `--visibility` is not one of `public` or `private`. |
 | `HARNESS_LEVEL_UNSUPPORTED` | `--level` is not one of `draft` or `done`. |
 | `CLI_ARGS_*` | Strict CLI argument parsing rejected a malformed option. |
 | `WORKSPACE_*` | Workspace/project path resolution rejected an unsafe or invalid path. |

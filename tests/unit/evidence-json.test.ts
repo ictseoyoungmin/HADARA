@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { handleEvidenceCommand } from '../../src/cli/evidence';
+import { handleEvidenceCommand, parseEvidenceVisibility } from '../../src/cli/evidence';
 import { createEvidenceCollectReport } from '../../src/cli/evidence-json';
 import { parseEvidenceResult } from '../../src/cli/evidence';
 import {
@@ -226,6 +226,68 @@ describe('CLI evidence JSON reports', () => {
     expect(listPrivateEvidenceManifests(root, task.id)).toEqual([]);
     expect(fs.existsSync(path.join(paths.dataRoot, 'private-evidence', task.id))).toBe(false);
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).not.toContain(externalPath);
+  });
+
+  it('treats --visibility private as private evidence in the CLI handler', () => {
+    const parent = tempProject();
+    const root = path.join(parent, 'repo');
+    fs.mkdirSync(root);
+    const task = createTaskCapsule(root, 'Visibility private evidence');
+    const externalPath = path.join(parent, 'visibility-outside.log');
+    fs.writeFileSync(externalPath, 'external private content', 'utf8');
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+
+    try {
+      expect(
+        handleEvidenceCommand({
+          args: [
+            'evidence',
+            'collect',
+            '--task',
+            task.id,
+            '--kind',
+            'command-log',
+            '--path',
+            externalPath,
+            '--summary',
+            'Visibility private evidence',
+            '--result',
+            'passed',
+            '--visibility',
+            'private',
+            '--json'
+          ],
+          projectRoot: root,
+          jsonOutput: true
+        })
+      ).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    const report = JSON.parse(output.join('\n'));
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.evidence.collect.v1',
+      command: 'evidence.collect',
+      ok: true,
+      evidence: {
+        visibility: 'private',
+        summary: 'Visibility private evidence'
+      }
+    });
+    expect(report.evidence).not.toHaveProperty('evidencePath');
+    expect(listPrivateEvidenceManifests(root, task.id)).toEqual([]);
+  });
+
+  it('parses --private as an alias that overrides visibility', () => {
+    expect(parseEvidenceVisibility('private')).toBe('private');
+    expect(parseEvidenceVisibility('public')).toBe('public');
+    expect(parseEvidenceVisibility('public', true)).toBe('private');
+    expect(() => parseEvidenceVisibility('internal')).toThrow('unsupported evidence visibility: internal');
   });
 
   it('returns a stable missing task envelope', () => {

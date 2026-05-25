@@ -8,6 +8,7 @@ describe('CLI JSON error envelope', () => {
     expect(cliErrorCode(new CliArgsError('CLI_OPTION_REQUIRED', '--task is required'))).toBe('CLI_OPTION_REQUIRED');
     expect(cliErrorCode(new Error('unsupported permission mode: banana'))).toBe('PERMISSION_MODE_UNSUPPORTED');
     expect(cliErrorCode(new Error('unsupported evidence result: success'))).toBe('EVIDENCE_RESULT_UNSUPPORTED');
+    expect(cliErrorCode(new Error('unsupported evidence visibility: internal'))).toBe('EVIDENCE_VISIBILITY_UNSUPPORTED');
     expect(cliErrorCode(new Error('unsupported harness validation level: release'))).toBe('HARNESS_LEVEL_UNSUPPORTED');
     expect(cliErrorCode(new WorkspaceFileError('WORKSPACE_FILE_OUTSIDE', 'outside'))).toBe('WORKSPACE_FILE_OUTSIDE');
   });

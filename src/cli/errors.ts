@@ -50,6 +50,7 @@ export function cliErrorCode(error: unknown): string {
   if (typeof maybeCode === 'string' && maybeCode.startsWith('WORKSPACE_')) return maybeCode;
   if (/unsupported permission mode/.test(message)) return 'PERMISSION_MODE_UNSUPPORTED';
   if (/unsupported evidence result/.test(message)) return 'EVIDENCE_RESULT_UNSUPPORTED';
+  if (/unsupported evidence visibility/.test(message)) return 'EVIDENCE_VISIBILITY_UNSUPPORTED';
   if (/unsupported harness validation level/.test(message)) return 'HARNESS_LEVEL_UNSUPPORTED';
   return 'CLI_COMMAND_FAILED';
 }

@@ -6,5 +6,6 @@
 - [x] Active-run report schema assertion failures report `ACTIVE_RUN_REPORT_SCHEMA_INVALID`.
 - [x] `hadara.privateEvidence.v1` schema fixture is registered and parseable.
 - [x] `hadara.releaseGate.v1` schema fixture is registered and parseable.
+- [x] CLI evidence collect supports `--visibility public|private` as an alias alongside `--private`.
 - [x] Evidence is attached.
 - [x] Handoff is updated.

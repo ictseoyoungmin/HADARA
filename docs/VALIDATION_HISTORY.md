@@ -102,3 +102,7 @@ Historical validation entries moved out of `docs/AGENT_HANDOFF.md` during T-0040
 - Docker check after T-0094: 37 test files passed, 234 tests passed.
 - Docker private evidence CLI smoke after T-0094 confirmed project-local private source created one private artifact, external absolute private source created no additional artifact, and both JSON reports stayed private without `evidencePath`.
 - Docker `node dist/cli/main.js harness validate --task T-0094 --level done --json --project /workspace` returned `ok: true`.
+- Docker focused evidence visibility alias tests after T-0094: 4 files passed, 22 tests passed.
+- Docker `--visibility private` CLI smoke after T-0094 confirmed project-local private source created one private artifact, external absolute private source created no additional artifact, and both JSON reports stayed private without `evidencePath`.
+- Docker check after T-0094 visibility alias: 37 test files passed, 236 tests passed.
+- Docker `node dist/cli/main.js harness validate --task T-0094 --level done --json --project /workspace` returned `ok: true` after evidence visibility alias cleanup.
