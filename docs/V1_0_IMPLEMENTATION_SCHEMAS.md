@@ -367,12 +367,11 @@ Current implementation:
 - `findings.count` is a per-pattern match count and may overlap across patterns when multiple detectors match the same input span
 - blocking `EvidenceArtifactPolicyError` instances may carry an internal `redactionReport`; user-facing outputs must not echo raw report content unless intentionally reduced to safe fields such as pattern ids, severities, and counts
 - non-blocking redaction findings are diagnostics only. Public artifact content is copied as-is when it passes the blocking threshold; it is not automatically rewritten unless a future sanitizing mode explicitly changes that policy.
+- T-0089 added a safe public artifact policy report helper for internal observability; it exposes pattern ids, severities, counts, and byte counts only. Tests prove medium diagnostics do not block public artifact collection while high/critical findings still block.
 
 Follow-up cleanup:
 
-- Evidence policy tests currently prove helper behavior more strongly than the full evidence artifact policy path.
-- Before adding a security CLI or broader evidence inspection surface, make policy decisions more observable by either injecting a test redaction registry with medium-severity findings or exposing safe `EvidenceArtifactPolicyError` metadata such as finding ids/severities.
-- A future test should prove medium findings can appear in a report without blocking public artifact collection while high/critical findings still block.
+- Future security CLI or broader evidence inspection surfaces should consume only reduced policy metadata and continue excluding raw artifact text, redacted text, and private paths from user-facing output.
 
 Target registry shape:
 

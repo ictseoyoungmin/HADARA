@@ -1,0 +1,3 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-25T01:44:54.773Z","taskId":"T-0089","kind":"test-log","summary":"Focused redaction policy observability tests passed: 2 files, 16 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-25T01:48:08.976Z","taskId":"T-0089","kind":"test-log","summary":"Docker npm run check passed: 36 test files, 220 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-25T01:49:18.891Z","taskId":"T-0089","kind":"test-log","summary":"Done-level harness validation passed for T-0089.","result":"passed","visibility":"public"}

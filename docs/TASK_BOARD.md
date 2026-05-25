@@ -89,3 +89,4 @@
 | T-0086 | Active Run Read Surfaces | Done | tasks/T-0086-active-run-read-surfaces | Adds read-only CLI/MCP active-run projection and resume guidance surfaces. |
 | T-0087 | Operational Debt Release Gates | Done | tasks/T-0087-operational-debt-release-gates | Adds debt list/show read surfaces, ops debt aggregates, and advisory/strict release-gate debt checks. |
 | T-0088 | Active Run Resume Hardening | Done | tasks/T-0088-active-run-resume-hardening | Canonicalizes active-run resume paths, warns on capsule mismatches, adds active-run schema fixtures, and clarifies read-only resume guidance. |
+| T-0089 | Redaction Policy Observability Tests | Done | tasks/T-0089-redaction-policy-observability-tests | Adds safe public artifact policy diagnostics and medium-finding non-blocking coverage. |

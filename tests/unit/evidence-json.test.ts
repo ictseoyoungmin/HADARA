@@ -5,10 +5,25 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { handleEvidenceCommand } from '../../src/cli/evidence';
 import { createEvidenceCollectReport } from '../../src/cli/evidence-json';
 import { parseEvidenceResult } from '../../src/cli/evidence';
-import { appendEvidence, EvidenceArtifactPolicyError } from '../../src/evidence/evidence';
+import {
+  appendEvidence,
+  appendEvidenceTextArtifact,
+  createPublicEvidenceArtifactPolicyReport,
+  EvidenceArtifactPolicyError
+} from '../../src/evidence/evidence';
+import type { RedactionPattern } from '../../src/core/redaction';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
+
+const mediumDiagnosticPattern: RedactionPattern = {
+  id: 'test-medium-diagnostic',
+  description: 'Test-only medium diagnostic',
+  regex: /OBS-[0-9]{4}/g,
+  severity: 'medium',
+  replacement: '[REDACTED]',
+  enabledByDefault: true
+};
 
 function tempProject(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-evidence-json-'));
@@ -244,6 +259,47 @@ describe('CLI evidence JSON reports', () => {
       });
       expect(JSON.stringify(policyError.redactionReport)).not.toContain('sk-abcdefghijklmnopqrstuvwxyz');
     }
+  });
+
+  it('reports medium redaction diagnostics without blocking public text artifact collection', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Medium diagnostic evidence');
+
+    const policy = createPublicEvidenceArtifactPolicyReport('diagnostic marker OBS-1234', {
+      redactionPatterns: [mediumDiagnosticPattern]
+    });
+
+    expect(policy).toEqual({
+      schemaVersion: 'hadara.evidence_artifact_policy.v1',
+      command: 'evidence.artifactPolicy',
+      ok: true,
+      blocking: false,
+      redaction: {
+        schemaVersion: 'hadara.redaction.report.v1',
+        ok: false,
+        inputBytes: expect.any(Number),
+        outputBytes: expect.any(Number),
+        findings: [{ patternId: 'test-medium-diagnostic', severity: 'medium', count: 1 }]
+      },
+      issues: []
+    });
+    expect(JSON.stringify(policy)).not.toContain('OBS-1234');
+
+    const result = appendEvidenceTextArtifact(
+      root,
+      {
+        taskId: task.id,
+        kind: 'test-log',
+        summary: 'Medium diagnostic artifact',
+        result: 'passed',
+        visibility: 'public'
+      },
+      { fileName: 'diagnostic.log', content: 'diagnostic marker OBS-1234' },
+      { redactionPatterns: [mediumDiagnosticPattern] }
+    );
+
+    expect(result.evidence.evidencePath).toMatch(/^artifacts\/test-log\//);
+    expect(fs.readFileSync(path.join(task.dir, result.evidence.evidencePath ?? ''), 'utf8')).toContain('OBS-1234');
   });
 
   it('rejects unsupported evidence result values at runtime', () => {

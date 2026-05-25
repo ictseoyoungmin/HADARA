@@ -28,6 +28,11 @@ export interface RedactionReport {
   redactedText?: string;
 }
 
+export interface RedactionReportOptions {
+  includeRedactedText?: boolean;
+  patterns?: RedactionPattern[];
+}
+
 export const REDACTION_PATTERNS: RedactionPattern[] = [
   {
     id: 'openai-api-key',
@@ -161,9 +166,9 @@ export function hasBlockingRedactionFinding(
 
 export function createRedactionReport(
   input: string,
-  options: { includeRedactedText?: boolean } = {}
+  options: RedactionReportOptions = {}
 ): RedactionReport {
-  const enabledPatterns = REDACTION_PATTERNS.filter((pattern) => pattern.enabledByDefault);
+  const enabledPatterns = (options.patterns ?? REDACTION_PATTERNS).filter((pattern) => pattern.enabledByDefault);
   const findings = scanRedactionFindings(input, enabledPatterns);
   const redactedText = options.includeRedactedText ? redactWithPatterns(input, enabledPatterns) : undefined;
   const output = redactedText ?? input;

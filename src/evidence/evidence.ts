@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDir } from '../core/fs';
-import { createRedactionReport, hasBlockingRedactionFinding, redactSecrets, RedactionReport } from '../core/redaction';
+import { createRedactionReport, hasBlockingRedactionFinding, redactSecrets, RedactionPattern, RedactionReport } from '../core/redaction';
 import { resolveProjectFile } from '../core/workspace';
 
 export interface EvidenceRecord {
@@ -32,6 +32,23 @@ export interface EvidenceAppendResult {
 
 export type EvidenceArtifactPolicyErrorCode = 'PUBLIC_ARTIFACT_BINARY_REJECTED' | 'PUBLIC_ARTIFACT_SECRET_DETECTED';
 
+export interface PublicEvidenceArtifactPolicyReport {
+  schemaVersion: 'hadara.evidence_artifact_policy.v1';
+  command: 'evidence.artifactPolicy';
+  ok: boolean;
+  blocking: boolean;
+  redaction: RedactionReport;
+  issues: Array<{
+    severity: 'error';
+    code: EvidenceArtifactPolicyErrorCode;
+    message: string;
+  }>;
+}
+
+export interface PublicEvidenceArtifactPolicyOptions {
+  redactionPatterns?: RedactionPattern[];
+}
+
 export class EvidenceArtifactPolicyError extends Error {
   constructor(
     public readonly code: EvidenceArtifactPolicyErrorCode,
@@ -58,7 +75,8 @@ export function appendEvidence(projectRoot: string, record: Omit<EvidenceRecord,
 export function appendEvidenceTextArtifact(
   projectRoot: string,
   record: Omit<EvidenceRecord, 'time' | 'path'>,
-  artifact: { fileName: string; content: string }
+  artifact: { fileName: string; content: string },
+  options: PublicEvidenceArtifactPolicyOptions = {}
 ): EvidenceAppendResult {
   const taskDir = findTaskDir(projectRoot, record.taskId);
   if (!taskDir) {
@@ -74,10 +92,35 @@ export function appendEvidenceTextArtifact(
           kind: record.kind,
           time,
           fileName: artifact.fileName,
-          content: artifact.content
+          content: artifact.content,
+          policyOptions: options
         })
       : undefined;
   return appendEvidenceRecord({ taskDir, time, record, visibility, attachedPath });
+}
+
+export function createPublicEvidenceArtifactPolicyReport(
+  content: string,
+  options: PublicEvidenceArtifactPolicyOptions = {}
+): PublicEvidenceArtifactPolicyReport {
+  const redaction = createRedactionReport(content, { patterns: options.redactionPatterns });
+  const blocking = hasBlockingRedactionFinding(redaction, 'high');
+  return {
+    schemaVersion: 'hadara.evidence_artifact_policy.v1',
+    command: 'evidence.artifactPolicy',
+    ok: !blocking,
+    blocking,
+    redaction,
+    issues: blocking
+      ? [
+          {
+            severity: 'error',
+            code: 'PUBLIC_ARTIFACT_SECRET_DETECTED',
+            message: 'Public evidence artifact contains secret-like content; collect it as private evidence or redact the source file first.'
+          }
+        ]
+      : []
+  };
 }
 
 function appendEvidenceIndex(taskDir: string, record: EvidenceIndexRecord): void {
@@ -128,12 +171,12 @@ function copyPublicEvidenceArtifact(input: {
 
   const sourceFile = resolveProjectFile(input.projectRoot, input.sourcePath);
   const artifactText = readPublicTextArtifact(sourceFile.absolutePath);
-  const report = createRedactionReport(artifactText);
-  if (hasBlockingRedactionFinding(report, 'high')) {
+  const policy = createPublicEvidenceArtifactPolicyReport(artifactText);
+  if (policy.blocking) {
     throw new EvidenceArtifactPolicyError(
       'PUBLIC_ARTIFACT_SECRET_DETECTED',
       'Public evidence artifact contains secret-like content; collect it as private evidence or redact the source file first.',
-      report
+      policy.redaction
     );
   }
 
@@ -150,13 +193,14 @@ function writePublicEvidenceTextArtifact(input: {
   time: string;
   fileName: string;
   content: string;
+  policyOptions?: PublicEvidenceArtifactPolicyOptions;
 }): string {
-  const report = createRedactionReport(input.content);
-  if (hasBlockingRedactionFinding(report, 'high')) {
+  const policy = createPublicEvidenceArtifactPolicyReport(input.content, input.policyOptions);
+  if (policy.blocking) {
     throw new EvidenceArtifactPolicyError(
       'PUBLIC_ARTIFACT_SECRET_DETECTED',
       'Public evidence artifact contains secret-like content; collect it as private evidence or redact the source file first.',
-      report
+      policy.redaction
     );
   }
 
