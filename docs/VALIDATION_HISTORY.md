@@ -94,3 +94,7 @@ Historical validation entries moved out of `docs/AGENT_HANDOFF.md` during T-0040
 - Docker check after T-0092: 37 test files passed, 230 tests passed.
 - Docker built CLI `run-state show --json` and `run-state resume --json` smokes after T-0092 returned active-run projection/resume schemas with `ok: true`.
 - Docker `node dist/cli/main.js harness validate --task T-0092 --level done --json --project /workspace` returned `ok: true`.
+- Docker focused policy/release-gate feedback tests after T-0093: 4 files passed, 33 tests passed.
+- Docker CLI smokes after T-0093 confirmed `npm publish` auto/trusted deny blocked, `npm publish` release asks high, `curl` auto/trusted asks high, and strict release gate exits 6.
+- Docker check after T-0093: 37 test files passed, 231 tests passed.
+- Docker `node dist/cli/main.js harness validate --task T-0093 --level done --json --project /workspace` returned `ok: true`.

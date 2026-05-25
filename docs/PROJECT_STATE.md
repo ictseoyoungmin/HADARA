@@ -109,6 +109,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - A read-only release-gate report exists as `hadara release gate --mode advisory|strict --json`; advisory mode warns and keeps `ok: true` for open high-severity debt, strict mode reports `ok: false`, and neither mode executes release, packaging, shell, provider, or deployment actions.
 - Shell policy internals now have focused tokenizer, exact safe command preset, command-risk, and permission-matrix modules while preserving the existing `src/policy/policy.ts` compatibility surface. Release-risk commands are denied outside release mode and require explicit approval in release mode; auto/trusted network-risk commands require approval.
 - Strict `hadara release gate --mode strict --json` failures set process exit code 6 when the release-gate report is not ok.
+- Policy matrix feedback verification confirms `npm publish` is denied in auto/trusted modes, asks in release mode, auto/trusted network commands ask with high risk, and strict release-gate failures exit 6.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.

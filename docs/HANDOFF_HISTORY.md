@@ -54,6 +54,7 @@ Historical completed-task handoff entries moved out of `docs/AGENT_HANDOFF.md` d
 - Completed T-0082 Cleanup Follow-up Notes by documenting redaction/schema/task.read/policy cleanup gaps and aligning policy check mode input with policy evaluate.
 - Completed T-0083 Task Read Evidence Normalization by reusing evidence-list normalization for task.read embedded evidenceIndex and sanitized evidence.jsonl views.
 - Completed T-0089 Redaction Policy Observability Tests by adding safe public artifact policy diagnostics and regressions for medium non-blocking findings plus high/critical blocking behavior.
+- Completed T-0090 Policy Matrix Refactor by splitting shell policy internals, blocking release-risk commands outside release mode, approval-gating network commands in auto/trusted modes, and making strict release gates return exit code 6.
 
 ## Source Documents
 

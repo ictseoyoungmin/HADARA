@@ -52,13 +52,14 @@
 - T-0090 is complete: shell policy internals now split tokenizer, exact safe presets, command-risk classification, and permission-matrix decisions while preserving existing public imports. Release-risk commands are denied outside release mode and require explicit approval in release mode; auto/trusted network-risk commands require approval. Strict release-gate CLI failures now set exit code 6.
 - T-0091 is complete: private evidence with readable source artifacts now writes raw bytes only to the ignored private portable store, records `hadara.privateEvidence.v1` manifests with SHA-256 hashes, retention, byte counts, and deferred encryption metadata, audits manifest writes privately, and keeps committed Task Capsule files plus context export free of private raw content, source paths, and private store paths.
 - T-0092 is complete: active-run projection/resume reports now validate against registered runtime schemas via `src/core/schema.ts`, and malformed active-run local state still degrades to schema-valid warning reports.
+- T-0093 is complete: policy matrix/release-gate feedback was verified against current code; production policy behavior was already present, and strict release-gate exit-code regression coverage was sharpened.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0090 Policy Matrix Refactor: split shell policy internals into tokenizer, presets, command-risk, and permission-matrix modules; added release/network safety regressions and strict release-gate exit-code behavior.
 - T-0091 Private Evidence Manifest: added private portable-store manifests with hashes, retention/deferred-encryption metadata, private audit events, and context-export exclusion coverage.
 - T-0092 Active Run Runtime Schema Validation: added lightweight registered schema validation for active-run projection/resume reports and malformed-local-state degraded outputs.
+- T-0093 Policy Matrix Release Gate Feedback: verified release/network policy behavior, strict release-gate exit code 6, and added a sharper exit-code regression test.
 
 ## Current Known Problems
 
@@ -73,16 +74,19 @@
 ## Next Recommended Step
 
 1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule, then continue with Logger and Audit Event Model before provider or dashboard integration work.
-2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
-3. Keep shell execution, provider calls, live dashboard streaming, multi-agent concurrency, and broad write-capable MCP behavior deferred.
+2. Keep P1 follow-ups separate unless prioritized: private evidence absolute source policy, active-run schema assertion error classification, private evidence manifest schema fixture, and release-gate schema fixture.
+3. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
+4. Keep shell execution, provider calls, live dashboard streaming, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest full check: Docker `npm run check` passed with 37 test files and 230 tests after T-0092 active-run runtime schema validation.
+- Latest full check: Docker `npm run check` passed with 37 test files and 231 tests after T-0093 policy feedback verification.
+- Latest focused policy feedback check: Docker `npx vitest run tests/unit/policy.test.ts tests/unit/operational-debt.test.ts tests/unit/policy-preflight.test.ts tests/unit/policy-json.test.ts` passed with 4 files and 33 tests.
+- Latest policy/release CLI smoke: built CLI confirmed `npm publish` auto/trusted deny blocked, `npm publish` release asks high, `curl` auto/trusted asks high, and strict release gate exits 6.
 - Latest focused active-run schema check: Docker `npx vitest run tests/unit/schema-runtime.test.ts tests/unit/active-run-state.test.ts tests/unit/schema-fixtures.test.ts` passed with 3 files and 14 tests.
 - Latest active-run CLI smoke: built CLI `run-state show --json` returned `hadara.active_run.projection.v1`, and `run-state resume --json` returned `hadara.active_run.resume.v1`, both `ok: true`.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0092 --level done --json --project /workspace` returned `ok: true`.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0093 --level done --json --project /workspace` returned `ok: true`.
 - Latest focused policy/release-gate check: Docker `npx vitest run tests/unit/policy.test.ts tests/unit/policy-preflight.test.ts tests/unit/policy-json.test.ts tests/unit/fake-shell.test.ts tests/unit/operational-debt.test.ts` passed with 5 files and 37 tests.
 - Latest policy/release CLI smoke: built CLI `policy check-shell` confirmed `npm publish` is denied in auto/trusted, asks in release mode, auto network asks, and strict `release gate --mode strict` exits 6.
 - Latest focused security follow-up check: Docker `npx vitest run tests/unit/operational-debt.test.ts tests/unit/tools-list.test.ts` passed with 2 files and 16 tests after advisory/strict release-gate mode separation.

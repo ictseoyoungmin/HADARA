@@ -182,6 +182,20 @@ describe('operational debt track', () => {
       mode: 'strict',
       ok: false
     });
+  });
+
+  it('sets exit code 6 for strict release gate CLI failures', () => {
+    const root = tempProject();
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    expect(handleReleaseGateCommand({ args: ['release', 'gate', '--mode', 'strict', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+
+    expect(JSON.parse(String(log.mock.calls[0]?.[0]))).toMatchObject({
+      schemaVersion: 'hadara.releaseGate.v1',
+      command: 'release.gate',
+      mode: 'strict',
+      ok: false
+    });
     expect(process.exitCode).toBe(6);
   });
 

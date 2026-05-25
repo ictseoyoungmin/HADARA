@@ -93,3 +93,4 @@
 | T-0090 | Policy Matrix Refactor | Done | tasks/T-0090-policy-matrix-refactor | Splits shell policy internals and blocks release-risk commands outside release mode while approval-gating auto/trusted network risk. |
 | T-0091 | Private Evidence Manifest | Done | tasks/T-0091-private-evidence-manifest | Adds private portable-store manifests with hashes, deferred encryption metadata, audit events, and context-export exclusion tests. |
 | T-0092 | Active Run Runtime Schema Validation | Done | tasks/T-0092-active-run-runtime-schema-validation | Adds runtime schema validation for active-run projection/resume reports and malformed-state degraded outputs. |
+| T-0093 | Policy Matrix Release Gate Feedback | Done | tasks/T-0093-policy-matrix-release-gate-feedback | Verifies release/network policy matrix behavior and sharpens strict release-gate exit-code regression coverage. |
