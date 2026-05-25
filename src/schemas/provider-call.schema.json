@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.provider.call.v1",
+  "x-hadara-schema-id": "hadara.provider.call.v1",
+  "type": "object",
+  "required": ["schemaVersion", "provider", "ok", "input", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.provider.call.v1" },
+    "provider": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9_.:-]+$" },
+    "model": { "type": "string", "minLength": 1 },
+    "ok": { "type": "boolean" },
+    "input": {
+      "type": "object",
+      "required": ["messages", "approxTokens"],
+      "properties": {
+        "messages": { "type": "integer" },
+        "approxTokens": { "type": "integer" }
+      }
+    },
+    "output": {
+      "type": "object",
+      "required": ["finishReason", "approxTokens"],
+      "properties": {
+        "finishReason": { "type": "string", "enum": ["stop", "length", "tool_call", "error"] },
+        "approxTokens": { "type": "integer" }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "type": "string", "enum": ["warning", "error"] },
+          "code": { "type": "string", "minLength": 1, "pattern": "^[A-Z0-9_:-]+$" },
+          "message": { "type": "string", "minLength": 1 },
+          "retriable": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

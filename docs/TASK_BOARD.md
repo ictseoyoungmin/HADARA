@@ -96,3 +96,4 @@
 | T-0093 | Policy Matrix Release Gate Feedback | Done | tasks/T-0093-policy-matrix-release-gate-feedback | Verifies release/network policy matrix behavior and sharpens strict release-gate exit-code regression coverage. |
 | T-0094 | Security Schema Follow-up Cleanup | Done | tasks/T-0094-security-schema-follow-up-cleanup | Restricts private evidence source copies to project-boundary files, adds `--visibility` evidence alias, separates active-run schema warnings, and adds privateEvidence/releaseGate schema fixtures. |
 | T-0095 | Logger and Audit Event Model | Done | tasks/T-0095-logger-and-audit-event-model | Adds `hadara.event.v1`, structured event helpers/schema, and compatibility-preserving audit event records. |
+| T-0096 | Real Provider Adapter Preparation | Done | tasks/T-0096-real-provider-adapter-preparation | Adds provider config/call schema fixtures and safe preparation helpers without real provider execution. |

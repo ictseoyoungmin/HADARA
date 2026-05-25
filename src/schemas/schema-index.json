@@ -56,6 +56,20 @@
       "status": "fixture",
       "owner": "core/events",
       "notes": "Documents structured HADARA event records used by private audit JSONL and future debug/read surfaces."
+    },
+    {
+      "id": "hadara.provider.config.v1",
+      "path": "src/schemas/provider-config.schema.json",
+      "status": "fixture",
+      "owner": "providers/preparation",
+      "notes": "Documents provider adapter configuration references without storing provider secret values."
+    },
+    {
+      "id": "hadara.provider.call.v1",
+      "path": "src/schemas/provider-call.schema.json",
+      "status": "fixture",
+      "owner": "providers/preparation",
+      "notes": "Documents provider call summary reports without prompt, response, or secret content."
     }
   ]
 }

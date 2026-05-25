@@ -17,6 +17,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - MockProvider contract exists.
 - ScriptedProvider exists for deterministic harness/replay provider behavior.
 - Provider fallback executor exists for deterministic chat fallback orchestration.
+- Provider adapter preparation contracts exist as `hadara.provider.config.v1` and `hadara.provider.call.v1`, with schema fixtures and helper APIs that reject stored secret values and summarize provider calls without prompt/response content.
 - Fake shell preflight harness exists for deterministic tool observations without real shell execution.
 - Minimal deterministic agent loop harness exists for ScriptedProvider responses plus fake shell observations.
 - Task Capsule creation exists.
@@ -112,10 +113,11 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Strict `hadara release gate --mode strict --json` failures set process exit code 6 when the release-gate report is not ok.
 - Policy matrix feedback verification confirms `npm publish` is denied in auto/trusted modes, asks in release mode, auto/trusted network commands ask with high risk, and strict release-gate failures exit 6.
 - Structured event records exist as `hadara.event.v1`; private audit JSONL writes now keep existing compatibility fields and include a nested redacted structured event for future audit/debug read surfaces.
+- Provider preparation helpers exist for schema-backed provider config references and provider call reports; they do not load secrets, call provider SDKs, perform network calls, or create provider execution surfaces.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.
-- Real provider adapters are not implemented.
+- Real provider adapters are not implemented; only schema-backed preparation contracts and safe report helpers exist.
 - Dashboard is locally servable through a static CLI helper, but it is not live-integrated; only its status JSON/read model, design references, static fixture-bound mockup shell, and sample-backed static server exist.
 - Broad MCP write tools are not implemented beyond the explicitly enabled, approval-recorded, audited evidence attach tool.
 - Operational debt records remain static and non-persisted; debt mutation and executable release automation remain deferred.

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.provider.config.v1",
+  "x-hadara-schema-id": "hadara.provider.config.v1",
+  "type": "object",
+  "required": ["schemaVersion", "providers", "defaultProvider"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.provider.config.v1" },
+    "providers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "enabled", "model", "capabilities", "localOnly", "costProfile"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9_.:-]+$" },
+          "kind": { "type": "string", "enum": ["openai-compatible", "ollama", "llama-cpp"] },
+          "enabled": { "type": "boolean" },
+          "baseUrlEnv": { "type": "string", "minLength": 1, "pattern": "^[A-Z_][A-Z0-9_]*$" },
+          "apiKeyEnv": { "type": "string", "minLength": 1, "pattern": "^[A-Z_][A-Z0-9_]*$" },
+          "model": { "type": "string", "minLength": 1 },
+          "capabilities": {
+            "type": "object",
+            "required": ["streaming", "toolCalling", "reasoning", "vision"],
+            "properties": {
+              "streaming": { "type": "boolean" },
+              "toolCalling": { "type": "boolean" },
+              "reasoning": { "type": "boolean" },
+              "vision": { "type": "boolean" }
+            }
+          },
+          "localOnly": { "type": "boolean" },
+          "costProfile": { "type": "string", "enum": ["free", "low", "medium", "high", "unknown"] }
+        }
+      }
+    },
+    "defaultProvider": {
+      "oneOf": [
+        { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9_.:-]+$" },
+        { "type": "null" }
+      ]
+    }
+  }
+}

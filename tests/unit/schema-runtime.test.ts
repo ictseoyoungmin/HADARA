@@ -124,6 +124,51 @@ describe('runtime schema validation', () => {
     ).toBe(true);
   });
 
+  it('validates provider preparation fixtures', () => {
+    expect(
+      validateSchema('hadara.provider.config.v1', {
+        schemaVersion: 'hadara.provider.config.v1',
+        providers: [
+          {
+            id: 'openai-compatible-local',
+            kind: 'openai-compatible',
+            enabled: false,
+            baseUrlEnv: 'HADARA_OPENAI_BASE_URL',
+            apiKeyEnv: 'HADARA_OPENAI_API_KEY',
+            model: 'local-model',
+            capabilities: {
+              streaming: true,
+              toolCalling: false,
+              reasoning: false,
+              vision: false
+            },
+            localOnly: true,
+            costProfile: 'unknown'
+          }
+        ],
+        defaultProvider: null
+      }).ok
+    ).toBe(true);
+
+    expect(
+      validateSchema('hadara.provider.call.v1', {
+        schemaVersion: 'hadara.provider.call.v1',
+        provider: 'scripted',
+        model: 'scripted-model',
+        ok: true,
+        input: {
+          messages: 2,
+          approxTokens: 120
+        },
+        output: {
+          finishReason: 'stop',
+          approxTokens: 40
+        },
+        issues: []
+      }).ok
+    ).toBe(true);
+  });
+
   it('reports clear issues for invalid active-run reports', () => {
     const result = validateSchema('hadara.active_run.projection.v1', {
       schemaVersion: 'hadara.active_run.projection.v1',

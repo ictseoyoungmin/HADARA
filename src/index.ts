@@ -4,6 +4,7 @@ export * from './core/workspace';
 export * from './cli/args';
 export * from './providers/provider-contract';
 export * from './providers/mock-provider';
+export * from './providers/provider-preparation';
 export * from './task/task-capsule';
 export * from './evidence/evidence';
 export * from './handoff/handoff';

@@ -55,13 +55,14 @@
 - T-0093 is complete: policy matrix/release-gate feedback was verified against current code; production policy behavior was already present, and strict release-gate exit-code regression coverage was sharpened.
 - T-0094 is complete: private evidence source artifact copying is project-boundary-limited by default, `hadara evidence collect` accepts `--visibility public|private`, active-run schema/report failure warnings are split by code, and `hadara.privateEvidence.v1` plus `hadara.releaseGate.v1` schema fixtures are registered.
 - T-0095 is complete: structured `hadara.event.v1` helpers and schema fixture exist, private audit JSONL writes keep existing compatibility fields and embed a nested redacted structured event, and focused event/schema plus full Docker checks passed.
+- T-0096 is complete: provider adapter preparation contracts now exist as `hadara.provider.config.v1` and `hadara.provider.call.v1`, with helper APIs that reject stored secret values, omit prompt/response content from call reports, and keep real provider execution deferred.
 - Real provider adapters, product-served/live dashboard integration, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0093 Policy Matrix Release Gate Feedback: verified release/network policy behavior, strict release-gate exit code 6, and added a sharper exit-code regression test.
 - T-0094 Security Schema Follow-up Cleanup: limited private evidence raw source copying to project-boundary files, added evidence `--visibility` CLI alias, split active-run warning codes, and added privateEvidence/releaseGate schema fixtures.
 - T-0095 Logger and Audit Event Model: added `hadara.event.v1` helpers/schema and embedded structured redacted events into existing private audit JSONL records without breaking compatibility fields.
+- T-0096 Real Provider Adapter Preparation: added provider config/call schema fixtures and preparation helpers without real provider SDKs, network calls, secret loading, or provider execution surfaces.
 
 ## Current Known Problems
 
@@ -75,16 +76,16 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. The next roadmap slice is Real Provider Adapter Preparation, limited to contracts/schema/scaffolding with no provider calls as the default path.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. The next roadmap slice is Dashboard Read Integration, limited to local read APIs over existing read models with no shell execution, provider calls, live streaming, or write behavior.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest focused event/schema check: Docker `npx vitest run tests/unit/events.test.ts tests/unit/schema-fixtures.test.ts tests/unit/schema-runtime.test.ts` passed with 3 files and 9 tests.
-- Latest full check: Docker `npm run check` passed with 38 test files and 239 tests after T-0095.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0095 --level done --json --project /workspace` returned `ok: true`.
+- Latest focused provider/schema check: Docker `npx vitest run tests/contract/provider-preparation.test.ts tests/unit/schema-fixtures.test.ts tests/unit/schema-runtime.test.ts` passed with 3 files and 13 tests.
+- Latest full check: Docker `npm run check` passed with 39 test files and 245 tests after T-0096.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0096 --level done --json --project /workspace` returned `ok: true`.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
 
 ## Historical Index
