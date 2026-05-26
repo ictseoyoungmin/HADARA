@@ -47,6 +47,11 @@ describe('tools list read model', () => {
           readOnly: true
         }),
         expect.objectContaining({
+          name: 'hadara tui [--snapshot]',
+          category: 'read',
+          readOnly: true
+        }),
+        expect.objectContaining({
           name: 'hadara run scaffold --task <task-id> --command <command> --json',
           category: 'write',
           readOnly: false

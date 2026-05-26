@@ -36,7 +36,8 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 - T-0099 TUI Design and Development Plan: done; aligns terminal work-console mockup learnings with the main docs without production TUI implementation.
 - T-0100 TUI Read-Model Aggregator: done; adds the internal TUI aggregate service over shared read models without renderer, CLI entry point, cache, writes, shell, provider, or MCP behavior.
 - T-0102 TUI Snapshot Renderer: done; renders internal TUI aggregate panels into deterministic no-color fixed-size text snapshots without interactive input or writes.
-- T-0106 TUI Raw Terminal Shell: done; adds an internal injected-stream terminal shell for key decoding, redraw, refresh effects, and clean shutdown without a public CLI command or project writes.
+- T-0106 TUI Raw Terminal Shell: done; adds an internal injected-stream terminal shell for key decoding, redraw, refresh effects, and clean shutdown without project writes.
+- T-0107 TUI Public CLI Entry Point: done; exposes the read-only local work console as `hadara tui`, with `hadara tui --snapshot` for non-interactive smoke rendering and capability discovery marked read-only.
 
 ## Immediate P0 Capsules
 
@@ -78,6 +79,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 | 18 | TUI snapshot renderer | T-0102 | Render Overview/Tasks/Detail/Help from the TUI aggregate with deterministic snapshots and no interactive input. | Done: no-color fixed-size panel snapshots and no-write tests pass. |
 | 19 | TUI interactive state | T-0105 | Add keyboard/search/refresh state transitions over the snapshot-ready renderer without write/execution behavior. | Done: pure state-transition tests cover panels, task selection/search, document tabs, scroll, refresh, quit, and no-write behavior. |
 | 20 | TUI read-only work console | T-0106 | Add local terminal raw-mode shell and optional mouse over the tested state/renderer. | Done: injected-stream terminal tests cover key decoding, redraw, refresh/detail-refresh effects, raw-mode restoration, quit handling, and no project writes. |
+| 20a | TUI public CLI entry point | T-0107 | Expose the read-only terminal work console through `hadara tui` and provide a snapshot smoke mode. | Done: public CLI handler, help entry, read-only capability registry entry, injected-stream CLI tests, full Docker check, and built CLI snapshot smoke pass. |
 | 21 | Release and packaging track | TBD | Define install, CI, clean-checkout, and release-gate behavior. | release checklist report and clean checkout smoke pass in Docker. |
 | 22 | Dogfooding E2E fixture | TBD | Replay a HADARA-on-HADARA workflow from context export to done-level validation. | E2E fixture proves context, capsule, evidence, handoff, policy, and harness continuity. |
 | 23 | Remote CI/release observation | TBD | Confirm remote CI behavior after local Docker validation and before v1.0 release gate freeze. | Remote workflow/check status is recorded and release-gate docs distinguish local vs remote validation. |

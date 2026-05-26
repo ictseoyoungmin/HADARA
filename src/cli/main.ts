@@ -17,6 +17,7 @@ import { handleToolsCommand } from './tools';
 import { handleDebtCommand } from './debt';
 import { handleReleaseGateCommand } from './release-gate';
 import { handleWriteCommand } from './write-preflight';
+import { handleTuiCommand } from './tui';
 import { getFlag, getStringOption } from './args';
 import { cliErrorExitCode, createCliErrorReport } from './errors';
 
@@ -49,6 +50,7 @@ Usage:
   hadara run-state resume [--json]  # read-only guidance; does not resume a process
   hadara release gate [--mode advisory|strict] [--json]
   hadara dashboard serve [--host <host>] [--port <port>]
+  hadara tui [--snapshot] [--compact] [--width <n>] [--height <n>] [--json]
   hadara run scaffold --task <task-id> --command <command> [--stdout <text>] [--stderr <text>] [--exit-code <n>] [--json]
   hadara run [request] --script <script.json> [--task <task-id>] [--fake-shell-fixtures <fixtures.json>] [--mode readonly|assisted|trusted|auto|release] [--max-steps <n>] [--json]
 
@@ -137,6 +139,11 @@ async function main(args = process.argv.slice(2)): Promise<void> {
 
     case 'dashboard': {
       if (handleDashboardCommand({ args, projectRoot: paths.projectRoot })) return;
+      break;
+    }
+
+    case 'tui': {
+      if (handleTuiCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 

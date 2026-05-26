@@ -107,3 +107,4 @@
 | T-0104 | TUI Snapshot Polish | Done | tasks/T-0104-tui-snapshot-polish | Hides volatile snapshot timestamps by default, adds mockup/compact width policy, and hardens wide-character Markdown rendering. |
 | T-0105 | TUI Interactive State | Done | tasks/T-0105-tui-interactive-state | Adds pure internal TUI state transitions for panels, task selection/search, detail docs, scroll, refresh completion, and quit without terminal runtime or writes. |
 | T-0106 | TUI Raw Terminal Shell | Done | tasks/T-0106-tui-raw-terminal-shell | Adds an internal injected-stream terminal shell for key decoding, redraw, refresh effects, and clean shutdown without a public CLI command or project writes. |
+| T-0107 | TUI Public CLI Entry Point | Done | tasks/T-0107-tui-public-cli-entry-point | Adds public read-only `hadara tui` and `hadara tui --snapshot` CLI entry points over the TUI renderer/terminal shell. |

@@ -198,6 +198,16 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     notes: 'Serves static sample-backed dashboard assets through allowlisted routes only.'
   },
   {
+    name: 'hadara tui [--snapshot]',
+    category: 'read',
+    stable: true,
+    readOnly: true,
+    enabledByDefault: true,
+    availability: 'default',
+    risk: 'low',
+    notes: 'Starts the local read-only terminal work console; --snapshot renders one deterministic frame for smoke checks.'
+  },
+  {
     name: 'hadara run scaffold --task <task-id> --command <command> --json',
     category: 'write',
     stable: true,
