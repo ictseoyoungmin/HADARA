@@ -83,6 +83,25 @@ describe('TUI CLI entry point', () => {
     expect(output.text()).toContain('\x1b[?25h');
   });
 
+  it('removes process listeners when an interactive session quits normally', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Public CLI cleanup task');
+    writeProjectDocs(root);
+    const input = new MemoryInput(true);
+    const output = new MemoryOutput(84, 24);
+    const beforeSigint = process.listenerCount('SIGINT');
+    const beforeExit = process.listenerCount('exit');
+
+    expect(handleTuiCommand({ args: ['tui'], projectRoot: root, jsonOutput: false, input, output })).toBe(true);
+    expect(process.listenerCount('SIGINT')).toBe(beforeSigint + 1);
+    expect(process.listenerCount('exit')).toBe(beforeExit + 1);
+
+    input.emit('data', Buffer.from('q'));
+
+    expect(process.listenerCount('SIGINT')).toBe(beforeSigint);
+    expect(process.listenerCount('exit')).toBe(beforeExit);
+  });
+
   it('refuses non-interactive terminal mode and points callers to snapshot mode', () => {
     const root = tempProject();
     writeProjectDocs(root);
@@ -92,6 +111,27 @@ describe('TUI CLI entry point', () => {
 
     expect(output.text()).toContain('requires an interactive terminal');
     expect(output.text()).toContain('hadara tui --snapshot');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('prints a JSON error envelope for non-interactive TUI mode when --json is requested', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+    const output = new MemoryOutput(84, 24);
+
+    expect(handleTuiCommand({ args: ['tui', '--json'], projectRoot: root, jsonOutput: true, input: new MemoryInput(false), output })).toBe(true);
+
+    expect(JSON.parse(output.text())).toMatchObject({
+      schemaVersion: 'hadara.tui.cli.error.v1',
+      command: 'tui',
+      ok: false,
+      issues: [
+        {
+          severity: 'error',
+          code: 'TUI_REQUIRES_TTY'
+        }
+      ]
+    });
     expect(process.exitCode).toBe(1);
   });
 });

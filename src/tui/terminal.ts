@@ -30,6 +30,7 @@ export interface TuiTerminalSessionOptions {
   includeGeneratedAt?: boolean;
   enableRawMode?: boolean;
   terminalControl?: boolean;
+  onStop?: () => void;
 }
 
 export interface TuiTerminalRenderResult {
@@ -86,6 +87,7 @@ export class TuiTerminalSession {
     }
     this.input.pause();
     if (this.options.terminalControl !== false) this.output.write('\x1b[?25h');
+    this.options.onStop?.();
   }
 
   isRunning(): boolean {

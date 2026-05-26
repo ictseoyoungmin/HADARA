@@ -33,22 +33,46 @@ export function handleTuiCommand(input: TuiCommandInput): boolean {
   }
 
   if (!terminalInput.isTTY) {
-    output.write('[HADARA] TUI requires an interactive terminal. Use hadara tui --snapshot for a read-only smoke render.\n');
+    if (input.jsonOutput) {
+      output.write(`${JSON.stringify(createTuiCliError('TUI_REQUIRES_TTY', 'TUI requires an interactive terminal. Use hadara tui --snapshot.'), null, 2)}\n`);
+    } else {
+      output.write('[HADARA] TUI requires an interactive terminal. Use hadara tui --snapshot for a read-only smoke render.\n');
+    }
     process.exitCode = 1;
     return true;
   }
 
+  let cleanup = (): void => undefined;
   const session = createTuiTerminalSession({
     projectRoot: input.projectRoot,
     input: terminalInput,
     output,
     width,
     height,
-    widthPolicy
+    widthPolicy,
+    onStop: () => cleanup()
   });
-  const stop = (): void => session.stop();
-  process.once('SIGINT', stop);
-  process.once('exit', stop);
+  cleanup = (): void => {
+    process.off('SIGINT', cleanup);
+    process.off('exit', cleanup);
+    session.stop();
+  };
+  process.once('SIGINT', cleanup);
+  process.once('exit', cleanup);
   session.start();
   return true;
+}
+
+function createTuiCliError(code: string, message: string): {
+  schemaVersion: 'hadara.tui.cli.error.v1';
+  command: 'tui';
+  ok: false;
+  issues: Array<{ severity: 'error'; code: string; message: string }>;
+} {
+  return {
+    schemaVersion: 'hadara.tui.cli.error.v1',
+    command: 'tui',
+    ok: false,
+    issues: [{ severity: 'error', code, message }]
+  };
 }

@@ -66,14 +66,14 @@
 - T-0104 is complete: TUI snapshots hide volatile `generatedAt` by default, expose explicit `includeGeneratedAt`, support explicit `widthPolicy: 'mockup' | 'compact'`, and render Markdown wrapping/tables by visible terminal width with Korean regressions.
 - T-0105 is complete: `src/tui/state.ts` adds pure internal TUI interaction state for panel switching, task selection/search, detail document tabs, local scroll offsets, refresh/detail refresh requests and completion signals, quit requests, and renderer/read-model option mapping without raw terminal mode, CLI entry point, cache writes, shell execution, provider calls, MCP calls, or Task Capsule mutation.
 - T-0106 is complete: `src/tui/terminal.ts` adds an internal injected-stream raw terminal shell for key decoding, redraws through the snapshot renderer, refresh/detail-refresh effects, quit handling, and raw-mode restoration without cache writes, shell execution, provider calls, MCP calls, evidence writes, handoff updates, or Task Capsule mutation.
-- T-0107 is complete: `hadara tui` now exposes the read-only local terminal work console through a focused CLI handler, while `hadara tui --snapshot` provides a non-interactive smoke render; capability discovery marks the command read-only, and TUI writes/cache/shell/provider/MCP/server/release behavior remain deferred.
+- T-0107 is complete: `hadara tui` now exposes the read-only local terminal work console through a focused CLI handler, while `hadara tui --snapshot` provides a non-interactive smoke render; capability discovery marks the command read-only, non-TTY `--json` returns a TUI JSON error envelope, process listeners are cleaned up on normal TUI stop, refresh completion/failure signals clear pending flags, and TUI writes/cache/shell/provider/MCP/server/release behavior remain deferred.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
 - T-0105 TUI Interactive State: added pure read-only local state transitions for panels, task selection/search, document tabs, scroll, refresh request/complete, and quit over the snapshot-ready renderer.
 - T-0106 TUI Raw Terminal Shell: added an internal injected-stream terminal shell for key decoding, redraw, refresh/detail-refresh effects, clean shutdown, and raw-mode restoration without a public CLI command.
-- T-0107 TUI Public CLI Entry Point: added public read-only `hadara tui` plus `hadara tui --snapshot`, with non-TTY refusal for interactive mode and capability discovery marked read-only.
+- T-0107 TUI Public CLI Entry Point: added public read-only `hadara tui` plus `hadara tui --snapshot`, with JSON non-TTY refusal, listener cleanup on normal stop, refresh completion/failure flag cleanup, and capability discovery marked read-only.
 
 ## Current Known Problems
 
@@ -94,8 +94,8 @@
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest focused TUI CLI check: Docker `npx vitest run tests/unit/tui-cli.test.ts tests/unit/tui-terminal.test.ts tests/unit/tools-list.test.ts` passed with 3 files and 12 tests.
-- Latest full check: Docker `npm run check` passed with 46 test files and 283 tests after T-0107 TUI public CLI entry point.
+- Latest focused TUI CLI check: Docker `npx vitest run tests/unit/tui-state.test.ts tests/unit/tui-cli.test.ts tests/unit/tui-terminal.test.ts` passed with 3 files and 17 tests after T-0107 review follow-up.
+- Latest full check: Docker `npm run check` passed with 46 test files and 286 tests after T-0107 review follow-up.
 - Latest built CLI smoke: Docker `timeout 60 node dist/cli/main.js tui --snapshot --compact --width 86 --height 24 --project /workspace` exited 0 and rendered the read-only HADARA Work Console for T-0107.
 - Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0107 --level done --json --project /workspace` returned `ok: true` and checked `docs/TASK_BOARD.md`.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.

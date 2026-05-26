@@ -139,9 +139,35 @@ describe('TUI interaction state', () => {
     state = reduceTuiInteractionState(state, model, 'refresh-complete');
     expect(state.refreshRequested).toBe(false);
 
+    state = reduceTuiInteractionState(state, model, 'r');
+    expect(state.refreshRequested).toBe(true);
+    state = reduceTuiInteractionState(state, model, 'refresh-failed');
+    expect(state.refreshRequested).toBe(false);
+
     state = reduceTuiInteractionState(state, model, 'q');
     expect(state.quitRequested).toBe(true);
     expect(listProjectFiles(root)).toEqual(before);
+  });
+
+  it('clears detail refresh request flags on completion or failure signals', () => {
+    const root = tempProject();
+    const first = createTaskCapsule(root, 'Detail first task');
+    createTaskCapsule(root, 'Detail second task');
+    writeProjectDocs(root);
+    const model = createTuiReadModel(root);
+
+    let state = createTuiInteractionState(model);
+    state = reduceTuiInteractionState(state, model, '2');
+    state = reduceTuiInteractionState(state, model, 'down');
+    state = reduceTuiInteractionState(state, model, 'enter');
+
+    expect(state.selectedTaskId).toBe(first.id);
+    expect(state.detailRefreshRequested).toBe(true);
+    state = reduceTuiInteractionState(state, model, 'detail-refresh-complete');
+    expect(state.detailRefreshRequested).toBe(false);
+
+    state = reduceTuiInteractionState({ ...state, detailRefreshRequested: true }, model, 'detail-refresh-failed');
+    expect(state.detailRefreshRequested).toBe(false);
   });
 });
 
