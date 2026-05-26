@@ -3,7 +3,7 @@
 ## Layers
 
 ```text
-[CLI / Dashboard]
+[CLI / Dashboard / TUI]
        ↓
 [Agent Controller]
        ↓
@@ -46,12 +46,14 @@ Implemented:
 - Opt-in MCP evidence attach with approval metadata and private audit records
 - Operations status JSON read model
 - Static sample-backed dashboard shell and local static dashboard server
+- TUI design notes based on `.mockup/tui` and `.mockup/tui-final` mockups
 
 Partially implemented:
 
 - Agent Controller: bounded deterministic loop exists; full autonomous controller is deferred.
 - Tool Runtime: fake shell observations and policy preflight exist; real shell execution is deferred.
 - Dashboard: static sample-backed shell and CLI serving exist; live/product-served integration is deferred.
+- TUI: mockups and product design notes exist; integrated production TUI is deferred.
 - MCP bridge: read tools and opt-in evidence attach exist; broad write tools, shell execution, and provider calls remain deferred.
 
 Not implemented:
@@ -60,6 +62,7 @@ Not implemented:
 - Real provider adapters
 - Tool runtime execution engine
 - Live/product dashboard integration
+- Integrated production TUI
 - Broad write-capable MCP tools
 - Release packager
 - Private evidence encryption
@@ -73,3 +76,9 @@ Not implemented:
 ### Project Store
 
 `docs/`, `tasks/`, `.hadara/context`, and agent context files belong to the project repository.
+
+### TUI Boundary
+
+The planned TUI is a read-only terminal work console over existing HADARA read models. Its first integrated implementation should live under `src/` as TypeScript and use shared services rather than inventing a separate data source.
+
+The TUI must not execute shell commands, call providers, call MCP tools, mutate Task Capsules, write evidence, update handoff, run releases, or treat terminal cache/state as committed evidence. Any TUI cache must stay in ignored machine-local state such as `.hadara/local/tui/`.

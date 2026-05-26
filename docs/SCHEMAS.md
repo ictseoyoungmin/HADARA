@@ -84,9 +84,14 @@ Current runtime usage is intentionally narrow: active-run projection/resume repo
 
 The validator currently covers the JSON Schema keywords used by registered fixtures, including required fields, const, enum, primitive type checks, arrays, object properties, local `$ref`, `oneOf`, string `minLength`, and regex `pattern`.
 
+## TUI Schema Posture
+
+The planned terminal TUI should compose existing read-model schemas instead of introducing a new public schema in its first integrated slice. Deterministic TUI snapshot JSON can be used for tests, but it is a presentation test artifact unless a later capsule explicitly promotes it to a stable contract.
+
 ## Non-Goals
 
 - No schema-based release gate is active yet.
 - No MCP write surface is enabled by schemas.
 - No shell execution, provider calls, dashboard live APIs, or release/package execution is introduced by this registry.
+- No TUI implementation or TUI write behavior is introduced by this registry.
 - No private evidence contents or machine-local paths should be included in public schema examples or fixtures.

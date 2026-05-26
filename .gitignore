@@ -22,5 +22,6 @@ docs/design/mockups/*
 !docs/design/mockups/HADARA_web_ui_v0.1_comfort_dark.html
 .dockerignore
 
-.mokup/
+.mockup/
 .agent_alpha_test/
+.mcp.json

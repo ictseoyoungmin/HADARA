@@ -2,6 +2,11 @@
 
 Files in this directory are exploratory mockups.
 
+Current design reference notes:
+
+- `docs/design/DASHBOARD_DESIGN_NOTES.md`
+- `docs/design/TUI_DESIGN_NOTES.md`
+
 They do not override:
 
 - `docs/AGENT_HANDOFF.md`

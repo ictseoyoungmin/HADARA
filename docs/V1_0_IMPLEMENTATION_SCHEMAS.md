@@ -116,6 +116,52 @@ Remaining consistency cleanup:
 
 - Policy service parity is report-builder parity only. It is not yet the v1.0 single source of authorization for actor/surface-aware provider-originated actions.
 
+## Terminal TUI Read Model Aggregation
+
+Current reference mockups:
+
+- `.mockup/tui/app.js`
+- `.mockup/tui-final/src/app.js`
+- `.mockup/tui-final/README.md`
+
+The production TUI should not add a new schema in its first slice. It should compose existing schema-backed and shared read models into presentation state:
+
+```text
+src/tui/
+  command.ts
+  read-model.ts
+  state.ts
+  renderer.ts
+  terminal.ts
+  snapshot.ts
+```
+
+Target aggregation inputs:
+
+- `src/services/operations-status-service.ts`
+- `src/services/task-read-model.ts`
+- `src/services/evidence-list.ts`
+- `src/services/active-run-state.ts`
+- `src/services/operational-debt.ts`
+- `src/services/tools-list.ts`
+- `src/services/write-preflight.ts`
+
+Implementation notes:
+
+- Keep terminal presentation state separate from HADARA project state.
+- Prefer direct TypeScript service calls over spawning the HADARA CLI inside production TUI code.
+- Keep the mockup-style CLI subprocess adapter only for compatibility fixtures or development snapshots if needed.
+- Snapshot output may have a TUI-specific test envelope, but it should be treated as a test artifact, not a stable external data contract.
+- Any cache must live under ignored machine-local state such as `.hadara/local/tui/`.
+
+Acceptance notes:
+
+- Render Overview, Tasks, Detail, and Help from shared read models.
+- Support deterministic no-color snapshots at fixed width and height.
+- Prove navigation, search, refresh, and task selection are local state transitions.
+- Prove refresh does not call write commands, shell execution, provider adapters, MCP tools, release/package execution, evidence writes, or handoff updates.
+- Do not add runtime TUI dependencies in the first integrated slice unless a dedicated capsule records the dependency decision and packaging impact.
+
 ## Active Run State
 
 Current manifest schema:

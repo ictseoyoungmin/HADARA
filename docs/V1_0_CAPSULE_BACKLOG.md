@@ -33,6 +33,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 - T-0093 Policy Matrix Release Gate Feedback: done; verified release/network policy behavior and strict release-gate exit-code handling.
 - T-0094 Security Schema Follow-up Cleanup: done; private evidence raw-copy sources are project-boundary-limited by default, active-run schema warnings are split by failure class, and privateEvidence/releaseGate schema fixtures are registered.
 - T-0095 Logger and Audit Event Model: done; `hadara.event.v1` helpers/schema exist and audit JSONL writes embed structured redacted events while preserving compatibility fields.
+- T-0099 TUI Design and Development Plan: done; aligns terminal work-console mockup learnings with the main docs without production TUI implementation.
 
 ## Immediate P0 Capsules
 
@@ -69,9 +70,11 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 | 13 | Provider adapter preparation | T-0096 | Document and scaffold provider adapters without making real provider execution the default. | Done: provider config/call report contract tests pass with secrets excluded. |
 | 14 | Dashboard read integration | T-0097 | Add local read APIs behind `hadara dashboard serve` without write or shell behavior. | Done: `/api/status`, `/api/tasks`, `/api/evidence?taskId=<task-id>`, `/api/active-run`, and `/api/debt` route tests pass. |
 | 15 | CLI write boundary preflight | T-0098 | Add expected-write preflight reports for CLI-owned write commands. | Done: schema-backed `hadara write preflight <command...> --json` reports list files before task/evidence/handoff/run-state/debt writes. |
-| 16 | Release and packaging track | TBD | Define install, CI, clean-checkout, and release-gate behavior. | release checklist report and clean checkout smoke pass in Docker. |
-| 17 | Dogfooding E2E fixture | TBD | Replay a HADARA-on-HADARA workflow from context export to done-level validation. | E2E fixture proves context, capsule, evidence, handoff, policy, and harness continuity. |
-| 18 | Remote CI/release observation | TBD | Confirm remote CI behavior after local Docker validation and before v1.0 release gate freeze. | Remote workflow/check status is recorded and release-gate docs distinguish local vs remote validation. |
+| 16 | TUI design alignment | T-0099 | Document terminal work-console scope, mockup learnings, technology choice, and read-only boundaries before implementation. | Docs consistently reference TUI design without claiming production implementation. |
+| 17 | TUI read-only work console | TBD | Implement the first integrated TUI over shared read models with snapshot coverage and no write/execution behavior. | `hadara tui` or equivalent local entry point renders Overview/Tasks/Detail/Help snapshots and preserves read-only boundary tests. |
+| 18 | Release and packaging track | TBD | Define install, CI, clean-checkout, and release-gate behavior. | release checklist report and clean checkout smoke pass in Docker. |
+| 19 | Dogfooding E2E fixture | TBD | Replay a HADARA-on-HADARA workflow from context export to done-level validation. | E2E fixture proves context, capsule, evidence, handoff, policy, and harness continuity. |
+| 20 | Remote CI/release observation | TBD | Confirm remote CI behavior after local Docker validation and before v1.0 release gate freeze. | Remote workflow/check status is recorded and release-gate docs distinguish local vs remote validation. |
 
 ## Must Preserve
 
@@ -79,4 +82,5 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 - `hadara.evidence.attach` remains opt-in, approval-recorded, and audited.
 - MCP shell execution, MCP release/package execution, broad MCP writes, cloud queues, and multi-agent concurrency remain out of scope.
 - Real provider execution is not the default path.
+- TUI and dashboard surfaces remain read-only until an explicit later capsule defines a safe write path.
 - Local mutable state failures should degrade read models with warnings instead of crashing status surfaces.

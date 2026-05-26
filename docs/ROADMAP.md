@@ -18,6 +18,7 @@ External agents can read HADARA project state, task capsules, handoff, evidence,
 - Context export with MCP usage instructions.
 - Compatibility fixture for Hermes-like external agent flow.
 - Static Operations Dashboard backed by status JSON / fixture.
+- Terminal TUI design alignment as a read-only local work-console candidate.
 
 ### Out of Scope
 
@@ -36,6 +37,8 @@ Most v0.3 foundations exist: Task Capsules, evidence indexing, done-level harnes
 T-0066 through T-0070 moved several v0.3/v0.4/v0.5 ideas from design into implementation: the Hermes-like compatibility fixture exists, project/handoff read-model parity has started, single active run state exists, operational debt tracking exists, and operations state robustness now degrades local-state failures into warnings.
 
 Remaining work is now v1.0 hardening rather than v0.3 proof of concept: redaction hardening, evidence list/read models, broader service parity, active-run CLI/MCP surfaces, operational debt release gates, schema validation, dashboard read APIs, provider adapter contracts, and release/packaging.
+
+T-0099 adds TUI design alignment before production TUI work. The TUI is planned as a read-only terminal work console over existing read models, not a write surface or dashboard replacement.
 
 Detailed capsule candidates live in `docs/V1_0_CAPSULE_BACKLOG.md`. Detailed schemas and implementation notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
 
@@ -107,6 +110,21 @@ Candidate scope:
 - Release checklist report.
 - Remote CI observation after local Docker validation.
 
+## v0.9 Terminal Work Console
+
+Provide a local terminal UI for operators who want current HADARA state visible without opening the browser dashboard.
+
+Candidate scope:
+
+- TypeScript + Node standard terminal rendering first; no runtime TUI framework dependency unless a later capsule justifies it.
+- Read-model aggregation from existing services for status, tasks, selected task detail, evidence, active-run, debt, release gate, tools, and write-preflight preview.
+- Overview, Tasks, Detail, and Help panels based on `.mockup/tui-final`.
+- Deterministic snapshot mode for tests and evidence.
+- Keyboard-first navigation, search, refresh, clean shutdown, and optional mouse selection.
+- No shell execution, provider calls, MCP calls, evidence writes, task mutation, handoff updates, release/package execution, or committed UI state.
+
+Status: design alignment is complete in T-0099; production implementation remains deferred.
+
 ## v1.0 Candidate
 
 HADARA becomes a portable, evidence-backed agentic development workbench suitable for long-running single-project development.
@@ -116,6 +134,7 @@ Candidate scope:
 - Stable Task Capsule lifecycle.
 - Stable CLI JSON and read-only MCP operations surfaces.
 - Static or product-served operations dashboard with clear read/write boundaries.
+- Read-only terminal TUI with clear read/write boundaries.
 - Documented provider adapter path.
 - Operational debt gates connected to product risk.
 - Runtime schema validation for core JSON reports.

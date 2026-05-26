@@ -98,6 +98,10 @@ The MCP bridge should preserve these CLI semantics where it delegates to existin
 - MCP tool failure should preserve the underlying `schemaVersion`, `command`, `ok`, and `issues` fields when available.
 - Early adapter validation failures may use MCP protocol errors, but the response payload should still prefer HADARA issue codes when possible.
 
+## TUI Implication
+
+The planned terminal TUI may use CLI JSON reports as a mockup or compatibility data source, but the integrated production TUI should prefer shared TypeScript read-model services so it does not depend on subprocess CLI transport for normal rendering. If a CLI adapter remains, it must call read-only JSON commands or `hadara write preflight ... --json` previews only.
+
 ## Planned v1.0 JSON Surfaces
 
 The following schemas are planned or partial and should not be treated as stable until their Task Capsules complete:
