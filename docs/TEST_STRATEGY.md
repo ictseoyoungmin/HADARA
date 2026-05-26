@@ -72,6 +72,85 @@ node dist/cli/main.js policy preflight-shell "npm run check" --mode auto --json
 node dist/cli/main.js harness validate --task <task-id> --json
 ```
 
+## TUI Validation Strategy
+
+The full TUI mockup parity and HADARA-native runtime design is preserved without omission in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`. TUI slices should use that section as the detailed source for validation requirements.
+
+### TUI Unit Suites
+
+Current and planned TUI unit suites:
+
+```text
+tests/unit/tui-state.test.ts
+tests/unit/tui-snapshot.test.ts
+tests/unit/tui-markdown.test.ts
+tests/unit/tui-terminal.test.ts
+tests/unit/tui-cli.test.ts
+tests/unit/tui-cache.test.ts
+tests/unit/tui-theme.test.ts
+tests/unit/tui-mouse.test.ts
+```
+
+### TUI Performance Fixture
+
+Future cache/performance work should add:
+
+```text
+tests/fixtures/tui-large-project.ts
+```
+
+The fixture should generate:
+
+```text
+- 1000 Task Capsules
+- minimal TASK.md
+- minimal PLAN.md
+- minimal evidence.jsonl
+- TASK_BOARD.md with all rows
+```
+
+The first performance report should be advisory and record:
+
+```json
+{
+  "taskCount": 1000,
+  "coldLoadMs": 1200,
+  "cachedLoadMs": 120,
+  "tabSwitchMs": 1,
+  "searchMs": 8,
+  "detailRefreshMs": 15
+}
+```
+
+### TUI Boundary Tests
+
+Every TUI slice must prove:
+
+```text
+- no Task Capsule mutation
+- no evidence writes
+- no handoff writes
+- no shell execution
+- no provider calls
+- no MCP calls
+- no release/package execution
+```
+
+Cache slices may write only:
+
+```text
+.hadara/local/tui/**
+```
+
+Cache slices must prove these paths are not written:
+
+```text
+docs/**
+tasks/**
+.hadara/context/**
+committed evidence files
+```
+
 ## Known Constraints
 
 - `npm ci` currently reports 5 moderate audit findings from dev dependencies. Do not run `npm audit fix --force` without reviewing version impact.

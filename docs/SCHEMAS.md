@@ -86,12 +86,55 @@ The validator currently covers the JSON Schema keywords used by registered fixtu
 
 ## TUI Schema Posture
 
-The planned terminal TUI should compose existing read-model schemas instead of introducing a new public schema in its first integrated slice. Deterministic TUI snapshot JSON can be used for tests, but it is a presentation test artifact unless a later capsule explicitly promotes it to a stable contract.
+The terminal TUI composes existing read-model schemas instead of introducing a new stable public TUI read-model schema. Deterministic TUI snapshot JSON can be used for tests, but it is a presentation test artifact unless a later capsule explicitly promotes it to a stable contract.
+
+The full TUI mockup parity and HADARA-native runtime design is preserved without omission in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` under `TUI Mockup Parity / HADARA-Native Runtime Design`. Schema-related TUI requirements from that design are:
+
+```text
+source = service by default
+cache = read-write only after the future TUI local cache capsule
+theme = hadara for TTY, no-color for snapshot tests unless specified
+auto refresh = off unless specified
+```
+
+Future TUI cache schema draft:
+
+```json
+{
+  "schemaVersion": "hadara.tui.cache.v1",
+  "projectRoot": "/workspace",
+  "generatedAt": "2026-05-26T00:00:00.000Z",
+  "taskIndex": [
+    {
+      "id": "T-0107",
+      "title": "TUI Public CLI Entry Point",
+      "status": "Done",
+      "capsule": "tasks/T-0107-tui-public-cli-entry-point",
+      "mtimeMs": 123456789,
+      "size": 4096,
+      "hash": "sha256:..."
+    }
+  ]
+}
+```
+
+Current status of `hadara.tui.cache.v1`:
+
+| Field | Current posture |
+|---|---|
+| Registry entry | Not registered. |
+| Fixture file | Not implemented. |
+| Runtime validation | Not implemented. |
+| Storage path | Future ignored local state under `.hadara/local/tui/`. |
+| Source-of-truth status | Never source-of-truth; cache only accelerates reads. |
+| Public evidence/context status | Must not be attached as evidence or exported in context. |
+
+When a future capsule implements TUI cache, it should decide whether `hadara.tui.cache.v1` remains an internal cache record or becomes a registered fixture-level schema. It must not become a release gate without a separate strictness decision.
 
 ## Non-Goals
 
 - No schema-based release gate is active yet.
 - No MCP write surface is enabled by schemas.
 - No shell execution, provider calls, dashboard live APIs, or release/package execution is introduced by this registry.
-- No TUI implementation or TUI write behavior is introduced by this registry.
+- No TUI cache fixture, TUI cache implementation, or TUI write behavior is introduced by this registry.
 - No private evidence contents or machine-local paths should be included in public schema examples or fixtures.

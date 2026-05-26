@@ -1,9 +1,9 @@
 # V1.0_CAPSULE_BACKLOG
 
-This document turns `docs/specs/HADARA_Core_v1.0_Technical_Development_Plan.md` into concrete future Task Capsule candidates.
+This document turns `docs/specs/HADARA_Core_v1.0_Technical_Development_Plan.md` and `docs/specs/HADARA_TUI_Mockup_Parity_HADARA_Native_Runtime_Design.md` into concrete future Task Capsule candidates.
 
 Use this file when creating the next v1.0 capsule after the latest completed baseline.
-Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
+Detailed schemas, file-level notes, and the unabridged TUI native runtime design import live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
 
 ## Current Baseline
 
@@ -38,6 +38,7 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 - T-0102 TUI Snapshot Renderer: done; renders internal TUI aggregate panels into deterministic no-color fixed-size text snapshots without interactive input or writes.
 - T-0106 TUI Raw Terminal Shell: done; adds an internal injected-stream terminal shell for key decoding, redraw, refresh effects, and clean shutdown without project writes.
 - T-0107 TUI Public CLI Entry Point: done; exposes the read-only local work console as `hadara tui`, with `hadara tui --snapshot` for non-interactive smoke rendering and capability discovery marked read-only.
+- T-0108 TUI Native Runtime Docs Assimilation: done; preserves the full TUI mockup parity / HADARA-native runtime design in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` without summarized-away requirements and updates backlog/schema/test planning docs.
 
 ## Immediate P0 Capsules
 
@@ -80,6 +81,12 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 | 19 | TUI interactive state | T-0105 | Add keyboard/search/refresh state transitions over the snapshot-ready renderer without write/execution behavior. | Done: pure state-transition tests cover panels, task selection/search, document tabs, scroll, refresh, quit, and no-write behavior. |
 | 20 | TUI read-only work console | T-0106 | Add local terminal raw-mode shell and optional mouse over the tested state/renderer. | Done: injected-stream terminal tests cover key decoding, redraw, refresh/detail-refresh effects, raw-mode restoration, quit handling, and no project writes. |
 | 20a | TUI public CLI entry point | T-0107 | Expose the read-only terminal work console through `hadara tui` and provide a snapshot smoke mode. | Done: public CLI handler, help entry, read-only capability registry entry, injected-stream CLI tests, full Docker check, and built CLI snapshot smoke pass. |
+| 20b | TUI native runtime docs assimilation | T-0108 | Reflect the full TUI mockup parity/native runtime design into the main v1.0 planning docs without omission. | Done: `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` contains the unabridged imported design, and backlog/schema/test docs point to it. |
+| 20c | TUI refresh completion and CLI JSON hardening | T-0107 follow-up | Correctness hardening from the TUI design before cache/performance work. | Done in T-0107 review follow-up: refresh/detail-refresh complete and failed signals clear pending flags, non-TTY `hadara tui --json` returns a JSON error envelope, process listeners are cleaned up, and focused/full checks pass. |
+| 20d | TUI local cache and incremental refresh | TBD | Make TUI scale to 1000+ capsules using `.hadara/local/tui/`, task summary index, selected detail/doc cache, mtime/hash invalidation, and full/fast/detail/none refresh modes. | Future: tab/search/scroll read zero files, selected detail refresh reads selected task only, cache writes stay under `.hadara/local/tui/`, context export excludes TUI cache, and 1000-capsule benchmark evidence is recorded. |
+| 20e | TUI visual parity pass | TBD | Bring production TUI visual feel closer to the mockup with HADARA Obsidian theme, high-contrast theme, no-color preservation, status/log line, loading frame, richer cards, status badges, detail polish, and snapshot JSON v2 test envelope. | Future: color mode resembles mockup, no-color mode remains deterministic, theme can be disabled, snapshots stay stable in test mode, and no write/shell/provider/MCP behavior is added. |
+| 20f | TUI mouse and resize support | TBD | Add optional terminal ergonomics through hitboxes, panel/task/doc-tab clicks, resize redraw, and no project/cache writes from mouse actions. | Future: mouse click transitions are pure, resize triggers redraw only, and no file mutation occurs. |
+| 20g | TUI compatibility CLI adapter | TBD | Provide explicit `--source cli` compatibility with bounded HADARA CLI subprocesses while keeping shared services as the default data source. | Future: default TUI uses shared services, `--source cli` works for compatibility smoke, subprocess failures degrade to warnings, and no source-of-truth drift is introduced. |
 | 21 | Release and packaging track | TBD | Define install, CI, clean-checkout, and release-gate behavior. | release checklist report and clean checkout smoke pass in Docker. |
 | 22 | Dogfooding E2E fixture | TBD | Replay a HADARA-on-HADARA workflow from context export to done-level validation. | E2E fixture proves context, capsule, evidence, handoff, policy, and harness continuity. |
 | 23 | Remote CI/release observation | TBD | Confirm remote CI behavior after local Docker validation and before v1.0 release gate freeze. | Remote workflow/check status is recorded and release-gate docs distinguish local vs remote validation. |
@@ -91,4 +98,5 @@ Detailed schemas and file-level notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.
 - MCP shell execution, MCP release/package execution, broad MCP writes, cloud queues, and multi-agent concurrency remain out of scope.
 - Real provider execution is not the default path.
 - TUI and dashboard surfaces remain read-only until an explicit later capsule defines a safe write path.
+- TUI cache, when implemented, is local acceleration only under `.hadara/local/tui/`; it is not evidence, source-of-truth, committed state, or context-export content.
 - Local mutable state failures should degrade read models with warnings instead of crashing status surfaces.

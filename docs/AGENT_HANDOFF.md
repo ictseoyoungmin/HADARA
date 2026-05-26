@@ -67,13 +67,14 @@
 - T-0105 is complete: `src/tui/state.ts` adds pure internal TUI interaction state for panel switching, task selection/search, detail document tabs, local scroll offsets, refresh/detail refresh requests and completion signals, quit requests, and renderer/read-model option mapping without raw terminal mode, CLI entry point, cache writes, shell execution, provider calls, MCP calls, or Task Capsule mutation.
 - T-0106 is complete: `src/tui/terminal.ts` adds an internal injected-stream raw terminal shell for key decoding, redraws through the snapshot renderer, refresh/detail-refresh effects, quit handling, and raw-mode restoration without cache writes, shell execution, provider calls, MCP calls, evidence writes, handoff updates, or Task Capsule mutation.
 - T-0107 is complete: `hadara tui` now exposes the read-only local terminal work console through a focused CLI handler, while `hadara tui --snapshot` provides a non-interactive smoke render; capability discovery marks the command read-only, non-TTY `--json` returns a TUI JSON error envelope, process listeners are cleaned up on normal TUI stop, refresh completion/failure signals clear pending flags, and TUI writes/cache/shell/provider/MCP/server/release behavior remain deferred.
+- T-0108 is complete: the full unabridged `docs/specs/HADARA_TUI_Mockup_Parity_HADARA_Native_Runtime_Design.md` body is preserved in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`, and `docs/V1_0_CAPSULE_BACKLOG.md`, `docs/SCHEMAS.md`, and `docs/TEST_STRATEGY.md` now carry the actionable TUI follow-up, cache/schema posture, and validation requirements without treating the deferred TUI cache as an enforced public schema.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0105 TUI Interactive State: added pure read-only local state transitions for panels, task selection/search, document tabs, scroll, refresh request/complete, and quit over the snapshot-ready renderer.
 - T-0106 TUI Raw Terminal Shell: added an internal injected-stream terminal shell for key decoding, redraw, refresh/detail-refresh effects, clean shutdown, and raw-mode restoration without a public CLI command.
 - T-0107 TUI Public CLI Entry Point: added public read-only `hadara tui` plus `hadara tui --snapshot`, with JSON non-TTY refusal, listener cleanup on normal stop, refresh completion/failure flag cleanup, and capability discovery marked read-only.
+- T-0108 TUI Native Runtime Docs Assimilation: reflected the full TUI mockup parity/native runtime design into the main v1.0 planning docs with a marker-delimited unabridged import and concrete follow-up/schema/test planning.
 
 ## Current Known Problems
 
@@ -87,17 +88,18 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. The next recommended roadmap slice is the release and packaging track, unless a focused TUI follow-up is chosen for full-workspace read-model performance before packaging.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. The next recommended roadmap slice is the release and packaging track, unless a focused TUI follow-up such as local cache/incremental refresh is chosen before packaging.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, TUI writes, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
+- Latest focused TUI docs parity check: marker-delimited import in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` matched `docs/specs/HADARA_TUI_Mockup_Parity_HADARA_Native_Runtime_Design.md` with `ok lines=959 bytes=17974`.
 - Latest focused TUI CLI check: Docker `npx vitest run tests/unit/tui-state.test.ts tests/unit/tui-cli.test.ts tests/unit/tui-terminal.test.ts` passed with 3 files and 17 tests after T-0107 review follow-up.
-- Latest full check: Docker `npm run check` passed with 46 test files and 286 tests after T-0107 review follow-up.
+- Latest full check: Docker `npm run check` passed with 46 test files and 286 tests after T-0108 docs assimilation.
 - Latest built CLI smoke: Docker `timeout 60 node dist/cli/main.js tui --snapshot --compact --width 86 --height 24 --project /workspace` exited 0 and rendered the read-only HADARA Work Console for T-0107.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0107 --level done --json --project /workspace` returned `ok: true` and checked `docs/TASK_BOARD.md`.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0108 --level done --json --project /workspace` returned `ok: true` and checked `docs/TASK_BOARD.md`.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
 
 ## Historical Index
