@@ -101,4 +101,4 @@
 | T-0098 | CLI Write Boundary Preflight | Done | tasks/T-0098-cli-write-boundary-preflight | Adds schema-backed read-only write preflight reports for CLI-owned write command families. |
 | T-0099 | TUI Design and Development Plan | Done | tasks/T-0099-tui-design-and-development-plan | Aligns `.mockup/tui` and `.mockup/tui-final` into main docs as a future read-only terminal work console; no production TUI implementation yet. |
 | T-0100 | TUI Read-Model Aggregator | Done | tasks/T-0100-tui-read-model-aggregator | Adds internal TUI aggregate read model over existing shared services without renderer, CLI entry point, cache, writes, shell, provider, or MCP behavior. |
-| T-0100 | TUI Read-Model Aggregator | Draft | tasks/T-0100-tui-read-model-aggregator | |
+| T-0101 | Task Board Append Done-Level Guard | Done | tasks/T-0101-task-board-append-done-level-guard | Adds done-level harness validation for duplicate/stale Task Board rows when completing a Task Capsule. |

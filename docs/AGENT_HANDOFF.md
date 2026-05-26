@@ -60,13 +60,14 @@
 - T-0098 is complete: `hadara write preflight <command...> --json` now returns schema-backed `hadara.write.preflight.v1` reports for task create, evidence collect, handoff update, planned run-state writes, and planned debt writes without executing target write commands.
 - T-0099 is complete: `.mockup/tui` and `.mockup/tui-final` are documented as references for a future read-only terminal work console over existing read models, with TypeScript + Node standard terminal rendering preferred first and production implementation deferred.
 - T-0100 is complete: `src/tui/read-model.ts` composes existing shared read models into an internal TUI aggregate for status, tasks, selected task detail/evidence, active-run projection/resume, debt, advisory release gate, tools, and write-preflight preview without renderer, CLI entry point, cache, writes, shell execution, provider calls, or MCP calls.
+- T-0101 is complete: done-level harness validation now checks `docs/TASK_BOARD.md` for exactly one row for the validated task, `Done` status, and the expected capsule path, catching duplicate or stale append/update results.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0098 CLI Write Boundary Preflight: added schema-backed read-only write preflight reports and CLI output for expected CLI-owned write paths without executing target writes.
 - T-0099 TUI Design and Development Plan: added terminal TUI design notes and aligned architecture, roadmap, v1.0 backlog/schema notes, development slices, project state, task board, and handoff around a future read-only work console without production implementation.
 - T-0100 TUI Read-Model Aggregator: added internal `src/tui/read-model.ts` aggregation over shared read services with focused no-write boundary tests and no renderer or CLI entry point.
+- T-0101 Task Board Append Done-Level Guard: added done-level harness validation for duplicate/stale Task Board rows and focused regressions for duplicate rows, stale status, and capsule path mismatch.
 
 ## Current Known Problems
 
@@ -87,9 +88,9 @@
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest focused TUI read-model check: Docker `npx vitest run tests/unit/tui-read-model.test.ts` passed with 1 file and 4 tests.
-- Latest full check: Docker `npm run check` passed with 41 test files and 260 tests after T-0100 TUI read-model aggregator.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0100 --level done --json --project /workspace` returned `ok: true`.
+- Latest focused harness check: Docker `npx vitest run tests/harness/harness-validate.test.ts` passed with 1 file and 15 tests.
+- Latest full check: Docker `npm run check` passed with 41 test files and 262 tests after T-0101 Task Board append done-level guard.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0101 --level done --json --project /workspace` returned `ok: true` and checked `docs/TASK_BOARD.md`.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
 
 ## Historical Index

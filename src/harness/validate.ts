@@ -91,7 +91,7 @@ export function validateTaskCapsule(projectRoot: string, taskId: string, options
   validateEvidenceMarkdown(projectRoot, task, issues);
   validateEvidenceIndex(projectRoot, task, issues);
   if (level === 'done') {
-    validateDoneLevel(projectRoot, task, issues);
+    validateDoneLevel(projectRoot, task, issues, checkedFiles);
   }
 
   return {
@@ -277,11 +277,12 @@ function validateEvidenceIndex(projectRoot: string, task: TaskCapsule, issues: H
   });
 }
 
-function validateDoneLevel(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+function validateDoneLevel(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[], checkedFiles: string[]): void {
   validateTaskStatusDone(projectRoot, task, issues);
   validateAcceptanceDone(projectRoot, task, issues);
   validateEvidenceIndexHasRecords(projectRoot, task, issues);
   validateHandoffDone(projectRoot, task, issues);
+  validateTaskBoardDone(projectRoot, task, issues, checkedFiles);
 }
 
 function validateTaskStatusDone(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
@@ -349,6 +350,81 @@ function validateHandoffDone(projectRoot: string, task: TaskCapsule, issues: Har
       path: relativePath
     });
   }
+}
+
+function validateTaskBoardDone(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[], checkedFiles: string[]): void {
+  const taskBoardPath = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
+  const relativePath = toPortablePath(path.relative(projectRoot, taskBoardPath));
+  checkedFiles.push(relativePath);
+
+  if (!fs.existsSync(taskBoardPath)) {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_BOARD_MISSING',
+      message: 'Done-level validation requires docs/TASK_BOARD.md to contain the completed task row.',
+      path: relativePath
+    });
+    return;
+  }
+
+  const rows = parseTaskBoardRows(fs.readFileSync(taskBoardPath, 'utf8')).filter((row) => row.id === task.id);
+  if (rows.length === 0) {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_BOARD_ROW_MISSING',
+      message: `Done-level validation requires docs/TASK_BOARD.md to contain exactly one row for ${task.id}.`,
+      path: relativePath
+    });
+    return;
+  }
+  if (rows.length > 1) {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_BOARD_ROW_DUPLICATE',
+      message: `docs/TASK_BOARD.md contains ${rows.length} rows for ${task.id}; expected exactly one.`,
+      path: relativePath
+    });
+    return;
+  }
+
+  const row = rows[0];
+  const expectedCapsule = toPortablePath(path.relative(projectRoot, task.dir));
+  if (row.status !== 'Done') {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_BOARD_STATUS_NOT_DONE',
+      message: `Done-level validation requires docs/TASK_BOARD.md status for ${task.id} to be Done.`,
+      path: relativePath
+    });
+  }
+  if (row.capsule !== expectedCapsule) {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_BOARD_CAPSULE_MISMATCH',
+      message: `docs/TASK_BOARD.md capsule for ${task.id} is ${row.capsule || '(empty)'}, expected ${expectedCapsule}.`,
+      path: relativePath
+    });
+  }
+}
+
+function parseTaskBoardRows(content: string): Array<{ id: string; title: string; status: string; capsule: string; notes: string }> {
+  return content
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => /^\|\s*T-\d{4}\s*\|/.test(line))
+    .map((line) => {
+      const cells = line
+        .slice(1, line.endsWith('|') ? -1 : undefined)
+        .split('|')
+        .map((cell) => cell.trim());
+      return {
+        id: cells[0] ?? '',
+        title: cells[1] ?? '',
+        status: cells[2] ?? '',
+        capsule: cells[3] ?? '',
+        notes: cells[4] ?? ''
+      };
+    });
 }
 
 function readSectionBody(filePath: string, heading: string): string {

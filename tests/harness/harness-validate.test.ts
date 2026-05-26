@@ -77,6 +77,7 @@ describe('Harness Task Capsule validation', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Completed capsule');
     markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
     markAcceptanceDone(task.dir);
     writeHandoffDone(task.dir);
     appendEvidence(root, {
@@ -90,7 +91,70 @@ describe('Harness Task Capsule validation', () => {
 
     expect(result.ok).toBe(true);
     expect(result.level).toBe('done');
+    expect(result.checkedFiles).toContain('docs/TASK_BOARD.md');
     expect(result.issues).toEqual([]);
+  });
+
+  it('rejects duplicate task board rows during done-level validation', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Duplicate board row');
+    markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
+    fs.appendFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      `| ${task.id} | Duplicate board row | Draft | tasks/${task.id}-duplicate-board-row | |\n`,
+      'utf8'
+    );
+    markAcceptanceDone(task.dir);
+    writeHandoffDone(task.dir);
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'note',
+      summary: 'Done-level validation evidence',
+      result: 'passed'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual({
+      severity: 'error',
+      code: 'TASK_BOARD_ROW_DUPLICATE',
+      message: `docs/TASK_BOARD.md contains 2 rows for ${task.id}; expected exactly one.`,
+      path: 'docs/TASK_BOARD.md'
+    });
+  });
+
+  it('rejects stale task board status and capsule path during done-level validation', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Stale board row');
+    markTaskDone(root, task.id);
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      [
+        '# TASK_BOARD',
+        '',
+        '| ID | Title | Status | Capsule | Notes |',
+        '|---|---|---|---|---|',
+        `| ${task.id} | Stale board row | Draft | tasks/${task.id}-wrong | |`
+      ].join('\n') + '\n',
+      'utf8'
+    );
+    markAcceptanceDone(task.dir);
+    writeHandoffDone(task.dir);
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'note',
+      summary: 'Done-level validation evidence',
+      result: 'passed'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(['TASK_BOARD_STATUS_NOT_DONE', 'TASK_BOARD_CAPSULE_MISMATCH'])
+    );
   });
 
   it('rejects unsupported harness validation levels', () => {
@@ -278,6 +342,24 @@ function markTaskDone(projectRoot: string, taskId: string): void {
   if (!taskDir) throw new Error(`Missing task dir for ${taskId}`);
   const taskPath = path.join(projectRoot, 'tasks', taskDir, 'TASK.md');
   fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace(/\nDraft\n$/, '\nDone\n'), 'utf8');
+}
+
+function markTaskBoardDone(projectRoot: string, taskId: string): void {
+  const taskBoardPath = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
+  const updated = fs
+    .readFileSync(taskBoardPath, 'utf8')
+    .split(/\r?\n/)
+    .map((line) => {
+      if (!line.startsWith(`| ${taskId} |`)) return line;
+      const cells = line
+        .slice(1, line.endsWith('|') ? -1 : undefined)
+        .split('|')
+        .map((cell) => cell.trim());
+      cells[2] = 'Done';
+      return `| ${cells.join(' | ')} |`;
+    })
+    .join('\n');
+  fs.writeFileSync(taskBoardPath, updated, 'utf8');
 }
 
 function markAcceptanceDone(taskDir: string): void {
