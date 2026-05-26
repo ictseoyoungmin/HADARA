@@ -70,6 +70,8 @@ export function createTuiInteractionState(model: TuiReadModel, options: TuiState
 export function reduceTuiInteractionState(state: TuiInteractionState, model: TuiReadModel, key: TuiInputKey): TuiInteractionState {
   const normalized = normalizeKey(key);
 
+  if (normalized === 'refresh-complete') return { ...state, refreshRequested: false };
+  if (normalized === 'detail-refresh-complete') return { ...state, detailRefreshRequested: false };
   if (normalized === 'ctrl-c' || normalized === 'q') return { ...state, quitRequested: true };
   if (normalized === 'r') return { ...state, refreshRequested: true };
   if (normalized === '?') return { ...state, activePanel: 'help' };

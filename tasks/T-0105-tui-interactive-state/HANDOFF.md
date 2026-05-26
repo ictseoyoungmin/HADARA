@@ -2,7 +2,7 @@
 
 ## Last Completed
 
-T-0105 TUI Interactive State is complete. `src/tui/state.ts` adds pure local state initialization and reducers for panel switching, task selection/search, document tabs, scroll offsets, refresh requests, quit requests, and renderer/read-model option mapping. It remains internal and read-only with no raw terminal mode, CLI entry point, cache writes, shell execution, provider calls, MCP calls, or Task Capsule mutation.
+T-0105 TUI Interactive State is complete. `src/tui/state.ts` adds pure local state initialization and reducers for panel switching, task selection/search, document tabs, scroll offsets, refresh/detail refresh requests and completion signals, quit requests, and renderer/read-model option mapping. It remains internal and read-only with no raw terminal mode, CLI entry point, cache writes, shell execution, provider calls, MCP calls, or Task Capsule mutation.
 
 ## Next Recommended Step
 

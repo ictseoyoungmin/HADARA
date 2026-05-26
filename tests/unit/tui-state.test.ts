@@ -68,6 +68,8 @@ describe('TUI interaction state', () => {
     expect(state.activePanel).toBe('detail');
     expect(state.selectedTaskId).toBe(first.id);
     expect(state.detailRefreshRequested).toBe(true);
+    state = reduceTuiInteractionState(state, model, 'detail-refresh-complete');
+    expect(state.detailRefreshRequested).toBe(false);
     expect(state.searchActive).toBe(false);
     expect(second.id).toBe(model.selectedTaskId);
     expect(listProjectFiles(root)).toEqual(before);
@@ -133,6 +135,9 @@ describe('TUI interaction state', () => {
     state = reduceTuiInteractionState(state, model, 'r');
     expect(state.refreshRequested).toBe(true);
     expect(state.quitRequested).toBe(false);
+
+    state = reduceTuiInteractionState(state, model, 'refresh-complete');
+    expect(state.refreshRequested).toBe(false);
 
     state = reduceTuiInteractionState(state, model, 'q');
     expect(state.quitRequested).toBe(true);

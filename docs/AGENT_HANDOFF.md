@@ -64,14 +64,14 @@
 - T-0102 is complete: `src/tui/snapshot.ts` renders Overview, Tasks, Detail, and Help panels from the internal TUI aggregate as deterministic no-color fixed-size text snapshots without interactive input, cache writes, shell execution, provider calls, MCP calls, or Task Capsule mutation.
 - T-0103 is complete: `.mockup/tui/app.js` rendering concepts are now split into `src/tui/constants.ts`, `src/tui/layout.ts`, and `src/tui/markdown.ts`, and `src/tui/snapshot.ts` renders a mockup-style read-only HADARA Work Console frame with overview cards, task rows, detail document tabs, and help controls.
 - T-0104 is complete: TUI snapshots hide volatile `generatedAt` by default, expose explicit `includeGeneratedAt`, support explicit `widthPolicy: 'mockup' | 'compact'`, and render Markdown wrapping/tables by visible terminal width with Korean regressions.
-- T-0105 is complete: `src/tui/state.ts` adds pure internal TUI interaction state for panel switching, task selection/search, detail document tabs, local scroll offsets, refresh/quit requests, and renderer/read-model option mapping without raw terminal mode, CLI entry point, cache writes, shell execution, provider calls, MCP calls, or Task Capsule mutation.
+- T-0105 is complete: `src/tui/state.ts` adds pure internal TUI interaction state for panel switching, task selection/search, detail document tabs, local scroll offsets, refresh/detail refresh requests and completion signals, quit requests, and renderer/read-model option mapping without raw terminal mode, CLI entry point, cache writes, shell execution, provider calls, MCP calls, or Task Capsule mutation.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
 - T-0103 TUI Mockup Parity Module Port: split mockup-derived TUI constants, layout, and Markdown rendering into TypeScript modules and updated snapshots toward the HADARA Work Console mockup.
 - T-0104 TUI Snapshot Polish: made snapshot text timestamp-stable by default, added explicit mockup/compact width policy, and hardened wide-character Markdown/snapshot rendering.
-- T-0105 TUI Interactive State: added pure read-only local state transitions for panels, task selection/search, document tabs, scroll, refresh, and quit over the snapshot-ready renderer.
+- T-0105 TUI Interactive State: added pure read-only local state transitions for panels, task selection/search, document tabs, scroll, refresh request/complete, and quit over the snapshot-ready renderer.
 
 ## Current Known Problems
 
@@ -92,9 +92,9 @@
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest focused TUI interactive state check: Docker `npx vitest run tests/unit/tui-state.test.ts tests/unit/tui-snapshot.test.ts tests/unit/tui-read-model.test.ts` passed with 3 files and 14 tests.
-- Latest full check: Docker `npm run check` passed with 44 test files and 274 tests after T-0105 TUI interactive state.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0105 --level done --json --project /workspace` returned `ok: true` and checked `docs/TASK_BOARD.md`.
+- Latest focused TUI interactive state check: Docker `npx vitest run tests/unit/tui-state.test.ts tests/unit/tui-snapshot.test.ts tests/unit/tui-read-model.test.ts` passed with 3 files and 14 tests after the refresh-completion follow-up.
+- Latest full check: Docker `npm run check` passed with 44 test files and 274 tests after the T-0105 refresh-completion follow-up.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0105 --level done --json --project /workspace` returned `ok: true` after the refresh-completion follow-up and checked `docs/TASK_BOARD.md`.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
 
 ## Historical Index
