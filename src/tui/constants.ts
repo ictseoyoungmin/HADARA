@@ -19,13 +19,13 @@ export interface TuiDocumentTab {
 export const TUI_DOCUMENT_TABS: TuiDocumentTab[] = [
   { label: 'Task', file: 'TASK.md', key: 't', shortLabel: 'TASK' },
   { label: 'Plan', file: 'PLAN.md', key: 'p', shortLabel: 'PLAN' },
-  { label: 'Decisions', file: 'DECISIONS.md', key: 'd', shortLabel: 'DECISIONS' },
-  { label: 'Acceptance', file: 'ACCEPTANCE.md', key: 'a', shortLabel: 'ACCEPT' },
-  { label: 'Evidence', file: 'EVIDENCE.md', key: 'e', shortLabel: 'EVIDENCE' },
-  { label: 'Handoff', file: 'HANDOFF.md', key: 'h', shortLabel: 'HANDOFF' },
-  { label: 'Files', file: 'FILES.md', key: 'f', shortLabel: 'FILES' },
-  { label: 'Risks', file: 'RISKS.md', key: 'k', shortLabel: 'RISKS' },
-  { label: 'Tests', file: 'TESTS.md', key: 's', shortLabel: 'TESTS' }
+  { label: 'Decisions', file: 'DECISIONS.md', key: 'd', shortLabel: 'DEC' },
+  { label: 'Acceptance', file: 'ACCEPTANCE.md', key: 'a', shortLabel: 'ACC' },
+  { label: 'Evidence', file: 'EVIDENCE.md', key: 'e', shortLabel: 'EVD' },
+  { label: 'Handoff', file: 'HANDOFF.md', key: 'h', shortLabel: 'HAND' },
+  { label: 'Files', file: 'FILES.md', key: 'f', shortLabel: 'FILE' },
+  { label: 'Risks', file: 'RISKS.md', key: 'k', shortLabel: 'RISK' },
+  { label: 'Tests', file: 'TESTS.md', key: 's', shortLabel: 'TEST' }
 ];
 
 export function resolveTuiPanelId(value: string | undefined, fallback: TuiPanelId = 'overview'): TuiPanelId {

@@ -47,6 +47,7 @@ describe('TUI interaction state', () => {
     expect(tuiStateToSnapshotOptions(state, { width: 90, height: 24 })).toMatchObject({
       panel: 'detail',
       document: 'PLAN.md',
+      documentScroll: 0,
       width: 90,
       height: 24
     });
@@ -118,6 +119,7 @@ describe('TUI interaction state', () => {
     expect(state.activePanel).toBe('detail');
     expect(state.documentFile).toBe('PLAN.md');
     expect(state.documentScroll).toBe(8);
+    expect(tuiStateToSnapshotOptions(state)).toMatchObject({ document: 'PLAN.md', documentScroll: 8 });
 
     state = reduceTuiInteractionState(state, model, 'e');
     expect(state.documentFile).toBe('EVIDENCE.md');
@@ -147,6 +149,39 @@ describe('TUI interaction state', () => {
     state = reduceTuiInteractionState(state, model, 'q');
     expect(state.quitRequested).toBe(true);
     expect(listProjectFiles(root)).toEqual(before);
+  });
+
+  it('supports mockup navigation keys and search completion', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Keyboard alpha');
+    createTaskCapsule(root, 'Keyboard beta');
+    createTaskCapsule(root, 'Keyboard gamma');
+    writeProjectDocs(root);
+    const model = createTuiReadModel(root);
+
+    let state = createTuiInteractionState(model);
+    state = reduceTuiInteractionState(state, model, 'tab');
+    expect(state.activePanel).toBe('tasks');
+    state = reduceTuiInteractionState(state, model, 'right');
+    expect(state.activePanel).toBe('detail');
+    state = reduceTuiInteractionState(state, model, 'shift-tab');
+    expect(state.activePanel).toBe('tasks');
+
+    state = reduceTuiInteractionState(state, model, '/');
+    state = reduceTuiInteractionState(state, model, 'b');
+    state = reduceTuiInteractionState(state, model, 'e');
+    state = reduceTuiInteractionState(state, model, 't');
+    state = reduceTuiInteractionState(state, model, 'enter');
+    expect(state.searchActive).toBe(false);
+    expect(state.taskSearch).toBe('bet');
+    expect(getTuiTaskRows(model, state)[0]?.title).toContain('Keyboard beta');
+
+    state = reduceTuiInteractionState(state, model, 'home');
+    expect(state.selectedTaskIndex).toBe(0);
+    state = reduceTuiInteractionState(state, model, 'end');
+    expect(state.selectedTaskIndex).toBe(getTuiTaskRows(model, state).length - 1);
+    state = reduceTuiInteractionState(state, model, 'ㅂ');
+    expect(state.quitRequested).toBe(true);
   });
 
   it('clears detail refresh request flags on completion or failure signals', () => {

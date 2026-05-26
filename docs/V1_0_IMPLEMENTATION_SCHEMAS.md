@@ -1759,6 +1759,8 @@ Acceptance:
 
 Purpose: make production TUI feel like the mockup.
 
+Status: implemented by T-0110 as a read-only visual/interaction parity slice.
+
 Scope:
 
 ```text
@@ -1770,7 +1772,7 @@ Scope:
 - richer overview current/previous cards
 - task rows with status badges
 - detail viewer polish
-- snapshot JSON v2 envelope
+- internal snapshot theme/color metadata
 ```
 
 Acceptance:
@@ -1781,6 +1783,14 @@ Acceptance:
 - theme can be disabled
 - snapshot text remains stable in test mode
 - no write/shell/provider/MCP behavior
+```
+
+T-0110 notes:
+
+```text
+- Interactive TUI defaults to the HADARA theme.
+- Snapshot smoke mode remains no-color by default; `--color --theme hadara|contrast` enables ANSI snapshots explicitly.
+- CLI snapshot JSON keeps the existing compatibility envelope; an external snapshot JSON v2 contract remains deferred until a dedicated schema/compatibility capsule needs it.
 ```
 
 ### T-0111 TUI Mouse and Resize Support

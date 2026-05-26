@@ -1,7 +1,8 @@
 import { TuiReadModel } from './read-model';
 import { resolveTuiDocumentTab, TUI_DOCUMENT_TABS, TUI_PANEL_IDS, TUI_PANEL_LABELS, TuiPanelId } from './constants';
-import { badge, card, columns, divider, fit, pad, trimFit } from './layout';
+import { badge, card, columns, divider, fit, fitAnsi, pad, padAnsi, trimFit, trimFitAnsi, visibleWidth } from './layout';
 import { incompleteChecklist, markdownPreview, renderMarkdownDocument } from './markdown';
+import { normalizeTuiThemeName, tuiBg, tuiColorEnabled, tuiFg, tuiSwatch, TuiThemeName } from './theme';
 
 export type TuiSnapshotPanel = TuiPanelId;
 export type TuiSnapshotWidthPolicy = 'mockup' | 'compact';
@@ -13,6 +14,13 @@ export interface TuiSnapshotOptions {
   widthPolicy?: TuiSnapshotWidthPolicy;
   width?: number;
   height?: number;
+  theme?: TuiThemeName | string;
+  loading?: boolean;
+  loadingTick?: number;
+  logLine?: string;
+  selectedTaskId?: string | null;
+  taskSearch?: string;
+  documentScroll?: number;
 }
 
 export interface TuiSnapshot {
@@ -22,7 +30,8 @@ export interface TuiSnapshot {
   terminal: {
     width: number;
     height: number;
-    color: false;
+    color: boolean;
+    theme: TuiThemeName;
   };
   text: string;
   lines: string[];
@@ -39,9 +48,19 @@ const COMPACT_MIN_HEIGHT = 10;
 export function renderTuiSnapshot(model: TuiReadModel, options: TuiSnapshotOptions = {}): TuiSnapshot {
   const terminal = resolveTerminalSize(options);
   const panel = options.panel ?? 'overview';
-  const rawLines = renderFrame(model, panel, resolveTuiDocumentTab(options.document), terminal.width, terminal.height, Boolean(options.includeGeneratedAt));
+  const theme = normalizeTuiThemeName(options.theme, 'none');
+  const rawLines = renderFrame(model, panel, resolveTuiDocumentTab(options.document), terminal.width, terminal.height, {
+    includeGeneratedAt: Boolean(options.includeGeneratedAt),
+    theme,
+    loading: options.loading === true,
+    loadingTick: options.loadingTick ?? 0,
+    logLine: options.logLine,
+    selectedTaskId: options.selectedTaskId ?? model.selectedTaskId,
+    taskSearch: options.taskSearch ?? '',
+    documentScroll: Math.max(0, Math.floor(options.documentScroll ?? 0))
+  });
   const truncated = rawLines.length > terminal.height;
-  const lines = rawLines.slice(0, terminal.height).map((line) => fit(line, terminal.width));
+  const lines = rawLines.slice(0, terminal.height).map((line) => (theme === 'none' ? fit(line, terminal.width) : fitAnsi(line, terminal.width)));
   while (lines.length < terminal.height) lines.push(''.padEnd(terminal.width));
 
   return {
@@ -51,7 +70,8 @@ export function renderTuiSnapshot(model: TuiReadModel, options: TuiSnapshotOptio
     terminal: {
       width: terminal.width,
       height: terminal.height,
-      color: false
+      color: tuiColorEnabled(theme),
+      theme
     },
     text: lines.join('\n'),
     lines,
@@ -75,60 +95,78 @@ function renderFrame(
   document: (typeof TUI_DOCUMENT_TABS)[number],
   width: number,
   height: number,
-  includeGeneratedAt: boolean
+  options: {
+    includeGeneratedAt: boolean;
+    theme: TuiThemeName;
+    loading: boolean;
+    loadingTick: number;
+    logLine?: string;
+    selectedTaskId: string | null;
+    taskSearch: string;
+    documentScroll: number;
+  }
 ): string[] {
-  const raw = renderHeader(model, document, width, includeGeneratedAt);
+  const raw = renderHeader(model, document, width, options);
   const availableRows = Math.max(1, height - raw.length - 3);
 
   if (width >= 104) {
     const navWidth = 22;
     const mainWidth = width - navWidth - 3;
-    const main = renderPanel(model, panel, document, mainWidth, availableRows);
-    const nav = renderNav(panel, navWidth);
+    const main = renderPanel(model, panel, document, mainWidth, availableRows, options);
+    const nav = renderNav(panel, navWidth, options.theme);
     const rows = Math.min(Math.max(nav.length, main.length), availableRows);
     for (let index = 0; index < rows; index += 1) {
-      raw.push(`${pad(nav[index] ?? '', navWidth)} │ ${pad(main[index] ?? '', mainWidth)}`);
+      raw.push(`${padAnsi(nav[index] ?? '', navWidth)} ${tuiFg(options.theme, 'border', '│')} ${padAnsi(main[index] ?? '', mainWidth)}`);
     }
   } else {
-    raw.push(renderTabBar(panel, width));
-    raw.push(divider(width));
-    raw.push(...renderPanel(model, panel, document, width - 2, availableRows).slice(0, availableRows));
+    raw.push(renderTabBar(panel, width, options.theme));
+    raw.push(colorDivider(width, options.theme));
+    raw.push(...renderPanel(model, panel, document, width - 2, availableRows, options).slice(0, availableRows));
   }
 
-  raw.push(divider(width));
-  raw.push(renderStatusBar(width));
+  raw.push(colorDivider(width, options.theme));
+  raw.push(renderStatusBar(width, options));
   return raw;
 }
 
-function renderHeader(model: TuiReadModel, document: (typeof TUI_DOCUMENT_TABS)[number], width: number, includeGeneratedAt: boolean): string[] {
+function renderHeader(
+  model: TuiReadModel,
+  document: (typeof TUI_DOCUMENT_TABS)[number],
+  width: number,
+  options: { includeGeneratedAt: boolean; theme: TuiThemeName; loading: boolean }
+): string[] {
   const selected = model.selectedTask;
-  const projectLine = includeGeneratedAt
+  const projectLine = options.includeGeneratedAt
     ? `branch ${model.overview.branch}  mode local  generated ${model.generatedAt}`
     : `branch ${model.overview.branch}  mode local`;
+  const title = `${tuiFg(options.theme, 'gold2', 'HADARA')} ${tuiFg(options.theme, 'text', 'Work Console')} ${tuiFg(options.theme, 'muted', '·')} ${colorBadge(String(model.overview.health).toUpperCase(), statusThemeRole(model.overview.health), options.theme)} ${colorBadge('READ ONLY', 'pass', options.theme)}`;
   return [
-    divider(width),
-    fit(`HADARA Work Console · ${badge(String(model.overview.health).toUpperCase())} ${badge('READ ONLY')}`, width),
-    fit(projectLine, width),
-    fit(`task ${model.selectedTaskId ?? '-'} ${selected?.summary.title ?? 'no task'}  doc ${document.file}`, width),
-    divider(width)
+    colorDivider(width, options.theme),
+    fitAnsi(title, width),
+    colorTextLine(projectLine, width, options.theme, 'muted'),
+    fitAnsi(`${tuiFg(options.theme, 'muted', options.loading ? 'loading' : 'task')} ${tuiFg(options.theme, 'gold2', model.selectedTaskId ?? '-')} ${tuiFg(options.theme, 'text2', selected?.summary.title ?? 'no task')}  ${tuiFg(options.theme, 'muted', 'doc')} ${tuiFg(options.theme, 'teal2', document.file)}`, width),
+    colorDivider(width, options.theme)
   ];
 }
 
-function renderNav(activePanel: TuiSnapshotPanel, width: number): string[] {
+function renderNav(activePanel: TuiSnapshotPanel, width: number, theme: TuiThemeName): string[] {
   return [
-    ' WORK',
+    tuiFg(theme, 'muted', ' WORK'),
     ...TUI_PANEL_IDS.map((panel, index) => {
       const marker = panel === activePanel ? '>' : ' ';
-      return fit(`${marker} ${index + 1} ${TUI_PANEL_LABELS[panel]}`, width);
+      const line = fit(`${marker} ${index + 1} ${TUI_PANEL_LABELS[panel]}`, width);
+      return panel === activePanel ? tuiBg(theme, 'panel2', tuiFg(theme, 'gold2', line)) : tuiFg(theme, 'text2', line);
     })
   ];
 }
 
-function renderTabBar(activePanel: TuiSnapshotPanel, width: number): string {
-  return fit(
-    TUI_PANEL_IDS.map((panel, index) => (panel === activePanel ? `[${index + 1} ${TUI_PANEL_LABELS[panel]}]` : ` ${index + 1} ${TUI_PANEL_LABELS[panel]} `)).join(' '),
-    width
-  );
+function renderTabBar(activePanel: TuiSnapshotPanel, width: number, theme: TuiThemeName): string {
+  const text = TUI_PANEL_IDS.map((panel, index) =>
+    panel === activePanel
+      ? tuiBg(theme, 'panel2', tuiFg(theme, 'gold2', `[${index + 1} ${TUI_PANEL_LABELS[panel]}]`))
+      : tuiFg(theme, 'muted', ` ${index + 1} ${TUI_PANEL_LABELS[panel]} `)
+  ).join(' ');
+  return fitAnsi(text, width);
 }
 
 function renderPanel(
@@ -136,19 +174,21 @@ function renderPanel(
   panel: TuiSnapshotPanel,
   document: (typeof TUI_DOCUMENT_TABS)[number],
   width: number,
-  availableRows: number
+  availableRows: number,
+  options: { theme: TuiThemeName; loading: boolean; loadingTick: number; selectedTaskId: string | null; taskSearch: string; documentScroll: number }
 ): string[] {
-  if (panel === 'tasks') return renderTasks(model, width);
-  if (panel === 'detail') return renderDetail(model, document, width, availableRows);
-  if (panel === 'help') return renderHelp(width);
-  return renderOverview(model, width);
+  if (options.loading) return renderLoadingPanel(TUI_PANEL_LABELS[panel], width, options);
+  if (panel === 'tasks') return renderTasks(model, width, options);
+  if (panel === 'detail') return renderDetail(model, document, width, availableRows, options);
+  if (panel === 'help') return renderHelp(width, options.theme);
+  return renderOverview(model, width, options.theme);
 }
 
-function renderOverview(model: TuiReadModel, width: number): string[] {
+function renderOverview(model: TuiReadModel, width: number, theme: TuiThemeName): string[] {
   const current = model.overview.currentWork;
   const previous = model.overview.previousWork;
-  const currentCard = card('Current Work', workSummaryLines(model, current, 'LIVE'), Math.floor(width * 0.5));
-  const previousCard = card('Previous Work', workSummaryLines(model, previous, previous ? 'FILE' : 'ROUTE'), Math.floor(width * 0.5));
+  const currentCard = colorCard('Current Work', workSummaryLines(model, current, 'LIVE', theme), Math.floor(width * 0.5), theme, 'teal');
+  const previousCard = colorCard('Previous Work', workSummaryLines(model, previous, previous ? 'FILE' : 'ROUTE', theme), Math.floor(width * 0.5), theme, 'violet');
   const top = width >= 96 ? columns(currentCard, previousCard, width) : [...currentCard, '', ...previousCard];
   const signals = [
     `health ${model.overview.health}  tasks done ${model.status.tasks.counts.done} partial ${model.status.tasks.counts.partial} unknown ${model.status.tasks.counts.unknown}`,
@@ -156,50 +196,68 @@ function renderOverview(model: TuiReadModel, width: number): string[] {
     `active run ${model.activeRun.projection.activeRun ? `${model.activeRun.projection.activeRun.taskId}: ${model.activeRun.projection.activeRun.summary}` : 'none'}`,
     `debt open ${model.debt.aggregate.open}, high ${model.debt.aggregate.highOpen}  release ${model.releaseGate.mode}: ${model.releaseGate.ok ? 'ok' : 'blocked'}`
   ];
-  return [...top, '', ...card('Resume Signals', signals, width), ...nextRecommendedCard(model, width)];
+  return [...top, '', ...colorCard('Resume Signals', signals, width, theme, 'gold'), ...nextRecommendedCard(model, width, theme)];
 }
 
-function renderTasks(model: TuiReadModel, width: number): string[] {
-  const latest = model.tasks.tasks.slice(-20).reverse();
+function renderTasks(model: TuiReadModel, width: number, options: { theme: TuiThemeName; selectedTaskId: string | null; taskSearch: string }): string[] {
+  const theme = options.theme;
+  const query = options.taskSearch.trim().toLowerCase();
+  const visible = query
+    ? model.tasks.tasks.filter((task) => [task.id, task.title, task.status, task.capsule].some((value) => String(value ?? '').toLowerCase().includes(query)))
+    : model.tasks.tasks;
+  const latest = visible.slice(-20).reverse();
   if (!latest.length) {
-    return card('Tasks Empty', [`${badge('ROUTE')} no displayable data exposed yet`], width);
+    return colorCard('Tasks Empty', [`${colorBadge('ROUTE', 'muted', theme)} no tasks match ${query ? `"${options.taskSearch}"` : 'the current project'}`], width, theme, 'warn');
   }
   const rows = latest.map((task) => {
-    const marker = model.selectedTaskId === task.id ? '>' : ' ';
+    const marker = options.selectedTaskId === task.id ? '>' : ' ';
     const titleWidth = Math.max(10, width - 44);
-    return `${marker} ${badge(task.status)} ${pad(task.id, 8)} ${fit(task.title, titleWidth)} ${trimFit(task.capsule, 22)}`;
+    const markerText = marker === '>' ? tuiFg(theme, 'gold2', marker) : tuiFg(theme, 'dim', marker);
+    return `${markerText} ${colorBadge(task.status, statusThemeRole(task.status), theme)} ${tuiFg(theme, 'gold2', pad(task.id, 8))} ${fit(task.title, titleWidth)} ${tuiFg(theme, 'muted', trimFit(task.capsule, 22))}`;
   });
   return [
-    fit('Status      ID       Title                                                    Capsule', width),
+    colorTextLine('Status      ID       Title                                                    Capsule', width, theme, 'muted'),
     ...rows,
     '',
-    fit(`/ search id/title/status · Showing 1-${rows.length} of ${model.tasks.count}. Enter/click opens Detail.`, width)
+    fit(`${query ? `search "${options.taskSearch}" · ` : '/ search id/title/status · '}Showing 1-${rows.length} of ${visible.length}/${model.tasks.count}. Enter opens Detail.`, width)
   ];
 }
 
-function renderDetail(model: TuiReadModel, document: (typeof TUI_DOCUMENT_TABS)[number], width: number, availableRows: number): string[] {
+function renderDetail(
+  model: TuiReadModel,
+  document: (typeof TUI_DOCUMENT_TABS)[number],
+  width: number,
+  availableRows: number,
+  options: { theme: TuiThemeName; documentScroll: number }
+): string[] {
+  const theme = options.theme;
   if (!model.selectedTask) {
-    return card('Detail Empty', [`${badge('ROUTE')} no selected task detail is available`], width);
+    return colorCard('Detail Empty', [`${colorBadge('ROUTE', 'muted', theme)} no selected task detail is available`], width, theme, 'warn');
   }
   const task = model.selectedTask.summary;
   const docText = model.selectedTask.detail.files?.[document.file] ?? '';
   const docAvailable = Boolean(docText);
-  const tabs = TUI_DOCUMENT_TABS.map((tab) => (tab.file === document.file ? `[${tab.key.toUpperCase()} ${tab.shortLabel}]` : ` ${tab.key} ${tab.shortLabel} `)).join(' ');
+  const tabs = TUI_DOCUMENT_TABS.map((tab) =>
+    tab.file === document.file ? tuiFg(theme, 'gold2', `[${tab.key.toUpperCase()} ${tab.shortLabel}]`) : tuiFg(theme, 'muted', ` ${tab.key} ${tab.shortLabel} `)
+  ).join(' ');
   const meta = [
-    `${badge('LIVE')} ${task.id} ${task.title}`,
-    `status ${task.status}  capsule ${trimFit(task.capsule || '-', Math.max(12, width - 26))}`,
-    `detail ${model.selectedTask.detail.schemaVersion}  document ${badge(docAvailable ? 'LIVE' : 'PLANNED')} ${document.file}`,
-    fit(tabs, Math.max(12, width - 4))
+    `${colorBadge('LIVE', 'pass', theme)} ${tuiFg(theme, 'gold2', task.id)} ${task.title}`,
+    `${tuiFg(theme, 'muted', 'status')} ${tuiFg(theme, statusThemeRole(task.status), task.status)}  ${tuiFg(theme, 'muted', 'capsule')} ${trimFit(task.capsule || '-', Math.max(12, width - 34))}`,
+    `${tuiFg(theme, 'muted', 'detail')} ${model.selectedTask.detail.schemaVersion}  ${tuiFg(theme, 'muted', 'document')} ${colorBadge(docAvailable ? 'LIVE' : 'PLANNED', docAvailable ? 'pass' : 'warn', theme)} ${document.file}`,
+    fitAnsi(tabs, Math.max(12, width - 4))
   ];
   const docRows = Math.max(1, Math.min(18, availableRows - 9));
-  const renderedDoc = docAvailable ? renderMarkdownDocument(docText, Math.max(12, width - 4), { maxRows: docRows }) : [`${document.file} unavailable.`];
-  const lines = renderedDoc.slice(0, docRows);
+  const renderedDoc = docAvailable ? renderMarkdownDocument(docText, Math.max(12, width - 4)) : [`${document.file} unavailable.`];
+  const maxScroll = Math.max(0, renderedDoc.length - docRows);
+  const scroll = Math.min(Math.max(0, options.documentScroll), maxScroll);
+  const lines = colorizeDetailDocument(renderedDoc.slice(scroll, scroll + docRows), theme);
   while (lines.length < docRows) lines.push('');
-  return [...card('Task Detail', meta, width), '', ...card(`Document Viewer ${document.file}`, lines, width)];
+  const title = maxScroll > 0 ? `Document Viewer ${document.file} ${scroll + 1}-${Math.min(renderedDoc.length, scroll + docRows)}/${renderedDoc.length}` : `Document Viewer ${document.file}`;
+  return [...colorCard('Task Detail', meta, width, theme, 'gold'), '', ...colorCard(title, lines, width, theme, docAvailable ? 'teal' : 'warn')];
 }
 
-function renderHelp(width: number): string[] {
-  return card(
+function renderHelp(width: number, theme: TuiThemeName): string[] {
+  return colorCard(
     'Controls',
     [
       '1-4 switch panels',
@@ -214,19 +272,33 @@ function renderHelp(width: number): string[] {
       '',
       'Boundary: read-only snapshot; no writes, shell execution, provider calls, or MCP calls.'
     ],
-    width
+    width,
+    theme,
+    'gold'
   );
 }
 
-function renderStatusBar(width: number): string {
-  const left = '[1-4] panels · [↑↓] select · [↵] detail · [/] search · [r] refresh · [?] help · [q] quit';
-  return fit(left, width);
+function renderStatusBar(width: number, options: { theme: TuiThemeName; logLine?: string }): string {
+  const key = (text: string) => (options.theme === 'none' ? `[${text}]` : tuiSwatch(options.theme, text === '↵' ? 'teal' : 'gold', 'black', ` ${text} `));
+  const left = [
+    `${key('1-4')} panels`,
+    `${key('↑↓')} select`,
+    `${key('↵')} detail`,
+    `${key('/')} search`,
+    `${key('r')} refresh`,
+    `${key('?')} help`,
+    `${key('q')} quit`
+  ].join(options.theme === 'none' ? ' · ' : tuiFg(options.theme, 'dim', ' · '));
+  const log = options.logLine ? `${tuiFg(options.theme, 'dim', 'log')} ${tuiFg(options.theme, 'muted', trimFitAnsi(options.logLine, Math.max(8, width - visibleWidth(left) - 8)))}` : '';
+  if (!log) return fitAnsi(left, width);
+  const gap = ' '.repeat(Math.max(1, width - visibleWidth(left) - visibleWidth(log) - 1));
+  return fitAnsi(`${left}${gap}${log}`, width);
 }
 
-function workSummaryLines(model: TuiReadModel, task: TuiReadModel['overview']['currentWork'], label: string): string[] {
+function workSummaryLines(model: TuiReadModel, task: TuiReadModel['overview']['currentWork'], label: string, theme: TuiThemeName): string[] {
   if (!task) {
     return [
-      `${badge('ROUTE')} - No task exposed`,
+      `${colorBadge('ROUTE', 'muted', theme)} - No task exposed`,
       'status - · capsule -',
       'Goal No summary exposed.',
       'Next Select a task or refresh read models.',
@@ -245,21 +317,21 @@ function workSummaryLines(model: TuiReadModel, task: TuiReadModel['overview']['c
         ? 'Done status exposed by task list.'
         : 'No evidence exposed.';
   return [
-    `${badge(label)} ${task.id} ${trimFit(task.title || '-', 42)}`,
-    `${task.status || '-'} · ${trimFit(task.capsule || '-', 46)}`,
-    `Goal ${firstLine(markdownPreview(taskText, 2), task.title)}`,
-    `Next ${next}`,
-    `Proof ${proof}`
+    `${colorBadge(label, label === 'LIVE' ? 'pass' : 'violet', theme)} ${tuiFg(theme, 'gold2', task.id)} ${trimFit(task.title || '-', 42)}`,
+    `${tuiFg(theme, statusThemeRole(task.status), task.status || '-')} ${tuiFg(theme, 'muted', '·')} ${trimFit(task.capsule || '-', 46)}`,
+    `${tuiFg(theme, 'teal2', 'Goal')} ${firstLine(markdownPreview(taskText, 2), task.title)}`,
+    `${tuiFg(theme, 'gold2', 'Next')} ${next}`,
+    `${tuiFg(theme, 'pass', 'Proof')} ${proof}`
   ];
 }
 
-function nextRecommendedCard(model: TuiReadModel, width: number): string[] {
+function nextRecommendedCard(model: TuiReadModel, width: number, theme: TuiThemeName): string[] {
   const next = [
     model.status.tasks.nextRecommended,
     ...(model.status.handoff.nextRecommendedStep ?? [])
   ].filter((line): line is string => Boolean(line));
   if (!next.length) return [];
-  return ['', ...card('Next Recommended', dedupe(next).slice(0, 4), width)];
+  return ['', ...colorCard('Next Recommended', dedupe(next).slice(0, 4), width, theme, 'gold')];
 }
 
 function dedupe(items: string[]): string[] {
@@ -268,6 +340,89 @@ function dedupe(items: string[]): string[] {
     if (seen.has(item)) return false;
     seen.add(item);
     return true;
+  });
+}
+
+function renderLoadingPanel(panel: string, width: number, options: { theme: TuiThemeName; loadingTick: number }): string[] {
+  return colorCard(
+    `${panel} Reading`,
+    [
+      ...loaderLines(width, options.theme, options.loadingTick),
+      '',
+      `${colorBadge('READ', 'pass', options.theme)} project state`,
+      `${tuiFg(options.theme, 'muted', 'signal')} selected task and capsule documents requested`
+    ],
+    width,
+    options.theme,
+    'teal'
+  );
+}
+
+function loaderLines(width: number, theme: TuiThemeName, tick: number): string[] {
+  const innerWidth = 24;
+  const dotCount = 11;
+  const position = Math.abs(tick) % dotCount;
+  const rail = Array.from({ length: dotCount }, (_, index) => tuiFg(theme, index === position ? 'teal2' : 'muted', index === position ? '●' : '·')).join(tuiFg(theme, 'muted', ' '));
+  const indent = ' '.repeat(Math.max(0, Math.floor((width - (innerWidth + 2)) / 2)));
+  const boxed = (content: string): string => `${indent}${tuiFg(theme, 'dim', '│')}${padAnsi(content, innerWidth)}${tuiFg(theme, 'dim', '│')}`;
+  return [
+    `${indent}${tuiFg(theme, 'dim', '╭')}${tuiFg(theme, 'dim', '─'.repeat(innerWidth))}${tuiFg(theme, 'dim', '╮')}`,
+    boxed(` ${rail}`),
+    boxed(tuiFg(theme, 'gold', ' reading task capsule')),
+    `${indent}${tuiFg(theme, 'dim', '╰')}${tuiFg(theme, 'dim', '─'.repeat(innerWidth))}${tuiFg(theme, 'dim', '╯')}`
+  ];
+}
+
+function colorCard(title: string, lines: string[], width: number, theme: TuiThemeName, accent: 'gold' | 'teal' | 'violet' | 'warn' = 'gold'): string[] {
+  if (theme === 'none') return card(title, lines, width);
+  const inner = Math.max(8, width - 4);
+  const head = ` ${title} `;
+  return [
+    `${tuiFg(theme, accent, '╭─')}${tuiFg(theme, accent, fit(head, Math.min(visibleWidth(head), inner)))}${tuiFg(theme, accent, '─'.repeat(Math.max(0, inner - visibleWidth(head))))}${tuiFg(theme, accent, '─╮')}`,
+    ...lines.map((line) => `${tuiFg(theme, 'border', '│')} ${padAnsi(line, inner)} ${tuiFg(theme, 'border', '│')}`),
+    `${tuiFg(theme, 'border', '╰')}${tuiFg(theme, 'border', '─'.repeat(inner + 2))}${tuiFg(theme, 'border', '╯')}`
+  ];
+}
+
+function colorBadge(text: string, role: 'pass' | 'warn' | 'fail' | 'teal' | 'gold' | 'muted' | 'violet', theme: TuiThemeName): string {
+  if (theme === 'none') return badge(text);
+  return tuiSwatch(theme, role, role === 'fail' ? 'white' : 'black', ` ${String(text).toUpperCase()} `);
+}
+
+function colorDivider(width: number, theme: TuiThemeName): string {
+  return tuiFg(theme, 'border', divider(width));
+}
+
+function colorTextLine(text: string, width: number, theme: TuiThemeName, role: 'muted' | 'text' | 'text2'): string {
+  return tuiFg(theme, role, fit(text, width));
+}
+
+function statusThemeRole(value: string | boolean | number | null | undefined): 'pass' | 'warn' | 'fail' | 'teal' {
+  const normalized = String(value ?? '').toLowerCase();
+  if (['ok', 'done', 'passed', 'true', 'read', 'preview'].includes(normalized)) return 'pass';
+  if (['warning', 'partial', 'draft', 'medium'].includes(normalized)) return 'warn';
+  if (['error', 'failed', 'high', 'disabled', 'blocked'].includes(normalized)) return 'fail';
+  return 'teal';
+}
+
+function colorizeDetailDocument(lines: string[], theme: TuiThemeName): string[] {
+  if (theme === 'none') return lines;
+  return lines.map((line) => {
+    const plain = line.trimEnd();
+    if (!plain) return line;
+    if (plain.startsWith('§ ')) return line.replace('§ ', tuiFg(theme, 'teal2', '§ '));
+    if (/^[A-Z0-9][A-Z0-9 _/-]{2,}$/.test(plain) && visibleWidth(plain) <= 48) return tuiFg(theme, 'teal2', line);
+    if (/^[-─]{8,}$/.test(plain)) return tuiFg(theme, 'border', line);
+    if (/^\[(DONE|TODO|LIVE|PLANNED|READY|FILE)\]/i.test(plain)) {
+      return line.replace(/^\[([^\]]+)\]/, (_match, label: string) => colorBadge(label, label.toLowerCase() === 'done' ? 'pass' : 'warn', theme));
+    }
+    if (/^\[[ xX]\]\s+/.test(plain)) {
+      return line.replace(/^\[([ xX])\]\s+/, (_match, mark: string) => `${colorBadge(mark.trim() ? 'DONE' : 'TODO', mark.trim() ? 'pass' : 'warn', theme)} `);
+    }
+    if (plain.startsWith('•')) return line.replace('•', tuiFg(theme, 'gold', '•'));
+    if (/^\d{2}\s+/.test(plain)) return line.replace(/^(\d{2})/, (_match, number: string) => tuiFg(theme, 'gold', number));
+    if (/^\d+\.\s+/.test(plain)) return line.replace(/^(\d+)\./, (_match, number: string) => tuiFg(theme, 'gold', number.padStart(2, '0')));
+    return tuiFg(theme, 'text2', line);
   });
 }
 

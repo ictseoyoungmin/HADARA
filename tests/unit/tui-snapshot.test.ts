@@ -105,6 +105,84 @@ describe('TUI snapshot renderer', () => {
     expect(snapshot.text).toContain('[ ] Port mockup renderer');
   });
 
+  it('applies document scroll and mockup-short detail tab labels', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Scrollable viewer task');
+    fs.writeFileSync(
+      path.join(task.dir, 'TASK.md'),
+      ['# Scrollable', '', ...Array.from({ length: 28 }, (_, index) => `- Viewer line ${String(index + 1).padStart(2, '0')}`)].join('\n'),
+      'utf8'
+    );
+    writeProjectDocs(root, task.id);
+    const model = createTuiReadModel(root, { selectedTaskId: task.id });
+
+    const top = renderTuiSnapshot(model, { panel: 'detail', width: 104, height: 28 });
+    const scrolled = renderTuiSnapshot(model, { panel: 'detail', width: 104, height: 28, documentScroll: 10 });
+
+    expect(top.text).toContain('Viewer line 01');
+    expect(top.text).not.toContain('Viewer line 20');
+    expect(scrolled.text).not.toContain('Viewer line 01');
+    expect(scrolled.text).toContain('Viewer line 19');
+    expect(scrolled.text).toContain('Document Viewer TASK.md 11-');
+    expect(scrolled.text).toContain(' d DEC ');
+    expect(scrolled.text).toContain(' a ACC ');
+    expect(scrolled.text).toContain(' e EVD ');
+    expect(scrolled.text).toContain(' h HAND ');
+    expect(scrolled.lines.every((line) => visibleWidth(line) === 104)).toBe(true);
+  });
+
+  it('renders mockup-style color and loading frames when explicitly requested', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Loading color task');
+    writeProjectDocs(root, task.id);
+    const model = createTuiReadModel(root, { selectedTaskId: task.id });
+
+    const color = renderTuiSnapshot(model, { panel: 'overview', width: 104, height: 26, theme: 'hadara', logLine: 'ready: visual parity' });
+    expect(color.terminal).toMatchObject({ color: true, theme: 'hadara' });
+    expect(color.text).toMatch(/\x1b\[/);
+    expect(color.text).toContain('\x1b[38;2;52;67;74m');
+    expect(color.text).toContain('\x1b[48;2;130;190;134m\x1b[38;2;8;16;20m OK \x1b[0m');
+    expect(color.text).toContain('log');
+    expect(color.lines.every((line) => visibleWidth(line) === 104)).toBe(true);
+
+    const loading = renderTuiSnapshot(model, { panel: 'tasks', width: 92, height: 26, loading: true, loadingTick: 3 });
+    expect(loading.text).toContain('Tasks Reading');
+    expect(loading.text).toContain('reading task capsule');
+    expect(loading.text).not.toMatch(/\x1b\[/);
+    expect(loading.lines.every((line) => visibleWidth(line) === 92)).toBe(true);
+  });
+
+  it('renders high contrast color mode explicitly', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Contrast color task');
+    writeProjectDocs(root, task.id);
+    const model = createTuiReadModel(root, { selectedTaskId: task.id });
+
+    const snapshot = renderTuiSnapshot(model, { panel: 'detail', width: 104, height: 26, theme: 'contrast' });
+
+    expect(snapshot.terminal).toMatchObject({ color: true, theme: 'contrast' });
+    expect(snapshot.text).toMatch(/\x1b\[/);
+    expect(snapshot.text).toContain('\x1b[38;2;119;119;119m');
+    expect(snapshot.text).toContain('Document Viewer TASK.md');
+    expect(snapshot.lines.every((line) => visibleWidth(line) === 104)).toBe(true);
+  });
+
+  it('colors detail viewer document content instead of leaving a legacy plain markdown box', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Viewer color task');
+    fs.writeFileSync(path.join(task.dir, 'TASK.md'), ['# Goal', '', '- [ ] Keep viewer parity', '- Readable bullet', '', '1. Numbered action'].join('\n'), 'utf8');
+    writeProjectDocs(root, task.id);
+    const model = createTuiReadModel(root, { selectedTaskId: task.id });
+
+    const snapshot = renderTuiSnapshot(model, { panel: 'detail', width: 104, height: 28, theme: 'hadara' });
+
+    expect(snapshot.text).toContain('Document Viewer TASK.md');
+    expect(snapshot.text).toContain('\x1b[38;2;130;199;206m§ \x1b[0mGoal');
+    expect(snapshot.text).toContain('\x1b[48;2;208;164;90m\x1b[38;2;8;16;20m TODO \x1b[0m');
+    expect(snapshot.text).toContain('\x1b[38;2;198;161;95m•\x1b[0m');
+    expect(snapshot.lines.every((line) => visibleWidth(line) === 104)).toBe(true);
+  });
+
   it('renders Korean wide characters within fixed visible terminal width', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, '한글 스냅샷 렌더링');

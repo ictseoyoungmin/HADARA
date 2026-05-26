@@ -35,14 +35,33 @@ export function fit(input: string, width: number): string {
   return `${out}…${repeat(' ', Math.max(0, target - used - 1))}`;
 }
 
+export function fitAnsi(input: string, width: number): string {
+  const target = Math.max(0, width);
+  const text = String(input);
+  const currentWidth = visibleWidth(text);
+  if (currentWidth <= target) return `${text}${repeat(' ', target - currentWidth)}`;
+  return fit(stripAnsi(text), target);
+}
+
 export function trimFit(input: string, width: number): string {
   return fit(input, width).trimEnd();
+}
+
+export function trimFitAnsi(input: string, width: number): string {
+  return fitAnsi(input, width).trimEnd();
 }
 
 export function pad(input: string, width: number): string {
   const text = String(input);
   const length = visibleWidth(text);
   if (length > width) return fit(text, width);
+  return `${text}${repeat(' ', width - length)}`;
+}
+
+export function padAnsi(input: string, width: number): string {
+  const text = String(input);
+  const length = visibleWidth(text);
+  if (length > width) return fitAnsi(text, width);
   return `${text}${repeat(' ', width - length)}`;
 }
 

@@ -69,13 +69,16 @@
 - T-0107 is complete: `hadara tui` now exposes the read-only local terminal work console through a focused CLI handler, while `hadara tui --snapshot` provides a non-interactive smoke render; capability discovery marks the command read-only, non-TTY `--json` returns a TUI JSON error envelope, process listeners are cleaned up on normal TUI stop, refresh completion/failure signals clear pending flags, and TUI writes/shell/provider/MCP/server/release behavior remain deferred.
 - T-0108 is complete: the full unabridged `docs/specs/HADARA_TUI_Mockup_Parity_HADARA_Native_Runtime_Design.md` body is preserved in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`, and `docs/V1_0_CAPSULE_BACKLOG.md`, `docs/SCHEMAS.md`, and `docs/TEST_STRATEGY.md` now carry the actionable TUI follow-up, cache/schema posture, and validation requirements.
 - T-0109 is complete: `src/tui/cache.ts` now provides an internal `.hadara/local/tui/read-model-cache.json` cache with `hadara.tui.cache.v1` records, source-signal invalidation for Task Board/tasks/handoff/active-run/selected task/evidence, task index mtime/size/hash invalidation with hash reuse, full/fast/detail/none refresh modes, private-evidence cache disable, selected-detail refresh without capsule directory scans, context-export exclusion tests, opt-in `hadara tui --cache`, and 1000-capsule benchmark evidence.
+- T-0110 is complete: production TUI now has HADARA and high-contrast ANSI themes, deterministic no-color snapshot preservation, status/log line rendering, loading frames before full/detail refreshes, richer overview/task/detail rendering, mockup-style key handling, Korean keyboard quit support, and state-driven selected/search task row rendering without writes, shell execution, provider calls, MCP calls, dashboard serving, or release behavior.
+- T-0111 is complete: TUI frame color and viewer parity were refined after operator feedback; themes now use mockup true-color RGB values, badge/keycap foreground/background composition is fixed, detail viewer document content is styled in color mode, keyboard document scroll state drives rendered document slices, and compact document tab labels match the mockup while no-color output remains deterministic.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0107 TUI Public CLI Entry Point: added public read-only `hadara tui` plus `hadara tui --snapshot`, with JSON non-TTY refusal, listener cleanup on normal stop, refresh completion/failure flag cleanup, and capability discovery marked read-only.
 - T-0108 TUI Native Runtime Docs Assimilation: reflected the full TUI mockup parity/native runtime design into the main v1.0 planning docs with a marker-delimited unabridged import and concrete follow-up/schema/test planning.
 - T-0109 TUI Local Cache and Incremental Refresh: added internal local TUI cache records, source-signal invalidation, refresh modes, opt-in interactive CLI cache use, private-evidence cache disable, boundary/context-export tests, and 1000-capsule benchmark evidence.
+- T-0110 TUI Visual Parity and Loading States: added HADARA/contrast themes, no-color preservation, status/log line, loading frames, visual task/detail polish, mockup-style key handling, and visible state-driven selection/search rendering.
+- T-0111 TUI Frame Color and Viewer Parity Fix: switched TUI colors to mockup true-color RGB, fixed badge/keycap color composition, styled detail viewer document content, wired keyboard document scrolling into rendering, and matched compact mockup tab labels.
 
 ## Current Known Problems
 
@@ -89,18 +92,18 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. The next recommended roadmap slice is the release and packaging track, unless a focused TUI follow-up such as visual parity is chosen before packaging.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. The next recommended focused TUI follow-up remains mouse/resize ergonomics; otherwise return to the release and packaging track.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, TUI writes, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest focused TUI cache check: Docker `npx vitest run tests/unit/tui-cache.test.ts tests/unit/tui-cli.test.ts tests/unit/tui-terminal.test.ts && npm run build` passed with 3 test files, 25 tests, and TypeScript build after T-0109 source-signal follow-up.
+- Latest focused TUI frame/viewer parity check: Docker temp-copy `npx vitest run tests/unit/tui-snapshot.test.ts tests/unit/tui-state.test.ts tests/unit/tui-terminal.test.ts tests/unit/tui-cli.test.ts` passed with 4 test files and 33 tests after document scroll and compact tab-label follow-up.
 - Latest TUI 1000-capsule benchmark: Docker temp project returned `ok: true`, `count: 1000`, `coldFullMs: 1157`, `fastHitMs: 17`, cache path `.hadara/local/tui/read-model-cache.json`.
-- Latest full check: Docker `npm run check` passed with 47 test files and 300 tests after T-0109 source-signal follow-up.
+- Latest full check: Docker temp-copy `npm run check` passed with TypeScript build, 47 test files, and 308 tests after T-0111 document scroll and compact tab-label follow-up.
 - Latest built CLI smoke: Docker `timeout 60 node dist/cli/main.js tui --snapshot --compact --width 86 --height 24 --project /workspace` exited 0 and rendered the read-only HADARA Work Console for T-0107.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0109 --level done --json --project /workspace` returned `ok: true` and checked `docs/TASK_BOARD.md`.
+- Latest done-level validation: Docker temp-copy `node dist/cli/main.js harness validate --task T-0111 --level done --json --project "$tmp"` returned `ok: true` with no issues after final document scroll/tab updates.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
 
 ## Historical Index

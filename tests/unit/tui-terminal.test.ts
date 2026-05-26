@@ -21,6 +21,14 @@ afterEach(() => {
 describe('TUI terminal shell', () => {
   it('decodes terminal input into TUI state keys', () => {
     expect(decodeTuiInput(Buffer.from('\x1b[A\x1b[B\x1b[5~\x1b[6~'))).toEqual(['up', 'down', 'pageup', 'pagedown']);
+    expect(decodeTuiInput(Buffer.from('\t\x1b[Z\x1b[H\x1b[F\x1b[1~\x1b[4~'))).toEqual([
+      'tab',
+      'shift-tab',
+      'home',
+      'end',
+      'home',
+      'end'
+    ]);
     expect(decodeTuiInput('\r\n\x7f\x03')).toEqual(['enter', 'enter', 'backspace', 'ctrl-c']);
     expect(decodeTuiInput('/ab\x1b')).toEqual(['/', 'a', 'b', 'escape']);
   });
@@ -50,6 +58,8 @@ describe('TUI terminal shell', () => {
     session.handleKey('r');
     expect(session.getState().refreshRequested).toBe(false);
     expect(session.getModel().selectedTaskId).toBe(task.id);
+    expect(output.text()).toContain('Tasks Reading');
+    expect(output.text()).toContain('reading task capsule');
     expect(output.text()).toContain('Terminal refresh task');
 
     session.stop();
@@ -60,10 +70,11 @@ describe('TUI terminal shell', () => {
     const first = createTaskCapsule(root, 'First terminal task');
     const second = createTaskCapsule(root, 'Second terminal task');
     writeProjectDocs(root, second.id);
+    const output = new MemoryOutput(92, 26);
     const session = createTuiTerminalSession({
       projectRoot: root,
       input: new MemoryInput(),
-      output: new MemoryOutput(92, 26),
+      output,
       widthPolicy: 'compact',
       terminalControl: false,
       enableRawMode: false
@@ -72,6 +83,8 @@ describe('TUI terminal shell', () => {
     session.start();
     session.handleKey('2');
     session.handleKey('down');
+    expect(session.getState().selectedTaskId).toBe(first.id);
+    expect(output.text()).toContain(`> [DRAFT] ${first.id}`);
     session.handleKey('enter');
 
     expect(session.getState()).toMatchObject({
@@ -104,6 +117,24 @@ describe('TUI terminal shell', () => {
     expect(input.rawModes).toEqual([true, false]);
     expect(input.pauseCount).toBe(1);
     expect(output.text()).toContain('\x1b[?25h');
+  });
+
+  it('accepts Korean keyboard quit and mockup tab panel navigation', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Terminal Korean quit task');
+    writeProjectDocs(root, task.id);
+    const input = new MemoryInput(true);
+    const output = new MemoryOutput(80, 24);
+    const session = createTuiTerminalSession({ projectRoot: root, input, output, terminalControl: false });
+
+    session.start();
+    input.emit('data', Buffer.from('\t\x1b[Z'));
+    expect(session.getState().activePanel).toBe('overview');
+
+    input.emit('data', Buffer.from('ㅂ'));
+
+    expect(session.isRunning()).toBe(false);
+    expect(session.getState().quitRequested).toBe(true);
   });
 
   it('does not write project files while navigating, refreshing, or quitting', () => {

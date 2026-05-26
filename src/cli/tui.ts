@@ -1,7 +1,8 @@
-import { getFlag, getIntegerOption } from './args';
+import { getFlag, getIntegerOption, getStringOption } from './args';
 import { createTuiReadModel } from '../tui/read-model';
 import { renderTuiSnapshot } from '../tui/snapshot';
 import { createTuiTerminalSession, TuiTerminalInput, TuiTerminalOutput } from '../tui/terminal';
+import { normalizeTuiThemeName } from '../tui/theme';
 
 export interface TuiCommandInput {
   args: string[];
@@ -20,11 +21,12 @@ export function handleTuiCommand(input: TuiCommandInput): boolean {
   const width = getIntegerOption(input.args, '--width', { min: 20, max: 300 });
   const height = getIntegerOption(input.args, '--height', { min: 10, max: 120 });
   const cacheEnabled = getFlag(input.args, '--cache') && !getFlag(input.args, '--no-cache');
+  const theme = getFlag(input.args, '--no-color') ? 'none' : normalizeTuiThemeName(getStringOption(input.args, '--theme'), 'hadara');
   const output = input.output ?? (process.stdout as TuiTerminalOutput);
   const terminalInput = input.input ?? (process.stdin as TuiTerminalInput);
 
   if (getFlag(input.args, '--snapshot')) {
-    const snapshot = renderTuiSnapshot(createTuiReadModel(input.projectRoot), { width, height, widthPolicy });
+    const snapshot = renderTuiSnapshot(createTuiReadModel(input.projectRoot), { width, height, widthPolicy, theme: getFlag(input.args, '--color') ? theme : 'none' });
     if (input.jsonOutput) {
       output.write(`${JSON.stringify({ schemaVersion: 'hadara.tui.snapshot.cli.v1', command: 'tui.snapshot', ok: true, text: snapshot.text }, null, 2)}\n`);
     } else {
@@ -51,6 +53,7 @@ export function handleTuiCommand(input: TuiCommandInput): boolean {
     width,
     height,
     widthPolicy,
+    theme,
     cache: { enabled: cacheEnabled },
     onStop: () => cleanup()
   });

@@ -66,6 +66,37 @@ describe('TUI CLI entry point', () => {
     expect(parsed.text).toContain('HADARA Work Console');
   });
 
+  it('can render a color snapshot explicitly while keeping plain snapshots deterministic by default', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Public CLI color snapshot task');
+    writeProjectDocs(root);
+    const plainOutput = new MemoryOutput(86, 24);
+    const colorOutput = new MemoryOutput(86, 24);
+
+    expect(
+      handleTuiCommand({
+        args: ['tui', '--snapshot', '--compact', '--width', '86', '--height', '24'],
+        projectRoot: root,
+        jsonOutput: false,
+        input: new MemoryInput(false),
+        output: plainOutput
+      })
+    ).toBe(true);
+    expect(plainOutput.text()).not.toContain('\x1b[');
+
+    expect(
+      handleTuiCommand({
+        args: ['tui', '--snapshot', '--compact', '--width', '86', '--height', '24', '--color', '--theme', 'contrast'],
+        projectRoot: root,
+        jsonOutput: false,
+        input: new MemoryInput(false),
+        output: colorOutput
+      })
+    ).toBe(true);
+    expect(colorOutput.text()).toContain('\x1b[');
+    expect(colorOutput.text()).toContain('HADARA');
+  });
+
   it('starts the injected terminal session only for interactive input', () => {
     const root = tempProject();
     createTaskCapsule(root, 'Public CLI interactive task');
@@ -81,6 +112,20 @@ describe('TUI CLI entry point', () => {
 
     expect(input.rawModes).toEqual([true, false]);
     expect(output.text()).toContain('\x1b[?25h');
+  });
+
+  it('passes the mockup theme into interactive sessions by default', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Public CLI interactive themed task');
+    writeProjectDocs(root);
+    const input = new MemoryInput(true);
+    const output = new MemoryOutput(84, 24);
+
+    expect(handleTuiCommand({ args: ['tui'], projectRoot: root, jsonOutput: false, input, output })).toBe(true);
+
+    expect(output.text()).toContain('\x1b[38;2;');
+
+    input.emit('data', Buffer.from('q'));
   });
 
   it('enables local cache writes only when interactive TUI opts in', () => {
