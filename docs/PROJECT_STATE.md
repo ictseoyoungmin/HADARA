@@ -120,12 +120,13 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - CLI write-boundary preflight exists as `hadara write preflight <command...> --json` with schema `hadara.write.preflight.v1`; it reports expected project/private-portable write paths for task create, evidence collect, handoff update, planned run-state writes, and planned debt writes without executing the target command.
 - TUI read-model aggregation exists as an internal TypeScript service in `src/tui/read-model.ts`; it composes existing shared read models for future terminal rendering without adding a renderer, CLI entry point, cache, writes, shell execution, provider calls, or MCP calls.
 - TUI snapshot rendering exists as an internal TypeScript service in `src/tui/snapshot.ts`; it renders Overview, Tasks, Detail, and Help panels as deterministic no-color fixed-size text snapshots without interactive input, cache writes, shell execution, provider calls, MCP calls, or Task Capsule mutation.
+- TUI mockup-parity module splitting has started: `src/tui/constants.ts`, `src/tui/layout.ts`, and `src/tui/markdown.ts` carry panel/document metadata, fixed-width terminal layout primitives, and Markdown document rendering from `.mockup/tui/app.js`, while `src/tui/snapshot.ts` now renders a mockup-style read-only HADARA Work Console frame.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.
 - Real provider adapters are not implemented; only schema-backed preparation contracts and safe report helpers exist.
 - Dashboard is locally servable through a static CLI helper with read-only local API routes, but the dashboard HTML still consumes the static sample fixture and is not live-rendering repository data.
-- Production TUI interactive shell and CLI entry point are not implemented; only mockups, design planning, the internal read-model aggregator, and the internal snapshot renderer exist. Future TUI work must remain read-only until an explicit Task Capsule expands scope.
+- Production TUI interactive shell and CLI entry point are not implemented; only mockups, design planning, the internal read-model aggregator, mockup-derived rendering modules, and the internal snapshot renderer exist. Future TUI work must remain read-only until an explicit Task Capsule expands scope.
 - Broad MCP write tools are not implemented beyond the explicitly enabled, approval-recorded, audited evidence attach tool.
 - Operational debt records remain static and non-persisted; debt mutation and executable release automation remain deferred.
 

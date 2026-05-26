@@ -103,3 +103,4 @@
 | T-0100 | TUI Read-Model Aggregator | Done | tasks/T-0100-tui-read-model-aggregator | Adds internal TUI aggregate read model over existing shared services without renderer, CLI entry point, cache, writes, shell, provider, or MCP behavior. |
 | T-0101 | Task Board Append Done-Level Guard | Done | tasks/T-0101-task-board-append-done-level-guard | Adds done-level harness validation for duplicate/stale Task Board rows when completing a Task Capsule. |
 | T-0102 | TUI Snapshot Renderer | Done | tasks/T-0102-tui-snapshot-renderer | Adds deterministic no-color fixed-size snapshots for Overview, Tasks, Detail, and Help over the internal TUI aggregate. |
+| T-0103 | TUI Mockup Parity Module Port | Done | tasks/T-0103-tui-mockup-parity-module-port | Ports mockup-derived constants, layout helpers, Markdown document rendering, and mockup-style read-only snapshot frame into `src/tui`. |

@@ -27,30 +27,31 @@ describe('TUI snapshot renderer', () => {
     const model = createTuiReadModel(root, { selectedTaskId: second.id });
 
     for (const panel of ['overview', 'tasks', 'detail', 'help'] satisfies TuiSnapshotPanel[]) {
-      const snapshot = renderTuiSnapshot(model, { panel, width: 72, height: 18 });
+      const snapshot = renderTuiSnapshot(model, { panel, width: 92, height: 26 });
 
       expect(snapshot).toMatchObject({
         schemaVersion: 'hadara.tui.snapshot.internal.v1',
         command: 'tui.snapshot',
         panel,
         terminal: {
-          width: 72,
-          height: 18,
+          width: 92,
+          height: 26,
           color: false
         }
       });
-      expect(snapshot.lines).toHaveLength(18);
-      expect(snapshot.lines.every((line) => line.length === 72)).toBe(true);
+      expect(snapshot.lines).toHaveLength(26);
+      expect(snapshot.lines.every((line) => line.length === 92)).toBe(true);
       expect(snapshot.text).not.toMatch(/\x1b\[/);
+      expect(snapshot.text).toContain('HADARA Work Console');
     }
 
-    expect(renderTuiSnapshot(model, { panel: 'overview', width: 72, height: 18 }).text).toContain(`${second.id} Snapshot second`);
-    expect(renderTuiSnapshot(model, { panel: 'tasks', width: 72, height: 18 }).text).toContain(`${first.id}`);
-    expect(renderTuiSnapshot(model, { panel: 'detail', width: 72, height: 18 }).text).toContain('TASK.md');
-    expect(renderTuiSnapshot(model, { panel: 'help', width: 72, height: 18 }).text).toContain('read-only snapshot');
+    expect(renderTuiSnapshot(model, { panel: 'overview', width: 92, height: 26 }).text).toContain(`${second.id} Snapshot second`);
+    expect(renderTuiSnapshot(model, { panel: 'tasks', width: 92, height: 26 }).text).toContain(`${first.id}`);
+    expect(renderTuiSnapshot(model, { panel: 'detail', width: 92, height: 26 }).text).toContain('Document Viewer TASK.md');
+    expect(renderTuiSnapshot(model, { panel: 'help', width: 92, height: 26 }).text).toContain('Boundary: read-only snapshot');
   });
 
-  it('clips and pads narrow snapshots without mutating project files', () => {
+  it('clips, pads, and preserves the mockup minimum frame without mutating project files', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Long snapshot task name that should be clipped in narrow terminals');
     writeProjectDocs(root, task.id);
@@ -59,10 +60,25 @@ describe('TUI snapshot renderer', () => {
 
     const snapshot = renderTuiSnapshot(model, { panel: 'detail', width: 44, height: 12 });
 
-    expect(snapshot.lines).toHaveLength(12);
-    expect(snapshot.lines.every((line) => line.length === 44)).toBe(true);
+    expect(snapshot.terminal).toMatchObject({ width: 78, height: 24 });
+    expect(snapshot.lines).toHaveLength(24);
+    expect(snapshot.lines.every((line) => line.length === 78)).toBe(true);
     expect(snapshot.text).toContain('…');
     expect(listProjectFiles(root)).toEqual(before);
+  });
+
+  it('renders alternate Task Capsule documents through mockup-style detail tabs', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Document tab task');
+    fs.writeFileSync(path.join(task.dir, 'PLAN.md'), '# Plan\n\n- [ ] Port mockup renderer\n', 'utf8');
+    writeProjectDocs(root, task.id);
+    const model = createTuiReadModel(root, { selectedTaskId: task.id });
+
+    const snapshot = renderTuiSnapshot(model, { panel: 'detail', document: 'PLAN.md', width: 92, height: 26 });
+
+    expect(snapshot.text).toContain('Document Viewer PLAN.md');
+    expect(snapshot.text).toContain('[P PLAN]');
+    expect(snapshot.text).toContain('[ ] Port mockup renderer');
   });
 });
 
