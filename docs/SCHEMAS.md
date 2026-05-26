@@ -104,6 +104,37 @@ T-0109 implemented an internal TUI cache record. It remains local acceleration o
   "schemaVersion": "hadara.tui.cache.v1",
   "projectRoot": ".",
   "generatedAt": "2026-05-26T00:00:00.000Z",
+  "sourceSignals": {
+    "taskBoard": {
+      "mtimeMs": 123456789,
+      "size": 4096,
+      "hash": "..."
+    },
+    "tasksDir": {
+      "entries": ["T-0107-tui-public-cli-entry-point"],
+      "mtimeMs": 123456789
+    },
+    "handoff": {
+      "mtimeMs": 123456789,
+      "size": 4096,
+      "hash": "..."
+    },
+    "activeRun": {
+      "mtimeMs": 123456789,
+      "size": 4096,
+      "hash": "..."
+    },
+    "selectedTask": {
+      "mtimeMs": 123456789,
+      "size": 4096,
+      "hash": "..."
+    },
+    "selectedEvidence": {
+      "mtimeMs": 123456789,
+      "size": 4096,
+      "hash": "..."
+    }
+  },
   "taskIndex": [
     {
       "id": "T-0107",
@@ -131,6 +162,7 @@ Current status of `hadara.tui.cache.v1`:
 | Storage path | Ignored local state under `.hadara/local/tui/read-model-cache.json`. |
 | Source-of-truth status | Never source-of-truth; cache only accelerates reads. |
 | Public evidence/context status | Must not be attached as evidence or exported in context. |
+| Private evidence status | Cache is disabled when private evidence metadata is requested. |
 
 Any future promotion of `hadara.tui.cache.v1` to a registered fixture-level schema or release-gated schema requires a separate strictness decision.
 

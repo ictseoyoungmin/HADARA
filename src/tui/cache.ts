@@ -24,10 +24,31 @@ export interface TuiTaskIndexEntry {
   hash?: string;
 }
 
+export interface TuiFileSignal {
+  mtimeMs: number;
+  size: number;
+  hash?: string;
+}
+
+export interface TuiDirectorySignal {
+  entries: string[];
+  mtimeMs?: number;
+}
+
+export interface TuiCacheSourceSignals {
+  taskBoard?: TuiFileSignal;
+  tasksDir?: TuiDirectorySignal;
+  handoff?: TuiFileSignal;
+  activeRun?: TuiFileSignal;
+  selectedTask?: TuiFileSignal;
+  selectedEvidence?: TuiFileSignal;
+}
+
 export interface TuiCacheRecord {
   schemaVersion: 'hadara.tui.cache.v1';
   projectRoot: string;
   generatedAt: string;
+  sourceSignals: TuiCacheSourceSignals;
   taskIndex: TuiTaskIndexEntry[];
   model: TuiReadModel;
 }
@@ -96,15 +117,78 @@ export function buildTaskIndex(projectRoot: string): TuiTaskIndexEntry[] {
 }
 
 export function refreshTaskIndex(projectRoot: string, previous: TuiTaskIndexEntry[]): TuiTaskIndexEntry[] {
-  const current = buildTaskIndex(projectRoot);
   const previousById = new Map(previous.map((entry) => [entry.id, entry]));
-  return current.map((entry) => {
-    const oldEntry = previousById.get(entry.id);
-    if (oldEntry && oldEntry.mtimeMs === entry.mtimeMs && oldEntry.size === entry.size && oldEntry.hash) {
-      return { ...entry, hash: oldEntry.hash };
+  return buildTaskIndexFromSummaries(
+    projectRoot,
+    previous.map((entry) => ({
+      id: entry.id,
+      title: entry.title,
+      status: entry.status,
+      slug: path.basename(entry.capsule).replace(/^T-\d{4}-/, ''),
+      capsule: entry.capsule
+    })),
+    previousById
+  );
+}
+
+export function collectTuiCacheSourceSignals(projectRoot: string, selectedTask?: TaskJsonSummary | null): TuiCacheSourceSignals {
+  return {
+    taskBoard: fileSignal(projectRoot, 'docs/TASK_BOARD.md', true),
+    tasksDir: directorySignal(projectRoot, 'tasks'),
+    handoff: fileSignal(projectRoot, 'docs/AGENT_HANDOFF.md', true),
+    activeRun: fileSignal(projectRoot, '.hadara/local/state/active-run.json', true),
+    selectedTask: selectedTask ? fileSignal(projectRoot, path.join(selectedTask.capsule, 'TASK.md'), true) : undefined,
+    selectedEvidence: selectedTask ? fileSignal(projectRoot, path.join(selectedTask.capsule, 'evidence.jsonl'), true) : undefined
+  };
+}
+
+export function areTuiCacheSourceSignalsEqual(left: TuiCacheSourceSignals | undefined, right: TuiCacheSourceSignals): boolean {
+  if (!left) return false;
+  return (
+    fileSignalsEqual(left.taskBoard, right.taskBoard) &&
+    directorySignalsEqual(left.tasksDir, right.tasksDir) &&
+    fileSignalsEqual(left.handoff, right.handoff) &&
+    fileSignalsEqual(left.activeRun, right.activeRun) &&
+    fileSignalsEqual(left.selectedTask, right.selectedTask) &&
+    fileSignalsEqual(left.selectedEvidence, right.selectedEvidence)
+  );
+}
+
+function sourceSignalsForCachedSelection(projectRoot: string, cached: TuiCacheRecord): TuiCacheSourceSignals {
+  return collectTuiCacheSourceSignals(projectRoot, cached.model.selectedTask?.summary ?? null);
+}
+
+function validateCachedRecord(projectRoot: string, cached: TuiCacheRecord | null): { valid: boolean; taskIndex: TuiTaskIndexEntry[] } {
+  if (!cached) return { valid: false, taskIndex: [] };
+  const sourceSignals = sourceSignalsForCachedSelection(projectRoot, cached);
+  if (!areTuiCacheSourceSignalsEqual(cached.sourceSignals, sourceSignals)) return { valid: false, taskIndex: [] };
+  const previousById = new Map(cached.taskIndex.map((entry) => [entry.id, entry]));
+  const taskIndex = buildTaskIndexFromSummaries(projectRoot, cached.model.tasks.tasks, previousById);
+  return { valid: taskIndexesEqual(cached.taskIndex, taskIndex), taskIndex };
+}
+
+function disablePrivateEvidenceCache(
+  projectRoot: string,
+  cachePath: string,
+  refresh: TuiCacheRefreshMode,
+  options: TuiCachedReadModelOptions
+): TuiCachedReadModelResult {
+  return {
+    model: createTuiReadModel(projectRoot, options),
+    cache: {
+      enabled: false,
+      refresh,
+      hit: false,
+      path: toProjectRelativePath(projectRoot, cachePath),
+      issues: [
+        {
+          severity: 'warning',
+          code: 'TUI_PRIVATE_EVIDENCE_CACHE_DISABLED',
+          message: 'TUI cache is disabled when includePrivateEvidence is true.'
+        }
+      ]
     }
-    return entry;
-  });
+  };
 }
 
 export function createTuiReadModelWithCache(projectRoot: string, options: TuiCachedReadModelOptions = {}): TuiCachedReadModelResult {
@@ -114,6 +198,10 @@ export function createTuiReadModelWithCache(projectRoot: string, options: TuiCac
   const cacheOptions = { projectRoot, cacheRoot, enabled: options.cache?.enabled };
   const issues: TuiCachedReadModelResult['cache']['issues'] = [];
 
+  if (options.includePrivateEvidence === true) {
+    return disablePrivateEvidenceCache(projectRoot, cachePath, refresh, options);
+  }
+
   if (options.cache?.enabled === false || refresh === 'none') {
     return {
       model: createTuiReadModel(projectRoot, options),
@@ -122,8 +210,8 @@ export function createTuiReadModelWithCache(projectRoot: string, options: TuiCac
   }
 
   const cached = readTuiCache(cacheOptions);
-  const taskIndex = buildTaskIndexFromSummaries(projectRoot, cached?.model.tasks.tasks ?? createTuiReadModel(projectRoot, options).tasks.tasks);
-  const valid = cached ? taskIndexesEqual(cached.taskIndex, taskIndex) : false;
+  const validation = validateCachedRecord(projectRoot, cached);
+  const valid = validation.valid;
 
   if (refresh === 'detail' && cached && valid && options.selectedTaskId) {
     const selectedSummary = cached.model.tasks.tasks.find((task) => task.id === options.selectedTaskId) ?? null;
@@ -134,7 +222,7 @@ export function createTuiReadModelWithCache(projectRoot: string, options: TuiCac
         selectedTaskId: options.selectedTaskId,
         selectedTask: createSelectedTask(projectRoot, selectedSummary, options)
       };
-      writeTuiCache(cacheOptions, createCacheRecord(projectRoot, model, taskIndex));
+      writeTuiCache(cacheOptions, createCacheRecord(projectRoot, model, validation.taskIndex));
       return { model, cache: { enabled: true, refresh, hit: true, path: toProjectRelativePath(projectRoot, cachePath), issues } };
     }
   }
@@ -204,16 +292,25 @@ function createCacheRecord(projectRoot: string, model: TuiReadModel, taskIndex: 
     schemaVersion: 'hadara.tui.cache.v1',
     projectRoot: '.',
     generatedAt: new Date().toISOString(),
+    sourceSignals: collectTuiCacheSourceSignals(projectRoot, model.selectedTask?.summary ?? null),
     taskIndex,
     model
   };
 }
 
-function buildTaskIndexFromSummaries(projectRoot: string, tasks: TaskJsonSummary[]): TuiTaskIndexEntry[] {
+function buildTaskIndexFromSummaries(
+  projectRoot: string,
+  tasks: TaskJsonSummary[],
+  previousById: Map<string, TuiTaskIndexEntry> = new Map()
+): TuiTaskIndexEntry[] {
   return tasks.map((task) => {
     const taskPath = path.join(projectRoot, task.capsule, 'TASK.md');
     const stat = fs.statSync(taskPath);
-    const content = fs.readFileSync(taskPath);
+    const previous = previousById.get(task.id);
+    const hash =
+      previous && previous.mtimeMs === stat.mtimeMs && previous.size === stat.size && previous.hash
+        ? previous.hash
+        : crypto.createHash('sha256').update(fs.readFileSync(taskPath)).digest('hex');
     return {
       id: task.id,
       title: task.title,
@@ -221,7 +318,7 @@ function buildTaskIndexFromSummaries(projectRoot: string, tasks: TaskJsonSummary
       capsule: task.capsule,
       mtimeMs: stat.mtimeMs,
       size: stat.size,
-      hash: crypto.createHash('sha256').update(content).digest('hex')
+      hash
     };
   });
 }
@@ -270,9 +367,53 @@ function isTuiCacheRecord(value: unknown, projectRoot: string): value is TuiCach
     record.schemaVersion === 'hadara.tui.cache.v1' &&
     record.projectRoot === '.' &&
     typeof record.generatedAt === 'string' &&
+    typeof record.sourceSignals === 'object' &&
+    record.sourceSignals !== null &&
     Array.isArray(record.taskIndex) &&
     typeof record.model === 'object' &&
     record.model !== null &&
     record.model.schemaVersion === 'hadara.tui.read_model.internal.v1'
   );
+}
+
+function fileSignal(projectRoot: string, relativePath: string, includeHash: boolean): TuiFileSignal | undefined {
+  const filePath = path.join(projectRoot, relativePath);
+  if (!fs.existsSync(filePath)) return undefined;
+  const stat = fs.statSync(filePath);
+  if (!stat.isFile()) return undefined;
+  const signal: TuiFileSignal = {
+    mtimeMs: stat.mtimeMs,
+    size: stat.size
+  };
+  if (includeHash) signal.hash = crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+  return signal;
+}
+
+function directorySignal(projectRoot: string, relativePath: string): TuiDirectorySignal | undefined {
+  const dirPath = path.join(projectRoot, relativePath);
+  if (!fs.existsSync(dirPath)) return undefined;
+  const stat = fs.statSync(dirPath);
+  if (!stat.isDirectory()) return undefined;
+  return {
+    entries: fs
+      .readdirSync(dirPath, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && /^T-\d{4}-/.test(entry.name))
+      .map((entry) => entry.name)
+      .sort(),
+    mtimeMs: stat.mtimeMs
+  };
+}
+
+function fileSignalsEqual(left: TuiFileSignal | undefined, right: TuiFileSignal | undefined): boolean {
+  if (!left || !right) return left === right;
+  return left.mtimeMs === right.mtimeMs && left.size === right.size && left.hash === right.hash;
+}
+
+function directorySignalsEqual(left: TuiDirectorySignal | undefined, right: TuiDirectorySignal | undefined): boolean {
+  if (!left || !right) return left === right;
+  return left.mtimeMs === right.mtimeMs && stringArraysEqual(left.entries, right.entries);
+}
+
+function stringArraysEqual(left: string[], right: string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
 }

@@ -9,3 +9,8 @@
 | 2026-05-26T20:44:35+09:00 | test-log | Docker `npm run check` passed: TypeScript build plus 47 test files and 294 tests. | passed |
 | 2026-05-26T20:45:00+09:00 | test-log | Docker done-level harness validation for T-0109 returned `ok: true` with no issues. | passed |
 | 2026-05-26T20:48:11+09:00 | test-log | Docker `npm run check` re-run after final cache record polish passed: TypeScript build plus 47 test files and 294 tests. | passed |
+| 2026-05-26T21:01:46+09:00 | test-log | Docker focused TUI cache regression tests passed: 1 file and 11 tests covering new/deleted task invalidation, Task Board-only invalidation, selected evidence detail refresh, private evidence cache disable, and fast hash reuse. | passed |
+| 2026-05-26T21:01:56+09:00 | test-log | Docker focused TUI cache/CLI/terminal tests plus TypeScript build passed: 3 files, 25 tests, and `tsc -p tsconfig.json`. | passed |
+| 2026-05-26T21:02:20+09:00 | command-log | Updated 1000-capsule benchmark in Docker temp project returned `ok: true`, `count: 1000`, `coldFullMs: 1157`, `fastHitMs: 17`, cache path `.hadara/local/tui/read-model-cache.json`. | passed |
+| 2026-05-26T21:05:56+09:00 | test-log | Docker `npm run check` passed after source-signal follow-up: TypeScript build plus 47 test files and 300 tests. | passed |
+| 2026-05-26T21:06:20+09:00 | test-log | Docker done-level harness validation for T-0109 returned `ok: true` after source-signal follow-up. | passed |

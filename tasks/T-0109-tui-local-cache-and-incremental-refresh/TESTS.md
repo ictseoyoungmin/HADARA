@@ -8,6 +8,8 @@
 docker exec hadara-dev bash -lc 'rm -rf /tmp/hadara && mkdir -p /tmp/hadara && tar --exclude=node_modules --exclude=dist -cf - -C /workspace . | tar -xf - -C /tmp/hadara && cd /tmp/hadara && npm ci >/dev/null && npx vitest run tests/unit/tui-cache.test.ts tests/unit/tui-cli.test.ts tests/unit/tui-terminal.test.ts && npm run build'
 ```
 
+This focused suite covers source-signal invalidation for new/deleted tasks, Task Board-only changes, selected evidence detail refresh, private-evidence cache disable, and fast validation hash reuse.
+
 - Docker full validation:
 
 ```bash
