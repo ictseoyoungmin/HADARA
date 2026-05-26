@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createTuiReadModel } from '../../src/tui/read-model';
 import { renderTuiSnapshot, TuiSnapshotPanel } from '../../src/tui/snapshot';
+import { visibleWidth } from '../../src/tui/layout';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -40,9 +41,10 @@ describe('TUI snapshot renderer', () => {
         }
       });
       expect(snapshot.lines).toHaveLength(26);
-      expect(snapshot.lines.every((line) => line.length === 92)).toBe(true);
+      expect(snapshot.lines.every((line) => visibleWidth(line) === 92)).toBe(true);
       expect(snapshot.text).not.toMatch(/\x1b\[/);
       expect(snapshot.text).toContain('HADARA Work Console');
+      expect(snapshot.text).not.toContain(model.generatedAt);
     }
 
     expect(renderTuiSnapshot(model, { panel: 'overview', width: 92, height: 26 }).text).toContain(`${second.id} Snapshot second`);
@@ -51,7 +53,23 @@ describe('TUI snapshot renderer', () => {
     expect(renderTuiSnapshot(model, { panel: 'help', width: 92, height: 26 }).text).toContain('Boundary: read-only snapshot');
   });
 
-  it('clips, pads, and preserves the mockup minimum frame without mutating project files', () => {
+  it('keeps default snapshots byte-stable across volatile generatedAt values', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Stable snapshot');
+    writeProjectDocs(root, task.id);
+    const model = createTuiReadModel(root, { selectedTaskId: task.id });
+    const laterModel = { ...model, generatedAt: '2099-01-01T00:00:00.000Z' };
+
+    const first = renderTuiSnapshot(model, { panel: 'overview', width: 92, height: 26 });
+    const second = renderTuiSnapshot(laterModel, { panel: 'overview', width: 92, height: 26 });
+    const explicit = renderTuiSnapshot(laterModel, { panel: 'overview', width: 92, height: 26, includeGeneratedAt: true });
+
+    expect(second.text).toBe(first.text);
+    expect(first.text).not.toContain(model.generatedAt);
+    expect(explicit.text).toContain('2099-01-01T00:00:00.000Z');
+  });
+
+  it('makes the width policy explicit without mutating project files', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Long snapshot task name that should be clipped in narrow terminals');
     writeProjectDocs(root, task.id);
@@ -62,8 +80,14 @@ describe('TUI snapshot renderer', () => {
 
     expect(snapshot.terminal).toMatchObject({ width: 78, height: 24 });
     expect(snapshot.lines).toHaveLength(24);
-    expect(snapshot.lines.every((line) => line.length === 78)).toBe(true);
+    expect(snapshot.lines.every((line) => visibleWidth(line) === 78)).toBe(true);
     expect(snapshot.text).toContain('…');
+    expect(listProjectFiles(root)).toEqual(before);
+
+    const compact = renderTuiSnapshot(model, { panel: 'detail', widthPolicy: 'compact', width: 44, height: 12 });
+    expect(compact.terminal).toMatchObject({ width: 44, height: 12 });
+    expect(compact.lines).toHaveLength(12);
+    expect(compact.lines.every((line) => visibleWidth(line) === 44)).toBe(true);
     expect(listProjectFiles(root)).toEqual(before);
   });
 
@@ -79,6 +103,27 @@ describe('TUI snapshot renderer', () => {
     expect(snapshot.text).toContain('Document Viewer PLAN.md');
     expect(snapshot.text).toContain('[P PLAN]');
     expect(snapshot.text).toContain('[ ] Port mockup renderer');
+  });
+
+  it('renders Korean wide characters within fixed visible terminal width', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, '한글 스냅샷 렌더링');
+    fs.writeFileSync(
+      path.join(task.dir, 'TASK.md'),
+      ['# 목표', '', '- [ ] 한글 폭 계산을 보존한다', '- 표와 줄바꿈이 터미널 폭을 넘지 않는다'].join('\n'),
+      'utf8'
+    );
+    writeProjectDocs(root, task.id);
+    const before = listProjectFiles(root);
+    const model = createTuiReadModel(root, { selectedTaskId: task.id });
+
+    const snapshot = renderTuiSnapshot(model, { panel: 'detail', widthPolicy: 'compact', width: 48, height: 24 });
+
+    expect(snapshot.text).toContain('한글');
+    expect(snapshot.lines).toHaveLength(24);
+    expect(snapshot.lines.every((line) => visibleWidth(line) === 48)).toBe(true);
+    expect(snapshot.text).not.toContain(model.generatedAt);
+    expect(listProjectFiles(root)).toEqual(before);
   });
 });
 

@@ -121,6 +121,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - TUI read-model aggregation exists as an internal TypeScript service in `src/tui/read-model.ts`; it composes existing shared read models for future terminal rendering without adding a renderer, CLI entry point, cache, writes, shell execution, provider calls, or MCP calls.
 - TUI snapshot rendering exists as an internal TypeScript service in `src/tui/snapshot.ts`; it renders Overview, Tasks, Detail, and Help panels as deterministic no-color fixed-size text snapshots without interactive input, cache writes, shell execution, provider calls, MCP calls, or Task Capsule mutation.
 - TUI mockup-parity module splitting has started: `src/tui/constants.ts`, `src/tui/layout.ts`, and `src/tui/markdown.ts` carry panel/document metadata, fixed-width terminal layout primitives, and Markdown document rendering from `.mockup/tui/app.js`, while `src/tui/snapshot.ts` now renders a mockup-style read-only HADARA Work Console frame.
+- TUI snapshot rendering is deterministic by default: rendered text hides volatile `generatedAt` unless `includeGeneratedAt` is requested, default mockup width policy clamps to 78x24, compact mode is explicit, and Markdown wrapping/table layout uses visible terminal width for Korean/wide-character text.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.

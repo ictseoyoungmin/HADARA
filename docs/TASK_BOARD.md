@@ -104,3 +104,4 @@
 | T-0101 | Task Board Append Done-Level Guard | Done | tasks/T-0101-task-board-append-done-level-guard | Adds done-level harness validation for duplicate/stale Task Board rows when completing a Task Capsule. |
 | T-0102 | TUI Snapshot Renderer | Done | tasks/T-0102-tui-snapshot-renderer | Adds deterministic no-color fixed-size snapshots for Overview, Tasks, Detail, and Help over the internal TUI aggregate. |
 | T-0103 | TUI Mockup Parity Module Port | Done | tasks/T-0103-tui-mockup-parity-module-port | Ports mockup-derived constants, layout helpers, Markdown document rendering, and mockup-style read-only snapshot frame into `src/tui`. |
+| T-0104 | TUI Snapshot Polish | Done | tasks/T-0104-tui-snapshot-polish | Hides volatile snapshot timestamps by default, adds mockup/compact width policy, and hardens wide-character Markdown rendering. |

@@ -4,10 +4,13 @@ import { badge, card, columns, divider, fit, pad, trimFit } from './layout';
 import { incompleteChecklist, markdownPreview, renderMarkdownDocument } from './markdown';
 
 export type TuiSnapshotPanel = TuiPanelId;
+export type TuiSnapshotWidthPolicy = 'mockup' | 'compact';
 
 export interface TuiSnapshotOptions {
   panel?: TuiSnapshotPanel;
   document?: string;
+  includeGeneratedAt?: boolean;
+  widthPolicy?: TuiSnapshotWidthPolicy;
   width?: number;
   height?: number;
 }
@@ -28,25 +31,26 @@ export interface TuiSnapshot {
 
 const DEFAULT_WIDTH = 100;
 const DEFAULT_HEIGHT = 32;
-const MIN_WIDTH = 78;
-const MIN_HEIGHT = 24;
+const MOCKUP_MIN_WIDTH = 78;
+const MOCKUP_MIN_HEIGHT = 24;
+const COMPACT_MIN_WIDTH = 40;
+const COMPACT_MIN_HEIGHT = 10;
 
 export function renderTuiSnapshot(model: TuiReadModel, options: TuiSnapshotOptions = {}): TuiSnapshot {
-  const width = Math.max(MIN_WIDTH, Math.floor(options.width ?? DEFAULT_WIDTH));
-  const height = Math.max(MIN_HEIGHT, Math.floor(options.height ?? DEFAULT_HEIGHT));
+  const terminal = resolveTerminalSize(options);
   const panel = options.panel ?? 'overview';
-  const rawLines = renderFrame(model, panel, resolveTuiDocumentTab(options.document), width, height);
-  const truncated = rawLines.length > height;
-  const lines = rawLines.slice(0, height).map((line) => fit(line, width));
-  while (lines.length < height) lines.push(''.padEnd(width));
+  const rawLines = renderFrame(model, panel, resolveTuiDocumentTab(options.document), terminal.width, terminal.height, Boolean(options.includeGeneratedAt));
+  const truncated = rawLines.length > terminal.height;
+  const lines = rawLines.slice(0, terminal.height).map((line) => fit(line, terminal.width));
+  while (lines.length < terminal.height) lines.push(''.padEnd(terminal.width));
 
   return {
     schemaVersion: 'hadara.tui.snapshot.internal.v1',
     command: 'tui.snapshot',
     panel,
     terminal: {
-      width,
-      height,
+      width: terminal.width,
+      height: terminal.height,
       color: false
     },
     text: lines.join('\n'),
@@ -55,8 +59,25 @@ export function renderTuiSnapshot(model: TuiReadModel, options: TuiSnapshotOptio
   };
 }
 
-function renderFrame(model: TuiReadModel, panel: TuiSnapshotPanel, document: (typeof TUI_DOCUMENT_TABS)[number], width: number, height: number): string[] {
-  const raw = renderHeader(model, document, width);
+function resolveTerminalSize(options: TuiSnapshotOptions): { width: number; height: number } {
+  const policy = options.widthPolicy ?? 'mockup';
+  const minWidth = policy === 'compact' ? COMPACT_MIN_WIDTH : MOCKUP_MIN_WIDTH;
+  const minHeight = policy === 'compact' ? COMPACT_MIN_HEIGHT : MOCKUP_MIN_HEIGHT;
+  return {
+    width: Math.max(minWidth, Math.floor(options.width ?? DEFAULT_WIDTH)),
+    height: Math.max(minHeight, Math.floor(options.height ?? DEFAULT_HEIGHT))
+  };
+}
+
+function renderFrame(
+  model: TuiReadModel,
+  panel: TuiSnapshotPanel,
+  document: (typeof TUI_DOCUMENT_TABS)[number],
+  width: number,
+  height: number,
+  includeGeneratedAt: boolean
+): string[] {
+  const raw = renderHeader(model, document, width, includeGeneratedAt);
   const availableRows = Math.max(1, height - raw.length - 3);
 
   if (width >= 104) {
@@ -79,12 +100,15 @@ function renderFrame(model: TuiReadModel, panel: TuiSnapshotPanel, document: (ty
   return raw;
 }
 
-function renderHeader(model: TuiReadModel, document: (typeof TUI_DOCUMENT_TABS)[number], width: number): string[] {
+function renderHeader(model: TuiReadModel, document: (typeof TUI_DOCUMENT_TABS)[number], width: number, includeGeneratedAt: boolean): string[] {
   const selected = model.selectedTask;
+  const projectLine = includeGeneratedAt
+    ? `branch ${model.overview.branch}  mode local  generated ${model.generatedAt}`
+    : `branch ${model.overview.branch}  mode local`;
   return [
     divider(width),
     fit(`HADARA Work Console · ${badge(String(model.overview.health).toUpperCase())} ${badge('READ ONLY')}`, width),
-    fit(`branch ${model.overview.branch}  mode local  generated ${model.generatedAt}`, width),
+    fit(projectLine, width),
     fit(`task ${model.selectedTaskId ?? '-'} ${selected?.summary.title ?? 'no task'}  doc ${document.file}`, width),
     divider(width)
   ];

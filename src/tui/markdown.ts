@@ -1,4 +1,4 @@
-import { fit, repeat, trimFit } from './layout';
+import { fit, repeat, trimFit, visibleWidth } from './layout';
 
 export interface RenderMarkdownDocumentOptions {
   maxRows?: number;
@@ -93,7 +93,7 @@ function renderMarkdownTable(lines: string[], width: number): string[] {
 
   const columnCount = Math.max(...rows.map((row) => row.length));
   const rawWidths = Array.from({ length: columnCount }, (_, column) =>
-    Math.max(3, ...rows.map((row) => (row[column] ?? '').length))
+    Math.max(3, ...rows.map((row) => visibleWidth(row[column] ?? '')))
   );
   const separators = Math.max(0, columnCount - 1) * 3;
   const available = Math.max(columnCount * 3, width - separators);
@@ -112,7 +112,7 @@ function renderWrapped(text: string, width: number, indent: string): string[] {
   let current = '';
   for (const word of words) {
     const candidate = current ? `${current} ${word}` : word;
-    if (candidate.length <= targetWidth) {
+    if (visibleWidth(candidate) <= targetWidth) {
       current = candidate;
       continue;
     }
@@ -124,15 +124,27 @@ function renderWrapped(text: string, width: number, indent: string): string[] {
 }
 
 function splitLongLine(line: string, width: number): string[] {
-  if (line.length <= width) return [line];
+  if (visibleWidth(line) <= width) return [line];
   const chunks: string[] = [];
   let remaining = line;
-  while (remaining.length > width) {
+  while (visibleWidth(remaining) > width) {
     chunks.push(trimFit(remaining, width));
-    remaining = `${repeat(' ', 2)}${remaining.slice(Math.max(1, width - 1)).trimStart()}`;
+    remaining = `${repeat(' ', 2)}${takeRemainderByVisibleWidth(remaining, Math.max(1, width - 1)).trimStart()}`;
   }
   chunks.push(remaining);
   return chunks;
+}
+
+function takeRemainderByVisibleWidth(text: string, width: number): string {
+  let used = 0;
+  let index = 0;
+  const chars = Array.from(text);
+  for (; index < chars.length; index += 1) {
+    const charWidth = (chars[index].codePointAt(0) ?? 0) > 0x2e80 ? 2 : 1;
+    if (used + charWidth > width) break;
+    used += charWidth;
+  }
+  return chars.slice(index).join('');
 }
 
 function pushBlank(rows: string[], maxRows: number | undefined): void {
