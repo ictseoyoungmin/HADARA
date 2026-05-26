@@ -59,13 +59,14 @@
 - T-0097 is complete: `hadara dashboard serve` response helpers now expose read-only local API routes for `/api/status`, `/api/tasks`, `/api/evidence?taskId=<task-id>`, `/api/active-run`, and `/api/debt`, backed by existing shared read-model services and preserving no shell, provider, MCP write, task mutation, evidence write, live streaming, or browser-state persistence behavior.
 - T-0098 is complete: `hadara write preflight <command...> --json` now returns schema-backed `hadara.write.preflight.v1` reports for task create, evidence collect, handoff update, planned run-state writes, and planned debt writes without executing target write commands.
 - T-0099 is complete: `.mockup/tui` and `.mockup/tui-final` are documented as references for a future read-only terminal work console over existing read models, with TypeScript + Node standard terminal rendering preferred first and production implementation deferred.
+- T-0100 is complete: `src/tui/read-model.ts` composes existing shared read models into an internal TUI aggregate for status, tasks, selected task detail/evidence, active-run projection/resume, debt, advisory release gate, tools, and write-preflight preview without renderer, CLI entry point, cache, writes, shell execution, provider calls, or MCP calls.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0097 Dashboard Read Integration: added read-only dashboard API routes for status, tasks, evidence, active-run, and debt using shared read-model services without write, shell, provider, streaming, or persistence behavior.
 - T-0098 CLI Write Boundary Preflight: added schema-backed read-only write preflight reports and CLI output for expected CLI-owned write paths without executing target writes.
 - T-0099 TUI Design and Development Plan: added terminal TUI design notes and aligned architecture, roadmap, v1.0 backlog/schema notes, development slices, project state, task board, and handoff around a future read-only work console without production implementation.
+- T-0100 TUI Read-Model Aggregator: added internal `src/tui/read-model.ts` aggregation over shared read services with focused no-write boundary tests and no renderer or CLI entry point.
 
 ## Current Known Problems
 
@@ -79,16 +80,16 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. Choose between the TUI read-only work-console implementation slice and the Release and Packaging Track based on operator priority.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. Choose between the TUI snapshot renderer slice and the Release and Packaging Track based on operator priority.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, TUI writes, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest focused write-preflight check: Docker `npx vitest run tests/unit/write-preflight.test.ts` passed with 1 file and 5 tests.
-- Latest full check: Docker `npm run check` passed with 40 test files and 256 tests after T-0098 CLI write boundary preflight.
-- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0099 --level done --json --project /workspace` returned `ok: true` after evidence kind normalization.
+- Latest focused TUI read-model check: Docker `npx vitest run tests/unit/tui-read-model.test.ts` passed with 1 file and 4 tests.
+- Latest full check: Docker `npm run check` passed with 41 test files and 260 tests after T-0100 TUI read-model aggregator.
+- Latest done-level validation: Reusable container `node dist/cli/main.js harness validate --task T-0100 --level done --json --project /workspace` returned `ok: true`.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
 
 ## Historical Index

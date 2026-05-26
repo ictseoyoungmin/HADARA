@@ -128,12 +128,12 @@ The production TUI should not add a new schema in its first slice. It should com
 
 ```text
 src/tui/
-  command.ts
-  read-model.ts
-  state.ts
-  renderer.ts
-  terminal.ts
-  snapshot.ts
+  read-model.ts       # implemented by T-0100
+  renderer.ts         # future
+  snapshot.ts         # future
+  state.ts            # future
+  terminal.ts         # future
+  command.ts          # future
 ```
 
 Target aggregation inputs:
@@ -156,7 +156,7 @@ Implementation notes:
 
 Acceptance notes:
 
-- Render Overview, Tasks, Detail, and Help from shared read models.
+- T-0100 implemented aggregation only. Future renderer slices should render Overview, Tasks, Detail, and Help from shared read models.
 - Support deterministic no-color snapshots at fixed width and height.
 - Prove navigation, search, refresh, and task selection are local state transitions.
 - Prove refresh does not call write commands, shell execution, provider adapters, MCP tools, release/package execution, evidence writes, or handoff updates.

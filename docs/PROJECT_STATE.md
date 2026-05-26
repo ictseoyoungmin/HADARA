@@ -117,12 +117,13 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Structured event records exist as `hadara.event.v1`; private audit JSONL writes now keep existing compatibility fields and include a nested redacted structured event for future audit/debug read surfaces, and event helpers expose optional schema assertion.
 - Provider preparation helpers exist for schema-backed provider config references and provider call reports; they deny unknown runtime config input fields, assert registered schemas before returning, and do not load secrets, call provider SDKs, perform network calls, or create provider execution surfaces.
 - CLI write-boundary preflight exists as `hadara write preflight <command...> --json` with schema `hadara.write.preflight.v1`; it reports expected project/private-portable write paths for task create, evidence collect, handoff update, planned run-state writes, and planned debt writes without executing the target command.
+- TUI read-model aggregation exists as an internal TypeScript service in `src/tui/read-model.ts`; it composes existing shared read models for future terminal rendering without adding a renderer, CLI entry point, cache, writes, shell execution, provider calls, or MCP calls.
 - Evidence CLI handling lives in `src/cli/evidence.ts`.
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.
 - Real provider adapters are not implemented; only schema-backed preparation contracts and safe report helpers exist.
 - Dashboard is locally servable through a static CLI helper with read-only local API routes, but the dashboard HTML still consumes the static sample fixture and is not live-rendering repository data.
-- Production TUI is not implemented; only mockups and design planning exist. Future TUI work must remain read-only until an explicit Task Capsule expands scope.
+- Production TUI rendering and CLI entry point are not implemented; only mockups, design planning, and the internal read-model aggregator exist. Future TUI work must remain read-only until an explicit Task Capsule expands scope.
 - Broad MCP write tools are not implemented beyond the explicitly enabled, approval-recorded, audited evidence attach tool.
 - Operational debt records remain static and non-persisted; debt mutation and executable release automation remain deferred.
 

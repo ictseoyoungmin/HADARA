@@ -100,3 +100,5 @@
 | T-0097 | Dashboard Read Integration | Done | tasks/T-0097-dashboard-read-integration | Adds read-only dashboard API routes for status, tasks, evidence, active-run, and debt without shell/write/provider behavior. |
 | T-0098 | CLI Write Boundary Preflight | Done | tasks/T-0098-cli-write-boundary-preflight | Adds schema-backed read-only write preflight reports for CLI-owned write command families. |
 | T-0099 | TUI Design and Development Plan | Done | tasks/T-0099-tui-design-and-development-plan | Aligns `.mockup/tui` and `.mockup/tui-final` into main docs as a future read-only terminal work console; no production TUI implementation yet. |
+| T-0100 | TUI Read-Model Aggregator | Done | tasks/T-0100-tui-read-model-aggregator | Adds internal TUI aggregate read model over existing shared services without renderer, CLI entry point, cache, writes, shell, provider, or MCP behavior. |
+| T-0100 | TUI Read-Model Aggregator | Draft | tasks/T-0100-tui-read-model-aggregator | |
