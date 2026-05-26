@@ -129,8 +129,8 @@ The production TUI should not add a new schema in its first slice. It should com
 ```text
 src/tui/
   read-model.ts       # implemented by T-0100
-  renderer.ts         # future
-  snapshot.ts         # future
+  snapshot.ts         # implemented by T-0102
+  renderer.ts         # future interactive/layout refinement
   state.ts            # future
   terminal.ts         # future
   command.ts          # future

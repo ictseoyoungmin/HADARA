@@ -1,0 +1,3 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-26T08:09:11Z","taskId":"T-0102","kind":"command-log","summary":"Docker focused npx vitest run tests/unit/tui-snapshot.test.ts passed: 1 file, 2 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-26T08:09:11Z","taskId":"T-0102","kind":"command-log","summary":"Docker npm run check passed: 42 test files, 264 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-26T08:10:58Z","taskId":"T-0102","kind":"command-log","summary":"Docker done-level harness validation passed for T-0102 with ok true; checked files included docs/TASK_BOARD.md.","result":"passed","visibility":"public"}

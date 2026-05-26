@@ -60,6 +60,7 @@ Historical completed-task handoff entries moved out of `docs/AGENT_HANDOFF.md` d
 - Completed T-0093 Policy Matrix Release Gate Feedback by verifying release/network policy matrix behavior and sharpening strict release-gate exit-code regression coverage.
 - Completed T-0097 Dashboard Read Integration by adding read-only dashboard API routes for status, tasks, evidence, active-run, and debt using shared read-model services without write, shell, provider, streaming, or persistence behavior.
 - Completed T-0098 CLI Write Boundary Preflight by adding schema-backed read-only write preflight reports and CLI output for expected CLI-owned write paths without executing target writes.
+- Completed T-0099 TUI Design and Development Plan by adding terminal TUI design notes and aligning architecture, roadmap, v1.0 backlog/schema notes, development slices, project state, task board, and handoff around a future read-only work console without production implementation.
 
 ## Source Documents
 
