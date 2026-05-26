@@ -92,17 +92,17 @@ The full TUI mockup parity and HADARA-native runtime design is preserved without
 
 ```text
 source = service by default
-cache = read-write only after the future TUI local cache capsule
+cache = internal local read-write only when explicitly enabled
 theme = hadara for TTY, no-color for snapshot tests unless specified
 auto refresh = off unless specified
 ```
 
-Future TUI cache schema draft:
+T-0109 implemented an internal TUI cache record. It remains local acceleration only, not a public read-model schema, fixture-level schema, or release-gated contract.
 
 ```json
 {
   "schemaVersion": "hadara.tui.cache.v1",
-  "projectRoot": "/workspace",
+  "projectRoot": ".",
   "generatedAt": "2026-05-26T00:00:00.000Z",
   "taskIndex": [
     {
@@ -112,9 +112,12 @@ Future TUI cache schema draft:
       "capsule": "tasks/T-0107-tui-public-cli-entry-point",
       "mtimeMs": 123456789,
       "size": 4096,
-      "hash": "sha256:..."
+      "hash": "..."
     }
-  ]
+  ],
+  "model": {
+    "schemaVersion": "hadara.tui.read_model.internal.v1"
+  }
 }
 ```
 
@@ -125,16 +128,16 @@ Current status of `hadara.tui.cache.v1`:
 | Registry entry | Not registered. |
 | Fixture file | Not implemented. |
 | Runtime validation | Not implemented. |
-| Storage path | Future ignored local state under `.hadara/local/tui/`. |
+| Storage path | Ignored local state under `.hadara/local/tui/read-model-cache.json`. |
 | Source-of-truth status | Never source-of-truth; cache only accelerates reads. |
 | Public evidence/context status | Must not be attached as evidence or exported in context. |
 
-When a future capsule implements TUI cache, it should decide whether `hadara.tui.cache.v1` remains an internal cache record or becomes a registered fixture-level schema. It must not become a release gate without a separate strictness decision.
+Any future promotion of `hadara.tui.cache.v1` to a registered fixture-level schema or release-gated schema requires a separate strictness decision.
 
 ## Non-Goals
 
 - No schema-based release gate is active yet.
 - No MCP write surface is enabled by schemas.
 - No shell execution, provider calls, dashboard live APIs, or release/package execution is introduced by this registry.
-- No TUI cache fixture, TUI cache implementation, or TUI write behavior is introduced by this registry.
+- No TUI cache fixture or public TUI cache schema is introduced by this registry.
 - No private evidence contents or machine-local paths should be included in public schema examples or fixtures.

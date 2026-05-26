@@ -109,3 +109,4 @@
 | T-0106 | TUI Raw Terminal Shell | Done | tasks/T-0106-tui-raw-terminal-shell | Adds an internal injected-stream terminal shell for key decoding, redraw, refresh effects, and clean shutdown without a public CLI command or project writes. |
 | T-0107 | TUI Public CLI Entry Point | Done | tasks/T-0107-tui-public-cli-entry-point | Adds public read-only `hadara tui` and `hadara tui --snapshot` CLI entry points over the TUI renderer/terminal shell. |
 | T-0108 | TUI Native Runtime Docs Assimilation | Done | tasks/T-0108-tui-native-runtime-docs-assimilation | Reflects the full TUI mockup parity/native runtime design into main v1.0 planning docs without omission. |
+| T-0109 | TUI Local Cache and Incremental Refresh | Done | tasks/T-0109-tui-local-cache-and-incremental-refresh | Adds internal local TUI cache, opt-in `hadara tui --cache`, invalidation/detail refresh tests, context-export exclusion, and 1000-capsule benchmark evidence. |

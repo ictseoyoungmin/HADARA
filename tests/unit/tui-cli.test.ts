@@ -83,6 +83,52 @@ describe('TUI CLI entry point', () => {
     expect(output.text()).toContain('\x1b[?25h');
   });
 
+  it('enables local cache writes only when interactive TUI opts in', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Public CLI cache task');
+    writeProjectDocs(root);
+    const input = new MemoryInput(true);
+    const output = new MemoryOutput(84, 24);
+
+    expect(handleTuiCommand({ args: ['tui', '--cache'], projectRoot: root, jsonOutput: false, input, output })).toBe(true);
+    expect(fs.existsSync(path.join(root, '.hadara', 'local', 'tui', 'read-model-cache.json'))).toBe(true);
+
+    input.emit('data', Buffer.from('q'));
+  });
+
+  it('keeps snapshot mode cache-free even when --cache is present', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Public CLI snapshot cache-free task');
+    writeProjectDocs(root);
+    const output = new MemoryOutput(86, 24);
+
+    expect(
+      handleTuiCommand({
+        args: ['tui', '--snapshot', '--cache'],
+        projectRoot: root,
+        jsonOutput: false,
+        input: new MemoryInput(false),
+        output
+      })
+    ).toBe(true);
+
+    expect(output.text()).toContain('HADARA Work Console');
+    expect(fs.existsSync(path.join(root, '.hadara', 'local', 'tui'))).toBe(false);
+  });
+
+  it('lets --no-cache override --cache', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Public CLI no cache task');
+    writeProjectDocs(root);
+    const input = new MemoryInput(true);
+    const output = new MemoryOutput(84, 24);
+
+    expect(handleTuiCommand({ args: ['tui', '--cache', '--no-cache'], projectRoot: root, jsonOutput: false, input, output })).toBe(true);
+    expect(fs.existsSync(path.join(root, '.hadara', 'local', 'tui'))).toBe(false);
+
+    input.emit('data', Buffer.from('q'));
+  });
+
   it('removes process listeners when an interactive session quits normally', () => {
     const root = tempProject();
     createTaskCapsule(root, 'Public CLI cleanup task');

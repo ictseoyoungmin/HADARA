@@ -1,6 +1,7 @@
 import { Readable, Writable } from 'node:stream';
-import { createTuiReadModel, TuiReadModel } from './read-model';
+import { createTuiReadModel, TuiReadModel, TuiReadModelOptions } from './read-model';
 import { renderTuiSnapshot, TuiSnapshotOptions, TuiSnapshotWidthPolicy } from './snapshot';
+import { createTuiReadModelWithCache, TuiCacheRefreshMode } from './cache';
 import {
   createTuiInteractionState,
   reduceTuiInteractionState,
@@ -30,6 +31,10 @@ export interface TuiTerminalSessionOptions {
   includeGeneratedAt?: boolean;
   enableRawMode?: boolean;
   terminalControl?: boolean;
+  cache?: {
+    enabled?: boolean;
+    root?: string;
+  };
   onStop?: () => void;
 }
 
@@ -59,7 +64,7 @@ export class TuiTerminalSession {
     this.options = options;
     this.input = options.input ?? (process.stdin as TuiTerminalInput);
     this.output = options.output ?? (process.stdout as TuiTerminalOutput);
-    this.model = createTuiReadModel(options.projectRoot);
+    this.model = this.loadModel('fast');
     this.state = createTuiInteractionState(this.model);
   }
 
@@ -121,11 +126,11 @@ export class TuiTerminalSession {
   private applyKey(key: TuiInputKey): TuiTerminalRenderResult | null {
     let nextState = reduceTuiInteractionState(this.state, this.model, key);
     if (nextState.detailRefreshRequested) {
-      this.model = createTuiReadModel(this.options.projectRoot, tuiStateToReadModelOptions(nextState));
+      this.model = this.loadModel('detail', tuiStateToReadModelOptions(nextState));
       nextState = reduceTuiInteractionState(nextState, this.model, 'detail-refresh-complete');
     }
     if (nextState.refreshRequested) {
-      this.model = createTuiReadModel(this.options.projectRoot, tuiStateToReadModelOptions(nextState));
+      this.model = this.loadModel('full', tuiStateToReadModelOptions(nextState));
       nextState = reduceTuiInteractionState(nextState, this.model, 'refresh-complete');
     }
     this.state = nextState;
@@ -149,6 +154,20 @@ export class TuiTerminalSession {
 
   private shouldEnableRawMode(): boolean {
     return this.options.enableRawMode !== false && Boolean(this.input.isTTY && this.input.setRawMode);
+  }
+
+  private loadModel(refresh: TuiCacheRefreshMode, readOptions: TuiReadModelOptions = {}): TuiReadModel {
+    if (this.options.cache?.enabled) {
+      return createTuiReadModelWithCache(this.options.projectRoot, {
+        ...readOptions,
+        cache: {
+          enabled: true,
+          root: this.options.cache.root,
+          refresh
+        }
+      }).model;
+    }
+    return createTuiReadModel(this.options.projectRoot, readOptions);
   }
 }
 

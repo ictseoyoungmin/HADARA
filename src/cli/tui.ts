@@ -14,11 +14,12 @@ export interface TuiCommandInput {
 export function handleTuiCommand(input: TuiCommandInput): boolean {
   if (input.args[0] !== 'tui') return false;
   const sub = input.args[1];
-  if (sub && sub !== '--snapshot' && sub !== '--compact' && sub !== '--json' && !sub.startsWith('--')) return false;
+  if (sub && sub !== '--snapshot' && sub !== '--compact' && sub !== '--json' && sub !== '--cache' && sub !== '--no-cache' && !sub.startsWith('--')) return false;
 
   const widthPolicy = getFlag(input.args, '--compact') ? 'compact' : undefined;
   const width = getIntegerOption(input.args, '--width', { min: 20, max: 300 });
   const height = getIntegerOption(input.args, '--height', { min: 10, max: 120 });
+  const cacheEnabled = getFlag(input.args, '--cache') && !getFlag(input.args, '--no-cache');
   const output = input.output ?? (process.stdout as TuiTerminalOutput);
   const terminalInput = input.input ?? (process.stdin as TuiTerminalInput);
 
@@ -50,6 +51,7 @@ export function handleTuiCommand(input: TuiCommandInput): boolean {
     width,
     height,
     widthPolicy,
+    cache: { enabled: cacheEnabled },
     onStop: () => cleanup()
   });
   cleanup = (): void => {
