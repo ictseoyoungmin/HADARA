@@ -1,7 +1,15 @@
 import { TuiReadModel } from './read-model';
-import { resolveTuiDocumentTab, TUI_DOCUMENT_TABS, TUI_PANEL_IDS, TUI_PANEL_LABELS, tuiTaskVisibleRowsForWidth, TuiPanelId } from './constants';
+import {
+  resolveTuiDocumentTab,
+  TUI_DOCUMENT_TABS,
+  TUI_PANEL_IDS,
+  TUI_PANEL_LABELS,
+  tuiDetailDocumentRowsForAvailableRows,
+  tuiTaskVisibleRowsForAvailableRows,
+  TuiPanelId
+} from './constants';
 import { badge, card, columns, divider, fit, fitAnsi, pad, padAnsi, trimFit, trimFitAnsi, visibleWidth } from './layout';
-import { incompleteChecklist, markdownPreview, renderMarkdownDocument } from './markdown';
+import { evidenceFromMarkdown, incompleteChecklist, markdownPreview, renderMarkdownDocument } from './markdown';
 import { normalizeTuiThemeName, tuiBg, tuiColorEnabled, tuiFg, tuiSwatch, TuiThemeName } from './theme';
 
 export type TuiSnapshotPanel = TuiPanelId;
@@ -50,6 +58,12 @@ export interface TuiHitbox {
   y2: number;
   action: TuiHitboxAction;
   payload: string;
+}
+
+export interface TuiDocumentScrollBounds {
+  maxScroll: number;
+  renderedRows: number;
+  visibleRows: number;
 }
 
 const DEFAULT_WIDTH = 100;
@@ -104,6 +118,21 @@ function resolveTerminalSize(options: TuiSnapshotOptions): { width: number; heig
   return {
     width: Math.max(minWidth, Math.floor(options.width ?? DEFAULT_WIDTH)),
     height: Math.max(minHeight, Math.floor(options.height ?? DEFAULT_HEIGHT))
+  };
+}
+
+export function getTuiDocumentScrollBounds(model: TuiReadModel, options: TuiSnapshotOptions = {}): TuiDocumentScrollBounds {
+  const terminal = resolveTerminalSize(options);
+  const document = resolveTuiDocumentTab(options.document);
+  const availableRows = Math.max(1, terminal.height - 8);
+  const panelWidth = terminal.width >= 104 ? terminal.width - 25 : terminal.width - 2;
+  const docRows = tuiDetailDocumentRowsForAvailableRows(availableRows);
+  const docText = model.selectedTask?.detail.files?.[document.file] ?? '';
+  const renderedDoc = docText ? renderMarkdownDocument(docText, Math.max(12, panelWidth - 4)) : [`${document.file} unavailable.`];
+  return {
+    maxScroll: Math.max(0, renderedDoc.length - docRows),
+    renderedRows: renderedDoc.length,
+    visibleRows: docRows
   };
 }
 
@@ -232,27 +261,22 @@ function renderOverview(model: TuiReadModel, width: number, theme: TuiThemeName)
   const rightWidth = width >= 96 ? Math.max(20, width - columnGap - leftWidth) : width;
   const currentCard = colorCard(
     'Current Work',
-    workSummaryLines(model, current, model.overview.currentDetail, 'LIVE', theme, Math.max(8, leftWidth - 4)),
+    workSummaryLines(model, current, model.overview.currentDetail, 'LIVE', theme, Math.max(8, leftWidth - 4), true),
     leftWidth,
     theme,
     'teal'
   );
   const previousCard = colorCard(
     'Previous Work',
-    workSummaryLines(model, previous, model.overview.previousDetail, previous ? 'FILE' : 'ROUTE', theme, Math.max(8, rightWidth - 4)),
+    workSummaryLines(model, previous, model.overview.previousDetail, previous ? 'FILE' : 'ROUTE', theme, Math.max(8, rightWidth - 4), false),
     rightWidth,
     theme,
     'violet'
   );
   const top = width >= 96 ? columns(currentCard, previousCard, width) : [...currentCard, '', ...previousCard];
-  const deferred = hasDeferredHeavyReads(model);
   const signals = [
     `health ${model.overview.health}  tasks done ${model.status.tasks.counts.done} partial ${model.status.tasks.counts.partial} unknown ${model.status.tasks.counts.unknown}`,
-    `validation ${trimFit(model.status.validation.latestFullCheck ?? '-', Math.max(12, width - 12))}`,
-    `active run ${model.activeRun.projection.activeRun ? `${model.activeRun.projection.activeRun.taskId}: ${model.activeRun.projection.activeRun.summary}` : 'none'}`,
-    deferred
-      ? `${colorBadge('DEFERRED', 'warn', theme)} debt/release/tools/write-preview deferred in fast TUI read`
-      : `debt open ${model.debt.aggregate.open}, high ${model.debt.aggregate.highOpen}  release ${model.releaseGate.mode}: ${model.releaseGate.ok ? 'ok' : 'blocked'}`
+    `validation ${trimFit(model.status.validation.latestFullCheck ?? '-', Math.max(12, width - 18))}`
   ];
   return [...top, '', ...colorCard('Resume Signals', signals, width, theme, 'gold'), ...nextRecommendedCard(model, width, theme)];
 }
@@ -275,7 +299,7 @@ function renderTasks(
   if (!rowsAll.length) {
     return colorCard('Tasks Empty', [`${colorBadge('ROUTE', 'muted', theme)} no tasks match ${query ? `"${options.taskSearch}"` : 'the current project'}`], width, theme, 'warn');
   }
-  const visibleRows = tuiTaskVisibleRowsForWidth(width);
+  const visibleRows = tuiTaskVisibleRowsForAvailableRows(availableRows);
   const selectedIndex = options.selectedTaskId ? rowsAll.findIndex((task) => task.id === options.selectedTaskId) : -1;
   const windowStart = normalizeTaskWindow(options.taskListScroll, selectedIndex, rowsAll.length, visibleRows);
   const rows = rowsAll.slice(windowStart, windowStart + visibleRows).map((task, localIndex) => {
@@ -329,7 +353,7 @@ function renderDetail(
     `${tuiFg(theme, 'muted', 'detail')} ${model.selectedTask.detail.schemaVersion}  ${tuiFg(theme, 'muted', 'document')} ${colorBadge(docAvailable ? 'LIVE' : 'PLANNED', docAvailable ? 'pass' : 'warn', theme)} ${document.file}`,
     fitAnsi(tabs, Math.max(12, width - 4))
   ];
-  const docRows = Math.max(1, Math.min(18, availableRows - 9));
+  const docRows = tuiDetailDocumentRowsForAvailableRows(availableRows);
   const renderedDoc = docAvailable ? renderMarkdownDocument(docText, Math.max(12, width - 4)) : [`${document.file} unavailable.`];
   const maxScroll = Math.max(0, renderedDoc.length - docRows);
   const scroll = Math.min(Math.max(0, options.documentScroll), maxScroll);
@@ -384,7 +408,8 @@ function workSummaryLines(
   detail: TuiReadModel['overview']['currentDetail'],
   label: string,
   theme: TuiThemeName,
-  width: number
+  width: number,
+  includeResumeActions: boolean
 ): string[] {
   if (!task) {
     return [
@@ -401,21 +426,22 @@ function workSummaryLines(
   const acceptanceText = docs?.['ACCEPTANCE.md'] ?? '';
   const handoffText = docs?.['HANDOFF.md'] ?? '';
   const evidenceText = docs?.['EVIDENCE.md'] ?? '';
+  const nextActions = includeResumeActions ? model.activeRun.resume.resumePrompt.nextActions : [];
   const next = firstLine(
+    nextActions,
+    markdownPreview(handoffText, { headings: ['Next Recommended Step', 'Next'], limit: 2 }),
     incompleteChecklist(planText, 2),
     incompleteChecklist(acceptanceText, 2),
     markdownPreview(planText, { headings: ['Plan'], limit: 2 }),
-    markdownPreview(acceptanceText, { headings: ['Acceptance'], limit: 2 })
+    markdownPreview(acceptanceText, { headings: ['Acceptance'], limit: 2 }),
+    task.status === 'Done' ? 'Completed; use current work as the next operating context.' : ''
   );
-  const documentProof = firstLine(markdownPreview(evidenceText, 2), markdownPreview(handoffText, 1));
-  const proof =
+  const latestEvidence =
     task.id === model.selectedTask?.summary.id && model.selectedTask.evidence.records[0]?.summary
-      ? model.selectedTask.evidence.records[0].summary
-      : documentProof
-        ? documentProof
-        : task.status === 'Done'
-          ? 'Done status exposed by task list.'
-          : 'No evidence exposed.';
+      ? [model.selectedTask.evidence.records[0].summary]
+      : [];
+  const proof =
+    firstLine(latestEvidence, evidenceFromMarkdown(evidenceText, 2), markdownPreview(evidenceText, { limit: 2 }), task.status === 'Done' ? 'Done status exposed by task list.' : '');
   return [
     summaryTitleLine(label, task.id, task.title || '-', width, theme),
     summaryStatusLine(task.status || '-', task.capsule || '-', width, theme),
@@ -460,10 +486,6 @@ function dedupe(items: string[]): string[] {
     seen.add(item);
     return true;
   });
-}
-
-function hasDeferredHeavyReads(model: TuiReadModel): boolean {
-  return model.issues.some((issue) => issue.code === 'TUI_HEAVY_READS_DEFERRED');
 }
 
 function normalizeTaskWindow(requestedStart: number, selectedIndex: number, rowCount: number, visibleRows: number): number {

@@ -2,10 +2,10 @@ import { Readable, Writable } from 'node:stream';
 import path from 'node:path';
 import { Worker } from 'node:worker_threads';
 import { createTuiLoadingReadModel, createTuiReadModel, TuiReadModel, TuiReadModelOptions } from './read-model';
-import { renderTuiSnapshot, TuiHitbox, TuiSnapshotOptions, TuiSnapshotWidthPolicy } from './snapshot';
+import { getTuiDocumentScrollBounds, renderTuiSnapshot, TuiHitbox, TuiSnapshotOptions, TuiSnapshotWidthPolicy } from './snapshot';
 import { createTuiReadModelWithCache, TuiCacheRefreshMode } from './cache';
 import { TuiThemeName } from './theme';
-import { resolveTuiPanelId, tuiTaskVisibleRowsForWidth } from './constants';
+import { resolveTuiPanelId, tuiTaskVisibleRowsForAvailableRows } from './constants';
 import {
   createTuiInteractionState,
   getTuiTaskRows,
@@ -358,17 +358,16 @@ export class TuiTerminalSession {
     return this.options.enableRawMode !== false && Boolean(this.input.isTTY && this.input.setRawMode);
   }
 
-  private stateReduceOptions(): { taskListVisibleRows: number } {
-    return { taskListVisibleRows: this.taskListVisibleRows() };
+  private stateReduceOptions(): { taskListVisibleRows: number; documentMaxScroll: number } {
+    return {
+      taskListVisibleRows: this.taskListVisibleRows(),
+      documentMaxScroll: getTuiDocumentScrollBounds(this.model, this.snapshotOptions()).maxScroll
+    };
   }
 
   private taskListVisibleRows(): number {
-    return tuiTaskVisibleRowsForWidth(this.taskPanelWidth());
-  }
-
-  private taskPanelWidth(): number {
-    const terminalWidth = Math.max(40, Math.floor(this.options.width ?? this.output.columns ?? 100));
-    return terminalWidth >= 104 ? terminalWidth - 25 : terminalWidth - 2;
+    const terminalHeight = Math.max(10, Math.floor(this.options.height ?? this.output.rows ?? 32));
+    return tuiTaskVisibleRowsForAvailableRows(Math.max(1, terminalHeight - 8));
   }
 
   private loadModel(refresh: TuiCacheRefreshMode, readOptions: TuiReadModelOptions = {}): TuiReadModel {
@@ -481,6 +480,15 @@ function matchEscapeSequence(text: string): { key: TuiInputKey; length: number }
   if (text.startsWith('\x1b[B')) return { key: 'down', length: 3 };
   if (text.startsWith('\x1b[C')) return { key: 'right', length: 3 };
   if (text.startsWith('\x1b[D')) return { key: 'left', length: 3 };
+  if (text.startsWith('\x1bOA')) return { key: 'up', length: 3 };
+  if (text.startsWith('\x1bOB')) return { key: 'down', length: 3 };
+  if (text.startsWith('\x1bOC')) return { key: 'right', length: 3 };
+  if (text.startsWith('\x1bOD')) return { key: 'left', length: 3 };
+  const modifiedArrow = text.match(/^\x1b\[(?:1|0)?(?:;\d+)+([ABCD])/);
+  if (modifiedArrow) {
+    const keyByCode: Record<string, TuiInputKey> = { A: 'up', B: 'down', C: 'right', D: 'left' };
+    return { key: keyByCode[modifiedArrow[1] ?? ''] ?? 'escape', length: modifiedArrow[0].length };
+  }
   if (text.startsWith('\x1b[Z')) return { key: 'shift-tab', length: 3 };
   if (text.startsWith('\x1b[H')) return { key: 'home', length: 3 };
   if (text.startsWith('\x1b[F')) return { key: 'end', length: 3 };

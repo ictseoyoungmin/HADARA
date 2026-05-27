@@ -47,6 +47,7 @@ export interface TuiStateOptions {
 
 export interface TuiReduceOptions {
   taskListVisibleRows?: number;
+  documentMaxScroll?: number;
 }
 
 const DEFAULT_PAGE_SIZE = 8;
@@ -130,15 +131,26 @@ export function reduceTuiInteractionState(state: TuiInteractionState, model: Tui
   }
 
   if (state.activePanel === 'detail') {
-    if (normalized === 'up') return { ...state, documentScroll: Math.max(0, state.documentScroll - 1) };
-    if (normalized === 'down') return { ...state, documentScroll: state.documentScroll + 1 };
-    if (normalized === 'pageup') return { ...state, documentScroll: Math.max(0, state.documentScroll - DEFAULT_PAGE_SIZE) };
-    if (normalized === 'pagedown') return { ...state, documentScroll: state.documentScroll + DEFAULT_PAGE_SIZE };
+    const maxScroll = normalizeDocumentMaxScroll(options.documentMaxScroll);
+    if (normalized === 'up') return { ...state, documentScroll: Math.max(0, clampDocumentScroll(state.documentScroll, maxScroll) - 1) };
+    if (normalized === 'down') return { ...state, documentScroll: clampDocumentScroll(state.documentScroll + 1, maxScroll) };
+    if (normalized === 'pageup') return { ...state, documentScroll: Math.max(0, clampDocumentScroll(state.documentScroll, maxScroll) - DEFAULT_PAGE_SIZE) };
+    if (normalized === 'pagedown') return { ...state, documentScroll: clampDocumentScroll(state.documentScroll + DEFAULT_PAGE_SIZE, maxScroll) };
     if (normalized === 'home') return { ...state, documentScroll: 0 };
-    if (normalized === 'end') return { ...state, documentScroll: Number.MAX_SAFE_INTEGER };
+    if (normalized === 'end') return { ...state, documentScroll: maxScroll ?? Number.MAX_SAFE_INTEGER };
   }
 
   return state;
+}
+
+function normalizeDocumentMaxScroll(value: number | undefined): number | null {
+  if (value === undefined) return null;
+  return Math.max(0, Math.floor(value));
+}
+
+function clampDocumentScroll(value: number, maxScroll: number | null): number {
+  const next = Math.max(0, Math.floor(value));
+  return maxScroll === null ? next : Math.min(next, maxScroll);
 }
 
 function moveTaskSelectionToEdge(state: TuiInteractionState, model: TuiReadModel, edge: 'start' | 'end', visibleRows: number): TuiInteractionState {

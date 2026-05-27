@@ -213,11 +213,25 @@ describe('TUI snapshot renderer', () => {
     expect(snapshot.text).toContain(`> [DRAFT] ${tasks[5]?.id}`);
     expect(snapshot.text).toContain('search: Windowed_');
     expect(snapshot.text).toContain('Enter/click opens Detail.');
-    expect(snapshot.text).toContain('Showing 7-18 of 18/18');
-    expect(snapshot.text).not.toContain(`${tasks[17]?.id} Windowed task 18`);
+    expect(snapshot.text).toContain('Showing 4-18 of 18/18');
   });
 
-  it('makes fast-profile deferred advisory reads visible instead of reporting false ok counts', () => {
+  it('derives Tasks height from the same available-height policy as Detail', () => {
+    const root = tempProject();
+    const tasks = Array.from({ length: 30 }, (_, index) => createTaskCapsule(root, `Height task ${String(index + 1).padStart(2, '0')}`));
+    writeProjectDocs(root, tasks[29]?.id ?? '');
+    const model = createTuiReadModel(root, { selectedTaskId: tasks[29]?.id });
+
+    const compact = renderTuiSnapshot(model, { panel: 'tasks', width: 92, height: 26 });
+    const wide = renderTuiSnapshot(model, { panel: 'tasks', width: 120, height: 28 });
+
+    expect(compact.text).toContain('Showing 1-15 of 30/30');
+    expect(wide.text).toContain('Showing 1-17 of 30/30');
+    expect(compact.lines.every((line) => visibleWidth(line) === 92)).toBe(true);
+    expect(wide.lines.every((line) => visibleWidth(line) === 120)).toBe(true);
+  });
+
+  it('keeps Overview Resume Signals concise like the mockup', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Deferred overview task');
     writeProjectDocs(root, task.id);
@@ -225,8 +239,45 @@ describe('TUI snapshot renderer', () => {
 
     const snapshot = renderTuiSnapshot(model, { panel: 'overview', width: 150, height: 30 });
 
-    expect(snapshot.text).toContain('[DEFERRED] debt/release/tools/write-preview deferred');
+    expect(snapshot.text).toContain('Resume Signals');
+    expect(snapshot.text).toContain('health');
+    expect(snapshot.text).toContain('validation');
+    expect(snapshot.text).not.toContain('[DEFERRED] debt/release/tools/write-preview deferred');
     expect(snapshot.text).not.toContain('debt open 0, high 0  release advisory: ok');
+    expect(snapshot.text).not.toContain('active run');
+  });
+
+  it('selects Overview work Next and Proof text in mockup order', () => {
+    const root = tempProject();
+    const previous = createTaskCapsule(root, 'Previous overview proof task');
+    fs.writeFileSync(
+      path.join(previous.dir, 'HANDOFF.md'),
+      ['# Handoff', '', '## Next Recommended Step', '', '- Previous handoff next wins', '', '## Other', '', '- ignored'].join('\n'),
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(previous.dir, 'PLAN.md'),
+      ['# Plan', '', '- [ ] Previous unchecked plan should be later'].join('\n'),
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(previous.dir, 'EVIDENCE.md'),
+      ['# Evidence', '', '| Time | Kind | Summary | Result |', '|---|---|---|---|', '| now | test-log | Previous evidence summary | passed |'].join('\n'),
+      'utf8'
+    );
+    const current = createTaskCapsule(root, 'Current overview resume task');
+    fs.writeFileSync(path.join(current.dir, 'PLAN.md'), ['# Plan', '', '- [ ] Current unchecked plan should be later'].join('\n'), 'utf8');
+    writeProjectDocs(root, current.id);
+    const model = createTuiReadModel(root, { selectedTaskId: current.id });
+    model.activeRun.resume.resumePrompt.nextActions = ['Resume action wins first'];
+
+    const snapshot = renderTuiSnapshot(model, { panel: 'overview', width: 150, height: 30 });
+
+    expect(snapshot.text).toContain('Next Resume action wins first');
+    expect(snapshot.text).not.toContain('Next Current unchecked plan should be later');
+    expect(snapshot.text).toContain('Next Previous handoff next wins');
+    expect(snapshot.text).not.toContain('Next Previous unchecked plan should be later');
+    expect(snapshot.text).toContain('Proof passed: Previous evidence summary');
   });
 
   it('renders high contrast color mode explicitly', () => {

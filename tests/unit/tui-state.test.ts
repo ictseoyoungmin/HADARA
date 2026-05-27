@@ -128,6 +128,24 @@ describe('TUI interaction state', () => {
     expect(state.documentScroll).toBe(0);
   });
 
+  it('clamps detail document scroll when the rendered max is known', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Bounded document task');
+    writeProjectDocs(root);
+    const model = createTuiReadModel(root);
+
+    let state = createTuiInteractionState(model, { panel: 'detail' });
+    for (let index = 0; index < 20; index += 1) {
+      state = reduceTuiInteractionState(state, model, 'down', { documentMaxScroll: 3 });
+    }
+    expect(state.documentScroll).toBe(3);
+
+    state = reduceTuiInteractionState(state, model, 'up', { documentMaxScroll: 3 });
+    expect(state.documentScroll).toBe(2);
+    state = reduceTuiInteractionState(state, model, 'end', { documentMaxScroll: 3 });
+    expect(state.documentScroll).toBe(3);
+  });
+
   it('records refresh and quit requests without performing the effects', () => {
     const root = tempProject();
     createTaskCapsule(root, 'Signal task');

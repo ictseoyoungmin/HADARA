@@ -22,6 +22,8 @@ afterEach(() => {
 describe('TUI terminal shell', () => {
   it('decodes terminal input into TUI state keys', () => {
     expect(decodeTuiInput(Buffer.from('\x1b[A\x1b[B\x1b[5~\x1b[6~'))).toEqual(['up', 'down', 'pageup', 'pagedown']);
+    expect(decodeTuiInput(Buffer.from('\x1bOA\x1bOB\x1bOC\x1bOD'))).toEqual(['up', 'down', 'right', 'left']);
+    expect(decodeTuiInput(Buffer.from('\x1b[1;2A\x1b[1;5B\x1b[1;3C\x1b[1;4D'))).toEqual(['up', 'down', 'right', 'left']);
     expect(decodeTuiInput(Buffer.from('\t\x1b[Z\x1b[H\x1b[F\x1b[1~\x1b[4~'))).toEqual([
       'tab',
       'shift-tab',
@@ -221,6 +223,60 @@ describe('TUI terminal shell', () => {
     expect(session.getModel().selectedTaskId).toBe(first.id);
     expect(session.getModel().selectedTask?.summary.title).toBe('First terminal task');
 
+    session.stop();
+  });
+
+  it('does not accumulate hidden document scroll past the rendered bottom', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Terminal bounded document task');
+    fs.writeFileSync(
+      path.join(task.dir, 'TASK.md'),
+      ['# Scrollable', '', ...Array.from({ length: 24 }, (_, index) => `- Viewer line ${String(index + 1).padStart(2, '0')}`)].join('\n'),
+      'utf8'
+    );
+    writeProjectDocs(root, task.id);
+    const output = new MemoryOutput(92, 26);
+    const session = createTuiTerminalSession({
+      projectRoot: root,
+      input: new MemoryInput(),
+      output,
+      widthPolicy: 'compact',
+      terminalControl: false,
+      enableRawMode: false
+    });
+
+    session.start();
+    session.handleKey('3');
+    for (let index = 0; index < 50; index += 1) session.handleKey('down');
+    const bottom = session.getState().documentScroll;
+    session.handleKey('up');
+
+    expect(bottom).toBeGreaterThan(0);
+    expect(session.getState().documentScroll).toBe(bottom - 1);
+    session.stop();
+  });
+
+  it('uses the renderer height policy for task page movement', () => {
+    const root = tempProject();
+    const tasks = Array.from({ length: 30 }, (_, index) => createTaskCapsule(root, `Terminal height task ${String(index + 1).padStart(2, '0')}`));
+    writeProjectDocs(root, tasks[29]?.id ?? '');
+    const output = new MemoryOutput(92, 26);
+    const session = createTuiTerminalSession({
+      projectRoot: root,
+      input: new MemoryInput(),
+      output,
+      widthPolicy: 'compact',
+      terminalControl: false,
+      enableRawMode: false
+    });
+
+    session.start();
+    session.handleKey('2');
+    session.handleKey('pagedown');
+
+    expect(session.getState().selectedTaskIndex).toBe(15);
+    expect(session.getState().taskListScroll).toBe(1);
+    expect(output.text()).toContain('Showing 2-16 of 30/30');
     session.stop();
   });
 

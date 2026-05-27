@@ -86,6 +86,21 @@ export function incompleteChecklist(markdown: string, limit = 2): string[] {
     .slice(0, limit);
 }
 
+export function evidenceFromMarkdown(markdown: string, limit = 2): string[] {
+  return String(markdown || '')
+    .split(/\r?\n/)
+    .map((line) => {
+      if (/^\s*#{1,6}\s+/.test(line)) return '';
+      const cells = line.trim().match(/^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|$/);
+      if (!cells) return cleanPreviewLine(line);
+      if (/^time$/i.test(cells[1] ?? '') || /^---$/.test(cells[1] ?? '')) return '';
+      return `${String(cells[4] ?? '').trim()}: ${String(cells[3] ?? '').trim()}`;
+    })
+    .map(cleanPreviewLine)
+    .filter(Boolean)
+    .slice(0, limit);
+}
+
 export function cleanPreviewLine(value: unknown): string {
   return String(value ?? '')
     .replace(/^#{1,6}\s+/, '')

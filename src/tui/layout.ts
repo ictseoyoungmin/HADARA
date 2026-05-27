@@ -40,7 +40,7 @@ export function fitAnsi(input: string, width: number): string {
   const text = String(input);
   const currentWidth = visibleWidth(text);
   if (currentWidth <= target) return `${text}${repeat(' ', target - currentWidth)}`;
-  return fit(stripAnsi(text), target);
+  return truncateAnsi(text, target);
 }
 
 export function trimFit(input: string, width: number): string {
@@ -101,4 +101,33 @@ export function columns(left: string[], right: string[], width: number, ratio = 
     output.push(`${pad(left[index] ?? '', leftWidth)}${repeat(' ', gap)}${pad(right[index] ?? '', rightWidth)}`);
   }
   return output;
+}
+
+function truncateAnsi(text: string, width: number): string {
+  if (width <= 0) return '';
+  if (width <= 1) return stripAnsi(text).slice(0, width);
+
+  let output = '';
+  let used = 0;
+  let index = 0;
+  let sawAnsi = false;
+  while (index < text.length) {
+    const ansi = text.slice(index).match(/^\x1b\[[0-9;?]*[ -/]*[@-~]/);
+    if (ansi) {
+      output += ansi[0];
+      sawAnsi = true;
+      index += ansi[0].length;
+      continue;
+    }
+
+    const char = Array.from(text.slice(index))[0] ?? '';
+    const charWidth = (char.codePointAt(0) ?? 0) > 0x2e80 ? 2 : 1;
+    if (used + charWidth > width - 1) break;
+    output += char;
+    used += charWidth;
+    index += char.length;
+  }
+
+  const suffix = `${output}…${repeat(' ', Math.max(0, width - used - 1))}`;
+  return sawAnsi ? `${suffix}\x1b[0m` : suffix;
 }
