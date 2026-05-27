@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
+import { isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 
 export type HarnessValidationSeverity = 'error' | 'warning';
 export type HarnessValidationLevel = 'draft' | 'done';
@@ -279,6 +279,7 @@ function validateEvidenceIndex(projectRoot: string, task: TaskCapsule, issues: H
 
 function validateDoneLevel(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[], checkedFiles: string[]): void {
   validateTaskStatusDone(projectRoot, task, issues);
+  validateDoneLevelScaffoldContent(projectRoot, task, issues);
   validateAcceptanceDone(projectRoot, task, issues);
   validateEvidenceIndexHasRecords(projectRoot, task, issues);
   validateHandoffDone(projectRoot, task, issues);
@@ -317,6 +318,71 @@ function validateAcceptanceDone(projectRoot: string, task: TaskCapsule, issues: 
       message: 'Done-level validation requires all acceptance checkboxes to be checked.',
       path: relativePath
     });
+  }
+}
+
+function validateDoneLevelScaffoldContent(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+  const checks: Array<{ fileName: string; code: string; message: string }> = [
+    {
+      fileName: 'TASK.md',
+      code: 'TASK_SCAFFOLD_PLACEHOLDER',
+      message: 'Done-level validation requires TASK.md Goal, Scope, and Out of Scope to replace scaffold placeholders.'
+    },
+    {
+      fileName: 'PLAN.md',
+      code: 'PLAN_SCAFFOLD_UNCHANGED',
+      message: 'Done-level validation requires PLAN.md to replace the default scaffold plan.'
+    },
+    {
+      fileName: 'CONTEXT.md',
+      code: 'CONTEXT_SCAFFOLD_UNCHANGED',
+      message: 'Done-level validation requires CONTEXT.md to contain task-specific context.'
+    },
+    {
+      fileName: 'FILES.md',
+      code: 'FILES_SCAFFOLD_UNCHANGED',
+      message: 'Done-level validation requires FILES.md to list touched files or explain that no files changed.'
+    },
+    {
+      fileName: 'ACCEPTANCE.md',
+      code: 'ACCEPTANCE_SCAFFOLD_UNCHANGED',
+      message: 'Done-level validation requires ACCEPTANCE.md to replace the default checklist items.'
+    },
+    {
+      fileName: 'TESTS.md',
+      code: 'TESTS_SCAFFOLD_UNCHANGED',
+      message: 'Done-level validation requires TESTS.md to replace the default npm test/npm run check scaffold.'
+    },
+    {
+      fileName: 'RISKS.md',
+      code: 'RISKS_SCAFFOLD_UNCHANGED',
+      message: 'Done-level validation requires RISKS.md to list risks or record why no material risks remain.'
+    },
+    {
+      fileName: 'DECISIONS.md',
+      code: 'DECISIONS_SCAFFOLD_UNCHANGED',
+      message: 'Done-level validation requires DECISIONS.md to replace the default scaffold note.'
+    },
+    {
+      fileName: 'EVIDENCE.md',
+      code: 'EVIDENCE_SCAFFOLD_UNCHANGED',
+      message: 'Done-level validation requires EVIDENCE.md to contain at least one evidence table row.'
+    }
+  ];
+
+  for (const check of checks) {
+    const filePath = path.join(task.dir, check.fileName);
+    if (!fs.existsSync(filePath)) continue;
+
+    const content = fs.readFileSync(filePath, 'utf8');
+    if (isTaskCapsuleScaffoldContent(task, check.fileName, content)) {
+      issues.push({
+        severity: 'error',
+        code: check.code,
+        message: check.message,
+        path: toPortablePath(path.relative(projectRoot, filePath))
+      });
+    }
   }
 }
 

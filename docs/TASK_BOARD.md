@@ -121,3 +121,4 @@
 | T-0118 | TUI Tasks Height and Overview Copy Parity | Done | tasks/T-0118-tui-tasks-height-and-overview-copy-parity | Aligns Tasks panel height with Detail, simplifies Overview Resume Signals, matches mockup-style Current/Previous Work Next/Proof fallback order, and lets numeric keys be searched while Tasks search is active. |
 | T-0119 | Release and Packaging Track | Done | tasks/T-0119-release-and-packaging-track | Extends release gate with package/bin/script, Node/CI, clean-checkout smoke, generated artifact policy, and operational debt checklist checks. |
 | T-0120 | Dogfooding E2E Fixture | Done | tasks/T-0120-dogfooding-e2e-fixture | Adds a deterministic fixture replaying context export, policy, evidence, handoff, and done-level harness continuity. |
+| T-0121 | Done-level Capsule Scaffold Guard | Done | tasks/T-0121-done-level-capsule-scaffold-guard | Adds done-level harness validation for scaffold/default capsule Markdown leftovers. |

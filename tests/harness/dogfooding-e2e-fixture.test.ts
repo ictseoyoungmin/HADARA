@@ -299,6 +299,36 @@ Draft
     '# Acceptance Criteria\n\n- [ ] Context export was read.\n- [ ] Policy continuity was checked.\n- [ ] Evidence was attached.\n- [ ] Handoff was updated.\n- [ ] Done-level harness validation passed.\n',
     'utf8'
   );
+  fs.writeFileSync(
+    path.join(task.dir, 'PLAN.md'),
+    '# Plan\n\n1. Read exported HADARA context.\n2. Create a temporary Task Capsule workflow.\n3. Check policy decisions without executing shell commands.\n4. Attach public evidence and update handoff.\n5. Run done-level harness validation.\n',
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(task.dir, 'CONTEXT.md'),
+    '# Context\n\nThis fixture proves a local HADARA-on-HADARA flow can move from context export to done-level validation without provider calls or shell execution.\n',
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(task.dir, 'FILES.md'),
+    '# Files\n\n| Path | Action | Reason |\n|---|---|---|\n| docs/AGENT_HANDOFF.md | Update | Record fixture handoff summary. |\n| EVIDENCE.md | Update | Attach public fixture evidence. |\n| evidence.jsonl | Update | Index public fixture evidence. |\n',
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(task.dir, 'TESTS.md'),
+    '# Tests\n\n## Required\n\n- Done-level harness validation for the fixture capsule\n- Policy decision assertions for allowed, requested, and blocked commands\n\n## Optional\n\n- Built CLI JSON-surface smoke when dist exists\n',
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(task.dir, 'RISKS.md'),
+    '# Risks\n\n| Risk | Mitigation |\n|---|---|\n| Fixture accidentally implies real execution | Assert no shell/provider/MCP write/release commands are used. |\n',
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(task.dir, 'DECISIONS.md'),
+    '# Decisions\n\n- Keep the dogfooding fixture deterministic and local-only.\n- Use existing CLI JSON surfaces instead of adding a public dogfooding command.\n',
+    'utf8'
+  );
 }
 
 function renderFixtureReport(

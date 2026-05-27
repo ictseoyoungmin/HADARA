@@ -53,6 +53,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Init profiles exist as `hadara init --profile minimal|full|hadara-protocol`; default/minimal init creates core HADARA protocol docs for Hermes/export-context readiness.
 - Harness validation supports `--level draft|done`; done-level validation requires Done status, completed acceptance, evidence records, and updated handoff sections.
 - Done-level harness validation now also checks `docs/TASK_BOARD.md` for exactly one row for the validated task, `Done` status, and the expected Task Capsule path, catching duplicate or stale append/update results before completion.
+- Done-level harness validation now rejects completed Task Capsules whose standard Markdown files still contain initial scaffold placeholders or default empty content, while draft-level validation remains structural.
 - Run scenario scaffolding exists as `hadara run scaffold --task <id> --command <command>`, generating deterministic ScriptedProvider and fake-shell fixture JSON files under `.hadara/scenarios/`.
 - Runtime validation now rejects unsupported permission modes and evidence result values; harness validation enforces evidence JSONL enum values.
 - JSON-mode CLI parse and validation failures return a shared `hadara.cli.error.v1` fallback envelope.

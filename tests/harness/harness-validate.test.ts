@@ -73,12 +73,45 @@ describe('Harness Task Capsule validation', () => {
     );
   });
 
+  it('rejects completed capsules that still contain scaffold Markdown defaults', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Scaffold leftovers');
+    markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
+    markAcceptanceDone(task.dir);
+    writeHandoffDone(task.dir);
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'note',
+      summary: 'Done-level validation evidence',
+      result: 'passed'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining([
+        'TASK_SCAFFOLD_PLACEHOLDER',
+        'PLAN_SCAFFOLD_UNCHANGED',
+        'CONTEXT_SCAFFOLD_UNCHANGED',
+        'FILES_SCAFFOLD_UNCHANGED',
+        'ACCEPTANCE_SCAFFOLD_UNCHANGED',
+        'TESTS_SCAFFOLD_UNCHANGED',
+        'RISKS_SCAFFOLD_UNCHANGED',
+        'DECISIONS_SCAFFOLD_UNCHANGED'
+      ])
+    );
+    expect(result.issues.map((issue) => issue.code)).not.toContain('EVIDENCE_SCAFFOLD_UNCHANGED');
+  });
+
   it('accepts done-level validation for completed capsules', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Completed capsule');
     markTaskDone(root, task.id);
     markTaskBoardDone(root, task.id);
     markAcceptanceDone(task.dir);
+    writeCompletedCapsuleDocs(task.dir);
     writeHandoffDone(task.dir);
     appendEvidence(root, {
       taskId: task.id,
@@ -106,6 +139,7 @@ describe('Harness Task Capsule validation', () => {
       'utf8'
     );
     markAcceptanceDone(task.dir);
+    writeCompletedCapsuleDocs(task.dir);
     writeHandoffDone(task.dir);
     appendEvidence(root, {
       taskId: task.id,
@@ -141,6 +175,7 @@ describe('Harness Task Capsule validation', () => {
       'utf8'
     );
     markAcceptanceDone(task.dir);
+    writeCompletedCapsuleDocs(task.dir);
     writeHandoffDone(task.dir);
     appendEvidence(root, {
       taskId: task.id,
@@ -365,6 +400,26 @@ function markTaskBoardDone(projectRoot: string, taskId: string): void {
 function markAcceptanceDone(taskDir: string): void {
   const acceptancePath = path.join(taskDir, 'ACCEPTANCE.md');
   fs.writeFileSync(acceptancePath, fs.readFileSync(acceptancePath, 'utf8').replace(/- \[ \]/g, '- [x]'), 'utf8');
+}
+
+function writeCompletedCapsuleDocs(taskDir: string): void {
+  const taskPath = path.join(taskDir, 'TASK.md');
+  fs.writeFileSync(
+    taskPath,
+    fs
+      .readFileSync(taskPath, 'utf8')
+      .replace('## Goal\n\nTBD.', '## Goal\n\nValidate done-level completion gates.')
+      .replace('## Scope\n\nTBD.', '## Scope\n\n- Exercise task-specific completed capsule documentation.')
+      .replace('## Out of Scope\n\nTBD.', '## Out of Scope\n\n- Broad workflow changes.'),
+    'utf8'
+  );
+  fs.writeFileSync(path.join(taskDir, 'PLAN.md'), '# Plan\n\n1. Prepare completed capsule fixture.\n2. Run done-level validation.\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'CONTEXT.md'), '# Context\n\nThis fixture represents a completed task with task-specific capsule docs.\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'FILES.md'), '# Files\n\n| Path | Action | Reason |\n|---|---|---|\n| src/harness/validate.ts | Test fixture | Exercise done-level validation. |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'ACCEPTANCE.md'), '# Acceptance Criteria\n\n- [x] Done-level fixture is complete.\n- [x] Evidence is attached.\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'TESTS.md'), '# Tests\n\n## Required\n\n- Focused harness validation fixture\n\n## Optional\n\n- None\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'RISKS.md'), '# Risks\n\n| Risk | Mitigation |\n|---|---|\n| Fixture drift | Keep assertions focused. |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'DECISIONS.md'), '# Decisions\n\n- Use task-specific completed fixture content.\n', 'utf8');
 }
 
 function writeHandoffDone(taskDir: string): void {

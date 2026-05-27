@@ -9,7 +9,7 @@ export interface TaskCapsule {
   dir: string;
 }
 
-const TASK_FILES: Record<string, (task: TaskCapsule) => string> = {
+export const TASK_FILES: Record<string, (task: TaskCapsule) => string> = {
   'TASK.md': (task) => `# ${task.id} ${task.title}\n\n## Goal\n\nTBD.\n\n## Scope\n\nTBD.\n\n## Out of Scope\n\nTBD.\n\n## Status\n\nDraft\n`,
   'PLAN.md': () => `# Plan\n\n1. Read relevant docs.\n2. Implement the smallest useful slice.\n3. Run tests.\n4. Attach evidence.\n5. Update handoff.\n`,
   'CONTEXT.md': () => `# Context\n\nRelevant documents, files, assumptions, and constraints.\n`,
@@ -22,6 +22,25 @@ const TASK_FILES: Record<string, (task: TaskCapsule) => string> = {
   'evidence.jsonl': () => '',
   'HANDOFF.md': () => `# Handoff\n\n## Last Completed\n\nTBD.\n\n## Next Recommended Step\n\nTBD.\n`
 };
+
+export function isTaskCapsuleScaffoldContent(task: TaskCapsule, fileName: string, content: string): boolean {
+  if (fileName === 'TASK.md') {
+    return ['## Goal', '## Scope', '## Out of Scope'].some((heading) => isPlaceholderSection(readMarkdownSection(content, heading)));
+  }
+
+  if (fileName === 'ACCEPTANCE.md') {
+    return acceptanceChecklistText(content).join('\n') === [
+      'Scope is implemented.',
+      'Tests or explicit constraints are recorded.',
+      'Evidence is attached.',
+      'Handoff is updated.'
+    ].join('\n');
+  }
+
+  const factory = TASK_FILES[fileName];
+  if (!factory) return false;
+  return normalizeMarkdown(content) === normalizeMarkdown(factory(task));
+}
 
 export function nextTaskId(tasksDir: string): string {
   ensureDir(tasksDir);
@@ -83,4 +102,29 @@ export function listTaskCapsules(projectRoot: string): TaskCapsule[] {
       return { id: fullId, title, slug, dir };
     })
     .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function readMarkdownSection(content: string, heading: string): string {
+  const start = content.indexOf(heading);
+  if (start < 0) return '';
+  const afterHeading = content.slice(start + heading.length);
+  const nextHeading = afterHeading.search(/\n##\s+/);
+  return nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading;
+}
+
+function isPlaceholderSection(value: string): boolean {
+  const normalized = value.trim();
+  return normalized.length === 0 || /^TBD\.?$/i.test(normalized);
+}
+
+function normalizeMarkdown(value: string): string {
+  return value.replace(/\r\n/g, '\n').trim();
+}
+
+function acceptanceChecklistText(content: string): string[] {
+  return content
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => /^-\s+\[[ xX]\]/.test(line))
+    .map((line) => line.replace(/^-\s+\[[ xX]\]\s*/, '').trim());
 }

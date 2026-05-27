@@ -81,13 +81,14 @@
 - T-0118 is complete: TUI Tasks and Overview copy/search parity were tightened after follow-up operator feedback. Tasks visible rows now derive from the same available-height policy as Detail, terminal task page movement uses that same count, Overview Resume Signals is reduced to health/tasks plus validation like the mockup, Current/Previous Work `Next`/`Proof` fallback order uses existing read-model data in the mockup order, and active Tasks search treats numeric `1`/`2`/`3`/`4` as query text until search exits.
 - T-0119 is complete: `hadara release gate --json` now reports a read-only planning/checklist release report for package bin metadata, validation scripts, Node 22 policy, CI clean install behavior, clean-checkout smoke planning, generated artifact boundaries, and operational debt. It does not create clean checkouts, run package/install smoke, diff generated artifacts, or observe remote CI. Readiness failures use check-specific issue codes; advisory mode keeps readiness/debt problems warning-only with `ok: true`, while strict mode promotes them to blocking errors and retains exit code 6 when the report is not ok.
 - T-0120 is complete: a deterministic dogfooding E2E fixture now replays a HADARA-on-HADARA workflow from in-memory context export through Task Capsule creation/completion, explicit allowed/requested/blocked policy checks, public evidence attachment, detailed generated capsule file assertions, handoff update, done-level harness validation, and built CLI JSON-surface smoke without shell execution, provider calls, MCP writes, release/package execution, or remote CI.
+- T-0121 is complete: done-level harness validation now rejects completed Task Capsules whose standard Markdown files still contain scaffold placeholders or default empty content, while draft-level validation remains structural; scaffold detection is shared from the Task Capsule scaffold helper, and dogfooding fixture completion now fills the generated capsule docs.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0118 TUI Tasks Height and Overview Copy Parity: aligned Tasks panel height with Detail, simplified Overview Resume Signals, matched mockup-style Work-card `Next`/`Proof` fallback order, and fixed numeric Tasks search input.
 - T-0119 Release and Packaging Track: extended release gate reporting with package/bin/script, Node/CI, clean-checkout smoke, generated artifact policy, and operational debt checklist checks.
 - T-0120 Dogfooding E2E Fixture: added a deterministic context-to-done fixture for HADARA-on-HADARA workflow continuity, detailed capsule-file assertions, explicit policy states, and built CLI JSON smoke.
+- T-0121 Done-level Capsule Scaffold Guard: added done-level scaffold/default Markdown detection for completed capsules, centralized scaffold comparison in the Task Capsule helper, and updated dogfooding completion fixtures.
 
 ## Current Known Problems
 
@@ -110,11 +111,11 @@
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
 - Latest TUI 1000-capsule benchmark: Docker temp project returned `ok: true`, `count: 1000`, `coldFullMs: 1157`, `fastHitMs: 17`, cache path `.hadara/local/tui/read-model-cache.json`.
-- Latest focused dogfooding check: Docker temp-copy `npm run build && npx vitest run tests/harness/dogfooding-e2e-fixture.test.ts` passed with 2 tests after T-0120 feedback, including built CLI JSON smoke.
-- Latest full check: Docker temp-copy `npm run check` passed with TypeScript build, 49 test files, and 333 tests after T-0120 feedback.
+- Latest focused harness/dogfooding check: Docker temp-copy `npm run build && npx vitest run tests/harness/harness-validate.test.ts tests/harness/dogfooding-e2e-fixture.test.ts` passed with 2 files and 18 tests after centralizing T-0121 scaffold detection.
+- Latest full check: Docker temp-copy `npm run check` passed with TypeScript build, 49 test files, and 334 tests after centralizing T-0121 scaffold detection.
 - Latest built CLI release-gate smoke: Docker built CLI `release gate --json --project /workspace` returned advisory `ok: true` with 7 coded checks, and `release gate --mode strict --json --project /workspace` returned strict `ok: false` with 7 coded checks and exit code 6 for open high operational debt.
 - Latest built CLI smoke: Docker built CLI `node dist/cli/main.js tui --snapshot --width 150 --height 30 --project /workspace` rendered Overview Current Work as T-0116, Previous Work as T-0115, and heading-aware Goal/Next lines from read-model document text.
-- Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0120 --level done --json --project /workspace` returned `ok: true` with no issues after the dogfooding fixture update.
+- Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0121 --level done --json --project /workspace` returned `ok: true` with no issues after the scaffold guard update.
 - Pre-T-0113 TUI performance measurement: Docker `hadara-cli-test` against `/workspace` measured full `createTuiReadModel` around 20.02s, startup around 18.83s, full refresh around 22.35s, different-task detail entry around 24.24s, and four loading-frame render cost around 6.07ms; cache writes failed on a stale missing capsule `TASK.md`, so current `--cache` did not hit in that measurement.
 - Latest TUI performance re-measurement after T-0113: Docker temp-copy build measured full read 26321.27ms, fast read 2705.97ms, cache fast hit 584.59ms, terminal startup 3098.58ms, terminal refresh 2786.69ms, and different-task detail 2980.76ms against `/workspace`.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
