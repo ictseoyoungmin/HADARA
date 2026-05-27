@@ -1,16 +1,21 @@
 import { createActiveRunResumeReport, ActiveRunResumeReport } from '../services/active-run-state';
+import { safeCreateActiveRunProjection } from '../services/active-run-state';
 import { createEvidenceListReport, EvidenceListReport } from '../services/evidence-list';
 import { createOperationalDebtReport, createReleaseGateReport, OperationalDebtReport, ReleaseGateReport } from '../services/operational-debt';
 import { createOpsStatusReport, OpsStatusReport } from '../services/operations-status-service';
+import { extractSection, readProjectSources } from '../services/project-read-model';
 import { createTaskListReport, createTaskReadReport, TaskJsonSummary, TaskListReport, TaskReadReport } from '../services/task-read-model';
 import { createToolsListReport, ToolsListReport } from '../services/tools-list';
 import { createWritePreflightReport, WritePreflightReport } from '../services/write-preflight';
+import fs from 'node:fs';
+import path from 'node:path';
 
 export interface TuiReadModelOptions {
   selectedTaskId?: string;
   evidenceLimit?: number;
   includePrivateEvidence?: boolean;
   writePreviewTitle?: string;
+  profile?: 'full' | 'fast';
 }
 
 export interface TuiReadModelIssue {
@@ -184,6 +189,8 @@ export function createTuiLoadingReadModel(): TuiReadModel {
 }
 
 export function createTuiReadModel(projectRoot: string, options: TuiReadModelOptions = {}): TuiReadModel {
+  if (options.profile === 'fast') return createTuiFastReadModel(projectRoot, options);
+
   const status = createOpsStatusReport(projectRoot);
   const tasks = createTaskListReport(projectRoot);
   const selectedTaskId = resolveSelectedTaskId(tasks.tasks, status, options.selectedTaskId);
@@ -238,6 +245,127 @@ export function createTuiReadModel(projectRoot: string, options: TuiReadModelOpt
   };
 }
 
+export function createTuiFastReadModel(projectRoot: string, options: TuiReadModelOptions = {}): TuiReadModel {
+  const sources = readProjectSources(projectRoot);
+  const tasks = createTaskListReport(projectRoot);
+  const activeRunProjection = safeCreateActiveRunProjection(projectRoot);
+  const status = createFastOpsStatusReport(projectRoot, sources, tasks, activeRunProjection);
+  const selectedTaskId = resolveSelectedTaskId(tasks.tasks, status, options.selectedTaskId);
+  const selectedSummary = selectedTaskId ? tasks.tasks.find((task) => task.id === selectedTaskId) ?? null : null;
+  const selectedTask = selectedSummary
+    ? {
+        summary: selectedSummary,
+        detail: createTaskReadReport(projectRoot, selectedSummary.id, { includePrivate: options.includePrivateEvidence }),
+        evidence: createEvidenceListReport(projectRoot, {
+          taskId: selectedSummary.id,
+          limit: options.evidenceLimit ?? DEFAULT_EVIDENCE_LIMIT,
+          includePrivate: options.includePrivateEvidence
+        })
+      }
+    : null;
+  const activeRunResume = createActiveRunResumeReport(projectRoot);
+  const deferredIssue: TuiReadModelIssue = {
+    source: 'tui-read-model',
+    severity: 'warning',
+    code: 'TUI_HEAVY_READS_DEFERRED',
+    message: 'TUI fast read model deferred debt, release-gate, tools, and write-preflight reads.'
+  };
+  const issues = [
+    ...collectIssues({
+      status,
+      activeRunResume,
+      selectedTask,
+      releaseGate: createDeferredReleaseGateReport(),
+      writePreview: createDeferredWritePreflightReport(),
+      selectedTaskId,
+      explicitSelectedTaskId: options.selectedTaskId ?? null
+    }),
+    deferredIssue
+  ];
+
+  return {
+    schemaVersion: 'hadara.tui.read_model.internal.v1',
+    command: 'tui.read-model',
+    ok: !issues.some((issue) => issue.severity === 'error'),
+    generatedAt: new Date().toISOString(),
+    selectedTaskId,
+    overview: createOverview(tasks.tasks, selectedSummary, status),
+    status,
+    tasks,
+    selectedTask,
+    activeRun: {
+      projection: status.activeRun,
+      resume: activeRunResume
+    },
+    debt: createDeferredDebtReport(),
+    releaseGate: createDeferredReleaseGateReport(),
+    tools: createDeferredToolsListReport(),
+    writePreview: createDeferredWritePreflightReport(),
+    issues
+  };
+}
+
+function createFastOpsStatusReport(
+  projectRoot: string,
+  sources: ReturnType<typeof readProjectSources>,
+  tasks: TaskListReport,
+  activeRun: OpsStatusReport['activeRun']
+): OpsStatusReport {
+  const counts = countTaskStatuses(tasks.tasks);
+  const validation = {
+    latestFullCheck:
+      extractValidationLine(sources.handoff.content, 'Latest full check') ?? extractValidationHistoryLine(sources.validationHistory.content, 'Docker check'),
+    latestDoneLevelValidation:
+      extractValidationLine(sources.handoff.content, 'Latest done-level validation') ??
+      extractValidationHistoryLine(sources.validationHistory.content, 'harness validate')
+  };
+  const issues: OpsStatusReport['issues'] = [];
+  if (!sources.projectState.exists) issues.push({ severity: 'warning', code: 'PROJECT_STATE_MISSING', message: 'docs/PROJECT_STATE.md is missing.' });
+  if (!sources.handoff.exists) issues.push({ severity: 'warning', code: 'AGENT_HANDOFF_MISSING', message: 'docs/AGENT_HANDOFF.md is missing.' });
+  if (!sources.taskBoard.exists) issues.push({ severity: 'warning', code: 'TASK_BOARD_MISSING', message: 'docs/TASK_BOARD.md is missing.' });
+  if (!sources.developmentSlices.exists) issues.push({ severity: 'warning', code: 'DEVELOPMENT_SLICES_MISSING', message: 'docs/DEVELOPMENT_SLICES.md is missing.' });
+  if (!validation.latestFullCheck && !validation.latestDoneLevelValidation) {
+    issues.push({ severity: 'warning', code: 'VALIDATION_BASELINE_MISSING', message: 'No latest validation baseline was found in handoff or validation history.' });
+  }
+  issues.push(...activeRun.issues);
+
+  return {
+    schemaVersion: 'hadara.ops.status.v1',
+    command: 'ops.status',
+    ok: true,
+    health: issues.some((issue) => issue.severity === 'error') ? 'error' : issues.length > 0 ? 'degraded' : 'ok',
+    project: {
+      branch: readGitBranch(projectRoot),
+      phase: extractProjectPhase(sources.projectState.content)
+    },
+    tasks: {
+      counts: counts.counts,
+      rawStatusCounts: counts.rawStatusCounts,
+      normalizedStatusCounts: counts.normalizedStatusCounts,
+      lastCompleted: extractLastCompletedTaskIds(sources.handoff.content),
+      nextRecommended: extractListSection(sources.handoff.content, '## Next Recommended Step')[0] ?? null
+    },
+    handoff: {
+      currentState: extractListSection(sources.handoff.content, '## Current State'),
+      knownProblems: extractListSection(sources.handoff.content, '## Current Known Problems'),
+      nextRecommendedStep: extractListSection(sources.handoff.content, '## Next Recommended Step')
+    },
+    validation,
+    activeRun,
+    debt: { total: 0, open: 0, tracked: 0, mitigated: 0, candidate: 0, highOpen: 0, bySeverity: { high: 0, medium: 0, low: 0 } },
+    mcp: {
+      defaultMode: 'read-only',
+      evidenceAttach: {
+        enabledByDefault: false,
+        requiresFlag: '--enable-evidence-attach',
+        requiresApproval: true,
+        audited: true
+      }
+    },
+    issues
+  };
+}
+
 function resolveSelectedTaskId(tasks: TaskJsonSummary[], status: OpsStatusReport, explicitSelectedTaskId?: string): string | null {
   if (explicitSelectedTaskId) return explicitSelectedTaskId;
   const activeTaskId = status.activeRun.activeRun?.taskId;
@@ -287,4 +415,149 @@ function collectIssues(input: {
   }
 
   return issues;
+}
+
+function countTaskStatuses(tasks: TaskJsonSummary[]): {
+  counts: OpsStatusReport['tasks']['counts'];
+  rawStatusCounts: Record<string, number>;
+  normalizedStatusCounts: Record<string, number>;
+} {
+  const counts: OpsStatusReport['tasks']['counts'] = {
+    done: 0,
+    draft: 0,
+    partial: 0,
+    superseded: 0,
+    inProgress: 0,
+    unknown: 0
+  };
+  const rawStatusCounts: Record<string, number> = {};
+  const normalizedStatusCounts: Record<string, number> = {};
+  for (const task of tasks) {
+    const rawStatus = task.status || 'Unknown';
+    const normalizedStatus = normalizeStatus(rawStatus);
+    const aggregate = aggregateStatus(normalizedStatus);
+    counts[aggregate] += 1;
+    rawStatusCounts[rawStatus] = (rawStatusCounts[rawStatus] ?? 0) + 1;
+    normalizedStatusCounts[normalizedStatus] = (normalizedStatusCounts[normalizedStatus] ?? 0) + 1;
+  }
+  return { counts, rawStatusCounts, normalizedStatusCounts };
+}
+
+function readGitBranch(projectRoot: string): string {
+  const headPath = path.join(projectRoot, '.git', 'HEAD');
+  if (!fs.existsSync(headPath)) return 'unknown';
+  const head = fs.readFileSync(headPath, 'utf8').trim();
+  const refPrefix = 'ref: refs/heads/';
+  if (head.startsWith(refPrefix)) return head.slice(refPrefix.length);
+  return head.length > 0 ? 'detached' : 'unknown';
+}
+
+function extractProjectPhase(projectState: string): string {
+  const section = extractSection(projectState, '## Current Phase');
+  const line = section
+    .split(/\r?\n/)
+    .map((value) => value.trim())
+    .find(Boolean);
+  if (!line) return 'unknown';
+  const explicit = line.match(/^Phase:\s*(.+)$/i);
+  if (explicit) return explicit[1].trim();
+  if (/Phase 0\s*\/\s*Phase 1 boundary/i.test(line)) return 'bootstrap-development';
+  return line;
+}
+
+function extractListSection(content: string, heading: string): string[] {
+  const section = extractSection(content, heading);
+  return section
+    .split(/\r?\n/)
+    .map((line) => line.trim().replace(/^[-*]\s+/, ''))
+    .filter(Boolean);
+}
+
+function extractLastCompletedTaskIds(handoff: string): string[] {
+  return extractListSection(handoff, '## Last 3 Completed Tasks')
+    .map((line) => line.match(/^(T-\d{4})\b/)?.[1])
+    .filter((value): value is string => Boolean(value));
+}
+
+function extractValidationLine(handoff: string, label: string): string | null {
+  const validation = extractListSection(handoff, '## Validation Baseline');
+  const prefix = `${label}:`;
+  const line = validation.find((item) => item.startsWith(prefix));
+  return line ? line.slice(prefix.length).trim().replace(/\.$/, '') : null;
+}
+
+function extractValidationHistoryLine(validationHistory: string, pattern: string): string | null {
+  const lines = validationHistory
+    .split(/\r?\n/)
+    .map((line) => line.trim().replace(/^[-*]\s+/, ''))
+    .filter((line) => line.includes(pattern));
+  return lines.at(-1)?.replace(/\.$/, '') ?? null;
+}
+
+function normalizeStatus(status: string): string {
+  const value = status.trim().toLowerCase().replace(/[\s_-]+(.)/g, (_match, letter: string) => letter.toUpperCase());
+  return value || 'unknown';
+}
+
+function aggregateStatus(status: string): keyof OpsStatusReport['tasks']['counts'] {
+  if (status === 'done') return 'done';
+  if (status === 'draft') return 'draft';
+  if (status === 'partial') return 'partial';
+  if (status === 'superseded') return 'superseded';
+  if (status === 'inProgress' || status === 'active' || status === 'doing') return 'inProgress';
+  return 'unknown';
+}
+
+function createDeferredDebtReport(): OperationalDebtReport {
+  return {
+    schemaVersion: 'hadara.operational_debt.v1',
+    command: 'operational-debt.report',
+    ok: true,
+    records: [],
+    aggregate: { total: 0, open: 0, tracked: 0, mitigated: 0, candidate: 0, highOpen: 0, bySeverity: { high: 0, medium: 0, low: 0 } },
+    capsuleSizeIndicators: [],
+    issues: []
+  };
+}
+
+function createDeferredReleaseGateReport(): ReleaseGateReport {
+  return {
+    schemaVersion: 'hadara.releaseGate.v1',
+    command: 'release.gate',
+    mode: 'advisory',
+    ok: true,
+    checks: [
+      {
+        name: 'Deferred release-gate check',
+        status: 'warning',
+        summary: 'Release-gate debt scan is deferred in the TUI fast read model.'
+      }
+    ],
+    issues: []
+  };
+}
+
+function createDeferredToolsListReport(): ToolsListReport {
+  return {
+    schemaVersion: 'hadara.tools.list.v1',
+    command: 'tools.list',
+    ok: true,
+    tools: [],
+    surfaces: [],
+    disabled: [],
+    issues: []
+  } as unknown as ToolsListReport;
+}
+
+function createDeferredWritePreflightReport(): WritePreflightReport {
+  return {
+    schemaVersion: 'hadara.write.preflight.v1',
+    command: 'unknown',
+    ok: true,
+    writes: [],
+    risk: 'low',
+    requiresApproval: false,
+    workspaceBoundary: 'project',
+    issues: []
+  } as unknown as WritePreflightReport;
 }

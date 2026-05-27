@@ -109,6 +109,28 @@ describe('TUI read-model aggregator', () => {
     expect(model.selectedTask?.detail.files?.['TASK.md']).toContain(`# ${latest.id} Latest task`);
   });
 
+  it('can build a fast TUI read model that defers expensive advisory surfaces', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Fast aggregate task');
+    writeProjectDocs(root, task.id);
+
+    const model = createTuiReadModel(root, { profile: 'fast' });
+
+    expect(model.ok).toBe(true);
+    expect(model.selectedTaskId).toBe(task.id);
+    expect(model.overview.currentWork?.id).toBe(task.id);
+    expect(model.selectedTask?.detail.files?.['TASK.md']).toContain('Fast aggregate task');
+    expect(model.debt.aggregate.total).toBe(0);
+    expect(model.releaseGate.checks[0]?.name).toBe('Deferred release-gate check');
+    expect(model.writePreview.command).toBe('unknown');
+    expect(model.issues).toContainEqual({
+      source: 'tui-read-model',
+      severity: 'warning',
+      code: 'TUI_HEAVY_READS_DEFERRED',
+      message: 'TUI fast read model deferred debt, release-gate, tools, and write-preflight reads.'
+    });
+  });
+
   it('reports an explicit missing selected task as an aggregate error', () => {
     const root = tempProject();
     createTaskCapsule(root, 'Existing task');

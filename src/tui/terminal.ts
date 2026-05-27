@@ -145,13 +145,13 @@ export class TuiTerminalSession {
     let nextState = reduceTuiInteractionState(this.state, this.model, key);
     if (nextState.detailRefreshRequested) {
       this.renderLoadingFrames(`loading ${nextState.selectedTaskId ?? 'selected task'} detail`);
-      this.model = this.loadModel('detail', tuiStateToReadModelOptions(nextState));
+      this.model = this.loadModel('detail', { ...tuiStateToReadModelOptions(nextState), profile: 'fast' });
       nextState = reduceTuiInteractionState(nextState, this.model, 'detail-refresh-complete');
       this.logLine = `loaded ${this.model.selectedTaskId ?? 'selected task'} detail`;
     }
     if (nextState.refreshRequested) {
       this.renderLoadingFrames('refreshing read models');
-      this.model = this.loadModel('full', tuiStateToReadModelOptions(nextState));
+      this.model = this.loadModel('full', { ...tuiStateToReadModelOptions(nextState), profile: 'fast' });
       nextState = reduceTuiInteractionState(nextState, this.model, 'refresh-complete');
       this.logLine = 'refreshed read models';
     }
@@ -167,7 +167,7 @@ export class TuiTerminalSession {
 
   private completeInitialLoad(): void {
     this.renderLoadingFrames('initial load: reading read models');
-    this.model = this.loadModel('fast');
+    this.model = this.loadModel('fast', { profile: 'fast' });
     this.state = createTuiInteractionState(this.model, {
       panel: this.state.activePanel,
       selectedTaskId: this.model.selectedTaskId,

@@ -77,6 +77,28 @@ describe('TUI local cache', () => {
     expect(invalidated.cache.hit).toBe(false);
   });
 
+  it('writes cache records when a task directory is missing TASK.md', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Missing task markdown cache task');
+    writeProjectDocs(root, task.id);
+    fs.unlinkSync(path.join(task.dir, 'TASK.md'));
+
+    const full = createTuiReadModelWithCache(root, { cache: { refresh: 'full' } });
+    const fast = createTuiReadModelWithCache(root, { cache: { refresh: 'fast' } });
+
+    expect(full.cache.issues).toEqual([]);
+    expect(full.cache.hit).toBe(false);
+    expect(fast.cache.hit).toBe(true);
+    expect(fast.model.tasks.tasks.find((row) => row.id === task.id)?.status).toBe('Unknown');
+    expect(readTuiCache({ projectRoot: root })?.taskIndex).toContainEqual(
+      expect.objectContaining({
+        id: task.id,
+        mtimeMs: 0,
+        size: 0
+      })
+    );
+  });
+
   it('invalidates fast cache when a task capsule is created', () => {
     const root = tempProject();
     const first = createTaskCapsule(root, 'Initial cache task');

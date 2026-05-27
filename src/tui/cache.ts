@@ -305,8 +305,18 @@ function buildTaskIndexFromSummaries(
 ): TuiTaskIndexEntry[] {
   return tasks.map((task) => {
     const taskPath = path.join(projectRoot, task.capsule, 'TASK.md');
-    const stat = fs.statSync(taskPath);
     const previous = previousById.get(task.id);
+    if (!fs.existsSync(taskPath)) {
+      return {
+        id: task.id,
+        title: task.title,
+        status: task.status,
+        capsule: task.capsule,
+        mtimeMs: 0,
+        size: 0
+      };
+    }
+    const stat = fs.statSync(taskPath);
     const hash =
       previous && previous.mtimeMs === stat.mtimeMs && previous.size === stat.size && previous.hash
         ? previous.hash
