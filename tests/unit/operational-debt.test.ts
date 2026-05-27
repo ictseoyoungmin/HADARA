@@ -21,6 +21,53 @@ function tempProject(): string {
   return dir;
 }
 
+function writeReleaseReadinessFiles(root: string): void {
+  fs.writeFileSync(
+    path.join(root, 'package.json'),
+    JSON.stringify(
+      {
+        bin: {
+          hadara: './dist/cli/main.js'
+        },
+        scripts: {
+          build: 'tsc -p tsconfig.json',
+          test: 'vitest run',
+          'test:contract': 'vitest run tests/contract',
+          'test:harness': 'vitest run tests/harness',
+          check: 'npm run build && npm test'
+        },
+        devDependencies: {
+          '@types/node': '^22.10.2'
+        }
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+  fs.mkdirSync(path.join(root, '.github', 'workflows'), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, '.github', 'workflows', 'ci.yml'),
+    ['uses: actions/setup-node@v4', 'node-version: 22', 'run: npm ci', 'run: npm run check'].join('\n'),
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(root, 'docs', 'V1_0_IMPLEMENTATION_SCHEMAS.md'),
+    ['npm ci', 'npm run check', 'node dist/cli/main.js doctor --json', 'node dist/cli/main.js ops status --json'].join('\n'),
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'),
+    ['clean checkout smoke', 'without writing generated context files'].join('\n'),
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(root, 'docs', 'PROJECT_STATE.md'),
+    ['contextPath: null', '.hadara/local/tui/', 'read-only local API routes'].join('\n'),
+    'utf8'
+  );
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
   process.exitCode = undefined;
@@ -104,19 +151,13 @@ describe('operational debt track', () => {
 
   it('warns release gates when high severity operational debt remains open', () => {
     const root = tempProject();
+    writeReleaseReadinessFiles(root);
 
-    expect(createReleaseGateReport(root)).toEqual({
+    expect(createReleaseGateReport(root)).toMatchObject({
       schemaVersion: 'hadara.releaseGate.v1',
       command: 'release.gate',
       mode: 'advisory',
       ok: true,
-      checks: [
-        {
-          name: 'No high severity operational debt',
-          status: 'warning',
-          summary: 'OD-0003, OD-0008 remain open.'
-        }
-      ],
       issues: [
         {
           severity: 'warning',
@@ -125,23 +166,54 @@ describe('operational debt track', () => {
         }
       ]
     });
+    expect(createReleaseGateReport(root).checks).toEqual([
+      {
+        name: 'Package bin entry',
+        status: 'passed',
+        summary: 'package.json exposes hadara at ./dist/cli/main.js.'
+      },
+      {
+        name: 'Package validation scripts',
+        status: 'passed',
+        summary: 'build, test, test:contract, test:harness, check scripts are defined.'
+      },
+      {
+        name: 'Node version policy',
+        status: 'passed',
+        summary: 'Development typings and CI target Node 22.'
+      },
+      {
+        name: 'CI clean install check',
+        status: 'passed',
+        summary: 'CI installs dependencies cleanly and runs npm run check.'
+      },
+      {
+        name: 'Clean checkout smoke policy',
+        status: 'passed',
+        summary: 'Release planning documents the clean-checkout smoke sequence.'
+      },
+      {
+        name: 'Generated artifact policy',
+        status: 'passed',
+        summary: 'Context export, dashboard APIs, and TUI cache boundaries are documented as non-committed/generated or read-only surfaces.'
+      },
+      {
+        name: 'No high severity operational debt',
+        status: 'warning',
+        summary: 'OD-0003, OD-0008 remain open.'
+      }
+    ]);
   });
 
   it('blocks release gates in strict mode when high severity operational debt remains open', () => {
     const root = tempProject();
+    writeReleaseReadinessFiles(root);
 
-    expect(createReleaseGateReport(root, 'strict')).toEqual({
+    expect(createReleaseGateReport(root, 'strict')).toMatchObject({
       schemaVersion: 'hadara.releaseGate.v1',
       command: 'release.gate',
       mode: 'strict',
       ok: false,
-      checks: [
-        {
-          name: 'No high severity operational debt',
-          status: 'error',
-          summary: 'OD-0003, OD-0008 remain open.'
-        }
-      ],
       issues: [
         {
           severity: 'error',
@@ -150,10 +222,52 @@ describe('operational debt track', () => {
         }
       ]
     });
+    expect(createReleaseGateReport(root, 'strict').checks.at(-1)).toEqual({
+      name: 'No high severity operational debt',
+      status: 'error',
+      summary: 'OD-0003, OD-0008 remain open.'
+    });
+  });
+
+  it('reports release readiness warnings in advisory mode and errors in strict mode', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ scripts: { build: 'tsc' } }), 'utf8');
+
+    const report = createReleaseGateReport(root);
+    const strictReport = createReleaseGateReport(root, 'strict');
+
+    expect(report.ok).toBe(true);
+    expect(report.checks).toContainEqual({
+      name: 'Package bin entry',
+      status: 'warning',
+      summary: 'package.json must expose bin.hadara as ./dist/cli/main.js.'
+    });
+    expect(report.checks).toContainEqual({
+      name: 'Package validation scripts',
+      status: 'warning',
+      summary: 'Missing package scripts: test, test:contract, test:harness, check.'
+    });
+    expect(report.issues).toContainEqual({
+      severity: 'warning',
+      code: 'RELEASE_READINESS_CHECK_FAILED',
+      message: 'Package bin entry: package.json must expose bin.hadara as ./dist/cli/main.js.'
+    });
+    expect(strictReport.ok).toBe(false);
+    expect(strictReport.checks).toContainEqual({
+      name: 'Package bin entry',
+      status: 'error',
+      summary: 'package.json must expose bin.hadara as ./dist/cli/main.js.'
+    });
+    expect(strictReport.issues).toContainEqual({
+      severity: 'error',
+      code: 'RELEASE_READINESS_CHECK_FAILED',
+      message: 'Package bin entry: package.json must expose bin.hadara as ./dist/cli/main.js.'
+    });
   });
 
   it('prints JSON through debt and release-gate CLI handlers', () => {
     const root = tempProject();
+    writeReleaseReadinessFiles(root);
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
     expect(handleDebtCommand({ args: ['debt', 'list', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
@@ -186,6 +300,7 @@ describe('operational debt track', () => {
 
   it('sets exit code 6 for strict release gate CLI failures', () => {
     const root = tempProject();
+    writeReleaseReadinessFiles(root);
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
     expect(handleReleaseGateCommand({ args: ['release', 'gate', '--mode', 'strict', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);

@@ -192,7 +192,8 @@ export function createReleaseGateReport(projectRoot: string, mode: ReleaseGateRe
   const debt = createOperationalDebtReport(projectRoot);
   const highOpen = debt.records.filter((record) => isOpenDebt(record) && record.severity === 'high');
   const blocking = mode === 'strict' && highOpen.length > 0;
-  const issues: ReleaseGateReport['issues'] =
+  const readiness = createReleaseReadinessChecks(projectRoot, mode);
+  const debtIssues: ReleaseGateReport['issues'] =
     highOpen.length > 0
       ? [
           {
@@ -202,12 +203,14 @@ export function createReleaseGateReport(projectRoot: string, mode: ReleaseGateRe
           }
         ]
       : [];
+  const issues = [...readiness.issues, ...debtIssues];
   return {
     schemaVersion: 'hadara.releaseGate.v1',
     command: 'release.gate',
     mode,
-    ok: !blocking,
+    ok: !blocking && readiness.checks.every((check) => check.status !== 'error'),
     checks: [
+      ...readiness.checks,
       {
         name: 'No high severity operational debt',
         status: highOpen.length > 0 ? (blocking ? 'error' : 'warning') : 'passed',
@@ -216,6 +219,134 @@ export function createReleaseGateReport(projectRoot: string, mode: ReleaseGateRe
     ],
     issues
   };
+}
+
+function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateReport['mode']): Pick<ReleaseGateReport, 'checks' | 'issues'> {
+  const packageJson = readJsonObject(path.join(projectRoot, 'package.json'));
+  const ciWorkflow = readOptionalText(path.join(projectRoot, '.github', 'workflows', 'ci.yml'));
+  const v1Schemas = readOptionalText(path.join(projectRoot, 'docs', 'V1_0_IMPLEMENTATION_SCHEMAS.md'));
+  const developmentSlices = readOptionalText(path.join(projectRoot, 'docs', 'DEVELOPMENT_SLICES.md'));
+  const projectState = readOptionalText(path.join(projectRoot, 'docs', 'PROJECT_STATE.md'));
+
+  const checks: ReleaseGateReport['checks'] = [
+    checkPackageBin(packageJson, mode),
+    checkPackageScripts(packageJson, mode),
+    checkNodePolicy(packageJson, ciWorkflow, mode),
+    checkCiWorkflow(ciWorkflow, mode),
+    checkCleanCheckoutPolicy(v1Schemas, developmentSlices, mode),
+    checkGeneratedArtifactPolicy(projectState, developmentSlices, mode)
+  ];
+  const issues = checks
+    .filter((check) => check.status !== 'passed')
+    .map((check) => ({
+      severity: check.status === 'error' ? ('error' as const) : ('warning' as const),
+      code: 'RELEASE_READINESS_CHECK_FAILED',
+      message: `${check.name}: ${check.summary}`
+    }));
+  return { checks, issues };
+}
+
+function checkPackageBin(packageJson: Record<string, unknown> | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const bin = isRecord(packageJson?.bin) ? packageJson.bin : {};
+  const ok = bin.hadara === './dist/cli/main.js';
+  return {
+    name: 'Package bin entry',
+    status: ok ? 'passed' : readinessFailureStatus(mode),
+    summary: ok ? 'package.json exposes hadara at ./dist/cli/main.js.' : 'package.json must expose bin.hadara as ./dist/cli/main.js.'
+  };
+}
+
+function checkPackageScripts(packageJson: Record<string, unknown> | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const scripts = isRecord(packageJson?.scripts) ? packageJson.scripts : {};
+  const required = ['build', 'test', 'test:contract', 'test:harness', 'check'];
+  const missing = required.filter((script) => typeof scripts[script] !== 'string' || scripts[script].trim() === '');
+  return {
+    name: 'Package validation scripts',
+    status: missing.length === 0 ? 'passed' : readinessFailureStatus(mode),
+    summary: missing.length === 0 ? `${required.join(', ')} scripts are defined.` : `Missing package scripts: ${missing.join(', ')}.`
+  };
+}
+
+function checkNodePolicy(packageJson: Record<string, unknown> | null, ciWorkflow: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const devDependencies = isRecord(packageJson?.devDependencies) ? packageJson.devDependencies : {};
+  const nodeTypes = String(devDependencies['@types/node'] ?? '');
+  const ciUsesNode22 = ciWorkflow !== null && /node-version:\s*22\b/.test(ciWorkflow);
+  const ok = nodeTypes.startsWith('^22') && ciUsesNode22;
+  return {
+    name: 'Node version policy',
+    status: ok ? 'passed' : readinessFailureStatus(mode),
+    summary: ok ? 'Development typings and CI target Node 22.' : 'Node 22 must be reflected in dev dependencies and CI.'
+  };
+}
+
+function checkCiWorkflow(ciWorkflow: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const missing = [
+    ['actions/setup-node@v4', ciWorkflow?.includes('actions/setup-node@v4')],
+    ['npm ci', ciWorkflow?.includes('npm ci')],
+    ['npm run check', ciWorkflow?.includes('npm run check')]
+  ]
+    .filter(([, present]) => !present)
+    .map(([name]) => name);
+  return {
+    name: 'CI clean install check',
+    status: missing.length === 0 ? 'passed' : readinessFailureStatus(mode),
+    summary: missing.length === 0 ? 'CI installs dependencies cleanly and runs npm run check.' : `CI workflow is missing: ${missing.join(', ')}.`
+  };
+}
+
+function checkCleanCheckoutPolicy(v1Schemas: string | null, developmentSlices: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const ok =
+    includesAll(v1Schemas, ['npm ci', 'npm run check', 'doctor --json', 'ops status --json']) &&
+    includesAny(developmentSlices, ['clean checkout smoke', 'clean-checkout smoke']);
+  return {
+    name: 'Clean checkout smoke policy',
+    status: ok ? 'passed' : readinessFailureStatus(mode),
+    summary: ok ? 'Release planning documents the clean-checkout smoke sequence.' : 'Release planning must document clean-checkout smoke expectations.'
+  };
+}
+
+function checkGeneratedArtifactPolicy(projectState: string | null, developmentSlices: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const ok = includesAll(projectState, ['contextPath: null', '.hadara/local/tui/', 'read-only local API routes']) && includesAll(developmentSlices, ['without writing generated context files']);
+  return {
+    name: 'Generated artifact policy',
+    status: ok ? 'passed' : readinessFailureStatus(mode),
+    summary: ok
+      ? 'Context export, dashboard APIs, and TUI cache boundaries are documented as non-committed/generated or read-only surfaces.'
+      : 'Generated context/dashboard/cache artifact boundaries must be documented before release.'
+  };
+}
+
+function readinessFailureStatus(mode: ReleaseGateReport['mode']): 'warning' | 'error' {
+  return mode === 'strict' ? 'error' : 'warning';
+}
+
+function readJsonObject(filePath: string): Record<string, unknown> | null {
+  try {
+    const parsed: unknown = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    return isRecord(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function readOptionalText(filePath: string): string | null {
+  try {
+    return fs.readFileSync(filePath, 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+function includesAll(text: string | null, needles: string[]): boolean {
+  return text !== null && needles.every((needle) => text.includes(needle));
+}
+
+function includesAny(text: string | null, needles: string[]): boolean {
+  return text !== null && needles.some((needle) => text.includes(needle));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export function createOperationalDebtAggregate(records: OperationalDebtRecord[]): OperationalDebtAggregate {
