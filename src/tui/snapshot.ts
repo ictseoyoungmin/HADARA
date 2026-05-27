@@ -20,6 +20,8 @@ export interface TuiSnapshotOptions {
   logLine?: string;
   selectedTaskId?: string | null;
   taskSearch?: string;
+  taskSearchActive?: boolean;
+  taskListScroll?: number;
   documentScroll?: number;
 }
 
@@ -57,6 +59,8 @@ export function renderTuiSnapshot(model: TuiReadModel, options: TuiSnapshotOptio
     logLine: options.logLine,
     selectedTaskId: options.selectedTaskId ?? model.selectedTaskId,
     taskSearch: options.taskSearch ?? '',
+    taskSearchActive: options.taskSearchActive === true,
+    taskListScroll: Math.max(0, Math.floor(options.taskListScroll ?? 0)),
     documentScroll: Math.max(0, Math.floor(options.documentScroll ?? 0))
   });
   const truncated = rawLines.length > terminal.height;
@@ -103,6 +107,8 @@ function renderFrame(
     logLine?: string;
     selectedTaskId: string | null;
     taskSearch: string;
+    taskSearchActive: boolean;
+    taskListScroll: number;
     documentScroll: number;
   }
 ): string[] {
@@ -175,10 +181,19 @@ function renderPanel(
   document: (typeof TUI_DOCUMENT_TABS)[number],
   width: number,
   availableRows: number,
-  options: { theme: TuiThemeName; loading: boolean; loadingTick: number; selectedTaskId: string | null; taskSearch: string; documentScroll: number }
+  options: {
+    theme: TuiThemeName;
+    loading: boolean;
+    loadingTick: number;
+    selectedTaskId: string | null;
+    taskSearch: string;
+    taskSearchActive: boolean;
+    taskListScroll: number;
+    documentScroll: number;
+  }
 ): string[] {
   if (options.loading) return renderLoadingPanel(TUI_PANEL_LABELS[panel], width, options);
-  if (panel === 'tasks') return renderTasks(model, width, options);
+  if (panel === 'tasks') return renderTasks(model, width, availableRows, options);
   if (panel === 'detail') return renderDetail(model, document, width, availableRows, options);
   if (panel === 'help') return renderHelp(width, options.theme);
   return renderOverview(model, width, options.theme);
@@ -190,36 +205,53 @@ function renderOverview(model: TuiReadModel, width: number, theme: TuiThemeName)
   const currentCard = colorCard('Current Work', workSummaryLines(model, current, 'LIVE', theme), Math.floor(width * 0.5), theme, 'teal');
   const previousCard = colorCard('Previous Work', workSummaryLines(model, previous, previous ? 'FILE' : 'ROUTE', theme), Math.floor(width * 0.5), theme, 'violet');
   const top = width >= 96 ? columns(currentCard, previousCard, width) : [...currentCard, '', ...previousCard];
+  const deferred = hasDeferredHeavyReads(model);
   const signals = [
     `health ${model.overview.health}  tasks done ${model.status.tasks.counts.done} partial ${model.status.tasks.counts.partial} unknown ${model.status.tasks.counts.unknown}`,
     `validation ${trimFit(model.status.validation.latestFullCheck ?? '-', Math.max(12, width - 12))}`,
     `active run ${model.activeRun.projection.activeRun ? `${model.activeRun.projection.activeRun.taskId}: ${model.activeRun.projection.activeRun.summary}` : 'none'}`,
-    `debt open ${model.debt.aggregate.open}, high ${model.debt.aggregate.highOpen}  release ${model.releaseGate.mode}: ${model.releaseGate.ok ? 'ok' : 'blocked'}`
+    deferred
+      ? `${colorBadge('DEFERRED', 'warn', theme)} debt/release/tools/write-preview deferred in fast TUI read`
+      : `debt open ${model.debt.aggregate.open}, high ${model.debt.aggregate.highOpen}  release ${model.releaseGate.mode}: ${model.releaseGate.ok ? 'ok' : 'blocked'}`
   ];
   return [...top, '', ...colorCard('Resume Signals', signals, width, theme, 'gold'), ...nextRecommendedCard(model, width, theme)];
 }
 
-function renderTasks(model: TuiReadModel, width: number, options: { theme: TuiThemeName; selectedTaskId: string | null; taskSearch: string }): string[] {
+function renderTasks(
+  model: TuiReadModel,
+  width: number,
+  availableRows: number,
+  options: { theme: TuiThemeName; selectedTaskId: string | null; taskSearch: string; taskSearchActive: boolean; taskListScroll: number }
+): string[] {
   const theme = options.theme;
   const query = options.taskSearch.trim().toLowerCase();
   const visible = query
     ? model.tasks.tasks.filter((task) => [task.id, task.title, task.status, task.capsule].some((value) => String(value ?? '').toLowerCase().includes(query)))
     : model.tasks.tasks;
-  const latest = visible.slice(-20).reverse();
-  if (!latest.length) {
+  const rowsAll = [...visible].reverse();
+  if (!rowsAll.length) {
     return colorCard('Tasks Empty', [`${colorBadge('ROUTE', 'muted', theme)} no tasks match ${query ? `"${options.taskSearch}"` : 'the current project'}`], width, theme, 'warn');
   }
-  const rows = latest.map((task) => {
+  const visibleRows = Math.max(1, Math.min(width > 100 ? 20 : 12, availableRows - 3));
+  const selectedIndex = options.selectedTaskId ? rowsAll.findIndex((task) => task.id === options.selectedTaskId) : -1;
+  const windowStart = normalizeTaskWindow(options.taskListScroll, selectedIndex, rowsAll.length, visibleRows);
+  const rows = rowsAll.slice(windowStart, windowStart + visibleRows).map((task) => {
     const marker = options.selectedTaskId === task.id ? '>' : ' ';
     const titleWidth = Math.max(10, width - 44);
     const markerText = marker === '>' ? tuiFg(theme, 'gold2', marker) : tuiFg(theme, 'dim', marker);
-    return `${markerText} ${colorBadge(task.status, statusThemeRole(task.status), theme)} ${tuiFg(theme, 'gold2', pad(task.id, 8))} ${fit(task.title, titleWidth)} ${tuiFg(theme, 'muted', trimFit(task.capsule, 22))}`;
+    const line = `${markerText} ${colorBadge(task.status, statusThemeRole(task.status), theme)} ${tuiFg(theme, 'gold2', pad(task.id, 8))} ${fit(task.title, titleWidth)} ${tuiFg(theme, 'muted', trimFit(task.capsule, 22))}`;
+    return marker === '>' ? tuiBg(theme, 'panel2', line) : line;
   });
+  const searchHint = options.taskSearchActive
+    ? `search: ${options.taskSearch}_`
+    : query
+      ? `search: ${options.taskSearch}`
+      : '/ search id/title/status';
   return [
     colorTextLine('Status      ID       Title                                                    Capsule', width, theme, 'muted'),
     ...rows,
     '',
-    fit(`${query ? `search "${options.taskSearch}" · ` : '/ search id/title/status · '}Showing 1-${rows.length} of ${visible.length}/${model.tasks.count}. Enter opens Detail.`, width)
+    fit(`${searchHint} · Showing ${windowStart + 1}-${windowStart + rows.length} of ${rowsAll.length}/${model.tasks.count}. Enter/click opens Detail.`, width)
   ];
 }
 
@@ -341,6 +373,18 @@ function dedupe(items: string[]): string[] {
     seen.add(item);
     return true;
   });
+}
+
+function hasDeferredHeavyReads(model: TuiReadModel): boolean {
+  return model.issues.some((issue) => issue.code === 'TUI_HEAVY_READS_DEFERRED');
+}
+
+function normalizeTaskWindow(requestedStart: number, selectedIndex: number, rowCount: number, visibleRows: number): number {
+  if (rowCount <= visibleRows) return 0;
+  let start = Math.min(Math.max(0, requestedStart), Math.max(0, rowCount - visibleRows));
+  if (selectedIndex >= 0 && selectedIndex < start) start = selectedIndex;
+  if (selectedIndex >= 0 && selectedIndex >= start + visibleRows) start = selectedIndex - visibleRows + 1;
+  return Math.min(Math.max(0, start), Math.max(0, rowCount - visibleRows));
 }
 
 function renderLoadingPanel(panel: string, width: number, options: { theme: TuiThemeName; loadingTick: number }): string[] {

@@ -161,6 +161,8 @@ export function tuiStateToSnapshotOptions(state: TuiInteractionState, options: O
     document: state.documentFile,
     selectedTaskId: state.selectedTaskId,
     taskSearch: state.taskSearch,
+    taskSearchActive: state.searchActive,
+    taskListScroll: state.taskListScroll,
     documentScroll: state.documentScroll
   };
 }

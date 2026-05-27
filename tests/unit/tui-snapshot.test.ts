@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createTuiReadModel } from '../../src/tui/read-model';
+import { createTuiFastReadModel, createTuiReadModel } from '../../src/tui/read-model';
 import { renderTuiSnapshot, TuiSnapshotPanel } from '../../src/tui/snapshot';
 import { visibleWidth } from '../../src/tui/layout';
 import { createTaskCapsule } from '../../src/task/task-capsule';
@@ -150,6 +150,41 @@ describe('TUI snapshot renderer', () => {
     expect(loading.text).toContain('reading task capsule');
     expect(loading.text).not.toMatch(/\x1b\[/);
     expect(loading.lines.every((line) => visibleWidth(line) === 92)).toBe(true);
+  });
+
+  it('renders task windows from interaction scroll state and active search copy', () => {
+    const root = tempProject();
+    const tasks = Array.from({ length: 18 }, (_, index) => createTaskCapsule(root, `Windowed task ${String(index + 1).padStart(2, '0')}`));
+    writeProjectDocs(root, tasks[17]?.id ?? '');
+    const model = createTuiReadModel(root, { selectedTaskId: tasks[5]?.id });
+
+    const snapshot = renderTuiSnapshot(model, {
+      panel: 'tasks',
+      width: 92,
+      height: 26,
+      selectedTaskId: tasks[5]?.id,
+      taskListScroll: 10,
+      taskSearch: 'Windowed',
+      taskSearchActive: true
+    });
+
+    expect(snapshot.text).toContain(`> [DRAFT] ${tasks[5]?.id}`);
+    expect(snapshot.text).toContain('search: Windowed_');
+    expect(snapshot.text).toContain('Enter/click opens Detail.');
+    expect(snapshot.text).toContain('Showing 7-18 of 18/18');
+    expect(snapshot.text).not.toContain(`${tasks[17]?.id} Windowed task 18`);
+  });
+
+  it('makes fast-profile deferred advisory reads visible instead of reporting false ok counts', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Deferred overview task');
+    writeProjectDocs(root, task.id);
+    const model = createTuiFastReadModel(root, { selectedTaskId: task.id });
+
+    const snapshot = renderTuiSnapshot(model, { panel: 'overview', width: 150, height: 30 });
+
+    expect(snapshot.text).toContain('[DEFERRED] debt/release/tools/write-preview deferred');
+    expect(snapshot.text).not.toContain('debt open 0, high 0  release advisory: ok');
   });
 
   it('renders high contrast color mode explicitly', () => {

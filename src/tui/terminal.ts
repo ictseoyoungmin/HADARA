@@ -142,7 +142,19 @@ export class TuiTerminalSession {
     const mouseResult = this.applyMouseKey(key);
     if (mouseResult !== undefined) return mouseResult;
 
-    let nextState = reduceTuiInteractionState(this.state, this.model, key);
+    const nextState = this.completePendingEffects(reduceTuiInteractionState(this.state, this.model, key));
+    this.state = nextState;
+
+    if (this.state.quitRequested) {
+      this.stop();
+      return null;
+    }
+
+    return this.render();
+  }
+
+  private completePendingEffects(requestedState: TuiInteractionState): TuiInteractionState {
+    let nextState = requestedState;
     if (nextState.detailRefreshRequested) {
       this.renderLoadingFrames(`loading ${nextState.selectedTaskId ?? 'selected task'} detail`);
       this.model = this.loadModel('detail', { ...tuiStateToReadModelOptions(nextState), profile: 'fast' });
@@ -155,14 +167,7 @@ export class TuiTerminalSession {
       nextState = reduceTuiInteractionState(nextState, this.model, 'refresh-complete');
       this.logLine = 'refreshed read models';
     }
-    this.state = nextState;
-
-    if (this.state.quitRequested) {
-      this.stop();
-      return null;
-    }
-
-    return this.render();
+    return nextState;
   }
 
   private completeInitialLoad(): void {
@@ -213,6 +218,10 @@ export class TuiTerminalSession {
     return this.options.width ?? this.output.columns ?? 100;
   }
 
+  private terminalHeight(): number {
+    return this.options.height ?? this.output.rows ?? 32;
+  }
+
   private applyMouseKey(key: TuiInputKey): TuiTerminalRenderResult | null | undefined {
     const parsed = parseMouseKey(key);
     if (!parsed) return undefined;
@@ -224,14 +233,18 @@ export class TuiTerminalSession {
     if (this.state.activePanel === 'tasks') {
       const rowIndex = taskRowIndexForMouse(parsed.y, this.terminalWidth());
       const rows = getTuiTaskRows(this.model, this.state);
-      if (rowIndex >= 0 && rowIndex < rows.length) {
-        const selected = rows[rowIndex];
-        this.state = {
+      const windowStart = taskWindowStartForMouse(rows.length, this.state.selectedTaskIndex, this.state.taskListScroll, this.terminalWidth(), this.terminalHeight());
+      const selectedIndex = windowStart + rowIndex;
+      if (rowIndex >= 0 && selectedIndex >= 0 && selectedIndex < rows.length) {
+        const selected = rows[selectedIndex];
+        const selectedState = {
           ...this.state,
           selectedTaskId: selected?.id ?? null,
-          selectedTaskIndex: rowIndex,
-          taskListScroll: Math.max(0, rowIndex - 7)
+          selectedTaskIndex: selectedIndex,
+          taskListScroll: this.state.taskListScroll,
+          documentScroll: 0
         };
+        this.state = this.completePendingEffects(reduceTuiInteractionState(selectedState, this.model, 'enter'));
         return this.render();
       }
     }
@@ -318,6 +331,7 @@ function matchMouseSequence(text: string): { key: TuiInputKey; length: number } 
 
 function panelForMouse(x: number, y: number, width: number): TuiInteractionState['activePanel'] | null {
   if (width >= 104) {
+    if (x > 22) return null;
     const index = y - 7;
     return TUI_PANEL_IDS[index] ?? null;
   }
@@ -331,6 +345,16 @@ function panelForMouse(x: number, y: number, width: number): TuiInteractionState
 
 function taskRowIndexForMouse(y: number, width: number): number {
   return width >= 104 ? y - 7 : y - 9;
+}
+
+function taskWindowStartForMouse(rowCount: number, selectedIndex: number, requestedStart: number, width: number, height: number): number {
+  const availableRows = Math.max(1, height - 8);
+  const visibleRows = Math.max(1, Math.min(width > 100 ? 20 : 12, availableRows - 3));
+  if (rowCount <= visibleRows) return 0;
+  let start = Math.min(Math.max(0, requestedStart), Math.max(0, rowCount - visibleRows));
+  if (selectedIndex >= 0 && selectedIndex < start) start = selectedIndex;
+  if (selectedIndex >= 0 && selectedIndex >= start + visibleRows) start = selectedIndex - visibleRows + 1;
+  return Math.min(Math.max(0, start), Math.max(0, rowCount - visibleRows));
 }
 
 function documentKeyForMouse(x: number, y: number, width: number): string | null {

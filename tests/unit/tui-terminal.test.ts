@@ -91,6 +91,51 @@ describe('TUI terminal shell', () => {
     session.stop();
   });
 
+  it('opens task detail from a mouse row click using the rendered task window', () => {
+    const root = tempProject();
+    const first = createTaskCapsule(root, 'First mouse row task');
+    const second = createTaskCapsule(root, 'Second mouse row task');
+    writeProjectDocs(root, second.id);
+    const input = new MemoryInput(true);
+    const output = new MemoryOutput(92, 26);
+    const session = createTuiTerminalSession({ projectRoot: root, input, output, widthPolicy: 'compact', terminalControl: false });
+
+    session.start();
+    input.emit('data', Buffer.from('\x1b[<0;16;6M'));
+    expect(session.getState().activePanel).toBe('tasks');
+    input.emit('data', Buffer.from('\x1b[<0;18;10M'));
+
+    expect(session.getState()).toMatchObject({
+      activePanel: 'detail',
+      selectedTaskId: first.id,
+      detailRefreshRequested: false
+    });
+    expect(session.getModel().selectedTaskId).toBe(first.id);
+    expect(session.getModel().selectedTask?.summary.title).toBe('First mouse row task');
+
+    session.stop();
+  });
+
+  it('does not treat wide task-table clicks as left navigation clicks', () => {
+    const root = tempProject();
+    const first = createTaskCapsule(root, 'Wide mouse first');
+    const second = createTaskCapsule(root, 'Wide mouse second');
+    writeProjectDocs(root, second.id);
+    const input = new MemoryInput(true);
+    const output = new MemoryOutput(120, 28);
+    const session = createTuiTerminalSession({ projectRoot: root, input, output, terminalControl: false });
+
+    session.start();
+    input.emit('data', Buffer.from('\x1b[<0;8;8M'));
+    expect(session.getState().activePanel).toBe('tasks');
+    input.emit('data', Buffer.from('\x1b[<0;35;8M'));
+
+    expect(session.getState().activePanel).toBe('detail');
+    expect(session.getModel().selectedTaskId).toBe(first.id);
+
+    session.stop();
+  });
+
   it('refreshes selected task detail after opening a different task', () => {
     const root = tempProject();
     const first = createTaskCapsule(root, 'First terminal task');

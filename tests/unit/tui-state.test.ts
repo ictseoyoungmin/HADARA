@@ -48,6 +48,8 @@ describe('TUI interaction state', () => {
       panel: 'detail',
       document: 'PLAN.md',
       documentScroll: 0,
+      taskListScroll: 0,
+      taskSearchActive: false,
       width: 90,
       height: 24
     });
