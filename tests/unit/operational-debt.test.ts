@@ -214,7 +214,7 @@ describe('operational debt track', () => {
         summary: 'Context export, dashboard APIs, and TUI cache boundaries are documented as non-committed/generated or read-only surfaces.'
       },
       {
-        code: 'REMOTE_CI_OBSERVATION_UNRECORDED',
+        code: 'REMOTE_CI_OBSERVATION',
         name: 'Remote CI observation evidence',
         status: 'passed',
         summary: 'Remote GitHub Actions status is recorded separately from local release-gate checks.'
@@ -304,14 +304,17 @@ describe('operational debt track', () => {
       'NODE_POLICY_UNCLEAR',
       'CI_CLEAN_INSTALL_UNCLEAR',
       'CLEAN_CHECKOUT_SMOKE_UNCLEAR',
-      'GENERATED_ARTIFACT_POLICY_UNCLEAR',
-      'REMOTE_CI_OBSERVATION_UNRECORDED'
+      'GENERATED_ARTIFACT_POLICY_UNCLEAR'
     ];
 
     for (const code of readinessCodes) {
       expect(advisory.issues).toContainEqual(expect.objectContaining({ code, severity: 'warning' }));
       expect(strict.issues).toContainEqual(expect.objectContaining({ code, severity: 'error' }));
     }
+    expect(advisory.checks).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION', status: 'warning' }));
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION', status: 'error' }));
+    expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION_UNRECORDED', severity: 'warning' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION_UNRECORDED', severity: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT', severity: 'warning' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT', severity: 'error' }));
   });

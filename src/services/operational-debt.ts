@@ -245,10 +245,15 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     .filter((check) => check.status !== 'passed')
     .map((check) => ({
       severity: check.status === 'error' ? ('error' as const) : ('warning' as const),
-      code: check.code,
+      code: releaseReadinessIssueCode(check.code),
       message: `${check.name}: ${check.summary}`
     }));
   return { checks, issues };
+}
+
+function releaseReadinessIssueCode(checkCode: string): string {
+  if (checkCode === 'REMOTE_CI_OBSERVATION') return 'REMOTE_CI_OBSERVATION_UNRECORDED';
+  return checkCode;
 }
 
 function checkPackageBin(packageJson: Record<string, unknown> | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
@@ -336,7 +341,7 @@ function checkRemoteCiObservation(
     includesAll(testStrategy, ['Remote CI observation', 'local Docker validation remains the primary reproducible check']) &&
     includesAll(validationHistory, ['GitHub Actions CI run', 'actions/runs/']);
   return {
-    code: 'REMOTE_CI_OBSERVATION_UNRECORDED',
+    code: 'REMOTE_CI_OBSERVATION',
     name: 'Remote CI observation evidence',
     status: ok ? 'passed' : readinessFailureStatus(mode),
     summary: ok
