@@ -16,8 +16,9 @@
       "items": {
         "type": "object",
         "additionalProperties": true,
-        "required": ["name", "status", "summary"],
+        "required": ["code", "name", "status", "summary"],
         "properties": {
+          "code": { "type": "string", "minLength": 1 },
           "name": { "type": "string", "minLength": 1 },
           "status": { "type": "string", "enum": ["passed", "warning", "error"] },
           "summary": { "type": "string", "minLength": 1 }

@@ -4,6 +4,8 @@
 
 Start the Release and Packaging Track by turning the existing debt-only release gate into a broader read-only release checklist for package layout, CI policy, Node policy, and clean-checkout smoke expectations.
 
+This is a planning/checklist readiness report, not an actual release smoke executor.
+
 ## Scope
 
 - Extend `hadara release gate --json` so its report includes static packaging readiness checks in addition to operational debt.
@@ -15,6 +17,8 @@ Start the Release and Packaging Track by turning the existing debt-only release 
 
 ## Out of Scope
 
+- Creating a clean checkout or fresh install sandbox from inside `hadara release gate`.
+- Running `npm pack`, `npm install -g`, generated artifact diff checks, archive smoke tests, or remote CI observation.
 - Creating release archives, checksums, installers, npm publication, or portable runtime bundles.
 - Running remote GitHub Actions or claiming remote CI has passed.
 - Adding MCP release/package tools, shell execution, provider calls, task mutation, or evidence writes.

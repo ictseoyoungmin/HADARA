@@ -546,6 +546,7 @@ function createDeferredReleaseGateReport(): ReleaseGateReport {
     ok: true,
     checks: [
       {
+        code: 'TUI_FAST_RELEASE_GATE_DEFERRED',
         name: 'Deferred release-gate check',
         status: 'warning',
         summary: 'Release-gate debt scan is deferred in the TUI fast read model.'

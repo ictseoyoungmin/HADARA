@@ -90,6 +90,7 @@ describe('runtime schema validation', () => {
         ok: false,
         checks: [
           {
+            code: 'OPEN_HIGH_OPERATIONAL_DEBT',
             name: 'No high severity operational debt',
             status: 'error',
             summary: 'OD-0003 remains open.'

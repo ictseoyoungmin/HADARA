@@ -69,6 +69,7 @@ export interface ReleaseGateReport {
   mode: 'advisory' | 'strict';
   ok: boolean;
   checks: Array<{
+    code: string;
     name: string;
     status: 'passed' | 'warning' | 'error';
     summary: string;
@@ -212,6 +213,7 @@ export function createReleaseGateReport(projectRoot: string, mode: ReleaseGateRe
     checks: [
       ...readiness.checks,
       {
+        code: 'OPEN_HIGH_OPERATIONAL_DEBT',
         name: 'No high severity operational debt',
         status: highOpen.length > 0 ? (blocking ? 'error' : 'warning') : 'passed',
         summary: highOpen.length > 0 ? `${highOpen.map((record) => record.id).join(', ')} remain open.` : 'No open high-severity operational debt records.'
@@ -240,7 +242,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     .filter((check) => check.status !== 'passed')
     .map((check) => ({
       severity: check.status === 'error' ? ('error' as const) : ('warning' as const),
-      code: 'RELEASE_READINESS_CHECK_FAILED',
+      code: check.code,
       message: `${check.name}: ${check.summary}`
     }));
   return { checks, issues };
@@ -250,6 +252,7 @@ function checkPackageBin(packageJson: Record<string, unknown> | null, mode: Rele
   const bin = isRecord(packageJson?.bin) ? packageJson.bin : {};
   const ok = bin.hadara === './dist/cli/main.js';
   return {
+    code: 'PACKAGE_BIN_MISSING',
     name: 'Package bin entry',
     status: ok ? 'passed' : readinessFailureStatus(mode),
     summary: ok ? 'package.json exposes hadara at ./dist/cli/main.js.' : 'package.json must expose bin.hadara as ./dist/cli/main.js.'
@@ -261,6 +264,7 @@ function checkPackageScripts(packageJson: Record<string, unknown> | null, mode: 
   const required = ['build', 'test', 'test:contract', 'test:harness', 'check'];
   const missing = required.filter((script) => typeof scripts[script] !== 'string' || scripts[script].trim() === '');
   return {
+    code: 'VALIDATION_SCRIPT_MISSING',
     name: 'Package validation scripts',
     status: missing.length === 0 ? 'passed' : readinessFailureStatus(mode),
     summary: missing.length === 0 ? `${required.join(', ')} scripts are defined.` : `Missing package scripts: ${missing.join(', ')}.`
@@ -273,6 +277,7 @@ function checkNodePolicy(packageJson: Record<string, unknown> | null, ciWorkflow
   const ciUsesNode22 = ciWorkflow !== null && /node-version:\s*22\b/.test(ciWorkflow);
   const ok = nodeTypes.startsWith('^22') && ciUsesNode22;
   return {
+    code: 'NODE_POLICY_UNCLEAR',
     name: 'Node version policy',
     status: ok ? 'passed' : readinessFailureStatus(mode),
     summary: ok ? 'Development typings and CI target Node 22.' : 'Node 22 must be reflected in dev dependencies and CI.'
@@ -288,6 +293,7 @@ function checkCiWorkflow(ciWorkflow: string | null, mode: ReleaseGateReport['mod
     .filter(([, present]) => !present)
     .map(([name]) => name);
   return {
+    code: 'CI_CLEAN_INSTALL_UNCLEAR',
     name: 'CI clean install check',
     status: missing.length === 0 ? 'passed' : readinessFailureStatus(mode),
     summary: missing.length === 0 ? 'CI installs dependencies cleanly and runs npm run check.' : `CI workflow is missing: ${missing.join(', ')}.`
@@ -299,6 +305,7 @@ function checkCleanCheckoutPolicy(v1Schemas: string | null, developmentSlices: s
     includesAll(v1Schemas, ['npm ci', 'npm run check', 'doctor --json', 'ops status --json']) &&
     includesAny(developmentSlices, ['clean checkout smoke', 'clean-checkout smoke']);
   return {
+    code: 'CLEAN_CHECKOUT_SMOKE_UNCLEAR',
     name: 'Clean checkout smoke policy',
     status: ok ? 'passed' : readinessFailureStatus(mode),
     summary: ok ? 'Release planning documents the clean-checkout smoke sequence.' : 'Release planning must document clean-checkout smoke expectations.'
@@ -308,6 +315,7 @@ function checkCleanCheckoutPolicy(v1Schemas: string | null, developmentSlices: s
 function checkGeneratedArtifactPolicy(projectState: string | null, developmentSlices: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
   const ok = includesAll(projectState, ['contextPath: null', '.hadara/local/tui/', 'read-only local API routes']) && includesAll(developmentSlices, ['without writing generated context files']);
   return {
+    code: 'GENERATED_ARTIFACT_POLICY_UNCLEAR',
     name: 'Generated artifact policy',
     status: ok ? 'passed' : readinessFailureStatus(mode),
     summary: ok

@@ -168,36 +168,43 @@ describe('operational debt track', () => {
     });
     expect(createReleaseGateReport(root).checks).toEqual([
       {
+        code: 'PACKAGE_BIN_MISSING',
         name: 'Package bin entry',
         status: 'passed',
         summary: 'package.json exposes hadara at ./dist/cli/main.js.'
       },
       {
+        code: 'VALIDATION_SCRIPT_MISSING',
         name: 'Package validation scripts',
         status: 'passed',
         summary: 'build, test, test:contract, test:harness, check scripts are defined.'
       },
       {
+        code: 'NODE_POLICY_UNCLEAR',
         name: 'Node version policy',
         status: 'passed',
         summary: 'Development typings and CI target Node 22.'
       },
       {
+        code: 'CI_CLEAN_INSTALL_UNCLEAR',
         name: 'CI clean install check',
         status: 'passed',
         summary: 'CI installs dependencies cleanly and runs npm run check.'
       },
       {
+        code: 'CLEAN_CHECKOUT_SMOKE_UNCLEAR',
         name: 'Clean checkout smoke policy',
         status: 'passed',
         summary: 'Release planning documents the clean-checkout smoke sequence.'
       },
       {
+        code: 'GENERATED_ARTIFACT_POLICY_UNCLEAR',
         name: 'Generated artifact policy',
         status: 'passed',
         summary: 'Context export, dashboard APIs, and TUI cache boundaries are documented as non-committed/generated or read-only surfaces.'
       },
       {
+        code: 'OPEN_HIGH_OPERATIONAL_DEBT',
         name: 'No high severity operational debt',
         status: 'warning',
         summary: 'OD-0003, OD-0008 remain open.'
@@ -223,6 +230,7 @@ describe('operational debt track', () => {
       ]
     });
     expect(createReleaseGateReport(root, 'strict').checks.at(-1)).toEqual({
+      code: 'OPEN_HIGH_OPERATIONAL_DEBT',
       name: 'No high severity operational debt',
       status: 'error',
       summary: 'OD-0003, OD-0008 remain open.'
@@ -238,31 +246,57 @@ describe('operational debt track', () => {
 
     expect(report.ok).toBe(true);
     expect(report.checks).toContainEqual({
+      code: 'PACKAGE_BIN_MISSING',
       name: 'Package bin entry',
       status: 'warning',
       summary: 'package.json must expose bin.hadara as ./dist/cli/main.js.'
     });
     expect(report.checks).toContainEqual({
+      code: 'VALIDATION_SCRIPT_MISSING',
       name: 'Package validation scripts',
       status: 'warning',
       summary: 'Missing package scripts: test, test:contract, test:harness, check.'
     });
     expect(report.issues).toContainEqual({
       severity: 'warning',
-      code: 'RELEASE_READINESS_CHECK_FAILED',
+      code: 'PACKAGE_BIN_MISSING',
       message: 'Package bin entry: package.json must expose bin.hadara as ./dist/cli/main.js.'
     });
     expect(strictReport.ok).toBe(false);
     expect(strictReport.checks).toContainEqual({
+      code: 'PACKAGE_BIN_MISSING',
       name: 'Package bin entry',
       status: 'error',
       summary: 'package.json must expose bin.hadara as ./dist/cli/main.js.'
     });
     expect(strictReport.issues).toContainEqual({
       severity: 'error',
-      code: 'RELEASE_READINESS_CHECK_FAILED',
+      code: 'PACKAGE_BIN_MISSING',
       message: 'Package bin entry: package.json must expose bin.hadara as ./dist/cli/main.js.'
     });
+  });
+
+  it('keeps release readiness issue codes stable across advisory and strict mode', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ scripts: { build: 'tsc' } }), 'utf8');
+
+    const advisory = createReleaseGateReport(root);
+    const strict = createReleaseGateReport(root, 'strict');
+    const readinessCodes = [
+      'PACKAGE_BIN_MISSING',
+      'VALIDATION_SCRIPT_MISSING',
+      'NODE_POLICY_UNCLEAR',
+      'CI_CLEAN_INSTALL_UNCLEAR',
+      'CLEAN_CHECKOUT_SMOKE_UNCLEAR',
+      'GENERATED_ARTIFACT_POLICY_UNCLEAR'
+    ];
+
+    for (const code of readinessCodes) {
+      expect(advisory.issues).toContainEqual(expect.objectContaining({ code, severity: 'warning' }));
+      expect(strict.issues).toContainEqual(expect.objectContaining({ code, severity: 'error' }));
+    }
+    expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT', severity: 'warning' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT', severity: 'error' }));
   });
 
   it('prints JSON through debt and release-gate CLI handlers', () => {

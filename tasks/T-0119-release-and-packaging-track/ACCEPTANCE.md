@@ -1,6 +1,8 @@
 # Acceptance Criteria
 
 - [x] `hadara release gate --json` reports package/bin/script, CI, Node policy, clean-checkout smoke, generated artifact policy, and operational debt checks.
+- [x] T-0119 remains explicitly scoped to planning/checklist readiness reporting, not actual clean-checkout/package/smoke execution.
+- [x] Release readiness issue codes and advisory/strict severity behavior are documented and covered by tests.
 - [x] Advisory mode remains warning-only for open high operational debt, while strict mode remains blocking with exit code 6.
 - [x] No release archive, checksum, publication, shell execution surface, provider call, MCP release tool, or write-capable release behavior is added.
 - [x] Focused release-gate tests pass.
