@@ -80,14 +80,14 @@
 - T-0117 is complete: TUI terminal input, Detail viewer scrolling, and narrow color clipping were hardened after operator feedback. Production input decoding now recognizes basic cursor arrows, application-cursor arrows, and modifier cursor arrows; Detail document scroll clamps at the renderer-derived bottom so repeated Down at EOF does not create hidden over-scroll; and `fitAnsi()` preserves color escape sequences while clipping narrow colored text to fixed visible width.
 - T-0118 is complete: TUI Tasks and Overview copy/search parity were tightened after follow-up operator feedback. Tasks visible rows now derive from the same available-height policy as Detail, terminal task page movement uses that same count, Overview Resume Signals is reduced to health/tasks plus validation like the mockup, Current/Previous Work `Next`/`Proof` fallback order uses existing read-model data in the mockup order, and active Tasks search treats numeric `1`/`2`/`3`/`4` as query text until search exits.
 - T-0119 is complete: `hadara release gate --json` now reports a read-only planning/checklist release report for package bin metadata, validation scripts, Node 22 policy, CI clean install behavior, clean-checkout smoke planning, generated artifact boundaries, and operational debt. It does not create clean checkouts, run package/install smoke, diff generated artifacts, or observe remote CI. Readiness failures use check-specific issue codes; advisory mode keeps readiness/debt problems warning-only with `ok: true`, while strict mode promotes them to blocking errors and retains exit code 6 when the report is not ok.
-- T-0120 is complete: a deterministic dogfooding E2E fixture now replays a HADARA-on-HADARA workflow from in-memory context export through Task Capsule creation/completion, policy check for `npm run check`, public evidence attachment, handoff update, and done-level harness validation without shell execution, provider calls, MCP writes, release/package execution, or remote CI.
+- T-0120 is complete: a deterministic dogfooding E2E fixture now replays a HADARA-on-HADARA workflow from in-memory context export through Task Capsule creation/completion, explicit allowed/requested/blocked policy checks, public evidence attachment, detailed generated capsule file assertions, handoff update, done-level harness validation, and built CLI JSON-surface smoke without shell execution, provider calls, MCP writes, release/package execution, or remote CI.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
 - T-0118 TUI Tasks Height and Overview Copy Parity: aligned Tasks panel height with Detail, simplified Overview Resume Signals, matched mockup-style Work-card `Next`/`Proof` fallback order, and fixed numeric Tasks search input.
 - T-0119 Release and Packaging Track: extended release gate reporting with package/bin/script, Node/CI, clean-checkout smoke, generated artifact policy, and operational debt checklist checks.
-- T-0120 Dogfooding E2E Fixture: added a deterministic context-to-done fixture for HADARA-on-HADARA workflow continuity.
+- T-0120 Dogfooding E2E Fixture: added a deterministic context-to-done fixture for HADARA-on-HADARA workflow continuity, detailed capsule-file assertions, explicit policy states, and built CLI JSON smoke.
 
 ## Current Known Problems
 
@@ -110,8 +110,8 @@
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
 - Latest TUI 1000-capsule benchmark: Docker temp project returned `ok: true`, `count: 1000`, `coldFullMs: 1157`, `fastHitMs: 17`, cache path `.hadara/local/tui/read-model-cache.json`.
-- Latest focused dogfooding check: Docker temp-copy `npx vitest run tests/harness/dogfooding-e2e-fixture.test.ts` passed with 1 test after T-0120.
-- Latest full check: Docker temp-copy `npm run check` passed with TypeScript build, 49 test files, and 332 tests after T-0120.
+- Latest focused dogfooding check: Docker temp-copy `npm run build && npx vitest run tests/harness/dogfooding-e2e-fixture.test.ts` passed with 2 tests after T-0120 feedback, including built CLI JSON smoke.
+- Latest full check: Docker temp-copy `npm run check` passed with TypeScript build, 49 test files, and 333 tests after T-0120 feedback.
 - Latest built CLI release-gate smoke: Docker built CLI `release gate --json --project /workspace` returned advisory `ok: true` with 7 coded checks, and `release gate --mode strict --json --project /workspace` returned strict `ok: false` with 7 coded checks and exit code 6 for open high operational debt.
 - Latest built CLI smoke: Docker built CLI `node dist/cli/main.js tui --snapshot --width 150 --height 30 --project /workspace` rendered Overview Current Work as T-0116, Previous Work as T-0115, and heading-aware Goal/Next lines from read-model document text.
 - Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0120 --level done --json --project /workspace` returned `ok: true` with no issues after the dogfooding fixture update.

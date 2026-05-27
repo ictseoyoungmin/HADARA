@@ -2,8 +2,8 @@
 
 | Path | Action | Reason |
 |---|---|---|
-| `tests/fixtures/dogfooding/hadara-on-hadara-flow.json` | Add | Describe the deterministic dogfooding workflow expectations. |
-| `tests/harness/dogfooding-e2e-fixture.test.ts` | Add | Replay context export, policy, evidence, handoff, and done-level harness validation in a temp project. |
+| `tests/fixtures/dogfooding/hadara-on-hadara-flow.json` | Add | Describe the deterministic dogfooding workflow expectations, including explicit policy states. |
+| `tests/harness/dogfooding-e2e-fixture.test.ts` | Add | Replay context export, policy, evidence, handoff, and done-level harness validation in a temp project; assert key capsule files and built CLI JSON smoke. |
 | `tasks/T-0120-dogfooding-e2e-fixture/*` | Modify | Record scope, decisions, tests, evidence, and handoff. |
 | `docs/TASK_BOARD.md` | Modify | Track T-0120 completion. |
 | `docs/PROJECT_STATE.md` | Modify | Record the dogfooding fixture capability. |

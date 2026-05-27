@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createContextExportReport } from '../../src/hermes/context-export';
 import { appendEvidenceTextArtifact } from '../../src/evidence/evidence';
@@ -18,6 +19,8 @@ interface DogfoodingFixture {
     command: string;
     mode: string;
     expectedAction: string;
+    expectedState: 'allowed' | 'requested' | 'blocked';
+    expectedOk: boolean;
   }>;
   evidence: {
     kind: 'test-log' | 'command-log' | 'diff-summary' | 'screenshot' | 'note';
@@ -59,8 +62,10 @@ describe('Dogfooding E2E fixture', () => {
 
     const policyReports = fixture.policyChecks.map((check) => createPolicyCheckReport(check.command, check.mode));
     for (const [index, report] of policyReports.entries()) {
-      expect(report.decision.action).toBe(fixture.policyChecks[index].expectedAction);
-      expect(report.ok).toBe(true);
+      const expected = fixture.policyChecks[index];
+      expect(policyDecisionState(report.decision.action)).toBe(expected.expectedState);
+      expect(report.decision.action).toBe(expected.expectedAction);
+      expect(report.ok).toBe(expected.expectedOk);
     }
 
     const evidence = appendEvidenceTextArtifact(
@@ -77,6 +82,7 @@ describe('Dogfooding E2E fixture', () => {
       }
     );
     expect(evidence.evidence.evidencePath).toMatch(/^artifacts\/test-log\/.+-dogfooding-fixture-report\.txt$/);
+    assertGeneratedCapsuleFiles({ root, task, fixture, evidencePath: evidence.evidence.evidencePath });
 
     updateHandoff({
       projectRoot: root,
@@ -90,6 +96,7 @@ describe('Dogfooding E2E fixture', () => {
     markTaskBoardDone(root, task.id);
     markAcceptanceDone(task.dir);
     writeTaskHandoff(task.dir, fixture);
+    assertCompletedCapsuleFiles({ root, task, fixture, evidencePath: evidence.evidence.evidencePath });
 
     const finalContext = createContextExportReport(root);
     expect(finalContext.content).toContain(task.id);
@@ -104,6 +111,125 @@ describe('Dogfooding E2E fixture', () => {
       issues: []
     });
     expect(doneValidation.checkedFiles).toEqual(expect.arrayContaining([`tasks/${task.id}-dogfood-fixture-task/evidence.jsonl`, 'docs/TASK_BOARD.md']));
+  });
+
+  const builtCliPath = path.join(process.cwd(), 'dist', 'cli', 'main.js');
+  const runIfBuilt = fs.existsSync(builtCliPath) ? it : it.skip;
+
+  runIfBuilt('smokes the dogfooding replay through built CLI JSON surfaces only', () => {
+    const fixture = readFixture();
+    const root = tempProject();
+    const task = createTaskCapsule(root, fixture.taskTitle);
+    writeTaskWorkPlan(task);
+
+    const executedCommands: string[] = [];
+    const contextReport = runBuiltCliJson(root, executedCommands, ['hermes', 'export-context', '--json']);
+    expect(contextReport).toMatchObject({
+      schemaVersion: 'hadara.hermes.export-context.v1',
+      command: 'hermes.export-context',
+      ok: true,
+      output: {
+        path: '.hadara/context/HADARA_CONTEXT.md'
+      }
+    });
+
+    const taskReport = runBuiltCliJson(root, executedCommands, ['task', 'show', task.id, '--json']);
+    expect(taskReport).toMatchObject({
+      schemaVersion: 'hadara.task.show.v1',
+      command: 'task.show',
+      ok: true,
+      task: {
+        id: task.id,
+        title: fixture.taskTitle
+      }
+    });
+
+    for (const check of fixture.policyChecks) {
+      const policyReport = runBuiltCliJson(root, executedCommands, ['policy', 'check-shell', ...check.command.split(' '), '--mode', check.mode, '--json']);
+      expect(policyDecisionState(policyReport.decision.action)).toBe(check.expectedState);
+      expect(policyReport.decision.action).toBe(check.expectedAction);
+      expect(policyReport.ok).toBe(check.expectedOk);
+    }
+
+    const evidenceReport = runBuiltCliJson(root, executedCommands, [
+      'evidence',
+      'collect',
+      '--task',
+      task.id,
+      '--kind',
+      fixture.evidence.kind,
+      '--summary',
+      fixture.evidence.summary,
+      '--result',
+      fixture.evidence.result,
+      '--json'
+    ]);
+    expect(evidenceReport).toMatchObject({
+      schemaVersion: 'hadara.evidence.collect.v1',
+      command: 'evidence.collect',
+      ok: true,
+      evidence: {
+        taskId: task.id,
+        kind: fixture.evidence.kind,
+        result: fixture.evidence.result,
+        visibility: 'public'
+      },
+      issues: []
+    });
+
+    const evidenceListReport = runBuiltCliJson(root, executedCommands, ['evidence', 'list', '--task', task.id, '--json']);
+    expect(evidenceListReport).toMatchObject({
+      schemaVersion: 'hadara.evidence.list.v1',
+      command: 'evidence.list',
+      ok: true,
+      records: [
+        {
+          taskId: task.id,
+          kind: fixture.evidence.kind,
+          result: fixture.evidence.result,
+          visibility: 'public'
+        }
+      ]
+    });
+
+    const handoffPreflight = runBuiltCliJson(root, executedCommands, ['write', 'preflight', 'handoff', 'update', '--task', task.id, '--json']);
+    expect(handoffPreflight).toMatchObject({
+      schemaVersion: 'hadara.write.preflight.v1',
+      command: 'handoff.update',
+      ok: true,
+      writes: ['docs/AGENT_HANDOFF.md']
+    });
+
+    updateHandoff({
+      projectRoot: root,
+      taskId: task.id,
+      summary: fixture.handoff.summary,
+      nextStep: fixture.handoff.next
+    });
+    markTaskDone(task);
+    markTaskBoardDone(root, task.id);
+    markAcceptanceDone(task.dir);
+    writeTaskHandoff(task.dir, fixture);
+
+    const validationReport = runBuiltCliJson(root, executedCommands, ['harness', 'validate', '--task', task.id, '--level', 'done', '--json']);
+    expect(validationReport).toMatchObject({
+      schemaVersion: 'hadara.harness.validate.v1',
+      command: 'harness.validate',
+      ok: true,
+      level: 'done',
+      issues: []
+    });
+
+    expect(executedCommands).toEqual([
+      'hermes export-context --json',
+      `task show ${task.id} --json`,
+      ...fixture.policyChecks.map((check) => `policy check-shell ${check.command} --mode ${check.mode} --json`),
+      `evidence collect --task ${task.id} --kind ${fixture.evidence.kind} --summary ${fixture.evidence.summary} --result ${fixture.evidence.result} --json`,
+      `evidence list --task ${task.id} --json`,
+      `write preflight handoff update --task ${task.id} --json`,
+      `harness validate --task ${task.id} --level done --json`
+    ]);
+    expect(executedCommands.some((command) => /^(run|mcp|release|dashboard)\b/.test(command))).toBe(false);
   });
 });
 
@@ -188,6 +314,79 @@ function renderFixtureReport(
     `Policy checks: ${policyReports.map((report) => `${report.input.command} -> ${report.decision.action}`).join(', ')}`,
     'Result: ready for done-level validation'
   ].join('\n');
+}
+
+function policyDecisionState(action: string): 'allowed' | 'requested' | 'blocked' {
+  if (action === 'allow') return 'allowed';
+  if (action === 'ask') return 'requested';
+  if (action === 'deny') return 'blocked';
+  throw new Error(`Unsupported policy action: ${action}`);
+}
+
+function assertGeneratedCapsuleFiles(input: { root: string; task: TaskCapsule; fixture: DogfoodingFixture; evidencePath?: string }): void {
+  const taskMarkdown = fs.readFileSync(path.join(input.task.dir, 'TASK.md'), 'utf8');
+  expect(taskMarkdown).toContain('Replay a miniature HADARA-on-HADARA workflow.');
+  expect(taskMarkdown).toContain('## Status\n\nDraft');
+
+  const evidenceMarkdown = fs.readFileSync(path.join(input.task.dir, 'EVIDENCE.md'), 'utf8');
+  expect(evidenceMarkdown).toContain(input.fixture.evidence.summary);
+  expect(evidenceMarkdown).toContain(input.fixture.evidence.result);
+
+  const evidenceJsonl = fs.readFileSync(path.join(input.task.dir, 'evidence.jsonl'), 'utf8').trim().split(/\r?\n/).map(JSON.parse);
+  expect(evidenceJsonl).toHaveLength(1);
+  expect(evidenceJsonl[0]).toMatchObject({
+    schemaVersion: 'hadara.evidence.v1',
+    taskId: input.task.id,
+    kind: input.fixture.evidence.kind,
+    summary: input.fixture.evidence.summary,
+    result: input.fixture.evidence.result,
+    visibility: 'public',
+    evidencePath: input.evidencePath
+  });
+
+  expect(input.evidencePath).toBeDefined();
+  expect(fs.readFileSync(path.join(input.task.dir, input.evidencePath ?? ''), 'utf8')).toContain(`Task: ${input.task.id}`);
+  expect(fs.readFileSync(path.join(input.root, 'docs', 'TASK_BOARD.md'), 'utf8')).toContain(`| ${input.task.id} | ${input.fixture.taskTitle} | Draft |`);
+}
+
+function assertCompletedCapsuleFiles(input: { root: string; task: TaskCapsule; fixture: DogfoodingFixture; evidencePath?: string }): void {
+  const taskMarkdown = fs.readFileSync(path.join(input.task.dir, 'TASK.md'), 'utf8');
+  expect(taskMarkdown).toContain('## Status\n\nDone');
+
+  const handoffMarkdown = fs.readFileSync(path.join(input.task.dir, 'HANDOFF.md'), 'utf8');
+  expect(handoffMarkdown).toContain(input.fixture.handoff.summary);
+  expect(handoffMarkdown).toContain(input.fixture.handoff.next);
+
+  const evidenceMarkdown = fs.readFileSync(path.join(input.task.dir, 'EVIDENCE.md'), 'utf8');
+  expect(evidenceMarkdown).toContain(input.evidencePath);
+
+  const evidenceRecord = JSON.parse(fs.readFileSync(path.join(input.task.dir, 'evidence.jsonl'), 'utf8').trim());
+  expect(evidenceRecord).toMatchObject({
+    taskId: input.task.id,
+    kind: input.fixture.evidence.kind,
+    result: input.fixture.evidence.result,
+    visibility: 'public',
+    evidencePath: input.evidencePath
+  });
+
+  expect(fs.readFileSync(path.join(input.root, 'docs', 'AGENT_HANDOFF.md'), 'utf8')).toContain(input.task.id);
+  expect(fs.readFileSync(path.join(input.root, 'docs', 'TASK_BOARD.md'), 'utf8')).toContain(`| ${input.task.id} | ${input.fixture.taskTitle} | Done |`);
+}
+
+function runBuiltCliJson(projectRoot: string, executedCommands: string[], args: string[]): any {
+  executedCommands.push(args.join(' '));
+  const result = spawnSync(process.execPath, [path.join(process.cwd(), 'dist', 'cli', 'main.js'), ...args], {
+    cwd: process.cwd(),
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      HADARA_PROJECT_ROOT: projectRoot
+    }
+  });
+  expect(result.error).toBeUndefined();
+  expect(result.stderr).toBe('');
+  expect(result.stdout.trim()).not.toBe('');
+  return JSON.parse(result.stdout);
 }
 
 function markTaskDone(task: TaskCapsule): void {

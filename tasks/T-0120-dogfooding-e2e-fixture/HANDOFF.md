@@ -2,7 +2,7 @@
 
 ## Last Completed
 
-T-0120 adds a deterministic dogfooding E2E fixture. The fixture starts from in-memory context export, creates a temporary Task Capsule, checks policy for `npm run check` without executing shell, attaches public evidence, updates handoff, marks the capsule complete, and proves done-level harness validation.
+T-0120 adds a deterministic dogfooding E2E fixture. The fixture starts from in-memory context export, creates a temporary Task Capsule, checks policy outcomes as allowed/requested/blocked without executing shell, attaches public evidence, updates handoff, marks the capsule complete, asserts the generated capsule files, proves done-level harness validation, and includes a built CLI JSON-surface-only smoke replay.
 
 ## Next Recommended Step
 

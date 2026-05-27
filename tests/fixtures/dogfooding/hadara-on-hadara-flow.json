@@ -11,7 +11,23 @@
     {
       "command": "npm run check",
       "mode": "auto",
-      "expectedAction": "allow"
+      "expectedAction": "allow",
+      "expectedState": "allowed",
+      "expectedOk": true
+    },
+    {
+      "command": "npm run check",
+      "mode": "assisted",
+      "expectedAction": "ask",
+      "expectedState": "requested",
+      "expectedOk": true
+    },
+    {
+      "command": "rm -rf .",
+      "mode": "auto",
+      "expectedAction": "deny",
+      "expectedState": "blocked",
+      "expectedOk": false
     }
   ],
   "evidence": {
