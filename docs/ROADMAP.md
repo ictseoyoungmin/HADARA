@@ -108,7 +108,7 @@ Candidate scope:
 - Portable store migration checks.
 - CLI distribution smoke tests.
 - Release checklist report.
-- Remote CI observation after local Docker validation.
+- Remote CI observation after local Docker validation. Current baseline: GitHub Actions CI on `main` has been observed successfully, while local Docker validation remains the primary reproducible evidence.
 
 ## v0.9 Terminal Work Console
 

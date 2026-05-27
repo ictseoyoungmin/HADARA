@@ -46,7 +46,7 @@ Read-only surfaces:
 - `hadara release gate --mode advisory --json` is the default current release gate. Open high-severity debt emits a warning check and `ok: true`.
 - `hadara release gate --mode strict --json` is a read-only blocking readiness report. Open high-severity debt emits an error check and `ok: false`.
 
-Both release-gate modes are read-only reports. They do not execute release, packaging, deployment, shell, or provider actions.
+Both release-gate modes are read-only reports. They do not execute release, packaging, deployment, shell, provider, or remote CI actions. Remote CI readiness is represented by documented observation evidence in `docs/VALIDATION_HISTORY.md`; the release gate checks for that record without calling GitHub.
 
 ## V1.0 Follow-Up
 

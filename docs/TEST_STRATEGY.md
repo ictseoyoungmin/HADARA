@@ -44,6 +44,12 @@ docker exec hadara-dev bash -lc 'cd /tmp/hadara && npm run build >/dev/null && n
 
 Run these commands inside the Docker copy-to-`/tmp/work` pattern unless `docs/AGENT_HANDOFF.md` says the host Node environment has been fixed.
 
+## Remote CI Observation
+
+Remote CI observation and GitHub Actions observation are release-readiness signals, not replacements for local reproducible Docker validation. The release-gate readiness marker is: local Docker validation remains the primary reproducible check. The local Docker `npm run check` plus done-level harness validation remain the primary evidence required to complete Task Capsules.
+
+When remote CI is observed, record the exact workflow, branch, commit SHA, run URL, conclusion, and relevant job steps in `docs/VALIDATION_HISTORY.md` or the active Task Capsule evidence. The release gate checks that this observation has been documented, but it does not call GitHub, create releases, deploy, or execute remote jobs.
+
 ## Required Session Checks
 
 Before marking a development Task Capsule Done:
@@ -154,7 +160,7 @@ committed evidence files
 ## Known Constraints
 
 - `npm ci` currently reports 5 moderate audit findings from dev dependencies. Do not run `npm audit fix --force` without reviewing version impact.
-- GitHub Actions exists but has not yet been observed on a remote push or PR.
+- GitHub Actions has now been observed on remote `main`; keep future observations recorded with run URLs and exact commit SHAs.
 - Host validation is not the source of truth until the Node/npm environment is fixed and recorded in `docs/AGENT_HANDOFF.md`.
 - Do not commit `node_modules`, machine-local logs, secrets, or private state produced during validation.
 

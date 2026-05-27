@@ -122,3 +122,4 @@
 | T-0119 | Release and Packaging Track | Done | tasks/T-0119-release-and-packaging-track | Extends release gate with package/bin/script, Node/CI, clean-checkout smoke, generated artifact policy, and operational debt checklist checks. |
 | T-0120 | Dogfooding E2E Fixture | Done | tasks/T-0120-dogfooding-e2e-fixture | Adds a deterministic fixture replaying context export, policy, evidence, handoff, and done-level harness continuity. |
 | T-0121 | Done-level Capsule Scaffold Guard | Done | tasks/T-0121-done-level-capsule-scaffold-guard | Adds done-level harness validation for scaffold/default capsule Markdown leftovers. |
+| T-0122 | Remote CI Release Observation | Done | tasks/T-0122-remote-ci-release-observation | Observed GitHub Actions CI run #109 on main and added documented remote CI observation to release-gate readiness. |

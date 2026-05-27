@@ -229,6 +229,8 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
   const v1Schemas = readOptionalText(path.join(projectRoot, 'docs', 'V1_0_IMPLEMENTATION_SCHEMAS.md'));
   const developmentSlices = readOptionalText(path.join(projectRoot, 'docs', 'DEVELOPMENT_SLICES.md'));
   const projectState = readOptionalText(path.join(projectRoot, 'docs', 'PROJECT_STATE.md'));
+  const testStrategy = readOptionalText(path.join(projectRoot, 'docs', 'TEST_STRATEGY.md'));
+  const validationHistory = readOptionalText(path.join(projectRoot, 'docs', 'VALIDATION_HISTORY.md'));
 
   const checks: ReleaseGateReport['checks'] = [
     checkPackageBin(packageJson, mode),
@@ -236,7 +238,8 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     checkNodePolicy(packageJson, ciWorkflow, mode),
     checkCiWorkflow(ciWorkflow, mode),
     checkCleanCheckoutPolicy(v1Schemas, developmentSlices, mode),
-    checkGeneratedArtifactPolicy(projectState, developmentSlices, mode)
+    checkGeneratedArtifactPolicy(projectState, developmentSlices, mode),
+    checkRemoteCiObservation(testStrategy, validationHistory, mode)
   ];
   const issues = checks
     .filter((check) => check.status !== 'passed')
@@ -321,6 +324,24 @@ function checkGeneratedArtifactPolicy(projectState: string | null, developmentSl
     summary: ok
       ? 'Context export, dashboard APIs, and TUI cache boundaries are documented as non-committed/generated or read-only surfaces.'
       : 'Generated context/dashboard/cache artifact boundaries must be documented before release.'
+  };
+}
+
+function checkRemoteCiObservation(
+  testStrategy: string | null,
+  validationHistory: string | null,
+  mode: ReleaseGateReport['mode']
+): ReleaseGateReport['checks'][number] {
+  const ok =
+    includesAll(testStrategy, ['Remote CI observation', 'local Docker validation remains the primary reproducible check']) &&
+    includesAll(validationHistory, ['GitHub Actions CI run', 'actions/runs/']);
+  return {
+    code: 'REMOTE_CI_OBSERVATION_UNRECORDED',
+    name: 'Remote CI observation evidence',
+    status: ok ? 'passed' : readinessFailureStatus(mode),
+    summary: ok
+      ? 'Remote GitHub Actions status is recorded separately from local release-gate checks.'
+      : 'Record a recent remote GitHub Actions observation and keep it distinct from local Docker validation.'
   };
 }
 

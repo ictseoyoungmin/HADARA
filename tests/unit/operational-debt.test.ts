@@ -66,6 +66,16 @@ function writeReleaseReadinessFiles(root: string): void {
     ['contextPath: null', '.hadara/local/tui/', 'read-only local API routes'].join('\n'),
     'utf8'
   );
+  fs.writeFileSync(
+    path.join(root, 'docs', 'TEST_STRATEGY.md'),
+    ['Remote CI observation', 'local Docker validation remains the primary reproducible check'].join('\n'),
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(root, 'docs', 'VALIDATION_HISTORY.md'),
+    ['GitHub Actions CI run succeeded: https://github.com/example/project/actions/runs/123'].join('\n'),
+    'utf8'
+  );
 }
 
 afterEach(() => {
@@ -204,6 +214,12 @@ describe('operational debt track', () => {
         summary: 'Context export, dashboard APIs, and TUI cache boundaries are documented as non-committed/generated or read-only surfaces.'
       },
       {
+        code: 'REMOTE_CI_OBSERVATION_UNRECORDED',
+        name: 'Remote CI observation evidence',
+        status: 'passed',
+        summary: 'Remote GitHub Actions status is recorded separately from local release-gate checks.'
+      },
+      {
         code: 'OPEN_HIGH_OPERATIONAL_DEBT',
         name: 'No high severity operational debt',
         status: 'warning',
@@ -288,7 +304,8 @@ describe('operational debt track', () => {
       'NODE_POLICY_UNCLEAR',
       'CI_CLEAN_INSTALL_UNCLEAR',
       'CLEAN_CHECKOUT_SMOKE_UNCLEAR',
-      'GENERATED_ARTIFACT_POLICY_UNCLEAR'
+      'GENERATED_ARTIFACT_POLICY_UNCLEAR',
+      'REMOTE_CI_OBSERVATION_UNRECORDED'
     ];
 
     for (const code of readinessCodes) {

@@ -115,3 +115,4 @@ Historical validation entries moved out of `docs/AGENT_HANDOFF.md` during T-0040
 - Docker focused provider/event/schema hardening tests after T-0096 follow-up: 4 files passed, 19 tests passed.
 - Docker check after T-0096 follow-up hardening: 39 test files passed, 249 tests passed.
 - Docker `node dist/cli/main.js harness validate --task T-0096 --level done --json --project /workspace` returned `ok: true` after follow-up hardening docs/evidence updates.
+- GitHub Actions CI run observed for remote `main` after T-0121: run #109 `CI`, branch `main`, commit `8b4f33d1bf926d051cf63e13ca2de222bfc22d8c`, event `push`, conclusion `success`, URL `https://github.com/ictseoyoungmin/HADARA-dev/actions/runs/26497664485`; job `check` completed successfully and included `npm ci` plus `npm run check`.

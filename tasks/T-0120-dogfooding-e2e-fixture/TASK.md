@@ -9,7 +9,8 @@ Add a deterministic HADARA-on-HADARA fixture that replays the core protocol path
 - Add a fixture describing the dogfooding flow expectations.
 - Add a harness test that creates a temporary HADARA project, exports context in memory, creates and completes a Task Capsule, checks policy for the validation command, attaches public evidence, updates handoff, and runs done-level harness validation.
 - Assert the generated temporary capsule's key files in detail: `TASK.md`, `EVIDENCE.md`, `HANDOFF.md`, and `evidence.jsonl`.
-- Add a built CLI smoke replay that uses CLI JSON surfaces only for context, task read, policy, evidence, handoff write preflight, and harness validation checks.
+- Add a built CLI smoke replay that uses CLI JSON surfaces only for generated context export compatibility, task read, policy, evidence, handoff write preflight, and harness validation checks.
+- Keep the primary dogfooding fixture on in-memory context export; treat `hermes export-context --json` smoke as generated context export JSON surface compatibility.
 - Keep the fixture deterministic and local-only.
 - Update capsule and roadmap tracking docs with evidence.
 
