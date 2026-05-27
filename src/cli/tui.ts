@@ -55,6 +55,7 @@ export function handleTuiCommand(input: TuiCommandInput): boolean {
     widthPolicy,
     theme,
     cache: { enabled: cacheEnabled },
+    asyncLoading: input.input ? false : true,
     onStop: () => cleanup()
   });
   cleanup = (): void => {

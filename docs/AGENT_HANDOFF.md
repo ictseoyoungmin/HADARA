@@ -76,13 +76,14 @@
 - T-0113 is complete: TUI now has a fast read-model profile for interactive startup/refresh/detail paths, deferring advisory debt/release/tools/write-preflight reads with an explicit warning while preserving full read-model behavior for default aggregate/snapshot paths. Cache indexing now represents missing capsule `TASK.md` files as zero-size entries instead of failing cache writes. `/workspace` measurement after the change showed fast read about 2.71s, cache fast hit about 0.58s, terminal startup about 3.10s, refresh about 2.79s, and different-task detail about 2.98s.
 - T-0114 is complete: TUI mockup UX parity was tightened after audit feedback. Fast-profile deferred advisory reads now render as deferred instead of false zero/ok signals, task-list rendering follows interaction scroll/search state, active search copy shows a cursor, task-row mouse clicks open refreshed Detail, and wide task-table clicks no longer hit left navigation.
 - T-0115 is complete: TUI mouse targeting now uses renderer-derived hitboxes emitted by the snapshot renderer for panel navigation, task rows, and Detail document tabs; the terminal shell consumes those hitboxes for SGR mouse clicks instead of duplicating fixed coordinate geometry, ignores SGR mouse release coordinate payloads so Help clicks do not bounce back to Overview, Task tab cursor/window movement follows the mockup visible-row offset policy, and intermediate-width Overview work cards keep Previous Work borders plus label colors without edge ellipsis artifacts.
+- T-0116 is complete: TUI Markdown viewer and live Overview parity now match the mockup more closely. Detail Markdown rendering supports heading underlines, numbered lists, checklists, bullets, aligned table dividers, and heading-aware previews; Overview Current Work and Previous Work follow the latest two task read-model rows with read-model document summaries; and the built interactive `hadara tui` path uses an asynchronous loading pulse with a worker-backed read-model loader when compiled worker files are available.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0113 TUI Async Loading and Read-Model Performance Refactor: added a fast interactive TUI read-model profile, fixed missing `TASK.md` cache indexing, and reduced measured terminal startup/refresh/detail paths to about 2.8-3.1s on `/workspace`.
 - T-0114 TUI Mockup UX Parity Audit Fix: made deferred fast-profile advisory reads visible, aligned task-list windows with interaction state, and made task-row mouse clicks open refreshed Detail.
 - T-0115 TUI Renderer-Derived Mouse Hitboxes and Detail Tab Fix: made panel/task/document-tab mouse targeting come from the rendered frame hitboxes, fixed mouse-release digits leaking into panel-number handling, aligned Task tab cursor windowing with the mockup, and fixed intermediate-width Overview work-card clipping/color artifacts.
+- T-0116 TUI Markdown Viewer and Live Overview Parity: ported mockup Markdown table/viewer semantics, made Overview latest-two-task summaries read-model-backed, and added asynchronous production loading pulse support.
 
 ## Current Known Problems
 
@@ -93,11 +94,11 @@
 - GitHub Actions has been added but has not yet been observed on a remote push/PR.
 - Policy parser is intentionally minimal; it is safer than before, but not a full POSIX or PowerShell parser.
 - Private evidence encryption remains deferred; private evidence manifests record this explicitly.
-- Production TUI fast interactive paths are much faster, but they still perform synchronous work on the main thread for the fast model. A deeper worker-thread loader could make loading animations continue during slow filesystems, but the current measured startup/refresh/detail paths are about 2.8-3.1s on `/workspace`.
+- Production TUI fast interactive paths use an asynchronous worker-backed loader when compiled worker files are available, but broad performance re-measurement after T-0116 has not yet been recorded.
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. If continuing TUI work, the next useful slice is a worker-thread loader for truly continuous loading animation during slow reads; otherwise continue the release and packaging track.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. The next roadmap slice is the Release and Packaging Track unless fresh operator feedback identifies another high-impact TUI parity gap.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, TUI writes, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
@@ -105,10 +106,10 @@
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
 - Latest TUI 1000-capsule benchmark: Docker temp project returned `ok: true`, `count: 1000`, `coldFullMs: 1157`, `fastHitMs: 17`, cache path `.hadara/local/tui/read-model-cache.json`.
-- Latest focused TUI hitbox/cursor/style check: Docker temp-copy `npx vitest run tests/unit/tui-snapshot.test.ts tests/unit/tui-state.test.ts tests/unit/tui-terminal.test.ts` passed with 3 test files and 31 tests after the T-0115 Overview card width/color fix.
-- Latest full check: Docker temp-copy `npm run check` passed with TypeScript build, 47 test files, and 320 tests after the T-0115 Overview card width/color fix.
-- Latest built CLI smoke: Docker `node dist/cli/main.js tui --snapshot --width 150 --height 27 --color --project /workspace` and rebuilt `hadara-cli-test` rendered side-by-side Overview work cards with intact Previous Work border and label colors.
-- Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0115 --level done --json --project /workspace` returned `ok: true` with no issues after the T-0115 Task cursor policy fix.
+- Latest focused TUI parity check: Docker temp-copy `npx vitest run tests/unit/tui-markdown.test.ts tests/unit/tui-read-model.test.ts tests/unit/tui-snapshot.test.ts tests/unit/tui-terminal.test.ts` passed with 4 test files and 32 tests after T-0116.
+- Latest full check: Docker temp-copy `npm run check` passed with TypeScript build, 47 test files, and 322 tests after T-0116.
+- Latest built CLI smoke: Docker built CLI `node dist/cli/main.js tui --snapshot --width 150 --height 30 --project /workspace` rendered Overview Current Work as T-0116, Previous Work as T-0115, and heading-aware Goal/Next lines from read-model document text.
+- Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0116 --level done --json --project /workspace` returned `ok: true` with no issues.
 - Pre-T-0113 TUI performance measurement: Docker `hadara-cli-test` against `/workspace` measured full `createTuiReadModel` around 20.02s, startup around 18.83s, full refresh around 22.35s, different-task detail entry around 24.24s, and four loading-frame render cost around 6.07ms; cache writes failed on a stale missing capsule `TASK.md`, so current `--cache` did not hit in that measurement.
 - Latest TUI performance re-measurement after T-0113: Docker temp-copy build measured full read 26321.27ms, fast read 2705.97ms, cache fast hit 584.59ms, terminal startup 3098.58ms, terminal refresh 2786.69ms, and different-task detail 2980.76ms against `/workspace`.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.

@@ -45,10 +45,13 @@ describe('TUI read-model aggregator', () => {
       selectedTaskId: first.id,
       overview: {
         currentWork: {
+          id: second.id,
+          title: 'Later task'
+        },
+        previousWork: {
           id: first.id,
           title: 'Active TUI task'
         },
-        previousWork: null,
         health: 'ok',
         phase: 'bootstrap-development',
         branch: 'main'
@@ -84,6 +87,8 @@ describe('TUI read-model aggregator', () => {
     });
     expect(model.tasks.count).toBe(2);
     expect(model.tasks.tasks.map((task) => task.id)).toEqual([first.id, second.id]);
+    expect(model.overview.currentDetail?.files?.['TASK.md']).toContain('Later task');
+    expect(model.overview.previousDetail?.files?.['TASK.md']).toContain('Active TUI task');
     expect(model.debt.aggregate.total).toBeGreaterThan(0);
     expect(model.tools.surfaces.cli.length).toBeGreaterThan(0);
     expect(model.writePreview.writes).toContain(`tasks/T-0003-tui-follow-up/TASK.md`);

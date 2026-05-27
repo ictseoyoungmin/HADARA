@@ -19,11 +19,14 @@ describe('TUI markdown renderer', () => {
       32
     );
 
-    expect(lines).toContain('§ Goal');
+    expect(lines).toContain('Goal');
+    expect(lines).toContain('────────────');
     expect(lines).toContain('[ ] Preserve mockup parity');
     expect(lines).toContain('[x] Keep read-only boundary');
     expect(lines).toContain('• Split renderer modules');
     expect(lines.some((line) => line.includes('Field') && line.includes('Value'))).toBe(true);
+    expect(lines.some((line) => line.includes('───┼───'))).toBe(true);
+    expect(lines.some((line) => line.includes('Status') && line.includes('Draft') && line.includes('│'))).toBe(true);
     expect(lines.every((line) => visibleWidth(line) <= 32)).toBe(true);
   });
 
@@ -41,9 +44,16 @@ describe('TUI markdown renderer', () => {
       32
     );
 
-    expect(lines).toContain('§ 목표');
+    expect(lines).toContain('목표');
     expect(lines.some((line) => line.includes('한글과'))).toBe(true);
     expect(lines.some((line) => line.includes('항목') && line.includes('설명'))).toBe(true);
+    expect(lines.some((line) => line.includes('─┼─'))).toBe(true);
     expect(lines.every((line) => visibleWidth(line) <= 32)).toBe(true);
+  });
+
+  it('requires a Markdown separator row before treating pipe lines as tables', () => {
+    const lines = renderMarkdownDocument(['| Not | a table |', '| because | no separator |'].join('\n'), 40);
+
+    expect(lines).toEqual(['| Not | a table |', '| because | no separator |']);
   });
 });

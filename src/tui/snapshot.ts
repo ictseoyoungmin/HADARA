@@ -230,8 +230,20 @@ function renderOverview(model: TuiReadModel, width: number, theme: TuiThemeName)
   const columnGap = 2;
   const leftWidth = width >= 96 ? Math.max(20, Math.floor((width - columnGap) * 0.52)) : width;
   const rightWidth = width >= 96 ? Math.max(20, width - columnGap - leftWidth) : width;
-  const currentCard = colorCard('Current Work', workSummaryLines(model, current, 'LIVE', theme, Math.max(8, leftWidth - 4)), leftWidth, theme, 'teal');
-  const previousCard = colorCard('Previous Work', workSummaryLines(model, previous, previous ? 'FILE' : 'ROUTE', theme, Math.max(8, rightWidth - 4)), rightWidth, theme, 'violet');
+  const currentCard = colorCard(
+    'Current Work',
+    workSummaryLines(model, current, model.overview.currentDetail, 'LIVE', theme, Math.max(8, leftWidth - 4)),
+    leftWidth,
+    theme,
+    'teal'
+  );
+  const previousCard = colorCard(
+    'Previous Work',
+    workSummaryLines(model, previous, model.overview.previousDetail, previous ? 'FILE' : 'ROUTE', theme, Math.max(8, rightWidth - 4)),
+    rightWidth,
+    theme,
+    'violet'
+  );
   const top = width >= 96 ? columns(currentCard, previousCard, width) : [...currentCard, '', ...previousCard];
   const deferred = hasDeferredHeavyReads(model);
   const signals = [
@@ -366,7 +378,14 @@ function renderStatusBar(width: number, options: { theme: TuiThemeName; logLine?
   return fitAnsi(`${left}${gap}${log}`, width);
 }
 
-function workSummaryLines(model: TuiReadModel, task: TuiReadModel['overview']['currentWork'], label: string, theme: TuiThemeName, width: number): string[] {
+function workSummaryLines(
+  model: TuiReadModel,
+  task: TuiReadModel['overview']['currentWork'],
+  detail: TuiReadModel['overview']['currentDetail'],
+  label: string,
+  theme: TuiThemeName,
+  width: number
+): string[] {
   if (!task) {
     return [
       trimLine(`${colorBadge('ROUTE', 'muted', theme)} - No task exposed`, width),
@@ -376,21 +395,31 @@ function workSummaryLines(model: TuiReadModel, task: TuiReadModel['overview']['c
       labelValueLine('Proof', 'pass', 'No evidence exposed.', width, theme)
     ];
   }
-  const docs = task.id === model.selectedTask?.summary.id ? model.selectedTask.detail.files : {};
+  const docs = detail?.files ?? {};
   const taskText = docs?.['TASK.md'] ?? '';
   const planText = docs?.['PLAN.md'] ?? '';
   const acceptanceText = docs?.['ACCEPTANCE.md'] ?? '';
-  const next = firstLine(incompleteChecklist(planText, 2), incompleteChecklist(acceptanceText, 2), markdownPreview(planText, 1), markdownPreview(acceptanceText, 1));
+  const handoffText = docs?.['HANDOFF.md'] ?? '';
+  const evidenceText = docs?.['EVIDENCE.md'] ?? '';
+  const next = firstLine(
+    incompleteChecklist(planText, 2),
+    incompleteChecklist(acceptanceText, 2),
+    markdownPreview(planText, { headings: ['Plan'], limit: 2 }),
+    markdownPreview(acceptanceText, { headings: ['Acceptance'], limit: 2 })
+  );
+  const documentProof = firstLine(markdownPreview(evidenceText, 2), markdownPreview(handoffText, 1));
   const proof =
     task.id === model.selectedTask?.summary.id && model.selectedTask.evidence.records[0]?.summary
       ? model.selectedTask.evidence.records[0].summary
-      : task.status === 'Done'
-        ? 'Done status exposed by task list.'
-        : 'No evidence exposed.';
+      : documentProof
+        ? documentProof
+        : task.status === 'Done'
+          ? 'Done status exposed by task list.'
+          : 'No evidence exposed.';
   return [
     summaryTitleLine(label, task.id, task.title || '-', width, theme),
     summaryStatusLine(task.status || '-', task.capsule || '-', width, theme),
-    labelValueLine('Goal', 'teal2', firstLine(markdownPreview(taskText, 2), task.title), width, theme),
+    labelValueLine('Goal', 'teal2', firstLine(markdownPreview(taskText, { headings: ['Goal', 'Current', 'Scope', 'Summary'], limit: 2 }), task.title), width, theme),
     labelValueLine('Next', 'gold2', next, width, theme),
     labelValueLine('Proof', 'pass', proof, width, theme)
   ];
@@ -509,12 +538,13 @@ function statusThemeRole(value: string | boolean | number | null | undefined): '
 
 function colorizeDetailDocument(lines: string[], theme: TuiThemeName): string[] {
   if (theme === 'none') return lines;
-  return lines.map((line) => {
+  return lines.map((line, index) => {
     const plain = line.trimEnd();
     if (!plain) return line;
-    if (plain.startsWith('§ ')) return line.replace('§ ', tuiFg(theme, 'teal2', '§ '));
+    if (/^─{8,}$/.test(plain)) return tuiFg(theme, 'border', line);
+    if (/^[-─┼]{8,}$/.test(plain)) return tuiFg(theme, 'border', line);
+    if (/^─/.test(lines[index + 1]?.trimEnd() ?? '')) return tuiFg(theme, index === 0 || !lines.slice(0, index).some((candidate) => candidate.trim()) ? 'gold2' : 'teal2', line);
     if (/^[A-Z0-9][A-Z0-9 _/-]{2,}$/.test(plain) && visibleWidth(plain) <= 48) return tuiFg(theme, 'teal2', line);
-    if (/^[-─]{8,}$/.test(plain)) return tuiFg(theme, 'border', line);
     if (/^\[(DONE|TODO|LIVE|PLANNED|READY|FILE)\]/i.test(plain)) {
       return line.replace(/^\[([^\]]+)\]/, (_match, label: string) => colorBadge(label, label.toLowerCase() === 'done' ? 'pass' : 'warn', theme));
     }

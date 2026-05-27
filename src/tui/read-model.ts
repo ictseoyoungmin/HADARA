@@ -41,6 +41,8 @@ export interface TuiReadModel {
   overview: {
     currentWork: TaskJsonSummary | null;
     previousWork: TaskJsonSummary | null;
+    currentDetail: TaskReadReport | null;
+    previousDetail: TaskReadReport | null;
     health: OpsStatusReport['health'];
     phase: string;
     branch: string;
@@ -77,6 +79,8 @@ export function createTuiLoadingReadModel(): TuiReadModel {
     overview: {
       currentWork: null,
       previousWork: null,
+      currentDetail: null,
+      previousDetail: null,
       health: 'loading' as OpsStatusReport['health'],
       phase: 'loading read models',
       branch: '...'
@@ -212,7 +216,7 @@ export function createTuiReadModel(projectRoot: string, options: TuiReadModelOpt
   const releaseGate = createReleaseGateReport(projectRoot, 'advisory');
   const tools = createToolsListReport();
   const writePreview = createWritePreflightReport(projectRoot, ['task', 'create', options.writePreviewTitle ?? DEFAULT_WRITE_PREVIEW_TITLE]);
-  const overview = createOverview(tasks.tasks, selectedSummary, status);
+  const overview = createOverview(projectRoot, tasks.tasks, selectedTask, status, options.includePrivateEvidence);
   const issues = collectIssues({
     status,
     activeRunResume,
@@ -289,7 +293,7 @@ export function createTuiFastReadModel(projectRoot: string, options: TuiReadMode
     ok: !issues.some((issue) => issue.severity === 'error'),
     generatedAt: new Date().toISOString(),
     selectedTaskId,
-    overview: createOverview(tasks.tasks, selectedSummary, status),
+    overview: createOverview(projectRoot, tasks.tasks, selectedTask, status, options.includePrivateEvidence),
     status,
     tasks,
     selectedTask,
@@ -373,12 +377,26 @@ function resolveSelectedTaskId(tasks: TaskJsonSummary[], status: OpsStatusReport
   return tasks.at(-1)?.id ?? null;
 }
 
-function createOverview(tasks: TaskJsonSummary[], selectedTask: TaskJsonSummary | null, status: OpsStatusReport): TuiReadModel['overview'] {
-  const selectedIndex = selectedTask ? tasks.findIndex((task) => task.id === selectedTask.id) : -1;
-  const previousWork = selectedIndex > 0 ? tasks[selectedIndex - 1] : null;
+function createOverview(
+  projectRoot: string,
+  tasks: TaskJsonSummary[],
+  selectedTask: TuiReadModel['selectedTask'],
+  status: OpsStatusReport,
+  includePrivateEvidence?: boolean
+): TuiReadModel['overview'] {
+  const latestRows = [...tasks].reverse();
+  const currentWork = latestRows[0] ?? null;
+  const previousWork = latestRows[1] ?? null;
+  const readDetail = (task: TaskJsonSummary | null): TaskReadReport | null => {
+    if (!task) return null;
+    if (selectedTask?.summary.id === task.id) return selectedTask.detail;
+    return createTaskReadReport(projectRoot, task.id, { includePrivate: includePrivateEvidence });
+  };
   return {
-    currentWork: selectedTask,
+    currentWork,
     previousWork,
+    currentDetail: readDetail(currentWork),
+    previousDetail: readDetail(previousWork),
     health: status.health,
     phase: status.project.phase,
     branch: status.project.branch

@@ -4,6 +4,11 @@ export interface RenderMarkdownDocumentOptions {
   maxRows?: number;
 }
 
+export interface MarkdownPreviewOptions {
+  headings?: string[];
+  limit?: number;
+}
+
 export function renderMarkdownDocument(markdown: string, width: number, options: RenderMarkdownDocumentOptions = {}): string[] {
   const sourceLines = String(markdown || '').split(/\r?\n/);
   const rows: string[] = [];
@@ -17,10 +22,11 @@ export function renderMarkdownDocument(markdown: string, width: number, options:
       continue;
     }
 
-    if (line.startsWith('|') && sourceLines[index + 1]?.trim().startsWith('|')) {
-      const tableLines: string[] = [];
-      while (index < sourceLines.length && sourceLines[index].trim().startsWith('|')) {
-        tableLines.push(sourceLines[index].trim());
+    if (isMarkdownTableStart(sourceLines, index)) {
+      const tableLines = [sourceLines[index]];
+      index += 2;
+      while (index < sourceLines.length && /^\s*\|.+\|\s*$/.test(sourceLines[index] ?? '')) {
+        tableLines.push(sourceLines[index]);
         index += 1;
       }
       index -= 1;
@@ -28,9 +34,12 @@ export function renderMarkdownDocument(markdown: string, width: number, options:
       continue;
     }
 
-    const heading = line.match(/^(#{1,6})\s+(.*)$/);
+    const heading = line.match(/^(#{1,6})\s+(.+?)\s*$/);
     if (heading) {
-      pushMany(rows, renderWrapped(`§ ${heading[2]}`, width, ''), options.maxRows);
+      const title = heading[2].replace(/\s+#+$/, '').trim();
+      if (rows.length && rows[rows.length - 1] !== '') pushBlank(rows, options.maxRows);
+      pushMany(rows, [trimFit(heading[1].length === 1 ? title : title.toUpperCase(), width)], options.maxRows);
+      if (heading[1].length <= 2) pushMany(rows, [repeat('─', Math.min(width, Math.max(12, visibleWidth(title) + 6)))], options.maxRows);
       continue;
     }
 
@@ -47,18 +56,25 @@ export function renderMarkdownDocument(markdown: string, width: number, options:
       continue;
     }
 
+    const numbered = line.match(/^(\d+)\.\s+(.*)$/);
+    if (numbered) {
+      pushMany(rows, renderWrapped(`${numbered[1].padStart(2, '0')} ${numbered[2]}`, width, '   '), options.maxRows);
+      continue;
+    }
+
     pushMany(rows, renderWrapped(line, width, ''), options.maxRows);
   }
 
   return rows.length ? rows : [''];
 }
 
-export function markdownPreview(markdown: string, limit = 2): string[] {
-  return String(markdown || '')
-    .split(/\r?\n/)
-    .map(cleanPreviewLine)
-    .filter(Boolean)
-    .slice(0, limit);
+export function markdownPreview(markdown: string, options: number | MarkdownPreviewOptions = 2): string[] {
+  const previewOptions = typeof options === 'number' ? { limit: options } : options;
+  const limit = previewOptions.limit ?? 2;
+  const section = previewOptions.headings?.length ? markdownSection(markdown, previewOptions.headings, limit) : [];
+  if (section.length) return section;
+  const parsed = parseMarkdown(markdown);
+  return parsed.lines.slice(0, limit);
 }
 
 export function incompleteChecklist(markdown: string, limit = 2): string[] {
@@ -80,27 +96,88 @@ export function cleanPreviewLine(value: unknown): string {
 }
 
 function renderMarkdownTable(lines: string[], width: number): string[] {
+  const header = tableCells(lines[0] ?? '');
   const rows = lines
-    .map((line) =>
-      line
-        .replace(/^\||\|$/g, '')
-        .split('|')
-        .map((cell) => cell.trim())
-    )
-    .filter((row) => !row.every((cell) => /^:?-{3,}:?$/.test(cell)));
+    .slice(1)
+    .filter((line) => !isMarkdownTableSeparator(line))
+    .map(tableCells)
+    .filter((cells) => cells.length && cells.some(Boolean));
+  const columnCount = Math.max(header.length, ...rows.map((row) => row.length));
+  if (!columnCount) return [];
 
-  if (!rows.length) return [];
-
-  const columnCount = Math.max(...rows.map((row) => row.length));
-  const rawWidths = Array.from({ length: columnCount }, (_, column) =>
-    Math.max(3, ...rows.map((row) => visibleWidth(row[column] ?? '')))
+  const normalizedRows = rows.map((row) => Array.from({ length: columnCount }, (_, index) => row[index] || ''));
+  const widths = Array.from({ length: columnCount }, (_, index) => {
+    const values = [header[index] || '', ...normalizedRows.map((row) => row[index] || '')];
+    return Math.max(3, Math.min(28, Math.max(...values.map((value) => visibleWidth(value)))));
+  });
+  shrinkTableWidths(widths, Math.max(20, width));
+  const dividerLine = widths.map((columnWidth) => repeat('─', columnWidth)).join('─┼─');
+  return [renderTableRow(header, widths), dividerLine, ...normalizedRows.map((row) => renderTableRow(row, widths))].map((line) =>
+    trimFit(line, width)
   );
-  const separators = Math.max(0, columnCount - 1) * 3;
-  const available = Math.max(columnCount * 3, width - separators);
-  const totalRaw = rawWidths.reduce((sum, value) => sum + value, 0);
-  const widths = rawWidths.map((rawWidth) => Math.max(3, Math.floor((rawWidth / Math.max(1, totalRaw)) * available)));
+}
 
-  return rows.map((row) => row.map((cell, column) => fit(cell ?? '', widths[column])).join(' | ').trimEnd());
+function parseMarkdown(markdown: string): { lines: string[]; sections: Record<string, string[]> } {
+  const parsed: { lines: string[]; sections: Record<string, string[]> } = { lines: [], sections: {} };
+  let current: string | null = null;
+  for (const rawLine of String(markdown || '').split(/\r?\n/)) {
+    const heading = rawLine.match(/^(#{1,6})\s+(.+?)\s*$/);
+    if (heading) {
+      current = normalizeHeading(heading[2].replace(/\s+#+$/, '').trim());
+      if (!parsed.sections[current]) parsed.sections[current] = [];
+      continue;
+    }
+    const cleaned = cleanPreviewLine(rawLine);
+    if (!cleaned || cleaned.startsWith('|---')) continue;
+    if (current) parsed.sections[current].push(cleaned);
+    else parsed.lines.push(cleaned);
+  }
+  return parsed;
+}
+
+function markdownSection(markdown: string, headings: string[], limit: number): string[] {
+  const parsed = parseMarkdown(markdown);
+  for (const heading of headings) {
+    const section = parsed.sections[normalizeHeading(heading)];
+    if (section?.length) return section.slice(0, limit);
+  }
+  return [];
+}
+
+function normalizeHeading(value: string): string {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function isMarkdownTableStart(lines: string[], index: number): boolean {
+  return /^\s*\|.+\|\s*$/.test(lines[index] ?? '') && isMarkdownTableSeparator(lines[index + 1] ?? '');
+}
+
+function isMarkdownTableSeparator(line: string): boolean {
+  return /^\s*\|\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|\s*$/.test(line || '');
+}
+
+function tableCells(line: string): string[] {
+  return String(line || '')
+    .trim()
+    .split('|')
+    .slice(1, -1)
+    .map(cleanPreviewLine);
+}
+
+function shrinkTableWidths(widths: number[], width: number): void {
+  const gapWidth = Math.max(0, widths.length - 1) * 3;
+  while (widths.reduce((sum, columnWidth) => sum + columnWidth, gapWidth) > width) {
+    const largest = widths.reduce((best, columnWidth, index) => (columnWidth > widths[best] ? index : best), 0);
+    if (widths[largest] <= 6) break;
+    widths[largest] -= 1;
+  }
+}
+
+function renderTableRow(cells: string[], widths: number[]): string {
+  return widths.map((columnWidth, index) => fit(cells[index] || '', columnWidth)).join(' │ ');
 }
 
 function renderWrapped(text: string, width: number, indent: string): string[] {

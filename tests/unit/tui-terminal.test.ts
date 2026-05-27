@@ -4,6 +4,7 @@ import path from 'node:path';
 import { Readable, Writable } from 'node:stream';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createTaskCapsule } from '../../src/task/task-capsule';
+import { createTuiReadModel, TuiReadModel } from '../../src/tui/read-model';
 import { createTuiTerminalSession, decodeTuiInput, TuiTerminalInput, TuiTerminalOutput } from '../../src/tui/terminal';
 
 const roots: string[] = [];
@@ -67,6 +68,41 @@ describe('TUI terminal shell', () => {
     expect(output.text()).toContain('reading task capsule');
     expect(output.text()).toContain('Terminal refresh task');
 
+    session.stop();
+  });
+
+  it('keeps rendering loading pulse frames while an async read-model load is pending', async () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Async loading task');
+    writeProjectDocs(root, task.id);
+    const output = new MemoryOutput(88, 24);
+    let resolveLoad: ((value: TuiReadModel) => void) | null = null;
+    const session = createTuiTerminalSession({
+      projectRoot: root,
+      input: new MemoryInput(),
+      output,
+      widthPolicy: 'compact',
+      terminalControl: false,
+      enableRawMode: false,
+      asyncLoading: true,
+      loadingFrameMs: 16,
+      readModelLoader: () =>
+        new Promise((resolve) => {
+          resolveLoad = resolve;
+        })
+    });
+
+    session.start();
+    expect(session.getModel().overview.health).toBe('loading');
+    await sleep(45);
+    const loadingFrames = output.chunks.filter((chunk) => chunk.includes('Overview Reading')).length;
+    expect(loadingFrames).toBeGreaterThanOrEqual(2);
+
+    resolveLoad?.(createTuiReadModel(root, { profile: 'fast' }));
+    await sleep(20);
+
+    expect(session.getModel().selectedTaskId).toBe(task.id);
+    expect(output.text()).toContain('Async loading task');
     session.stop();
   });
 
@@ -336,6 +372,10 @@ function listProjectFiles(root: string): string[] {
   const files: string[] = [];
   walk(root, files);
   return files.sort();
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function walk(dir: string, files: string[]): void {
