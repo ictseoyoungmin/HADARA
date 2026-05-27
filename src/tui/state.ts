@@ -85,16 +85,6 @@ export function reduceTuiInteractionState(state: TuiInteractionState, model: Tui
   if (normalized === 'refresh-complete' || normalized === 'refresh-failed') return { ...state, refreshRequested: false };
   if (normalized === 'detail-refresh-complete' || normalized === 'detail-refresh-failed') return { ...state, detailRefreshRequested: false };
   if (normalized === 'ctrl-c' || normalized === 'q' || normalized === 'ㅂ') return { ...state, quitRequested: true };
-  if (normalized === 'r') return { ...state, refreshRequested: true };
-  if (normalized === '?') return { ...state, activePanel: 'help' };
-  if (normalized === 'tab' || normalized === 'right') return { ...state, activePanel: nextPanel(state.activePanel, 1), searchActive: false };
-  if (normalized === 'shift-tab' || normalized === 'left') return { ...state, activePanel: nextPanel(state.activePanel, -1), searchActive: false };
-
-  const panel = panelForKey(normalized);
-  if (panel) return { ...state, activePanel: panel, searchActive: panel === 'tasks' ? state.searchActive : false };
-
-  if (normalized === '/') return reconcileTaskSelection({ ...state, activePanel: 'tasks', searchActive: true, taskSearch: '', taskListScroll: 0 }, model, taskListVisibleRows);
-  if (normalized === 'escape') return reconcileTaskSelection({ ...state, searchActive: false, taskSearch: '', taskListScroll: 0 }, model, taskListVisibleRows);
 
   if (state.searchActive) {
     if (normalized === 'enter') return { ...state, searchActive: false };
@@ -106,6 +96,17 @@ export function reduceTuiInteractionState(state: TuiInteractionState, model: Tui
       return reconcileTaskSelection({ ...state, taskSearch: `${state.taskSearch}${key}`, taskListScroll: 0 }, model, taskListVisibleRows);
     }
   }
+
+  if (normalized === 'r') return { ...state, refreshRequested: true };
+  if (normalized === '?') return { ...state, activePanel: 'help' };
+  if (normalized === 'tab' || normalized === 'right') return { ...state, activePanel: nextPanel(state.activePanel, 1), searchActive: false };
+  if (normalized === 'shift-tab' || normalized === 'left') return { ...state, activePanel: nextPanel(state.activePanel, -1), searchActive: false };
+
+  const panel = panelForKey(normalized);
+  if (panel) return { ...state, activePanel: panel, searchActive: panel === 'tasks' ? state.searchActive : false };
+
+  if (normalized === '/') return reconcileTaskSelection({ ...state, activePanel: 'tasks', searchActive: true, taskSearch: '', taskListScroll: 0 }, model, taskListVisibleRows);
+  if (normalized === 'escape') return reconcileTaskSelection({ ...state, searchActive: false, taskSearch: '', taskListScroll: 0 }, model, taskListVisibleRows);
 
   const document = documentForKey(normalized);
   if (document) return { ...state, activePanel: 'detail', documentFile: document.file, documentScroll: 0, searchActive: false };

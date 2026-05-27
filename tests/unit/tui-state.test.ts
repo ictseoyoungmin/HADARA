@@ -106,6 +106,29 @@ describe('TUI interaction state', () => {
     expect(state.taskSearch).toBe('');
   });
 
+  it('treats numeric panel keys as search text while task search is active', () => {
+    const root = tempProject();
+    const numeric = createTaskCapsule(root, 'Fix ticket 1234');
+    createTaskCapsule(root, 'Plain task');
+    writeProjectDocs(root);
+    const model = createTuiReadModel(root);
+
+    let state = createTuiInteractionState(model);
+    state = reduceTuiInteractionState(state, model, '/');
+    for (const key of ['1', '2', '3', '4']) {
+      state = reduceTuiInteractionState(state, model, key);
+    }
+
+    expect(state.activePanel).toBe('tasks');
+    expect(state.searchActive).toBe(true);
+    expect(state.taskSearch).toBe('1234');
+    expect(getTuiTaskRows(model, state).map((task) => task.id)).toEqual([numeric.id]);
+
+    state = reduceTuiInteractionState(state, model, 'enter');
+    state = reduceTuiInteractionState(state, model, '1');
+    expect(state.activePanel).toBe('overview');
+  });
+
   it('tracks document tab and scroll transitions as local state only', () => {
     const root = tempProject();
     createTaskCapsule(root, 'Document task');

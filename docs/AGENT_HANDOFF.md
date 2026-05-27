@@ -78,14 +78,14 @@
 - T-0115 is complete: TUI mouse targeting now uses renderer-derived hitboxes emitted by the snapshot renderer for panel navigation, task rows, and Detail document tabs; the terminal shell consumes those hitboxes for SGR mouse clicks instead of duplicating fixed coordinate geometry, ignores SGR mouse release coordinate payloads so Help clicks do not bounce back to Overview, Task tab cursor/window movement follows the mockup visible-row offset policy, and intermediate-width Overview work cards keep Previous Work borders plus label colors without edge ellipsis artifacts.
 - T-0116 is complete: TUI Markdown viewer and live Overview parity now match the mockup more closely. Detail Markdown rendering supports heading underlines, numbered lists, checklists, bullets, aligned table dividers, and heading-aware previews; Overview Current Work and Previous Work follow the latest two task read-model rows with read-model document summaries; and the built interactive `hadara tui` path uses an asynchronous loading pulse with a worker-backed read-model loader when compiled worker files are available.
 - T-0117 is complete: TUI terminal input, Detail viewer scrolling, and narrow color clipping were hardened after operator feedback. Production input decoding now recognizes basic cursor arrows, application-cursor arrows, and modifier cursor arrows; Detail document scroll clamps at the renderer-derived bottom so repeated Down at EOF does not create hidden over-scroll; and `fitAnsi()` preserves color escape sequences while clipping narrow colored text to fixed visible width.
-- T-0118 is complete: TUI Tasks and Overview copy parity were tightened after follow-up operator feedback. Tasks visible rows now derive from the same available-height policy as Detail, terminal task page movement uses that same count, Overview Resume Signals is reduced to health/tasks plus validation like the mockup, and Current/Previous Work `Next`/`Proof` fallback order uses existing read-model data in the mockup order.
+- T-0118 is complete: TUI Tasks and Overview copy/search parity were tightened after follow-up operator feedback. Tasks visible rows now derive from the same available-height policy as Detail, terminal task page movement uses that same count, Overview Resume Signals is reduced to health/tasks plus validation like the mockup, Current/Previous Work `Next`/`Proof` fallback order uses existing read-model data in the mockup order, and active Tasks search treats numeric `1`/`2`/`3`/`4` as query text until search exits.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
 - T-0116 TUI Markdown Viewer and Live Overview Parity: ported mockup Markdown table/viewer semantics, made Overview latest-two-task summaries read-model-backed, and added asynchronous production loading pulse support.
 - T-0117 TUI Arrow Input and Narrow Color Clipping Fix: fixed terminal-specific arrow decoding for Detail/Tasks navigation, clamped Detail document scroll at the rendered bottom, and preserved ANSI colors under narrow-width clipping.
-- T-0118 TUI Tasks Height and Overview Copy Parity: aligned Tasks panel height with Detail, simplified Overview Resume Signals, and matched mockup-style Work-card `Next`/`Proof` fallback order.
+- T-0118 TUI Tasks Height and Overview Copy Parity: aligned Tasks panel height with Detail, simplified Overview Resume Signals, matched mockup-style Work-card `Next`/`Proof` fallback order, and fixed numeric Tasks search input.
 
 ## Current Known Problems
 
@@ -108,10 +108,10 @@
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
 - Latest TUI 1000-capsule benchmark: Docker temp project returned `ok: true`, `count: 1000`, `coldFullMs: 1157`, `fastHitMs: 17`, cache path `.hadara/local/tui/read-model-cache.json`.
-- Latest focused TUI overview/tasks parity check: Docker temp-copy `npx vitest run tests/unit/tui-snapshot.test.ts tests/unit/tui-state.test.ts tests/unit/tui-terminal.test.ts` passed with 3 test files and 37 tests after T-0118.
-- Latest full check: Docker temp-copy `npm run check` passed with TypeScript build, 48 test files, and 328 tests after T-0118.
+- Latest focused TUI overview/tasks parity check: Docker temp-copy `npx vitest run tests/unit/tui-state.test.ts tests/unit/tui-snapshot.test.ts tests/unit/tui-terminal.test.ts` passed with 3 test files and 38 tests after the T-0118 numeric Tasks search fix.
+- Latest full check: Docker temp-copy `npm run check` passed with TypeScript build, 48 test files, and 329 tests after the T-0118 numeric Tasks search fix.
 - Latest built CLI smoke: Docker built CLI `node dist/cli/main.js tui --snapshot --width 150 --height 30 --project /workspace` rendered Overview Current Work as T-0116, Previous Work as T-0115, and heading-aware Goal/Next lines from read-model document text.
-- Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0118 --level done --json --project /workspace` returned `ok: true` with no issues after removing the stale Draft Task Board row.
+- Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0118 --level done --json --project /workspace` returned `ok: true` with no issues after the numeric Tasks search documentation update.
 - Pre-T-0113 TUI performance measurement: Docker `hadara-cli-test` against `/workspace` measured full `createTuiReadModel` around 20.02s, startup around 18.83s, full refresh around 22.35s, different-task detail entry around 24.24s, and four loading-frame render cost around 6.07ms; cache writes failed on a stale missing capsule `TASK.md`, so current `--cache` did not hit in that measurement.
 - Latest TUI performance re-measurement after T-0113: Docker temp-copy build measured full read 26321.27ms, fast read 2705.97ms, cache fast hit 584.59ms, terminal startup 3098.58ms, terminal refresh 2786.69ms, and different-task detail 2980.76ms against `/workspace`.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
