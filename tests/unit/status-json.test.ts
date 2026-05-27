@@ -79,11 +79,11 @@ describe('Operations Status JSON', () => {
       },
       debt: {
         total: 8,
-        open: 6,
-        tracked: 4,
-        mitigated: 2,
+        open: 4,
+        tracked: 2,
+        mitigated: 4,
         candidate: 2,
-        highOpen: 2
+        highOpen: 0
       },
       mcp: {
         defaultMode: 'read-only',

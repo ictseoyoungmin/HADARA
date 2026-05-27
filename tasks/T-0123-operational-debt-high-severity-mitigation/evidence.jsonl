@@ -1,0 +1,4 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-27T08:33:20.826Z","taskId":"T-0123","kind":"test-log","summary":"Docker focused debt/status/MCP/TUI tests passed: 4 files, 42 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-27T08:33:20.939Z","taskId":"T-0123","kind":"test-log","summary":"Docker npm run check passed: 49 test files, 334 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-27T08:33:21.058Z","taskId":"T-0123","kind":"command-log","summary":"Built CLI strict release gate passed with ok true, 8 passed checks, and highOpen debt resolved.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-27T08:35:09.010Z","taskId":"T-0123","kind":"command-log","summary":"Done-level harness validation passed for T-0123 with ok true and no issues.","result":"passed","visibility":"public"}

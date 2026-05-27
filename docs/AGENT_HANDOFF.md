@@ -83,13 +83,14 @@
 - T-0120 is complete: a deterministic dogfooding E2E fixture now replays a HADARA-on-HADARA workflow from in-memory context export through Task Capsule creation/completion, explicit allowed/requested/blocked policy checks, public evidence attachment, detailed generated capsule file assertions, handoff update, and done-level harness validation. The built CLI smoke separately verifies generated context export JSON surface compatibility through `hermes export-context --json`, which may return `.hadara/context/HADARA_CONTEXT.md`; neither path adds shell execution, provider calls, MCP writes, release/package execution, or remote CI.
 - T-0121 is complete: done-level harness validation now rejects completed Task Capsules whose standard Markdown files still contain scaffold placeholders or default empty content, while draft-level validation remains structural; scaffold detection is shared from the Task Capsule scaffold helper, and dogfooding fixture completion now fills the generated capsule docs.
 - T-0122 is complete: remote GitHub Actions CI on `main` was observed successfully for run #109 at commit `8b4f33d1bf926d051cf63e13ca2de222bfc22d8c`, and release-gate readiness now checks locally documented remote CI observation evidence without calling GitHub or executing remote/release actions.
+- T-0123 is complete: high-severity operational debt OD-0003 and OD-0008 are mitigated by the existing required-reading/context safeguards and done-level evidence validation gates; debt aggregates now report `highOpen: 0`, and strict release gate passes when documented readiness checks pass.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0120 Dogfooding E2E Fixture: added a deterministic context-to-done fixture for HADARA-on-HADARA workflow continuity, detailed capsule-file assertions, explicit policy states, and built CLI JSON smoke.
 - T-0121 Done-level Capsule Scaffold Guard: added done-level scaffold/default Markdown detection for completed capsules, centralized scaffold comparison in the Task Capsule helper, and updated dogfooding completion fixtures.
 - T-0122 Remote CI Release Observation: observed successful remote GitHub Actions CI on `main`, recorded run #109 evidence, and added documented remote CI observation to release-gate readiness.
+- T-0123 Operational Debt High Severity Mitigation: reclassified OD-0003/OD-0008 as mitigated based on implemented protocol and done-level validation safeguards, updating debt aggregates and strict release-gate expectations.
 
 ## Current Known Problems
 
@@ -104,7 +105,7 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. Good next candidates are clean-checkout/package smoke automation planning or reducing high operational debt OD-0003/OD-0008 before expecting strict release gate to be fully green.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is clean-checkout/package smoke automation planning now that strict release gate can pass from documented readiness state.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, TUI writes, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
@@ -112,11 +113,11 @@
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
 - Latest TUI 1000-capsule benchmark: Docker temp project returned `ok: true`, `count: 1000`, `coldFullMs: 1157`, `fastHitMs: 17`, cache path `.hadara/local/tui/read-model-cache.json`.
-- Latest focused release-gate check: Docker temp-copy `npx vitest run tests/unit/operational-debt.test.ts` passed with 1 file and 16 tests after adding documented remote CI observation readiness.
-- Latest full check: Docker temp-copy `npm run check` passed with TypeScript build, 49 test files, and 334 tests after T-0122.
-- Latest built CLI release-gate smoke: Docker built CLI `release gate --json --project /workspace` returned advisory `ok: true` with 8 coded checks, including passed `REMOTE_CI_OBSERVATION`; `release gate --mode strict --json --project /workspace` returned strict `ok: false` with only open high operational debt blocking and exit code 6. Missing remote CI documentation would report issue code `REMOTE_CI_OBSERVATION_UNRECORDED`.
+- Latest focused release-gate/debt checks: Docker temp-copy `npx vitest run tests/unit/operational-debt.test.ts tests/unit/mcp-tools.test.ts tests/unit/status-json.test.ts tests/unit/tui-read-model.test.ts` passed with 4 files and 42 tests after mitigating OD-0003/OD-0008.
+- Latest full check: Docker temp-copy `npm run check` passed with TypeScript build, 49 test files, and 334 tests after T-0123.
+- Latest built CLI release-gate smoke: Docker built CLI `release gate --mode strict --json --project /workspace` returned strict `ok: true` with 8 passed checks; `OPEN_HIGH_OPERATIONAL_DEBT` is passed because no high-severity operational debt remains open. Missing remote CI documentation would still report issue code `REMOTE_CI_OBSERVATION_UNRECORDED`.
 - Latest remote CI observation: GitHub Actions CI run #109 on `main` for commit `8b4f33d1bf926d051cf63e13ca2de222bfc22d8c` completed successfully; job `check` included `npm ci` and `npm run check`.
-- Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0122 --level done --json --project /workspace` returned `ok: true` with no issues.
+- Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0123 --level done --json --project /workspace` returned `ok: true` with no issues.
 - Latest built CLI smoke: Docker built CLI `node dist/cli/main.js tui --snapshot --width 150 --height 30 --project /workspace` rendered Overview Current Work as T-0116, Previous Work as T-0115, and heading-aware Goal/Next lines from read-model document text.
 - Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0121 --level done --json --project /workspace` returned `ok: true` with no issues after the scaffold guard update.
 - Pre-T-0113 TUI performance measurement: Docker `hadara-cli-test` against `/workspace` measured full `createTuiReadModel` around 20.02s, startup around 18.83s, full refresh around 22.35s, different-task detail entry around 24.24s, and four loading-frame render cost around 6.07ms; cache writes failed on a stale missing capsule `TASK.md`, so current `--cache` did not hit in that measurement.

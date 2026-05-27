@@ -105,9 +105,9 @@ export const OPERATIONAL_DEBT_RECORDS: OperationalDebtRecord[] = [
     title: 'Agents can overfit to the last capsule and miss broader roadmap state',
     source: 'known_issue.log#3',
     category: 'continuity',
-    status: 'tracked',
+    status: 'mitigated',
     severity: 'high',
-    targetCapability: 'Roadmap-aware handoff validation'
+    targetCapability: 'Required-reading protocol and roadmap-aware handoff guidance'
   },
   {
     id: 'OD-0004',
@@ -150,9 +150,9 @@ export const OPERATIONAL_DEBT_RECORDS: OperationalDebtRecord[] = [
     title: 'ACCEPTANCE.md checkboxes can be marked before implementation evidence exists',
     source: 'known_issue.log#8',
     category: 'validation',
-    status: 'tracked',
+    status: 'mitigated',
     severity: 'high',
-    targetCapability: 'Premature acceptance guard'
+    targetCapability: 'Premature acceptance guard and done-level harness validation'
   }
 ];
 

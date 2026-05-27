@@ -100,7 +100,8 @@ describe('operational debt track', () => {
     expect(OPERATIONAL_DEBT_RECORDS.find((record) => record.id === 'OD-0008')).toMatchObject({
       category: 'validation',
       severity: 'high',
-      targetCapability: 'Premature acceptance guard'
+      status: 'mitigated',
+      targetCapability: 'Premature acceptance guard and done-level harness validation'
     });
   });
 
@@ -111,11 +112,11 @@ describe('operational debt track', () => {
 
     expect(report.aggregate).toEqual({
       total: 8,
-      open: 6,
-      tracked: 4,
-      mitigated: 2,
+      open: 4,
+      tracked: 2,
+      mitigated: 4,
       candidate: 2,
-      highOpen: 2,
+      highOpen: 0,
       bySeverity: {
         high: 2,
         medium: 4,
@@ -159,7 +160,7 @@ describe('operational debt track', () => {
     });
   });
 
-  it('warns release gates when high severity operational debt remains open', () => {
+  it('passes release gates when no high severity operational debt remains open', () => {
     const root = tempProject();
     writeReleaseReadinessFiles(root);
 
@@ -168,13 +169,7 @@ describe('operational debt track', () => {
       command: 'release.gate',
       mode: 'advisory',
       ok: true,
-      issues: [
-        {
-          severity: 'warning',
-          code: 'OPEN_HIGH_OPERATIONAL_DEBT',
-          message: '2 open high-severity operational debt record(s) remain.'
-        }
-      ]
+      issues: []
     });
     expect(createReleaseGateReport(root).checks).toEqual([
       {
@@ -222,13 +217,13 @@ describe('operational debt track', () => {
       {
         code: 'OPEN_HIGH_OPERATIONAL_DEBT',
         name: 'No high severity operational debt',
-        status: 'warning',
-        summary: 'OD-0003, OD-0008 remain open.'
+        status: 'passed',
+        summary: 'No open high-severity operational debt records.'
       }
     ]);
   });
 
-  it('blocks release gates in strict mode when high severity operational debt remains open', () => {
+  it('passes release gates in strict mode when no high severity operational debt remains open', () => {
     const root = tempProject();
     writeReleaseReadinessFiles(root);
 
@@ -236,20 +231,14 @@ describe('operational debt track', () => {
       schemaVersion: 'hadara.releaseGate.v1',
       command: 'release.gate',
       mode: 'strict',
-      ok: false,
-      issues: [
-        {
-          severity: 'error',
-          code: 'OPEN_HIGH_OPERATIONAL_DEBT',
-          message: '2 open high-severity operational debt record(s) remain.'
-        }
-      ]
+      ok: true,
+      issues: []
     });
     expect(createReleaseGateReport(root, 'strict').checks.at(-1)).toEqual({
       code: 'OPEN_HIGH_OPERATIONAL_DEBT',
       name: 'No high severity operational debt',
-      status: 'error',
-      summary: 'OD-0003, OD-0008 remain open.'
+      status: 'passed',
+      summary: 'No open high-severity operational debt records.'
     });
   });
 
@@ -315,8 +304,8 @@ describe('operational debt track', () => {
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION', status: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION_UNRECORDED', severity: 'warning' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION_UNRECORDED', severity: 'error' }));
-    expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT', severity: 'warning' }));
-    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT', severity: 'error' }));
+    expect(advisory.issues).not.toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
+    expect(strict.issues).not.toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
   });
 
   it('prints JSON through debt and release-gate CLI handlers', () => {
@@ -348,13 +337,13 @@ describe('operational debt track', () => {
       schemaVersion: 'hadara.releaseGate.v1',
       command: 'release.gate',
       mode: 'strict',
-      ok: false
+      ok: true
     });
   });
 
-  it('sets exit code 6 for strict release gate CLI failures', () => {
+  it('sets exit code 6 for strict release gate CLI readiness failures', () => {
     const root = tempProject();
-    writeReleaseReadinessFiles(root);
+    fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ scripts: { build: 'tsc' } }), 'utf8');
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
     expect(handleReleaseGateCommand({ args: ['release', 'gate', '--mode', 'strict', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);

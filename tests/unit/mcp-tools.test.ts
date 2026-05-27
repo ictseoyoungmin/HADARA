@@ -441,12 +441,13 @@ describe('MCP read tools', () => {
       ok: true,
       aggregate: {
         total: 8,
-        highOpen: 2
+        highOpen: 0
       },
       records: expect.arrayContaining([
         expect.objectContaining({
           id: 'OD-0008',
-          severity: 'high'
+          severity: 'high',
+          status: 'mitigated'
         })
       ])
     });
@@ -457,7 +458,8 @@ describe('MCP read tools', () => {
       id: 'OD-0008',
       record: {
         id: 'OD-0008',
-        severity: 'high'
+        severity: 'high',
+        status: 'mitigated'
       },
       issues: []
     });

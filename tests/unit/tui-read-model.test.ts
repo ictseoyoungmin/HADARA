@@ -90,14 +90,10 @@ describe('TUI read-model aggregator', () => {
     expect(model.overview.currentDetail?.files?.['TASK.md']).toContain('Later task');
     expect(model.overview.previousDetail?.files?.['TASK.md']).toContain('Active TUI task');
     expect(model.debt.aggregate.total).toBeGreaterThan(0);
+    expect(model.debt.aggregate.highOpen).toBe(0);
     expect(model.tools.surfaces.cli.length).toBeGreaterThan(0);
     expect(model.writePreview.writes).toContain(`tasks/T-0003-tui-follow-up/TASK.md`);
-    expect(model.issues).toContainEqual({
-      source: 'release-gate',
-      severity: 'warning',
-      code: 'OPEN_HIGH_OPERATIONAL_DEBT',
-      message: '2 open high-severity operational debt record(s) remain.'
-    });
+    expect(model.issues).not.toContainEqual(expect.objectContaining({ source: 'release-gate', code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
   });
 
   it('falls back to the latest task when no active task is selectable', () => {
