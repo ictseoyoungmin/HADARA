@@ -11,10 +11,11 @@ Implemented:
 - Detail viewer content is colorized for headings, checks, bullets, numbered markers, rules, and body text in color mode while preserving no-color output.
 - Detail viewer keyboard scroll state now controls the rendered document slice, so Up/Down/PageUp/PageDown/Home/End can read long docs.
 - Detail document tab labels now match the mockup's compact strip (`DEC`, `ACC`, `EVD`, `HAND`, `FILE`, `RISK`, `TEST`).
+- TUI cache fast validation now reuses unchanged source-signal hashes after `mtimeMs`/`size` comparison, avoiding reads of unchanged Task Board, handoff, active-run, selected task, and selected evidence files.
 
 Validation:
-- Docker focused TUI tests: 4 files, 33 tests passed.
-- Docker full check: TypeScript build plus 47 test files and 308 tests passed.
+- Docker focused TUI cache test: 1 file, 12 tests passed.
+- Docker full check: TypeScript build plus 47 test files and 309 tests passed.
 
 ## Next Recommended Step
 

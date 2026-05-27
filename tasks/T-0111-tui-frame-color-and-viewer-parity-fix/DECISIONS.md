@@ -6,3 +6,4 @@
 - Colorize existing detail viewer lines after Markdown rendering rather than rewriting the Markdown renderer contract in this small follow-up.
 - Render the full selected document before slicing by `documentScroll`; this preserves keyboard scroll behavior without adding read effects or state mutation in the renderer.
 - Use mockup short tab labels for dense detail layout while keeping file-name and key resolution unchanged.
+- For TUI cache source signals, trust unchanged `mtimeMs` and `size` to reuse the cached hash during fast validation; only read and hash when those cheap metadata checks differ.

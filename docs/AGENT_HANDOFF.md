@@ -70,7 +70,7 @@
 - T-0108 is complete: the full unabridged `docs/specs/HADARA_TUI_Mockup_Parity_HADARA_Native_Runtime_Design.md` body is preserved in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`, and `docs/V1_0_CAPSULE_BACKLOG.md`, `docs/SCHEMAS.md`, and `docs/TEST_STRATEGY.md` now carry the actionable TUI follow-up, cache/schema posture, and validation requirements.
 - T-0109 is complete: `src/tui/cache.ts` now provides an internal `.hadara/local/tui/read-model-cache.json` cache with `hadara.tui.cache.v1` records, source-signal invalidation for Task Board/tasks/handoff/active-run/selected task/evidence, task index mtime/size/hash invalidation with hash reuse, full/fast/detail/none refresh modes, private-evidence cache disable, selected-detail refresh without capsule directory scans, context-export exclusion tests, opt-in `hadara tui --cache`, and 1000-capsule benchmark evidence.
 - T-0110 is complete: production TUI now has HADARA and high-contrast ANSI themes, deterministic no-color snapshot preservation, status/log line rendering, loading frames before full/detail refreshes, richer overview/task/detail rendering, mockup-style key handling, Korean keyboard quit support, and state-driven selected/search task row rendering without writes, shell execution, provider calls, MCP calls, dashboard serving, or release behavior.
-- T-0111 is complete: TUI frame color and viewer parity were refined after operator feedback; themes now use mockup true-color RGB values, badge/keycap foreground/background composition is fixed, detail viewer document content is styled in color mode, keyboard document scroll state drives rendered document slices, and compact document tab labels match the mockup while no-color output remains deterministic.
+- T-0111 is complete: TUI frame color and viewer parity were refined after operator feedback; themes now use mockup true-color RGB values, badge/keycap foreground/background composition is fixed, detail viewer document content is styled in color mode, keyboard document scroll state drives rendered document slices, compact document tab labels match the mockup, and cache source-signal fast validation reuses unchanged hashes after mtime/size checks while no-color output remains deterministic.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
@@ -78,7 +78,7 @@
 - T-0108 TUI Native Runtime Docs Assimilation: reflected the full TUI mockup parity/native runtime design into the main v1.0 planning docs with a marker-delimited unabridged import and concrete follow-up/schema/test planning.
 - T-0109 TUI Local Cache and Incremental Refresh: added internal local TUI cache records, source-signal invalidation, refresh modes, opt-in interactive CLI cache use, private-evidence cache disable, boundary/context-export tests, and 1000-capsule benchmark evidence.
 - T-0110 TUI Visual Parity and Loading States: added HADARA/contrast themes, no-color preservation, status/log line, loading frames, visual task/detail polish, mockup-style key handling, and visible state-driven selection/search rendering.
-- T-0111 TUI Frame Color and Viewer Parity Fix: switched TUI colors to mockup true-color RGB, fixed badge/keycap color composition, styled detail viewer document content, wired keyboard document scrolling into rendering, and matched compact mockup tab labels.
+- T-0111 TUI Frame Color and Viewer Parity Fix: switched TUI colors to mockup true-color RGB, fixed badge/keycap color composition, styled detail viewer document content, wired keyboard document scrolling into rendering, matched compact mockup tab labels, and optimized cache source-signal fast validation hash reuse.
 
 ## Current Known Problems
 
@@ -99,11 +99,11 @@
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest focused TUI frame/viewer parity check: Docker temp-copy `npx vitest run tests/unit/tui-snapshot.test.ts tests/unit/tui-state.test.ts tests/unit/tui-terminal.test.ts tests/unit/tui-cli.test.ts` passed with 4 test files and 33 tests after document scroll and compact tab-label follow-up.
+- Latest focused TUI cache optimization check: Docker temp-copy `npx vitest run tests/unit/tui-cache.test.ts` passed with 1 test file and 12 tests after source-signal hash reuse optimization.
 - Latest TUI 1000-capsule benchmark: Docker temp project returned `ok: true`, `count: 1000`, `coldFullMs: 1157`, `fastHitMs: 17`, cache path `.hadara/local/tui/read-model-cache.json`.
-- Latest full check: Docker temp-copy `npm run check` passed with TypeScript build, 47 test files, and 308 tests after T-0111 document scroll and compact tab-label follow-up.
+- Latest full check: Docker temp-copy `npm run check` passed with TypeScript build, 47 test files, and 309 tests after T-0111 cache source-signal fast validation optimization.
 - Latest built CLI smoke: Docker `timeout 60 node dist/cli/main.js tui --snapshot --compact --width 86 --height 24 --project /workspace` exited 0 and rendered the read-only HADARA Work Console for T-0107.
-- Latest done-level validation: Docker temp-copy `node dist/cli/main.js harness validate --task T-0111 --level done --json --project "$tmp"` returned `ok: true` with no issues after final document scroll/tab updates.
+- Latest done-level validation: Docker temp-copy `node dist/cli/main.js harness validate --task T-0111 --level done --json --project "$tmp"` returned `ok: true` with no issues after cache source-signal optimization docs/evidence updates.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
 
 ## Historical Index

@@ -173,6 +173,32 @@ describe('TUI local cache', () => {
     expect(taskReads).toBeLessThanOrEqual(1);
   });
 
+  it('reuses unchanged source signal hashes during fast validation', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Source signal performance cache task');
+    writeProjectDocs(root, task.id);
+    fs.mkdirSync(path.join(root, '.hadara', 'local', 'state'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'local', 'state', 'active-run.json'), '{"schemaVersion":"hadara.activeRun.local.v1"}\n', 'utf8');
+    appendEvidence(task.dir, task.id, 'source signal cache reuse');
+
+    createTuiReadModelWithCache(root, { selectedTaskId: task.id, cache: { refresh: 'full' } });
+
+    const sourceReads = countReadsMatching(
+      [
+        path.join(root, 'docs', 'TASK_BOARD.md'),
+        path.join(root, 'docs', 'AGENT_HANDOFF.md'),
+        path.join(root, '.hadara', 'local', 'state', 'active-run.json'),
+        path.join(task.dir, 'evidence.jsonl')
+      ],
+      () => {
+        const result = createTuiReadModelWithCache(root, { selectedTaskId: task.id, cache: { refresh: 'fast' } });
+        expect(result.cache.hit).toBe(true);
+      }
+    );
+
+    expect(sourceReads).toBe(0);
+  });
+
   it('keeps TUI cache out of context export content', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Context export cache task');
@@ -226,6 +252,23 @@ function countTaskMarkdownReads(fn: () => void): number {
   fs.readFileSync = ((...args: Parameters<typeof fs.readFileSync>) => {
     const filePath = String(args[0]);
     if (filePath.endsWith(`${path.sep}TASK.md`)) count += 1;
+    return original(...args);
+  }) as typeof fs.readFileSync;
+  try {
+    fn();
+    return count;
+  } finally {
+    fs.readFileSync = original;
+  }
+}
+
+function countReadsMatching(paths: string[], fn: () => void): number {
+  const normalized = new Set(paths.map((filePath) => path.normalize(filePath)));
+  const original = fs.readFileSync;
+  let count = 0;
+  fs.readFileSync = ((...args: Parameters<typeof fs.readFileSync>) => {
+    const filePath = path.normalize(String(args[0]));
+    if (normalized.has(filePath)) count += 1;
     return original(...args);
   }) as typeof fs.readFileSync;
   try {
