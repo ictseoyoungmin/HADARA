@@ -71,14 +71,15 @@
 - T-0109 is complete: `src/tui/cache.ts` now provides an internal `.hadara/local/tui/read-model-cache.json` cache with `hadara.tui.cache.v1` records, source-signal invalidation for Task Board/tasks/handoff/active-run/selected task/evidence, task index mtime/size/hash invalidation with hash reuse, full/fast/detail/none refresh modes, private-evidence cache disable, selected-detail refresh without capsule directory scans, context-export exclusion tests, opt-in `hadara tui --cache`, and 1000-capsule benchmark evidence.
 - T-0110 is complete: production TUI now has HADARA and high-contrast ANSI themes, deterministic no-color snapshot preservation, status/log line rendering, loading frames before full/detail refreshes, richer overview/task/detail rendering, mockup-style key handling, Korean keyboard quit support, and state-driven selected/search task row rendering without writes, shell execution, provider calls, MCP calls, dashboard serving, or release behavior.
 - T-0111 is complete: TUI frame color and viewer parity were refined after operator feedback; themes now use mockup true-color RGB values, badge/keycap foreground/background composition is fixed, detail viewer document content is styled in color mode, keyboard document scroll state drives rendered document slices, compact document tab labels match the mockup, and cache source-signal fast validation reuses unchanged hashes after mtime/size checks while no-color output remains deterministic.
+- T-0112 is complete: TUI startup now enters the terminal shell immediately on a synthetic loading read model before the first project read, startup/full/detail refreshes render multiple loading frames, SGR mouse mode supports panel/task/doc-tab clicks, and resize events redraw the current frame without project writes, shell execution, provider calls, MCP calls, dashboard/server behavior, or release behavior.
+- Post-T-0112 measurement found a remaining production TUI responsiveness gap versus the mockup. In `hadara-cli-test` against `/workspace`, startup took about 18.83s, full refresh about 22.35s, different-task detail entry about 24.24s, and full `createTuiReadModel('/workspace')` about 20.02s. Component timing points to operations status, operational debt, and release gate reads as the main synchronous costs, and TUI cache writes currently fail when Task Board/task-list rows reference missing capsule `TASK.md` files such as `tasks/T-0073-t-0066-t-0070-design-mismatch-documentation-cleanup/TASK.md`.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0108 TUI Native Runtime Docs Assimilation: reflected the full TUI mockup parity/native runtime design into the main v1.0 planning docs with a marker-delimited unabridged import and concrete follow-up/schema/test planning.
-- T-0109 TUI Local Cache and Incremental Refresh: added internal local TUI cache records, source-signal invalidation, refresh modes, opt-in interactive CLI cache use, private-evidence cache disable, boundary/context-export tests, and 1000-capsule benchmark evidence.
 - T-0110 TUI Visual Parity and Loading States: added HADARA/contrast themes, no-color preservation, status/log line, loading frames, visual task/detail polish, mockup-style key handling, and visible state-driven selection/search rendering.
 - T-0111 TUI Frame Color and Viewer Parity Fix: switched TUI colors to mockup true-color RGB, fixed badge/keycap color composition, styled detail viewer document content, wired keyboard document scrolling into rendering, matched compact mockup tab labels, and optimized cache source-signal fast validation hash reuse.
+- T-0112 TUI Loading Animation Mouse and Resize Ergonomics: made interactive startup show a loading frame before the first project read, advanced loading frames for startup/full/detail refreshes, added SGR mouse panel/task/doc-tab clicks, and redrew on terminal resize.
 
 ## Current Known Problems
 
@@ -89,21 +90,23 @@
 - GitHub Actions has been added but has not yet been observed on a remote push/PR.
 - Policy parser is intentionally minimal; it is safer than before, but not a full POSIX or PowerShell parser.
 - Private evidence encryption remains deferred; private evidence manifests record this explicitly.
+- Production TUI still performs full synchronous aggregate reads on startup, full refresh, and selected-detail refresh. Loading frames render before the blocking read but do not keep ticking during it; this differs from the mockup's async timer. TUI cache fast path may be bypassed when stale/missing Task Board capsule entries make cache record creation fail.
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. The next recommended focused TUI follow-up remains mouse/resize ergonomics; otherwise return to the release and packaging track.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. The next recommended focused TUI follow-up is TUI async loading and read-model performance refactor: make cache indexing degrade on missing/stale task rows, keep loading animation ticking during reads, split startup/fast/detail/full read paths, and lazy-load debt/release/tools/write-preview data.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, TUI writes, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
 ## Validation Baseline
 
 - Use Docker validation by copying the repo into the container filesystem before `npm ci`.
-- Latest focused TUI cache optimization check: Docker temp-copy `npx vitest run tests/unit/tui-cache.test.ts` passed with 1 test file and 12 tests after source-signal hash reuse optimization.
+- Latest focused TUI ergonomics check: Docker temp-copy `npx vitest run tests/unit/tui-terminal.test.ts tests/unit/tui-snapshot.test.ts tests/unit/tui-state.test.ts tests/unit/tui-cli.test.ts` passed with 4 test files and 34 tests after T-0112 loading/mouse/resize changes.
 - Latest TUI 1000-capsule benchmark: Docker temp project returned `ok: true`, `count: 1000`, `coldFullMs: 1157`, `fastHitMs: 17`, cache path `.hadara/local/tui/read-model-cache.json`.
-- Latest full check: Docker temp-copy `npm run check` passed with TypeScript build, 47 test files, and 309 tests after T-0111 cache source-signal fast validation optimization.
+- Latest full check: Docker temp-copy `npm run check` passed with TypeScript build, 47 test files, and 310 tests after T-0112 loading/mouse/resize changes.
 - Latest built CLI smoke: Docker `timeout 60 node dist/cli/main.js tui --snapshot --compact --width 86 --height 24 --project /workspace` exited 0 and rendered the read-only HADARA Work Console for T-0107.
-- Latest done-level validation: Docker temp-copy `node dist/cli/main.js harness validate --task T-0111 --level done --json --project "$tmp"` returned `ok: true` with no issues after cache source-signal optimization docs/evidence updates.
+- Latest done-level validation: Docker temp-copy `node dist/cli/main.js harness validate --task T-0112 --level done --json --project /tmp/hadara-t0112-validate3` returned `ok: true` with no issues after loading/mouse/resize docs and evidence updates.
+- Latest TUI performance measurement: Docker `hadara-cli-test` against `/workspace` measured full `createTuiReadModel` around 20.02s, startup around 18.83s, full refresh around 22.35s, different-task detail entry around 24.24s, and four loading-frame render cost around 6.07ms; cache writes failed on a stale missing capsule `TASK.md`, so current `--cache` did not hit in that measurement.
 - Latest reusable container check: `docker ps --filter name=^/hadara-dev$` showed `hadara-dev` running.
 
 ## Historical Index

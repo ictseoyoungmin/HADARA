@@ -1,10 +1,12 @@
 import { Readable, Writable } from 'node:stream';
-import { createTuiReadModel, TuiReadModel, TuiReadModelOptions } from './read-model';
+import { createTuiLoadingReadModel, createTuiReadModel, TuiReadModel, TuiReadModelOptions } from './read-model';
 import { renderTuiSnapshot, TuiSnapshotOptions, TuiSnapshotWidthPolicy } from './snapshot';
 import { createTuiReadModelWithCache, TuiCacheRefreshMode } from './cache';
 import { TuiThemeName } from './theme';
+import { TUI_PANEL_IDS } from './constants';
 import {
   createTuiInteractionState,
+  getTuiTaskRows,
   reduceTuiInteractionState,
   TuiInputKey,
   TuiInteractionState,
@@ -55,7 +57,13 @@ export class TuiTerminalSession {
   private running = false;
   private rawModeEnabled = false;
   private loadingTick = 0;
-  private logLine = 'ready: work console loaded';
+  private loaded = false;
+  private logLine = 'loading: reading work console';
+
+  private readonly onResize = (): void => {
+    if (!this.running) return;
+    this.render();
+  };
 
   private readonly onData = (chunk: Buffer | string): void => {
     for (const key of decodeTuiInput(chunk)) {
@@ -68,7 +76,7 @@ export class TuiTerminalSession {
     this.options = options;
     this.input = options.input ?? (process.stdin as TuiTerminalInput);
     this.output = options.output ?? (process.stdout as TuiTerminalOutput);
-    this.model = this.loadModel('fast');
+    this.model = createTuiLoadingReadModel();
     this.state = createTuiInteractionState(this.model);
   }
 
@@ -81,8 +89,10 @@ export class TuiTerminalSession {
       }
       this.input.resume();
       this.input.on('data', this.onData);
-      if (this.options.terminalControl !== false) this.output.write('\x1b[?25l');
+      this.output.on?.('resize', this.onResize);
+      if (this.options.terminalControl !== false) this.output.write('\x1b[?25l\x1b[?1000h\x1b[?1006h');
     }
+    if (!this.loaded) this.completeInitialLoad();
     return this.render();
   }
 
@@ -95,7 +105,8 @@ export class TuiTerminalSession {
       this.rawModeEnabled = false;
     }
     this.input.pause();
-    if (this.options.terminalControl !== false) this.output.write('\x1b[?25h');
+    this.output.off?.('resize', this.onResize);
+    if (this.options.terminalControl !== false) this.output.write('\x1b[?1000l\x1b[?1006l\x1b[?25h');
     this.options.onStop?.();
   }
 
@@ -128,15 +139,18 @@ export class TuiTerminalSession {
   }
 
   private applyKey(key: TuiInputKey): TuiTerminalRenderResult | null {
+    const mouseResult = this.applyMouseKey(key);
+    if (mouseResult !== undefined) return mouseResult;
+
     let nextState = reduceTuiInteractionState(this.state, this.model, key);
     if (nextState.detailRefreshRequested) {
-      this.renderLoading(`loading ${nextState.selectedTaskId ?? 'selected task'} detail`);
+      this.renderLoadingFrames(`loading ${nextState.selectedTaskId ?? 'selected task'} detail`);
       this.model = this.loadModel('detail', tuiStateToReadModelOptions(nextState));
       nextState = reduceTuiInteractionState(nextState, this.model, 'detail-refresh-complete');
       this.logLine = `loaded ${this.model.selectedTaskId ?? 'selected task'} detail`;
     }
     if (nextState.refreshRequested) {
-      this.renderLoading('refreshing read models');
+      this.renderLoadingFrames('refreshing read models');
       this.model = this.loadModel('full', tuiStateToReadModelOptions(nextState));
       nextState = reduceTuiInteractionState(nextState, this.model, 'refresh-complete');
       this.logLine = 'refreshed read models';
@@ -149,6 +163,20 @@ export class TuiTerminalSession {
     }
 
     return this.render();
+  }
+
+  private completeInitialLoad(): void {
+    this.renderLoadingFrames('initial load: reading read models');
+    this.model = this.loadModel('fast');
+    this.state = createTuiInteractionState(this.model, {
+      panel: this.state.activePanel,
+      selectedTaskId: this.model.selectedTaskId,
+      document: this.state.documentFile,
+      taskSearch: this.state.taskSearch,
+      searchActive: this.state.searchActive
+    });
+    this.loaded = true;
+    this.logLine = 'ready: work console loaded';
   }
 
   private snapshotOptions(): TuiSnapshotOptions {
@@ -173,6 +201,48 @@ export class TuiTerminalSession {
     });
     if (this.options.terminalControl !== false) this.output.write('\x1b[H\x1b[2J');
     this.output.write(snapshot.text);
+  }
+
+  private renderLoadingFrames(message: string): void {
+    for (let frame = 0; frame < 4; frame += 1) {
+      this.renderLoading(message);
+    }
+  }
+
+  private terminalWidth(): number {
+    return this.options.width ?? this.output.columns ?? 100;
+  }
+
+  private applyMouseKey(key: TuiInputKey): TuiTerminalRenderResult | null | undefined {
+    const parsed = parseMouseKey(key);
+    if (!parsed) return undefined;
+    const panel = panelForMouse(parsed.x, parsed.y, this.terminalWidth());
+    if (panel) {
+      this.state = reduceTuiInteractionState(this.state, this.model, String(TUI_PANEL_IDS.indexOf(panel) + 1));
+      return this.render();
+    }
+    if (this.state.activePanel === 'tasks') {
+      const rowIndex = taskRowIndexForMouse(parsed.y, this.terminalWidth());
+      const rows = getTuiTaskRows(this.model, this.state);
+      if (rowIndex >= 0 && rowIndex < rows.length) {
+        const selected = rows[rowIndex];
+        this.state = {
+          ...this.state,
+          selectedTaskId: selected?.id ?? null,
+          selectedTaskIndex: rowIndex,
+          taskListScroll: Math.max(0, rowIndex - 7)
+        };
+        return this.render();
+      }
+    }
+    if (this.state.activePanel === 'detail') {
+      const document = documentKeyForMouse(parsed.x, parsed.y, this.terminalWidth());
+      if (document) {
+        this.state = reduceTuiInteractionState(this.state, this.model, document);
+        return this.render();
+      }
+    }
+    return this.render();
   }
 
   private shouldEnableRawMode(): boolean {
@@ -213,6 +283,12 @@ export function decodeTuiInput(input: Buffer | string): TuiInputKey[] {
     } else if (char === '\x7f' || char === '\b') {
       keys.push('backspace');
     } else if (char === '\x1b') {
+      const mouse = matchMouseSequence(text.slice(index));
+      if (mouse) {
+        keys.push(mouse.key);
+        index += mouse.length - 1;
+        continue;
+      }
       const sequence = matchEscapeSequence(text.slice(index));
       keys.push(sequence.key);
       index += sequence.length - 1;
@@ -222,6 +298,57 @@ export function decodeTuiInput(input: Buffer | string): TuiInputKey[] {
   }
 
   return keys;
+}
+
+function parseMouseKey(key: TuiInputKey): { x: number; y: number } | null {
+  if (typeof key !== 'string') return null;
+  const match = key.match(/^mouse:(\d+):(\d+)$/);
+  if (!match) return null;
+  return { x: Number(match[1]), y: Number(match[2]) };
+}
+
+function matchMouseSequence(text: string): { key: TuiInputKey; length: number } | null {
+  const match = text.match(/^\x1b\[<(\d+);(\d+);(\d+)([mM])/);
+  if (!match || match[4] !== 'M' || Number(match[1]) !== 0) return null;
+  return {
+    key: `mouse:${Number(match[2])}:${Number(match[3])}`,
+    length: match[0].length
+  };
+}
+
+function panelForMouse(x: number, y: number, width: number): TuiInteractionState['activePanel'] | null {
+  if (width >= 104) {
+    const index = y - 7;
+    return TUI_PANEL_IDS[index] ?? null;
+  }
+  if (y !== 6) return null;
+  if (x >= 1 && x <= 13) return 'overview';
+  if (x >= 14 && x <= 24) return 'tasks';
+  if (x >= 25 && x <= 36) return 'detail';
+  if (x >= 37 && x <= 46) return 'help';
+  return null;
+}
+
+function taskRowIndexForMouse(y: number, width: number): number {
+  return width >= 104 ? y - 7 : y - 9;
+}
+
+function documentKeyForMouse(x: number, y: number, width: number): string | null {
+  const tabY = width >= 104 ? 10 : 12;
+  if (y !== tabY) return null;
+  const mainX = width >= 104 ? x - 26 : x;
+  const slots = [
+    { min: 1, max: 10, key: 't' },
+    { min: 11, max: 20, key: 'p' },
+    { min: 21, max: 29, key: 'd' },
+    { min: 30, max: 38, key: 'a' },
+    { min: 39, max: 47, key: 'e' },
+    { min: 48, max: 58, key: 'h' },
+    { min: 59, max: 69, key: 'f' },
+    { min: 70, max: 80, key: 'k' },
+    { min: 81, max: 91, key: 's' }
+  ];
+  return slots.find((slot) => mainX >= slot.min && mainX <= slot.max)?.key ?? null;
 }
 
 function matchEscapeSequence(text: string): { key: TuiInputKey; length: number } {

@@ -29,6 +29,7 @@ describe('TUI terminal shell', () => {
       'home',
       'end'
     ]);
+    expect(decodeTuiInput(Buffer.from('\x1b[<0;14;6M'))).toEqual(['mouse:14:6']);
     expect(decodeTuiInput('\r\n\x7f\x03')).toEqual(['enter', 'enter', 'backspace', 'ctrl-c']);
     expect(decodeTuiInput('/ab\x1b')).toEqual(['/', 'a', 'b', 'escape']);
   });
@@ -49,6 +50,8 @@ describe('TUI terminal shell', () => {
 
     const initial = session.start();
     expect(initial.text).toContain('HADARA Work Console');
+    expect(output.text()).toContain('Overview Reading');
+    expect(output.text()).toContain('loading');
     expect(session.isRunning()).toBe(true);
 
     session.handleKey('2');
@@ -61,6 +64,29 @@ describe('TUI terminal shell', () => {
     expect(output.text()).toContain('Tasks Reading');
     expect(output.text()).toContain('reading task capsule');
     expect(output.text()).toContain('Terminal refresh task');
+
+    session.stop();
+  });
+
+  it('supports mouse panel clicks, detail document tab clicks, and resize redraws', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Terminal mouse task');
+    writeProjectDocs(root, task.id);
+    const input = new MemoryInput(true);
+    const output = new MemoryOutput(92, 26);
+    const session = createTuiTerminalSession({ projectRoot: root, input, output, widthPolicy: 'compact', terminalControl: false });
+
+    session.start();
+    input.emit('data', Buffer.from('\x1b[<0;16;6M'));
+    expect(session.getState().activePanel).toBe('tasks');
+    input.emit('data', Buffer.from('\x1b[<0;30;6M'));
+    expect(session.getState().activePanel).toBe('detail');
+    input.emit('data', Buffer.from('\x1b[<0;14;12M'));
+    expect(session.getState().documentFile).toBe('PLAN.md');
+
+    const beforeResize = output.chunks.length;
+    output.emit('resize');
+    expect(output.chunks.length).toBeGreaterThan(beforeResize);
 
     session.stop();
   });
@@ -109,6 +135,7 @@ describe('TUI terminal shell', () => {
     session.start();
     expect(input.rawModes).toEqual([true]);
     expect(output.text()).toContain('\x1b[?25l');
+    expect(output.text()).toContain('\x1b[?1000h\x1b[?1006h');
 
     input.emit('data', Buffer.from('q'));
 
@@ -116,6 +143,7 @@ describe('TUI terminal shell', () => {
     expect(session.getState().quitRequested).toBe(true);
     expect(input.rawModes).toEqual([true, false]);
     expect(input.pauseCount).toBe(1);
+    expect(output.text()).toContain('\x1b[?1000l\x1b[?1006l');
     expect(output.text()).toContain('\x1b[?25h');
   });
 

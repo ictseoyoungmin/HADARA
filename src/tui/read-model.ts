@@ -61,6 +61,128 @@ export interface TuiReadModel {
 const DEFAULT_EVIDENCE_LIMIT = 20;
 const DEFAULT_WRITE_PREVIEW_TITLE = 'TUI Follow-up';
 
+export function createTuiLoadingReadModel(): TuiReadModel {
+  const generatedAt = new Date().toISOString();
+  return {
+    schemaVersion: 'hadara.tui.read_model.internal.v1',
+    command: 'tui.read-model',
+    ok: true,
+    generatedAt,
+    selectedTaskId: null,
+    overview: {
+      currentWork: null,
+      previousWork: null,
+      health: 'loading' as OpsStatusReport['health'],
+      phase: 'loading read models',
+      branch: '...'
+    },
+    status: ({
+      schemaVersion: 'hadara.ops.status.v1',
+      command: 'ops.status',
+      ok: true,
+      health: 'loading',
+      project: { branch: '...', phase: 'loading read models' },
+      tasks: {
+        counts: { done: 0, draft: 0, partial: 0, superseded: 0, inProgress: 0, unknown: 0 },
+        rawStatusCounts: {},
+        normalizedStatusCounts: {},
+        lastCompleted: [],
+        nextRecommended: 'Reading HADARA project state...'
+      },
+      handoff: { currentState: [], knownProblems: [], nextRecommendedStep: [] },
+      validation: { latestFullCheck: 'loading', latestDoneLevelValidation: null },
+      activeRun: {
+        schemaVersion: 'hadara.active_run.projection.v1',
+        command: 'active-run.projection',
+        ok: true,
+        path: '.hadara/local/state/active-run.json',
+        activeRun: null,
+        handoff: { fresh: true, staleReason: null },
+        resume: null,
+        issues: []
+      },
+      debt: { total: 0, open: 0, tracked: 0, mitigated: 0, candidate: 0, highOpen: 0, bySeverity: {} },
+      mcp: {
+        defaultMode: 'read-only',
+        evidenceAttach: { enabledByDefault: false, requiresFlag: '--enable-evidence-attach', requiresApproval: true, audited: true }
+      },
+      issues: []
+    } as unknown) as OpsStatusReport,
+    tasks: {
+      schemaVersion: 'hadara.task.list.v1',
+      command: 'task.list',
+      ok: true,
+      count: 0,
+      tasks: [],
+      issues: []
+    } as TaskListReport,
+    selectedTask: null,
+    activeRun: {
+      projection: {
+        schemaVersion: 'hadara.active_run.projection.v1',
+        command: 'active-run.projection',
+        ok: true,
+        path: '.hadara/local/state/active-run.json',
+        activeRun: null,
+        handoff: { fresh: true, staleReason: null },
+        resume: null,
+        issues: []
+      } as OpsStatusReport['activeRun'],
+      resume: {
+        schemaVersion: 'hadara.active_run.resume.v1',
+        command: 'active-run.resume',
+        ok: true,
+        activeRun: null,
+        resumePrompt: {
+          summary: 'Reading active-run state...',
+          mustRead: [],
+          nextActions: [],
+          constraints: ['Read-only mode remains enforced.']
+        },
+        issues: []
+      } as ActiveRunResumeReport
+    },
+    debt: ({
+      schemaVersion: 'hadara.operational_debt.list.v1',
+      command: 'debt.list',
+      ok: true,
+      aggregate: { total: 0, open: 0, tracked: 0, mitigated: 0, candidate: 0, highOpen: 0, bySeverity: {} },
+      records: [],
+      debts: [],
+      capsuleSizeIndicators: [],
+      issues: []
+    } as unknown) as OperationalDebtReport,
+    releaseGate: ({
+      schemaVersion: 'hadara.releaseGate.v1',
+      command: 'release.gate',
+      ok: true,
+      mode: 'advisory',
+      checks: [],
+      issues: []
+    } as unknown) as ReleaseGateReport,
+    tools: ({
+      schemaVersion: 'hadara.tools.list.v1',
+      command: 'tools.list',
+      ok: true,
+      tools: [],
+      surfaces: [],
+      disabled: [],
+      issues: []
+    } as unknown) as ToolsListReport,
+    writePreview: ({
+      schemaVersion: 'hadara.write.preflight.v1',
+      command: 'unknown',
+      ok: true,
+      writes: [],
+      risk: 'low',
+      requiresApproval: false,
+      workspaceBoundary: 'project',
+      issues: []
+    } as unknown) as WritePreflightReport,
+    issues: []
+  };
+}
+
 export function createTuiReadModel(projectRoot: string, options: TuiReadModelOptions = {}): TuiReadModel {
   const status = createOpsStatusReport(projectRoot);
   const tasks = createTaskListReport(projectRoot);
