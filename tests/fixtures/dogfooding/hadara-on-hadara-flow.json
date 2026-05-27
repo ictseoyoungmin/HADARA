@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "hadara.dogfooding.fixture.v1",
+  "name": "HADARA-on-HADARA capsule lifecycle",
+  "taskTitle": "Dogfood fixture task",
+  "contextMustContain": [
+    "docs/IMPLEMENTATION_SOP.md",
+    "Attach evidence before marking work complete.",
+    "Use hadara.context.export for in-memory MCP context export"
+  ],
+  "policyChecks": [
+    {
+      "command": "npm run check",
+      "mode": "auto",
+      "expectedAction": "allow"
+    }
+  ],
+  "evidence": {
+    "kind": "test-log",
+    "result": "passed",
+    "summary": "Dogfooding fixture replayed context, policy, evidence, handoff, and done-level validation.",
+    "artifactFile": "dogfooding-fixture-report.txt"
+  },
+  "handoff": {
+    "summary": "Dogfooding fixture task completed with evidence and done-level validation.",
+    "next": "Continue with remote CI/release observation when local dogfooding evidence is stable."
+  }
+}
