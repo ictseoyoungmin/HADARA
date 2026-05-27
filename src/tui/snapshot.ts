@@ -1,5 +1,5 @@
 import { TuiReadModel } from './read-model';
-import { resolveTuiDocumentTab, TUI_DOCUMENT_TABS, TUI_PANEL_IDS, TUI_PANEL_LABELS, TuiPanelId } from './constants';
+import { resolveTuiDocumentTab, TUI_DOCUMENT_TABS, TUI_PANEL_IDS, TUI_PANEL_LABELS, tuiTaskVisibleRowsForWidth, TuiPanelId } from './constants';
 import { badge, card, columns, divider, fit, fitAnsi, pad, padAnsi, trimFit, trimFitAnsi, visibleWidth } from './layout';
 import { incompleteChecklist, markdownPreview, renderMarkdownDocument } from './markdown';
 import { normalizeTuiThemeName, tuiBg, tuiColorEnabled, tuiFg, tuiSwatch, TuiThemeName } from './theme';
@@ -37,7 +37,19 @@ export interface TuiSnapshot {
   };
   text: string;
   lines: string[];
+  hitboxes: TuiHitbox[];
   truncated: boolean;
+}
+
+export type TuiHitboxAction = 'panel' | 'task' | 'document';
+
+export interface TuiHitbox {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  action: TuiHitboxAction;
+  payload: string;
 }
 
 const DEFAULT_WIDTH = 100;
@@ -51,7 +63,8 @@ export function renderTuiSnapshot(model: TuiReadModel, options: TuiSnapshotOptio
   const terminal = resolveTerminalSize(options);
   const panel = options.panel ?? 'overview';
   const theme = normalizeTuiThemeName(options.theme, 'none');
-  const rawLines = renderFrame(model, panel, resolveTuiDocumentTab(options.document), terminal.width, terminal.height, {
+  const hitboxes: TuiHitbox[] = [];
+  const rawLines = renderFrame(model, panel, resolveTuiDocumentTab(options.document), terminal.width, terminal.height, hitboxes, {
     includeGeneratedAt: Boolean(options.includeGeneratedAt),
     theme,
     loading: options.loading === true,
@@ -79,6 +92,7 @@ export function renderTuiSnapshot(model: TuiReadModel, options: TuiSnapshotOptio
     },
     text: lines.join('\n'),
     lines,
+    hitboxes,
     truncated
   };
 }
@@ -99,6 +113,7 @@ function renderFrame(
   document: (typeof TUI_DOCUMENT_TABS)[number],
   width: number,
   height: number,
+  hitboxes: TuiHitbox[],
   options: {
     includeGeneratedAt: boolean;
     theme: TuiThemeName;
@@ -118,16 +133,20 @@ function renderFrame(
   if (width >= 104) {
     const navWidth = 22;
     const mainWidth = width - navWidth - 3;
-    const main = renderPanel(model, panel, document, mainWidth, availableRows, options);
-    const nav = renderNav(panel, navWidth, options.theme);
+    const contentStartY = raw.length + 1;
+    const mainStartX = navWidth + 4;
+    const main = renderPanel(model, panel, document, mainWidth, availableRows, options, hitboxes, mainStartX, contentStartY);
+    const nav = renderNav(panel, navWidth, options.theme, hitboxes, 1, contentStartY);
     const rows = Math.min(Math.max(nav.length, main.length), availableRows);
     for (let index = 0; index < rows; index += 1) {
       raw.push(`${padAnsi(nav[index] ?? '', navWidth)} ${tuiFg(options.theme, 'border', '│')} ${padAnsi(main[index] ?? '', mainWidth)}`);
     }
   } else {
-    raw.push(renderTabBar(panel, width, options.theme));
+    const tabY = raw.length + 1;
+    raw.push(renderTabBar(panel, width, options.theme, hitboxes, tabY));
     raw.push(colorDivider(width, options.theme));
-    raw.push(...renderPanel(model, panel, document, width - 2, availableRows, options).slice(0, availableRows));
+    const panelStartY = raw.length + 1;
+    raw.push(...renderPanel(model, panel, document, width - 2, availableRows, options, hitboxes, 1, panelStartY).slice(0, availableRows));
   }
 
   raw.push(colorDivider(width, options.theme));
@@ -155,23 +174,26 @@ function renderHeader(
   ];
 }
 
-function renderNav(activePanel: TuiSnapshotPanel, width: number, theme: TuiThemeName): string[] {
+function renderNav(activePanel: TuiSnapshotPanel, width: number, theme: TuiThemeName, hitboxes: TuiHitbox[], startX: number, startY: number): string[] {
   return [
     tuiFg(theme, 'muted', ' WORK'),
     ...TUI_PANEL_IDS.map((panel, index) => {
       const marker = panel === activePanel ? '>' : ' ';
       const line = fit(`${marker} ${index + 1} ${TUI_PANEL_LABELS[panel]}`, width);
+      addHitbox(hitboxes, startX, startY + index + 1, width, 1, 'panel', panel);
       return panel === activePanel ? tuiBg(theme, 'panel2', tuiFg(theme, 'gold2', line)) : tuiFg(theme, 'text2', line);
     })
   ];
 }
 
-function renderTabBar(activePanel: TuiSnapshotPanel, width: number, theme: TuiThemeName): string {
-  const text = TUI_PANEL_IDS.map((panel, index) =>
-    panel === activePanel
-      ? tuiBg(theme, 'panel2', tuiFg(theme, 'gold2', `[${index + 1} ${TUI_PANEL_LABELS[panel]}]`))
-      : tuiFg(theme, 'muted', ` ${index + 1} ${TUI_PANEL_LABELS[panel]} `)
-  ).join(' ');
+function renderTabBar(activePanel: TuiSnapshotPanel, width: number, theme: TuiThemeName, hitboxes: TuiHitbox[], y: number): string {
+  let cursor = 1;
+  const text = TUI_PANEL_IDS.map((panel, index) => {
+    const plain = panel === activePanel ? `[${index + 1} ${TUI_PANEL_LABELS[panel]}]` : ` ${index + 1} ${TUI_PANEL_LABELS[panel]} `;
+    addHitbox(hitboxes, cursor, y, visibleWidth(plain), 1, 'panel', panel);
+    cursor += visibleWidth(plain) + 1;
+    return panel === activePanel ? tuiBg(theme, 'panel2', tuiFg(theme, 'gold2', plain)) : tuiFg(theme, 'muted', plain);
+  }).join(' ');
   return fitAnsi(text, width);
 }
 
@@ -190,11 +212,14 @@ function renderPanel(
     taskSearchActive: boolean;
     taskListScroll: number;
     documentScroll: number;
-  }
+  },
+  hitboxes: TuiHitbox[],
+  startX: number,
+  startY: number
 ): string[] {
   if (options.loading) return renderLoadingPanel(TUI_PANEL_LABELS[panel], width, options);
-  if (panel === 'tasks') return renderTasks(model, width, availableRows, options);
-  if (panel === 'detail') return renderDetail(model, document, width, availableRows, options);
+  if (panel === 'tasks') return renderTasks(model, width, availableRows, options, hitboxes, startX, startY);
+  if (panel === 'detail') return renderDetail(model, document, width, availableRows, options, hitboxes, startX, startY);
   if (panel === 'help') return renderHelp(width, options.theme);
   return renderOverview(model, width, options.theme);
 }
@@ -202,8 +227,11 @@ function renderPanel(
 function renderOverview(model: TuiReadModel, width: number, theme: TuiThemeName): string[] {
   const current = model.overview.currentWork;
   const previous = model.overview.previousWork;
-  const currentCard = colorCard('Current Work', workSummaryLines(model, current, 'LIVE', theme), Math.floor(width * 0.5), theme, 'teal');
-  const previousCard = colorCard('Previous Work', workSummaryLines(model, previous, previous ? 'FILE' : 'ROUTE', theme), Math.floor(width * 0.5), theme, 'violet');
+  const columnGap = 2;
+  const leftWidth = width >= 96 ? Math.max(20, Math.floor((width - columnGap) * 0.52)) : width;
+  const rightWidth = width >= 96 ? Math.max(20, width - columnGap - leftWidth) : width;
+  const currentCard = colorCard('Current Work', workSummaryLines(model, current, 'LIVE', theme, Math.max(8, leftWidth - 4)), leftWidth, theme, 'teal');
+  const previousCard = colorCard('Previous Work', workSummaryLines(model, previous, previous ? 'FILE' : 'ROUTE', theme, Math.max(8, rightWidth - 4)), rightWidth, theme, 'violet');
   const top = width >= 96 ? columns(currentCard, previousCard, width) : [...currentCard, '', ...previousCard];
   const deferred = hasDeferredHeavyReads(model);
   const signals = [
@@ -221,7 +249,10 @@ function renderTasks(
   model: TuiReadModel,
   width: number,
   availableRows: number,
-  options: { theme: TuiThemeName; selectedTaskId: string | null; taskSearch: string; taskSearchActive: boolean; taskListScroll: number }
+  options: { theme: TuiThemeName; selectedTaskId: string | null; taskSearch: string; taskSearchActive: boolean; taskListScroll: number },
+  hitboxes: TuiHitbox[],
+  startX: number,
+  startY: number
 ): string[] {
   const theme = options.theme;
   const query = options.taskSearch.trim().toLowerCase();
@@ -232,14 +263,15 @@ function renderTasks(
   if (!rowsAll.length) {
     return colorCard('Tasks Empty', [`${colorBadge('ROUTE', 'muted', theme)} no tasks match ${query ? `"${options.taskSearch}"` : 'the current project'}`], width, theme, 'warn');
   }
-  const visibleRows = Math.max(1, Math.min(width > 100 ? 20 : 12, availableRows - 3));
+  const visibleRows = tuiTaskVisibleRowsForWidth(width);
   const selectedIndex = options.selectedTaskId ? rowsAll.findIndex((task) => task.id === options.selectedTaskId) : -1;
   const windowStart = normalizeTaskWindow(options.taskListScroll, selectedIndex, rowsAll.length, visibleRows);
-  const rows = rowsAll.slice(windowStart, windowStart + visibleRows).map((task) => {
+  const rows = rowsAll.slice(windowStart, windowStart + visibleRows).map((task, localIndex) => {
     const marker = options.selectedTaskId === task.id ? '>' : ' ';
     const titleWidth = Math.max(10, width - 44);
     const markerText = marker === '>' ? tuiFg(theme, 'gold2', marker) : tuiFg(theme, 'dim', marker);
     const line = `${markerText} ${colorBadge(task.status, statusThemeRole(task.status), theme)} ${tuiFg(theme, 'gold2', pad(task.id, 8))} ${fit(task.title, titleWidth)} ${tuiFg(theme, 'muted', trimFit(task.capsule, 22))}`;
+    addHitbox(hitboxes, startX, startY + localIndex + 1, width, 1, 'task', task.id);
     return marker === '>' ? tuiBg(theme, 'panel2', line) : line;
   });
   const searchHint = options.taskSearchActive
@@ -260,7 +292,10 @@ function renderDetail(
   document: (typeof TUI_DOCUMENT_TABS)[number],
   width: number,
   availableRows: number,
-  options: { theme: TuiThemeName; documentScroll: number }
+  options: { theme: TuiThemeName; documentScroll: number },
+  hitboxes: TuiHitbox[],
+  startX: number,
+  startY: number
 ): string[] {
   const theme = options.theme;
   if (!model.selectedTask) {
@@ -269,9 +304,13 @@ function renderDetail(
   const task = model.selectedTask.summary;
   const docText = model.selectedTask.detail.files?.[document.file] ?? '';
   const docAvailable = Boolean(docText);
-  const tabs = TUI_DOCUMENT_TABS.map((tab) =>
-    tab.file === document.file ? tuiFg(theme, 'gold2', `[${tab.key.toUpperCase()} ${tab.shortLabel}]`) : tuiFg(theme, 'muted', ` ${tab.key} ${tab.shortLabel} `)
-  ).join(' ');
+  let tabCursor = startX + 2;
+  const tabs = TUI_DOCUMENT_TABS.map((tab) => {
+    const plain = tab.file === document.file ? `[${tab.key.toUpperCase()} ${tab.shortLabel}]` : ` ${tab.key} ${tab.shortLabel} `;
+    addHitbox(hitboxes, tabCursor, startY + 4, visibleWidth(plain), 1, 'document', tab.file);
+    tabCursor += visibleWidth(plain) + 1;
+    return tab.file === document.file ? tuiFg(theme, 'gold2', plain) : tuiFg(theme, 'muted', plain);
+  }).join(' ');
   const meta = [
     `${colorBadge('LIVE', 'pass', theme)} ${tuiFg(theme, 'gold2', task.id)} ${task.title}`,
     `${tuiFg(theme, 'muted', 'status')} ${tuiFg(theme, statusThemeRole(task.status), task.status)}  ${tuiFg(theme, 'muted', 'capsule')} ${trimFit(task.capsule || '-', Math.max(12, width - 34))}`,
@@ -327,14 +366,14 @@ function renderStatusBar(width: number, options: { theme: TuiThemeName; logLine?
   return fitAnsi(`${left}${gap}${log}`, width);
 }
 
-function workSummaryLines(model: TuiReadModel, task: TuiReadModel['overview']['currentWork'], label: string, theme: TuiThemeName): string[] {
+function workSummaryLines(model: TuiReadModel, task: TuiReadModel['overview']['currentWork'], label: string, theme: TuiThemeName, width: number): string[] {
   if (!task) {
     return [
-      `${colorBadge('ROUTE', 'muted', theme)} - No task exposed`,
-      'status - · capsule -',
-      'Goal No summary exposed.',
-      'Next Select a task or refresh read models.',
-      'Proof No evidence exposed.'
+      trimLine(`${colorBadge('ROUTE', 'muted', theme)} - No task exposed`, width),
+      labelValueLine('status', 'muted', '- · capsule -', width, theme),
+      labelValueLine('Goal', 'teal2', 'No summary exposed.', width, theme),
+      labelValueLine('Next', 'gold2', 'Select a task or refresh read models.', width, theme),
+      labelValueLine('Proof', 'pass', 'No evidence exposed.', width, theme)
     ];
   }
   const docs = task.id === model.selectedTask?.summary.id ? model.selectedTask.detail.files : {};
@@ -349,12 +388,31 @@ function workSummaryLines(model: TuiReadModel, task: TuiReadModel['overview']['c
         ? 'Done status exposed by task list.'
         : 'No evidence exposed.';
   return [
-    `${colorBadge(label, label === 'LIVE' ? 'pass' : 'violet', theme)} ${tuiFg(theme, 'gold2', task.id)} ${trimFit(task.title || '-', 42)}`,
-    `${tuiFg(theme, statusThemeRole(task.status), task.status || '-')} ${tuiFg(theme, 'muted', '·')} ${trimFit(task.capsule || '-', 46)}`,
-    `${tuiFg(theme, 'teal2', 'Goal')} ${firstLine(markdownPreview(taskText, 2), task.title)}`,
-    `${tuiFg(theme, 'gold2', 'Next')} ${next}`,
-    `${tuiFg(theme, 'pass', 'Proof')} ${proof}`
+    summaryTitleLine(label, task.id, task.title || '-', width, theme),
+    summaryStatusLine(task.status || '-', task.capsule || '-', width, theme),
+    labelValueLine('Goal', 'teal2', firstLine(markdownPreview(taskText, 2), task.title), width, theme),
+    labelValueLine('Next', 'gold2', next, width, theme),
+    labelValueLine('Proof', 'pass', proof, width, theme)
   ];
+}
+
+function summaryTitleLine(label: string, taskId: string, title: string, width: number, theme: TuiThemeName): string {
+  const prefix = `${colorBadge(label, label === 'LIVE' ? 'pass' : 'violet', theme)} ${tuiFg(theme, 'gold2', taskId)} `;
+  return `${prefix}${trimFit(title, Math.max(1, width - visibleWidth(prefix)))}`;
+}
+
+function summaryStatusLine(status: string, capsule: string, width: number, theme: TuiThemeName): string {
+  const prefix = `${tuiFg(theme, statusThemeRole(status), status)} ${tuiFg(theme, 'muted', '·')} `;
+  return `${prefix}${trimFit(capsule, Math.max(1, width - visibleWidth(prefix)))}`;
+}
+
+function labelValueLine(label: string, role: 'muted' | 'teal2' | 'gold2' | 'pass', value: string, width: number, theme: TuiThemeName): string {
+  const prefix = `${tuiFg(theme, role, label)} `;
+  return `${prefix}${trimFit(value, Math.max(1, width - visibleWidth(prefix)))}`;
+}
+
+function trimLine(line: string, width: number): string {
+  return trimFitAnsi(line, width);
 }
 
 function nextRecommendedCard(model: TuiReadModel, width: number, theme: TuiThemeName): string[] {
@@ -467,6 +525,26 @@ function colorizeDetailDocument(lines: string[], theme: TuiThemeName): string[] 
     if (/^\d{2}\s+/.test(plain)) return line.replace(/^(\d{2})/, (_match, number: string) => tuiFg(theme, 'gold', number));
     if (/^\d+\.\s+/.test(plain)) return line.replace(/^(\d+)\./, (_match, number: string) => tuiFg(theme, 'gold', number.padStart(2, '0')));
     return tuiFg(theme, 'text2', line);
+  });
+}
+
+function addHitbox(
+  hitboxes: TuiHitbox[],
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  action: TuiHitboxAction,
+  payload: string
+): void {
+  if (width <= 0 || height <= 0) return;
+  hitboxes.push({
+    x1: x,
+    y1: y,
+    x2: x + width - 1,
+    y2: y + height - 1,
+    action,
+    payload
   });
 }
 

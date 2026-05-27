@@ -186,6 +186,45 @@ describe('TUI interaction state', () => {
     expect(state.quitRequested).toBe(true);
   });
 
+  it('keeps task cursor movement aligned with the mockup visible-window policy', () => {
+    const root = tempProject();
+    for (let index = 0; index < 15; index += 1) {
+      createTaskCapsule(root, `Cursor task ${String(index + 1).padStart(2, '0')}`);
+    }
+    writeProjectDocs(root);
+    const model = createTuiReadModel(root);
+
+    let compact = createTuiInteractionState(model, { panel: 'tasks', taskListVisibleRows: 12 });
+    for (let index = 0; index < 11; index += 1) {
+      compact = reduceTuiInteractionState(compact, model, 'down', { taskListVisibleRows: 12 });
+    }
+    expect(compact.selectedTaskIndex).toBe(11);
+    expect(compact.taskListScroll).toBe(0);
+
+    compact = reduceTuiInteractionState(compact, model, 'down', { taskListVisibleRows: 12 });
+    expect(compact.selectedTaskIndex).toBe(12);
+    expect(compact.taskListScroll).toBe(1);
+
+    compact = reduceTuiInteractionState(compact, model, 'up', { taskListVisibleRows: 12 });
+    expect(compact.selectedTaskIndex).toBe(11);
+    expect(compact.taskListScroll).toBe(1);
+    compact = reduceTuiInteractionState(compact, model, 'up', { taskListVisibleRows: 12 });
+    expect(compact.selectedTaskIndex).toBe(10);
+    expect(compact.taskListScroll).toBe(1);
+    for (let index = 0; index < 10; index += 1) {
+      compact = reduceTuiInteractionState(compact, model, 'up', { taskListVisibleRows: 12 });
+    }
+    expect(compact.selectedTaskIndex).toBe(0);
+    expect(compact.taskListScroll).toBe(0);
+
+    let wide = createTuiInteractionState(model, { panel: 'tasks', taskListVisibleRows: 20 });
+    for (let index = 0; index < 14; index += 1) {
+      wide = reduceTuiInteractionState(wide, model, 'down', { taskListVisibleRows: 20 });
+    }
+    expect(wide.selectedTaskIndex).toBe(14);
+    expect(wide.taskListScroll).toBe(0);
+  });
+
   it('clears detail refresh request flags on completion or failure signals', () => {
     const root = tempProject();
     const first = createTaskCapsule(root, 'Detail first task');

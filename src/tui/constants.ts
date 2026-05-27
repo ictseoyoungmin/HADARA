@@ -1,4 +1,6 @@
 export const TUI_PANEL_IDS = ['overview', 'tasks', 'detail', 'help'] as const;
+const COMPACT_TASK_VISIBLE_ROWS = 12;
+const WIDE_TASK_VISIBLE_ROWS = 20;
 
 export type TuiPanelId = (typeof TUI_PANEL_IDS)[number];
 
@@ -40,4 +42,8 @@ export function resolveTuiDocumentTab(file: string | undefined): TuiDocumentTab 
       [tab.label, tab.file, tab.key, tab.shortLabel].some((candidate) => candidate.toLowerCase() === normalized)
     ) ?? TUI_DOCUMENT_TABS[0]
   );
+}
+
+export function tuiTaskVisibleRowsForWidth(width: number): number {
+  return width > 100 ? WIDE_TASK_VISIBLE_ROWS : COMPACT_TASK_VISIBLE_ROWS;
 }

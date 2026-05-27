@@ -4,7 +4,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createTuiFastReadModel, createTuiReadModel } from '../../src/tui/read-model';
 import { renderTuiSnapshot, TuiSnapshotPanel } from '../../src/tui/snapshot';
-import { visibleWidth } from '../../src/tui/layout';
+import { stripAnsi, visibleWidth } from '../../src/tui/layout';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -105,6 +105,27 @@ describe('TUI snapshot renderer', () => {
     expect(snapshot.text).toContain('[ ] Port mockup renderer');
   });
 
+  it('emits renderer-derived hitboxes for panels, task rows, and detail document tabs', () => {
+    const root = tempProject();
+    const first = createTaskCapsule(root, 'Hitbox first');
+    const second = createTaskCapsule(root, 'Hitbox second');
+    writeProjectDocs(root, second.id);
+    const model = createTuiReadModel(root, { selectedTaskId: second.id });
+
+    const tasks = renderTuiSnapshot(model, { panel: 'tasks', widthPolicy: 'compact', width: 92, height: 26 });
+    expect(tasks.hitboxes).toContainEqual(expect.objectContaining({ action: 'panel', payload: 'tasks', y1: 6, y2: 6 }));
+    expect(tasks.hitboxes).toContainEqual(expect.objectContaining({ action: 'task', payload: first.id }));
+    expect(tasks.hitboxes).toContainEqual(expect.objectContaining({ action: 'task', payload: second.id }));
+
+    const detail = renderTuiSnapshot(model, { panel: 'detail', widthPolicy: 'compact', width: 92, height: 26 });
+    expect(detail.hitboxes).toContainEqual(expect.objectContaining({ action: 'document', payload: 'PLAN.md', y1: 12, y2: 12 }));
+    expect(detail.hitboxes).toContainEqual(expect.objectContaining({ action: 'document', payload: 'ACCEPTANCE.md' }));
+
+    const wide = renderTuiSnapshot(model, { panel: 'tasks', width: 120, height: 28 });
+    expect(wide.hitboxes).toContainEqual(expect.objectContaining({ action: 'panel', payload: 'tasks', x1: 1, y1: 8 }));
+    expect(wide.hitboxes.find((box) => box.action === 'task' && box.payload === first.id)?.x1).toBe(26);
+  });
+
   it('applies document scroll and mockup-short detail tab labels', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Scrollable viewer task');
@@ -150,6 +171,27 @@ describe('TUI snapshot renderer', () => {
     expect(loading.text).toContain('reading task capsule');
     expect(loading.text).not.toMatch(/\x1b\[/);
     expect(loading.lines.every((line) => visibleWidth(line) === 92)).toBe(true);
+  });
+
+  it('keeps overview work cards aligned at wide intermediate widths without edge ellipses', () => {
+    const root = tempProject();
+    const current = createTaskCapsule(root, 'Current overview card with enough text to clip inside the card');
+    createTaskCapsule(root, 'Previous overview card with enough text to clip inside the card');
+    writeProjectDocs(root, current.id);
+    const model = createTuiFastReadModel(root, { selectedTaskId: current.id });
+
+    const snapshot = renderTuiSnapshot(model, { panel: 'overview', width: 118, height: 28, theme: 'hadara' });
+    const plainLines = snapshot.lines.map(stripAnsi);
+    const previousStart = plainLines.findIndex((line) => line.includes('Previous Work'));
+    const previousBlock = plainLines.slice(previousStart, previousStart + 7);
+
+    expect(previousStart).toBeGreaterThanOrEqual(0);
+    expect(previousBlock.every((line) => line.trimEnd().endsWith('│') || line.trimEnd().endsWith('╮') || line.trimEnd().endsWith('╯'))).toBe(true);
+    expect(previousBlock.some((line) => line.trimEnd().endsWith('…'))).toBe(false);
+    expect(snapshot.text).toContain('\x1b[38;2;130;199;206mGoal\x1b[0m');
+    expect(snapshot.text).toContain('\x1b[38;2;224;185;109mNext\x1b[0m');
+    expect(snapshot.text).toContain('\x1b[38;2;130;190;134mProof\x1b[0m');
+    expect(snapshot.lines.every((line) => visibleWidth(line) === 118)).toBe(true);
   });
 
   it('renders task windows from interaction scroll state and active search copy', () => {

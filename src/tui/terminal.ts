@@ -1,9 +1,9 @@
 import { Readable, Writable } from 'node:stream';
 import { createTuiLoadingReadModel, createTuiReadModel, TuiReadModel, TuiReadModelOptions } from './read-model';
-import { renderTuiSnapshot, TuiSnapshotOptions, TuiSnapshotWidthPolicy } from './snapshot';
+import { renderTuiSnapshot, TuiHitbox, TuiSnapshotOptions, TuiSnapshotWidthPolicy } from './snapshot';
 import { createTuiReadModelWithCache, TuiCacheRefreshMode } from './cache';
 import { TuiThemeName } from './theme';
-import { TUI_PANEL_IDS } from './constants';
+import { resolveTuiPanelId, tuiTaskVisibleRowsForWidth } from './constants';
 import {
   createTuiInteractionState,
   getTuiTaskRows,
@@ -59,6 +59,7 @@ export class TuiTerminalSession {
   private loadingTick = 0;
   private loaded = false;
   private logLine = 'loading: reading work console';
+  private hitboxes: TuiHitbox[] = [];
 
   private readonly onResize = (): void => {
     if (!this.running) return;
@@ -129,6 +130,7 @@ export class TuiTerminalSession {
 
   render(): TuiTerminalRenderResult {
     const snapshot = renderTuiSnapshot(this.model, this.snapshotOptions());
+    this.hitboxes = snapshot.hitboxes;
     if (this.options.terminalControl !== false) this.output.write('\x1b[H\x1b[2J');
     this.output.write(snapshot.text);
     return {
@@ -142,7 +144,7 @@ export class TuiTerminalSession {
     const mouseResult = this.applyMouseKey(key);
     if (mouseResult !== undefined) return mouseResult;
 
-    const nextState = this.completePendingEffects(reduceTuiInteractionState(this.state, this.model, key));
+    const nextState = this.completePendingEffects(reduceTuiInteractionState(this.state, this.model, key, this.stateReduceOptions()));
     this.state = nextState;
 
     if (this.state.quitRequested) {
@@ -178,7 +180,8 @@ export class TuiTerminalSession {
       selectedTaskId: this.model.selectedTaskId,
       document: this.state.documentFile,
       taskSearch: this.state.taskSearch,
-      searchActive: this.state.searchActive
+      searchActive: this.state.searchActive,
+      taskListVisibleRows: this.taskListVisibleRows()
     });
     this.loaded = true;
     this.logLine = 'ready: work console loaded';
@@ -204,6 +207,7 @@ export class TuiTerminalSession {
       loadingTick: this.loadingTick,
       logLine: message
     });
+    this.hitboxes = snapshot.hitboxes;
     if (this.options.terminalControl !== false) this.output.write('\x1b[H\x1b[2J');
     this.output.write(snapshot.text);
   }
@@ -214,28 +218,20 @@ export class TuiTerminalSession {
     }
   }
 
-  private terminalWidth(): number {
-    return this.options.width ?? this.output.columns ?? 100;
-  }
-
-  private terminalHeight(): number {
-    return this.options.height ?? this.output.rows ?? 32;
-  }
-
   private applyMouseKey(key: TuiInputKey): TuiTerminalRenderResult | null | undefined {
     const parsed = parseMouseKey(key);
     if (!parsed) return undefined;
-    const panel = panelForMouse(parsed.x, parsed.y, this.terminalWidth());
-    if (panel) {
-      this.state = reduceTuiInteractionState(this.state, this.model, String(TUI_PANEL_IDS.indexOf(panel) + 1));
+    const hitbox = resolveHitbox(this.hitboxes, parsed.x, parsed.y);
+    if (!hitbox) return this.render();
+    if (hitbox.action === 'panel') {
+      const activePanel = resolveTuiPanelId(hitbox.payload, this.state.activePanel);
+      this.state = { ...this.state, activePanel, searchActive: activePanel === 'tasks' ? this.state.searchActive : false };
       return this.render();
     }
-    if (this.state.activePanel === 'tasks') {
-      const rowIndex = taskRowIndexForMouse(parsed.y, this.terminalWidth());
+    if (hitbox.action === 'task') {
       const rows = getTuiTaskRows(this.model, this.state);
-      const windowStart = taskWindowStartForMouse(rows.length, this.state.selectedTaskIndex, this.state.taskListScroll, this.terminalWidth(), this.terminalHeight());
-      const selectedIndex = windowStart + rowIndex;
-      if (rowIndex >= 0 && selectedIndex >= 0 && selectedIndex < rows.length) {
+      const selectedIndex = rows.findIndex((row) => row.id === hitbox.payload);
+      if (selectedIndex >= 0) {
         const selected = rows[selectedIndex];
         const selectedState = {
           ...this.state,
@@ -244,22 +240,32 @@ export class TuiTerminalSession {
           taskListScroll: this.state.taskListScroll,
           documentScroll: 0
         };
-        this.state = this.completePendingEffects(reduceTuiInteractionState(selectedState, this.model, 'enter'));
+        this.state = this.completePendingEffects(reduceTuiInteractionState(selectedState, this.model, 'enter', this.stateReduceOptions()));
         return this.render();
       }
     }
-    if (this.state.activePanel === 'detail') {
-      const document = documentKeyForMouse(parsed.x, parsed.y, this.terminalWidth());
-      if (document) {
-        this.state = reduceTuiInteractionState(this.state, this.model, document);
-        return this.render();
-      }
+    if (hitbox.action === 'document') {
+      this.state = reduceTuiInteractionState(this.state, this.model, hitbox.payload, this.stateReduceOptions());
+      return this.render();
     }
     return this.render();
   }
 
   private shouldEnableRawMode(): boolean {
     return this.options.enableRawMode !== false && Boolean(this.input.isTTY && this.input.setRawMode);
+  }
+
+  private stateReduceOptions(): { taskListVisibleRows: number } {
+    return { taskListVisibleRows: this.taskListVisibleRows() };
+  }
+
+  private taskListVisibleRows(): number {
+    return tuiTaskVisibleRowsForWidth(this.taskPanelWidth());
+  }
+
+  private taskPanelWidth(): number {
+    const terminalWidth = Math.max(40, Math.floor(this.options.width ?? this.output.columns ?? 100));
+    return terminalWidth >= 104 ? terminalWidth - 25 : terminalWidth - 2;
   }
 
   private loadModel(refresh: TuiCacheRefreshMode, readOptions: TuiReadModelOptions = {}): TuiReadModel {
@@ -298,7 +304,7 @@ export function decodeTuiInput(input: Buffer | string): TuiInputKey[] {
     } else if (char === '\x1b') {
       const mouse = matchMouseSequence(text.slice(index));
       if (mouse) {
-        keys.push(mouse.key);
+        if (mouse.key) keys.push(mouse.key);
         index += mouse.length - 1;
         continue;
       }
@@ -320,59 +326,23 @@ function parseMouseKey(key: TuiInputKey): { x: number; y: number } | null {
   return { x: Number(match[1]), y: Number(match[2]) };
 }
 
-function matchMouseSequence(text: string): { key: TuiInputKey; length: number } | null {
+function matchMouseSequence(text: string): { key: TuiInputKey | null; length: number } | null {
   const match = text.match(/^\x1b\[<(\d+);(\d+);(\d+)([mM])/);
-  if (!match || match[4] !== 'M' || Number(match[1]) !== 0) return null;
+  if (!match) return null;
+  if (match[4] !== 'M' || Number(match[1]) !== 0) {
+    return {
+      key: null,
+      length: match[0].length
+    };
+  }
   return {
     key: `mouse:${Number(match[2])}:${Number(match[3])}`,
     length: match[0].length
   };
 }
 
-function panelForMouse(x: number, y: number, width: number): TuiInteractionState['activePanel'] | null {
-  if (width >= 104) {
-    if (x > 22) return null;
-    const index = y - 7;
-    return TUI_PANEL_IDS[index] ?? null;
-  }
-  if (y !== 6) return null;
-  if (x >= 1 && x <= 13) return 'overview';
-  if (x >= 14 && x <= 24) return 'tasks';
-  if (x >= 25 && x <= 36) return 'detail';
-  if (x >= 37 && x <= 46) return 'help';
-  return null;
-}
-
-function taskRowIndexForMouse(y: number, width: number): number {
-  return width >= 104 ? y - 7 : y - 9;
-}
-
-function taskWindowStartForMouse(rowCount: number, selectedIndex: number, requestedStart: number, width: number, height: number): number {
-  const availableRows = Math.max(1, height - 8);
-  const visibleRows = Math.max(1, Math.min(width > 100 ? 20 : 12, availableRows - 3));
-  if (rowCount <= visibleRows) return 0;
-  let start = Math.min(Math.max(0, requestedStart), Math.max(0, rowCount - visibleRows));
-  if (selectedIndex >= 0 && selectedIndex < start) start = selectedIndex;
-  if (selectedIndex >= 0 && selectedIndex >= start + visibleRows) start = selectedIndex - visibleRows + 1;
-  return Math.min(Math.max(0, start), Math.max(0, rowCount - visibleRows));
-}
-
-function documentKeyForMouse(x: number, y: number, width: number): string | null {
-  const tabY = width >= 104 ? 10 : 12;
-  if (y !== tabY) return null;
-  const mainX = width >= 104 ? x - 26 : x;
-  const slots = [
-    { min: 1, max: 10, key: 't' },
-    { min: 11, max: 20, key: 'p' },
-    { min: 21, max: 29, key: 'd' },
-    { min: 30, max: 38, key: 'a' },
-    { min: 39, max: 47, key: 'e' },
-    { min: 48, max: 58, key: 'h' },
-    { min: 59, max: 69, key: 'f' },
-    { min: 70, max: 80, key: 'k' },
-    { min: 81, max: 91, key: 's' }
-  ];
-  return slots.find((slot) => mainX >= slot.min && mainX <= slot.max)?.key ?? null;
+function resolveHitbox(hitboxes: TuiHitbox[], x: number, y: number): TuiHitbox | null {
+  return hitboxes.find((box) => x >= box.x1 && x <= box.x2 && y >= box.y1 && y <= box.y2) ?? null;
 }
 
 function matchEscapeSequence(text: string): { key: TuiInputKey; length: number } {

@@ -45,9 +45,14 @@ export interface TuiStateOptions {
   searchActive?: boolean;
 }
 
-const DEFAULT_PAGE_SIZE = 8;
+export interface TuiReduceOptions {
+  taskListVisibleRows?: number;
+}
 
-export function createTuiInteractionState(model: TuiReadModel, options: TuiStateOptions = {}): TuiInteractionState {
+const DEFAULT_PAGE_SIZE = 8;
+const DEFAULT_TASK_VISIBLE_ROWS = 12;
+
+export function createTuiInteractionState(model: TuiReadModel, options: TuiStateOptions & TuiReduceOptions = {}): TuiInteractionState {
   const panel = resolvePanel(options.panel, 'overview');
   const document = resolveTuiDocumentTab(options.document).file;
   const taskSearch = options.taskSearch ?? '';
@@ -55,6 +60,7 @@ export function createTuiInteractionState(model: TuiReadModel, options: TuiState
   const requestedTaskId = options.selectedTaskId ?? model.selectedTaskId;
   const selectedTaskIndex = resolveTaskIndex(rows, requestedTaskId);
   const selectedTask = selectedTaskIndex >= 0 ? rows[selectedTaskIndex] : null;
+  const taskListVisibleRows = normalizeVisibleRows(options.taskListVisibleRows);
 
   return {
     activePanel: panel,
@@ -64,15 +70,16 @@ export function createTuiInteractionState(model: TuiReadModel, options: TuiState
     searchActive: Boolean(options.searchActive),
     documentFile: document,
     documentScroll: 0,
-    taskListScroll: clampScroll(selectedTaskIndex, rows.length),
+    taskListScroll: normalizeTaskOffset(0, selectedTaskIndex, rows.length, taskListVisibleRows),
     refreshRequested: false,
     quitRequested: false,
     detailRefreshRequested: false
   };
 }
 
-export function reduceTuiInteractionState(state: TuiInteractionState, model: TuiReadModel, key: TuiInputKey): TuiInteractionState {
+export function reduceTuiInteractionState(state: TuiInteractionState, model: TuiReadModel, key: TuiInputKey, options: TuiReduceOptions = {}): TuiInteractionState {
   const normalized = normalizeKey(key);
+  const taskListVisibleRows = normalizeVisibleRows(options.taskListVisibleRows);
 
   if (normalized === 'refresh-complete' || normalized === 'refresh-failed') return { ...state, refreshRequested: false };
   if (normalized === 'detail-refresh-complete' || normalized === 'detail-refresh-failed') return { ...state, detailRefreshRequested: false };
@@ -85,17 +92,17 @@ export function reduceTuiInteractionState(state: TuiInteractionState, model: Tui
   const panel = panelForKey(normalized);
   if (panel) return { ...state, activePanel: panel, searchActive: panel === 'tasks' ? state.searchActive : false };
 
-  if (normalized === '/') return reconcileTaskSelection({ ...state, activePanel: 'tasks', searchActive: true, taskSearch: '' }, model);
-  if (normalized === 'escape') return reconcileTaskSelection({ ...state, searchActive: false, taskSearch: '' }, model);
+  if (normalized === '/') return reconcileTaskSelection({ ...state, activePanel: 'tasks', searchActive: true, taskSearch: '', taskListScroll: 0 }, model, taskListVisibleRows);
+  if (normalized === 'escape') return reconcileTaskSelection({ ...state, searchActive: false, taskSearch: '', taskListScroll: 0 }, model, taskListVisibleRows);
 
   if (state.searchActive) {
     if (normalized === 'enter') return { ...state, searchActive: false };
-    if (normalized === 'escape') return reconcileTaskSelection({ ...state, searchActive: false, taskSearch: '' }, model);
+    if (normalized === 'escape') return reconcileTaskSelection({ ...state, searchActive: false, taskSearch: '', taskListScroll: 0 }, model, taskListVisibleRows);
     if (normalized === 'backspace') {
-      return reconcileTaskSelection({ ...state, taskSearch: state.taskSearch.slice(0, -1) }, model);
+      return reconcileTaskSelection({ ...state, taskSearch: state.taskSearch.slice(0, -1), taskListScroll: 0 }, model, taskListVisibleRows);
     }
     if (isSearchCharacter(key)) {
-      return reconcileTaskSelection({ ...state, taskSearch: `${state.taskSearch}${key}` }, model);
+      return reconcileTaskSelection({ ...state, taskSearch: `${state.taskSearch}${key}`, taskListScroll: 0 }, model, taskListVisibleRows);
     }
   }
 
@@ -113,13 +120,13 @@ export function reduceTuiInteractionState(state: TuiInteractionState, model: Tui
   }
 
   if (state.activePanel === 'tasks' && (normalized === 'up' || normalized === 'down')) {
-    return moveTaskSelection(state, model, normalized === 'down' ? 1 : -1);
+    return moveTaskSelection(state, model, normalized === 'down' ? 1 : -1, taskListVisibleRows);
   }
   if (state.activePanel === 'tasks') {
-    if (normalized === 'pageup') return moveTaskSelection(state, model, -DEFAULT_PAGE_SIZE);
-    if (normalized === 'pagedown') return moveTaskSelection(state, model, DEFAULT_PAGE_SIZE);
-    if (normalized === 'home') return moveTaskSelectionToEdge(state, model, 'start');
-    if (normalized === 'end') return moveTaskSelectionToEdge(state, model, 'end');
+    if (normalized === 'pageup') return moveTaskSelection(state, model, -taskListVisibleRows, taskListVisibleRows);
+    if (normalized === 'pagedown') return moveTaskSelection(state, model, taskListVisibleRows, taskListVisibleRows);
+    if (normalized === 'home') return moveTaskSelectionToEdge(state, model, 'start', taskListVisibleRows);
+    if (normalized === 'end') return moveTaskSelectionToEdge(state, model, 'end', taskListVisibleRows);
   }
 
   if (state.activePanel === 'detail') {
@@ -134,7 +141,7 @@ export function reduceTuiInteractionState(state: TuiInteractionState, model: Tui
   return state;
 }
 
-function moveTaskSelectionToEdge(state: TuiInteractionState, model: TuiReadModel, edge: 'start' | 'end'): TuiInteractionState {
+function moveTaskSelectionToEdge(state: TuiInteractionState, model: TuiReadModel, edge: 'start' | 'end', visibleRows: number): TuiInteractionState {
   const rows = getTuiTaskRows(model, state);
   if (!rows.length) return { ...state, selectedTaskId: null, selectedTaskIndex: -1, taskListScroll: 0 };
   const nextIndex = edge === 'start' ? 0 : rows.length - 1;
@@ -142,7 +149,7 @@ function moveTaskSelectionToEdge(state: TuiInteractionState, model: TuiReadModel
     ...state,
     selectedTaskId: rows[nextIndex]?.id ?? null,
     selectedTaskIndex: nextIndex,
-    taskListScroll: clampScroll(nextIndex, rows.length)
+    taskListScroll: normalizeTaskOffset(state.taskListScroll, nextIndex, rows.length, visibleRows)
   };
 }
 
@@ -177,7 +184,7 @@ function filterTaskRows(tasks: TuiReadModel['tasks']['tasks'], search: string): 
   return tasks.filter((task) => [task.id, task.title, task.status, task.capsule].some((value) => String(value ?? '').toLowerCase().includes(query)));
 }
 
-function reconcileTaskSelection(state: TuiInteractionState, model: TuiReadModel): TuiInteractionState {
+function reconcileTaskSelection(state: TuiInteractionState, model: TuiReadModel, visibleRows: number): TuiInteractionState {
   const rows = getTuiTaskRows(model, state);
   const index = resolveTaskIndex(rows, state.selectedTaskId);
   const fallbackIndex = index >= 0 ? index : rows.length ? 0 : -1;
@@ -186,11 +193,11 @@ function reconcileTaskSelection(state: TuiInteractionState, model: TuiReadModel)
     ...state,
     selectedTaskId: selectedTask?.id ?? null,
     selectedTaskIndex: fallbackIndex,
-    taskListScroll: clampScroll(fallbackIndex, rows.length)
+    taskListScroll: normalizeTaskOffset(state.taskListScroll, fallbackIndex, rows.length, visibleRows)
   };
 }
 
-function moveTaskSelection(state: TuiInteractionState, model: TuiReadModel, delta: number): TuiInteractionState {
+function moveTaskSelection(state: TuiInteractionState, model: TuiReadModel, delta: number, visibleRows: number): TuiInteractionState {
   const rows = getTuiTaskRows(model, state);
   if (!rows.length) return { ...state, selectedTaskId: null, selectedTaskIndex: -1, taskListScroll: 0 };
   const nextIndex = Math.min(rows.length - 1, Math.max(0, state.selectedTaskIndex + delta));
@@ -198,7 +205,7 @@ function moveTaskSelection(state: TuiInteractionState, model: TuiReadModel, delt
     ...state,
     selectedTaskId: rows[nextIndex]?.id ?? null,
     selectedTaskIndex: nextIndex,
-    taskListScroll: clampScroll(nextIndex, rows.length)
+    taskListScroll: normalizeTaskOffset(state.taskListScroll, nextIndex, rows.length, visibleRows)
   };
 }
 
@@ -210,9 +217,16 @@ function resolveTaskIndex(tasks: TuiReadModel['tasks']['tasks'], selectedTaskId:
   return tasks.length ? 0 : -1;
 }
 
-function clampScroll(selectedIndex: number, rowCount: number): number {
-  if (selectedIndex <= 0 || rowCount <= DEFAULT_PAGE_SIZE) return 0;
-  return Math.min(selectedIndex, Math.max(0, rowCount - DEFAULT_PAGE_SIZE));
+function normalizeTaskOffset(requestedStart: number, selectedIndex: number, rowCount: number, visibleRows: number): number {
+  if (rowCount <= visibleRows || selectedIndex < 0) return 0;
+  let start = Math.min(Math.max(0, requestedStart), Math.max(0, rowCount - visibleRows));
+  if (selectedIndex < start) start = selectedIndex;
+  if (selectedIndex >= start + visibleRows) start = selectedIndex - visibleRows + 1;
+  return Math.min(Math.max(0, start), Math.max(0, rowCount - visibleRows));
+}
+
+function normalizeVisibleRows(value: number | undefined): number {
+  return Math.max(1, Math.floor(value ?? DEFAULT_TASK_VISIBLE_ROWS));
 }
 
 function panelForKey(key: string): TuiPanelId | null {

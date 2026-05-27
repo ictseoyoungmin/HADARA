@@ -30,6 +30,8 @@ describe('TUI terminal shell', () => {
       'end'
     ]);
     expect(decodeTuiInput(Buffer.from('\x1b[<0;14;6M'))).toEqual(['mouse:14:6']);
+    expect(decodeTuiInput(Buffer.from('\x1b[<0;41;6m'))).toEqual([]);
+    expect(decodeTuiInput(Buffer.from('\x1b[<0;41;6M\x1b[<0;41;6m'))).toEqual(['mouse:41:6']);
     expect(decodeTuiInput('\r\n\x7f\x03')).toEqual(['enter', 'enter', 'backspace', 'ctrl-c']);
     expect(decodeTuiInput('/ab\x1b')).toEqual(['/', 'a', 'b', 'escape']);
   });
@@ -87,6 +89,23 @@ describe('TUI terminal shell', () => {
     const beforeResize = output.chunks.length;
     output.emit('resize');
     expect(output.chunks.length).toBeGreaterThan(beforeResize);
+
+    session.stop();
+  });
+
+  it('keeps Help selected when a terminal sends mouse press and release for the tab click', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Terminal help release task');
+    writeProjectDocs(root, task.id);
+    const input = new MemoryInput(true);
+    const output = new MemoryOutput(92, 26);
+    const session = createTuiTerminalSession({ projectRoot: root, input, output, widthPolicy: 'compact', terminalControl: false });
+
+    session.start();
+    input.emit('data', Buffer.from('\x1b[<0;38;6M\x1b[<0;38;6m'));
+
+    expect(session.getState().activePanel).toBe('help');
+    expect(output.text()).toContain('Controls');
 
     session.stop();
   });
