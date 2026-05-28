@@ -134,3 +134,4 @@
 | T-0131 | Major Feature Smoke Runner | Done | tasks/T-0131-major-feature-smoke-runner | Adds read-only `hadara smoke run --profile core --json` with reduced feature-smoke reports. |
 | T-0132 | Package Smoke Schema and Fixture | Done | tasks/T-0132-package-smoke-schema-and-fixture | Registers `hadara.packageSmoke.v1` with deterministic reduced fixtures and no package-smoke execution. |
 | T-0133 | Package Smoke Dry-run Implementation | Done | tasks/T-0133-package-smoke-dry-run-implementation | Adds read-only `hadara package smoke --dry-run --json` planning reports without package execution. |
+| T-0134 | Local Package Smoke Execution | Done | tasks/T-0134-local-package-smoke-execution | Adds explicit `hadara package smoke --execute --json` local smoke with npm pack, isolated prefix install, installed doctor/core smoke, cleanup, and reduced reports. |

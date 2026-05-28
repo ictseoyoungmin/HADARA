@@ -1,5 +1,5 @@
 import { HadaraPaths } from '../core/paths';
-import { createPackageSmokeDryRunReport } from '../services/package-smoke';
+import { createPackageSmokeDryRunReport, createPackageSmokeLocalReport } from '../services/package-smoke';
 import { getFlag, getIntegerOption, getStringOption } from './args';
 
 export interface PackageCommandInput {
@@ -11,9 +11,9 @@ export interface PackageCommandInput {
 export function handlePackageCommand(input: PackageCommandInput): boolean {
   if (input.args[0] !== 'package' || input.args[1] !== 'smoke') return false;
 
-  const report = createPackageSmokeDryRunReport({
+  const options = {
     paths: input.paths,
-    dryRun: true,
+    dryRun: !getFlag(input.args, '--execute'),
     from: getStringOption(input.args, '--from'),
     workspace: getStringOption(input.args, '--workspace'),
     taskId: getStringOption(input.args, '--task'),
@@ -22,7 +22,8 @@ export function handlePackageCommand(input: PackageCommandInput): boolean {
     keepTemp: getFlag(input.args, '--keep-temp'),
     privateLogs: getFlag(input.args, '--private-logs'),
     timeoutSeconds: getIntegerOption(input.args, '--timeout', { min: 1 })
-  });
+  };
+  const report = getFlag(input.args, '--execute') ? createPackageSmokeLocalReport(options) : createPackageSmokeDryRunReport(options);
 
   if (input.jsonOutput) {
     console.log(JSON.stringify(report, null, 2));

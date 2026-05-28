@@ -262,6 +262,17 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     notes: 'Read-only package-smoke dry-run planner; previews workspace, steps, artifacts, and evidence without npm pack, install, subprocess execution, artifact writes, or evidence attachment.'
   },
   {
+    name: 'hadara package smoke --execute --json',
+    category: 'execute',
+    stable: true,
+    readOnly: false,
+    enabledByDefault: true,
+    availability: 'default',
+    risk: 'medium',
+    schemaVersion: 'hadara.packageSmoke.v1',
+    notes: 'Explicit local package-smoke execution; runs npm pack, isolated prefix install, installed doctor, and installed core smoke in a disposable workspace without publish, release mutation, global install, or public raw logs.'
+  },
+  {
     name: 'hadara release gate --mode advisory|strict --json',
     category: 'release',
     stable: true,

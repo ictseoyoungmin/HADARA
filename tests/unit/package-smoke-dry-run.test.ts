@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handlePackageCommand } from '../../src/cli/package-smoke';
 import { resolveHadaraPaths } from '../../src/core/paths';
 import { validateSchema } from '../../src/core/schema';
-import { createPackageSmokeDryRunReport } from '../../src/services/package-smoke';
+import { createPackageSmokeDryRunReport, createPackageSmokeLocalReport, PackageSmokeCommandRunner } from '../../src/services/package-smoke';
 
 const roots: string[] = [];
 
@@ -199,6 +199,184 @@ describe('package smoke dry-run', () => {
       mode: 'dry-run',
       readOnly: true
     });
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
+  it('keeps the CLI default path in dry-run mode without --execute', () => {
+    const root = tempProject();
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handlePackageCommand({
+      args: ['package', 'smoke', '--json'],
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const report = JSON.parse(spy.mock.calls[0]?.[0] ?? '{}');
+    expect(report).toMatchObject({
+      mode: 'dry-run',
+      readOnly: true,
+      execution: {
+        npmPackExecuted: false,
+        packageInstallExecuted: false,
+        featureSmokeExecuted: false
+      }
+    });
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+});
+
+describe('package smoke local execution', () => {
+  it('creates a reduced schema-valid local execution report with cleanup', () => {
+    const root = tempProject();
+    const calls: Array<{ command: string; args: string[]; cwd: string }> = [];
+    let workspace = '';
+    const runner: PackageSmokeCommandRunner = (command, args, options) => {
+      calls.push({ command, args, cwd: options.cwd });
+      if (args[0] === 'pack') {
+        workspace = String(args[args.indexOf('--pack-destination') + 1]);
+        fs.writeFileSync(path.join(workspace, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
+        return {
+          status: 0,
+          stdout: JSON.stringify([{ filename: 'hadara-0.0.0-bootstrap.tgz' }]),
+          stderr: 'npm notice private path would be here',
+          elapsedMs: 11
+        };
+      }
+      if (args[0] === 'install') {
+        return { status: 0, stdout: 'added 1 package', stderr: '', elapsedMs: 12 };
+      }
+      if (args[0] === 'doctor') {
+        return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 13 };
+      }
+      if (args[0] === 'smoke') {
+        return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 14 };
+      }
+      return { status: 1, stdout: '', stderr: 'unexpected', elapsedMs: 1 };
+    };
+
+    const report = createPackageSmokeLocalReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      runner,
+      timeoutSeconds: 30
+    });
+    const encoded = JSON.stringify(report);
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.packageSmoke.v1',
+      command: 'package.smoke',
+      ok: true,
+      mode: 'local',
+      readOnly: false,
+      execution: {
+        npmPackExecuted: true,
+        packageInstallExecuted: true,
+        featureSmokeExecuted: true,
+        releaseMutationExecuted: false,
+        publishExecuted: false
+      },
+      privacy: {
+        rawLogsIncluded: false,
+        rawPackageContentsIncluded: false,
+        privatePathsIncluded: false,
+        environmentSecretsIncluded: false,
+        privateStorePathsIncluded: false
+      },
+      issues: []
+    });
+    expect(report.steps.map((step) => step.id)).toEqual([
+      'validate-source',
+      'plan-workspace',
+      'npm-pack',
+      'install-cli',
+      'doctor',
+      'feature-smoke-core',
+      'cleanup'
+    ]);
+    expect(report.steps.every((step) => step.status === 'passed')).toBe(true);
+    expect(report.artifacts).toContainEqual(
+      expect.objectContaining({
+        kind: 'package-artifact',
+        visibility: 'temporary',
+        relativePath: 'hadara-0.0.0-bootstrap.tgz',
+        rawContentIncluded: false,
+        byteLength: 13
+      })
+    );
+    expect(fs.existsSync(workspace)).toBe(false);
+    expect(encoded).not.toContain(root);
+    expect(encoded).not.toContain(workspace);
+    expect(encoded).not.toContain('npm notice');
+    expect(calls.map((call) => call.args[0])).toEqual(['pack', 'install', 'doctor', 'smoke']);
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
+  it('returns reduced failure details when isolated install fails', () => {
+    const root = tempProject();
+    const runner: PackageSmokeCommandRunner = (_command, args) => {
+      if (args[0] === 'pack') {
+        const workspace = String(args[args.indexOf('--pack-destination') + 1]);
+        fs.writeFileSync(path.join(workspace, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
+        return {
+          status: 0,
+          stdout: JSON.stringify([{ filename: 'hadara-0.0.0-bootstrap.tgz' }]),
+          stderr: '',
+          elapsedMs: 10
+        };
+      }
+      if (args[0] === 'install') {
+        return { status: 1, stdout: '', stderr: '/home/alice/private install failure log', elapsedMs: 20 };
+      }
+      return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 1 };
+    };
+
+    const report = createPackageSmokeLocalReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      runner
+    });
+    const encoded = JSON.stringify(report);
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual({
+      severity: 'error',
+      code: 'PACKAGE_SMOKE_INSTALL_FAILED',
+      message: 'Package install failed in the isolated prefix.',
+      stepId: 'install-cli'
+    });
+    expect(report.steps).toContainEqual(
+      expect.objectContaining({
+        id: 'doctor',
+        status: 'skipped'
+      })
+    );
+    expect(report.steps).toContainEqual(
+      expect.objectContaining({
+        id: 'feature-smoke-core',
+        status: 'skipped'
+      })
+    );
+    expect(encoded).not.toContain('/home/alice/private');
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
+  it('rejects execution workspaces inside the project source tree', () => {
+    const root = tempProject();
+    const runner = vi.fn<PackageSmokeCommandRunner>();
+
+    const report = createPackageSmokeLocalReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      workspace: 'tmp/package-smoke',
+      runner
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual({
+      severity: 'error',
+      code: 'PACKAGE_SMOKE_WORKSPACE_INSIDE_PROJECT',
+      message: 'Package-smoke execution workspace must be outside the project source tree.'
+    });
+    expect(runner).not.toHaveBeenCalled();
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
   });
 });
