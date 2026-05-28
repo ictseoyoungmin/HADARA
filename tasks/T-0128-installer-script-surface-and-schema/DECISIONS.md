@@ -8,4 +8,7 @@
 - USB portable examples are `L:\HADARA` for Windows and `/mnt/l/HADARA` for WSL.
 - Installers must validate Node 22 and WSL must reject Windows `node.exe` shims in favor of Linux Node.js.
 - Future dry-run installer reports use `hadara.install.plan.v1`.
+- Public install-plan target paths use path-reference objects, not raw strings: `target.prefix.displayPath`, `target.prefix.pathRedacted: true`, `target.launcher.displayPath`, and `target.launcher.pathRedacted: true`.
+- Source path details in public install-plan output must use `source.pathRedacted: true`; raw private absolute paths, private store paths, raw logs, and environment values stay out of public output.
+- `mode: execute` remains schema-reserved only. T-0129 dry-run implementation must reject execute mode or return `INSTALL_EXECUTION_DISABLED` until a later capsule explicitly authorizes installer mutation.
 - T-0128 performs no install mutation, package execution, publish, registry login, token handling, or release deployment.

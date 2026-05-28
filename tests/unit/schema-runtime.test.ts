@@ -223,11 +223,24 @@ describe('runtime schema validation', () => {
         platform: 'posix',
         source: {
           kind: 'tarball',
+          displayPath: '<redacted-tarball>',
           pathRedacted: true
         },
         target: {
-          prefix: '~/.local/share/hadara',
-          launcher: '~/.local/bin/hadara'
+          prefix: {
+            displayPath: '~/.local/share/hadara',
+            pathRedacted: true,
+            kind: 'default'
+          },
+          launcher: {
+            displayPath: '~/.local/bin/hadara',
+            pathRedacted: true,
+            kind: 'default'
+          }
+        },
+        execution: {
+          executeEnabled: false,
+          disabledIssueCode: 'INSTALL_EXECUTION_DISABLED'
         },
         node: {
           requiredMajor: 22,
@@ -244,5 +257,76 @@ describe('runtime schema validation', () => {
         issues: []
       }).ok
     ).toBe(true);
+  });
+
+  it('rejects install plan target paths as raw strings', () => {
+    const result = validateSchema('hadara.install.plan.v1', {
+      schemaVersion: 'hadara.install.plan.v1',
+      command: 'install.plan',
+      ok: true,
+      mode: 'dry-run',
+      platform: 'posix',
+      source: {
+        kind: 'tarball',
+        pathRedacted: true
+      },
+      target: {
+        prefix: '/home/example/.local/share/hadara',
+        launcher: '/home/example/.local/bin/hadara'
+      },
+      execution: {
+        executeEnabled: false
+      },
+      actions: [],
+      issues: []
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: '$.target.prefix',
+          code: 'SCHEMA_TYPE_MISMATCH'
+        }),
+        expect.objectContaining({
+          path: '$.target.launcher',
+          code: 'SCHEMA_TYPE_MISMATCH'
+        })
+      ])
+    );
+  });
+
+  it('requires install plan execution capability state', () => {
+    const result = validateSchema('hadara.install.plan.v1', {
+      schemaVersion: 'hadara.install.plan.v1',
+      command: 'install.plan',
+      ok: true,
+      mode: 'dry-run',
+      platform: 'posix',
+      source: {
+        kind: 'tarball',
+        pathRedacted: true
+      },
+      target: {
+        prefix: {
+          displayPath: '~/.local/share/hadara',
+          pathRedacted: true
+        },
+        launcher: {
+          displayPath: '~/.local/bin/hadara',
+          pathRedacted: true
+        }
+      },
+      actions: [],
+      issues: []
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        path: '$.execution',
+        code: 'SCHEMA_REQUIRED_MISSING'
+      })
+    );
   });
 });

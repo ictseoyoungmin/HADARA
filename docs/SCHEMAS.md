@@ -37,7 +37,7 @@ Initial fixtures:
 | `hadara.privateEvidence.v1` | `src/schemas/private-evidence.schema.json` | fixture | Documents private portable-store manifest records without private raw content or source paths. |
 | `hadara.event.v1` | `src/schemas/event.schema.json` | fixture | Documents structured redacted event records embedded in private audit JSONL. |
 | `hadara.write.preflight.v1` | `src/schemas/write-preflight.schema.json` | fixture | Documents read-only CLI write-boundary preflight reports. |
-| `hadara.install.plan.v1` | `src/schemas/install-plan.schema.json` | fixture | Documents future installer dry-run planning reports without performing install mutation. |
+| `hadara.install.plan.v1` | `src/schemas/install-plan.schema.json` | fixture | Documents future installer dry-run planning reports without performing install mutation; target paths are redacted public path-reference objects instead of raw strings. |
 
 ## Versioning
 
@@ -61,6 +61,8 @@ Schema validation should distinguish three strictness levels:
 | `releaseGate` | Pre-release blocking validation. | Policy must be explicit per schema. | Future release/package checks. |
 
 The current `additionalProperties: true` posture is only a fixture-level policy. Do not treat the initial fixtures as release gates until a later capsule defines core-field strictness, required/enum enforcement, and unknown-field handling.
+
+`hadara.install.plan.v1` is intentionally a little stricter for public path fields: `target.prefix` and `target.launcher` are objects with `displayPath` and `pathRedacted: true`, not raw path strings. `mode: execute` is reserved in the schema for future compatibility, but the next dry-run implementation must keep execution disabled and reject execute mode or report `INSTALL_EXECUTION_DISABLED` until a later capsule explicitly authorizes installer mutation.
 
 ## Runtime API
 

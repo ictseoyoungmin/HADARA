@@ -5,7 +5,7 @@
   "title": "HADARA Install Plan Report",
   "type": "object",
   "additionalProperties": true,
-  "required": ["schemaVersion", "command", "ok", "mode", "platform", "source", "target", "actions", "issues"],
+  "required": ["schemaVersion", "command", "ok", "mode", "platform", "source", "target", "execution", "actions", "issues"],
   "properties": {
     "schemaVersion": { "const": "hadara.install.plan.v1" },
     "command": { "const": "install.plan" },
@@ -18,7 +18,9 @@
       "required": ["kind", "pathRedacted"],
       "properties": {
         "kind": { "type": "string", "enum": ["tarball", "directory", "portable-bundle"] },
-        "pathRedacted": { "type": "boolean" }
+        "displayPath": { "type": "string", "minLength": 1 },
+        "pathRedacted": { "type": "boolean", "const": true },
+        "relativePath": { "type": "string", "minLength": 1 }
       }
     },
     "target": {
@@ -26,8 +28,17 @@
       "additionalProperties": true,
       "required": ["prefix", "launcher"],
       "properties": {
-        "prefix": { "type": "string", "minLength": 1 },
-        "launcher": { "type": "string", "minLength": 1 }
+        "prefix": { "$ref": "#/$defs/publicPathRef" },
+        "launcher": { "$ref": "#/$defs/publicPathRef" }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["executeEnabled"],
+      "properties": {
+        "executeEnabled": { "type": "boolean" },
+        "disabledIssueCode": { "type": "string", "minLength": 1 }
       }
     },
     "node": {
@@ -63,6 +74,19 @@
           "code": { "type": "string", "minLength": 1 },
           "message": { "type": "string", "minLength": 1 }
         }
+      }
+    }
+  },
+  "$defs": {
+    "publicPathRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["displayPath", "pathRedacted"],
+      "properties": {
+        "displayPath": { "type": "string", "minLength": 1 },
+        "pathRedacted": { "type": "boolean", "const": true },
+        "relativePath": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "enum": ["default", "portable", "relative"] }
       }
     }
   }

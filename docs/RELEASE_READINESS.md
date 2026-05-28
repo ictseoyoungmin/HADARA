@@ -10,10 +10,21 @@ Current bootstrap metadata mode:
 
 - Package name decision: `hadara`.
 - npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28; recheck immediately before publish.
+- Current version remains `0.0.0-bootstrap`.
+- Current package remains `private: true`.
+- Current binary remains `bin.hadara` at `./dist/cli/main.js`.
 - Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability.
 - Release-candidate metadata mode: version `0.1.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present.
+- Scoped fallback decision: do not silently switch names; choose and document an explicit scope in a later release-target capsule if `hadara` is unavailable.
+- Version policy: first release-candidate target is `0.1.0-rc.0`; first stable target is `0.1.0`.
+- `private: true` remains until the package files whitelist, root README, license decision, and package-smoke dry-run evidence are complete.
+- Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist.
+- Do not add `files` entries for missing installer or portable paths in T-0127.
 - MIT license decision: adopt MIT; package remains private until owner-approved `LICENSE` text exists.
 - Publish target decision: npm package first, GitHub Release second, Docker image deferred.
+- Installed CLI verification must use `hadara doctor --json`.
+- T-0127 performs no publish, no `npm pack`, no install smoke, no release artifact build, no GitHub Release, no Docker image build, and no registry mutation.
+- Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`.
 
 ## Installer Script Surface and Schema
 
@@ -73,6 +84,17 @@ Dry-run report schema:
 - Platforms: `posix`, `windows`, `wsl`, `usb`
 - Actions must describe planned writes without performing them.
 - Public output must be reduced and redacted.
+- Target paths must be public path references, not raw absolute path strings.
+- `target.prefix.displayPath` is a redacted or portable display path for humans, not a private raw path.
+- `target.prefix.pathRedacted: true` is required for public install-plan output.
+- `target.launcher.displayPath` is a redacted or portable display path for humans, not a private raw path.
+- `target.launcher.pathRedacted: true` is required for public install-plan output.
+- `source.pathRedacted: true` is required when source path details appear in public install-plan output.
+- Optional `relativePath` values must be project-relative, bundle-relative, or portable-relative; they must not be private absolute paths.
+- `execution.executeEnabled` must state whether mutation is available to the current command implementation.
+- `mode: execute` is schema-reserved only until an explicit later capsule implements mutation.
+- T-0129 dry-run implementation must reject execute mode or return `INSTALL_EXECUTION_DISABLED`.
+- The schema fixture documents a future execute mode but does not authorize installer execution.
 - Raw logs must be temporary or private/local only.
 
 T-0128 release-gate boundary:
