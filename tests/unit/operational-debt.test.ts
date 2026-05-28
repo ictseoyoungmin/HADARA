@@ -68,7 +68,17 @@ function writeReleaseReadinessFiles(root: string): void {
   );
   fs.writeFileSync(
     path.join(root, 'docs', 'TEST_STRATEGY.md'),
-    ['Remote CI observation', 'local Docker validation remains the primary reproducible check'].join('\n'),
+    [
+      'Clean Checkout Package Smoke Plan',
+      'npm ci',
+      'npm run build',
+      'node dist/cli/main.js doctor --json',
+      'node dist/cli/main.js ops status --json',
+      'node dist/cli/main.js release gate --mode strict --json',
+      'no packaging or release execution',
+      'Remote CI observation',
+      'local Docker validation remains the primary reproducible check'
+    ].join('\n'),
     'utf8'
   );
   fs.writeFileSync(
@@ -200,7 +210,7 @@ describe('operational debt track', () => {
         code: 'CLEAN_CHECKOUT_SMOKE_UNCLEAR',
         name: 'Clean checkout smoke policy',
         status: 'passed',
-        summary: 'Release planning documents the clean-checkout smoke sequence.'
+        summary: 'Release planning documents the clean-checkout package smoke sequence.'
       },
       {
         code: 'GENERATED_ARTIFACT_POLICY_UNCLEAR',

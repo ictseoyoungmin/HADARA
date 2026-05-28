@@ -50,6 +50,23 @@ Remote CI observation and GitHub Actions observation are release-readiness signa
 
 When remote CI is observed, record the exact workflow, branch, commit SHA, run URL, conclusion, and relevant job steps in `docs/VALIDATION_HISTORY.md` or the active Task Capsule evidence. The release gate checks that this observation has been documented, but it does not call GitHub, create releases, deploy, or execute remote jobs.
 
+## Clean Checkout Package Smoke Plan
+
+This plan defines release-readiness observation, not release execution. Run it only in a disposable Docker/container filesystem copy of the repository, and keep committed source, Task Capsules, evidence, private state, generated context, package artifacts, and local cache boundaries unchanged unless a later Task Capsule explicitly approves a write path.
+
+Sequence:
+
+```bash
+npm ci
+npm run build
+npm run check
+node dist/cli/main.js doctor --json
+node dist/cli/main.js ops status --json
+node dist/cli/main.js release gate --mode strict --json
+```
+
+The current smoke plan performs no packaging or release execution. It does not run `npm pack`, publish packages, create archives, compute release checksums, call GitHub, deploy, execute MCP release/package tools, or mutate Task Capsules. If a future capsule adds executable package smoke behavior, it must define the allowed workspace, expected artifacts, redaction/audit handling, and evidence format before implementation.
+
 ## Required Session Checks
 
 Before marking a development Task Capsule Done:

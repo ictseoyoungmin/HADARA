@@ -237,7 +237,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     checkPackageScripts(packageJson, mode),
     checkNodePolicy(packageJson, ciWorkflow, mode),
     checkCiWorkflow(ciWorkflow, mode),
-    checkCleanCheckoutPolicy(v1Schemas, developmentSlices, mode),
+    checkCleanCheckoutPolicy(v1Schemas, developmentSlices, testStrategy, mode),
     checkGeneratedArtifactPolicy(projectState, developmentSlices, mode),
     checkRemoteCiObservation(testStrategy, validationHistory, mode)
   ];
@@ -308,15 +308,31 @@ function checkCiWorkflow(ciWorkflow: string | null, mode: ReleaseGateReport['mod
   };
 }
 
-function checkCleanCheckoutPolicy(v1Schemas: string | null, developmentSlices: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+function checkCleanCheckoutPolicy(
+  v1Schemas: string | null,
+  developmentSlices: string | null,
+  testStrategy: string | null,
+  mode: ReleaseGateReport['mode']
+): ReleaseGateReport['checks'][number] {
   const ok =
     includesAll(v1Schemas, ['npm ci', 'npm run check', 'doctor --json', 'ops status --json']) &&
-    includesAny(developmentSlices, ['clean checkout smoke', 'clean-checkout smoke']);
+    includesAny(developmentSlices, ['clean checkout smoke', 'clean-checkout smoke']) &&
+    includesAll(testStrategy, [
+      'Clean Checkout Package Smoke Plan',
+      'npm ci',
+      'npm run build',
+      'node dist/cli/main.js doctor --json',
+      'node dist/cli/main.js ops status --json',
+      'node dist/cli/main.js release gate --mode strict --json',
+      'no packaging or release execution'
+    ]);
   return {
     code: 'CLEAN_CHECKOUT_SMOKE_UNCLEAR',
     name: 'Clean checkout smoke policy',
     status: ok ? 'passed' : readinessFailureStatus(mode),
-    summary: ok ? 'Release planning documents the clean-checkout smoke sequence.' : 'Release planning must document clean-checkout smoke expectations.'
+    summary: ok
+      ? 'Release planning documents the clean-checkout package smoke sequence.'
+      : 'Release planning must document clean-checkout package smoke expectations.'
   };
 }
 

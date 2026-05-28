@@ -49,6 +49,7 @@ Detailed schemas, file-level notes, and the unabridged TUI native runtime design
 - T-0119 Release and Packaging Track: done; `hadara release gate --json` now reports package/bin/script, Node/CI, clean-checkout smoke, generated artifact policy, and operational debt checklist checks with advisory vs strict semantics.
 - T-0120 Dogfooding E2E Fixture: done; primary deterministic fixture replays in-memory context export through Task Capsule completion, policy check, public evidence, handoff update, and done-level harness validation, while built CLI smoke covers generated context export JSON surface compatibility.
 - T-0122 Remote CI Release Observation: done; remote GitHub Actions CI for `main` was observed as successful and release-gate readiness now checks for documented remote CI observation evidence without calling GitHub.
+- T-0124 Clean Checkout Package Smoke Planning: done; `docs/TEST_STRATEGY.md` now carries the explicit clean-checkout package smoke sequence and non-execution boundaries, and the read-only release gate requires those markers before passing the clean-checkout smoke readiness check.
 
 ## Immediate P0 Capsules
 
@@ -103,6 +104,7 @@ Detailed schemas, file-level notes, and the unabridged TUI native runtime design
 | 21 | Release and packaging track | T-0119 | Define install, CI, clean-checkout, and release-gate behavior. | Done: release checklist checks are included in `hadara.releaseGate.v1`; focused/full Docker checks and built CLI advisory/strict smokes pass. |
 | 22 | Dogfooding E2E fixture | T-0120 | Replay a HADARA-on-HADARA workflow from context export to done-level validation. | Done: primary fixture proves in-memory context, capsule, evidence, handoff, policy, and harness continuity; built CLI smoke separately covers generated context export JSON surface compatibility without shell/provider/MCP write/release behavior. |
 | 23 | Remote CI/release observation | T-0122 | Confirm remote CI behavior after local Docker validation and before v1.0 release gate freeze. | Done: GitHub Actions CI run #109 on `main` succeeded for commit `8b4f33d1bf926d051cf63e13ca2de222bfc22d8c`; release-gate docs and checks distinguish documented remote observation from local Docker validation. |
+| 24 | Clean-checkout package smoke planning | T-0124 | Make the package smoke sequence explicit before adding any executable package-smoke command or artifact writes. | Done: `docs/TEST_STRATEGY.md` documents the sequence and boundaries; the read-only release gate requires those markers and still performs no package/release execution. |
 
 ## Must Preserve
 

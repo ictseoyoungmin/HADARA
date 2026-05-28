@@ -124,3 +124,4 @@
 | T-0121 | Done-level Capsule Scaffold Guard | Done | tasks/T-0121-done-level-capsule-scaffold-guard | Adds done-level harness validation for scaffold/default capsule Markdown leftovers. |
 | T-0122 | Remote CI Release Observation | Done | tasks/T-0122-remote-ci-release-observation | Observed GitHub Actions CI run #109 on main and added documented remote CI observation to release-gate readiness. |
 | T-0123 | Operational Debt High Severity Mitigation | Done | tasks/T-0123-operational-debt-high-severity-mitigation | Mitigates OD-0003/OD-0008 based on implemented protocol and done-level validation safeguards; strict release gate now passes when readiness docs pass. |
+| T-0124 | Clean Checkout Package Smoke Planning | Done | tasks/T-0124-clean-checkout-package-smoke-planning | Strengthens clean-checkout package smoke planning markers in TEST_STRATEGY and the read-only release gate. |
