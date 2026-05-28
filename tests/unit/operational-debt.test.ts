@@ -85,6 +85,18 @@ function writeReleaseReadinessFiles(root: string): void {
       'Evidence/report shape',
       'hadara.packageSmoke.v1',
       'performs no package-smoke execution',
+      'Package Smoke Command Surface',
+      'hadara package smoke --dry-run --json',
+      'hadara package smoke --task <task-id> --json',
+      'hadara package smoke --workspace /tmp/hadara-package-smoke/<run-id> --json',
+      'hadara package smoke --from ./dist-release/hadara-0.1.0-rc.0.tgz --json',
+      'hadara package smoke --keep-temp --json',
+      'Do not use `hadara release smoke` as the primary command surface',
+      '`--timeout <seconds>`',
+      '`--attach-evidence`',
+      '`--private-logs`',
+      'Package smoke must not be callable from MCP by default',
+      'The release gate must not call `hadara package smoke`',
       'Remote CI observation',
       'local Docker validation remains the primary reproducible check'
     ].join('\n'),
@@ -228,6 +240,12 @@ describe('operational debt track', () => {
         summary: 'Executable package-smoke artifact and evidence boundaries are documented before implementation.'
       },
       {
+        code: 'PACKAGE_SMOKE_COMMAND_SURFACE',
+        name: 'Package smoke command surface',
+        status: 'passed',
+        summary: '`hadara package smoke` command naming, flags, approval, cleanup, failure, evidence, and MCP boundaries are documented.'
+      },
+      {
         code: 'GENERATED_ARTIFACT_POLICY_UNCLEAR',
         name: 'Generated artifact policy',
         status: 'passed',
@@ -329,10 +347,14 @@ describe('operational debt track', () => {
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION', status: 'error' }));
     expect(advisory.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY', status: 'warning' }));
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY', status: 'error' }));
+    expect(advisory.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE', status: 'warning' }));
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE', status: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION_UNRECORDED', severity: 'warning' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION_UNRECORDED', severity: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR', severity: 'warning' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR', severity: 'error' }));
+    expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR', severity: 'warning' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR', severity: 'error' }));
     expect(advisory.issues).not.toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
     expect(strict.issues).not.toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
   });
@@ -375,6 +397,55 @@ describe('operational debt track', () => {
     expect(strict.ok).toBe(false);
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY', status: 'error' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR', severity: 'error' }));
+  });
+
+  it('requires package-smoke command surface documentation before release readiness passes', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root);
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TEST_STRATEGY.md'),
+      [
+        'Clean Checkout Package Smoke Plan',
+        'npm ci',
+        'npm run build',
+        'node dist/cli/main.js doctor --json',
+        'node dist/cli/main.js ops status --json',
+        'node dist/cli/main.js release gate --mode strict --json',
+        'no packaging or release execution',
+        'Executable Package Smoke Artifact Boundary',
+        'Allowed workspace',
+        '/tmp/hadara-package-smoke/<run-id>',
+        'Package artifact paths',
+        'tasks/<task-id>/artifacts/package-smoke/',
+        'Redaction and audit handling',
+        'Evidence/report shape',
+        'hadara.packageSmoke.v1',
+        'performs no package-smoke execution',
+        'Remote CI observation',
+        'local Docker validation remains the primary reproducible check'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const advisory = createReleaseGateReport(root);
+    const strict = createReleaseGateReport(root, 'strict');
+
+    expect(advisory.ok).toBe(true);
+    expect(advisory.checks).toContainEqual({
+      code: 'PACKAGE_SMOKE_COMMAND_SURFACE',
+      name: 'Package smoke command surface',
+      status: 'warning',
+      summary: 'Package-smoke command naming, flags, approval, cleanup, failure, evidence, and MCP boundaries must be documented before implementation.'
+    });
+    expect(advisory.issues).toContainEqual({
+      severity: 'warning',
+      code: 'PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR',
+      message:
+        'Package smoke command surface: Package-smoke command naming, flags, approval, cleanup, failure, evidence, and MCP boundaries must be documented before implementation.'
+    });
+    expect(strict.ok).toBe(false);
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE', status: 'error' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR', severity: 'error' }));
   });
 
   it('prints JSON through debt and release-gate CLI handlers', () => {

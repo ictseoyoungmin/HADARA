@@ -126,3 +126,4 @@
 | T-0123 | Operational Debt High Severity Mitigation | Done | tasks/T-0123-operational-debt-high-severity-mitigation | Mitigates OD-0003/OD-0008 based on implemented protocol and done-level validation safeguards; strict release gate now passes when readiness docs pass. |
 | T-0124 | Clean Checkout Package Smoke Planning | Done | tasks/T-0124-clean-checkout-package-smoke-planning | Strengthens clean-checkout package smoke planning markers in TEST_STRATEGY and the read-only release gate. |
 | T-0125 | Executable Package Smoke Artifact Boundary Design | Done | tasks/T-0125-executable-package-smoke-artifact-boundary-design | Defines future executable package-smoke workspace/artifact/evidence boundaries and strengthens the read-only release gate. |
+| T-0126 | Package Smoke Command Surface Design | Done | tasks/T-0126-package-smoke-command-surface-design | Defines `hadara package smoke` command-surface semantics and strengthens the read-only release gate. |

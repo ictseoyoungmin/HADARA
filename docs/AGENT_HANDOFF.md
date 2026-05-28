@@ -86,14 +86,15 @@
 - T-0123 is complete: high-severity operational debt OD-0003 and OD-0008 are mitigated by the existing required-reading/context safeguards and done-level evidence validation gates; debt aggregates now report `highOpen: 0`, and strict release gate passes when documented readiness checks pass.
 - T-0124 is complete: clean-checkout package smoke planning is explicit in `docs/TEST_STRATEGY.md`, and the read-only release gate now requires those smoke-plan markers before the clean-checkout readiness check passes. The current smoke plan remains observational only and performs no packaging, publishing, archive/checksum generation, deployment, GitHub calls, MCP release/package execution, or committed artifact writes.
 - T-0125 is complete: executable package-smoke artifact-boundary planning is explicit in `docs/TEST_STRATEGY.md`, covering disposable workspace, package artifact paths, redaction/audit handling, and reduced public evidence/report shape; the read-only release gate now reports `PACKAGE_SMOKE_ARTIFACT_BOUNDARY` as the check and maps missing markers to `PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR` issues while still performing no package-smoke execution.
-- Release/install/package-smoke future work is now centralized in `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md`; use it before creating T-0126+ capsules for package-smoke command surface, package metadata, installer scripts, POSIX/Windows/USB install smoke, evidence freeze, release artifacts, or publish/deploy scripts.
+- T-0126 is complete: package-smoke command-surface planning is explicit in `docs/TEST_STRATEGY.md`, with `hadara package smoke` as the primary future command, `hadara release smoke` avoided as the primary surface, command flags and approval/cleanup/failure/evidence/MCP boundaries documented, and the read-only release gate now reporting `PACKAGE_SMOKE_COMMAND_SURFACE` while mapping missing markers to `PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR` issues.
+- Release/install/package-smoke future work is tracked in `docs/DEVELOPMENT_SLICES.md`, `docs/V1_0_CAPSULE_BACKLOG.md`, and `docs/TEST_STRATEGY.md`. The local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` may exist in this workspace as supporting planning context for agents, but it is intentionally not committed to GitHub.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0123 Operational Debt High Severity Mitigation: reclassified OD-0003/OD-0008 as mitigated based on implemented protocol and done-level validation safeguards, updating debt aggregates and strict release-gate expectations.
 - T-0124 Clean Checkout Package Smoke Planning: documented the clean-checkout package smoke sequence and strengthened the read-only release gate to require explicit smoke-plan markers.
 - T-0125 Executable Package Smoke Artifact Boundary Design: documented future executable package-smoke workspace/artifact/evidence boundaries and strengthened the read-only release gate to require those markers.
+- T-0126 Package Smoke Command Surface Design: documented `hadara package smoke` command-surface semantics and strengthened the read-only release gate to require those markers.
 
 ## Current Known Problems
 
@@ -108,7 +109,7 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is T-0126 Package Smoke Command Surface Design from `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md`, defining approval, cleanup, failure, and explicit no-commit artifact semantics before implementing any package/release execution.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is T-0127 Package Metadata Release Readiness, recording package name/version/private/files/license/publish-target decisions without publishing.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, TUI writes, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
@@ -128,6 +129,10 @@
 - Latest T-0125 built CLI release-gate smoke: Docker built CLI `node dist/cli/main.js release gate --mode strict --json --project /workspace` returned `ok: true`, 9 passed checks, including `PACKAGE_SMOKE_ARTIFACT_BOUNDARY`.
 - Latest T-0125 done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0125 --level done --json --project /workspace` returned `ok: true` with no issues.
 - Latest T-0125 follow-up check/issue code split validation: Docker focused `tests/unit/operational-debt.test.ts` passed with 17 tests, Docker `npm run check` passed with 49 files and 335 tests, built CLI strict release gate returned passed check code `PACKAGE_SMOKE_ARTIFACT_BOUNDARY` while reserving `PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR` for issues, and done-level harness validation returned `ok: true`.
+- Latest T-0126 focused check: Docker temp-copy `npx vitest run tests/unit/operational-debt.test.ts` passed with 1 file and 18 tests after adding the package-smoke command-surface readiness check.
+- Latest T-0126 full check: Docker temp-copy `npm run check` passed with TypeScript build, 49 test files, and 336 tests.
+- Latest T-0126 built CLI release-gate smoke: Docker built CLI `node dist/cli/main.js release gate --mode strict --json --project /workspace` returned `ok: true`, 10 passed checks, including `PACKAGE_SMOKE_COMMAND_SURFACE`.
+- Latest T-0126 done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0126 --level done --json --project /workspace` returned `ok: true` with no issues.
 - Latest remote CI observation: GitHub Actions CI run #109 on `main` for commit `8b4f33d1bf926d051cf63e13ca2de222bfc22d8c` completed successfully; job `check` included `npm ci` and `npm run check`.
 - Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0123 --level done --json --project /workspace` returned `ok: true` with no issues.
 - Latest built CLI smoke: Docker built CLI `node dist/cli/main.js tui --snapshot --width 150 --height 30 --project /workspace` rendered Overview Current Work as T-0116, Previous Work as T-0115, and heading-aware Goal/Next lines from read-model document text.

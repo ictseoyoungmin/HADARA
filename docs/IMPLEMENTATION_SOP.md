@@ -14,7 +14,7 @@ HADARA development follows the core philosophy: Unbroken Context, Verified Devel
 8. Read project-specific specs or roadmap documents referenced by the current task.
 9. For MCP/Hermes work, read `docs/CLI_JSON_CONTRACT.md` and `docs/MCP_BRIDGE_CONTRACT.md`.
 10. For v1.0 hardening work, read `docs/V1_0_CAPSULE_BACKLOG.md` and `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
-11. For release, install, installer, package-smoke, install-matrix, or publish/deploy work, read `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` before creating or implementing the Task Capsule.
+11. For release, install, installer, package-smoke, install-matrix, or publish/deploy work, use `docs/DEVELOPMENT_SLICES.md`, `docs/V1_0_CAPSULE_BACKLOG.md`, and `docs/TEST_STRATEGY.md` as the tracked sources. If the local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` exists in this workspace, agents may use it as supporting planning context, but it is not required committed context.
 12. Summarize the current state from the required docs.
 13. Identify the active Task Capsule and explain why it fits the work.
 14. Propose or choose the smallest useful implementation slice.

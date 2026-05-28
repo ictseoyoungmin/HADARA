@@ -239,6 +239,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     checkCiWorkflow(ciWorkflow, mode),
     checkCleanCheckoutPolicy(v1Schemas, developmentSlices, testStrategy, mode),
     checkPackageSmokeArtifactBoundary(testStrategy, mode),
+    checkPackageSmokeCommandSurface(testStrategy, mode),
     checkGeneratedArtifactPolicy(projectState, developmentSlices, mode),
     checkRemoteCiObservation(testStrategy, validationHistory, mode)
   ];
@@ -255,6 +256,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
 function releaseReadinessIssueCode(checkCode: string): string {
   if (checkCode === 'REMOTE_CI_OBSERVATION') return 'REMOTE_CI_OBSERVATION_UNRECORDED';
   if (checkCode === 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY') return 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR';
+  if (checkCode === 'PACKAGE_SMOKE_COMMAND_SURFACE') return 'PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR';
   return checkCode;
 }
 
@@ -357,6 +359,31 @@ function checkPackageSmokeArtifactBoundary(testStrategy: string | null, mode: Re
     summary: ok
       ? 'Executable package-smoke artifact and evidence boundaries are documented before implementation.'
       : 'Executable package-smoke workspace, artifact, redaction/audit, and evidence boundaries must be documented before implementation.'
+  };
+}
+
+function checkPackageSmokeCommandSurface(testStrategy: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const ok = includesAll(testStrategy, [
+    'Package Smoke Command Surface',
+    'hadara package smoke --dry-run --json',
+    'hadara package smoke --task <task-id> --json',
+    'hadara package smoke --workspace /tmp/hadara-package-smoke/<run-id> --json',
+    'hadara package smoke --from ./dist-release/hadara-0.1.0-rc.0.tgz --json',
+    'hadara package smoke --keep-temp --json',
+    'Do not use `hadara release smoke` as the primary command surface',
+    '`--timeout <seconds>`',
+    '`--attach-evidence`',
+    '`--private-logs`',
+    'Package smoke must not be callable from MCP by default',
+    'The release gate must not call `hadara package smoke`'
+  ]);
+  return {
+    code: 'PACKAGE_SMOKE_COMMAND_SURFACE',
+    name: 'Package smoke command surface',
+    status: ok ? 'passed' : readinessFailureStatus(mode),
+    summary: ok
+      ? '`hadara package smoke` command naming, flags, approval, cleanup, failure, evidence, and MCP boundaries are documented.'
+      : 'Package-smoke command naming, flags, approval, cleanup, failure, evidence, and MCP boundaries must be documented before implementation.'
   };
 }
 

@@ -120,11 +120,46 @@ Evidence/report shape:
 
 The future executable package-smoke command must define approval, cleanup, and failure semantics in its own Task Capsule before implementation. Until then, `hadara release gate --mode strict --json` remains a read-only checklist and performs no package-smoke execution.
 
+## Package Smoke Command Surface
+
+The future executable package-smoke surface is:
+
+```bash
+hadara package smoke --dry-run --json
+hadara package smoke --task <task-id> --json
+hadara package smoke --workspace /tmp/hadara-package-smoke/<run-id> --json
+hadara package smoke --from ./dist-release/hadara-0.1.0-rc.0.tgz --json
+hadara package smoke --keep-temp --json
+```
+
+Use `hadara package smoke` as the primary command name. Do not use `hadara release smoke` as the primary command surface because release wording implies publish/deploy behavior.
+
+Required flags and semantics:
+
+- `--dry-run`: default first-stage behavior; plans workspace, commands, artifacts, and evidence without `npm pack`, install, package artifact writes, or release execution.
+- `--json`: emits a reduced `hadara.packageSmoke.v1` report.
+- `--task <task-id>`: selects an optional Task Capsule for evidence attachment.
+- `--workspace <dir>`: sets the disposable workspace root, which must be outside committed source unless explicitly approved.
+- `--from <tarball|dir>`: selects the package source.
+- `--keep-temp`: preserves the disposable workspace for debugging and warns that private paths may exist locally.
+- `--timeout <seconds>`: bounds execution.
+- `--no-evidence`: runs without attaching evidence.
+- `--attach-evidence`: attaches reduced public evidence only when `--task <task-id>` is provided and redaction checks pass.
+- `--private-logs`: retains raw logs only under ignored private/local storage, never public Task Capsule files.
+
+Approval and boundary rules:
+
+- Dry-run planning may run in normal assisted/dev mode.
+- Real package-smoke execution must require an explicit user command in a later implementation capsule.
+- Package smoke must not be callable from MCP by default; any future MCP package-smoke surface must be opt-in, approval-gated, and privately audited.
+- The release gate must not call `hadara package smoke`; it may only read documented markers and later evidence records.
+- On success, disposable workspace cleanup should be the default. On failure, raw package/install artifacts should be removed unless `--keep-temp` is set, and public output should remain reduced and redacted.
+
 ## Release Install Package Smoke Plan
 
-Detailed remaining capsule sequencing for package smoke, package metadata, Linux/WSL and Windows installers, USB portable launchers, install matrix smoke, evidence-backed release gates, release artifacts, and final publish/deploy scripts lives in `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md`.
+Tracked remaining capsule sequencing for package smoke, package metadata, Linux/WSL and Windows installers, USB portable launchers, install matrix smoke, evidence-backed release gates, release artifacts, and final publish/deploy scripts lives in `docs/DEVELOPMENT_SLICES.md` and `docs/V1_0_CAPSULE_BACKLOG.md`.
 
-Use that plan before starting T-0126 or later release/install/package-smoke capsules. Public user-facing install docs should prefer the installed `hadara` command form, while source-checkout validation may keep `node dist/cli/main.js` as an internal fallback until installer/package surfaces exist.
+The local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` may exist in this workspace as supporting planning context for agents, but it is intentionally not committed. Public user-facing install docs should prefer the installed `hadara` command form, while source-checkout validation may keep `node dist/cli/main.js` as an internal fallback until installer/package surfaces exist.
 
 ## Required Session Checks
 
