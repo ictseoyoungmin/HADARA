@@ -133,12 +133,18 @@ describe('runtime schema validation', () => {
         ok: true,
         profile: 'core',
         readOnly: true,
+        executionMode: 'service-read-model',
+        binaryExecuted: false,
+        launcherChecked: false,
+        packageInstallChecked: false,
         steps: [
           {
             id: 'doctor',
             command: 'hadara doctor --json',
+            executionMode: 'service-read-model',
             status: 'passed',
             schemaVersion: 'hadara.doctor.v1',
+            schemaStatus: 'not-registered',
             summary: 'Doctor completed.'
           }
         ],

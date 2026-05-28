@@ -1,5 +1,5 @@
 import { HadaraPaths } from '../core/paths';
-import { assertSchema } from '../core/schema';
+import { assertSchema, validateSchema } from '../core/schema';
 import { createDoctorReport } from '../cli/doctor';
 import { createReleaseGateReport } from './operational-debt';
 import { createOpsStatusReport } from './operations-status-service';
@@ -21,8 +21,10 @@ export interface FeatureSmokeIssue {
 export interface FeatureSmokeStep {
   id: string;
   command: string;
+  executionMode: 'service-read-model';
   status: FeatureSmokeStepStatus;
   schemaVersion?: string;
+  schemaStatus?: 'validated' | 'not-registered' | 'invalid';
   summary: string;
 }
 
@@ -32,6 +34,10 @@ export interface FeatureSmokeReport {
   ok: boolean;
   profile: FeatureSmokeProfile;
   readOnly: true;
+  executionMode: 'service-read-model';
+  binaryExecuted: false;
+  launcherChecked: false;
+  packageInstallChecked: false;
   steps: FeatureSmokeStep[];
   issues: FeatureSmokeIssue[];
 }
@@ -60,6 +66,10 @@ export function createFeatureSmokeReport(options: FeatureSmokeOptions): FeatureS
     ok: issues.every((issue) => issue.severity !== 'error') && steps.every((step) => step.status === 'passed'),
     profile,
     readOnly: true,
+    executionMode: 'service-read-model',
+    binaryExecuted: false,
+    launcherChecked: false,
+    packageInstallChecked: false,
     steps,
     issues
   };
@@ -140,6 +150,15 @@ function runStep<T extends { ok: boolean }>(
 ): FeatureSmokeStep {
   try {
     const result = step.run();
+    const schemaStatus = validateRegisteredStepSchema(step.schemaVersion, result);
+    if (schemaStatus === 'invalid') {
+      issues.push({
+        severity: 'error',
+        code: 'FEATURE_SMOKE_STEP_SCHEMA_INVALID',
+        message: `${step.command} produced a reduced report that failed its registered schema.`,
+        stepId: step.id
+      });
+    }
     if (!result.ok) {
       issues.push({
         severity: 'error',
@@ -151,8 +170,10 @@ function runStep<T extends { ok: boolean }>(
     return {
       id: step.id,
       command: step.command,
-      status: result.ok ? 'passed' : 'failed',
+      executionMode: 'service-read-model',
+      status: result.ok && schemaStatus !== 'invalid' ? 'passed' : 'failed',
       schemaVersion: step.schemaVersion,
+      schemaStatus,
       summary: step.summarize(result)
     };
   } catch {
@@ -165,9 +186,19 @@ function runStep<T extends { ok: boolean }>(
     return {
       id: step.id,
       command: step.command,
+      executionMode: 'service-read-model',
       status: 'failed',
       schemaVersion: step.schemaVersion,
       summary: 'Step failed before producing a reduced report.'
     };
+  }
+}
+
+function validateRegisteredStepSchema(schemaVersion: string, value: unknown): 'validated' | 'not-registered' | 'invalid' {
+  try {
+    const result = validateSchema(schemaVersion, value);
+    return result.ok ? 'validated' : 'invalid';
+  } catch {
+    return 'not-registered';
   }
 }

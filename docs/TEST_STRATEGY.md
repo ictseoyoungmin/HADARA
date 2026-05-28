@@ -195,7 +195,9 @@ Structured matrix follow-up:
 
 ## Major Feature Smoke Runner Plan
 
-T-0131 adds the shared installed-CLI smoke runner before package-smoke execution. The first profile is `core`, intentionally avoiding package-smoke execution and strict evidence-gate cycles.
+T-0131 adds the shared core feature smoke runner before package-smoke execution. The first profile is `core`, intentionally avoiding package-smoke execution and strict evidence-gate cycles.
+
+Current T-0131 is not an installed-binary/PATH/launcher smoke. It calls internal service/read-model surfaces directly and reports `executionMode: "service-read-model"`, `binaryExecuted: false`, `launcherChecked: false`, and `packageInstallChecked: false`.
 
 Recommended `core` profile:
 
@@ -206,7 +208,7 @@ Recommended `core` profile:
 - `hadara tui --snapshot --json`
 - `hadara release gate --mode advisory --json`
 
-`hadara smoke run --profile core --json` emits a reduced schema-valid `hadara.featureSmoke.v1` report. The reserved `release-readiness` profile currently returns `FEATURE_SMOKE_PROFILE_DEFERRED`; later it may add strict release gate checks, package smoke evidence, install matrix evidence, and release artifact evidence once those surfaces exist.
+`hadara smoke run --profile core --json` emits a reduced schema-valid `hadara.featureSmoke.v1` report. For registered sub-report schemas, the runner validates the reduced report before marking the step passed; unregistered sub-report schemas are marked as not registered rather than treated as installed CLI proof. The reserved `release-readiness` profile currently returns `FEATURE_SMOKE_PROFILE_DEFERRED`; later it may add strict release gate checks, package smoke evidence, install matrix evidence, release artifact evidence, and explicit installed-binary smoke once those surfaces exist.
 
 ## Package Metadata Release Readiness
 

@@ -248,7 +248,7 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     availability: 'default',
     risk: 'low',
     schemaVersion: 'hadara.featureSmoke.v1',
-    notes: 'Reduced read-only major feature smoke runner for installed-CLI core validation; does not execute package smoke or strict release evidence gates.'
+    notes: 'Reduced read-only core feature smoke runner over service/read-model surfaces; does not execute installed binaries, package smoke, install mutation, or strict release evidence gates.'
   },
   {
     name: 'hadara release gate --mode advisory|strict --json',

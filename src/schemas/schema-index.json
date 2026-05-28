@@ -90,7 +90,7 @@
       "path": "src/schemas/feature-smoke.schema.json",
       "status": "fixture",
       "owner": "feature-smoke/runner",
-      "notes": "Documents reduced read-only major feature smoke reports for core installed-CLI validation."
+      "notes": "Documents reduced read-only major feature smoke reports for core service/read-model validation; installed binary and launcher checks are deferred."
     }
   ]
 }

@@ -38,8 +38,17 @@ describe('major feature smoke runner', () => {
       ok: true,
       profile: 'core',
       readOnly: true,
+      executionMode: 'service-read-model',
+      binaryExecuted: false,
+      launcherChecked: false,
+      packageInstallChecked: false,
       issues: []
     });
+    expect(report.steps.every((step) => step.executionMode === 'service-read-model')).toBe(true);
+    expect(report.steps.filter((step) => step.schemaStatus === 'validated').map((step) => step.command)).toEqual([
+      'hadara tools list --json',
+      'hadara release gate --mode advisory --json'
+    ]);
     expect(report.steps.map((step) => step.command)).toEqual([
       'hadara doctor --json',
       'hadara status --json',
@@ -84,7 +93,9 @@ describe('major feature smoke runner', () => {
       schemaVersion: 'hadara.featureSmoke.v1',
       command: 'feature-smoke.run',
       ok: true,
-      profile: 'core'
+      profile: 'core',
+      executionMode: 'service-read-model',
+      binaryExecuted: false
     });
   });
 });

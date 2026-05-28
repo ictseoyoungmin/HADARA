@@ -5,13 +5,29 @@
   "title": "HADARA Feature Smoke Report",
   "type": "object",
   "additionalProperties": true,
-  "required": ["schemaVersion", "command", "ok", "profile", "readOnly", "steps", "issues"],
+  "required": [
+    "schemaVersion",
+    "command",
+    "ok",
+    "profile",
+    "readOnly",
+    "executionMode",
+    "binaryExecuted",
+    "launcherChecked",
+    "packageInstallChecked",
+    "steps",
+    "issues"
+  ],
   "properties": {
     "schemaVersion": { "const": "hadara.featureSmoke.v1" },
     "command": { "const": "feature-smoke.run" },
     "ok": { "type": "boolean" },
     "profile": { "type": "string", "enum": ["core", "release-readiness"] },
     "readOnly": { "const": true },
+    "executionMode": { "const": "service-read-model" },
+    "binaryExecuted": { "const": false },
+    "launcherChecked": { "const": false },
+    "packageInstallChecked": { "const": false },
     "steps": {
       "type": "array",
       "items": { "$ref": "#/$defs/step" }
@@ -25,12 +41,14 @@
     "step": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["id", "command", "status", "summary"],
+      "required": ["id", "command", "executionMode", "status", "summary"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "command": { "type": "string", "minLength": 1 },
+        "executionMode": { "const": "service-read-model" },
         "status": { "type": "string", "enum": ["passed", "failed", "skipped"] },
         "schemaVersion": { "type": "string", "minLength": 1 },
+        "schemaStatus": { "type": "string", "enum": ["validated", "not-registered", "invalid"] },
         "summary": { "type": "string", "minLength": 1 }
       }
     },

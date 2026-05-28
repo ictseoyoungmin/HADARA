@@ -177,7 +177,14 @@ Structured matrix follow-up:
 
 ## Major Feature Smoke Runner Plan
 
-T-0131 implements the installed-CLI major-feature smoke runner before package-smoke or install-matrix execution. The first profile is `core`, so package smoke can reuse it without creating release-gate evidence cycles.
+T-0131 implements the core major-feature smoke runner before package-smoke or install-matrix execution. The first profile is `core`, so package smoke can reuse the same reduced feature checks without creating release-gate evidence cycles.
+
+Current T-0131 boundary:
+
+- The core profile calls internal service/read-model surfaces directly.
+- It does not spawn `hadara`, resolve PATH, verify launcher wiring, install a package artifact, or prove a USB/Windows/Linux installed binary.
+- Report fields must make this explicit with `executionMode: "service-read-model"`, `binaryExecuted: false`, `launcherChecked: false`, and `packageInstallChecked: false`.
+- Future installed-CLI smoke belongs after package artifacts, install apply/launcher wiring, and explicit subprocess policy exist.
 
 Recommended `core` profile command set:
 
@@ -191,7 +198,7 @@ Recommended `core` profile command set:
 Profile boundaries:
 
 - The `core` profile must avoid package-smoke execution and strict release-gate evidence requirements.
-- `hadara smoke run --profile core --json` emits a reduced `hadara.featureSmoke.v1` report.
+- `hadara smoke run --profile core --json` emits a reduced `hadara.featureSmoke.v1` report over service/read-model surfaces.
 - The `release-readiness` profile is reserved but currently returns `FEATURE_SMOKE_PROFILE_DEFERRED`.
 - A later `release-readiness` profile may include strict release gate checks, package smoke evidence, install matrix evidence, and release artifact evidence after those surfaces exist.
 - Smoke runner output must stay reduced and redacted, with raw logs temporary or private/local only.
