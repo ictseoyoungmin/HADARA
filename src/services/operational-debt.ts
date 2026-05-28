@@ -261,6 +261,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     checkPackageSmokeArtifactBoundary(testStrategy, mode),
     checkPackageSmokeCommandSurface(testStrategy, mode),
     checkPackageMetadataReadiness(packageJson, licenseText, testStrategy, releaseReadiness, validationHistory, mode),
+    checkReleaseWorkflowTargetDecision(releaseReadiness, mode),
     checkInstallerSurfaceAndSchema(releaseReadiness, mode),
     checkInstallMatrixSmokePlan(releaseReadiness, mode),
     checkPackageSmokeEvidence(evidence, mode),
@@ -285,6 +286,7 @@ function releaseReadinessIssueCode(checkCode: string): string {
   if (checkCode === 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY') return 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR';
   if (checkCode === 'PACKAGE_SMOKE_COMMAND_SURFACE') return 'PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR';
   if (checkCode === 'PACKAGE_METADATA_RELEASE_READINESS') return 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR';
+  if (checkCode === 'CI_RELEASE_WORKFLOW_TARGET_DECISION') return 'CI_RELEASE_WORKFLOW_TARGET_DECISION_UNCLEAR';
   if (checkCode === 'INSTALLER_SCRIPT_SURFACE_SCHEMA') return 'INSTALLER_SCRIPT_SURFACE_SCHEMA_UNCLEAR';
   if (checkCode === 'INSTALL_MATRIX_SMOKE_PLAN') return 'INSTALL_MATRIX_SMOKE_PLAN_UNCLEAR';
   if (checkCode === 'PACKAGE_SMOKE_EVIDENCE') return 'PACKAGE_SMOKE_EVIDENCE_MISSING';
@@ -528,6 +530,31 @@ function checkInstallerSurfaceAndSchema(releaseReadiness: string | null, mode: R
     summary: ok
       ? 'Installer script paths, portable launchers, install locations, Node/WSL checks, and install plan schema are documented without install mutation.'
       : 'Installer script paths, portable launchers, install locations, Node/WSL checks, and install plan schema must be documented before implementation.'
+  };
+}
+
+function checkReleaseWorkflowTargetDecision(releaseReadiness: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const ok = includesAll(releaseReadiness, [
+    'CI Release Workflow Target Decision',
+    'Primary release target: npm package',
+    'Secondary release target: GitHub Release with tarball, checksum, and manifest',
+    'Deferred release target: Docker image',
+    'npm publish token name: `NPM_TOKEN`',
+    'GitHub Release token name: `GITHUB_TOKEN` or `HADARA_GITHUB_RELEASE_TOKEN`',
+    'Token values must never be written to repository files, public evidence, release artifacts, logs, manifests, or context export',
+    'Publish/deploy remains explicit approval only',
+    'T-0139 performs no publish, no GitHub Release creation, no Docker image build, no registry mutation, no GitHub API call, and no token loading',
+    'Evidence freshness must compare evidence to the release candidate window',
+    'Evidence cross-check should follow this order: record exists, artifact exists, artifact schema valid, `sourceReport.ok` true when present, category/mode/result match the expected check',
+    'Release artifact evidence flow must be explicit: run `hadara release artifact --execute --json --output dist-release`'
+  ]);
+  return {
+    code: 'CI_RELEASE_WORKFLOW_TARGET_DECISION',
+    name: 'CI/release workflow target decision',
+    status: ok ? 'passed' : readinessFailureStatus(mode),
+    summary: ok
+      ? 'Release targets, token names, approval boundary, and T-0140 evidence hardening requirements are documented.'
+      : 'Release workflow targets, token names, approval boundary, and evidence hardening requirements must be documented before release scripts.'
   };
 }
 

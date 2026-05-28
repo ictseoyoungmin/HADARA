@@ -144,6 +144,18 @@ function writeReleaseReadinessFiles(root: string): void {
       'Installed CLI verification must use `hadara doctor --json`',
       'T-0127 performs no publish, no `npm pack`, no install smoke, no release artifact build, no GitHub Release, no Docker image build, and no registry mutation',
       'Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`',
+      'CI Release Workflow Target Decision',
+      'Primary release target: npm package',
+      'Secondary release target: GitHub Release with tarball, checksum, and manifest',
+      'Deferred release target: Docker image',
+      'npm publish token name: `NPM_TOKEN`',
+      'GitHub Release token name: `GITHUB_TOKEN` or `HADARA_GITHUB_RELEASE_TOKEN`',
+      'Token values must never be written to repository files, public evidence, release artifacts, logs, manifests, or context export',
+      'Publish/deploy remains explicit approval only',
+      'T-0139 performs no publish, no GitHub Release creation, no Docker image build, no registry mutation, no GitHub API call, and no token loading',
+      'Evidence freshness must compare evidence to the release candidate window',
+      'Evidence cross-check should follow this order: record exists, artifact exists, artifact schema valid, `sourceReport.ok` true when present, category/mode/result match the expected check',
+      'Release artifact evidence flow must be explicit: run `hadara release artifact --execute --json --output dist-release`',
       'Installer Script Surface and Schema',
       '`scripts/install.sh`',
       '`scripts/install.ps1`',
@@ -394,6 +406,12 @@ describe('operational debt track', () => {
           'Package name, bootstrap version, private transition, files target, license path, publish target, and installed CLI verification decisions are documented without publishing.'
       },
       {
+        code: 'CI_RELEASE_WORKFLOW_TARGET_DECISION',
+        name: 'CI/release workflow target decision',
+        status: 'passed',
+        summary: 'Release targets, token names, approval boundary, and T-0140 evidence hardening requirements are documented.'
+      },
+      {
         code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA',
         name: 'Installer script surface and schema',
         status: 'passed',
@@ -567,6 +585,8 @@ describe('operational debt track', () => {
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE', status: 'error' }));
     expect(advisory.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS', status: 'warning' }));
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS', status: 'error' }));
+    expect(advisory.checks).toContainEqual(expect.objectContaining({ code: 'CI_RELEASE_WORKFLOW_TARGET_DECISION', status: 'warning' }));
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'CI_RELEASE_WORKFLOW_TARGET_DECISION', status: 'error' }));
     expect(advisory.checks).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA', status: 'warning' }));
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA', status: 'error' }));
     expect(advisory.checks).toContainEqual(expect.objectContaining({ code: 'INSTALL_MATRIX_SMOKE_PLAN', status: 'warning' }));
@@ -579,6 +599,8 @@ describe('operational debt track', () => {
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR', severity: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR', severity: 'warning' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR', severity: 'error' }));
+    expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'CI_RELEASE_WORKFLOW_TARGET_DECISION_UNCLEAR', severity: 'warning' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'CI_RELEASE_WORKFLOW_TARGET_DECISION_UNCLEAR', severity: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA_UNCLEAR', severity: 'warning' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA_UNCLEAR', severity: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'INSTALL_MATRIX_SMOKE_PLAN_UNCLEAR', severity: 'warning' }));

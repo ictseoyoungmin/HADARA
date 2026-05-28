@@ -27,6 +27,41 @@ Current bootstrap metadata mode:
 - T-0127 performs no publish, no `npm pack`, no install smoke, no release artifact build, no GitHub Release, no Docker image build, and no registry mutation.
 - Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`.
 
+## CI Release Workflow Target Decision
+
+T-0139 decides what release means before any publish or deploy script exists.
+
+Release target decision:
+
+- Primary release target: npm package.
+- Secondary release target: GitHub Release with tarball, checksum, and manifest.
+- Deferred release target: Docker image.
+- Docker image publishing is deferred unless HADARA adds a server/runtime product surface that needs container distribution.
+- npm package publish is the first approval-gated mutation path because HADARA is currently a Node CLI/workbench.
+- GitHub Release is secondary for portable archive distribution and checksum/manifest inspection.
+
+Required secret names:
+
+- npm publish token name: `NPM_TOKEN`.
+- GitHub Release token name: `GITHUB_TOKEN` or `HADARA_GITHUB_RELEASE_TOKEN`.
+- Token values must never be written to repository files, public evidence, release artifacts, logs, manifests, or context export.
+- Token presence checks may report only present/missing/redacted status.
+
+Approval and mutation boundary:
+
+- Publish/deploy remains explicit approval only.
+- T-0139 performs no publish, no GitHub Release creation, no Docker image build, no registry mutation, no GitHub API call, and no token loading.
+- Release mode is required before any future publish/deploy command may consider `NPM_TOKEN`, `GITHUB_TOKEN`, or `HADARA_GITHUB_RELEASE_TOKEN`.
+
+Evidence freshness and cross-check requirements for T-0140:
+
+- Evidence freshness must compare evidence to the release candidate window.
+- Evidence freshness should prefer same git commit, same package version, and same release artifact manifest hash when available.
+- Stale evidence must become an advisory warning or strict blocker before publish/deploy.
+- Only the latest successful relevant evidence should satisfy release readiness unless a release script explicitly selects older evidence.
+- Evidence cross-check should follow this order: record exists, artifact exists, artifact schema valid, `sourceReport.ok` true when present, category/mode/result match the expected check.
+- Release artifact evidence flow must be explicit: run `hadara release artifact --execute --json --output dist-release`, then attach the reduced release artifact report or manifest through a documented evidence collection path before final dry-run/release gates treat it as publish-ready evidence.
+
 ## Installer Script Surface and Schema
 
 T-0128 defines installer and portable launcher contracts only. It does not create installer scripts, portable launchers, install trees, symlinks, shell profile edits, package copies, package artifacts, or registry mutations.

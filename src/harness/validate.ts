@@ -281,6 +281,7 @@ function validateDoneLevel(projectRoot: string, task: TaskCapsule, issues: Harne
   validateTaskStatusDone(projectRoot, task, issues);
   validateDoneLevelScaffoldContent(projectRoot, task, issues);
   validateAcceptanceDone(projectRoot, task, issues);
+  validateEvidenceMarkdownSingleTable(projectRoot, task, issues);
   validateEvidenceIndexHasRecords(projectRoot, task, issues);
   validateHandoffDone(projectRoot, task, issues);
   validateTaskBoardDone(projectRoot, task, issues, checkedFiles);
@@ -396,6 +397,23 @@ function validateEvidenceIndexHasRecords(projectRoot: string, task: TaskCapsule,
       severity: 'error',
       code: 'EVIDENCE_REQUIRED',
       message: 'Done-level validation requires at least one evidence.jsonl record.',
+      path: relativePath
+    });
+  }
+}
+
+function validateEvidenceMarkdownSingleTable(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+  const evidencePath = path.join(task.dir, 'EVIDENCE.md');
+  if (!fs.existsSync(evidencePath)) return;
+
+  const relativePath = toPortablePath(path.relative(projectRoot, evidencePath));
+  const lines = fs.readFileSync(evidencePath, 'utf8').split(/\r?\n/);
+  const tableHeaderCount = lines.filter((line, index) => line.trim() === '| Time | Kind | Summary | Result |' && lines[index + 1]?.trim() === '|---|---|---|---|').length;
+  if (tableHeaderCount > 1) {
+    issues.push({
+      severity: 'error',
+      code: 'EVIDENCE_TABLE_DUPLICATE_HEADER',
+      message: `Done-level validation requires EVIDENCE.md to contain exactly one evidence table header; found ${tableHeaderCount}.`,
       path: relativePath
     });
   }

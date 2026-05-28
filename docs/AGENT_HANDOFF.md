@@ -99,14 +99,15 @@
 - T-0136 is complete: package-smoke local execution and clean-checkout smoke execution now support explicit `--attach-evidence --task <task-id>` reduced public evidence attachment. Summaries are written under task-local `artifacts/package-smoke/` or `artifacts/clean-checkout-smoke/`, linked from `EVIDENCE.md` and `evidence.jsonl`, and pass public artifact redaction checks while excluding raw logs, raw package contents, private paths, private store paths, release mutation, publish, GitHub Release, Docker image build, and MCP smoke execution.
 - T-0137 is complete: `hadara release artifact --execute --json` now stages a whitelisted package, runs `npm pack`, generates SHA-256 checksum and manifest files, verifies package contents, and emits schema-valid `hadara.releaseArtifact.v1` reduced reports. Default output is disposable, explicit `--output <dir>` is retained local output, and the command performs no publish, GitHub Release, Docker image build, installer/install-matrix execution, MCP release execution, or public raw-log/private-path exposure.
 - T-0138 is complete: `hadara release gate --mode advisory|strict --json` remains read-only but now reads existing Task Capsule evidence records for package-smoke, clean-checkout smoke, and release-artifact readiness. Strict mode blocks on missing package-smoke, clean-checkout smoke, or release-artifact evidence with stable issue codes; advisory mode warns; install-matrix evidence enforcement remains deferred until an executable install-matrix smoke surface exists. `hadara.smokeEvidenceSummary.v1` and `hadara.releaseArtifact.manifest.v1` are registered schema fixtures.
+- T-0139 is complete: release workflow target decisions are documented with npm package as primary, GitHub Release with tarball/checksum/manifest as secondary, and Docker image publishing deferred unless the product/server runtime surface changes. Required token names are documented without values (`NPM_TOKEN`, `GITHUB_TOKEN`, or `HADARA_GITHUB_RELEASE_TOKEN`), publish/deploy remains explicit approval only, and strict release gate checks `CI_RELEASE_WORKFLOW_TARGET_DECISION` read-only.
 - Release/install/package-smoke future work is tracked in `docs/DEVELOPMENT_SLICES.md`, `docs/V1_0_CAPSULE_BACKLOG.md`, and `docs/TEST_STRATEGY.md`. The local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` may exist in this workspace as supporting planning context for agents, but it is intentionally not committed to GitHub.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0136 Smoke Evidence Integration: added explicit reduced public evidence attachment for package-smoke and clean-checkout smoke.
 - T-0137 Release Artifact Builder: added explicit local tarball/checksum/manifest builder with whitelist verification and reduced reports.
 - T-0138 Release Gate Evidence Freeze: added evidence-backed read-only release gate checks for package-smoke, clean-checkout smoke, and release artifacts.
+- T-0139 CI Release Workflow Target Decision: documented npm primary, GitHub Release secondary, Docker deferred, token names, and T-0140 evidence hardening requirements.
 
 ## Current Known Problems
 
@@ -121,7 +122,7 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is T-0139 CI/Release Workflow Target Decision: document npm package as primary, GitHub Release as secondary, Docker deferred, and required token names without storing secrets or publishing.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is T-0140 Final Deployment Script Dry Run: no publish/GitHub Release/registry mutation, reduced JSON output only, and verify evidence freshness plus artifact cross-checks before reporting release readiness.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, TUI writes, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
@@ -214,6 +215,8 @@
 - Latest T-0137 built CLI release artifact smoke: Docker built CLI `node dist/cli/main.js release artifact --execute --json --project /tmp/hadara --timeout 120` returned `ok: true`, generated tarball/checksum/manifest metadata, verified 111 package files under the whitelist, and reported no issues.
 - Latest T-0137 built CLI release-gate smoke: Docker built CLI `node dist/cli/main.js release gate --mode strict --json --project /tmp/hadara` returned `ok: true`, 13 passed checks, and no issues.
 - Latest T-0137 done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0137 --level done --json --project /tmp/hadara` returned `ok: true` with no issues.
+- Latest T-0138 validation: Docker focused release-gate/schema tests passed with 3 files and 43 tests; Docker full `npm run check` passed with 55 files and 394 tests; strict release gate passed with evidence-backed checks; done-level harness returned `ok: true`.
+- Latest T-0139 validation: Docker focused `tests/unit/operational-debt.test.ts` passed with 24 tests; Docker full `npm run check` passed with 55 files and 394 tests; strict release gate passed with `CI_RELEASE_WORKFLOW_TARGET_DECISION`; done-level harness returned `ok: true`.
 - Latest remote CI observation: GitHub Actions CI run #109 on `main` for commit `8b4f33d1bf926d051cf63e13ca2de222bfc22d8c` completed successfully; job `check` included `npm ci` and `npm run check`.
 - Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0123 --level done --json --project /workspace` returned `ok: true` with no issues.
 - Latest built CLI smoke: Docker built CLI `node dist/cli/main.js tui --snapshot --width 150 --height 30 --project /workspace` rendered Overview Current Work as T-0116, Previous Work as T-0115, and heading-aware Goal/Next lines from read-model document text.

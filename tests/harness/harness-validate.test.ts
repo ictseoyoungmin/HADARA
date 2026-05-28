@@ -128,6 +128,33 @@ describe('Harness Task Capsule validation', () => {
     expect(result.issues).toEqual([]);
   });
 
+  it('rejects duplicate evidence table headers during done-level validation', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Duplicate evidence header');
+    markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
+    markAcceptanceDone(task.dir);
+    writeCompletedCapsuleDocs(task.dir);
+    writeHandoffDone(task.dir);
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'note',
+      summary: 'Done-level validation evidence',
+      result: 'passed'
+    });
+    fs.appendFileSync(path.join(task.dir, 'EVIDENCE.md'), '\n| Time | Kind | Summary | Result |\n|---|---|---|---|\n', 'utf8');
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual({
+      severity: 'error',
+      code: 'EVIDENCE_TABLE_DUPLICATE_HEADER',
+      message: 'Done-level validation requires EVIDENCE.md to contain exactly one evidence table header; found 2.',
+      path: `tasks/${task.id}-duplicate-evidence-header/EVIDENCE.md`
+    });
+  });
+
   it('rejects duplicate task board rows during done-level validation', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Duplicate board row');

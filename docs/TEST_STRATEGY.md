@@ -167,6 +167,13 @@ T-0138 evidence freeze:
 - Install-matrix evidence remains non-blocking until install-matrix smoke execution exists.
 - The release gate must not execute smoke, package, install, publish, GitHub, Docker, provider, or MCP release/package/install behavior.
 
+T-0140 dry-run evidence hardening requirements:
+
+- Evidence freshness should compare same git commit, same package version, same release artifact manifest hash, and release candidate window when those values are available.
+- Stale evidence should be reported as an advisory warning or strict blocker before any publish/deploy path is considered.
+- Evidence artifact cross-checks should require: `evidence.jsonl` record exists, `evidencePath` artifact exists when referenced, artifact schema is valid, `sourceReport.ok` is true when present, and category/mode/result match the expected release check.
+- Release artifact evidence must have an explicit user path: build with `hadara release artifact --execute --json --output dist-release`, then attach or collect the reduced release artifact report/manifest as public evidence before dry-run release scripts consider it current.
+
 The local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` may exist in this workspace as supporting planning context for agents, but it is intentionally not committed. Public user-facing install docs should prefer the installed `hadara` command form, while source-checkout validation may keep `node dist/cli/main.js` as an internal fallback until installer/package surfaces exist.
 
 Installer dry-run planning now uses `hadara install plan --json`. This command emits `hadara.install.plan.v1`, reports planned writes without performing them, redacts public source/target paths, and returns `INSTALL_EXECUTION_DISABLED` for execute mode until a later capsule explicitly authorizes installer mutation. `--platform linux` is the user-facing Linux option; `posix` remains a compatibility alias. USB planning must be explicit with `--usb-root` or `--target`, and missing USB roots return `USB_ROOT_REQUIRED`. `wouldWrite: true` means a future confirmed execute/apply mode would write; dry-run JSON never prompts and never writes.
