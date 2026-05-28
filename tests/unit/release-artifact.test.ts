@@ -64,9 +64,14 @@ describe('release artifact builder', () => {
   it('creates tarball checksum and manifest metadata in an explicit output directory', () => {
     const root = tempProject();
     const output = path.join(root, 'dist-release');
-    const runner: ReleaseArtifactCommandRunner = (_command, args) => {
+    const runner: ReleaseArtifactCommandRunner = (_command, args, options) => {
+      const stagedPackage = JSON.parse(fs.readFileSync(path.join(options.cwd, 'package.json'), 'utf8')) as {
+        description?: string;
+      };
       const outputDir = String(args[args.indexOf('--pack-destination') + 1]);
       fs.writeFileSync(path.join(outputDir, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
+      expect(stagedPackage.description).not.toContain('bootstrap skeleton');
+      expect(stagedPackage.description).toBe('HADARA: portable agentic development workbench');
       return {
         status: 0,
         stdout: JSON.stringify([

@@ -112,6 +112,18 @@ T-0128 release-gate boundary:
 - The release gate must not create or invoke `portable/bin/hadara`.
 - The release gate must not mutate install locations, PATH, shell profiles, package artifacts, GitHub Releases, Docker images, npm registry state, or user machines.
 
+## Release Artifact Output Boundary
+
+T-0137 introduces explicit local release artifact building through `hadara release artifact --execute --json`.
+
+- Default artifact output is disposable and removed after the reduced report is created.
+- Retained output requires an explicit `--output <dir>`.
+- The recommended retained local output directory is `dist-release/`.
+- `dist-release/` is ignored by git and should not be committed.
+- Release artifact outputs may include tarballs, checksum files, and manifest files, but public reports must stay reduced and redacted.
+- Release artifact building must not publish to npm, create GitHub Releases, build Docker images, call GitHub, mutate registries, or execute install-matrix behavior.
+- The generated release artifact manifest currently uses `hadara.releaseArtifact.manifest.v1`; register that manifest schema before a future release gate reads manifest files directly.
+
 ## Installer Dry-run Implementation
 
 T-0129 implements installer planning only.

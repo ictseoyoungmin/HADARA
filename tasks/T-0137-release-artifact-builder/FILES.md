@@ -3,6 +3,8 @@
 | Path | Action | Reason |
 |---|---|---|
 | `src/services/release-artifact.ts` | Add | Build staged release artifacts and reduced reports. |
+| `package.json` | Update | Remove bootstrap skeleton wording from public package metadata. |
+| `.gitignore` | Update | Ignore retained local release artifact output under `dist-release/`. |
 | `src/cli/release-artifact.ts` | Add | Expose `hadara release artifact --execute --json`. |
 | `src/cli/main.ts` | Update | Route and document the release artifact command. |
 | `src/schemas/release-artifact.schema.json` | Add | Register `hadara.releaseArtifact.v1`. |
@@ -15,6 +17,8 @@
 | `tests/unit/tools-list.test.ts` | Update | Cover capability discovery for release artifact builder. |
 | `tasks/T-0137-release-artifact-builder/*` | Update | Record capsule scope, evidence, and handoff. |
 | `docs/PROJECT_STATE.md` | Update | Record implemented release artifact builder. |
+| `docs/RELEASE_READINESS.md` | Update | Document retained artifact output boundary and manifest schema follow-up. |
+| `docs/SCHEMAS.md` | Update | Document pending smoke evidence summary and release artifact manifest schema fixtures. |
 | `docs/DEVELOPMENT_SLICES.md` | Update | Mark T-0137 done after validation. |
 | `docs/V1_0_CAPSULE_BACKLOG.md` | Update | Mark T-0136/T-0137 release sequencing as complete in backlog. |
 | `docs/TASK_BOARD.md` | Update | Move T-0137 to Done after validation. |

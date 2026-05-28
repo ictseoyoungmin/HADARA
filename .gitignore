@@ -2,6 +2,7 @@ node_modules/
 dist/
 coverage/
 *.log
+dist-release/
 
 # HADARA portable/local state
 data/

@@ -320,7 +320,7 @@ function copyWhitelistedPackage(projectRoot: string, staging: string, metadata: 
           version: metadata.version,
           private: metadata.private,
           ...(metadata.license ? { license: metadata.license } : {}),
-          description: 'HADARA bootstrap skeleton: portable agentic development workbench',
+          description: 'HADARA: portable agentic development workbench',
           bin: { hadara: './dist/cli/main.js' },
           files: ['dist/', 'README.md', 'LICENSE', 'package.json']
         },

@@ -43,6 +43,11 @@ Initial fixtures:
 | `hadara.cleanCheckoutSmoke.v1` | `src/schemas/clean-checkout-smoke.schema.json` | fixture | Documents reduced source-checkout smoke reports for disposable clean-checkout validation without package install, publish, release mutation, or public raw logs. |
 | `hadara.releaseArtifact.v1` | `src/schemas/release-artifact.schema.json` | fixture | Documents reduced release artifact build reports for tarball, checksum, manifest, whitelist verification, and no publish/GitHub/Docker mutation. |
 
+Follow-up schema fixture:
+
+- `hadara.releaseArtifact.manifest.v1` is emitted inside T-0137 manifest files but is not yet registered as a standalone schema. Register it before release gates or other read models consume manifest files directly.
+- `hadara.smokeEvidenceSummary.v1` is emitted inside T-0136 public smoke evidence artifacts but is not yet registered as a standalone schema. Register it before T-0138 reads smoke evidence artifacts.
+
 ## Versioning
 
 - Schema ids should match the payload `schemaVersion`.

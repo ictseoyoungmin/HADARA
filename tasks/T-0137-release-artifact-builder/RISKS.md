@@ -7,3 +7,6 @@
 | Public report leaks raw npm logs or private paths. | Serialize reduced metadata only; command stdout/stderr are never copied into the report. |
 | Default artifact output creates committed files. | Use a disposable temp output by default; explicit `--output` is required for retained local files. |
 | T-0138 reads unregistered smoke evidence summaries. | Carry forward a T-0138 note to register `hadara.smokeEvidenceSummary.v1` before evidence-freeze reads. |
+| Retained release artifacts are accidentally committed. | Add `dist-release/` to `.gitignore` and document it as the recommended retained local output directory. |
+| Release artifact metadata keeps bootstrap wording. | Staged package description uses release-facing wording and tests guard against "bootstrap skeleton". |
+| Future release gate reads manifest files without a schema. | Carry forward a T-0138 note to register `hadara.releaseArtifact.manifest.v1` before direct manifest reads. |

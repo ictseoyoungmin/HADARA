@@ -6,4 +6,4 @@ T-0137 is complete. `hadara release artifact --execute --json` stages a whitelis
 
 ## Next Recommended Step
 
-Proceed to T-0138 Release Gate Evidence Freeze. Before the release gate reads T-0136 smoke evidence artifacts, register `hadara.smokeEvidenceSummary.v1` as a schema fixture. If raw logs are retained for debugging in a future slice, keep them private/local with manifests or audit metadata only.
+Proceed to T-0138 Release Gate Evidence Freeze. Before the release gate reads T-0136 smoke evidence artifacts, register `hadara.smokeEvidenceSummary.v1` as a schema fixture. Before the release gate reads T-0137 manifest files directly, register `hadara.releaseArtifact.manifest.v1`. If raw logs are retained for debugging in a future slice, keep them private/local with manifests or audit metadata only.

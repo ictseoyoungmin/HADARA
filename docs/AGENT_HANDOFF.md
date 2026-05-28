@@ -120,7 +120,7 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is T-0138 Release Gate Evidence Freeze: move release gate from plan markers toward evidence-backed readiness while keeping it read-only. Before reading T-0136 smoke evidence artifacts, register `hadara.smokeEvidenceSummary.v1` as a schema fixture.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is T-0138 Release Gate Evidence Freeze: move release gate from plan markers toward evidence-backed readiness while keeping it read-only. Before reading T-0136 smoke evidence artifacts, register `hadara.smokeEvidenceSummary.v1`; before reading T-0137 manifest files directly, register `hadara.releaseArtifact.manifest.v1`.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, TUI writes, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
