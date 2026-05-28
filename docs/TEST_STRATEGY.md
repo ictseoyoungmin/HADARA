@@ -163,6 +163,30 @@ The local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Cap
 
 Installer dry-run planning now uses `hadara install plan --json`. This command emits `hadara.install.plan.v1`, reports planned writes without performing them, redacts public source/target paths, and returns `INSTALL_EXECUTION_DISABLED` for execute mode until a later capsule explicitly authorizes installer mutation. `--platform linux` is the user-facing Linux option; `posix` remains a compatibility alias. USB planning must be explicit with `--usb-root` or `--target`, and missing USB roots return `USB_ROOT_REQUIRED`. `wouldWrite: true` means a future confirmed execute/apply mode would write; dry-run JSON never prompts and never writes.
 
+## Install Matrix Smoke Plan
+
+T-0130 defines the install matrix before any executable install-matrix smoke runner exists. The matrix must distinguish source-checkout validation, package-install validation, USB portable validation, and installed-CLI feature validation.
+
+Required rows:
+
+- Linux source checkout: disposable clean checkout, Node 22, `npm ci`, `npm run check`, `hadara install plan --platform linux --json`, and core source CLI smoke.
+- Linux package install: future package artifact, isolated prefix, installed `hadara` command, `hadara doctor --json`, and core smoke profile.
+- WSL source checkout: Linux Node.js only, no Windows `node.exe` shim, `hadara install plan --platform wsl --json`, and core source CLI smoke.
+- Windows source checkout: real Windows or explicitly documented Windows runner, Node 22, clean install/check, `hadara install plan --platform windows --json`, and source CLI smoke.
+- Windows package install: future package artifact, `%LOCALAPPDATA%\HADARA` suggestion or explicit target, installed `hadara` command, `hadara doctor --json`, and core smoke profile.
+- USB portable on Windows: explicit user-selected USB root such as `E:\HADARA`, portable launcher command form, no drive-letter assumption, no PATH/profile mutation, and core smoke profile.
+- USB portable on WSL: explicit user-selected mounted removable root such as `/mnt/e/HADARA`, portable launcher command form, Linux Node.js where needed, no mount-path assumption, and core smoke profile.
+- Installed CLI major-feature smoke: future shared smoke runner with `--profile core`, covering doctor, status, task read/list, evidence list, release-gate advisory read, and package/install-independent read-only surfaces.
+
+Matrix boundaries:
+
+- Docker/Linux validation does not replace real Windows validation.
+- Package-install rows are blocked until package smoke and release artifacts exist.
+- USB rows must require explicit user-selected USB roots.
+- Matrix evidence must record platform, source kind, installer/package form, command form, and reduced public result.
+- Raw logs and private paths must stay temporary or private/local.
+- The release gate must not execute install matrix smoke; it may only check this plan now and later read reduced evidence records.
+
 ## Package Metadata Release Readiness
 
 T-0127 records package metadata decisions without making the package publishable.

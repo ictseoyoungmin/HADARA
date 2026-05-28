@@ -244,6 +244,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     checkPackageSmokeCommandSurface(testStrategy, mode),
     checkPackageMetadataReadiness(packageJson, licenseText, testStrategy, releaseReadiness, validationHistory, mode),
     checkInstallerSurfaceAndSchema(releaseReadiness, mode),
+    checkInstallMatrixSmokePlan(releaseReadiness, mode),
     checkGeneratedArtifactPolicy(projectState, developmentSlices, mode),
     checkRemoteCiObservation(testStrategy, validationHistory, mode)
   ];
@@ -263,6 +264,7 @@ function releaseReadinessIssueCode(checkCode: string): string {
   if (checkCode === 'PACKAGE_SMOKE_COMMAND_SURFACE') return 'PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR';
   if (checkCode === 'PACKAGE_METADATA_RELEASE_READINESS') return 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR';
   if (checkCode === 'INSTALLER_SCRIPT_SURFACE_SCHEMA') return 'INSTALLER_SCRIPT_SURFACE_SCHEMA_UNCLEAR';
+  if (checkCode === 'INSTALL_MATRIX_SMOKE_PLAN') return 'INSTALL_MATRIX_SMOKE_PLAN_UNCLEAR';
   return checkCode;
 }
 
@@ -500,6 +502,35 @@ function checkInstallerSurfaceAndSchema(releaseReadiness: string | null, mode: R
     summary: ok
       ? 'Installer script paths, portable launchers, install locations, Node/WSL checks, and install plan schema are documented without install mutation.'
       : 'Installer script paths, portable launchers, install locations, Node/WSL checks, and install plan schema must be documented before implementation.'
+  };
+}
+
+function checkInstallMatrixSmokePlan(releaseReadiness: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const ok = includesAll(releaseReadiness, [
+    'Install Matrix Smoke Plan',
+    'T-0130 defines install-matrix smoke planning only',
+    'Matrix row: Linux source checkout',
+    'Matrix row: Linux package install',
+    'Matrix row: WSL source checkout',
+    'Matrix row: Windows source checkout',
+    'Matrix row: Windows package install',
+    'Matrix row: USB portable on Windows',
+    'Matrix row: USB portable on WSL',
+    'Matrix row: installed CLI major-feature smoke',
+    'Docker/Linux validation does not replace real Windows validation',
+    'USB rows must require explicit user-selected USB roots',
+    'Package-install rows are blocked until package smoke and release artifacts exist',
+    'Matrix evidence must record platform, source kind, installer/package form, command form, and reduced public result',
+    'Raw logs and private paths must stay temporary or private/local',
+    'The release gate must not execute install matrix smoke'
+  ]);
+  return {
+    code: 'INSTALL_MATRIX_SMOKE_PLAN',
+    name: 'Install matrix smoke plan',
+    status: ok ? 'passed' : readinessFailureStatus(mode),
+    summary: ok
+      ? 'Install matrix rows, platform boundaries, evidence shape, and non-execution release-gate behavior are documented.'
+      : 'Install matrix smoke rows and evidence boundaries must be documented before execution.'
   };
 }
 

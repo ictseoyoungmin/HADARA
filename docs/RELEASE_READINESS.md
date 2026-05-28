@@ -129,3 +129,40 @@ T-0129 implements installer planning only.
 - Future install execution must require either interactive confirmation or an explicit `--yes`.
 - Capability discovery marks `hadara install plan --json` as read-only.
 - T-0129 creates no installer scripts, no portable launchers, no install directories, no package artifacts, and no MCP installer execution surface.
+
+## Install Matrix Smoke Plan
+
+T-0130 defines install-matrix smoke planning only. It does not run installer scripts, run package smoke, call `npm pack`, install packages, create portable bundles, mutate PATH, mutate shell profiles, call GitHub, publish packages, create release artifacts, or write install-matrix evidence.
+
+Required matrix rows:
+
+- Matrix row: Linux source checkout
+- Matrix row: Linux package install
+- Matrix row: WSL source checkout
+- Matrix row: Windows source checkout
+- Matrix row: Windows package install
+- Matrix row: USB portable on Windows
+- Matrix row: USB portable on WSL
+- Matrix row: installed CLI major-feature smoke
+
+Matrix execution boundaries:
+
+- Docker/Linux validation does not replace real Windows validation.
+- Linux source-checkout rows may use Docker or native Linux as reproducible local evidence.
+- WSL source-checkout rows must prove Linux Node.js is used, not a Windows `node.exe` shim.
+- Windows rows must be observed on real Windows or an explicitly documented Windows runner.
+- USB rows must require explicit user-selected USB roots.
+- USB rows must not assume a drive letter or mount path.
+- Package-install rows are blocked until package smoke and release artifacts exist.
+- Source-checkout rows may keep `node dist/cli/main.js` as an internal fallback.
+- Package/install/USB rows must prefer the installed `hadara` command form.
+- Installed CLI major-feature smoke should use the future core smoke profile before release-readiness checks.
+
+Matrix evidence boundaries:
+
+- Matrix evidence must record platform, source kind, installer/package form, command form, and reduced public result.
+- Public matrix evidence must not include raw install logs, npm token values, environment dumps, private absolute paths, private portable-store paths, or USB serial/device identifiers.
+- Raw logs and private paths must stay temporary or private/local.
+- Failure evidence should record stable issue codes, exit codes, and reduced remediation text.
+- The release gate must not execute install matrix smoke.
+- The release gate may only check this plan now and later read reduced evidence records.

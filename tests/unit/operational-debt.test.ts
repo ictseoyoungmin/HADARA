@@ -184,7 +184,23 @@ function writeReleaseReadinessFiles(root: string): void {
       'The schema fixture documents a future execute mode but does not authorize installer execution',
       'The release gate checks installer surface and schema markers only',
       'The release gate must not execute `scripts/install.sh`',
-      'The release gate must not execute `scripts/install.ps1`'
+      'The release gate must not execute `scripts/install.ps1`',
+      'Install Matrix Smoke Plan',
+      'T-0130 defines install-matrix smoke planning only',
+      'Matrix row: Linux source checkout',
+      'Matrix row: Linux package install',
+      'Matrix row: WSL source checkout',
+      'Matrix row: Windows source checkout',
+      'Matrix row: Windows package install',
+      'Matrix row: USB portable on Windows',
+      'Matrix row: USB portable on WSL',
+      'Matrix row: installed CLI major-feature smoke',
+      'Docker/Linux validation does not replace real Windows validation',
+      'USB rows must require explicit user-selected USB roots',
+      'Package-install rows are blocked until package smoke and release artifacts exist',
+      'Matrix evidence must record platform, source kind, installer/package form, command form, and reduced public result',
+      'Raw logs and private paths must stay temporary or private/local',
+      'The release gate must not execute install matrix smoke'
     ].join('\n'),
     'utf8'
   );
@@ -346,6 +362,12 @@ describe('operational debt track', () => {
           'Installer script paths, portable launchers, install locations, Node/WSL checks, and install plan schema are documented without install mutation.'
       },
       {
+        code: 'INSTALL_MATRIX_SMOKE_PLAN',
+        name: 'Install matrix smoke plan',
+        status: 'passed',
+        summary: 'Install matrix rows, platform boundaries, evidence shape, and non-execution release-gate behavior are documented.'
+      },
+      {
         code: 'GENERATED_ARTIFACT_POLICY_UNCLEAR',
         name: 'Generated artifact policy',
         status: 'passed',
@@ -453,6 +475,8 @@ describe('operational debt track', () => {
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS', status: 'error' }));
     expect(advisory.checks).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA', status: 'warning' }));
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA', status: 'error' }));
+    expect(advisory.checks).toContainEqual(expect.objectContaining({ code: 'INSTALL_MATRIX_SMOKE_PLAN', status: 'warning' }));
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'INSTALL_MATRIX_SMOKE_PLAN', status: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION_UNRECORDED', severity: 'warning' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION_UNRECORDED', severity: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR', severity: 'warning' }));
@@ -463,6 +487,8 @@ describe('operational debt track', () => {
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR', severity: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA_UNCLEAR', severity: 'warning' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA_UNCLEAR', severity: 'error' }));
+    expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'INSTALL_MATRIX_SMOKE_PLAN_UNCLEAR', severity: 'warning' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'INSTALL_MATRIX_SMOKE_PLAN_UNCLEAR', severity: 'error' }));
     expect(advisory.issues).not.toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
     expect(strict.issues).not.toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
   });
@@ -667,6 +693,36 @@ describe('operational debt track', () => {
     expect(strict.ok).toBe(false);
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA', status: 'error' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA_UNCLEAR', severity: 'error' }));
+  });
+
+  it('requires install matrix smoke planning before release readiness passes', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root);
+    const releaseReadinessPath = path.join(root, 'docs', 'RELEASE_READINESS.md');
+    fs.writeFileSync(
+      releaseReadinessPath,
+      fs.readFileSync(releaseReadinessPath, 'utf8').replace('Install Matrix Smoke Plan', 'Install Matrix Planning Missing'),
+      'utf8'
+    );
+
+    const advisory = createReleaseGateReport(root);
+    const strict = createReleaseGateReport(root, 'strict');
+
+    expect(advisory.ok).toBe(true);
+    expect(advisory.checks).toContainEqual({
+      code: 'INSTALL_MATRIX_SMOKE_PLAN',
+      name: 'Install matrix smoke plan',
+      status: 'warning',
+      summary: 'Install matrix smoke rows and evidence boundaries must be documented before execution.'
+    });
+    expect(advisory.issues).toContainEqual({
+      severity: 'warning',
+      code: 'INSTALL_MATRIX_SMOKE_PLAN_UNCLEAR',
+      message: 'Install matrix smoke plan: Install matrix smoke rows and evidence boundaries must be documented before execution.'
+    });
+    expect(strict.ok).toBe(false);
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'INSTALL_MATRIX_SMOKE_PLAN', status: 'error' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'INSTALL_MATRIX_SMOKE_PLAN_UNCLEAR', severity: 'error' }));
   });
 
   it('allows package metadata release-candidate mode when release artifacts are still checked read-only', () => {
