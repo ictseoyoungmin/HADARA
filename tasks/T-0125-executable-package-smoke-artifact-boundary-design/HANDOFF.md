@@ -2,7 +2,7 @@
 
 ## Last Completed
 
-T-0125 Executable Package Smoke Artifact Boundary Design is complete. `docs/TEST_STRATEGY.md` now defines the future executable package-smoke boundary for disposable workspace location, package artifact paths, public/private redaction and audit handling, and reduced evidence/report shape. The read-only release gate now requires these markers through `PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR` before strict readiness passes, while still performing no package-smoke execution.
+T-0125 Executable Package Smoke Artifact Boundary Design is complete. `docs/TEST_STRATEGY.md` now defines the future executable package-smoke boundary for disposable workspace location, package artifact paths, public/private redaction and audit handling, and reduced evidence/report shape. The read-only release gate now reports the user-facing check as `PACKAGE_SMOKE_ARTIFACT_BOUNDARY` and maps missing markers to the `PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR` issue code, while still performing no package-smoke execution.
 
 ## Next Recommended Step
 

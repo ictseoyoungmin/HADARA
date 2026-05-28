@@ -222,7 +222,7 @@ describe('operational debt track', () => {
         summary: 'Release planning documents the clean-checkout package smoke sequence.'
       },
       {
-        code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR',
+        code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY',
         name: 'Package smoke artifact boundary',
         status: 'passed',
         summary: 'Executable package-smoke artifact and evidence boundaries are documented before implementation.'
@@ -318,7 +318,6 @@ describe('operational debt track', () => {
       'NODE_POLICY_UNCLEAR',
       'CI_CLEAN_INSTALL_UNCLEAR',
       'CLEAN_CHECKOUT_SMOKE_UNCLEAR',
-      'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR',
       'GENERATED_ARTIFACT_POLICY_UNCLEAR'
     ];
 
@@ -328,8 +327,12 @@ describe('operational debt track', () => {
     }
     expect(advisory.checks).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION', status: 'warning' }));
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION', status: 'error' }));
+    expect(advisory.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY', status: 'warning' }));
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY', status: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION_UNRECORDED', severity: 'warning' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION_UNRECORDED', severity: 'error' }));
+    expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR', severity: 'warning' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR', severity: 'error' }));
     expect(advisory.issues).not.toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
     expect(strict.issues).not.toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
   });
@@ -358,7 +361,7 @@ describe('operational debt track', () => {
 
     expect(advisory.ok).toBe(true);
     expect(advisory.checks).toContainEqual({
-      code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR',
+      code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY',
       name: 'Package smoke artifact boundary',
       status: 'warning',
       summary: 'Executable package-smoke workspace, artifact, redaction/audit, and evidence boundaries must be documented before implementation.'
@@ -370,7 +373,7 @@ describe('operational debt track', () => {
         'Package smoke artifact boundary: Executable package-smoke workspace, artifact, redaction/audit, and evidence boundaries must be documented before implementation.'
     });
     expect(strict.ok).toBe(false);
-    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR', status: 'error' }));
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY', status: 'error' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR', severity: 'error' }));
   });
 

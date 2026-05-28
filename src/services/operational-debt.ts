@@ -254,6 +254,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
 
 function releaseReadinessIssueCode(checkCode: string): string {
   if (checkCode === 'REMOTE_CI_OBSERVATION') return 'REMOTE_CI_OBSERVATION_UNRECORDED';
+  if (checkCode === 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY') return 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR';
   return checkCode;
 }
 
@@ -350,7 +351,7 @@ function checkPackageSmokeArtifactBoundary(testStrategy: string | null, mode: Re
     'performs no package-smoke execution'
   ]);
   return {
-    code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR',
+    code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY',
     name: 'Package smoke artifact boundary',
     status: ok ? 'passed' : readinessFailureStatus(mode),
     summary: ok

@@ -10,4 +10,4 @@ Future executable package smoke evidence should commit only reduced public JSON/
 
 ## D-003: Stable Readiness Marker
 
-The release gate should use a stable check code for missing executable package-smoke artifact-boundary documentation so advisory and strict modes can report the same problem at different severities.
+The release gate should use `PACKAGE_SMOKE_ARTIFACT_BOUNDARY` as the user-facing check code and map failed/warning results to `PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR` as the issue code. This keeps passed release reports from showing a failure-oriented check code while preserving a stable failure code for automation.
