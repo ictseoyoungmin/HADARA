@@ -114,6 +114,13 @@
       "notes": "Documents reduced release artifact build reports for tarball, checksum, manifest, and package-content verification without publish or GitHub Release mutation."
     },
     {
+      "id": "hadara.releaseDryRun.v1",
+      "path": "src/schemas/release-dry-run.schema.json",
+      "status": "fixture",
+      "owner": "release/dry-run",
+      "notes": "Documents read-only final release dry-run reports that cross-check public evidence artifacts and planned release targets without publish or GitHub Release mutation."
+    },
+    {
       "id": "hadara.smokeEvidenceSummary.v1",
       "path": "src/schemas/smoke-evidence-summary.schema.json",
       "status": "fixture",

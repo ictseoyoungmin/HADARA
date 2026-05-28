@@ -13,6 +13,7 @@ import providerCallSchemaJson from '../schemas/provider-call.schema.json';
 import providerConfigSchemaJson from '../schemas/provider-config.schema.json';
 import releaseArtifactManifestSchemaJson from '../schemas/release-artifact-manifest.schema.json';
 import releaseArtifactSchemaJson from '../schemas/release-artifact.schema.json';
+import releaseDryRunSchemaJson from '../schemas/release-dry-run.schema.json';
 import releaseGateSchemaJson from '../schemas/release-gate.schema.json';
 import smokeEvidenceSummarySchemaJson from '../schemas/smoke-evidence-summary.schema.json';
 import toolsListSchemaJson from '../schemas/tools-list.schema.json';
@@ -71,6 +72,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.provider.config.v1': providerConfigSchemaJson as JsonObject,
   'hadara.releaseArtifact.manifest.v1': releaseArtifactManifestSchemaJson as JsonObject,
   'hadara.releaseArtifact.v1': releaseArtifactSchemaJson as JsonObject,
+  'hadara.releaseDryRun.v1': releaseDryRunSchemaJson as JsonObject,
   'hadara.releaseGate.v1': releaseGateSchemaJson as JsonObject,
   'hadara.smokeEvidenceSummary.v1': smokeEvidenceSummarySchemaJson as JsonObject,
   'hadara.tools.list.v1': toolsListSchemaJson as JsonObject,

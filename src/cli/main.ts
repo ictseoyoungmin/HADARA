@@ -17,6 +17,7 @@ import { handleToolsCommand } from './tools';
 import { handleDebtCommand } from './debt';
 import { handleReleaseGateCommand } from './release-gate';
 import { handleReleaseArtifactCommand } from './release-artifact';
+import { handleReleaseDryRunCommand } from './release-dry-run';
 import { handleWriteCommand } from './write-preflight';
 import { handleTuiCommand } from './tui';
 import { handleInstallCommand } from './install';
@@ -56,7 +57,8 @@ Usage:
   hadara smoke run [--profile core|release-readiness] [--json]
   hadara smoke clean-checkout --execute [--workspace <dir>] [--task <task-id>] [--timeout <seconds>] [--keep-temp] [--no-evidence|--attach-evidence] [--json]
   hadara package smoke [--dry-run|--execute] [--from <tarball|dir>] [--workspace <dir>] [--task <task-id>] [--timeout <seconds>] [--keep-temp] [--no-evidence|--attach-evidence] [--private-logs] [--json]
-  hadara release artifact --execute [--output <dir>] [--timeout <seconds>] [--keep-temp] [--json]
+  hadara release dry-run [--json]
+  hadara release artifact --execute [--output <dir>] [--task <task-id>] [--attach-evidence] [--timeout <seconds>] [--keep-temp] [--json]
   hadara release gate [--mode advisory|strict] [--json]
   hadara dashboard serve [--host <host>] [--port <port>]
   hadara tui [--snapshot] [--compact] [--width <n>] [--height <n>] [--json]
@@ -172,6 +174,7 @@ async function main(args = process.argv.slice(2)): Promise<void> {
     }
 
     case 'release': {
+      if (handleReleaseDryRunCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       if (handleReleaseArtifactCommand({ args, paths, jsonOutput })) return;
       if (handleReleaseGateCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;

@@ -53,14 +53,20 @@ Approval and mutation boundary:
 - T-0139 performs no publish, no GitHub Release creation, no Docker image build, no registry mutation, no GitHub API call, and no token loading.
 - Release mode is required before any future publish/deploy command may consider `NPM_TOKEN`, `GITHUB_TOKEN`, or `HADARA_GITHUB_RELEASE_TOKEN`.
 
-Evidence freshness and cross-check requirements for T-0140:
+Evidence freshness and cross-check implementation for T-0140:
+
+- `hadara release dry-run --json` is read-only and emits `hadara.releaseDryRun.v1`.
+- The dry-run verifies the strict release gate, then cross-checks package-smoke, clean-checkout smoke, and release-artifact public evidence records.
+- Evidence cross-check follows this order: record exists, artifact exists, artifact schema valid, source/report `ok` true, category/mode/result expected.
+- Release artifact freshness checks current package version and release artifact manifest hash. Git commit freshness is checked when public evidence artifacts include git commit metadata.
+- Release artifact evidence flow is explicit: run `hadara release artifact --execute --json --output dist-release --attach-evidence --task <task-id>` to attach the reduced `hadara.releaseArtifact.v1` report under `tasks/<task-id>/artifacts/release-artifact/`.
+- T-0140 still performs no publish, no GitHub Release creation, no Docker image build, no registry mutation, no GitHub API call, and no token loading.
+
+Compatibility markers retained for the read-only strict release gate:
 
 - Evidence freshness must compare evidence to the release candidate window.
-- Evidence freshness should prefer same git commit, same package version, and same release artifact manifest hash when available.
-- Stale evidence must become an advisory warning or strict blocker before publish/deploy.
-- Only the latest successful relevant evidence should satisfy release readiness unless a release script explicitly selects older evidence.
 - Evidence cross-check should follow this order: record exists, artifact exists, artifact schema valid, `sourceReport.ok` true when present, category/mode/result match the expected check.
-- Release artifact evidence flow must be explicit: run `hadara release artifact --execute --json --output dist-release`, then attach the reduced release artifact report or manifest through a documented evidence collection path before final dry-run/release gates treat it as publish-ready evidence.
+- Release artifact evidence flow must be explicit: run `hadara release artifact --execute --json --output dist-release`.
 
 ## Installer Script Surface and Schema
 

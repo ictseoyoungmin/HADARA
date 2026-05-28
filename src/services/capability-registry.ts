@@ -295,6 +295,17 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     notes: 'Read-only release readiness report; advisory mode warns, strict mode blocks on open high-severity debt, and neither mode packages, deploys, or executes release actions.'
   },
   {
+    name: 'hadara release dry-run --json',
+    category: 'release',
+    stable: true,
+    readOnly: true,
+    enabledByDefault: true,
+    availability: 'default',
+    risk: 'medium',
+    schemaVersion: 'hadara.releaseDryRun.v1',
+    notes: 'Read-only final release dry-run; cross-checks linked public evidence artifacts, package version, git commit metadata when present, and release artifact manifest hashes without publish or GitHub Release mutation.'
+  },
+  {
     name: 'hadara release artifact --execute --json',
     category: 'release',
     stable: true,
@@ -303,7 +314,7 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     availability: 'default',
     risk: 'medium',
     schemaVersion: 'hadara.releaseArtifact.v1',
-    notes: 'Explicit release artifact build; creates a whitelisted npm tarball, checksum, and manifest in a disposable or explicit output directory without publish, GitHub Release, Docker image build, or public raw logs.'
+    notes: 'Explicit release artifact build; creates a whitelisted npm tarball, checksum, and manifest in a disposable or explicit output directory without publish, GitHub Release, Docker image build, or public raw logs. Public reduced evidence attachment is available with --attach-evidence --task <task-id>.'
   },
   {
     name: 'hadara run --script <script.json> --json',

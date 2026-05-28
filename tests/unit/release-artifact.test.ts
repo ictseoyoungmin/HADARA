@@ -5,7 +5,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleReleaseArtifactCommand } from '../../src/cli/release-artifact';
 import { resolveHadaraPaths } from '../../src/core/paths';
 import { validateSchema } from '../../src/core/schema';
+import { attachReleaseArtifactEvidence } from '../../src/services/release-artifact-evidence';
 import { createReleaseArtifactReport, ReleaseArtifactCommandRunner } from '../../src/services/release-artifact';
+import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
 
@@ -207,5 +209,59 @@ describe('release artifact builder', () => {
       ok: false
     });
     expect(validateSchema('hadara.releaseArtifact.v1', report).ok).toBe(true);
+  });
+
+  it('attaches reduced release artifact reports as public evidence artifacts', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Release artifact evidence');
+    const report = createReleaseArtifactReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      execute: true,
+      output: 'dist-release',
+      runner: (_command, args) => {
+        const outputDir = String(args[args.indexOf('--pack-destination') + 1]);
+        fs.writeFileSync(path.join(outputDir, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
+        return {
+          status: 0,
+          stdout: JSON.stringify([
+            {
+              filename: 'hadara-0.0.0-bootstrap.tgz',
+              files: [
+                { path: 'package.json', size: 240 },
+                { path: 'README.md', size: 9 },
+                { path: 'LICENSE', size: 4 },
+                { path: 'dist/cli/main.js', size: 42 }
+              ]
+            }
+          ]),
+          stderr: '',
+          elapsedMs: 10
+        };
+      }
+    });
+
+    const attached = attachReleaseArtifactEvidence({
+      projectRoot: root,
+      taskId: task.id,
+      summary: 'hadara release artifact --execute --attach-evidence artifacts/release-artifact hadara.releaseArtifact.v1',
+      report
+    });
+
+    const artifactPath = path.join(task.dir, attached.evidence.evidencePath ?? '');
+    const artifact = JSON.parse(fs.readFileSync(artifactPath, 'utf8'));
+    expect(attached.evidence).toMatchObject({
+      taskId: task.id,
+      result: 'passed',
+      visibility: 'public'
+    });
+    expect(attached.evidence.evidencePath).toContain('artifacts/release-artifact/');
+    expect(artifact).toMatchObject({
+      schemaVersion: 'hadara.releaseArtifact.v1',
+      ok: true,
+      evidence: {
+        taskId: task.id
+      }
+    });
+    expect(validateSchema('hadara.releaseArtifact.v1', artifact).ok).toBe(true);
   });
 });

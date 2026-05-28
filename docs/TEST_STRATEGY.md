@@ -167,12 +167,13 @@ T-0138 evidence freeze:
 - Install-matrix evidence remains non-blocking until install-matrix smoke execution exists.
 - The release gate must not execute smoke, package, install, publish, GitHub, Docker, provider, or MCP release/package/install behavior.
 
-T-0140 dry-run evidence hardening requirements:
+T-0140 dry-run evidence hardening:
 
-- Evidence freshness should compare same git commit, same package version, same release artifact manifest hash, and release candidate window when those values are available.
-- Stale evidence should be reported as an advisory warning or strict blocker before any publish/deploy path is considered.
-- Evidence artifact cross-checks should require: `evidence.jsonl` record exists, `evidencePath` artifact exists when referenced, artifact schema is valid, `sourceReport.ok` is true when present, and category/mode/result match the expected release check.
-- Release artifact evidence must have an explicit user path: build with `hadara release artifact --execute --json --output dist-release`, then attach or collect the reduced release artifact report/manifest as public evidence before dry-run release scripts consider it current.
+- `hadara release dry-run --json` emits `hadara.releaseDryRun.v1` without publishing, creating GitHub Releases, building Docker images, loading token values, or mutating release state.
+- The dry-run cross-checks passed public package-smoke, clean-checkout smoke, and release-artifact evidence records.
+- Evidence artifact cross-checks require: `evidence.jsonl` record exists, `evidencePath` artifact exists, artifact schema is valid, source/report `ok` is true, and category/mode/result match the expected release check.
+- Release artifact freshness requires the attached release artifact report or manifest to expose the current package version and a manifest hash; git commit freshness is checked when the artifact includes git commit metadata.
+- Release artifact evidence has an explicit user path: build with `hadara release artifact --execute --json --output dist-release --attach-evidence --task <task-id>`, which attaches the reduced `hadara.releaseArtifact.v1` public report under `tasks/<task-id>/artifacts/release-artifact/`.
 
 The local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` may exist in this workspace as supporting planning context for agents, but it is intentionally not committed. Public user-facing install docs should prefer the installed `hadara` command form, while source-checkout validation may keep `node dist/cli/main.js` as an internal fallback until installer/package surfaces exist.
 

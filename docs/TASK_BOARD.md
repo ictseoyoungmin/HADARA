@@ -140,3 +140,4 @@
 | T-0137 | Release Artifact Builder | Done | tasks/T-0137-release-artifact-builder | Adds explicit local release artifact tarball/checksum/manifest builder without publishing. |
 | T-0138 | Release Gate Evidence Freeze | Done | tasks/T-0138-release-gate-evidence-freeze | Adds read-only evidence-backed release gate checks for package smoke, clean-checkout smoke, and release artifacts. |
 | T-0139 | CI Release Workflow Target Decision | Done | tasks/T-0139-ci-release-workflow-target-decision | Decides npm primary, GitHub Release secondary, Docker deferred, and documents token names without values. |
+| T-0140 | Final Deployment Script Dry Run | Done | tasks/T-0140-final-deployment-script-dry-run | Adds read-only release dry-run evidence cross-checks and release artifact public evidence attachment. |

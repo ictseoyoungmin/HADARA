@@ -378,6 +378,70 @@ describe('runtime schema validation', () => {
     ).toBe(true);
   });
 
+  it('validates release dry-run reports', () => {
+    expect(
+      validateSchema('hadara.releaseDryRun.v1', {
+        schemaVersion: 'hadara.releaseDryRun.v1',
+        command: 'release.dryRun',
+        mode: 'dry-run',
+        ok: true,
+        current: {
+          packageName: 'hadara',
+          packageVersion: '0.0.0-bootstrap',
+          gitCommit: '0123456789abcdef0123456789abcdef01234567'
+        },
+        releaseTargets: {
+          primary: 'npm-package',
+          secondary: 'github-release',
+          dockerImage: 'deferred'
+        },
+        checks: [
+          {
+            code: 'STRICT_RELEASE_GATE',
+            name: 'Strict release gate',
+            status: 'passed',
+            summary: 'Strict release gate passed.'
+          }
+        ],
+        evidence: [
+          {
+            code: 'RELEASE_ARTIFACT_EVIDENCE',
+            taskId: 'T-0140',
+            time: '2026-05-28T00:00:00.000Z',
+            evidencePath: 'artifacts/release-artifact/report.json',
+            artifactExists: true,
+            artifactSchemaValid: true,
+            sourceOk: true,
+            category: 'release-artifact',
+            mode: 'execute',
+            result: 'passed',
+            packageVersion: '0.0.0-bootstrap',
+            gitCommit: '0123456789abcdef0123456789abcdef01234567',
+            manifestHash: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+          }
+        ],
+        plannedSteps: [
+          {
+            id: 'npm-publish',
+            target: 'npm-package',
+            willExecute: false,
+            requiresApproval: true,
+            summary: 'Would publish only after approval.'
+          }
+        ],
+        privacy: {
+          tokenValuesIncluded: false,
+          rawLogsIncluded: false,
+          privatePathsIncluded: false,
+          publishExecuted: false,
+          githubReleaseCreated: false,
+          dockerImageBuilt: false
+        },
+        issues: []
+      }).ok
+    ).toBe(true);
+  });
+
   it('rejects release artifact reports with publish or unredacted markers', () => {
     const result = validateSchema('hadara.releaseArtifact.v1', {
       schemaVersion: 'hadara.releaseArtifact.v1',

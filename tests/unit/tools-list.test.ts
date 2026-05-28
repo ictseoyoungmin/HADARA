@@ -93,6 +93,12 @@ describe('tools list read model', () => {
           schemaVersion: 'hadara.releaseGate.v1'
         }),
         expect.objectContaining({
+          name: 'hadara release dry-run --json',
+          category: 'release',
+          readOnly: true,
+          schemaVersion: 'hadara.releaseDryRun.v1'
+        }),
+        expect.objectContaining({
           name: 'hadara release artifact --execute --json',
           category: 'release',
           readOnly: false,
