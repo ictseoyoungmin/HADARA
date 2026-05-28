@@ -17,7 +17,7 @@ Prepare HADARA package metadata release-readiness decisions before any publish, 
 - Running `npm pack`, package-smoke execution, install smoke, or release artifact builds.
 - Changing `package.json` to `private: false`.
 - Adding `files` entries that reference installer or portable files before those files exist.
-- Choosing a final legal license on behalf of the project owner.
+- Adding final `LICENSE` file text before the owner-approved copyright holder text is available.
 - Adding installer scripts, portable launchers, Docker images, MCP package/release tools, or provider/shell execution.
 
 ## Status

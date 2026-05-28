@@ -231,6 +231,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
   const projectState = readOptionalText(path.join(projectRoot, 'docs', 'PROJECT_STATE.md'));
   const testStrategy = readOptionalText(path.join(projectRoot, 'docs', 'TEST_STRATEGY.md'));
   const validationHistory = readOptionalText(path.join(projectRoot, 'docs', 'VALIDATION_HISTORY.md'));
+  const licenseText = readOptionalText(path.join(projectRoot, 'LICENSE'));
 
   const checks: ReleaseGateReport['checks'] = [
     checkPackageBin(packageJson, mode),
@@ -240,7 +241,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     checkCleanCheckoutPolicy(v1Schemas, developmentSlices, testStrategy, mode),
     checkPackageSmokeArtifactBoundary(testStrategy, mode),
     checkPackageSmokeCommandSurface(testStrategy, mode),
-    checkPackageMetadataReadiness(packageJson, testStrategy, mode),
+    checkPackageMetadataReadiness(packageJson, licenseText, testStrategy, validationHistory, mode),
     checkGeneratedArtifactPolicy(projectState, developmentSlices, mode),
     checkRemoteCiObservation(testStrategy, validationHistory, mode)
   ];
@@ -391,32 +392,48 @@ function checkPackageSmokeCommandSurface(testStrategy: string | null, mode: Rele
 
 function checkPackageMetadataReadiness(
   packageJson: Record<string, unknown> | null,
+  licenseText: string | null,
   testStrategy: string | null,
+  validationHistory: string | null,
   mode: ReleaseGateReport['mode']
 ): ReleaseGateReport['checks'][number] {
   const bin = isRecord(packageJson?.bin) ? packageJson.bin : {};
-  const packageMetadataOk =
+  const files = Array.isArray(packageJson?.files) ? packageJson.files.filter((entry): entry is string => typeof entry === 'string') : [];
+  const bootstrapMetadataOk =
     packageJson?.name === 'hadara' &&
     packageJson?.version === '0.0.0-bootstrap' &&
     packageJson?.private === true &&
     bin.hadara === './dist/cli/main.js';
+  const releaseCandidateMetadataOk =
+    packageJson?.name === 'hadara' &&
+    /^0\.1\.0-rc\.\d+$/.test(String(packageJson?.version ?? '')) &&
+    packageJson?.private === false &&
+    packageJson?.license === 'MIT' &&
+    bin.hadara === './dist/cli/main.js' &&
+    includesAll(files.join('\n'), ['dist/', 'README.md', 'LICENSE', 'package.json']) &&
+    licenseText !== null &&
+    includesAny(validationHistory, ['hadara.packageSmoke.v1', 'PACKAGE_SMOKE_EVIDENCE']);
   const docsOk = includesAll(testStrategy, [
     'Package Metadata Release Readiness',
     'Package name decision: `hadara`',
+    'npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28',
     'Current version remains `0.0.0-bootstrap`',
     'Current package remains `private: true`',
     'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
+    'Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability',
+    'Release-candidate metadata mode: version `0.1.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
     'Scoped fallback decision: do not silently switch names',
     'Version policy: first release-candidate target is `0.1.0-rc.0`; first stable target is `0.1.0`',
     '`private: true` remains until the package files whitelist, root README, license decision, and package-smoke dry-run evidence are complete',
     'Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist',
     'Do not add `files` entries for missing installer or portable paths in T-0127',
-    'License path: `LICENSE`; package remains private until the owner chooses license text',
+    'MIT license decision: adopt MIT; package remains private until owner-approved `LICENSE` text exists',
     'Publish target decision: npm package first, GitHub Release second, Docker image deferred',
     'Installed CLI verification must use `hadara doctor --json`',
-    'T-0127 performs no publish, no `npm pack`, no install smoke, no release artifact build, no GitHub Release, no Docker image build, and no registry mutation'
+    'T-0127 performs no publish, no `npm pack`, no install smoke, no release artifact build, no GitHub Release, no Docker image build, and no registry mutation',
+    'Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`'
   ]);
-  const ok = packageMetadataOk && docsOk;
+  const ok = (bootstrapMetadataOk || releaseCandidateMetadataOk) && docsOk;
   return {
     code: 'PACKAGE_METADATA_RELEASE_READINESS',
     name: 'Package metadata release readiness',

@@ -168,9 +168,15 @@ T-0127 records package metadata decisions without making the package publishable
 Current package metadata remains bootstrap-stage:
 
 - Package name decision: `hadara`.
+- npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28; recheck immediately before publish because name availability can change.
 - Current version remains `0.0.0-bootstrap`.
 - Current package remains `private: true`.
 - Current binary remains `bin.hadara` at `./dist/cli/main.js`.
+
+Release metadata modes:
+
+- Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability.
+- Release-candidate metadata mode: version `0.1.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present.
 
 Release-candidate transition policy:
 
@@ -179,7 +185,7 @@ Release-candidate transition policy:
 - `private: true` remains until the package files whitelist, root README, license decision, and package-smoke dry-run evidence are complete.
 - Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist.
 - Do not add `files` entries for missing installer or portable paths in T-0127.
-- License path: `LICENSE`; package remains private until the owner chooses license text, such as MIT or Apache-2.0.
+- MIT license decision: adopt MIT; package remains private until owner-approved `LICENSE` text exists.
 - Publish target decision: npm package first, GitHub Release second, Docker image deferred.
 
 CLI verification forms:
@@ -189,6 +195,12 @@ CLI verification forms:
 - Linked development CLI checks may use `npm link` only in a disposable workspace in later package-smoke work.
 
 T-0127 performs no publish, no `npm pack`, no install smoke, no release artifact build, no GitHub Release, no Docker image build, and no registry mutation.
+
+Release readiness marker debt:
+
+- T-0124 through T-0127 release-gate readiness checks currently read planning markers from `docs/TEST_STRATEGY.md`.
+- Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`.
+- A dedicated readiness source should preserve read-only release gate behavior while reducing strict-gate fragility from wording-only edits.
 
 ## Required Session Checks
 

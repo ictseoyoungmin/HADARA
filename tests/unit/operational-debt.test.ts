@@ -102,18 +102,22 @@ function writeReleaseReadinessFiles(root: string): void {
       'The release gate must not call `hadara package smoke`',
       'Package Metadata Release Readiness',
       'Package name decision: `hadara`',
+      'npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28',
       'Current version remains `0.0.0-bootstrap`',
       'Current package remains `private: true`',
       'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
+      'Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability',
+      'Release-candidate metadata mode: version `0.1.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
       'Scoped fallback decision: do not silently switch names',
       'Version policy: first release-candidate target is `0.1.0-rc.0`; first stable target is `0.1.0`',
       '`private: true` remains until the package files whitelist, root README, license decision, and package-smoke dry-run evidence are complete',
       'Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist',
       'Do not add `files` entries for missing installer or portable paths in T-0127',
-      'License path: `LICENSE`; package remains private until the owner chooses license text',
+      'MIT license decision: adopt MIT; package remains private until owner-approved `LICENSE` text exists',
       'Publish target decision: npm package first, GitHub Release second, Docker image deferred',
       'Installed CLI verification must use `hadara doctor --json`',
       'T-0127 performs no publish, no `npm pack`, no install smoke, no release artifact build, no GitHub Release, no Docker image build, and no registry mutation',
+      'Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`',
       'Remote CI observation',
       'local Docker validation remains the primary reproducible check'
     ].join('\n'),
@@ -535,6 +539,56 @@ describe('operational debt track', () => {
     expect(strict.ok).toBe(false);
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS', status: 'error' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR', severity: 'error' }));
+  });
+
+  it('allows package metadata release-candidate mode when release artifacts are still checked read-only', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root);
+    fs.writeFileSync(
+      path.join(root, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'hadara',
+          version: '0.1.0-rc.0',
+          private: false,
+          license: 'MIT',
+          bin: {
+            hadara: './dist/cli/main.js'
+          },
+          files: ['dist/', 'README.md', 'LICENSE', 'package.json'],
+          scripts: {
+            build: 'tsc -p tsconfig.json',
+            test: 'vitest run',
+            'test:contract': 'vitest run tests/contract',
+            'test:harness': 'vitest run tests/harness',
+            check: 'npm run build && npm test'
+          },
+          devDependencies: {
+            '@types/node': '^22.10.2'
+          }
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+    fs.writeFileSync(path.join(root, 'LICENSE'), 'MIT License\n\nCopyright (c) test\n', 'utf8');
+    fs.writeFileSync(
+      path.join(root, 'docs', 'VALIDATION_HISTORY.md'),
+      ['GitHub Actions CI run succeeded: https://github.com/example/project/actions/runs/123', 'hadara.packageSmoke.v1 evidence recorded'].join('\n'),
+      'utf8'
+    );
+
+    const strict = createReleaseGateReport(root, 'strict');
+
+    expect(strict.ok).toBe(true);
+    expect(strict.checks).toContainEqual({
+      code: 'PACKAGE_METADATA_RELEASE_READINESS',
+      name: 'Package metadata release readiness',
+      status: 'passed',
+      summary:
+        'Package name, bootstrap version, private transition, files target, license path, publish target, and installed CLI verification decisions are documented without publishing.'
+    });
   });
 
   it('prints JSON through debt and release-gate CLI handlers', () => {
