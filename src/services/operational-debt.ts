@@ -230,6 +230,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
   const developmentSlices = readOptionalText(path.join(projectRoot, 'docs', 'DEVELOPMENT_SLICES.md'));
   const projectState = readOptionalText(path.join(projectRoot, 'docs', 'PROJECT_STATE.md'));
   const testStrategy = readOptionalText(path.join(projectRoot, 'docs', 'TEST_STRATEGY.md'));
+  const releaseReadiness = readOptionalText(path.join(projectRoot, 'docs', 'RELEASE_READINESS.md'));
   const validationHistory = readOptionalText(path.join(projectRoot, 'docs', 'VALIDATION_HISTORY.md'));
   const licenseText = readOptionalText(path.join(projectRoot, 'LICENSE'));
 
@@ -241,7 +242,8 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     checkCleanCheckoutPolicy(v1Schemas, developmentSlices, testStrategy, mode),
     checkPackageSmokeArtifactBoundary(testStrategy, mode),
     checkPackageSmokeCommandSurface(testStrategy, mode),
-    checkPackageMetadataReadiness(packageJson, licenseText, testStrategy, validationHistory, mode),
+    checkPackageMetadataReadiness(packageJson, licenseText, testStrategy, releaseReadiness, validationHistory, mode),
+    checkInstallerSurfaceAndSchema(releaseReadiness, mode),
     checkGeneratedArtifactPolicy(projectState, developmentSlices, mode),
     checkRemoteCiObservation(testStrategy, validationHistory, mode)
   ];
@@ -260,6 +262,7 @@ function releaseReadinessIssueCode(checkCode: string): string {
   if (checkCode === 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY') return 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR';
   if (checkCode === 'PACKAGE_SMOKE_COMMAND_SURFACE') return 'PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR';
   if (checkCode === 'PACKAGE_METADATA_RELEASE_READINESS') return 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR';
+  if (checkCode === 'INSTALLER_SCRIPT_SURFACE_SCHEMA') return 'INSTALLER_SCRIPT_SURFACE_SCHEMA_UNCLEAR';
   return checkCode;
 }
 
@@ -394,6 +397,7 @@ function checkPackageMetadataReadiness(
   packageJson: Record<string, unknown> | null,
   licenseText: string | null,
   testStrategy: string | null,
+  releaseReadiness: string | null,
   validationHistory: string | null,
   mode: ReleaseGateReport['mode']
 ): ReleaseGateReport['checks'][number] {
@@ -413,7 +417,7 @@ function checkPackageMetadataReadiness(
     includesAll(files.join('\n'), ['dist/', 'README.md', 'LICENSE', 'package.json']) &&
     licenseText !== null &&
     includesAny(validationHistory, ['hadara.packageSmoke.v1', 'PACKAGE_SMOKE_EVIDENCE']);
-  const docsOk = includesAll(testStrategy, [
+  const metadataMarkers = [
     'Package Metadata Release Readiness',
     'Package name decision: `hadara`',
     'npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28',
@@ -432,7 +436,8 @@ function checkPackageMetadataReadiness(
     'Installed CLI verification must use `hadara doctor --json`',
     'T-0127 performs no publish, no `npm pack`, no install smoke, no release artifact build, no GitHub Release, no Docker image build, and no registry mutation',
     'Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`'
-  ]);
+  ];
+  const docsOk = includesAll(testStrategy, metadataMarkers) || includesAll(releaseReadiness, metadataMarkers);
   const ok = (bootstrapMetadataOk || releaseCandidateMetadataOk) && docsOk;
   return {
     code: 'PACKAGE_METADATA_RELEASE_READINESS',
@@ -441,6 +446,48 @@ function checkPackageMetadataReadiness(
     summary: ok
       ? 'Package name, bootstrap version, private transition, files target, license path, publish target, and installed CLI verification decisions are documented without publishing.'
       : 'Package metadata release-readiness decisions must be documented while keeping the package private and non-publishable.'
+  };
+}
+
+function checkInstallerSurfaceAndSchema(releaseReadiness: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const ok = includesAll(releaseReadiness, [
+    'Installer Script Surface and Schema',
+    '`scripts/install.sh`',
+    '`scripts/install.ps1`',
+    '`portable/bin/hadara`',
+    '`portable/bin/hadara.cmd`',
+    '`portable/bin/hadara.ps1`',
+    'Installer scripts install or plan installation from a tarball or directory',
+    'Installer scripts must support dry-run planning before mutation',
+    'Installer scripts must emit `hadara.install.plan.v1` JSON for dry-run planning',
+    'Installer scripts must not use `sudo` by default',
+    'Installer scripts must not force `npm install -g`',
+    'Installer scripts must not mutate shell profiles or PATH by default',
+    'Portable launchers invoke an installed or portable HADARA bundle',
+    'Portable launchers do not install dependencies',
+    'Portable launchers do not mutate PATH',
+    'Portable launchers do not modify project files',
+    'POSIX prefix: `~/.local/share/hadara`',
+    'POSIX bin link: `~/.local/bin/hadara`',
+    'Windows prefix: `%LOCALAPPDATA%\\HADARA`',
+    'Windows cmd launcher: `%LOCALAPPDATA%\\HADARA\\bin\\hadara.cmd`',
+    'Windows PowerShell launcher: `%LOCALAPPDATA%\\HADARA\\bin\\hadara.ps1`',
+    'Windows USB portable root: `L:\\HADARA`',
+    'WSL USB portable root: `/mnt/l/HADARA`',
+    'Installer plans must validate Node 22',
+    'WSL install plans must reject Windows `node.exe` shims',
+    'Schema id: `hadara.install.plan.v1`',
+    'The release gate checks installer surface and schema markers only',
+    'The release gate must not execute `scripts/install.sh`',
+    'The release gate must not execute `scripts/install.ps1`'
+  ]);
+  return {
+    code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA',
+    name: 'Installer script surface and schema',
+    status: ok ? 'passed' : readinessFailureStatus(mode),
+    summary: ok
+      ? 'Installer script paths, portable launchers, install locations, Node/WSL checks, and install plan schema are documented without install mutation.'
+      : 'Installer script paths, portable launchers, install locations, Node/WSL checks, and install plan schema must be documented before implementation.'
   };
 }
 

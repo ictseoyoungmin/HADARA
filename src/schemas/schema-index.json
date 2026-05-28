@@ -77,6 +77,13 @@
       "status": "fixture",
       "owner": "services/write-preflight",
       "notes": "Documents read-only CLI write-boundary preflight reports for expected project/portable write paths."
+    },
+    {
+      "id": "hadara.install.plan.v1",
+      "path": "src/schemas/install-plan.schema.json",
+      "status": "fixture",
+      "owner": "install/plan",
+      "notes": "Documents dry-run installer planning reports before any install mutation implementation."
     }
   ]
 }

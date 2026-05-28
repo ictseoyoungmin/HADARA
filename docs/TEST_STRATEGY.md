@@ -199,7 +199,7 @@ T-0127 performs no publish, no `npm pack`, no install smoke, no release artifact
 Release readiness marker debt:
 
 - T-0124 through T-0127 release-gate readiness checks currently read planning markers from `docs/TEST_STRATEGY.md`.
-- Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`.
+- T-0128 introduced `docs/RELEASE_READINESS.md` as the dedicated structured readiness source for installer/package readiness details.
 - A dedicated readiness source should preserve read-only release gate behavior while reducing strict-gate fragility from wording-only edits.
 
 ## Required Session Checks

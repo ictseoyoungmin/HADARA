@@ -212,4 +212,37 @@ describe('runtime schema validation', () => {
       ])
     );
   });
+
+  it('validates install plan report fixtures', () => {
+    expect(
+      validateSchema('hadara.install.plan.v1', {
+        schemaVersion: 'hadara.install.plan.v1',
+        command: 'install.plan',
+        ok: true,
+        mode: 'dry-run',
+        platform: 'posix',
+        source: {
+          kind: 'tarball',
+          pathRedacted: true
+        },
+        target: {
+          prefix: '~/.local/share/hadara',
+          launcher: '~/.local/bin/hadara'
+        },
+        node: {
+          requiredMajor: 22,
+          detected: null,
+          windowsShimRejected: false
+        },
+        actions: [
+          {
+            kind: 'create-directory',
+            description: 'Create install prefix',
+            wouldWrite: true
+          }
+        ],
+        issues: []
+      }).ok
+    ).toBe(true);
+  });
 });

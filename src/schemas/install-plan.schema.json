@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.install.plan.v1",
+  "x-hadara-schema-id": "hadara.install.plan.v1",
+  "title": "HADARA Install Plan Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "mode", "platform", "source", "target", "actions", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.install.plan.v1" },
+    "command": { "const": "install.plan" },
+    "ok": { "type": "boolean" },
+    "mode": { "type": "string", "enum": ["dry-run", "execute"] },
+    "platform": { "type": "string", "enum": ["posix", "windows", "wsl", "usb"] },
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "pathRedacted"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["tarball", "directory", "portable-bundle"] },
+        "pathRedacted": { "type": "boolean" }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["prefix", "launcher"],
+      "properties": {
+        "prefix": { "type": "string", "minLength": 1 },
+        "launcher": { "type": "string", "minLength": 1 }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "requiredMajor": { "type": "integer" },
+        "detected": { "type": ["string", "null"] },
+        "windowsShimRejected": { "type": "boolean" }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["kind", "description", "wouldWrite"],
+        "properties": {
+          "kind": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "wouldWrite": { "type": "boolean" }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "type": "string", "enum": ["warning", "error"] },
+          "code": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

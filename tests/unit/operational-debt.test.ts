@@ -124,6 +124,59 @@ function writeReleaseReadinessFiles(root: string): void {
     'utf8'
   );
   fs.writeFileSync(
+    path.join(root, 'docs', 'RELEASE_READINESS.md'),
+    [
+      'Package Metadata Release Readiness',
+      'Package name decision: `hadara`',
+      'npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28',
+      'Current version remains `0.0.0-bootstrap`',
+      'Current package remains `private: true`',
+      'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
+      'Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability',
+      'Release-candidate metadata mode: version `0.1.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
+      'Scoped fallback decision: do not silently switch names',
+      'Version policy: first release-candidate target is `0.1.0-rc.0`; first stable target is `0.1.0`',
+      '`private: true` remains until the package files whitelist, root README, license decision, and package-smoke dry-run evidence are complete',
+      'Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist',
+      'Do not add `files` entries for missing installer or portable paths in T-0127',
+      'MIT license decision: adopt MIT; package remains private until owner-approved `LICENSE` text exists',
+      'Publish target decision: npm package first, GitHub Release second, Docker image deferred',
+      'Installed CLI verification must use `hadara doctor --json`',
+      'T-0127 performs no publish, no `npm pack`, no install smoke, no release artifact build, no GitHub Release, no Docker image build, and no registry mutation',
+      'Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`',
+      'Installer Script Surface and Schema',
+      '`scripts/install.sh`',
+      '`scripts/install.ps1`',
+      '`portable/bin/hadara`',
+      '`portable/bin/hadara.cmd`',
+      '`portable/bin/hadara.ps1`',
+      'Installer scripts install or plan installation from a tarball or directory',
+      'Installer scripts must support dry-run planning before mutation',
+      'Installer scripts must emit `hadara.install.plan.v1` JSON for dry-run planning',
+      'Installer scripts must not use `sudo` by default',
+      'Installer scripts must not force `npm install -g`',
+      'Installer scripts must not mutate shell profiles or PATH by default',
+      'Portable launchers invoke an installed or portable HADARA bundle',
+      'Portable launchers do not install dependencies',
+      'Portable launchers do not mutate PATH',
+      'Portable launchers do not modify project files',
+      'POSIX prefix: `~/.local/share/hadara`',
+      'POSIX bin link: `~/.local/bin/hadara`',
+      'Windows prefix: `%LOCALAPPDATA%\\HADARA`',
+      'Windows cmd launcher: `%LOCALAPPDATA%\\HADARA\\bin\\hadara.cmd`',
+      'Windows PowerShell launcher: `%LOCALAPPDATA%\\HADARA\\bin\\hadara.ps1`',
+      'Windows USB portable root: `L:\\HADARA`',
+      'WSL USB portable root: `/mnt/l/HADARA`',
+      'Installer plans must validate Node 22',
+      'WSL install plans must reject Windows `node.exe` shims',
+      'Schema id: `hadara.install.plan.v1`',
+      'The release gate checks installer surface and schema markers only',
+      'The release gate must not execute `scripts/install.sh`',
+      'The release gate must not execute `scripts/install.ps1`'
+    ].join('\n'),
+    'utf8'
+  );
+  fs.writeFileSync(
     path.join(root, 'docs', 'VALIDATION_HISTORY.md'),
     ['GitHub Actions CI run succeeded: https://github.com/example/project/actions/runs/123'].join('\n'),
     'utf8'
@@ -274,6 +327,13 @@ describe('operational debt track', () => {
           'Package name, bootstrap version, private transition, files target, license path, publish target, and installed CLI verification decisions are documented without publishing.'
       },
       {
+        code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA',
+        name: 'Installer script surface and schema',
+        status: 'passed',
+        summary:
+          'Installer script paths, portable launchers, install locations, Node/WSL checks, and install plan schema are documented without install mutation.'
+      },
+      {
         code: 'GENERATED_ARTIFACT_POLICY_UNCLEAR',
         name: 'Generated artifact policy',
         status: 'passed',
@@ -379,6 +439,8 @@ describe('operational debt track', () => {
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE', status: 'error' }));
     expect(advisory.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS', status: 'warning' }));
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS', status: 'error' }));
+    expect(advisory.checks).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA', status: 'warning' }));
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA', status: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION_UNRECORDED', severity: 'warning' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION_UNRECORDED', severity: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR', severity: 'warning' }));
@@ -387,6 +449,8 @@ describe('operational debt track', () => {
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR', severity: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR', severity: 'warning' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR', severity: 'error' }));
+    expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA_UNCLEAR', severity: 'warning' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA_UNCLEAR', severity: 'error' }));
     expect(advisory.issues).not.toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
     expect(strict.issues).not.toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
   });
@@ -409,6 +473,7 @@ describe('operational debt track', () => {
       ].join('\n'),
       'utf8'
     );
+    fs.writeFileSync(path.join(root, 'docs', 'RELEASE_READINESS.md'), 'Installer Script Surface and Schema\n', 'utf8');
 
     const advisory = createReleaseGateReport(root);
     const strict = createReleaseGateReport(root, 'strict');
@@ -458,6 +523,7 @@ describe('operational debt track', () => {
       ].join('\n'),
       'utf8'
     );
+    fs.writeFileSync(path.join(root, 'docs', 'RELEASE_READINESS.md'), 'Installer Script Surface and Schema\n', 'utf8');
 
     const advisory = createReleaseGateReport(root);
     const strict = createReleaseGateReport(root, 'strict');
@@ -519,6 +585,7 @@ describe('operational debt track', () => {
       ].join('\n'),
       'utf8'
     );
+    fs.writeFileSync(path.join(root, 'docs', 'RELEASE_READINESS.md'), 'Installer Script Surface and Schema\n', 'utf8');
 
     const advisory = createReleaseGateReport(root);
     const strict = createReleaseGateReport(root, 'strict');
@@ -539,6 +606,55 @@ describe('operational debt track', () => {
     expect(strict.ok).toBe(false);
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS', status: 'error' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR', severity: 'error' }));
+  });
+
+  it('requires installer surface and schema documentation before release readiness passes', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root);
+    fs.writeFileSync(
+      path.join(root, 'docs', 'RELEASE_READINESS.md'),
+      [
+        'Package Metadata Release Readiness',
+        'Package name decision: `hadara`',
+        'npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28',
+        'Current version remains `0.0.0-bootstrap`',
+        'Current package remains `private: true`',
+        'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
+        'Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability',
+        'Release-candidate metadata mode: version `0.1.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
+        'Scoped fallback decision: do not silently switch names',
+        'Version policy: first release-candidate target is `0.1.0-rc.0`; first stable target is `0.1.0`',
+        '`private: true` remains until the package files whitelist, root README, license decision, and package-smoke dry-run evidence are complete',
+        'Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist',
+        'Do not add `files` entries for missing installer or portable paths in T-0127',
+        'MIT license decision: adopt MIT; package remains private until owner-approved `LICENSE` text exists',
+        'Publish target decision: npm package first, GitHub Release second, Docker image deferred',
+        'Installed CLI verification must use `hadara doctor --json`',
+        'T-0127 performs no publish, no `npm pack`, no install smoke, no release artifact build, no GitHub Release, no Docker image build, and no registry mutation',
+        'Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const advisory = createReleaseGateReport(root);
+    const strict = createReleaseGateReport(root, 'strict');
+
+    expect(advisory.ok).toBe(true);
+    expect(advisory.checks).toContainEqual({
+      code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA',
+      name: 'Installer script surface and schema',
+      status: 'warning',
+      summary: 'Installer script paths, portable launchers, install locations, Node/WSL checks, and install plan schema must be documented before implementation.'
+    });
+    expect(advisory.issues).toContainEqual({
+      severity: 'warning',
+      code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA_UNCLEAR',
+      message:
+        'Installer script surface and schema: Installer script paths, portable launchers, install locations, Node/WSL checks, and install plan schema must be documented before implementation.'
+    });
+    expect(strict.ok).toBe(false);
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA', status: 'error' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA_UNCLEAR', severity: 'error' }));
   });
 
   it('allows package metadata release-candidate mode when release artifacts are still checked read-only', () => {

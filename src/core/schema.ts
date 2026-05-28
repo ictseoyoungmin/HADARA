@@ -4,6 +4,7 @@ import activeRunResumeSchemaJson from '../schemas/active-run-resume.schema.json'
 import contextExportSchemaJson from '../schemas/context-export.schema.json';
 import evidenceListSchemaJson from '../schemas/evidence-list.schema.json';
 import eventSchemaJson from '../schemas/event.schema.json';
+import installPlanSchemaJson from '../schemas/install-plan.schema.json';
 import privateEvidenceSchemaJson from '../schemas/private-evidence.schema.json';
 import providerCallSchemaJson from '../schemas/provider-call.schema.json';
 import providerConfigSchemaJson from '../schemas/provider-config.schema.json';
@@ -55,6 +56,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.context.export.v1': contextExportSchemaJson as JsonObject,
   'hadara.evidence.list.v1': evidenceListSchemaJson as JsonObject,
   'hadara.event.v1': eventSchemaJson as JsonObject,
+  'hadara.install.plan.v1': installPlanSchemaJson as JsonObject,
   'hadara.privateEvidence.v1': privateEvidenceSchemaJson as JsonObject,
   'hadara.provider.call.v1': providerCallSchemaJson as JsonObject,
   'hadara.provider.config.v1': providerConfigSchemaJson as JsonObject,
