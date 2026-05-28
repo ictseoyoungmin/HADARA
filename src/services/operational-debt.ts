@@ -240,6 +240,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     checkCleanCheckoutPolicy(v1Schemas, developmentSlices, testStrategy, mode),
     checkPackageSmokeArtifactBoundary(testStrategy, mode),
     checkPackageSmokeCommandSurface(testStrategy, mode),
+    checkPackageMetadataReadiness(packageJson, testStrategy, mode),
     checkGeneratedArtifactPolicy(projectState, developmentSlices, mode),
     checkRemoteCiObservation(testStrategy, validationHistory, mode)
   ];
@@ -257,6 +258,7 @@ function releaseReadinessIssueCode(checkCode: string): string {
   if (checkCode === 'REMOTE_CI_OBSERVATION') return 'REMOTE_CI_OBSERVATION_UNRECORDED';
   if (checkCode === 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY') return 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR';
   if (checkCode === 'PACKAGE_SMOKE_COMMAND_SURFACE') return 'PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR';
+  if (checkCode === 'PACKAGE_METADATA_RELEASE_READINESS') return 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR';
   return checkCode;
 }
 
@@ -384,6 +386,44 @@ function checkPackageSmokeCommandSurface(testStrategy: string | null, mode: Rele
     summary: ok
       ? '`hadara package smoke` command naming, flags, approval, cleanup, failure, evidence, and MCP boundaries are documented.'
       : 'Package-smoke command naming, flags, approval, cleanup, failure, evidence, and MCP boundaries must be documented before implementation.'
+  };
+}
+
+function checkPackageMetadataReadiness(
+  packageJson: Record<string, unknown> | null,
+  testStrategy: string | null,
+  mode: ReleaseGateReport['mode']
+): ReleaseGateReport['checks'][number] {
+  const bin = isRecord(packageJson?.bin) ? packageJson.bin : {};
+  const packageMetadataOk =
+    packageJson?.name === 'hadara' &&
+    packageJson?.version === '0.0.0-bootstrap' &&
+    packageJson?.private === true &&
+    bin.hadara === './dist/cli/main.js';
+  const docsOk = includesAll(testStrategy, [
+    'Package Metadata Release Readiness',
+    'Package name decision: `hadara`',
+    'Current version remains `0.0.0-bootstrap`',
+    'Current package remains `private: true`',
+    'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
+    'Scoped fallback decision: do not silently switch names',
+    'Version policy: first release-candidate target is `0.1.0-rc.0`; first stable target is `0.1.0`',
+    '`private: true` remains until the package files whitelist, root README, license decision, and package-smoke dry-run evidence are complete',
+    'Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist',
+    'Do not add `files` entries for missing installer or portable paths in T-0127',
+    'License path: `LICENSE`; package remains private until the owner chooses license text',
+    'Publish target decision: npm package first, GitHub Release second, Docker image deferred',
+    'Installed CLI verification must use `hadara doctor --json`',
+    'T-0127 performs no publish, no `npm pack`, no install smoke, no release artifact build, no GitHub Release, no Docker image build, and no registry mutation'
+  ]);
+  const ok = packageMetadataOk && docsOk;
+  return {
+    code: 'PACKAGE_METADATA_RELEASE_READINESS',
+    name: 'Package metadata release readiness',
+    status: ok ? 'passed' : readinessFailureStatus(mode),
+    summary: ok
+      ? 'Package name, bootstrap version, private transition, files target, license path, publish target, and installed CLI verification decisions are documented without publishing.'
+      : 'Package metadata release-readiness decisions must be documented while keeping the package private and non-publishable.'
   };
 }
 

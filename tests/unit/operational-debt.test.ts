@@ -26,6 +26,9 @@ function writeReleaseReadinessFiles(root: string): void {
     path.join(root, 'package.json'),
     JSON.stringify(
       {
+        name: 'hadara',
+        version: '0.0.0-bootstrap',
+        private: true,
         bin: {
           hadara: './dist/cli/main.js'
         },
@@ -97,6 +100,20 @@ function writeReleaseReadinessFiles(root: string): void {
       '`--private-logs`',
       'Package smoke must not be callable from MCP by default',
       'The release gate must not call `hadara package smoke`',
+      'Package Metadata Release Readiness',
+      'Package name decision: `hadara`',
+      'Current version remains `0.0.0-bootstrap`',
+      'Current package remains `private: true`',
+      'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
+      'Scoped fallback decision: do not silently switch names',
+      'Version policy: first release-candidate target is `0.1.0-rc.0`; first stable target is `0.1.0`',
+      '`private: true` remains until the package files whitelist, root README, license decision, and package-smoke dry-run evidence are complete',
+      'Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist',
+      'Do not add `files` entries for missing installer or portable paths in T-0127',
+      'License path: `LICENSE`; package remains private until the owner chooses license text',
+      'Publish target decision: npm package first, GitHub Release second, Docker image deferred',
+      'Installed CLI verification must use `hadara doctor --json`',
+      'T-0127 performs no publish, no `npm pack`, no install smoke, no release artifact build, no GitHub Release, no Docker image build, and no registry mutation',
       'Remote CI observation',
       'local Docker validation remains the primary reproducible check'
     ].join('\n'),
@@ -246,6 +263,13 @@ describe('operational debt track', () => {
         summary: '`hadara package smoke` command naming, flags, approval, cleanup, failure, evidence, and MCP boundaries are documented.'
       },
       {
+        code: 'PACKAGE_METADATA_RELEASE_READINESS',
+        name: 'Package metadata release readiness',
+        status: 'passed',
+        summary:
+          'Package name, bootstrap version, private transition, files target, license path, publish target, and installed CLI verification decisions are documented without publishing.'
+      },
+      {
         code: 'GENERATED_ARTIFACT_POLICY_UNCLEAR',
         name: 'Generated artifact policy',
         status: 'passed',
@@ -349,12 +373,16 @@ describe('operational debt track', () => {
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY', status: 'error' }));
     expect(advisory.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE', status: 'warning' }));
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE', status: 'error' }));
+    expect(advisory.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS', status: 'warning' }));
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS', status: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION_UNRECORDED', severity: 'warning' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION_UNRECORDED', severity: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR', severity: 'warning' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR', severity: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR', severity: 'warning' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR', severity: 'error' }));
+    expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR', severity: 'warning' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR', severity: 'error' }));
     expect(advisory.issues).not.toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
     expect(strict.issues).not.toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
   });
@@ -446,6 +474,67 @@ describe('operational debt track', () => {
     expect(strict.ok).toBe(false);
     expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE', status: 'error' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR', severity: 'error' }));
+  });
+
+  it('requires package metadata release-readiness documentation before release readiness passes', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root);
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TEST_STRATEGY.md'),
+      [
+        'Clean Checkout Package Smoke Plan',
+        'npm ci',
+        'npm run build',
+        'node dist/cli/main.js doctor --json',
+        'node dist/cli/main.js ops status --json',
+        'node dist/cli/main.js release gate --mode strict --json',
+        'no packaging or release execution',
+        'Executable Package Smoke Artifact Boundary',
+        'Allowed workspace',
+        '/tmp/hadara-package-smoke/<run-id>',
+        'Package artifact paths',
+        'tasks/<task-id>/artifacts/package-smoke/',
+        'Redaction and audit handling',
+        'Evidence/report shape',
+        'hadara.packageSmoke.v1',
+        'performs no package-smoke execution',
+        'Package Smoke Command Surface',
+        'hadara package smoke --dry-run --json',
+        'hadara package smoke --task <task-id> --json',
+        'hadara package smoke --workspace /tmp/hadara-package-smoke/<run-id> --json',
+        'hadara package smoke --from ./dist-release/hadara-0.1.0-rc.0.tgz --json',
+        'hadara package smoke --keep-temp --json',
+        'Do not use `hadara release smoke` as the primary command surface',
+        '`--timeout <seconds>`',
+        '`--attach-evidence`',
+        '`--private-logs`',
+        'Package smoke must not be callable from MCP by default',
+        'The release gate must not call `hadara package smoke`',
+        'Remote CI observation',
+        'local Docker validation remains the primary reproducible check'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const advisory = createReleaseGateReport(root);
+    const strict = createReleaseGateReport(root, 'strict');
+
+    expect(advisory.ok).toBe(true);
+    expect(advisory.checks).toContainEqual({
+      code: 'PACKAGE_METADATA_RELEASE_READINESS',
+      name: 'Package metadata release readiness',
+      status: 'warning',
+      summary: 'Package metadata release-readiness decisions must be documented while keeping the package private and non-publishable.'
+    });
+    expect(advisory.issues).toContainEqual({
+      severity: 'warning',
+      code: 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR',
+      message:
+        'Package metadata release readiness: Package metadata release-readiness decisions must be documented while keeping the package private and non-publishable.'
+    });
+    expect(strict.ok).toBe(false);
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS', status: 'error' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR', severity: 'error' }));
   });
 
   it('prints JSON through debt and release-gate CLI handlers', () => {

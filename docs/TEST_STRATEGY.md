@@ -161,6 +161,35 @@ Tracked remaining capsule sequencing for package smoke, package metadata, Linux/
 
 The local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` may exist in this workspace as supporting planning context for agents, but it is intentionally not committed. Public user-facing install docs should prefer the installed `hadara` command form, while source-checkout validation may keep `node dist/cli/main.js` as an internal fallback until installer/package surfaces exist.
 
+## Package Metadata Release Readiness
+
+T-0127 records package metadata decisions without making the package publishable.
+
+Current package metadata remains bootstrap-stage:
+
+- Package name decision: `hadara`.
+- Current version remains `0.0.0-bootstrap`.
+- Current package remains `private: true`.
+- Current binary remains `bin.hadara` at `./dist/cli/main.js`.
+
+Release-candidate transition policy:
+
+- Scoped fallback decision: do not silently switch names; choose and document an explicit scope in a later release-target capsule if `hadara` is unavailable.
+- Version policy: first release-candidate target is `0.1.0-rc.0`; first stable target is `0.1.0` after package smoke, install matrix, release-gate evidence freeze, public docs alignment, and license finalization.
+- `private: true` remains until the package files whitelist, root README, license decision, and package-smoke dry-run evidence are complete.
+- Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist.
+- Do not add `files` entries for missing installer or portable paths in T-0127.
+- License path: `LICENSE`; package remains private until the owner chooses license text, such as MIT or Apache-2.0.
+- Publish target decision: npm package first, GitHub Release second, Docker image deferred.
+
+CLI verification forms:
+
+- Source checkout validation may use `node dist/cli/main.js doctor --json`.
+- Installed CLI verification must use `hadara doctor --json`.
+- Linked development CLI checks may use `npm link` only in a disposable workspace in later package-smoke work.
+
+T-0127 performs no publish, no `npm pack`, no install smoke, no release artifact build, no GitHub Release, no Docker image build, and no registry mutation.
+
 ## Required Session Checks
 
 Before marking a development Task Capsule Done:
