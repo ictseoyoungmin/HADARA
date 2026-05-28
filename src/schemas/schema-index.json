@@ -112,6 +112,20 @@
       "status": "fixture",
       "owner": "release/artifact",
       "notes": "Documents reduced release artifact build reports for tarball, checksum, manifest, and package-content verification without publish or GitHub Release mutation."
+    },
+    {
+      "id": "hadara.smokeEvidenceSummary.v1",
+      "path": "src/schemas/smoke-evidence-summary.schema.json",
+      "status": "fixture",
+      "owner": "smoke/evidence",
+      "notes": "Documents reduced public smoke evidence summaries attached by package-smoke and clean-checkout smoke execution."
+    },
+    {
+      "id": "hadara.releaseArtifact.manifest.v1",
+      "path": "src/schemas/release-artifact-manifest.schema.json",
+      "status": "fixture",
+      "owner": "release/artifact",
+      "notes": "Documents generated release artifact manifest files for tarball hash and package file lists without publish or GitHub Release mutation."
     }
   ]
 }

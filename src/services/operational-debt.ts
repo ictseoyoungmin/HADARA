@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { validateSchema } from '../core/schema';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 
 export interface OperationalDebtRecord {
@@ -79,6 +80,22 @@ export interface ReleaseGateReport {
     code: string;
     message: string;
   }>;
+}
+
+interface ReleaseEvidenceRecord {
+  taskId: string;
+  taskDir: string;
+  time: string;
+  kind: string;
+  summary: string;
+  result: string;
+  visibility: string;
+  evidencePath?: string;
+}
+
+interface ReleaseEvidenceMatch {
+  record: ReleaseEvidenceRecord;
+  artifactSchemaValid?: boolean;
 }
 
 export const OPERATIONAL_DEBT_RECORDS: OperationalDebtRecord[] = [
@@ -233,6 +250,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
   const releaseReadiness = readOptionalText(path.join(projectRoot, 'docs', 'RELEASE_READINESS.md'));
   const validationHistory = readOptionalText(path.join(projectRoot, 'docs', 'VALIDATION_HISTORY.md'));
   const licenseText = readOptionalText(path.join(projectRoot, 'LICENSE'));
+  const evidence = readReleaseEvidenceRecords(projectRoot);
 
   const checks: ReleaseGateReport['checks'] = [
     checkPackageBin(packageJson, mode),
@@ -245,6 +263,10 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     checkPackageMetadataReadiness(packageJson, licenseText, testStrategy, releaseReadiness, validationHistory, mode),
     checkInstallerSurfaceAndSchema(releaseReadiness, mode),
     checkInstallMatrixSmokePlan(releaseReadiness, mode),
+    checkPackageSmokeEvidence(evidence, mode),
+    checkCleanCheckoutSmokeEvidence(evidence, mode),
+    checkReleaseArtifactEvidence(evidence, mode),
+    checkInstallMatrixSmokeEvidence(),
     checkGeneratedArtifactPolicy(projectState, developmentSlices, mode),
     checkRemoteCiObservation(testStrategy, validationHistory, mode)
   ];
@@ -265,6 +287,10 @@ function releaseReadinessIssueCode(checkCode: string): string {
   if (checkCode === 'PACKAGE_METADATA_RELEASE_READINESS') return 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR';
   if (checkCode === 'INSTALLER_SCRIPT_SURFACE_SCHEMA') return 'INSTALLER_SCRIPT_SURFACE_SCHEMA_UNCLEAR';
   if (checkCode === 'INSTALL_MATRIX_SMOKE_PLAN') return 'INSTALL_MATRIX_SMOKE_PLAN_UNCLEAR';
+  if (checkCode === 'PACKAGE_SMOKE_EVIDENCE') return 'PACKAGE_SMOKE_EVIDENCE_MISSING';
+  if (checkCode === 'CLEAN_CHECKOUT_SMOKE_EVIDENCE') return 'CLEAN_CHECKOUT_SMOKE_EVIDENCE_MISSING';
+  if (checkCode === 'RELEASE_ARTIFACT_EVIDENCE') return 'RELEASE_ARTIFACT_EVIDENCE_MISSING';
+  if (checkCode === 'INSTALL_MATRIX_SMOKE_EVIDENCE') return 'INSTALL_MATRIX_SMOKE_EVIDENCE_MISSING';
   return checkCode;
 }
 
@@ -534,6 +560,92 @@ function checkInstallMatrixSmokePlan(releaseReadiness: string | null, mode: Rele
   };
 }
 
+function checkPackageSmokeEvidence(evidence: ReleaseEvidenceRecord[], mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const match = findLatestEvidence(evidence, (record) =>
+    record.result === 'passed' &&
+    record.visibility === 'public' &&
+    includesAll(record.summary, ['package smoke', '--execute']) &&
+    includesAny(record.summary, ['--attach-evidence', 'artifacts/package-smoke', 'hadara.packageSmoke.v1'])
+  );
+  return createEvidenceCheck(
+    'PACKAGE_SMOKE_EVIDENCE',
+    'Package smoke evidence',
+    match,
+    mode,
+    'Latest package-smoke evidence is recorded',
+    'Record passed public package-smoke execution evidence before release readiness is frozen.'
+  );
+}
+
+function checkCleanCheckoutSmokeEvidence(evidence: ReleaseEvidenceRecord[], mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const match = findLatestEvidence(evidence, (record) =>
+    record.result === 'passed' &&
+    record.visibility === 'public' &&
+    includesAll(record.summary, ['smoke clean-checkout', '--execute']) &&
+    includesAny(record.summary, ['--attach-evidence', 'artifacts/clean-checkout-smoke', 'hadara.cleanCheckoutSmoke.v1'])
+  );
+  return createEvidenceCheck(
+    'CLEAN_CHECKOUT_SMOKE_EVIDENCE',
+    'Clean checkout smoke evidence',
+    match,
+    mode,
+    'Latest clean-checkout smoke evidence is recorded',
+    'Record passed public clean-checkout smoke evidence before release readiness is frozen.'
+  );
+}
+
+function checkReleaseArtifactEvidence(evidence: ReleaseEvidenceRecord[], mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const match = findLatestEvidence(evidence, (record) =>
+    record.result === 'passed' &&
+    record.visibility === 'public' &&
+    includesAll(record.summary, ['release artifact', '--execute']) &&
+    includesAny(record.summary, ['generated tarball/checksum/manifest', 'retained-output', 'hadara.releaseArtifact.v1'])
+  );
+  return createEvidenceCheck(
+    'RELEASE_ARTIFACT_EVIDENCE',
+    'Release artifact evidence',
+    match,
+    mode,
+    'Latest release artifact build evidence is recorded',
+    'Record passed public release artifact build evidence before release readiness is frozen.'
+  );
+}
+
+function checkInstallMatrixSmokeEvidence(): ReleaseGateReport['checks'][number] {
+  return {
+    code: 'INSTALL_MATRIX_SMOKE_EVIDENCE',
+    name: 'Install matrix smoke evidence',
+    status: 'passed',
+    summary: 'Install-matrix evidence enforcement is deferred until an executable install-matrix smoke surface exists.'
+  };
+}
+
+function createEvidenceCheck(
+  code: string,
+  name: string,
+  match: ReleaseEvidenceMatch | null,
+  mode: ReleaseGateReport['mode'],
+  passedSummary: string,
+  missingSummary: string
+): ReleaseGateReport['checks'][number] {
+  if (!match) {
+    return {
+      code,
+      name,
+      status: readinessFailureStatus(mode),
+      summary: missingSummary
+    };
+  }
+  const artifactNote =
+    match.artifactSchemaValid === undefined ? '' : match.artifactSchemaValid ? '; linked summary artifact is schema-valid' : '; linked summary artifact was not schema-valid';
+  return {
+    code,
+    name,
+    status: match.artifactSchemaValid === false ? readinessFailureStatus(mode) : 'passed',
+    summary: `${passedSummary}: ${match.record.taskId} at ${match.record.time}${artifactNote}.`
+  };
+}
+
 function checkGeneratedArtifactPolicy(projectState: string | null, developmentSlices: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
   const ok = includesAll(projectState, ['contextPath: null', '.hadara/local/tui/', 'read-only local API routes']) && includesAll(developmentSlices, ['without writing generated context files']);
   return {
@@ -562,6 +674,66 @@ function checkRemoteCiObservation(
       ? 'Remote GitHub Actions status is recorded separately from local release-gate checks.'
       : 'Record a recent remote GitHub Actions observation and keep it distinct from local Docker validation.'
   };
+}
+
+function readReleaseEvidenceRecords(projectRoot: string): ReleaseEvidenceRecord[] {
+  return listTaskCapsules(projectRoot).flatMap((task) => readTaskEvidenceRecords(task.dir));
+}
+
+function readTaskEvidenceRecords(taskDir: string): ReleaseEvidenceRecord[] {
+  const evidencePath = path.join(taskDir, 'evidence.jsonl');
+  if (!fs.existsSync(evidencePath)) return [];
+  return fs
+    .readFileSync(evidencePath, 'utf8')
+    .split(/\r?\n/)
+    .map((line): ReleaseEvidenceRecord | null => {
+      if (line.trim() === '') return null;
+      try {
+        const parsed: unknown = JSON.parse(line);
+        if (!isRecord(parsed)) return null;
+        if (parsed.schemaVersion !== 'hadara.evidence.v1') return null;
+        if (typeof parsed.time !== 'string' || typeof parsed.summary !== 'string') return null;
+        if (typeof parsed.taskId !== 'string' || typeof parsed.kind !== 'string') return null;
+        if (typeof parsed.result !== 'string' || typeof parsed.visibility !== 'string') return null;
+        return {
+          taskId: parsed.taskId,
+          taskDir,
+          time: parsed.time,
+          kind: parsed.kind,
+          summary: parsed.summary,
+          result: parsed.result,
+          visibility: parsed.visibility,
+          ...(typeof parsed.evidencePath === 'string' ? { evidencePath: parsed.evidencePath } : {})
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter((record): record is ReleaseEvidenceRecord => record !== null);
+}
+
+function findLatestEvidence(evidence: ReleaseEvidenceRecord[], predicate: (record: ReleaseEvidenceRecord) => boolean): ReleaseEvidenceMatch | null {
+  const matches = evidence.filter(predicate).sort((a, b) => b.time.localeCompare(a.time));
+  const record = matches[0];
+  if (!record) return null;
+  return {
+    record,
+    ...validateLinkedEvidenceArtifact(record)
+  };
+}
+
+function validateLinkedEvidenceArtifact(record: ReleaseEvidenceRecord): { artifactSchemaValid?: boolean } {
+  if (!record.evidencePath) return {};
+  const artifactPath = path.resolve(record.taskDir, record.evidencePath);
+  if (!artifactPath.startsWith(`${path.resolve(record.taskDir)}${path.sep}`) || !fs.existsSync(artifactPath)) return {};
+  try {
+    const parsed: unknown = JSON.parse(fs.readFileSync(artifactPath, 'utf8'));
+    if (!isRecord(parsed) || typeof parsed.schemaVersion !== 'string') return { artifactSchemaValid: false };
+    if (parsed.schemaVersion !== 'hadara.smokeEvidenceSummary.v1') return {};
+    return { artifactSchemaValid: validateSchema('hadara.smokeEvidenceSummary.v1', parsed).ok };
+  } catch {
+    return { artifactSchemaValid: false };
+  }
 }
 
 function readinessFailureStatus(mode: ReleaseGateReport['mode']): 'warning' | 'error' {

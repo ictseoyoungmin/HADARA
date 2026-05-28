@@ -98,14 +98,15 @@
 - T-0135 is complete: `hadara smoke clean-checkout --execute --json` now copies source into a disposable clean checkout, runs `npm ci`, `npm run build`, `npm run check`, built CLI `doctor --json`, built CLI `ops status --json`, and built CLI strict release gate, then cleans up by default and emits a reduced schema-valid `hadara.cleanCheckoutSmoke.v1` report. The source workspace remains unchanged, installed user-facing `hadara` validation remains separate package/install smoke scope, and the command performs no package install, publish, release mutation, GitHub Release, Docker image build, evidence attachment, or public raw-log retention.
 - T-0136 is complete: package-smoke local execution and clean-checkout smoke execution now support explicit `--attach-evidence --task <task-id>` reduced public evidence attachment. Summaries are written under task-local `artifacts/package-smoke/` or `artifacts/clean-checkout-smoke/`, linked from `EVIDENCE.md` and `evidence.jsonl`, and pass public artifact redaction checks while excluding raw logs, raw package contents, private paths, private store paths, release mutation, publish, GitHub Release, Docker image build, and MCP smoke execution.
 - T-0137 is complete: `hadara release artifact --execute --json` now stages a whitelisted package, runs `npm pack`, generates SHA-256 checksum and manifest files, verifies package contents, and emits schema-valid `hadara.releaseArtifact.v1` reduced reports. Default output is disposable, explicit `--output <dir>` is retained local output, and the command performs no publish, GitHub Release, Docker image build, installer/install-matrix execution, MCP release execution, or public raw-log/private-path exposure.
+- T-0138 is complete: `hadara release gate --mode advisory|strict --json` remains read-only but now reads existing Task Capsule evidence records for package-smoke, clean-checkout smoke, and release-artifact readiness. Strict mode blocks on missing package-smoke, clean-checkout smoke, or release-artifact evidence with stable issue codes; advisory mode warns; install-matrix evidence enforcement remains deferred until an executable install-matrix smoke surface exists. `hadara.smokeEvidenceSummary.v1` and `hadara.releaseArtifact.manifest.v1` are registered schema fixtures.
 - Release/install/package-smoke future work is tracked in `docs/DEVELOPMENT_SLICES.md`, `docs/V1_0_CAPSULE_BACKLOG.md`, and `docs/TEST_STRATEGY.md`. The local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` may exist in this workspace as supporting planning context for agents, but it is intentionally not committed to GitHub.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0135 Clean Checkout Smoke Implementation: added explicit source-checkout smoke in a disposable copy with reduced reports and default cleanup.
 - T-0136 Smoke Evidence Integration: added explicit reduced public evidence attachment for package-smoke and clean-checkout smoke.
 - T-0137 Release Artifact Builder: added explicit local tarball/checksum/manifest builder with whitelist verification and reduced reports.
+- T-0138 Release Gate Evidence Freeze: added evidence-backed read-only release gate checks for package-smoke, clean-checkout smoke, and release artifacts.
 
 ## Current Known Problems
 
@@ -120,7 +121,7 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is T-0138 Release Gate Evidence Freeze: move release gate from plan markers toward evidence-backed readiness while keeping it read-only. Before reading T-0136 smoke evidence artifacts, register `hadara.smokeEvidenceSummary.v1`; before reading T-0137 manifest files directly, register `hadara.releaseArtifact.manifest.v1`.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is T-0139 CI/Release Workflow Target Decision: document npm package as primary, GitHub Release as secondary, Docker deferred, and required token names without storing secrets or publishing.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, TUI writes, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 

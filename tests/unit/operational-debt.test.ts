@@ -209,6 +209,45 @@ function writeReleaseReadinessFiles(root: string): void {
     ['GitHub Actions CI run succeeded: https://github.com/example/project/actions/runs/123'].join('\n'),
     'utf8'
   );
+  writeReleaseEvidenceRecords(root);
+}
+
+function writeReleaseEvidenceRecords(root: string): void {
+  const taskDir = path.join(root, 'tasks', 'T-0138-release-evidence-fixture');
+  fs.mkdirSync(taskDir, { recursive: true });
+  const records = [
+    {
+      schemaVersion: 'hadara.evidence.v1',
+      time: '2026-05-28T12:52:58Z',
+      taskId: 'T-0138',
+      kind: 'command-log',
+      summary:
+        'Docker built CLI package smoke --execute --attach-evidence --task T-0138 --json returned ok true, attached public artifacts/package-smoke summary JSON, and reported no issues.',
+      result: 'passed',
+      visibility: 'public'
+    },
+    {
+      schemaVersion: 'hadara.evidence.v1',
+      time: '2026-05-28T12:53:26Z',
+      taskId: 'T-0138',
+      kind: 'command-log',
+      summary:
+        'Docker built CLI smoke clean-checkout --execute --attach-evidence --task T-0138 --json returned ok true, attached public artifacts/clean-checkout-smoke summary JSON, and reported no issues.',
+      result: 'passed',
+      visibility: 'public'
+    },
+    {
+      schemaVersion: 'hadara.evidence.v1',
+      time: '2026-05-28T13:15:03Z',
+      taskId: 'T-0138',
+      kind: 'command-log',
+      summary:
+        'Docker built CLI release artifact --execute --json returned ok true, generated tarball/checksum/manifest metadata, verified package files, and reported no issues.',
+      result: 'passed',
+      visibility: 'public'
+    }
+  ];
+  fs.writeFileSync(path.join(taskDir, 'evidence.jsonl'), records.map((record) => JSON.stringify(record)).join('\n') + '\n', 'utf8');
 }
 
 afterEach(() => {
@@ -368,6 +407,30 @@ describe('operational debt track', () => {
         summary: 'Install matrix rows, platform boundaries, evidence shape, and non-execution release-gate behavior are documented.'
       },
       {
+        code: 'PACKAGE_SMOKE_EVIDENCE',
+        name: 'Package smoke evidence',
+        status: 'passed',
+        summary: 'Latest package-smoke evidence is recorded: T-0138 at 2026-05-28T12:52:58Z.'
+      },
+      {
+        code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE',
+        name: 'Clean checkout smoke evidence',
+        status: 'passed',
+        summary: 'Latest clean-checkout smoke evidence is recorded: T-0138 at 2026-05-28T12:53:26Z.'
+      },
+      {
+        code: 'RELEASE_ARTIFACT_EVIDENCE',
+        name: 'Release artifact evidence',
+        status: 'passed',
+        summary: 'Latest release artifact build evidence is recorded: T-0138 at 2026-05-28T13:15:03Z.'
+      },
+      {
+        code: 'INSTALL_MATRIX_SMOKE_EVIDENCE',
+        name: 'Install matrix smoke evidence',
+        status: 'passed',
+        summary: 'Install-matrix evidence enforcement is deferred until an executable install-matrix smoke surface exists.'
+      },
+      {
         code: 'GENERATED_ARTIFACT_POLICY_UNCLEAR',
         name: 'Generated artifact policy',
         status: 'passed',
@@ -405,6 +468,37 @@ describe('operational debt track', () => {
       status: 'passed',
       summary: 'No open high-severity operational debt records.'
     });
+  });
+
+  it('requires release evidence records without executing smoke or artifact commands', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root);
+    fs.rmSync(path.join(root, 'tasks'), { recursive: true, force: true });
+
+    const advisory = createReleaseGateReport(root);
+    const strict = createReleaseGateReport(root, 'strict');
+
+    expect(advisory.ok).toBe(true);
+    expect(strict.ok).toBe(false);
+    expect(advisory.checks).toContainEqual(
+      expect.objectContaining({
+        code: 'PACKAGE_SMOKE_EVIDENCE',
+        status: 'warning',
+        summary: 'Record passed public package-smoke execution evidence before release readiness is frozen.'
+      })
+    );
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_EVIDENCE', status: 'error' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_EVIDENCE_MISSING', severity: 'error' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE_MISSING', severity: 'error' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'RELEASE_ARTIFACT_EVIDENCE_MISSING', severity: 'error' }));
+    expect(strict.checks).toContainEqual(
+      expect.objectContaining({
+        code: 'INSTALL_MATRIX_SMOKE_EVIDENCE',
+        status: 'passed',
+        summary: 'Install-matrix evidence enforcement is deferred until an executable install-matrix smoke surface exists.'
+      })
+    );
+    expect(strict.issues).not.toContainEqual(expect.objectContaining({ code: 'INSTALL_MATRIX_SMOKE_EVIDENCE_MISSING' }));
   });
 
   it('reports release readiness warnings in advisory mode and errors in strict mode', () => {
@@ -489,6 +583,14 @@ describe('operational debt track', () => {
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'INSTALLER_SCRIPT_SURFACE_SCHEMA_UNCLEAR', severity: 'error' }));
     expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'INSTALL_MATRIX_SMOKE_PLAN_UNCLEAR', severity: 'warning' }));
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'INSTALL_MATRIX_SMOKE_PLAN_UNCLEAR', severity: 'error' }));
+    expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_EVIDENCE_MISSING', severity: 'warning' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_EVIDENCE_MISSING', severity: 'error' }));
+    expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE_MISSING', severity: 'warning' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE_MISSING', severity: 'error' }));
+    expect(advisory.issues).toContainEqual(expect.objectContaining({ code: 'RELEASE_ARTIFACT_EVIDENCE_MISSING', severity: 'warning' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'RELEASE_ARTIFACT_EVIDENCE_MISSING', severity: 'error' }));
+    expect(advisory.issues).not.toContainEqual(expect.objectContaining({ code: 'INSTALL_MATRIX_SMOKE_EVIDENCE_MISSING' }));
+    expect(strict.issues).not.toContainEqual(expect.objectContaining({ code: 'INSTALL_MATRIX_SMOKE_EVIDENCE_MISSING' }));
     expect(advisory.issues).not.toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
     expect(strict.issues).not.toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
   });

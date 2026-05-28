@@ -138,3 +138,4 @@
 | T-0135 | Clean Checkout Smoke Implementation | Done | tasks/T-0135-clean-checkout-smoke-implementation | Adds explicit `hadara smoke clean-checkout --execute --json` source-checkout smoke in a disposable copy with reduced reports and cleanup. |
 | T-0136 | Smoke Evidence Integration | Done | tasks/T-0136-smoke-evidence-integration | Adds reduced public smoke evidence attachment for package-smoke and clean-checkout smoke. |
 | T-0137 | Release Artifact Builder | Done | tasks/T-0137-release-artifact-builder | Adds explicit local release artifact tarball/checksum/manifest builder without publishing. |
+| T-0138 | Release Gate Evidence Freeze | Done | tasks/T-0138-release-gate-evidence-freeze | Adds read-only evidence-backed release gate checks for package smoke, clean-checkout smoke, and release artifacts. |

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.releaseArtifact.manifest.v1",
+  "x-hadara-schema-id": "hadara.releaseArtifact.manifest.v1",
+  "title": "HADARA Release Artifact Manifest",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "package",
+    "tarball",
+    "files",
+    "releaseMutationExecuted",
+    "publishExecuted",
+    "githubReleaseCreated"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.releaseArtifact.manifest.v1" },
+    "package": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "version", "private"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "private": { "type": "boolean" },
+        "license": { "type": "string", "minLength": 1 }
+      }
+    },
+    "tarball": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["fileName", "hash"],
+      "properties": {
+        "fileName": { "type": "string", "minLength": 1 },
+        "hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["path"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "byteLength": { "type": "integer" }
+        }
+      }
+    },
+    "releaseMutationExecuted": { "const": false },
+    "publishExecuted": { "const": false },
+    "githubReleaseCreated": { "const": false }
+  }
+}

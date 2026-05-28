@@ -311,6 +311,73 @@ describe('runtime schema validation', () => {
     ).toBe(true);
   });
 
+  it('validates smoke evidence summaries and release artifact manifests', () => {
+    expect(
+      validateSchema('hadara.smokeEvidenceSummary.v1', {
+        schemaVersion: 'hadara.smokeEvidenceSummary.v1',
+        time: '2026-05-28T00:00:00.000Z',
+        taskId: 'T-0136',
+        category: 'package-smoke',
+        sourceReport: {
+          schemaVersion: 'hadara.packageSmoke.v1',
+          command: 'package.smoke',
+          mode: 'local',
+          ok: true
+        },
+        execution: {
+          npmPackExecuted: true,
+          packageInstallExecuted: true,
+          featureSmokeExecuted: true
+        },
+        steps: [
+          {
+            id: 'installed-doctor',
+            label: 'Installed doctor',
+            status: 'passed',
+            exitCode: 0,
+            summary: 'Installed doctor passed.'
+          }
+        ],
+        privacy: {
+          rawLogsIncluded: false,
+          rawPackageContentsIncluded: false,
+          privatePathsIncluded: false,
+          environmentSecretsIncluded: false,
+          privateStorePathsIncluded: false
+        },
+        issues: [],
+        rawLogsIncluded: false,
+        privatePathsIncluded: false,
+        rawPackageContentsIncluded: false
+      }).ok
+    ).toBe(true);
+
+    expect(
+      validateSchema('hadara.releaseArtifact.manifest.v1', {
+        schemaVersion: 'hadara.releaseArtifact.manifest.v1',
+        package: {
+          name: 'hadara',
+          version: '0.0.0-bootstrap',
+          private: true,
+          license: 'MIT'
+        },
+        tarball: {
+          fileName: 'hadara-0.0.0-bootstrap.tgz',
+          hash: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+        },
+        files: [
+          {
+            path: 'package.json',
+            byteLength: 100
+          }
+        ],
+        releaseMutationExecuted: false,
+        publishExecuted: false,
+        githubReleaseCreated: false
+      }).ok
+    ).toBe(true);
+  });
+
   it('rejects release artifact reports with publish or unredacted markers', () => {
     const result = validateSchema('hadara.releaseArtifact.v1', {
       schemaVersion: 'hadara.releaseArtifact.v1',

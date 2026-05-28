@@ -215,3 +215,17 @@ Profile boundaries:
 - The `release-readiness` profile is reserved but currently returns `FEATURE_SMOKE_PROFILE_DEFERRED`.
 - A later `release-readiness` profile may include strict release gate checks, package smoke evidence, install matrix evidence, and release artifact evidence after those surfaces exist.
 - Smoke runner output must stay reduced and redacted, with raw logs temporary or private/local only.
+
+## Release Gate Evidence Freeze
+
+T-0138 keeps `hadara release gate --mode advisory|strict --json` read-only while allowing it to read existing Task Capsule evidence records.
+
+Evidence-backed checks:
+
+- `PACKAGE_SMOKE_EVIDENCE` reads passed public package-smoke execution evidence.
+- `CLEAN_CHECKOUT_SMOKE_EVIDENCE` reads passed public clean-checkout smoke evidence.
+- `RELEASE_ARTIFACT_EVIDENCE` reads passed public release artifact build evidence.
+- `REMOTE_CI_OBSERVATION` remains a documented remote-CI observation check.
+- `INSTALL_MATRIX_SMOKE_EVIDENCE` is reserved but non-blocking until an executable install-matrix smoke surface exists.
+
+The release gate must not execute package smoke, clean-checkout smoke, install matrix smoke, `npm pack`, installer scripts, package installs, publish/deploy, GitHub Releases, Docker builds, provider calls, or MCP release/package/install tools.
