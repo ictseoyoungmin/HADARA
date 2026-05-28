@@ -238,6 +238,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     checkNodePolicy(packageJson, ciWorkflow, mode),
     checkCiWorkflow(ciWorkflow, mode),
     checkCleanCheckoutPolicy(v1Schemas, developmentSlices, testStrategy, mode),
+    checkPackageSmokeArtifactBoundary(testStrategy, mode),
     checkGeneratedArtifactPolicy(projectState, developmentSlices, mode),
     checkRemoteCiObservation(testStrategy, validationHistory, mode)
   ];
@@ -333,6 +334,28 @@ function checkCleanCheckoutPolicy(
     summary: ok
       ? 'Release planning documents the clean-checkout package smoke sequence.'
       : 'Release planning must document clean-checkout package smoke expectations.'
+  };
+}
+
+function checkPackageSmokeArtifactBoundary(testStrategy: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
+  const ok = includesAll(testStrategy, [
+    'Executable Package Smoke Artifact Boundary',
+    'Allowed workspace',
+    '/tmp/hadara-package-smoke/<run-id>',
+    'Package artifact paths',
+    'tasks/<task-id>/artifacts/package-smoke/',
+    'Redaction and audit handling',
+    'Evidence/report shape',
+    'hadara.packageSmoke.v1',
+    'performs no package-smoke execution'
+  ]);
+  return {
+    code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR',
+    name: 'Package smoke artifact boundary',
+    status: ok ? 'passed' : readinessFailureStatus(mode),
+    summary: ok
+      ? 'Executable package-smoke artifact and evidence boundaries are documented before implementation.'
+      : 'Executable package-smoke workspace, artifact, redaction/audit, and evidence boundaries must be documented before implementation.'
   };
 }
 

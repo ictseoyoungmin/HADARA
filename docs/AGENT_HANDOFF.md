@@ -85,13 +85,14 @@
 - T-0122 is complete: remote GitHub Actions CI on `main` was observed successfully for run #109 at commit `8b4f33d1bf926d051cf63e13ca2de222bfc22d8c`, and release-gate readiness now checks locally documented remote CI observation evidence without calling GitHub or executing remote/release actions.
 - T-0123 is complete: high-severity operational debt OD-0003 and OD-0008 are mitigated by the existing required-reading/context safeguards and done-level evidence validation gates; debt aggregates now report `highOpen: 0`, and strict release gate passes when documented readiness checks pass.
 - T-0124 is complete: clean-checkout package smoke planning is explicit in `docs/TEST_STRATEGY.md`, and the read-only release gate now requires those smoke-plan markers before the clean-checkout readiness check passes. The current smoke plan remains observational only and performs no packaging, publishing, archive/checksum generation, deployment, GitHub calls, MCP release/package execution, or committed artifact writes.
+- T-0125 is complete: executable package-smoke artifact-boundary planning is explicit in `docs/TEST_STRATEGY.md`, covering disposable workspace, package artifact paths, redaction/audit handling, and reduced public evidence/report shape; the read-only release gate now requires those markers through `PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR` while still performing no package-smoke execution.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0122 Remote CI Release Observation: observed successful remote GitHub Actions CI on `main`, recorded run #109 evidence, and added documented remote CI observation to release-gate readiness.
 - T-0123 Operational Debt High Severity Mitigation: reclassified OD-0003/OD-0008 as mitigated based on implemented protocol and done-level validation safeguards, updating debt aggregates and strict release-gate expectations.
 - T-0124 Clean Checkout Package Smoke Planning: documented the clean-checkout package smoke sequence and strengthened the read-only release gate to require explicit smoke-plan markers.
+- T-0125 Executable Package Smoke Artifact Boundary Design: documented future executable package-smoke workspace/artifact/evidence boundaries and strengthened the read-only release gate to require those markers.
 
 ## Current Known Problems
 
@@ -106,7 +107,7 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is executable package-smoke/artifact-boundary design, defining allowed temporary workspace, package artifact paths, redaction/audit handling, and evidence format before adding any package/release execution.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is executable package-smoke command surface design, defining approval, cleanup, failure, and explicit no-commit artifact semantics before implementing any package/release execution.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, TUI writes, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
@@ -121,6 +122,10 @@
 - Latest T-0124 full check: Docker temp-copy `npm run check` passed with TypeScript build, 49 test files, and 334 tests.
 - Latest T-0124 built CLI release-gate smoke: Docker built CLI `node dist/cli/main.js release gate --mode strict --json --project /workspace` returned `ok: true`, 8 passed checks, and the clean-checkout package smoke policy passed.
 - Latest T-0124 done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0124 --level done --json --project /workspace` returned `ok: true` with no issues.
+- Latest T-0125 focused check: Docker temp-copy `npx vitest run tests/unit/operational-debt.test.ts` passed with 1 file and 17 tests after adding the package-smoke artifact-boundary readiness check.
+- Latest T-0125 full check: Docker temp-copy `npm run check` passed with TypeScript build, 49 test files, and 335 tests.
+- Latest T-0125 built CLI release-gate smoke: Docker built CLI `node dist/cli/main.js release gate --mode strict --json --project /workspace` returned `ok: true`, 9 passed checks, including `PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR`.
+- Latest T-0125 done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0125 --level done --json --project /workspace` returned `ok: true` with no issues.
 - Latest remote CI observation: GitHub Actions CI run #109 on `main` for commit `8b4f33d1bf926d051cf63e13ca2de222bfc22d8c` completed successfully; job `check` included `npm ci` and `npm run check`.
 - Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0123 --level done --json --project /workspace` returned `ok: true` with no issues.
 - Latest built CLI smoke: Docker built CLI `node dist/cli/main.js tui --snapshot --width 150 --height 30 --project /workspace` rendered Overview Current Work as T-0116, Previous Work as T-0115, and heading-aware Goal/Next lines from read-model document text.

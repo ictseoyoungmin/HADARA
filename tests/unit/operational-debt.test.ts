@@ -76,6 +76,15 @@ function writeReleaseReadinessFiles(root: string): void {
       'node dist/cli/main.js ops status --json',
       'node dist/cli/main.js release gate --mode strict --json',
       'no packaging or release execution',
+      'Executable Package Smoke Artifact Boundary',
+      'Allowed workspace',
+      '/tmp/hadara-package-smoke/<run-id>',
+      'Package artifact paths',
+      'tasks/<task-id>/artifacts/package-smoke/',
+      'Redaction and audit handling',
+      'Evidence/report shape',
+      'hadara.packageSmoke.v1',
+      'performs no package-smoke execution',
       'Remote CI observation',
       'local Docker validation remains the primary reproducible check'
     ].join('\n'),
@@ -213,6 +222,12 @@ describe('operational debt track', () => {
         summary: 'Release planning documents the clean-checkout package smoke sequence.'
       },
       {
+        code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR',
+        name: 'Package smoke artifact boundary',
+        status: 'passed',
+        summary: 'Executable package-smoke artifact and evidence boundaries are documented before implementation.'
+      },
+      {
         code: 'GENERATED_ARTIFACT_POLICY_UNCLEAR',
         name: 'Generated artifact policy',
         status: 'passed',
@@ -303,6 +318,7 @@ describe('operational debt track', () => {
       'NODE_POLICY_UNCLEAR',
       'CI_CLEAN_INSTALL_UNCLEAR',
       'CLEAN_CHECKOUT_SMOKE_UNCLEAR',
+      'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR',
       'GENERATED_ARTIFACT_POLICY_UNCLEAR'
     ];
 
@@ -316,6 +332,46 @@ describe('operational debt track', () => {
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'REMOTE_CI_OBSERVATION_UNRECORDED', severity: 'error' }));
     expect(advisory.issues).not.toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
     expect(strict.issues).not.toContainEqual(expect.objectContaining({ code: 'OPEN_HIGH_OPERATIONAL_DEBT' }));
+  });
+
+  it('requires executable package-smoke artifact boundary documentation before release readiness passes', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root);
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TEST_STRATEGY.md'),
+      [
+        'Clean Checkout Package Smoke Plan',
+        'npm ci',
+        'npm run build',
+        'node dist/cli/main.js doctor --json',
+        'node dist/cli/main.js ops status --json',
+        'node dist/cli/main.js release gate --mode strict --json',
+        'no packaging or release execution',
+        'Remote CI observation',
+        'local Docker validation remains the primary reproducible check'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const advisory = createReleaseGateReport(root);
+    const strict = createReleaseGateReport(root, 'strict');
+
+    expect(advisory.ok).toBe(true);
+    expect(advisory.checks).toContainEqual({
+      code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR',
+      name: 'Package smoke artifact boundary',
+      status: 'warning',
+      summary: 'Executable package-smoke workspace, artifact, redaction/audit, and evidence boundaries must be documented before implementation.'
+    });
+    expect(advisory.issues).toContainEqual({
+      severity: 'warning',
+      code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR',
+      message:
+        'Package smoke artifact boundary: Executable package-smoke workspace, artifact, redaction/audit, and evidence boundaries must be documented before implementation.'
+    });
+    expect(strict.ok).toBe(false);
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR', status: 'error' }));
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR', severity: 'error' }));
   });
 
   it('prints JSON through debt and release-gate CLI handlers', () => {

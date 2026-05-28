@@ -67,6 +67,59 @@ node dist/cli/main.js release gate --mode strict --json
 
 The current smoke plan performs no packaging or release execution. It does not run `npm pack`, publish packages, create archives, compute release checksums, call GitHub, deploy, execute MCP release/package tools, or mutate Task Capsules. If a future capsule adds executable package smoke behavior, it must define the allowed workspace, expected artifacts, redaction/audit handling, and evidence format before implementation.
 
+## Executable Package Smoke Artifact Boundary
+
+This boundary is a design contract for a future executable package-smoke command. It does not authorize package or release execution in the current release gate.
+
+Allowed workspace:
+
+- The smoke run must operate in a disposable clean checkout under a container or temporary filesystem such as `/tmp/hadara-package-smoke/<run-id>`.
+- Dependency installation, build output, package installation targets, npm cache overrides, and package-smoke command logs must stay inside the disposable workspace or ignored local/private HADARA storage.
+- The mounted project workspace remains source input only unless a later Task Capsule explicitly approves a narrow write path.
+
+Package artifact paths:
+
+- Future package artifacts such as `*.tgz`, expanded install trees, npm cache content, and raw command transcripts are temporary by default.
+- No package artifact, archive, checksum file, install tree, or raw log is committed under `docs/`, `tasks/`, `.hadara/context/`, or other portable project files by default.
+- Public Task Capsule artifacts may contain only reduced UTF-8 text or JSON summaries under `tasks/<task-id>/artifacts/package-smoke/` after passing the existing public evidence artifact redaction policy.
+
+Redaction and audit handling:
+
+- Public package-smoke evidence must use the existing public artifact policy: UTF-8 text only, high/critical secret findings blocked, and no private absolute paths.
+- Private/raw logs or package artifacts must be treated as private evidence or disposable workspace content. If retained, they must live under ignored private/local HADARA storage with structured audit metadata.
+- User-facing JSON must report reduced metadata only: command labels, exit codes, relative evidence paths, elapsed time, artifact names, byte counts, hashes when explicitly approved, and redaction summary counts. It must not include raw package contents, raw npm logs, private source paths, environment secrets, or private store paths.
+
+Evidence/report shape:
+
+```json
+{
+  "schemaVersion": "hadara.packageSmoke.v1",
+  "command": "package.smoke",
+  "ok": true,
+  "workspace": {
+    "kind": "disposable",
+    "pathRedacted": true
+  },
+  "steps": [
+    {
+      "name": "npm ci",
+      "status": "passed",
+      "exitCode": 0
+    }
+  ],
+  "artifacts": [
+    {
+      "kind": "summary",
+      "visibility": "public",
+      "evidencePath": "tasks/T-0000-example/artifacts/package-smoke/<timestamp>-summary.json"
+    }
+  ],
+  "issues": []
+}
+```
+
+The future executable package-smoke command must define approval, cleanup, and failure semantics in its own Task Capsule before implementation. Until then, `hadara release gate --mode strict --json` remains a read-only checklist and performs no package-smoke execution.
+
 ## Required Session Checks
 
 Before marking a development Task Capsule Done:
