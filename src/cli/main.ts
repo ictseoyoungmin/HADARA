@@ -20,6 +20,7 @@ import { handleWriteCommand } from './write-preflight';
 import { handleTuiCommand } from './tui';
 import { handleInstallCommand } from './install';
 import { handleSmokeCommand } from './smoke';
+import { handlePackageCommand } from './package-smoke';
 import { getFlag, getStringOption } from './args';
 import { cliErrorExitCode, createCliErrorReport } from './errors';
 
@@ -52,6 +53,7 @@ Usage:
   hadara run-state resume [--json]  # read-only guidance; does not resume a process
   hadara install plan [--platform linux|windows|wsl|usb|posix] [--source <path>] [--source-kind tarball|directory|portable-bundle] [--target <path>] [--usb-root <path>] [--prefix <path>] [--launcher <path>] [--mode dry-run|execute] [--json]
   hadara smoke run [--profile core|release-readiness] [--json]
+  hadara package smoke [--dry-run] [--from <tarball|dir>] [--workspace <dir>] [--task <task-id>] [--timeout <seconds>] [--keep-temp] [--no-evidence|--attach-evidence] [--private-logs] [--json]
   hadara release gate [--mode advisory|strict] [--json]
   hadara dashboard serve [--host <host>] [--port <port>]
   hadara tui [--snapshot] [--compact] [--width <n>] [--height <n>] [--json]
@@ -178,6 +180,11 @@ async function main(args = process.argv.slice(2)): Promise<void> {
 
     case 'smoke': {
       if (handleSmokeCommand({ args, paths, jsonOutput })) return;
+      break;
+    }
+
+    case 'package': {
+      if (handlePackageCommand({ args, paths, jsonOutput })) return;
       break;
     }
   }

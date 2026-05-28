@@ -199,6 +199,22 @@ T-0131 adds the shared core feature smoke runner before package-smoke execution.
 
 Current T-0131 is not an installed-binary/PATH/launcher smoke. It calls internal service/read-model surfaces directly and reports `executionMode: "service-read-model"`, `binaryExecuted: false`, `launcherChecked: false`, and `packageInstallChecked: false`.
 
+T-0131 validates:
+
+- Core service/read-model surfaces are healthy.
+- Reduced report summaries are safe.
+- `hadara.featureSmoke.v1` output is schema-valid.
+- TUI snapshot read-model/rendering does not break.
+- Advisory release gate is callable as a service.
+
+T-0131 does not validate:
+
+- Installed `hadara` binary execution.
+- PATH or launcher wiring.
+- Package-installed CLI behavior.
+- Subprocess command execution.
+- Actual package-smoke execution.
+
 Recommended `core` profile:
 
 - `hadara doctor --json`
@@ -208,7 +224,7 @@ Recommended `core` profile:
 - `hadara tui --snapshot --json`
 - `hadara release gate --mode advisory --json`
 
-`hadara smoke run --profile core --json` emits a reduced schema-valid `hadara.featureSmoke.v1` report. For registered sub-report schemas, the runner validates the reduced report before marking the step passed; unregistered sub-report schemas are marked as not registered rather than treated as installed CLI proof. The reserved `release-readiness` profile currently returns `FEATURE_SMOKE_PROFILE_DEFERRED`; later it may add strict release gate checks, package smoke evidence, install matrix evidence, release artifact evidence, and explicit installed-binary smoke once those surfaces exist.
+`hadara smoke run --profile core --json` emits a reduced schema-valid `hadara.featureSmoke.v1` report. For registered sub-report schemas, the runner validates the reduced report before marking the step passed; unregistered sub-report schemas are marked as not registered rather than treated as installed CLI proof. T-0131 is the Core Feature Smoke Runner; future capsules own Installed CLI Smoke and Package Smoke Execution. The reserved `release-readiness` profile currently returns `FEATURE_SMOKE_PROFILE_DEFERRED`; later it may add strict release gate checks, package smoke evidence, install matrix evidence, release artifact evidence, and explicit installed-binary smoke once those surfaces exist.
 
 ## Package Metadata Release Readiness
 

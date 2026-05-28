@@ -251,6 +251,17 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     notes: 'Reduced read-only core feature smoke runner over service/read-model surfaces; does not execute installed binaries, package smoke, install mutation, or strict release evidence gates.'
   },
   {
+    name: 'hadara package smoke --dry-run --json',
+    category: 'read',
+    stable: true,
+    readOnly: true,
+    enabledByDefault: true,
+    availability: 'default',
+    risk: 'low',
+    schemaVersion: 'hadara.packageSmoke.v1',
+    notes: 'Read-only package-smoke dry-run planner; previews workspace, steps, artifacts, and evidence without npm pack, install, subprocess execution, artifact writes, or evidence attachment.'
+  },
+  {
     name: 'hadara release gate --mode advisory|strict --json',
     category: 'release',
     stable: true,
