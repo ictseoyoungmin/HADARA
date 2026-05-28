@@ -161,6 +161,8 @@ Tracked remaining capsule sequencing for package smoke, package metadata, Linux/
 
 The local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` may exist in this workspace as supporting planning context for agents, but it is intentionally not committed. Public user-facing install docs should prefer the installed `hadara` command form, while source-checkout validation may keep `node dist/cli/main.js` as an internal fallback until installer/package surfaces exist.
 
+Installer dry-run planning now uses `hadara install plan --json`. This command emits `hadara.install.plan.v1`, reports planned writes without performing them, redacts public source/target paths, and returns `INSTALL_EXECUTION_DISABLED` for execute mode until a later capsule explicitly authorizes installer mutation.
+
 ## Package Metadata Release Readiness
 
 T-0127 records package metadata decisions without making the package publishable.

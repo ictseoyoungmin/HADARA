@@ -18,6 +18,7 @@ import { handleDebtCommand } from './debt';
 import { handleReleaseGateCommand } from './release-gate';
 import { handleWriteCommand } from './write-preflight';
 import { handleTuiCommand } from './tui';
+import { handleInstallCommand } from './install';
 import { getFlag, getStringOption } from './args';
 import { cliErrorExitCode, createCliErrorReport } from './errors';
 
@@ -48,6 +49,7 @@ Usage:
   hadara ops status [--json]
   hadara run-state show [--json]
   hadara run-state resume [--json]  # read-only guidance; does not resume a process
+  hadara install plan [--platform linux|windows|wsl|usb|posix] [--source <path>] [--source-kind tarball|directory|portable-bundle] [--prefix <path>] [--launcher <path>] [--mode dry-run|execute] [--json]
   hadara release gate [--mode advisory|strict] [--json]
   hadara dashboard serve [--host <host>] [--port <port>]
   hadara tui [--snapshot] [--compact] [--width <n>] [--height <n>] [--json]
@@ -164,6 +166,11 @@ async function main(args = process.argv.slice(2)): Promise<void> {
 
     case 'release': {
       if (handleReleaseGateCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
+      break;
+    }
+
+    case 'install': {
+      if (handleInstallCommand({ args, jsonOutput })) return;
       break;
     }
   }

@@ -89,14 +89,15 @@
 - T-0126 is complete: package-smoke command-surface planning is explicit in `docs/TEST_STRATEGY.md`, with `hadara package smoke` as the primary future command, `hadara release smoke` avoided as the primary surface, command flags and approval/cleanup/failure/evidence/MCP boundaries documented, and the read-only release gate now reporting `PACKAGE_SMOKE_COMMAND_SURFACE` while mapping missing markers to `PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR` issues.
 - T-0127 is complete: package metadata release-readiness planning is explicit in `docs/TEST_STRATEGY.md`, with `hadara` as the package name, npm registry E404 observed for `hadara` on 2026-05-28, bootstrap and release-candidate metadata modes documented, MIT selected as intended license, `private: true` still in place, `files` mutations deferred, and the read-only release gate now reporting `PACKAGE_METADATA_RELEASE_READINESS` while mapping missing markers to `PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR` issues.
 - T-0128 is complete: installer script surface and schema planning is explicit in `docs/RELEASE_READINESS.md`, with POSIX/Windows installer paths, portable launcher paths, POSIX/Windows/USB/WSL install locations, Node 22/WSL shim checks, redacted public path-reference targets for `hadara.install.plan.v1`, and execute mode documented as schema-reserved only; the read-only release gate now reports `INSTALLER_SCRIPT_SURFACE_SCHEMA` while performing no installer execution or install mutation.
+- T-0129 is complete: `hadara install plan --json` now emits schema-valid `hadara.install.plan.v1` dry-run reports for Linux/Windows/WSL/USB planning, keeps `posix` as a compatibility alias, describes planned writes without performing them, redacts public source/target paths, reports Node 22 and WSL Windows-shim checks, returns `INSTALL_EXECUTION_DISABLED` for execute mode, and is listed as a read-only CLI capability.
 - Release/install/package-smoke future work is tracked in `docs/DEVELOPMENT_SLICES.md`, `docs/V1_0_CAPSULE_BACKLOG.md`, and `docs/TEST_STRATEGY.md`. The local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` may exist in this workspace as supporting planning context for agents, but it is intentionally not committed to GitHub.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0126 Package Smoke Command Surface Design: documented `hadara package smoke` command-surface semantics and strengthened the read-only release gate to require those markers.
 - T-0127 Package Metadata Release Readiness: documented package metadata transition decisions and strengthened the read-only release gate to require those markers.
 - T-0128 Installer Script Surface and Schema: documented installer/portable launcher contracts, registered `hadara.install.plan.v1`, and strengthened the read-only release gate to require those markers.
+- T-0129 Installer Dry-run Implementation: added read-only `hadara install plan --json` reports with redacted paths and execute-disabled behavior.
 
 ## Current Known Problems
 
@@ -111,7 +112,7 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is T-0129 Installer Dry-run Implementation, implementing dry-run install planning for POSIX/Windows/portable surfaces without full install mutation by default, emitting redacted install-plan path references, rejecting execute mode or returning `INSTALL_EXECUTION_DISABLED`, and splitting subcapsules if implementation risk is high.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is T-0130 Install Matrix Smoke Plan: define Linux/source, Linux/package, Windows/source, Windows/package, USB Windows, USB WSL, and major-feature smoke rows before executing install matrix checks.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, TUI writes, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
@@ -148,6 +149,13 @@
 - Latest T-0128 follow-up built CLI release-gate smoke: Docker built CLI `node dist/cli/main.js release gate --mode strict --json --project /workspace` returned `ok: true`, 12 passed checks, and no issues after moving package metadata readiness markers into `docs/RELEASE_READINESS.md`.
 - Latest T-0128 follow-up full check: Docker temp-copy `npm run check` passed with TypeScript build, 49 test files, and 342 tests.
 - Latest T-0128 follow-up done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0128 --level done --json --project /workspace` returned `ok: true` with no issues after evidence updates.
+- Latest T-0129 focused checks: Docker temp-copy `npx vitest run tests/unit/install-plan.test.ts tests/unit/schema-runtime.test.ts tests/unit/tools-list.test.ts` passed with 3 files and 17 tests after adding the installer dry-run plan service and CLI surface.
+- Latest T-0129 built CLI dry-run smoke: Docker built CLI `node dist/cli/main.js install plan --platform posix --source dist-release/hadara-0.1.0-rc.0.tgz --json` returned `ok: true`, schema `hadara.install.plan.v1`, redacted path references, and no issues. Follow-up support adds explicit `--platform linux` while keeping `posix` as an alias.
+- Latest T-0129 built CLI execute-disabled smoke: Docker built CLI `node dist/cli/main.js install plan --mode execute --json` returned `ok: false`, issue `INSTALL_EXECUTION_DISABLED`, and exit code 6 without install mutation.
+- Latest T-0129 full check: Docker temp-copy `npm run check` passed with TypeScript build, 50 test files, and 346 tests.
+- Latest T-0129 built CLI release-gate smoke: Docker built CLI `node dist/cli/main.js release gate --mode strict --json --project /workspace` returned `ok: true`, 12 passed checks, and no issues after readiness docs updates.
+- Latest T-0129 done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0129 --level done --json --project /workspace` returned `ok: true` with no issues.
+- Latest T-0129 Linux platform follow-up: Docker focused `npx vitest run tests/unit/install-plan.test.ts tests/unit/schema-runtime.test.ts tests/unit/tools-list.test.ts` passed with 3 files and 18 tests, and built CLI `node dist/cli/main.js install plan --platform linux --json` returned `ok: true`, platform `linux`, and schema `hadara.install.plan.v1`.
 - Latest remote CI observation: GitHub Actions CI run #109 on `main` for commit `8b4f33d1bf926d051cf63e13ca2de222bfc22d8c` completed successfully; job `check` included `npm ci` and `npm run check`.
 - Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0123 --level done --json --project /workspace` returned `ok: true` with no issues.
 - Latest built CLI smoke: Docker built CLI `node dist/cli/main.js tui --snapshot --width 150 --height 30 --project /workspace` rendered Overview Current Work as T-0116, Previous Work as T-0115, and heading-aware Goal/Next lines from read-model document text.

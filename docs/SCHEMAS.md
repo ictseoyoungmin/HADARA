@@ -4,9 +4,9 @@ HADARA JSON schemas are contract fixtures for stable external read models. They 
 
 ## Current Phase
 
-Schema layer status: planning and fixture registration, with limited active-run and write-preflight runtime validation.
+Schema layer status: planning and fixture registration, with limited active-run, write-preflight, and install-plan runtime validation.
 
-T-0079 added fixture registration only. T-0092 added a lightweight runtime validation API for `hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` because those read models are backed by mutable local state. T-0098 registers and validates `hadara.write.preflight.v1` reports before returning CLI write-boundary preflight output. Broad schema validation and release gates remain deferred.
+T-0079 added fixture registration only. T-0092 added a lightweight runtime validation API for `hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` because those read models are backed by mutable local state. T-0098 registers and validates `hadara.write.preflight.v1` reports before returning CLI write-boundary preflight output. T-0129 validates `hadara.install.plan.v1` before returning installer dry-run plans. Broad schema validation and release gates remain deferred.
 
 ## Registry
 
@@ -62,7 +62,7 @@ Schema validation should distinguish three strictness levels:
 
 The current `additionalProperties: true` posture is only a fixture-level policy. Do not treat the initial fixtures as release gates until a later capsule defines core-field strictness, required/enum enforcement, and unknown-field handling.
 
-`hadara.install.plan.v1` is intentionally a little stricter for public path fields: `target.prefix` and `target.launcher` are objects with `displayPath` and `pathRedacted: true`, not raw path strings. `mode: execute` is reserved in the schema for future compatibility, but the next dry-run implementation must keep execution disabled and reject execute mode or report `INSTALL_EXECUTION_DISABLED` until a later capsule explicitly authorizes installer mutation.
+`hadara.install.plan.v1` is intentionally a little stricter for public path fields: `target.prefix` and `target.launcher` are objects with `displayPath` and `pathRedacted: true`, not raw path strings. `mode: execute` is reserved in the schema for future compatibility, but the current dry-run implementation keeps execution disabled and reports `INSTALL_EXECUTION_DISABLED` until a later capsule explicitly authorizes installer mutation.
 
 ## Runtime API
 
@@ -83,7 +83,7 @@ export function validateSchema(schemaId: string, value: unknown): SchemaValidati
 export function loadSchema(schemaId: string): unknown;
 ```
 
-Current runtime usage is intentionally narrow: active-run projection/resume reports and write-preflight reports validate against the fixture subset before shared service builders return them. Future work should keep CLI/MCP transport envelopes separate from shared read-model schemas.
+Current runtime usage is intentionally narrow: active-run projection/resume reports, write-preflight reports, and install-plan reports validate against the fixture subset before shared service builders return them. Future work should keep CLI/MCP transport envelopes separate from shared read-model schemas.
 
 The validator currently covers the JSON Schema keywords used by registered fixtures, including required fields, const, enum, primitive type checks, arrays, object properties, local `$ref`, `oneOf`, string `minLength`, and regex `pattern`.
 

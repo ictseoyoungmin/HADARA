@@ -63,6 +63,12 @@ describe('tools list read model', () => {
           schemaVersion: 'hadara.active_run.projection.v1'
         }),
         expect.objectContaining({
+          name: 'hadara install plan --json',
+          category: 'read',
+          readOnly: true,
+          schemaVersion: 'hadara.install.plan.v1'
+        }),
+        expect.objectContaining({
           name: 'hadara debt list --json',
           category: 'read',
           readOnly: true,

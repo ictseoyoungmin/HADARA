@@ -229,6 +229,17 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     notes: 'Read-only resume guidance derived from the active-run projection; does not update state or resume an agent process.'
   },
   {
+    name: 'hadara install plan --json',
+    category: 'read',
+    stable: true,
+    readOnly: true,
+    enabledByDefault: true,
+    availability: 'default',
+    risk: 'low',
+    schemaVersion: 'hadara.install.plan.v1',
+    notes: 'Read-only installer dry-run plan; reports planned writes with redacted public path references and does not mutate install locations.'
+  },
+  {
     name: 'hadara release gate --mode advisory|strict --json',
     category: 'release',
     stable: true,

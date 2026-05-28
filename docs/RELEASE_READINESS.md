@@ -81,7 +81,7 @@ Dry-run report schema:
 - Schema id: `hadara.install.plan.v1`
 - Command: `install.plan`
 - Modes: `dry-run`, `execute`
-- Platforms: `posix`, `windows`, `wsl`, `usb`
+- Platforms: `linux`, `windows`, `wsl`, `usb`; `posix` remains a compatibility alias for Linux-style installs.
 - Actions must describe planned writes without performing them.
 - Public output must be reduced and redacted.
 - Target paths must be public path references, not raw absolute path strings.
@@ -104,3 +104,17 @@ T-0128 release-gate boundary:
 - The release gate must not execute `scripts/install.ps1`.
 - The release gate must not create or invoke `portable/bin/hadara`.
 - The release gate must not mutate install locations, PATH, shell profiles, package artifacts, GitHub Releases, Docker images, npm registry state, or user machines.
+
+## Installer Dry-run Implementation
+
+T-0129 implements installer planning only.
+
+- Public command: `hadara install plan --json`.
+- Supported flags: `--platform linux|windows|wsl|usb|posix`, `--source <path>`, `--source-kind tarball|directory|portable-bundle`, `--prefix <path>`, `--launcher <path>`, and `--mode dry-run|execute`.
+- Successful dry-run output uses schema `hadara.install.plan.v1`.
+- Dry-run actions describe planned writes with `wouldWrite: true` but perform no filesystem, PATH, profile, package, registry, or release mutation.
+- Public source and target path fields use `pathRedacted: true`.
+- User-supplied private absolute source, prefix, and launcher paths are not echoed in public output.
+- `--mode execute` returns issue `INSTALL_EXECUTION_DISABLED` and does not execute installer behavior.
+- Capability discovery marks `hadara install plan --json` as read-only.
+- T-0129 creates no installer scripts, no portable launchers, no install directories, no package artifacts, and no MCP installer execution surface.
