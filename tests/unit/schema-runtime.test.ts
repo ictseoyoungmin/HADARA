@@ -153,6 +153,58 @@ describe('runtime schema validation', () => {
     ).toBe(true);
   });
 
+  it('validates clean-checkout smoke reports', () => {
+    expect(
+      validateSchema('hadara.cleanCheckoutSmoke.v1', {
+        schemaVersion: 'hadara.cleanCheckoutSmoke.v1',
+        command: 'smoke.cleanCheckout',
+        ok: true,
+        mode: 'execute',
+        execution: {
+          sourceCopied: true,
+          dependencyInstallExecuted: true,
+          buildExecuted: true,
+          checkExecuted: true,
+          builtCliSmokeExecuted: true,
+          packageInstallExecuted: false,
+          releaseMutationExecuted: false,
+          publishExecuted: false
+        },
+        workspace: {
+          kind: 'disposable-clean-checkout',
+          displayPath: '<redacted-clean-checkout-workspace>',
+          pathRedacted: true,
+          retention: 'deleted'
+        },
+        source: {
+          kind: 'source-checkout',
+          displayPath: '.',
+          relativePath: '.',
+          pathRedacted: true,
+          mutated: false
+        },
+        steps: [
+          {
+            id: 'npm-ci',
+            label: 'Clean dependency install',
+            command: 'npm ci',
+            status: 'passed',
+            exitCode: 0,
+            elapsedMs: 10,
+            summary: 'Clean dependency install completed successfully.'
+          }
+        ],
+        privacy: {
+          rawLogsIncluded: false,
+          privatePathsIncluded: false,
+          environmentSecretsIncluded: false,
+          privateStorePathsIncluded: false
+        },
+        issues: []
+      }).ok
+    ).toBe(true);
+  });
+
   it('validates package smoke fixtures', () => {
     expect(
       validateSchema('hadara.packageSmoke.v1', {

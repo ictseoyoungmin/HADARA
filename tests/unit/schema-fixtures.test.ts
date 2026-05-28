@@ -26,6 +26,7 @@ describe('schema fixtures', () => {
     expect(index.schemas.map((entry) => entry.id).sort()).toEqual([
       'hadara.active_run.projection.v1',
       'hadara.active_run.resume.v1',
+      'hadara.cleanCheckoutSmoke.v1',
       'hadara.context.export.v1',
       'hadara.event.v1',
       'hadara.evidence.list.v1',

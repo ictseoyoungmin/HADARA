@@ -98,6 +98,13 @@
       "status": "fixture",
       "owner": "feature-smoke/runner",
       "notes": "Documents reduced read-only major feature smoke reports for core service/read-model validation; installed binary and launcher checks are deferred."
+    },
+    {
+      "id": "hadara.cleanCheckoutSmoke.v1",
+      "path": "src/schemas/clean-checkout-smoke.schema.json",
+      "status": "fixture",
+      "owner": "clean-checkout/smoke",
+      "notes": "Documents reduced executable source-checkout smoke reports for disposable clean checkout validation."
     }
   ]
 }

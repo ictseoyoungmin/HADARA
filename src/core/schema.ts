@@ -1,6 +1,7 @@
 import schemaIndexJson from '../schemas/schema-index.json';
 import activeRunProjectionSchemaJson from '../schemas/active-run-projection.schema.json';
 import activeRunResumeSchemaJson from '../schemas/active-run-resume.schema.json';
+import cleanCheckoutSmokeSchemaJson from '../schemas/clean-checkout-smoke.schema.json';
 import contextExportSchemaJson from '../schemas/context-export.schema.json';
 import evidenceListSchemaJson from '../schemas/evidence-list.schema.json';
 import eventSchemaJson from '../schemas/event.schema.json';
@@ -55,6 +56,7 @@ const schemaIndex = schemaIndexJson as SchemaIndex;
 const registeredSchemas: Record<string, JsonObject> = {
   'hadara.active_run.projection.v1': activeRunProjectionSchemaJson as JsonObject,
   'hadara.active_run.resume.v1': activeRunResumeSchemaJson as JsonObject,
+  'hadara.cleanCheckoutSmoke.v1': cleanCheckoutSmokeSchemaJson as JsonObject,
   'hadara.context.export.v1': contextExportSchemaJson as JsonObject,
   'hadara.evidence.list.v1': evidenceListSchemaJson as JsonObject,
   'hadara.event.v1': eventSchemaJson as JsonObject,

@@ -251,6 +251,17 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     notes: 'Reduced read-only core feature smoke runner over service/read-model surfaces; does not execute installed binaries, package smoke, install mutation, or strict release evidence gates.'
   },
   {
+    name: 'hadara smoke clean-checkout --execute --json',
+    category: 'execute',
+    stable: true,
+    readOnly: false,
+    enabledByDefault: true,
+    availability: 'default',
+    risk: 'medium',
+    schemaVersion: 'hadara.cleanCheckoutSmoke.v1',
+    notes: 'Explicit source-checkout smoke; runs npm ci/build/check and built CLI doctor/status/strict release gate in a disposable clean copy without package install, publish, release mutation, or public raw logs.'
+  },
+  {
     name: 'hadara package smoke --dry-run --json',
     category: 'read',
     stable: true,
