@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.releaseArtifact.v1",
+  "x-hadara-schema-id": "hadara.releaseArtifact.v1",
+  "title": "HADARA Release Artifact Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "command",
+    "ok",
+    "mode",
+    "execution",
+    "output",
+    "package",
+    "artifacts",
+    "packageContents",
+    "privacy",
+    "issues"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.releaseArtifact.v1" },
+    "command": { "const": "release.artifact" },
+    "ok": { "type": "boolean" },
+    "mode": { "const": "execute" },
+    "execution": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "stagingCreated",
+        "npmPackExecuted",
+        "checksumGenerated",
+        "manifestGenerated",
+        "packageContentsVerified",
+        "publishExecuted",
+        "githubReleaseCreated",
+        "dockerImageBuilt"
+      ],
+      "properties": {
+        "stagingCreated": { "type": "boolean" },
+        "npmPackExecuted": { "type": "boolean" },
+        "checksumGenerated": { "type": "boolean" },
+        "manifestGenerated": { "type": "boolean" },
+        "packageContentsVerified": { "type": "boolean" },
+        "publishExecuted": { "const": false },
+        "githubReleaseCreated": { "const": false },
+        "dockerImageBuilt": { "const": false }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "displayPath", "pathRedacted", "retention"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["disposable", "explicit"] },
+        "displayPath": { "type": "string", "minLength": 1 },
+        "pathRedacted": { "const": true },
+        "relativePath": { "type": "string", "minLength": 1 },
+        "retention": { "type": "string", "enum": ["deleted", "kept-temporary", "explicit-output"] }
+      }
+    },
+    "package": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "version", "private", "filesWhitelistApplied"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "private": { "type": "boolean" },
+        "filesWhitelistApplied": { "const": true }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "packageContents": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["verified", "fileCount", "allowedRoots", "requiredFiles", "forbiddenMatches"],
+      "properties": {
+        "verified": { "type": "boolean" },
+        "fileCount": { "type": "integer" },
+        "allowedRoots": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "requiredFiles": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "forbiddenMatches": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "rawLogsIncluded",
+        "packageContentsIncluded",
+        "privatePathsIncluded",
+        "environmentSecretsIncluded",
+        "privateStorePathsIncluded"
+      ],
+      "properties": {
+        "rawLogsIncluded": { "const": false },
+        "packageContentsIncluded": { "const": false },
+        "privatePathsIncluded": { "const": false },
+        "environmentSecretsIncluded": { "const": false },
+        "privateStorePathsIncluded": { "const": false }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "visibility", "fileName", "pathRedacted", "rawContentIncluded"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["tarball", "checksum", "manifest"] },
+        "visibility": { "type": "string", "enum": ["temporary", "local"] },
+        "fileName": { "type": "string", "minLength": 1 },
+        "relativePath": { "type": "string", "minLength": 1 },
+        "pathRedacted": { "const": true },
+        "byteLength": { "type": "integer" },
+        "hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "rawContentIncluded": { "const": false }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "stepId": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

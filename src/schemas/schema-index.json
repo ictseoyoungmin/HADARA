@@ -105,6 +105,13 @@
       "status": "fixture",
       "owner": "clean-checkout/smoke",
       "notes": "Documents reduced executable source-checkout smoke reports for disposable clean checkout validation."
+    },
+    {
+      "id": "hadara.releaseArtifact.v1",
+      "path": "src/schemas/release-artifact.schema.json",
+      "status": "fixture",
+      "owner": "release/artifact",
+      "notes": "Documents reduced release artifact build reports for tarball, checksum, manifest, and package-content verification without publish or GitHub Release mutation."
     }
   ]
 }

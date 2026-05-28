@@ -4,9 +4,9 @@ HADARA JSON schemas are contract fixtures for stable external read models. They 
 
 ## Current Phase
 
-Schema layer status: planning and fixture registration, with limited active-run, write-preflight, install-plan, feature-smoke, and package-smoke runtime validation.
+Schema layer status: planning and fixture registration, with limited active-run, write-preflight, install-plan, feature-smoke, package-smoke, clean-checkout smoke, and release-artifact runtime validation.
 
-T-0079 added fixture registration only. T-0092 added a lightweight runtime validation API for `hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` because those read models are backed by mutable local state. T-0098 registers and validates `hadara.write.preflight.v1` reports before returning CLI write-boundary preflight output. T-0129 validates `hadara.install.plan.v1` before returning installer dry-run plans. T-0131 validates `hadara.featureSmoke.v1` before returning reduced core feature smoke reports over service/read-model surfaces. T-0132 registers `hadara.packageSmoke.v1` and validates deterministic package-smoke report fixtures before package-smoke dry-run or execution commands exist. Broad schema validation and release gates remain deferred.
+T-0079 added fixture registration only. T-0092 added a lightweight runtime validation API for `hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` because those read models are backed by mutable local state. T-0098 registers and validates `hadara.write.preflight.v1` reports before returning CLI write-boundary preflight output. T-0129 validates `hadara.install.plan.v1` before returning installer dry-run plans. T-0131 validates `hadara.featureSmoke.v1` before returning reduced core feature smoke reports over service/read-model surfaces. T-0132 registers `hadara.packageSmoke.v1` and validates deterministic package-smoke report fixtures before package-smoke dry-run or execution commands exist. T-0137 registers and validates `hadara.releaseArtifact.v1` before returning release artifact builder reports. Broad schema validation and release gates remain deferred.
 
 ## Registry
 
@@ -41,6 +41,7 @@ Initial fixtures:
 | `hadara.featureSmoke.v1` | `src/schemas/feature-smoke.schema.json` | fixture | Documents reduced read-only core feature smoke reports for the `core` profile and deferred `release-readiness` profile; installed binary and launcher checks are explicitly false in the current report. |
 | `hadara.packageSmoke.v1` | `src/schemas/package-smoke.schema.json` | fixture | Documents reduced package-smoke reports, redacted path references, execution markers, artifact metadata, and privacy booleans before package-smoke command implementation. |
 | `hadara.cleanCheckoutSmoke.v1` | `src/schemas/clean-checkout-smoke.schema.json` | fixture | Documents reduced source-checkout smoke reports for disposable clean-checkout validation without package install, publish, release mutation, or public raw logs. |
+| `hadara.releaseArtifact.v1` | `src/schemas/release-artifact.schema.json` | fixture | Documents reduced release artifact build reports for tarball, checksum, manifest, whitelist verification, and no publish/GitHub/Docker mutation. |
 
 ## Versioning
 

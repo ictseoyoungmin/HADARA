@@ -1,0 +1,206 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { handleReleaseArtifactCommand } from '../../src/cli/release-artifact';
+import { resolveHadaraPaths } from '../../src/core/paths';
+import { validateSchema } from '../../src/core/schema';
+import { createReleaseArtifactReport, ReleaseArtifactCommandRunner } from '../../src/services/release-artifact';
+
+const roots: string[] = [];
+
+function tempProject(): string {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-release-artifact-'));
+  roots.push(root);
+  fs.mkdirSync(path.join(root, 'dist', 'cli'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'dist', 'cli', 'main.js'), '#!/usr/bin/env node\nconsole.log("hadara");\n', 'utf8');
+  fs.writeFileSync(path.join(root, 'dist', 'index.js'), 'module.exports = {};\n', 'utf8');
+  fs.writeFileSync(path.join(root, 'README.md'), '# HADARA\n', 'utf8');
+  fs.writeFileSync(path.join(root, 'LICENSE'), 'MIT\n', 'utf8');
+  fs.writeFileSync(
+    path.join(root, 'package.json'),
+    JSON.stringify(
+      {
+        name: 'hadara',
+        version: '0.0.0-bootstrap',
+        private: true,
+        license: 'MIT',
+        bin: { hadara: './dist/cli/main.js' }
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+  return root;
+}
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  process.exitCode = undefined;
+  for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
+});
+
+describe('release artifact builder', () => {
+  it('requires explicit execution before running npm pack', () => {
+    const root = tempProject();
+    const runner = vi.fn<ReleaseArtifactCommandRunner>();
+
+    const report = createReleaseArtifactReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      runner
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual({
+      severity: 'error',
+      code: 'RELEASE_ARTIFACT_EXECUTION_REQUIRED',
+      message: 'Release artifact building requires explicit --execute because it runs npm pack and writes artifacts.'
+    });
+    expect(runner).not.toHaveBeenCalled();
+    expect(validateSchema('hadara.releaseArtifact.v1', report).ok).toBe(true);
+  });
+
+  it('creates tarball checksum and manifest metadata in an explicit output directory', () => {
+    const root = tempProject();
+    const output = path.join(root, 'dist-release');
+    const runner: ReleaseArtifactCommandRunner = (_command, args) => {
+      const outputDir = String(args[args.indexOf('--pack-destination') + 1]);
+      fs.writeFileSync(path.join(outputDir, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
+      return {
+        status: 0,
+        stdout: JSON.stringify([
+          {
+            filename: 'hadara-0.0.0-bootstrap.tgz',
+            files: [
+              { path: 'package.json', size: 240 },
+              { path: 'README.md', size: 9 },
+              { path: 'LICENSE', size: 4 },
+              { path: 'dist/cli/main.js', size: 42 },
+              { path: 'dist/index.js', size: 21 }
+            ]
+          }
+        ]),
+        stderr: '/private/path/raw npm notice',
+        elapsedMs: 15
+      };
+    };
+
+    const report = createReleaseArtifactReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      execute: true,
+      output: 'dist-release',
+      runner
+    });
+    const encoded = JSON.stringify(report);
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.releaseArtifact.v1',
+      command: 'release.artifact',
+      ok: true,
+      mode: 'execute',
+      execution: {
+        stagingCreated: true,
+        npmPackExecuted: true,
+        checksumGenerated: true,
+        manifestGenerated: true,
+        packageContentsVerified: true,
+        publishExecuted: false,
+        githubReleaseCreated: false,
+        dockerImageBuilt: false
+      },
+      output: {
+        kind: 'explicit',
+        displayPath: './dist-release',
+        relativePath: 'dist-release',
+        pathRedacted: true,
+        retention: 'explicit-output'
+      },
+      packageContents: {
+        verified: true,
+        fileCount: 5,
+        forbiddenMatches: []
+      },
+      privacy: {
+        rawLogsIncluded: false,
+        packageContentsIncluded: false,
+        privatePathsIncluded: false,
+        environmentSecretsIncluded: false,
+        privateStorePathsIncluded: false
+      },
+      issues: []
+    });
+    expect(report.artifacts.map((artifact) => artifact.kind)).toEqual(['tarball', 'checksum', 'manifest']);
+    expect(report.artifacts.every((artifact) => artifact.hash?.startsWith('sha256:'))).toBe(true);
+    expect(fs.existsSync(path.join(output, 'hadara-0.0.0-bootstrap.tgz'))).toBe(true);
+    expect(fs.existsSync(path.join(output, 'hadara-0.0.0-bootstrap.tgz.sha256'))).toBe(true);
+    expect(fs.existsSync(path.join(output, 'hadara-0.0.0-bootstrap.tgz.manifest.json'))).toBe(true);
+    expect(encoded).not.toContain(root);
+    expect(encoded).not.toContain('/private/path');
+    expect(validateSchema('hadara.releaseArtifact.v1', report).ok).toBe(true);
+  });
+
+  it('fails package content verification when npm pack reports a file outside the whitelist', () => {
+    const root = tempProject();
+    const runner: ReleaseArtifactCommandRunner = (_command, args) => {
+      const outputDir = String(args[args.indexOf('--pack-destination') + 1]);
+      fs.writeFileSync(path.join(outputDir, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
+      return {
+        status: 0,
+        stdout: JSON.stringify([
+          {
+            filename: 'hadara-0.0.0-bootstrap.tgz',
+            files: [
+              { path: 'package.json', size: 240 },
+              { path: 'README.md', size: 9 },
+              { path: 'LICENSE', size: 4 },
+              { path: 'dist/cli/main.js', size: 42 },
+              { path: 'tasks/T-0001/EVIDENCE.md', size: 99 }
+            ]
+          }
+        ]),
+        stderr: '',
+        elapsedMs: 15
+      };
+    };
+
+    const report = createReleaseArtifactReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      execute: true,
+      runner
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.packageContents).toMatchObject({
+      verified: false,
+      forbiddenMatches: ['tasks/T-0001/EVIDENCE.md']
+    });
+    expect(report.issues).toContainEqual({
+      severity: 'error',
+      code: 'RELEASE_ARTIFACT_FORBIDDEN_FILE_INCLUDED',
+      message: 'Release artifact package includes file outside the whitelist: tasks/T-0001/EVIDENCE.md.',
+      stepId: 'verify-contents'
+    });
+    expect(validateSchema('hadara.releaseArtifact.v1', report).ok).toBe(true);
+  });
+
+  it('prints JSON through the release artifact CLI handler', () => {
+    const root = tempProject();
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleReleaseArtifactCommand({
+      args: ['release', 'artifact', '--json'],
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const report = JSON.parse(spy.mock.calls[0]?.[0] ?? '{}');
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.releaseArtifact.v1',
+      command: 'release.artifact',
+      ok: false
+    });
+    expect(validateSchema('hadara.releaseArtifact.v1', report).ok).toBe(true);
+  });
+});

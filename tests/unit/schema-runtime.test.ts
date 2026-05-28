@@ -252,6 +252,132 @@ describe('runtime schema validation', () => {
     ).toBe(true);
   });
 
+  it('validates release artifact reports', () => {
+    expect(
+      validateSchema('hadara.releaseArtifact.v1', {
+        schemaVersion: 'hadara.releaseArtifact.v1',
+        command: 'release.artifact',
+        ok: true,
+        mode: 'execute',
+        execution: {
+          stagingCreated: true,
+          npmPackExecuted: true,
+          checksumGenerated: true,
+          manifestGenerated: true,
+          packageContentsVerified: true,
+          publishExecuted: false,
+          githubReleaseCreated: false,
+          dockerImageBuilt: false
+        },
+        output: {
+          kind: 'disposable',
+          displayPath: '<redacted-release-artifact-output>',
+          pathRedacted: true,
+          retention: 'deleted'
+        },
+        package: {
+          name: 'hadara',
+          version: '0.0.0-bootstrap',
+          private: true,
+          filesWhitelistApplied: true
+        },
+        artifacts: [
+          {
+            kind: 'tarball',
+            visibility: 'temporary',
+            fileName: 'hadara-0.0.0-bootstrap.tgz',
+            pathRedacted: true,
+            byteLength: 100,
+            hash: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            rawContentIncluded: false
+          }
+        ],
+        packageContents: {
+          verified: true,
+          fileCount: 5,
+          allowedRoots: ['dist/', 'README.md', 'LICENSE', 'package.json'],
+          requiredFiles: ['package.json', 'README.md', 'LICENSE', 'dist/cli/main.js'],
+          forbiddenMatches: []
+        },
+        privacy: {
+          rawLogsIncluded: false,
+          packageContentsIncluded: false,
+          privatePathsIncluded: false,
+          environmentSecretsIncluded: false,
+          privateStorePathsIncluded: false
+        },
+        issues: []
+      }).ok
+    ).toBe(true);
+  });
+
+  it('rejects release artifact reports with publish or unredacted markers', () => {
+    const result = validateSchema('hadara.releaseArtifact.v1', {
+      schemaVersion: 'hadara.releaseArtifact.v1',
+      command: 'release.artifact',
+      ok: true,
+      mode: 'execute',
+      execution: {
+        stagingCreated: true,
+        npmPackExecuted: true,
+        checksumGenerated: true,
+        manifestGenerated: true,
+        packageContentsVerified: true,
+        publishExecuted: true,
+        githubReleaseCreated: true,
+        dockerImageBuilt: true
+      },
+      output: {
+        kind: 'disposable',
+        displayPath: '/home/alice/private',
+        pathRedacted: false,
+        retention: 'deleted'
+      },
+      package: {
+        name: 'hadara',
+        version: '0.0.0-bootstrap',
+        private: true,
+        filesWhitelistApplied: false
+      },
+      artifacts: [
+        {
+          kind: 'tarball',
+          visibility: 'temporary',
+          fileName: 'hadara.tgz',
+          pathRedacted: false,
+          rawContentIncluded: true
+        }
+      ],
+      packageContents: {
+        verified: true,
+        fileCount: 1,
+        allowedRoots: [],
+        requiredFiles: [],
+        forbiddenMatches: []
+      },
+      privacy: {
+        rawLogsIncluded: true,
+        packageContentsIncluded: true,
+        privatePathsIncluded: true,
+        environmentSecretsIncluded: true,
+        privateStorePathsIncluded: true
+      },
+      issues: []
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: '$.execution.publishExecuted', code: 'SCHEMA_CONST_MISMATCH' }),
+        expect.objectContaining({ path: '$.execution.githubReleaseCreated', code: 'SCHEMA_CONST_MISMATCH' }),
+        expect.objectContaining({ path: '$.output.pathRedacted', code: 'SCHEMA_CONST_MISMATCH' }),
+        expect.objectContaining({ path: '$.package.filesWhitelistApplied', code: 'SCHEMA_CONST_MISMATCH' }),
+        expect.objectContaining({ path: '$.artifacts[0].rawContentIncluded', code: 'SCHEMA_CONST_MISMATCH' }),
+        expect.objectContaining({ path: '$.privacy.rawLogsIncluded', code: 'SCHEMA_CONST_MISMATCH' })
+      ])
+    );
+  });
+
   it('rejects package smoke reports with publish or release mutation markers', () => {
     const result = validateSchema('hadara.packageSmoke.v1', {
       schemaVersion: 'hadara.packageSmoke.v1',

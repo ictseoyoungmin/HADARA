@@ -295,6 +295,17 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     notes: 'Read-only release readiness report; advisory mode warns, strict mode blocks on open high-severity debt, and neither mode packages, deploys, or executes release actions.'
   },
   {
+    name: 'hadara release artifact --execute --json',
+    category: 'release',
+    stable: true,
+    readOnly: false,
+    enabledByDefault: true,
+    availability: 'default',
+    risk: 'medium',
+    schemaVersion: 'hadara.releaseArtifact.v1',
+    notes: 'Explicit release artifact build; creates a whitelisted npm tarball, checksum, and manifest in a disposable or explicit output directory without publish, GitHub Release, Docker image build, or public raw logs.'
+  },
+  {
     name: 'hadara run --script <script.json> --json',
     category: 'execute',
     stable: true,
