@@ -4,6 +4,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { HadaraPaths } from '../core/paths';
 import { assertSchema } from '../core/schema';
+import { attachReducedSmokeEvidence, SmokeEvidenceArtifact } from './smoke-evidence';
 
 export interface CleanCheckoutSmokeIssue {
   severity: 'warning' | 'error';
@@ -52,6 +53,7 @@ export interface CleanCheckoutSmokeReport {
     mutated: false;
   };
   steps: CleanCheckoutSmokeStep[];
+  artifacts: SmokeEvidenceArtifact[];
   privacy: {
     rawLogsIncluded: false;
     privatePathsIncluded: false;
@@ -67,6 +69,9 @@ export interface CleanCheckoutSmokeOptions {
   workspace?: string;
   keepTemp?: boolean;
   timeoutSeconds?: number;
+  taskId?: string;
+  attachEvidence?: boolean;
+  noEvidence?: boolean;
   runner?: CleanCheckoutCommandRunner;
 }
 
@@ -110,6 +115,7 @@ export function createCleanCheckoutSmokeReport(options: CleanCheckoutSmokeOption
   const steps: CleanCheckoutSmokeStep[] = [];
   const runner = options.runner ?? runCommand;
   const timeoutMs = (options.timeoutSeconds ?? 180) * 1000;
+  validateTaskId(options.taskId, issues);
 
   try {
     if (issues.some((issue) => issue.severity === 'error') || !workspaceSetup.ok) {
@@ -246,6 +252,7 @@ export function createCleanCheckoutSmokeReport(options: CleanCheckoutSmokeOption
       mutated: false
     },
     steps,
+    artifacts: [],
     privacy: {
       rawLogsIncluded: false,
       privatePathsIncluded: false,
@@ -254,6 +261,26 @@ export function createCleanCheckoutSmokeReport(options: CleanCheckoutSmokeOption
     },
     issues
   };
+
+  if (options.attachEvidence === true && options.taskId && options.noEvidence !== true) {
+    const evidence = attachReducedSmokeEvidence({
+      projectRoot: options.paths.projectRoot,
+      taskId: options.taskId,
+      category: 'clean-checkout-smoke',
+      kind: 'command-log',
+      summary: `Clean-checkout smoke ${report.ok ? 'passed' : 'failed'} with reduced public evidence.`,
+      result: report.ok ? 'passed' : 'failed',
+      report
+    });
+    report.artifacts.push(evidence.artifact);
+    report.steps.push({
+      id: 'evidence',
+      label: 'Attach reduced public evidence',
+      command: 'write reduced public smoke evidence summary',
+      status: 'passed',
+      summary: 'Reduced clean-checkout smoke summary was attached as public evidence after redaction checks.'
+    });
+  }
 
   assertSchema('hadara.cleanCheckoutSmoke.v1', report);
   return report;
@@ -442,6 +469,16 @@ function validateTimeout(timeoutSeconds: number | undefined, issues: CleanChecko
       severity: 'error',
       code: 'CLEAN_CHECKOUT_TIMEOUT_INVALID',
       message: 'Clean-checkout smoke timeout must be a positive integer number of seconds.'
+    });
+  }
+}
+
+function validateTaskId(taskId: string | undefined, issues: CleanCheckoutSmokeIssue[]): void {
+  if (taskId !== undefined && !/^T-[0-9]{4}$/.test(taskId)) {
+    issues.push({
+      severity: 'error',
+      code: 'CLEAN_CHECKOUT_TASK_ID_INVALID',
+      message: 'Clean-checkout smoke task id must look like T-0000.'
     });
   }
 }

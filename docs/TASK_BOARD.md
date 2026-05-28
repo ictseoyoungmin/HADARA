@@ -136,3 +136,4 @@
 | T-0133 | Package Smoke Dry-run Implementation | Done | tasks/T-0133-package-smoke-dry-run-implementation | Adds read-only `hadara package smoke --dry-run --json` planning reports without package execution. |
 | T-0134 | Local Package Smoke Execution | Done | tasks/T-0134-local-package-smoke-execution | Adds explicit `hadara package smoke --execute --json` local smoke with npm pack, isolated prefix install, installed doctor/core smoke, cleanup, and reduced reports. |
 | T-0135 | Clean Checkout Smoke Implementation | Done | tasks/T-0135-clean-checkout-smoke-implementation | Adds explicit `hadara smoke clean-checkout --execute --json` source-checkout smoke in a disposable copy with reduced reports and cleanup. |
+| T-0136 | Smoke Evidence Integration | Done | tasks/T-0136-smoke-evidence-integration | Adds reduced public smoke evidence attachment for package-smoke and clean-checkout smoke. |

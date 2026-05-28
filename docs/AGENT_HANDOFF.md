@@ -96,14 +96,15 @@
 - T-0133 is complete: `hadara package smoke --dry-run --json` now emits a schema-valid `hadara.packageSmoke.v1` planning report for source validation, disposable workspace planning, planned package/install/core-smoke/evidence steps, reduced artifact metadata, and issues. It keeps all execution markers false, redacts absolute source/workspace paths, attaches no evidence by default, and performs no `npm pack`, package install, subprocess execution, artifact write, release mutation, publish, GitHub Release, Docker image build, provider call, or MCP package-smoke behavior.
 - T-0134 is complete: `hadara package smoke --execute --json` now requires explicit local execution, runs `npm pack`, installs the package into an isolated disposable prefix using npm's `-g --prefix` mechanics without system-global install, invokes installed command-form `hadara doctor --json` and `hadara smoke run --profile core --json`, cleans up its disposable workspace by default, and emits a reduced schema-valid `hadara.packageSmoke.v1` local report without raw logs, raw package contents, private paths, publish, release mutation, global install, GitHub Release, Docker image build, default evidence attachment, provider calls, or MCP package-smoke behavior. Dry-run remains default-safe and read-only; raw/private log retention policy remains deferred to T-0136.
 - T-0135 is complete: `hadara smoke clean-checkout --execute --json` now copies source into a disposable clean checkout, runs `npm ci`, `npm run build`, `npm run check`, built CLI `doctor --json`, built CLI `ops status --json`, and built CLI strict release gate, then cleans up by default and emits a reduced schema-valid `hadara.cleanCheckoutSmoke.v1` report. The source workspace remains unchanged, installed user-facing `hadara` validation remains separate package/install smoke scope, and the command performs no package install, publish, release mutation, GitHub Release, Docker image build, evidence attachment, or public raw-log retention.
+- T-0136 is complete: package-smoke local execution and clean-checkout smoke execution now support explicit `--attach-evidence --task <task-id>` reduced public evidence attachment. Summaries are written under task-local `artifacts/package-smoke/` or `artifacts/clean-checkout-smoke/`, linked from `EVIDENCE.md` and `evidence.jsonl`, and pass public artifact redaction checks while excluding raw logs, raw package contents, private paths, private store paths, release mutation, publish, GitHub Release, Docker image build, and MCP smoke execution.
 - Release/install/package-smoke future work is tracked in `docs/DEVELOPMENT_SLICES.md`, `docs/V1_0_CAPSULE_BACKLOG.md`, and `docs/TEST_STRATEGY.md`. The local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` may exist in this workspace as supporting planning context for agents, but it is intentionally not committed to GitHub.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0133 Package Smoke Dry-run Implementation: added read-only `hadara package smoke --dry-run --json` planning reports with no package execution or evidence writes.
 - T-0134 Local Package Smoke Execution: added explicit `hadara package smoke --execute --json` local execution with reduced reports and default cleanup.
 - T-0135 Clean Checkout Smoke Implementation: added explicit source-checkout smoke in a disposable copy with reduced reports and default cleanup.
+- T-0136 Smoke Evidence Integration: added explicit reduced public evidence attachment for package-smoke and clean-checkout smoke.
 
 ## Current Known Problems
 
@@ -118,7 +119,7 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is T-0136 Smoke Evidence Integration: attach reduced package/install/clean-checkout smoke evidence safely while keeping raw logs private or temporary, and preserve the "isolated prefix install, not system global install" wording for package smoke.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is T-0137 Release Artifact Builder: build tarball/checksum/manifest and verify package contents without publishing, while keeping outputs disposable or explicitly approved and evidence reduced.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, TUI writes, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
@@ -200,6 +201,12 @@
 - Latest T-0135 full check: Docker temp-copy `npm run check` passed with TypeScript build, 54 test files, and 384 tests.
 - Latest T-0135 built CLI release-gate smoke: Docker built CLI `node dist/cli/main.js release gate --mode strict --json --project /tmp/hadara` returned `ok: true`, 13 passed checks, and no issues.
 - Latest T-0135 done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0135 --level done --json --project /tmp/hadara` returned `ok: true` with no issues.
+- Latest T-0136 focused check: Docker temp-copy `npx vitest run tests/unit/package-smoke-dry-run.test.ts tests/unit/clean-checkout-smoke.test.ts tests/unit/schema-runtime.test.ts tests/unit/schema-fixtures.test.ts` passed with 4 files and 32 tests.
+- Latest T-0136 full check: Docker temp-copy `npm run check` passed with TypeScript build, 54 test files, and 386 tests.
+- Latest T-0136 built CLI package-smoke attach evidence: Docker built CLI `node dist/cli/main.js package smoke --execute --attach-evidence --task T-0136 --json --project /tmp/hadara --timeout 120` returned `ok: true`, attached a public `artifacts/package-smoke/*-summary.json`, and reported no issues.
+- Latest T-0136 built CLI clean-checkout attach evidence: Docker built CLI `node dist/cli/main.js smoke clean-checkout --execute --attach-evidence --task T-0136 --json --project /tmp/hadara --timeout 180` returned `ok: true`, attached a public `artifacts/clean-checkout-smoke/*-summary.json`, and reported no issues.
+- Latest T-0136 built CLI release-gate smoke: Docker built CLI `node dist/cli/main.js release gate --mode strict --json --project /tmp/hadara` returned `ok: true`, 13 passed checks, and no issues.
+- Latest T-0136 done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0136 --level done --json --project /tmp/hadara` returned `ok: true` with no issues.
 - Latest remote CI observation: GitHub Actions CI run #109 on `main` for commit `8b4f33d1bf926d051cf63e13ca2de222bfc22d8c` completed successfully; job `check` included `npm ci` and `npm run check`.
 - Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0123 --level done --json --project /workspace` returned `ok: true` with no issues.
 - Latest built CLI smoke: Docker built CLI `node dist/cli/main.js tui --snapshot --width 150 --height 30 --project /workspace` rendered Overview Current Work as T-0116, Previous Work as T-0115, and heading-aware Goal/Next lines from read-model document text.

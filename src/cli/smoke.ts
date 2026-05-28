@@ -18,6 +18,9 @@ export function handleSmokeCommand(input: SmokeCommandInput): boolean {
       execute: getFlag(input.args, '--execute'),
       workspace: getStringOption(input.args, '--workspace'),
       keepTemp: getFlag(input.args, '--keep-temp'),
+      taskId: getStringOption(input.args, '--task'),
+      attachEvidence: getFlag(input.args, '--attach-evidence'),
+      noEvidence: getFlag(input.args, '--no-evidence'),
       timeoutSeconds: getIntegerOption(input.args, '--timeout', { min: 1 })
     });
 

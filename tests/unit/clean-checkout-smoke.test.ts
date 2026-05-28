@@ -14,6 +14,7 @@ function tempProject(): string {
   roots.push(root);
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
   fs.mkdirSync(path.join(root, 'tasks'), { recursive: true });
+  fs.mkdirSync(path.join(root, 'tasks', 'T-0136-smoke-evidence-integration'), { recursive: true });
   fs.mkdirSync(path.join(root, '.hadara', 'local', 'portable', 'data', 'private-evidence'), { recursive: true });
   fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
   fs.mkdirSync(path.join(root, 'node_modules'), { recursive: true });
@@ -193,6 +194,51 @@ describe('clean checkout smoke', () => {
       ok: false,
       mode: 'execute'
     });
+    expect(validateSchema('hadara.cleanCheckoutSmoke.v1', report).ok).toBe(true);
+  });
+
+  it('attaches reduced public clean-checkout smoke evidence when requested', () => {
+    const root = tempProject();
+    const runner: CleanCheckoutCommandRunner = (_command, args) => ({
+      status: 0,
+      stdout: args.includes('--json') ? JSON.stringify({ ok: true }) : 'raw stdout /home/alice/private',
+      stderr: 'raw stderr token=secret',
+      elapsedMs: 5
+    });
+
+    const report = createCleanCheckoutSmokeReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      execute: true,
+      taskId: 'T-0136',
+      attachEvidence: true,
+      runner
+    });
+    const taskDir = path.join(root, 'tasks', 'T-0136-smoke-evidence-integration');
+    const evidenceRecord = JSON.parse(fs.readFileSync(path.join(taskDir, 'evidence.jsonl'), 'utf8').trim()) as {
+      evidencePath: string;
+      visibility: string;
+      result: string;
+    };
+    const artifact = fs.readFileSync(path.join(taskDir, evidenceRecord.evidencePath), 'utf8');
+
+    expect(report.ok).toBe(true);
+    expect(report.artifacts).toContainEqual(
+      expect.objectContaining({
+        kind: 'summary',
+        visibility: 'public',
+        evidencePath: expect.stringMatching(/^tasks\/T-0136-smoke-evidence-integration\/artifacts\/clean-checkout-smoke\/.+-summary\.json$/),
+        rawContentIncluded: false
+      })
+    );
+    expect(report.steps).toContainEqual(expect.objectContaining({ id: 'evidence', status: 'passed' }));
+    expect(evidenceRecord).toMatchObject({
+      visibility: 'public',
+      result: 'passed'
+    });
+    expect(evidenceRecord.evidencePath).toMatch(/^artifacts\/clean-checkout-smoke\/.+-summary\.json$/);
+    expect(artifact).toContain('"category": "clean-checkout-smoke"');
+    expect(artifact).not.toContain('/home/alice/private');
+    expect(artifact).not.toContain('token=secret');
     expect(validateSchema('hadara.cleanCheckoutSmoke.v1', report).ok).toBe(true);
   });
 });

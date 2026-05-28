@@ -4,6 +4,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { HadaraPaths } from '../core/paths';
 import { assertSchema } from '../core/schema';
+import { attachReducedSmokeEvidence } from './smoke-evidence';
 
 export interface PackageSmokeIssue {
   severity: 'warning' | 'error';
@@ -54,6 +55,8 @@ export interface PackageSmokeReport {
     relativePath?: string;
     pathRedacted?: true;
     rawContentIncluded: false;
+    byteLength?: number;
+    hash?: string;
   }>;
   privacy: {
     rawLogsIncluded: false;
@@ -363,15 +366,6 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
     }
   }
 
-  if (options.attachEvidence === true && options.taskId && options.noEvidence !== true) {
-    issues.push({
-      severity: 'warning',
-      code: 'PACKAGE_SMOKE_EVIDENCE_DEFERRED',
-      message: 'Package-smoke evidence attachment remains deferred to the smoke evidence integration capsule.',
-      stepId: 'evidence'
-    });
-  }
-
   const report: PackageSmokeReport = {
     schemaVersion: 'hadara.packageSmoke.v1',
     command: 'package.smoke',
@@ -398,6 +392,25 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
     },
     issues
   };
+
+  if (options.attachEvidence === true && options.taskId && options.noEvidence !== true) {
+    const evidence = attachReducedSmokeEvidence({
+      projectRoot: options.paths.projectRoot,
+      taskId: options.taskId,
+      category: 'package-smoke',
+      kind: 'command-log',
+      summary: `Package smoke ${report.mode} ${report.ok ? 'passed' : 'failed'} with reduced public evidence.`,
+      result: report.ok ? 'passed' : 'failed',
+      report
+    });
+    report.artifacts.push(evidence.artifact);
+    report.steps.push({
+      id: 'evidence',
+      label: 'Attach reduced public evidence',
+      status: 'passed',
+      summary: 'Reduced package-smoke summary was attached as public evidence after redaction checks.'
+    });
+  }
 
   assertSchema('hadara.packageSmoke.v1', report);
   return report;

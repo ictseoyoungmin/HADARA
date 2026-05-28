@@ -65,6 +65,10 @@
       "type": "array",
       "items": { "$ref": "#/$defs/step" }
     },
+    "artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artifact" }
+    },
     "privacy": {
       "type": "object",
       "additionalProperties": true,
@@ -105,6 +109,17 @@
         "code": { "type": "string", "minLength": 1 },
         "message": { "type": "string", "minLength": 1 },
         "stepId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "visibility", "evidencePath", "rawContentIncluded"],
+      "properties": {
+        "kind": { "const": "summary" },
+        "visibility": { "const": "public" },
+        "evidencePath": { "type": "string", "pattern": "^tasks/T-[0-9]{4}-.+/artifacts/clean-checkout-smoke/.+" },
+        "rawContentIncluded": { "const": false }
       }
     }
   }

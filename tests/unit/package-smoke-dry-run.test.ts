@@ -13,6 +13,7 @@ function tempProject(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-package-smoke-'));
   roots.push(root);
   fs.mkdirSync(path.join(root, 'tasks', 'T-0133-package-smoke-dry-run-implementation'), { recursive: true });
+  fs.mkdirSync(path.join(root, 'tasks', 'T-0136-smoke-evidence-integration'), { recursive: true });
   fs.writeFileSync(
     path.join(root, 'package.json'),
     JSON.stringify(
@@ -377,6 +378,50 @@ describe('package smoke local execution', () => {
       message: 'Package-smoke execution workspace must be outside the project source tree.'
     });
     expect(runner).not.toHaveBeenCalled();
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
+  it('attaches reduced public package-smoke evidence when requested', () => {
+    const root = tempProject();
+    const runner: PackageSmokeCommandRunner = (_command, args) => {
+      if (args[0] === 'pack') {
+        const workspace = String(args[args.indexOf('--pack-destination') + 1]);
+        fs.writeFileSync(path.join(workspace, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
+        return { status: 0, stdout: JSON.stringify([{ filename: 'hadara-0.0.0-bootstrap.tgz' }]), stderr: '/private/raw/path', elapsedMs: 10 };
+      }
+      if (args[0] === 'install') return { status: 0, stdout: 'installed', stderr: '', elapsedMs: 11 };
+      return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 12 };
+    };
+
+    const report = createPackageSmokeLocalReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      taskId: 'T-0136',
+      attachEvidence: true,
+      runner
+    });
+    const taskDir = path.join(root, 'tasks', 'T-0136-smoke-evidence-integration');
+    const evidenceIndex = fs.readFileSync(path.join(taskDir, 'evidence.jsonl'), 'utf8');
+    const evidenceRecord = JSON.parse(evidenceIndex.trim()) as { evidencePath: string; visibility: string; result: string };
+    const artifact = fs.readFileSync(path.join(taskDir, evidenceRecord.evidencePath), 'utf8');
+
+    expect(report.ok).toBe(true);
+    expect(report.artifacts).toContainEqual(
+      expect.objectContaining({
+        kind: 'summary',
+        visibility: 'public',
+        evidencePath: expect.stringMatching(/^tasks\/T-0136-smoke-evidence-integration\/artifacts\/package-smoke\/.+-summary\.json$/),
+        rawContentIncluded: false
+      })
+    );
+    expect(report.steps).toContainEqual(expect.objectContaining({ id: 'evidence', status: 'passed' }));
+    expect(evidenceRecord).toMatchObject({
+      visibility: 'public',
+      result: 'passed'
+    });
+    expect(evidenceRecord.evidencePath).toMatch(/^artifacts\/package-smoke\/.+-summary\.json$/);
+    expect(artifact).toContain('"schemaVersion": "hadara.smokeEvidenceSummary.v1"');
+    expect(artifact).toContain('"category": "package-smoke"');
+    expect(artifact).not.toContain('/private/raw/path');
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
   });
 });
