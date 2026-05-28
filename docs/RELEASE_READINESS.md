@@ -12,6 +12,7 @@ Current bootstrap metadata mode:
 - npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28; recheck immediately before publish.
 - Current version remains `0.0.0-bootstrap`.
 - Current package remains `private: true`.
+- Current package metadata includes `"license": "MIT"`.
 - Current binary remains `bin.hadara` at `./dist/cli/main.js`.
 - Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability.
 - Release-candidate metadata mode: version `0.1.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present.
@@ -59,15 +60,20 @@ Portable launcher responsibilities:
 - Portable launchers do not modify project files.
 - Portable launchers must prefer the installed `hadara` command form for user-facing validation.
 
-Default install locations:
+Default install location suggestions:
 
-- POSIX prefix: `~/.local/share/hadara`
-- POSIX bin link: `~/.local/bin/hadara`
-- Windows prefix: `%LOCALAPPDATA%\HADARA`
-- Windows cmd launcher: `%LOCALAPPDATA%\HADARA\bin\hadara.cmd`
-- Windows PowerShell launcher: `%LOCALAPPDATA%\HADARA\bin\hadara.ps1`
-- Windows USB portable root: `L:\HADARA`
-- WSL USB portable root: `/mnt/l/HADARA`
+- Linux/POSIX/WSL prefix suggestion: `~/.local/share/hadara`
+- Linux/POSIX/WSL bin link suggestion: `~/.local/bin/hadara`
+- Windows prefix suggestion: `%LOCALAPPDATA%\HADARA`
+- Windows cmd launcher suggestion: `%LOCALAPPDATA%\HADARA\bin\hadara.cmd`
+- Windows PowerShell launcher suggestion: `%LOCALAPPDATA%\HADARA\bin\hadara.ps1`
+- Default POSIX/WSL/Windows install paths are suggestions, not silent decisions.
+- Windows USB portable root: user-selected removable drive, for example `L:\HADARA`.
+- WSL USB portable root for `--platform usb`: user-selected mounted removable drive, for example `/mnt/l/HADARA`.
+- The drive letter or mount path must not be assumed.
+- USB install roots must be explicitly provided.
+- Install planning must require an explicit `--usb-root` or `--target` value for USB, or return a structured issue asking the user to choose one.
+- `--platform wsl` uses Linux-style default install suggestions; mounted removable drives belong to `--platform usb`.
 
 Node and WSL checks:
 
@@ -83,6 +89,7 @@ Dry-run report schema:
 - Modes: `dry-run`, `execute`
 - Platforms: `linux`, `windows`, `wsl`, `usb`; `posix` remains a compatibility alias for Linux-style installs.
 - Actions must describe planned writes without performing them.
+- `wouldWrite: true` means the action would write only in a future confirmed execute/apply mode; it does not mean the dry-run command wrote anything.
 - Public output must be reduced and redacted.
 - Target paths must be public path references, not raw absolute path strings.
 - `target.prefix.displayPath` is a redacted or portable display path for humans, not a private raw path.
@@ -110,11 +117,15 @@ T-0128 release-gate boundary:
 T-0129 implements installer planning only.
 
 - Public command: `hadara install plan --json`.
-- Supported flags: `--platform linux|windows|wsl|usb|posix`, `--source <path>`, `--source-kind tarball|directory|portable-bundle`, `--prefix <path>`, `--launcher <path>`, and `--mode dry-run|execute`.
+- Supported flags: `--platform linux|windows|wsl|usb|posix`, `--source <path>`, `--source-kind tarball|directory|portable-bundle`, `--target <path>`, `--usb-root <path>`, `--prefix <path>`, `--launcher <path>`, and `--mode dry-run|execute`.
 - Successful dry-run output uses schema `hadara.install.plan.v1`.
 - Dry-run actions describe planned writes with `wouldWrite: true` but perform no filesystem, PATH, profile, package, registry, or release mutation.
+- `wouldWrite: true` means execute/apply mode would write if later confirmed; it is not evidence that dry-run wrote files.
 - Public source and target path fields use `pathRedacted: true`.
 - User-supplied private absolute source, prefix, and launcher paths are not echoed in public output.
+- USB dry-run planning without `--usb-root` or `--target` returns issue `USB_ROOT_REQUIRED`.
 - `--mode execute` returns issue `INSTALL_EXECUTION_DISABLED` and does not execute installer behavior.
+- Dry-run JSON must never prompt.
+- Future install execution must require either interactive confirmation or an explicit `--yes`.
 - Capability discovery marks `hadara install plan --json` as read-only.
 - T-0129 creates no installer scripts, no portable launchers, no install directories, no package artifacts, and no MCP installer execution surface.

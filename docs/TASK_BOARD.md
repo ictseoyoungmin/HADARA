@@ -129,4 +129,4 @@
 | T-0126 | Package Smoke Command Surface Design | Done | tasks/T-0126-package-smoke-command-surface-design | Defines `hadara package smoke` command-surface semantics and strengthens the read-only release gate. |
 | T-0127 | Package Metadata Release Readiness | Done | tasks/T-0127-package-metadata-release-readiness | Records package name/version/private/files/license/publish-target decisions and strengthens the read-only release gate. |
 | T-0128 | Installer Script Surface and Schema | Done | tasks/T-0128-installer-script-surface-and-schema | Defines installer/portable launcher surfaces, redacted install plan schema, execute-reserved policy, and read-only release-gate markers without install mutation. |
-| T-0129 | Installer Dry-run Implementation | Done | tasks/T-0129-installer-dry-run-implementation | Adds read-only `hadara install plan --json` dry-run reports with redacted paths and execute-disabled behavior. |
+| T-0129 | Installer Dry-run Implementation | Done | tasks/T-0129-installer-dry-run-implementation | Adds read-only `hadara install plan --json` dry-run reports with redacted paths, explicit USB-root requirement, and execute-disabled behavior. |

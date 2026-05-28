@@ -14,6 +14,8 @@ export function handleInstallCommand(input: InstallCommandInput): boolean {
     platform: getStringOption(input.args, '--platform'),
     source: getStringOption(input.args, '--source'),
     sourceKind: getStringOption(input.args, '--source-kind'),
+    target: getStringOption(input.args, '--target'),
+    usbRoot: getStringOption(input.args, '--usb-root'),
     prefix: getStringOption(input.args, '--prefix'),
     launcher: getStringOption(input.args, '--launcher')
   });

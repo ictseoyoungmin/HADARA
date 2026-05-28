@@ -83,6 +83,27 @@ describe('installer dry-run plan', () => {
     expect(validateSchema('hadara.install.plan.v1', report).ok).toBe(true);
   });
 
+  it('uses Linux-style default suggestions for WSL installs', () => {
+    const report = createInstallPlanReport({
+      platform: 'wsl'
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.platform).toBe('wsl');
+    expect(report.target.prefix).toMatchObject({
+      displayPath: '~/.local/share/hadara',
+      pathRedacted: true,
+      kind: 'default'
+    });
+    expect(report.target.launcher).toMatchObject({
+      displayPath: '~/.local/bin/hadara',
+      pathRedacted: true,
+      kind: 'default'
+    });
+    expect(JSON.stringify(report.target)).not.toContain('/mnt/l/HADARA');
+    expect(validateSchema('hadara.install.plan.v1', report).ok).toBe(true);
+  });
+
   it('keeps execute mode disabled in the dry-run implementation', () => {
     const report = createInstallPlanReport({
       mode: 'execute',
@@ -99,6 +120,72 @@ describe('installer dry-run plan', () => {
       severity: 'error',
       code: 'INSTALL_EXECUTION_DISABLED',
       message: 'Installer execution is not implemented in this dry-run capsule.'
+    });
+  });
+
+  it('requires an explicit USB root instead of assuming a drive letter', () => {
+    const report = createInstallPlanReport({
+      platform: 'usb'
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.target.prefix).toMatchObject({
+      displayPath: '<usb-root-required>',
+      pathRedacted: true,
+      kind: 'portable'
+    });
+    expect(report.issues).toContainEqual({
+      severity: 'error',
+      code: 'USB_ROOT_REQUIRED',
+      message: 'USB install planning requires an explicit USB root path, such as --usb-root L:\\HADARA or --usb-root /mnt/l/HADARA.'
+    });
+    expect(JSON.stringify(report.target)).not.toContain('L:\\HADARA');
+    expect(JSON.stringify(report.target)).not.toContain('/mnt/l/HADARA');
+  });
+
+  it('does not treat a generic prefix as the required USB root', () => {
+    const report = createInstallPlanReport({
+      platform: 'usb',
+      prefix: 'ignored-prefix'
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'USB_ROOT_REQUIRED' }));
+    expect(report.target.prefix.displayPath).toBe('<usb-root-required>');
+  });
+
+  it('accepts an explicit USB root while keeping public paths redacted', () => {
+    const report = createInstallPlanReport({
+      platform: 'usb',
+      usbRoot: 'E:\\HADARA'
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.target.prefix).toMatchObject({
+      displayPath: '<redacted-windows-path>',
+      pathRedacted: true,
+      kind: 'portable'
+    });
+    expect(report.target.launcher).toMatchObject({
+      displayPath: '<redacted-windows-path>',
+      pathRedacted: true,
+      kind: 'portable'
+    });
+    expect(JSON.stringify(report)).not.toContain('E:\\HADARA');
+    expect(validateSchema('hadara.install.plan.v1', report).ok).toBe(true);
+  });
+
+  it('accepts --target-style root planning for automation', () => {
+    const report = createInstallPlanReport({
+      platform: 'linux',
+      target: 'custom/hadara'
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.target.prefix).toMatchObject({
+      displayPath: './custom/hadara',
+      relativePath: 'custom/hadara',
+      pathRedacted: true
     });
   });
 

@@ -6,6 +6,8 @@
 | `src/cli/install.ts` | Add | Expose `hadara install plan` CLI output. |
 | `src/cli/main.ts` | Update | Route the new install command and help text. |
 | `src/services/capability-registry.ts` | Update | Mark `hadara install plan --json` as a read-only capability. |
+| `package.json` | Update | Record MIT package metadata without making the private package publishable. |
+| `package-lock.json` | Update | Keep root package lock metadata aligned with `package.json`. |
 | `tests/unit/install-plan.test.ts` | Add | Cover schema validity, redaction, execute-disabled behavior, and CLI JSON output. |
 | `tasks/T-0129-installer-dry-run-implementation/*` | Update | Replace scaffold docs and record evidence. |
 | `docs/PROJECT_STATE.md` | Update | Record the new installer dry-run plan surface when complete. |

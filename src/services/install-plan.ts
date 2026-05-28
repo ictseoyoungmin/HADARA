@@ -57,6 +57,8 @@ export interface InstallPlanOptions {
   platform?: string;
   source?: string;
   sourceKind?: string;
+  target?: string;
+  usbRoot?: string;
   prefix?: string;
   launcher?: string;
 }
@@ -96,7 +98,7 @@ export function createInstallPlanReport(options: InstallPlanOptions = {}): Insta
     });
   }
 
-  const target = createTarget(platform, options.prefix, options.launcher);
+  const target = createTarget(platform, options, issues);
   const report: InstallPlanReport = {
     schemaVersion: 'hadara.install.plan.v1',
     command: 'install.plan',
@@ -176,15 +178,26 @@ function createSource(kind: InstallPlanSourceKind, source: string | undefined): 
   };
 }
 
-function createTarget(platform: InstallPlanPlatform, prefix: string | undefined, launcher: string | undefined): InstallPlanReport['target'] {
-  const defaults = defaultTarget(platform);
+function createTarget(platform: InstallPlanPlatform, options: InstallPlanOptions, issues: InstallPlanIssue[]): InstallPlanReport['target'] {
+  const root = platform === 'usb' ? options.usbRoot ?? options.target : options.target ?? options.prefix;
+  if (platform === 'usb' && !root) {
+    issues.push({
+      severity: 'error',
+      code: 'USB_ROOT_REQUIRED',
+      message: 'USB install planning requires an explicit USB root path, such as --usb-root L:\\HADARA or --usb-root /mnt/l/HADARA.'
+    });
+  }
+
+  const defaults = defaultTarget(platform, root);
+  const prefix = root ?? defaults.prefix;
+  const launcher = options.launcher ?? defaults.launcher;
   return {
-        prefix: publicPathRef(prefix ?? defaults.prefix, defaults.prefixKind, platform),
-        launcher: publicPathRef(launcher ?? defaults.launcher, defaults.launcherKind, platform)
+    prefix: publicPathRef(prefix, defaults.prefixKind, platform),
+    launcher: publicPathRef(launcher, defaults.launcherKind, platform)
   };
 }
 
-function defaultTarget(platform: InstallPlanPlatform): {
+function defaultTarget(platform: InstallPlanPlatform, root?: string): {
   prefix: string;
   launcher: string;
   prefixKind: PublicPathRef['kind'];
@@ -199,21 +212,23 @@ function defaultTarget(platform: InstallPlanPlatform): {
         launcherKind: 'default'
       };
     case 'usb':
+      if (root) {
+        return {
+          prefix: root,
+          launcher: joinPortableLauncher(root),
+          prefixKind: 'portable',
+          launcherKind: 'portable'
+        };
+      }
       return {
-        prefix: 'HADARA',
-        launcher: 'portable/bin/hadara',
-        prefixKind: 'portable',
-        launcherKind: 'portable'
-      };
-    case 'wsl':
-      return {
-        prefix: '/mnt/l/HADARA',
-        launcher: '/mnt/l/HADARA/portable/bin/hadara',
+        prefix: '<usb-root-required>',
+        launcher: '<usb-root-required>/portable/bin/hadara',
         prefixKind: 'portable',
         launcherKind: 'portable'
       };
     case 'linux':
     case 'posix':
+    case 'wsl':
     default:
       return {
         prefix: '~/.local/share/hadara',
@@ -222,6 +237,11 @@ function defaultTarget(platform: InstallPlanPlatform): {
         launcherKind: 'default'
       };
   }
+}
+
+function joinPortableLauncher(root: string): string {
+  const separator = root.includes('\\') ? '\\' : '/';
+  return `${root.replace(/[\\/]+$/, '')}${separator}portable${separator}bin${separator}hadara`;
 }
 
 function publicPathRef(value: string, kind: PublicPathRef['kind'], platform: InstallPlanPlatform): PublicPathRef {
@@ -235,13 +255,14 @@ function publicPathRef(value: string, kind: PublicPathRef['kind'], platform: Ins
 }
 
 function safeRelativePath(value: string | undefined): string | undefined {
-  if (!value || path.isAbsolute(value) || /^[A-Za-z]:[\\/]/.test(value) || value.startsWith('~') || value.includes('%')) return undefined;
+  if (!value || path.isAbsolute(value) || /^[A-Za-z]:[\\/]/.test(value) || value.startsWith('~') || value.startsWith('<') || value.includes('%')) return undefined;
   const normalized = value.split(/[\\/]+/).filter(Boolean).join('/');
   if (!normalized || normalized === '.' || normalized.startsWith('..')) return undefined;
   return normalized;
 }
 
 function redactDisplayPath(value: string, platform: InstallPlanPlatform): string {
+  if (value.startsWith('<')) return value;
   if (value.startsWith('~') || value.includes('%')) return value;
   if (/^[A-Za-z]:[\\/]/.test(value)) return '<redacted-windows-path>';
   if (path.isAbsolute(value)) return `<redacted-${redactedPlatformLabel(platform)}-path>`;

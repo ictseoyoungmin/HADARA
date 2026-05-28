@@ -2,6 +2,7 @@
   "name": "hadara",
   "version": "0.0.0-bootstrap",
   "private": true,
+  "license": "MIT",
   "description": "HADARA bootstrap skeleton: portable agentic development workbench",
   "bin": {
     "hadara": "./dist/cli/main.js"
