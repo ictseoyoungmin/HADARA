@@ -166,3 +166,30 @@ Matrix evidence boundaries:
 - Failure evidence should record stable issue codes, exit codes, and reduced remediation text.
 - The release gate must not execute install matrix smoke.
 - The release gate may only check this plan now and later read reduced evidence records.
+
+Structured matrix follow-up:
+
+- T-0130 keeps install matrix rows as planning markers only.
+- Before adding more matrix rows or executable matrix results, move the matrix row list into a structured fixture such as `docs/release-readiness.json` or `src/fixtures/install-matrix.v1.json`.
+- The future structured fixture schema should be `hadara.installMatrix.plan.v1`.
+- The future fixture should include row fields such as `id`, `platform`, `sourceKind`, `commandForm`, and `status`.
+- The read-only release gate should prefer the structured fixture over wording-sensitive Markdown markers once the fixture exists.
+
+## Major Feature Smoke Runner Plan
+
+T-0131 should implement the installed-CLI major-feature smoke runner before package-smoke or install-matrix execution. The first profile should be `core`, so package smoke can reuse it without creating release-gate evidence cycles.
+
+Recommended `core` profile command set:
+
+- `hadara doctor --json`
+- `hadara status --json`
+- `hadara task list --json`
+- `hadara tools list --json`
+- `hadara tui --snapshot --json`
+- `hadara release gate --mode advisory --json`
+
+Profile boundaries:
+
+- The `core` profile must avoid package-smoke execution and strict release-gate evidence requirements.
+- A later `release-readiness` profile may include strict release gate checks, package smoke evidence, install matrix evidence, and release artifact evidence after those surfaces exist.
+- Smoke runner output must stay reduced and redacted, with raw logs temporary or private/local only.

@@ -187,6 +187,27 @@ Matrix boundaries:
 - Raw logs and private paths must stay temporary or private/local.
 - The release gate must not execute install matrix smoke; it may only check this plan now and later read reduced evidence records.
 
+Structured matrix follow-up:
+
+- T-0130 keeps rows as planning markers.
+- Before row count or row status grows, promote the matrix into `docs/release-readiness.json` or `src/fixtures/install-matrix.v1.json`.
+- The fixture should use `schemaVersion: "hadara.installMatrix.plan.v1"` and row fields such as `id`, `platform`, `sourceKind`, `commandForm`, and `status`.
+
+## Major Feature Smoke Runner Plan
+
+T-0131 should add the shared installed-CLI smoke runner before package-smoke execution. The first profile is `core`, intentionally avoiding package-smoke execution and strict evidence-gate cycles.
+
+Recommended `core` profile:
+
+- `hadara doctor --json`
+- `hadara status --json`
+- `hadara task list --json`
+- `hadara tools list --json`
+- `hadara tui --snapshot --json`
+- `hadara release gate --mode advisory --json`
+
+The later `release-readiness` profile may add strict release gate checks, package smoke evidence, install matrix evidence, and release artifact evidence once those surfaces exist.
+
 ## Package Metadata Release Readiness
 
 T-0127 records package metadata decisions without making the package publishable.

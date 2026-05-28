@@ -7,3 +7,5 @@
 | 2026-05-28T10:19:37Z | command-log | Docker built CLI strict release gate passed with `ok: true`, 13 checks, including `INSTALL_MATRIX_SMOKE_PLAN`, and no issues. | passed |
 | 2026-05-28T10:19:37Z | command-log | Initial done-level harness validation failed as expected before evidence records existed, with `EVIDENCE_SCAFFOLD_UNCHANGED` and `EVIDENCE_REQUIRED`; evidence was then recorded for rerun. | passed |
 | 2026-05-28T10:20:12Z | command-log | Done-level harness validation passed for T-0130 with `ok: true` and no issues. | passed |
+| 2026-05-28T10:28:11Z | command-log | Follow-up strict release gate passed after documenting structured matrix fixture migration and T-0131 core smoke profile: `ok: true`, 13 checks, no issues. | passed |
+| 2026-05-28T10:28:45Z | command-log | Follow-up done-level harness validation passed for T-0130 with `ok: true` and no issues. | passed |
