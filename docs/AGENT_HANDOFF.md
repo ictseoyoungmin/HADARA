@@ -86,6 +86,7 @@
 - T-0123 is complete: high-severity operational debt OD-0003 and OD-0008 are mitigated by the existing required-reading/context safeguards and done-level evidence validation gates; debt aggregates now report `highOpen: 0`, and strict release gate passes when documented readiness checks pass.
 - T-0124 is complete: clean-checkout package smoke planning is explicit in `docs/TEST_STRATEGY.md`, and the read-only release gate now requires those smoke-plan markers before the clean-checkout readiness check passes. The current smoke plan remains observational only and performs no packaging, publishing, archive/checksum generation, deployment, GitHub calls, MCP release/package execution, or committed artifact writes.
 - T-0125 is complete: executable package-smoke artifact-boundary planning is explicit in `docs/TEST_STRATEGY.md`, covering disposable workspace, package artifact paths, redaction/audit handling, and reduced public evidence/report shape; the read-only release gate now reports `PACKAGE_SMOKE_ARTIFACT_BOUNDARY` as the check and maps missing markers to `PACKAGE_SMOKE_ARTIFACT_BOUNDARY_UNCLEAR` issues while still performing no package-smoke execution.
+- Release/install/package-smoke future work is now centralized in `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md`; use it before creating T-0126+ capsules for package-smoke command surface, package metadata, installer scripts, POSIX/Windows/USB install smoke, evidence freeze, release artifacts, or publish/deploy scripts.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
@@ -107,7 +108,7 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is executable package-smoke command surface design, defining approval, cleanup, failure, and explicit no-commit artifact semantics before implementing any package/release execution.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is T-0126 Package Smoke Command Surface Design from `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md`, defining approval, cleanup, failure, and explicit no-commit artifact semantics before implementing any package/release execution.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, TUI writes, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 

@@ -120,6 +120,12 @@ Evidence/report shape:
 
 The future executable package-smoke command must define approval, cleanup, and failure semantics in its own Task Capsule before implementation. Until then, `hadara release gate --mode strict --json` remains a read-only checklist and performs no package-smoke execution.
 
+## Release Install Package Smoke Plan
+
+Detailed remaining capsule sequencing for package smoke, package metadata, Linux/WSL and Windows installers, USB portable launchers, install matrix smoke, evidence-backed release gates, release artifacts, and final publish/deploy scripts lives in `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md`.
+
+Use that plan before starting T-0126 or later release/install/package-smoke capsules. Public user-facing install docs should prefer the installed `hadara` command form, while source-checkout validation may keep `node dist/cli/main.js` as an internal fallback until installer/package surfaces exist.
+
 ## Required Session Checks
 
 Before marking a development Task Capsule Done:

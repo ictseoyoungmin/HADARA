@@ -40,7 +40,7 @@ Remaining work is now v1.0 hardening rather than v0.3 proof of concept: redactio
 
 T-0099 adds TUI design alignment before production TUI work. The TUI is planned as a read-only terminal work console over existing read models, not a write surface or dashboard replacement.
 
-Detailed capsule candidates live in `docs/V1_0_CAPSULE_BACKLOG.md`. Detailed schemas and implementation notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
+Detailed capsule candidates live in `docs/V1_0_CAPSULE_BACKLOG.md`. Detailed schemas and implementation notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`. Release/install/package-smoke sequencing lives in `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md`.
 
 ## v0.4 Single-Agent Run State
 
