@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "hadara.packageSmoke.v1",
+  "command": "package.smoke",
+  "ok": true,
+  "mode": "dry-run",
+  "readOnly": true,
+  "execution": {
+    "npmPackExecuted": false,
+    "packageInstallExecuted": false,
+    "featureSmokeExecuted": false,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "workspace": {
+    "kind": "disposable",
+    "displayPath": "<redacted-disposable-workspace>",
+    "pathRedacted": true,
+    "retention": "deleted"
+  },
+  "source": {
+    "kind": "tarball",
+    "displayPath": "<redacted-tarball>",
+    "pathRedacted": true
+  },
+  "steps": [
+    {
+      "id": "plan-workspace",
+      "label": "Plan disposable workspace",
+      "status": "planned",
+      "summary": "Dry-run preview uses redacted public path references."
+    }
+  ],
+  "artifacts": [
+    {
+      "kind": "summary",
+      "visibility": "temporary",
+      "pathRedacted": true,
+      "rawContentIncluded": false
+    }
+  ],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "rawPackageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": []
+}

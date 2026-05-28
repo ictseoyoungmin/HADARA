@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "hadara.packageSmoke.v1",
+  "command": "package.smoke",
+  "ok": true,
+  "mode": "local",
+  "readOnly": false,
+  "execution": {
+    "npmPackExecuted": true,
+    "packageInstallExecuted": true,
+    "featureSmokeExecuted": true,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "workspace": {
+    "kind": "disposable",
+    "displayPath": "<redacted-disposable-workspace>",
+    "pathRedacted": true,
+    "retention": "private-local"
+  },
+  "source": {
+    "kind": "release-artifact",
+    "displayPath": "<redacted-release-artifact>",
+    "pathRedacted": true
+  },
+  "steps": [
+    {
+      "id": "collect-private-log",
+      "label": "Collect private log metadata",
+      "status": "passed",
+      "exitCode": 0,
+      "summary": "Private raw log bytes are retained outside the public report."
+    }
+  ],
+  "artifacts": [
+    {
+      "kind": "command-log",
+      "visibility": "private",
+      "pathRedacted": true,
+      "rawContentIncluded": false,
+      "byteLength": 4096,
+      "hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "kind": "package-artifact",
+      "visibility": "temporary",
+      "pathRedacted": true,
+      "rawContentIncluded": false,
+      "byteLength": 8192,
+      "hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  ],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "rawPackageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": []
+}

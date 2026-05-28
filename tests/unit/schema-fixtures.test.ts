@@ -31,6 +31,7 @@ describe('schema fixtures', () => {
       'hadara.evidence.list.v1',
       'hadara.featureSmoke.v1',
       'hadara.install.plan.v1',
+      'hadara.packageSmoke.v1',
       'hadara.privateEvidence.v1',
       'hadara.provider.call.v1',
       'hadara.provider.config.v1',

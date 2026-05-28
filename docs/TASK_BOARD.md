@@ -132,3 +132,4 @@
 | T-0129 | Installer Dry-run Implementation | Done | tasks/T-0129-installer-dry-run-implementation | Adds read-only `hadara install plan --json` dry-run reports with redacted paths, explicit USB-root requirement, and execute-disabled behavior. |
 | T-0130 | Install Matrix Smoke Plan | Done | tasks/T-0130-install-matrix-smoke-plan | Defines Linux/WSL/Windows/USB install matrix rows, evidence boundaries, and read-only release-gate markers without executing install smoke. |
 | T-0131 | Major Feature Smoke Runner | Done | tasks/T-0131-major-feature-smoke-runner | Adds read-only `hadara smoke run --profile core --json` with reduced feature-smoke reports. |
+| T-0132 | Package Smoke Schema and Fixture | Done | tasks/T-0132-package-smoke-schema-and-fixture | Registers `hadara.packageSmoke.v1` with deterministic reduced fixtures and no package-smoke execution. |

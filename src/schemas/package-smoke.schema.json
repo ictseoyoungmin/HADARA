@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.packageSmoke.v1",
+  "x-hadara-schema-id": "hadara.packageSmoke.v1",
+  "title": "HADARA Package Smoke Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "command",
+    "ok",
+    "mode",
+    "readOnly",
+    "execution",
+    "workspace",
+    "source",
+    "steps",
+    "artifacts",
+    "privacy",
+    "issues"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.packageSmoke.v1" },
+    "command": { "const": "package.smoke" },
+    "ok": { "type": "boolean" },
+    "mode": { "type": "string", "enum": ["dry-run", "local"] },
+    "readOnly": { "type": "boolean" },
+    "execution": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["npmPackExecuted", "packageInstallExecuted", "featureSmokeExecuted", "releaseMutationExecuted", "publishExecuted"],
+      "properties": {
+        "npmPackExecuted": { "type": "boolean" },
+        "packageInstallExecuted": { "type": "boolean" },
+        "featureSmokeExecuted": { "type": "boolean" },
+        "releaseMutationExecuted": { "const": false },
+        "publishExecuted": { "const": false }
+      }
+    },
+    "workspace": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "pathRedacted"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["disposable", "project-source"] },
+        "displayPath": { "type": "string", "minLength": 1 },
+        "relativePath": { "type": "string", "minLength": 1 },
+        "pathRedacted": { "const": true },
+        "retention": { "type": "string", "enum": ["deleted", "kept-temporary", "private-local"] }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "pathRedacted"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["source-checkout", "tarball", "release-artifact"] },
+        "displayPath": { "type": "string", "minLength": 1 },
+        "relativePath": { "type": "string", "minLength": 1 },
+        "pathRedacted": { "const": true }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/step" }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["rawLogsIncluded", "rawPackageContentsIncluded", "privatePathsIncluded", "environmentSecretsIncluded", "privateStorePathsIncluded"],
+      "properties": {
+        "rawLogsIncluded": { "const": false },
+        "rawPackageContentsIncluded": { "const": false },
+        "privatePathsIncluded": { "const": false },
+        "environmentSecretsIncluded": { "const": false },
+        "privateStorePathsIncluded": { "const": false }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "step": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "label", "status"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["planned", "passed", "failed", "skipped"] },
+        "command": { "type": "string", "minLength": 1 },
+        "exitCode": { "type": ["integer", "null"] },
+        "elapsedMs": { "type": "integer" },
+        "summary": { "type": "string", "minLength": 1 }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "visibility"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["summary", "command-log", "package-artifact", "install-tree"] },
+        "visibility": { "type": "string", "enum": ["public", "private", "temporary"] },
+        "evidencePath": { "type": "string", "pattern": "^tasks/T-[0-9]{4}-.+/artifacts/package-smoke/.+" },
+        "relativePath": { "type": "string", "minLength": 1 },
+        "pathRedacted": { "const": true },
+        "rawContentIncluded": { "const": false },
+        "byteLength": { "type": "integer" },
+        "hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "stepId": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "hadara.packageSmoke.v1",
+  "command": "package.smoke",
+  "ok": true,
+  "mode": "local",
+  "readOnly": false,
+  "execution": {
+    "npmPackExecuted": true,
+    "packageInstallExecuted": true,
+    "featureSmokeExecuted": true,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "workspace": {
+    "kind": "disposable",
+    "displayPath": "<redacted-disposable-workspace>",
+    "pathRedacted": true,
+    "retention": "deleted"
+  },
+  "source": {
+    "kind": "tarball",
+    "displayPath": "<redacted-tarball>",
+    "pathRedacted": true
+  },
+  "steps": [
+    {
+      "id": "attach-summary",
+      "label": "Attach reduced public summary",
+      "status": "passed",
+      "exitCode": 0,
+      "summary": "Reduced UTF-8 summary is safe for public Task Capsule evidence."
+    }
+  ],
+  "artifacts": [
+    {
+      "kind": "summary",
+      "visibility": "public",
+      "evidencePath": "tasks/T-0136-smoke-evidence-integration/artifacts/package-smoke/2026-05-28T00-00-00Z-summary.json",
+      "rawContentIncluded": false,
+      "byteLength": 1024,
+      "hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    }
+  ],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "rawPackageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": []
+}

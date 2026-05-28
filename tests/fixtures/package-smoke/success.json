@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "hadara.packageSmoke.v1",
+  "command": "package.smoke",
+  "ok": true,
+  "mode": "local",
+  "readOnly": false,
+  "execution": {
+    "npmPackExecuted": true,
+    "packageInstallExecuted": true,
+    "featureSmokeExecuted": true,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "workspace": {
+    "kind": "disposable",
+    "displayPath": "<redacted-disposable-workspace>",
+    "pathRedacted": true,
+    "retention": "deleted"
+  },
+  "source": {
+    "kind": "source-checkout",
+    "displayPath": "<redacted-source-checkout>",
+    "pathRedacted": true
+  },
+  "steps": [
+    {
+      "id": "npm-pack",
+      "label": "npm pack",
+      "command": "npm pack --json",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 1200,
+      "summary": "Package tarball was created in the disposable workspace."
+    },
+    {
+      "id": "install-cli",
+      "label": "Install package into isolated prefix",
+      "command": "npm install <redacted-tarball>",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 2300,
+      "summary": "Package installed into an isolated temporary prefix."
+    },
+    {
+      "id": "feature-smoke-core",
+      "label": "Core feature smoke",
+      "command": "hadara smoke run --profile core --json",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 900,
+      "summary": "Core feature smoke passed through the installed command form."
+    }
+  ],
+  "artifacts": [],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "rawPackageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": []
+}

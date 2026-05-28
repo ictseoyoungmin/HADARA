@@ -153,6 +153,174 @@ describe('runtime schema validation', () => {
     ).toBe(true);
   });
 
+  it('validates package smoke fixtures', () => {
+    expect(
+      validateSchema('hadara.packageSmoke.v1', {
+        schemaVersion: 'hadara.packageSmoke.v1',
+        command: 'package.smoke',
+        ok: true,
+        mode: 'dry-run',
+        readOnly: true,
+        execution: {
+          npmPackExecuted: false,
+          packageInstallExecuted: false,
+          featureSmokeExecuted: false,
+          releaseMutationExecuted: false,
+          publishExecuted: false
+        },
+        workspace: {
+          kind: 'disposable',
+          displayPath: '<redacted-disposable-workspace>',
+          pathRedacted: true,
+          retention: 'deleted'
+        },
+        source: {
+          kind: 'source-checkout',
+          displayPath: '<redacted-source-checkout>',
+          pathRedacted: true
+        },
+        steps: [
+          {
+            id: 'plan-workspace',
+            label: 'Plan disposable workspace',
+            status: 'planned',
+            summary: 'Dry-run preview.'
+          }
+        ],
+        artifacts: [],
+        privacy: {
+          rawLogsIncluded: false,
+          rawPackageContentsIncluded: false,
+          privatePathsIncluded: false,
+          environmentSecretsIncluded: false,
+          privateStorePathsIncluded: false
+        },
+        issues: []
+      }).ok
+    ).toBe(true);
+  });
+
+  it('rejects package smoke reports with publish or release mutation markers', () => {
+    const result = validateSchema('hadara.packageSmoke.v1', {
+      schemaVersion: 'hadara.packageSmoke.v1',
+      command: 'package.smoke',
+      ok: true,
+      mode: 'local',
+      readOnly: false,
+      execution: {
+        npmPackExecuted: true,
+        packageInstallExecuted: true,
+        featureSmokeExecuted: true,
+        releaseMutationExecuted: true,
+        publishExecuted: true
+      },
+      workspace: {
+        kind: 'disposable',
+        pathRedacted: true
+      },
+      source: {
+        kind: 'tarball',
+        pathRedacted: true
+      },
+      steps: [],
+      artifacts: [],
+      privacy: {
+        rawLogsIncluded: false,
+        rawPackageContentsIncluded: false,
+        privatePathsIncluded: false,
+        environmentSecretsIncluded: false,
+        privateStorePathsIncluded: false
+      },
+      issues: []
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: '$.execution.releaseMutationExecuted',
+          code: 'SCHEMA_CONST_MISMATCH'
+        }),
+        expect.objectContaining({
+          path: '$.execution.publishExecuted',
+          code: 'SCHEMA_CONST_MISMATCH'
+        })
+      ])
+    );
+  });
+
+  it('rejects package smoke reports that include private or raw public content markers', () => {
+    const result = validateSchema('hadara.packageSmoke.v1', {
+      schemaVersion: 'hadara.packageSmoke.v1',
+      command: 'package.smoke',
+      ok: true,
+      mode: 'local',
+      readOnly: false,
+      execution: {
+        npmPackExecuted: true,
+        packageInstallExecuted: true,
+        featureSmokeExecuted: true,
+        releaseMutationExecuted: false,
+        publishExecuted: false
+      },
+      workspace: {
+        kind: 'disposable',
+        pathRedacted: false
+      },
+      source: {
+        kind: 'tarball',
+        pathRedacted: false
+      },
+      steps: [],
+      artifacts: [
+        {
+          kind: 'summary',
+          visibility: 'public',
+          evidencePath: '/home/user/project/tasks/T-0136/artifacts/package-smoke/raw.json',
+          rawContentIncluded: true
+        }
+      ],
+      privacy: {
+        rawLogsIncluded: true,
+        rawPackageContentsIncluded: true,
+        privatePathsIncluded: true,
+        environmentSecretsIncluded: true,
+        privateStorePathsIncluded: true
+      },
+      issues: []
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: '$.workspace.pathRedacted',
+          code: 'SCHEMA_CONST_MISMATCH'
+        }),
+        expect.objectContaining({
+          path: '$.source.pathRedacted',
+          code: 'SCHEMA_CONST_MISMATCH'
+        }),
+        expect.objectContaining({
+          path: '$.artifacts[0].evidencePath',
+          code: 'SCHEMA_PATTERN_MISMATCH'
+        }),
+        expect.objectContaining({
+          path: '$.artifacts[0].rawContentIncluded',
+          code: 'SCHEMA_CONST_MISMATCH'
+        }),
+        expect.objectContaining({
+          path: '$.privacy.rawLogsIncluded',
+          code: 'SCHEMA_CONST_MISMATCH'
+        }),
+        expect.objectContaining({
+          path: '$.privacy.privateStorePathsIncluded',
+          code: 'SCHEMA_CONST_MISMATCH'
+        })
+      ])
+    );
+  });
+
   it('validates provider preparation fixtures', () => {
     expect(
       validateSchema('hadara.provider.config.v1', {

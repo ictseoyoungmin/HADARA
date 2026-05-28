@@ -92,14 +92,15 @@
 - T-0129 is complete: `hadara install plan --json` now emits schema-valid `hadara.install.plan.v1` dry-run reports for Linux/Windows/WSL/USB planning, keeps `posix` as a compatibility alias, uses Linux-style default suggestions for WSL, describes future confirmed execute/apply writes with `wouldWrite: true` without performing them, redacts public source/target paths, requires explicit `--usb-root` or `--target` for USB planning, reports Node 22 and WSL Windows-shim checks, returns `INSTALL_EXECUTION_DISABLED` for execute mode, and is listed as a read-only CLI capability. Package metadata now records `"license": "MIT"` while `private: true` still blocks publish.
 - T-0130 is complete: install matrix smoke planning is explicit in `docs/RELEASE_READINESS.md` and `docs/TEST_STRATEGY.md`, covering Linux source/package, WSL source, Windows source/package, USB Windows, USB WSL, and installed-CLI major-feature rows with reduced public evidence boundaries. Follow-up notes call for moving growing matrix rows into `hadara.installMatrix.plan.v1` structured fixture data and define the T-0131 `core` smoke profile. The read-only release gate now reports `INSTALL_MATRIX_SMOKE_PLAN` while performing no install-matrix execution.
 - T-0131 is complete: `hadara smoke run --profile core --json` now emits schema-valid `hadara.featureSmoke.v1` reduced reports for doctor, status, task list, tools list, TUI snapshot, and advisory release gate through service/read-model calls. The report explicitly records `executionMode: "service-read-model"`, `binaryExecuted: false`, `launcherChecked: false`, and `packageInstallChecked: false`; registered sub-report schemas are validated before a step is marked passed. The runner is read-only, avoids package-smoke, installed-binary execution, install mutation, strict release-gate evidence cycles, shell execution, provider calls, MCP writes, raw logs, raw TUI output, and private path leakage; `release-readiness` is reserved but returns `FEATURE_SMOKE_PROFILE_DEFERRED`.
+- T-0132 is complete: `hadara.packageSmoke.v1` is registered as a schema fixture and runtime-loadable schema with deterministic success, step-failure, redacted-path, private/raw-omitted, and public reduced-evidence fixtures. Tests prove package-smoke reports keep raw package contents, raw npm logs, env secrets, private paths, and private store paths out of public reports, and strict release gate remains read-only without emitting a `package.smoke` report.
 - Release/install/package-smoke future work is tracked in `docs/DEVELOPMENT_SLICES.md`, `docs/V1_0_CAPSULE_BACKLOG.md`, and `docs/TEST_STRATEGY.md`. The local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` may exist in this workspace as supporting planning context for agents, but it is intentionally not committed to GitHub.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0129 Installer Dry-run Implementation: added read-only `hadara install plan --json` reports with redacted paths and execute-disabled behavior.
 - T-0130 Install Matrix Smoke Plan: documented install matrix rows/evidence boundaries and strengthened the read-only release gate to require those markers.
 - T-0131 Major Feature Smoke Runner: added read-only `hadara smoke run --profile core --json` with reduced schema-valid service/read-model feature-smoke reports.
+- T-0132 Package Smoke Schema and Fixture: registered `hadara.packageSmoke.v1` with reduced deterministic fixtures and no package-smoke execution.
 
 ## Current Known Problems
 
@@ -114,7 +115,7 @@
 
 ## Next Recommended Step
 
-1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is T-0132 Package Smoke Schema and Fixture: register and fixture `hadara.packageSmoke.v1` before any package-smoke execution.
+1. Use `docker exec hadara-dev ... node dist/cli/main.js task create "<title>" --project /workspace` for the next new capsule. A good next candidate is T-0133 Package Smoke Dry-run Implementation: implement `hadara package smoke --dry-run --json` using `hadara.packageSmoke.v1` without `npm pack`, package install, artifact writes, or default evidence attachment.
 2. Keep default MCP startup read-only; `hadara.evidence.attach` remains opt-in with `--enable-evidence-attach`, requires per-call approval metadata, and audits write attempts privately.
 3. Keep shell execution, provider calls, live dashboard streaming, TUI writes, multi-agent concurrency, and broad write-capable MCP behavior deferred.
 
@@ -175,6 +176,10 @@
 - Latest T-0131 built CLI deferred-profile smoke: Docker built CLI `node dist/cli/main.js smoke run --profile release-readiness --json --project <temp-copy>` returned `ok: false`, issue `FEATURE_SMOKE_PROFILE_DEFERRED`, and exit code 6.
 - Latest T-0131 done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0131 --level done --json --project /workspace` returned `ok: true` with no issues.
 - Latest T-0131 follow-up validation: Docker focused feature-smoke/schema/tools-list tests passed with 4 files and 18 tests; Docker temp-copy `npm run check` passed with 51 files and 357 tests; built CLI core smoke returned service/read-model execution markers, false installed-binary/launcher/package-install checks, registered schema-status markers, and `ok: true`; T-0131 done-level harness and strict release gate both returned `ok: true`.
+- Latest T-0132 focused check: Docker temp-copy `npx vitest run tests/unit/package-smoke-schema.test.ts tests/unit/schema-runtime.test.ts tests/unit/schema-fixtures.test.ts tests/unit/operational-debt.test.ts` passed with 4 files and 46 tests.
+- Latest T-0132 full check: Docker temp-copy `npm run check` passed with TypeScript build, 52 test files, and 369 tests.
+- Latest T-0132 built CLI release-gate smoke: Docker built CLI `node dist/cli/main.js release gate --mode strict --json --project /tmp/hadara-t0132` returned `ok: true`, 13 passed checks, and no issues after adding `hadara.packageSmoke.v1`.
+- Latest T-0132 done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0132 --level done --json --project /workspace` returned `ok: true` with no issues.
 - Latest remote CI observation: GitHub Actions CI run #109 on `main` for commit `8b4f33d1bf926d051cf63e13ca2de222bfc22d8c` completed successfully; job `check` included `npm ci` and `npm run check`.
 - Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0123 --level done --json --project /workspace` returned `ok: true` with no issues.
 - Latest built CLI smoke: Docker built CLI `node dist/cli/main.js tui --snapshot --width 150 --height 30 --project /workspace` rendered Overview Current Work as T-0116, Previous Work as T-0115, and heading-aware Goal/Next lines from read-model document text.

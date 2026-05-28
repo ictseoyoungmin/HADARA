@@ -86,6 +86,13 @@
       "notes": "Documents dry-run installer planning reports before any install mutation implementation."
     },
     {
+      "id": "hadara.packageSmoke.v1",
+      "path": "src/schemas/package-smoke.schema.json",
+      "status": "fixture",
+      "owner": "package-smoke/report",
+      "notes": "Documents reduced package-smoke reports before dry-run or executable package-smoke command implementation."
+    },
+    {
       "id": "hadara.featureSmoke.v1",
       "path": "src/schemas/feature-smoke.schema.json",
       "status": "fixture",

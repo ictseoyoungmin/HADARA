@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "hadara.packageSmoke.v1",
+  "command": "package.smoke",
+  "ok": false,
+  "mode": "local",
+  "readOnly": false,
+  "execution": {
+    "npmPackExecuted": true,
+    "packageInstallExecuted": false,
+    "featureSmokeExecuted": false,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "workspace": {
+    "kind": "disposable",
+    "displayPath": "<redacted-disposable-workspace>",
+    "pathRedacted": true,
+    "retention": "kept-temporary"
+  },
+  "source": {
+    "kind": "source-checkout",
+    "displayPath": "<redacted-source-checkout>",
+    "pathRedacted": true
+  },
+  "steps": [
+    {
+      "id": "npm-pack",
+      "label": "npm pack",
+      "command": "npm pack --json",
+      "status": "failed",
+      "exitCode": 1,
+      "elapsedMs": 100,
+      "summary": "Package creation failed; raw npm output is omitted from the public report."
+    },
+    {
+      "id": "install-cli",
+      "label": "Install package into isolated prefix",
+      "status": "skipped",
+      "summary": "Skipped because package creation failed."
+    }
+  ],
+  "artifacts": [
+    {
+      "kind": "command-log",
+      "visibility": "private",
+      "pathRedacted": true,
+      "rawContentIncluded": false,
+      "byteLength": 2048
+    }
+  ],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "rawPackageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [
+    {
+      "severity": "error",
+      "code": "PACKAGE_SMOKE_STEP_FAILED",
+      "message": "Package smoke step npm-pack failed.",
+      "stepId": "npm-pack"
+    }
+  ]
+}

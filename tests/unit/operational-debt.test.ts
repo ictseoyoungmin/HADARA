@@ -584,6 +584,21 @@ describe('operational debt track', () => {
     expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE_UNCLEAR', severity: 'error' }));
   });
 
+  it('keeps release gate package-smoke handling read-only and report-only', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root);
+
+    const report = createReleaseGateReport(root, 'strict');
+    const encoded = JSON.stringify(report);
+
+    expect(report.command).toBe('release.gate');
+    expect(report.ok).toBe(true);
+    expect(report.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_ARTIFACT_BOUNDARY', status: 'passed' }));
+    expect(report.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE', status: 'passed' }));
+    expect(encoded).not.toContain('"command":"package.smoke"');
+    expect(encoded).not.toContain('"schemaVersion":"hadara.packageSmoke.v1"');
+  });
+
   it('requires package metadata release-readiness documentation before release readiness passes', () => {
     const root = tempProject();
     writeReleaseReadinessFiles(root);

@@ -6,6 +6,7 @@ import evidenceListSchemaJson from '../schemas/evidence-list.schema.json';
 import eventSchemaJson from '../schemas/event.schema.json';
 import featureSmokeSchemaJson from '../schemas/feature-smoke.schema.json';
 import installPlanSchemaJson from '../schemas/install-plan.schema.json';
+import packageSmokeSchemaJson from '../schemas/package-smoke.schema.json';
 import privateEvidenceSchemaJson from '../schemas/private-evidence.schema.json';
 import providerCallSchemaJson from '../schemas/provider-call.schema.json';
 import providerConfigSchemaJson from '../schemas/provider-config.schema.json';
@@ -59,6 +60,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.event.v1': eventSchemaJson as JsonObject,
   'hadara.featureSmoke.v1': featureSmokeSchemaJson as JsonObject,
   'hadara.install.plan.v1': installPlanSchemaJson as JsonObject,
+  'hadara.packageSmoke.v1': packageSmokeSchemaJson as JsonObject,
   'hadara.privateEvidence.v1': privateEvidenceSchemaJson as JsonObject,
   'hadara.provider.call.v1': providerCallSchemaJson as JsonObject,
   'hadara.provider.config.v1': providerConfigSchemaJson as JsonObject,
