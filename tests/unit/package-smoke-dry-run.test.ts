@@ -144,6 +144,26 @@ describe('package smoke dry-run', () => {
     expect(encoded).not.toContain('placeholder tarball bytes');
   });
 
+  it('lets --no-evidence override --attach-evidence in both steps and artifacts', () => {
+    const root = tempProject();
+    const report = createPackageSmokeDryRunReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      taskId: 'T-0133',
+      attachEvidence: true,
+      noEvidence: true
+    });
+
+    expect(report.steps).toContainEqual(
+      expect.objectContaining({
+        id: 'evidence',
+        status: 'skipped',
+        summary: 'No public evidence attachment is planned by default.'
+      })
+    );
+    expect(report.artifacts).not.toContainEqual(expect.objectContaining({ visibility: 'public' }));
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
   it('reports missing sources without leaking the missing path', () => {
     const root = tempProject();
     const report = createPackageSmokeDryRunReport({

@@ -186,6 +186,8 @@
 - Latest T-0133 built CLI dry-run smoke: Docker built CLI `node dist/cli/main.js package smoke --dry-run --json --project /tmp/hadara-t0133` returned `ok: true`, schema `hadara.packageSmoke.v1`, all execution markers false, redacted workspace/source fields, and no issues.
 - Latest T-0133 built CLI release-gate smoke: Docker built CLI `node dist/cli/main.js release gate --mode strict --json --project /tmp/hadara-t0133` returned `ok: true`, 13 passed checks, and no issues.
 - Latest T-0133 done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0133 --level done --json --project /workspace` returned `ok: true` with no issues.
+- Latest T-0133 follow-up focused check: Docker temp-copy `npx vitest run tests/unit/package-smoke-dry-run.test.ts` passed with 5 tests after aligning `--no-evidence` step and artifact previews.
+- Latest T-0133 follow-up done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0133 --level done --json --project /workspace` returned `ok: true` with no issues after the evidence-preview fix.
 - Latest remote CI observation: GitHub Actions CI run #109 on `main` for commit `8b4f33d1bf926d051cf63e13ca2de222bfc22d8c` completed successfully; job `check` included `npm ci` and `npm run check`.
 - Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0123 --level done --json --project /workspace` returned `ok: true` with no issues.
 - Latest built CLI smoke: Docker built CLI `node dist/cli/main.js tui --snapshot --width 150 --height 30 --project /workspace` rendered Overview Current Work as T-0116, Previous Work as T-0115, and heading-aware Goal/Next lines from read-model document text.

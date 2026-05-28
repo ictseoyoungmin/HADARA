@@ -125,6 +125,7 @@ export function createPackageSmokeDryRunReport(options: PackageSmokeDryRunOption
 
 function createDryRunSteps(sourceKind: PackageSmokeReport['source']['kind'], options: PackageSmokeDryRunOptions): PackageSmokeReport['steps'] {
   const packStatus = sourceKind === 'source-checkout' ? 'planned' : 'skipped';
+  const evidencePlanned = options.attachEvidence === true && options.taskId !== undefined && options.noEvidence !== true;
   return [
     {
       id: 'validate-source',
@@ -166,9 +167,9 @@ function createDryRunSteps(sourceKind: PackageSmokeReport['source']['kind'], opt
     {
       id: 'evidence',
       label: 'Evidence handling',
-      status: options.attachEvidence === true && options.taskId ? 'planned' : 'skipped',
+      status: evidencePlanned ? 'planned' : 'skipped',
       summary:
-        options.attachEvidence === true && options.taskId
+        evidencePlanned
           ? 'Would attach a reduced public summary after redaction checks in a later evidence integration capsule.'
           : 'No public evidence attachment is planned by default.'
     }
