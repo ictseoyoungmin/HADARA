@@ -4,9 +4,9 @@ HADARA JSON schemas are contract fixtures for stable external read models. They 
 
 ## Current Phase
 
-Schema layer status: planning and fixture registration, with limited active-run, write-preflight, and install-plan runtime validation.
+Schema layer status: planning and fixture registration, with limited active-run, write-preflight, install-plan, and feature-smoke runtime validation.
 
-T-0079 added fixture registration only. T-0092 added a lightweight runtime validation API for `hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` because those read models are backed by mutable local state. T-0098 registers and validates `hadara.write.preflight.v1` reports before returning CLI write-boundary preflight output. T-0129 validates `hadara.install.plan.v1` before returning installer dry-run plans. Broad schema validation and release gates remain deferred.
+T-0079 added fixture registration only. T-0092 added a lightweight runtime validation API for `hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` because those read models are backed by mutable local state. T-0098 registers and validates `hadara.write.preflight.v1` reports before returning CLI write-boundary preflight output. T-0129 validates `hadara.install.plan.v1` before returning installer dry-run plans. T-0131 validates `hadara.featureSmoke.v1` before returning reduced installed-CLI major-feature smoke reports. Broad schema validation and release gates remain deferred.
 
 ## Registry
 
@@ -38,6 +38,7 @@ Initial fixtures:
 | `hadara.event.v1` | `src/schemas/event.schema.json` | fixture | Documents structured redacted event records embedded in private audit JSONL. |
 | `hadara.write.preflight.v1` | `src/schemas/write-preflight.schema.json` | fixture | Documents read-only CLI write-boundary preflight reports. |
 | `hadara.install.plan.v1` | `src/schemas/install-plan.schema.json` | fixture | Documents future installer dry-run planning reports without performing install mutation; target paths are redacted public path-reference objects instead of raw strings. |
+| `hadara.featureSmoke.v1` | `src/schemas/feature-smoke.schema.json` | fixture | Documents reduced read-only installed-CLI major-feature smoke reports for the `core` profile and deferred `release-readiness` profile. |
 
 ## Versioning
 
@@ -83,7 +84,7 @@ export function validateSchema(schemaId: string, value: unknown): SchemaValidati
 export function loadSchema(schemaId: string): unknown;
 ```
 
-Current runtime usage is intentionally narrow: active-run projection/resume reports, write-preflight reports, and install-plan reports validate against the fixture subset before shared service builders return them. Future work should keep CLI/MCP transport envelopes separate from shared read-model schemas.
+Current runtime usage is intentionally narrow: active-run projection/resume reports, write-preflight reports, install-plan reports, and feature-smoke reports validate against the fixture subset before shared service builders return them. Future work should keep CLI/MCP transport envelopes separate from shared read-model schemas.
 
 The validator currently covers the JSON Schema keywords used by registered fixtures, including required fields, const, enum, primitive type checks, arrays, object properties, local `$ref`, `oneOf`, string `minLength`, and regex `pattern`.
 

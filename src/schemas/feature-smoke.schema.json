@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.featureSmoke.v1",
+  "x-hadara-schema-id": "hadara.featureSmoke.v1",
+  "title": "HADARA Feature Smoke Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "profile", "readOnly", "steps", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.featureSmoke.v1" },
+    "command": { "const": "feature-smoke.run" },
+    "ok": { "type": "boolean" },
+    "profile": { "type": "string", "enum": ["core", "release-readiness"] },
+    "readOnly": { "const": true },
+    "steps": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/step" }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "step": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "command", "status", "summary"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "command": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["passed", "failed", "skipped"] },
+        "schemaVersion": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "stepId": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

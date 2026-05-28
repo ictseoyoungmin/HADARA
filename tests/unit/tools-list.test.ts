@@ -69,6 +69,12 @@ describe('tools list read model', () => {
           schemaVersion: 'hadara.install.plan.v1'
         }),
         expect.objectContaining({
+          name: 'hadara smoke run --profile core --json',
+          category: 'read',
+          readOnly: true,
+          schemaVersion: 'hadara.featureSmoke.v1'
+        }),
+        expect.objectContaining({
           name: 'hadara debt list --json',
           category: 'read',
           readOnly: true,

@@ -125,6 +125,28 @@ describe('runtime schema validation', () => {
     ).toBe(true);
   });
 
+  it('validates feature smoke fixtures', () => {
+    expect(
+      validateSchema('hadara.featureSmoke.v1', {
+        schemaVersion: 'hadara.featureSmoke.v1',
+        command: 'feature-smoke.run',
+        ok: true,
+        profile: 'core',
+        readOnly: true,
+        steps: [
+          {
+            id: 'doctor',
+            command: 'hadara doctor --json',
+            status: 'passed',
+            schemaVersion: 'hadara.doctor.v1',
+            summary: 'Doctor completed.'
+          }
+        ],
+        issues: []
+      }).ok
+    ).toBe(true);
+  });
+
   it('validates provider preparation fixtures', () => {
     expect(
       validateSchema('hadara.provider.config.v1', {
