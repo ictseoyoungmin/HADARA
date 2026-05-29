@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { handleMcpJsonRpcMessage } from '../../src/mcp/server';
 import { HADARA_MCP_TOOL_SCHEMAS } from '../../src/mcp/tool-schemas';
+import packageJson from '../../package.json';
 
 function request(method: string, id: string | number = 1, params?: unknown): string {
   return JSON.stringify({
@@ -28,7 +29,7 @@ describe('MCP JSON-RPC server skeleton', () => {
         protocolVersion: '2024-11-05',
         serverInfo: {
           name: 'hadara',
-          version: '0.0.0-bootstrap'
+          version: packageJson.version
         },
         capabilities: {
           tools: {
@@ -46,6 +47,7 @@ describe('MCP JSON-RPC server skeleton', () => {
       }
     });
     expect(response.result.instructions).toContain('default read-only mode');
+    expect(response.result.serverInfo.version).not.toBe('0.0.0-bootstrap');
   });
 
   it('returns write-aware server metadata when evidence attach is enabled', () => {

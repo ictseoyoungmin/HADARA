@@ -399,20 +399,20 @@ function checkPackageSmokeArtifactBoundary(testStrategy: string | null, mode: Re
 }
 
 function checkPackageSmokeCommandSurface(testStrategy: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
-  const ok = includesAll(testStrategy, [
-    'Package Smoke Command Surface',
-    'hadara package smoke --dry-run --json',
-    'hadara package smoke --task <task-id> --json',
-    'hadara package smoke --workspace /tmp/hadara-package-smoke/<run-id> --json',
-    'hadara package smoke --from ./dist-release/hadara-0.1.0-rc.0.tgz --json',
-    'hadara package smoke --keep-temp --json',
-    'Do not use `hadara release smoke` as the primary command surface',
-    '`--timeout <seconds>`',
-    '`--attach-evidence`',
-    '`--private-logs`',
-    'Package smoke must not be callable from MCP by default',
-    'The release gate must not call `hadara package smoke`'
-  ]);
+  const ok =
+    includesAll(testStrategy, [
+      'Package Smoke Command Surface',
+      'hadara package smoke --dry-run --json',
+      'hadara package smoke --task <task-id> --json',
+      'hadara package smoke --workspace /tmp/hadara-package-smoke/<run-id> --json',
+      'hadara package smoke --keep-temp --json',
+      'Do not use `hadara release smoke` as the primary command surface',
+      '`--timeout <seconds>`',
+      '`--attach-evidence`',
+      '`--private-logs`',
+      'Package smoke must not be callable from MCP by default',
+      'The release gate must not call `hadara package smoke`'
+    ]) && hasVersionedHadaraTarballExample(testStrategy);
   return {
     code: 'PACKAGE_SMOKE_COMMAND_SURFACE',
     name: 'Package smoke command surface',
@@ -433,6 +433,7 @@ function checkPackageMetadataReadiness(
 ): ReleaseGateReport['checks'][number] {
   const bin = isRecord(packageJson?.bin) ? packageJson.bin : {};
   const files = Array.isArray(packageJson?.files) ? packageJson.files.filter((entry): entry is string => typeof entry === 'string') : [];
+  const currentVersion = typeof packageJson?.version === 'string' ? packageJson.version : 'unknown';
   const bootstrapMetadataOk =
     packageJson?.name === 'hadara' &&
     packageJson?.version === '0.0.0-bootstrap' &&
@@ -451,14 +452,14 @@ function checkPackageMetadataReadiness(
     'Package Metadata Release Readiness',
     'Package name decision: `hadara`',
     'npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28',
-    'Current version is `0.1.0-rc.0`',
+    `Current version is \`${currentVersion}\``,
     'Current package is `private: false`',
     'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
     'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',
     'Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability',
     'Release-candidate metadata mode: version `0.1.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
     'Scoped fallback decision: do not silently switch names',
-    'Version policy: first release-candidate target is `0.1.0-rc.0`; first stable target is `0.1.0`',
+    'Version policy:',
     'T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist',
     'Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist',
     'Do not add `files` entries for missing installer or portable paths in T-0127',
@@ -478,6 +479,10 @@ function checkPackageMetadataReadiness(
       ? 'Package name, release-candidate version, private transition, files target, license path, publish target, and installed CLI verification decisions are documented without publishing.'
       : 'Package metadata release-readiness decisions must be documented before publishability is accepted.'
   };
+}
+
+function hasVersionedHadaraTarballExample(text: string | null): boolean {
+  return text !== null && /hadara package smoke --from \.\/dist-release\/hadara-[^\s/]+\.tgz --json/.test(text);
 }
 
 function checkInstallerSurfaceAndSchema(releaseReadiness: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {

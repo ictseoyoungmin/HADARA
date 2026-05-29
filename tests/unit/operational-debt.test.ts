@@ -21,13 +21,13 @@ function tempProject(): string {
   return dir;
 }
 
-function writeReleaseReadinessFiles(root: string): void {
+function writeReleaseReadinessFiles(root: string, version = '0.1.0-rc.0'): void {
   fs.writeFileSync(
     path.join(root, 'package.json'),
     JSON.stringify(
       {
         name: 'hadara',
-        version: '0.1.0-rc.0',
+        version,
         private: false,
         license: 'MIT',
         bin: {
@@ -95,7 +95,7 @@ function writeReleaseReadinessFiles(root: string): void {
       'hadara package smoke --dry-run --json',
       'hadara package smoke --task <task-id> --json',
       'hadara package smoke --workspace /tmp/hadara-package-smoke/<run-id> --json',
-      'hadara package smoke --from ./dist-release/hadara-0.1.0-rc.0.tgz --json',
+      `hadara package smoke --from ./dist-release/hadara-${version}.tgz --json`,
       'hadara package smoke --keep-temp --json',
       'Do not use `hadara release smoke` as the primary command surface',
       '`--timeout <seconds>`',
@@ -106,7 +106,7 @@ function writeReleaseReadinessFiles(root: string): void {
       'Package Metadata Release Readiness',
       'Package name decision: `hadara`',
       'npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28',
-      'Current version is `0.1.0-rc.0`',
+      `Current version is \`${version}\``,
       'Current package is `private: false`',
       'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
       'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',
@@ -133,7 +133,7 @@ function writeReleaseReadinessFiles(root: string): void {
       'Package Metadata Release Readiness',
       'Package name decision: `hadara`',
       'npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28',
-      'Current version is `0.1.0-rc.0`',
+      `Current version is \`${version}\``,
       'Current package is `private: false`',
       'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
       'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',
@@ -491,6 +491,18 @@ describe('operational debt track', () => {
       status: 'passed',
       summary: 'No open high-severity operational debt records.'
     });
+  });
+
+  it('uses package metadata instead of a fixed RC version for release readiness markers', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root, '0.1.0-rc.7');
+
+    const strict = createReleaseGateReport(root, 'strict');
+
+    expect(strict.ok).toBe(true);
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_COMMAND_SURFACE', status: 'passed' }));
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS', status: 'passed' }));
+    expect(strict.issues).not.toContainEqual(expect.objectContaining({ code: 'PACKAGE_METADATA_RELEASE_READINESS_UNCLEAR' }));
   });
 
   it('requires release evidence records without executing smoke or artifact commands', () => {

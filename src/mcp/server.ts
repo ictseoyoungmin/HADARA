@@ -1,4 +1,6 @@
 import readline from 'node:readline';
+import fs from 'node:fs';
+import path from 'node:path';
 import { Readable, Writable } from 'node:stream';
 import { dispatchMcpToolCall, McpToolDispatchError } from './tool-dispatch';
 import { createMcpToolRegistry } from './tool-registry';
@@ -32,6 +34,8 @@ export interface McpServerOptions {
   projectRoot?: string;
   enableEvidenceAttach?: boolean;
 }
+
+const serverPackageVersion = readServerPackageVersion();
 
 export function handleMcpJsonRpcMessage(message: string, options: McpServerOptions = {}): string | null {
   let parsed: unknown;
@@ -72,7 +76,7 @@ function handleMcpRequest(request: JsonRpcRequest, options: McpServerOptions): J
         protocolVersion: '2024-11-05',
         serverInfo: {
           name: 'hadara',
-          version: '0.0.0-bootstrap'
+          version: serverPackageVersion
         },
         capabilities: {
           tools: {
@@ -130,4 +134,16 @@ function error(id: JsonRpcId, code: number, message: string, data?: unknown): Js
 
 function serializeError(id: JsonRpcId, code: number, message: string): string {
   return JSON.stringify(error(id, code, message));
+}
+
+function readServerPackageVersion(): string {
+  try {
+    const packageJsonPath = path.resolve(__dirname, '..', '..', 'package.json');
+    const parsed: unknown = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    if (typeof parsed !== 'object' || parsed === null) return 'unknown';
+    const version = (parsed as { version?: unknown }).version;
+    return typeof version === 'string' && version.length > 0 ? version : 'unknown';
+  } catch {
+    return 'unknown';
+  }
 }
