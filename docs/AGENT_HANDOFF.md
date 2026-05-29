@@ -107,14 +107,15 @@
 - T-0144 is complete: root README now documents npm RC install/npx usage for `hadara@0.1.0-rc.0`, installed CLI verification, source-checkout development, current CLI/planning surfaces, MIT license, and deferred installer/GitHub Release/USB/Docker boundaries without release mutation.
 - T-0145 is complete: MCP initialize now reports `serverInfo.version` from HADARA package metadata, so built MCP initialize smoke returns `0.1.0-rc.0` while preserving read-only/evidence-attach metadata behavior.
 - T-0146 is complete: release readiness source checks no longer require the exact current RC version in package metadata docs or package-smoke tarball examples; future RC metadata/docs regression coverage passes.
+- T-0147 is complete: `hadara init` no longer generates Hermes files/guidance, now creates `.gitignore`, emits structured general HADARA protocol docs with an SOP required-reading table and init profile matrix, and root `docs/IMPLEMENTATION_SOP.md` now carries the same generalized scaffold structure standard with HADARA-dev-specific docs registered conditionally.
 - Release/install/package-smoke future work is tracked in `docs/DEVELOPMENT_SLICES.md`, `docs/V1_0_CAPSULE_BACKLOG.md`, and `docs/TEST_STRATEGY.md`. The local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` may exist in this workspace as supporting planning context for agents, but it is intentionally not committed to GitHub.
 - Real provider adapters, live dashboard data rendering, shell execution, provider calls, and broad write-capable MCP behavior remain deferred.
 
 ## Last 3 Completed Tasks
 
-- T-0144 README Release Install Docs Cleanup: aligned README with npm RC install/use, source-checkout development, current CLI/planning surfaces, MIT license, and deferred release/install boundaries.
 - T-0145 MCP Initialize Package Version Metadata: aligned MCP initialize `serverInfo.version` with HADARA package metadata and preserved MCP capability metadata.
 - T-0146 Release Metadata Hardcoding Cleanup: removed exact current-RC coupling from release readiness source checks and preserved strict release-gate behavior.
+- T-0147 Init Scaffold Protocol Alignment: removed Hermes defaults from init, added `.gitignore`, made generated protocol docs structured/general-purpose, and aligned root SOP with the same scaffold standard.
 
 ## Current Known Problems
 
@@ -231,6 +232,7 @@
 - Latest T-0144 validation: Docker temp-copy `npm run check` passed with TypeScript build, 57 test files, and 404 tests; built CLI README smoke checks returned `doctor --json` ok true and `install plan --platform linux --json` ok true with schema `hadara.install.plan.v1`; done-level harness validation returned `ok: true` with no issues, including after the README License wording refinement.
 - Latest T-0145 validation: Docker focused `tests/unit/mcp-server.test.ts` passed with 1 file and 7 tests; Docker `npm run check` passed with 57 files and 404 tests; built CLI MCP initialize smoke returned `serverInfo.version` as `0.1.0-rc.0` with read-only metadata preserved; done-level harness validation returned `ok: true` with no issues.
 - Latest T-0146 validation: Docker focused `tests/unit/operational-debt.test.ts` passed with 1 file and 26 tests; Docker `npm run check` passed with 57 files and 405 tests; built CLI strict release gate smoke returned `ok: true` with all 18 checks passed; done-level harness validation returned `ok: true` with no issues.
+- Latest T-0147 validation: Docker focused `tests/unit/init.test.ts` passed with 1 file and 7 tests, including root SOP scaffold-standard coverage; built CLI init smoke generated `.gitignore`, structured protocol docs, and no Hermes files; Docker `npm run check` passed with 57 files and 409 tests; done-level harness validation returned `ok: true` with no issues.
 - Latest remote CI observation: GitHub Actions CI run #109 on `main` for commit `8b4f33d1bf926d051cf63e13ca2de222bfc22d8c` completed successfully; job `check` included `npm ci` and `npm run check`.
 - Latest done-level validation: Docker built CLI `node dist/cli/main.js harness validate --task T-0123 --level done --json --project /workspace` returned `ok: true` with no issues.
 - Latest built CLI smoke: Docker built CLI `node dist/cli/main.js tui --snapshot --width 150 --height 30 --project /workspace` rendered Overview Current Work as T-0116, Previous Work as T-0115, and heading-aware Goal/Next lines from read-model document text.

@@ -10,14 +10,54 @@ HADARA development follows the core philosophy: Unbroken Context, Verified Devel
 4. Read `docs/DEVELOPMENT_SLICES.md` when the work may start, complete, or reclassify a roadmap slice.
 5. Follow the Historical Index in `docs/AGENT_HANDOFF.md` when older completed-task or validation history is needed.
 6. Pick or create one Task Capsule. Create new capsules through `hadara task create <title>` by default.
-7. Read `TASK.md`, `DECISIONS.md`,`PLAN.md`, `CONTEXT.md`, `ACCEPTANCE.md`, `FILES.md`, `TESTS.md`, `RISKS.md`, and `HANDOFF.md` for the active Task Capsule.
-8. Read project-specific specs or roadmap documents referenced by the current task.
-9. For MCP/Hermes work, read `docs/CLI_JSON_CONTRACT.md` and `docs/MCP_BRIDGE_CONTRACT.md`.
-10. For v1.0 hardening work, read `docs/V1_0_CAPSULE_BACKLOG.md` and `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
-11. For release, install, installer, package-smoke, install-matrix, or publish/deploy work, use `docs/DEVELOPMENT_SLICES.md`, `docs/V1_0_CAPSULE_BACKLOG.md`, and `docs/TEST_STRATEGY.md` as the tracked sources. If the local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` exists in this workspace, agents may use it as supporting planning context, but it is not required committed context.
-12. Summarize the current state from the required docs.
-13. Identify the active Task Capsule and explain why it fits the work.
-14. Propose or choose the smallest useful implementation slice.
+7. Read `TASK.md`, `DECISIONS.md`, `PLAN.md`, `CONTEXT.md`, `ACCEPTANCE.md`, `FILES.md`, `TESTS.md`, `RISKS.md`, and `HANDOFF.md` for the active Task Capsule.
+8. Read project-specific specs, contracts, or roadmap documents listed in the Required Reading table below when their condition applies.
+9. Summarize the current state from the required docs.
+10. Identify the active Task Capsule and explain why it fits the work.
+11. Propose or choose the smallest useful implementation slice.
+
+## Required Reading
+
+| Document | When to Read | Purpose |
+|---|---|---|
+| `docs/PROJECT_STATE.md` | Every session | Current product state, capability boundaries, and source-of-truth map. |
+| `docs/AGENT_HANDOFF.md` | Every session | Compact current-state handoff, latest validation baseline, and next recommended step. |
+| `docs/TASK_BOARD.md` | Every session | Work queue, task status, and capsule paths. |
+| `docs/IMPLEMENTATION_SOP.md` | Every session | Local HADARA workflow rules and project-specific required-reading registry. |
+| `docs/DEVELOPMENT_SLICES.md` | Starting, completing, or reclassifying slices | Roadmap ordering, prerequisite constraints, and completion evidence. |
+| Active `tasks/T-*/TASK.md` | Working a task | Task-specific goal, scope, status, and acceptance frame. |
+| Active Task Capsule docs | Working a task | `DECISIONS.md`, `PLAN.md`, `CONTEXT.md`, `ACCEPTANCE.md`, `FILES.md`, `TESTS.md`, `RISKS.md`, and `HANDOFF.md`. |
+| `docs/CLI_JSON_CONTRACT.md` and `docs/MCP_BRIDGE_CONTRACT.md` | HADARA-dev MCP or tool-surface work only | Local contracts for CLI JSON and MCP bridge compatibility. |
+| `docs/V1_0_CAPSULE_BACKLOG.md` and `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` | HADARA-dev v1.0 hardening or schema work only | Future capsule backlog and implementation schema notes. |
+| `docs/TEST_STRATEGY.md` | Release, install, installer, package-smoke, install-matrix, publish/deploy, or validation-surface work | Tracked validation requirements and special-case smoke boundaries. |
+
+When adding project-specific specs, contracts, or roadmap files, add them to this table and explain when agents must read them. A future HADARA command may automate this registration; for now, update this table manually.
+
+If the local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` exists in this workspace, agents may use it as supporting planning context for release/install work, but it is not required committed context.
+
+## Init Profile Matrix
+
+| Profile | Generated Docs | Intended Use | Special Notes |
+|---|---|---|---|
+| `minimal` | Core protocol docs only | General projects adopting Task Capsules, evidence, and handoff discipline. | No release, security-smoke, MCP, provider, dashboard, or Hermes assumptions. |
+| `full` | Core protocol docs plus `docs/ROADMAP.md` | Projects that want roadmap tracking from the start. | Still no release or integration-specific assumptions. |
+| `hadara-protocol` | Same file set as `full` | Projects dogfooding the HADARA protocol deeply. | Add project-specific contracts manually to Required Reading as they become real. |
+
+## Scaffold Document Structure
+
+Generated HADARA docs should follow a stable structure so agents do not reinterpret the same filename differently across projects.
+
+| Document | Required Structure |
+|---|---|
+| `docs/PROJECT_STATE.md` | Product, Current Phase, Current Status, and Single Source of Truth sections. |
+| `docs/AGENT_HANDOFF.md` | Current State, Last 3 Completed Tasks, Current Known Problems, Next Recommended Step, Validation Baseline, and Historical Index sections. |
+| `docs/TASK_BOARD.md` | One task table with ID, Title, Status, Capsule, and Notes columns. |
+| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Implementation, Validation, Session End, and Handoff Compaction sections. |
+| `docs/DEVELOPMENT_SLICES.md` | Evidence-backed slice table with ordering and done evidence. |
+| `docs/TEST_STRATEGY.md` | Current Validation Environment, Suites, Required Session Checks, and Special-Case Checks sections. |
+| `docs/SECURITY_MODEL.md` | Default Mode, Invariants, and Special Checks sections. |
+
+Prefer tables for repeated records and `##`/`###` headings for durable sections. Do not leave scaffold docs as unstructured prose when a table or named section would make agent interpretation more deterministic.
 
 ## Implementation
 
@@ -52,7 +92,8 @@ For repeated validation, reuse `/tmp/hadara` when it is fresh; resync from `/wor
 1. Run the checks named in the active Task Capsule `TESTS.md`.
 2. Use validation constraints from `docs/AGENT_HANDOFF.md`; for example, prefer Docker-based Node/npm validation when the handoff records host Node/npm problems.
 3. Run `hadara harness validate --task <task-id> --json` before marking a Task Capsule Done.
-4. If a required check cannot run, record the reason and residual risk in `EVIDENCE.md`, `evidence.jsonl`, and `HANDOFF.md`.
+4. Add security, release, install, provider, MCP, dashboard, or deployment smoke checks only after those surfaces exist and are documented for this project.
+5. If a required check cannot run, record the reason and residual risk in `EVIDENCE.md`, `evidence.jsonl`, and `HANDOFF.md`.
 
 ## Session End
 

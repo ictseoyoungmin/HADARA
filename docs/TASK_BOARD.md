@@ -147,3 +147,4 @@
 | T-0144 | README release install docs cleanup | Done | tasks/T-0144-readme-release-install-docs-cleanup | Aligns README with npm RC install/use, source-checkout development, MIT license, and deferred release/install boundaries. |
 | T-0145 | MCP initialize package version metadata | Done | tasks/T-0145-mcp-initialize-package-version-metadata | Reports MCP initialize serverInfo.version from HADARA package metadata instead of stale bootstrap metadata. |
 | T-0146 | Release metadata hardcoding cleanup | Done | tasks/T-0146-release-metadata-hardcoding-cleanup | Removes exact current-RC version coupling from release readiness checks and keeps package-smoke tarball examples version-flexible. |
+| T-0147 | Init scaffold protocol alignment | Done | tasks/T-0147-init-scaffold-protocol-alignment | Aligns init scaffolds and root SOP with general HADARA protocol, removes Hermes defaults, adds `.gitignore`, and structures generated docs. |

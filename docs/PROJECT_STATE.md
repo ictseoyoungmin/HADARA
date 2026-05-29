@@ -23,7 +23,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Task Capsule creation exists.
 - Evidence append writes Markdown summaries, `evidence.jsonl` indexes, and managed public artifact copies.
 - Handoff update exists.
-- AGENTS.md and IMPLEMENTATION_SOP now capture reusable HADARA session protocol rules.
+- AGENTS.md and IMPLEMENTATION_SOP now capture reusable HADARA session protocol rules, required-reading registration, init profile matrix, and scaffold document structure standards.
 - Hermes/Agent Harness context export exists as a seed command.
 - Doctor CLI JSON output exists as `hadara doctor --json`.
 - Task list/show CLI JSON output exists as `hadara task list --json` and `hadara task show <task-id> --json`.
@@ -50,7 +50,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Agent loop evidence attachment exists: deterministic fake-shell observations from `hadara run --task ...` can be attached as managed public command-log artifacts and reported in run JSON output.
 - ScriptedProvider now consumes scripted steps in order for deterministic replay semantics.
 - Task Capsule creation now includes an empty `evidence.jsonl` required by harness validation.
-- Init profiles exist as `hadara init --profile minimal|full|hadara-protocol`; default/minimal init creates core HADARA protocol docs for Hermes/export-context readiness.
+- Init profiles exist as `hadara init --profile minimal|full|hadara-protocol`; default/minimal init creates general HADARA protocol docs without Hermes-specific files or guidance, generates `.gitignore` for local/private state, and uses structured scaffold sections/tables for agent consistency. Root `docs/IMPLEMENTATION_SOP.md` is aligned to the same generalized Required Reading, Init Profile Matrix, and scaffold structure standard, while HADARA-dev-specific docs are registered as conditional project-specific rows. `full` and `hadara-protocol` add roadmap tracking without release, security-smoke, MCP, provider, dashboard, or Hermes assumptions.
 - Harness validation supports `--level draft|done`; done-level validation requires Done status, completed acceptance, evidence records, and updated handoff sections.
 - Done-level harness validation now also checks `docs/TASK_BOARD.md` for exactly one row for the validated task, `Done` status, and the expected Task Capsule path, catching duplicate or stale append/update results before completion.
 - Done-level harness validation now rejects completed Task Capsules whose standard Markdown files still contain initial scaffold placeholders or default empty content, while draft-level validation remains structural.
