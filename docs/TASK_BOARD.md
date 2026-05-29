@@ -141,3 +141,4 @@
 | T-0138 | Release Gate Evidence Freeze | Done | tasks/T-0138-release-gate-evidence-freeze | Adds read-only evidence-backed release gate checks for package smoke, clean-checkout smoke, and release artifacts. |
 | T-0139 | CI Release Workflow Target Decision | Done | tasks/T-0139-ci-release-workflow-target-decision | Decides npm primary, GitHub Release secondary, Docker deferred, and documents token names without values. |
 | T-0140 | Final Deployment Script Dry Run | Done | tasks/T-0140-final-deployment-script-dry-run | Adds read-only release dry-run evidence cross-checks and release artifact public evidence attachment. |
+| T-0141 | Final Publish/Deploy Script | Done | tasks/T-0141-final-publish-deploy-script | Adds approval-gated release publish/deploy readiness reports with token presence checks, blocked execute audit, and no publish/GitHub/Docker mutation. |

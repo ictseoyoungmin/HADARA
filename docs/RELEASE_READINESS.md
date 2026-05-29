@@ -53,6 +53,13 @@ Approval and mutation boundary:
 - T-0139 performs no publish, no GitHub Release creation, no Docker image build, no registry mutation, no GitHub API call, and no token loading.
 - Release mode is required before any future publish/deploy command may consider `NPM_TOKEN`, `GITHUB_TOKEN`, or `HADARA_GITHUB_RELEASE_TOKEN`.
 
+T-0141 publish/deploy command boundary:
+
+- `hadara release publish --mode dry-run|execute --json` emits `hadara.releasePublish.v1`.
+- The command checks release dry-run readiness, package publishability metadata, approval metadata, and token presence without including token values.
+- Execute mode requires `--approval-actor`, `--approval-reason`, and `--confirm publish-deploy`, and execute requests are privately audited before returning a blocked report.
+- The current implementation never runs `npm publish`, creates a GitHub Release, builds a Docker image, mutates registries, uploads artifacts, calls GitHub APIs, or exposes an MCP release execution surface.
+
 Evidence freshness and cross-check implementation for T-0140:
 
 - `hadara release dry-run --json` is read-only and emits `hadara.releaseDryRun.v1`.

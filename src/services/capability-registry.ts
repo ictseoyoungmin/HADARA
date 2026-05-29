@@ -306,6 +306,29 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     notes: 'Read-only final release dry-run; cross-checks linked public evidence artifacts, package version, git commit metadata when present, and release artifact manifest hashes without publish or GitHub Release mutation.'
   },
   {
+    name: 'hadara release publish --mode dry-run --json',
+    category: 'release',
+    stable: true,
+    readOnly: true,
+    enabledByDefault: true,
+    availability: 'default',
+    risk: 'medium',
+    schemaVersion: 'hadara.releasePublish.v1',
+    notes: 'Read-only publish/deploy dry-run readiness report; checks release dry-run, package metadata, approval requirements, and token presence without token values. It never publishes, creates GitHub Releases, builds Docker images, writes audit records, or exposes an MCP release surface.'
+  },
+  {
+    name: 'hadara release publish --mode execute --json',
+    category: 'release',
+    stable: true,
+    readOnly: false,
+    enabledByDefault: true,
+    availability: 'default',
+    risk: 'high',
+    requiresApproval: true,
+    schemaVersion: 'hadara.releasePublish.v1',
+    notes: 'Approval-gated execute request surface; requires approval metadata, privately audits blocked requests, and currently never publishes, creates GitHub Releases, builds Docker images, or exposes an MCP release surface.'
+  },
+  {
     name: 'hadara release artifact --execute --json',
     category: 'release',
     stable: true,

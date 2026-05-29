@@ -121,6 +121,13 @@
       "notes": "Documents read-only final release dry-run reports that cross-check public evidence artifacts and planned release targets without publish or GitHub Release mutation."
     },
     {
+      "id": "hadara.releasePublish.v1",
+      "path": "src/schemas/release-publish.schema.json",
+      "status": "fixture",
+      "owner": "release/publish",
+      "notes": "Documents approval-gated publish/deploy readiness reports with token presence checks but no token values or release mutation."
+    },
+    {
       "id": "hadara.smokeEvidenceSummary.v1",
       "path": "src/schemas/smoke-evidence-summary.schema.json",
       "status": "fixture",

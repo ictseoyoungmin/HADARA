@@ -99,6 +99,21 @@ describe('tools list read model', () => {
           schemaVersion: 'hadara.releaseDryRun.v1'
         }),
         expect.objectContaining({
+          name: 'hadara release publish --mode dry-run --json',
+          category: 'release',
+          readOnly: true,
+          risk: 'medium',
+          schemaVersion: 'hadara.releasePublish.v1'
+        }),
+        expect.objectContaining({
+          name: 'hadara release publish --mode execute --json',
+          category: 'release',
+          readOnly: false,
+          requiresApproval: true,
+          risk: 'high',
+          schemaVersion: 'hadara.releasePublish.v1'
+        }),
+        expect.objectContaining({
           name: 'hadara release artifact --execute --json',
           category: 'release',
           readOnly: false,
@@ -143,6 +158,13 @@ describe('tools list read model', () => {
         expect.objectContaining({ name: 'mcp.provider.call', availability: 'deferred' }),
         expect.objectContaining({ name: 'mcp.release.execute', availability: 'deferred' }),
         expect.objectContaining({ name: 'mcp.write.*', availability: 'disabled' })
+      ])
+    );
+    expect(report.surfaces.mcp).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: expect.stringContaining('release')
+        })
       ])
     );
   });

@@ -15,6 +15,7 @@ import releaseArtifactManifestSchemaJson from '../schemas/release-artifact-manif
 import releaseArtifactSchemaJson from '../schemas/release-artifact.schema.json';
 import releaseDryRunSchemaJson from '../schemas/release-dry-run.schema.json';
 import releaseGateSchemaJson from '../schemas/release-gate.schema.json';
+import releasePublishSchemaJson from '../schemas/release-publish.schema.json';
 import smokeEvidenceSummarySchemaJson from '../schemas/smoke-evidence-summary.schema.json';
 import toolsListSchemaJson from '../schemas/tools-list.schema.json';
 import writePreflightSchemaJson from '../schemas/write-preflight.schema.json';
@@ -74,6 +75,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.releaseArtifact.v1': releaseArtifactSchemaJson as JsonObject,
   'hadara.releaseDryRun.v1': releaseDryRunSchemaJson as JsonObject,
   'hadara.releaseGate.v1': releaseGateSchemaJson as JsonObject,
+  'hadara.releasePublish.v1': releasePublishSchemaJson as JsonObject,
   'hadara.smokeEvidenceSummary.v1': smokeEvidenceSummarySchemaJson as JsonObject,
   'hadara.tools.list.v1': toolsListSchemaJson as JsonObject,
   'hadara.write.preflight.v1': writePreflightSchemaJson as JsonObject

@@ -40,6 +40,7 @@ describe('schema fixtures', () => {
       'hadara.releaseArtifact.v1',
       'hadara.releaseDryRun.v1',
       'hadara.releaseGate.v1',
+      'hadara.releasePublish.v1',
       'hadara.smokeEvidenceSummary.v1',
       'hadara.tools.list.v1',
       'hadara.write.preflight.v1'

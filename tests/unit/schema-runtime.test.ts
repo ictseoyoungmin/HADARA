@@ -442,6 +442,66 @@ describe('runtime schema validation', () => {
     ).toBe(true);
   });
 
+  it('validates release publish reports', () => {
+    expect(
+      validateSchema('hadara.releasePublish.v1', {
+        schemaVersion: 'hadara.releasePublish.v1',
+        command: 'release.publish',
+        mode: 'execute',
+        ok: false,
+        current: {
+          packageName: 'hadara',
+          packageVersion: '0.0.0-bootstrap',
+          private: true
+        },
+        approval: {
+          required: true,
+          actorProvided: true,
+          reasonProvided: true,
+          confirmationProvided: true
+        },
+        releaseTargets: [
+          {
+            id: 'npm-publish',
+            target: 'npm-package',
+            status: 'blocked',
+            tokenName: 'NPM_TOKEN',
+            tokenPresent: true,
+            willExecute: false,
+            summary: 'Blocked before mutation.'
+          }
+        ],
+        checks: [
+          {
+            code: 'NO_MUTATION_EXECUTED',
+            name: 'No mutation executed',
+            status: 'passed',
+            summary: 'No release mutation executed.'
+          }
+        ],
+        privacy: {
+          tokenValuesIncluded: false,
+          rawLogsIncluded: false,
+          privatePathsIncluded: false,
+          publishExecuted: false,
+          githubReleaseCreated: false,
+          dockerImageBuilt: false
+        },
+        audit: {
+          attempted: true,
+          written: true
+        },
+        issues: [
+          {
+            severity: 'error',
+            code: 'PACKAGE_PUBLISHABLE_METADATA_BLOCKED',
+            message: 'Package metadata is blocked.'
+          }
+        ]
+      }).ok
+    ).toBe(true);
+  });
+
   it('rejects release artifact reports with publish or unredacted markers', () => {
     const result = validateSchema('hadara.releaseArtifact.v1', {
       schemaVersion: 'hadara.releaseArtifact.v1',
