@@ -244,15 +244,16 @@ Recommended `core` profile:
 
 ## Package Metadata Release Readiness
 
-T-0127 records package metadata decisions without making the package publishable.
+T-0127 recorded package metadata decisions without making the package publishable. T-0142 transitions the package metadata to release-candidate mode while still performing no publish/deploy mutation.
 
-Current package metadata remains bootstrap-stage:
+Current package metadata is release-candidate stage:
 
 - Package name decision: `hadara`.
 - npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28; recheck immediately before publish because name availability can change.
-- Current version remains `0.0.0-bootstrap`.
-- Current package remains `private: true`.
+- Current version is `0.1.0-rc.0`.
+- Current package is `private: false`.
 - Current binary remains `bin.hadara` at `./dist/cli/main.js`.
+- Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`.
 
 Release metadata modes:
 
@@ -263,10 +264,10 @@ Release-candidate transition policy:
 
 - Scoped fallback decision: do not silently switch names; choose and document an explicit scope in a later release-target capsule if `hadara` is unavailable.
 - Version policy: first release-candidate target is `0.1.0-rc.0`; first stable target is `0.1.0` after package smoke, install matrix, release-gate evidence freeze, public docs alignment, and license finalization.
-- `private: true` remains until the package files whitelist, root README, license decision, and package-smoke dry-run evidence are complete.
+- T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist.
 - Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist.
 - Do not add `files` entries for missing installer or portable paths in T-0127.
-- MIT license decision: adopt MIT; package remains private until owner-approved `LICENSE` text exists.
+- MIT license decision: adopt MIT; `LICENSE` exists and is included in the package whitelist.
 - Publish target decision: npm package first, GitHub Release second, Docker image deferred.
 
 CLI verification forms:

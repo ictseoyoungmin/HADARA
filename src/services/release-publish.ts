@@ -72,7 +72,7 @@ export function createReleasePublishReport(options: ReleasePublishOptions): Rele
   const mode = options.mode ?? 'dry-run';
   const env = options.env ?? process.env;
   const metadata = readPackageMetadata(options.projectRoot);
-  const metadataPublishable = !metadata.private && metadata.packageVersion !== '0.0.0-bootstrap';
+  const metadataPublishable = !metadata.private && /^0\.1\.0-rc\.\d+$/.test(metadata.packageVersion);
   const dryRun = createReleaseDryRunReport(options.projectRoot);
   const approval = {
     required: true as const,
@@ -93,7 +93,7 @@ export function createReleasePublishReport(options: ReleasePublishOptions): Rele
       name: 'Package publishable metadata',
       status: metadataPublishable ? 'passed' : 'error',
       summary:
-        metadataPublishable ? 'Package metadata is no longer bootstrap/private.' : 'Package metadata is still bootstrap/private and must be changed in a dedicated release-candidate step.'
+        metadataPublishable ? 'Package metadata is in release-candidate mode.' : 'Package metadata must be 0.1.0-rc.N with private false before publish/deploy readiness can pass.'
     },
     {
       code: 'APPROVAL_RECORD',

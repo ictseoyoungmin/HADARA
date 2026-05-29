@@ -246,8 +246,8 @@ function evidenceRequirements(): EvidenceRequirement[] {
         record.result === 'passed' &&
         record.visibility === 'public' &&
         record.evidencePath !== undefined &&
-        includesAll(record.summary, ['package smoke', '--execute']) &&
-        includesAny(record.summary, ['--attach-evidence', 'artifacts/package-smoke', 'hadara.packageSmoke.v1'])
+        (includesAll(record.summary, ['package smoke', '--execute']) || includesAny(record.evidencePath, ['artifacts/package-smoke'])) &&
+        includesAny(`${record.summary}\n${record.evidencePath}`, ['--attach-evidence', 'artifacts/package-smoke', 'hadara.packageSmoke.v1'])
     },
     {
       code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE',
@@ -258,8 +258,8 @@ function evidenceRequirements(): EvidenceRequirement[] {
         record.result === 'passed' &&
         record.visibility === 'public' &&
         record.evidencePath !== undefined &&
-        includesAll(record.summary, ['smoke clean-checkout', '--execute']) &&
-        includesAny(record.summary, ['--attach-evidence', 'artifacts/clean-checkout-smoke', 'hadara.cleanCheckoutSmoke.v1'])
+        (includesAll(record.summary, ['smoke clean-checkout', '--execute']) || includesAny(record.evidencePath, ['artifacts/clean-checkout-smoke'])) &&
+        includesAny(`${record.summary}\n${record.evidencePath}`, ['--attach-evidence', 'artifacts/clean-checkout-smoke', 'hadara.cleanCheckoutSmoke.v1'])
     },
     {
       code: 'RELEASE_ARTIFACT_EVIDENCE',

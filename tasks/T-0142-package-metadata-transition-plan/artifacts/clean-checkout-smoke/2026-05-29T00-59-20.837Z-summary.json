@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "hadara.smokeEvidenceSummary.v1",
+  "time": "2026-05-29T00:59:20.837Z",
+  "taskId": "T-0142",
+  "category": "clean-checkout-smoke",
+  "sourceReport": {
+    "schemaVersion": "hadara.cleanCheckoutSmoke.v1",
+    "command": "smoke.cleanCheckout",
+    "mode": "execute",
+    "ok": false
+  },
+  "execution": {
+    "sourceCopied": true,
+    "dependencyInstallExecuted": true,
+    "buildExecuted": true,
+    "checkExecuted": true,
+    "builtCliSmokeExecuted": true,
+    "packageInstallExecuted": false,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "steps": [
+    {
+      "id": "copy-source",
+      "label": "Copy source checkout",
+      "status": "passed",
+      "summary": "Source checkout was copied into a disposable workspace without including dependency, build, local, or private store directories."
+    },
+    {
+      "id": "npm-ci",
+      "label": "Clean dependency install",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 2062,
+      "summary": "Clean dependency install completed successfully."
+    },
+    {
+      "id": "build",
+      "label": "Build clean checkout",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 3048,
+      "summary": "Build clean checkout completed successfully."
+    },
+    {
+      "id": "check",
+      "label": "Check clean checkout",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 8114,
+      "summary": "Check clean checkout completed successfully."
+    },
+    {
+      "id": "doctor",
+      "label": "Built CLI doctor",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 81,
+      "summary": "Built CLI doctor completed successfully."
+    },
+    {
+      "id": "ops-status",
+      "label": "Built CLI operations status",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 162,
+      "summary": "Built CLI operations status completed successfully."
+    },
+    {
+      "id": "release-gate-strict",
+      "label": "Built CLI strict release gate",
+      "status": "failed",
+      "exitCode": 6,
+      "elapsedMs": 157,
+      "summary": "Built CLI strict release gate failed with a reduced exit summary."
+    },
+    {
+      "id": "cleanup",
+      "label": "Cleanup disposable workspace",
+      "status": "passed",
+      "summary": "Disposable clean checkout was removed."
+    }
+  ],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [
+    {
+      "severity": "error",
+      "code": "CLEAN_CHECKOUT_STEP_FAILED",
+      "message": "node dist/cli/main.js release gate --mode strict --json --project <redacted-clean-checkout> failed during clean-checkout smoke.",
+      "stepId": "release-gate-strict"
+    }
+  ],
+  "rawLogsIncluded": false,
+  "privatePathsIncluded": false,
+  "rawPackageContentsIncluded": false
+}

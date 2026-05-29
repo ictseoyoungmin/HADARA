@@ -46,7 +46,7 @@ describe('release dry-run', () => {
         sourceOk: true,
         category: 'release-artifact',
         mode: 'execute',
-        packageVersion: '0.0.0-bootstrap',
+        packageVersion: '0.1.0-rc.0',
         gitCommit: commit,
         manifestHash: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
       })
@@ -192,8 +192,8 @@ function releaseArtifactReport(): Record<string, unknown> {
     },
     package: {
       name: 'hadara',
-      version: '0.0.0-bootstrap',
-      private: true,
+      version: '0.1.0-rc.0',
+      private: false,
       filesWhitelistApplied: true
     },
     artifacts: [
@@ -238,9 +238,11 @@ function writeReleaseReadinessFiles(root: string): void {
     path.join(root, 'package.json'),
     JSON.stringify({
       name: 'hadara',
-      version: '0.0.0-bootstrap',
-      private: true,
+      version: '0.1.0-rc.0',
+      private: false,
+      license: 'MIT',
       bin: { hadara: './dist/cli/main.js' },
+      files: ['dist/', 'README.md', 'LICENSE', 'package.json'],
       scripts: {
         build: 'tsc -p tsconfig.json',
         test: 'vitest run',
@@ -258,7 +260,11 @@ function writeReleaseReadinessFiles(root: string): void {
   fs.writeFileSync(path.join(root, 'docs', 'V1_0_IMPLEMENTATION_SCHEMAS.md'), 'npm ci\nnpm run check\nnode dist/cli/main.js doctor --json\nnode dist/cli/main.js ops status --json\n', 'utf8');
   fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), 'clean checkout smoke\nwithout writing generated context files\n', 'utf8');
   fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), 'contextPath: null\n.hadara/local/tui/\nread-only local API routes\n', 'utf8');
-  fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), 'GitHub Actions CI run succeeded: https://github.com/example/project/actions/runs/123\n', 'utf8');
+  fs.writeFileSync(
+    path.join(root, 'docs', 'VALIDATION_HISTORY.md'),
+    'GitHub Actions CI run succeeded: https://github.com/example/project/actions/runs/123\nhadara.packageSmoke.v1 evidence recorded\n',
+    'utf8'
+  );
   fs.writeFileSync(
     path.join(root, 'docs', 'TEST_STRATEGY.md'),
     [
@@ -293,20 +299,21 @@ function writeReleaseReadinessFiles(root: string): void {
       'Package Metadata Release Readiness',
       'Package name decision: `hadara`',
       'npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28',
-      'Current version remains `0.0.0-bootstrap`',
-      'Current package remains `private: true`',
+      'Current version is `0.1.0-rc.0`',
+      'Current package is `private: false`',
       'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
+      'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',
       'Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability',
       'Release-candidate metadata mode: version `0.1.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
       'Scoped fallback decision: do not silently switch names',
       'Version policy: first release-candidate target is `0.1.0-rc.0`; first stable target is `0.1.0`',
-      '`private: true` remains until the package files whitelist, root README, license decision, and package-smoke dry-run evidence are complete',
+      'T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist',
       'Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist',
       'Do not add `files` entries for missing installer or portable paths in T-0127',
-      'MIT license decision: adopt MIT; package remains private until owner-approved `LICENSE` text exists',
+      'MIT license decision: adopt MIT; `LICENSE` exists and is included in the package whitelist',
       'Publish target decision: npm package first, GitHub Release second, Docker image deferred',
       'Installed CLI verification must use `hadara doctor --json`',
-      'T-0127 performs no publish, no `npm pack`, no install smoke, no release artifact build, no GitHub Release, no Docker image build, and no registry mutation',
+      'T-0142 performs no publish, no GitHub Release creation, no Docker image build, and no registry mutation; it transitions metadata and regenerates reduced release evidence only',
       'Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`',
       'Remote CI observation',
       'local Docker validation remains the primary reproducible check'
@@ -319,20 +326,21 @@ function writeReleaseReadinessFiles(root: string): void {
       'Package Metadata Release Readiness',
       'Package name decision: `hadara`',
       'npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28',
-      'Current version remains `0.0.0-bootstrap`',
-      'Current package remains `private: true`',
+      'Current version is `0.1.0-rc.0`',
+      'Current package is `private: false`',
       'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
+      'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',
       'Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability',
       'Release-candidate metadata mode: version `0.1.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
       'Scoped fallback decision: do not silently switch names',
       'Version policy: first release-candidate target is `0.1.0-rc.0`; first stable target is `0.1.0`',
-      '`private: true` remains until the package files whitelist, root README, license decision, and package-smoke dry-run evidence are complete',
+      'T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist',
       'Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist',
       'Do not add `files` entries for missing installer or portable paths in T-0127',
-      'MIT license decision: adopt MIT; package remains private until owner-approved `LICENSE` text exists',
+      'MIT license decision: adopt MIT; `LICENSE` exists and is included in the package whitelist',
       'Publish target decision: npm package first, GitHub Release second, Docker image deferred',
       'Installed CLI verification must use `hadara doctor --json`',
-      'T-0127 performs no publish, no `npm pack`, no install smoke, no release artifact build, no GitHub Release, no Docker image build, and no registry mutation',
+      'T-0142 performs no publish, no GitHub Release creation, no Docker image build, and no registry mutation; it transitions metadata and regenerates reduced release evidence only',
       'Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`',
       'CI Release Workflow Target Decision',
       'Primary release target: npm package',
