@@ -59,7 +59,7 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     schemaVersion: 'hadara.doctor.v1'
   },
   {
-    name: 'hadara init [--profile minimal|full|hadara-protocol]',
+    name: 'hadara init [--profile basic|standard|governed]',
     category: 'write',
     stable: true,
     readOnly: false,

@@ -12,5 +12,5 @@
 
 ## Optional
 
-- Built CLI smoke for `init --profile full`.
+- Built CLI smoke for `init --profile governed`.
 - Built CLI smoke for `run scaffold` followed by scaffolded `run`.

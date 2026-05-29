@@ -1160,23 +1160,23 @@ const TASKS = {
   'T-0028':{
     id:'T-0028',slug:'init-profiles-protocol-docs',status:'Done',risk:'low',
     goal:'Improve first-use project initialization by adding init profiles and generating the core HADARA protocol documents that Hermes/export-context expects.',
-    scope:['Add hadara init --profile minimal|full|hadara-protocol.','Keep default hadara init compatible by using the minimal profile.','Generate docs/ARCHITECTURE.md, docs/IMPLEMENTATION_SOP.md, and docs/DEVELOPMENT_SLICES.md during initialization.','Add focused tests for profile validation and generated documents.'],
+    scope:['Add hadara init --profile basic|standard|governed.','Keep default hadara init compatible by using the standard profile.','Generate docs/ARCHITECTURE.md, docs/IMPLEMENTATION_SOP.md, and docs/DEVELOPMENT_SLICES.md during initialization.','Add focused tests for profile validation and generated documents.'],
     outofscope:['Done-level harness validation.','Run scenario scaffolding.','Dashboard, real provider adapters, or MCP server expansion.','Rich project-specific document authoring.'],
-    plan:['Add profile parsing for hadara init.','Generate missing protocol docs for the minimal/default init profile.','Add a full/hadara-protocol profile alias for protocol-heavy initialization.','Add focused unit tests.','Run Docker validation and harness validation.','Update evidence, task board, project state, development slices, and handoff.'],
+    plan:['Add profile parsing for hadara init.','Generate missing protocol docs for the standard/default init profile.','Add a governed profile for protocol-heavy initialization.','Add focused unit tests.','Run Docker validation and harness validation.','Update evidence, task board, project state, development slices, and handoff.'],
     acceptance:[
-      {done:true,text:'`hadara init --profile minimal` is accepted.'},
-      {done:true,text:'`hadara init --profile full` is accepted.'},
-      {done:true,text:'`hadara init --profile hadara-protocol` is accepted as a protocol-heavy alias.'},
+      {done:true,text:'`hadara init --profile basic` is accepted.'},
+      {done:true,text:'`hadara init --profile standard` is accepted.'},
+      {done:true,text:'`hadara init --profile governed` is accepted as the heavier governance profile.'},
       {done:true,text:'Unsupported init profiles are rejected.'},
-      {done:true,text:'Default/minimal init creates ARCHITECTURE.md, IMPLEMENTATION_SOP.md, and DEVELOPMENT_SLICES.md.'},
+      {done:true,text:'Default/standard init creates ARCHITECTURE.md, IMPLEMENTATION_SOP.md, and DEVELOPMENT_SLICES.md.'},
       {done:true,text:'Required Docker validation passes.'},
       {done:true,text:'Evidence and handoff documents are updated.'},
     ],
     risks:[
       {r:'Init could overwrite user-authored docs.',m:'Continue using writeFileIfMissing() so existing files are preserved.'},
-      {r:'Profiles could imply more behavior than exists.',m:'Keep full/hadara-protocol scoped to protocol document scaffolding for now.'},
+      {r:'Profiles could imply more behavior than exists.',m:'Keep governed scoped to protocol document scaffolding unless project-specific docs register additional behavior.'},
     ],
-    context:'Feedback after T-0027 called out that hadara init is too thin for toy projects:\n- docs/ARCHITECTURE.md may be missing even though Hermes context export reads it.\n- docs/IMPLEMENTATION_SOP.md and docs/DEVELOPMENT_SLICES.md are important to the HADARA protocol but are not generated for new projects.\n- P1 recommendation: add hadara init --profile minimal and hadara init --profile full.\n\nThis task focuses on initialization ergonomics only.',
+    context:'Feedback after T-0027 called out that hadara init is too thin for toy projects:\n- docs/ARCHITECTURE.md may be missing even though Hermes context export reads it.\n- docs/IMPLEMENTATION_SOP.md and docs/DEVELOPMENT_SLICES.md are important to the HADARA protocol but are not generated for new projects.\n- Current recommendation: use hadara init --profile basic|standard|governed.\n\nThis task focuses on initialization ergonomics only.',
     files:[
       {a:'Update',p:'src/cli/main.ts',r:'Add init profile parsing and protocol doc generation.'},
       {a:'Add',p:'tests/unit/init.test.ts',r:'Cover generated docs and invalid profile rejection.'},
@@ -1187,15 +1187,15 @@ const TASKS = {
       {a:'Update',p:'docs/AGENT_HANDOFF.md',r:'Refresh next-session handoff.'},
     ],
     decisions:[
-      {d:'Default hadara init uses the minimal profile.',r:'Preserves current command shape while improving the baseline project contract.'},
-      {d:'hadara-protocol aliases the full profile.',r:'Gives users a descriptive profile name without adding divergent behavior yet.'},
+      {d:'Default hadara init uses the standard profile.',r:'Preserves current command shape while improving the baseline project contract.'},
+      {d:'governed is the heavier profile.',r:'Gives users a scale-oriented profile name without adding divergent behavior by default.'},
     ],
-    handoff_last:['Added hadara init --profile minimal|full|hadara-protocol.','Default hadara init now uses the minimal profile.','Minimal/default init creates ARCHITECTURE.md, IMPLEMENTATION_SOP.md, and DEVELOPMENT_SLICES.md.','Full/hadara-protocol init also creates docs/ROADMAP.md.','Existing files are preserved through writeFileIfMissing().','Docker npm ci && npm run check: 21 test files, 92 tests passed.','Docker built CLI harness validate --task T-0028 --json → ok: true.','Docker built CLI smoke for hadara init --profile full and hermes export-context --json passed.'],
+    handoff_last:['Added hadara init --profile basic|standard|governed.','Default hadara init now uses the standard profile.','Standard/default init creates ARCHITECTURE.md, IMPLEMENTATION_SOP.md, and DEVELOPMENT_SLICES.md.','Governed init also creates docs/ROADMAP.md.','Existing files are preserved through writeFileIfMissing().','Docker npm ci && npm run check: 21 test files, 92 tests passed.','Docker built CLI harness validate --task T-0028 --json → ok: true.','Docker built CLI smoke for hadara init --profile governed and hermes export-context --json passed.'],
     handoff_next:'Consider P1 done-level harness validation next.',
     evidence:[
       {time:'2026-05-22T07:09:20.568Z',kind:'test-log',summary:'Docker npm ci && npm run check: 21 test files, 92 tests passed.',result:'passed'},
       {time:'2026-05-22T07:09:20.568Z',kind:'command-log',summary:'Docker CLI harness validate --task T-0028 --json → ok: true, evidence.jsonl checked.',result:'passed'},
-      {time:'2026-05-22T07:09:20.568Z',kind:'command-log',summary:'Docker CLI smoke: hadara init --profile full created protocol docs; hermes export-context --json → ok: true.',result:'passed'},
+      {time:'2026-05-22T07:09:20.568Z',kind:'command-log',summary:'Docker CLI smoke: hadara init --profile governed created protocol docs; hermes export-context --json → ok: true.',result:'passed'},
     ]
   },
   'T-0037':{

@@ -148,3 +148,4 @@
 | T-0145 | MCP initialize package version metadata | Done | tasks/T-0145-mcp-initialize-package-version-metadata | Reports MCP initialize serverInfo.version from HADARA package metadata instead of stale bootstrap metadata. |
 | T-0146 | Release metadata hardcoding cleanup | Done | tasks/T-0146-release-metadata-hardcoding-cleanup | Removes exact current-RC version coupling from release readiness checks and keeps package-smoke tarball examples version-flexible. |
 | T-0147 | Init scaffold protocol alignment | Done | tasks/T-0147-init-scaffold-protocol-alignment | Aligns init scaffolds and root SOP with general HADARA protocol, removes Hermes defaults, adds `.gitignore`, and structures generated docs. |
+| T-0148 | Init profile scale matrix refactor | Done | tasks/T-0148-init-profile-scale-matrix-refactor | Replaces primary init profiles with `basic`, `standard`, and `governed`; generated SOP/AGENTS now reflect the selected profile's docs. |

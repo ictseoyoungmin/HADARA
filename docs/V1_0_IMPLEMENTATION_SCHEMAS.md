@@ -1149,7 +1149,7 @@ Release checklist schema:
 
 Functional:
 
-- New projects can run `hadara init --profile hadara-protocol`.
+- New projects can run `hadara init --profile governed`.
 - Task creation/read/validation works.
 - Evidence append and evidence list work.
 - Handoff update and handoff read work.

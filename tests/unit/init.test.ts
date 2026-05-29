@@ -23,14 +23,14 @@ afterEach(() => {
 });
 
 describe('init profiles', () => {
-  it('accepts supported init profiles and rejects unknown profiles', () => {
-    expect(parseInitProfile('minimal')).toBe('minimal');
-    expect(parseInitProfile('full')).toBe('full');
-    expect(parseInitProfile('hadara-protocol')).toBe('hadara-protocol');
+  it('accepts scale profiles and rejects unknown profiles', () => {
+    expect(parseInitProfile('basic')).toBe('basic');
+    expect(parseInitProfile('standard')).toBe('standard');
+    expect(parseInitProfile('governed')).toBe('governed');
     expect(() => parseInitProfile('thin')).toThrow(/unsupported init profile/);
   });
 
-  it('creates baseline HADARA protocol docs for the default minimal profile', () => {
+  it('creates standard HADARA protocol docs by default', () => {
     const root = tempProject();
 
     initProject(root);
@@ -42,8 +42,12 @@ describe('init profiles', () => {
     expect(fs.existsSync(path.join(root, 'docs', 'ARCHITECTURE.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'docs', 'DECISIONS.md'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'docs', 'TEST_STRATEGY.md'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'docs', 'SECURITY_MODEL.md'))).toBe(false);
+    expect(fs.existsSync(path.join(root, 'docs', 'REFACTOR_LOG.md'))).toBe(false);
     expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(false);
-    expect(fs.readFileSync(path.join(root, 'docs', 'ARCHITECTURE.md'), 'utf8')).toContain('`minimal` profile');
+    expect(fs.readFileSync(path.join(root, 'docs', 'ARCHITECTURE.md'), 'utf8')).toContain('`standard` profile');
   });
 
   it('creates structured general-purpose protocol guidance without project-specific Hermes or MCP assumptions', () => {
@@ -63,9 +67,16 @@ describe('init profiles', () => {
     expect(sop).toContain('## Required Reading');
     expect(sop).toContain('| Document | When to Read | Purpose |');
     expect(sop).toContain('## Init Profile Matrix');
-    expect(sop).toContain('| `minimal` | Core protocol docs only |');
+    expect(sop).toContain('This project was initialized with the `standard` HADARA profile.');
+    expect(sop).toContain('| `standard` | Medium, default |');
     expect(sop).toContain('## Scaffold Document Structure');
-    expect(sop).toContain('| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Implementation, Validation, Session End, and Handoff Compaction sections. |');
+    expect(sop).toContain('| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Validation, Session End, and Handoff Compaction sections. |');
+    expect(sop).toContain('`docs/ARCHITECTURE.md`');
+    expect(sop).toContain('`docs/DEVELOPMENT_SLICES.md`');
+    expect(sop).toContain('`docs/TEST_STRATEGY.md`');
+    expect(sop).not.toContain('`docs/SECURITY_MODEL.md`');
+    expect(sop).not.toContain('`docs/REFACTOR_LOG.md`');
+    expect(sop).not.toContain('`docs/ROADMAP.md`');
     expect(sop).toContain('## Handoff Compaction');
     expect(sop).toContain('When adding project-specific specs, contracts, or roadmap files, add them to this table');
 
@@ -75,10 +86,37 @@ describe('init profiles', () => {
     expect(testStrategy).toContain('## Special-Case Checks');
     expect(testStrategy).toContain('| Security smoke | The project has documented security boundaries or secret-handling behavior. |');
     expect(testStrategy).not.toContain('Run unit, contract, harness, security, and release smoke tests.');
+  });
 
-    const security = fs.readFileSync(path.join(root, 'docs', 'SECURITY_MODEL.md'), 'utf8');
-    expect(security).toContain('## Invariants');
-    expect(security).toContain('| Invariant | Rule |');
+  it('creates a basic profile without optional generated-doc references in SOP or AGENTS', () => {
+    const root = tempProject();
+
+    initProject(root, 'basic');
+
+    expect(fs.existsSync(path.join(root, 'docs', 'PROJECT_STATE.md'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'docs', 'TASK_BOARD.md'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'docs', 'ARCHITECTURE.md'))).toBe(false);
+    expect(fs.existsSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'))).toBe(false);
+    expect(fs.existsSync(path.join(root, 'docs', 'DECISIONS.md'))).toBe(false);
+    expect(fs.existsSync(path.join(root, 'docs', 'TEST_STRATEGY.md'))).toBe(false);
+    expect(fs.existsSync(path.join(root, 'docs', 'SECURITY_MODEL.md'))).toBe(false);
+    expect(fs.existsSync(path.join(root, 'docs', 'REFACTOR_LOG.md'))).toBe(false);
+    expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(false);
+
+    const sop = fs.readFileSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'), 'utf8');
+    expect(sop).toContain('This project was initialized with the `basic` HADARA profile.');
+    expect(sop).not.toContain('`docs/ARCHITECTURE.md`');
+    expect(sop).not.toContain('`docs/DEVELOPMENT_SLICES.md`');
+    expect(sop).not.toContain('`docs/DECISIONS.md`');
+    expect(sop).not.toContain('`docs/TEST_STRATEGY.md`');
+    expect(sop).not.toContain('`docs/SECURITY_MODEL.md`');
+    expect(sop).not.toContain('`docs/REFACTOR_LOG.md`');
+    expect(sop).not.toContain('`docs/ROADMAP.md`');
+
+    const agents = fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8');
+    expect(agents).not.toContain('docs/DEVELOPMENT_SLICES.md');
   });
 
   it('creates ignore rules for HADARA local state without overwriting an existing gitignore', () => {
@@ -96,24 +134,35 @@ describe('init profiles', () => {
     expect(fs.readFileSync(path.join(root, '.gitignore'), 'utf8')).toBe('custom\n');
   });
 
-  it('creates full-profile roadmap docs without overwriting existing files', () => {
+  it('creates governed-profile docs without overwriting existing files', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
     fs.writeFileSync(path.join(root, 'docs', 'ARCHITECTURE.md'), '# Custom architecture\n', 'utf8');
 
-    initProject(root, 'full');
+    initProject(root, 'governed');
 
     expect(fs.readFileSync(path.join(root, 'docs', 'ARCHITECTURE.md'), 'utf8')).toBe('# Custom architecture\n');
+    expect(fs.existsSync(path.join(root, 'docs', 'SECURITY_MODEL.md'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'docs', 'REFACTOR_LOG.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(true);
+
+    const sop = fs.readFileSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'), 'utf8');
+    expect(sop).toContain('This project was initialized with the `governed` HADARA profile.');
+    expect(sop).toContain('`docs/SECURITY_MODEL.md`');
+    expect(sop).toContain('`docs/REFACTOR_LOG.md`');
+    expect(sop).toContain('`docs/ROADMAP.md`');
+
+    const security = fs.readFileSync(path.join(root, 'docs', 'SECURITY_MODEL.md'), 'utf8');
+    expect(security).toContain('## Invariants');
+    expect(security).toContain('| Invariant | Rule |');
   });
 
-  it('does not create Hermes files for full or hadara-protocol profiles', () => {
-    for (const profile of ['full', 'hadara-protocol'] as const) {
+  it('does not create Hermes files for any scale profile', () => {
+    for (const profile of ['basic', 'standard', 'governed'] as const) {
       const root = tempProject();
 
       initProject(root, profile);
 
-      expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(true);
       expect(fs.existsSync(path.join(root, 'HERMES.md'))).toBe(false);
       expect(fs.existsSync(path.join(root, '.hermes.md'))).toBe(false);
     }
@@ -125,9 +174,14 @@ describe('init profiles', () => {
     expect(sop).toContain('## Required Reading');
     expect(sop).toContain('| Document | When to Read | Purpose |');
     expect(sop).toContain('## Init Profile Matrix');
-    expect(sop).toContain('| `minimal` | Core protocol docs only |');
+    expect(sop).toContain('This repository operates as the `governed` HADARA profile');
+    expect(sop).toContain('| `basic` | Small |');
+    expect(sop).toContain('| `standard` | Medium, default |');
+    expect(sop).toContain('| `governed` | Heavy |');
     expect(sop).toContain('## Scaffold Document Structure');
-    expect(sop).toContain('| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Implementation, Validation, Session End, and Handoff Compaction sections. |');
+    expect(sop).toContain('| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Validation, Session End, and Handoff Compaction sections. |');
+    expect(sop).toContain('docs/SECURITY_MODEL.md');
+    expect(sop).toContain('docs/ROADMAP.md');
     expect(sop).toContain('docs/CLI_JSON_CONTRACT.md');
     expect(sop).toContain('HADARA-dev MCP or tool-surface work only');
   });

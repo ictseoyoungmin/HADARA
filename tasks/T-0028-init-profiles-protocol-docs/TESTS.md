@@ -11,4 +11,4 @@
 
 ## Optional
 
-- Built CLI smoke for `hadara init --profile full`.
+- Built CLI smoke for `hadara init --profile governed`.

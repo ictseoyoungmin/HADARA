@@ -31,7 +31,7 @@ function printHelp(): void {
   console.log(`HADARA bootstrap CLI
 
 Usage:
-  hadara init [--project <path>] [--profile minimal|full|hadara-protocol]
+  hadara init [--project <path>] [--profile basic|standard|governed]
   hadara doctor
   hadara task create <title>
   hadara task list

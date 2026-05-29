@@ -2,6 +2,8 @@
 
 HADARA development follows the core philosophy: Unbroken Context, Verified Development.
 
+This repository operates as the `governed` HADARA profile because it has long-lived release, security, MCP, TUI, and operational surfaces. New initialized projects should choose the smallest profile that matches their actual scale.
+
 ## Session Start
 
 1. Read `docs/PROJECT_STATE.md`.
@@ -24,12 +26,17 @@ HADARA development follows the core philosophy: Unbroken Context, Verified Devel
 | `docs/AGENT_HANDOFF.md` | Every session | Compact current-state handoff, latest validation baseline, and next recommended step. |
 | `docs/TASK_BOARD.md` | Every session | Work queue, task status, and capsule paths. |
 | `docs/IMPLEMENTATION_SOP.md` | Every session | Local HADARA workflow rules and project-specific required-reading registry. |
+| `docs/ARCHITECTURE.md` | Architecture, component, or boundary work | Current system shape and ownership boundaries. |
 | `docs/DEVELOPMENT_SLICES.md` | Starting, completing, or reclassifying slices | Roadmap ordering, prerequisite constraints, and completion evidence. |
+| `docs/DECISIONS.md` | Project-level decision work | Durable decisions that affect architecture or workflow. |
+| `docs/TEST_STRATEGY.md` | Release, install, installer, package-smoke, install-matrix, publish/deploy, validation-surface work, or completion checks | Tracked validation requirements and special-case smoke boundaries. |
+| `docs/SECURITY_MODEL.md` | Security, secret, permission, or evidence-safety work | Project security invariants and special checks. |
+| `docs/REFACTOR_LOG.md` | Refactor, migration, removal, or replacement work | Project-level refactor history. |
+| `docs/ROADMAP.md` | Roadmap, milestone, release, or scope planning | Longer-term priorities and deferred work. |
 | Active `tasks/T-*/TASK.md` | Working a task | Task-specific goal, scope, status, and acceptance frame. |
 | Active Task Capsule docs | Working a task | `DECISIONS.md`, `PLAN.md`, `CONTEXT.md`, `ACCEPTANCE.md`, `FILES.md`, `TESTS.md`, `RISKS.md`, and `HANDOFF.md`. |
 | `docs/CLI_JSON_CONTRACT.md` and `docs/MCP_BRIDGE_CONTRACT.md` | HADARA-dev MCP or tool-surface work only | Local contracts for CLI JSON and MCP bridge compatibility. |
 | `docs/V1_0_CAPSULE_BACKLOG.md` and `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` | HADARA-dev v1.0 hardening or schema work only | Future capsule backlog and implementation schema notes. |
-| `docs/TEST_STRATEGY.md` | Release, install, installer, package-smoke, install-matrix, publish/deploy, or validation-surface work | Tracked validation requirements and special-case smoke boundaries. |
 
 When adding project-specific specs, contracts, or roadmap files, add them to this table and explain when agents must read them. A future HADARA command may automate this registration; for now, update this table manually.
 
@@ -37,11 +44,13 @@ If the local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_
 
 ## Init Profile Matrix
 
-| Profile | Generated Docs | Intended Use | Special Notes |
-|---|---|---|---|
-| `minimal` | Core protocol docs only | General projects adopting Task Capsules, evidence, and handoff discipline. | No release, security-smoke, MCP, provider, dashboard, or Hermes assumptions. |
-| `full` | Core protocol docs plus `docs/ROADMAP.md` | Projects that want roadmap tracking from the start. | Still no release or integration-specific assumptions. |
-| `hadara-protocol` | Same file set as `full` | Projects dogfooding the HADARA protocol deeply. | Add project-specific contracts manually to Required Reading as they become real. |
+| Profile | Scale | Generated Docs | SOP Required Reading Adds | Intended Use |
+|---|---|---|---|---|
+| `basic` | Small | `AGENTS.md`, `.gitignore`, `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, `docs/TASK_BOARD.md`, `docs/IMPLEMENTATION_SOP.md` | Core docs and active Task Capsule docs only. | Small projects that need Task Capsules, evidence, and handoff discipline without planning overhead. |
+| `standard` | Medium, default | Basic docs plus `docs/ARCHITECTURE.md`, `docs/DEVELOPMENT_SLICES.md`, `docs/DECISIONS.md`, and `docs/TEST_STRATEGY.md` | Architecture, slice, decision, and validation rows. | Most multi-session projects that need roadmap slices and repeatable validation. |
+| `governed` | Heavy | Standard docs plus `docs/SECURITY_MODEL.md`, `docs/REFACTOR_LOG.md`, and `docs/ROADMAP.md` | Security, refactor, and roadmap rows. | Long-lived projects with stronger governance, release planning, security boundaries, or operational surfaces. |
+
+HADARA-dev uses `governed`. Project-specific rows such as MCP, v1.0 hardening, release-readiness support specs, and other manually added contracts are local registrations, not generic scaffold defaults.
 
 ## Scaffold Document Structure
 
@@ -49,13 +58,18 @@ Generated HADARA docs should follow a stable structure so agents do not reinterp
 
 | Document | Required Structure |
 |---|---|
+| `AGENTS.md` | Required Reading and Rules sections. |
 | `docs/PROJECT_STATE.md` | Product, Current Phase, Current Status, and Single Source of Truth sections. |
 | `docs/AGENT_HANDOFF.md` | Current State, Last 3 Completed Tasks, Current Known Problems, Next Recommended Step, Validation Baseline, and Historical Index sections. |
 | `docs/TASK_BOARD.md` | One task table with ID, Title, Status, Capsule, and Notes columns. |
-| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Implementation, Validation, Session End, and Handoff Compaction sections. |
+| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Validation, Session End, and Handoff Compaction sections. |
+| `docs/ARCHITECTURE.md` | Overview, Boundaries, and Current Components sections. |
 | `docs/DEVELOPMENT_SLICES.md` | Evidence-backed slice table with ordering and done evidence. |
+| `docs/DECISIONS.md` | Decision table with ID, Decision, Status, and Rationale columns. |
 | `docs/TEST_STRATEGY.md` | Current Validation Environment, Suites, Required Session Checks, and Special-Case Checks sections. |
 | `docs/SECURITY_MODEL.md` | Default Mode, Invariants, and Special Checks sections. |
+| `docs/REFACTOR_LOG.md` | Format section with Date, Area, Change, and Evidence columns. |
+| `docs/ROADMAP.md` | Near Term and Deferred sections. |
 
 Prefer tables for repeated records and `##`/`###` headings for durable sections. Do not leave scaffold docs as unstructured prose when a table or named section would make agent interpretation more deterministic.
 

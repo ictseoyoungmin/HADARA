@@ -29,7 +29,7 @@ Historical completed-task handoff entries moved out of `docs/AGENT_HANDOFF.md` d
 - Completed T-0025 CLI Args Parser with strict reusable option helpers and malformed option value rejection.
 - Completed T-0026 Agent Loop Evidence Attachment with fake-shell observation command-log artifacts and run JSON evidence metadata.
 - Completed T-0027 Deterministic Scripted Provider and Capsule Evidence Index with sequential script consumption and empty `evidence.jsonl` scaffolding.
-- Completed T-0028 Init Profiles Protocol Docs with `minimal`, `full`, and `hadara-protocol` init profiles and baseline protocol docs.
+- Completed T-0028 Init Profiles Protocol Docs with the then-current init profiles and baseline protocol docs; current init profiles are `basic`, `standard`, and `governed`.
 - Completed T-0029 Done-Level Harness Validation with `--level draft|done` and completion gates for Done status, acceptance, evidence, and handoff.
 - Completed T-0030 Run Scenario Scaffold with deterministic script/fixture generation under `.hadara/scenarios/`.
 - Completed T-0031 CLI Handler Extraction by moving init profile logic to `src/cli/init.ts` and run scaffold logic to `src/cli/run-scaffold.ts`.

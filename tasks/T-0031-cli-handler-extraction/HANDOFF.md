@@ -8,7 +8,7 @@
 - Updated focused init and run scaffold tests to import the new modules.
 - `src/cli/main.ts` decreased from 667 LOC to 459 LOC.
 - Docker `npm ci && npm run check` passed: 21 test files passed, 97 tests passed.
-- Built CLI smoke for `init --profile full`, `run scaffold`, and scaffolded `run` returned `ok: true`.
+- Built CLI smoke for `init --profile governed`, `run scaffold`, and scaffolded `run` returned `ok: true`.
 - Docker built CLI `harness validate --task T-0031 --level done --json` returned `ok: true`.
 
 ## Next Recommended Step

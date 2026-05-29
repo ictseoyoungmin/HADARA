@@ -6,8 +6,8 @@ Improve first-use project initialization by adding init profiles and generating 
 
 ## Scope
 
-- Add `hadara init --profile minimal|full|hadara-protocol`.
-- Keep default `hadara init` compatible by using the minimal profile.
+- Add scale-based `hadara init --profile basic|standard|governed`.
+- Keep default `hadara init` compatible by using the standard profile.
 - Generate `docs/ARCHITECTURE.md`, `docs/IMPLEMENTATION_SOP.md`, and `docs/DEVELOPMENT_SLICES.md` during initialization.
 - Add focused tests for profile validation and generated documents.
 
