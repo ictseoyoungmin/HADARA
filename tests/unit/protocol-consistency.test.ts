@@ -20,7 +20,7 @@ function tempProject(): string {
   fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
   fs.writeFileSync(
     path.join(dir, 'docs', 'IMPLEMENTATION_SOP.md'),
-    '# IMPLEMENTATION_SOP\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | Current state. |\n| `docs/AGENT_HANDOFF.md` | Every session | Handoff. |\n| `docs/TASK_BOARD.md` | Every session | Work queue. |\n| `docs/IMPLEMENTATION_SOP.md` | Every session | Workflow. |\n',
+    '# IMPLEMENTATION_SOP\n\n## Session Start\n\nRead docs.\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | Current state. |\n| `docs/AGENT_HANDOFF.md` | Every session | Handoff. |\n| `docs/TASK_BOARD.md` | Every session | Work queue. |\n| `docs/IMPLEMENTATION_SOP.md` | Every session | Workflow. |\n\n## Init Profile Matrix\n\n| Profile | Scale |\n|---|---|\n| `basic` | Small |\n\n## Scaffold Document Structure\n\n| Document | Required Structure |\n|---|---|\n| `docs/PROJECT_STATE.md` | Product and status. |\n\n## Implementation\n\nWork in a capsule.\n\n## Validation\n\nRun checks.\n\n## Session End\n\nUpdate evidence.\n\n## Handoff Compaction\n\nKeep handoff compact.\n',
     'utf8'
   );
   return dir;
@@ -34,7 +34,11 @@ describe('Docs protocol consistency report', () => {
   it('returns a stable docs-scoped report for an in-sync project', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Docs protocol');
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\nLatest completed task: none\nActive: ${task.id}\n`, 'utf8');
+    fs.writeFileSync(
+      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
+      `# AGENT_HANDOFF\n\n## Current State\n\n| Area | State | Notes |\n|---|---|---|\n| Latest Completed Task | none | none |\n| Active / Next Task | ${task.id} | active |\n`,
+      'utf8'
+    );
 
     const report = createDocsProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
 
@@ -72,7 +76,11 @@ describe('Docs protocol consistency report', () => {
       `# AGENT_HANDOFF\n\nActive task: ${activeTask.id}\n`,
       'utf8'
     );
-    fs.appendFileSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'), '| `docs/MISSING_SPEC.md` | Protocol work | Missing fixture. |\n', 'utf8');
+    replaceInFile(
+      path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'),
+      '| `docs/IMPLEMENTATION_SOP.md` | Every session | Workflow. |',
+      '| `docs/IMPLEMENTATION_SOP.md` | Every session | Workflow. |\n| `docs/MISSING_SPEC.md` | Protocol work | Missing fixture. |'
+    );
     fs.rmSync(path.join(root, 'AGENTS.md'));
     replaceInFile(
       path.join(root, 'docs', 'TASK_BOARD.md'),
@@ -102,6 +110,56 @@ describe('Docs protocol consistency report', () => {
       taskId: activeTask.id,
       expected: `tasks/${activeTask.id}-active-docs-task`,
       actual: `tasks/${activeTask.id}-wrong`
+    });
+  });
+
+  it('reports expanded project-doc drift for profile, state, slices, decisions, tests, handoff, and SOP structure', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'docs', 'SECURITY_MODEL.md'), '# SECURITY_MODEL\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'ROADMAP.md'), '# ROADMAP\n', 'utf8');
+    fs.writeFileSync(
+      path.join(root, 'docs', 'PROJECT_STATE.md'),
+      '# PROJECT_STATE\n\n## Current Status\n\n- Active Task: T-9999\n- Latest Completed Task: T-9998\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
+      '# AGENT_HANDOFF\n\n## Current State\n\n| Area | State | Notes |\n|---|---|---|\n| Latest Completed Task | T-9998 | stale |\n| Active / Next Task | T-9999 | stale |\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'),
+      '# DEVELOPMENT_SLICES\n\n| Order | Slice | Capsule | Purpose | Done Evidence |\n|---|---|---|---|---|\n| 1 | Drift | T-0001 | Check drift. | Done: stale evidence. |\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(root, 'docs', 'DECISIONS.md'),
+      '# DECISIONS\n\n| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n| D-1 | Keep drift fixture. | Accepted | Needed. | TBD |\n',
+      'utf8'
+    );
+    fs.writeFileSync(path.join(root, 'docs', 'TEST_STRATEGY.md'), '# TEST_STRATEGY\n\n## Current Validation Environment\n\nHost checks only.\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'), '# IMPLEMENTATION_SOP\n\n## Required Reading\n\nNo table.\n', 'utf8');
+    const task = createTaskCapsule(root, 'Expanded drift');
+
+    const report = createDocsProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.ok).toBe(false);
+    expect(report.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining([
+        'PROFILE_DOC_SET_MIXED',
+        'PROJECT_DOC_MISSING',
+        'PROJECT_STATE_ACTIVE_TASK_STALE',
+        'PROJECT_HANDOFF_ACTIVE_TASK_STALE',
+        'DEVELOPMENT_SLICE_STATUS_DRIFT',
+        'DECISION_EVIDENCE_MISSING',
+        'TEST_STRATEGY_VALIDATION_BASELINE_STALE',
+        'SOP_SCAFFOLD_SECTION_MISSING',
+        'SOP_REQUIRED_READING_TABLE_MISSING'
+      ])
+    );
+    expect(report.issues.find((issue) => issue.code === 'PROJECT_STATE_ACTIVE_TASK_STALE')).toMatchObject({
+      taskId: task.id,
+      path: 'docs/PROJECT_STATE.md'
     });
   });
 });

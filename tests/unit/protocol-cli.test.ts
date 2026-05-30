@@ -16,7 +16,7 @@ function tempProject(): string {
   fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
   fs.writeFileSync(
     path.join(dir, 'docs', 'IMPLEMENTATION_SOP.md'),
-    '# IMPLEMENTATION_SOP\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | Current state. |\n| `docs/AGENT_HANDOFF.md` | Every session | Handoff. |\n| `docs/TASK_BOARD.md` | Every session | Work queue. |\n| `docs/IMPLEMENTATION_SOP.md` | Every session | Workflow. |\n',
+    '# IMPLEMENTATION_SOP\n\n## Session Start\n\nRead docs.\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | Current state. |\n| `docs/AGENT_HANDOFF.md` | Every session | Handoff. |\n| `docs/TASK_BOARD.md` | Every session | Work queue. |\n| `docs/IMPLEMENTATION_SOP.md` | Every session | Workflow. |\n\n## Init Profile Matrix\n\n| Profile | Scale |\n|---|---|\n| `basic` | Small |\n\n## Scaffold Document Structure\n\n| Document | Required Structure |\n|---|---|\n| `docs/PROJECT_STATE.md` | Product and status. |\n\n## Implementation\n\nWork in a capsule.\n\n## Validation\n\nRun checks.\n\n## Session End\n\nUpdate evidence.\n\n## Handoff Compaction\n\nKeep handoff compact.\n',
     'utf8'
   );
   return dir;
@@ -96,6 +96,19 @@ describe('protocol CLI command handler', () => {
         activeTaskId: task.id
       }
     });
+  });
+
+  it('rejects using --task and --scope together', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Ambiguous protocol');
+
+    expect(() =>
+      handleProtocolCommand({
+        args: ['protocol', 'doctor', '--task', task.id, '--scope', 'docs', '--json'],
+        projectRoot: root,
+        jsonOutput: true
+      })
+    ).toThrow('--task and --scope cannot be used together');
   });
 
   it('ignores unrelated protocol subcommands for the top-level dispatcher', () => {

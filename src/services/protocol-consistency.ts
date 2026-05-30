@@ -65,6 +65,9 @@ export interface ProtocolConsistencyReport {
 
 const REQUIRED_TASK_FILES = Object.keys(TASK_FILES);
 const DONE_STATUSES = new Set(['done']);
+const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/IMPLEMENTATION_SOP.md'];
+const STANDARD_PROJECT_DOCS = ['docs/ARCHITECTURE.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/DECISIONS.md', 'docs/TEST_STRATEGY.md'];
+const GOVERNED_PROJECT_DOCS = ['docs/SECURITY_MODEL.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md'];
 
 export function createTaskProtocolConsistencyReport(projectRoot: string, taskId: string, now = new Date()): ProtocolConsistencyReport {
   const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
@@ -106,16 +109,23 @@ export function createDocsProtocolConsistencyReport(projectRoot: string, now = n
   const checkedDocs = new Set<string>();
   const tasks = listTaskCapsules(projectRoot);
   const taskBoardRows = readTaskBoardRows(projectRoot, checkedDocs);
+  const activeTaskId = findActiveTaskId(taskBoardRows, tasks);
+  const latestDoneTask = findLatestDoneTask(tasks);
 
   checkRequiredProjectDocs(projectRoot, checkedDocs, issues);
   checkRequiredReadingPaths(projectRoot, checkedDocs, issues);
   checkTaskBoardAgainstCapsules(projectRoot, tasks, taskBoardRows, issues);
-  checkLatestCompletedHandoff(projectRoot, tasks, checkedDocs, issues);
+  checkProjectStateConsistency(projectRoot, activeTaskId, latestDoneTask, checkedDocs, issues);
+  checkProjectHandoffConsistency(projectRoot, activeTaskId, latestDoneTask, checkedDocs, issues);
+  checkDevelopmentSlicesConsistency(projectRoot, tasks, checkedDocs, issues);
+  checkDecisionsConsistency(projectRoot, checkedDocs, issues);
+  checkTestStrategyConsistency(projectRoot, checkedDocs, issues);
+  checkSopScaffoldStructure(projectRoot, checkedDocs, issues);
 
   return buildReport(projectRoot, now, issues, checkedDocs, undefined, null, undefined, {
     scope: 'docs',
     checkedTasks: tasks.length,
-    activeTaskId: findActiveTaskId(taskBoardRows, tasks)
+    activeTaskId
   });
 }
 
@@ -173,22 +183,29 @@ function buildReport(
 }
 
 function checkRequiredProjectDocs(projectRoot: string, checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
-  const docs = [
-    'AGENTS.md',
-    'docs/PROJECT_STATE.md',
-    'docs/AGENT_HANDOFF.md',
-    'docs/TASK_BOARD.md',
-    'docs/IMPLEMENTATION_SOP.md'
-  ];
+  const docs = [...CORE_PROJECT_DOCS];
   const profile = detectProfile(projectRoot);
-  if (profile === 'standard' || profile === 'governed') {
-    docs.push('docs/ARCHITECTURE.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/DECISIONS.md', 'docs/TEST_STRATEGY.md');
+  const docSet = getProjectDocSet(projectRoot);
+  const hasAnyStandardDoc = docSet.standard.present.length > 0;
+  const hasAnyGovernedDoc = docSet.governed.present.length > 0;
+  if (profile === 'mixed' || (hasAnyStandardDoc && docSet.standard.missing.length > 0) || (hasAnyGovernedDoc && docSet.governed.missing.length > 0)) {
+    pushIssue(issues, {
+      code: 'PROFILE_DOC_SET_MIXED',
+      severity: 'warning',
+      area: 'profile',
+      message: 'Project profile document set is mixed or partial.',
+      expected: 'complete basic, standard, or governed doc set',
+      actual: `standard missing: ${docSet.standard.missing.join(', ') || 'none'}; governed missing: ${docSet.governed.missing.join(', ') || 'none'}`
+    });
   }
-  if (profile === 'governed') {
-    docs.push('docs/SECURITY_MODEL.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md');
+  if (profile === 'standard' || profile === 'governed' || hasAnyStandardDoc || hasAnyGovernedDoc) {
+    docs.push(...STANDARD_PROJECT_DOCS);
+  }
+  if (profile === 'governed' || hasAnyGovernedDoc) {
+    docs.push(...GOVERNED_PROJECT_DOCS);
   }
 
-  for (const relativePath of docs) {
+  for (const relativePath of Array.from(new Set(docs))) {
     checkedDocs.add(relativePath);
     if (!fs.existsSync(path.join(projectRoot, relativePath))) {
       pushIssue(issues, {
@@ -316,28 +333,249 @@ function checkTaskBoardAgainstCapsules(
   }
 }
 
-function checkLatestCompletedHandoff(projectRoot: string, tasks: TaskCapsule[], checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
+function checkProjectStateConsistency(
+  projectRoot: string,
+  activeTaskId: string | null,
+  latestDoneTask: TaskCapsule | undefined,
+  checkedDocs: Set<string>,
+  issues: ProtocolConsistencyIssue[]
+): void {
+  const projectStatePath = path.join(projectRoot, 'docs', 'PROJECT_STATE.md');
+  const relativePath = 'docs/PROJECT_STATE.md';
+  checkedDocs.add(relativePath);
+  if (!fs.existsSync(projectStatePath)) return;
+
+  const content = fs.readFileSync(projectStatePath, 'utf8');
+  const currentStatus = readMarkdownSection(content, '## Current Status');
+  if (activeTaskId && hasTaskStateMarker(content, 'active') && !currentStatus.includes(activeTaskId)) {
+    pushIssue(issues, {
+      code: 'PROJECT_STATE_ACTIVE_TASK_STALE',
+      severity: 'warning',
+      area: 'docs',
+      taskId: activeTaskId,
+      path: relativePath,
+      message: `docs/PROJECT_STATE.md active/current task markers do not mention ${activeTaskId}.`,
+      expected: `Current Status mentions ${activeTaskId}`,
+      actual: 'task id not found in Current Status'
+    });
+  }
+  if (latestDoneTask && hasTaskStateMarker(content, 'latest') && !currentStatus.includes(latestDoneTask.id)) {
+    pushIssue(issues, {
+      code: 'PROJECT_STATE_LATEST_COMPLETED_STALE',
+      severity: 'warning',
+      area: 'docs',
+      taskId: latestDoneTask.id,
+      path: relativePath,
+      message: `docs/PROJECT_STATE.md latest completed markers do not mention ${latestDoneTask.id}.`,
+      expected: `Current Status mentions ${latestDoneTask.id}`,
+      actual: 'task id not found in Current Status'
+    });
+  }
+}
+
+function checkProjectHandoffConsistency(
+  projectRoot: string,
+  activeTaskId: string | null,
+  latestDoneTask: TaskCapsule | undefined,
+  checkedDocs: Set<string>,
+  issues: ProtocolConsistencyIssue[]
+): void {
   const handoffPath = path.join(projectRoot, 'docs', 'AGENT_HANDOFF.md');
   const relativePath = 'docs/AGENT_HANDOFF.md';
   checkedDocs.add(relativePath);
   if (!fs.existsSync(handoffPath)) return;
 
-  const latestDone = [...tasks]
-    .filter((task) => isDoneStatus(readTaskStatus(task)))
-    .sort((a, b) => b.id.localeCompare(a.id))[0];
-  if (!latestDone) return;
-
   const content = fs.readFileSync(handoffPath, 'utf8');
-  if (!content.includes(latestDone.id)) {
+  const currentState = readMarkdownSection(content, '## Current State');
+  const fields = readKeyValueRows(currentState);
+  const latestCell = fields.get('latest completed task') ?? '';
+  const activeCell = fields.get('active / next task') ?? '';
+
+  if (latestDoneTask && !latestCell.includes(latestDoneTask.id)) {
     pushIssue(issues, {
       code: 'PROJECT_HANDOFF_LATEST_COMPLETED_STALE',
       severity: 'warning',
       area: 'handoff',
-      taskId: latestDone.id,
+      taskId: latestDoneTask.id,
       path: relativePath,
-      message: `docs/AGENT_HANDOFF.md does not mention the latest completed task ${latestDone.id}.`,
-      expected: `handoff mentions ${latestDone.id}`,
-      actual: 'task id not found'
+      message: `docs/AGENT_HANDOFF.md Latest Completed Task does not point at ${latestDoneTask.id}.`,
+      expected: `Latest Completed Task mentions ${latestDoneTask.id}`,
+      actual: latestCell || 'missing Latest Completed Task field'
+    });
+  }
+  if (activeTaskId && !activeCell.includes(activeTaskId)) {
+    pushIssue(issues, {
+      code: 'PROJECT_HANDOFF_ACTIVE_TASK_STALE',
+      severity: 'warning',
+      area: 'handoff',
+      taskId: activeTaskId,
+      path: relativePath,
+      message: `docs/AGENT_HANDOFF.md Active / Next Task does not point at ${activeTaskId}.`,
+      expected: `Active / Next Task mentions ${activeTaskId}`,
+      actual: activeCell || 'missing Active / Next Task field'
+    });
+  }
+}
+
+function checkDevelopmentSlicesConsistency(projectRoot: string, tasks: TaskCapsule[], checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
+  const slicesPath = path.join(projectRoot, 'docs', 'DEVELOPMENT_SLICES.md');
+  const relativePath = 'docs/DEVELOPMENT_SLICES.md';
+  checkedDocs.add(relativePath);
+  if (!fs.existsSync(slicesPath)) return;
+
+  const tasksById = new Map(tasks.map((task) => [task.id, task]));
+  for (const row of parseMarkdownRows(fs.readFileSync(slicesPath, 'utf8'))) {
+    const capsule = row[2] ?? '';
+    const taskIds = [...capsule.matchAll(/T-\d{4}/g)].map((match) => match[0]);
+    if (taskIds.length === 0) continue;
+    const evidence = row[4] ?? '';
+    const evidenceLooksDone = /^\s*Done\b/i.test(evidence);
+    const evidenceLooksFuture = /^\s*Future\b/i.test(evidence);
+    for (const taskId of taskIds) {
+      const task = tasksById.get(taskId);
+      if (!task) continue;
+      const taskDone = isDoneStatus(readTaskStatus(task));
+      if (taskDone && evidenceLooksFuture) {
+        pushIssue(issues, {
+          code: 'DEVELOPMENT_SLICE_STATUS_DRIFT',
+          severity: 'warning',
+          area: 'docs',
+          taskId,
+          path: relativePath,
+          message: `docs/DEVELOPMENT_SLICES.md still marks ${taskId} as future while its Task Capsule is Done.`,
+          expected: 'Done evidence',
+          actual: evidence
+        });
+      }
+      if (!taskDone && evidenceLooksDone) {
+        pushIssue(issues, {
+          code: 'DEVELOPMENT_SLICE_STATUS_DRIFT',
+          severity: 'warning',
+          area: 'docs',
+          taskId,
+          path: relativePath,
+          message: `docs/DEVELOPMENT_SLICES.md marks ${taskId} as done while its Task Capsule is ${readTaskStatus(task) || '(empty)'}.`,
+          expected: `Task Capsule status ${readTaskStatus(task) || '(empty)'}`,
+          actual: evidence
+        });
+      }
+    }
+  }
+}
+
+function checkDecisionsConsistency(projectRoot: string, checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
+  const decisionsPath = path.join(projectRoot, 'docs', 'DECISIONS.md');
+  const relativePath = 'docs/DECISIONS.md';
+  checkedDocs.add(relativePath);
+  if (!fs.existsSync(decisionsPath)) return;
+
+  const content = fs.readFileSync(decisionsPath, 'utf8');
+  const rows = parseMarkdownRows(content).filter((row) => /^D-\d+/i.test(row[0] ?? ''));
+  if (rows.length === 0 && /##\s+D-\d+/i.test(content)) {
+    pushIssue(issues, {
+      code: 'DECISIONS_TABLE_MISSING',
+      severity: 'warning',
+      area: 'docs',
+      path: relativePath,
+      message: 'docs/DECISIONS.md uses legacy decision prose without the table-first decision index expected by the current scaffold.',
+      expected: 'decision table rows with evidence cells',
+      actual: 'legacy decision headings'
+    });
+    return;
+  }
+  for (const row of rows) {
+    const status = row[2] ?? '';
+    const evidence = row[4] ?? '';
+    if (/accepted/i.test(status) && isEmptyEvidenceCell(evidence)) {
+      pushIssue(issues, {
+        code: 'DECISION_EVIDENCE_MISSING',
+        severity: 'warning',
+        area: 'docs',
+        path: relativePath,
+        message: `Accepted project decision ${row[0]} has no evidence link.`,
+        expected: 'non-empty evidence cell',
+        actual: evidence || 'empty'
+      });
+    }
+  }
+}
+
+function checkTestStrategyConsistency(projectRoot: string, checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
+  const testStrategyPath = path.join(projectRoot, 'docs', 'TEST_STRATEGY.md');
+  const handoffPath = path.join(projectRoot, 'docs', 'AGENT_HANDOFF.md');
+  const relativePath = 'docs/TEST_STRATEGY.md';
+  checkedDocs.add(relativePath);
+  if (!fs.existsSync(testStrategyPath)) return;
+
+  const content = fs.readFileSync(testStrategyPath, 'utf8');
+  const envSection = readMarkdownSection(content, '## Current Validation Environment');
+  if (!/Docker/i.test(envSection) || !/primary validation path/i.test(envSection)) {
+    pushIssue(issues, {
+      code: 'TEST_STRATEGY_VALIDATION_BASELINE_STALE',
+      severity: 'warning',
+      area: 'validation',
+      path: relativePath,
+      message: 'docs/TEST_STRATEGY.md Current Validation Environment does not clearly identify Docker as the primary validation path.',
+      expected: 'Docker primary validation baseline',
+      actual: envSection.trim().split(/\r?\n/)[0] || 'missing Current Validation Environment section'
+    });
+  }
+  if (fs.existsSync(handoffPath)) {
+    const handoff = fs.readFileSync(handoffPath, 'utf8');
+    if (/Validation Baseline/i.test(handoff) && /Docker/i.test(handoff) && !/Docker/i.test(envSection)) {
+      pushIssue(issues, {
+        code: 'TEST_STRATEGY_HANDOFF_BASELINE_DRIFT',
+        severity: 'warning',
+        area: 'validation',
+        path: relativePath,
+        message: 'docs/AGENT_HANDOFF.md records a Docker validation baseline but TEST_STRATEGY does not.',
+        expected: 'TEST_STRATEGY mirrors Docker baseline',
+        actual: 'Docker missing from TEST_STRATEGY validation environment'
+      });
+    }
+  }
+}
+
+function checkSopScaffoldStructure(projectRoot: string, checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
+  const sopPath = path.join(projectRoot, 'docs', 'IMPLEMENTATION_SOP.md');
+  const relativePath = 'docs/IMPLEMENTATION_SOP.md';
+  checkedDocs.add(relativePath);
+  if (!fs.existsSync(sopPath)) return;
+
+  const content = fs.readFileSync(sopPath, 'utf8');
+  const requiredSections = [
+    '## Session Start',
+    '## Required Reading',
+    '## Init Profile Matrix',
+    '## Scaffold Document Structure',
+    '## Implementation',
+    '## Validation',
+    '## Session End',
+    '## Handoff Compaction'
+  ];
+  for (const heading of requiredSections) {
+    if (content.includes(heading)) continue;
+    pushIssue(issues, {
+      code: 'SOP_SCAFFOLD_SECTION_MISSING',
+      severity: 'warning',
+      area: 'docs',
+      path: relativePath,
+      message: `docs/IMPLEMENTATION_SOP.md is missing required section ${heading}.`,
+      expected: heading,
+      actual: 'missing'
+    });
+  }
+  const requiredReading = readMarkdownSection(content, '## Required Reading');
+  const requiredReadingRows = parseMarkdownRows(requiredReading);
+  if (!requiredReadingRows.some((row) => row[0] === 'Document' && row[1] === 'When to Read' && row[2] === 'Purpose')) {
+    pushIssue(issues, {
+      code: 'SOP_REQUIRED_READING_TABLE_MISSING',
+      severity: 'warning',
+      area: 'required-reading',
+      path: relativePath,
+      message: 'docs/IMPLEMENTATION_SOP.md Required Reading section is missing the canonical table header.',
+      expected: '| Document | When to Read | Purpose |',
+      actual: 'canonical header not found'
     });
   }
 }
@@ -608,6 +846,10 @@ function readTaskBoardRows(projectRoot: string, checkedDocs: Set<string>): TaskB
     });
 }
 
+function findLatestDoneTask(tasks: TaskCapsule[]): TaskCapsule | undefined {
+  return [...tasks].filter((task) => isDoneStatus(readTaskStatus(task))).sort((a, b) => b.id.localeCompare(a.id))[0];
+}
+
 function findActiveTaskId(rows: TaskBoardRow[], tasks: TaskCapsule[]): string | null {
   const activeRow = rows.find((row) => row.status.trim().toLowerCase() === 'active');
   if (activeRow) return activeRow.id;
@@ -618,6 +860,44 @@ function findActiveTaskId(rows: TaskBoardRow[], tasks: TaskCapsule[]): string | 
     return status === 'active' || status === 'draft';
   });
   return activeTask?.id ?? null;
+}
+
+function getProjectDocSet(projectRoot: string): {
+  standard: { present: string[]; missing: string[] };
+  governed: { present: string[]; missing: string[] };
+} {
+  return {
+    standard: splitDocPresence(projectRoot, STANDARD_PROJECT_DOCS),
+    governed: splitDocPresence(projectRoot, GOVERNED_PROJECT_DOCS)
+  };
+}
+
+function splitDocPresence(projectRoot: string, relativePaths: string[]): { present: string[]; missing: string[] } {
+  const present: string[] = [];
+  const missing: string[] = [];
+  for (const relativePath of relativePaths) {
+    (fs.existsSync(path.join(projectRoot, relativePath)) ? present : missing).push(relativePath);
+  }
+  return { present, missing };
+}
+
+function readKeyValueRows(content: string): Map<string, string> {
+  const fields = new Map<string, string>();
+  for (const row of parseMarkdownRows(content)) {
+    const key = (row[0] ?? '').trim().toLowerCase();
+    if (!key || key === 'area' || key === 'field') continue;
+    fields.set(key, row.slice(1).join(' | '));
+  }
+  return fields;
+}
+
+function hasTaskStateMarker(content: string, kind: 'active' | 'latest'): boolean {
+  const pattern = kind === 'active' ? /active\s*(\/|or)?\s*(current|next)?\s*task/i : /latest\s+completed\s+task/i;
+  return pattern.test(content);
+}
+
+function isEmptyEvidenceCell(value: string): boolean {
+  return !value.trim() || /^(TBD|N\/A|None|Not Run)$/i.test(value.trim());
 }
 
 function pushIssue(issues: ProtocolConsistencyIssue[], issue: Omit<ProtocolConsistencyIssue, 'id'>): void {

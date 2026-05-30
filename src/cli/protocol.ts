@@ -16,7 +16,9 @@ export function handleProtocolCommand(input: ProtocolCommandInput): boolean {
   let report: ProtocolConsistencyReport;
   let label: string;
 
-  if (taskId) {
+  if (taskId && scope) {
+    throw new CliArgsError('CLI_OPTION_INVALID_VALUE', '--task and --scope cannot be used together');
+  } else if (taskId) {
     report = createTaskProtocolConsistencyReport(input.projectRoot, taskId);
     label = taskId;
   } else if (scope === 'docs') {
