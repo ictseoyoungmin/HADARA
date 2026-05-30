@@ -276,10 +276,11 @@ describe('init profiles', () => {
     expect(fs.readFileSync(path.join(root, 'HERMES.md'), 'utf8')).toBe('# stale\n');
   });
 
-  it('reports profile metadata drift after missing-doc expansion', () => {
+  it('reports profile metadata drift when higher-profile docs exist without core metadata merge', () => {
     const root = tempProject();
     initProject(root, 'basic');
-    handleInitCommand({ args: ['init', 'upgrade', '--profile', 'governed', '--execute', '--json'], projectRoot: root, jsonOutput: true });
+    fs.writeFileSync(path.join(root, 'docs', 'SECURITY_MODEL.md'), '# SECURITY_MODEL\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'ROADMAP.md'), '# ROADMAP\n', 'utf8');
 
     handleInitCommand({ args: ['init', 'doctor', '--json'], projectRoot: root, jsonOutput: true });
 
@@ -292,7 +293,7 @@ describe('init profiles', () => {
     ]));
   });
 
-  it('upgrades profiles through dry-run planning and missing-file-only execution', () => {
+  it('upgrades profiles through dry-run planning, missing docs, and profile metadata merge', () => {
     const root = tempProject();
     initProject(root, 'basic');
     fs.writeFileSync(path.join(root, 'docs', 'DECISIONS.md'), '# Custom decisions\n', 'utf8');
@@ -300,17 +301,26 @@ describe('init profiles', () => {
     handleInitCommand({ args: ['init', 'upgrade', '--profile', 'governed', '--json'], projectRoot: root, jsonOutput: true });
     const dryRun = lastJsonLog();
     expect(dryRun.mode).toBe('dry-run');
-    expect(dryRun.summary).toContain('creates missing scaffold docs only');
-    expect(dryRun.summary).toContain('Existing profile-bearing docs are preserved');
+    expect(dryRun.summary).toContain('creates missing scaffold docs and updates generated profile metadata');
     expect(dryRun.actions).toContainEqual(expect.objectContaining({ path: 'docs/ROADMAP.md', status: 'planned' }));
+    expect(dryRun.actions).toContainEqual(expect.objectContaining({ action: 'upgrade-profile-metadata', path: 'docs/PROJECT_STATE.md', status: 'planned' }));
     expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(false);
+    expect(read(root, 'docs/PROJECT_STATE.md')).toContain('| HADARA Profile | basic |');
 
     handleInitCommand({ args: ['init', 'upgrade', '--profile', 'governed', '--execute', '--json'], projectRoot: root, jsonOutput: true });
     const executed = lastJsonLog();
     expect(executed.mode).toBe('execute');
     expect(executed.actions).toContainEqual(expect.objectContaining({ path: 'docs/ROADMAP.md', status: 'created' }));
+    expect(executed.actions).toContainEqual(expect.objectContaining({ action: 'upgrade-profile-metadata', path: 'docs/PROJECT_STATE.md', status: 'updated' }));
     expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(true);
+    expect(read(root, 'docs/PROJECT_STATE.md')).toContain('| HADARA Profile | governed |');
+    expect(read(root, 'docs/IMPLEMENTATION_SOP.md')).toContain('This project uses the `governed` HADARA profile.');
+    expect(read(root, 'docs/IMPLEMENTATION_SOP.md')).toContain('`docs/SECURITY_MODEL.md`');
+    expect(read(root, 'AGENTS.md')).toContain('`docs/SECURITY_MODEL.md`');
     expect(fs.readFileSync(path.join(root, 'docs', 'DECISIONS.md'), 'utf8')).toBe('# Custom decisions\n');
+
+    handleInitCommand({ args: ['init', 'doctor', '--json'], projectRoot: root, jsonOutput: true });
+    expect(lastJsonLog().issues).not.toContainEqual(expect.objectContaining({ code: 'INIT_PROFILE_METADATA_MISMATCH' }));
   });
 
   it('registers project-specific Required Reading rows idempotently', () => {
@@ -416,6 +426,30 @@ describe('init profiles', () => {
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'INIT_REQUIRED_READING_TABLE_MISSING' }));
     expect(fs.existsSync(path.join(root, 'docs', 'integrations', 'MCP.md'))).toBe(false);
+  });
+
+  it('rolls back integration writes when a multi-file commit fails', () => {
+    const root = tempProject();
+    initProject(root);
+    const originalRename = fs.renameSync;
+    let renameCalls = 0;
+    const renameSpy = vi.spyOn(fs, 'renameSync').mockImplementation((oldPath, newPath) => {
+      renameCalls += 1;
+      if (renameCalls === 2) throw new Error('simulated rename failure');
+      return originalRename(oldPath, newPath);
+    });
+
+    try {
+      handleInitCommand({ args: ['init', 'enable-integration', '--integration', 'mcp', '--execute', '--json'], projectRoot: root, jsonOutput: true });
+    } finally {
+      renameSpy.mockRestore();
+    }
+
+    const report = lastJsonLog();
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'INIT_ATOMIC_WRITE_FAILED' }));
+    expect(fs.existsSync(path.join(root, 'docs', 'integrations', 'MCP.md'))).toBe(false);
+    expect(read(root, 'docs/IMPLEMENTATION_SOP.md')).not.toContain('docs/integrations/MCP.md');
   });
 
 

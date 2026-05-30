@@ -1192,9 +1192,9 @@ All Phase 1 follow-up surfaces were implemented in T-0150 using the shared `hada
 |---|---|---|
 | `hadara init doctor --json` | Detect stale old-profile, old-Hermes, broad-ignore, missing-core-doc, or prose-only scaffold patterns. | Read-only report; no automatic migration or overwrite. |
 | Lazy runtime-store creation | Avoid creating every local runtime directory during small/basic init. | Init writes scaffold docs only; later runtime commands create local/private stores when needed. |
-| `hadara init upgrade --profile <profile> --json [--execute]` | Expand `basic` to `standard` or `governed` safely by creating missing docs. | Dry-run by default; execute creates only missing generated files, preserves user edits, and reports that existing profile-bearing docs are not migrated. |
+| `hadara init upgrade --profile <profile> --json [--execute]` | Expand `basic` to `standard` or `governed` safely by creating missing docs and merging known generated profile metadata. | Dry-run by default; execute creates missing generated files and updates recognizable generated profile metadata/Required Reading rows while avoiding arbitrary user-content rewrites. |
 | `hadara init register-doc --path <path> --when <text> --purpose <text> --json [--require-exists] [--execute]` | Add project-specific specs/contracts to generated SOP tables idempotently. | Dry-run by default; execute inserts a single Required Reading row, validates project-relative paths/table cells, warns on missing referenced docs, and treats missing docs as errors with `--require-exists`. |
-| `hadara init enable-integration --integration hermes|mcp --json [--execute]` | Add Hermes/MCP integration guidance docs explicitly. | Dry-run by default; execute creates/registers integration docs only on request, avoids partial doc writes when SOP registration cannot be updated, and does not enable runtime behavior. |
+| `hadara init enable-integration --integration hermes|mcp --json [--execute]` | Add Hermes/MCP integration guidance docs explicitly. | Dry-run by default; execute creates/registers integration docs only on request, validates SOP registration first, commits multi-file writes with temp-file/rename rollback, and does not enable runtime behavior. |
 
 ## V1.0 Acceptance Checklist
 

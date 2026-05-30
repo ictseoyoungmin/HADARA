@@ -65,8 +65,8 @@ Reason:
 - `hadara init doctor --json` is read-only and reports scaffold drift with stable issue codes.
 - `hadara init upgrade`, `hadara init register-doc`, and `hadara init enable-integration` dry-run by default and require `--execute` for writes.
 - Profile upgrades create only missing generated files; they do not overwrite user-edited docs.
-- Profile upgrades are missing-doc expansion, not full profile metadata migration; `init doctor` reports `INIT_PROFILE_METADATA_MISMATCH` when higher-profile docs exist but profile-bearing docs still describe a lower profile.
+- Profile upgrades create missing scaffold docs and merge known generated profile metadata in `PROJECT_STATE`, `IMPLEMENTATION_SOP`, `AGENTS`, and `ARCHITECTURE` when those files still have recognizable scaffold structure; they do not perform arbitrary user-content diff/merge.
 - `hadara init register-doc --require-exists` is the strict mode for missing referenced docs; default registration keeps missing docs warning-only so planned specs can be registered deliberately.
-- `hadara init enable-integration` registers guidance docs and SOP rows only; it does not enable Hermes/MCP runtime behavior or change capability gates.
+- `hadara init enable-integration` registers guidance docs and SOP rows only; it does not enable Hermes/MCP runtime behavior or change capability gates. Multi-file integration writes use temp-file/rename commit with rollback and `INIT_ATOMIC_WRITE_FAILED` on failure.
 - Runtime local/private stores should be created by the commands that need them, not eagerly by generic project initialization.
 - T-0150 locked the initial decision with focused init tests, full Docker validation, built CLI follow-up smokes, and done-level harness validation. T-0151 hardened wording, validation, strict mode, and partial-write behavior after review.

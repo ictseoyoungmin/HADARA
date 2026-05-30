@@ -70,6 +70,7 @@ hadara init enable-integration --integration mcp --json
 ```
 
 `register-doc` can use `--require-exists` when missing referenced docs should be treated as an error. `enable-integration` registers project guidance docs only; it does not enable Hermes/MCP runtime behavior or change capability gates.
+`upgrade` creates missing scaffold docs and updates known generated profile metadata; it does not rewrite unrelated user-authored content.
 
 ## Current CLI Surfaces
 
