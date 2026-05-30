@@ -134,19 +134,19 @@ function validateTaskMarkdown(projectRoot: string, task: TaskCapsule, issues: Ha
 function validateCapsuleFormatMarkdown(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
   validateMarkdownFile(projectRoot, task, issues, 'ACCEPTANCE.md', [
     { code: 'ACCEPTANCE_HEADING_INVALID', anyText: ['# Acceptance Criteria'] },
-    { code: 'ACCEPTANCE_CHECKLIST_MISSING', anyText: ['- [ ]', '- [x]'] }
+    { code: 'ACCEPTANCE_CHECKLIST_MISSING', anyText: ['- [ ]', '- [x]', '| ID | Criterion | Status | Evidence |'] }
   ]);
   validateMarkdownFile(projectRoot, task, issues, 'FILES.md', [
-    { code: 'FILES_TABLE_INVALID', anyText: ['| Path | Action | Reason |'] },
-    { code: 'FILES_TABLE_INVALID', anyText: ['|---|---|---|'] }
+    { code: 'FILES_TABLE_INVALID', anyText: ['| Path | Action | Reason |', '| Path | Action | Reason | Status |'] },
+    { code: 'FILES_TABLE_INVALID', anyText: ['|---|---|---|', '|---|---|---|---|'] }
   ]);
   validateMarkdownFile(projectRoot, task, issues, 'TESTS.md', [
-    { code: 'TESTS_SECTION_MISSING', anyText: ['## Required'] },
-    { code: 'TESTS_SECTION_MISSING', anyText: ['## Optional'] }
+    { code: 'TESTS_SECTION_MISSING', anyText: ['## Required', '## Routine Checks'] },
+    { code: 'TESTS_SECTION_MISSING', anyText: ['## Optional', '## Special Checks'] }
   ]);
   validateMarkdownFile(projectRoot, task, issues, 'RISKS.md', [
-    { code: 'RISKS_TABLE_INVALID', anyText: ['| Risk | Mitigation |'] },
-    { code: 'RISKS_TABLE_INVALID', anyText: ['|---|---|'] }
+    { code: 'RISKS_TABLE_INVALID', anyText: ['| Risk | Mitigation |', '| Risk | Impact | Likelihood | Mitigation | Status |'] },
+    { code: 'RISKS_TABLE_INVALID', anyText: ['|---|---|', '|---|---|---|---|---|'] }
   ]);
   validateMarkdownFile(projectRoot, task, issues, 'HANDOFF.md', [
     { code: 'HANDOFF_SECTION_MISSING', anyText: ['## Last Completed'] },
@@ -184,8 +184,8 @@ function validateEvidenceMarkdown(projectRoot: string, task: TaskCapsule, issues
 
   const relativePath = toPortablePath(path.relative(projectRoot, evidencePath));
   const lines = fs.readFileSync(evidencePath, 'utf8').split(/\r?\n/);
-  const headerIndex = lines.findIndex((line) => line.trim() === '| Time | Kind | Summary | Result |');
-  if (headerIndex < 0 || lines[headerIndex + 1]?.trim() !== '|---|---|---|---|') {
+  const headerIndex = lines.findIndex(isEvidenceTableHeader);
+  if (headerIndex < 0 || !isEvidenceSeparator(lines[headerIndex + 1]?.trim())) {
     issues.push({
       severity: 'error',
       code: 'EVIDENCE_TABLE_INVALID',
@@ -308,15 +308,23 @@ function validateAcceptanceDone(projectRoot: string, task: TaskCapsule, issues: 
   if (!fs.existsSync(acceptancePath)) return;
 
   const relativePath = toPortablePath(path.relative(projectRoot, acceptancePath));
-  const checklistLines = fs
-    .readFileSync(acceptancePath, 'utf8')
+  const content = fs.readFileSync(acceptancePath, 'utf8');
+  const checklistLines = content
     .split(/\r?\n/)
     .filter((line) => /^-\s+\[[ xX]\]/.test(line.trim()));
-  if (checklistLines.length === 0 || checklistLines.some((line) => /^-\s+\[\s\]/.test(line.trim()))) {
+  const tableRows = parseMarkdownRows(content).filter((cells) => /^AC-\d+$/i.test(cells[0] ?? ''));
+  const tableIncomplete =
+    tableRows.length > 0 &&
+    tableRows.some((cells) => {
+      const status = cells[2]?.trim().toLowerCase();
+      return status === 'pending' || status === 'blocked' || !status;
+    });
+  const checklistIncomplete = checklistLines.length > 0 && checklistLines.some((line) => /^-\s+\[\s\]/.test(line.trim()));
+  if ((tableRows.length > 0 && tableIncomplete) || (tableRows.length === 0 && (checklistLines.length === 0 || checklistIncomplete))) {
     issues.push({
       severity: 'error',
       code: 'ACCEPTANCE_INCOMPLETE',
-      message: 'Done-level validation requires all acceptance checkboxes to be checked.',
+      message: 'Done-level validation requires all acceptance criteria to be complete.',
       path: relativePath
     });
   }
@@ -408,7 +416,7 @@ function validateEvidenceMarkdownSingleTable(projectRoot: string, task: TaskCaps
 
   const relativePath = toPortablePath(path.relative(projectRoot, evidencePath));
   const lines = fs.readFileSync(evidencePath, 'utf8').split(/\r?\n/);
-  const tableHeaderCount = lines.filter((line, index) => line.trim() === '| Time | Kind | Summary | Result |' && lines[index + 1]?.trim() === '|---|---|---|---|').length;
+  const tableHeaderCount = lines.filter((line, index) => isEvidenceTableHeader(line) && isEvidenceSeparator(lines[index + 1]?.trim())).length;
   if (tableHeaderCount > 1) {
     issues.push({
       severity: 'error',
@@ -511,6 +519,30 @@ function parseTaskBoardRows(content: string): Array<{ id: string; title: string;
     });
 }
 
+function parseMarkdownRows(content: string): string[][] {
+  return content
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('|') && line.endsWith('|'))
+    .filter((line) => !/^\|\s*-+/.test(line))
+    .map((line) =>
+      line
+        .slice(1, -1)
+        .split('|')
+        .map((cell) => cell.trim())
+    );
+}
+
+function isEvidenceTableHeader(line: string | undefined): boolean {
+  const normalized = line?.trim();
+  return normalized === '| Time | Kind | Summary | Result |' || normalized === '| Time | Kind | Summary | Result | Visibility | JSONL |';
+}
+
+function isEvidenceSeparator(line: string | undefined): boolean {
+  const normalized = line?.trim();
+  return normalized === '|---|---|---|---|' || normalized === '|---|---|---|---|---|---|';
+}
+
 function readSectionBody(filePath: string, heading: string): string {
   const content = fs.readFileSync(filePath, 'utf8');
   const start = content.indexOf(heading);
@@ -522,7 +554,8 @@ function readSectionBody(filePath: string, heading: string): string {
 
 function isPlaceholderSection(value: string): boolean {
   const normalized = value.trim();
-  return normalized.length === 0 || /^TBD\.?$/i.test(normalized);
+  if (normalized.length === 0 || /^TBD\.?$/i.test(normalized)) return true;
+  return /\|\s*TBD\s*\|/i.test(normalized);
 }
 
 function toPortablePath(value: string): string {

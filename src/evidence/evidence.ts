@@ -139,10 +139,11 @@ function appendEvidenceRecord(input: {
   const summary = redactSecrets(input.record.summary.replace(/\|/g, '/'));
   const markdownPath = path.join(input.taskDir, 'EVIDENCE.md');
   const rowSummary = input.visibility === 'private' || !input.attachedPath ? summary : `${summary} (${input.attachedPath})`;
-  const row = `| ${input.time} | ${input.record.kind} | ${rowSummary} | ${input.record.result} |\n`;
+  const jsonlMarker = input.visibility === 'public' && input.attachedPath ? input.attachedPath : 'evidence.jsonl';
+  const row = `| ${input.time} | ${input.record.kind} | ${rowSummary} | ${input.record.result} | ${input.visibility} | ${jsonlMarker} |\n`;
 
   if (!fs.existsSync(markdownPath)) {
-    fs.writeFileSync(markdownPath, '# Evidence\n\n| Time | Kind | Summary | Result |\n|---|---|---|---|\n', 'utf8');
+    fs.writeFileSync(markdownPath, '# Evidence\n\n| Time | Kind | Summary | Result | Visibility | JSONL |\n|---|---|---|---|---|---|\n', 'utf8');
   }
   fs.appendFileSync(markdownPath, row, 'utf8');
 

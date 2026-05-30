@@ -27,8 +27,11 @@ describe('Task Capsule harness', () => {
     expect(fs.existsSync(path.join(task.dir, 'ACCEPTANCE.md'))).toBe(true);
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe('');
     expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain(
-      '| Time | Kind | Summary | Result |\n|---|---|---|---|'
+      '| Time | Kind | Summary | Result | Visibility | JSONL |\n|---|---|---|---|---|---|'
     );
+    expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toContain('| Field | Value |');
+    expect(fs.readFileSync(path.join(task.dir, 'PLAN.md'), 'utf8')).toContain('| Step | Action | Status | Evidence |');
+    expect(fs.readFileSync(path.join(task.dir, 'ACCEPTANCE.md'), 'utf8')).toContain('| ID | Criterion | Status | Evidence |');
     expect(fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8')).toContain(task.id);
   });
 
@@ -47,9 +50,9 @@ describe('Task Capsule harness', () => {
     });
 
     const evidence = fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8').trim().split('\n');
-    expect(evidence[2]).toBe('| Time | Kind | Summary | Result |');
-    expect(evidence[3]).toBe('|---|---|---|---|');
-    expect(evidence[4].split('|')).toHaveLength(6);
+    expect(evidence[2]).toBe('| Time | Kind | Summary | Result | Visibility | JSONL |');
+    expect(evidence[3]).toBe('|---|---|---|---|---|---|');
+    expect(evidence[4].split('|')).toHaveLength(8);
 
     const index = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
     expect(index[0]).toMatchObject({

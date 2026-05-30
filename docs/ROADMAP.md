@@ -42,7 +42,9 @@ T-0099 adds TUI design alignment before production TUI work. The TUI is planned 
 
 Detailed capsule candidates live in `docs/V1_0_CAPSULE_BACKLOG.md`. Detailed schemas and implementation notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`. Release/install/package-smoke sequencing is tracked in `docs/DEVELOPMENT_SLICES.md` and `docs/V1_0_CAPSULE_BACKLOG.md`; a workspace-local ignored supporting plan may exist under `docs/specs/` for agents.
 
-Init scaffold Phase 1 is complete through T-0150: generic/profile-aware init docs are table-framed, optional integrations are explicit opt-ins, follow-up maintenance commands exist for doctor/upgrade/Required Reading/integration enablement, and runtime local/private stores are no longer eagerly created by `hadara init`.
+Init scaffold Phase 1 is complete through T-0151: generic/profile-aware init docs are table-framed, optional integrations are explicit opt-ins, follow-up maintenance commands exist for doctor/upgrade/Required Reading/integration enablement, profile metadata drift is diagnosed, Required Reading registration is stricter, integration guidance writes are rollback-aware, and runtime local/private stores are no longer eagerly created by `hadara init`.
+
+Project Protocol Consistency Phase 2 is now starting with T-0152. This layer is separate from init: it keeps living project docs, Task Capsules, evidence, handoff, validation records, profile metadata, and Required Reading registration mutually consistent after real work begins. The planned command boundary is read-first `hadara protocol doctor --json`, task-scoped protocol checks, profile drift remediation guidance, and dry-run-first safe remediation commands.
 
 ## v0.4 Single-Agent Run State
 
@@ -141,6 +143,7 @@ Candidate scope:
 - Operational debt gates connected to product risk.
 - Runtime schema validation for core JSON reports.
 - Evidence list/read model and private evidence manifest.
+- Project Protocol Consistency Layer for Task Capsule frames, cross-document doctor checks, profile drift guidance, and safe dry-run-first remediation.
 
 ## Operational Debt Track
 

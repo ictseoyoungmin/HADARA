@@ -868,7 +868,7 @@ function detectPrematureAcceptance(
   if (!fs.existsSync(taskPath) || !fs.existsSync(acceptancePath)) return [];
   const taskStatus = readTaskStatus(taskPath);
   const acceptance = fs.readFileSync(acceptancePath, 'utf8');
-  const checkedCount = acceptance.match(/-\s+\[[xX]\]/g)?.length ?? 0;
+  const checkedCount = countCompletedAcceptanceItems(acceptance);
   const evidenceCount = countValidEvidenceRecords(evidencePath);
   if (checkedCount > 0 && (taskStatus !== 'Done' || evidenceCount === 0)) {
     return [
@@ -892,7 +892,26 @@ function classifyCapsuleSize(lineCount: number): CapsuleSizeIndicator['size'] {
 function readTaskStatus(taskPath: string): string {
   const content = fs.readFileSync(taskPath, 'utf8');
   const match = content.match(/^## Status\s*\n+([\s\S]*?)(?:\n## |\s*$)/m);
-  return match?.[1]?.trim().split(/\r?\n/)[0]?.trim() || 'Unknown';
+  const sectionStatus = match?.[1]?.trim().split(/\r?\n/)[0]?.trim();
+  if (sectionStatus === 'Done') return sectionStatus;
+  const metadataStatus = content.match(/^\|\s*Status\s*\|\s*([^|]+?)\s*\|$/m)?.[1]?.trim();
+  return metadataStatus || sectionStatus || 'Unknown';
+}
+
+function countCompletedAcceptanceItems(content: string): number {
+  const checklistCount = content.match(/-\s+\[[xX]\]/g)?.length ?? 0;
+  const tableCount = content
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => /^\|\s*AC-\d+\s*\|/.test(line))
+    .filter((line) => {
+      const cells = line
+        .slice(1, line.endsWith('|') ? -1 : undefined)
+        .split('|')
+        .map((cell) => cell.trim().toLowerCase());
+      return cells[2] === 'met';
+    }).length;
+  return checklistCount + tableCount;
 }
 
 function countValidEvidenceRecords(evidencePath: string): number {

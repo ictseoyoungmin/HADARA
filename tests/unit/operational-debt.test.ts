@@ -1066,7 +1066,11 @@ describe('operational debt track', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Premature acceptance');
     const acceptancePath = path.join(task.dir, 'ACCEPTANCE.md');
-    fs.writeFileSync(acceptancePath, fs.readFileSync(acceptancePath, 'utf8').replace(/- \[ \]/g, '- [x]'), 'utf8');
+    fs.writeFileSync(
+      acceptancePath,
+      fs.readFileSync(acceptancePath, 'utf8').replace(/- \[ \]/g, '- [x]').replace(/\| Pending \| TBD \|/g, '| Met | Premature evidence claim |'),
+      'utf8'
+    );
 
     const report = createOperationalDebtReport(root);
 

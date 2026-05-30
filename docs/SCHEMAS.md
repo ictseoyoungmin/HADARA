@@ -6,7 +6,7 @@ HADARA JSON schemas are contract fixtures for stable external read models. They 
 
 Schema layer status: planning and fixture registration, with limited active-run, write-preflight, install-plan, feature-smoke, package-smoke, clean-checkout smoke, release-artifact, and release evidence summary runtime validation.
 
-T-0079 added fixture registration only. T-0092 added a lightweight runtime validation API for `hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` because those read models are backed by mutable local state. T-0098 registers and validates `hadara.write.preflight.v1` reports before returning CLI write-boundary preflight output. T-0129 validates `hadara.install.plan.v1` before returning installer dry-run plans. T-0131 validates `hadara.featureSmoke.v1` before returning reduced core feature smoke reports over service/read-model surfaces. T-0132 registers `hadara.packageSmoke.v1` and validates deterministic package-smoke report fixtures before package-smoke dry-run or execution commands exist. T-0137 registers and validates `hadara.releaseArtifact.v1` before returning release artifact builder reports. T-0138 registers `hadara.smokeEvidenceSummary.v1` and `hadara.releaseArtifact.manifest.v1` before release gates read existing evidence records or optional reduced summary artifacts. T-0140 registers and validates `hadara.releaseDryRun.v1` before returning final release dry-run reports. T-0141 registers and validates `hadara.releasePublish.v1` before returning approval-gated publish/deploy readiness reports. Broad schema validation remains deferred.
+T-0079 added fixture registration only. T-0092 added a lightweight runtime validation API for `hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` because those read models are backed by mutable local state. T-0098 registers and validates `hadara.write.preflight.v1` reports before returning CLI write-boundary preflight output. T-0129 validates `hadara.install.plan.v1` before returning installer dry-run plans. T-0131 validates `hadara.featureSmoke.v1` before returning reduced core feature smoke reports over service/read-model surfaces. T-0132 registers `hadara.packageSmoke.v1` and validates deterministic package-smoke report fixtures before package-smoke dry-run or execution commands exist. T-0137 registers and validates `hadara.releaseArtifact.v1` before returning release artifact builder reports. T-0138 registers `hadara.smokeEvidenceSummary.v1` and `hadara.releaseArtifact.manifest.v1` before release gates read existing evidence records or optional reduced summary artifacts. T-0140 registers and validates `hadara.releaseDryRun.v1` before returning final release dry-run reports. T-0141 registers and validates `hadara.releasePublish.v1` before returning approval-gated publish/deploy readiness reports. Phase 2 protocol consistency schemas are planned next; broad schema validation remains deferred.
 
 ## Registry
 
@@ -46,6 +46,13 @@ Initial fixtures:
 | `hadara.releasePublish.v1` | `src/schemas/release-publish.schema.json` | fixture | Documents approval-gated publish/deploy readiness reports with token presence checks, private audit for execute requests, and no publish/GitHub/Docker mutation. |
 | `hadara.smokeEvidenceSummary.v1` | `src/schemas/smoke-evidence-summary.schema.json` | fixture | Documents reduced public smoke evidence summary artifacts for package-smoke and clean-checkout smoke attachment. |
 | `hadara.releaseArtifact.manifest.v1` | `src/schemas/release-artifact-manifest.schema.json` | fixture | Documents generated release artifact manifest files for tarball hash and package file lists without publish/GitHub mutation. |
+
+Planned Phase 2 fixtures:
+
+| Schema ID | File | Status | Notes |
+|---|---|---|---|
+| `hadara.protocol.consistency.v1` | `src/schemas/protocol-consistency.schema.json` | planned | Will document read-only project protocol consistency reports for docs/tasks/profile scopes. |
+| `hadara.protocol.remediation.v1` | `src/schemas/protocol-remediation.schema.json` | planned | Will document dry-run-first remediation plans and safe-auto execution reports without destructive rewrites. |
 
 ## Versioning
 

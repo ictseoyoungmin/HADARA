@@ -10,17 +10,17 @@ export interface TaskCapsule {
 }
 
 export const TASK_FILES: Record<string, (task: TaskCapsule) => string> = {
-  'TASK.md': (task) => `# ${task.id} ${task.title}\n\n## Goal\n\nTBD.\n\n## Scope\n\nTBD.\n\n## Out of Scope\n\nTBD.\n\n## Status\n\nDraft\n`,
-  'PLAN.md': () => `# Plan\n\n1. Read relevant docs.\n2. Implement the smallest useful slice.\n3. Run tests.\n4. Attach evidence.\n5. Update handoff.\n`,
-  'CONTEXT.md': () => `# Context\n\nRelevant documents, files, assumptions, and constraints.\n`,
-  'FILES.md': () => `# Files\n\n| Path | Action | Reason |\n|---|---|---|\n`,
-  'ACCEPTANCE.md': () => `# Acceptance Criteria\n\n- [ ] Scope is implemented.\n- [ ] Tests or explicit constraints are recorded.\n- [ ] Evidence is attached.\n- [ ] Handoff is updated.\n`,
-  'TESTS.md': () => `# Tests\n\n## Required\n\n- npm test\n\n## Optional\n\n- npm run check\n`,
-  'RISKS.md': () => `# Risks\n\n| Risk | Mitigation |\n|---|---|\n`,
-  'DECISIONS.md': () => `# Decisions\n\nRecord task-local design decisions here.\n`,
-  'EVIDENCE.md': () => `# Evidence\n\n| Time | Kind | Summary | Result |\n|---|---|---|---|\n`,
+  'TASK.md': (task) => `# ${task.id} ${task.title}\n\n## Metadata\n\n| Field | Value |\n|---|---|\n| ID | ${task.id} |\n| Title | ${task.title.replace(/\|/g, '/')} |\n| Status | Draft |\n| Created | TBD |\n| Updated | TBD |\n\n## Goal\n\n| Goal | Notes |\n|---|---|\n| TBD | Replace with the smallest verifiable outcome. |\n\n## Scope\n\n| In Scope | Reason |\n|---|---|\n| TBD | TBD |\n\n## Out of Scope\n\n| Out of Scope | Reason |\n|---|---|\n| TBD | TBD |\n\n## Status\n\nDraft\n\n## Status History\n\n| Time | Status | Reason | Evidence |\n|---|---|---|---|\n| TBD | Draft | Initial task scaffold. | TBD |\n`,
+  'PLAN.md': () => `# Plan\n\n| Step | Action | Status | Evidence |\n|---|---|---|---|\n| 1 | Read required project docs. | Pending | TBD |\n| 2 | Implement the smallest useful slice. | Pending | TBD |\n| 3 | Run validation. | Pending | TBD |\n| 4 | Attach evidence. | Pending | TBD |\n| 5 | Update handoff. | Pending | TBD |\n`,
+  'CONTEXT.md': () => `# Context\n\n## Required Reading Used\n\n| Document | Why It Matters | Read Status |\n|---|---|---|\n| docs/PROJECT_STATE.md | Current project state. | Pending |\n| docs/AGENT_HANDOFF.md | Current handoff. | Pending |\n| docs/TASK_BOARD.md | Task queue and status. | Pending |\n| docs/IMPLEMENTATION_SOP.md | Workflow rules. | Pending |\n\n## Assumptions\n\n| Assumption | Source | Risk If Wrong |\n|---|---|---|\n| TBD | TBD | TBD |\n\n## Constraints\n\n| Constraint | Source | Notes |\n|---|---|---|\n| TBD | TBD | TBD |\n`,
+  'FILES.md': () => `# Files\n\n| Path | Action | Reason | Status |\n|---|---|---|---|\n`,
+  'ACCEPTANCE.md': () => `# Acceptance Criteria\n\n| ID | Criterion | Status | Evidence |\n|---|---|---|---|\n| AC-1 | Scope is implemented. | Pending | TBD |\n| AC-2 | Tests or explicit constraints are recorded. | Pending | TBD |\n| AC-3 | Evidence is attached. | Pending | TBD |\n| AC-4 | Handoff is updated. | Pending | TBD |\n`,
+  'TESTS.md': () => `# Tests\n\n## Routine Checks\n\n| Command | Purpose | Required For Done | Latest Result | Evidence |\n|---|---|---|---|---|\n| npm test | Run the default project test suite. | Yes | Not Run | TBD |\n| npm run check | Run the full repository check when available. | Yes | Not Run | TBD |\n\n## Special Checks\n\n| Check | Required? | Reason | Latest Result | Evidence |\n|---|---|---|---|---|\n| Security smoke | No | Only if security boundary changes. | Not Run | TBD |\n| Integration smoke | No | Only if integration surface changes. | Not Run | TBD |\n`,
+  'RISKS.md': () => `# Risks\n\n| Risk | Impact | Likelihood | Mitigation | Status |\n|---|---|---|---|---|\n`,
+  'DECISIONS.md': () => `# Decisions\n\n| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n`,
+  'EVIDENCE.md': () => `# Evidence\n\n| Time | Kind | Summary | Result | Visibility | JSONL |\n|---|---|---|---|---|---|\n`,
   'evidence.jsonl': () => '',
-  'HANDOFF.md': () => `# Handoff\n\n## Last Completed\n\nTBD.\n\n## Next Recommended Step\n\nTBD.\n`
+  'HANDOFF.md': (task) => `# Handoff\n\n## Current State\n\n| Field | Value |\n|---|---|\n| Task | ${task.id} |\n| Status | Draft |\n| Last Updated | TBD |\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| TBD | TBD |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| TBD | TBD | TBD |\n\n## Carry Forward Warnings\n\n| Warning | Impact | Mitigation |\n|---|---|---|\n`
 };
 
 export function isTaskCapsuleScaffoldContent(task: TaskCapsule, fileName: string, content: string): boolean {
@@ -29,12 +29,17 @@ export function isTaskCapsuleScaffoldContent(task: TaskCapsule, fileName: string
   }
 
   if (fileName === 'ACCEPTANCE.md') {
-    return acceptanceChecklistText(content).join('\n') === [
+    const defaultItems = [
       'Scope is implemented.',
       'Tests or explicit constraints are recorded.',
       'Evidence is attached.',
       'Handoff is updated.'
-    ].join('\n');
+    ];
+    const tableCriteria = acceptanceTableCriteria(content);
+    if (tableCriteria.length > 0) {
+      return tableCriteria.join('\n') === defaultItems.join('\n');
+    }
+    return acceptanceChecklistText(content).join('\n') === defaultItems.join('\n');
   }
 
   const factory = TASK_FILES[fileName];
@@ -114,7 +119,8 @@ function readMarkdownSection(content: string, heading: string): string {
 
 function isPlaceholderSection(value: string): boolean {
   const normalized = value.trim();
-  return normalized.length === 0 || /^TBD\.?$/i.test(normalized);
+  if (normalized.length === 0 || /^TBD\.?$/i.test(normalized)) return true;
+  return /\|\s*TBD\s*\|/i.test(normalized);
 }
 
 function normalizeMarkdown(value: string): string {
@@ -127,4 +133,19 @@ function acceptanceChecklistText(content: string): string[] {
     .map((line) => line.trim())
     .filter((line) => /^-\s+\[[ xX]\]/.test(line))
     .map((line) => line.replace(/^-\s+\[[ xX]\]\s*/, '').trim());
+}
+
+function acceptanceTableCriteria(content: string): string[] {
+  return content
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => /^\|\s*AC-\d+\s*\|/.test(line))
+    .map((line) =>
+      line
+        .slice(1, line.endsWith('|') ? -1 : undefined)
+        .split('|')
+        .map((cell) => cell.trim())
+    )
+    .map((cells) => cells[1] ?? '')
+    .filter(Boolean);
 }

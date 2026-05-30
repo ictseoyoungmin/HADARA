@@ -1,6 +1,6 @@
 # V1.0_CAPSULE_BACKLOG
 
-This document turns `docs/specs/HADARA_Core_v1.0_Technical_Development_Plan.md` and `docs/specs/HADARA_TUI_Mockup_Parity_HADARA_Native_Runtime_Design.md` into concrete future Task Capsule candidates.
+This document turns `docs/specs/HADARA_Core_v1.0_Technical_Development_Plan.md`, `docs/specs/HADARA_TUI_Mockup_Parity_HADARA_Native_Runtime_Design.md`, and `docs/specs/HADARA_Project_Protocol_Consistency_Layer_Phase2_Development_Plan.md` into concrete future Task Capsule candidates.
 
 Use this file when creating the next v1.0 capsule after the latest completed baseline.
 Detailed schemas, file-level notes, and the unabridged TUI native runtime design import live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
@@ -53,6 +53,7 @@ Detailed schemas, file-level notes, and the unabridged TUI native runtime design
 - T-0125 Executable Package Smoke Artifact Boundary Design: done; `docs/TEST_STRATEGY.md` now defines the future executable package-smoke disposable workspace, package artifact, redaction/audit, and reduced evidence/report boundary, and the read-only release gate requires those markers before strict readiness passes.
 - Release/install/package-smoke capsule sequencing is tracked below and in `docs/DEVELOPMENT_SLICES.md`; the workspace may also contain a local-only ignored supporting plan at `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` for agents, but that file is not committed to GitHub.
 - T-0126 Package Smoke Command Surface Design: done; `docs/TEST_STRATEGY.md` now defines `hadara package smoke` as the future primary command surface, documents flags and safety semantics, keeps `hadara release smoke` out of the primary role, and release gate readiness now checks the command-surface markers without executing package smoke.
+- T-0151 Init Follow-up Hardening: done; init follow-up commands now have profile metadata drift warnings, stricter Required Reading path/table validation, `--require-exists`, non-runtime integration guidance, and rollback-aware multi-file integration writes.
 
 ## Immediate P0 Capsules
 
@@ -137,6 +138,19 @@ Detailed schemas, file-level notes, and the unabridged TUI native runtime design
 | 46 | Init profile upgrade command | T-0150 | Add safe `basic -> standard -> governed` expansion after table-framed docs are stable. | Done: `hadara init upgrade --profile <profile> --json` dry-runs missing scaffold docs, and `--execute` creates only missing files through missing-file-only writes. |
 | 47 | Required Reading registration command | T-0150 | Automate adding project-specific specs/contracts to SOP Required Reading tables. | Done: `hadara init register-doc --path <path> --when <text> --purpose <text> --json` dry-runs by default and `--execute` adds an idempotent SOP row. |
 | 48 | Optional integration enable commands | T-0150 | Add explicit enable flows for Hermes/MCP or other optional integrations instead of init defaults. | Done: `hadara init enable-integration --integration hermes|mcp --json` dry-runs by default and `--execute` creates/registers integration docs explicitly. |
+
+## Protocol Consistency Layer Capsules
+
+Phase 2 begins after the init scaffold/follow-up work. Its source plan is `docs/specs/HADARA_Project_Protocol_Consistency_Layer_Phase2_Development_Plan.md`; detailed schema and issue-code notes are preserved in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
+
+| Order | Candidate Slice | Capsule | Purpose | Key Done Evidence |
+|---:|---|---|---|---|
+| 49 | Task Capsule scaffold frame alignment | T-0152 | Modernize newly generated Task Capsule files into table-first frames while preserving existing file set and legacy scaffold detection. | Done: new Task Capsules use v2 table frames, evidence Markdown uses visibility/JSONL columns, harness/operational-debt logic accepts v2 and legacy frames, focused tests passed with 3 files / 50 tests, full check passed with 57 files / 421 tests, and done-level harness returned `ok: true`. |
+| 50 | Task Capsule consistency doctor | T-0153 | Add a read-only task-level consistency report for one capsule covering missing files, status mismatch, pending acceptance at Done, missing evidence JSONL, stale task handoff, and placeholder drift. | Future: unit tests and a CLI smoke for `hadara protocol doctor --task <id> --json` or equivalent. |
+| 51 | Project docs consistency doctor | T-0154 | Add cross-document checks for Task Board rows, project handoff, Project State, SOP Required Reading, Development Slices, and project decision/test docs. | Future: stable issue-code tests for task-board, handoff, required-reading, and slice drift. |
+| 52 | Profile drift remediation guide | T-0155 | Detect profile doc-set drift and emit actionable remediation hints for PROJECT_STATE, SOP, AGENTS, and mixed doc sets. | Future: basic-to-governed expansion fixtures produce specific profile remediation objects without auto-merging user docs. |
+| 53 | Safe remediation command MVP | T-0156 | Add dry-run-first bounded remediation for low-risk edits such as missing `evidence.jsonl`, missing table frame insertion, exact profile row update, or missing Task Board row. | Future: dry-run hash tests, execute-mode bounded-write tests, and no deletion of user content. |
+| 54 | Protocol consistency JSON contract | T-0157 | Register schema fixtures and contract tests for `hadara.protocol.consistency.v1` and remediation reports. | Future: schema fixture validation and CLI JSON contract regression coverage. |
 
 ## Must Preserve
 

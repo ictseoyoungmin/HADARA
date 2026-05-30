@@ -70,3 +70,12 @@ Reason:
 - `hadara init enable-integration` registers guidance docs and SOP rows only; it does not enable Hermes/MCP runtime behavior or change capability gates. Multi-file integration writes use temp-file/rename commit with rollback and `INIT_ATOMIC_WRITE_FAILED` on failure.
 - Runtime local/private stores should be created by the commands that need them, not eagerly by generic project initialization.
 - T-0150 locked the initial decision with focused init tests, full Docker validation, built CLI follow-up smokes, and done-level harness validation. T-0151 hardened wording, validation, strict mode, and partial-write behavior after review.
+
+## D-0010: Protocol consistency is a living-project layer, not an init extension
+
+Reason:
+- Phase 1 made initial `hadara init` scaffolds generic, profile-aware, and table-framed.
+- Long-running HADARA projects drift after initialization: Task Board status can diverge from `TASK.md`, evidence Markdown can diverge from `evidence.jsonl`, handoff can point at stale work, and profile metadata can lag behind upgraded doc sets.
+- Living-project consistency should use `hadara protocol ...` read-first surfaces rather than overloading `hadara init doctor`, so users understand the protocol applies throughout the project lifecycle.
+- New Task Capsules should move to table-first v2 frames, while existing capsules remain valid until an explicit non-destructive upgrade/remediation command inserts missing frames.
+- Any remediation must be dry-run by default, `--execute` gated, low-risk, bounded to exact table/row/file operations, and must not delete user-authored content.

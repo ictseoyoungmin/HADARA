@@ -312,6 +312,23 @@ node dist/cli/main.js policy preflight-shell "npm run check" --mode auto --json
 node dist/cli/main.js harness validate --task <task-id> --json
 ```
 
+## Protocol Consistency Validation
+
+Project Protocol Consistency Phase 2 must stay read-first and evidence-backed. Use the detailed source plan in `docs/specs/HADARA_Project_Protocol_Consistency_Layer_Phase2_Development_Plan.md` and the assimilated implementation notes in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`.
+
+Required checks by slice:
+
+| Slice | Required Focus |
+|---|---|
+| T-0152 Task Capsule scaffold frames | Unit or harness tests must assert new Task Capsule canonical table headers, legacy placeholder detection compatibility, and `evidence.jsonl` creation. |
+| T-0153 Task Capsule consistency doctor | Tests must cover missing files, task/board status mismatch, Done with pending acceptance, missing evidence JSONL, stale task handoff, and placeholder drift. |
+| T-0154 Project docs consistency doctor | Tests must cover Task Board row drift, duplicate rows, missing capsule paths, stale project handoff, missing Required Reading docs, and Development Slices evidence drift. |
+| T-0155 Profile drift remediation guide | Tests must cover detected `basic`, `standard`, `governed`, `mixed`, and `unknown` profile states plus remediation hints for mismatched PROJECT_STATE/SOP/AGENTS metadata. |
+| T-0156 Safe remediation MVP | Tests must prove dry-run writes nothing, `--execute` changes only whitelisted target files, and safe remediation never deletes user content. |
+| T-0157 Protocol JSON contract | Contract tests must validate `hadara.protocol.consistency.v1`, remediation reports, stable issue-code registration, and existing JSON error-envelope behavior. |
+
+Protocol doctor and remediation surfaces must not enable Hermes/MCP runtime capabilities, execute shell commands, call providers, publish packages, mutate release state, or silently rewrite user-authored docs.
+
 ## TUI Validation Strategy
 
 The full TUI mockup parity and HADARA-native runtime design is preserved without omission in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`. TUI slices should use that section as the detailed source for validation requirements.

@@ -1196,6 +1196,113 @@ All Phase 1 follow-up surfaces were implemented in T-0150 using the shared `hada
 | `hadara init register-doc --path <path> --when <text> --purpose <text> --json [--require-exists] [--execute]` | Add project-specific specs/contracts to generated SOP tables idempotently. | Dry-run by default; execute inserts a single Required Reading row, validates project-relative paths/table cells, warns on missing referenced docs, and treats missing docs as errors with `--require-exists`. |
 | `hadara init enable-integration --integration hermes|mcp --json [--execute]` | Add Hermes/MCP integration guidance docs explicitly. | Dry-run by default; execute creates/registers integration docs only on request, validates SOP registration first, commits multi-file writes with temp-file/rename rollback, and does not enable runtime behavior. |
 
+## Project Protocol Consistency Layer Phase 2
+
+The Phase 2 source plan is `docs/specs/HADARA_Project_Protocol_Consistency_Layer_Phase2_Development_Plan.md`. Phase 1 made `hadara init` generate clean generic docs; Phase 2 keeps living project docs, Task Capsules, evidence, handoff, validation records, profile metadata, and Required Reading registration mutually consistent after real work begins.
+
+### Phase 2 Command Boundary
+
+| Surface | Purpose | Write Boundary |
+|---|---|---|
+| `hadara init doctor --json` | Init scaffold shape and stale init artifacts. | Read-only. |
+| `hadara protocol doctor --json` | Cross-doc and project protocol consistency. | Read-only. |
+| `hadara protocol doctor --scope docs|tasks|profile|all --json` | Scoped protocol consistency check. | Read-only. |
+| `hadara protocol doctor --task <id> --json` | Focused Task Capsule consistency check with project references. | Read-only. |
+| `hadara protocol remediate --issue <id> --json [--execute]` | Dry-run-first remediation plan and optional safe bounded write. | Writes only with `--execute`. |
+| `hadara task upgrade-scaffold --task <id> --json [--execute]` | Preview or insert missing non-destructive Task Capsule frame sections. | Writes only with `--execute`; no deletion. |
+
+Phase 2 should not overload `init doctor` with living-project checks. `init` owns bootstrap and generated-doc expansion; `protocol` owns ongoing consistency; `harness` owns done-level validation; `task` owns individual capsule lifecycle.
+
+### Protocol Consistency Report
+
+Target schema id:
+
+```text
+hadara.protocol.consistency.v1
+```
+
+Top-level report fields:
+
+| Field | Type / Values | Notes |
+|---|---|---|
+| `schemaVersion` | `hadara.protocol.consistency.v1` | Stable external contract id. |
+| `ok` | boolean | False only for error-severity issues. |
+| `scope` | `docs`, `tasks`, `profile`, or `all` | Requested check scope. |
+| `projectRoot` | string | Public project path reference policy should follow existing redaction rules when exposed. |
+| `generatedAt` | ISO string | Volatile timestamp. |
+| `summary.checkedDocs` | number | Project docs checked. |
+| `summary.checkedTasks` | number | Task Capsules checked. |
+| `summary.activeTaskId` | string or null | Derived from active-run/handoff/project docs when available. |
+| `summary.detectedProfile` | `basic`, `standard`, `governed`, `unknown`, or `mixed` | Detected from doc set, not text alone. |
+| `summary.issueCounts` | object | `error`, `warning`, `info`. |
+| `issues` | array | Stable issue-code records. |
+| `remediations` | array | Manual or safe-auto remediation guidance. |
+
+Issue records should include `id`, `code`, `severity`, `area`, optional `path`, optional `taskId`, `message`, optional `expected`, optional `actual`, and optional `remediationId`.
+
+Remediation records should include `id`, `issueIds`, `title`, `mode` (`manual`, `safe-auto`, or `unsafe-auto`), optional `command`, `targetPaths`, `summary`, `steps`, and optional preview fields.
+
+Exit policy:
+
+| Condition | `ok` | Exit Code |
+|---|---:|---:|
+| No issues, info only, or warnings only | true | 0 |
+| Any error | false | 6 |
+| CLI input error | false | Existing CLI error policy. |
+| Unexpected JSON-mode failure | false | Existing `hadara.cli.error.v1` fallback. |
+
+### Task Capsule Scaffold v2 Frames
+
+T-0152 owns generation for new Task Capsules only. Existing capsules are not auto-migrated.
+
+| File | Canonical v2 Frame |
+|---|---|
+| `TASK.md` | Metadata table, Goal table, Scope table, Out of Scope table, Status, and Status History table. |
+| `PLAN.md` | `| Step | Action | Status | Evidence |` |
+| `CONTEXT.md` | Required Reading Used, Assumptions, and Constraints tables. |
+| `FILES.md` | `| Path | Action | Reason | Status |` |
+| `ACCEPTANCE.md` | `| ID | Criterion | Status | Evidence |` with `Pending`, `Met`, `Not Applicable`, or `Blocked`. |
+| `TESTS.md` | Routine Checks and Special Checks tables. |
+| `RISKS.md` | `| Risk | Impact | Likelihood | Mitigation | Status |` |
+| `DECISIONS.md` | `| ID | Decision | Status | Rationale | Evidence |` |
+| `EVIDENCE.md` | `| Time | Kind | Summary | Result | Visibility | JSONL |` plus `evidence.jsonl`. |
+| `HANDOFF.md` | Current State, Last Completed, Next Recommended Step, and Carry Forward Warnings tables. |
+
+Legacy Task Capsule frames remain valid for already-created capsules until a later migration/remediation command inserts missing sections without deleting user text.
+
+### Phase 2 Issue Code Families
+
+| Family | Representative Codes |
+|---|---|
+| Profile | `PROFILE_METADATA_MISMATCH`, `PROFILE_DOC_SET_INCOMPLETE`, `PROFILE_DOC_SET_MIXED`, `PROFILE_REQUIRED_READING_DRIFT`, `PROFILE_OLD_NAME`. |
+| Task | `TASK_FILE_MISSING`, `TASK_METADATA_TABLE_MISSING`, `TASK_STATUS_MISSING`, `TASK_STATUS_MISMATCH`, `TASK_PLACEHOLDER_CONTENT`, `TASK_ACCEPTANCE_TABLE_MISSING`, `TASK_DONE_WITH_PENDING_ACCEPTANCE`, `TASK_EVIDENCE_JSONL_MISSING`, `TASK_EVIDENCE_JSONL_EMPTY_FOR_DONE`, `TASK_HANDOFF_STALE_STATUS`. |
+| Project docs | `TASK_BOARD_ROW_MISSING`, `TASK_BOARD_DUPLICATE_ROW`, `TASK_BOARD_CAPSULE_MISSING`, `PROJECT_HANDOFF_ACTIVE_TASK_MISSING`, `PROJECT_HANDOFF_NEXT_STEP_MISSING`, `SOP_REQUIRED_READING_DOC_MISSING`, `SOP_REQUIRED_READING_PATH_INVALID`, `SLICES_DONE_WITHOUT_EVIDENCE`, `PROJECT_DECISION_ACCEPTED_WITHOUT_EVIDENCE`, `TEST_STRATEGY_REQUIRED_COMMAND_TBD`. |
+
+### Remediation Policy
+
+| Mode | Meaning | Execute Allowed |
+|---|---|---:|
+| `manual` | Report only, user edits manually. | No |
+| `safe-auto` | Bounded table row/field edit or missing section insertion. | Yes, only with `--execute`. |
+| `unsafe-auto` | Requires semantic merge, deletion, or broad rewrite. | No in Phase 2. |
+
+Allowed safe-auto edits are limited to adding a missing table section without deleting existing content, creating an empty missing `evidence.jsonl`, updating one known profile row value when the current value exactly matches the report, adding a missing Task Board row for an existing capsule without duplication, and adding a missing SOP Required Reading row through the existing registration logic.
+
+Disallowed Phase 2 remediations include changing task status automatically, marking acceptance Met, deleting stale rows, or rewriting handoff summaries.
+
+### Implementation File Candidates
+
+| File | Responsibility |
+|---|---|
+| `src/services/markdown-table.ts` | Shared generated-table parsing, row finding, and safe cell validation. |
+| `src/services/task-consistency.ts` | Task Capsule consistency checks. |
+| `src/services/docs-consistency.ts` | Project-level docs consistency checks. |
+| `src/services/protocol-profile.ts` | Profile detection and profile drift checks. |
+| `src/services/protocol-consistency.ts` | Top-level report builder. |
+| `src/services/protocol-remediation.ts` | Remediation planning and safe execution. |
+| `src/cli/protocol.ts` | `hadara protocol ...` CLI handler. |
+| `src/task/task-capsule.ts` | New Task Capsule scaffold frames and scaffold placeholder detection. |
+
 ## V1.0 Acceptance Checklist
 
 Functional:
