@@ -88,7 +88,9 @@ Prefer tables for repeated records and `##`/`###` headings for durable sections.
 
 ## Reusable Docker Workflow
 
-When host Node/npm is unreliable, keep a reusable container running:
+For HADARA-dev, prefer the reusable Docker workflow for Node/npm validation and built-CLI smoke checks. The host workspace may not have `node_modules`, and host-local Node/npm results are not the validation baseline unless a task explicitly records that host dependencies were installed and used.
+
+Keep a reusable container running:
 
 ```bash
 docker run -dit --name hadara-dev -v /mnt/f/NowWorking/HADARA-dev:/workspace -w /tmp node:22-bookworm bash
@@ -101,6 +103,22 @@ docker exec hadara-dev bash -lc 'rm -rf /tmp/hadara && mkdir -p /tmp/hadara && t
 ```
 
 For repeated validation, reuse `/tmp/hadara` when it is fresh; resync from `/workspace` after source changes.
+
+When CLI code changes, remember that three different command paths may exist:
+
+| Path | Meaning | Use |
+|---|---|---|
+| `/tmp/hadara/dist/cli/main.js` | Fresh Docker temp-copy build output. | Primary path for focused/full validation and smoke checks immediately after build. |
+| `/workspace/dist/cli/main.js` | Built CLI committed workspace output. | Refresh from `/tmp/hadara/dist` after CLI changes so workspace built-CLI smokes use the new code. |
+| `/usr/local/bin/hadara` inside the container | Container-global npm install or older helper symlink. | Do not assume this is the latest development build. Use only when intentionally testing installed-package behavior. |
+
+After a successful Docker build that changes CLI behavior, refresh the workspace build output before final built-CLI smokes:
+
+```bash
+docker exec hadara-dev bash -lc 'cp -R /tmp/hadara/dist/. /workspace/dist/'
+```
+
+Then run built-CLI smokes through `node /workspace/dist/cli/main.js ... --project /workspace` or explicitly through `/tmp/hadara/dist/cli/main.js`. Do not mark CLI work complete based only on the container-global `hadara` command.
 
 ## Validation
 

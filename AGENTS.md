@@ -20,6 +20,7 @@ This repository must be developed using the HADARA protocol.
 - Keep work inside one Task Capsule whenever possible.
 - If no suitable Task Capsule exists, create one before implementation with `hadara task create <title>` by default.
 - If host Node/npm is unavailable, use the reusable Docker workflow in `docs/IMPLEMENTATION_SOP.md` to run the HADARA CLI against the workspace.
+- For HADARA-dev CLI development, prefer the reusable `hadara-dev` Docker workflow over host-local Node/npm. After changing CLI code, build in Docker and refresh `/workspace/dist` from the Docker build output before running built-CLI smokes or treating the workspace CLI as current. Do not assume the container-global `/usr/local/bin/hadara` is the latest development build.
 - Do not mark work done without evidence.
 - Do not execute dangerous commands.
 - Do not write secrets, private logs, or machine-local state into committed files.
