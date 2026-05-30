@@ -83,7 +83,7 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     availability: 'default',
     risk: 'medium',
     schemaVersion: 'hadara.init.followup.v1',
-    notes: 'Dry-run by default; --execute creates missing docs or SOP rows without overwriting existing files.'
+    notes: 'Dry-run by default; --execute required for writes. Upgrade creates only missing scaffold docs, register-doc supports --require-exists for strict missing-doc checks, and enable-integration registers project guidance docs without enabling runtime behavior.'
   },
   {
     name: 'hadara task create <title>',

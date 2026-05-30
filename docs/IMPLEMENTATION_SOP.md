@@ -38,7 +38,7 @@ This repository operates as the `governed` HADARA profile because it has long-li
 | `docs/CLI_JSON_CONTRACT.md` and `docs/MCP_BRIDGE_CONTRACT.md` | HADARA-dev MCP or tool-surface work only | Local contracts for CLI JSON and MCP bridge compatibility. |
 | `docs/V1_0_CAPSULE_BACKLOG.md` and `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` | HADARA-dev v1.0 hardening or schema work only | Future capsule backlog and implementation schema notes. |
 
-When adding project-specific specs, contracts, or roadmap files, add them to this table and explain when agents must read them. `hadara init register-doc --path <path> --when <text> --purpose <text> --json` previews the row, and `--execute` updates the table idempotently.
+When adding project-specific specs, contracts, or roadmap files, add them to this table and explain when agents must read them. Use `hadara init register-doc --path <path> --when <text> --purpose <text> --json` to preview registration, and add `--execute` to update this table.
 
 If the local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` exists in this workspace, agents may use it as supporting planning context for release/install work, but it is not required committed context.
 
@@ -48,7 +48,7 @@ If the local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_
 |---|---|---|---|---|
 | `basic` | Small | `AGENTS.md`, `.gitignore`, `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, `docs/TASK_BOARD.md`, `docs/IMPLEMENTATION_SOP.md` | Core docs and active Task Capsule docs only. | Small projects that need Task Capsules, evidence, and handoff discipline without planning overhead. |
 | `standard` | Medium, default | Basic docs plus `docs/ARCHITECTURE.md`, `docs/DEVELOPMENT_SLICES.md`, `docs/DECISIONS.md`, and `docs/TEST_STRATEGY.md` | Architecture, slice, decision, and validation rows. | Most multi-session projects that need roadmap slices and repeatable validation. |
-| `governed` | Heavy | Standard docs plus `docs/SECURITY_MODEL.md`, `docs/REFACTOR_LOG.md`, and `docs/ROADMAP.md` | Security, refactor, and roadmap rows. | Long-lived projects with stronger governance, release planning, security boundaries, or operational surfaces. |
+| `governed` | Heavy | Standard docs plus `docs/SECURITY_MODEL.md`, `docs/REFACTOR_LOG.md`, and `docs/ROADMAP.md` | Security, refactor, and roadmap rows. | Long-lived projects with stronger governance, security boundaries, refactor history, or roadmap-level planning. |
 
 HADARA-dev uses `governed`. Project-specific rows such as MCP, v1.0 hardening, release-readiness support specs, and other manually added contracts are local registrations, not generic scaffold defaults.
 

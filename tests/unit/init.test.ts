@@ -19,6 +19,7 @@ beforeEach(() => {
 
 afterEach(() => {
   logSpy.mockRestore();
+  process.exitCode = undefined;
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -102,6 +103,9 @@ describe('init profiles', () => {
     expect(sop).not.toContain('`docs/ROADMAP.md`');
     expect(sop).toContain('## Handoff Compaction');
     expect(sop).toContain('When adding project-specific specs, contracts, or roadmap files, add them to this table');
+    expect(sop).toContain('hadara init register-doc --path <path> --when <text> --purpose <text> --json');
+    expect(sop).toContain('add `--execute` to update this table');
+    expect(sop).not.toContain('A future HADARA command may automate this registration');
     expectNoGenericOptionalIntegrationDefaults(sop);
 
     const testStrategy = fs.readFileSync(path.join(root, 'docs', 'TEST_STRATEGY.md'), 'utf8');
@@ -272,6 +276,22 @@ describe('init profiles', () => {
     expect(fs.readFileSync(path.join(root, 'HERMES.md'), 'utf8')).toBe('# stale\n');
   });
 
+  it('reports profile metadata drift after missing-doc expansion', () => {
+    const root = tempProject();
+    initProject(root, 'basic');
+    handleInitCommand({ args: ['init', 'upgrade', '--profile', 'governed', '--execute', '--json'], projectRoot: root, jsonOutput: true });
+
+    handleInitCommand({ args: ['init', 'doctor', '--json'], projectRoot: root, jsonOutput: true });
+
+    const report = lastJsonLog();
+    expect(report.ok).toBe(true);
+    expect(report.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'INIT_PROFILE_METADATA_MISMATCH', path: 'docs/PROJECT_STATE.md' }),
+      expect.objectContaining({ code: 'INIT_PROFILE_METADATA_MISMATCH', path: 'docs/IMPLEMENTATION_SOP.md' }),
+      expect.objectContaining({ code: 'INIT_PROFILE_METADATA_MISMATCH', path: 'AGENTS.md' })
+    ]));
+  });
+
   it('upgrades profiles through dry-run planning and missing-file-only execution', () => {
     const root = tempProject();
     initProject(root, 'basic');
@@ -280,6 +300,8 @@ describe('init profiles', () => {
     handleInitCommand({ args: ['init', 'upgrade', '--profile', 'governed', '--json'], projectRoot: root, jsonOutput: true });
     const dryRun = lastJsonLog();
     expect(dryRun.mode).toBe('dry-run');
+    expect(dryRun.summary).toContain('creates missing scaffold docs only');
+    expect(dryRun.summary).toContain('Existing profile-bearing docs are preserved');
     expect(dryRun.actions).toContainEqual(expect.objectContaining({ path: 'docs/ROADMAP.md', status: 'planned' }));
     expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(false);
 
@@ -314,6 +336,55 @@ describe('init profiles', () => {
     expect(sop).toContain('| `docs/specs/LOCAL.md` | Local work | Local spec context |');
   });
 
+  it('hardens Required Reading registration path and table-cell inputs', () => {
+    const root = tempProject();
+    initProject(root);
+
+    handleInitCommand({
+      args: ['init', 'register-doc', '--path', '../outside.md', '--when', 'Local work', '--purpose', 'Local spec context', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+    expect(lastJsonLog()).toEqual(expect.objectContaining({
+      ok: false,
+      issues: [expect.objectContaining({ code: 'INIT_INVALID_REGISTER_DOC_PATH' })]
+    }));
+
+    handleInitCommand({
+      args: ['init', 'register-doc', '--path', 'docs/specs/LOCAL.md', '--when', 'Local | work', '--purpose', 'Local spec context', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+    expect(lastJsonLog()).toEqual(expect.objectContaining({
+      ok: false,
+      issues: [expect.objectContaining({ code: 'INIT_INVALID_TABLE_CELL' })]
+    }));
+  });
+
+  it('can require registered docs to exist before updating Required Reading', () => {
+    const root = tempProject();
+    initProject(root);
+
+    handleInitCommand({
+      args: ['init', 'register-doc', '--path', 'docs/specs/MISSING.md', '--when', 'Local work', '--purpose', 'Local spec context', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+    const warningOnly = lastJsonLog();
+    expect(warningOnly.ok).toBe(true);
+    expect(warningOnly.issues).toContainEqual(expect.objectContaining({ code: 'INIT_REGISTERED_DOC_MISSING', severity: 'warning' }));
+
+    handleInitCommand({
+      args: ['init', 'register-doc', '--path', 'docs/specs/MISSING.md', '--when', 'Local work', '--purpose', 'Local spec context', '--require-exists', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+    const strict = lastJsonLog();
+    expect(strict.ok).toBe(false);
+    expect(strict.issues).toContainEqual(expect.objectContaining({ code: 'INIT_REGISTERED_DOC_MISSING', severity: 'error' }));
+    expect(read(root, 'docs/IMPLEMENTATION_SOP.md')).not.toContain('docs/specs/MISSING.md');
+  });
+
   it('enables optional integration docs only through explicit execute', () => {
     const root = tempProject();
     initProject(root);
@@ -326,10 +397,25 @@ describe('init profiles', () => {
 
     handleInitCommand({ args: ['init', 'enable-integration', '--integration', 'mcp', '--execute', '--json'], projectRoot: root, jsonOutput: true });
     const executed = lastJsonLog();
+    expect(executed.summary).toContain('does not enable Hermes/MCP runtime behavior');
     expect(executed.actions).toContainEqual(expect.objectContaining({ path: 'docs/integrations/MCP.md', status: 'created' }));
     expect(read(root, 'docs/integrations/MCP.md')).toContain('Enabled By');
-    expect(read(root, 'docs/IMPLEMENTATION_SOP.md')).toContain('| `docs/integrations/MCP.md` | MCP integration work only | Project-specific optional MCP integration guidance. |');
+    expect(read(root, 'docs/integrations/MCP.md')).toContain('does not enable MCP runtime behavior or change capability gates');
+    expect(read(root, 'docs/IMPLEMENTATION_SOP.md')).toContain('| `docs/integrations/MCP.md` | MCP integration work only | Project-specific optional MCP integration guidance registration. This does not enable runtime behavior. |');
     expect(fs.existsSync(path.join(root, 'HERMES.md'))).toBe(false);
+  });
+
+  it('does not partially write integration docs when SOP registration cannot be updated', () => {
+    const root = tempProject();
+    initProject(root);
+    fs.writeFileSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'), '# Broken SOP\n', 'utf8');
+
+    handleInitCommand({ args: ['init', 'enable-integration', '--integration', 'mcp', '--execute', '--json'], projectRoot: root, jsonOutput: true });
+
+    const report = lastJsonLog();
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'INIT_REQUIRED_READING_TABLE_MISSING' }));
+    expect(fs.existsSync(path.join(root, 'docs', 'integrations', 'MCP.md'))).toBe(false);
   });
 
 
@@ -343,6 +429,8 @@ describe('init profiles', () => {
     expect(sop).toContain('| `basic` | Small |');
     expect(sop).toContain('| `standard` | Medium, default |');
     expect(sop).toContain('| `governed` | Heavy |');
+    expect(sop).toContain('Long-lived projects with stronger governance, security boundaries, refactor history, or roadmap-level planning.');
+    expect(sop).not.toContain('Long-lived projects with stronger governance, release planning');
     expect(sop).toContain('## Scaffold Document Structure');
     expect(sop).toContain('| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Validation, Session End, and Handoff Compaction sections. |');
     expect(sop).toContain('docs/SECURITY_MODEL.md');

@@ -34,7 +34,7 @@ Usage:
   hadara init [--project <path>] [--profile basic|standard|governed]
   hadara init doctor [--json]
   hadara init upgrade --profile basic|standard|governed [--execute] [--json]
-  hadara init register-doc --path <path> --when <text> --purpose <text> [--execute] [--json]
+  hadara init register-doc --path <path> --when <text> --purpose <text> [--require-exists] [--execute] [--json]
   hadara init enable-integration --integration hermes|mcp [--execute] [--json]
   hadara doctor
   hadara task create <title>

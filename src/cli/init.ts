@@ -44,6 +44,7 @@ interface InitFollowUpReport {
   schemaVersion: 'hadara.init.followup.v1';
   command: string;
   ok: boolean;
+  summary?: string;
   mode?: InitFollowUpMode;
   profile?: InitProfile;
   integration?: string;
@@ -90,7 +91,7 @@ const INIT_PROFILE_SPECS: Record<InitProfile, InitProfileSpec> = {
   governed: {
     profile: 'governed',
     generatedDocsDescription: 'Standard docs plus security, refactor log, and roadmap docs',
-    intendedUse: 'Long-lived projects with stronger governance, release planning, security boundaries, or operational surfaces.',
+    intendedUse: 'Long-lived projects with stronger governance, security boundaries, refactor history, or roadmap-level planning.',
     specialNotes: 'Project-specific contracts still must be manually registered in the SOP when they become real.',
     docs: {
       architecture: true,
@@ -147,7 +148,8 @@ export function handleInitCommand(input: InitCommandInput): boolean {
       documentPath: getRequiredStringOption(input.args, '--path'),
       when: getRequiredStringOption(input.args, '--when'),
       purpose: getRequiredStringOption(input.args, '--purpose'),
-      mode: getInitFollowUpMode(input.args)
+      mode: getInitFollowUpMode(input.args),
+      requireExists: getFlag(input.args, '--require-exists')
     });
     printInitFollowUpReport(report, input.jsonOutput);
     return true;
@@ -216,6 +218,8 @@ function createInitDoctorReport(projectRoot: string): InitFollowUpReport {
     issues.push({ severity: 'warning', code: 'INIT_OLD_PROFILE_NAME', path: 'docs/IMPLEMENTATION_SOP.md', message: 'SOP mentions old init profile names.' });
   }
 
+  issues.push(...detectProfileMetadataMismatches(projectRoot));
+
   for (const [relativePath, headers] of Object.entries(CANONICAL_TABLE_HEADERS)) {
     const content = readProjectText(projectRoot, relativePath);
     if (content === null) continue;
@@ -241,6 +245,7 @@ function createInitDoctorReport(projectRoot: string): InitFollowUpReport {
 function createInitUpgradeReport(projectRoot: string, profile: InitProfile, mode: InitFollowUpMode): InitFollowUpReport {
   const actions: InitAction[] = [];
   const issues: InitIssue[] = [];
+  const summary = 'This command creates missing scaffold docs only. Existing profile-bearing docs are preserved. Run doctor to detect profile text drift.';
   for (const file of createGeneratedScaffoldFiles(profile)) {
     const filePath = path.join(projectRoot, file.path);
     if (fs.existsSync(filePath)) {
@@ -258,6 +263,7 @@ function createInitUpgradeReport(projectRoot: string, profile: InitProfile, mode
     schemaVersion: 'hadara.init.followup.v1',
     command: 'init.upgrade',
     ok: true,
+    summary,
     mode,
     profile,
     actions,
@@ -267,13 +273,26 @@ function createInitUpgradeReport(projectRoot: string, profile: InitProfile, mode
 
 function createRequiredReadingRegistrationReport(
   projectRoot: string,
-  input: { documentPath: string; when: string; purpose: string; mode: InitFollowUpMode }
+  input: { documentPath: string; when: string; purpose: string; mode: InitFollowUpMode; requireExists?: boolean }
 ): InitFollowUpReport {
-  const relativePath = normalizeProjectRelativePath(input.documentPath);
+  const pathResult = normalizeProjectRelativePath(input.documentPath);
+  const cellIssues = validateTableCells([input.when, input.purpose]);
+  if (!pathResult.ok || cellIssues.length > 0) {
+    return {
+      schemaVersion: 'hadara.init.followup.v1',
+      command: 'init.register-doc',
+      ok: false,
+      mode: input.mode,
+      actions: [],
+      issues: [...(pathResult.ok ? [] : [pathResult.issue]), ...cellIssues]
+    };
+  }
+  const relativePath = pathResult.relativePath;
   const row = formatTableRow([`\`${relativePath}\``, input.when, input.purpose]);
   return createSopRowUpdateReport(projectRoot, {
     command: 'init.register-doc',
     mode: input.mode,
+    requireExists: input.requireExists ?? false,
     row,
     relativePath,
     action: 'register-doc',
@@ -293,6 +312,31 @@ function createIntegrationEnableReport(
   const actions: InitAction[] = [];
   const issues: InitIssue[] = [];
   const fullPath = path.join(projectRoot, relativePath);
+  const registration = createSopRowUpdateReport(projectRoot, {
+    command: 'init.enable-integration',
+    mode: input.mode,
+    allowMissingDocument: true,
+    row: formatTableRow([`\`${relativePath}\``, `${integration.toUpperCase()} integration work only`, `Project-specific optional ${integration.toUpperCase()} integration guidance registration. This does not enable runtime behavior.`]),
+    relativePath,
+    action: 'enable-integration-registration',
+    plannedSummary: `${relativePath} would be registered in SOP Required Reading.`,
+    createdSummary: `${relativePath} was registered in SOP Required Reading.`,
+    existsSummary: `${relativePath} is already registered in SOP Required Reading.`
+  });
+
+  if (!registration.ok) {
+    return {
+      schemaVersion: 'hadara.init.followup.v1',
+      command: 'init.enable-integration',
+      ok: false,
+      summary: 'This command registers project guidance only; it does not enable Hermes/MCP runtime behavior.',
+      mode: input.mode,
+      integration,
+      actions: registration.actions,
+      issues: registration.issues
+    };
+  }
+
   if (fs.existsSync(fullPath)) {
     actions.push({ action: 'enable-integration-doc', path: relativePath, status: 'exists', summary: `${relativePath} already exists and will not be overwritten.` });
   } else if (input.mode === 'execute') {
@@ -301,20 +345,10 @@ function createIntegrationEnableReport(
   } else {
     actions.push({ action: 'enable-integration-doc', path: relativePath, status: 'planned', summary: `${relativePath} would be created.` });
   }
-
-  const registration = createSopRowUpdateReport(projectRoot, {
-    command: 'init.enable-integration',
-    mode: input.mode,
-    row: formatTableRow([`\`${relativePath}\``, `${integration.toUpperCase()} integration work only`, `Project-specific optional ${integration.toUpperCase()} integration guidance.`]),
-    relativePath,
-    action: 'enable-integration-registration',
-    plannedSummary: `${relativePath} would be registered in SOP Required Reading.`,
-    createdSummary: `${relativePath} was registered in SOP Required Reading.`,
-    existsSummary: `${relativePath} is already registered in SOP Required Reading.`
-  });
   return {
     schemaVersion: 'hadara.init.followup.v1',
     command: 'init.enable-integration',
+    summary: 'This command registers project guidance only; it does not enable Hermes/MCP runtime behavior.',
     ok: issues.length === 0 && registration.ok,
     mode: input.mode,
     integration,
@@ -328,6 +362,8 @@ function createSopRowUpdateReport(
   input: {
     command: string;
     mode: InitFollowUpMode;
+    requireExists?: boolean;
+    allowMissingDocument?: boolean;
     row: string;
     relativePath: string;
     action: string;
@@ -344,8 +380,13 @@ function createSopRowUpdateReport(
     issues.push({ severity: 'error', code: 'INIT_SOP_MISSING', path: 'docs/IMPLEMENTATION_SOP.md', message: 'SOP Required Reading table cannot be updated because IMPLEMENTATION_SOP.md is missing.' });
     return { schemaVersion: 'hadara.init.followup.v1', command: input.command, ok: false, mode: input.mode, actions, issues };
   }
-  if (!fs.existsSync(path.join(projectRoot, input.relativePath))) {
-    issues.push({ severity: 'warning', code: 'INIT_REGISTERED_DOC_MISSING', path: input.relativePath, message: `${input.relativePath} does not exist yet.` });
+  if (!input.allowMissingDocument && !fs.existsSync(path.join(projectRoot, input.relativePath))) {
+    issues.push({
+      severity: input.requireExists ? 'error' : 'warning',
+      code: 'INIT_REGISTERED_DOC_MISSING',
+      path: input.relativePath,
+      message: `${input.relativePath} does not exist yet.`
+    });
   }
   if (sop.includes(`\`${input.relativePath}\``)) {
     actions.push({ action: input.action, path: 'docs/IMPLEMENTATION_SOP.md', status: 'exists', summary: input.existsSummary });
@@ -353,6 +394,9 @@ function createSopRowUpdateReport(
   }
   if (!sop.includes('| Document | When to Read | Purpose |')) {
     issues.push({ severity: 'error', code: 'INIT_REQUIRED_READING_TABLE_MISSING', path: 'docs/IMPLEMENTATION_SOP.md', message: 'SOP Required Reading table header was not found.' });
+    return { schemaVersion: 'hadara.init.followup.v1', command: input.command, ok: false, mode: input.mode, actions, issues };
+  }
+  if (issues.some((issue) => issue.severity === 'error')) {
     return { schemaVersion: 'hadara.init.followup.v1', command: input.command, ok: false, mode: input.mode, actions, issues };
   }
   if (input.mode === 'execute') {
@@ -401,8 +445,104 @@ function readProjectText(projectRoot: string, relativePath: string): string | nu
   return fs.existsSync(fullPath) ? fs.readFileSync(fullPath, 'utf8') : null;
 }
 
-function normalizeProjectRelativePath(value: string): string {
-  return value.replace(/\\/g, '/').replace(/^\.?\//, '');
+function detectProfileMetadataMismatches(projectRoot: string): InitIssue[] {
+  const inferredProfile = inferProfileFromGeneratedDocs(projectRoot);
+  const issues: InitIssue[] = [];
+  const projectState = readProjectText(projectRoot, 'docs/PROJECT_STATE.md');
+  const projectStateProfile = projectState?.match(/\|\s*HADARA Profile\s*\|\s*(basic|standard|governed)\s*\|/)?.[1] as InitProfile | undefined;
+  if (projectStateProfile !== undefined && isLowerProfile(projectStateProfile, inferredProfile)) {
+    issues.push({
+      severity: 'warning',
+      code: 'INIT_PROFILE_METADATA_MISMATCH',
+      path: 'docs/PROJECT_STATE.md',
+      message: `PROJECT_STATE says ${projectStateProfile}, but ${inferredProfile}-level scaffold docs exist.`
+    });
+  }
+
+  const sop = readProjectText(projectRoot, 'docs/IMPLEMENTATION_SOP.md');
+  const sopProfile = sop?.match(/initialized with the `(basic|standard|governed)` HADARA profile/)?.[1] as InitProfile | undefined;
+  if (sopProfile !== undefined && isLowerProfile(sopProfile, inferredProfile)) {
+    issues.push({
+      severity: 'warning',
+      code: 'INIT_PROFILE_METADATA_MISMATCH',
+      path: 'docs/IMPLEMENTATION_SOP.md',
+      message: `SOP says ${sopProfile}, but ${inferredProfile}-level scaffold docs exist.`
+    });
+  }
+  if (sop !== null) {
+    for (const requiredPath of requiredDocsForProfile(inferredProfile)) {
+      if (!sop.includes(`\`${requiredPath}\``)) {
+        issues.push({
+          severity: 'warning',
+          code: 'INIT_PROFILE_METADATA_MISMATCH',
+          path: 'docs/IMPLEMENTATION_SOP.md',
+          message: `SOP Required Reading does not include ${requiredPath}, but ${inferredProfile}-level scaffold docs exist.`
+        });
+        break;
+      }
+    }
+  }
+
+  const agents = readProjectText(projectRoot, 'AGENTS.md');
+  if (agents !== null) {
+    for (const requiredPath of requiredDocsForProfile(inferredProfile)) {
+      if (!agents.includes(`\`${requiredPath}\``)) {
+        issues.push({
+          severity: 'warning',
+          code: 'INIT_PROFILE_METADATA_MISMATCH',
+          path: 'AGENTS.md',
+          message: `AGENTS required reading does not include ${requiredPath}, but ${inferredProfile}-level scaffold docs exist.`
+        });
+        break;
+      }
+    }
+  }
+  return issues;
+}
+
+function inferProfileFromGeneratedDocs(projectRoot: string): InitProfile {
+  if (['docs/SECURITY_MODEL.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md'].some((relativePath) => fs.existsSync(path.join(projectRoot, relativePath)))) {
+    return 'governed';
+  }
+  if (['docs/ARCHITECTURE.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/DECISIONS.md', 'docs/TEST_STRATEGY.md'].some((relativePath) => fs.existsSync(path.join(projectRoot, relativePath)))) {
+    return 'standard';
+  }
+  return 'basic';
+}
+
+function requiredDocsForProfile(profile: InitProfile): string[] {
+  const docs = ['docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/IMPLEMENTATION_SOP.md'];
+  if (profile === 'standard' || profile === 'governed') {
+    docs.push('docs/ARCHITECTURE.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/DECISIONS.md', 'docs/TEST_STRATEGY.md');
+  }
+  if (profile === 'governed') {
+    docs.push('docs/SECURITY_MODEL.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md');
+  }
+  return docs;
+}
+
+function isLowerProfile(current: InitProfile, inferred: InitProfile): boolean {
+  const rank: Record<InitProfile, number> = { basic: 1, standard: 2, governed: 3 };
+  return rank[current] < rank[inferred];
+}
+
+function normalizeProjectRelativePath(value: string): { ok: true; relativePath: string } | { ok: false; issue: InitIssue } {
+  const normalized = value.trim().replace(/\\/g, '/').replace(/^\.?\//, '');
+  const issue = (message: string): { ok: false; issue: InitIssue } => ({
+    ok: false,
+    issue: { severity: 'error', code: 'INIT_INVALID_REGISTER_DOC_PATH', path: value, message }
+  });
+  if (normalized.length === 0) return issue('Registered document path must not be empty.');
+  if (value.startsWith('/') || /^[A-Za-z]:\//.test(value.replace(/\\/g, '/'))) return issue('Registered document path must be project-relative.');
+  if (normalized.split('/').includes('..')) return issue('Registered document path must not contain .. segments.');
+  if (/[|\r\n]/.test(normalized)) return issue('Registered document path must not contain table delimiters or newlines.');
+  return { ok: true, relativePath: normalized };
+}
+
+function validateTableCells(values: string[]): InitIssue[] {
+  return values.flatMap((value) => (/[|\r\n]/.test(value)
+    ? [{ severity: 'error' as const, code: 'INIT_INVALID_TABLE_CELL', message: 'Required Reading table cells must not contain | or newline characters.' }]
+    : []));
 }
 
 function insertRequiredReadingRow(sop: string, row: string): string {
@@ -435,6 +575,7 @@ function createHermesIntegrationDoc(): string {
 | Boundary | Rule |
 |---|---|
 | Registration | Keep this document registered in \`docs/IMPLEMENTATION_SOP.md\` before agents rely on it. |
+| Runtime | This document is project guidance registration only; it does not enable Hermes runtime behavior. |
 | Scope | Treat Hermes behavior as project-specific integration work, not generic HADARA init behavior. |
 `;
 }
@@ -454,6 +595,7 @@ function createMcpIntegrationDoc(): string {
 | Boundary | Rule |
 |---|---|
 | Registration | Keep this document registered in \`docs/IMPLEMENTATION_SOP.md\` before agents rely on it. |
+| Runtime | This document is project guidance registration only; it does not enable MCP runtime behavior or change capability gates. |
 | Scope | Treat MCP behavior as project-specific integration work, not generic HADARA init behavior. |
 | Writes | Do not add MCP write tools without explicit project approval and safety evidence. |
 `;
@@ -645,7 +787,7 @@ ${numberedList(sessionStart)}
 |---|---|---|
 ${requiredReadingRows.map(formatTableRow).join('\n')}
 
-When adding project-specific specs, contracts, or roadmap files, add them to this table and explain when agents must read them. A future HADARA command may automate this registration; for now, update this table manually.
+When adding project-specific specs, contracts, or roadmap files, add them to this table and explain when agents must read them. Use \`hadara init register-doc --path <path> --when <text> --purpose <text> --json\` to preview registration, and add \`--execute\` to update this table.
 
 ## Init Profile Matrix
 
@@ -653,7 +795,7 @@ When adding project-specific specs, contracts, or roadmap files, add them to thi
 |---|---|---|---|---|
 | \`basic\` | Small | Core session docs only | Small projects that need Task Capsules, evidence, and handoff discipline without planning overhead. | SOP required reading references only core docs plus active Task Capsule docs. |
 | \`standard\` | Medium, default | Core docs plus planning, architecture, decision, and validation docs | Most multi-session projects that need roadmap slices and repeatable validation. | Optional integrations must be registered before agents rely on them. |
-| \`governed\` | Heavy | Standard docs plus security, refactor log, and roadmap docs | Long-lived projects with stronger governance, release planning, security boundaries, or operational surfaces. | Project-specific contracts still must be manually registered in Required Reading. |
+| \`governed\` | Heavy | Standard docs plus security, refactor log, and roadmap docs | Long-lived projects with stronger governance, security boundaries, refactor history, or roadmap-level planning. | Project-specific contracts still must be manually registered in Required Reading. |
 
 ## Scaffold Document Structure
 
