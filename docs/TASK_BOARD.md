@@ -157,3 +157,4 @@
 | T-0154 | Project Docs Consistency Doctor | Done | tasks/T-0154-project-docs-consistency-doctor | Adds read-only docs-scope protocol consistency doctor. |
 | T-0155 | Project Docs Consistency Doctor Completion | Done | tasks/T-0155-project-docs-consistency-doctor-completion | Completes the planned T-0154 project-doc doctor coverage as logical T-0154a. |
 | T-0156 | Profile Drift Remediation Guide | Done | tasks/T-0156-profile-drift-remediation-guide | Adds `--scope profile` diagnostics and manual remediation guidance; Docker validation and built CLI smokes passed. |
+| T-0157 | Safe Protocol Remediation MVP | Done | tasks/T-0157-safe-protocol-remediation-mvp | Adds dry-run-first bounded `protocol remediate` fixes for Task Board rows, Decisions table frame, Project State profile row, and evidence JSONL. |

@@ -82,6 +82,7 @@ hadara init doctor --json
 hadara protocol doctor --task T-0001 --json
 hadara protocol doctor --scope docs --json
 hadara protocol doctor --scope profile --json
+hadara protocol remediate --fix task-board-row --task T-0001 --json
 hadara doctor
 hadara task create "..."
 hadara task list
@@ -90,7 +91,7 @@ hadara evidence collect --task T-0001
 hadara handoff update --task T-0001
 ```
 
-`protocol doctor` is read-only and diagnostic-first. `ok: true` means there are no blocking errors; warning issues may still report consistency drift, and profile-scope reports can include optional manual `remediations` guidance. Profile reports expose `summary.profile.declared`, `summary.profile.detected`, and `summary.profile.target`: declared comes from project metadata, detected comes from the committed protocol document set, and target is the higher intended profile from metadata plus doc-set evidence. Remediation commands are dry-run-first; use `--json` to review the plan and add `--execute` only after intentionally accepting the changes.
+`protocol doctor` is read-only and diagnostic-first. `ok: true` means there are no blocking errors; warning issues may still report consistency drift, and profile-scope reports can include optional manual `remediations` guidance. Profile reports expose `summary.profile.declared`, `summary.profile.detected`, and `summary.profile.target`: declared comes from project metadata, detected comes from the committed protocol document set, and target is the higher intended profile from metadata plus doc-set evidence. `protocol remediate` is dry-run-first; use `--json` to review the plan and add `--execute` only after intentionally accepting one of the bounded fixes: `task-board-row`, `decisions-table-frame`, `project-state-profile`, or `evidence-jsonl`.
 
 Read-only operations and validation surfaces:
 

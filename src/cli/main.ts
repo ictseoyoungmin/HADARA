@@ -47,6 +47,7 @@ Usage:
   hadara debt show <id> [--json]
   hadara protocol doctor --task <task-id> [--json]
   hadara protocol doctor --scope docs|profile [--json]
+  hadara protocol remediate --fix task-board-row|decisions-table-frame|project-state-profile|evidence-jsonl [--task <task-id>] [--profile basic|standard|governed] [--execute] [--json]
   hadara tools list [--json]
   hadara handoff update --task <task-id> [--summary <text>] [--next <text>]
   hadara write preflight <command...> [--json]

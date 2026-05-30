@@ -137,6 +137,41 @@ describe('protocol CLI command handler', () => {
     ).toThrow('--task and --scope cannot be used together');
   });
 
+  it('prints JSON for protocol remediate dry-run', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'CLI remediation');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(boardPath, fs.readFileSync(boardPath, 'utf8').replace(new RegExp(`\\| ${task.id} \\|[^\\n]+\\n`), ''), 'utf8');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleProtocolCommand({
+      args: ['protocol', 'remediate', '--fix', 'task-board-row', '--task', task.id, '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls[0][0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.protocol.remediation.v1',
+      command: 'protocol.remediate',
+      ok: true,
+      mode: 'dry-run',
+      fix: 'task-board-row'
+    });
+    expect(fs.readFileSync(boardPath, 'utf8')).not.toContain(`| ${task.id} |`);
+  });
+
+  it('rejects unsupported protocol remediation fixes', () => {
+    expect(() =>
+      handleProtocolCommand({
+        args: ['protocol', 'remediate', '--fix', 'broad-rewrite', '--json'],
+        projectRoot: tempProject(),
+        jsonOutput: true
+      })
+    ).toThrow('unsupported protocol remediation fix: broad-rewrite');
+  });
+
   it('ignores unrelated protocol subcommands for the top-level dispatcher', () => {
     expect(handleProtocolCommand({ args: ['protocol', 'unknown'], projectRoot: tempProject(), jsonOutput: true })).toBe(false);
   });
