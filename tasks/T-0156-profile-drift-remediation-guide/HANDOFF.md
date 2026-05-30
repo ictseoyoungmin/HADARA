@@ -20,6 +20,7 @@
 | Project docs updated for completion. | `docs/TASK_BOARD.md`, `docs/PROJECT_STATE.md`, `docs/DEVELOPMENT_SLICES.md`, `docs/AGENT_HANDOFF.md` |
 | Done-level harness passed. | 2026-05-30T08:31:43.011Z evidence |
 | Added profile policy follow-up. | `summary.profile` separates declared/detected/target/source; Required Reading drift checks section table rows; 2026-05-30T08:51:13.168Z evidence. |
+| Added explicit profile summary edge-case tests. | Covered metadata governed plus standard docs, missing metadata plus governed docs, metadata basic plus partial governed docs, and PROJECT_STATE/SOP mixed declarations; 2026-05-30T09:00:07.842Z evidence. |
 
 ## Next Recommended Step
 

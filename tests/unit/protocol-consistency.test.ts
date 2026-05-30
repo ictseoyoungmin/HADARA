@@ -271,6 +271,39 @@ describe('Profile protocol consistency report', () => {
     });
   });
 
+  it('uses complete governed docs as the target when metadata is missing', () => {
+    const root = tempProject();
+    writeProfileDocs(root, 'governed');
+
+    const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.summary.profile).toMatchObject({
+      declared: 'unknown',
+      detected: 'governed',
+      target: 'governed',
+      source: 'metadata-and-docset'
+    });
+    expect(report.issues.map((issue) => issue.code)).toEqual(expect.arrayContaining(['PROFILE_METADATA_MISSING']));
+  });
+
+  it('uses partial governed docs as the target when metadata declares basic', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'docs', 'SECURITY_MODEL.md'), '# SECURITY_MODEL\n', 'utf8');
+    writeProfileMetadata(root, 'basic');
+
+    const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.summary.profile).toMatchObject({
+      declared: 'basic',
+      detected: 'mixed',
+      target: 'governed',
+      source: 'metadata-and-docset'
+    });
+    expect(report.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(['PROFILE_DOC_SET_MIXED', 'PROFILE_METADATA_DRIFT', 'PROFILE_REQUIRED_DOC_MISSING'])
+    );
+  });
+
   it('uses partial governed docs as the target when metadata declares standard', () => {
     const root = tempProject();
     writeProfileDocs(root, 'standard');
@@ -288,6 +321,29 @@ describe('Profile protocol consistency report', () => {
     expect(report.issues.map((issue) => issue.code)).toEqual(
       expect.arrayContaining(['PROFILE_DOC_SET_MIXED', 'PROFILE_METADATA_DRIFT', 'PROFILE_REQUIRED_DOC_MISSING'])
     );
+  });
+
+  it('reports mixed declarations when PROJECT_STATE and SOP disagree', () => {
+    const root = tempProject();
+    writeProfileDocs(root, 'standard');
+    writeSplitProfileMetadata(root, 'standard', 'governed');
+
+    const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.summary.profile).toMatchObject({
+      declared: 'mixed',
+      detected: 'standard',
+      target: 'standard',
+      source: 'metadata-and-docset'
+    });
+    expect(report.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(['PROFILE_METADATA_DRIFT', 'PROFILE_REQUIRED_READING_DRIFT'])
+    );
+    expect(report.issues.find((issue) => issue.path === 'docs/IMPLEMENTATION_SOP.md')).toMatchObject({
+      code: 'PROFILE_METADATA_DRIFT',
+      expected: 'standard',
+      actual: 'governed'
+    });
   });
 
   it('requires AGENTS profile paths inside the Required Reading table', () => {
@@ -438,14 +494,18 @@ function writeProfileDocs(root: string, profile: 'standard' | 'governed'): void 
 }
 
 function writeProfileMetadata(root: string, profile: 'basic' | 'standard' | 'governed'): void {
+  writeSplitProfileMetadata(root, profile, profile);
+}
+
+function writeSplitProfileMetadata(root: string, projectStateProfile: 'basic' | 'standard' | 'governed', sopProfile: 'basic' | 'standard' | 'governed'): void {
   fs.writeFileSync(
     path.join(root, 'docs', 'PROJECT_STATE.md'),
-    `# PROJECT_STATE\n\n| Field | Value |\n|---|---|\n| HADARA Profile | ${profile} |\n`,
+    `# PROJECT_STATE\n\n| Field | Value |\n|---|---|\n| HADARA Profile | ${projectStateProfile} |\n`,
     'utf8'
   );
   fs.writeFileSync(
     path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'),
-    `# IMPLEMENTATION_SOP\n\nThis repository was initialized with the \`${profile}\` HADARA profile.\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| \`docs/PROJECT_STATE.md\` | Every session | Current state. |\n| \`docs/AGENT_HANDOFF.md\` | Every session | Handoff. |\n| \`docs/TASK_BOARD.md\` | Every session | Work queue. |\n| \`docs/IMPLEMENTATION_SOP.md\` | Every session | Workflow. |\n| \`docs/ARCHITECTURE.md\` | Architecture work | System map. |\n| \`docs/DEVELOPMENT_SLICES.md\` | Slice work | Work order. |\n| \`docs/DECISIONS.md\` | Decision work | Decision log. |\n| \`docs/TEST_STRATEGY.md\` | Validation work | Test baseline. |\n| \`docs/SECURITY_MODEL.md\` | Security work | Security boundary. |\n| \`docs/REFACTOR_LOG.md\` | Refactor work | Refactor log. |\n| \`docs/ROADMAP.md\` | Roadmap work | Roadmap. |\n`,
+    `# IMPLEMENTATION_SOP\n\nThis repository was initialized with the \`${sopProfile}\` HADARA profile.\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| \`docs/PROJECT_STATE.md\` | Every session | Current state. |\n| \`docs/AGENT_HANDOFF.md\` | Every session | Handoff. |\n| \`docs/TASK_BOARD.md\` | Every session | Work queue. |\n| \`docs/IMPLEMENTATION_SOP.md\` | Every session | Workflow. |\n| \`docs/ARCHITECTURE.md\` | Architecture work | System map. |\n| \`docs/DEVELOPMENT_SLICES.md\` | Slice work | Work order. |\n| \`docs/DECISIONS.md\` | Decision work | Decision log. |\n| \`docs/TEST_STRATEGY.md\` | Validation work | Test baseline. |\n| \`docs/SECURITY_MODEL.md\` | Security work | Security boundary. |\n| \`docs/REFACTOR_LOG.md\` | Refactor work | Refactor log. |\n| \`docs/ROADMAP.md\` | Roadmap work | Roadmap. |\n`,
     'utf8'
   );
 }
