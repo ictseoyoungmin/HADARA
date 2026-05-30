@@ -156,3 +156,4 @@
 | T-0153 | Task Capsule Consistency Doctor | Done | tasks/T-0153-task-capsule-consistency-doctor | Adds read-only task-scoped protocol consistency doctor. |
 | T-0154 | Project Docs Consistency Doctor | Done | tasks/T-0154-project-docs-consistency-doctor | Adds read-only docs-scope protocol consistency doctor. |
 | T-0155 | Project Docs Consistency Doctor Completion | Done | tasks/T-0155-project-docs-consistency-doctor-completion | Completes the planned T-0154 project-doc doctor coverage as logical T-0154a. |
+| T-0156 | Profile Drift Remediation Guide | Done | tasks/T-0156-profile-drift-remediation-guide | Adds `--scope profile` diagnostics and manual remediation guidance; Docker validation and built CLI smokes passed. |

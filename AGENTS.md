@@ -9,9 +9,15 @@ This repository must be developed using the HADARA protocol.
 3. `docs/TASK_BOARD.md`
 4. `docs/IMPLEMENTATION_SOP.md`
 5. `docs/DEVELOPMENT_SLICES.md` when starting, completing, or reclassifying a development slice
-6. Active `tasks/T-*/TASK.md`
-7. Task Capsule files required by `docs/IMPLEMENTATION_SOP.md`
-8. Project-specific specs or roadmap documents referenced by the current task
+6. `docs/ARCHITECTURE.md` when changing architecture, boundaries, or runtime surfaces
+7. `docs/DECISIONS.md` when adding or revising decisions
+8. `docs/TEST_STRATEGY.md` when changing validation expectations
+9. `docs/SECURITY_MODEL.md` when changing permissions, secrets, storage, MCP, or execution boundaries
+10. `docs/REFACTOR_LOG.md` when doing broad refactors or cleanup sequences
+11. `docs/ROADMAP.md` when changing release, scope, or deferred-work boundaries
+12. Active `tasks/T-*/TASK.md`
+13. Task Capsule files required by `docs/IMPLEMENTATION_SOP.md`
+14. Project-specific specs or roadmap documents referenced by the current task
 
 `docs/AGENT_HANDOFF.md` is compact current-state handoff, not full project history. Follow its Historical Index when older completed-task or validation history is needed.
 

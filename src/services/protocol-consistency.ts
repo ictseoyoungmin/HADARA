@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { createProfileConsistencyDiagnostics } from './protocol-profile';
 import { isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule, TASK_FILES } from '../task/task-capsule';
 
 export type ProtocolConsistencyScope = 'docs' | 'tasks' | 'profile' | 'all';
@@ -129,6 +130,31 @@ export function createDocsProtocolConsistencyReport(projectRoot: string, now = n
   });
 }
 
+export function createProfileProtocolConsistencyReport(projectRoot: string, now = new Date()): ProtocolConsistencyReport {
+  const diagnostics = createProfileConsistencyDiagnostics(projectRoot);
+  const issues: ProtocolConsistencyIssue[] = [];
+
+  for (const issue of diagnostics.issues) {
+    pushIssue(issues, issue);
+  }
+
+  const remediations = diagnostics.remediations.map((remediation) => ({
+    ...remediation,
+    issueIds:
+      remediation.issueIds.length > 0
+        ? remediation.issueIds
+        : issues.filter((issue) => issue.remediationId === remediation.id).map((issue) => issue.id)
+  }));
+
+  return buildReport(projectRoot, now, issues, diagnostics.checkedDocs, undefined, null, undefined, {
+    scope: 'profile',
+    checkedTasks: 0,
+    activeTaskId: null,
+    detectedProfile: diagnostics.detectedProfile,
+    remediations
+  });
+}
+
 function buildReport(
   projectRoot: string,
   now: Date,
@@ -144,6 +170,8 @@ function buildReport(
     scope?: ProtocolConsistencyScope;
     checkedTasks?: number;
     activeTaskId?: string | null;
+    detectedProfile?: 'basic' | 'standard' | 'governed' | 'unknown' | 'mixed';
+    remediations?: ProtocolRemediation[];
   }
 ): ProtocolConsistencyReport {
   const counts = {
@@ -163,7 +191,7 @@ function buildReport(
       checkedDocs: checkedDocs.size,
       checkedTasks: options?.checkedTasks ?? (task ? 1 : 0),
       activeTaskId: options?.activeTaskId ?? (task && !isDoneStatus(taskMeta?.taskStatus ?? '') ? task.id : null),
-      detectedProfile: detectProfile(projectRoot),
+      detectedProfile: options?.detectedProfile ?? detectProfile(projectRoot),
       issueCounts: counts
     },
     ...(task && taskMeta
@@ -178,7 +206,7 @@ function buildReport(
         }
       : {}),
     issues,
-    remediations: []
+    remediations: options?.remediations ?? []
   };
 }
 

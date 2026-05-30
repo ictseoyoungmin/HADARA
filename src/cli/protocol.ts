@@ -1,4 +1,9 @@
-import { createDocsProtocolConsistencyReport, createTaskProtocolConsistencyReport, ProtocolConsistencyReport } from '../services/protocol-consistency';
+import {
+  createDocsProtocolConsistencyReport,
+  createProfileProtocolConsistencyReport,
+  createTaskProtocolConsistencyReport,
+  ProtocolConsistencyReport
+} from '../services/protocol-consistency';
 import { CliArgsError, getStringOption } from './args';
 
 export interface ProtocolCommandInput {
@@ -24,10 +29,13 @@ export function handleProtocolCommand(input: ProtocolCommandInput): boolean {
   } else if (scope === 'docs') {
     report = createDocsProtocolConsistencyReport(input.projectRoot);
     label = 'docs';
+  } else if (scope === 'profile') {
+    report = createProfileProtocolConsistencyReport(input.projectRoot);
+    label = 'profile';
   } else if (scope) {
     throw new CliArgsError('CLI_OPTION_INVALID_VALUE', `unsupported protocol doctor scope: ${scope}`);
   } else {
-    throw new CliArgsError('CLI_OPTION_REQUIRED', '--task or --scope docs is required');
+    throw new CliArgsError('CLI_OPTION_REQUIRED', '--task or --scope docs|profile is required');
   }
 
   if (input.jsonOutput) {

@@ -2,7 +2,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createDocsProtocolConsistencyReport, createTaskProtocolConsistencyReport } from '../../src/services/protocol-consistency';
+import {
+  createDocsProtocolConsistencyReport,
+  createProfileProtocolConsistencyReport,
+  createTaskProtocolConsistencyReport
+} from '../../src/services/protocol-consistency';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -164,6 +168,75 @@ describe('Docs protocol consistency report', () => {
   });
 });
 
+describe('Profile protocol consistency report', () => {
+  it('reports basic-to-governed metadata drift with concrete manual remediations', () => {
+    const root = tempProject();
+    writeProfileDocs(root, 'governed');
+    fs.writeFileSync(
+      path.join(root, 'docs', 'PROJECT_STATE.md'),
+      '# PROJECT_STATE\n\n| Field | Value |\n|---|---|\n| HADARA Profile | basic |\n',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'),
+      '# IMPLEMENTATION_SOP\n\nThis repository was initialized with the `basic` HADARA profile.\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | Current state. |\n| `docs/AGENT_HANDOFF.md` | Every session | Handoff. |\n| `docs/TASK_BOARD.md` | Every session | Work queue. |\n| `docs/IMPLEMENTATION_SOP.md` | Every session | Workflow. |\n',
+      'utf8'
+    );
+
+    const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.protocol.consistency.v1',
+      command: 'protocol.doctor',
+      ok: true,
+      scope: 'profile',
+      generatedAt: '2026-05-30T00:00:00.000Z',
+      summary: {
+        checkedTasks: 0,
+        activeTaskId: null,
+        detectedProfile: 'governed',
+        issueCounts: {
+          error: 0
+        }
+      }
+    });
+    expect(report.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(['PROFILE_METADATA_DRIFT', 'PROFILE_REQUIRED_READING_DRIFT'])
+    );
+    const remediation = report.remediations.find((candidate) => candidate.id === 'profile-metadata-align');
+    expect(remediation).toMatchObject({
+      mode: 'manual',
+      command: 'hadara init upgrade --profile governed --json',
+      targetPaths: expect.arrayContaining(['docs/PROJECT_STATE.md', 'docs/IMPLEMENTATION_SOP.md', 'AGENTS.md'])
+    });
+    expect(remediation?.steps.join('\n')).toContain('docs/PROJECT_STATE.md');
+    expect(remediation?.steps.join('\n')).toContain('AGENTS.md');
+    expect(remediation?.issueIds.length).toBeGreaterThan(0);
+  });
+
+  it('reports partial profile document sets with missing-doc remediation guidance', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'docs', 'SECURITY_MODEL.md'), '# SECURITY_MODEL\n', 'utf8');
+
+    const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.ok).toBe(true);
+    expect(report.summary.detectedProfile).toBe('mixed');
+    expect(report.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(['PROFILE_DOC_SET_MIXED', 'PROFILE_REQUIRED_DOC_MISSING'])
+    );
+    expect(report.issues.find((issue) => issue.code === 'PROFILE_REQUIRED_DOC_MISSING')).toMatchObject({
+      severity: 'warning'
+    });
+    const remediation = report.remediations.find((candidate) => candidate.id === 'profile-doc-set-complete');
+    expect(remediation).toMatchObject({
+      mode: 'manual',
+      command: 'hadara init upgrade --profile governed --json',
+      targetPaths: expect.arrayContaining(['docs/ARCHITECTURE.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md'])
+    });
+  });
+});
+
 describe('Task protocol consistency report', () => {
   it('returns a stable task-scoped report for an in-sync draft capsule', () => {
     const root = tempProject();
@@ -277,6 +350,19 @@ function markTaskDone(root: string, taskId: string): void {
     board.replace(new RegExp(`(\\| ${taskId} \\| [^|]+ \\| )Draft( \\|)`), '$1Done$2'),
     'utf8'
   );
+}
+
+function writeProfileDocs(root: string, profile: 'standard' | 'governed'): void {
+  const standardDocs = ['ARCHITECTURE.md', 'DEVELOPMENT_SLICES.md', 'DECISIONS.md', 'TEST_STRATEGY.md'];
+  for (const file of standardDocs) {
+    fs.writeFileSync(path.join(root, 'docs', file), `# ${file.replace(/\.md$/, '')}\n`, 'utf8');
+  }
+  if (profile === 'governed') {
+    const governedDocs = ['SECURITY_MODEL.md', 'REFACTOR_LOG.md', 'ROADMAP.md'];
+    for (const file of governedDocs) {
+      fs.writeFileSync(path.join(root, 'docs', file), `# ${file.replace(/\.md$/, '')}\n`, 'utf8');
+    }
+  }
 }
 
 function replaceInFile(filePath: string, before: string, after: string): void {

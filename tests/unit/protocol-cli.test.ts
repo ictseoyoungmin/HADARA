@@ -98,6 +98,32 @@ describe('protocol CLI command handler', () => {
     });
   });
 
+  it('prints JSON for protocol doctor --scope profile', () => {
+    const root = tempProject();
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleProtocolCommand({
+      args: ['protocol', 'doctor', '--scope', 'profile', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    expect(process.exitCode).toBeUndefined();
+    const payload = JSON.parse(String(log.mock.calls[0][0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.protocol.consistency.v1',
+      command: 'protocol.doctor',
+      ok: true,
+      scope: 'profile',
+      summary: {
+        checkedTasks: 0,
+        activeTaskId: null,
+        detectedProfile: 'basic'
+      }
+    });
+  });
+
   it('rejects using --task and --scope together', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Ambiguous protocol');

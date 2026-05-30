@@ -1,0 +1,7 @@
+# Evidence
+
+| Time | Kind | Summary | Result | Visibility | JSONL |
+|---|---|---|---|---|---|
+| 2026-05-30T08:28:39.267Z | command-log | Focused protocol profile and CLI tests passed: 2 files / 12 tests before source sync, then full check after source sync passed with 60 files / 437 tests. | passed | public | evidence.jsonl |
+| 2026-05-30T08:28:51.526Z | command-log | Built CLI smokes passed after refreshing /workspace/dist: profile scope ok with 0 issues, task scope ok for T-0156, docs scope ok with two historical warnings, and --task/--scope conflict returns CLI_OPTION_INVALID_VALUE. | passed | public | evidence.jsonl |
+| 2026-05-30T08:31:43.011Z | command-log | Done-level harness passed for T-0156 with ok:true and no issues. | passed | public | evidence.jsonl |
