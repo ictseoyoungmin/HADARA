@@ -38,7 +38,7 @@ This repository operates as the `governed` HADARA profile because it has long-li
 | `docs/CLI_JSON_CONTRACT.md` and `docs/MCP_BRIDGE_CONTRACT.md` | HADARA-dev MCP or tool-surface work only | Local contracts for CLI JSON and MCP bridge compatibility. |
 | `docs/V1_0_CAPSULE_BACKLOG.md` and `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` | HADARA-dev v1.0 hardening or schema work only | Future capsule backlog and implementation schema notes. |
 
-When adding project-specific specs, contracts, or roadmap files, add them to this table and explain when agents must read them. A future HADARA command may automate this registration; for now, update this table manually.
+When adding project-specific specs, contracts, or roadmap files, add them to this table and explain when agents must read them. `hadara init register-doc --path <path> --when <text> --purpose <text> --json` previews the row, and `--execute` updates the table idempotently.
 
 If the local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` exists in this workspace, agents may use it as supporting planning context for release/install work, but it is not required committed context.
 

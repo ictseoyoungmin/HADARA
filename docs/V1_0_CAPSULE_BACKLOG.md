@@ -132,11 +132,11 @@ Detailed schemas, file-level notes, and the unabridged TUI native runtime design
 
 | Order | Candidate Slice | Capsule | Purpose | Key Done Evidence |
 |---:|---|---|---|---|
-| 44 | Init scaffold doctor/migration guard | TBD | Detect stale old-profile names, old Hermes defaults, missing `.gitignore`, broad `data/` ignore rules, or prose-only generated docs in already-initialized projects. | Future: read-only report emits stable issue codes and does not overwrite user files. |
-| 45 | Init lazy runtime-store creation | TBD | Revisit eager local/private runtime directory creation for small/basic projects. | Future: directory creation semantics are documented, audited, and covered by path/doctor tests. |
-| 46 | Init profile upgrade command | TBD | Add safe `basic -> standard -> governed` expansion after table-framed docs are stable. | Future: upgrade plan is idempotent, conflict-aware, and preserves edited docs. |
-| 47 | Required Reading registration command | TBD | Automate adding project-specific specs/contracts to SOP Required Reading tables. | Future: command validates referenced docs, avoids duplicate rows, and preserves table formatting. |
-| 48 | Optional integration enable commands | TBD | Add explicit enable flows for Hermes/MCP or other optional integrations instead of init defaults. | Future: enable command creates/registers integration docs only on request and keeps default init generic. |
+| 44 | Init scaffold doctor/migration guard | T-0150 | Detect stale old-profile names, old Hermes defaults, missing `.gitignore`, broad `data/` ignore rules, or prose-only generated docs in already-initialized projects. | Done: `hadara init doctor --json` emits a read-only `hadara.init.followup.v1` report with stable issue codes and no overwrite behavior. |
+| 45 | Init lazy runtime-store creation | T-0150 | Revisit eager local/private runtime directory creation for small/basic projects. | Done: `hadara init` writes project scaffold files without eagerly creating `.hadara/local/portable` runtime-store directories. |
+| 46 | Init profile upgrade command | T-0150 | Add safe `basic -> standard -> governed` expansion after table-framed docs are stable. | Done: `hadara init upgrade --profile <profile> --json` dry-runs missing scaffold docs, and `--execute` creates only missing files through missing-file-only writes. |
+| 47 | Required Reading registration command | T-0150 | Automate adding project-specific specs/contracts to SOP Required Reading tables. | Done: `hadara init register-doc --path <path> --when <text> --purpose <text> --json` dry-runs by default and `--execute` adds an idempotent SOP row. |
+| 48 | Optional integration enable commands | T-0150 | Add explicit enable flows for Hermes/MCP or other optional integrations instead of init defaults. | Done: `hadara init enable-integration --integration hermes|mcp --json` dry-runs by default and `--execute` creates/registers integration docs explicitly. |
 
 ## Must Preserve
 

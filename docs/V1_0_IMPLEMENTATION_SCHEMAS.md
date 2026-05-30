@@ -1147,7 +1147,7 @@ Release checklist schema:
 
 ## Init Scaffold Phase 1 Contract
 
-T-0147 through T-0149 converted `hadara init` from a HADARA-dev-shaped bootstrap scaffold into a generic, profile-aware HADARA protocol scaffold. The design source is `docs/specs/HADARA_Init_Refactoring_Phase1_Development_Plan.md`; the implemented T-0149 behavior is now the current baseline.
+T-0147 through T-0150 converted `hadara init` from a HADARA-dev-shaped bootstrap scaffold into a generic, profile-aware HADARA protocol scaffold with explicit follow-up maintenance commands. The design source is `docs/specs/HADARA_Init_Refactoring_Phase1_Development_Plan.md`; the implemented T-0150 behavior is now the current baseline.
 
 ### Init Profiles
 
@@ -1181,18 +1181,20 @@ T-0147 through T-0149 converted `hadara init` from a HADARA-dev-shaped bootstrap
 | No missing-doc references | Generated docs must not require docs that the selected profile does not create. | `tests/unit/init.test.ts` includes basic-profile absent-reference assertions. |
 | No optional-integration defaults | Generic init docs must not carry default Hermes/MCP/dashboard/provider roadmap assumptions. | Init tests and built CLI smokes grep generated docs for optional-surface leakage. |
 | Idempotent generation | Init keeps `writeFileIfMissing` behavior and does not overwrite existing user files. | Existing idempotence tests remain in `tests/unit/init.test.ts`. |
-| Local/private ignore boundary | Generated `.gitignore` ignores HADARA local/private paths but not top-level project-owned `data/`. | Init tests assert `.hadara/local/` exists and `data/` is absent. |
+| Local/private ignore boundary | Generated `.gitignore` ignores HADARA local/private paths but not top-level project-owned `data/`. `hadara init` does not eagerly create `.hadara/local/portable` runtime-store directories. | Init tests assert `.hadara/local/portable` is absent after init and `data/` is absent from generated ignore rules. |
 | Registration before reliance | Project-specific specs/contracts must be added to SOP Required Reading before agents are expected to use them. | Generated SOP and AGENTS include registration guidance. |
 
 ### Follow-Up Init Surfaces
 
-| Future Surface | Purpose | Boundary |
+All Phase 1 follow-up surfaces were implemented in T-0150 using the shared `hadara.init.followup.v1` report envelope. Write-capable follow-ups dry-run by default and require `--execute`.
+
+| Surface | Purpose | Boundary |
 |---|---|---|
-| Init scaffold doctor/migration guard | Detect stale old-profile, old-Hermes, broad-ignore, or prose-only scaffold patterns. | Read-only report first; no automatic overwrite. |
-| Lazy runtime-store creation | Avoid creating every local runtime directory during small/basic init. | Requires path/audit/doctor review before changing directory creation semantics. |
-| Profile upgrade command | Expand `basic` to `standard` or `governed` safely. | Must preserve user edits and show conflicts before writing. |
-| Required Reading registration command | Add project-specific specs/contracts to generated SOP tables idempotently. | Must validate referenced files and avoid duplicate rows. |
-| Optional integration enable commands | Add Hermes/MCP or other integration docs explicitly. | Optional integrations remain outside default `hadara init`. |
+| `hadara init doctor --json` | Detect stale old-profile, old-Hermes, broad-ignore, missing-core-doc, or prose-only scaffold patterns. | Read-only report; no automatic migration or overwrite. |
+| Lazy runtime-store creation | Avoid creating every local runtime directory during small/basic init. | Init writes scaffold docs only; later runtime commands create local/private stores when needed. |
+| `hadara init upgrade --profile <profile> --json [--execute]` | Expand `basic` to `standard` or `governed` safely. | Dry-run by default; execute creates only missing generated files and preserves user edits. |
+| `hadara init register-doc --path <path> --when <text> --purpose <text> --json [--execute]` | Add project-specific specs/contracts to generated SOP tables idempotently. | Dry-run by default; execute inserts a single Required Reading row and warns on missing referenced docs. |
+| `hadara init enable-integration --integration hermes|mcp --json [--execute]` | Add Hermes/MCP integration docs explicitly. | Dry-run by default; execute creates/registers integration docs only on request, keeping default init generic. |
 
 ## V1.0 Acceptance Checklist
 
@@ -1201,6 +1203,7 @@ Functional:
 - New projects can run `hadara init --profile governed`.
 - New projects can run default `hadara init` and receive the `standard` profile.
 - Generated init docs are profile-aware and table-framed according to the Init Scaffold Phase 1 Contract.
+- Init follow-up commands provide doctor, profile upgrade, Required Reading registration, and optional integration enable flows with dry-run-by-default write safety.
 - Task creation/read/validation works.
 - Evidence append and evidence list work.
 - Handoff update and handoff read work.

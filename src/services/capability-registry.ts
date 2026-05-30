@@ -66,7 +66,24 @@ export const HADARA_CLI_CAPABILITIES: CapabilitySurface[] = [
     enabledByDefault: true,
     availability: 'default',
     risk: 'medium',
-    notes: 'CLI-owned project bootstrap writes protocol files into the selected project root.'
+    notes: 'CLI-owned project bootstrap writes protocol files into the selected project root; follow-up doctor/upgrade/register-doc/enable-integration surfaces are dry-run or read-only by default.'
+  },
+  {
+    ...DEFAULT_READ,
+    name: 'hadara init doctor --json',
+    schemaVersion: 'hadara.init.followup.v1',
+    notes: 'Read-only scaffold drift report for stale init defaults and table-frame issues.'
+  },
+  {
+    name: 'hadara init upgrade/register-doc/enable-integration [--execute] --json',
+    category: 'write',
+    stable: true,
+    readOnly: false,
+    enabledByDefault: true,
+    availability: 'default',
+    risk: 'medium',
+    schemaVersion: 'hadara.init.followup.v1',
+    notes: 'Dry-run by default; --execute creates missing docs or SOP rows without overwriting existing files.'
   },
   {
     name: 'hadara task create <title>',

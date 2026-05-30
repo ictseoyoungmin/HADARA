@@ -57,3 +57,13 @@ Reason:
 - Optional surfaces such as Hermes, MCP, dashboard, provider, release, installer, and deployment work require project-specific registration before agents rely on them.
 - Generated `.gitignore` must ignore HADARA local/private state without hiding project-owned top-level paths such as `data/`.
 - T-0149 locked this decision with init template changes, README entry-surface cleanup, focused init tests, built CLI profile smokes, full Docker validation, and done-level harness validation.
+
+## D-0009: Init follow-up writes are explicit, dry-run-first maintenance surfaces
+
+Reason:
+- Projects need safe ways to inspect older scaffolds, upgrade profile docs, register local Required Reading, and enable optional integrations without re-running `hadara init` as a destructive migration.
+- `hadara init doctor --json` is read-only and reports scaffold drift with stable issue codes.
+- `hadara init upgrade`, `hadara init register-doc`, and `hadara init enable-integration` dry-run by default and require `--execute` for writes.
+- Profile upgrades create only missing generated files; they do not overwrite user-edited docs.
+- Runtime local/private stores should be created by the commands that need them, not eagerly by generic project initialization.
+- T-0150 locked this decision with focused init tests, full Docker validation, built CLI follow-up smokes, and done-level harness validation.

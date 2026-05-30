@@ -1,8 +1,8 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { resolveHadaraPaths } from '../core/paths';
 import { ensureDir, writeFileIfMissing } from '../core/fs';
-import { writeAuditEvent } from '../core/audit';
-import { getStringOption } from './args';
+import { getFlag, getRequiredStringOption, getStringOption } from './args';
 
 export type InitProfile = 'basic' | 'standard' | 'governed';
 
@@ -20,6 +20,40 @@ interface InitProfileSpec {
     testStrategy: boolean;
     roadmap: boolean;
   };
+}
+
+type InitFollowUpMode = 'dry-run' | 'execute';
+type InitActionStatus = 'planned' | 'created' | 'exists' | 'skipped';
+type InitIssueSeverity = 'warning' | 'error';
+
+interface InitAction {
+  action: string;
+  path?: string;
+  status: InitActionStatus;
+  summary: string;
+}
+
+interface InitIssue {
+  severity: InitIssueSeverity;
+  code: string;
+  path?: string;
+  message: string;
+}
+
+interface InitFollowUpReport {
+  schemaVersion: 'hadara.init.followup.v1';
+  command: string;
+  ok: boolean;
+  mode?: InitFollowUpMode;
+  profile?: InitProfile;
+  integration?: string;
+  actions: InitAction[];
+  issues: InitIssue[];
+}
+
+interface GeneratedScaffoldFile {
+  path: string;
+  content: string;
 }
 
 const INIT_PROFILE_SPECS: Record<InitProfile, InitProfileSpec> = {
@@ -74,59 +108,12 @@ export function initProject(projectRoot: string, profile = 'standard'): void {
   const normalizedProfile = parseInitProfile(profile);
   const spec = INIT_PROFILE_SPECS[normalizedProfile];
   const paths = resolveHadaraPaths({ projectRoot });
-  for (const dir of [
-    paths.dataRoot,
-    paths.configDir,
-    paths.secretsDir,
-    paths.sessionsDir,
-    paths.logsDir,
-    paths.auditDir,
-    paths.exportsDir,
-    paths.projectDocsDir,
-    paths.projectTasksDir,
-    paths.projectContextDir
-  ]) {
-    ensureDir(dir);
-  }
+  ensureDir(paths.projectDocsDir);
+  ensureDir(paths.projectTasksDir);
 
-  writeFileIfMissing(
-    path.join(projectRoot, 'docs', 'PROJECT_STATE.md'),
-    createProjectStateDoc(normalizedProfile)
-  );
-  writeFileIfMissing(path.join(projectRoot, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n');
-  writeFileIfMissing(path.join(projectRoot, 'docs', 'AGENT_HANDOFF.md'), createAgentHandoffDoc());
-  writeFileIfMissing(path.join(projectRoot, 'docs', 'IMPLEMENTATION_SOP.md'), createImplementationSopDoc(spec));
-  if (spec.docs.architecture) {
-    writeFileIfMissing(path.join(projectRoot, 'docs', 'ARCHITECTURE.md'), createArchitectureDoc(normalizedProfile));
+  for (const file of createGeneratedScaffoldFiles(normalizedProfile)) {
+    writeFileIfMissing(path.join(projectRoot, file.path), file.content);
   }
-  if (spec.docs.developmentSlices) {
-    writeFileIfMissing(path.join(projectRoot, 'docs', 'DEVELOPMENT_SLICES.md'), createDevelopmentSlicesDoc());
-  }
-  if (spec.docs.decisions) {
-    writeFileIfMissing(path.join(projectRoot, 'docs', 'DECISIONS.md'), createDecisionsDoc());
-  }
-  if (spec.docs.refactorLog) {
-    writeFileIfMissing(path.join(projectRoot, 'docs', 'REFACTOR_LOG.md'), createRefactorLogDoc());
-  }
-  if (spec.docs.securityModel) {
-    writeFileIfMissing(path.join(projectRoot, 'docs', 'SECURITY_MODEL.md'), createSecurityModelDoc());
-  }
-  if (spec.docs.testStrategy) {
-    writeFileIfMissing(path.join(projectRoot, 'docs', 'TEST_STRATEGY.md'), createTestStrategyDoc());
-  }
-  if (spec.docs.roadmap) {
-    writeFileIfMissing(path.join(projectRoot, 'docs', 'ROADMAP.md'), createRoadmapDoc());
-  }
-
-  writeFileIfMissing(path.join(projectRoot, 'AGENTS.md'), createAgentsDoc(spec));
-  writeFileIfMissing(path.join(projectRoot, '.gitignore'), createGitignoreDoc());
-
-  writeAuditEvent(paths.auditDir, {
-    actor: 'system',
-    event_type: 'init',
-    summary: `Initialized project at ${projectRoot} with ${normalizedProfile} profile`,
-    payload: { projectRoot, profile: normalizedProfile, requestedProfile: profile }
-  });
 
   console.log(`[HADARA] Initialized project: ${projectRoot}`);
   console.log(`[HADARA] Init profile: ${normalizedProfile}`);
@@ -140,11 +127,336 @@ export function parseInitProfile(value: string): InitProfile {
 export interface InitCommandInput {
   args: string[];
   projectRoot: string;
+  jsonOutput?: boolean;
 }
 
 export function handleInitCommand(input: InitCommandInput): boolean {
+  const subcommand = input.args[1];
+  if (subcommand === 'doctor') {
+    printInitFollowUpReport(createInitDoctorReport(input.projectRoot), input.jsonOutput);
+    return true;
+  }
+  if (subcommand === 'upgrade') {
+    const profile = parseInitProfile(getRequiredStringOption(input.args, '--profile'));
+    const report = createInitUpgradeReport(input.projectRoot, profile, getInitFollowUpMode(input.args));
+    printInitFollowUpReport(report, input.jsonOutput);
+    return true;
+  }
+  if (subcommand === 'register-doc') {
+    const report = createRequiredReadingRegistrationReport(input.projectRoot, {
+      documentPath: getRequiredStringOption(input.args, '--path'),
+      when: getRequiredStringOption(input.args, '--when'),
+      purpose: getRequiredStringOption(input.args, '--purpose'),
+      mode: getInitFollowUpMode(input.args)
+    });
+    printInitFollowUpReport(report, input.jsonOutput);
+    return true;
+  }
+  if (subcommand === 'enable-integration') {
+    const report = createIntegrationEnableReport(input.projectRoot, {
+      integration: getRequiredStringOption(input.args, '--integration'),
+      mode: getInitFollowUpMode(input.args)
+    });
+    printInitFollowUpReport(report, input.jsonOutput);
+    return true;
+  }
   initProject(input.projectRoot, getStringOption(input.args, '--profile', 'standard') ?? 'standard');
   return true;
+}
+
+function getInitFollowUpMode(args: string[]): InitFollowUpMode {
+  return getFlag(args, '--execute') ? 'execute' : 'dry-run';
+}
+
+function createGeneratedScaffoldFiles(profile: InitProfile): GeneratedScaffoldFile[] {
+  const spec = INIT_PROFILE_SPECS[profile];
+  const files: GeneratedScaffoldFile[] = [
+    { path: 'docs/PROJECT_STATE.md', content: createProjectStateDoc(profile) },
+    { path: 'docs/TASK_BOARD.md', content: '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n' },
+    { path: 'docs/AGENT_HANDOFF.md', content: createAgentHandoffDoc() },
+    { path: 'docs/IMPLEMENTATION_SOP.md', content: createImplementationSopDoc(spec) },
+    { path: 'AGENTS.md', content: createAgentsDoc(spec) },
+    { path: '.gitignore', content: createGitignoreDoc() }
+  ];
+  if (spec.docs.architecture) files.push({ path: 'docs/ARCHITECTURE.md', content: createArchitectureDoc(profile) });
+  if (spec.docs.developmentSlices) files.push({ path: 'docs/DEVELOPMENT_SLICES.md', content: createDevelopmentSlicesDoc() });
+  if (spec.docs.decisions) files.push({ path: 'docs/DECISIONS.md', content: createDecisionsDoc() });
+  if (spec.docs.refactorLog) files.push({ path: 'docs/REFACTOR_LOG.md', content: createRefactorLogDoc() });
+  if (spec.docs.securityModel) files.push({ path: 'docs/SECURITY_MODEL.md', content: createSecurityModelDoc() });
+  if (spec.docs.testStrategy) files.push({ path: 'docs/TEST_STRATEGY.md', content: createTestStrategyDoc() });
+  if (spec.docs.roadmap) files.push({ path: 'docs/ROADMAP.md', content: createRoadmapDoc() });
+  return files;
+}
+
+function createInitDoctorReport(projectRoot: string): InitFollowUpReport {
+  const issues: InitIssue[] = [];
+  const actions: InitAction[] = [];
+  const requiredCore = ['AGENTS.md', '.gitignore', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/IMPLEMENTATION_SOP.md'];
+  for (const relativePath of requiredCore) {
+    if (!fs.existsSync(path.join(projectRoot, relativePath))) {
+      issues.push({ severity: 'error', code: 'INIT_CORE_DOC_MISSING', path: relativePath, message: `${relativePath} is missing from the init scaffold.` });
+    }
+  }
+
+  for (const relativePath of ['HERMES.md', '.hermes.md']) {
+    if (fs.existsSync(path.join(projectRoot, relativePath))) {
+      issues.push({ severity: 'warning', code: 'INIT_STALE_HERMES_DEFAULT', path: relativePath, message: `${relativePath} looks like an old default Hermes scaffold file.` });
+    }
+  }
+
+  const gitignore = readProjectText(projectRoot, '.gitignore');
+  if (gitignore === null) {
+    issues.push({ severity: 'error', code: 'INIT_GITIGNORE_MISSING', path: '.gitignore', message: 'Generated scaffold .gitignore is missing.' });
+  } else if (/^data\/$/m.test(gitignore)) {
+    issues.push({ severity: 'warning', code: 'INIT_BROAD_DATA_IGNORE', path: '.gitignore', message: 'Top-level data/ is ignored; generated init should only ignore HADARA local/private state.' });
+  }
+
+  const sop = readProjectText(projectRoot, 'docs/IMPLEMENTATION_SOP.md');
+  if (sop !== null && /minimal|full|hadara-protocol/.test(sop)) {
+    issues.push({ severity: 'warning', code: 'INIT_OLD_PROFILE_NAME', path: 'docs/IMPLEMENTATION_SOP.md', message: 'SOP mentions old init profile names.' });
+  }
+
+  for (const [relativePath, headers] of Object.entries(CANONICAL_TABLE_HEADERS)) {
+    const content = readProjectText(projectRoot, relativePath);
+    if (content === null) continue;
+    for (const header of headers) {
+      if (!content.includes(header)) {
+        issues.push({ severity: 'warning', code: 'INIT_TABLE_FRAME_MISSING', path: relativePath, message: `${relativePath} is missing canonical table header: ${header}` });
+      }
+    }
+  }
+
+  if (issues.length === 0) {
+    actions.push({ action: 'doctor', status: 'exists', summary: 'Init scaffold matches current Phase 1 expectations.' });
+  }
+  return {
+    schemaVersion: 'hadara.init.followup.v1',
+    command: 'init.doctor',
+    ok: issues.every((issue) => issue.severity !== 'error'),
+    actions,
+    issues
+  };
+}
+
+function createInitUpgradeReport(projectRoot: string, profile: InitProfile, mode: InitFollowUpMode): InitFollowUpReport {
+  const actions: InitAction[] = [];
+  const issues: InitIssue[] = [];
+  for (const file of createGeneratedScaffoldFiles(profile)) {
+    const filePath = path.join(projectRoot, file.path);
+    if (fs.existsSync(filePath)) {
+      actions.push({ action: 'upgrade-doc', path: file.path, status: 'exists', summary: `${file.path} already exists and will not be overwritten.` });
+      continue;
+    }
+    if (mode === 'execute') {
+      const created = writeFileIfMissing(filePath, file.content);
+      actions.push({ action: 'upgrade-doc', path: file.path, status: created ? 'created' : 'exists', summary: created ? `${file.path} was created.` : `${file.path} already exists and was preserved.` });
+    } else {
+      actions.push({ action: 'upgrade-doc', path: file.path, status: 'planned', summary: `${file.path} would be created.` });
+    }
+  }
+  return {
+    schemaVersion: 'hadara.init.followup.v1',
+    command: 'init.upgrade',
+    ok: true,
+    mode,
+    profile,
+    actions,
+    issues
+  };
+}
+
+function createRequiredReadingRegistrationReport(
+  projectRoot: string,
+  input: { documentPath: string; when: string; purpose: string; mode: InitFollowUpMode }
+): InitFollowUpReport {
+  const relativePath = normalizeProjectRelativePath(input.documentPath);
+  const row = formatTableRow([`\`${relativePath}\``, input.when, input.purpose]);
+  return createSopRowUpdateReport(projectRoot, {
+    command: 'init.register-doc',
+    mode: input.mode,
+    row,
+    relativePath,
+    action: 'register-doc',
+    plannedSummary: `${relativePath} would be registered in SOP Required Reading.`,
+    createdSummary: `${relativePath} was registered in SOP Required Reading.`,
+    existsSummary: `${relativePath} is already registered in SOP Required Reading.`
+  });
+}
+
+function createIntegrationEnableReport(
+  projectRoot: string,
+  input: { integration: string; mode: InitFollowUpMode }
+): InitFollowUpReport {
+  const integration = parseIntegration(input.integration);
+  const relativePath = integration === 'hermes' ? 'docs/integrations/HERMES.md' : 'docs/integrations/MCP.md';
+  const content = integration === 'hermes' ? createHermesIntegrationDoc() : createMcpIntegrationDoc();
+  const actions: InitAction[] = [];
+  const issues: InitIssue[] = [];
+  const fullPath = path.join(projectRoot, relativePath);
+  if (fs.existsSync(fullPath)) {
+    actions.push({ action: 'enable-integration-doc', path: relativePath, status: 'exists', summary: `${relativePath} already exists and will not be overwritten.` });
+  } else if (input.mode === 'execute') {
+    writeFileIfMissing(fullPath, content);
+    actions.push({ action: 'enable-integration-doc', path: relativePath, status: 'created', summary: `${relativePath} was created.` });
+  } else {
+    actions.push({ action: 'enable-integration-doc', path: relativePath, status: 'planned', summary: `${relativePath} would be created.` });
+  }
+
+  const registration = createSopRowUpdateReport(projectRoot, {
+    command: 'init.enable-integration',
+    mode: input.mode,
+    row: formatTableRow([`\`${relativePath}\``, `${integration.toUpperCase()} integration work only`, `Project-specific optional ${integration.toUpperCase()} integration guidance.`]),
+    relativePath,
+    action: 'enable-integration-registration',
+    plannedSummary: `${relativePath} would be registered in SOP Required Reading.`,
+    createdSummary: `${relativePath} was registered in SOP Required Reading.`,
+    existsSummary: `${relativePath} is already registered in SOP Required Reading.`
+  });
+  return {
+    schemaVersion: 'hadara.init.followup.v1',
+    command: 'init.enable-integration',
+    ok: issues.length === 0 && registration.ok,
+    mode: input.mode,
+    integration,
+    actions: [...actions, ...registration.actions],
+    issues: [...issues, ...registration.issues]
+  };
+}
+
+function createSopRowUpdateReport(
+  projectRoot: string,
+  input: {
+    command: string;
+    mode: InitFollowUpMode;
+    row: string;
+    relativePath: string;
+    action: string;
+    plannedSummary: string;
+    createdSummary: string;
+    existsSummary: string;
+  }
+): InitFollowUpReport {
+  const actions: InitAction[] = [];
+  const issues: InitIssue[] = [];
+  const sopPath = path.join(projectRoot, 'docs', 'IMPLEMENTATION_SOP.md');
+  const sop = fs.existsSync(sopPath) ? fs.readFileSync(sopPath, 'utf8') : null;
+  if (sop === null) {
+    issues.push({ severity: 'error', code: 'INIT_SOP_MISSING', path: 'docs/IMPLEMENTATION_SOP.md', message: 'SOP Required Reading table cannot be updated because IMPLEMENTATION_SOP.md is missing.' });
+    return { schemaVersion: 'hadara.init.followup.v1', command: input.command, ok: false, mode: input.mode, actions, issues };
+  }
+  if (!fs.existsSync(path.join(projectRoot, input.relativePath))) {
+    issues.push({ severity: 'warning', code: 'INIT_REGISTERED_DOC_MISSING', path: input.relativePath, message: `${input.relativePath} does not exist yet.` });
+  }
+  if (sop.includes(`\`${input.relativePath}\``)) {
+    actions.push({ action: input.action, path: 'docs/IMPLEMENTATION_SOP.md', status: 'exists', summary: input.existsSummary });
+    return { schemaVersion: 'hadara.init.followup.v1', command: input.command, ok: true, mode: input.mode, actions, issues };
+  }
+  if (!sop.includes('| Document | When to Read | Purpose |')) {
+    issues.push({ severity: 'error', code: 'INIT_REQUIRED_READING_TABLE_MISSING', path: 'docs/IMPLEMENTATION_SOP.md', message: 'SOP Required Reading table header was not found.' });
+    return { schemaVersion: 'hadara.init.followup.v1', command: input.command, ok: false, mode: input.mode, actions, issues };
+  }
+  if (input.mode === 'execute') {
+    fs.writeFileSync(sopPath, insertRequiredReadingRow(sop, input.row), 'utf8');
+    actions.push({ action: input.action, path: 'docs/IMPLEMENTATION_SOP.md', status: 'created', summary: input.createdSummary });
+  } else {
+    actions.push({ action: input.action, path: 'docs/IMPLEMENTATION_SOP.md', status: 'planned', summary: input.plannedSummary });
+  }
+  return {
+    schemaVersion: 'hadara.init.followup.v1',
+    command: input.command,
+    ok: issues.every((issue) => issue.severity !== 'error'),
+    mode: input.mode,
+    actions,
+    issues
+  };
+}
+
+const CANONICAL_TABLE_HEADERS: Record<string, string[]> = {
+  'AGENTS.md': ['| Order | Document | When | Purpose |', '| Rule | Requirement | Evidence / Update Location |'],
+  'docs/PROJECT_STATE.md': ['| Field | Value |', '| Area | Status | Notes |', '| Source | Path | Purpose |'],
+  'docs/AGENT_HANDOFF.md': ['| Area | State | Notes |', '| Task | Summary | Evidence |', '| Issue | Impact | Next Step |', '| Step | Reason | Done Evidence |', '| Check | Latest Evidence | Notes |', '| History Type | Path | When to Use |'],
+  'docs/TASK_BOARD.md': ['| ID | Title | Status | Capsule | Notes |'],
+  'docs/IMPLEMENTATION_SOP.md': ['| Document | When to Read | Purpose |', '| Profile | Scale | Generated Docs | Intended Use | Special Notes |', '| Document | Required Structure |'],
+  'docs/ARCHITECTURE.md': ['| Field | Value |', '| Boundary | Rule | Notes |', '| Component | Path / Surface | Responsibility | Status |'],
+  'docs/DEVELOPMENT_SLICES.md': ['| Order | Slice | Capsule | Purpose | Done Evidence |'],
+  'docs/DECISIONS.md': ['| ID | Date | Decision | Status | Rationale | Evidence |'],
+  'docs/TEST_STRATEGY.md': ['| Field | Value |', '| Suite | Command | Purpose | Required For Done |', '| Step | Check | Evidence Location |', '| Check Type | Add Only When |'],
+  'docs/SECURITY_MODEL.md': ['| Mode | Rule | Approval Boundary |', '| Invariant | Rule | Evidence |', '| Check Type | Add To | When Required |'],
+  'docs/REFACTOR_LOG.md': ['| Date | Area | Change | Rationale | Evidence |'],
+  'docs/ROADMAP.md': ['| Order | Item | Purpose | Done Evidence |', '| Item | Reason Deferred | Revisit When |']
+};
+
+function printInitFollowUpReport(report: InitFollowUpReport, jsonOutput = false): void {
+  if (jsonOutput) {
+    console.log(JSON.stringify(report, null, 2));
+    if (!report.ok) process.exitCode = 6;
+    return;
+  }
+  console.log(`${report.ok ? 'passed' : 'failed'} | ${report.command} | ${report.actions.length} actions | ${report.issues.length} issues`);
+  if (!report.ok) process.exitCode = 6;
+}
+
+function readProjectText(projectRoot: string, relativePath: string): string | null {
+  const fullPath = path.join(projectRoot, relativePath);
+  return fs.existsSync(fullPath) ? fs.readFileSync(fullPath, 'utf8') : null;
+}
+
+function normalizeProjectRelativePath(value: string): string {
+  return value.replace(/\\/g, '/').replace(/^\.?\//, '');
+}
+
+function insertRequiredReadingRow(sop: string, row: string): string {
+  const lines = sop.split('\n');
+  const headerIndex = lines.findIndex((line) => line.trim() === '| Document | When to Read | Purpose |');
+  if (headerIndex < 0) return sop;
+  let insertAt = headerIndex + 2;
+  while (insertAt < lines.length && lines[insertAt].startsWith('|')) insertAt += 1;
+  lines.splice(insertAt, 0, row);
+  return lines.join('\n');
+}
+
+function parseIntegration(value: string): 'hermes' | 'mcp' {
+  if (value === 'hermes' || value === 'mcp') return value;
+  throw new Error(`unsupported init integration: ${value}; expected hermes or mcp`);
+}
+
+function createHermesIntegrationDoc(): string {
+  return `# Hermes Integration
+
+## Status
+
+| Field | Value |
+|---|---|
+| Enabled By | \`hadara init enable-integration --integration hermes --execute\` |
+| Default Init Surface | No |
+
+## Boundaries
+
+| Boundary | Rule |
+|---|---|
+| Registration | Keep this document registered in \`docs/IMPLEMENTATION_SOP.md\` before agents rely on it. |
+| Scope | Treat Hermes behavior as project-specific integration work, not generic HADARA init behavior. |
+`;
+}
+
+function createMcpIntegrationDoc(): string {
+  return `# MCP Integration
+
+## Status
+
+| Field | Value |
+|---|---|
+| Enabled By | \`hadara init enable-integration --integration mcp --execute\` |
+| Default Init Surface | No |
+
+## Boundaries
+
+| Boundary | Rule |
+|---|---|
+| Registration | Keep this document registered in \`docs/IMPLEMENTATION_SOP.md\` before agents rely on it. |
+| Scope | Treat MCP behavior as project-specific integration work, not generic HADARA init behavior. |
+| Writes | Do not add MCP write tools without explicit project approval and safety evidence. |
+`;
 }
 
 function createProjectStateDoc(profile: InitProfile): string {

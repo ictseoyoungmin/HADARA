@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { initProject, parseInitProfile } from '../../src/cli/init';
+import { handleInitCommand, initProject, parseInitProfile } from '../../src/cli/init';
 
 const roots: string[] = [];
 let logSpy: ReturnType<typeof vi.spyOn>;
@@ -23,6 +23,11 @@ afterEach(() => {
 });
 
 describe('init profiles', () => {
+  function lastJsonLog(): any {
+    const calls = logSpy.mock.calls;
+    return JSON.parse(String(calls[calls.length - 1][0]));
+  }
+
   function read(root: string, file: string): string {
     return fs.readFileSync(path.join(root, file), 'utf8');
   }
@@ -201,6 +206,7 @@ describe('init profiles', () => {
     expect(gitignore).toContain('node_modules/');
     expect(gitignore).toContain('.env');
     expect(gitignore).not.toContain('\ndata/\n');
+    expect(fs.existsSync(path.join(root, '.hadara', 'local', 'portable'))).toBe(false);
 
     fs.writeFileSync(path.join(root, '.gitignore'), 'custom\n', 'utf8');
     initProject(root);
@@ -249,6 +255,83 @@ describe('init profiles', () => {
       expect(fs.existsSync(path.join(root, '.hermes.md'))).toBe(false);
     }
   });
+
+  it('reports stale init scaffold drift without writing files', () => {
+    const root = tempProject();
+    initProject(root);
+    fs.writeFileSync(path.join(root, 'HERMES.md'), '# stale\n', 'utf8');
+    fs.appendFileSync(path.join(root, '.gitignore'), 'data/\n', 'utf8');
+
+    handleInitCommand({ args: ['init', 'doctor', '--json'], projectRoot: root, jsonOutput: true });
+
+    const report = lastJsonLog();
+    expect(report.schemaVersion).toBe('hadara.init.followup.v1');
+    expect(report.command).toBe('init.doctor');
+    expect(report.ok).toBe(true);
+    expect(report.issues.map((issue: any) => issue.code)).toEqual(expect.arrayContaining(['INIT_STALE_HERMES_DEFAULT', 'INIT_BROAD_DATA_IGNORE']));
+    expect(fs.readFileSync(path.join(root, 'HERMES.md'), 'utf8')).toBe('# stale\n');
+  });
+
+  it('upgrades profiles through dry-run planning and missing-file-only execution', () => {
+    const root = tempProject();
+    initProject(root, 'basic');
+    fs.writeFileSync(path.join(root, 'docs', 'DECISIONS.md'), '# Custom decisions\n', 'utf8');
+
+    handleInitCommand({ args: ['init', 'upgrade', '--profile', 'governed', '--json'], projectRoot: root, jsonOutput: true });
+    const dryRun = lastJsonLog();
+    expect(dryRun.mode).toBe('dry-run');
+    expect(dryRun.actions).toContainEqual(expect.objectContaining({ path: 'docs/ROADMAP.md', status: 'planned' }));
+    expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(false);
+
+    handleInitCommand({ args: ['init', 'upgrade', '--profile', 'governed', '--execute', '--json'], projectRoot: root, jsonOutput: true });
+    const executed = lastJsonLog();
+    expect(executed.mode).toBe('execute');
+    expect(executed.actions).toContainEqual(expect.objectContaining({ path: 'docs/ROADMAP.md', status: 'created' }));
+    expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(true);
+    expect(fs.readFileSync(path.join(root, 'docs', 'DECISIONS.md'), 'utf8')).toBe('# Custom decisions\n');
+  });
+
+  it('registers project-specific Required Reading rows idempotently', () => {
+    const root = tempProject();
+    initProject(root);
+    fs.mkdirSync(path.join(root, 'docs', 'specs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'specs', 'LOCAL.md'), '# Local spec\n', 'utf8');
+
+    handleInitCommand({
+      args: ['init', 'register-doc', '--path', 'docs/specs/LOCAL.md', '--when', 'Local work', '--purpose', 'Local spec context', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+    const dryRun = lastJsonLog();
+    expect(dryRun.actions).toContainEqual(expect.objectContaining({ status: 'planned' }));
+    expect(read(root, 'docs/IMPLEMENTATION_SOP.md')).not.toContain('docs/specs/LOCAL.md');
+
+    const executeArgs = ['init', 'register-doc', '--path', 'docs/specs/LOCAL.md', '--when', 'Local work', '--purpose', 'Local spec context', '--execute', '--json'];
+    handleInitCommand({ args: executeArgs, projectRoot: root, jsonOutput: true });
+    handleInitCommand({ args: executeArgs, projectRoot: root, jsonOutput: true });
+    const sop = read(root, 'docs/IMPLEMENTATION_SOP.md');
+    expect(sop.match(/docs\/specs\/LOCAL.md/g)?.length).toBe(1);
+    expect(sop).toContain('| `docs/specs/LOCAL.md` | Local work | Local spec context |');
+  });
+
+  it('enables optional integration docs only through explicit execute', () => {
+    const root = tempProject();
+    initProject(root);
+
+    handleInitCommand({ args: ['init', 'enable-integration', '--integration', 'mcp', '--json'], projectRoot: root, jsonOutput: true });
+    const dryRun = lastJsonLog();
+    expect(dryRun.mode).toBe('dry-run');
+    expect(dryRun.integration).toBe('mcp');
+    expect(fs.existsSync(path.join(root, 'docs', 'integrations', 'MCP.md'))).toBe(false);
+
+    handleInitCommand({ args: ['init', 'enable-integration', '--integration', 'mcp', '--execute', '--json'], projectRoot: root, jsonOutput: true });
+    const executed = lastJsonLog();
+    expect(executed.actions).toContainEqual(expect.objectContaining({ path: 'docs/integrations/MCP.md', status: 'created' }));
+    expect(read(root, 'docs/integrations/MCP.md')).toContain('Enabled By');
+    expect(read(root, 'docs/IMPLEMENTATION_SOP.md')).toContain('| `docs/integrations/MCP.md` | MCP integration work only | Project-specific optional MCP integration guidance. |');
+    expect(fs.existsSync(path.join(root, 'HERMES.md'))).toBe(false);
+  });
+
 
   it('keeps the repository SOP aligned with the generated scaffold structure standard', () => {
     const sop = fs.readFileSync(path.join(process.cwd(), 'docs', 'IMPLEMENTATION_SOP.md'), 'utf8');

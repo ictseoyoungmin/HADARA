@@ -42,6 +42,8 @@ T-0099 adds TUI design alignment before production TUI work. The TUI is planned 
 
 Detailed capsule candidates live in `docs/V1_0_CAPSULE_BACKLOG.md`. Detailed schemas and implementation notes live in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`. Release/install/package-smoke sequencing is tracked in `docs/DEVELOPMENT_SLICES.md` and `docs/V1_0_CAPSULE_BACKLOG.md`; a workspace-local ignored supporting plan may exist under `docs/specs/` for agents.
 
+Init scaffold Phase 1 is complete through T-0150: generic/profile-aware init docs are table-framed, optional integrations are explicit opt-ins, follow-up maintenance commands exist for doctor/upgrade/Required Reading/integration enablement, and runtime local/private stores are no longer eagerly created by `hadara init`.
+
 ## v0.4 Single-Agent Run State
 
 Track the active task/run explicitly so agents do not infer current work only from the last visible capsule or compact handoff.

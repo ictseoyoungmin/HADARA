@@ -32,6 +32,10 @@ function printHelp(): void {
 
 Usage:
   hadara init [--project <path>] [--profile basic|standard|governed]
+  hadara init doctor [--json]
+  hadara init upgrade --profile basic|standard|governed [--execute] [--json]
+  hadara init register-doc --path <path> --when <text> --purpose <text> [--execute] [--json]
+  hadara init enable-integration --integration hermes|mcp [--execute] [--json]
   hadara doctor
   hadara task create <title>
   hadara task list
@@ -86,7 +90,7 @@ async function main(args = process.argv.slice(2)): Promise<void> {
 
   switch (command) {
     case 'init': {
-      if (handleInitCommand({ args, projectRoot: paths.projectRoot })) return;
+      if (handleInitCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
