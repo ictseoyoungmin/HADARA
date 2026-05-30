@@ -6,7 +6,7 @@
 |---|---|
 | Task | T-0156 |
 | Status | Done |
-| Last Updated | 2026-05-30T17:31:43+09:00 |
+| Last Updated | 2026-05-30T17:51:13+09:00 |
 
 ## Last Completed
 
@@ -19,6 +19,7 @@
 | Docker validation and built CLI smokes passed. | `EVIDENCE.md`, `evidence.jsonl` |
 | Project docs updated for completion. | `docs/TASK_BOARD.md`, `docs/PROJECT_STATE.md`, `docs/DEVELOPMENT_SLICES.md`, `docs/AGENT_HANDOFF.md` |
 | Done-level harness passed. | 2026-05-30T08:31:43.011Z evidence |
+| Added profile policy follow-up. | `summary.profile` separates declared/detected/target/source; Required Reading drift checks section table rows; 2026-05-30T08:51:13.168Z evidence. |
 
 ## Next Recommended Step
 

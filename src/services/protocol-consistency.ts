@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { createProfileConsistencyDiagnostics } from './protocol-profile';
+import { createProfileConsistencyDiagnostics, createProtocolProfileSummary, ProtocolProfileSummary } from './protocol-profile';
 import { isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule, TASK_FILES } from '../task/task-capsule';
 
 export type ProtocolConsistencyScope = 'docs' | 'tasks' | 'profile' | 'all';
@@ -47,6 +47,7 @@ export interface ProtocolConsistencyReport {
     checkedTasks: number;
     activeTaskId: string | null;
     detectedProfile: 'basic' | 'standard' | 'governed' | 'unknown' | 'mixed';
+    profile: ProtocolProfileSummary;
     issueCounts: {
       error: number;
       warning: number;
@@ -151,6 +152,7 @@ export function createProfileProtocolConsistencyReport(projectRoot: string, now 
     checkedTasks: 0,
     activeTaskId: null,
     detectedProfile: diagnostics.detectedProfile,
+    profileSummary: diagnostics.profileSummary,
     remediations
   });
 }
@@ -171,6 +173,7 @@ function buildReport(
     checkedTasks?: number;
     activeTaskId?: string | null;
     detectedProfile?: 'basic' | 'standard' | 'governed' | 'unknown' | 'mixed';
+    profileSummary?: ProtocolProfileSummary;
     remediations?: ProtocolRemediation[];
   }
 ): ProtocolConsistencyReport {
@@ -192,6 +195,7 @@ function buildReport(
       checkedTasks: options?.checkedTasks ?? (task ? 1 : 0),
       activeTaskId: options?.activeTaskId ?? (task && !isDoneStatus(taskMeta?.taskStatus ?? '') ? task.id : null),
       detectedProfile: options?.detectedProfile ?? detectProfile(projectRoot),
+      profile: options?.profileSummary ?? createProtocolProfileSummary(projectRoot),
       issueCounts: counts
     },
     ...(task && taskMeta

@@ -34,10 +34,19 @@ export interface ProfileDiagnosticRemediation {
 
 export interface ProfileDiagnostics {
   detectedProfile: ProtocolProfile;
+  declaredProfile: ProtocolProfile;
   targetProfile: TargetProtocolProfile | 'unknown';
+  profileSummary: ProtocolProfileSummary;
   checkedDocs: Set<string>;
   issues: ProfileDiagnosticIssue[];
   remediations: ProfileDiagnosticRemediation[];
+}
+
+export interface ProtocolProfileSummary {
+  declared: ProtocolProfile;
+  detected: ProtocolProfile;
+  target: TargetProtocolProfile | 'unknown';
+  source: 'metadata-and-docset';
 }
 
 const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/IMPLEMENTATION_SOP.md'];
@@ -48,8 +57,16 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
   const checkedDocs = new Set<string>();
   const issues: ProfileDiagnosticIssue[] = [];
   const docSet = getProfileDocSet(projectRoot);
+  const metadata = readProfileMetadata(projectRoot);
   const detectedProfile = detectProfileFromDocSet(docSet);
-  const targetProfile = inferTargetProfile(docSet);
+  const declaredProfile = inferDeclaredProfile(metadata);
+  const targetProfile = inferTargetProfile(docSet, declaredProfile);
+  const profileSummary = {
+    declared: declaredProfile,
+    detected: detectedProfile,
+    target: targetProfile,
+    source: 'metadata-and-docset' as const
+  };
   const requiredDocs = targetProfile === 'unknown' ? CORE_PROJECT_DOCS : requiredDocsForProfile(targetProfile);
   const missingTargetDocs = requiredDocs.filter((relativePath) => !exists(projectRoot, relativePath));
 
@@ -82,7 +99,6 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
     });
   }
 
-  const metadata = readProfileMetadata(projectRoot);
   const metadataTargets = [
     { path: 'docs/PROJECT_STATE.md', actual: metadata.projectState },
     { path: 'docs/IMPLEMENTATION_SOP.md', actual: metadata.sop }
@@ -109,7 +125,7 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
           severity: 'warning',
           area: 'profile',
           path: item.path,
-          message: `${item.path} declares ${item.actual} while project docs imply ${targetProfile}.`,
+          message: `${item.path} declares ${item.actual} while metadata and project docs target ${targetProfile}.`,
           expected: targetProfile,
           actual: item.actual,
           remediationId: 'profile-metadata-align'
@@ -148,7 +164,20 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
   }
 
   const remediations = buildProfileRemediations(targetProfile, missingTargetDocs, issues);
-  return { detectedProfile, targetProfile, checkedDocs, issues, remediations };
+  return { detectedProfile, declaredProfile, targetProfile, profileSummary, checkedDocs, issues, remediations };
+}
+
+export function createProtocolProfileSummary(projectRoot: string): ProtocolProfileSummary {
+  const docSet = getProfileDocSet(projectRoot);
+  const metadata = readProfileMetadata(projectRoot);
+  const detected = detectProfileFromDocSet(docSet);
+  const declared = inferDeclaredProfile(metadata);
+  return {
+    declared,
+    detected,
+    target: inferTargetProfile(docSet, declared),
+    source: 'metadata-and-docset'
+  };
 }
 
 function buildProfileRemediations(
@@ -230,7 +259,14 @@ function detectProfileFromDocSet(docSet: ReturnType<typeof getProfileDocSet>): P
   return 'unknown';
 }
 
-function inferTargetProfile(docSet: ReturnType<typeof getProfileDocSet>): TargetProtocolProfile | 'unknown' {
+function inferTargetProfile(docSet: ReturnType<typeof getProfileDocSet>, declaredProfile: ProtocolProfile): TargetProtocolProfile | 'unknown' {
+  const candidates = [highestDocSetProfile(docSet), declaredProfile].filter(
+    (profile): profile is TargetProtocolProfile => profile === 'basic' || profile === 'standard' || profile === 'governed'
+  );
+  return candidates.sort((a, b) => profileRank(b) - profileRank(a))[0] ?? 'unknown';
+}
+
+function highestDocSetProfile(docSet: ReturnType<typeof getProfileDocSet>): TargetProtocolProfile | 'unknown' {
   if (docSet.governed.present.length > 0) return 'governed';
   if (docSet.standard.present.length > 0) return 'standard';
   if (docSet.core.present.length > 0) return 'basic';
@@ -252,6 +288,13 @@ function readProfileMetadata(projectRoot: string): { projectState: TargetProtoco
     projectState: readProjectStateProfile(projectRoot),
     sop: readSopProfile(projectRoot)
   };
+}
+
+function inferDeclaredProfile(metadata: { projectState: TargetProtocolProfile | null; sop: TargetProtocolProfile | null }): ProtocolProfile {
+  const declared = [metadata.projectState, metadata.sop].filter((profile): profile is TargetProtocolProfile => Boolean(profile));
+  if (declared.length === 0) return 'unknown';
+  if (new Set(declared).size > 1) return 'mixed';
+  return declared[0];
 }
 
 function readProjectStateProfile(projectRoot: string): TargetProtocolProfile | null {
@@ -278,7 +321,9 @@ function readSopProfile(projectRoot: string): TargetProtocolProfile | null {
 function missingRequiredReadingPaths(projectRoot: string, relativePath: string, requiredPaths: string[]): string[] {
   if (!exists(projectRoot, relativePath)) return requiredPaths;
   const content = fs.readFileSync(path.join(projectRoot, relativePath), 'utf8');
-  return requiredPaths.filter((requiredPath) => !content.includes(requiredPath));
+  const requiredReading = readMarkdownSection(content, '## Required Reading');
+  const listedPaths = new Set(parseMarkdownRows(requiredReading).flatMap((row) => row.flatMap((cell) => [...cell.matchAll(/`([^`]+)`/g)].map((match) => match[1]))));
+  return requiredPaths.filter((requiredPath) => !listedPaths.has(requiredPath));
 }
 
 function describeDocSet(docSet: ReturnType<typeof getProfileDocSet>): string {
@@ -309,6 +354,20 @@ function firstMatch(content: string, pattern: RegExp): string | null {
 function normalizeProfile(value: string | null | undefined): TargetProtocolProfile | null {
   const normalized = value?.trim().replace(/`/g, '').toLowerCase();
   return normalized === 'basic' || normalized === 'standard' || normalized === 'governed' ? normalized : null;
+}
+
+function profileRank(profile: TargetProtocolProfile): number {
+  if (profile === 'governed') return 3;
+  if (profile === 'standard') return 2;
+  return 1;
+}
+
+function readMarkdownSection(content: string, heading: string): string {
+  const start = content.indexOf(heading);
+  if (start < 0) return '';
+  const afterHeading = content.slice(start + heading.length);
+  const nextHeading = afterHeading.search(/\n##\s+/);
+  return nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading;
 }
 
 function parseMarkdownRows(content: string): string[][] {

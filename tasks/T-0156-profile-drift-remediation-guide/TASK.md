@@ -45,3 +45,4 @@ Done
 | 2026-05-30T17:20:16+09:00 | Draft | Initial task scaffold. | hadara task create |
 | 2026-05-30T17:20:16+09:00 | Active | Begin Profile Drift Remediation Guide implementation. | This capsule |
 | 2026-05-30T17:29:30+09:00 | Done | Implemented profile-scope doctor reports and manual remediation guidance with Docker validation. | `EVIDENCE.md`, built CLI smokes |
+| 2026-05-30T17:51:13+09:00 | Done | Added declared/detected/target profile summary policy and stricter Required Reading table checks. | `EVIDENCE.md`, profile policy follow-up |

@@ -195,6 +195,12 @@ describe('Profile protocol consistency report', () => {
         checkedTasks: 0,
         activeTaskId: null,
         detectedProfile: 'governed',
+        profile: {
+          declared: 'basic',
+          detected: 'governed',
+          target: 'governed',
+          source: 'metadata-and-docset'
+        },
         issueCounts: {
           error: 0
         }
@@ -222,6 +228,12 @@ describe('Profile protocol consistency report', () => {
 
     expect(report.ok).toBe(true);
     expect(report.summary.detectedProfile).toBe('mixed');
+    expect(report.summary.profile).toMatchObject({
+      declared: 'unknown',
+      detected: 'mixed',
+      target: 'governed',
+      source: 'metadata-and-docset'
+    });
     expect(report.issues.map((issue) => issue.code)).toEqual(
       expect.arrayContaining(['PROFILE_DOC_SET_MIXED', 'PROFILE_REQUIRED_DOC_MISSING'])
     );
@@ -233,6 +245,66 @@ describe('Profile protocol consistency report', () => {
       mode: 'manual',
       command: 'hadara init upgrade --profile governed --json',
       targetPaths: expect.arrayContaining(['docs/ARCHITECTURE.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md'])
+    });
+  });
+
+  it('uses declared governed metadata as the target when only standard docs exist', () => {
+    const root = tempProject();
+    writeProfileDocs(root, 'standard');
+    writeProfileMetadata(root, 'governed');
+
+    const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.summary.profile).toMatchObject({
+      declared: 'governed',
+      detected: 'standard',
+      target: 'governed',
+      source: 'metadata-and-docset'
+    });
+    expect(report.issues.map((issue) => issue.code)).toEqual(expect.arrayContaining(['PROFILE_REQUIRED_DOC_MISSING']));
+    expect(report.issues.find((issue) => issue.path === 'docs/SECURITY_MODEL.md')).toMatchObject({
+      expected: 'docs/SECURITY_MODEL.md present'
+    });
+    expect(report.remediations.find((candidate) => candidate.id === 'profile-doc-set-complete')).toMatchObject({
+      command: 'hadara init upgrade --profile governed --json',
+      targetPaths: expect.arrayContaining(['docs/SECURITY_MODEL.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md'])
+    });
+  });
+
+  it('uses partial governed docs as the target when metadata declares standard', () => {
+    const root = tempProject();
+    writeProfileDocs(root, 'standard');
+    fs.writeFileSync(path.join(root, 'docs', 'SECURITY_MODEL.md'), '# SECURITY_MODEL\n', 'utf8');
+    writeProfileMetadata(root, 'standard');
+
+    const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.summary.profile).toMatchObject({
+      declared: 'standard',
+      detected: 'mixed',
+      target: 'governed',
+      source: 'metadata-and-docset'
+    });
+    expect(report.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(['PROFILE_DOC_SET_MIXED', 'PROFILE_METADATA_DRIFT', 'PROFILE_REQUIRED_DOC_MISSING'])
+    );
+  });
+
+  it('requires AGENTS profile paths inside the Required Reading table', () => {
+    const root = tempProject();
+    writeProfileDocs(root, 'governed');
+    writeProfileMetadata(root, 'governed');
+    fs.writeFileSync(
+      path.join(root, 'AGENTS.md'),
+      '# AGENTS\n\nMention `docs/ROADMAP.md` in prose only.\n\n## Required Reading\n\n1. `docs/PROJECT_STATE.md`\n2. `docs/AGENT_HANDOFF.md`\n3. `docs/TASK_BOARD.md`\n4. `docs/IMPLEMENTATION_SOP.md`\n',
+      'utf8'
+    );
+
+    const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.issues.find((issue) => issue.path === 'AGENTS.md')).toMatchObject({
+      code: 'PROFILE_REQUIRED_READING_DRIFT',
+      expected: expect.stringContaining('docs/ROADMAP.md')
     });
   });
 });
@@ -363,6 +435,19 @@ function writeProfileDocs(root: string, profile: 'standard' | 'governed'): void 
       fs.writeFileSync(path.join(root, 'docs', file), `# ${file.replace(/\.md$/, '')}\n`, 'utf8');
     }
   }
+}
+
+function writeProfileMetadata(root: string, profile: 'basic' | 'standard' | 'governed'): void {
+  fs.writeFileSync(
+    path.join(root, 'docs', 'PROJECT_STATE.md'),
+    `# PROJECT_STATE\n\n| Field | Value |\n|---|---|\n| HADARA Profile | ${profile} |\n`,
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'),
+    `# IMPLEMENTATION_SOP\n\nThis repository was initialized with the \`${profile}\` HADARA profile.\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| \`docs/PROJECT_STATE.md\` | Every session | Current state. |\n| \`docs/AGENT_HANDOFF.md\` | Every session | Handoff. |\n| \`docs/TASK_BOARD.md\` | Every session | Work queue. |\n| \`docs/IMPLEMENTATION_SOP.md\` | Every session | Workflow. |\n| \`docs/ARCHITECTURE.md\` | Architecture work | System map. |\n| \`docs/DEVELOPMENT_SLICES.md\` | Slice work | Work order. |\n| \`docs/DECISIONS.md\` | Decision work | Decision log. |\n| \`docs/TEST_STRATEGY.md\` | Validation work | Test baseline. |\n| \`docs/SECURITY_MODEL.md\` | Security work | Security boundary. |\n| \`docs/REFACTOR_LOG.md\` | Refactor work | Refactor log. |\n| \`docs/ROADMAP.md\` | Roadmap work | Roadmap. |\n`,
+    'utf8'
+  );
 }
 
 function replaceInFile(filePath: string, before: string, after: string): void {

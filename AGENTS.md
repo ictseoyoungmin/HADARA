@@ -4,20 +4,22 @@ This repository must be developed using the HADARA protocol.
 
 ## Required Reading
 
-1. `docs/PROJECT_STATE.md`
-2. `docs/AGENT_HANDOFF.md`
-3. `docs/TASK_BOARD.md`
-4. `docs/IMPLEMENTATION_SOP.md`
-5. `docs/DEVELOPMENT_SLICES.md` when starting, completing, or reclassifying a development slice
-6. `docs/ARCHITECTURE.md` when changing architecture, boundaries, or runtime surfaces
-7. `docs/DECISIONS.md` when adding or revising decisions
-8. `docs/TEST_STRATEGY.md` when changing validation expectations
-9. `docs/SECURITY_MODEL.md` when changing permissions, secrets, storage, MCP, or execution boundaries
-10. `docs/REFACTOR_LOG.md` when doing broad refactors or cleanup sequences
-11. `docs/ROADMAP.md` when changing release, scope, or deferred-work boundaries
-12. Active `tasks/T-*/TASK.md`
-13. Task Capsule files required by `docs/IMPLEMENTATION_SOP.md`
-14. Project-specific specs or roadmap documents referenced by the current task
+| Document | When to Read | Purpose |
+|---|---|---|
+| `docs/PROJECT_STATE.md` | Every session | Current project state. |
+| `docs/AGENT_HANDOFF.md` | Every session | Compact current-state handoff. |
+| `docs/TASK_BOARD.md` | Every session | Task queue and capsule paths. |
+| `docs/IMPLEMENTATION_SOP.md` | Every session | Workflow rules. |
+| `docs/DEVELOPMENT_SLICES.md` | Starting, completing, or reclassifying a development slice. | Slice order and status. |
+| `docs/ARCHITECTURE.md` | Changing architecture, boundaries, or runtime surfaces. | System structure. |
+| `docs/DECISIONS.md` | Adding or revising decisions. | Decision record. |
+| `docs/TEST_STRATEGY.md` | Changing validation expectations. | Validation baseline. |
+| `docs/SECURITY_MODEL.md` | Changing permissions, secrets, storage, MCP, or execution boundaries. | Security constraints. |
+| `docs/REFACTOR_LOG.md` | Doing broad refactors or cleanup sequences. | Refactor continuity. |
+| `docs/ROADMAP.md` | Changing release, scope, or deferred-work boundaries. | Roadmap and scope boundaries. |
+| Active `tasks/T-*/TASK.md` | Every implementation session. | Active capsule scope. |
+| Task Capsule files required by `docs/IMPLEMENTATION_SOP.md` | Every implementation session. | Capsule evidence and handoff. |
+| Project-specific specs or roadmap documents referenced by the current task | When referenced by the active task. | Task-specific constraints. |
 
 `docs/AGENT_HANDOFF.md` is compact current-state handoff, not full project history. Follow its Historical Index when older completed-task or validation history is needed.
 
