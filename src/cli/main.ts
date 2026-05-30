@@ -24,6 +24,7 @@ import { handleTuiCommand } from './tui';
 import { handleInstallCommand } from './install';
 import { handleSmokeCommand } from './smoke';
 import { handlePackageCommand } from './package-smoke';
+import { handleProtocolCommand } from './protocol';
 import { getFlag, getStringOption } from './args';
 import { cliErrorExitCode, createCliErrorReport } from './errors';
 
@@ -44,6 +45,7 @@ Usage:
   hadara evidence list --task <task-id> [--limit <n>] [--include-private] [--json]
   hadara debt list [--json]
   hadara debt show <id> [--json]
+  hadara protocol doctor --task <task-id> [--json]
   hadara tools list [--json]
   hadara handoff update --task <task-id> [--summary <text>] [--next <text>]
   hadara write preflight <command...> [--json]
@@ -111,6 +113,11 @@ async function main(args = process.argv.slice(2)): Promise<void> {
 
     case 'tools': {
       if (handleToolsCommand({ args, jsonOutput })) return;
+      break;
+    }
+
+    case 'protocol': {
+      if (handleProtocolCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 

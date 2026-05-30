@@ -1,0 +1,71 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { handleProtocolCommand } from '../../src/cli/protocol';
+import { createTaskCapsule } from '../../src/task/task-capsule';
+
+const roots: string[] = [];
+
+function tempProject(): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-protocol-cli-'));
+  roots.push(dir);
+  fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\nNo active task yet.\n', 'utf8');
+  fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
+  return dir;
+}
+
+afterEach(() => {
+  for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
+  vi.restoreAllMocks();
+  process.exitCode = undefined;
+});
+
+describe('protocol CLI command handler', () => {
+  it('prints JSON for protocol doctor --task', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'CLI protocol');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\nActive: ${task.id}\n`, 'utf8');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleProtocolCommand({
+      args: ['protocol', 'doctor', '--task', task.id, '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    expect(process.exitCode).toBeUndefined();
+    const payload = JSON.parse(String(log.mock.calls[0][0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.protocol.consistency.v1',
+      command: 'protocol.doctor',
+      ok: true,
+      task: {
+        id: task.id,
+        taskStatus: 'Draft',
+        taskBoardStatus: 'Draft'
+      }
+    });
+  });
+
+  it('sets exit code 6 when task-scoped protocol errors are present', () => {
+    const root = tempProject();
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleProtocolCommand({
+      args: ['protocol', 'doctor', '--task', 'T-9999'],
+      projectRoot: root,
+      jsonOutput: false
+    });
+
+    expect(handled).toBe(true);
+    expect(process.exitCode).toBe(6);
+    expect(log.mock.calls.map((call) => String(call[0])).join('\n')).toContain('TASK_NOT_FOUND');
+  });
+
+  it('ignores unrelated protocol subcommands for the top-level dispatcher', () => {
+    expect(handleProtocolCommand({ args: ['protocol', 'unknown'], projectRoot: tempProject(), jsonOutput: true })).toBe(false);
+  });
+});
