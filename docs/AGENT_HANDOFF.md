@@ -6,7 +6,7 @@
 |---|---|---|
 | Branch | main | Working tree contains T-0152 changes. |
 | Current Phase | Project Protocol Consistency Phase 2 | Phase 1 init scaffold/follow-up work is complete through T-0151. |
-| Latest Completed Task | T-0152 Task Capsule Scaffold Frame Alignment | New Task Capsules now use table-first v2 frames, evidence Markdown includes visibility/JSONL columns, and validation remains compatible with legacy capsule frames. |
+| Latest Completed Task | T-0152 Task Capsule Scaffold Frame Alignment | New Task Capsules now use table-first v2 frames, evidence Markdown includes visibility/JSONL columns, validation remains compatible with legacy capsule frames, and `/workspace/dist` was refreshed for the actual package bin. |
 | Active / Next Task | T-0153 Task Capsule Consistency Doctor | Next Phase 2 slice should add a read-only per-capsule protocol consistency report. |
 | Validation Baseline | Docker full check passed | Latest Docker temp-copy `npm run check` passed with 57 files and 421 tests. |
 
@@ -16,7 +16,7 @@
 |---|---|---|
 | T-0150 Init Follow-up Commands Completion | Completed init doctor, profile upgrade, Required Reading registration, optional integration enablement, and lazy runtime-store behavior. | T-0150 capsule evidence; full check passed with 57 files / 416 tests; done-level harness `ok: true`. |
 | T-0151 Init Follow-up Hardening | Hardened init follow-up wording, profile metadata merge/drift detection, strict registration checks, and integration write rollback behavior. | T-0151 capsule evidence; focused init tests passed with 19 tests; full check passed with 57 files / 421 tests; done-level harness `ok: true`. |
-| T-0152 Task Capsule Scaffold Frame Alignment | Assimilated Phase 2 plan into main docs, implemented Task Capsule v2 table frames, updated evidence/harness/operational-debt compatibility, and preserved legacy capsule validation. | T-0152 evidence: focused checks passed with 3 files / 50 tests; full Docker `npm run check` passed with 57 files / 421 tests; done-level harness `ok: true`. |
+| T-0152 Task Capsule Scaffold Frame Alignment | Assimilated Phase 2 plan into main docs, implemented Task Capsule v2 table frames, updated evidence/harness/operational-debt compatibility, preserved legacy capsule validation, and refreshed `/workspace/dist` for `package.json` bin usage. | T-0152 evidence: `npm run build` passed and dist was copied to `/workspace/dist`; unit command passed with 46 files / 345 tests; full check passed with 58 files / 422 tests; hadara-dev and hadara-recycle dist smoke checks passed; done-level harness `ok: true`. |
 
 ## Current Known Problems
 
@@ -37,7 +37,8 @@
 | Check | Latest Evidence | Notes |
 |---|---|---|
 | Focused protocol scaffold checks | Docker temp-copy `npx vitest run tests/unit/operational-debt.test.ts tests/harness/task-capsule.test.ts tests/harness/harness-validate.test.ts` passed with 3 files and 50 tests. | Covers v2 scaffold frames, evidence table shape, harness compatibility, and operational-debt acceptance detection. |
-| Full repository check | Docker temp-copy `npm run check` passed with 57 files and 421 tests. | Host dependencies were unavailable; Docker was used per SOP. |
+| Full repository check | Docker temp-copy `npm run check` passed with 58 files and 422 tests. | Host dependencies were unavailable; Docker was used per SOP. |
+| Dist/bin smoke | `node dist/cli/main.js task create "Task Capsule Scaffold Smoke" --project <tmp>` passed in both hadara-dev and hadara-recycle. | Smoke verified v2 `TASK`, `PLAN`, `ACCEPTANCE`, `TESTS`, `HANDOFF`, `EVIDENCE`, and empty `evidence.jsonl`. |
 | Done-level harness | Docker built CLI `node dist/cli/main.js harness validate --task T-0152 --level done --json --project /workspace` returned `ok: true` with no issues. | Run after T-0152 docs/evidence updates. |
 
 ## Historical Index

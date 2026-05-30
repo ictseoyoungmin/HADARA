@@ -6,7 +6,7 @@
 |---|---|
 | Task | T-0152 |
 | Status | Done |
-| Last Updated | 2026-05-30T06:04:22Z |
+| Last Updated | 2026-05-30T06:32:00Z |
 
 ## Last Completed
 
@@ -15,6 +15,7 @@
 | Phase 2 plan assimilated into tracked docs. | Docs updated. |
 | Task Capsule v2 scaffold implementation started. | Focused scaffold/harness tests passed. |
 | Task Capsule v2 scaffold implementation completed. | Docker full `npm run check` passed with 57 files and 421 tests. |
+| Dist/bin reflection verified. | `/workspace/dist` refreshed; hadara-dev and hadara-recycle `node dist/cli/main.js task create` smoke checks generated v2 frames and empty `evidence.jsonl`. |
 
 ## Next Recommended Step
 

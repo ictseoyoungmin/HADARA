@@ -43,3 +43,4 @@ Done
 |---|---|---|---|
 | 2026-05-30T05:57:58Z | Draft | Capsule opened and implementation started from Phase 2 plan. | Focused tests pending. |
 | 2026-05-30T06:04:22Z | Done | Phase 2 docs assimilated, v2 scaffold implemented, compatibility preserved, and validation passed. | T-0152 evidence records. |
+| 2026-05-30T06:32:00Z | Done | Dist/bin reflection verified after follow-up review. | `node dist/cli/main.js task create` smoke passed in hadara-dev and hadara-recycle. |

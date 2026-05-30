@@ -15,6 +15,8 @@
 | src/task/task-capsule.ts | modify | Generate Task Capsule v2 frames and preserve scaffold detection. | Done |
 | src/evidence/evidence.ts | modify | Append evidence rows to the v2 evidence table shape. | Done |
 | src/harness/validate.ts | modify | Accept v2 and legacy capsule frames during validation. | Done |
+| dist/ | modify | Refresh compiled package bin output used by `package.json` `bin.hadara`. | Done |
+| tests/unit/task-capsule.test.ts | create | Add unit-level v2 scaffold frame coverage for the requested test command. | Done |
 | tests/harness/task-capsule.test.ts | modify | Assert v2 scaffold headers and evidence rows. | Done |
 | tests/harness/harness-validate.test.ts | modify | Update completed fixture helpers for v2 frames. | Done |
 | tasks/T-0152-task-capsule-scaffold-frame-alignment/* | modify | Maintain active Task Capsule docs. | Done |
