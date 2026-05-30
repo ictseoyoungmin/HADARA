@@ -128,6 +128,16 @@ Detailed schemas, file-level notes, and the unabridged TUI native runtime design
 | 42 | Package metadata transition plan | T-0142 | Transition package metadata from bootstrap/private mode to release-candidate metadata. | Done: package metadata is `0.1.0-rc.0`, `private: false`, with a narrow files whitelist; fresh package-smoke, clean-checkout, release-artifact, release dry-run, and release publish dry-run evidence passes while actual publish/deploy mutation remains absent. |
 | 43 | Manual RC npm publish | T-0143 | Publish the first npm release candidate after explicit manual approval. | Done: `hadara@0.1.0-rc.0` is published to npm with registry verification; GitHub Release draft/tag push, installer scripts, USB flow, and README release/install cleanup remain next-capsule work. |
 
+## Init Scaffold Follow-Up Capsules
+
+| Order | Candidate Slice | Capsule | Purpose | Key Done Evidence |
+|---:|---|---|---|---|
+| 44 | Init scaffold doctor/migration guard | TBD | Detect stale old-profile names, old Hermes defaults, missing `.gitignore`, broad `data/` ignore rules, or prose-only generated docs in already-initialized projects. | Future: read-only report emits stable issue codes and does not overwrite user files. |
+| 45 | Init lazy runtime-store creation | TBD | Revisit eager local/private runtime directory creation for small/basic projects. | Future: directory creation semantics are documented, audited, and covered by path/doctor tests. |
+| 46 | Init profile upgrade command | TBD | Add safe `basic -> standard -> governed` expansion after table-framed docs are stable. | Future: upgrade plan is idempotent, conflict-aware, and preserves edited docs. |
+| 47 | Required Reading registration command | TBD | Automate adding project-specific specs/contracts to SOP Required Reading tables. | Future: command validates referenced docs, avoids duplicate rows, and preserves table formatting. |
+| 48 | Optional integration enable commands | TBD | Add explicit enable flows for Hermes/MCP or other optional integrations instead of init defaults. | Future: enable command creates/registers integration docs only on request and keeps default init generic. |
+
 ## Must Preserve
 
 - Default MCP startup remains read-only.

@@ -47,3 +47,13 @@ Reason:
 - `docs/V1_0_CAPSULE_BACKLOG.md` tracks candidate slices and ordering.
 - `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` tracks detailed schemas, file candidates, and implementation notes.
 - Existing contract docs remain authoritative for implemented stable surfaces; v1.0 reference docs describe planned or partial surfaces until promoted.
+
+## D-0008: Generic init preserves HADARA structure, not HADARA-dev assumptions
+
+Reason:
+- `hadara init` should generate profile-aware HADARA protocol structure for new projects, not copy HADARA-dev's current optional integration roadmap.
+- Generated docs use stable headings and table frames where records will grow over time so future agents can update them deterministically.
+- `basic`, `standard`, and `governed` profiles must not reference docs they do not generate.
+- Optional surfaces such as Hermes, MCP, dashboard, provider, release, installer, and deployment work require project-specific registration before agents rely on them.
+- Generated `.gitignore` must ignore HADARA local/private state without hiding project-owned top-level paths such as `data/`.
+- T-0149 locked this decision with init template changes, README entry-surface cleanup, focused init tests, built CLI profile smokes, full Docker validation, and done-level harness validation.

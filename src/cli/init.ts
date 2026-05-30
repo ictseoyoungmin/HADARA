@@ -42,7 +42,7 @@ const INIT_PROFILE_SPECS: Record<InitProfile, InitProfileSpec> = {
     profile: 'standard',
     generatedDocsDescription: 'Core docs plus planning, architecture, decision, and validation docs',
     intendedUse: 'Most multi-session projects that need roadmap slices and repeatable validation.',
-    specialNotes: 'Default profile. It does not assume release, security-smoke, MCP, provider, dashboard, or Hermes surfaces.',
+    specialNotes: 'Default profile. Optional integrations must be registered before agents rely on them.',
     docs: {
       architecture: true,
       developmentSlices: true,
@@ -91,7 +91,7 @@ export function initProject(projectRoot: string, profile = 'standard'): void {
 
   writeFileIfMissing(
     path.join(projectRoot, 'docs', 'PROJECT_STATE.md'),
-    createProjectStateDoc()
+    createProjectStateDoc(normalizedProfile)
   );
   writeFileIfMissing(path.join(projectRoot, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n');
   writeFileIfMissing(path.join(projectRoot, 'docs', 'AGENT_HANDOFF.md'), createAgentHandoffDoc());
@@ -147,28 +147,40 @@ export function handleInitCommand(input: InitCommandInput): boolean {
   return true;
 }
 
-function createProjectStateDoc(): string {
+function createProjectStateDoc(profile: InitProfile): string {
   return `# PROJECT_STATE
 
 ## Product
 
-Describe the project in one or two sentences.
+| Field | Value |
+|---|---|
+| Name | TBD |
+| Purpose | Describe the project in one or two sentences. |
+| HADARA Profile | ${profile} |
 
 ## Current Phase
 
-bootstrap-development
+| Field | Value |
+|---|---|
+| Phase | bootstrap-development |
+| Status | initialized |
+| Active Task | TBD |
 
 ## Current Status
 
-- HADARA protocol scaffold is initialized.
-- First Task Capsule has not been selected yet.
+| Area | Status | Notes |
+|---|---|---|
+| Scaffold | Initialized | HADARA protocol scaffold is initialized. |
+| Task Capsule | Not selected | Create or select the first Task Capsule. |
 
 ## Single Source of Truth
 
-- Current state: \`docs/PROJECT_STATE.md\`
-- Work queue: \`docs/TASK_BOARD.md\`
-- Next-session handoff: \`docs/AGENT_HANDOFF.md\`
-- Task details: \`tasks/T-*/\`
+| Source | Path | Purpose |
+|---|---|---|
+| Current state | \`docs/PROJECT_STATE.md\` | Product and capability state. |
+| Work queue | \`docs/TASK_BOARD.md\` | Task status and queue. |
+| Next-session handoff | \`docs/AGENT_HANDOFF.md\` | Compact continuation state. |
+| Task details | \`tasks/T-*/\` | Task-local evidence and decisions. |
 `;
 }
 
@@ -177,13 +189,15 @@ function createAgentHandoffDoc(): string {
 
 ## Current State
 
-- HADARA protocol scaffold is initialized.
-- Read \`docs/PROJECT_STATE.md\`, \`docs/TASK_BOARD.md\`, and \`docs/IMPLEMENTATION_SOP.md\` before starting work.
+| Area | State | Notes |
+|---|---|---|
+| Scaffold | Initialized | HADARA protocol scaffold is initialized. |
+| Required Reading | Pending | Read \`PROJECT_STATE\`, \`TASK_BOARD\`, and \`IMPLEMENTATION_SOP\` before starting. |
 
 ## Last 3 Completed Tasks
 
-| Task | Summary |
-|---|---|
+| Task | Summary | Evidence |
+|---|---|---|
 
 ## Current Known Problems
 
@@ -192,17 +206,21 @@ function createAgentHandoffDoc(): string {
 
 ## Next Recommended Step
 
-Create or select the first Task Capsule, then record evidence before marking work done.
+| Step | Reason | Done Evidence |
+|---|---|---|
+| Create or select first Task Capsule | Establish one bounded unit of work. | Task Capsule exists and is referenced from \`docs/TASK_BOARD.md\`. |
 
 ## Validation Baseline
 
-| Check | Latest Evidence |
-|---|---|
+| Check | Latest Evidence | Notes |
+|---|---|---|
 
 ## Historical Index
 
-- Completed task history: add a history document here if this handoff grows too large.
-- Validation history: add a validation history document here if validation notes grow too large.
+| History Type | Path | When to Use |
+|---|---|---|
+| Completed tasks | TBD | Add when handoff grows too large. |
+| Validation history | TBD | Add when validation notes grow too large. |
 `;
 }
 
@@ -211,19 +229,26 @@ function createArchitectureDoc(profile: InitProfile): string {
 
 ## Overview
 
-This project was initialized with HADARA using the \`${profile}\` profile.
+| Field | Value |
+|---|---|
+| HADARA Profile | ${profile} |
+| Summary | Describe the current system architecture. |
 
 ## Boundaries
 
-- Keep project source, docs, and Task Capsules in the repository.
-- Keep portable/local machine state under \`.hadara/local/\`.
-- Do not commit secrets, private logs, or machine-local state.
+| Boundary | Rule | Notes |
+|---|---|---|
+| Project state | Keep project source, docs, and Task Capsules in the repository. | Reproducible state only. |
+| Local state | Keep portable/local machine state under \`.hadara/local/\`. | Must be ignored. |
+| Secrets | Do not commit secrets, private logs, or machine-local state. | Use local/private stores. |
 
 ## Current Components
 
-- Task Capsules in \`tasks/T-*/\`.
-- Evidence records in \`EVIDENCE.md\` and \`evidence.jsonl\`.
-- Handoff state in \`docs/AGENT_HANDOFF.md\`.
+| Component | Path / Surface | Responsibility | Status |
+|---|---|---|---|
+| Task Capsules | \`tasks/T-*/\` | Task-local scope, evidence, decisions, and handoff. | Active |
+| Evidence records | \`EVIDENCE.md\`, \`evidence.jsonl\` | Validation evidence and artifact references. | Active |
+| Handoff | \`docs/AGENT_HANDOFF.md\` | Next-session continuation state. | Active |
 `;
 }
 
@@ -285,10 +310,10 @@ function createImplementationSopDoc(spec: InitProfileSpec): string {
   ];
   if (spec.docs.architecture) structureRows.push(['`docs/ARCHITECTURE.md`', 'Overview, Boundaries, and Current Components sections.']);
   if (spec.docs.developmentSlices) structureRows.push(['`docs/DEVELOPMENT_SLICES.md`', 'Evidence-backed slice table with ordering and done evidence.']);
-  if (spec.docs.decisions) structureRows.push(['`docs/DECISIONS.md`', 'Decision table with ID, Decision, Status, and Rationale columns.']);
+  if (spec.docs.decisions) structureRows.push(['`docs/DECISIONS.md`', 'Decision table with ID, Date, Decision, Status, Rationale, and Evidence columns.']);
   if (spec.docs.testStrategy) structureRows.push(['`docs/TEST_STRATEGY.md`', 'Current Validation Environment, Suites, Required Session Checks, and Special-Case Checks sections.']);
   if (spec.docs.securityModel) structureRows.push(['`docs/SECURITY_MODEL.md`', 'Default Mode, Invariants, and Special Checks sections.']);
-  if (spec.docs.refactorLog) structureRows.push(['`docs/REFACTOR_LOG.md`', 'Format section with Date, Area, Change, and Evidence columns.']);
+  if (spec.docs.refactorLog) structureRows.push(['`docs/REFACTOR_LOG.md`', 'Format section with Date, Area, Change, Rationale, and Evidence columns.']);
   if (spec.docs.roadmap) structureRows.push(['`docs/ROADMAP.md`', 'Near Term and Deferred sections.']);
   const stateTrackingDocs = spec.docs.developmentSlices
     ? '`docs/TASK_BOARD.md` and `docs/DEVELOPMENT_SLICES.md`'
@@ -315,7 +340,7 @@ When adding project-specific specs, contracts, or roadmap files, add them to thi
 | Profile | Scale | Generated Docs | Intended Use | Special Notes |
 |---|---|---|---|---|
 | \`basic\` | Small | Core session docs only | Small projects that need Task Capsules, evidence, and handoff discipline without planning overhead. | SOP required reading references only core docs plus active Task Capsule docs. |
-| \`standard\` | Medium, default | Core docs plus planning, architecture, decision, and validation docs | Most multi-session projects that need roadmap slices and repeatable validation. | Does not assume release, security-smoke, MCP, provider, dashboard, or Hermes surfaces. |
+| \`standard\` | Medium, default | Core docs plus planning, architecture, decision, and validation docs | Most multi-session projects that need roadmap slices and repeatable validation. | Optional integrations must be registered before agents rely on them. |
 | \`governed\` | Heavy | Standard docs plus security, refactor log, and roadmap docs | Long-lived projects with stronger governance, release planning, security boundaries, or operational surfaces. | Project-specific contracts still must be manually registered in Required Reading. |
 
 ## Scaffold Document Structure
@@ -340,7 +365,7 @@ Prefer tables for repeated records and \`##\`/\`###\` headings for durable secti
 1. Run relevant tests.
 2. Run \`hadara harness validate --task <task-id> --json\`.
 3. Record evidence in \`EVIDENCE.md\` and \`evidence.jsonl\`.
-4. Add security, release, install, provider, MCP, or dashboard smoke checks only after those surfaces exist and are documented for this project.
+4. Add project-specific integration or deployment smoke checks only after those surfaces exist and are documented for this project.
 
 ## Session End
 
@@ -380,8 +405,8 @@ HADARA development should proceed in small, evidence-backed slices.
 function createDecisionsDoc(): string {
   return `# DECISIONS
 
-| ID | Decision | Status | Rationale |
-|---|---|---|---|
+| ID | Date | Decision | Status | Rationale | Evidence |
+|---|---|---|---|---|---|
 
 Record project-level decisions here. Keep task-local decisions inside the active Task Capsule unless they change project architecture or workflow.
 `;
@@ -392,8 +417,8 @@ function createRefactorLogDoc(): string {
 
 ## Format
 
-| Date | Area | Change | Evidence |
-|---|---|---|---|
+| Date | Area | Change | Rationale | Evidence |
+|---|---|---|---|---|
 
 Record meaningful removals, replacements, and migrations here.
 `;
@@ -404,20 +429,26 @@ function createSecurityModelDoc(): string {
 
 ## Default Mode
 
-Use assisted development by default: read, edit, and validate deliberately, and ask for explicit approval before risky mutation.
+| Mode | Rule | Approval Boundary |
+|---|---|---|
+| Assisted development | Read, edit, and validate deliberately. | Ask for explicit approval before risky mutation. |
 
 ## Invariants
 
-| Invariant | Rule |
-|---|---|
-| Secrets | Do not write secrets, private logs, environment dumps, or token values into committed files. |
-| Local state | Keep machine-local state under ignored local paths such as \`.hadara/local/\`. |
-| Evidence | Public evidence must be reduced and safe to commit. |
-| Commands | Do not run dangerous or destructive commands unless the user explicitly requests and approves them. |
+| Invariant | Rule | Evidence |
+|---|---|---|
+| Secrets | Do not write secrets, private logs, environment dumps, or token values into committed files. | Review changed files before completion. |
+| Local state | Keep machine-local state under ignored local paths such as \`.hadara/local/\`. | \`.gitignore\` includes HADARA local state. |
+| Evidence | Public evidence must be reduced and safe to commit. | Evidence files do not contain private logs or secrets. |
+| Commands | Do not run dangerous or destructive commands unless explicitly requested and approved. | Risky commands are recorded in task evidence. |
 
 ## Special Checks
 
-Security, release, install, provider, MCP, or deployment smoke tests are project-specific. Add them to \`docs/TEST_STRATEGY.md\` only after those surfaces exist.
+| Check Type | Add To | When Required |
+|---|---|---|
+| Security smoke | \`docs/TEST_STRATEGY.md\` | The project has documented security boundaries. |
+| Secret scan | \`docs/TEST_STRATEGY.md\` | The project handles credentials, tokens, private logs, or environment dumps. |
+| Permission review | Task Capsule evidence | A change modifies write, delete, publish, or deploy behavior. |
 `;
 }
 
@@ -426,23 +457,28 @@ function createTestStrategyDoc(): string {
 
 ## Current Validation Environment
 
-Describe the normal validation environment for this project.
+| Field | Value |
+|---|---|
+| Primary Environment | TBD |
+| Package Manager | TBD |
+| Runtime | TBD |
+| Notes | Describe normal validation constraints for this project. |
 
 ## Suites
 
-| Suite | Command | Purpose |
-|---|---|---|
-| Unit | TBD | Fast checks for local logic. |
-| Integration | TBD | Cross-module or external-boundary checks when they exist. |
-| Full | TBD | The strongest routine validation command for task completion. |
+| Suite | Command | Purpose | Required For Done |
+|---|---|---|---|
+| Unit | TBD | Fast checks for local logic. | TBD |
+| Integration | TBD | Cross-module or external-boundary checks when they exist. | TBD |
+| Full | TBD | The strongest routine validation command for task completion. | TBD |
 
 ## Required Session Checks
 
-Before marking a Task Capsule Done:
-
-1. Run the relevant suite from the table above.
-2. Run \`hadara harness validate --task <task-id> --json\`.
-3. Record evidence in the Task Capsule.
+| Step | Check | Evidence Location |
+|---|---|---|
+| 1 | Run the relevant suite from the table above. | Task Capsule \`EVIDENCE.md\` |
+| 2 | Run \`hadara harness validate --task <task-id> --json\`. | Task Capsule \`EVIDENCE.md\` and \`evidence.jsonl\` |
+| 3 | Record meaningful evidence in the Task Capsule. | Task Capsule files |
 
 ## Special-Case Checks
 
@@ -451,7 +487,7 @@ Before marking a Task Capsule Done:
 | Security smoke | The project has documented security boundaries or secret-handling behavior. |
 | Release smoke | The project has documented release or package behavior. |
 | Install smoke | The project has documented installer or deployment behavior. |
-| Provider/MCP smoke | The project has documented provider or MCP surfaces. |
+| Integration smoke | The project has documented external integration surfaces. |
 `;
 }
 
@@ -460,36 +496,55 @@ function createRoadmapDoc(): string {
 
 ## Near Term
 
-- Define the first Task Capsule.
-- Attach evidence for meaningful checks.
-- Keep handoff current between sessions.
+| Order | Item | Purpose | Done Evidence |
+|---|---|---|---|
+| 1 | Define the first Task Capsule | Establish the first concrete work unit. | Task Capsule exists and is referenced from \`docs/TASK_BOARD.md\`. |
+| 2 | Attach first evidence | Verify that evidence flow works. | \`EVIDENCE.md\` and \`evidence.jsonl\` contain a meaningful check. |
+| 3 | Update handoff | Make continuation safe across sessions. | \`docs/AGENT_HANDOFF.md\` reflects current state. |
 
 ## Deferred
 
-- Dashboard read model.
-- Real provider adapters.
-- MCP server expansion.
+| Item | Reason Deferred | Revisit When |
+|---|---|---|
 `;
 }
 
 function createAgentsDoc(spec: InitProfileSpec): string {
-  const requiredReading = [
-    '`docs/PROJECT_STATE.md`',
-    '`docs/AGENT_HANDOFF.md`',
-    '`docs/TASK_BOARD.md`',
-    '`docs/IMPLEMENTATION_SOP.md`',
-    ...(spec.docs.developmentSlices
-      ? ['`docs/DEVELOPMENT_SLICES.md` when starting, completing, or reclassifying a development slice']
-      : []),
-    'Active `tasks/T-*/TASK.md`',
-    'Task Capsule files required by `docs/IMPLEMENTATION_SOP.md`',
-    'Project-specific specs, contracts, or roadmap documents listed in `docs/IMPLEMENTATION_SOP.md`'
+  const requiredReadingRows = [
+    ['1', '`docs/PROJECT_STATE.md`', 'Every session', 'Current product and capability state.'],
+    ['2', '`docs/AGENT_HANDOFF.md`', 'Every session', 'Compact continuation state.'],
+    ['3', '`docs/TASK_BOARD.md`', 'Every session', 'Current task queue and status.'],
+    ['4', '`docs/IMPLEMENTATION_SOP.md`', 'Every session', 'Local workflow and required-reading registry.']
   ];
-  const trackedStateDocs = [
-    '`docs/TASK_BOARD.md`',
-    '`docs/PROJECT_STATE.md`',
-    ...(spec.docs.developmentSlices ? ['`docs/DEVELOPMENT_SLICES.md`'] : [])
+  let order = 5;
+  if (spec.docs.architecture) requiredReadingRows.push([String(order++), '`docs/ARCHITECTURE.md`', 'Architecture, component, or boundary work', 'Current system shape and ownership boundaries.']);
+  if (spec.docs.developmentSlices) requiredReadingRows.push([String(order++), '`docs/DEVELOPMENT_SLICES.md`', 'Starting, completing, or reclassifying a development slice', 'Roadmap ordering, prerequisites, and completion evidence.']);
+  if (spec.docs.decisions) requiredReadingRows.push([String(order++), '`docs/DECISIONS.md`', 'Project-level decision work', 'Durable project decisions.']);
+  if (spec.docs.testStrategy) requiredReadingRows.push([String(order++), '`docs/TEST_STRATEGY.md`', 'Validation planning or completion checks', 'Routine suites and special-case checks.']);
+  if (spec.docs.securityModel) requiredReadingRows.push([String(order++), '`docs/SECURITY_MODEL.md`', 'Security, secret, permission, or evidence-safety work', 'Project security invariants.']);
+  if (spec.docs.refactorLog) requiredReadingRows.push([String(order++), '`docs/REFACTOR_LOG.md`', 'Refactor, migration, removal, or replacement work', 'Project-level refactor history.']);
+  if (spec.docs.roadmap) requiredReadingRows.push([String(order++), '`docs/ROADMAP.md`', 'Roadmap, milestone, or scope planning', 'Longer-term priorities and deferred work.']);
+  requiredReadingRows.push(
+    [String(order++), 'Active `tasks/T-*/TASK.md`', 'Working a task', 'Task-specific goal, scope, and status.'],
+    [String(order++), 'Active Task Capsule docs', 'Working a task', 'Decisions, plan, context, acceptance, files, tests, risks, handoff, and evidence.'],
+    [String(order++), 'Project-specific registered docs', 'When listed in `docs/IMPLEMENTATION_SOP.md`', 'Specs, contracts, or roadmap files explicitly added by this project.']
+  );
+  const trackedStateDocs = ['`docs/TASK_BOARD.md`', '`docs/PROJECT_STATE.md`', ...(spec.docs.developmentSlices ? ['`docs/DEVELOPMENT_SLICES.md`'] : [])];
+  const ruleRows = [
+    ['Task boundary', 'Keep work inside one Task Capsule whenever possible.', 'Active Task Capsule'],
+    ['Task creation', 'If no suitable capsule exists, create one with `hadara task create <title>`.', '`docs/TASK_BOARD.md`'],
+    ['Evidence', 'Do not mark work done without evidence.', '`EVIDENCE.md`, `evidence.jsonl`'],
+    ['Safety', 'Do not execute dangerous commands without explicit user approval.', 'Task Capsule evidence'],
+    ['Secrets', 'Do not write secrets, private logs, or machine-local state into committed files.', 'Changed-file review'],
+    ['Store boundary', 'Preserve the portable/project store boundary.', spec.docs.architecture ? '`.gitignore`, `docs/ARCHITECTURE.md`' : '`.gitignore`'],
+    ['Validation', 'Follow validation constraints recorded in `docs/AGENT_HANDOFF.md` and the active Task Capsule.', 'Task Capsule evidence'],
+    ['Tracked state', `Update ${formatInlineList(trackedStateDocs)} when tracked state changes.`, 'Tracked docs'],
+    ['Handoff', 'Update `docs/AGENT_HANDOFF.md` before stopping.', '`docs/AGENT_HANDOFF.md`'],
+    ['Required reading', 'Register project-specific docs in `docs/IMPLEMENTATION_SOP.md` before expecting agents to rely on them.', '`docs/IMPLEMENTATION_SOP.md`']
   ];
+  if (spec.docs.developmentSlices) {
+    ruleRows.push(['Slice order', 'Respect prerequisite order in `docs/DEVELOPMENT_SLICES.md`.', '`docs/DEVELOPMENT_SLICES.md`']);
+  }
 
   return `# AGENTS
 
@@ -497,24 +552,17 @@ This repository must be developed using the HADARA protocol.
 
 ## Required Reading
 
-${numberedList(requiredReading)}
+| Order | Document | When | Purpose |
+|---|---|---|---|
+${requiredReadingRows.map(formatTableRow).join('\n')}
 
 \`docs/AGENT_HANDOFF.md\` is compact current-state handoff, not full project history. Follow its Historical Index when older completed-task or validation history is needed.
 
 ## Rules
 
-- Keep work inside one Task Capsule whenever possible.
-- If no suitable Task Capsule exists, create one before implementation with \`hadara task create <title>\` by default.
-- Do not mark work done without evidence.
-- Do not execute dangerous commands.
-- Do not write secrets, private logs, or machine-local state into committed files.
-- Preserve the portable/project store boundary.
-- Follow validation constraints recorded in \`docs/AGENT_HANDOFF.md\` and the active Task Capsule.
-- Update \`EVIDENCE.md\` and \`evidence.jsonl\` for meaningful checks.
-- Update ${formatInlineList(trackedStateDocs)} when their tracked state changes.
-- Update \`docs/AGENT_HANDOFF.md\` before stopping.
-${spec.docs.developmentSlices ? '- Respect prerequisite order in `docs/DEVELOPMENT_SLICES.md`.' : ''}
-- Add project-specific required reading to \`docs/IMPLEMENTATION_SOP.md\` before expecting agents to rely on it.
+| Rule | Requirement | Evidence / Update Location |
+|---|---|---|
+${ruleRows.map(formatTableRow).join('\n')}
 `;
 }
 
@@ -534,7 +582,6 @@ coverage/
 .hadara/local/
 .hadara/tmp/
 .hadara/cache/
-data/
 
 # Environment and machine-local files
 .env

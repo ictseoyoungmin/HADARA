@@ -65,10 +65,10 @@ Generated HADARA docs should follow a stable structure so agents do not reinterp
 | `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Validation, Session End, and Handoff Compaction sections. |
 | `docs/ARCHITECTURE.md` | Overview, Boundaries, and Current Components sections. |
 | `docs/DEVELOPMENT_SLICES.md` | Evidence-backed slice table with ordering and done evidence. |
-| `docs/DECISIONS.md` | Decision table with ID, Decision, Status, and Rationale columns. |
+| `docs/DECISIONS.md` | Decision table with ID, Date, Decision, Status, Rationale, and Evidence columns. |
 | `docs/TEST_STRATEGY.md` | Current Validation Environment, Suites, Required Session Checks, and Special-Case Checks sections. |
 | `docs/SECURITY_MODEL.md` | Default Mode, Invariants, and Special Checks sections. |
-| `docs/REFACTOR_LOG.md` | Format section with Date, Area, Change, and Evidence columns. |
+| `docs/REFACTOR_LOG.md` | Format section with Date, Area, Change, Rationale, and Evidence columns. |
 | `docs/ROADMAP.md` | Near Term and Deferred sections. |
 
 Prefer tables for repeated records and `##`/`###` headings for durable sections. Do not leave scaffold docs as unstructured prose when a table or named section would make agent interpretation more deterministic.

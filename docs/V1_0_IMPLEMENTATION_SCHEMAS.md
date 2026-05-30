@@ -1145,11 +1145,62 @@ Release checklist schema:
 }
 ```
 
+## Init Scaffold Phase 1 Contract
+
+T-0147 through T-0149 converted `hadara init` from a HADARA-dev-shaped bootstrap scaffold into a generic, profile-aware HADARA protocol scaffold. The design source is `docs/specs/HADARA_Init_Refactoring_Phase1_Development_Plan.md`; the implemented T-0149 behavior is now the current baseline.
+
+### Init Profiles
+
+| Profile | Scale | Generated Doc Level | Required Behavior |
+|---|---|---|---|
+| `basic` | Small | Core session docs only | Generates `AGENTS.md`, `.gitignore`, `PROJECT_STATE`, `AGENT_HANDOFF`, `TASK_BOARD`, and `IMPLEMENTATION_SOP`; generated SOP/AGENTS do not reference standard/governed-only docs. |
+| `standard` | Medium, default | Core plus planning/architecture/decision/validation docs | Generates architecture, development slices, decisions, and test strategy docs; does not assume optional integration surfaces. |
+| `governed` | Heavy | Standard plus governance docs | Adds security model, refactor log, and roadmap docs; project-specific contracts still require explicit Required Reading registration. |
+
+### Generated Markdown Table Frames
+
+| Generated File | Canonical Table Frame |
+|---|---|
+| `AGENTS.md` | `| Order | Document | When | Purpose |` and `| Rule | Requirement | Evidence / Update Location |` |
+| `docs/PROJECT_STATE.md` | `| Field | Value |`, `| Area | Status | Notes |`, and `| Source | Path | Purpose |` |
+| `docs/AGENT_HANDOFF.md` | `| Area | State | Notes |`, `| Task | Summary | Evidence |`, `| Issue | Impact | Next Step |`, `| Step | Reason | Done Evidence |`, `| Check | Latest Evidence | Notes |`, and `| History Type | Path | When to Use |` |
+| `docs/TASK_BOARD.md` | `| ID | Title | Status | Capsule | Notes |` |
+| `docs/IMPLEMENTATION_SOP.md` | `| Document | When to Read | Purpose |`, `| Profile | Scale | Generated Docs | Intended Use | Special Notes |`, and `| Document | Required Structure |` |
+| `docs/ARCHITECTURE.md` | `| Field | Value |`, `| Boundary | Rule | Notes |`, and `| Component | Path / Surface | Responsibility | Status |` |
+| `docs/DEVELOPMENT_SLICES.md` | `| Order | Slice | Capsule | Purpose | Done Evidence |` |
+| `docs/DECISIONS.md` | `| ID | Date | Decision | Status | Rationale | Evidence |` |
+| `docs/TEST_STRATEGY.md` | `| Field | Value |`, `| Suite | Command | Purpose | Required For Done |`, `| Step | Check | Evidence Location |`, and `| Check Type | Add Only When |` |
+| `docs/SECURITY_MODEL.md` | `| Mode | Rule | Approval Boundary |`, `| Invariant | Rule | Evidence |`, and `| Check Type | Add To | When Required |` |
+| `docs/REFACTOR_LOG.md` | `| Date | Area | Change | Rationale | Evidence |` |
+| `docs/ROADMAP.md` | `| Order | Item | Purpose | Done Evidence |` and `| Item | Reason Deferred | Revisit When |` |
+
+### Generic Scaffold Invariants
+
+| Invariant | Requirement | Test / Evidence |
+|---|---|---|
+| No missing-doc references | Generated docs must not require docs that the selected profile does not create. | `tests/unit/init.test.ts` includes basic-profile absent-reference assertions. |
+| No optional-integration defaults | Generic init docs must not carry default Hermes/MCP/dashboard/provider roadmap assumptions. | Init tests and built CLI smokes grep generated docs for optional-surface leakage. |
+| Idempotent generation | Init keeps `writeFileIfMissing` behavior and does not overwrite existing user files. | Existing idempotence tests remain in `tests/unit/init.test.ts`. |
+| Local/private ignore boundary | Generated `.gitignore` ignores HADARA local/private paths but not top-level project-owned `data/`. | Init tests assert `.hadara/local/` exists and `data/` is absent. |
+| Registration before reliance | Project-specific specs/contracts must be added to SOP Required Reading before agents are expected to use them. | Generated SOP and AGENTS include registration guidance. |
+
+### Follow-Up Init Surfaces
+
+| Future Surface | Purpose | Boundary |
+|---|---|---|
+| Init scaffold doctor/migration guard | Detect stale old-profile, old-Hermes, broad-ignore, or prose-only scaffold patterns. | Read-only report first; no automatic overwrite. |
+| Lazy runtime-store creation | Avoid creating every local runtime directory during small/basic init. | Requires path/audit/doctor review before changing directory creation semantics. |
+| Profile upgrade command | Expand `basic` to `standard` or `governed` safely. | Must preserve user edits and show conflicts before writing. |
+| Required Reading registration command | Add project-specific specs/contracts to generated SOP tables idempotently. | Must validate referenced files and avoid duplicate rows. |
+| Optional integration enable commands | Add Hermes/MCP or other integration docs explicitly. | Optional integrations remain outside default `hadara init`. |
+
 ## V1.0 Acceptance Checklist
 
 Functional:
 
 - New projects can run `hadara init --profile governed`.
+- New projects can run default `hadara init` and receive the `standard` profile.
+- Generated init docs are profile-aware and table-framed according to the Init Scaffold Phase 1 Contract.
 - Task creation/read/validation works.
 - Evidence append and evidence list work.
 - Handoff update and handoff read work.

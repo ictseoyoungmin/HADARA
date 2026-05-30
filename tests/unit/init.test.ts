@@ -23,6 +23,23 @@ afterEach(() => {
 });
 
 describe('init profiles', () => {
+  function read(root: string, file: string): string {
+    return fs.readFileSync(path.join(root, file), 'utf8');
+  }
+
+  function expectTableFrames(root: string, file: string, headers: string[]): void {
+    const content = read(root, file);
+    for (const header of headers) expect(content).toContain(header);
+  }
+
+  function expectNoGenericOptionalIntegrationDefaults(content: string): void {
+    expect(content).not.toContain('Hermes');
+    expect(content).not.toContain('MCP');
+    expect(content).not.toContain('Dashboard read model');
+    expect(content).not.toContain('Real provider adapters');
+    expect(content).not.toContain('provider adapters');
+  }
+
   it('accepts scale profiles and rejects unknown profiles', () => {
     expect(parseInitProfile('basic')).toBe('basic');
     expect(parseInitProfile('standard')).toBe('standard');
@@ -47,7 +64,7 @@ describe('init profiles', () => {
     expect(fs.existsSync(path.join(root, 'docs', 'SECURITY_MODEL.md'))).toBe(false);
     expect(fs.existsSync(path.join(root, 'docs', 'REFACTOR_LOG.md'))).toBe(false);
     expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(false);
-    expect(fs.readFileSync(path.join(root, 'docs', 'ARCHITECTURE.md'), 'utf8')).toContain('`standard` profile');
+    expect(read(root, 'docs/ARCHITECTURE.md')).toContain('| HADARA Profile | standard |');
   });
 
   it('creates structured general-purpose protocol guidance without project-specific Hermes or MCP assumptions', () => {
@@ -57,11 +74,12 @@ describe('init profiles', () => {
 
     const agents = fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8');
     expect(agents).toContain('## Required Reading');
+    expect(agents).toContain('| Order | Document | When | Purpose |');
     expect(agents).toContain('## Rules');
+    expect(agents).toContain('| Rule | Requirement | Evidence / Update Location |');
     expect(agents).toContain('docs/IMPLEMENTATION_SOP.md');
-    expect(agents).toContain('Project-specific specs, contracts, or roadmap documents listed in `docs/IMPLEMENTATION_SOP.md`');
-    expect(agents).not.toContain('Hermes');
-    expect(agents).not.toContain('MCP_BRIDGE_CONTRACT');
+    expect(agents).toContain('Project-specific registered docs');
+    expectNoGenericOptionalIntegrationDefaults(agents);
 
     const sop = fs.readFileSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'), 'utf8');
     expect(sop).toContain('## Required Reading');
@@ -79,13 +97,59 @@ describe('init profiles', () => {
     expect(sop).not.toContain('`docs/ROADMAP.md`');
     expect(sop).toContain('## Handoff Compaction');
     expect(sop).toContain('When adding project-specific specs, contracts, or roadmap files, add them to this table');
+    expectNoGenericOptionalIntegrationDefaults(sop);
 
     const testStrategy = fs.readFileSync(path.join(root, 'docs', 'TEST_STRATEGY.md'), 'utf8');
     expect(testStrategy).toContain('## Suites');
-    expect(testStrategy).toContain('| Suite | Command | Purpose |');
+    expect(testStrategy).toContain('| Suite | Command | Purpose | Required For Done |');
+    expect(testStrategy).toContain('| Step | Check | Evidence Location |');
     expect(testStrategy).toContain('## Special-Case Checks');
     expect(testStrategy).toContain('| Security smoke | The project has documented security boundaries or secret-handling behavior. |');
     expect(testStrategy).not.toContain('Run unit, contract, harness, security, and release smoke tests.');
+    expectNoGenericOptionalIntegrationDefaults(testStrategy);
+  });
+
+  it('generates canonical table frames for standard profile docs', () => {
+    const root = tempProject();
+
+    initProject(root);
+
+    expectTableFrames(root, 'AGENTS.md', [
+      '| Order | Document | When | Purpose |',
+      '| Rule | Requirement | Evidence / Update Location |'
+    ]);
+    expectTableFrames(root, 'docs/PROJECT_STATE.md', [
+      '| Field | Value |',
+      '| Area | Status | Notes |',
+      '| Source | Path | Purpose |'
+    ]);
+    expectTableFrames(root, 'docs/AGENT_HANDOFF.md', [
+      '| Area | State | Notes |',
+      '| Task | Summary | Evidence |',
+      '| Issue | Impact | Next Step |',
+      '| Step | Reason | Done Evidence |',
+      '| Check | Latest Evidence | Notes |',
+      '| History Type | Path | When to Use |'
+    ]);
+    expectTableFrames(root, 'docs/TASK_BOARD.md', ['| ID | Title | Status | Capsule | Notes |']);
+    expectTableFrames(root, 'docs/IMPLEMENTATION_SOP.md', [
+      '| Document | When to Read | Purpose |',
+      '| Profile | Scale | Generated Docs | Intended Use | Special Notes |',
+      '| Document | Required Structure |'
+    ]);
+    expectTableFrames(root, 'docs/ARCHITECTURE.md', [
+      '| Field | Value |',
+      '| Boundary | Rule | Notes |',
+      '| Component | Path / Surface | Responsibility | Status |'
+    ]);
+    expectTableFrames(root, 'docs/DEVELOPMENT_SLICES.md', ['| Order | Slice | Capsule | Purpose | Done Evidence |']);
+    expectTableFrames(root, 'docs/DECISIONS.md', ['| ID | Date | Decision | Status | Rationale | Evidence |']);
+    expectTableFrames(root, 'docs/TEST_STRATEGY.md', [
+      '| Field | Value |',
+      '| Suite | Command | Purpose | Required For Done |',
+      '| Step | Check | Evidence Location |',
+      '| Check Type | Add Only When |'
+    ]);
   });
 
   it('creates a basic profile without optional generated-doc references in SOP or AGENTS', () => {
@@ -116,7 +180,15 @@ describe('init profiles', () => {
     expect(sop).not.toContain('`docs/ROADMAP.md`');
 
     const agents = fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8');
+    expect(agents).toContain('| Order | Document | When | Purpose |');
+    expect(agents).toContain('| Rule | Requirement | Evidence / Update Location |');
+    expect(agents).not.toContain('docs/ARCHITECTURE.md');
     expect(agents).not.toContain('docs/DEVELOPMENT_SLICES.md');
+    expect(agents).not.toContain('docs/DECISIONS.md');
+    expect(agents).not.toContain('docs/TEST_STRATEGY.md');
+    expect(agents).not.toContain('docs/SECURITY_MODEL.md');
+    expect(agents).not.toContain('docs/REFACTOR_LOG.md');
+    expect(agents).not.toContain('docs/ROADMAP.md');
   });
 
   it('creates ignore rules for HADARA local state without overwriting an existing gitignore', () => {
@@ -128,6 +200,7 @@ describe('init profiles', () => {
     expect(gitignore).toContain('.hadara/local/');
     expect(gitignore).toContain('node_modules/');
     expect(gitignore).toContain('.env');
+    expect(gitignore).not.toContain('\ndata/\n');
 
     fs.writeFileSync(path.join(root, '.gitignore'), 'custom\n', 'utf8');
     initProject(root);
@@ -154,7 +227,16 @@ describe('init profiles', () => {
 
     const security = fs.readFileSync(path.join(root, 'docs', 'SECURITY_MODEL.md'), 'utf8');
     expect(security).toContain('## Invariants');
-    expect(security).toContain('| Invariant | Rule |');
+    expect(security).toContain('| Mode | Rule | Approval Boundary |');
+    expect(security).toContain('| Invariant | Rule | Evidence |');
+    expect(security).toContain('| Check Type | Add To | When Required |');
+
+    expectTableFrames(root, 'docs/REFACTOR_LOG.md', ['| Date | Area | Change | Rationale | Evidence |']);
+    expectTableFrames(root, 'docs/ROADMAP.md', [
+      '| Order | Item | Purpose | Done Evidence |',
+      '| Item | Reason Deferred | Revisit When |'
+    ]);
+    expectNoGenericOptionalIntegrationDefaults(read(root, 'docs/ROADMAP.md'));
   });
 
   it('does not create Hermes files for any scale profile', () => {
@@ -184,5 +266,19 @@ describe('init profiles', () => {
     expect(sop).toContain('docs/ROADMAP.md');
     expect(sop).toContain('docs/CLI_JSON_CONTRACT.md');
     expect(sop).toContain('HADARA-dev MCP or tool-surface work only');
+  });
+
+  it('keeps the README entry surface aligned with current init profiles', () => {
+    const readme = fs.readFileSync(path.join(process.cwd(), 'README.md'), 'utf8');
+
+    expect(readme).toContain('hadara init                  # default: standard');
+    expect(readme).toContain('hadara init --profile basic');
+    expect(readme).toContain('hadara init --profile governed');
+    expect(readme).toContain('| `basic` | Small project, only task/handoff discipline needed. |');
+    expect(readme).toContain('## Optional / Deferred Integrations');
+    expect(readme).toContain('They are not generated by `hadara init` and are not part of the default scaffold.');
+    expect(readme).not.toContain('.hermes.md');
+    expect(readme).not.toContain('HERMES.md');
+    expect(readme).not.toContain('minimal/full/hadara-protocol');
   });
 });
