@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createTaskProtocolConsistencyReport } from '../../src/services/protocol-consistency';
+import { createDocsProtocolConsistencyReport, createTaskProtocolConsistencyReport } from '../../src/services/protocol-consistency';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -11,17 +11,99 @@ function tempProject(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-protocol-consistency-'));
   roots.push(dir);
   fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'AGENTS.md'), '# AGENTS\n', 'utf8');
   fs.writeFileSync(
     path.join(dir, 'docs', 'AGENT_HANDOFF.md'),
     '# AGENT_HANDOFF\n\n## Current State\n\n| Area | State |\n|---|---|\n| Active / Next Task | none |\n',
     'utf8'
   );
   fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
+  fs.writeFileSync(
+    path.join(dir, 'docs', 'IMPLEMENTATION_SOP.md'),
+    '# IMPLEMENTATION_SOP\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | Current state. |\n| `docs/AGENT_HANDOFF.md` | Every session | Handoff. |\n| `docs/TASK_BOARD.md` | Every session | Work queue. |\n| `docs/IMPLEMENTATION_SOP.md` | Every session | Workflow. |\n',
+    'utf8'
+  );
   return dir;
 }
 
 afterEach(() => {
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
+});
+
+describe('Docs protocol consistency report', () => {
+  it('returns a stable docs-scoped report for an in-sync project', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Docs protocol');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\nLatest completed task: none\nActive: ${task.id}\n`, 'utf8');
+
+    const report = createDocsProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.protocol.consistency.v1',
+      command: 'protocol.doctor',
+      ok: true,
+      scope: 'docs',
+      generatedAt: '2026-05-30T00:00:00.000Z',
+      summary: {
+        checkedTasks: 1,
+        activeTaskId: task.id,
+        detectedProfile: 'basic',
+        issueCounts: {
+          error: 0,
+          warning: 0,
+          info: 0
+        }
+      },
+      issues: [],
+      remediations: []
+    });
+    expect(report.summary.checkedDocs).toBeGreaterThanOrEqual(5);
+  });
+
+  it('reports project docs, Task Board, handoff, and required-reading drift', () => {
+    const root = tempProject();
+    const doneTask = createTaskCapsule(root, 'Finished docs task');
+    const activeTask = createTaskCapsule(root, 'Active docs task');
+    markTaskDone(root, doneTask.id);
+    replaceInFile(path.join(activeTask.dir, 'TASK.md'), '| Status | Draft |', '| Status | Active |');
+    replaceInFile(path.join(activeTask.dir, 'TASK.md'), '\n## Status\n\nDraft\n', '\n## Status\n\nActive\n');
+    fs.writeFileSync(
+      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
+      `# AGENT_HANDOFF\n\nActive task: ${activeTask.id}\n`,
+      'utf8'
+    );
+    fs.appendFileSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'), '| `docs/MISSING_SPEC.md` | Protocol work | Missing fixture. |\n', 'utf8');
+    fs.rmSync(path.join(root, 'AGENTS.md'));
+    replaceInFile(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      `| ${activeTask.id} | Active docs task | Draft | tasks/${activeTask.id}-active-docs-task |`,
+      `| ${activeTask.id} | Active docs task | Draft | tasks/${activeTask.id}-wrong |`
+    );
+
+    const report = createDocsProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.ok).toBe(false);
+    expect(report.summary.activeTaskId).toBe(activeTask.id);
+    expect(report.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining([
+        'PROJECT_DOC_MISSING',
+        'REQUIRED_READING_DOC_MISSING',
+        'PROJECT_TASK_BOARD_STATUS_DRIFT',
+        'PROJECT_TASK_BOARD_CAPSULE_DRIFT',
+        'PROJECT_HANDOFF_LATEST_COMPLETED_STALE'
+      ])
+    );
+    expect(report.issues.find((issue) => issue.code === 'PROJECT_DOC_MISSING')).toMatchObject({
+      severity: 'error',
+      path: 'AGENTS.md'
+    });
+    expect(report.issues.find((issue) => issue.code === 'PROJECT_TASK_BOARD_CAPSULE_DRIFT')).toMatchObject({
+      severity: 'warning',
+      taskId: activeTask.id,
+      expected: `tasks/${activeTask.id}-active-docs-task`,
+      actual: `tasks/${activeTask.id}-wrong`
+    });
+  });
 });
 
 describe('Task protocol consistency report', () => {
@@ -131,7 +213,12 @@ function markTaskDone(root: string, taskId: string): void {
   replaceInFile(taskPath, '| Status | Draft |', '| Status | Done |');
   replaceInFile(taskPath, '\n## Status\n\nDraft\n', '\n## Status\n\nDone\n');
   const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
-  replaceInFile(boardPath, `| ${taskId} | Premature done | Draft |`, `| ${taskId} | Premature done | Done |`);
+  const board = fs.readFileSync(boardPath, 'utf8');
+  fs.writeFileSync(
+    boardPath,
+    board.replace(new RegExp(`(\\| ${taskId} \\| [^|]+ \\| )Draft( \\|)`), '$1Done$2'),
+    'utf8'
+  );
 }
 
 function replaceInFile(filePath: string, before: string, after: string): void {

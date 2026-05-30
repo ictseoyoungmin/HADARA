@@ -4,43 +4,44 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Working tree contains completed T-0153 changes. |
-| Current Phase | Project Protocol Consistency Phase 2 | Phase 1 init scaffold/follow-up work is complete; T-0152 and T-0153 are complete. |
-| Latest Completed Task | T-0153 Task Capsule Consistency Doctor | Added read-only `hadara protocol doctor --task <id> --json` with task-scoped `hadara.protocol.consistency.v1` reports. |
-| Active / Next Task | T-0154 Project Docs Consistency Doctor | Next Phase 2 slice should add cross-document project consistency checks over Task Board, handoff, Project State, SOP, slices, decisions, and test strategy. |
-| Validation Baseline | Docker full check passed | Latest Docker temp-copy `npm run check` passed with 60 files and 429 tests. |
+| Branch | main | Working tree contains completed T-0154 changes. |
+| Current Phase | Project Protocol Consistency Phase 2 | Phase 1 init scaffold/follow-up work is complete; T-0152 through T-0154 are complete. |
+| Latest Completed Task | T-0154 Project Docs Consistency Doctor | Added read-only `hadara protocol doctor --scope docs --json` with docs-scope `hadara.protocol.consistency.v1` reports. |
+| Active / Next Task | T-0155 Profile Drift Remediation Guide | Next Phase 2 slice should add profile drift guidance while keeping remediation writes deferred. |
+| Validation Baseline | Docker full check passed | Latest Docker temp-copy `npm run check` passed with 60 files and 432 tests. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0151 Init Follow-up Hardening | Hardened init follow-up wording, profile-drift doctor checks, register-doc validation/strict mode, and integration guidance write ordering. | T-0151 capsule evidence; focused init tests passed with 19 tests; full check passed with 57 files / 421 tests; done-level harness `ok: true`. |
 | T-0152 Task Capsule Scaffold Frame Alignment | Assimilated Phase 2 plan into main docs, implemented Task Capsule v2 table frames, updated evidence/harness/operational-debt compatibility, preserved legacy capsule validation, and refreshed `/workspace/dist` for `package.json` bin usage. | T-0152 evidence: focused checks passed with 3 files / 50 tests; full check passed; done-level harness `ok: true`. |
 | T-0153 Task Capsule Consistency Doctor | Implemented task-scoped protocol doctor reports for missing files, Task Board drift, Done with pending acceptance, evidence JSONL gaps, stale project handoff, and Done-state scaffold placeholders. | T-0153 evidence: focused protocol tests passed with 2 files / 7 tests; full Docker check passed with 60 files / 429 tests; built CLI smoke returned `ok: true`; done-level harness `ok: true`. |
+| T-0154 Project Docs Consistency Doctor | Implemented docs-scope protocol doctor reports for required project docs, SOP Required Reading missing paths, Task Board versus capsule drift, and latest-completed handoff drift. | T-0154 evidence: focused protocol/error tests passed with 3 files / 13 tests; full Docker check passed with 60 files / 432 tests; built CLI smoke returned `ok: true`; done-level harness `ok: true`. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
 | Host workspace has no `node_modules`. | Host `npm run build` and host `npx vitest` are unreliable; escalated `npx` found registry access but could not resolve local `vitest/config`. | Use the reusable Docker workflow for validation or install dependencies intentionally before host validation. |
-| Project-wide protocol doctor is not implemented yet. | T-0153 checks one Task Capsule only; cross-document drift is still manual. | Start T-0154 with `docs/specs/HADARA_Project_Protocol_Consistency_Layer_Phase2_Development_Plan.md` and current `hadara.protocol.consistency.v1` shape. |
-| `hadara.protocol.consistency.v1` schema fixture is not registered yet. | T-0153 emits the report shape, but broad schema/contract fixture work remains future scope. | Keep T-0154/T-0155 compatible with the T-0153 report shape; T-0157 owns schema registration. |
+| Profile drift remediation guidance is not implemented yet. | T-0154 reports docs-scope drift but does not produce remediation guidance or profile-specific repair plans. | Start T-0155 with the Phase 2 plan and current `hadara.protocol.consistency.v1` shape. |
+| `hadara.protocol.consistency.v1` schema fixture is not registered yet. | T-0153/T-0154 emit the report shape, but broad schema/contract fixture work remains future scope. | Keep T-0155/T-0156 compatible with the current report shape; T-0157 owns schema registration. |
 | Existing historical capsules mostly use legacy frames. | This is expected and should not fail validation solely for not using v2 tables. | Future `task upgrade-scaffold` / remediation work must be non-destructive and dry-run-first. |
+| Docs-scope protocol doctor reports historical T-0073 Task Board drift as a warning. | `hadara protocol doctor --scope docs --json` remains `ok: true`; warning-only reports exit 0. | T-0155/T-0156 can decide whether to guide or safely remediate this historical drift. |
 
 ## Next Recommended Step
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create/start T-0154 Project Docs Consistency Doctor. | T-0153 completed per-capsule checks; the next Phase 2 slice should compare project-level docs and Task Capsules against each other. | Stable issue-code tests for Task Board, project handoff, Project State, SOP Required Reading, Development Slices, Decisions, and Test Strategy drift; CLI smoke for `hadara protocol doctor --scope docs|all --json` or equivalent. |
+| Create/start T-0155 Profile Drift Remediation Guide. | T-0154 completed docs-scope checks; the next Phase 2 slice should add profile drift diagnostics/remediation guidance without broad user-doc rewrites. | Stable profile drift fixtures and manual remediation objects; no write behavior unless explicitly deferred to T-0156. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Focused protocol checks | Docker temp-copy `npx vitest run tests/unit/protocol-consistency.test.ts tests/unit/protocol-cli.test.ts` passed with 2 files and 7 tests. | Covers task-scoped report shape, drift issue codes, JSON CLI output, text output warnings, and exit code behavior. |
-| Full repository check | Docker temp-copy `npm run check` passed with 60 files and 429 tests. | Host dependencies were unavailable; Docker was used per SOP. |
-| Built CLI smoke | `node /workspace/dist/cli/main.js protocol doctor --task T-0153 --json --project /workspace` returned `ok: true` with zero issues. | Run after refreshing `/workspace/dist` from Docker build output. |
-| Done-level harness | Docker built CLI `node /workspace/dist/cli/main.js harness validate --task T-0153 --level done --json --project /workspace` returned `ok: true` with no issues. | Run after T-0153 docs/evidence updates. |
+| Focused protocol checks | Docker temp-copy `npx vitest run tests/unit/protocol-consistency.test.ts tests/unit/protocol-cli.test.ts tests/unit/cli-errors.test.ts` passed with 3 files and 13 tests. | Covers task/docs scoped report shape, drift issue codes, JSON CLI output, text output warnings, and exit code behavior. |
+| Full repository check | Docker temp-copy `npm run check` passed with 60 files and 432 tests. | Host dependencies were unavailable; Docker was used per SOP. |
+| Built CLI smoke | Docker built CLI `protocol doctor --scope docs --json --project /workspace` returned `ok: true` with one warning for historical T-0073 Task Board drift; `protocol doctor --task T-0154 --json` returned `ok: true` with zero issues. | Run from `/tmp/hadara/dist` against `/workspace`. |
+| Done-level harness | Docker built CLI `harness validate --task T-0154 --level done --json --project /workspace` returned `ok: true` with no issues. | Run after T-0154 docs/evidence updates. |
 
 ## Historical Index
 

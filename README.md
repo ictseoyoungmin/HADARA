@@ -79,6 +79,8 @@ Common read and protocol commands:
 ```bash
 hadara init
 hadara init doctor --json
+hadara protocol doctor --task T-0001 --json
+hadara protocol doctor --scope docs --json
 hadara doctor
 hadara task create "..."
 hadara task list
@@ -86,6 +88,8 @@ hadara task show T-0001
 hadara evidence collect --task T-0001
 hadara handoff update --task T-0001
 ```
+
+`protocol doctor` is currently diagnostic-only. It reports task-scoped and docs-scoped consistency issues in `hadara.protocol.consistency.v1`; `remediations` remains empty until the later remediation slices.
 
 Read-only operations and validation surfaces:
 

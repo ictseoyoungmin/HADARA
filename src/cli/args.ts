@@ -1,5 +1,13 @@
 export class CliArgsError extends Error {
-  constructor(public readonly code: 'CLI_OPTION_MISSING_VALUE' | 'CLI_OPTION_VALUE_LOOKS_LIKE_FLAG' | 'CLI_OPTION_REQUIRED' | 'CLI_OPTION_INTEGER_INVALID', message: string) {
+  constructor(
+    public readonly code:
+      | 'CLI_OPTION_MISSING_VALUE'
+      | 'CLI_OPTION_VALUE_LOOKS_LIKE_FLAG'
+      | 'CLI_OPTION_REQUIRED'
+      | 'CLI_OPTION_INTEGER_INVALID'
+      | 'CLI_OPTION_INVALID_VALUE',
+    message: string
+  ) {
     super(message);
     this.name = 'CliArgsError';
   }

@@ -11,8 +11,14 @@ function tempProject(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-protocol-cli-'));
   roots.push(dir);
   fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'AGENTS.md'), '# AGENTS\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\nNo active task yet.\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
+  fs.writeFileSync(
+    path.join(dir, 'docs', 'IMPLEMENTATION_SOP.md'),
+    '# IMPLEMENTATION_SOP\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | Current state. |\n| `docs/AGENT_HANDOFF.md` | Every session | Handoff. |\n| `docs/TASK_BOARD.md` | Every session | Work queue. |\n| `docs/IMPLEMENTATION_SOP.md` | Every session | Workflow. |\n',
+    'utf8'
+  );
   return dir;
 }
 
@@ -63,6 +69,33 @@ describe('protocol CLI command handler', () => {
     expect(handled).toBe(true);
     expect(process.exitCode).toBe(6);
     expect(log.mock.calls.map((call) => String(call[0])).join('\n')).toContain('TASK_NOT_FOUND');
+  });
+
+  it('prints JSON for protocol doctor --scope docs', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Docs CLI protocol');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\nActive: ${task.id}\n`, 'utf8');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleProtocolCommand({
+      args: ['protocol', 'doctor', '--scope', 'docs', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    expect(process.exitCode).toBeUndefined();
+    const payload = JSON.parse(String(log.mock.calls[0][0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.protocol.consistency.v1',
+      command: 'protocol.doctor',
+      ok: true,
+      scope: 'docs',
+      summary: {
+        checkedTasks: 1,
+        activeTaskId: task.id
+      }
+    });
   });
 
   it('ignores unrelated protocol subcommands for the top-level dispatcher', () => {

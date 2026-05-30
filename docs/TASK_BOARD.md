@@ -154,3 +154,4 @@
 | T-0151 | Init Follow-up Hardening | Done | tasks/T-0151-init-follow-up-hardening | Hardens init follow-up wording, profile-drift doctor checks, register-doc validation/strict mode, and integration guidance write ordering. |
 | T-0152 | Task Capsule Scaffold Frame Alignment | Done | tasks/T-0152-task-capsule-scaffold-frame-alignment | Starts Phase 2 protocol consistency with v2 Task Capsule table frames and compatibility validation. |
 | T-0153 | Task Capsule Consistency Doctor | Done | tasks/T-0153-task-capsule-consistency-doctor | Adds read-only task-scoped protocol consistency doctor. |
+| T-0154 | Project Docs Consistency Doctor | Done | tasks/T-0154-project-docs-consistency-doctor | Adds read-only docs-scope protocol consistency doctor. |

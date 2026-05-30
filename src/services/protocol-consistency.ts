@@ -101,6 +101,24 @@ export function createTaskProtocolConsistencyReport(projectRoot: string, taskId:
   });
 }
 
+export function createDocsProtocolConsistencyReport(projectRoot: string, now = new Date()): ProtocolConsistencyReport {
+  const issues: ProtocolConsistencyIssue[] = [];
+  const checkedDocs = new Set<string>();
+  const tasks = listTaskCapsules(projectRoot);
+  const taskBoardRows = readTaskBoardRows(projectRoot, checkedDocs);
+
+  checkRequiredProjectDocs(projectRoot, checkedDocs, issues);
+  checkRequiredReadingPaths(projectRoot, checkedDocs, issues);
+  checkTaskBoardAgainstCapsules(projectRoot, tasks, taskBoardRows, issues);
+  checkLatestCompletedHandoff(projectRoot, tasks, checkedDocs, issues);
+
+  return buildReport(projectRoot, now, issues, checkedDocs, undefined, null, undefined, {
+    scope: 'docs',
+    checkedTasks: tasks.length,
+    activeTaskId: findActiveTaskId(taskBoardRows, tasks)
+  });
+}
+
 function buildReport(
   projectRoot: string,
   now: Date,
@@ -111,6 +129,11 @@ function buildReport(
   taskMeta?: {
     capsule: string;
     taskStatus: string;
+  },
+  options?: {
+    scope?: ProtocolConsistencyScope;
+    checkedTasks?: number;
+    activeTaskId?: string | null;
   }
 ): ProtocolConsistencyReport {
   const counts = {
@@ -123,13 +146,13 @@ function buildReport(
     schemaVersion: 'hadara.protocol.consistency.v1',
     command: 'protocol.doctor',
     ok: counts.error === 0,
-    scope: 'tasks',
+    scope: options?.scope ?? 'tasks',
     projectRoot,
     generatedAt: now.toISOString(),
     summary: {
       checkedDocs: checkedDocs.size,
-      checkedTasks: task ? 1 : 0,
-      activeTaskId: task && !isDoneStatus(taskMeta?.taskStatus ?? '') ? task.id : null,
+      checkedTasks: options?.checkedTasks ?? (task ? 1 : 0),
+      activeTaskId: options?.activeTaskId ?? (task && !isDoneStatus(taskMeta?.taskStatus ?? '') ? task.id : null),
       detectedProfile: detectProfile(projectRoot),
       issueCounts: counts
     },
@@ -147,6 +170,176 @@ function buildReport(
     issues,
     remediations: []
   };
+}
+
+function checkRequiredProjectDocs(projectRoot: string, checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
+  const docs = [
+    'AGENTS.md',
+    'docs/PROJECT_STATE.md',
+    'docs/AGENT_HANDOFF.md',
+    'docs/TASK_BOARD.md',
+    'docs/IMPLEMENTATION_SOP.md'
+  ];
+  const profile = detectProfile(projectRoot);
+  if (profile === 'standard' || profile === 'governed') {
+    docs.push('docs/ARCHITECTURE.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/DECISIONS.md', 'docs/TEST_STRATEGY.md');
+  }
+  if (profile === 'governed') {
+    docs.push('docs/SECURITY_MODEL.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md');
+  }
+
+  for (const relativePath of docs) {
+    checkedDocs.add(relativePath);
+    if (!fs.existsSync(path.join(projectRoot, relativePath))) {
+      pushIssue(issues, {
+        code: 'PROJECT_DOC_MISSING',
+        severity: 'error',
+        area: 'docs',
+        path: relativePath,
+        message: `Required project protocol document is missing: ${relativePath}`,
+        expected: 'present',
+        actual: 'missing'
+      });
+    }
+  }
+}
+
+function checkRequiredReadingPaths(projectRoot: string, checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
+  const sopPath = path.join(projectRoot, 'docs', 'IMPLEMENTATION_SOP.md');
+  const relativePath = 'docs/IMPLEMENTATION_SOP.md';
+  checkedDocs.add(relativePath);
+  if (!fs.existsSync(sopPath)) return;
+
+  const rows = parseMarkdownRows(readMarkdownSection(fs.readFileSync(sopPath, 'utf8'), '## Required Reading'));
+  for (const cells of rows) {
+    const documentCell = cells[0] ?? '';
+    if (!documentCell.includes('`')) continue;
+    const documentPaths = [...documentCell.matchAll(/`([^`]+)`/g)].map((match) => match[1]).filter((value) => value && !value.includes('*'));
+    for (const documentPath of documentPaths) {
+      if (isExternalReference(documentPath) || fs.existsSync(path.join(projectRoot, documentPath))) continue;
+      pushIssue(issues, {
+        code: 'REQUIRED_READING_DOC_MISSING',
+        severity: 'warning',
+        area: 'required-reading',
+        path: relativePath,
+        message: `SOP Required Reading references a missing document: ${documentPath}`,
+        expected: `${documentPath} present`,
+        actual: 'missing'
+      });
+    }
+  }
+}
+
+function checkTaskBoardAgainstCapsules(
+  projectRoot: string,
+  tasks: TaskCapsule[],
+  rows: TaskBoardRow[],
+  issues: ProtocolConsistencyIssue[]
+): void {
+  const taskBoardPath = 'docs/TASK_BOARD.md';
+  const rowsById = new Map<string, TaskBoardRow[]>();
+  for (const row of rows) {
+    rowsById.set(row.id, [...(rowsById.get(row.id) ?? []), row]);
+  }
+
+  for (const task of tasks) {
+    const taskStatus = readTaskStatus(task);
+    const expectedCapsule = toPortablePath(path.relative(projectRoot, task.dir));
+    const matchingRows = rowsById.get(task.id) ?? [];
+    if (matchingRows.length === 0) {
+      pushIssue(issues, {
+        code: 'PROJECT_TASK_BOARD_ROW_MISSING',
+        severity: 'warning',
+        area: 'docs',
+        taskId: task.id,
+        path: taskBoardPath,
+        message: `docs/TASK_BOARD.md does not contain a row for ${task.id}.`,
+        expected: task.id,
+        actual: 'missing'
+      });
+      continue;
+    }
+    if (matchingRows.length > 1) {
+      pushIssue(issues, {
+        code: 'PROJECT_TASK_BOARD_ROW_DUPLICATE',
+        severity: 'error',
+        area: 'docs',
+        taskId: task.id,
+        path: taskBoardPath,
+        message: `docs/TASK_BOARD.md contains ${matchingRows.length} rows for ${task.id}; expected one.`,
+        expected: '1 row',
+        actual: `${matchingRows.length} rows`
+      });
+      continue;
+    }
+
+    const row = matchingRows[0];
+    if (row.status !== taskStatus) {
+      pushIssue(issues, {
+        code: 'PROJECT_TASK_BOARD_STATUS_DRIFT',
+        severity: 'warning',
+        area: 'docs',
+        taskId: task.id,
+        path: taskBoardPath,
+        message: `docs/TASK_BOARD.md status for ${task.id} is ${row.status || '(empty)'}, but TASK.md status is ${taskStatus || '(empty)'}.`,
+        expected: taskStatus || '(empty)',
+        actual: row.status || '(empty)'
+      });
+    }
+    if (row.capsule !== expectedCapsule) {
+      pushIssue(issues, {
+        code: 'PROJECT_TASK_BOARD_CAPSULE_DRIFT',
+        severity: 'warning',
+        area: 'docs',
+        taskId: task.id,
+        path: taskBoardPath,
+        message: `docs/TASK_BOARD.md capsule for ${task.id} is ${row.capsule || '(empty)'}, expected ${expectedCapsule}.`,
+        expected: expectedCapsule,
+        actual: row.capsule || '(empty)'
+      });
+    }
+  }
+
+  const taskIds = new Set(tasks.map((task) => task.id));
+  for (const row of rows) {
+    if (taskIds.has(row.id)) continue;
+    pushIssue(issues, {
+      code: 'PROJECT_TASK_BOARD_ORPHAN_ROW',
+      severity: 'warning',
+      area: 'docs',
+      taskId: row.id,
+      path: taskBoardPath,
+      message: `docs/TASK_BOARD.md contains ${row.id}, but no matching Task Capsule directory was found.`,
+      expected: 'matching Task Capsule directory',
+      actual: 'missing'
+    });
+  }
+}
+
+function checkLatestCompletedHandoff(projectRoot: string, tasks: TaskCapsule[], checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
+  const handoffPath = path.join(projectRoot, 'docs', 'AGENT_HANDOFF.md');
+  const relativePath = 'docs/AGENT_HANDOFF.md';
+  checkedDocs.add(relativePath);
+  if (!fs.existsSync(handoffPath)) return;
+
+  const latestDone = [...tasks]
+    .filter((task) => isDoneStatus(readTaskStatus(task)))
+    .sort((a, b) => b.id.localeCompare(a.id))[0];
+  if (!latestDone) return;
+
+  const content = fs.readFileSync(handoffPath, 'utf8');
+  if (!content.includes(latestDone.id)) {
+    pushIssue(issues, {
+      code: 'PROJECT_HANDOFF_LATEST_COMPLETED_STALE',
+      severity: 'warning',
+      area: 'handoff',
+      taskId: latestDone.id,
+      path: relativePath,
+      message: `docs/AGENT_HANDOFF.md does not mention the latest completed task ${latestDone.id}.`,
+      expected: `handoff mentions ${latestDone.id}`,
+      actual: 'task id not found'
+    });
+  }
 }
 
 function checkRequiredTaskFiles(projectRoot: string, task: TaskCapsule, issues: ProtocolConsistencyIssue[]): void {
@@ -415,6 +608,18 @@ function readTaskBoardRows(projectRoot: string, checkedDocs: Set<string>): TaskB
     });
 }
 
+function findActiveTaskId(rows: TaskBoardRow[], tasks: TaskCapsule[]): string | null {
+  const activeRow = rows.find((row) => row.status.trim().toLowerCase() === 'active');
+  if (activeRow) return activeRow.id;
+  const draftRow = rows.find((row) => row.status.trim().toLowerCase() === 'draft');
+  if (draftRow) return draftRow.id;
+  const activeTask = tasks.find((task) => {
+    const status = readTaskStatus(task).trim().toLowerCase();
+    return status === 'active' || status === 'draft';
+  });
+  return activeTask?.id ?? null;
+}
+
 function pushIssue(issues: ProtocolConsistencyIssue[], issue: Omit<ProtocolConsistencyIssue, 'id'>): void {
   issues.push({
     id: `issue-${String(issues.length + 1).padStart(3, '0')}`,
@@ -458,6 +663,10 @@ function readMarkdownSection(content: string, heading: string): string {
 
 function isDoneStatus(status: string | null | undefined): boolean {
   return DONE_STATUSES.has((status ?? '').trim().toLowerCase());
+}
+
+function isExternalReference(value: string): boolean {
+  return /^[a-z][a-z0-9+.-]*:/i.test(value);
 }
 
 function toPortablePath(value: string): string {

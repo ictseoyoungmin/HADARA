@@ -6,6 +6,7 @@ import { WorkspaceFileError } from '../../src/core/workspace';
 describe('CLI JSON error envelope', () => {
   it('maps known validation errors to stable codes', () => {
     expect(cliErrorCode(new CliArgsError('CLI_OPTION_REQUIRED', '--task is required'))).toBe('CLI_OPTION_REQUIRED');
+    expect(cliErrorCode(new CliArgsError('CLI_OPTION_INVALID_VALUE', 'unsupported protocol doctor scope: profile'))).toBe('CLI_OPTION_INVALID_VALUE');
     expect(cliErrorCode(new Error('unsupported permission mode: banana'))).toBe('PERMISSION_MODE_UNSUPPORTED');
     expect(cliErrorCode(new Error('unsupported evidence result: success'))).toBe('EVIDENCE_RESULT_UNSUPPORTED');
     expect(cliErrorCode(new Error('unsupported evidence visibility: internal'))).toBe('EVIDENCE_VISIBILITY_UNSUPPORTED');

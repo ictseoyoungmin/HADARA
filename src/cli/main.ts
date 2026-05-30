@@ -46,6 +46,7 @@ Usage:
   hadara debt list [--json]
   hadara debt show <id> [--json]
   hadara protocol doctor --task <task-id> [--json]
+  hadara protocol doctor --scope docs [--json]
   hadara tools list [--json]
   hadara handoff update --task <task-id> [--summary <text>] [--next <text>]
   hadara write preflight <command...> [--json]
