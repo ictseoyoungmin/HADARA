@@ -1306,14 +1306,14 @@ Disallowed Phase 2 remediations include changing task status automatically, mark
 
 ### Phase 2 Completion Review and Hardening Follow-up
 
-T-0152 through T-0160 satisfy the Phase 2 product baseline: new Task Capsules use v2 table-first frames, task/docs/profile/all protocol doctor reports exist, safe remediation is dry-run-first and allowlisted, and fixture-level JSON contracts are registered for consistency and remediation reports. Strict reading of the original Phase 2 plan leaves four follow-up capsules. These are hardening and plan-conformance tasks, not blockers for the Phase 2 baseline.
+T-0152 through T-0160 satisfy the Phase 2 product baseline: new Task Capsules use v2 table-first frames, task/docs/profile/all protocol doctor reports exist, safe remediation is dry-run-first and allowlisted, and fixture-level JSON contracts are registered for consistency and remediation reports. T-0161 through T-0164 close the strict-reading hardening follow-ups from the original Phase 2 plan: shared table helpers, unified doctor remediation hints, a non-destructive task scaffold upgrade command, and protocol surface docs/help/schema-note alignment.
 
 | Proposed Capsule | Status | Goal | Non-Goals |
 |---|---|---|---|
-| T-0161 Markdown Table Helper Extraction | Planned | Extract shared generated-table parsing/formatting helpers so protocol consistency, profile diagnostics, harness validation, and remediation code stop carrying local table parsers. | Do not change protocol doctor behavior, issue codes, scaffold frames, or remediation write semantics. |
-| T-0162 Doctor Remediation Hint Unification | Planned | Attach machine-readable remediation hints to doctor issues for existing safe-auto repairs while preserving the current `protocol remediate --fix` execution surface. | Do not introduce broad automatic repairs, deletion, status changes, acceptance rewrites, or release-gate schema strictness. |
-| T-0163 Task Capsule Upgrade Scaffold Command | Planned | Add `hadara task upgrade-scaffold --task <id> --json [--execute]` to preview and insert missing v2 Task Capsule frame sections without deleting legacy prose. | Do not mass-migrate all historical capsules, mark legacy frames invalid, or rewrite user-authored content. |
-| T-0164 Protocol Surface Docs Alignment | Planned | Align CLI help, schema registry notes, and protocol docs with the implemented `all` scope and current `--fix` remediation surface. | Do not change runtime behavior unless a stale help string is generated from code comments or constants. |
+| T-0161 Markdown Table Helper Extraction | Done | Extract shared generated-table parsing/formatting helpers so protocol consistency, profile diagnostics, harness validation, and remediation code stop carrying local table parsers. | Do not change protocol doctor behavior, issue codes, scaffold frames, or remediation write semantics. |
+| T-0162 Doctor Remediation Hint Unification | Done | Attach machine-readable remediation hints to doctor issues for existing safe-auto repairs while preserving the current `protocol remediate --fix` execution surface. | Do not introduce broad automatic repairs, deletion, status changes, acceptance rewrites, or release-gate schema strictness. |
+| T-0163 Task Capsule Upgrade Scaffold Command | Done | Add `hadara task upgrade-scaffold --task <id> --json [--execute]` to preview and insert missing v2 Task Capsule frame sections without deleting legacy prose. | Do not mass-migrate all historical capsules, mark legacy frames invalid, or rewrite user-authored content. |
+| T-0164 Protocol Surface Docs Alignment | Done | Align CLI help, schema registry notes, and protocol docs with the implemented `all` scope and current `--fix` remediation surface. | Do not change runtime behavior unless a stale help string is generated from code comments or constants. |
 
 #### T-0161 Markdown Table Helper Extraction
 

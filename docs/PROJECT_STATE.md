@@ -68,8 +68,8 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Latest completed task: T-0161 Markdown Table Helper Extraction added `src/services/markdown-table.ts`, removed duplicated protocol/profile/harness Markdown row parsers, and refreshed built output after Docker validation.
 - Latest completed task: T-0162 Doctor Remediation Hint Unification added additive safe-auto `suggestedFix` hints and remediation objects to protocol doctor reports while preserving dry-run-first `protocol remediate --fix` execution.
 - Latest completed task: T-0163 Task Capsule Upgrade Scaffold Command added dry-run-first `hadara task upgrade-scaffold --task <id> --json [--execute]` with append/create-only safe writes, ambiguous-frame skips, before-hash/existence checks, and `hadara.task.upgrade_scaffold.v1` fixture-level schema.
-- Active / next task: T-0164 Protocol Surface Docs Alignment.
-- Planned Phase 2 hardening follow-up is documented for new agents: T-0164 protocol surface docs/help/schema-note alignment. This is a plan-conformance hardening task, not a blocker for the Phase 2 product baseline.
+- Latest completed task: T-0164 Protocol Surface Docs Alignment aligned CLI help, README, JSON contract docs, schema docs, schema index notes, and Phase 2 planning docs with the implemented protocol doctor/remediation/task upgrade surfaces.
+- Active / next task: operator-selected next work; T-0161 through T-0164 strict-plan Phase 2 hardening follow-ups are complete.
 - Harness validation supports `--level draft|done`; done-level validation requires Done status, completed acceptance, evidence records, and updated handoff sections.
 - Done-level harness validation now also checks `docs/TASK_BOARD.md` for exactly one row for the validated task, `Done` status, and the expected Task Capsule path, catching duplicate or stale append/update results before completion.
 - Done-level harness validation now rejects completed Task Capsules whose standard Markdown files still contain initial scaffold placeholders or default empty content, while draft-level validation remains structural.

@@ -89,11 +89,12 @@ hadara doctor
 hadara task create "..."
 hadara task list
 hadara task show T-0001
+hadara task upgrade-scaffold --task T-0001 --json
 hadara evidence collect --task T-0001
 hadara handoff update --task T-0001
 ```
 
-`protocol doctor` is read-only and diagnostic-first. `ok: true` means there are no blocking errors; warning issues may still report consistency drift, and profile-scope reports can include optional manual `remediations` guidance. Profile reports expose `summary.profile.declared`, `summary.profile.detected`, and `summary.profile.target`: declared comes from project metadata, detected comes from the committed protocol document set, and target is the higher intended profile from metadata plus doc-set evidence. `protocol remediate` is dry-run-first; use `--json` to review the plan and add `--execute` only after intentionally accepting one of the bounded fixes: `task-board-row`, `decisions-table-frame`, `project-state-profile`, or `evidence-jsonl`.
+`protocol doctor` is read-only and diagnostic-first. `ok: true` means there are no blocking errors; warning issues may still report consistency drift, and profile-scope reports can include optional manual `remediations` guidance. Profile reports expose `summary.profile.declared`, `summary.profile.detected`, and `summary.profile.target`: declared comes from project metadata, detected comes from the committed protocol document set, and target is the higher intended profile from metadata plus doc-set evidence. `protocol remediate` is dry-run-first; use `--json` to review the plan and add `--execute` only after intentionally accepting one of the bounded fixes: `task-board-row`, `decisions-table-frame`, `project-state-profile`, or `evidence-jsonl`. `task upgrade-scaffold` is also dry-run-first and only inserts missing Task Capsule v2 frames or creates missing standard capsule files when `--execute` is explicitly supplied.
 
 Read-only operations and validation surfaces:
 

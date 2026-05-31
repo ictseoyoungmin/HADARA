@@ -164,3 +164,4 @@
 | T-0161 | Markdown Table Helper Extraction | Done | tasks/T-0161-markdown-table-helper-extraction | Extracts shared Markdown table helper; Docker validation and full check passed. |
 | T-0162 | Doctor Remediation Hint Unification | Done | tasks/T-0162-doctor-remediation-hint-unification | Adds safe-auto remediation hints to protocol doctor reports; Docker validation passed. |
 | T-0163 | Task Capsule Upgrade Scaffold Command | Done | tasks/T-0163-task-capsule-upgrade-scaffold-command | Adds dry-run-first non-destructive task scaffold upgrade command; Docker validation passed. |
+| T-0164 | Protocol Surface Docs Alignment | Done | tasks/T-0164-protocol-surface-docs-alignment | Aligns CLI help, README, JSON contract docs, schema notes, and Phase 2 planning docs with implemented protocol doctor/remediation/task upgrade surfaces; Docker validation passed. |

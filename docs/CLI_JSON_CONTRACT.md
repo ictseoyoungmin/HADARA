@@ -20,6 +20,7 @@ Examples include:
 - `hadara.doctor.v1`
 - `hadara.task.list.v1`
 - `hadara.task.show.v1`
+- `hadara.task.upgrade_scaffold.v1`
 - `hadara.policy.check.v1`
 - `hadara.policy.preflight.v1`
 - `hadara.hermes.detect.v1`
@@ -43,6 +44,8 @@ Examples include:
 Agents should treat `issues` as the primary machine-readable failure detail when present.
 
 `hadara protocol doctor --json` defaults to the broad read-only all-scope protocol report. It returns `hadara.protocol.consistency.v1` with `scope: "all"`, aggregating docs, profile, and active-task detail without writing files.
+
+`hadara task upgrade-scaffold --task <id> --json` returns `hadara.task.upgrade_scaffold.v1` in dry-run mode by default. It previews missing Task Capsule v2 frame insertions and missing standard capsule file creation; writes require `--execute`, use before-hash/existence checks, and must not delete user-authored content.
 
 `hadara run-state resume --json` returns read-only resume guidance. It does not update active-run state, execute commands, call providers, or resume an agent process.
 

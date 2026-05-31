@@ -48,7 +48,7 @@
       "path": "src/schemas/protocol-consistency.schema.json",
       "status": "fixture",
       "owner": "protocol/consistency",
-      "notes": "Documents read-only protocol doctor reports for task, docs, and profile scopes."
+      "notes": "Documents read-only protocol doctor reports for task, docs, profile, and all scopes."
     },
     {
       "id": "hadara.protocol.remediation.v1",
