@@ -49,6 +49,7 @@ describe('schema fixtures', () => {
       'hadara.task.close.v1',
       'hadara.task.ready.v1',
       'hadara.task.upgrade_scaffold.v1',
+      'hadara.task.workbench.v1',
       'hadara.tools.list.v1',
       'hadara.write.preflight.v1'
     ]);

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.task.workbench.v1",
+  "x-hadara-schema-id": "hadara.task.workbench.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "generatedAt", "projectRoot", "task", "state", "summary", "sources", "issues", "nextActions"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.task.workbench.v1" },
+    "command": { "const": "task.status" },
+    "ok": { "type": "boolean" },
+    "generatedAt": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "task": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "title", "capsule", "taskStatus", "taskBoardStatus"],
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "capsule": { "type": "string" },
+        "taskStatus": { "type": "string" },
+        "taskBoardStatus": { "type": "string" }
+      }
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["closeState", "ready", "closed", "auditable"],
+      "properties": {
+        "closeState": { "enum": ["not-closed", "closed"] },
+        "ready": { "type": "boolean" },
+        "closed": { "type": "boolean" },
+        "auditable": { "type": "boolean" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["blockers", "warnings", "evidenceRecords", "nextActions"],
+      "properties": {
+        "blockers": { "type": "number" },
+        "warnings": { "type": "number" },
+        "evidenceRecords": { "type": "number" },
+        "nextActions": { "type": "number" }
+      }
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["taskClosePlan", "evidenceLint", "evidenceList", "protocolTask", "protocolDocs", "protocolProfile"],
+      "properties": {
+        "taskClosePlan": { "type": "object", "additionalProperties": true },
+        "evidenceLint": { "type": "object", "additionalProperties": true },
+        "evidenceList": { "type": "object", "additionalProperties": true },
+        "protocolTask": { "type": "object", "additionalProperties": true },
+        "protocolDocs": { "type": "object", "additionalProperties": true },
+        "protocolProfile": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "nextActions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "kind", "required", "priority", "message", "sourceIssueCodes"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "enum": ["command", "review", "edit", "remediation", "audit"] },
+          "required": { "type": "boolean" },
+          "priority": { "enum": ["now", "soon", "optional"] },
+          "command": { "type": "string" },
+          "executeCommand": { "type": "string" },
+          "message": { "type": "string" },
+          "path": { "type": "string" },
+          "sourceIssueCodes": { "type": "array", "items": { "type": "string" } },
+          "loopBoundary": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

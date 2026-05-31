@@ -159,7 +159,7 @@ function fromCloseAction(taskId: string, action: TaskCloseNextAction): Workbench
     };
   }
 
-  return {
+  return stripUndefined({
     id: action.id,
     kind: action.kind === 'command' ? 'command' : 'review',
     required: action.required,
@@ -168,7 +168,7 @@ function fromCloseAction(taskId: string, action: TaskCloseNextAction): Workbench
     message: action.message,
     sourceIssueCodes: [action.id],
     loopBoundary: action.loopBoundary
-  };
+  });
 }
 
 function upsert(actions: Map<string, WorkbenchNextAction>, action: WorkbenchNextAction): void {
@@ -196,4 +196,8 @@ function priorityRank(priority: WorkbenchNextAction['priority']): number {
   if (priority === 'now') return 0;
   if (priority === 'soon') return 1;
   return 2;
+}
+
+function stripUndefined(action: WorkbenchNextAction): WorkbenchNextAction {
+  return Object.fromEntries(Object.entries(action).filter(([, value]) => value !== undefined)) as unknown as WorkbenchNextAction;
 }

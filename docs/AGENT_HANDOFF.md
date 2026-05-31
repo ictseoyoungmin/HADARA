@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Working tree contains completed T-0172 Phase 3 suggested action changes. |
+| Branch | main | Working tree contains completed T-0173 Phase 3 schema contract changes. |
 | Current Phase | Phase 3 / Task Operator Console | T-0170 close/audit preflight is complete; T-0171 starts the read-only workbench projection. |
-| Latest Completed Task | T-0172 Workbench Suggested Action Engine | Added centralized `WorkbenchNextAction` generation with priorities, source issue codes, remediation/audit kinds, and dry-run/execute pairing. |
-| Active / Next Task | T-0173 Workbench Schema Contract | Register fixture-level workbench schema and tighten contract coverage now that action shape is stable. |
-| Validation Baseline | Full Docker check, built CLI smoke, done harness, and close audit passed | Focused next-action/workbench tests passed with 2 files / 8 tests; full Docker `npm run check` passed with 68 files / 491 tests; built CLI task status smoke exposed `WorkbenchNextAction` fields; T-0172 done harness and audit-close passed. |
+| Latest Completed Task | T-0173 Workbench Schema Contract | Registered fixture-level `hadara.task.workbench.v1` and validation coverage for raw workbench service reports. |
+| Active / Next Task | T-0174 Worker-Friendly Text Output | Polish non-JSON status/audit output now that JSON shape is registered. |
+| Validation Baseline | Full Docker check, built CLI smoke, done harness, and close audit passed | Focused schema/workbench/action tests passed with 3 files / 9 tests; full Docker `npm run check` passed with 68 files / 491 tests; built CLI task status smoke returned `hadara.task.workbench.v1`; T-0173 done harness and audit-close passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0170 Close UX Polish and Audit Semantics | Added report/source hash split, execute success append/audit nextActions, close append result paths, and read-only `task audit-close`. | T-0170 evidence: focused Docker checks passed with 3 files / 8 tests; full Docker check passed with 66 files / 483 tests; built CLI close/audit smokes and done harness passed. |
 | T-0171 Task Workbench Status Report | Added read-only `task status` workbench projection without duplicate done-level validation or broad writes. | T-0171 evidence: focused Docker test, full Docker check, built CLI status smoke, done harness, close execute, and audit-close passed. |
 | T-0172 Workbench Suggested Action Engine | Added centralized next-action builder for workbench status reports. | T-0172 evidence: focused Docker tests, full Docker check, built CLI smoke, done harness, close execute, and audit-close passed. |
+| T-0173 Workbench Schema Contract | Registered `hadara.task.workbench.v1` fixture schema and raw report validation coverage. | T-0173 evidence: focused Docker tests, full Docker check, built CLI smoke, done harness, close execute, and audit-close passed. |
 
 ## Current Known Problems
 
@@ -28,24 +28,24 @@
 | Protocol schemas are fixture-level, not release-gate strict schemas. | Additive report fields remain allowed; consumers should not treat these schemas as a blocking release gate yet. | Preserve additive compatibility or create a new schema id for breaking changes. |
 | All-scope protocol doctor is broad but not a deep done-level check for every historical capsule. | It keeps default protocol doctor responsive by aggregating docs, profile, and active-task detail; docs-scope still checks Task Board/capsule drift across all tasks. | Use task-scoped doctor or harness validation for deep capsule checks. |
 | Docs-scope protocol doctor reports historical T-0073 Task Board drift and legacy Decisions structure as warnings. | `hadara protocol doctor --scope docs --json` remains `ok: true`; warning-only reports exit 0. | Use `protocol remediate` only when an operator explicitly accepts an allowlisted bounded fix; broad cleanup remains future scope. |
-| Phase 3 schema contract is not registered yet. | T-0172 stabilized the action shape, but fixture-level schema registration is planned as the next capsule. | Complete T-0173 Workbench Schema Contract. |
+| Workbench text output is still basic. | JSON/status surfaces are registered, but human non-JSON polish remains the next Phase 3 slice. | Complete T-0174 Worker-Friendly Text Output. |
 | Close validation evidence can create a fixed-point loop if modeled as a same-run precondition. | Recording validation evidence mutates evidence files after validation. | Use the documented three-layer model: validation proves readiness, close records the proof, audit checks the close record. T-0170 adds source/report hash split and read-only audit for this model. |
 
 ## Next Recommended Step
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Continue with T-0173 Workbench Schema Contract. | T-0172 stabilized action shape; schema registration can now describe the current JSON surface. | Use `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md`, `src/services/task-workbench.ts`, and `src/services/workbench-next-actions.ts`. |
+| Continue with T-0174 Worker-Friendly Text Output. | JSON workbench and schema contract are implemented; the next planned Phase 3 slice is concise non-JSON operator output. | Use `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md`, `src/services/task-workbench.ts`, and `src/cli/task.ts`. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Focused next-action/workbench check | Docker `npx vitest run tests/unit/workbench-next-actions.test.ts tests/unit/task-workbench.test.ts` passed with 2 files and 8 tests. | Covers action mappings, dry-run/execute pairing, and workbench integration. |
-| Built CLI smoke | Built CLI `task status --task T-0172 --json` returned `hadara.task.workbench.v1` with `priority` and `sourceIssueCodes` in nextActions. | `/workspace/dist` was refreshed from Docker build output. |
+| Focused schema/workbench/action check | Docker `npx vitest run tests/unit/task-workbench.test.ts tests/unit/schema-fixtures.test.ts tests/unit/workbench-next-actions.test.ts` passed with 3 files and 9 tests. | Covers workbench schema validation, schema fixture registry alignment, and action optional field shape. |
+| Built CLI smoke | Built CLI `task status --task T-0173 --json` returned `hadara.task.workbench.v1`. | `/workspace/dist` was refreshed from Docker build output. |
 | Full repository check | Docker temp-copy `npm run check` passed with 68 files and 491 tests. | Host dependencies are unavailable; Docker was used. |
-| Done-level harness | Docker built CLI `harness validate --task T-0172 --level done --json --project /workspace` returned `ok:true`. | No issues. |
-| Close audit | Built CLI `task audit-close --task T-0172 --json` returned `ok:true` with close evidence records and zero warnings. | Final close evidence appended after capsule source docs were updated. |
+| Done-level harness | Docker built CLI `harness validate --task T-0173 --level done --json --project /workspace` returned `ok:true`. | No issues. |
+| Close audit | Built CLI `task audit-close --task T-0173 --json` returned `ok:true` with close evidence records and zero warnings. | Final close evidence appended after capsule source docs were updated. |
 
 ## Historical Index
 

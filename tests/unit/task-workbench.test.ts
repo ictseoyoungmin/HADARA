@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { appendEvidence } from '../../src/evidence/evidence';
 import { handleTaskCommand } from '../../src/cli/task';
+import { validateSchema } from '../../src/core/schema';
 import * as harnessService from '../../src/services/harness-service';
 import { createTaskWorkbenchReport } from '../../src/services/task-workbench';
 import { createTaskCapsule } from '../../src/task/task-capsule';
@@ -58,6 +59,7 @@ describe('task workbench status report', () => {
     });
     expect(report.sources.evidenceList.latest).toMatchObject({ kind: 'note', result: 'passed', visibility: 'public' });
     expect(report.nextActions.length).toBeGreaterThan(0);
+    expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
     expect(snapshotProject(root)).toEqual(before);
   });
 

@@ -93,6 +93,13 @@
       "notes": "Documents read-only task readiness preflight reports before close."
     },
     {
+      "id": "hadara.task.workbench.v1",
+      "path": "src/schemas/task-workbench.schema.json",
+      "status": "fixture",
+      "owner": "task/workbench",
+      "notes": "Documents read-only Phase 3 task operator console reports from task status."
+    },
+    {
       "id": "hadara.releaseGate.v1",
       "path": "src/schemas/release-gate.schema.json",
       "status": "fixture",
