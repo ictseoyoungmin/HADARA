@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { appendEvidence } from '../../src/evidence/evidence';
-import { createTaskCloseReport } from '../../src/task/task-close';
+import { createTaskCloseReport, executeTaskCloseEvidence } from '../../src/task/task-close';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -69,15 +69,21 @@ describe('task close report', () => {
     expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'resolve-close-blockers', required: true }));
   });
 
-  it('keeps execute reserved until the execute MVP capsule', () => {
+  it('appends only close evidence in execute mode after blockers pass', () => {
     const root = tempProject();
-    const task = createTaskCapsule(root, 'Close execute reserved');
+    const task = createTaskCapsule(root, 'Close execute evidence');
     completeTask(root, task.id, task.dir);
 
     const report = createTaskCloseReport(root, task.id, 'execute');
+    const before = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
+    executeTaskCloseEvidence(root, report);
+    const after = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
 
-    expect(report.ok).toBe(false);
-    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_EXECUTE_NOT_IMPLEMENTED' }));
+    expect(report.ok).toBe(true);
+    expect(report.closeEvidence.appended).toBe(true);
+    expect(after.split(/\r?\n/).filter(Boolean).length).toBe(before.split(/\r?\n/).filter(Boolean).length + 1);
+    expect(after).toContain('"kind":"command-log"');
+    expect(after).toContain('"Task close validation for ' + task.id);
   });
 });
 

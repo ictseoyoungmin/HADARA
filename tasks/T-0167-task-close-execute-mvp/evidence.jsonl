@@ -1,0 +1,2 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-31T06:30:07.394Z","taskId":"T-0167","kind":"test-log","summary":"Focused Docker validation passed for task close execute MVP and schema fixtures: 2 files / 4 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-31T06:32:12.122Z","taskId":"T-0167","kind":"command-log","summary":"Task close validation for T-0167 returned ok:true before close evidence append.","result":"passed","visibility":"public"}

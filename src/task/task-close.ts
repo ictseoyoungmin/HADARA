@@ -75,14 +75,6 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
   const closeEvidenceSummary = `Task close validation for ${taskId} returned ${validation.ok ? 'ok:true' : 'ok:false'} before close evidence append.`;
 
   collectBlockingIssues(validation, evidenceLint, protocolDoctor, issues);
-  if (mode === 'execute') {
-    issues.push({
-      severity: 'error',
-      code: 'TASK_CLOSE_EXECUTE_NOT_IMPLEMENTED',
-      message: 'task close --execute is reserved for the next capsule; this report is dry-run planning only.'
-    });
-  }
-
   const ok = !issues.some((issue) => issue.severity === 'error');
   const nextActions = createNextActions(taskId, ok, mode);
   return {
