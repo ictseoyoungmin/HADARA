@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createProtocolRemediateReport } from '../../src/services/protocol-remediation';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
@@ -19,6 +19,7 @@ function tempProject(): string {
 
 afterEach(() => {
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
+  vi.restoreAllMocks();
 });
 
 describe('protocol remediation service', () => {
@@ -70,6 +71,87 @@ describe('protocol remediation service', () => {
     expect(updated.actions[0]).toMatchObject({ status: 'updated', path: 'docs/PROJECT_STATE.md' });
     expect(fs.readFileSync(projectStatePath, 'utf8')).toContain('| HADARA Profile | governed |');
     expect(fs.readFileSync(projectStatePath, 'utf8')).not.toContain('| HADARA Profile | standard |');
+  });
+
+  it('upserts the Project State profile inside Metadata without dropping existing rows or sections', () => {
+    const root = tempProject();
+    const projectStatePath = path.join(root, 'docs', 'PROJECT_STATE.md');
+    fs.writeFileSync(
+      projectStatePath,
+      '# PROJECT_STATE\n\n## Metadata\n\n| Field | Value |\n|---|---|\n| Owner | Team A |\n\n## Current Status\n\nStable.\n',
+      'utf8'
+    );
+
+    createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed' });
+
+    const content = fs.readFileSync(projectStatePath, 'utf8');
+    expect(content).toContain('| Owner | Team A |');
+    expect(content).toContain('| HADARA Profile | governed |');
+    expect(content).toContain('## Current Status');
+    expect(content.match(/\| Field \| Value \|/g)).toHaveLength(1);
+  });
+
+  it('skips Task Board row append when the canonical table frame is missing', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Frame missing');
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(boardPath, '# TASK_BOARD\n\nLost table frame.\n', 'utf8');
+
+    const report = createProtocolRemediateReport({ projectRoot: root, fix: 'task-board-row', mode: 'execute', taskId: task.id });
+
+    expect(report.ok).toBe(true);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_BOARD_TABLE_FRAME_MISSING', severity: 'warning' }));
+    expect(report.actions[0]).toMatchObject({ status: 'skipped', path: 'docs/TASK_BOARD.md' });
+    expect(fs.readFileSync(boardPath, 'utf8')).not.toContain(`| ${task.id} |`);
+  });
+
+  it('skips Decisions frame insertion when a non-canonical decision table already exists', () => {
+    const root = tempProject();
+    const decisionsPath = path.join(root, 'docs', 'DECISIONS.md');
+    fs.writeFileSync(decisionsPath, '# DECISIONS\n\n| ID | Decision | Status | Evidence |\n|---|---|---|---|\n| D-1 | Keep legacy table. | Accepted | Existing. |\n', 'utf8');
+
+    const report = createProtocolRemediateReport({ projectRoot: root, fix: 'decisions-table-frame', mode: 'execute' });
+
+    expect(report.ok).toBe(true);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'DECISIONS_TABLE_FRAME_AMBIGUOUS', severity: 'warning' }));
+    expect(report.actions[0]).toMatchObject({ status: 'skipped', path: 'docs/DECISIONS.md' });
+    expect(fs.readFileSync(decisionsPath, 'utf8')).not.toContain('| ID | Date | Decision | Status | Rationale | Evidence |');
+  });
+
+  it('detects write conflicts before applying a planned remediation write', () => {
+    const root = tempProject();
+    const projectStatePath = path.join(root, 'docs', 'PROJECT_STATE.md');
+    const originalReadFileSync = fs.readFileSync;
+    let projectStateReads = 0;
+    vi.spyOn(fs, 'readFileSync').mockImplementation((file, options) => {
+      if (String(file) === projectStatePath) {
+        projectStateReads += 1;
+        return projectStateReads === 1 ? '# PROJECT_STATE\n' : '# PROJECT_STATE\n\nExternal change.\n';
+      }
+      return originalReadFileSync(file, options);
+    });
+
+    const report = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed' });
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'PROTOCOL_REMEDIATION_WRITE_CONFLICT', severity: 'error' }));
+    expect(report.actions[0]).toMatchObject({ status: 'skipped' });
+  });
+
+  it('reports atomic write failures and leaves the original file unchanged', () => {
+    const root = tempProject();
+    const projectStatePath = path.join(root, 'docs', 'PROJECT_STATE.md');
+    const before = fs.readFileSync(projectStatePath, 'utf8');
+    vi.spyOn(fs, 'renameSync').mockImplementation(() => {
+      throw new Error('simulated rename failure');
+    });
+
+    const report = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed' });
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'PROTOCOL_REMEDIATION_ATOMIC_WRITE_FAILED', severity: 'error' }));
+    expect(fs.readFileSync(projectStatePath, 'utf8')).toBe(before);
+    expect(fs.readdirSync(path.dirname(projectStatePath)).filter((entry) => entry.includes('.hadara-remediate-'))).toHaveLength(0);
   });
 
   it('creates a missing evidence.jsonl file for an existing Task Capsule', () => {
