@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.evidence.lint.v1",
+  "x-hadara-schema-id": "hadara.evidence.lint.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "taskId", "projectRoot", "summary", "records", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.evidence.lint.v1" },
+    "command": { "const": "evidence.lint" },
+    "ok": { "type": "boolean" },
+    "taskId": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["records", "markdownRows", "issueCounts"],
+      "properties": {
+        "records": { "type": "number" },
+        "markdownRows": { "type": "number" },
+        "issueCounts": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["error", "warning", "info"],
+          "properties": {
+            "error": { "type": "number" },
+            "warning": { "type": "number" },
+            "info": { "type": "number" }
+          }
+        }
+      }
+    },
+    "records": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "enum": ["error", "warning", "info"] },
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "path": { "type": "string" },
+          "line": { "type": "number" },
+          "expected": { "type": "string" },
+          "actual": { "type": "string" }
+        }
+      }
+    }
+  }
+}

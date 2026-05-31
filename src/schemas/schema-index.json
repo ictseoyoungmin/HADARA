@@ -9,6 +9,13 @@
       "notes": "Shared by CLI evidence list and read-only MCP hadara.evidence.list."
     },
     {
+      "id": "hadara.evidence.lint.v1",
+      "path": "src/schemas/evidence-lint.schema.json",
+      "status": "fixture",
+      "owner": "services/evidence-lint",
+      "notes": "Documents read-only evidence index lint reports for early Task Capsule evidence drift detection."
+    },
+    {
       "id": "hadara.context.export.v1",
       "path": "src/schemas/context-export.schema.json",
       "status": "fixture",

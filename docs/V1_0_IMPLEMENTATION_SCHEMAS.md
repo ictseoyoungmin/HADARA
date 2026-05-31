@@ -1308,6 +1308,44 @@ Disallowed Phase 2 remediations include changing task status automatically, mark
 
 T-0152 through T-0160 satisfy the Phase 2 product baseline: new Task Capsules use v2 table-first frames, task/docs/profile/all protocol doctor reports exist, safe remediation is dry-run-first and allowlisted, and fixture-level JSON contracts are registered for consistency and remediation reports. T-0161 through T-0164 close the strict-reading hardening follow-ups from the original Phase 2 plan: shared table helpers, unified doctor remediation hints, a non-destructive task scaffold upgrade command, and protocol surface docs/help/schema-note alignment.
 
+### Close Validation / Evidence Fixed-Point Redesign
+
+T-0164 exposed a completion-loop design issue: a done-level validation can pass, but recording that validation as evidence mutates the evidence files that validation checks. HADARA resolves this by separating three layers:
+
+| Layer | Role | Loop Rule |
+|---|---|---|
+| Validation | Proves a task is ready to close. | Validates the pre-close state. |
+| Close | Records the proof as close audit evidence. | Appended close evidence is not a prerequisite for the same validation run. |
+| Audit | Checks that an already closed task still has coherent close records. | It does not re-close the task. |
+
+Design principle:
+
+```text
+Validation proves readiness.
+Close records the proof.
+Audit checks the close record.
+These are three different layers.
+```
+
+Operational rules:
+
+- Task Capsule `evidence.jsonl` is append-only through HADARA evidence commands; agents must not hand-edit it.
+- Harness/test/doctor/build command results use evidence kind `command-log`.
+- `hadara evidence lint --task <id> --json` and task-scoped protocol doctor should catch malformed JSONL, unsupported enums, taskId mismatches, missing required fields, rough Markdown/JSONL drift, and missing public evidence artifacts before close.
+- `hadara task close --task <id> --json` should start as a read-only close plan with `nextActions`.
+- `hadara task close --task <id> --execute --json` should initially write only close evidence through the canonical evidence writer after validation/lint/doctor blockers pass.
+- Automatic status, Task Board, Project State, and handoff writes remain future opt-in flags or separate remediation commands, not the initial close MVP.
+
+Planned follow-up capsules:
+
+| Capsule | Goal | Initial Write Boundary |
+|---|---|---|
+| T-0165 Evidence Lint and Doctor Validation | Add read-only evidence lint and surface evidence drift through task doctor. | None |
+| T-0166 Task Close Plan Report | Add dry-run `task close` plan with loop-boundary `nextActions`. | None |
+| T-0167 Task Close Execute MVP | Execute close only by appending canonical close evidence after blockers pass. | Close evidence append only |
+| T-0168 Task Ready Preflight | Add friendly readiness preflight before close. | None |
+| T-0169 Evidence Command UX | Add command-log evidence writer ergonomics without executing shell commands. | Evidence append only |
+
 | Proposed Capsule | Status | Goal | Non-Goals |
 |---|---|---|---|
 | T-0161 Markdown Table Helper Extraction | Done | Extract shared generated-table parsing/formatting helpers so protocol consistency, profile diagnostics, harness validation, and remediation code stop carrying local table parsers. | Do not change protocol doctor behavior, issue codes, scaffold frames, or remediation write semantics. |

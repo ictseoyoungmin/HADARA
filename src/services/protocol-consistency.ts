@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createProfileConsistencyDiagnostics, createProtocolProfileSummary, ProtocolProfileSummary } from './protocol-profile';
+import { createEvidenceLintReport } from './evidence-lint';
 import { parseMarkdownRows } from './markdown-table';
 import { ProtocolRemediationFix } from './protocol-remediation';
 import { isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule, TASK_FILES } from '../task/task-capsule';
@@ -846,6 +847,22 @@ function checkEvidenceIndex(projectRoot: string, task: TaskCapsule, taskLooksDon
       message: 'Task is marked Done but evidence.jsonl has no records.',
       expected: 'at least one evidence record',
       actual: 'empty evidence.jsonl'
+    });
+  }
+
+  const lintReport = createEvidenceLintReport(projectRoot, task.id);
+  for (const issue of lintReport.issues) {
+    if (issue.code === 'EVIDENCE_MARKDOWN_JSONL_COUNT_DRIFT') continue;
+    if (issue.code === 'EVIDENCE_INDEX_MISSING') continue;
+    pushIssue(issues, {
+      code: issue.code,
+      severity: issue.severity,
+      area: 'evidence',
+      taskId: task.id,
+      path: issue.path,
+      message: issue.message,
+      expected: issue.expected,
+      actual: issue.actual
     });
   }
 }

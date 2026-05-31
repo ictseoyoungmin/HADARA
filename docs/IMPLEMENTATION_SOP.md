@@ -128,6 +128,14 @@ Then run built-CLI smokes through `node /workspace/dist/cli/main.js ... --projec
 4. Add security, release, install, provider, MCP, dashboard, or deployment smoke checks only after those surfaces exist and are documented for this project.
 5. If a required check cannot run, record the reason and residual risk in `EVIDENCE.md`, `evidence.jsonl`, and `HANDOFF.md`.
 
+## Evidence Records
+
+1. Do not hand-edit Task Capsule `evidence.jsonl`.
+2. Append evidence through HADARA evidence commands or command-specific evidence attachment helpers so kind, result, visibility, artifact policy, and redaction checks run consistently.
+3. Treat close validation output as close audit evidence, not as a prerequisite for the same validation run.
+4. Use `command-log` for harness, doctor, build, test, and CLI smoke command results.
+5. Use `hadara evidence lint --task <task-id> --json` or task-scoped protocol doctor before close when evidence drift is suspected.
+
 ## Session End
 
 1. Run relevant tests or record why not.

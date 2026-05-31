@@ -29,6 +29,7 @@ describe('schema fixtures', () => {
       'hadara.cleanCheckoutSmoke.v1',
       'hadara.context.export.v1',
       'hadara.event.v1',
+      'hadara.evidence.lint.v1',
       'hadara.evidence.list.v1',
       'hadara.featureSmoke.v1',
       'hadara.install.plan.v1',

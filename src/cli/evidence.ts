@@ -1,5 +1,6 @@
 import { appendEvidence, EvidenceRecord } from '../evidence/evidence';
 import { createEvidenceCollectReport } from './evidence-json';
+import { createEvidenceLintReport } from '../services/evidence-lint';
 import { createEvidenceListReport } from '../services/evidence-list';
 import { getFlag, getIntegerOption, getRequiredStringOption, getStringOption } from './args';
 
@@ -24,6 +25,21 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
       for (const record of report.records) {
         console.log(`${record.time} | ${record.kind} | ${record.result} | ${record.visibility} | ${record.summary}`);
       }
+      for (const issue of report.issues) {
+        console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
+      }
+    }
+    if (!report.ok) process.exitCode = 6;
+    return true;
+  }
+
+  if (sub === 'lint') {
+    const taskId = getRequiredStringOption(input.args, '--task');
+    const report = createEvidenceLintReport(input.projectRoot, taskId);
+    if (input.jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log(`[HADARA] evidence lint ${taskId}: ${report.ok ? 'ok' : 'issues'}`);
       for (const issue of report.issues) {
         console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
       }
