@@ -166,7 +166,7 @@
 | T-0163 | Task Capsule Upgrade Scaffold Command | Done | tasks/T-0163-task-capsule-upgrade-scaffold-command | Adds dry-run-first non-destructive task scaffold upgrade command; Docker validation passed. |
 | T-0164 | Protocol Surface Docs Alignment | Done | tasks/T-0164-protocol-surface-docs-alignment | Aligns CLI help, README, JSON contract docs, schema notes, and Phase 2 planning docs with implemented protocol doctor/remediation/task upgrade surfaces; Docker validation passed. |
 | T-0165 | Evidence Lint and Doctor Validation | Done | tasks/T-0165-evidence-lint-and-doctor-validation | Adds read-only evidence lint, protocol doctor evidence drift surfacing, schema fixture, and close/evidence loop design docs. |
-| T-0166 | Task Close Plan Report | Draft | tasks/T-0166-task-close-plan-report | Planned close validation/evidence loop-boundary dry-run report. |
+| T-0166 | Task Close Plan Report | Done | tasks/T-0166-task-close-plan-report | Adds read-only task close plan report with validation/evidence lint/task doctor checks, close evidence loop-boundary metadata, and nextActions. |
 | T-0167 | Task Close Execute MVP | Draft | tasks/T-0167-task-close-execute-mvp | Planned close execute MVP with close evidence append only. |
 | T-0168 | Task Ready Preflight | Draft | tasks/T-0168-task-ready-preflight | Planned friendly readiness preflight before close. |
 | T-0169 | Evidence Command UX | Draft | tasks/T-0169-evidence-command-ux | Planned command-log evidence writer ergonomics without shell execution. |

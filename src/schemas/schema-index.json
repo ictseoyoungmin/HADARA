@@ -72,6 +72,13 @@
       "notes": "Documents dry-run-first non-destructive Task Capsule scaffold frame upgrade reports."
     },
     {
+      "id": "hadara.task.close.v1",
+      "path": "src/schemas/task-close.schema.json",
+      "status": "fixture",
+      "owner": "task/close",
+      "notes": "Documents task close plan and execute reports with close-evidence loop-boundary metadata."
+    },
+    {
       "id": "hadara.releaseGate.v1",
       "path": "src/schemas/release-gate.schema.json",
       "status": "fixture",

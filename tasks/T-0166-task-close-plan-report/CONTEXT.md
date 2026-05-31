@@ -4,19 +4,20 @@
 
 | Document | Why It Matters | Read Status |
 |---|---|---|
-| docs/PROJECT_STATE.md | Current project state. | Pending |
-| docs/AGENT_HANDOFF.md | Current handoff. | Pending |
-| docs/TASK_BOARD.md | Task queue and status. | Pending |
-| docs/IMPLEMENTATION_SOP.md | Workflow rules. | Pending |
+| docs/PROJECT_STATE.md | Current project state. | Read |
+| docs/AGENT_HANDOFF.md | Current handoff. | Read |
+| docs/TASK_BOARD.md | Task queue and status. | Read |
+| docs/IMPLEMENTATION_SOP.md | Workflow rules. | Read |
+| docs/V1_0_IMPLEMENTATION_SCHEMAS.md | Defines close validation/evidence layer separation. | Read |
 
 ## Assumptions
 
 | Assumption | Source | Risk If Wrong |
 |---|---|---|
-| TBD | TBD | TBD |
+| Close plan may run read-only validation services. | T-0166 design. | If expensive, future optimization may be needed. |
 
 ## Constraints
 
 | Constraint | Source | Notes |
 |---|---|---|
-| TBD | TBD | TBD |
+| T-0166 must not write close evidence. | Reviewer guidance. | `--execute` remains reserved with an explicit error. |

@@ -1,0 +1,2 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-31T06:25:14.088Z","taskId":"T-0166","kind":"test-log","summary":"Focused Docker validation passed for task close plan, schema fixtures, and evidence lint: 3 files / 7 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-31T06:27:42.937Z","taskId":"T-0166","kind":"command-log","summary":"Built CLI task close dry-run returned ok:true with closeEvidence.appended false, and T-0166 done-level harness returned ok:true.","result":"passed","visibility":"public"}

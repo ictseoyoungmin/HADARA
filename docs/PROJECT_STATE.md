@@ -70,7 +70,8 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Latest completed task: T-0163 Task Capsule Upgrade Scaffold Command added dry-run-first `hadara task upgrade-scaffold --task <id> --json [--execute]` with append/create-only safe writes, ambiguous-frame skips, before-hash/existence checks, and `hadara.task.upgrade_scaffold.v1` fixture-level schema.
 - Latest completed task: T-0164 Protocol Surface Docs Alignment aligned CLI help, README, JSON contract docs, schema docs, schema index notes, and Phase 2 planning docs with the implemented protocol doctor/remediation/task upgrade surfaces.
 - Latest completed task: T-0165 Evidence Lint and Doctor Validation added read-only `hadara evidence lint --task <id> --json`, registered `hadara.evidence.lint.v1`, surfaced evidence lint failures through task protocol doctor, and documented the close validation/evidence fixed-point redesign.
-- Active / next task: T-0166 Task Close Plan Report.
+- Latest completed task: T-0166 Task Close Plan Report added read-only `hadara task close --task <id> --json` reports with done validation, evidence lint, task protocol doctor checks, close evidence loop-boundary metadata, and machine-readable `nextActions`.
+- Active / next task: T-0167 Task Close Execute MVP.
 - Planned close-model follow-ups are tracked as T-0166 through T-0169: task close plan report, close execute MVP with close evidence append only, task ready preflight, and command-log evidence writer UX.
 - Harness validation supports `--level draft|done`; done-level validation requires Done status, completed acceptance, evidence records, and updated handoff sections.
 - Done-level harness validation now also checks `docs/TASK_BOARD.md` for exactly one row for the validated task, `Done` status, and the expected Task Capsule path, catching duplicate or stale append/update results before completion.

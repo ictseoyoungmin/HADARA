@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Working tree contains completed T-0165 evidence lint changes. |
+| Branch | main | Working tree contains completed T-0166 task close plan changes. |
 | Current Phase | Close Validation / Evidence Fixed-Point Hardening | Phase 2 baseline and strict-plan follow-ups are complete; close-model follow-ups T-0165 through T-0169 are in progress. |
-| Latest Completed Task | T-0165 Evidence Lint and Doctor Validation | Added read-only evidence lint, task doctor evidence drift surfacing, schema fixture, and fixed-point close/evidence docs. |
-| Active / Next Task | T-0166 Task Close Plan Report | Next planned slice is read-only `task close` planning with loop-boundary `nextActions`. |
-| Validation Baseline | Focused Docker checks passed | Latest focused Docker vitest passed with 3 files and 22 tests for evidence lint, schema fixtures, and protocol consistency integration. |
+| Latest Completed Task | T-0166 Task Close Plan Report | Added read-only task close plan report with validation/evidence lint/task doctor checks, close evidence loop-boundary metadata, and nextActions. |
+| Active / Next Task | T-0167 Task Close Execute MVP | Next planned slice appends close evidence only after blockers pass. |
+| Validation Baseline | Focused Docker checks passed | Latest focused Docker vitest passed with 3 files and 7 tests for task close, schema fixtures, and evidence lint. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0163 Task Capsule Upgrade Scaffold Command | Added `hadara task upgrade-scaffold --task <id> --json [--execute]`, safe append/create-only execution, ambiguous-frame skips, and `hadara.task.upgrade_scaffold.v1`. | T-0163 evidence: focused upgrade/schema/task tests passed with 3 files / 11 tests; full Docker check passed with 63 files / 472 tests; built CLI dry-run smoke passed. |
 | T-0164 Protocol Surface Docs Alignment | Aligned executable help, README, CLI JSON contract docs, schema notes, schema registry metadata, and Phase 2 follow-up docs with the implemented protocol doctor/remediate/task upgrade surfaces. | T-0164 evidence: full Docker check passed with 63 files / 472 tests; built CLI help smoke listed protocol doctor default/all-scope forms and task upgrade-scaffold; done-level harness returned `ok: true`; `/workspace/dist` was refreshed. |
 | T-0165 Evidence Lint and Doctor Validation | Added `hadara evidence lint --task <id> --json`, `hadara.evidence.lint.v1`, task doctor evidence lint surfacing, and close/evidence loop design docs. | T-0165 evidence: focused Docker checks passed with 3 files / 22 tests. |
+| T-0166 Task Close Plan Report | Added `hadara task close --task <id> --json` dry-run reports with done validation, evidence lint, task doctor summary, loop-boundary close evidence plan, and nextActions. | T-0166 evidence: focused Docker checks passed with 3 files / 7 tests. |
 
 ## Current Known Problems
 
@@ -35,16 +35,16 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Implement T-0166 Task Close Plan Report. | T-0165 added evidence lint; the next step is a read-only close plan surface with `nextActions` and no writes. | Read `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` close redesign section and T-0166 capsule. |
+| Implement T-0167 Task Close Execute MVP. | T-0166 added dry-run close planning; the next step is to append close evidence only after validation/lint/doctor blockers pass. | Read `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` close redesign section and T-0167 capsule. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Focused evidence lint/schema/protocol checks | Docker `npx vitest run tests/unit/evidence-lint.test.ts tests/unit/schema-fixtures.test.ts tests/unit/protocol-consistency.test.ts` passed with 3 files and 22 tests. | Covers valid lint reports, unsupported kind detection, task doctor surfacing, and schema registry alignment. |
-| Built CLI smoke | Docker built CLI `evidence lint --task T-0165 --json --project /workspace` returned `ok: true`. | `/workspace/dist` was refreshed after build. |
+| Focused task close/schema/evidence checks | Docker `npx vitest run tests/unit/task-close.test.ts tests/unit/schema-fixtures.test.ts tests/unit/evidence-lint.test.ts` passed with 3 files and 7 tests. | Covers ready close plan, blocker plan, reserved execute, schema registry, and lint behavior. |
+| Built CLI smoke | Docker built CLI `task close --task T-0166 --json --project /workspace` returned `ok: true`, `mode: dry-run`, and `closeEvidence.appended: false`. | `/workspace/dist` was refreshed after build. |
 | Full repository check | Last full Docker `npm run check` passed with 63 files and 472 tests before T-0165; rerun before closing the whole T-0165 through T-0169 sequence. | Host dependencies are unavailable; use Docker. |
-| Done-level harness | Docker built CLI `harness validate --task T-0165 --level done --json --project /workspace` returned `ok: true`. | No issues. |
+| Done-level harness | Docker built CLI `harness validate --task T-0166 --level done --json --project /workspace` returned `ok: true`. | No issues. |
 
 ## Historical Index
 

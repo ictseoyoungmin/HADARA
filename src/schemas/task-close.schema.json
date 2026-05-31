@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.task.close.v1",
+  "x-hadara-schema-id": "hadara.task.close.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "mode", "taskId", "projectRoot", "summary", "validation", "evidenceLint", "protocolDoctor", "closeEvidence", "nextActions", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.task.close.v1" },
+    "command": { "const": "task.close" },
+    "ok": { "type": "boolean" },
+    "mode": { "enum": ["dry-run", "execute"] },
+    "taskId": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["blockers", "warnings", "nextActions"],
+      "properties": {
+        "blockers": { "type": "number" },
+        "warnings": { "type": "number" },
+        "nextActions": { "type": "number" }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["ok", "level", "issueCount", "validatedBeforeCloseEvidenceHash"],
+      "properties": {
+        "ok": { "type": "boolean" },
+        "level": { "const": "done" },
+        "issueCount": { "type": "number" },
+        "validatedBeforeCloseEvidenceHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$|^sha256:missing-task$" }
+      }
+    },
+    "evidenceLint": { "type": "object", "additionalProperties": true },
+    "protocolDoctor": { "type": "object", "additionalProperties": true },
+    "closeEvidence": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["planned", "appended", "kind", "result", "summary", "excludedFromCurrentValidationLoop"],
+      "properties": {
+        "planned": { "type": "boolean" },
+        "appended": { "type": "boolean" },
+        "kind": { "const": "command-log" },
+        "result": { "enum": ["passed", "blocked"] },
+        "summary": { "type": "string" },
+        "excludedFromCurrentValidationLoop": { "const": true }
+      }
+    },
+    "nextActions": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "enum": ["error", "warning", "info"] },
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "path": { "type": "string" }
+        }
+      }
+    }
+  }
+}

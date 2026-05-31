@@ -1,0 +1,120 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
+import { appendEvidence } from '../../src/evidence/evidence';
+import { createTaskCloseReport } from '../../src/task/task-close';
+import { createTaskCapsule } from '../../src/task/task-capsule';
+
+const roots: string[] = [];
+
+function tempProject(): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-task-close-'));
+  roots.push(dir);
+  return dir;
+}
+
+afterEach(() => {
+  for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
+});
+
+describe('task close report', () => {
+  it('creates a read-only close plan with loop-boundary next actions for a completed task', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close ready task');
+    completeTask(root, task.id, task.dir);
+
+    const report = createTaskCloseReport(root, task.id, 'dry-run');
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.task.close.v1',
+      command: 'task.close',
+      ok: true,
+      mode: 'dry-run',
+      taskId: task.id,
+      validation: {
+        ok: true,
+        level: 'done',
+        issueCount: 0
+      },
+      evidenceLint: { ok: true, issueCount: 0 },
+      protocolDoctor: { ok: true, issueCount: 0 },
+      closeEvidence: {
+        planned: true,
+        appended: false,
+        kind: 'command-log',
+        result: 'passed',
+        excludedFromCurrentValidationLoop: true
+      }
+    });
+    expect(report.validation.validatedBeforeCloseEvidenceHash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(report.nextActions).toContainEqual(
+      expect.objectContaining({
+        id: 'append-close-evidence',
+        loopBoundary: true,
+        command: `hadara task close --task ${task.id} --execute --json`
+      })
+    );
+  });
+
+  it('reports blockers for tasks that are not done-ready', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close blocked task');
+
+    const report = createTaskCloseReport(root, task.id, 'dry-run');
+
+    expect(report.ok).toBe(false);
+    expect(report.summary.blockers).toBeGreaterThan(0);
+    expect(report.closeEvidence.planned).toBe(false);
+    expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'resolve-close-blockers', required: true }));
+  });
+
+  it('keeps execute reserved until the execute MVP capsule', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close execute reserved');
+    completeTask(root, task.id, task.dir);
+
+    const report = createTaskCloseReport(root, task.id, 'execute');
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_EXECUTE_NOT_IMPLEMENTED' }));
+  });
+});
+
+function completeTask(root: string, taskId: string, taskDir: string): void {
+  fs.writeFileSync(
+    path.join(taskDir, 'TASK.md'),
+    fs
+      .readFileSync(path.join(taskDir, 'TASK.md'), 'utf8')
+      .replace(/\| Status \| Draft \|/g, '| Status | Done |')
+      .replace(/\nDraft\n/, '\nDone\n')
+      .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Exercise task close planning. | Fixture verifies close readiness. |')
+      .replace('| TBD | TBD |', '| Complete fixture documents. | Needed for done-level validation. |')
+      .replace('| TBD | TBD |', '| Broad workflow mutation. | Outside fixture scope. |')
+      .replace('| TBD | Draft | Initial task scaffold. | TBD |', '| 2026-05-31T00:00:00.000Z | Done | Fixture complete. | Evidence. |'),
+    'utf8'
+  );
+  updateTaskBoardDone(root, taskId);
+  fs.writeFileSync(path.join(taskDir, 'PLAN.md'), '# Plan\n\n| Step | Action | Status | Evidence |\n|---|---|---|---|\n| 1 | Complete fixture. | Done | Fixture. |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'CONTEXT.md'), '# Context\n\n## Required Reading Used\n\n| Document | Why It Matters | Read Status |\n|---|---|---|\n| docs/TASK_BOARD.md | Fixture. | Read |\n\n## Assumptions\n\n| Assumption | Source | Risk If Wrong |\n|---|---|---|\n| Fixture is complete. | Test | Low. |\n\n## Constraints\n\n| Constraint | Source | Notes |\n|---|---|---|\n| Read-only close plan. | Test | No writes. |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'FILES.md'), '# Files\n\n| Path | Action | Reason | Status |\n|---|---|---|---|\n| src/task/task-close.ts | Add | Close plan. | Done |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'ACCEPTANCE.md'), '# Acceptance Criteria\n\n| ID | Criterion | Status | Evidence |\n|---|---|---|---|\n| AC-1 | Fixture complete. | Met | Evidence. |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'TESTS.md'), '# Tests\n\n## Routine Checks\n\n| Command | Purpose | Required For Done | Latest Result | Evidence |\n|---|---|---|---|---|\n| Fixture | Exercise close. | Yes | Passed | Evidence. |\n\n## Special Checks\n\n| Check | Required? | Reason | Latest Result | Evidence |\n|---|---|---|---|---|\n| None | No | Fixture. | Not Run | Not applicable. |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'RISKS.md'), '# Risks\n\n| Risk | Impact | Likelihood | Mitigation | Status |\n|---|---|---|---|---|\n| Fixture drift | Low | Low | Keep local. | Mitigated |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'DECISIONS.md'), '# Decisions\n\n| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n| D-1 | Use fixture. | Accepted | Test close plan. | Test. |\n', 'utf8');
+  fs.writeFileSync(path.join(taskDir, 'HANDOFF.md'), '# Handoff\n\n## Current State\n\n| Field | Value |\n|---|---|\n| Status | Done |\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| Fixture complete. | Evidence. |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| Continue. | Done. | docs/TASK_BOARD.md |\n', 'utf8');
+  appendEvidence(root, { taskId, kind: 'note', summary: 'Close-ready evidence', result: 'passed', visibility: 'public' });
+}
+
+function updateTaskBoardDone(root: string, taskId: string): void {
+  const taskBoard = path.join(root, 'docs', 'TASK_BOARD.md');
+  fs.writeFileSync(
+    taskBoard,
+    fs
+      .readFileSync(taskBoard, 'utf8')
+      .split(/\r?\n/)
+      .map((line) => (line.startsWith(`| ${taskId} |`) ? line.replace('| Draft |', '| Done |') : line))
+      .join('\n'),
+    'utf8'
+  );
+}
