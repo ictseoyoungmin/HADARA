@@ -21,6 +21,7 @@ import releaseGateSchemaJson from '../schemas/release-gate.schema.json';
 import releasePublishSchemaJson from '../schemas/release-publish.schema.json';
 import smokeEvidenceSummarySchemaJson from '../schemas/smoke-evidence-summary.schema.json';
 import taskCloseSchemaJson from '../schemas/task-close.schema.json';
+import taskReadySchemaJson from '../schemas/task-ready.schema.json';
 import taskUpgradeScaffoldSchemaJson from '../schemas/task-upgrade-scaffold.schema.json';
 import toolsListSchemaJson from '../schemas/tools-list.schema.json';
 import writePreflightSchemaJson from '../schemas/write-preflight.schema.json';
@@ -86,6 +87,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.releasePublish.v1': releasePublishSchemaJson as JsonObject,
   'hadara.smokeEvidenceSummary.v1': smokeEvidenceSummarySchemaJson as JsonObject,
   'hadara.task.close.v1': taskCloseSchemaJson as JsonObject,
+  'hadara.task.ready.v1': taskReadySchemaJson as JsonObject,
   'hadara.task.upgrade_scaffold.v1': taskUpgradeScaffoldSchemaJson as JsonObject,
   'hadara.tools.list.v1': toolsListSchemaJson as JsonObject,
   'hadara.write.preflight.v1': writePreflightSchemaJson as JsonObject

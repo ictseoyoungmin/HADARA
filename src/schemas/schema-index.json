@@ -79,6 +79,13 @@
       "notes": "Documents task close plan and execute reports with close-evidence loop-boundary metadata."
     },
     {
+      "id": "hadara.task.ready.v1",
+      "path": "src/schemas/task-ready.schema.json",
+      "status": "fixture",
+      "owner": "task/ready",
+      "notes": "Documents read-only task readiness preflight reports before close."
+    },
+    {
       "id": "hadara.releaseGate.v1",
       "path": "src/schemas/release-gate.schema.json",
       "status": "fixture",

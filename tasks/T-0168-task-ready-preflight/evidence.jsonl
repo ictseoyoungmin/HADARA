@@ -1,0 +1,2 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-31T06:35:48.185Z","taskId":"T-0168","kind":"test-log","summary":"Focused Docker validation passed for task ready, task close, and schema fixtures: 3 files / 6 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-31T06:38:10.376Z","taskId":"T-0168","kind":"command-log","summary":"Built CLI task ready smoke returned ok:true with ready:true, and T-0168 done-level harness returned ok:true.","result":"passed","visibility":"public"}

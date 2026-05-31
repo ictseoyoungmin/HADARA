@@ -6,34 +6,37 @@
 |---|---|
 | ID | T-0168 |
 | Title | Task Ready Preflight |
-| Status | Draft |
-| Created | TBD |
-| Updated | TBD |
+| Status | Done |
+| Created | 2026-05-31 |
+| Updated | 2026-05-31 |
 
 ## Goal
 
 | Goal | Notes |
 |---|---|
-| TBD | Replace with the smallest verifiable outcome. |
+| Add read-only task readiness preflight. | Provide a friendly blocker summary before close without appending evidence. |
 
 ## Scope
 
 | In Scope | Reason |
 |---|---|
-| TBD | TBD |
+| Add `hadara task ready --task <id> --level done --json`. | Agents need a pre-close readiness surface. |
+| Register `hadara.task.ready.v1`. | Keep CLI JSON surface documented. |
 
 ## Out of Scope
 
 | Out of Scope | Reason |
 |---|---|
-| TBD | TBD |
+| Append close evidence. | Belongs to `task close --execute`. |
+| Update status or project docs. | Out of scope for read-only readiness. |
 
 ## Status
 
-Draft
+Done
 
 ## Status History
 
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
-| TBD | Draft | Initial task scaffold. | TBD |
+| 2026-05-31T06:35:48.185Z | Draft | Initial task scaffold. | Task created by HADARA CLI. |
+| 2026-05-31T06:35:48.185Z | Done | Task ready preflight implemented and validated. | Focused Docker checks passed. |

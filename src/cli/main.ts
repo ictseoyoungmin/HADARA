@@ -43,6 +43,7 @@ Usage:
   hadara task show <task-id>
   hadara task upgrade-scaffold --task <task-id> [--execute] [--json]
   hadara task close --task <task-id> [--execute] [--json]
+  hadara task ready --task <task-id> [--level done] [--json]
   hadara evidence collect --task <task-id> [--kind note|test-log|command-log|diff-summary|screenshot] [--path <path>] [--summary <text>] [--result passed|failed|blocked|unknown] [--private|--visibility public|private]
   hadara evidence list --task <task-id> [--limit <n>] [--include-private] [--json]
   hadara evidence lint --task <task-id> [--json]

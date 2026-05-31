@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.task.ready.v1",
+  "x-hadara-schema-id": "hadara.task.ready.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "taskId", "projectRoot", "level", "summary", "checks", "nextActions", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.task.ready.v1" },
+    "command": { "const": "task.ready" },
+    "ok": { "type": "boolean" },
+    "taskId": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "level": { "const": "done" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["ready", "blockers", "warnings"],
+      "properties": {
+        "ready": { "type": "boolean" },
+        "blockers": { "type": "number" },
+        "warnings": { "type": "number" }
+      }
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["doneValidation", "evidenceLint", "protocolDoctor"],
+      "properties": {
+        "doneValidation": { "type": "boolean" },
+        "evidenceLint": { "type": "boolean" },
+        "protocolDoctor": { "type": "boolean" }
+      }
+    },
+    "nextActions": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+  }
+}

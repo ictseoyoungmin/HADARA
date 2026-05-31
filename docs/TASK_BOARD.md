@@ -168,5 +168,5 @@
 | T-0165 | Evidence Lint and Doctor Validation | Done | tasks/T-0165-evidence-lint-and-doctor-validation | Adds read-only evidence lint, protocol doctor evidence drift surfacing, schema fixture, and close/evidence loop design docs. |
 | T-0166 | Task Close Plan Report | Done | tasks/T-0166-task-close-plan-report | Adds read-only task close plan report with validation/evidence lint/task doctor checks, close evidence loop-boundary metadata, and nextActions. |
 | T-0167 | Task Close Execute MVP | Done | tasks/T-0167-task-close-execute-mvp | Enables `task close --execute` to append canonical close evidence only after blockers pass. |
-| T-0168 | Task Ready Preflight | Draft | tasks/T-0168-task-ready-preflight | Planned friendly readiness preflight before close. |
+| T-0168 | Task Ready Preflight | Done | tasks/T-0168-task-ready-preflight | Adds read-only `task ready --level done` preflight with friendly blockers, check booleans, and nextActions. |
 | T-0169 | Evidence Command UX | Draft | tasks/T-0169-evidence-command-ux | Planned command-log evidence writer ergonomics without shell execution. |
