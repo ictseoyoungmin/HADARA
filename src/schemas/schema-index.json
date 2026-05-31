@@ -44,6 +44,20 @@
       "notes": "Documents private portable-store manifest records without private raw content or source paths."
     },
     {
+      "id": "hadara.protocol.consistency.v1",
+      "path": "src/schemas/protocol-consistency.schema.json",
+      "status": "fixture",
+      "owner": "protocol/consistency",
+      "notes": "Documents read-only protocol doctor reports for task, docs, and profile scopes."
+    },
+    {
+      "id": "hadara.protocol.remediation.v1",
+      "path": "src/schemas/protocol-remediation.schema.json",
+      "status": "fixture",
+      "owner": "protocol/remediation",
+      "notes": "Documents dry-run-first protocol remediation plans and bounded execute reports."
+    },
+    {
       "id": "hadara.releaseGate.v1",
       "path": "src/schemas/release-gate.schema.json",
       "status": "fixture",

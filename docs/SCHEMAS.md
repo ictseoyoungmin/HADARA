@@ -4,9 +4,9 @@ HADARA JSON schemas are contract fixtures for stable external read models. They 
 
 ## Current Phase
 
-Schema layer status: planning and fixture registration, with limited active-run, write-preflight, install-plan, feature-smoke, package-smoke, clean-checkout smoke, release-artifact, and release evidence summary runtime validation.
+Schema layer status: planning and fixture registration, with limited active-run, write-preflight, install-plan, feature-smoke, package-smoke, clean-checkout smoke, release-artifact, release evidence summary, and protocol consistency/remediation runtime validation in focused contract tests.
 
-T-0079 added fixture registration only. T-0092 added a lightweight runtime validation API for `hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` because those read models are backed by mutable local state. T-0098 registers and validates `hadara.write.preflight.v1` reports before returning CLI write-boundary preflight output. T-0129 validates `hadara.install.plan.v1` before returning installer dry-run plans. T-0131 validates `hadara.featureSmoke.v1` before returning reduced core feature smoke reports over service/read-model surfaces. T-0132 registers `hadara.packageSmoke.v1` and validates deterministic package-smoke report fixtures before package-smoke dry-run or execution commands exist. T-0137 registers and validates `hadara.releaseArtifact.v1` before returning release artifact builder reports. T-0138 registers `hadara.smokeEvidenceSummary.v1` and `hadara.releaseArtifact.manifest.v1` before release gates read existing evidence records or optional reduced summary artifacts. T-0140 registers and validates `hadara.releaseDryRun.v1` before returning final release dry-run reports. T-0141 registers and validates `hadara.releasePublish.v1` before returning approval-gated publish/deploy readiness reports. Phase 2 protocol consistency schemas are planned next; broad schema validation remains deferred.
+T-0079 added fixture registration only. T-0092 added a lightweight runtime validation API for `hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` because those read models are backed by mutable local state. T-0098 registers and validates `hadara.write.preflight.v1` reports before returning CLI write-boundary preflight output. T-0129 validates `hadara.install.plan.v1` before returning installer dry-run plans. T-0131 validates `hadara.featureSmoke.v1` before returning reduced core feature smoke reports over service/read-model surfaces. T-0132 registers `hadara.packageSmoke.v1` and validates deterministic package-smoke report fixtures before package-smoke dry-run or execution commands exist. T-0137 registers and validates `hadara.releaseArtifact.v1` before returning release artifact builder reports. T-0138 registers `hadara.smokeEvidenceSummary.v1` and `hadara.releaseArtifact.manifest.v1` before release gates read existing evidence records or optional reduced summary artifacts. T-0140 registers and validates `hadara.releaseDryRun.v1` before returning final release dry-run reports. T-0141 registers and validates `hadara.releasePublish.v1` before returning approval-gated publish/deploy readiness reports. T-0159 registers `hadara.protocol.consistency.v1` and `hadara.protocol.remediation.v1` and validates focused service/CLI contract reports, including remediation action hash/existence fields. Broad schema validation remains deferred.
 
 ## Registry
 
@@ -36,6 +36,8 @@ Initial fixtures:
 | `hadara.releaseGate.v1` | `src/schemas/release-gate.schema.json` | fixture | Documents advisory and strict release gate reports. |
 | `hadara.privateEvidence.v1` | `src/schemas/private-evidence.schema.json` | fixture | Documents private portable-store manifest records without private raw content or source paths. |
 | `hadara.event.v1` | `src/schemas/event.schema.json` | fixture | Documents structured redacted event records embedded in private audit JSONL. |
+| `hadara.protocol.consistency.v1` | `src/schemas/protocol-consistency.schema.json` | fixture | Documents read-only protocol doctor reports for task, docs, and profile scopes. |
+| `hadara.protocol.remediation.v1` | `src/schemas/protocol-remediation.schema.json` | fixture | Documents dry-run-first protocol remediation plans and bounded execute reports, including optional planned-content hash/existence fields. |
 | `hadara.write.preflight.v1` | `src/schemas/write-preflight.schema.json` | fixture | Documents read-only CLI write-boundary preflight reports. |
 | `hadara.install.plan.v1` | `src/schemas/install-plan.schema.json` | fixture | Documents future installer dry-run planning reports without performing install mutation; target paths are redacted public path-reference objects instead of raw strings. |
 | `hadara.featureSmoke.v1` | `src/schemas/feature-smoke.schema.json` | fixture | Documents reduced read-only core feature smoke reports for the `core` profile and deferred `release-readiness` profile; installed binary and launcher checks are explicitly false in the current report. |
@@ -49,10 +51,7 @@ Initial fixtures:
 
 Planned Phase 2 fixtures:
 
-| Schema ID | File | Status | Notes |
-|---|---|---|---|
-| `hadara.protocol.consistency.v1` | `src/schemas/protocol-consistency.schema.json` | planned | Will document read-only project protocol consistency reports for docs/tasks/profile scopes. |
-| `hadara.protocol.remediation.v1` | `src/schemas/protocol-remediation.schema.json` | planned | Will document dry-run-first remediation plans and safe-auto execution reports without destructive rewrites. |
+None currently.
 
 ## Versioning
 
@@ -98,7 +97,7 @@ export function validateSchema(schemaId: string, value: unknown): SchemaValidati
 export function loadSchema(schemaId: string): unknown;
 ```
 
-Current runtime usage is intentionally narrow: active-run projection/resume reports, write-preflight reports, install-plan reports, feature-smoke reports, and deterministic package-smoke fixtures validate against the fixture subset. Future work should keep CLI/MCP transport envelopes separate from shared read-model schemas.
+Current runtime usage is intentionally narrow: active-run projection/resume reports, write-preflight reports, install-plan reports, feature-smoke reports, deterministic package-smoke fixtures, release reports, and focused protocol consistency/remediation contract reports validate against the fixture subset. Future work should keep CLI/MCP transport envelopes separate from shared read-model schemas.
 
 The validator currently covers the JSON Schema keywords used by registered fixtures, including required fields, const, enum, primitive type checks, arrays, object properties, local `$ref`, `oneOf`, string `minLength`, and regex `pattern`.
 

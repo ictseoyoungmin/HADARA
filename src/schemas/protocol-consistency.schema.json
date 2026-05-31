@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.protocol.consistency.v1",
+  "x-hadara-schema-id": "hadara.protocol.consistency.v1",
+  "title": "HADARA Protocol Consistency Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "scope", "projectRoot", "generatedAt", "summary", "issues", "remediations"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.protocol.consistency.v1" },
+    "command": { "const": "protocol.doctor" },
+    "ok": { "type": "boolean" },
+    "scope": { "type": "string", "enum": ["docs", "tasks", "profile", "all"] },
+    "projectRoot": { "type": "string", "minLength": 1 },
+    "generatedAt": { "type": "string", "minLength": 1 },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["checkedDocs", "checkedTasks", "activeTaskId", "detectedProfile", "profile", "issueCounts"],
+      "properties": {
+        "checkedDocs": { "type": "integer" },
+        "checkedTasks": { "type": "integer" },
+        "activeTaskId": {
+          "type": ["string", "null"],
+          "pattern": "^T-[0-9]{4}$"
+        },
+        "detectedProfile": { "type": "string", "enum": ["basic", "standard", "governed", "unknown", "mixed"] },
+        "profile": { "$ref": "#/$defs/profileSummary" },
+        "issueCounts": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["error", "warning", "info"],
+          "properties": {
+            "error": { "type": "integer" },
+            "warning": { "type": "integer" },
+            "info": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "title", "capsule", "taskStatus", "taskBoardStatus"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+        "title": { "type": "string", "minLength": 1 },
+        "capsule": { "type": "string", "minLength": 1 },
+        "taskStatus": { "type": "string", "minLength": 1 },
+        "taskBoardStatus": { "type": ["string", "null"] }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    },
+    "remediations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/remediation" }
+    }
+  },
+  "$defs": {
+    "profileSummary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["declared", "detected", "target", "source"],
+      "properties": {
+        "declared": { "type": "string", "enum": ["basic", "standard", "governed", "unknown", "mixed"] },
+        "detected": { "type": "string", "enum": ["basic", "standard", "governed", "unknown", "mixed"] },
+        "target": { "type": "string", "enum": ["basic", "standard", "governed", "unknown"] },
+        "source": { "const": "metadata-and-docset" }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "code", "severity", "area", "message"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "code": { "type": "string", "minLength": 1, "pattern": "^[A-Z0-9_:-]+$" },
+        "severity": { "type": "string", "enum": ["error", "warning", "info"] },
+        "area": {
+          "type": "string",
+          "enum": ["profile", "docs", "task", "evidence", "handoff", "validation", "required-reading"]
+        },
+        "path": { "type": "string", "minLength": 1 },
+        "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+        "message": { "type": "string", "minLength": 1 },
+        "expected": { "type": "string" },
+        "actual": { "type": "string" },
+        "remediationId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "remediation": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "issueIds", "title", "mode", "targetPaths", "summary", "steps"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "issueIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "title": { "type": "string", "minLength": 1 },
+        "mode": { "type": "string", "enum": ["manual", "safe-auto", "unsafe-auto"] },
+        "command": { "type": "string", "minLength": 1 },
+        "targetPaths": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "summary": { "type": "string", "minLength": 1 },
+        "steps": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "preview": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "before": { "type": "string" },
+            "after": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

@@ -9,6 +9,8 @@ import featureSmokeSchemaJson from '../schemas/feature-smoke.schema.json';
 import installPlanSchemaJson from '../schemas/install-plan.schema.json';
 import packageSmokeSchemaJson from '../schemas/package-smoke.schema.json';
 import privateEvidenceSchemaJson from '../schemas/private-evidence.schema.json';
+import protocolConsistencySchemaJson from '../schemas/protocol-consistency.schema.json';
+import protocolRemediationSchemaJson from '../schemas/protocol-remediation.schema.json';
 import providerCallSchemaJson from '../schemas/provider-call.schema.json';
 import providerConfigSchemaJson from '../schemas/provider-config.schema.json';
 import releaseArtifactManifestSchemaJson from '../schemas/release-artifact-manifest.schema.json';
@@ -69,6 +71,8 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.install.plan.v1': installPlanSchemaJson as JsonObject,
   'hadara.packageSmoke.v1': packageSmokeSchemaJson as JsonObject,
   'hadara.privateEvidence.v1': privateEvidenceSchemaJson as JsonObject,
+  'hadara.protocol.consistency.v1': protocolConsistencySchemaJson as JsonObject,
+  'hadara.protocol.remediation.v1': protocolRemediationSchemaJson as JsonObject,
   'hadara.provider.call.v1': providerCallSchemaJson as JsonObject,
   'hadara.provider.config.v1': providerConfigSchemaJson as JsonObject,
   'hadara.releaseArtifact.manifest.v1': releaseArtifactManifestSchemaJson as JsonObject,

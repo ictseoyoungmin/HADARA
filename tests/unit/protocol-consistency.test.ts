@@ -7,6 +7,7 @@ import {
   createProfileProtocolConsistencyReport,
   createTaskProtocolConsistencyReport
 } from '../../src/services/protocol-consistency';
+import { validateSchema } from '../../src/core/schema';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -66,6 +67,7 @@ describe('Docs protocol consistency report', () => {
       remediations: []
     });
     expect(report.summary.checkedDocs).toBeGreaterThanOrEqual(5);
+    expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
   });
 
   it('reports project docs, Task Board, handoff, and required-reading drift', () => {
@@ -115,6 +117,7 @@ describe('Docs protocol consistency report', () => {
       expected: `tasks/${activeTask.id}-active-docs-task`,
       actual: `tasks/${activeTask.id}-wrong`
     });
+    expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
   });
 
   it('reports expanded project-doc drift for profile, state, slices, decisions, tests, handoff, and SOP structure', () => {
@@ -218,6 +221,7 @@ describe('Profile protocol consistency report', () => {
     expect(remediation?.steps.join('\n')).toContain('docs/PROJECT_STATE.md');
     expect(remediation?.steps.join('\n')).toContain('AGENTS.md');
     expect(remediation?.issueIds.length).toBeGreaterThan(0);
+    expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
   });
 
   it('reports partial profile document sets with missing-doc remediation guidance', () => {
@@ -400,6 +404,7 @@ describe('Task protocol consistency report', () => {
       issues: [],
       remediations: []
     });
+    expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
   });
 
   it('reports missing files, status drift, stale handoff, and missing evidence index', () => {
@@ -462,6 +467,7 @@ describe('Task protocol consistency report', () => {
         message: 'Task Capsule not found: T-9999'
       }
     ]);
+    expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
   });
 });
 

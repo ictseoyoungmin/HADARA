@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createProtocolRemediateReport } from '../../src/services/protocol-remediation';
+import { validateSchema } from '../../src/core/schema';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -39,11 +40,18 @@ describe('protocol remediation service', () => {
       fix: 'task-board-row',
       actions: [expect.objectContaining({ status: 'planned', path: 'docs/TASK_BOARD.md' })]
     });
+    expect(validateSchema('hadara.protocol.remediation.v1', dryRun).ok).toBe(true);
+    expect(dryRun.actions[0]).toMatchObject({
+      expectedBeforeExists: true,
+      expectedBeforeHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+      afterHash: expect.stringMatching(/^[a-f0-9]{64}$/)
+    });
     expect(fs.readFileSync(boardPath, 'utf8')).not.toContain(`| ${task.id} |`);
 
     const executed = createProtocolRemediateReport({ projectRoot: root, fix: 'task-board-row', mode: 'execute', taskId: task.id });
 
     expect(executed.actions[0]).toMatchObject({ status: 'updated', path: 'docs/TASK_BOARD.md' });
+    expect(validateSchema('hadara.protocol.remediation.v1', executed).ok).toBe(true);
     expect(fs.readFileSync(boardPath, 'utf8')).toContain(`| ${task.id} | Missing board row | Draft | tasks/${task.id}-missing-board-row |`);
   });
 
@@ -136,6 +144,7 @@ describe('protocol remediation service', () => {
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'PROTOCOL_REMEDIATION_WRITE_CONFLICT', severity: 'error' }));
     expect(report.actions[0]).toMatchObject({ status: 'skipped' });
+    expect(validateSchema('hadara.protocol.remediation.v1', report).ok).toBe(true);
   });
 
   it('reports atomic write failures and leaves the original file unchanged', () => {

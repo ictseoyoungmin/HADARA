@@ -325,7 +325,7 @@ Required checks by slice:
 | T-0154 Project docs consistency doctor | Tests must cover Task Board row drift, duplicate rows, missing capsule paths, stale project handoff, missing Required Reading docs, and Development Slices evidence drift. |
 | T-0155 Profile drift remediation guide | Tests must cover detected `basic`, `standard`, `governed`, `mixed`, and `unknown` profile states plus remediation hints for mismatched PROJECT_STATE/SOP/AGENTS metadata. |
 | T-0156 Safe remediation MVP | Tests must prove dry-run writes nothing, `--execute` changes only whitelisted target files, and safe remediation never deletes user content. |
-| T-0157 Protocol JSON contract | Contract tests must validate `hadara.protocol.consistency.v1`, remediation reports, stable issue-code registration, and existing JSON error-envelope behavior. |
+| T-0159 Protocol JSON contract | Contract tests must validate `hadara.protocol.consistency.v1`, remediation reports, stable issue-code registration, and existing JSON error-envelope behavior. |
 
 Protocol doctor and remediation surfaces must not enable Hermes/MCP runtime capabilities, execute shell commands, call providers, publish packages, mutate release state, or silently rewrite user-authored docs.
 

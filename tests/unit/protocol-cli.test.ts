@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleProtocolCommand } from '../../src/cli/protocol';
+import { validateSchema } from '../../src/core/schema';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -54,6 +55,7 @@ describe('protocol CLI command handler', () => {
         taskBoardStatus: 'Draft'
       }
     });
+    expect(validateSchema('hadara.protocol.consistency.v1', payload).ok).toBe(true);
   });
 
   it('sets exit code 6 when task-scoped protocol errors are present', () => {
@@ -96,6 +98,7 @@ describe('protocol CLI command handler', () => {
         activeTaskId: task.id
       }
     });
+    expect(validateSchema('hadara.protocol.consistency.v1', payload).ok).toBe(true);
   });
 
   it('prints JSON for protocol doctor --scope profile', () => {
@@ -122,6 +125,7 @@ describe('protocol CLI command handler', () => {
         detectedProfile: 'basic'
       }
     });
+    expect(validateSchema('hadara.protocol.consistency.v1', payload).ok).toBe(true);
   });
 
   it('rejects using --task and --scope together', () => {
@@ -159,6 +163,7 @@ describe('protocol CLI command handler', () => {
       mode: 'dry-run',
       fix: 'task-board-row'
     });
+    expect(validateSchema('hadara.protocol.remediation.v1', payload).ok).toBe(true);
     expect(fs.readFileSync(boardPath, 'utf8')).not.toContain(`| ${task.id} |`);
   });
 

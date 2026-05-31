@@ -35,6 +35,8 @@ Examples include:
 - `hadara.ops.status.v1`
 - `hadara.active_run.projection.v1`
 - `hadara.active_run.resume.v1`
+- `hadara.protocol.consistency.v1`
+- `hadara.protocol.remediation.v1`
 - `hadara.releaseGate.v1`
 - `hadara.context.export.v1` (MCP read-only memory payload)
 
