@@ -100,6 +100,13 @@
       "notes": "Documents dry-run-first bounded Task Capsule finish/status sync reports."
     },
     {
+      "id": "hadara.task.next.v1",
+      "path": "src/schemas/task-next.schema.json",
+      "status": "fixture",
+      "owner": "task/next",
+      "notes": "Documents read-only next-task recommendation reports from Development Slices, Task Board, and handoff state."
+    },
+    {
       "id": "hadara.task.workbench.v1",
       "path": "src/schemas/task-workbench.schema.json",
       "status": "fixture",

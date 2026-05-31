@@ -53,6 +53,8 @@ Agents should treat `issues` as the primary machine-readable failure detail when
 
 `hadara task finish --task <id> --json` returns `hadara.task.finish.v1` in dry-run mode by default. It plans the bounded bookkeeping needed to mark a Task Capsule done: `TASK.md` status and the matching `docs/TASK_BOARD.md` row status/path. Writes require `--execute`; execute mode must not update `docs/DEVELOPMENT_SLICES.md`, `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, evidence files, or close evidence. Those broader state updates remain advisory/manual until a later capsule explicitly expands the finish boundary.
 
+`hadara task next --json` returns `hadara.task.next.v1`. It is a read-only recommendation report that prefers the first incomplete row in `docs/DEVELOPMENT_SLICES.md`, falls back to the first incomplete `docs/TASK_BOARD.md` row, and includes required-reading guidance plus a `createCommand` when the planned slice has no Task Capsule yet. It must not create tasks, update project docs, append evidence, or infer completion.
+
 `hadara evidence from-command` is intentionally not implemented. The design boundary lives in `docs/EVIDENCE_FROM_COMMAND_DESIGN.md`; until a future capsule implements it, shell-executing evidence capture must not be inferred from `evidence add-command`.
 
 `hadara run-state resume --json` returns read-only resume guidance. It does not update active-run state, execute commands, call providers, or resume an agent process.

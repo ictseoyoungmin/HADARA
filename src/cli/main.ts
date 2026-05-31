@@ -43,6 +43,7 @@ Usage:
   hadara task create <title>
   hadara task list
   hadara task show <task-id>
+  hadara task next [--json]
   hadara task status --task <task-id> [--json]
   hadara task finish --task <task-id> [--execute] [--json]
   hadara task upgrade-scaffold --task <task-id> [--execute] [--json]

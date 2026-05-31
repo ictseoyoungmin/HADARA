@@ -2,6 +2,7 @@ import { createTaskCapsule } from '../task/task-capsule';
 import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../task/task-close';
 import { createTaskReadyReport } from '../task/task-ready';
 import { createTaskFinishReport, formatTaskFinishReport } from '../task/task-finish';
+import { createTaskNextReport, formatTaskNextReport } from '../task/task-next';
 import { createTaskUpgradeScaffoldReport, formatTaskUpgradeScaffoldReport } from '../task/task-upgrade-scaffold';
 import { createTaskWorkbenchReport, formatTaskWorkbenchReport } from '../services/task-workbench';
 import { getFlag, getStringOption } from './args';
@@ -44,6 +45,17 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
       console.log(report.task.taskMarkdown);
     } else {
       console.log(`[HADARA] Task not found: ${id}`);
+    }
+    if (!report.ok) process.exitCode = 6;
+    return true;
+  }
+
+  if (sub === 'next') {
+    const report = createTaskNextReport(input.projectRoot);
+    if (input.jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log(formatTaskNextReport(report));
     }
     if (!report.ok) process.exitCode = 6;
     return true;
