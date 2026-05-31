@@ -38,6 +38,7 @@ Initial fixtures:
 | `hadara.event.v1` | `src/schemas/event.schema.json` | fixture | Documents structured redacted event records embedded in private audit JSONL. |
 | `hadara.protocol.consistency.v1` | `src/schemas/protocol-consistency.schema.json` | fixture | Documents read-only protocol doctor reports for task, docs, profile, and all scopes. |
 | `hadara.protocol.remediation.v1` | `src/schemas/protocol-remediation.schema.json` | fixture | Documents dry-run-first protocol remediation plans and bounded execute reports, including optional planned-content hash/existence fields. |
+| `hadara.task.upgrade_scaffold.v1` | `src/schemas/task-upgrade-scaffold.schema.json` | fixture | Documents dry-run-first non-destructive Task Capsule scaffold frame upgrade reports. |
 | `hadara.write.preflight.v1` | `src/schemas/write-preflight.schema.json` | fixture | Documents read-only CLI write-boundary preflight reports. |
 | `hadara.install.plan.v1` | `src/schemas/install-plan.schema.json` | fixture | Documents future installer dry-run planning reports without performing install mutation; target paths are redacted public path-reference objects instead of raw strings. |
 | `hadara.featureSmoke.v1` | `src/schemas/feature-smoke.schema.json` | fixture | Documents reduced read-only core feature smoke reports for the `core` profile and deferred `release-readiness` profile; installed binary and launcher checks are explicitly false in the current report. |

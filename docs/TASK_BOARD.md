@@ -163,3 +163,4 @@
 | T-0160 | Protocol Doctor All Scope | Done | tasks/T-0160-protocol-doctor-all-scope | Adds all-scope protocol doctor aggregation; Docker validation and built CLI smokes passed. |
 | T-0161 | Markdown Table Helper Extraction | Done | tasks/T-0161-markdown-table-helper-extraction | Extracts shared Markdown table helper; Docker validation and full check passed. |
 | T-0162 | Doctor Remediation Hint Unification | Done | tasks/T-0162-doctor-remediation-hint-unification | Adds safe-auto remediation hints to protocol doctor reports; Docker validation passed. |
+| T-0163 | Task Capsule Upgrade Scaffold Command | Done | tasks/T-0163-task-capsule-upgrade-scaffold-command | Adds dry-run-first non-destructive task scaffold upgrade command; Docker validation passed. |

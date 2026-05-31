@@ -58,6 +58,13 @@
       "notes": "Documents dry-run-first protocol remediation plans and bounded execute reports."
     },
     {
+      "id": "hadara.task.upgrade_scaffold.v1",
+      "path": "src/schemas/task-upgrade-scaffold.schema.json",
+      "status": "fixture",
+      "owner": "task/upgrade-scaffold",
+      "notes": "Documents dry-run-first non-destructive Task Capsule scaffold frame upgrade reports."
+    },
+    {
       "id": "hadara.releaseGate.v1",
       "path": "src/schemas/release-gate.schema.json",
       "status": "fixture",

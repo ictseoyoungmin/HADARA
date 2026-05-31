@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.task.upgrade_scaffold.v1",
+  "x-hadara-schema-id": "hadara.task.upgrade_scaffold.v1",
+  "title": "HADARA Task Upgrade Scaffold Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "mode", "projectRoot", "taskId", "summary", "actions", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.task.upgrade_scaffold.v1" },
+    "command": { "const": "task.upgrade-scaffold" },
+    "ok": { "type": "boolean" },
+    "mode": { "type": "string", "enum": ["dry-run", "execute"] },
+    "projectRoot": { "type": "string", "minLength": 1 },
+    "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["planned", "changed", "skipped"],
+      "properties": {
+        "planned": { "type": "integer" },
+        "changed": { "type": "integer" },
+        "skipped": { "type": "integer" }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/action" }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "action": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "path", "status", "summary"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["planned", "created", "updated", "skipped"] },
+        "summary": { "type": "string", "minLength": 1 },
+        "before": { "type": "string" },
+        "after": { "type": "string" },
+        "expectedBeforeExists": { "type": "boolean" },
+        "expectedBeforeHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "afterHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["error", "warning", "info"] },
+        "code": { "type": "string", "minLength": 1, "pattern": "^[A-Z0-9_:-]+$" },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
