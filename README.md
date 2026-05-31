@@ -46,6 +46,30 @@ npm run build
 node dist/cli/main.js doctor --json
 ```
 
+### Complete a Task Capsule
+
+HADARA task workflow commands have distinct read/write boundaries. The full command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`.
+
+```bash
+hadara task next --json
+hadara task status --task T-XXXX --json
+
+# work...
+
+hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
+hadara task ready --task T-XXXX --level done --json
+
+hadara task finish --task T-XXXX --json
+hadara task finish --task T-XXXX --execute --json
+
+hadara task close --task T-XXXX --json
+hadara task close --task T-XXXX --execute --json
+
+hadara task audit-close --task T-XXXX --json
+```
+
+`task status` is a read-only operator console; its `ok` field means the report was generated, not that the task is ready. `task finish --execute` is bounded to `TASK.md` and `docs/TASK_BOARD.md`. `task close --execute` appends close evidence only.
+
 ### Initialize a Project
 
 ```bash
@@ -87,6 +111,14 @@ hadara protocol doctor --scope all --json
 hadara protocol remediate --fix task-board-row --task T-0001 --json
 hadara doctor
 hadara task create "..."
+hadara task next --json
+hadara task status --task T-0001 --json
+hadara task ready --task T-0001 --level done --json
+hadara task finish --task T-0001 --json
+hadara task finish --task T-0001 --execute --json
+hadara task close --task T-0001 --json
+hadara task close --task T-0001 --execute --json
+hadara task audit-close --task T-0001 --json
 hadara task list
 hadara task show T-0001
 hadara task upgrade-scaffold --task T-0001 --json
@@ -140,8 +172,9 @@ HADARA development must dogfood the HADARA workflow:
 2. Read `docs/AGENT_HANDOFF.md`
 3. Read `docs/TASK_BOARD.md`
 4. Work inside a Task Capsule
-5. Attach evidence before marking work complete
-6. Update handoff before stopping
+5. Follow `docs/TASK_WORKFLOW_COMMANDS.md` for evidence, ready, finish, close, and audit commands
+6. Attach evidence before marking work complete
+7. Update handoff before stopping
 
 ## Store Separation
 

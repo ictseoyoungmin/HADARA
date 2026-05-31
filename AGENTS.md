@@ -17,6 +17,7 @@ This repository must be developed using the HADARA protocol.
 | `docs/SECURITY_MODEL.md` | Changing permissions, secrets, storage, MCP, or execution boundaries. | Security constraints. |
 | `docs/REFACTOR_LOG.md` | Doing broad refactors or cleanup sequences. | Refactor continuity. |
 | `docs/ROADMAP.md` | Changing release, scope, or deferred-work boundaries. | Roadmap and scope boundaries. |
+| `docs/TASK_WORKFLOW_COMMANDS.md` | Starting, finishing, closing, auditing, or explaining task workflow commands. | Standard task loop, read/write boundaries, dry-run rules, and `ok` semantics. |
 | Active `tasks/T-*/TASK.md` | Every implementation session. | Active capsule scope. |
 | Task Capsule files required by `docs/IMPLEMENTATION_SOP.md` | Every implementation session. | Capsule evidence and handoff. |
 | Project-specific specs or roadmap documents referenced by the current task | When referenced by the active task. | Task-specific constraints. |
@@ -30,6 +31,7 @@ This repository must be developed using the HADARA protocol.
 - If host Node/npm is unavailable, use the reusable Docker workflow in `docs/IMPLEMENTATION_SOP.md` to run the HADARA CLI against the workspace.
 - For HADARA-dev CLI development, prefer the reusable `hadara-dev` Docker workflow over host-local Node/npm. After changing CLI code, build in Docker and refresh `/workspace/dist` from the Docker build output before running built-CLI smokes or treating the workspace CLI as current. Do not assume the container-global `/usr/local/bin/hadara` is the latest development build.
 - Do not mark work done without evidence.
+- For task workflow commands, follow `docs/TASK_WORKFLOW_COMMANDS.md`: start from `task next`/`task status`, record evidence, run `task ready`, preview and execute `task finish`, preview and execute `task close`, then run `task audit-close`.
 - Do not execute dangerous commands.
 - Do not write secrets, private logs, or machine-local state into committed files.
 - Preserve the portable/project store boundary.

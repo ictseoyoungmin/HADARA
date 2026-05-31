@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Continue Phase 3.5 capsules through T-0183, committing each capsule with the task id prefix. |
-| Current Phase | Phase 3.5 / Operator Workflow Hardening complete | Runtime origin diagnostics, Docker sync-build scripting, bounded finish/status sync, task next recommendations, schema stability classification, focused test UX, and finish write hardening are complete. |
-| Latest Completed Task | T-0184 Task Finish Write Safety Hardening | Hardened `task finish --execute` writes and task-next command quoting. |
+| Branch | main | T-0185 completed; commit with the task id prefix before moving on. |
+| Current Phase | Phase 3.5 / Operator Workflow Hardening complete | Runtime origin diagnostics, Docker sync-build scripting, bounded finish/status sync, task next recommendations, schema stability classification, focused test UX, finish write hardening, and command semantics audit are complete. |
+| Latest Completed Task | T-0185 Task Workflow Command Semantics Audit | Added the canonical workflow command semantics doc and aligned README/AGENTS/SOP/CLI JSON contract guidance. |
 | Active / Next Task | Phase 4 Read Surface Integration / Operator UI planning | Start UI/read-surface work after reviewing current roadmap and contracts. |
-| Validation Baseline | Docker sync-build, built CLI smoke, done harness, and close audit passed | `npm run dev:docker-sync-build` passed with 74 files / 518 tests; built CLI task finish dry-run showed write hash metadata; T-0184 done harness and audit-close passed. |
+| Validation Baseline | Docker sync-build, focused docs regression, done harness, and close audit passed | `npm run dev:docker-sync-build` passed with 75 files / 521 tests; focused task workflow docs regression passed with 1 file / 3 tests; latest T-0185 done harness and audit-close returned `ok:true`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0182 Schema Stability Classification | Documented stable/additive/compatibility alias/deprecated/experimental field classes and annotated `hadara.task.workbench.v1`. | T-0182 evidence: Docker sync-build, done harness, close execute, and audit-close passed. |
 | T-0183 Focused Test Command UX | Added `test:focused` and documented selected-file Vitest invocation. | T-0183 evidence: Docker sync-build, focused smoke, done harness, close execute, and audit-close passed. |
 | T-0184 Task Finish Write Safety Hardening | Added write hash/existence metadata, temp-file/rename conflict guards, malformed frame/no-op refusal, and shell-quoted task-next createCommand output. | T-0184 evidence: Docker sync-build, built CLI smoke, done harness, close execute, and audit-close passed. |
+| T-0185 Task Workflow Command Semantics Audit | Added `docs/TASK_WORKFLOW_COMMANDS.md`, aligned README/AGENTS/SOP/CLI JSON contract guidance, and added docs drift regression tests for the standard task loop. | T-0185 evidence: focused docs regression, Docker sync-build, done harness, close execute, and audit-close passed. |
 
 ## Current Known Problems
 
@@ -36,16 +36,17 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Begin Phase 4 Read Surface Integration / Operator UI planning. | Phase 3.5 operator workflow hardening sequence T-0178 through T-0183 is complete. | Start from `docs/ROADMAP.md`, `docs/DEVELOPMENT_SLICES.md`, `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md`, and `docs/DASHBOARD_READ_MODEL_CONTRACT.md`. |
+| Begin Phase 4 Read Surface Integration / Operator UI planning. | Phase 3.5 operator workflow hardening sequence T-0178 through T-0185 is complete. | Start from `docs/ROADMAP.md`, `docs/DEVELOPMENT_SLICES.md`, `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md`, `docs/DASHBOARD_READ_MODEL_CONTRACT.md`, and `docs/TASK_WORKFLOW_COMMANDS.md`. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Full repository check | Docker temp-copy `npm run check` passed with 74 files and 518 tests. | Host dependencies are unavailable; Docker was used. |
-| Built CLI smoke | Built CLI `task finish --task T-0184 --json` returned `hadara.task.finish.v1` with expected existence/hash metadata on planned writes. | `/workspace/dist` was refreshed from Docker build output. |
-| Done-level harness | Built CLI `harness validate --task T-0184 --level done --json` returned `ok:true`. | No issues. |
-| Close audit | Built CLI `task audit-close --task T-0184 --json` returned `ok:true` with close evidence records and zero warnings. | Final close evidence appended after capsule source docs were updated. |
+| Focused docs regression | Docker `npm run test:focused -- tests/unit/task-workflow-docs.test.ts` passed with 1 file and 3 tests. | Covers README/SOP/workflow/CLI contract command semantics. |
+| Full repository check | Docker temp-copy `npm run check` passed with 75 files and 521 tests. | Host dependencies are unavailable; Docker was used through `npm run dev:docker-sync-build`. |
+| Built CLI smoke | `npm run dev:docker-sync-build` refreshed `/workspace/dist` and ran `hadara version --verbose --json` with `ok:true`. | `distLooksStale:false`. |
+| Done-level harness | Built CLI `harness validate --task T-0185 --level done --json` returned `ok:true`. | No issues. |
+| Close audit | Built CLI `task audit-close --task T-0185 --json` returned `ok:true` with close evidence present and zero warnings. | Final close evidence appended after capsule source docs were updated. |
 
 ## Historical Index
 

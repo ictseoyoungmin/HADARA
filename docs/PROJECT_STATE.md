@@ -12,9 +12,9 @@ HADARA - Portable Agentic Development Workbench
 
 ## Current Phase
 
-Phase 3.5 / Operator Workflow Hardening.
+Phase 3.5 / Operator Workflow Hardening complete.
 
-The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer, close/evidence hardening through T-0170, and Phase 3 task operator console through T-0177 are complete. Phase 3.5 is reducing operator workflow friction before Phase 4 read-surface/operator UI work.
+The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer, close/evidence hardening through T-0170, Phase 3 task operator console through T-0177, and Phase 3.5 operator workflow hardening through T-0185 are complete. The next major work is Phase 4 read-surface/operator UI planning.
 
 ## Current Status
 
@@ -89,6 +89,7 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Latest completed task: T-0182 Schema Stability Classification documented stable/additive/compatibility/deprecated/experimental field classes and annotated `hadara.task.workbench.v1` compatibility aliases.
 - Latest completed task: T-0183 Focused Test Command UX added `npm run test:focused -- <path>` guidance and script support for narrow Vitest file runs.
 - Latest completed task: T-0184 Task Finish Write Safety Hardening added hash/existence metadata, temp-file/rename writes, malformed frame/no-op guards, and safer task-next createCommand quoting.
+- Latest completed task: T-0185 Task Workflow Command Semantics Audit added `docs/TASK_WORKFLOW_COMMANDS.md`, aligned README/AGENTS/SOP/CLI JSON contract guidance, and locked the standard task loop with docs regression tests.
 - Active / next task: Phase 4 Read Surface Integration / Operator UI planning.
 - Phase 3 source plan: `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md`.
 - Task workbench status report exists as `hadara task status --task <id> --json`; centralized suggested-action generation and fixture-level schema registration are implemented. T-0177 hardened true Task Board status projection, optional nextAction normalization, and close evidence/valid-closure semantics.

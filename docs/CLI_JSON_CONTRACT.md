@@ -59,6 +59,22 @@ Agents should treat `issues` as the primary machine-readable failure detail when
 
 `hadara run-state resume --json` returns read-only resume guidance. It does not update active-run state, execute commands, call providers, or resume an agent process.
 
+## Task Workflow Command Semantics
+
+The task workflow surface is intentionally staged. `docs/TASK_WORKFLOW_COMMANDS.md` is the operator-facing source for the full loop.
+
+| Command | JSON Schema | Write Policy | `ok` Semantics |
+|---|---|---|---|
+| `task next --json` | `hadara.task.next.v1` | Read-only. | Recommendation report was generated. |
+| `task status --task T-XXXX --json` | `hadara.task.workbench.v1` | Read-only. | Report generation succeeded for an existing task; not a readiness gate. |
+| `evidence add-command --task T-XXXX ... --json` | `hadara.evidence.collect.v1` evidence append response | Writes command-log evidence only. | Evidence append succeeded. |
+| `task ready --task T-XXXX --level done --json` | `hadara.task.ready.v1` | Read-only. | Requested readiness level passed. |
+| `task finish --task T-XXXX --json` | `hadara.task.finish.v1` | Read-only dry-run. | Bounded finish plan has no blockers. |
+| `task finish --task T-XXXX --execute --json` | `hadara.task.finish.v1` | Writes only `TASK.md` and `docs/TASK_BOARD.md` status/path changes. | Bounded writes succeeded or no write was needed. |
+| `task close --task T-XXXX --json` | `hadara.task.close.v1` | Read-only dry-run. | Close preconditions passed. |
+| `task close --task T-XXXX --execute --json` | `hadara.task.close.v1` | Appends close evidence only. | Close evidence append succeeded. |
+| `task audit-close --task T-XXXX --json` | `hadara.task.audit_close.v1` | Read-only. | Valid close evidence exists and no audit blockers remain. |
+
 ## Early Failure Fallback
 
 If parsing or validation fails before a command-specific report can be built, JSON mode returns:

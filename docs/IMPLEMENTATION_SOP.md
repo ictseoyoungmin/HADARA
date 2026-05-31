@@ -33,6 +33,7 @@ This repository operates as the `governed` HADARA profile because it has long-li
 | `docs/SECURITY_MODEL.md` | Security, secret, permission, or evidence-safety work | Project security invariants and special checks. |
 | `docs/REFACTOR_LOG.md` | Refactor, migration, removal, or replacement work | Project-level refactor history. |
 | `docs/ROADMAP.md` | Roadmap, milestone, release, or scope planning | Longer-term priorities and deferred work. |
+| `docs/TASK_WORKFLOW_COMMANDS.md` | Starting, finishing, closing, auditing, or changing task workflow commands | Standard task loop, read/write boundaries, dry-run rules, and command `ok` semantics. |
 | Active `tasks/T-*/TASK.md` | Working a task | Task-specific goal, scope, status, and acceptance frame. |
 | Active Task Capsule docs | Working a task | `DECISIONS.md`, `PLAN.md`, `CONTEXT.md`, `ACCEPTANCE.md`, `FILES.md`, `TESTS.md`, `RISKS.md`, and `HANDOFF.md`. |
 | `docs/CLI_JSON_CONTRACT.md` and `docs/MCP_BRIDGE_CONTRACT.md` | HADARA-dev MCP or tool-surface work only | Local contracts for CLI JSON and MCP bridge compatibility. |
@@ -88,6 +89,38 @@ Prefer tables for repeated records and `##`/`###` headings for durable sections.
 7. Make the smallest coherent change that satisfies the Task Capsule acceptance criteria.
 8. Update `PLAN.md`, `FILES.md`, `DECISIONS.md`, and task-local docs when the implementation scope changes.
 9. Do not add MCP write tools, shell execution, provider calls, or server behavior before the read-only bridge contract and follow-up implementation slices allow them.
+
+## Standard Task Workflow Loop
+
+The authoritative command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`. For ordinary implementation capsules, use this loop:
+
+```bash
+hadara task next --json
+hadara task status --task T-XXXX --json
+
+# work...
+
+hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
+hadara task ready --task T-XXXX --level done --json
+
+hadara task finish --task T-XXXX --json
+hadara task finish --task T-XXXX --execute --json
+
+hadara task close --task T-XXXX --json
+hadara task close --task T-XXXX --execute --json
+
+hadara task audit-close --task T-XXXX --json
+```
+
+| Command | Default Write Behavior | Notes |
+|---|---|---|
+| `task next` | Read-only | Recommends work; does not create tasks. |
+| `task status` | Read-only | `ok` means report generation succeeded; readiness is in `state.ready`, `summary.blockers`, and `issues`. |
+| `evidence add-command` | Write | Appends command-log evidence; does not execute shell commands. |
+| `task ready` | Read-only | Checks readiness; does not mutate evidence or status docs. |
+| `task finish` | Dry-run by default; writes only with `--execute` | Bounded to `TASK.md` and `docs/TASK_BOARD.md`. |
+| `task close` | Dry-run by default; writes only with `--execute` | Bounded to close evidence append. |
+| `task audit-close` | Read-only | Verifies close evidence after close. |
 
 ## Reusable Docker Workflow
 
