@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createProfileConsistencyDiagnostics, createProtocolProfileSummary, ProtocolProfileSummary } from './protocol-profile';
 import { parseMarkdownRows } from './markdown-table';
+import { ProtocolRemediationFix } from './protocol-remediation';
 import { isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule, TASK_FILES } from '../task/task-capsule';
 
 export type ProtocolConsistencyScope = 'docs' | 'tasks' | 'profile' | 'all';
@@ -19,6 +20,16 @@ export interface ProtocolConsistencyIssue {
   expected?: string;
   actual?: string;
   remediationId?: string;
+  suggestedFix?: ProtocolSuggestedFix;
+}
+
+export interface ProtocolSuggestedFix {
+  kind: 'protocol-remediate';
+  mode: 'safe-auto';
+  fix: ProtocolRemediationFix;
+  command: string;
+  targetPaths: string[];
+  executeRequires: '--execute';
 }
 
 export interface ProtocolRemediation {
@@ -137,7 +148,10 @@ export function createProfileProtocolConsistencyReport(projectRoot: string, now 
   const issues: ProtocolConsistencyIssue[] = [];
 
   for (const issue of diagnostics.issues) {
-    pushIssue(issues, issue);
+    pushIssue(issues, {
+      ...issue,
+      suggestedFix: createProfileSuggestedFix(issue, diagnostics.targetProfile)
+    });
   }
 
   const remediations = diagnostics.remediations.map((remediation) => ({
@@ -177,10 +191,20 @@ export function createAllProtocolConsistencyReport(projectRoot: string, now = ne
     }
   }
 
-  const remediations = profileReport.remediations.map((remediation) => ({
-    ...remediation,
-    issueIds: remediation.issueIds.map((issueId) => issueIdMap.get(`profile:${issueId}`) ?? issueId)
-  }));
+  const remediations: ProtocolRemediation[] = [];
+  for (const [label, report] of [
+    ['docs', docsReport],
+    ['profile', profileReport],
+    ...taskReports.map((report) => [`task:${report.task?.id ?? report.summary.activeTaskId ?? report.scope}`, report] as const)
+  ] as const) {
+    for (const remediation of report.remediations) {
+      const remapped = {
+        ...remediation,
+        issueIds: remediation.issueIds.map((issueId) => issueIdMap.get(`${label}:${issueId}`) ?? issueId)
+      };
+      remediations.push(remediations.some((candidate) => candidate.id === remapped.id) ? { ...remapped, id: `${label}:${remapped.id}` } : remapped);
+    }
+  }
   const counts = countIssues(issues);
 
   return {
@@ -252,7 +276,7 @@ function buildReport(
         }
       : {}),
     issues,
-    remediations: options?.remediations ?? []
+    remediations: mergeRemediations(options?.remediations ?? [], buildSuggestedFixRemediations(issues))
   };
 }
 
@@ -354,7 +378,8 @@ function checkTaskBoardAgainstCapsules(
         path: taskBoardPath,
         message: `docs/TASK_BOARD.md does not contain a row for ${task.id}.`,
         expected: task.id,
-        actual: 'missing'
+        actual: 'missing',
+        suggestedFix: createSuggestedFix('task-board-row', task.id, [taskBoardPath])
       });
       continue;
     }
@@ -561,7 +586,8 @@ function checkDecisionsConsistency(projectRoot: string, checkedDocs: Set<string>
       path: relativePath,
       message: 'docs/DECISIONS.md uses legacy decision prose without the table-first decision index expected by the current scaffold.',
       expected: 'decision table rows with evidence cells',
-      actual: 'legacy decision headings'
+      actual: 'legacy decision headings',
+      suggestedFix: createSuggestedFix('decisions-table-frame', undefined, [relativePath])
     });
     return;
   }
@@ -706,16 +732,17 @@ function checkTaskBoard(
   }
 
   if (rows.length === 0) {
-    pushIssue(issues, {
-      code: 'TASK_BOARD_ROW_MISSING',
-      severity: 'error',
-      area: 'docs',
-      taskId: task.id,
-      path: relativePath,
-      message: `docs/TASK_BOARD.md does not contain a row for ${task.id}.`,
-      expected: task.id,
-      actual: 'missing'
-    });
+      pushIssue(issues, {
+        code: 'TASK_BOARD_ROW_MISSING',
+        severity: 'error',
+        area: 'docs',
+        taskId: task.id,
+        path: relativePath,
+        message: `docs/TASK_BOARD.md does not contain a row for ${task.id}.`,
+        expected: task.id,
+        actual: 'missing',
+        suggestedFix: createSuggestedFix('task-board-row', task.id, [relativePath])
+      });
     return;
   }
 
@@ -803,7 +830,8 @@ function checkEvidenceIndex(projectRoot: string, task: TaskCapsule, taskLooksDon
       path: toPortablePath(path.relative(projectRoot, evidencePath)),
       message: 'Task Capsule evidence index is missing.',
       expected: 'evidence.jsonl present',
-      actual: 'missing'
+      actual: 'missing',
+      suggestedFix: createSuggestedFix('evidence-jsonl', task.id, [toPortablePath(path.relative(projectRoot, evidencePath))])
     });
     return;
   }
@@ -987,6 +1015,100 @@ function pushIssue(issues: ProtocolConsistencyIssue[], issue: Omit<ProtocolConsi
     id: `issue-${String(issues.length + 1).padStart(3, '0')}`,
     ...issue
   });
+}
+
+function createProfileSuggestedFix(
+  issue: {
+    code: string;
+    path?: string;
+  },
+  targetProfile: 'basic' | 'standard' | 'governed' | 'unknown'
+): ProtocolSuggestedFix | undefined {
+  if (targetProfile === 'unknown') return undefined;
+  if ((issue.code !== 'PROFILE_METADATA_MISSING' && issue.code !== 'PROFILE_METADATA_DRIFT') || issue.path !== 'docs/PROJECT_STATE.md') return undefined;
+  return createSuggestedFix('project-state-profile', undefined, ['docs/PROJECT_STATE.md'], targetProfile);
+}
+
+function createSuggestedFix(
+  fix: ProtocolRemediationFix,
+  taskId: string | undefined,
+  targetPaths: string[],
+  profile?: 'basic' | 'standard' | 'governed'
+): ProtocolSuggestedFix {
+  const taskArg = taskId ? ` --task ${taskId}` : '';
+  const profileArg = profile ? ` --profile ${profile}` : '';
+  return {
+    kind: 'protocol-remediate',
+    mode: 'safe-auto',
+    fix,
+    command: `hadara protocol remediate --fix ${fix}${taskArg}${profileArg} --json`,
+    targetPaths,
+    executeRequires: '--execute'
+  };
+}
+
+function buildSuggestedFixRemediations(issues: ProtocolConsistencyIssue[]): ProtocolRemediation[] {
+  const groups = new Map<string, { fix: ProtocolRemediationFix; command: string; targetPaths: Set<string>; issueIds: string[] }>();
+  for (const issue of issues) {
+    if (!issue.suggestedFix) continue;
+    const key = `${issue.suggestedFix.fix}:${issue.suggestedFix.command}`;
+    const group =
+      groups.get(key) ??
+      {
+        fix: issue.suggestedFix.fix,
+        command: issue.suggestedFix.command,
+        targetPaths: new Set<string>(),
+        issueIds: []
+      };
+    for (const targetPath of issue.suggestedFix.targetPaths) group.targetPaths.add(targetPath);
+    group.issueIds.push(issue.id);
+    groups.set(key, group);
+  }
+
+  return [...groups.values()].map((group) => ({
+    id: `safe-${group.fix}-${slugify(group.command)}`,
+    issueIds: group.issueIds,
+    title: safeFixTitle(group.fix),
+    mode: 'safe-auto',
+    command: group.command,
+    targetPaths: [...group.targetPaths],
+    summary: `Preview the bounded ${group.fix} remediation with the listed command; add --execute only after reviewing the dry-run action plan.`,
+    steps: [
+      `Run \`${group.command}\` to preview the exact planned file actions.`,
+      'Review target paths, before hashes, planned content hashes, and skipped actions.',
+      `Run \`${group.command.replace(/ --json$/, ' --execute --json')}\` only if the dry-run plan is still appropriate.`
+    ]
+  }));
+}
+
+function mergeRemediations(primary: ProtocolRemediation[], secondary: ProtocolRemediation[]): ProtocolRemediation[] {
+  const result = [...primary];
+  for (const remediation of secondary) {
+    if (!result.some((candidate) => candidate.id === remediation.id)) result.push(remediation);
+  }
+  return result;
+}
+
+function safeFixTitle(fix: ProtocolRemediationFix): string {
+  switch (fix) {
+    case 'task-board-row':
+      return 'Add the missing Task Board row';
+    case 'decisions-table-frame':
+      return 'Insert the Decisions table frame';
+    case 'project-state-profile':
+      return 'Align the Project State profile metadata row';
+    case 'evidence-jsonl':
+      return 'Create the missing task evidence JSONL index';
+  }
+}
+
+function slugify(value: string): string {
+  return value
+    .replace(/^hadara protocol remediate --fix\s+/, '')
+    .replace(/\s+--json$/, '')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-zA-Z0-9-]/g, '')
+    .toLowerCase();
 }
 
 function detectProfile(projectRoot: string): 'basic' | 'standard' | 'governed' | 'unknown' | 'mixed' {

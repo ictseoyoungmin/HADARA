@@ -93,6 +93,36 @@ describe('Docs protocol consistency report', () => {
     expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
   });
 
+  it('includes safe-auto remediation hints for missing Task Board rows and Decisions frames', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Docs safe fix');
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'DECISIONS.md'), '# DECISIONS\n\n## D-0001 Legacy decision\n\nAccepted.\n', 'utf8');
+
+    const report = createDocsProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    const taskBoardIssue = report.issues.find((issue) => issue.code === 'PROJECT_TASK_BOARD_ROW_MISSING');
+    expect(taskBoardIssue).toMatchObject({
+      taskId: task.id,
+      suggestedFix: {
+        kind: 'protocol-remediate',
+        mode: 'safe-auto',
+        fix: 'task-board-row',
+        command: `hadara protocol remediate --fix task-board-row --task ${task.id} --json`,
+        executeRequires: '--execute'
+      }
+    });
+    expect(report.issues.find((issue) => issue.code === 'DECISIONS_TABLE_MISSING')).toMatchObject({
+      suggestedFix: {
+        fix: 'decisions-table-frame',
+        command: 'hadara protocol remediate --fix decisions-table-frame --json'
+      }
+    });
+    expect(report.remediations.map((remediation) => remediation.mode)).toContain('safe-auto');
+    expect(report.remediations.find((remediation) => remediation.command?.includes('task-board-row'))?.issueIds).toContain(taskBoardIssue?.id);
+    expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
+  });
+
   it('returns a stable docs-scoped report for an in-sync project', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Docs protocol');
@@ -278,6 +308,16 @@ describe('Profile protocol consistency report', () => {
     expect(remediation?.steps.join('\n')).toContain('docs/PROJECT_STATE.md');
     expect(remediation?.steps.join('\n')).toContain('AGENTS.md');
     expect(remediation?.issueIds.length).toBeGreaterThan(0);
+    expect(report.issues.find((issue) => issue.path === 'docs/PROJECT_STATE.md')).toMatchObject({
+      suggestedFix: {
+        fix: 'project-state-profile',
+        command: 'hadara protocol remediate --fix project-state-profile --profile governed --json'
+      }
+    });
+    expect(report.remediations.find((candidate) => candidate.command === 'hadara protocol remediate --fix project-state-profile --profile governed --json')).toMatchObject({
+      mode: 'safe-auto',
+      targetPaths: ['docs/PROJECT_STATE.md']
+    });
     expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
   });
 
@@ -485,6 +525,17 @@ describe('Task protocol consistency report', () => {
       severity: 'warning',
       expected: 'Active',
       actual: 'Draft'
+    });
+    const evidenceIssue = report.issues.find((issue) => issue.code === 'EVIDENCE_JSONL_MISSING');
+    expect(evidenceIssue).toMatchObject({
+      suggestedFix: {
+        fix: 'evidence-jsonl',
+        command: `hadara protocol remediate --fix evidence-jsonl --task ${task.id} --json`
+      }
+    });
+    expect(report.remediations.find((remediation) => remediation.command?.includes('evidence-jsonl'))).toMatchObject({
+      mode: 'safe-auto',
+      issueIds: [evidenceIssue?.id]
     });
   });
 

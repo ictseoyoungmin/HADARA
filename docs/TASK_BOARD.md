@@ -162,3 +162,4 @@
 | T-0159 | Protocol Consistency JSON Contract | Done | tasks/T-0159-protocol-consistency-json-contract | Registers protocol consistency/remediation JSON schemas and contract tests; Docker validation and built CLI smokes passed. |
 | T-0160 | Protocol Doctor All Scope | Done | tasks/T-0160-protocol-doctor-all-scope | Adds all-scope protocol doctor aggregation; Docker validation and built CLI smokes passed. |
 | T-0161 | Markdown Table Helper Extraction | Done | tasks/T-0161-markdown-table-helper-extraction | Extracts shared Markdown table helper; Docker validation and full check passed. |
+| T-0162 | Doctor Remediation Hint Unification | Done | tasks/T-0162-doctor-remediation-hint-unification | Adds safe-auto remediation hints to protocol doctor reports; Docker validation passed. |

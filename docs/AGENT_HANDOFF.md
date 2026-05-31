@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Working tree contains completed T-0161 markdown-table helper extraction changes. |
-| Current Phase | Project Protocol Consistency Phase 2 | Phase 1 init scaffold/follow-up work is complete; T-0152 through T-0161 are complete. |
-| Latest Completed Task | T-0161 Markdown Table Helper Extraction | Added shared Markdown table helper and removed duplicated protocol/profile/harness row parsers. |
-| Active / Next Task | T-0162 Doctor Remediation Hint Unification | Next planned Phase 2 hardening item; no T-0162 capsule has been pre-created yet. |
-| Validation Baseline | Docker full check passed | Latest Docker temp-copy `npm run check` passed with 62 files and 466 tests; `/workspace/dist` was refreshed from Docker build output. |
+| Branch | main | Working tree contains completed T-0162 doctor remediation hint changes. |
+| Current Phase | Project Protocol Consistency Phase 2 | Phase 1 init scaffold/follow-up work is complete; T-0152 through T-0162 are complete. |
+| Latest Completed Task | T-0162 Doctor Remediation Hint Unification | Added additive safe-auto doctor hints mapped to existing `protocol remediate --fix` commands. |
+| Active / Next Task | T-0163 Task Capsule Upgrade Scaffold Command | Next planned Phase 2 hardening item; no T-0163 capsule has been pre-created yet. |
+| Validation Baseline | Docker full check passed | Latest Docker temp-copy `npm run check` passed with 62 files and 467 tests; `/workspace/dist` was refreshed from Docker build output. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0159 Protocol Consistency JSON Contract | Registered `hadara.protocol.consistency.v1` and `hadara.protocol.remediation.v1` schema fixtures, runtime loader entries, schema docs, and focused service/CLI contract tests including T-0158 action hash/existence fields. | T-0159 evidence: focused schema/protocol tests passed with 4 files / 34 tests; full Docker check passed with 61 files / 455 tests; built CLI task doctor and remediation dry-run smokes passed after refreshing `/workspace/dist`. |
 | T-0160 Protocol Doctor All Scope | Added `createAllProtocolConsistencyReport`, CLI support for `--scope all`, and default all-scope `protocol doctor --json`; all-scope aggregates docs, profile, and active-task detail. | T-0160 evidence: focused protocol tests passed with 2 files / 27 tests; full Docker check passed with 61 files / 459 tests; built CLI `--scope all` and default doctor smokes passed after refreshing `/workspace/dist`. |
 | T-0161 Markdown Table Helper Extraction | Added `src/services/markdown-table.ts`, moved protocol/profile/harness row parsing to the shared helper, and added helper regression tests. | T-0161 evidence: focused helper/protocol tests passed with 3 files / 34 tests; full Docker check passed with 62 files / 466 tests; `/workspace/dist` was refreshed. |
+| T-0162 Doctor Remediation Hint Unification | Added additive `suggestedFix` hints and safe-auto remediation objects to doctor reports for existing allowlisted fixes while keeping doctor read-only. | T-0162 evidence: focused protocol/remediation tests passed with 3 files / 38 tests; full Docker check passed with 62 files / 467 tests; built CLI docs-scope smoke returned safe-auto hints. |
 
 ## Current Known Problems
 
@@ -34,16 +34,16 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Choose or create T-0162 Doctor Remediation Hint Unification. | T-0161 removed table-parser duplication; the next strict-plan gap is adding unified doctor remediation hints for existing safe-auto fixes. | Use `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`, `docs/DEVELOPMENT_SLICES.md`, and `docs/TEST_STRATEGY.md` for the implementation plan. |
+| Choose or create T-0163 Task Capsule Upgrade Scaffold Command. | T-0162 closes doctor hint unification; the next strict-plan gap is a non-destructive dry-run-first scaffold upgrade command. | Use `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`, `docs/DEVELOPMENT_SLICES.md`, and `docs/TEST_STRATEGY.md` for the implementation plan. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Focused helper/protocol checks | Docker `npx vitest run tests/unit/markdown-table.test.ts tests/unit/protocol-consistency.test.ts tests/unit/protocol-cli.test.ts` passed with 3 files and 34 tests. | Covers shared table helper behavior and existing protocol report callers. |
-| Full repository check | Docker temp-copy `npm run check` passed with 62 files and 466 tests. | Host dependencies were unavailable; Docker was used per SOP and changed files were synced into `/tmp/hadara` before the final check. |
-| Built CLI output | Refreshed `/workspace/dist` from `/tmp/hadara/dist`. | Required because source helper changes affect built CLI modules. |
-| Done-level harness | Docker built CLI `harness validate --task T-0161 --level done --json --project /workspace` returned `ok: true`. | No issues. |
+| Focused protocol/remediation checks | Docker `npx vitest run tests/unit/protocol-consistency.test.ts tests/unit/protocol-cli.test.ts tests/unit/protocol-remediation.test.ts` passed with 3 files and 38 tests. | Covers additive safe-auto doctor hints and unchanged remediation command behavior. |
+| Full repository check | Docker temp-copy `npm run check` passed with 62 files and 467 tests. | Host dependencies were unavailable; Docker was used per SOP and changed files were synced into `/tmp/hadara` before the final check. |
+| Built CLI smoke | Refreshed `/workspace/dist` from `/tmp/hadara/dist`; built CLI `protocol doctor --scope docs --json --project /workspace` returned `ok: true` with safe-auto remediation hints for known warning issues. | Doctor remains read-only. |
+| Done-level harness | Docker built CLI `harness validate --task T-0162 --level done --json --project /workspace` returned `ok: true`. | No issues. |
 
 ## Historical Index
 
