@@ -21,7 +21,9 @@
     "test:unit": "vitest run tests/unit",
     "test:contract": "vitest run tests/contract",
     "test:harness": "vitest run tests/harness",
-    "check": "npm run build && npm test"
+    "check": "npm run build && npm test",
+    "dev:docker-check": "bash scripts/dev-docker-sync-build.sh --check-only --no-smoke",
+    "dev:docker-sync-build": "bash scripts/dev-docker-sync-build.sh"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

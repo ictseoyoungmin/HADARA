@@ -107,6 +107,20 @@ docker exec hadara-dev bash -lc 'rm -rf /tmp/hadara && mkdir -p /tmp/hadara && t
 
 For repeated validation, reuse `/tmp/hadara` when it is fresh; resync from `/workspace` after source changes.
 
+The preferred repo helper for the standard sync/check/build/smoke path is:
+
+```bash
+npm run dev:docker-sync-build
+```
+
+It copies the workspace into the reusable `hadara-dev` container while excluding `.git`, `.hadara`, `node_modules`, and `dist`, runs `npm ci` and `npm run check` in `/tmp/hadara`, refreshes `/workspace/dist`, and runs `hadara version --verbose --json` through the built workspace CLI. Use:
+
+```bash
+npm run dev:docker-check
+```
+
+when you need the same Docker temp-copy check without refreshing `/workspace/dist` or running a built CLI smoke.
+
 When CLI code changes, remember that three different command paths may exist:
 
 | Path | Meaning | Use |

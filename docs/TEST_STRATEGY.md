@@ -26,6 +26,18 @@ Run dependency-heavy work in `/tmp/hadara` inside that container, not directly o
 docker exec hadara-dev bash -lc 'rm -rf /tmp/hadara && mkdir -p /tmp/hadara && tar --exclude=node_modules --exclude=dist -cf - -C /workspace . | tar -xf - -C /tmp/hadara && cd /tmp/hadara && npm ci && npm run check'
 ```
 
+The preferred HADARA-dev helper for this repeated workflow is:
+
+```bash
+npm run dev:docker-check
+```
+
+For CLI changes that should refresh `/workspace/dist` and run a built CLI runtime-origin smoke, use:
+
+```bash
+npm run dev:docker-sync-build
+```
+
 To create a Task Capsule through the built HADARA CLI while writing to the workspace:
 
 ```bash

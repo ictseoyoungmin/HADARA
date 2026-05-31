@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0178 is ready to commit; continue Phase 3.5 capsules through T-0183. |
-| Current Phase | Phase 3.5 / Operator Workflow Hardening | Runtime origin diagnostics are complete; Docker sync-build scripting is next. |
-| Latest Completed Task | T-0178 Runtime Version CLI Origin Doctor | Added read-only `hadara version --verbose --json` with `hadara.runtime.version.v1`. |
-| Active / Next Task | T-0179 Docker Dev Sync-Build Script | Provide a repo-level helper for Docker temp-copy/check/dist refresh/smoke workflow. |
-| Validation Baseline | Full Docker check, built CLI smoke, done harness, and close audit passed | Full Docker `npm run check` passed with 69 files / 502 tests; built CLI `version --verbose --json` returned `hadara.runtime.version.v1`; T-0178 done harness and audit-close passed. |
+| Branch | main | T-0179 is ready to commit; continue Phase 3.5 capsules through T-0183. |
+| Current Phase | Phase 3.5 / Operator Workflow Hardening | Runtime origin diagnostics and Docker sync-build scripting are complete. |
+| Latest Completed Task | T-0179 Docker Dev Sync-Build Script | Added `dev:docker-check` and `dev:docker-sync-build` helper scripts. |
+| Active / Next Task | T-0180 Task Finish / Status Sync MVP | Add bounded dry-run-first task status finish/sync. |
+| Validation Baseline | Docker helper check, sync-build smoke, done harness, and close audit passed | `npm run dev:docker-check` and `npm run dev:docker-sync-build` passed with 70 files / 504 tests; runtime smoke returned `hadara.runtime.version.v1`; T-0179 done harness and audit-close passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0176 Evidence From Command Design | Added design-only safety boundary for future shell-executing evidence capture. | T-0176 evidence: full Docker check, built CLI smoke, done harness, close execute, and audit-close passed. |
 | T-0177 Task Workbench Hardening | Hardened workbench Task Board status semantics, optional nextAction normalization, close state split, and contract docs. | T-0177 evidence: focused Docker unit suite, full Docker check, built CLI smoke, done harness, close execute, and audit-close passed. |
 | T-0178 Runtime Version CLI Origin Doctor | Added runtime CLI origin report with package/git/node/build freshness metadata. | T-0178 evidence: focused runtime/schema tests, full Docker check, built CLI smoke, done harness, close execute, and audit-close passed. |
+| T-0179 Docker Dev Sync-Build Script | Added Docker helper scripts and docs for check-only and sync-build/dist-refresh flows. | T-0179 evidence: focused script tests, `dev:docker-check`, `dev:docker-sync-build`, done harness, close execute, and audit-close passed. |
 
 ## Current Known Problems
 

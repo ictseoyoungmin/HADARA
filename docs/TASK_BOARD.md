@@ -179,3 +179,4 @@
 | T-0176 | Evidence From Command Design | Done | tasks/T-0176-evidence-from-command-design | Adds design-only safety boundary for future shell-executing evidence capture. |
 | T-0177 | Task Workbench Hardening | Done | tasks/T-0177-task-workbench-hardening | Hardened workbench Task Board projection, nextAction normalization, and close state semantics. |
 | T-0178 | Runtime Version CLI Origin Doctor | Done | tasks/T-0178-runtime-version-cli-origin-doctor | Adds read-only `version --verbose --json` runtime origin diagnostics. |
+| T-0179 | Docker Dev Sync Build Script | Done | tasks/T-0179-docker-dev-sync-build-script | Adds npm helpers for Docker check and sync-build/dist refresh. |
