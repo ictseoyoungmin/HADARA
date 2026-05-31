@@ -41,6 +41,7 @@ Usage:
   hadara task create <title>
   hadara task list
   hadara task show <task-id>
+  hadara task status --task <task-id> [--json]
   hadara task upgrade-scaffold --task <task-id> [--execute] [--json]
   hadara task close --task <task-id> [--execute] [--json]
   hadara task audit-close --task <task-id> [--json]

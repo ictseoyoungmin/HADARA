@@ -171,3 +171,4 @@
 | T-0168 | Task Ready Preflight | Done | tasks/T-0168-task-ready-preflight | Adds read-only `task ready --level done` preflight with friendly blockers, check booleans, and nextActions. |
 | T-0169 | Evidence Command UX | Done | tasks/T-0169-evidence-command-ux | Adds `evidence add-command` canonical command-log evidence writer without shell execution. |
 | T-0170 | Close UX Polish and Audit Semantics | Done | tasks/T-0170-close-ux-polish-and-audit-semantics | Adds close report/source hash split, execute nextActions polish, append result paths, and read-only `task audit-close`. |
+| T-0171 | Task Workbench Status Report | Done | tasks/T-0171-task-workbench-status-report | Adds read-only `task status --task <id> --json` workbench projection over close, evidence, protocol, and Task Board sources. |

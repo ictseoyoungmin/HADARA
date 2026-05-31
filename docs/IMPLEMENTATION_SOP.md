@@ -38,6 +38,7 @@ This repository operates as the `governed` HADARA profile because it has long-li
 | `docs/CLI_JSON_CONTRACT.md` and `docs/MCP_BRIDGE_CONTRACT.md` | HADARA-dev MCP or tool-surface work only | Local contracts for CLI JSON and MCP bridge compatibility. |
 | `docs/V1_0_CAPSULE_BACKLOG.md` and `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` | HADARA-dev v1.0 hardening or schema work only | Future capsule backlog and implementation schema notes. |
 | `docs/specs/HADARA_Project_Protocol_Consistency_Layer_Phase2_Development_Plan.md` | Protocol consistency, Task Capsule scaffold, profile drift, or protocol doctor work only | Source design for Phase 2 living-project consistency checks and remediation boundaries. |
+| `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md` | Phase 3 task operator console, workbench projection, task status, close/audit, or suggested-action work only | Source design for Phase 3 read-oriented task operator console scope and capsule order. |
 
 When adding project-specific specs, contracts, or roadmap files, add them to this table and explain when agents must read them. Use `hadara init register-doc --path <path> --when <text> --purpose <text> --json` to preview registration, and add `--execute` to update this table.
 

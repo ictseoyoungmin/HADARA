@@ -46,6 +46,8 @@ Init scaffold Phase 1 is complete through T-0151: generic/profile-aware init doc
 
 Project Protocol Consistency Phase 2 reached its product baseline in T-0160 and its strict-plan hardening follow-ups are complete through T-0164. This layer is separate from init: it keeps living project docs, Task Capsules, evidence, handoff, validation records, profile metadata, and Required Reading registration mutually consistent after real work begins. The implemented command boundary is read-first `hadara protocol doctor --json`, task/docs/profile/all scoped checks, additive doctor remediation hints for existing safe-auto fixes, profile drift remediation guidance, dry-run-first `hadara protocol remediate --fix` safe remediation commands, shared generated-table helpers, and dry-run-first `hadara task upgrade-scaffold --task <id> --json [--execute]` for non-destructive capsule scaffold upgrades.
 
+Phase 3 Task Operator Console work is now active after the T-0170 close/audit preflight. The phase builds a read-oriented `hadara task status --task <id> --json` workbench projection over existing task, evidence, protocol, ready, close, and audit sources, while preserving the current no-broad-write posture. The source plan is `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md`; implementation proceeds through T-0171 and follow-up capsules for suggested actions, schema contracts, text UX, read projection prep, and evidence-from-command design.
+
 ## v0.4 Single-Agent Run State
 
 Track the active task/run explicitly so agents do not infer current work only from the last visible capsule or compact handoff.

@@ -2,6 +2,7 @@ import { createTaskCapsule } from '../task/task-capsule';
 import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence } from '../task/task-close';
 import { createTaskReadyReport } from '../task/task-ready';
 import { createTaskUpgradeScaffoldReport, formatTaskUpgradeScaffoldReport } from '../task/task-upgrade-scaffold';
+import { createTaskWorkbenchReport, formatTaskWorkbenchReport } from '../services/task-workbench';
 import { getFlag, getStringOption } from './args';
 import { createTaskListReport, createTaskShowReport, formatTaskListReport } from './task-json';
 
@@ -71,6 +72,19 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
       console.log(`[HADARA] task close ${id}: ${report.ok ? 'ok' : 'issues'}`);
       for (const issue of report.issues) console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
       for (const action of report.nextActions) console.log(`${action.required ? 'REQUIRED' : 'OPTIONAL'}\t${action.id}\t${action.command ?? action.message}`);
+    }
+    if (!report.ok) process.exitCode = 6;
+    return true;
+  }
+
+  if (sub === 'status') {
+    const id = getStringOption(input.args, '--task') ?? input.args[2];
+    if (!id || id.startsWith('--')) throw new Error('task status requires --task <task-id>');
+    const report = createTaskWorkbenchReport(input.projectRoot, id);
+    if (input.jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log(formatTaskWorkbenchReport(report));
     }
     if (!report.ok) process.exitCode = 6;
     return true;
