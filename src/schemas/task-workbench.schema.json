@@ -14,22 +14,26 @@
     "task": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["id", "title", "capsule", "taskStatus", "taskBoardStatus"],
+      "required": ["id", "title", "capsule", "taskStatus", "taskBoardStatus", "taskBoardPath", "taskBoardPresent"],
       "properties": {
         "id": { "type": "string" },
         "title": { "type": "string" },
         "capsule": { "type": "string" },
         "taskStatus": { "type": "string" },
-        "taskBoardStatus": { "type": "string" }
+        "taskBoardStatus": { "type": "string" },
+        "taskBoardPath": { "type": "string" },
+        "taskBoardPresent": { "type": "boolean" }
       }
     },
     "state": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["closeState", "ready", "closed", "auditable"],
+      "required": ["closeState", "ready", "closeEvidenceFound", "closedValid", "closed", "auditable"],
       "properties": {
-        "closeState": { "enum": ["not-closed", "closed"] },
+        "closeState": { "enum": ["not-closed", "closed", "closed-valid", "close-evidence-found-invalid", "close-evidence-malformed"] },
         "ready": { "type": "boolean" },
+        "closeEvidenceFound": { "type": "boolean" },
+        "closedValid": { "type": "boolean" },
         "closed": { "type": "boolean" },
         "auditable": { "type": "boolean" }
       }

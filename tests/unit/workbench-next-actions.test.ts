@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildWorkbenchNextActions } from '../../src/services/workbench-next-actions';
+import { validateSchema } from '../../src/core/schema';
 
 describe('workbench next actions', () => {
   it('suggests safe evidence.jsonl remediation as dry-run plus execute command', () => {
@@ -41,6 +42,8 @@ describe('workbench next actions', () => {
         command: 'hadara evidence lint --task T-0172 --json'
       })
     );
+    expect(Object.prototype.hasOwnProperty.call(actions[0], 'path')).toBe(false);
+    expect(validateSchema('hadara.task.workbench.v1', fixtureReport(actions)).ok).toBe(true);
   });
 
   it('suggests close dry-run with paired execute command when a task is ready', () => {
@@ -109,4 +112,106 @@ describe('workbench next actions', () => {
       })
     );
   });
+
+  it('normalizes append-close-evidence actions without undefined loopBoundary fields', () => {
+    const actions = buildWorkbenchNextActions({
+      taskId: 'T-0172',
+      closed: false,
+      closePlanOk: false,
+      evidenceRecords: 1,
+      closeActions: [
+        {
+          id: 'append-close-evidence',
+          kind: 'command',
+          required: true,
+          command: 'hadara task close --task T-0172 --execute --json',
+          message: 'Append close evidence.'
+        }
+      ],
+      issues: []
+    });
+
+    expect(actions[0]).toMatchObject({ id: 'review-close-plan' });
+    expect(Object.prototype.hasOwnProperty.call(actions[0], 'loopBoundary')).toBe(false);
+    expect(validateSchema('hadara.task.workbench.v1', fixtureReport(actions)).ok).toBe(true);
+  });
+
+  it('does not turn another task board warning into current-task remediation', () => {
+    const actions = buildWorkbenchNextActions({
+      taskId: 'T-0172',
+      closed: false,
+      closePlanOk: false,
+      evidenceRecords: 1,
+      closeActions: [],
+      issues: [
+        {
+          severity: 'warning',
+          code: 'PROTOCOL_DOCS_PROJECT_TASK_BOARD_ROW_MISSING',
+          message: 'docs/TASK_BOARD.md does not contain a row for T-0073.',
+          path: 'docs/TASK_BOARD.md'
+        }
+      ]
+    });
+
+    expect(actions.some((action) => action.id === 'remediate-task-board-row')).toBe(false);
+    expect(validateSchema('hadara.task.workbench.v1', fixtureReport(actions)).ok).toBe(true);
+  });
+
+  it('can suggest audit and close actions together when close evidence exists but is not valid', () => {
+    const actions = buildWorkbenchNextActions({
+      taskId: 'T-0172',
+      closed: false,
+      closeEvidenceFound: true,
+      closePlanOk: true,
+      evidenceRecords: 2,
+      closeActions: [],
+      issues: []
+    });
+
+    expect(actions.map((action) => action.id)).toEqual(['review-close-plan', 'audit-close']);
+    expect(validateSchema('hadara.task.workbench.v1', fixtureReport(actions)).ok).toBe(true);
+  });
 });
+
+function fixtureReport(nextActions: ReturnType<typeof buildWorkbenchNextActions>): object {
+  return {
+    schemaVersion: 'hadara.task.workbench.v1',
+    command: 'task.status',
+    ok: true,
+    generatedAt: '2026-05-31T00:00:00.000Z',
+    projectRoot: '/tmp/hadara',
+    task: {
+      id: 'T-0172',
+      title: 'Fixture',
+      capsule: 'tasks/T-0172-fixture',
+      taskStatus: 'Draft',
+      taskBoardStatus: 'Draft',
+      taskBoardPath: 'docs/TASK_BOARD.md',
+      taskBoardPresent: true
+    },
+    state: {
+      closeState: 'not-closed',
+      ready: false,
+      closeEvidenceFound: false,
+      closedValid: false,
+      closed: false,
+      auditable: false
+    },
+    summary: {
+      blockers: 0,
+      warnings: 0,
+      evidenceRecords: 1,
+      nextActions: nextActions.length
+    },
+    sources: {
+      taskClosePlan: { ok: false, mode: 'dry-run', blockers: 0, warnings: 0 },
+      evidenceLint: { ok: true, issues: 0 },
+      evidenceList: { ok: true, records: 1 },
+      protocolTask: { ok: true, issues: 0 },
+      protocolDocs: { ok: true, issues: 0 },
+      protocolProfile: { ok: true, issues: 0 }
+    },
+    issues: [],
+    nextActions
+  };
+}

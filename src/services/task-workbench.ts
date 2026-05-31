@@ -1,9 +1,14 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { EvidenceIndexRecord } from '../evidence/evidence';
 import { createTaskCloseReport, TaskCloseIssue } from '../task/task-close';
-import { createTaskListReport, createTaskShowReport } from './task-read-model';
+import { createTaskShowReport } from './task-read-model';
 import { createEvidenceListReport } from './evidence-list';
+import { parseMarkdownRows } from './markdown-table';
 import { createDocsProtocolConsistencyReport, createProfileProtocolConsistencyReport } from './protocol-consistency';
 import { buildWorkbenchNextActions, WorkbenchNextAction } from './workbench-next-actions';
+
+type CloseState = 'not-closed' | 'closed-valid' | 'close-evidence-found-invalid' | 'close-evidence-malformed';
 
 export interface TaskWorkbenchReport {
   schemaVersion: 'hadara.task.workbench.v1';
@@ -17,10 +22,14 @@ export interface TaskWorkbenchReport {
     capsule: string;
     taskStatus: string;
     taskBoardStatus: string;
+    taskBoardPath: string;
+    taskBoardPresent: boolean;
   };
   state: {
-    closeState: 'not-closed' | 'closed';
+    closeState: CloseState;
     ready: boolean;
+    closeEvidenceFound: boolean;
+    closedValid: boolean;
     closed: boolean;
     auditable: boolean;
   };
@@ -80,18 +89,22 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
   const evidenceList = createEvidenceListReport(projectRoot, { taskId });
   const docsDoctor = createDocsProtocolConsistencyReport(projectRoot, now);
   const profileDoctor = createProfileProtocolConsistencyReport(projectRoot, now);
-  const taskBoardStatus = createTaskListReport(projectRoot).tasks.find((task) => task.id === taskId)?.status ?? 'Unknown';
+  const taskBoard = readTaskBoardProjection(projectRoot, taskShow.task.id);
   const latestEvidence = evidenceList.records.at(-1);
-  const closed = evidenceList.records.some(isCloseEvidenceRecord);
+  const closeState = getCloseState(evidenceList.records);
+  const closeEvidenceFound = closeState !== 'not-closed';
+  const closedValid = closeState === 'closed-valid';
   const issues = [
     ...closePlan.issues,
+    ...buildTaskBoardIssues(taskShow.task.id, taskShow.task.status, taskShow.task.capsule, taskBoard),
     ...evidenceList.issues.map((issue): TaskCloseIssue => ({ severity: issue.severity, code: `EVIDENCE_LIST_${issue.code}`, message: issue.message })),
     ...docsDoctor.issues.map((issue): TaskCloseIssue => ({ severity: issue.severity, code: `PROTOCOL_DOCS_${issue.code}`, message: issue.message, path: issue.path })),
     ...profileDoctor.issues.map((issue): TaskCloseIssue => ({ severity: issue.severity, code: `PROTOCOL_PROFILE_${issue.code}`, message: issue.message, path: issue.path }))
   ];
   const nextActions = buildWorkbenchNextActions({
     taskId,
-    closed,
+    closed: closedValid,
+    closeEvidenceFound,
     closePlanOk: closePlan.ok,
     evidenceRecords: evidenceList.count,
     closeActions: closePlan.nextActions,
@@ -109,13 +122,17 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
       title: taskShow.task.title,
       capsule: taskShow.task.capsule,
       taskStatus: taskShow.task.status,
-      taskBoardStatus
+      taskBoardStatus: taskBoard.status,
+      taskBoardPath: taskBoard.path,
+      taskBoardPresent: taskBoard.present
     },
     state: {
-      closeState: closed ? 'closed' : 'not-closed',
+      closeState,
       ready: closePlan.ok,
-      closed,
-      auditable: closed
+      closeEvidenceFound,
+      closedValid,
+      closed: closedValid,
+      auditable: closeEvidenceFound
     },
     summary: {
       blockers: issues.filter((issue) => issue.severity === 'error').length,
@@ -164,7 +181,7 @@ export function formatTaskWorkbenchReport(report: TaskWorkbenchReport): string {
     'State',
     `- Capsule: ${report.task.capsule}`,
     `- TASK.md status: ${report.task.taskStatus}`,
-    `- Task Board status: ${report.task.taskBoardStatus}`,
+    `- Task Board status: ${report.task.taskBoardPresent ? report.task.taskBoardStatus : 'missing'}`,
     `- Close state: ${report.state.closeState}`,
     `- Ready for Done: ${report.state.ready ? 'yes' : 'no'}`,
     '',
@@ -209,11 +226,15 @@ function buildMissingTaskReport(projectRoot: string, taskId: string, generatedAt
       title: 'Unknown',
       capsule: '',
       taskStatus: 'Missing',
-      taskBoardStatus: 'Missing'
+      taskBoardStatus: 'Missing',
+      taskBoardPath: 'docs/TASK_BOARD.md',
+      taskBoardPresent: false
     },
     state: {
       closeState: 'not-closed',
       ready: false,
+      closeEvidenceFound: false,
+      closedValid: false,
       closed: false,
       auditable: false
     },
@@ -246,6 +267,80 @@ function summarizeEvidence(record: EvidenceIndexRecord): NonNullable<TaskWorkben
   };
 }
 
-function isCloseEvidenceRecord(record: EvidenceIndexRecord): boolean {
+interface TaskBoardProjection {
+  status: string;
+  path: string;
+  present: boolean;
+  capsule: string | null;
+}
+
+function readTaskBoardProjection(projectRoot: string, taskId: string): TaskBoardProjection {
+  const taskBoardPath = 'docs/TASK_BOARD.md';
+  const absolutePath = path.join(projectRoot, taskBoardPath);
+  if (!fs.existsSync(absolutePath)) {
+    return { status: 'Missing', path: taskBoardPath, present: false, capsule: null };
+  }
+
+  const rows = parseMarkdownRows(fs.readFileSync(absolutePath, 'utf8')).filter((row) => row[0] === taskId);
+  if (rows.length !== 1) {
+    return { status: 'Missing', path: taskBoardPath, present: false, capsule: null };
+  }
+
+  return {
+    status: rows[0][2] || 'Unknown',
+    path: taskBoardPath,
+    present: true,
+    capsule: rows[0][3] || null
+  };
+}
+
+function buildTaskBoardIssues(taskId: string, taskStatus: string, capsule: string, taskBoard: TaskBoardProjection): TaskCloseIssue[] {
+  if (!taskBoard.present) {
+    return [
+      {
+        severity: 'warning',
+        code: 'WORKBENCH_TASK_BOARD_ROW_MISSING',
+        message: `docs/TASK_BOARD.md does not contain a row for ${taskId}.`,
+        path: taskBoard.path
+      }
+    ];
+  }
+
+  const issues: TaskCloseIssue[] = [];
+  if (taskBoard.status !== taskStatus) {
+    issues.push({
+      severity: 'warning',
+      code: 'WORKBENCH_TASK_BOARD_STATUS_DRIFT',
+      message: `docs/TASK_BOARD.md status for ${taskId} is ${taskBoard.status || '(empty)'}, but TASK.md status is ${taskStatus || '(empty)'}.`,
+      path: taskBoard.path
+    });
+  }
+  if (taskBoard.capsule !== capsule) {
+    issues.push({
+      severity: 'warning',
+      code: 'WORKBENCH_TASK_BOARD_CAPSULE_DRIFT',
+      message: `docs/TASK_BOARD.md capsule for ${taskId} is ${taskBoard.capsule || '(empty)'}, expected ${capsule}.`,
+      path: taskBoard.path
+    });
+  }
+  return issues;
+}
+
+function getCloseState(records: EvidenceIndexRecord[]): CloseState {
+  if (records.some(isPassedCloseEvidenceRecord)) return 'closed-valid';
+  if (records.some(isWellFormedCloseEvidenceRecord)) return 'close-evidence-found-invalid';
+  if (records.some(isMalformedCloseEvidenceRecord)) return 'close-evidence-malformed';
+  return 'not-closed';
+}
+
+function isPassedCloseEvidenceRecord(record: EvidenceIndexRecord): boolean {
+  return isWellFormedCloseEvidenceRecord(record) && record.result === 'passed';
+}
+
+function isWellFormedCloseEvidenceRecord(record: EvidenceIndexRecord): boolean {
   return record.kind === 'command-log' && /Task close validation .* before close evidence append/.test(record.summary);
+}
+
+function isMalformedCloseEvidenceRecord(record: EvidenceIndexRecord): boolean {
+  return /Task close validation |before close evidence append/.test(record.summary);
 }

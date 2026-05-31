@@ -44,11 +44,15 @@ describe('task workbench status report', () => {
         id: task.id,
         title: 'Workbench report',
         taskStatus: 'Draft',
-        taskBoardStatus: 'Draft'
+        taskBoardStatus: 'Draft',
+        taskBoardPath: 'docs/TASK_BOARD.md',
+        taskBoardPresent: true
       },
       state: {
         closeState: 'not-closed',
         ready: false,
+        closeEvidenceFound: false,
+        closedValid: false,
         closed: false
       },
       sources: {
@@ -85,8 +89,103 @@ describe('task workbench status report', () => {
       schemaVersion: 'hadara.task.workbench.v1',
       command: 'task.status',
       ok: false,
-      task: { id: 'T-9999', taskStatus: 'Missing', taskBoardStatus: 'Missing' }
+      task: { id: 'T-9999', taskStatus: 'Missing', taskBoardStatus: 'Missing', taskBoardPresent: false }
     });
+  });
+
+  it('reports Task Board status drift from the actual docs/TASK_BOARD.md row', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Workbench board drift');
+    setTaskStatus(task.dir, 'Done');
+    replaceTaskBoardRow(root, task.id, `| ${task.id} | Workbench board drift | Active | ${path.relative(root, task.dir)} | |`);
+
+    const report = createTaskWorkbenchReport(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
+
+    expect(report.ok).toBe(true);
+    expect(report.state.ready).toBe(false);
+    expect(report.task).toMatchObject({
+      taskStatus: 'Done',
+      taskBoardStatus: 'Active',
+      taskBoardPath: 'docs/TASK_BOARD.md',
+      taskBoardPresent: true
+    });
+    expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'WORKBENCH_TASK_BOARD_STATUS_DRIFT' })]));
+    expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
+  });
+
+  it('reports missing Task Board rows without falling back to TASK.md status', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Workbench board missing');
+    setTaskStatus(task.dir, 'Done');
+    removeTaskBoardRow(root, task.id);
+
+    const report = createTaskWorkbenchReport(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
+
+    expect(report.task).toMatchObject({
+      taskStatus: 'Done',
+      taskBoardStatus: 'Missing',
+      taskBoardPresent: false
+    });
+    expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'WORKBENCH_TASK_BOARD_ROW_MISSING' })]));
+    expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
+  });
+
+  it('reports Task Board capsule drift explicitly', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Workbench capsule drift');
+    replaceTaskBoardRow(root, task.id, `| ${task.id} | Workbench capsule drift | Draft | tasks/T-0000-wrong | |`);
+
+    const report = createTaskWorkbenchReport(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
+
+    expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'WORKBENCH_TASK_BOARD_CAPSULE_DRIFT' })]));
+    expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
+  });
+
+  it('separates blocked close evidence from valid closure', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Workbench blocked close evidence');
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Task close validation for T-0001 returned ok:false before close evidence append; reportHash sha256:test; sourceHash sha256:test.',
+      result: 'blocked',
+      visibility: 'public'
+    });
+
+    const report = createTaskWorkbenchReport(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
+
+    expect(report.state).toMatchObject({
+      closeState: 'close-evidence-found-invalid',
+      closeEvidenceFound: true,
+      closedValid: false,
+      closed: false,
+      auditable: true
+    });
+    expect(report.nextActions).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'audit-close' })]));
+    expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
+  });
+
+  it('treats passed close evidence as valid closure', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Workbench passed close evidence');
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Task close validation for T-0001 returned ok:true before close evidence append; reportHash sha256:test; sourceHash sha256:test.',
+      result: 'passed',
+      visibility: 'public'
+    });
+
+    const report = createTaskWorkbenchReport(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
+
+    expect(report.state).toMatchObject({
+      closeState: 'closed-valid',
+      closeEvidenceFound: true,
+      closedValid: true,
+      closed: true,
+      auditable: true
+    });
+    expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
   });
 
   it('uses task close dry-run as the single done-level validation source', () => {
@@ -112,4 +211,36 @@ function snapshotProject(root: string): Record<string, string> {
     ])
   ];
   return Object.fromEntries(files.map((file) => [file, fs.readFileSync(path.join(root, file), 'utf8')]));
+}
+
+function setTaskStatus(taskDir: string, status: string): void {
+  const taskPath = path.join(taskDir, 'TASK.md');
+  const content = fs.readFileSync(taskPath, 'utf8');
+  fs.writeFileSync(taskPath, content.replace(/^## Status\s*\n+[\s\S]*?(?=\n## Status History)/m, `## Status\n\n${status}\n`), 'utf8');
+}
+
+function replaceTaskBoardRow(root: string, taskId: string, replacement: string): void {
+  const taskBoardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+  const content = fs.readFileSync(taskBoardPath, 'utf8');
+  fs.writeFileSync(
+    taskBoardPath,
+    content
+      .split(/\r?\n/)
+      .map((line) => (line.startsWith(`| ${taskId} |`) ? replacement : line))
+      .join('\n'),
+    'utf8'
+  );
+}
+
+function removeTaskBoardRow(root: string, taskId: string): void {
+  const taskBoardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+  const content = fs.readFileSync(taskBoardPath, 'utf8');
+  fs.writeFileSync(
+    taskBoardPath,
+    content
+      .split(/\r?\n/)
+      .filter((line) => !line.startsWith(`| ${taskId} |`))
+      .join('\n'),
+    'utf8'
+  );
 }

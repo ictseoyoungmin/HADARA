@@ -26,12 +26,18 @@ Consumers should prefer this report when they need task readiness, evidence heal
 
 | Field | Intended Use |
 |---|---|
-| `task` | Identity, capsule path, task status, and board-facing status. |
-| `state` | Quick close/readiness/auditability flags. |
+| `task` | Identity, capsule path, `TASK.md` status, true Task Board row status/path/presence from `docs/TASK_BOARD.md`. |
+| `state` | Quick readiness, close evidence presence, valid closure, and auditability flags. |
 | `summary` | Dashboard cards, badges, and compact TUI rows. |
 | `sources` | Source-level health; useful for drill-down links to existing commands. |
 | `issues` | Blocking/warning details; consumers should not infer blockers from text. |
 | `nextActions` | Copyable commands and review/edit/remediation/audit guidance. |
+
+For `task.status`, top-level `ok` means report generation succeeded for an existing task. It is not a readiness gate. Consumers should use `state.ready`, `summary.blockers`, and `issues` for readiness or closeability.
+
+Task Board consumers should use `task.taskBoardPresent` before displaying `task.taskBoardStatus`. If `task.taskBoardPresent` is false, `task.taskBoardStatus` is a sentinel and the corresponding issue will include `WORKBENCH_TASK_BOARD_ROW_MISSING`. Status and capsule mismatches are surfaced as `WORKBENCH_TASK_BOARD_STATUS_DRIFT` and `WORKBENCH_TASK_BOARD_CAPSULE_DRIFT`.
+
+Close-state consumers should prefer `state.closedValid` over the legacy `state.closed` alias. `state.closeEvidenceFound` means a close evidence-like record exists; `state.closedValid` means a passed canonical close evidence record exists. `state.closeState` may be `not-closed`, `closed-valid`, `close-evidence-found-invalid`, or `close-evidence-malformed`.
 
 ## Boundaries
 

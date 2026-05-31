@@ -16,6 +16,7 @@ export interface WorkbenchNextAction {
 export interface WorkbenchNextActionInput {
   taskId: string;
   closed: boolean;
+  closeEvidenceFound?: boolean;
   closePlanOk: boolean;
   evidenceRecords: number;
   closeActions: TaskCloseNextAction[];
@@ -41,7 +42,7 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
     });
   }
 
-  if (input.closed) {
+  if (input.closed || input.closeEvidenceFound) {
     upsert(actions, {
       id: 'audit-close',
       kind: 'audit',
@@ -51,7 +52,13 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
       message: 'Audit the existing close evidence in a read-only pass.',
       sourceIssueCodes: ['TASK_CLOSE_EVIDENCE_PRESENT']
     });
-  } else if (input.closePlanOk) {
+  }
+
+  if (input.closed) {
+    return Array.from(actions.values()).sort(compareActions);
+  }
+
+  if (input.closePlanOk) {
     upsert(actions, {
       id: 'review-close-plan',
       kind: 'command',
@@ -103,6 +110,7 @@ function addIssueAction(actions: Map<string, WorkbenchNextAction>, taskId: strin
   }
 
   if (issue.code.includes('TASK_BOARD_ROW_MISSING')) {
+    if (!isIssueForTask(issue, taskId)) return;
     upsert(actions, {
       id: 'remediate-task-board-row',
       kind: 'remediation',
@@ -144,9 +152,13 @@ function addIssueAction(actions: Map<string, WorkbenchNextAction>, taskId: strin
   }
 }
 
+function isIssueForTask(issue: TaskCloseIssue, taskId: string): boolean {
+  return issue.message.includes(taskId);
+}
+
 function fromCloseAction(taskId: string, action: TaskCloseNextAction): WorkbenchNextAction {
   if (action.id === 'append-close-evidence') {
-    return {
+    return createWorkbenchNextAction({
       id: 'review-close-plan',
       kind: 'command',
       required: action.required,
@@ -156,10 +168,10 @@ function fromCloseAction(taskId: string, action: TaskCloseNextAction): Workbench
       message: action.message,
       sourceIssueCodes: ['TASK_CLOSE_READY'],
       loopBoundary: action.loopBoundary
-    };
+    });
   }
 
-  return stripUndefined({
+  return createWorkbenchNextAction({
     id: action.id,
     kind: action.kind === 'command' ? 'command' : 'review',
     required: action.required,
@@ -172,16 +184,17 @@ function fromCloseAction(taskId: string, action: TaskCloseNextAction): Workbench
 }
 
 function upsert(actions: Map<string, WorkbenchNextAction>, action: WorkbenchNextAction): void {
-  const existing = actions.get(action.id);
+  const normalized = createWorkbenchNextAction(action);
+  const existing = actions.get(normalized.id);
   if (!existing) {
-    actions.set(action.id, action);
+    actions.set(normalized.id, normalized);
     return;
   }
-  const sourceIssueCodes = Array.from(new Set([...existing.sourceIssueCodes, ...action.sourceIssueCodes]));
-  actions.set(action.id, {
+  const sourceIssueCodes = Array.from(new Set([...existing.sourceIssueCodes, ...normalized.sourceIssueCodes]));
+  actions.set(normalized.id, {
     ...existing,
-    required: existing.required || action.required,
-    priority: priorityRank(action.priority) < priorityRank(existing.priority) ? action.priority : existing.priority,
+    required: existing.required || normalized.required,
+    priority: priorityRank(normalized.priority) < priorityRank(existing.priority) ? normalized.priority : existing.priority,
     sourceIssueCodes
   });
 }
@@ -196,6 +209,10 @@ function priorityRank(priority: WorkbenchNextAction['priority']): number {
   if (priority === 'now') return 0;
   if (priority === 'soon') return 1;
   return 2;
+}
+
+export function createWorkbenchNextAction(input: WorkbenchNextAction): WorkbenchNextAction {
+  return stripUndefined(input);
 }
 
 function stripUndefined(action: WorkbenchNextAction): WorkbenchNextAction {
