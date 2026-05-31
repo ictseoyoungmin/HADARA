@@ -172,3 +172,4 @@
 | T-0169 | Evidence Command UX | Done | tasks/T-0169-evidence-command-ux | Adds `evidence add-command` canonical command-log evidence writer without shell execution. |
 | T-0170 | Close UX Polish and Audit Semantics | Done | tasks/T-0170-close-ux-polish-and-audit-semantics | Adds close report/source hash split, execute nextActions polish, append result paths, and read-only `task audit-close`. |
 | T-0171 | Task Workbench Status Report | Done | tasks/T-0171-task-workbench-status-report | Adds read-only `task status --task <id> --json` workbench projection over close, evidence, protocol, and Task Board sources. |
+| T-0172 | Workbench Suggested Action Engine | Done | tasks/T-0172-workbench-suggested-action-engine | Centralizes workbench nextActions with priorities, source issue codes, and dry-run/execute pairing. |

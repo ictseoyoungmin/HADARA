@@ -1,8 +1,9 @@
 import { EvidenceIndexRecord } from '../evidence/evidence';
-import { createTaskCloseReport, TaskCloseIssue, TaskCloseNextAction } from '../task/task-close';
+import { createTaskCloseReport, TaskCloseIssue } from '../task/task-close';
 import { createTaskListReport, createTaskShowReport } from './task-read-model';
 import { createEvidenceListReport } from './evidence-list';
 import { createDocsProtocolConsistencyReport, createProfileProtocolConsistencyReport } from './protocol-consistency';
+import { buildWorkbenchNextActions, WorkbenchNextAction } from './workbench-next-actions';
 
 export interface TaskWorkbenchReport {
   schemaVersion: 'hadara.task.workbench.v1';
@@ -65,7 +66,7 @@ export interface TaskWorkbenchReport {
     };
   };
   issues: TaskCloseIssue[];
-  nextActions: TaskCloseNextAction[];
+  nextActions: WorkbenchNextAction[];
 }
 
 export function createTaskWorkbenchReport(projectRoot: string, taskId: string, now = new Date()): TaskWorkbenchReport {
@@ -88,7 +89,14 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
     ...docsDoctor.issues.map((issue): TaskCloseIssue => ({ severity: issue.severity, code: `PROTOCOL_DOCS_${issue.code}`, message: issue.message, path: issue.path })),
     ...profileDoctor.issues.map((issue): TaskCloseIssue => ({ severity: issue.severity, code: `PROTOCOL_PROFILE_${issue.code}`, message: issue.message, path: issue.path }))
   ];
-  const nextActions = normalizeWorkbenchActions(taskId, closePlan.nextActions, closed);
+  const nextActions = buildWorkbenchNextActions({
+    taskId,
+    closed,
+    closePlanOk: closePlan.ok,
+    evidenceRecords: evidenceList.count,
+    closeActions: closePlan.nextActions,
+    issues
+  });
 
   return {
     schemaVersion: 'hadara.task.workbench.v1',
@@ -226,21 +234,6 @@ function buildMissingTaskReport(projectRoot: string, taskId: string, generatedAt
     issues,
     nextActions: []
   };
-}
-
-function normalizeWorkbenchActions(taskId: string, actions: TaskCloseNextAction[], closed: boolean): TaskCloseNextAction[] {
-  if (closed) {
-    return [
-      {
-        id: 'audit-close',
-        kind: 'command',
-        required: false,
-        command: `hadara task audit-close --task ${taskId} --json`,
-        message: 'Audit the existing close evidence in a read-only pass.'
-      }
-    ];
-  }
-  return actions;
 }
 
 function summarizeEvidence(record: EvidenceIndexRecord): NonNullable<TaskWorkbenchReport['sources']['evidenceList']['latest']> {

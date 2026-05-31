@@ -76,9 +76,10 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Latest completed task: T-0169 Evidence Command UX added `hadara evidence add-command --task <id> --summary <text> --result <result> --json` as a canonical command-log evidence writer without shell execution or stdout/stderr capture.
 - Latest completed task: T-0170 Close UX Polish and Audit Semantics clarified task close report/source hash semantics, improved execute-mode nextActions, added append result paths, and added read-only `hadara task audit-close --task <id> --json`.
 - Latest completed task: T-0171 Task Workbench Status Report added read-only `hadara task status --task <id> --json` as a Phase 3 workbench projection over close, evidence, protocol, and Task Board sources without duplicate done-level harness validation.
-- Active / next task: T-0172 Workbench Suggested Action Engine.
+- Latest completed task: T-0172 Workbench Suggested Action Engine centralized `task status` nextActions with action priorities, source issue codes, remediation/audit kinds, and dry-run/execute command pairing.
+- Active / next task: T-0173 Workbench Schema Contract.
 - Phase 3 source plan: `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md`.
-- Task workbench status report exists as `hadara task status --task <id> --json`; schema contract registration and richer suggested-action normalization continue in follow-up Phase 3 capsules.
+- Task workbench status report exists as `hadara task status --task <id> --json`; centralized suggested-action generation is implemented, and schema contract registration continues in the next Phase 3 capsule.
 - Planned close-model follow-ups are tracked as T-0166 through T-0169: task close plan report, close execute MVP with close evidence append only, task ready preflight, and command-log evidence writer UX.
 - Harness validation supports `--level draft|done`; done-level validation requires Done status, completed acceptance, evidence records, and updated handoff sections.
 - Done-level harness validation now also checks `docs/TASK_BOARD.md` for exactly one row for the validated task, `Done` status, and the expected Task Capsule path, catching duplicate or stale append/update results before completion.
