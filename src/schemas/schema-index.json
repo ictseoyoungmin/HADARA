@@ -93,6 +93,13 @@
       "notes": "Documents read-only task readiness preflight reports before close."
     },
     {
+      "id": "hadara.task.finish.v1",
+      "path": "src/schemas/task-finish.schema.json",
+      "status": "fixture",
+      "owner": "task/finish",
+      "notes": "Documents dry-run-first bounded Task Capsule finish/status sync reports."
+    },
+    {
       "id": "hadara.task.workbench.v1",
       "path": "src/schemas/task-workbench.schema.json",
       "status": "fixture",

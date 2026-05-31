@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.task.finish.v1",
+  "x-hadara-schema-id": "hadara.task.finish.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "mode", "taskId", "projectRoot", "status", "summary", "writes", "advisories", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.task.finish.v1" },
+    "command": { "const": "task.finish" },
+    "ok": { "type": "boolean" },
+    "mode": { "enum": ["dry-run", "execute"] },
+    "taskId": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "status": { "type": "object", "additionalProperties": true },
+    "summary": { "type": "object", "additionalProperties": true },
+    "writes": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "advisories": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+  }
+}

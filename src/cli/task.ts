@@ -1,6 +1,7 @@
 import { createTaskCapsule } from '../task/task-capsule';
 import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../task/task-close';
 import { createTaskReadyReport } from '../task/task-ready';
+import { createTaskFinishReport, formatTaskFinishReport } from '../task/task-finish';
 import { createTaskUpgradeScaffoldReport, formatTaskUpgradeScaffoldReport } from '../task/task-upgrade-scaffold';
 import { createTaskWorkbenchReport, formatTaskWorkbenchReport } from '../services/task-workbench';
 import { getFlag, getStringOption } from './args';
@@ -85,6 +86,19 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
       console.log(JSON.stringify(report, null, 2));
     } else {
       console.log(formatTaskWorkbenchReport(report));
+    }
+    if (!report.ok) process.exitCode = 6;
+    return true;
+  }
+
+  if (sub === 'finish') {
+    const id = getStringOption(input.args, '--task') ?? input.args[2];
+    if (!id || id.startsWith('--')) throw new Error('task finish requires --task <task-id>');
+    const report = createTaskFinishReport(input.projectRoot, id, getFlag(input.args, '--execute') ? 'execute' : 'dry-run');
+    if (input.jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log(formatTaskFinishReport(report));
     }
     if (!report.ok) process.exitCode = 6;
     return true;

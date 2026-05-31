@@ -23,6 +23,7 @@ import runtimeVersionSchemaJson from '../schemas/runtime-version.schema.json';
 import smokeEvidenceSummarySchemaJson from '../schemas/smoke-evidence-summary.schema.json';
 import taskAuditCloseSchemaJson from '../schemas/task-audit-close.schema.json';
 import taskCloseSchemaJson from '../schemas/task-close.schema.json';
+import taskFinishSchemaJson from '../schemas/task-finish.schema.json';
 import taskReadySchemaJson from '../schemas/task-ready.schema.json';
 import taskUpgradeScaffoldSchemaJson from '../schemas/task-upgrade-scaffold.schema.json';
 import taskWorkbenchSchemaJson from '../schemas/task-workbench.schema.json';
@@ -92,6 +93,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.smokeEvidenceSummary.v1': smokeEvidenceSummarySchemaJson as JsonObject,
   'hadara.task.audit_close.v1': taskAuditCloseSchemaJson as JsonObject,
   'hadara.task.close.v1': taskCloseSchemaJson as JsonObject,
+  'hadara.task.finish.v1': taskFinishSchemaJson as JsonObject,
   'hadara.task.ready.v1': taskReadySchemaJson as JsonObject,
   'hadara.task.upgrade_scaffold.v1': taskUpgradeScaffoldSchemaJson as JsonObject,
   'hadara.task.workbench.v1': taskWorkbenchSchemaJson as JsonObject,

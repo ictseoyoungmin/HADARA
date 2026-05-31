@@ -84,7 +84,8 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Latest completed task: T-0177 Task Workbench Hardening fixed true Task Board status projection, normalized optional nextAction fields, split close evidence presence from valid closure, and documented `task.status` `ok` semantics.
 - Latest completed task: T-0178 Runtime Version CLI Origin Doctor added read-only `hadara version --verbose --json` as `hadara.runtime.version.v1` for CLI entry, project root, package/git/node metadata, and build freshness diagnostics.
 - Latest completed task: T-0179 Docker Dev Sync-Build Script added repo-level `dev:docker-check` and `dev:docker-sync-build` helpers for Docker temp-copy validation, workspace dist refresh, and runtime version smoke.
-- Active / next task: T-0180 Task Finish / Status Sync MVP.
+- Latest completed task: T-0180 Task Finish / Status Sync MVP added dry-run-first `hadara task finish --task <id> --json` as `hadara.task.finish.v1`, with bounded execute writes for `TASK.md` and `docs/TASK_BOARD.md` status/path only.
+- Active / next task: T-0181 Task Next Recommendation.
 - Phase 3 source plan: `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md`.
 - Task workbench status report exists as `hadara task status --task <id> --json`; centralized suggested-action generation and fixture-level schema registration are implemented. T-0177 hardened true Task Board status projection, optional nextAction normalization, and close evidence/valid-closure semantics.
 - Phase 3 task operator console capsule sequence T-0171 through T-0176 is complete: status projection, suggested actions, schema contract, text output, read-consumer projection prep, and evidence-from-command design boundary.
