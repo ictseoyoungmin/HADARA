@@ -128,6 +128,55 @@ describe('protocol CLI command handler', () => {
     expect(validateSchema('hadara.protocol.consistency.v1', payload).ok).toBe(true);
   });
 
+  it('prints JSON for protocol doctor --scope all', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'All CLI protocol');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\nActive: ${task.id}\n`, 'utf8');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleProtocolCommand({
+      args: ['protocol', 'doctor', '--scope', 'all', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    expect(process.exitCode).toBeUndefined();
+    const payload = JSON.parse(String(log.mock.calls[0][0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.protocol.consistency.v1',
+      command: 'protocol.doctor',
+      ok: true,
+      scope: 'all',
+      summary: {
+        checkedTasks: 1,
+        activeTaskId: task.id
+      }
+    });
+    expect(validateSchema('hadara.protocol.consistency.v1', payload).ok).toBe(true);
+  });
+
+  it('defaults protocol doctor JSON to all scope', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Default all CLI protocol');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleProtocolCommand({
+      args: ['protocol', 'doctor', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls[0][0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.protocol.consistency.v1',
+      command: 'protocol.doctor',
+      scope: 'all'
+    });
+    expect(validateSchema('hadara.protocol.consistency.v1', payload).ok).toBe(true);
+  });
+
   it('rejects using --task and --scope together', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Ambiguous protocol');

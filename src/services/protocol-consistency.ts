@@ -157,6 +157,51 @@ export function createProfileProtocolConsistencyReport(projectRoot: string, now 
   });
 }
 
+export function createAllProtocolConsistencyReport(projectRoot: string, now = new Date()): ProtocolConsistencyReport {
+  const docsReport = createDocsProtocolConsistencyReport(projectRoot, now);
+  const profileReport = createProfileProtocolConsistencyReport(projectRoot, now);
+  const taskReports = docsReport.summary.activeTaskId ? [createTaskProtocolConsistencyReport(projectRoot, docsReport.summary.activeTaskId, now)] : [];
+  const issueIdMap = new Map<string, string>();
+  const issues: ProtocolConsistencyIssue[] = [];
+
+  for (const [label, report] of [
+    ['docs', docsReport],
+    ['profile', profileReport],
+    ...taskReports.map((report) => [`task:${report.task?.id ?? report.summary.activeTaskId ?? report.scope}`, report] as const)
+  ] as const) {
+    for (const issue of report.issues) {
+      const id = `issue-${String(issues.length + 1).padStart(3, '0')}`;
+      issueIdMap.set(`${label}:${issue.id}`, id);
+      issues.push({ ...issue, id });
+    }
+  }
+
+  const remediations = profileReport.remediations.map((remediation) => ({
+    ...remediation,
+    issueIds: remediation.issueIds.map((issueId) => issueIdMap.get(`profile:${issueId}`) ?? issueId)
+  }));
+  const counts = countIssues(issues);
+
+  return {
+    schemaVersion: 'hadara.protocol.consistency.v1',
+    command: 'protocol.doctor',
+    ok: counts.error === 0,
+    scope: 'all',
+    projectRoot,
+    generatedAt: now.toISOString(),
+    summary: {
+      checkedDocs: Math.max(docsReport.summary.checkedDocs, profileReport.summary.checkedDocs),
+      checkedTasks: docsReport.summary.checkedTasks,
+      activeTaskId: docsReport.summary.activeTaskId,
+      detectedProfile: profileReport.summary.detectedProfile,
+      profile: profileReport.summary.profile,
+      issueCounts: counts
+    },
+    issues,
+    remediations
+  };
+}
+
 function buildReport(
   projectRoot: string,
   now: Date,
@@ -177,11 +222,7 @@ function buildReport(
     remediations?: ProtocolRemediation[];
   }
 ): ProtocolConsistencyReport {
-  const counts = {
-    error: issues.filter((issue) => issue.severity === 'error').length,
-    warning: issues.filter((issue) => issue.severity === 'warning').length,
-    info: issues.filter((issue) => issue.severity === 'info').length
-  };
+  const counts = countIssues(issues);
 
   return {
     schemaVersion: 'hadara.protocol.consistency.v1',
@@ -211,6 +252,14 @@ function buildReport(
       : {}),
     issues,
     remediations: options?.remediations ?? []
+  };
+}
+
+function countIssues(issues: ProtocolConsistencyIssue[]): { error: number; warning: number; info: number } {
+  return {
+    error: issues.filter((issue) => issue.severity === 'error').length,
+    warning: issues.filter((issue) => issue.severity === 'warning').length,
+    info: issues.filter((issue) => issue.severity === 'info').length
   };
 }
 

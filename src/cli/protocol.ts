@@ -1,4 +1,5 @@
 import {
+  createAllProtocolConsistencyReport,
   createDocsProtocolConsistencyReport,
   createProfileProtocolConsistencyReport,
   createTaskProtocolConsistencyReport,
@@ -34,10 +35,14 @@ export function handleProtocolCommand(input: ProtocolCommandInput): boolean {
   } else if (scope === 'profile') {
     report = createProfileProtocolConsistencyReport(input.projectRoot);
     label = 'profile';
+  } else if (scope === 'all' || !scope) {
+    report = createAllProtocolConsistencyReport(input.projectRoot);
+    label = 'all';
   } else if (scope) {
     throw new CliArgsError('CLI_OPTION_INVALID_VALUE', `unsupported protocol doctor scope: ${scope}`);
   } else {
-    throw new CliArgsError('CLI_OPTION_REQUIRED', '--task or --scope docs|profile is required');
+    report = createAllProtocolConsistencyReport(input.projectRoot);
+    label = 'all';
   }
 
   if (input.jsonOutput) {

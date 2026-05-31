@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  createAllProtocolConsistencyReport,
   createDocsProtocolConsistencyReport,
   createProfileProtocolConsistencyReport,
   createTaskProtocolConsistencyReport
@@ -36,6 +37,62 @@ afterEach(() => {
 });
 
 describe('Docs protocol consistency report', () => {
+  it('returns an all-scoped report that aggregates docs, profile, and active-task diagnostics', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'All protocol');
+    fs.writeFileSync(
+      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
+      `# AGENT_HANDOFF\n\n## Current State\n\n| Area | State | Notes |\n|---|---|---|\n| Latest Completed Task | none | none |\n| Active / Next Task | ${task.id} | active |\n`,
+      'utf8'
+    );
+
+    const report = createAllProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.protocol.consistency.v1',
+      command: 'protocol.doctor',
+      ok: true,
+      scope: 'all',
+      generatedAt: '2026-05-30T00:00:00.000Z',
+      summary: {
+        checkedTasks: 1,
+        activeTaskId: task.id,
+        detectedProfile: 'basic',
+        issueCounts: {
+          error: 0,
+          warning: 3,
+          info: 0
+        }
+      }
+    });
+    expect(report.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(['PROFILE_METADATA_MISSING', 'PROFILE_REQUIRED_READING_DRIFT'])
+    );
+    expect(report.remediations.find((candidate) => candidate.id === 'profile-metadata-align')).toBeTruthy();
+    expect(report.summary.checkedDocs).toBeGreaterThanOrEqual(5);
+    expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
+  });
+
+  it('remaps all-scope issue ids and remediation issue references', () => {
+    const root = tempProject();
+    writeProfileDocs(root, 'governed');
+    writeProfileMetadata(root, 'basic');
+    fs.writeFileSync(
+      path.join(root, 'AGENTS.md'),
+      '# AGENTS\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | Current state. |\n',
+      'utf8'
+    );
+
+    const report = createAllProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
+    const remediation = report.remediations.find((candidate) => candidate.id === 'profile-metadata-align');
+
+    expect(report.scope).toBe('all');
+    expect(report.issues.map((issue) => issue.id)).toEqual(report.issues.map((_, index) => `issue-${String(index + 1).padStart(3, '0')}`));
+    expect(remediation?.issueIds.length).toBeGreaterThan(0);
+    expect(remediation?.issueIds.every((issueId) => report.issues.some((issue) => issue.id === issueId))).toBe(true);
+    expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
+  });
+
   it('returns a stable docs-scoped report for an in-sync project', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Docs protocol');

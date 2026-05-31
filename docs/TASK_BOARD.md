@@ -160,3 +160,4 @@
 | T-0157 | Safe Protocol Remediation MVP | Done | tasks/T-0157-safe-protocol-remediation-mvp | Adds dry-run-first bounded `protocol remediate` fixes for Task Board rows, Decisions table frame, Project State profile row, and evidence JSONL. |
 | T-0158 | Safe Protocol Remediation Hardening | Done | tasks/T-0158-safe-protocol-remediation-hardening | Hardens `protocol remediate` atomic writes, Metadata upsert, table-frame guards, and conflict checks. |
 | T-0159 | Protocol Consistency JSON Contract | Done | tasks/T-0159-protocol-consistency-json-contract | Registers protocol consistency/remediation JSON schemas and contract tests; Docker validation and built CLI smokes passed. |
+| T-0160 | Protocol Doctor All Scope | Done | tasks/T-0160-protocol-doctor-all-scope | Adds all-scope protocol doctor aggregation; Docker validation and built CLI smokes passed. |

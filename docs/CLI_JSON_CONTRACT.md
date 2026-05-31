@@ -42,6 +42,8 @@ Examples include:
 
 Agents should treat `issues` as the primary machine-readable failure detail when present.
 
+`hadara protocol doctor --json` defaults to the broad read-only all-scope protocol report. It returns `hadara.protocol.consistency.v1` with `scope: "all"`, aggregating docs, profile, and active-task detail without writing files.
+
 `hadara run-state resume --json` returns read-only resume guidance. It does not update active-run state, execute commands, call providers, or resume an agent process.
 
 ## Early Failure Fallback
