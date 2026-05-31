@@ -5,18 +5,18 @@
 | Area | State | Notes |
 |---|---|---|
 | Branch | main | Continue Phase 3.5 capsules through T-0183, committing each capsule with the task id prefix. |
-| Current Phase | Phase 3.5 / Operator Workflow Hardening | Runtime origin diagnostics, Docker sync-build scripting, bounded task finish/status sync, and task next recommendations are complete. |
-| Latest Completed Task | T-0181 Task Next Recommendation | Added read-only `task next` recommendations from slices/board/handoff state. |
-| Active / Next Task | T-0182 Schema Stability Classification | Document stable/additive/compatibility/deprecated/experimental schema field classes. |
-| Validation Baseline | Docker sync-build, built CLI smokes, done harness, and close audit passed | `npm run dev:docker-sync-build` passed with 72 files / 513 tests; built CLI task next smoke passed; T-0181 done harness and audit-close passed. |
+| Current Phase | Phase 3.5 / Operator Workflow Hardening | Runtime origin diagnostics, Docker sync-build scripting, bounded task finish/status sync, task next recommendations, and schema stability classification are complete. |
+| Latest Completed Task | T-0182 Schema Stability Classification | Documented field stability classes and annotated workbench compatibility aliases. |
+| Active / Next Task | T-0183 Focused Test Command UX | Add a focused test script/SOP path that actually targets selected Vitest files. |
+| Validation Baseline | Docker sync-build, done harness, and close audit passed | `npm run dev:docker-sync-build` passed with 73 files / 514 tests; T-0182 done harness and audit-close passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0179 Docker Dev Sync-Build Script | Added Docker helper scripts and docs for check-only and sync-build/dist-refresh flows. | T-0179 evidence: focused script tests, `dev:docker-check`, `dev:docker-sync-build`, done harness, close execute, and audit-close passed. |
 | T-0180 Task Finish Status Sync MVP | Added `hadara.task.finish.v1` and bounded dry-run/execute status sync for `TASK.md` plus Task Board. | T-0180 evidence: Docker sync-build, built CLI dry-run/execute smokes, done harness, close execute, and audit-close passed. |
 | T-0181 Task Next Recommendation | Added `hadara.task.next.v1` recommendations from Development Slices, Task Board, and handoff state. | T-0181 evidence: Docker sync-build, built CLI smoke, done harness, close execute, and audit-close passed. |
+| T-0182 Schema Stability Classification | Documented stable/additive/compatibility alias/deprecated/experimental field classes and annotated `hadara.task.workbench.v1`. | T-0182 evidence: Docker sync-build, done harness, close execute, and audit-close passed. |
 
 ## Current Known Problems
 
@@ -36,16 +36,15 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Continue with T-0182 Schema Stability Classification. | Phase 3.5 sequence continues by clarifying schema field compatibility before more consumers arrive. | Start from `docs/SCHEMAS.md`, `src/schemas/task-workbench.schema.json`, and `docs/CLI_JSON_CONTRACT.md`. |
+| Continue with T-0183 Focused Test Command UX. | Phase 3.5 sequence finalizes a practical focused test command before UI/TUI work. | Start from `package.json`, `docs/IMPLEMENTATION_SOP.md`, and `docs/TEST_STRATEGY.md`. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Built CLI smoke | Built CLI `task next --json` returned `hadara.task.next.v1` and recommended T-0181 from Development Slices before close. | `/workspace/dist` was refreshed from Docker build output. |
-| Full repository check | Docker temp-copy `npm run check` passed with 72 files and 513 tests. | Host dependencies are unavailable; Docker was used. |
-| Done-level harness | Built CLI `harness validate --task T-0181 --level done --json` returned `ok:true`. | No issues. |
-| Close audit | Built CLI `task audit-close --task T-0181 --json` returned `ok:true` with close evidence records and zero warnings. | Final close evidence appended after capsule source docs were updated. |
+| Full repository check | Docker temp-copy `npm run check` passed with 73 files and 514 tests. | Host dependencies are unavailable; Docker was used. |
+| Done-level harness | Built CLI `harness validate --task T-0182 --level done --json` returned `ok:true`. | No issues. |
+| Close audit | Built CLI `task audit-close --task T-0182 --json` returned `ok:true` with close evidence records and zero warnings. | Final close evidence appended after capsule source docs were updated. |
 
 ## Historical Index
 

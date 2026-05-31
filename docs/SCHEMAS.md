@@ -69,6 +69,28 @@ None currently.
 - Removing fields, changing field meaning, or changing enum semantics requires a new schema id.
 - Compatibility booleans may remain in schemas even after newer enum fields exist. For example, `enabledByDefault` remains in `hadara.tools.list.v1` while `availability` carries richer semantics.
 
+## Field Stability Classes
+
+Schema fixtures may classify fields with `x-hadara-field-classes` when a report has active external consumers or compatibility aliases. Classification is documentation-first for now; it does not make fixture schemas release-gate strict.
+
+| Field Class | Meaning | Consumer Guidance |
+|---|---|---|
+| Stable | Consumers may rely on the field name and meaning within the current schema id. | Breaking changes require a new schema id or an explicit compatibility plan. |
+| Additive | Fields or nested properties may be added without changing the schema id. | Consumers should ignore unknown additive fields unless documented otherwise. |
+| Compatibility alias | Maintained for existing consumers after a preferred field exists. | New consumers should use the preferred field and treat the alias as legacy-compatible. |
+| Deprecated | Field remains temporarily but is planned for removal or replacement. | Consumers should migrate away before the next breaking schema id. |
+| Experimental | Field is useful but not yet a stable contract. | Consumers should guard reads and avoid hard dependencies. |
+
+Current classified fields:
+
+| Schema | Field | Class | Preferred Field | Notes |
+|---|---|---|---|---|
+| `hadara.task.workbench.v1` | `state.closedValid` | Stable |  | Preferred boolean for valid close evidence. |
+| `hadara.task.workbench.v1` | `state.closeState` | Stable |  | Preferred enum for close state. |
+| `hadara.task.workbench.v1` | `state.closed` | Compatibility alias | `state.closedValid` | Kept for existing task status consumers; new consumers should avoid it. |
+| `hadara.task.workbench.v1` | `sources.*` | Additive |  | Source summaries may grow as the workbench composes more read models. |
+| `hadara.task.workbench.v1` | `generatedAt` | Experimental |  | Useful for display/debug, but consumers should not use it as identity or ordering authority. |
+
 ## Fixture Strictness
 
 Initial report schemas require stable envelope fields such as `schemaVersion`, `command`, `ok`, primary arrays, and `issues`. Record schemas such as `hadara.privateEvidence.v1` require their domain fields instead.

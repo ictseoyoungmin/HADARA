@@ -2,6 +2,41 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "hadara.task.workbench.v1",
   "x-hadara-schema-id": "hadara.task.workbench.v1",
+  "x-hadara-field-classes": {
+    "stable": [
+      "schemaVersion",
+      "command",
+      "ok",
+      "task.id",
+      "task.taskStatus",
+      "task.taskBoardStatus",
+      "task.taskBoardPath",
+      "task.taskBoardPresent",
+      "state.closeState",
+      "state.ready",
+      "state.closeEvidenceFound",
+      "state.closedValid",
+      "summary.blockers",
+      "summary.warnings",
+      "issues",
+      "nextActions"
+    ],
+    "compatibilityAlias": [
+      {
+        "field": "state.closed",
+        "preferred": "state.closedValid",
+        "notes": "Kept for existing task.status consumers; new consumers should read state.closeState and state.closedValid."
+      }
+    ],
+    "additive": [
+      "sources.*",
+      "nextActions.*"
+    ],
+    "experimental": [
+      "generatedAt"
+    ],
+    "deprecated": []
+  },
   "type": "object",
   "additionalProperties": true,
   "required": ["schemaVersion", "command", "ok", "generatedAt", "projectRoot", "task", "state", "summary", "sources", "issues", "nextActions"],

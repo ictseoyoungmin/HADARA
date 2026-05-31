@@ -182,3 +182,4 @@
 | T-0179 | Docker Dev Sync Build Script | Done | tasks/T-0179-docker-dev-sync-build-script | Adds npm helpers for Docker check and sync-build/dist refresh. |
 | T-0180 | Task Finish Status Sync MVP | Done | tasks/T-0180-task-finish-status-sync-mvp | |
 | T-0181 | Task Next Recommendation | Done | tasks/T-0181-task-next-recommendation | |
+| T-0182 | Schema Stability Classification | Done | tasks/T-0182-schema-stability-classification | |
