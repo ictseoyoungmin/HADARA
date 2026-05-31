@@ -66,6 +66,7 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Latest completed task: T-0159 Protocol Consistency JSON Contract registered protocol consistency/remediation schema fixtures and contract tests.
 - Latest completed task: T-0160 Protocol Doctor All Scope added all-scope protocol doctor aggregation and default `protocol doctor --json` behavior.
 - Active / next task: TBD by operator; no follow-up capsule is pre-created after T-0160.
+- Planned Phase 2 hardening follow-ups are documented for new agents: T-0161 Markdown table helper extraction, T-0162 doctor remediation hint unification, T-0163 dry-run-first Task Capsule upgrade-scaffold command, and T-0164 protocol surface docs/help/schema-note alignment. These are plan-conformance hardening tasks, not blockers for the Phase 2 product baseline.
 - Harness validation supports `--level draft|done`; done-level validation requires Done status, completed acceptance, evidence records, and updated handoff sections.
 - Done-level harness validation now also checks `docs/TASK_BOARD.md` for exactly one row for the validated task, `Done` status, and the expected Task Capsule path, catching duplicate or stale append/update results before completion.
 - Done-level harness validation now rejects completed Task Capsules whose standard Markdown files still contain initial scaffold placeholders or default empty content, while draft-level validation remains structural.

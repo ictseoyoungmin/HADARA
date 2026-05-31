@@ -79,9 +79,11 @@ Common read and protocol commands:
 ```bash
 hadara init
 hadara init doctor --json
+hadara protocol doctor --json
 hadara protocol doctor --task T-0001 --json
 hadara protocol doctor --scope docs --json
 hadara protocol doctor --scope profile --json
+hadara protocol doctor --scope all --json
 hadara protocol remediate --fix task-board-row --task T-0001 --json
 hadara doctor
 hadara task create "..."

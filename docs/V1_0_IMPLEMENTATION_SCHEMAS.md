@@ -1206,9 +1206,10 @@ The Phase 2 source plan is `docs/specs/HADARA_Project_Protocol_Consistency_Layer
 |---|---|---|
 | `hadara init doctor --json` | Init scaffold shape and stale init artifacts. | Read-only. |
 | `hadara protocol doctor --json` | Cross-doc and project protocol consistency. | Read-only. |
-| `hadara protocol doctor --scope docs|tasks|profile|all --json` | Scoped protocol consistency check. | Read-only. |
+| `hadara protocol doctor --scope docs|profile|all --json` | Scoped protocol consistency check. | Read-only. |
 | `hadara protocol doctor --task <id> --json` | Focused Task Capsule consistency check with project references. | Read-only. |
-| `hadara protocol remediate --issue <id> --json [--execute]` | Dry-run-first remediation plan and optional safe bounded write. | Writes only with `--execute`. |
+| `hadara protocol remediate --fix <name> --json [--execute]` | Current dry-run-first remediation plan and optional safe bounded write for allowlisted fixes. | Writes only with `--execute`. |
+| `hadara protocol remediate --issue <id> --json [--execute]` | Future issue-id convenience surface only after doctor issues expose unambiguous suggested fixes. | Writes only with `--execute`; must map to the same allowlisted fixes. |
 | `hadara task upgrade-scaffold --task <id> --json [--execute]` | Preview or insert missing non-destructive Task Capsule frame sections. | Writes only with `--execute`; no deletion. |
 
 Phase 2 should not overload `init doctor` with living-project checks. `init` owns bootstrap and generated-doc expansion; `protocol` owns ongoing consistency; `harness` owns done-level validation; `task` owns individual capsule lifecycle.
@@ -1227,7 +1228,7 @@ Top-level report fields:
 |---|---|---|
 | `schemaVersion` | `hadara.protocol.consistency.v1` | Stable external contract id. |
 | `ok` | boolean | False only for error-severity issues. |
-| `scope` | `docs`, `tasks`, `profile`, or `all` | Requested check scope. |
+| `scope` | `docs`, `tasks`, `profile`, or `all` | Report scope. `tasks` is currently emitted by task-specific `--task <id>` reports rather than selected through `--scope tasks`. |
 | `projectRoot` | string | Public project path reference policy should follow existing redaction rules when exposed. |
 | `generatedAt` | ISO string | Volatile timestamp. |
 | `summary.checkedDocs` | number | Project docs checked. |
@@ -1302,6 +1303,98 @@ Disallowed Phase 2 remediations include changing task status automatically, mark
 | `src/services/protocol-remediation.ts` | Remediation planning and safe execution. |
 | `src/cli/protocol.ts` | `hadara protocol ...` CLI handler. |
 | `src/task/task-capsule.ts` | New Task Capsule scaffold frames and scaffold placeholder detection. |
+
+### Phase 2 Completion Review and Hardening Follow-up
+
+T-0152 through T-0160 satisfy the Phase 2 product baseline: new Task Capsules use v2 table-first frames, task/docs/profile/all protocol doctor reports exist, safe remediation is dry-run-first and allowlisted, and fixture-level JSON contracts are registered for consistency and remediation reports. Strict reading of the original Phase 2 plan leaves four follow-up capsules. These are hardening and plan-conformance tasks, not blockers for the Phase 2 baseline.
+
+| Proposed Capsule | Status | Goal | Non-Goals |
+|---|---|---|---|
+| T-0161 Markdown Table Helper Extraction | Planned | Extract shared generated-table parsing/formatting helpers so protocol consistency, profile diagnostics, harness validation, and remediation code stop carrying local table parsers. | Do not change protocol doctor behavior, issue codes, scaffold frames, or remediation write semantics. |
+| T-0162 Doctor Remediation Hint Unification | Planned | Attach machine-readable remediation hints to doctor issues for existing safe-auto repairs while preserving the current `protocol remediate --fix` execution surface. | Do not introduce broad automatic repairs, deletion, status changes, acceptance rewrites, or release-gate schema strictness. |
+| T-0163 Task Capsule Upgrade Scaffold Command | Planned | Add `hadara task upgrade-scaffold --task <id> --json [--execute]` to preview and insert missing v2 Task Capsule frame sections without deleting legacy prose. | Do not mass-migrate all historical capsules, mark legacy frames invalid, or rewrite user-authored content. |
+| T-0164 Protocol Surface Docs Alignment | Planned | Align CLI help, schema registry notes, and protocol docs with the implemented `all` scope and current `--fix` remediation surface. | Do not change runtime behavior unless a stale help string is generated from code comments or constants. |
+
+#### T-0161 Markdown Table Helper Extraction
+
+Implementation target:
+
+- Add `src/services/markdown-table.ts` or `src/core/markdown-table.ts`; prefer `src/services/markdown-table.ts` unless existing imports reveal a stronger local convention.
+- Move common Markdown table parsing from `src/services/protocol-consistency.ts`, `src/services/protocol-profile.ts`, and `src/harness/validate.ts` into the helper.
+- Include helpers for:
+  - extracting table rows under a heading or from a full table block,
+  - normalizing header/cell whitespace,
+  - finding rows by key column,
+  - formatting a safe Markdown table row,
+  - rejecting unsafe cell content containing raw newlines or pipe-breaking content unless the existing caller already supports escaping.
+- Keep generated-table parsing conservative. If a table is malformed, preserve the current warning/skip behavior instead of guessing.
+- Add `tests/unit/markdown-table.test.ts` covering aligned tables, compact tables, Korean/wide text cells, empty cells, malformed divider rows, row lookup, and safe row formatting.
+- Update existing protocol/harness tests only where imports or helper behavior require it.
+
+Acceptance notes:
+
+- Focused unit tests pass for the new helper and existing protocol/harness suites.
+- `protocol doctor --scope docs --json`, `protocol doctor --scope profile --json`, and a representative done-level harness validation keep the same user-visible issue codes for existing fixtures.
+- No Task Capsule or project doc content is rewritten by this extraction.
+
+#### T-0162 Doctor Remediation Hint Unification
+
+Implementation target:
+
+- Preserve the current `hadara.protocol.consistency.v1` schema id and additive fixture posture.
+- Add optional issue-level linkage such as `remediationId`, `suggestedFix`, or both for safe-auto cases that already have bounded remediation support.
+- Ensure doctor reports expose remediation guidance for at least:
+  - profile metadata mismatch,
+  - missing Task Board row,
+  - missing task `evidence.jsonl`,
+  - missing Decisions table frame or other supported table-frame insertion.
+- Map safe-auto hints to the existing `protocol remediate --fix <name> --json [--execute]` allowlist. Do not invent a second execution engine.
+- If adding a future `--issue <issue-id>` preview surface, make it a read/planning convenience that resolves to one existing safe `--fix` action and fails when an issue is ambiguous, stale, or unsafe.
+
+Acceptance notes:
+
+- Doctor report contract tests validate additive remediation hint fields without requiring consumers to use them.
+- Dry-run remediation output remains the source of exact file action plans, before hashes, planned hashes, and execute readiness.
+- `--execute` remains explicit, and no doctor command writes files.
+
+#### T-0163 Task Capsule Upgrade Scaffold Command
+
+Implementation target:
+
+- Add `hadara task upgrade-scaffold --task <id> --json [--execute]`.
+- The command should emit a dry-run-first JSON report. Reuse `hadara.protocol.remediation.v1` only if the report shape naturally fits; otherwise add a dedicated fixture-level schema in a separate schema capsule before treating it as a public contract.
+- For each standard Task Capsule file, detect missing v2 table sections and plan insertions that are:
+  - append-only or section-local,
+  - idempotent,
+  - non-destructive,
+  - compatible with legacy prose,
+  - skipped with warnings when a file has ambiguous or malformed existing structure.
+- Execute mode may create missing standard files only when the task capsule exists and the generated content is the same safe scaffold content used by `task create`.
+- Execute mode must not delete user-authored content, rewrite freeform prose, change task status, mark acceptance criteria, or modify evidence records beyond creating a missing empty `evidence.jsonl` if that behavior is explicitly included and remains allowlisted.
+- Use temp-file/rename and before-hash or before-existence checks consistent with `protocol remediate` hardening.
+
+Acceptance notes:
+
+- Dry-run writes nothing.
+- Execute on a legacy fixture inserts only missing frame sections and preserves surrounding prose byte-for-byte where practical.
+- Re-running execute is idempotent and reports no duplicate frame insertions.
+- Malformed or ambiguous files produce warning issues and are skipped.
+- Done-level validation continues to accept legacy frames unless the capsule otherwise violates existing done-level rules.
+
+#### T-0164 Protocol Surface Docs Alignment
+
+Implementation target:
+
+- Update CLI help in `src/cli/main.ts` or the relevant dispatcher/help source so protocol doctor documents `--scope docs|profile|all` and the task-specific `--task <id>` form. Include `tasks` only if the CLI actually supports it as a scope.
+- Align `docs/SCHEMAS.md` and `src/schemas/schema-index.json` notes so `hadara.protocol.consistency.v1` mentions task, docs, profile, and all scopes.
+- Align this document and `docs/CLI_JSON_CONTRACT.md` with the current `protocol remediate --fix` surface, while retaining `--issue` only as future work unless implemented.
+- Confirm README or quickstart references do not imply protocol doctor writes files or that fixture-level schemas are release gates.
+
+Acceptance notes:
+
+- Built CLI help text and docs agree on implemented command forms.
+- Schema notes remain fixture-level and additive, not release-gate strict.
+- No behavior changes are required unless help text is generated from executable code.
 
 ## V1.0 Acceptance Checklist
 

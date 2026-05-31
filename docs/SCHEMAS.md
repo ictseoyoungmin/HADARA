@@ -36,7 +36,7 @@ Initial fixtures:
 | `hadara.releaseGate.v1` | `src/schemas/release-gate.schema.json` | fixture | Documents advisory and strict release gate reports. |
 | `hadara.privateEvidence.v1` | `src/schemas/private-evidence.schema.json` | fixture | Documents private portable-store manifest records without private raw content or source paths. |
 | `hadara.event.v1` | `src/schemas/event.schema.json` | fixture | Documents structured redacted event records embedded in private audit JSONL. |
-| `hadara.protocol.consistency.v1` | `src/schemas/protocol-consistency.schema.json` | fixture | Documents read-only protocol doctor reports for task, docs, and profile scopes. |
+| `hadara.protocol.consistency.v1` | `src/schemas/protocol-consistency.schema.json` | fixture | Documents read-only protocol doctor reports for task, docs, profile, and all scopes. |
 | `hadara.protocol.remediation.v1` | `src/schemas/protocol-remediation.schema.json` | fixture | Documents dry-run-first protocol remediation plans and bounded execute reports, including optional planned-content hash/existence fields. |
 | `hadara.write.preflight.v1` | `src/schemas/write-preflight.schema.json` | fixture | Documents read-only CLI write-boundary preflight reports. |
 | `hadara.install.plan.v1` | `src/schemas/install-plan.schema.json` | fixture | Documents future installer dry-run planning reports without performing install mutation; target paths are redacted public path-reference objects instead of raw strings. |

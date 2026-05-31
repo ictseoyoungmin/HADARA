@@ -327,6 +327,10 @@ Required checks by slice:
 | T-0156 Safe remediation MVP | Tests must prove dry-run writes nothing, `--execute` changes only whitelisted target files, and safe remediation never deletes user content. |
 | T-0159 Protocol JSON contract | Contract tests must validate `hadara.protocol.consistency.v1`, remediation reports, stable issue-code registration, and existing JSON error-envelope behavior. |
 | T-0160 Protocol doctor all scope | Tests must validate `--scope all`, default `protocol doctor --json`, schema-valid output, and no write/runtime side effects. |
+| T-0161 Markdown table helper extraction | Tests must cover shared table parsing/formatting helpers, malformed-table skip behavior, safe cell validation, and unchanged protocol/harness issue-code behavior after extraction. |
+| T-0162 Doctor remediation hint unification | Tests must cover additive doctor remediation hints for existing safe-auto fixes, schema-valid reports, no writes from doctor commands, and unchanged dry-run/execute semantics for `protocol remediate --fix`. |
+| T-0163 Task upgrade-scaffold command | Tests must cover dry-run no-write behavior, execute idempotence, legacy prose preservation, malformed-file skip warnings, and no deletion or status/acceptance mutation. |
+| T-0164 Protocol surface docs alignment | Tests or smokes must verify CLI help, schema notes, and JSON contract docs agree on implemented protocol doctor scopes and the current `protocol remediate --fix` surface. |
 
 Protocol doctor and remediation surfaces must not enable Hermes/MCP runtime capabilities, execute shell commands, call providers, publish packages, mutate release state, or silently rewrite user-authored docs.
 
