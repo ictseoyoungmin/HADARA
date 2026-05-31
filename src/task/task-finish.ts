@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import { listTaskCapsules, TaskCapsule } from './task-capsule';
 
@@ -37,6 +38,9 @@ export interface TaskFinishWrite {
   field: 'task-status' | 'task-board-row';
   before: string | null;
   after: string;
+  expectedBeforeExists: boolean;
+  expectedBeforeHash: string;
+  afterHash: string;
   applied: boolean;
 }
 
@@ -77,7 +81,7 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
   const board = readTaskBoard(projectRoot, task.id);
   const writes = planWrites(projectRoot, task, capsule, taskStatus, board, issues);
   if (mode === 'execute' && !issues.some((issue) => issue.severity === 'error')) {
-    applyWrites(projectRoot, task, writes);
+    applyWrites(projectRoot, writes, issues);
   }
 
   return {
@@ -130,23 +134,54 @@ export function formatTaskFinishReport(report: TaskFinishReport): string {
 function planWrites(projectRoot: string, task: TaskCapsule, capsule: string, taskStatus: string, board: TaskBoardProjection, issues: TaskFinishIssue[]): TaskFinishWrite[] {
   const writes: TaskFinishWrite[] = [];
   if (taskStatus !== 'Done') {
-    writes.push({
-      path: toPortablePath(path.relative(projectRoot, path.join(task.dir, 'TASK.md'))),
-      action: 'update',
-      field: 'task-status',
-      before: taskStatus,
-      after: 'Done',
-      applied: false
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const taskContent = fs.existsSync(taskPath) ? fs.readFileSync(taskPath, 'utf8') : '';
+    const nextTaskContent = replaceTaskStatus(taskContent, 'Done');
+    if (nextTaskContent === taskContent) {
+      issues.push({
+        severity: 'error',
+        code: 'TASK_FINISH_TASK_STATUS_REPLACE_FAILED',
+        message: 'TASK.md does not contain the expected metadata/status frames for bounded finish sync.',
+        path: toPortablePath(path.relative(projectRoot, taskPath))
+      });
+    } else {
+      writes.push({
+        path: toPortablePath(path.relative(projectRoot, taskPath)),
+        action: 'update',
+        field: 'task-status',
+        before: taskStatus,
+        after: 'Done',
+        expectedBeforeExists: true,
+        expectedBeforeHash: hashContent(taskContent),
+        afterHash: hashContent(nextTaskContent),
+        applied: false
+      });
+    }
+  }
+
+  if (board.exists && !board.tableFramePresent) {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_BOARD_TABLE_FRAME_MISSING',
+      message: 'docs/TASK_BOARD.md is missing the canonical table frame; refusing bounded finish sync.',
+      path: 'docs/TASK_BOARD.md'
     });
+    return writes;
   }
 
   if (!board.present) {
+    const beforeContent = board.content ?? defaultTaskBoard();
+    const afterRow = formatTaskBoardRow(task, capsule, 'Done');
+    const afterContent = appendTaskBoardRow(beforeContent, afterRow);
     writes.push({
       path: 'docs/TASK_BOARD.md',
       action: 'insert',
       field: 'task-board-row',
       before: null,
-      after: formatTaskBoardRow(task, capsule, 'Done'),
+      after: afterRow,
+      expectedBeforeExists: board.exists,
+      expectedBeforeHash: hashContent(beforeContent),
+      afterHash: hashContent(afterContent),
       applied: false
     });
     return writes;
@@ -164,54 +199,132 @@ function planWrites(projectRoot: string, task: TaskCapsule, capsule: string, tas
 
   const expected = formatTaskBoardRow(task, capsule, 'Done');
   if (board.line !== expected) {
+    const beforeContent = board.content ?? '';
+    const afterContent = replaceTaskBoardRow(beforeContent, task.id, expected);
+    if (afterContent === beforeContent) {
+      issues.push({
+        severity: 'error',
+        code: 'TASK_FINISH_TASK_BOARD_REPLACE_FAILED',
+        message: `docs/TASK_BOARD.md row for ${task.id} could not be replaced safely.`,
+        path: 'docs/TASK_BOARD.md'
+      });
+      return writes;
+    }
     writes.push({
       path: 'docs/TASK_BOARD.md',
       action: 'update',
       field: 'task-board-row',
       before: board.line,
       after: expected,
+      expectedBeforeExists: true,
+      expectedBeforeHash: hashContent(beforeContent),
+      afterHash: hashContent(afterContent),
       applied: false
     });
   }
   return writes;
 }
 
-function applyWrites(projectRoot: string, task: TaskCapsule, writes: TaskFinishWrite[]): void {
-  for (const write of writes) {
-    if (write.field === 'task-status') {
-      const taskPath = path.join(task.dir, 'TASK.md');
-      const content = fs.readFileSync(taskPath, 'utf8');
-      fs.writeFileSync(taskPath, replaceTaskStatus(content, 'Done'), 'utf8');
-      write.applied = true;
+function applyWrites(projectRoot: string, writes: TaskFinishWrite[], issues: TaskFinishIssue[]): void {
+  const prepared: Array<{ write: TaskFinishWrite; absolutePath: string; tmpPath: string; existed: boolean; original: string }> = [];
+  const committed: typeof prepared = [];
+  try {
+    for (const write of writes) {
+      const absolutePath = path.resolve(projectRoot, write.path);
+      const relative = path.relative(projectRoot, absolutePath);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        issues.push({ severity: 'error', code: 'TASK_FINISH_PATH_OUTSIDE_PROJECT', message: `Refusing to write outside project: ${write.path}`, path: write.path });
+        continue;
+      }
+
+      const existed = fs.existsSync(absolutePath);
+      const current = existed ? fs.readFileSync(absolutePath, 'utf8') : missingFileBaseline(write);
+      if (existed !== write.expectedBeforeExists || hashContent(current) !== write.expectedBeforeHash) {
+        issues.push({
+          severity: 'error',
+          code: 'TASK_FINISH_WRITE_CONFLICT',
+          message: `${write.path} changed after finish planning; rerun dry-run before executing.`,
+          path: write.path
+        });
+        continue;
+      }
+
+      const next = nextWriteContent(current, write);
+      if (next === current) {
+        issues.push({
+          severity: 'error',
+          code: 'TASK_FINISH_NOOP_WRITE',
+          message: `${write.path} did not change after applying planned finish write.`,
+          path: write.path
+        });
+        continue;
+      }
+      if (hashContent(next) !== write.afterHash) {
+        issues.push({
+          severity: 'error',
+          code: 'TASK_FINISH_AFTER_HASH_MISMATCH',
+          message: `${write.path} planned after hash does not match generated content.`,
+          path: write.path
+        });
+        continue;
+      }
+
+      fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+      const tmpPath = path.join(path.dirname(absolutePath), `.hadara-task-finish-${process.pid}-${Date.now()}-${prepared.length}-${path.basename(absolutePath)}.tmp`);
+      fs.writeFileSync(tmpPath, next, { encoding: 'utf8', flag: 'wx' });
+      prepared.push({ write, absolutePath, tmpPath, existed, original: current });
     }
-    if (write.field === 'task-board-row') {
-      const taskBoardPath = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
-      const content = fs.existsSync(taskBoardPath) ? fs.readFileSync(taskBoardPath, 'utf8') : defaultTaskBoard();
-      const next = write.action === 'insert' ? appendTaskBoardRow(content, write.after) : replaceTaskBoardRow(content, task.id, write.after);
-      fs.writeFileSync(taskBoardPath, next, 'utf8');
-      write.applied = true;
+    if (issues.some((issue) => issue.severity === 'error')) {
+      for (const item of prepared) if (fs.existsSync(item.tmpPath)) fs.rmSync(item.tmpPath, { force: true });
+      return;
     }
+    for (const item of prepared) {
+      fs.renameSync(item.tmpPath, item.absolutePath);
+      committed.push(item);
+      item.write.applied = true;
+    }
+  } catch (error) {
+    for (const item of prepared) if (fs.existsSync(item.tmpPath)) fs.rmSync(item.tmpPath, { force: true });
+    for (const item of committed.reverse()) {
+      try {
+        if (item.existed) fs.writeFileSync(item.absolutePath, item.original, 'utf8');
+        else if (fs.existsSync(item.absolutePath)) fs.rmSync(item.absolutePath, { force: true });
+        item.write.applied = false;
+      } catch {
+        issues.push({ severity: 'warning', code: 'TASK_FINISH_ROLLBACK_INCOMPLETE', message: `Rollback failed for ${item.write.path}.`, path: item.write.path });
+      }
+    }
+    issues.push({
+      severity: 'error',
+      code: 'TASK_FINISH_ATOMIC_WRITE_FAILED',
+      message: `Atomic task finish write failed and rollback was attempted. Cause: ${error instanceof Error ? error.message : String(error)}`
+    });
   }
 }
 
 interface TaskBoardProjection {
+  exists: boolean;
   present: boolean;
   duplicates: boolean;
+  tableFramePresent: boolean;
   line: string | null;
   status: string | null;
+  content: string | null;
 }
 
 function readTaskBoard(projectRoot: string, taskId: string): TaskBoardProjection {
   const taskBoardPath = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
-  if (!fs.existsSync(taskBoardPath)) return { present: false, duplicates: false, line: null, status: null };
-  const lines = fs.readFileSync(taskBoardPath, 'utf8').split(/\r?\n/);
+  if (!fs.existsSync(taskBoardPath)) return { exists: false, present: false, duplicates: false, tableFramePresent: false, line: null, status: null, content: null };
+  const content = fs.readFileSync(taskBoardPath, 'utf8');
+  const lines = content.split(/\r?\n/);
   const matches = lines.filter((line) => line.startsWith(`| ${taskId} |`));
-  if (matches.length === 0) return { present: false, duplicates: false, line: null, status: null };
+  const tableFramePresent = hasTaskBoardTableFrame(lines);
+  if (matches.length === 0) return { exists: true, present: false, duplicates: false, tableFramePresent, line: null, status: null, content };
   const cells = matches[0]
     .slice(1, -1)
     .split('|')
     .map((cell) => cell.trim());
-  return { present: true, duplicates: matches.length > 1, line: matches[0], status: cells[2] ?? null };
+  return { exists: true, present: true, duplicates: matches.length > 1, tableFramePresent, line: matches[0], status: cells[2] ?? null, content };
 }
 
 function readTaskStatus(task: TaskCapsule): string {
@@ -224,6 +337,19 @@ function readTaskStatus(task: TaskCapsule): string {
 function replaceTaskStatus(content: string, status: string): string {
   const withMetadata = content.replace(/^(\|\s*Status\s*\|\s*)[^|]*(\|)$/m, `$1${status} $2`);
   return withMetadata.replace(/^## Status\s*\n+[\s\S]*?(?=\n## Status History)/m, `## Status\n\n${status}\n`);
+}
+
+function nextWriteContent(current: string, write: TaskFinishWrite): string {
+  if (write.field === 'task-status') return replaceTaskStatus(current, write.after);
+  if (write.action === 'insert') return appendTaskBoardRow(current || defaultTaskBoard(), write.after);
+  const taskId = write.after.match(/^\|\s*(T-\d{4})\s*\|/)?.[1];
+  if (!taskId) return current;
+  return replaceTaskBoardRow(current, taskId, write.after);
+}
+
+function missingFileBaseline(write: TaskFinishWrite): string {
+  if (write.field === 'task-board-row' && write.action === 'insert') return defaultTaskBoard();
+  return '';
 }
 
 function replaceTaskBoardRow(content: string, taskId: string, row: string): string {
@@ -244,6 +370,14 @@ function formatTaskBoardRow(task: TaskCapsule, capsule: string, status: string):
 
 function defaultTaskBoard(): string {
   return '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n';
+}
+
+function hasTaskBoardTableFrame(lines: string[]): boolean {
+  return lines.some((line) => line.trim() === '| ID | Title | Status | Capsule | Notes |') && lines.some((line) => /^\|\s*-+\s*\|\s*-+\s*\|\s*-+\s*\|\s*-+\s*\|\s*-+\s*\|$/.test(line.trim()));
+}
+
+function hashContent(content: string): string {
+  return `sha256:${crypto.createHash('sha256').update(content).digest('hex')}`;
 }
 
 function toPortablePath(value: string): string {

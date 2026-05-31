@@ -118,7 +118,7 @@ function recommendationFromSlice(projectRoot: string, slice: SliceRow, boardRows
     taskCapsulePresent: Boolean(capsule),
     capsule: capsulePath,
     requiredReading: REQUIRED_READING,
-    createCommand: capsule ? null : `hadara task create "${slice.title}"`
+    createCommand: capsule ? null : `hadara task create ${shellQuote(slice.title)}`
   };
 }
 
@@ -136,7 +136,7 @@ function recommendationFromTaskBoard(boardRows: BoardRow[], capsules: ReturnType
     taskCapsulePresent: Boolean(capsule),
     capsule: capsule ? row.capsule : row.capsule || null,
     requiredReading: REQUIRED_READING,
-    createCommand: capsule ? null : `hadara task create "${row.title}"`
+    createCommand: capsule ? null : `hadara task create ${shellQuote(row.title)}`
   };
 }
 
@@ -183,4 +183,8 @@ function isOpenBoardStatus(status: string): boolean {
 
 function toPortablePath(value: string): string {
   return value.split(path.sep).join('/');
+}
+
+function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`;
 }

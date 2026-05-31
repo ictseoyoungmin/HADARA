@@ -56,18 +56,18 @@ describe('task next recommendation', () => {
     expect(formatTaskNextReport(report)).toContain(`${next.id}\tNext Slice`);
   });
 
-  it('returns a create command when the planned slice has no capsule yet', () => {
+  it('returns a shell-quoted create command when the planned slice has no capsule yet', () => {
     const root = tempProject();
-    writeDevelopmentSlices(root, ['| 1 | Missing Capsule | T-0188 | Create me. | Planned after current. |']);
+    writeDevelopmentSlices(root, [`| 1 | Missing "Quoted" Capsule | T-0188 | Create me. | Planned after current. |`]);
 
     const report = createTaskNextReport(root);
 
     expect(report.recommendations[0]).toMatchObject({
       taskId: 'T-0188',
-      title: 'Missing Capsule',
+      title: 'Missing "Quoted" Capsule',
       taskCapsulePresent: false,
       capsule: null,
-      createCommand: 'hadara task create "Missing Capsule"'
+      createCommand: `hadara task create 'Missing "Quoted" Capsule'`
     });
     expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
   });

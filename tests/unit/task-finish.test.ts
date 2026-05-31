@@ -34,6 +34,11 @@ describe('task finish status sync', () => {
       summary: { plannedWrites: 2, appliedWrites: 0, advisoryOnly: 3 }
     });
     expect(report.writes.map((write) => write.field).sort()).toEqual(['task-board-row', 'task-status']);
+    for (const write of report.writes) {
+      expect(write.expectedBeforeExists).toBe(true);
+      expect(write.expectedBeforeHash).toMatch(/^sha256:/);
+      expect(write.afterHash).toMatch(/^sha256:/);
+    }
     expect(report.advisories.map((advisory) => advisory.path)).toEqual([
       'docs/DEVELOPMENT_SLICES.md',
       'docs/PROJECT_STATE.md',
@@ -70,6 +75,35 @@ describe('task finish status sync', () => {
     expect(report.status.taskBoardPresent).toBe(false);
     expect(report.writes).toEqual(expect.arrayContaining([expect.objectContaining({ action: 'insert', field: 'task-board-row', applied: true })]));
     expect(readBoard(root)).toContain(`| ${task.id} | Finish missing board row | Done | tasks/${task.id}-finish-missing-board-row | |`);
+    expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
+  });
+
+  it('blocks Task Board insertion when the table frame is malformed', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finish malformed board');
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n\nLost table frame.\n', 'utf8');
+
+    const report = createTaskFinishReport(root, task.id, 'execute');
+
+    expect(report.ok).toBe(false);
+    expect(report.summary.appliedWrites).toBe(0);
+    expect(readBoard(root)).toBe('# TASK_BOARD\n\nLost table frame.\n');
+    expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'TASK_BOARD_TABLE_FRAME_MISSING' })]));
+    expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
+  });
+
+  it('blocks TASK.md status writes when status frames cannot be replaced', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finish broken task status');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(taskPath, `# ${task.id} Finish broken task status\n\nNo status frames here.\n`, 'utf8');
+
+    const report = createTaskFinishReport(root, task.id, 'execute');
+
+    expect(report.ok).toBe(false);
+    expect(report.summary.appliedWrites).toBe(0);
+    expect(fs.readFileSync(taskPath, 'utf8')).toBe(`# ${task.id} Finish broken task status\n\nNo status frames here.\n`);
+    expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'TASK_FINISH_TASK_STATUS_REPLACE_FAILED' })]));
     expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
   });
 

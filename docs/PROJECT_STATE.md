@@ -88,6 +88,7 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Latest completed task: T-0181 Task Next Recommendation added read-only `hadara task next --json` as `hadara.task.next.v1`, preferring planned Development Slices and falling back to Task Board with capsule/create guidance.
 - Latest completed task: T-0182 Schema Stability Classification documented stable/additive/compatibility/deprecated/experimental field classes and annotated `hadara.task.workbench.v1` compatibility aliases.
 - Latest completed task: T-0183 Focused Test Command UX added `npm run test:focused -- <path>` guidance and script support for narrow Vitest file runs.
+- Latest completed task: T-0184 Task Finish Write Safety Hardening added hash/existence metadata, temp-file/rename writes, malformed frame/no-op guards, and safer task-next createCommand quoting.
 - Active / next task: Phase 4 Read Surface Integration / Operator UI planning.
 - Phase 3 source plan: `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md`.
 - Task workbench status report exists as `hadara task status --task <id> --json`; centralized suggested-action generation and fixture-level schema registration are implemented. T-0177 hardened true Task Board status projection, optional nextAction normalization, and close evidence/valid-closure semantics.

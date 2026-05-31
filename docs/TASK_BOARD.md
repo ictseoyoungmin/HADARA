@@ -184,3 +184,4 @@
 | T-0181 | Task Next Recommendation | Done | tasks/T-0181-task-next-recommendation | |
 | T-0182 | Schema Stability Classification | Done | tasks/T-0182-schema-stability-classification | |
 | T-0183 | Focused Test Command UX | Done | tasks/T-0183-focused-test-command-ux | |
+| T-0184 | Task Finish Write Safety Hardening | Done | tasks/T-0184-task-finish-write-safety-hardening | |
