@@ -36,6 +36,7 @@ This repository operates as the `governed` HADARA profile because it has long-li
 | Active `tasks/T-*/TASK.md` | Working a task | Task-specific goal, scope, status, and acceptance frame. |
 | Active Task Capsule docs | Working a task | `DECISIONS.md`, `PLAN.md`, `CONTEXT.md`, `ACCEPTANCE.md`, `FILES.md`, `TESTS.md`, `RISKS.md`, and `HANDOFF.md`. |
 | `docs/CLI_JSON_CONTRACT.md` and `docs/MCP_BRIDGE_CONTRACT.md` | HADARA-dev MCP or tool-surface work only | Local contracts for CLI JSON and MCP bridge compatibility. |
+| `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md` | Dashboard, TUI, MCP, or external-agent selected-task detail work | Consumer guidance for the Phase 3 task workbench projection. |
 | `docs/V1_0_CAPSULE_BACKLOG.md` and `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` | HADARA-dev v1.0 hardening or schema work only | Future capsule backlog and implementation schema notes. |
 | `docs/specs/HADARA_Project_Protocol_Consistency_Layer_Phase2_Development_Plan.md` | Protocol consistency, Task Capsule scaffold, profile drift, or protocol doctor work only | Source design for Phase 2 living-project consistency checks and remediation boundaries. |
 | `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md` | Phase 3 task operator console, workbench projection, task status, close/audit, or suggested-action work only | Source design for Phase 3 read-oriented task operator console scope and capsule order. |

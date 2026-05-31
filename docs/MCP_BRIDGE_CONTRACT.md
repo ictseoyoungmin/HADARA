@@ -694,3 +694,5 @@ Output schema:
 ## Relationship To CLI JSON
 
 The bridge should treat `docs/CLI_JSON_CONTRACT.md` as the source for command/report envelope behavior. MCP should not invent competing command schemas when a CLI JSON schema already exists.
+
+Future selected-task MCP read tools should prefer `hadara.task.workbench.v1` from `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md` for task readiness, evidence health, close/audit state, protocol summaries, and next actions. Such a tool must remain read-only, wrap the report as JSON text, and must not expose remediation execution, close execution, evidence attach, shell execution, provider calls, or broad file writes.

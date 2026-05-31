@@ -26,6 +26,8 @@ The fixture is static sample data and may not match the repository's current sta
 
 Planned v1.0 local dashboard read APIs are tracked in `docs/V1_0_IMPLEMENTATION_SCHEMAS.md`. They are not part of the current static dashboard contract until their Task Capsules complete.
 
+Selected-task detail work should use `hadara.task.workbench.v1` from `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md` rather than parsing Task Capsule Markdown directly. The operations home remains backed by `hadara.ops.status.v1`; the workbench report is for a focused task detail/readiness panel.
+
 Visual reference:
 
 - `docs/design/mockups/HADARA_web_ui_v0.1_comfort_dark.html`
@@ -100,3 +102,5 @@ GET /api/debt
 ```
 
 These routes must not execute shell commands, call providers, mutate tasks, perform MCP writes, or persist browser state.
+
+A future selected-task route may expose `hadara.task.workbench.v1`, but it must remain read-only and should reuse `createTaskWorkbenchReport` rather than building a dashboard-only task parser.

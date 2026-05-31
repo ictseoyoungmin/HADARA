@@ -79,7 +79,8 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Latest completed task: T-0172 Workbench Suggested Action Engine centralized `task status` nextActions with action priorities, source issue codes, remediation/audit kinds, and dry-run/execute command pairing.
 - Latest completed task: T-0173 Workbench Schema Contract registered fixture-level `hadara.task.workbench.v1` with schema index/runtime loader coverage and raw service report validation.
 - Latest completed task: T-0174 Worker-Friendly Text Output added grouped non-JSON `task status` and `task audit-close` output for worker-facing State/Evidence/Protocol/Close/Audit/Suggested-next summaries.
-- Active / next task: T-0175 Dashboard TUI MCP Read Projection Prep.
+- Latest completed task: T-0175 Dashboard TUI MCP Read Projection Prep added `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md` and aligned dashboard/MCP guidance for future read-only selected-task consumers.
+- Active / next task: T-0176 Evidence From Command Design.
 - Phase 3 source plan: `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md`.
 - Task workbench status report exists as `hadara task status --task <id> --json`; centralized suggested-action generation and fixture-level schema registration are implemented.
 - Planned close-model follow-ups are tracked as T-0166 through T-0169: task close plan report, close execute MVP with close evidence append only, task ready preflight, and command-log evidence writer UX.
