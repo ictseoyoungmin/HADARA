@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { appendEvidence } from '../../src/evidence/evidence';
-import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence } from '../../src/task/task-close';
+import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../../src/task/task-close';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -109,6 +109,10 @@ describe('task close report', () => {
     });
     expect(audit.latestCloseEvidence?.validationReportHash).toBe(closeReport.validation.validatedBeforeCloseEvidenceReportHash);
     expect(audit.latestCloseEvidence?.sourceHash).toBe(closeReport.validation.validatedBeforeCloseEvidenceSourceHash);
+    expect(formatTaskAuditCloseReport(audit)).toContain('State\n- Closed: yes');
+    expect(formatTaskAuditCloseReport(audit)).toContain('Close Evidence\n- Latest: passed');
+    expect(formatTaskAuditCloseReport(audit)).toContain('Audit\n- Blockers: 0');
+    expect(formatTaskAuditCloseReport(audit)).toContain('Suggested next');
 
     fs.appendFileSync(path.join(task.dir, 'PLAN.md'), '\n| 2 | Drift after close. | Done | Drift. |\n', 'utf8');
     const drift = createTaskAuditCloseReport(root, task.id);

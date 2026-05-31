@@ -1,5 +1,5 @@
 import { createTaskCapsule } from '../task/task-capsule';
-import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence } from '../task/task-close';
+import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../task/task-close';
 import { createTaskReadyReport } from '../task/task-ready';
 import { createTaskUpgradeScaffoldReport, formatTaskUpgradeScaffoldReport } from '../task/task-upgrade-scaffold';
 import { createTaskWorkbenchReport, formatTaskWorkbenchReport } from '../services/task-workbench';
@@ -97,8 +97,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {
-      console.log(`[HADARA] task audit-close ${id}: ${report.ok ? 'ok' : 'issues'}`);
-      for (const issue of report.issues) console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
+      console.log(formatTaskAuditCloseReport(report));
     }
     if (!report.ok) process.exitCode = 6;
     return true;

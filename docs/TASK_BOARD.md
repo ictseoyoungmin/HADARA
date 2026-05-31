@@ -174,3 +174,4 @@
 | T-0171 | Task Workbench Status Report | Done | tasks/T-0171-task-workbench-status-report | Adds read-only `task status --task <id> --json` workbench projection over close, evidence, protocol, and Task Board sources. |
 | T-0172 | Workbench Suggested Action Engine | Done | tasks/T-0172-workbench-suggested-action-engine | Centralizes workbench nextActions with priorities, source issue codes, and dry-run/execute pairing. |
 | T-0173 | Workbench Schema Contract | Done | tasks/T-0173-workbench-schema-contract | Registers fixture-level `hadara.task.workbench.v1` schema and validation coverage. |
+| T-0174 | Worker-Friendly Text Output | Done | tasks/T-0174-worker-friendly-text-output | Adds grouped non-JSON task status and audit-close output. |

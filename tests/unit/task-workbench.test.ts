@@ -6,7 +6,7 @@ import { appendEvidence } from '../../src/evidence/evidence';
 import { handleTaskCommand } from '../../src/cli/task';
 import { validateSchema } from '../../src/core/schema';
 import * as harnessService from '../../src/services/harness-service';
-import { createTaskWorkbenchReport } from '../../src/services/task-workbench';
+import { createTaskWorkbenchReport, formatTaskWorkbenchReport } from '../../src/services/task-workbench';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -60,6 +60,11 @@ describe('task workbench status report', () => {
     expect(report.sources.evidenceList.latest).toMatchObject({ kind: 'note', result: 'passed', visibility: 'public' });
     expect(report.nextActions.length).toBeGreaterThan(0);
     expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
+    expect(formatTaskWorkbenchReport(report)).toContain('State\n- Capsule:');
+    expect(formatTaskWorkbenchReport(report)).toContain('Evidence\n- Lint: ok');
+    expect(formatTaskWorkbenchReport(report)).toContain('Protocol\n- Task doctor:');
+    expect(formatTaskWorkbenchReport(report)).toContain('Close\n- Close plan:');
+    expect(formatTaskWorkbenchReport(report)).toContain('Suggested next');
     expect(snapshotProject(root)).toEqual(before);
   });
 

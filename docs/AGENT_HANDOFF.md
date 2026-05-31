@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Working tree contains completed T-0173 Phase 3 schema contract changes. |
+| Branch | main | Working tree contains completed T-0174 Phase 3 text output changes. |
 | Current Phase | Phase 3 / Task Operator Console | T-0170 close/audit preflight is complete; T-0171 starts the read-only workbench projection. |
-| Latest Completed Task | T-0173 Workbench Schema Contract | Registered fixture-level `hadara.task.workbench.v1` and validation coverage for raw workbench service reports. |
-| Active / Next Task | T-0174 Worker-Friendly Text Output | Polish non-JSON status/audit output now that JSON shape is registered. |
-| Validation Baseline | Full Docker check, built CLI smoke, done harness, and close audit passed | Focused schema/workbench/action tests passed with 3 files / 9 tests; full Docker `npm run check` passed with 68 files / 491 tests; built CLI task status smoke returned `hadara.task.workbench.v1`; T-0173 done harness and audit-close passed. |
+| Latest Completed Task | T-0174 Worker-Friendly Text Output | Added grouped non-JSON output for `task status` and `task audit-close`. |
+| Active / Next Task | T-0175 Dashboard TUI MCP Read Projection Prep | Prepare future read-only consumers to use the workbench projection without raw file parsing. |
+| Validation Baseline | Full Docker check, built CLI text smokes, done harness, and close audit passed | Focused text-output tests passed with 2 files / 8 tests; full Docker `npm run check` passed with 68 files / 491 tests; built CLI status/audit text smokes printed expected sections; T-0174 done harness and audit-close passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0171 Task Workbench Status Report | Added read-only `task status` workbench projection without duplicate done-level validation or broad writes. | T-0171 evidence: focused Docker test, full Docker check, built CLI status smoke, done harness, close execute, and audit-close passed. |
 | T-0172 Workbench Suggested Action Engine | Added centralized next-action builder for workbench status reports. | T-0172 evidence: focused Docker tests, full Docker check, built CLI smoke, done harness, close execute, and audit-close passed. |
 | T-0173 Workbench Schema Contract | Registered `hadara.task.workbench.v1` fixture schema and raw report validation coverage. | T-0173 evidence: focused Docker tests, full Docker check, built CLI smoke, done harness, close execute, and audit-close passed. |
+| T-0174 Worker-Friendly Text Output | Added concise grouped text output for status and audit-close. | T-0174 evidence: focused Docker tests, full Docker check, built CLI status/audit text smokes, done harness, close execute, and audit-close passed. |
 
 ## Current Known Problems
 
@@ -28,24 +28,24 @@
 | Protocol schemas are fixture-level, not release-gate strict schemas. | Additive report fields remain allowed; consumers should not treat these schemas as a blocking release gate yet. | Preserve additive compatibility or create a new schema id for breaking changes. |
 | All-scope protocol doctor is broad but not a deep done-level check for every historical capsule. | It keeps default protocol doctor responsive by aggregating docs, profile, and active-task detail; docs-scope still checks Task Board/capsule drift across all tasks. | Use task-scoped doctor or harness validation for deep capsule checks. |
 | Docs-scope protocol doctor reports historical T-0073 Task Board drift and legacy Decisions structure as warnings. | `hadara protocol doctor --scope docs --json` remains `ok: true`; warning-only reports exit 0. | Use `protocol remediate` only when an operator explicitly accepts an allowlisted bounded fix; broad cleanup remains future scope. |
-| Workbench text output is still basic. | JSON/status surfaces are registered, but human non-JSON polish remains the next Phase 3 slice. | Complete T-0174 Worker-Friendly Text Output. |
+| Dashboard/TUI/MCP workbench projection prep is not yet done. | Future read consumers still need explicit guidance to use the workbench report rather than raw file parsing. | Complete T-0175 without adding write surfaces. |
 | Close validation evidence can create a fixed-point loop if modeled as a same-run precondition. | Recording validation evidence mutates evidence files after validation. | Use the documented three-layer model: validation proves readiness, close records the proof, audit checks the close record. T-0170 adds source/report hash split and read-only audit for this model. |
 
 ## Next Recommended Step
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Continue with T-0174 Worker-Friendly Text Output. | JSON workbench and schema contract are implemented; the next planned Phase 3 slice is concise non-JSON operator output. | Use `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md`, `src/services/task-workbench.ts`, and `src/cli/task.ts`. |
+| Continue with T-0175 Dashboard TUI MCP Read Projection Prep. | Status JSON, suggested actions, schema, and text output are implemented; future read consumers need a documented projection boundary. | Use Phase 3 plan, `docs/DASHBOARD_READ_MODEL_CONTRACT.md`, and TUI/MCP read-model docs. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Focused schema/workbench/action check | Docker `npx vitest run tests/unit/task-workbench.test.ts tests/unit/schema-fixtures.test.ts tests/unit/workbench-next-actions.test.ts` passed with 3 files and 9 tests. | Covers workbench schema validation, schema fixture registry alignment, and action optional field shape. |
-| Built CLI smoke | Built CLI `task status --task T-0173 --json` returned `hadara.task.workbench.v1`. | `/workspace/dist` was refreshed from Docker build output. |
+| Focused text-output check | Docker `npx vitest run tests/unit/task-workbench.test.ts tests/unit/task-close.test.ts` passed with 2 files and 8 tests. | Covers status and audit-close text sections. |
+| Built CLI smoke | Built CLI `task status --task T-0174` and `task audit-close --task T-0174` printed expected grouped sections. | `/workspace/dist` was refreshed from Docker build output. |
 | Full repository check | Docker temp-copy `npm run check` passed with 68 files and 491 tests. | Host dependencies are unavailable; Docker was used. |
-| Done-level harness | Docker built CLI `harness validate --task T-0173 --level done --json --project /workspace` returned `ok:true`. | No issues. |
-| Close audit | Built CLI `task audit-close --task T-0173 --json` returned `ok:true` with close evidence records and zero warnings. | Final close evidence appended after capsule source docs were updated. |
+| Done-level harness | Docker built CLI `harness validate --task T-0174 --level done --json --project /workspace` returned `ok:true`. | No issues. |
+| Close audit | Built CLI `task audit-close --task T-0174 --json` returned `ok:true` with close evidence records and zero warnings. | Final close evidence appended after capsule source docs were updated. |
 
 ## Historical Index
 

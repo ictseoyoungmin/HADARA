@@ -398,6 +398,43 @@ export function createTaskAuditCloseReport(projectRoot: string, taskId: string):
   );
 }
 
+export function formatTaskAuditCloseReport(report: TaskAuditCloseReport): string {
+  const lines = [
+    `[HADARA] Task Close Audit: ${report.taskId}`,
+    '',
+    'State',
+    `- Closed: ${report.summary.closeEvidenceRecords > 0 ? 'yes' : 'no'}`,
+    `- Close evidence records: ${report.summary.closeEvidenceRecords}`,
+    '',
+    'Close Evidence'
+  ];
+  if (report.latestCloseEvidence) {
+    lines.push(`- Latest: ${report.latestCloseEvidence.result} / ${report.latestCloseEvidence.time}`);
+    if (report.latestCloseEvidence.validationReportHash) lines.push(`- Report hash: ${report.latestCloseEvidence.validationReportHash}`);
+    if (report.latestCloseEvidence.sourceHash) lines.push(`- Source hash: ${report.latestCloseEvidence.sourceHash}`);
+  } else {
+    lines.push('- Latest: none');
+  }
+  lines.push(
+    '',
+    'Audit',
+    `- Blockers: ${report.summary.blockers}`,
+    `- Warnings: ${report.summary.warnings}`,
+    '',
+    'Suggested next'
+  );
+  if (report.ok) {
+    lines.push('- No immediate actions.');
+  } else {
+    lines.push(`1. hadara task close --task ${report.taskId} --json`);
+  }
+  if (report.issues.length > 0) {
+    lines.push('', 'Issues');
+    for (const issue of report.issues) lines.push(`- [${issue.severity}] ${issue.code}: ${issue.message}`);
+  }
+  return lines.join('\n');
+}
+
 function buildAuditReport(
   projectRoot: string,
   taskId: string,
