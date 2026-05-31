@@ -183,3 +183,4 @@
 | T-0180 | Task Finish Status Sync MVP | Done | tasks/T-0180-task-finish-status-sync-mvp | |
 | T-0181 | Task Next Recommendation | Done | tasks/T-0181-task-next-recommendation | |
 | T-0182 | Schema Stability Classification | Done | tasks/T-0182-schema-stability-classification | |
+| T-0183 | Focused Test Command UX | Done | tasks/T-0183-focused-test-command-ux | |

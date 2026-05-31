@@ -19,6 +19,7 @@
     "start": "node dist/cli/main.js",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
+    "test:focused": "vitest run",
     "test:contract": "vitest run tests/contract",
     "test:harness": "vitest run tests/harness",
     "check": "npm run build && npm test",

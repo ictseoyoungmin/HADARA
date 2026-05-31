@@ -121,6 +121,14 @@ npm run dev:docker-check
 
 when you need the same Docker temp-copy check without refreshing `/workspace/dist` or running a built CLI smoke.
 
+For a focused Vitest file or small set of files, use:
+
+```bash
+npm run test:focused -- tests/unit/<file>.test.ts
+```
+
+Do not use `npm run test:unit -- tests/unit/<file>.test.ts` when the intent is a narrow file-only run; `test:unit` already supplies the `tests/unit` argument and may still run the whole unit suite depending on Vitest argument handling.
+
 When CLI code changes, remember that three different command paths may exist:
 
 | Path | Meaning | Use |

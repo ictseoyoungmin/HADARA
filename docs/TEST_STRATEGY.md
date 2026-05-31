@@ -49,12 +49,13 @@ docker exec hadara-dev bash -lc 'cd /tmp/hadara && npm run build >/dev/null && n
 | Suite | Command | Purpose |
 |---|---|---|
 | Unit | `npm run test:unit` | Core functions and schemas. |
+| Focused | `npm run test:focused -- tests/unit/<file>.test.ts` | One Vitest file or explicit small set of files. |
 | Contract | `npm run test:contract` | Provider/tool interface compatibility. |
 | Harness | `npm run test:harness` | Task Capsule validation, replay, and fake workflow checks. |
 | Full | `npm test` | All Vitest suites. |
 | Check | `npm run check` | TypeScript build plus all tests. |
 
-Run these commands inside the Docker copy-to-`/tmp/work` pattern unless `docs/AGENT_HANDOFF.md` says the host Node environment has been fixed.
+Run these commands inside the Docker copy-to-`/tmp/work` pattern unless `docs/AGENT_HANDOFF.md` says the host Node environment has been fixed. For focused checks, prefer `npm run test:focused -- <path>` so the file path is passed directly to Vitest.
 
 ## Remote CI Observation
 
