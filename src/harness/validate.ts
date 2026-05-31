@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { parseMarkdownRows } from '../services/markdown-table';
 import { isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 
 export type HarnessValidationSeverity = 'error' | 'warning';
@@ -517,20 +518,6 @@ function parseTaskBoardRows(content: string): Array<{ id: string; title: string;
         notes: cells[4] ?? ''
       };
     });
-}
-
-function parseMarkdownRows(content: string): string[][] {
-  return content
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.startsWith('|') && line.endsWith('|'))
-    .filter((line) => !/^\|\s*-+/.test(line))
-    .map((line) =>
-      line
-        .slice(1, -1)
-        .split('|')
-        .map((cell) => cell.trim())
-    );
 }
 
 function isEvidenceTableHeader(line: string | undefined): boolean {

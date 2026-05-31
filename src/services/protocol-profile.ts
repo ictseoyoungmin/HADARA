@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { parseMarkdownRows } from './markdown-table';
 import { createManualRemediation } from './protocol-remediation';
 
 export type ProtocolProfile = 'basic' | 'standard' | 'governed' | 'unknown' | 'mixed';
@@ -368,18 +369,4 @@ function readMarkdownSection(content: string, heading: string): string {
   const afterHeading = content.slice(start + heading.length);
   const nextHeading = afterHeading.search(/\n##\s+/);
   return nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading;
-}
-
-function parseMarkdownRows(content: string): string[][] {
-  return content
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.startsWith('|') && line.endsWith('|'))
-    .filter((line) => !/^\|\s*-+/.test(line))
-    .map((line) =>
-      line
-        .slice(1, -1)
-        .split('|')
-        .map((cell) => cell.trim())
-    );
 }

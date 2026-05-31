@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createProfileConsistencyDiagnostics, createProtocolProfileSummary, ProtocolProfileSummary } from './protocol-profile';
+import { parseMarkdownRows } from './markdown-table';
 import { isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule, TASK_FILES } from '../task/task-capsule';
 
 export type ProtocolConsistencyScope = 'docs' | 'tasks' | 'profile' | 'all';
@@ -998,20 +999,6 @@ function detectProfile(projectRoot: string): 'basic' | 'standard' | 'governed' |
   if (hasStandardDocs) return 'standard';
   if (fs.existsSync(path.join(projectRoot, 'docs', 'PROJECT_STATE.md'))) return 'basic';
   return 'unknown';
-}
-
-function parseMarkdownRows(content: string): string[][] {
-  return content
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.startsWith('|') && line.endsWith('|'))
-    .filter((line) => !/^\|\s*-+/.test(line))
-    .map((line) =>
-      line
-        .slice(1, -1)
-        .split('|')
-        .map((cell) => cell.trim())
-    );
 }
 
 function readMarkdownSection(content: string, heading: string): string {

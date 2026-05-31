@@ -65,8 +65,9 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Protocol consistency and remediation schema fixtures are registered as `hadara.protocol.consistency.v1` and `hadara.protocol.remediation.v1`, with focused service/CLI contract tests covering task/docs/profile doctor reports, remediation reports, and optional T-0158 action hash/existence fields.
 - Latest completed task: T-0159 Protocol Consistency JSON Contract registered protocol consistency/remediation schema fixtures and contract tests.
 - Latest completed task: T-0160 Protocol Doctor All Scope added all-scope protocol doctor aggregation and default `protocol doctor --json` behavior.
-- Active / next task: TBD by operator; no follow-up capsule is pre-created after T-0160.
-- Planned Phase 2 hardening follow-ups are documented for new agents: T-0161 Markdown table helper extraction, T-0162 doctor remediation hint unification, T-0163 dry-run-first Task Capsule upgrade-scaffold command, and T-0164 protocol surface docs/help/schema-note alignment. These are plan-conformance hardening tasks, not blockers for the Phase 2 product baseline.
+- Latest completed task: T-0161 Markdown Table Helper Extraction added `src/services/markdown-table.ts`, removed duplicated protocol/profile/harness Markdown row parsers, and refreshed built output after Docker validation.
+- Active / next task: T-0162 Doctor Remediation Hint Unification.
+- Planned Phase 2 hardening follow-ups are documented for new agents: T-0162 doctor remediation hint unification, T-0163 dry-run-first Task Capsule upgrade-scaffold command, and T-0164 protocol surface docs/help/schema-note alignment. These are plan-conformance hardening tasks, not blockers for the Phase 2 product baseline.
 - Harness validation supports `--level draft|done`; done-level validation requires Done status, completed acceptance, evidence records, and updated handoff sections.
 - Done-level harness validation now also checks `docs/TASK_BOARD.md` for exactly one row for the validated task, `Done` status, and the expected Task Capsule path, catching duplicate or stale append/update results before completion.
 - Done-level harness validation now rejects completed Task Capsules whose standard Markdown files still contain initial scaffold placeholders or default empty content, while draft-level validation remains structural.
