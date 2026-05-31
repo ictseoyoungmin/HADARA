@@ -12,9 +12,9 @@ HADARA - Portable Agentic Development Workbench
 
 ## Current Phase
 
-Phase 3 / Task Operator Console Complete.
+Phase 3.5 / Operator Workflow Hardening.
 
-The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer, and close/evidence hardening through T-0170 are complete. Phase 3 added and hardened a read-oriented task operator console that projects existing task, evidence, protocol, ready, close, and audit state without becoming a new source of truth.
+The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer, close/evidence hardening through T-0170, and Phase 3 task operator console through T-0177 are complete. Phase 3.5 is reducing operator workflow friction before Phase 4 read-surface/operator UI work.
 
 ## Current Status
 
@@ -82,7 +82,8 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Latest completed task: T-0175 Dashboard TUI MCP Read Projection Prep added `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md` and aligned dashboard/MCP guidance for future read-only selected-task consumers.
 - Latest completed task: T-0176 Evidence From Command Design added `docs/EVIDENCE_FROM_COMMAND_DESIGN.md` and clarified that shell-executing evidence capture remains unimplemented/design-only.
 - Latest completed task: T-0177 Task Workbench Hardening fixed true Task Board status projection, normalized optional nextAction fields, split close evidence presence from valid closure, and documented `task.status` `ok` semantics.
-- Active / next task: operator-selected next work after Phase 3 hardening.
+- Latest completed task: T-0178 Runtime Version CLI Origin Doctor added read-only `hadara version --verbose --json` as `hadara.runtime.version.v1` for CLI entry, project root, package/git/node metadata, and build freshness diagnostics.
+- Active / next task: T-0179 Docker Dev Sync-Build Script.
 - Phase 3 source plan: `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md`.
 - Task workbench status report exists as `hadara task status --task <id> --json`; centralized suggested-action generation and fixture-level schema registration are implemented. T-0177 hardened true Task Board status projection, optional nextAction normalization, and close evidence/valid-closure semantics.
 - Phase 3 task operator console capsule sequence T-0171 through T-0176 is complete: status projection, suggested actions, schema contract, text output, read-consumer projection prep, and evidence-from-command design boundary.

@@ -25,6 +25,7 @@ import { handleInstallCommand } from './install';
 import { handleSmokeCommand } from './smoke';
 import { handlePackageCommand } from './package-smoke';
 import { handleProtocolCommand } from './protocol';
+import { handleVersionCommand } from './version';
 import { getFlag, getStringOption } from './args';
 import { cliErrorExitCode, createCliErrorReport } from './errors';
 
@@ -37,6 +38,7 @@ Usage:
   hadara init upgrade --profile basic|standard|governed [--execute] [--json]
   hadara init register-doc --path <path> --when <text> --purpose <text> [--require-exists] [--execute] [--json]
   hadara init enable-integration --integration hermes|mcp [--execute] [--json]
+  hadara version [--verbose] [--json]
   hadara doctor
   hadara task create <title>
   hadara task list
@@ -101,6 +103,11 @@ async function main(args = process.argv.slice(2)): Promise<void> {
   const jsonOutput = getFlag(args, '--json');
 
   switch (command) {
+    case 'version': {
+      if (handleVersionCommand({ args, projectRoot: paths.projectRoot, jsonOutput, cliEntry: process.argv[1] })) return;
+      break;
+    }
+
     case 'init': {
       if (handleInitCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;

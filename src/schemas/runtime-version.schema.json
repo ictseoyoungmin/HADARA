@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.runtime.version.v1",
+  "x-hadara-schema-id": "hadara.runtime.version.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "cliEntry", "cwd", "projectRoot", "packageVersion", "git", "build", "node", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.runtime.version.v1" },
+    "command": { "const": "version.verbose" },
+    "ok": { "type": "boolean" },
+    "cliEntry": { "type": "string" },
+    "cwd": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "packageVersion": { "type": "string" },
+    "git": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["branch", "head"],
+      "properties": {
+        "branch": { "type": ["string", "null"] },
+        "head": { "type": ["string", "null"] }
+      }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["distMtime", "sourceMtime", "distLooksStale"],
+      "properties": {
+        "distMtime": { "type": ["string", "null"] },
+        "sourceMtime": { "type": ["string", "null"] },
+        "distLooksStale": { "type": "boolean" }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["version"],
+      "properties": {
+        "version": { "type": "string" }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "enum": ["warning", "error"] },
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "path": { "type": "string" }
+        }
+      }
+    }
+  }
+}

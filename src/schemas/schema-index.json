@@ -100,6 +100,13 @@
       "notes": "Documents read-only Phase 3 task operator console reports from task status."
     },
     {
+      "id": "hadara.runtime.version.v1",
+      "path": "src/schemas/runtime-version.schema.json",
+      "status": "fixture",
+      "owner": "runtime/version",
+      "notes": "Documents read-only CLI origin, package, git, Node, and build freshness reports from hadara version --verbose."
+    },
+    {
       "id": "hadara.releaseGate.v1",
       "path": "src/schemas/release-gate.schema.json",
       "status": "fixture",

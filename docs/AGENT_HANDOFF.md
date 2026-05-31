@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Working tree contains uncommitted T-0177 hardening changes by operator request. |
-| Current Phase | Phase 3 / Task Operator Console Complete | T-0171 through T-0177 are complete after T-0170 close/audit preflight and follow-up hardening. |
-| Latest Completed Task | T-0177 Task Workbench Hardening | Hardened true Task Board projection, nextAction normalization, close evidence state semantics, and `task.status` contract docs. |
-| Active / Next Task | Operator-selected next work | Phase 3 task operator console capsule sequence plus hardening is complete. |
-| Validation Baseline | Full Docker check, built CLI smoke, done harness, and close audit passed | Full Docker `npm run check` passed with 68 files / 499 tests; built CLI `task status --task T-0177 --json` returned `hadara.task.workbench.v1`; T-0177 done harness and audit-close passed. |
+| Branch | main | T-0178 is ready to commit; continue Phase 3.5 capsules through T-0183. |
+| Current Phase | Phase 3.5 / Operator Workflow Hardening | Runtime origin diagnostics are complete; Docker sync-build scripting is next. |
+| Latest Completed Task | T-0178 Runtime Version CLI Origin Doctor | Added read-only `hadara version --verbose --json` with `hadara.runtime.version.v1`. |
+| Active / Next Task | T-0179 Docker Dev Sync-Build Script | Provide a repo-level helper for Docker temp-copy/check/dist refresh/smoke workflow. |
+| Validation Baseline | Full Docker check, built CLI smoke, done harness, and close audit passed | Full Docker `npm run check` passed with 69 files / 502 tests; built CLI `version --verbose --json` returned `hadara.runtime.version.v1`; T-0178 done harness and audit-close passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0175 Dashboard TUI MCP Read Projection Prep | Added workbench read-model contract and future read-consumer guidance. | T-0175 evidence: full Docker check, built CLI workbench smoke, done harness, close execute, and audit-close passed. |
 | T-0176 Evidence From Command Design | Added design-only safety boundary for future shell-executing evidence capture. | T-0176 evidence: full Docker check, built CLI smoke, done harness, close execute, and audit-close passed. |
 | T-0177 Task Workbench Hardening | Hardened workbench Task Board status semantics, optional nextAction normalization, close state split, and contract docs. | T-0177 evidence: focused Docker unit suite, full Docker check, built CLI smoke, done harness, close execute, and audit-close passed. |
+| T-0178 Runtime Version CLI Origin Doctor | Added runtime CLI origin report with package/git/node/build freshness metadata. | T-0178 evidence: focused runtime/schema tests, full Docker check, built CLI smoke, done harness, close execute, and audit-close passed. |
 
 ## Current Known Problems
 
@@ -30,7 +30,7 @@
 | Docs-scope protocol doctor reports historical T-0073 Task Board drift and legacy Decisions structure as warnings. | `hadara protocol doctor --scope docs --json` remains `ok: true`; warning-only reports exit 0. | Use `protocol remediate` only when an operator explicitly accepts an allowlisted bounded fix; broad cleanup remains future scope. |
 | Evidence from-command remains unimplemented. | T-0176 documents the future design boundary only; current command-log evidence remains non-executing. | Use `evidence add-command` until a future implementation capsule exists. |
 | Close validation evidence can create a fixed-point loop if modeled as a same-run precondition. | Recording validation evidence mutates evidence files after validation. | Use the documented three-layer model: validation proves readiness, close records the proof, audit checks the close record. T-0170 adds source/report hash split and read-only audit for this model. |
-| T-0177 was intentionally not committed. | The working tree is expected to remain dirty until the operator decides to commit or continue editing. | Do not assume this is accidental; preserve these changes unless explicitly directed otherwise. |
+| Runtime version detects stale dist but does not refresh it. | Operators still need to run the documented Docker refresh workflow manually. | T-0179 should add a repo-level helper script for sync/build/check/dist refresh. |
 
 ## Next Recommended Step
 
@@ -42,10 +42,10 @@
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Built CLI smoke | Built CLI `task status --task T-0177 --json` returned `hadara.task.workbench.v1` with true Task Board fields and split close state fields. | `/workspace/dist` was refreshed from Docker build output. |
-| Full repository check | Docker temp-copy `npm run check` passed with 68 files and 499 tests. | Host dependencies are unavailable; Docker was used. |
-| Done-level harness | Docker built CLI `harness validate --task T-0177 --level done --json --project /workspace` returned `ok:true`. | No issues. |
-| Close audit | Built CLI `task audit-close --task T-0177 --json` returned `ok:true` with close evidence records and zero warnings. | Final close evidence appended after capsule source docs were updated. |
+| Built CLI smoke | Built CLI `version --verbose --json` returned `hadara.runtime.version.v1`, `cliEntry: /workspace/dist/cli/main.js`, and `distLooksStale: false`. | `/workspace/dist` was refreshed from Docker build output. |
+| Full repository check | Docker temp-copy `npm run check` passed with 69 files and 502 tests. | Host dependencies are unavailable; Docker was used. |
+| Done-level harness | Docker built CLI `harness validate --task T-0178 --level done --json --project /workspace` returned `ok:true`. | No issues. |
+| Close audit | Built CLI `task audit-close --task T-0178 --json` returned `ok:true` with close evidence records and zero warnings. | Final close evidence appended after capsule source docs were updated. |
 
 ## Historical Index
 
