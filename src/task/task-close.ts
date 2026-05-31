@@ -1,4 +1,6 @@
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import { appendEvidence } from '../evidence/evidence';
 import { createEvidenceLintReport, EvidenceLintReport } from '../services/evidence-lint';
 import { createHarnessValidateReport, HarnessValidateResult } from '../services/harness-service';
@@ -23,6 +25,9 @@ export interface TaskCloseReport {
     ok: boolean;
     level: 'done';
     issueCount: number;
+    validatedBeforeCloseEvidenceReportHash: string;
+    validatedBeforeCloseEvidenceSourceHash: string;
+    /** @deprecated Use validatedBeforeCloseEvidenceReportHash. This hashes diagnostic report output, not raw source file content. */
     validatedBeforeCloseEvidenceHash: string;
   };
   evidenceLint: {
@@ -40,6 +45,10 @@ export interface TaskCloseReport {
     result: 'passed' | 'blocked';
     summary: string;
     excludedFromCurrentValidationLoop: true;
+    validationReportHash?: string;
+    sourceHash?: string;
+    markdownPath?: string;
+    evidencePath?: string;
   };
   nextActions: TaskCloseNextAction[];
   issues: TaskCloseIssue[];
@@ -72,7 +81,9 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
   const validation = createHarnessValidateReport(projectRoot, taskId, { level: 'done' });
   const evidenceLint = createEvidenceLintReport(projectRoot, taskId);
   const protocolDoctor = createTaskProtocolConsistencyReport(projectRoot, taskId);
-  const closeEvidenceSummary = `Task close validation for ${taskId} returned ${validation.ok ? 'ok:true' : 'ok:false'} before close evidence append.`;
+  const validationReportHash = hashValidationInputs(validation, evidenceLint, protocolDoctor);
+  const sourceHash = hashCloseRelevantSource(projectRoot, task.dir);
+  const closeEvidenceSummary = `Task close validation for ${taskId} returned ${validation.ok ? 'ok:true' : 'ok:false'} before close evidence append; reportHash ${validationReportHash}; sourceHash ${sourceHash}.`;
 
   collectBlockingIssues(validation, evidenceLint, protocolDoctor, issues);
   const ok = !issues.some((issue) => issue.severity === 'error');
@@ -93,7 +104,9 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
       ok: validation.ok,
       level: 'done',
       issueCount: validation.issues.length,
-      validatedBeforeCloseEvidenceHash: hashValidationInputs(validation, evidenceLint, protocolDoctor)
+      validatedBeforeCloseEvidenceReportHash: validationReportHash,
+      validatedBeforeCloseEvidenceSourceHash: sourceHash,
+      validatedBeforeCloseEvidenceHash: validationReportHash
     },
     evidenceLint: {
       ok: evidenceLint.ok,
@@ -109,7 +122,9 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
       kind: 'command-log',
       result: ok ? 'passed' : 'blocked',
       summary: closeEvidenceSummary,
-      excludedFromCurrentValidationLoop: true
+      excludedFromCurrentValidationLoop: true,
+      validationReportHash,
+      sourceHash
     },
     nextActions,
     issues
@@ -130,6 +145,35 @@ function collectBlockingIssues(validation: HarnessValidateResult, evidenceLint: 
 }
 
 function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode): TaskCloseNextAction[] {
+  if (mode === 'execute') {
+    if (ok) {
+      return [
+        {
+          id: 'close-evidence-appended',
+          kind: 'review',
+          required: false,
+          message: 'Close audit evidence was appended through the canonical evidence writer.',
+          loopBoundary: true
+        },
+        {
+          id: 'audit-close',
+          kind: 'command',
+          required: false,
+          command: `hadara task audit-close --task ${taskId} --json`,
+          message: 'Optionally audit the close record in a later read-only pass.'
+        }
+      ];
+    }
+    return [
+      {
+        id: 'resolve-close-blockers',
+        kind: 'review',
+        required: true,
+        message: 'Resolve blocking issues before appending close evidence.'
+      }
+    ];
+  }
+
   const actions: TaskCloseNextAction[] = [
     {
       id: 'run-done-validation',
@@ -148,11 +192,11 @@ function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode): Ta
   ];
   if (ok) {
     actions.push({
-      id: mode === 'execute' ? 'close-evidence-appended' : 'append-close-evidence',
+      id: 'append-close-evidence',
       kind: 'command',
-      required: mode !== 'execute',
-      command: mode === 'execute' ? undefined : `hadara task close --task ${taskId} --execute --json`,
-      message: mode === 'execute' ? 'Close evidence append is planned for the execute MVP.' : 'Append close audit evidence after reviewing this dry-run plan.',
+      required: true,
+      command: `hadara task close --task ${taskId} --execute --json`,
+      message: 'Append close audit evidence after reviewing this dry-run plan.',
       loopBoundary: true
     });
   } else {
@@ -175,7 +219,14 @@ function buildMissingTaskReport(projectRoot: string, taskId: string, mode: TaskC
     taskId,
     projectRoot,
     summary: { blockers: issues.length, warnings: 0, nextActions: 0 },
-    validation: { ok: false, level: 'done', issueCount: 0, validatedBeforeCloseEvidenceHash: 'sha256:missing-task' },
+    validation: {
+      ok: false,
+      level: 'done',
+      issueCount: 0,
+      validatedBeforeCloseEvidenceReportHash: 'sha256:missing-task',
+      validatedBeforeCloseEvidenceSourceHash: 'sha256:missing-task',
+      validatedBeforeCloseEvidenceHash: 'sha256:missing-task'
+    },
     evidenceLint: { ok: false, issueCount: 0 },
     protocolDoctor: { ok: false, issueCount: 0 },
     closeEvidence: {
@@ -203,8 +254,34 @@ function hashValidationInputs(validation: HarnessValidateResult, evidenceLint: E
   return `sha256:${crypto.createHash('sha256').update(payload, 'utf8').digest('hex')}`;
 }
 
+function hashCloseRelevantSource(projectRoot: string, taskDir: string): string {
+  const relativePaths = [
+    path.relative(projectRoot, path.join(taskDir, 'TASK.md')),
+    path.relative(projectRoot, path.join(taskDir, 'PLAN.md')),
+    path.relative(projectRoot, path.join(taskDir, 'CONTEXT.md')),
+    path.relative(projectRoot, path.join(taskDir, 'FILES.md')),
+    path.relative(projectRoot, path.join(taskDir, 'ACCEPTANCE.md')),
+    path.relative(projectRoot, path.join(taskDir, 'TESTS.md')),
+    path.relative(projectRoot, path.join(taskDir, 'RISKS.md')),
+    path.relative(projectRoot, path.join(taskDir, 'DECISIONS.md')),
+    path.relative(projectRoot, path.join(taskDir, 'HANDOFF.md')),
+    path.join('docs', 'TASK_BOARD.md')
+  ]
+    .map(toPortablePath)
+    .sort();
+  const payload = relativePaths.map((relativePath) => {
+    const absolutePath = path.join(projectRoot, relativePath);
+    return {
+      path: relativePath,
+      exists: fs.existsSync(absolutePath),
+      sha256: fs.existsSync(absolutePath) ? crypto.createHash('sha256').update(fs.readFileSync(absolutePath)).digest('hex') : null
+    };
+  });
+  return `sha256:${crypto.createHash('sha256').update(JSON.stringify(payload), 'utf8').digest('hex')}`;
+}
+
 export function executeTaskCloseEvidence(projectRoot: string, report: TaskCloseReport): void {
-  appendEvidence(projectRoot, {
+  const markdownPath = appendEvidence(projectRoot, {
     taskId: report.taskId,
     kind: 'command-log',
     summary: report.closeEvidence.summary,
@@ -212,4 +289,186 @@ export function executeTaskCloseEvidence(projectRoot: string, report: TaskCloseR
     visibility: 'public'
   });
   report.closeEvidence.appended = true;
+  report.closeEvidence.markdownPath = toPortablePath(path.relative(projectRoot, markdownPath));
+  const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === report.taskId);
+  if (task) {
+    report.closeEvidence.evidencePath = toPortablePath(path.relative(projectRoot, path.join(task.dir, 'evidence.jsonl')));
+  }
+}
+
+export interface TaskAuditCloseReport {
+  schemaVersion: 'hadara.task.audit_close.v1';
+  command: 'task.audit-close';
+  ok: boolean;
+  taskId: string;
+  projectRoot: string;
+  summary: {
+    closeEvidenceRecords: number;
+    blockers: number;
+    warnings: number;
+  };
+  currentValidationReportHash: string;
+  currentSourceHash: string;
+  latestCloseEvidence?: {
+    time: string;
+    summary: string;
+    result: string;
+    validationReportHash?: string;
+    sourceHash?: string;
+  };
+  issues: TaskCloseIssue[];
+}
+
+export function createTaskAuditCloseReport(projectRoot: string, taskId: string): TaskAuditCloseReport {
+  const issues: TaskCloseIssue[] = [];
+  const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
+  if (!task) {
+    issues.push({ severity: 'error', code: 'TASK_NOT_FOUND', message: `Task Capsule not found: ${taskId}` });
+    return buildAuditReport(projectRoot, taskId, 'sha256:missing-task', 'sha256:missing-task', [], issues);
+  }
+
+  const closePlan = createTaskCloseReport(projectRoot, taskId, 'dry-run');
+  const evidencePath = path.join(task.dir, 'evidence.jsonl');
+  const records = readCloseEvidenceRecords(evidencePath);
+  if (records.length === 0) {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_CLOSE_EVIDENCE_MISSING',
+      message: 'No command-log close evidence record was found for this task.',
+      path: toPortablePath(path.relative(projectRoot, evidencePath))
+    });
+  }
+  const latest = records.at(-1);
+  const latestHash = latest ? extractReportHash(latest.summary) : undefined;
+  const latestSourceHash = latest ? extractSourceHash(latest.summary) : undefined;
+  if (latest && latest.kind !== 'command-log') {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_CLOSE_EVIDENCE_KIND_INVALID',
+      message: 'Close evidence must use command-log kind.',
+      path: toPortablePath(path.relative(projectRoot, evidencePath))
+    });
+  }
+  if (latest && latest.result !== 'passed') {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_CLOSE_EVIDENCE_RESULT_INVALID',
+      message: 'Close evidence should record a passed result.',
+      path: toPortablePath(path.relative(projectRoot, evidencePath))
+    });
+  }
+  if (latest && !latestHash) {
+    issues.push({
+      severity: 'warning',
+      code: 'TASK_CLOSE_EVIDENCE_HASH_MISSING',
+      message: 'Latest close evidence does not include a validation report hash.',
+      path: toPortablePath(path.relative(projectRoot, evidencePath))
+    });
+  } else if (latestHash && latestHash !== closePlan.validation.validatedBeforeCloseEvidenceReportHash) {
+    issues.push({
+      severity: 'warning',
+      code: 'TASK_CLOSE_AUDIT_CURRENT_REPORT_HASH_DRIFT',
+      message: 'Current diagnostic report hash differs from the latest close evidence hash.',
+      path: toPortablePath(path.relative(projectRoot, evidencePath))
+    });
+  }
+  if (latest && !latestSourceHash) {
+    issues.push({
+      severity: 'warning',
+      code: 'TASK_CLOSE_EVIDENCE_SOURCE_HASH_MISSING',
+      message: 'Latest close evidence does not include a close-relevant source hash.',
+      path: toPortablePath(path.relative(projectRoot, evidencePath))
+    });
+  } else if (latestSourceHash && latestSourceHash !== closePlan.validation.validatedBeforeCloseEvidenceSourceHash) {
+    issues.push({
+      severity: 'warning',
+      code: 'TASK_CLOSE_AUDIT_SOURCE_HASH_DRIFT',
+      message: 'Current close-relevant source hash differs from the latest close evidence source hash.',
+      path: toPortablePath(path.relative(projectRoot, evidencePath))
+    });
+  }
+
+  return buildAuditReport(
+    projectRoot,
+    taskId,
+    closePlan.validation.validatedBeforeCloseEvidenceReportHash,
+    closePlan.validation.validatedBeforeCloseEvidenceSourceHash,
+    records,
+    issues
+  );
+}
+
+function buildAuditReport(
+  projectRoot: string,
+  taskId: string,
+  currentHash: string,
+  currentSourceHash: string,
+  records: Array<{ time: string; kind: string; summary: string; result: string }>,
+  issues: TaskCloseIssue[]
+): TaskAuditCloseReport {
+  const latest = records.at(-1);
+  return {
+    schemaVersion: 'hadara.task.audit_close.v1',
+    command: 'task.audit-close',
+    ok: !issues.some((issue) => issue.severity === 'error'),
+    taskId,
+    projectRoot,
+    summary: {
+      closeEvidenceRecords: records.length,
+      blockers: issues.filter((issue) => issue.severity === 'error').length,
+      warnings: issues.filter((issue) => issue.severity === 'warning').length
+    },
+    currentValidationReportHash: currentHash,
+    currentSourceHash,
+    ...(latest
+      ? {
+          latestCloseEvidence: {
+            time: latest.time,
+            summary: latest.summary,
+            result: latest.result,
+            ...(extractReportHash(latest.summary) ? { validationReportHash: extractReportHash(latest.summary) } : {}),
+            ...(extractSourceHash(latest.summary) ? { sourceHash: extractSourceHash(latest.summary) } : {})
+          }
+        }
+      : {}),
+    issues
+  };
+}
+
+function readCloseEvidenceRecords(evidencePath: string): Array<{ time: string; kind: string; summary: string; result: string }> {
+  if (!fs.existsSync(evidencePath)) return [];
+  return fs
+    .readFileSync(evidencePath, 'utf8')
+    .trim()
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .flatMap((line) => {
+      try {
+        const record = JSON.parse(line) as { time?: unknown; kind?: unknown; summary?: unknown; result?: unknown };
+        if (
+          typeof record.time === 'string' &&
+          typeof record.kind === 'string' &&
+          typeof record.summary === 'string' &&
+          typeof record.result === 'string' &&
+          /Task close validation .* before close evidence append/.test(record.summary)
+        ) {
+          return [{ time: record.time, kind: record.kind, summary: record.summary, result: record.result }];
+        }
+      } catch {
+        return [];
+      }
+      return [];
+    });
+}
+
+function extractReportHash(summary: string): string | undefined {
+  return summary.match(/reportHash\s+(sha256:[a-f0-9]{64})/)?.[1];
+}
+
+function extractSourceHash(summary: string): string | undefined {
+  return summary.match(/sourceHash\s+(sha256:[a-f0-9]{64})/)?.[1];
+}
+
+function toPortablePath(value: string): string {
+  return value.split(path.sep).join('/');
 }

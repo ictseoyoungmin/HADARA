@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { appendEvidence } from '../../src/evidence/evidence';
-import { createTaskCloseReport, executeTaskCloseEvidence } from '../../src/task/task-close';
+import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence } from '../../src/task/task-close';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -47,7 +47,9 @@ describe('task close report', () => {
         excludedFromCurrentValidationLoop: true
       }
     });
-    expect(report.validation.validatedBeforeCloseEvidenceHash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(report.validation.validatedBeforeCloseEvidenceReportHash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(report.validation.validatedBeforeCloseEvidenceSourceHash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(report.validation.validatedBeforeCloseEvidenceHash).toBe(report.validation.validatedBeforeCloseEvidenceReportHash);
     expect(report.nextActions).toContainEqual(
       expect.objectContaining({
         id: 'append-close-evidence',
@@ -81,9 +83,48 @@ describe('task close report', () => {
 
     expect(report.ok).toBe(true);
     expect(report.closeEvidence.appended).toBe(true);
+    expect(report.closeEvidence.sourceHash).toBe(report.validation.validatedBeforeCloseEvidenceSourceHash);
     expect(after.split(/\r?\n/).filter(Boolean).length).toBe(before.split(/\r?\n/).filter(Boolean).length + 1);
     expect(after).toContain('"kind":"command-log"');
     expect(after).toContain('"Task close validation for ' + task.id);
+    expect(report.closeEvidence.markdownPath).toBe(`tasks/${task.id}-close-execute-evidence/EVIDENCE.md`);
+    expect(report.closeEvidence.evidencePath).toBe(`tasks/${task.id}-close-execute-evidence/evidence.jsonl`);
+    expect(report.nextActions.map((action) => action.id)).toEqual(['close-evidence-appended', 'audit-close']);
+    expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'audit-close', command: `hadara task audit-close --task ${task.id} --json` }));
+  });
+
+  it('audits close evidence and reports hash drift as a warning', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close audit evidence');
+    completeTask(root, task.id, task.dir);
+    const closeReport = createTaskCloseReport(root, task.id, 'execute');
+    executeTaskCloseEvidence(root, closeReport);
+
+    const audit = createTaskAuditCloseReport(root, task.id);
+    expect(audit).toMatchObject({
+      schemaVersion: 'hadara.task.audit_close.v1',
+      command: 'task.audit-close',
+      ok: true,
+      summary: { closeEvidenceRecords: 1, blockers: 0 }
+    });
+    expect(audit.latestCloseEvidence?.validationReportHash).toBe(closeReport.validation.validatedBeforeCloseEvidenceReportHash);
+    expect(audit.latestCloseEvidence?.sourceHash).toBe(closeReport.validation.validatedBeforeCloseEvidenceSourceHash);
+
+    fs.appendFileSync(path.join(task.dir, 'PLAN.md'), '\n| 2 | Drift after close. | Done | Drift. |\n', 'utf8');
+    const drift = createTaskAuditCloseReport(root, task.id);
+    expect(drift.ok).toBe(true);
+    expect(drift.issues).toContainEqual(expect.objectContaining({ severity: 'warning', code: 'TASK_CLOSE_AUDIT_SOURCE_HASH_DRIFT' }));
+  });
+
+  it('reports missing close evidence during audit', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close audit missing');
+    completeTask(root, task.id, task.dir);
+
+    const audit = createTaskAuditCloseReport(root, task.id);
+
+    expect(audit.ok).toBe(false);
+    expect(audit.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_EVIDENCE_MISSING' }));
   });
 });
 

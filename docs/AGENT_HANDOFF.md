@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Working tree contains completed T-0169 evidence command UX changes. |
-| Current Phase | Close Validation / Evidence Fixed-Point Hardening | Phase 2 baseline and strict-plan follow-ups are complete; close-model follow-ups T-0165 through T-0169 are complete. |
-| Latest Completed Task | T-0169 Evidence Command UX | Added canonical command-log evidence writer ergonomics without shell execution. |
-| Active / Next Task | Operator-selected next work | Close-model follow-ups T-0165 through T-0169 are complete. |
-| Validation Baseline | Full Docker check passed | Latest Docker temp-copy `npm run check` passed with 66 files and 481 tests; built CLI evidence add-command smoke and T-0169 done harness passed. |
+| Branch | main | Working tree contains completed T-0170 close UX/audit semantics changes. |
+| Current Phase | Close Validation / Evidence Fixed-Point Hardening | Phase 2 baseline, strict-plan follow-ups, and close-model follow-ups T-0165 through T-0170 are complete. |
+| Latest Completed Task | T-0170 Close UX Polish and Audit Semantics | Clarified close report/source hashes, polished execute nextActions, added append result paths, and added read-only close audit. |
+| Active / Next Task | Operator-selected next work | Close-model follow-ups are complete; next scope can move toward Phase 3 or operator-selected maintenance. |
+| Validation Baseline | Full Docker check and built CLI smokes passed | Focused close/audit checks passed with 3 files / 8 tests; full Docker `npm run check` passed with 66 files / 483 tests; built CLI close/audit smokes and T-0170 done harness passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0167 Task Close Execute MVP | Enabled `hadara task close --task <id> --execute --json` to append canonical close evidence only after blockers pass. | T-0167 evidence: focused Docker checks passed with 2 files / 4 tests; built CLI execute smoke appended command-log close evidence; done harness returned `ok:true`. |
 | T-0168 Task Ready Preflight | Added `hadara task ready --task <id> --level done --json` read-only readiness reports before close. | T-0168 evidence: focused Docker checks passed with 3 files / 6 tests; built CLI ready smoke and done harness returned `ok:true`. |
 | T-0169 Evidence Command UX | Added `hadara evidence add-command --task <id> --summary <text> --result <result> --json` as a command-log evidence writer without shell execution. | T-0169 evidence: focused Docker checks passed with 3 files / 19 tests; full Docker check passed with 66 files / 481 tests; built CLI smoke and done harness passed. |
+| T-0170 Close UX Polish and Audit Semantics | Added report/source hash split, execute success append/audit nextActions, close append result paths, and read-only `task audit-close`. | T-0170 evidence: focused Docker checks passed with 3 files / 8 tests; full Docker check passed with 66 files / 483 tests; built CLI close/audit smokes and done harness passed. |
 
 ## Current Known Problems
 
@@ -29,22 +29,22 @@
 | All-scope protocol doctor is broad but not a deep done-level check for every historical capsule. | It keeps default protocol doctor responsive by aggregating docs, profile, and active-task detail; docs-scope still checks Task Board/capsule drift across all tasks. | Use task-scoped doctor or harness validation for deep capsule checks. |
 | Docs-scope protocol doctor reports historical T-0073 Task Board drift and legacy Decisions structure as warnings. | `hadara protocol doctor --scope docs --json` remains `ok: true`; warning-only reports exit 0. | Use `protocol remediate` only when an operator explicitly accepts an allowlisted bounded fix; broad cleanup remains future scope. |
 | Phase 2 strict-plan hardening follow-ups are complete. | T-0161 through T-0164 close the remaining strict-reading gaps from the Phase 2 plan. | Treat further Phase 2 work as operator-selected maintenance or new product scope, with a new Task Capsule. |
-| Close validation evidence can create a fixed-point loop if modeled as a same-run precondition. | Recording validation evidence mutates evidence files after validation. | Use the documented three-layer model: validation proves readiness, close records the proof, audit checks the close record. |
+| Close validation evidence can create a fixed-point loop if modeled as a same-run precondition. | Recording validation evidence mutates evidence files after validation. | Use the documented three-layer model: validation proves readiness, close records the proof, audit checks the close record. T-0170 adds source/report hash split and read-only audit for this model. |
 
 ## Next Recommended Step
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Choose next operator-directed scope. | Close-model follow-ups T-0165 through T-0169 are complete and validated. | Start from `docs/TASK_BOARD.md`, `docs/ROADMAP.md`, and current product priorities. |
+| Choose next operator-directed scope. | Close-model follow-ups T-0165 through T-0170 are complete and validated. | Start from `docs/TASK_BOARD.md`, `docs/ROADMAP.md`, and current product priorities. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Focused evidence UX/lint/ready checks | Docker `npx vitest run tests/unit/evidence-json.test.ts tests/unit/evidence-lint.test.ts tests/unit/task-ready.test.ts` passed with 3 files and 19 tests. | Covers add-command command-log writer, evidence lint, and ready reports. |
-| Built CLI smoke | Docker built CLI `evidence add-command --task T-0169 --summary ... --result passed --json --project /workspace` returned `ok:true` and appended `command-log` evidence. | `/workspace/dist` was refreshed after build. |
-| Full repository check | Docker temp-copy `npm run check` passed with 66 files and 481 tests. | Host dependencies are unavailable; Docker was used. |
-| Done-level harness | Docker built CLI `harness validate --task T-0169 --level done --json --project /workspace` returned `ok:true`. | No issues. |
+| Focused close/audit checks | Docker `npx vitest run tests/unit/task-close.test.ts tests/unit/schema-fixtures.test.ts tests/unit/task-ready.test.ts` passed with 3 files and 8 tests. | Covers close hash semantics, execute nextActions, append paths, audit success, missing evidence, and drift warnings. |
+| Built CLI smoke | Built CLI `task close --json`, `task close --execute --json`, and `task audit-close --json` returned `ok:true`; final audit summary had 2 close records and 0 warnings. | `/workspace/dist` was refreshed from Docker build output. |
+| Full repository check | Docker temp-copy `npm run check` passed with 66 files and 483 tests. | Host dependencies are unavailable; Docker was used. |
+| Done-level harness | Docker built CLI `harness validate --task T-0170 --level done --json --project /workspace` returned `ok:true`. | No issues. |
 
 ## Historical Index
 

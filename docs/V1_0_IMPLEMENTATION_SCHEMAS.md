@@ -1334,6 +1334,8 @@ Operational rules:
 - `hadara evidence lint --task <id> --json` and task-scoped protocol doctor should catch malformed JSONL, unsupported enums, taskId mismatches, missing required fields, rough Markdown/JSONL drift, and missing public evidence artifacts before close.
 - `hadara task close --task <id> --json` should start as a read-only close plan with `nextActions`.
 - `hadara task close --task <id> --execute --json` should initially write only close evidence through the canonical evidence writer after validation/lint/doctor blockers pass.
+- `hadara task close --task <id> --execute --json` should report completed append metadata and optional audit guidance after success rather than presenting preflight checks as required next work.
+- `hadara task audit-close --task <id> --json` should be read-only and check close evidence presence, kind/result shape, diagnostic report hash drift, and close-relevant source hash drift.
 - Automatic status, Task Board, Project State, and handoff writes remain future opt-in flags or separate remediation commands, not the initial close MVP.
 
 Planned follow-up capsules:
@@ -1345,6 +1347,15 @@ Planned follow-up capsules:
 | T-0167 Task Close Execute MVP | Execute close only by appending canonical close evidence after blockers pass. | Close evidence append only |
 | T-0168 Task Ready Preflight | Add friendly readiness preflight before close. | None |
 | T-0169 Evidence Command UX | Add command-log evidence writer ergonomics without executing shell commands. | Evidence append only |
+| T-0170 Close UX Polish and Audit Semantics | Clarify close hash semantics, polish execute nextActions, add append result paths, and provide read-only close audit. | None for audit; close command still appends close evidence only in execute mode |
+
+T-0170 semantic clarification:
+
+| Field | Meaning |
+|---|---|
+| `validatedBeforeCloseEvidenceReportHash` | Hash of the pre-close diagnostic report inputs: done validation, evidence lint, and task protocol doctor issue/ok state. |
+| `validatedBeforeCloseEvidenceSourceHash` | Hash of close-relevant source files such as task capsule planning/status docs and Task Board state, excluding evidence files so close evidence append does not immediately create drift. |
+| `validatedBeforeCloseEvidenceHash` | Deprecated compatibility alias for the diagnostic report hash. |
 
 | Proposed Capsule | Status | Goal | Non-Goals |
 |---|---|---|---|

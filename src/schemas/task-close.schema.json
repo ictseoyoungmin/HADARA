@@ -25,11 +25,13 @@
     "validation": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["ok", "level", "issueCount", "validatedBeforeCloseEvidenceHash"],
+      "required": ["ok", "level", "issueCount", "validatedBeforeCloseEvidenceReportHash", "validatedBeforeCloseEvidenceSourceHash"],
       "properties": {
         "ok": { "type": "boolean" },
         "level": { "const": "done" },
         "issueCount": { "type": "number" },
+        "validatedBeforeCloseEvidenceReportHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$|^sha256:missing-task$" },
+        "validatedBeforeCloseEvidenceSourceHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$|^sha256:missing-task$" },
         "validatedBeforeCloseEvidenceHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$|^sha256:missing-task$" }
       }
     },
@@ -45,7 +47,11 @@
         "kind": { "const": "command-log" },
         "result": { "enum": ["passed", "blocked"] },
         "summary": { "type": "string" },
-        "excludedFromCurrentValidationLoop": { "const": true }
+        "excludedFromCurrentValidationLoop": { "const": true },
+        "validationReportHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "sourceHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "markdownPath": { "type": "string" },
+        "evidencePath": { "type": "string" }
       }
     },
     "nextActions": {

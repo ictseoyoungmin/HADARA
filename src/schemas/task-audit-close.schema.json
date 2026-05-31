@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.task.audit_close.v1",
+  "x-hadara-schema-id": "hadara.task.audit_close.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "taskId", "projectRoot", "summary", "currentValidationReportHash", "currentSourceHash", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.task.audit_close.v1" },
+    "command": { "const": "task.audit-close" },
+    "ok": { "type": "boolean" },
+    "taskId": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["closeEvidenceRecords", "blockers", "warnings"],
+      "properties": {
+        "closeEvidenceRecords": { "type": "number" },
+        "blockers": { "type": "number" },
+        "warnings": { "type": "number" }
+      }
+    },
+    "currentValidationReportHash": { "type": "string" },
+    "currentSourceHash": { "type": "string" },
+    "latestCloseEvidence": { "type": "object", "additionalProperties": true },
+    "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+  }
+}

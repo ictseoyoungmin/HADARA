@@ -74,7 +74,8 @@ This repository is a bootstrap skeleton. Development should follow the HADARA pr
 - Latest completed task: T-0167 Task Close Execute MVP enabled `hadara task close --task <id> --execute --json` to append canonical close evidence only after done validation, evidence lint, and task protocol doctor blockers pass.
 - Latest completed task: T-0168 Task Ready Preflight added read-only `hadara task ready --task <id> --level done --json` reports with friendly blocker summaries, check booleans, and nextActions before close.
 - Latest completed task: T-0169 Evidence Command UX added `hadara evidence add-command --task <id> --summary <text> --result <result> --json` as a canonical command-log evidence writer without shell execution or stdout/stderr capture.
-- Active / next task: operator-selected next work; close-model follow-ups T-0165 through T-0169 are complete.
+- Latest completed task: T-0170 Close UX Polish and Audit Semantics clarified task close report/source hash semantics, improved execute-mode nextActions, added append result paths, and added read-only `hadara task audit-close --task <id> --json`.
+- Active / next task: operator-selected next work; close-model follow-ups T-0165 through T-0170 are complete.
 - Planned close-model follow-ups are tracked as T-0166 through T-0169: task close plan report, close execute MVP with close evidence append only, task ready preflight, and command-log evidence writer UX.
 - Harness validation supports `--level draft|done`; done-level validation requires Done status, completed acceptance, evidence records, and updated handoff sections.
 - Done-level harness validation now also checks `docs/TASK_BOARD.md` for exactly one row for the validated task, `Done` status, and the expected Task Capsule path, catching duplicate or stale append/update results before completion.

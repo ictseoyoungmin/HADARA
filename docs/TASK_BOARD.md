@@ -170,3 +170,4 @@
 | T-0167 | Task Close Execute MVP | Done | tasks/T-0167-task-close-execute-mvp | Enables `task close --execute` to append canonical close evidence only after blockers pass. |
 | T-0168 | Task Ready Preflight | Done | tasks/T-0168-task-ready-preflight | Adds read-only `task ready --level done` preflight with friendly blockers, check booleans, and nextActions. |
 | T-0169 | Evidence Command UX | Done | tasks/T-0169-evidence-command-ux | Adds `evidence add-command` canonical command-log evidence writer without shell execution. |
+| T-0170 | Close UX Polish and Audit Semantics | Done | tasks/T-0170-close-ux-polish-and-audit-semantics | Adds close report/source hash split, execute nextActions polish, append result paths, and read-only `task audit-close`. |

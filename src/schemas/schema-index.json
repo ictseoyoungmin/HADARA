@@ -79,6 +79,13 @@
       "notes": "Documents task close plan and execute reports with close-evidence loop-boundary metadata."
     },
     {
+      "id": "hadara.task.audit_close.v1",
+      "path": "src/schemas/task-audit-close.schema.json",
+      "status": "fixture",
+      "owner": "task/close",
+      "notes": "Documents read-only audit reports for previously appended task close evidence."
+    },
+    {
       "id": "hadara.task.ready.v1",
       "path": "src/schemas/task-ready.schema.json",
       "status": "fixture",
