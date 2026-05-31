@@ -48,6 +48,28 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
     return true;
   }
 
+  if (sub === 'add-command') {
+    const taskId = getRequiredStringOption(input.args, '--task');
+    const summary = getStringOption(input.args, '--summary') ?? 'Command completed.';
+    const result = parseEvidenceResult(getStringOption(input.args, '--result', 'unknown') ?? 'unknown');
+    const visibility = parseEvidenceVisibility(getStringOption(input.args, '--visibility', 'public') ?? 'public', getFlag(input.args, '--private'));
+    if (input.jsonOutput) {
+      const report = createEvidenceCollectReport(input.projectRoot, {
+        taskId,
+        kind: 'command-log',
+        summary,
+        result,
+        visibility
+      });
+      console.log(JSON.stringify({ ...report, command: 'evidence.add-command' }, null, 2));
+      if (!report.ok) process.exitCode = 6;
+    } else {
+      const filePath = appendEvidence(input.projectRoot, { taskId, kind: 'command-log', summary, result, visibility });
+      console.log(`[HADARA] Command evidence updated: ${filePath}`);
+    }
+    return true;
+  }
+
   if (sub !== 'collect') return false;
 
   const taskId = getRequiredStringOption(input.args, '--task');

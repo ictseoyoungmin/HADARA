@@ -5,20 +5,20 @@
 | Field | Value |
 |---|---|
 | Task | T-0169 |
-| Status | Draft |
-| Last Updated | TBD |
+| Status | Done |
+| Last Updated | 2026-05-31T06:41:02.229Z |
 
 ## Last Completed
 
 | Item | Evidence |
 |---|---|
-| TBD | TBD |
+| Evidence add-command implemented. | Canonical command-log writer without shell execution. |
 
 ## Next Recommended Step
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| TBD | TBD | TBD |
+| Run final full validation and pick next operator-directed scope. | T-0165 through T-0169 close-model follow-ups are implemented. | docs/TASK_BOARD.md |
 
 ## Carry Forward Warnings
 

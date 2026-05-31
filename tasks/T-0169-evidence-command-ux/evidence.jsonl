@@ -1,0 +1,2 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-31T06:41:02.229Z","taskId":"T-0169","kind":"test-log","summary":"Focused Docker validation passed for evidence add-command, evidence lint, and task ready: 3 files / 19 tests.","result":"passed","visibility":"public"}
+{"schemaVersion":"hadara.evidence.v1","time":"2026-05-31T06:42:53.280Z","taskId":"T-0169","kind":"command-log","summary":"Built CLI evidence add-command smoke returned ok:true","result":"passed","visibility":"public"}

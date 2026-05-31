@@ -76,6 +76,43 @@ describe('CLI evidence JSON reports', () => {
     });
   });
 
+  it('adds command-log evidence through the command-result UX without executing a command', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Add command evidence');
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+
+    try {
+      expect(
+        handleEvidenceCommand({
+          args: ['evidence', 'add-command', '--task', task.id, '--summary', 'Done-level harness returned ok:true', '--result', 'passed', '--json'],
+          projectRoot: root,
+          jsonOutput: true
+        })
+      ).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    const report = JSON.parse(output.join('\n'));
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.evidence.collect.v1',
+      command: 'evidence.add-command',
+      ok: true,
+      evidence: {
+        taskId: task.id,
+        kind: 'command-log',
+        summary: 'Done-level harness returned ok:true',
+        result: 'passed',
+        visibility: 'public'
+      }
+    });
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('"kind":"command-log"');
+  });
+
   it('returns a stable collect envelope with the appended evidence index record', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Collect JSON evidence');

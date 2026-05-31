@@ -133,7 +133,7 @@ Then run built-CLI smokes through `node /workspace/dist/cli/main.js ... --projec
 1. Do not hand-edit Task Capsule `evidence.jsonl`.
 2. Append evidence through HADARA evidence commands or command-specific evidence attachment helpers so kind, result, visibility, artifact policy, and redaction checks run consistently.
 3. Treat close validation output as close audit evidence, not as a prerequisite for the same validation run.
-4. Use `command-log` for harness, doctor, build, test, and CLI smoke command results.
+4. Use `hadara evidence add-command --task <task-id> --summary <text> --result passed|failed|blocked|unknown --json` for harness, doctor, build, test, and CLI smoke command results when no artifact file is being attached.
 5. Use `hadara evidence lint --task <task-id> --json` or task-scoped protocol doctor before close when evidence drift is suspected.
 
 ## Session End

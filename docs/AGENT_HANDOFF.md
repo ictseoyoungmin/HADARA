@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Working tree contains completed T-0168 task ready changes. |
-| Current Phase | Close Validation / Evidence Fixed-Point Hardening | Phase 2 baseline and strict-plan follow-ups are complete; close-model follow-ups T-0165 through T-0169 are in progress. |
-| Latest Completed Task | T-0168 Task Ready Preflight | Added read-only task readiness reports with friendly blocker summaries, check booleans, and nextActions before close. |
-| Active / Next Task | T-0169 Evidence Command UX | Next planned slice adds command-log evidence writer ergonomics without shell execution. |
-| Validation Baseline | Focused Docker checks passed | Latest focused Docker vitest passed with 3 files and 6 tests for task ready, task close, and schema fixtures. |
+| Branch | main | Working tree contains completed T-0169 evidence command UX changes. |
+| Current Phase | Close Validation / Evidence Fixed-Point Hardening | Phase 2 baseline and strict-plan follow-ups are complete; close-model follow-ups T-0165 through T-0169 are complete. |
+| Latest Completed Task | T-0169 Evidence Command UX | Added canonical command-log evidence writer ergonomics without shell execution. |
+| Active / Next Task | Operator-selected next work | Close-model follow-ups T-0165 through T-0169 are complete. |
+| Validation Baseline | Full Docker check passed | Latest Docker temp-copy `npm run check` passed with 66 files and 481 tests; built CLI evidence add-command smoke and T-0169 done harness passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0166 Task Close Plan Report | Added `hadara task close --task <id> --json` dry-run reports with done validation, evidence lint, task doctor summary, loop-boundary close evidence plan, and nextActions. | T-0166 evidence: focused Docker checks passed with 3 files / 7 tests. |
 | T-0167 Task Close Execute MVP | Enabled `hadara task close --task <id> --execute --json` to append canonical close evidence only after blockers pass. | T-0167 evidence: focused Docker checks passed with 2 files / 4 tests; built CLI execute smoke appended command-log close evidence; done harness returned `ok:true`. |
 | T-0168 Task Ready Preflight | Added `hadara task ready --task <id> --level done --json` read-only readiness reports before close. | T-0168 evidence: focused Docker checks passed with 3 files / 6 tests; built CLI ready smoke and done harness returned `ok:true`. |
+| T-0169 Evidence Command UX | Added `hadara evidence add-command --task <id> --summary <text> --result <result> --json` as a command-log evidence writer without shell execution. | T-0169 evidence: focused Docker checks passed with 3 files / 19 tests; full Docker check passed with 66 files / 481 tests; built CLI smoke and done harness passed. |
 
 ## Current Known Problems
 
@@ -35,16 +35,16 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Implement T-0169 Evidence Command UX. | Close/ready surfaces exist; agents still need a canonical command-log evidence writer that does not execute shell commands. | Read `docs/V1_0_IMPLEMENTATION_SCHEMAS.md` close redesign section and T-0169 capsule. |
+| Choose next operator-directed scope. | Close-model follow-ups T-0165 through T-0169 are complete and validated. | Start from `docs/TASK_BOARD.md`, `docs/ROADMAP.md`, and current product priorities. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Focused task ready/close/schema checks | Docker `npx vitest run tests/unit/task-ready.test.ts tests/unit/task-close.test.ts tests/unit/schema-fixtures.test.ts` passed with 3 files and 6 tests. | Covers ready report, blocked report, close report behavior, and schema registry. |
-| Built CLI smoke | Docker built CLI `task ready --task T-0168 --level done --json --project /workspace` returned `ok:true` and `ready:true`. | `/workspace/dist` was refreshed after build. |
-| Full repository check | Last full Docker `npm run check` passed with 63 files and 472 tests before T-0165; rerun before closing the whole T-0165 through T-0169 sequence. | Host dependencies are unavailable; use Docker. |
-| Done-level harness | Docker built CLI `harness validate --task T-0168 --level done --json --project /workspace` returned `ok:true`. | No issues. |
+| Focused evidence UX/lint/ready checks | Docker `npx vitest run tests/unit/evidence-json.test.ts tests/unit/evidence-lint.test.ts tests/unit/task-ready.test.ts` passed with 3 files and 19 tests. | Covers add-command command-log writer, evidence lint, and ready reports. |
+| Built CLI smoke | Docker built CLI `evidence add-command --task T-0169 --summary ... --result passed --json --project /workspace` returned `ok:true` and appended `command-log` evidence. | `/workspace/dist` was refreshed after build. |
+| Full repository check | Docker temp-copy `npm run check` passed with 66 files and 481 tests. | Host dependencies are unavailable; Docker was used. |
+| Done-level harness | Docker built CLI `harness validate --task T-0169 --level done --json --project /workspace` returned `ok:true`. | No issues. |
 
 ## Historical Index
 
