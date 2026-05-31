@@ -49,6 +49,8 @@ Agents should treat `issues` as the primary machine-readable failure detail when
 
 `hadara task status --task <id> --json` returns `hadara.task.workbench.v1`. It is the Phase 3 read-only task operator console projection and aggregates task identity, Task Board status, evidence list/lint summary, task close dry-run readiness, task protocol doctor summary, docs/profile protocol summaries, close state, and next actions. It must not append evidence, mutate Task Capsule files, update project docs, run shell commands, call providers, or rerun done-level harness validation separately from the close dry-run source.
 
+`hadara evidence from-command` is intentionally not implemented. The design boundary lives in `docs/EVIDENCE_FROM_COMMAND_DESIGN.md`; until a future capsule implements it, shell-executing evidence capture must not be inferred from `evidence add-command`.
+
 `hadara run-state resume --json` returns read-only resume guidance. It does not update active-run state, execute commands, call providers, or resume an agent process.
 
 ## Early Failure Fallback

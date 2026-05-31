@@ -15,6 +15,7 @@ Assisted mode.
 - Binary evidence and secret-bearing evidence must stay private until a dedicated sanitized artifact policy exists.
 - Private evidence source artifacts are copied into the private portable store only when the source resolves inside the project boundary by default.
 - External absolute private evidence paths may be recorded only as sanitized committed evidence metadata unless a future explicit override policy is added.
+- Shell-executing evidence capture is not implemented. Future `evidence from-command` work must follow `docs/EVIDENCE_FROM_COMMAND_DESIGN.md`, require explicit execution mode, run policy preflight, bound raw logs, and keep raw/private output out of committed evidence by default.
 
 ## Blocked by Default
 

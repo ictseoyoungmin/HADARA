@@ -176,3 +176,4 @@
 | T-0173 | Workbench Schema Contract | Done | tasks/T-0173-workbench-schema-contract | Registers fixture-level `hadara.task.workbench.v1` schema and validation coverage. |
 | T-0174 | Worker-Friendly Text Output | Done | tasks/T-0174-worker-friendly-text-output | Adds grouped non-JSON task status and audit-close output. |
 | T-0175 | Dashboard TUI MCP Read Projection Prep | Done | tasks/T-0175-dashboard-tui-mcp-read-projection-prep | Adds workbench read-model consumer contract and future dashboard/MCP guidance. |
+| T-0176 | Evidence From Command Design | Done | tasks/T-0176-evidence-from-command-design | Adds design-only safety boundary for future shell-executing evidence capture. |
