@@ -7,7 +7,7 @@
 | Branch | main | T-0185 completed; commit with the task id prefix before moving on. |
 | Current Phase | Phase 3.5 / Operator Workflow Hardening complete | Runtime origin diagnostics, Docker sync-build scripting, bounded finish/status sync, task next recommendations, schema stability classification, focused test UX, finish write hardening, and command semantics audit are complete. |
 | Latest Completed Task | T-0185 Task Workflow Command Semantics Audit | Added the canonical workflow command semantics doc and aligned README/AGENTS/SOP/CLI JSON contract guidance. |
-| Active / Next Task | Phase 4 Read Surface Integration / Operator UI planning | Start UI/read-surface work after reviewing current roadmap and contracts. |
+| Active / Next Task | Phase 4 Evidence Proof Semantics Foundation / Read Surface Integration planning | Start with evidence proof semantics before Dashboard/TUI binding: v1 normalizer, semantic classifier/analyzer, lint/protocol/harness integration, and release proof predicate stub. |
 | Validation Baseline | Docker sync-build, focused docs regression, done harness, and close audit passed | `npm run dev:docker-sync-build` passed with 75 files / 521 tests; focused task workflow docs regression passed with 1 file / 3 tests; latest T-0185 done harness and audit-close returned `ok:true`. |
 
 ## Last 3 Completed Tasks
@@ -29,6 +29,7 @@
 | All-scope protocol doctor is broad but not a deep done-level check for every historical capsule. | It keeps default protocol doctor responsive by aggregating docs, profile, and active-task detail; docs-scope still checks Task Board/capsule drift across all tasks. | Use task-scoped doctor or harness validation for deep capsule checks. |
 | Docs-scope protocol doctor reports historical T-0073 Task Board drift and legacy Decisions structure as warnings. | `hadara protocol doctor --scope docs --json` remains `ok: true`; warning-only reports exit 0. | Use `protocol remediate` only when an operator explicitly accepts an allowlisted bounded fix; broad cleanup remains future scope. |
 | Evidence from-command remains unimplemented. | T-0176 documents the future design boundary only; current command-log evidence remains non-executing. | Use `evidence add-command` until a future implementation capsule exists. |
+| Evidence v2 writer and migration remain deferred. | Phase 4 should first add compatibility-first semantic read models over existing `hadara.evidence.v1`; writer changes, `EVIDENCE.md` rewrites, init changes, mass migration, and strict release-gate enforcement are separate follow-ups. | Begin with the Evidence Proof Semantics Foundation slice and keep the first implementation read/validation-oriented. |
 | Close validation evidence can create a fixed-point loop if modeled as a same-run precondition. | Recording validation evidence mutates evidence files after validation. | Use the documented three-layer model: validation proves readiness, close records the proof, audit checks the close record. T-0170 adds source/report hash split and read-only audit for this model. |
 | `task finish` intentionally leaves broad prose docs advisory-only. | Operators still need to update Development Slices, Project State, Agent Handoff, and evidence/close records manually. | Use the finish report advisories; future finish expansion should remain dry-run-first, bounded, and hash-guarded. |
 
@@ -36,7 +37,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Begin Phase 4 Read Surface Integration / Operator UI planning. | Phase 3.5 operator workflow hardening sequence T-0178 through T-0185 is complete. | Start from `docs/ROADMAP.md`, `docs/DEVELOPMENT_SLICES.md`, `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md`, `docs/DASHBOARD_READ_MODEL_CONTRACT.md`, and `docs/TASK_WORKFLOW_COMMANDS.md`. |
+| Begin Phase 4 Evidence Proof Semantics Foundation. | Phase 3.5 operator workflow hardening sequence T-0178 through T-0185 is complete, and Dashboard/TUI selected-task proof views should not interpret raw evidence independently. | Start from `docs/ROADMAP.md`, `docs/DEVELOPMENT_SLICES.md`, `docs/TEST_STRATEGY.md`, `docs/SCHEMAS.md`, `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md`, and `docs/DASHBOARD_READ_MODEL_CONTRACT.md`. |
 
 ## Validation Baseline
 

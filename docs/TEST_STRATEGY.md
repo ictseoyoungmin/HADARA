@@ -433,6 +433,41 @@ committed evidence files
 - Host validation is not the source of truth until the Node/npm environment is fixed and recorded in `docs/AGENT_HANDOFF.md`.
 - Do not commit `node_modules`, machine-local logs, secrets, or private state produced during validation.
 
+## Evidence Proof Semantics Validation
+
+Phase 4 evidence work should validate proof meaning without changing persisted evidence writes in the first slice.
+
+Focused semantic checks should cover:
+
+```bash
+npm run test:focused -- tests/unit/evidence-normalizer.test.ts
+npm run test:focused -- tests/unit/evidence-semantics.test.ts
+npm run test:focused -- tests/unit/evidence-lint.test.ts
+npm run test:focused -- tests/unit/protocol-consistency.test.ts
+npm run test:focused -- tests/harness/harness-validate.test.ts
+```
+
+Required scenarios:
+
+| Scenario | Expected Result |
+|---|---|
+| Done task with only note/weak evidence | Semantic error. |
+| Done task with unresolved failed evidence | Semantic error. |
+| Failed evidence followed only by free-text `resolved`/`fixed` wording | Still unresolved; require exact `supersedes:<id>` / `resolves:<id>` marker, later passed same-category evidence, or explicit residual-risk documentation. |
+| Done task with unexplained blocked evidence | Semantic error. |
+| Done task with substantive passed validation or implementation evidence | No semantic blocker. |
+| Done task with private-only substantive evidence | Warning for normal tasks, not first-rollout harness failure. |
+| Ambiguous passed command-log | Not over-classified as validation proof. |
+| Release proof candidate with arbitrary passed command-log | Predicate rejects it. |
+
+Full validation remains:
+
+```bash
+npm run dev:docker-sync-build
+```
+
+The first evidence semantics slice must not convert writers to `hadara.evidence.v2`, rewrite `EVIDENCE.md`, mass-migrate `evidence.jsonl`, change `hadara init`, execute release/package behavior, or add MCP writes.
+
 ## Harness-First Rule
 
 Real provider integration must not be implemented until MockProvider, ScriptedProvider, policy preflight, fake tool harnesses, Task Capsule validation, and evidence recording workflows are stable.

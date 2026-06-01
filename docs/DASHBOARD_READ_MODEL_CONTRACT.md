@@ -104,3 +104,5 @@ GET /api/debt
 These routes must not execute shell commands, call providers, mutate tasks, perform MCP writes, or persist browser state.
 
 A future selected-task route may expose `hadara.task.workbench.v1`, but it must remain read-only and should reuse `createTaskWorkbenchReport` rather than building a dashboard-only task parser.
+
+Future Dashboard evidence panels should consume shared evidence semantic read models rather than interpreting raw evidence records in browser code. The intended Phase 4 sequence is: keep `hadara.evidence.v1` persisted records valid, add normalized proof semantics in shared services, expose semantic summary/issues through existing read surfaces, and only then bind Dashboard selected-task proof badges or evidence timeline tone. Evidence v2 writer and migration work must remain a separate follow-up from Dashboard rendering.

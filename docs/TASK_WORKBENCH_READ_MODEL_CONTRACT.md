@@ -39,6 +39,8 @@ Task Board consumers should use `task.taskBoardPresent` before displaying `task.
 
 Close-state consumers should prefer `state.closedValid` over the legacy `state.closed` alias. `state.closeEvidenceFound` means a close evidence-like record exists; `state.closedValid` means a passed canonical close evidence record exists. `state.closeState` may be `not-closed`, `closed-valid`, `close-evidence-found-invalid`, or `close-evidence-malformed`.
 
+Future Phase 4 evidence semantics should appear in the workbench only through shared evidence semantic services. Workbench consumers should not infer proof strength by parsing `evidence.jsonl` directly. Expected future signals include a selected-task evidence semantic summary, semantic issue list, and a compact proof status such as `sufficient`, `weak`, `failed`, `blocked`, `private-only`, or `unknown`.
+
 ## Boundaries
 
 | Boundary | Requirement |
@@ -55,3 +57,4 @@ Close-state consumers should prefer `state.closedValid` over the legacy `state.c
 | Dashboard live selected-task panel | Deferred | Must remain read-only and use the workbench report or service. |
 | TUI selected-task summary | Deferred | Must remain read-only and avoid shell/provider/MCP calls. |
 | MCP `hadara.task.workbench` | Deferred | Read-only only; no evidence attach or remediation execution. |
+| Evidence semantic proof status | Deferred | Must be produced by shared evidence semantics, remain additive, and avoid evidence writer or migration behavior. |

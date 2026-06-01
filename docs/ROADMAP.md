@@ -50,6 +50,8 @@ Phase 3 Task Operator Console work is complete through T-0177. The phase built a
 
 Before Phase 4 read-surface/operator UI work, Phase 3.5 focuses on operator workflow hardening: runtime CLI origin diagnostics, Docker sync-build scripting, bounded task finish/status sync, task next recommendations, schema stability classification, and focused test command UX. These capsules reduce execution-environment confusion and repetitive completion bookkeeping before Dashboard/TUI/MCP selected-task surfaces consume the workbench projection more heavily.
 
+Phase 4 should begin with evidence proof semantics, not Dashboard rendering or an evidence writer migration. The first Phase 4 evidence slice should keep `hadara.evidence.v1` persisted records valid, add a normalized semantic read model, classify evidence strength, summarize proof meaning, and reuse one analyzer across evidence lint, task protocol doctor, done-level harness validation, and future Dashboard/TUI selected-task views. Evidence v2 writer work, `EVIDENCE.md` frame migration, init scaffold changes, mass evidence migration, MCP write expansion, and strict release-gate enforcement are separate follow-up slices. A workspace-local ignored supporting spec may exist at `docs/specs/evidence/EVIDENCE_PHASE4_REFACTOR_PLAN.md`; this committed roadmap records the GitHub-visible boundary.
+
 ## v0.4 Single-Agent Run State
 
 Track the active task/run explicitly so agents do not infer current work only from the last visible capsule or compact handoff.

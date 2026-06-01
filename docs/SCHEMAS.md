@@ -214,6 +214,21 @@ Current status of `hadara.tui.cache.v1`:
 
 Any future promotion of `hadara.tui.cache.v1` to a registered fixture-level schema or release-gated schema requires a separate strictness decision.
 
+## Evidence Semantics Schema Posture
+
+Phase 4 evidence proof semantics should start as additive read-model/schema work over existing `hadara.evidence.v1` records. A future `hadara.evidence.normalized.v1` shape may be introduced as an internal or fixture-level read model for semantic analysis, but it must not imply persisted writer migration by itself.
+
+Expected first-slice schema posture:
+
+| Surface | Posture |
+|---|---|
+| `hadara.evidence.v1` | Remains the persisted evidence index format. |
+| `hadara.evidence.lint.v1` | Remains the lint report id; semantic summary/issues are additive if implemented. |
+| `hadara.evidence.normalized.v1` | Planned read model, not a persisted writer format. |
+| `hadara.evidence.v2` | Deferred writer/migration design; requires a separate schema id and task. |
+
+Evidence semantic schemas must not introduce init scaffold changes, evidence JSONL rewrites, public binary artifact policy, MCP writes, release/package execution, or strict release-gate enforcement in the same slice.
+
 ## Non-Goals
 
 - No schema-based release gate is active yet.
