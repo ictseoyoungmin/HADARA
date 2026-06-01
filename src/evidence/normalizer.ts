@@ -111,15 +111,25 @@ export function normalizeEvidenceRecordsWithSourceLines(
   entries: EvidenceIndexRecordWithSourceLine[],
   context: { taskDir?: string } = {}
 ): NormalizedEvidenceRecord[] {
-  return entries.map((entry) => normalizeEvidenceRecord(entry.record, { taskDir: context.taskDir, lineNumber: entry.lineNumber }));
+  return entries.map((entry) =>
+    normalizeEvidenceRecord(entry.record, {
+      taskDir: context.taskDir,
+      lineNumber: entry.lineNumber
+    })
+  );
 }
 
 /**
- * Use only for tests, synthetic records, or records that do not come from a JSONL file.
- * This does not preserve source-line identity from an evidence.jsonl file.
+ * Use only for tests, synthetic records, or records that do not come from JSONL.
+ * This does not preserve actual source-line identity.
  */
 export function normalizeEvidenceRecordsInMemoryOrder(records: EvidenceIndexRecord[], context: { taskDir?: string } = {}): NormalizedEvidenceRecord[] {
-  return records.map((record, index) => normalizeEvidenceRecord(record, { taskDir: context.taskDir, lineNumber: index + 1 }));
+  return records.map((record, index) =>
+    normalizeEvidenceRecord(record, {
+      taskDir: context.taskDir,
+      lineNumber: index + 1
+    })
+  );
 }
 
 /** @deprecated Use normalizeEvidenceRecordsWithSourceLines for JSONL records. */
