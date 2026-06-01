@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.dashboard.timeline.v1",
+  "x-hadara-schema-id": "hadara.dashboard.timeline.v1",
+  "type": "object",
+  "required": ["schemaVersion", "command", "ok", "generatedAt", "source", "events", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.dashboard.timeline.v1" },
+    "command": { "const": "dashboard.timeline" },
+    "ok": { "type": "boolean" },
+    "taskId": { "type": "string" },
+    "generatedAt": { "type": "string" },
+    "source": {
+      "type": "object",
+      "required": ["projectRoot", "live"],
+      "properties": {
+        "projectRoot": { "type": "string" },
+        "live": { "type": "boolean" }
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "order", "kind", "title", "summary", "severity", "readOnly"],
+        "properties": {
+          "id": { "type": "string" },
+          "order": { "type": "number" },
+          "time": { "type": "string" },
+          "kind": {
+            "enum": ["task", "evidence", "protocol", "harness", "handoff", "active-run", "debt", "release", "system"]
+          },
+          "title": { "type": "string" },
+          "summary": { "type": "string" },
+          "severity": { "enum": ["ok", "warning", "error", "info"] },
+          "taskId": { "type": "string" },
+          "evidenceId": { "type": "string" },
+          "sourcePath": { "type": "string" },
+          "command": { "type": "string" },
+          "readOnly": { "const": true }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "enum": ["warning", "error"] },
+          "code": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      }
+    }
+  }
+}

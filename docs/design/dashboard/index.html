@@ -1160,6 +1160,28 @@
       });
     }
 
+    function renderTimelineReport(report) {
+      const root = document.getElementById('evidence-timeline');
+      clear(root);
+      const events = Array.isArray(report?.events) ? report.events : [];
+      if (events.length === 0) {
+        appendEmpty(root, 'No timeline events available');
+        return;
+      }
+      events.slice(0, 12).forEach((event) => {
+        const row = el('div', 'timeline-row');
+        row.append(el('div', 'timeline-title', text(event.title, 'Timeline event')));
+        row.append(el('div', 'timeline-meta', `${text(event.kind, 'system')} · ${text(event.severity, 'info')} · ${text(event.summary, '')}`));
+        root.append(row);
+      });
+    }
+
+    async function loadTimeline(taskId) {
+      const suffix = taskId ? `?taskId=${encodeURIComponent(taskId)}` : '';
+      const report = await readJson(`/api/timeline${suffix}`);
+      renderTimelineReport(report);
+    }
+
     function renderMcpGuard(status) {
       const attach = status.mcp?.evidenceAttach ?? {};
       const values = [
@@ -1278,6 +1300,7 @@
           readJson(`/api/evidence?taskId=${encodeURIComponent(taskId)}`)
         ]);
         renderEvidenceLens(taskId, workbench, lintReport, evidenceReport);
+        loadTimeline(taskId).catch(() => {});
       } catch (error) {
         document.getElementById('proof-status').textContent = 'unknown';
         document.getElementById('proof-note').textContent = safeError(error);
@@ -1351,6 +1374,7 @@
       }
       renderHandoff(status);
       renderTimeline(status);
+      loadTimeline(selectedTaskId).catch(() => renderTimeline(status));
       renderMcpGuard(status);
       renderRawCounts(status.tasks?.rawStatusCounts);
     }

@@ -2,6 +2,13 @@
   "schemaVersion": "hadara.schema.index.v1",
   "schemas": [
     {
+      "id": "hadara.dashboard.timeline.v1",
+      "path": "src/schemas/dashboard-timeline.schema.json",
+      "status": "fixture",
+      "owner": "services/dashboard-timeline",
+      "notes": "Documents read-only dashboard timeline reports for deterministic operator-console workstream rendering."
+    },
+    {
       "id": "hadara.evidence.list.v1",
       "path": "src/schemas/evidence-list.schema.json",
       "status": "fixture",

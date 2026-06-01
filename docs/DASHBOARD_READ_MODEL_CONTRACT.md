@@ -102,6 +102,8 @@ GET /api/evidence?taskId=T-00NN
 GET /api/evidence-lint?taskId=T-00NN
 GET /api/active-run
 GET /api/debt
+GET /api/timeline
+GET /api/timeline?taskId=T-00NN
 ```
 
 These routes must not execute shell commands, call providers, mutate tasks, perform MCP writes, or persist browser state.
@@ -110,7 +112,6 @@ Phase 5 may add these read-only routes:
 
 ```text
 GET /api/task-workbench?taskId=T-00NN
-GET /api/timeline?taskId=T-00NN
 GET /api/release-gate?mode=<mode>
 ```
 
@@ -170,6 +171,17 @@ Phase 5 should proceed in read-model-first slices:
 | T-0196 Dashboard Timeline Read Model | Add a deterministic read model for selected-task timeline/history. | No SSE, polling, live stream, or mutation behavior. |
 
 Polling refresh, SSE timelines, telemetry/OTel trace bridges, multi-agent lanes, provider execution, remediation actions, and dashboard-triggered task mutation are deferred beyond the Phase 5 core sequence.
+
+## Dashboard Timeline
+
+`hadara.dashboard.timeline.v1` is the deterministic read model for the dashboard Workstream panel:
+
+```text
+GET /api/timeline
+GET /api/timeline?taskId=<task-id>
+```
+
+Timeline reports are generated from existing read models and are not persisted. Every event must carry `readOnly: true`, deterministic `order`, safe title/summary metadata, and no private raw paths. T-0196 timeline support is not polling, SSE, websocket, telemetry bridge, or live trace streaming.
 
 ## Selected-Task Evidence Semantics
 

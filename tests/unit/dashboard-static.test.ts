@@ -148,6 +148,7 @@ describe('static dashboard reference', () => {
     expect(html).toContain('/api/task-workbench?taskId=');
     expect(html).toContain('/api/evidence-lint?taskId=');
     expect(html).toContain('/api/evidence?taskId=');
+    expect(html).toContain('/api/timeline');
     expect(html).toContain('proofStatusFrom');
     expect(html).toContain('TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE');
     expect(html).toContain('Auditability warning, not a Done blocker.');
@@ -216,6 +217,7 @@ describe('static dashboard reference', () => {
     const evidence = createDashboardServerResponse(process.cwd(), '/api/evidence?taskId=T-0097');
     const workbench = createDashboardServerResponse(process.cwd(), '/api/task-workbench?taskId=T-0194');
     const evidenceLint = createDashboardServerResponse(process.cwd(), '/api/evidence-lint?taskId=T-0194');
+    const timeline = createDashboardServerResponse(process.cwd(), '/api/timeline?taskId=T-0195');
     const activeRun = createDashboardServerResponse(process.cwd(), '/api/active-run');
     const debt = createDashboardServerResponse(process.cwd(), '/api/debt');
 
@@ -248,6 +250,12 @@ describe('static dashboard reference', () => {
       command: 'evidence.lint',
       taskId: 'T-0194',
       summary: expect.objectContaining({ semantics: expect.any(Object) })
+    });
+    expect(JSON.parse(timeline.body)).toMatchObject({
+      schemaVersion: 'hadara.dashboard.timeline.v1',
+      command: 'dashboard.timeline',
+      taskId: 'T-0195',
+      events: expect.arrayContaining([expect.objectContaining({ readOnly: true })])
     });
     expect(JSON.parse(activeRun.body)).toMatchObject({
       schemaVersion: 'hadara.active_run.projection.v1',

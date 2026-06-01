@@ -12,9 +12,9 @@ HADARA - Portable Agentic Development Workbench
 
 ## Current Phase
 
-Phase 5 Dashboard / Operator Console is in progress.
+Phase 5 Dashboard / Operator Console is complete through T-0196.
 
-The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer, close/evidence hardening through T-0170, Phase 3 task operator console through T-0177, Phase 3.5 operator workflow hardening through T-0185, and Phase 4 evidence semantics/hardening through T-0192 are complete. Phase 5 has started with dashboard live read binding in T-0193.
+The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer, close/evidence hardening through T-0170, Phase 3 task operator console through T-0177, Phase 3.5 operator workflow hardening through T-0185, Phase 4 evidence semantics/hardening through T-0192, and Phase 5 dashboard/operator console work through T-0196 are complete.
 
 ## Current Status
 
@@ -60,6 +60,7 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Dashboard live read binding exists: the served dashboard now tries `/api/status` first, falls back to the static fixture, then falls back to inline JSON; it displays source provenance and loaded timestamps, and `Refresh Status` performs read-only refetch only.
 - Dashboard operator-console layout exists: the served dashboard now renders top source/health controls, an Agent Lane, Workstream panel, deferred Evidence Lens placeholder, and Bottom Inspector while preserving read-only labels and live/fallback binding.
 - Dashboard selected-task evidence lens exists: task selection reads shared task workbench, evidence lint, and evidence list reports through read-only dashboard APIs; proof status derives from semantic issue codes and summary counts, private-only is an auditability warning, and generated legacy ids are labeled as non-durable compatibility identity.
+- Dashboard timeline read model exists: `hadara.dashboard.timeline.v1` generates deterministic read-only Workstream events from existing read models and `/api/timeline` serves them without polling, streaming, persistence, or private raw paths.
 - Private evidence manifests exist for readable project-boundary private evidence source artifacts: raw private bytes are copied only to the ignored private portable store, `hadara.privateEvidence.v1` manifests record SHA-256 hashes, byte counts, retention, and deferred encryption metadata, and manifest writes are privately audited. External absolute private source paths are not copied into the private portable store by default. Committed Task Capsule files and context export exclude private raw content, source paths, and private store paths.
 - Context export read model exists as `hadara.context.export.v1`; read-only MCP `hadara.context.export` returns an in-memory payload with `contextPath: null` and does not write `.hadara/context/HADARA_CONTEXT.md`, while CLI `hadara hermes export-context` remains the file-writing path. Context export includes `docs/IMPLEMENTATION_SOP.md` as the authoritative workflow source, and `summaryOnly` currently returns a warning instead of silently pretending to summarize.
 - Tools list read model exists as `hadara.tools.list.v1`; `hadara tools list --json` and read-only MCP `hadara.tools.list` report the current CLI help surface, read-only MCP tools, opt-in evidence attach status, `availability`/`risk` metadata, and disabled shell/provider/release/broad-write MCP surfaces from a neutral capability registry.
@@ -110,6 +111,7 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Latest completed task: T-0193 Dashboard Live Read Binding made the served dashboard live-read-first over `/api/status`, preserved fixture/inline fallback, added source provenance UI, and kept refresh read-only.
 - Latest completed task: T-0194 Dashboard Operator Console Layout reworked the dashboard shell into Agent Lane, Workstream, Evidence Lens placeholder, and Bottom Inspector sections with read-only action language.
 - Latest completed task: T-0195 Dashboard Selected Task Evidence Lens added read-only dashboard workbench/evidence-lint routes and bound selected-task proof status to shared evidence semantics.
+- Latest completed task: T-0196 Dashboard Timeline Read Model added a schema-registered deterministic dashboard timeline report and `/api/timeline` route consumed by the Workstream panel.
 - Active / next task: post-hardening roadmap selection via `hadara task next --json`.
 - Phase 3 source plan: `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md`.
 - Task workbench status report exists as `hadara task status --task <id> --json`; centralized suggested-action generation and fixture-level schema registration are implemented. T-0177 hardened true Task Board status projection, optional nextAction normalization, and close evidence/valid-closure semantics.
@@ -231,7 +233,7 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.
 - Real provider adapters are not implemented; only schema-backed preparation contracts and safe report helpers exist.
-- Dashboard is locally servable through a static CLI helper with read-only local API routes, live-renders `/api/status` first with fixture and inline fallback provenance, uses a Phase 5 operator-console layout, and can show selected-task proof status from shared workbench/evidence semantic reports.
+- Dashboard is locally servable through a static CLI helper with read-only local API routes, live-renders `/api/status` first with fixture and inline fallback provenance, uses a Phase 5 operator-console layout, can show selected-task proof status from shared workbench/evidence semantic reports, and consumes a deterministic dashboard timeline read model.
 - Production TUI public CLI entry is implemented as a read-only local work console through `hadara tui` and `hadara tui --snapshot`; optional TUI cache persistence is local-only under `.hadara/local/tui/`; interactive production loading uses an asynchronous pulse while read models load; TUI task/evidence/handoff writes, shell execution, provider calls, MCP calls, dashboard/server behavior, and release/package behavior remain deferred.
 - Broad MCP write tools are not implemented beyond the explicitly enabled, approval-recorded, audited evidence attach tool.
 - Operational debt records remain static and non-persisted; debt mutation and executable release automation remain deferred.

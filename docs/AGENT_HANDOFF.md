@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0195 is closed-valid and ready to commit. |
-| Current Phase | Phase 5 Dashboard / Operator Console in progress | T-0193 live binding, T-0194 layout, and T-0195 selected-task evidence lens are complete; T-0196 timeline read model is next. |
-| Latest Completed Task | T-0195 Dashboard Selected Task Evidence Lens | Dashboard selected task proof now reads workbench/evidence semantic reports and derives proof status without raw evidence parsing. |
-| Active / Next Task | T-0196 Dashboard Timeline Read Model | After closing/committing T-0195, continue Phase 5 with deterministic timeline read model. |
-| Validation Baseline | Docker sync-build passed | `npm run dev:docker-sync-build` passed with 79 files / 551 tests and built CLI version smoke `ok:true`. |
+| Branch | main | T-0196 is closed-valid and committed; local branch is ahead of origin. |
+| Current Phase | Phase 5 Dashboard / Operator Console complete through T-0196 | Live binding, operator layout, selected-task evidence lens, and deterministic timeline read model are implemented. |
+| Latest Completed Task | T-0196 Dashboard Timeline Read Model | Dashboard Workstream now consumes `hadara.dashboard.timeline.v1` from `/api/timeline` without streaming or mutation. |
+| Active / Next Task | Post-Phase-5 follow-up selection | Use `task next` to choose the next planned slice after reviewing the completed Phase 5 dashboard work. |
+| Validation Baseline | Docker sync-build passed | `npm run dev:docker-sync-build` passed with 80 files / 552 tests and built CLI version smoke `ok:true`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0193 Dashboard Live Read Binding | Converted the served dashboard from fixture-first to live `/api/status` first with fixture/inline fallback, provenance badges, and read-only `Refresh Status`. | T-0193 evidence: focused dashboard test passed with 1 file / 12 tests; Docker sync-build passed with 79 files / 550 tests and built CLI smoke `ok:true`. |
 | T-0194 Dashboard Operator Console Layout | Reworked the served dashboard into a read-only operator-console shell with Agent Lane, Workstream, Evidence Lens placeholder, and Bottom Inspector. | T-0194 evidence: focused dashboard test passed with 1 file / 13 tests; Docker sync-build passed with 79 files / 551 tests and built CLI smoke `ok:true`. |
 | T-0195 Dashboard Selected Task Evidence Lens | Added read-only dashboard workbench/evidence-lint routes and selected-task proof status derived from shared evidence semantics. | T-0195 evidence: focused dashboard test passed with 1 file / 13 tests; Docker sync-build passed with 79 files / 551 tests and built CLI smoke `ok:true`. |
+| T-0196 Dashboard Timeline Read Model | Added schema-registered deterministic timeline read model, `/api/timeline`, and Workstream consumption. | T-0196 evidence: focused dashboard/timeline tests passed with 2 files / 14 tests; Docker sync-build passed with 80 files / 552 tests and built CLI smoke `ok:true`. |
 
 ## Current Known Problems
 
@@ -38,17 +38,17 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Finish/close T-0195 and continue with T-0196. | Phase 5 selected-task evidence lens is implemented and validated; the next planned slice is deterministic timeline read model. | Use the standard `task ready`, `task finish`, `task close`, and `task audit-close` loop for T-0195, then create/start T-0196. |
+| Select the next planned slice. | Phase 5 requested capsules are implemented, validated, closed, and committed through T-0196. | Run `hadara task next --json` and review the next planned capsule. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Full repository check | Docker `npm run dev:docker-sync-build` passed with 79 files and 551 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
-| Focused dashboard check | Docker temp-copy `npm run test:focused -- tests/unit/dashboard-static.test.ts` passed with 1 file and 13 tests. | Covers live-first fetch order, fallback provenance, operator layout landmarks, read-only wording, and existing route boundaries. |
+| Full repository check | Docker `npm run dev:docker-sync-build` passed with 80 files and 552 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
+| Focused dashboard/timeline check | Docker temp-copy `npm run test:focused -- tests/unit/dashboard-static.test.ts tests/unit/dashboard-timeline.test.ts` passed with 2 files and 14 tests. | Covers live binding, selected-task APIs, timeline schema/report, Workstream consumption, and route boundaries. |
 | Built CLI smoke | `npm run dev:docker-sync-build` refreshed `/workspace/dist` and ran `hadara version --verbose --json` with `ok:true`. | `distLooksStale:false`. |
-| Done-level readiness | Built CLI `task ready --task T-0195 --level done --json` returned `ok:true`. | No blockers or warnings. |
-| Close audit | Built CLI `task audit-close --task T-0195 --json` returned `ok:true`. | One close evidence record, zero blockers, zero warnings. |
+| Done-level readiness | Built CLI `task ready --task T-0196 --level done --json` returned `ok:true`. | No blockers or warnings. |
+| Close audit | Built CLI `task audit-close --task T-0196 --json` returned `ok:true`. | One close evidence record, zero blockers, zero warnings. |
 
 ## Historical Index
 
