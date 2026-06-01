@@ -225,9 +225,11 @@ Expected first-slice schema posture:
 | `hadara.evidence.v1` | Remains the persisted evidence index format. |
 | `hadara.evidence.lint.v1` | Remains the lint report id; semantic summary/issues are additive if implemented. |
 | `hadara.evidence.normalized.v1` | Planned read model, not a persisted writer format. |
-| `hadara.evidence.v2` | Deferred writer/migration design; requires a separate schema id and task. |
+| `hadara.evidence.v2` | Planned persisted writer format; see `docs/EVIDENCE_V2_WRITER_MIGRATION_PLAN.md` before implementation. |
 
 Evidence semantic schemas must not introduce init scaffold changes, evidence JSONL rewrites, public binary artifact policy, MCP writes, release/package execution, or strict release-gate enforcement in the same slice.
+
+Evidence v2 writer and migration work must be dry-run-first, dual-read compatible, and explicitly opt-in until a later implementation task proves safe writer behavior. The schema registry must not imply that existing v1 evidence has already been migrated.
 
 ## Non-Goals
 

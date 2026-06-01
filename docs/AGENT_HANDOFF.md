@@ -4,19 +4,18 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0189 implementation complete; commit with the task id prefix before moving on. |
-| Current Phase | Phase 4 Dashboard/TUI Evidence Semantic Contract complete | Selected-task Dashboard/TUI consumers now have a read-only semantic evidence contract and proof status derivation. |
-| Latest Completed Task | T-0189 Dashboard/TUI Evidence Semantic Contract | Updated Dashboard/workbench contracts and added a docs regression test for proof statuses, semantic issue codes, and no raw evidence parsing. |
-| Active / Next Task | T-0190 Evidence v2 Writer and Migration Plan | Design persisted evidence v2 taxonomy, writer behavior, Markdown frame strategy, dual-read compatibility, and dry-run-first migration. |
-| Validation Baseline | Focused evidence semantic contract docs test and Docker sync-build passed | Focused Docker docs regression passed with 1 file / 1 test; `npm run dev:docker-sync-build` passed with 78 files / 545 tests and built CLI version smoke `ok:true`. |
+| Branch | main | T-0190 implementation complete; commit with the task id prefix before moving on. |
+| Current Phase | Phase 4 Evidence v2 Writer and Migration Plan complete | Persisted v2 writer/migration behavior is documented as design-only, dry-run-first, and compatibility-first. |
+| Latest Completed Task | T-0190 Evidence v2 Writer and Migration Plan | Added the public v2 writer/migration plan, schema/test strategy alignment, and docs regression coverage. |
+| Active / Next Task | T-0191 Release Evidence Strict Gate | Apply release proof predicates to release readiness checks without publish/package execution or MCP release expansion. |
+| Validation Baseline | Focused evidence v2 plan docs test and Docker sync-build passed | Focused Docker docs regression passed with 1 file / 1 test; `npm run dev:docker-sync-build` passed with 79 files / 546 tests and built CLI version smoke `ok:true`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0187 Evidence Lint Semantic Integration | Added additive `summary.semantics` to evidence lint, mapped actionable semantic errors/warnings for Done tasks, and kept legacy v1 presence as summary counts rather than noisy lint issues. | T-0187 evidence: focused Docker tests passed with 5 files / 30 tests; Docker sync-build passed with 77 files / 541 tests and built CLI smoke `ok:true`. |
-| T-0188 Protocol and Harness Semantic Gates | Added done-level harness semantic gates via evidence lint and protocol doctor coverage for semantic evidence issues. | T-0188 evidence: focused Docker tests passed with 4 files / 55 tests; Docker sync-build passed with 77 files / 544 tests and built CLI smoke `ok:true`. |
 | T-0189 Dashboard/TUI Evidence Semantic Contract | Documented selected-task evidence semantic sources, proof status derivation, no raw evidence parsing, and read-only/additive UI boundaries. | T-0189 evidence: focused docs regression passed with 1 file / 1 test; Docker sync-build passed with 78 files / 545 tests and built CLI smoke `ok:true`. |
+| T-0190 Evidence v2 Writer and Migration Plan | Documented persisted v2 writer shape, opt-in writer transition, dry-run-first migration, hash guards, mixed-version tolerance, and explicit non-goals. | T-0190 evidence: focused docs regression passed with 1 file / 1 test; Docker sync-build passed with 79 files / 546 tests and built CLI smoke `ok:true`. |
 
 ## Current Known Problems
 
@@ -37,17 +36,17 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Begin T-0190 Evidence v2 Writer and Migration Plan. | Semantic read surfaces and consumer contracts are in place; the next slice should design writer/migration behavior without rewriting existing evidence automatically. | Start from `docs/SCHEMAS.md`, `docs/TEST_STRATEGY.md`, `docs/DASHBOARD_READ_MODEL_CONTRACT.md`, `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md`, and `docs/specs/evidence/EVIDENCE_PHASE4_REFACTOR_PLAN.md`. |
+| Begin T-0191 Release Evidence Strict Gate. | v2 writer/migration planning is documented; the final Phase 4 slice should apply tested release proof predicates to release readiness checks. | Start from `src/evidence/semantics.ts`, release gate/readiness code, `docs/TEST_STRATEGY.md`, and T-0190 handoff. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Focused evidence semantic contract docs test | Docker `npm run test:focused -- tests/unit/evidence-semantic-contract-docs.test.ts` passed with 1 file and 1 test. | Covers Dashboard/TUI proof status and no-raw-parsing contract text. |
-| Full repository check | Docker `npm run dev:docker-sync-build` passed with 78 files and 545 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
+| Focused evidence v2 plan docs test | Docker `npm run test:focused -- tests/unit/evidence-v2-plan-docs.test.ts` passed with 1 file and 1 test. | Covers v2 writer shape, dry-run migration, schema/test references, and non-goals. |
+| Full repository check | Docker `npm run dev:docker-sync-build` passed with 79 files and 546 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
 | Built CLI smoke | `npm run dev:docker-sync-build` refreshed `/workspace/dist` and ran `hadara version --verbose --json` with `ok:true`. | `distLooksStale:false`. |
-| Done-level readiness | Built CLI `task ready --task T-0189 --level done --json` returned `ok:true`. | No blockers or warnings. |
-| Close audit | Built CLI `task audit-close --task T-0189 --json` returned `ok:true`. | Close evidence present with zero blockers and zero warnings. |
+| Done-level readiness | Built CLI `task ready --task T-0190 --level done --json` returned `ok:true`. | No blockers or warnings. |
+| Close audit | Built CLI `task audit-close --task T-0190 --json` returned `ok:true`. | Close evidence present with zero blockers and zero warnings. |
 
 ## Historical Index
 

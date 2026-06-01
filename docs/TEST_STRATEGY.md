@@ -468,6 +468,8 @@ npm run dev:docker-sync-build
 
 The first evidence semantics slice must not convert writers to `hadara.evidence.v2`, rewrite `EVIDENCE.md`, mass-migrate `evidence.jsonl`, change `hadara init`, execute release/package behavior, or add MCP writes.
 
+Evidence v2 writer/migration work must begin as a design and dry-run-first migration plan. Required future validation includes dual-read v1/v2 normalization, no-write migration previews, hash-guarded execute behavior, private path non-leakage, and unchanged protocol/harness semantic behavior over mixed v1/v2 evidence.
+
 ## Harness-First Rule
 
 Real provider integration must not be implemented until MockProvider, ScriptedProvider, policy preflight, fake tool harnesses, Task Capsule validation, and evidence recording workflows are stable.

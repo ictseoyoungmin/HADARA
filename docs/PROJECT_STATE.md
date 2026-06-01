@@ -14,7 +14,7 @@ HADARA - Portable Agentic Development Workbench
 
 Phase 4 Evidence Proof Semantics Foundation complete.
 
-The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer, close/evidence hardening through T-0170, Phase 3 task operator console through T-0177, Phase 3.5 operator workflow hardening through T-0185, and Phase 4 evidence semantics through T-0189 are complete. The next major work is Phase 4 evidence v2 writer and migration planning.
+The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer, close/evidence hardening through T-0170, Phase 3 task operator console through T-0177, Phase 3.5 operator workflow hardening through T-0185, and Phase 4 evidence semantics through T-0190 are complete. The next major work is Phase 4 release evidence strict gate enforcement.
 
 ## Current Status
 
@@ -54,6 +54,7 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Evidence lint semantic integration exists: `hadara evidence lint --task <id> --json` keeps `hadara.evidence.lint.v1`, adds `summary.semantics`, maps actionable semantic Done-task errors/warnings from the shared analyzer, keeps legacy v1 compatibility information in summary counts instead of noisy lint issues, and preserves existing JSONL/Markdown drift checks.
 - Protocol and harness semantic gates exist: task-scoped protocol doctor surfaces semantic evidence issues through the evidence area, and done-level harness validation blocks weak/unresolved failed/unexplained blocked Done evidence while keeping private-only substantive evidence as a warning for first rollout.
 - Dashboard/TUI evidence semantic contract exists: selected-task Dashboard and TUI consumers must use shared semantic read surfaces, derive proof statuses from semantic summary/issues, avoid raw `evidence.jsonl`/`EVIDENCE.md` parsing for proof strength, and keep UI/API work read-only and additive.
+- Evidence v2 writer/migration planning exists: `docs/EVIDENCE_V2_WRITER_MIGRATION_PLAN.md` defines the planned persisted v2 shape, opt-in writer transition, dry-run-first per-task migration, hash-guarded execute posture, mixed-version tolerance, and explicit non-goals for automatic rewrites, init changes, MCP writes, UI work, and release enforcement.
 - Private evidence manifests exist for readable project-boundary private evidence source artifacts: raw private bytes are copied only to the ignored private portable store, `hadara.privateEvidence.v1` manifests record SHA-256 hashes, byte counts, retention, and deferred encryption metadata, and manifest writes are privately audited. External absolute private source paths are not copied into the private portable store by default. Committed Task Capsule files and context export exclude private raw content, source paths, and private store paths.
 - Context export read model exists as `hadara.context.export.v1`; read-only MCP `hadara.context.export` returns an in-memory payload with `contextPath: null` and does not write `.hadara/context/HADARA_CONTEXT.md`, while CLI `hadara hermes export-context` remains the file-writing path. Context export includes `docs/IMPLEMENTATION_SOP.md` as the authoritative workflow source, and `summaryOnly` currently returns a warning instead of silently pretending to summarize.
 - Tools list read model exists as `hadara.tools.list.v1`; `hadara tools list --json` and read-only MCP `hadara.tools.list` report the current CLI help surface, read-only MCP tools, opt-in evidence attach status, `availability`/`risk` metadata, and disabled shell/provider/release/broad-write MCP surfaces from a neutral capability registry.
@@ -99,7 +100,8 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Latest completed task: T-0187 Evidence Lint Semantic Integration added additive evidence lint semantic summaries/issues and kept legacy v1 compatibility in summary counts instead of noisy issues.
 - Latest completed task: T-0188 Protocol and Harness Semantic Gates added task-scoped protocol semantic issue coverage and done-level harness semantic blockers/warnings.
 - Latest completed task: T-0189 Dashboard/TUI Evidence Semantic Contract documented selected-task evidence semantic sources, proof status derivation, and no-raw-evidence-parsing boundaries for Dashboard/TUI consumers.
-- Active / next task: T-0190 Evidence v2 Writer and Migration Plan.
+- Latest completed task: T-0190 Evidence v2 Writer and Migration Plan documented v2 writer/migration design, schema/test strategy posture, and dry-run-first non-goals without implementing writer changes.
+- Active / next task: T-0191 Release Evidence Strict Gate.
 - Phase 3 source plan: `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md`.
 - Task workbench status report exists as `hadara task status --task <id> --json`; centralized suggested-action generation and fixture-level schema registration are implemented. T-0177 hardened true Task Board status projection, optional nextAction normalization, and close evidence/valid-closure semantics.
 - Phase 3 task operator console capsule sequence T-0171 through T-0176 is complete: status projection, suggested actions, schema contract, text output, read-consumer projection prep, and evidence-from-command design boundary.
