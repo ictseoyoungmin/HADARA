@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0187 implementation complete; commit with the task id prefix before moving on. |
-| Current Phase | Phase 4 Evidence Lint Semantic Integration complete | Evidence lint now exposes additive semantic summaries and actionable Done-task semantic errors/warnings without changing evidence writers or persisted formats. |
-| Latest Completed Task | T-0187 Evidence Lint Semantic Integration | Added semantic lint integration in `src/services/evidence-lint.ts`, updated the lint schema, and broadened focused tests for semantic lint behavior plus ready/close fixtures. |
-| Active / Next Task | T-0188 Protocol and Harness Semantic Gates | Add direct protocol doctor and done-level harness semantic gates for weak, unresolved failed, and unexplained blocked Done tasks. |
-| Validation Baseline | Focused semantic lint tests and Docker sync-build passed | Focused Docker tests passed with 5 files / 30 tests; `npm run dev:docker-sync-build` passed with 77 files / 541 tests and built CLI version smoke `ok:true`. |
+| Branch | main | T-0188 implementation complete; commit with the task id prefix before moving on. |
+| Current Phase | Phase 4 Protocol and Harness Semantic Gates complete | Task protocol doctor surfaces semantic evidence issues, and done-level harness validation now enforces the first semantic evidence gates. |
+| Latest Completed Task | T-0188 Protocol and Harness Semantic Gates | Added harness semantic gates through evidence lint, protocol regression coverage, and harness tests for weak/private-only proof behavior. |
+| Active / Next Task | T-0189 Dashboard/TUI Evidence Semantic Contract | Define the selected-task semantic evidence view consumed by Dashboard/TUI without raw evidence meaning parsing. |
+| Validation Baseline | Focused protocol/harness semantic tests and Docker sync-build passed | Focused Docker tests passed with 4 files / 55 tests; `npm run dev:docker-sync-build` passed with 77 files / 544 tests and built CLI version smoke `ok:true`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0185 Task Workflow Command Semantics Audit | Added `docs/TASK_WORKFLOW_COMMANDS.md`, aligned README/AGENTS/SOP/CLI JSON contract guidance, and added docs drift regression tests for the standard task loop. | T-0185 evidence: focused docs regression, Docker sync-build, done harness, close execute, and audit-close passed. |
 | T-0186 Evidence Proof Semantics Foundation | Added v1 evidence normalization, proof strength classification, task semantic analysis, exact-marker failed resolution, blocked explanation checks, private-only warnings, and release proof predicates. | T-0186 evidence: focused Docker tests passed with 2 files / 15 tests; Docker sync-build passed with 77 files / 536 tests and built CLI smoke `ok:true`. |
 | T-0187 Evidence Lint Semantic Integration | Added additive `summary.semantics` to evidence lint, mapped actionable semantic errors/warnings for Done tasks, and kept legacy v1 presence as summary counts rather than noisy lint issues. | T-0187 evidence: focused Docker tests passed with 5 files / 30 tests; Docker sync-build passed with 77 files / 541 tests and built CLI smoke `ok:true`. |
+| T-0188 Protocol and Harness Semantic Gates | Added done-level harness semantic gates via evidence lint and protocol doctor coverage for semantic evidence issues. | T-0188 evidence: focused Docker tests passed with 4 files / 55 tests; Docker sync-build passed with 77 files / 544 tests and built CLI smoke `ok:true`. |
 
 ## Current Known Problems
 
@@ -37,17 +37,17 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Begin T-0188 Protocol and Harness Semantic Gates. | T-0187 exposes semantic lint data; the next slice should add direct protocol doctor and done-level harness blockers for weak, unresolved failed, and unexplained blocked Done tasks. | Start from `src/services/protocol-consistency.ts`, `src/harness/validate.ts`, `src/services/evidence-lint.ts`, `src/evidence/semantics.ts`, `tests/unit/protocol-consistency.test.ts`, and `tests/harness/harness-validate.test.ts`. |
+| Begin T-0189 Dashboard/TUI Evidence Semantic Contract. | Protocol/harness semantic gates are in place; Dashboard and TUI now need a stable selected-task semantic evidence contract before UI rendering. | Start from `docs/DASHBOARD_READ_MODEL_CONTRACT.md`, `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md`, `src/services/evidence-lint.ts`, and Phase 4 evidence specs. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Focused semantic lint tests | Docker `npm run test:focused -- tests/unit/evidence-lint.test.ts tests/unit/task-ready.test.ts tests/unit/task-close.test.ts tests/unit/evidence-normalizer.test.ts tests/unit/evidence-semantics.test.ts` passed with 5 files and 30 tests. | Covers lint semantic summary/issues, task ready/close compatibility, v1 normalization, and semantic analyzer behavior. |
-| Full repository check | Docker `npm run dev:docker-sync-build` passed with 77 files and 541 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
+| Focused protocol/harness semantic tests | Docker `npm run test:focused -- tests/unit/protocol-consistency.test.ts tests/harness/harness-validate.test.ts tests/unit/evidence-lint.test.ts tests/unit/evidence-semantics.test.ts` passed with 4 files and 55 tests. | Covers task protocol semantic issue surfacing, done-level harness semantic gates, lint integration, and shared analyzer behavior. |
+| Full repository check | Docker `npm run dev:docker-sync-build` passed with 77 files and 544 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
 | Built CLI smoke | `npm run dev:docker-sync-build` refreshed `/workspace/dist` and ran `hadara version --verbose --json` with `ok:true`. | `distLooksStale:false`. |
-| Done-level readiness | Built CLI `task ready --task T-0187 --level done --json` returned `ok:true`. | No blockers or warnings. |
-| Close audit | Built CLI `task audit-close --task T-0187 --json` returned `ok:true`. | Close evidence present with zero blockers and zero warnings. |
+| Done-level readiness | Built CLI `task ready --task T-0188 --level done --json` returned `ok:true`. | No blockers or warnings. |
+| Close audit | Built CLI `task audit-close --task T-0188 --json` returned `ok:true`. | Close evidence present with zero blockers and zero warnings. |
 
 ## Historical Index
 

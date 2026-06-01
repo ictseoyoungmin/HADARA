@@ -82,7 +82,7 @@ describe('Harness Task Capsule validation', () => {
     writeHandoffDone(task.dir);
     appendEvidence(root, {
       taskId: task.id,
-      kind: 'note',
+      kind: 'test-log',
       summary: 'Done-level validation evidence',
       result: 'passed'
     });
@@ -115,7 +115,7 @@ describe('Harness Task Capsule validation', () => {
     writeHandoffDone(task.dir);
     appendEvidence(root, {
       taskId: task.id,
-      kind: 'note',
+      kind: 'test-log',
       summary: 'Done-level validation evidence',
       result: 'passed'
     });
@@ -128,6 +128,56 @@ describe('Harness Task Capsule validation', () => {
     expect(result.issues).toEqual([]);
   });
 
+  it('blocks done-level validation for note-only evidence', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Weak done evidence');
+    markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
+    markAcceptanceDone(task.dir);
+    writeCompletedCapsuleDocs(task.dir);
+    writeHandoffDone(task.dir);
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'note',
+      summary: 'Human note says this is done.',
+      result: 'passed'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ severity: 'error', code: 'TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE' }),
+        expect.objectContaining({ severity: 'error', code: 'TASK_DONE_WITH_ONLY_WEAK_EVIDENCE' })
+      ])
+    );
+  });
+
+  it('warns without failing done-level validation for private-only substantive evidence', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Private evidence done');
+    markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
+    markAcceptanceDone(task.dir);
+    writeCompletedCapsuleDocs(task.dir);
+    writeHandoffDone(task.dir);
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Private focused validation passed.',
+      result: 'passed',
+      visibility: 'private'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(true);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({ severity: 'warning', code: 'TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE' })
+    );
+  });
+
   it('rejects duplicate evidence table headers during done-level validation', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Duplicate evidence header');
@@ -138,7 +188,7 @@ describe('Harness Task Capsule validation', () => {
     writeHandoffDone(task.dir);
     appendEvidence(root, {
       taskId: task.id,
-      kind: 'note',
+      kind: 'test-log',
       summary: 'Done-level validation evidence',
       result: 'passed'
     });
@@ -170,7 +220,7 @@ describe('Harness Task Capsule validation', () => {
     writeHandoffDone(task.dir);
     appendEvidence(root, {
       taskId: task.id,
-      kind: 'note',
+      kind: 'test-log',
       summary: 'Done-level validation evidence',
       result: 'passed'
     });
@@ -206,7 +256,7 @@ describe('Harness Task Capsule validation', () => {
     writeHandoffDone(task.dir);
     appendEvidence(root, {
       taskId: task.id,
-      kind: 'note',
+      kind: 'test-log',
       summary: 'Done-level validation evidence',
       result: 'passed'
     });

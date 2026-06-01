@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { parseMarkdownRows } from '../services/markdown-table';
+import { createEvidenceLintReport } from '../services/evidence-lint';
 import { isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 
 export type HarnessValidationSeverity = 'error' | 'warning';
@@ -44,6 +45,13 @@ const REQUIRED_TASK_FILES = [
 const EVIDENCE_KINDS = new Set(['test-log', 'command-log', 'diff-summary', 'screenshot', 'note']);
 const EVIDENCE_RESULTS = new Set(['passed', 'failed', 'blocked', 'unknown']);
 const EVIDENCE_VISIBILITIES = new Set(['public', 'private']);
+const DONE_SEMANTIC_EVIDENCE_CODES = new Set([
+  'TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE',
+  'TASK_DONE_WITH_FAILED_EVIDENCE',
+  'TASK_DONE_WITH_UNEXPLAINED_BLOCKED_EVIDENCE',
+  'TASK_DONE_WITH_ONLY_WEAK_EVIDENCE',
+  'TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE'
+]);
 
 export interface HarnessValidateOptions {
   level?: HarnessValidationLevel;
@@ -284,6 +292,7 @@ function validateDoneLevel(projectRoot: string, task: TaskCapsule, issues: Harne
   validateAcceptanceDone(projectRoot, task, issues);
   validateEvidenceMarkdownSingleTable(projectRoot, task, issues);
   validateEvidenceIndexHasRecords(projectRoot, task, issues);
+  validateEvidenceSemanticGates(projectRoot, task, issues);
   validateHandoffDone(projectRoot, task, issues);
   validateTaskBoardDone(projectRoot, task, issues, checkedFiles);
 }
@@ -407,6 +416,19 @@ function validateEvidenceIndexHasRecords(projectRoot: string, task: TaskCapsule,
       code: 'EVIDENCE_REQUIRED',
       message: 'Done-level validation requires at least one evidence.jsonl record.',
       path: relativePath
+    });
+  }
+}
+
+function validateEvidenceSemanticGates(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+  const lintReport = createEvidenceLintReport(projectRoot, task.id);
+  for (const issue of lintReport.issues) {
+    if (!DONE_SEMANTIC_EVIDENCE_CODES.has(issue.code)) continue;
+    issues.push({
+      severity: issue.severity === 'warning' ? 'warning' : 'error',
+      code: issue.code,
+      message: issue.message,
+      path: issue.path
     });
   }
 }

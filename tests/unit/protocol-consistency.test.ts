@@ -8,6 +8,7 @@ import {
   createProfileProtocolConsistencyReport,
   createTaskProtocolConsistencyReport
 } from '../../src/services/protocol-consistency';
+import { appendEvidence } from '../../src/evidence/evidence';
 import { validateSchema } from '../../src/core/schema';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
@@ -556,6 +557,39 @@ describe('Task protocol consistency report', () => {
       area: 'validation'
     });
     expect(report.issues.filter((issue) => issue.code === 'TASK_SCAFFOLD_PLACEHOLDER').length).toBeGreaterThan(1);
+  });
+
+  it('surfaces task-scoped evidence semantic issues through protocol doctor', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Protocol semantic evidence');
+    markTaskDone(root, task.id);
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'note',
+      summary: 'Human note says this is complete.',
+      result: 'passed',
+      visibility: 'public'
+    });
+
+    const report = createTaskProtocolConsistencyReport(root, task.id, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          severity: 'error',
+          area: 'evidence',
+          taskId: task.id,
+          code: 'TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE'
+        }),
+        expect.objectContaining({
+          severity: 'error',
+          area: 'evidence',
+          taskId: task.id,
+          code: 'TASK_DONE_WITH_ONLY_WEAK_EVIDENCE'
+        })
+      ])
+    );
   });
 
   it('returns a stable missing task issue', () => {
