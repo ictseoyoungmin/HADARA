@@ -5,8 +5,8 @@
 | Area | State | Notes |
 |---|---|---|
 | Branch | main | Phase 5.5 local commits are ahead of origin; commit/push state should be checked before publishing. |
-| Current Phase | Phase 5 Dashboard / Operator Console and Phase 5.5 production-readiness complete through T-0204 | Dashboard readiness review is documented with route/schema/boundary inventory and residual risks. |
-| Latest Completed Task | T-0204 Dashboard Production Readiness Review | Final route/schema/read-only/private-path/browser-storage/cache/polling/performance audit documented. |
+| Current Phase | Phase 5 Dashboard / Operator Console and Phase 5.5 production-readiness complete through T-0205 | Dashboard readiness review and Playwright Docker performance measurement are documented. |
+| Latest Completed Task | T-0205 Dashboard Playwright Performance Measurement | Playwright Docker `/tmp` copy route timing report documented for dashboard shell/bootstrap/task-detail/timeline cache paths. |
 | Active / Next Task | Next roadmap slice selection pending | Review roadmap/current priorities before opening the next implementation capsule. |
 | Validation Baseline | Docker sync-build passed | `npm run dev:docker-sync-build` passed with 84 files / 562 tests and built CLI version smoke `ok:true`. |
 
@@ -14,9 +14,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0202 Dashboard Degraded UX and Performance Budget | Made dashboard load/degraded states visible and documented advisory performance targets. | T-0202 evidence: Docker sync-build passed with 83 files / 561 tests and built CLI smoke `ok:true`. |
 | T-0203 Optional Dashboard Polling Refresh | Added off-by-default, memory-only optional polling with backoff and hidden-document pause. | T-0203 evidence: Docker sync-build passed with 83 files / 561 tests and built CLI smoke `ok:true`. |
 | T-0204 Dashboard Production Readiness Review | Documented final Phase 5.5 route/schema/boundary inventory and readiness conclusion. | T-0204 evidence: Docker sync-build passed with 84 files / 562 tests and built CLI smoke `ok:true`. |
+| T-0205 Dashboard Playwright Performance Measurement | Measured dashboard shell/API route timings in Playwright Docker and recorded the advisory report. | T-0205 evidence: Playwright Docker measurement passed; Docker sync-build passed with 84 files / 562 tests and built CLI smoke `ok:true`. |
 
 ## Current Known Problems
 
@@ -46,10 +46,11 @@
 | Check | Latest Evidence | Notes |
 |---|---|---|
 | Full repository check | Docker `npm run dev:docker-sync-build` passed with 84 files and 562 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
+| Dashboard performance measurement | Playwright Docker `/tmp` copy measurement recorded shell HTML fetch 4.4 ms, bootstrap bypass avg 174.7 ms, task-detail bypass avg 243.3 ms, timeline bypass avg 150.4 ms, with cache hit samples near 1-2 ms. | Direct bind-mounted workspace measurement was unsuitable because the dashboard server did not return promptly enough for stable timings. |
 | Focused dashboard/readiness check | Covered by full Docker after readiness review assertions were added. | Covers route/schema/boundary inventory doc, dashboard schema status, and final readiness conclusion. |
 | Built CLI smoke | `npm run dev:docker-sync-build` refreshed `/workspace/dist` and ran `hadara version --verbose --json` with `ok:true`. | `distLooksStale:false`. |
-| Done-level readiness | `task ready --task T-0204 --level done --json` passed with zero blockers and zero warnings. | Re-run if additional T-0204 files change before commit. |
-| Close audit | `task audit-close --task T-0204 --json` passed with close evidence present, zero blockers, and zero warnings. | Re-run after final handoff/doc edits so the close source hash matches the committed state. |
+| Done-level readiness | `task ready --task T-0205 --level done --json` passed with zero blockers and zero warnings. | Re-run if additional T-0205 files change before commit. |
+| Close audit | `task audit-close --task T-0205 --json` passed with close evidence present, zero blockers, and zero warnings. | Re-run after final handoff/doc edits so the close source hash matches the committed state. |
 
 ## Historical Index
 

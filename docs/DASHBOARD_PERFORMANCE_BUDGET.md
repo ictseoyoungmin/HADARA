@@ -23,6 +23,8 @@ Performance evidence should be recorded as public command-log observations when 
 
 Do not commit raw private logs, browser storage snapshots, local cache files, or machine-local traces.
 
+Latest advisory measurement: `docs/DASHBOARD_PERFORMANCE_MEASUREMENT.md`.
+
 ## Debug Surface
 
 Dashboard debug helpers must be read-only. They may expose current source/cache/load metadata for inspection, but must not execute commands, mutate task capsules, write evidence, write handoff files, call providers, or persist project state in browser storage.

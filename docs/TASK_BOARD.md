@@ -205,3 +205,4 @@
 | T-0202 | Dashboard Degraded UX and Performance Budget | Done | tasks/T-0202-dashboard-degraded-ux-and-performance-budget | |
 | T-0203 | Optional Dashboard Polling Refresh | Done | tasks/T-0203-optional-dashboard-polling-refresh | |
 | T-0204 | Dashboard Production Readiness Review | Done | tasks/T-0204-dashboard-production-readiness-review | |
+| T-0205 | Dashboard Playwright Performance Measurement | Done | tasks/T-0205-dashboard-playwright-performance-measurement | |
