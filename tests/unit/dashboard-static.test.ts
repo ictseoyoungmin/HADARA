@@ -53,6 +53,7 @@ describe('static dashboard reference', () => {
   it('keeps dashboard HTML static and scoped to the sample fixture', () => {
     const html = fs.readFileSync(dashboardPath, 'utf8');
 
+    expect(html).toContain("const liveBootstrapUrl = '/api/dashboard/bootstrap'");
     expect(html).toContain("const liveStatusUrl = '/api/status'");
     expect(html).toContain('../fixtures/hadara.ops.status.sample.json');
     expect(html).toContain('fallback-status-json');
@@ -60,7 +61,7 @@ describe('static dashboard reference', () => {
     expect(html).toContain('MCP Guard');
     expect(html).toContain('notLiveData');
     expect(html).toContain('Refresh Status');
-    expect(html).toContain('LIVE API');
+    expect(html).toContain('LIVE BOOTSTRAP');
     expect(html).toContain('FIXTURE FALLBACK');
     expect(html).toContain('OFFLINE FALLBACK');
     expect(html).toContain('data-field="health"');
@@ -68,6 +69,7 @@ describe('static dashboard reference', () => {
     expect(html).toContain('data-field="validation.latestFullCheck"');
     expect(html).toContain('data-field="mcp.defaultMode"');
     expect(html).toContain('data-source-kind');
+    expect(html).toContain('data-cache-status');
 
     const forbiddenTokens = [
       'child_process',
@@ -128,6 +130,8 @@ describe('static dashboard reference', () => {
     expect(html).toContain('metrics');
     expect(html).toContain('Handoff Beacon');
     expect(html).toContain('Workstream');
+    expect(html).toContain('Bootstrap timeline overview with selected-task detail loaded separately.');
+    expect(html).not.toContain('Status-derived rows until the deterministic timeline read model lands.');
     expect(html).toContain('visual shell follows the operator-console layout; data contract remains authoritative');
     expect(html).toContain('FIXTURE FALLBACK');
   });
@@ -160,19 +164,28 @@ describe('static dashboard reference', () => {
     expect(html).toContain('.inspector-grid');
   });
 
-  it('documents live-first dashboard loading order and read-only refresh behavior', () => {
+  it('documents bootstrap-first dashboard loading order and read-only refresh behavior', () => {
     const html = fs.readFileSync(dashboardPath, 'utf8');
+    const bootstrapIndex = html.indexOf('const liveBootstrapUrl');
     const liveIndex = html.indexOf('const liveStatusUrl');
     const fixtureIndex = html.indexOf('const fixtureUrl');
+    const bootstrapFetchIndex = html.indexOf('tryFetchJson(url)');
     const liveFetchIndex = html.indexOf('tryFetchJson(liveStatusUrl)');
     const fixtureFetchIndex = html.indexOf('tryFetchJson(fixtureUrl)');
 
+    expect(bootstrapIndex).toBeGreaterThan(-1);
     expect(liveIndex).toBeGreaterThan(-1);
     expect(fixtureIndex).toBeGreaterThan(-1);
+    expect(bootstrapIndex).toBeLessThan(liveIndex);
     expect(liveIndex).toBeLessThan(fixtureIndex);
+    expect(bootstrapFetchIndex).toBeGreaterThan(-1);
     expect(liveFetchIndex).toBeGreaterThan(-1);
     expect(fixtureFetchIndex).toBeGreaterThan(-1);
+    expect(bootstrapFetchIndex).toBeLessThan(liveFetchIndex);
     expect(liveFetchIndex).toBeLessThan(fixtureFetchIndex);
+    expect(html).toContain('lastSuccessfulRuntimeState');
+    expect(html).toContain('Refresh failed; keeping previous in-memory view.');
+    expect(html).toContain('loadDashboardWithFallback');
     expect(html).toContain("kind: 'live-api'");
     expect(html).toContain("kind: 'fixture-fallback'");
     expect(html).toContain("kind: 'inline-fallback'");
@@ -197,6 +210,7 @@ describe('static dashboard reference', () => {
     expect(dashboard.headers['x-content-type-options']).toBe('nosniff');
     expect(dashboard.body).toContain('HADARA Operator Console');
     expect(dashboard.body).toContain('../fixtures/hadara.ops.status.sample.json');
+    expect(dashboard.body).toContain('/api/dashboard/bootstrap');
     expect(dashboard.body).toContain('/api/status');
     expect(dashboard.body).toContain('Refresh Status');
 

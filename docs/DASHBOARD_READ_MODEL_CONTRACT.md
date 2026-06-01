@@ -199,7 +199,7 @@ The detail report should be registered as `hadara.dashboard.task_detail.v1` and 
 
 Phase 5.5 may add a process-memory TTL cache for dashboard aggregate reads. Cache metadata should report `hit`, `miss`, `stale`, `bypass`, or `disabled`, plus key, TTL, generated time, and expiry when relevant. The cache must stay process-memory only: it is not a database, file watcher, committed artifact, `.hadara/local` state, context-export input, evidence source, or browser project-state store.
 
-Frontend loading should be progressive:
+T-0198 makes frontend loading progressive for the first screen:
 
 ```text
 shell
@@ -210,7 +210,7 @@ detail-ready
 degraded
 ```
 
-The shell should render immediately. Refresh must mean "read again"; it must keep the previous successful in-memory view visible while a refresh is in flight or degraded. Dashboard code must not persist project state in `localStorage`, `sessionStorage`, IndexedDB, cookies, or equivalent browser storage.
+The shell should render immediately. Refresh must mean "read again"; it must keep the previous successful in-memory view visible while a refresh is in flight or degraded. Dashboard code must not persist project state in `localStorage`, `sessionStorage`, IndexedDB, cookies, or equivalent browser storage. In T-0198 selected-task detail still loads through the Phase 5 read routes; T-0199 moves that detail fan-out behind `/api/dashboard/task-detail`.
 
 Phase 5.5 may later add optional polling only after aggregate reads, cache metadata, and degraded UX are stable. Polling must be memory-only, operator-controllable or conservative by default, back off on failure, and must not introduce SSE/WebSocket streaming, shell execution, provider calls, MCP writes, task/evidence/handoff mutation, release/package execution, auto-remediation, or multi-agent concurrency claims.
 

@@ -5,24 +5,24 @@
 | Area | State | Notes |
 |---|---|---|
 | Branch | main | T-0197 is closed-valid locally; commit/push state should be checked before publishing. |
-| Current Phase | Phase 5 Dashboard / Operator Console complete; Phase 5.5 complete through T-0197 | Bootstrap aggregate read model is implemented; progressive frontend loading starts next. |
-| Latest Completed Task | T-0197 Dashboard Bootstrap Read Model | `/api/dashboard/bootstrap` now returns `hadara.dashboard.bootstrap.v1` with status, task summary, timeline overview, active-run/debt summaries, optional compact selected-task proof, and disabled cache metadata. |
-| Active / Next Task | T-0198 Dashboard Progressive Bootstrap Frontend planned | Switch the frontend first paint to the bootstrap aggregate while preserving live/fixture/inline fallback and no browser project-state storage. |
+| Current Phase | Phase 5 Dashboard / Operator Console complete; Phase 5.5 complete through T-0198 | Bootstrap aggregate and frontend first-paint consumption are implemented; task-detail aggregation starts next. |
+| Latest Completed Task | T-0198 Dashboard Progressive Bootstrap Frontend | Dashboard first reads `/api/dashboard/bootstrap`, falls back to `/api/status` then fixture/inline data, shows cache status, and keeps previous successful in-memory view on refresh failure. |
+| Active / Next Task | T-0199 Dashboard Task Detail Aggregate Endpoint planned | Collapse selected-task detail fan-out behind `/api/dashboard/task-detail?taskId=...`. |
 | Validation Baseline | Docker sync-build passed | `npm run dev:docker-sync-build` passed with 81 files / 555 tests and built CLI version smoke `ok:true`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0195 Dashboard Selected Task Evidence Lens | Added read-only dashboard workbench/evidence-lint routes and selected-task proof status derived from shared evidence semantics. | T-0195 evidence: focused dashboard test passed with 1 file / 13 tests; Docker sync-build passed with 79 files / 551 tests and built CLI smoke `ok:true`. |
 | T-0196 Dashboard Timeline Read Model | Added schema-registered deterministic timeline read model, `/api/timeline`, and Workstream consumption. | T-0196 evidence: focused dashboard/timeline tests passed with 2 files / 14 tests; Docker sync-build passed with 80 files / 552 tests and built CLI smoke `ok:true`. |
 | T-0197 Dashboard Bootstrap Read Model | Added schema-registered first-paint dashboard aggregate read model and `/api/dashboard/bootstrap`. | T-0197 evidence: focused dashboard bootstrap tests passed with 3 files / 17 tests; Docker sync-build passed with 81 files / 555 tests and built CLI smoke `ok:true`. |
+| T-0198 Dashboard Progressive Bootstrap Frontend | Bound the static dashboard first paint to the bootstrap aggregate with status/fixture/inline fallback and in-memory previous-view retention. | T-0198 evidence: focused dashboard frontend/bootstrap tests passed with 2 files / 16 tests; Docker sync-build passed with 81 files / 555 tests and built CLI smoke `ok:true`. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| Phase 5.5 frontend has not consumed bootstrap yet. | The backend aggregate exists, but the dashboard HTML still uses the Phase 5 live status/detail route pattern until T-0198. | Start T-0198 and switch first paint to `/api/dashboard/bootstrap` with progressive loading and in-memory previous successful response reuse. |
+| Selected-task detail still fans out across Phase 5 routes. | First paint is faster, but choosing a task can still read workbench, evidence lint, evidence list, and timeline separately. | Start T-0199 and add `/api/dashboard/task-detail?taskId=...` as the selected-task aggregate. |
 | Host workspace has no `node_modules`. | Host `npm run build` and host `npx vitest` are unreliable; escalated `npx` found registry access but could not resolve local `vitest/config`. | Use the reusable Docker workflow for validation or install dependencies intentionally before host validation. |
 | HADARA-dev has multiple CLI execution paths. | `/tmp/hadara/dist` may be fresh while `/workspace/dist` or container-global `/usr/local/bin/hadara` is stale, causing agents to test old CLI behavior. | For CLI changes, build in Docker, refresh `/workspace/dist` from `/tmp/hadara/dist`, and run final smokes via `node /workspace/dist/cli/main.js ... --project /workspace` or explicitly via `/tmp/hadara/dist/cli/main.js`; do not assume global `hadara` is current. |
 | Existing historical capsules mostly use legacy frames. | This is expected and should not fail validation solely for not using v2 tables. | Future `task upgrade-scaffold` / remediation work must be non-destructive and dry-run-first. |
@@ -39,17 +39,17 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start T-0198 Dashboard Progressive Bootstrap Frontend. | T-0197 added the backend aggregate; frontend perceived latency improves only after the dashboard consumes it for first paint. | Create/open the T-0198 Task Capsule, then bind the dashboard shell to `/api/dashboard/bootstrap` before selected-task detail loading. |
+| Start T-0199 Dashboard Task Detail Aggregate Endpoint. | T-0198 improved first paint; selected-task detail remains the next source of frontend fan-out. | Create/open the T-0199 Task Capsule, then implement `hadara.dashboard.task_detail.v1` and `/api/dashboard/task-detail?taskId=...`. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
 | Full repository check | Docker `npm run dev:docker-sync-build` passed with 81 files and 555 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
-| Focused dashboard/bootstrap check | Docker temp-copy `npm run test:focused -- tests/unit/dashboard-bootstrap.test.ts tests/unit/dashboard-static.test.ts tests/unit/schema-fixtures.test.ts` passed with 3 files and 17 tests. | Covers bootstrap aggregate, selected-task compact proof, invalid selected-task degradation, served route, and schema registration. |
+| Focused dashboard/frontend check | Docker temp-copy `npm run test:focused -- tests/unit/dashboard-static.test.ts tests/unit/dashboard-bootstrap.test.ts` passed with 2 files and 16 tests. | Covers bootstrap-first loading, fallback preservation, cache status badge, previous-view retention source, storage bans, and served route coverage. |
 | Built CLI smoke | `npm run dev:docker-sync-build` refreshed `/workspace/dist` and ran `hadara version --verbose --json` with `ok:true`. | `distLooksStale:false`. |
-| Done-level readiness | Built CLI `task ready --task T-0197 --level done --json` returned `ok:true`. | No blockers or warnings. |
-| Close audit | Built CLI `task audit-close --task T-0197 --json` returned `ok:true`. | Close evidence was rerun after final handoff/doc updates; latest source hash matches, zero blockers, zero warnings. |
+| Done-level readiness | Built CLI `task ready --task T-0198 --level done --json` returned `ok:true`. | No blockers or warnings. |
+| Close audit | Built CLI `task audit-close --task T-0198 --json` returned `ok:true`. | Close evidence may be rerun after final handoff/doc updates; latest source hash should match, zero blockers, zero warnings. |
 
 ## Historical Index
 
