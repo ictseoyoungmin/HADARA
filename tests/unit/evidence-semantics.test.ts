@@ -1,0 +1,162 @@
+import { describe, expect, it } from 'vitest';
+import { EvidenceIndexRecord } from '../../src/evidence/evidence';
+import { normalizeEvidenceRecord } from '../../src/evidence/normalizer';
+import {
+  analyzeTaskEvidenceSemantics,
+  classifyEvidenceStrength,
+  findUnresolvedFailedEvidence,
+  findUnexplainedBlockedEvidence,
+  isLegacyReleaseProofEvidence,
+  isReleaseProofEvidence,
+  summarizeEvidenceSemantics
+} from '../../src/evidence/semantics';
+
+function v1(overrides: Partial<EvidenceIndexRecord> = {}): EvidenceIndexRecord {
+  return {
+    schemaVersion: 'hadara.evidence.v1',
+    time: '2026-06-01T00:00:00.000Z',
+    taskId: 'T-0001',
+    kind: 'command-log',
+    summary: 'npm run check passed',
+    result: 'passed',
+    visibility: 'public',
+    ...overrides
+  };
+}
+
+describe('evidence semantics', () => {
+  it('classifies core strength categories', () => {
+    expect(classifyEvidenceStrength(normalizeEvidenceRecord(v1({ kind: 'test-log', result: 'passed' })))).toBe('substantive-positive');
+    expect(classifyEvidenceStrength(normalizeEvidenceRecord(v1({ kind: 'diff-summary', result: 'passed' })))).toBe('substantive-positive');
+    expect(classifyEvidenceStrength(normalizeEvidenceRecord(v1({ kind: 'note', result: 'passed' })))).toBe('record-only');
+    expect(classifyEvidenceStrength(normalizeEvidenceRecord(v1({ kind: 'note', result: 'unknown' })))).toBe('weak');
+    expect(classifyEvidenceStrength(normalizeEvidenceRecord(v1({ kind: 'test-log', result: 'failed' })))).toBe('substantive-negative');
+    expect(classifyEvidenceStrength(normalizeEvidenceRecord(v1({ kind: 'test-log', result: 'blocked' })))).toBe('blocked');
+  });
+
+  it('summarizes records by strength, category, outcome, visibility, and latest substantive evidence', () => {
+    const records = [
+      normalizeEvidenceRecord(v1({ kind: 'test-log', result: 'passed', visibility: 'public' }), { lineNumber: 1 }),
+      normalizeEvidenceRecord(v1({ kind: 'note', result: 'unknown', visibility: 'private' }), { lineNumber: 2 })
+    ];
+
+    const summary = summarizeEvidenceSemantics(records);
+
+    expect(summary.total).toBe(2);
+    expect(summary.byStrength['substantive-positive']).toBe(1);
+    expect(summary.byStrength.weak).toBe(1);
+    expect(summary.byCategory.validation).toBe(1);
+    expect(summary.byOutcome.passed).toBe(1);
+    expect(summary.publicRecords).toBe(1);
+    expect(summary.privateRecords).toBe(1);
+    expect(summary.legacyRecords).toBe(2);
+    expect(summary.latestSubstantiveEvidenceId).toBe(records[0].id);
+  });
+
+  it('reports note-only Done tasks as weak evidence', () => {
+    const records = [normalizeEvidenceRecord(v1({ kind: 'note', result: 'passed', summary: 'manual note' }))];
+
+    const analysis = analyzeTaskEvidenceSemantics({
+      taskId: 'T-0001',
+      taskDir: 'tasks/T-0001',
+      taskLooksDone: true,
+      records
+    });
+
+    expect(analysis.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(['TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE', 'TASK_DONE_WITH_ONLY_WEAK_EVIDENCE'])
+    );
+  });
+
+  it('does not report a semantic blocker for substantive passed validation evidence', () => {
+    const analysis = analyzeTaskEvidenceSemantics({
+      taskId: 'T-0001',
+      taskDir: 'tasks/T-0001',
+      taskLooksDone: true,
+      records: [normalizeEvidenceRecord(v1({ kind: 'test-log', result: 'passed', summary: 'vitest passed' }))]
+    });
+
+    expect(analysis.issues.filter((issue) => issue.severity === 'error')).toEqual([]);
+  });
+
+  it('requires exact markers or later passed same-category evidence to resolve failed evidence', () => {
+    const failed = normalizeEvidenceRecord(v1({ kind: 'test-log', result: 'failed', summary: 'vitest failed loudly' }), {
+      lineNumber: 1
+    });
+    const freeTextOnly = normalizeEvidenceRecord(v1({ kind: 'note', result: 'passed', summary: 'fixed and rerun passed' }), {
+      lineNumber: 2
+    });
+    const exactMarker = {
+      ...normalizeEvidenceRecord(v1({ kind: 'note', result: 'passed', summary: `documented resolves:${failed.id}` }), {
+        lineNumber: 3
+      }),
+      tags: [`resolves:${failed.id}`]
+    };
+
+    expect(findUnresolvedFailedEvidence([failed, freeTextOnly]).map((record) => record.id)).toEqual([failed.id]);
+    expect(findUnresolvedFailedEvidence([failed, exactMarker])).toEqual([]);
+    expect(
+      findUnresolvedFailedEvidence([
+        failed,
+        normalizeEvidenceRecord(v1({ kind: 'test-log', result: 'passed', summary: 'vitest rerun passed' }), { lineNumber: 4 })
+      ])
+    ).toEqual([]);
+  });
+
+  it('reports unresolved failed evidence for Done tasks', () => {
+    const failed = normalizeEvidenceRecord(v1({ kind: 'test-log', result: 'failed', summary: 'unit tests failed' }));
+
+    const analysis = analyzeTaskEvidenceSemantics({
+      taskId: 'T-0001',
+      taskDir: 'tasks/T-0001',
+      taskLooksDone: true,
+      records: [failed]
+    });
+
+    expect(analysis.issues.map((issue) => issue.code)).toContain('TASK_DONE_WITH_FAILED_EVIDENCE');
+  });
+
+  it('requires blocked evidence explanation', () => {
+    const blocked = normalizeEvidenceRecord(v1({ kind: 'test-log', result: 'blocked', summary: 'vitest unavailable' }));
+    const explained = normalizeEvidenceRecord(v1({ kind: 'test-log', result: 'blocked', summary: 'blocked because dependency is deferred' }));
+
+    expect(findUnexplainedBlockedEvidence([blocked])).toEqual([blocked]);
+    expect(findUnexplainedBlockedEvidence([explained])).toEqual([]);
+  });
+
+  it('warns when Done tasks only have private substantive evidence', () => {
+    const analysis = analyzeTaskEvidenceSemantics({
+      taskId: 'T-0001',
+      taskDir: 'tasks/T-0001',
+      taskLooksDone: true,
+      records: [normalizeEvidenceRecord(v1({ kind: 'test-log', result: 'passed', visibility: 'private' }))]
+    });
+
+    expect(analysis.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          severity: 'warning',
+          code: 'TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE'
+        })
+      ])
+    );
+  });
+
+  it('accepts supported public release evidence and rejects arbitrary command logs', () => {
+    const releaseEvidence = normalizeEvidenceRecord(
+      v1({
+        kind: 'command-log',
+        summary: 'release artifact built',
+        result: 'passed',
+        visibility: 'public',
+        evidencePath: 'artifacts/release-artifact/report.json'
+      })
+    );
+    const arbitraryCommand = normalizeEvidenceRecord(v1({ summary: 'listed files successfully', result: 'passed' }));
+
+    expect(isReleaseProofEvidence(releaseEvidence)).toBe(true);
+    expect(isLegacyReleaseProofEvidence(releaseEvidence)).toBe(true);
+    expect(isReleaseProofEvidence(arbitraryCommand)).toBe(false);
+    expect(isLegacyReleaseProofEvidence(arbitraryCommand)).toBe(false);
+  });
+});

@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0185 completed; commit with the task id prefix before moving on. |
-| Current Phase | Phase 3.5 / Operator Workflow Hardening complete | Runtime origin diagnostics, Docker sync-build scripting, bounded finish/status sync, task next recommendations, schema stability classification, focused test UX, finish write hardening, and command semantics audit are complete. |
-| Latest Completed Task | T-0185 Task Workflow Command Semantics Audit | Added the canonical workflow command semantics doc and aligned README/AGENTS/SOP/CLI JSON contract guidance. |
-| Active / Next Task | Phase 4 Evidence Proof Semantics Foundation / Read Surface Integration planning | Start with evidence proof semantics before Dashboard/TUI binding: v1 normalizer, semantic classifier/analyzer, lint/protocol/harness integration, and release proof predicate stub. |
-| Validation Baseline | Docker sync-build, focused docs regression, done harness, and close audit passed | `npm run dev:docker-sync-build` passed with 75 files / 521 tests; focused task workflow docs regression passed with 1 file / 3 tests; latest T-0185 done harness and audit-close returned `ok:true`. |
+| Branch | main | T-0186 implementation complete; commit with the task id prefix before moving on. |
+| Current Phase | Phase 4 Evidence Proof Semantics Foundation complete | Compatibility-first v1 normalizer, semantic classifier/analyzer, failed/blocked proof rules, private-only warning, and release proof predicates are implemented without writer migration. |
+| Latest Completed Task | T-0186 Evidence Proof Semantics Foundation | Added `src/evidence/normalizer.ts`, `src/evidence/semantics.ts`, and focused unit tests for evidence proof semantics. |
+| Active / Next Task | T-0187 Evidence Lint Semantic Integration | Add semantic summary and semantic issues to `hadara.evidence.lint.v1` additively while preserving existing lint checks. |
+| Validation Baseline | Focused evidence semantics tests and Docker sync-build passed | Focused Docker tests passed with 2 files / 15 tests; `npm run dev:docker-sync-build` passed with 77 files / 536 tests and built CLI version smoke `ok:true`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0183 Focused Test Command UX | Added `test:focused` and documented selected-file Vitest invocation. | T-0183 evidence: Docker sync-build, focused smoke, done harness, close execute, and audit-close passed. |
 | T-0184 Task Finish Write Safety Hardening | Added write hash/existence metadata, temp-file/rename conflict guards, malformed frame/no-op refusal, and shell-quoted task-next createCommand output. | T-0184 evidence: Docker sync-build, built CLI smoke, done harness, close execute, and audit-close passed. |
 | T-0185 Task Workflow Command Semantics Audit | Added `docs/TASK_WORKFLOW_COMMANDS.md`, aligned README/AGENTS/SOP/CLI JSON contract guidance, and added docs drift regression tests for the standard task loop. | T-0185 evidence: focused docs regression, Docker sync-build, done harness, close execute, and audit-close passed. |
+| T-0186 Evidence Proof Semantics Foundation | Added v1 evidence normalization, proof strength classification, task semantic analysis, exact-marker failed resolution, blocked explanation checks, private-only warnings, and release proof predicates. | T-0186 evidence: focused Docker tests passed with 2 files / 15 tests; Docker sync-build passed with 77 files / 536 tests and built CLI smoke `ok:true`. |
 
 ## Current Known Problems
 
@@ -37,17 +37,17 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Begin Phase 4 Evidence Proof Semantics Foundation. | Phase 3.5 operator workflow hardening sequence T-0178 through T-0185 is complete, and Dashboard/TUI selected-task proof views should not interpret raw evidence independently. | Start from `docs/ROADMAP.md`, `docs/DEVELOPMENT_SLICES.md`, `docs/TEST_STRATEGY.md`, `docs/SCHEMAS.md`, `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md`, and `docs/DASHBOARD_READ_MODEL_CONTRACT.md`. |
+| Begin T-0187 Evidence Lint Semantic Integration. | T-0186 created the shared semantic engine; the next slice should expose its summary/issues through `hadara.evidence.lint.v1` without breaking existing lint consumers. | Start from `src/services/evidence-lint.ts`, `src/evidence/normalizer.ts`, `src/evidence/semantics.ts`, `tests/unit/evidence-lint.test.ts`, `docs/SCHEMAS.md`, and `docs/TEST_STRATEGY.md`. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Focused docs regression | Docker `npm run test:focused -- tests/unit/task-workflow-docs.test.ts` passed with 1 file and 3 tests. | Covers README/SOP/workflow/CLI contract command semantics. |
-| Full repository check | Docker temp-copy `npm run check` passed with 75 files and 521 tests. | Host dependencies are unavailable; Docker was used through `npm run dev:docker-sync-build`. |
+| Focused evidence semantics tests | Docker `npm run test:focused -- tests/unit/evidence-normalizer.test.ts tests/unit/evidence-semantics.test.ts` passed with 2 files and 15 tests. | Covers v1 normalization, strength classification, task analysis, exact failed resolution markers, blocked explanation, private-only warning, and release proof predicate. |
+| Full repository check | Docker `npm run dev:docker-sync-build` passed with 77 files and 536 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
 | Built CLI smoke | `npm run dev:docker-sync-build` refreshed `/workspace/dist` and ran `hadara version --verbose --json` with `ok:true`. | `distLooksStale:false`. |
-| Done-level harness | Built CLI `harness validate --task T-0185 --level done --json` returned `ok:true`. | No issues. |
-| Close audit | Built CLI `task audit-close --task T-0185 --json` returned `ok:true` with close evidence present and zero warnings. | Final close evidence appended after capsule source docs were updated. |
+| Done-level readiness | Built CLI `task ready --task T-0186 --level done --json` returned `ok:true`. | No blockers or warnings. |
+| Close audit | Built CLI `task audit-close --task T-0186 --json` returned `ok:true`. | Close evidence present with zero blockers and zero warnings. |
 
 ## Historical Index
 

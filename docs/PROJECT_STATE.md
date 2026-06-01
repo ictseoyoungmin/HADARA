@@ -12,9 +12,9 @@ HADARA - Portable Agentic Development Workbench
 
 ## Current Phase
 
-Phase 3.5 / Operator Workflow Hardening complete; Phase 4 evidence semantics planning is the next read-surface foundation.
+Phase 4 Evidence Proof Semantics Foundation complete.
 
-The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer, close/evidence hardening through T-0170, Phase 3 task operator console through T-0177, and Phase 3.5 operator workflow hardening through T-0185 are complete. The next major work is Phase 4 evidence proof semantics before live read-surface/operator UI binding.
+The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer, close/evidence hardening through T-0170, Phase 3 task operator console through T-0177, Phase 3.5 operator workflow hardening through T-0185, and Phase 4 evidence proof semantics foundation through T-0186 are complete. The next major work is Phase 4 evidence lint semantic integration.
 
 ## Current Status
 
@@ -50,6 +50,7 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Evidence artifact redaction registry exists: public artifacts must be UTF-8 text and pass severity-threshold high-risk secret-pattern scanning before committed copy, with `hadara.redaction.report.v1` findings available from the core redaction service and safe public artifact policy diagnostics available as pattern ids, severities, counts, and byte counts.
 - Evidence list read model exists as `hadara.evidence.list.v1`, with a shared report builder used by `hadara evidence list --json` and read-only MCP `hadara.evidence.list`; malformed JSONL lines degrade to warnings, parsed records are normalized before output, private evidence paths are stripped, and taskId mismatches are dropped with warnings.
 - Phase 4 evidence planning is compatibility-first: existing `hadara.evidence.v1` records stay valid while a future normalized semantic read model classifies evidence strength, summarizes proof meaning, and feeds evidence lint, task protocol doctor, done-level harness validation, Dashboard, and TUI. Evidence v2 writer, `EVIDENCE.md` rewrite, init scaffold changes, mass migration, MCP writes, and release-gate strict enforcement remain follow-up work.
+- Evidence proof semantics foundation exists: `src/evidence/normalizer.ts` converts existing v1 records into `hadara.evidence.normalized.v1` read-model records, and `src/evidence/semantics.ts` classifies evidence strength, summarizes proof meaning, analyzes Done evidence sufficiency, rejects free-text-only failed evidence resolution, warns on private-only substantive evidence, and exposes release proof predicates without changing evidence writers or persisted formats.
 - Private evidence manifests exist for readable project-boundary private evidence source artifacts: raw private bytes are copied only to the ignored private portable store, `hadara.privateEvidence.v1` manifests record SHA-256 hashes, byte counts, retention, and deferred encryption metadata, and manifest writes are privately audited. External absolute private source paths are not copied into the private portable store by default. Committed Task Capsule files and context export exclude private raw content, source paths, and private store paths.
 - Context export read model exists as `hadara.context.export.v1`; read-only MCP `hadara.context.export` returns an in-memory payload with `contextPath: null` and does not write `.hadara/context/HADARA_CONTEXT.md`, while CLI `hadara hermes export-context` remains the file-writing path. Context export includes `docs/IMPLEMENTATION_SOP.md` as the authoritative workflow source, and `summaryOnly` currently returns a warning instead of silently pretending to summarize.
 - Tools list read model exists as `hadara.tools.list.v1`; `hadara tools list --json` and read-only MCP `hadara.tools.list` report the current CLI help surface, read-only MCP tools, opt-in evidence attach status, `availability`/`risk` metadata, and disabled shell/provider/release/broad-write MCP surfaces from a neutral capability registry.
@@ -91,7 +92,8 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Latest completed task: T-0183 Focused Test Command UX added `npm run test:focused -- <path>` guidance and script support for narrow Vitest file runs.
 - Latest completed task: T-0184 Task Finish Write Safety Hardening added hash/existence metadata, temp-file/rename writes, malformed frame/no-op guards, and safer task-next createCommand quoting.
 - Latest completed task: T-0185 Task Workflow Command Semantics Audit added `docs/TASK_WORKFLOW_COMMANDS.md`, aligned README/AGENTS/SOP/CLI JSON contract guidance, and locked the standard task loop with docs regression tests.
-- Active / next task: Phase 4 Evidence Proof Semantics Foundation / Read Surface Integration planning.
+- Latest completed task: T-0186 Evidence Proof Semantics Foundation added compatibility-first evidence normalizer/semantics modules and focused tests without writer migration.
+- Active / next task: T-0187 Evidence Lint Semantic Integration.
 - Phase 3 source plan: `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md`.
 - Task workbench status report exists as `hadara task status --task <id> --json`; centralized suggested-action generation and fixture-level schema registration are implemented. T-0177 hardened true Task Board status projection, optional nextAction normalization, and close evidence/valid-closure semantics.
 - Phase 3 task operator console capsule sequence T-0171 through T-0176 is complete: status projection, suggested actions, schema contract, text output, read-consumer projection prep, and evidence-from-command design boundary.

@@ -1,0 +1,111 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
+import {
+  createLegacyEvidenceId,
+  deriveEvidenceCategoryFromV1,
+  normalizeEvidenceRecord,
+  normalizeEvidenceRecords
+} from '../../src/evidence/normalizer';
+import { EvidenceIndexRecord } from '../../src/evidence/evidence';
+
+const roots: string[] = [];
+
+function tempDir(): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-evidence-normalizer-'));
+  roots.push(dir);
+  return dir;
+}
+
+afterEach(() => {
+  for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
+});
+
+function evidenceRecord(overrides: Partial<EvidenceIndexRecord> = {}): EvidenceIndexRecord {
+  return {
+    schemaVersion: 'hadara.evidence.v1',
+    time: '2026-06-01T00:00:00.000Z',
+    taskId: 'T-0001',
+    kind: 'command-log',
+    summary: 'npm run check passed',
+    result: 'passed',
+    visibility: 'public',
+    ...overrides
+  };
+}
+
+describe('evidence normalizer', () => {
+  it('maps v1 validation, implementation, release, note, and observation categories', () => {
+    expect(deriveEvidenceCategoryFromV1(evidenceRecord({ kind: 'test-log', summary: 'vitest passed' }))).toBe('validation');
+    expect(deriveEvidenceCategoryFromV1(evidenceRecord({ kind: 'diff-summary', summary: 'changed files' }))).toBe('implementation');
+    expect(deriveEvidenceCategoryFromV1(evidenceRecord({ kind: 'command-log', summary: 'release artifact built' }))).toBe('release');
+    expect(deriveEvidenceCategoryFromV1(evidenceRecord({ kind: 'screenshot', summary: 'dashboard visual' }))).toBe('observation');
+    expect(deriveEvidenceCategoryFromV1(evidenceRecord({ kind: 'note', summary: 'manual note' }))).toBe('note');
+  });
+
+  it('keeps ambiguous command logs out of validation classification', () => {
+    const normalized = normalizeEvidenceRecord(evidenceRecord({ summary: 'listed files successfully' }));
+
+    expect(normalized.category).toBe('operation');
+    expect(normalized.artifactType).toBe('command-log');
+    expect(normalized.outcome).toBe('passed');
+  });
+
+  it('creates deterministic legacy ids without artifact paths', () => {
+    const record = evidenceRecord({ evidencePath: 'artifacts/command-log/private-looking.log' });
+
+    const first = createLegacyEvidenceId(record, 7);
+    const second = createLegacyEvidenceId(record, 7);
+
+    expect(first).toBe(second);
+    expect(first).toMatch(/^legacy:T-0001:7:[a-f0-9]{12}$/);
+    expect(first).not.toContain('private-looking.log');
+  });
+
+  it('normalizes public artifact refs and existence inside the task directory', () => {
+    const taskDir = tempDir();
+    const artifactDir = path.join(taskDir, 'artifacts', 'command-log');
+    fs.mkdirSync(artifactDir, { recursive: true });
+    fs.writeFileSync(path.join(artifactDir, 'summary.txt'), 'ok', 'utf8');
+
+    const normalized = normalizeEvidenceRecord(
+      evidenceRecord({ evidencePath: 'artifacts/command-log/summary.txt' }),
+      { taskDir, lineNumber: 1 }
+    );
+
+    expect(normalized.artifacts).toEqual([
+      {
+        path: 'artifacts/command-log/summary.txt',
+        visibility: 'public',
+        artifactType: 'command-log',
+        exists: true
+      }
+    ]);
+  });
+
+  it('drops private evidence paths from artifact refs while preserving legacy metadata', () => {
+    const normalized = normalizeEvidenceRecord(
+      evidenceRecord({
+        visibility: 'private',
+        evidencePath: 'artifacts/command-log/private.txt',
+        summary: 'token=secret-value'
+      })
+    );
+
+    expect(normalized.summary).toBe('token=[REDACTED]');
+    expect(normalized.artifacts).toEqual([]);
+    expect(normalized.legacy.evidencePath).toBe('artifacts/command-log/private.txt');
+  });
+
+  it('normalizes arrays with stable one-based line numbers and exact resolution tags', () => {
+    const records = normalizeEvidenceRecords([
+      evidenceRecord({ summary: 'first' }),
+      evidenceRecord({ summary: 'second resolves:legacy:T-0001:1:abc123abc123' })
+    ]);
+
+    expect(records[0].id).toMatch(/^legacy:T-0001:1:/);
+    expect(records[1].id).toMatch(/^legacy:T-0001:2:/);
+    expect(records[1].tags).toEqual(['resolves:legacy:T-0001:1:abc123abc123']);
+  });
+});
