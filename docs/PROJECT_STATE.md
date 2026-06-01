@@ -12,9 +12,9 @@ HADARA - Portable Agentic Development Workbench
 
 ## Current Phase
 
-Phase 5 Dashboard / Operator Console is complete through T-0196.
+Phase 5 Dashboard / Operator Console is complete through T-0196. Phase 5.5 Dashboard production-readiness is planned next as T-0197 through T-0204.
 
-The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer, close/evidence hardening through T-0170, Phase 3 task operator console through T-0177, Phase 3.5 operator workflow hardening through T-0185, Phase 4 evidence semantics/hardening through T-0192, and Phase 5 dashboard/operator console work through T-0196 are complete.
+The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer, close/evidence hardening through T-0170, Phase 3 task operator console through T-0177, Phase 3.5 operator workflow hardening through T-0185, Phase 4 evidence semantics/hardening through T-0192, and Phase 5 dashboard/operator console work through T-0196 are complete. The Phase 5.5 plan has been assimilated into the tracked docs without opening a Task Capsule; implementation remains future work.
 
 ## Current Status
 
@@ -61,6 +61,7 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Dashboard operator-console layout exists: the served dashboard now renders top source/health controls, an Agent Lane, Workstream panel, deferred Evidence Lens placeholder, and Bottom Inspector while preserving read-only labels and live/fallback binding.
 - Dashboard selected-task evidence lens exists: task selection reads shared task workbench, evidence lint, and evidence list reports through read-only dashboard APIs; proof status derives from semantic issue codes and summary counts, private-only is an auditability warning, and generated legacy ids are labeled as non-durable compatibility identity.
 - Dashboard timeline read model exists: `hadara.dashboard.timeline.v1` generates deterministic read-only Workstream events from existing read models and `/api/timeline` serves them without polling, streaming, persistence, or private raw paths.
+- Dashboard Phase 5.5 production-readiness is planned: T-0197 through T-0204 should add aggregate bootstrap and task-detail dashboard read models, progressive loading, process-memory TTL cache metadata, degraded refresh handling, timeline identity hardening, optional memory-only polling, and a final route/schema/boundary audit while preserving the no-mutation, no-browser-project-storage, no-private-raw-path, and no-default-streaming boundaries.
 - Private evidence manifests exist for readable project-boundary private evidence source artifacts: raw private bytes are copied only to the ignored private portable store, `hadara.privateEvidence.v1` manifests record SHA-256 hashes, byte counts, retention, and deferred encryption metadata, and manifest writes are privately audited. External absolute private source paths are not copied into the private portable store by default. Committed Task Capsule files and context export exclude private raw content, source paths, and private store paths.
 - Context export read model exists as `hadara.context.export.v1`; read-only MCP `hadara.context.export` returns an in-memory payload with `contextPath: null` and does not write `.hadara/context/HADARA_CONTEXT.md`, while CLI `hadara hermes export-context` remains the file-writing path. Context export includes `docs/IMPLEMENTATION_SOP.md` as the authoritative workflow source, and `summaryOnly` currently returns a warning instead of silently pretending to summarize.
 - Tools list read model exists as `hadara.tools.list.v1`; `hadara tools list --json` and read-only MCP `hadara.tools.list` report the current CLI help surface, read-only MCP tools, opt-in evidence attach status, `availability`/`risk` metadata, and disabled shell/provider/release/broad-write MCP surfaces from a neutral capability registry.

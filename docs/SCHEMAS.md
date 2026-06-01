@@ -8,6 +8,8 @@ Schema layer status: planning and fixture registration, with limited active-run,
 
 T-0079 added fixture registration only. T-0092 added a lightweight runtime validation API for `hadara.active_run.projection.v1` and `hadara.active_run.resume.v1` because those read models are backed by mutable local state. T-0098 registers and validates `hadara.write.preflight.v1` reports before returning CLI write-boundary preflight output. T-0129 validates `hadara.install.plan.v1` before returning installer dry-run plans. T-0131 validates `hadara.featureSmoke.v1` before returning reduced core feature smoke reports over service/read-model surfaces. T-0132 registers `hadara.packageSmoke.v1` and validates deterministic package-smoke report fixtures before package-smoke dry-run or execution commands exist. T-0137 registers and validates `hadara.releaseArtifact.v1` before returning release artifact builder reports. T-0138 registers `hadara.smokeEvidenceSummary.v1` and `hadara.releaseArtifact.manifest.v1` before release gates read existing evidence records or optional reduced summary artifacts. T-0140 registers and validates `hadara.releaseDryRun.v1` before returning final release dry-run reports. T-0141 registers `hadara.releasePublish.v1` before returning approval-gated publish/deploy readiness reports. T-0159 registers `hadara.protocol.consistency.v1` and `hadara.protocol.remediation.v1` and validates focused service/CLI contract reports, including remediation action hash/existence fields. T-0163 registers `hadara.task.upgrade_scaffold.v1` for dry-run-first non-destructive Task Capsule scaffold frame upgrade reports. T-0165 registers `hadara.evidence.lint.v1` for early evidence index lint reports. T-0166 registers `hadara.task.close.v1` for close plan reports with loop-boundary metadata. T-0168 registers `hadara.task.ready.v1` for read-only readiness preflight reports. T-0170 registers `hadara.task.audit_close.v1` and clarifies task-close report/source hash semantics. T-0173 registers `hadara.task.workbench.v1` for the read-only Phase 3 task operator console. T-0178 registers `hadara.runtime.version.v1` for read-only CLI origin diagnostics. T-0180 registers `hadara.task.finish.v1` for dry-run-first bounded task finish/status sync reports. T-0181 registers `hadara.task.next.v1` for read-only next-task recommendations. Broad schema validation remains deferred.
 
+Planned Phase 5.5 dashboard production-readiness schemas are `hadara.dashboard.bootstrap.v1` and `hadara.dashboard.task_detail.v1`. They should be added as fixture-level schemas when T-0197 and T-0199 land, respectively. `hadara.dashboard.bootstrap.v1` is the first-paint aggregate read model for status, task summary, active-run/debt summaries, timeline overview, optional compact selected-task proof, source metadata, cache metadata, and issues. `hadara.dashboard.task_detail.v1` is the selected-task aggregate over workbench, evidence lint, sanitized evidence list, timeline, semantic proof summary, and copyable command guidance. Both schemas must remain read-only, additive where possible, and free of private raw paths or mutation/execution fields.
+
 ## Registry
 
 Schema fixtures live under `src/schemas/`.
@@ -57,6 +59,13 @@ Initial fixtures:
 | `hadara.releasePublish.v1` | `src/schemas/release-publish.schema.json` | fixture | Documents approval-gated publish/deploy readiness reports with token presence checks, private audit for execute requests, and no publish/GitHub/Docker mutation. |
 | `hadara.smokeEvidenceSummary.v1` | `src/schemas/smoke-evidence-summary.schema.json` | fixture | Documents reduced public smoke evidence summary artifacts for package-smoke and clean-checkout smoke attachment. |
 | `hadara.releaseArtifact.manifest.v1` | `src/schemas/release-artifact-manifest.schema.json` | fixture | Documents generated release artifact manifest files for tarball hash and package file lists without publish/GitHub mutation. |
+
+Planned dashboard fixtures:
+
+| Schema ID | File | Status | Notes |
+|---|---|---|---|
+| `hadara.dashboard.bootstrap.v1` | `src/schemas/dashboard-bootstrap.schema.json` | planned | First-paint Dashboard aggregate over existing read models with source/cache metadata; no deep evidence payload or mutation fields. |
+| `hadara.dashboard.task_detail.v1` | `src/schemas/dashboard-task-detail.schema.json` | planned | Selected-task Dashboard aggregate over workbench/evidence/timeline read models with semantic proof summary and copyable commands only. |
 
 Planned Phase 2 fixtures:
 

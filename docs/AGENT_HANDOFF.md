@@ -5,9 +5,9 @@
 | Area | State | Notes |
 |---|---|---|
 | Branch | main | T-0196 is closed-valid and committed; local branch is ahead of origin. |
-| Current Phase | Phase 5 Dashboard / Operator Console complete through T-0196 | Live binding, operator layout, selected-task evidence lens, and deterministic timeline read model are implemented. |
+| Current Phase | Phase 5 Dashboard / Operator Console complete through T-0196; Phase 5.5 planned | Live binding, operator layout, selected-task evidence lens, and deterministic timeline read model are implemented. Phase 5.5 production-readiness planning is now reflected in docs. |
 | Latest Completed Task | T-0196 Dashboard Timeline Read Model | Dashboard Workstream now consumes `hadara.dashboard.timeline.v1` from `/api/timeline` without streaming or mutation. |
-| Active / Next Task | Post-Phase-5 follow-up selection | Use `task next` to choose the next planned slice after reviewing the completed Phase 5 dashboard work. |
+| Active / Next Task | T-0197 Dashboard Bootstrap Read Model planned | No Task Capsule was opened for the documentation assimilation pass; next implementation should create/start T-0197. |
 | Validation Baseline | Docker sync-build passed | `npm run dev:docker-sync-build` passed with 80 files / 552 tests and built CLI version smoke `ok:true`. |
 
 ## Last 3 Completed Tasks
@@ -22,6 +22,7 @@
 
 | Issue | Impact | Next Step |
 |---|---|---|
+| Phase 5.5 is planned but not implemented. | The dashboard still uses the Phase 5 route pattern and may fan out selected-task detail reads before aggregate bootstrap/detail endpoints and cache behavior exist. | Start T-0197 with a Task Capsule before implementing `/api/dashboard/bootstrap`; preserve the read-only/no-browser-project-storage boundaries from the Phase 5.5 plan. |
 | Host workspace has no `node_modules`. | Host `npm run build` and host `npx vitest` are unreliable; escalated `npx` found registry access but could not resolve local `vitest/config`. | Use the reusable Docker workflow for validation or install dependencies intentionally before host validation. |
 | HADARA-dev has multiple CLI execution paths. | `/tmp/hadara/dist` may be fresh while `/workspace/dist` or container-global `/usr/local/bin/hadara` is stale, causing agents to test old CLI behavior. | For CLI changes, build in Docker, refresh `/workspace/dist` from `/tmp/hadara/dist`, and run final smokes via `node /workspace/dist/cli/main.js ... --project /workspace` or explicitly via `/tmp/hadara/dist/cli/main.js`; do not assume global `hadara` is current. |
 | Existing historical capsules mostly use legacy frames. | This is expected and should not fail validation solely for not using v2 tables. | Future `task upgrade-scaffold` / remediation work must be non-destructive and dry-run-first. |
@@ -38,7 +39,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Select the next planned slice. | Phase 5 requested capsules are implemented, validated, closed, and committed through T-0196. | Run `hadara task next --json` and review the next planned capsule. |
+| Start T-0197 Dashboard Bootstrap Read Model. | Phase 5 is complete and Phase 5.5 planning is now tracked in docs; T-0197 is the first production-readiness slice. | Create/open the T-0197 Task Capsule, then implement `hadara.dashboard.bootstrap.v1` and `/api/dashboard/bootstrap` with read-only aggregate behavior. |
 
 ## Validation Baseline
 

@@ -57,6 +57,24 @@ docker exec hadara-dev bash -lc 'cd /tmp/hadara && npm run build >/dev/null && n
 
 Run these commands inside the Docker copy-to-`/tmp/work` pattern unless `docs/AGENT_HANDOFF.md` says the host Node environment has been fixed. For focused checks, prefer `npm run test:focused -- <path>` so the file path is passed directly to Vitest.
 
+## Dashboard Production Readiness Checks
+
+Phase 5.5 Dashboard work should validate responsiveness and read-only boundaries without brittle wall-clock assertions.
+
+Required focused coverage for relevant capsules:
+
+| Area | Expected Coverage |
+|---|---|
+| Bootstrap aggregate | `hadara.dashboard.bootstrap.v1` schema fixture/registration, `/api/dashboard/bootstrap`, selected-task degradation, no deep evidence payload, GET/HEAD-only behavior. |
+| Task detail aggregate | `hadara.dashboard.task_detail.v1` schema fixture/registration, taskId-required behavior, workbench/evidence/timeline composition, semantic proof derivation, private-only auditability warning, no private raw paths. |
+| Cache | Process-memory TTL hit/miss/expiry/bypass behavior, cache metadata, no committed or `.hadara/local` cache writes. |
+| Frontend progressive UX | Immediate shell render, bootstrap-first loading, selected-task lazy detail, previous in-memory view retained on failed refresh, source/cache/load status display. |
+| Browser storage boundary | Static/source tests for no project-state use of `localStorage`, `sessionStorage`, IndexedDB, or cookies. |
+| Debug/action boundary | Debug helpers remain read-only; UI labels avoid command execution, task mutation, evidence append, remediation, publish, or release/package action wording. |
+| Timeline identity | Evidence events prefer semantic id/fingerprint/sourceLine/idStability where available and keep fallback ids display-only. |
+
+Performance budgets should be recorded as observed evidence per capsule rather than enforced as timing-sensitive unit tests. Suggested targets are uncached bootstrap under 500 ms, cached bootstrap under 50 ms, uncached selected-task detail under 800 ms, cached selected-task detail under 80 ms, immediate/static shell paint, and no blank screen on refresh failure.
+
 ## Remote CI Observation
 
 Remote CI observation and GitHub Actions observation are release-readiness signals, not replacements for local reproducible Docker validation. The release-gate readiness marker is: local Docker validation remains the primary reproducible check. The local Docker `npm run check` plus done-level harness validation remain the primary evidence required to complete Task Capsules.

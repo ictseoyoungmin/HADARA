@@ -43,6 +43,8 @@ Phase 4 evidence semantics appear through shared evidence semantic services. Wor
 
 Dashboard Phase 5 selected-task work should treat this report as a read model, not a command surface. A dashboard refresh for selected-task state may re-read the workbench and evidence semantic reports, but it must not run readiness checks, append evidence, call `task finish`, call `task close`, update handoff, or synchronize Task Board state. Any suggested remediation should be presented as copyable command guidance.
 
+Dashboard Phase 5.5 may wrap this report inside `hadara.dashboard.task_detail.v1` so the browser can fetch one selected-task aggregate instead of fanning out to workbench, evidence lint, evidence list, and timeline routes. That aggregate must still reuse the workbench and shared evidence semantic analyzers; it must not become a new task parser, evidence interpreter, command executor, or source of truth. Missing or invalid task ids should degrade through structured dashboard API issues/errors instead of triggering mutation or fallback parsing.
+
 ## Evidence Semantic Consumer Contract
 
 | Consumer Need | Current Source | Future Additive Workbench Field | Notes |
