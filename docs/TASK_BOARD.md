@@ -195,3 +195,4 @@
 | T-0192 | Evidence Semantics Hardening | Done | tasks/T-0192-evidence-semantics-hardening | |
 | T-0193 | Dashboard Live Read Binding | Done | tasks/T-0193-dashboard-live-read-binding | |
 | T-0194 | Dashboard Operator Console Layout | Done | tasks/T-0194-dashboard-operator-console-layout | |
+| T-0195 | Dashboard Selected Task Evidence Lens | Done | tasks/T-0195-dashboard-selected-task-evidence-lens | |

@@ -2,10 +2,12 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { safeCreateActiveRunProjection } from '../services/active-run-state';
+import { createEvidenceLintReport } from '../services/evidence-lint';
 import { createEvidenceListReport } from '../services/evidence-list';
 import { createOperationalDebtReport } from '../services/operational-debt';
 import { createOpsStatusReport } from '../services/operations-status-service';
 import { createTaskListReport } from '../services/task-read-model';
+import { createTaskWorkbenchReport } from '../services/task-workbench';
 import { getIntegerOption, getStringOption } from './args';
 
 export interface DashboardCommandInput {
@@ -100,30 +102,42 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
   if (url.pathname === '/api/tasks') return jsonResponse(createTaskListReport(projectRoot), headOnly);
   if (url.pathname === '/api/active-run') return jsonResponse(safeCreateActiveRunProjection(projectRoot), headOnly);
   if (url.pathname === '/api/debt') return jsonResponse(createOperationalDebtReport(projectRoot), headOnly);
+  if (url.pathname === '/api/task-workbench') {
+    const taskId = url.searchParams.get('taskId')?.trim();
+    if (!taskId) return missingTaskId(headOnly);
+    return jsonResponse(createTaskWorkbenchReport(projectRoot, taskId), headOnly);
+  }
+  if (url.pathname === '/api/evidence-lint') {
+    const taskId = url.searchParams.get('taskId')?.trim();
+    if (!taskId) return missingTaskId(headOnly);
+    return jsonResponse(createEvidenceLintReport(projectRoot, taskId), headOnly);
+  }
   if (url.pathname === '/api/evidence') {
     const taskId = url.searchParams.get('taskId')?.trim();
-    if (!taskId) {
-      return jsonResponse(
-        {
-          schemaVersion: 'hadara.dashboard.api.error.v1',
-          command: 'dashboard.api',
-          ok: false,
-          issues: [
-            {
-              severity: 'error',
-              code: 'TASK_ID_REQUIRED',
-              message: 'Missing required query parameter: taskId.'
-            }
-          ]
-        },
-        headOnly,
-        400
-      );
-    }
+    if (!taskId) return missingTaskId(headOnly);
     return jsonResponse(createEvidenceListReport(projectRoot, { taskId }), headOnly);
   }
 
   return notFound();
+}
+
+function missingTaskId(headOnly: boolean): DashboardStaticResponse {
+  return jsonResponse(
+    {
+      schemaVersion: 'hadara.dashboard.api.error.v1',
+      command: 'dashboard.api',
+      ok: false,
+      issues: [
+        {
+          severity: 'error',
+          code: 'TASK_ID_REQUIRED',
+          message: 'Missing required query parameter: taskId.'
+        }
+      ]
+    },
+    headOnly,
+    400
+  );
 }
 
 function safePathname(requestUrl: string): string | null {

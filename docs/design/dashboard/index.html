@@ -537,6 +537,18 @@
       align-items: center;
     }
 
+    button.task-row {
+      width: 100%;
+      color: inherit;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    button.task-row[aria-pressed="true"] {
+      border-color: rgba(119, 210, 222, 0.42);
+      background: rgba(119, 210, 222, 0.08);
+    }
+
     .tid {
       color: var(--teal);
       font-family: var(--mono);
@@ -782,15 +794,35 @@
               <div class="console-section-head">
                 <div>
                   <h2 class="section-title">Evidence Lens</h2>
-                  <div class="section-subtitle">Selected-task semantics arrive in T-0195.</div>
+                  <div class="section-subtitle">Selected-task proof from shared workbench and evidence semantic reports.</div>
                 </div>
-                <span class="source-chip warn">deferred</span>
+                <span class="source-chip ok">semantic read</span>
               </div>
               <div class="lens-stack">
                 <div class="signal-card">
                   <div class="signal-title">proof status</div>
-                  <div class="signal-value">Pending selection</div>
-                  <div class="signal-note">Uses shared evidence semantics in the next slice; no raw evidence parsing here.</div>
+                  <div class="signal-value" id="proof-status">No task selected</div>
+                  <div class="signal-note" id="proof-note">Select a task to read shared workbench and evidence semantic reports.</div>
+                </div>
+                <div class="parser-row">
+                  <div class="parser-key">selected task</div>
+                  <div class="parser-val" id="selected-task-id">none</div>
+                </div>
+                <div class="parser-row">
+                  <div class="parser-key">strength</div>
+                  <div class="parser-val" id="strength-counts">No semantic summary loaded</div>
+                </div>
+                <div class="parser-row">
+                  <div class="parser-key">visibility</div>
+                  <div class="parser-val" id="visibility-counts">No semantic summary loaded</div>
+                </div>
+                <div class="parser-row">
+                  <div class="parser-key">identity</div>
+                  <div class="parser-val" id="identity-stability">Generated legacy ids are compatibility read-model ids, not durable persisted identity.</div>
+                </div>
+                <div>
+                  <div class="ct">Semantic Issues</div>
+                  <div class="kv-list" id="semantic-issues"></div>
                 </div>
                 <div class="parser-row">
                   <div class="parser-key">full check</div>
@@ -934,6 +966,7 @@
   <script>
     const liveStatusUrl = '/api/status';
     const fixtureUrl = '../fixtures/hadara.ops.status.sample.json';
+    let selectedTaskId = null;
 
     function safeError(error) {
       if (!error) return 'Unavailable';
@@ -1048,6 +1081,12 @@
       root.append(row);
     }
 
+    async function readJson(url) {
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`read failed: ${response.status}`);
+      return response.json();
+    }
+
     function renderMetrics(counts) {
       const labels = [
         ['done', 'Done', 'ok'],
@@ -1074,13 +1113,17 @@
       clear(root);
       const values = Array.isArray(items) ? items : [];
       if (values.length === 0) {
-        appendEmpty(root, 'No completed tasks in fixture');
+        appendEmpty(root, 'No completed tasks in status source');
         return;
       }
       values.forEach((taskId) => {
-        const row = el('div', 'task-row');
+        const row = el('button', 'task-row');
+        row.type = 'button';
+        row.dataset.taskId = text(taskId, '');
+        row.setAttribute('aria-pressed', selectedTaskId === taskId ? 'true' : 'false');
         row.append(el('span', 'tid', text(taskId, 'T-????')));
-        row.append(el('span', 'ttitle', 'completed capsule from status snapshot'));
+        row.append(el('span', 'ttitle', 'select for evidence lens'));
+        row.addEventListener('click', () => selectTask(text(taskId, '')));
         root.append(row);
       });
     }
@@ -1164,6 +1207,83 @@
       return 'pill good';
     }
 
+    function proofStatusFrom(lintReport) {
+      const codes = new Set((Array.isArray(lintReport?.issues) ? lintReport.issues : []).map((issue) => issue.code));
+      if (codes.has('TASK_DONE_WITH_FAILED_EVIDENCE')) return ['failed', 'Blocking unresolved failed evidence.'];
+      if (codes.has('TASK_DONE_WITH_UNEXPLAINED_BLOCKED_EVIDENCE')) return ['blocked', 'Blocking blocked evidence needs explanation.'];
+      if (codes.has('TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE') || codes.has('TASK_DONE_WITH_ONLY_WEAK_EVIDENCE')) return ['weak', 'Blocking proof insufficiency.'];
+      if (codes.has('TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE')) return ['private-only', 'Auditability warning, not a Done blocker.'];
+      const substantive = Number(lintReport?.summary?.semantics?.byStrength?.['substantive-positive'] ?? 0);
+      const semanticErrors = (Array.isArray(lintReport?.issues) ? lintReport.issues : []).some((issue) => issue.severity === 'error' && String(issue.code).startsWith('TASK_DONE_'));
+      if (substantive > 0 && !semanticErrors) return ['sufficient', 'Evidence is sufficient for selected-task proof display.'];
+      return ['unknown', 'No semantic proof summary is available.'];
+    }
+
+    function renderSemanticIssues(issues) {
+      const root = document.getElementById('semantic-issues');
+      clear(root);
+      const semanticIssues = (Array.isArray(issues) ? issues : []).filter((issue) => String(issue.code ?? '').startsWith('TASK_DONE_'));
+      if (semanticIssues.length === 0) {
+        const row = el('div', 'parser-row');
+        row.append(el('div', 'parser-key', 'status'));
+        row.append(el('div', 'parser-val', 'No semantic task proof issues'));
+        root.append(row);
+        return;
+      }
+      semanticIssues.slice(0, 4).forEach((issue) => {
+        const row = el('div', 'parser-row');
+        row.append(el('div', 'parser-key', issue.severity ?? 'issue'));
+        row.append(el('div', 'parser-val', `${issue.code}: ${issue.message}`));
+        root.append(row);
+      });
+    }
+
+    function renderEvidenceLens(taskId, workbench, lintReport, evidenceReport) {
+      const semantics = lintReport?.summary?.semantics;
+      const [status, note] = proofStatusFrom(lintReport);
+      document.getElementById('selected-task-id').textContent = taskId;
+      document.getElementById('proof-status').textContent = status;
+      document.getElementById('proof-note').textContent = note;
+      document.getElementById('strength-counts').textContent = semantics
+        ? `substantive-positive ${Number(semantics.byStrength?.['substantive-positive'] ?? 0)} · weak ${Number(semantics.byStrength?.weak ?? 0)} · failed ${Number(semantics.byStrength?.['substantive-negative'] ?? 0)}`
+        : 'No semantic summary loaded';
+      document.getElementById('visibility-counts').textContent = semantics
+        ? `public ${Number(semantics.publicRecords ?? 0)} · private ${Number(semantics.privateRecords ?? 0)} · legacy ${Number(semantics.legacyRecords ?? 0)}`
+        : 'No semantic summary loaded';
+      document.getElementById('identity-stability').textContent = semantics?.latestSubstantiveEvidenceId
+        ? `Latest substantive evidence: ${semantics.latestSubstantiveEvidenceId}; generated legacy ids remain compatibility read-model ids.`
+        : 'Generated legacy ids are compatibility read-model ids, not durable persisted identity.';
+      renderSemanticIssues(lintReport?.issues);
+      if (workbench?.nextActions?.[0]?.command) {
+        document.querySelector('[data-action="command.copy"]').textContent = 'Copy suggested command';
+      }
+      if (Array.isArray(evidenceReport?.issues) && evidenceReport.issues.length > 0) {
+        document.getElementById('proof-note').textContent = `${note} Evidence source warnings: ${evidenceReport.issues.length}.`;
+      }
+    }
+
+    async function selectTask(taskId) {
+      if (!taskId) return;
+      selectedTaskId = taskId;
+      document.querySelectorAll('[data-task-id]').forEach((node) => {
+        node.setAttribute('aria-pressed', node.dataset.taskId === taskId ? 'true' : 'false');
+      });
+      document.getElementById('selected-task-id').textContent = taskId;
+      document.getElementById('proof-status').textContent = 'Reading reports';
+      document.getElementById('proof-note').textContent = 'Reading shared workbench and evidence semantic reports.';
+      try {
+        const [workbench, lintReport, evidenceReport] = await Promise.all([
+          readJson(`/api/task-workbench?taskId=${encodeURIComponent(taskId)}`),
+          readJson(`/api/evidence-lint?taskId=${encodeURIComponent(taskId)}`),
+          readJson(`/api/evidence?taskId=${encodeURIComponent(taskId)}`)
+        ]);
+        renderEvidenceLens(taskId, workbench, lintReport, evidenceReport);
+      } catch (error) {
+        document.getElementById('proof-status').textContent = 'unknown';
+        document.getElementById('proof-note').textContent = safeError(error);
+      }
+    }
+
     function sourceClass(kind) {
       if (kind === 'live-api') return 'source-chip ok';
       if (kind === 'degraded') return 'source-chip danger';
@@ -1226,6 +1346,9 @@
 
       renderMetrics(status.tasks?.counts);
       renderLastCompleted(lastCompleted);
+      if (!selectedTaskId && lastCompleted[0]) {
+        selectTask(text(lastCompleted[0], ''));
+      }
       renderHandoff(status);
       renderTimeline(status);
       renderMcpGuard(status);

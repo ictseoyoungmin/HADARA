@@ -99,6 +99,7 @@ T-0097 added local read-only routes behind `hadara dashboard serve`:
 GET /api/status
 GET /api/tasks
 GET /api/evidence?taskId=T-00NN
+GET /api/evidence-lint?taskId=T-00NN
 GET /api/active-run
 GET /api/debt
 ```
@@ -177,8 +178,8 @@ Dashboard selected-task panels must not parse `evidence.jsonl`, `EVIDENCE.md`, c
 | Purpose | Source | Contract |
 |---|---|---|
 | Selected task identity/readiness | `hadara task status --task <id> --json` | `hadara.task.workbench.v1` from `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md`. |
-| Evidence semantic summary | `hadara evidence lint --task <id> --json` | `summary.semantics` from `hadara.evidence.lint.v1`. |
-| Evidence semantic issues | `hadara evidence lint --task <id> --json` and task protocol doctor | `issues[]` entries whose codes begin with `TASK_DONE_` or evidence semantic release/private-only codes. |
+| Evidence semantic summary | `GET /api/evidence-lint?taskId=<id>` / `hadara evidence lint --task <id> --json` | `summary.semantics` from `hadara.evidence.lint.v1`. |
+| Evidence semantic issues | `GET /api/evidence-lint?taskId=<id>`, `hadara evidence lint --task <id> --json`, and task protocol doctor | `issues[]` entries whose codes begin with `TASK_DONE_` or evidence semantic release/private-only codes. |
 
 Dashboard proof badges should derive from semantic fields and issue codes only:
 
