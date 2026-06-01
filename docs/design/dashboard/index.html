@@ -729,6 +729,7 @@
             </div>
             <div class="actions">
               <button class="btn teal" type="button" data-action="status.refresh">Refresh Status</button>
+              <button class="btn" type="button" data-action="status.poll.toggle" aria-pressed="false">Auto Refresh Off</button>
               <button class="btn gold" type="button" data-action="command.copy" disabled>Copy next command</button>
               <button class="btn" type="button" data-action="status.inspect" disabled>Inspect JSON</button>
             </div>
@@ -973,6 +974,13 @@
     let selectedTaskId = null;
     let lastSuccessfulRuntimeState = null;
     let currentLoadPhase = 'shell';
+    const pollingState = {
+      enabled: false,
+      timer: null,
+      intervalMs: 30000,
+      failures: 0,
+      paused: false
+    };
 
     function safeError(error) {
       if (!error) return 'Unavailable';
@@ -1473,6 +1481,7 @@
         if (state.source?.kind !== 'degraded') {
           lastSuccessfulRuntimeState = state;
         }
+        return state;
       } catch (error) {
         if (lastSuccessfulRuntimeState) {
           lastSuccessfulRuntimeState.source = {
@@ -1482,8 +1491,10 @@
             error: safeError(error)
           };
           renderRuntime(lastSuccessfulRuntimeState);
+          return lastSuccessfulRuntimeState;
         } else {
           setLoadPhase('degraded', 'Refresh failed and no previous in-memory view is available.');
+          return null;
         }
       } finally {
         if (button) {
@@ -1493,11 +1504,68 @@
       }
     }
 
+    function pollingDelayMs() {
+      return pollingState.intervalMs * Math.min(4, 1 + pollingState.failures);
+    }
+
+    function updatePollingButton() {
+      const button = document.querySelector('[data-action="status.poll.toggle"]');
+      if (!button) return;
+      button.setAttribute('aria-pressed', pollingState.enabled ? 'true' : 'false');
+      button.textContent = pollingState.enabled
+        ? pollingState.paused
+          ? 'Auto Refresh Paused'
+          : 'Auto Refresh On'
+        : 'Auto Refresh Off';
+    }
+
+    function clearPollingTimer() {
+      if (pollingState.timer) {
+        clearTimeout(pollingState.timer);
+        pollingState.timer = null;
+      }
+    }
+
+    function schedulePolling() {
+      clearPollingTimer();
+      updatePollingButton();
+      if (!pollingState.enabled || pollingState.paused) return;
+      pollingState.timer = setTimeout(runPollingRefresh, pollingDelayMs());
+    }
+
+    async function runPollingRefresh() {
+      if (!pollingState.enabled || pollingState.paused) return;
+      setLoadPhase('polling');
+      const state = await refreshStatus();
+      pollingState.failures = state?.source?.kind === 'degraded' ? pollingState.failures + 1 : 0;
+      schedulePolling();
+    }
+
+    function togglePolling() {
+      pollingState.enabled = !pollingState.enabled;
+      pollingState.failures = 0;
+      if (!pollingState.enabled) {
+        clearPollingTimer();
+      }
+      schedulePolling();
+    }
+
+    function pausePolling(paused) {
+      pollingState.paused = paused;
+      schedulePolling();
+    }
+
     function dashboardDebugSnapshot() {
       return {
         readOnly: true,
         selectedTaskId,
         loadPhase: currentLoadPhase,
+        polling: {
+          enabled: pollingState.enabled,
+          paused: pollingState.paused,
+          intervalMs: pollingState.intervalMs,
+          failures: pollingState.failures
+        },
         hasPreviousRuntimeState: Boolean(lastSuccessfulRuntimeState),
         sourceKind: lastSuccessfulRuntimeState?.source?.kind ?? null,
         cacheStatus: lastSuccessfulRuntimeState?.source?.cache?.status ?? null
@@ -1505,7 +1573,9 @@
     }
 
     document.querySelector('[data-action="status.refresh"]')?.addEventListener('click', refreshStatus);
-    window.HadaraDashboard = { loadDashboardWithFallback, loadStatusWithFallback, refreshStatus, debugSnapshot: dashboardDebugSnapshot };
+    document.querySelector('[data-action="status.poll.toggle"]')?.addEventListener('click', togglePolling);
+    document.addEventListener('visibilitychange', () => pausePolling(document.hidden));
+    window.HadaraDashboard = { loadDashboardWithFallback, loadStatusWithFallback, refreshStatus, togglePolling, debugSnapshot: dashboardDebugSnapshot };
     refreshStatus();
   </script>
 </body>

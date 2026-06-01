@@ -222,7 +222,7 @@ The shell should render immediately. Refresh must mean "read again"; it must kee
 
 T-0202 makes load phase observable in the served dashboard (`shell`, `bootstrap-loading`, `bootstrap-ready`, `status-fallback-ready`, `degraded`) and limits the browser debug surface to read-only snapshot helpers. The dashboard performance budget is advisory and documented in `docs/DASHBOARD_PERFORMANCE_BUDGET.md`; unit tests should check behavior and boundaries, not wall-clock timings.
 
-Phase 5.5 may later add optional polling only after aggregate reads, cache metadata, and degraded UX are stable. Polling must be memory-only, operator-controllable or conservative by default, back off on failure, and must not introduce SSE/WebSocket streaming, shell execution, provider calls, MCP writes, task/evidence/handoff mutation, release/package execution, auto-remediation, or multi-agent concurrency claims.
+T-0203 adds optional polling only after aggregate reads, cache metadata, and degraded UX are stable. Polling is memory-only, off by default, operator-toggleable, based on repeated read-only refreshes, pauses while the document is hidden, and backs off on degraded reads. It must not introduce browser project-state persistence, SSE/WebSocket streaming, shell execution, provider calls, MCP writes, task/evidence/handoff mutation, release/package execution, auto-remediation, or multi-agent concurrency claims.
 
 ## Dashboard Timeline
 

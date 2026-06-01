@@ -66,6 +66,7 @@ describe('static dashboard reference', () => {
     expect(html).toContain('MCP Guard');
     expect(html).toContain('notLiveData');
     expect(html).toContain('Refresh Status');
+    expect(html).toContain('Auto Refresh Off');
     expect(html).toContain('LIVE BOOTSTRAP');
     expect(html).toContain('FIXTURE FALLBACK');
     expect(html).toContain('OFFLINE FALLBACK');
@@ -201,8 +202,16 @@ describe('static dashboard reference', () => {
     expect(html).toContain("kind: 'inline-fallback'");
     expect(html).toContain("kind: 'degraded'");
     expect(html).toContain('data-action="status.refresh"');
+    expect(html).toContain('data-action="status.poll.toggle"');
     expect(html).toContain('addEventListener(\'click\', refreshStatus)');
+    expect(html).toContain('addEventListener(\'click\', togglePolling)');
     expect(html).toContain('fetch(url, { cache: \'no-store\' })');
+    expect(html).toContain('const pollingState');
+    expect(html).toContain('intervalMs: 30000');
+    expect(html).toContain('setTimeout(runPollingRefresh, pollingDelayMs())');
+    expect(html).toContain('clearTimeout(pollingState.timer)');
+    expect(html).toContain("setLoadPhase('polling')");
+    expect(html).toContain("document.addEventListener('visibilitychange'");
     expect(html).not.toContain('setInterval');
     expect(html).not.toContain('WebSocket');
     expect(html).not.toContain('EventSource');
@@ -217,6 +226,7 @@ describe('static dashboard reference', () => {
     expect(html).toContain('debugSnapshot: dashboardDebugSnapshot');
     expect(html).toContain('hasPreviousRuntimeState');
     expect(html).toContain('cacheStatus');
+    expect(html).toContain('polling: {');
     expect(html).not.toContain('localStorage');
     expect(html).not.toContain('sessionStorage');
     expect(html).not.toContain('indexedDB');

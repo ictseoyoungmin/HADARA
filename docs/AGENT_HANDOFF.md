@@ -5,24 +5,24 @@
 | Area | State | Notes |
 |---|---|---|
 | Branch | main | Phase 5.5 local commits are ahead of origin; commit/push state should be checked before publishing. |
-| Current Phase | Phase 5 Dashboard / Operator Console complete; Phase 5.5 complete through T-0202 | Aggregate cache and degraded/load-phase UX hardening are implemented. |
-| Latest Completed Task | T-0202 Dashboard Degraded UX and Performance Budget | Dashboard now exposes load phase metadata, retains previous in-memory view on degraded refresh when available, and has advisory performance budget docs. |
-| Active / Next Task | T-0203 Optional Dashboard Polling Refresh planned | Add optional memory-only polling only if it preserves read-only/no-persistence/no-streaming boundaries. |
+| Current Phase | Phase 5 Dashboard / Operator Console complete; Phase 5.5 complete through T-0203 | Aggregate cache, degraded/load-phase UX, and optional memory-only polling are implemented. |
+| Latest Completed Task | T-0203 Optional Dashboard Polling Refresh | Dashboard polling is off by default, operator-toggleable, memory-only, backoff-aware, and non-streaming. |
+| Active / Next Task | T-0204 Dashboard Production Readiness Review planned | Run final dashboard route/schema/boundary audit and capture readiness evidence. |
 | Validation Baseline | Docker sync-build passed | `npm run dev:docker-sync-build` passed with 83 files / 561 tests and built CLI version smoke `ok:true`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0200 Dashboard Timeline Identity Hardening | Timeline evidence events now expose normalized evidence identity metadata and keep fallback ids fallback-only. | T-0200 evidence: focused dashboard timeline/detail/static tests passed with 3 files / 16 tests; Docker sync-build passed with 82 files / 557 tests and built CLI smoke `ok:true`. |
 | T-0201 Dashboard Serve TTL Cache | Added process-memory TTL cache behavior to served dashboard aggregate routes. | T-0201 evidence: host focused test could not run because host `vitest` is unavailable; Docker sync-build passed with 83 files / 560 tests and built CLI smoke `ok:true`. |
 | T-0202 Dashboard Degraded UX and Performance Budget | Made dashboard load/degraded states visible and documented advisory performance targets. | T-0202 evidence: Docker sync-build passed with 83 files / 561 tests and built CLI smoke `ok:true`. |
+| T-0203 Optional Dashboard Polling Refresh | Added off-by-default, memory-only optional polling with backoff and hidden-document pause. | T-0203 evidence: Docker sync-build passed with 83 files / 561 tests and built CLI smoke `ok:true`. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| Dashboard polling remains deferred. | Manual refresh is stable, but optional refresh automation is not implemented yet. | Start T-0203 only as memory-only, operator-controlled or conservative polling with backoff and no streaming/mutation. |
+| Final dashboard readiness review remains. | Implementation slices exist, but final route/schema/private-path/storage/read-only audit is still pending. | Start T-0204 and complete production-readiness review evidence. |
 | Host workspace has no `node_modules`. | Host `npm run build` and host `npx vitest` are unreliable; escalated `npx` found registry access but could not resolve local `vitest/config`. | Use the reusable Docker workflow for validation or install dependencies intentionally before host validation. |
 | HADARA-dev has multiple CLI execution paths. | `/tmp/hadara/dist` may be fresh while `/workspace/dist` or container-global `/usr/local/bin/hadara` is stale, causing agents to test old CLI behavior. | For CLI changes, build in Docker, refresh `/workspace/dist` from `/tmp/hadara/dist`, and run final smokes via `node /workspace/dist/cli/main.js ... --project /workspace` or explicitly via `/tmp/hadara/dist/cli/main.js`; do not assume global `hadara` is current. |
 | Existing historical capsules mostly use legacy frames. | This is expected and should not fail validation solely for not using v2 tables. | Future `task upgrade-scaffold` / remediation work must be non-destructive and dry-run-first. |
@@ -39,17 +39,17 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start T-0203 Optional Dashboard Polling Refresh. | Cache and degraded UX behavior exist; optional polling can now be considered under strict read-only and memory-only boundaries. | Create/open the T-0203 Task Capsule, then add operator-controlled/conservative polling with failure backoff and no SSE/WebSocket. |
+| Start T-0204 Dashboard Production Readiness Review. | Phase 5.5 implementation slices are complete; final audit should verify routes, schemas, cache/polling UX, read-only boundaries, storage, and private-path exposure. | Create/open the T-0204 Task Capsule, run focused audit checks plus full Docker validation, and record readiness findings. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
 | Full repository check | Docker `npm run dev:docker-sync-build` passed with 83 files and 561 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
-| Focused dashboard/degraded UX check | Covered by full Docker after static dashboard assertions were expanded. | Covers load phase display, read-only debug snapshot, no browser project-state persistence, and performance budget doc presence. |
+| Focused dashboard/polling check | Covered by full Docker after static dashboard assertions were expanded. | Covers optional polling toggle, setTimeout scheduling, backoff hooks, hidden-document pause, no browser project-state persistence, and no SSE/WebSocket. |
 | Built CLI smoke | `npm run dev:docker-sync-build` refreshed `/workspace/dist` and ran `hadara version --verbose --json` with `ok:true`. | `distLooksStale:false`. |
-| Done-level readiness | `task ready --task T-0202 --level done --json` passed with zero blockers and zero warnings. | Re-run if additional T-0202 files change before commit. |
-| Close audit | `task audit-close --task T-0202 --json` passed with close evidence present, zero blockers, and zero warnings. | Re-run after final handoff/doc edits so the close source hash matches the committed state. |
+| Done-level readiness | `task ready --task T-0203 --level done --json` passed with zero blockers and zero warnings. | Re-run if additional T-0203 files change before commit. |
+| Close audit | `task audit-close --task T-0203 --json` passed with close evidence present, zero blockers, and zero warnings. | Re-run after final handoff/doc edits so the close source hash matches the committed state. |
 
 ## Historical Index
 
