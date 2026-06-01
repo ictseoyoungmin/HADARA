@@ -200,3 +200,4 @@
 | T-0197 | Dashboard Bootstrap Read Model | Done | tasks/T-0197-dashboard-bootstrap-read-model | |
 | T-0198 | Dashboard Progressive Bootstrap Frontend | Done | tasks/T-0198-dashboard-progressive-bootstrap-frontend | |
 | T-0199 | Dashboard Task Detail Aggregate Endpoint | Done | tasks/T-0199-dashboard-task-detail-aggregate-endpoint | |
+| T-0200 | Dashboard Timeline Identity Hardening | Done | tasks/T-0200-dashboard-timeline-identity-hardening | |

@@ -35,6 +35,10 @@
           "severity": { "enum": ["ok", "warning", "error", "info"] },
           "taskId": { "type": "string" },
           "evidenceId": { "type": "string" },
+          "evidenceFingerprint": { "type": "string" },
+          "evidenceSourceLine": { "type": "number" },
+          "evidenceIdSource": { "enum": ["persisted", "content-fingerprint", "line-fallback"] },
+          "evidenceIdStability": { "enum": ["durable", "stable-unless-edited", "unstable-on-reorder"] },
           "sourcePath": { "type": "string" },
           "command": { "type": "string" },
           "readOnly": { "const": true }

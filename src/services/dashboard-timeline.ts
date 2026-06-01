@@ -1,7 +1,12 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { createEvidenceListReport } from './evidence-list';
 import { createOpsStatusReport } from './operations-status-service';
 import { createTaskListReport } from './task-read-model';
 import { createTaskWorkbenchReport } from './task-workbench';
+import { EvidenceIndexRecord } from '../evidence/evidence';
+import { normalizeEvidenceRecordsWithSourceLines, NormalizedEvidenceRecord } from '../evidence/normalizer';
+import { listTaskCapsules } from '../task/task-capsule';
 
 export type DashboardTimelineEventKind =
   | 'task'
@@ -24,6 +29,10 @@ export interface DashboardTimelineEvent {
   severity: 'ok' | 'warning' | 'error' | 'info';
   taskId?: string;
   evidenceId?: string;
+  evidenceFingerprint?: string;
+  evidenceSourceLine?: number;
+  evidenceIdSource?: NormalizedEvidenceRecord['idSource'];
+  evidenceIdStability?: NormalizedEvidenceRecord['idStability'];
   sourcePath?: string;
   command?: string;
   readOnly: true;
@@ -137,16 +146,43 @@ export function createDashboardTimelineReport(projectRoot: string, input: Dashbo
     for (const issue of evidence.issues) {
       issues.push({ severity: issue.severity, code: `EVIDENCE_LIST_${issue.code}`, message: issue.message });
     }
-    evidence.records.forEach((record, index) => {
+    const normalizedEvidence = readNormalizedEvidenceRecords(projectRoot, input.taskId).slice(0, 12);
+    const recordsForEvents: NormalizedEvidenceRecord[] =
+      normalizedEvidence.length > 0
+        ? normalizedEvidence
+        : evidence.records.map((record, index) => ({
+            schemaVersion: 'hadara.evidence.normalized.v1' as const,
+            id: `artifact-${index + 1}`,
+            idSource: 'line-fallback' as const,
+            idStability: 'unstable-on-reorder' as const,
+            fingerprint: '',
+            time: record.time,
+            taskId: record.taskId,
+            category: 'observation' as const,
+            artifactType: record.kind,
+            outcome: record.result,
+            visibility: record.visibility,
+            summary: record.summary,
+            artifacts: [],
+            issues: [],
+            tags: [],
+            persistedSchemaVersion: record.schemaVersion,
+            legacy: { kind: record.kind, result: record.result, ...(record.evidencePath ? { evidencePath: record.evidencePath } : {}) }
+          }));
+    recordsForEvents.forEach((record) => {
       push({
-        id: `evidence-${index + 1}`,
+        id: record.id,
         time: record.time,
         kind: 'evidence',
-        title: `${record.kind} ${record.result}`,
+        title: `${record.legacy.kind ?? record.artifactType} ${record.legacy.result ?? record.outcome}`,
         summary: record.summary,
-        severity: record.result === 'failed' ? 'error' : record.result === 'blocked' ? 'warning' : record.result === 'passed' ? 'ok' : 'info',
+        severity: record.outcome === 'failed' ? 'error' : record.outcome === 'blocked' ? 'warning' : record.outcome === 'passed' ? 'ok' : 'info',
         taskId: input.taskId,
-        evidenceId: record.evidencePath ? `artifact-${index + 1}` : undefined
+        evidenceId: record.id,
+        ...(record.fingerprint ? { evidenceFingerprint: record.fingerprint } : {}),
+        ...(record.sourceLine ? { evidenceSourceLine: record.sourceLine } : {}),
+        evidenceIdSource: record.idSource,
+        evidenceIdStability: record.idStability
       });
     });
   }
@@ -164,4 +200,50 @@ export function createDashboardTimelineReport(projectRoot: string, input: Dashbo
     events,
     issues
   };
+}
+
+function readNormalizedEvidenceRecords(projectRoot: string, taskId: string): NormalizedEvidenceRecord[] {
+  const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
+  if (!task) return [];
+  const indexPath = path.join(task.dir, 'evidence.jsonl');
+  if (!fs.existsSync(indexPath)) return [];
+  const content = fs.readFileSync(indexPath, 'utf8').trim();
+  if (!content) return [];
+  const entries: Array<{ record: EvidenceIndexRecord; lineNumber: number }> = [];
+  content.split(/\r?\n/).forEach((line, index) => {
+    try {
+      const record = JSON.parse(line) as Partial<EvidenceIndexRecord>;
+      if (isEvidenceIndexRecord(record) && record.taskId === taskId) {
+        entries.push({ record, lineNumber: index + 1 });
+      }
+    } catch {
+      // Evidence-list issues remain the public diagnostic source for malformed lines.
+    }
+  });
+  return normalizeEvidenceRecordsWithSourceLines(entries, { taskDir: task.dir });
+}
+
+function isEvidenceIndexRecord(value: Partial<EvidenceIndexRecord>): value is EvidenceIndexRecord {
+  return (
+    value.schemaVersion === 'hadara.evidence.v1' &&
+    typeof value.time === 'string' &&
+    typeof value.taskId === 'string' &&
+    typeof value.summary === 'string' &&
+    isEvidenceKind(value.kind) &&
+    isEvidenceResult(value.result) &&
+    isEvidenceVisibility(value.visibility) &&
+    (value.evidencePath === undefined || typeof value.evidencePath === 'string')
+  );
+}
+
+function isEvidenceKind(value: unknown): value is EvidenceIndexRecord['kind'] {
+  return value === 'test-log' || value === 'command-log' || value === 'diff-summary' || value === 'screenshot' || value === 'note';
+}
+
+function isEvidenceResult(value: unknown): value is EvidenceIndexRecord['result'] {
+  return value === 'passed' || value === 'failed' || value === 'blocked' || value === 'unknown';
+}
+
+function isEvidenceVisibility(value: unknown): value is EvidenceIndexRecord['visibility'] {
+  return value === 'public' || value === 'private';
 }

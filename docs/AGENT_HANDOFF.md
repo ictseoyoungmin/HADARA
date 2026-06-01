@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0197 is closed-valid locally; commit/push state should be checked before publishing. |
-| Current Phase | Phase 5 Dashboard / Operator Console complete; Phase 5.5 complete through T-0199 | Bootstrap and task-detail aggregate read paths are implemented; timeline identity hardening starts next. |
-| Latest Completed Task | T-0199 Dashboard Task Detail Aggregate Endpoint | `/api/dashboard/task-detail?taskId=...` returns `hadara.dashboard.task_detail.v1`; frontend selected-task detail now uses the aggregate route. |
-| Active / Next Task | T-0200 Dashboard Timeline Identity Hardening planned | Upgrade evidence timeline events to expose semantic identity metadata where available. |
+| Branch | main | Phase 5.5 local commits are ahead of origin; commit/push state should be checked before publishing. |
+| Current Phase | Phase 5 Dashboard / Operator Console complete; Phase 5.5 complete through T-0200 | Bootstrap/detail aggregate read paths and timeline identity metadata are implemented; dashboard TTL cache starts next. |
+| Latest Completed Task | T-0200 Dashboard Timeline Identity Hardening | Evidence timeline events now use normalized evidence ids and expose fingerprint/sourceLine/idSource/idStability metadata where available. |
+| Active / Next Task | T-0201 Dashboard Serve TTL Cache planned | Add process-memory TTL cache metadata and bypass behavior for dashboard aggregate reads. |
 | Validation Baseline | Docker sync-build passed | `npm run dev:docker-sync-build` passed with 82 files / 557 tests and built CLI version smoke `ok:true`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0197 Dashboard Bootstrap Read Model | Added schema-registered first-paint dashboard aggregate read model and `/api/dashboard/bootstrap`. | T-0197 evidence: focused dashboard bootstrap tests passed with 3 files / 17 tests; Docker sync-build passed with 81 files / 555 tests and built CLI smoke `ok:true`. |
 | T-0198 Dashboard Progressive Bootstrap Frontend | Bound the static dashboard first paint to the bootstrap aggregate with status/fixture/inline fallback and in-memory previous-view retention. | T-0198 evidence: focused dashboard frontend/bootstrap tests passed with 2 files / 16 tests; Docker sync-build passed with 81 files / 555 tests and built CLI smoke `ok:true`. |
 | T-0199 Dashboard Task Detail Aggregate Endpoint | Added schema-registered selected-task detail aggregate and switched frontend Evidence Lens to it. | T-0199 evidence: focused dashboard task-detail tests passed with 3 files / 16 tests; Docker sync-build passed with 82 files / 557 tests and built CLI smoke `ok:true`. |
+| T-0200 Dashboard Timeline Identity Hardening | Timeline evidence events now expose normalized evidence identity metadata and keep fallback ids fallback-only. | T-0200 evidence: focused dashboard timeline/detail/static tests passed with 3 files / 16 tests; Docker sync-build passed with 82 files / 557 tests and built CLI smoke `ok:true`. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| Timeline evidence identity is still fallback-oriented. | Evidence timeline rows can still use generated/fallback display ids instead of semantic identity metadata. | Start T-0200 and prefer semantic evidence id, fingerprint, sourceLine, and idStability where available. |
+| Dashboard aggregate reads are not cached yet. | First paint and selected-task detail are less chatty, but repeated refresh still recomputes read models. | Start T-0201 and add process-memory TTL cache with cache metadata and bypass semantics. |
 | Host workspace has no `node_modules`. | Host `npm run build` and host `npx vitest` are unreliable; escalated `npx` found registry access but could not resolve local `vitest/config`. | Use the reusable Docker workflow for validation or install dependencies intentionally before host validation. |
 | HADARA-dev has multiple CLI execution paths. | `/tmp/hadara/dist` may be fresh while `/workspace/dist` or container-global `/usr/local/bin/hadara` is stale, causing agents to test old CLI behavior. | For CLI changes, build in Docker, refresh `/workspace/dist` from `/tmp/hadara/dist`, and run final smokes via `node /workspace/dist/cli/main.js ... --project /workspace` or explicitly via `/tmp/hadara/dist/cli/main.js`; do not assume global `hadara` is current. |
 | Existing historical capsules mostly use legacy frames. | This is expected and should not fail validation solely for not using v2 tables. | Future `task upgrade-scaffold` / remediation work must be non-destructive and dry-run-first. |
@@ -39,17 +39,17 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start T-0200 Dashboard Timeline Identity Hardening. | Bootstrap/detail fan-out is reduced; timeline event identity is the next auditability gap. | Create/open the T-0200 Task Capsule, then expose semantic identity metadata on evidence timeline events where available. |
+| Start T-0201 Dashboard Serve TTL Cache. | Aggregate routes exist; cache metadata should now become meaningful for repeated reads. | Create/open the T-0201 Task Capsule, then implement process-memory TTL cache and `?cache=bypass` support. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
 | Full repository check | Docker `npm run dev:docker-sync-build` passed with 82 files and 557 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
-| Focused dashboard/task-detail check | Docker temp-copy `npm run test:focused -- tests/unit/dashboard-task-detail.test.ts tests/unit/dashboard-static.test.ts tests/unit/schema-fixtures.test.ts` passed with 3 files and 16 tests. | Covers task-detail aggregate, proof metadata, missing task degradation, schema registration, route coverage, and frontend fan-out removal. |
+| Focused dashboard/timeline identity check | Docker temp-copy `npm run test:focused -- tests/unit/dashboard-timeline.test.ts tests/unit/dashboard-task-detail.test.ts tests/unit/dashboard-static.test.ts` passed with 3 files and 16 tests. | Covers normalized evidence id, fingerprint, source line, id stability metadata, task-detail consumer, and route coverage. |
 | Built CLI smoke | `npm run dev:docker-sync-build` refreshed `/workspace/dist` and ran `hadara version --verbose --json` with `ok:true`. | `distLooksStale:false`. |
-| Done-level readiness | Built CLI `task ready --task T-0199 --level done --json` returned `ok:true`. | No blockers or warnings. |
-| Close audit | Built CLI `task audit-close --task T-0199 --json` returned `ok:true`. | Close evidence may be rerun after final handoff/doc updates; latest source hash should match, zero blockers, zero warnings. |
+| Done-level readiness | `task ready --task T-0200 --level done --json` passed with zero blockers and zero warnings. | Re-run if additional T-0200 files change before commit. |
+| Close audit | `task audit-close --task T-0200 --json` passed with close evidence present, zero blockers, and zero warnings. | Re-run after final handoff/doc edits so the close source hash matches the committed state. |
 
 ## Historical Index
 

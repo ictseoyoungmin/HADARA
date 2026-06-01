@@ -225,6 +225,18 @@ GET /api/timeline?taskId=<task-id>
 
 Timeline reports are generated from existing read models and are not persisted. Every event must carry `readOnly: true`, deterministic `order`, safe title/summary metadata, and no private raw paths. T-0196 timeline support is not polling, SSE, websocket, telemetry bridge, or live trace streaming.
 
+T-0200 hardens evidence timeline identity. Evidence events should use normalized evidence `id` when available and expose audit metadata:
+
+| Field | Meaning |
+|---|---|
+| `evidenceId` | Normalized evidence read-model id, such as a legacy line-fallback id. |
+| `evidenceFingerprint` | Content fingerprint for the normalized evidence record. |
+| `evidenceSourceLine` | Actual `evidence.jsonl` source line when available. |
+| `evidenceIdSource` | `persisted`, `content-fingerprint`, or `line-fallback`. |
+| `evidenceIdStability` | `durable`, `stable-unless-edited`, or `unstable-on-reorder`. |
+
+Dashboard consumers must not treat `legacy:*` ids with `unstable-on-reorder` as durable persisted identity. Fallback display ids such as `artifact-N` are fallback-only and should not be shown as durable evidence ids.
+
 ## Selected-Task Evidence Semantics
 
 Dashboard selected-task panels must not parse `evidence.jsonl`, `EVIDENCE.md`, command summaries, or artifact paths to infer proof strength. They should use the shared read surfaces below.

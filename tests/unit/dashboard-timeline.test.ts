@@ -18,6 +18,16 @@ describe('dashboard timeline read model', () => {
     expect(report.events.every((event) => event.readOnly === true)).toBe(true);
     expect(report.events.map((event) => event.order)).toEqual(report.events.map((_, index) => index + 1));
     expect(report.events.some((event) => event.kind === 'evidence' && event.taskId === 'T-0195')).toBe(true);
+    const evidenceEvent = report.events.find((event) => event.kind === 'evidence' && event.taskId === 'T-0195');
+    expect(evidenceEvent).toMatchObject({
+      evidenceId: expect.stringMatching(/^legacy:/),
+      evidenceFingerprint: expect.any(String),
+      evidenceSourceLine: expect.any(Number),
+      evidenceIdSource: 'line-fallback',
+      evidenceIdStability: 'unstable-on-reorder'
+    });
+    expect(evidenceEvent?.id).toBe(evidenceEvent?.evidenceId);
+    expect(evidenceEvent?.evidenceId).not.toMatch(/^artifact-/);
     expect(JSON.stringify(report)).not.toContain('.hadara/local');
     expect(validateSchema('hadara.dashboard.timeline.v1', report).ok).toBe(true);
   });
