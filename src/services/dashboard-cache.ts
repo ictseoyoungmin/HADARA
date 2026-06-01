@@ -1,4 +1,14 @@
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+
 export type DashboardCacheStatus = 'hit' | 'miss' | 'stale' | 'bypass' | 'disabled';
+
+export interface DashboardProjectReference {
+  kind: 'project-root';
+  pathRedacted: true;
+  fingerprint: string;
+}
 
 export interface DashboardCacheMetadata {
   status: DashboardCacheStatus;
@@ -29,6 +39,24 @@ export const DASHBOARD_CACHE_TTLS = {
 } as const;
 
 const entries = new Map<string, DashboardCacheEntry<unknown>>();
+
+export function createDashboardProjectFingerprint(projectRoot: string): string {
+  const realProjectRoot = realpathProjectRoot(projectRoot);
+  const digest = crypto.createHash('sha256').update(realProjectRoot).digest('hex').slice(0, 12);
+  return `sha256:${digest}`;
+}
+
+export function createDashboardProjectReference(projectRoot: string): DashboardProjectReference {
+  return {
+    kind: 'project-root',
+    pathRedacted: true,
+    fingerprint: createDashboardProjectFingerprint(projectRoot)
+  };
+}
+
+export function createDashboardCacheKey(projectRoot: string, ...parts: string[]): string {
+  return ['dashboard', createDashboardProjectFingerprint(projectRoot), ...parts].join(':');
+}
 
 export function disabledDashboardCacheMetadata(key: string, generatedAt: string): DashboardCacheMetadata {
   return {
@@ -119,4 +147,16 @@ export function clearDashboardCacheForTests(): void {
 
 function cloneReport<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function realpathProjectRoot(projectRoot: string): string {
+  try {
+    return fs.realpathSync.native(projectRoot);
+  } catch {
+    try {
+      return fs.realpathSync(projectRoot);
+    } catch {
+      return path.resolve(projectRoot);
+    }
+  }
 }

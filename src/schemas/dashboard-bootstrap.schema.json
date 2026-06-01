@@ -11,11 +11,21 @@
     "generatedAt": { "type": "string" },
     "source": {
       "type": "object",
-      "required": ["kind", "label", "projectRoot"],
+      "required": ["kind", "label", "projectRoot", "projectRootRedacted", "project"],
       "properties": {
         "kind": { "const": "live-api" },
         "label": { "type": "string" },
-        "projectRoot": { "type": "string" }
+        "projectRoot": { "type": "string" },
+        "projectRootRedacted": { "const": true },
+        "project": {
+          "type": "object",
+          "required": ["kind", "pathRedacted", "fingerprint"],
+          "properties": {
+            "kind": { "const": "project-root" },
+            "pathRedacted": { "const": true },
+            "fingerprint": { "type": "string", "pattern": "^sha256:[a-f0-9]{12}$" }
+          }
+        }
       }
     },
     "cache": {

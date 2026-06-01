@@ -1,6 +1,12 @@
 import { createEvidenceLintReport } from './evidence-lint';
 import { createDashboardTimelineReport, DashboardTimelineEvent } from './dashboard-timeline';
-import { DashboardCacheMetadata, disabledDashboardCacheMetadata } from './dashboard-cache';
+import {
+  createDashboardCacheKey,
+  createDashboardProjectReference,
+  DashboardCacheMetadata,
+  DashboardProjectReference,
+  disabledDashboardCacheMetadata
+} from './dashboard-cache';
 import { createOpsStatusReport, OpsStatusReport } from './operations-status-service';
 import { createTaskListReport, TaskJsonSummary } from './task-read-model';
 import { createTaskWorkbenchReport } from './task-workbench';
@@ -20,6 +26,8 @@ export interface DashboardBootstrapReport {
     kind: 'live-api';
     label: string;
     projectRoot: string;
+    projectRootRedacted: true;
+    project: DashboardProjectReference;
   };
   cache: DashboardCacheMetadata;
   status: OpsStatusReport;
@@ -101,9 +109,16 @@ export function createDashboardBootstrapReport(projectRoot: string, input: Dashb
     source: {
       kind: 'live-api',
       label: 'Live dashboard aggregate read',
-      projectRoot
+      projectRoot,
+      projectRootRedacted: true,
+      project: createDashboardProjectReference(projectRoot)
     },
-    cache: disabledDashboardCacheMetadata(selectedTaskId ? `dashboard:bootstrap:selected:${selectedTaskId}` : 'dashboard:bootstrap', generatedAt),
+    cache: disabledDashboardCacheMetadata(
+      selectedTaskId
+        ? createDashboardCacheKey(projectRoot, 'bootstrap', 'selected', selectedTaskId)
+        : createDashboardCacheKey(projectRoot, 'bootstrap'),
+      generatedAt
+    ),
     status,
     taskSummary: {
       total: tasks.count,

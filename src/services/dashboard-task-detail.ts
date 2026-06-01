@@ -1,7 +1,13 @@
 import { createEvidenceLintReport } from './evidence-lint';
 import { createEvidenceListReport, EvidenceListReport } from './evidence-list';
 import { createDashboardTimelineReport, DashboardTimelineReport } from './dashboard-timeline';
-import { DashboardCacheMetadata, disabledDashboardCacheMetadata } from './dashboard-cache';
+import {
+  createDashboardCacheKey,
+  createDashboardProjectReference,
+  DashboardCacheMetadata,
+  DashboardProjectReference,
+  disabledDashboardCacheMetadata
+} from './dashboard-cache';
 import { createTaskWorkbenchReport, TaskWorkbenchReport } from './task-workbench';
 
 export interface DashboardTaskDetailIssue {
@@ -28,6 +34,8 @@ export interface DashboardTaskDetailReport {
   source: {
     kind: 'live-api';
     projectRoot: string;
+    projectRootRedacted: true;
+    project: DashboardProjectReference;
     readOnly: true;
   };
   cache: DashboardCacheMetadata;
@@ -71,9 +79,11 @@ export function createDashboardTaskDetailReport(projectRoot: string, taskId: str
     source: {
       kind: 'live-api',
       projectRoot,
+      projectRootRedacted: true,
+      project: createDashboardProjectReference(projectRoot),
       readOnly: true
     },
-    cache: disabledDashboardCacheMetadata(`dashboard:task-detail:${taskId}`, generatedAt),
+    cache: disabledDashboardCacheMetadata(createDashboardCacheKey(projectRoot, 'task-detail', taskId), generatedAt),
     workbench,
     evidenceLint,
     evidenceList,

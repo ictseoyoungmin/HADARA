@@ -102,6 +102,7 @@
       align-items: center;
       gap: 7px;
       min-height: 26px;
+      max-width: min(520px, 52vw);
       border: 1px solid var(--border);
       border-radius: 4px;
       padding: 4px 8px;
@@ -110,6 +111,8 @@
       font-family: var(--mono);
       font-size: 11px;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .badge.active,
@@ -233,6 +236,13 @@
       background: rgba(236, 232, 213, 0.045);
     }
 
+    .nav-item:hover,
+    .nav-item:focus-visible {
+      color: var(--text);
+      border-color: rgba(119, 210, 222, 0.28);
+      outline: none;
+    }
+
     .nav-count {
       color: var(--teal);
       font-family: var(--mono);
@@ -326,6 +336,10 @@
     .evidence-lens,
     .bottom-inspector {
       min-width: 0;
+    }
+
+    [data-view-section][hidden] {
+      display: none !important;
     }
 
     .console-section-head {
@@ -450,12 +464,14 @@
       display: flex;
       gap: 7px;
       flex-wrap: wrap;
+      min-width: 0;
     }
 
     .source-chip {
       display: inline-flex;
       align-items: center;
       min-height: 24px;
+      max-width: min(620px, 100%);
       border: 1px solid var(--border);
       border-radius: 4px;
       padding: 4px 8px;
@@ -463,6 +479,9 @@
       background: rgba(0, 0, 0, 0.13);
       font-family: var(--mono);
       font-size: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .source-chip.ok { color: var(--teal); }
@@ -703,20 +722,20 @@
 
         <div class="nav-group">
           <div class="nav-label">workspace</div>
-          <a class="nav-item" href="#" aria-current="page"><span>Home</span><span class="nav-count" data-field="health">ok</span></a>
-          <a class="nav-item" href="#"><span>Task Board</span><span class="nav-count" data-field="tasks.counts.done">0</span></a>
+          <a class="nav-item" href="#home" data-view-target="home" aria-current="page"><span>Home</span><span class="nav-count" data-field="health">ok</span></a>
+          <a class="nav-item" href="#task-board" data-view-target="task-board"><span>Task Board</span><span class="nav-count" data-field="tasks.counts.done">0</span></a>
         </div>
         <div class="nav-group">
           <div class="nav-label">capsule detail</div>
-          <a class="nav-item" href="#"><span>Task Capsule</span><span class="nav-count" data-field="tasks.lastCompleted.length">0</span></a>
-          <a class="nav-item" href="#"><span>Evidence</span><span class="nav-count">fixture</span></a>
-          <a class="nav-item" href="#"><span>Handoff</span><span class="nav-count" data-field="handoff.nextRecommendedStep.length">0</span></a>
+          <a class="nav-item" href="#task-capsule" data-view-target="task-capsule"><span>Task Capsule</span><span class="nav-count" data-field="tasks.lastCompleted.length">0</span></a>
+          <a class="nav-item" href="#evidence" data-view-target="evidence"><span>Evidence</span><span class="nav-count">fixture</span></a>
+          <a class="nav-item" href="#handoff" data-view-target="handoff"><span>Handoff</span><span class="nav-count" data-field="handoff.nextRecommendedStep.length">0</span></a>
         </div>
         <div class="nav-group">
           <div class="nav-label">operations</div>
-          <a class="nav-item" href="#"><span>Harness Lab</span><span class="nav-count">read</span></a>
-          <a class="nav-item" href="#"><span>MCP Guard</span><span class="nav-count" data-field="mcp.evidenceAttach.requiresApproval">guard</span></a>
-          <a class="nav-item" href="#"><span>Release Gate</span><span class="nav-count">defer</span></a>
+          <a class="nav-item" href="#harness" data-view-target="harness"><span>Harness Lab</span><span class="nav-count">read</span></a>
+          <a class="nav-item" href="#mcp" data-view-target="mcp"><span>MCP Guard</span><span class="nav-count" data-field="mcp.evidenceAttach.requiresApproval">guard</span></a>
+          <a class="nav-item" href="#release" data-view-target="release"><span>Release Gate</span><span class="nav-count">defer</span></a>
         </div>
       </nav>
 
@@ -744,6 +763,7 @@
                 <span class="source-chip" data-source-loaded>loaded: pending</span>
                 <span class="source-chip" data-cache-status>cache: pending</span>
                 <span class="source-chip" data-load-phase>phase: shell</span>
+                <span class="source-chip" data-active-view-label>view: Home</span>
                 <span class="source-chip warn" data-source-warning>waiting for live status</span>
               </div>
             </div>
@@ -755,7 +775,7 @@
           </div>
 
           <div class="operator-grid" data-layout="operator-console">
-            <aside class="card agent-lane" data-layout="agent-lane" aria-label="Agent lane">
+            <aside class="card agent-lane" data-layout="agent-lane" data-view-section="home task-capsule handoff mcp release" aria-label="Agent lane">
               <div class="console-section-head">
                 <h2 class="section-title">Agent Lane</h2>
                 <span class="source-chip read-only-mark">read-only</span>
@@ -782,7 +802,7 @@
               </div>
             </aside>
 
-            <section class="card workstream-panel" data-layout="workstream-panel" aria-label="Workstream panel">
+            <section class="card workstream-panel" data-layout="workstream-panel" data-view-section="home task-board harness release" aria-label="Workstream panel">
               <div class="console-section-head">
                 <div>
                   <h2 class="section-title">Workstream</h2>
@@ -794,7 +814,7 @@
               <div class="timeline" id="evidence-timeline"></div>
             </section>
 
-            <aside class="card evidence-lens" data-layout="evidence-lens-placeholder" aria-label="Evidence lens">
+            <aside class="card evidence-lens" data-layout="evidence-lens-placeholder" data-view-section="home task-capsule evidence mcp" aria-label="Evidence lens">
               <div class="console-section-head">
                 <div>
                   <h2 class="section-title">Evidence Lens</h2>
@@ -844,7 +864,7 @@
             </aside>
           </div>
 
-          <section class="bottom-inspector" data-layout="bottom-inspector" aria-label="Bottom inspector">
+          <section class="bottom-inspector" data-layout="bottom-inspector" data-view-section="home task-board task-capsule evidence handoff harness mcp release" aria-label="Bottom inspector">
             <div class="console-section-head">
               <h2 class="section-title">Bottom Inspector</h2>
               <span class="source-chip read-only-mark">JSON · Commands · Sources</span>
@@ -974,6 +994,7 @@
     let selectedTaskId = null;
     let lastSuccessfulRuntimeState = null;
     let currentLoadPhase = 'shell';
+    let activeView = 'home';
     const pollingState = {
       enabled: false,
       timer: null,
@@ -981,6 +1002,36 @@
       failures: 0,
       paused: false
     };
+    const viewLabels = {
+      home: 'Home',
+      'task-board': 'Task Board',
+      'task-capsule': 'Task Capsule',
+      evidence: 'Evidence',
+      handoff: 'Handoff',
+      harness: 'Harness Lab',
+      mcp: 'MCP Guard',
+      release: 'Release Gate'
+    };
+
+    function activateDashboardView(view) {
+      activeView = Object.prototype.hasOwnProperty.call(viewLabels, view) ? view : 'home';
+      document.body.dataset.activeView = activeView;
+      document.querySelectorAll('[data-view-target]').forEach((node) => {
+        const isCurrent = node.getAttribute('data-view-target') === activeView;
+        if (isCurrent) {
+          node.setAttribute('aria-current', 'page');
+        } else {
+          node.removeAttribute('aria-current');
+        }
+      });
+      document.querySelectorAll('[data-view-section]').forEach((node) => {
+        const views = (node.getAttribute('data-view-section') ?? '').split(/\s+/).filter(Boolean);
+        node.hidden = !views.includes(activeView);
+      });
+      document.querySelectorAll('[data-active-view-label]').forEach((node) => {
+        node.textContent = `view: ${viewLabels[activeView]}`;
+      });
+    }
 
     function safeError(error) {
       if (!error) return 'Unavailable';
@@ -1560,6 +1611,7 @@
         readOnly: true,
         selectedTaskId,
         loadPhase: currentLoadPhase,
+        activeView,
         polling: {
           enabled: pollingState.enabled,
           paused: pollingState.paused,
@@ -1572,9 +1624,16 @@
       };
     }
 
+    document.querySelectorAll('[data-view-target]').forEach((node) => {
+      node.addEventListener('click', (event) => {
+        event.preventDefault();
+        activateDashboardView(node.getAttribute('data-view-target') ?? 'home');
+      });
+    });
     document.querySelector('[data-action="status.refresh"]')?.addEventListener('click', refreshStatus);
     document.querySelector('[data-action="status.poll.toggle"]')?.addEventListener('click', togglePolling);
     document.addEventListener('visibilitychange', () => pausePolling(document.hidden));
+    activateDashboardView('home');
     window.HadaraDashboard = { loadDashboardWithFallback, loadStatusWithFallback, refreshStatus, togglePolling, debugSnapshot: dashboardDebugSnapshot };
     refreshStatus();
   </script>

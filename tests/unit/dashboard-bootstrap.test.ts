@@ -12,11 +12,17 @@ describe('dashboard bootstrap read model', () => {
       generatedAt: '2026-06-01T00:00:00.000Z',
       source: {
         kind: 'live-api',
-        label: 'Live dashboard aggregate read'
+        label: 'Live dashboard aggregate read',
+        projectRootRedacted: true,
+        project: expect.objectContaining({
+          kind: 'project-root',
+          pathRedacted: true,
+          fingerprint: expect.stringMatching(/^sha256:[a-f0-9]{12}$/)
+        })
       },
       cache: {
         status: 'disabled',
-        key: 'dashboard:bootstrap',
+        key: expect.stringMatching(/^dashboard:sha256:[a-f0-9]{12}:bootstrap$/),
         ttlMs: null,
         generatedAt: '2026-06-01T00:00:00.000Z',
         expiresAt: null
@@ -40,7 +46,7 @@ describe('dashboard bootstrap read model', () => {
   it('includes only compact selected-task proof metadata when requested', () => {
     const report = createDashboardBootstrapReport(process.cwd(), { selectedTaskId: 'T-0196' }, new Date('2026-06-01T00:00:00.000Z'));
 
-    expect(report.cache.key).toBe('dashboard:bootstrap:selected:T-0196');
+    expect(report.cache.key).toMatch(/^dashboard:sha256:[a-f0-9]{12}:bootstrap:selected:T-0196$/);
     expect(report.selectedTask).toMatchObject({
       requestedTaskId: 'T-0196',
       ok: true,

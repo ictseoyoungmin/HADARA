@@ -12,10 +12,20 @@
     "generatedAt": { "type": "string" },
     "source": {
       "type": "object",
-      "required": ["kind", "projectRoot", "readOnly"],
+      "required": ["kind", "projectRoot", "projectRootRedacted", "project", "readOnly"],
       "properties": {
         "kind": { "const": "live-api" },
         "projectRoot": { "type": "string" },
+        "projectRootRedacted": { "const": true },
+        "project": {
+          "type": "object",
+          "required": ["kind", "pathRedacted", "fingerprint"],
+          "properties": {
+            "kind": { "const": "project-root" },
+            "pathRedacted": { "const": true },
+            "fingerprint": { "type": "string", "pattern": "^sha256:[a-f0-9]{12}$" }
+          }
+        },
         "readOnly": { "const": true }
       }
     },

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { safeCreateActiveRunProjection } from '../services/active-run-state';
 import { createDashboardBootstrapReport } from '../services/dashboard-bootstrap';
 import {
+  createDashboardCacheKey,
   createDashboardCacheStatusReport,
   DASHBOARD_CACHE_TTLS,
   getOrCreateCachedReport,
@@ -110,7 +111,9 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
   if (url.pathname === '/api/status') return jsonResponse(createOpsStatusReport(projectRoot), headOnly);
   if (url.pathname === '/api/dashboard/bootstrap') {
     const selectedTaskId = url.searchParams.get('selectedTaskId')?.trim();
-    const key = selectedTaskId ? `dashboard:bootstrap:selected:${selectedTaskId}` : 'dashboard:bootstrap';
+    const key = selectedTaskId
+      ? createDashboardCacheKey(projectRoot, 'bootstrap', 'selected', selectedTaskId)
+      : createDashboardCacheKey(projectRoot, 'bootstrap');
     const cached = getOrCreateCachedReport(
       key,
       { ttlMs: DASHBOARD_CACHE_TTLS.bootstrap, bypass: url.searchParams.get('cache') === 'bypass' },
@@ -121,7 +124,7 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
   if (url.pathname === '/api/dashboard/task-detail') {
     const taskId = url.searchParams.get('taskId')?.trim();
     if (!taskId) return missingTaskId(headOnly);
-    const key = `dashboard:task-detail:${taskId}`;
+    const key = createDashboardCacheKey(projectRoot, 'task-detail', taskId);
     const cached = getOrCreateCachedReport(
       key,
       { ttlMs: DASHBOARD_CACHE_TTLS.taskDetail, bypass: url.searchParams.get('cache') === 'bypass' },
@@ -135,7 +138,7 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
   if (url.pathname === '/api/debt') return jsonResponse(createOperationalDebtReport(projectRoot), headOnly);
   if (url.pathname === '/api/timeline') {
     const taskId = url.searchParams.get('taskId')?.trim();
-    const key = taskId ? `dashboard:timeline:${taskId}` : 'dashboard:timeline';
+    const key = taskId ? createDashboardCacheKey(projectRoot, 'timeline', taskId) : createDashboardCacheKey(projectRoot, 'timeline');
     const cached = getOrCreateCachedReport(
       key,
       { ttlMs: DASHBOARD_CACHE_TTLS.timeline, bypass: url.searchParams.get('cache') === 'bypass' },

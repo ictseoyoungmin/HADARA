@@ -77,6 +77,9 @@ describe('static dashboard reference', () => {
     expect(html).toContain('data-source-kind');
     expect(html).toContain('data-cache-status');
     expect(html).toContain('data-load-phase');
+    expect(html).toContain('data-view-target="task-board"');
+    expect(html).toContain('data-view-section="home task-board harness release"');
+    expect(html).toContain('data-active-view-label');
 
     const forbiddenTokens = [
       'child_process',
@@ -203,8 +206,12 @@ describe('static dashboard reference', () => {
     expect(html).toContain("kind: 'degraded'");
     expect(html).toContain('data-action="status.refresh"');
     expect(html).toContain('data-action="status.poll.toggle"');
+    expect(html).toContain('function activateDashboardView(view)');
+    expect(html).toContain('data-view-target');
+    expect(html).toContain('activeView');
     expect(html).toContain('addEventListener(\'click\', refreshStatus)');
     expect(html).toContain('addEventListener(\'click\', togglePolling)');
+    expect(html).toContain('activateDashboardView(\'home\')');
     expect(html).toContain('fetch(url, { cache: \'no-store\' })');
     expect(html).toContain('const pollingState');
     expect(html).toContain('intervalMs: 30000');
@@ -311,20 +318,32 @@ describe('static dashboard reference', () => {
       schemaVersion: 'hadara.dashboard.timeline.v1',
       command: 'dashboard.timeline',
       taskId: 'T-0195',
-      cache: expect.objectContaining({ status: 'miss', key: 'dashboard:timeline:T-0195' }),
+      source: expect.objectContaining({
+        projectRootRedacted: true,
+        project: expect.objectContaining({ pathRedacted: true, fingerprint: expect.stringMatching(/^sha256:[a-f0-9]{12}$/) })
+      }),
+      cache: expect.objectContaining({ status: 'miss', key: expect.stringMatching(/^dashboard:sha256:[a-f0-9]{12}:timeline:T-0195$/) }),
       events: expect.arrayContaining([expect.objectContaining({ readOnly: true })])
     });
     expect(JSON.parse(bootstrap.body)).toMatchObject({
       schemaVersion: 'hadara.dashboard.bootstrap.v1',
       command: 'dashboard.bootstrap',
+      source: expect.objectContaining({
+        projectRootRedacted: true,
+        project: expect.objectContaining({ pathRedacted: true, fingerprint: expect.stringMatching(/^sha256:[a-f0-9]{12}$/) })
+      }),
       selectedTask: expect.objectContaining({ requestedTaskId: 'T-0196' }),
-      cache: expect.objectContaining({ status: 'miss', key: 'dashboard:bootstrap:selected:T-0196' })
+      cache: expect.objectContaining({ status: 'miss', key: expect.stringMatching(/^dashboard:sha256:[a-f0-9]{12}:bootstrap:selected:T-0196$/) })
     });
     expect(JSON.parse(taskDetail.body)).toMatchObject({
       schemaVersion: 'hadara.dashboard.task_detail.v1',
       command: 'dashboard.task-detail',
       taskId: 'T-0198',
-      cache: expect.objectContaining({ status: 'miss', key: 'dashboard:task-detail:T-0198' }),
+      source: expect.objectContaining({
+        projectRootRedacted: true,
+        project: expect.objectContaining({ pathRedacted: true, fingerprint: expect.stringMatching(/^sha256:[a-f0-9]{12}$/) })
+      }),
+      cache: expect.objectContaining({ status: 'miss', key: expect.stringMatching(/^dashboard:sha256:[a-f0-9]{12}:task-detail:T-0198$/) }),
       proof: expect.objectContaining({ auditabilityWarning: expect.any(Boolean) })
     });
     expect(JSON.parse(activeRun.body)).toMatchObject({

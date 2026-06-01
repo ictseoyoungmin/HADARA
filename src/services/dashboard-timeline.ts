@@ -1,7 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createEvidenceListReport } from './evidence-list';
-import { DashboardCacheMetadata, disabledDashboardCacheMetadata } from './dashboard-cache';
+import {
+  createDashboardCacheKey,
+  createDashboardProjectReference,
+  DashboardCacheMetadata,
+  DashboardProjectReference,
+  disabledDashboardCacheMetadata
+} from './dashboard-cache';
 import { createOpsStatusReport } from './operations-status-service';
 import { createTaskListReport } from './task-read-model';
 import { createTaskWorkbenchReport } from './task-workbench';
@@ -53,6 +59,8 @@ export interface DashboardTimelineReport {
   generatedAt: string;
   source: {
     projectRoot: string;
+    projectRootRedacted: true;
+    project: DashboardProjectReference;
     live: boolean;
   };
   cache: DashboardCacheMetadata;
@@ -197,9 +205,14 @@ export function createDashboardTimelineReport(projectRoot: string, input: Dashbo
     generatedAt: now.toISOString(),
     source: {
       projectRoot,
+      projectRootRedacted: true,
+      project: createDashboardProjectReference(projectRoot),
       live: true
     },
-    cache: disabledDashboardCacheMetadata(input.taskId ? `dashboard:timeline:${input.taskId}` : 'dashboard:timeline', now.toISOString()),
+    cache: disabledDashboardCacheMetadata(
+      input.taskId ? createDashboardCacheKey(projectRoot, 'timeline', input.taskId) : createDashboardCacheKey(projectRoot, 'timeline'),
+      now.toISOString()
+    ),
     events,
     issues
   };

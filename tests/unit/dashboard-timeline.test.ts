@@ -12,7 +12,15 @@ describe('dashboard timeline read model', () => {
       ok: true,
       taskId: 'T-0195',
       generatedAt: '2026-06-01T00:00:00.000Z',
-      source: { live: true }
+      source: {
+        live: true,
+        projectRootRedacted: true,
+        project: expect.objectContaining({
+          kind: 'project-root',
+          pathRedacted: true,
+          fingerprint: expect.stringMatching(/^sha256:[a-f0-9]{12}$/)
+        })
+      }
     });
     expect(report.events.length).toBeGreaterThan(3);
     expect(report.events.every((event) => event.readOnly === true)).toBe(true);

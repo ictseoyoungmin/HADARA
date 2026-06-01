@@ -197,7 +197,22 @@ GET /api/dashboard/task-detail?taskId=T-00NN&cache=bypass
 
 T-0199 implements the detail report as `hadara.dashboard.task_detail.v1`. It composes `hadara.task.workbench.v1`, `hadara.evidence.lint.v1`, sanitized `hadara.evidence.list.v1`, and `hadara.dashboard.timeline.v1`. Proof status must be derived from semantic issue codes and semantic summary data only, with `private-only` treated as an auditability warning rather than a Done blocker. The frontend selected-task Evidence Lens should use this route instead of fanning out across workbench, evidence lint, evidence list, and timeline routes.
 
-T-0201 adds a process-memory TTL cache for served dashboard aggregate reads. Cache metadata reports `hit`, `miss`, `stale`, `bypass`, or `disabled`, plus key, TTL, generated time, and expiry when relevant. The cache stays process-memory only: it is not a database, file watcher, committed artifact, `.hadara/local` state, context-export input, evidence source, or browser project-state store. `?cache=bypass` recomputes a fresh read and does not overwrite the existing cached entry.
+T-0201 adds a process-memory TTL cache for served dashboard aggregate reads. Cache metadata reports `hit`, `miss`, `stale`, `bypass`, or `disabled`, plus key, TTL, generated time, and expiry when relevant. T-0206 scopes aggregate cache keys by a redacted project fingerprint such as `dashboard:sha256:<12hex>:bootstrap`, so multiple project roots in one Node process do not share bootstrap/detail/timeline entries. The cache stays process-memory only: it is not a database, file watcher, committed artifact, `.hadara/local` state, context-export input, evidence source, or browser project-state store. `?cache=bypass` recomputes a fresh read and does not overwrite the existing cached entry.
+
+Browser-facing aggregate sources include a redacted project reference:
+
+```json
+{
+  "projectRootRedacted": true,
+  "project": {
+    "kind": "project-root",
+    "pathRedacted": true,
+    "fingerprint": "sha256:<12hex>"
+  }
+}
+```
+
+The legacy `source.projectRoot` field remains during the v1 compatibility window. New dashboard consumers should use `source.project.fingerprint` and `pathRedacted` instead of displaying or keying behavior on a raw absolute path.
 
 Cache status metadata can be inspected without exposing cached report bodies:
 
@@ -222,7 +237,7 @@ The shell should render immediately. Refresh must mean "read again"; it must kee
 
 T-0202 makes load phase observable in the served dashboard (`shell`, `bootstrap-loading`, `bootstrap-ready`, `status-fallback-ready`, `degraded`) and limits the browser debug surface to read-only snapshot helpers. The dashboard performance budget is advisory and documented in `docs/DASHBOARD_PERFORMANCE_BUDGET.md`; unit tests should check behavior and boundaries, not wall-clock timings.
 
-T-0203 adds optional polling only after aggregate reads, cache metadata, and degraded UX are stable. Polling is memory-only, off by default, operator-toggleable, based on repeated read-only refreshes, pauses while the document is hidden, and backs off on degraded reads. It must not introduce browser project-state persistence, SSE/WebSocket streaming, shell execution, provider calls, MCP writes, task/evidence/handoff mutation, release/package execution, auto-remediation, or multi-agent concurrency claims.
+T-0203 adds optional polling only after aggregate reads, cache metadata, and degraded UX are stable. Polling is memory-only, off by default, operator-toggleable, based on repeated read-only refreshes, pauses while the document is hidden, and backs off on degraded reads. The `window.HadaraDashboard.togglePolling` debug helper is allowed because it only schedules the same read-only refresh path and remains memory-only. It must not introduce browser project-state persistence, SSE/WebSocket streaming, shell execution, provider calls, MCP writes, task/evidence/handoff mutation, release/package execution, auto-remediation, or multi-agent concurrency claims.
 
 ## Dashboard Timeline
 

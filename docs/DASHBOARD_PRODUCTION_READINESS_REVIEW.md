@@ -45,8 +45,8 @@ All served routes are GET/HEAD-only through the dashboard helper and return safe
 | No task/evidence/handoff/release mutation | Pass | Dashboard API helper exposes read reports and safe errors only. |
 | No browser project-state persistence | Pass | No `localStorage`, `sessionStorage`, IndexedDB, or cookies for project state. |
 | No default streaming | Pass | No SSE, WebSocket, or telemetry streaming. |
-| Process-memory cache only | Pass | Cache is an in-process `Map`, not `.hadara/local`, database, file watcher, committed cache, or evidence source. |
-| Private/raw path exposure | Pass | Aggregate detail uses sanitized evidence list and timeline metadata; cache status hides cached bodies. |
+| Process-memory cache only | Pass | Cache is an in-process `Map`, not `.hadara/local`, database, file watcher, committed cache, or evidence source; aggregate cache keys are isolated by a redacted `sha256:<12hex>` project fingerprint. |
+| Private/raw path exposure | Pass with compatibility note | Aggregate reports include `source.projectRootRedacted: true` and `source.project.fingerprint`; legacy `source.projectRoot` remains only for v1 compatibility and should not be displayed by new browser consumers. |
 | Responsive layout baseline | Pass | Static dashboard keeps responsive operator grid and inspector media queries. |
 | Performance evidence posture | Pass | `docs/DASHBOARD_PERFORMANCE_BUDGET.md` records advisory targets and evidence guidance without brittle timing assertions. |
 
@@ -56,8 +56,9 @@ All served routes are GET/HEAD-only through the dashboard helper and return safe
 |---|---|---|
 | Static tests cannot fully prove browser interaction timing. | Accepted | Add Playwright smoke only if future visual/runtime regressions appear. |
 | `hadara.dashboard.cache_status.v1` is not schema-registered. | Accepted | Register it later if an external consumer needs strict schema validation. |
+| Legacy aggregate `source.projectRoot` remains in v1. | Transitional | Prefer `source.project.fingerprint` now and remove raw path exposure in a future v2 contract. |
 | Dashboard remains a local operator console, not a multi-agent live trace system. | Intentional | Keep live stream/provider/MCP write surfaces out of dashboard scope. |
 
 ## Final Readiness Conclusion
 
-Phase 5.5 is ready as a local, read-only, production-grade operator console baseline. The dashboard now uses aggregate read models, route-level process-memory cache metadata, degraded load provenance, optional memory-only polling, and documented performance/readiness boundaries while preserving HADARA governance constraints.
+Phase 5.5 is ready as a local, read-only, production-grade operator console baseline. The dashboard now uses aggregate read models, project-isolated route-level process-memory cache metadata, redacted project source references, degraded load provenance, optional memory-only polling, and documented performance/readiness boundaries while preserving HADARA governance constraints.

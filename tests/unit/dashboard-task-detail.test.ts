@@ -13,11 +13,17 @@ describe('dashboard task detail read model', () => {
       generatedAt: '2026-06-01T00:00:00.000Z',
       source: {
         kind: 'live-api',
+        projectRootRedacted: true,
+        project: expect.objectContaining({
+          kind: 'project-root',
+          pathRedacted: true,
+          fingerprint: expect.stringMatching(/^sha256:[a-f0-9]{12}$/)
+        }),
         readOnly: true
       },
       cache: {
         status: 'disabled',
-        key: 'dashboard:task-detail:T-0198',
+        key: expect.stringMatching(/^dashboard:sha256:[a-f0-9]{12}:task-detail:T-0198$/),
         ttlMs: null,
         expiresAt: null
       },
