@@ -192,3 +192,4 @@
 | T-0189 | Dashboard/TUI Evidence Semantic Contract | Done | tasks/T-0189-dashboard-tui-evidence-semantic-contract | |
 | T-0190 | Evidence v2 Writer and Migration Plan | Done | tasks/T-0190-evidence-v2-writer-and-migration-plan | |
 | T-0191 | Release Evidence Strict Gate | Done | tasks/T-0191-release-evidence-strict-gate | |
+| T-0192 | Evidence Semantics Hardening | Done | tasks/T-0192-evidence-semantics-hardening | |

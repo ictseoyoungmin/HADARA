@@ -57,7 +57,7 @@ Proof status derivation should use this priority order:
 | 1 | `failed` | `TASK_DONE_WITH_FAILED_EVIDENCE`. |
 | 2 | `blocked` | `TASK_DONE_WITH_UNEXPLAINED_BLOCKED_EVIDENCE`. |
 | 3 | `weak` | `TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE` or `TASK_DONE_WITH_ONLY_WEAK_EVIDENCE`. |
-| 4 | `private-only` | `TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE`. |
+| 4 | `private-only` | `TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE`; treat as an auditability warning, not a Done blocker. |
 | 5 | `sufficient` | At least one `substantive-positive` record and no semantic error. |
 | 6 | `unknown` | No semantic summary, no records, or unavailable evidence source. |
 

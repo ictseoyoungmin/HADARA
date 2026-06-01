@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { EvidenceIndexRecord } from '../evidence/evidence';
-import { normalizeEvidenceRecords } from '../evidence/normalizer';
+import { EvidenceIndexRecordWithSourceLine, normalizeEvidenceRecordsWithSourceLines } from '../evidence/normalizer';
 import { analyzeTaskEvidenceSemantics, EvidenceSemanticIssue, EvidenceSemanticSummary } from '../evidence/semantics';
 import { listTaskCapsules } from '../task/task-capsule';
 import { parseMarkdownRows } from './markdown-table';
@@ -51,7 +51,8 @@ export function createEvidenceLintReport(projectRoot: string, taskId: string): E
 
   const indexPath = path.join(task.dir, 'evidence.jsonl');
   const evidencePath = path.join(task.dir, 'EVIDENCE.md');
-  const records = lintEvidenceIndex(projectRoot, taskId, indexPath, issues);
+  const parsedRecords = lintEvidenceIndex(projectRoot, taskId, indexPath, issues);
+  const records = parsedRecords.map((entry) => entry.record);
   const markdownRows = lintEvidenceMarkdown(projectRoot, evidencePath, issues);
 
   if (markdownRows > 0 && records.length === 0) {
@@ -83,7 +84,7 @@ export function createEvidenceLintReport(projectRoot: string, taskId: string): E
     });
   }
 
-  const normalizedRecords = normalizeEvidenceRecords(records, { taskDir: task.dir });
+  const normalizedRecords = normalizeEvidenceRecordsWithSourceLines(parsedRecords, { taskDir: task.dir });
   const semanticAnalysis = analyzeTaskEvidenceSemantics({
     taskId,
     taskDir: toPortablePath(path.relative(projectRoot, task.dir)),
@@ -99,7 +100,7 @@ export function createEvidenceLintReport(projectRoot: string, taskId: string): E
   return buildReport(projectRoot, taskId, records, markdownRows, issues, semanticAnalysis.summary);
 }
 
-function lintEvidenceIndex(projectRoot: string, taskId: string, indexPath: string, issues: EvidenceLintIssue[]): EvidenceIndexRecord[] {
+function lintEvidenceIndex(projectRoot: string, taskId: string, indexPath: string, issues: EvidenceLintIssue[]): EvidenceIndexRecordWithSourceLine[] {
   const relativePath = toPortablePath(path.relative(projectRoot, indexPath));
   if (!fs.existsSync(indexPath)) {
     issues.push({ severity: 'error', code: 'EVIDENCE_INDEX_MISSING', message: 'evidence.jsonl is missing.', path: relativePath });
@@ -109,7 +110,7 @@ function lintEvidenceIndex(projectRoot: string, taskId: string, indexPath: strin
   const content = fs.readFileSync(indexPath, 'utf8').trim();
   if (!content) return [];
 
-  const records: EvidenceIndexRecord[] = [];
+  const records: EvidenceIndexRecordWithSourceLine[] = [];
   content.split(/\r?\n/).forEach((line, index) => {
     const lineNumber = index + 1;
     try {
@@ -141,7 +142,7 @@ function lintEvidenceIndex(projectRoot: string, taskId: string, indexPath: strin
           issues.push({ severity: 'warning', code: 'EVIDENCE_ARTIFACT_MISSING', message: `Public evidence artifact for line ${lineNumber} does not exist.`, path: relativePath, line: lineNumber, expected: record.evidencePath, actual: 'missing' });
         }
       }
-      if (isValidRecord(record, taskId)) records.push(record);
+      if (isValidRecord(record, taskId)) records.push({ record, lineNumber });
     } catch {
       issues.push({ severity: 'error', code: 'EVIDENCE_INDEX_JSON_INVALID', message: `evidence.jsonl line ${lineNumber} is not valid JSON.`, path: relativePath, line: lineNumber });
     }

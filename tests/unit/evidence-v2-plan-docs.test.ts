@@ -14,7 +14,7 @@ describe('evidence v2 writer and migration plan docs', () => {
     const schemas = read('docs/SCHEMAS.md');
     const tests = read('docs/TEST_STRATEGY.md');
 
-    for (const field of ['`schemaVersion`', '`id`', '`category`', '`outcome`', '`artifacts`', '`tags`', '`legacy`']) {
+    for (const field of ['`schemaVersion`', '`id`', '`sourceLine`', '`fingerprint`', '`idSource` / `idStability`', '`category`', '`outcome`', '`artifacts`', '`tags`', '`legacy`']) {
       expect(plan).toContain(field);
     }
 
@@ -25,11 +25,13 @@ describe('evidence v2 writer and migration plan docs', () => {
     expect(plan).toContain('Mixed-version tolerance');
     expect(plan).toContain('No automatic rewrite of existing `evidence.jsonl`.');
     expect(plan).toContain('No automatic rewrite of existing `EVIDENCE.md`.');
-    expect(plan).toContain('No failed-evidence resolution unless an exact marker, later passed same-category evidence, or explicit residual-risk documentation provides the signal.');
+    expect(plan).toContain('Later passed same-category evidence remains a v1 compatibility-only transitional fallback');
+    expect(plan).toContain('No failed-evidence resolution unless an exact marker, v1 compatibility-only later passed same-category evidence, or explicit residual-risk documentation provides the signal.');
 
     expect(schemas).toContain('docs/EVIDENCE_V2_WRITER_MIGRATION_PLAN.md');
     expect(schemas).toContain('must not imply that existing v1 evidence has already been migrated');
     expect(tests).toContain('dual-read v1/v2 normalization');
     expect(tests).toContain('hash-guarded execute behavior');
+    expect(tests).toContain('v1 compatibility-only later passed same-category evidence');
   });
 });

@@ -43,6 +43,10 @@ export interface NormalizedEvidenceRecord {
   schemaVersion: 'hadara.evidence.normalized.v1';
   persistedSchemaVersion: PersistedEvidenceSchemaVersion;
   id: string;
+  idSource: 'persisted' | 'content-fingerprint' | 'line-fallback';
+  idStability: 'durable' | 'stable-unless-edited' | 'unstable-on-reorder';
+  sourceLine?: number;
+  fingerprint: string;
   time: string;
   taskId: string;
   category: EvidenceCategory;
@@ -65,16 +69,26 @@ export interface NormalizeEvidenceRecordContext {
   taskDir?: string;
 }
 
+export interface EvidenceIndexRecordWithSourceLine {
+  record: EvidenceIndexRecord;
+  lineNumber: number;
+}
+
 export function normalizeEvidenceRecord(
   record: EvidenceIndexRecord,
   context: NormalizeEvidenceRecordContext = {}
 ): NormalizedEvidenceRecord {
   const summary = redactSecrets(record.summary);
   const artifactType = normalizeArtifactType(record.kind);
+  const sourceLine = context.lineNumber;
   return {
     schemaVersion: 'hadara.evidence.normalized.v1',
     persistedSchemaVersion: record.schemaVersion,
-    id: createLegacyEvidenceId(record, context.lineNumber ?? 1),
+    id: createLegacyEvidenceId(record, sourceLine ?? 1),
+    idSource: 'line-fallback',
+    idStability: 'unstable-on-reorder',
+    ...(sourceLine ? { sourceLine } : {}),
+    fingerprint: createLegacyEvidenceFingerprint(record),
     time: record.time,
     taskId: record.taskId,
     category: deriveEvidenceCategoryFromV1(record),
@@ -93,9 +107,23 @@ export function normalizeEvidenceRecord(
   };
 }
 
-export function normalizeEvidenceRecords(records: EvidenceIndexRecord[], context: { taskDir?: string } = {}): NormalizedEvidenceRecord[] {
+export function normalizeEvidenceRecordsWithSourceLines(
+  entries: EvidenceIndexRecordWithSourceLine[],
+  context: { taskDir?: string } = {}
+): NormalizedEvidenceRecord[] {
+  return entries.map((entry) => normalizeEvidenceRecord(entry.record, { taskDir: context.taskDir, lineNumber: entry.lineNumber }));
+}
+
+/**
+ * Use only for tests, synthetic records, or records that do not come from a JSONL file.
+ * This does not preserve source-line identity from an evidence.jsonl file.
+ */
+export function normalizeEvidenceRecordsInMemoryOrder(records: EvidenceIndexRecord[], context: { taskDir?: string } = {}): NormalizedEvidenceRecord[] {
   return records.map((record, index) => normalizeEvidenceRecord(record, { taskDir: context.taskDir, lineNumber: index + 1 }));
 }
+
+/** @deprecated Use normalizeEvidenceRecordsWithSourceLines for JSONL records. */
+export const normalizeEvidenceRecords = normalizeEvidenceRecordsInMemoryOrder;
 
 export function deriveEvidenceCategoryFromV1(record: EvidenceIndexRecord): EvidenceCategory {
   if (record.kind === 'test-log') return 'validation';
@@ -112,12 +140,16 @@ export function deriveEvidenceCategoryFromV1(record: EvidenceIndexRecord): Evide
 }
 
 export function createLegacyEvidenceId(record: EvidenceIndexRecord, lineNumber: number): string {
+  const hash = createLegacyEvidenceFingerprint(record).replace(/^sha256:/, '').slice(0, 12);
+  return `legacy:${record.taskId}:${lineNumber}:${hash}`;
+}
+
+export function createLegacyEvidenceFingerprint(record: EvidenceIndexRecord): string {
   const hash = crypto
     .createHash('sha256')
     .update([record.time, record.taskId, record.kind, record.result, redactSecrets(record.summary)].join('\n'), 'utf8')
-    .digest('hex')
-    .slice(0, 12);
-  return `legacy:${record.taskId}:${lineNumber}:${hash}`;
+    .digest('hex');
+  return `sha256:${hash}`;
 }
 
 function normalizeArtifactType(kind: EvidenceIndexRecord['kind']): EvidenceArtifactType {

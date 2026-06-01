@@ -125,7 +125,7 @@ Dashboard proof badges should derive from semantic fields and issue codes only:
 | `weak` | `TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE` or `TASK_DONE_WITH_ONLY_WEAK_EVIDENCE`. | Show blocking proof insufficiency. |
 | `failed` | `TASK_DONE_WITH_FAILED_EVIDENCE`. | Show unresolved failed evidence. |
 | `blocked` | `TASK_DONE_WITH_UNEXPLAINED_BLOCKED_EVIDENCE`. | Show blocked proof needing explanation. |
-| `private-only` | `TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE`. | Show warning; do not expose private paths. |
+| `private-only` | `TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE`. | Show auditability warning, not a Done blocker; do not expose private paths. |
 | `unknown` | No records or semantic summary unavailable. | Show neutral unknown state. |
 
 Evidence rows may show legacy `kind`, `result`, time, visibility, and redacted summaries from read-only reports, but color/tone and badge meaning must come from semantic strength, category, outcome, and issue codes. Private evidence must not reveal raw private paths or private store locations.

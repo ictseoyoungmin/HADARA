@@ -144,6 +144,39 @@ describe('evidence lint', () => {
     );
   });
 
+  it('uses actual JSONL line numbers for generated semantic evidence ids', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Evidence lint source line done');
+    markTaskDone(root, task.id, task.dir);
+    fs.writeFileSync(
+      path.join(task.dir, 'evidence.jsonl'),
+      [
+        'not-json',
+        JSON.stringify({
+          schemaVersion: 'hadara.evidence.v1',
+          time: '2026-05-31T00:00:00.000Z',
+          taskId: task.id,
+          kind: 'test-log',
+          summary: 'Focused vitest failed.',
+          result: 'failed',
+          visibility: 'public'
+        })
+      ].join('\n') + '\n',
+      'utf8'
+    );
+
+    const report = createEvidenceLintReport(root, task.id);
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'EVIDENCE_INDEX_JSON_INVALID', line: 1 }));
+    expect(report.issues).toContainEqual(
+      expect.objectContaining({
+        code: 'TASK_DONE_WITH_FAILED_EVIDENCE',
+        evidenceId: expect.stringMatching(new RegExp(`^legacy:${task.id}:2:[a-f0-9]{12}$`))
+      })
+    );
+  });
+
   it('accepts later passed same-category evidence as failed evidence resolution', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Evidence lint resolved failed done');

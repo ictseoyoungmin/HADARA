@@ -14,6 +14,9 @@ The plan is deliberately dry-run-first and compatibility-first. Existing `hadara
 |---|---|
 | `schemaVersion` | Literal `hadara.evidence.v2`. |
 | `id` | Stable evidence id generated at write time. |
+| `sourceLine` | Optional migration/read-model metadata for the source JSONL line; useful for v1 compatibility diagnostics, not durable identity. |
+| `fingerprint` | Content fingerprint for migration reports and compatibility read models. |
+| `idSource` / `idStability` | Read-model metadata that distinguishes persisted ids from content or line fallback ids and tells consumers whether reorder/edit can change the id. |
 | `time` | ISO timestamp. |
 | `taskId` | Owning Task Capsule id. |
 | `category` | Semantic category such as `validation`, `implementation`, `release`, `security`, `policy`, `operation`, `decision`, `handoff`, `audit`, `note`, or `observation`. |
@@ -35,6 +38,7 @@ Proof `strength` should remain derived by the semantic analyzer, not persisted a
 | Default transition | Default v2 writes happen only after dual-read tests, migration dry-run reports, and consumer contracts are stable. |
 | Markdown frame | `EVIDENCE.md` keeps a human table first; any richer frame is planned separately and must preserve readable history. |
 | Exact resolution markers | Writer help should document `supersedes:<id>` and `resolves:<id>` exact markers; human summary wording must not create semantic resolution. |
+| Subject-aware resolution | Later passed same-category evidence remains a v1 compatibility-only transitional fallback; v2 should add subject/scope metadata so failure resolution can narrow to same category plus same subject. |
 | Private evidence | Private artifacts stay in private portable storage/manifests; public committed records may include safe summaries and manifest metadata only. |
 
 ## Migration Plan
@@ -67,6 +71,7 @@ The command names are proposed design, not implemented behavior.
 | Migration dry-run | Tests prove no writes by default and stable before-hash reporting. |
 | Migration execute | Tests prove hash-guarded writes and no unrelated file mutation. |
 | Protocol/harness | Existing semantic gates behave the same over v1, v2, and mixed evidence. |
+| Identity hardening | Tests prove actual JSONL source lines are preserved for v1 normalization and generated ids expose stability metadata. |
 
 ## Explicit Non-Goals
 
@@ -76,4 +81,4 @@ The command names are proposed design, not implemented behavior.
 - No MCP write expansion.
 - No Dashboard or TUI rendering work.
 - No release/package execution or strict release-gate enforcement.
-- No failed-evidence resolution unless an exact marker, later passed same-category evidence, or explicit residual-risk documentation provides the signal.
+- No failed-evidence resolution unless an exact marker, v1 compatibility-only later passed same-category evidence, or explicit residual-risk documentation provides the signal.

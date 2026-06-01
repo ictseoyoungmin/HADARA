@@ -108,17 +108,17 @@ function writeStrongEvidence(root: string): void {
   const records = [
     evidenceRecord(
       '2026-05-28T10:00:00Z',
-      'hadara package smoke --execute --attach-evidence wrote artifacts/package-smoke summary hadara.packageSmoke.v1',
+      'Reduced public evidence attached for release readiness.',
       'artifacts/package-smoke/summary.json'
     ),
     evidenceRecord(
       '2026-05-28T10:01:00Z',
-      'hadara smoke clean-checkout --execute --attach-evidence wrote artifacts/clean-checkout-smoke summary hadara.cleanCheckoutSmoke.v1',
+      'Reduced public evidence attached for release readiness.',
       'artifacts/clean-checkout-smoke/summary.json'
     ),
     evidenceRecord(
       '2026-05-28T10:02:00Z',
-      'hadara release artifact --execute --attach-evidence generated tarball/checksum/manifest artifacts/release-artifact hadara.releaseArtifact.v1',
+      'Reduced public evidence attached for release readiness.',
       'artifacts/release-artifact/report.json'
     )
   ];

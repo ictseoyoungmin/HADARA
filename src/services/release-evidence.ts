@@ -9,6 +9,7 @@ import { isLegacyReleaseProofEvidence } from '../evidence/semantics';
 export interface ReleaseEvidenceRecord {
   taskId: string;
   taskDir: string;
+  sourceLine?: number;
   time: string;
   kind: string;
   summary: string;
@@ -129,7 +130,7 @@ export function normalizeReleaseEvidenceRecord(record: ReleaseEvidenceRecord): N
       visibility: record.visibility,
       ...(record.evidencePath ? { evidencePath: record.evidencePath } : {})
     },
-    { taskDir: record.taskDir }
+    { taskDir: record.taskDir, lineNumber: record.sourceLine }
   );
   const validation = validateReleaseEvidenceArtifact(record);
   if (validation.schemaVersion && normalized.artifacts.length > 0) {
@@ -160,7 +161,7 @@ function readTaskEvidenceRecords(taskDir: string): ReleaseEvidenceRecord[] {
   return fs
     .readFileSync(evidencePath, 'utf8')
     .split(/\r?\n/)
-    .map((line): ReleaseEvidenceRecord | null => {
+    .map((line, index): ReleaseEvidenceRecord | null => {
       if (line.trim() === '') return null;
       try {
         const parsed: unknown = JSON.parse(line);
@@ -172,6 +173,7 @@ function readTaskEvidenceRecords(taskDir: string): ReleaseEvidenceRecord[] {
         return {
           taskId: parsed.taskId,
           taskDir,
+          sourceLine: index + 1,
           time: parsed.time,
           kind: parsed.kind,
           summary: parsed.summary,

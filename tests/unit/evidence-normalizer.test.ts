@@ -3,10 +3,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  createLegacyEvidenceFingerprint,
   createLegacyEvidenceId,
   deriveEvidenceCategoryFromV1,
   normalizeEvidenceRecord,
-  normalizeEvidenceRecords
+  normalizeEvidenceRecordsInMemoryOrder,
+  normalizeEvidenceRecordsWithSourceLines
 } from '../../src/evidence/normalizer';
 import { EvidenceIndexRecord } from '../../src/evidence/evidence';
 
@@ -57,10 +59,13 @@ describe('evidence normalizer', () => {
 
     const first = createLegacyEvidenceId(record, 7);
     const second = createLegacyEvidenceId(record, 7);
+    const fingerprint = createLegacyEvidenceFingerprint(record);
 
     expect(first).toBe(second);
     expect(first).toMatch(/^legacy:T-0001:7:[a-f0-9]{12}$/);
+    expect(fingerprint).toMatch(/^sha256:[a-f0-9]{64}$/);
     expect(first).not.toContain('private-looking.log');
+    expect(fingerprint).not.toContain('private-looking.log');
   });
 
   it('normalizes public artifact refs and existence inside the task directory', () => {
@@ -82,6 +87,10 @@ describe('evidence normalizer', () => {
         exists: true
       }
     ]);
+    expect(normalized.sourceLine).toBe(1);
+    expect(normalized.idSource).toBe('line-fallback');
+    expect(normalized.idStability).toBe('unstable-on-reorder');
+    expect(normalized.fingerprint).toMatch(/^sha256:[a-f0-9]{64}$/);
   });
 
   it('drops private evidence paths from artifact refs while preserving legacy metadata', () => {
@@ -98,14 +107,26 @@ describe('evidence normalizer', () => {
     expect(normalized.legacy.evidencePath).toBe('artifacts/command-log/private.txt');
   });
 
-  it('normalizes arrays with stable one-based line numbers and exact resolution tags', () => {
-    const records = normalizeEvidenceRecords([
+  it('normalizes synthetic arrays in memory order with one-based fallback lines', () => {
+    const records = normalizeEvidenceRecordsInMemoryOrder([
       evidenceRecord({ summary: 'first' }),
       evidenceRecord({ summary: 'second resolves:legacy:T-0001:1:abc123abc123' })
     ]);
 
     expect(records[0].id).toMatch(/^legacy:T-0001:1:/);
     expect(records[1].id).toMatch(/^legacy:T-0001:2:/);
+    expect(records.map((record) => record.sourceLine)).toEqual([1, 2]);
     expect(records[1].tags).toEqual(['resolves:legacy:T-0001:1:abc123abc123']);
+  });
+
+  it('normalizes parsed JSONL entries with explicit source lines', () => {
+    const records = normalizeEvidenceRecordsWithSourceLines([
+      { lineNumber: 3, record: evidenceRecord({ summary: 'first valid line' }) },
+      { lineNumber: 7, record: evidenceRecord({ summary: 'second valid line' }) }
+    ]);
+
+    expect(records[0].id).toMatch(/^legacy:T-0001:3:/);
+    expect(records[1].id).toMatch(/^legacy:T-0001:7:/);
+    expect(records.map((record) => record.sourceLine)).toEqual([3, 7]);
   });
 });

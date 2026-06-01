@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { assertSchema } from '../core/schema';
 import { createReleaseGateReport } from './operational-debt';
-import { readReleaseEvidenceRecords, ReleaseEvidenceRecord, validateReleaseEvidenceArtifact } from './release-evidence';
+import { isStrictReleaseEvidenceProof, readReleaseEvidenceRecords, ReleaseEvidenceRecord, validateReleaseEvidenceArtifact } from './release-evidence';
 
 export interface ReleaseDryRunReport {
   schemaVersion: 'hadara.releaseDryRun.v1';
@@ -67,7 +67,6 @@ interface EvidenceRequirement {
   name: string;
   category: 'package-smoke' | 'clean-checkout-smoke' | 'release-artifact';
   mode: string;
-  predicate: (record: ReleaseEvidenceRecord) => boolean;
 }
 
 export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunReport {
@@ -175,7 +174,9 @@ export function readCurrentGitCommit(projectRoot: string): string | undefined {
 }
 
 function validateEvidenceRequirement(records: ReleaseEvidenceRecord[], requirement: EvidenceRequirement) {
-  const record = records.filter(requirement.predicate).sort((a, b) => b.time.localeCompare(a.time))[0];
+  const record = records
+    .filter((candidate) => isStrictReleaseEvidenceProof(candidate, { category: requirement.category, mode: requirement.mode }))
+    .sort((a, b) => b.time.localeCompare(a.time))[0];
   if (!record) {
     return {
       code: requirement.code,
@@ -241,37 +242,19 @@ function evidenceRequirements(): EvidenceRequirement[] {
       code: 'PACKAGE_SMOKE_EVIDENCE',
       name: 'Package smoke evidence',
       category: 'package-smoke',
-      mode: 'local',
-      predicate: (record) =>
-        record.result === 'passed' &&
-        record.visibility === 'public' &&
-        record.evidencePath !== undefined &&
-        (includesAll(record.summary, ['package smoke', '--execute']) || includesAny(record.evidencePath, ['artifacts/package-smoke'])) &&
-        includesAny(`${record.summary}\n${record.evidencePath}`, ['--attach-evidence', 'artifacts/package-smoke', 'hadara.packageSmoke.v1'])
+      mode: 'local'
     },
     {
       code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE',
       name: 'Clean checkout smoke evidence',
       category: 'clean-checkout-smoke',
-      mode: 'execute',
-      predicate: (record) =>
-        record.result === 'passed' &&
-        record.visibility === 'public' &&
-        record.evidencePath !== undefined &&
-        (includesAll(record.summary, ['smoke clean-checkout', '--execute']) || includesAny(record.evidencePath, ['artifacts/clean-checkout-smoke'])) &&
-        includesAny(`${record.summary}\n${record.evidencePath}`, ['--attach-evidence', 'artifacts/clean-checkout-smoke', 'hadara.cleanCheckoutSmoke.v1'])
+      mode: 'execute'
     },
     {
       code: 'RELEASE_ARTIFACT_EVIDENCE',
       name: 'Release artifact evidence',
       category: 'release-artifact',
-      mode: 'execute',
-      predicate: (record) =>
-        record.result === 'passed' &&
-        record.visibility === 'public' &&
-        record.evidencePath !== undefined &&
-        includesAll(record.summary, ['release artifact', '--execute']) &&
-        includesAny(record.summary, ['artifacts/release-artifact', 'hadara.releaseArtifact.v1', 'generated tarball/checksum/manifest'])
+      mode: 'execute'
     }
   ];
 }
@@ -291,14 +274,6 @@ function readPackageMetadata(projectRoot: string): { name: string; version: stri
   } catch {
     return { name: 'unknown', version: 'unknown' };
   }
-}
-
-function includesAll(text: string, needles: string[]): boolean {
-  return needles.every((needle) => text.includes(needle));
-}
-
-function includesAny(text: string, needles: string[]): boolean {
-  return needles.some((needle) => text.includes(needle));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
