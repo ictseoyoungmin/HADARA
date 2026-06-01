@@ -1,8 +1,10 @@
 # DASHBOARD_READ_MODEL_CONTRACT
 
-This document defines how a HADARA dashboard consumes `hadara.ops.status.v1`.
+This document defines how a HADARA dashboard consumes HADARA read models, starting with `hadara.ops.status.v1`.
 
 T-0055 introduced this contract for dashboard data consumption. Later dashboard slices may consume it without changing the contract.
+
+Phase 5 dashboard work should move the static/sample-backed dashboard toward a live read-only operator console. The dashboard remains an observation surface: it can read existing APIs, show source provenance, and present copyable commands, but it must not execute workflow actions or mutate project state.
 
 ## Data Source
 
@@ -103,9 +105,70 @@ GET /api/debt
 
 These routes must not execute shell commands, call providers, mutate tasks, perform MCP writes, or persist browser state.
 
+Phase 5 may add these read-only routes:
+
+```text
+GET /api/task-workbench?taskId=T-00NN
+GET /api/timeline?taskId=T-00NN
+GET /api/release-gate?mode=<mode>
+```
+
+Any new dashboard route must remain a read model over existing services. It must not append evidence, run validation, run package/release commands, update Task Capsules, update handoff, update Task Board, call providers, invoke MCP writes, or expose raw private paths.
+
 A future selected-task route may expose `hadara.task.workbench.v1`, but it must remain read-only and should reuse `createTaskWorkbenchReport` rather than building a dashboard-only task parser.
 
 Future Dashboard evidence panels should consume shared evidence semantic read models rather than interpreting raw evidence records in browser code. The intended Phase 4 sequence is: keep `hadara.evidence.v1` persisted records valid, add normalized proof semantics in shared services, expose semantic summary/issues through existing read surfaces, and only then bind Dashboard selected-task proof badges or evidence timeline tone. Evidence v2 writer and migration work must remain a separate follow-up from Dashboard rendering.
+
+## Phase 5 Live Read Binding
+
+The first Phase 5 dashboard slice should bind the static shell to live status data conservatively:
+
+1. Try `GET /api/status`.
+2. If unavailable, fall back to the checked-in fixture.
+3. If the fixture is unavailable or invalid, fall back to inline JSON.
+4. Render source provenance visibly.
+
+The runtime state wrapper should make provenance explicit:
+
+```ts
+type DashboardRuntimeSourceKind =
+  | "live-api"
+  | "fixture-fallback"
+  | "inline-fallback"
+  | "degraded";
+
+interface DashboardRuntimeState<T> {
+  data: T;
+  source: {
+    kind: DashboardRuntimeSourceKind;
+    label: string;
+    fetchedAt?: string;
+    issue?: string;
+  };
+}
+```
+
+For T-0193, refresh is manual only. The control label should be `Refresh Status`, and the implementation must only:
+
+- read `GET /api/status`
+- fall back to the fixture
+- fall back to inline JSON
+- update source provenance
+
+The refresh control must not appear to run checks, synchronize project state, update tasks, refresh evidence by executing validation, or perform remediation. Dashboard actions should be limited to "read again" and "copy command" semantics.
+
+## Phase 5 Operator Console Sequence
+
+Phase 5 should proceed in read-model-first slices:
+
+| Slice | Scope | Boundary |
+|---|---|---|
+| T-0193 Dashboard Live Read Binding | Bind `/api/status` with fixture/inline fallback and visible provenance. | No polling, no selected-task evidence lens, no writes. |
+| T-0194 Dashboard Operator Console Layout | Rework the shell into an operator console for current state, active/next work, gates, and next actions. | Layout only over existing read models; no new execution behavior. |
+| T-0195 Selected Task Evidence Lens | Show selected-task readiness and proof status through workbench/evidence semantic read models. | No raw evidence meaning parsing; private-only remains an auditability warning. |
+| T-0196 Dashboard Timeline Read Model | Add a deterministic read model for selected-task timeline/history. | No SSE, polling, live stream, or mutation behavior. |
+
+Polling refresh, SSE timelines, telemetry/OTel trace bridges, multi-agent lanes, provider execution, remediation actions, and dashboard-triggered task mutation are deferred beyond the Phase 5 core sequence.
 
 ## Selected-Task Evidence Semantics
 
@@ -130,4 +193,17 @@ Dashboard proof badges should derive from semantic fields and issue codes only:
 
 Evidence rows may show legacy `kind`, `result`, time, visibility, and redacted summaries from read-only reports, but color/tone and badge meaning must come from semantic strength, category, outcome, and issue codes. Private evidence must not reveal raw private paths or private store locations.
 
-This contract does not require a Dashboard UI implementation, new browser route, evidence writer migration, MCP write, release/package execution, or strict release-gate enforcement.
+If normalized evidence records expose `idSource`, `idStability`, `sourceLine`, and `fingerprint`, dashboard consumers may display those fields as audit metadata. They must not treat generated `legacy:*` ids or line-fallback identity as durable identity across reorder/delete/migration operations.
+
+## Release Gate Display Semantics
+
+Dashboard release readiness displays must preserve the current distinction between release gate checks and release dry-run checks:
+
+| Surface | Required meaning |
+|---|---|
+| Release gate | Existence, schema validity, source/category/mode match, and strict release proof candidate selection. |
+| Release dry-run | Release gate candidate selection plus freshness, package version, git commit, and manifest hash checks. |
+
+The dashboard should label these as different proof strengths instead of collapsing them into a single generic "release ok" state.
+
+This contract does not require a Dashboard UI implementation, new browser route, evidence writer migration, MCP write, release/package execution, or dashboard-triggered strict release-gate enforcement.

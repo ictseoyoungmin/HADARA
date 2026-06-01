@@ -17,7 +17,7 @@ Consumers should prefer this report when they need task readiness, evidence heal
 
 | Consumer | Guidance |
 |---|---|
-| Dashboard | Use workbench JSON for a selected task detail panel instead of parsing Task Capsule Markdown directly. |
+| Dashboard | Use workbench JSON for a selected task detail panel instead of parsing Task Capsule Markdown directly; dashboard controls should remain read-again or copy-command only. |
 | TUI | Use the service report for selected-task detail, close readiness, and next actions; keep full raw document viewing as a separate detail tab. |
 | MCP | If a future read-only MCP task-workbench tool is added, wrap this report as JSON text and preserve `schemaVersion`, `command`, `ok`, `issues`, and `nextActions`. |
 | External agents | Prefer `task status --json` before stitching together task show, evidence list, evidence lint, protocol doctor, ready, close, and harness reports manually. |
@@ -40,6 +40,8 @@ Task Board consumers should use `task.taskBoardPresent` before displaying `task.
 Close-state consumers should prefer `state.closedValid` over the legacy `state.closed` alias. `state.closeEvidenceFound` means a close evidence-like record exists; `state.closedValid` means a passed canonical close evidence record exists. `state.closeState` may be `not-closed`, `closed-valid`, `close-evidence-found-invalid`, or `close-evidence-malformed`.
 
 Phase 4 evidence semantics appear through shared evidence semantic services. Workbench consumers should not infer proof strength by parsing `evidence.jsonl` directly. Current selected-task consumers should combine `hadara.task.workbench.v1` for task state/readiness with `hadara.evidence.lint.v1` for `summary.semantics` and semantic `issues[]`. A future additive workbench field may inline the same semantic summary, issue list, and compact proof status, but it must reuse the same analyzer rather than inventing a workbench-only taxonomy.
+
+Dashboard Phase 5 selected-task work should treat this report as a read model, not a command surface. A dashboard refresh for selected-task state may re-read the workbench and evidence semantic reports, but it must not run readiness checks, append evidence, call `task finish`, call `task close`, update handoff, or synchronize Task Board state. Any suggested remediation should be presented as copyable command guidance.
 
 ## Evidence Semantic Consumer Contract
 
