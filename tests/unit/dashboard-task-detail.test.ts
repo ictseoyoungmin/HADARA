@@ -15,6 +15,12 @@ describe('dashboard task detail read model', () => {
         kind: 'live-api',
         readOnly: true
       },
+      cache: {
+        status: 'disabled',
+        key: 'dashboard:task-detail:T-0198',
+        ttlMs: null,
+        expiresAt: null
+      },
       workbench: {
         schemaVersion: 'hadara.task.workbench.v1',
         task: expect.objectContaining({ id: 'T-0198' })

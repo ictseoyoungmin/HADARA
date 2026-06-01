@@ -3,7 +3,7 @@
   "$id": "hadara.dashboard.task_detail.v1",
   "x-hadara-schema-id": "hadara.dashboard.task_detail.v1",
   "type": "object",
-  "required": ["schemaVersion", "command", "ok", "taskId", "generatedAt", "source", "workbench", "evidenceLint", "evidenceList", "timeline", "proof", "commandGuidance", "issues"],
+  "required": ["schemaVersion", "command", "ok", "taskId", "generatedAt", "source", "cache", "workbench", "evidenceLint", "evidenceList", "timeline", "proof", "commandGuidance", "issues"],
   "properties": {
     "schemaVersion": { "const": "hadara.dashboard.task_detail.v1" },
     "command": { "const": "dashboard.task-detail" },
@@ -17,6 +17,17 @@
         "kind": { "const": "live-api" },
         "projectRoot": { "type": "string" },
         "readOnly": { "const": true }
+      }
+    },
+    "cache": {
+      "type": "object",
+      "required": ["status", "key", "ttlMs", "generatedAt", "expiresAt"],
+      "properties": {
+        "status": { "enum": ["hit", "miss", "stale", "bypass", "disabled"] },
+        "key": { "type": "string" },
+        "ttlMs": { "type": ["number", "null"] },
+        "generatedAt": { "type": "string" },
+        "expiresAt": { "type": ["string", "null"] }
       }
     },
     "workbench": { "type": "object" },

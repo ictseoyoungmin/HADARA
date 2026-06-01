@@ -3,6 +3,12 @@ import http from 'node:http';
 import path from 'node:path';
 import { safeCreateActiveRunProjection } from '../services/active-run-state';
 import { createDashboardBootstrapReport } from '../services/dashboard-bootstrap';
+import {
+  createDashboardCacheStatusReport,
+  DASHBOARD_CACHE_TTLS,
+  getOrCreateCachedReport,
+  withDashboardCacheMetadata
+} from '../services/dashboard-cache';
 import { createDashboardTaskDetailReport } from '../services/dashboard-task-detail';
 import { createEvidenceLintReport } from '../services/evidence-lint';
 import { createEvidenceListReport } from '../services/evidence-list';
@@ -104,19 +110,38 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
   if (url.pathname === '/api/status') return jsonResponse(createOpsStatusReport(projectRoot), headOnly);
   if (url.pathname === '/api/dashboard/bootstrap') {
     const selectedTaskId = url.searchParams.get('selectedTaskId')?.trim();
-    return jsonResponse(createDashboardBootstrapReport(projectRoot, selectedTaskId ? { selectedTaskId } : {}), headOnly);
+    const key = selectedTaskId ? `dashboard:bootstrap:selected:${selectedTaskId}` : 'dashboard:bootstrap';
+    const cached = getOrCreateCachedReport(
+      key,
+      { ttlMs: DASHBOARD_CACHE_TTLS.bootstrap, bypass: url.searchParams.get('cache') === 'bypass' },
+      () => createDashboardBootstrapReport(projectRoot, selectedTaskId ? { selectedTaskId } : {})
+    );
+    return jsonResponse(withDashboardCacheMetadata(cached.value, cached.cache), headOnly);
   }
   if (url.pathname === '/api/dashboard/task-detail') {
     const taskId = url.searchParams.get('taskId')?.trim();
     if (!taskId) return missingTaskId(headOnly);
-    return jsonResponse(createDashboardTaskDetailReport(projectRoot, taskId), headOnly);
+    const key = `dashboard:task-detail:${taskId}`;
+    const cached = getOrCreateCachedReport(
+      key,
+      { ttlMs: DASHBOARD_CACHE_TTLS.taskDetail, bypass: url.searchParams.get('cache') === 'bypass' },
+      () => createDashboardTaskDetailReport(projectRoot, taskId)
+    );
+    return jsonResponse(withDashboardCacheMetadata(cached.value, cached.cache), headOnly);
   }
+  if (url.pathname === '/api/dashboard/cache/status') return jsonResponse(createDashboardCacheStatusReport(), headOnly);
   if (url.pathname === '/api/tasks') return jsonResponse(createTaskListReport(projectRoot), headOnly);
   if (url.pathname === '/api/active-run') return jsonResponse(safeCreateActiveRunProjection(projectRoot), headOnly);
   if (url.pathname === '/api/debt') return jsonResponse(createOperationalDebtReport(projectRoot), headOnly);
   if (url.pathname === '/api/timeline') {
     const taskId = url.searchParams.get('taskId')?.trim();
-    return jsonResponse(createDashboardTimelineReport(projectRoot, taskId ? { taskId } : {}), headOnly);
+    const key = taskId ? `dashboard:timeline:${taskId}` : 'dashboard:timeline';
+    const cached = getOrCreateCachedReport(
+      key,
+      { ttlMs: DASHBOARD_CACHE_TTLS.timeline, bypass: url.searchParams.get('cache') === 'bypass' },
+      () => createDashboardTimelineReport(projectRoot, taskId ? { taskId } : {})
+    );
+    return jsonResponse(withDashboardCacheMetadata(cached.value, cached.cache), headOnly);
   }
   if (url.pathname === '/api/task-workbench') {
     const taskId = url.searchParams.get('taskId')?.trim();

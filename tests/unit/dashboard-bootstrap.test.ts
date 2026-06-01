@@ -18,6 +18,7 @@ describe('dashboard bootstrap read model', () => {
         status: 'disabled',
         key: 'dashboard:bootstrap',
         ttlMs: null,
+        generatedAt: '2026-06-01T00:00:00.000Z',
         expiresAt: null
       },
       status: {

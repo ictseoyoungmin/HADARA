@@ -1,0 +1,122 @@
+export type DashboardCacheStatus = 'hit' | 'miss' | 'stale' | 'bypass' | 'disabled';
+
+export interface DashboardCacheMetadata {
+  status: DashboardCacheStatus;
+  key: string;
+  ttlMs: number | null;
+  generatedAt: string;
+  expiresAt: string | null;
+}
+
+export interface DashboardCacheEntry<T> {
+  key: string;
+  value: T;
+  generatedAtMs: number;
+  expiresAtMs: number;
+}
+
+export interface DashboardCacheResult<T> {
+  value: T;
+  cache: DashboardCacheMetadata;
+}
+
+export const DASHBOARD_CACHE_TTLS = {
+  bootstrap: 3_000,
+  timeline: 8_000,
+  taskDetail: 15_000,
+  evidenceLint: 30_000,
+  debt: 30_000
+} as const;
+
+const entries = new Map<string, DashboardCacheEntry<unknown>>();
+
+export function disabledDashboardCacheMetadata(key: string, generatedAt: string): DashboardCacheMetadata {
+  return {
+    status: 'disabled',
+    key,
+    ttlMs: null,
+    generatedAt,
+    expiresAt: null
+  };
+}
+
+export function getOrCreateCachedReport<T>(
+  key: string,
+  options: {
+    ttlMs: number;
+    bypass?: boolean;
+    now?: () => number;
+  },
+  create: () => T
+): DashboardCacheResult<T> {
+  const nowMs = options.now?.() ?? Date.now();
+  const nowIso = new Date(nowMs).toISOString();
+  const existing = entries.get(key) as DashboardCacheEntry<T> | undefined;
+
+  if (!options.bypass && existing && existing.expiresAtMs > nowMs) {
+    return {
+      value: cloneReport(existing.value),
+      cache: {
+        status: 'hit',
+        key,
+        ttlMs: options.ttlMs,
+        generatedAt: new Date(existing.generatedAtMs).toISOString(),
+        expiresAt: new Date(existing.expiresAtMs).toISOString()
+      }
+    };
+  }
+
+  const value = create();
+  const expiresAtMs = nowMs + options.ttlMs;
+  const status: DashboardCacheStatus = options.bypass ? 'bypass' : existing ? 'stale' : 'miss';
+
+  if (!options.bypass) {
+    entries.set(key, {
+      key,
+      value: cloneReport(value),
+      generatedAtMs: nowMs,
+      expiresAtMs
+    });
+  }
+
+  return {
+    value,
+    cache: {
+      status,
+      key,
+      ttlMs: options.ttlMs,
+      generatedAt: nowIso,
+      expiresAt: new Date(expiresAtMs).toISOString()
+    }
+  };
+}
+
+export function withDashboardCacheMetadata<T extends object>(value: T, cache: DashboardCacheMetadata): T & { cache: DashboardCacheMetadata } {
+  return {
+    ...value,
+    cache
+  };
+}
+
+export function createDashboardCacheStatusReport(now = new Date()) {
+  return {
+    schemaVersion: 'hadara.dashboard.cache_status.v1',
+    command: 'dashboard.cache.status',
+    ok: true,
+    generatedAt: now.toISOString(),
+    processMemoryOnly: true,
+    entries: Array.from(entries.values()).map((entry) => ({
+      key: entry.key,
+      generatedAt: new Date(entry.generatedAtMs).toISOString(),
+      expiresAt: new Date(entry.expiresAtMs).toISOString()
+    }))
+  };
+}
+
+export function clearDashboardCacheForTests(): void {
+  entries.clear();
+}
+
+function cloneReport<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}

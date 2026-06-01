@@ -1,12 +1,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createDashboardServerResponse, createDashboardStaticResponse } from '../../src/cli/dashboard';
+import { clearDashboardCacheForTests } from '../../src/services/dashboard-cache';
 
 const dashboardPath = path.join(process.cwd(), 'docs', 'design', 'dashboard', 'index.html');
 const fixturePath = path.join(process.cwd(), 'docs', 'design', 'fixtures', 'hadara.ops.status.sample.json');
 
 describe('static dashboard reference', () => {
+  beforeEach(() => {
+    clearDashboardCacheForTests();
+  });
+
   function readFixture(): Record<string, unknown> {
     return JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as Record<string, unknown>;
   }
@@ -271,18 +276,20 @@ describe('static dashboard reference', () => {
       schemaVersion: 'hadara.dashboard.timeline.v1',
       command: 'dashboard.timeline',
       taskId: 'T-0195',
+      cache: expect.objectContaining({ status: 'miss', key: 'dashboard:timeline:T-0195' }),
       events: expect.arrayContaining([expect.objectContaining({ readOnly: true })])
     });
     expect(JSON.parse(bootstrap.body)).toMatchObject({
       schemaVersion: 'hadara.dashboard.bootstrap.v1',
       command: 'dashboard.bootstrap',
       selectedTask: expect.objectContaining({ requestedTaskId: 'T-0196' }),
-      cache: expect.objectContaining({ status: 'disabled' })
+      cache: expect.objectContaining({ status: 'miss', key: 'dashboard:bootstrap:selected:T-0196' })
     });
     expect(JSON.parse(taskDetail.body)).toMatchObject({
       schemaVersion: 'hadara.dashboard.task_detail.v1',
       command: 'dashboard.task-detail',
       taskId: 'T-0198',
+      cache: expect.objectContaining({ status: 'miss', key: 'dashboard:task-detail:T-0198' }),
       proof: expect.objectContaining({ auditabilityWarning: expect.any(Boolean) })
     });
     expect(JSON.parse(activeRun.body)).toMatchObject({
@@ -292,6 +299,17 @@ describe('static dashboard reference', () => {
     expect(JSON.parse(debt.body)).toMatchObject({
       schemaVersion: 'hadara.operational_debt.v1',
       command: 'operational-debt.report'
+    });
+
+    const bootstrapHit = JSON.parse(createDashboardServerResponse(process.cwd(), '/api/dashboard/bootstrap?selectedTaskId=T-0196').body);
+    const bootstrapBypass = JSON.parse(createDashboardServerResponse(process.cwd(), '/api/dashboard/bootstrap?selectedTaskId=T-0196&cache=bypass').body);
+    const cacheStatus = JSON.parse(createDashboardServerResponse(process.cwd(), '/api/dashboard/cache/status').body);
+    expect(bootstrapHit.cache.status).toBe('hit');
+    expect(bootstrapBypass.cache.status).toBe('bypass');
+    expect(cacheStatus).toMatchObject({
+      schemaVersion: 'hadara.dashboard.cache_status.v1',
+      command: 'dashboard.cache.status',
+      processMemoryOnly: true
     });
   });
 

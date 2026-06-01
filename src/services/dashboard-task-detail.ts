@@ -1,6 +1,7 @@
 import { createEvidenceLintReport } from './evidence-lint';
 import { createEvidenceListReport, EvidenceListReport } from './evidence-list';
 import { createDashboardTimelineReport, DashboardTimelineReport } from './dashboard-timeline';
+import { DashboardCacheMetadata, disabledDashboardCacheMetadata } from './dashboard-cache';
 import { createTaskWorkbenchReport, TaskWorkbenchReport } from './task-workbench';
 
 export interface DashboardTaskDetailIssue {
@@ -29,6 +30,7 @@ export interface DashboardTaskDetailReport {
     projectRoot: string;
     readOnly: true;
   };
+  cache: DashboardCacheMetadata;
   workbench: TaskWorkbenchReport;
   evidenceLint: ReturnType<typeof createEvidenceLintReport>;
   evidenceList: EvidenceListReport;
@@ -71,6 +73,7 @@ export function createDashboardTaskDetailReport(projectRoot: string, taskId: str
       projectRoot,
       readOnly: true
     },
+    cache: disabledDashboardCacheMetadata(`dashboard:task-detail:${taskId}`, generatedAt),
     workbench,
     evidenceLint,
     evidenceList,

@@ -186,7 +186,7 @@ GET /api/dashboard/bootstrap?selectedTaskId=T-00NN
 GET /api/dashboard/bootstrap?cache=bypass
 ```
 
-T-0197 implements the bootstrap report as `hadara.dashboard.bootstrap.v1`. It includes operations status, task count/last-completed/next-work summary, timeline overview, active-run and debt summaries where available, optional compact selected-task proof, source metadata, cache metadata, and issues. It must not include full evidence lists, raw artifacts, private raw paths, or deep selected-task payloads. In T-0197 cache metadata is a placeholder with `status: "disabled"`; TTL cache behavior remains T-0201 scope.
+T-0197 implements the bootstrap report as `hadara.dashboard.bootstrap.v1`. It includes operations status, task count/last-completed/next-work summary, timeline overview, active-run and debt summaries where available, optional compact selected-task proof, source metadata, cache metadata, and issues. It must not include full evidence lists, raw artifacts, private raw paths, or deep selected-task payloads. T-0201 adds route-level process-memory TTL cache behavior for the served bootstrap API; direct service construction may still report `status: "disabled"` when not served through the dashboard API.
 
 Selected-task detail should move to a single aggregate read:
 
@@ -197,7 +197,15 @@ GET /api/dashboard/task-detail?taskId=T-00NN&cache=bypass
 
 T-0199 implements the detail report as `hadara.dashboard.task_detail.v1`. It composes `hadara.task.workbench.v1`, `hadara.evidence.lint.v1`, sanitized `hadara.evidence.list.v1`, and `hadara.dashboard.timeline.v1`. Proof status must be derived from semantic issue codes and semantic summary data only, with `private-only` treated as an auditability warning rather than a Done blocker. The frontend selected-task Evidence Lens should use this route instead of fanning out across workbench, evidence lint, evidence list, and timeline routes.
 
-Phase 5.5 may add a process-memory TTL cache for dashboard aggregate reads. Cache metadata should report `hit`, `miss`, `stale`, `bypass`, or `disabled`, plus key, TTL, generated time, and expiry when relevant. The cache must stay process-memory only: it is not a database, file watcher, committed artifact, `.hadara/local` state, context-export input, evidence source, or browser project-state store.
+T-0201 adds a process-memory TTL cache for served dashboard aggregate reads. Cache metadata reports `hit`, `miss`, `stale`, `bypass`, or `disabled`, plus key, TTL, generated time, and expiry when relevant. The cache stays process-memory only: it is not a database, file watcher, committed artifact, `.hadara/local` state, context-export input, evidence source, or browser project-state store. `?cache=bypass` recomputes a fresh read and does not overwrite the existing cached entry.
+
+Cache status metadata can be inspected without exposing cached report bodies:
+
+```text
+GET /api/dashboard/cache/status
+```
+
+This route is read-only and metadata-only; it reports keys and timestamps, not cached values or private raw paths.
 
 T-0198 makes frontend loading progressive for the first screen:
 

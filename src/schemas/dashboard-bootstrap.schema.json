@@ -22,11 +22,11 @@
       "type": "object",
       "required": ["status", "key", "ttlMs", "generatedAt", "expiresAt"],
       "properties": {
-        "status": { "const": "disabled" },
+        "status": { "enum": ["hit", "miss", "stale", "bypass", "disabled"] },
         "key": { "type": "string" },
-        "ttlMs": { "type": "null" },
+        "ttlMs": { "type": ["number", "null"] },
         "generatedAt": { "type": "string" },
-        "expiresAt": { "type": "null" }
+        "expiresAt": { "type": ["string", "null"] }
       }
     },
     "status": { "type": "object" },

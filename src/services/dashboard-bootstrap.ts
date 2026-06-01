@@ -1,5 +1,6 @@
 import { createEvidenceLintReport } from './evidence-lint';
 import { createDashboardTimelineReport, DashboardTimelineEvent } from './dashboard-timeline';
+import { DashboardCacheMetadata, disabledDashboardCacheMetadata } from './dashboard-cache';
 import { createOpsStatusReport, OpsStatusReport } from './operations-status-service';
 import { createTaskListReport, TaskJsonSummary } from './task-read-model';
 import { createTaskWorkbenchReport } from './task-workbench';
@@ -20,13 +21,7 @@ export interface DashboardBootstrapReport {
     label: string;
     projectRoot: string;
   };
-  cache: {
-    status: 'disabled';
-    key: string;
-    ttlMs: null;
-    generatedAt: string;
-    expiresAt: null;
-  };
+  cache: DashboardCacheMetadata;
   status: OpsStatusReport;
   taskSummary: {
     total: number;
@@ -108,13 +103,7 @@ export function createDashboardBootstrapReport(projectRoot: string, input: Dashb
       label: 'Live dashboard aggregate read',
       projectRoot
     },
-    cache: {
-      status: 'disabled',
-      key: selectedTaskId ? `dashboard:bootstrap:selected:${selectedTaskId}` : 'dashboard:bootstrap',
-      ttlMs: null,
-      generatedAt,
-      expiresAt: null
-    },
+    cache: disabledDashboardCacheMetadata(selectedTaskId ? `dashboard:bootstrap:selected:${selectedTaskId}` : 'dashboard:bootstrap', generatedAt),
     status,
     taskSummary: {
       total: tasks.count,

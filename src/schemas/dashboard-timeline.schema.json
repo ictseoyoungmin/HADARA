@@ -3,7 +3,7 @@
   "$id": "hadara.dashboard.timeline.v1",
   "x-hadara-schema-id": "hadara.dashboard.timeline.v1",
   "type": "object",
-  "required": ["schemaVersion", "command", "ok", "generatedAt", "source", "events", "issues"],
+  "required": ["schemaVersion", "command", "ok", "generatedAt", "source", "cache", "events", "issues"],
   "properties": {
     "schemaVersion": { "const": "hadara.dashboard.timeline.v1" },
     "command": { "const": "dashboard.timeline" },
@@ -16,6 +16,17 @@
       "properties": {
         "projectRoot": { "type": "string" },
         "live": { "type": "boolean" }
+      }
+    },
+    "cache": {
+      "type": "object",
+      "required": ["status", "key", "ttlMs", "generatedAt", "expiresAt"],
+      "properties": {
+        "status": { "enum": ["hit", "miss", "stale", "bypass", "disabled"] },
+        "key": { "type": "string" },
+        "ttlMs": { "type": ["number", "null"] },
+        "generatedAt": { "type": "string" },
+        "expiresAt": { "type": ["string", "null"] }
       }
     },
     "events": {
