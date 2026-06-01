@@ -194,3 +194,4 @@
 | T-0191 | Release Evidence Strict Gate | Done | tasks/T-0191-release-evidence-strict-gate | |
 | T-0192 | Evidence Semantics Hardening | Done | tasks/T-0192-evidence-semantics-hardening | |
 | T-0193 | Dashboard Live Read Binding | Done | tasks/T-0193-dashboard-live-read-binding | |
+| T-0194 | Dashboard Operator Console Layout | Done | tasks/T-0194-dashboard-operator-console-layout | |

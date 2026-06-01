@@ -56,7 +56,7 @@ describe('static dashboard reference', () => {
     expect(html).toContain("const liveStatusUrl = '/api/status'");
     expect(html).toContain('../fixtures/hadara.ops.status.sample.json');
     expect(html).toContain('fallback-status-json');
-    expect(html).toContain('Command Center');
+    expect(html).toContain('HADARA Operator Console');
     expect(html).toContain('MCP Guard');
     expect(html).toContain('notLiveData');
     expect(html).toContain('Refresh Status');
@@ -127,9 +127,29 @@ describe('static dashboard reference', () => {
     expect(html).toContain('sidebar');
     expect(html).toContain('metrics');
     expect(html).toContain('Handoff Beacon');
-    expect(html).toContain('Evidence Timeline');
-    expect(html).toContain('visual shell follows the mockup; data contract remains authoritative');
+    expect(html).toContain('Workstream');
+    expect(html).toContain('visual shell follows the operator-console layout; data contract remains authoritative');
     expect(html).toContain('FIXTURE FALLBACK');
+  });
+
+  it('renders the Phase 5 operator console layout landmarks with read-only wording', () => {
+    const html = fs.readFileSync(dashboardPath, 'utf8');
+
+    expect(html).toContain('data-layout="operator-console"');
+    expect(html).toContain('data-layout="agent-lane"');
+    expect(html).toContain('data-layout="workstream-panel"');
+    expect(html).toContain('data-layout="evidence-lens-placeholder"');
+    expect(html).toContain('data-layout="bottom-inspector"');
+    expect(html).toContain('Agent Lane');
+    expect(html).toContain('Workstream');
+    expect(html).toContain('Evidence Lens');
+    expect(html).toContain('Bottom Inspector');
+    expect(html).toContain('Selected-task semantics arrive in T-0195.');
+    expect(html).toContain('dashboard does not execute it');
+    expect(html).toContain('read-only');
+    expect(html).toContain('@media (max-width: 1180px)');
+    expect(html).toContain('.operator-grid');
+    expect(html).toContain('.inspector-grid');
   });
 
   it('documents live-first dashboard loading order and read-only refresh behavior', () => {
@@ -167,7 +187,7 @@ describe('static dashboard reference', () => {
     expect(dashboard.headers['cache-control']).toBe('no-store');
     expect(dashboard.headers['content-security-policy']).toContain("default-src 'self'");
     expect(dashboard.headers['x-content-type-options']).toBe('nosniff');
-    expect(dashboard.body).toContain('Command Center');
+    expect(dashboard.body).toContain('HADARA Operator Console');
     expect(dashboard.body).toContain('../fixtures/hadara.ops.status.sample.json');
     expect(dashboard.body).toContain('/api/status');
     expect(dashboard.body).toContain('Refresh Status');

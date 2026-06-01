@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0193 is closed-valid and ready to commit. |
-| Current Phase | Phase 5 Dashboard / Operator Console in progress | T-0193 live status binding is complete; T-0194 operator-console layout is next. |
-| Latest Completed Task | T-0193 Dashboard Live Read Binding | Served dashboard now loads `/api/status` first, falls back to fixture/inline JSON, shows source provenance, and keeps `Refresh Status` read-only. |
-| Active / Next Task | T-0194 Dashboard Operator Console Layout | After closing/committing T-0193, continue Phase 5 with the layout slice. |
-| Validation Baseline | Docker sync-build passed | `npm run dev:docker-sync-build` passed with 79 files / 550 tests and built CLI version smoke `ok:true`. |
+| Branch | main | T-0194 is closed-valid and ready to commit. |
+| Current Phase | Phase 5 Dashboard / Operator Console in progress | T-0193 live status binding and T-0194 operator-console layout are complete; T-0195 selected-task evidence lens is next. |
+| Latest Completed Task | T-0194 Dashboard Operator Console Layout | Dashboard shell now renders Agent Lane, Workstream, Evidence Lens placeholder, and Bottom Inspector while preserving read-only language. |
+| Active / Next Task | T-0195 Selected Task Evidence Lens | After closing/committing T-0194, continue Phase 5 with selected-task proof semantics. |
+| Validation Baseline | Docker sync-build passed | `npm run dev:docker-sync-build` passed with 79 files / 551 tests and built CLI version smoke `ok:true`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0191 Release Evidence Strict Gate | Applied release proof predicates to release readiness checks and tightened reviewer-facing failed evidence resolution wording. | T-0191 evidence: Docker sync-build passed with 79 files / 547 tests and built CLI smoke `ok:true`. |
 | T-0192 Evidence Semantics Hardening | Hardened generated evidence identity metadata, lint line preservation, release dry-run strictness, and Dashboard/TUI warning contracts. | T-0192 evidence: Docker sync-build passed with 79 files / 548 tests and built CLI smoke `ok:true`. |
 | T-0193 Dashboard Live Read Binding | Converted the served dashboard from fixture-first to live `/api/status` first with fixture/inline fallback, provenance badges, and read-only `Refresh Status`. | T-0193 evidence: focused dashboard test passed with 1 file / 12 tests; Docker sync-build passed with 79 files / 550 tests and built CLI smoke `ok:true`. |
+| T-0194 Dashboard Operator Console Layout | Reworked the served dashboard into a read-only operator-console shell with Agent Lane, Workstream, Evidence Lens placeholder, and Bottom Inspector. | T-0194 evidence: focused dashboard test passed with 1 file / 13 tests; Docker sync-build passed with 79 files / 551 tests and built CLI smoke `ok:true`. |
 
 ## Current Known Problems
 
@@ -38,17 +38,17 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Finish/close T-0193 and continue with T-0194. | Phase 5 live binding is implemented and validated; the next planned slice is operator-console layout. | Use the standard `task ready`, `task finish`, `task close`, and `task audit-close` loop for T-0193, then create/start T-0194. |
+| Finish/close T-0194 and continue with T-0195. | Phase 5 layout is implemented and validated; the next planned slice is selected-task evidence lens. | Use the standard `task ready`, `task finish`, `task close`, and `task audit-close` loop for T-0194, then create/start T-0195. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Full repository check | Docker `npm run dev:docker-sync-build` passed with 79 files and 550 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
-| Focused dashboard check | Docker temp-copy `npm run test:focused -- tests/unit/dashboard-static.test.ts` passed with 1 file and 12 tests. | Covers live-first fetch order, fallback provenance, refresh label, and existing route boundaries. |
+| Full repository check | Docker `npm run dev:docker-sync-build` passed with 79 files and 551 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
+| Focused dashboard check | Docker temp-copy `npm run test:focused -- tests/unit/dashboard-static.test.ts` passed with 1 file and 13 tests. | Covers live-first fetch order, fallback provenance, operator layout landmarks, read-only wording, and existing route boundaries. |
 | Built CLI smoke | `npm run dev:docker-sync-build` refreshed `/workspace/dist` and ran `hadara version --verbose --json` with `ok:true`. | `distLooksStale:false`. |
-| Done-level readiness | Built CLI `task ready --task T-0193 --level done --json` returned `ok:true`. | No blockers or warnings. |
-| Close audit | Built CLI `task audit-close --task T-0193 --json` returned `ok:true`. | One close evidence record, zero blockers, zero warnings. |
+| Done-level readiness | Built CLI `task ready --task T-0194 --level done --json` returned `ok:true`. | No blockers or warnings. |
+| Close audit | Built CLI `task audit-close --task T-0194 --json` returned `ok:true`. | One close evidence record, zero blockers, zero warnings. |
 
 ## Historical Index
 

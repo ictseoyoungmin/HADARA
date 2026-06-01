@@ -314,6 +314,68 @@
       margin-bottom: 14px;
     }
 
+    .operator-grid {
+      display: grid;
+      grid-template-columns: minmax(230px, 0.72fr) minmax(360px, 1.35fr) minmax(280px, 0.86fr);
+      gap: 10px;
+      align-items: start;
+    }
+
+    .agent-lane,
+    .workstream-panel,
+    .evidence-lens,
+    .bottom-inspector {
+      min-width: 0;
+    }
+
+    .console-section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      margin: 0;
+      color: var(--gold);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .section-subtitle {
+      color: var(--muted);
+      font-size: 11px;
+      overflow-wrap: anywhere;
+    }
+
+    .lane-stack,
+    .lens-stack,
+    .inspector-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .read-only-mark {
+      color: var(--teal);
+      border-color: rgba(119, 210, 222, 0.30);
+      background: rgba(119, 210, 222, 0.07);
+    }
+
+    .bottom-inspector {
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.14);
+      padding: 12px;
+    }
+
+    .inspector-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 0.78fr) minmax(260px, 0.78fr);
+    }
+
     .metric,
     .card,
     .gate-card,
@@ -559,6 +621,8 @@
       .body { grid-template-columns: 1fr; }
       .sidebar { display: none; }
       .metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .operator-grid,
+      .inspector-grid { grid-template-columns: 1fr; }
       .command-grid,
       .wide-grid { grid-template-columns: 1fr; }
     }
@@ -647,7 +711,7 @@
         <section class="page" aria-live="polite">
           <div class="page-head">
             <div>
-              <h1 class="page-title">Command Center</h1>
+              <h1 class="page-title">HADARA Operator Console</h1>
               <div class="page-subtitle" data-field="fixtureMeta.note">Loading status snapshot...</div>
             </div>
             <div class="actions">
@@ -656,8 +720,6 @@
               <button class="btn" type="button" data-action="status.inspect" disabled>Inspect JSON</button>
             </div>
           </div>
-
-          <div class="metrics" id="task-metrics" aria-label="Task metrics"></div>
 
           <div class="command-dock">
             <div>
@@ -676,59 +738,102 @@
             </div>
           </div>
 
-          <div class="command-grid">
-            <article class="card">
-              <div class="ct">Capsule Index</div>
-              <div class="task-list" id="last-completed-list"></div>
-            </article>
-
-            <article class="card">
-              <div class="ct">Operating State</div>
-              <div class="gate-grid">
+          <div class="operator-grid" data-layout="operator-console">
+            <aside class="card agent-lane" data-layout="agent-lane" aria-label="Agent lane">
+              <div class="console-section-head">
+                <h2 class="section-title">Agent Lane</h2>
+                <span class="source-chip read-only-mark">read-only</span>
+              </div>
+              <div class="lane-stack">
                 <div class="gate-card">
                   <div class="gate-head"><span>health</span><span class="pill good" data-field="health">ok</span></div>
                   <div class="gate-main" data-field="health">ok</div>
                   <div class="gate-sub" data-field="issues.length">0 issues</div>
                 </div>
                 <div class="gate-card">
-                  <div class="gate-head"><span>next slice</span><span class="pill warn">next</span></div>
-                  <div class="gate-main">Queued</div>
+                  <div class="gate-head"><span>next action</span><span class="pill warn">copy</span></div>
+                  <div class="gate-main">Command guidance</div>
                   <div class="gate-sub" data-field="tasks.nextRecommended">No recommendation available</div>
                 </div>
+                <div>
+                  <div class="ct">Handoff Beacon</div>
+                  <div class="handoff-list" id="handoff-list"></div>
+                </div>
+                <div>
+                  <div class="ct">Capsule Index</div>
+                  <div class="task-list" id="last-completed-list"></div>
+                </div>
               </div>
-              <div class="parser-row">
-                <div class="parser-key">full check</div>
-                <div class="parser-val" data-field="validation.latestFullCheck">No full check recorded</div>
-              </div>
-              <div class="parser-row">
-                <div class="parser-key">done level</div>
-                <div class="parser-val" data-field="validation.latestDoneLevelValidation">No done-level validation recorded</div>
-              </div>
-              <div class="parser-row">
-                <div class="parser-key">contract</div>
-                <div class="parser-val">visual shell follows the mockup; data contract remains authoritative</div>
-              </div>
-            </article>
+            </aside>
 
-            <article class="card">
-              <div class="ct">Handoff Beacon</div>
-              <div class="handoff-list" id="handoff-list"></div>
-            </article>
-          </div>
-
-          <div class="wide-grid">
-            <article class="card">
-              <div class="ct">Evidence Timeline — derived from status</div>
+            <section class="card workstream-panel" data-layout="workstream-panel" aria-label="Workstream panel">
+              <div class="console-section-head">
+                <div>
+                  <h2 class="section-title">Workstream</h2>
+                  <div class="section-subtitle">Status-derived rows until the deterministic timeline read model lands.</div>
+                </div>
+                <span class="source-chip" data-source-kind>source: loading</span>
+              </div>
+              <div class="metrics" id="task-metrics" aria-label="Task metrics"></div>
               <div class="timeline" id="evidence-timeline"></div>
-            </article>
+            </section>
 
-            <article class="card">
-              <div class="ct">MCP Guard</div>
-              <div class="gate-grid" id="mcp-guard"></div>
-              <div class="ct">Source Status Counts</div>
-              <div class="kv-list" id="raw-counts"></div>
-            </article>
+            <aside class="card evidence-lens" data-layout="evidence-lens-placeholder" aria-label="Evidence lens">
+              <div class="console-section-head">
+                <div>
+                  <h2 class="section-title">Evidence Lens</h2>
+                  <div class="section-subtitle">Selected-task semantics arrive in T-0195.</div>
+                </div>
+                <span class="source-chip warn">deferred</span>
+              </div>
+              <div class="lens-stack">
+                <div class="signal-card">
+                  <div class="signal-title">proof status</div>
+                  <div class="signal-value">Pending selection</div>
+                  <div class="signal-note">Uses shared evidence semantics in the next slice; no raw evidence parsing here.</div>
+                </div>
+                <div class="parser-row">
+                  <div class="parser-key">full check</div>
+                  <div class="parser-val" data-field="validation.latestFullCheck">No full check recorded</div>
+                </div>
+                <div class="parser-row">
+                  <div class="parser-key">done level</div>
+                  <div class="parser-val" data-field="validation.latestDoneLevelValidation">No done-level validation recorded</div>
+                </div>
+                <div>
+                  <div class="ct">MCP Guard</div>
+                  <div class="gate-grid" id="mcp-guard"></div>
+                </div>
+              </div>
+            </aside>
           </div>
+
+          <section class="bottom-inspector" data-layout="bottom-inspector" aria-label="Bottom inspector">
+            <div class="console-section-head">
+              <h2 class="section-title">Bottom Inspector</h2>
+              <span class="source-chip read-only-mark">JSON · Commands · Sources</span>
+            </div>
+            <div class="inspector-grid">
+              <div>
+                <div class="ct">Sources</div>
+                <div class="kv-list" id="raw-counts"></div>
+              </div>
+              <div>
+                <div class="ct">Commands</div>
+                <div class="parser-row">
+                  <div class="parser-key">next</div>
+                  <div class="parser-val">Copy suggested HADARA command from task status surfaces; dashboard does not execute it.</div>
+                </div>
+              </div>
+              <div>
+                <div class="ct">Contract</div>
+                <div class="parser-row">
+                  <div class="parser-key">boundary</div>
+                  <div class="parser-val">visual shell follows the operator-console layout; data contract remains authoritative and read-only.</div>
+                </div>
+              </div>
+            </div>
+          </section>
         </section>
       </main>
     </div>
