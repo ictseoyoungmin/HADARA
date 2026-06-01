@@ -187,3 +187,4 @@
 | T-0184 | Task Finish Write Safety Hardening | Done | tasks/T-0184-task-finish-write-safety-hardening | |
 | T-0185 | Task Workflow Command Semantics Audit | Done | tasks/T-0185-task-workflow-command-semantics-audit | |
 | T-0186 | Evidence Proof Semantics Foundation | Done | tasks/T-0186-evidence-proof-semantics-foundation | |
+| T-0187 | Evidence Lint Semantic Integration | Done | tasks/T-0187-evidence-lint-semantic-integration | |

@@ -80,5 +80,5 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
   fs.writeFileSync(path.join(taskDir, 'RISKS.md'), '# Risks\n\n| Risk | Impact | Likelihood | Mitigation | Status |\n|---|---|---|---|---|\n| Fixture drift | Low | Low | Keep local. | Mitigated |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'DECISIONS.md'), '# Decisions\n\n| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n| D-1 | Use fixture. | Accepted | Test ready report. | Test. |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'HANDOFF.md'), '# Handoff\n\n## Current State\n\n| Field | Value |\n|---|---|\n| Status | Done |\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| Fixture complete. | Evidence. |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| Continue. | Done. | docs/TASK_BOARD.md |\n', 'utf8');
-  appendEvidence(root, { taskId, kind: 'note', summary: 'Ready evidence', result: 'passed', visibility: 'public' });
+  appendEvidence(root, { taskId, kind: 'test-log', summary: 'Ready fixture validation passed.', result: 'passed', visibility: 'public' });
 }

@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { EvidenceIndexRecord } from '../evidence/evidence';
+import { normalizeEvidenceRecords } from '../evidence/normalizer';
+import { analyzeTaskEvidenceSemantics, EvidenceSemanticIssue, EvidenceSemanticSummary } from '../evidence/semantics';
 import { listTaskCapsules } from '../task/task-capsule';
 import { parseMarkdownRows } from './markdown-table';
 
@@ -18,6 +20,7 @@ export interface EvidenceLintReport {
       warning: number;
       info: number;
     };
+    semantics?: EvidenceSemanticSummary;
   };
   records: EvidenceIndexRecord[];
   issues: EvidenceLintIssue[];
@@ -27,6 +30,7 @@ export interface EvidenceLintIssue {
   severity: 'error' | 'warning' | 'info';
   code: string;
   message: string;
+  evidenceId?: string;
   path?: string;
   line?: number;
   expected?: string;
@@ -79,7 +83,20 @@ export function createEvidenceLintReport(projectRoot: string, taskId: string): E
     });
   }
 
-  return buildReport(projectRoot, taskId, records, markdownRows, issues);
+  const normalizedRecords = normalizeEvidenceRecords(records, { taskDir: task.dir });
+  const semanticAnalysis = analyzeTaskEvidenceSemantics({
+    taskId,
+    taskDir: toPortablePath(path.relative(projectRoot, task.dir)),
+    taskLooksDone: taskLooksDone(projectRoot, task),
+    records: normalizedRecords,
+    taskDocs: readTaskDocs(task.dir)
+  });
+  for (const semanticIssue of semanticAnalysis.issues) {
+    if (semanticIssue.code === 'LEGACY_EVIDENCE_SCHEMA_PRESENT') continue;
+    issues.push(toLintIssue(semanticIssue));
+  }
+
+  return buildReport(projectRoot, taskId, records, markdownRows, issues, semanticAnalysis.summary);
 }
 
 function lintEvidenceIndex(projectRoot: string, taskId: string, indexPath: string, issues: EvidenceLintIssue[]): EvidenceIndexRecord[] {
@@ -160,7 +177,14 @@ function isValidRecord(record: Partial<EvidenceIndexRecord>, taskId: string): re
   );
 }
 
-function buildReport(projectRoot: string, taskId: string, records: EvidenceIndexRecord[], markdownRows: number, issues: EvidenceLintIssue[]): EvidenceLintReport {
+function buildReport(
+  projectRoot: string,
+  taskId: string,
+  records: EvidenceIndexRecord[],
+  markdownRows: number,
+  issues: EvidenceLintIssue[],
+  semantics?: EvidenceSemanticSummary
+): EvidenceLintReport {
   return {
     schemaVersion: 'hadara.evidence.lint.v1',
     command: 'evidence.lint',
@@ -174,10 +198,77 @@ function buildReport(projectRoot: string, taskId: string, records: EvidenceIndex
         error: issues.filter((issue) => issue.severity === 'error').length,
         warning: issues.filter((issue) => issue.severity === 'warning').length,
         info: issues.filter((issue) => issue.severity === 'info').length
-      }
+      },
+      ...(semantics ? { semantics } : {})
     },
     records,
     issues
+  };
+}
+
+function taskLooksDone(projectRoot: string, task: { id: string; dir: string }): boolean {
+  return isDoneStatus(readTaskStatus(task.dir)) || isDoneStatus(readTaskBoardStatus(projectRoot, task.id));
+}
+
+function readTaskStatus(taskDir: string): string {
+  const taskPath = path.join(taskDir, 'TASK.md');
+  if (!fs.existsSync(taskPath)) return '';
+  const content = fs.readFileSync(taskPath, 'utf8');
+  for (const cells of parseMarkdownRows(content)) {
+    if ((cells[0] ?? '').trim().toLowerCase() === 'status') return cells[1] ?? '';
+  }
+  return readMarkdownSection(content, '## Status').trim().split(/\r?\n/)[0]?.trim() ?? '';
+}
+
+function readTaskBoardStatus(projectRoot: string, taskId: string): string {
+  const taskBoardPath = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
+  if (!fs.existsSync(taskBoardPath)) return '';
+  const rows = fs
+    .readFileSync(taskBoardPath, 'utf8')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith(`| ${taskId} |`));
+  if (rows.length !== 1) return '';
+  const cells = rows[0]
+    .slice(1, rows[0].endsWith('|') ? -1 : undefined)
+    .split('|')
+    .map((cell) => cell.trim());
+  return cells[2] ?? '';
+}
+
+function readTaskDocs(taskDir: string): { acceptance?: string; risks?: string; handoff?: string } {
+  return {
+    acceptance: readOptionalFile(path.join(taskDir, 'ACCEPTANCE.md')),
+    risks: readOptionalFile(path.join(taskDir, 'RISKS.md')),
+    handoff: readOptionalFile(path.join(taskDir, 'HANDOFF.md'))
+  };
+}
+
+function readOptionalFile(filePath: string): string | undefined {
+  return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : undefined;
+}
+
+function readMarkdownSection(content: string, heading: string): string {
+  const start = content.indexOf(heading);
+  if (start < 0) return '';
+  const afterHeading = content.slice(start + heading.length);
+  const nextHeading = afterHeading.search(/\n##\s+/);
+  return nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading;
+}
+
+function isDoneStatus(status: string | null | undefined): boolean {
+  return (status ?? '').trim().toLowerCase() === 'done';
+}
+
+function toLintIssue(issue: EvidenceSemanticIssue): EvidenceLintIssue {
+  return {
+    severity: issue.severity,
+    code: issue.code,
+    message: issue.message,
+    ...(issue.evidenceId ? { evidenceId: issue.evidenceId } : {}),
+    ...(issue.path ? { path: issue.path } : {}),
+    ...(issue.expected ? { expected: issue.expected } : {}),
+    ...(issue.actual ? { actual: issue.actual } : {})
   };
 }
 

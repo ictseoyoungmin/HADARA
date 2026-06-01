@@ -27,6 +27,20 @@
             "warning": { "type": "number" },
             "info": { "type": "number" }
           }
+        },
+        "semantics": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "total": { "type": "number" },
+            "byStrength": { "type": "object", "additionalProperties": { "type": "number" } },
+            "byCategory": { "type": "object", "additionalProperties": { "type": "number" } },
+            "byOutcome": { "type": "object", "additionalProperties": { "type": "number" } },
+            "publicRecords": { "type": "number" },
+            "privateRecords": { "type": "number" },
+            "legacyRecords": { "type": "number" },
+            "latestSubstantiveEvidenceId": { "type": "string" }
+          }
         }
       }
     },
@@ -41,6 +55,7 @@
           "severity": { "enum": ["error", "warning", "info"] },
           "code": { "type": "string" },
           "message": { "type": "string" },
+          "evidenceId": { "type": "string" },
           "path": { "type": "string" },
           "line": { "type": "number" },
           "expected": { "type": "string" },
