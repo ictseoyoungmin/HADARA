@@ -1293,9 +1293,11 @@
       });
     }
 
-    function renderEvidenceLens(taskId, workbench, lintReport, evidenceReport) {
+    function renderEvidenceLens(taskId, workbench, lintReport, evidenceReport, proof) {
       const semantics = lintReport?.summary?.semantics;
-      const [status, note] = proofStatusFrom(lintReport);
+      const [fallbackStatus, fallbackNote] = proofStatusFrom(lintReport);
+      const status = proof?.status ?? fallbackStatus;
+      const note = proof?.note ?? fallbackNote;
       document.getElementById('selected-task-id').textContent = taskId;
       document.getElementById('proof-status').textContent = status;
       document.getElementById('proof-note').textContent = note;
@@ -1317,6 +1319,14 @@
       }
     }
 
+    function renderTaskDetail(detail) {
+      renderEvidenceLens(detail.taskId, detail.workbench, detail.evidenceLint, detail.evidenceList, detail.proof);
+      renderTimelineReport(detail.timeline);
+      if (Array.isArray(detail.commandGuidance) && detail.commandGuidance.some((action) => action.command)) {
+        document.querySelector('[data-action="command.copy"]').textContent = 'Copy suggested command';
+      }
+    }
+
     async function selectTask(taskId) {
       if (!taskId) return;
       selectedTaskId = taskId;
@@ -1325,15 +1335,10 @@
       });
       document.getElementById('selected-task-id').textContent = taskId;
       document.getElementById('proof-status').textContent = 'Reading reports';
-      document.getElementById('proof-note').textContent = 'Reading shared workbench and evidence semantic reports.';
+      document.getElementById('proof-note').textContent = 'Reading shared dashboard task detail report.';
       try {
-        const [workbench, lintReport, evidenceReport] = await Promise.all([
-          readJson(`/api/task-workbench?taskId=${encodeURIComponent(taskId)}`),
-          readJson(`/api/evidence-lint?taskId=${encodeURIComponent(taskId)}`),
-          readJson(`/api/evidence?taskId=${encodeURIComponent(taskId)}`)
-        ]);
-        renderEvidenceLens(taskId, workbench, lintReport, evidenceReport);
-        loadTimeline(taskId).catch(() => {});
+        const detail = await readJson(`/api/dashboard/task-detail?taskId=${encodeURIComponent(taskId)}`);
+        renderTaskDetail(detail);
       } catch (error) {
         document.getElementById('proof-status').textContent = 'unknown';
         document.getElementById('proof-note').textContent = safeError(error);

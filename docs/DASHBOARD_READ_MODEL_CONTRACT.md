@@ -195,7 +195,7 @@ GET /api/dashboard/task-detail?taskId=T-00NN
 GET /api/dashboard/task-detail?taskId=T-00NN&cache=bypass
 ```
 
-The detail report should be registered as `hadara.dashboard.task_detail.v1` and compose `hadara.task.workbench.v1`, `hadara.evidence.lint.v1`, sanitized `hadara.evidence.list.v1`, and `hadara.dashboard.timeline.v1`. Proof status must be derived from semantic issue codes and semantic summary data only, with `private-only` treated as an auditability warning rather than a Done blocker.
+T-0199 implements the detail report as `hadara.dashboard.task_detail.v1`. It composes `hadara.task.workbench.v1`, `hadara.evidence.lint.v1`, sanitized `hadara.evidence.list.v1`, and `hadara.dashboard.timeline.v1`. Proof status must be derived from semantic issue codes and semantic summary data only, with `private-only` treated as an auditability warning rather than a Done blocker. The frontend selected-task Evidence Lens should use this route instead of fanning out across workbench, evidence lint, evidence list, and timeline routes.
 
 Phase 5.5 may add a process-memory TTL cache for dashboard aggregate reads. Cache metadata should report `hit`, `miss`, `stale`, `bypass`, or `disabled`, plus key, TTL, generated time, and expiry when relevant. The cache must stay process-memory only: it is not a database, file watcher, committed artifact, `.hadara/local` state, context-export input, evidence source, or browser project-state store.
 
@@ -210,7 +210,7 @@ detail-ready
 degraded
 ```
 
-The shell should render immediately. Refresh must mean "read again"; it must keep the previous successful in-memory view visible while a refresh is in flight or degraded. Dashboard code must not persist project state in `localStorage`, `sessionStorage`, IndexedDB, cookies, or equivalent browser storage. In T-0198 selected-task detail still loads through the Phase 5 read routes; T-0199 moves that detail fan-out behind `/api/dashboard/task-detail`.
+The shell should render immediately. Refresh must mean "read again"; it must keep the previous successful in-memory view visible while a refresh is in flight or degraded. Dashboard code must not persist project state in `localStorage`, `sessionStorage`, IndexedDB, cookies, or equivalent browser storage. T-0199 moves selected-task detail fan-out behind `/api/dashboard/task-detail`.
 
 Phase 5.5 may later add optional polling only after aggregate reads, cache metadata, and degraded UX are stable. Polling must be memory-only, operator-controllable or conservative by default, back off on failure, and must not introduce SSE/WebSocket streaming, shell execution, provider calls, MCP writes, task/evidence/handoff mutation, release/package execution, auto-remediation, or multi-agent concurrency claims.
 

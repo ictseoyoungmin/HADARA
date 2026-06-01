@@ -4,6 +4,7 @@ import activeRunResumeSchemaJson from '../schemas/active-run-resume.schema.json'
 import cleanCheckoutSmokeSchemaJson from '../schemas/clean-checkout-smoke.schema.json';
 import contextExportSchemaJson from '../schemas/context-export.schema.json';
 import dashboardBootstrapSchemaJson from '../schemas/dashboard-bootstrap.schema.json';
+import dashboardTaskDetailSchemaJson from '../schemas/dashboard-task-detail.schema.json';
 import dashboardTimelineSchemaJson from '../schemas/dashboard-timeline.schema.json';
 import evidenceLintSchemaJson from '../schemas/evidence-lint.schema.json';
 import evidenceListSchemaJson from '../schemas/evidence-list.schema.json';
@@ -77,6 +78,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.cleanCheckoutSmoke.v1': cleanCheckoutSmokeSchemaJson as JsonObject,
   'hadara.context.export.v1': contextExportSchemaJson as JsonObject,
   'hadara.dashboard.bootstrap.v1': dashboardBootstrapSchemaJson as JsonObject,
+  'hadara.dashboard.task_detail.v1': dashboardTaskDetailSchemaJson as JsonObject,
   'hadara.dashboard.timeline.v1': dashboardTimelineSchemaJson as JsonObject,
   'hadara.evidence.lint.v1': evidenceLintSchemaJson as JsonObject,
   'hadara.evidence.list.v1': evidenceListSchemaJson as JsonObject,

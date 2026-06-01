@@ -149,10 +149,10 @@ describe('static dashboard reference', () => {
     expect(html).toContain('Evidence Lens');
     expect(html).toContain('Bottom Inspector');
     expect(html).toContain('Selected-task proof from shared workbench and evidence semantic reports.');
-    expect(html).toContain('/api/task-workbench?taskId=');
-    expect(html).toContain('/api/evidence-lint?taskId=');
-    expect(html).toContain('/api/evidence?taskId=');
-    expect(html).toContain('/api/timeline');
+    expect(html).toContain('/api/dashboard/task-detail?taskId=');
+    expect(html).not.toContain('/api/task-workbench?taskId=');
+    expect(html).not.toContain('/api/evidence-lint?taskId=');
+    expect(html).not.toContain('/api/evidence?taskId=');
     expect(html).toContain('proofStatusFrom');
     expect(html).toContain('TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE');
     expect(html).toContain('Auditability warning, not a Done blocker.');
@@ -233,6 +233,7 @@ describe('static dashboard reference', () => {
     const evidenceLint = createDashboardServerResponse(process.cwd(), '/api/evidence-lint?taskId=T-0194');
     const timeline = createDashboardServerResponse(process.cwd(), '/api/timeline?taskId=T-0195');
     const bootstrap = createDashboardServerResponse(process.cwd(), '/api/dashboard/bootstrap?selectedTaskId=T-0196');
+    const taskDetail = createDashboardServerResponse(process.cwd(), '/api/dashboard/task-detail?taskId=T-0198');
     const activeRun = createDashboardServerResponse(process.cwd(), '/api/active-run');
     const debt = createDashboardServerResponse(process.cwd(), '/api/debt');
 
@@ -278,6 +279,12 @@ describe('static dashboard reference', () => {
       selectedTask: expect.objectContaining({ requestedTaskId: 'T-0196' }),
       cache: expect.objectContaining({ status: 'disabled' })
     });
+    expect(JSON.parse(taskDetail.body)).toMatchObject({
+      schemaVersion: 'hadara.dashboard.task_detail.v1',
+      command: 'dashboard.task-detail',
+      taskId: 'T-0198',
+      proof: expect.objectContaining({ auditabilityWarning: expect.any(Boolean) })
+    });
     expect(JSON.parse(activeRun.body)).toMatchObject({
       schemaVersion: 'hadara.active_run.projection.v1',
       command: 'active-run.projection'
@@ -293,6 +300,7 @@ describe('static dashboard reference', () => {
     const post = createDashboardServerResponse(process.cwd(), '/api/status', 'POST');
     const missingTaskId = createDashboardServerResponse(process.cwd(), '/api/evidence');
     const missingWorkbenchTaskId = createDashboardServerResponse(process.cwd(), '/api/task-workbench');
+    const missingTaskDetailTaskId = createDashboardServerResponse(process.cwd(), '/api/dashboard/task-detail');
     const missingLintTaskId = createDashboardServerResponse(process.cwd(), '/api/evidence-lint');
     const unknownApi = createDashboardServerResponse(process.cwd(), '/api/unknown');
     const traversalLikeApi = createDashboardServerResponse(process.cwd(), '/api/%2e%2e/status');
@@ -313,6 +321,10 @@ describe('static dashboard reference', () => {
     });
     expect(missingWorkbenchTaskId.statusCode).toBe(400);
     expect(JSON.parse(missingWorkbenchTaskId.body)).toMatchObject({
+      issues: [expect.objectContaining({ code: 'TASK_ID_REQUIRED' })]
+    });
+    expect(missingTaskDetailTaskId.statusCode).toBe(400);
+    expect(JSON.parse(missingTaskDetailTaskId.body)).toMatchObject({
       issues: [expect.objectContaining({ code: 'TASK_ID_REQUIRED' })]
     });
     expect(missingLintTaskId.statusCode).toBe(400);
