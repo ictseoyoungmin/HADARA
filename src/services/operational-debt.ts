@@ -1,6 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { validateSchema } from '../core/schema';
+import {
+  isStrictReleaseEvidenceProof,
+  readReleaseEvidenceRecords,
+  ReleaseEvidenceRecord,
+  validateReleaseEvidenceArtifact
+} from './release-evidence';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 
 export interface OperationalDebtRecord {
@@ -80,17 +85,6 @@ export interface ReleaseGateReport {
     code: string;
     message: string;
   }>;
-}
-
-interface ReleaseEvidenceRecord {
-  taskId: string;
-  taskDir: string;
-  time: string;
-  kind: string;
-  summary: string;
-  result: string;
-  visibility: string;
-  evidencePath?: string;
 }
 
 interface ReleaseEvidenceMatch {
@@ -594,14 +588,7 @@ function checkInstallMatrixSmokePlan(releaseReadiness: string | null, mode: Rele
 }
 
 function checkPackageSmokeEvidence(evidence: ReleaseEvidenceRecord[], mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
-  const match = findLatestEvidence(evidence, (record) =>
-    record.result === 'passed' &&
-    record.visibility === 'public' &&
-    (includesAll(record.summary, ['package smoke', '--execute']) ||
-      Boolean(record.evidencePath?.includes('artifacts/package-smoke/'))) &&
-    (includesAny(record.summary, ['--attach-evidence', 'artifacts/package-smoke', 'hadara.packageSmoke.v1']) ||
-      Boolean(record.evidencePath?.includes('artifacts/package-smoke/')))
-  );
+  const match = findLatestEvidence(evidence, (record) => isStrictReleaseEvidenceProof(record, { category: 'package-smoke', mode: 'local' }));
   return createEvidenceCheck(
     'PACKAGE_SMOKE_EVIDENCE',
     'Package smoke evidence',
@@ -613,14 +600,7 @@ function checkPackageSmokeEvidence(evidence: ReleaseEvidenceRecord[], mode: Rele
 }
 
 function checkCleanCheckoutSmokeEvidence(evidence: ReleaseEvidenceRecord[], mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
-  const match = findLatestEvidence(evidence, (record) =>
-    record.result === 'passed' &&
-    record.visibility === 'public' &&
-    (includesAll(record.summary, ['smoke clean-checkout', '--execute']) ||
-      Boolean(record.evidencePath?.includes('artifacts/clean-checkout-smoke/'))) &&
-    (includesAny(record.summary, ['--attach-evidence', 'artifacts/clean-checkout-smoke', 'hadara.cleanCheckoutSmoke.v1']) ||
-      Boolean(record.evidencePath?.includes('artifacts/clean-checkout-smoke/')))
-  );
+  const match = findLatestEvidence(evidence, (record) => isStrictReleaseEvidenceProof(record, { category: 'clean-checkout-smoke', mode: 'execute' }));
   return createEvidenceCheck(
     'CLEAN_CHECKOUT_SMOKE_EVIDENCE',
     'Clean checkout smoke evidence',
@@ -632,12 +612,7 @@ function checkCleanCheckoutSmokeEvidence(evidence: ReleaseEvidenceRecord[], mode
 }
 
 function checkReleaseArtifactEvidence(evidence: ReleaseEvidenceRecord[], mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
-  const match = findLatestEvidence(evidence, (record) =>
-    record.result === 'passed' &&
-    record.visibility === 'public' &&
-    includesAll(record.summary, ['release artifact', '--execute']) &&
-    includesAny(record.summary, ['generated tarball/checksum/manifest', 'retained-output', 'hadara.releaseArtifact.v1'])
-  );
+  const match = findLatestEvidence(evidence, (record) => isStrictReleaseEvidenceProof(record, { category: 'release-artifact', mode: 'execute' }));
   return createEvidenceCheck(
     'RELEASE_ARTIFACT_EVIDENCE',
     'Release artifact evidence',
@@ -713,42 +688,6 @@ function checkRemoteCiObservation(
   };
 }
 
-function readReleaseEvidenceRecords(projectRoot: string): ReleaseEvidenceRecord[] {
-  return listTaskCapsules(projectRoot).flatMap((task) => readTaskEvidenceRecords(task.dir));
-}
-
-function readTaskEvidenceRecords(taskDir: string): ReleaseEvidenceRecord[] {
-  const evidencePath = path.join(taskDir, 'evidence.jsonl');
-  if (!fs.existsSync(evidencePath)) return [];
-  return fs
-    .readFileSync(evidencePath, 'utf8')
-    .split(/\r?\n/)
-    .map((line): ReleaseEvidenceRecord | null => {
-      if (line.trim() === '') return null;
-      try {
-        const parsed: unknown = JSON.parse(line);
-        if (!isRecord(parsed)) return null;
-        if (parsed.schemaVersion !== 'hadara.evidence.v1') return null;
-        if (typeof parsed.time !== 'string' || typeof parsed.summary !== 'string') return null;
-        if (typeof parsed.taskId !== 'string' || typeof parsed.kind !== 'string') return null;
-        if (typeof parsed.result !== 'string' || typeof parsed.visibility !== 'string') return null;
-        return {
-          taskId: parsed.taskId,
-          taskDir,
-          time: parsed.time,
-          kind: parsed.kind,
-          summary: parsed.summary,
-          result: parsed.result,
-          visibility: parsed.visibility,
-          ...(typeof parsed.evidencePath === 'string' ? { evidencePath: parsed.evidencePath } : {})
-        };
-      } catch {
-        return null;
-      }
-    })
-    .filter((record): record is ReleaseEvidenceRecord => record !== null);
-}
-
 function findLatestEvidence(evidence: ReleaseEvidenceRecord[], predicate: (record: ReleaseEvidenceRecord) => boolean): ReleaseEvidenceMatch | null {
   const matches = evidence.filter(predicate).sort((a, b) => b.time.localeCompare(a.time));
   const record = matches[0];
@@ -760,17 +699,8 @@ function findLatestEvidence(evidence: ReleaseEvidenceRecord[], predicate: (recor
 }
 
 function validateLinkedEvidenceArtifact(record: ReleaseEvidenceRecord): { artifactSchemaValid?: boolean } {
-  if (!record.evidencePath) return {};
-  const artifactPath = path.resolve(record.taskDir, record.evidencePath);
-  if (!artifactPath.startsWith(`${path.resolve(record.taskDir)}${path.sep}`) || !fs.existsSync(artifactPath)) return {};
-  try {
-    const parsed: unknown = JSON.parse(fs.readFileSync(artifactPath, 'utf8'));
-    if (!isRecord(parsed) || typeof parsed.schemaVersion !== 'string') return { artifactSchemaValid: false };
-    if (parsed.schemaVersion !== 'hadara.smokeEvidenceSummary.v1') return {};
-    return { artifactSchemaValid: validateSchema('hadara.smokeEvidenceSummary.v1', parsed).ok };
-  } catch {
-    return { artifactSchemaValid: false };
-  }
+  const validation = validateReleaseEvidenceArtifact(record);
+  return validation.exists ? { artifactSchemaValid: validation.schemaValid === true } : {};
 }
 
 function readinessFailureStatus(mode: ReleaseGateReport['mode']): 'warning' | 'error' {

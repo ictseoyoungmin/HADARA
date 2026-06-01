@@ -25,7 +25,7 @@ describe('evidence v2 writer and migration plan docs', () => {
     expect(plan).toContain('Mixed-version tolerance');
     expect(plan).toContain('No automatic rewrite of existing `evidence.jsonl`.');
     expect(plan).toContain('No automatic rewrite of existing `EVIDENCE.md`.');
-    expect(plan).toContain('No acceptance of free-text failed-evidence resolution words as semantic resolution.');
+    expect(plan).toContain('No failed-evidence resolution unless an exact marker, later passed same-category evidence, or explicit residual-risk documentation provides the signal.');
 
     expect(schemas).toContain('docs/EVIDENCE_V2_WRITER_MIGRATION_PLAN.md');
     expect(schemas).toContain('must not imply that existing v1 evidence has already been migrated');

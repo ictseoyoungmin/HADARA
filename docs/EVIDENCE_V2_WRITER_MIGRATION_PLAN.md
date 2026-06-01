@@ -34,7 +34,7 @@ Proof `strength` should remain derived by the semantic analyzer, not persisted a
 | Opt-in writer | Evidence write commands may gain an explicit opt-in writer mode before v2 becomes default. |
 | Default transition | Default v2 writes happen only after dual-read tests, migration dry-run reports, and consumer contracts are stable. |
 | Markdown frame | `EVIDENCE.md` keeps a human table first; any richer frame is planned separately and must preserve readable history. |
-| Exact resolution markers | Writer help should document `supersedes:<id>` and `resolves:<id>` exact markers; free-text `resolved`/`fixed` wording must not create semantic resolution. |
+| Exact resolution markers | Writer help should document `supersedes:<id>` and `resolves:<id>` exact markers; human summary wording must not create semantic resolution. |
 | Private evidence | Private artifacts stay in private portable storage/manifests; public committed records may include safe summaries and manifest metadata only. |
 
 ## Migration Plan
@@ -76,4 +76,4 @@ The command names are proposed design, not implemented behavior.
 - No MCP write expansion.
 - No Dashboard or TUI rendering work.
 - No release/package execution or strict release-gate enforcement.
-- No acceptance of free-text failed-evidence resolution words as semantic resolution.
+- No failed-evidence resolution unless an exact marker, later passed same-category evidence, or explicit residual-risk documentation provides the signal.

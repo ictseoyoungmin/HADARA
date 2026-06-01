@@ -232,6 +232,23 @@ function writeReleaseReadinessFiles(root: string, version = '0.1.0-rc.0'): void 
 function writeReleaseEvidenceRecords(root: string): void {
   const taskDir = path.join(root, 'tasks', 'T-0138-release-evidence-fixture');
   fs.mkdirSync(taskDir, { recursive: true });
+  writeSmokeEvidenceSummary(taskDir, {
+    filePath: 'artifacts/package-smoke/2026-05-28T12-52-58.000Z-summary.json',
+    time: '2026-05-28T12:52:58Z',
+    taskId: 'T-0138',
+    category: 'package-smoke',
+    mode: 'local',
+    command: 'package.smoke'
+  });
+  writeSmokeEvidenceSummary(taskDir, {
+    filePath: 'artifacts/clean-checkout-smoke/2026-05-28T12-53-26.000Z-summary.json',
+    time: '2026-05-28T12:53:26Z',
+    taskId: 'T-0138',
+    category: 'clean-checkout-smoke',
+    mode: 'execute',
+    command: 'smoke.cleanCheckout'
+  });
+  writeReleaseArtifactEvidence(taskDir, 'artifacts/release-artifact/2026-05-28T13-15-03.000Z-report.json');
   const records = [
     {
       schemaVersion: 'hadara.evidence.v1',
@@ -241,7 +258,8 @@ function writeReleaseEvidenceRecords(root: string): void {
       summary:
         'Docker built CLI package smoke --execute --attach-evidence --task T-0138 --json returned ok true, attached public artifacts/package-smoke summary JSON, and reported no issues.',
       result: 'passed',
-      visibility: 'public'
+      visibility: 'public',
+      evidencePath: 'artifacts/package-smoke/2026-05-28T12-52-58.000Z-summary.json'
     },
     {
       schemaVersion: 'hadara.evidence.v1',
@@ -251,7 +269,8 @@ function writeReleaseEvidenceRecords(root: string): void {
       summary:
         'Docker built CLI smoke clean-checkout --execute --attach-evidence --task T-0138 --json returned ok true, attached public artifacts/clean-checkout-smoke summary JSON, and reported no issues.',
       result: 'passed',
-      visibility: 'public'
+      visibility: 'public',
+      evidencePath: 'artifacts/clean-checkout-smoke/2026-05-28T12-53-26.000Z-summary.json'
     },
     {
       schemaVersion: 'hadara.evidence.v1',
@@ -261,10 +280,113 @@ function writeReleaseEvidenceRecords(root: string): void {
       summary:
         'Docker built CLI release artifact --execute --json returned ok true, generated tarball/checksum/manifest metadata, verified package files, and reported no issues.',
       result: 'passed',
-      visibility: 'public'
+      visibility: 'public',
+      evidencePath: 'artifacts/release-artifact/2026-05-28T13-15-03.000Z-report.json'
     }
   ];
   fs.writeFileSync(path.join(taskDir, 'evidence.jsonl'), records.map((record) => JSON.stringify(record)).join('\n') + '\n', 'utf8');
+}
+
+function writeSmokeEvidenceSummary(
+  taskDir: string,
+  options: {
+    filePath: string;
+    time: string;
+    taskId: string;
+    category: 'package-smoke' | 'clean-checkout-smoke';
+    mode: 'local' | 'execute';
+    command: string;
+  }
+): void {
+  writeJsonArtifact(taskDir, options.filePath, {
+    schemaVersion: 'hadara.smokeEvidenceSummary.v1',
+    time: options.time,
+    taskId: options.taskId,
+    category: options.category,
+    sourceReport: {
+      schemaVersion: options.category === 'package-smoke' ? 'hadara.packageSmoke.v1' : 'hadara.cleanCheckoutSmoke.v1',
+      command: options.command,
+      mode: options.mode,
+      ok: true
+    },
+    execution: {},
+    steps: [{ id: 'run', label: 'Run smoke', status: 'passed', summary: 'Smoke passed.' }],
+    privacy: {
+      rawLogsIncluded: false,
+      rawPackageContentsIncluded: false,
+      privatePathsIncluded: false,
+      environmentSecretsIncluded: false,
+      privateStorePathsIncluded: false
+    },
+    issues: [],
+    rawLogsIncluded: false,
+    privatePathsIncluded: false,
+    rawPackageContentsIncluded: false
+  });
+}
+
+function writeReleaseArtifactEvidence(taskDir: string, filePath: string): void {
+  writeJsonArtifact(taskDir, filePath, {
+    schemaVersion: 'hadara.releaseArtifact.v1',
+    command: 'release.artifact',
+    ok: true,
+    mode: 'execute',
+    execution: {
+      stagingCreated: true,
+      npmPackExecuted: true,
+      checksumGenerated: true,
+      manifestGenerated: true,
+      packageContentsVerified: true,
+      publishExecuted: false,
+      githubReleaseCreated: false,
+      dockerImageBuilt: false
+    },
+    output: {
+      kind: 'explicit',
+      displayPath: 'dist-release',
+      pathRedacted: true,
+      relativePath: 'dist-release',
+      retention: 'explicit-output'
+    },
+    package: {
+      name: 'hadara',
+      version: '0.1.0-rc.0',
+      private: false,
+      filesWhitelistApplied: true
+    },
+    artifacts: [
+      {
+        kind: 'manifest',
+        visibility: 'local',
+        fileName: 'hadara-0.1.0-rc.0.manifest.json',
+        pathRedacted: true,
+        byteLength: 128,
+        hash: `sha256:${'a'.repeat(64)}`,
+        rawContentIncluded: false
+      }
+    ],
+    packageContents: {
+      verified: true,
+      fileCount: 12,
+      allowedRoots: ['dist/'],
+      requiredFiles: ['package.json', 'README.md', 'LICENSE'],
+      forbiddenMatches: []
+    },
+    privacy: {
+      rawLogsIncluded: false,
+      packageContentsIncluded: false,
+      privatePathsIncluded: false,
+      environmentSecretsIncluded: false,
+      privateStorePathsIncluded: false
+    },
+    issues: []
+  });
+}
+
+function writeJsonArtifact(taskDir: string, relativePath: string, content: unknown): void {
+  const artifactPath = path.join(taskDir, relativePath);
+  fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
+  fs.writeFileSync(artifactPath, JSON.stringify(content, null, 2), 'utf8');
 }
 
 afterEach(() => {
@@ -433,19 +555,19 @@ describe('operational debt track', () => {
         code: 'PACKAGE_SMOKE_EVIDENCE',
         name: 'Package smoke evidence',
         status: 'passed',
-        summary: 'Latest package-smoke evidence is recorded: T-0138 at 2026-05-28T12:52:58Z.'
+        summary: 'Latest package-smoke evidence is recorded: T-0138 at 2026-05-28T12:52:58Z; linked summary artifact is schema-valid.'
       },
       {
         code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE',
         name: 'Clean checkout smoke evidence',
         status: 'passed',
-        summary: 'Latest clean-checkout smoke evidence is recorded: T-0138 at 2026-05-28T12:53:26Z.'
+        summary: 'Latest clean-checkout smoke evidence is recorded: T-0138 at 2026-05-28T12:53:26Z; linked summary artifact is schema-valid.'
       },
       {
         code: 'RELEASE_ARTIFACT_EVIDENCE',
         name: 'Release artifact evidence',
         status: 'passed',
-        summary: 'Latest release artifact build evidence is recorded: T-0138 at 2026-05-28T13:15:03Z.'
+        summary: 'Latest release artifact build evidence is recorded: T-0138 at 2026-05-28T13:15:03Z; linked summary artifact is schema-valid.'
       },
       {
         code: 'INSTALL_MATRIX_SMOKE_EVIDENCE',
@@ -536,11 +658,79 @@ describe('operational debt track', () => {
     expect(strict.issues).not.toContainEqual(expect.objectContaining({ code: 'INSTALL_MATRIX_SMOKE_EVIDENCE_MISSING' }));
   });
 
+  it('rejects release evidence records that only match summary wording', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root);
+    fs.rmSync(path.join(root, 'tasks'), { recursive: true, force: true });
+    const taskDir = path.join(root, 'tasks', 'T-0142-summary-only-release-evidence');
+    fs.mkdirSync(taskDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(taskDir, 'evidence.jsonl'),
+      [
+        {
+          schemaVersion: 'hadara.evidence.v1',
+          time: '2026-05-29T00:56:41.077Z',
+          taskId: 'T-0142',
+          kind: 'command-log',
+          summary:
+            'Docker built CLI package smoke --execute --attach-evidence --task T-0142 --json returned ok true, attached public artifacts/package-smoke summary JSON, and reported no issues.',
+          result: 'passed',
+          visibility: 'public'
+        },
+        {
+          schemaVersion: 'hadara.evidence.v1',
+          time: '2026-05-29T01:01:42.779Z',
+          taskId: 'T-0142',
+          kind: 'command-log',
+          summary:
+            'Docker built CLI smoke clean-checkout --execute --attach-evidence --task T-0142 --json returned ok true, attached public artifacts/clean-checkout-smoke summary JSON, and reported no issues.',
+          result: 'passed',
+          visibility: 'public'
+        },
+        {
+          schemaVersion: 'hadara.evidence.v1',
+          time: '2026-05-29T01:15:03Z',
+          taskId: 'T-0142',
+          kind: 'command-log',
+          summary:
+            'Docker built CLI release artifact --execute --json returned ok true, generated tarball/checksum/manifest metadata, verified package files, and reported no issues.',
+          result: 'passed',
+          visibility: 'public'
+        }
+      ]
+        .map((record) => JSON.stringify(record))
+        .join('\n') + '\n',
+      'utf8'
+    );
+
+    const strict = createReleaseGateReport(root, 'strict');
+
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_EVIDENCE', status: 'error' }));
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE', status: 'error' }));
+    expect(strict.checks).toContainEqual(expect.objectContaining({ code: 'RELEASE_ARTIFACT_EVIDENCE', status: 'error' }));
+  });
+
   it('accepts reduced smoke evidence records by task artifact path', () => {
     const root = tempProject();
     writeReleaseReadinessFiles(root);
     const taskDir = path.join(root, 'tasks', 'T-0142-package-metadata-transition-plan');
     fs.mkdirSync(taskDir, { recursive: true });
+    writeSmokeEvidenceSummary(taskDir, {
+      filePath: 'artifacts/package-smoke/2026-05-29T00-56-41.077Z-summary.json',
+      time: '2026-05-29T00:56:41.077Z',
+      taskId: 'T-0142',
+      category: 'package-smoke',
+      mode: 'local',
+      command: 'package.smoke'
+    });
+    writeSmokeEvidenceSummary(taskDir, {
+      filePath: 'artifacts/clean-checkout-smoke/2026-05-29T01-01-42.779Z-summary.json',
+      time: '2026-05-29T01:01:42.779Z',
+      taskId: 'T-0142',
+      category: 'clean-checkout-smoke',
+      mode: 'execute',
+      command: 'smoke.cleanCheckout'
+    });
     fs.writeFileSync(
       path.join(taskDir, 'evidence.jsonl'),
       [
@@ -576,14 +766,14 @@ describe('operational debt track', () => {
       expect.objectContaining({
         code: 'PACKAGE_SMOKE_EVIDENCE',
         status: 'passed',
-        summary: 'Latest package-smoke evidence is recorded: T-0142 at 2026-05-29T00:56:41.077Z.'
+        summary: 'Latest package-smoke evidence is recorded: T-0142 at 2026-05-29T00:56:41.077Z; linked summary artifact is schema-valid.'
       })
     );
     expect(report.checks).toContainEqual(
       expect.objectContaining({
         code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE',
         status: 'passed',
-        summary: 'Latest clean-checkout smoke evidence is recorded: T-0142 at 2026-05-29T01:01:42.779Z.'
+        summary: 'Latest clean-checkout smoke evidence is recorded: T-0142 at 2026-05-29T01:01:42.779Z; linked summary artifact is schema-valid.'
       })
     );
   });

@@ -2,6 +2,9 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { validateSchema } from '../core/schema';
+import { EvidenceIndexRecord } from '../evidence/evidence';
+import { normalizeEvidenceRecord, NormalizedEvidenceRecord } from '../evidence/normalizer';
+import { isLegacyReleaseProofEvidence } from '../evidence/semantics';
 
 export interface ReleaseEvidenceRecord {
   taskId: string;
@@ -25,6 +28,11 @@ export interface ReleaseEvidenceArtifactValidation {
   gitCommit?: string;
   manifestHash?: string;
   issues: string[];
+}
+
+export interface StrictReleaseEvidenceExpectation {
+  category: 'package-smoke' | 'clean-checkout-smoke' | 'release-artifact';
+  mode?: string;
 }
 
 export function readReleaseEvidenceRecords(projectRoot: string): ReleaseEvidenceRecord[] {
@@ -108,6 +116,44 @@ export function validateReleaseEvidenceArtifact(record: ReleaseEvidenceRecord): 
   }
 }
 
+export function normalizeReleaseEvidenceRecord(record: ReleaseEvidenceRecord): NormalizedEvidenceRecord | null {
+  if (!isEvidenceKind(record.kind) || !isEvidenceResult(record.result) || !isEvidenceVisibility(record.visibility)) return null;
+  const normalized = normalizeEvidenceRecord(
+    {
+      schemaVersion: 'hadara.evidence.v1',
+      time: record.time,
+      taskId: record.taskId,
+      kind: record.kind,
+      summary: record.summary,
+      result: record.result,
+      visibility: record.visibility,
+      ...(record.evidencePath ? { evidencePath: record.evidencePath } : {})
+    },
+    { taskDir: record.taskDir }
+  );
+  const validation = validateReleaseEvidenceArtifact(record);
+  if (validation.schemaVersion && normalized.artifacts.length > 0) {
+    return {
+      ...normalized,
+      artifacts: normalized.artifacts.map((artifact) => ({
+        ...artifact,
+        schemaVersion: validation.schemaVersion
+      }))
+    };
+  }
+  return normalized;
+}
+
+export function isStrictReleaseEvidenceProof(record: ReleaseEvidenceRecord, expectation: StrictReleaseEvidenceExpectation): boolean {
+  const artifact = validateReleaseEvidenceArtifact(record);
+  if (!artifact.exists || artifact.schemaValid !== true || artifact.sourceOk !== true) return false;
+  if (artifact.category !== expectation.category) return false;
+  if (expectation.mode && artifact.mode !== expectation.mode) return false;
+
+  const normalized = normalizeReleaseEvidenceRecord(record);
+  return normalized !== null && isLegacyReleaseProofEvidence(normalized);
+}
+
 function readTaskEvidenceRecords(taskDir: string): ReleaseEvidenceRecord[] {
   const evidencePath = path.join(taskDir, 'evidence.jsonl');
   if (!fs.existsSync(evidencePath)) return [];
@@ -150,4 +196,16 @@ function sha256(content: string): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isEvidenceKind(value: string): value is EvidenceIndexRecord['kind'] {
+  return value === 'test-log' || value === 'command-log' || value === 'diff-summary' || value === 'screenshot' || value === 'note';
+}
+
+function isEvidenceResult(value: string): value is EvidenceIndexRecord['result'] {
+  return value === 'passed' || value === 'failed' || value === 'blocked' || value === 'unknown';
+}
+
+function isEvidenceVisibility(value: string): value is EvidenceIndexRecord['visibility'] {
+  return value === 'public' || value === 'private';
 }

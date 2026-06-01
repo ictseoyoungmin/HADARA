@@ -48,7 +48,7 @@ Phase 4 evidence semantics appear through shared evidence semantic services. Wor
 | Semantic counts | `hadara evidence lint --task <id> --json` `summary.semantics` | `sources.evidenceSemantics.summary` | Counts include `byStrength`, `byCategory`, `byOutcome`, public/private counts, legacy record count, and latest substantive evidence id. |
 | Semantic issues | Evidence lint `issues[]` and protocol doctor evidence issues | `sources.evidenceSemantics.issues` | Consumers should key on issue `code`, not human text. |
 | Compact proof status | Derived by consumer from semantic summary/issues | `sources.evidenceSemantics.proofStatus` | Allowed values: `sufficient`, `weak`, `failed`, `blocked`, `private-only`, `unknown`. |
-| Evidence row tone | Evidence lint/list normalized semantics | Future additive row semantics | Do not infer tone from free-text words like `resolved`, `fixed`, `rerun passed`, or `superseded`. |
+| Evidence row tone | Evidence lint/list normalized semantics | Future additive row semantics | Do not infer resolution or proof tone from human summary wording; use exact semantic markers and normalized analyzer output only. |
 
 Proof status derivation should use this priority order:
 

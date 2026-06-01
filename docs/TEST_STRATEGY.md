@@ -453,7 +453,7 @@ Required scenarios:
 |---|---|
 | Done task with only note/weak evidence | Semantic error. |
 | Done task with unresolved failed evidence | Semantic error. |
-| Failed evidence followed only by free-text `resolved`/`fixed`/`rerun passed`/`superseded` wording | Still unresolved; do not use conservative keyword matching. Require exact `supersedes:<id>` / `resolves:<id>` marker, later passed same-category evidence, or explicit residual-risk documentation. |
+| Failed evidence without an exact resolution signal | Still unresolved. Accept only exact `supersedes:<id>` / `resolves:<id>` markers, later passed same-category evidence, or explicit residual-risk documentation; never infer resolution from human summary wording. |
 | Done task with unexplained blocked evidence | Semantic error. |
 | Done task with substantive passed validation or implementation evidence | No semantic blocker. |
 | Done task with private-only substantive evidence | Warning for normal tasks, not first-rollout harness failure. |

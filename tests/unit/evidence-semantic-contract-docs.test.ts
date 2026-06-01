@@ -31,7 +31,7 @@ describe('evidence semantic consumer contract docs', () => {
 
     expect(dashboard).toContain('must not parse `evidence.jsonl`, `EVIDENCE.md`, command summaries, or artifact paths');
     expect(workbench).toContain('should not infer proof strength by parsing `evidence.jsonl` directly');
-    expect(workbench).toContain('Do not infer tone from free-text words like `resolved`, `fixed`, `rerun passed`, or `superseded`.');
+    expect(workbench).toContain('Do not infer resolution or proof tone from human summary wording; use exact semantic markers and normalized analyzer output only.');
     expect(dashboard).toContain('This contract does not require a Dashboard UI implementation');
   });
 });
