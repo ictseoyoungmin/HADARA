@@ -75,6 +75,8 @@ Required focused coverage for relevant capsules:
 
 Performance budgets should be recorded as observed evidence per capsule rather than enforced as timing-sensitive unit tests. Suggested targets are uncached bootstrap under 500 ms, cached bootstrap under 50 ms, uncached selected-task detail under 800 ms, cached selected-task detail under 80 ms, immediate/static shell paint, and no blank screen on refresh failure.
 
+`docs/DASHBOARD_PERFORMANCE_BUDGET.md` is the operator-facing performance budget reference. Dashboard tests should assert deterministic behavior such as cache metadata, previous-view retention hooks, load phase display, read-only debug helpers, and absence of browser project-state persistence rather than absolute wall-clock timings.
+
 ## Remote CI Observation
 
 Remote CI observation and GitHub Actions observation are release-readiness signals, not replacements for local reproducible Docker validation. The release-gate readiness marker is: local Docker validation remains the primary reproducible check. The local Docker `npm run check` plus done-level harness validation remain the primary evidence required to complete Task Capsules.

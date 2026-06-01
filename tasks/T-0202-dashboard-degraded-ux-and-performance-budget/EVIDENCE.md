@@ -1,0 +1,7 @@
+# Evidence
+
+| Time | Kind | Summary | Result | Visibility | JSONL |
+|---|---|---|---|---|---|
+| 2026-06-01T08:08:19.747Z | command-log | Docker sync-build passed after dashboard degraded UX and performance budget updates with 83 files / 561 tests and built CLI version smoke ok:true. | passed | public | evidence.jsonl |
+| 2026-06-01T08:10:25.869Z | command-log | Task close validation for T-0202 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:0a44711b93bed7b02481f509be5ca1c5cab28fd405374866d2209a6132877dba. | passed | public | evidence.jsonl |
+| 2026-06-01T08:11:06.174Z | command-log | Task close validation for T-0202 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:ba1b66470e640ad3751ede1a82080ab855e5aee03e7f321c37fd824d0fb8c1b7. | passed | public | evidence.jsonl |

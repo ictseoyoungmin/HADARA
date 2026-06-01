@@ -202,3 +202,4 @@
 | T-0199 | Dashboard Task Detail Aggregate Endpoint | Done | tasks/T-0199-dashboard-task-detail-aggregate-endpoint | |
 | T-0200 | Dashboard Timeline Identity Hardening | Done | tasks/T-0200-dashboard-timeline-identity-hardening | |
 | T-0201 | Dashboard Serve TTL Cache | Done | tasks/T-0201-dashboard-serve-ttl-cache | |
+| T-0202 | Dashboard Degraded UX and Performance Budget | Done | tasks/T-0202-dashboard-degraded-ux-and-performance-budget | |

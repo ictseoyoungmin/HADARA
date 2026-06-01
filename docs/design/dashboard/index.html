@@ -672,6 +672,7 @@
       <div class="top-badges">
         <span class="badge active" data-field="health">loading</span>
         <span class="badge" data-source-kind>source: loading</span>
+        <span class="badge" data-load-phase>phase: shell</span>
         <span class="badge hide-sm" data-field="schemaVersion">hadara.ops.status.v1</span>
         <span class="badge" data-field="project.phase">phase: unknown</span>
         <span class="badge" data-field="project.branch">branch: unknown</span>
@@ -741,6 +742,7 @@
                 <span class="source-chip" data-source-kind>source: loading</span>
                 <span class="source-chip" data-source-loaded>loaded: pending</span>
                 <span class="source-chip" data-cache-status>cache: pending</span>
+                <span class="source-chip" data-load-phase>phase: shell</span>
                 <span class="source-chip warn" data-source-warning>waiting for live status</span>
               </div>
             </div>
@@ -970,6 +972,7 @@
     const fixtureUrl = '../fixtures/hadara.ops.status.sample.json';
     let selectedTaskId = null;
     let lastSuccessfulRuntimeState = null;
+    let currentLoadPhase = 'shell';
 
     function safeError(error) {
       if (!error) return 'Unavailable';
@@ -992,6 +995,7 @@
         data,
         source: {
           loadedAt: new Date().toISOString(),
+          loadPhase: source.loadPhase ?? 'bootstrap-ready',
           ...source
         }
       };
@@ -1069,7 +1073,8 @@
           kind: 'live-api',
           label: 'LIVE BOOTSTRAP',
           url,
-          cache: live.data.cache
+          cache: live.data.cache,
+          loadPhase: 'bootstrap-ready'
         });
       }
 
@@ -1078,6 +1083,7 @@
         ...statusState,
         source: {
           ...statusState.source,
+          loadPhase: statusState.source.kind === 'degraded' ? 'degraded' : 'status-fallback-ready',
           warning: statusState.source.warning ?? 'Bootstrap unavailable; using status fallback.',
           error: safeError(live.error)
         }
@@ -1359,6 +1365,7 @@
 
     function renderSource(source, cache) {
       const loaded = source?.loadedAt ? new Date(source.loadedAt).toLocaleString() : 'pending';
+      const phase = source?.loadPhase ?? currentLoadPhase;
       document.querySelectorAll('[data-source-kind]').forEach((node) => {
         node.textContent = source?.label ?? 'SOURCE UNKNOWN';
         node.className = node.classList.contains('badge') ? sourceBadgeClass(source?.kind) : sourceClass(source?.kind);
@@ -1376,6 +1383,21 @@
         const key = cache?.key ?? source?.cache?.key ?? 'none';
         node.textContent = `cache: ${status} · ${key}`;
         node.className = status === 'hit' ? 'source-chip ok' : 'source-chip';
+      });
+      setLoadPhase(phase, source?.kind === 'degraded' ? 'Refresh degraded; previous in-memory view is retained when available.' : undefined);
+    }
+
+    function setLoadPhase(phase, detail) {
+      currentLoadPhase = phase;
+      document.querySelectorAll('[data-load-phase]').forEach((node) => {
+        node.textContent = detail ? `phase: ${phase} · ${detail}` : `phase: ${phase}`;
+        node.className = node.classList.contains('badge')
+          ? phase === 'degraded'
+            ? 'badge pill danger'
+            : 'badge active'
+          : phase === 'degraded'
+            ? 'source-chip danger'
+            : 'source-chip ok';
       });
     }
 
@@ -1444,6 +1466,7 @@
         button.disabled = true;
         button.textContent = 'Reading status...';
       }
+      setLoadPhase('bootstrap-loading');
       try {
         const state = await loadDashboardWithFallback();
         renderRuntime(state);
@@ -1454,10 +1477,13 @@
         if (lastSuccessfulRuntimeState) {
           lastSuccessfulRuntimeState.source = {
             ...lastSuccessfulRuntimeState.source,
+            loadPhase: 'degraded',
             warning: 'Refresh failed; keeping previous in-memory view.',
             error: safeError(error)
           };
           renderRuntime(lastSuccessfulRuntimeState);
+        } else {
+          setLoadPhase('degraded', 'Refresh failed and no previous in-memory view is available.');
         }
       } finally {
         if (button) {
@@ -1467,8 +1493,19 @@
       }
     }
 
+    function dashboardDebugSnapshot() {
+      return {
+        readOnly: true,
+        selectedTaskId,
+        loadPhase: currentLoadPhase,
+        hasPreviousRuntimeState: Boolean(lastSuccessfulRuntimeState),
+        sourceKind: lastSuccessfulRuntimeState?.source?.kind ?? null,
+        cacheStatus: lastSuccessfulRuntimeState?.source?.cache?.status ?? null
+      };
+    }
+
     document.querySelector('[data-action="status.refresh"]')?.addEventListener('click', refreshStatus);
-    window.HadaraDashboard = { loadDashboardWithFallback, loadStatusWithFallback, refreshStatus };
+    window.HadaraDashboard = { loadDashboardWithFallback, loadStatusWithFallback, refreshStatus, debugSnapshot: dashboardDebugSnapshot };
     refreshStatus();
   </script>
 </body>

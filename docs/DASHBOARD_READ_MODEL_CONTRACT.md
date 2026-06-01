@@ -220,6 +220,8 @@ degraded
 
 The shell should render immediately. Refresh must mean "read again"; it must keep the previous successful in-memory view visible while a refresh is in flight or degraded. Dashboard code must not persist project state in `localStorage`, `sessionStorage`, IndexedDB, cookies, or equivalent browser storage. T-0199 moves selected-task detail fan-out behind `/api/dashboard/task-detail`.
 
+T-0202 makes load phase observable in the served dashboard (`shell`, `bootstrap-loading`, `bootstrap-ready`, `status-fallback-ready`, `degraded`) and limits the browser debug surface to read-only snapshot helpers. The dashboard performance budget is advisory and documented in `docs/DASHBOARD_PERFORMANCE_BUDGET.md`; unit tests should check behavior and boundaries, not wall-clock timings.
+
 Phase 5.5 may later add optional polling only after aggregate reads, cache metadata, and degraded UX are stable. Polling must be memory-only, operator-controllable or conservative by default, back off on failure, and must not introduce SSE/WebSocket streaming, shell execution, provider calls, MCP writes, task/evidence/handoff mutation, release/package execution, auto-remediation, or multi-agent concurrency claims.
 
 ## Dashboard Timeline

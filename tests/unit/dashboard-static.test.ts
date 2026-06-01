@@ -75,6 +75,7 @@ describe('static dashboard reference', () => {
     expect(html).toContain('data-field="mcp.defaultMode"');
     expect(html).toContain('data-source-kind');
     expect(html).toContain('data-cache-status');
+    expect(html).toContain('data-load-phase');
 
     const forbiddenTokens = [
       'child_process',
@@ -190,6 +191,10 @@ describe('static dashboard reference', () => {
     expect(liveFetchIndex).toBeLessThan(fixtureFetchIndex);
     expect(html).toContain('lastSuccessfulRuntimeState');
     expect(html).toContain('Refresh failed; keeping previous in-memory view.');
+    expect(html).toContain('setLoadPhase(\'bootstrap-loading\')');
+    expect(html).toContain('status-fallback-ready');
+    expect(html).toContain('bootstrap-ready');
+    expect(html).toContain('phase: shell');
     expect(html).toContain('loadDashboardWithFallback');
     expect(html).toContain("kind: 'live-api'");
     expect(html).toContain("kind: 'fixture-fallback'");
@@ -201,6 +206,26 @@ describe('static dashboard reference', () => {
     expect(html).not.toContain('setInterval');
     expect(html).not.toContain('WebSocket');
     expect(html).not.toContain('EventSource');
+  });
+
+  it('keeps the dashboard debug surface read-only and performance-budget oriented', () => {
+    const html = fs.readFileSync(dashboardPath, 'utf8');
+    const budget = fs.readFileSync(path.join(process.cwd(), 'docs', 'DASHBOARD_PERFORMANCE_BUDGET.md'), 'utf8');
+
+    expect(html).toContain('function dashboardDebugSnapshot()');
+    expect(html).toContain('readOnly: true');
+    expect(html).toContain('debugSnapshot: dashboardDebugSnapshot');
+    expect(html).toContain('hasPreviousRuntimeState');
+    expect(html).toContain('cacheStatus');
+    expect(html).not.toContain('localStorage');
+    expect(html).not.toContain('sessionStorage');
+    expect(html).not.toContain('indexedDB');
+    expect(html).not.toContain('document.cookie');
+
+    expect(budget).toContain('Uncached bootstrap read');
+    expect(budget).toContain('Cached selected task detail');
+    expect(budget).toContain('no blank screen');
+    expect(budget).toContain('must be read-only');
   });
 
   it('serves only allowlisted static dashboard assets through the CLI helper', () => {
