@@ -2,6 +2,13 @@
   "schemaVersion": "hadara.schema.index.v1",
   "schemas": [
     {
+      "id": "hadara.dashboard.bootstrap.v1",
+      "path": "src/schemas/dashboard-bootstrap.schema.json",
+      "status": "fixture",
+      "owner": "services/dashboard-bootstrap",
+      "notes": "Documents read-only dashboard bootstrap aggregate reports for first-paint operator-console rendering."
+    },
+    {
       "id": "hadara.dashboard.timeline.v1",
       "path": "src/schemas/dashboard-timeline.schema.json",
       "status": "fixture",

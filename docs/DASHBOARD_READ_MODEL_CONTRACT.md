@@ -104,6 +104,8 @@ GET /api/active-run
 GET /api/debt
 GET /api/timeline
 GET /api/timeline?taskId=T-00NN
+GET /api/dashboard/bootstrap
+GET /api/dashboard/bootstrap?selectedTaskId=T-00NN
 ```
 
 These routes must not execute shell commands, call providers, mutate tasks, perform MCP writes, or persist browser state.
@@ -184,7 +186,7 @@ GET /api/dashboard/bootstrap?selectedTaskId=T-00NN
 GET /api/dashboard/bootstrap?cache=bypass
 ```
 
-The bootstrap report should be registered as `hadara.dashboard.bootstrap.v1` and include operations status, task count/last-completed/next-work summary, timeline overview, active-run and debt summaries where available, optional compact selected-task proof, source metadata, cache metadata, and issues. It must not include full evidence lists, raw artifacts, private raw paths, or deep selected-task payloads.
+T-0197 implements the bootstrap report as `hadara.dashboard.bootstrap.v1`. It includes operations status, task count/last-completed/next-work summary, timeline overview, active-run and debt summaries where available, optional compact selected-task proof, source metadata, cache metadata, and issues. It must not include full evidence lists, raw artifacts, private raw paths, or deep selected-task payloads. In T-0197 cache metadata is a placeholder with `status: "disabled"`; TTL cache behavior remains T-0201 scope.
 
 Selected-task detail should move to a single aggregate read:
 

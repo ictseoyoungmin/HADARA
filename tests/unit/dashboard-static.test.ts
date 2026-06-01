@@ -218,6 +218,7 @@ describe('static dashboard reference', () => {
     const workbench = createDashboardServerResponse(process.cwd(), '/api/task-workbench?taskId=T-0194');
     const evidenceLint = createDashboardServerResponse(process.cwd(), '/api/evidence-lint?taskId=T-0194');
     const timeline = createDashboardServerResponse(process.cwd(), '/api/timeline?taskId=T-0195');
+    const bootstrap = createDashboardServerResponse(process.cwd(), '/api/dashboard/bootstrap?selectedTaskId=T-0196');
     const activeRun = createDashboardServerResponse(process.cwd(), '/api/active-run');
     const debt = createDashboardServerResponse(process.cwd(), '/api/debt');
 
@@ -256,6 +257,12 @@ describe('static dashboard reference', () => {
       command: 'dashboard.timeline',
       taskId: 'T-0195',
       events: expect.arrayContaining([expect.objectContaining({ readOnly: true })])
+    });
+    expect(JSON.parse(bootstrap.body)).toMatchObject({
+      schemaVersion: 'hadara.dashboard.bootstrap.v1',
+      command: 'dashboard.bootstrap',
+      selectedTask: expect.objectContaining({ requestedTaskId: 'T-0196' }),
+      cache: expect.objectContaining({ status: 'disabled' })
     });
     expect(JSON.parse(activeRun.body)).toMatchObject({
       schemaVersion: 'hadara.active_run.projection.v1',

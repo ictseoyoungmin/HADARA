@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { safeCreateActiveRunProjection } from '../services/active-run-state';
+import { createDashboardBootstrapReport } from '../services/dashboard-bootstrap';
 import { createEvidenceLintReport } from '../services/evidence-lint';
 import { createEvidenceListReport } from '../services/evidence-list';
 import { createDashboardTimelineReport } from '../services/dashboard-timeline';
@@ -100,6 +101,10 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
 
   const headOnly = normalizedMethod === 'HEAD';
   if (url.pathname === '/api/status') return jsonResponse(createOpsStatusReport(projectRoot), headOnly);
+  if (url.pathname === '/api/dashboard/bootstrap') {
+    const selectedTaskId = url.searchParams.get('selectedTaskId')?.trim();
+    return jsonResponse(createDashboardBootstrapReport(projectRoot, selectedTaskId ? { selectedTaskId } : {}), headOnly);
+  }
   if (url.pathname === '/api/tasks') return jsonResponse(createTaskListReport(projectRoot), headOnly);
   if (url.pathname === '/api/active-run') return jsonResponse(safeCreateActiveRunProjection(projectRoot), headOnly);
   if (url.pathname === '/api/debt') return jsonResponse(createOperationalDebtReport(projectRoot), headOnly);
