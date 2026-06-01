@@ -189,3 +189,4 @@
 | T-0186 | Evidence Proof Semantics Foundation | Done | tasks/T-0186-evidence-proof-semantics-foundation | |
 | T-0187 | Evidence Lint Semantic Integration | Done | tasks/T-0187-evidence-lint-semantic-integration | |
 | T-0188 | Protocol and Harness Semantic Gates | Done | tasks/T-0188-protocol-and-harness-semantic-gates | |
+| T-0189 | Dashboard/TUI Evidence Semantic Contract | Done | tasks/T-0189-dashboard-tui-evidence-semantic-contract | |

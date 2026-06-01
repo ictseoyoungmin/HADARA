@@ -39,7 +39,29 @@ Task Board consumers should use `task.taskBoardPresent` before displaying `task.
 
 Close-state consumers should prefer `state.closedValid` over the legacy `state.closed` alias. `state.closeEvidenceFound` means a close evidence-like record exists; `state.closedValid` means a passed canonical close evidence record exists. `state.closeState` may be `not-closed`, `closed-valid`, `close-evidence-found-invalid`, or `close-evidence-malformed`.
 
-Future Phase 4 evidence semantics should appear in the workbench only through shared evidence semantic services. Workbench consumers should not infer proof strength by parsing `evidence.jsonl` directly. Expected future signals include a selected-task evidence semantic summary, semantic issue list, and a compact proof status such as `sufficient`, `weak`, `failed`, `blocked`, `private-only`, or `unknown`.
+Phase 4 evidence semantics appear through shared evidence semantic services. Workbench consumers should not infer proof strength by parsing `evidence.jsonl` directly. Current selected-task consumers should combine `hadara.task.workbench.v1` for task state/readiness with `hadara.evidence.lint.v1` for `summary.semantics` and semantic `issues[]`. A future additive workbench field may inline the same semantic summary, issue list, and compact proof status, but it must reuse the same analyzer rather than inventing a workbench-only taxonomy.
+
+## Evidence Semantic Consumer Contract
+
+| Consumer Need | Current Source | Future Additive Workbench Field | Notes |
+|---|---|---|---|
+| Semantic counts | `hadara evidence lint --task <id> --json` `summary.semantics` | `sources.evidenceSemantics.summary` | Counts include `byStrength`, `byCategory`, `byOutcome`, public/private counts, legacy record count, and latest substantive evidence id. |
+| Semantic issues | Evidence lint `issues[]` and protocol doctor evidence issues | `sources.evidenceSemantics.issues` | Consumers should key on issue `code`, not human text. |
+| Compact proof status | Derived by consumer from semantic summary/issues | `sources.evidenceSemantics.proofStatus` | Allowed values: `sufficient`, `weak`, `failed`, `blocked`, `private-only`, `unknown`. |
+| Evidence row tone | Evidence lint/list normalized semantics | Future additive row semantics | Do not infer tone from free-text words like `resolved`, `fixed`, `rerun passed`, or `superseded`. |
+
+Proof status derivation should use this priority order:
+
+| Priority | Status | Signal |
+|---|---|---|
+| 1 | `failed` | `TASK_DONE_WITH_FAILED_EVIDENCE`. |
+| 2 | `blocked` | `TASK_DONE_WITH_UNEXPLAINED_BLOCKED_EVIDENCE`. |
+| 3 | `weak` | `TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE` or `TASK_DONE_WITH_ONLY_WEAK_EVIDENCE`. |
+| 4 | `private-only` | `TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE`. |
+| 5 | `sufficient` | At least one `substantive-positive` record and no semantic error. |
+| 6 | `unknown` | No semantic summary, no records, or unavailable evidence source. |
+
+The workbench contract remains read-only. It must not append evidence, rewrite `EVIDENCE.md`, migrate `evidence.jsonl`, expose private raw artifact paths, trigger Dashboard/TUI writes, execute release/package commands, or expand MCP write behavior.
 
 ## Boundaries
 
@@ -57,4 +79,4 @@ Future Phase 4 evidence semantics should appear in the workbench only through sh
 | Dashboard live selected-task panel | Deferred | Must remain read-only and use the workbench report or service. |
 | TUI selected-task summary | Deferred | Must remain read-only and avoid shell/provider/MCP calls. |
 | MCP `hadara.task.workbench` | Deferred | Read-only only; no evidence attach or remediation execution. |
-| Evidence semantic proof status | Deferred | Must be produced by shared evidence semantics, remain additive, and avoid evidence writer or migration behavior. |
+| Evidence semantic proof status | Contracted for future additive workbench exposure | Must be produced by shared evidence semantics, remain additive, and avoid evidence writer or migration behavior. |

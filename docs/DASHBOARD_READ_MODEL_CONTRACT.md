@@ -106,3 +106,28 @@ These routes must not execute shell commands, call providers, mutate tasks, perf
 A future selected-task route may expose `hadara.task.workbench.v1`, but it must remain read-only and should reuse `createTaskWorkbenchReport` rather than building a dashboard-only task parser.
 
 Future Dashboard evidence panels should consume shared evidence semantic read models rather than interpreting raw evidence records in browser code. The intended Phase 4 sequence is: keep `hadara.evidence.v1` persisted records valid, add normalized proof semantics in shared services, expose semantic summary/issues through existing read surfaces, and only then bind Dashboard selected-task proof badges or evidence timeline tone. Evidence v2 writer and migration work must remain a separate follow-up from Dashboard rendering.
+
+## Selected-Task Evidence Semantics
+
+Dashboard selected-task panels must not parse `evidence.jsonl`, `EVIDENCE.md`, command summaries, or artifact paths to infer proof strength. They should use the shared read surfaces below.
+
+| Purpose | Source | Contract |
+|---|---|---|
+| Selected task identity/readiness | `hadara task status --task <id> --json` | `hadara.task.workbench.v1` from `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md`. |
+| Evidence semantic summary | `hadara evidence lint --task <id> --json` | `summary.semantics` from `hadara.evidence.lint.v1`. |
+| Evidence semantic issues | `hadara evidence lint --task <id> --json` and task protocol doctor | `issues[]` entries whose codes begin with `TASK_DONE_` or evidence semantic release/private-only codes. |
+
+Dashboard proof badges should derive from semantic fields and issue codes only:
+
+| Proof status | Required signal | Dashboard behavior |
+|---|---|---|
+| `sufficient` | `summary.semantics.byStrength["substantive-positive"] > 0` and no semantic error issue. | Show completed proof state. |
+| `weak` | `TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE` or `TASK_DONE_WITH_ONLY_WEAK_EVIDENCE`. | Show blocking proof insufficiency. |
+| `failed` | `TASK_DONE_WITH_FAILED_EVIDENCE`. | Show unresolved failed evidence. |
+| `blocked` | `TASK_DONE_WITH_UNEXPLAINED_BLOCKED_EVIDENCE`. | Show blocked proof needing explanation. |
+| `private-only` | `TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE`. | Show warning; do not expose private paths. |
+| `unknown` | No records or semantic summary unavailable. | Show neutral unknown state. |
+
+Evidence rows may show legacy `kind`, `result`, time, visibility, and redacted summaries from read-only reports, but color/tone and badge meaning must come from semantic strength, category, outcome, and issue codes. Private evidence must not reveal raw private paths or private store locations.
+
+This contract does not require a Dashboard UI implementation, new browser route, evidence writer migration, MCP write, release/package execution, or strict release-gate enforcement.

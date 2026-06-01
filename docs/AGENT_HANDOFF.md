@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0188 implementation complete; commit with the task id prefix before moving on. |
-| Current Phase | Phase 4 Protocol and Harness Semantic Gates complete | Task protocol doctor surfaces semantic evidence issues, and done-level harness validation now enforces the first semantic evidence gates. |
-| Latest Completed Task | T-0188 Protocol and Harness Semantic Gates | Added harness semantic gates through evidence lint, protocol regression coverage, and harness tests for weak/private-only proof behavior. |
-| Active / Next Task | T-0189 Dashboard/TUI Evidence Semantic Contract | Define the selected-task semantic evidence view consumed by Dashboard/TUI without raw evidence meaning parsing. |
-| Validation Baseline | Focused protocol/harness semantic tests and Docker sync-build passed | Focused Docker tests passed with 4 files / 55 tests; `npm run dev:docker-sync-build` passed with 77 files / 544 tests and built CLI version smoke `ok:true`. |
+| Branch | main | T-0189 implementation complete; commit with the task id prefix before moving on. |
+| Current Phase | Phase 4 Dashboard/TUI Evidence Semantic Contract complete | Selected-task Dashboard/TUI consumers now have a read-only semantic evidence contract and proof status derivation. |
+| Latest Completed Task | T-0189 Dashboard/TUI Evidence Semantic Contract | Updated Dashboard/workbench contracts and added a docs regression test for proof statuses, semantic issue codes, and no raw evidence parsing. |
+| Active / Next Task | T-0190 Evidence v2 Writer and Migration Plan | Design persisted evidence v2 taxonomy, writer behavior, Markdown frame strategy, dual-read compatibility, and dry-run-first migration. |
+| Validation Baseline | Focused evidence semantic contract docs test and Docker sync-build passed | Focused Docker docs regression passed with 1 file / 1 test; `npm run dev:docker-sync-build` passed with 78 files / 545 tests and built CLI version smoke `ok:true`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0186 Evidence Proof Semantics Foundation | Added v1 evidence normalization, proof strength classification, task semantic analysis, exact-marker failed resolution, blocked explanation checks, private-only warnings, and release proof predicates. | T-0186 evidence: focused Docker tests passed with 2 files / 15 tests; Docker sync-build passed with 77 files / 536 tests and built CLI smoke `ok:true`. |
 | T-0187 Evidence Lint Semantic Integration | Added additive `summary.semantics` to evidence lint, mapped actionable semantic errors/warnings for Done tasks, and kept legacy v1 presence as summary counts rather than noisy lint issues. | T-0187 evidence: focused Docker tests passed with 5 files / 30 tests; Docker sync-build passed with 77 files / 541 tests and built CLI smoke `ok:true`. |
 | T-0188 Protocol and Harness Semantic Gates | Added done-level harness semantic gates via evidence lint and protocol doctor coverage for semantic evidence issues. | T-0188 evidence: focused Docker tests passed with 4 files / 55 tests; Docker sync-build passed with 77 files / 544 tests and built CLI smoke `ok:true`. |
+| T-0189 Dashboard/TUI Evidence Semantic Contract | Documented selected-task evidence semantic sources, proof status derivation, no raw evidence parsing, and read-only/additive UI boundaries. | T-0189 evidence: focused docs regression passed with 1 file / 1 test; Docker sync-build passed with 78 files / 545 tests and built CLI smoke `ok:true`. |
 
 ## Current Known Problems
 
@@ -37,17 +37,17 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Begin T-0189 Dashboard/TUI Evidence Semantic Contract. | Protocol/harness semantic gates are in place; Dashboard and TUI now need a stable selected-task semantic evidence contract before UI rendering. | Start from `docs/DASHBOARD_READ_MODEL_CONTRACT.md`, `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md`, `src/services/evidence-lint.ts`, and Phase 4 evidence specs. |
+| Begin T-0190 Evidence v2 Writer and Migration Plan. | Semantic read surfaces and consumer contracts are in place; the next slice should design writer/migration behavior without rewriting existing evidence automatically. | Start from `docs/SCHEMAS.md`, `docs/TEST_STRATEGY.md`, `docs/DASHBOARD_READ_MODEL_CONTRACT.md`, `docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md`, and `docs/specs/evidence/EVIDENCE_PHASE4_REFACTOR_PLAN.md`. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Focused protocol/harness semantic tests | Docker `npm run test:focused -- tests/unit/protocol-consistency.test.ts tests/harness/harness-validate.test.ts tests/unit/evidence-lint.test.ts tests/unit/evidence-semantics.test.ts` passed with 4 files and 55 tests. | Covers task protocol semantic issue surfacing, done-level harness semantic gates, lint integration, and shared analyzer behavior. |
-| Full repository check | Docker `npm run dev:docker-sync-build` passed with 77 files and 544 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
+| Focused evidence semantic contract docs test | Docker `npm run test:focused -- tests/unit/evidence-semantic-contract-docs.test.ts` passed with 1 file and 1 test. | Covers Dashboard/TUI proof status and no-raw-parsing contract text. |
+| Full repository check | Docker `npm run dev:docker-sync-build` passed with 78 files and 545 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
 | Built CLI smoke | `npm run dev:docker-sync-build` refreshed `/workspace/dist` and ran `hadara version --verbose --json` with `ok:true`. | `distLooksStale:false`. |
-| Done-level readiness | Built CLI `task ready --task T-0188 --level done --json` returned `ok:true`. | No blockers or warnings. |
-| Close audit | Built CLI `task audit-close --task T-0188 --json` returned `ok:true`. | Close evidence present with zero blockers and zero warnings. |
+| Done-level readiness | Built CLI `task ready --task T-0189 --level done --json` returned `ok:true`. | No blockers or warnings. |
+| Close audit | Built CLI `task audit-close --task T-0189 --json` returned `ok:true`. | Close evidence present with zero blockers and zero warnings. |
 
 ## Historical Index
 

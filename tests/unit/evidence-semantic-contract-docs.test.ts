@@ -1,0 +1,37 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { describe, expect, it } from 'vitest';
+
+const root = process.cwd();
+
+function read(relativePath: string): string {
+  return fs.readFileSync(path.join(root, relativePath), 'utf8');
+}
+
+describe('evidence semantic consumer contract docs', () => {
+  it('documents selected-task Dashboard and TUI evidence semantics without raw evidence parsing', () => {
+    const dashboard = read('docs/DASHBOARD_READ_MODEL_CONTRACT.md');
+    const workbench = read('docs/TASK_WORKBENCH_READ_MODEL_CONTRACT.md');
+
+    for (const status of ['sufficient', 'weak', 'failed', 'blocked', 'private-only', 'unknown']) {
+      expect(dashboard).toContain(`| \`${status}\` |`);
+      expect(workbench).toContain(`| \`${status}\` |`);
+    }
+
+    for (const code of [
+      'TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE',
+      'TASK_DONE_WITH_ONLY_WEAK_EVIDENCE',
+      'TASK_DONE_WITH_FAILED_EVIDENCE',
+      'TASK_DONE_WITH_UNEXPLAINED_BLOCKED_EVIDENCE',
+      'TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE'
+    ]) {
+      expect(dashboard).toContain(code);
+      expect(workbench).toContain(code);
+    }
+
+    expect(dashboard).toContain('must not parse `evidence.jsonl`, `EVIDENCE.md`, command summaries, or artifact paths');
+    expect(workbench).toContain('should not infer proof strength by parsing `evidence.jsonl` directly');
+    expect(workbench).toContain('Do not infer tone from free-text words like `resolved`, `fixed`, `rerun passed`, or `superseded`.');
+    expect(dashboard).toContain('This contract does not require a Dashboard UI implementation');
+  });
+});
