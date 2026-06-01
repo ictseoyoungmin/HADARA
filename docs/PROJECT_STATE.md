@@ -12,9 +12,9 @@ HADARA - Portable Agentic Development Workbench
 
 ## Current Phase
 
-Phase 4 Evidence Proof Semantics Foundation complete.
+Phase 5 Dashboard / Operator Console is in progress.
 
-The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer, close/evidence hardening through T-0170, Phase 3 task operator console through T-0177, Phase 3.5 operator workflow hardening through T-0185, and Phase 4 evidence semantics through T-0190 are complete. The next major work is Phase 4 release evidence strict gate enforcement.
+The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer, close/evidence hardening through T-0170, Phase 3 task operator console through T-0177, Phase 3.5 operator workflow hardening through T-0185, and Phase 4 evidence semantics/hardening through T-0192 are complete. Phase 5 has started with dashboard live read binding in T-0193.
 
 ## Current Status
 
@@ -57,6 +57,7 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Evidence v2 writer/migration planning exists: `docs/EVIDENCE_V2_WRITER_MIGRATION_PLAN.md` defines the planned persisted v2 shape, opt-in writer transition, dry-run-first per-task migration, hash-guarded execute posture, mixed-version tolerance, and explicit non-goals for automatic rewrites, init changes, MCP writes, UI work, and release enforcement.
 - Release evidence strict gates exist: package-smoke, clean-checkout smoke, and release-artifact readiness checks now use strict release proof helpers over normalized legacy evidence plus artifact validation, requiring public passed evidence linked to schema-valid/source-ok artifacts with expected category/mode instead of accepting summary wording alone.
 - Evidence semantics hardening exists: normalized v1 records now expose source-line, fingerprint, id-source, and id-stability metadata; evidence lint preserves actual JSONL line numbers when generating semantic ids; later same-category failed-evidence resolution is documented as a v1 compatibility-only fallback; release dry-run reuses strict release proof candidate selection before version/hash freshness checks; Dashboard/TUI contracts treat private-only proof as an auditability warning rather than a Done blocker.
+- Dashboard live read binding exists: the served dashboard now tries `/api/status` first, falls back to the static fixture, then falls back to inline JSON; it displays source provenance and loaded timestamps, and `Refresh Status` performs read-only refetch only.
 - Private evidence manifests exist for readable project-boundary private evidence source artifacts: raw private bytes are copied only to the ignored private portable store, `hadara.privateEvidence.v1` manifests record SHA-256 hashes, byte counts, retention, and deferred encryption metadata, and manifest writes are privately audited. External absolute private source paths are not copied into the private portable store by default. Committed Task Capsule files and context export exclude private raw content, source paths, and private store paths.
 - Context export read model exists as `hadara.context.export.v1`; read-only MCP `hadara.context.export` returns an in-memory payload with `contextPath: null` and does not write `.hadara/context/HADARA_CONTEXT.md`, while CLI `hadara hermes export-context` remains the file-writing path. Context export includes `docs/IMPLEMENTATION_SOP.md` as the authoritative workflow source, and `summaryOnly` currently returns a warning instead of silently pretending to summarize.
 - Tools list read model exists as `hadara.tools.list.v1`; `hadara tools list --json` and read-only MCP `hadara.tools.list` report the current CLI help surface, read-only MCP tools, opt-in evidence attach status, `availability`/`risk` metadata, and disabled shell/provider/release/broad-write MCP surfaces from a neutral capability registry.
@@ -104,6 +105,7 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Latest completed task: T-0189 Dashboard/TUI Evidence Semantic Contract documented selected-task evidence semantic sources, proof status derivation, and no-raw-evidence-parsing boundaries for Dashboard/TUI consumers.
 - Latest completed task: T-0190 Evidence v2 Writer and Migration Plan documented v2 writer/migration design, schema/test strategy posture, and dry-run-first non-goals without implementing writer changes.
 - Latest completed task: T-0192 Evidence Semantics Hardening added normalized evidence identity stability metadata, actual JSONL source-line preservation in evidence lint, strict release proof candidate selection for release dry-run, private-only auditability-warning UI semantics, and gate-vs-dry-run release strictness docs.
+- Latest completed task: T-0193 Dashboard Live Read Binding made the served dashboard live-read-first over `/api/status`, preserved fixture/inline fallback, added source provenance UI, and kept refresh read-only.
 - Active / next task: post-hardening roadmap selection via `hadara task next --json`.
 - Phase 3 source plan: `docs/specs/HADARA_Phase3_Task_Operator_Console_Development_Plan.md`.
 - Task workbench status report exists as `hadara task status --task <id> --json`; centralized suggested-action generation and fixture-level schema registration are implemented. T-0177 hardened true Task Board status projection, optional nextAction normalization, and close evidence/valid-closure semantics.
@@ -225,7 +227,7 @@ The Phase 1 init scaffold reset, Phase 2 protocol consistency/remediation layer,
 - Policy CLI handling lives in `src/cli/policy.ts`.
 - Hermes CLI handling lives in `src/cli/hermes.ts`; handoff CLI handling lives in `src/cli/handoff.ts`.
 - Real provider adapters are not implemented; only schema-backed preparation contracts and safe report helpers exist.
-- Dashboard is locally servable through a static CLI helper with read-only local API routes, but the dashboard HTML still consumes the static sample fixture and is not live-rendering repository data.
+- Dashboard is locally servable through a static CLI helper with read-only local API routes, and the dashboard HTML now live-renders `/api/status` first with fixture and inline fallback provenance.
 - Production TUI public CLI entry is implemented as a read-only local work console through `hadara tui` and `hadara tui --snapshot`; optional TUI cache persistence is local-only under `.hadara/local/tui/`; interactive production loading uses an asynchronous pulse while read models load; TUI task/evidence/handoff writes, shell execution, provider calls, MCP calls, dashboard/server behavior, and release/package behavior remain deferred.
 - Broad MCP write tools are not implemented beyond the explicitly enabled, approval-recorded, audited evidence attach tool.
 - Operational debt records remain static and non-persisted; debt mutation and executable release automation remain deferred.

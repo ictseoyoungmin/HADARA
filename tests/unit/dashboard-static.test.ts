@@ -53,15 +53,21 @@ describe('static dashboard reference', () => {
   it('keeps dashboard HTML static and scoped to the sample fixture', () => {
     const html = fs.readFileSync(dashboardPath, 'utf8');
 
+    expect(html).toContain("const liveStatusUrl = '/api/status'");
     expect(html).toContain('../fixtures/hadara.ops.status.sample.json');
     expect(html).toContain('fallback-status-json');
     expect(html).toContain('Command Center');
     expect(html).toContain('MCP Guard');
     expect(html).toContain('notLiveData');
+    expect(html).toContain('Refresh Status');
+    expect(html).toContain('LIVE API');
+    expect(html).toContain('FIXTURE FALLBACK');
+    expect(html).toContain('OFFLINE FALLBACK');
     expect(html).toContain('data-field="health"');
     expect(html).toContain('data-field="tasks.nextRecommended"');
     expect(html).toContain('data-field="validation.latestFullCheck"');
     expect(html).toContain('data-field="mcp.defaultMode"');
+    expect(html).toContain('data-source-kind');
 
     const forbiddenTokens = [
       'child_process',
@@ -75,7 +81,16 @@ describe('static dashboard reference', () => {
       'indexedDB',
       'innerHTML',
       'data:image',
-      'base64,'
+      'base64,',
+      'Run check',
+      'Sync project',
+      'Update task',
+      'Refresh evidence',
+      'Fix issue',
+      'Close task',
+      'Finish task',
+      'Publish',
+      'Attach evidence'
     ];
 
     for (const token of forbiddenTokens) {
@@ -114,7 +129,32 @@ describe('static dashboard reference', () => {
     expect(html).toContain('Handoff Beacon');
     expect(html).toContain('Evidence Timeline');
     expect(html).toContain('visual shell follows the mockup; data contract remains authoritative');
-    expect(html).toContain('fixture-backed');
+    expect(html).toContain('FIXTURE FALLBACK');
+  });
+
+  it('documents live-first dashboard loading order and read-only refresh behavior', () => {
+    const html = fs.readFileSync(dashboardPath, 'utf8');
+    const liveIndex = html.indexOf('const liveStatusUrl');
+    const fixtureIndex = html.indexOf('const fixtureUrl');
+    const liveFetchIndex = html.indexOf('tryFetchJson(liveStatusUrl)');
+    const fixtureFetchIndex = html.indexOf('tryFetchJson(fixtureUrl)');
+
+    expect(liveIndex).toBeGreaterThan(-1);
+    expect(fixtureIndex).toBeGreaterThan(-1);
+    expect(liveIndex).toBeLessThan(fixtureIndex);
+    expect(liveFetchIndex).toBeGreaterThan(-1);
+    expect(fixtureFetchIndex).toBeGreaterThan(-1);
+    expect(liveFetchIndex).toBeLessThan(fixtureFetchIndex);
+    expect(html).toContain("kind: 'live-api'");
+    expect(html).toContain("kind: 'fixture-fallback'");
+    expect(html).toContain("kind: 'inline-fallback'");
+    expect(html).toContain("kind: 'degraded'");
+    expect(html).toContain('data-action="status.refresh"');
+    expect(html).toContain('addEventListener(\'click\', refreshStatus)');
+    expect(html).toContain('fetch(url, { cache: \'no-store\' })');
+    expect(html).not.toContain('setInterval');
+    expect(html).not.toContain('WebSocket');
+    expect(html).not.toContain('EventSource');
   });
 
   it('serves only allowlisted static dashboard assets through the CLI helper', () => {
@@ -129,6 +169,8 @@ describe('static dashboard reference', () => {
     expect(dashboard.headers['x-content-type-options']).toBe('nosniff');
     expect(dashboard.body).toContain('Command Center');
     expect(dashboard.body).toContain('../fixtures/hadara.ops.status.sample.json');
+    expect(dashboard.body).toContain('/api/status');
+    expect(dashboard.body).toContain('Refresh Status');
 
     expect(fixture.statusCode).toBe(200);
     expect(fixture.headers['content-type']).toBe('application/json; charset=utf-8');

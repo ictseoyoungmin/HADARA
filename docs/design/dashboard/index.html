@@ -296,6 +296,11 @@
       background: rgba(201, 166, 107, 0.08);
     }
 
+    .btn[disabled] {
+      cursor: default;
+      opacity: 0.78;
+    }
+
     .metrics,
     .gate-grid,
     .command-grid,
@@ -400,6 +405,7 @@
 
     .source-chip.ok { color: var(--teal); }
     .source-chip.warn { color: var(--amber); }
+    .source-chip.danger { color: var(--red); }
 
     .command-grid { grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr) minmax(320px, 0.82fr); }
     .wide-grid { grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr); margin-top: 10px; }
@@ -589,6 +595,7 @@
       </div>
       <div class="top-badges">
         <span class="badge active" data-field="health">loading</span>
+        <span class="badge" data-source-kind>source: loading</span>
         <span class="badge hide-sm" data-field="schemaVersion">hadara.ops.status.v1</span>
         <span class="badge" data-field="project.phase">phase: unknown</span>
         <span class="badge" data-field="project.branch">branch: unknown</span>
@@ -644,9 +651,9 @@
               <div class="page-subtitle" data-field="fixtureMeta.note">Loading status snapshot...</div>
             </div>
             <div class="actions">
-              <button class="btn teal" type="button" data-action="fixture.refresh">Refresh fixture</button>
-              <button class="btn gold" type="button" data-action="task.plan">Plan next</button>
-              <button class="btn" type="button" data-action="status.inspect">Inspect JSON</button>
+              <button class="btn teal" type="button" data-action="status.refresh">Refresh Status</button>
+              <button class="btn gold" type="button" data-action="command.copy" disabled>Copy next command</button>
+              <button class="btn" type="button" data-action="status.inspect" disabled>Inspect JSON</button>
             </div>
           </div>
 
@@ -657,8 +664,9 @@
               <div class="command-dock-title">Operations Status Source</div>
               <div class="source-strip">
                 <span class="source-chip ok">hadara.ops.status.v1</span>
-                <span class="source-chip ok">fixture-backed</span>
-                <span class="source-chip warn">not live data</span>
+                <span class="source-chip" data-source-kind>source: loading</span>
+                <span class="source-chip" data-source-loaded>loaded: pending</span>
+                <span class="source-chip warn" data-source-warning>waiting for live status</span>
               </div>
             </div>
             <div class="action-strip">
@@ -819,15 +827,90 @@
   </script>
 
   <script>
+    const liveStatusUrl = '/api/status';
     const fixtureUrl = '../fixtures/hadara.ops.status.sample.json';
 
-    async function loadStatus() {
+    function safeError(error) {
+      if (!error) return 'Unavailable';
+      const message = error instanceof Error ? error.message : String(error);
+      return message.replace(/\s+/g, ' ').slice(0, 180);
+    }
+
+    async function tryFetchJson(url) {
       try {
-        const response = await fetch(fixtureUrl, { cache: 'no-store' });
-        if (!response.ok) throw new Error(`fixture fetch failed: ${response.status}`);
-        return await response.json();
-      } catch (_error) {
-        return JSON.parse(document.getElementById('fallback-status-json').textContent);
+        const response = await fetch(url, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`read failed: ${response.status}`);
+        return { ok: true, data: await response.json() };
+      } catch (error) {
+        return { ok: false, error };
+      }
+    }
+
+    function runtimeState(data, source) {
+      return {
+        data,
+        source: {
+          loadedAt: new Date().toISOString(),
+          ...source
+        }
+      };
+    }
+
+    function parseInlineFallback() {
+      return JSON.parse(document.getElementById('fallback-status-json').textContent);
+    }
+
+    async function loadStatusWithFallback() {
+      const live = await tryFetchJson(liveStatusUrl);
+      if (live.ok) {
+        return runtimeState(live.data, {
+          kind: 'live-api',
+          label: 'LIVE API',
+          url: liveStatusUrl
+        });
+      }
+
+      const fixture = await tryFetchJson(fixtureUrl);
+      if (fixture.ok) {
+        return runtimeState(fixture.data, {
+          kind: 'fixture-fallback',
+          label: 'FIXTURE FALLBACK',
+          url: fixtureUrl,
+          warning: 'Sample data may not match the current repository state.',
+          error: safeError(live.error)
+        });
+      }
+
+      try {
+        return runtimeState(parseInlineFallback(), {
+          kind: 'inline-fallback',
+          label: 'OFFLINE FALLBACK',
+          url: null,
+          warning: 'Inline fallback data may not match the current repository state.',
+          error: safeError(fixture.error ?? live.error)
+        });
+      } catch (error) {
+        return runtimeState(
+          {
+            schemaVersion: 'hadara.ops.status.v1',
+            command: 'ops.status',
+            ok: false,
+            health: 'error',
+            project: {},
+            tasks: { counts: {}, lastCompleted: [] },
+            handoff: {},
+            validation: {},
+            mcp: {},
+            issues: [{ severity: 'error', code: 'DASHBOARD_STATUS_UNAVAILABLE', message: 'Status data is unavailable.' }]
+          },
+          {
+            kind: 'degraded',
+            label: 'DEGRADED',
+            url: null,
+            warning: 'Status data is unavailable.',
+            error: safeError(error)
+          }
+        );
       }
     }
 
@@ -976,12 +1059,41 @@
       return 'pill good';
     }
 
-    function render(status) {
+    function sourceClass(kind) {
+      if (kind === 'live-api') return 'source-chip ok';
+      if (kind === 'degraded') return 'source-chip danger';
+      return 'source-chip warn';
+    }
+
+    function sourceBadgeClass(kind) {
+      if (kind === 'live-api') return 'badge active';
+      if (kind === 'degraded') return 'badge pill danger';
+      return 'badge pill warn';
+    }
+
+    function renderSource(source) {
+      const loaded = source?.loadedAt ? new Date(source.loadedAt).toLocaleString() : 'pending';
+      document.querySelectorAll('[data-source-kind]').forEach((node) => {
+        node.textContent = source?.label ?? 'SOURCE UNKNOWN';
+        node.className = node.classList.contains('badge') ? sourceBadgeClass(source?.kind) : sourceClass(source?.kind);
+      });
+      document.querySelectorAll('[data-source-loaded]').forEach((node) => {
+        node.textContent = `loaded: ${loaded}`;
+      });
+      document.querySelectorAll('[data-source-warning]').forEach((node) => {
+        const warning = source?.warning ?? (source?.kind === 'live-api' ? 'live project status' : 'source fallback active');
+        node.textContent = source?.error ? `${warning}; previous read: ${source.error}` : warning;
+        node.className = source?.kind === 'live-api' ? 'source-chip ok' : sourceClass(source?.kind);
+      });
+    }
+
+    function render(status, source) {
       const health = text(status.health, 'degraded');
       const issues = Array.isArray(status.issues) ? status.issues : [];
       const lastCompleted = Array.isArray(status.tasks?.lastCompleted) ? status.tasks.lastCompleted : [];
       const nextSteps = Array.isArray(status.handoff?.nextRecommendedStep) ? status.handoff.nextRecommendedStep : [];
 
+      renderSource(source);
       setField('health', health);
       document.querySelectorAll('[data-field="health"]').forEach((node) => {
         if (node.classList.contains('pill') || node.classList.contains('badge')) {
@@ -992,8 +1104,11 @@
       setField('command', text(status.command, 'unknown command'));
       setField('project.phase', `phase: ${text(status.project?.phase, 'unknown')}`);
       setField('project.branch', `branch: ${text(status.project?.branch, 'unknown')}`);
-      setField('fixtureMeta.kind', text(status.fixtureMeta?.kind, 'unknown'));
-      setField('fixtureMeta.note', text(status.fixtureMeta?.note, 'Status snapshot loaded.'));
+      setField('fixtureMeta.kind', text(source?.kind, status.fixtureMeta?.kind ?? 'unknown'));
+      setField(
+        'fixtureMeta.note',
+        `${text(source?.label, 'SOURCE UNKNOWN')} loaded ${source?.loadedAt ? new Date(source.loadedAt).toLocaleString() : 'recently'}. ${text(source?.warning, status.fixtureMeta?.note ?? 'Status snapshot loaded.')}`
+      );
       setField('mcp.defaultMode', text(status.mcp?.defaultMode, 'unknown'));
       setField('tasks.counts.done', String(Number(status.tasks?.counts?.done ?? 0)));
       setField('tasks.lastCompleted.length', String(lastCompleted.length));
@@ -1012,7 +1127,29 @@
       renderRawCounts(status.tasks?.rawStatusCounts);
     }
 
-    loadStatus().then(render);
+    function renderRuntime(state) {
+      render(state.data, state.source);
+    }
+
+    async function refreshStatus() {
+      const button = document.querySelector('[data-action="status.refresh"]');
+      if (button) {
+        button.disabled = true;
+        button.textContent = 'Reading status...';
+      }
+      try {
+        renderRuntime(await loadStatusWithFallback());
+      } finally {
+        if (button) {
+          button.disabled = false;
+          button.textContent = 'Refresh Status';
+        }
+      }
+    }
+
+    document.querySelector('[data-action="status.refresh"]')?.addEventListener('click', refreshStatus);
+    window.HadaraDashboard = { loadStatusWithFallback, refreshStatus };
+    refreshStatus();
   </script>
 </body>
 </html>

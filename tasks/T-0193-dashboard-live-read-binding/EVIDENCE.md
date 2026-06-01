@@ -1,0 +1,8 @@
+# Evidence
+
+| Time | Kind | Summary | Result | Visibility | JSONL |
+|---|---|---|---|---|---|
+| 2026-06-01T05:45:12.266Z | command-log | Focused dashboard live-binding regression passed: npm run test:focused -- tests/unit/dashboard-static.test.ts in Docker temp copy, 1 file / 12 tests. | passed | public | evidence.jsonl |
+| 2026-06-01T05:45:12.265Z | command-log | Full Docker sync-build passed after dashboard live-read binding: 79 test files / 550 tests and built CLI version smoke ok:true. | passed | public | evidence.jsonl |
+| 2026-06-01T05:45:30.385Z | command-log | Full Docker sync-build passed after dashboard live-read binding: 79 test files / 550 tests and built CLI version smoke ok:true. | passed | public | evidence.jsonl |
+| 2026-06-01T05:49:25.298Z | command-log | Task close validation for T-0193 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:2f7d3f3cf42844452daa9abbe0c9c5cdcb458993d718770ac352df568d6e4ab8. | passed | public | evidence.jsonl |

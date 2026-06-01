@@ -4,11 +4,11 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0192 implementation complete; commit with the task id prefix before moving on. |
-| Current Phase | Post-Phase-4 evidence hardening complete | Evidence semantics are hardened for Dashboard/TUI consumers before UI implementation. |
-| Latest Completed Task | T-0192 Evidence Semantics Hardening | Normalized identity metadata, actual JSONL source-line preservation, release dry-run strict candidate selection, and UI/release docs clarifications are complete. |
-| Active / Next Task | Post-hardening roadmap selection | Use `task next` after committing T-0192 to choose the next incomplete planned slice. |
-| Validation Baseline | Docker sync-build passed | `npm run dev:docker-sync-build` passed with 79 files / 548 tests and built CLI version smoke `ok:true`. |
+| Branch | main | T-0193 is closed-valid and ready to commit. |
+| Current Phase | Phase 5 Dashboard / Operator Console in progress | T-0193 live status binding is complete; T-0194 operator-console layout is next. |
+| Latest Completed Task | T-0193 Dashboard Live Read Binding | Served dashboard now loads `/api/status` first, falls back to fixture/inline JSON, shows source provenance, and keeps `Refresh Status` read-only. |
+| Active / Next Task | T-0194 Dashboard Operator Console Layout | After closing/committing T-0193, continue Phase 5 with the layout slice. |
+| Validation Baseline | Docker sync-build passed | `npm run dev:docker-sync-build` passed with 79 files / 550 tests and built CLI version smoke `ok:true`. |
 
 ## Last 3 Completed Tasks
 
@@ -16,6 +16,7 @@
 |---|---|---|
 | T-0191 Release Evidence Strict Gate | Applied release proof predicates to release readiness checks and tightened reviewer-facing failed evidence resolution wording. | T-0191 evidence: Docker sync-build passed with 79 files / 547 tests and built CLI smoke `ok:true`. |
 | T-0192 Evidence Semantics Hardening | Hardened generated evidence identity metadata, lint line preservation, release dry-run strictness, and Dashboard/TUI warning contracts. | T-0192 evidence: Docker sync-build passed with 79 files / 548 tests and built CLI smoke `ok:true`. |
+| T-0193 Dashboard Live Read Binding | Converted the served dashboard from fixture-first to live `/api/status` first with fixture/inline fallback, provenance badges, and read-only `Refresh Status`. | T-0193 evidence: focused dashboard test passed with 1 file / 12 tests; Docker sync-build passed with 79 files / 550 tests and built CLI smoke `ok:true`. |
 
 ## Current Known Problems
 
@@ -37,16 +38,17 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Commit T-0192 and select the next post-hardening slice. | Evidence semantics are hardened for Dashboard/TUI implementation. | Use `git commit -m "T-0192 Evidence Semantics Hardening"` and then `hadara task next --json`. |
+| Finish/close T-0193 and continue with T-0194. | Phase 5 live binding is implemented and validated; the next planned slice is operator-console layout. | Use the standard `task ready`, `task finish`, `task close`, and `task audit-close` loop for T-0193, then create/start T-0194. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Full repository check | Docker `npm run dev:docker-sync-build` passed with 79 files and 548 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
+| Full repository check | Docker `npm run dev:docker-sync-build` passed with 79 files and 550 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
+| Focused dashboard check | Docker temp-copy `npm run test:focused -- tests/unit/dashboard-static.test.ts` passed with 1 file and 12 tests. | Covers live-first fetch order, fallback provenance, refresh label, and existing route boundaries. |
 | Built CLI smoke | `npm run dev:docker-sync-build` refreshed `/workspace/dist` and ran `hadara version --verbose --json` with `ok:true`. | `distLooksStale:false`. |
-| Done-level readiness | Built CLI `task ready --task T-0192 --level done --json` returned `ok:true`. | No blockers or warnings. |
-| Close audit | Built CLI `task audit-close --task T-0192 --json` returned `ok:true`. | One close evidence record, zero blockers, zero warnings. |
+| Done-level readiness | Built CLI `task ready --task T-0193 --level done --json` returned `ok:true`. | No blockers or warnings. |
+| Close audit | Built CLI `task audit-close --task T-0193 --json` returned `ok:true`. | One close evidence record, zero blockers, zero warnings. |
 
 ## Historical Index
 

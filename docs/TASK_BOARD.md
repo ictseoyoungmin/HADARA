@@ -193,3 +193,4 @@
 | T-0190 | Evidence v2 Writer and Migration Plan | Done | tasks/T-0190-evidence-v2-writer-and-migration-plan | |
 | T-0191 | Release Evidence Strict Gate | Done | tasks/T-0191-release-evidence-strict-gate | |
 | T-0192 | Evidence Semantics Hardening | Done | tasks/T-0192-evidence-semantics-hardening | |
+| T-0193 | Dashboard Live Read Binding | Done | tasks/T-0193-dashboard-live-read-binding | |
