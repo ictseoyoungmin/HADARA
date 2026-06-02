@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0219 |
 | Title | Background Refresh and Serve Warmup |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-06-02 |
 | Updated | 2026-06-02 |
 
@@ -34,10 +34,11 @@
 
 ## Status
 
-Draft
+Done
 
 ## Status History
 
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-02 | Draft | Initial task scaffold for background refresh and serve warmup. | Task created by HADARA CLI. |
+| 2026-06-02 | Done | Added serve-start warmup, refresh/status routes, refresh coalescing, metadata-only projection status, and focused tests; Docker validation gap recorded. | `evidence.add-command` at 2026-06-02T03:14:16.983Z. |

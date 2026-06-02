@@ -11,6 +11,11 @@ import {
   withDashboardCacheMetadata
 } from '../services/dashboard-cache';
 import { createDashboardCoreReport } from '../services/dashboard-core';
+import {
+  createDashboardProjectionStatusReport,
+  triggerDashboardProjectionRefresh,
+  warmDashboardProjections
+} from '../services/dashboard-refresh';
 import { createDashboardTaskDetailReport } from '../services/dashboard-task-detail';
 import { createEvidenceLintReport } from '../services/evidence-lint';
 import { createEvidenceListReport } from '../services/evidence-list';
@@ -66,6 +71,7 @@ export function serveDashboard(projectRoot: string, options: DashboardServeOptio
   server.listen(port, host, () => {
     const address = server.address();
     const actualPort = typeof address === 'object' && address ? address.port : port;
+    warmDashboardProjections(projectRoot);
     // console.log(`[HADARA] Dashboard serving sample fixture at http://${host}:${actualPort}/dashboard/`);
     console.log(`[HADARA] Dashboard serving at http://${host}:${actualPort}/dashboard/ with read-only APIs under /api/.`);
   });
@@ -113,6 +119,8 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
   if (url.pathname === '/api/dashboard/core') {
     return jsonResponse(createDashboardCoreReport(projectRoot, { bypassProjection: url.searchParams.get('cache') === 'bypass' }), headOnly);
   }
+  if (url.pathname === '/api/dashboard/projection/status') return jsonResponse(createDashboardProjectionStatusReport(projectRoot), headOnly);
+  if (url.pathname === '/api/dashboard/refresh') return jsonResponse(triggerDashboardProjectionRefresh(projectRoot, 'api'), headOnly);
   if (url.pathname === '/api/dashboard/bootstrap') {
     const selectedTaskId = url.searchParams.get('selectedTaskId')?.trim();
     const tier = url.searchParams.get('tier') === 'core' ? 'core' : 'full';

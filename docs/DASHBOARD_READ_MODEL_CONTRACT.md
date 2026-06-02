@@ -276,6 +276,17 @@ T-0218 adds `/api/dashboard/core` over `hadara.dashboard.core.v1`. The first req
 
 The core route must not scan every Task Capsule directory on the request path. Task counts and recent-task summaries come from Task Board rows; heavy timeline, debt, and selected-task detail remain pending sections until later projection slices populate them.
 
+T-0219 adds projection refresh metadata and warmup surfaces:
+
+```text
+GET /api/dashboard/projection/status
+GET /api/dashboard/refresh
+```
+
+`/api/dashboard/projection/status` is metadata-only: it may report refresh state, generated times, projection presence, pending sections, and stale sections, but it must not expose cached projection bodies. `/api/dashboard/refresh` is a local read-model maintenance trigger/status route. It may start a background refresh that rewrites ignored dashboard projection files, but it must not mutate Task Capsules, evidence, handoff, Task Board, project docs, browser storage, provider state, MCP state, shell state, or release/package state.
+
+`hadara dashboard serve` should trigger a non-blocking warmup on start. Foreground routes must remain able to return stale, missing, or unknown-freshness projection metadata immediately while refresh work runs in the background.
+
 The core contract deliberately excludes full evidence lists, deep selected-task payloads, raw artifacts, private raw paths, and request-time all-capsule scan requirements. Later Phase 5.7 capsules may add local server projection storage and background refresh around this contract, but browser code must still avoid `localStorage`, `sessionStorage`, IndexedDB, cookies, or equivalent project-state persistence.
 
 `/api/dashboard/bootstrap` should remain additive and transition-safe while `/api/dashboard/core` is introduced. New consumers should prefer `/core` plus separate projected heavy sections once T-0218 through T-0222 land; old consumers may keep using bootstrap until the compatibility window is explicitly closed.

@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0218 changes are local/uncommitted until the requested per-capsule commit is made; commit/push state should be checked before publishing. |
-| Current Phase | Phase 5.7 Dashboard read-model projection performance | Projection contract/store/core route are complete through T-0218; background refresh and serve warmup T-0219 is next. |
-| Latest Completed Task | T-0218 Dashboard Core Route from Projection | Added `/api/dashboard/core` over `hadara.dashboard.core.v1`, using bounded docs and local projection warm reads without broad request-path capsule scans. |
-| Active / Next Task | T-0219 Background Refresh and Serve Warmup | Move slow projection refresh/warmup out of foreground route handling while returning stale/missing projections immediately. |
-| Validation Baseline | T-0216 Docker sync-build passed; T-0217/T-0218 Docker validation blocked | Last full Docker validation remains `npm run dev:docker-sync-build` with 85 files / 564 tests from T-0216. T-0217/T-0218 added focused tests and passed `git diff --check`, but Docker sync-build escalation was rejected by usage limit. |
+| Branch | main | T-0219 changes are local/uncommitted until the requested per-capsule commit is made; commit/push state should be checked before publishing. |
+| Current Phase | Phase 5.7 Dashboard read-model projection performance | Projection contract/store/core route/refresh are complete through T-0219; incremental task projection T-0220 is next. |
+| Latest Completed Task | T-0219 Background Refresh and Serve Warmup | Added serve-start projection warmup, `/api/dashboard/refresh`, and metadata-only `/api/dashboard/projection/status`. |
+| Active / Next Task | T-0220 Incremental Task Projection | Track source signals and refresh changed task summaries without reparsing every capsule. |
+| Validation Baseline | T-0216 Docker sync-build passed; T-0217/T-0219 Docker validation blocked | Last full Docker validation remains `npm run dev:docker-sync-build` with 85 files / 564 tests from T-0216. T-0217 through T-0219 added focused tests and passed `git diff --check`, but Docker sync-build escalation was rejected by usage limit. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0217 Dashboard Local Projection Store | Added a local dashboard projection store service and focused boundary tests. | T-0217 evidence: public `evidence.add-command` attached; `git diff --check` passed; Docker validation gap recorded. |
 | T-0218 Dashboard Core Route from Projection | Added the first `hadara.dashboard.core.v1` route and local projection warm read path. | T-0218 evidence: public `evidence.add-command` attached; `git diff --check` passed; focused no-task-scan tests added; Docker validation gap recorded. |
-| T-0216 Dashboard Projection Contract | Registered the Phase 5.7 dashboard core projection contract before storage/routes/frontend work. | T-0216 evidence: focused schema tests passed; Docker sync-build passed with 85 files / 564 tests; built CLI smoke `ok:true`. |
+| T-0219 Background Refresh and Serve Warmup | Added projection warmup, refresh coalescing, and metadata-only status routes. | T-0219 evidence: public `evidence.add-command` attached; `git diff --check` passed; focused refresh tests added; Docker validation gap recorded. |
+| T-0217 Dashboard Local Projection Store | Added a local dashboard projection store service and focused boundary tests. | T-0217 evidence: public `evidence.add-command` attached; `git diff --check` passed; Docker validation gap recorded. |
 | T-0215 Phase 5.6 Close / Handoff Sync | Closed T-0207 through T-0214 and staged T-0216 through T-0223 for Phase 5.7 projection work. | T-0215 evidence: task finish/ready/close/audit-close completed for T-0207 through T-0214; Phase 5.7 capsules created. |
 
 ## Current Known Problems
@@ -24,7 +24,7 @@
 | Issue | Impact | Next Step |
 |---|---|---|
 | Host workspace has no `node_modules`. | Host `npm run build` and host `npx vitest` are unreliable; escalated `npx` found registry access but could not resolve local `vitest/config`. | Use the reusable Docker workflow for validation or install dependencies intentionally before host validation. |
-| T-0217/T-0218 full Docker validation did not run. | New projection store/core route TypeScript/tests have not yet been covered by a successful Docker sync-build in this session. | Run `npm run dev:docker-sync-build` as soon as approval/usage is available, ideally before closing T-0219, and include `tests/unit/dashboard-projection-store.test.ts` and `tests/unit/dashboard-core-route.test.ts`. |
+| T-0217/T-0218/T-0219 full Docker validation did not run. | New projection store/core route/refresh TypeScript/tests have not yet been covered by a successful Docker sync-build in this session. | Run `npm run dev:docker-sync-build` as soon as approval/usage is available, ideally before closing T-0220, and include `tests/unit/dashboard-projection-store.test.ts`, `tests/unit/dashboard-core-route.test.ts`, and `tests/unit/dashboard-refresh.test.ts`. |
 | HADARA-dev has multiple CLI execution paths. | `/tmp/hadara/dist` may be fresh while `/workspace/dist` or container-global `/usr/local/bin/hadara` is stale, causing agents to test old CLI behavior. | For CLI changes, build in Docker, refresh `/workspace/dist` from `/tmp/hadara/dist`, and run final smokes via `node /workspace/dist/cli/main.js ... --project /workspace` or explicitly via `/tmp/hadara/dist/cli/main.js`; do not assume global `hadara` is current. |
 | Existing historical capsules mostly use legacy frames. | This is expected and should not fail validation solely for not using v2 tables. | Future `task upgrade-scaffold` / remediation work must be non-destructive and dry-run-first. |
 | Protocol schemas are fixture-level, not release-gate strict schemas. | Additive report fields remain allowed; consumers should not treat these schemas as a blocking release gate yet. | Preserve additive compatibility or create a new schema id for breaking changes. |
@@ -42,13 +42,13 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start T-0219 Background Refresh and Serve Warmup. | The core route can now read/write local core projections; next work should warm and refresh projections outside the foreground route path. | Use `src/services/dashboard-core.ts`, `src/services/dashboard-projection-store.ts`, `hadara.dashboard.core.v1`, and the Phase 5.7 redesign spec. |
+| Start T-0220 Incremental Task Projection. | Refresh infrastructure exists; next work should track source signals and changed task summaries instead of relying only on Task Board rows. | Use `src/services/dashboard-refresh.ts`, `src/services/dashboard-core.ts`, `src/services/dashboard-projection-store.ts`, and the Phase 5.7 redesign spec. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Full repository check | Docker `npm run dev:docker-sync-build` passed with 85 files and 564 tests during T-0216. | Host dependencies are unavailable; T-0217/T-0218 Docker validation was blocked by escalation usage limit, so Docker remains the next required validation path. |
+| Full repository check | Docker `npm run dev:docker-sync-build` passed with 85 files and 564 tests during T-0216. | Host dependencies are unavailable; T-0217/T-0219 Docker validation was blocked by escalation usage limit, so Docker remains the next required validation path. |
 | Dashboard performance measurement | Playwright Docker `/tmp` copy measurement recorded shell HTML fetch 4.4 ms, bootstrap bypass avg 174.7 ms, task-detail bypass avg 243.3 ms, timeline bypass avg 150.4 ms, with cache hit samples near 1-2 ms. | Direct bind-mounted workspace measurement was unsuitable because the dashboard server did not return promptly enough for stable timings. |
 | Focused dashboard/readiness check | Covered by full Docker after readiness review assertions were added. | Covers route/schema/boundary inventory doc, dashboard schema status, and final readiness conclusion. |
 | Dashboard visual/a11y gate | Playwright + axe-core gate passed for home/detail/empty/degraded. | T-0214 records the visual/a11y evidence. |

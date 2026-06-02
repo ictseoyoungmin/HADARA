@@ -219,7 +219,7 @@
 | T-0216 | Dashboard Projection Contract | Done | tasks/T-0216-dashboard-projection-contract | |
 | T-0217 | Dashboard Local Projection Store | Done | tasks/T-0217-dashboard-local-projection-store | |
 | T-0218 | Dashboard Core Route from Projection | Done | tasks/T-0218-dashboard-core-route-from-projection | |
-| T-0219 | Background Refresh and Serve Warmup | Draft | tasks/T-0219-background-refresh-and-serve-warmup | |
+| T-0219 | Background Refresh and Serve Warmup | Done | tasks/T-0219-background-refresh-and-serve-warmup | |
 | T-0220 | Incremental Task Projection | Draft | tasks/T-0220-incremental-task-projection | |
 | T-0221 | Timeline / Debt Projection | Draft | tasks/T-0221-timeline-debt-projection | |
 | T-0222 | Frontend Core + Heavy Merge | Draft | tasks/T-0222-frontend-core-heavy-merge | |
