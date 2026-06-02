@@ -10,6 +10,7 @@ import {
   getOrCreateCachedReport,
   withDashboardCacheMetadata
 } from '../services/dashboard-cache';
+import { createDashboardCoreReport } from '../services/dashboard-core';
 import { createDashboardTaskDetailReport } from '../services/dashboard-task-detail';
 import { createEvidenceLintReport } from '../services/evidence-lint';
 import { createEvidenceListReport } from '../services/evidence-list';
@@ -109,6 +110,9 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
 
   const headOnly = normalizedMethod === 'HEAD';
   if (url.pathname === '/api/status') return jsonResponse(createOpsStatusReport(projectRoot), headOnly);
+  if (url.pathname === '/api/dashboard/core') {
+    return jsonResponse(createDashboardCoreReport(projectRoot, { bypassProjection: url.searchParams.get('cache') === 'bypass' }), headOnly);
+  }
   if (url.pathname === '/api/dashboard/bootstrap') {
     const selectedTaskId = url.searchParams.get('selectedTaskId')?.trim();
     const tier = url.searchParams.get('tier') === 'core' ? 'core' : 'full';

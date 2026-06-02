@@ -69,6 +69,7 @@ Required focused coverage for relevant capsules:
 | Task detail aggregate | `hadara.dashboard.task_detail.v1` schema fixture/registration, taskId-required behavior, workbench/evidence/timeline composition, semantic proof derivation, private-only auditability warning, no private raw paths. |
 | Phase 5.5 route cache | Process-memory TTL hit/miss/expiry/bypass behavior, cache metadata, no committed or `.hadara/local` cache writes. |
 | Phase 5.7 projection store | Local `.hadara/local/cache/dashboard` writes are ignored, redacted, atomic temp-file/rename replacements, context-export excluded, and never browser-written. |
+| Phase 5.7 core route | `/api/dashboard/core` returns `hadara.dashboard.core.v1`, uses local projection warm reads, supports bypass recompute, and does not scan every Task Capsule directory on the request path. |
 | Frontend progressive UX | Immediate shell render, bootstrap-first loading, selected-task lazy detail, previous in-memory view retained on failed refresh, source/cache/load status display. |
 | Browser storage boundary | Static/source tests for no project-state use of `localStorage`, `sessionStorage`, IndexedDB, or cookies. |
 | Debug/action boundary | Debug helpers remain read-only; UI labels avoid command execution, task mutation, evidence append, remediation, publish, or release/package action wording. |

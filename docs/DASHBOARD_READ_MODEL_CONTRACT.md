@@ -272,6 +272,10 @@ The projection store is a disposable machine-local read cache, not project truth
 
 Projection store writes must stay under `.hadara/local/cache/dashboard`, use temp-file plus rename replacement, and remain excluded from git and context export through the existing `.hadara/local/` boundary. Browser code must not write this store directly. Route-level process-memory TTL cache may still be used as the hottest layer, but it should sit above the local projection store rather than replacing it.
 
+T-0218 adds `/api/dashboard/core` over `hadara.dashboard.core.v1`. The first request may build a cheap live core report from bounded project documents (`docs/TASK_BOARD.md`, `docs/AGENT_HANDOFF.md`, `docs/PROJECT_STATE.md`, validation history, active-run local state, and available local projection summaries), then write `core/index.json` to the local projection store. Warm reads return that local projection unless `?cache=bypass` asks for a cheap recompute.
+
+The core route must not scan every Task Capsule directory on the request path. Task counts and recent-task summaries come from Task Board rows; heavy timeline, debt, and selected-task detail remain pending sections until later projection slices populate them.
+
 The core contract deliberately excludes full evidence lists, deep selected-task payloads, raw artifacts, private raw paths, and request-time all-capsule scan requirements. Later Phase 5.7 capsules may add local server projection storage and background refresh around this contract, but browser code must still avoid `localStorage`, `sessionStorage`, IndexedDB, cookies, or equivalent project-state persistence.
 
 `/api/dashboard/bootstrap` should remain additive and transition-safe while `/api/dashboard/core` is introduced. New consumers should prefer `/core` plus separate projected heavy sections once T-0218 through T-0222 land; old consumers may keep using bootstrap until the compatibility window is explicitly closed.

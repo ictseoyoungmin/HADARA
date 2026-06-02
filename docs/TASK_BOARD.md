@@ -218,7 +218,7 @@
 | T-0215 | Phase 5.6 Close / Handoff Sync | Done | tasks/T-0215-phase-5-6-close-handoff-sync | |
 | T-0216 | Dashboard Projection Contract | Done | tasks/T-0216-dashboard-projection-contract | |
 | T-0217 | Dashboard Local Projection Store | Done | tasks/T-0217-dashboard-local-projection-store | |
-| T-0218 | Dashboard Core Route from Projection | Draft | tasks/T-0218-dashboard-core-route-from-projection | |
+| T-0218 | Dashboard Core Route from Projection | Done | tasks/T-0218-dashboard-core-route-from-projection | |
 | T-0219 | Background Refresh and Serve Warmup | Draft | tasks/T-0219-background-refresh-and-serve-warmup | |
 | T-0220 | Incremental Task Projection | Draft | tasks/T-0220-incremental-task-projection | |
 | T-0221 | Timeline / Debt Projection | Draft | tasks/T-0221-timeline-debt-projection | |

@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0218 |
 | Title | Dashboard Core Route from Projection |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-06-02 |
 | Updated | 2026-06-02 |
 
@@ -34,10 +34,11 @@
 
 ## Status
 
-Draft
+Done
 
 ## Status History
 
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-02 | Draft | Initial task scaffold for core route from projection. | Task created by HADARA CLI. |
+| 2026-06-02 | Done | Added `/api/dashboard/core` over `hadara.dashboard.core.v1`, local projection warm reads, bypass recompute, and no-task-scan focused tests; Docker validation gap recorded. | `evidence.add-command` at 2026-06-02T03:05:56.005Z. |
