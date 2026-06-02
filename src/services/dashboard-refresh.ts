@@ -1,6 +1,7 @@
 import { createDashboardProjectFingerprint, createDashboardProjectReference, DashboardProjectReference } from './dashboard-cache';
 import { createDashboardCoreReport } from './dashboard-core';
 import { readDashboardProjection } from './dashboard-projection-store';
+import { refreshDashboardTaskProjectionIndex } from './dashboard-task-projection';
 
 export type DashboardRefreshState = 'idle' | 'checking' | 'refreshing' | 'failed';
 
@@ -79,6 +80,7 @@ export function triggerDashboardProjectionRefresh(projectRoot: string, reason = 
 
   setTimeout(() => {
     try {
+      refreshDashboardTaskProjectionIndex(projectRoot);
       createDashboardCoreReport(projectRoot, { bypassProjection: true });
       const previous = getRefreshState(projectRoot);
       refreshStates.set(key, {

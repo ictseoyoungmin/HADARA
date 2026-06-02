@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0220 |
 | Title | Incremental Task Projection |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-06-02 |
 | Updated | 2026-06-02 |
 
@@ -34,10 +34,11 @@
 
 ## Status
 
-Draft
+Done
 
 ## Status History
 
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-02 | Draft | Initial task scaffold for incremental task projection. | Task created by HADARA CLI. |
+| 2026-06-02 | Done | Added incremental task projection source signals, changed/reused ids, refresh/core integration, and focused tests; Docker validation gap recorded. | `evidence.add-command` at 2026-06-02T03:23:27.341Z. |

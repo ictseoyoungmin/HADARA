@@ -5,6 +5,7 @@ import {
   readDashboardProjection,
   writeDashboardProjection
 } from './dashboard-projection-store';
+import { DashboardTaskProjectionSummary, readDashboardTaskProjectionIndex } from './dashboard-task-projection';
 import { extractSection, readProjectSources } from './project-read-model';
 
 export interface DashboardCoreIssue {
@@ -120,6 +121,7 @@ function createLiveDashboardCoreReport(projectRoot: string, now: Date): Dashboar
   const generatedAt = now.toISOString();
   const sources = readProjectSources(projectRoot);
   const taskBoardRows = parseTaskBoardRows(sources.taskBoard.content);
+  const taskProjection = readDashboardTaskProjectionIndex(projectRoot);
   const handoffSummary = {
     currentState: extractListSection(sources.handoff.content, '## Current State'),
     knownProblems: extractListSection(sources.handoff.content, '## Current Known Problems'),
@@ -134,6 +136,7 @@ function createLiveDashboardCoreReport(projectRoot: string, now: Date): Dashboar
   };
   const activeRun = safeCreateActiveRunProjection(projectRoot);
   const debtProjection = readDashboardProjection<Record<string, unknown>>({ projectRoot }, 'debt', 'summary');
+  const pendingSections = pendingSectionsFor(Boolean(taskProjection), Boolean(debtProjection));
   const issues = collectIssues(
     {
       projectState: sources.projectState.exists,
@@ -157,22 +160,27 @@ function createLiveDashboardCoreReport(projectRoot: string, now: Date): Dashboar
     },
     projection: {
       freshness: 'fresh',
-      completeness: debtProjection ? 'partial' : 'core',
+      completeness: taskProjection || debtProjection ? 'partial' : 'core',
       refreshState: 'idle',
       generatedAt,
-      pendingSections: debtProjection ? ['timeline', 'task-detail'] : ['timeline', 'debt', 'task-detail'],
+      pendingSections,
       staleSections: [],
       sourceSignals: {
         taskBoard: sources.taskBoard.exists ? 'known' : 'missing',
         handoff: sources.handoff.exists ? 'known' : 'missing',
         projectState: sources.projectState.exists ? 'known' : 'missing',
-        capsules: 'unknown',
+        capsules: taskProjection ? 'known' : 'unknown',
         debt: debtProjection ? 'known' : 'missing'
       }
     },
     core: {
       health: issues.some((issue) => issue.severity === 'error') ? 'error' : issues.length > 0 ? 'degraded' : 'ok',
-      taskSummary: summarizeTaskBoard(taskBoardRows, handoffSummary.nextRecommendedStep[0] ?? null),
+      taskSummary: taskProjection
+        ? summarizeProjectedTasks(
+            taskProjection.tasks.map((entry) => entry.summary),
+            handoffSummary.nextRecommendedStep[0] ?? null
+          )
+        : summarizeTaskBoard(taskBoardRows, handoffSummary.nextRecommendedStep[0] ?? null),
       handoffSummary,
       activeRunSummary: {
         ok: activeRun.ok,
@@ -227,6 +235,23 @@ function parseTaskBoardRows(content: string): TaskBoardRow[] {
 }
 
 function summarizeTaskBoard(rows: TaskBoardRow[], nextRecommended: string | null): DashboardCoreReport['core']['taskSummary'] {
+  return summarizeProjectedTasks(
+    rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      status: row.status,
+      slug: '',
+      capsule: row.capsule,
+      evidenceRecords: 0
+    })),
+    nextRecommended
+  );
+}
+
+function summarizeProjectedTasks(
+  rows: DashboardTaskProjectionSummary[],
+  nextRecommended: string | null
+): DashboardCoreReport['core']['taskSummary'] {
   const counts: DashboardCoreReport['core']['taskSummary']['counts'] = {
     done: 0,
     draft: 0,
@@ -251,6 +276,13 @@ function summarizeTaskBoard(rows: TaskBoardRow[], nextRecommended: string | null
       capsule: row.capsule
     }))
   };
+}
+
+function pendingSectionsFor(hasTaskProjection: boolean, hasDebtProjection: boolean): string[] {
+  const pending = ['timeline'];
+  if (!hasDebtProjection) pending.push('debt');
+  if (!hasTaskProjection) pending.push('task-detail');
+  return pending;
 }
 
 function aggregateStatus(status: string): keyof DashboardCoreReport['core']['taskSummary']['counts'] {

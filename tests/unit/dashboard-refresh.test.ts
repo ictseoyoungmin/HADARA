@@ -51,7 +51,7 @@ describe('dashboard background refresh and projection status', () => {
 
     expect(after).toMatchObject({
       refresh: expect.objectContaining({ state: 'idle', runs: 1 }),
-      projections: { core: expect.objectContaining({ present: true, freshness: 'unknown', completeness: 'core' }) }
+      projections: { core: expect.objectContaining({ present: true, freshness: 'unknown', completeness: 'partial' }) }
     });
     expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'core', 'index.json'))).toBe(true);
   });
