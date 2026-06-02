@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0217 |
 | Title | Dashboard Local Projection Store |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-06-02 |
 | Updated | 2026-06-02 |
 
@@ -34,10 +34,11 @@
 
 ## Status
 
-Draft
+Done
 
 ## Status History
 
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-02 | Draft | Initial task scaffold for local projection store. | Task created by HADARA CLI. |
+| 2026-06-02 | Done | Added local dashboard projection store service, focused tests, and contract/test-strategy documentation; Docker validation gap recorded. | `evidence.add-command` at 2026-06-02T02:55:34.424Z. |

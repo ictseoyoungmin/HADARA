@@ -258,6 +258,20 @@ T-0216 registers `hadara.dashboard.core.v1` as the contract for that route befor
 | Section metadata | `pendingSections` and `staleSections` arrays. |
 | Core state | Health, task summary, handoff summary, optional active-run/validation/debt summaries. |
 
+T-0217 adds the local projection store boundary used by later Phase 5.7 slices:
+
+```text
+.hadara/local/cache/dashboard/
+  core/index.json
+  task-detail/<task-id>.json
+  timeline/<key>.json
+  debt/<key>.json
+```
+
+The projection store is a disposable machine-local read cache, not project truth. It may be used to make the first request after `hadara dashboard serve` fast, but every stored body must be rebuildable from committed project sources and existing local read models. Projection records use `hadara.dashboard.projection_record.v1`, include a redacted project reference, and reject raw project-root paths before writing.
+
+Projection store writes must stay under `.hadara/local/cache/dashboard`, use temp-file plus rename replacement, and remain excluded from git and context export through the existing `.hadara/local/` boundary. Browser code must not write this store directly. Route-level process-memory TTL cache may still be used as the hottest layer, but it should sit above the local projection store rather than replacing it.
+
 The core contract deliberately excludes full evidence lists, deep selected-task payloads, raw artifacts, private raw paths, and request-time all-capsule scan requirements. Later Phase 5.7 capsules may add local server projection storage and background refresh around this contract, but browser code must still avoid `localStorage`, `sessionStorage`, IndexedDB, cookies, or equivalent project-state persistence.
 
 `/api/dashboard/bootstrap` should remain additive and transition-safe while `/api/dashboard/core` is introduced. New consumers should prefer `/core` plus separate projected heavy sections once T-0218 through T-0222 land; old consumers may keep using bootstrap until the compatibility window is explicitly closed.
