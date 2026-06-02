@@ -81,6 +81,8 @@ describe('dashboard core route from projection', () => {
 
     expect(body.core.handoffSummary.currentState[0]).toBe('Branch · main · fixture branch');
     expect(body.core.handoffSummary.nextRecommendedStep[0]).toBe('Run validation · prove parser behavior · done evidence');
+    expect(body.core.validationSummary.latestFullCheck).toBe('Docker sync-build passed');
+    expect(body.core.validationSummary.latestDoneLevelValidation).toBe('harness validate passed');
     expect(body.core.handoffSummary.currentState).not.toContain('Area · State · Notes');
     expect(body.core.handoffSummary.nextRecommendedStep).not.toContain('Step · Reason · Done Evidence');
   });

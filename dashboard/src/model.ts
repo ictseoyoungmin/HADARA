@@ -89,7 +89,7 @@ export interface TaskDetail {
     substantivePositive: number;
     semanticIssueCodes: string[];
   };
-  evidence: { id: string; strength: string; visibility: string; summary: string }[];
+  evidence: { id: string; kind: string; result: string; strength: string; visibility: string; summary: string }[];
   evidenceCount: number;
   timeline: TimelineEvent[];
   commands: { label: string; command: string; source: string }[];
@@ -283,7 +283,9 @@ export function normalizeTaskDetail(report: AnyObj): TaskDetail {
   const records = asArray<AnyObj>(report.evidenceList?.records);
   const evidence = records.slice(0, 12).map((r, i) => ({
     id: asString(r.id ?? r.evidenceId, `record-${i + 1}`),
-    strength: asString(r.strength ?? r.semanticStrength, 'unknown'),
+    kind: asString(r.kind ?? r.artifactType, 'unknown'),
+    result: asString(r.result ?? r.outcome, 'unknown'),
+    strength: asString(r.strength ?? r.semanticStrength, ''),
     visibility: asString(r.visibility, 'unknown'),
     summary: asString(r.summary ?? r.message ?? r.note, '')
   }));

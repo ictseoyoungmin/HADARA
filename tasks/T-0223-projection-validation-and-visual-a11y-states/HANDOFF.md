@@ -14,16 +14,18 @@
 |---|---|
 | Projection visual/a11y gate extended | `dashboard/visual-check.mjs` now stubs `/api/dashboard/core`, `/api/dashboard/timeline`, `/api/dashboard/debt`, and `/api/dashboard/projection/status` with redacted fixtures and captures projection-ready/detail/stale/refreshing/missing/offline/degraded states. |
 | Static validation added | `tests/unit/dashboard-static.test.ts` checks projection fixture schema/redaction and visual gate route/state coverage. |
-| Dependency blockers resolved through Docker | Docker sync-build passed 90 files / 585 tests with built CLI smoke `ok:true`; Docker dashboard build rebuilt served HTML; Docker visual/a11y gate passed all projection states. |
+| Dependency blockers resolved through Docker | Docker sync-build passed 90 files / 586 tests with built CLI smoke `ok:true`; Docker dashboard build rebuilt served HTML; Docker visual/a11y gate passed all projection states. |
 | Serve-start blocking refresh follow-up applied | `warmDashboardProjections` now schedules delayed core-only warmup, so first dashboard requests are no longer queued behind immediate task/timeline/debt projection scans; manual refresh yields between task/heavy/core stages. |
 | Selected detail unavailable follow-up fixed | `/api/dashboard/task-detail?taskId=T-0223` now uses selected-task fast workbench data and task-scoped timeline events; built `dist` smoke returned `statusCode:200`, `ok:true`, `closeState:closed-valid` in 1852 ms. |
 | Summary table parsing follow-up fixed | Dashboard core and operations status handoff section parsing now skip Markdown table headers/delimiters and summarize actual data rows. |
+| Evidence label follow-up fixed | Evidence cards now show canonical `kind/result/visibility` instead of `unknown/public`; built route smoke confirmed T-0223 evidence payload as `command-log/passed/public`. |
+| Stale timeline projection follow-up fixed | Cached `/api/dashboard/timeline` projection bodies with old Markdown header summaries are sanitized at read time from bounded handoff-doc data rows. |
 
 ## Next Recommended Step
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Maintain Docker validation/build as the authoritative path while host dependencies are absent. | Follow-up Docker sync-build, dashboard build, visual/a11y gate, selected-detail smoke, and handoff parsing smoke all passed; host `node_modules` remains absent. | `docs/TEST_STRATEGY.md`, `tasks/T-0223.../TESTS.md` |
+| Maintain Docker validation/build as the authoritative path while host dependencies are absent. | Follow-up Docker sync-build, dashboard build, visual/a11y gate, selected-detail smoke, evidence-label smoke, and handoff/timeline parsing smoke all passed; host `node_modules` remains absent. | `docs/TEST_STRATEGY.md`, `tasks/T-0223.../TESTS.md` |
 
 ## Carry Forward Warnings
 

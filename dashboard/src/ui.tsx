@@ -314,7 +314,9 @@ export function EvidenceList({ detail }: { detail: TaskDetail }) {
         <li class="evidence-item" key={r.id}>
           <div class="evidence-top">
             <span class="evidence-id mono">{r.id}</span>
-            <span class={`tag tag-${r.strength === 'substantive-positive' ? 'ok' : 'muted'}`}>{r.strength}</span>
+            <span class="tag tag-muted">{r.kind}</span>
+            <span class={`tag tag-${r.result === 'passed' ? 'ok' : r.result === 'failed' ? 'danger' : r.result === 'blocked' ? 'warn' : 'muted'}`}>{r.result}</span>
+            {r.strength ? <span class={`tag tag-${r.strength === 'substantive-positive' ? 'ok' : 'muted'}`}>{r.strength}</span> : null}
             <span class="tag tag-muted">{r.visibility}</span>
           </div>
           {r.summary ? <div class="evidence-summary">{r.summary}</div> : null}

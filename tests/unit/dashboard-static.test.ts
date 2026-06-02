@@ -160,6 +160,10 @@ describe('operator console bundle (Phase 5.6)', () => {
     expect(statusIndex).toBeLessThan(fixtureIndex);
     // a stalled read must degrade rather than freeze the console
     expect(code).toContain('AbortController');
+    // evidence cards display concrete record kind/result instead of falling back to unknown semantic strength
+    expect(code).toContain('kind: asString(r.kind ?? r.artifactType');
+    expect(code).toContain('result: asString(r.result ?? r.outcome');
+    expect(code).toContain('r.result ===');
   });
 
   it('keeps the visual/a11y gate bound to projection, offline, refreshing, missing, and degraded states', () => {

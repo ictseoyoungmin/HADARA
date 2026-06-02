@@ -27,7 +27,7 @@ afterEach(() => {
 });
 
 describe('dashboard background refresh and projection status', () => {
-  it('warms core projection in the background without blocking the trigger response', () => {
+  it('warms core projection in the background without blocking the trigger response', async () => {
     const root = tempProject();
     writeProjectDocs(root);
 
@@ -46,7 +46,7 @@ describe('dashboard background refresh and projection status', () => {
       projections: { core: expect.objectContaining({ present: false, freshness: 'missing' }) }
     });
 
-    vi.runAllTimers();
+    await vi.runAllTimersAsync();
     const after = JSON.parse(createDashboardServerResponse(root, '/api/dashboard/projection/status').body);
 
     expect(after).toMatchObject({
@@ -56,9 +56,10 @@ describe('dashboard background refresh and projection status', () => {
     expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'core', 'index.json'))).toBe(true);
   });
 
-  it('coalesces refresh triggers and exposes metadata without cached bodies', () => {
+  it('coalesces refresh triggers and exposes metadata without cached bodies', async () => {
     const root = tempProject();
     writeProjectDocs(root);
+    vi.useRealTimers();
 
     const first = JSON.parse(createDashboardServerResponse(root, '/api/dashboard/refresh').body);
     const second = JSON.parse(createDashboardServerResponse(root, '/api/dashboard/refresh').body);
@@ -69,39 +70,39 @@ describe('dashboard background refresh and projection status', () => {
     expect(bodyText).not.toContain('Core route fixture.');
     expect(bodyText).not.toContain('First done');
 
-    vi.runAllTimers();
-    const after = JSON.parse(createDashboardServerResponse(root, '/api/dashboard/projection/status').body);
+    const after = await waitForRefreshRuns(root, 1);
     expect(after.refresh.runs).toBe(1);
   });
 
-  it('runs manual full refresh in yielded projection stages', () => {
+  it('runs manual full refresh through async staged projections', async () => {
     const root = tempProject();
     writeProjectDocs(root);
+    vi.useRealTimers();
 
     const first = JSON.parse(createDashboardServerResponse(root, '/api/dashboard/refresh').body);
     expect(first).toMatchObject({ command: 'dashboard.refresh', accepted: true });
 
-    vi.advanceTimersToNextTimer();
+    const after = await waitForRefreshRuns(root, 1);
     expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'source-signals', 'tasks.json'))).toBe(true);
-    expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'timeline', 'overview.json'))).toBe(false);
-    expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'core', 'index.json'))).toBe(false);
-
-    vi.advanceTimersToNextTimer();
     expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'timeline', 'overview.json'))).toBe(true);
     expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'debt', 'summary.json'))).toBe(true);
-    expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'core', 'index.json'))).toBe(false);
-
-    vi.advanceTimersToNextTimer();
     expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'core', 'index.json'))).toBe(true);
-    expect(JSON.parse(createDashboardServerResponse(root, '/api/dashboard/projection/status').body).refresh.state).toBe('refreshing');
-
-    vi.advanceTimersToNextTimer();
-    expect(JSON.parse(createDashboardServerResponse(root, '/api/dashboard/projection/status').body).refresh).toMatchObject({
+    expect(after.refresh).toMatchObject({
       state: 'idle',
       runs: 1
     });
   });
 });
+
+async function waitForRefreshRuns(root: string, runs: number): Promise<Record<string, any>> {
+  let latest: Record<string, any> = {};
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    latest = JSON.parse(createDashboardServerResponse(root, '/api/dashboard/projection/status').body);
+    if (latest.refresh?.runs >= runs && latest.refresh?.state === 'idle') return latest;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+  return latest;
+}
 
 function writeProjectDocs(root: string): void {
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });

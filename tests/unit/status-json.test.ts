@@ -228,6 +228,45 @@ describe('Operations Status JSON', () => {
     expect(report.issues).toEqual([]);
   });
 
+  it('prefers table-first handoff validation over older validation history', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Phase\n\nPhase: dashboard-refresh\n', 'utf8');
+    fs.writeFileSync(
+      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
+      [
+        '# AGENT_HANDOFF',
+        '',
+        '## Current State',
+        '',
+        '| Area | State | Notes |',
+        '|---|---|---|',
+        '| Branch | main | current |',
+        '',
+        '## Next Recommended Step',
+        '',
+        '| Step | Reason | Done Evidence |',
+        '|---|---|---|',
+        '| Continue | current task | evidence |',
+        '',
+        '## Validation Baseline',
+        '',
+        '| Check | Latest Evidence | Notes |',
+        '|---|---|---|',
+        '| Full repository check | Docker `npm run dev:docker-sync-build` passed with 90 files and 586 tests during T-0224. | Current |'
+      ].join('\n'),
+      'utf8'
+    );
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), '- Docker check after T-0096 follow-up hardening: 39 test files passed, 249 tests passed.\n', 'utf8');
+
+    const report = createOpsStatusReport(root);
+
+    expect(report.validation.latestFullCheck).toBe('Docker `npm run dev:docker-sync-build` passed with 90 files and 586 tests during T-0224');
+    expect(report.validation.latestFullCheck).not.toContain('T-0096');
+  });
+
   it('parses handoff table sections as data rows instead of Markdown headers', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
@@ -273,6 +312,8 @@ describe('Operations Status JSON', () => {
     expect(report.handoff.currentState[0]).toBe('Branch · main · table fixture');
     expect(report.handoff.nextRecommendedStep[0]).toBe('Continue · table parser works · status evidence');
     expect(report.tasks.nextRecommended).toBe('Continue · table parser works · status evidence');
+    expect(report.validation.latestFullCheck).toBe('Docker sync-build passed');
+    expect(report.validation.latestDoneLevelValidation).toBe('harness validate passed');
     expect(report.handoff.currentState).not.toContain('Area · State · Notes');
     expect(report.handoff.nextRecommendedStep).not.toContain('Step · Reason · Done Evidence');
   });

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ActiveRunProjection, safeCreateActiveRunProjection } from './active-run-state';
+import { extractHandoffSectionValues, extractValidationBaselineSummary } from './handoff-summary-parser';
 import { createOperationalDebtReport, OperationalDebtAggregate } from './operational-debt';
 import { extractSection, ProjectReadSources, readProjectSources } from './project-read-model';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
@@ -78,17 +79,11 @@ export function createOpsStatusReport(projectRoot: string, options: OpsStatusOpt
   const tasks = listTaskCapsules(projectRoot);
   const taskCounts = countTaskStatuses(tasks);
   const handoffSections = {
-    currentState: extractListSection(sources.handoff.content, '## Current State'),
-    knownProblems: extractListSection(sources.handoff.content, '## Current Known Problems'),
-    nextRecommendedStep: extractListSection(sources.handoff.content, '## Next Recommended Step')
+    currentState: extractHandoffSectionValues(sources.handoff.content, '## Current State'),
+    knownProblems: extractHandoffSectionValues(sources.handoff.content, '## Current Known Problems'),
+    nextRecommendedStep: extractHandoffSectionValues(sources.handoff.content, '## Next Recommended Step')
   };
-  const validation = {
-    latestFullCheck:
-      extractValidationLine(sources.handoff.content, 'Latest full check') ?? extractValidationHistoryLine(sources.validationHistory.content, 'Docker check'),
-    latestDoneLevelValidation:
-      extractValidationLine(sources.handoff.content, 'Latest done-level validation') ??
-      extractValidationHistoryLine(sources.validationHistory.content, 'harness validate')
-  };
+  const validation = extractValidationBaselineSummary(sources.handoff.content, sources.validationHistory.content);
   const activeRun = safeCreateActiveRunProjection(projectRoot);
   const debtAggregate = includeDebt ? createOperationalDebtReport(projectRoot).aggregate : EMPTY_DEBT_AGGREGATE;
   const issues = [...collectIssues(sources, validation), ...activeRun.issues];
@@ -212,24 +207,9 @@ function aggregateStatus(status: string): keyof OpsStatusReport['tasks']['counts
 }
 
 function extractLastCompletedTaskIds(handoff: string): string[] {
-  return extractListSection(handoff, '## Last 3 Completed Tasks')
+  return extractHandoffSectionValues(handoff, '## Last 3 Completed Tasks')
     .map((line) => line.match(/^(T-\d{4})\b/)?.[1])
     .filter((value): value is string => Boolean(value));
-}
-
-function extractValidationLine(handoff: string, label: string): string | null {
-  const validation = extractListSection(handoff, '## Validation Baseline');
-  const prefix = `${label}:`;
-  const line = validation.find((item) => item.startsWith(prefix));
-  return line ? line.slice(prefix.length).trim().replace(/\.$/, '') : null;
-}
-
-function extractValidationHistoryLine(validationHistory: string, pattern: string): string | null {
-  const lines = validationHistory
-    .split(/\r?\n/)
-    .map((line) => line.trim().replace(/^[-*]\s+/, ''))
-    .filter((line) => line.includes(pattern));
-  return lines.at(-1)?.replace(/\.$/, '') ?? null;
 }
 
 function collectIssues(
@@ -253,35 +233,4 @@ function warning(code: string, message: string): OpsStatusReport['issues'][numbe
     code,
     message
   };
-}
-
-function extractListSection(content: string, heading: string): string[] {
-  let skippedTableHeader = false;
-  const values: string[] = [];
-  for (const line of extractSection(content, heading).split(/\r?\n/)) {
-    const value = normalizeSectionLine(line, skippedTableHeader);
-    if (value === '__TABLE_HEADER__') {
-      skippedTableHeader = true;
-      continue;
-    }
-    if (value) values.push(value);
-  }
-  return values;
-}
-
-function normalizeSectionLine(line: string, skippedTableHeader: boolean): string {
-  const trimmed = line.trim();
-  if (!trimmed) return '';
-  if (/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(trimmed)) return '';
-  if (trimmed.startsWith('|')) {
-    const cells = trimmed
-      .slice(1, trimmed.endsWith('|') ? -1 : undefined)
-      .split('|')
-      .map((cell) => cell.trim())
-      .filter(Boolean);
-    if (!cells.length) return '';
-    if (!skippedTableHeader) return '__TABLE_HEADER__';
-    return cells.join(' · ');
-  }
-  return trimmed.replace(/^[-*]\s+/, '').replace(/^\d+\.\s+/, '').trim();
 }

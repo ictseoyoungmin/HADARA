@@ -11,6 +11,7 @@ import {
 import { createOpsStatusReport } from './operations-status-service';
 import { createTaskListReport } from './task-read-model';
 import { createTaskWorkbenchReport } from './task-workbench';
+import type { DashboardCoreReport } from './dashboard-core';
 import { EvidenceIndexRecord } from '../evidence/evidence';
 import { normalizeEvidenceRecordsWithSourceLines, NormalizedEvidenceRecord } from '../evidence/normalizer';
 import { listTaskCapsules } from '../task/task-capsule';
@@ -79,6 +80,7 @@ export interface DashboardTimelineInput {
 export interface DashboardTimelineDeps {
   status?: ReturnType<typeof createOpsStatusReport>;
   tasks?: ReturnType<typeof createTaskListReport>;
+  core?: DashboardCoreReport;
 }
 
 export function createDashboardTimelineReport(
@@ -105,7 +107,10 @@ export function createDashboardTimelineReport(
   };
 
   if (!input.taskId) {
-    const status = deps.status ?? createOpsStatusReport(projectRoot);
+    if (deps.core) {
+      pushOverviewEventsFromCore(push, deps.core);
+    } else {
+      const status = deps.status ?? createOpsStatusReport(projectRoot);
     push({
       kind: 'system',
       title: 'Status snapshot read',
@@ -154,6 +159,7 @@ export function createDashboardTimelineReport(
     const tasks = deps.tasks ?? createTaskListReport(projectRoot);
     if (!tasks.ok) {
       issues.push({ severity: 'warning', code: 'TASK_LIST_UNAVAILABLE', message: 'Task list report was unavailable.' });
+    }
     }
   }
 
@@ -232,6 +238,54 @@ export function createDashboardTimelineReport(
     events,
     issues
   };
+}
+
+function pushOverviewEventsFromCore(
+  push: (event: Omit<DashboardTimelineEvent, 'id' | 'order' | 'readOnly'> & { id?: string }) => void,
+  core: DashboardCoreReport
+): void {
+  push({
+    kind: 'system',
+    title: 'Status snapshot read',
+    summary: `Operations status health is ${core.core.health}.`,
+    severity: core.core.health === 'error' ? 'error' : core.core.health === 'degraded' ? 'warning' : 'ok',
+    command: 'dashboard.timeline'
+  });
+
+  push({
+    kind: 'active-run',
+    title: 'Active run projection read',
+    summary: core.core.activeRunSummary.present ? 'An active run is recorded.' : 'No active run is recorded.',
+    severity: core.core.activeRunSummary.ok ? 'info' : 'warning'
+  });
+
+  if (core.core.taskSummary.nextRecommended) {
+    push({
+      kind: 'task',
+      title: 'Next recommended work',
+      summary: core.core.taskSummary.nextRecommended,
+      severity: 'info'
+    });
+  }
+
+  const handoffState = core.core.handoffSummary.currentState[0];
+  if (handoffState) {
+    push({
+      kind: 'handoff',
+      title: 'Handoff current state',
+      summary: handoffState,
+      severity: 'info'
+    });
+  }
+
+  if (core.core.validationSummary.latestFullCheck) {
+    push({
+      kind: 'harness',
+      title: 'Latest full validation',
+      summary: core.core.validationSummary.latestFullCheck,
+      severity: 'ok'
+    });
+  }
 }
 
 function readNormalizedEvidenceRecords(projectRoot: string, taskId: string): NormalizedEvidenceRecord[] {

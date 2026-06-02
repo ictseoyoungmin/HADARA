@@ -1,8 +1,8 @@
 import { createDashboardProjectFingerprint, createDashboardProjectReference, DashboardProjectReference } from './dashboard-cache';
 import { createDashboardCoreReport } from './dashboard-core';
-import { refreshDashboardHeavyProjections } from './dashboard-heavy-projection';
+import { refreshDashboardDebtProjection, refreshDashboardTimelineProjection } from './dashboard-heavy-projection';
 import { readDashboardProjection } from './dashboard-projection-store';
-import { refreshDashboardTaskProjectionIndex } from './dashboard-task-projection';
+import { refreshDashboardTaskProjectionIndexAsync } from './dashboard-task-projection';
 
 export type DashboardRefreshState = 'idle' | 'checking' | 'refreshing' | 'failed';
 
@@ -66,7 +66,7 @@ interface DashboardRefreshOptions {
   delayMs?: number;
 }
 
-type DashboardRefreshStep = () => void;
+type DashboardRefreshStep = () => void | Promise<void>;
 
 const refreshStates = new Map<string, RefreshStateRecord>();
 
@@ -113,10 +113,23 @@ export function triggerDashboardProjectionRefresh(
 function createRefreshSteps(projectRoot: string, options: DashboardRefreshOptions): DashboardRefreshStep[] {
   const steps: DashboardRefreshStep[] = [];
   if (options.includeHeavy !== false) {
-    steps.push(() => refreshDashboardTaskProjectionIndex(projectRoot));
-    steps.push(() => refreshDashboardHeavyProjections(projectRoot));
+    steps.push(async () => {
+      await refreshDashboardTaskProjectionIndexAsync(projectRoot);
+    });
+    steps.push(() => {
+      createDashboardCoreReport(projectRoot, { bypassProjection: true });
+    });
+    steps.push(() => {
+      const core = createDashboardCoreReport(projectRoot);
+      refreshDashboardTimelineProjection(projectRoot, new Date(), { core });
+    });
+    steps.push(() => {
+      refreshDashboardDebtProjection(projectRoot);
+    });
   }
-  steps.push(() => createDashboardCoreReport(projectRoot, { bypassProjection: true }));
+  steps.push(() => {
+    createDashboardCoreReport(projectRoot, { bypassProjection: true });
+  });
   return steps;
 }
 
@@ -129,11 +142,11 @@ function scheduleRefreshSteps(
   delayMs: number
 ): void {
   let index = 0;
-  const runNext = () => {
+  const runNext = async () => {
     try {
       const step = steps[index];
       if (step) {
-        step();
+        await step();
         index += 1;
         setTimeout(runNext, 0);
         return;

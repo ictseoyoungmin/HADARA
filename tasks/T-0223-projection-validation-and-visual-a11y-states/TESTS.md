@@ -4,7 +4,7 @@
 
 | Command | Purpose | Required For Done | Latest Result | Evidence |
 |---|---|---|---|---|
-| `npm run dev:docker-sync-build` | Run Docker build/test/smoke and refresh `dist`. | Yes | Passed: 90 test files / 585 tests; built CLI version smoke `ok:true`; `distLooksStale:false`. | Command output observed 2026-06-02 after task-detail/table parsing follow-up. |
+| `npm run dev:docker-sync-build` | Run Docker build/test/smoke and refresh `dist`. | Yes | Passed: 90 test files / 586 tests; built CLI version smoke `ok:true`; `distLooksStale:false`. | Command output observed 2026-06-02 after evidence-label/timeline-header follow-up. |
 | `git diff --check` | Check patch whitespace. | Yes | Passed | Command exited 0 after follow-up. |
 | `node --check dashboard/visual-check.mjs` | Check visual gate JavaScript syntax without Playwright dependencies. | Yes | Passed | Command exited 0. |
 | `node -e "...fixture parse/redaction..."` | Parse new projection fixtures and assert no raw project path strings. | Yes | Passed | Printed `visual projection fixtures parse and are redacted`. |
@@ -12,6 +12,7 @@
 | `npm run dashboard:build:docker` | Rebuild static dashboard bundle. | Yes | Passed | Docker build rebuilt `docs/design/dashboard/index.html`; bundle reports JS 40.2 kB, CSS 17.0 kB, total 60.2 kB. |
 | `npm run dashboard:visual:docker` | Run Playwright/axe visual gate. | Yes | Passed | Projection-ready/detail/stale/refreshing/missing/offline/degraded screenshots/a11y checks passed; screenshots written to `.dashboard-visual`. |
 | `node --input-type=module -e "...task-detail/core smoke..."` | Check built `dist` selected-detail availability and handoff table parsing. | Yes | Passed | T-0223 detail returned `statusCode:200`, `ok:true`, `closeState:closed-valid` in 1852 ms; core handoff summaries expose table data rows instead of Markdown header text. |
+| `node --input-type=module -e "...detail evidence/timeline smoke..."` | Check built route payloads for evidence labels and projected timeline summaries. | Yes | Passed | T-0223 first evidence record returned `command-log/passed/public`; projected timeline handoff/next events returned data-row summaries, not Markdown table headers. |
 
 ## Special Checks
 
@@ -20,3 +21,4 @@
 | Security smoke | No | Projection fixtures are read-only/redacted; no new mutation surface. | Covered by redaction/static checks | Fixture strings are path-redacted and static tests assert no browser storage/mutation patterns. |
 | Integration smoke | No | Integration surface is the visual gate runner. | Passed | `npm run dashboard:visual:docker` passed after projection provenance assertion was aligned with explicit projection labeling. |
 | Selected detail smoke | Yes | The visual detail state must be backed by a responsive task-detail aggregate. | Passed | Built `dist` smoke confirmed selected T-0223 detail loads through task-scoped data without global status snapshot timeline work. |
+| Evidence label smoke | Yes | The visual detail/evidence states must not display `unknown` when canonical evidence fields are present. | Passed | Frontend normalization displays evidence kind/result/visibility; built route smoke confirmed canonical payload fields. |

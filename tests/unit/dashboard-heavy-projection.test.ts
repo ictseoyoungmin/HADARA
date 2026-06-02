@@ -3,8 +3,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createDashboardServerResponse } from '../../src/cli/dashboard';
-import { refreshDashboardHeavyProjections } from '../../src/services/dashboard-heavy-projection';
-import { resolveDashboardProjectionStoreRoot } from '../../src/services/dashboard-projection-store';
+import { refreshDashboardDebtProjection, refreshDashboardHeavyProjections } from '../../src/services/dashboard-heavy-projection';
+import {
+  createDashboardProjectionRecord,
+  resolveDashboardProjectionStoreRoot,
+  writeDashboardProjection
+} from '../../src/services/dashboard-projection-store';
 
 const roots: string[] = [];
 
@@ -63,6 +67,76 @@ describe('dashboard timeline/debt projections', () => {
     expect(status.projections.debt.present).toBe(false);
     expect(reads()).toEqual([]);
   });
+
+  it('writes dashboard debt projection without task capsule scans', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+    writeTask(root, 'T-0001-first', 'Done');
+    const reads = observeTaskCapsuleReads(root);
+
+    const debt = refreshDashboardDebtProjection(root);
+
+    expect(debt.aggregate).toMatchObject({ total: expect.any(Number), open: expect.any(Number), highOpen: expect.any(Number) });
+    expect(debt.issues).toEqual([]);
+    expect(reads()).toEqual([]);
+  });
+
+  it('sanitizes stale projected timeline table headers at read time', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+    writeTask(root, 'T-0001-first', 'Done');
+    const generatedAt = '2026-06-02T00:00:00.000Z';
+    writeDashboardProjection(
+      { projectRoot: root },
+      createDashboardProjectionRecord(
+        root,
+        'timeline',
+        'overview',
+        {
+          schemaVersion: 'hadara.dashboard.timeline.v1',
+          command: 'dashboard.timeline',
+          ok: true,
+          generatedAt,
+          source: {
+            projectRoot: '.',
+            projectRootRedacted: true,
+            project: { kind: 'project-root', pathRedacted: true, fingerprint: 'sha256:000000000000' },
+            live: false
+          },
+          cache: { status: 'disabled', ttlMs: null, generatedAt: null, expiresAt: null },
+          events: [
+            {
+              id: 'handoff',
+              order: 1,
+              kind: 'handoff',
+              title: 'Handoff current state',
+              summary: '| Area | State | Notes |',
+              severity: 'info',
+              readOnly: true
+            },
+            {
+              id: 'next',
+              order: 2,
+              kind: 'task',
+              title: 'Next recommended work',
+              summary: '| Step | Reason | Done Evidence |',
+              severity: 'info',
+              readOnly: true
+            }
+          ],
+          issues: []
+        },
+        generatedAt
+      )
+    );
+
+    const timeline = JSON.parse(createDashboardServerResponse(root, '/api/dashboard/timeline').body);
+
+    expect(timeline.events.map((event: { summary: string }) => event.summary)).toEqual([
+      'Branch · main · ready',
+      'Select next · because · evidence'
+    ]);
+  });
 });
 
 function observeTaskCapsuleReads(root: string): () => string[] {
@@ -93,7 +167,9 @@ function writeProjectDocs(root: string): void {
       '',
       '## Current State',
       '',
-      '- Heavy projection fixture.',
+      '| Area | State | Notes |',
+      '|---|---|---|',
+      '| Branch | main | ready |',
       '',
       '## Current Known Problems',
       '',
@@ -101,7 +177,9 @@ function writeProjectDocs(root: string): void {
       '',
       '## Next Recommended Step',
       '',
-      '- Continue.',
+      '| Step | Reason | Done Evidence |',
+      '|---|---|---|',
+      '| Select next | because | evidence |',
       '',
       '## Validation Baseline',
       '',

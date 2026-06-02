@@ -15,10 +15,12 @@
 | Updated authored frontend data layer. | `dashboard/src/model.ts` now loads core first and projection debt/timeline routes for heavy sections. |
 | Updated app merge behavior. | `dashboard/src/app.tsx` backfills timeline after core render. |
 | Updated static source expectation. | `tests/unit/dashboard-static.test.ts` checks core-before-bootstrap authored source order. |
-| Closed build validation gap. | Docker dashboard build rebuilt served HTML; Docker sync-build passed 90 files / 585 tests with built CLI smoke `ok:true`. |
+| Closed build validation gap. | Docker dashboard build rebuilt served HTML; Docker sync-build passed 90 files / 586 tests with built CLI smoke `ok:true`. |
 | Serve-start warmup blocker clarified. | Authored source is core-first, but first paint also depends on the served bundle being rebuilt and the server event loop not being monopolized by warmup; T-0219 now uses delayed core-only warmup. |
 | Selected detail follow-up fixed. | `/api/dashboard/task-detail?taskId=T-0223` now uses selected-task fast workbench/timeline data and returned `ok:true` in 1852 ms in built `dist` smoke. |
 | Handoff table parsing fixed. | Dashboard handoff summaries now parse table data rows instead of surfacing Markdown header text such as `| Area | State | Notes |`. |
+| Evidence label follow-up fixed. | Evidence cards now display `kind/result/visibility` instead of `unknown/public` when canonical evidence records lack semantic-strength fields. |
+| Stale projected timeline header follow-up fixed. | `/api/dashboard/timeline` sanitizes cached projection header summaries at read time, so Home activity no longer depends solely on projection refresh timing. |
 
 ## Next Recommended Step
 
