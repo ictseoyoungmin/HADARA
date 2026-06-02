@@ -239,6 +239,29 @@ T-0202 makes load phase observable in the served dashboard (`shell`, `bootstrap-
 
 T-0203 adds optional polling only after aggregate reads, cache metadata, and degraded UX are stable. Polling is memory-only, off by default, operator-toggleable, based on repeated read-only refreshes, pauses while the document is hidden, and backs off on degraded reads. The `window.HadaraDashboard.togglePolling` debug helper is allowed because it only schedules the same read-only refresh path and remains memory-only. It must not introduce browser project-state persistence, SSE/WebSocket streaming, shell execution, provider calls, MCP writes, task/evidence/handoff mutation, release/package execution, auto-remediation, or multi-agent concurrency claims.
 
+## Phase 5.7 Projection Contract
+
+Phase 5.7 changes the performance architecture without changing dashboard authority. The current `/api/dashboard/bootstrap` aggregate remains compatible during the transition, but new first-screen work should move toward a cheaper core projection:
+
+```text
+GET /api/dashboard/core
+```
+
+T-0216 registers `hadara.dashboard.core.v1` as the contract for that route before storage, route implementation, or frontend migration starts. The contract is a first-actionable read model, not a complete dashboard aggregate. It should contain only cheap core state and explicit projection metadata:
+
+| Area | Contract |
+|---|---|
+| Source | Redacted project reference with `projectRootRedacted: true` and `project.pathRedacted: true`. |
+| Projection freshness | `fresh`, `stale`, `missing`, or `unknown`. |
+| Projection completeness | `core`, `partial`, or `complete`. |
+| Refresh state | `idle`, `checking`, `refreshing`, or `failed`. |
+| Section metadata | `pendingSections` and `staleSections` arrays. |
+| Core state | Health, task summary, handoff summary, optional active-run/validation/debt summaries. |
+
+The core contract deliberately excludes full evidence lists, deep selected-task payloads, raw artifacts, private raw paths, and request-time all-capsule scan requirements. Later Phase 5.7 capsules may add local server projection storage and background refresh around this contract, but browser code must still avoid `localStorage`, `sessionStorage`, IndexedDB, cookies, or equivalent project-state persistence.
+
+`/api/dashboard/bootstrap` should remain additive and transition-safe while `/api/dashboard/core` is introduced. New consumers should prefer `/core` plus separate projected heavy sections once T-0218 through T-0222 land; old consumers may keep using bootstrap until the compatibility window is explicitly closed.
+
 ## Dashboard Timeline
 
 `hadara.dashboard.timeline.v1` is the deterministic read model for the dashboard Workstream panel:

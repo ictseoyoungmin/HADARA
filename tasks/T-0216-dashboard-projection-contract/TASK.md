@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0216 |
 | Title | Dashboard Projection Contract |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-06-02 |
 | Updated | 2026-06-02 |
 
@@ -34,10 +34,11 @@
 
 ## Status
 
-Draft
+Done
 
 ## Status History
 
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-02 | Draft | Initial task scaffold for Phase 5.7 projection contract. | Task created by HADARA CLI. |
+| 2026-06-02 | Partial | Contract/schema/docs/tests implemented; final close pending. | Focused tests and Docker sync-build passed. |

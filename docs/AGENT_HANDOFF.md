@@ -5,18 +5,18 @@
 | Area | State | Notes |
 |---|---|---|
 | Branch | main | Phase 5.6 and Phase 5.7 planning changes are local/uncommitted; commit/push state should be checked before publishing. |
-| Current Phase | Phase 5.7 Dashboard read-model projection performance | Phase 5.6 UI/UX reset is closed through T-0214; projection work is staged through T-0223. |
-| Latest Completed Task | T-0215 Phase 5.6 Close / Handoff Sync | T-0207 through T-0214 were marked Done, closed, and audit-close checked; Phase 5.7 capsules were created. |
-| Active / Next Task | T-0216 Dashboard Projection Contract | Start by defining `hadara.dashboard.core.v1`, projection metadata, freshness/completeness enums, and bootstrap compatibility. |
-| Validation Baseline | Phase 5.6 Docker validation passed | Phase 5.6 evidence records full Docker suite at 84 files / 562 tests and dashboard visual/a11y gate passed; T-0215 is documentation/status sync only. |
+| Current Phase | Phase 5.7 Dashboard read-model projection performance | Projection contract T-0216 is complete; local projection store T-0217 is next. |
+| Latest Completed Task | T-0216 Dashboard Projection Contract | Registered `hadara.dashboard.core.v1`, documented projection metadata and bootstrap compatibility, and validated schema contract. |
+| Active / Next Task | T-0217 Dashboard Local Projection Store | Implement local `.hadara/local/cache/dashboard` projection store with atomic replace, redaction, ignore/context-export boundaries. |
+| Validation Baseline | Docker sync-build passed | `npm run dev:docker-sync-build` passed with 85 files / 564 tests and built CLI version smoke `ok:true`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0213 Dashboard Metrics With Meaning and Developer JSON | Reframed dashboard metrics with context and moved raw JSON behind a read-only disclosure. | T-0213 evidence: full Docker suite passed with 84 files / 562 tests; dashboard visual/a11y gate passed. |
 | T-0214 Dashboard Visual Regression and A11y Gate | Added Playwright screenshot fixtures and axe-core checks for the rebuilt dashboard surface. | T-0214 evidence: visual/a11y gate passed for home/detail/empty/degraded; full Docker suite passed with 84 files / 562 tests. |
 | T-0215 Phase 5.6 Close / Handoff Sync | Closed T-0207 through T-0214 and staged T-0216 through T-0223 for Phase 5.7 projection work. | T-0215 evidence: task finish/ready/close/audit-close completed for T-0207 through T-0214; Phase 5.7 capsules created. |
+| T-0216 Dashboard Projection Contract | Registered the Phase 5.7 dashboard core projection contract before storage/routes/frontend work. | T-0216 evidence: focused schema tests passed; Docker sync-build passed with 85 files / 564 tests; built CLI smoke `ok:true`. |
 
 ## Current Known Problems
 
@@ -40,17 +40,18 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start T-0216 Dashboard Projection Contract. | Phase 5.7 needs a stable read-model contract before local projection storage or routes are implemented. | Use `docs/specs/dashboard/HADARA_Dashboard_Read_Model_Performance_Redesign.md` and keep `/api/dashboard/bootstrap` compatibility additive. |
+| Start T-0217 Dashboard Local Projection Store. | The projection contract is complete; next work should add the local disposable/redacted projection store without routes or frontend changes. | Use `hadara.dashboard.core.v1`, `docs/specs/dashboard/HADARA_Dashboard_Read_Model_Performance_Redesign.md`, and keep projection cache outside committed/context-exported state. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Full repository check | Phase 5.6 Docker validation passed with 84 files and 562 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
+| Full repository check | Docker `npm run dev:docker-sync-build` passed with 85 files and 564 tests. | Host dependencies are unavailable; Docker remains the validation baseline. |
 | Dashboard performance measurement | Playwright Docker `/tmp` copy measurement recorded shell HTML fetch 4.4 ms, bootstrap bypass avg 174.7 ms, task-detail bypass avg 243.3 ms, timeline bypass avg 150.4 ms, with cache hit samples near 1-2 ms. | Direct bind-mounted workspace measurement was unsuitable because the dashboard server did not return promptly enough for stable timings. |
 | Focused dashboard/readiness check | Covered by full Docker after readiness review assertions were added. | Covers route/schema/boundary inventory doc, dashboard schema status, and final readiness conclusion. |
 | Dashboard visual/a11y gate | Playwright + axe-core gate passed for home/detail/empty/degraded. | T-0214 records the visual/a11y evidence. |
 | Phase 5.6 close audit | T-0207 through T-0214 were finished, readied, closed, and audit-close checked. | Re-run task-scoped status/audit only if those capsules change before commit. |
+| Dashboard core schema contract | Focused Docker test passed for schema index and `hadara.dashboard.core.v1` contract. | `npm run test:focused -- tests/unit/schema-fixtures.test.ts tests/unit/dashboard-core-contract.test.ts` passed with 2 files / 3 tests in `/tmp/hadara`. |
 
 ## Historical Index
 

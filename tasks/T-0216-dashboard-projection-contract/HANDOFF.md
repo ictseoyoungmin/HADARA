@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | Task | T-0216 |
-| Status | Draft |
+| Status | Done |
 | Last Updated | 2026-06-02 |
 
 ## Last Completed
@@ -18,10 +18,10 @@
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Define the projection contract and freshness metadata before implementing storage/routes. | Contract-first order prevents divergent Phase 5.7 semantics. | `docs/specs/dashboard/HADARA_Dashboard_Read_Model_Performance_Redesign.md`; `docs/DASHBOARD_READ_MODEL_CONTRACT.md` |
+| Start T-0217 Dashboard Local Projection Store. | T-0216 contract/schema/docs/tests are complete; next capsule should implement local projection storage only. | `docs/specs/dashboard/HADARA_Dashboard_Read_Model_Performance_Redesign.md`; `docs/DASHBOARD_READ_MODEL_CONTRACT.md`; `src/schemas/dashboard-core.schema.json` |
 
 ## Carry Forward Warnings
 
 | Warning | Impact | Mitigation |
 |---|---|---|
-| T-0216 is Draft and has no evidence yet. | Done-level blockers are expected until implementation starts. | Replace planned rows with evidence-backed Done rows during T-0216 work. |
+| T-0217 should not add routes or frontend migration. | Projection storage should stay local, disposable, redacted, ignored, and context-export excluded. | Keep route work for T-0218 and frontend work for T-0222. |

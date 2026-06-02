@@ -9,6 +9,13 @@
       "notes": "Documents read-only dashboard bootstrap aggregate reports for first-paint operator-console rendering."
     },
     {
+      "id": "hadara.dashboard.core.v1",
+      "path": "src/schemas/dashboard-core.schema.json",
+      "status": "fixture",
+      "owner": "services/dashboard-core",
+      "notes": "Documents the Phase 5.7 first-actionable dashboard core projection contract with freshness and completeness metadata."
+    },
+    {
       "id": "hadara.dashboard.task_detail.v1",
       "path": "src/schemas/dashboard-task-detail.schema.json",
       "status": "fixture",
