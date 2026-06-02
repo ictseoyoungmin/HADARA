@@ -3,7 +3,7 @@
 // bootstrap report, the ops.status fixture, and the inline fallback into one
 // in-memory RuntimeState. No browser-persisted project state is created here.
 
-export type SourceKind = 'live-api' | 'live-status' | 'fixture-fallback' | 'inline-fallback' | 'degraded';
+export type SourceKind = 'projection' | 'live-api' | 'live-status' | 'fixture-fallback' | 'inline-fallback' | 'degraded';
 
 export type Health = 'ok' | 'degraded' | 'error' | 'unknown';
 
@@ -220,6 +220,58 @@ export function normalizeBootstrap(report: AnyObj): RuntimeState {
   });
 }
 
+export function normalizeCore(report: AnyObj): RuntimeState {
+  const core = (report.core ?? {}) as AnyObj;
+  const taskSummary = (core.taskSummary ?? {}) as AnyObj;
+  const handoffSummary = (core.handoffSummary ?? {}) as AnyObj;
+  const validationSummary = (core.validationSummary ?? {}) as AnyObj;
+  const debtSummary = (core.debtSummary ?? {}) as AnyObj;
+  const activeRunSummary = (core.activeRunSummary ?? {}) as AnyObj;
+  const sourceKind = report.source?.kind === 'projection' ? 'projection' : 'live-api';
+  return {
+    source: {
+      kind: sourceKind,
+      label: sourceKind === 'projection' ? 'Local dashboard core projection' : 'Live dashboard core read',
+      generatedAt: typeof report.generatedAt === 'string' ? report.generatedAt : null,
+      projectFingerprint: typeof report.source?.project?.fingerprint === 'string' ? report.source.project.fingerprint : null
+    },
+    cache: null,
+    ok: report.ok !== false,
+    health: normalizeHealth(core.health),
+    project: { branch: 'unknown', phase: 'dashboard projection' },
+    tasks: {
+      total: asNumber(taskSummary.total),
+      counts: (taskSummary.counts ?? {}) as Record<string, number>,
+      nextRecommended: typeof taskSummary.nextRecommended === 'string' ? taskSummary.nextRecommended : null,
+      recent: asArray<AnyObj>(taskSummary.recent).map((t) => ({ id: asString(t.id), title: asString(t.title), status: asString(t.status) })),
+      lastCompleted: asArray<string>(taskSummary.lastCompleted)
+    },
+    handoff: {
+      currentState: asArray<string>(handoffSummary.currentState),
+      nextStep: asArray<string>(handoffSummary.nextRecommendedStep)
+    },
+    validation: {
+      latestFullCheck: typeof validationSummary.latestFullCheck === 'string' ? validationSummary.latestFullCheck : null,
+      latestDoneLevelValidation: typeof validationSummary.latestDoneLevelValidation === 'string' ? validationSummary.latestDoneLevelValidation : null
+    },
+    debt: {
+      total: asNumber(debtSummary.total),
+      open: asNumber(debtSummary.open),
+      highOpen: asNumber(debtSummary.highOpen),
+      bySeverity: (debtSummary.bySeverity ?? {}) as Record<string, number>,
+      pending: debtSummary.pending !== false
+    },
+    mcp: { defaultMode: 'read-only', evidenceAttachRequiresApproval: true },
+    activeRun: {
+      present: activeRunSummary.present === true,
+      taskId: typeof activeRunSummary.taskId === 'string' ? activeRunSummary.taskId : null,
+      status: typeof activeRunSummary.status === 'string' ? activeRunSummary.status : null,
+      staleReason: typeof activeRunSummary.staleReason === 'string' ? activeRunSummary.staleReason : null
+    },
+    timeline: []
+  };
+}
+
 export function normalizeOpsStatus(report: AnyObj, kind: SourceKind, label: string): RuntimeState {
   return normalizeStatusBlock(report, kind, label, { generatedAt: report.generatedAt });
 }
@@ -316,7 +368,7 @@ function readInlineFallback(): AnyObj | null {
 }
 
 export function isLiveSource(kind: SourceKind): boolean {
-  return kind === 'live-api' || kind === 'live-status';
+  return kind === 'projection' || kind === 'live-api' || kind === 'live-status';
 }
 
 // Synchronous, no-network inline fallback used for an instant offline preview
@@ -326,15 +378,18 @@ export function readInlineRuntime(): RuntimeState | null {
   return inline ? normalizeOpsStatus(inline, 'inline-fallback', 'Offline inline fallback (not live data)') : null;
 }
 
-// Live sources only: aggregate bootstrap, then plain status. Returns null if
+// Live sources only: projection core, aggregate bootstrap, then plain status. Returns null if
 // neither live read succeeds so the caller can decide how to degrade.
-// Uses the "core" tier (skips the expensive operational-debt scan) for a fast
-// first paint; the caller backfills debt via loadDebt() in the background.
 export async function loadLiveRuntime(options: { bypass?: boolean } = {}): Promise<RuntimeState | null> {
+  const coreUrl = options.bypass ? '/api/dashboard/core?cache=bypass' : '/api/dashboard/core';
+  const core = await tryFetchJson(coreUrl);
+  if (core && core.schemaVersion === 'hadara.dashboard.core.v1') {
+    return normalizeCore(core);
+  }
+
   const params = new URLSearchParams({ tier: 'core' });
   if (options.bypass) params.set('cache', 'bypass');
   const bootstrapUrl = `${liveBootstrapUrl}?${params.toString()}`;
-
   const bootstrap = await tryFetchJson(bootstrapUrl);
   if (bootstrap && bootstrap.schemaVersion === 'hadara.dashboard.bootstrap.v1') {
     return normalizeBootstrap(bootstrap);
@@ -367,15 +422,21 @@ export interface DebtAggregate {
 
 // Background backfill for the debt metric that the core bootstrap tier defers.
 export async function loadDebt(): Promise<DebtAggregate | null> {
-  const report = await tryFetchJson('/api/debt');
-  if (!report || report.schemaVersion !== 'hadara.operational_debt.v1') return null;
-  const agg = (report.aggregate ?? report) as AnyObj;
+  const report = await tryFetchJson('/api/dashboard/debt');
+  if (!report || report.schemaVersion !== 'hadara.dashboard.debt_projection.v1') return null;
+  const agg = (report.aggregate ?? {}) as AnyObj;
   return {
     total: asNumber(agg.total),
     open: asNumber(agg.open),
     highOpen: asNumber(agg.highOpen),
     bySeverity: (agg.bySeverity ?? {}) as Record<string, number>
   };
+}
+
+export async function loadTimeline(): Promise<TimelineEvent[] | null> {
+  const report = await tryFetchJson('/api/dashboard/timeline');
+  if (!report || report.schemaVersion !== 'hadara.dashboard.timeline.v1') return null;
+  return normalizeTimeline(asArray<AnyObj>(report.events));
 }
 
 export async function loadTaskDetail(taskId: string, options: { bypass?: boolean } = {}): Promise<TaskDetail | null> {

@@ -140,13 +140,16 @@ describe('operator console bundle (Phase 5.6)', () => {
     // commands are copy-only; the dashboard never executes them
     expect(code).toContain('clipboard');
     expect(code).toContain('dashboard does not execute');
-    // bootstrap-first fallback order is encoded in the data layer
+    // core-first fallback order is encoded in the data layer
+    const coreIndex = code.indexOf("'/api/dashboard/core'");
     const bootstrapIndex = code.indexOf("'/api/dashboard/bootstrap'");
     const statusIndex = code.indexOf("'/api/status'");
     const fixtureIndex = code.indexOf('fixtures/hadara.ops.status.sample.json');
+    expect(coreIndex).toBeGreaterThan(-1);
     expect(bootstrapIndex).toBeGreaterThan(-1);
     expect(statusIndex).toBeGreaterThan(-1);
     expect(fixtureIndex).toBeGreaterThan(-1);
+    expect(coreIndex).toBeLessThan(bootstrapIndex);
     expect(bootstrapIndex).toBeLessThan(statusIndex);
     expect(statusIndex).toBeLessThan(fixtureIndex);
     // a stalled read must degrade rather than freeze the console

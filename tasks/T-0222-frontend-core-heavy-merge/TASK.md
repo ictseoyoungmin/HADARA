@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0222 |
 | Title | Frontend Core + Heavy Merge |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-06-02 |
 | Updated | 2026-06-02 |
 
@@ -34,10 +34,11 @@
 
 ## Status
 
-Draft
+Done
 
 ## Status History
 
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-02 | Draft | Initial task scaffold for frontend core/heavy merge. | Task created by HADARA CLI. |
+| 2026-06-02 | Done | Updated authored frontend data flow to core-first and projection heavy backfills; static bundle build remains blocked and carried to T-0223. | `evidence.add-command` at 2026-06-02T03:38:37.698Z. |

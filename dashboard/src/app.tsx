@@ -2,7 +2,17 @@
 import { render } from 'preact';
 import type { ComponentChildren } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { isLiveSource, loadDebt, loadFallbackRuntime, loadLiveRuntime, loadTaskDetail, readInlineRuntime, type RuntimeState, type TaskDetail } from './model';
+import {
+  isLiveSource,
+  loadDebt,
+  loadFallbackRuntime,
+  loadLiveRuntime,
+  loadTaskDetail,
+  loadTimeline,
+  readInlineRuntime,
+  type RuntimeState,
+  type TaskDetail
+} from './model';
 import {
   ActiveNext,
   ActivityFeed,
@@ -239,6 +249,14 @@ function App() {
     if (lg && lg.debt.pending) lastGoodRuntime.current = { ...lg, debt: { ...debt, pending: false } };
   }, []);
 
+  const backfillTimeline = useCallback(async () => {
+    const timeline = await loadTimeline();
+    if (!timeline || timeline.length === 0) return;
+    setRuntime((cur) => (cur ? { ...cur, timeline } : cur));
+    const lg = lastGoodRuntime.current;
+    if (lg) lastGoodRuntime.current = { ...lg, timeline };
+  }, []);
+
   const load = useCallback(async (opts: { bypass?: boolean; viaPoll?: boolean } = {}) => {
     setBusy(true);
     // Perceived-speed: on the first load only, if the live read is slow, paint
@@ -269,6 +287,7 @@ function App() {
       setDegraded(false);
       setBusy(false);
       if (live.debt.pending) void backfillDebt();
+      if (live.timeline.length === 0) void backfillTimeline();
       return true;
     }
 
