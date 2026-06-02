@@ -17,6 +17,7 @@ import {
   warmDashboardProjections
 } from '../services/dashboard-refresh';
 import { createDashboardTaskDetailReport } from '../services/dashboard-task-detail';
+import { createProjectedDashboardDebtReport, createProjectedDashboardTimelineReport } from '../services/dashboard-heavy-projection';
 import { createEvidenceLintReport } from '../services/evidence-lint';
 import { createEvidenceListReport } from '../services/evidence-list';
 import { createDashboardTimelineReport } from '../services/dashboard-timeline';
@@ -121,6 +122,8 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
   }
   if (url.pathname === '/api/dashboard/projection/status') return jsonResponse(createDashboardProjectionStatusReport(projectRoot), headOnly);
   if (url.pathname === '/api/dashboard/refresh') return jsonResponse(triggerDashboardProjectionRefresh(projectRoot, 'api'), headOnly);
+  if (url.pathname === '/api/dashboard/timeline') return jsonResponse(createProjectedDashboardTimelineReport(projectRoot), headOnly);
+  if (url.pathname === '/api/dashboard/debt') return jsonResponse(createProjectedDashboardDebtReport(projectRoot), headOnly);
   if (url.pathname === '/api/dashboard/bootstrap') {
     const selectedTaskId = url.searchParams.get('selectedTaskId')?.trim();
     const tier = url.searchParams.get('tier') === 'core' ? 'core' : 'full';

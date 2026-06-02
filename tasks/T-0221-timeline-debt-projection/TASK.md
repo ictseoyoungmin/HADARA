@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0221 |
 | Title | Timeline / Debt Projection |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-06-02 |
 | Updated | 2026-06-02 |
 
@@ -34,10 +34,11 @@
 
 ## Status
 
-Draft
+Done
 
 ## Status History
 
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-02 | Draft | Initial task scaffold for timeline/debt projection. | Task created by HADARA CLI. |
+| 2026-06-02 | Done | Added background timeline/debt projection materialization, projection-first dashboard heavy routes, metadata status, and focused tests; Docker validation gap recorded. | `evidence.add-command` at 2026-06-02T03:31:14.863Z. |

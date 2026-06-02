@@ -1,5 +1,6 @@
 import { createDashboardProjectFingerprint, createDashboardProjectReference, DashboardProjectReference } from './dashboard-cache';
 import { createDashboardCoreReport } from './dashboard-core';
+import { refreshDashboardHeavyProjections } from './dashboard-heavy-projection';
 import { readDashboardProjection } from './dashboard-projection-store';
 import { refreshDashboardTaskProjectionIndex } from './dashboard-task-projection';
 
@@ -25,6 +26,16 @@ export interface DashboardProjectionStatusReport {
       generatedAt: string | null;
       freshness: 'fresh' | 'stale' | 'missing' | 'unknown';
       completeness: 'core' | 'partial' | 'complete' | 'unknown';
+    };
+    timeline: {
+      present: boolean;
+      generatedAt: string | null;
+      freshness: 'fresh' | 'stale' | 'missing' | 'unknown';
+    };
+    debt: {
+      present: boolean;
+      generatedAt: string | null;
+      freshness: 'fresh' | 'stale' | 'missing' | 'unknown';
     };
   };
   pendingSections: string[];
@@ -81,6 +92,7 @@ export function triggerDashboardProjectionRefresh(projectRoot: string, reason = 
   setTimeout(() => {
     try {
       refreshDashboardTaskProjectionIndex(projectRoot);
+      refreshDashboardHeavyProjections(projectRoot);
       createDashboardCoreReport(projectRoot, { bypassProjection: true });
       const previous = getRefreshState(projectRoot);
       refreshStates.set(key, {
@@ -114,6 +126,8 @@ export function triggerDashboardProjectionRefresh(projectRoot: string, reason = 
 
 export function createDashboardProjectionStatusReport(projectRoot: string, now = new Date()): DashboardProjectionStatusReport {
   const core = readDashboardProjection({ projectRoot }, 'core', 'index');
+  const timeline = readDashboardProjection({ projectRoot }, 'timeline', 'overview');
+  const debt = readDashboardProjection({ projectRoot }, 'debt', 'summary');
   const state = getRefreshState(projectRoot);
   const projection = projectionMetadata(core?.body);
   const pendingSections = projection ? projectionStringArray(projection, 'pendingSections') : ['core'];
@@ -133,6 +147,16 @@ export function createDashboardProjectionStatusReport(projectRoot: string, now =
         generatedAt: core?.generatedAt ?? null,
         freshness: core ? 'unknown' : 'missing',
         completeness
+      },
+      timeline: {
+        present: Boolean(timeline),
+        generatedAt: timeline?.generatedAt ?? null,
+        freshness: timeline ? 'unknown' : 'missing'
+      },
+      debt: {
+        present: Boolean(debt),
+        generatedAt: debt?.generatedAt ?? null,
+        freshness: debt ? 'unknown' : 'missing'
       }
     },
     pendingSections,

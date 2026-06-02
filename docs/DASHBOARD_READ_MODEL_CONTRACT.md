@@ -295,6 +295,15 @@ T-0220 adds the incremental task projection index:
 
 The index uses `hadara.dashboard.task_projection_index.v1`, stores per-task summaries plus `TASK.md` and `evidence.jsonl` file signals, and records changed/reused task ids for each refresh. Refresh may scan the `tasks/` directory to discover task ids, but unchanged task bodies should be reused from the previous projection instead of rereading every `TASK.md` and `evidence.jsonl`. `/api/dashboard/core` should prefer this task projection when present; Task Board rows remain the bounded fallback when the projection is missing.
 
+T-0221 adds projection-first heavy read routes:
+
+```text
+GET /api/dashboard/timeline
+GET /api/dashboard/debt
+```
+
+Background refresh materializes `.hadara/local/cache/dashboard/timeline/overview.json` and `.hadara/local/cache/dashboard/debt/summary.json`. These routes should read only the local projection bodies or return honest missing-projection warnings; they must not trigger full timeline or debt recomputation on the foreground request path. Legacy `/api/timeline` and `/api/debt` remain compatibility read routes during the transition.
+
 The core contract deliberately excludes full evidence lists, deep selected-task payloads, raw artifacts, private raw paths, and request-time all-capsule scan requirements. Later Phase 5.7 capsules may add local server projection storage and background refresh around this contract, but browser code must still avoid `localStorage`, `sessionStorage`, IndexedDB, cookies, or equivalent project-state persistence.
 
 `/api/dashboard/bootstrap` should remain additive and transition-safe while `/api/dashboard/core` is introduced. New consumers should prefer `/core` plus separate projected heavy sections once T-0218 through T-0222 land; old consumers may keep using bootstrap until the compatibility window is explicitly closed.
