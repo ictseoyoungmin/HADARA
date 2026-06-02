@@ -6,15 +6,15 @@
 |---|---|---|
 | Branch | main | T-0223 is ready for the requested per-capsule commit; commit/push state should be checked before publishing. |
 | Current Phase | Dashboard refresh/read-model hardening | Phase 5.7 projection slices are complete through T-0223, with T-0224 fixing validation fallback and explicit refresh broad-scan behavior. |
-| Latest Completed Task | T-0224 Dashboard Refresh Refactor and Validation Read Model | Added a strict refresh refactor spec, shared table-first handoff validation parser, async staged refresh, core-fed timeline projection, and aggregate-only dashboard debt projection. |
+| Latest Completed Task | T-0224 Dashboard Refresh Refactor and Validation Read Model | Added a strict refresh refactor spec, shared table-first handoff validation parser, async staged refresh, core-fed timeline projection, aggregate-only dashboard debt projection, and a done-level TASK metadata gate. |
 | Active / Next Task | Next roadmap slice selection pending | Phase 5.7 is complete; select the next capsule deliberately from roadmap priorities. |
-| Validation Baseline | T-0224 Docker validation passed | `npm run dev:docker-sync-build` passed with 90 files / 588 tests and built CLI smoke `ok:true`; built dashboard refresh/latest-validation route smoke passed with `latestContainsT0096:false`; `git diff --check` passed. |
+| Validation Baseline | T-0224 Docker validation passed | `npm run dev:docker-sync-build` passed with 90 files / 589 tests and built CLI smoke `ok:true`; built dashboard refresh/latest-validation route smoke passed with `latestContainsT0096:false`; `git diff --check` passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0224 Dashboard Refresh Refactor and Validation Read Model | Fixed latest validation read-model fallback and refactored explicit dashboard refresh stages. | T-0224 evidence: Docker sync-build passed 90 files / 588 tests; built route smoke passed with refresh completion and `latestContainsT0096:false`; close audit passed. |
+| T-0224 Dashboard Refresh Refactor and Validation Read Model | Fixed latest validation read-model fallback, refactored explicit dashboard refresh stages, and added a done-level TASK metadata gate. | T-0224 evidence: Docker sync-build passed 90 files / 589 tests; built route smoke passed with refresh completion and `latestContainsT0096:false`; close audit passed. |
 | T-0223 Projection Validation and Visual/A11y States | Added projection route fixtures and visual/a11y states for projection-ready/detail/stale/refreshing/missing/offline/degraded. | T-0223 evidence: Docker sync-build, dashboard build, visual/a11y gate, selected-detail/evidence-label/table parsing smokes, and close audit passed. |
 | T-0222 Frontend Core + Heavy Merge | Updated authored frontend data flow to core-first and projection heavy backfills. | T-0222 evidence: Docker sync-build, dashboard build, selected-detail/evidence-label/table parsing smokes, and close audit passed. |
 
@@ -50,7 +50,7 @@
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Full repository check | Docker `npm run dev:docker-sync-build` passed with 90 files and 588 tests during T-0224. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`. |
+| Full repository check | Docker `npm run dev:docker-sync-build` passed with 90 files and 589 tests during T-0224. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`; done-level harness now blocks `TASK.md` Created/Updated metadata placeholders. |
 | Dashboard refresh/latest validation smoke | Built route smoke accepted `/api/dashboard/refresh`, completed one refresh run, reported core/timeline/debt projections present, and returned latest validation fields without T-0096 fallback. | Confirms the reported stale `Latest full validation` read-model issue is fixed. |
 | Dashboard selected-detail/table parsing smoke | Built `dist` smoke returned T-0223 detail `statusCode:200`, `ok:true`, `closeState:closed-valid` in 1852 ms, with no global `Status snapshot read` timeline event; core handoff summaries returned data rows instead of Markdown table headers. | Confirms the reported `Detail unavailable`/long skeleton path and `| Area | State | Notes |` summary leak were fixed. |
 | Dashboard evidence-label/timeline projection smoke | Built `dist` smoke returned first T-0223 evidence record as `kind: command-log`, `result: passed`, `visibility: public`; projected timeline handoff/next events returned data-row summaries instead of Markdown table headers. | Confirms the reported `record-1 unknown public` and timeline projection header leak were fixed in server payloads and frontend normalization. |

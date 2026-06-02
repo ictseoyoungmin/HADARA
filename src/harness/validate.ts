@@ -287,6 +287,7 @@ function validateEvidenceIndex(projectRoot: string, task: TaskCapsule, issues: H
 }
 
 function validateDoneLevel(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[], checkedFiles: string[]): void {
+  validateTaskMetadataComplete(projectRoot, task, issues);
   validateTaskStatusDone(projectRoot, task, issues);
   validateDoneLevelScaffoldContent(projectRoot, task, issues);
   validateAcceptanceDone(projectRoot, task, issues);
@@ -295,6 +296,39 @@ function validateDoneLevel(projectRoot: string, task: TaskCapsule, issues: Harne
   validateEvidenceSemanticGates(projectRoot, task, issues);
   validateHandoffDone(projectRoot, task, issues);
   validateTaskBoardDone(projectRoot, task, issues, checkedFiles);
+}
+
+function validateTaskMetadataComplete(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+  const taskPath = path.join(task.dir, 'TASK.md');
+  if (!fs.existsSync(taskPath)) return;
+
+  const relativePath = toPortablePath(path.relative(projectRoot, taskPath));
+  const metadata = readMetadataTable(fs.readFileSync(taskPath, 'utf8'));
+  const created = metadata.get('Created') ?? '';
+  const updated = metadata.get('Updated') ?? '';
+  const missing = [
+    ['Created', created],
+    ['Updated', updated]
+  ]
+    .filter(([, value]) => isMetadataPlaceholder(value))
+    .map(([field]) => field);
+  if (missing.length > 0) {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_METADATA_PLACEHOLDER',
+      message: `Done-level validation requires TASK.md metadata field(s) to be concrete dates, not TBD: ${missing.join(', ')}.`,
+      path: relativePath
+    });
+    return;
+  }
+  if (!isIsoDate(created) || !isIsoDate(updated)) {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_METADATA_DATE_INVALID',
+      message: 'Done-level validation requires TASK.md Created and Updated metadata to use YYYY-MM-DD dates.',
+      path: relativePath
+    });
+  }
 }
 
 function validateTaskStatusDone(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
@@ -565,6 +599,31 @@ function isPlaceholderSection(value: string): boolean {
   const normalized = value.trim();
   if (normalized.length === 0 || /^TBD\.?$/i.test(normalized)) return true;
   return /\|\s*TBD\s*\|/i.test(normalized);
+}
+
+function readMetadataTable(content: string): Map<string, string> {
+  const metadata = new Map<string, string>();
+  for (const cells of parseMarkdownRows(readSectionFromContent(content, '## Metadata'))) {
+    if (cells.length < 2 || cells[0] === 'Field') continue;
+    metadata.set(cells[0], cells[1]);
+  }
+  return metadata;
+}
+
+function readSectionFromContent(content: string, heading: string): string {
+  const start = content.indexOf(heading);
+  if (start < 0) return '';
+  const afterHeading = content.slice(start + heading.length);
+  const nextHeading = afterHeading.search(/\n##\s+/);
+  return nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading;
+}
+
+function isMetadataPlaceholder(value: string): boolean {
+  return value.trim().length === 0 || /^TBD\.?$/i.test(value.trim());
+}
+
+function isIsoDate(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value.trim());
 }
 
 function toPortablePath(value: string): string {

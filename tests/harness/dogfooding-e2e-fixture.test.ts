@@ -270,6 +270,16 @@ function writeTaskWorkPlan(task: TaskCapsule): void {
     path.join(task.dir, 'TASK.md'),
     `# ${task.id} ${task.title}
 
+## Metadata
+
+| Field | Value |
+|---|---|
+| ID | ${task.id} |
+| Title | ${task.title} |
+| Status | Draft |
+| Created | 2026-06-02 |
+| Updated | 2026-06-02 |
+
 ## Goal
 
 Replay a miniature HADARA-on-HADARA workflow.
@@ -421,7 +431,11 @@ function runBuiltCliJson(projectRoot: string, executedCommands: string[], args: 
 
 function markTaskDone(task: TaskCapsule): void {
   const taskPath = path.join(task.dir, 'TASK.md');
-  fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace(/\nDraft\n$/, '\nDone\n'), 'utf8');
+  fs.writeFileSync(
+    taskPath,
+    fs.readFileSync(taskPath, 'utf8').replace('| Status | Draft |', '| Status | Done |').replace(/\nDraft\n$/, '\nDone\n'),
+    'utf8'
+  );
 }
 
 function markTaskBoardDone(projectRoot: string, taskId: string): void {

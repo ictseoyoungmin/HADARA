@@ -105,6 +105,32 @@ describe('Harness Task Capsule validation', () => {
     expect(result.issues.map((issue) => issue.code)).not.toContain('EVIDENCE_SCAFFOLD_UNCHANGED');
   });
 
+  it('rejects done-level capsules with placeholder TASK metadata dates', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Placeholder metadata');
+    markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
+    markAcceptanceDone(task.dir);
+    writeCompletedCapsuleDocs(task.dir, { keepMetadataPlaceholders: true });
+    writeHandoffDone(task.dir);
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Done-level validation evidence',
+      result: 'passed'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual({
+      severity: 'error',
+      code: 'TASK_METADATA_PLACEHOLDER',
+      message: 'Done-level validation requires TASK.md metadata field(s) to be concrete dates, not TBD: Created, Updated.',
+      path: `tasks/${task.id}-placeholder-metadata/TASK.md`
+    });
+  });
+
   it('accepts done-level validation for completed capsules', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Completed capsule');
@@ -490,20 +516,20 @@ function markAcceptanceDone(taskDir: string): void {
   );
 }
 
-function writeCompletedCapsuleDocs(taskDir: string): void {
+function writeCompletedCapsuleDocs(taskDir: string, options: { keepMetadataPlaceholders?: boolean } = {}): void {
   const taskPath = path.join(taskDir, 'TASK.md');
-  fs.writeFileSync(
-    taskPath,
-    fs
-      .readFileSync(taskPath, 'utf8')
-      .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Validate done-level completion gates. | Fixture verifies completed capsule docs. |')
-      .replace('| TBD | TBD |', '| Exercise task-specific completed capsule documentation. | Needed for done-level validation. |')
-      .replace('| TBD | TBD |', '| Broad workflow changes. | Outside fixture scope. |')
-      .replace('## Goal\n\nTBD.', '## Goal\n\nValidate done-level completion gates.')
-      .replace('## Scope\n\nTBD.', '## Scope\n\n- Exercise task-specific completed capsule documentation.')
-      .replace('## Out of Scope\n\nTBD.', '## Out of Scope\n\n- Broad workflow changes.'),
-    'utf8'
-  );
+  let taskContent = fs
+    .readFileSync(taskPath, 'utf8')
+    .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Validate done-level completion gates. | Fixture verifies completed capsule docs. |')
+    .replace('| TBD | TBD |', '| Exercise task-specific completed capsule documentation. | Needed for done-level validation. |')
+    .replace('| TBD | TBD |', '| Broad workflow changes. | Outside fixture scope. |')
+    .replace('## Goal\n\nTBD.', '## Goal\n\nValidate done-level completion gates.')
+    .replace('## Scope\n\nTBD.', '## Scope\n\n- Exercise task-specific completed capsule documentation.')
+    .replace('## Out of Scope\n\nTBD.', '## Out of Scope\n\n- Broad workflow changes.');
+  if (!options.keepMetadataPlaceholders) {
+    taskContent = taskContent.replace('| Created | TBD |', '| Created | 2026-06-02 |').replace('| Updated | TBD |', '| Updated | 2026-06-02 |');
+  }
+  fs.writeFileSync(taskPath, taskContent, 'utf8');
   fs.writeFileSync(path.join(taskDir, 'PLAN.md'), '# Plan\n\n| Step | Action | Status | Evidence |\n|---|---|---|---|\n| 1 | Prepare completed capsule fixture. | Done | Test fixture setup. |\n| 2 | Run done-level validation. | Done | Harness result. |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'CONTEXT.md'), '# Context\n\n## Required Reading Used\n\n| Document | Why It Matters | Read Status |\n|---|---|---|\n| src/harness/validate.ts | Harness validator behavior. | Read |\n\n## Assumptions\n\n| Assumption | Source | Risk If Wrong |\n|---|---|---|\n| Fixture represents a completed task. | Test setup | Done-level regression would be noisy. |\n\n## Constraints\n\n| Constraint | Source | Notes |\n|---|---|---|\n| No broad workflow changes. | Fixture scope | Keep assertions focused. |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'FILES.md'), '# Files\n\n| Path | Action | Reason | Status |\n|---|---|---|---|\n| src/harness/validate.ts | read | Exercise done-level validation. | Done |\n', 'utf8');

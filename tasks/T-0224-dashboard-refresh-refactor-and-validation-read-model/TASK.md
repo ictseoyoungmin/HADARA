@@ -7,8 +7,8 @@
 | ID | T-0224 |
 | Title | Dashboard Refresh Refactor and Validation Read Model |
 | Status | Done |
-| Created | TBD |
-| Updated | TBD |
+| Created | 2026-06-02 |
+| Updated | 2026-06-02 |
 
 ## Goal
 

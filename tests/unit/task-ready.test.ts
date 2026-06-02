@@ -56,6 +56,8 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
     fs
       .readFileSync(path.join(taskDir, 'TASK.md'), 'utf8')
       .replace(/\| Status \| Draft \|/g, '| Status | Done |')
+      .replace('| Created | TBD |', '| Created | 2026-06-02 |')
+      .replace('| Updated | TBD |', '| Updated | 2026-06-02 |')
       .replace(/\nDraft\n/, '\nDone\n')
       .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Exercise task ready. | Fixture verifies ready preflight. |')
       .replace('| TBD | TBD |', '| Complete fixture documents. | Needed for done-level validation. |')

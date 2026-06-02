@@ -57,6 +57,10 @@ docker exec hadara-dev bash -lc 'cd /tmp/hadara && npm run build >/dev/null && n
 
 Run these commands inside the Docker copy-to-`/tmp/work` pattern unless `docs/AGENT_HANDOFF.md` says the host Node environment has been fixed. For focused checks, prefer `npm run test:focused -- <path>` so the file path is passed directly to Vitest.
 
+## Task Capsule Completion Checks
+
+Done-level harness validation is the minimum completion gate for Task Capsules. It requires Done status, completed acceptance, indexed evidence, updated handoff sections, Task Board alignment, non-placeholder standard capsule docs, and concrete `TASK.md` Created/Updated metadata formatted as `YYYY-MM-DD`.
+
 ## Dashboard Production Readiness Checks
 
 Phase 5.5 Dashboard work should validate responsiveness and read-only boundaries without brittle wall-clock assertions.
