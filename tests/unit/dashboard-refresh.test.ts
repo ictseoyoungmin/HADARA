@@ -51,7 +51,7 @@ describe('dashboard background refresh and projection status', () => {
 
     expect(after).toMatchObject({
       refresh: expect.objectContaining({ state: 'idle', runs: 1 }),
-      projections: { core: expect.objectContaining({ present: true, freshness: 'unknown', completeness: 'partial' }) }
+      projections: { core: expect.objectContaining({ present: true, freshness: 'unknown', completeness: 'core' }) }
     });
     expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'core', 'index.json'))).toBe(true);
   });
@@ -72,6 +72,34 @@ describe('dashboard background refresh and projection status', () => {
     vi.runAllTimers();
     const after = JSON.parse(createDashboardServerResponse(root, '/api/dashboard/projection/status').body);
     expect(after.refresh.runs).toBe(1);
+  });
+
+  it('runs manual full refresh in yielded projection stages', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+
+    const first = JSON.parse(createDashboardServerResponse(root, '/api/dashboard/refresh').body);
+    expect(first).toMatchObject({ command: 'dashboard.refresh', accepted: true });
+
+    vi.advanceTimersToNextTimer();
+    expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'source-signals', 'tasks.json'))).toBe(true);
+    expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'timeline', 'overview.json'))).toBe(false);
+    expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'core', 'index.json'))).toBe(false);
+
+    vi.advanceTimersToNextTimer();
+    expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'timeline', 'overview.json'))).toBe(true);
+    expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'debt', 'summary.json'))).toBe(true);
+    expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'core', 'index.json'))).toBe(false);
+
+    vi.advanceTimersToNextTimer();
+    expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'core', 'index.json'))).toBe(true);
+    expect(JSON.parse(createDashboardServerResponse(root, '/api/dashboard/projection/status').body).refresh.state).toBe('refreshing');
+
+    vi.advanceTimersToNextTimer();
+    expect(JSON.parse(createDashboardServerResponse(root, '/api/dashboard/projection/status').body).refresh).toMatchObject({
+      state: 'idle',
+      runs: 1
+    });
   });
 });
 

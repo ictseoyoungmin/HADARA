@@ -41,4 +41,4 @@ Done
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-02 | Draft | Initial task scaffold for timeline/debt projection. | Task created by HADARA CLI. |
-| 2026-06-02 | Done | Added background timeline/debt projection materialization, projection-first dashboard heavy routes, metadata status, and focused tests; Docker validation gap recorded. | `evidence.add-command` at 2026-06-02T03:31:14.863Z. |
+| 2026-06-02 | Done | Added background timeline/debt projection materialization, projection-first dashboard heavy routes, metadata status, and focused tests; follow-up Docker sync-build and close audit passed. | `evidence.add-command` at 2026-06-02T07:35:28.157Z; audit-close at 2026-06-02T07:37:27.871Z. |

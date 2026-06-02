@@ -228,6 +228,55 @@ describe('Operations Status JSON', () => {
     expect(report.issues).toEqual([]);
   });
 
+  it('parses handoff table sections as data rows instead of Markdown headers', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Phase\n\nPhase: table-parser\n', 'utf8');
+    fs.writeFileSync(
+      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
+      [
+        '# AGENT_HANDOFF',
+        '',
+        '## Current State',
+        '',
+        '| Area | State | Notes |',
+        '|---|---|---|',
+        '| Branch | main | table fixture |',
+        '',
+        '## Current Known Problems',
+        '',
+        '| Issue | Impact | Next Step |',
+        '|---|---|---|',
+        '| None | None | Continue |',
+        '',
+        '## Next Recommended Step',
+        '',
+        '| Step | Reason | Done Evidence |',
+        '|---|---|---|',
+        '| Continue | table parser works | status evidence |',
+        '',
+        '## Validation Baseline',
+        '',
+        '| Check | Latest Evidence | Notes |',
+        '|---|---|---|',
+        '| Latest full check | Docker sync-build passed | fixture |',
+        '| Latest done-level validation | harness validate passed | fixture |'
+      ].join('\n'),
+      'utf8'
+    );
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n', 'utf8');
+
+    const report = createOpsStatusReport(root);
+
+    expect(report.handoff.currentState[0]).toBe('Branch · main · table fixture');
+    expect(report.handoff.nextRecommendedStep[0]).toBe('Continue · table parser works · status evidence');
+    expect(report.tasks.nextRecommended).toBe('Continue · table parser works · status evidence');
+    expect(report.handoff.currentState).not.toContain('Area · State · Notes');
+    expect(report.handoff.nextRecommendedStep).not.toContain('Step · Reason · Done Evidence');
+  });
+
   it('prints JSON for both status command forms', () => {
     const root = tempProject();
     writeProjectDocs(root);

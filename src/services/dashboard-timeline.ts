@@ -104,55 +104,57 @@ export function createDashboardTimelineReport(
     events.push(nextEvent);
   };
 
-  const status = deps.status ?? createOpsStatusReport(projectRoot);
-  push({
-    kind: 'system',
-    title: 'Status snapshot read',
-    summary: `Operations status health is ${status.health}.`,
-    severity: status.health === 'error' ? 'error' : status.health === 'degraded' ? 'warning' : 'ok',
-    command: 'dashboard.timeline'
-  });
-
-  if (status.activeRun) {
+  if (!input.taskId) {
+    const status = deps.status ?? createOpsStatusReport(projectRoot);
     push({
-      kind: 'active-run',
-      title: 'Active run projection read',
-      summary: status.activeRun.activeRun ? 'An active run is recorded.' : 'No active run is recorded.',
-      severity: status.activeRun.ok ? 'info' : 'warning'
+      kind: 'system',
+      title: 'Status snapshot read',
+      summary: `Operations status health is ${status.health}.`,
+      severity: status.health === 'error' ? 'error' : status.health === 'degraded' ? 'warning' : 'ok',
+      command: 'dashboard.timeline'
     });
-  }
 
-  if (status.tasks?.nextRecommended) {
-    push({
-      kind: 'task',
-      title: 'Next recommended work',
-      summary: status.tasks.nextRecommended,
-      severity: 'info'
-    });
-  }
+    if (status.activeRun) {
+      push({
+        kind: 'active-run',
+        title: 'Active run projection read',
+        summary: status.activeRun.activeRun ? 'An active run is recorded.' : 'No active run is recorded.',
+        severity: status.activeRun.ok ? 'info' : 'warning'
+      });
+    }
 
-  const handoffState = status.handoff?.currentState?.[0];
-  if (handoffState) {
-    push({
-      kind: 'handoff',
-      title: 'Handoff current state',
-      summary: handoffState,
-      severity: 'info'
-    });
-  }
+    if (status.tasks?.nextRecommended) {
+      push({
+        kind: 'task',
+        title: 'Next recommended work',
+        summary: status.tasks.nextRecommended,
+        severity: 'info'
+      });
+    }
 
-  if (status.validation?.latestFullCheck) {
-    push({
-      kind: 'harness',
-      title: 'Latest full validation',
-      summary: status.validation.latestFullCheck,
-      severity: 'ok'
-    });
-  }
+    const handoffState = status.handoff?.currentState?.[0];
+    if (handoffState) {
+      push({
+        kind: 'handoff',
+        title: 'Handoff current state',
+        summary: handoffState,
+        severity: 'info'
+      });
+    }
 
-  const tasks = deps.tasks ?? createTaskListReport(projectRoot);
-  if (!tasks.ok) {
-    issues.push({ severity: 'warning', code: 'TASK_LIST_UNAVAILABLE', message: 'Task list report was unavailable.' });
+    if (status.validation?.latestFullCheck) {
+      push({
+        kind: 'harness',
+        title: 'Latest full validation',
+        summary: status.validation.latestFullCheck,
+        severity: 'ok'
+      });
+    }
+
+    const tasks = deps.tasks ?? createTaskListReport(projectRoot);
+    if (!tasks.ok) {
+      issues.push({ severity: 'warning', code: 'TASK_LIST_UNAVAILABLE', message: 'Task list report was unavailable.' });
+    }
   }
 
   if (input.taskId) {

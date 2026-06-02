@@ -6,5 +6,5 @@
 | 2 | Add incremental task projection service. | Done | Added `src/services/dashboard-task-projection.ts` with task/evidence signals, changed/reused ids, and local projection index writes. |
 | 3 | Integrate refresh/core. | Done | Background refresh now refreshes task projection before core; core prefers task projection summaries when present. |
 | 4 | Add focused coverage. | Done | Added `tests/unit/dashboard-task-projection.test.ts` for unchanged reuse, changed-task reread, and redacted storage. |
-| 5 | Run validation and attach evidence. | Done | `git diff --check` passed; host Vitest unavailable; Docker validation still blocked by approval usage limit; evidence attached. |
+| 5 | Run validation and attach evidence. | Done | Follow-up Docker sync-build passed 90 files / 582 tests with built CLI smoke `ok:true`; `git diff --check` passed; evidence attached. |
 | 6 | Update handoff and close capsule. | Done | Task handoff updated; finish/close/audit commands pending after status updates. |

@@ -256,10 +256,32 @@ function warning(code: string, message: string): OpsStatusReport['issues'][numbe
 }
 
 function extractListSection(content: string, heading: string): string[] {
-  return extractSection(content, heading)
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => line.replace(/^[-*]\s+/, '').replace(/^\d+\.\s+/, '').trim())
-    .filter(Boolean);
+  let skippedTableHeader = false;
+  const values: string[] = [];
+  for (const line of extractSection(content, heading).split(/\r?\n/)) {
+    const value = normalizeSectionLine(line, skippedTableHeader);
+    if (value === '__TABLE_HEADER__') {
+      skippedTableHeader = true;
+      continue;
+    }
+    if (value) values.push(value);
+  }
+  return values;
+}
+
+function normalizeSectionLine(line: string, skippedTableHeader: boolean): string {
+  const trimmed = line.trim();
+  if (!trimmed) return '';
+  if (/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(trimmed)) return '';
+  if (trimmed.startsWith('|')) {
+    const cells = trimmed
+      .slice(1, trimmed.endsWith('|') ? -1 : undefined)
+      .split('|')
+      .map((cell) => cell.trim())
+      .filter(Boolean);
+    if (!cells.length) return '';
+    if (!skippedTableHeader) return '__TABLE_HEADER__';
+    return cells.join(' · ');
+  }
+  return trimmed.replace(/^[-*]\s+/, '').replace(/^\d+\.\s+/, '').trim();
 }

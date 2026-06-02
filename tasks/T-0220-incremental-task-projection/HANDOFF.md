@@ -28,4 +28,4 @@
 | Warning | Impact | Mitigation |
 |---|---|---|
 | Full Docker sync-build did not run for T-0220 because Docker escalation remains blocked by usage limit. | TypeScript/Vitest regressions may remain until Docker validation is available. | Run `npm run dev:docker-sync-build` before or during T-0221 and include projection/core/refresh/task-projection focused tests. |
-| Task projection still scans the task directory and stats task/evidence files. | Very slow mounts may still pay metadata cost during background refresh. | T-0221 should keep heavy timeline/debt work off the request path; future work can optimize discovery if needed. |
+| Task projection still scans the task directory and stats task/evidence files. | Very slow mounts may still pay metadata cost during the task-projection stage of explicit background refresh. | Serve-start warmup avoids this path and manual refresh yields between major stages; future work can optimize discovery or worker-offload task projection if needed. |

@@ -8,7 +8,7 @@
 | Current Phase | Phase 5.7 Dashboard read-model projection performance | Phase 5.7 projection contract/store/core/refresh/task/heavy/frontend/validation slices are complete through T-0223. |
 | Latest Completed Task | T-0223 Projection Validation and Visual/A11y States | Extended projection visual/a11y gate fixtures/states and static validation coverage. |
 | Active / Next Task | Next roadmap slice selection pending | Phase 5.7 is complete; select the next capsule deliberately from roadmap priorities. |
-| Validation Baseline | T-0216 Docker sync-build passed; T-0217/T-0223 Docker validation blocked | Last full Docker validation remains `npm run dev:docker-sync-build` with 85 files / 564 tests from T-0216. T-0217 through T-0223 added focused/static checks and passed `git diff --check`, but Docker sync-build/visual gate remain blocked by dependency/access limits. |
+| Validation Baseline | Phase 5.7 follow-up Docker validation passed | `npm run dev:docker-sync-build` passed with 90 files / 585 tests and built CLI smoke `ok:true`; Docker dashboard build rebuilt the served bundle; Docker visual/a11y gate passed all projection states; built `dist` selected-detail/table-parsing smoke passed. |
 
 ## Last 3 Completed Tasks
 
@@ -16,16 +16,15 @@
 |---|---|---|
 | T-0223 Projection Validation and Visual/A11y States | Added projection route fixtures and visual/a11y states for projection-ready/detail/stale/refreshing/missing/offline/degraded. | T-0223 evidence: `git diff --check`, visual-check syntax, and fixture parse/redaction checks passed; host/Docker blockers recorded. |
 | T-0222 Frontend Core + Heavy Merge | Updated authored frontend data flow to core-first and projection heavy backfills. | T-0222 evidence: public `evidence.add-command` attached; `git diff --check` passed; host build/test and Docker validation blocked. |
-| T-0221 Timeline / Debt Projection | Added projection-first heavy routes and background materialization. | T-0221 evidence: public `evidence.add-command` attached; `git diff --check` passed; focused heavy projection tests added; Docker validation gap recorded. |
+| T-0221 Timeline / Debt Projection | Added projection-first heavy routes and background materialization. | T-0221 evidence: public `evidence.add-command` attached; follow-up Docker sync-build passed 90 files / 582 tests and close audit passed. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| Host workspace has no `node_modules`. | Host `npm run build` and host `npx vitest` are unreliable; escalated `npx` found registry access but could not resolve local `vitest/config`. | Use the reusable Docker workflow for validation or install dependencies intentionally before host validation. |
-| T-0217 through T-0223 full Docker validation did not run. | New projection/backend/frontend/visual-gate TypeScript/tests have not yet been covered by a successful Docker sync-build in this session. | Run `npm run dev:docker-sync-build` as soon as approval/usage is available and include all Phase 5.7 projection/frontend tests. |
-| Static dashboard bundle was not rebuilt in T-0222/T-0223. | Served HTML may not reflect authored frontend source changes yet. | Run `npm run dashboard:build` or Docker visual build when deps/approval are available. |
-| T-0223 Playwright/axe visual gate was extended but not executed. | Screenshot/a11y baselines for projection states are defined but not freshly observed. | Run `npm run dashboard:visual:docker` after Docker access is restored. |
+| Host workspace has no `node_modules`. | Host `npm run build`, host `vitest`, and host dashboard build remain unreliable without installing dependencies. | Use the reusable Docker workflow for validation/build or install dependencies intentionally before host validation. |
+| Manual dashboard projection refresh has synchronous work inside yielded stages. | Explicit `/api/dashboard/refresh` now yields between task, heavy, and core stages, but an individual stage can still block on `/mnt/f` metadata scans. | Serve-start warmup avoids this heavy path by scheduling delayed core-only refresh; future core refactor should chunk task discovery/stat walks or offload projection rebuilds if this remains visible. |
+| Dashboard selected-detail fast path avoids global protocol doctors. | Capsule detail now stays responsive by using selected-task fast workbench data and task-scoped timeline events, so it does not prove all closure-grade protocol checks by itself. | Use `task ready`, `task close`, and `task audit-close` for closure-grade validation before closing capsules. |
 | HADARA-dev has multiple CLI execution paths. | `/tmp/hadara/dist` may be fresh while `/workspace/dist` or container-global `/usr/local/bin/hadara` is stale, causing agents to test old CLI behavior. | For CLI changes, build in Docker, refresh `/workspace/dist` from `/tmp/hadara/dist`, and run final smokes via `node /workspace/dist/cli/main.js ... --project /workspace` or explicitly via `/tmp/hadara/dist/cli/main.js`; do not assume global `hadara` is current. |
 | Existing historical capsules mostly use legacy frames. | This is expected and should not fail validation solely for not using v2 tables. | Future `task upgrade-scaffold` / remediation work must be non-destructive and dry-run-first. |
 | Protocol schemas are fixture-level, not release-gate strict schemas. | Additive report fields remain allowed; consumers should not treat these schemas as a blocking release gate yet. | Preserve additive compatibility or create a new schema id for breaking changes. |
@@ -49,10 +48,11 @@
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Full repository check | Docker `npm run dev:docker-sync-build` passed with 85 files and 564 tests during T-0216. | Host dependencies are unavailable; T-0217/T-0223 Docker validation was blocked by escalation/access limits, so Docker remains the next required validation path. |
+| Full repository check | Docker `npm run dev:docker-sync-build` passed with 90 files and 585 tests during the Phase 5.7 follow-up. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`. |
+| Dashboard selected-detail/table parsing smoke | Built `dist` smoke returned T-0223 detail `statusCode:200`, `ok:true`, `closeState:closed-valid` in 1852 ms, with no global `Status snapshot read` timeline event; core handoff summaries returned data rows instead of Markdown table headers. | Confirms the reported `Detail unavailable`/long skeleton path and `| Area | State | Notes |` summary leak were fixed. |
 | Dashboard performance measurement | Playwright Docker `/tmp` copy measurement recorded shell HTML fetch 4.4 ms, bootstrap bypass avg 174.7 ms, task-detail bypass avg 243.3 ms, timeline bypass avg 150.4 ms, with cache hit samples near 1-2 ms. | Direct bind-mounted workspace measurement was unsuitable because the dashboard server did not return promptly enough for stable timings. |
 | Focused dashboard/readiness check | Covered by full Docker after readiness review assertions were added. | Covers route/schema/boundary inventory doc, dashboard schema status, and final readiness conclusion. |
-| Dashboard visual/a11y gate | Playwright + axe-core gate passed for home/detail/empty/degraded during T-0214; T-0223 extends the gate for projection states but could not execute Docker. | Re-run `npm run dashboard:visual:docker` when Docker access returns. |
+| Dashboard visual/a11y gate | Docker Playwright + axe-core gate passed for projection-ready/detail/stale/refreshing/missing/offline/degraded states during the Phase 5.7 follow-up. | Screenshots were written to `.dashboard-visual`; host dependencies remain optional if Docker workflow is used. |
 | Phase 5.6 close audit | T-0207 through T-0214 were finished, readied, closed, and audit-close checked. | Re-run task-scoped status/audit only if those capsules change before commit. |
 | Dashboard core schema contract | Focused Docker test passed for schema index and `hadara.dashboard.core.v1` contract. | `npm run test:focused -- tests/unit/schema-fixtures.test.ts tests/unit/dashboard-core-contract.test.ts` passed with 2 files / 3 tests in `/tmp/hadara`. |
 

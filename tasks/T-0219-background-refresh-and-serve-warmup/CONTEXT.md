@@ -22,6 +22,7 @@
 |---|---|---|
 | T-0219 refresh warms core projection only; timeline/debt projection generation remains deferred. | T-0219 out-of-scope and T-0221 scope. | Refresh could be mistaken as complete heavy-section materialization. |
 | A process-memory refresh state map is sufficient before persistent source-signal work. | T-0219 scope excludes file watcher and incremental changed-task refresh. | Refresh state resets on server restart. |
+| Serve-start warmup must not start broad task/timeline/debt projection scans immediately. | Post-T-0223 performance review found the previous `setTimeout(0)` full refresh could block first dashboard requests on the same Node event loop. | If warmup reintroduces full refresh, `/api/dashboard/core` can still feel slow despite being projection-first. |
 
 ## Constraints
 
@@ -30,3 +31,4 @@
 | Do not mutate project docs, Task Capsules, evidence, handoff, MCP, provider, shell, release, or browser state. | Dashboard authority model. | Refresh writes only ignored local projection cache files. |
 | Do not expose cached projection bodies through projection status. | Phase 5.7 spec. | Status route returns metadata only. |
 | Do not implement file watchers. | T-0219 out of scope. | Trigger is serve-start or explicit refresh route. |
+| Keep serve-start warmup lightweight. | First paint must not wait behind heavy projection scans. | Warmup may refresh core only; task/timeline/debt refresh stays on explicit refresh or future cooperative refresh work. |

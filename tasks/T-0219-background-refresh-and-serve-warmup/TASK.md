@@ -41,4 +41,4 @@ Done
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-02 | Draft | Initial task scaffold for background refresh and serve warmup. | Task created by HADARA CLI. |
-| 2026-06-02 | Done | Added serve-start warmup, refresh/status routes, refresh coalescing, metadata-only projection status, and focused tests; Docker validation gap recorded. | `evidence.add-command` at 2026-06-02T03:14:16.983Z. |
+| 2026-06-02 | Done | Added serve-start warmup, refresh/status routes, refresh coalescing, metadata-only projection status, delayed core-only warmup, and yielded manual refresh stages; follow-up Docker sync-build and close audit passed. | `evidence.add-command` at 2026-06-02T07:35:28.156Z; audit-close at 2026-06-02T07:37:27.063Z. |

@@ -73,6 +73,38 @@ describe('dashboard core route from projection', () => {
     expect(bypass.projection.freshness).toBe('fresh');
   });
 
+  it('normalizes handoff table sections without exposing Markdown header rows', () => {
+    const root = tempProject();
+    writeProjectDocsWithHandoffTables(root);
+
+    const body = JSON.parse(createDashboardServerResponse(root, '/api/dashboard/core?cache=bypass').body);
+
+    expect(body.core.handoffSummary.currentState[0]).toBe('Branch · main · fixture branch');
+    expect(body.core.handoffSummary.nextRecommendedStep[0]).toBe('Run validation · prove parser behavior · done evidence');
+    expect(body.core.handoffSummary.currentState).not.toContain('Area · State · Notes');
+    expect(body.core.handoffSummary.nextRecommendedStep).not.toContain('Step · Reason · Done Evidence');
+  });
+
+  it('keeps task-detail available for a selected capsule without global timeline work', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+    writeTaskCapsuleNoise(root);
+
+    const body = JSON.parse(createDashboardServerResponse(root, '/api/dashboard/task-detail?taskId=T-0004').body);
+
+    expect(body).toMatchObject({
+      schemaVersion: 'hadara.dashboard.task_detail.v1',
+      command: 'dashboard.task-detail',
+      taskId: 'T-0004',
+      timeline: {
+        schemaVersion: 'hadara.dashboard.timeline.v1',
+        taskId: 'T-0004',
+        events: [expect.objectContaining({ title: 'Selected task T-0004', taskId: 'T-0004' })]
+      }
+    });
+    expect(body.timeline.events.some((event: { title: string }) => event.title === 'Status snapshot read')).toBe(false);
+  });
+
   it('keeps the core route read-only over HTTP methods', () => {
     const root = tempProject();
     writeProjectDocs(root);
@@ -154,6 +186,56 @@ function writeProjectDocs(root: string): void {
       '| T-0002 | Draft item | Draft | tasks/T-0002-draft-item | |',
       '| T-0003 | Active item | In Progress | tasks/T-0003-active-item | |',
       '| T-0004 | Second done | Done | tasks/T-0004-second-done | |'
+    ].join('\n'),
+    'utf8'
+  );
+  fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
+  fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n', 'utf8');
+}
+
+function writeProjectDocsWithHandoffTables(root: string): void {
+  fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Phase\n\nPhase 5.7 table fixture.\n', 'utf8');
+  fs.writeFileSync(
+    path.join(root, 'docs', 'AGENT_HANDOFF.md'),
+    [
+      '# AGENT_HANDOFF',
+      '',
+      '## Current State',
+      '',
+      '| Area | State | Notes |',
+      '|---|---|---|',
+      '| Branch | main | fixture branch |',
+      '',
+      '## Current Known Problems',
+      '',
+      '| Issue | Impact | Next Step |',
+      '|---|---|---|',
+      '| None | None | Continue |',
+      '',
+      '## Next Recommended Step',
+      '',
+      '| Step | Reason | Done Evidence |',
+      '|---|---|---|',
+      '| Run validation | prove parser behavior | done evidence |',
+      '',
+      '## Validation Baseline',
+      '',
+      '| Check | Latest Evidence | Notes |',
+      '|---|---|---|',
+      '| Latest full check | Docker sync-build passed | fixture |',
+      '| Latest done-level validation | harness validate passed | fixture |'
+    ].join('\n'),
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(root, 'docs', 'TASK_BOARD.md'),
+    [
+      '# TASK_BOARD',
+      '',
+      '| ID | Title | Status | Capsule | Notes |',
+      '|---|---|---|---|---|',
+      '| T-0001 | First done | Done | tasks/T-0001-first-done | |'
     ].join('\n'),
     'utf8'
   );

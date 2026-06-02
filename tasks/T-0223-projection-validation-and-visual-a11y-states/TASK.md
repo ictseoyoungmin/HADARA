@@ -41,4 +41,4 @@ Done
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-02 | Draft | Initial task scaffold for projection validation and visual/a11y states. | Task created by HADARA CLI. |
-| 2026-06-02 | Done | Projection validation/static visual gate coverage added; dependency/Docker validation gaps recorded. | T-0223 evidence records and tests matrix. |
+| 2026-06-02 | Done | Projection validation/static visual gate coverage added; follow-up Docker sync-build, dashboard build, visual/a11y gate, close execute, and audit-close passed. | T-0223 evidence records and tests matrix; audit-close at 2026-06-02T07:37:42.832Z. |

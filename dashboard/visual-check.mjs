@@ -109,7 +109,7 @@ try {
 
   check('one health verdict rendered', (await home.locator('.verdict').count()) >= 1);
   check('ambient provenance badge present', (await home.locator('.provenance').count()) === 1);
-  check('projection provenance is treated as live', (await home.locator('.provenance', { hasText: /live/i }).count()) === 1);
+  check('projection provenance is labeled explicitly', (await home.locator('.provenance', { hasText: /projection/i }).count()) === 1);
   check('metrics carry context', (await home.locator('.metric-context').count()) >= 1);
   check('activity feed renders events', (await home.locator('.feed-item').count()) >= 1);
   check('copy-only command affordance present', (await home.locator('.copy-btn').count()) >= 1);

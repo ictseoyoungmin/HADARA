@@ -12,8 +12,8 @@
 
 | Item | Evidence |
 |---|---|
-| Added dashboard refresh service. | `src/services/dashboard-refresh.ts` tracks refresh state, coalesces triggers, warms core projection, and reports metadata. |
-| Added refresh/status routes and serve warmup. | `src/cli/dashboard.ts` calls warmup on serve start and exposes `/api/dashboard/refresh` plus `/api/dashboard/projection/status`. |
+| Added dashboard refresh service. | `src/services/dashboard-refresh.ts` tracks refresh state, coalesces triggers, warms core projection, and reports metadata. Serve-start warmup now schedules delayed core-only refresh instead of immediate full task/timeline/debt refresh. |
+| Added refresh/status routes and serve warmup. | `src/cli/dashboard.ts` calls warmup on serve start and exposes `/api/dashboard/refresh` plus `/api/dashboard/projection/status`; manual refresh remains the full projection rebuild path but now yields between task, heavy, and core stages. |
 | Added focused refresh tests. | `tests/unit/dashboard-refresh.test.ts` covers warmup, coalescing, and metadata-only status. |
 | Updated dashboard contract/test strategy. | Docs describe T-0219 routes and boundaries. |
 
@@ -28,4 +28,4 @@
 | Warning | Impact | Mitigation |
 |---|---|---|
 | Full Docker sync-build did not run for T-0219 because Docker escalation remains blocked by usage limit. | TypeScript/Vitest regressions may remain until Docker validation is available. | Run `npm run dev:docker-sync-build` before or during T-0220 and include projection/core/refresh focused tests. |
-| Refresh state is process-memory only and warms core only. | Status resets on server restart and heavy sections remain pending. | T-0220/T-0221 should add source-signal task projection and timeline/debt projections. |
+| Refresh state is process-memory only and serve-start warms core only. | Status resets on server restart and heavy sections can remain pending until explicit refresh/cached projections. | This protects first paint from heavy scans; manual refresh yields between stages, and future core refactor can chunk/offload individual broad scan stages. |

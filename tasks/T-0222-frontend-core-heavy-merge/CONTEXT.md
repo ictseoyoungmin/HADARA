@@ -19,7 +19,7 @@
 
 | Assumption | Source | Risk If Wrong |
 |---|---|---|
-| Authored source can be updated even when the static bundle cannot be rebuilt in this sandbox. | Host lacks esbuild and Docker escalation is blocked. | Served HTML remains stale until a later successful dashboard build. |
+| Authored source and served bundle can diverge if the bundle is not rebuilt. | Host lacks dependencies by default, so Docker build is the reliable path. | Served HTML was rebuilt through Docker after the follow-up, closing the stale-bundle risk for this state. |
 | Projection source should be treated as live local read, not offline fallback. | T-0218/T-0221 route semantics. | UI could otherwise show misleading offline banners. |
 
 ## Constraints

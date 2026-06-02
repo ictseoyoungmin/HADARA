@@ -22,6 +22,7 @@
 |---|---|---|
 | Task Board rows are the bounded source for core task counts and recent summaries until incremental task projections exist. | T-0218 scope and Phase 5.7 redesign. | Counts may drift from individual `TASK.md` files until T-0220 adds incremental projections. |
 | Warm `/api/dashboard/core` reads may return local projection bodies without source-signal validation until T-0219/T-0220. | T-0218 out-of-scope excludes background refresh. | Freshness must be marked conservatively when served from projection. |
+| Request-path no-scan is narrower than event-loop non-blocking. | Post-T-0223 review found the later serve-start full refresh could block first requests despite T-0218 route-level no-scan behavior. | Keep core route bounded and prevent unrelated warmup work from monopolizing the server event loop. |
 
 ## Constraints
 
@@ -30,3 +31,4 @@
 | Do not scan every Task Capsule directory on the core route request path. | T-0218 scope. | Test spies on `tasks/` readdir/readFile calls. |
 | Do not implement background refresh. | T-0218 out of scope. | Deferred to T-0219. |
 | Do not migrate frontend. | T-0218 out of scope. | Deferred to T-0222. |
+| Do not treat background refresh behavior as T-0218 proof. | T-0218 validates route handler shape only. | Serve-start/manual refresh scheduling is owned by T-0219 and later projection slices. |

@@ -41,4 +41,4 @@ Done
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-02 | Draft | Initial task scaffold for incremental task projection. | Task created by HADARA CLI. |
-| 2026-06-02 | Done | Added incremental task projection source signals, changed/reused ids, refresh/core integration, and focused tests; Docker validation gap recorded. | `evidence.add-command` at 2026-06-02T03:23:27.341Z. |
+| 2026-06-02 | Done | Added incremental task projection source signals, changed/reused ids, refresh/core integration, and focused tests; follow-up Docker sync-build and close audit passed. | `evidence.add-command` at 2026-06-02T07:35:28.519Z; audit-close at 2026-06-02T07:37:27.869Z. |

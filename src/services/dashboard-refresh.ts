@@ -61,13 +61,24 @@ interface RefreshStateRecord {
   runs: number;
 }
 
+interface DashboardRefreshOptions {
+  includeHeavy?: boolean;
+  delayMs?: number;
+}
+
+type DashboardRefreshStep = () => void;
+
 const refreshStates = new Map<string, RefreshStateRecord>();
 
 export function warmDashboardProjections(projectRoot: string): DashboardRefreshTriggerReport {
-  return triggerDashboardProjectionRefresh(projectRoot, 'serve-start');
+  return triggerDashboardProjectionRefresh(projectRoot, 'serve-start', { includeHeavy: false, delayMs: 250 });
 }
 
-export function triggerDashboardProjectionRefresh(projectRoot: string, reason = 'manual'): DashboardRefreshTriggerReport {
+export function triggerDashboardProjectionRefresh(
+  projectRoot: string,
+  reason = 'manual',
+  options: DashboardRefreshOptions = {}
+): DashboardRefreshTriggerReport {
   const key = createDashboardProjectFingerprint(projectRoot);
   const current = getRefreshState(projectRoot);
   if (current.state === 'checking' || current.state === 'refreshing') {
@@ -89,11 +100,45 @@ export function triggerDashboardProjectionRefresh(projectRoot: string, reason = 
     runs: current.runs
   });
 
-  setTimeout(() => {
+  scheduleRefreshSteps(projectRoot, key, reason, startedAt, createRefreshSteps(projectRoot, options), options.delayMs ?? 0);
+
+  return {
+    ...createDashboardProjectionStatusReport(projectRoot),
+    schemaVersion: 'hadara.dashboard.projection_status.v1',
+    command: 'dashboard.refresh',
+    accepted: true
+  };
+}
+
+function createRefreshSteps(projectRoot: string, options: DashboardRefreshOptions): DashboardRefreshStep[] {
+  const steps: DashboardRefreshStep[] = [];
+  if (options.includeHeavy !== false) {
+    steps.push(() => refreshDashboardTaskProjectionIndex(projectRoot));
+    steps.push(() => refreshDashboardHeavyProjections(projectRoot));
+  }
+  steps.push(() => createDashboardCoreReport(projectRoot, { bypassProjection: true }));
+  return steps;
+}
+
+function scheduleRefreshSteps(
+  projectRoot: string,
+  key: string,
+  reason: string,
+  startedAt: string,
+  steps: DashboardRefreshStep[],
+  delayMs: number
+): void {
+  let index = 0;
+  const runNext = () => {
     try {
-      refreshDashboardTaskProjectionIndex(projectRoot);
-      refreshDashboardHeavyProjections(projectRoot);
-      createDashboardCoreReport(projectRoot, { bypassProjection: true });
+      const step = steps[index];
+      if (step) {
+        step();
+        index += 1;
+        setTimeout(runNext, 0);
+        return;
+      }
+
       const previous = getRefreshState(projectRoot);
       refreshStates.set(key, {
         state: 'idle',
@@ -114,14 +159,9 @@ export function triggerDashboardProjectionRefresh(projectRoot: string, reason = 
         runs: previous.runs
       });
     }
-  }, 0);
-
-  return {
-    ...createDashboardProjectionStatusReport(projectRoot),
-    schemaVersion: 'hadara.dashboard.projection_status.v1',
-    command: 'dashboard.refresh',
-    accepted: true
   };
+
+  setTimeout(runNext, delayMs);
 }
 
 export function createDashboardProjectionStatusReport(projectRoot: string, now = new Date()): DashboardProjectionStatusReport {

@@ -332,6 +332,7 @@ export function normalizeTaskDetail(report: AnyObj): TaskDetail {
 
 // --- read-only fetch with bootstrap-first fallback chain --------------------
 
+const coreUrl = '/api/dashboard/core';
 const liveBootstrapUrl = '/api/dashboard/bootstrap';
 const liveStatusUrl = '/api/status';
 const fixtureUrl = 'fixtures/hadara.ops.status.sample.json';
@@ -381,8 +382,8 @@ export function readInlineRuntime(): RuntimeState | null {
 // Live sources only: projection core, aggregate bootstrap, then plain status. Returns null if
 // neither live read succeeds so the caller can decide how to degrade.
 export async function loadLiveRuntime(options: { bypass?: boolean } = {}): Promise<RuntimeState | null> {
-  const coreUrl = options.bypass ? '/api/dashboard/core?cache=bypass' : '/api/dashboard/core';
-  const core = await tryFetchJson(coreUrl);
+  const coreRequestUrl = options.bypass ? `${coreUrl}?cache=bypass` : coreUrl;
+  const core = await tryFetchJson(coreRequestUrl);
   if (core && core.schemaVersion === 'hadara.dashboard.core.v1') {
     return normalizeCore(core);
   }

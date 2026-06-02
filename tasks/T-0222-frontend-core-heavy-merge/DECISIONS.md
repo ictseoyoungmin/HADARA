@@ -5,4 +5,5 @@
 | D-1 | Try `/api/dashboard/core` before bootstrap/status. | Accepted | Core route is the Phase 5.7 first-actionable read path. | `dashboard/src/model.ts`. |
 | D-2 | Treat projection source as live local read. | Accepted | Projection is not an offline fixture; provenance should not show stale sample labels. | `isLiveSource`. |
 | D-3 | Backfill timeline independently from `/api/dashboard/timeline`. | Accepted | Activity should merge after core rather than blocking first render. | `dashboard/src/app.tsx`. |
-| D-4 | Defer static bundle rebuild until dependencies/Docker are available. | Accepted | Host build lacks esbuild and Docker escalation is blocked by usage limit. | TESTS/RISKS. |
+| D-4 | Defer static bundle rebuild until dependencies/Docker are available. | Superseded | Follow-up Docker access returned and `npm run dashboard:build:docker` rebuilt the served bundle. | D-5; TESTS/RISKS. |
+| D-5 | Use Docker dashboard build as the authoritative bundle refresh path when host dependencies are absent. | Accepted | Follow-up validation access returned; Docker dashboard build rebuilt served HTML and visual/a11y gate passed. | TESTS/EVIDENCE. |
