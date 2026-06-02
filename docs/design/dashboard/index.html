@@ -1,902 +1,996 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HADARA Operations Dashboard</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #101a22;
-      --bg-2: #152126;
-      --panel: #19272d;
-      --panel-2: #203037;
-      --panel-3: #253840;
-      --border: rgba(206, 196, 164, 0.22);
-      --border-strong: rgba(166, 142, 91, 0.42);
-      --text: #ece8d5;
-      --muted: #adbaa9;
-      --soft: #77877d;
-      --teal: #77d2de;
-      --teal-2: #4da9b6;
-      --gold: #c9a66b;
-      --gold-2: #a68e5b;
-      --green: #7fd49b;
-      --amber: #f0c267;
-      --red: #f07f7c;
-      --navy: #0d1419;
-      --shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
-      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      min-width: 320px;
-      background:
-        radial-gradient(circle at 18% 0%, rgba(119, 210, 222, 0.10), transparent 30%),
-        linear-gradient(180deg, #0f171d 0%, var(--bg) 42%, #0d151b 100%);
-      color: var(--text);
-      font-family: var(--sans);
-      line-height: 1.45;
-    }
-
-    button { font: inherit; }
-
-    .root {
-      min-height: 100vh;
-      display: grid;
-      grid-template-rows: auto 1fr;
-    }
-
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 5;
-      min-height: 62px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 13px 18px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(21, 29, 34, 0.96);
-      backdrop-filter: blur(9px);
-      box-shadow: 0 1px 0 rgba(206, 196, 164, 0.10);
-    }
-
-    .logo {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
-    }
-
-    .logo-mark {
-      width: 28px;
-      height: 28px;
-      flex: 0 0 auto;
-    }
-
-    .logo-name {
-      font-weight: 700;
-      letter-spacing: 0.01em;
-      color: var(--text);
-    }
-
-    .logo-dia { color: var(--gold); font-size: 12px; }
-
-    .top-badges {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .badge,
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      min-height: 26px;
-      max-width: min(520px, 52vw);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 4px 8px;
-      color: var(--muted);
-      background: rgba(236, 232, 213, 0.035);
-      font-family: var(--mono);
-      font-size: 11px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .badge.active,
-    .pill.good {
-      color: var(--teal);
-      border-color: rgba(119, 210, 222, 0.36);
-      background: rgba(119, 210, 222, 0.08);
-    }
-
-    .pill.warn {
-      color: var(--amber);
-      border-color: rgba(240, 194, 103, 0.36);
-      background: rgba(240, 194, 103, 0.08);
-    }
-
-    .pill.danger {
-      color: var(--red);
-      border-color: rgba(240, 127, 124, 0.40);
-      background: rgba(240, 127, 124, 0.08);
-    }
-
-    .body {
-      min-width: 0;
-      display: grid;
-      grid-template-columns: 260px minmax(0, 1fr);
-    }
-
-    .sidebar {
-      min-width: 0;
-      border-right: 1px solid var(--border);
-      background: rgba(21, 29, 34, 0.96);
-      padding: 18px 14px;
-    }
-
-    .side-brand { display: grid; gap: 12px; margin-bottom: 20px; }
-
-    .brand-card {
-      position: relative;
-      min-height: 154px;
-      overflow: hidden;
-      border: 1px solid var(--border-strong);
-      border-radius: 4px;
-      background:
-        linear-gradient(145deg, rgba(119, 210, 222, 0.12), transparent 42%),
-        linear-gradient(0deg, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.06)),
-        var(--navy);
-      box-shadow: var(--shadow);
-    }
-
-    .brand-card svg {
-      position: absolute;
-      inset: 15px 18px auto auto;
-      width: 92px;
-      opacity: 0.86;
-    }
-
-    .brand-caption {
-      position: absolute;
-      left: 13px;
-      right: 13px;
-      bottom: 12px;
-      display: grid;
-      gap: 4px;
-    }
-
-    .brand-caption strong { font-size: 15px; }
-    .brand-caption span { color: var(--muted); font-size: 11px; }
-
-    .side-status {
-      display: grid;
-      gap: 7px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      background: rgba(236, 232, 213, 0.035);
-      padding: 10px;
-    }
-
-    .side-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      font-size: 11px;
-    }
-
-    .side-row span { color: var(--muted); font-family: var(--mono); }
-    .side-row strong { color: var(--text); font-size: 12px; overflow-wrap: anywhere; }
-
-    .nav-group {
-      display: grid;
-      gap: 5px;
-      margin-bottom: 18px;
-    }
-
-    .nav-label {
-      color: var(--soft);
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin: 0 3px 3px;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      min-height: 32px;
-      border: 1px solid transparent;
-      border-radius: 4px;
-      padding: 7px 9px;
-      color: var(--muted);
-      text-decoration: none;
-      font-size: 12px;
-    }
-
-    .nav-item[aria-current="page"] {
-      color: var(--text);
-      border-color: var(--border);
-      background: rgba(236, 232, 213, 0.045);
-    }
-
-    .nav-item:hover,
-    .nav-item:focus-visible {
-      color: var(--text);
-      border-color: rgba(119, 210, 222, 0.28);
-      outline: none;
-    }
-
-    .nav-count {
-      color: var(--teal);
-      font-family: var(--mono);
-      font-size: 10px;
-    }
-
-    .main {
-      min-width: 0;
-      padding: 18px;
-    }
-
-    .page-head {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 14px;
-    }
-
-    .page-title {
-      margin: 0;
-      font-size: 21px;
-      font-weight: 680;
-      letter-spacing: 0.01em;
-    }
-
-    .page-subtitle {
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 12px;
-      overflow-wrap: anywhere;
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .btn {
-      min-height: 30px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      color: var(--muted);
-      background: rgba(236, 232, 213, 0.035);
-      padding: 6px 10px;
-      font-family: var(--mono);
-      font-size: 11px;
-    }
-
-    .btn.teal {
-      color: var(--teal);
-      border-color: rgba(119, 210, 222, 0.32);
-      background: rgba(119, 210, 222, 0.08);
-    }
-
-    .btn.gold {
-      color: var(--gold);
-      border-color: rgba(201, 166, 107, 0.34);
-      background: rgba(201, 166, 107, 0.08);
-    }
-
-    .btn[disabled] {
-      cursor: default;
-      opacity: 0.78;
-    }
-
-    .metrics,
-    .gate-grid,
-    .command-grid,
-    .wide-grid {
-      display: grid;
-      gap: 10px;
-    }
-
-    .metrics {
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-      margin-bottom: 14px;
-    }
-
-    .operator-grid {
-      display: grid;
-      grid-template-columns: minmax(230px, 0.72fr) minmax(360px, 1.35fr) minmax(280px, 0.86fr);
-      gap: 10px;
-      align-items: start;
-    }
-
-    .agent-lane,
-    .workstream-panel,
-    .evidence-lens,
-    .bottom-inspector {
-      min-width: 0;
-    }
-
-    [data-view-section][hidden] {
-      display: none !important;
-    }
-
-    .console-section-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .section-title {
-      margin: 0;
-      color: var(--gold);
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .section-subtitle {
-      color: var(--muted);
-      font-size: 11px;
-      overflow-wrap: anywhere;
-    }
-
-    .lane-stack,
-    .lens-stack,
-    .inspector-grid {
-      display: grid;
-      gap: 10px;
-    }
-
-    .read-only-mark {
-      color: var(--teal);
-      border-color: rgba(119, 210, 222, 0.30);
-      background: rgba(119, 210, 222, 0.07);
-    }
-
-    .bottom-inspector {
-      margin-top: 10px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      background: rgba(0, 0, 0, 0.14);
-      padding: 12px;
-    }
-
-    .inspector-grid {
-      grid-template-columns: minmax(0, 1fr) minmax(260px, 0.78fr) minmax(260px, 0.78fr);
-    }
-
-    .metric,
-    .card,
-    .gate-card,
-    .signal-card {
-      min-width: 0;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      background: linear-gradient(180deg, rgba(236, 232, 213, 0.045), rgba(236, 232, 213, 0.022));
-      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
-    }
-
-    .metric {
-      min-height: 106px;
-      padding: 12px 14px;
-      display: grid;
-      align-content: space-between;
-      gap: 8px;
-    }
-
-    .m-label,
-    .ct,
-    .gate-head,
-    .signal-title,
-    .parser-key {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--soft);
-    }
-
-    .m-val {
-      font-size: 29px;
-      line-height: 1;
-      font-weight: 720;
-      color: var(--text);
-    }
-
-    .m-sub {
-      color: var(--muted);
-      font-size: 11px;
-      overflow-wrap: anywhere;
-    }
-
-    .m-sub.ok { color: var(--green); }
-    .m-sub.warn { color: var(--amber); }
-    .m-sub.fail { color: var(--red); }
-
-    .command-dock {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      border: 1px solid var(--border-strong);
-      border-radius: 4px;
-      background: rgba(119, 210, 222, 0.055);
-      padding: 12px;
-      margin-bottom: 14px;
-    }
-
-    .command-dock-title {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--soft);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 6px;
-    }
-
-    .source-strip,
-    .action-strip {
-      display: flex;
-      gap: 7px;
-      flex-wrap: wrap;
-      min-width: 0;
-    }
-
-    .source-chip {
-      display: inline-flex;
-      align-items: center;
-      min-height: 24px;
-      max-width: min(620px, 100%);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 4px 8px;
-      color: var(--muted);
-      background: rgba(0, 0, 0, 0.13);
-      font-family: var(--mono);
-      font-size: 10px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .source-chip.ok { color: var(--teal); }
-    .source-chip.warn { color: var(--amber); }
-    .source-chip.danger { color: var(--red); }
-
-    .command-grid { grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr) minmax(320px, 0.82fr); }
-    .wide-grid { grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr); margin-top: 10px; }
-
-    .card { padding: 14px; }
-
-    .ct {
-      margin-bottom: 12px;
-      color: var(--gold);
-    }
-
-    .gate-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      margin-bottom: 12px;
-    }
-
-    .gate-card {
-      padding: 12px;
-      display: grid;
-      gap: 6px;
-    }
-
-    .gate-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .gate-main {
-      font-size: 21px;
-      font-weight: 700;
-      color: var(--text);
-      overflow-wrap: anywhere;
-    }
-
-    .gate-sub,
-    .signal-note {
-      color: var(--muted);
-      font-size: 11px;
-      overflow-wrap: anywhere;
-    }
-
-    .task-list,
-    .timeline,
-    .handoff-list,
-    .kv-list {
-      display: grid;
-      gap: 8px;
-    }
-
-    .task-row,
-    .timeline-row,
-    .handoff-block,
-    .parser-row {
-      min-width: 0;
-      border: 1px solid rgba(206, 196, 164, 0.14);
-      border-radius: 4px;
-      background: rgba(0, 0, 0, 0.13);
-      padding: 9px 10px;
-    }
-
-    .task-row {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      gap: 9px;
-      align-items: center;
-    }
-
-    button.task-row {
-      width: 100%;
-      color: inherit;
-      cursor: pointer;
-      text-align: left;
-    }
-
-    button.task-row[aria-pressed="true"] {
-      border-color: rgba(119, 210, 222, 0.42);
-      background: rgba(119, 210, 222, 0.08);
-    }
-
-    .tid {
-      color: var(--teal);
-      font-family: var(--mono);
-      font-size: 11px;
-    }
-
-    .ttitle {
-      color: var(--text);
-      font-size: 12px;
-      overflow-wrap: anywhere;
-    }
-
-    .parser-row {
-      display: grid;
-      grid-template-columns: 118px minmax(0, 1fr);
-      gap: 12px;
-      margin-bottom: 8px;
-    }
-
-    .parser-val {
-      color: var(--text);
-      font-size: 12px;
-      overflow-wrap: anywhere;
-    }
-
-    .handoff-block {
-      border-left: 2px solid var(--gold-2);
-      background: rgba(201, 166, 107, 0.055);
-    }
-
-    .hl {
-      color: var(--gold);
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      margin-bottom: 5px;
-    }
-
-    .ht {
-      color: var(--text);
-      font-size: 12px;
-      overflow-wrap: anywhere;
-    }
-
-    .timeline-row {
-      display: grid;
-      gap: 4px;
-    }
-
-    .timeline-title {
-      color: var(--text);
-      font-size: 12px;
-      overflow-wrap: anywhere;
-    }
-
-    .timeline-meta {
-      color: var(--muted);
-      font-family: var(--mono);
-      font-size: 10px;
-      overflow-wrap: anywhere;
-    }
-
-    .signal-card {
-      padding: 10px;
-      display: grid;
-      gap: 6px;
-    }
-
-    .signal-value {
-      font-size: 18px;
-      color: var(--text);
-      overflow-wrap: anywhere;
-    }
-
-    .empty {
-      color: var(--muted);
-      border-style: dashed;
-    }
-
-    @media (max-width: 1180px) {
-      .body { grid-template-columns: 1fr; }
-      .sidebar { display: none; }
-      .metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .operator-grid,
-      .inspector-grid { grid-template-columns: 1fr; }
-      .command-grid,
-      .wide-grid { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 720px) {
-      .topbar,
-      .page-head,
-      .command-dock {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-
-      .top-badges,
-      .actions { justify-content: flex-start; }
-      .main { padding: 14px; }
-      .metrics,
-      .gate-grid { grid-template-columns: 1fr; }
-      .parser-row { grid-template-columns: 1fr; gap: 4px; }
-      .hide-sm { display: none; }
-    }
-  </style>
-</head>
-<body>
-  <div class="root">
-    <header class="topbar">
-      <div class="logo" aria-label="HADARA">
-        <svg class="logo-mark" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-          <path d="M11 2C8 2 5.5 4.5 5.5 7c0 1.8.9 3.2 2.2 4L6.5 18h9l-1.2-7c1.3-.8 2.2-2.2 2.2-4C16.5 4.5 14 2 11 2z" fill="#77d2de" opacity=".58"/>
-          <ellipse cx="11" cy="11" rx="2.5" ry="3.5" fill="#c9a66b" opacity=".82"/>
-          <path d="M9.4 6.6 11 3.2l1.6 3.4" fill="#ece8d5" opacity=".88"/>
-        </svg>
-        <span class="logo-name">HADARA</span>
-        <span class="logo-dia">◆</span>
-      </div>
-      <div class="top-badges">
-        <span class="badge active" data-field="health">loading</span>
-        <span class="badge" data-source-kind>source: loading</span>
-        <span class="badge" data-load-phase>phase: shell</span>
-        <span class="badge hide-sm" data-field="schemaVersion">hadara.ops.status.v1</span>
-        <span class="badge" data-field="project.phase">phase: unknown</span>
-        <span class="badge" data-field="project.branch">branch: unknown</span>
-      </div>
-    </header>
-
-    <div class="body">
-      <nav class="sidebar" aria-label="Dashboard navigation">
-        <div class="side-brand">
-          <div class="brand-card" aria-label="HADARA dashboard visual baseline">
-            <svg viewBox="0 0 120 120" fill="none" aria-hidden="true">
-              <path d="M58 18c-14 8-22 20-20 35 1 10 8 18 18 22l-5 23h33l-7-25c9-5 15-13 15-24 0-15-12-26-34-31z" fill="#77d2de" opacity=".23"/>
-              <path d="M60 31c-6 14-11 25-11 34 0 10 5 17 12 17s12-7 12-17c0-9-5-20-13-34z" fill="#c9a66b" opacity=".78"/>
-              <path d="M35 91h53" stroke="#ece8d5" stroke-width="2" opacity=".52"/>
-              <path d="M42 101h39" stroke="#77d2de" stroke-width="2" opacity=".46"/>
-            </svg>
-            <div class="brand-caption">
-              <strong>Operations shell</strong>
-              <span>handoff · evidence · gates</span>
-            </div>
-          </div>
-          <div class="side-status">
-            <div class="side-row"><span>workspace</span><strong>HADARA-dev</strong></div>
-            <div class="side-row"><span>source</span><strong data-field="fixtureMeta.kind">sample</strong></div>
-            <div class="side-row"><span>mode</span><strong data-field="mcp.defaultMode">read-only</strong></div>
-          </div>
-        </div>
-
-        <div class="nav-group">
-          <div class="nav-label">workspace</div>
-          <a class="nav-item" href="#home" data-view-target="home" aria-current="page"><span>Home</span><span class="nav-count" data-field="health">ok</span></a>
-          <a class="nav-item" href="#task-board" data-view-target="task-board"><span>Task Board</span><span class="nav-count" data-field="tasks.counts.done">0</span></a>
-        </div>
-        <div class="nav-group">
-          <div class="nav-label">capsule detail</div>
-          <a class="nav-item" href="#task-capsule" data-view-target="task-capsule"><span>Task Capsule</span><span class="nav-count" data-field="tasks.lastCompleted.length">0</span></a>
-          <a class="nav-item" href="#evidence" data-view-target="evidence"><span>Evidence</span><span class="nav-count">fixture</span></a>
-          <a class="nav-item" href="#handoff" data-view-target="handoff"><span>Handoff</span><span class="nav-count" data-field="handoff.nextRecommendedStep.length">0</span></a>
-        </div>
-        <div class="nav-group">
-          <div class="nav-label">operations</div>
-          <a class="nav-item" href="#harness" data-view-target="harness"><span>Harness Lab</span><span class="nav-count">read</span></a>
-          <a class="nav-item" href="#mcp" data-view-target="mcp"><span>MCP Guard</span><span class="nav-count" data-field="mcp.evidenceAttach.requiresApproval">guard</span></a>
-          <a class="nav-item" href="#release" data-view-target="release"><span>Release Gate</span><span class="nav-count">defer</span></a>
-        </div>
-      </nav>
-
-      <main class="main">
-        <section class="page" aria-live="polite">
-          <div class="page-head">
-            <div>
-              <h1 class="page-title">HADARA Operator Console</h1>
-              <div class="page-subtitle" data-field="fixtureMeta.note">Loading status snapshot...</div>
-            </div>
-            <div class="actions">
-              <button class="btn teal" type="button" data-action="status.refresh">Refresh Status</button>
-              <button class="btn" type="button" data-action="status.poll.toggle" aria-pressed="false">Auto Refresh Off</button>
-              <button class="btn gold" type="button" data-action="command.copy" disabled>Copy next command</button>
-              <button class="btn" type="button" data-action="status.inspect" disabled>Inspect JSON</button>
-            </div>
-          </div>
-
-          <div class="command-dock">
-            <div>
-              <div class="command-dock-title">Operations Status Source</div>
-              <div class="source-strip">
-                <span class="source-chip ok">hadara.ops.status.v1</span>
-                <span class="source-chip" data-source-kind>source: loading</span>
-                <span class="source-chip" data-source-loaded>loaded: pending</span>
-                <span class="source-chip" data-cache-status>cache: pending</span>
-                <span class="source-chip" data-load-phase>phase: shell</span>
-                <span class="source-chip" data-active-view-label>view: Home</span>
-                <span class="source-chip warn" data-source-warning>waiting for live status</span>
-              </div>
-            </div>
-            <div class="action-strip">
-              <span class="source-chip" data-field="project.phase">phase: unknown</span>
-              <span class="source-chip" data-field="project.branch">branch: unknown</span>
-              <span class="source-chip" data-field="command">ops.status</span>
-            </div>
-          </div>
-
-          <div class="operator-grid" data-layout="operator-console">
-            <aside class="card agent-lane" data-layout="agent-lane" data-view-section="home task-capsule handoff mcp release" aria-label="Agent lane">
-              <div class="console-section-head">
-                <h2 class="section-title">Agent Lane</h2>
-                <span class="source-chip read-only-mark">read-only</span>
-              </div>
-              <div class="lane-stack">
-                <div class="gate-card">
-                  <div class="gate-head"><span>health</span><span class="pill good" data-field="health">ok</span></div>
-                  <div class="gate-main" data-field="health">ok</div>
-                  <div class="gate-sub" data-field="issues.length">0 issues</div>
-                </div>
-                <div class="gate-card">
-                  <div class="gate-head"><span>next action</span><span class="pill warn">copy</span></div>
-                  <div class="gate-main">Command guidance</div>
-                  <div class="gate-sub" data-field="tasks.nextRecommended">No recommendation available</div>
-                </div>
-                <div>
-                  <div class="ct">Handoff Beacon</div>
-                  <div class="handoff-list" id="handoff-list"></div>
-                </div>
-                <div>
-                  <div class="ct">Capsule Index</div>
-                  <div class="task-list" id="last-completed-list"></div>
-                </div>
-              </div>
-            </aside>
-
-            <section class="card workstream-panel" data-layout="workstream-panel" data-view-section="home task-board harness release" aria-label="Workstream panel">
-              <div class="console-section-head">
-                <div>
-                  <h2 class="section-title">Workstream</h2>
-                  <div class="section-subtitle">Bootstrap timeline overview with selected-task detail loaded separately.</div>
-                </div>
-                <span class="source-chip" data-source-kind>source: loading</span>
-              </div>
-              <div class="metrics" id="task-metrics" aria-label="Task metrics"></div>
-              <div class="timeline" id="evidence-timeline"></div>
-            </section>
-
-            <aside class="card evidence-lens" data-layout="evidence-lens-placeholder" data-view-section="home task-capsule evidence mcp" aria-label="Evidence lens">
-              <div class="console-section-head">
-                <div>
-                  <h2 class="section-title">Evidence Lens</h2>
-                  <div class="section-subtitle">Selected-task proof from shared workbench and evidence semantic reports.</div>
-                </div>
-                <span class="source-chip ok">semantic read</span>
-              </div>
-              <div class="lens-stack">
-                <div class="signal-card">
-                  <div class="signal-title">proof status</div>
-                  <div class="signal-value" id="proof-status">No task selected</div>
-                  <div class="signal-note" id="proof-note">Select a task to read shared workbench and evidence semantic reports.</div>
-                </div>
-                <div class="parser-row">
-                  <div class="parser-key">selected task</div>
-                  <div class="parser-val" id="selected-task-id">none</div>
-                </div>
-                <div class="parser-row">
-                  <div class="parser-key">strength</div>
-                  <div class="parser-val" id="strength-counts">No semantic summary loaded</div>
-                </div>
-                <div class="parser-row">
-                  <div class="parser-key">visibility</div>
-                  <div class="parser-val" id="visibility-counts">No semantic summary loaded</div>
-                </div>
-                <div class="parser-row">
-                  <div class="parser-key">identity</div>
-                  <div class="parser-val" id="identity-stability">Generated legacy ids are compatibility read-model ids, not durable persisted identity.</div>
-                </div>
-                <div>
-                  <div class="ct">Semantic Issues</div>
-                  <div class="kv-list" id="semantic-issues"></div>
-                </div>
-                <div class="parser-row">
-                  <div class="parser-key">full check</div>
-                  <div class="parser-val" data-field="validation.latestFullCheck">No full check recorded</div>
-                </div>
-                <div class="parser-row">
-                  <div class="parser-key">done level</div>
-                  <div class="parser-val" data-field="validation.latestDoneLevelValidation">No done-level validation recorded</div>
-                </div>
-                <div>
-                  <div class="ct">MCP Guard</div>
-                  <div class="gate-grid" id="mcp-guard"></div>
-                </div>
-              </div>
-            </aside>
-          </div>
-
-          <section class="bottom-inspector" data-layout="bottom-inspector" data-view-section="home task-board task-capsule evidence handoff harness mcp release" aria-label="Bottom inspector">
-            <div class="console-section-head">
-              <h2 class="section-title">Bottom Inspector</h2>
-              <span class="source-chip read-only-mark">JSON · Commands · Sources</span>
-            </div>
-            <div class="inspector-grid">
-              <div>
-                <div class="ct">Sources</div>
-                <div class="kv-list" id="raw-counts"></div>
-              </div>
-              <div>
-                <div class="ct">Commands</div>
-                <div class="parser-row">
-                  <div class="parser-key">next</div>
-                  <div class="parser-val">Copy suggested HADARA command from task status surfaces; dashboard does not execute it.</div>
-                </div>
-              </div>
-              <div>
-                <div class="ct">Contract</div>
-                <div class="parser-row">
-                  <div class="parser-key">boundary</div>
-                  <div class="parser-val">visual shell follows the operator-console layout; data contract remains authoritative and read-only.</div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </section>
-      </main>
-    </div>
-  </div>
-
-  <script type="application/json" id="fallback-status-json">
-{
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>HADARA Operator Console</title>
+    <!-- Generated artifact. Source: dashboard/src/*, dashboard/app.css. Build: dashboard/build.mjs. -->
+    <!-- Read-only operator console. No browser-persisted project state. Single self-contained asset (CSP self-only). -->
+    <style>/* HADARA Operator Console — Phase 5.6 design system.
+   Tokens and components per docs/DASHBOARD_DESIGN_LANGUAGE.md. */
+
+:root {
+  --bg: #0c1418;
+  --surface: #121d22;
+  --surface-2: #18262c;
+  --surface-3: #20323a;
+  --border: rgba(120, 210, 222, 0.14);
+  --border-strong: rgba(201, 166, 107, 0.34);
+
+  --text: #eef1ea;
+  --muted: #aeb9b3;
+  --faint: #939d96;
+
+  --accent: #79d2de;
+  --accent-2: #c9a66b;
+
+  --ok: #6fd99a;
+  --warn: #efc169;
+  --danger: #f08a86;
+  --info: #8fb7e8;
+
+  --radius-ctl: 6px;
+  --radius-card: 10px;
+  --radius-region: 14px;
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 32px rgba(0, 0, 0, 0.3);
+
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono {
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+/* layout ------------------------------------------------------------------ */
+
+.root {
+  display: grid;
+  grid-template-columns: 248px 1fr;
+  min-height: 100vh;
+}
+
+.frame {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #0f181d, #0b1216);
+  border-right: 1px solid var(--border);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-mark {
+  color: var(--accent-2);
+  font-size: 18px;
+}
+.brand-name {
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  font-size: 15px;
+}
+.brand-sub {
+  color: var(--faint);
+  font-size: 12px;
+  margin-top: -14px;
+  padding-left: 28px;
+}
+
+.nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nav-label {
+  color: var(--faint);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+.nav-item {
+  appearance: none;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: var(--radius-ctl);
+  cursor: pointer;
+}
+.nav-item:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.nav-item.is-active {
+  background: var(--surface-3);
+  color: var(--text);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.nav-foot {
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.nav-foot-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--faint);
+}
+.nav-foot-row strong {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* topbar ------------------------------------------------------------------ */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(12, 20, 24, 0.7);
+  backdrop-filter: blur(6px);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.topbar-left,
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.workspace-name {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.verdict.muted {
+  color: var(--faint);
+}
+
+.provenance {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.provenance-ok {
+  color: var(--ok);
+  border-color: rgba(111, 217, 154, 0.32);
+}
+.provenance-warn {
+  color: var(--warn);
+  border-color: rgba(239, 193, 105, 0.32);
+}
+.provenance-info {
+  color: var(--info);
+}
+
+.primary-btn,
+.toggle {
+  appearance: none;
+  font: inherit;
+  font-size: 13px;
+  border-radius: var(--radius-ctl);
+  padding: 7px 14px;
+  cursor: pointer;
+}
+.primary-btn {
+  background: var(--accent);
+  color: #06222a;
+  border: 0;
+  font-weight: 600;
+}
+.primary-btn:hover {
+  filter: brightness(1.07);
+}
+.toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.toggle.is-on {
+  border-color: rgba(111, 217, 154, 0.4);
+  color: var(--ok);
+}
+
+/* main grid --------------------------------------------------------------- */
+
+.main {
+  padding: 24px 28px 48px;
+  overflow: auto;
+}
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(320px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.grid-main,
+.grid-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* cards ------------------------------------------------------------------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.card-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.card-body {
+  padding: 20px;
+}
+.sub-title {
+  margin: 18px 0 10px;
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* focal card -------------------------------------------------------------- */
+
+.focal-card {
+  border-color: var(--border-strong);
+  background: linear-gradient(180deg, #16252b, #121d22);
+}
+.focal-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+}
+.focal-id {
+  color: var(--accent);
+  font-size: 15px;
+}
+.focal-title {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.focal-next {
+  border-top: 1px dashed var(--border);
+  padding-top: 14px;
+}
+.focal-next-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--faint);
+  margin-bottom: 8px;
+}
+.focal-next-cmd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.focal-next-cmd code {
+  background: var(--surface-3);
+  padding: 6px 10px;
+  border-radius: var(--radius-ctl);
+  color: var(--text);
+}
+.focal-note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.copy-btn,
+.link-btn {
+  appearance: none;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: var(--radius-ctl);
+}
+.copy-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  padding: 5px 12px;
+}
+.copy-btn:hover {
+  background: var(--surface-3);
+}
+.link-btn {
+  background: transparent;
+  border: 0;
+  color: var(--accent);
+  padding: 4px 6px;
+}
+
+/* metrics ----------------------------------------------------------------- */
+
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.metric {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 16px;
+}
+.metric-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.metric-ok {
+  color: var(--ok);
+}
+.metric-warn {
+  color: var(--warn);
+}
+.metric-danger {
+  color: var(--danger);
+}
+.metric-info {
+  color: var(--info);
+}
+.metric-muted {
+  color: var(--text);
+}
+.metric-label {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.metric-context {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--faint);
+}
+
+/* activity feed ----------------------------------------------------------- */
+
+.feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.feed-item {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.feed-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.feed-glyph {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--surface-2);
+  font-size: 12px;
+}
+.feed-ok {
+  color: var(--ok);
+}
+.feed-warn {
+  color: var(--warn);
+}
+.feed-danger {
+  color: var(--danger);
+}
+.feed-info {
+  color: var(--info);
+}
+.feed-main {
+  min-width: 0;
+  flex: 1;
+}
+.feed-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.feed-title {
+  font-weight: 600;
+}
+.feed-time,
+.feed-kind {
+  color: var(--faint);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.feed-summary {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 2px;
+}
+.feed-meta {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+/* proof ------------------------------------------------------------------- */
+
+.proof-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+}
+.proof-ok {
+  color: var(--ok);
+}
+.proof-warn {
+  color: var(--warn);
+}
+.proof-danger {
+  color: var(--danger);
+}
+.proof-muted {
+  color: var(--muted);
+}
+.proof-note {
+  margin: 8px 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.proof-stats {
+  display: flex;
+  gap: 18px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.proof-stats strong {
+  color: var(--text);
+}
+.proof-audit {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius-ctl);
+  background: rgba(239, 193, 105, 0.1);
+  border: 1px solid rgba(239, 193, 105, 0.3);
+  color: var(--warn);
+  font-size: 12px;
+}
+.issue-codes {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.issue-codes li {
+  font-size: 11px;
+  color: var(--danger);
+  background: rgba(240, 138, 134, 0.1);
+  border: 1px solid rgba(240, 138, 134, 0.28);
+  padding: 3px 8px;
+  border-radius: var(--radius-ctl);
+}
+
+/* capsule + evidence + recent --------------------------------------------- */
+
+.capsule-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+.capsule-id {
+  color: var(--accent);
+}
+.capsule-title {
+  font-weight: 600;
+}
+.evidence-list,
+.recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.evidence-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-ctl);
+  padding: 10px 12px;
+}
+.evidence-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.evidence-id {
+  color: var(--muted);
+}
+.evidence-summary {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--faint);
+}
+.recent-item {
+  appearance: none;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-ctl);
+  padding: 9px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  font: inherit;
+}
+.recent-item:hover {
+  background: var(--surface-2);
+}
+.recent-item.is-active {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+.recent-id {
+  color: var(--accent);
+  flex: none;
+}
+.recent-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.tag-ok {
+  color: var(--ok);
+  border-color: rgba(111, 217, 154, 0.3);
+}
+.tag-muted {
+  color: var(--faint);
+}
+
+/* governance kv ----------------------------------------------------------- */
+
+.kv {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.kv > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.kv dt {
+  color: var(--faint);
+  font-size: 12px;
+}
+.kv dd {
+  margin: 0;
+  color: var(--text);
+  font-size: 13px;
+}
+.kv-wrap {
+  color: var(--muted) !important;
+  font-size: 12px !important;
+  line-height: 1.4;
+}
+
+/* dev json ---------------------------------------------------------------- */
+
+.dev-json .card-body {
+  padding-top: 12px;
+}
+.dev-note {
+  margin: 0 0 10px;
+  color: var(--faint);
+  font-size: 12px;
+}
+.json-view {
+  margin: 0;
+  max-height: 360px;
+  overflow: auto;
+  background: #0a1014;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-ctl);
+  padding: 14px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* dots / pills ------------------------------------------------------------ */
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dot-ok {
+  background: var(--ok);
+  box-shadow: 0 0 0 3px rgba(111, 217, 154, 0.18);
+}
+.dot-warn {
+  background: var(--warn);
+  box-shadow: 0 0 0 3px rgba(239, 193, 105, 0.18);
+}
+.dot-danger {
+  background: var(--danger);
+  box-shadow: 0 0 0 3px rgba(240, 138, 134, 0.18);
+}
+.dot-info {
+  background: var(--info);
+}
+.dot-muted {
+  background: var(--faint);
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+/* skeleton / states ------------------------------------------------------- */
+
+.skeleton {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sk-bar {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--surface-2), var(--surface-3), var(--surface-2));
+  background-size: 200% 100%;
+  animation: sk 1.4s ease-in-out infinite;
+}
+.sk-title {
+  height: 18px;
+  width: 40%;
+}
+@keyframes sk {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.degraded-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(239, 193, 105, 0.08);
+  border: 1px solid rgba(239, 193, 105, 0.3);
+  color: var(--warn);
+  border-radius: var(--radius-ctl);
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.degraded-banner .link-btn {
+  margin-left: auto;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  padding: 28px 16px;
+  color: var(--muted);
+}
+.empty-mark {
+  color: var(--accent-2);
+  font-size: 22px;
+  opacity: 0.7;
+}
+.empty-state strong {
+  color: var(--text);
+}
+.empty-state span {
+  font-size: 13px;
+  color: var(--faint);
+  max-width: 320px;
+}
+
+/* focus ------------------------------------------------------------------- */
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* responsive -------------------------------------------------------------- */
+
+@media (max-width: 1180px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .metrics-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .root {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+  .nav-foot {
+    display: none;
+  }
+  .brand-sub {
+    display: none;
+  }
+  .topbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+/* ───────────── Phase 5.6 fix pass: views, headers, mobile nav ───────────── */
+
+.page-head {
+  margin: 0 0 20px;
+}
+.page-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.page-subtitle {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.grid-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* syncing indicator (Refresh / first load feedback) */
+.syncing {
+  font-size: 12px;
+  color: var(--accent);
+  opacity: 0.85;
+}
+.primary-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* proof -> evidence drill link */
+.proof-drill {
+  margin-left: auto;
+  color: var(--accent);
+}
+
+/* row list (handoff, etc.) */
+.row-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.row-list li {
+  display: flex;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+}
+.row-list li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.row-key {
+  flex: none;
+  min-width: 132px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13px;
+}
+.row-val {
+  color: var(--muted);
+  font-size: 13px;
+  min-width: 0;
+}
+
+/* task counts grid */
+.counts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.count-cell {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-ctl);
+  padding: 14px;
+  text-align: center;
+}
+.count-value {
+  font-size: 24px;
+  font-weight: 700;
+}
+.count-key {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.view-note {
+  margin: 14px 0 0;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+/* mobile navigation: compact horizontal scroll strip instead of a wrapped block */
+@media (max-width: 768px) {
+  .root {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    background: #0b1216;
+  }
+  .brand {
+    flex: none;
+  }
+  .brand-sub,
+  .nav-foot,
+  .nav-label {
+    display: none;
+  }
+  .nav-group {
+    flex-direction: row;
+    gap: 6px;
+    flex: none;
+  }
+  .nav-item {
+    white-space: nowrap;
+    padding: 7px 12px;
+  }
+  .nav-item.is-active {
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+  .topbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .counts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+</style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <noscript>HADARA Operator Console requires JavaScript. All data is read-only.</noscript>
+    <script type="application/json" id="fallback-status-json">{
   "schemaVersion": "hadara.ops.status.v1",
   "command": "ops.status",
   "fixtureMeta": {
@@ -984,658 +1078,8 @@
     }
   },
   "issues": []
-}
-  </script>
-
-  <script>
-    const liveBootstrapUrl = '/api/dashboard/bootstrap';
-    const liveStatusUrl = '/api/status';
-    const fixtureUrl = '../fixtures/hadara.ops.status.sample.json';
-    let selectedTaskId = null;
-    let lastSuccessfulRuntimeState = null;
-    let currentLoadPhase = 'shell';
-    let activeView = 'home';
-    const pollingState = {
-      enabled: false,
-      timer: null,
-      intervalMs: 30000,
-      failures: 0,
-      paused: false
-    };
-    const viewLabels = {
-      home: 'Home',
-      'task-board': 'Task Board',
-      'task-capsule': 'Task Capsule',
-      evidence: 'Evidence',
-      handoff: 'Handoff',
-      harness: 'Harness Lab',
-      mcp: 'MCP Guard',
-      release: 'Release Gate'
-    };
-
-    function activateDashboardView(view) {
-      activeView = Object.prototype.hasOwnProperty.call(viewLabels, view) ? view : 'home';
-      document.body.dataset.activeView = activeView;
-      document.querySelectorAll('[data-view-target]').forEach((node) => {
-        const isCurrent = node.getAttribute('data-view-target') === activeView;
-        if (isCurrent) {
-          node.setAttribute('aria-current', 'page');
-        } else {
-          node.removeAttribute('aria-current');
-        }
-      });
-      document.querySelectorAll('[data-view-section]').forEach((node) => {
-        const views = (node.getAttribute('data-view-section') ?? '').split(/\s+/).filter(Boolean);
-        node.hidden = !views.includes(activeView);
-      });
-      document.querySelectorAll('[data-active-view-label]').forEach((node) => {
-        node.textContent = `view: ${viewLabels[activeView]}`;
-      });
-    }
-
-    function safeError(error) {
-      if (!error) return 'Unavailable';
-      const message = error instanceof Error ? error.message : String(error);
-      return message.replace(/\s+/g, ' ').slice(0, 180);
-    }
-
-    async function tryFetchJson(url) {
-      try {
-        const response = await fetch(url, { cache: 'no-store' });
-        if (!response.ok) throw new Error(`read failed: ${response.status}`);
-        return { ok: true, data: await response.json() };
-      } catch (error) {
-        return { ok: false, error };
-      }
-    }
-
-    function runtimeState(data, source) {
-      return {
-        data,
-        source: {
-          loadedAt: new Date().toISOString(),
-          loadPhase: source.loadPhase ?? 'bootstrap-ready',
-          ...source
-        }
-      };
-    }
-
-    function parseInlineFallback() {
-      return JSON.parse(document.getElementById('fallback-status-json').textContent);
-    }
-
-    async function loadStatusWithFallback() {
-      const live = await tryFetchJson(liveStatusUrl);
-      if (live.ok) {
-        return runtimeState(live.data, {
-          kind: 'live-api',
-          label: 'LIVE API',
-          url: liveStatusUrl
-        });
-      }
-
-      const fixture = await tryFetchJson(fixtureUrl);
-      if (fixture.ok) {
-        return runtimeState(fixture.data, {
-          kind: 'fixture-fallback',
-          label: 'FIXTURE FALLBACK',
-          url: fixtureUrl,
-          warning: 'Sample data may not match the current repository state.',
-          error: safeError(live.error)
-        });
-      }
-
-      try {
-        return runtimeState(parseInlineFallback(), {
-          kind: 'inline-fallback',
-          label: 'OFFLINE FALLBACK',
-          url: null,
-          warning: 'Inline fallback data may not match the current repository state.',
-          error: safeError(fixture.error ?? live.error)
-        });
-      } catch (error) {
-        return runtimeState(
-          {
-            schemaVersion: 'hadara.ops.status.v1',
-            command: 'ops.status',
-            ok: false,
-            health: 'error',
-            project: {},
-            tasks: { counts: {}, lastCompleted: [] },
-            handoff: {},
-            validation: {},
-            mcp: {},
-            issues: [{ severity: 'error', code: 'DASHBOARD_STATUS_UNAVAILABLE', message: 'Status data is unavailable.' }]
-          },
-          {
-            kind: 'degraded',
-            label: 'DEGRADED',
-            url: null,
-            warning: 'Status data is unavailable.',
-            error: safeError(error)
-          }
-        );
-      }
-    }
-
-    function selectedBootstrapUrl() {
-      return selectedTaskId
-        ? `${liveBootstrapUrl}?selectedTaskId=${encodeURIComponent(selectedTaskId)}`
-        : liveBootstrapUrl;
-    }
-
-    async function loadDashboardWithFallback() {
-      const url = selectedBootstrapUrl();
-      const live = await tryFetchJson(url);
-      if (live.ok && live.data?.schemaVersion === 'hadara.dashboard.bootstrap.v1') {
-        return runtimeState(live.data, {
-          kind: 'live-api',
-          label: 'LIVE BOOTSTRAP',
-          url,
-          cache: live.data.cache,
-          loadPhase: 'bootstrap-ready'
-        });
-      }
-
-      const statusState = await loadStatusWithFallback();
-      return {
-        ...statusState,
-        source: {
-          ...statusState.source,
-          loadPhase: statusState.source.kind === 'degraded' ? 'degraded' : 'status-fallback-ready',
-          warning: statusState.source.warning ?? 'Bootstrap unavailable; using status fallback.',
-          error: safeError(live.error)
-        }
-      };
-    }
-
-    function text(value, fallback = '') {
-      if (value === undefined || value === null || value === '') return fallback;
-      return String(value);
-    }
-
-    function setField(field, value) {
-      document.querySelectorAll(`[data-field="${field}"]`).forEach((node) => {
-        node.textContent = value;
-      });
-    }
-
-    function clear(node) {
-      while (node.firstChild) node.removeChild(node.firstChild);
-    }
-
-    function el(tag, className, value) {
-      const node = document.createElement(tag);
-      if (className) node.className = className;
-      if (value !== undefined) node.textContent = value;
-      return node;
-    }
-
-    function appendEmpty(root, message) {
-      const row = el('div', 'task-row empty');
-      row.append(el('span', 'tid', '-'));
-      row.append(el('span', 'ttitle', message));
-      root.append(row);
-    }
-
-    async function readJson(url) {
-      const response = await fetch(url, { cache: 'no-store' });
-      if (!response.ok) throw new Error(`read failed: ${response.status}`);
-      return response.json();
-    }
-
-    function renderMetrics(counts) {
-      const labels = [
-        ['done', 'Done', 'ok'],
-        ['draft', 'Draft', ''],
-        ['partial', 'Partial', 'warn'],
-        ['superseded', 'Superseded', ''],
-        ['inProgress', 'In progress', 'warn'],
-        ['unknown', 'Unknown', 'fail']
-      ];
-      const root = document.getElementById('task-metrics');
-      clear(root);
-      labels.forEach(([key, label, tone]) => {
-        const card = el('article', 'metric');
-        card.dataset.field = `tasks.counts.${key}`;
-        card.append(el('div', 'm-label', label));
-        card.append(el('div', 'm-val', String(Number(counts?.[key] ?? 0))));
-        card.append(el('div', `m-sub ${tone}`, `tasks.counts.${key}`));
-        root.append(card);
-      });
-    }
-
-    function renderLastCompleted(items, recentTasks) {
-      const root = document.getElementById('last-completed-list');
-      clear(root);
-      const values = Array.isArray(items) ? items : [];
-      const recentById = new Map((Array.isArray(recentTasks) ? recentTasks : []).map((task) => [task.id, task]));
-      if (values.length === 0) {
-        appendEmpty(root, 'No completed tasks in status source');
-        return;
-      }
-      values.forEach((taskId) => {
-        const row = el('button', 'task-row');
-        row.type = 'button';
-        row.dataset.taskId = text(taskId, '');
-        row.setAttribute('aria-pressed', selectedTaskId === taskId ? 'true' : 'false');
-        row.append(el('span', 'tid', text(taskId, 'T-????')));
-        row.append(el('span', 'ttitle', text(recentById.get(taskId)?.title, 'select for evidence lens')));
-        row.addEventListener('click', () => selectTask(text(taskId, '')));
-        root.append(row);
-      });
-    }
-
-    function renderHandoff(status) {
-      const root = document.getElementById('handoff-list');
-      clear(root);
-      const blocks = [
-        ['current state', status.handoff?.currentState?.[0] ?? 'No current state found'],
-        ['known problem', status.handoff?.knownProblems?.[0] ?? 'No known problems listed'],
-        ['next recommended step', status.handoff?.nextRecommendedStep?.[0] ?? status.tasks?.nextRecommended ?? 'No recommendation available']
-      ];
-      blocks.forEach(([label, value]) => {
-        const block = el('div', 'handoff-block');
-        block.append(el('div', 'hl', label));
-        block.append(el('div', 'ht', text(value, 'Unavailable')));
-        root.append(block);
-      });
-    }
-
-    function renderTimeline(status) {
-      const root = document.getElementById('evidence-timeline');
-      clear(root);
-      const rows = [
-        ['full-check', status.validation?.latestFullCheck ?? 'No full check recorded'],
-        ['done-level', status.validation?.latestDoneLevelValidation ?? 'No done-level validation recorded'],
-        ['issues', `${Array.isArray(status.issues) ? status.issues.length : 0} status issues`]
-      ];
-      rows.forEach(([kind, summary]) => {
-        const row = el('div', 'timeline-row');
-        row.append(el('div', 'timeline-title', text(summary, 'Unavailable')));
-        row.append(el('div', 'timeline-meta', kind));
-        root.append(row);
-      });
-    }
-
-    function renderTimelineReport(report) {
-      const root = document.getElementById('evidence-timeline');
-      clear(root);
-      const events = Array.isArray(report?.events) ? report.events : [];
-      if (events.length === 0) {
-        appendEmpty(root, 'No timeline events available');
-        return;
-      }
-      events.slice(0, 12).forEach((event) => {
-        const row = el('div', 'timeline-row');
-        row.append(el('div', 'timeline-title', text(event.title, 'Timeline event')));
-        row.append(el('div', 'timeline-meta', `${text(event.kind, 'system')} · ${text(event.severity, 'info')} · ${text(event.summary, '')}`));
-        root.append(row);
-      });
-    }
-
-    async function loadTimeline(taskId) {
-      const suffix = taskId ? `?taskId=${encodeURIComponent(taskId)}` : '';
-      const report = await readJson(`/api/timeline${suffix}`);
-      renderTimelineReport(report);
-    }
-
-    function renderMcpGuard(status) {
-      const attach = status.mcp?.evidenceAttach ?? {};
-      const values = [
-        ['default', status.mcp?.defaultMode ?? 'unknown', 'configured capability'],
-        ['attach', attach.enabledByDefault === false ? 'disabled' : 'unknown', 'disabled by default'],
-        ['approval', attach.requiresApproval ? 'required' : 'unavailable', 'per-call approval'],
-        ['audit', attach.audited ? 'enabled' : 'unavailable', 'private audit trail']
-      ];
-      const root = document.getElementById('mcp-guard');
-      clear(root);
-      values.forEach(([label, value, note]) => {
-        const card = el('div', 'gate-card');
-        const head = el('div', 'gate-head');
-        head.append(el('span', '', label));
-        head.append(el('span', 'pill good', value));
-        card.append(head);
-        card.append(el('div', 'gate-main', value));
-        card.append(el('div', 'gate-sub', note));
-        root.append(card);
-      });
-    }
-
-    function renderRawCounts(counts) {
-      const root = document.getElementById('raw-counts');
-      clear(root);
-      const entries = Object.entries(counts ?? {});
-      if (entries.length === 0) {
-        const row = el('div', 'parser-row');
-        row.append(el('div', 'parser-key', 'status'));
-        row.append(el('div', 'parser-val', 'No source status labels'));
-        root.append(row);
-        return;
-      }
-      entries.forEach(([label, count]) => {
-        const row = el('div', 'parser-row');
-        row.append(el('div', 'parser-key', label));
-        row.append(el('div', 'parser-val', String(count)));
-        root.append(row);
-      });
-    }
-
-    function healthPillClass(health) {
-      if (health === 'error') return 'pill danger';
-      if (health === 'degraded') return 'pill warn';
-      return 'pill good';
-    }
-
-    function proofStatusFrom(lintReport) {
-      const codes = new Set((Array.isArray(lintReport?.issues) ? lintReport.issues : []).map((issue) => issue.code));
-      if (codes.has('TASK_DONE_WITH_FAILED_EVIDENCE')) return ['failed', 'Blocking unresolved failed evidence.'];
-      if (codes.has('TASK_DONE_WITH_UNEXPLAINED_BLOCKED_EVIDENCE')) return ['blocked', 'Blocking blocked evidence needs explanation.'];
-      if (codes.has('TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE') || codes.has('TASK_DONE_WITH_ONLY_WEAK_EVIDENCE')) return ['weak', 'Blocking proof insufficiency.'];
-      if (codes.has('TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE')) return ['private-only', 'Auditability warning, not a Done blocker.'];
-      const substantive = Number(lintReport?.summary?.semantics?.byStrength?.['substantive-positive'] ?? 0);
-      const semanticErrors = (Array.isArray(lintReport?.issues) ? lintReport.issues : []).some((issue) => issue.severity === 'error' && String(issue.code).startsWith('TASK_DONE_'));
-      if (substantive > 0 && !semanticErrors) return ['sufficient', 'Evidence is sufficient for selected-task proof display.'];
-      return ['unknown', 'No semantic proof summary is available.'];
-    }
-
-    function renderSemanticIssues(issues) {
-      const root = document.getElementById('semantic-issues');
-      clear(root);
-      const semanticIssues = (Array.isArray(issues) ? issues : []).filter((issue) => String(issue.code ?? '').startsWith('TASK_DONE_'));
-      if (semanticIssues.length === 0) {
-        const row = el('div', 'parser-row');
-        row.append(el('div', 'parser-key', 'status'));
-        row.append(el('div', 'parser-val', 'No semantic task proof issues'));
-        root.append(row);
-        return;
-      }
-      semanticIssues.slice(0, 4).forEach((issue) => {
-        const row = el('div', 'parser-row');
-        row.append(el('div', 'parser-key', issue.severity ?? 'issue'));
-        row.append(el('div', 'parser-val', `${issue.code}: ${issue.message}`));
-        root.append(row);
-      });
-    }
-
-    function renderEvidenceLens(taskId, workbench, lintReport, evidenceReport, proof) {
-      const semantics = lintReport?.summary?.semantics;
-      const [fallbackStatus, fallbackNote] = proofStatusFrom(lintReport);
-      const status = proof?.status ?? fallbackStatus;
-      const note = proof?.note ?? fallbackNote;
-      document.getElementById('selected-task-id').textContent = taskId;
-      document.getElementById('proof-status').textContent = status;
-      document.getElementById('proof-note').textContent = note;
-      document.getElementById('strength-counts').textContent = semantics
-        ? `substantive-positive ${Number(semantics.byStrength?.['substantive-positive'] ?? 0)} · weak ${Number(semantics.byStrength?.weak ?? 0)} · failed ${Number(semantics.byStrength?.['substantive-negative'] ?? 0)}`
-        : 'No semantic summary loaded';
-      document.getElementById('visibility-counts').textContent = semantics
-        ? `public ${Number(semantics.publicRecords ?? 0)} · private ${Number(semantics.privateRecords ?? 0)} · legacy ${Number(semantics.legacyRecords ?? 0)}`
-        : 'No semantic summary loaded';
-      document.getElementById('identity-stability').textContent = semantics?.latestSubstantiveEvidenceId
-        ? `Latest substantive evidence: ${semantics.latestSubstantiveEvidenceId}; generated legacy ids remain compatibility read-model ids.`
-        : 'Generated legacy ids are compatibility read-model ids, not durable persisted identity.';
-      renderSemanticIssues(lintReport?.issues);
-      if (workbench?.nextActions?.[0]?.command) {
-        document.querySelector('[data-action="command.copy"]').textContent = 'Copy suggested command';
-      }
-      if (Array.isArray(evidenceReport?.issues) && evidenceReport.issues.length > 0) {
-        document.getElementById('proof-note').textContent = `${note} Evidence source warnings: ${evidenceReport.issues.length}.`;
-      }
-    }
-
-    function renderTaskDetail(detail) {
-      renderEvidenceLens(detail.taskId, detail.workbench, detail.evidenceLint, detail.evidenceList, detail.proof);
-      renderTimelineReport(detail.timeline);
-      if (Array.isArray(detail.commandGuidance) && detail.commandGuidance.some((action) => action.command)) {
-        document.querySelector('[data-action="command.copy"]').textContent = 'Copy suggested command';
-      }
-    }
-
-    async function selectTask(taskId) {
-      if (!taskId) return;
-      selectedTaskId = taskId;
-      document.querySelectorAll('[data-task-id]').forEach((node) => {
-        node.setAttribute('aria-pressed', node.dataset.taskId === taskId ? 'true' : 'false');
-      });
-      document.getElementById('selected-task-id').textContent = taskId;
-      document.getElementById('proof-status').textContent = 'Reading reports';
-      document.getElementById('proof-note').textContent = 'Reading shared dashboard task detail report.';
-      try {
-        const detail = await readJson(`/api/dashboard/task-detail?taskId=${encodeURIComponent(taskId)}`);
-        renderTaskDetail(detail);
-      } catch (error) {
-        document.getElementById('proof-status').textContent = 'unknown';
-        document.getElementById('proof-note').textContent = safeError(error);
-      }
-    }
-
-    function sourceClass(kind) {
-      if (kind === 'live-api') return 'source-chip ok';
-      if (kind === 'degraded') return 'source-chip danger';
-      return 'source-chip warn';
-    }
-
-    function sourceBadgeClass(kind) {
-      if (kind === 'live-api') return 'badge active';
-      if (kind === 'degraded') return 'badge pill danger';
-      return 'badge pill warn';
-    }
-
-    function renderSource(source, cache) {
-      const loaded = source?.loadedAt ? new Date(source.loadedAt).toLocaleString() : 'pending';
-      const phase = source?.loadPhase ?? currentLoadPhase;
-      document.querySelectorAll('[data-source-kind]').forEach((node) => {
-        node.textContent = source?.label ?? 'SOURCE UNKNOWN';
-        node.className = node.classList.contains('badge') ? sourceBadgeClass(source?.kind) : sourceClass(source?.kind);
-      });
-      document.querySelectorAll('[data-source-loaded]').forEach((node) => {
-        node.textContent = `loaded: ${loaded}`;
-      });
-      document.querySelectorAll('[data-source-warning]').forEach((node) => {
-        const warning = source?.warning ?? (source?.kind === 'live-api' ? 'live project status' : 'source fallback active');
-        node.textContent = source?.error ? `${warning}; previous read: ${source.error}` : warning;
-        node.className = source?.kind === 'live-api' ? 'source-chip ok' : sourceClass(source?.kind);
-      });
-      document.querySelectorAll('[data-cache-status]').forEach((node) => {
-        const status = cache?.status ?? source?.cache?.status ?? 'disabled';
-        const key = cache?.key ?? source?.cache?.key ?? 'none';
-        node.textContent = `cache: ${status} · ${key}`;
-        node.className = status === 'hit' ? 'source-chip ok' : 'source-chip';
-      });
-      setLoadPhase(phase, source?.kind === 'degraded' ? 'Refresh degraded; previous in-memory view is retained when available.' : undefined);
-    }
-
-    function setLoadPhase(phase, detail) {
-      currentLoadPhase = phase;
-      document.querySelectorAll('[data-load-phase]').forEach((node) => {
-        node.textContent = detail ? `phase: ${phase} · ${detail}` : `phase: ${phase}`;
-        node.className = node.classList.contains('badge')
-          ? phase === 'degraded'
-            ? 'badge pill danger'
-            : 'badge active'
-          : phase === 'degraded'
-            ? 'source-chip danger'
-            : 'source-chip ok';
-      });
-    }
-
-    function render(data, source) {
-      const bootstrap = data?.schemaVersion === 'hadara.dashboard.bootstrap.v1' ? data : null;
-      const status = bootstrap?.status ?? data;
-      const health = text(status.health, 'degraded');
-      const issues = Array.isArray(status.issues) ? status.issues : [];
-      const taskSummary = bootstrap?.taskSummary;
-      const lastCompleted = Array.isArray(taskSummary?.lastCompleted)
-        ? taskSummary.lastCompleted
-        : Array.isArray(status.tasks?.lastCompleted)
-          ? status.tasks.lastCompleted
-          : [];
-      const nextSteps = Array.isArray(status.handoff?.nextRecommendedStep) ? status.handoff.nextRecommendedStep : [];
-
-      renderSource(source, bootstrap?.cache);
-      setField('health', health);
-      document.querySelectorAll('[data-field="health"]').forEach((node) => {
-        if (node.classList.contains('pill') || node.classList.contains('badge')) {
-          node.className = node.className.includes('badge') ? `badge active` : healthPillClass(health);
-        }
-      });
-      setField('schemaVersion', text(bootstrap?.schemaVersion ?? status.schemaVersion, 'unknown schema'));
-      setField('command', text(bootstrap?.command ?? status.command, 'unknown command'));
-      setField('project.phase', `phase: ${text(status.project?.phase, 'unknown')}`);
-      setField('project.branch', `branch: ${text(status.project?.branch, 'unknown')}`);
-      setField('fixtureMeta.kind', text(source?.kind, status.fixtureMeta?.kind ?? 'unknown'));
-      setField(
-        'fixtureMeta.note',
-        `${text(source?.label, 'SOURCE UNKNOWN')} loaded ${source?.loadedAt ? new Date(source.loadedAt).toLocaleString() : 'recently'}. ${text(source?.warning, status.fixtureMeta?.note ?? 'Status snapshot loaded.')}`
-      );
-      setField('mcp.defaultMode', text(status.mcp?.defaultMode, 'unknown'));
-      setField('tasks.counts.done', String(Number(status.tasks?.counts?.done ?? 0)));
-      setField('tasks.lastCompleted.length', String(lastCompleted.length));
-      setField('handoff.nextRecommendedStep.length', String(nextSteps.length));
-      setField('mcp.evidenceAttach.requiresApproval', status.mcp?.evidenceAttach?.requiresApproval ? 'approval' : 'guard');
-      setField('issues.length', `${issues.length} issues`);
-      setField('tasks.nextRecommended', text(taskSummary?.nextRecommended ?? status.tasks?.nextRecommended, 'No recommendation available'));
-      setField('validation.latestFullCheck', text(status.validation?.latestFullCheck, 'No full check recorded'));
-      setField('validation.latestDoneLevelValidation', text(status.validation?.latestDoneLevelValidation, 'No done-level validation recorded'));
-
-      renderMetrics(taskSummary?.counts ?? status.tasks?.counts);
-      renderLastCompleted(lastCompleted, taskSummary?.recent);
-      if (!selectedTaskId && lastCompleted[0]) {
-        selectTask(text(lastCompleted[0], ''));
-      }
-      renderHandoff(status);
-      if (bootstrap?.timelineOverview) {
-        renderTimelineReport(bootstrap.timelineOverview);
-      } else {
-        renderTimeline(status);
-        loadTimeline(selectedTaskId).catch(() => renderTimeline(status));
-      }
-      renderMcpGuard(status);
-      renderRawCounts(taskSummary?.rawStatusCounts ?? status.tasks?.rawStatusCounts);
-    }
-
-    function renderRuntime(state) {
-      render(state.data, state.source);
-    }
-
-    async function refreshStatus() {
-      const button = document.querySelector('[data-action="status.refresh"]');
-      if (button) {
-        button.disabled = true;
-        button.textContent = 'Reading status...';
-      }
-      setLoadPhase('bootstrap-loading');
-      try {
-        const state = await loadDashboardWithFallback();
-        renderRuntime(state);
-        if (state.source?.kind !== 'degraded') {
-          lastSuccessfulRuntimeState = state;
-        }
-        return state;
-      } catch (error) {
-        if (lastSuccessfulRuntimeState) {
-          lastSuccessfulRuntimeState.source = {
-            ...lastSuccessfulRuntimeState.source,
-            loadPhase: 'degraded',
-            warning: 'Refresh failed; keeping previous in-memory view.',
-            error: safeError(error)
-          };
-          renderRuntime(lastSuccessfulRuntimeState);
-          return lastSuccessfulRuntimeState;
-        } else {
-          setLoadPhase('degraded', 'Refresh failed and no previous in-memory view is available.');
-          return null;
-        }
-      } finally {
-        if (button) {
-          button.disabled = false;
-          button.textContent = 'Refresh Status';
-        }
-      }
-    }
-
-    function pollingDelayMs() {
-      return pollingState.intervalMs * Math.min(4, 1 + pollingState.failures);
-    }
-
-    function updatePollingButton() {
-      const button = document.querySelector('[data-action="status.poll.toggle"]');
-      if (!button) return;
-      button.setAttribute('aria-pressed', pollingState.enabled ? 'true' : 'false');
-      button.textContent = pollingState.enabled
-        ? pollingState.paused
-          ? 'Auto Refresh Paused'
-          : 'Auto Refresh On'
-        : 'Auto Refresh Off';
-    }
-
-    function clearPollingTimer() {
-      if (pollingState.timer) {
-        clearTimeout(pollingState.timer);
-        pollingState.timer = null;
-      }
-    }
-
-    function schedulePolling() {
-      clearPollingTimer();
-      updatePollingButton();
-      if (!pollingState.enabled || pollingState.paused) return;
-      pollingState.timer = setTimeout(runPollingRefresh, pollingDelayMs());
-    }
-
-    async function runPollingRefresh() {
-      if (!pollingState.enabled || pollingState.paused) return;
-      setLoadPhase('polling');
-      const state = await refreshStatus();
-      pollingState.failures = state?.source?.kind === 'degraded' ? pollingState.failures + 1 : 0;
-      schedulePolling();
-    }
-
-    function togglePolling() {
-      pollingState.enabled = !pollingState.enabled;
-      pollingState.failures = 0;
-      if (!pollingState.enabled) {
-        clearPollingTimer();
-      }
-      schedulePolling();
-    }
-
-    function pausePolling(paused) {
-      pollingState.paused = paused;
-      schedulePolling();
-    }
-
-    function dashboardDebugSnapshot() {
-      return {
-        readOnly: true,
-        selectedTaskId,
-        loadPhase: currentLoadPhase,
-        activeView,
-        polling: {
-          enabled: pollingState.enabled,
-          paused: pollingState.paused,
-          intervalMs: pollingState.intervalMs,
-          failures: pollingState.failures
-        },
-        hasPreviousRuntimeState: Boolean(lastSuccessfulRuntimeState),
-        sourceKind: lastSuccessfulRuntimeState?.source?.kind ?? null,
-        cacheStatus: lastSuccessfulRuntimeState?.source?.cache?.status ?? null
-      };
-    }
-
-    document.querySelectorAll('[data-view-target]').forEach((node) => {
-      node.addEventListener('click', (event) => {
-        event.preventDefault();
-        activateDashboardView(node.getAttribute('data-view-target') ?? 'home');
-      });
-    });
-    document.querySelector('[data-action="status.refresh"]')?.addEventListener('click', refreshStatus);
-    document.querySelector('[data-action="status.poll.toggle"]')?.addEventListener('click', togglePolling);
-    document.addEventListener('visibilitychange', () => pausePolling(document.hidden));
-    activateDashboardView('home');
-    window.HadaraDashboard = { loadDashboardWithFallback, loadStatusWithFallback, refreshStatus, togglePolling, debugSnapshot: dashboardDebugSnapshot };
-    refreshStatus();
-  </script>
-</body>
+}</script>
+    <script>"use strict";(()=>{var ae,g,Ne,jt,F,je,He,$e,ve,Z,z,Ve,be,me,he,Lt,ne={},ie=[],Mt=/acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i,se=Array.isArray;function H(e,t){for(var i in t)e[i]=t[i];return e}function ye(e){e&&e.parentNode&&e.parentNode.removeChild(e)}function Et(e,t,i){var r,s,a,l={};for(a in t)a=="key"?r=t[a]:a=="ref"?s=t[a]:l[a]=t[a];if(arguments.length>2&&(l.children=arguments.length>3?ae.call(arguments,2):i),typeof e=="function"&&e.defaultProps!=null)for(a in e.defaultProps)l[a]===void 0&&(l[a]=e.defaultProps[a]);return ee(e,l,r,s,null)}function ee(e,t,i,r,s){var a={type:e,props:t,key:i,ref:r,__k:null,__:null,__b:0,__e:null,__c:null,constructor:void 0,__v:s??++Ne,__i:-1,__u:0};return s==null&&g.vnode!=null&&g.vnode(a),a}function R(e){return e.children}function te(e,t){this.props=e,this.context=t}function B(e,t){if(t==null)return e.__?B(e.__,e.__i+1):null;for(var i;t<e.__k.length;t++)if((i=e.__k[t])!=null&&i.__e!=null)return i.__e;return typeof e.type=="function"?B(e):null}function Nt(e){if(e.__P&&e.__d){var t=e.__v,i=t.__e,r=[],s=[],a=H({},t);a.__v=t.__v+1,g.vnode&&g.vnode(a),ke(e.__P,a,t,e.__n,e.__P.namespaceURI,32&t.__u?[i]:null,r,i??B(t),!!(32&t.__u),s),a.__v=t.__v,a.__.__k[a.__i]=a,Be(r,a,s),t.__e=t.__=null,a.__e!=i&&Ue(a)}}function Ue(e){if((e=e.__)!=null&&e.__c!=null)return e.__e=e.__c.base=null,e.__k.some(function(t){if(t!=null&&t.__e!=null)return e.__e=e.__c.base=t.__e}),Ue(e)}function Le(e){(!e.__d&&(e.__d=!0)&&F.push(e)&&!re.__r++||je!=g.debounceRendering)&&((je=g.debounceRendering)||He)(re)}function re(){try{for(var e,t=1;F.length;)F.length>t&&F.sort($e),e=F.shift(),t=F.length,Nt(e)}finally{F.length=re.__r=0}}function Fe(e,t,i,r,s,a,l,d,u,c,_){var o,p,f,b,C,k,h,m=r&&r.__k||ie,A=t.length;for(u=Ht(i,t,m,u,A),o=0;o<A;o++)(f=i.__k[o])!=null&&(p=f.__i!=-1&&m[f.__i]||ne,f.__i=o,k=ke(e,f,p,s,a,l,d,u,c,_),b=f.__e,f.ref&&p.ref!=f.ref&&(p.ref&&we(p.ref,null,f),_.push(f.ref,f.__c||b,f)),C==null&&b!=null&&(C=b),(h=!!(4&f.__u))||p.__k===f.__k?(u=We(f,u,e,h),h&&p.__e&&(p.__e=null)):typeof f.type=="function"&&k!==void 0?u=k:b&&(u=b.nextSibling),f.__u&=-7);return i.__e=C,u}function Ht(e,t,i,r,s){var a,l,d,u,c,_=i.length,o=_,p=0;for(e.__k=new Array(s),a=0;a<s;a++)(l=t[a])!=null&&typeof l!="boolean"&&typeof l!="function"?(typeof l=="string"||typeof l=="number"||typeof l=="bigint"||l.constructor==String?l=e.__k[a]=ee(null,l,null,null,null):se(l)?l=e.__k[a]=ee(R,{children:l},null,null,null):l.constructor===void 0&&l.__b>0?l=e.__k[a]=ee(l.type,l.props,l.key,l.ref?l.ref:null,l.__v):e.__k[a]=l,u=a+p,l.__=e,l.__b=e.__b+1,d=null,(c=l.__i=$t(l,i,u,o))!=-1&&(o--,(d=i[c])&&(d.__u|=2)),d==null||d.__v==null?(c==-1&&(s>_?p--:s<_&&p++),typeof l.type!="function"&&(l.__u|=4)):c!=u&&(c==u-1?p--:c==u+1?p++:(c>u?p--:p++,l.__u|=4))):e.__k[a]=null;if(o)for(a=0;a<_;a++)(d=i[a])!=null&&(2&d.__u)==0&&(d.__e==r&&(r=B(d)),ze(d,d));return r}function We(e,t,i,r){var s,a;if(typeof e.type=="function"){for(s=e.__k,a=0;s&&a<s.length;a++)s[a]&&(s[a].__=e,t=We(s[a],t,i,r));return t}e.__e!=t&&(r&&(t&&e.type&&!t.parentNode&&(t=B(e)),i.insertBefore(e.__e,t||null)),t=e.__e);do t=t&&t.nextSibling;while(t!=null&&t.nodeType==8);return t}function $t(e,t,i,r){var s,a,l,d=e.key,u=e.type,c=t[i],_=c!=null&&(2&c.__u)==0;if(c===null&&d==null||_&&d==c.key&&u==c.type)return i;if(r>(_?1:0)){for(s=i-1,a=i+1;s>=0||a<t.length;)if((c=t[l=s>=0?s--:a++])!=null&&(2&c.__u)==0&&d==c.key&&u==c.type)return l}return-1}function Me(e,t,i){t[0]=="-"?e.setProperty(t,i??""):e[t]=i==null?"":typeof i!="number"||Mt.test(t)?i:i+"px"}function X(e,t,i,r,s){var a,l;e:if(t=="style")if(typeof i=="string")e.style.cssText=i;else{if(typeof r=="string"&&(e.style.cssText=r=""),r)for(t in r)i&&t in i||Me(e.style,t,"");if(i)for(t in i)r&&i[t]==r[t]||Me(e.style,t,i[t])}else if(t[0]=="o"&&t[1]=="n")a=t!=(t=t.replace(Ve,"$1")),l=t.toLowerCase(),t=l in e||t=="onFocusOut"||t=="onFocusIn"?l.slice(2):t.slice(2),e.l||(e.l={}),e.l[t+a]=i,i?r?i[z]=r[z]:(i[z]=be,e.addEventListener(t,a?he:me,a)):e.removeEventListener(t,a?he:me,a);else{if(s=="http://www.w3.org/2000/svg")t=t.replace(/xlink(H|:h)/,"h").replace(/sName$/,"s");else if(t!="width"&&t!="height"&&t!="href"&&t!="list"&&t!="form"&&t!="tabIndex"&&t!="download"&&t!="rowSpan"&&t!="colSpan"&&t!="role"&&t!="popover"&&t in e)try{e[t]=i??"";break e}catch{}typeof i=="function"||(i==null||i===!1&&t[4]!="-"?e.removeAttribute(t):e.setAttribute(t,t=="popover"&&i==1?"":i))}}function Ee(e){return function(t){if(this.l){var i=this.l[t.type+e];if(t[Z]==null)t[Z]=be++;else if(t[Z]<i[z])return;return i(g.event?g.event(t):t)}}}function ke(e,t,i,r,s,a,l,d,u,c){var _,o,p,f,b,C,k,h,m,A,j,V,E,N,L,P=t.type;if(t.constructor!==void 0)return null;128&i.__u&&(u=!!(32&i.__u),a=[d=t.__e=i.__e]),(_=g.__b)&&_(t);e:if(typeof P=="function")try{if(h=t.props,m=P.prototype&&P.prototype.render,A=(_=P.contextType)&&r[_.__c],j=_?A?A.props.value:_.__:r,i.__c?k=(o=t.__c=i.__c).__=o.__E:(m?t.__c=o=new P(h,j):(t.__c=o=new te(h,j),o.constructor=P,o.render=Ut),A&&A.sub(o),o.state||(o.state={}),o.__n=r,p=o.__d=!0,o.__h=[],o._sb=[]),m&&o.__s==null&&(o.__s=o.state),m&&P.getDerivedStateFromProps!=null&&(o.__s==o.state&&(o.__s=H({},o.__s)),H(o.__s,P.getDerivedStateFromProps(h,o.__s))),f=o.props,b=o.state,o.__v=t,p)m&&P.getDerivedStateFromProps==null&&o.componentWillMount!=null&&o.componentWillMount(),m&&o.componentDidMount!=null&&o.__h.push(o.componentDidMount);else{if(m&&P.getDerivedStateFromProps==null&&h!==f&&o.componentWillReceiveProps!=null&&o.componentWillReceiveProps(h,j),t.__v==i.__v||!o.__e&&o.shouldComponentUpdate!=null&&o.shouldComponentUpdate(h,o.__s,j)===!1){t.__v!=i.__v&&(o.props=h,o.state=o.__s,o.__d=!1),t.__e=i.__e,t.__k=i.__k,t.__k.some(function(U){U&&(U.__=t)}),ie.push.apply(o.__h,o._sb),o._sb=[],o.__h.length&&l.push(o);break e}o.componentWillUpdate!=null&&o.componentWillUpdate(h,o.__s,j),m&&o.componentDidUpdate!=null&&o.__h.push(function(){o.componentDidUpdate(f,b,C)})}if(o.context=j,o.props=h,o.__P=e,o.__e=!1,V=g.__r,E=0,m)o.state=o.__s,o.__d=!1,V&&V(t),_=o.render(o.props,o.state,o.context),ie.push.apply(o.__h,o._sb),o._sb=[];else do o.__d=!1,V&&V(t),_=o.render(o.props,o.state,o.context),o.state=o.__s;while(o.__d&&++E<25);o.state=o.__s,o.getChildContext!=null&&(r=H(H({},r),o.getChildContext())),m&&!p&&o.getSnapshotBeforeUpdate!=null&&(C=o.getSnapshotBeforeUpdate(f,b)),N=_!=null&&_.type===R&&_.key==null?qe(_.props.children):_,d=Fe(e,se(N)?N:[N],t,i,r,s,a,l,d,u,c),o.base=t.__e,t.__u&=-161,o.__h.length&&l.push(o),k&&(o.__E=o.__=null)}catch(U){if(t.__v=null,u||a!=null)if(U.then){for(t.__u|=u?160:128;d&&d.nodeType==8&&d.nextSibling;)d=d.nextSibling;a[a.indexOf(d)]=null,t.__e=d}else{for(L=a.length;L--;)ye(a[L]);ge(t)}else t.__e=i.__e,t.__k=i.__k,U.then||ge(t);g.__e(U,t,i)}else a==null&&t.__v==i.__v?(t.__k=i.__k,t.__e=i.__e):d=t.__e=Vt(i.__e,t,i,r,s,a,l,u,c);return(_=g.diffed)&&_(t),128&t.__u?void 0:d}function ge(e){e&&(e.__c&&(e.__c.__e=!0),e.__k&&e.__k.some(ge))}function Be(e,t,i){for(var r=0;r<i.length;r++)we(i[r],i[++r],i[++r]);g.__c&&g.__c(t,e),e.some(function(s){try{e=s.__h,s.__h=[],e.some(function(a){a.call(s)})}catch(a){g.__e(a,s.__v)}})}function qe(e){return typeof e!="object"||e==null||e.__b>0?e:se(e)?e.map(qe):e.constructor!==void 0?null:H({},e)}function Vt(e,t,i,r,s,a,l,d,u){var c,_,o,p,f,b,C,k=i.props||ne,h=t.props,m=t.type;if(m=="svg"?s="http://www.w3.org/2000/svg":m=="math"?s="http://www.w3.org/1998/Math/MathML":s||(s="http://www.w3.org/1999/xhtml"),a!=null){for(c=0;c<a.length;c++)if((f=a[c])&&"setAttribute"in f==!!m&&(m?f.localName==m:f.nodeType==3)){e=f,a[c]=null;break}}if(e==null){if(m==null)return document.createTextNode(h);e=document.createElementNS(s,m,h.is&&h),d&&(g.__m&&g.__m(t,a),d=!1),a=null}if(m==null)k===h||d&&e.data==h||(e.data=h);else{if(a=m=="textarea"&&h.defaultValue!=null?null:a&&ae.call(e.childNodes),!d&&a!=null)for(k={},c=0;c<e.attributes.length;c++)k[(f=e.attributes[c]).name]=f.value;for(c in k)f=k[c],c=="dangerouslySetInnerHTML"?o=f:c=="children"||c in h||c=="value"&&"defaultValue"in h||c=="checked"&&"defaultChecked"in h||X(e,c,null,f,s);for(c in h)f=h[c],c=="children"?p=f:c=="dangerouslySetInnerHTML"?_=f:c=="value"?b=f:c=="checked"?C=f:d&&typeof f!="function"||k[c]===f||X(e,c,f,k[c],s);if(_)d||o&&(_.__html==o.__html||_.__html==e.innerHTML)||(e.innerHTML=_.__html),t.__k=[];else if(o&&(e.innerHTML=""),Fe(t.type=="template"?e.content:e,se(p)?p:[p],t,i,r,m=="foreignObject"?"http://www.w3.org/1999/xhtml":s,a,l,a?a[0]:i.__k&&B(i,0),d,u),a!=null)for(c=a.length;c--;)ye(a[c]);d&&m!="textarea"||(c="value",m=="progress"&&b==null?e.removeAttribute("value"):b!=null&&(b!==e[c]||m=="progress"&&!b||m=="option"&&b!=k[c])&&X(e,c,b,k[c],s),c="checked",C!=null&&C!=e[c]&&X(e,c,C,k[c],s))}return e}function we(e,t,i){try{if(typeof e=="function"){var r=typeof e.__u=="function";r&&e.__u(),r&&t==null||(e.__u=e(t))}else e.current=t}catch(s){g.__e(s,i)}}function ze(e,t,i){var r,s;if(g.unmount&&g.unmount(e),(r=e.ref)&&(r.current&&r.current!=e.__e||we(r,null,t)),(r=e.__c)!=null){if(r.componentWillUnmount)try{r.componentWillUnmount()}catch(a){g.__e(a,t)}r.base=r.__P=null}if(r=e.__k)for(s=0;s<r.length;s++)r[s]&&ze(r[s],t,i||typeof e.type!="function");i||ye(e.__e),e.__c=e.__=e.__e=void 0}function Ut(e,t,i){return this.constructor(e,i)}function Ge(e,t,i){var r,s,a,l;t==document&&(t=document.documentElement),g.__&&g.__(e,t),s=(r=typeof i=="function")?null:i&&i.__k||t.__k,a=[],l=[],ke(t,e=(!r&&i||t).__k=Et(R,null,[e]),s||ne,ne,t.namespaceURI,!r&&i?[i]:s?null:t.firstChild?ae.call(t.childNodes):null,a,!r&&i?i:s?s.__e:t.firstChild,r,l),Be(a,e,l)}ae=ie.slice,g={__e:function(e,t,i,r){for(var s,a,l;t=t.__;)if((s=t.__c)&&!s.__)try{if((a=s.constructor)&&a.getDerivedStateFromError!=null&&(s.setState(a.getDerivedStateFromError(e)),l=s.__d),s.componentDidCatch!=null&&(s.componentDidCatch(e,r||{}),l=s.__d),l)return s.__E=s}catch(d){e=d}throw e}},Ne=0,jt=function(e){return e!=null&&e.constructor===void 0},te.prototype.setState=function(e,t){var i;i=this.__s!=null&&this.__s!=this.state?this.__s:this.__s=H({},this.state),typeof e=="function"&&(e=e(H({},i),this.props)),e&&H(i,e),e!=null&&this.__v&&(t&&this._sb.push(t),Le(this))},te.prototype.forceUpdate=function(e){this.__v&&(this.__e=!0,e&&this.__h.push(e),Le(this))},te.prototype.render=R,F=[],He=typeof Promise=="function"?Promise.prototype.then.bind(Promise.resolve()):setTimeout,$e=function(e,t){return e.__v.__b-t.__v.__b},re.__r=0,ve=Math.random().toString(8),Z="__d"+ve,z="__a"+ve,Ve=/(PointerCapture)$|Capture$/i,be=0,me=Ee(!1),he=Ee(!0),Lt=0;var G,w,Se,Je,J=0,nt=[],S=g,Ke=S.__b,Ye=S.__r,Qe=S.diffed,Xe=S.__c,Ze=S.unmount,et=S.__;function Ce(e,t){S.__h&&S.__h(w,e,J||t),J=0;var i=w.__H||(w.__H={__:[],__h:[]});return e>=i.__.length&&i.__.push({}),i.__[e]}function I(e){return J=1,Ft(at,e)}function Ft(e,t,i){var r=Ce(G++,2);if(r.t=e,!r.__c&&(r.__=[i?i(t):at(void 0,t),function(d){var u=r.__N?r.__N[0]:r.__[0],c=r.t(u,d);u!==c&&(r.__N=[c,r.__[1]],r.__c.setState({}))}],r.__c=w,!w.__f)){var s=function(d,u,c){if(!r.__c.__H)return!0;var _=r.__c.__H.__.filter(function(p){return p.__c});if(_.every(function(p){return!p.__N}))return!a||a.call(this,d,u,c);var o=r.__c.props!==d;return _.some(function(p){if(p.__N){var f=p.__[0];p.__=p.__N,p.__N=void 0,f!==p.__[0]&&(o=!0)}}),a&&a.call(this,d,u,c)||o};w.__f=!0;var a=w.shouldComponentUpdate,l=w.componentWillUpdate;w.componentWillUpdate=function(d,u,c){if(this.__e){var _=a;a=void 0,s(d,u,c),a=_}l&&l.call(this,d,u,c)},w.shouldComponentUpdate=s}return r.__N||r.__}function le(e,t){var i=Ce(G++,3);!S.__s&&rt(i.__H,t)&&(i.__=e,i.u=t,w.__H.__h.push(i))}function ce(e){return J=5,it(function(){return{current:e}},[])}function it(e,t){var i=Ce(G++,7);return rt(i.__H,t)&&(i.__=e(),i.__H=t,i.__h=e),i.__}function de(e,t){return J=8,it(function(){return e},t)}function Wt(){for(var e;e=nt.shift();){var t=e.__H;if(e.__P&&t)try{t.__h.some(oe),t.__h.some(xe),t.__h=[]}catch(i){t.__h=[],S.__e(i,e.__v)}}}S.__b=function(e){w=null,Ke&&Ke(e)},S.__=function(e,t){e&&t.__k&&t.__k.__m&&(e.__m=t.__k.__m),et&&et(e,t)},S.__r=function(e){Ye&&Ye(e),G=0;var t=(w=e.__c).__H;t&&(Se===w?(t.__h=[],w.__h=[],t.__.some(function(i){i.__N&&(i.__=i.__N),i.u=i.__N=void 0})):(t.__h.some(oe),t.__h.some(xe),t.__h=[],G=0)),Se=w},S.diffed=function(e){Qe&&Qe(e);var t=e.__c;t&&t.__H&&(t.__H.__h.length&&(nt.push(t)!==1&&Je===S.requestAnimationFrame||((Je=S.requestAnimationFrame)||Bt)(Wt)),t.__H.__.some(function(i){i.u&&(i.__H=i.u),i.u=void 0})),Se=w=null},S.__c=function(e,t){t.some(function(i){try{i.__h.some(oe),i.__h=i.__h.filter(function(r){return!r.__||xe(r)})}catch(r){t.some(function(s){s.__h&&(s.__h=[])}),t=[],S.__e(r,i.__v)}}),Xe&&Xe(e,t)},S.unmount=function(e){Ze&&Ze(e);var t,i=e.__c;i&&i.__H&&(i.__H.__.some(function(r){try{oe(r)}catch(s){t=s}}),i.__H=void 0,t&&S.__e(t,i.__v))};var tt=typeof requestAnimationFrame=="function";function Bt(e){var t,i=function(){clearTimeout(r),tt&&cancelAnimationFrame(t),setTimeout(e)},r=setTimeout(i,35);tt&&(t=requestAnimationFrame(i))}function oe(e){var t=w,i=e.__c;typeof i=="function"&&(e.__c=void 0,i()),w=t}function xe(e){var t=w;e.__c=e.__(),w=t}function rt(e,t){return!e||e.length!==t.length||t.some(function(i,r){return i!==e[r]})}function at(e,t){return typeof t=="function"?t(e):t}function y(e,t=""){return typeof e=="string"?e:t}function O(e,t=0){return typeof e=="number"&&Number.isFinite(e)?e:t}function $(e){return Array.isArray(e)?e:[]}function qt(e){return e==="ok"||e==="degraded"||e==="error"?e:"unknown"}function st(e){return e.map((t,i)=>({id:y(t.id,`event-${i+1}`),order:O(t.order,i+1),kind:y(t.kind,"info"),title:y(t.title,"Event"),summary:y(t.summary,""),severity:["ok","warning","error","info"].includes(t.severity)?t.severity:"info",time:typeof t.time=="string"?t.time:null,taskId:typeof t.taskId=="string"?t.taskId:null,command:typeof t.command=="string"?t.command:null,evidenceId:typeof t.evidenceId=="string"?t.evidenceId:null,evidenceIdStability:typeof t.evidenceIdStability=="string"?t.evidenceIdStability:null}))}function ot(e){return!e||typeof e!="object"?null:e.status==="disabled"&&e.ttlMs==null?{status:"disabled",ttlMs:null,generatedAt:null,expiresAt:null}:{status:y(e.status,"unknown"),ttlMs:typeof e.ttlMs=="number"?e.ttlMs:null,generatedAt:typeof e.generatedAt=="string"?e.generatedAt:null,expiresAt:typeof e.expiresAt=="string"?e.expiresAt:null}}function lt(e,t,i,r){let s=e.tasks??{},a=e.handoff??{},l=e.validation??{},d=e.debt??{},u=e.mcp??{},c=e.project??{},_=r?.taskSummary??{},o=$(_.recent).map(b=>({id:y(b.id),title:y(b.title),status:y(b.status)})),p=r?.activeRunSummary??{},f=r?.debtSummary??d;return{source:{kind:t,label:i,generatedAt:typeof r?.generatedAt=="string"?r.generatedAt:typeof e.generatedAt=="string"?e.generatedAt:null,projectFingerprint:r?.source?.project?.fingerprint&&typeof r.source.project.fingerprint=="string"?r.source.project.fingerprint:null},cache:ot(r?.cache),ok:e.ok!==!1,health:qt(e.health),project:{branch:y(c.branch,"unknown"),phase:y(c.phase,"unknown")},tasks:{total:O(_.total,O(s.count)),counts:s.counts??{},nextRecommended:typeof _.nextRecommended=="string"?_.nextRecommended:typeof s.nextRecommended=="string"?s.nextRecommended:null,recent:o,lastCompleted:$(s.lastCompleted)},handoff:{currentState:$(a.currentState),nextStep:$(a.nextRecommendedStep??a.nextStep)},validation:{latestFullCheck:typeof l.latestFullCheck=="string"?l.latestFullCheck:null,latestDoneLevelValidation:typeof l.latestDoneLevelValidation=="string"?l.latestDoneLevelValidation:null},debt:{total:O(f.total),open:O(f.open),highOpen:O(f.highOpen),bySeverity:f.bySeverity??{},pending:f.pending===!0},mcp:{defaultMode:y(u.defaultMode,"read-only"),evidenceAttachRequiresApproval:u?.evidenceAttach?.requiresApproval!==!1},activeRun:{present:p.present===!0,taskId:typeof p.taskId=="string"?p.taskId:null,status:typeof p.status=="string"?p.status:null,staleReason:typeof p.staleReason=="string"?p.staleReason:null},timeline:st($(r?.timelineOverview?.events))}}function zt(e){return lt(e.status??{},"live-api","Live dashboard aggregate read",{taskSummary:e.taskSummary,timelineOverview:e.timelineOverview,activeRunSummary:e.activeRunSummary,debtSummary:e.debtSummary,cache:e.cache,source:e.source,generatedAt:e.generatedAt})}function Ae(e,t,i){return lt(e,t,i,{generatedAt:e.generatedAt})}function Gt(e){let t=e.workbench??{},i=t.task??{},r=e.proof??{},a=$(e.evidenceList?.records).slice(0,12).map((u,c)=>({id:y(u.id??u.evidenceId,`record-${c+1}`),strength:y(u.strength??u.semanticStrength,"unknown"),visibility:y(u.visibility,"unknown"),summary:y(u.summary??u.message??u.note,"")})),l=$(e.commandGuidance??e.commands).map(u=>({label:y(u.label,"command"),command:y(u.command),source:y(u.source,"protocol")})),d=e.workbench?.state?{ready:t.state.ready===!0,closeState:y(t.state.closeState,"unknown"),blockers:O(t.state.blockers),warnings:O(t.state.warnings)}:null;return{ok:e.ok!==!1,taskId:y(e.taskId,y(i.id)),title:y(i.title),taskStatus:y(i.taskStatus??i.status,"unknown"),capsule:y(i.capsule),source:{kind:"live-api",label:"Live task detail aggregate read",generatedAt:typeof e.generatedAt=="string"?e.generatedAt:null,projectFingerprint:typeof e.source?.project?.fingerprint=="string"?e.source.project.fingerprint:null},cache:ot(e.cache),proof:{status:["sufficient","weak","failed","blocked","private-only","unknown"].includes(r.status)?r.status:"unknown",note:y(r.note),blocking:r.blocking===!0,auditabilityWarning:r.auditabilityWarning===!0,substantivePositive:O(r.substantivePositive),semanticIssueCodes:$(r.semanticIssueCodes)},evidence:a,evidenceCount:O(e.evidenceList?.count,a.length),timeline:st($(e.timeline?.events)),commands:l,state:d}}var Jt="/api/dashboard/bootstrap",Kt="/api/status",Yt="fixtures/hadara.ops.status.sample.json",Qt=3e4;async function K(e){let t=new AbortController,i=window.setTimeout(()=>t.abort(),Qt);try{let r=await fetch(e,{cache:"no-store",signal:t.signal});return r.ok?await r.json():null}catch{return null}finally{window.clearTimeout(i)}}function Xt(){let e=document.getElementById("fallback-status-json");if(!e||!e.textContent)return null;try{return JSON.parse(e.textContent)}catch{return null}}function Te(e){return e==="live-api"||e==="live-status"}function Re(){let e=Xt();return e?Ae(e,"inline-fallback","Offline inline fallback (not live data)"):null}async function ct(e={}){let t=new URLSearchParams({tier:"core"});e.bypass&&t.set("cache","bypass");let i=`${Jt}?${t.toString()}`,r=await K(i);if(r&&r.schemaVersion==="hadara.dashboard.bootstrap.v1")return zt(r);let s=await K(Kt);return s&&s.schemaVersion==="hadara.ops.status.v1"?Ae(s,"live-status","Live status read (aggregate unavailable)"):null}async function dt(){let e=await K(Yt);return e&&e.schemaVersion==="hadara.ops.status.v1"?Ae(e,"fixture-fallback","Sample fixture (not live data)"):Re()}async function ut(){let e=await K("/api/debt");if(!e||e.schemaVersion!=="hadara.operational_debt.v1")return null;let t=e.aggregate??e;return{total:O(t.total),open:O(t.open),highOpen:O(t.highOpen),bySeverity:t.bySeverity??{}}}async function _t(e,t={}){let i=`/api/dashboard/task-detail?taskId=${encodeURIComponent(e)}`,r=t.bypass?`${i}&cache=bypass`:i,s=await K(r);return s&&s.schemaVersion==="hadara.dashboard.task_detail.v1"?Gt(s):null}function ue(e,t=Date.now()){if(!e)return"";let i=Date.parse(e);if(Number.isNaN(i))return"";let r=Math.max(0,t-i),s=Math.round(r/1e3);if(s<5)return"just now";if(s<60)return`${s}s ago`;let a=Math.round(s/60);if(a<60)return`${a}m ago`;let l=Math.round(a/60);return l<24?`${l}h ago`:`${Math.round(l/24)}d ago`}function pt(e){return e==="ok"?"ok":e==="degraded"?"warn":e==="error"?"danger":"muted"}function Ie(e){return e==="ok"?"Healthy":e==="degraded"?"Degraded":e==="error"?"Error":"Unknown"}function ft(e){return e==="sufficient"?"ok":e==="failed"||e==="blocked"?"danger":e==="weak"||e==="private-only"?"warn":"muted"}function vt(e){return e==="private-only"?"PRIVATE-ONLY":e.toUpperCase()}function mt(e){return e==="live-api"||e==="live-status"?"ok":e==="fixture-fallback"||e==="inline-fallback"||e==="degraded"?"warn":"info"}function ht(e){switch(e){case"live-api":return"live";case"live-status":return"live (status)";case"fixture-fallback":return"fixture";case"inline-fallback":return"offline";case"degraded":return"degraded";default:return e}}function gt(e){return e==="ok"?"ok":e==="warning"?"warn":e==="error"?"danger":"info"}function bt(e){if(!e)return null;let t=e.trim();return!t||t.startsWith("|")||/^-+$/.test(t)?null:t}var Zt=0,mn=Array.isArray;function n(e,t,i,r,s,a){t||(t={});var l,d,u=t;if("ref"in u)for(d in u={},t)d=="ref"?l=t[d]:u[d]=t[d];var c={type:e,props:u,key:i,ref:l,__k:null,__:null,__b:0,__e:null,__c:null,constructor:void 0,__v:--Zt,__i:-1,__u:0,__source:s,__self:a};if(typeof e=="function"&&(l=e.defaultProps))for(d in l)u[d]===void 0&&(u[d]=l[d]);return g.vnode&&g.vnode(c),c}function pe({tone:e}){return n("span",{class:`dot dot-${e}`,"aria-hidden":"true"})}function en({tone:e,children:t}){return n("span",{class:`pill pill-${e}`,children:[n(pe,{tone:e}),t]})}function tn({value:e,label:t}){let[i,r]=I(!1);function s(){try{navigator.clipboard?.writeText(e).then(()=>{r(!0),window.setTimeout(()=>r(!1),1400)})}catch{}}return n("button",{type:"button",class:"copy-btn",onClick:s,title:"Copy command (read-only \u2014 dashboard does not execute it)",children:i?"Copied":t??"Copy"})}function yt({health:e}){let t=pt(e);return n("div",{class:"verdict",role:"status","aria-label":`Project health: ${Ie(e)}`,children:[n(pe,{tone:t}),n("strong",{children:Ie(e)})]})}function kt({runtime:e}){let t=mt(e.source.kind),i=e.source.generatedAt,r=e.cache,s=r&&r.status!=="disabled"?` \xB7 cache ${r.status}`:"";return n("span",{class:`provenance provenance-${t}`,title:e.source.label,children:[ht(e.source.kind),i?` \xB7 ${ue(i)}`:"",s]})}function Y({lines:e=3,title:t}){return n("div",{class:"skeleton","aria-hidden":"true",children:[t?n("div",{class:"sk-bar sk-title"}):null,Array.from({length:e}).map((i,r)=>n("div",{class:"sk-bar",style:{width:`${90-r*12}%`}}))]})}function wt({kind:e,when:t,onRetry:i}){let r=e==="offline"?"Live read unavailable \u2014 showing offline sample data (not live).":`Refresh failed \u2014 showing the last good live read${t?` \xB7 ${ue(t)}`:""}.`;return n("div",{class:"degraded-banner",role:"alert",children:[n(pe,{tone:"warn"}),n("span",{children:r}),n("button",{type:"button",class:"link-btn",onClick:i,children:"Retry"})]})}function M({title:e,hint:t}){return n("div",{class:"empty-state",children:[n("div",{class:"empty-mark","aria-hidden":"true",children:"\u25C6"}),n("strong",{children:e}),n("span",{children:t})]})}function x({title:e,accessory:t,children:i,className:r}){return n("section",{class:`card ${r??""}`,children:[e?n("header",{class:"card-head",children:[n("h2",{class:"card-title",children:e}),t?n("div",{class:"card-accessory",children:t}):null]}):null,n("div",{class:"card-body",children:i})]})}function Oe({runtime:e}){let t=e.activeRun.present?e.activeRun:null,i=bt(e.tasks.nextRecommended),r=e.tasks.recent[e.tasks.recent.length-1],s=t?.taskId??r?.id??null,a=t?t.status??"":r?.title??"",l=i?"hadara task next":"hadara task status";return n("section",{class:"card focal-card",children:[n("header",{class:"card-head",children:[n("h2",{class:"card-title",children:t?"Active run":"Latest work"}),n(en,{tone:t?"info":"ok",children:t?"in progress":"idle"})]}),n("div",{class:"card-body",children:[n("div",{class:"focal-row",children:[n("div",{class:"focal-id mono",children:s??"\u2014"}),n("div",{class:"focal-title",children:a||"No active run. The workspace is idle."})]}),n("div",{class:"focal-next",children:[n("div",{class:"focal-next-label",children:"Next recommended"}),n("div",{class:"focal-next-cmd",children:[n("code",{class:"mono",children:l}),n(tn,{value:l})]}),n("p",{class:"focal-note",children:"Copy and run in your terminal \u2014 the dashboard does not execute it."})]})]})]})}function _e({value:e,label:t,tone:i="muted",context:r}){return n("div",{class:"metric",children:[n("div",{class:`metric-value metric-${i}`,children:e}),n("div",{class:"metric-label",children:t}),r?n("div",{class:"metric-context",children:r}):null]})}function Pe({runtime:e}){let t=e.tasks.counts??{},i=t.done??0,r=(t.inProgress??0)+(t.partial??0),s=t.blocked??0,a=e.debt.highOpen,l=e.debt.pending===!0;return n("div",{class:"metrics-row",children:[n(_e,{value:i,label:"Tasks done",tone:"ok",context:"completed capsules"}),n(_e,{value:r,label:"Active / partial",tone:r>0?"info":"muted",context:r>0?"work in flight":"none in flight"}),n(_e,{value:s,label:"Blocked",tone:s>0?"danger":"muted",context:s>0?"needs attention":"clear"}),n(_e,{value:l?"\u2026":e.debt.open,label:"Open debt",tone:l?"muted":a>0?"warn":e.debt.open>0?"info":"muted",context:l?"loading\u2026":a>0?`${a} high`:"no high-severity"})]})}function nn(e){switch(e){case"system":return"\u25C6";case"harness":return"\u2713";case"evidence":return"\u25A3";case"task":return"\u25CF";default:return"\xB7"}}function St({events:e,offline:t}){return e.length?n("ol",{class:"feed",children:e.slice().sort((i,r)=>r.order-i.order).map(i=>{let r=gt(i.severity);return n("li",{class:"feed-item",children:[n("span",{class:`feed-glyph feed-${r}`,"aria-hidden":"true",children:nn(i.kind)}),n("div",{class:"feed-main",children:[n("div",{class:"feed-top",children:[n("span",{class:"feed-title",children:i.title}),i.time?n("span",{class:"feed-time",children:ue(i.time)}):n("span",{class:"feed-kind",children:i.kind})]}),n("div",{class:"feed-summary",children:i.summary}),i.taskId||i.evidenceId?n("div",{class:"feed-meta mono",children:[i.taskId?n("span",{children:i.taskId}):null,i.evidenceId?n("span",{children:i.evidenceId}):null]}):null]})]},i.id)})}):t?n(M,{title:"Unavailable offline",hint:"The activity timeline is a live read and is not included in the offline fallback."}):n(M,{title:"No activity yet",hint:"The deterministic read-only timeline has no events for this view."})}function xt({detail:e}){let t=ft(e.proof.status),i=e.proof.auditabilityWarning;return n("div",{class:"proof",children:[n("div",{class:`proof-verdict proof-${t}`,children:[n(pe,{tone:t}),n("strong",{children:vt(e.proof.status)})]}),n("p",{class:"proof-note",children:e.proof.note||"No proof note available."}),n("div",{class:"proof-stats",children:[n("span",{children:[n("strong",{children:e.proof.substantivePositive})," substantive"]}),n("span",{children:[n("strong",{children:e.evidenceCount})," records"]}),e.state?n("span",{children:["blockers ",n("strong",{children:e.state.blockers})]}):null,e.evidenceCount>0?n("button",{type:"button",class:"link-btn proof-drill",onClick:()=>document.getElementById("capsule-evidence")?.scrollIntoView({behavior:"smooth",block:"start"}),children:"View evidence \u2193"}):null]}),i?n("div",{class:"proof-audit",children:"Private-only evidence \u2014 auditability warning, not a Done blocker."}):null,e.proof.semanticIssueCodes.length?n("ul",{class:"issue-codes",children:e.proof.semanticIssueCodes.map(r=>n("li",{class:"mono",children:r},r))}):null]})}function De({detail:e}){return e.evidence.length?n("ul",{class:"evidence-list",children:e.evidence.map(t=>n("li",{class:"evidence-item",children:[n("div",{class:"evidence-top",children:[n("span",{class:"evidence-id mono",children:t.id}),n("span",{class:`tag tag-${t.strength==="substantive-positive"?"ok":"muted"}`,children:t.strength}),n("span",{class:"tag tag-muted",children:t.visibility})]}),t.summary?n("div",{class:"evidence-summary",children:t.summary}):null]},t.id))}):n(M,{title:"No evidence records",hint:"This capsule has no sanitized evidence records to display."})}function Ct({data:e}){let[t,i]=I(!1);return n("section",{class:"card dev-json",children:[n("header",{class:"card-head",children:[n("h2",{class:"card-title",children:"Developer"}),n("button",{type:"button",class:"link-btn","aria-expanded":t,onClick:()=>i(r=>!r),children:t?"Hide raw JSON":"Show raw JSON"})]}),t?n("div",{class:"card-body",children:[n("p",{class:"dev-note",children:"Read-only snapshot of the current in-memory view. The dashboard performs no mutation."}),n("pre",{class:"json-view",children:JSON.stringify(e,null,2)})]}):null]})}var At=[{id:"home",label:"Home",group:"Workspace"},{id:"board",label:"Task Board",group:"Workspace"},{id:"capsule",label:"Task Capsule",group:"Capsule detail"},{id:"evidence",label:"Evidence",group:"Capsule detail"},{id:"handoff",label:"Handoff",group:"Capsule detail"},{id:"harness",label:"Harness Lab",group:"Operations"},{id:"mcp",label:"MCP Guard",group:"Operations"},{id:"release",label:"Release Gate",group:"Operations"}],rn={home:{title:"Operator Console",subtitle:"Current state, what to do next, and recent activity."},board:{title:"Task Board",subtitle:"Task counts, recent capsules, and the next recommended step."},capsule:{title:"Task Capsule",subtitle:"Proof status and evidence for the selected capsule."},evidence:{title:"Evidence",subtitle:"Sanitized evidence records for the selected capsule (read-only)."},handoff:{title:"Handoff",subtitle:"Current-state handoff and the next recommended step."},harness:{title:"Harness Lab",subtitle:"Latest validation results (read-only)."},mcp:{title:"MCP Guard",subtitle:"MCP mode and evidence-attach gates."},release:{title:"Release Gate",subtitle:"Operational debt and release posture (read-only)."}},an=3e4,sn=350;function Tt({view:e}){let t=rn[e];return n("div",{class:"page-head",children:[n("h1",{class:"page-title",children:t.title}),n("p",{class:"page-subtitle",children:t.subtitle})]})}function Rt({rows:e,emptyOffline:t}){let i=e.map(r=>r.split("|").map(s=>s.trim()).filter(s=>s.length)).filter(r=>r.length&&!r.every(s=>/^-+$/.test(s)));return i.length?n("ul",{class:"row-list",children:i.map((r,s)=>n("li",{children:[n("span",{class:"row-key",children:r[0]}),n("span",{class:"row-val",children:r.slice(1).join(" \xB7 ")||"\u2014"})]},s))}):n(M,{title:t?"Unavailable offline":"Nothing recorded",hint:t?"This is a live read and is not in the offline fallback.":"No rows were reported for this section."})}function It({runtime:e}){return n(x,{title:"Governance",children:n("dl",{class:"kv",children:[n("div",{children:[n("dt",{children:"MCP mode"}),n("dd",{children:e.mcp.defaultMode})]}),n("div",{children:[n("dt",{children:"Evidence attach"}),n("dd",{children:e.mcp.evidenceAttachRequiresApproval?"requires approval":"enabled"})]}),n("div",{children:[n("dt",{children:"Latest full check"}),n("dd",{class:"kv-wrap",children:e.validation.latestFullCheck??"none recorded"})]})]})})}function on({runtime:e}){let t=e.tasks.counts??{},r=["done","inProgress","partial","draft","superseded","unknown"].filter(s=>s in t).map(s=>[s,t[s]]);return n(x,{title:"Task counts",children:n("div",{class:"counts-grid",children:r.map(([s,a])=>n("div",{class:"count-cell",children:[n("div",{class:"count-value",children:a}),n("div",{class:"count-key",children:s})]},s))})})}function ln({runtime:e,active:t,onSelect:i}){let r=[...new Set(At.map(s=>s.group))];return n("nav",{class:"sidebar","aria-label":"Dashboard views",children:[n("div",{class:"brand",children:[n("span",{class:"brand-mark","aria-hidden":"true",children:"\u25C6"}),n("span",{class:"brand-name",children:"HADARA"})]}),n("div",{class:"brand-sub",children:"Operator Console"}),r.map(s=>n("div",{class:"nav-group",children:[n("div",{class:"nav-label",children:s}),At.filter(a=>a.group===s).map(a=>n("button",{type:"button",class:`nav-item ${t===a.id?"is-active":""}`,"aria-current":t===a.id?"page":void 0,onClick:()=>i(a.id),children:a.label},a.id))]},s)),n("div",{class:"nav-foot",children:[n("div",{class:"nav-foot-row",children:[n("span",{children:"workspace"}),n("strong",{children:"HADARA-dev"})]}),n("div",{class:"nav-foot-row",children:[n("span",{children:"mode"}),n("strong",{children:e?.mcp.defaultMode??"read-only"})]})]})]})}function Ot({selectedTaskId:e,detail:t,loading:i}){return e?i&&!t?n(Y,{lines:4,title:!0}):t?n("div",{class:"capsule-detail",children:[n("div",{class:"capsule-head",children:[n("span",{class:"mono capsule-id",children:t.taskId}),n("span",{class:"capsule-title",children:t.title||"Untitled capsule"})]}),n(xt,{detail:t}),n("div",{class:"capsule-evidence",id:"capsule-evidence",children:[n("h3",{class:"sub-title",children:"Evidence"}),n(De,{detail:t})]})]}):n(M,{title:"Detail unavailable",hint:`Could not load aggregate detail for ${e}.`}):n(M,{title:"No task selected",hint:"Pick a recent capsule to load its proof, evidence, and timeline."})}function fe({runtime:e,selectedTaskId:t,onSelect:i,offline:r}){let s=e.tasks.recent.slice().reverse();return s.length?n("ul",{class:"recent-list",children:s.map(a=>n("li",{children:n("button",{type:"button",class:`recent-item ${t===a.id?"is-active":""}`,onClick:()=>i(a.id),children:[n("span",{class:"mono recent-id",children:a.id}),n("span",{class:"recent-title",children:a.title}),n("span",{class:`tag tag-${a.status==="Done"?"ok":"muted"}`,children:a.status})]})},a.id))}):r?n(M,{title:"Unavailable offline",hint:"The recent-capsule list is a live read and is not included in the offline fallback."}):n(M,{title:"No recent tasks",hint:"No recently completed capsules were reported."})}function W({main:e,side:t}){return t?n("div",{class:"grid",children:[n("div",{class:"grid-main",children:e}),n("div",{class:"grid-side",children:t})]}):n("div",{class:"grid grid-single",children:e})}function cn(){let[e,t]=I(null),[i,r]=I(!0),[s,a]=I(!1),[l,d]=I("offline"),[u,c]=I("home"),[_,o]=I(null),[p,f]=I(null),[b,C]=I(!1),[k,h]=I(!1),m=ce(null),A=ce(null),j=ce(0),V=de(async()=>{let v=await ut();if(!v)return;t(T=>T&&T.debt.pending?{...T,debt:{...v,pending:!1}}:T);let D=m.current;D&&D.debt.pending&&(m.current={...D,debt:{...v,pending:!1}})},[]),E=de(async(v={})=>{r(!0);let D=null;m.current||(D=window.setTimeout(()=>{if(!m.current){let Q=Re();Q&&t(Dt=>Dt??Q)}},sn));let T=null;try{T=await ct({bypass:v.bypass})}catch(Q){console.error("[dashboard] live read failed",Q)}if(D!==null&&window.clearTimeout(D),T&&Te(T.source.kind))return m.current=T,j.current=0,t(T),a(!1),r(!1),T.debt.pending&&V(),!0;j.current+=1;let q=null;try{q=await dt()}catch{}return m.current?(t(m.current),d("refresh-failed")):(q&&t(q),d("offline")),a(!0),r(!1),!1},[V]);le(()=>{E()},[E]),le(()=>{if(!_){f(null);return}let v=!1;return C(!0),_t(_).then(D=>{v||(f(D),C(!1))}),()=>{v=!0}},[_]),le(()=>{function v(){A.current!==null&&(window.clearTimeout(A.current),A.current=null)}function D(){v();let T=Math.min(j.current,4),q=an*(1+T);A.current=window.setTimeout(async()=>{document.hidden||await E({viaPoll:!0}),k&&D()},q)}return k&&D(),v},[k,E]);let N=de(v=>{o(v),c("capsule")},[]),L=!!e&&!Te(e.source.kind),P=!e&&i;function U(v){switch(u){case"board":return n(W,{main:n(R,{children:[n(Pe,{runtime:v}),n(on,{runtime:v}),n(Oe,{runtime:v})]}),side:n(x,{title:"Recent capsules",children:n(fe,{runtime:v,selectedTaskId:_,onSelect:N,offline:L})})});case"capsule":return n(W,{main:n(x,{title:"Capsule detail",children:n(Ot,{selectedTaskId:_,detail:p,loading:b})}),side:n(x,{title:"Recent capsules",children:n(fe,{runtime:v,selectedTaskId:_,onSelect:N,offline:L})})});case"evidence":return n(W,{main:n(x,{title:"Evidence",children:p?n(R,{children:[n("div",{class:"capsule-head",children:[n("span",{class:"mono capsule-id",children:p.taskId}),n("span",{class:"capsule-title",children:p.title||"Untitled capsule"})]}),n("div",{id:"capsule-evidence",children:n(De,{detail:p})})]}):n(M,{title:"No task selected",hint:"Pick a recent capsule to read its sanitized evidence records."})}),side:n(x,{title:"Recent capsules",children:n(fe,{runtime:v,selectedTaskId:_,onSelect:N,offline:L})})});case"handoff":return n(W,{main:n(x,{title:"Current state",children:n(Rt,{rows:v.handoff.currentState,emptyOffline:L})}),side:n(x,{title:"Next recommended step",children:n(Rt,{rows:v.handoff.nextStep,emptyOffline:L})})});case"harness":return n(W,{main:n(x,{title:"Latest validation",children:[n("dl",{class:"kv",children:[n("div",{children:[n("dt",{children:"Latest full check"}),n("dd",{class:"kv-wrap",children:v.validation.latestFullCheck??"none recorded"})]}),n("div",{children:[n("dt",{children:"Latest done-level validation"}),n("dd",{class:"kv-wrap",children:v.validation.latestDoneLevelValidation??"none recorded"})]})]}),n("p",{class:"view-note",children:"Read-only. The dashboard does not run checks; refresh only re-reads recorded results."})]})});case"mcp":return n(W,{main:n(x,{title:"MCP guard",children:[n("dl",{class:"kv",children:[n("div",{children:[n("dt",{children:"Default mode"}),n("dd",{children:v.mcp.defaultMode})]}),n("div",{children:[n("dt",{children:"Evidence attach"}),n("dd",{children:v.mcp.evidenceAttachRequiresApproval?"requires approval":"enabled"})]})]}),n("p",{class:"view-note",children:"Read-only guard surface. Evidence attach, shell execution, and provider calls remain gated."})]})});case"release":return n(W,{main:n(x,{title:"Operational debt",children:[n("div",{class:"counts-grid",children:[n("div",{class:"count-cell",children:[n("div",{class:"count-value",children:v.debt.open}),n("div",{class:"count-key",children:"open"})]}),n("div",{class:"count-cell",children:[n("div",{class:`count-value ${v.debt.highOpen>0?"metric-warn":""}`,children:v.debt.highOpen}),n("div",{class:"count-key",children:"high open"})]}),n("div",{class:"count-cell",children:[n("div",{class:"count-value",children:v.debt.total}),n("div",{class:"count-key",children:"total"})]})]}),n("p",{class:"view-note",children:"Release execution is deferred and never runs from the dashboard. This is a read-only posture view."})]}),side:n(It,{runtime:v})});case"home":default:return n(W,{main:n(R,{children:[n(Oe,{runtime:v}),n(Pe,{runtime:v}),n(x,{title:"Activity",children:n(St,{events:v.timeline,offline:L})}),n(Ct,{data:p??v})]}),side:n(R,{children:[n(x,{title:"Capsule detail",children:n(Ot,{selectedTaskId:_,detail:p,loading:b})}),n(x,{title:"Recent capsules",children:n(fe,{runtime:v,selectedTaskId:_,onSelect:N,offline:L})}),n(It,{runtime:v})]})})}}return n("div",{class:"root",children:[n(ln,{runtime:e,active:u,onSelect:c}),n("div",{class:"frame",children:[n("header",{class:"topbar",children:[n("div",{class:"topbar-left",children:[n("span",{class:"workspace-name",children:"HADARA-dev"}),e?n(yt,{health:e.health}):n("span",{class:"verdict muted",children:"Loading\u2026"})]}),n("div",{class:"topbar-right",children:[i?n("span",{class:"syncing","aria-live":"polite",children:"syncing\u2026"}):null,e?n(kt,{runtime:e}):null,n("button",{type:"button",class:`toggle ${k?"is-on":""}`,"aria-pressed":k,onClick:()=>h(v=>!v),children:k?"Auto-refresh on":"Auto-refresh off"}),n("button",{type:"button",class:"primary-btn",onClick:()=>void E({bypass:!0}),disabled:i,children:"Refresh"})]})]}),n("main",{class:"main","aria-live":"polite",children:[s?n(wt,{kind:l,when:m.current?.source.generatedAt??null,onRetry:()=>void E({bypass:!0})}):null,P?n(R,{children:[n(Tt,{view:u}),n("div",{class:"grid",children:[n("div",{class:"grid-main",children:[n(Y,{lines:3,title:!0}),n(Y,{lines:5,title:!0})]}),n("div",{class:"grid-side",children:n(Y,{lines:4,title:!0})})]})]}):e?n(R,{children:[n(Tt,{view:u}),U(e)]}):n(M,{title:"No data available",hint:"Could not read live status, fixture, or inline fallback. Use Refresh to retry."})]})]})]})}var Pt=document.getElementById("app");Pt&&Ge(n(cn,{}),Pt);})();
+</script>
+  </body>
 </html>

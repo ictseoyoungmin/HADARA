@@ -207,3 +207,11 @@
 | T-0204 | Dashboard Production Readiness Review | Done | tasks/T-0204-dashboard-production-readiness-review | |
 | T-0205 | Dashboard Playwright Performance Measurement | Done | tasks/T-0205-dashboard-playwright-performance-measurement | |
 | T-0206 | Dashboard Production Hardening Follow-up | Done | tasks/T-0206-dashboard-production-hardening-follow-up | |
+| T-0207 | Dashboard Design Language and Tokens | Partial | tasks/T-0207-dashboard-design-language-and-tokens | |
+| T-0208 | Dashboard Frontend Tech Decision Spike | Partial | tasks/T-0208-dashboard-frontend-tech-decision-spike | |
+| T-0209 | Dashboard Operator Console Shell Rebuild | Partial | tasks/T-0209-dashboard-operator-console-shell-rebuild | |
+| T-0210 | Dashboard Active Next and Command Affordance | Partial | tasks/T-0210-dashboard-active-next-and-command-affordance | |
+| T-0211 | Dashboard Activity Feed Timeline Redesign | Partial | tasks/T-0211-dashboard-activity-feed-timeline-redesign | |
+| T-0212 | Dashboard Proof Verdict and Evidence Lens Redesign | Partial | tasks/T-0212-dashboard-proof-verdict-and-evidence-lens-redesign | |
+| T-0213 | Dashboard Metrics With Meaning and Developer JSON | Partial | tasks/T-0213-dashboard-metrics-with-meaning-and-developer-json | |
+| T-0214 | Dashboard Visual Regression and A11y Gate | Partial | tasks/T-0214-dashboard-visual-regression-and-a11y-gate | |

@@ -31,8 +31,8 @@ describe('dashboard process-memory cache', () => {
       () => ({ generatedAt: 'second', value: ++createCount })
     );
 
-    expect(first.cache).toMatchObject({ status: 'miss', key, ttlMs: 3000 });
-    expect(second.cache).toMatchObject({ status: 'hit', key, ttlMs: 3000 });
+    expect(first.cache).toMatchObject({ status: 'miss', key, ttlMs: DASHBOARD_CACHE_TTLS.bootstrap });
+    expect(second.cache).toMatchObject({ status: 'hit', key, ttlMs: DASHBOARD_CACHE_TTLS.bootstrap });
     expect(second.value).toEqual({ generatedAt: 'first', value: 1 });
     expect(createCount).toBe(1);
   });

@@ -111,13 +111,15 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
   if (url.pathname === '/api/status') return jsonResponse(createOpsStatusReport(projectRoot), headOnly);
   if (url.pathname === '/api/dashboard/bootstrap') {
     const selectedTaskId = url.searchParams.get('selectedTaskId')?.trim();
-    const key = selectedTaskId
-      ? createDashboardCacheKey(projectRoot, 'bootstrap', 'selected', selectedTaskId)
-      : createDashboardCacheKey(projectRoot, 'bootstrap');
+    const tier = url.searchParams.get('tier') === 'core' ? 'core' : 'full';
+    const keyParts: string[] = ['bootstrap'];
+    if (tier === 'core') keyParts.push('core');
+    if (selectedTaskId) keyParts.push('selected', selectedTaskId);
+    const key = createDashboardCacheKey(projectRoot, ...keyParts);
     const cached = getOrCreateCachedReport(
       key,
       { ttlMs: DASHBOARD_CACHE_TTLS.bootstrap, bypass: url.searchParams.get('cache') === 'bypass' },
-      () => createDashboardBootstrapReport(projectRoot, selectedTaskId ? { selectedTaskId } : {})
+      () => createDashboardBootstrapReport(projectRoot, { tier, ...(selectedTaskId ? { selectedTaskId } : {}) })
     );
     return jsonResponse(withDashboardCacheMetadata(cached.value, cached.cache), headOnly);
   }

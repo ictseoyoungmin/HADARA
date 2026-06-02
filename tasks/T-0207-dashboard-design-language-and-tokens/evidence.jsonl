@@ -1,0 +1,1 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-06-02T00:30:00.767Z","taskId":"T-0207","kind":"command-log","summary":"Phase 5.6 design language and token system authored (docs/DASHBOARD_DESIGN_LANGUAGE.md); contrast targets validated by axe-core AA pass; --faint corrected to #939d96 for AA.","result":"passed","visibility":"public"}

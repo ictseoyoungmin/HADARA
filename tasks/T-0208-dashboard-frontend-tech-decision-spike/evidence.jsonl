@@ -1,0 +1,1 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-06-02T00:30:16.637Z","taskId":"T-0208","kind":"command-log","summary":"Approach B (Preact single self-contained bundle) selected and recorded in DECISIONS D-0011; build emits a ~49 kB inlined index.html served 200 under the existing self-only CSP with no external/CDN resources.","result":"passed","visibility":"public"}

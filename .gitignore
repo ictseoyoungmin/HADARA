@@ -26,3 +26,6 @@ docs/design/mockups/*
 .mockup/
 .agent_alpha_test/
 .mcp.json
+
+# Phase 5.6 dashboard visual baselines (generated)
+.dashboard-visual/

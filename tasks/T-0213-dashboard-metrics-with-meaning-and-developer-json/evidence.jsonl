@@ -1,0 +1,1 @@
+{"schemaVersion":"hadara.evidence.v1","time":"2026-06-02T00:30:29.926Z","taskId":"T-0213","kind":"command-log","summary":"Metrics given context and raw JSON moved behind a read-only Developer disclosure; inspector vocabulary removed; visual gate metrics-context pass; static test asserts absence of parser-row/Bottom Inspector/Inspect JSON.","result":"passed","visibility":"public"}

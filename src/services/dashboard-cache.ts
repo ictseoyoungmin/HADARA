@@ -30,10 +30,13 @@ export interface DashboardCacheResult<T> {
   cache: DashboardCacheMetadata;
 }
 
+// TTLs are sized so that after a first (possibly slow on networked/NTFS
+// filesystems) read, subsequent navigation and refresh land on a warm cache.
+// Manual Refresh uses ?cache=bypass to force a fresh read when needed.
 export const DASHBOARD_CACHE_TTLS = {
-  bootstrap: 3_000,
-  timeline: 8_000,
-  taskDetail: 15_000,
+  bootstrap: 15_000,
+  timeline: 15_000,
+  taskDetail: 30_000,
   evidenceLint: 30_000,
   debt: 30_000
 } as const;

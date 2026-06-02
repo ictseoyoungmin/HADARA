@@ -1,0 +1,437 @@
+{
+  "schemaVersion": "hadara.dashboard.task_detail.v1",
+  "command": "dashboard.task-detail",
+  "ok": true,
+  "taskId": "T-0206",
+  "generatedAt": "2026-06-02T00:07:38.688Z",
+  "source": {
+    "kind": "live-api",
+    "projectRoot": "/mnt/f/NowWorking/HADARA-dev",
+    "projectRootRedacted": true,
+    "project": {
+      "kind": "project-root",
+      "pathRedacted": true,
+      "fingerprint": "sha256:479fa84bc9c3"
+    },
+    "readOnly": true
+  },
+  "cache": {
+    "status": "miss",
+    "key": "dashboard:sha256:000000000000:task-detail:T-0206",
+    "ttlMs": 15000,
+    "generatedAt": "2026-06-02T00:08:19.837Z",
+    "expiresAt": "2026-06-02T00:08:34.837Z"
+  },
+  "workbench": {
+    "schemaVersion": "hadara.task.workbench.v1",
+    "command": "task.status",
+    "ok": true,
+    "generatedAt": "2026-06-02T00:07:38.688Z",
+    "projectRoot": "/mnt/f/NowWorking/HADARA-dev",
+    "task": {
+      "id": "T-0206",
+      "title": "Dashboard Production Hardening Follow-up",
+      "capsule": "tasks/T-0206-dashboard-production-hardening-follow-up",
+      "taskStatus": "Done",
+      "taskBoardStatus": "Done",
+      "taskBoardPath": "docs/TASK_BOARD.md",
+      "taskBoardPresent": true
+    },
+    "state": {
+      "closeState": "closed-valid",
+      "ready": true,
+      "closeEvidenceFound": true,
+      "closedValid": true,
+      "closed": true,
+      "auditable": true
+    },
+    "summary": {
+      "blockers": 0,
+      "warnings": 7,
+      "evidenceRecords": 3,
+      "nextActions": 1
+    },
+    "sources": {
+      "taskClosePlan": {
+        "ok": true,
+        "mode": "dry-run",
+        "blockers": 0,
+        "warnings": 0
+      },
+      "evidenceLint": {
+        "ok": true,
+        "issues": 0
+      },
+      "evidenceList": {
+        "ok": true,
+        "records": 3,
+        "latest": {
+          "time": "2026-06-01T09:32:27.645Z",
+          "kind": "command-log",
+          "result": "passed",
+          "visibility": "public",
+          "summary": "Task close validation for T-0206 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:4ac10f03705e7d0368758a598aacd28ae65a4075644ce8807c415a9c334f7d38."
+        }
+      },
+      "protocolTask": {
+        "ok": true,
+        "issues": 0
+      },
+      "protocolDocs": {
+        "ok": true,
+        "issues": 7
+      },
+      "protocolProfile": {
+        "ok": true,
+        "issues": 0
+      }
+    },
+    "issues": [
+      {
+        "severity": "warning",
+        "code": "PROTOCOL_DOCS_PROJECT_TASK_BOARD_ROW_MISSING",
+        "message": "docs/TASK_BOARD.md does not contain a row for T-0073.",
+        "path": "docs/TASK_BOARD.md"
+      },
+      {
+        "severity": "warning",
+        "code": "PROTOCOL_DOCS_PROJECT_TASK_BOARD_ROW_MISSING",
+        "message": "docs/TASK_BOARD.md does not contain a row for T-0207.",
+        "path": "docs/TASK_BOARD.md"
+      },
+      {
+        "severity": "warning",
+        "code": "PROTOCOL_DOCS_PROJECT_TASK_BOARD_ROW_MISSING",
+        "message": "docs/TASK_BOARD.md does not contain a row for T-0208.",
+        "path": "docs/TASK_BOARD.md"
+      },
+      {
+        "severity": "warning",
+        "code": "PROTOCOL_DOCS_PROJECT_TASK_BOARD_ROW_MISSING",
+        "message": "docs/TASK_BOARD.md does not contain a row for T-0209.",
+        "path": "docs/TASK_BOARD.md"
+      },
+      {
+        "severity": "warning",
+        "code": "PROTOCOL_DOCS_PROJECT_TASK_BOARD_ROW_MISSING",
+        "message": "docs/TASK_BOARD.md does not contain a row for T-0210.",
+        "path": "docs/TASK_BOARD.md"
+      },
+      {
+        "severity": "warning",
+        "code": "PROTOCOL_DOCS_PROJECT_STATE_LATEST_COMPLETED_STALE",
+        "message": "docs/PROJECT_STATE.md latest completed markers do not mention T-0206.",
+        "path": "docs/PROJECT_STATE.md"
+      },
+      {
+        "severity": "warning",
+        "code": "PROTOCOL_DOCS_DECISIONS_TABLE_MISSING",
+        "message": "docs/DECISIONS.md uses legacy decision prose without the table-first decision index expected by the current scaffold.",
+        "path": "docs/DECISIONS.md"
+      }
+    ],
+    "nextActions": [
+      {
+        "id": "audit-close",
+        "kind": "audit",
+        "required": false,
+        "priority": "soon",
+        "command": "hadara task audit-close --task T-0206 --json",
+        "message": "Audit the existing close evidence in a read-only pass.",
+        "sourceIssueCodes": [
+          "TASK_CLOSE_EVIDENCE_PRESENT"
+        ]
+      }
+    ]
+  },
+  "evidenceLint": {
+    "schemaVersion": "hadara.evidence.lint.v1",
+    "command": "evidence.lint",
+    "ok": true,
+    "taskId": "T-0206",
+    "projectRoot": "/mnt/f/NowWorking/HADARA-dev",
+    "summary": {
+      "records": 3,
+      "markdownRows": 3,
+      "issueCounts": {
+        "error": 0,
+        "warning": 0,
+        "info": 0
+      },
+      "semantics": {
+        "total": 3,
+        "byStrength": {
+          "substantive-positive": 3,
+          "substantive-negative": 0,
+          "blocked": 0,
+          "record-only": 0,
+          "weak": 0,
+          "not-applicable": 0
+        },
+        "byCategory": {
+          "validation": 1,
+          "operation": 2
+        },
+        "byOutcome": {
+          "passed": 3
+        },
+        "publicRecords": 3,
+        "privateRecords": 0,
+        "legacyRecords": 3,
+        "latestSubstantiveEvidenceId": "legacy:T-0206:3:f5ac7d6dc133"
+      }
+    },
+    "records": [
+      {
+        "schemaVersion": "hadara.evidence.v1",
+        "time": "2026-06-01T09:29:16.575Z",
+        "taskId": "T-0206",
+        "kind": "command-log",
+        "summary": "Docker sync-build after dashboard production hardening follow-up passed: build, 84 test files, 563 tests, built CLI version smoke ok.",
+        "result": "passed",
+        "visibility": "public"
+      },
+      {
+        "schemaVersion": "hadara.evidence.v1",
+        "time": "2026-06-01T09:31:19.620Z",
+        "taskId": "T-0206",
+        "kind": "command-log",
+        "summary": "Task close validation for T-0206 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:aa2e2a2189f1e31eb21cd846fa906d9ae002b297800ce901a86fe6f60e51ed22.",
+        "result": "passed",
+        "visibility": "public"
+      },
+      {
+        "schemaVersion": "hadara.evidence.v1",
+        "time": "2026-06-01T09:32:27.645Z",
+        "taskId": "T-0206",
+        "kind": "command-log",
+        "summary": "Task close validation for T-0206 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:4ac10f03705e7d0368758a598aacd28ae65a4075644ce8807c415a9c334f7d38.",
+        "result": "passed",
+        "visibility": "public"
+      }
+    ],
+    "issues": []
+  },
+  "evidenceList": {
+    "schemaVersion": "hadara.evidence.list.v1",
+    "command": "evidence.list",
+    "ok": true,
+    "taskId": "T-0206",
+    "count": 3,
+    "records": [
+      {
+        "schemaVersion": "hadara.evidence.v1",
+        "time": "2026-06-01T09:29:16.575Z",
+        "taskId": "T-0206",
+        "kind": "command-log",
+        "summary": "Docker sync-build after dashboard production hardening follow-up passed: build, 84 test files, 563 tests, built CLI version smoke ok.",
+        "result": "passed",
+        "visibility": "public"
+      },
+      {
+        "schemaVersion": "hadara.evidence.v1",
+        "time": "2026-06-01T09:31:19.620Z",
+        "taskId": "T-0206",
+        "kind": "command-log",
+        "summary": "Task close validation for T-0206 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:aa2e2a2189f1e31eb21cd846fa906d9ae002b297800ce901a86fe6f60e51ed22.",
+        "result": "passed",
+        "visibility": "public"
+      },
+      {
+        "schemaVersion": "hadara.evidence.v1",
+        "time": "2026-06-01T09:32:27.645Z",
+        "taskId": "T-0206",
+        "kind": "command-log",
+        "summary": "Task close validation for T-0206 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:4ac10f03705e7d0368758a598aacd28ae65a4075644ce8807c415a9c334f7d38.",
+        "result": "passed",
+        "visibility": "public"
+      }
+    ],
+    "issues": []
+  },
+  "timeline": {
+    "schemaVersion": "hadara.dashboard.timeline.v1",
+    "command": "dashboard.timeline",
+    "ok": true,
+    "taskId": "T-0206",
+    "generatedAt": "2026-06-02T00:07:38.688Z",
+    "source": {
+      "projectRoot": "/mnt/f/NowWorking/HADARA-dev",
+      "projectRootRedacted": true,
+      "project": {
+        "kind": "project-root",
+        "pathRedacted": true,
+        "fingerprint": "sha256:479fa84bc9c3"
+      },
+      "live": true
+    },
+    "cache": {
+      "status": "disabled",
+      "key": "dashboard:sha256:479fa84bc9c3:timeline:T-0206",
+      "ttlMs": null,
+      "generatedAt": "2026-06-02T00:07:38.688Z",
+      "expiresAt": null
+    },
+    "events": [
+      {
+        "id": "0001-system",
+        "order": 1,
+        "readOnly": true,
+        "kind": "system",
+        "title": "Status snapshot read",
+        "summary": "Operations status health is ok.",
+        "severity": "ok",
+        "command": "dashboard.timeline"
+      },
+      {
+        "id": "0002-active-run",
+        "order": 2,
+        "readOnly": true,
+        "kind": "active-run",
+        "title": "Active run projection read",
+        "summary": "No active run is recorded.",
+        "severity": "info"
+      },
+      {
+        "id": "0003-task",
+        "order": 3,
+        "readOnly": true,
+        "kind": "task",
+        "title": "Next recommended work",
+        "summary": "| Step | Reason | Done Evidence |",
+        "severity": "info"
+      },
+      {
+        "id": "0004-handoff",
+        "order": 4,
+        "readOnly": true,
+        "kind": "handoff",
+        "title": "Handoff current state",
+        "summary": "| Area | State | Notes |",
+        "severity": "info"
+      },
+      {
+        "id": "0005-harness",
+        "order": 5,
+        "readOnly": true,
+        "kind": "harness",
+        "title": "Latest full validation",
+        "summary": "Docker check after T-0096 follow-up hardening: 39 test files passed, 249 tests passed",
+        "severity": "ok"
+      },
+      {
+        "id": "0006-task",
+        "order": 6,
+        "readOnly": true,
+        "kind": "task",
+        "title": "Selected task T-0206",
+        "summary": "Done / closed-valid",
+        "severity": "ok",
+        "taskId": "T-0206",
+        "command": "task.status T-0206"
+      },
+      {
+        "id": "legacy:T-0206:1:63dd2911b340",
+        "order": 7,
+        "readOnly": true,
+        "time": "2026-06-01T09:29:16.575Z",
+        "kind": "evidence",
+        "title": "command-log passed",
+        "summary": "Docker sync-build after dashboard production hardening follow-up passed: build, 84 test files, 563 tests, built CLI version smoke ok.",
+        "severity": "ok",
+        "taskId": "T-0206",
+        "evidenceId": "legacy:T-0206:1:63dd2911b340",
+        "evidenceFingerprint": "sha256:63dd2911b340ef1c7334360ff2128118544cd157bdad8548014e6a4120e8b2ae",
+        "evidenceSourceLine": 1,
+        "evidenceIdSource": "line-fallback",
+        "evidenceIdStability": "unstable-on-reorder"
+      },
+      {
+        "id": "legacy:T-0206:2:2f86c41412bd",
+        "order": 8,
+        "readOnly": true,
+        "time": "2026-06-01T09:31:19.620Z",
+        "kind": "evidence",
+        "title": "command-log passed",
+        "summary": "Task close validation for T-0206 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:aa2e2a2189f1e31eb21cd846fa906d9ae002b297800ce901a86fe6f60e51ed22.",
+        "severity": "ok",
+        "taskId": "T-0206",
+        "evidenceId": "legacy:T-0206:2:2f86c41412bd",
+        "evidenceFingerprint": "sha256:2f86c41412bdbc365d66939419b0a69e10a05b902eb375e9a04d233436a03a26",
+        "evidenceSourceLine": 2,
+        "evidenceIdSource": "line-fallback",
+        "evidenceIdStability": "unstable-on-reorder"
+      },
+      {
+        "id": "legacy:T-0206:3:f5ac7d6dc133",
+        "order": 9,
+        "readOnly": true,
+        "time": "2026-06-01T09:32:27.645Z",
+        "kind": "evidence",
+        "title": "command-log passed",
+        "summary": "Task close validation for T-0206 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:4ac10f03705e7d0368758a598aacd28ae65a4075644ce8807c415a9c334f7d38.",
+        "severity": "ok",
+        "taskId": "T-0206",
+        "evidenceId": "legacy:T-0206:3:f5ac7d6dc133",
+        "evidenceFingerprint": "sha256:f5ac7d6dc1333dfd85e80d6b73c8a7ec9a0fd29eaf82b009c8685c8cf84dd4af",
+        "evidenceSourceLine": 3,
+        "evidenceIdSource": "line-fallback",
+        "evidenceIdStability": "unstable-on-reorder"
+      }
+    ],
+    "issues": []
+  },
+  "proof": {
+    "status": "sufficient",
+    "blocking": false,
+    "auditabilityWarning": false,
+    "note": "Evidence is sufficient for selected-task proof display.",
+    "substantivePositive": 3,
+    "semanticIssueCodes": []
+  },
+  "commandGuidance": [
+    {
+      "id": "audit-close",
+      "label": "Audit the existing close evidence in a read-only pass.",
+      "command": "hadara task audit-close --task T-0206 --json",
+      "readOnly": true
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warning",
+      "code": "WORKBENCH_PROTOCOL_DOCS_PROJECT_TASK_BOARD_ROW_MISSING",
+      "message": "docs/TASK_BOARD.md does not contain a row for T-0073."
+    },
+    {
+      "severity": "warning",
+      "code": "WORKBENCH_PROTOCOL_DOCS_PROJECT_TASK_BOARD_ROW_MISSING",
+      "message": "docs/TASK_BOARD.md does not contain a row for T-0207."
+    },
+    {
+      "severity": "warning",
+      "code": "WORKBENCH_PROTOCOL_DOCS_PROJECT_TASK_BOARD_ROW_MISSING",
+      "message": "docs/TASK_BOARD.md does not contain a row for T-0208."
+    },
+    {
+      "severity": "warning",
+      "code": "WORKBENCH_PROTOCOL_DOCS_PROJECT_TASK_BOARD_ROW_MISSING",
+      "message": "docs/TASK_BOARD.md does not contain a row for T-0209."
+    },
+    {
+      "severity": "warning",
+      "code": "WORKBENCH_PROTOCOL_DOCS_PROJECT_TASK_BOARD_ROW_MISSING",
+      "message": "docs/TASK_BOARD.md does not contain a row for T-0210."
+    },
+    {
+      "severity": "warning",
+      "code": "WORKBENCH_PROTOCOL_DOCS_PROJECT_STATE_LATEST_COMPLETED_STALE",
+      "message": "docs/PROJECT_STATE.md latest completed markers do not mention T-0206."
+    },
+    {
+      "severity": "warning",
+      "code": "WORKBENCH_PROTOCOL_DOCS_DECISIONS_TABLE_MISSING",
+      "message": "docs/DECISIONS.md uses legacy decision prose without the table-first decision index expected by the current scaffold."
+    }
+  ]
+}

@@ -72,7 +72,21 @@ export interface DashboardTimelineInput {
   taskId?: string;
 }
 
-export function createDashboardTimelineReport(projectRoot: string, input: DashboardTimelineInput = {}, now = new Date()): DashboardTimelineReport {
+// Optional precomputed reports so an aggregate caller (e.g. the dashboard
+// bootstrap) can avoid recomputing the expensive ops-status / task-list scans
+// that this timeline otherwise reads independently. Behavior is unchanged when
+// deps are omitted.
+export interface DashboardTimelineDeps {
+  status?: ReturnType<typeof createOpsStatusReport>;
+  tasks?: ReturnType<typeof createTaskListReport>;
+}
+
+export function createDashboardTimelineReport(
+  projectRoot: string,
+  input: DashboardTimelineInput = {},
+  now = new Date(),
+  deps: DashboardTimelineDeps = {}
+): DashboardTimelineReport {
   const events: DashboardTimelineEvent[] = [];
   const issues: DashboardTimelineIssue[] = [];
   let order = 0;
@@ -90,7 +104,7 @@ export function createDashboardTimelineReport(projectRoot: string, input: Dashbo
     events.push(nextEvent);
   };
 
-  const status = createOpsStatusReport(projectRoot);
+  const status = deps.status ?? createOpsStatusReport(projectRoot);
   push({
     kind: 'system',
     title: 'Status snapshot read',
@@ -136,7 +150,7 @@ export function createDashboardTimelineReport(projectRoot: string, input: Dashbo
     });
   }
 
-  const tasks = createTaskListReport(projectRoot);
+  const tasks = deps.tasks ?? createTaskListReport(projectRoot);
   if (!tasks.ok) {
     issues.push({ severity: 'warning', code: 'TASK_LIST_UNAVAILABLE', message: 'Task list report was unavailable.' });
   }

@@ -30,6 +30,7 @@ export interface DashboardBootstrapReport {
     project: DashboardProjectReference;
   };
   cache: DashboardCacheMetadata;
+  tier: 'core' | 'full';
   status: OpsStatusReport;
   taskSummary: {
     total: number;
@@ -54,7 +55,7 @@ export interface DashboardBootstrapReport {
     staleReason: string | null;
     issues: number;
   };
-  debtSummary: OpsStatusReport['debt'];
+  debtSummary: OpsStatusReport['debt'] & { pending?: boolean };
   selectedTask: DashboardBootstrapSelectedTask | null;
   issues: DashboardBootstrapIssue[];
 }
@@ -87,13 +88,20 @@ export interface DashboardBootstrapSelectedTask {
 
 export interface DashboardBootstrapInput {
   selectedTaskId?: string;
+  // 'core' skips the expensive operational-debt computation for a fast first
+  // paint; the frontend loads debt in the background and merges it. 'full'
+  // (default) includes everything and is unchanged.
+  tier?: 'core' | 'full';
 }
 
 export function createDashboardBootstrapReport(projectRoot: string, input: DashboardBootstrapInput = {}, now = new Date()): DashboardBootstrapReport {
   const generatedAt = now.toISOString();
-  const status = createOpsStatusReport(projectRoot);
+  const core = input.tier === 'core';
+  const status = createOpsStatusReport(projectRoot, { includeDebt: !core });
   const tasks = createTaskListReport(projectRoot);
-  const timeline = createDashboardTimelineReport(projectRoot, {}, now);
+  // Reuse the already-computed status/tasks so the timeline does not re-run the
+  // expensive ops-status and task-list scans a second time (major /mnt/f cost).
+  const timeline = createDashboardTimelineReport(projectRoot, {}, now, { status, tasks });
   const issues: DashboardBootstrapIssue[] = [
     ...status.issues.map((issue) => ({ severity: issue.severity, code: `STATUS_${issue.code}`, message: issue.message })),
     ...timeline.issues.map((issue) => ({ severity: issue.severity, code: `TIMELINE_${issue.code}`, message: issue.message }))
@@ -119,6 +127,7 @@ export function createDashboardBootstrapReport(projectRoot: string, input: Dashb
         : createDashboardCacheKey(projectRoot, 'bootstrap'),
       generatedAt
     ),
+    tier: core ? 'core' : 'full',
     status,
     taskSummary: {
       total: tasks.count,
@@ -143,7 +152,7 @@ export function createDashboardBootstrapReport(projectRoot: string, input: Dashb
       staleReason: status.activeRun.handoff.staleReason,
       issues: status.activeRun.issues.length
     },
-    debtSummary: status.debt,
+    debtSummary: core ? { ...status.debt, pending: true } : status.debt,
     selectedTask,
     issues
   };

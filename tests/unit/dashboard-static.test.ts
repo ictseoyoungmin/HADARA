@@ -6,28 +6,28 @@ import { clearDashboardCacheForTests } from '../../src/services/dashboard-cache'
 
 const dashboardPath = path.join(process.cwd(), 'docs', 'design', 'dashboard', 'index.html');
 const fixturePath = path.join(process.cwd(), 'docs', 'design', 'fixtures', 'hadara.ops.status.sample.json');
+const dashboardSrcDir = path.join(process.cwd(), 'dashboard', 'src');
 
-describe('static dashboard reference', () => {
+function readDashboardHtml(): string {
+  return fs.readFileSync(dashboardPath, 'utf8');
+}
+
+function readFixture(): Record<string, unknown> {
+  return JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as Record<string, unknown>;
+}
+
+function readAuthoredSource(): string {
+  return fs
+    .readdirSync(dashboardSrcDir)
+    .filter((file) => /\.(ts|tsx)$/.test(file))
+    .map((file) => fs.readFileSync(path.join(dashboardSrcDir, file), 'utf8'))
+    .join('\n');
+}
+
+describe('operator console bundle (Phase 5.6)', () => {
   beforeEach(() => {
     clearDashboardCacheForTests();
   });
-
-  function readFixture(): Record<string, unknown> {
-    return JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as Record<string, unknown>;
-  }
-
-  function getValue(root: unknown, field: string): unknown {
-    if (field.endsWith('.length')) {
-      const value = getValue(root, field.slice(0, -'.length'.length));
-      return Array.isArray(value) ? value.length : undefined;
-    }
-    return field.split('.').reduce<unknown>((value, segment) => {
-      if (value && typeof value === 'object' && segment in value) {
-        return (value as Record<string, unknown>)[segment];
-      }
-      return undefined;
-    }, root);
-  }
 
   it('loads a static sample fixture with non-live metadata', () => {
     const fixture = readFixture();
@@ -55,31 +55,38 @@ describe('static dashboard reference', () => {
     });
   });
 
-  it('keeps dashboard HTML static and scoped to the sample fixture', () => {
-    const html = fs.readFileSync(dashboardPath, 'utf8');
+  it('serves the built operator console as a single self-contained asset consuming the aggregate read models', () => {
+    const html = readDashboardHtml();
 
-    expect(html).toContain("const liveBootstrapUrl = '/api/dashboard/bootstrap'");
-    expect(html).toContain("const liveStatusUrl = '/api/status'");
-    expect(html).toContain('../fixtures/hadara.ops.status.sample.json');
-    expect(html).toContain('fallback-status-json');
+    // application shell + inline fallback
     expect(html).toContain('HADARA Operator Console');
-    expect(html).toContain('MCP Guard');
-    expect(html).toContain('notLiveData');
-    expect(html).toContain('Refresh Status');
-    expect(html).toContain('Auto Refresh Off');
-    expect(html).toContain('LIVE BOOTSTRAP');
-    expect(html).toContain('FIXTURE FALLBACK');
-    expect(html).toContain('OFFLINE FALLBACK');
-    expect(html).toContain('data-field="health"');
-    expect(html).toContain('data-field="tasks.nextRecommended"');
-    expect(html).toContain('data-field="validation.latestFullCheck"');
-    expect(html).toContain('data-field="mcp.defaultMode"');
-    expect(html).toContain('data-source-kind');
-    expect(html).toContain('data-cache-status');
-    expect(html).toContain('data-load-phase');
-    expect(html).toContain('data-view-target="task-board"');
-    expect(html).toContain('data-view-section="home task-board harness release"');
-    expect(html).toContain('data-active-view-label');
+    expect(html).toContain('id="app"');
+    expect(html).toContain('id="fallback-status-json"');
+
+    // bootstrap-first aggregate read models; no frontend fan-out across raw endpoints
+    expect(html).toContain('/api/dashboard/bootstrap');
+    expect(html).toContain('/api/dashboard/task-detail');
+    expect(html).toContain('/api/status');
+    expect(html).toContain('fixtures/hadara.ops.status.sample.json');
+    expect(html).not.toContain('/api/task-workbench?taskId=');
+    expect(html).not.toContain('/api/evidence-lint?taskId=');
+    expect(html).not.toContain('/api/evidence?taskId=');
+
+    // source provenance schema gating remains visible in the bundle
+    expect(html).toContain('hadara.dashboard.bootstrap.v1');
+    expect(html).toContain('hadara.dashboard.task_detail.v1');
+    expect(html).toContain('hadara.ops.status.v1');
+
+    // single self-contained asset: no external/CDN resources (CSP self-only)
+    expect(html).not.toMatch(/src=["']https?:/i);
+    expect(html).not.toMatch(/href=["']https?:/i);
+    expect(html).not.toContain('unpkg');
+    expect(html).not.toContain('jsdelivr');
+    expect(html).not.toContain('cdn.');
+  });
+
+  it('keeps the served bundle read-only with no browser-persisted project state, streaming, or command execution', () => {
+    const html = readDashboardHtml();
 
     const forbiddenTokens = [
       'child_process',
@@ -87,13 +94,15 @@ describe('static dashboard reference', () => {
       'spawn(',
       'WebSocket',
       'EventSource',
+      'setInterval',
       'hadara mcp serve',
-      'localStorage.setItem',
       'localStorage',
+      'sessionStorage',
       'indexedDB',
-      'innerHTML',
+      'document.cookie',
       'data:image',
       'base64,',
+      // command-execution affordances must never appear
       'Run check',
       'Sync project',
       'Update task',
@@ -106,12 +115,46 @@ describe('static dashboard reference', () => {
     ];
 
     for (const token of forbiddenTokens) {
-      expect(html).not.toContain(token);
+      expect(html, token).not.toContain(token);
     }
   });
 
+  it('keeps the authored dashboard source free of mutation/storage/streaming/raw-injection patterns', () => {
+    const code = readAuthoredSource();
+
+    for (const token of [
+      'localStorage',
+      'sessionStorage',
+      'indexedDB',
+      'document.cookie',
+      'WebSocket',
+      'EventSource',
+      'setInterval',
+      'innerHTML',
+      'dangerouslySetInnerHTML',
+      'child_process'
+    ]) {
+      expect(code, token).not.toContain(token);
+    }
+
+    // commands are copy-only; the dashboard never executes them
+    expect(code).toContain('clipboard');
+    expect(code).toContain('dashboard does not execute');
+    // bootstrap-first fallback order is encoded in the data layer
+    const bootstrapIndex = code.indexOf("'/api/dashboard/bootstrap'");
+    const statusIndex = code.indexOf("'/api/status'");
+    const fixtureIndex = code.indexOf('fixtures/hadara.ops.status.sample.json');
+    expect(bootstrapIndex).toBeGreaterThan(-1);
+    expect(statusIndex).toBeGreaterThan(-1);
+    expect(fixtureIndex).toBeGreaterThan(-1);
+    expect(bootstrapIndex).toBeLessThan(statusIndex);
+    expect(statusIndex).toBeLessThan(fixtureIndex);
+    // a stalled read must degrade rather than freeze the console
+    expect(code).toContain('AbortController');
+  });
+
   it('keeps the inline fallback fixture aligned with the sample fixture', () => {
-    const html = fs.readFileSync(dashboardPath, 'utf8');
+    const html = readDashboardHtml();
     const fixture = readFixture();
     const match = html.match(/<script type="application\/json" id="fallback-status-json">\s*([\s\S]*?)\s*<\/script>/);
 
@@ -121,123 +164,20 @@ describe('static dashboard reference', () => {
     expect(fallback).toEqual(fixture);
   });
 
-  it('binds every static data-field to fixture-backed or derived status data', () => {
-    const html = fs.readFileSync(dashboardPath, 'utf8');
-    const fixture = readFixture();
-    const fields = [...html.matchAll(/\sdata-field="([^"]+)"/g)].map((match) => match[1]);
+  it('keeps the new operator console surface free of inspector/debug-window vocabulary', () => {
+    const html = readDashboardHtml();
 
-    expect(fields.length).toBeGreaterThan(10);
-    for (const field of fields) {
-      expect(getValue(fixture, field), field).not.toBeUndefined();
-    }
+    // the reset removes the property-inspector framing from the primary surface
+    expect(html).not.toContain('Bottom Inspector');
+    expect(html).not.toContain('Inspect JSON');
+    expect(html).not.toContain('parser-row');
+
+    // private-only stays an auditability warning, not a Done blocker
+    expect(html).toContain('auditability warning');
   });
 
-  it('adopts the comfort dark mockup shell without adopting mockup behavior', () => {
-    const html = fs.readFileSync(dashboardPath, 'utf8');
-
-    expect(html).toContain('topbar');
-    expect(html).toContain('sidebar');
-    expect(html).toContain('metrics');
-    expect(html).toContain('Handoff Beacon');
-    expect(html).toContain('Workstream');
-    expect(html).toContain('Bootstrap timeline overview with selected-task detail loaded separately.');
-    expect(html).not.toContain('Status-derived rows until the deterministic timeline read model lands.');
-    expect(html).toContain('visual shell follows the operator-console layout; data contract remains authoritative');
-    expect(html).toContain('FIXTURE FALLBACK');
-  });
-
-  it('renders the Phase 5 operator console layout landmarks with read-only wording', () => {
-    const html = fs.readFileSync(dashboardPath, 'utf8');
-
-    expect(html).toContain('data-layout="operator-console"');
-    expect(html).toContain('data-layout="agent-lane"');
-    expect(html).toContain('data-layout="workstream-panel"');
-    expect(html).toContain('data-layout="evidence-lens-placeholder"');
-    expect(html).toContain('data-layout="bottom-inspector"');
-    expect(html).toContain('Agent Lane');
-    expect(html).toContain('Workstream');
-    expect(html).toContain('Evidence Lens');
-    expect(html).toContain('Bottom Inspector');
-    expect(html).toContain('Selected-task proof from shared workbench and evidence semantic reports.');
-    expect(html).toContain('/api/dashboard/task-detail?taskId=');
-    expect(html).not.toContain('/api/task-workbench?taskId=');
-    expect(html).not.toContain('/api/evidence-lint?taskId=');
-    expect(html).not.toContain('/api/evidence?taskId=');
-    expect(html).toContain('proofStatusFrom');
-    expect(html).toContain('TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE');
-    expect(html).toContain('Auditability warning, not a Done blocker.');
-    expect(html).toContain('Generated legacy ids are compatibility read-model ids');
-    expect(html).toContain('dashboard does not execute it');
-    expect(html).toContain('read-only');
-    expect(html).toContain('@media (max-width: 1180px)');
-    expect(html).toContain('.operator-grid');
-    expect(html).toContain('.inspector-grid');
-  });
-
-  it('documents bootstrap-first dashboard loading order and read-only refresh behavior', () => {
-    const html = fs.readFileSync(dashboardPath, 'utf8');
-    const bootstrapIndex = html.indexOf('const liveBootstrapUrl');
-    const liveIndex = html.indexOf('const liveStatusUrl');
-    const fixtureIndex = html.indexOf('const fixtureUrl');
-    const bootstrapFetchIndex = html.indexOf('tryFetchJson(url)');
-    const liveFetchIndex = html.indexOf('tryFetchJson(liveStatusUrl)');
-    const fixtureFetchIndex = html.indexOf('tryFetchJson(fixtureUrl)');
-
-    expect(bootstrapIndex).toBeGreaterThan(-1);
-    expect(liveIndex).toBeGreaterThan(-1);
-    expect(fixtureIndex).toBeGreaterThan(-1);
-    expect(bootstrapIndex).toBeLessThan(liveIndex);
-    expect(liveIndex).toBeLessThan(fixtureIndex);
-    expect(bootstrapFetchIndex).toBeGreaterThan(-1);
-    expect(liveFetchIndex).toBeGreaterThan(-1);
-    expect(fixtureFetchIndex).toBeGreaterThan(-1);
-    expect(bootstrapFetchIndex).toBeLessThan(liveFetchIndex);
-    expect(liveFetchIndex).toBeLessThan(fixtureFetchIndex);
-    expect(html).toContain('lastSuccessfulRuntimeState');
-    expect(html).toContain('Refresh failed; keeping previous in-memory view.');
-    expect(html).toContain('setLoadPhase(\'bootstrap-loading\')');
-    expect(html).toContain('status-fallback-ready');
-    expect(html).toContain('bootstrap-ready');
-    expect(html).toContain('phase: shell');
-    expect(html).toContain('loadDashboardWithFallback');
-    expect(html).toContain("kind: 'live-api'");
-    expect(html).toContain("kind: 'fixture-fallback'");
-    expect(html).toContain("kind: 'inline-fallback'");
-    expect(html).toContain("kind: 'degraded'");
-    expect(html).toContain('data-action="status.refresh"');
-    expect(html).toContain('data-action="status.poll.toggle"');
-    expect(html).toContain('function activateDashboardView(view)');
-    expect(html).toContain('data-view-target');
-    expect(html).toContain('activeView');
-    expect(html).toContain('addEventListener(\'click\', refreshStatus)');
-    expect(html).toContain('addEventListener(\'click\', togglePolling)');
-    expect(html).toContain('activateDashboardView(\'home\')');
-    expect(html).toContain('fetch(url, { cache: \'no-store\' })');
-    expect(html).toContain('const pollingState');
-    expect(html).toContain('intervalMs: 30000');
-    expect(html).toContain('setTimeout(runPollingRefresh, pollingDelayMs())');
-    expect(html).toContain('clearTimeout(pollingState.timer)');
-    expect(html).toContain("setLoadPhase('polling')");
-    expect(html).toContain("document.addEventListener('visibilitychange'");
-    expect(html).not.toContain('setInterval');
-    expect(html).not.toContain('WebSocket');
-    expect(html).not.toContain('EventSource');
-  });
-
-  it('keeps the dashboard debug surface read-only and performance-budget oriented', () => {
-    const html = fs.readFileSync(dashboardPath, 'utf8');
+  it('documents the performance budget for the dashboard read path', () => {
     const budget = fs.readFileSync(path.join(process.cwd(), 'docs', 'DASHBOARD_PERFORMANCE_BUDGET.md'), 'utf8');
-
-    expect(html).toContain('function dashboardDebugSnapshot()');
-    expect(html).toContain('readOnly: true');
-    expect(html).toContain('debugSnapshot: dashboardDebugSnapshot');
-    expect(html).toContain('hasPreviousRuntimeState');
-    expect(html).toContain('cacheStatus');
-    expect(html).toContain('polling: {');
-    expect(html).not.toContain('localStorage');
-    expect(html).not.toContain('sessionStorage');
-    expect(html).not.toContain('indexedDB');
-    expect(html).not.toContain('document.cookie');
 
     expect(budget).toContain('Uncached bootstrap read');
     expect(budget).toContain('Cached selected task detail');
@@ -256,10 +196,8 @@ describe('static dashboard reference', () => {
     expect(dashboard.headers['content-security-policy']).toContain("default-src 'self'");
     expect(dashboard.headers['x-content-type-options']).toBe('nosniff');
     expect(dashboard.body).toContain('HADARA Operator Console');
-    expect(dashboard.body).toContain('../fixtures/hadara.ops.status.sample.json');
     expect(dashboard.body).toContain('/api/dashboard/bootstrap');
     expect(dashboard.body).toContain('/api/status');
-    expect(dashboard.body).toContain('Refresh Status');
 
     expect(fixture.statusCode).toBe(200);
     expect(fixture.headers['content-type']).toBe('application/json; charset=utf-8');

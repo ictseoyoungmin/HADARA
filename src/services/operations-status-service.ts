@@ -55,7 +55,25 @@ export interface OpsStatusReport {
   }>;
 }
 
-export function createOpsStatusReport(projectRoot: string): OpsStatusReport {
+export interface OpsStatusOptions {
+  // When false, skip the operational-debt computation (the dominant cost on
+  // large/slow filesystems) and return a zeroed debt aggregate. Used by the
+  // dashboard "core" tier, which loads debt separately in the background.
+  includeDebt?: boolean;
+}
+
+const EMPTY_DEBT_AGGREGATE: OperationalDebtAggregate = {
+  total: 0,
+  open: 0,
+  tracked: 0,
+  mitigated: 0,
+  candidate: 0,
+  highOpen: 0,
+  bySeverity: { high: 0, medium: 0, low: 0 }
+};
+
+export function createOpsStatusReport(projectRoot: string, options: OpsStatusOptions = {}): OpsStatusReport {
+  const includeDebt = options.includeDebt !== false;
   const sources = readProjectSources(projectRoot);
   const tasks = listTaskCapsules(projectRoot);
   const taskCounts = countTaskStatuses(tasks);
@@ -72,7 +90,7 @@ export function createOpsStatusReport(projectRoot: string): OpsStatusReport {
       extractValidationHistoryLine(sources.validationHistory.content, 'harness validate')
   };
   const activeRun = safeCreateActiveRunProjection(projectRoot);
-  const debt = createOperationalDebtReport(projectRoot);
+  const debtAggregate = includeDebt ? createOperationalDebtReport(projectRoot).aggregate : EMPTY_DEBT_AGGREGATE;
   const issues = [...collectIssues(sources, validation), ...activeRun.issues];
 
   return {
@@ -94,7 +112,7 @@ export function createOpsStatusReport(projectRoot: string): OpsStatusReport {
     handoff: handoffSections,
     validation,
     activeRun,
-    debt: debt.aggregate,
+    debt: debtAggregate,
     mcp: {
       defaultMode: 'read-only',
       evidenceAttach: {
