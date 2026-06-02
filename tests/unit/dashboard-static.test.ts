@@ -7,6 +7,8 @@ import { clearDashboardCacheForTests } from '../../src/services/dashboard-cache'
 const dashboardPath = path.join(process.cwd(), 'docs', 'design', 'dashboard', 'index.html');
 const fixturePath = path.join(process.cwd(), 'docs', 'design', 'fixtures', 'hadara.ops.status.sample.json');
 const dashboardSrcDir = path.join(process.cwd(), 'dashboard', 'src');
+const visualCheckPath = path.join(process.cwd(), 'dashboard', 'visual-check.mjs');
+const visualFixtureDir = path.join(process.cwd(), 'dashboard', 'visual-fixtures');
 
 function readDashboardHtml(): string {
   return fs.readFileSync(dashboardPath, 'utf8');
@@ -22,6 +24,10 @@ function readAuthoredSource(): string {
     .filter((file) => /\.(ts|tsx)$/.test(file))
     .map((file) => fs.readFileSync(path.join(dashboardSrcDir, file), 'utf8'))
     .join('\n');
+}
+
+function readVisualFixture(name: string): Record<string, unknown> {
+  return JSON.parse(fs.readFileSync(path.join(visualFixtureDir, name), 'utf8')) as Record<string, unknown>;
 }
 
 describe('operator console bundle (Phase 5.6)', () => {
@@ -154,6 +160,69 @@ describe('operator console bundle (Phase 5.6)', () => {
     expect(statusIndex).toBeLessThan(fixtureIndex);
     // a stalled read must degrade rather than freeze the console
     expect(code).toContain('AbortController');
+  });
+
+  it('keeps the visual/a11y gate bound to projection, offline, refreshing, missing, and degraded states', () => {
+    const script = fs.readFileSync(visualCheckPath, 'utf8');
+
+    for (const fixture of [
+      'core.json',
+      'timeline.json',
+      'debt.json',
+      'projection-status-ready.json',
+      'projection-status-stale.json',
+      'projection-status-refreshing.json',
+      'projection-status-missing.json'
+    ]) {
+      expect(script).toContain(fixture);
+      expect(fs.existsSync(path.join(visualFixtureDir, fixture))).toBe(true);
+    }
+
+    for (const route of ['/api/dashboard/core', '/api/dashboard/timeline', '/api/dashboard/debt', '/api/dashboard/projection/status']) {
+      expect(script).toContain(route);
+    }
+
+    for (const state of ['projection-ready', 'projection-detail', 'projection-stale', 'projection-refreshing', 'projection-missing', 'offline', 'degraded']) {
+      expect(script).toContain(`${state}.png`);
+      expect(script).toContain(`'${state}'`);
+    }
+  });
+
+  it('keeps projection visual fixtures redacted and schema-gated', () => {
+    const fixtures = [
+      ['core.json', 'hadara.dashboard.core.v1'],
+      ['timeline.json', 'hadara.dashboard.timeline.v1'],
+      ['debt.json', 'hadara.dashboard.debt_projection.v1'],
+      ['projection-status-ready.json', 'hadara.dashboard.projection_status.v1'],
+      ['projection-status-stale.json', 'hadara.dashboard.projection_status.v1'],
+      ['projection-status-refreshing.json', 'hadara.dashboard.projection_status.v1'],
+      ['projection-status-missing.json', 'hadara.dashboard.projection_status.v1']
+    ] as const;
+
+    for (const [file, schemaVersion] of fixtures) {
+      const text = fs.readFileSync(path.join(visualFixtureDir, file), 'utf8');
+      const fixture = JSON.parse(text) as Record<string, unknown>;
+      expect(fixture.schemaVersion).toBe(schemaVersion);
+      expect(text).not.toContain(process.cwd());
+      expect(text).not.toContain('/mnt/');
+      expect(text).not.toContain('F:\\');
+      expect(text).toContain('"pathRedacted": true');
+      expect(text).toContain('"fingerprint": "sha256:000000000000"');
+    }
+
+    expect(readVisualFixture('projection-status-refreshing.json')).toMatchObject({
+      refresh: { state: 'refreshing' },
+      pendingSections: expect.arrayContaining(['timeline', 'debt'])
+    });
+    expect(readVisualFixture('projection-status-stale.json')).toMatchObject({
+      staleSections: expect.arrayContaining(['core', 'timeline', 'debt'])
+    });
+    expect(readVisualFixture('projection-status-missing.json')).toMatchObject({
+      projections: {
+        timeline: { present: false, freshness: 'missing' },
+        debt: { present: false, freshness: 'missing' }
+      }
+    });
   });
 
   it('keeps the inline fallback fixture aligned with the sample fixture', () => {

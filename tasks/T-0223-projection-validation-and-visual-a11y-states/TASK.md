@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0223 |
 | Title | Projection Validation and Visual/A11y States |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-06-02 |
 | Updated | 2026-06-02 |
 
@@ -34,10 +34,11 @@
 
 ## Status
 
-Draft
+Done
 
 ## Status History
 
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-02 | Draft | Initial task scaffold for projection validation and visual/a11y states. | Task created by HADARA CLI. |
+| 2026-06-02 | Done | Projection validation/static visual gate coverage added; dependency/Docker validation gaps recorded. | T-0223 evidence records and tests matrix. |

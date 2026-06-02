@@ -4,28 +4,28 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0222 changes are local/uncommitted until the requested per-capsule commit is made; commit/push state should be checked before publishing. |
-| Current Phase | Phase 5.7 Dashboard read-model projection performance | Authored frontend merge is complete through T-0222; projection validation and visual/a11y states T-0223 is next. |
-| Latest Completed Task | T-0222 Frontend Core + Heavy Merge | Updated authored dashboard source to load core first and backfill debt/timeline projection routes. |
-| Active / Next Task | T-0223 Projection Validation and Visual/A11y States | Rebuild/validate static bundle, projection visual states, and a11y coverage when environment allows. |
-| Validation Baseline | T-0216 Docker sync-build passed; T-0217/T-0222 Docker validation blocked | Last full Docker validation remains `npm run dev:docker-sync-build` with 85 files / 564 tests from T-0216. T-0217 through T-0222 added focused tests and passed `git diff --check`, but Docker sync-build escalation was rejected by usage limit. |
+| Branch | main | T-0223 is ready for the requested per-capsule commit; commit/push state should be checked before publishing. |
+| Current Phase | Phase 5.7 Dashboard read-model projection performance | Phase 5.7 projection contract/store/core/refresh/task/heavy/frontend/validation slices are complete through T-0223. |
+| Latest Completed Task | T-0223 Projection Validation and Visual/A11y States | Extended projection visual/a11y gate fixtures/states and static validation coverage. |
+| Active / Next Task | Next roadmap slice selection pending | Phase 5.7 is complete; select the next capsule deliberately from roadmap priorities. |
+| Validation Baseline | T-0216 Docker sync-build passed; T-0217/T-0223 Docker validation blocked | Last full Docker validation remains `npm run dev:docker-sync-build` with 85 files / 564 tests from T-0216. T-0217 through T-0223 added focused/static checks and passed `git diff --check`, but Docker sync-build/visual gate remain blocked by dependency/access limits. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0221 Timeline / Debt Projection | Added projection-first heavy routes and background materialization. | T-0221 evidence: public `evidence.add-command` attached; `git diff --check` passed; focused heavy projection tests added; Docker validation gap recorded. |
+| T-0223 Projection Validation and Visual/A11y States | Added projection route fixtures and visual/a11y states for projection-ready/detail/stale/refreshing/missing/offline/degraded. | T-0223 evidence: `git diff --check`, visual-check syntax, and fixture parse/redaction checks passed; host/Docker blockers recorded. |
 | T-0222 Frontend Core + Heavy Merge | Updated authored frontend data flow to core-first and projection heavy backfills. | T-0222 evidence: public `evidence.add-command` attached; `git diff --check` passed; host build/test and Docker validation blocked. |
-| T-0220 Incremental Task Projection | Added task projection source signals and changed/reused summary reuse. | T-0220 evidence: public `evidence.add-command` attached; `git diff --check` passed; focused task projection tests added; Docker validation gap recorded. |
-| T-0215 Phase 5.6 Close / Handoff Sync | Closed T-0207 through T-0214 and staged T-0216 through T-0223 for Phase 5.7 projection work. | T-0215 evidence: task finish/ready/close/audit-close completed for T-0207 through T-0214; Phase 5.7 capsules created. |
+| T-0221 Timeline / Debt Projection | Added projection-first heavy routes and background materialization. | T-0221 evidence: public `evidence.add-command` attached; `git diff --check` passed; focused heavy projection tests added; Docker validation gap recorded. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
 | Host workspace has no `node_modules`. | Host `npm run build` and host `npx vitest` are unreliable; escalated `npx` found registry access but could not resolve local `vitest/config`. | Use the reusable Docker workflow for validation or install dependencies intentionally before host validation. |
-| T-0217 through T-0222 full Docker validation did not run. | New projection/backend/frontend TypeScript/tests have not yet been covered by a successful Docker sync-build in this session. | Run `npm run dev:docker-sync-build` as soon as approval/usage is available, ideally before closing T-0223, and include all Phase 5.7 projection/frontend tests. |
-| Static dashboard bundle was not rebuilt in T-0222. | Served HTML may not reflect authored frontend source changes yet. | T-0223 should run `npm run dashboard:build` or Docker visual build when deps/approval are available. |
+| T-0217 through T-0223 full Docker validation did not run. | New projection/backend/frontend/visual-gate TypeScript/tests have not yet been covered by a successful Docker sync-build in this session. | Run `npm run dev:docker-sync-build` as soon as approval/usage is available and include all Phase 5.7 projection/frontend tests. |
+| Static dashboard bundle was not rebuilt in T-0222/T-0223. | Served HTML may not reflect authored frontend source changes yet. | Run `npm run dashboard:build` or Docker visual build when deps/approval are available. |
+| T-0223 Playwright/axe visual gate was extended but not executed. | Screenshot/a11y baselines for projection states are defined but not freshly observed. | Run `npm run dashboard:visual:docker` after Docker access is restored. |
 | HADARA-dev has multiple CLI execution paths. | `/tmp/hadara/dist` may be fresh while `/workspace/dist` or container-global `/usr/local/bin/hadara` is stale, causing agents to test old CLI behavior. | For CLI changes, build in Docker, refresh `/workspace/dist` from `/tmp/hadara/dist`, and run final smokes via `node /workspace/dist/cli/main.js ... --project /workspace` or explicitly via `/tmp/hadara/dist/cli/main.js`; do not assume global `hadara` is current. |
 | Existing historical capsules mostly use legacy frames. | This is expected and should not fail validation solely for not using v2 tables. | Future `task upgrade-scaffold` / remediation work must be non-destructive and dry-run-first. |
 | Protocol schemas are fixture-level, not release-gate strict schemas. | Additive report fields remain allowed; consumers should not treat these schemas as a blocking release gate yet. | Preserve additive compatibility or create a new schema id for breaking changes. |
@@ -43,16 +43,16 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start T-0223 Projection Validation and Visual/A11y States. | Authored source changed but bundle/visual validation are pending; final capsule should lock projection states honestly. | Use T-0222 TESTS/RISKS, `dashboard/src/model.ts`, `dashboard/src/app.tsx`, dashboard build scripts, and Phase 5.7 spec. |
+| Select the next roadmap slice. | Phase 5.7 projection redesign is complete through T-0223, with validation gaps explicitly carried forward. | Review `docs/ROADMAP.md`, `docs/DEVELOPMENT_SLICES.md`, and T-0223 TESTS/RISKS before opening the next capsule. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Full repository check | Docker `npm run dev:docker-sync-build` passed with 85 files and 564 tests during T-0216. | Host dependencies are unavailable; T-0217/T-0222 Docker validation was blocked by escalation usage limit, so Docker remains the next required validation path. |
+| Full repository check | Docker `npm run dev:docker-sync-build` passed with 85 files and 564 tests during T-0216. | Host dependencies are unavailable; T-0217/T-0223 Docker validation was blocked by escalation/access limits, so Docker remains the next required validation path. |
 | Dashboard performance measurement | Playwright Docker `/tmp` copy measurement recorded shell HTML fetch 4.4 ms, bootstrap bypass avg 174.7 ms, task-detail bypass avg 243.3 ms, timeline bypass avg 150.4 ms, with cache hit samples near 1-2 ms. | Direct bind-mounted workspace measurement was unsuitable because the dashboard server did not return promptly enough for stable timings. |
 | Focused dashboard/readiness check | Covered by full Docker after readiness review assertions were added. | Covers route/schema/boundary inventory doc, dashboard schema status, and final readiness conclusion. |
-| Dashboard visual/a11y gate | Playwright + axe-core gate passed for home/detail/empty/degraded. | T-0214 records the visual/a11y evidence. |
+| Dashboard visual/a11y gate | Playwright + axe-core gate passed for home/detail/empty/degraded during T-0214; T-0223 extends the gate for projection states but could not execute Docker. | Re-run `npm run dashboard:visual:docker` when Docker access returns. |
 | Phase 5.6 close audit | T-0207 through T-0214 were finished, readied, closed, and audit-close checked. | Re-run task-scoped status/audit only if those capsules change before commit. |
 | Dashboard core schema contract | Focused Docker test passed for schema index and `hadara.dashboard.core.v1` contract. | `npm run test:focused -- tests/unit/schema-fixtures.test.ts tests/unit/dashboard-core-contract.test.ts` passed with 2 files / 3 tests in `/tmp/hadara`. |
 

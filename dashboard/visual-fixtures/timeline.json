@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "hadara.dashboard.timeline.v1",
+  "command": "dashboard.timeline",
+  "ok": true,
+  "generatedAt": "2026-06-02T00:00:02.000Z",
+  "source": {
+    "kind": "projection",
+    "projectRootRedacted": true,
+    "project": {
+      "kind": "project-root",
+      "pathRedacted": true,
+      "fingerprint": "sha256:000000000000"
+    }
+  },
+  "events": [
+    {
+      "id": "projection-core-ready",
+      "order": 1,
+      "kind": "projection",
+      "title": "Core projection ready",
+      "summary": "The dashboard core route rendered from local projection data.",
+      "severity": "ok",
+      "time": "2026-06-02T00:00:00.000Z",
+      "taskId": "T-0222"
+    },
+    {
+      "id": "projection-heavy-refresh",
+      "order": 2,
+      "kind": "projection",
+      "title": "Heavy projections refreshed",
+      "summary": "Timeline and debt projections were merged after the core view painted.",
+      "severity": "info",
+      "time": "2026-06-02T00:00:02.000Z",
+      "taskId": "T-0223"
+    }
+  ]
+}

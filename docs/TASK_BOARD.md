@@ -223,4 +223,4 @@
 | T-0220 | Incremental Task Projection | Done | tasks/T-0220-incremental-task-projection | |
 | T-0221 | Timeline / Debt Projection | Done | tasks/T-0221-timeline-debt-projection | |
 | T-0222 | Frontend Core + Heavy Merge | Done | tasks/T-0222-frontend-core-heavy-merge | |
-| T-0223 | Projection Validation and Visual/A11y States | Draft | tasks/T-0223-projection-validation-and-visual-a11y-states | |
+| T-0223 | Projection Validation and Visual/A11y States | Done | tasks/T-0223-projection-validation-and-visual-a11y-states | |

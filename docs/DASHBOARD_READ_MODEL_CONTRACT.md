@@ -306,6 +306,8 @@ Background refresh materializes `.hadara/local/cache/dashboard/timeline/overview
 
 T-0222 changes the authored frontend data layer to load `/api/dashboard/core` before falling back to `/api/dashboard/bootstrap` and `/api/status`. Debt and timeline sections backfill independently from `/api/dashboard/debt` and `/api/dashboard/timeline`. The dashboard must keep fallback/offline labels honest and must not add browser project-state storage.
 
+T-0223 locks the projection validation surface. The visual/a11y gate must stub the projection-first routes (`/api/dashboard/core`, `/api/dashboard/timeline`, `/api/dashboard/debt`, and `/api/dashboard/projection/status`) from committed redacted fixtures, not only legacy bootstrap fixtures. Screenshot/a11y states should cover projection-ready, selected-task detail, offline fallback, stale projections, refreshing projections, missing heavy projections, and degraded reads. Projection fixtures must remain schema-gated, path-redacted, and free of raw project-root strings.
+
 The core contract deliberately excludes full evidence lists, deep selected-task payloads, raw artifacts, private raw paths, and request-time all-capsule scan requirements. Later Phase 5.7 capsules may add local server projection storage and background refresh around this contract, but browser code must still avoid `localStorage`, `sessionStorage`, IndexedDB, cookies, or equivalent project-state persistence.
 
 `/api/dashboard/bootstrap` should remain additive and transition-safe while `/api/dashboard/core` is introduced. New consumers should prefer `/core` plus separate projected heavy sections once T-0218 through T-0222 land; old consumers may keep using bootstrap until the compatibility window is explicitly closed.

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "hadara.dashboard.projection_status.v1",
+  "command": "dashboard.projection.status",
+  "ok": true,
+  "generatedAt": "2026-06-02T00:00:06.000Z",
+  "project": {
+    "kind": "project-root",
+    "pathRedacted": true,
+    "fingerprint": "sha256:000000000000"
+  },
+  "refresh": {
+    "state": "idle",
+    "reason": "visual-fixture",
+    "startedAt": "2026-06-02T00:00:00.000Z",
+    "finishedAt": "2026-06-02T00:00:03.000Z",
+    "lastError": null,
+    "runs": 1
+  },
+  "projections": {
+    "core": {
+      "present": true,
+      "generatedAt": "2026-06-02T00:00:00.000Z",
+      "freshness": "stale",
+      "completeness": "core"
+    },
+    "timeline": {
+      "present": true,
+      "generatedAt": "2026-06-02T00:00:01.000Z",
+      "freshness": "stale"
+    },
+    "debt": {
+      "present": true,
+      "generatedAt": "2026-06-02T00:00:01.000Z",
+      "freshness": "stale"
+    }
+  },
+  "pendingSections": [],
+  "staleSections": [
+    "core",
+    "timeline",
+    "debt"
+  ],
+  "issues": []
+}
