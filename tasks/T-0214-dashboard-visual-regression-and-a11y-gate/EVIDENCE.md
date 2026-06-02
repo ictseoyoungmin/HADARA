@@ -3,3 +3,4 @@
 | Time | Kind | Summary | Result | Visibility | JSONL |
 |---|---|---|---|---|---|
 | 2026-06-02T00:30:32.338Z | command-log | Playwright + axe-core visual/a11y gate added (home/detail/empty/degraded all pass); dashboard-static.test.ts rewritten to new-design invariants with governance/server scans preserved; full Docker suite green: 84 files / 562 tests. | passed | public | evidence.jsonl |
+| 2026-06-02T02:19:02.529Z | command-log | Task close validation for T-0214 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:d0219add4fc926b2759d078037dd00147857d6cae874150651f0e398e1414ce8. | passed | public | evidence.jsonl |

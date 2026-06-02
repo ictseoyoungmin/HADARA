@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0210 |
 | Title | Dashboard Active Next and Command Affordance |
-| Status | Partial |
+| Status | Done |
 | Created | 2026-06-02 |
 | Updated | 2026-06-02 |
 
@@ -33,7 +33,7 @@
 
 ## Status
 
-Partial
+Done
 
 ## Status History
 

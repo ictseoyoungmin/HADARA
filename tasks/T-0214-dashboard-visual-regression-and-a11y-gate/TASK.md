@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0214 |
 | Title | Dashboard Visual Regression and A11y Gate |
-| Status | Partial |
+| Status | Done |
 | Created | 2026-06-02 |
 | Updated | 2026-06-02 |
 
@@ -34,7 +34,7 @@
 
 ## Status
 
-Partial
+Done
 
 ## Status History
 

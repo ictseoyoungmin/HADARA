@@ -207,11 +207,20 @@
 | T-0204 | Dashboard Production Readiness Review | Done | tasks/T-0204-dashboard-production-readiness-review | |
 | T-0205 | Dashboard Playwright Performance Measurement | Done | tasks/T-0205-dashboard-playwright-performance-measurement | |
 | T-0206 | Dashboard Production Hardening Follow-up | Done | tasks/T-0206-dashboard-production-hardening-follow-up | |
-| T-0207 | Dashboard Design Language and Tokens | Partial | tasks/T-0207-dashboard-design-language-and-tokens | |
-| T-0208 | Dashboard Frontend Tech Decision Spike | Partial | tasks/T-0208-dashboard-frontend-tech-decision-spike | |
-| T-0209 | Dashboard Operator Console Shell Rebuild | Partial | tasks/T-0209-dashboard-operator-console-shell-rebuild | |
-| T-0210 | Dashboard Active Next and Command Affordance | Partial | tasks/T-0210-dashboard-active-next-and-command-affordance | |
-| T-0211 | Dashboard Activity Feed Timeline Redesign | Partial | tasks/T-0211-dashboard-activity-feed-timeline-redesign | |
-| T-0212 | Dashboard Proof Verdict and Evidence Lens Redesign | Partial | tasks/T-0212-dashboard-proof-verdict-and-evidence-lens-redesign | |
-| T-0213 | Dashboard Metrics With Meaning and Developer JSON | Partial | tasks/T-0213-dashboard-metrics-with-meaning-and-developer-json | |
-| T-0214 | Dashboard Visual Regression and A11y Gate | Partial | tasks/T-0214-dashboard-visual-regression-and-a11y-gate | |
+| T-0207 | Dashboard Design Language and Tokens | Done | tasks/T-0207-dashboard-design-language-and-tokens | |
+| T-0208 | Dashboard Frontend Tech Decision Spike | Done | tasks/T-0208-dashboard-frontend-tech-decision-spike | |
+| T-0209 | Dashboard Operator Console Shell Rebuild | Done | tasks/T-0209-dashboard-operator-console-shell-rebuild | |
+| T-0210 | Dashboard Active Next and Command Affordance | Done | tasks/T-0210-dashboard-active-next-and-command-affordance | |
+| T-0211 | Dashboard Activity Feed Timeline Redesign | Done | tasks/T-0211-dashboard-activity-feed-timeline-redesign | |
+| T-0212 | Dashboard Proof Verdict and Evidence Lens Redesign | Done | tasks/T-0212-dashboard-proof-verdict-and-evidence-lens-redesign | |
+| T-0213 | Dashboard Metrics With Meaning and Developer JSON | Done | tasks/T-0213-dashboard-metrics-with-meaning-and-developer-json | |
+| T-0214 | Dashboard Visual Regression and A11y Gate | Done | tasks/T-0214-dashboard-visual-regression-and-a11y-gate | |
+| T-0215 | Phase 5.6 Close / Handoff Sync | Done | tasks/T-0215-phase-5-6-close-handoff-sync | |
+| T-0216 | Dashboard Projection Contract | Draft | tasks/T-0216-dashboard-projection-contract | |
+| T-0217 | Dashboard Local Projection Store | Draft | tasks/T-0217-dashboard-local-projection-store | |
+| T-0218 | Dashboard Core Route from Projection | Draft | tasks/T-0218-dashboard-core-route-from-projection | |
+| T-0219 | Background Refresh and Serve Warmup | Draft | tasks/T-0219-background-refresh-and-serve-warmup | |
+| T-0220 | Incremental Task Projection | Draft | tasks/T-0220-incremental-task-projection | |
+| T-0221 | Timeline / Debt Projection | Draft | tasks/T-0221-timeline-debt-projection | |
+| T-0222 | Frontend Core + Heavy Merge | Draft | tasks/T-0222-frontend-core-heavy-merge | |
+| T-0223 | Projection Validation and Visual/A11y States | Draft | tasks/T-0223-projection-validation-and-visual-a11y-states | |
