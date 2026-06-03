@@ -21,7 +21,7 @@
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Commit T-0230, then start T-0231. | Remaining bottleneck is CLI startup eager imports rather than TUI read-model scans. | T-0230 evidence |
+| T-0231 completed the remaining startup hardening. | T-0230 left CLI startup imports as the next bottleneck; T-0231 reduced built `/mnt/f` snapshot to 1.37s. | T-0231 evidence |
 
 ## Carry Forward Warnings
 
@@ -29,4 +29,4 @@
 |---|---|---|
 | TUI no longer broad-scans `tasks/` to detect deleted capsule directories. | Stale Task Board/projection rows can stay visible. | Treat as protocol drift; use workflow/doctor validation to repair source-of-truth. |
 | If projection and Task Board are both missing, legacy fallback still scans tasks. | Damaged/non-standard workspaces may be slower. | Future hardening can require projection bootstrap or explicit degraded state. |
-| Built CLI snapshot still takes about 4s on `/mnt/f`. | T-0230 removed read-model bottlenecks but not CLI startup import cost. | T-0231 should lazy-load TUI command imports or split snapshot entry startup. |
+| T-0230 alone did not hit the 2s target. | T-0230 removed read-model bottlenecks but left CLI startup import cost. | Resolved by T-0231 lazy CLI handler imports. |

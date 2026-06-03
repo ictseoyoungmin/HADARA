@@ -20,7 +20,7 @@
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Commit T-0231. | Implementation, validation, and target timing are complete. | T-0231 evidence |
+| Return to roadmap value work unless timing regresses. | Implementation, validation, close/audit, and commit are complete; the 2s target is met. | T-0231 evidence |
 
 ## Carry Forward Warnings
 
