@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { readMarkdownSectionWithHeading } from '../services/markdown-table';
 import { TASK_FILES, listTaskCapsules, TaskCapsule } from './task-capsule';
 
 export type TaskUpgradeScaffoldMode = 'dry-run' | 'execute';
@@ -293,11 +294,7 @@ function applyActions(projectRoot: string, actions: TaskUpgradeScaffoldAction[],
 
 function readCanonicalSection(task: TaskCapsule, fileName: string, heading: string): string {
   const content = TASK_FILES[fileName](task);
-  const start = content.indexOf(heading);
-  if (start < 0) return content;
-  const afterHeading = content.slice(start + heading.length);
-  const nextHeading = afterHeading.search(/\n##\s+/);
-  return `${heading}${nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading}`.trimEnd();
+  return readMarkdownSectionWithHeading(content, heading) || content;
 }
 
 function ensureTrailingNewline(value: string): string {

@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0226 changes are local and validated; commit/push state should be checked before publishing. |
-| Current Phase | Dashboard refresh/read-model hardening | Phase 5.7 projection slices plus refresh responsiveness measurement are complete through T-0226. |
-| Latest Completed Task | T-0226 Dashboard Refresh Responsiveness Measurement | Added refresh stage duration metadata, slow-stage warnings, an operator measurement script for core p50/p95 during refresh, task-signals progress, and `/tmp` comparison. |
+| Branch | main | T-0227 changes are local and validated; commit/push state should be checked before publishing. |
+| Current Phase | Dashboard refresh/read-model hardening plus task workflow hardening | Phase 5.7 projection slices, refresh responsiveness measurement, Status History done gate, and shared Markdown section reader consolidation are complete through T-0227. |
+| Latest Completed Task | T-0227 Task Status History Done Gate | `task finish --execute` appends/repairs final Done Status History rows, done-level harness validation rejects non-Done Status History endings, and task/protocol/read-model section readers now use shared heading-line matching. |
 | Active / Next Task | T-0228-style streaming task scan recommended if optimizing further | T-0226 measurement showed mounted-workspace task-signals cost dominates compared with `/tmp`; stage budget metadata is already present. |
-| Validation Baseline | T-0226 Docker validation passed | Focused Docker tests passed 4 files / 23 tests; `npm run dev:docker-sync-build` passed with 91 files / 592 tests and built CLI smoke `ok:true`; built measurement smoke returned `ok:true` with workspace core p50/p95 49.6/62.0 ms and tmp-ext4 core p50/p95 0.5/1.6 ms. |
+| Validation Baseline | T-0227 Docker validation passed | Shared section reader focused Docker tests passed 7 files / 74 tests; `npm run dev:docker-sync-build` passed with 91 files / 595 tests and built CLI smoke `ok:true`, `distLooksStale:false`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0227 Task Status History Done Gate | Added finish-time Status History Done row append/repair, done-level validation for latest Status History row, and shared heading-line Markdown section readers for task/protocol/read-model surfaces. | T-0227 evidence: shared section reader focused Docker tests passed 7 files / 74 tests; Docker sync-build passed 91 files / 595 tests; T-0226 and T-0196 fixture history were aligned with the new gate. |
 | T-0226 Dashboard Refresh Responsiveness Measurement | Added refresh stage timing metadata, slow-stage warnings, operational measurement docs, and a built measurement script for core responsiveness during refresh plus `/tmp` comparison. | T-0226 evidence: focused Docker tests passed 4 files / 23 tests; Docker sync-build passed 91 files / 592 tests; built measurement smoke returned `ok:true`, workspace task-signals 3780 ms, tmp-ext4 task-signals 147 ms. |
 | T-0225 Dashboard Cooperative Refresh Progress | Added cooperative refresh progress metadata, task projection batch progress, core stale/pending metadata during refresh, and projection-triggered UI Refresh. | T-0225 evidence: focused Docker tests passed 3 files / 22 tests; Docker sync-build passed 90 files / 591 tests; built route smoke observed `currentStage`, `processed/total`, `lastYieldAt`, and non-blocking stale core. |
-| T-0224 Dashboard Refresh Refactor and Validation Read Model | Fixed latest validation read-model fallback, refactored explicit dashboard refresh stages, and added a done-level TASK metadata gate. | T-0224 evidence: Docker sync-build passed 90 files / 589 tests; built route smoke passed with refresh completion and `latestContainsT0096:false`; close audit passed. |
 
 ## Current Known Problems
 
@@ -30,6 +30,7 @@
 | Dashboard debt projection is aggregate-only. | `/api/dashboard/debt` no longer performs full capsule-size or premature-acceptance scans during dashboard refresh. | Use operational-debt/release read models for deep debt diagnostics; dashboard debt remains a fast aggregate projection. |
 | HADARA-dev has multiple CLI execution paths. | `/tmp/hadara/dist` may be fresh while `/workspace/dist` or container-global `/usr/local/bin/hadara` is stale, causing agents to test old CLI behavior. | For CLI changes, build in Docker, refresh `/workspace/dist` from `/tmp/hadara/dist`, and run final smokes via `node /workspace/dist/cli/main.js ... --project /workspace` or explicitly via `/tmp/hadara/dist/cli/main.js`; do not assume global `hadara` is current. |
 | Existing historical capsules mostly use legacy frames. | This is expected and should not fail validation solely for not using v2 tables. | Future `task upgrade-scaffold` / remediation work must be non-destructive and dry-run-first. |
+| Status History done gate can expose legacy completed capsule drift in task-scoped done validation. | T-0227 repaired T-0226 and the T-0196 dashboard bootstrap fixture, but did not run a broad historical migration. | Repair individual legacy capsules only when they block active validation, or open a dedicated dry-run-first remediation capsule for historical migration. |
 | Protocol schemas are fixture-level, not release-gate strict schemas. | Additive report fields remain allowed; consumers should not treat these schemas as a blocking release gate yet. | Preserve additive compatibility or create a new schema id for breaking changes. |
 | All-scope protocol doctor is broad but not a deep done-level check for every historical capsule. | It keeps default protocol doctor responsive by aggregating docs, profile, and active-task detail; docs-scope still checks Task Board/capsule drift across all tasks. | Use task-scoped doctor or harness validation for deep capsule checks. |
 | Docs-scope protocol doctor reports historical T-0073 Task Board drift and legacy Decisions structure as warnings. | `hadara protocol doctor --scope docs --json` remains `ok: true`; warning-only reports exit 0. | Use `protocol remediate` only when an operator explicitly accepts an allowlisted bounded fix; broad cleanup remains future scope. |
@@ -51,7 +52,8 @@
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Full repository check | Docker `npm run dev:docker-sync-build` passed with 91 files and 592 tests during T-0226. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`. |
+| Full repository check | Docker `npm run dev:docker-sync-build` passed with 91 files and 595 tests during T-0227. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`. |
+| Task workflow Status History and Markdown section reader gate | Focused Docker tests passed for markdown-table, task-finish, harness-validate, task-upgrade-scaffold, protocol-consistency, protocol-remediation, and dashboard-bootstrap. | Covers finish append/repair behavior, `TASK_STATUS_HISTORY_NOT_DONE`, shared heading-line section extraction, and affected fixture/read-model compatibility. |
 | Dashboard refresh responsiveness measurement | Built `node scripts/dashboard-refresh-responsiveness.mjs --project /workspace --samples 8 --compare-tmp --json` returned `ok:true`. | Workspace core p50/p95 during refresh: 49.6/62.0 ms; workspace task-signals: 3780 ms slow warning; tmp-ext4 core p50/p95: 0.5/1.6 ms; tmp-ext4 task-signals: 147 ms. |
 | Dashboard cooperative refresh smoke | Built route smoke accepted `/api/dashboard/refresh`, observed progress with `currentStage: task-signals`, `processed:25`, `total:225`, `lastYieldAt`, and core returned stale/pending metadata while refresh was running. | Confirms core does not wait for refresh completion and refresh status is observable. |
 | Dashboard refresh/latest validation smoke | Built route smoke accepted `/api/dashboard/refresh`, completed one refresh run, reported core/timeline/debt projections present, and returned latest validation fields without T-0096 fallback. | Confirms the reported stale `Latest full validation` read-model issue is fixed. |

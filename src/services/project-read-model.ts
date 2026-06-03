@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { readMarkdownSection } from './markdown-table';
 
 export interface ProjectFileRead {
   path: string;
@@ -144,13 +145,5 @@ export function tailLines(content: string, limit: number): string {
 }
 
 export function extractSection(content: string, heading: string): string {
-  const match = new RegExp(`^${escapeRegExp(heading)}\\s*$`, 'm').exec(content);
-  if (!match || match.index === undefined) return '';
-  const afterHeading = content.slice(match.index + match[0].length);
-  const nextHeading = afterHeading.search(/\n##\s+/);
-  return (nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading).trim();
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return readMarkdownSection(content, heading).trim();
 }

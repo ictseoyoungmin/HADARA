@@ -227,3 +227,4 @@
 | T-0224 | Dashboard Refresh Refactor and Validation Read Model | Done | tasks/T-0224-dashboard-refresh-refactor-and-validation-read-model | Metadata gate follow-up validated with Docker sync-build. |
 | T-0225 | Dashboard Cooperative Refresh Progress | Done | tasks/T-0225-dashboard-cooperative-refresh-progress | |
 | T-0226 | Dashboard Refresh Responsiveness Measurement | Done | tasks/T-0226-dashboard-refresh-responsiveness-measurement | |
+| T-0227 | Task Status History Done Gate | Done | tasks/T-0227-task-status-history-done-gate | |

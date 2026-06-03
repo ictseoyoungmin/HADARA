@@ -69,7 +69,7 @@ describe('Harness Task Capsule validation', () => {
     expect(result.ok).toBe(false);
     expect(result.level).toBe('done');
     expect(result.issues.map((issue) => issue.code)).toEqual(
-      expect.arrayContaining(['TASK_STATUS_NOT_DONE', 'ACCEPTANCE_INCOMPLETE', 'EVIDENCE_REQUIRED', 'HANDOFF_PLACEHOLDER'])
+      expect.arrayContaining(['TASK_STATUS_NOT_DONE', 'TASK_STATUS_HISTORY_NOT_DONE', 'ACCEPTANCE_INCOMPLETE', 'EVIDENCE_REQUIRED', 'HANDOFF_PLACEHOLDER'])
     );
   });
 
@@ -128,6 +128,32 @@ describe('Harness Task Capsule validation', () => {
       code: 'TASK_METADATA_PLACEHOLDER',
       message: 'Done-level validation requires TASK.md metadata field(s) to be concrete dates, not TBD: Created, Updated.',
       path: `tasks/${task.id}-placeholder-metadata/TASK.md`
+    });
+  });
+
+  it('rejects done-level capsules whose Status History does not end with Done', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'History missing done');
+    markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
+    markAcceptanceDone(task.dir);
+    writeCompletedCapsuleDocs(task.dir, { keepStatusHistoryDraft: true });
+    writeHandoffDone(task.dir);
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Done-level validation evidence',
+      result: 'passed'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual({
+      severity: 'error',
+      code: 'TASK_STATUS_HISTORY_NOT_DONE',
+      message: 'Done-level validation requires TASK.md Status History to end with Done.',
+      path: `tasks/${task.id}-history-missing-done/TASK.md`
     });
   });
 
@@ -516,7 +542,7 @@ function markAcceptanceDone(taskDir: string): void {
   );
 }
 
-function writeCompletedCapsuleDocs(taskDir: string, options: { keepMetadataPlaceholders?: boolean } = {}): void {
+function writeCompletedCapsuleDocs(taskDir: string, options: { keepMetadataPlaceholders?: boolean; keepStatusHistoryDraft?: boolean } = {}): void {
   const taskPath = path.join(taskDir, 'TASK.md');
   let taskContent = fs
     .readFileSync(taskPath, 'utf8')
@@ -528,6 +554,9 @@ function writeCompletedCapsuleDocs(taskDir: string, options: { keepMetadataPlace
     .replace('## Out of Scope\n\nTBD.', '## Out of Scope\n\n- Broad workflow changes.');
   if (!options.keepMetadataPlaceholders) {
     taskContent = taskContent.replace('| Created | TBD |', '| Created | 2026-06-02 |').replace('| Updated | TBD |', '| Updated | 2026-06-02 |');
+  }
+  if (!options.keepStatusHistoryDraft) {
+    taskContent = `${taskContent.trimEnd()}\n| 2026-06-02 | Done | Fixture completed. | Harness fixture. |\n`;
   }
   fs.writeFileSync(taskPath, taskContent, 'utf8');
   fs.writeFileSync(path.join(taskDir, 'PLAN.md'), '# Plan\n\n| Step | Action | Status | Evidence |\n|---|---|---|---|\n| 1 | Prepare completed capsule fixture. | Done | Test fixture setup. |\n| 2 | Run done-level validation. | Done | Harness result. |\n', 'utf8');

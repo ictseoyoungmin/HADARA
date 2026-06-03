@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDir, slugify, writeFileIfMissing } from '../core/fs';
+import { readMarkdownSection } from '../services/markdown-table';
 
 export interface TaskCapsule {
   id: string;
@@ -107,14 +108,6 @@ export function listTaskCapsules(projectRoot: string): TaskCapsule[] {
       return { id: fullId, title, slug, dir };
     })
     .sort((a, b) => a.id.localeCompare(b.id));
-}
-
-function readMarkdownSection(content: string, heading: string): string {
-  const start = content.indexOf(heading);
-  if (start < 0) return '';
-  const afterHeading = content.slice(start + heading.length);
-  const nextHeading = afterHeading.search(/\n##\s+/);
-  return nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading;
 }
 
 function isPlaceholderSection(value: string): boolean {

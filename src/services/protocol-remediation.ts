@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import { listTaskCapsules } from '../task/task-capsule';
+import { readMarkdownSection } from './markdown-table';
 
 export interface ManualRemediationInput {
   id: string;
@@ -337,8 +338,7 @@ function readTaskStatus(taskDir: string): string {
   const content = readIfExists(taskPath);
   const row = content.match(/\|\s*Status\s*\|\s*([^|]+)\|/i);
   if (row?.[1]) return row[1].trim();
-  const section = content.match(/## Status\s+([^\n]+)/i);
-  return section?.[1]?.trim() || 'Draft';
+  return readMarkdownSection(content, '## Status').trim().split(/\r?\n/)[0]?.trim() || 'Draft';
 }
 
 function ensureTrailingNewline(value: string): string {

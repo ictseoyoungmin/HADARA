@@ -4,7 +4,7 @@ import { EvidenceIndexRecord } from '../evidence/evidence';
 import { EvidenceIndexRecordWithSourceLine, normalizeEvidenceRecordsWithSourceLines } from '../evidence/normalizer';
 import { analyzeTaskEvidenceSemantics, EvidenceSemanticIssue, EvidenceSemanticSummary } from '../evidence/semantics';
 import { listTaskCapsules } from '../task/task-capsule';
-import { parseMarkdownRows } from './markdown-table';
+import { parseMarkdownRows, readMarkdownSection } from './markdown-table';
 
 export interface EvidenceLintReport {
   schemaVersion: 'hadara.evidence.lint.v1';
@@ -247,14 +247,6 @@ function readTaskDocs(taskDir: string): { acceptance?: string; risks?: string; h
 
 function readOptionalFile(filePath: string): string | undefined {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : undefined;
-}
-
-function readMarkdownSection(content: string, heading: string): string {
-  const start = content.indexOf(heading);
-  if (start < 0) return '';
-  const afterHeading = content.slice(start + heading.length);
-  const nextHeading = afterHeading.search(/\n##\s+/);
-  return nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading;
 }
 
 function isDoneStatus(status: string | null | undefined): boolean {

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { parseMarkdownRows } from './markdown-table';
+import { parseMarkdownRows, readMarkdownSection } from './markdown-table';
 import { createManualRemediation } from './protocol-remediation';
 
 export type ProtocolProfile = 'basic' | 'standard' | 'governed' | 'unknown' | 'mixed';
@@ -361,12 +361,4 @@ function profileRank(profile: TargetProtocolProfile): number {
   if (profile === 'governed') return 3;
   if (profile === 'standard') return 2;
   return 1;
-}
-
-function readMarkdownSection(content: string, heading: string): string {
-  const start = content.indexOf(heading);
-  if (start < 0) return '';
-  const afterHeading = content.slice(start + heading.length);
-  const nextHeading = afterHeading.search(/\n##\s+/);
-  return nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading;
 }

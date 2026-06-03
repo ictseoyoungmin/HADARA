@@ -301,6 +301,12 @@ Replay a miniature HADARA-on-HADARA workflow.
 ## Status
 
 Draft
+
+## Status History
+
+| Time | Status | Reason | Evidence |
+|---|---|---|---|
+| 2026-06-02 | Draft | Initial dogfooding fixture task. | Test fixture. |
 `,
     'utf8'
   );
@@ -431,11 +437,11 @@ function runBuiltCliJson(projectRoot: string, executedCommands: string[], args: 
 
 function markTaskDone(task: TaskCapsule): void {
   const taskPath = path.join(task.dir, 'TASK.md');
-  fs.writeFileSync(
-    taskPath,
-    fs.readFileSync(taskPath, 'utf8').replace('| Status | Draft |', '| Status | Done |').replace(/\nDraft\n$/, '\nDone\n'),
-    'utf8'
-  );
+  const content = fs
+    .readFileSync(taskPath, 'utf8')
+    .replace('| Status | Draft |', '| Status | Done |')
+    .replace(/^## Status\s*\n+[\s\S]*?(?=\n## Status History)/m, '## Status\n\nDone\n');
+  fs.writeFileSync(taskPath, `${content.trimEnd()}\n| 2026-06-02 | Done | Fixture completed. | Dogfooding fixture. |\n`, 'utf8');
 }
 
 function markTaskBoardDone(projectRoot: string, taskId: string): void {

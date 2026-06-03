@@ -13,6 +13,16 @@ export function parseMarkdownRowsUnderHeading(content: string, heading: string):
   return parseMarkdownRows(readMarkdownSection(content, heading));
 }
 
+export function readMarkdownSection(content: string, heading: string): string {
+  const bounds = findMarkdownSectionBounds(content, heading);
+  return bounds ? content.slice(bounds.bodyStart, bounds.end) : '';
+}
+
+export function readMarkdownSectionWithHeading(content: string, heading: string): string {
+  const bounds = findMarkdownSectionBounds(content, heading);
+  return bounds ? content.slice(bounds.headingStart, bounds.end).trimEnd() : '';
+}
+
 export function findMarkdownRowByCell(rows: MarkdownTableRow[], columnIndex: number, expected: string): MarkdownTableRow | undefined {
   const normalizedExpected = normalizeMarkdownTableCell(expected);
   return rows.find((row) => normalizeMarkdownTableCell(row[columnIndex] ?? '') === normalizedExpected);
@@ -48,10 +58,18 @@ function isMarkdownDividerRow(line: string): boolean {
   return /^\|\s*:?-+/.test(line);
 }
 
-function readMarkdownSection(content: string, heading: string): string {
-  const start = content.indexOf(heading);
-  if (start < 0) return '';
-  const afterHeading = content.slice(start + heading.length);
+function findMarkdownSectionBounds(content: string, heading: string): { headingStart: number; bodyStart: number; end: number } | null {
+  const match = new RegExp(`^${escapeRegExp(heading)}\\s*$`, 'm').exec(content);
+  if (!match || match.index === undefined) return null;
+  const afterHeading = content.slice(match.index + match[0].length);
   const nextHeading = afterHeading.search(/\n##\s+/);
-  return nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading;
+  return {
+    headingStart: match.index,
+    bodyStart: match.index + match[0].length,
+    end: nextHeading >= 0 ? match.index + match[0].length + nextHeading : content.length
+  };
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

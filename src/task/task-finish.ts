@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import path from 'node:path';
+import { readMarkdownSection, readMarkdownSectionWithHeading } from '../services/markdown-table';
 import { listTaskCapsules, TaskCapsule } from './task-capsule';
 
 export type TaskFinishMode = 'dry-run' | 'execute';
@@ -78,8 +79,9 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
 
   const capsule = toPortablePath(path.relative(projectRoot, task.dir));
   const taskStatus = readTaskStatus(task);
+  const statusHistoryStatus = readLatestStatusHistoryStatus(task);
   const board = readTaskBoard(projectRoot, task.id);
-  const writes = planWrites(projectRoot, task, capsule, taskStatus, board, issues);
+  const writes = planWrites(projectRoot, task, capsule, taskStatus, statusHistoryStatus, board, issues);
   if (mode === 'execute' && !issues.some((issue) => issue.severity === 'error')) {
     applyWrites(projectRoot, writes, issues);
   }
@@ -131,17 +133,25 @@ export function formatTaskFinishReport(report: TaskFinishReport): string {
   return lines.join('\n');
 }
 
-function planWrites(projectRoot: string, task: TaskCapsule, capsule: string, taskStatus: string, board: TaskBoardProjection, issues: TaskFinishIssue[]): TaskFinishWrite[] {
+function planWrites(
+  projectRoot: string,
+  task: TaskCapsule,
+  capsule: string,
+  taskStatus: string,
+  statusHistoryStatus: string | null,
+  board: TaskBoardProjection,
+  issues: TaskFinishIssue[]
+): TaskFinishWrite[] {
   const writes: TaskFinishWrite[] = [];
-  if (taskStatus !== 'Done') {
+  if (taskStatus !== 'Done' || statusHistoryStatus !== 'Done') {
     const taskPath = path.join(task.dir, 'TASK.md');
     const taskContent = fs.existsSync(taskPath) ? fs.readFileSync(taskPath, 'utf8') : '';
     const nextTaskContent = replaceTaskStatus(taskContent, 'Done');
-    if (nextTaskContent === taskContent) {
+    if (nextTaskContent === taskContent || latestStatusHistoryStatus(nextTaskContent) !== 'Done') {
       issues.push({
         severity: 'error',
         code: 'TASK_FINISH_TASK_STATUS_REPLACE_FAILED',
-        message: 'TASK.md does not contain the expected metadata/status frames for bounded finish sync.',
+        message: 'TASK.md does not contain the expected metadata/status/history frames for bounded finish sync.',
         path: toPortablePath(path.relative(projectRoot, taskPath))
       });
     } else {
@@ -334,9 +344,16 @@ function readTaskStatus(task: TaskCapsule): string {
   return match?.[1]?.trim().split(/\r?\n/)[0]?.trim() || 'Unknown';
 }
 
+function readLatestStatusHistoryStatus(task: TaskCapsule): string | null {
+  const taskPath = path.join(task.dir, 'TASK.md');
+  if (!fs.existsSync(taskPath)) return null;
+  return latestStatusHistoryStatus(fs.readFileSync(taskPath, 'utf8'));
+}
+
 function replaceTaskStatus(content: string, status: string): string {
   const withMetadata = content.replace(/^(\|\s*Status\s*\|\s*)[^|]*(\|)$/m, `$1${status} $2`);
-  return withMetadata.replace(/^## Status\s*\n+[\s\S]*?(?=\n## Status History)/m, `## Status\n\n${status}\n`);
+  const withStatus = withMetadata.replace(/^## Status\s*\n+[\s\S]*?(?=\n## Status History)/m, `## Status\n\n${status}\n`);
+  return appendStatusHistoryDone(withStatus);
 }
 
 function nextWriteContent(current: string, write: TaskFinishWrite): string {
@@ -357,6 +374,35 @@ function replaceTaskBoardRow(content: string, taskId: string, row: string): stri
     .split(/\r?\n/)
     .map((line) => (line.startsWith(`| ${taskId} |`) ? row : line))
     .join('\n');
+}
+
+function appendStatusHistoryDone(content: string): string {
+  if (latestStatusHistoryStatus(content) === 'Done') return content;
+  const section = readMarkdownSectionWithHeading(content, '## Status History');
+  if (!section) return content;
+
+  const start = content.indexOf(section);
+  if (start < 0) return content;
+  const end = start + section.length;
+  const prefix = content.slice(0, start);
+  const suffix = content.slice(end);
+  const row = `| ${new Date().toISOString().slice(0, 10)} | Done | Finished task capsule. | \`hadara task finish --execute\` |`;
+  const separator = section.endsWith('\n') ? '' : '\n';
+  return `${prefix}${section}${separator}${row}\n${suffix}`;
+}
+
+function latestStatusHistoryStatus(content: string): string | null {
+  const rows = readMarkdownSection(content, '## Status History')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('|') && !/^\|\s*-+/.test(line) && !/^\|\s*Time\s*\|/i.test(line));
+  const latest = rows.at(-1);
+  if (!latest) return null;
+  const cells = latest
+    .slice(1, latest.endsWith('|') ? -1 : undefined)
+    .split('|')
+    .map((cell) => cell.trim());
+  return cells[1] || null;
 }
 
 function appendTaskBoardRow(content: string, row: string): string {

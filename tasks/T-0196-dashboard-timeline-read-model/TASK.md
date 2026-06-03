@@ -43,3 +43,4 @@ Done
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-01 | Draft | Initial task scaffold. | Created with `task create`. |
+| 2026-06-01 | Done | Completed dashboard timeline read model. | Historical capsule alignment for Status History done gate. |

@@ -4,7 +4,9 @@ import {
   formatMarkdownTableRow,
   isSafeMarkdownTableCell,
   parseMarkdownRows,
-  parseMarkdownRowsUnderHeading
+  parseMarkdownRowsUnderHeading,
+  readMarkdownSection,
+  readMarkdownSectionWithHeading
 } from '../../src/services/markdown-table';
 
 describe('markdown table helper', () => {
@@ -52,6 +54,29 @@ describe('markdown table helper', () => {
       ['A', 'B'],
       ['1', '2']
     ]);
+  });
+
+  it('extracts sections only from real heading lines', () => {
+    const content = [
+      '# Doc',
+      '',
+      '| Field | Value |',
+      '|---|---|',
+      '| Note | inline `## Status` must not count |',
+      '',
+      '## Status',
+      '',
+      'Done',
+      '',
+      '## Status History',
+      '',
+      '| Time | Status |',
+      '|---|---|',
+      '| today | Done |'
+    ].join('\n');
+
+    expect(readMarkdownSection(content, '## Status').trim()).toBe('Done');
+    expect(readMarkdownSectionWithHeading(content, '## Status')).toBe('## Status\n\nDone');
   });
 
   it('finds rows by normalized cell value', () => {

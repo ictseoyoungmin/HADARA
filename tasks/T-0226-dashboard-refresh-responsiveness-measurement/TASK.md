@@ -42,3 +42,4 @@ Done
 |---|---|---|---|
 | 2026-06-03 | Draft | Initial task scaffold. | `hadara task create` |
 | 2026-06-03 | In Progress | Scope fixed to measurement plus refresh duration metadata. | Task capsule update |
+| 2026-06-03 | Done | Finished and closed T-0226. | `task finish`, `task close`, and `task audit-close` |

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { parseMarkdownRows } from '../services/markdown-table';
+import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
 import { createEvidenceLintReport } from '../services/evidence-lint';
 import { isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 
@@ -289,6 +289,7 @@ function validateEvidenceIndex(projectRoot: string, task: TaskCapsule, issues: H
 function validateDoneLevel(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[], checkedFiles: string[]): void {
   validateTaskMetadataComplete(projectRoot, task, issues);
   validateTaskStatusDone(projectRoot, task, issues);
+  validateTaskStatusHistoryDone(projectRoot, task, issues);
   validateDoneLevelScaffoldContent(projectRoot, task, issues);
   validateAcceptanceDone(projectRoot, task, issues);
   validateEvidenceMarkdownSingleTable(projectRoot, task, issues);
@@ -342,6 +343,22 @@ function validateTaskStatusDone(projectRoot: string, task: TaskCapsule, issues: 
       severity: 'error',
       code: 'TASK_STATUS_NOT_DONE',
       message: 'Done-level validation requires TASK.md status to be Done.',
+      path: relativePath
+    });
+  }
+}
+
+function validateTaskStatusHistoryDone(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+  const taskPath = path.join(task.dir, 'TASK.md');
+  if (!fs.existsSync(taskPath)) return;
+
+  const relativePath = toPortablePath(path.relative(projectRoot, taskPath));
+  const latestStatus = latestStatusHistoryStatus(fs.readFileSync(taskPath, 'utf8'));
+  if (latestStatus !== 'Done') {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_STATUS_HISTORY_NOT_DONE',
+      message: 'Done-level validation requires TASK.md Status History to end with Done.',
       path: relativePath
     });
   }
@@ -588,11 +605,7 @@ function isEvidenceSeparator(line: string | undefined): boolean {
 
 function readSectionBody(filePath: string, heading: string): string {
   const content = fs.readFileSync(filePath, 'utf8');
-  const start = content.indexOf(heading);
-  if (start < 0) return '';
-  const afterHeading = content.slice(start + heading.length);
-  const nextHeading = afterHeading.search(/\n##\s+/);
-  return nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading;
+  return readMarkdownSection(content, heading);
 }
 
 function isPlaceholderSection(value: string): boolean {
@@ -603,19 +616,25 @@ function isPlaceholderSection(value: string): boolean {
 
 function readMetadataTable(content: string): Map<string, string> {
   const metadata = new Map<string, string>();
-  for (const cells of parseMarkdownRows(readSectionFromContent(content, '## Metadata'))) {
+  for (const cells of parseMarkdownRows(readMarkdownSection(content, '## Metadata'))) {
     if (cells.length < 2 || cells[0] === 'Field') continue;
     metadata.set(cells[0], cells[1]);
   }
   return metadata;
 }
 
-function readSectionFromContent(content: string, heading: string): string {
-  const start = content.indexOf(heading);
-  if (start < 0) return '';
-  const afterHeading = content.slice(start + heading.length);
-  const nextHeading = afterHeading.search(/\n##\s+/);
-  return nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading;
+function latestStatusHistoryStatus(content: string): string | null {
+  const rows = readMarkdownSection(content, '## Status History')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('|') && !/^\|\s*-+/.test(line) && !/^\|\s*Time\s*\|/i.test(line));
+  const latest = rows.at(-1);
+  if (!latest) return null;
+  const cells = latest
+    .slice(1, latest.endsWith('|') ? -1 : undefined)
+    .split('|')
+    .map((cell) => cell.trim());
+  return cells[1] || null;
 }
 
 function isMetadataPlaceholder(value: string): boolean {

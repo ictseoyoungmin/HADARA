@@ -60,7 +60,26 @@ describe('task finish status sync', () => {
     expect(report.summary).toMatchObject({ plannedWrites: 2, appliedWrites: 2 });
     expect(readTask(root, task.id)).toContain('| Status | Done |');
     expect(readTask(root, task.id)).toContain('## Status\n\nDone\n');
+    expect(readTask(root, task.id)).toMatch(/\|\s*\d{4}-\d{2}-\d{2}\s*\|\s*Done\s*\|\s*Finished task capsule\.\s*\|\s*`hadara task finish --execute`\s*\|/);
     expect(readBoard(root)).toContain(`| ${task.id} | Finish execute | Done | tasks/${task.id}-finish-execute | |`);
+    expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
+  });
+
+  it('updates Status History when TASK.md status is already Done', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finish history only');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs.readFileSync(taskPath, 'utf8').replace('| Status | Draft |', '| Status | Done |').replace('## Status\n\nDraft\n', '## Status\n\nDone\n'),
+      'utf8'
+    );
+
+    const report = createTaskFinishReport(root, task.id, 'execute');
+
+    expect(report.ok).toBe(true);
+    expect(report.writes).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'task-status', applied: true })]));
+    expect(readTask(root, task.id)).toMatch(/\|\s*\d{4}-\d{2}-\d{2}\s*\|\s*Done\s*\|\s*Finished task capsule\.\s*\|\s*`hadara task finish --execute`\s*\|/);
     expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
   });
 

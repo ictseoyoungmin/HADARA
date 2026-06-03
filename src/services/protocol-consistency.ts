@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createProfileConsistencyDiagnostics, createProtocolProfileSummary, ProtocolProfileSummary } from './protocol-profile';
 import { createEvidenceLintReport } from './evidence-lint';
-import { parseMarkdownRows } from './markdown-table';
+import { parseMarkdownRows, readMarkdownSection } from './markdown-table';
 import { ProtocolRemediationFix } from './protocol-remediation';
 import { isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule, TASK_FILES } from '../task/task-capsule';
 
@@ -1138,14 +1138,6 @@ function detectProfile(projectRoot: string): 'basic' | 'standard' | 'governed' |
   if (hasStandardDocs) return 'standard';
   if (fs.existsSync(path.join(projectRoot, 'docs', 'PROJECT_STATE.md'))) return 'basic';
   return 'unknown';
-}
-
-function readMarkdownSection(content: string, heading: string): string {
-  const start = content.indexOf(heading);
-  if (start < 0) return '';
-  const afterHeading = content.slice(start + heading.length);
-  const nextHeading = afterHeading.search(/\n##\s+/);
-  return nextHeading >= 0 ? afterHeading.slice(0, nextHeading) : afterHeading;
 }
 
 function isDoneStatus(status: string | null | undefined): boolean {
