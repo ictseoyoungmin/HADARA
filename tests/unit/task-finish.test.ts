@@ -31,7 +31,7 @@ describe('task finish status sync', () => {
       mode: 'dry-run',
       taskId: task.id,
       status: { taskStatus: 'Draft', taskBoardStatus: 'Draft', taskBoardPresent: true },
-      summary: { plannedWrites: 2, appliedWrites: 0, advisoryOnly: 3 }
+      summary: { plannedWrites: 2, appliedWrites: 0, advisoryOnly: 3, stateDocsPending: 3 }
     });
     expect(report.writes.map((write) => write.field).sort()).toEqual(['task-board-row', 'task-status']);
     for (const write of report.writes) {
@@ -44,10 +44,38 @@ describe('task finish status sync', () => {
       'docs/PROJECT_STATE.md',
       'docs/AGENT_HANDOFF.md'
     ]);
+    expect(report.stateDocs).toEqual([
+      expect.objectContaining({ path: 'docs/DEVELOPMENT_SLICES.md', present: false, mentionsTask: false, state: 'missing' }),
+      expect.objectContaining({ path: 'docs/PROJECT_STATE.md', present: false, mentionsTask: false, state: 'missing' }),
+      expect.objectContaining({ path: 'docs/AGENT_HANDOFF.md', present: false, mentionsTask: false, state: 'missing' })
+    ]);
     expect(readTask(root, task.id)).toBe(beforeTask);
     expect(readBoard(root)).toBe(beforeBoard);
     expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
     expect(formatTaskFinishReport(report)).toContain('PLANNED\ttask-board-row\tdocs/TASK_BOARD.md');
+    expect(formatTaskFinishReport(report)).toContain('ADVISORY\tdocs/AGENT_HANDOFF.md\tmissing');
+  });
+
+  it('reports state document freshness without writing broad docs', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finish state docs');
+    fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), `# DEVELOPMENT_SLICES\n\n| Order | Slice | Capsule | Purpose | Done Evidence |\n|---|---|---|---|---|\n| 1 | Finish state docs | ${task.id} | Test | Done: local evidence. |\n`, 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Status\n\nNo mention yet.\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\n## Current State\n\n| Area | State | Notes |\n|---|---|---|\n| Latest Completed Task | ${task.id} Finish state docs | Test. |\n`, 'utf8');
+    const beforeProject = fs.readFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), 'utf8');
+
+    const report = createTaskFinishReport(root, task.id, 'execute');
+
+    expect(report.ok).toBe(true);
+    expect(report.summary.stateDocsPending).toBe(1);
+    expect(report.stateDocs).toEqual([
+      expect.objectContaining({ path: 'docs/DEVELOPMENT_SLICES.md', present: true, mentionsTask: true, state: 'current' }),
+      expect.objectContaining({ path: 'docs/PROJECT_STATE.md', present: true, mentionsTask: false, state: 'pending' }),
+      expect.objectContaining({ path: 'docs/AGENT_HANDOFF.md', present: true, mentionsTask: true, state: 'current' })
+    ]);
+    expect(report.advisories.map((advisory) => advisory.state)).toEqual(['current', 'pending', 'current']);
+    expect(fs.readFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), 'utf8')).toBe(beforeProject);
+    expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
   });
 
   it('executes only TASK.md status and Task Board row status/path sync', () => {

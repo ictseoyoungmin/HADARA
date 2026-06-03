@@ -237,3 +237,4 @@
 | T-0234 | Evidence v2 Release Read Model Compatibility | Done | tasks/T-0234-evidence-v2-release-read-model-compatibility | |
 | T-0235 | Evidence v2 Migration Preview | Done | tasks/T-0235-evidence-v2-migration-preview | |
 | T-0236 | Evidence v2 Migration Execute Mode | Done | tasks/T-0236-evidence-v2-migration-execute-mode | |
+| T-0237 | Task Finish State Docs Advisory Report | Done | tasks/T-0237-task-finish-state-docs-advisory-report | |

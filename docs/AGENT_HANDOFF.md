@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0236 is the current completed local work and has been committed locally. |
+| Branch | main | T-0237 is the current completed local work and has been committed locally. |
 | Current Phase | Dashboard/TUI UI work paused; core evidence/task lifecycle work resumed | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0236 Evidence v2 Migration Execute Mode | `hadara evidence migrate --task <id> --to v2 --execute --before-hash <hash> --json` now rewrites only the selected task `evidence.jsonl` when the hash matches and skipped records are safe. |
-| Active / Next Task | Task lifecycle hardening | Evidence v2 writer/compatibility/preview/execute are in place; do not mass-migrate historical capsules by default. |
-| Validation Baseline | T-0236 Docker validation passed | Focused migration/evidence/schema suite passed 7 files / 67 tests; `npm run dev:docker-sync-build` passed with 92 files / 606 tests and built CLI temp-copy execute/mismatch smokes passed. |
+| Latest Completed Task | T-0237 Task Finish State Docs Advisory Report | `hadara.task.finish.v1` now reports structured state-doc freshness for Development Slices, Project State, and Agent Handoff without expanding finish writes. |
+| Active / Next Task | Close/audit workflow hardening | Finish advisories are now more actionable; continue lifecycle hardening around close/audit semantics or capsule remediation. |
+| Validation Baseline | T-0237 Docker validation passed | Focused task lifecycle suite passed 5 files / 40 tests; `npm run dev:docker-sync-build` passed with 92 files / 607 tests and built CLI finish JSON smoke exposed `stateDocs`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0237 Task Finish State Docs Advisory Report | Added `stateDocs` to `hadara.task.finish.v1` for `docs/DEVELOPMENT_SLICES.md`, `docs/PROJECT_STATE.md`, and `docs/AGENT_HANDOFF.md`, with current/pending/missing state, mention signal, and recommendations while preserving the `task finish --execute` write boundary. | T-0237 evidence: focused task lifecycle tests passed 5 files / 40 tests; Docker sync-build passed 92 files / 607 tests; built CLI smoke returned `stateDocsPending: 3` before manual docs update. |
 | T-0236 Evidence v2 Migration Execute Mode | Added hash-guarded execute mode for `evidence migrate`, requiring `--before-hash`, preserving dry-run preview shape, converting v1 lines to planned v2 records, preserving existing v2 lines, refusing skipped invalid records, and keeping `EVIDENCE.md` unchanged. | T-0236 evidence: focused migration/evidence/schema tests passed 7 files / 67 tests; Docker sync-build passed 92 files / 606 tests; built CLI temp-copy smoke migrated T-0015 from v1 5/v2 0 to v1 0/v2 5 and mismatch smoke returned `EVIDENCE_MIGRATION_BEFORE_HASH_MISMATCH`. |
 | T-0235 Evidence v2 Migration Preview | Added dry-run-only `evidence migrate` reporting as `hadara.evidence.migration_preview.v1`, including `beforeHash`, deterministic planned v2 ids/fingerprints, planned records, skipped records, warning issues, and explicit execute rejection. | T-0235 evidence: focused migration/evidence/schema tests passed 7 files / 64 tests; Docker sync-build passed 92 files / 603 tests; built CLI smoke on T-0015 planned 5 transforms with no writes. |
-| T-0234 Evidence v2 Release Read Model Compatibility | Routed package-smoke, clean-checkout smoke, and release artifact evidence attachment through the canonical v2 text artifact writer, preserved release artifact directory names, and made release dry-run/strict gates accept v1/v2 mixed evidence. | T-0234 evidence: focused release/evidence tests passed 7 files / 73 tests; Docker sync-build passed 91 files / 600 tests; T-0234 ready/finish/close/audit loop passed using v2 evidence. |
 
 ## Current Known Problems
 
@@ -50,19 +50,21 @@
 | Dashboard aggregate reports still expose legacy `source.projectRoot` during v1 compatibility. | New browser consumers should avoid displaying raw absolute paths even though the compatibility field remains. | Use `source.project.fingerprint` and `source.projectRootRedacted` now; remove raw path exposure in a future v2 contract. |
 | Direct `/mnt/f` dashboard live reads are structurally slow on cold reads. | Phase 5.6 measured about 17s uncached bootstrap after dedup because broad capsule filesystem scans remain on the request path. | Phase 5.7 should move to local projections: start with T-0216 contract, then projection store/core route/background refresh. |
 | Close validation evidence can create a fixed-point loop if modeled as a same-run precondition. | Recording validation evidence mutates evidence files after validation. | Use the documented three-layer model: validation proves readiness, close records the proof, audit checks the close record. T-0170 adds source/report hash split and read-only audit for this model. |
-| `task finish` intentionally leaves broad prose docs advisory-only. | Operators still need to update Development Slices, Project State, Agent Handoff, and evidence/close records manually. | Use the finish report advisories; future finish expansion should remain dry-run-first, bounded, and hash-guarded. |
+| `task finish` intentionally leaves broad prose docs advisory-only. | Operators still need to update Development Slices, Project State, Agent Handoff, and evidence/close records manually. | Use T-0237 `stateDocs` current/pending/missing diagnostics; future finish expansion should remain dry-run-first, bounded, and hash-guarded. |
 
 ## Next Recommended Step
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Return to task lifecycle hardening. | Finish remains advisory-heavy and close validation has a known fixed-point model; Evidence v2 writer/compatibility/preview/execute are now available. | Use `docs/TASK_WORKFLOW_COMMANDS.md` and recent close/audit evidence behavior. |
+| Continue close/audit workflow hardening. | Finish advisories now expose structured state-doc freshness, while close validation still depends on the source/report hash model and repeated audit discipline. | Use `docs/TASK_WORKFLOW_COMMANDS.md` and recent close/audit evidence behavior. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| Task finish state-doc advisory focused checks | Docker focused suite passed with 5 files / 40 tests during T-0237. | Covered `task finish` stateDocs current/pending/missing diagnostics, unchanged broad-doc write boundary, ready/close adjacency, done-level harness, and workflow docs. |
+| Task finish state-doc advisory full check | Docker `npm run dev:docker-sync-build` passed with 92 files and 607 tests during T-0237. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`; `/workspace/dist` was refreshed. Built finish JSON smoke returned `stateDocsPending: 3` before manual docs update. |
 | Evidence v2 migration execute focused checks | Docker focused suite passed with 7 files / 67 tests during T-0236. | Covered execute success, before-hash required/mismatch no-write behavior, skipped-record execute refusal, CLI execute JSON, schema registration, and v1/v2 evidence compatibility adjacency. |
 | Evidence v2 migration execute full check | Docker `npm run dev:docker-sync-build` passed with 92 files and 606 tests during T-0236. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`; `/workspace/dist` was refreshed. Built temp-copy execute smoke migrated T-0015 from v1 5/v2 0 to v1 0/v2 5 and mismatch smoke returned `EVIDENCE_MIGRATION_BEFORE_HASH_MISMATCH`. |
 | Evidence v2 migration preview focused checks | Docker focused suite passed with 7 files / 64 tests during T-0235. | Covered migration preview service/CLI, schema registration, v1/v2 evidence compatibility, evidence list/lint/normalizer adjacency, and harness validation adjacency. |
@@ -71,7 +73,7 @@
 | Evidence v2 release compatibility full check | Docker `npm run dev:docker-sync-build` passed with 91 files and 600 tests during T-0234. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`; `/workspace/dist` was refreshed. |
 | Evidence v2 writer/read-model focused checks | Docker focused suites passed with 10 files / 81 tests and 9 files / 78 tests during T-0233. | Covered evidence writer/list/lint/normalizer, harness validation, task close/workbench, dashboard/timeline/TUI consumers, schema fixtures, release dry-run/artifact adjacency, MCP tools, and agent evidence paths. |
 | Evidence v2 full check | Docker `npm run dev:docker-sync-build` passed with 91 files and 599 tests during T-0233. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`; `/workspace/dist` was refreshed. |
-| Full repository check | Docker `npm run dev:docker-sync-build` passed with 92 files and 606 tests during T-0236. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`; `/workspace/dist` was refreshed. |
+| Full repository check | Docker `npm run dev:docker-sync-build` passed with 92 files and 607 tests during T-0237. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`; `/workspace/dist` was refreshed. |
 | TUI table preview focused check | Docker `npm run test:focused -- tests/unit/tui-markdown.test.ts tests/unit/tui-snapshot.test.ts tests/unit/tui-read-model.test.ts tests/unit/status-json.test.ts` passed. | 4 files / 35 tests cover helper-level table data previews, Detail table inline-code pipe cells, Overview cards, fast TUI handoff parsing, and existing status table parsing. |
 | TUI table preview full check | Docker `npm run dev:docker-sync-build` passed with 91 files and 598 tests during T-0232. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`; built Detail TESTS.md smoke showed no bogus Goal/Notes/Step/Reason columns created from inline-code pipes. |
 | CLI/TUI focused check | Docker `npm run test:focused -- tests/unit/tui-cli.test.ts tests/unit/feature-smoke.test.ts tests/unit/runtime-version.test.ts tests/unit/task-json.test.ts tests/unit/evidence-json.test.ts tests/unit/status-json.test.ts tests/unit/policy-json.test.ts tests/unit/cli-errors.test.ts` passed. | 8 files / 53 tests covered representative lazy-dispatched CLI surfaces and TUI snapshot behavior. |

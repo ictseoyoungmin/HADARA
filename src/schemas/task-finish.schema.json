@@ -16,6 +16,7 @@
     "summary": { "type": "object", "additionalProperties": true },
     "writes": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "advisories": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "stateDocs": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
   }
 }

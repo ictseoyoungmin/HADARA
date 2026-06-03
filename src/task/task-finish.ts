@@ -27,9 +27,11 @@ export interface TaskFinishReport {
     plannedWrites: number;
     appliedWrites: number;
     advisoryOnly: number;
+    stateDocsPending: number;
   };
   writes: TaskFinishWrite[];
   advisories: TaskFinishAdvisory[];
+  stateDocs: TaskFinishStateDoc[];
   issues: TaskFinishIssue[];
 }
 
@@ -49,6 +51,16 @@ export interface TaskFinishAdvisory {
   path: string;
   reason: string;
   mode: 'dry-run-only';
+  state?: 'current' | 'pending' | 'missing';
+}
+
+export interface TaskFinishStateDoc {
+  path: 'docs/DEVELOPMENT_SLICES.md' | 'docs/PROJECT_STATE.md' | 'docs/AGENT_HANDOFF.md';
+  present: boolean;
+  mentionsTask: boolean;
+  state: 'current' | 'pending' | 'missing';
+  reason: string;
+  recommendation: string;
 }
 
 export interface TaskFinishIssue {
@@ -70,9 +82,10 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
       taskId,
       projectRoot,
       status: { taskStatus: null, taskBoardStatus: null, taskBoardPresent: false },
-      summary: { plannedWrites: 0, appliedWrites: 0, advisoryOnly: 0 },
+      summary: { plannedWrites: 0, appliedWrites: 0, advisoryOnly: 0, stateDocsPending: 0 },
       writes: [],
       advisories: [],
+      stateDocs: [],
       issues: [{ severity: 'error', code: 'TASK_NOT_FOUND', message: `Task Capsule not found: ${taskId}` }]
     };
   }
@@ -82,6 +95,7 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
   const statusHistoryStatus = readLatestStatusHistoryStatus(task);
   const board = readTaskBoard(projectRoot, task.id);
   const writes = planWrites(projectRoot, task, capsule, taskStatus, statusHistoryStatus, board, issues);
+  const stateDocs = createStateDocAdvisories(projectRoot, task);
   if (mode === 'execute' && !issues.some((issue) => issue.severity === 'error')) {
     applyWrites(projectRoot, writes, issues);
   }
@@ -106,14 +120,12 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
     summary: {
       plannedWrites: writes.length,
       appliedWrites: writes.filter((write) => write.applied).length,
-      advisoryOnly: 3
+      advisoryOnly: stateDocs.length,
+      stateDocsPending: stateDocs.filter((doc) => doc.state !== 'current').length
     },
     writes,
-    advisories: [
-      { path: 'docs/DEVELOPMENT_SLICES.md', reason: 'Slice completion evidence still requires operator-authored summary.', mode: 'dry-run-only' },
-      { path: 'docs/PROJECT_STATE.md', reason: 'Latest completed/current task prose remains operator-authored.', mode: 'dry-run-only' },
-      { path: 'docs/AGENT_HANDOFF.md', reason: 'Next-session handoff remains operator-authored.', mode: 'dry-run-only' }
-    ],
+    advisories: stateDocs.map((doc) => ({ path: doc.path, reason: doc.reason, mode: 'dry-run-only' as const, state: doc.state })),
+    stateDocs,
     issues
   };
 }
@@ -125,7 +137,7 @@ export function formatTaskFinishReport(report: TaskFinishReport): string {
     lines.push(`${write.applied ? 'APPLIED' : 'PLANNED'}\t${write.field}\t${write.path}`);
   }
   for (const advisory of report.advisories) {
-    lines.push(`ADVISORY\t${advisory.path}\t${advisory.reason}`);
+    lines.push(`ADVISORY\t${advisory.path}\t${advisory.state ?? 'pending'}\t${advisory.reason}`);
   }
   for (const issue of report.issues) {
     lines.push(`[${issue.severity}] ${issue.code}: ${issue.message}`);
@@ -310,6 +322,44 @@ function applyWrites(projectRoot: string, writes: TaskFinishWrite[], issues: Tas
       message: `Atomic task finish write failed and rollback was attempted. Cause: ${error instanceof Error ? error.message : String(error)}`
     });
   }
+}
+
+function createStateDocAdvisories(projectRoot: string, task: TaskCapsule): TaskFinishStateDoc[] {
+  return [
+    stateDoc(projectRoot, task, 'docs/DEVELOPMENT_SLICES.md', 'Slice completion evidence still requires operator-authored summary.', 'Add or update a Development Slices row with Done evidence for this task.'),
+    stateDoc(projectRoot, task, 'docs/PROJECT_STATE.md', 'Latest completed/current task prose remains operator-authored.', 'Update Project State current phase/status text if this task changes project capability state.'),
+    stateDoc(projectRoot, task, 'docs/AGENT_HANDOFF.md', 'Next-session handoff remains operator-authored.', 'Update Agent Handoff latest completed task, validation baseline, known problems, and next recommended step.')
+  ];
+}
+
+function stateDoc(
+  projectRoot: string,
+  task: TaskCapsule,
+  relativePath: TaskFinishStateDoc['path'],
+  baseReason: string,
+  recommendation: string
+): TaskFinishStateDoc {
+  const absolutePath = path.join(projectRoot, relativePath);
+  if (!fs.existsSync(absolutePath)) {
+    return {
+      path: relativePath,
+      present: false,
+      mentionsTask: false,
+      state: 'missing',
+      reason: `${baseReason} File is missing.`,
+      recommendation
+    };
+  }
+  const content = fs.readFileSync(absolutePath, 'utf8');
+  const mentionsTask = content.includes(task.id);
+  return {
+    path: relativePath,
+    present: true,
+    mentionsTask,
+    state: mentionsTask ? 'current' : 'pending',
+    reason: mentionsTask ? `${baseReason} This document already mentions ${task.id}.` : `${baseReason} This document does not mention ${task.id}.`,
+    recommendation
+  };
 }
 
 interface TaskBoardProjection {
