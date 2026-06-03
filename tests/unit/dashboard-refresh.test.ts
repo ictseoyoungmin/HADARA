@@ -91,8 +91,18 @@ describe('dashboard background refresh and projection status', () => {
       state: 'idle',
       runs: 1,
       currentStage: null,
+      stageStartedAt: expect.any(String),
+      stageFinishedAt: expect.any(String),
+      stageDurationMs: expect.any(Number),
       processed: null,
-      total: null
+      total: null,
+      stageDurations: expect.arrayContaining([
+        expect.objectContaining({ stage: 'task-signals', durationMs: expect.any(Number) }),
+        expect.objectContaining({ stage: 'timeline', durationMs: expect.any(Number) }),
+        expect.objectContaining({ stage: 'debt', durationMs: expect.any(Number) }),
+        expect.objectContaining({ stage: 'core-final', durationMs: expect.any(Number) })
+      ]),
+      slowStageWarnings: expect.any(Array)
     });
   });
 
@@ -111,13 +121,24 @@ describe('dashboard background refresh and projection status', () => {
     expect(during.refresh).toMatchObject({
       state: 'refreshing',
       currentStage: expect.any(String),
+      stageStartedAt: expect.any(String),
+      stageFinishedAt: null,
+      stageDurationMs: null,
       processed: expect.any(Number),
       total: expect.any(Number),
-      lastYieldAt: expect.any(String)
+      lastYieldAt: expect.any(String),
+      stageDurations: expect.any(Array),
+      slowStageWarnings: expect.any(Array)
     });
 
     const after = await waitForRefreshRuns(root, 1);
-    expect(after.refresh).toMatchObject({ state: 'idle', currentStage: null, processed: null, total: null });
+    expect(after.refresh).toMatchObject({
+      state: 'idle',
+      currentStage: null,
+      processed: null,
+      total: null,
+      stageDurations: expect.arrayContaining([expect.objectContaining({ stage: 'task-signals', finishedAt: expect.any(String) })])
+    });
   });
 });
 

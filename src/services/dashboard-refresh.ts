@@ -6,6 +6,23 @@ import { refreshDashboardTaskProjectionIndexAsync } from './dashboard-task-proje
 
 export type DashboardRefreshState = 'idle' | 'checking' | 'refreshing' | 'failed';
 
+export interface DashboardRefreshStageDuration {
+  stage: string;
+  startedAt: string;
+  finishedAt: string;
+  durationMs: number;
+  processed: number | null;
+  total: number | null;
+  lastYieldAt: string | null;
+}
+
+export interface DashboardRefreshSlowStageWarning {
+  stage: string;
+  durationMs: number;
+  thresholdMs: number;
+  message: string;
+}
+
 export interface DashboardProjectionStatusReport {
   schemaVersion: 'hadara.dashboard.projection_status.v1';
   command: 'dashboard.projection.status';
@@ -20,9 +37,14 @@ export interface DashboardProjectionStatusReport {
     lastError: string | null;
     runs: number;
     currentStage: string | null;
+    stageStartedAt: string | null;
+    stageFinishedAt: string | null;
+    stageDurationMs: number | null;
     processed: number | null;
     total: number | null;
     lastYieldAt: string | null;
+    stageDurations: DashboardRefreshStageDuration[];
+    slowStageWarnings: DashboardRefreshSlowStageWarning[];
   };
   projections: {
     core: {
@@ -64,9 +86,14 @@ interface RefreshStateRecord {
   lastError: string | null;
   runs: number;
   currentStage: string | null;
+  stageStartedAt: string | null;
+  stageFinishedAt: string | null;
+  stageDurationMs: number | null;
   processed: number | null;
   total: number | null;
   lastYieldAt: string | null;
+  stageDurations: DashboardRefreshStageDuration[];
+  slowStageWarnings: DashboardRefreshSlowStageWarning[];
 }
 
 interface DashboardRefreshOptions {
@@ -84,6 +111,7 @@ interface DashboardRefreshStep {
 }
 
 const refreshStates = new Map<string, RefreshStateRecord>();
+const SLOW_REFRESH_STAGE_WARNING_MS = 1_000;
 
 export function warmDashboardProjections(projectRoot: string): DashboardRefreshTriggerReport {
   return triggerDashboardProjectionRefresh(projectRoot, 'serve-start', { includeHeavy: false, delayMs: 250 });
@@ -114,9 +142,14 @@ export function triggerDashboardProjectionRefresh(
     lastError: null,
     runs: current.runs,
     currentStage: null,
+    stageStartedAt: null,
+    stageFinishedAt: null,
+    stageDurationMs: null,
     processed: null,
     total: null,
-    lastYieldAt: null
+    lastYieldAt: null,
+    stageDurations: [],
+    slowStageWarnings: []
   });
 
   scheduleRefreshSteps(projectRoot, key, reason, startedAt, createRefreshSteps(projectRoot, options), options.delayMs ?? 0);
@@ -194,6 +227,7 @@ function scheduleRefreshSteps(
         await step.run({
           updateProgress: (progress) => updateRefreshProgress(key, projectRoot, progress)
         });
+        finishRefreshStage(key, projectRoot, new Date());
         index += 1;
         setTimeout(runNext, 0);
         return;
@@ -208,11 +242,17 @@ function scheduleRefreshSteps(
         lastError: null,
         runs: previous.runs + 1,
         currentStage: null,
+        stageStartedAt: previous.stageStartedAt,
+        stageFinishedAt: previous.stageFinishedAt,
+        stageDurationMs: previous.stageDurationMs,
         processed: null,
         total: null,
-        lastYieldAt: previous.lastYieldAt
+        lastYieldAt: previous.lastYieldAt,
+        stageDurations: previous.stageDurations,
+        slowStageWarnings: previous.slowStageWarnings
       });
     } catch (error) {
+      finishRefreshStage(key, projectRoot, new Date());
       const previous = getRefreshState(projectRoot);
       refreshStates.set(key, {
         state: 'failed',
@@ -222,9 +262,14 @@ function scheduleRefreshSteps(
         lastError: error instanceof Error ? error.message : String(error),
         runs: previous.runs,
         currentStage: previous.currentStage,
+        stageStartedAt: previous.stageStartedAt,
+        stageFinishedAt: previous.stageFinishedAt,
+        stageDurationMs: previous.stageDurationMs,
         processed: previous.processed,
         total: previous.total,
-        lastYieldAt: previous.lastYieldAt
+        lastYieldAt: previous.lastYieldAt,
+        stageDurations: previous.stageDurations,
+        slowStageWarnings: previous.slowStageWarnings
       });
     }
   };
@@ -305,21 +350,64 @@ function getRefreshState(projectRoot: string): RefreshStateRecord {
       lastError: null,
       runs: 0,
       currentStage: null,
+      stageStartedAt: null,
+      stageFinishedAt: null,
+      stageDurationMs: null,
       processed: null,
       total: null,
-      lastYieldAt: null
+      lastYieldAt: null,
+      stageDurations: [],
+      slowStageWarnings: []
     }
   );
 }
 
 function setRefreshStage(key: string, projectRoot: string, stage: string): void {
   const previous = getRefreshState(projectRoot);
+  const startedAt = new Date().toISOString();
   refreshStates.set(key, {
     ...previous,
     currentStage: stage,
+    stageStartedAt: startedAt,
+    stageFinishedAt: null,
+    stageDurationMs: null,
     processed: 0,
     total: null,
     lastYieldAt: previous.lastYieldAt
+  });
+}
+
+function finishRefreshStage(key: string, projectRoot: string, finished = new Date()): void {
+  const previous = getRefreshState(projectRoot);
+  if (!previous.currentStage || !previous.stageStartedAt) return;
+
+  const finishedAt = finished.toISOString();
+  const durationMs = Math.max(0, finished.getTime() - new Date(previous.stageStartedAt).getTime());
+  const duration: DashboardRefreshStageDuration = {
+    stage: previous.currentStage,
+    startedAt: previous.stageStartedAt,
+    finishedAt,
+    durationMs,
+    processed: previous.processed,
+    total: previous.total,
+    lastYieldAt: previous.lastYieldAt
+  };
+  const warning =
+    durationMs > SLOW_REFRESH_STAGE_WARNING_MS
+      ? {
+          stage: previous.currentStage,
+          durationMs,
+          thresholdMs: SLOW_REFRESH_STAGE_WARNING_MS,
+          message: `Dashboard refresh stage ${previous.currentStage} took ${durationMs}ms.`
+        }
+      : null;
+
+  refreshStates.set(key, {
+    ...previous,
+    stageFinishedAt: finishedAt,
+    stageDurationMs: durationMs,
+    stageDurations: [...previous.stageDurations, duration],
+    slowStageWarnings: warning ? [...previous.slowStageWarnings, warning] : previous.slowStageWarnings
   });
 }
 

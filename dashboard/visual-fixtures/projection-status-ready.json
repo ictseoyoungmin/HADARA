@@ -16,9 +16,33 @@
     "lastError": null,
     "runs": 1,
     "currentStage": null,
+    "stageStartedAt": "2026-06-02T00:00:02.000Z",
+    "stageFinishedAt": "2026-06-02T00:00:03.000Z",
+    "stageDurationMs": 1000,
     "processed": null,
     "total": null,
-    "lastYieldAt": "2026-06-02T00:00:03.000Z"
+    "lastYieldAt": "2026-06-02T00:00:03.000Z",
+    "stageDurations": [
+      {
+        "stage": "task-signals",
+        "startedAt": "2026-06-02T00:00:00.000Z",
+        "finishedAt": "2026-06-02T00:00:01.000Z",
+        "durationMs": 1000,
+        "processed": 224,
+        "total": 224,
+        "lastYieldAt": "2026-06-02T00:00:01.000Z"
+      },
+      {
+        "stage": "core-final",
+        "startedAt": "2026-06-02T00:00:02.000Z",
+        "finishedAt": "2026-06-02T00:00:03.000Z",
+        "durationMs": 1000,
+        "processed": 1,
+        "total": 1,
+        "lastYieldAt": "2026-06-02T00:00:03.000Z"
+      }
+    ],
+    "slowStageWarnings": []
   },
   "projections": {
     "core": {

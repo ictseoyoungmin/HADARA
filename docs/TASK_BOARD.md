@@ -226,3 +226,4 @@
 | T-0223 | Projection Validation and Visual/A11y States | Done | tasks/T-0223-projection-validation-and-visual-a11y-states | |
 | T-0224 | Dashboard Refresh Refactor and Validation Read Model | Done | tasks/T-0224-dashboard-refresh-refactor-and-validation-read-model | Metadata gate follow-up validated with Docker sync-build. |
 | T-0225 | Dashboard Cooperative Refresh Progress | Done | tasks/T-0225-dashboard-cooperative-refresh-progress | |
+| T-0226 | Dashboard Refresh Responsiveness Measurement | Done | tasks/T-0226-dashboard-refresh-responsiveness-measurement | |

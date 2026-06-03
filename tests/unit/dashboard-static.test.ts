@@ -219,7 +219,18 @@ describe('operator console bundle (Phase 5.6)', () => {
     }
 
     expect(readVisualFixture('projection-status-refreshing.json')).toMatchObject({
-      refresh: { state: 'refreshing', currentStage: expect.any(String), processed: expect.any(Number), total: expect.any(Number), lastYieldAt: expect.any(String) },
+      refresh: {
+        state: 'refreshing',
+        currentStage: expect.any(String),
+        stageStartedAt: expect.any(String),
+        stageFinishedAt: null,
+        stageDurationMs: null,
+        processed: expect.any(Number),
+        total: expect.any(Number),
+        lastYieldAt: expect.any(String),
+        stageDurations: expect.any(Array),
+        slowStageWarnings: expect.any(Array)
+      },
       pendingSections: expect.arrayContaining(['timeline', 'debt'])
     });
     expect(readVisualFixture('projection-status-stale.json')).toMatchObject({

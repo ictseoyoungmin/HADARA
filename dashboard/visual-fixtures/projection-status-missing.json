@@ -16,9 +16,14 @@
     "lastError": null,
     "runs": 0,
     "currentStage": null,
+    "stageStartedAt": null,
+    "stageFinishedAt": null,
+    "stageDurationMs": null,
     "processed": null,
     "total": null,
-    "lastYieldAt": null
+    "lastYieldAt": null,
+    "stageDurations": [],
+    "slowStageWarnings": []
   },
   "projections": {
     "core": {

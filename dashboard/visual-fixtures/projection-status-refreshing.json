@@ -16,9 +16,14 @@
     "lastError": null,
     "runs": 1,
     "currentStage": "task-signals",
+    "stageStartedAt": "2026-06-02T00:00:03.000Z",
+    "stageFinishedAt": null,
+    "stageDurationMs": null,
     "processed": 25,
     "total": 224,
-    "lastYieldAt": "2026-06-02T00:00:03.500Z"
+    "lastYieldAt": "2026-06-02T00:00:03.500Z",
+    "stageDurations": [],
+    "slowStageWarnings": []
   },
   "projections": {
     "core": {
