@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0228 changes are local and validated; commit/push state should be checked before publishing. |
-| Current Phase | Dashboard paused after Phase 5.7; TUI projection-first alignment complete | Dashboard projection/refresh hardening, task workflow status-history hardening, and the first TUI shared operator read-model alignment slice are complete through T-0228. |
-| Latest Completed Task | T-0228 TUI Projection-First Operator Read Model | Dashboard work is paused in docs/specs; TUI now exposes shared dashboard core/projection status and snapshots show source/refresh/pending state without HTTP calls or ordinary projection writes. |
-| Active / Next Task | TUI selected task detail/proof shared-service replacement | Replace remaining TUI direct task detail/proof paths with dashboard task-detail, task workbench, and evidence-lint services per the new TUI spec. |
-| Validation Baseline | T-0228 Docker validation passed | Focused TUI Docker tests passed 4 files / 46 tests; `npm run dev:docker-sync-build` passed with 91 files / 595 tests and built CLI smoke `ok:true`, `distLooksStale:false`; built TUI snapshot smoke displayed `source projection refresh idle pending timeline,debt`. |
+| Branch | main | T-0229 changes are local and validated; commit before T-0230. |
+| Current Phase | Dashboard paused after Phase 5.7; TUI shared read-model replacement continuing | T-0228 established projection-first TUI operator status; T-0229 moved selected task proof/evidence semantics to shared dashboard task-detail. |
+| Latest Completed Task | T-0229 TUI Selected Task Detail Shared Read Model | `TuiReadModel.selectedTask` now carries dashboard task-detail/proof data and snapshot proof display prefers shared proof before Markdown fallbacks. |
+| Active / Next Task | T-0230 TUI Projection-First Task Index / Cache Replacement | Built `/mnt/f` snapshot smoke still took 42.56s after T-0229, so the next bottleneck is TUI task index/cache/document scan behavior. |
+| Validation Baseline | T-0229 Docker validation passed | Focused TUI Docker tests passed 4 files / 46 tests; `npm run dev:docker-sync-build` passed with 91 files / 595 tests and built CLI smoke `ok:true`, `distLooksStale:false`; built TUI snapshot smoke passed but took 42.56s on `/mnt/f`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0229 TUI Selected Task Detail Shared Read Model | Added dashboard task-detail aggregate/proof to selected TUI task state and made Overview proof display prefer shared proof/evidence data while preserving document viewer compatibility. | T-0229 evidence: focused TUI tests passed 4 files / 46 tests; Docker sync-build passed 91 files / 595 tests; built snapshot smoke displayed shared proof but took 42.56s on `/mnt/f`. |
 | T-0228 TUI Projection-First Operator Read Model | Added the TUI shared operator read-model spec, paused dashboard work in project docs, exposed shared dashboard core/projection status in `TuiReadModel`, and rendered source/refresh/pending state in snapshots. | T-0228 evidence: focused Docker TUI tests passed 4 files / 46 tests; Docker sync-build passed 91 files / 595 tests; built snapshot smoke displayed `source projection refresh idle pending timeline,debt`. |
 | T-0227 Task Status History Done Gate | Added finish-time Status History Done row append/repair, done-level validation for latest Status History row, and shared heading-line Markdown section readers for task/protocol/read-model surfaces. | T-0227 evidence: shared section reader focused Docker tests passed 7 files / 74 tests; Docker sync-build passed 91 files / 595 tests; T-0226 and T-0196 fixture history were aligned with the new gate. |
-| T-0226 Dashboard Refresh Responsiveness Measurement | Added refresh stage timing metadata, slow-stage warnings, operational measurement docs, and a built measurement script for core responsiveness during refresh plus `/tmp` comparison. | T-0226 evidence: focused Docker tests passed 4 files / 23 tests; Docker sync-build passed 91 files / 592 tests; built measurement smoke returned `ok:true`, workspace task-signals 3780 ms, tmp-ext4 task-signals 147 ms. |
 
 ## Current Known Problems
 
@@ -48,7 +48,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Close T-0228, then continue TUI shared read-model replacement. | Dashboard work is paused; the next product value is keeping terminal operations aligned with the same source-of-truth projections and evidence semantics. | Use `docs/specs/tui/HADARA_TUI_Shared_Operator_Read_Model_Spec.md`; likely next slice is replacing selected task detail/proof with dashboard task-detail, workbench, and evidence-lint services. |
+| Start T-0230 TUI Projection-First Task Index / Cache Replacement. | T-0229 aligned selected proof/evidence semantics but `/mnt/f` built snapshot smoke still took 42.56s, so task list/cache/source-signal scans remain the next target. | Use `docs/specs/tui/HADARA_TUI_Shared_Operator_Read_Model_Spec.md`; replace TUI-owned task index/cache scans with dashboard task projection where possible. |
 
 ## Validation Baseline
 
@@ -56,7 +56,7 @@
 |---|---|---|
 | Full repository check | Docker `npm run dev:docker-sync-build` passed with 91 files and 595 tests during T-0228. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`. |
 | TUI shared operator read-model focused check | Docker `npm run test:focused -- tests/unit/tui-read-model.test.ts tests/unit/tui-snapshot.test.ts tests/unit/tui-cache.test.ts tests/unit/tui-terminal.test.ts` passed. | 4 files / 46 tests covered operator projection status in TUI read model, snapshot header rendering, cache compatibility, and terminal behavior. |
-| Built TUI snapshot smoke | `node dist/cli/main.js tui --snapshot --compact --width 100 --height 26 --project /mnt/f/NowWorking/HADARA-dev` exited 0. | Output displayed `source projection refresh idle pending timeline,debt`; mounted workspace snapshot took roughly 33 seconds, so remaining TUI direct read/cache follow-ups matter. |
+| Built TUI snapshot smoke | `/usr/bin/time -f 'elapsed=%e' node dist/cli/main.js tui --snapshot --compact --width 100 --height 26 --project /mnt/f/NowWorking/HADARA-dev` exited 0. | Output displayed projection status and shared selected proof text; mounted workspace snapshot took 42.56s, so T-0230 remains required. |
 | Task workflow Status History and Markdown section reader gate | Focused Docker tests passed for markdown-table, task-finish, harness-validate, task-upgrade-scaffold, protocol-consistency, protocol-remediation, and dashboard-bootstrap. | Covers finish append/repair behavior, `TASK_STATUS_HISTORY_NOT_DONE`, shared heading-line section extraction, and affected fixture/read-model compatibility. |
 | Dashboard refresh responsiveness measurement | Built `node scripts/dashboard-refresh-responsiveness.mjs --project /workspace --samples 8 --compare-tmp --json` returned `ok:true`. | Workspace core p50/p95 during refresh: 49.6/62.0 ms; workspace task-signals: 3780 ms slow warning; tmp-ext4 core p50/p95: 0.5/1.6 ms; tmp-ext4 task-signals: 147 ms. |
 | Dashboard cooperative refresh smoke | Built route smoke accepted `/api/dashboard/refresh`, observed progress with `currentStage: task-signals`, `processed:25`, `total:225`, `lastYieldAt`, and core returned stale/pending metadata while refresh was running. | Confirms core does not wait for refresh completion and refresh status is observable. |

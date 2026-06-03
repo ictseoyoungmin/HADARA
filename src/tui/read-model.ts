@@ -2,6 +2,7 @@ import { createActiveRunResumeReport, ActiveRunResumeReport } from '../services/
 import { safeCreateActiveRunProjection } from '../services/active-run-state';
 import { createDashboardCoreReport, DashboardCoreReport } from '../services/dashboard-core';
 import { createDashboardProjectionStatusReport, DashboardProjectionStatusReport } from '../services/dashboard-refresh';
+import { createDashboardTaskDetailReport, DashboardTaskDetailReport } from '../services/dashboard-task-detail';
 import { createEvidenceListReport, EvidenceListReport } from '../services/evidence-list';
 import { createOperationalDebtReport, createReleaseGateReport, OperationalDebtReport, ReleaseGateReport } from '../services/operational-debt';
 import { createOpsStatusReport, OpsStatusReport } from '../services/operations-status-service';
@@ -62,6 +63,8 @@ export interface TuiReadModel {
     summary: TaskJsonSummary;
     detail: TaskReadReport;
     evidence: EvidenceListReport;
+    dashboardDetail: DashboardTaskDetailReport;
+    proof: DashboardTaskDetailReport['proof'];
   } | null;
   activeRun: {
     projection: OpsStatusReport['activeRun'];
@@ -255,17 +258,7 @@ export function createTuiReadModel(projectRoot: string, options: TuiReadModelOpt
   const tasks = createTaskListReport(projectRoot);
   const selectedTaskId = resolveSelectedTaskId(tasks.tasks, status, options.selectedTaskId);
   const selectedSummary = selectedTaskId ? tasks.tasks.find((task) => task.id === selectedTaskId) ?? null : null;
-  const selectedTask = selectedSummary
-    ? {
-        summary: selectedSummary,
-        detail: createTaskReadReport(projectRoot, selectedSummary.id, { includePrivate: options.includePrivateEvidence }),
-        evidence: createEvidenceListReport(projectRoot, {
-          taskId: selectedSummary.id,
-          limit: options.evidenceLimit ?? DEFAULT_EVIDENCE_LIMIT,
-          includePrivate: options.includePrivateEvidence
-        })
-      }
-    : null;
+  const selectedTask = selectedSummary ? createSelectedTaskReadModel(projectRoot, selectedSummary, options) : null;
 
   const activeRunResume = createActiveRunResumeReport(projectRoot);
   const debt = createOperationalDebtReport(projectRoot);
@@ -315,17 +308,7 @@ export function createTuiFastReadModel(projectRoot: string, options: TuiReadMode
   const status = createFastOpsStatusReport(projectRoot, sources, tasks, activeRunProjection);
   const selectedTaskId = resolveSelectedTaskId(tasks.tasks, status, options.selectedTaskId);
   const selectedSummary = selectedTaskId ? tasks.tasks.find((task) => task.id === selectedTaskId) ?? null : null;
-  const selectedTask = selectedSummary
-    ? {
-        summary: selectedSummary,
-        detail: createTaskReadReport(projectRoot, selectedSummary.id, { includePrivate: options.includePrivateEvidence }),
-        evidence: createEvidenceListReport(projectRoot, {
-          taskId: selectedSummary.id,
-          limit: options.evidenceLimit ?? DEFAULT_EVIDENCE_LIMIT,
-          includePrivate: options.includePrivateEvidence
-        })
-      }
-    : null;
+  const selectedTask = selectedSummary ? createSelectedTaskReadModel(projectRoot, selectedSummary, options) : null;
   const activeRunResume = createActiveRunResumeReport(projectRoot);
   const deferredIssue: TuiReadModelIssue = {
     source: 'tui-read-model',
@@ -383,6 +366,58 @@ function createTuiOperatorReadModel(projectRoot: string): TuiReadModel['operator
       writeProjection: false
     })
   };
+}
+
+export function createSelectedTaskReadModel(
+  projectRoot: string,
+  summary: TaskJsonSummary,
+  options: TuiReadModelOptions = {}
+): NonNullable<TuiReadModel['selectedTask']> {
+  const dashboardDetail = createDashboardTaskDetailReport(projectRoot, summary.id);
+  const evidence =
+    options.includePrivateEvidence === true
+      ? createEvidenceListReport(projectRoot, {
+          taskId: summary.id,
+          limit: options.evidenceLimit ?? DEFAULT_EVIDENCE_LIMIT,
+          includePrivate: true
+        })
+      : limitEvidenceListReport(dashboardDetail.evidenceList, options.evidenceLimit ?? DEFAULT_EVIDENCE_LIMIT);
+  const detail = createTaskReadReport(projectRoot, summary.id, { includePrivate: options.includePrivateEvidence });
+  return {
+    summary,
+    detail: {
+      ...detail,
+      evidenceIndex: evidence.records,
+      issues: mergeTaskReadIssues(detail.issues, dashboardDetail.issues)
+    },
+    evidence,
+    dashboardDetail,
+    proof: dashboardDetail.proof
+  };
+}
+
+function limitEvidenceListReport(report: EvidenceListReport, limit: number): EvidenceListReport {
+  const boundedLimit = Math.max(0, Math.floor(limit));
+  const records = report.records.slice(0, boundedLimit);
+  return {
+    ...report,
+    count: records.length,
+    records
+  };
+}
+
+function mergeTaskReadIssues(
+  taskReadIssues: TaskReadReport['issues'],
+  dashboardIssues: DashboardTaskDetailReport['issues']
+): TaskReadReport['issues'] {
+  return [
+    ...taskReadIssues,
+    ...dashboardIssues.map((issue) => ({
+      severity: issue.severity,
+      code: `DASHBOARD_TASK_DETAIL_${issue.code}`,
+      message: issue.message
+    }))
+  ];
 }
 
 function createLoadingProjectionStatusReport(generatedAt: string): DashboardProjectionStatusReport {

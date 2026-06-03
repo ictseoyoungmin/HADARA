@@ -229,3 +229,4 @@
 | T-0226 | Dashboard Refresh Responsiveness Measurement | Done | tasks/T-0226-dashboard-refresh-responsiveness-measurement | |
 | T-0227 | Task Status History Done Gate | Done | tasks/T-0227-task-status-history-done-gate | |
 | T-0228 | TUI Projection-First Operator Read Model | Done | tasks/T-0228-tui-projection-first-operator-read-model | |
+| T-0229 | TUI Selected Task Detail Shared Read Model | Done | tasks/T-0229-tui-selected-task-detail-shared-read-model | |

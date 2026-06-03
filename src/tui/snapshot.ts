@@ -453,8 +453,12 @@ function workSummaryLines(
     task.id === model.selectedTask?.summary.id && model.selectedTask.evidence.records[0]?.summary
       ? [model.selectedTask.evidence.records[0].summary]
       : [];
+  const sharedProof =
+    task.id === model.selectedTask?.summary.id
+      ? [`${model.selectedTask.proof.status}: ${model.selectedTask.proof.note}`]
+      : [];
   const proof =
-    firstLine(latestEvidence, evidenceFromMarkdown(evidenceText, 2), markdownPreview(evidenceText, { limit: 2 }), task.status === 'Done' ? 'Done status exposed by task list.' : '');
+    firstLine(sharedProof, latestEvidence, evidenceFromMarkdown(evidenceText, 2), markdownPreview(evidenceText, { limit: 2 }), task.status === 'Done' ? 'Done status exposed by task list.' : '');
   return [
     summaryTitleLine(label, task.id, task.title || '-', width, theme),
     summaryStatusLine(task.status || '-', task.capsule || '-', width, theme),

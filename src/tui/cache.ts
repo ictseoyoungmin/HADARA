@@ -2,9 +2,8 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { assertInsideProject, toProjectRelativePath } from '../core/workspace';
-import { parseEvidenceIndexFile } from '../services/evidence-list';
-import { TaskJsonSummary, TaskReadReport } from '../services/task-read-model';
-import { TuiReadModel, TuiReadModelOptions, createTuiReadModel } from './read-model';
+import { TaskJsonSummary } from '../services/task-read-model';
+import { TuiReadModel, TuiReadModelOptions, createSelectedTaskReadModel, createTuiReadModel } from './read-model';
 
 export type TuiCacheRefreshMode = 'full' | 'fast' | 'detail' | 'none';
 
@@ -73,20 +72,6 @@ export interface TuiCachedReadModelResult {
 }
 
 const CACHE_FILE = 'read-model-cache.json';
-const TASK_CAPSULE_FILES = [
-  'TASK.md',
-  'PLAN.md',
-  'CONTEXT.md',
-  'ACCEPTANCE.md',
-  'FILES.md',
-  'TESTS.md',
-  'RISKS.md',
-  'DECISIONS.md',
-  'EVIDENCE.md',
-  'evidence.jsonl',
-  'HANDOFF.md'
-];
-
 export function resolveTuiCacheRoot(projectRoot: string): string {
   return path.join(projectRoot, '.hadara', 'local', 'tui');
 }
@@ -245,46 +230,7 @@ export function createTuiReadModelWithCache(projectRoot: string, options: TuiCac
 }
 
 function createSelectedTask(projectRoot: string, summary: TaskJsonSummary, options: TuiReadModelOptions): NonNullable<TuiReadModel['selectedTask']> {
-  const detail = createTaskReadReportFromSummary(projectRoot, summary, options);
-  const evidenceRecords = detail.evidenceIndex ?? [];
-  const limit = Math.max(0, Math.floor(options.evidenceLimit ?? 20));
-  return {
-    summary,
-    detail,
-    evidence: {
-      schemaVersion: 'hadara.evidence.list.v1',
-      command: 'evidence.list',
-      ok: detail.ok,
-      taskId: summary.id,
-      count: evidenceRecords.slice(0, limit).length,
-      records: evidenceRecords.slice(0, limit),
-      issues: detail.issues
-    }
-  };
-}
-
-function createTaskReadReportFromSummary(projectRoot: string, summary: TaskJsonSummary, options: TuiReadModelOptions): TaskReadReport {
-  const taskDir = path.join(projectRoot, summary.capsule);
-  assertInsideProject(projectRoot, taskDir, summary.capsule);
-  const files = Object.fromEntries(
-    TASK_CAPSULE_FILES.map((fileName) => {
-      const filePath = path.join(taskDir, fileName);
-      return [fileName, fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : ''];
-    })
-  );
-  const parsed = parseEvidenceIndexFile(path.join(taskDir, 'evidence.jsonl'), summary.id);
-  const includePrivate = options.includePrivateEvidence === true;
-  const evidenceIndex = parsed.records.filter((record) => includePrivate || record.visibility !== 'private');
-  files['evidence.jsonl'] = evidenceIndex.length ? `${evidenceIndex.map((record) => JSON.stringify(record)).join('\n')}\n` : '';
-  return {
-    schemaVersion: 'hadara.task.read.v1',
-    command: 'task.read',
-    ok: !parsed.issues.some((issue) => issue.severity === 'error'),
-    task: summary,
-    files,
-    evidenceIndex,
-    issues: parsed.issues
-  };
+  return createSelectedTaskReadModel(projectRoot, summary, options);
 }
 
 function createCacheRecord(projectRoot: string, model: TuiReadModel, taskIndex: TuiTaskIndexEntry[]): TuiCacheRecord {

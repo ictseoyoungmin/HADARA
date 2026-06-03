@@ -61,6 +61,14 @@ describe('TUI read-model aggregator', () => {
           id: first.id,
           capsule: `tasks/${first.id}-active-tui-task`
         },
+        dashboardDetail: {
+          schemaVersion: 'hadara.dashboard.task_detail.v1',
+          command: 'dashboard.task-detail',
+          taskId: first.id
+        },
+        proof: {
+          note: expect.any(String)
+        },
         evidence: {
           schemaVersion: 'hadara.evidence.list.v1',
           count: 1
@@ -105,6 +113,8 @@ describe('TUI read-model aggregator', () => {
     expect(model.tasks.count).toBe(2);
     expect(model.operator.core.projection.pendingSections).toContain('timeline');
     expect(model.operator.projectionStatus.pendingSections).toContain('core');
+    expect(model.selectedTask?.evidence.records).toEqual(model.selectedTask?.dashboardDetail.evidenceList.records.slice(0, 20));
+    expect(model.selectedTask?.proof).toBe(model.selectedTask?.dashboardDetail.proof);
     expect(model.tasks.tasks.map((task) => task.id)).toEqual([first.id, second.id]);
     expect(model.overview.currentDetail?.files?.['TASK.md']).toContain('Later task');
     expect(model.overview.previousDetail?.files?.['TASK.md']).toContain('Active TUI task');
@@ -141,6 +151,7 @@ describe('TUI read-model aggregator', () => {
     expect(model.operator.projectionStatus.refresh.state).toBe('idle');
     expect(model.selectedTaskId).toBe(task.id);
     expect(model.overview.currentWork?.id).toBe(task.id);
+    expect(model.selectedTask?.dashboardDetail.schemaVersion).toBe('hadara.dashboard.task_detail.v1');
     expect(model.selectedTask?.detail.files?.['TASK.md']).toContain('Fast aggregate task');
     expect(model.debt.aggregate.total).toBe(0);
     expect(model.releaseGate.checks[0]?.name).toBe('Deferred release-gate check');
