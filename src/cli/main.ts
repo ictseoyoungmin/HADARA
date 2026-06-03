@@ -1,31 +1,5 @@
 #!/usr/bin/env node
 import { resolveHadaraPaths } from '../core/paths';
-import { handleDoctorCommand } from './doctor';
-import { handleInitCommand } from './init';
-import { handleHarnessCommand } from './harness';
-import { handleEvidenceCommand } from './evidence';
-import { handlePolicyCommand } from './policy';
-import { handleHermesCommand } from './hermes';
-import { handleHandoffCommand } from './handoff';
-import { handleTaskCommand } from './task';
-import { handleMcpCommand } from './mcp';
-import { handleRunCommand } from './run';
-import { handleRunStateCommand } from './run-state';
-import { handleOpsCommand, handleStatusCommand } from './status';
-import { handleDashboardCommand } from './dashboard';
-import { handleToolsCommand } from './tools';
-import { handleDebtCommand } from './debt';
-import { handleReleaseGateCommand } from './release-gate';
-import { handleReleaseArtifactCommand } from './release-artifact';
-import { handleReleaseDryRunCommand } from './release-dry-run';
-import { handleReleasePublishCommand } from './release-publish';
-import { handleWriteCommand } from './write-preflight';
-import { handleTuiCommand } from './tui';
-import { handleInstallCommand } from './install';
-import { handleSmokeCommand } from './smoke';
-import { handlePackageCommand } from './package-smoke';
-import { handleProtocolCommand } from './protocol';
-import { handleVersionCommand } from './version';
 import { getFlag, getStringOption } from './args';
 import { cliErrorExitCode, createCliErrorReport } from './errors';
 
@@ -106,124 +80,151 @@ async function main(args = process.argv.slice(2)): Promise<void> {
 
   switch (command) {
     case 'version': {
+      const { handleVersionCommand } = await import('./version');
       if (handleVersionCommand({ args, projectRoot: paths.projectRoot, jsonOutput, cliEntry: process.argv[1] })) return;
       break;
     }
 
     case 'init': {
+      const { handleInitCommand } = await import('./init');
       if (handleInitCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
     case 'doctor': {
+      const { handleDoctorCommand } = await import('./doctor');
       if (handleDoctorCommand({ paths, jsonOutput })) return;
       break;
     }
 
     case 'task': {
+      const { handleTaskCommand } = await import('./task');
       if (handleTaskCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
     case 'evidence': {
+      const { handleEvidenceCommand } = await import('./evidence');
       if (handleEvidenceCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
     case 'tools': {
+      const { handleToolsCommand } = await import('./tools');
       if (handleToolsCommand({ args, jsonOutput })) return;
       break;
     }
 
     case 'protocol': {
+      const { handleProtocolCommand } = await import('./protocol');
       if (handleProtocolCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
     case 'debt': {
+      const { handleDebtCommand } = await import('./debt');
       if (handleDebtCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
     case 'handoff': {
+      const { handleHandoffCommand } = await import('./handoff');
       if (handleHandoffCommand({ args, projectRoot: paths.projectRoot })) return;
       break;
     }
 
     case 'write': {
+      const { handleWriteCommand } = await import('./write-preflight');
       if (handleWriteCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
     case 'policy': {
+      const { handlePolicyCommand } = await import('./policy');
       if (handlePolicyCommand({ args, jsonOutput })) return;
       break;
     }
 
     case 'hermes': {
+      const { handleHermesCommand } = await import('./hermes');
       if (handleHermesCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
     case 'harness': {
+      const { handleHarnessCommand } = await import('./harness');
       if (await handleHarnessCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
     case 'mcp': {
+      const { handleMcpCommand } = await import('./mcp');
       if (handleMcpCommand({ args, projectRoot: paths.projectRoot })) return;
       break;
     }
 
     case 'status': {
+      const { handleStatusCommand } = await import('./status');
       if (handleStatusCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
     case 'dashboard': {
+      const { handleDashboardCommand } = await import('./dashboard');
       if (handleDashboardCommand({ args, projectRoot: paths.projectRoot })) return;
       break;
     }
 
     case 'tui': {
+      const { handleTuiCommand } = await import('./tui');
       if (handleTuiCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
     case 'ops': {
+      const { handleOpsCommand } = await import('./status');
       if (handleOpsCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
     case 'run': {
+      const { handleRunCommand } = await import('./run');
       if (await handleRunCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
     case 'run-state': {
+      const { handleRunStateCommand } = await import('./run-state');
       if (handleRunStateCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
     case 'release': {
+      const { handleReleaseDryRunCommand } = await import('./release-dry-run');
       if (handleReleaseDryRunCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
+      const { handleReleasePublishCommand } = await import('./release-publish');
       if (handleReleasePublishCommand({ args, paths, jsonOutput })) return;
+      const { handleReleaseArtifactCommand } = await import('./release-artifact');
       if (handleReleaseArtifactCommand({ args, paths, jsonOutput })) return;
+      const { handleReleaseGateCommand } = await import('./release-gate');
       if (handleReleaseGateCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
     case 'install': {
+      const { handleInstallCommand } = await import('./install');
       if (handleInstallCommand({ args, jsonOutput })) return;
       break;
     }
 
     case 'smoke': {
+      const { handleSmokeCommand } = await import('./smoke');
       if (handleSmokeCommand({ args, paths, jsonOutput })) return;
       break;
     }
 
     case 'package': {
+      const { handlePackageCommand } = await import('./package-smoke');
       if (handlePackageCommand({ args, paths, jsonOutput })) return;
       break;
     }

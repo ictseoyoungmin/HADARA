@@ -231,3 +231,4 @@
 | T-0228 | TUI Projection-First Operator Read Model | Done | tasks/T-0228-tui-projection-first-operator-read-model | |
 | T-0229 | TUI Selected Task Detail Shared Read Model | Done | tasks/T-0229-tui-selected-task-detail-shared-read-model | |
 | T-0230 | TUI Projection-First Task Index Cache Replacement | Done | tasks/T-0230-tui-projection-first-task-index-cache-replacement | |
+| T-0231 | TUI CLI Lazy Startup for Snapshot Smoke | Done | tasks/T-0231-tui-cli-lazy-startup-for-snapshot-smoke | |

@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0230 changes are local and validated; commit before T-0231. |
-| Current Phase | Dashboard paused after Phase 5.7; TUI `/mnt/f` snapshot performance hardening continuing | T-0230 removed broad TUI task index/cache scans and deferred selected proof lint in fast snapshot reads. |
-| Latest Completed Task | T-0230 TUI Projection-First Task Index Cache Replacement | TUI task lists prefer dashboard task projection plus Task Board, selected docs read directly from summary capsule paths, fast cache validation avoids `tasks/` directory scans, and snapshot uses fast profile. |
-| Active / Next Task | T-0231 TUI CLI Lazy Startup for Snapshot Smoke | TUI read-model/render now measures about 160 ms, but built CLI snapshot remains about 4.05s because CLI startup eagerly imports broad command modules. |
-| Validation Baseline | T-0230 Docker validation passed | Focused TUI/CLI Docker tests passed 6 files / 60 tests; `npm run dev:docker-sync-build` passed with 91 files / 595 tests and built CLI smoke `ok:true`, `distLooksStale:false`; built `/mnt/f` snapshot smoke improved from 42.56s to 4.05s. |
+| Branch | main | T-0231 changes are local and validated; commit before the next capsule. |
+| Current Phase | Dashboard paused after Phase 5.7; TUI `/mnt/f` snapshot performance hardening target met | T-0230 removed read-model/task scan bottlenecks and T-0231 removed eager CLI handler imports from TUI snapshot startup. |
+| Latest Completed Task | T-0231 TUI CLI Lazy Startup for Snapshot Smoke | `main.ts` lazy-loads command handlers after dispatch; built `/mnt/f` TUI snapshot smoke now completes in 1.37s. |
+| Active / Next Task | Follow-up hardening only if needed | The explicit 2s built snapshot target is met; next work can return to roadmap value unless repeated measurements show instability. |
+| Validation Baseline | T-0231 Docker validation passed | Focused CLI/TUI Docker tests passed 8 files / 53 tests; `npm run dev:docker-sync-build` passed with 91 files / 595 tests and built CLI smoke `ok:true`, `distLooksStale:false`; built `/mnt/f` snapshot smoke improved from 4.05s to 1.37s. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0231 TUI CLI Lazy Startup for Snapshot Smoke | Replaced top-level CLI handler imports with per-command dynamic imports so TUI snapshot startup avoids unrelated dashboard/task/release/smoke module loading. | T-0231 evidence: focused CLI/TUI tests passed 8 files / 53 tests; Docker sync-build passed 91 files / 595 tests; built `/mnt/f` snapshot smoke took 1.37s. |
 | T-0230 TUI Projection-First Task Index Cache Replacement | Replaced TUI broad task list/cache validation with projection/Task Board source signals, made selected docs path-based, deferred selected proof lint in fast reads, and routed snapshot smoke through fast profile. | T-0230 evidence: focused TUI/CLI tests passed 6 files / 60 tests; Docker sync-build passed 91 files / 595 tests; built `/mnt/f` snapshot smoke took 4.05s and internal fast read-model/render measured about 160 ms. |
 | T-0229 TUI Selected Task Detail Shared Read Model | Added dashboard task-detail aggregate/proof to selected TUI task state and made Overview proof display prefer shared proof/evidence data while preserving document viewer compatibility. | T-0229 evidence: focused TUI tests passed 4 files / 46 tests; Docker sync-build passed 91 files / 595 tests; built snapshot smoke displayed shared proof but took 42.56s on `/mnt/f`. |
-| T-0228 TUI Projection-First Operator Read Model | Added the TUI shared operator read-model spec, paused dashboard work in project docs, exposed shared dashboard core/projection status in `TuiReadModel`, and rendered source/refresh/pending state in snapshots. | T-0228 evidence: focused Docker TUI tests passed 4 files / 46 tests; Docker sync-build passed 91 files / 595 tests; built snapshot smoke displayed `source projection refresh idle pending timeline,debt`. |
 
 ## Current Known Problems
 
@@ -28,7 +28,7 @@
 | Dashboard frontend/server projection mismatch can persist until server restart. | Rebuilt `dist` and served HTML are current, but an already-running dashboard process can keep old code in memory and regenerate old projections. | Restart the dashboard server after CLI/frontend changes; cached timeline route also sanitizes old header summaries defensively. |
 | Dashboard work is paused after Phase 5.7 refresh/read-model hardening. | Dashboard is usable as an operator observation surface, but further optimization could consume roadmap time. | Deferred dashboard items are refresh stage budget/streaming task scan, stronger projection freshness manifest, mounted-filesystem performance optimization, optional worker-thread projection rebuild, and deeper productization only if needed. |
 | Dashboard task-signals refresh remains filesystem-bound on mounted workspaces. | T-0226 measurement showed `/workspace` task-signals took 3780 ms while a `/tmp` copy took 147 ms; core stayed responsive but refresh duration is still dominated by task metadata reads on the mounted filesystem. | Do not continue dashboard optimization by default; return only if operator usage requires streaming scan, worker offload, or stricter freshness manifests. |
-| Built TUI snapshot is now dominated by CLI startup imports, not the TUI read model. | T-0230 reduced the TUI fast read-model/render path to about 160 ms, but `node dist/cli/main.js tui --snapshot ...` still takes about 4.05s on `/mnt/f`. | T-0231 should lazy-load TUI command modules or split snapshot entry import cost so snapshot smoke can approach the read-model time. |
+| Lazy CLI imports make command-family coverage important. | Handler import path errors now surface when that command dispatches, not at process startup. | Full Docker suite passed; add targeted tests if future handler files move. |
 | Fast TUI selected proof lint is deferred. | Snapshot/fast initial reads show proof as unknown/pending instead of waiting for evidence lint/list scans. | Full selected detail still uses `createDashboardTaskDetailReport()`; interactive detail refresh can load full proof when needed. |
 | TUI task list source-of-truth is projection/Task Board first. | Deleting a task capsule directory without updating Task Board/projection can leave a stale row visible. | Treat as protocol drift; use task workflow/protocol doctor validation to repair source-of-truth. |
 | Dashboard debt projection is aggregate-only. | `/api/dashboard/debt` no longer performs full capsule-size or premature-acceptance scans during dashboard refresh. | Use operational-debt/release read models for deep debt diagnostics; dashboard debt remains a fast aggregate projection. |
@@ -50,15 +50,15 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start T-0231 TUI CLI Lazy Startup for Snapshot Smoke. | T-0230 removed read-model/task scan bottlenecks, but built snapshot smoke remains about 4.05s because CLI startup eagerly imports broad command modules before dispatching `tui --snapshot`. | Use T-0230 timing evidence; preserve normal CLI behavior while making TUI snapshot imports lazy/bounded. |
+| Return to roadmap value work unless TUI timing regresses. | The requested `/mnt/f` built snapshot smoke target is under 2s after T-0231. | If repeated timings exceed target, open a narrow hardening capsule for remaining import/read overhead. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Full repository check | Docker `npm run dev:docker-sync-build` passed with 91 files and 595 tests during T-0230. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`. |
-| TUI focused check | Docker `npm run test:focused -- tests/unit/tui-read-model.test.ts tests/unit/tui-cache.test.ts tests/unit/tui-snapshot.test.ts tests/unit/tui-terminal.test.ts tests/unit/tui-cli.test.ts tests/unit/feature-smoke.test.ts` passed. | 6 files / 60 tests covered projection-first task list/cache, fast selected proof defer, snapshot/terminal/CLI behavior, and feature smoke. |
-| Built TUI snapshot smoke | `/usr/bin/time -f 'elapsed=%e' node dist/cli/main.js tui --snapshot --compact --width 100 --height 26 --project /mnt/f/NowWorking/HADARA-dev` exited 0. | Mounted workspace snapshot improved from 42.56s to 4.05s; direct `createTuiReadModel({profile:'fast'})` plus render measured about 160 ms, leaving CLI startup imports as the next bottleneck. |
+| Full repository check | Docker `npm run dev:docker-sync-build` passed with 91 files and 595 tests during T-0231. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`. |
+| CLI/TUI focused check | Docker `npm run test:focused -- tests/unit/tui-cli.test.ts tests/unit/feature-smoke.test.ts tests/unit/runtime-version.test.ts tests/unit/task-json.test.ts tests/unit/evidence-json.test.ts tests/unit/status-json.test.ts tests/unit/policy-json.test.ts tests/unit/cli-errors.test.ts` passed. | 8 files / 53 tests covered representative lazy-dispatched CLI surfaces and TUI snapshot behavior. |
+| Built TUI snapshot smoke | `/usr/bin/time -f 'elapsed=%e' node dist/cli/main.js tui --snapshot --compact --width 100 --height 26 --project /mnt/f/NowWorking/HADARA-dev` exited 0. | Mounted workspace snapshot improved from 42.56s after T-0229 to 4.05s after T-0230 to 1.37s after T-0231. |
 | Task workflow Status History and Markdown section reader gate | Focused Docker tests passed for markdown-table, task-finish, harness-validate, task-upgrade-scaffold, protocol-consistency, protocol-remediation, and dashboard-bootstrap. | Covers finish append/repair behavior, `TASK_STATUS_HISTORY_NOT_DONE`, shared heading-line section extraction, and affected fixture/read-model compatibility. |
 | Dashboard refresh responsiveness measurement | Built `node scripts/dashboard-refresh-responsiveness.mjs --project /workspace --samples 8 --compare-tmp --json` returned `ok:true`. | Workspace core p50/p95 during refresh: 49.6/62.0 ms; workspace task-signals: 3780 ms slow warning; tmp-ext4 core p50/p95: 0.5/1.6 ms; tmp-ext4 task-signals: 147 ms. |
 | Dashboard cooperative refresh smoke | Built route smoke accepted `/api/dashboard/refresh`, observed progress with `currentStage: task-signals`, `processed:25`, `total:225`, `lastYieldAt`, and core returned stale/pending metadata while refresh was running. | Confirms core does not wait for refresh completion and refresh status is observable. |
