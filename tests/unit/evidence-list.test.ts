@@ -40,12 +40,14 @@ describe('evidence list read model', () => {
       count: 1,
       records: [
         {
-          schemaVersion: 'hadara.evidence.v1',
+          schemaVersion: 'hadara.evidence.v2',
+          id: expect.stringMatching(new RegExp(`^ev:${task.id}:[a-f0-9]{24}$`)),
           taskId: task.id,
-          kind: 'note',
+          category: 'note',
           summary: 'First public record',
-          result: 'passed',
-          visibility: 'public'
+          outcome: 'passed',
+          visibility: 'public',
+          legacy: { kind: 'note', result: 'passed' }
         }
       ],
       issues: []
@@ -78,11 +80,13 @@ describe('evidence list read model', () => {
     expect(publicOnly.records.map((record) => record.visibility)).toEqual(['public']);
     expect(withPrivate.count).toBe(2);
     expect(withPrivate.records[1]).toMatchObject({
-      kind: 'command-log',
+      schemaVersion: 'hadara.evidence.v2',
+      legacy: { kind: 'command-log', result: 'unknown' },
       summary: 'Private token=[REDACTED]',
       visibility: 'private'
     });
     expect(withPrivate.records[1]).not.toHaveProperty('evidencePath');
+    if (withPrivate.records[1].schemaVersion === 'hadara.evidence.v2') expect(withPrivate.records[1].legacy).not.toHaveProperty('evidencePath');
     expect(JSON.stringify(withPrivate)).not.toContain('/tmp/private.log');
     expect(JSON.stringify(withPrivate)).not.toContain('secret-value');
   });

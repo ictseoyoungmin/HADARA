@@ -102,11 +102,11 @@ describe('MCP evidence attach guard', () => {
       command: 'evidence.collect',
       ok: true,
       evidence: {
-        schemaVersion: 'hadara.evidence.v1',
+        schemaVersion: 'hadara.evidence.v2',
         taskId: task.id,
-        kind: 'note',
+        legacy: { kind: 'note', result: 'passed' },
         summary: 'MCP evidence attach works',
-        result: 'passed',
+        outcome: 'passed',
         visibility: 'public',
         markdownPath: 'tasks/T-0001-mcp-evidence-attach/EVIDENCE.md'
       },

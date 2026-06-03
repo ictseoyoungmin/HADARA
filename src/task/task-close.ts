@@ -481,15 +481,17 @@ function readCloseEvidenceRecords(evidencePath: string): Array<{ time: string; k
     .filter(Boolean)
     .flatMap((line) => {
       try {
-        const record = JSON.parse(line) as { time?: unknown; kind?: unknown; summary?: unknown; result?: unknown };
+        const record = JSON.parse(line) as { schemaVersion?: unknown; time?: unknown; kind?: unknown; summary?: unknown; result?: unknown; legacy?: { kind?: unknown; result?: unknown } };
+        const kind = record.schemaVersion === 'hadara.evidence.v2' ? record.legacy?.kind : record.kind;
+        const result = record.schemaVersion === 'hadara.evidence.v2' ? record.legacy?.result : record.result;
         if (
           typeof record.time === 'string' &&
-          typeof record.kind === 'string' &&
+          typeof kind === 'string' &&
           typeof record.summary === 'string' &&
-          typeof record.result === 'string' &&
+          typeof result === 'string' &&
           /Task close validation .* before close evidence append/.test(record.summary)
         ) {
-          return [{ time: record.time, kind: record.kind, summary: record.summary, result: record.result }];
+          return [{ time: record.time, kind, summary: record.summary, result }];
         }
       } catch {
         return [];

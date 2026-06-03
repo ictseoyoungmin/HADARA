@@ -2,24 +2,11 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { redactSecrets } from '../core/redaction';
-import { EvidenceIndexRecord } from './evidence';
+import { EvidenceCategory, EvidenceIndexRecord, EvidenceOutcome, EvidenceV2IndexRecord, PersistedEvidenceRecord } from './evidence';
 
-export type PersistedEvidenceSchemaVersion = 'hadara.evidence.v1';
+export type { EvidenceCategory, EvidenceOutcome };
 
-export type EvidenceCategory =
-  | 'validation'
-  | 'implementation'
-  | 'release'
-  | 'security'
-  | 'policy'
-  | 'operation'
-  | 'decision'
-  | 'handoff'
-  | 'audit'
-  | 'note'
-  | 'observation';
-
-export type EvidenceOutcome = 'passed' | 'failed' | 'blocked' | 'unknown' | 'recorded' | 'not-applicable';
+export type PersistedEvidenceSchemaVersion = 'hadara.evidence.v1' | 'hadara.evidence.v2';
 
 export type EvidenceArtifactType = 'test-log' | 'command-log' | 'diff-summary' | 'screenshot' | 'note' | 'unknown';
 
@@ -70,14 +57,15 @@ export interface NormalizeEvidenceRecordContext {
 }
 
 export interface EvidenceIndexRecordWithSourceLine {
-  record: EvidenceIndexRecord;
+  record: PersistedEvidenceRecord;
   lineNumber: number;
 }
 
 export function normalizeEvidenceRecord(
-  record: EvidenceIndexRecord,
+  record: PersistedEvidenceRecord,
   context: NormalizeEvidenceRecordContext = {}
 ): NormalizedEvidenceRecord {
+  if (record.schemaVersion === 'hadara.evidence.v2') return normalizeEvidenceV2Record(record, context);
   const summary = redactSecrets(record.summary);
   const artifactType = normalizeArtifactType(record.kind);
   const sourceLine = context.lineNumber;
@@ -123,7 +111,7 @@ export function normalizeEvidenceRecordsWithSourceLines(
  * Use only for tests, synthetic records, or records that do not come from JSONL.
  * This does not preserve actual source-line identity.
  */
-export function normalizeEvidenceRecordsInMemoryOrder(records: EvidenceIndexRecord[], context: { taskDir?: string } = {}): NormalizedEvidenceRecord[] {
+export function normalizeEvidenceRecordsInMemoryOrder(records: PersistedEvidenceRecord[], context: { taskDir?: string } = {}): NormalizedEvidenceRecord[] {
   return records.map((record, index) =>
     normalizeEvidenceRecord(record, {
       taskDir: context.taskDir,
@@ -147,6 +135,36 @@ export function deriveEvidenceCategoryFromV1(record: EvidenceIndexRecord): Evide
     return 'validation';
   }
   return 'operation';
+}
+
+function normalizeEvidenceV2Record(record: EvidenceV2IndexRecord, context: NormalizeEvidenceRecordContext): NormalizedEvidenceRecord {
+  const summary = redactSecrets(record.summary);
+  const artifactType = normalizeArtifactType(record.legacy.kind);
+  const sourceLine = context.lineNumber ?? record.sourceLine;
+  return {
+    schemaVersion: 'hadara.evidence.normalized.v1',
+    persistedSchemaVersion: record.schemaVersion,
+    id: record.id,
+    idSource: record.idSource,
+    idStability: record.idStability,
+    ...(sourceLine ? { sourceLine } : {}),
+    fingerprint: record.fingerprint,
+    time: record.time,
+    taskId: record.taskId,
+    category: record.category,
+    artifactType,
+    outcome: record.outcome,
+    visibility: record.visibility,
+    summary,
+    artifacts: normalizeV2ArtifactRefs(record, context.taskDir),
+    issues: [],
+    tags: record.tags.map(String),
+    legacy: {
+      kind: record.legacy.kind,
+      result: record.legacy.result,
+      ...(record.legacy.evidencePath ? { evidencePath: record.legacy.evidencePath } : {})
+    }
+  };
 }
 
 export function createLegacyEvidenceId(record: EvidenceIndexRecord, lineNumber: number): string {
@@ -188,6 +206,25 @@ function normalizeArtifactRefs(
     artifact.exists = absolutePath.startsWith(taskRoot + path.sep) && fs.existsSync(absolutePath);
   }
   return [artifact];
+}
+
+function normalizeV2ArtifactRefs(record: EvidenceV2IndexRecord, taskDir: string | undefined): EvidenceArtifactRef[] {
+  return record.artifacts
+    .filter((artifact) => artifact.visibility === 'public')
+    .map((artifact) => {
+      const normalized: EvidenceArtifactRef = {
+        path: artifact.path,
+        visibility: 'public',
+        artifactType: normalizeArtifactType(artifact.artifactType)
+      };
+      if (taskDir) {
+        const absolutePath = path.resolve(taskDir, artifact.path);
+        const taskRoot = path.resolve(taskDir);
+        normalized.exists = absolutePath.startsWith(taskRoot + path.sep) && fs.existsSync(absolutePath);
+      }
+      if (artifact.path === record.legacy.evidencePath) return normalized;
+      return normalized;
+    });
 }
 
 function extractEvidenceTags(summary: string): string[] {

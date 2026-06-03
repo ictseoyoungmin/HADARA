@@ -75,11 +75,11 @@ describe('MCP evidence attach safety', () => {
       command: 'evidence.collect',
       ok: true,
       evidence: {
-        schemaVersion: 'hadara.evidence.v1',
+        schemaVersion: 'hadara.evidence.v2',
         taskId: task.id,
-        kind: 'note',
+        legacy: { kind: 'note', result: 'passed' },
         summary: 'safe note',
-        result: 'passed',
+        outcome: 'passed',
         visibility: 'public',
         markdownPath: 'tasks/T-0001-evidence-attach-note/EVIDENCE.md'
       },
@@ -103,8 +103,9 @@ describe('MCP evidence attach safety', () => {
     );
 
     expect(payload.ok).toBe(true);
-    expect(payload.evidence.evidencePath).toMatch(/^artifacts\/test-log\/.+-safe\.log$/);
-    expect(fs.existsSync(path.join(task.dir, payload.evidence.evidencePath))).toBe(true);
+    const evidencePath = payload.evidence.artifacts[0].path;
+    expect(evidencePath).toMatch(/^artifacts\/test-log\/.+-safe\.log$/);
+    expect(fs.existsSync(path.join(task.dir, evidencePath))).toBe(true);
   });
 
   it('returns evidence collect issues for workspace boundary failures', () => {

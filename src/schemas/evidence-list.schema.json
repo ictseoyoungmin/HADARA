@@ -14,20 +14,7 @@
     "count": { "type": "integer", "minimum": 0 },
     "records": {
       "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": true,
-        "required": ["schemaVersion", "time", "taskId", "kind", "summary", "result", "visibility"],
-        "properties": {
-          "schemaVersion": { "const": "hadara.evidence.v1" },
-          "time": { "type": "string", "minLength": 1 },
-          "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
-          "kind": { "type": "string", "enum": ["test-log", "command-log", "diff-summary", "screenshot", "note"] },
-          "summary": { "type": "string", "minLength": 1 },
-          "result": { "type": "string", "enum": ["passed", "failed", "blocked", "unknown"] },
-          "visibility": { "type": "string", "enum": ["public", "private"] }
-        }
-      }
+      "items": { "oneOf": [{ "$ref": "#/$defs/evidenceV1" }, { "$ref": "#/$defs/evidenceV2" }] }
     },
     "issues": {
       "type": "array",
@@ -35,6 +22,63 @@
     }
   },
   "$defs": {
+    "evidenceV1": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["schemaVersion", "time", "taskId", "kind", "summary", "result", "visibility"],
+      "properties": {
+        "schemaVersion": { "const": "hadara.evidence.v1" },
+        "time": { "type": "string", "minLength": 1 },
+        "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+        "kind": { "type": "string", "enum": ["test-log", "command-log", "diff-summary", "screenshot", "note"] },
+        "summary": { "type": "string", "minLength": 1 },
+        "result": { "type": "string", "enum": ["passed", "failed", "blocked", "unknown"] },
+        "visibility": { "type": "string", "enum": ["public", "private"] }
+      }
+    },
+    "evidenceV2": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["schemaVersion", "id", "fingerprint", "idSource", "idStability", "time", "taskId", "category", "outcome", "visibility", "summary", "artifacts", "tags", "legacy"],
+      "properties": {
+        "schemaVersion": { "const": "hadara.evidence.v2" },
+        "id": { "type": "string", "minLength": 1 },
+        "sourceLine": { "type": "integer", "minimum": 1 },
+        "fingerprint": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "idSource": { "const": "persisted" },
+        "idStability": { "const": "durable" },
+        "time": { "type": "string", "minLength": 1 },
+        "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+        "category": { "type": "string", "enum": ["validation", "implementation", "release", "security", "policy", "operation", "decision", "handoff", "audit", "note", "observation"] },
+        "outcome": { "type": "string", "enum": ["passed", "failed", "blocked", "unknown", "recorded", "not-applicable"] },
+        "visibility": { "type": "string", "enum": ["public", "private"] },
+        "summary": { "type": "string", "minLength": 1 },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["path", "visibility", "artifactType"],
+            "properties": {
+              "path": { "type": "string", "minLength": 1 },
+              "visibility": { "const": "public" },
+              "artifactType": { "type": "string", "enum": ["test-log", "command-log", "diff-summary", "screenshot", "note"] }
+            }
+          }
+        },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "legacy": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["kind", "result"],
+          "properties": {
+            "kind": { "type": "string", "enum": ["test-log", "command-log", "diff-summary", "screenshot", "note"] },
+            "result": { "type": "string", "enum": ["passed", "failed", "blocked", "unknown"] },
+            "evidencePath": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
     "issue": {
       "type": "object",
       "additionalProperties": true,

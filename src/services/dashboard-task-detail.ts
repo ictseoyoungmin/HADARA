@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { EvidenceIndexRecord } from '../evidence/evidence';
+import { EvidenceIndexRecord, PersistedEvidenceRecord } from '../evidence/evidence';
 import { createEvidenceLintReport } from './evidence-lint';
 import { createEvidenceListReport, EvidenceListReport } from './evidence-list';
 import { DashboardTimelineReport } from './dashboard-timeline';
@@ -334,32 +334,32 @@ function buildFastWorkbenchNextActions(
   return actions;
 }
 
-function summarizeEvidence(record: EvidenceIndexRecord): NonNullable<TaskWorkbenchReport['sources']['evidenceList']['latest']> {
+function summarizeEvidence(record: PersistedEvidenceRecord): NonNullable<TaskWorkbenchReport['sources']['evidenceList']['latest']> {
   return {
     time: record.time,
-    kind: record.kind,
-    result: record.result,
+    kind: evidenceKind(record),
+    result: evidenceResult(record),
     visibility: record.visibility,
     summary: record.summary
   };
 }
 
-function getCloseState(records: EvidenceIndexRecord[]): TaskWorkbenchReport['state']['closeState'] {
+function getCloseState(records: PersistedEvidenceRecord[]): TaskWorkbenchReport['state']['closeState'] {
   if (records.some(isPassedCloseEvidenceRecord)) return 'closed-valid';
   if (records.some(isWellFormedCloseEvidenceRecord)) return 'close-evidence-found-invalid';
   if (records.some(isMalformedCloseEvidenceRecord)) return 'close-evidence-malformed';
   return 'not-closed';
 }
 
-function isPassedCloseEvidenceRecord(record: EvidenceIndexRecord): boolean {
-  return isWellFormedCloseEvidenceRecord(record) && record.result === 'passed';
+function isPassedCloseEvidenceRecord(record: PersistedEvidenceRecord): boolean {
+  return isWellFormedCloseEvidenceRecord(record) && evidenceResult(record) === 'passed';
 }
 
-function isWellFormedCloseEvidenceRecord(record: EvidenceIndexRecord): boolean {
-  return record.kind === 'command-log' && /Task close validation .* before close evidence append/.test(record.summary);
+function isWellFormedCloseEvidenceRecord(record: PersistedEvidenceRecord): boolean {
+  return evidenceKind(record) === 'command-log' && /Task close validation .* before close evidence append/.test(record.summary);
 }
 
-function isMalformedCloseEvidenceRecord(record: EvidenceIndexRecord): boolean {
+function isMalformedCloseEvidenceRecord(record: PersistedEvidenceRecord): boolean {
   return /Task close validation |before close evidence append/.test(record.summary);
 }
 
@@ -388,9 +388,9 @@ function createTaskScopedTimelineReport(
       order: index + 2,
       time: record.time,
       kind: 'evidence' as const,
-      title: `${record.kind} ${record.result}`,
+      title: `${evidenceKind(record)} ${evidenceResult(record)}`,
       summary: record.summary,
-      severity: record.result === 'failed' ? ('error' as const) : record.result === 'blocked' ? ('warning' as const) : record.result === 'passed' ? ('ok' as const) : ('info' as const),
+      severity: evidenceResult(record) === 'failed' ? ('error' as const) : evidenceResult(record) === 'blocked' ? ('warning' as const) : evidenceResult(record) === 'passed' ? ('ok' as const) : ('info' as const),
       taskId,
       readOnly: true as const
     }))
@@ -411,6 +411,14 @@ function createTaskScopedTimelineReport(
     events,
     issues: evidenceList.issues.map((issue) => ({ severity: issue.severity, code: `EVIDENCE_LIST_${issue.code}`, message: issue.message }))
   };
+}
+
+function evidenceKind(record: PersistedEvidenceRecord): EvidenceIndexRecord['kind'] {
+  return record.schemaVersion === 'hadara.evidence.v2' ? record.legacy.kind : record.kind;
+}
+
+function evidenceResult(record: PersistedEvidenceRecord): EvidenceIndexRecord['result'] {
+  return record.schemaVersion === 'hadara.evidence.v2' ? record.legacy.result : record.result;
 }
 
 function proofFromEvidenceLint(evidenceLint: ReturnType<typeof createEvidenceLintReport>): DashboardTaskDetailProof {

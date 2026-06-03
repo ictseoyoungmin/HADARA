@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { EvidenceIndexRecord } from '../evidence/evidence';
+import { PersistedEvidenceRecord } from '../evidence/evidence';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 import { EvidenceListIssue, parseEvidenceIndexFile } from './evidence-list';
 
@@ -54,7 +54,7 @@ export interface TaskReadReport {
   ok: boolean;
   task?: TaskJsonSummary;
   files?: Record<string, string>;
-  evidenceIndex?: EvidenceIndexRecord[];
+  evidenceIndex?: PersistedEvidenceRecord[];
   issues: EvidenceListIssue[];
 }
 
@@ -144,7 +144,7 @@ export function formatTaskListReport(report: TaskListReport): string {
   return report.tasks.map((task) => `${task.id}\t${task.title}\t${task.capsule}`).join('\n');
 }
 
-function formatEvidenceIndexFile(records: EvidenceIndexRecord[]): string {
+function formatEvidenceIndexFile(records: PersistedEvidenceRecord[]): string {
   if (records.length === 0) return '';
   return `${records.map((record) => JSON.stringify(record)).join('\n')}\n`;
 }

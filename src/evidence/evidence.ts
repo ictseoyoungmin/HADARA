@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { ensureDir } from '../core/fs';
 import { createRedactionReport, hasBlockingRedactionFinding, redactSecrets, RedactionPattern, RedactionReport } from '../core/redaction';
 import { resolveProjectFile } from '../core/workspace';
@@ -26,9 +27,66 @@ export interface EvidenceIndexRecord {
   evidencePath?: string;
 }
 
+export type EvidenceCategory =
+  | 'validation'
+  | 'implementation'
+  | 'release'
+  | 'security'
+  | 'policy'
+  | 'operation'
+  | 'decision'
+  | 'handoff'
+  | 'audit'
+  | 'note'
+  | 'observation';
+
+export type EvidenceOutcome = 'passed' | 'failed' | 'blocked' | 'unknown' | 'recorded' | 'not-applicable';
+
+export interface EvidenceV2ArtifactRef {
+  path: string;
+  visibility: 'public';
+  artifactType: EvidenceRecord['kind'];
+}
+
+export interface EvidenceV2IndexRecord {
+  schemaVersion: 'hadara.evidence.v2';
+  id: string;
+  sourceLine?: number;
+  fingerprint: string;
+  idSource: 'persisted';
+  idStability: 'durable';
+  time: string;
+  taskId: string;
+  category: EvidenceCategory;
+  outcome: EvidenceOutcome;
+  visibility: NonNullable<EvidenceRecord['visibility']>;
+  summary: string;
+  artifacts: EvidenceV2ArtifactRef[];
+  tags: string[];
+  legacy: {
+    kind: EvidenceRecord['kind'];
+    result: EvidenceRecord['result'];
+    evidencePath?: string;
+  };
+}
+
+export type PersistedEvidenceRecord = EvidenceIndexRecord | EvidenceV2IndexRecord;
+
+export function persistedEvidenceKind(record: PersistedEvidenceRecord): EvidenceRecord['kind'] {
+  return record.schemaVersion === 'hadara.evidence.v2' ? record.legacy.kind : record.kind;
+}
+
+export function persistedEvidenceResult(record: PersistedEvidenceRecord): EvidenceRecord['result'] {
+  return record.schemaVersion === 'hadara.evidence.v2' ? record.legacy.result : record.result;
+}
+
+export function persistedEvidencePath(record: PersistedEvidenceRecord): string | undefined {
+  return record.schemaVersion === 'hadara.evidence.v2' ? record.legacy.evidencePath : record.evidencePath;
+}
+
 export interface EvidenceAppendResult {
   markdownPath: string;
-  evidence: EvidenceIndexRecord;
+  evidence: PersistedEvidenceRecord;
 }
 
 export type EvidenceArtifactPolicyErrorCode = 'PUBLIC_ARTIFACT_BINARY_REJECTED' | 'PUBLIC_ARTIFACT_SECRET_DETECTED';
@@ -124,7 +182,7 @@ export function createPublicEvidenceArtifactPolicyReport(
   };
 }
 
-function appendEvidenceIndex(taskDir: string, record: EvidenceIndexRecord): void {
+function appendEvidenceIndex(taskDir: string, record: PersistedEvidenceRecord): void {
   fs.appendFileSync(path.join(taskDir, 'evidence.jsonl'), `${JSON.stringify(record)}\n`, 'utf8');
 }
 
@@ -147,16 +205,15 @@ function appendEvidenceRecord(input: {
   }
   fs.appendFileSync(markdownPath, row, 'utf8');
 
-  const evidence: EvidenceIndexRecord = {
-    schemaVersion: 'hadara.evidence.v1',
+  const evidence = createEvidenceV2Record({
     time: input.time,
     taskId: input.record.taskId,
     kind: input.record.kind,
     summary,
     result: input.record.result,
     visibility: input.visibility,
-    ...(input.visibility === 'public' && input.attachedPath ? { evidencePath: input.attachedPath } : {})
-  };
+    attachedPath: input.attachedPath
+  });
   appendEvidenceIndex(input.taskDir, evidence);
   if (input.visibility === 'private') {
     writePrivateEvidenceManifest({
@@ -171,6 +228,105 @@ function appendEvidenceRecord(input: {
   }
 
   return { markdownPath, evidence };
+}
+
+function createEvidenceV2Record(input: {
+  time: string;
+  taskId: string;
+  kind: EvidenceRecord['kind'];
+  summary: string;
+  result: EvidenceRecord['result'];
+  visibility: NonNullable<EvidenceRecord['visibility']>;
+  attachedPath?: string;
+}): EvidenceV2IndexRecord {
+  const legacy = {
+    kind: input.kind,
+    result: input.result,
+    ...(input.visibility === 'public' && input.attachedPath ? { evidencePath: input.attachedPath } : {})
+  };
+  const recordWithoutIdentity = {
+    schemaVersion: 'hadara.evidence.v2' as const,
+    time: input.time,
+    taskId: input.taskId,
+    category: deriveEvidenceCategory(input.kind, input.summary),
+    outcome: normalizeEvidenceOutcome(input.result),
+    visibility: input.visibility,
+    summary: input.summary,
+    artifacts:
+      input.visibility === 'public' && input.attachedPath
+        ? [
+            {
+              path: input.attachedPath,
+              visibility: 'public' as const,
+              artifactType: input.kind
+            }
+          ]
+        : [],
+    tags: extractEvidenceTags(input.summary),
+    legacy
+  };
+  const fingerprint = createEvidenceV2Fingerprint(recordWithoutIdentity);
+  return {
+    ...recordWithoutIdentity,
+    id: createEvidenceV2Id(input.taskId),
+    fingerprint,
+    idSource: 'persisted',
+    idStability: 'durable'
+  };
+}
+
+function createEvidenceV2Id(taskId: string): string {
+  const random = crypto.randomUUID().replace(/-/g, '').slice(0, 24);
+  return `ev:${taskId}:${random}`;
+}
+
+function createEvidenceV2Fingerprint(record: Omit<EvidenceV2IndexRecord, 'id' | 'fingerprint' | 'idSource' | 'idStability'>): string {
+  const hash = crypto
+    .createHash('sha256')
+    .update(
+      JSON.stringify({
+        time: record.time,
+        taskId: record.taskId,
+        category: record.category,
+        outcome: record.outcome,
+        visibility: record.visibility,
+        summary: redactSecrets(record.summary),
+        artifacts: record.artifacts,
+        tags: record.tags,
+        legacy: record.legacy
+      }),
+      'utf8'
+    )
+    .digest('hex');
+  return `sha256:${hash}`;
+}
+
+function deriveEvidenceCategory(kind: EvidenceRecord['kind'], summary: string): EvidenceCategory {
+  if (kind === 'test-log') return 'validation';
+  if (kind === 'diff-summary') return 'implementation';
+  if (kind === 'screenshot') return 'observation';
+  if (kind === 'note') return 'note';
+
+  const lowered = summary.toLowerCase();
+  if (/\b(release|package|artifact|publish|install|clean-checkout)\b/.test(lowered)) return 'release';
+  if (/\b(npm run check|test|vitest|harness validate|doctor|smoke|dev:docker-sync-build|docker sync-build)\b/.test(lowered)) {
+    return 'validation';
+  }
+  if (/\b(policy|preflight|permission)\b/.test(lowered)) return 'policy';
+  if (/\b(handoff|agent_handoff)\b/.test(lowered)) return 'handoff';
+  if (/\b(close validation|audit-close|audit)\b/.test(lowered)) return 'audit';
+  return 'operation';
+}
+
+function normalizeEvidenceOutcome(result: EvidenceRecord['result']): EvidenceOutcome {
+  return result;
+}
+
+function extractEvidenceTags(summary: string): string[] {
+  const tags = new Set<string>();
+  const markerPattern = /\b(?:supersedes|resolves):[^\s,;|]+/g;
+  for (const match of summary.matchAll(markerPattern)) tags.add(match[0]);
+  return Array.from(tags);
 }
 
 function copyPublicEvidenceArtifact(input: {

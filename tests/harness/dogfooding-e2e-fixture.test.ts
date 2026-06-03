@@ -81,8 +81,9 @@ describe('Dogfooding E2E fixture', () => {
         content: renderFixtureReport(fixture, task, initialContext.content, policyReports)
       }
     );
-    expect(evidence.evidence.evidencePath).toMatch(/^artifacts\/test-log\/.+-dogfooding-fixture-report\.txt$/);
-    assertGeneratedCapsuleFiles({ root, task, fixture, evidencePath: evidence.evidence.evidencePath });
+    const evidencePath = evidence.evidence.schemaVersion === 'hadara.evidence.v2' ? evidence.evidence.artifacts[0].path : evidence.evidence.evidencePath;
+    expect(evidencePath).toMatch(/^artifacts\/test-log\/.+-dogfooding-fixture-report\.txt$/);
+    assertGeneratedCapsuleFiles({ root, task, fixture, evidencePath: evidencePath ?? '' });
 
     updateHandoff({
       projectRoot: root,
@@ -96,7 +97,7 @@ describe('Dogfooding E2E fixture', () => {
     markTaskBoardDone(root, task.id);
     markAcceptanceDone(task.dir);
     writeTaskHandoff(task.dir, fixture);
-    assertCompletedCapsuleFiles({ root, task, fixture, evidencePath: evidence.evidence.evidencePath });
+    assertCompletedCapsuleFiles({ root, task, fixture, evidencePath });
 
     const finalContext = createContextExportReport(root);
     expect(finalContext.content).toContain(task.id);
@@ -170,8 +171,8 @@ describe('Dogfooding E2E fixture', () => {
       ok: true,
       evidence: {
         taskId: task.id,
-        kind: fixture.evidence.kind,
-        result: fixture.evidence.result,
+        legacy: { kind: fixture.evidence.kind, result: fixture.evidence.result },
+        outcome: fixture.evidence.result,
         visibility: 'public'
       },
       issues: []
@@ -184,9 +185,10 @@ describe('Dogfooding E2E fixture', () => {
       ok: true,
       records: [
         {
+          schemaVersion: 'hadara.evidence.v2',
           taskId: task.id,
-          kind: fixture.evidence.kind,
-          result: fixture.evidence.result,
+          legacy: { kind: fixture.evidence.kind, result: fixture.evidence.result },
+          outcome: fixture.evidence.result,
           visibility: 'public'
         }
       ]
@@ -381,13 +383,13 @@ function assertGeneratedCapsuleFiles(input: { root: string; task: TaskCapsule; f
   const evidenceJsonl = fs.readFileSync(path.join(input.task.dir, 'evidence.jsonl'), 'utf8').trim().split(/\r?\n/).map(JSON.parse);
   expect(evidenceJsonl).toHaveLength(1);
   expect(evidenceJsonl[0]).toMatchObject({
-    schemaVersion: 'hadara.evidence.v1',
+    schemaVersion: 'hadara.evidence.v2',
     taskId: input.task.id,
-    kind: input.fixture.evidence.kind,
     summary: input.fixture.evidence.summary,
-    result: input.fixture.evidence.result,
+    outcome: input.fixture.evidence.result,
     visibility: 'public',
-    evidencePath: input.evidencePath
+    artifacts: [{ path: input.evidencePath, visibility: 'public', artifactType: input.fixture.evidence.kind }],
+    legacy: { kind: input.fixture.evidence.kind, result: input.fixture.evidence.result, evidencePath: input.evidencePath }
   });
 
   expect(input.evidencePath).toBeDefined();
@@ -408,11 +410,12 @@ function assertCompletedCapsuleFiles(input: { root: string; task: TaskCapsule; f
 
   const evidenceRecord = JSON.parse(fs.readFileSync(path.join(input.task.dir, 'evidence.jsonl'), 'utf8').trim());
   expect(evidenceRecord).toMatchObject({
+    schemaVersion: 'hadara.evidence.v2',
     taskId: input.task.id,
-    kind: input.fixture.evidence.kind,
-    result: input.fixture.evidence.result,
+    legacy: { kind: input.fixture.evidence.kind, result: input.fixture.evidence.result, evidencePath: input.evidencePath },
+    outcome: input.fixture.evidence.result,
     visibility: 'public',
-    evidencePath: input.evidencePath
+    artifacts: [{ path: input.evidencePath, visibility: 'public', artifactType: input.fixture.evidence.kind }]
   });
 
   expect(fs.readFileSync(path.join(input.root, 'docs', 'AGENT_HANDOFF.md'), 'utf8')).toContain(input.task.id);

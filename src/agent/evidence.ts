@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { appendEvidenceTextArtifact, EvidenceAppendResult } from '../evidence/evidence';
+import { appendEvidenceTextArtifact, EvidenceAppendResult, persistedEvidencePath } from '../evidence/evidence';
 import { AgentLoopEvidenceRecord, AgentLoopResult, AgentLoopStep } from './loop';
 
 export function attachAgentLoopEvidence(projectRoot: string, result: AgentLoopResult): AgentLoopEvidenceRecord[] {
@@ -50,7 +50,7 @@ function toAttachment(
     kind: 'command-log',
     summary,
     result,
-    evidencePath: appended.evidence.evidencePath ?? '',
+    evidencePath: persistedEvidencePath(appended.evidence) ?? '',
     markdownPath: toPortablePath(path.relative(projectRoot, appended.markdownPath))
   };
 }

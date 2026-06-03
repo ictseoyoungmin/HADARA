@@ -12,7 +12,7 @@ import { createOpsStatusReport } from './operations-status-service';
 import { createTaskListReport } from './task-read-model';
 import { createTaskWorkbenchReport } from './task-workbench';
 import type { DashboardCoreReport } from './dashboard-core';
-import { EvidenceIndexRecord } from '../evidence/evidence';
+import { EvidenceIndexRecord, persistedEvidenceKind, persistedEvidencePath, persistedEvidenceResult } from '../evidence/evidence';
 import { normalizeEvidenceRecordsWithSourceLines, NormalizedEvidenceRecord } from '../evidence/normalizer';
 import { listTaskCapsules } from '../task/task-capsule';
 
@@ -191,15 +191,19 @@ export function createDashboardTimelineReport(
             time: record.time,
             taskId: record.taskId,
             category: 'observation' as const,
-            artifactType: record.kind,
-            outcome: record.result,
+            artifactType: persistedEvidenceKind(record),
+            outcome: persistedEvidenceResult(record),
             visibility: record.visibility,
             summary: record.summary,
             artifacts: [],
             issues: [],
             tags: [],
             persistedSchemaVersion: record.schemaVersion,
-            legacy: { kind: record.kind, result: record.result, ...(record.evidencePath ? { evidencePath: record.evidencePath } : {}) }
+            legacy: {
+              kind: persistedEvidenceKind(record),
+              result: persistedEvidenceResult(record),
+              ...(persistedEvidencePath(record) ? { evidencePath: persistedEvidencePath(record) } : {})
+            }
           }));
     recordsForEvents.forEach((record) => {
       push({

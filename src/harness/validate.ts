@@ -216,14 +216,23 @@ function validateEvidenceIndex(projectRoot: string, task: TaskCapsule, issues: H
     try {
       const record = JSON.parse(line) as {
         schemaVersion?: unknown;
+        id?: unknown;
+        fingerprint?: unknown;
+        idSource?: unknown;
+        idStability?: unknown;
         time?: unknown;
         taskId?: unknown;
         kind?: unknown;
         summary?: unknown;
         result?: unknown;
+        category?: unknown;
+        outcome?: unknown;
         visibility?: unknown;
+        artifacts?: unknown;
+        tags?: unknown;
+        legacy?: unknown;
       };
-      if (record.schemaVersion !== 'hadara.evidence.v1') {
+      if (record.schemaVersion !== 'hadara.evidence.v1' && record.schemaVersion !== 'hadara.evidence.v2') {
         issues.push({
           severity: 'error',
           code: 'EVIDENCE_INDEX_SCHEMA_INVALID',
@@ -231,7 +240,7 @@ function validateEvidenceIndex(projectRoot: string, task: TaskCapsule, issues: H
           path: relativePath
         });
       }
-      if (record.taskId !== task.id || typeof record.kind !== 'string' || typeof record.result !== 'string') {
+      if (record.taskId !== task.id || !hasEvidenceKindAndResult(record)) {
         issues.push({
           severity: 'error',
           code: 'EVIDENCE_INDEX_RECORD_INVALID',
@@ -264,8 +273,7 @@ function validateEvidenceIndex(projectRoot: string, task: TaskCapsule, issues: H
         });
       }
       if (
-        (typeof record.kind === 'string' && !EVIDENCE_KINDS.has(record.kind)) ||
-        (typeof record.result === 'string' && !EVIDENCE_RESULTS.has(record.result)) ||
+        hasInvalidEvidenceKindOrResult(record) ||
         (typeof record.visibility === 'string' && !EVIDENCE_VISIBILITIES.has(record.visibility))
       ) {
         issues.push({
@@ -275,6 +283,7 @@ function validateEvidenceIndex(projectRoot: string, task: TaskCapsule, issues: H
           path: relativePath
         });
       }
+      validateEvidenceSchemaSpecificFields(record, index + 1, relativePath, issues);
     } catch {
       issues.push({
         severity: 'error',
@@ -284,6 +293,94 @@ function validateEvidenceIndex(projectRoot: string, task: TaskCapsule, issues: H
       });
     }
   });
+}
+
+function hasEvidenceKindAndResult(record: { schemaVersion?: unknown; kind?: unknown; result?: unknown; legacy?: unknown }): boolean {
+  if (record.schemaVersion === 'hadara.evidence.v2') {
+    const legacy = record.legacy as { kind?: unknown; result?: unknown } | undefined;
+    return typeof legacy?.kind === 'string' && typeof legacy.result === 'string';
+  }
+  return typeof record.kind === 'string' && typeof record.result === 'string';
+}
+
+function hasInvalidEvidenceKindOrResult(record: { schemaVersion?: unknown; kind?: unknown; result?: unknown; legacy?: unknown }): boolean {
+  if (record.schemaVersion === 'hadara.evidence.v2') {
+    const legacy = record.legacy as { kind?: unknown; result?: unknown } | undefined;
+    return (
+      (typeof legacy?.kind === 'string' && !EVIDENCE_KINDS.has(legacy.kind)) ||
+      (typeof legacy?.result === 'string' && !EVIDENCE_RESULTS.has(legacy.result))
+    );
+  }
+  return (
+    (typeof record.kind === 'string' && !EVIDENCE_KINDS.has(record.kind)) ||
+    (typeof record.result === 'string' && !EVIDENCE_RESULTS.has(record.result))
+  );
+}
+
+function validateEvidenceSchemaSpecificFields(
+  record: {
+    schemaVersion?: unknown;
+    id?: unknown;
+    fingerprint?: unknown;
+    idSource?: unknown;
+    idStability?: unknown;
+    category?: unknown;
+    outcome?: unknown;
+    artifacts?: unknown;
+    tags?: unknown;
+    legacy?: unknown;
+  },
+  lineNumber: number,
+  relativePath: string,
+  issues: HarnessValidationIssue[]
+): void {
+  if (record.schemaVersion !== 'hadara.evidence.v2') return;
+  const legacy = record.legacy as { kind?: unknown; result?: unknown; evidencePath?: unknown } | undefined;
+  const valid =
+    typeof record.id === 'string' &&
+    record.id.trim().length > 0 &&
+    typeof record.fingerprint === 'string' &&
+    /^sha256:[a-f0-9]{64}$/.test(record.fingerprint) &&
+    record.idSource === 'persisted' &&
+    record.idStability === 'durable' &&
+    isEvidenceCategory(record.category) &&
+    isEvidenceOutcome(record.outcome) &&
+    Array.isArray(record.artifacts) &&
+    Array.isArray(record.tags) &&
+    record.tags.every((tag) => typeof tag === 'string') &&
+    typeof legacy === 'object' &&
+    legacy !== null &&
+    typeof legacy.kind === 'string' &&
+    typeof legacy.result === 'string' &&
+    (legacy.evidencePath === undefined || typeof legacy.evidencePath === 'string');
+  if (!valid) {
+    issues.push({
+      severity: 'error',
+      code: 'EVIDENCE_INDEX_V2_RECORD_INVALID',
+      message: `evidence.jsonl line ${lineNumber} has invalid v2 evidence fields.`,
+      path: relativePath
+    });
+  }
+}
+
+function isEvidenceCategory(value: unknown): boolean {
+  return (
+    value === 'validation' ||
+    value === 'implementation' ||
+    value === 'release' ||
+    value === 'security' ||
+    value === 'policy' ||
+    value === 'operation' ||
+    value === 'decision' ||
+    value === 'handoff' ||
+    value === 'audit' ||
+    value === 'note' ||
+    value === 'observation'
+  );
+}
+
+function isEvidenceOutcome(value: unknown): boolean {
+  return value === 'passed' || value === 'failed' || value === 'blocked' || value === 'unknown' || value === 'recorded' || value === 'not-applicable';
 }
 
 function validateDoneLevel(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[], checkedFiles: string[]): void {

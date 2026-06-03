@@ -56,13 +56,14 @@ describe('Task Capsule harness', () => {
 
     const index = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
     expect(index[0]).toMatchObject({
-      schemaVersion: 'hadara.evidence.v1',
-      kind: 'test-log',
-      evidencePath: expect.stringMatching(/^artifacts\/test-log\/.+-test-output\.log$/),
+      schemaVersion: 'hadara.evidence.v2',
+      id: expect.stringMatching(new RegExp(`^ev:${task.id}:[a-f0-9]{24}$`)),
+      artifacts: [{ path: expect.stringMatching(/^artifacts\/test-log\/.+-test-output\.log$/), visibility: 'public', artifactType: 'test-log' }],
+      legacy: { kind: 'test-log', result: 'passed', evidencePath: expect.stringMatching(/^artifacts\/test-log\/.+-test-output\.log$/) },
       visibility: 'public',
-      result: 'passed'
+      outcome: 'passed'
     });
-    expect(fs.existsSync(path.join(task.dir, index[0].evidencePath))).toBe(true);
+    expect(fs.existsSync(path.join(task.dir, index[0].artifacts[0].path))).toBe(true);
   });
 
   it('rejects public artifact copies when text contains secret-like values', () => {

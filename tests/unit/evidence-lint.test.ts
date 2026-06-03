@@ -51,7 +51,7 @@ describe('evidence lint', () => {
       byOutcome: expect.objectContaining({ passed: 1 }),
       publicRecords: 1,
       privateRecords: 0,
-      legacyRecords: 1
+      legacyRecords: 0
     });
   });
 
@@ -200,7 +200,7 @@ describe('evidence lint', () => {
 
     expect(report.ok).toBe(true);
     expect(report.issues).not.toContainEqual(expect.objectContaining({ code: 'TASK_DONE_WITH_FAILED_EVIDENCE' }));
-    expect(report.summary.semantics).toMatchObject({ legacyRecords: 2 });
+    expect(report.summary.semantics).toMatchObject({ legacyRecords: 0 });
   });
 
   it('reports semantic errors for Done tasks with unexplained blocked evidence', () => {

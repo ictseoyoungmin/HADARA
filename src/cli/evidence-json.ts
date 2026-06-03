@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { appendEvidence, EvidenceArtifactPolicyError, EvidenceIndexRecord, EvidenceRecord } from '../evidence/evidence';
+import { appendEvidence, EvidenceArtifactPolicyError, EvidenceRecord, PersistedEvidenceRecord } from '../evidence/evidence';
 import { listTaskCapsules } from '../task/task-capsule';
 import { WorkspaceFileError } from '../core/workspace';
 
@@ -17,7 +17,7 @@ export interface EvidenceCollectReport {
   schemaVersion: 'hadara.evidence.collect.v1';
   command: 'evidence.collect';
   ok: boolean;
-  evidence?: EvidenceIndexRecord & {
+  evidence?: PersistedEvidenceRecord & {
     markdownPath: string;
   };
   issues: Array<{
@@ -85,10 +85,10 @@ export function createEvidenceCollectReport(projectRoot: string, input: Evidence
   };
 }
 
-function readLastEvidenceIndexRecord(taskDir: string): EvidenceIndexRecord {
+function readLastEvidenceIndexRecord(taskDir: string): PersistedEvidenceRecord {
   const indexPath = path.join(taskDir, 'evidence.jsonl');
   const lines = fs.readFileSync(indexPath, 'utf8').trim().split(/\r?\n/);
-  return JSON.parse(lines.at(-1) ?? '{}') as EvidenceIndexRecord;
+  return JSON.parse(lines.at(-1) ?? '{}') as PersistedEvidenceRecord;
 }
 
 function toPortablePath(value: string): string {

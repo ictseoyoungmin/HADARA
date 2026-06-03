@@ -103,14 +103,20 @@ describe('CLI evidence JSON reports', () => {
       command: 'evidence.add-command',
       ok: true,
       evidence: {
+        schemaVersion: 'hadara.evidence.v2',
+        id: expect.stringMatching(new RegExp(`^ev:${task.id}:[a-f0-9]{24}$`)),
+        fingerprint: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+        idSource: 'persisted',
+        idStability: 'durable',
         taskId: task.id,
-        kind: 'command-log',
+        category: 'operation',
         summary: 'Done-level harness returned ok:true',
-        result: 'passed',
+        outcome: 'passed',
+        legacy: { kind: 'command-log', result: 'passed' },
         visibility: 'public'
       }
     });
-    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('"kind":"command-log"');
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('"schemaVersion":"hadara.evidence.v2"');
   });
 
   it('returns a stable collect envelope with the appended evidence index record', () => {
@@ -132,18 +138,23 @@ describe('CLI evidence JSON reports', () => {
       command: 'evidence.collect',
       ok: true,
       evidence: {
-        schemaVersion: 'hadara.evidence.v1',
+        schemaVersion: 'hadara.evidence.v2',
+        id: expect.stringMatching(new RegExp(`^ev:${task.id}:[a-f0-9]{24}$`)),
+        fingerprint: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+        idSource: 'persisted',
+        idStability: 'durable',
         taskId: task.id,
-        kind: 'test-log',
+        category: 'validation',
         summary: 'Recorded test output',
-        result: 'passed',
+        outcome: 'passed',
         visibility: 'public',
-        evidencePath: expect.stringMatching(/^artifacts\/test-log\/.+-result\.log$/),
+        artifacts: [{ path: expect.stringMatching(/^artifacts\/test-log\/.+-result\.log$/), visibility: 'public', artifactType: 'test-log' }],
+        legacy: { kind: 'test-log', result: 'passed', evidencePath: expect.stringMatching(/^artifacts\/test-log\/.+-result\.log$/) },
         markdownPath: `tasks/${task.id}-collect-json-evidence/EVIDENCE.md`
       },
       issues: []
     });
-    expect(report.evidence?.evidencePath ? fs.existsSync(path.join(task.dir, report.evidence.evidencePath)) : false).toBe(true);
+    expect(report.evidence?.schemaVersion === 'hadara.evidence.v2' ? fs.existsSync(path.join(task.dir, report.evidence.artifacts[0].path)) : false).toBe(true);
     expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain('Recorded test output');
   });
 
@@ -494,8 +505,10 @@ describe('CLI evidence JSON reports', () => {
       { redactionPatterns: [mediumDiagnosticPattern] }
     );
 
-    expect(result.evidence.evidencePath).toMatch(/^artifacts\/test-log\//);
-    expect(fs.readFileSync(path.join(task.dir, result.evidence.evidencePath ?? ''), 'utf8')).toContain('OBS-1234');
+    expect(result.evidence.schemaVersion).toBe('hadara.evidence.v2');
+    const evidencePath = result.evidence.schemaVersion === 'hadara.evidence.v2' ? result.evidence.artifacts[0].path : result.evidence.evidencePath;
+    expect(evidencePath).toMatch(/^artifacts\/test-log\//);
+    expect(fs.readFileSync(path.join(task.dir, evidencePath ?? ''), 'utf8')).toContain('OBS-1234');
   });
 
   it('rejects unsupported evidence result values at runtime', () => {

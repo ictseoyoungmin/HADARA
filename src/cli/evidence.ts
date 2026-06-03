@@ -1,4 +1,4 @@
-import { appendEvidence, EvidenceRecord } from '../evidence/evidence';
+import { appendEvidence, EvidenceRecord, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
 import { createEvidenceCollectReport } from './evidence-json';
 import { createEvidenceLintReport } from '../services/evidence-lint';
 import { createEvidenceListReport } from '../services/evidence-list';
@@ -23,7 +23,7 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
       console.log(JSON.stringify(report, null, 2));
     } else {
       for (const record of report.records) {
-        console.log(`${record.time} | ${record.kind} | ${record.result} | ${record.visibility} | ${record.summary}`);
+        console.log(`${record.time} | ${persistedEvidenceKind(record)} | ${persistedEvidenceResult(record)} | ${record.visibility} | ${record.summary}`);
       }
       for (const issue of report.issues) {
         console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);

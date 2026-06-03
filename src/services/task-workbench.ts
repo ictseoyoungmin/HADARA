@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { EvidenceIndexRecord } from '../evidence/evidence';
+import { EvidenceIndexRecord, PersistedEvidenceRecord, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
 import { createTaskCloseReport, TaskCloseIssue } from '../task/task-close';
 import { createTaskShowReport } from './task-read-model';
 import { createEvidenceListReport } from './evidence-list';
@@ -257,11 +257,11 @@ function buildMissingTaskReport(projectRoot: string, taskId: string, generatedAt
   };
 }
 
-function summarizeEvidence(record: EvidenceIndexRecord): NonNullable<TaskWorkbenchReport['sources']['evidenceList']['latest']> {
+function summarizeEvidence(record: PersistedEvidenceRecord): NonNullable<TaskWorkbenchReport['sources']['evidenceList']['latest']> {
   return {
     time: record.time,
-    kind: record.kind,
-    result: record.result,
+    kind: persistedEvidenceKind(record),
+    result: persistedEvidenceResult(record),
     visibility: record.visibility,
     summary: record.summary
   };
@@ -326,21 +326,21 @@ function buildTaskBoardIssues(taskId: string, taskStatus: string, capsule: strin
   return issues;
 }
 
-function getCloseState(records: EvidenceIndexRecord[]): CloseState {
+function getCloseState(records: PersistedEvidenceRecord[]): CloseState {
   if (records.some(isPassedCloseEvidenceRecord)) return 'closed-valid';
   if (records.some(isWellFormedCloseEvidenceRecord)) return 'close-evidence-found-invalid';
   if (records.some(isMalformedCloseEvidenceRecord)) return 'close-evidence-malformed';
   return 'not-closed';
 }
 
-function isPassedCloseEvidenceRecord(record: EvidenceIndexRecord): boolean {
-  return isWellFormedCloseEvidenceRecord(record) && record.result === 'passed';
+function isPassedCloseEvidenceRecord(record: PersistedEvidenceRecord): boolean {
+  return isWellFormedCloseEvidenceRecord(record) && persistedEvidenceResult(record) === 'passed';
 }
 
-function isWellFormedCloseEvidenceRecord(record: EvidenceIndexRecord): boolean {
-  return record.kind === 'command-log' && /Task close validation .* before close evidence append/.test(record.summary);
+function isWellFormedCloseEvidenceRecord(record: PersistedEvidenceRecord): boolean {
+  return persistedEvidenceKind(record) === 'command-log' && /Task close validation .* before close evidence append/.test(record.summary);
 }
 
-function isMalformedCloseEvidenceRecord(record: EvidenceIndexRecord): boolean {
+function isMalformedCloseEvidenceRecord(record: PersistedEvidenceRecord): boolean {
   return /Task close validation |before close evidence append/.test(record.summary);
 }

@@ -10,7 +10,7 @@ import {
   normalizeEvidenceRecordsInMemoryOrder,
   normalizeEvidenceRecordsWithSourceLines
 } from '../../src/evidence/normalizer';
-import { EvidenceIndexRecord } from '../../src/evidence/evidence';
+import { EvidenceIndexRecord, EvidenceV2IndexRecord } from '../../src/evidence/evidence';
 
 const roots: string[] = [];
 
@@ -33,6 +33,26 @@ function evidenceRecord(overrides: Partial<EvidenceIndexRecord> = {}): EvidenceI
     summary: 'npm run check passed',
     result: 'passed',
     visibility: 'public',
+    ...overrides
+  };
+}
+
+function evidenceV2Record(overrides: Partial<EvidenceV2IndexRecord> = {}): EvidenceV2IndexRecord {
+  return {
+    schemaVersion: 'hadara.evidence.v2',
+    id: 'ev:T-0001:abcdefabcdefabcdefabcdef',
+    fingerprint: 'sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+    idSource: 'persisted',
+    idStability: 'durable',
+    time: '2026-06-01T00:00:00.000Z',
+    taskId: 'T-0001',
+    category: 'validation',
+    outcome: 'passed',
+    visibility: 'public',
+    summary: 'npm run check passed resolves:legacy:T-0001:1:abc123abc123',
+    artifacts: [],
+    tags: ['resolves:legacy:T-0001:1:abc123abc123'],
+    legacy: { kind: 'command-log', result: 'passed' },
     ...overrides
   };
 }
@@ -128,5 +148,23 @@ describe('evidence normalizer', () => {
     expect(records[0].id).toMatch(/^legacy:T-0001:3:/);
     expect(records[1].id).toMatch(/^legacy:T-0001:7:/);
     expect(records.map((record) => record.sourceLine)).toEqual([3, 7]);
+  });
+
+  it('normalizes v2 records with persisted durable ids', () => {
+    const normalized = normalizeEvidenceRecord(evidenceV2Record(), { lineNumber: 4 });
+
+    expect(normalized).toMatchObject({
+      persistedSchemaVersion: 'hadara.evidence.v2',
+      id: 'ev:T-0001:abcdefabcdefabcdefabcdef',
+      idSource: 'persisted',
+      idStability: 'durable',
+      sourceLine: 4,
+      fingerprint: 'sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+      category: 'validation',
+      artifactType: 'command-log',
+      outcome: 'passed',
+      tags: ['resolves:legacy:T-0001:1:abc123abc123'],
+      legacy: { kind: 'command-log', result: 'passed' }
+    });
   });
 });
