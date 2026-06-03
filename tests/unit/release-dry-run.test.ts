@@ -60,6 +60,36 @@ describe('release dry-run', () => {
     expect(validateSchema('hadara.releaseDryRun.v1', report).ok).toBe(true);
   });
 
+  it('accepts v2 release evidence records with persisted ids', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root);
+    writeStrongEvidence(root, { schemaVersion: 'hadara.evidence.v2' });
+
+    const report = createReleaseDryRunReport(root);
+
+    expect(report.ok).toBe(true);
+    expect(report.evidence).toContainEqual(
+      expect.objectContaining({
+        code: 'PACKAGE_SMOKE_EVIDENCE',
+        artifactExists: true,
+        artifactSchemaValid: true,
+        sourceOk: true,
+        category: 'package-smoke',
+        mode: 'local'
+      })
+    );
+    expect(report.evidence).toContainEqual(
+      expect.objectContaining({
+        code: 'RELEASE_ARTIFACT_EVIDENCE',
+        artifactExists: true,
+        artifactSchemaValid: true,
+        sourceOk: true,
+        category: 'release-artifact',
+        mode: 'execute'
+      })
+    );
+  });
+
   it('fails when release evidence records do not link schema-valid artifacts', () => {
     const root = tempProject();
     writeReleaseReadinessFiles(root);
@@ -94,7 +124,7 @@ describe('release dry-run', () => {
   });
 });
 
-function writeStrongEvidence(root: string): void {
+function writeStrongEvidence(root: string, options: { schemaVersion?: 'hadara.evidence.v1' | 'hadara.evidence.v2' } = {}): void {
   const taskDir = path.join(root, 'tasks', 'T-0001-release-evidence');
   const artifactDir = path.join(taskDir, 'artifacts');
   fs.mkdirSync(path.join(artifactDir, 'package-smoke'), { recursive: true });
@@ -109,23 +139,48 @@ function writeStrongEvidence(root: string): void {
     evidenceRecord(
       '2026-05-28T10:00:00Z',
       'Reduced public evidence attached for release readiness.',
-      'artifacts/package-smoke/summary.json'
+      'artifacts/package-smoke/summary.json',
+      options.schemaVersion
     ),
     evidenceRecord(
       '2026-05-28T10:01:00Z',
       'Reduced public evidence attached for release readiness.',
-      'artifacts/clean-checkout-smoke/summary.json'
+      'artifacts/clean-checkout-smoke/summary.json',
+      options.schemaVersion
     ),
     evidenceRecord(
       '2026-05-28T10:02:00Z',
       'Reduced public evidence attached for release readiness.',
-      'artifacts/release-artifact/report.json'
+      'artifacts/release-artifact/report.json',
+      options.schemaVersion
     )
   ];
   fs.writeFileSync(path.join(taskDir, 'evidence.jsonl'), records.map((record) => JSON.stringify(record)).join('\n') + '\n', 'utf8');
 }
 
-function evidenceRecord(time: string, summary: string, evidencePath: string): Record<string, unknown> {
+function evidenceRecord(time: string, summary: string, evidencePath: string, schemaVersion: 'hadara.evidence.v1' | 'hadara.evidence.v2' = 'hadara.evidence.v1'): Record<string, unknown> {
+  if (schemaVersion === 'hadara.evidence.v2') {
+    return {
+      schemaVersion: 'hadara.evidence.v2',
+      id: `ev:T-0001:${evidencePath.replace(/[^a-z0-9]/gi, '').slice(0, 24).padEnd(24, '0')}`,
+      fingerprint: 'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      idSource: 'persisted',
+      idStability: 'durable',
+      time,
+      taskId: 'T-0001',
+      category: 'release',
+      outcome: 'passed',
+      visibility: 'public',
+      summary,
+      artifacts: [{ path: evidencePath, visibility: 'public', artifactType: 'command-log' }],
+      tags: [],
+      legacy: {
+        kind: 'command-log',
+        result: 'passed',
+        evidencePath
+      }
+    };
+  }
   return {
     schemaVersion: 'hadara.evidence.v1',
     time,

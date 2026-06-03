@@ -1,8 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { ensureDir } from '../core/fs';
-import { createPublicEvidenceArtifactPolicyReport, EvidenceArtifactPolicyError, EvidenceIndexRecord, EvidenceRecord } from '../evidence/evidence';
-import { redactSecrets } from '../core/redaction';
+import { appendEvidenceTextArtifact, EvidenceRecord, PersistedEvidenceRecord, persistedEvidencePath } from '../evidence/evidence';
 
 export interface SmokeEvidenceIssue {
   severity: 'warning' | 'error';
@@ -44,7 +42,7 @@ export interface SmokeEvidenceInput {
   };
 }
 
-export function attachReducedSmokeEvidence(input: SmokeEvidenceInput): { evidence: EvidenceIndexRecord; artifact: SmokeEvidenceArtifact } {
+export function attachReducedSmokeEvidence(input: SmokeEvidenceInput): { evidence: PersistedEvidenceRecord; artifact: SmokeEvidenceArtifact } {
   const taskDir = findTaskDir(input.projectRoot, input.taskId);
   if (!taskDir) {
     throw new Error(`Task capsule not found: ${input.taskId}`);
@@ -53,37 +51,22 @@ export function attachReducedSmokeEvidence(input: SmokeEvidenceInput): { evidenc
   const time = new Date().toISOString();
   const summaryContent = createReducedSummary(input, time);
   const content = JSON.stringify(summaryContent, null, 2);
-  const policy = createPublicEvidenceArtifactPolicyReport(content);
-  if (policy.blocking) {
-    throw new EvidenceArtifactPolicyError(
-      'PUBLIC_ARTIFACT_SECRET_DETECTED',
-      'Public smoke evidence summary contains secret-like content; collect raw logs privately or reduce the report first.',
-      policy.redaction
-    );
-  }
-
-  const artifactDir = path.join(taskDir, 'artifacts', input.category);
-  ensureDir(artifactDir);
-  const targetPath = path.join(artifactDir, `${safeFilePart(time)}-summary.json`);
-  fs.writeFileSync(targetPath, content, 'utf8');
-  const evidencePath = toPortablePath(path.relative(taskDir, targetPath));
-  const summary = redactSecrets(input.summary.replace(/\|/g, '/'));
-  const evidence: EvidenceIndexRecord = {
-    schemaVersion: 'hadara.evidence.v1',
-    time,
-    taskId: input.taskId,
-    kind: input.kind,
-    summary,
-    result: input.result,
-    visibility: 'public',
-    evidencePath
-  };
-
-  appendEvidenceMarkdown(taskDir, evidence);
-  fs.appendFileSync(path.join(taskDir, 'evidence.jsonl'), `${JSON.stringify(evidence)}\n`, 'utf8');
+  const appendResult = appendEvidenceTextArtifact(
+    input.projectRoot,
+    {
+      taskId: input.taskId,
+      kind: input.kind,
+      summary: input.summary,
+      result: input.result,
+      visibility: 'public'
+    },
+    { fileName: 'summary.json', content, artifactDirName: input.category }
+  );
+  const evidencePath = persistedEvidencePath(appendResult.evidence);
+  if (!evidencePath) throw new Error('Smoke evidence artifact path was not recorded.');
 
   return {
-    evidence,
+    evidence: appendResult.evidence,
     artifact: {
       kind: 'summary',
       visibility: 'public',
@@ -127,23 +110,11 @@ function createReducedSummary(input: SmokeEvidenceInput, time: string): Record<s
   };
 }
 
-function appendEvidenceMarkdown(taskDir: string, evidence: EvidenceIndexRecord): void {
-  const markdownPath = path.join(taskDir, 'EVIDENCE.md');
-  if (!fs.existsSync(markdownPath)) {
-    fs.writeFileSync(markdownPath, '# Evidence\n\n| Time | Kind | Summary | Result |\n|---|---|---|---|\n', 'utf8');
-  }
-  fs.appendFileSync(markdownPath, `| ${evidence.time} | ${evidence.kind} | ${evidence.summary} (${evidence.evidencePath}) | ${evidence.result} |\n`, 'utf8');
-}
-
 function findTaskDir(projectRoot: string, taskId: string): string | null {
   const tasksDir = path.join(projectRoot, 'tasks');
   if (!fs.existsSync(tasksDir)) return null;
   const entry = fs.readdirSync(tasksDir).find((name) => name.startsWith(`${taskId}-`));
   return entry ? path.join(tasksDir, entry) : null;
-}
-
-function safeFilePart(value: string): string {
-  return value.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'artifact';
 }
 
 function toPortablePath(value: string): string {

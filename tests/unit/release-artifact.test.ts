@@ -247,14 +247,16 @@ describe('release artifact builder', () => {
       report
     });
 
-    const artifactPath = path.join(task.dir, attached.evidence.evidencePath ?? '');
+    const evidencePath = attached.evidence.schemaVersion === 'hadara.evidence.v2' ? attached.evidence.legacy.evidencePath : attached.evidence.evidencePath;
+    const artifactPath = path.join(task.dir, evidencePath ?? '');
     const artifact = JSON.parse(fs.readFileSync(artifactPath, 'utf8'));
     expect(attached.evidence).toMatchObject({
+      schemaVersion: 'hadara.evidence.v2',
       taskId: task.id,
-      result: 'passed',
+      legacy: { result: 'passed' },
       visibility: 'public'
     });
-    expect(attached.evidence.evidencePath).toContain('artifacts/release-artifact/');
+    expect(evidencePath).toContain('artifacts/release-artifact/');
     expect(artifact).toMatchObject({
       schemaVersion: 'hadara.releaseArtifact.v1',
       ok: true,

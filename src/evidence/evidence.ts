@@ -134,7 +134,7 @@ export function appendEvidence(projectRoot: string, record: Omit<EvidenceRecord,
 export function appendEvidenceTextArtifact(
   projectRoot: string,
   record: Omit<EvidenceRecord, 'time' | 'path'>,
-  artifact: { fileName: string; content: string },
+  artifact: { fileName: string; content: string; artifactDirName?: string },
   options: PublicEvidenceArtifactPolicyOptions = {}
 ): EvidenceAppendResult {
   const taskDir = findTaskDir(projectRoot, record.taskId);
@@ -152,6 +152,7 @@ export function appendEvidenceTextArtifact(
           time,
           fileName: artifact.fileName,
           content: artifact.content,
+          artifactDirName: artifact.artifactDirName,
           policyOptions: options
         })
       : undefined;
@@ -363,6 +364,7 @@ function writePublicEvidenceTextArtifact(input: {
   time: string;
   fileName: string;
   content: string;
+  artifactDirName?: string;
   policyOptions?: PublicEvidenceArtifactPolicyOptions;
 }): string {
   const policy = createPublicEvidenceArtifactPolicyReport(input.content, input.policyOptions);
@@ -374,7 +376,7 @@ function writePublicEvidenceTextArtifact(input: {
     );
   }
 
-  const artifactsDir = path.join(input.taskDir, 'artifacts', input.kind);
+  const artifactsDir = path.join(input.taskDir, 'artifacts', safeFilePart(input.artifactDirName ?? input.kind));
   ensureDir(artifactsDir);
   const targetPath = path.join(artifactsDir, `${safeFilePart(input.time)}-${safeFilePart(input.fileName)}`);
   fs.writeFileSync(targetPath, input.content, 'utf8');

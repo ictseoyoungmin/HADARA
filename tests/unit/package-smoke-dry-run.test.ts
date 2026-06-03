@@ -401,8 +401,9 @@ describe('package smoke local execution', () => {
     });
     const taskDir = path.join(root, 'tasks', 'T-0136-smoke-evidence-integration');
     const evidenceIndex = fs.readFileSync(path.join(taskDir, 'evidence.jsonl'), 'utf8');
-    const evidenceRecord = JSON.parse(evidenceIndex.trim()) as { evidencePath: string; visibility: string; result: string };
-    const artifact = fs.readFileSync(path.join(taskDir, evidenceRecord.evidencePath), 'utf8');
+    const evidenceRecord = JSON.parse(evidenceIndex.trim()) as { schemaVersion: string; evidencePath?: string; legacy?: { evidencePath?: string; result?: string }; visibility: string; result?: string };
+    const evidencePath = evidenceRecord.schemaVersion === 'hadara.evidence.v2' ? evidenceRecord.legacy?.evidencePath : evidenceRecord.evidencePath;
+    const artifact = fs.readFileSync(path.join(taskDir, evidencePath ?? ''), 'utf8');
 
     expect(report.ok).toBe(true);
     expect(report.artifacts).toContainEqual(
@@ -415,10 +416,11 @@ describe('package smoke local execution', () => {
     );
     expect(report.steps).toContainEqual(expect.objectContaining({ id: 'evidence', status: 'passed' }));
     expect(evidenceRecord).toMatchObject({
+      schemaVersion: 'hadara.evidence.v2',
       visibility: 'public',
-      result: 'passed'
+      legacy: { result: 'passed' }
     });
-    expect(evidenceRecord.evidencePath).toMatch(/^artifacts\/package-smoke\/.+-summary\.json$/);
+    expect(evidencePath).toMatch(/^artifacts\/package-smoke\/.+-summary\.json$/);
     expect(artifact).toContain('"schemaVersion": "hadara.smokeEvidenceSummary.v1"');
     expect(artifact).toContain('"category": "package-smoke"');
     expect(artifact).not.toContain('/private/raw/path');

@@ -215,11 +215,14 @@ describe('clean checkout smoke', () => {
     });
     const taskDir = path.join(root, 'tasks', 'T-0136-smoke-evidence-integration');
     const evidenceRecord = JSON.parse(fs.readFileSync(path.join(taskDir, 'evidence.jsonl'), 'utf8').trim()) as {
-      evidencePath: string;
+      schemaVersion: string;
+      legacy?: { evidencePath?: string; result?: string };
+      evidencePath?: string;
       visibility: string;
       result: string;
     };
-    const artifact = fs.readFileSync(path.join(taskDir, evidenceRecord.evidencePath), 'utf8');
+    const evidencePath = evidenceRecord.schemaVersion === 'hadara.evidence.v2' ? evidenceRecord.legacy?.evidencePath : evidenceRecord.evidencePath;
+    const artifact = fs.readFileSync(path.join(taskDir, evidencePath ?? ''), 'utf8');
 
     expect(report.ok).toBe(true);
     expect(report.artifacts).toContainEqual(
@@ -232,10 +235,11 @@ describe('clean checkout smoke', () => {
     );
     expect(report.steps).toContainEqual(expect.objectContaining({ id: 'evidence', status: 'passed' }));
     expect(evidenceRecord).toMatchObject({
+      schemaVersion: 'hadara.evidence.v2',
       visibility: 'public',
-      result: 'passed'
+      legacy: { result: 'passed' }
     });
-    expect(evidenceRecord.evidencePath).toMatch(/^artifacts\/clean-checkout-smoke\/.+-summary\.json$/);
+    expect(evidencePath).toMatch(/^artifacts\/clean-checkout-smoke\/.+-summary\.json$/);
     expect(artifact).toContain('"category": "clean-checkout-smoke"');
     expect(artifact).not.toContain('/home/alice/private');
     expect(artifact).not.toContain('token=secret');

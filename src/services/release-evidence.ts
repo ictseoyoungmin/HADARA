@@ -2,9 +2,9 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { validateSchema } from '../core/schema';
-import { EvidenceIndexRecord } from '../evidence/evidence';
+import { EvidenceIndexRecord, EvidenceV2IndexRecord, PersistedEvidenceRecord, persistedEvidencePath } from '../evidence/evidence';
 import { normalizeEvidenceRecord, NormalizedEvidenceRecord } from '../evidence/normalizer';
-import { isLegacyReleaseProofEvidence } from '../evidence/semantics';
+import { isReleaseProofEvidence } from '../evidence/semantics';
 
 export interface ReleaseEvidenceRecord {
   taskId: string;
@@ -16,6 +16,7 @@ export interface ReleaseEvidenceRecord {
   result: string;
   visibility: string;
   evidencePath?: string;
+  persisted: PersistedEvidenceRecord;
 }
 
 export interface ReleaseEvidenceArtifactValidation {
@@ -119,19 +120,7 @@ export function validateReleaseEvidenceArtifact(record: ReleaseEvidenceRecord): 
 
 export function normalizeReleaseEvidenceRecord(record: ReleaseEvidenceRecord): NormalizedEvidenceRecord | null {
   if (!isEvidenceKind(record.kind) || !isEvidenceResult(record.result) || !isEvidenceVisibility(record.visibility)) return null;
-  const normalized = normalizeEvidenceRecord(
-    {
-      schemaVersion: 'hadara.evidence.v1',
-      time: record.time,
-      taskId: record.taskId,
-      kind: record.kind,
-      summary: record.summary,
-      result: record.result,
-      visibility: record.visibility,
-      ...(record.evidencePath ? { evidencePath: record.evidencePath } : {})
-    },
-    { taskDir: record.taskDir, lineNumber: record.sourceLine }
-  );
+  const normalized = normalizeEvidenceRecord(record.persisted, { taskDir: record.taskDir, lineNumber: record.sourceLine });
   const validation = validateReleaseEvidenceArtifact(record);
   if (validation.schemaVersion && normalized.artifacts.length > 0) {
     return {
@@ -152,7 +141,7 @@ export function isStrictReleaseEvidenceProof(record: ReleaseEvidenceRecord, expe
   if (expectation.mode && artifact.mode !== expectation.mode) return false;
 
   const normalized = normalizeReleaseEvidenceRecord(record);
-  return normalized !== null && isLegacyReleaseProofEvidence(normalized);
+  return normalized !== null && typeof normalized.legacy.kind === 'string' && isReleaseCompatibleKind(normalized.legacy.kind) && isReleaseProofEvidence(normalized);
 }
 
 function readTaskEvidenceRecords(taskDir: string): ReleaseEvidenceRecord[] {
@@ -166,26 +155,94 @@ function readTaskEvidenceRecords(taskDir: string): ReleaseEvidenceRecord[] {
       try {
         const parsed: unknown = JSON.parse(line);
         if (!isRecord(parsed)) return null;
-        if (parsed.schemaVersion !== 'hadara.evidence.v1') return null;
-        if (typeof parsed.time !== 'string' || typeof parsed.summary !== 'string') return null;
-        if (typeof parsed.taskId !== 'string' || typeof parsed.kind !== 'string') return null;
-        if (typeof parsed.result !== 'string' || typeof parsed.visibility !== 'string') return null;
-        return {
-          taskId: parsed.taskId,
-          taskDir,
-          sourceLine: index + 1,
-          time: parsed.time,
-          kind: parsed.kind,
-          summary: parsed.summary,
-          result: parsed.result,
-          visibility: parsed.visibility,
-          ...(typeof parsed.evidencePath === 'string' ? { evidencePath: parsed.evidencePath } : {})
-        };
+        return toReleaseEvidenceRecord(parsed, taskDir, index + 1);
       } catch {
         return null;
       }
     })
     .filter((record): record is ReleaseEvidenceRecord => record !== null);
+}
+
+function toReleaseEvidenceRecord(parsed: Record<string, unknown>, taskDir: string, sourceLine: number): ReleaseEvidenceRecord | null {
+  if (parsed.schemaVersion === 'hadara.evidence.v1') return toReleaseEvidenceV1Record(parsed, taskDir, sourceLine);
+  if (parsed.schemaVersion === 'hadara.evidence.v2') return toReleaseEvidenceV2Record(parsed, taskDir, sourceLine);
+  return null;
+}
+
+function toReleaseEvidenceV1Record(parsed: Record<string, unknown>, taskDir: string, sourceLine: number): ReleaseEvidenceRecord | null {
+  if (typeof parsed.time !== 'string' || typeof parsed.summary !== 'string') return null;
+  if (typeof parsed.taskId !== 'string' || typeof parsed.kind !== 'string') return null;
+  if (typeof parsed.result !== 'string' || typeof parsed.visibility !== 'string') return null;
+  if (!isEvidenceKind(parsed.kind) || !isEvidenceResult(parsed.result) || !isEvidenceVisibility(parsed.visibility)) return null;
+  const persisted: EvidenceIndexRecord = {
+    schemaVersion: 'hadara.evidence.v1',
+    time: parsed.time,
+    taskId: parsed.taskId,
+    kind: parsed.kind,
+    summary: parsed.summary,
+    result: parsed.result,
+    visibility: parsed.visibility,
+    ...(typeof parsed.evidencePath === 'string' ? { evidencePath: parsed.evidencePath } : {})
+  };
+  return {
+    taskId: persisted.taskId,
+    taskDir,
+    sourceLine,
+    time: persisted.time,
+    kind: persisted.kind,
+    summary: persisted.summary,
+    result: persisted.result,
+    visibility: persisted.visibility,
+    ...(persisted.evidencePath ? { evidencePath: persisted.evidencePath } : {}),
+    persisted
+  };
+}
+
+function toReleaseEvidenceV2Record(parsed: Record<string, unknown>, taskDir: string, sourceLine: number): ReleaseEvidenceRecord | null {
+  if (typeof parsed.time !== 'string' || typeof parsed.summary !== 'string') return null;
+  if (typeof parsed.taskId !== 'string' || typeof parsed.visibility !== 'string') return null;
+  const legacy = isRecord(parsed.legacy) ? parsed.legacy : null;
+  if (!legacy || typeof legacy.kind !== 'string' || typeof legacy.result !== 'string') return null;
+  if (!isEvidenceKind(legacy.kind) || !isEvidenceResult(legacy.result) || !isEvidenceVisibility(parsed.visibility)) return null;
+  if (typeof parsed.id !== 'string' || typeof parsed.fingerprint !== 'string') return null;
+  const category = isEvidenceV2Category(parsed.category) ? parsed.category : 'release';
+  const outcome = isEvidenceV2Outcome(parsed.outcome) ? parsed.outcome : 'unknown';
+  const artifacts = Array.isArray(parsed.artifacts) ? parsed.artifacts.filter(isV2ArtifactRef) : [];
+  const tags = Array.isArray(parsed.tags) ? parsed.tags.filter((tag): tag is string => typeof tag === 'string') : [];
+  const persisted: EvidenceV2IndexRecord = {
+    schemaVersion: 'hadara.evidence.v2',
+    id: parsed.id,
+    fingerprint: parsed.fingerprint,
+    idSource: parsed.idSource === 'persisted' ? 'persisted' : 'persisted',
+    idStability: parsed.idStability === 'durable' ? 'durable' : 'durable',
+    sourceLine,
+    time: parsed.time,
+    taskId: parsed.taskId,
+    category,
+    outcome,
+    visibility: parsed.visibility,
+    summary: parsed.summary,
+    artifacts,
+    tags,
+    legacy: {
+      kind: legacy.kind,
+      result: legacy.result,
+      ...(typeof legacy.evidencePath === 'string' ? { evidencePath: legacy.evidencePath } : {})
+    }
+  };
+  const evidencePath = persistedEvidencePath(persisted) ?? persisted.artifacts.find((artifact) => artifact.visibility === 'public')?.path;
+  return {
+    taskId: persisted.taskId,
+    taskDir,
+    sourceLine,
+    time: persisted.time,
+    kind: persisted.legacy.kind,
+    summary: persisted.summary,
+    result: persisted.legacy.result,
+    visibility: persisted.visibility,
+    ...(evidencePath ? { evidencePath } : {}),
+    persisted
+  };
 }
 
 function readOptionalString(value: unknown): string | undefined {
@@ -200,6 +257,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function isV2ArtifactRef(value: unknown): value is EvidenceV2IndexRecord['artifacts'][number] {
+  return (
+    isRecord(value) &&
+    typeof value.path === 'string' &&
+    value.visibility === 'public' &&
+    (value.artifactType === 'test-log' || value.artifactType === 'command-log' || value.artifactType === 'diff-summary' || value.artifactType === 'screenshot' || value.artifactType === 'note')
+  );
+}
+
 function isEvidenceKind(value: string): value is EvidenceIndexRecord['kind'] {
   return value === 'test-log' || value === 'command-log' || value === 'diff-summary' || value === 'screenshot' || value === 'note';
 }
@@ -210,4 +276,28 @@ function isEvidenceResult(value: string): value is EvidenceIndexRecord['result']
 
 function isEvidenceVisibility(value: string): value is EvidenceIndexRecord['visibility'] {
   return value === 'public' || value === 'private';
+}
+
+function isReleaseCompatibleKind(value: string): boolean {
+  return value === 'command-log' || value === 'test-log';
+}
+
+function isEvidenceV2Category(value: unknown): value is EvidenceV2IndexRecord['category'] {
+  return (
+    value === 'validation' ||
+    value === 'implementation' ||
+    value === 'release' ||
+    value === 'security' ||
+    value === 'policy' ||
+    value === 'operation' ||
+    value === 'decision' ||
+    value === 'handoff' ||
+    value === 'audit' ||
+    value === 'note' ||
+    value === 'observation'
+  );
+}
+
+function isEvidenceV2Outcome(value: unknown): value is EvidenceV2IndexRecord['outcome'] {
+  return value === 'passed' || value === 'failed' || value === 'blocked' || value === 'unknown' || value === 'recorded' || value === 'not-applicable';
 }
