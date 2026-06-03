@@ -1,0 +1,9 @@
+# Evidence
+
+| Time | Kind | Summary | Result | Visibility | JSONL |
+|---|---|---|---|---|---|
+| 2026-06-03T07:42:54.286Z | command-log | Focused TUI/CLI validation passed: npm run test:focused -- tests/unit/tui-read-model.test.ts tests/unit/tui-cache.test.ts tests/unit/tui-snapshot.test.ts tests/unit/tui-terminal.test.ts tests/unit/tui-cli.test.ts tests/unit/feature-smoke.test.ts returned 6 files / 60 tests. | passed | public | evidence.jsonl |
+| 2026-06-03T07:42:57.522Z | command-log | Full Docker sync-build passed: npm run dev:docker-sync-build returned 91 test files / 595 tests and built CLI version smoke ok:true with distLooksStale:false. | passed | public | evidence.jsonl |
+| 2026-06-03T07:43:00.908Z | command-log | Built /mnt/f TUI snapshot smoke passed: node dist/cli/main.js tui --snapshot --compact --width 100 --height 26 --project /mnt/f/NowWorking/HADARA-dev exited 0 in 4.05s; direct fast read-model/render measured about 160ms, leaving CLI startup imports as T-0231 scope. | passed | public | evidence.jsonl |
+| 2026-06-03T07:44:12.801Z | command-log | Task close validation for T-0230 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:3262c0e2fa817810f8849dcd28638d85026210d84b4dbfed0d66ec91522d807e. | passed | public | evidence.jsonl |
+| 2026-06-03T07:44:57.738Z | command-log | Task close validation for T-0230 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:1857a4bb704f9c59ddb9da139d2e044135028885733af68e62f228f961e75986. | passed | public | evidence.jsonl |

@@ -2,14 +2,17 @@ import { createActiveRunResumeReport, ActiveRunResumeReport } from '../services/
 import { safeCreateActiveRunProjection } from '../services/active-run-state';
 import { createDashboardCoreReport, DashboardCoreReport } from '../services/dashboard-core';
 import { createDashboardProjectionStatusReport, DashboardProjectionStatusReport } from '../services/dashboard-refresh';
-import { createDashboardTaskDetailReport, DashboardTaskDetailReport } from '../services/dashboard-task-detail';
-import { createEvidenceListReport, EvidenceListReport } from '../services/evidence-list';
+import { createDashboardTaskDetailReport, DashboardTaskDetailProof, DashboardTaskDetailReport } from '../services/dashboard-task-detail';
+import { readDashboardTaskProjectionIndex } from '../services/dashboard-task-projection';
+import { createEvidenceListReport, EvidenceListReport, parseEvidenceIndexFile } from '../services/evidence-list';
 import { createOperationalDebtReport, createReleaseGateReport, OperationalDebtReport, ReleaseGateReport } from '../services/operational-debt';
 import { createOpsStatusReport, OpsStatusReport } from '../services/operations-status-service';
+import { parseMarkdownRows } from '../services/markdown-table';
 import { extractSection, readProjectSources } from '../services/project-read-model';
-import { createTaskListReport, createTaskReadReport, TaskJsonSummary, TaskListReport, TaskReadReport } from '../services/task-read-model';
+import { createTaskListReport, TaskJsonSummary, TaskListReport, TaskReadOptions, TaskReadReport } from '../services/task-read-model';
 import { createToolsListReport, ToolsListReport } from '../services/tools-list';
 import { createWritePreflightReport, WritePreflightReport } from '../services/write-preflight';
+import { assertInsideProject } from '../core/workspace';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -63,7 +66,7 @@ export interface TuiReadModel {
     summary: TaskJsonSummary;
     detail: TaskReadReport;
     evidence: EvidenceListReport;
-    dashboardDetail: DashboardTaskDetailReport;
+    dashboardDetail: DashboardTaskDetailReport | null;
     proof: DashboardTaskDetailReport['proof'];
   } | null;
   activeRun: {
@@ -79,6 +82,19 @@ export interface TuiReadModel {
 
 const DEFAULT_EVIDENCE_LIMIT = 20;
 const DEFAULT_WRITE_PREVIEW_TITLE = 'TUI Follow-up';
+const TASK_CAPSULE_FILES = [
+  'TASK.md',
+  'PLAN.md',
+  'CONTEXT.md',
+  'ACCEPTANCE.md',
+  'FILES.md',
+  'TESTS.md',
+  'RISKS.md',
+  'DECISIONS.md',
+  'EVIDENCE.md',
+  'evidence.jsonl',
+  'HANDOFF.md'
+];
 
 export function createTuiLoadingReadModel(): TuiReadModel {
   const generatedAt = new Date().toISOString();
@@ -255,7 +271,7 @@ export function createTuiReadModel(projectRoot: string, options: TuiReadModelOpt
 
   const operator = createTuiOperatorReadModel(projectRoot);
   const status = createOpsStatusReport(projectRoot);
-  const tasks = createTaskListReport(projectRoot);
+  const tasks = createTuiTaskListReport(projectRoot);
   const selectedTaskId = resolveSelectedTaskId(tasks.tasks, status, options.selectedTaskId);
   const selectedSummary = selectedTaskId ? tasks.tasks.find((task) => task.id === selectedTaskId) ?? null : null;
   const selectedTask = selectedSummary ? createSelectedTaskReadModel(projectRoot, selectedSummary, options) : null;
@@ -303,7 +319,7 @@ export function createTuiReadModel(projectRoot: string, options: TuiReadModelOpt
 export function createTuiFastReadModel(projectRoot: string, options: TuiReadModelOptions = {}): TuiReadModel {
   const operator = createTuiOperatorReadModel(projectRoot);
   const sources = readProjectSources(projectRoot);
-  const tasks = createTaskListReport(projectRoot);
+  const tasks = createTuiTaskListReport(projectRoot);
   const activeRunProjection = safeCreateActiveRunProjection(projectRoot);
   const status = createFastOpsStatusReport(projectRoot, sources, tasks, activeRunProjection);
   const selectedTaskId = resolveSelectedTaskId(tasks.tasks, status, options.selectedTaskId);
@@ -314,7 +330,7 @@ export function createTuiFastReadModel(projectRoot: string, options: TuiReadMode
     source: 'tui-read-model',
     severity: 'warning',
     code: 'TUI_HEAVY_READS_DEFERRED',
-    message: 'TUI fast read model deferred debt, release-gate, tools, and write-preflight reads.'
+    message: 'TUI fast read model deferred selected-task proof lint, debt, release-gate, tools, and write-preflight reads.'
   };
   const issues = [
     ...collectIssues({
@@ -373,6 +389,9 @@ export function createSelectedTaskReadModel(
   summary: TaskJsonSummary,
   options: TuiReadModelOptions = {}
 ): NonNullable<TuiReadModel['selectedTask']> {
+  if (options.profile === 'fast' && options.includePrivateEvidence !== true) {
+    return createFastSelectedTaskReadModel(projectRoot, summary, options);
+  }
   const dashboardDetail = createDashboardTaskDetailReport(projectRoot, summary.id);
   const evidence =
     options.includePrivateEvidence === true
@@ -382,7 +401,7 @@ export function createSelectedTaskReadModel(
           includePrivate: true
         })
       : limitEvidenceListReport(dashboardDetail.evidenceList, options.evidenceLimit ?? DEFAULT_EVIDENCE_LIMIT);
-  const detail = createTaskReadReport(projectRoot, summary.id, { includePrivate: options.includePrivateEvidence });
+  const detail = createTaskDocumentReadReportFromSummary(projectRoot, summary, { includePrivate: options.includePrivateEvidence });
   return {
     summary,
     detail: {
@@ -393,6 +412,132 @@ export function createSelectedTaskReadModel(
     evidence,
     dashboardDetail,
     proof: dashboardDetail.proof
+  };
+}
+
+function createFastSelectedTaskReadModel(
+  projectRoot: string,
+  summary: TaskJsonSummary,
+  options: TuiReadModelOptions
+): NonNullable<TuiReadModel['selectedTask']> {
+  const detail = createTaskDocumentReadReportFromSummary(projectRoot, summary, { includePrivate: false });
+  const evidenceIndex = detail.evidenceIndex ?? [];
+  const evidence = limitEvidenceListReport(
+    {
+      schemaVersion: 'hadara.evidence.list.v1',
+      command: 'evidence.list',
+      ok: !detail.issues.some((issue) => issue.severity === 'error'),
+      taskId: summary.id,
+      count: evidenceIndex.length,
+      records: evidenceIndex,
+      issues: detail.issues
+        .filter((issue) => issue.code.startsWith('EVIDENCE_'))
+        .map((issue) => ({ severity: issue.severity, code: issue.code, message: issue.message }))
+    },
+    options.evidenceLimit ?? DEFAULT_EVIDENCE_LIMIT
+  );
+  const proof: DashboardTaskDetailProof = {
+    status: 'unknown',
+    blocking: false,
+    auditabilityWarning: false,
+    note: 'Selected task proof is deferred in fast TUI reads.',
+    substantivePositive: evidence.records.length,
+    semanticIssueCodes: ['TUI_FAST_PROOF_DEFERRED']
+  };
+  return {
+    summary,
+    detail: {
+      ...detail,
+      evidenceIndex: evidence.records,
+      issues: detail.issues
+    },
+    evidence,
+    dashboardDetail: null,
+    proof
+  };
+}
+
+export function createTuiTaskListReport(projectRoot: string): TaskListReport {
+  const projection = readDashboardTaskProjectionIndex(projectRoot);
+  const projectedTasks = projection?.tasks.map((entry) => entry.summary) ?? [];
+  const projectedById = new Map(projectedTasks.map((task) => [task.id, task]));
+  const boardTasks = readTaskBoardTaskSummaries(projectRoot).filter((task) => !projectedById.has(task.id));
+  const tasks = [...projectedTasks, ...boardTasks].sort((left, right) => left.id.localeCompare(right.id));
+
+  if (tasks.length > 0) {
+    return {
+      schemaVersion: 'hadara.task.list.v1',
+      command: 'task.list',
+      ok: true,
+      count: tasks.length,
+      tasks
+    };
+  }
+
+  return createTaskListReport(projectRoot);
+}
+
+function readTaskBoardTaskSummaries(projectRoot: string): TaskJsonSummary[] {
+  const taskBoardPath = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
+  if (!fs.existsSync(taskBoardPath)) return [];
+  return parseMarkdownRows(fs.readFileSync(taskBoardPath, 'utf8'))
+    .filter((row) => /^T-\d{4}$/.test(row[0] ?? ''))
+    .map((row) => {
+      const id = row[0] ?? '';
+      const title = row[1] ?? id;
+      const status = row[2] ?? 'Unknown';
+      const capsule = row[3] ?? '';
+      return {
+        id,
+        title,
+        status,
+        slug: path.basename(capsule).replace(/^T-\d{4}-/, ''),
+        capsule
+      };
+    })
+    .filter((task) => task.id && task.capsule);
+}
+
+function createTaskDocumentReadReportFromSummary(projectRoot: string, summary: TaskJsonSummary, options: TaskReadOptions = {}): TaskReadReport {
+  const taskDir = path.join(projectRoot, summary.capsule);
+  try {
+    assertInsideProject(projectRoot, taskDir, summary.capsule);
+  } catch (error) {
+    return {
+      schemaVersion: 'hadara.task.read.v1',
+      command: 'task.read',
+      ok: false,
+      task: summary,
+      files: {},
+      evidenceIndex: [],
+      issues: [
+        {
+          severity: 'error',
+          code: 'TASK_PATH_OUTSIDE_PROJECT',
+          message: error instanceof Error ? error.message : String(error)
+        }
+      ]
+    };
+  }
+
+  const files = Object.fromEntries(
+    TASK_CAPSULE_FILES.map((fileName) => {
+      const filePath = path.join(taskDir, fileName);
+      return [fileName, fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : ''];
+    })
+  );
+  const parsed = parseEvidenceIndexFile(path.join(taskDir, 'evidence.jsonl'), summary.id);
+  const includePrivate = options.includePrivate === true;
+  const evidenceIndex = parsed.records.filter((record) => includePrivate || record.visibility !== 'private');
+  files['evidence.jsonl'] = evidenceIndex.length ? `${evidenceIndex.map((record) => JSON.stringify(record)).join('\n')}\n` : '';
+  return {
+    schemaVersion: 'hadara.task.read.v1',
+    command: 'task.read',
+    ok: !parsed.issues.some((issue) => issue.severity === 'error'),
+    task: summary,
+    files,
+    evidenceIndex,
+    issues: parsed.issues
   };
 }
 
@@ -536,7 +681,7 @@ function createOverview(
   const readDetail = (task: TaskJsonSummary | null): TaskReadReport | null => {
     if (!task) return null;
     if (selectedTask?.summary.id === task.id) return selectedTask.detail;
-    return createTaskReadReport(projectRoot, task.id, { includePrivate: includePrivateEvidence });
+    return createTaskDocumentReadReportFromSummary(projectRoot, task, { includePrivate: includePrivateEvidence });
   };
   return {
     currentWork,

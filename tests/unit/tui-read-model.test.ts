@@ -151,7 +151,11 @@ describe('TUI read-model aggregator', () => {
     expect(model.operator.projectionStatus.refresh.state).toBe('idle');
     expect(model.selectedTaskId).toBe(task.id);
     expect(model.overview.currentWork?.id).toBe(task.id);
-    expect(model.selectedTask?.dashboardDetail.schemaVersion).toBe('hadara.dashboard.task_detail.v1');
+    expect(model.selectedTask?.dashboardDetail).toBeNull();
+    expect(model.selectedTask?.proof).toMatchObject({
+      status: 'unknown',
+      semanticIssueCodes: ['TUI_FAST_PROOF_DEFERRED']
+    });
     expect(model.selectedTask?.detail.files?.['TASK.md']).toContain('Fast aggregate task');
     expect(model.debt.aggregate.total).toBe(0);
     expect(model.releaseGate.checks[0]?.name).toBe('Deferred release-gate check');
@@ -160,7 +164,7 @@ describe('TUI read-model aggregator', () => {
       source: 'tui-read-model',
       severity: 'warning',
       code: 'TUI_HEAVY_READS_DEFERRED',
-      message: 'TUI fast read model deferred debt, release-gate, tools, and write-preflight reads.'
+      message: 'TUI fast read model deferred selected-task proof lint, debt, release-gate, tools, and write-preflight reads.'
     });
   });
 

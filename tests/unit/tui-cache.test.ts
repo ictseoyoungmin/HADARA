@@ -41,7 +41,7 @@ describe('TUI local cache', () => {
     expect(cache?.schemaVersion).toBe('hadara.tui.cache.v1');
     expect(cache?.projectRoot).toBe('.');
     expect(cache?.sourceSignals.taskBoard).toMatchObject({ size: expect.any(Number), hash: expect.any(String) });
-    expect(cache?.sourceSignals.tasksDir?.entries).toEqual([path.basename(task.dir)]);
+    expect(cache?.sourceSignals.tasksDir).toBeUndefined();
     expect(cache?.taskIndex).toHaveLength(1);
     expect(cache?.model.selectedTaskId).toBe(task.id);
   });
@@ -89,7 +89,7 @@ describe('TUI local cache', () => {
     expect(full.cache.issues).toEqual([]);
     expect(full.cache.hit).toBe(false);
     expect(fast.cache.hit).toBe(true);
-    expect(fast.model.tasks.tasks.find((row) => row.id === task.id)?.status).toBe('Unknown');
+    expect(fast.model.tasks.tasks.find((row) => row.id === task.id)?.status).toBe('Draft');
     expect(readTuiCache({ projectRoot: root })?.taskIndex).toContainEqual(
       expect.objectContaining({
         id: task.id,
@@ -112,7 +112,7 @@ describe('TUI local cache', () => {
     expect(result.model.tasks.tasks.map((task) => task.id)).toContain(created.id);
   });
 
-  it('invalidates fast cache when a task capsule is deleted', () => {
+  it('keeps task board entries as source-of-truth when a task capsule is deleted', () => {
     const root = tempProject();
     const first = createTaskCapsule(root, 'First cache task');
     const deleted = createTaskCapsule(root, 'Deleted cache task');
@@ -123,7 +123,8 @@ describe('TUI local cache', () => {
     const result = createTuiReadModelWithCache(root, { cache: { refresh: 'fast' } });
 
     expect(result.cache.hit).toBe(false);
-    expect(result.model.tasks.tasks.map((task) => task.id)).not.toContain(deleted.id);
+    expect(result.model.tasks.tasks.map((task) => task.id)).toContain(deleted.id);
+    expect(result.model.tasks.tasks.map((task) => task.id)).toContain(first.id);
   });
 
   it('invalidates fast cache when only TASK_BOARD changes', () => {

@@ -123,7 +123,7 @@ function createCoreSteps(paths: HadaraPaths, issues: FeatureSmokeIssue[]): Featu
       command: 'hadara tui --snapshot --json',
       schemaVersion: 'hadara.tui.snapshot.cli.v1',
       run: () => {
-        renderTuiSnapshot(createTuiReadModel(paths.projectRoot), { width: 86, height: 24, widthPolicy: 'compact', theme: 'none' });
+        renderTuiSnapshot(createTuiReadModel(paths.projectRoot, { profile: 'fast' }), { width: 86, height: 24, widthPolicy: 'compact', theme: 'none' });
         return { ok: true };
       },
       summarize: () => 'TUI snapshot completed as a reduced no-color render.'

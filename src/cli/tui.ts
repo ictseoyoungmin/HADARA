@@ -26,7 +26,12 @@ export function handleTuiCommand(input: TuiCommandInput): boolean {
   const terminalInput = input.input ?? (process.stdin as TuiTerminalInput);
 
   if (getFlag(input.args, '--snapshot')) {
-    const snapshot = renderTuiSnapshot(createTuiReadModel(input.projectRoot), { width, height, widthPolicy, theme: getFlag(input.args, '--color') ? theme : 'none' });
+    const snapshot = renderTuiSnapshot(createTuiReadModel(input.projectRoot, { profile: 'fast' }), {
+      width,
+      height,
+      widthPolicy,
+      theme: getFlag(input.args, '--color') ? theme : 'none'
+    });
     if (input.jsonOutput) {
       output.write(`${JSON.stringify({ schemaVersion: 'hadara.tui.snapshot.cli.v1', command: 'tui.snapshot', ok: true, text: snapshot.text }, null, 2)}\n`);
     } else {
