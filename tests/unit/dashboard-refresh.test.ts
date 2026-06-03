@@ -51,7 +51,7 @@ describe('dashboard background refresh and projection status', () => {
 
     expect(after).toMatchObject({
       refresh: expect.objectContaining({ state: 'idle', runs: 1 }),
-      projections: { core: expect.objectContaining({ present: true, freshness: 'unknown', completeness: 'core' }) }
+      projections: { core: expect.objectContaining({ present: true, freshness: 'fresh', completeness: 'core' }) }
     });
     expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'core', 'index.json'))).toBe(true);
   });
@@ -89,8 +89,35 @@ describe('dashboard background refresh and projection status', () => {
     expect(fs.existsSync(path.join(resolveDashboardProjectionStoreRoot(root), 'core', 'index.json'))).toBe(true);
     expect(after.refresh).toMatchObject({
       state: 'idle',
-      runs: 1
+      runs: 1,
+      currentStage: null,
+      processed: null,
+      total: null
     });
+  });
+
+  it('exposes current stage, progress, and yield metadata while manual refresh is running', async () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+    for (let index = 1; index <= 80; index += 1) {
+      const id = String(index).padStart(4, '0');
+      writeTask(root, `T-${id}-progress-${id}`, index % 2 === 0 ? 'Done' : 'Draft');
+    }
+    vi.useRealTimers();
+
+    JSON.parse(createDashboardServerResponse(root, '/api/dashboard/refresh').body);
+    const during = await waitForRefreshProgress(root);
+
+    expect(during.refresh).toMatchObject({
+      state: 'refreshing',
+      currentStage: expect.any(String),
+      processed: expect.any(Number),
+      total: expect.any(Number),
+      lastYieldAt: expect.any(String)
+    });
+
+    const after = await waitForRefreshRuns(root, 1);
+    expect(after.refresh).toMatchObject({ state: 'idle', currentStage: null, processed: null, total: null });
   });
 });
 
@@ -99,6 +126,24 @@ async function waitForRefreshRuns(root: string, runs: number): Promise<Record<st
   for (let attempt = 0; attempt < 60; attempt += 1) {
     latest = JSON.parse(createDashboardServerResponse(root, '/api/dashboard/projection/status').body);
     if (latest.refresh?.runs >= runs && latest.refresh?.state === 'idle') return latest;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+  return latest;
+}
+
+async function waitForRefreshProgress(root: string): Promise<Record<string, any>> {
+  let latest: Record<string, any> = {};
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    latest = JSON.parse(createDashboardServerResponse(root, '/api/dashboard/projection/status').body);
+    if (
+      latest.refresh?.state === 'refreshing' &&
+      latest.refresh?.currentStage &&
+      typeof latest.refresh?.processed === 'number' &&
+      typeof latest.refresh?.total === 'number' &&
+      typeof latest.refresh?.lastYieldAt === 'string'
+    ) {
+      return latest;
+    }
     await new Promise((resolve) => setTimeout(resolve, 5));
   }
   return latest;
@@ -148,4 +193,12 @@ function writeProjectDocs(root: string): void {
   );
   fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
   fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n', 'utf8');
+}
+
+function writeTask(root: string, directoryName: string, status: string): void {
+  const taskId = directoryName.slice(0, 6);
+  const dir = path.join(root, 'tasks', directoryName);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'TASK.md'), [`# ${taskId} ${directoryName.slice(7)}`, '', '## Status', '', status, ''].join('\n'), 'utf8');
+  fs.writeFileSync(path.join(dir, 'evidence.jsonl'), '', 'utf8');
 }

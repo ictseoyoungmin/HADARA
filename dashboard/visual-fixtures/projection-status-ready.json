@@ -14,7 +14,11 @@
     "startedAt": "2026-06-02T00:00:00.000Z",
     "finishedAt": "2026-06-02T00:00:03.000Z",
     "lastError": null,
-    "runs": 1
+    "runs": 1,
+    "currentStage": null,
+    "processed": null,
+    "total": null,
+    "lastYieldAt": "2026-06-02T00:00:03.000Z"
   },
   "projections": {
     "core": {

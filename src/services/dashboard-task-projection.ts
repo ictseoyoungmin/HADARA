@@ -39,6 +39,17 @@ export interface DashboardTaskProjectionIndex {
   reusedTaskIds: string[];
 }
 
+export interface DashboardTaskProjectionProgress {
+  processed: number;
+  total: number;
+  lastYieldAt: string;
+}
+
+export interface DashboardTaskProjectionRefreshOptions {
+  batchSize?: number;
+  onProgress?: (progress: DashboardTaskProjectionProgress) => void;
+}
+
 export function readDashboardTaskProjectionIndex(projectRoot: string): DashboardTaskProjectionIndex | null {
   const record = readDashboardProjection<DashboardTaskProjectionIndex>({ projectRoot }, 'source-signals', 'tasks');
   return record?.body?.schemaVersion === 'hadara.dashboard.task_projection_index.v1' ? record.body : null;
@@ -59,10 +70,15 @@ export function refreshDashboardTaskProjectionIndex(projectRoot: string, now = n
   return index;
 }
 
-export async function refreshDashboardTaskProjectionIndexAsync(projectRoot: string, now = new Date(), batchSize = 25): Promise<DashboardTaskProjectionIndex> {
+export async function refreshDashboardTaskProjectionIndexAsync(
+  projectRoot: string,
+  now = new Date(),
+  options: number | DashboardTaskProjectionRefreshOptions = {}
+): Promise<DashboardTaskProjectionIndex> {
+  const refreshOptions = typeof options === 'number' ? { batchSize: options } : options;
   const previous = readDashboardTaskProjectionIndex(projectRoot);
   const previousById = new Map((previous?.tasks ?? []).map((entry) => [entry.summary.id, entry]));
-  const tasks = await listTaskProjectionEntriesAsync(projectRoot, previousById, batchSize);
+  const tasks = await listTaskProjectionEntriesAsync(projectRoot, previousById, refreshOptions);
   const index: DashboardTaskProjectionIndex = {
     schemaVersion: 'hadara.dashboard.task_projection_index.v1',
     generatedAt: now.toISOString(),
@@ -87,20 +103,28 @@ function listTaskProjectionEntries(projectRoot: string, previousById: Map<string
 async function listTaskProjectionEntriesAsync(
   projectRoot: string,
   previousById: Map<string, DashboardTaskProjectionEntry>,
-  batchSize: number
+  options: DashboardTaskProjectionRefreshOptions
 ): Promise<DashboardTaskProjectionEntry[]> {
   const tasksDir = path.join(projectRoot, 'tasks');
   try {
+    const batchSize = options.batchSize ?? 25;
     const entries = await fsp.readdir(tasksDir, { withFileTypes: true });
     const names = entries.filter((entry) => entry.isDirectory() && /^T-\d{4}-/.test(entry.name)).map((entry) => entry.name);
     const tasks: DashboardTaskProjectionEntry[] = [];
+    if (names.length === 0) {
+      options.onProgress?.({ processed: 0, total: 0, lastYieldAt: new Date().toISOString() });
+    }
     for (let index = 0; index < names.length; index += batchSize) {
       const batch = names.slice(index, index + batchSize);
       tasks.push(...(await Promise.all(batch.map((name) => buildTaskProjectionEntryAsync(projectRoot, name, previousById)))));
+      const processed = Math.min(index + batch.length, names.length);
+      const yieldedAt = new Date().toISOString();
+      options.onProgress?.({ processed, total: names.length, lastYieldAt: yieldedAt });
       if (index + batchSize < names.length) await yieldToEventLoop();
     }
     return tasks.sort((left, right) => left.summary.id.localeCompare(right.summary.id));
   } catch {
+    options.onProgress?.({ processed: 0, total: 0, lastYieldAt: new Date().toISOString() });
     return [];
   }
 }

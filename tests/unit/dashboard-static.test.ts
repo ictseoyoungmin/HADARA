@@ -160,6 +160,10 @@ describe('operator console bundle (Phase 5.6)', () => {
     expect(statusIndex).toBeLessThan(fixtureIndex);
     // a stalled read must degrade rather than freeze the console
     expect(code).toContain('AbortController');
+    // manual UI refresh triggers projection refresh and then re-reads current core state;
+    // it must not force core?cache=bypass as the primary refresh action.
+    expect(code).toContain("'/api/dashboard/refresh'");
+    expect(code).not.toContain('load({ bypass: true })');
     // evidence cards display concrete record kind/result instead of falling back to unknown semantic strength
     expect(code).toContain('kind: asString(r.kind ?? r.artifactType');
     expect(code).toContain('result: asString(r.result ?? r.outcome');
@@ -182,7 +186,7 @@ describe('operator console bundle (Phase 5.6)', () => {
       expect(fs.existsSync(path.join(visualFixtureDir, fixture))).toBe(true);
     }
 
-    for (const route of ['/api/dashboard/core', '/api/dashboard/timeline', '/api/dashboard/debt', '/api/dashboard/projection/status']) {
+    for (const route of ['/api/dashboard/core', '/api/dashboard/timeline', '/api/dashboard/debt', '/api/dashboard/projection/status', '/api/dashboard/refresh']) {
       expect(script).toContain(route);
     }
 
@@ -215,7 +219,7 @@ describe('operator console bundle (Phase 5.6)', () => {
     }
 
     expect(readVisualFixture('projection-status-refreshing.json')).toMatchObject({
-      refresh: { state: 'refreshing' },
+      refresh: { state: 'refreshing', currentStage: expect.any(String), processed: expect.any(Number), total: expect.any(Number), lastYieldAt: expect.any(String) },
       pendingSections: expect.arrayContaining(['timeline', 'debt'])
     });
     expect(readVisualFixture('projection-status-stale.json')).toMatchObject({

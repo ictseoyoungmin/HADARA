@@ -88,6 +88,10 @@ export interface DashboardCoreTaskSummary {
 
 export interface DashboardCoreOptions {
   bypassProjection?: boolean;
+  projectionFreshness?: DashboardCoreReport['projection']['freshness'];
+  refreshState?: DashboardCoreReport['projection']['refreshState'];
+  pendingSections?: string[];
+  staleSections?: string[];
 }
 
 interface TaskBoardRow {
@@ -100,7 +104,7 @@ interface TaskBoardRow {
 export function createDashboardCoreReport(projectRoot: string, options: DashboardCoreOptions = {}, now = new Date()): DashboardCoreReport {
   if (!options.bypassProjection) {
     const cached = readDashboardProjection<DashboardCoreReport>({ projectRoot }, 'core', 'index');
-    if (cached) return reportFromProjection(cached.body, cached.generatedAt);
+    if (cached) return reportFromProjection(cached.body, cached.generatedAt, options);
   }
 
   const report = createLiveDashboardCoreReport(projectRoot, now);
@@ -192,7 +196,7 @@ function createLiveDashboardCoreReport(projectRoot: string, now: Date): Dashboar
   };
 }
 
-function reportFromProjection(report: DashboardCoreReport, projectionGeneratedAt: string): DashboardCoreReport {
+function reportFromProjection(report: DashboardCoreReport, projectionGeneratedAt: string, options: DashboardCoreOptions): DashboardCoreReport {
   return {
     ...report,
     source: {
@@ -202,9 +206,11 @@ function reportFromProjection(report: DashboardCoreReport, projectionGeneratedAt
     },
     projection: {
       ...report.projection,
-      freshness: 'unknown',
-      refreshState: 'idle',
-      generatedAt: projectionGeneratedAt
+      freshness: options.projectionFreshness ?? report.projection.freshness ?? 'unknown',
+      refreshState: options.refreshState ?? 'idle',
+      generatedAt: projectionGeneratedAt,
+      pendingSections: options.pendingSections ?? report.projection.pendingSections,
+      staleSections: options.staleSections ?? report.projection.staleSections
     }
   };
 }

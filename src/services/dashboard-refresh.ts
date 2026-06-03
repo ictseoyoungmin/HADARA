@@ -19,6 +19,10 @@ export interface DashboardProjectionStatusReport {
     finishedAt: string | null;
     lastError: string | null;
     runs: number;
+    currentStage: string | null;
+    processed: number | null;
+    total: number | null;
+    lastYieldAt: string | null;
   };
   projections: {
     core: {
@@ -59,6 +63,10 @@ interface RefreshStateRecord {
   finishedAt: string | null;
   lastError: string | null;
   runs: number;
+  currentStage: string | null;
+  processed: number | null;
+  total: number | null;
+  lastYieldAt: string | null;
 }
 
 interface DashboardRefreshOptions {
@@ -66,7 +74,14 @@ interface DashboardRefreshOptions {
   delayMs?: number;
 }
 
-type DashboardRefreshStep = () => void | Promise<void>;
+interface DashboardRefreshStepContext {
+  updateProgress: (progress: Partial<Pick<RefreshStateRecord, 'processed' | 'total' | 'lastYieldAt'>>) => void;
+}
+
+interface DashboardRefreshStep {
+  stage: string;
+  run: (context: DashboardRefreshStepContext) => void | Promise<void>;
+}
 
 const refreshStates = new Map<string, RefreshStateRecord>();
 
@@ -97,7 +112,11 @@ export function triggerDashboardProjectionRefresh(
     startedAt,
     finishedAt: null,
     lastError: null,
-    runs: current.runs
+    runs: current.runs,
+    currentStage: null,
+    processed: null,
+    total: null,
+    lastYieldAt: null
   });
 
   scheduleRefreshSteps(projectRoot, key, reason, startedAt, createRefreshSteps(projectRoot, options), options.delayMs ?? 0);
@@ -113,22 +132,47 @@ export function triggerDashboardProjectionRefresh(
 function createRefreshSteps(projectRoot: string, options: DashboardRefreshOptions): DashboardRefreshStep[] {
   const steps: DashboardRefreshStep[] = [];
   if (options.includeHeavy !== false) {
-    steps.push(async () => {
-      await refreshDashboardTaskProjectionIndexAsync(projectRoot);
+    steps.push({
+      stage: 'task-signals',
+      run: async ({ updateProgress }) => {
+        await refreshDashboardTaskProjectionIndexAsync(projectRoot, new Date(), {
+          onProgress: (progress) => updateProgress(progress)
+        });
+      }
     });
-    steps.push(() => {
-      createDashboardCoreReport(projectRoot, { bypassProjection: true });
+    steps.push({
+      stage: 'core-before-heavy',
+      run: ({ updateProgress }) => {
+        updateProgress({ processed: 0, total: 1 });
+        createDashboardCoreReport(projectRoot, { bypassProjection: true });
+        updateProgress({ processed: 1, total: 1, lastYieldAt: new Date().toISOString() });
+      }
     });
-    steps.push(() => {
-      const core = createDashboardCoreReport(projectRoot);
-      refreshDashboardTimelineProjection(projectRoot, new Date(), { core });
+    steps.push({
+      stage: 'timeline',
+      run: ({ updateProgress }) => {
+        updateProgress({ processed: 0, total: 1 });
+        const core = createDashboardCoreReport(projectRoot);
+        refreshDashboardTimelineProjection(projectRoot, new Date(), { core });
+        updateProgress({ processed: 1, total: 1, lastYieldAt: new Date().toISOString() });
+      }
     });
-    steps.push(() => {
-      refreshDashboardDebtProjection(projectRoot);
+    steps.push({
+      stage: 'debt',
+      run: ({ updateProgress }) => {
+        updateProgress({ processed: 0, total: 1 });
+        refreshDashboardDebtProjection(projectRoot);
+        updateProgress({ processed: 1, total: 1, lastYieldAt: new Date().toISOString() });
+      }
     });
   }
-  steps.push(() => {
-    createDashboardCoreReport(projectRoot, { bypassProjection: true });
+  steps.push({
+    stage: 'core-final',
+    run: ({ updateProgress }) => {
+      updateProgress({ processed: 0, total: 1 });
+      createDashboardCoreReport(projectRoot, { bypassProjection: true });
+      updateProgress({ processed: 1, total: 1, lastYieldAt: new Date().toISOString() });
+    }
   });
   return steps;
 }
@@ -146,7 +190,10 @@ function scheduleRefreshSteps(
     try {
       const step = steps[index];
       if (step) {
-        await step();
+        setRefreshStage(key, projectRoot, step.stage);
+        await step.run({
+          updateProgress: (progress) => updateRefreshProgress(key, projectRoot, progress)
+        });
         index += 1;
         setTimeout(runNext, 0);
         return;
@@ -159,7 +206,11 @@ function scheduleRefreshSteps(
         startedAt,
         finishedAt: new Date().toISOString(),
         lastError: null,
-        runs: previous.runs + 1
+        runs: previous.runs + 1,
+        currentStage: null,
+        processed: null,
+        total: null,
+        lastYieldAt: previous.lastYieldAt
       });
     } catch (error) {
       const previous = getRefreshState(projectRoot);
@@ -169,7 +220,11 @@ function scheduleRefreshSteps(
         startedAt,
         finishedAt: new Date().toISOString(),
         lastError: error instanceof Error ? error.message : String(error),
-        runs: previous.runs
+        runs: previous.runs,
+        currentStage: previous.currentStage,
+        processed: previous.processed,
+        total: previous.total,
+        lastYieldAt: previous.lastYieldAt
       });
     }
   };
@@ -183,8 +238,17 @@ export function createDashboardProjectionStatusReport(projectRoot: string, now =
   const debt = readDashboardProjection({ projectRoot }, 'debt', 'summary');
   const state = getRefreshState(projectRoot);
   const projection = projectionMetadata(core?.body);
-  const pendingSections = projection ? projectionStringArray(projection, 'pendingSections') : ['core'];
-  const staleSections = projection ? projectionStringArray(projection, 'staleSections') : [];
+  const coreFreshness = projectionFreshness(core?.generatedAt ?? null, state);
+  const timelineFreshness = projectionFreshness(timeline?.generatedAt ?? null, state);
+  const debtFreshness = projectionFreshness(debt?.generatedAt ?? null, state);
+  const pendingSections = mergeUnique([
+    ...(projection ? projectionStringArray(projection, 'pendingSections') : ['core']),
+    ...missingSections({ core: coreFreshness, timeline: timelineFreshness, debt: debtFreshness })
+  ]);
+  const staleSections = mergeUnique([
+    ...(projection ? projectionStringArray(projection, 'staleSections') : []),
+    ...staleProjectionSections({ core: coreFreshness, timeline: timelineFreshness, debt: debtFreshness })
+  ]);
   const completeness = projection ? projectionCompleteness(projection) : 'unknown';
 
   return {
@@ -198,18 +262,18 @@ export function createDashboardProjectionStatusReport(projectRoot: string, now =
       core: {
         present: Boolean(core),
         generatedAt: core?.generatedAt ?? null,
-        freshness: core ? 'unknown' : 'missing',
+        freshness: coreFreshness,
         completeness
       },
       timeline: {
         present: Boolean(timeline),
         generatedAt: timeline?.generatedAt ?? null,
-        freshness: timeline ? 'unknown' : 'missing'
+        freshness: timelineFreshness
       },
       debt: {
         present: Boolean(debt),
         generatedAt: debt?.generatedAt ?? null,
-        freshness: debt ? 'unknown' : 'missing'
+        freshness: debtFreshness
       }
     },
     pendingSections,
@@ -239,9 +303,51 @@ function getRefreshState(projectRoot: string): RefreshStateRecord {
       startedAt: null,
       finishedAt: null,
       lastError: null,
-      runs: 0
+      runs: 0,
+      currentStage: null,
+      processed: null,
+      total: null,
+      lastYieldAt: null
     }
   );
+}
+
+function setRefreshStage(key: string, projectRoot: string, stage: string): void {
+  const previous = getRefreshState(projectRoot);
+  refreshStates.set(key, {
+    ...previous,
+    currentStage: stage,
+    processed: 0,
+    total: null,
+    lastYieldAt: previous.lastYieldAt
+  });
+}
+
+function updateRefreshProgress(
+  key: string,
+  projectRoot: string,
+  progress: Partial<Pick<RefreshStateRecord, 'processed' | 'total' | 'lastYieldAt'>>
+): void {
+  const previous = getRefreshState(projectRoot);
+  refreshStates.set(key, {
+    ...previous,
+    processed: progress.processed ?? previous.processed,
+    total: progress.total ?? previous.total,
+    lastYieldAt: progress.lastYieldAt ?? previous.lastYieldAt
+  });
+}
+
+function projectionFreshness(
+  generatedAt: string | null,
+  state: RefreshStateRecord
+): 'fresh' | 'stale' | 'missing' | 'unknown' {
+  if (!generatedAt) return 'missing';
+  if (state.state === 'refreshing' || state.state === 'checking') {
+    return state.startedAt && generatedAt < state.startedAt ? 'stale' : 'unknown';
+  }
+  if (state.state === 'failed') return 'stale';
+  if (!state.startedAt || !state.finishedAt) return 'unknown';
+  return generatedAt >= state.startedAt ? 'fresh' : 'stale';
 }
 
 function projectionStringArray(value: unknown, key: 'pendingSections' | 'staleSections'): string[] {
@@ -259,4 +365,20 @@ function projectionCompleteness(value: unknown): 'core' | 'partial' | 'complete'
   if (typeof value !== 'object' || value === null) return 'unknown';
   const candidate = (value as Record<string, unknown>).completeness;
   return candidate === 'core' || candidate === 'partial' || candidate === 'complete' ? candidate : 'unknown';
+}
+
+function mergeUnique(values: string[]): string[] {
+  return Array.from(new Set(values));
+}
+
+function missingSections(freshness: Record<'core' | 'timeline' | 'debt', 'fresh' | 'stale' | 'missing' | 'unknown'>): string[] {
+  return Object.entries(freshness)
+    .filter(([, value]) => value === 'missing')
+    .map(([key]) => key);
+}
+
+function staleProjectionSections(freshness: Record<'core' | 'timeline' | 'debt', 'fresh' | 'stale' | 'missing' | 'unknown'>): string[] {
+  return Object.entries(freshness)
+    .filter(([, value]) => value === 'stale')
+    .map(([key]) => key);
 }

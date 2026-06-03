@@ -10,6 +10,7 @@ import {
   loadTaskDetail,
   loadTimeline,
   readInlineRuntime,
+  triggerProjectionRefresh,
   type RuntimeState,
   type TaskDetail
 } from './model';
@@ -24,6 +25,7 @@ import {
   HealthVerdict,
   MetricsRow,
   ProofVerdict,
+  ProjectionBadge,
   ProvenanceBadge,
   SkeletonBlock
 } from './ui';
@@ -313,7 +315,17 @@ function App() {
     setDegraded(true);
     setBusy(false);
     return false;
-  }, [backfillDebt]);
+  }, [backfillDebt, backfillTimeline]);
+
+  const refreshProjection = useCallback(async () => {
+    setBusy(true);
+    try {
+      await triggerProjectionRefresh();
+    } catch {
+      /* a failed trigger falls through to the normal degraded live read path */
+    }
+    return load();
+  }, [load]);
 
   useEffect(() => {
     void load();
@@ -548,18 +560,19 @@ function App() {
           </div>
           <div class="topbar-right">
             {busy ? <span class="syncing" aria-live="polite">syncing…</span> : null}
+            {runtime ? <ProjectionBadge runtime={runtime} /> : null}
             {runtime ? <ProvenanceBadge runtime={runtime} /> : null}
             <button type="button" class={`toggle ${polling ? 'is-on' : ''}`} aria-pressed={polling} onClick={() => setPolling((v) => !v)}>
               {polling ? 'Auto-refresh on' : 'Auto-refresh off'}
             </button>
-            <button type="button" class="primary-btn" onClick={() => void load({ bypass: true })} disabled={busy}>
+            <button type="button" class="primary-btn" onClick={() => void refreshProjection()} disabled={busy}>
               Refresh
             </button>
           </div>
         </header>
 
         <main class="main" aria-live="polite">
-          {degraded ? <DegradedBanner kind={degradedKind} when={lastGoodRuntime.current?.source.generatedAt ?? null} onRetry={() => void load({ bypass: true })} /> : null}
+          {degraded ? <DegradedBanner kind={degradedKind} when={lastGoodRuntime.current?.source.generatedAt ?? null} onRetry={() => void refreshProjection()} /> : null}
 
           {showShell ? (
             <>

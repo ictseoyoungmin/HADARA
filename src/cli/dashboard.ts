@@ -118,7 +118,18 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
   const headOnly = normalizedMethod === 'HEAD';
   if (url.pathname === '/api/status') return jsonResponse(createOpsStatusReport(projectRoot), headOnly);
   if (url.pathname === '/api/dashboard/core') {
-    return jsonResponse(createDashboardCoreReport(projectRoot, { bypassProjection: url.searchParams.get('cache') === 'bypass' }), headOnly);
+    const bypassProjection = url.searchParams.get('cache') === 'bypass';
+    const status = bypassProjection ? null : createDashboardProjectionStatusReport(projectRoot);
+    return jsonResponse(
+      createDashboardCoreReport(projectRoot, {
+        bypassProjection,
+        projectionFreshness: status?.projections.core.freshness,
+        refreshState: status?.refresh.state,
+        pendingSections: status?.pendingSections,
+        staleSections: status?.staleSections
+      }),
+      headOnly
+    );
   }
   if (url.pathname === '/api/dashboard/projection/status') return jsonResponse(createDashboardProjectionStatusReport(projectRoot), headOnly);
   if (url.pathname === '/api/dashboard/refresh') return jsonResponse(triggerDashboardProjectionRefresh(projectRoot, 'api'), headOnly);

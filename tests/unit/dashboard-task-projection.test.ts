@@ -4,7 +4,8 @@ import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   readDashboardTaskProjectionIndex,
-  refreshDashboardTaskProjectionIndex
+  refreshDashboardTaskProjectionIndex,
+  refreshDashboardTaskProjectionIndexAsync
 } from '../../src/services/dashboard-task-projection';
 import { resolveDashboardProjectionStoreRoot } from '../../src/services/dashboard-projection-store';
 
@@ -66,6 +67,24 @@ describe('dashboard incremental task projection', () => {
     });
     expect(stored).not.toContain(root);
     expect(stored).toContain('"pathRedacted": true');
+  });
+
+  it('reports async batch progress and yield timestamps while rebuilding task projections', async () => {
+    const root = tempProject();
+    writeTask(root, 'T-0001-first', 'Done', 1);
+    writeTask(root, 'T-0002-second', 'Draft', 2);
+    writeTask(root, 'T-0003-third', 'Partial', 0);
+
+    const progress: Array<{ processed: number; total: number; lastYieldAt: string }> = [];
+    const index = await refreshDashboardTaskProjectionIndexAsync(root, new Date('2026-06-03T00:00:00.000Z'), {
+      batchSize: 1,
+      onProgress: (item) => progress.push(item)
+    });
+
+    expect(index.tasks).toHaveLength(3);
+    expect(progress.map((item) => item.processed)).toEqual([1, 2, 3]);
+    expect(progress.every((item) => item.total === 3)).toBe(true);
+    expect(progress.every((item) => typeof item.lastYieldAt === 'string' && item.lastYieldAt.length > 0)).toBe(true);
   });
 });
 

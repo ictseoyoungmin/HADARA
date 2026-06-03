@@ -76,6 +76,31 @@ export function ProvenanceBadge({ runtime }: { runtime: RuntimeState }) {
   );
 }
 
+export function ProjectionBadge({ runtime }: { runtime: RuntimeState }) {
+  const projection = runtime.projection;
+  if (!projection) return null;
+  const pending = projection.pendingSections.length;
+  const stale = projection.staleSections.length;
+  const tone: Tone =
+    projection.refreshState === 'refreshing' || projection.refreshState === 'checking'
+      ? 'info'
+      : projection.freshness === 'stale' || stale > 0
+        ? 'warn'
+        : pending > 0
+          ? 'muted'
+          : 'ok';
+  const parts = [
+    projection.refreshState === 'refreshing' || projection.refreshState === 'checking' ? projection.refreshState : projection.freshness,
+    pending > 0 ? `${pending} pending` : null,
+    stale > 0 ? `${stale} stale` : null
+  ].filter(Boolean);
+  return (
+    <span class={`provenance provenance-${tone}`} title={`Pending: ${projection.pendingSections.join(', ') || 'none'} · Stale: ${projection.staleSections.join(', ') || 'none'}`}>
+      {parts.join(' · ')}
+    </span>
+  );
+}
+
 // --- skeleton / states ------------------------------------------------------
 
 export function SkeletonBlock({ lines = 3, title }: { lines?: number; title?: boolean }) {

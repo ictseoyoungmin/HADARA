@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0223 is ready for the requested per-capsule commit; commit/push state should be checked before publishing. |
-| Current Phase | Dashboard refresh/read-model hardening | Phase 5.7 projection slices are complete through T-0223, with T-0224 fixing validation fallback and explicit refresh broad-scan behavior. |
-| Latest Completed Task | T-0224 Dashboard Refresh Refactor and Validation Read Model | Added a strict refresh refactor spec, shared table-first handoff validation parser, async staged refresh, core-fed timeline projection, aggregate-only dashboard debt projection, and a done-level TASK metadata gate. |
-| Active / Next Task | Next roadmap slice selection pending | Phase 5.7 is complete; select the next capsule deliberately from roadmap priorities. |
-| Validation Baseline | T-0224 Docker validation passed | `npm run dev:docker-sync-build` passed with 90 files / 589 tests and built CLI smoke `ok:true`; built dashboard refresh/latest-validation route smoke passed with `latestContainsT0096:false`; `git diff --check` passed. |
+| Branch | main | T-0225 changes are local and validated; commit/push state should be checked before publishing. |
+| Current Phase | Dashboard refresh/read-model hardening | Phase 5.7 projection slices plus cooperative refresh progress are complete through T-0225. |
+| Latest Completed Task | T-0225 Dashboard Cooperative Refresh Progress | Added refresh progress metadata, batch progress reporting, non-blocking core stale/pending metadata, and UI refresh alignment with `/api/dashboard/refresh`. |
+| Active / Next Task | Next roadmap slice selection pending | Dashboard refresh/read-model hardening is complete; select the next capsule deliberately from roadmap priorities. |
+| Validation Baseline | T-0225 Docker validation passed | Focused Docker tests passed 3 files / 22 tests; `npm run dev:docker-sync-build` passed with 90 files / 591 tests and built CLI smoke `ok:true`; built dashboard route smoke observed refresh progress and non-blocking stale core; `git diff --check` passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0225 Dashboard Cooperative Refresh Progress | Added cooperative refresh progress metadata, task projection batch progress, core stale/pending metadata during refresh, and projection-triggered UI Refresh. | T-0225 evidence: focused Docker tests passed 3 files / 22 tests; Docker sync-build passed 90 files / 591 tests; built route smoke observed `currentStage`, `processed/total`, `lastYieldAt`, and non-blocking stale core. |
 | T-0224 Dashboard Refresh Refactor and Validation Read Model | Fixed latest validation read-model fallback, refactored explicit dashboard refresh stages, and added a done-level TASK metadata gate. | T-0224 evidence: Docker sync-build passed 90 files / 589 tests; built route smoke passed with refresh completion and `latestContainsT0096:false`; close audit passed. |
 | T-0223 Projection Validation and Visual/A11y States | Added projection route fixtures and visual/a11y states for projection-ready/detail/stale/refreshing/missing/offline/degraded. | T-0223 evidence: Docker sync-build, dashboard build, visual/a11y gate, selected-detail/evidence-label/table parsing smokes, and close audit passed. |
-| T-0222 Frontend Core + Heavy Merge | Updated authored frontend data flow to core-first and projection heavy backfills. | T-0222 evidence: Docker sync-build, dashboard build, selected-detail/evidence-label/table parsing smokes, and close audit passed. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| Host workspace has no `node_modules`. | Host `npm run build`, host `vitest`, and host dashboard build remain unreliable without installing dependencies. | Use the reusable Docker workflow for validation/build or install dependencies intentionally before host validation. |
-| Manual dashboard projection refresh has synchronous work inside yielded stages. | Explicit `/api/dashboard/refresh` now yields between task, heavy, and core stages, but an individual stage can still block on `/mnt/f` metadata scans. | Serve-start warmup avoids this heavy path by scheduling delayed core-only refresh; future core refactor should chunk task discovery/stat walks or offload projection rebuilds if this remains visible. |
+| Host `node_modules` is ignored local state and not the validation baseline. | This workspace may have host dependencies from local attempts, but reproducible validation should not depend on them. | Use the reusable Docker workflow for validation/build; treat host dependency state as disposable. |
+| Full dashboard projection freshness proof remains cheap-metadata based. | Projection status can report stale/unknown rather than proving freshness through expensive broad scans. | Keep `/api/dashboard/core` non-blocking; add per-source manifests in a future slice only if operators need stronger freshness proof. |
 | Dashboard selected-detail fast path avoids global protocol doctors. | Capsule detail now stays responsive by using selected-task fast workbench data and task-scoped timeline events, so it does not prove all closure-grade protocol checks by itself. | Use `task ready`, `task close`, and `task audit-close` for closure-grade validation before closing capsules. |
 | Dashboard frontend/server projection mismatch can persist until server restart. | Rebuilt `dist` and served HTML are current, but an already-running dashboard process can keep old code in memory and regenerate old projections. | Restart the dashboard server after CLI/frontend changes; cached timeline route also sanitizes old header summaries defensively. |
 | Dashboard debt projection is aggregate-only. | `/api/dashboard/debt` no longer performs full capsule-size or premature-acceptance scans during dashboard refresh. | Use operational-debt/release read models for deep debt diagnostics; dashboard debt remains a fast aggregate projection. |
@@ -44,13 +44,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Select the next roadmap slice. | Phase 5.7 projection redesign is complete through T-0223, with validation gaps explicitly carried forward. | Review `docs/ROADMAP.md`, `docs/DEVELOPMENT_SLICES.md`, and T-0223 TESTS/RISKS before opening the next capsule. |
+| Select the next roadmap slice. | Dashboard refresh/read-model hardening is complete through T-0225. | Review `docs/ROADMAP.md`, `docs/DEVELOPMENT_SLICES.md`, and current known problems before opening the next capsule. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Full repository check | Docker `npm run dev:docker-sync-build` passed with 90 files and 589 tests during T-0224. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`; done-level harness now blocks `TASK.md` Created/Updated metadata placeholders. |
+| Full repository check | Docker `npm run dev:docker-sync-build` passed with 90 files and 591 tests during T-0225. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`. |
+| Dashboard cooperative refresh smoke | Built route smoke accepted `/api/dashboard/refresh`, observed progress with `currentStage: task-signals`, `processed:25`, `total:225`, `lastYieldAt`, and core returned stale/pending metadata while refresh was running. | Confirms core does not wait for refresh completion and refresh status is observable. |
 | Dashboard refresh/latest validation smoke | Built route smoke accepted `/api/dashboard/refresh`, completed one refresh run, reported core/timeline/debt projections present, and returned latest validation fields without T-0096 fallback. | Confirms the reported stale `Latest full validation` read-model issue is fixed. |
 | Dashboard selected-detail/table parsing smoke | Built `dist` smoke returned T-0223 detail `statusCode:200`, `ok:true`, `closeState:closed-valid` in 1852 ms, with no global `Status snapshot read` timeline event; core handoff summaries returned data rows instead of Markdown table headers. | Confirms the reported `Detail unavailable`/long skeleton path and `| Area | State | Notes |` summary leak were fixed. |
 | Dashboard evidence-label/timeline projection smoke | Built `dist` smoke returned first T-0223 evidence record as `kind: command-log`, `result: passed`, `visibility: public`; projected timeline handoff/next events returned data-row summaries instead of Markdown table headers. | Confirms the reported `record-1 unknown public` and timeline projection header leak were fixed in server payloads and frontend normalization. |

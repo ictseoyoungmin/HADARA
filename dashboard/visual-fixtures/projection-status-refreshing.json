@@ -14,7 +14,11 @@
     "startedAt": "2026-06-02T00:00:03.000Z",
     "finishedAt": null,
     "lastError": null,
-    "runs": 1
+    "runs": 1,
+    "currentStage": "task-signals",
+    "processed": 25,
+    "total": 224,
+    "lastYieldAt": "2026-06-02T00:00:03.500Z"
   },
   "projections": {
     "core": {

@@ -32,6 +32,13 @@ export interface CacheMeta {
   expiresAt: string | null;
 }
 
+export interface ProjectionMeta {
+  freshness: 'fresh' | 'stale' | 'missing' | 'unknown';
+  refreshState: 'idle' | 'checking' | 'refreshing' | 'failed';
+  pendingSections: string[];
+  staleSections: string[];
+}
+
 export interface TimelineEvent {
   id: string;
   order: number;
@@ -55,6 +62,7 @@ export interface RecentTask {
 export interface RuntimeState {
   source: SourceMeta;
   cache: CacheMeta | null;
+  projection: ProjectionMeta | null;
   ok: boolean;
   health: Health;
   project: { branch: string; phase: string };
@@ -168,6 +176,7 @@ function normalizeStatusBlock(status: AnyObj, kind: SourceKind, label: string, e
         extras?.source?.project?.fingerprint && typeof extras.source.project.fingerprint === 'string' ? extras.source.project.fingerprint : null
     },
     cache: cacheFrom(extras?.cache),
+    projection: null,
     ok: status.ok !== false,
     health: normalizeHealth(status.health),
     project: { branch: asString(project.branch, 'unknown'), phase: asString(project.phase, 'unknown') },
@@ -228,6 +237,7 @@ export function normalizeCore(report: AnyObj): RuntimeState {
   const debtSummary = (core.debtSummary ?? {}) as AnyObj;
   const activeRunSummary = (core.activeRunSummary ?? {}) as AnyObj;
   const sourceKind = report.source?.kind === 'projection' ? 'projection' : 'live-api';
+  const projection = (report.projection ?? {}) as AnyObj;
   return {
     source: {
       kind: sourceKind,
@@ -236,6 +246,12 @@ export function normalizeCore(report: AnyObj): RuntimeState {
       projectFingerprint: typeof report.source?.project?.fingerprint === 'string' ? report.source.project.fingerprint : null
     },
     cache: null,
+    projection: {
+      freshness: (['fresh', 'stale', 'missing', 'unknown'].includes(projection.freshness) ? projection.freshness : 'unknown') as ProjectionMeta['freshness'],
+      refreshState: (['idle', 'checking', 'refreshing', 'failed'].includes(projection.refreshState) ? projection.refreshState : 'idle') as ProjectionMeta['refreshState'],
+      pendingSections: asArray<string>(projection.pendingSections),
+      staleSections: asArray<string>(projection.staleSections)
+    },
     ok: report.ok !== false,
     health: normalizeHealth(core.health),
     project: { branch: 'unknown', phase: 'dashboard projection' },
@@ -414,6 +430,11 @@ export async function loadFallbackRuntime(): Promise<RuntimeState | null> {
     return normalizeOpsStatus(fixture, 'fixture-fallback', 'Sample fixture (not live data)');
   }
   return readInlineRuntime();
+}
+
+export async function triggerProjectionRefresh(): Promise<AnyObj | null> {
+  const report = await tryFetchJson('/api/dashboard/refresh');
+  return report && report.schemaVersion === 'hadara.dashboard.projection_status.v1' ? report : null;
 }
 
 export interface DebtAggregate {
