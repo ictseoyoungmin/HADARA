@@ -9,6 +9,7 @@ import dashboardTaskDetailSchemaJson from '../schemas/dashboard-task-detail.sche
 import dashboardTimelineSchemaJson from '../schemas/dashboard-timeline.schema.json';
 import evidenceLintSchemaJson from '../schemas/evidence-lint.schema.json';
 import evidenceListSchemaJson from '../schemas/evidence-list.schema.json';
+import evidenceMigrationPreviewSchemaJson from '../schemas/evidence-migration-preview.schema.json';
 import eventSchemaJson from '../schemas/event.schema.json';
 import featureSmokeSchemaJson from '../schemas/feature-smoke.schema.json';
 import installPlanSchemaJson from '../schemas/install-plan.schema.json';
@@ -84,6 +85,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.dashboard.timeline.v1': dashboardTimelineSchemaJson as JsonObject,
   'hadara.evidence.lint.v1': evidenceLintSchemaJson as JsonObject,
   'hadara.evidence.list.v1': evidenceListSchemaJson as JsonObject,
+  'hadara.evidence.migration_preview.v1': evidenceMigrationPreviewSchemaJson as JsonObject,
   'hadara.event.v1': eventSchemaJson as JsonObject,
   'hadara.featureSmoke.v1': featureSmokeSchemaJson as JsonObject,
   'hadara.install.plan.v1': installPlanSchemaJson as JsonObject,

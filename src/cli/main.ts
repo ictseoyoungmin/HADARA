@@ -28,6 +28,7 @@ Usage:
   hadara evidence add-command --task <task-id> --summary <text> [--result passed|failed|blocked|unknown] [--private|--visibility public|private] [--json]
   hadara evidence list --task <task-id> [--limit <n>] [--include-private] [--json]
   hadara evidence lint --task <task-id> [--json]
+  hadara evidence migrate --task <task-id> --to v2 [--json]
   hadara debt list [--json]
   hadara debt show <id> [--json]
   hadara protocol doctor [--json]

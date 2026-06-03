@@ -2,6 +2,7 @@ import { appendEvidence, EvidenceRecord, persistedEvidenceKind, persistedEvidenc
 import { createEvidenceCollectReport } from './evidence-json';
 import { createEvidenceLintReport } from '../services/evidence-lint';
 import { createEvidenceListReport } from '../services/evidence-list';
+import { createEvidenceMigrationPreviewReport } from '../services/evidence-migration';
 import { getFlag, getIntegerOption, getRequiredStringOption, getStringOption } from './args';
 
 export interface EvidenceCommandInput {
@@ -40,6 +41,26 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
       console.log(JSON.stringify(report, null, 2));
     } else {
       console.log(`[HADARA] evidence lint ${taskId}: ${report.ok ? 'ok' : 'issues'}`);
+      for (const issue of report.issues) {
+        console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
+      }
+    }
+    if (!report.ok) process.exitCode = 6;
+    return true;
+  }
+
+  if (sub === 'migrate') {
+    const taskId = getRequiredStringOption(input.args, '--task');
+    const report = createEvidenceMigrationPreviewReport({
+      projectRoot: input.projectRoot,
+      taskId,
+      toVersion: getStringOption(input.args, '--to', 'v2') ?? 'v2',
+      execute: getFlag(input.args, '--execute')
+    });
+    if (input.jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log(`[HADARA] evidence migrate ${taskId}: ${report.ok ? 'ok' : 'issues'} | planned ${report.summary.plannedTransforms} | skipped ${report.summary.skippedRecords}`);
       for (const issue of report.issues) {
         console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
       }

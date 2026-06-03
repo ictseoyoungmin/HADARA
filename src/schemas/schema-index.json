@@ -44,6 +44,13 @@
       "notes": "Documents read-only evidence index lint reports for early Task Capsule evidence drift detection."
     },
     {
+      "id": "hadara.evidence.migration_preview.v1",
+      "path": "src/schemas/evidence-migration-preview.schema.json",
+      "status": "fixture",
+      "owner": "services/evidence-migration",
+      "notes": "Documents dry-run-first per-task Evidence v2 migration preview reports without rewriting evidence files."
+    },
+    {
       "id": "hadara.context.export.v1",
       "path": "src/schemas/context-export.schema.json",
       "status": "fixture",

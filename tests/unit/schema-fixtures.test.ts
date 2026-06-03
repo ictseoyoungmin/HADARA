@@ -35,6 +35,7 @@ describe('schema fixtures', () => {
       'hadara.event.v1',
       'hadara.evidence.lint.v1',
       'hadara.evidence.list.v1',
+      'hadara.evidence.migration_preview.v1',
       'hadara.featureSmoke.v1',
       'hadara.install.plan.v1',
       'hadara.packageSmoke.v1',

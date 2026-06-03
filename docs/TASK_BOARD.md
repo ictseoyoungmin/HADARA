@@ -235,3 +235,4 @@
 | T-0232 | TUI Overview Markdown Table Preview Cleanup | Done | tasks/T-0232-tui-overview-markdown-table-preview-cleanup | Also fixes Detail table cells with inline-code or escaped pipe characters. |
 | T-0233 | Evidence v2 Persisted ID Writer MVP | Done | tasks/T-0233-evidence-v2-persisted-id-writer-mvp | |
 | T-0234 | Evidence v2 Release Read Model Compatibility | Done | tasks/T-0234-evidence-v2-release-read-model-compatibility | |
+| T-0235 | Evidence v2 Migration Preview | Done | tasks/T-0235-evidence-v2-migration-preview | |

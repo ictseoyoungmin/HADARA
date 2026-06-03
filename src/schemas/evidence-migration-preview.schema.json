@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.evidence.migration_preview.v1",
+  "x-hadara-schema-id": "hadara.evidence.migration_preview.v1",
+  "type": "object",
+  "required": ["schemaVersion", "command", "ok", "mode", "executeSupported", "taskId", "projectRoot", "targetVersion", "summary", "transforms", "skipped", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.evidence.migration_preview.v1" },
+    "command": { "const": "evidence.migrate" },
+    "ok": { "type": "boolean" },
+    "mode": { "enum": ["dry-run", "execute"] },
+    "executeSupported": { "const": false },
+    "taskId": { "type": "string", "minLength": 1 },
+    "projectRoot": { "type": "string", "minLength": 1 },
+    "targetVersion": { "const": "hadara.evidence.v2" },
+    "evidencePath": { "type": "string", "minLength": 1 },
+    "beforeHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "summary": {
+      "type": "object",
+      "required": ["totalLines", "v1Records", "v2Records", "plannedTransforms", "skippedRecords"],
+      "properties": {
+        "totalLines": { "type": "integer", "minimum": 0 },
+        "v1Records": { "type": "integer", "minimum": 0 },
+        "v2Records": { "type": "integer", "minimum": 0 },
+        "plannedTransforms": { "type": "integer", "minimum": 0 },
+        "skippedRecords": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "transforms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["line", "action", "fromSchemaVersion", "toSchemaVersion", "plannedId", "plannedFingerprint", "plannedRecord"],
+        "properties": {
+          "line": { "type": "integer", "minimum": 1 },
+          "action": { "const": "convert-v1-to-v2" },
+          "fromSchemaVersion": { "const": "hadara.evidence.v1" },
+          "toSchemaVersion": { "const": "hadara.evidence.v2" },
+          "plannedId": { "type": "string", "pattern": "^ev:T-[0-9]{4}:[a-f0-9]{24}$" },
+          "plannedFingerprint": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+          "plannedRecord": {
+            "type": "object",
+            "required": ["schemaVersion", "id", "sourceLine", "fingerprint", "idSource", "idStability", "time", "taskId", "category", "outcome", "visibility", "summary", "artifacts", "tags", "legacy"],
+            "properties": {
+              "schemaVersion": { "const": "hadara.evidence.v2" },
+              "id": { "type": "string", "minLength": 1 },
+              "sourceLine": { "type": "integer", "minimum": 1 },
+              "fingerprint": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+              "idSource": { "const": "persisted" },
+              "idStability": { "const": "durable" },
+              "time": { "type": "string", "minLength": 1 },
+              "taskId": { "type": "string", "minLength": 1 },
+              "category": { "type": "string", "minLength": 1 },
+              "outcome": { "type": "string", "minLength": 1 },
+              "visibility": { "enum": ["public", "private"] },
+              "summary": { "type": "string" },
+              "artifacts": { "type": "array" },
+              "tags": { "type": "array", "items": { "type": "string" } },
+              "legacy": { "type": "object" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "skipped": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["line", "reason", "message"],
+        "properties": {
+          "line": { "type": "integer", "minimum": 1 },
+          "reason": { "enum": ["already-v2", "invalid-json", "unsupported-schema", "invalid-v1", "task-mismatch"] },
+          "message": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "enum": ["warning", "error"] },
+          "code": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 },
+          "line": { "type": "integer", "minimum": 1 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
