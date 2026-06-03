@@ -4,10 +4,10 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0232 follow-up changes are local, validated, closed, and ready to commit. |
-| Current Phase | Dashboard paused after Phase 5.7; TUI `/mnt/f` snapshot target met and Overview/Detail table rendering cleanup complete | T-0232 removes raw Markdown table header/delimiter noise from compact Overview cards and keeps Detail table cells stable when inline code contains pipe characters. |
+| Branch | main | T-0232 follow-up is committed as `0501b7b`; current docs are being aligned for the next roadmap slice. |
+| Current Phase | Dashboard/TUI UI work paused; return to roadmap value work | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
 | Latest Completed Task | T-0232 TUI Overview Markdown Table Preview Cleanup | Overview preview extraction now summarizes Markdown table data rows, fast TUI handoff status uses shared table-aware parsing, and Detail table parsing keeps inline-code/escaped pipes inside cells. |
-| Active / Next Task | Return to roadmap value work | The reported `| Goal | Notes |`, `| Step | Reason |`, and `| Time | Kind | Summary |` card noise is fixed and covered by focused tests. |
+| Active / Next Task | Evidence v2 writer / persisted evidence IDs, or finish/close workflow hardening if evidence writer scope is too large | UI polishing is no longer the default path; the next work should strengthen HADARA's core evidence/task lifecycle value. |
 | Validation Baseline | T-0232 Docker validation passed | Focused TUI/status Docker tests passed 4 files / 35 tests; `npm run dev:docker-sync-build` passed with 91 files / 598 tests and built CLI smoke `ok:true`; built Detail TESTS.md smoke showed no bogus pipe-created columns. |
 
 ## Last 3 Completed Tasks
@@ -27,12 +27,14 @@
 | Dashboard selected-detail fast path avoids global protocol doctors. | Capsule detail now stays responsive by using selected-task fast workbench data and task-scoped timeline events, so it does not prove all closure-grade protocol checks by itself. | Use `task ready`, `task close`, and `task audit-close` for closure-grade validation before closing capsules. |
 | Dashboard frontend/server projection mismatch can persist until server restart. | Rebuilt `dist` and served HTML are current, but an already-running dashboard process can keep old code in memory and regenerate old projections. | Restart the dashboard server after CLI/frontend changes; cached timeline route also sanitizes old header summaries defensively. |
 | Dashboard work is paused after Phase 5.7 refresh/read-model hardening. | Dashboard is usable as an operator observation surface, but further optimization could consume roadmap time. | Deferred dashboard items are refresh stage budget/streaming task scan, stronger projection freshness manifest, mounted-filesystem performance optimization, optional worker-thread projection rebuild, and deeper productization only if needed. |
+| Dashboard/TUI UI work is paused. | Continuing visual polish or performance tuning can displace higher-value evidence/task lifecycle work. | Do not continue dashboard or terminal UI work unless a concrete operator blocker appears. |
 | Dashboard task-signals refresh remains filesystem-bound on mounted workspaces. | T-0226 measurement showed `/workspace` task-signals took 3780 ms while a `/tmp` copy took 147 ms; core stayed responsive but refresh duration is still dominated by task metadata reads on the mounted filesystem. | Do not continue dashboard optimization by default; return only if operator usage requires streaming scan, worker offload, or stricter freshness manifests. |
 | Lazy CLI imports make command-family coverage important. | Handler import path errors now surface when that command dispatches, not at process startup. | Full Docker suite passed; add targeted tests if future handler files move. |
 | Fast TUI selected proof lint is deferred. | Snapshot/fast initial reads show proof as unknown/pending instead of waiting for evidence lint/list scans. | Full selected detail still uses `createDashboardTaskDetailReport()`; interactive detail refresh can load full proof when needed. |
 | TUI task list source-of-truth is projection/Task Board first. | Deleting a task capsule directory without updating Task Board/projection can leave a stale row visible. | Treat as protocol drift; use task workflow/protocol doctor validation to repair source-of-truth. |
 | TUI Overview table previews are concise by design. | Secondary table columns may not appear in compact cards. | Use Detail panel for full table rendering. |
 | TUI table cells treat raw unescaped pipes as Markdown separators. | Literal pipe characters outside inline code spans or escaped pipes can still create extra columns. | Write literal pipe examples as inline code spans or escaped pipes in table cells. |
+| TUI fast/full mode contract is implementation-real but under-documented. | Future TUI work may blur fast startup semantics versus full proof/debt/release reads. | Defer documentation until TUI work resumes, unless a consumer needs the contract sooner. |
 | Dashboard debt projection is aggregate-only. | `/api/dashboard/debt` no longer performs full capsule-size or premature-acceptance scans during dashboard refresh. | Use operational-debt/release read models for deep debt diagnostics; dashboard debt remains a fast aggregate projection. |
 | HADARA-dev has multiple CLI execution paths. | `/tmp/hadara/dist` may be fresh while `/workspace/dist` or container-global `/usr/local/bin/hadara` is stale, causing agents to test old CLI behavior. | For CLI changes, build in Docker, refresh `/workspace/dist` from `/tmp/hadara/dist`, and run final smokes via `node /workspace/dist/cli/main.js ... --project /workspace` or explicitly via `/tmp/hadara/dist/cli/main.js`; do not assume global `hadara` is current. |
 | Existing historical capsules mostly use legacy frames. | This is expected and should not fail validation solely for not using v2 tables. | Future `task upgrade-scaffold` / remediation work must be non-destructive and dry-run-first. |
@@ -52,7 +54,8 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Commit T-0232 follow-up, then return to roadmap value work. | T-0232 implementation, validation, close, and audit are complete. | T-0232 capsule docs |
+| Open the next core-value capsule around Evidence v2 writer / persisted evidence IDs. | Legacy evidence ids, writer-v1 persistence, and migration-preview gaps now matter more than additional UI polish. | Use `docs/EVIDENCE_V2_WRITER_MIGRATION_PLAN.md` as the starting point. |
+| If Evidence v2 scope is too large for one capsule, start with finish/ready/close/audit workflow hardening. | Finish remains advisory-heavy and close validation has a known fixed-point model; this is the next strongest core lifecycle value after durable evidence identity. | Use `docs/TASK_WORKFLOW_COMMANDS.md` and recent close/audit evidence behavior. |
 
 ## Validation Baseline
 

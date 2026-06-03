@@ -56,6 +56,18 @@ Phase 5 should turn the existing served static dashboard into a live read-only H
 
 Phase 5 is complete through T-0196 and Phase 5.5 Dashboard production-readiness is complete through T-0204, with T-0206 follow-up hardening for project-isolated cache keys, redacted project source references, and sidebar view switching. The local operator console now has aggregate bootstrap and selected-task detail read models, progressive frontend loading, process-memory TTL cache metadata, degraded refresh behavior that keeps the last in-memory successful view, timeline identity hardening, optional memory-only polling after cache/detail behavior is stable, and a final production-readiness boundary audit in `docs/DASHBOARD_PRODUCTION_READINESS_REVIEW.md`. The Dashboard boundary remains read-only: no shell execution, provider calls, MCP writes, evidence/task/handoff mutation, release/package execution, database, file watcher, committed cache, browser project-state storage, default SSE/WebSocket stream, auto-remediation, or multi-agent concurrency claim. Browser-facing aggregate reports now include redacted project fingerprints; legacy `source.projectRoot` remains a v1 compatibility field pending a future contract revision.
 
+Phase 5.7 dashboard projection/read-model hardening and TUI shared-read-model alignment are now sufficient for current operator observation needs. Dashboard and TUI UI work is paused after T-0232. Do not continue polishing dashboards or terminal UI unless a concrete operator blocker appears. Deferred UI/performance items are dashboard streaming task scan, dashboard projection freshness manifests, TUI fast/full mode contract documentation, deeper tab-by-tab TUI productization, and visual/detail polish only after core workflows progress.
+
+The next roadmap emphasis should return to HADARA's core evidence and task lifecycle value. Preferred order:
+
+1. Evidence v2 writer / persisted evidence IDs.
+2. Task finish / ready / close / audit workflow hardening.
+3. Task capsule upgrade/remediation dry-run.
+4. Release/package readiness hardening.
+5. Hermes/MCP integration polish.
+
+Evidence v2 writer work is the strongest next candidate because legacy generated evidence ids remain unstable compatibility read-model ids, the writer still persists v1 records, and migration-preview behavior is already planned but not implemented. If that scope is too large for one capsule, start with a smaller finish/close workflow hardening capsule that reduces manual completion bookkeeping while preserving dry-run-first and bounded-write guarantees.
+
 ## v0.4 Single-Agent Run State
 
 Track the active task/run explicitly so agents do not infer current work only from the last visible capsule or compact handoff.
@@ -137,7 +149,7 @@ Candidate scope:
 - Keyboard-first navigation, search, refresh, clean shutdown, and optional mouse selection.
 - No shell execution, provider calls, MCP calls, evidence writes, task mutation, handoff updates, release/package execution, or committed UI state.
 
-Status: design alignment is complete in T-0099; production implementation remains deferred.
+Status: production TUI work has progressed through projection-first shared read models, `/mnt/f` snapshot startup improvements, lazy CLI loading, and Overview/Detail Markdown table cleanup through T-0232. The TUI is paused as a read-only operator observation surface; future TUI work should be limited to concrete operator blockers or documented core workflow needs.
 
 ## v1.0 Candidate
 
