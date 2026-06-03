@@ -1,5 +1,7 @@
 import { createActiveRunResumeReport, ActiveRunResumeReport } from '../services/active-run-state';
 import { safeCreateActiveRunProjection } from '../services/active-run-state';
+import { createDashboardCoreReport, DashboardCoreReport } from '../services/dashboard-core';
+import { createDashboardProjectionStatusReport, DashboardProjectionStatusReport } from '../services/dashboard-refresh';
 import { createEvidenceListReport, EvidenceListReport } from '../services/evidence-list';
 import { createOperationalDebtReport, createReleaseGateReport, OperationalDebtReport, ReleaseGateReport } from '../services/operational-debt';
 import { createOpsStatusReport, OpsStatusReport } from '../services/operations-status-service';
@@ -21,6 +23,8 @@ export interface TuiReadModelOptions {
 export interface TuiReadModelIssue {
   source:
     | 'status'
+    | 'operator-core'
+    | 'operator-projection'
     | 'active-run-resume'
     | 'task-detail'
     | 'evidence'
@@ -46,6 +50,11 @@ export interface TuiReadModel {
     health: OpsStatusReport['health'];
     phase: string;
     branch: string;
+  };
+  operator: {
+    source: 'shared-dashboard-services';
+    core: DashboardCoreReport;
+    projectionStatus: DashboardProjectionStatusReport;
   };
   status: OpsStatusReport;
   tasks: TaskListReport;
@@ -84,6 +93,52 @@ export function createTuiLoadingReadModel(): TuiReadModel {
       health: 'loading' as OpsStatusReport['health'],
       phase: 'loading read models',
       branch: '...'
+    },
+    operator: {
+      source: 'shared-dashboard-services',
+      core: ({
+        schemaVersion: 'hadara.dashboard.core.v1',
+        command: 'dashboard.core',
+        ok: true,
+        generatedAt,
+        source: {
+          kind: 'live-api',
+          label: 'Loading dashboard core',
+          projectRootRedacted: true,
+          project: { kind: 'project-root', pathRedacted: true, fingerprint: 'loading' }
+        },
+        projection: {
+          freshness: 'unknown',
+          completeness: 'unknown',
+          refreshState: 'checking',
+          generatedAt: null,
+          pendingSections: ['core'],
+          staleSections: [],
+          sourceSignals: {
+            taskBoard: 'unknown',
+            handoff: 'unknown',
+            projectState: 'unknown',
+            capsules: 'unknown',
+            debt: 'unknown'
+          }
+        },
+        core: {
+          health: 'unknown',
+          taskSummary: {
+            total: 0,
+            counts: { done: 0, draft: 0, partial: 0, superseded: 0, inProgress: 0, unknown: 0 },
+            lastCompleted: [],
+            nextRecommended: null,
+            recent: []
+          },
+          handoffSummary: { currentState: [], knownProblems: [], nextRecommendedStep: [] },
+          activeRunSummary: { ok: true, present: false, taskId: null, status: null, staleReason: null, issues: 0 },
+          validationSummary: { latestFullCheck: null, latestDoneLevelValidation: null },
+          debtSummary: { pending: true }
+        },
+        issues: []
+      } as unknown) as DashboardCoreReport,
+      projectionStatus: createLoadingProjectionStatusReport(generatedAt)
     },
     status: ({
       schemaVersion: 'hadara.ops.status.v1',
@@ -195,6 +250,7 @@ export function createTuiLoadingReadModel(): TuiReadModel {
 export function createTuiReadModel(projectRoot: string, options: TuiReadModelOptions = {}): TuiReadModel {
   if (options.profile === 'fast') return createTuiFastReadModel(projectRoot, options);
 
+  const operator = createTuiOperatorReadModel(projectRoot);
   const status = createOpsStatusReport(projectRoot);
   const tasks = createTaskListReport(projectRoot);
   const selectedTaskId = resolveSelectedTaskId(tasks.tasks, status, options.selectedTaskId);
@@ -219,6 +275,7 @@ export function createTuiReadModel(projectRoot: string, options: TuiReadModelOpt
   const overview = createOverview(projectRoot, tasks.tasks, selectedTask, status, options.includePrivateEvidence);
   const issues = collectIssues({
     status,
+    operator,
     activeRunResume,
     selectedTask,
     releaseGate,
@@ -234,6 +291,7 @@ export function createTuiReadModel(projectRoot: string, options: TuiReadModelOpt
     generatedAt: new Date().toISOString(),
     selectedTaskId,
     overview,
+    operator,
     status,
     tasks,
     selectedTask,
@@ -250,6 +308,7 @@ export function createTuiReadModel(projectRoot: string, options: TuiReadModelOpt
 }
 
 export function createTuiFastReadModel(projectRoot: string, options: TuiReadModelOptions = {}): TuiReadModel {
+  const operator = createTuiOperatorReadModel(projectRoot);
   const sources = readProjectSources(projectRoot);
   const tasks = createTaskListReport(projectRoot);
   const activeRunProjection = safeCreateActiveRunProjection(projectRoot);
@@ -276,8 +335,9 @@ export function createTuiFastReadModel(projectRoot: string, options: TuiReadMode
   };
   const issues = [
     ...collectIssues({
-      status,
-      activeRunResume,
+    status,
+    operator,
+    activeRunResume,
       selectedTask,
       releaseGate: createDeferredReleaseGateReport(),
       writePreview: createDeferredWritePreflightReport(),
@@ -294,6 +354,7 @@ export function createTuiFastReadModel(projectRoot: string, options: TuiReadMode
     generatedAt: new Date().toISOString(),
     selectedTaskId,
     overview: createOverview(projectRoot, tasks.tasks, selectedTask, status, options.includePrivateEvidence),
+    operator,
     status,
     tasks,
     selectedTask,
@@ -306,6 +367,56 @@ export function createTuiFastReadModel(projectRoot: string, options: TuiReadMode
     tools: createDeferredToolsListReport(),
     writePreview: createDeferredWritePreflightReport(),
     issues
+  };
+}
+
+function createTuiOperatorReadModel(projectRoot: string): TuiReadModel['operator'] {
+  const projectionStatus = createDashboardProjectionStatusReport(projectRoot);
+  return {
+    source: 'shared-dashboard-services',
+    projectionStatus,
+    core: createDashboardCoreReport(projectRoot, {
+      projectionFreshness: projectionStatus.projections.core.freshness,
+      refreshState: projectionStatus.refresh.state,
+      pendingSections: projectionStatus.pendingSections,
+      staleSections: projectionStatus.staleSections,
+      writeProjection: false
+    })
+  };
+}
+
+function createLoadingProjectionStatusReport(generatedAt: string): DashboardProjectionStatusReport {
+  return {
+    schemaVersion: 'hadara.dashboard.projection_status.v1',
+    command: 'dashboard.projection.status',
+    ok: true,
+    generatedAt,
+    project: { kind: 'project-root', pathRedacted: true, fingerprint: 'loading' },
+    refresh: {
+      state: 'checking',
+      reason: null,
+      startedAt: null,
+      finishedAt: null,
+      lastError: null,
+      runs: 0,
+      currentStage: null,
+      stageStartedAt: null,
+      stageFinishedAt: null,
+      stageDurationMs: null,
+      processed: null,
+      total: null,
+      lastYieldAt: null,
+      stageDurations: [],
+      slowStageWarnings: []
+    },
+    projections: {
+      core: { present: false, generatedAt: null, freshness: 'unknown', completeness: 'unknown' },
+      timeline: { present: false, generatedAt: null, freshness: 'unknown' },
+      debt: { present: false, generatedAt: null, freshness: 'unknown' }
+    },
+    pendingSections: ['core'],
+    staleSections: [],
+    issues: []
   };
 }
 
@@ -409,10 +520,13 @@ function collectIssues(input: {
   selectedTask: TuiReadModel['selectedTask'];
   releaseGate: ReleaseGateReport;
   writePreview: WritePreflightReport;
+  operator: TuiReadModel['operator'];
   selectedTaskId: string | null;
   explicitSelectedTaskId: string | null;
 }): TuiReadModelIssue[] {
   const issues: TuiReadModelIssue[] = [
+    ...input.operator.core.issues.map((issue) => ({ source: 'operator-core' as const, ...issue })),
+    ...input.operator.projectionStatus.issues.map((issue) => ({ source: 'operator-projection' as const, ...issue })),
     ...input.status.issues.map((issue) => ({ source: 'status' as const, ...issue })),
     ...input.activeRunResume.issues.map((issue) => ({ source: 'active-run-resume' as const, ...issue })),
     ...input.releaseGate.issues.map((issue) => ({ source: 'release-gate' as const, ...issue })),

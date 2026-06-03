@@ -44,6 +44,7 @@ describe('TUI snapshot renderer', () => {
       expect(snapshot.lines.every((line) => visibleWidth(line) === 92)).toBe(true);
       expect(snapshot.text).not.toMatch(/\x1b\[/);
       expect(snapshot.text).toContain('HADARA Work Console');
+      expect(snapshot.text).toContain('source live-api refresh idle pending');
       expect(snapshot.text).not.toContain(model.generatedAt);
     }
 

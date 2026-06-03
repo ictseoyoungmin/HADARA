@@ -190,9 +190,10 @@ function renderHeader(
   options: { includeGeneratedAt: boolean; theme: TuiThemeName; loading: boolean }
 ): string[] {
   const selected = model.selectedTask;
+  const operatorLine = formatOperatorLine(model);
   const projectLine = options.includeGeneratedAt
-    ? `branch ${model.overview.branch}  mode local  generated ${model.generatedAt}`
-    : `branch ${model.overview.branch}  mode local`;
+    ? `branch ${model.overview.branch}  mode local  generated ${model.generatedAt}  ${operatorLine}`
+    : `branch ${model.overview.branch}  mode local  ${operatorLine}`;
   const title = `${tuiFg(options.theme, 'gold2', 'HADARA')} ${tuiFg(options.theme, 'text', 'Work Console')} ${tuiFg(options.theme, 'muted', '·')} ${colorBadge(String(model.overview.health).toUpperCase(), statusThemeRole(model.overview.health), options.theme)} ${colorBadge('READ ONLY', 'pass', options.theme)}`;
   return [
     colorDivider(width, options.theme),
@@ -201,6 +202,18 @@ function renderHeader(
     fitAnsi(`${tuiFg(options.theme, 'muted', options.loading ? 'loading' : 'task')} ${tuiFg(options.theme, 'gold2', model.selectedTaskId ?? '-')} ${tuiFg(options.theme, 'text2', selected?.summary.title ?? 'no task')}  ${tuiFg(options.theme, 'muted', 'doc')} ${tuiFg(options.theme, 'teal2', document.file)}`, width),
     colorDivider(width, options.theme)
   ];
+}
+
+function formatOperatorLine(model: TuiReadModel): string {
+  const projection = model.operator.projectionStatus;
+  const refresh = projection.refresh;
+  const progress =
+    refresh.currentStage && refresh.processed !== null && refresh.total !== null
+      ? `${refresh.currentStage} ${refresh.processed}/${refresh.total}`
+      : refresh.currentStage ?? refresh.state;
+  const pending = projection.pendingSections.length ? `pending ${projection.pendingSections.join(',')}` : 'pending none';
+  const stale = projection.staleSections.length ? `stale ${projection.staleSections.join(',')}` : null;
+  return ['source', model.operator.core.source.kind, 'refresh', progress, pending, stale].filter(Boolean).join(' ');
 }
 
 function renderNav(activePanel: TuiSnapshotPanel, width: number, theme: TuiThemeName, hitboxes: TuiHitbox[], startX: number, startY: number): string[] {

@@ -66,6 +66,23 @@ describe('TUI read-model aggregator', () => {
           count: 1
         }
       },
+      operator: {
+        source: 'shared-dashboard-services',
+        core: {
+          schemaVersion: 'hadara.dashboard.core.v1',
+          command: 'dashboard.core',
+          source: {
+            kind: 'live-api'
+          },
+          projection: {
+            refreshState: 'idle'
+          }
+        },
+        projectionStatus: {
+          schemaVersion: 'hadara.dashboard.projection_status.v1',
+          command: 'dashboard.projection.status'
+        }
+      },
       activeRun: {
         resume: {
           schemaVersion: 'hadara.active_run.resume.v1',
@@ -86,6 +103,8 @@ describe('TUI read-model aggregator', () => {
       }
     });
     expect(model.tasks.count).toBe(2);
+    expect(model.operator.core.projection.pendingSections).toContain('timeline');
+    expect(model.operator.projectionStatus.pendingSections).toContain('core');
     expect(model.tasks.tasks.map((task) => task.id)).toEqual([first.id, second.id]);
     expect(model.overview.currentDetail?.files?.['TASK.md']).toContain('Later task');
     expect(model.overview.previousDetail?.files?.['TASK.md']).toContain('Active TUI task');
@@ -118,6 +137,8 @@ describe('TUI read-model aggregator', () => {
     const model = createTuiReadModel(root, { profile: 'fast' });
 
     expect(model.ok).toBe(true);
+    expect(model.operator.source).toBe('shared-dashboard-services');
+    expect(model.operator.projectionStatus.refresh.state).toBe('idle');
     expect(model.selectedTaskId).toBe(task.id);
     expect(model.overview.currentWork?.id).toBe(task.id);
     expect(model.selectedTask?.detail.files?.['TASK.md']).toContain('Fast aggregate task');

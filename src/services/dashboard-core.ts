@@ -88,6 +88,7 @@ export interface DashboardCoreTaskSummary {
 
 export interface DashboardCoreOptions {
   bypassProjection?: boolean;
+  writeProjection?: boolean;
   projectionFreshness?: DashboardCoreReport['projection']['freshness'];
   refreshState?: DashboardCoreReport['projection']['refreshState'];
   pendingSections?: string[];
@@ -108,6 +109,7 @@ export function createDashboardCoreReport(projectRoot: string, options: Dashboar
   }
 
   const report = createLiveDashboardCoreReport(projectRoot, now);
+  if (options.writeProjection === false) return report;
   try {
     writeDashboardProjection({ projectRoot }, createDashboardProjectionRecord(projectRoot, 'core', 'index', report, report.generatedAt));
   } catch (error) {

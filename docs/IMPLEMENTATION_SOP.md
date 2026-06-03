@@ -45,6 +45,7 @@ This repository operates as the `governed` HADARA profile because it has long-li
 | `docs/specs/dashboard/HADARA_Dashboard_Phase5_Development_Plan.md` | Phase 5 dashboard live binding, operator-console layout, selected-task evidence lens, or timeline read-model work only | Source design for the Phase 5 read-only Dashboard / Operator Console sequence. |
 | `docs/specs/dashboard/HADARA_Dashboard_Phase5_5_Production_Development_Plan.md` | Phase 5.5 dashboard production-readiness, aggregate bootstrap/detail, cache, progressive loading, or degraded UX work only | Source design for the production-level responsive local operator console follow-up after T-0196. |
 | `docs/DASHBOARD_REFRESH_RESPONSIVENESS_MEASUREMENT.md` | Dashboard refresh responsiveness, projection progress, or stage duration measurement work only | Operational command and interpretation guide for refresh responsiveness measurements. |
+| `docs/specs/tui/HADARA_TUI_Shared_Operator_Read_Model_Spec.md` | TUI read-model, projection status, cache, task detail, timeline/debt, or evidence-proof display work only | Source design for projection-first TUI behavior over shared operator read models after Dashboard Phase 5.7 is paused. |
 
 When adding project-specific specs, contracts, or roadmap files, add them to this table and explain when agents must read them. Use `hadara init register-doc --path <path> --when <text> --purpose <text> --json` to preview registration, and add `--execute` to update this table.
 

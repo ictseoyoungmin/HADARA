@@ -228,3 +228,4 @@
 | T-0225 | Dashboard Cooperative Refresh Progress | Done | tasks/T-0225-dashboard-cooperative-refresh-progress | |
 | T-0226 | Dashboard Refresh Responsiveness Measurement | Done | tasks/T-0226-dashboard-refresh-responsiveness-measurement | |
 | T-0227 | Task Status History Done Gate | Done | tasks/T-0227-task-status-history-done-gate | |
+| T-0228 | TUI Projection-First Operator Read Model | Done | tasks/T-0228-tui-projection-first-operator-read-model | |
