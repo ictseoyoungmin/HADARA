@@ -34,12 +34,23 @@ export interface EvidenceMigrationPreviewReport {
   command: 'evidence.migrate';
   ok: boolean;
   mode: 'dry-run' | 'execute';
-  executeSupported: false;
+  executeSupported: boolean;
   taskId: string;
   projectRoot: string;
   targetVersion: 'hadara.evidence.v2';
   evidencePath?: string;
   beforeHash?: string;
+  afterHash?: string;
+  execution: {
+    requested: boolean;
+    writePlanned: boolean;
+    applied: boolean;
+    beforeHashExpected?: string;
+    beforeHashActual?: string;
+    afterHash?: string;
+    rewrittenRecords: number;
+    preservedRecords: number;
+  };
   summary: {
     totalLines: number;
     v1Records: number;
@@ -57,6 +68,7 @@ export function createEvidenceMigrationPreviewReport(input: {
   taskId: string;
   toVersion?: string;
   execute?: boolean;
+  beforeHash?: string;
 }): EvidenceMigrationPreviewReport {
   const mode = input.execute ? 'execute' : 'dry-run';
   const unsupportedTarget = input.toVersion && input.toVersion !== 'v2' && input.toVersion !== 'hadara.evidence.v2';
@@ -66,15 +78,23 @@ export function createEvidenceMigrationPreviewReport(input: {
     command: 'evidence.migrate',
     ok: false,
     mode,
-    executeSupported: false,
+    executeSupported: true,
     taskId: input.taskId,
     projectRoot: input.projectRoot,
     targetVersion: 'hadara.evidence.v2',
+    execution: {
+      requested: mode === 'execute',
+      writePlanned: false,
+      applied: false,
+      rewrittenRecords: 0,
+      preservedRecords: 0
+    },
     summary: { totalLines: 0, v1Records: 0, v2Records: 0, plannedTransforms: 0, skippedRecords: 0 },
     transforms: [],
     skipped: [],
     issues: []
   };
+  if (input.beforeHash) baseReport.execution.beforeHashExpected = input.beforeHash;
 
   if (unsupportedTarget) {
     baseReport.issues.push({
@@ -83,14 +103,6 @@ export function createEvidenceMigrationPreviewReport(input: {
       message: `Unsupported evidence migration target: ${input.toVersion}.`
     });
     return baseReport;
-  }
-
-  if (input.execute) {
-    baseReport.issues.push({
-      severity: 'error',
-      code: 'EVIDENCE_MIGRATION_EXECUTE_UNIMPLEMENTED',
-      message: 'Evidence migration execute is not implemented; run the dry-run preview first.'
-    });
   }
 
   if (!task) {
@@ -110,12 +122,20 @@ export function createEvidenceMigrationPreviewReport(input: {
       code: 'EVIDENCE_INDEX_MISSING',
       message: 'evidence.jsonl is missing.'
     });
+    if (input.execute) {
+      baseReport.issues.push({
+        severity: 'error',
+        code: 'EVIDENCE_MIGRATION_EVIDENCE_INDEX_MISSING',
+        message: 'Execute mode requires an existing evidence.jsonl file.'
+      });
+    }
     baseReport.ok = baseReport.issues.every((issue) => issue.severity !== 'error');
     return baseReport;
   }
 
   const content = fs.readFileSync(evidencePath, 'utf8');
   baseReport.beforeHash = `sha256:${sha256(content)}`;
+  baseReport.execution.beforeHashActual = baseReport.beforeHash;
   const lines = content.split(/\r?\n/).filter((line) => line.trim() !== '');
   baseReport.summary.totalLines = lines.length;
 
@@ -163,8 +183,64 @@ export function createEvidenceMigrationPreviewReport(input: {
 
   baseReport.summary.plannedTransforms = baseReport.transforms.length;
   baseReport.summary.skippedRecords = baseReport.skipped.length;
+
+  if (input.execute) {
+    executeMigration({ report: baseReport, evidencePath, lines, expectedBeforeHash: input.beforeHash });
+  }
+
   baseReport.ok = baseReport.issues.every((issue) => issue.severity !== 'error');
   return baseReport;
+}
+
+function executeMigration(input: { report: EvidenceMigrationPreviewReport; evidencePath: string; lines: string[]; expectedBeforeHash?: string }): void {
+  const { report, evidencePath, lines, expectedBeforeHash } = input;
+  if (!expectedBeforeHash) {
+    report.issues.push({
+      severity: 'error',
+      code: 'EVIDENCE_MIGRATION_BEFORE_HASH_REQUIRED',
+      message: 'Execute mode requires --before-hash from a current dry-run preview.'
+    });
+    return;
+  }
+  if (expectedBeforeHash !== report.beforeHash) {
+    report.issues.push({
+      severity: 'error',
+      code: 'EVIDENCE_MIGRATION_BEFORE_HASH_MISMATCH',
+      message: `Current evidence hash ${report.beforeHash ?? 'missing'} does not match expected ${expectedBeforeHash}.`
+    });
+    return;
+  }
+  const blockingSkipped = report.skipped.filter((record) => record.reason !== 'already-v2');
+  if (blockingSkipped.length > 0) {
+    report.issues.push({
+      severity: 'error',
+      code: 'EVIDENCE_MIGRATION_SKIPPED_RECORDS_BLOCK_EXECUTE',
+      message: `Execute mode refused because ${blockingSkipped.length} skipped record(s) require manual review.`
+    });
+    return;
+  }
+
+  const transformByLine = new Map(report.transforms.map((transform) => [transform.line, transform]));
+  const rewrittenLines = lines.map((line, index) => {
+    const transform = transformByLine.get(index + 1);
+    return transform ? JSON.stringify(transform.plannedRecord) : line;
+  });
+  const nextContent = rewrittenLines.length > 0 ? `${rewrittenLines.join('\n')}\n` : '';
+  const afterHash = `sha256:${sha256(nextContent)}`;
+  report.afterHash = afterHash;
+  report.execution.afterHash = afterHash;
+  report.execution.writePlanned = report.transforms.length > 0;
+  report.execution.rewrittenRecords = report.transforms.length;
+  report.execution.preservedRecords = lines.length - report.transforms.length;
+  if (nextContent === fs.readFileSync(evidencePath, 'utf8')) {
+    report.execution.applied = false;
+    return;
+  }
+
+  const tempPath = `${evidencePath}.tmp-${process.pid}-${Date.now()}`;
+  fs.writeFileSync(tempPath, nextContent, 'utf8');
+  fs.renameSync(tempPath, evidencePath);
+  report.execution.applied = true;
 }
 
 function parseV1Record(value: Record<string, unknown>): EvidenceIndexRecord | null {

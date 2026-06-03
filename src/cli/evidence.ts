@@ -55,12 +55,14 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
       projectRoot: input.projectRoot,
       taskId,
       toVersion: getStringOption(input.args, '--to', 'v2') ?? 'v2',
-      execute: getFlag(input.args, '--execute')
+      execute: getFlag(input.args, '--execute'),
+      beforeHash: getStringOption(input.args, '--before-hash')
     });
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {
-      console.log(`[HADARA] evidence migrate ${taskId}: ${report.ok ? 'ok' : 'issues'} | planned ${report.summary.plannedTransforms} | skipped ${report.summary.skippedRecords}`);
+      const execution = report.mode === 'execute' ? ` | applied ${report.execution.applied ? 'yes' : 'no'}` : '';
+      console.log(`[HADARA] evidence migrate ${taskId}: ${report.ok ? 'ok' : 'issues'} | planned ${report.summary.plannedTransforms} | skipped ${report.summary.skippedRecords}${execution}`);
       for (const issue of report.issues) {
         console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
       }

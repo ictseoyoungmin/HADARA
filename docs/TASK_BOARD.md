@@ -236,3 +236,4 @@
 | T-0233 | Evidence v2 Persisted ID Writer MVP | Done | tasks/T-0233-evidence-v2-persisted-id-writer-mvp | |
 | T-0234 | Evidence v2 Release Read Model Compatibility | Done | tasks/T-0234-evidence-v2-release-read-model-compatibility | |
 | T-0235 | Evidence v2 Migration Preview | Done | tasks/T-0235-evidence-v2-migration-preview | |
+| T-0236 | Evidence v2 Migration Execute Mode | Done | tasks/T-0236-evidence-v2-migration-execute-mode | |

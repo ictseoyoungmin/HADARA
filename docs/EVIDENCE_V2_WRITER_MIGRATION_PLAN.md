@@ -47,7 +47,7 @@ Future migration should be per-task, dry-run-first, and hash-guarded:
 
 ```bash
 hadara evidence migrate --task T-XXXX --to v2 --json
-hadara evidence migrate --task T-XXXX --to v2 --execute --json
+hadara evidence migrate --task T-XXXX --to v2 --execute --before-hash <sha256:...> --json
 ```
 
 The command names are proposed design, not implemented behavior.

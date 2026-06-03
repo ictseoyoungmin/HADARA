@@ -57,6 +57,8 @@ Agents should treat `issues` as the primary machine-readable failure detail when
 
 `hadara evidence from-command` is intentionally not implemented. The design boundary lives in `docs/EVIDENCE_FROM_COMMAND_DESIGN.md`; until a future capsule implements it, shell-executing evidence capture must not be inferred from `evidence add-command`.
 
+`hadara evidence migrate --task <id> --to v2 --json` returns `hadara.evidence.migration_preview.v1`. Dry-run mode is read-only and reports `beforeHash`, planned v2 transforms, skipped records, warning issues, and execution metadata. Execute mode requires `--execute --before-hash <hash>`, rewrites only the selected task's `evidence.jsonl` through temp-file/rename when the hash matches and no blocking skipped records exist, preserves existing v2 records, and must not rewrite `EVIDENCE.md`, other tasks, artifacts, or project docs.
+
 `hadara run-state resume --json` returns read-only resume guidance. It does not update active-run state, execute commands, call providers, or resume an agent process.
 
 ## Task Workflow Command Semantics

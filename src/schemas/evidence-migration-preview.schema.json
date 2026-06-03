@@ -9,12 +9,28 @@
     "command": { "const": "evidence.migrate" },
     "ok": { "type": "boolean" },
     "mode": { "enum": ["dry-run", "execute"] },
-    "executeSupported": { "const": false },
+    "executeSupported": { "type": "boolean" },
     "taskId": { "type": "string", "minLength": 1 },
     "projectRoot": { "type": "string", "minLength": 1 },
     "targetVersion": { "const": "hadara.evidence.v2" },
     "evidencePath": { "type": "string", "minLength": 1 },
     "beforeHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "afterHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "execution": {
+      "type": "object",
+      "required": ["requested", "writePlanned", "applied", "rewrittenRecords", "preservedRecords"],
+      "properties": {
+        "requested": { "type": "boolean" },
+        "writePlanned": { "type": "boolean" },
+        "applied": { "type": "boolean" },
+        "beforeHashExpected": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "beforeHashActual": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "afterHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "rewrittenRecords": { "type": "integer", "minimum": 0 },
+        "preservedRecords": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
     "summary": {
       "type": "object",
       "required": ["totalLines", "v1Records", "v2Records", "plannedTransforms", "skippedRecords"],
