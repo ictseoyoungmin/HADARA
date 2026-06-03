@@ -281,6 +281,88 @@ describe('TUI snapshot renderer', () => {
     expect(snapshot.text).toContain('Proof passed: Previous evidence summary');
   });
 
+  it('does not show Markdown table headers in Overview preview cards', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Table preview cleanup task');
+    fs.writeFileSync(
+      path.join(task.dir, 'TASK.md'),
+      [
+        `# ${task.id} Table preview cleanup task`,
+        '',
+        '## Goal',
+        '',
+        '| Goal | Notes |',
+        '|---|---|',
+        '| Render table data rows in Overview. | Header should stay hidden. |',
+        '',
+        '## Status',
+        '',
+        'In Progress'
+      ].join('\n'),
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(task.dir, 'HANDOFF.md'),
+      [
+        '# Handoff',
+        '',
+        '## Next Recommended Step',
+        '',
+        '| Step | Reason | Required Reading |',
+        '|---|---|---|',
+        '| Continue with roadmap value work. | Timing target is met. | T-0231 evidence |'
+      ].join('\n'),
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(task.dir, 'EVIDENCE.md'),
+      [
+        '# Evidence',
+        '',
+        '| Time | Kind | Summary | Result | Visibility |',
+        '|---|---|---|---|---|',
+        '| now | command-log | Overview preview cleanup passed. | passed | public |'
+      ].join('\n'),
+      'utf8'
+    );
+    writeProjectDocs(root, task.id);
+    fs.writeFileSync(
+      path.join(root, 'docs', 'AGENT_HANDOFF.md'),
+      [
+        '# AGENT_HANDOFF',
+        '',
+        '## Current State',
+        '',
+        '| Area | State | Notes |',
+        '|---|---|---|',
+        '| Branch | main | table fixture |',
+        '',
+        '## Next Recommended Step',
+        '',
+        '| Step | Reason | Done Evidence |',
+        '|---|---|---|',
+        '| Continue with roadmap value work. | Timing target is met. | T-0231 evidence |',
+        '',
+        '## Validation Baseline',
+        '',
+        '| Check | Latest Evidence | Notes |',
+        '|---|---|---|',
+        '| Latest full check | Docker sync-build passed | fixture |'
+      ].join('\n'),
+      'utf8'
+    );
+    const model = createTuiReadModel(root, { selectedTaskId: task.id });
+
+    const snapshot = renderTuiSnapshot(model, { panel: 'overview', width: 150, height: 30 });
+
+    expect(snapshot.text).toContain('Goal Render table data rows in Overview.');
+    expect(snapshot.text).toContain('Continue with roadmap value work. · Timing target is met. · T-0231 evidence');
+    expect(snapshot.text).toContain('Proof unknown: No semantic proof summary is available.');
+    expect(snapshot.text).not.toContain('| Goal | Notes |');
+    expect(snapshot.text).not.toContain('| Step | Reason |');
+    expect(snapshot.text).not.toContain('| Time | Kind | Summary |');
+  });
+
   it('renders high contrast color mode explicitly', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Contrast color task');

@@ -87,18 +87,31 @@ export function incompleteChecklist(markdown: string, limit = 2): string[] {
 }
 
 export function evidenceFromMarkdown(markdown: string, limit = 2): string[] {
-  return String(markdown || '')
-    .split(/\r?\n/)
-    .map((line) => {
-      if (/^\s*#{1,6}\s+/.test(line)) return '';
-      const cells = line.trim().match(/^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|$/);
-      if (!cells) return cleanPreviewLine(line);
-      if (/^time$/i.test(cells[1] ?? '') || /^---$/.test(cells[1] ?? '')) return '';
-      return `${String(cells[4] ?? '').trim()}: ${String(cells[3] ?? '').trim()}`;
-    })
-    .map(cleanPreviewLine)
-    .filter(Boolean)
-    .slice(0, limit);
+  const sourceLines = String(markdown || '').split(/\r?\n/);
+  const values: string[] = [];
+  for (let index = 0; index < sourceLines.length; index += 1) {
+    const line = sourceLines[index] ?? '';
+    if (/^\s*#{1,6}\s+/.test(line)) continue;
+    if (isMarkdownTableStart(sourceLines, index)) {
+      const header = tableCells(line);
+      const normalizedHeaders = header.map((cell) => normalizeHeading(cell));
+      index += 2;
+      while (index < sourceLines.length && /^\s*\|.+\|\s*$/.test(sourceLines[index] ?? '')) {
+        const cells = tableCells(sourceLines[index] ?? '');
+        const summary = cells[normalizedHeaders.indexOf('summary')] ?? '';
+        const result = cells[normalizedHeaders.indexOf('result')] ?? '';
+        const fallback = summarizeMarkdownTableRow(header, cells);
+        const value = summary ? `${result || 'evidence'}: ${summary}` : fallback;
+        if (value) values.push(value);
+        index += 1;
+      }
+      index -= 1;
+      continue;
+    }
+    const cleaned = cleanPreviewLine(line);
+    if (cleaned) values.push(cleaned);
+  }
+  return values.map(cleanPreviewLine).filter(Boolean).slice(0, limit);
 }
 
 export function cleanPreviewLine(value: unknown): string {
@@ -135,17 +148,38 @@ function renderMarkdownTable(lines: string[], width: number): string[] {
 function parseMarkdown(markdown: string): { lines: string[]; sections: Record<string, string[]> } {
   const parsed: { lines: string[]; sections: Record<string, string[]> } = { lines: [], sections: {} };
   let current: string | null = null;
-  for (const rawLine of String(markdown || '').split(/\r?\n/)) {
+  const sourceLines = String(markdown || '').split(/\r?\n/);
+  const pushPreview = (value: string): void => {
+    if (!value) return;
+    if (current) parsed.sections[current].push(value);
+    else parsed.lines.push(value);
+  };
+
+  for (let index = 0; index < sourceLines.length; index += 1) {
+    const rawLine = sourceLines[index];
     const heading = rawLine.match(/^(#{1,6})\s+(.+?)\s*$/);
     if (heading) {
       current = normalizeHeading(heading[2].replace(/\s+#+$/, '').trim());
       if (!parsed.sections[current]) parsed.sections[current] = [];
       continue;
     }
+
+    if (isMarkdownTableStart(sourceLines, index)) {
+      const header = tableCells(sourceLines[index] ?? '');
+      index += 2;
+      while (index < sourceLines.length && /^\s*\|.+\|\s*$/.test(sourceLines[index] ?? '')) {
+        const cells = tableCells(sourceLines[index] ?? '');
+        const summary = summarizeMarkdownTableRow(header, cells);
+        if (summary) pushPreview(summary);
+        index += 1;
+      }
+      index -= 1;
+      continue;
+    }
+
     const cleaned = cleanPreviewLine(rawLine);
     if (!cleaned || cleaned.startsWith('|---')) continue;
-    if (current) parsed.sections[current].push(cleaned);
-    else parsed.lines.push(cleaned);
+    pushPreview(cleaned);
   }
   return parsed;
 }
@@ -180,6 +214,29 @@ function tableCells(line: string): string[] {
     .split('|')
     .slice(1, -1)
     .map(cleanPreviewLine);
+}
+
+function summarizeMarkdownTableRow(header: string[], cells: string[]): string {
+  const preferredHeaders = [
+    'summary',
+    'goal',
+    'step',
+    'criterion',
+    'decision',
+    'action',
+    'warning',
+    'risk',
+    'item',
+    'task',
+    'title'
+  ];
+  const normalizedHeaders = header.map((cell) => normalizeHeading(cell));
+  for (const preferred of preferredHeaders) {
+    const index = normalizedHeaders.indexOf(preferred);
+    const value = cleanPreviewLine(cells[index] ?? '');
+    if (value) return value;
+  }
+  return cells.map(cleanPreviewLine).find(Boolean) ?? '';
 }
 
 function shrinkTableWidths(widths: number[], width: number): void {

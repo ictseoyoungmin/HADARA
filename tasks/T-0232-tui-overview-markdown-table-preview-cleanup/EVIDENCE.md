@@ -1,0 +1,9 @@
+# Evidence
+
+| Time | Kind | Summary | Result | Visibility | JSONL |
+|---|---|---|---|---|---|
+| 2026-06-03T08:31:04.085Z | command-log | Focused TUI table preview regression passed: npm run test:focused -- tests/unit/tui-markdown.test.ts tests/unit/tui-snapshot.test.ts tests/unit/tui-read-model.test.ts tests/unit/status-json.test.ts returned 4 files / 34 tests. | passed | public | evidence.jsonl |
+| 2026-06-03T08:31:05.777Z | command-log | Full Docker sync-build passed after TUI Overview Markdown table preview cleanup: npm run dev:docker-sync-build returned 91 files / 597 tests and built CLI smoke ok:true with distLooksStale:false. | passed | public | evidence.jsonl |
+| 2026-06-03T08:31:07.868Z | command-log | Built TUI snapshot smoke passed in 1.46s and grep found no reported table preview headers: / Goal / Notes /, / Step / Reason /, or / Time / Kind / Summary /. | passed | public | evidence.jsonl |
+| 2026-06-03T08:32:00.257Z | command-log | Task close validation for T-0232 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:59a2e458b5052b1679b657d6546402d5e274687723436258724ce6074e819c21. | passed | public | evidence.jsonl |
+| 2026-06-03T08:32:48.397Z | command-log | Task close validation for T-0232 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:b4c6a55b1f0a385f16c51f777473f0ab0c1b20cfeb07b0109acc8da196c62426. | passed | public | evidence.jsonl |

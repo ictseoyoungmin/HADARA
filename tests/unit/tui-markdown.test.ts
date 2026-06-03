@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { visibleWidth } from '../../src/tui/layout';
-import { renderMarkdownDocument } from '../../src/tui/markdown';
+import { evidenceFromMarkdown, markdownPreview, renderMarkdownDocument } from '../../src/tui/markdown';
 
 describe('TUI markdown renderer', () => {
   it('renders headings, checklists, bullets, and tables into clipped terminal rows', () => {
@@ -55,5 +55,32 @@ describe('TUI markdown renderer', () => {
     const lines = renderMarkdownDocument(['| Not | a table |', '| because | no separator |'].join('\n'), 40);
 
     expect(lines).toEqual(['| Not | a table |', '| because | no separator |']);
+  });
+
+  it('uses Markdown table data rows instead of header rows for previews', () => {
+    const taskPreview = markdownPreview(
+      ['# Task', '', '## Goal', '', '| Goal | Notes |', '|---|---|', '| Fix noisy preview rows. | Header must not render. |'].join('\n'),
+      { headings: ['Goal'], limit: 2 }
+    );
+    const handoffPreview = markdownPreview(
+      [
+        '# Handoff',
+        '',
+        '## Next Recommended Step',
+        '',
+        '| Step | Reason | Required Reading |',
+        '|---|---|---|',
+        '| Return to roadmap value work. | Timing target is met. | T-0231 evidence |'
+      ].join('\n'),
+      { headings: ['Next Recommended Step'], limit: 2 }
+    );
+    const evidencePreview = evidenceFromMarkdown(
+      ['# Evidence', '', '| Time | Kind | Summary | Result | Visibility |', '|---|---|---|---|---|', '| now | command-log | Snapshot passed. | passed | public |'].join('\n'),
+      2
+    );
+
+    expect(taskPreview).toEqual(['Fix noisy preview rows.']);
+    expect(handoffPreview).toEqual(['Return to roadmap value work.']);
+    expect(evidencePreview).toEqual(['passed: Snapshot passed.']);
   });
 });

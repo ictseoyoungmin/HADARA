@@ -8,6 +8,7 @@ import { createEvidenceListReport, EvidenceListReport, parseEvidenceIndexFile } 
 import { createOperationalDebtReport, createReleaseGateReport, OperationalDebtReport, ReleaseGateReport } from '../services/operational-debt';
 import { createOpsStatusReport, OpsStatusReport } from '../services/operations-status-service';
 import { parseMarkdownRows } from '../services/markdown-table';
+import { extractHandoffSectionValues } from '../services/handoff-summary-parser';
 import { extractSection, readProjectSources } from '../services/project-read-model';
 import { createTaskListReport, TaskJsonSummary, TaskListReport, TaskReadOptions, TaskReadReport } from '../services/task-read-model';
 import { createToolsListReport, ToolsListReport } from '../services/tools-list';
@@ -778,11 +779,7 @@ function extractProjectPhase(projectState: string): string {
 }
 
 function extractListSection(content: string, heading: string): string[] {
-  const section = extractSection(content, heading);
-  return section
-    .split(/\r?\n/)
-    .map((line) => line.trim().replace(/^[-*]\s+/, ''))
-    .filter(Boolean);
+  return extractHandoffSectionValues(content, heading);
 }
 
 function extractLastCompletedTaskIds(handoff: string): string[] {
