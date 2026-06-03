@@ -83,4 +83,22 @@ describe('TUI markdown renderer', () => {
     expect(handoffPreview).toEqual(['Return to roadmap value work.']);
     expect(evidencePreview).toEqual(['passed: Snapshot passed.']);
   });
+
+  it('keeps inline code pipes inside Markdown table cells', () => {
+    const lines = renderMarkdownDocument(
+      [
+        '| Check | Required | Latest Result | Evidence |',
+        '|---|---|---|---|',
+        '| Built snapshot | Yes | Passed | no `| Goal | Notes |`, `| Step | Reason |`, or `| Time | Kind | Summary |` strings |'
+      ].join('\n'),
+      180
+    );
+    const dataRow = lines.find((line) => line.includes('Built snapshot')) ?? '';
+
+    expect(dataRow).toContain('`| Goal | Notes |`');
+    expect(dataRow).toContain('`| Step | Reason |`');
+    expect(dataRow).toContain('`| Time | Kind | Summary |`');
+    expect(dataRow.match(/│/g)).toHaveLength(3);
+    expect(lines.every((line) => visibleWidth(line) <= 180)).toBe(true);
+  });
 });

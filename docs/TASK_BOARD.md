@@ -232,4 +232,4 @@
 | T-0229 | TUI Selected Task Detail Shared Read Model | Done | tasks/T-0229-tui-selected-task-detail-shared-read-model | |
 | T-0230 | TUI Projection-First Task Index Cache Replacement | Done | tasks/T-0230-tui-projection-first-task-index-cache-replacement | |
 | T-0231 | TUI CLI Lazy Startup for Snapshot Smoke | Done | tasks/T-0231-tui-cli-lazy-startup-for-snapshot-smoke | |
-| T-0232 | TUI Overview Markdown Table Preview Cleanup | Done | tasks/T-0232-tui-overview-markdown-table-preview-cleanup | |
+| T-0232 | TUI Overview Markdown Table Preview Cleanup | Done | tasks/T-0232-tui-overview-markdown-table-preview-cleanup | Also fixes Detail table cells with inline-code or escaped pipe characters. |

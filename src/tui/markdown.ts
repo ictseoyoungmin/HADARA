@@ -134,11 +134,14 @@ function renderMarkdownTable(lines: string[], width: number): string[] {
   if (!columnCount) return [];
 
   const normalizedRows = rows.map((row) => Array.from({ length: columnCount }, (_, index) => row[index] || ''));
+  const targetWidth = Math.max(20, width);
+  const gapWidth = Math.max(0, columnCount - 1) * 3;
+  const maxColumnWidth = Math.max(28, Math.floor(Math.max(28, targetWidth - gapWidth) * 0.65));
   const widths = Array.from({ length: columnCount }, (_, index) => {
     const values = [header[index] || '', ...normalizedRows.map((row) => row[index] || '')];
-    return Math.max(3, Math.min(28, Math.max(...values.map((value) => visibleWidth(value)))));
+    return Math.max(3, Math.min(maxColumnWidth, Math.max(...values.map((value) => visibleWidth(value)))));
   });
-  shrinkTableWidths(widths, Math.max(20, width));
+  shrinkTableWidths(widths, targetWidth);
   const dividerLine = widths.map((columnWidth) => repeat('─', columnWidth)).join('─┼─');
   return [renderTableRow(header, widths), dividerLine, ...normalizedRows.map((row) => renderTableRow(row, widths))].map((line) =>
     trimFit(line, width)
@@ -209,11 +212,33 @@ function isMarkdownTableSeparator(line: string): boolean {
 }
 
 function tableCells(line: string): string[] {
-  return String(line || '')
-    .trim()
-    .split('|')
-    .slice(1, -1)
-    .map(cleanPreviewLine);
+  const cells: string[] = [];
+  let current = '';
+  let inCode = false;
+  const chars = Array.from(String(line || '').trim());
+  for (let index = 0; index < chars.length; index += 1) {
+    const char = chars[index];
+    const previous = chars[index - 1] ?? '';
+    if (char === '`' && previous !== '\\') {
+      inCode = !inCode;
+      current += char;
+      continue;
+    }
+    if (char === '|' && !inCode && previous !== '\\') {
+      cells.push(current);
+      current = '';
+      continue;
+    }
+    if (char === '|' && previous === '\\') {
+      current = `${current.slice(0, -1)}|`;
+      continue;
+    }
+    current += char;
+  }
+  cells.push(current);
+  const bounded = cells[0]?.trim() === '' ? cells.slice(1) : cells;
+  const withoutTrailing = bounded.at(-1)?.trim() === '' ? bounded.slice(0, -1) : bounded;
+  return withoutTrailing.map(cleanPreviewLine);
 }
 
 function summarizeMarkdownTableRow(header: string[], cells: string[]): string {

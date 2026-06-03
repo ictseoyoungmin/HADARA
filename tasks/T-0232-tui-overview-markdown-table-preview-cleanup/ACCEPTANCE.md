@@ -7,3 +7,5 @@
 | AC-3 | Fast TUI `Next Recommended` uses table-aware handoff section parsing. | Done | Focused `tui-read-model`/`status-json` tests and built snapshot output. |
 | AC-4 | Full Docker sync-build passes. | Done | 91 files / 597 tests; built CLI smoke ok. |
 | AC-5 | Evidence is attached and handoff docs are updated. | Done | EVIDENCE.md/evidence.jsonl and docs updates. |
+| AC-6 | Detail document tables keep inline-code pipes inside the same cell instead of rendering bogus extra columns. | Done | Focused `tui-markdown` regression and built Detail TESTS.md smoke. |
+| AC-7 | Wide Detail table rendering can use available width for long cells without exceeding the panel width. | Done | Focused `tui-markdown` visible-width regression. |

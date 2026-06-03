@@ -4,17 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0232 changes are local, validated, closed, and ready to commit. |
-| Current Phase | Dashboard paused after Phase 5.7; TUI `/mnt/f` snapshot target met and Overview table preview cleanup complete | T-0232 removes raw Markdown table header/delimiter noise from compact Overview cards. |
-| Latest Completed Task | T-0232 TUI Overview Markdown Table Preview Cleanup | Overview preview extraction now summarizes Markdown table data rows and fast TUI handoff status uses shared table-aware parsing. |
+| Branch | main | T-0232 follow-up changes are local, validated, closed, and ready to commit. |
+| Current Phase | Dashboard paused after Phase 5.7; TUI `/mnt/f` snapshot target met and Overview/Detail table rendering cleanup complete | T-0232 removes raw Markdown table header/delimiter noise from compact Overview cards and keeps Detail table cells stable when inline code contains pipe characters. |
+| Latest Completed Task | T-0232 TUI Overview Markdown Table Preview Cleanup | Overview preview extraction now summarizes Markdown table data rows, fast TUI handoff status uses shared table-aware parsing, and Detail table parsing keeps inline-code/escaped pipes inside cells. |
 | Active / Next Task | Return to roadmap value work | The reported `| Goal | Notes |`, `| Step | Reason |`, and `| Time | Kind | Summary |` card noise is fixed and covered by focused tests. |
-| Validation Baseline | T-0232 Docker validation passed | Focused TUI/status Docker tests passed 4 files / 34 tests; `npm run dev:docker-sync-build` passed with 91 files / 597 tests and built CLI smoke `ok:true`; built TUI snapshot smoke passed in 1.46s with no reported table preview headers. |
+| Validation Baseline | T-0232 Docker validation passed | Focused TUI/status Docker tests passed 4 files / 35 tests; `npm run dev:docker-sync-build` passed with 91 files / 598 tests and built CLI smoke `ok:true`; built Detail TESTS.md smoke showed no bogus pipe-created columns. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0232 TUI Overview Markdown Table Preview Cleanup | Made Markdown preview extraction skip table headers/delimiters, summarize table data rows, support multi-column evidence tables, and align fast TUI handoff parsing with shared status parsing. | T-0232 evidence: focused TUI/status tests passed 4 files / 34 tests; Docker sync-build passed 91 files / 597 tests; built snapshot grep found no reported table preview headers. |
+| T-0232 TUI Overview Markdown Table Preview Cleanup | Made Markdown preview extraction skip table headers/delimiters, summarize table data rows, support multi-column evidence tables, align fast TUI handoff parsing with shared status parsing, and keep inline-code pipes inside Detail table cells. | T-0232 evidence: focused TUI/status tests passed 4 files / 35 tests; Docker sync-build passed 91 files / 598 tests; built Detail smoke found no bogus pipe-created columns. |
 | T-0231 TUI CLI Lazy Startup for Snapshot Smoke | Replaced top-level CLI handler imports with per-command dynamic imports so TUI snapshot startup avoids unrelated dashboard/task/release/smoke module loading. | T-0231 evidence: focused CLI/TUI tests passed 8 files / 53 tests; Docker sync-build passed 91 files / 595 tests; built `/mnt/f` snapshot smoke took 1.37s. |
 | T-0230 TUI Projection-First Task Index Cache Replacement | Replaced TUI broad task list/cache validation with projection/Task Board source signals, made selected docs path-based, deferred selected proof lint in fast reads, and routed snapshot smoke through fast profile. | T-0230 evidence: focused TUI/CLI tests passed 6 files / 60 tests; Docker sync-build passed 91 files / 595 tests; built `/mnt/f` snapshot smoke took 4.05s and internal fast read-model/render measured about 160 ms. |
 
@@ -32,6 +32,7 @@
 | Fast TUI selected proof lint is deferred. | Snapshot/fast initial reads show proof as unknown/pending instead of waiting for evidence lint/list scans. | Full selected detail still uses `createDashboardTaskDetailReport()`; interactive detail refresh can load full proof when needed. |
 | TUI task list source-of-truth is projection/Task Board first. | Deleting a task capsule directory without updating Task Board/projection can leave a stale row visible. | Treat as protocol drift; use task workflow/protocol doctor validation to repair source-of-truth. |
 | TUI Overview table previews are concise by design. | Secondary table columns may not appear in compact cards. | Use Detail panel for full table rendering. |
+| TUI table cells treat raw unescaped pipes as Markdown separators. | Literal pipe characters outside inline code spans or escaped pipes can still create extra columns. | Write literal pipe examples as inline code spans or escaped pipes in table cells. |
 | Dashboard debt projection is aggregate-only. | `/api/dashboard/debt` no longer performs full capsule-size or premature-acceptance scans during dashboard refresh. | Use operational-debt/release read models for deep debt diagnostics; dashboard debt remains a fast aggregate projection. |
 | HADARA-dev has multiple CLI execution paths. | `/tmp/hadara/dist` may be fresh while `/workspace/dist` or container-global `/usr/local/bin/hadara` is stale, causing agents to test old CLI behavior. | For CLI changes, build in Docker, refresh `/workspace/dist` from `/tmp/hadara/dist`, and run final smokes via `node /workspace/dist/cli/main.js ... --project /workspace` or explicitly via `/tmp/hadara/dist/cli/main.js`; do not assume global `hadara` is current. |
 | Existing historical capsules mostly use legacy frames. | This is expected and should not fail validation solely for not using v2 tables. | Future `task upgrade-scaffold` / remediation work must be non-destructive and dry-run-first. |
@@ -51,15 +52,15 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Commit T-0232, then return to roadmap value work. | T-0232 implementation, validation, close, and audit are complete. | T-0232 capsule docs |
+| Commit T-0232 follow-up, then return to roadmap value work. | T-0232 implementation, validation, close, and audit are complete. | T-0232 capsule docs |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
 | Full repository check | Docker `npm run dev:docker-sync-build` passed with 91 files and 595 tests during T-0231. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`. |
-| TUI table preview focused check | Docker `npm run test:focused -- tests/unit/tui-markdown.test.ts tests/unit/tui-snapshot.test.ts tests/unit/tui-read-model.test.ts tests/unit/status-json.test.ts` passed. | 4 files / 34 tests cover helper-level table data previews, Overview cards, fast TUI handoff parsing, and existing status table parsing. |
-| TUI table preview full check | Docker `npm run dev:docker-sync-build` passed with 91 files and 597 tests during T-0232. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`; built TUI snapshot grep found no `| Goal | Notes |`, `| Step | Reason |`, or `| Time | Kind | Summary |` strings. |
+| TUI table preview focused check | Docker `npm run test:focused -- tests/unit/tui-markdown.test.ts tests/unit/tui-snapshot.test.ts tests/unit/tui-read-model.test.ts tests/unit/status-json.test.ts` passed. | 4 files / 35 tests cover helper-level table data previews, Detail table inline-code pipe cells, Overview cards, fast TUI handoff parsing, and existing status table parsing. |
+| TUI table preview full check | Docker `npm run dev:docker-sync-build` passed with 91 files and 598 tests during T-0232. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`; built Detail TESTS.md smoke showed no bogus Goal/Notes/Step/Reason columns created from inline-code pipes. |
 | CLI/TUI focused check | Docker `npm run test:focused -- tests/unit/tui-cli.test.ts tests/unit/feature-smoke.test.ts tests/unit/runtime-version.test.ts tests/unit/task-json.test.ts tests/unit/evidence-json.test.ts tests/unit/status-json.test.ts tests/unit/policy-json.test.ts tests/unit/cli-errors.test.ts` passed. | 8 files / 53 tests covered representative lazy-dispatched CLI surfaces and TUI snapshot behavior. |
 | Built TUI snapshot smoke | `/usr/bin/time -f 'elapsed=%e' node dist/cli/main.js tui --snapshot --compact --width 100 --height 26 --project /mnt/f/NowWorking/HADARA-dev` exited 0. | Mounted workspace snapshot improved from 42.56s after T-0229 to 4.05s after T-0230 to 1.37s after T-0231. |
 | Task workflow Status History and Markdown section reader gate | Focused Docker tests passed for markdown-table, task-finish, harness-validate, task-upgrade-scaffold, protocol-consistency, protocol-remediation, and dashboard-bootstrap. | Covers finish append/repair behavior, `TASK_STATUS_HISTORY_NOT_DONE`, shared heading-line section extraction, and affected fixture/read-model compatibility. |
