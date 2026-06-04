@@ -67,6 +67,22 @@ describe('release dry-run', () => {
         })
       ])
     );
+    expect(report.providerCapabilities).toMatchObject({
+      'npm-package': {
+        detect: 'supported',
+        buildPlan: 'supported',
+        smokePlan: 'supported',
+        artifactPlan: 'supported',
+        publishPlan: 'supported'
+      },
+      'python-package-preview': {
+        detect: 'unsupported',
+        buildPlan: 'unsupported',
+        smokePlan: 'unsupported',
+        artifactPlan: 'unsupported',
+        publishPlan: 'unsupported'
+      }
+    });
     expect(report.evidence).toContainEqual(
       expect.objectContaining({
         code: 'RELEASE_ARTIFACT_EVIDENCE',
@@ -262,6 +278,14 @@ describe('release dry-run', () => {
         smokeProfile: 'python-package-preview'
       })
     );
+    expect(report.providerCapabilities['python-package-preview']).toMatchObject({
+      detect: 'preview',
+      buildPlan: 'unsupported',
+      smokePlan: 'unsupported',
+      artifactPlan: 'unsupported',
+      publishPlan: 'unsupported'
+    });
+    expect(report.providerCapabilities['python-package-preview'].notes.join('\n')).toContain('T-0247');
     expect(report.plannedSteps.some((step) => step.target === 'npm-package')).toBe(true);
     expect(report.privacy.publishExecuted).toBe(false);
   });

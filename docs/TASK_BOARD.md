@@ -246,3 +246,6 @@
 | T-0243 | Create an explicit release artifact evidence refresh capsule | Done | tasks/T-0243-create-an-explicit-release-artifact-evidence-refresh-capsule | Added release artifact dirty-worktree guard; actual artifact refresh deferred until clean worktree. |
 | T-0244 | Multi-Ecosystem Release Target Model | Done | tasks/T-0244-multi-ecosystem-release-target-model | Descriptor-backed release targets added with npm-primary execution, npm package-smoke provider metadata, and Python preview-only detection. |
 | T-0245 | Release Artifact Evidence Refresh | Done | tasks/T-0245-release-artifact-evidence-refresh | |
+| T-0246 | Release Provider Contract | Done | tasks/T-0246-release-provider-contract | |
+| T-0247 | Python Release Preview Provider | Draft | tasks/T-0247-python-release-preview-provider | |
+| T-0248 | Python Package Smoke Dry Run Local Mode | Draft | tasks/T-0248-python-package-smoke-dry-run-local-mode | |

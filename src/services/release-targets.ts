@@ -2,6 +2,23 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 export type ReleaseEcosystem = 'npm' | 'python' | 'docker' | 'github-release' | 'generic-archive' | 'cargo' | 'maven';
+export type ReleaseProviderSupport = 'supported' | 'preview' | 'unsupported';
+
+export interface ReleaseProviderCapabilities {
+  detect: ReleaseProviderSupport;
+  buildPlan: ReleaseProviderSupport;
+  smokePlan: ReleaseProviderSupport;
+  artifactPlan: ReleaseProviderSupport;
+  publishPlan: ReleaseProviderSupport;
+  notes: string[];
+}
+
+export interface ReleaseProvider {
+  id: string;
+  ecosystem: ReleaseEcosystem;
+  capabilities(projectRoot: string): ReleaseProviderCapabilities;
+  descriptor(projectRoot: string): ReleaseTargetDescriptor | null;
+}
 
 export interface ReleaseTargetDescriptor {
   id: string;
@@ -21,10 +38,13 @@ export interface ReleaseTargetDescriptor {
 export interface ReleaseTargetModel {
   primary: ReleaseTargetDescriptor;
   descriptors: ReleaseTargetDescriptor[];
+  providerCapabilities: Record<string, ReleaseProviderCapabilities>;
 }
 
 export function createReleaseTargetModel(projectRoot: string): ReleaseTargetModel {
-  const npm = createNpmDescriptor(projectRoot);
+  const providers: ReleaseProvider[] = [new NpmReleaseProvider(), new PythonReleaseProvider()];
+  const npm = providers[0].descriptor(projectRoot);
+  if (!npm) throw new Error('npm release provider did not produce the required primary descriptor');
   const descriptors: ReleaseTargetDescriptor[] = [
     npm,
     {
@@ -53,52 +73,93 @@ export function createReleaseTargetModel(projectRoot: string): ReleaseTargetMode
     }
   ];
 
-  const python = createPythonPreviewDescriptor(projectRoot);
-  if (python) descriptors.push(python);
+  for (const provider of providers.slice(1)) {
+    const descriptor = provider.descriptor(projectRoot);
+    if (descriptor) descriptors.push(descriptor);
+  }
 
   return {
     primary: npm,
-    descriptors
+    descriptors,
+    providerCapabilities: Object.fromEntries(providers.map((provider) => [provider.id, provider.capabilities(projectRoot)]))
   };
 }
 
-function createNpmDescriptor(projectRoot: string): ReleaseTargetDescriptor {
-  const metadata = readPackageJson(projectRoot);
-  return {
-    id: 'npm-package',
-    ecosystem: 'npm',
-    role: 'primary',
-    status: 'active',
-    manifestPath: 'package.json',
-    packageName: metadata.name,
-    version: metadata.version,
-    artifactKinds: ['npm-tarball'],
-    smokeProfile: 'npm-package-smoke',
-    publishProvider: 'npm',
-    publishDeferred: false,
-    notes: ['Current primary release target for the HADARA Node CLI/workbench. Publish mutation remains approval-gated.']
-  };
+export class NpmReleaseProvider implements ReleaseProvider {
+  id = 'npm-package';
+  ecosystem = 'npm' as const;
+
+  capabilities(): ReleaseProviderCapabilities {
+    return {
+      detect: 'supported',
+      buildPlan: 'supported',
+      smokePlan: 'supported',
+      artifactPlan: 'supported',
+      publishPlan: 'supported',
+      notes: ['Current npm release provider supports release target detection and planning; publish mutation remains approval-gated outside dry-run.']
+    };
+  }
+
+  descriptor(projectRoot: string): ReleaseTargetDescriptor {
+    const metadata = readPackageJson(projectRoot);
+    return {
+      id: 'npm-package',
+      ecosystem: 'npm',
+      role: 'primary',
+      status: 'active',
+      manifestPath: 'package.json',
+      packageName: metadata.name,
+      version: metadata.version,
+      artifactKinds: ['npm-tarball'],
+      smokeProfile: 'npm-package-smoke',
+      publishProvider: 'npm',
+      publishDeferred: false,
+      notes: ['Current primary release target for the HADARA Node CLI/workbench. Publish mutation remains approval-gated.']
+    };
+  }
 }
 
-function createPythonPreviewDescriptor(projectRoot: string): ReleaseTargetDescriptor | null {
-  const manifestPath = path.join(projectRoot, 'pyproject.toml');
-  if (!fs.existsSync(manifestPath)) return null;
-  const text = fs.readFileSync(manifestPath, 'utf8');
-  const projectBlock = readTomlTable(text, 'project');
-  return {
-    id: 'python-package-preview',
-    ecosystem: 'python',
-    role: 'preview',
-    status: 'preview',
-    manifestPath: 'pyproject.toml',
-    ...(projectBlock.name ? { packageName: projectBlock.name } : {}),
-    ...(projectBlock.version ? { version: projectBlock.version } : {}),
-    artifactKinds: ['wheel', 'sdist'],
-    smokeProfile: 'python-package-preview',
-    publishProvider: 'pypi',
-    publishDeferred: true,
-    notes: ['Read-only detector only; no Python build, pip install smoke, twine check, or PyPI publish is implemented.']
-  };
+export class PythonReleaseProvider implements ReleaseProvider {
+  id = 'python-package-preview';
+  ecosystem = 'python' as const;
+
+  capabilities(projectRoot: string): ReleaseProviderCapabilities {
+    const detected = fs.existsSync(path.join(projectRoot, 'pyproject.toml'));
+    return {
+      detect: detected ? 'preview' : 'unsupported',
+      buildPlan: 'unsupported',
+      smokePlan: 'unsupported',
+      artifactPlan: 'unsupported',
+      publishPlan: 'unsupported',
+      notes: [
+        detected
+          ? 'pyproject.toml was detected for read-only preview metadata only; Python build/smoke/artifact/publish planning is deferred.'
+          : 'No pyproject.toml detected; Python provider remains unavailable for this project.',
+        'T-0247 owns Python metadata/backend parsing and planned command previews.'
+      ]
+    };
+  }
+
+  descriptor(projectRoot: string): ReleaseTargetDescriptor | null {
+    const manifestPath = path.join(projectRoot, 'pyproject.toml');
+    if (!fs.existsSync(manifestPath)) return null;
+    const text = fs.readFileSync(manifestPath, 'utf8');
+    const projectBlock = readTomlTable(text, 'project');
+    return {
+      id: 'python-package-preview',
+      ecosystem: 'python',
+      role: 'preview',
+      status: 'preview',
+      manifestPath: 'pyproject.toml',
+      ...(projectBlock.name ? { packageName: projectBlock.name } : {}),
+      ...(projectBlock.version ? { version: projectBlock.version } : {}),
+      artifactKinds: ['wheel', 'sdist'],
+      smokeProfile: 'python-package-preview',
+      publishProvider: 'pypi',
+      publishDeferred: true,
+      notes: ['Read-only detector only; no Python build, pip install smoke, twine check, or PyPI publish is implemented.']
+    };
+  }
 }
 
 function readPackageJson(projectRoot: string): { name: string; version: string; private: boolean } {

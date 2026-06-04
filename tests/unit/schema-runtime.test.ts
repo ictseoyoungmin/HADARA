@@ -429,6 +429,24 @@ describe('runtime schema validation', () => {
             summary: 'Would publish only after approval.'
           }
         ],
+        providerCapabilities: {
+          'npm-package': {
+            detect: 'supported',
+            buildPlan: 'supported',
+            smokePlan: 'supported',
+            artifactPlan: 'supported',
+            publishPlan: 'supported',
+            notes: ['npm provider supports dry-run planning.']
+          },
+          'python-package-preview': {
+            detect: 'preview',
+            buildPlan: 'unsupported',
+            smokePlan: 'unsupported',
+            artifactPlan: 'unsupported',
+            publishPlan: 'unsupported',
+            notes: ['Python provider is preview only.']
+          }
+        },
         readiness: {
           status: 'ready',
           blockers: 0,

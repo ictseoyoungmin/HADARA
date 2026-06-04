@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { assertSchema } from '../core/schema';
 import { createReleaseGateReport } from './operational-debt';
 import { isStrictReleaseEvidenceProof, readReleaseEvidenceRecords, ReleaseEvidenceRecord, validateReleaseEvidenceArtifact } from './release-evidence';
-import { createReleaseTargetModel, ReleaseTargetDescriptor } from './release-targets';
+import { createReleaseTargetModel, ReleaseProviderCapabilities, ReleaseTargetDescriptor } from './release-targets';
 
 export interface ReleaseDryRunReport {
   schemaVersion: 'hadara.releaseDryRun.v1';
@@ -22,6 +22,7 @@ export interface ReleaseDryRunReport {
     dockerImage: 'deferred';
     descriptors?: ReleaseTargetDescriptor[];
   };
+  providerCapabilities: Record<string, ReleaseProviderCapabilities>;
   checks: Array<{
     code: string;
     name: string;
@@ -161,6 +162,7 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
       dockerImage: 'deferred',
       descriptors: targetModel.descriptors
     },
+    providerCapabilities: targetModel.providerCapabilities,
     checks,
     evidence,
     plannedSteps: [
