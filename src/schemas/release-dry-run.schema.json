@@ -148,7 +148,24 @@
         "smokeProfile": { "type": "string", "minLength": 1 },
         "publishProvider": { "type": "string", "minLength": 1 },
         "publishDeferred": { "type": "boolean" },
+        "buildBackend": { "type": "string", "enum": ["setuptools", "poetry", "hatch", "flit", "unknown"] },
+        "plannedCommands": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/providerPlannedCommand" }
+        },
         "notes": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "providerPlannedCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "command", "willExecute", "purpose", "summary"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "command": { "type": "string", "minLength": 1 },
+        "willExecute": { "const": false },
+        "purpose": { "type": "string", "enum": ["build", "check", "smoke"] },
+        "summary": { "type": "string", "minLength": 1 }
       }
     },
     "providerCapabilities": {

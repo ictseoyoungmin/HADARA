@@ -32,7 +32,19 @@ export interface ReleaseTargetDescriptor {
   smokeProfile: string;
   publishProvider?: string;
   publishDeferred: boolean;
+  buildBackend?: PythonBuildBackend;
+  plannedCommands?: ReleaseProviderPlannedCommand[];
   notes: string[];
+}
+
+export type PythonBuildBackend = 'setuptools' | 'poetry' | 'hatch' | 'flit' | 'unknown';
+
+export interface ReleaseProviderPlannedCommand {
+  id: string;
+  command: string;
+  willExecute: false;
+  purpose: 'build' | 'check' | 'smoke';
+  summary: string;
 }
 
 export interface ReleaseTargetModel {
@@ -124,42 +136,107 @@ export class PythonReleaseProvider implements ReleaseProvider {
   ecosystem = 'python' as const;
 
   capabilities(projectRoot: string): ReleaseProviderCapabilities {
-    const detected = fs.existsSync(path.join(projectRoot, 'pyproject.toml'));
+    const parsed = readPythonProjectPreview(projectRoot);
+    const detected = parsed.detected;
     return {
       detect: detected ? 'preview' : 'unsupported',
-      buildPlan: 'unsupported',
-      smokePlan: 'unsupported',
-      artifactPlan: 'unsupported',
+      buildPlan: detected ? 'preview' : 'unsupported',
+      smokePlan: detected ? 'preview' : 'unsupported',
+      artifactPlan: detected ? 'preview' : 'unsupported',
       publishPlan: 'unsupported',
       notes: [
         detected
-          ? 'pyproject.toml was detected for read-only preview metadata only; Python build/smoke/artifact/publish planning is deferred.'
+          ? `pyproject.toml was detected for read-only preview metadata; build backend is ${parsed.buildBackend}.`
           : 'No pyproject.toml detected; Python provider remains unavailable for this project.',
-        'T-0247 owns Python metadata/backend parsing and planned command previews.'
+        'Planned Python commands are preview-only and are not executed by release dry-run.'
       ]
     };
   }
 
   descriptor(projectRoot: string): ReleaseTargetDescriptor | null {
-    const manifestPath = path.join(projectRoot, 'pyproject.toml');
-    if (!fs.existsSync(manifestPath)) return null;
-    const text = fs.readFileSync(manifestPath, 'utf8');
-    const projectBlock = readTomlTable(text, 'project');
+    const parsed = readPythonProjectPreview(projectRoot);
+    if (!parsed.detected) return null;
     return {
       id: 'python-package-preview',
       ecosystem: 'python',
       role: 'preview',
       status: 'preview',
       manifestPath: 'pyproject.toml',
-      ...(projectBlock.name ? { packageName: projectBlock.name } : {}),
-      ...(projectBlock.version ? { version: projectBlock.version } : {}),
+      ...(parsed.packageName ? { packageName: parsed.packageName } : {}),
+      ...(parsed.version ? { version: parsed.version } : {}),
       artifactKinds: ['wheel', 'sdist'],
       smokeProfile: 'python-package-preview',
       publishProvider: 'pypi',
       publishDeferred: true,
-      notes: ['Read-only detector only; no Python build, pip install smoke, twine check, or PyPI publish is implemented.']
+      buildBackend: parsed.buildBackend,
+      plannedCommands: createPythonPlannedCommands(),
+      notes: ['Read-only preview only; no Python build, pip install smoke, twine check, or PyPI publish is executed.']
     };
   }
+}
+
+export interface PythonProjectPreview {
+  detected: boolean;
+  packageName?: string;
+  version?: string;
+  buildBackend: PythonBuildBackend;
+}
+
+export function readPythonProjectPreview(projectRoot: string): PythonProjectPreview {
+  const manifestPath = path.join(projectRoot, 'pyproject.toml');
+  if (!fs.existsSync(manifestPath)) {
+    return {
+      detected: false,
+      buildBackend: 'unknown'
+    };
+  }
+  const text = fs.readFileSync(manifestPath, 'utf8');
+  const projectBlock = readTomlTable(text, 'project');
+  const poetryBlock = readTomlTable(text, 'tool.poetry');
+  const buildSystemBlock = readTomlTable(text, 'build-system');
+  return {
+    detected: true,
+    ...(projectBlock.name || poetryBlock.name ? { packageName: projectBlock.name ?? poetryBlock.name } : {}),
+    ...(projectBlock.version || poetryBlock.version ? { version: projectBlock.version ?? poetryBlock.version } : {}),
+    buildBackend: detectPythonBuildBackend(text, buildSystemBlock)
+  };
+}
+
+function createPythonPlannedCommands(): ReleaseProviderPlannedCommand[] {
+  return [
+    {
+      id: 'python-build',
+      command: 'python -m build',
+      willExecute: false,
+      purpose: 'build',
+      summary: 'Would build wheel and sdist in a future explicit Python artifact mode.'
+    },
+    {
+      id: 'twine-check',
+      command: 'twine check',
+      willExecute: false,
+      purpose: 'check',
+      summary: 'Would validate generated distributions in a future explicit Python smoke mode.'
+    },
+    {
+      id: 'pip-install-wheel',
+      command: 'pip install wheel',
+      willExecute: false,
+      purpose: 'smoke',
+      summary: 'Would install the built wheel in an isolated environment in a future explicit Python smoke mode.'
+    }
+  ];
+}
+
+function detectPythonBuildBackend(text: string, buildSystemBlock: Record<string, string>): PythonBuildBackend {
+  const haystack = [buildSystemBlock['build-backend'] ?? '', readTomlStringArray(text, 'build-system', 'requires').join(' '), text.includes('[tool.poetry]') ? 'poetry' : '']
+    .join(' ')
+    .toLowerCase();
+  if (haystack.includes('poetry')) return 'poetry';
+  if (haystack.includes('hatchling') || haystack.includes('hatch')) return 'hatch';
+  if (haystack.includes('flit_core') || haystack.includes('flit')) return 'flit';
+  if (haystack.includes('setuptools')) return 'setuptools';
+  return 'unknown';
 }
 
 function readPackageJson(projectRoot: string): { name: string; version: string; private: boolean } {
@@ -193,4 +270,24 @@ function readTomlTable(text: string, tableName: string): Record<string, string> 
     if (match) result[match[1]] = match[2];
   }
   return result;
+}
+
+function readTomlStringArray(text: string, tableName: string, key: string): string[] {
+  let inTable = false;
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (line.startsWith('[') && line.endsWith(']')) {
+      inTable = line === `[${tableName}]`;
+      continue;
+    }
+    if (!inTable || line.startsWith('#')) continue;
+    const match = new RegExp(`^${escapeRegExp(key)}\\s*=\\s*\\[(.*)\\]\\s*(?:#.*)?$`).exec(line);
+    if (!match) continue;
+    return [...match[1].matchAll(/"([^"]*)"/g)].map((item) => item[1]);
+  }
+  return [];
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

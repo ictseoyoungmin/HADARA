@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createReleaseDryRunReport } from '../../src/services/release-dry-run';
 import { validateSchema } from '../../src/core/schema';
+import { readPythonProjectPreview } from '../../src/services/release-targets';
 
 const roots: string[] = [];
 const commit = '0123456789abcdef0123456789abcdef01234567';
@@ -275,19 +276,64 @@ describe('release dry-run', () => {
         version: '0.0.1',
         publishProvider: 'pypi',
         publishDeferred: true,
-        smokeProfile: 'python-package-preview'
+        smokeProfile: 'python-package-preview',
+        buildBackend: 'unknown',
+        plannedCommands: [
+          expect.objectContaining({ command: 'python -m build', willExecute: false, purpose: 'build' }),
+          expect.objectContaining({ command: 'twine check', willExecute: false, purpose: 'check' }),
+          expect.objectContaining({ command: 'pip install wheel', willExecute: false, purpose: 'smoke' })
+        ]
       })
     );
     expect(report.providerCapabilities['python-package-preview']).toMatchObject({
       detect: 'preview',
-      buildPlan: 'unsupported',
-      smokePlan: 'unsupported',
-      artifactPlan: 'unsupported',
+      buildPlan: 'preview',
+      smokePlan: 'preview',
+      artifactPlan: 'preview',
       publishPlan: 'unsupported'
     });
-    expect(report.providerCapabilities['python-package-preview'].notes.join('\n')).toContain('T-0247');
+    expect(report.providerCapabilities['python-package-preview'].notes.join('\n')).toContain('Planned Python commands are preview-only');
     expect(report.plannedSteps.some((step) => step.target === 'npm-package')).toBe(true);
     expect(report.privacy.publishExecuted).toBe(false);
+  });
+
+  it('parses Python project metadata and common build backends without executing tooling', () => {
+    const cases = [
+      {
+        text: ['[project]', 'name = "setuptools-pkg"', 'version = "1.2.3"', '[build-system]', 'requires = ["setuptools>=68", "wheel"]', ''].join('\n'),
+        expectedName: 'setuptools-pkg',
+        expectedVersion: '1.2.3',
+        expectedBackend: 'setuptools'
+      },
+      {
+        text: ['[tool.poetry]', 'name = "poetry-pkg"', 'version = "2.0.0"', '[build-system]', 'build-backend = "poetry.core.masonry.api"', ''].join('\n'),
+        expectedName: 'poetry-pkg',
+        expectedVersion: '2.0.0',
+        expectedBackend: 'poetry'
+      },
+      {
+        text: ['[project]', 'name = "hatch-pkg"', '[build-system]', 'requires = ["hatchling"]', ''].join('\n'),
+        expectedName: 'hatch-pkg',
+        expectedBackend: 'hatch'
+      },
+      {
+        text: ['[project]', 'name = "flit-pkg"', '[build-system]', 'build-backend = "flit_core.buildapi"', ''].join('\n'),
+        expectedName: 'flit-pkg',
+        expectedBackend: 'flit'
+      }
+    ];
+
+    for (const item of cases) {
+      const root = tempProject();
+      fs.writeFileSync(path.join(root, 'pyproject.toml'), item.text, 'utf8');
+
+      expect(readPythonProjectPreview(root)).toMatchObject({
+        detected: true,
+        packageName: item.expectedName,
+        ...(item.expectedVersion ? { version: item.expectedVersion } : {}),
+        buildBackend: item.expectedBackend
+      });
+    }
   });
 });
 

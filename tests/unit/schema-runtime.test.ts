@@ -393,7 +393,31 @@ describe('runtime schema validation', () => {
         releaseTargets: {
           primary: 'npm-package',
           secondary: 'github-release',
-          dockerImage: 'deferred'
+          dockerImage: 'deferred',
+          descriptors: [
+            {
+              id: 'python-package-preview',
+              ecosystem: 'python',
+              role: 'preview',
+              status: 'preview',
+              manifestPath: 'pyproject.toml',
+              artifactKinds: ['wheel', 'sdist'],
+              smokeProfile: 'python-package-preview',
+              publishProvider: 'pypi',
+              publishDeferred: true,
+              buildBackend: 'setuptools',
+              plannedCommands: [
+                {
+                  id: 'python-build',
+                  command: 'python -m build',
+                  willExecute: false,
+                  purpose: 'build',
+                  summary: 'Would build Python distributions.'
+                }
+              ],
+              notes: ['Preview only.']
+            }
+          ]
         },
         checks: [
           {
@@ -440,9 +464,9 @@ describe('runtime schema validation', () => {
           },
           'python-package-preview': {
             detect: 'preview',
-            buildPlan: 'unsupported',
-            smokePlan: 'unsupported',
-            artifactPlan: 'unsupported',
+            buildPlan: 'preview',
+            smokePlan: 'preview',
+            artifactPlan: 'preview',
             publishPlan: 'unsupported',
             notes: ['Python provider is preview only.']
           }

@@ -4,12 +4,11 @@
 
 | Command | Purpose | Required For Done | Latest Result | Evidence |
 |---|---|---|---|---|
-| npm test | Run the default project test suite. | Yes | Not Run | TBD |
-| npm run check | Run the full repository check when available. | Yes | Not Run | TBD |
+| npm run test:focused -- tests/unit/release-dry-run.test.ts tests/unit/schema-runtime.test.ts | Validate Python preview parser output and schema compatibility. | Yes | Passed | Docker `/tmp/hadara`: 2 files / 27 tests passed. |
+| npm run check | Run the full repository check when available. | Yes | Passed | Docker `/tmp/hadara`: 92 files / 616 tests passed. |
 
 ## Special Checks
 
 | Check | Required? | Reason | Latest Result | Evidence |
 |---|---|---|---|---|
-| Security smoke | No | Only if security boundary changes. | Not Run | TBD |
-| Integration smoke | No | Only if integration surface changes. | Not Run | TBD |
+| Built CLI Python preview smoke | Yes | Confirms release dry-run emits Python preview metadata without execution. | Passed | Temp `pyproject.toml` smoke detected package name/version, hatch backend, and planned commands with `willExecute:false`. |

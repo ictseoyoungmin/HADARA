@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0246 release provider contract is complete; T-0247 Python release preview provider is next. |
+| Branch | main | T-0247 Python release preview provider is complete; T-0248 Python package smoke dry-run/local mode is next. |
 | Current Phase | Dashboard/TUI UI work paused; core evidence/task lifecycle work resumed | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0246 Release Provider Contract | Release dry-run now exposes provider capabilities; npm remains supported and Python remains preview/detect-only. |
-| Active / Next Task | T-0247 Python Release Preview Provider | Add read-only `pyproject.toml` parser, package metadata/backend detection, and planned command previews only. |
-| Validation Baseline | T-0246 Docker validation passed | Focused Docker tests passed 2 files / 26 tests; Docker full check passed 92 files / 615 tests; built release dry-run smoke emitted provider capabilities with only the expected release artifact freshness blocker. |
+| Latest Completed Task | T-0247 Python Release Preview Provider | Release dry-run now previews Python package name/version, backend, and planned commands without execution. |
+| Active / Next Task | T-0248 Python Package Smoke Dry Run/Local Mode | Add Python package smoke dry-run/local mode planning without PyPI token or publish support. |
+| Validation Baseline | T-0247 Docker validation passed | Focused Docker tests passed 2 files / 27 tests; Docker full check passed 92 files / 616 tests; built release dry-run smoke against a temp pyproject emitted hatch backend and planned commands with `willExecute:false`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0247 Python Release Preview Provider | Added read-only `pyproject.toml` parser for PEP 621 and Poetry metadata, backend detection for setuptools/poetry/hatch/flit/unknown, and planned Python commands with `willExecute:false`. | T-0247 evidence: Docker focused tests passed 2 files / 27 tests; Docker full check passed 92 files / 616 tests; built CLI temp pyproject smoke detected hatch backend and planned commands. |
 | T-0246 Release Provider Contract | Added `ReleaseProvider` capability states and provider implementations. `NpmReleaseProvider` wraps current npm planning, while `PythonReleaseProvider` remains preview/detect-only until parser work. | T-0246 evidence: Docker focused tests passed 2 files / 26 tests; Docker full check passed 92 files / 615 tests; built release dry-run emitted `providerCapabilities` for npm and Python. |
 | T-0245 Release Artifact Evidence Refresh | Hardened release artifact `npm pack` execution for disposable cache and empty successful stdout, then refreshed release artifact evidence from a clean commit. Release dry-run returned ready/blockers 0 at the time of that clean commit. | T-0245 evidence: Docker check/sync-build passed 92 files / 615 tests; release artifact refresh attached passed evidence for commit `2eff19c8ab63b635804352d2c71803226d592749`; release dry-run returned `ok:true`; release publish dry-run returned `ok:true` with mutation flags false. |
-| T-0244 Multi-Ecosystem Release Target Model | Added descriptor-backed release targets while preserving npm as the active primary provider; GitHub Release remains secondary, Docker remains deferred, and Python `pyproject.toml` detection is preview-only metadata with no PyPI/build/smoke execution. | T-0244 evidence: Docker check and sync-build passed 92 files / 613 tests; built CLI release dry-run emitted npm/GitHub/Docker descriptors; built package smoke dry-run emitted `provider.smokeProfile: npm-package-smoke`. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
 | Release publish remains approval-gated/manual. | `release dry-run` is ready after T-0245, and `release publish --mode dry-run` is ok, but actual publish/deploy mutation still requires explicit approval metadata, confirmation, tokens, and future mutation-capable handling. | Do not run publish/deploy execute unless an operator explicitly requests the approval-gated release path. |
-| Release provider capabilities are explicit but non-npm execution remains unsupported. | T-0246 reports npm as supported and Python as preview/detect-only, but HADARA still does not build wheels/sdists, run pip/twine smoke, load PyPI credentials, publish to PyPI, build Docker images, or create GitHub Releases. | Continue with T-0247 parser/preview and T-0248 smoke dry-run/local planning before claiming Python execution support. |
+| Python release preview is metadata/planned-command only. | T-0247 detects package metadata/backend and planned commands, but HADARA still does not build wheels/sdists, run pip/twine smoke, load PyPI credentials, publish to PyPI, build Docker images, or create GitHub Releases. | Continue with T-0248 smoke dry-run/local planning before claiming Python smoke execution support. |
 | Release artifact refresh now requires a clean git worktree. | In active development, `release artifact --execute` will return `RELEASE_ARTIFACT_WORKTREE_DIRTY` and skip `npm pack` until pending changes are committed or otherwise cleaned. | Treat this as intentional release safety, not a release artifact failure; do not bypass it with dirty worktree evidence. |
 | Release dry-run latency is currently dominated by the strict release gate. | Built `/mnt/f` smoke reported total duration about 13.8s with `strict-release-gate` about 12.5s; this is now visible but not optimized. | Treat timing diagnostics as metadata; optimize strict release-gate reads only if release operators need faster repeated dry-runs. |
 | `task upgrade-scaffold --execute` and `protocol remediate --execute` now require `--before-hash` when writes are planned. | Old execute-only copy-paste commands fail closed. | Run the dry-run first, review `summary.beforeHash`, then execute with `--before-hash <hash>`. |
@@ -62,7 +62,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| T-0247 Python Release Preview Provider. | Provider abstraction is in place; the next safe step is read-only Python package metadata/backend detection and planned command previews, not execution. | Use T-0247 capsule; no PyPI token, Python build, twine, pip install, publish, or release mutation. |
+| T-0248 Python Package Smoke Dry Run/Local Mode. | Python preview metadata is available; the next safe step is smoke dry-run/local planning without PyPI token or publish support. | Use T-0248 capsule; keep PyPI token loading and publish out of scope. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
@@ -70,6 +70,7 @@
 | Check | Latest Evidence | Notes |
 |---|---|---|
 | Release provider contract full check | Docker focused tests passed 2 files / 26 tests; Docker `npm run check` passed 92 files / 615 tests during T-0246. | Built release dry-run emitted `providerCapabilities` for `npm-package` and `python-package-preview`; exit 6 was expected because release artifact evidence points at T-0245's previous commit, not the current development HEAD. |
+| Python release preview full check | Docker focused tests passed 2 files / 27 tests; Docker `npm run check` passed 92 files / 616 tests during T-0247. | Built release dry-run against a temp `pyproject.toml` emitted package `hadara-python-tools`, version `0.0.1`, backend `hatch`, and planned commands `python -m build`, `twine check`, and `pip install wheel` with `willExecute:false`. |
 | Release artifact evidence refresh full check | Docker `npm run dev:docker-check` and `npm run dev:docker-sync-build` passed with 92 files and 615 tests during T-0245. | Built release artifact refresh attached passed T-0245 evidence for commit `2eff19c8ab63b635804352d2c71803226d592749`; built release dry-run returned `ok:true`, readiness `ready`, blockers 0; built release publish dry-run returned `ok:true` with token warnings only and mutation flags false. |
 | Multi-ecosystem release target model full check | Docker `npm run dev:docker-check` and `npm run dev:docker-sync-build` passed with 92 files and 613 tests during T-0244. | Built CLI release dry-run returned expected stale artifact blocker but emitted npm/GitHub/Docker descriptors; built package smoke dry-run emitted provider `npm-package-smoke`; no PyPI/Docker/GitHub mutation was added. |
 | Release artifact dirty-worktree guard full check | Docker `npm run dev:docker-sync-build` passed with 92 files and 612 tests during T-0243. | Built CLI blocked `release artifact --execute --attach-evidence` in the current dirty worktree with `RELEASE_ARTIFACT_WORKTREE_DIRTY`, `npmPackExecuted:false`, and no generated artifacts. |
