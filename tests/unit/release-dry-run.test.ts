@@ -33,11 +33,39 @@ describe('release dry-run', () => {
     expect(report.ok).toBe(true);
     expect(report.schemaVersion).toBe('hadara.releaseDryRun.v1');
     expect(report.current.gitCommit).toBe(commit);
-    expect(report.releaseTargets).toEqual({
+    expect(report.releaseTargets).toMatchObject({
       primary: 'npm-package',
       secondary: 'github-release',
       dockerImage: 'deferred'
     });
+    expect(report.releaseTargets.descriptors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'npm-package',
+          ecosystem: 'npm',
+          role: 'primary',
+          manifestPath: 'package.json',
+          packageName: 'hadara',
+          version: '0.1.0-rc.0',
+          smokeProfile: 'npm-package-smoke',
+          publishProvider: 'npm',
+          publishDeferred: false
+        }),
+        expect.objectContaining({
+          id: 'github-release',
+          ecosystem: 'github-release',
+          role: 'secondary',
+          status: 'active'
+        }),
+        expect.objectContaining({
+          id: 'docker-image',
+          ecosystem: 'docker',
+          role: 'deferred',
+          status: 'deferred',
+          publishDeferred: true
+        })
+      ])
+    );
     expect(report.evidence).toContainEqual(
       expect.objectContaining({
         code: 'RELEASE_ARTIFACT_EVIDENCE',
@@ -63,7 +91,7 @@ describe('release dry-run', () => {
       })
     );
     expect(report.diagnostics.stageTimings.map((timing) => timing.stage)).toEqual([
-      'package-metadata',
+      'release-targets',
       'git-commit',
       'strict-release-gate',
       'release-evidence-scan',
@@ -173,6 +201,37 @@ describe('release dry-run', () => {
         command: 'hadara release artifact --execute --json --output dist-release --attach-evidence --task <task-id>'
       })
     );
+  });
+
+  it('detects pyproject.toml as a read-only Python release target preview', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root);
+    writeStrongEvidence(root);
+    fs.writeFileSync(
+      path.join(root, 'pyproject.toml'),
+      ['[project]', 'name = "hadara-python-tools"', 'version = "0.0.1"', ''].join('\n'),
+      'utf8'
+    );
+
+    const report = createReleaseDryRunReport(root);
+
+    expect(report.ok).toBe(true);
+    expect(report.releaseTargets.descriptors).toContainEqual(
+      expect.objectContaining({
+        id: 'python-package-preview',
+        ecosystem: 'python',
+        role: 'preview',
+        status: 'preview',
+        manifestPath: 'pyproject.toml',
+        packageName: 'hadara-python-tools',
+        version: '0.0.1',
+        publishProvider: 'pypi',
+        publishDeferred: true,
+        smokeProfile: 'python-package-preview'
+      })
+    );
+    expect(report.plannedSteps.some((step) => step.target === 'npm-package')).toBe(true);
+    expect(report.privacy.publishExecuted).toBe(false);
   });
 });
 

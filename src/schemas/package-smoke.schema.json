@@ -25,6 +25,16 @@
     "ok": { "type": "boolean" },
     "mode": { "type": "string", "enum": ["dry-run", "local"] },
     "readOnly": { "type": "boolean" },
+    "provider": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["ecosystem", "smokeProfile", "command"],
+      "properties": {
+        "ecosystem": { "const": "npm" },
+        "smokeProfile": { "const": "npm-package-smoke" },
+        "command": { "const": "package.smoke" }
+      }
+    },
     "execution": {
       "type": "object",
       "additionalProperties": true,

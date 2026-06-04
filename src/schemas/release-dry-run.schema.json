@@ -40,7 +40,11 @@
       "properties": {
         "primary": { "const": "npm-package" },
         "secondary": { "const": "github-release" },
-        "dockerImage": { "const": "deferred" }
+        "dockerImage": { "const": "deferred" },
+        "descriptors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/releaseTargetDescriptor" }
+        }
       }
     },
     "checks": {
@@ -121,6 +125,25 @@
         "name": { "type": "string", "minLength": 1 },
         "status": { "type": "string", "enum": ["passed", "warning", "error"] },
         "summary": { "type": "string", "minLength": 1 }
+      }
+    },
+    "releaseTargetDescriptor": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "ecosystem", "role", "status", "manifestPath", "artifactKinds", "smokeProfile", "publishDeferred", "notes"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "ecosystem": { "type": "string", "enum": ["npm", "python", "docker", "github-release", "generic-archive", "cargo", "maven"] },
+        "role": { "type": "string", "enum": ["primary", "secondary", "deferred", "preview"] },
+        "status": { "type": "string", "enum": ["active", "deferred", "preview"] },
+        "manifestPath": { "type": "string", "minLength": 1 },
+        "packageName": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "artifactKinds": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "smokeProfile": { "type": "string", "minLength": 1 },
+        "publishProvider": { "type": "string", "minLength": 1 },
+        "publishDeferred": { "type": "boolean" },
+        "notes": { "type": "array", "items": { "type": "string", "minLength": 1 } }
       }
     },
     "evidence": {

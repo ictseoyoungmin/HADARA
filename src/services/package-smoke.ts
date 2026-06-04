@@ -19,6 +19,11 @@ export interface PackageSmokeReport {
   ok: boolean;
   mode: 'dry-run' | 'local';
   readOnly: boolean;
+  provider: {
+    ecosystem: 'npm';
+    smokeProfile: 'npm-package-smoke';
+    command: 'package.smoke';
+  };
   execution: {
     npmPackExecuted: boolean;
     packageInstallExecuted: boolean;
@@ -119,6 +124,11 @@ export function createPackageSmokeDryRunReport(options: PackageSmokeDryRunOption
     ok: false,
     mode: 'dry-run',
     readOnly: true,
+    provider: {
+      ecosystem: 'npm',
+      smokeProfile: 'npm-package-smoke',
+      command: 'package.smoke'
+    },
     execution: {
       npmPackExecuted: false,
       packageInstallExecuted: false,
@@ -372,6 +382,11 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
     ok: issues.every((issue) => issue.severity !== 'error') && steps.every((step) => step.status !== 'failed'),
     mode: 'local',
     readOnly: false,
+    provider: {
+      ecosystem: 'npm',
+      smokeProfile: 'npm-package-smoke',
+      command: 'package.smoke'
+    },
     execution,
     workspace: {
       kind: 'disposable',

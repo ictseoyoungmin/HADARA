@@ -3,6 +3,7 @@ import path from 'node:path';
 import { assertSchema } from '../core/schema';
 import { createReleaseGateReport } from './operational-debt';
 import { isStrictReleaseEvidenceProof, readReleaseEvidenceRecords, ReleaseEvidenceRecord, validateReleaseEvidenceArtifact } from './release-evidence';
+import { createReleaseTargetModel, ReleaseTargetDescriptor } from './release-targets';
 
 export interface ReleaseDryRunReport {
   schemaVersion: 'hadara.releaseDryRun.v1';
@@ -18,6 +19,7 @@ export interface ReleaseDryRunReport {
     primary: 'npm-package';
     secondary: 'github-release';
     dockerImage: 'deferred';
+    descriptors?: ReleaseTargetDescriptor[];
   };
   checks: Array<{
     code: string;
@@ -101,7 +103,11 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
   const startedAt = Date.now();
   const generatedAt = new Date().toISOString();
   const timings: ReleaseDryRunReport['diagnostics']['stageTimings'] = [];
-  const packageMetadata = timeStage(timings, 'package-metadata', () => readPackageMetadata(projectRoot));
+  const targetModel = timeStage(timings, 'release-targets', () => createReleaseTargetModel(projectRoot));
+  const packageMetadata = {
+    name: targetModel.primary.packageName ?? 'unknown',
+    version: targetModel.primary.version ?? 'unknown'
+  };
   const gitCommit = timeStage(timings, 'git-commit', () => readCurrentGitCommit(projectRoot));
   const releaseGate = timeStage(timings, 'strict-release-gate', () => createReleaseGateReport(projectRoot, 'strict'));
   const evidenceRecords = timeStage(timings, 'release-evidence-scan', () => readReleaseEvidenceRecords(projectRoot));
@@ -150,7 +156,8 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
     releaseTargets: {
       primary: 'npm-package',
       secondary: 'github-release',
-      dockerImage: 'deferred'
+      dockerImage: 'deferred',
+      descriptors: targetModel.descriptors
     },
     checks,
     evidence,
@@ -423,21 +430,4 @@ function evidenceRequirements(): EvidenceRequirement[] {
 
 function evidenceName(code: string): string {
   return evidenceRequirements().find((requirement) => requirement.code === code)?.name ?? code;
-}
-
-function readPackageMetadata(projectRoot: string): { name: string; version: string } {
-  try {
-    const parsed: unknown = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8'));
-    if (!isRecord(parsed)) return { name: 'unknown', version: 'unknown' };
-    return {
-      name: typeof parsed.name === 'string' ? parsed.name : 'unknown',
-      version: typeof parsed.version === 'string' ? parsed.version : 'unknown'
-    };
-  } catch {
-    return { name: 'unknown', version: 'unknown' };
-  }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

@@ -58,6 +58,11 @@ describe('package smoke dry-run', () => {
       ok: true,
       mode: 'dry-run',
       readOnly: true,
+      provider: {
+        ecosystem: 'npm',
+        smokeProfile: 'npm-package-smoke',
+        command: 'package.smoke'
+      },
       execution: {
         npmPackExecuted: false,
         packageInstallExecuted: false,
@@ -270,6 +275,11 @@ describe('package smoke local execution', () => {
       ok: true,
       mode: 'local',
       readOnly: false,
+      provider: {
+        ecosystem: 'npm',
+        smokeProfile: 'npm-package-smoke',
+        command: 'package.smoke'
+      },
       execution: {
         npmPackExecuted: true,
         packageInstallExecuted: true,

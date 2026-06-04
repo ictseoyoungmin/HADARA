@@ -54,6 +54,17 @@ Approval and mutation boundary:
 - T-0139 performs no publish, no GitHub Release creation, no Docker image build, no registry mutation, no GitHub API call, and no token loading.
 - Release mode is required before any future publish/deploy command may consider `NPM_TOKEN`, `GITHUB_TOKEN`, or `HADARA_GITHUB_RELEASE_TOKEN`.
 
+Release target provider model:
+
+- T-0244 introduces release target descriptors so release readiness can name ecosystem-specific targets without claiming every ecosystem is executable.
+- The active primary descriptor is `npm-package` with ecosystem `npm`, manifest `package.json`, artifact kind `npm-tarball`, smoke profile `npm-package-smoke`, and publish provider `npm`.
+- The active secondary descriptor is `github-release` with ecosystem `github-release`, retained tarball/checksum/manifest artifacts, and approval-gated publishing still blocked by the current implementation.
+- The deferred descriptor is `docker-image` with ecosystem `docker`; Docker build and publish execution remain deferred.
+- If `pyproject.toml` is present, release dry-run may surface `python-package-preview` with ecosystem `python`, artifact kinds `wheel` and `sdist`, smoke profile `python-package-preview`, and publish provider `pypi`.
+- Python release target detection is read-only preview only. HADARA does not currently run `python -m build`, create wheels or sdists, run `pip install` smoke, run `twine check`, load PyPI credentials, or publish to PyPI.
+- The existing `package-smoke` evidence category remains the historical npm package smoke evidence channel; new provider metadata identifies the current implementation as npm-specific through `npm-package-smoke`.
+- Future release ecosystems such as Python, Cargo, Maven, Docker, or generic archives must add provider-specific smoke/readiness behavior in their own capsules and preserve the no-mutation-by-default release boundary.
+
 T-0141 publish/deploy command boundary:
 
 - `hadara release publish --mode dry-run|execute --json` emits `hadara.releasePublish.v1`.
