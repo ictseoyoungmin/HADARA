@@ -4,24 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0238 is the current completed local work and has been committed locally. |
+| Branch | main | T-0239 is committed locally in current HEAD. |
 | Current Phase | Dashboard/TUI UI work paused; core evidence/task lifecycle work resumed | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0238 Task Close Audit Boundary Guidance | `hadara.task.close.v1` now reports additive lifecycle guidance and `hadara.task.audit_close.v1` reports additive audit verdict metadata without expanding write boundaries. |
+| Latest Completed Task | T-0239 Task Next Handoff Priority | `hadara.task.next.v1` now uses handoff-first recommendations and keeps old Partial Task Board rows as non-primary backlog. |
 | Active / Next Task | Task capsule upgrade/remediation dry-run hardening | Finish and close/audit workflow reports are now more actionable; continue lifecycle hardening around safe capsule remediation instead of UI polish. |
-| Validation Baseline | T-0238 Docker validation passed | Focused close/audit guidance suite passed 5 files / 19 tests; `npm run dev:docker-sync-build` passed with 92 files / 607 tests; built close/audit smokes exposed `lifecycle` and `auditVerdict`. |
+| Validation Baseline | T-0239 Docker validation passed | Focused task-next suite passed 3 files / 9 tests; `npm run dev:docker-sync-build` passed with 92 files / 608 tests; built `task next` smoke used handoff primary and kept T-0006 in backlog. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0239 Task Next Handoff Priority | Added `docs/specs/HADARA_Task_Next_Handoff_Priority_Refactor.md`, registered it in SOP Required Reading, and changed `hadara.task.next.v1` to use handoff-first policy metadata with sourceKind and backlog rows while preserving Development Slice and Task Board fallback behavior. | T-0239 evidence: focused task-next/schema/workflow-docs tests passed 3 files / 9 tests; Docker sync-build passed 92 files / 608 tests; built CLI smoke recommended handoff current work and kept T-0006 only in `backlog`. |
 | T-0238 Task Close Audit Boundary Guidance | Added `lifecycle` metadata to `hadara.task.close.v1` and `auditVerdict` metadata to `hadara.task.audit_close.v1`, making validation/close/audit phases, close evidence loop boundary, write boundary, and current/recorded hash verdicts machine-readable while preserving close-evidence-only execute and read-only audit. | T-0238 evidence: focused close/audit guidance tests passed 5 files / 19 tests; Docker sync-build passed 92 files / 607 tests; built CLI close dry-run showed `lifecycle.model: validation-close-audit`; built audit-close before close showed `auditVerdict.verdict: not-closed`. |
 | T-0237 Task Finish State Docs Advisory Report | Added `stateDocs` to `hadara.task.finish.v1` for `docs/DEVELOPMENT_SLICES.md`, `docs/PROJECT_STATE.md`, and `docs/AGENT_HANDOFF.md`, with current/pending/missing state, mention signal, and recommendations while preserving the `task finish --execute` write boundary. | T-0237 evidence: focused task lifecycle tests passed 5 files / 40 tests; Docker sync-build passed 92 files / 607 tests; built CLI smoke returned `stateDocsPending: 3` before manual docs update. |
-| T-0236 Evidence v2 Migration Execute Mode | Added hash-guarded execute mode for `evidence migrate`, requiring `--before-hash`, preserving dry-run preview shape, converting v1 lines to planned v2 records, preserving existing v2 lines, refusing skipped invalid records, and keeping `EVIDENCE.md` unchanged. | T-0236 evidence: focused migration/evidence/schema tests passed 7 files / 67 tests; Docker sync-build passed 92 files / 606 tests; built CLI temp-copy smoke migrated T-0015 from v1 5/v2 0 to v1 0/v2 5 and mismatch smoke returned `EVIDENCE_MIGRATION_BEFORE_HASH_MISMATCH`. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
+| `task next` now emits handoff recommendations with `taskId: TBD` when no capsule exists yet. | Consumers that require concrete Task IDs must inspect `createCommand` and `sourceKind` before assuming a capsule exists. | Use `createCommand` to create the next capsule, then rerun `task next` or `task status` for the concrete task. |
 | Host `node_modules` is ignored local state and not the validation baseline. | This workspace may have host dependencies from local attempts, but reproducible validation should not depend on them. | Use the reusable Docker workflow for validation/build; treat host dependency state as disposable. |
 | Full dashboard projection freshness proof remains cheap-metadata based. | Projection status can report stale/unknown rather than proving freshness through expensive broad scans. | Keep `/api/dashboard/core` non-blocking; add per-source manifests in a future slice only if operators need stronger freshness proof. |
 | Dashboard selected-detail fast path avoids global protocol doctors. | Capsule detail now stays responsive by using selected-task fast workbench data and task-scoped timeline events, so it does not prove all closure-grade protocol checks by itself. | Use `task ready`, `task close`, and `task audit-close` for closure-grade validation before closing capsules. |
@@ -63,6 +64,8 @@
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| Task-next handoff-priority focused checks | Docker focused suite passed with 3 files / 9 tests during T-0239. | Covered handoff primary recommendations, sourceKind/policy metadata, backlog rows for legacy Partial tasks, schema fixtures, and workflow docs. |
+| Task-next handoff-priority full check | Docker `npm run dev:docker-sync-build` passed with 92 files and 608 tests during T-0239. | Built `task next --json` smoke returned `summary.source: docs/AGENT_HANDOFF.md`, `policy: handoff-first`, `taskId: TBD`, and T-0006 only in `backlog`. |
 | Task close/audit boundary guidance focused checks | Docker focused suite passed with 5 files / 19 tests during T-0238. | Covered `task close` lifecycle guidance, execute write boundary, `task audit-close` audit verdicts, schema fixtures, workbench/ready adjacency, and workflow docs. |
 | Task close/audit boundary guidance full check | Docker `npm run dev:docker-sync-build` passed with 92 files and 607 tests during T-0238. | Built CLI close dry-run smoke while T-0238 was In Progress returned expected blockers plus `lifecycle`; built audit-close smoke before close returned `auditVerdict.verdict: not-closed` and `writeBoundary: read-only`. |
 | Task finish state-doc advisory focused checks | Docker focused suite passed with 5 files / 40 tests during T-0237. | Covered `task finish` stateDocs current/pending/missing diagnostics, unchanged broad-doc write boundary, ready/close adjacency, done-level harness, and workflow docs. |

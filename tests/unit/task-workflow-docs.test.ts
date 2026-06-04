@@ -50,7 +50,7 @@ describe('task workflow command semantics docs', () => {
       expect(contract).toContain(command);
     }
 
-    expect(workflow).toContain('| `hadara task next --json` | Recommend the next task from roadmap and board state. | Read-only report. | No. |');
+    expect(workflow).toContain('| `hadara task next --json` | Recommend next work from handoff, roadmap, and board state. | Read-only report. | No. |');
     expect(workflow).toContain('| `hadara task status --task T-XXXX --json` | Operator console projection for one task. | Read-only report. | No. |');
     expect(workflow).toContain('| `hadara evidence add-command --task T-XXXX --summary "..." --result passed --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence. |');
     expect(workflow).toContain('| `hadara task finish --task T-XXXX --execute --json` | Apply bounded status bookkeeping for `TASK.md` and `docs/TASK_BOARD.md`. | Execute after dry-run review. | Yes, bounded to those files. |');

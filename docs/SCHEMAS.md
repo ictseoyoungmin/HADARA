@@ -46,7 +46,7 @@ Initial fixtures:
 | `hadara.task.audit_close.v1` | `src/schemas/task-audit-close.schema.json` | fixture | Documents read-only close audit reports for close evidence presence, shape, and post-close hash drift. |
 | `hadara.task.ready.v1` | `src/schemas/task-ready.schema.json` | fixture | Documents read-only task readiness preflight reports before close. |
 | `hadara.task.finish.v1` | `src/schemas/task-finish.schema.json` | fixture | Documents dry-run-first bounded Task Capsule finish/status sync reports. |
-| `hadara.task.next.v1` | `src/schemas/task-next.schema.json` | fixture | Documents read-only next-task recommendation reports from slices, Task Board, and handoff state. |
+| `hadara.task.next.v1` | `src/schemas/task-next.schema.json` | fixture | Documents read-only next-task recommendation reports from handoff, slices, Task Board fallback, and backlog state. |
 | `hadara.task.workbench.v1` | `src/schemas/task-workbench.schema.json` | fixture | Documents read-only Phase 3 task status/workbench reports and normalized next actions. |
 | `hadara.runtime.version.v1` | `src/schemas/runtime-version.schema.json` | fixture | Documents read-only CLI origin, package/git/node metadata, and build freshness diagnostics. |
 | `hadara.dashboard.bootstrap.v1` | `src/schemas/dashboard-bootstrap.schema.json` | fixture | Documents the first-paint Dashboard aggregate over existing read models with disabled cache metadata, optional compact selected-task proof, and no deep evidence payload. |

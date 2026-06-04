@@ -139,7 +139,7 @@
       "path": "src/schemas/task-next.schema.json",
       "status": "fixture",
       "owner": "task/next",
-      "notes": "Documents read-only next-task recommendation reports from Development Slices, Task Board, and handoff state."
+      "notes": "Documents read-only next-task recommendation reports from handoff, Development Slices, Task Board fallback, and backlog state."
     },
     {
       "id": "hadara.task.workbench.v1",

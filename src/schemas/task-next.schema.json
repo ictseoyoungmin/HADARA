@@ -10,8 +10,24 @@
     "command": { "const": "task.next" },
     "ok": { "type": "boolean" },
     "projectRoot": { "type": "string" },
-    "summary": { "type": "object", "additionalProperties": true },
-    "recommendations": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "policy": { "const": "handoff-first" }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "sourceKind": { "enum": ["handoff", "development-slices", "task-board-fallback"] }
+        }
+      }
+    },
+    "backlog": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "sources": { "type": "object", "additionalProperties": true },
     "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
   }

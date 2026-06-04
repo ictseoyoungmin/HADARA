@@ -16,6 +16,48 @@ afterEach(() => {
 });
 
 describe('task next recommendation', () => {
+  it('prefers actionable handoff next step and keeps legacy Task Board rows as backlog', () => {
+    const root = tempProject({
+      handoffNextStep: 'Continue with task capsule upgrade/remediation dry-run hardening.',
+      developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
+    });
+    const legacy = createTaskCapsule(root, 'Legacy Partial Work');
+    updateTaskBoardStatus(root, legacy.id, 'Partial');
+
+    const report = createTaskNextReport(root);
+
+    expect(report).toMatchObject({
+      summary: { recommendations: 1, source: 'docs/AGENT_HANDOFF.md', policy: 'handoff-first' },
+      recommendations: [
+        expect.objectContaining({
+          taskId: 'TBD',
+          title: 'Task capsule upgrade/remediation dry-run hardening',
+          source: 'docs/AGENT_HANDOFF.md',
+          sourceKind: 'handoff',
+          taskCapsulePresent: false,
+          createCommand: "hadara task create 'Task capsule upgrade/remediation dry-run hardening'"
+        })
+      ],
+      sources: {
+        agentHandoff: expect.objectContaining({
+          activeNext: 'T-0181 Task Next Recommendation',
+          nextRecommendedStep: 'Continue with task capsule upgrade/remediation dry-run hardening.'
+        })
+      },
+      backlog: [
+        expect.objectContaining({
+          taskId: legacy.id,
+          title: 'Legacy Partial Work',
+          status: 'Partial',
+          source: 'docs/TASK_BOARD.md',
+          taskCapsulePresent: true
+        })
+      ]
+    });
+    expect(report.recommendations[0].taskId).not.toBe(legacy.id);
+    expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
+  });
+
   it('recommends the first incomplete Development Slices row with existing capsule metadata', () => {
     const root = tempProject();
     const done = createTaskCapsule(root, 'Already Done');
@@ -83,7 +125,8 @@ describe('task next recommendation', () => {
       taskId: task.id,
       title: 'Board Fallback',
       reason: 'First incomplete Task Board row with status Draft.',
-      source: 'docs/TASK_BOARD.md'
+      source: 'docs/TASK_BOARD.md',
+      sourceKind: 'task-board-fallback'
     });
     expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
   });
@@ -102,15 +145,35 @@ describe('task next recommendation', () => {
   });
 });
 
-function tempProject(): string {
+function tempProject(options: { handoffNextStep?: string; developmentRows?: string[] } = {}): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-task-next-'));
   roots.push(root);
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
   fs.writeFileSync(
     path.join(root, 'docs', 'AGENT_HANDOFF.md'),
-    '# AGENT_HANDOFF\n\n| Area | State | Notes |\n|---|---|---|\n| Active / Next Task | T-0181 Task Next Recommendation | Fixture. |\n',
+    [
+      '# AGENT_HANDOFF',
+      '',
+      '## Current State',
+      '',
+      '| Area | State | Notes |',
+      '|---|---|---|',
+      '| Active / Next Task | T-0181 Task Next Recommendation | Fixture. |',
+      '',
+      ...(options.handoffNextStep
+        ? [
+            '## Next Recommended Step',
+            '',
+            '| Step | Reason | Done Evidence |',
+            '|---|---|---|',
+            `| ${options.handoffNextStep} | Fixture handoff priority. | TBD |`,
+            ''
+          ]
+        : [])
+    ].join('\n'),
     'utf8'
   );
+  if (options.developmentRows) writeDevelopmentSlices(root, options.developmentRows);
   return root;
 }
 
@@ -118,6 +181,19 @@ function writeDevelopmentSlices(root: string, rows: string[]): void {
   fs.writeFileSync(
     path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'),
     ['# DEVELOPMENT_SLICES', '', '| # | Name | Task | Objective | Status / Evidence |', '|---|---|---|---|---|', ...rows, ''].join('\n'),
+    'utf8'
+  );
+}
+
+function updateTaskBoardStatus(root: string, taskId: string, status: string): void {
+  const taskBoard = path.join(root, 'docs', 'TASK_BOARD.md');
+  fs.writeFileSync(
+    taskBoard,
+    fs
+      .readFileSync(taskBoard, 'utf8')
+      .split(/\r?\n/)
+      .map((line) => (line.startsWith(`| ${taskId} |`) ? line.replace('| Draft |', `| ${status} |`) : line))
+      .join('\n'),
     'utf8'
   );
 }

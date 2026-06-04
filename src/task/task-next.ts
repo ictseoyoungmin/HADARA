@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { parseMarkdownRows } from '../services/markdown-table';
+import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
 import { listTaskCapsules } from './task-capsule';
 
 export interface TaskNextReport {
@@ -11,12 +11,14 @@ export interface TaskNextReport {
   summary: {
     recommendations: number;
     source: string;
+    policy?: 'handoff-first';
   };
   recommendations: TaskNextRecommendation[];
+  backlog?: TaskNextBacklogItem[];
   sources: {
     developmentSlices: { path: string; present: boolean; rows: number };
     taskBoard: { path: string; present: boolean; rows: number };
-    agentHandoff: { path: string; present: boolean; activeNext: string | null };
+    agentHandoff: { path: string; present: boolean; activeNext: string | null; nextRecommendedStep?: string | null };
   };
   issues: TaskNextIssue[];
 }
@@ -26,12 +28,23 @@ export interface TaskNextRecommendation {
   title: string;
   reason: string;
   source: string;
+  sourceKind?: 'handoff' | 'development-slices' | 'task-board-fallback';
   taskBoardStatus: string | null;
   taskBoardPath: string | null;
   taskCapsulePresent: boolean;
   capsule: string | null;
   requiredReading: string[];
   createCommand: string | null;
+}
+
+export interface TaskNextBacklogItem {
+  taskId: string;
+  title: string;
+  status: string;
+  source: 'docs/TASK_BOARD.md';
+  capsule: string | null;
+  taskCapsulePresent: boolean;
+  reason: string;
 }
 
 export interface TaskNextIssue {
@@ -64,8 +77,10 @@ export function createTaskNextReport(projectRoot: string): TaskNextReport {
   const capsules = listTaskCapsules(projectRoot);
 
   const nextSlice = slices.rows.find((row) => isOpenSliceStatus(row.status));
-  const recommendation = nextSlice ? recommendationFromSlice(projectRoot, nextSlice, board.rows, capsules) : recommendationFromTaskBoard(board.rows, capsules);
+  const handoffRecommendation = handoff.nextRecommendedStep ? recommendationFromHandoff(projectRoot, handoff.nextRecommendedStep, board.rows, capsules) : null;
+  const recommendation = handoffRecommendation ?? (nextSlice ? recommendationFromSlice(projectRoot, nextSlice, board.rows, capsules) : recommendationFromTaskBoard(board.rows, capsules));
   const recommendations = recommendation ? [recommendation] : [];
+  const backlog = createTaskBoardBacklog(board.rows, capsules, recommendation?.taskId ?? null);
   if (!recommendation) {
     issues.push({
       severity: 'warning',
@@ -81,13 +96,15 @@ export function createTaskNextReport(projectRoot: string): TaskNextReport {
     projectRoot,
     summary: {
       recommendations: recommendations.length,
-      source: recommendation?.source ?? 'none'
+      source: recommendation?.source ?? 'none',
+      policy: 'handoff-first'
     },
     recommendations,
+    backlog,
     sources: {
       developmentSlices: { path: 'docs/DEVELOPMENT_SLICES.md', present: slices.present, rows: slices.rows.length },
       taskBoard: { path: 'docs/TASK_BOARD.md', present: board.present, rows: board.rows.length },
-      agentHandoff: { path: 'docs/AGENT_HANDOFF.md', present: handoff.present, activeNext: handoff.activeNext }
+      agentHandoff: { path: 'docs/AGENT_HANDOFF.md', present: handoff.present, activeNext: handoff.activeNext, nextRecommendedStep: handoff.nextRecommendedStep }
     },
     issues
   };
@@ -113,12 +130,33 @@ function recommendationFromSlice(projectRoot: string, slice: SliceRow, boardRows
     title: slice.title,
     reason: `First incomplete planned slice in docs/DEVELOPMENT_SLICES.md: ${slice.status || 'no status'}.`,
     source: 'docs/DEVELOPMENT_SLICES.md',
+    sourceKind: 'development-slices',
     taskBoardStatus: boardRow?.status ?? null,
     taskBoardPath: boardRow ? 'docs/TASK_BOARD.md' : null,
     taskCapsulePresent: Boolean(capsule),
     capsule: capsulePath,
     requiredReading: REQUIRED_READING,
     createCommand: capsule ? null : `hadara task create ${shellQuote(slice.title)}`
+  };
+}
+
+function recommendationFromHandoff(projectRoot: string, step: string, boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskNextRecommendation {
+  const knownTaskId = step.match(/\bT-\d{4}\b/)?.[0] ?? null;
+  const boardRow = knownTaskId ? boardRows.find((row) => row.taskId === knownTaskId) : undefined;
+  const capsule = knownTaskId ? capsules.find((task) => task.id === knownTaskId) : undefined;
+  const title = normalizeHandoffTitle(step);
+  return {
+    taskId: knownTaskId ?? 'TBD',
+    title,
+    reason: 'Current next recommended step from docs/AGENT_HANDOFF.md.',
+    source: 'docs/AGENT_HANDOFF.md',
+    sourceKind: 'handoff',
+    taskBoardStatus: boardRow?.status ?? null,
+    taskBoardPath: boardRow ? 'docs/TASK_BOARD.md' : null,
+    taskCapsulePresent: Boolean(capsule),
+    capsule: capsule ? toPortablePath(path.relative(projectRoot, capsule.dir)) : boardRow?.capsule || null,
+    requiredReading: REQUIRED_READING,
+    createCommand: capsule ? null : `hadara task create ${shellQuote(title)}`
   };
 }
 
@@ -131,6 +169,7 @@ function recommendationFromTaskBoard(boardRows: BoardRow[], capsules: ReturnType
     title: row.title,
     reason: `First incomplete Task Board row with status ${row.status || 'empty'}.`,
     source: 'docs/TASK_BOARD.md',
+    sourceKind: 'task-board-fallback',
     taskBoardStatus: row.status,
     taskBoardPath: 'docs/TASK_BOARD.md',
     taskCapsulePresent: Boolean(capsule),
@@ -138,6 +177,24 @@ function recommendationFromTaskBoard(boardRows: BoardRow[], capsules: ReturnType
     requiredReading: REQUIRED_READING,
     createCommand: capsule ? null : `hadara task create ${shellQuote(row.title)}`
   };
+}
+
+function createTaskBoardBacklog(boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>, primaryTaskId: string | null): TaskNextBacklogItem[] {
+  return boardRows
+    .filter((row) => isOpenBoardStatus(row.status))
+    .filter((row) => row.taskId !== primaryTaskId)
+    .map((row) => {
+      const capsule = capsules.find((task) => task.id === row.taskId);
+      return {
+        taskId: row.taskId,
+        title: row.title,
+        status: row.status,
+        source: 'docs/TASK_BOARD.md',
+        capsule: capsule ? row.capsule : row.capsule || null,
+        taskCapsulePresent: Boolean(capsule),
+        reason: `Non-primary open Task Board row with status ${row.status || 'empty'}.`
+      };
+    });
 }
 
 function readDevelopmentSlices(projectRoot: string, issues: TaskNextIssue[]): { present: boolean; rows: SliceRow[] } {
@@ -164,11 +221,31 @@ function readTaskBoard(projectRoot: string, issues: TaskNextIssue[]): { present:
   return { present: true, rows };
 }
 
-function readAgentHandoff(projectRoot: string): { present: boolean; activeNext: string | null } {
+function readAgentHandoff(projectRoot: string): { present: boolean; activeNext: string | null; nextRecommendedStep: string | null } {
   const filePath = path.join(projectRoot, 'docs', 'AGENT_HANDOFF.md');
-  if (!fs.existsSync(filePath)) return { present: false, activeNext: null };
-  const row = parseMarkdownRows(fs.readFileSync(filePath, 'utf8')).find((cells) => cells[0] === 'Active / Next Task');
-  return { present: true, activeNext: row?.[1] ?? null };
+  if (!fs.existsSync(filePath)) return { present: false, activeNext: null, nextRecommendedStep: null };
+  const content = fs.readFileSync(filePath, 'utf8');
+  const row = parseMarkdownRows(content).find((cells) => cells[0] === 'Active / Next Task');
+  const nextRecommendedStep = parseMarkdownRows(readMarkdownSection(content, '## Next Recommended Step'))
+    .map((cells) => cells[0] ?? '')
+    .find((cell) => isActionableHandoffStep(cell)) ?? null;
+  return { present: true, activeNext: row?.[1] ?? null, nextRecommendedStep };
+}
+
+function isActionableHandoffStep(step: string): boolean {
+  const normalized = step.trim().toLowerCase();
+  if (!normalized || normalized === 'step' || normalized === 'tbd') return false;
+  if (normalized.startsWith('migrate selected historical evidence only when explicitly requested')) return false;
+  return true;
+}
+
+function normalizeHandoffTitle(step: string): string {
+  return step
+    .replace(/^continue\s+(with\s+)?/i, '')
+    .replace(/\.$/, '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/^./, (first) => first.toUpperCase());
 }
 
 function isOpenSliceStatus(status: string): boolean {

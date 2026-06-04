@@ -32,7 +32,7 @@ The close model has three separate phases: validation proves readiness, close re
 
 | Command | Role | Default Mode | Writes? | `ok` Meaning | Failure Exit |
 |---|---|---|---|---|---|
-| `hadara task next --json` | Recommend the next task from roadmap and board state. | Read-only report. | No. | Recommendation report was generated. | Task-style failures use 6. |
+| `hadara task next --json` | Recommend next work from handoff, roadmap, and board state. | Read-only report. | No. | Recommendation report was generated. | Task-style failures use 6. |
 | `hadara task status --task T-XXXX --json` | Operator console projection for one task. | Read-only report. | No. | Report was generated for an existing task, not that the task is ready. | Task-style failures use 6. |
 | `hadara evidence add-command --task T-XXXX --summary "..." --result passed --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence. | Evidence append succeeded. | Evidence/task-style failures use 6. |
 | `hadara task ready --task T-XXXX --level done --json` | Readiness preflight before finish/close. | Read-only report. | No. | Requested readiness level passed. | Task-style failures use 6. |

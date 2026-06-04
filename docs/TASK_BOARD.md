@@ -239,3 +239,4 @@
 | T-0236 | Evidence v2 Migration Execute Mode | Done | tasks/T-0236-evidence-v2-migration-execute-mode | |
 | T-0237 | Task Finish State Docs Advisory Report | Done | tasks/T-0237-task-finish-state-docs-advisory-report | |
 | T-0238 | Task Close Audit Boundary Guidance | Done | tasks/T-0238-task-close-audit-boundary-guidance | |
+| T-0239 | Task Next Handoff Priority | Done | tasks/T-0239-task-next-handoff-priority | |
