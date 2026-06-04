@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createReleaseDryRunReport } from '../../src/services/release-dry-run';
 import { validateSchema } from '../../src/core/schema';
@@ -203,6 +204,37 @@ describe('release dry-run', () => {
     );
   });
 
+  it('keeps release artifact evidence fresh across evidence-only commits', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-release-dry-run-git-'));
+    roots.push(root);
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    writeReleaseReadinessFiles(root);
+    runGit(root, ['init']);
+    runGit(root, ['config', 'user.email', 'hadara@example.test']);
+    runGit(root, ['config', 'user.name', 'HADARA Test']);
+    runGit(root, ['add', 'package.json', 'LICENSE', 'docs']);
+    runGit(root, ['commit', '-m', 'package inputs']);
+    const artifactCommit = gitOutput(root, ['rev-parse', 'HEAD']);
+    writeStrongEvidence(root, { artifactGitCommit: artifactCommit });
+    runGit(root, ['add', 'tasks']);
+    runGit(root, ['commit', '-m', 'release evidence']);
+
+    const report = createReleaseDryRunReport(root);
+
+    expect(report.ok).toBe(true);
+    expect(report.current.gitCommit).not.toBe(artifactCommit);
+    expect(report.checks).toContainEqual(
+      expect.objectContaining({
+        code: 'RELEASE_ARTIFACT_EVIDENCE',
+        status: 'passed'
+      })
+    );
+    expect(report.readiness).toMatchObject({
+      status: 'ready',
+      blockers: 0
+    });
+  });
+
   it('detects pyproject.toml as a read-only Python release target preview', () => {
     const root = tempProject();
     writeReleaseReadinessFiles(root);
@@ -397,6 +429,21 @@ function releaseArtifactReport(gitCommit = commit): Record<string, unknown> {
 
 function writeJson(filePath: string, value: Record<string, unknown>): void {
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+}
+
+function runGit(root: string, args: string[]): void {
+  const result = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+  if (result.status !== 0) {
+    throw new Error(`git ${args.join(' ')} failed: ${result.stderr || result.stdout}`);
+  }
+}
+
+function gitOutput(root: string, args: string[]): string {
+  const result = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+  if (result.status !== 0) {
+    throw new Error(`git ${args.join(' ')} failed: ${result.stderr || result.stdout}`);
+  }
+  return result.stdout.trim();
 }
 
 function writeReleaseReadinessFiles(root: string): void {

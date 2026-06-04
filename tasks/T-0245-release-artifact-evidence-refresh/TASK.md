@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0245 |
 | Title | Release Artifact Evidence Refresh |
-| Status | In Progress |
+| Status | Done |
 | Created | 2026-06-04 |
 | Updated | 2026-06-04 |
 
@@ -36,7 +36,7 @@
 
 ## Status
 
-In Progress
+Done
 
 ## Status History
 
@@ -44,3 +44,4 @@ In Progress
 |---|---|---|---|
 | 2026-06-04 | Draft | Initial task scaffold. | `hadara task create` |
 | 2026-06-04 | In Progress | Scope fixed to clean-worktree release artifact evidence refresh. | Capsule update |
+| 2026-06-04 | Done | Finished task capsule. | `hadara task finish --execute` |

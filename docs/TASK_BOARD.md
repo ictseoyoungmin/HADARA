@@ -245,4 +245,4 @@
 | T-0242 | Release Package Readiness Hardening | Done | tasks/T-0242-release-package-readiness-hardening | Release dry-run readiness next actions and stage timing diagnostics added. |
 | T-0243 | Create an explicit release artifact evidence refresh capsule | Done | tasks/T-0243-create-an-explicit-release-artifact-evidence-refresh-capsule | Added release artifact dirty-worktree guard; actual artifact refresh deferred until clean worktree. |
 | T-0244 | Multi-Ecosystem Release Target Model | Done | tasks/T-0244-multi-ecosystem-release-target-model | Descriptor-backed release targets added with npm-primary execution, npm package-smoke provider metadata, and Python preview-only detection. |
-| T-0245 | Release Artifact Evidence Refresh | In Progress | tasks/T-0245-release-artifact-evidence-refresh | Scaffold/scope prepared; commit before release artifact refresh to satisfy clean-worktree guard. |
+| T-0245 | Release Artifact Evidence Refresh | Done | tasks/T-0245-release-artifact-evidence-refresh | |

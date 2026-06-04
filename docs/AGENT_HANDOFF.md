@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0244 is the latest completed local task; commit current T-0244 changes before release artifact refresh. |
+| Branch | main | T-0245 release artifact evidence refresh is in close workflow; final commit pending. |
 | Current Phase | Dashboard/TUI UI work paused; core evidence/task lifecycle work resumed | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0244 Multi-Ecosystem Release Target Model | Release dry-run now emits descriptor-backed npm/GitHub/Docker targets, package smoke reports npm provider metadata, and `pyproject.toml` is preview-only Python metadata. |
-| Active / Next Task | Release artifact evidence refresh capsule | After T-0244 changes are committed/clean, refresh release artifact evidence for the current git commit; no separate clean-worktree capsule is needed. |
-| Validation Baseline | T-0244 Docker validation passed | Docker check and sync-build passed 92 files / 613 tests; built release dry-run/package-smoke smokes confirmed descriptors/provider metadata. |
+| Latest Completed Task | T-0245 Release Artifact Evidence Refresh | Release artifact evidence was refreshed for commit `8e43a7a0af3273dc56c18169ee66cdfe13da2fbe`; release dry-run is ready with blockers 0. |
+| Active / Next Task | Return to roadmap value work unless an operator explicitly starts approval-gated publish planning | Publish dry-run is ok but reports missing npm/GitHub tokens as warnings; no publish/GitHub/Docker mutation was executed. |
+| Validation Baseline | T-0245 Docker/release validation passed | Docker check and sync-build passed 92 files / 614 tests; built release artifact refresh, release dry-run, and publish dry-run smokes passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0245 Release Artifact Evidence Refresh | Hardened release artifact `npm pack` execution for disposable cache and empty successful stdout, then refreshed release artifact evidence from a clean commit. Release dry-run now returns ready/blockers 0, and publish dry-run remains no-mutation with token warnings only. | T-0245 evidence: Docker check/sync-build passed 92 files / 614 tests; release artifact refresh attached passed evidence for commit `8e43a7a0af3273dc56c18169ee66cdfe13da2fbe`; release dry-run returned `ok:true`; release publish dry-run returned `ok:true` with mutation flags false. |
 | T-0244 Multi-Ecosystem Release Target Model | Added descriptor-backed release targets while preserving npm as the active primary provider; GitHub Release remains secondary, Docker remains deferred, and Python `pyproject.toml` detection is preview-only metadata with no PyPI/build/smoke execution. | T-0244 evidence: Docker check and sync-build passed 92 files / 613 tests; built CLI release dry-run emitted npm/GitHub/Docker descriptors; built package smoke dry-run emitted `provider.smokeProfile: npm-package-smoke`. |
 | T-0243 Release Artifact Evidence Dirty-Worktree Guard | Added a clean-worktree guard before release artifact staging/npm pack so attached release artifact evidence cannot claim freshness for artifact contents containing uncommitted changes. Actual artifact refresh is deferred until the worktree is clean. | T-0243 evidence: Docker sync-build passed 92 files / 612 tests; built CLI blocked current dirty worktree with `RELEASE_ARTIFACT_WORKTREE_DIRTY`, `npmPackExecuted:false`, and no generated artifacts. |
-| T-0242 Release Package Readiness Hardening | Added additive `readiness` and `diagnostics` fields to `hadara.releaseDryRun.v1`, including next-action commands for stale evidence and stage timing/slow-stage warnings. | T-0242 evidence: Docker check and sync-build passed 92 files / 611 tests; built CLI release dry-run returned `refresh-release-artifact-evidence` and identified `strict-release-gate` as the slow stage. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| Current release dry-run is blocked by stale release artifact evidence. | `hadara release dry-run --json` reports package-smoke and clean-checkout evidence as passed, but release artifact evidence still points to git commit `51da6d269396489d4cbd3b4183ca84dcdf9e697d` while current HEAD is `06ccd308b8bee369b90f2a34a7afa45a021a7f65`. | After T-0244 changes are committed/clean, run `hadara release artifact --execute --json --output dist-release --attach-evidence --task <task-id>` in an explicit release evidence capsule. |
+| Release publish remains approval-gated/manual. | `release dry-run` is ready after T-0245, and `release publish --mode dry-run` is ok, but actual publish/deploy mutation still requires explicit approval metadata, confirmation, tokens, and future mutation-capable handling. | Do not run publish/deploy execute unless an operator explicitly requests the approval-gated release path. |
 | Release target descriptors are multi-ecosystem metadata, not multi-ecosystem execution support. | T-0244 can surface Python `pyproject.toml` as preview-only metadata, but HADARA still does not build wheels/sdists, run pip/twine smoke, load PyPI credentials, publish to PyPI, build Docker images, or create GitHub Releases. | Add future provider-specific capsules before claiming Python/Cargo/Maven/Docker/generic archive execution support. |
 | Release artifact refresh now requires a clean git worktree. | In active development, `release artifact --execute` will return `RELEASE_ARTIFACT_WORKTREE_DIRTY` and skip `npm pack` until pending changes are committed or otherwise cleaned. | Treat this as intentional release safety, not a release artifact failure; do not bypass it with dirty worktree evidence. |
 | Release dry-run latency is currently dominated by the strict release gate. | Built `/mnt/f` smoke reported total duration about 13.8s with `strict-release-gate` about 12.5s; this is now visible but not optimized. | Treat timing diagnostics as metadata; optimize strict release-gate reads only if release operators need faster repeated dry-runs. |
@@ -62,13 +62,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create or continue a release artifact evidence refresh capsule after the current worktree changes are committed/clean. | The dirty-worktree guard prevents false freshness from dirty artifact contents; recent target-model work did not refresh artifact evidence, so release dry-run remains blocked by stale release artifact evidence. | Expected command path after clean state: `hadara release artifact --execute --json --output dist-release --attach-evidence --task <task-id>`. |
+| Return to roadmap value work unless an operator explicitly starts approval-gated publish planning. | Release/package readiness is now evidence-backed and dry-run ready; actual publish remains a separate approval decision, not an automatic next capsule. | Current evidence: T-0245 release dry-run `ok:true`, readiness `ready`, blockers 0; publish dry-run `ok:true` with no mutation executed. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| Release artifact evidence refresh full check | Docker `npm run dev:docker-check` and `npm run dev:docker-sync-build` passed with 92 files and 614 tests during T-0245. | Built release artifact refresh attached passed T-0245 evidence; built release dry-run returned `ok:true`, readiness `ready`, blockers 0; built release publish dry-run returned `ok:true` with token warnings only and mutation flags false. |
 | Multi-ecosystem release target model full check | Docker `npm run dev:docker-check` and `npm run dev:docker-sync-build` passed with 92 files and 613 tests during T-0244. | Built CLI release dry-run returned expected stale artifact blocker but emitted npm/GitHub/Docker descriptors; built package smoke dry-run emitted provider `npm-package-smoke`; no PyPI/Docker/GitHub mutation was added. |
 | Release artifact dirty-worktree guard full check | Docker `npm run dev:docker-sync-build` passed with 92 files and 612 tests during T-0243. | Built CLI blocked `release artifact --execute --attach-evidence` in the current dirty worktree with `RELEASE_ARTIFACT_WORKTREE_DIRTY`, `npmPackExecuted:false`, and no generated artifacts. |
 | Release dry-run readiness hardening full check | Docker `npm run dev:docker-check` and `npm run dev:docker-sync-build` passed with 92 files and 611 tests during T-0242. | Built CLI release dry-run smoke returned exit 6 as expected for stale release artifact evidence, with `readiness.nextActions[0].id: refresh-release-artifact-evidence` and `diagnostics.slowStageWarnings[0].stage: strict-release-gate`. |

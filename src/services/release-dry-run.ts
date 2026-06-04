@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { assertSchema } from '../core/schema';
 import { createReleaseGateReport } from './operational-debt';
 import { isStrictReleaseEvidenceProof, readReleaseEvidenceRecords, ReleaseEvidenceRecord, validateReleaseEvidenceArtifact } from './release-evidence';
@@ -112,6 +113,7 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
   const releaseGate = timeStage(timings, 'strict-release-gate', () => createReleaseGateReport(projectRoot, 'strict'));
   const evidenceRecords = timeStage(timings, 'release-evidence-scan', () => readReleaseEvidenceRecords(projectRoot));
   const evidence = timeStage(timings, 'release-evidence-validation', () => evidenceRequirements().map((requirement) => validateEvidenceRequirement(evidenceRecords, requirement)));
+  const gitFreshness = createGitFreshnessChecker(projectRoot, gitCommit);
   const checks = [
     {
       code: 'STRICT_RELEASE_GATE',
@@ -122,8 +124,8 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
     ...evidence.map((item) => ({
       code: item.code,
       name: evidenceName(item.code),
-      status: evidenceCheckPassed(item, packageMetadata.version, gitCommit) ? ('passed' as const) : ('error' as const),
-      summary: evidenceSummary(item, packageMetadata.version, gitCommit)
+      status: evidenceCheckPassed(item, packageMetadata.version, gitCommit, gitFreshness) ? ('passed' as const) : ('error' as const),
+      summary: evidenceSummary(item, packageMetadata.version, gitCommit, gitFreshness)
     })),
     {
       code: 'RELEASE_TARGETS',
@@ -140,7 +142,7 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
       message: `${check.name}: ${check.summary}`
     }));
   applyStageStatuses(timings, releaseGate.ok, checks);
-  const readiness = createReadinessSummary(checks, evidence, packageMetadata.version, gitCommit);
+  const readiness = createReadinessSummary(checks, evidence, packageMetadata.version, gitCommit, gitFreshness);
   const diagnostics = createDiagnostics(generatedAt, startedAt, timings);
 
   const report: ReleaseDryRunReport = {
@@ -253,7 +255,8 @@ function createReadinessSummary(
   checks: ReleaseDryRunReport['checks'],
   evidence: ReleaseDryRunReport['evidence'],
   packageVersion: string,
-  gitCommit: string | undefined
+  gitCommit: string | undefined,
+  gitFreshness: GitFreshnessChecker
 ): ReleaseDryRunReport['readiness'] {
   const blockers = checks.filter((check) => check.status === 'error').length;
   const warnings = checks.filter((check) => check.status === 'warning').length;
@@ -261,7 +264,7 @@ function createReadinessSummary(
     status: blockers === 0 ? 'ready' : 'blocked',
     blockers,
     warnings,
-    nextActions: createNextActions(checks, evidence, packageVersion, gitCommit)
+    nextActions: createNextActions(checks, evidence, packageVersion, gitCommit, gitFreshness)
   };
 }
 
@@ -269,7 +272,8 @@ function createNextActions(
   checks: ReleaseDryRunReport['checks'],
   evidence: ReleaseDryRunReport['evidence'],
   packageVersion: string,
-  gitCommit: string | undefined
+  gitCommit: string | undefined,
+  gitFreshness: GitFreshnessChecker
 ): ReleaseDryRunReport['readiness']['nextActions'] {
   const actions: ReleaseDryRunReport['readiness']['nextActions'] = [];
   if (checks.some((check) => check.code === 'STRICT_RELEASE_GATE' && check.status === 'error')) {
@@ -283,7 +287,7 @@ function createNextActions(
   }
 
   const packageSmoke = evidence.find((item) => item.code === 'PACKAGE_SMOKE_EVIDENCE');
-  if (!evidenceCheckPassed(packageSmoke ?? { code: 'PACKAGE_SMOKE_EVIDENCE', artifactExists: false }, packageVersion, gitCommit)) {
+  if (!evidenceCheckPassed(packageSmoke ?? { code: 'PACKAGE_SMOKE_EVIDENCE', artifactExists: false }, packageVersion, gitCommit, gitFreshness)) {
     actions.push({
       id: 'refresh-package-smoke-evidence',
       required: true,
@@ -294,7 +298,7 @@ function createNextActions(
   }
 
   const cleanCheckout = evidence.find((item) => item.code === 'CLEAN_CHECKOUT_SMOKE_EVIDENCE');
-  if (!evidenceCheckPassed(cleanCheckout ?? { code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE', artifactExists: false }, packageVersion, gitCommit)) {
+  if (!evidenceCheckPassed(cleanCheckout ?? { code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE', artifactExists: false }, packageVersion, gitCommit, gitFreshness)) {
     actions.push({
       id: 'refresh-clean-checkout-smoke-evidence',
       required: true,
@@ -305,7 +309,7 @@ function createNextActions(
   }
 
   const releaseArtifact = evidence.find((item) => item.code === 'RELEASE_ARTIFACT_EVIDENCE');
-  if (!evidenceCheckPassed(releaseArtifact ?? { code: 'RELEASE_ARTIFACT_EVIDENCE', artifactExists: false }, packageVersion, gitCommit)) {
+  if (!evidenceCheckPassed(releaseArtifact ?? { code: 'RELEASE_ARTIFACT_EVIDENCE', artifactExists: false }, packageVersion, gitCommit, gitFreshness)) {
     actions.push({
       id: 'refresh-release-artifact-evidence',
       required: true,
@@ -370,7 +374,9 @@ function validateEvidenceRequirement(records: ReleaseEvidenceRecord[], requireme
   };
 }
 
-function evidenceCheckPassed(item: ReleaseDryRunReport['evidence'][number], packageVersion: string, gitCommit: string | undefined): boolean {
+type GitFreshnessChecker = (item: ReleaseDryRunReport['evidence'][number]) => boolean;
+
+function evidenceCheckPassed(item: ReleaseDryRunReport['evidence'][number], packageVersion: string, gitCommit: string | undefined, gitFreshness: GitFreshnessChecker): boolean {
   if (item.result !== 'passed') return false;
   if (item.artifactExists !== true || item.artifactSchemaValid !== true || item.sourceOk !== true) return false;
   if (item.code === 'PACKAGE_SMOKE_EVIDENCE' && (item.category !== 'package-smoke' || item.mode !== 'local')) return false;
@@ -379,12 +385,12 @@ function evidenceCheckPassed(item: ReleaseDryRunReport['evidence'][number], pack
     if (item.category !== 'release-artifact' || item.mode !== 'execute') return false;
     if (item.packageVersion !== packageVersion) return false;
     if (!item.manifestHash) return false;
+    if (gitCommit && item.gitCommit && item.gitCommit !== gitCommit && !gitFreshness(item)) return false;
   }
-  if (gitCommit && item.gitCommit && item.gitCommit !== gitCommit) return false;
   return true;
 }
 
-function evidenceSummary(item: ReleaseDryRunReport['evidence'][number], packageVersion: string, gitCommit: string | undefined): string {
+function evidenceSummary(item: ReleaseDryRunReport['evidence'][number], packageVersion: string, gitCommit: string | undefined, gitFreshness: GitFreshnessChecker): string {
   if (!item.taskId) return 'No matching passed public evidence record was found.';
   if (!item.artifactExists) return `${item.taskId} at ${item.time} has no linked public evidence artifact.`;
   if (item.artifactSchemaValid !== true) return `${item.taskId} at ${item.time} has a linked artifact, but schema validation failed.`;
@@ -400,9 +406,26 @@ function evidenceSummary(item: ReleaseDryRunReport['evidence'][number], packageV
     if (item.category !== 'release-artifact' || item.mode !== 'execute') return `${item.taskId} at ${item.time} does not match expected release-artifact category/mode.`;
     if (item.packageVersion !== packageVersion) return `${item.taskId} at ${item.time} package version ${item.packageVersion ?? 'unknown'} does not match current ${packageVersion}.`;
     if (!item.manifestHash) return `${item.taskId} at ${item.time} does not expose a release artifact manifest hash.`;
+    if (gitCommit && item.gitCommit && item.gitCommit !== gitCommit && !gitFreshness(item)) return `${item.taskId} at ${item.time} git commit ${item.gitCommit} does not match current ${gitCommit}.`;
   }
-  if (gitCommit && item.gitCommit && item.gitCommit !== gitCommit) return `${item.taskId} at ${item.time} git commit ${item.gitCommit} does not match current ${gitCommit}.`;
   return `${item.taskId} at ${item.time} has a current schema-valid public artifact.`;
+}
+
+function createGitFreshnessChecker(projectRoot: string, currentGitCommit: string | undefined): GitFreshnessChecker {
+  return (item) => {
+    if (!currentGitCommit || !item.gitCommit || item.gitCommit === currentGitCommit) return true;
+    if (item.code !== 'RELEASE_ARTIFACT_EVIDENCE') return false;
+    return releaseArtifactInputsUnchangedSince(projectRoot, item.gitCommit, currentGitCommit);
+  };
+}
+
+function releaseArtifactInputsUnchangedSince(projectRoot: string, artifactGitCommit: string, currentGitCommit: string): boolean {
+  const result = spawnSync('git', ['diff', '--name-only', `${artifactGitCommit}..${currentGitCommit}`, '--', 'dist', 'README.md', 'LICENSE', 'package.json'], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    timeout: 10_000
+  });
+  return result.status === 0 && result.stdout.trim().length === 0;
 }
 
 function evidenceRequirements(): EvidenceRequirement[] {
