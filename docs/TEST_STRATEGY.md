@@ -373,8 +373,9 @@ Required checks by slice:
 | T-0160 Protocol doctor all scope | Tests must validate `--scope all`, default `protocol doctor --json`, schema-valid output, and no write/runtime side effects. |
 | T-0161 Markdown table helper extraction | Tests must cover shared table parsing/formatting helpers, malformed-table skip behavior, safe cell validation, and unchanged protocol/harness issue-code behavior after extraction. |
 | T-0162 Doctor remediation hint unification | Tests must cover additive doctor remediation hints for existing safe-auto fixes, schema-valid reports, no writes from doctor commands, and unchanged dry-run/execute semantics for `protocol remediate --fix`. |
-| T-0163 Task upgrade-scaffold command | Tests must cover dry-run no-write behavior, execute idempotence, legacy prose preservation, malformed-file skip warnings, and no deletion or status/acceptance mutation. |
+| T-0163/T-0240 Task upgrade-scaffold command | Tests must cover dry-run no-write behavior, report-level before-hash metadata, execute refusal without a matching reviewed dry-run hash, execute idempotence, legacy prose preservation, malformed-file skip warnings, and no deletion or status/acceptance mutation. |
 | T-0164 Protocol surface docs alignment | Tests or smokes must verify CLI help, schema notes, and JSON contract docs agree on implemented protocol doctor scopes and the current `protocol remediate --fix` surface. |
+| T-0240 Protocol remediation execute guard | Tests must cover dry-run `summary.beforeHash`, execute refusal without `--before-hash`, execute refusal on hash mismatch, and apply-time write-conflict detection after a matching dry-run hash. |
 
 Protocol doctor and remediation surfaces must not enable Hermes/MCP runtime capabilities, execute shell commands, call providers, publish packages, mutate release state, or silently rewrite user-authored docs.
 

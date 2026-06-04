@@ -23,7 +23,13 @@
       "properties": {
         "planned": { "type": "integer" },
         "changed": { "type": "integer" },
-        "skipped": { "type": "integer" }
+        "skipped": { "type": "integer" },
+        "beforeHash": {
+          "anyOf": [
+            { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            { "type": "null" }
+          ]
+        }
       }
     },
     "actions": {

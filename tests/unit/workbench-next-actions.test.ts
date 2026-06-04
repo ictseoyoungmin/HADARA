@@ -19,7 +19,7 @@ describe('workbench next actions', () => {
         kind: 'remediation',
         required: true,
         command: 'hadara protocol remediate --fix evidence-jsonl --task T-0172 --json',
-        executeCommand: 'hadara protocol remediate --fix evidence-jsonl --task T-0172 --execute --json',
+        executeCommand: 'hadara protocol remediate --fix evidence-jsonl --task T-0172 --execute --before-hash <dry-run summary.beforeHash> --json',
         sourceIssueCodes: ['EVIDENCE_LINT_EVIDENCE_INDEX_MISSING']
       })
     );

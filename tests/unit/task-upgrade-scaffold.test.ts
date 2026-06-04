@@ -41,6 +41,7 @@ describe('task upgrade scaffold report', () => {
       status: 'planned',
       expectedBeforeExists: true
     });
+    expect(report.summary.beforeHash).toMatch(/^[a-f0-9]{64}$/);
     expect(fs.readFileSync(planPath, 'utf8')).toBe('# Plan\n\nLegacy prose stays.\n');
     expect(validateSchema('hadara.task.upgrade_scaffold.v1', report).ok).toBe(true);
   });
@@ -51,7 +52,8 @@ describe('task upgrade scaffold report', () => {
     const planPath = path.join(task.dir, 'PLAN.md');
     fs.writeFileSync(planPath, '# Plan\n\nLegacy prose stays.\n', 'utf8');
 
-    const executeReport = createTaskUpgradeScaffoldReport(root, task.id, 'execute');
+    const dryRun = createTaskUpgradeScaffoldReport(root, task.id, 'dry-run');
+    const executeReport = createTaskUpgradeScaffoldReport(root, task.id, 'execute', { beforeHash: dryRun.summary.beforeHash ?? undefined });
     const updated = fs.readFileSync(planPath, 'utf8');
 
     expect(executeReport.summary.changed).toBeGreaterThan(0);
@@ -62,7 +64,26 @@ describe('task upgrade scaffold report', () => {
     expect(rerun.actions.find((action) => action.path.endsWith('/PLAN.md'))).toMatchObject({
       status: 'skipped'
     });
+    expect(rerun.summary.beforeHash).toBeNull();
     expect(fs.readFileSync(planPath, 'utf8')).toBe(updated);
+  });
+
+  it('refuses execute with planned writes when before-hash is missing or stale', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Guarded execute');
+    const planPath = path.join(task.dir, 'PLAN.md');
+    fs.writeFileSync(planPath, '# Plan\n\nLegacy prose stays.\n', 'utf8');
+
+    const missingHash = createTaskUpgradeScaffoldReport(root, task.id, 'execute');
+    expect(missingHash.ok).toBe(false);
+    expect(missingHash.issues).toContainEqual(expect.objectContaining({ code: 'TASK_UPGRADE_SCAFFOLD_BEFORE_HASH_REQUIRED', severity: 'error' }));
+    expect(fs.readFileSync(planPath, 'utf8')).toBe('# Plan\n\nLegacy prose stays.\n');
+
+    const staleHash = createTaskUpgradeScaffoldReport(root, task.id, 'execute', { beforeHash: '0'.repeat(64) });
+    expect(staleHash.ok).toBe(false);
+    expect(staleHash.issues).toContainEqual(expect.objectContaining({ code: 'TASK_UPGRADE_SCAFFOLD_BEFORE_HASH_MISMATCH', severity: 'error' }));
+    expect(fs.readFileSync(planPath, 'utf8')).toBe('# Plan\n\nLegacy prose stays.\n');
+    expect(validateSchema('hadara.task.upgrade_scaffold.v1', staleHash).ok).toBe(true);
   });
 
   it('creates missing standard files and empty evidence index only when executing', () => {
@@ -78,7 +99,7 @@ describe('task upgrade scaffold report', () => {
     expect(fs.existsSync(path.join(task.dir, 'FILES.md'))).toBe(false);
     expect(fs.existsSync(path.join(task.dir, 'evidence.jsonl'))).toBe(false);
 
-    const execute = createTaskUpgradeScaffoldReport(root, task.id, 'execute');
+    const execute = createTaskUpgradeScaffoldReport(root, task.id, 'execute', { beforeHash: dryRun.summary.beforeHash ?? undefined });
     expect(execute.ok).toBe(true);
     expect(fs.readFileSync(path.join(task.dir, 'FILES.md'), 'utf8')).toContain('| Path | Action | Reason | Status |');
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe('');

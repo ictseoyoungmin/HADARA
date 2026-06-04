@@ -240,3 +240,4 @@
 | T-0237 | Task Finish State Docs Advisory Report | Done | tasks/T-0237-task-finish-state-docs-advisory-report | |
 | T-0238 | Task Close Audit Boundary Guidance | Done | tasks/T-0238-task-close-audit-boundary-guidance | |
 | T-0239 | Task Next Handoff Priority | Done | tasks/T-0239-task-next-handoff-priority | |
+| T-0240 | Task Capsule Upgrade Remediation Dry Run Hardening | Done | tasks/T-0240-task-capsule-upgrade-remediation-dry-run-hardening | |

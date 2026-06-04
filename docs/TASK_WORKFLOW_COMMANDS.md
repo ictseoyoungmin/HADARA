@@ -28,6 +28,8 @@ hadara task audit-close --task T-XXXX --json
 
 The close model has three separate phases: validation proves readiness, close records the proof, and audit checks the already-recorded close evidence. Close evidence is excluded from the current validation loop because it is appended after validation; requiring it as a same-run precondition would create a fixed-point loop.
 
+Dry-run-first remediation commands use a separate guard: when `task upgrade-scaffold` or `protocol remediate` reports planned writes, the dry-run report includes `summary.beforeHash`. Execute mode requires `--before-hash <hash>` from that reviewed dry-run before it will apply those writes.
+
 ## Command Semantics Matrix
 
 | Command | Role | Default Mode | Writes? | `ok` Meaning | Failure Exit |

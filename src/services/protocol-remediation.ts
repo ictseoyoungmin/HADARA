@@ -27,6 +27,7 @@ export interface ProtocolRemediateInput {
   mode: ProtocolRemediationMode;
   taskId?: string;
   profile?: 'basic' | 'standard' | 'governed';
+  beforeHash?: string;
 }
 
 export interface ProtocolRemediateReport {
@@ -40,6 +41,7 @@ export interface ProtocolRemediateReport {
     planned: number;
     changed: number;
     skipped: number;
+    beforeHash: string | null;
   };
   actions: ProtocolRemediateAction[];
   issues: ProtocolRemediateIssue[];
@@ -85,6 +87,9 @@ export function createProtocolRemediateReport(input: ProtocolRemediateInput): Pr
       issues.push({ severity: 'error', code: 'PROTOCOL_REMEDIATION_FIX_UNSUPPORTED', message: `unsupported protocol remediation fix: ${String(input.fix)}` });
   }
 
+  const beforeHash = createPlanHash(actions);
+  if (input.mode === 'execute' && beforeHash) validateBeforeHash(input.beforeHash, beforeHash, issues);
+
   if (input.mode === 'execute' && issues.every((issue) => issue.severity !== 'error')) {
     applyActions(input.projectRoot, actions, issues);
   }
@@ -99,11 +104,44 @@ export function createProtocolRemediateReport(input: ProtocolRemediateInput): Pr
     summary: {
       planned: actions.filter((action) => action.status === 'planned').length,
       changed: actions.filter((action) => action.status === 'created' || action.status === 'updated').length,
-      skipped: actions.filter((action) => action.status === 'skipped').length
+      skipped: actions.filter((action) => action.status === 'skipped').length,
+      beforeHash
     },
     actions,
     issues
   };
+}
+
+function createPlanHash(actions: ProtocolRemediateAction[]): string | null {
+  const planned = actions
+    .filter((action) => action.status === 'planned')
+    .map((action) => ({
+      id: action.id,
+      path: action.path,
+      expectedBeforeExists: action.expectedBeforeExists ?? null,
+      expectedBeforeHash: action.expectedBeforeHash ?? null,
+      afterHash: action.afterHash ?? null
+    }));
+  if (planned.length === 0) return null;
+  return hashContent(JSON.stringify(planned));
+}
+
+function validateBeforeHash(beforeHash: string | undefined, expected: string, issues: ProtocolRemediateIssue[]): void {
+  if (!beforeHash) {
+    issues.push({
+      severity: 'error',
+      code: 'PROTOCOL_REMEDIATION_BEFORE_HASH_REQUIRED',
+      message: `Execute mode requires --before-hash ${expected} from a reviewed dry-run report before applying planned writes.`
+    });
+    return;
+  }
+  if (beforeHash !== expected) {
+    issues.push({
+      severity: 'error',
+      code: 'PROTOCOL_REMEDIATION_BEFORE_HASH_MISMATCH',
+      message: 'The supplied --before-hash does not match the current remediation plan; rerun the dry-run and review the new plan.'
+    });
+  }
 }
 
 function planTaskBoardRow(input: ProtocolRemediateInput, actions: ProtocolRemediateAction[], issues: ProtocolRemediateIssue[]): void {

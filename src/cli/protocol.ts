@@ -80,7 +80,8 @@ function handleProtocolRemediateCommand(input: ProtocolCommandInput): boolean {
     fix,
     mode: getFlag(input.args, '--execute') ? 'execute' : 'dry-run',
     taskId: getStringOption(input.args, '--task'),
-    profile
+    profile,
+    beforeHash: getStringOption(input.args, '--before-hash')
   });
 
   if (input.jsonOutput) {

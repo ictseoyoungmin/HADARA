@@ -17,9 +17,14 @@ export interface TaskUpgradeScaffoldReport {
     planned: number;
     changed: number;
     skipped: number;
+    beforeHash: string | null;
   };
   actions: TaskUpgradeScaffoldAction[];
   issues: TaskUpgradeScaffoldIssue[];
+}
+
+export interface TaskUpgradeScaffoldOptions {
+  beforeHash?: string;
 }
 
 export interface TaskUpgradeScaffoldAction {
@@ -121,7 +126,7 @@ const FRAME_BLOCKS: Record<string, FrameBlock[]> = {
   ]
 };
 
-export function createTaskUpgradeScaffoldReport(projectRoot: string, taskId: string, mode: TaskUpgradeScaffoldMode): TaskUpgradeScaffoldReport {
+export function createTaskUpgradeScaffoldReport(projectRoot: string, taskId: string, mode: TaskUpgradeScaffoldMode, options: TaskUpgradeScaffoldOptions = {}): TaskUpgradeScaffoldReport {
   const actions: TaskUpgradeScaffoldAction[] = [];
   const issues: TaskUpgradeScaffoldIssue[] = [];
   const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
@@ -133,6 +138,9 @@ export function createTaskUpgradeScaffoldReport(projectRoot: string, taskId: str
       planFileUpgrade(projectRoot, task, fileName, mode, actions, issues);
     }
   }
+
+  const beforeHash = createPlanHash(actions);
+  if (mode === 'execute' && beforeHash) validateBeforeHash(options.beforeHash, beforeHash, issues);
 
   if (mode === 'execute' && issues.every((issue) => issue.severity !== 'error')) {
     applyActions(projectRoot, actions, issues);
@@ -148,7 +156,8 @@ export function createTaskUpgradeScaffoldReport(projectRoot: string, taskId: str
     summary: {
       planned: actions.filter((action) => action.status === 'planned').length,
       changed: actions.filter((action) => action.status === 'created' || action.status === 'updated').length,
-      skipped: actions.filter((action) => action.status === 'skipped').length
+      skipped: actions.filter((action) => action.status === 'skipped').length,
+      beforeHash
     },
     actions,
     issues
@@ -231,6 +240,38 @@ function createAction(
     expectedBeforeHash: hashContent(before),
     afterHash: hashContent(after)
   };
+}
+
+function createPlanHash(actions: TaskUpgradeScaffoldAction[]): string | null {
+  const planned = actions
+    .filter((action) => action.status === 'planned')
+    .map((action) => ({
+      id: action.id,
+      path: action.path,
+      expectedBeforeExists: action.expectedBeforeExists ?? null,
+      expectedBeforeHash: action.expectedBeforeHash ?? null,
+      afterHash: action.afterHash ?? null
+    }));
+  if (planned.length === 0) return null;
+  return hashContent(JSON.stringify(planned));
+}
+
+function validateBeforeHash(beforeHash: string | undefined, expected: string, issues: TaskUpgradeScaffoldIssue[]): void {
+  if (!beforeHash) {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_UPGRADE_SCAFFOLD_BEFORE_HASH_REQUIRED',
+      message: `Execute mode requires --before-hash ${expected} from a reviewed dry-run report before applying planned writes.`
+    });
+    return;
+  }
+  if (beforeHash !== expected) {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_UPGRADE_SCAFFOLD_BEFORE_HASH_MISMATCH',
+      message: 'The supplied --before-hash does not match the current scaffold upgrade plan; rerun the dry-run and review the new plan.'
+    });
+  }
 }
 
 function applyActions(projectRoot: string, actions: TaskUpgradeScaffoldAction[], issues: TaskUpgradeScaffoldIssue[]): void {

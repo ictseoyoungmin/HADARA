@@ -4,24 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0239 is committed locally in current HEAD. |
+| Branch | main | T-0240 is committed locally in current HEAD. |
 | Current Phase | Dashboard/TUI UI work paused; core evidence/task lifecycle work resumed | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0239 Task Next Handoff Priority | `hadara.task.next.v1` now uses handoff-first recommendations and keeps old Partial Task Board rows as non-primary backlog. |
-| Active / Next Task | Task capsule upgrade/remediation dry-run hardening | Finish and close/audit workflow reports are now more actionable; continue lifecycle hardening around safe capsule remediation instead of UI polish. |
-| Validation Baseline | T-0239 Docker validation passed | Focused task-next suite passed 3 files / 9 tests; `npm run dev:docker-sync-build` passed with 92 files / 608 tests; built `task next` smoke used handoff primary and kept T-0006 in backlog. |
+| Latest Completed Task | T-0240 Task Capsule Upgrade Remediation Dry Run Hardening | `task upgrade-scaffold` and `protocol remediate` planned writes now require a reviewed dry-run `summary.beforeHash` before execute mode writes. |
+| Active / Next Task | Release/package readiness hardening | Evidence v2, finish/close guidance, task-next priority, and remediation execute guards are in place; return to release/package value work before more UI or lifecycle polish. |
+| Validation Baseline | T-0240 Docker validation passed | Focused upgrade/remediation guard suite passed 5 files / 36 tests; `npm run dev:docker-sync-build` passed with 92 files / 610 tests; built CLI guard smoke verified hash-required execute behavior. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0240 Task Capsule Upgrade Remediation Dry Run Hardening | Added report-level `summary.beforeHash` to `hadara.task.upgrade_scaffold.v1` and `hadara.protocol.remediation.v1`; execute mode now rejects planned writes without a matching reviewed dry-run hash while preserving per-action write conflict checks. | T-0240 evidence: focused guard suite passed 5 files / 36 tests; Docker sync-build passed 92 files / 610 tests; built CLI guard smoke verified no-hash failure and matching-hash success for task scaffold upgrade and protocol remediation. |
 | T-0239 Task Next Handoff Priority | Added `docs/specs/HADARA_Task_Next_Handoff_Priority_Refactor.md`, registered it in SOP Required Reading, and changed `hadara.task.next.v1` to use handoff-first policy metadata with sourceKind and backlog rows while preserving Development Slice and Task Board fallback behavior. | T-0239 evidence: focused task-next/schema/workflow-docs tests passed 3 files / 9 tests; Docker sync-build passed 92 files / 608 tests; built CLI smoke recommended handoff current work and kept T-0006 only in `backlog`. |
 | T-0238 Task Close Audit Boundary Guidance | Added `lifecycle` metadata to `hadara.task.close.v1` and `auditVerdict` metadata to `hadara.task.audit_close.v1`, making validation/close/audit phases, close evidence loop boundary, write boundary, and current/recorded hash verdicts machine-readable while preserving close-evidence-only execute and read-only audit. | T-0238 evidence: focused close/audit guidance tests passed 5 files / 19 tests; Docker sync-build passed 92 files / 607 tests; built CLI close dry-run showed `lifecycle.model: validation-close-audit`; built audit-close before close showed `auditVerdict.verdict: not-closed`. |
-| T-0237 Task Finish State Docs Advisory Report | Added `stateDocs` to `hadara.task.finish.v1` for `docs/DEVELOPMENT_SLICES.md`, `docs/PROJECT_STATE.md`, and `docs/AGENT_HANDOFF.md`, with current/pending/missing state, mention signal, and recommendations while preserving the `task finish --execute` write boundary. | T-0237 evidence: focused task lifecycle tests passed 5 files / 40 tests; Docker sync-build passed 92 files / 607 tests; built CLI smoke returned `stateDocsPending: 3` before manual docs update. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
+| `task upgrade-scaffold --execute` and `protocol remediate --execute` now require `--before-hash` when writes are planned. | Old execute-only copy-paste commands fail closed. | Run the dry-run first, review `summary.beforeHash`, then execute with `--before-hash <hash>`. |
 | `task next` now emits handoff recommendations with `taskId: TBD` when no capsule exists yet. | Consumers that require concrete Task IDs must inspect `createCommand` and `sourceKind` before assuming a capsule exists. | Use `createCommand` to create the next capsule, then rerun `task next` or `task status` for the concrete task. |
 | Host `node_modules` is ignored local state and not the validation baseline. | This workspace may have host dependencies from local attempts, but reproducible validation should not depend on them. | Use the reusable Docker workflow for validation/build; treat host dependency state as disposable. |
 | Full dashboard projection freshness proof remains cheap-metadata based. | Projection status can report stale/unknown rather than proving freshness through expensive broad scans. | Keep `/api/dashboard/core` non-blocking; add per-source manifests in a future slice only if operators need stronger freshness proof. |
@@ -57,13 +58,15 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Continue with task capsule upgrade/remediation dry-run hardening. | Evidence v2, finish advisories, and close/audit boundary guidance are now in place; the next lifecycle value is safe bounded remediation for capsule drift. | Use protocol doctor/remediation docs, T-0163 task upgrade scaffold behavior, and recent finish/close workflow reports. |
+| Continue with release/package readiness hardening. | Evidence v2 and task lifecycle safety work are now stable enough to return to release readiness value work. | Review release/package readiness docs and current release-gate evidence before creating the next capsule. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| Task upgrade/remediation guard focused checks | Docker focused suite passed with 5 files / 36 tests during T-0240. | Covered task scaffold upgrade before-hash metadata, missing/stale hash refusal, guarded execute, protocol remediation guard behavior, apply-time conflict detection, CLI dry-run JSON, workbench remediation guidance, and schema fixtures. |
+| Task upgrade/remediation guard full check | Docker `npm run dev:docker-sync-build` passed with 92 files and 610 tests during T-0240. | Built CLI guard smoke verified `task upgrade-scaffold` and `protocol remediate` dry-run hashes, no-hash execute failures, and matching-hash execute success in a temp project. |
 | Task-next handoff-priority focused checks | Docker focused suite passed with 3 files / 9 tests during T-0239. | Covered handoff primary recommendations, sourceKind/policy metadata, backlog rows for legacy Partial tasks, schema fixtures, and workflow docs. |
 | Task-next handoff-priority full check | Docker `npm run dev:docker-sync-build` passed with 92 files and 608 tests during T-0239. | Built `task next --json` smoke returned `summary.source: docs/AGENT_HANDOFF.md`, `policy: handoff-first`, `taskId: TBD`, and T-0006 only in `backlog`. |
 | Task close/audit boundary guidance focused checks | Docker focused suite passed with 5 files / 19 tests during T-0238. | Covered `task close` lifecycle guidance, execute write boundary, `task audit-close` audit verdicts, schema fixtures, workbench/ready adjacency, and workflow docs. |

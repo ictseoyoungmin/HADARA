@@ -48,7 +48,7 @@ describe('protocol remediation service', () => {
     });
     expect(fs.readFileSync(boardPath, 'utf8')).not.toContain(`| ${task.id} |`);
 
-    const executed = createProtocolRemediateReport({ projectRoot: root, fix: 'task-board-row', mode: 'execute', taskId: task.id });
+    const executed = createProtocolRemediateReport({ projectRoot: root, fix: 'task-board-row', mode: 'execute', taskId: task.id, beforeHash: dryRun.summary.beforeHash ?? undefined });
 
     expect(executed.actions[0]).toMatchObject({ status: 'updated', path: 'docs/TASK_BOARD.md' });
     expect(validateSchema('hadara.protocol.remediation.v1', executed).ok).toBe(true);
@@ -59,7 +59,8 @@ describe('protocol remediation service', () => {
     const root = tempProject();
     const decisionsPath = path.join(root, 'docs', 'DECISIONS.md');
 
-    const report = createProtocolRemediateReport({ projectRoot: root, fix: 'decisions-table-frame', mode: 'execute' });
+    const dryRun = createProtocolRemediateReport({ projectRoot: root, fix: 'decisions-table-frame', mode: 'dry-run' });
+    const report = createProtocolRemediateReport({ projectRoot: root, fix: 'decisions-table-frame', mode: 'execute', beforeHash: dryRun.summary.beforeHash ?? undefined });
 
     const content = fs.readFileSync(decisionsPath, 'utf8');
     expect(report.actions[0]).toMatchObject({ status: 'updated', path: 'docs/DECISIONS.md' });
@@ -71,11 +72,13 @@ describe('protocol remediation service', () => {
     const root = tempProject();
     const projectStatePath = path.join(root, 'docs', 'PROJECT_STATE.md');
 
-    const created = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'standard' });
+    const createDryRun = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'dry-run', profile: 'standard' });
+    const created = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'standard', beforeHash: createDryRun.summary.beforeHash ?? undefined });
     expect(created.actions[0]).toMatchObject({ status: 'updated', path: 'docs/PROJECT_STATE.md' });
     expect(fs.readFileSync(projectStatePath, 'utf8')).toContain('| HADARA Profile | standard |');
 
-    const updated = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed' });
+    const updateDryRun = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'dry-run', profile: 'governed' });
+    const updated = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed', beforeHash: updateDryRun.summary.beforeHash ?? undefined });
     expect(updated.actions[0]).toMatchObject({ status: 'updated', path: 'docs/PROJECT_STATE.md' });
     expect(fs.readFileSync(projectStatePath, 'utf8')).toContain('| HADARA Profile | governed |');
     expect(fs.readFileSync(projectStatePath, 'utf8')).not.toContain('| HADARA Profile | standard |');
@@ -90,13 +93,31 @@ describe('protocol remediation service', () => {
       'utf8'
     );
 
-    createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed' });
+    const dryRun = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'dry-run', profile: 'governed' });
+    createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed', beforeHash: dryRun.summary.beforeHash ?? undefined });
 
     const content = fs.readFileSync(projectStatePath, 'utf8');
     expect(content).toContain('| Owner | Team A |');
     expect(content).toContain('| HADARA Profile | governed |');
     expect(content).toContain('## Current Status');
     expect(content.match(/\| Field \| Value \|/g)).toHaveLength(1);
+  });
+
+  it('refuses execute with planned writes when before-hash is missing or stale', () => {
+    const root = tempProject();
+    const projectStatePath = path.join(root, 'docs', 'PROJECT_STATE.md');
+    const before = fs.readFileSync(projectStatePath, 'utf8');
+
+    const missingHash = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed' });
+    expect(missingHash.ok).toBe(false);
+    expect(missingHash.issues).toContainEqual(expect.objectContaining({ code: 'PROTOCOL_REMEDIATION_BEFORE_HASH_REQUIRED', severity: 'error' }));
+    expect(fs.readFileSync(projectStatePath, 'utf8')).toBe(before);
+
+    const staleHash = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed', beforeHash: '0'.repeat(64) });
+    expect(staleHash.ok).toBe(false);
+    expect(staleHash.issues).toContainEqual(expect.objectContaining({ code: 'PROTOCOL_REMEDIATION_BEFORE_HASH_MISMATCH', severity: 'error' }));
+    expect(fs.readFileSync(projectStatePath, 'utf8')).toBe(before);
+    expect(validateSchema('hadara.protocol.remediation.v1', staleHash).ok).toBe(true);
   });
 
   it('skips Task Board row append when the canonical table frame is missing', () => {
@@ -129,17 +150,18 @@ describe('protocol remediation service', () => {
   it('detects write conflicts before applying a planned remediation write', () => {
     const root = tempProject();
     const projectStatePath = path.join(root, 'docs', 'PROJECT_STATE.md');
+    const dryRun = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'dry-run', profile: 'governed' });
     const originalReadFileSync = fs.readFileSync;
     let projectStateReads = 0;
     vi.spyOn(fs, 'readFileSync').mockImplementation((file, options) => {
       if (String(file) === projectStatePath) {
         projectStateReads += 1;
-        return projectStateReads === 1 ? '# PROJECT_STATE\n' : '# PROJECT_STATE\n\nExternal change.\n';
+        return projectStateReads === 1 ? originalReadFileSync(file, options) : '# PROJECT_STATE\n\nExternal change.\n';
       }
       return originalReadFileSync(file, options);
     });
 
-    const report = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed' });
+    const report = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed', beforeHash: dryRun.summary.beforeHash ?? undefined });
 
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'PROTOCOL_REMEDIATION_WRITE_CONFLICT', severity: 'error' }));
@@ -155,7 +177,8 @@ describe('protocol remediation service', () => {
       throw new Error('simulated rename failure');
     });
 
-    const report = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed' });
+    const dryRun = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'dry-run', profile: 'governed' });
+    const report = createProtocolRemediateReport({ projectRoot: root, fix: 'project-state-profile', mode: 'execute', profile: 'governed', beforeHash: dryRun.summary.beforeHash ?? undefined });
 
     expect(report.ok).toBe(false);
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'PROTOCOL_REMEDIATION_ATOMIC_WRITE_FAILED', severity: 'error' }));
@@ -169,7 +192,8 @@ describe('protocol remediation service', () => {
     const evidencePath = path.join(task.dir, 'evidence.jsonl');
     fs.rmSync(evidencePath);
 
-    const report = createProtocolRemediateReport({ projectRoot: root, fix: 'evidence-jsonl', mode: 'execute', taskId: task.id });
+    const dryRun = createProtocolRemediateReport({ projectRoot: root, fix: 'evidence-jsonl', mode: 'dry-run', taskId: task.id });
+    const report = createProtocolRemediateReport({ projectRoot: root, fix: 'evidence-jsonl', mode: 'execute', taskId: task.id, beforeHash: dryRun.summary.beforeHash ?? undefined });
 
     expect(report.actions[0]).toMatchObject({ status: 'created', path: `tasks/${task.id}-missing-evidence-index/evidence.jsonl` });
     expect(fs.existsSync(evidencePath)).toBe(true);

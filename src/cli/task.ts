@@ -64,7 +64,9 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   if (sub === 'upgrade-scaffold') {
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) throw new Error('task upgrade-scaffold requires --task <task-id>');
-    const report = createTaskUpgradeScaffoldReport(input.projectRoot, id, getFlag(input.args, '--execute') ? 'execute' : 'dry-run');
+    const report = createTaskUpgradeScaffoldReport(input.projectRoot, id, getFlag(input.args, '--execute') ? 'execute' : 'dry-run', {
+      beforeHash: getStringOption(input.args, '--before-hash')
+    });
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {

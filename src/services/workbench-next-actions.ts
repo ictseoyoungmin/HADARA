@@ -87,8 +87,8 @@ function addIssueAction(actions: Map<string, WorkbenchNextAction>, taskId: strin
       required: true,
       priority: 'now',
       command: `hadara protocol remediate --fix evidence-jsonl --task ${taskId} --json`,
-      executeCommand: `hadara protocol remediate --fix evidence-jsonl --task ${taskId} --execute --json`,
-      message: 'Preview the bounded evidence.jsonl remediation before executing it.',
+      executeCommand: `hadara protocol remediate --fix evidence-jsonl --task ${taskId} --execute --before-hash <dry-run summary.beforeHash> --json`,
+      message: 'Preview the bounded evidence.jsonl remediation, review summary.beforeHash, then execute with that hash.',
       path: issue.path,
       sourceIssueCodes: [issue.code]
     });
@@ -117,8 +117,8 @@ function addIssueAction(actions: Map<string, WorkbenchNextAction>, taskId: strin
       required: true,
       priority: 'now',
       command: `hadara protocol remediate --fix task-board-row --task ${taskId} --json`,
-      executeCommand: `hadara protocol remediate --fix task-board-row --task ${taskId} --execute --json`,
-      message: 'Preview the bounded Task Board row remediation before executing it.',
+      executeCommand: `hadara protocol remediate --fix task-board-row --task ${taskId} --execute --before-hash <dry-run summary.beforeHash> --json`,
+      message: 'Preview the bounded Task Board row remediation, review summary.beforeHash, then execute with that hash.',
       path: issue.path,
       sourceIssueCodes: [issue.code]
     });
