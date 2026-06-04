@@ -33,6 +33,14 @@ function tempProject(): string {
   return root;
 }
 
+function writePyproject(root: string): void {
+  fs.writeFileSync(
+    path.join(root, 'pyproject.toml'),
+    ['[project]', 'name = "hadara-python-tools"', 'version = "0.0.1"', '[build-system]', 'requires = ["hatchling"]', ''].join('\n'),
+    'utf8'
+  );
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
   process.exitCode = undefined;
@@ -227,6 +235,64 @@ describe('package smoke dry-run', () => {
         npmPackExecuted: false,
         packageInstallExecuted: false,
         featureSmokeExecuted: false
+      }
+    });
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
+  it('creates a Python provider dry-run report without executing Python tooling', () => {
+    const root = tempProject();
+    writePyproject(root);
+
+    const report = createPackageSmokeDryRunReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      provider: 'python',
+      taskId: 'T-0133',
+      attachEvidence: true
+    });
+
+    expect(report).toMatchObject({
+      ok: true,
+      mode: 'dry-run',
+      readOnly: true,
+      provider: {
+        ecosystem: 'python',
+        smokeProfile: 'python-package-smoke'
+      },
+      execution: {
+        npmPackExecuted: false,
+        pythonBuildExecuted: false,
+        twineCheckExecuted: false,
+        pipInstallExecuted: false,
+        packageInstallExecuted: false,
+        publishExecuted: false
+      }
+    });
+    expect(report.steps.map((step) => step.id)).toEqual(['validate-source', 'plan-workspace', 'python-build', 'twine-check', 'pip-install-wheel', 'evidence']);
+    expect(report.steps).toContainEqual(expect.objectContaining({ id: 'python-build', command: 'python -m build', status: 'planned' }));
+    expect(report.steps).toContainEqual(expect.objectContaining({ id: 'twine-check', command: 'twine check', status: 'planned' }));
+    expect(report.steps).toContainEqual(expect.objectContaining({ id: 'pip-install-wheel', command: 'pip install wheel', status: 'planned' }));
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
+  it('prints Python provider dry-run JSON through the CLI handler', () => {
+    const root = tempProject();
+    writePyproject(root);
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handlePackageCommand({
+      args: ['package', 'smoke', '--provider', 'python', '--json'],
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const report = JSON.parse(spy.mock.calls[0]?.[0] ?? '{}');
+    expect(report).toMatchObject({
+      mode: 'dry-run',
+      provider: {
+        ecosystem: 'python',
+        smokeProfile: 'python-package-smoke'
       }
     });
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
@@ -434,6 +500,67 @@ describe('package smoke local execution', () => {
     expect(artifact).toContain('"schemaVersion": "hadara.smokeEvidenceSummary.v1"');
     expect(artifact).toContain('"category": "package-smoke"');
     expect(artifact).not.toContain('/private/raw/path');
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
+  it('creates a reduced Python local mode report without publish or PyPI behavior', () => {
+    const root = tempProject();
+    writePyproject(root);
+    const calls: Array<{ command: string; args: string[]; cwd: string }> = [];
+    let workspace = '';
+    const runner: PackageSmokeCommandRunner = (command, args, options) => {
+      calls.push({ command, args, cwd: options.cwd });
+      if (args[0] === '-m' && args[1] === 'build') {
+        workspace = String(args[args.indexOf('--outdir') + 1]);
+        fs.writeFileSync(path.join(workspace, 'hadara_python_tools-0.0.1-py3-none-any.whl'), 'wheel bytes', 'utf8');
+        fs.writeFileSync(path.join(workspace, 'hadara-python-tools-0.0.1.tar.gz'), 'sdist bytes', 'utf8');
+        return { status: 0, stdout: 'built distributions', stderr: '/private/python/build', elapsedMs: 11 };
+      }
+      if (args[0] === 'check') return { status: 0, stdout: 'PASSED', stderr: '', elapsedMs: 12 };
+      if (args[0] === '-m' && args[1] === 'pip') return { status: 0, stdout: 'installed', stderr: '', elapsedMs: 13 };
+      return { status: 1, stdout: '', stderr: 'unexpected', elapsedMs: 1 };
+    };
+
+    const report = createPackageSmokeLocalReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      provider: 'python',
+      runner
+    });
+    const encoded = JSON.stringify(report);
+
+    expect(report).toMatchObject({
+      ok: true,
+      mode: 'local',
+      readOnly: false,
+      provider: {
+        ecosystem: 'python',
+        smokeProfile: 'python-package-smoke'
+      },
+      execution: {
+        npmPackExecuted: false,
+        pythonBuildExecuted: true,
+        twineCheckExecuted: true,
+        pipInstallExecuted: true,
+        packageInstallExecuted: true,
+        featureSmokeExecuted: false,
+        releaseMutationExecuted: false,
+        publishExecuted: false
+      },
+      privacy: {
+        rawLogsIncluded: false,
+        privatePathsIncluded: false,
+        environmentSecretsIncluded: false
+      },
+      issues: []
+    });
+    expect(report.steps.map((step) => step.id)).toEqual(['validate-source', 'plan-workspace', 'python-build', 'twine-check', 'pip-install-wheel', 'cleanup']);
+    expect(report.artifacts).toContainEqual(expect.objectContaining({ kind: 'package-artifact', visibility: 'temporary', relativePath: 'dist/hadara_python_tools-0.0.1-py3-none-any.whl' }));
+    expect(report.artifacts).toContainEqual(expect.objectContaining({ kind: 'install-tree', visibility: 'temporary', relativePath: 'python-install' }));
+    expect(calls[0].args.slice(0, 2)).toEqual(['-m', 'build']);
+    expect(calls[1].args[0]).toBe('check');
+    expect(calls[2].args.slice(0, 2)).toEqual(['-m', 'pip']);
+    expect(fs.existsSync(workspace)).toBe(false);
+    expect(encoded).not.toContain('/private/python/build');
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
   });
 });

@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { HadaraPaths } from '../core/paths';
 import { assertSchema } from '../core/schema';
 import { attachReducedSmokeEvidence } from './smoke-evidence';
+import { readPythonProjectPreview } from './release-targets';
 
 export interface PackageSmokeIssue {
   severity: 'warning' | 'error';
@@ -20,12 +21,15 @@ export interface PackageSmokeReport {
   mode: 'dry-run' | 'local';
   readOnly: boolean;
   provider: {
-    ecosystem: 'npm';
-    smokeProfile: 'npm-package-smoke';
+    ecosystem: 'npm' | 'python';
+    smokeProfile: 'npm-package-smoke' | 'python-package-smoke';
     command: 'package.smoke';
   };
   execution: {
     npmPackExecuted: boolean;
+    pythonBuildExecuted?: boolean;
+    twineCheckExecuted?: boolean;
+    pipInstallExecuted?: boolean;
     packageInstallExecuted: boolean;
     featureSmokeExecuted: boolean;
     releaseMutationExecuted: false;
@@ -76,6 +80,7 @@ export interface PackageSmokeReport {
 export interface PackageSmokeDryRunOptions {
   paths: HadaraPaths;
   dryRun?: boolean;
+  provider?: string;
   from?: string;
   workspace?: string;
   taskId?: string;
@@ -102,6 +107,10 @@ export interface PackageSmokeCommandResult {
 export type PackageSmokeCommandRunner = (command: string, args: string[], options: { cwd: string; timeoutMs: number; env?: NodeJS.ProcessEnv }) => PackageSmokeCommandResult;
 
 export function createPackageSmokeDryRunReport(options: PackageSmokeDryRunOptions): PackageSmokeReport {
+  if (normalizePackageSmokeProvider(options.provider) === 'python') {
+    return createPythonPackageSmokeDryRunReport(options);
+  }
+
   const issues: PackageSmokeIssue[] = [];
   if (options.dryRun === false) {
     issues.push({
@@ -156,6 +165,10 @@ export function createPackageSmokeDryRunReport(options: PackageSmokeDryRunOption
 }
 
 export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions): PackageSmokeReport {
+  if (normalizePackageSmokeProvider(options.provider) === 'python') {
+    return createPythonPackageSmokeLocalReport(options);
+  }
+
   const issues: PackageSmokeIssue[] = [];
   validateTaskId(options.taskId, issues);
   validateTimeout(options.timeoutSeconds, issues);
@@ -429,6 +442,331 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
 
   assertSchema('hadara.packageSmoke.v1', report);
   return report;
+}
+
+function createPythonPackageSmokeDryRunReport(options: PackageSmokeDryRunOptions): PackageSmokeReport {
+  const issues: PackageSmokeIssue[] = [];
+  validateTaskId(options.taskId, issues);
+  validateTimeout(options.timeoutSeconds, issues);
+  const preview = readPythonProjectPreview(options.paths.projectRoot);
+  if (!preview.detected) {
+    issues.push({
+      severity: 'error',
+      code: 'PACKAGE_SMOKE_PYPROJECT_MISSING',
+      message: 'Python package smoke requires pyproject.toml in the project root.',
+      stepId: 'validate-source'
+    });
+  }
+  const workspace = createWorkspace(options.workspace, options.keepTemp === true);
+  const evidencePlanned = options.attachEvidence === true && options.taskId !== undefined && options.noEvidence !== true;
+  const report: PackageSmokeReport = {
+    schemaVersion: 'hadara.packageSmoke.v1',
+    command: 'package.smoke',
+    ok: issues.every((issue) => issue.severity !== 'error'),
+    mode: 'dry-run',
+    readOnly: true,
+    provider: {
+      ecosystem: 'python',
+      smokeProfile: 'python-package-smoke',
+      command: 'package.smoke'
+    },
+    execution: {
+      npmPackExecuted: false,
+      pythonBuildExecuted: false,
+      twineCheckExecuted: false,
+      pipInstallExecuted: false,
+      packageInstallExecuted: false,
+      featureSmokeExecuted: false,
+      releaseMutationExecuted: false,
+      publishExecuted: false
+    },
+    workspace,
+    source: {
+      kind: 'source-checkout',
+      displayPath: '.',
+      relativePath: '.',
+      pathRedacted: true
+    },
+    steps: [
+      {
+        id: 'validate-source',
+        label: 'Validate Python package source',
+        status: preview.detected ? 'planned' : 'failed',
+        summary: preview.detected
+          ? `Would use pyproject.toml metadata${preview.packageName ? ` for ${preview.packageName}` : ''}; backend ${preview.buildBackend}.`
+          : 'pyproject.toml was not found.'
+      },
+      {
+        id: 'plan-workspace',
+        label: 'Plan disposable workspace',
+        status: 'planned',
+        summary: 'Plan isolated Python package-smoke output and install target without creating directories.'
+      },
+      {
+        id: 'python-build',
+        label: 'Build Python distributions',
+        command: 'python -m build',
+        status: 'planned',
+        summary: 'Would build wheel and sdist into the disposable workspace.'
+      },
+      {
+        id: 'twine-check',
+        label: 'Check Python distributions',
+        command: 'twine check',
+        status: 'planned',
+        summary: 'Would run twine check against built distributions without uploading.'
+      },
+      {
+        id: 'pip-install-wheel',
+        label: 'Install Python wheel',
+        command: 'pip install wheel',
+        status: 'planned',
+        summary: 'Would install the built wheel into an isolated target for local smoke.'
+      },
+      {
+        id: 'evidence',
+        label: 'Evidence handling',
+        status: evidencePlanned ? 'planned' : 'skipped',
+        summary:
+          evidencePlanned
+            ? 'Would attach a reduced public summary after redaction checks.'
+            : 'No public evidence attachment is planned by default.'
+      }
+    ],
+    artifacts: createPlannedArtifacts(options),
+    privacy: {
+      rawLogsIncluded: false,
+      rawPackageContentsIncluded: false,
+      privatePathsIncluded: false,
+      environmentSecretsIncluded: false,
+      privateStorePathsIncluded: false
+    },
+    issues
+  };
+
+  assertSchema('hadara.packageSmoke.v1', report);
+  return report;
+}
+
+function createPythonPackageSmokeLocalReport(options: PackageSmokeLocalOptions): PackageSmokeReport {
+  const issues: PackageSmokeIssue[] = [];
+  validateTaskId(options.taskId, issues);
+  validateTimeout(options.timeoutSeconds, issues);
+  const preview = readPythonProjectPreview(options.paths.projectRoot);
+  if (!preview.detected) {
+    issues.push({
+      severity: 'error',
+      code: 'PACKAGE_SMOKE_PYPROJECT_MISSING',
+      message: 'Python package smoke requires pyproject.toml in the project root.',
+      stepId: 'validate-source'
+    });
+  }
+  const workspaceSetup = prepareExecutionWorkspace(options.paths.projectRoot, options.workspace, options.keepTemp === true, issues);
+  const runner = options.runner ?? runCommand;
+  const timeoutMs = (options.timeoutSeconds ?? 120) * 1000;
+  const steps: PackageSmokeReport['steps'] = [
+    {
+      id: 'validate-source',
+      label: 'Validate Python package source',
+      status: preview.detected ? 'passed' : 'failed',
+      summary: preview.detected
+        ? `pyproject.toml metadata was checked without executing package code; backend ${preview.buildBackend}.`
+        : 'pyproject.toml was not found.'
+    },
+    {
+      id: 'plan-workspace',
+      label: 'Prepare disposable workspace',
+      status: workspaceSetup.ok ? 'passed' : 'failed',
+      summary: workspaceSetup.ok ? 'Disposable Python package-smoke workspace was prepared outside the project source.' : 'Disposable Python package-smoke workspace could not be prepared safely.'
+    }
+  ];
+  const execution = {
+    npmPackExecuted: false,
+    pythonBuildExecuted: false,
+    twineCheckExecuted: false,
+    pipInstallExecuted: false,
+    packageInstallExecuted: false,
+    featureSmokeExecuted: false,
+    releaseMutationExecuted: false as const,
+    publishExecuted: false as const
+  };
+  const artifacts: PackageSmokeReport['artifacts'] = [
+    {
+      kind: 'summary',
+      visibility: 'temporary',
+      pathRedacted: true,
+      rawContentIncluded: false
+    }
+  ];
+
+  try {
+    if (issues.some((issue) => issue.severity === 'error') || !workspaceSetup.ok) {
+      steps.push(
+        skippedPythonStep('python-build', 'Build Python distributions', 'python -m build'),
+        skippedPythonStep('twine-check', 'Check Python distributions', 'twine check'),
+        skippedPythonStep('pip-install-wheel', 'Install Python wheel', 'pip install wheel')
+      );
+    } else {
+      const distDir = path.join(workspaceSetup.path, 'dist');
+      fs.mkdirSync(distDir, { recursive: true });
+      execution.pythonBuildExecuted = true;
+      const build = runner(pythonCommand(), ['-m', 'build', '--outdir', distDir], {
+        cwd: options.paths.projectRoot,
+        timeoutMs
+      });
+      const buildStep = commandStep('python-build', 'Build Python distributions', 'python -m build --outdir <redacted-workspace>', build);
+      if (build.status !== 0) {
+        buildStep.status = 'failed';
+        buildStep.summary = build.timedOut ? 'Python build timed out.' : 'Python build failed.';
+        issues.push({
+          severity: 'error',
+          code: build.timedOut ? 'PACKAGE_SMOKE_PYTHON_BUILD_TIMEOUT' : 'PACKAGE_SMOKE_PYTHON_BUILD_FAILED',
+          message: build.timedOut ? 'Python build timed out during package smoke.' : 'Python build failed during package smoke.',
+          stepId: 'python-build'
+        });
+      } else {
+        buildStep.summary = 'Python build produced temporary distribution artifacts.';
+        for (const artifactPath of listPythonDistributionArtifacts(distDir)) {
+          const byteLength = safeFileSize(artifactPath);
+          artifacts.push({
+            kind: 'package-artifact',
+            visibility: 'temporary',
+            relativePath: path.join('dist', path.basename(artifactPath)),
+            pathRedacted: true,
+            rawContentIncluded: false,
+            ...(byteLength === undefined ? {} : { byteLength })
+          });
+        }
+      }
+      steps.push(buildStep);
+
+      const distributionArtifacts = listPythonDistributionArtifacts(distDir);
+      const wheelPath = distributionArtifacts.find((item) => item.endsWith('.whl'));
+      if (distributionArtifacts.length > 0 && !issues.some((issue) => issue.severity === 'error')) {
+        execution.twineCheckExecuted = true;
+        const twine = runner(twineCommand(), ['check', ...distributionArtifacts], {
+          cwd: workspaceSetup.path,
+          timeoutMs
+        });
+        const twineStep = commandStep('twine-check', 'Check Python distributions', 'twine check <redacted-distributions>', twine);
+        if (twine.status !== 0) {
+          twineStep.status = 'failed';
+          twineStep.summary = twine.timedOut ? 'twine check timed out.' : 'twine check failed.';
+          issues.push({
+            severity: 'error',
+            code: twine.timedOut ? 'PACKAGE_SMOKE_TWINE_CHECK_TIMEOUT' : 'PACKAGE_SMOKE_TWINE_CHECK_FAILED',
+            message: twine.timedOut ? 'twine check timed out during package smoke.' : 'twine check failed during package smoke.',
+            stepId: 'twine-check'
+          });
+        } else {
+          twineStep.summary = 'twine check passed for temporary distributions.';
+        }
+        steps.push(twineStep);
+      } else {
+        steps.push(skippedPythonStep('twine-check', 'Check Python distributions', 'twine check'));
+      }
+
+      if (wheelPath && !issues.some((issue) => issue.severity === 'error')) {
+        execution.pipInstallExecuted = true;
+        execution.packageInstallExecuted = true;
+        const installTarget = path.join(workspaceSetup.path, 'python-install');
+        fs.mkdirSync(installTarget, { recursive: true });
+        const pip = runner(pythonCommand(), ['-m', 'pip', 'install', '--target', installTarget, wheelPath], {
+          cwd: workspaceSetup.path,
+          timeoutMs
+        });
+        const pipStep = commandStep('pip-install-wheel', 'Install Python wheel', 'pip install wheel --target <redacted-target>', pip);
+        if (pip.status !== 0) {
+          pipStep.status = 'failed';
+          pipStep.summary = pip.timedOut ? 'pip install timed out.' : 'pip install failed.';
+          issues.push({
+            severity: 'error',
+            code: pip.timedOut ? 'PACKAGE_SMOKE_PIP_INSTALL_TIMEOUT' : 'PACKAGE_SMOKE_PIP_INSTALL_FAILED',
+            message: pip.timedOut ? 'pip install timed out during package smoke.' : 'pip install failed during package smoke.',
+            stepId: 'pip-install-wheel'
+          });
+        } else {
+          pipStep.summary = 'Built wheel installed into an isolated temporary target.';
+          artifacts.push({
+            kind: 'install-tree',
+            visibility: 'temporary',
+            relativePath: 'python-install',
+            pathRedacted: true,
+            rawContentIncluded: false
+          });
+        }
+        steps.push(pipStep);
+      } else {
+        steps.push(skippedPythonStep('pip-install-wheel', 'Install Python wheel', 'pip install wheel'));
+      }
+    }
+  } finally {
+    const cleanup = cleanupWorkspace(workspaceSetup, options.keepTemp === true);
+    steps.push({
+      id: 'cleanup',
+      label: 'Cleanup disposable workspace',
+      status: cleanup.ok ? 'passed' : 'failed',
+      summary: cleanup.summary
+    });
+    if (!cleanup.ok) {
+      issues.push({
+        severity: 'warning',
+        code: 'PACKAGE_SMOKE_CLEANUP_FAILED',
+        message: 'Package-smoke cleanup could not remove the disposable workspace.',
+        stepId: 'cleanup'
+      });
+    }
+  }
+
+  const report: PackageSmokeReport = {
+    schemaVersion: 'hadara.packageSmoke.v1',
+    command: 'package.smoke',
+    ok: issues.every((issue) => issue.severity !== 'error') && steps.every((step) => step.status !== 'failed'),
+    mode: 'local',
+    readOnly: false,
+    provider: {
+      ecosystem: 'python',
+      smokeProfile: 'python-package-smoke',
+      command: 'package.smoke'
+    },
+    execution,
+    workspace: {
+      kind: 'disposable',
+      displayPath: workspaceSetup.displayPath,
+      pathRedacted: true,
+      ...(workspaceSetup.relativePath ? { relativePath: workspaceSetup.relativePath } : {}),
+      retention: options.keepTemp === true ? 'kept-temporary' : 'deleted'
+    },
+    source: {
+      kind: 'source-checkout',
+      displayPath: '.',
+      relativePath: '.',
+      pathRedacted: true
+    },
+    steps,
+    artifacts,
+    privacy: {
+      rawLogsIncluded: false,
+      rawPackageContentsIncluded: false,
+      privatePathsIncluded: false,
+      environmentSecretsIncluded: false,
+      privateStorePathsIncluded: false
+    },
+    issues
+  };
+
+  assertSchema('hadara.packageSmoke.v1', report);
+  return report;
+}
+
+function skippedPythonStep(id: string, label: string, command: string): PackageSmokeReport['steps'][number] {
+  return {
+    id,
+    label,
+    command,
+    status: 'skipped',
+    summary: 'Skipped because a prior Python package-smoke step did not produce the required temporary artifact.'
+  };
 }
 
 function createDryRunSteps(sourceKind: PackageSmokeReport['source']['kind'], options: PackageSmokeDryRunOptions): PackageSmokeReport['steps'] {
@@ -715,6 +1053,30 @@ function runCommand(command: string, args: string[], options: { cwd: string; tim
 
 function npmCommand(): string {
   return process.platform === 'win32' ? 'npm.cmd' : 'npm';
+}
+
+function pythonCommand(): string {
+  return process.platform === 'win32' ? 'python.exe' : 'python';
+}
+
+function twineCommand(): string {
+  return process.platform === 'win32' ? 'twine.exe' : 'twine';
+}
+
+function listPythonDistributionArtifacts(distDir: string): string[] {
+  try {
+    return fs
+      .readdirSync(distDir)
+      .filter((entry) => entry.endsWith('.whl') || entry.endsWith('.tar.gz') || entry.endsWith('.zip'))
+      .map((entry) => path.join(distDir, entry))
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
+function normalizePackageSmokeProvider(value: string | undefined): 'npm' | 'python' {
+  return value === 'python' ? 'python' : 'npm';
 }
 
 function installedHadaraCommand(prefix: string): string {

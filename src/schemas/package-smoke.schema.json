@@ -30,8 +30,8 @@
       "additionalProperties": true,
       "required": ["ecosystem", "smokeProfile", "command"],
       "properties": {
-        "ecosystem": { "const": "npm" },
-        "smokeProfile": { "const": "npm-package-smoke" },
+        "ecosystem": { "type": "string", "enum": ["npm", "python"] },
+        "smokeProfile": { "type": "string", "enum": ["npm-package-smoke", "python-package-smoke"] },
         "command": { "const": "package.smoke" }
       }
     },
@@ -41,6 +41,9 @@
       "required": ["npmPackExecuted", "packageInstallExecuted", "featureSmokeExecuted", "releaseMutationExecuted", "publishExecuted"],
       "properties": {
         "npmPackExecuted": { "type": "boolean" },
+        "pythonBuildExecuted": { "type": "boolean" },
+        "twineCheckExecuted": { "type": "boolean" },
+        "pipInstallExecuted": { "type": "boolean" },
         "packageInstallExecuted": { "type": "boolean" },
         "featureSmokeExecuted": { "type": "boolean" },
         "releaseMutationExecuted": { "const": false },

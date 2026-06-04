@@ -14,6 +14,7 @@ export function handlePackageCommand(input: PackageCommandInput): boolean {
   const options = {
     paths: input.paths,
     dryRun: !getFlag(input.args, '--execute'),
+    provider: getStringOption(input.args, '--provider'),
     from: getStringOption(input.args, '--from'),
     workspace: getStringOption(input.args, '--workspace'),
     taskId: getStringOption(input.args, '--task'),

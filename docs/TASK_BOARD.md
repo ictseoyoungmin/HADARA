@@ -248,4 +248,4 @@
 | T-0245 | Release Artifact Evidence Refresh | Done | tasks/T-0245-release-artifact-evidence-refresh | |
 | T-0246 | Release Provider Contract | Done | tasks/T-0246-release-provider-contract | |
 | T-0247 | Python Release Preview Provider | Done | tasks/T-0247-python-release-preview-provider | |
-| T-0248 | Python Package Smoke Dry Run Local Mode | Draft | tasks/T-0248-python-package-smoke-dry-run-local-mode | |
+| T-0248 | Python Package Smoke Dry Run Local Mode | Done | tasks/T-0248-python-package-smoke-dry-run-local-mode | |
