@@ -48,6 +48,27 @@
         }
       }
     },
+    "releaseTargetConfiguration": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["source", "configPath", "effectivePrimaryTarget", "autoPromotion", "supported", "targets", "issues"],
+      "properties": {
+        "source": { "type": "string", "enum": ["default", "project-file"] },
+        "configPath": { "const": ".hadara/release-targets.json" },
+        "effectivePrimaryTarget": { "const": "npm-package" },
+        "requestedPrimaryTarget": { "type": "string", "minLength": 1 },
+        "autoPromotion": { "const": false },
+        "supported": { "type": "boolean" },
+        "targets": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/releaseTargetConfigurationTarget" }
+        },
+        "issues": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/issue" }
+        }
+      }
+    },
     "checks": {
       "type": "array",
       "items": { "$ref": "#/$defs/check" }
@@ -170,6 +191,16 @@
         "willExecute": { "const": false },
         "purpose": { "type": "string", "enum": ["build", "check", "smoke"] },
         "summary": { "type": "string", "minLength": 1 }
+      }
+    },
+    "releaseTargetConfigurationTarget": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "role", "status"],
+      "properties": {
+        "id": { "type": "string", "enum": ["npm-package", "python-package-preview", "docker-image"] },
+        "role": { "type": "string", "enum": ["primary", "preview", "deferred"] },
+        "status": { "type": "string", "enum": ["active", "preview", "deferred"] }
       }
     },
     "providerCapabilities": {

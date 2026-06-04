@@ -251,3 +251,4 @@
 | T-0248 | Python Package Smoke Dry Run Local Mode | Done | tasks/T-0248-python-package-smoke-dry-run-local-mode | |
 | T-0249 | Python Package Smoke Boundary Hardening | Done | tasks/T-0249-python-package-smoke-boundary-hardening | |
 | T-0250 | Python Release Advisory Read Model | Done | tasks/T-0250-python-release-advisory-read-model | |
+| T-0251 | Release Target Configuration Preview | Done | tasks/T-0251-release-target-configuration-preview | |

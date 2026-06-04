@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0250 Python release advisory read model is complete. |
+| Branch | main | T-0251 Release Target Configuration Preview is complete. |
 | Current Phase | Dashboard/TUI UI work paused; core evidence/task lifecycle work resumed | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0250 Python Release Advisory Read Model | Release dry-run now emits Python preview provider advisories for smoke evidence present/missing/stale with `blocking:false`. |
-| Active / Next Task | T-0251 Release Target Configuration Preview, if continuing the attached plan. | Next step is explicit target configuration preview so npm primary / Python preview / Docker deferred stay configured and automatic promotion remains forbidden. |
-| Validation Baseline | T-0250 Docker validation passed | Focused Docker tests passed 2 files / 29 tests; Docker full check passed 92 files / 624 tests; built release dry-run emitted Python advisory `smokeEvidence: missing`, `blocking:false`, and readiness remained ready. |
+| Latest Completed Task | T-0251 Release Target Configuration Preview | Release dry-run now emits `releaseTargetConfiguration` with npm primary, Python preview, Docker deferred, and `autoPromotion:false`; config requests cannot promote Python primary. |
+| Active / Next Task | Return to roadmap value work or explicitly scope the next release-provider hardening capsule. | T-0249 through T-0251 completed the attached boundary/advisory/config preview sequence without Python publish or primary-target support. |
+| Validation Baseline | T-0251 Docker validation passed | Focused Docker tests passed 2 files / 30 tests; Docker full check passed 92 files / 625 tests; built release dry-run emitted target config preview with effective primary `npm-package` and `autoPromotion:false`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0251 Release Target Configuration Preview | Added additive release dry-run target configuration preview with npm primary, Python preview, Docker deferred, `autoPromotion:false`, and unsupported-primary warnings. | T-0251 evidence: Docker focused tests passed 2 files / 30 tests; Docker full check passed 92 files / 625 tests; built release dry-run emitted effective primary `npm-package`, Python preview, Docker deferred, and `autoPromotion:false`. |
 | T-0250 Python Release Advisory Read Model | Added additive release dry-run `providerAdvisories` for Python preview smoke evidence present/missing/stale, always non-blocking. | T-0250 evidence: Docker focused tests passed 2 files / 29 tests; Docker full check passed 92 files / 624 tests; built release dry-run emitted Python advisory `smokeEvidence: missing`, `blocking:false`. |
 | T-0249 Python Package Smoke Boundary Hardening | Added package-smoke `networkPolicy`, Python best-effort offline command flags, Python reduced evidence attach, and release dry-run npm package-smoke proof separation. | T-0249 evidence: Docker focused tests passed 3 files / 32 tests; Docker full check passed 92 files / 623 tests; built CLI Python offline dry-run emitted `offline-best-effort`, `enforced:false`, `python -m build --no-isolation`, and pip `--no-index --no-deps`. |
-| T-0248 Python Package Smoke Dry Run Local Mode | Added explicit `--provider python` package smoke dry-run and local-mode reports. Dry-run plans Python build/check/install steps; local mode runs through the reduced disposable runner boundary without PyPI/publish behavior. | T-0248 evidence: Docker focused tests passed 3 files / 41 tests; Docker full check passed 92 files / 619 tests; built CLI Python dry-run emitted planned steps with all execution/publish flags false. |
 
 ## Current Known Problems
 
@@ -62,13 +62,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Continue with T-0251 Release Target Configuration Preview, if following the attached plan. | T-0250 completed Python advisory read model; the remaining attached-plan step is explicit release target configuration preview and anti-auto-promotion guardrails. | Current evidence: T-0250 Docker check passed 92 files / 624 tests; no PyPI token loading, publish behavior, or Python primary target behavior added. |
+| Return to roadmap value work or explicitly scope the next release-provider hardening capsule. | T-0249 through T-0251 completed package-smoke boundary hardening, Python release advisory read model, and target configuration preview. | Current evidence: T-0251 Docker check passed 92 files / 625 tests; no PyPI token loading, publish behavior, or Python primary target behavior added. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| Release target configuration preview full check | Docker focused tests passed 2 files / 30 tests; Docker `npm run check` passed 92 files / 625 tests during T-0251. | Built release dry-run emitted `releaseTargetConfiguration.source: default`, effective primary `npm-package`, Python preview, Docker deferred, `autoPromotion:false`, and readiness remained npm-primary. |
 | Python release advisory read model full check | Docker focused tests passed 2 files / 29 tests; Docker `npm run check` passed 92 files / 624 tests during T-0250. | Built release dry-run emitted Python advisory `status: preview`, `smokeEvidence: missing`, `blocking:false`; release readiness remained ready and npm remained primary. |
 | Python package smoke boundary hardening full check | Docker focused tests passed 3 files / 32 tests; Docker `npm run check` passed 92 files / 623 tests during T-0249. | Built Python offline dry-run emitted `offline-best-effort`, `enforced:false`, `python -m build --no-isolation`, and pip `--no-index --no-deps`; Python evidence attach is reduced public evidence but does not satisfy the npm release gate. |
 | Release provider contract full check | Docker focused tests passed 2 files / 26 tests; Docker `npm run check` passed 92 files / 615 tests during T-0246. | Built release dry-run emitted `providerCapabilities` for `npm-package` and `python-package-preview`; exit 6 was expected because release artifact evidence points at T-0245's previous commit, not the current development HEAD. |

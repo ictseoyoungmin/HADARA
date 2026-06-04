@@ -40,6 +40,19 @@ describe('release dry-run', () => {
       secondary: 'github-release',
       dockerImage: 'deferred'
     });
+    expect(report.releaseTargetConfiguration).toMatchObject({
+      source: 'default',
+      configPath: '.hadara/release-targets.json',
+      effectivePrimaryTarget: 'npm-package',
+      autoPromotion: false,
+      supported: true,
+      targets: [
+        { id: 'npm-package', role: 'primary', status: 'active' },
+        { id: 'python-package-preview', role: 'preview', status: 'preview' },
+        { id: 'docker-image', role: 'deferred', status: 'deferred' }
+      ],
+      issues: []
+    });
     expect(report.releaseTargets.descriptors).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -119,6 +132,7 @@ describe('release dry-run', () => {
     );
     expect(report.diagnostics.stageTimings.map((timing) => timing.stage)).toEqual([
       'release-targets',
+      'release-target-configuration',
       'git-commit',
       'strict-release-gate',
       'release-evidence-scan',
@@ -335,6 +349,11 @@ describe('release dry-run', () => {
     const report = createReleaseDryRunReport(root);
 
     expect(report.ok).toBe(true);
+    expect(report.releaseTargetConfiguration).toMatchObject({
+      effectivePrimaryTarget: 'npm-package',
+      autoPromotion: false,
+      supported: true
+    });
     expect(report.releaseTargets.descriptors).toContainEqual(
       expect.objectContaining({
         id: 'python-package-preview',
@@ -363,8 +382,42 @@ describe('release dry-run', () => {
       publishPlan: 'unsupported'
     });
     expect(report.providerCapabilities['python-package-preview'].notes.join('\n')).toContain('Planned Python commands are preview-only');
+    expect(report.releaseTargets.primary).toBe('npm-package');
     expect(report.plannedSteps.some((step) => step.target === 'npm-package')).toBe(true);
     expect(report.privacy.publishExecuted).toBe(false);
+  });
+
+  it('previews release target config requests without promoting Python primary', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root);
+    writeStrongEvidence(root);
+    fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, '.hadara', 'release-targets.json'),
+      JSON.stringify({ primaryTarget: 'python-package-preview', targets: [{ id: 'python-package-preview', role: 'primary' }] }, null, 2),
+      'utf8'
+    );
+
+    const report = createReleaseDryRunReport(root);
+
+    expect(report.ok).toBe(true);
+    expect(report.releaseTargets.primary).toBe('npm-package');
+    expect(report.releaseTargetConfiguration).toMatchObject({
+      source: 'project-file',
+      configPath: '.hadara/release-targets.json',
+      requestedPrimaryTarget: 'python-package-preview',
+      effectivePrimaryTarget: 'npm-package',
+      autoPromotion: false,
+      supported: false,
+      issues: [
+        expect.objectContaining({
+          severity: 'warning',
+          code: 'RELEASE_TARGET_PRIMARY_UNSUPPORTED'
+        })
+      ]
+    });
+    expect(report.issues).not.toContainEqual(expect.objectContaining({ code: 'RELEASE_TARGET_PRIMARY_UNSUPPORTED' }));
+    expect(validateSchema('hadara.releaseDryRun.v1', report).ok).toBe(true);
   });
 
   it('parses Python project metadata and common build backends without executing tooling', () => {
