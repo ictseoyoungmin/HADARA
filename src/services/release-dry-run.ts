@@ -23,6 +23,16 @@ export interface ReleaseDryRunReport {
     descriptors?: ReleaseTargetDescriptor[];
   };
   providerCapabilities: Record<string, ReleaseProviderCapabilities>;
+  providerAdvisories: Array<{
+    provider: 'python';
+    status: 'preview';
+    smokeEvidence: 'present' | 'missing' | 'stale';
+    blocking: false;
+    taskId?: string;
+    time?: string;
+    evidencePath?: string;
+    summary: string;
+  }>;
   checks: Array<{
     code: string;
     name: string;
@@ -116,6 +126,7 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
   const releaseGate = timeStage(timings, 'strict-release-gate', () => createReleaseGateReport(projectRoot, 'strict'));
   const evidenceRecords = timeStage(timings, 'release-evidence-scan', () => readReleaseEvidenceRecords(projectRoot));
   const evidence = timeStage(timings, 'release-evidence-validation', () => evidenceRequirements().map((requirement) => validateEvidenceRequirement(evidenceRecords, requirement)));
+  const providerAdvisories = timeStage(timings, 'provider-advisories', () => createProviderAdvisories(evidenceRecords));
   const gitFreshness = createGitFreshnessChecker(projectRoot, gitCommit);
   const checks = [
     {
@@ -165,6 +176,7 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
       descriptors: targetModel.descriptors
     },
     providerCapabilities: targetModel.providerCapabilities,
+    providerAdvisories,
     checks,
     evidence,
     plannedSteps: [
@@ -205,6 +217,48 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
 
   assertSchema('hadara.releaseDryRun.v1', report);
   return report;
+}
+
+function createProviderAdvisories(records: ReleaseEvidenceRecord[]): ReleaseDryRunReport['providerAdvisories'] {
+  const pythonSmokeRecords = records
+    .map((record) => ({ record, artifact: validateReleaseEvidenceArtifact(record) }))
+    .filter(({ artifact }) => artifact.category === 'package-smoke' && artifact.providerEcosystem === 'python')
+    .sort((a, b) => b.record.time.localeCompare(a.record.time));
+  const latest = pythonSmokeRecords[0];
+  if (!latest) {
+    return [
+      {
+        provider: 'python',
+        status: 'preview',
+        smokeEvidence: 'missing',
+        blocking: false,
+        summary: 'Python package smoke evidence is missing; this is advisory because npm remains the active primary release target.'
+      }
+    ];
+  }
+
+  const { record, artifact } = latest;
+  const present =
+    record.result === 'passed' &&
+    record.visibility === 'public' &&
+    artifact.exists === true &&
+    artifact.schemaValid === true &&
+    artifact.sourceOk === true &&
+    artifact.mode === 'local';
+  return [
+    {
+      provider: 'python',
+      status: 'preview',
+      smokeEvidence: present ? 'present' : 'stale',
+      blocking: false,
+      taskId: record.taskId,
+      time: record.time,
+      ...(record.evidencePath ? { evidencePath: record.evidencePath } : {}),
+      summary: present
+        ? 'Python package smoke evidence is present; this is advisory because npm remains the active primary release target.'
+        : 'Python package smoke evidence is stale or not passed/source-ok; this is advisory because npm remains the active primary release target.'
+    }
+  ];
 }
 
 function timeStage<T>(timings: ReleaseDryRunReport['diagnostics']['stageTimings'], stage: string, fn: () => T): T {

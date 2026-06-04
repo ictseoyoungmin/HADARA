@@ -84,6 +84,15 @@ describe('release dry-run', () => {
         publishPlan: 'unsupported'
       }
     });
+    expect(report.providerAdvisories).toContainEqual(
+      expect.objectContaining({
+        provider: 'python',
+        status: 'preview',
+        smokeEvidence: 'missing',
+        blocking: false,
+        summary: expect.stringContaining('advisory because npm remains the active primary release target')
+      })
+    );
     expect(report.evidence).toContainEqual(
       expect.objectContaining({
         code: 'RELEASE_ARTIFACT_EVIDENCE',
@@ -113,7 +122,8 @@ describe('release dry-run', () => {
       'git-commit',
       'strict-release-gate',
       'release-evidence-scan',
-      'release-evidence-validation'
+      'release-evidence-validation',
+      'provider-advisories'
     ]);
     expect(report.privacy).toMatchObject({
       tokenValuesIncluded: false,
@@ -163,6 +173,16 @@ describe('release dry-run', () => {
     const report = createReleaseDryRunReport(root);
 
     expect(report.ok).toBe(false);
+    expect(report.providerAdvisories).toContainEqual(
+      expect.objectContaining({
+        provider: 'python',
+        status: 'preview',
+        smokeEvidence: 'present',
+        blocking: false,
+        taskId: 'T-0001',
+        evidencePath: 'artifacts/package-smoke/summary.json'
+      })
+    );
     expect(report.evidence).toContainEqual(
       expect.objectContaining({
         code: 'PACKAGE_SMOKE_EVIDENCE',
@@ -180,6 +200,28 @@ describe('release dry-run', () => {
         command: 'hadara package smoke --execute --attach-evidence --task <task-id> --json'
       })
     );
+  });
+
+  it('reports stale Python package-smoke evidence as advisory only', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root);
+    writeStrongEvidence(root);
+    writePythonSmokeEvidence(root, { result: 'failed' });
+
+    const report = createReleaseDryRunReport(root);
+
+    expect(report.ok).toBe(true);
+    expect(report.providerAdvisories).toContainEqual(
+      expect.objectContaining({
+        provider: 'python',
+        status: 'preview',
+        smokeEvidence: 'stale',
+        blocking: false,
+        taskId: 'T-0002',
+        summary: expect.stringContaining('advisory because npm remains the active primary release target')
+      })
+    );
+    expect(report.issues).not.toContainEqual(expect.objectContaining({ code: expect.stringContaining('PYTHON') }));
   });
 
   it('fails when release evidence records do not link schema-valid artifacts', () => {
@@ -435,6 +477,27 @@ function evidenceRecord(time: string, summary: string, evidencePath: string, sch
     visibility: 'public',
     evidencePath
   };
+}
+
+function writePythonSmokeEvidence(root: string, options: { result: 'passed' | 'failed' }): void {
+  const taskDir = path.join(root, 'tasks', 'T-0002-python-smoke-evidence');
+  const artifactDir = path.join(taskDir, 'artifacts', 'package-smoke');
+  fs.mkdirSync(artifactDir, { recursive: true });
+  writeJson(path.join(artifactDir, 'summary.json'), smokeSummary('package-smoke', 'package.smoke', 'local', 'python'));
+  fs.writeFileSync(
+    path.join(taskDir, 'evidence.jsonl'),
+    JSON.stringify({
+      schemaVersion: 'hadara.evidence.v1',
+      time: '2026-05-28T11:00:00Z',
+      taskId: 'T-0002',
+      kind: 'command-log',
+      summary: 'Python package smoke advisory evidence.',
+      result: options.result,
+      visibility: 'public',
+      evidencePath: 'artifacts/package-smoke/summary.json'
+    }) + '\n',
+    'utf8'
+  );
 }
 
 function smokeSummary(category: 'package-smoke' | 'clean-checkout-smoke', command: string, mode: string, providerEcosystem?: 'npm' | 'python'): Record<string, unknown> {

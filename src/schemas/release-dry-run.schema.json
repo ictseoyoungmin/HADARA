@@ -64,6 +64,10 @@
       "type": "object",
       "additionalProperties": { "$ref": "#/$defs/providerCapabilities" }
     },
+    "providerAdvisories": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/providerAdvisory" }
+    },
     "readiness": {
       "type": "object",
       "additionalProperties": true,
@@ -184,6 +188,21 @@
     "providerSupport": {
       "type": "string",
       "enum": ["supported", "preview", "unsupported"]
+    },
+    "providerAdvisory": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["provider", "status", "smokeEvidence", "blocking", "summary"],
+      "properties": {
+        "provider": { "const": "python" },
+        "status": { "const": "preview" },
+        "smokeEvidence": { "type": "string", "enum": ["present", "missing", "stale"] },
+        "blocking": { "const": false },
+        "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+        "time": { "type": "string", "minLength": 1 },
+        "evidencePath": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 }
+      }
     },
     "evidence": {
       "type": "object",
