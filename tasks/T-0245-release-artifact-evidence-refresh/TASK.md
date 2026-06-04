@@ -21,6 +21,7 @@
 | In Scope | Reason |
 |---|---|
 | Run `release artifact --execute --json --output dist-release --attach-evidence --task T-0245` from a clean worktree. | The release dry-run blocker is stale release artifact evidence for an old git commit. |
+| Harden release artifact `npm pack` execution to use a disposable npm cache. | The first clean-worktree refresh attempt reached `npm pack` but failed because npm tried to write to a read-only home cache. |
 | Verify release dry-run after refresh. | Proves package-smoke, clean-checkout, and release-artifact evidence all align with the current commit. |
 | Keep release mutation blocked. | Artifact refresh must not publish to npm, create GitHub Releases, build Docker images, or load tokens. |
 | Record evidence and close/audit the capsule. | HADARA workflow requires evidence-backed completion. |

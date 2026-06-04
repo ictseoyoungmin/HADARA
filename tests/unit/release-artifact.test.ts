@@ -72,6 +72,8 @@ describe('release artifact builder', () => {
         description?: string;
       };
       const outputDir = String(args[args.indexOf('--pack-destination') + 1]);
+      expect(options.env?.NPM_CONFIG_CACHE).toContain('hadara-release-artifact-npm-cache-');
+      expect(options.env?.npm_config_cache).toBe(options.env?.NPM_CONFIG_CACHE);
       fs.writeFileSync(path.join(outputDir, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
       expect(stagedPackage.description).not.toContain('bootstrap skeleton');
       expect(stagedPackage.description).toBe('HADARA: portable agentic development workbench');

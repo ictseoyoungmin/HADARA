@@ -90,7 +90,7 @@ export interface ReleaseArtifactCommandResult {
 export type ReleaseArtifactCommandRunner = (
   command: string,
   args: string[],
-  options: { cwd: string; timeoutMs: number }
+  options: { cwd: string; timeoutMs: number; env?: NodeJS.ProcessEnv }
 ) => ReleaseArtifactCommandResult;
 
 interface PackFile {
@@ -148,10 +148,21 @@ export function createReleaseArtifactReport(options: ReleaseArtifactOptions): Re
       execution.stagingCreated = !issues.some((issue) => issue.stepId === 'stage-package');
       if (execution.stagingCreated) {
         execution.npmPackExecuted = true;
-        const pack = runner(npmCommand(), ['pack', '--json', '--pack-destination', output.path], {
-          cwd: staging.path,
-          timeoutMs
-        });
+        const npmCache = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-release-artifact-npm-cache-'));
+        let pack: ReleaseArtifactCommandResult;
+        try {
+          pack = runner(npmCommand(), ['pack', '--json', '--pack-destination', output.path], {
+            cwd: staging.path,
+            timeoutMs,
+            env: {
+              ...process.env,
+              NPM_CONFIG_CACHE: npmCache,
+              npm_config_cache: npmCache
+            }
+          });
+        } finally {
+          cleanupDirectory(npmCache, true);
+        }
         const parsed = parsePackResult(pack.stdout);
         if (pack.status !== 0 || !parsed) {
           issues.push({
@@ -452,10 +463,11 @@ function cleanupDirectory(directory: string, cleanup: boolean): void {
   if (cleanup) fs.rmSync(directory, { recursive: true, force: true });
 }
 
-function runCommand(command: string, args: string[], options: { cwd: string; timeoutMs: number }): ReleaseArtifactCommandResult {
+function runCommand(command: string, args: string[], options: { cwd: string; timeoutMs: number; env?: NodeJS.ProcessEnv }): ReleaseArtifactCommandResult {
   const started = Date.now();
   const result = spawnSync(command, args, {
     cwd: options.cwd,
+    env: options.env,
     encoding: 'utf8',
     timeout: options.timeoutMs,
     maxBuffer: 1024 * 1024 * 4
