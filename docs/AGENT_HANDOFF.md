@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0240 is committed locally in current HEAD. |
+| Branch | main | T-0241 is committed locally in current HEAD. |
 | Current Phase | Dashboard/TUI UI work paused; core evidence/task lifecycle work resumed | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0240 Task Capsule Upgrade Remediation Dry Run Hardening | `task upgrade-scaffold` and `protocol remediate` planned writes now require a reviewed dry-run `summary.beforeHash` before execute mode writes. |
+| Latest Completed Task | T-0241 Reviewer Feedback Docs Alignment | Accepted reviewer cautions are now reflected in Evidence v2, task-next, task workflow, SOP, and Project State docs. |
 | Active / Next Task | Release/package readiness hardening | Evidence v2, finish/close guidance, task-next priority, and remediation execute guards are in place; return to release/package value work before more UI or lifecycle polish. |
-| Validation Baseline | T-0240 Docker validation passed | Focused upgrade/remediation guard suite passed 5 files / 36 tests; `npm run dev:docker-sync-build` passed with 92 files / 610 tests; built CLI guard smoke verified hash-required execute behavior. |
+| Validation Baseline | T-0241 docs validation passed | `rg` caution phrase check and `git diff --check` passed; no runtime code changed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0241 Reviewer Feedback Docs Alignment | Reflected accepted reviewer cautions: Evidence v2 migration is selected-task/operator-selected rather than default broad migration; current `EVIDENCE.md` does not surface persisted v2 ids; `task next` may return `taskId: TBD`; and T-0240 remediation execute hash-copy friction is intentional. | T-0241 evidence: `rg` caution phrase check and `git diff --check` passed. |
 | T-0240 Task Capsule Upgrade Remediation Dry Run Hardening | Added report-level `summary.beforeHash` to `hadara.task.upgrade_scaffold.v1` and `hadara.protocol.remediation.v1`; execute mode now rejects planned writes without a matching reviewed dry-run hash while preserving per-action write conflict checks. | T-0240 evidence: focused guard suite passed 5 files / 36 tests; Docker sync-build passed 92 files / 610 tests; built CLI guard smoke verified no-hash failure and matching-hash success for task scaffold upgrade and protocol remediation. |
 | T-0239 Task Next Handoff Priority | Added `docs/specs/HADARA_Task_Next_Handoff_Priority_Refactor.md`, registered it in SOP Required Reading, and changed `hadara.task.next.v1` to use handoff-first policy metadata with sourceKind and backlog rows while preserving Development Slice and Task Board fallback behavior. | T-0239 evidence: focused task-next/schema/workflow-docs tests passed 3 files / 9 tests; Docker sync-build passed 92 files / 608 tests; built CLI smoke recommended handoff current work and kept T-0006 only in `backlog`. |
-| T-0238 Task Close Audit Boundary Guidance | Added `lifecycle` metadata to `hadara.task.close.v1` and `auditVerdict` metadata to `hadara.task.audit_close.v1`, making validation/close/audit phases, close evidence loop boundary, write boundary, and current/recorded hash verdicts machine-readable while preserving close-evidence-only execute and read-only audit. | T-0238 evidence: focused close/audit guidance tests passed 5 files / 19 tests; Docker sync-build passed 92 files / 607 tests; built CLI close dry-run showed `lifecycle.model: validation-close-audit`; built audit-close before close showed `auditVerdict.verdict: not-closed`. |
 
 ## Current Known Problems
 
@@ -65,6 +65,7 @@
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| Reviewer feedback docs alignment | `rg` caution phrase check and `git diff --check` passed during T-0241. | Covered operator-selected Evidence v2 migration, Markdown v2-id visibility, `task next` TBD consumer contract, and T-0240 before-hash UX. |
 | Task upgrade/remediation guard focused checks | Docker focused suite passed with 5 files / 36 tests during T-0240. | Covered task scaffold upgrade before-hash metadata, missing/stale hash refusal, guarded execute, protocol remediation guard behavior, apply-time conflict detection, CLI dry-run JSON, workbench remediation guidance, and schema fixtures. |
 | Task upgrade/remediation guard full check | Docker `npm run dev:docker-sync-build` passed with 92 files and 610 tests during T-0240. | Built CLI guard smoke verified `task upgrade-scaffold` and `protocol remediate` dry-run hashes, no-hash execute failures, and matching-hash execute success in a temp project. |
 | Task-next handoff-priority focused checks | Docker focused suite passed with 3 files / 9 tests during T-0239. | Covered handoff primary recommendations, sourceKind/policy metadata, backlog rows for legacy Partial tasks, schema fixtures, and workflow docs. |

@@ -127,6 +127,18 @@ hadara task audit-close --task T-XXXX --json
 | `task close` | Dry-run by default; writes only with `--execute` | Bounded to close evidence append. |
 | `task audit-close` | Read-only | Verifies close evidence after close. |
 
+For dry-run-first remediation commands outside the ordinary close loop, follow the reviewed-hash pattern:
+
+```bash
+hadara task upgrade-scaffold --task T-XXXX --json
+hadara task upgrade-scaffold --task T-XXXX --execute --before-hash <summary.beforeHash> --json
+
+hadara protocol remediate --fix evidence-jsonl --task T-XXXX --json
+hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-hash <summary.beforeHash> --json
+```
+
+If `task next --json` returns `taskId: "TBD"`, treat it as a handoff work item, not an existing capsule. Review `sourceKind`, `createCommand`, `taskCapsulePresent`, and `backlog`, create the capsule if appropriate, then rerun `task next` or `task status`.
+
 ## Reusable Docker Workflow
 
 For HADARA-dev, prefer the reusable Docker workflow for Node/npm validation and built-CLI smoke checks. The host workspace may not have `node_modules`, and host-local Node/npm results are not the validation baseline unless a task explicitly records that host dependencies were installed and used.
@@ -198,6 +210,8 @@ Then run built-CLI smokes through `node /workspace/dist/cli/main.js ... --projec
 3. Treat close validation output as close audit evidence, not as a prerequisite for the same validation run.
 4. Use `hadara evidence add-command --task <task-id> --summary <text> --result passed|failed|blocked|unknown --json` for harness, doctor, build, test, and CLI smoke command results when no artifact file is being attached.
 5. Use `hadara evidence lint --task <task-id> --json` or task-scoped protocol doctor before close when evidence drift is suspected.
+6. Treat Evidence v2 migration as selected-task maintenance, not a default broad migration. Run `hadara evidence migrate --task <id> --to v2 --json`, review `beforeHash`, then execute only for that task with `--before-hash <hash>` when migration is explicitly needed.
+7. Persisted v2 evidence ids live in `evidence.jsonl` and read models; the current `EVIDENCE.md` table remains a human summary and does not show durable v2 ids.
 
 ## Session End
 

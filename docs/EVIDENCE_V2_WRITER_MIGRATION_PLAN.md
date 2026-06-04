@@ -43,14 +43,12 @@ Proof `strength` should remain derived by the semantic analyzer, not persisted a
 
 ## Migration Plan
 
-Future migration should be per-task, dry-run-first, and hash-guarded:
+Migration is available for selected tasks, not a recommended default maintenance action. Historical evidence migration must remain operator-selected: choose a concrete task, review the dry-run plan, copy the returned hash, and execute only when that specific task needs persisted v2 records.
 
 ```bash
 hadara evidence migrate --task T-XXXX --to v2 --json
 hadara evidence migrate --task T-XXXX --to v2 --execute --before-hash <sha256:...> --json
 ```
-
-The command names are proposed design, not implemented behavior.
 
 | Requirement | Rule |
 |---|---|
@@ -61,6 +59,14 @@ The command names are proposed design, not implemented behavior.
 | Scope | Migrate one task at a time first; no repository-wide automatic migration in the first implementation. |
 | Markdown | Do not rewrite `EVIDENCE.md` automatically in the first migration command; plan any table/frame rewrite as a separate dry-run-first task. |
 | Init | Do not change init scaffolds until v2 writer behavior is implemented and documented. |
+
+## Operator Visibility Notes
+
+| Topic | Current Behavior | Operator Guidance |
+|---|---|---|
+| Historical migration | Execute mode exists, but broad migration is not the default workflow. | Migrate only selected tasks after dry-run review and matching `beforeHash` execution. |
+| Persisted v2 ids | New v2 records persist durable ids in `evidence.jsonl` and read models. | Use JSONL, `hadara evidence list --json`, evidence lint/read-model consumers, or release reports to inspect durable ids. |
+| Markdown table | `EVIDENCE.md` remains a human summary table and does not surface persisted v2 ids yet. | Do not rely on Markdown alone when exact durable evidence ids are needed. |
 
 ## Validation Requirements
 

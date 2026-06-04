@@ -28,7 +28,14 @@ hadara task audit-close --task T-XXXX --json
 
 The close model has three separate phases: validation proves readiness, close records the proof, and audit checks the already-recorded close evidence. Close evidence is excluded from the current validation loop because it is appended after validation; requiring it as a same-run precondition would create a fixed-point loop.
 
-Dry-run-first remediation commands use a separate guard: when `task upgrade-scaffold` or `protocol remediate` reports planned writes, the dry-run report includes `summary.beforeHash`. Execute mode requires `--before-hash <hash>` from that reviewed dry-run before it will apply those writes.
+Dry-run-first remediation commands use a separate guard: when `task upgrade-scaffold` or `protocol remediate` reports planned writes, the dry-run report includes `summary.beforeHash`. Execute mode requires `--before-hash <hash>` from that reviewed dry-run before it will apply those writes. This extra copy step is intentional UX friction: old execute-only commands fail closed so operators review the current plan before any scaffold/remediation write.
+
+Example:
+
+```bash
+hadara protocol remediate --fix evidence-jsonl --task T-XXXX --json
+hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-hash <summary.beforeHash> --json
+```
 
 ## Command Semantics Matrix
 
@@ -46,7 +53,7 @@ Dry-run-first remediation commands use a separate guard: when `task upgrade-scaf
 
 ## Non-Overlap Rules
 
-- `task next` chooses work; it does not create a capsule or infer completion.
+- `task next` chooses work; it does not create a capsule or infer completion. Handoff-first recommendations may use `taskId: TBD`; consumers must inspect `sourceKind`, `taskCapsulePresent`, `createCommand`, and `backlog`.
 - `task status` is an operator console; `ok: true` means report generation succeeded. Readiness lives in `state.ready`, `summary.blockers`, and `issues`.
 - `task ready` checks whether the capsule can satisfy a requested validation level; it does not write evidence or status.
 - `evidence add-command` records an operator-supplied command result; it does not execute shell commands or capture stdout/stderr.

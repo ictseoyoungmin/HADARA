@@ -241,3 +241,4 @@
 | T-0238 | Task Close Audit Boundary Guidance | Done | tasks/T-0238-task-close-audit-boundary-guidance | |
 | T-0239 | Task Next Handoff Priority | Done | tasks/T-0239-task-next-handoff-priority | |
 | T-0240 | Task Capsule Upgrade Remediation Dry Run Hardening | Done | tasks/T-0240-task-capsule-upgrade-remediation-dry-run-hardening | |
+| T-0241 | Reviewer Feedback Docs Alignment | Done | tasks/T-0241-reviewer-feedback-docs-alignment | |
