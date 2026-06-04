@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0237 is the current completed local work and has been committed locally. |
+| Branch | main | T-0238 is the current completed local work and has been committed locally. |
 | Current Phase | Dashboard/TUI UI work paused; core evidence/task lifecycle work resumed | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0237 Task Finish State Docs Advisory Report | `hadara.task.finish.v1` now reports structured state-doc freshness for Development Slices, Project State, and Agent Handoff without expanding finish writes. |
-| Active / Next Task | Close/audit workflow hardening | Finish advisories are now more actionable; continue lifecycle hardening around close/audit semantics or capsule remediation. |
-| Validation Baseline | T-0237 Docker validation passed | Focused task lifecycle suite passed 5 files / 40 tests; `npm run dev:docker-sync-build` passed with 92 files / 607 tests and built CLI finish JSON smoke exposed `stateDocs`. |
+| Latest Completed Task | T-0238 Task Close Audit Boundary Guidance | `hadara.task.close.v1` now reports additive lifecycle guidance and `hadara.task.audit_close.v1` reports additive audit verdict metadata without expanding write boundaries. |
+| Active / Next Task | Task capsule upgrade/remediation dry-run hardening | Finish and close/audit workflow reports are now more actionable; continue lifecycle hardening around safe capsule remediation instead of UI polish. |
+| Validation Baseline | T-0238 Docker validation passed | Focused close/audit guidance suite passed 5 files / 19 tests; `npm run dev:docker-sync-build` passed with 92 files / 607 tests; built close/audit smokes exposed `lifecycle` and `auditVerdict`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0238 Task Close Audit Boundary Guidance | Added `lifecycle` metadata to `hadara.task.close.v1` and `auditVerdict` metadata to `hadara.task.audit_close.v1`, making validation/close/audit phases, close evidence loop boundary, write boundary, and current/recorded hash verdicts machine-readable while preserving close-evidence-only execute and read-only audit. | T-0238 evidence: focused close/audit guidance tests passed 5 files / 19 tests; Docker sync-build passed 92 files / 607 tests; built CLI close dry-run showed `lifecycle.model: validation-close-audit`; built audit-close before close showed `auditVerdict.verdict: not-closed`. |
 | T-0237 Task Finish State Docs Advisory Report | Added `stateDocs` to `hadara.task.finish.v1` for `docs/DEVELOPMENT_SLICES.md`, `docs/PROJECT_STATE.md`, and `docs/AGENT_HANDOFF.md`, with current/pending/missing state, mention signal, and recommendations while preserving the `task finish --execute` write boundary. | T-0237 evidence: focused task lifecycle tests passed 5 files / 40 tests; Docker sync-build passed 92 files / 607 tests; built CLI smoke returned `stateDocsPending: 3` before manual docs update. |
 | T-0236 Evidence v2 Migration Execute Mode | Added hash-guarded execute mode for `evidence migrate`, requiring `--before-hash`, preserving dry-run preview shape, converting v1 lines to planned v2 records, preserving existing v2 lines, refusing skipped invalid records, and keeping `EVIDENCE.md` unchanged. | T-0236 evidence: focused migration/evidence/schema tests passed 7 files / 67 tests; Docker sync-build passed 92 files / 606 tests; built CLI temp-copy smoke migrated T-0015 from v1 5/v2 0 to v1 0/v2 5 and mismatch smoke returned `EVIDENCE_MIGRATION_BEFORE_HASH_MISMATCH`. |
-| T-0235 Evidence v2 Migration Preview | Added dry-run-only `evidence migrate` reporting as `hadara.evidence.migration_preview.v1`, including `beforeHash`, deterministic planned v2 ids/fingerprints, planned records, skipped records, warning issues, and explicit execute rejection. | T-0235 evidence: focused migration/evidence/schema tests passed 7 files / 64 tests; Docker sync-build passed 92 files / 603 tests; built CLI smoke on T-0015 planned 5 transforms with no writes. |
 
 ## Current Known Problems
 
@@ -49,20 +49,22 @@
 | Legacy generated evidence ids remain compatibility read-model ids. | They now expose `idStability: unstable-on-reorder`, while newly written v2 evidence has durable persisted ids. | Use exact markers carefully in v1 evidence; migrate historical records only through the planned hash-guarded flow. |
 | Dashboard aggregate reports still expose legacy `source.projectRoot` during v1 compatibility. | New browser consumers should avoid displaying raw absolute paths even though the compatibility field remains. | Use `source.project.fingerprint` and `source.projectRootRedacted` now; remove raw path exposure in a future v2 contract. |
 | Direct `/mnt/f` dashboard live reads are structurally slow on cold reads. | Phase 5.6 measured about 17s uncached bootstrap after dedup because broad capsule filesystem scans remain on the request path. | Phase 5.7 should move to local projections: start with T-0216 contract, then projection store/core route/background refresh. |
-| Close validation evidence can create a fixed-point loop if modeled as a same-run precondition. | Recording validation evidence mutates evidence files after validation. | Use the documented three-layer model: validation proves readiness, close records the proof, audit checks the close record. T-0170 adds source/report hash split and read-only audit for this model. |
+| Close validation evidence can create a fixed-point loop if modeled as a same-run precondition. | Recording validation evidence mutates evidence files after validation. | Use the documented three-layer model: validation proves readiness, close records the proof, audit checks the close record. T-0238 exposes this as `task close` lifecycle metadata and `task audit-close` audit verdict metadata. |
 | `task finish` intentionally leaves broad prose docs advisory-only. | Operators still need to update Development Slices, Project State, Agent Handoff, and evidence/close records manually. | Use T-0237 `stateDocs` current/pending/missing diagnostics; future finish expansion should remain dry-run-first, bounded, and hash-guarded. |
 
 ## Next Recommended Step
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Continue close/audit workflow hardening. | Finish advisories now expose structured state-doc freshness, while close validation still depends on the source/report hash model and repeated audit discipline. | Use `docs/TASK_WORKFLOW_COMMANDS.md` and recent close/audit evidence behavior. |
+| Continue with task capsule upgrade/remediation dry-run hardening. | Evidence v2, finish advisories, and close/audit boundary guidance are now in place; the next lifecycle value is safe bounded remediation for capsule drift. | Use protocol doctor/remediation docs, T-0163 task upgrade scaffold behavior, and recent finish/close workflow reports. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| Task close/audit boundary guidance focused checks | Docker focused suite passed with 5 files / 19 tests during T-0238. | Covered `task close` lifecycle guidance, execute write boundary, `task audit-close` audit verdicts, schema fixtures, workbench/ready adjacency, and workflow docs. |
+| Task close/audit boundary guidance full check | Docker `npm run dev:docker-sync-build` passed with 92 files and 607 tests during T-0238. | Built CLI close dry-run smoke while T-0238 was In Progress returned expected blockers plus `lifecycle`; built audit-close smoke before close returned `auditVerdict.verdict: not-closed` and `writeBoundary: read-only`. |
 | Task finish state-doc advisory focused checks | Docker focused suite passed with 5 files / 40 tests during T-0237. | Covered `task finish` stateDocs current/pending/missing diagnostics, unchanged broad-doc write boundary, ready/close adjacency, done-level harness, and workflow docs. |
 | Task finish state-doc advisory full check | Docker `npm run dev:docker-sync-build` passed with 92 files and 607 tests during T-0237. | Built CLI smoke returned `ok:true`, package version `0.1.0-rc.0`, `distLooksStale:false`; `/workspace/dist` was refreshed. Built finish JSON smoke returned `stateDocsPending: 3` before manual docs update. |
 | Evidence v2 migration execute focused checks | Docker focused suite passed with 7 files / 67 tests during T-0236. | Covered execute success, before-hash required/mismatch no-write behavior, skipped-record execute refusal, CLI execute JSON, schema registration, and v1/v2 evidence compatibility adjacency. |

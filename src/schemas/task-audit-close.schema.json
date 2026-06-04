@@ -24,6 +24,20 @@
     "currentValidationReportHash": { "type": "string" },
     "currentSourceHash": { "type": "string" },
     "latestCloseEvidence": { "type": "object", "additionalProperties": true },
+    "auditVerdict": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "phase": { "const": "post-close-audit" },
+        "verdict": { "enum": ["closed-valid", "not-closed", "close-evidence-invalid", "closed-with-drift-warnings"] },
+        "closeEvidenceFound": { "type": "boolean" },
+        "closeEvidenceValid": { "type": "boolean" },
+        "reportHashMatches": { "type": "boolean" },
+        "sourceHashMatches": { "type": "boolean" },
+        "writeBoundary": { "const": "read-only" },
+        "model": { "const": "validation-close-audit" }
+      }
+    },
     "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
   }
 }

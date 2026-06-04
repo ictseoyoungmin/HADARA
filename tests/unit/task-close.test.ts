@@ -50,6 +50,29 @@ describe('task close report', () => {
     expect(report.validation.validatedBeforeCloseEvidenceReportHash).toMatch(/^sha256:[a-f0-9]{64}$/);
     expect(report.validation.validatedBeforeCloseEvidenceSourceHash).toMatch(/^sha256:[a-f0-9]{64}$/);
     expect(report.validation.validatedBeforeCloseEvidenceHash).toBe(report.validation.validatedBeforeCloseEvidenceReportHash);
+    expect(report.lifecycle).toMatchObject({
+      model: 'validation-close-audit',
+      reportPhase: 'pre-close-plan',
+      nextPhaseAfterSuccess: 'close-execute',
+      validationPhase: {
+        role: 'prove-readiness',
+        command: `hadara task close --task ${task.id} --json`,
+        includesCloseEvidenceAppend: false
+      },
+      closePhase: {
+        role: 'record-proof',
+        command: `hadara task close --task ${task.id} --execute --json`,
+        writes: 'close-evidence-only'
+      },
+      auditPhase: {
+        role: 'check-close-record',
+        command: `hadara task audit-close --task ${task.id} --json`,
+        writes: 'none'
+      },
+      closeEvidenceLoopBoundary: {
+        excludedFromCurrentValidationLoop: true
+      }
+    });
     expect(report.nextActions).toContainEqual(
       expect.objectContaining({
         id: 'append-close-evidence',
@@ -83,6 +106,12 @@ describe('task close report', () => {
 
     expect(report.ok).toBe(true);
     expect(report.closeEvidence.appended).toBe(true);
+    expect(report.lifecycle).toMatchObject({
+      reportPhase: 'close-execute',
+      nextPhaseAfterSuccess: 'post-close-audit',
+      closePhase: { writes: 'close-evidence-only' },
+      auditPhase: { command: `hadara task audit-close --task ${task.id} --json`, writes: 'none' }
+    });
     expect(report.closeEvidence.sourceHash).toBe(report.validation.validatedBeforeCloseEvidenceSourceHash);
     expect(after.split(/\r?\n/).filter(Boolean).length).toBe(before.split(/\r?\n/).filter(Boolean).length + 1);
     expect(after).toContain('"kind":"command-log"');
@@ -109,14 +138,39 @@ describe('task close report', () => {
     });
     expect(audit.latestCloseEvidence?.validationReportHash).toBe(closeReport.validation.validatedBeforeCloseEvidenceReportHash);
     expect(audit.latestCloseEvidence?.sourceHash).toBe(closeReport.validation.validatedBeforeCloseEvidenceSourceHash);
+    expect(audit.auditVerdict).toMatchObject({
+      phase: 'post-close-audit',
+      verdict: 'closed-valid',
+      closeEvidenceFound: true,
+      closeEvidenceValid: true,
+      reportHashMatches: true,
+      sourceHashMatches: true,
+      recordedValidationReportHash: closeReport.validation.validatedBeforeCloseEvidenceReportHash,
+      recordedSourceHash: closeReport.validation.validatedBeforeCloseEvidenceSourceHash,
+      currentValidationReportHash: audit.currentValidationReportHash,
+      currentSourceHash: audit.currentSourceHash,
+      blockers: 0,
+      warnings: 0,
+      writeBoundary: 'read-only',
+      model: 'validation-close-audit'
+    });
     expect(formatTaskAuditCloseReport(audit)).toContain('State\n- Closed: yes');
     expect(formatTaskAuditCloseReport(audit)).toContain('Close Evidence\n- Latest: passed');
-    expect(formatTaskAuditCloseReport(audit)).toContain('Audit\n- Blockers: 0');
+    expect(formatTaskAuditCloseReport(audit)).toContain('Audit\n- Verdict: closed-valid');
+    expect(formatTaskAuditCloseReport(audit)).toContain('- Blockers: 0');
     expect(formatTaskAuditCloseReport(audit)).toContain('Suggested next');
 
     fs.appendFileSync(path.join(task.dir, 'PLAN.md'), '\n| 2 | Drift after close. | Done | Drift. |\n', 'utf8');
     const drift = createTaskAuditCloseReport(root, task.id);
     expect(drift.ok).toBe(true);
+    expect(drift.auditVerdict).toMatchObject({
+      verdict: 'closed-with-drift-warnings',
+      closeEvidenceFound: true,
+      closeEvidenceValid: true,
+      reportHashMatches: true,
+      sourceHashMatches: false,
+      writeBoundary: 'read-only'
+    });
     expect(drift.issues).toContainEqual(expect.objectContaining({ severity: 'warning', code: 'TASK_CLOSE_AUDIT_SOURCE_HASH_DRIFT' }));
   });
 
@@ -128,6 +182,13 @@ describe('task close report', () => {
     const audit = createTaskAuditCloseReport(root, task.id);
 
     expect(audit.ok).toBe(false);
+    expect(audit.auditVerdict).toMatchObject({
+      verdict: 'not-closed',
+      closeEvidenceFound: false,
+      closeEvidenceValid: false,
+      blockers: 1,
+      writeBoundary: 'read-only'
+    });
     expect(audit.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_EVIDENCE_MISSING' }));
   });
 });

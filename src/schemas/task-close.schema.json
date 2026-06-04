@@ -54,6 +54,39 @@
         "evidencePath": { "type": "string" }
       }
     },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "model": { "const": "validation-close-audit" },
+        "reportPhase": { "enum": ["pre-close-plan", "close-execute"] },
+        "nextPhaseAfterSuccess": { "enum": ["close-execute", "post-close-audit"] },
+        "validationPhase": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "role": { "const": "prove-readiness" },
+            "includesCloseEvidenceAppend": { "const": false }
+          }
+        },
+        "closePhase": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "role": { "const": "record-proof" },
+            "writes": { "const": "close-evidence-only" }
+          }
+        },
+        "auditPhase": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "role": { "const": "check-close-record" },
+            "writes": { "const": "none" }
+          }
+        }
+      }
+    },
     "nextActions": {
       "type": "array",
       "items": { "type": "object", "additionalProperties": true }

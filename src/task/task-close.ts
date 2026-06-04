@@ -50,8 +50,34 @@ export interface TaskCloseReport {
     markdownPath?: string;
     evidencePath?: string;
   };
+  lifecycle: TaskCloseLifecycleGuidance;
   nextActions: TaskCloseNextAction[];
   issues: TaskCloseIssue[];
+}
+
+export interface TaskCloseLifecycleGuidance {
+  model: 'validation-close-audit';
+  reportPhase: 'pre-close-plan' | 'close-execute';
+  nextPhaseAfterSuccess: 'close-execute' | 'post-close-audit';
+  validationPhase: {
+    role: 'prove-readiness';
+    command: string;
+    includesCloseEvidenceAppend: false;
+  };
+  closePhase: {
+    role: 'record-proof';
+    command: string;
+    writes: 'close-evidence-only';
+  };
+  auditPhase: {
+    role: 'check-close-record';
+    command: string;
+    writes: 'none';
+  };
+  closeEvidenceLoopBoundary: {
+    excludedFromCurrentValidationLoop: true;
+    reason: string;
+  };
 }
 
 export interface TaskCloseNextAction {
@@ -126,6 +152,7 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
       validationReportHash,
       sourceHash
     },
+    lifecycle: createCloseLifecycleGuidance(taskId, mode),
     nextActions,
     issues
   };
@@ -237,8 +264,36 @@ function buildMissingTaskReport(projectRoot: string, taskId: string, mode: TaskC
       summary: `Task close validation for ${taskId} could not run because the task was not found.`,
       excludedFromCurrentValidationLoop: true
     },
+    lifecycle: createCloseLifecycleGuidance(taskId, mode),
     nextActions: [],
     issues
+  };
+}
+
+function createCloseLifecycleGuidance(taskId: string, mode: TaskCloseMode): TaskCloseLifecycleGuidance {
+  return {
+    model: 'validation-close-audit',
+    reportPhase: mode === 'execute' ? 'close-execute' : 'pre-close-plan',
+    nextPhaseAfterSuccess: mode === 'execute' ? 'post-close-audit' : 'close-execute',
+    validationPhase: {
+      role: 'prove-readiness',
+      command: `hadara task close --task ${taskId} --json`,
+      includesCloseEvidenceAppend: false
+    },
+    closePhase: {
+      role: 'record-proof',
+      command: `hadara task close --task ${taskId} --execute --json`,
+      writes: 'close-evidence-only'
+    },
+    auditPhase: {
+      role: 'check-close-record',
+      command: `hadara task audit-close --task ${taskId} --json`,
+      writes: 'none'
+    },
+    closeEvidenceLoopBoundary: {
+      excludedFromCurrentValidationLoop: true,
+      reason: 'Close evidence is appended after validation, so the same validation run must not require the evidence it is about to create.'
+    }
   };
 }
 
@@ -316,7 +371,25 @@ export interface TaskAuditCloseReport {
     validationReportHash?: string;
     sourceHash?: string;
   };
+  auditVerdict: TaskAuditCloseVerdict;
   issues: TaskCloseIssue[];
+}
+
+export interface TaskAuditCloseVerdict {
+  phase: 'post-close-audit';
+  verdict: 'closed-valid' | 'not-closed' | 'close-evidence-invalid' | 'closed-with-drift-warnings';
+  closeEvidenceFound: boolean;
+  closeEvidenceValid: boolean;
+  reportHashMatches?: boolean;
+  sourceHashMatches?: boolean;
+  recordedValidationReportHash?: string;
+  recordedSourceHash?: string;
+  currentValidationReportHash: string;
+  currentSourceHash: string;
+  blockers: number;
+  warnings: number;
+  writeBoundary: 'read-only';
+  model: 'validation-close-audit';
 }
 
 export function createTaskAuditCloseReport(projectRoot: string, taskId: string): TaskAuditCloseReport {
@@ -418,6 +491,7 @@ export function formatTaskAuditCloseReport(report: TaskAuditCloseReport): string
   lines.push(
     '',
     'Audit',
+    `- Verdict: ${report.auditVerdict.verdict}`,
     `- Blockers: ${report.summary.blockers}`,
     `- Warnings: ${report.summary.warnings}`,
     '',
@@ -468,7 +542,45 @@ function buildAuditReport(
           }
         }
       : {}),
+    auditVerdict: createAuditVerdict(currentHash, currentSourceHash, latest, issues),
     issues
+  };
+}
+
+function createAuditVerdict(
+  currentHash: string,
+  currentSourceHash: string,
+  latest: { time: string; kind: string; summary: string; result: string } | undefined,
+  issues: TaskCloseIssue[]
+): TaskAuditCloseVerdict {
+  const blockers = issues.filter((issue) => issue.severity === 'error').length;
+  const warnings = issues.filter((issue) => issue.severity === 'warning').length;
+  const recordedValidationReportHash = latest ? extractReportHash(latest.summary) : undefined;
+  const recordedSourceHash = latest ? extractSourceHash(latest.summary) : undefined;
+  const closeEvidenceFound = latest !== undefined;
+  const closeEvidenceValid = closeEvidenceFound && latest.kind === 'command-log' && latest.result === 'passed';
+  let verdict: TaskAuditCloseVerdict['verdict'] = 'closed-valid';
+  if (!closeEvidenceFound) {
+    verdict = 'not-closed';
+  } else if (!closeEvidenceValid || blockers > 0) {
+    verdict = 'close-evidence-invalid';
+  } else if (warnings > 0) {
+    verdict = 'closed-with-drift-warnings';
+  }
+
+  return {
+    phase: 'post-close-audit',
+    verdict,
+    closeEvidenceFound,
+    closeEvidenceValid,
+    ...(recordedValidationReportHash ? { recordedValidationReportHash, reportHashMatches: recordedValidationReportHash === currentHash } : {}),
+    ...(recordedSourceHash ? { recordedSourceHash, sourceHashMatches: recordedSourceHash === currentSourceHash } : {}),
+    currentValidationReportHash: currentHash,
+    currentSourceHash,
+    blockers,
+    warnings,
+    writeBoundary: 'read-only',
+    model: 'validation-close-audit'
   };
 }
 
