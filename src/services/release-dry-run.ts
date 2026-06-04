@@ -39,6 +39,7 @@ export interface ReleaseDryRunReport {
     sourceOk?: boolean;
     category?: string;
     mode?: string;
+    providerEcosystem?: string;
     result?: string;
     packageVersion?: string;
     gitCommit?: string;
@@ -99,6 +100,7 @@ interface EvidenceRequirement {
   name: string;
   category: 'package-smoke' | 'clean-checkout-smoke' | 'release-artifact';
   mode: string;
+  providerEcosystem?: string;
 }
 
 export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunReport {
@@ -350,7 +352,7 @@ export function readCurrentGitCommit(projectRoot: string): string | undefined {
 
 function validateEvidenceRequirement(records: ReleaseEvidenceRecord[], requirement: EvidenceRequirement) {
   const record = records
-    .filter((candidate) => isStrictReleaseEvidenceProof(candidate, { category: requirement.category, mode: requirement.mode }))
+    .filter((candidate) => isStrictReleaseEvidenceProof(candidate, { category: requirement.category, mode: requirement.mode, providerEcosystem: requirement.providerEcosystem }))
     .sort((a, b) => b.time.localeCompare(a.time))[0];
   if (!record) {
     return {
@@ -370,6 +372,7 @@ function validateEvidenceRequirement(records: ReleaseEvidenceRecord[], requireme
     ...(artifact.sourceOk === undefined ? {} : { sourceOk: artifact.sourceOk }),
     ...(artifact.category ? { category: artifact.category } : {}),
     ...(artifact.mode ? { mode: artifact.mode } : {}),
+    ...(artifact.providerEcosystem ? { providerEcosystem: artifact.providerEcosystem } : {}),
     ...(artifact.packageVersion ? { packageVersion: artifact.packageVersion } : {}),
     ...(artifact.gitCommit ? { gitCommit: artifact.gitCommit } : {}),
     ...(artifact.manifestHash ? { manifestHash: artifact.manifestHash } : {})
@@ -381,7 +384,7 @@ type GitFreshnessChecker = (item: ReleaseDryRunReport['evidence'][number]) => bo
 function evidenceCheckPassed(item: ReleaseDryRunReport['evidence'][number], packageVersion: string, gitCommit: string | undefined, gitFreshness: GitFreshnessChecker): boolean {
   if (item.result !== 'passed') return false;
   if (item.artifactExists !== true || item.artifactSchemaValid !== true || item.sourceOk !== true) return false;
-  if (item.code === 'PACKAGE_SMOKE_EVIDENCE' && (item.category !== 'package-smoke' || item.mode !== 'local')) return false;
+  if (item.code === 'PACKAGE_SMOKE_EVIDENCE' && (item.category !== 'package-smoke' || item.mode !== 'local' || !npmProviderEvidenceCompatible(item.providerEcosystem))) return false;
   if (item.code === 'CLEAN_CHECKOUT_SMOKE_EVIDENCE' && (item.category !== 'clean-checkout-smoke' || item.mode !== 'execute')) return false;
   if (item.code === 'RELEASE_ARTIFACT_EVIDENCE') {
     if (item.category !== 'release-artifact' || item.mode !== 'execute') return false;
@@ -398,8 +401,8 @@ function evidenceSummary(item: ReleaseDryRunReport['evidence'][number], packageV
   if (item.artifactSchemaValid !== true) return `${item.taskId} at ${item.time} has a linked artifact, but schema validation failed.`;
   if (item.sourceOk !== true) return `${item.taskId} at ${item.time} has a linked artifact, but source report ok is not true.`;
   if (item.result !== 'passed') return `${item.taskId} at ${item.time} is not a passed evidence record.`;
-  if (item.code === 'PACKAGE_SMOKE_EVIDENCE' && (item.category !== 'package-smoke' || item.mode !== 'local')) {
-    return `${item.taskId} at ${item.time} does not match expected package-smoke category/mode.`;
+  if (item.code === 'PACKAGE_SMOKE_EVIDENCE' && (item.category !== 'package-smoke' || item.mode !== 'local' || !npmProviderEvidenceCompatible(item.providerEcosystem))) {
+    return `${item.taskId} at ${item.time} does not match expected npm package-smoke category/mode/provider.`;
   }
   if (item.code === 'CLEAN_CHECKOUT_SMOKE_EVIDENCE' && (item.category !== 'clean-checkout-smoke' || item.mode !== 'execute')) {
     return `${item.taskId} at ${item.time} does not match expected clean-checkout category/mode.`;
@@ -411,6 +414,10 @@ function evidenceSummary(item: ReleaseDryRunReport['evidence'][number], packageV
     if (gitCommit && item.gitCommit && item.gitCommit !== gitCommit && !gitFreshness(item)) return `${item.taskId} at ${item.time} git commit ${item.gitCommit} does not match current ${gitCommit}.`;
   }
   return `${item.taskId} at ${item.time} has a current schema-valid public artifact.`;
+}
+
+function npmProviderEvidenceCompatible(providerEcosystem: string | undefined): boolean {
+  return providerEcosystem === 'npm' || providerEcosystem === undefined;
 }
 
 function createGitFreshnessChecker(projectRoot: string, currentGitCommit: string | undefined): GitFreshnessChecker {
@@ -436,7 +443,8 @@ function evidenceRequirements(): EvidenceRequirement[] {
       code: 'PACKAGE_SMOKE_EVIDENCE',
       name: 'Package smoke evidence',
       category: 'package-smoke',
-      mode: 'local'
+      mode: 'local',
+      providerEcosystem: 'npm'
     },
     {
       code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE',

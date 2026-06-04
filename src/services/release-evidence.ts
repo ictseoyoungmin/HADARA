@@ -26,6 +26,7 @@ export interface ReleaseEvidenceArtifactValidation {
   sourceOk?: boolean;
   category?: string;
   mode?: string;
+  providerEcosystem?: string;
   packageVersion?: string;
   gitCommit?: string;
   manifestHash?: string;
@@ -35,6 +36,7 @@ export interface ReleaseEvidenceArtifactValidation {
 export interface StrictReleaseEvidenceExpectation {
   category: 'package-smoke' | 'clean-checkout-smoke' | 'release-artifact';
   mode?: string;
+  providerEcosystem?: string;
 }
 
 export function readReleaseEvidenceRecords(projectRoot: string): ReleaseEvidenceRecord[] {
@@ -69,6 +71,7 @@ export function validateReleaseEvidenceArtifact(record: ReleaseEvidenceRecord): 
         sourceOk: sourceReport.ok === true,
         category: typeof parsed.category === 'string' ? parsed.category : undefined,
         mode: typeof sourceReport.mode === 'string' ? sourceReport.mode : undefined,
+        providerEcosystem: readProviderEcosystem(sourceReport),
         packageVersion: readOptionalString(parsed.packageVersion) ?? readOptionalString(sourceReport.packageVersion),
         gitCommit: readOptionalString(parsed.gitCommit) ?? readOptionalString(sourceReport.gitCommit),
         issues: []
@@ -139,6 +142,7 @@ export function isStrictReleaseEvidenceProof(record: ReleaseEvidenceRecord, expe
   if (!artifact.exists || artifact.schemaValid !== true || artifact.sourceOk !== true) return false;
   if (artifact.category !== expectation.category) return false;
   if (expectation.mode && artifact.mode !== expectation.mode) return false;
+  if (expectation.providerEcosystem && !providerMatchesExpectation(artifact.providerEcosystem, expectation.providerEcosystem)) return false;
 
   const normalized = normalizeReleaseEvidenceRecord(record);
   return normalized !== null && typeof normalized.legacy.kind === 'string' && isReleaseCompatibleKind(normalized.legacy.kind) && isReleaseProofEvidence(normalized);
@@ -247,6 +251,16 @@ function toReleaseEvidenceV2Record(parsed: Record<string, unknown>, taskDir: str
 
 function readOptionalString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() !== '' ? value : undefined;
+}
+
+function readProviderEcosystem(sourceReport: Record<string, unknown>): string | undefined {
+  const provider = isRecord(sourceReport.provider) ? sourceReport.provider : undefined;
+  return readOptionalString(provider?.ecosystem);
+}
+
+function providerMatchesExpectation(actual: string | undefined, expected: string): boolean {
+  if (actual === expected) return true;
+  return expected === 'npm' && actual === undefined;
 }
 
 function sha256(content: string): string {

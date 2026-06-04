@@ -139,7 +139,8 @@ describe('release dry-run', () => {
         artifactSchemaValid: true,
         sourceOk: true,
         category: 'package-smoke',
-        mode: 'local'
+        mode: 'local',
+        providerEcosystem: 'npm'
       })
     );
     expect(report.evidence).toContainEqual(
@@ -150,6 +151,33 @@ describe('release dry-run', () => {
         sourceOk: true,
         category: 'release-artifact',
         mode: 'execute'
+      })
+    );
+  });
+
+  it('does not let Python package-smoke evidence satisfy the npm release gate', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root);
+    writeStrongEvidence(root, { packageSmokeProvider: 'python' });
+
+    const report = createReleaseDryRunReport(root);
+
+    expect(report.ok).toBe(false);
+    expect(report.evidence).toContainEqual(
+      expect.objectContaining({
+        code: 'PACKAGE_SMOKE_EVIDENCE',
+        artifactExists: false
+      })
+    );
+    expect(report.issues).toContainEqual(
+      expect.objectContaining({
+        code: 'PACKAGE_SMOKE_EVIDENCE_NOT_READY'
+      })
+    );
+    expect(report.readiness.nextActions).toContainEqual(
+      expect.objectContaining({
+        id: 'refresh-package-smoke-evidence',
+        command: 'hadara package smoke --execute --attach-evidence --task <task-id> --json'
       })
     );
   });
@@ -337,14 +365,17 @@ describe('release dry-run', () => {
   });
 });
 
-function writeStrongEvidence(root: string, options: { schemaVersion?: 'hadara.evidence.v1' | 'hadara.evidence.v2'; artifactGitCommit?: string } = {}): void {
+function writeStrongEvidence(
+  root: string,
+  options: { schemaVersion?: 'hadara.evidence.v1' | 'hadara.evidence.v2'; artifactGitCommit?: string; packageSmokeProvider?: 'npm' | 'python' } = {}
+): void {
   const taskDir = path.join(root, 'tasks', 'T-0001-release-evidence');
   const artifactDir = path.join(taskDir, 'artifacts');
   fs.mkdirSync(path.join(artifactDir, 'package-smoke'), { recursive: true });
   fs.mkdirSync(path.join(artifactDir, 'clean-checkout-smoke'), { recursive: true });
   fs.mkdirSync(path.join(artifactDir, 'release-artifact'), { recursive: true });
 
-  writeJson(path.join(artifactDir, 'package-smoke', 'summary.json'), smokeSummary('package-smoke', 'package.smoke', 'local'));
+  writeJson(path.join(artifactDir, 'package-smoke', 'summary.json'), smokeSummary('package-smoke', 'package.smoke', 'local', options.packageSmokeProvider ?? 'npm'));
   writeJson(path.join(artifactDir, 'clean-checkout-smoke', 'summary.json'), smokeSummary('clean-checkout-smoke', 'smoke.clean-checkout', 'execute'));
   writeJson(path.join(artifactDir, 'release-artifact', 'report.json'), releaseArtifactReport(options.artifactGitCommit));
 
@@ -406,7 +437,7 @@ function evidenceRecord(time: string, summary: string, evidencePath: string, sch
   };
 }
 
-function smokeSummary(category: 'package-smoke' | 'clean-checkout-smoke', command: string, mode: string): Record<string, unknown> {
+function smokeSummary(category: 'package-smoke' | 'clean-checkout-smoke', command: string, mode: string, providerEcosystem?: 'npm' | 'python'): Record<string, unknown> {
   return {
     schemaVersion: 'hadara.smokeEvidenceSummary.v1',
     time: '2026-05-28T10:00:00Z',
@@ -417,7 +448,16 @@ function smokeSummary(category: 'package-smoke' | 'clean-checkout-smoke', comman
       schemaVersion: category === 'package-smoke' ? 'hadara.packageSmoke.v1' : 'hadara.cleanCheckoutSmoke.v1',
       command,
       mode,
-      ok: true
+      ok: true,
+      ...(providerEcosystem
+        ? {
+            provider: {
+              ecosystem: providerEcosystem,
+              smokeProfile: providerEcosystem === 'python' ? 'python-package-smoke' : 'npm-package-smoke',
+              command: 'package.smoke'
+            }
+          }
+        : {})
     },
     execution: {},
     steps: [{ id: 'step', label: 'Step', status: 'passed', summary: 'passed' }],

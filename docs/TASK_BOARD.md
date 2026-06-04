@@ -249,3 +249,4 @@
 | T-0246 | Release Provider Contract | Done | tasks/T-0246-release-provider-contract | |
 | T-0247 | Python Release Preview Provider | Done | tasks/T-0247-python-release-preview-provider | |
 | T-0248 | Python Package Smoke Dry Run Local Mode | Done | tasks/T-0248-python-package-smoke-dry-run-local-mode | |
+| T-0249 | Python Package Smoke Boundary Hardening | Done | tasks/T-0249-python-package-smoke-boundary-hardening | |

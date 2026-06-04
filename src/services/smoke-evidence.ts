@@ -28,6 +28,8 @@ export interface SmokeEvidenceInput {
     command: string;
     ok: boolean;
     mode: string;
+    provider?: object;
+    networkPolicy?: object;
     execution: Record<string, unknown>;
     steps: Array<{
       id: string;
@@ -86,7 +88,9 @@ function createReducedSummary(input: SmokeEvidenceInput, time: string): Record<s
       schemaVersion: input.report.schemaVersion,
       command: input.report.command,
       mode: input.report.mode,
-      ok: input.report.ok
+      ok: input.report.ok,
+      ...(input.report.provider ? { provider: input.report.provider } : {}),
+      ...(input.report.networkPolicy ? { networkPolicy: input.report.networkPolicy } : {})
     },
     execution: input.report.execution,
     steps: input.report.steps.map((step) => ({

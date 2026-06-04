@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0248 Python package smoke dry-run/local mode is complete. |
+| Branch | main | T-0249 Python package smoke boundary hardening is complete. |
 | Current Phase | Dashboard/TUI UI work paused; core evidence/task lifecycle work resumed | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0248 Python Package Smoke Dry Run Local Mode | `hadara package smoke --provider python` now supports dry-run and local-mode reports without PyPI publish behavior. |
-| Active / Next Task | Return to roadmap value work or explicitly scope the next release provider hardening capsule. | Python release provider preview and package-smoke local path are in place; publish/PyPI remains out of scope. |
-| Validation Baseline | T-0248 Docker validation passed | Focused Docker tests passed 3 files / 41 tests; Docker full check passed 92 files / 619 tests; built CLI Python package smoke dry-run emitted planned steps with all execution/publish flags false. |
+| Latest Completed Task | T-0249 Python Package Smoke Boundary Hardening | Package-smoke reports now include non-enforced network policy metadata, Python offline best-effort flags, Python reduced evidence attachment, and npm-only release proof separation. |
+| Active / Next Task | T-0250 Python Release Advisory Read Model, if continuing the attached plan. | Next step is advisory release read-model work: release dry-run provider advisories for Python smoke evidence present/missing/stale with `blocking:false`, still no Python primary/publish behavior. |
+| Validation Baseline | T-0249 Docker validation passed | Focused Docker tests passed 3 files / 32 tests; Docker full check passed 92 files / 623 tests; built CLI Python offline dry-run emitted `offline-best-effort`, `enforced:false`, and best-effort offline command flags. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0249 Python Package Smoke Boundary Hardening | Added package-smoke `networkPolicy`, Python best-effort offline command flags, Python reduced evidence attach, and release dry-run npm package-smoke proof separation. | T-0249 evidence: Docker focused tests passed 3 files / 32 tests; Docker full check passed 92 files / 623 tests; built CLI Python offline dry-run emitted `offline-best-effort`, `enforced:false`, `python -m build --no-isolation`, and pip `--no-index --no-deps`. |
 | T-0248 Python Package Smoke Dry Run Local Mode | Added explicit `--provider python` package smoke dry-run and local-mode reports. Dry-run plans Python build/check/install steps; local mode runs through the reduced disposable runner boundary without PyPI/publish behavior. | T-0248 evidence: Docker focused tests passed 3 files / 41 tests; Docker full check passed 92 files / 619 tests; built CLI Python dry-run emitted planned steps with all execution/publish flags false. |
 | T-0247 Python Release Preview Provider | Added read-only `pyproject.toml` parser for PEP 621 and Poetry metadata, backend detection for setuptools/poetry/hatch/flit/unknown, and planned Python commands with `willExecute:false`. | T-0247 evidence: Docker focused tests passed 2 files / 27 tests; Docker full check passed 92 files / 616 tests; built CLI temp pyproject smoke detected hatch backend and planned commands. |
-| T-0246 Release Provider Contract | Added `ReleaseProvider` capability states and provider implementations. `NpmReleaseProvider` wraps current npm planning, while `PythonReleaseProvider` remains preview/detect-only until parser work. | T-0246 evidence: Docker focused tests passed 2 files / 26 tests; Docker full check passed 92 files / 615 tests; built release dry-run emitted `providerCapabilities` for npm and Python. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
 | Release publish remains approval-gated/manual. | `release dry-run` is ready after T-0245, and `release publish --mode dry-run` is ok, but actual publish/deploy mutation still requires explicit approval metadata, confirmation, tokens, and future mutation-capable handling. | Do not run publish/deploy execute unless an operator explicitly requests the approval-gated release path. |
-| Python package smoke is local-only and environment-dependent. | T-0248 adds dry-run and local-mode reports, but real local execution depends on Python packaging tools such as `build`, `twine`, and pip availability. HADARA still does not load PyPI credentials or publish to PyPI. | Use dry-run first; treat local execution failures as environment/tooling failures, not publish readiness. |
+| Python package smoke is local-only, advisory, and environment-dependent. | T-0249 makes network behavior explicit: default is environment-inherited, `--network-policy offline` is best-effort with `enforced:false`, and local execution still depends on Python packaging tools such as `build`, `twine`, and pip. HADARA still does not load PyPI credentials or publish to PyPI. | Use dry-run first; treat local execution failures as environment/tooling failures, not publish readiness. Python evidence must not be used to unblock the npm release gate. |
 | Release artifact refresh now requires a clean git worktree. | In active development, `release artifact --execute` will return `RELEASE_ARTIFACT_WORKTREE_DIRTY` and skip `npm pack` until pending changes are committed or otherwise cleaned. | Treat this as intentional release safety, not a release artifact failure; do not bypass it with dirty worktree evidence. |
 | Release dry-run latency is currently dominated by the strict release gate. | Built `/mnt/f` smoke reported total duration about 13.8s with `strict-release-gate` about 12.5s; this is now visible but not optimized. | Treat timing diagnostics as metadata; optimize strict release-gate reads only if release operators need faster repeated dry-runs. |
 | `task upgrade-scaffold --execute` and `protocol remediate --execute` now require `--before-hash` when writes are planned. | Old execute-only copy-paste commands fail closed. | Run the dry-run first, review `summary.beforeHash`, then execute with `--before-hash <hash>`. |
@@ -62,13 +62,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Return to roadmap value work or explicitly scope the next release provider hardening capsule. | T-0246 through T-0248 completed provider abstraction, Python preview, and package-smoke dry-run/local reports. | Current evidence: T-0248 Docker check passed 92 files / 619 tests; no PyPI token loading or publish behavior added. |
+| Continue with T-0250 Python Release Advisory Read Model, if following the attached plan. | T-0249 completed the network/evidence boundary hardening needed before release dry-run can report Python advisories. | Current evidence: T-0249 Docker check passed 92 files / 623 tests; no PyPI token loading, publish behavior, or Python primary target behavior added. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| Python package smoke boundary hardening full check | Docker focused tests passed 3 files / 32 tests; Docker `npm run check` passed 92 files / 623 tests during T-0249. | Built Python offline dry-run emitted `offline-best-effort`, `enforced:false`, `python -m build --no-isolation`, and pip `--no-index --no-deps`; Python evidence attach is reduced public evidence but does not satisfy the npm release gate. |
 | Release provider contract full check | Docker focused tests passed 2 files / 26 tests; Docker `npm run check` passed 92 files / 615 tests during T-0246. | Built release dry-run emitted `providerCapabilities` for `npm-package` and `python-package-preview`; exit 6 was expected because release artifact evidence points at T-0245's previous commit, not the current development HEAD. |
 | Python release preview full check | Docker focused tests passed 2 files / 27 tests; Docker `npm run check` passed 92 files / 616 tests during T-0247. | Built release dry-run against a temp `pyproject.toml` emitted package `hadara-python-tools`, version `0.0.1`, backend `hatch`, and planned commands `python -m build`, `twine check`, and `pip install wheel` with `willExecute:false`. |
 | Python package smoke dry-run/local full check | Docker focused tests passed 3 files / 41 tests; Docker `npm run check` passed 92 files / 619 tests during T-0248. | Built `package smoke --provider python --json` dry-run emitted planned `python-build`, `twine-check`, and `pip-install-wheel` steps with all execution/publish flags false; local mode command flow was unit-tested through an injected runner. |

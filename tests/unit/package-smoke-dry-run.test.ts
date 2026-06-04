@@ -71,6 +71,10 @@ describe('package smoke dry-run', () => {
         smokeProfile: 'npm-package-smoke',
         command: 'package.smoke'
       },
+      networkPolicy: {
+        mode: 'environment-inherited',
+        enforced: false
+      },
       execution: {
         npmPackExecuted: false,
         packageInstallExecuted: false,
@@ -259,6 +263,10 @@ describe('package smoke dry-run', () => {
         ecosystem: 'python',
         smokeProfile: 'python-package-smoke'
       },
+      networkPolicy: {
+        mode: 'environment-inherited',
+        enforced: false
+      },
       execution: {
         npmPackExecuted: false,
         pythonBuildExecuted: false,
@@ -272,6 +280,26 @@ describe('package smoke dry-run', () => {
     expect(report.steps).toContainEqual(expect.objectContaining({ id: 'python-build', command: 'python -m build', status: 'planned' }));
     expect(report.steps).toContainEqual(expect.objectContaining({ id: 'twine-check', command: 'twine check', status: 'planned' }));
     expect(report.steps).toContainEqual(expect.objectContaining({ id: 'pip-install-wheel', command: 'pip install wheel', status: 'planned' }));
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
+  it('plans Python offline mode as non-enforced best-effort command flags', () => {
+    const root = tempProject();
+    writePyproject(root);
+
+    const report = createPackageSmokeDryRunReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      provider: 'python',
+      networkPolicy: 'offline'
+    });
+
+    expect(report.networkPolicy).toMatchObject({
+      mode: 'offline-best-effort',
+      enforced: false
+    });
+    expect(report.networkPolicy.notes.join(' ')).toContain('No OS-level network isolation');
+    expect(report.steps).toContainEqual(expect.objectContaining({ id: 'python-build', command: 'python -m build --no-isolation' }));
+    expect(report.steps).toContainEqual(expect.objectContaining({ id: 'pip-install-wheel', command: 'pip install --no-index --no-deps wheel' }));
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
   });
 
@@ -536,6 +564,10 @@ describe('package smoke local execution', () => {
         ecosystem: 'python',
         smokeProfile: 'python-package-smoke'
       },
+      networkPolicy: {
+        mode: 'environment-inherited',
+        enforced: false
+      },
       execution: {
         npmPackExecuted: false,
         pythonBuildExecuted: true,
@@ -561,6 +593,87 @@ describe('package smoke local execution', () => {
     expect(calls[2].args.slice(0, 2)).toEqual(['-m', 'pip']);
     expect(fs.existsSync(workspace)).toBe(false);
     expect(encoded).not.toContain('/private/python/build');
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
+  it('applies Python local offline flags without claiming network enforcement', () => {
+    const root = tempProject();
+    writePyproject(root);
+    const calls: Array<{ args: string[] }> = [];
+    const runner: PackageSmokeCommandRunner = (_command, args) => {
+      calls.push({ args });
+      if (args[0] === '-m' && args[1] === 'build') {
+        const workspace = String(args[args.indexOf('--outdir') + 1]);
+        fs.writeFileSync(path.join(workspace, 'hadara_python_tools-0.0.1-py3-none-any.whl'), 'wheel bytes', 'utf8');
+        return { status: 0, stdout: 'built distributions', stderr: '', elapsedMs: 11 };
+      }
+      if (args[0] === 'check') return { status: 0, stdout: 'PASSED', stderr: '', elapsedMs: 12 };
+      if (args[0] === '-m' && args[1] === 'pip') return { status: 0, stdout: 'installed', stderr: '', elapsedMs: 13 };
+      return { status: 1, stdout: '', stderr: 'unexpected', elapsedMs: 1 };
+    };
+
+    const report = createPackageSmokeLocalReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      provider: 'python',
+      networkPolicy: 'offline',
+      runner
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.networkPolicy).toMatchObject({ mode: 'offline-best-effort', enforced: false });
+    expect(calls[0].args).toContain('--no-isolation');
+    expect(calls[2].args).toEqual(expect.arrayContaining(['--no-index', '--no-deps']));
+    expect(report.steps).toContainEqual(expect.objectContaining({ id: 'python-build', command: 'python -m build --no-isolation --outdir <redacted-workspace>' }));
+    expect(report.steps).toContainEqual(expect.objectContaining({ id: 'pip-install-wheel', command: 'pip install --no-index --no-deps wheel --target <redacted-target>' }));
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
+  it('attaches reduced public Python package-smoke evidence when requested', () => {
+    const root = tempProject();
+    writePyproject(root);
+    const runner: PackageSmokeCommandRunner = (_command, args) => {
+      if (args[0] === '-m' && args[1] === 'build') {
+        const workspace = String(args[args.indexOf('--outdir') + 1]);
+        fs.writeFileSync(path.join(workspace, 'hadara_python_tools-0.0.1-py3-none-any.whl'), 'wheel bytes', 'utf8');
+        return { status: 0, stdout: 'built distributions', stderr: '/private/python/build', elapsedMs: 11 };
+      }
+      if (args[0] === 'check') return { status: 0, stdout: 'PASSED', stderr: '', elapsedMs: 12 };
+      if (args[0] === '-m' && args[1] === 'pip') return { status: 0, stdout: 'installed', stderr: '', elapsedMs: 13 };
+      return { status: 1, stdout: '', stderr: 'unexpected', elapsedMs: 1 };
+    };
+
+    const report = createPackageSmokeLocalReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      provider: 'python',
+      taskId: 'T-0136',
+      attachEvidence: true,
+      runner
+    });
+    const taskDir = path.join(root, 'tasks', 'T-0136-smoke-evidence-integration');
+    const evidenceIndex = fs.readFileSync(path.join(taskDir, 'evidence.jsonl'), 'utf8');
+    const evidenceRecord = JSON.parse(evidenceIndex.trim()) as { schemaVersion: string; legacy?: { evidencePath?: string; result?: string }; visibility: string };
+    const evidencePath = evidenceRecord.legacy?.evidencePath;
+    const artifact = JSON.parse(fs.readFileSync(path.join(taskDir, evidencePath ?? ''), 'utf8')) as Record<string, unknown>;
+
+    expect(report.ok).toBe(true);
+    expect(report.artifacts).toContainEqual(expect.objectContaining({ kind: 'summary', visibility: 'public', rawContentIncluded: false }));
+    expect(report.steps).toContainEqual(expect.objectContaining({ id: 'evidence', status: 'passed' }));
+    expect(evidenceRecord).toMatchObject({ schemaVersion: 'hadara.evidence.v2', visibility: 'public', legacy: { result: 'passed' } });
+    expect(artifact).toMatchObject({
+      schemaVersion: 'hadara.smokeEvidenceSummary.v1',
+      category: 'package-smoke',
+      sourceReport: {
+        provider: {
+          ecosystem: 'python',
+          smokeProfile: 'python-package-smoke'
+        },
+        networkPolicy: {
+          mode: 'environment-inherited',
+          enforced: false
+        }
+      }
+    });
+    expect(JSON.stringify(artifact)).not.toContain('/private/python/build');
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
   });
 });

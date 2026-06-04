@@ -202,6 +202,7 @@
         "sourceOk": { "type": "boolean" },
         "category": { "type": "string", "minLength": 1 },
         "mode": { "type": "string", "minLength": 1 },
+        "providerEcosystem": { "type": "string", "minLength": 1 },
         "result": { "type": "string", "minLength": 1 },
         "packageVersion": { "type": "string", "minLength": 1 },
         "gitCommit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },

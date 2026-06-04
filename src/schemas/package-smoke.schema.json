@@ -35,6 +35,19 @@
         "command": { "const": "package.smoke" }
       }
     },
+    "networkPolicy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["mode", "enforced", "notes"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["environment-inherited", "offline-requested", "offline-best-effort"] },
+        "enforced": { "type": "boolean" },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
     "execution": {
       "type": "object",
       "additionalProperties": true,

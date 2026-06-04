@@ -25,6 +25,7 @@ export interface PackageSmokeReport {
     smokeProfile: 'npm-package-smoke' | 'python-package-smoke';
     command: 'package.smoke';
   };
+  networkPolicy: PackageSmokeNetworkPolicy;
   execution: {
     npmPackExecuted: boolean;
     pythonBuildExecuted?: boolean;
@@ -77,10 +78,17 @@ export interface PackageSmokeReport {
   issues: PackageSmokeIssue[];
 }
 
+export interface PackageSmokeNetworkPolicy {
+  mode: 'environment-inherited' | 'offline-requested' | 'offline-best-effort';
+  enforced: boolean;
+  notes: string[];
+}
+
 export interface PackageSmokeDryRunOptions {
   paths: HadaraPaths;
   dryRun?: boolean;
   provider?: string;
+  networkPolicy?: string;
   from?: string;
   workspace?: string;
   taskId?: string;
@@ -126,6 +134,7 @@ export function createPackageSmokeDryRunReport(options: PackageSmokeDryRunOption
   const workspace = createWorkspace(options.workspace, options.keepTemp === true);
   const steps = createDryRunSteps(source.kind, options);
   const artifacts = createPlannedArtifacts(options);
+  const networkPolicy = createNetworkPolicy(options.networkPolicy, 'npm', issues);
 
   const report: PackageSmokeReport = {
     schemaVersion: 'hadara.packageSmoke.v1',
@@ -138,6 +147,7 @@ export function createPackageSmokeDryRunReport(options: PackageSmokeDryRunOption
       smokeProfile: 'npm-package-smoke',
       command: 'package.smoke'
     },
+    networkPolicy,
     execution: {
       npmPackExecuted: false,
       packageInstallExecuted: false,
@@ -175,6 +185,7 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
 
   const source = createSource(options.paths.projectRoot, options.from, issues);
   const workspaceSetup = prepareExecutionWorkspace(options.paths.projectRoot, options.workspace, options.keepTemp === true, issues);
+  const networkPolicy = createNetworkPolicy(options.networkPolicy, 'npm', issues);
   const steps: PackageSmokeReport['steps'] = [
     {
       id: 'validate-source',
@@ -400,6 +411,7 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
       smokeProfile: 'npm-package-smoke',
       command: 'package.smoke'
     },
+    networkPolicy,
     execution,
     workspace: {
       kind: 'disposable',
@@ -459,6 +471,8 @@ function createPythonPackageSmokeDryRunReport(options: PackageSmokeDryRunOptions
   }
   const workspace = createWorkspace(options.workspace, options.keepTemp === true);
   const evidencePlanned = options.attachEvidence === true && options.taskId !== undefined && options.noEvidence !== true;
+  const networkPolicy = createNetworkPolicy(options.networkPolicy, 'python', issues);
+  const offline = networkPolicy.mode === 'offline-best-effort';
   const report: PackageSmokeReport = {
     schemaVersion: 'hadara.packageSmoke.v1',
     command: 'package.smoke',
@@ -470,6 +484,7 @@ function createPythonPackageSmokeDryRunReport(options: PackageSmokeDryRunOptions
       smokeProfile: 'python-package-smoke',
       command: 'package.smoke'
     },
+    networkPolicy,
     execution: {
       npmPackExecuted: false,
       pythonBuildExecuted: false,
@@ -505,9 +520,9 @@ function createPythonPackageSmokeDryRunReport(options: PackageSmokeDryRunOptions
       {
         id: 'python-build',
         label: 'Build Python distributions',
-        command: 'python -m build',
+        command: offline ? 'python -m build --no-isolation' : 'python -m build',
         status: 'planned',
-        summary: 'Would build wheel and sdist into the disposable workspace.'
+        summary: offline ? 'Would build wheel and sdist with best-effort offline build isolation disabled.' : 'Would build wheel and sdist into the disposable workspace.'
       },
       {
         id: 'twine-check',
@@ -519,9 +534,9 @@ function createPythonPackageSmokeDryRunReport(options: PackageSmokeDryRunOptions
       {
         id: 'pip-install-wheel',
         label: 'Install Python wheel',
-        command: 'pip install wheel',
+        command: offline ? 'pip install --no-index --no-deps wheel' : 'pip install wheel',
         status: 'planned',
-        summary: 'Would install the built wheel into an isolated target for local smoke.'
+        summary: offline ? 'Would install the built wheel into an isolated target with best-effort offline pip flags.' : 'Would install the built wheel into an isolated target for local smoke.'
       },
       {
         id: 'evidence',
@@ -553,6 +568,8 @@ function createPythonPackageSmokeLocalReport(options: PackageSmokeLocalOptions):
   validateTaskId(options.taskId, issues);
   validateTimeout(options.timeoutSeconds, issues);
   const preview = readPythonProjectPreview(options.paths.projectRoot);
+  const networkPolicy = createNetworkPolicy(options.networkPolicy, 'python', issues);
+  const offline = networkPolicy.mode === 'offline-best-effort';
   if (!preview.detected) {
     issues.push({
       severity: 'error',
@@ -602,19 +619,25 @@ function createPythonPackageSmokeLocalReport(options: PackageSmokeLocalOptions):
   try {
     if (issues.some((issue) => issue.severity === 'error') || !workspaceSetup.ok) {
       steps.push(
-        skippedPythonStep('python-build', 'Build Python distributions', 'python -m build'),
+        skippedPythonStep('python-build', 'Build Python distributions', offline ? 'python -m build --no-isolation' : 'python -m build'),
         skippedPythonStep('twine-check', 'Check Python distributions', 'twine check'),
-        skippedPythonStep('pip-install-wheel', 'Install Python wheel', 'pip install wheel')
+        skippedPythonStep('pip-install-wheel', 'Install Python wheel', offline ? 'pip install --no-index --no-deps wheel' : 'pip install wheel')
       );
     } else {
       const distDir = path.join(workspaceSetup.path, 'dist');
       fs.mkdirSync(distDir, { recursive: true });
       execution.pythonBuildExecuted = true;
-      const build = runner(pythonCommand(), ['-m', 'build', '--outdir', distDir], {
+      const buildArgs = offline ? ['-m', 'build', '--no-isolation', '--outdir', distDir] : ['-m', 'build', '--outdir', distDir];
+      const build = runner(pythonCommand(), buildArgs, {
         cwd: options.paths.projectRoot,
         timeoutMs
       });
-      const buildStep = commandStep('python-build', 'Build Python distributions', 'python -m build --outdir <redacted-workspace>', build);
+      const buildStep = commandStep(
+        'python-build',
+        'Build Python distributions',
+        offline ? 'python -m build --no-isolation --outdir <redacted-workspace>' : 'python -m build --outdir <redacted-workspace>',
+        build
+      );
       if (build.status !== 0) {
         buildStep.status = 'failed';
         buildStep.summary = build.timedOut ? 'Python build timed out.' : 'Python build failed.';
@@ -671,11 +694,19 @@ function createPythonPackageSmokeLocalReport(options: PackageSmokeLocalOptions):
         execution.packageInstallExecuted = true;
         const installTarget = path.join(workspaceSetup.path, 'python-install');
         fs.mkdirSync(installTarget, { recursive: true });
-        const pip = runner(pythonCommand(), ['-m', 'pip', 'install', '--target', installTarget, wheelPath], {
+        const pipArgs = offline
+          ? ['-m', 'pip', 'install', '--no-index', '--no-deps', '--target', installTarget, wheelPath]
+          : ['-m', 'pip', 'install', '--target', installTarget, wheelPath];
+        const pip = runner(pythonCommand(), pipArgs, {
           cwd: workspaceSetup.path,
           timeoutMs
         });
-        const pipStep = commandStep('pip-install-wheel', 'Install Python wheel', 'pip install wheel --target <redacted-target>', pip);
+        const pipStep = commandStep(
+          'pip-install-wheel',
+          'Install Python wheel',
+          offline ? 'pip install --no-index --no-deps wheel --target <redacted-target>' : 'pip install wheel --target <redacted-target>',
+          pip
+        );
         if (pip.status !== 0) {
           pipStep.status = 'failed';
           pipStep.summary = pip.timedOut ? 'pip install timed out.' : 'pip install failed.';
@@ -729,6 +760,7 @@ function createPythonPackageSmokeLocalReport(options: PackageSmokeLocalOptions):
       smokeProfile: 'python-package-smoke',
       command: 'package.smoke'
     },
+    networkPolicy,
     execution,
     workspace: {
       kind: 'disposable',
@@ -755,8 +787,66 @@ function createPythonPackageSmokeLocalReport(options: PackageSmokeLocalOptions):
     issues
   };
 
+  if (options.attachEvidence === true && options.taskId && options.noEvidence !== true) {
+    const evidence = attachReducedSmokeEvidence({
+      projectRoot: options.paths.projectRoot,
+      taskId: options.taskId,
+      category: 'package-smoke',
+      kind: 'command-log',
+      summary: `Python package smoke ${report.mode} ${report.ok ? 'passed' : 'failed'} with reduced public evidence.`,
+      result: report.ok ? 'passed' : 'failed',
+      report
+    });
+    report.artifacts.push(evidence.artifact);
+    report.steps.push({
+      id: 'evidence',
+      label: 'Attach reduced public evidence',
+      status: 'passed',
+      summary: 'Reduced Python package-smoke summary was attached as public evidence after redaction checks.'
+    });
+  }
+
   assertSchema('hadara.packageSmoke.v1', report);
   return report;
+}
+
+function createNetworkPolicy(networkPolicy: string | undefined, provider: 'npm' | 'python', issues: PackageSmokeIssue[]): PackageSmokeNetworkPolicy {
+  if (!networkPolicy) {
+    return {
+      mode: 'environment-inherited',
+      enforced: false,
+      notes: [
+        'Package-smoke commands inherit the current environment network behavior.',
+        'HADARA does not enforce OS-level network isolation for local package tooling.'
+      ]
+    };
+  }
+  if (networkPolicy !== 'offline') {
+    issues.push({
+      severity: 'error',
+      code: 'PACKAGE_SMOKE_NETWORK_POLICY_UNSUPPORTED',
+      message: 'Unsupported package-smoke network policy. Supported value: offline.'
+    });
+    return {
+      mode: 'environment-inherited',
+      enforced: false,
+      notes: ['Unsupported network policy was ignored; package-smoke remains environment-inherited.']
+    };
+  }
+  return {
+    mode: provider === 'python' ? 'offline-best-effort' : 'offline-requested',
+    enforced: false,
+    notes:
+      provider === 'python'
+        ? [
+            'Best-effort Python offline flags are applied to build and pip install commands.',
+            'No OS-level network isolation is enforced by HADARA.'
+          ]
+        : [
+            'Offline network policy was requested, but npm package-smoke does not enforce offline flags in this capsule.',
+            'No OS-level network isolation is enforced by HADARA.'
+          ]
+  };
 }
 
 function skippedPythonStep(id: string, label: string, command: string): PackageSmokeReport['steps'][number] {

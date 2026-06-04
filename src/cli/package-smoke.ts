@@ -15,6 +15,7 @@ export function handlePackageCommand(input: PackageCommandInput): boolean {
     paths: input.paths,
     dryRun: !getFlag(input.args, '--execute'),
     provider: getStringOption(input.args, '--provider'),
+    networkPolicy: getStringOption(input.args, '--network-policy'),
     from: getStringOption(input.args, '--from'),
     workspace: getStringOption(input.args, '--workspace'),
     taskId: getStringOption(input.args, '--task'),
