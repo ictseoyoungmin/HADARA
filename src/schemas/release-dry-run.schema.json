@@ -55,6 +55,37 @@
       "type": "array",
       "items": { "$ref": "#/$defs/plannedStep" }
     },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["status", "blockers", "warnings", "nextActions"],
+      "properties": {
+        "status": { "type": "string", "enum": ["ready", "blocked"] },
+        "blockers": { "type": "number" },
+        "warnings": { "type": "number" },
+        "nextActions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nextAction" }
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["generatedAt", "durationMs", "stageTimings", "slowStageWarnings"],
+      "properties": {
+        "generatedAt": { "type": "string", "minLength": 1 },
+        "durationMs": { "type": "number" },
+        "stageTimings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/stageTiming" }
+        },
+        "slowStageWarnings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/slowStageWarning" }
+        }
+      }
+    },
     "privacy": {
       "type": "object",
       "additionalProperties": true,
@@ -124,6 +155,40 @@
         "target": { "type": "string", "enum": ["npm-package", "github-release", "docker-image"] },
         "willExecute": { "const": false },
         "requiresApproval": { "type": "boolean" },
+        "summary": { "type": "string", "minLength": 1 }
+      }
+    },
+    "nextAction": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "required", "reason", "summary"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "required": { "type": "boolean" },
+        "command": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 }
+      }
+    },
+    "stageTiming": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["stage", "durationMs", "status", "summary"],
+      "properties": {
+        "stage": { "type": "string", "minLength": 1 },
+        "durationMs": { "type": "number" },
+        "status": { "type": "string", "enum": ["passed", "warning", "error"] },
+        "summary": { "type": "string", "minLength": 1 }
+      }
+    },
+    "slowStageWarning": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["stage", "durationMs", "thresholdMs", "summary"],
+      "properties": {
+        "stage": { "type": "string", "minLength": 1 },
+        "durationMs": { "type": "number" },
+        "thresholdMs": { "type": "number" },
         "summary": { "type": "string", "minLength": 1 }
       }
     },

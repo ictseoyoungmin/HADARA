@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleReleaseArtifactCommand } from '../../src/cli/release-artifact';
 import { resolveHadaraPaths } from '../../src/core/paths';
@@ -144,6 +145,29 @@ describe('release artifact builder', () => {
     expect(fs.existsSync(path.join(output, 'hadara-0.0.0-bootstrap.tgz.manifest.json'))).toBe(true);
     expect(encoded).not.toContain(root);
     expect(encoded).not.toContain('/private/path');
+    expect(validateSchema('hadara.releaseArtifact.v1', report).ok).toBe(true);
+  });
+
+  it('refuses to build release artifacts from a dirty git worktree', () => {
+    const root = tempProject();
+    spawnSync('git', ['init'], { cwd: root, encoding: 'utf8' });
+    fs.writeFileSync(path.join(root, 'dirty.txt'), 'dirty\n', 'utf8');
+    const runner = vi.fn<ReleaseArtifactCommandRunner>();
+
+    const report = createReleaseArtifactReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      execute: true,
+      output: 'dist-release',
+      runner
+    });
+
+    expect(report.ok).toBe(false);
+    expect(runner).not.toHaveBeenCalled();
+    expect(report.issues).toContainEqual({
+      severity: 'error',
+      code: 'RELEASE_ARTIFACT_WORKTREE_DIRTY',
+      message: 'Release artifact builder requires a clean git worktree so git commit metadata describes the artifact contents.'
+    });
     expect(validateSchema('hadara.releaseArtifact.v1', report).ok).toBe(true);
   });
 

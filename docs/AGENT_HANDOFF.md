@@ -4,24 +4,27 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0241 is committed locally in current HEAD. |
+| Branch | main | T-0243 is the latest completed local task; commit is still pending. |
 | Current Phase | Dashboard/TUI UI work paused; core evidence/task lifecycle work resumed | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0241 Reviewer Feedback Docs Alignment | Accepted reviewer cautions are now reflected in Evidence v2, task-next, task workflow, SOP, and Project State docs. |
-| Active / Next Task | Release/package readiness hardening | Evidence v2, finish/close guidance, task-next priority, and remediation execute guards are in place; return to release/package value work before more UI or lifecycle polish. |
-| Validation Baseline | T-0241 docs validation passed | `rg` caution phrase check and `git diff --check` passed; no runtime code changed. |
+| Latest Completed Task | T-0243 Release Artifact Evidence Dirty-Worktree Guard | `release artifact --execute` now refuses dirty git worktrees before staging or `npm pack`, preventing false release artifact freshness. |
+| Active / Next Task | Clean/commit worktree before actual release artifact evidence refresh | T-0243 intentionally blocked refresh in the current dirty worktree; release dry-run remains blocked until artifact evidence is regenerated from a clean state. |
+| Validation Baseline | T-0243 Docker validation passed | Docker sync-build passed 92 files / 612 tests; built CLI release artifact smoke returned `RELEASE_ARTIFACT_WORKTREE_DIRTY` with `npmPackExecuted:false`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0243 Release Artifact Evidence Dirty-Worktree Guard | Added a clean-worktree guard before release artifact staging/npm pack so attached release artifact evidence cannot claim freshness for artifact contents containing uncommitted changes. Actual artifact refresh is deferred until the worktree is clean. | T-0243 evidence: Docker sync-build passed 92 files / 612 tests; built CLI blocked current dirty worktree with `RELEASE_ARTIFACT_WORKTREE_DIRTY`, `npmPackExecuted:false`, and no generated artifacts. |
+| T-0242 Release Package Readiness Hardening | Added additive `readiness` and `diagnostics` fields to `hadara.releaseDryRun.v1`, including next-action commands for stale evidence and stage timing/slow-stage warnings. | T-0242 evidence: Docker check and sync-build passed 92 files / 611 tests; built CLI release dry-run returned `refresh-release-artifact-evidence` and identified `strict-release-gate` as the slow stage. |
 | T-0241 Reviewer Feedback Docs Alignment | Reflected accepted reviewer cautions: Evidence v2 migration is selected-task/operator-selected rather than default broad migration; current `EVIDENCE.md` does not surface persisted v2 ids; `task next` may return `taskId: TBD`; and T-0240 remediation execute hash-copy friction is intentional. | T-0241 evidence: `rg` caution phrase check and `git diff --check` passed. |
-| T-0240 Task Capsule Upgrade Remediation Dry Run Hardening | Added report-level `summary.beforeHash` to `hadara.task.upgrade_scaffold.v1` and `hadara.protocol.remediation.v1`; execute mode now rejects planned writes without a matching reviewed dry-run hash while preserving per-action write conflict checks. | T-0240 evidence: focused guard suite passed 5 files / 36 tests; Docker sync-build passed 92 files / 610 tests; built CLI guard smoke verified no-hash failure and matching-hash success for task scaffold upgrade and protocol remediation. |
-| T-0239 Task Next Handoff Priority | Added `docs/specs/HADARA_Task_Next_Handoff_Priority_Refactor.md`, registered it in SOP Required Reading, and changed `hadara.task.next.v1` to use handoff-first policy metadata with sourceKind and backlog rows while preserving Development Slice and Task Board fallback behavior. | T-0239 evidence: focused task-next/schema/workflow-docs tests passed 3 files / 9 tests; Docker sync-build passed 92 files / 608 tests; built CLI smoke recommended handoff current work and kept T-0006 only in `backlog`. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
+| Current release dry-run is blocked by stale release artifact evidence. | `hadara release dry-run --json` reports package-smoke and clean-checkout evidence as passed, but release artifact evidence still points to git commit `51da6d269396489d4cbd3b4183ca84dcdf9e697d` while current HEAD is `f75cfa09d7ab8c8274b9bc7e26ef7b52cae9b8f2`. | Clean/commit the worktree first, then run `hadara release artifact --execute --json --output dist-release --attach-evidence --task <task-id>` in an explicit release evidence capsule. |
+| Release artifact refresh now requires a clean git worktree. | In active development, `release artifact --execute` will return `RELEASE_ARTIFACT_WORKTREE_DIRTY` and skip `npm pack` until pending changes are committed or otherwise cleaned. | Treat this as intentional release safety, not a release artifact failure; do not bypass it with dirty worktree evidence. |
+| Release dry-run latency is currently dominated by the strict release gate. | Built `/mnt/f` smoke reported total duration about 13.8s with `strict-release-gate` about 12.5s; this is now visible but not optimized. | Treat timing diagnostics as metadata; optimize strict release-gate reads only if release operators need faster repeated dry-runs. |
 | `task upgrade-scaffold --execute` and `protocol remediate --execute` now require `--before-hash` when writes are planned. | Old execute-only copy-paste commands fail closed. | Run the dry-run first, review `summary.beforeHash`, then execute with `--before-hash <hash>`. |
 | `task next` now emits handoff recommendations with `taskId: TBD` when no capsule exists yet. | Consumers that require concrete Task IDs must inspect `createCommand` and `sourceKind` before assuming a capsule exists. | Use `createCommand` to create the next capsule, then rerun `task next` or `task status` for the concrete task. |
 | Host `node_modules` is ignored local state and not the validation baseline. | This workspace may have host dependencies from local attempts, but reproducible validation should not depend on them. | Use the reusable Docker workflow for validation/build; treat host dependency state as disposable. |
@@ -58,13 +61,15 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Continue with release/package readiness hardening. | Evidence v2 and task lifecycle safety work are now stable enough to return to release readiness value work. | Review release/package readiness docs and current release-gate evidence before creating the next capsule. |
+| Clean/commit the worktree, then create a release artifact evidence refresh capsule. | T-0243 prevents false freshness from dirty artifact contents; the actual release artifact evidence refresh remains necessary after the worktree is clean. | Expected command path after clean state: `hadara release artifact --execute --json --output dist-release --attach-evidence --task <task-id>`. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| Release artifact dirty-worktree guard full check | Docker `npm run dev:docker-sync-build` passed with 92 files and 612 tests during T-0243. | Built CLI blocked `release artifact --execute --attach-evidence` in the current dirty worktree with `RELEASE_ARTIFACT_WORKTREE_DIRTY`, `npmPackExecuted:false`, and no generated artifacts. |
+| Release dry-run readiness hardening full check | Docker `npm run dev:docker-check` and `npm run dev:docker-sync-build` passed with 92 files and 611 tests during T-0242. | Built CLI release dry-run smoke returned exit 6 as expected for stale release artifact evidence, with `readiness.nextActions[0].id: refresh-release-artifact-evidence` and `diagnostics.slowStageWarnings[0].stage: strict-release-gate`. |
 | Reviewer feedback docs alignment | `rg` caution phrase check and `git diff --check` passed during T-0241. | Covered operator-selected Evidence v2 migration, Markdown v2-id visibility, `task next` TBD consumer contract, and T-0240 before-hash UX. |
 | Task upgrade/remediation guard focused checks | Docker focused suite passed with 5 files / 36 tests during T-0240. | Covered task scaffold upgrade before-hash metadata, missing/stale hash refusal, guarded execute, protocol remediation guard behavior, apply-time conflict detection, CLI dry-run JSON, workbench remediation guidance, and schema fixtures. |
 | Task upgrade/remediation guard full check | Docker `npm run dev:docker-sync-build` passed with 92 files and 610 tests during T-0240. | Built CLI guard smoke verified `task upgrade-scaffold` and `protocol remediate` dry-run hashes, no-hash execute failures, and matching-hash execute success in a temp project. |

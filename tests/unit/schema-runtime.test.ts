@@ -429,6 +429,33 @@ describe('runtime schema validation', () => {
             summary: 'Would publish only after approval.'
           }
         ],
+        readiness: {
+          status: 'ready',
+          blockers: 0,
+          warnings: 0,
+          nextActions: [
+            {
+              id: 'review-publish-dry-run',
+              required: false,
+              command: 'hadara release publish --mode dry-run --json',
+              reason: 'RELEASE_DRY_RUN_READY',
+              summary: 'Review publish dry-run gates.'
+            }
+          ]
+        },
+        diagnostics: {
+          generatedAt: '2026-05-28T00:00:00.000Z',
+          durationMs: 10,
+          stageTimings: [
+            {
+              stage: 'strict-release-gate',
+              durationMs: 5,
+              status: 'passed',
+              summary: 'Strict gate completed.'
+            }
+          ],
+          slowStageWarnings: []
+        },
         privacy: {
           tokenValuesIncluded: false,
           rawLogsIncluded: false,

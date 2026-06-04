@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "hadara.releaseArtifact.v1",
+  "command": "release.artifact",
+  "ok": false,
+  "mode": "execute",
+  "execution": {
+    "stagingCreated": false,
+    "npmPackExecuted": false,
+    "checksumGenerated": false,
+    "manifestGenerated": false,
+    "packageContentsVerified": false,
+    "publishExecuted": false,
+    "githubReleaseCreated": false,
+    "dockerImageBuilt": false
+  },
+  "output": {
+    "kind": "explicit",
+    "displayPath": "./dist-release",
+    "pathRedacted": true,
+    "relativePath": "dist-release",
+    "retention": "explicit-output"
+  },
+  "package": {
+    "name": "hadara",
+    "version": "0.1.0-rc.0",
+    "private": false,
+    "filesWhitelistApplied": true
+  },
+  "artifacts": [],
+  "packageContents": {
+    "verified": false,
+    "fileCount": 0,
+    "allowedRoots": [
+      "dist/",
+      "README.md",
+      "LICENSE",
+      "package.json"
+    ],
+    "requiredFiles": [
+      "package.json",
+      "README.md",
+      "LICENSE",
+      "dist/cli/main.js"
+    ],
+    "forbiddenMatches": []
+  },
+  "privacy": {
+    "rawLogsIncluded": false,
+    "packageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [
+    {
+      "severity": "error",
+      "code": "RELEASE_ARTIFACT_GIT_STATUS_FAILED",
+      "message": "Release artifact builder could not verify git worktree cleanliness before building artifacts."
+    }
+  ],
+  "evidence": {
+    "time": "2026-06-04T05:36:59.907Z",
+    "taskId": "T-0243",
+    "gitCommit": "f75cfa09d7ab8c8274b9bc7e26ef7b52cae9b8f2"
+  }
+}

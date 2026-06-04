@@ -242,3 +242,5 @@
 | T-0239 | Task Next Handoff Priority | Done | tasks/T-0239-task-next-handoff-priority | |
 | T-0240 | Task Capsule Upgrade Remediation Dry Run Hardening | Done | tasks/T-0240-task-capsule-upgrade-remediation-dry-run-hardening | |
 | T-0241 | Reviewer Feedback Docs Alignment | Done | tasks/T-0241-reviewer-feedback-docs-alignment | |
+| T-0242 | Release Package Readiness Hardening | Done | tasks/T-0242-release-package-readiness-hardening | Release dry-run readiness next actions and stage timing diagnostics added. |
+| T-0243 | Create an explicit release artifact evidence refresh capsule | Done | tasks/T-0243-create-an-explicit-release-artifact-evidence-refresh-capsule | Added release artifact dirty-worktree guard; actual artifact refresh deferred until clean worktree. |

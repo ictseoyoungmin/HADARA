@@ -118,6 +118,7 @@ export function createReleaseArtifactReport(options: ReleaseArtifactOptions): Re
   }
 
   const packageMetadata = readPackageMetadata(options.paths.projectRoot, issues);
+  validateCleanGitWorktree(options.paths.projectRoot, issues);
   const output = prepareOutput(options.paths.projectRoot, options.output, options.keepTemp === true, issues);
   const staging = prepareStaging(options.paths.projectRoot, issues);
   const runner = options.runner ?? runCommand;
@@ -262,6 +263,30 @@ function readPackageMetadata(projectRoot: string, issues: ReleaseArtifactIssue[]
       message: 'Release artifact builder requires readable package.json metadata.'
     });
     return { name: 'unknown', version: '0.0.0', private: true };
+  }
+}
+
+function validateCleanGitWorktree(projectRoot: string, issues: ReleaseArtifactIssue[]): void {
+  if (!fs.existsSync(path.join(projectRoot, '.git'))) return;
+  const result = spawnSync('git', ['status', '--porcelain=v1', '--untracked-files=normal'], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    timeout: 10_000
+  });
+  if (result.status !== 0) {
+    issues.push({
+      severity: 'error',
+      code: 'RELEASE_ARTIFACT_GIT_STATUS_FAILED',
+      message: 'Release artifact builder could not verify git worktree cleanliness before building artifacts.'
+    });
+    return;
+  }
+  if (result.stdout.trim().length > 0) {
+    issues.push({
+      severity: 'error',
+      code: 'RELEASE_ARTIFACT_WORKTREE_DIRTY',
+      message: 'Release artifact builder requires a clean git worktree so git commit metadata describes the artifact contents.'
+    });
   }
 }
 

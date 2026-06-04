@@ -47,6 +47,34 @@ export interface ReleaseDryRunReport {
     requiresApproval: boolean;
     summary: string;
   }>;
+  readiness: {
+    status: 'ready' | 'blocked';
+    blockers: number;
+    warnings: number;
+    nextActions: Array<{
+      id: string;
+      required: boolean;
+      command?: string;
+      reason: string;
+      summary: string;
+    }>;
+  };
+  diagnostics: {
+    generatedAt: string;
+    durationMs: number;
+    stageTimings: Array<{
+      stage: string;
+      durationMs: number;
+      status: 'passed' | 'warning' | 'error';
+      summary: string;
+    }>;
+    slowStageWarnings: Array<{
+      stage: string;
+      durationMs: number;
+      thresholdMs: number;
+      summary: string;
+    }>;
+  };
   privacy: {
     tokenValuesIncluded: false;
     rawLogsIncluded: false;
@@ -70,11 +98,14 @@ interface EvidenceRequirement {
 }
 
 export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunReport {
-  const packageMetadata = readPackageMetadata(projectRoot);
-  const gitCommit = readCurrentGitCommit(projectRoot);
-  const releaseGate = createReleaseGateReport(projectRoot, 'strict');
-  const evidenceRecords = readReleaseEvidenceRecords(projectRoot);
-  const evidence = evidenceRequirements().map((requirement) => validateEvidenceRequirement(evidenceRecords, requirement));
+  const startedAt = Date.now();
+  const generatedAt = new Date().toISOString();
+  const timings: ReleaseDryRunReport['diagnostics']['stageTimings'] = [];
+  const packageMetadata = timeStage(timings, 'package-metadata', () => readPackageMetadata(projectRoot));
+  const gitCommit = timeStage(timings, 'git-commit', () => readCurrentGitCommit(projectRoot));
+  const releaseGate = timeStage(timings, 'strict-release-gate', () => createReleaseGateReport(projectRoot, 'strict'));
+  const evidenceRecords = timeStage(timings, 'release-evidence-scan', () => readReleaseEvidenceRecords(projectRoot));
+  const evidence = timeStage(timings, 'release-evidence-validation', () => evidenceRequirements().map((requirement) => validateEvidenceRequirement(evidenceRecords, requirement)));
   const checks = [
     {
       code: 'STRICT_RELEASE_GATE',
@@ -102,6 +133,9 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
       code: `${check.code}_NOT_READY`,
       message: `${check.name}: ${check.summary}`
     }));
+  applyStageStatuses(timings, releaseGate.ok, checks);
+  const readiness = createReadinessSummary(checks, evidence, packageMetadata.version, gitCommit);
+  const diagnostics = createDiagnostics(generatedAt, startedAt, timings);
 
   const report: ReleaseDryRunReport = {
     schemaVersion: 'hadara.releaseDryRun.v1',
@@ -143,6 +177,8 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
         summary: 'Docker image publishing remains deferred unless the product/server runtime surface changes.'
       }
     ],
+    readiness,
+    diagnostics,
     privacy: {
       tokenValuesIncluded: false,
       rawLogsIncluded: false,
@@ -156,6 +192,132 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
 
   assertSchema('hadara.releaseDryRun.v1', report);
   return report;
+}
+
+function timeStage<T>(timings: ReleaseDryRunReport['diagnostics']['stageTimings'], stage: string, fn: () => T): T {
+  const startedAt = Date.now();
+  try {
+    return fn();
+  } finally {
+    timings.push({
+      stage,
+      durationMs: Date.now() - startedAt,
+      status: 'passed',
+      summary: `${stage} completed.`
+    });
+  }
+}
+
+function applyStageStatuses(timings: ReleaseDryRunReport['diagnostics']['stageTimings'], releaseGateOk: boolean, checks: ReleaseDryRunReport['checks']): void {
+  const evidenceOk = checks.filter((check) => check.code.endsWith('_EVIDENCE')).every((check) => check.status === 'passed');
+  for (const timing of timings) {
+    if (timing.stage === 'strict-release-gate' && !releaseGateOk) {
+      timing.status = 'error';
+      timing.summary = 'Strict release gate completed with blocking checks.';
+    } else if (timing.stage === 'release-evidence-validation' && !evidenceOk) {
+      timing.status = 'error';
+      timing.summary = 'Release evidence validation completed with blocking checks.';
+    }
+  }
+}
+
+function createDiagnostics(
+  generatedAt: string,
+  startedAt: number,
+  stageTimings: ReleaseDryRunReport['diagnostics']['stageTimings']
+): ReleaseDryRunReport['diagnostics'] {
+  const thresholdMs = 5000;
+  return {
+    generatedAt,
+    durationMs: Date.now() - startedAt,
+    stageTimings,
+    slowStageWarnings: stageTimings
+      .filter((timing) => timing.durationMs >= thresholdMs)
+      .map((timing) => ({
+        stage: timing.stage,
+        durationMs: timing.durationMs,
+        thresholdMs,
+        summary: `${timing.stage} took ${timing.durationMs}ms; inspect this stage before treating release dry-run latency as a packaging problem.`
+      }))
+  };
+}
+
+function createReadinessSummary(
+  checks: ReleaseDryRunReport['checks'],
+  evidence: ReleaseDryRunReport['evidence'],
+  packageVersion: string,
+  gitCommit: string | undefined
+): ReleaseDryRunReport['readiness'] {
+  const blockers = checks.filter((check) => check.status === 'error').length;
+  const warnings = checks.filter((check) => check.status === 'warning').length;
+  return {
+    status: blockers === 0 ? 'ready' : 'blocked',
+    blockers,
+    warnings,
+    nextActions: createNextActions(checks, evidence, packageVersion, gitCommit)
+  };
+}
+
+function createNextActions(
+  checks: ReleaseDryRunReport['checks'],
+  evidence: ReleaseDryRunReport['evidence'],
+  packageVersion: string,
+  gitCommit: string | undefined
+): ReleaseDryRunReport['readiness']['nextActions'] {
+  const actions: ReleaseDryRunReport['readiness']['nextActions'] = [];
+  if (checks.some((check) => check.code === 'STRICT_RELEASE_GATE' && check.status === 'error')) {
+    actions.push({
+      id: 'resolve-strict-release-gate',
+      required: true,
+      command: 'hadara release gate --mode strict --json',
+      reason: 'STRICT_RELEASE_GATE_NOT_READY',
+      summary: 'Run the strict release gate and resolve its blocking checks before release planning.'
+    });
+  }
+
+  const packageSmoke = evidence.find((item) => item.code === 'PACKAGE_SMOKE_EVIDENCE');
+  if (!evidenceCheckPassed(packageSmoke ?? { code: 'PACKAGE_SMOKE_EVIDENCE', artifactExists: false }, packageVersion, gitCommit)) {
+    actions.push({
+      id: 'refresh-package-smoke-evidence',
+      required: true,
+      command: 'hadara package smoke --execute --attach-evidence --task <task-id> --json',
+      reason: 'PACKAGE_SMOKE_EVIDENCE_NOT_READY',
+      summary: 'Refresh package smoke evidence with a schema-valid public reduced artifact.'
+    });
+  }
+
+  const cleanCheckout = evidence.find((item) => item.code === 'CLEAN_CHECKOUT_SMOKE_EVIDENCE');
+  if (!evidenceCheckPassed(cleanCheckout ?? { code: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE', artifactExists: false }, packageVersion, gitCommit)) {
+    actions.push({
+      id: 'refresh-clean-checkout-smoke-evidence',
+      required: true,
+      command: 'hadara smoke clean-checkout --execute --attach-evidence --task <task-id> --json',
+      reason: 'CLEAN_CHECKOUT_SMOKE_EVIDENCE_NOT_READY',
+      summary: 'Refresh clean-checkout smoke evidence with a schema-valid public reduced artifact.'
+    });
+  }
+
+  const releaseArtifact = evidence.find((item) => item.code === 'RELEASE_ARTIFACT_EVIDENCE');
+  if (!evidenceCheckPassed(releaseArtifact ?? { code: 'RELEASE_ARTIFACT_EVIDENCE', artifactExists: false }, packageVersion, gitCommit)) {
+    actions.push({
+      id: 'refresh-release-artifact-evidence',
+      required: true,
+      command: 'hadara release artifact --execute --json --output dist-release --attach-evidence --task <task-id>',
+      reason: 'RELEASE_ARTIFACT_EVIDENCE_NOT_READY',
+      summary: 'Refresh release artifact evidence for the current package version and git commit before publish/deploy planning.'
+    });
+  }
+
+  if (actions.length === 0) {
+    actions.push({
+      id: 'review-publish-dry-run',
+      required: false,
+      command: 'hadara release publish --mode dry-run --json',
+      reason: 'RELEASE_DRY_RUN_READY',
+      summary: 'Release dry-run is ready; review publish/deploy dry-run gates without executing release mutation.'
+    });
+  }
+  return actions;
 }
 
 export function readCurrentGitCommit(projectRoot: string): string | undefined {

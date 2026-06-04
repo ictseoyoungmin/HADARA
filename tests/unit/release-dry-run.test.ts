@@ -51,6 +51,24 @@ describe('release dry-run', () => {
         manifestHash: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
       })
     );
+    expect(report.readiness).toMatchObject({
+      status: 'ready',
+      blockers: 0,
+      warnings: 0
+    });
+    expect(report.readiness.nextActions).toContainEqual(
+      expect.objectContaining({
+        id: 'review-publish-dry-run',
+        command: 'hadara release publish --mode dry-run --json'
+      })
+    );
+    expect(report.diagnostics.stageTimings.map((timing) => timing.stage)).toEqual([
+      'package-metadata',
+      'git-commit',
+      'strict-release-gate',
+      'release-evidence-scan',
+      'release-evidence-validation'
+    ]);
     expect(report.privacy).toMatchObject({
       tokenValuesIncluded: false,
       publishExecuted: false,
@@ -121,10 +139,44 @@ describe('release dry-run', () => {
       })
     );
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'PACKAGE_SMOKE_EVIDENCE_NOT_READY', severity: 'error' }));
+    expect(report.readiness).toMatchObject({
+      status: 'blocked',
+      blockers: expect.any(Number)
+    });
+    expect(report.readiness.nextActions).toContainEqual(
+      expect.objectContaining({
+        id: 'refresh-package-smoke-evidence',
+        command: 'hadara package smoke --execute --attach-evidence --task <task-id> --json'
+      })
+    );
+  });
+
+  it('points operators at release artifact refresh when commit freshness is stale', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root);
+    writeStrongEvidence(root, { artifactGitCommit: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' });
+
+    const report = createReleaseDryRunReport(root);
+
+    expect(report.ok).toBe(false);
+    expect(report.checks).toContainEqual(
+      expect.objectContaining({
+        code: 'RELEASE_ARTIFACT_EVIDENCE',
+        status: 'error',
+        summary: expect.stringContaining('does not match current')
+      })
+    );
+    expect(report.readiness.nextActions).toContainEqual(
+      expect.objectContaining({
+        id: 'refresh-release-artifact-evidence',
+        reason: 'RELEASE_ARTIFACT_EVIDENCE_NOT_READY',
+        command: 'hadara release artifact --execute --json --output dist-release --attach-evidence --task <task-id>'
+      })
+    );
   });
 });
 
-function writeStrongEvidence(root: string, options: { schemaVersion?: 'hadara.evidence.v1' | 'hadara.evidence.v2' } = {}): void {
+function writeStrongEvidence(root: string, options: { schemaVersion?: 'hadara.evidence.v1' | 'hadara.evidence.v2'; artifactGitCommit?: string } = {}): void {
   const taskDir = path.join(root, 'tasks', 'T-0001-release-evidence');
   const artifactDir = path.join(taskDir, 'artifacts');
   fs.mkdirSync(path.join(artifactDir, 'package-smoke'), { recursive: true });
@@ -133,7 +185,7 @@ function writeStrongEvidence(root: string, options: { schemaVersion?: 'hadara.ev
 
   writeJson(path.join(artifactDir, 'package-smoke', 'summary.json'), smokeSummary('package-smoke', 'package.smoke', 'local'));
   writeJson(path.join(artifactDir, 'clean-checkout-smoke', 'summary.json'), smokeSummary('clean-checkout-smoke', 'smoke.clean-checkout', 'execute'));
-  writeJson(path.join(artifactDir, 'release-artifact', 'report.json'), releaseArtifactReport());
+  writeJson(path.join(artifactDir, 'release-artifact', 'report.json'), releaseArtifactReport(options.artifactGitCommit));
 
   const records = [
     evidenceRecord(
@@ -222,7 +274,7 @@ function smokeSummary(category: 'package-smoke' | 'clean-checkout-smoke', comman
   };
 }
 
-function releaseArtifactReport(): Record<string, unknown> {
+function releaseArtifactReport(gitCommit = commit): Record<string, unknown> {
   return {
     schemaVersion: 'hadara.releaseArtifact.v1',
     command: 'release.artifact',
@@ -278,7 +330,7 @@ function releaseArtifactReport(): Record<string, unknown> {
       privateStorePathsIncluded: false
     },
     evidence: {
-      gitCommit: commit
+      gitCommit
     },
     issues: []
   };
