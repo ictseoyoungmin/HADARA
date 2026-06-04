@@ -12,15 +12,15 @@
 
 | Item | Evidence |
 |---|---|
-| Release artifact command hardened. | Docker check/sync-build passed 92 files / 614 tests; release artifact service now uses disposable npm cache and recovers empty successful npm stdout. |
-| Release artifact evidence refreshed. | Built release artifact command returned `ok:true` and attached passed T-0245 report evidence for commit `8e43a7a0af3273dc56c18169ee66cdfe13da2fbe`. |
+| Release artifact command hardened. | Docker check/sync-build passed 92 files / 615 tests; release artifact service now uses disposable npm cache and recovers empty successful npm stdout. |
+| Release artifact evidence refreshed. | Built release artifact command returned `ok:true` and attached passed T-0245 report evidence for commit `2eff19c8ab63b635804352d2c71803226d592749`. |
 | Release readiness verified. | Built release dry-run returned `ok:true`, readiness `ready`, blockers 0; publish dry-run returned `ok:true` with no mutation executed. |
 
 ## Next Recommended Step
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Commit final T-0245 state. | Implementation, validation evidence, and lifecycle closure are complete. | `tasks/T-0245-release-artifact-evidence-refresh/TESTS.md` |
+| Return to roadmap value work unless an operator explicitly starts approval-gated publish planning. | Release artifact evidence is refreshed and release dry-run is ready; actual publish remains a separate approval decision. | `tasks/T-0245-release-artifact-evidence-refresh/TESTS.md` |
 
 ## Carry Forward Warnings
 

@@ -4,17 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0245 release artifact evidence refresh is in close workflow; final commit pending. |
+| Branch | main | T-0245 release artifact evidence refresh is complete; release dry-run is ready with blockers 0. |
 | Current Phase | Dashboard/TUI UI work paused; core evidence/task lifecycle work resumed | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0245 Release Artifact Evidence Refresh | Release artifact evidence was refreshed for commit `8e43a7a0af3273dc56c18169ee66cdfe13da2fbe`; release dry-run is ready with blockers 0. |
+| Latest Completed Task | T-0245 Release Artifact Evidence Refresh | Release artifact evidence was refreshed for commit `2eff19c8ab63b635804352d2c71803226d592749`; release dry-run is ready with blockers 0. |
 | Active / Next Task | Return to roadmap value work unless an operator explicitly starts approval-gated publish planning | Publish dry-run is ok but reports missing npm/GitHub tokens as warnings; no publish/GitHub/Docker mutation was executed. |
-| Validation Baseline | T-0245 Docker/release validation passed | Docker check and sync-build passed 92 files / 614 tests; built release artifact refresh, release dry-run, and publish dry-run smokes passed. |
+| Validation Baseline | T-0245 Docker/release validation passed | Docker check and sync-build passed 92 files / 615 tests; built release artifact refresh, release dry-run, and publish dry-run smokes passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0245 Release Artifact Evidence Refresh | Hardened release artifact `npm pack` execution for disposable cache and empty successful stdout, then refreshed release artifact evidence from a clean commit. Release dry-run now returns ready/blockers 0, and publish dry-run remains no-mutation with token warnings only. | T-0245 evidence: Docker check/sync-build passed 92 files / 614 tests; release artifact refresh attached passed evidence for commit `8e43a7a0af3273dc56c18169ee66cdfe13da2fbe`; release dry-run returned `ok:true`; release publish dry-run returned `ok:true` with mutation flags false. |
+| T-0245 Release Artifact Evidence Refresh | Hardened release artifact `npm pack` execution for disposable cache and empty successful stdout, then refreshed release artifact evidence from a clean commit. Release dry-run now returns ready/blockers 0, and publish dry-run remains no-mutation with token warnings only. | T-0245 evidence: Docker check/sync-build passed 92 files / 615 tests; release artifact refresh attached passed evidence for commit `2eff19c8ab63b635804352d2c71803226d592749`; release dry-run returned `ok:true`; release publish dry-run returned `ok:true` with mutation flags false. |
 | T-0244 Multi-Ecosystem Release Target Model | Added descriptor-backed release targets while preserving npm as the active primary provider; GitHub Release remains secondary, Docker remains deferred, and Python `pyproject.toml` detection is preview-only metadata with no PyPI/build/smoke execution. | T-0244 evidence: Docker check and sync-build passed 92 files / 613 tests; built CLI release dry-run emitted npm/GitHub/Docker descriptors; built package smoke dry-run emitted `provider.smokeProfile: npm-package-smoke`. |
 | T-0243 Release Artifact Evidence Dirty-Worktree Guard | Added a clean-worktree guard before release artifact staging/npm pack so attached release artifact evidence cannot claim freshness for artifact contents containing uncommitted changes. Actual artifact refresh is deferred until the worktree is clean. | T-0243 evidence: Docker sync-build passed 92 files / 612 tests; built CLI blocked current dirty worktree with `RELEASE_ARTIFACT_WORKTREE_DIRTY`, `npmPackExecuted:false`, and no generated artifacts. |
 
@@ -69,7 +69,7 @@
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| Release artifact evidence refresh full check | Docker `npm run dev:docker-check` and `npm run dev:docker-sync-build` passed with 92 files and 614 tests during T-0245. | Built release artifact refresh attached passed T-0245 evidence; built release dry-run returned `ok:true`, readiness `ready`, blockers 0; built release publish dry-run returned `ok:true` with token warnings only and mutation flags false. |
+| Release artifact evidence refresh full check | Docker `npm run dev:docker-check` and `npm run dev:docker-sync-build` passed with 92 files and 615 tests during T-0245. | Built release artifact refresh attached passed T-0245 evidence for commit `2eff19c8ab63b635804352d2c71803226d592749`; built release dry-run returned `ok:true`, readiness `ready`, blockers 0; built release publish dry-run returned `ok:true` with token warnings only and mutation flags false. |
 | Multi-ecosystem release target model full check | Docker `npm run dev:docker-check` and `npm run dev:docker-sync-build` passed with 92 files and 613 tests during T-0244. | Built CLI release dry-run returned expected stale artifact blocker but emitted npm/GitHub/Docker descriptors; built package smoke dry-run emitted provider `npm-package-smoke`; no PyPI/Docker/GitHub mutation was added. |
 | Release artifact dirty-worktree guard full check | Docker `npm run dev:docker-sync-build` passed with 92 files and 612 tests during T-0243. | Built CLI blocked `release artifact --execute --attach-evidence` in the current dirty worktree with `RELEASE_ARTIFACT_WORKTREE_DIRTY`, `npmPackExecuted:false`, and no generated artifacts. |
 | Release dry-run readiness hardening full check | Docker `npm run dev:docker-check` and `npm run dev:docker-sync-build` passed with 92 files and 611 tests during T-0242. | Built CLI release dry-run smoke returned exit 6 as expected for stale release artifact evidence, with `readiness.nextActions[0].id: refresh-release-artifact-evidence` and `diagnostics.slowStageWarnings[0].stage: strict-release-gate`. |
