@@ -163,7 +163,7 @@ export function createReleaseArtifactReport(options: ReleaseArtifactOptions): Re
         } finally {
           cleanupDirectory(npmCache, true);
         }
-        const parsed = parsePackResult(pack.stdout);
+        const parsed = parsePackResult(pack.stdout) ?? recoverPackResultFromOutput(output.path, staging.path, packageMetadata);
         if (pack.status !== 0 || !parsed) {
           issues.push({
             severity: 'error',
@@ -396,6 +396,48 @@ function parsePackResult(stdout: string): PackResult | undefined {
   } catch {
     return undefined;
   }
+}
+
+function recoverPackResultFromOutput(outputPath: string, stagingPath: string, metadata: { name: string; version: string }): PackResult | undefined {
+  const expected = expectedTarballFileName(metadata.name, metadata.version);
+  const expectedPath = path.join(outputPath, expected);
+  const filename = fs.existsSync(expectedPath)
+    ? expected
+    : fs
+        .readdirSync(outputPath)
+        .filter((entry) => entry.endsWith('.tgz'))
+        .sort()[0];
+  if (!filename) return undefined;
+  return {
+    filename,
+    files: listStagedPackageFiles(stagingPath)
+  };
+}
+
+function expectedTarballFileName(name: string, version: string): string {
+  const safeName = name.startsWith('@') ? name.slice(1).replace('/', '-') : name;
+  return `${safeName}-${version}.tgz`;
+}
+
+function listStagedPackageFiles(stagingPath: string): PackFile[] {
+  const files: PackFile[] = [];
+  const visit = (directory: string): void => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const fullPath = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        visit(fullPath);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      const relative = path.relative(stagingPath, fullPath).split(path.sep).join('/');
+      files.push({
+        path: relative,
+        size: safeFileSize(fullPath)
+      });
+    }
+  };
+  visit(stagingPath);
+  return files.sort((a, b) => a.path.localeCompare(b.path));
 }
 
 function verifyPackageContents(files: string[]): { ok: boolean; forbidden: string[]; missingRequired: string[] } {

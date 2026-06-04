@@ -150,6 +150,36 @@ describe('release artifact builder', () => {
     expect(validateSchema('hadara.releaseArtifact.v1', report).ok).toBe(true);
   });
 
+  it('recovers release artifact metadata when npm pack succeeds with empty stdout', () => {
+    const root = tempProject();
+    const runner: ReleaseArtifactCommandRunner = (_command, args) => {
+      const outputDir = String(args[args.indexOf('--pack-destination') + 1]);
+      fs.writeFileSync(path.join(outputDir, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
+      return {
+        status: 0,
+        stdout: '',
+        stderr: '',
+        elapsedMs: 15
+      };
+    };
+
+    const report = createReleaseArtifactReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      execute: true,
+      output: 'dist-release',
+      runner
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.packageContents).toMatchObject({
+      verified: true,
+      fileCount: 5,
+      forbiddenMatches: []
+    });
+    expect(report.artifacts.map((artifact) => artifact.kind)).toEqual(['tarball', 'checksum', 'manifest']);
+    expect(validateSchema('hadara.releaseArtifact.v1', report).ok).toBe(true);
+  });
+
   it('refuses to build release artifacts from a dirty git worktree', () => {
     const root = tempProject();
     spawnSync('git', ['init'], { cwd: root, encoding: 'utf8' });
