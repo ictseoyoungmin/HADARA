@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0267 Task Finish EOF Normalization is complete. |
-| Current Phase | Phase 6.1 Reviewer Feedback Hardening complete | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0267 Task Finish EOF Normalization | `task finish` generated writes now normalize trailing blank EOF to a single final newline. |
-| Active / Next Task | Release Candidate Freeze / Artifact Refresh | Phase 6.1 reviewer-feedback hardening and the T-0267 finish hygiene hotfix are complete. |
-| Validation Baseline | T-0267 Docker validation passed | Focused Docker wrapper passed task-finish/schema tests; Docker sync-build passed 100 files / 673 tests; built task finish smoke verified no trailing blank EOF. |
+| Branch | main | T-0268 Release Candidate Freeze and Artifact Refresh is complete. |
+| Current Phase | Phase 6 / 6.1 release candidate evidence refresh complete | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0268 Release Candidate Freeze and Artifact Refresh | `hadara@0.2.0-rc.0` metadata, release docs, release artifact evidence, release dry-run, and publish dry-run are refreshed without publish/deploy mutation. |
+| Active / Next Task | Publish remains approval-gated/manual | Review T-0268 evidence before any explicit publish capsule; do not run publish execute by default. |
+| Validation Baseline | T-0268 RC readiness passed | Focused/full Docker validation passed; package smoke passed; clean-checkout smoke passed; current-HEAD release artifact passed; release dry-run ready with blockers 0; publish dry-run ok with token warnings only. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0268 Release Candidate Freeze and Artifact Refresh | Package metadata and release docs now target `hadara@0.2.0-rc.0`; release metadata readiness is generalized for next RCs; package-smoke handles empty npm/installed CLI stdout capture; release evidence was refreshed without publish/deploy mutation. | T-0268 evidence: focused Docker tests passed package-smoke/release/operational-debt/release-publish coverage; package smoke, clean-checkout smoke, current-HEAD release artifact, release dry-run, and release publish dry-run passed. |
 | T-0267 Task Finish EOF Normalization | `task finish` generated text writes now normalize trailing whitespace/blank EOF to a single final newline through the shared dry-run/execute content path, preventing repeated `git diff --check` cleanup and close source-hash churn. | T-0267 evidence: focused Docker wrapper passed task-finish/schema tests; Docker sync-build passed 100 files / 673 tests; built task finish smoke returned finish `ok:true`, single newline EOF, and no trailing blank EOF. |
 | T-0266 Handoff Suggestion Fragment Polish | `handoff suggest` section fragments now include exact `targetBeforeHash`, `sectionTitle`, and `suggestedReplacementMarkdown`, preserve compatibility `suggestedMarkdown`, and keep read-only/execute-refusal behavior. | T-0266 evidence: focused Docker wrapper passed handoff-suggestion/schema tests; Docker sync-build passed 100 files / 673 tests; built CLI smokes verified precise fragments and `HANDOFF_SUGGEST_EXECUTE_UNSUPPORTED`. |
-| T-0265 Task Create Collision Guard | `createTaskCapsule()` now retries selected-directory collisions, skips Task Board candidate-id collisions, fails exhausted retries with `TASK_CREATE_COLLISION_RETRIES_EXHAUSTED`, and keeps no-template create reports schema-valid. | T-0265 evidence: focused Docker wrapper passed task-create/schema tests; Docker sync-build passed 100 files / 673 tests; built task-create smoke in `/tmp` returned ok:true. |
 
 ## Current Known Problems
 
@@ -28,7 +28,7 @@
 | Release target configuration remains preview-only. | T-0252 surfaces unsupported/invalid `.hadara/release-targets.json` as warning/advisory metadata, but the parser still only reads `primaryTarget` and effective primary remains npm. | Define `hadara.releaseTargetConfig.v1` before real config support, including supported/ignored/unsupported fields, non-blocking warnings, and migration behavior. |
 | Python TOML parsing remains preview-only. | `pyproject.toml` detection uses a lightweight parser for static name/version/backend metadata only. | Use a formal TOML parser before Python release readiness, artifact gates, or publish behavior depend on TOML data. |
 | Phase 6 is not a full multi-agent runtime. | T-0253 through T-0260 added metadata, read-only orchestration, idempotent close evidence, handoff suggestions, Docker validation wrapper, task templates, and release dry-run service decomposition. It did not add hidden shared-doc writes, `task complete --execute`, scheduler behavior, publish automation, or release mutation. | Treat Phase 6 as foundation metadata/workflow compression only; future multi-agent runtime work needs its own capsules and safety gates. |
-| Phase 6.1 reviewer-feedback hardening is complete. | T-0262 closed actor CLI option plumbing, T-0263 closed stricter sync-dist before-hash conflict handling, T-0264 closed close evidence append race recheck, T-0265 closed task create collision guard, and T-0266 closed handoff fragment polish. | Proceed to release candidate freeze / artifact refresh with conservative Phase 6 messaging. |
+| Phase 6.1 reviewer-feedback hardening and RC evidence refresh are complete. | T-0262 through T-0266 closed reviewer hardening items; T-0267 fixed finish EOF churn; T-0268 refreshed `0.2.0-rc.0` release evidence. | Proceed only to an explicit approval-gated publish capsule if requested by the operator. |
 | Release artifact refresh now requires a clean git worktree. | In active development, `release artifact --execute` will return `RELEASE_ARTIFACT_WORKTREE_DIRTY` and skip `npm pack` until pending changes are committed or otherwise cleaned. | Treat this as intentional release safety, not a release artifact failure; do not bypass it with dirty worktree evidence. |
 | Release dry-run latency is currently dominated by the strict release gate. | Built `/mnt/f` smoke reported total duration about 13.8s with `strict-release-gate` about 12.5s; this is now visible but not optimized. | Treat timing diagnostics as metadata; optimize strict release-gate reads only if release operators need faster repeated dry-runs. |
 | `task upgrade-scaffold --execute` and `protocol remediate --execute` now require `--before-hash` when writes are planned. | Old execute-only copy-paste commands fail closed. | Run the dry-run first, review `summary.beforeHash`, then execute with `--before-hash <hash>`. |
@@ -67,13 +67,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Release Candidate Freeze / Artifact Refresh | Phase 6.1 reviewer-feedback hardening and T-0267 finish hygiene hotfix are complete. | Refresh release artifacts from a clean worktree, then run release dry-run/readiness checks before any approval-gated publish path. |
+| Approval-gated publish review, if requested | T-0268 proves RC readiness only; actual publish/deploy mutation is still intentionally blocked by default. | Review T-0268 release dry-run and publish dry-run evidence, then run publish execute only under an explicit future publish capsule with required tokens/confirmation. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0268 RC readiness | Package smoke, clean-checkout smoke, current-HEAD release artifact, release dry-run, and release publish dry-run passed during T-0268. | Release dry-run reported readiness `ready`, blockers 0, warnings 0; publish dry-run reported token absence warnings only and all targets `willExecute:false`; no publish/GitHub/Docker mutation occurred. |
 | Task finish EOF normalization full check | Docker `npm run dev:docker-sync-build` passed 100 files / 673 tests during T-0267. | Focused wrapper covered task-finish/schema tests; regression checks `TASK.md` and Task Board no trailing blank EOF after finish execute; built smoke verified single newline EOF and finish `ok:true`. |
 | Handoff suggestion fragment polish full check | Docker `npm run dev:docker-sync-build` passed 100 files / 673 tests during T-0266. | Focused wrapper covered handoff-suggestion/schema tests; built handoff suggest smoke returned exact `targetBeforeHash`, `sectionTitle`, and `suggestedReplacementMarkdown`; built `--execute` smoke returned `HANDOFF_SUGGEST_EXECUTE_UNSUPPORTED`. |
 | Task create collision guard full check | Docker `npm run dev:docker-sync-build` passed 100 files / 673 tests during T-0265. | Focused wrapper covered task-create/schema tests; regression covers selected-dir race retry, retry exhaustion, Task Board id collision skip, and no-template schema validity; built task-create smoke in `/tmp` returned ok:true. |

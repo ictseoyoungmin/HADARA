@@ -268,4 +268,4 @@
 | T-0265 | Task Create Collision Guard | Done | tasks/T-0265-task-create-collision-guard | |
 | T-0266 | Handoff Suggestion Fragment Polish | Done | tasks/T-0266-handoff-suggestion-fragment-polish | |
 | T-0267 | Task Finish EOF Normalization | Done | tasks/T-0267-task-finish-eof-normalization | |
-| T-0268 | Release Candidate Freeze and Artifact Refresh | Draft | tasks/T-0268-release-candidate-freeze-and-artifact-refresh | |
+| T-0268 | Release Candidate Freeze and Artifact Refresh | Done | tasks/T-0268-release-candidate-freeze-and-artifact-refresh | |

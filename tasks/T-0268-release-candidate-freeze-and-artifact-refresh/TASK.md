@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0268 |
 | Title | Release Candidate Freeze and Artifact Refresh |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-06-05 |
 | Updated | 2026-06-05 |
 
@@ -44,7 +44,7 @@
 
 ## Status
 
-Draft
+Done
 
 ## Status History
 
@@ -53,3 +53,6 @@ Draft
 | TBD | Draft | Initial task scaffold from template. | Template defaults. |
 | 2026-06-05 | Draft | Froze package metadata and release-facing docs for `0.2.0-rc.0`. | `package.json`, `package-lock.json`, README, release readiness docs, release notes. |
 | 2026-06-05 | Draft | Ran focused/full Docker validation and guarded sync-dist check. | T-0268 evidence entries at 2026-06-05T10:47:39Z and 2026-06-05T10:47:40Z. |
+| 2026-06-05 | Draft | Hardened package-smoke and release metadata readiness for the next RC target. | Focused Docker validation passed for package-smoke, release dry-run, operational-debt, and release-publish tests. |
+| 2026-06-05 | Draft | Refreshed current-HEAD release evidence without publish/deploy mutation. | Package smoke, clean-checkout smoke, release artifact, release dry-run, and release publish dry-run evidence passed for `hadara@0.2.0-rc.0`. |
+| 2026-06-05 | Done | Finished task capsule. | `hadara task finish --execute` |
