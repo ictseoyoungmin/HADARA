@@ -309,6 +309,8 @@ describe('operator console bundle (Phase 5.6)', () => {
     const evidenceLint = createDashboardServerResponse(process.cwd(), '/api/evidence-lint?taskId=T-0194');
     const timeline = createDashboardServerResponse(process.cwd(), '/api/timeline?taskId=T-0195');
     const bootstrap = createDashboardServerResponse(process.cwd(), '/api/dashboard/bootstrap?selectedTaskId=T-0196');
+    const bootstrapHit = JSON.parse(createDashboardServerResponse(process.cwd(), '/api/dashboard/bootstrap?selectedTaskId=T-0196').body);
+    const bootstrapBypass = JSON.parse(createDashboardServerResponse(process.cwd(), '/api/dashboard/bootstrap?selectedTaskId=T-0196&cache=bypass').body);
     const taskDetail = createDashboardServerResponse(process.cwd(), '/api/dashboard/task-detail?taskId=T-0198');
     const activeRun = createDashboardServerResponse(process.cwd(), '/api/active-run');
     const debt = createDashboardServerResponse(process.cwd(), '/api/debt');
@@ -384,8 +386,6 @@ describe('operator console bundle (Phase 5.6)', () => {
       command: 'operational-debt.report'
     });
 
-    const bootstrapHit = JSON.parse(createDashboardServerResponse(process.cwd(), '/api/dashboard/bootstrap?selectedTaskId=T-0196').body);
-    const bootstrapBypass = JSON.parse(createDashboardServerResponse(process.cwd(), '/api/dashboard/bootstrap?selectedTaskId=T-0196&cache=bypass').body);
     const cacheStatus = JSON.parse(createDashboardServerResponse(process.cwd(), '/api/dashboard/cache/status').body);
     expect(bootstrapHit.cache.status).toBe('hit');
     expect(bootstrapBypass.cache.status).toBe('bypass');

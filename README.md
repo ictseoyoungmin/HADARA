@@ -4,6 +4,12 @@
   <img src="https://raw.githubusercontent.com/ictseoyoungmin/HADARA-dev/main/docs/assets/hadara_sub_right_name.png" alt="HADARA" width="720">
 </p>
 
+<p align="center">
+  <strong>Current RC:</strong> <code>hadara@0.2.0-rc.0</code> ·
+  <strong>Node.js:</strong> <code>22+</code> ·
+  <strong>License:</strong> MIT
+</p>
+
 **HADARA** is a portable agentic development workbench for keeping long-running AI-assisted software work inspectable, resumable, and evidence-backed.
 
 > Unbroken Context, Verified Development.
@@ -40,7 +46,7 @@ No release command should publish, create a GitHub Release, build Docker images,
 
 Requires Node.js 22.
 
-After `0.2.0-rc.0` is published:
+Install the current RC:
 
 ```bash
 npm install -g hadara@0.2.0-rc.0
@@ -56,12 +62,7 @@ npx hadara@0.2.0-rc.0 doctor --json
 npx hadara@0.2.0-rc.0 tools list --json
 ```
 
-Until `0.2.0-rc.0` is visible on npm, use the currently published RC:
-
-```bash
-npm install -g hadara@0.1.0-rc.0
-npx hadara@0.1.0-rc.0 doctor --json
-```
+Previous RC: `hadara@0.1.0-rc.0` remains available on npm for comparison or rollback, but new installs should use the current RC once it is published.
 
 ## What HADARA Gives You
 
@@ -120,16 +121,21 @@ Release and package readiness:
 hadara package smoke --dry-run --json
 hadara package smoke --execute --attach-evidence --task T-0001 --json
 hadara smoke clean-checkout --execute --attach-evidence --task T-0001 --json
+hadara release artifact --execute --json --output dist-release --attach-evidence --task T-0001
 hadara release gate --mode strict --json
 hadara release dry-run --json
 hadara release publish --mode dry-run --json
 ```
 
-`release publish --mode dry-run` reports readiness, token presence by name, approval requirements, and mutation privacy flags. The current CLI publish report does not run `npm publish`; actual npm publishing remains a separate approval-gated manual release path.
+`package smoke --execute`, `smoke clean-checkout --execute`, and `release artifact --execute` create local validation artifacts and reduced public evidence only. They must not publish packages, create GitHub Releases, build Docker images, push images, or load publish token values.
+
+`release publish --mode dry-run` reports readiness, token presence by name, approval requirements, and mutation privacy flags without running `npm publish`. Any publish execution must happen only in a separate approval-gated release capsule with explicit operator confirmation.
 
 ## Task Capsule Lifecycle
 
 HADARA task workflow commands have distinct read/write boundaries. The full command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`.
+
+Phase 6 reports support optional actor/run metadata for future multi-agent-compatible workflows. Commands such as `task complete`, `task finish`, `task ready`, `task close`, `task audit-close`, `handoff suggest`, and `dev docker-check` may accept metadata such as `--agent-id`, `--run-id`, `--actor-role`, and `--parent-run-id`. These fields improve provenance but do not enable a scheduler or full multi-agent runtime.
 
 ```bash
 hadara task next --json
