@@ -65,6 +65,17 @@
         "evidencePath": { "type": "string" }
       }
     },
+    "closeEvidenceWrite": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["idempotencyKey", "duplicateFound", "duplicateAction"],
+      "properties": {
+        "idempotencyKey": { "type": "string" },
+        "duplicateFound": { "type": "boolean" },
+        "duplicateAction": { "enum": ["no-op", "append", "warning"] },
+        "supersedes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
     "lifecycle": {
       "type": "object",
       "additionalProperties": true,

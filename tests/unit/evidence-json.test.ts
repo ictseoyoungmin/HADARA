@@ -8,6 +8,7 @@ import { createEvidenceCollectReport } from '../../src/cli/evidence-json';
 import { parseEvidenceResult } from '../../src/cli/evidence';
 import {
   appendEvidence,
+  appendEvidenceWithResult,
   appendEvidenceTextArtifact,
   createPublicEvidenceArtifactPolicyReport,
   EvidenceArtifactPolicyError
@@ -117,6 +118,29 @@ describe('CLI evidence JSON reports', () => {
       }
     });
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('"schemaVersion":"hadara.evidence.v2"');
+  });
+
+  it('preserves optional v2 idempotency, tags, and actor metadata', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Evidence metadata');
+
+    const result = appendEvidenceWithResult(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Close validation metadata',
+      result: 'passed',
+      visibility: 'public',
+      tags: ['close-proof', 'idempotency:close:T-0001:source:report'],
+      idempotencyKey: 'close:T-0001:source:report',
+      actor: { agentId: 'worker-1', runId: 'run-1', role: 'worker', parentRunId: null }
+    });
+
+    expect(result.evidence).toMatchObject({
+      schemaVersion: 'hadara.evidence.v2',
+      tags: ['close-proof', 'idempotency:close:T-0001:source:report'],
+      idempotencyKey: 'close:T-0001:source:report',
+      actor: { agentId: 'worker-1', runId: 'run-1', role: 'worker', parentRunId: null }
+    });
   });
 
   it('returns a stable collect envelope with the appended evidence index record', () => {

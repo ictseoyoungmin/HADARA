@@ -46,8 +46,13 @@ describe('task close report', () => {
         kind: 'command-log',
         result: 'passed',
         excludedFromCurrentValidationLoop: true
+      },
+      closeEvidenceWrite: {
+        duplicateFound: false,
+        duplicateAction: 'append'
       }
     });
+    expect(report.closeEvidenceWrite?.idempotencyKey).toBe(`close:${task.id}:${report.validation.validatedBeforeCloseEvidenceSourceHash}:${report.validation.validatedBeforeCloseEvidenceReportHash}`);
     expect(report.validation.validatedBeforeCloseEvidenceReportHash).toMatch(/^sha256:[a-f0-9]{64}$/);
     expect(report.validation.validatedBeforeCloseEvidenceSourceHash).toMatch(/^sha256:[a-f0-9]{64}$/);
     expect(report.validation.validatedBeforeCloseEvidenceHash).toBe(report.validation.validatedBeforeCloseEvidenceReportHash);
@@ -125,8 +130,84 @@ describe('task close report', () => {
     expect(after).toContain('"Task close validation for ' + task.id);
     expect(report.closeEvidence.markdownPath).toBe(`tasks/${task.id}-close-execute-evidence/EVIDENCE.md`);
     expect(report.closeEvidence.evidencePath).toBe(`tasks/${task.id}-close-execute-evidence/evidence.jsonl`);
+    const closeRecord = JSON.parse(after.trim().split(/\r?\n/).at(-1) ?? '{}');
+    expect(closeRecord).toMatchObject({
+      schemaVersion: 'hadara.evidence.v2',
+      idempotencyKey: report.closeEvidenceWrite?.idempotencyKey,
+      actor: { agentId: 'unknown', runId: 'local', role: 'operator', parentRunId: null }
+    });
+    expect(closeRecord.tags).toEqual(expect.arrayContaining(['close-proof', `idempotency:${report.closeEvidenceWrite?.idempotencyKey}`]));
     expect(report.nextActions.map((action) => action.id)).toEqual(['close-evidence-appended', 'audit-close']);
     expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'audit-close', command: `hadara task audit-close --task ${task.id} --json`, writeBoundary: 'read-only', recommendedActorRole: 'reviewer' }));
+  });
+
+  it('does not append duplicate close evidence for the same source and report hash', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close duplicate evidence');
+    completeTask(root, task.id, task.dir);
+    const firstReport = createTaskCloseReport(root, task.id, 'execute');
+    executeTaskCloseEvidence(root, firstReport);
+    const afterFirst = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
+
+    const duplicateReport = createTaskCloseReport(root, task.id, 'execute');
+    executeTaskCloseEvidence(root, duplicateReport);
+    const afterDuplicate = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
+
+    expect(duplicateReport.closeEvidenceWrite).toMatchObject({
+      idempotencyKey: firstReport.closeEvidenceWrite?.idempotencyKey,
+      duplicateFound: true,
+      duplicateAction: 'no-op'
+    });
+    expect(duplicateReport.closeEvidence.planned).toBe(false);
+    expect(duplicateReport.closeEvidence.appended).toBe(false);
+    expect(duplicateReport.nextActions).toContainEqual(expect.objectContaining({ id: 'close-evidence-duplicate-noop', writeBoundary: 'read-only' }));
+    expect(afterDuplicate).toBe(afterFirst);
+    const audit = createTaskAuditCloseReport(root, task.id);
+    expect(audit.closeEvidenceAudit).toMatchObject({
+      latestCloseEvidenceId: expect.stringMatching(new RegExp(`^ev:${task.id}:`)),
+      supersededCloseEvidenceIds: [],
+      duplicateCloseEvidenceCount: 0,
+      verdict: 'valid'
+    });
+  });
+
+  it('appends changed close evidence and marks the previous proof as superseded', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close supersedes evidence');
+    completeTask(root, task.id, task.dir);
+    const firstReport = createTaskCloseReport(root, task.id, 'execute');
+    executeTaskCloseEvidence(root, firstReport);
+    const firstRecord = JSON.parse(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8').trim().split(/\r?\n/).at(-1) ?? '{}');
+
+    fs.appendFileSync(path.join(task.dir, 'PLAN.md'), '| 2 | Final source change. | Done | Fixture. |\n', 'utf8');
+    const secondReport = createTaskCloseReport(root, task.id, 'execute');
+    executeTaskCloseEvidence(root, secondReport);
+    const records = fs
+      .readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')
+      .trim()
+      .split(/\r?\n/)
+      .map((line) => JSON.parse(line));
+    const secondRecord = records.at(-1);
+
+    expect(secondReport.closeEvidenceWrite).toMatchObject({
+      duplicateFound: false,
+      duplicateAction: 'append',
+      supersedes: [firstRecord.id]
+    });
+    expect(secondRecord.tags).toEqual(expect.arrayContaining([`supersedes:${firstRecord.id}`, `idempotency:${secondReport.closeEvidenceWrite?.idempotencyKey}`]));
+    const audit = createTaskAuditCloseReport(root, task.id);
+    expect(audit.latestCloseEvidence?.id).toBe(secondRecord.id);
+    expect(audit.closeEvidenceAudit).toMatchObject({
+      latestCloseEvidenceId: secondRecord.id,
+      supersededCloseEvidenceIds: [firstRecord.id],
+      duplicateCloseEvidenceCount: 0,
+      verdict: 'valid'
+    });
+    expect(audit.auditVerdict).toMatchObject({
+      verdict: 'closed-valid',
+      reportHashMatches: true,
+      sourceHashMatches: true
+    });
   });
 
   it('audits close evidence and reports hash drift as a warning', () => {
@@ -147,6 +228,12 @@ describe('task close report', () => {
     expect(audit.nextActions).toEqual([]);
     expect(audit.latestCloseEvidence?.validationReportHash).toBe(closeReport.validation.validatedBeforeCloseEvidenceReportHash);
     expect(audit.latestCloseEvidence?.sourceHash).toBe(closeReport.validation.validatedBeforeCloseEvidenceSourceHash);
+    expect(audit.closeEvidenceAudit).toMatchObject({
+      latestCloseEvidenceId: expect.stringMatching(new RegExp(`^ev:${task.id}:`)),
+      supersededCloseEvidenceIds: [],
+      duplicateCloseEvidenceCount: 0,
+      verdict: 'valid'
+    });
     expect(audit.auditVerdict).toMatchObject({
       phase: 'post-close-audit',
       verdict: 'closed-valid',
@@ -205,6 +292,11 @@ describe('task close report', () => {
       recommendedActorRole: 'worker',
       requiresBeforeHash: false,
       stalePlanRisk: 'none'
+    });
+    expect(audit.closeEvidenceAudit).toMatchObject({
+      supersededCloseEvidenceIds: [],
+      duplicateCloseEvidenceCount: 0,
+      verdict: 'not-closed'
     });
     expect(audit.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_EVIDENCE_MISSING' }));
   });

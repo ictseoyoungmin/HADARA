@@ -256,3 +256,4 @@
 | T-0253 | Multi-Agent Command Context Contract | Done | tasks/T-0253-multi-agent-command-context-contract | |
 | T-0254 | Task Lifecycle Next Action Metadata | Done | tasks/T-0254-task-lifecycle-next-action-metadata | |
 | T-0255 | Task Complete Flow Dry-Run | Done | tasks/T-0255-task-complete-flow-dry-run | |
+| T-0256 | Close Evidence Idempotency / Supersedes | Done | tasks/T-0256-close-evidence-idempotency-supersedes | |

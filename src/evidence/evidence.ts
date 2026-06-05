@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import { ensureDir } from '../core/fs';
 import { createRedactionReport, hasBlockingRedactionFinding, redactSecrets, RedactionPattern, RedactionReport } from '../core/redaction';
 import { resolveProjectFile } from '../core/workspace';
+import type { HadaraActorContext } from '../core/actor-context';
 import { writePrivateEvidenceManifest } from './private-manifest';
 
 export interface EvidenceRecord {
@@ -14,6 +15,9 @@ export interface EvidenceRecord {
   summary: string;
   result: 'passed' | 'failed' | 'blocked' | 'unknown';
   visibility?: 'public' | 'private';
+  tags?: string[];
+  idempotencyKey?: string;
+  actor?: HadaraActorContext;
 }
 
 export interface EvidenceIndexRecord {
@@ -63,6 +67,8 @@ export interface EvidenceV2IndexRecord {
   summary: string;
   artifacts: EvidenceV2ArtifactRef[];
   tags: string[];
+  idempotencyKey?: string;
+  actor?: HadaraActorContext;
   legacy: {
     kind: EvidenceRecord['kind'];
     result: EvidenceRecord['result'];
@@ -120,6 +126,10 @@ export class EvidenceArtifactPolicyError extends Error {
 }
 
 export function appendEvidence(projectRoot: string, record: Omit<EvidenceRecord, 'time'>): string {
+  return appendEvidenceWithResult(projectRoot, record).markdownPath;
+}
+
+export function appendEvidenceWithResult(projectRoot: string, record: Omit<EvidenceRecord, 'time'>): EvidenceAppendResult {
   const taskDir = findTaskDir(projectRoot, record.taskId);
   if (!taskDir) {
     throw new Error(`Task capsule not found: ${record.taskId}`);
@@ -128,7 +138,7 @@ export function appendEvidence(projectRoot: string, record: Omit<EvidenceRecord,
   const time = new Date().toISOString();
   const visibility = record.visibility ?? 'public';
   const attachedPath = copyPublicEvidenceArtifact({ projectRoot, taskDir, kind: record.kind, sourcePath: record.path, time, visibility });
-  return appendEvidenceRecord({ projectRoot, taskDir, time, record, visibility, attachedPath }).markdownPath;
+  return appendEvidenceRecord({ projectRoot, taskDir, time, record, visibility, attachedPath });
 }
 
 export function appendEvidenceTextArtifact(
@@ -213,7 +223,10 @@ function appendEvidenceRecord(input: {
     summary,
     result: input.record.result,
     visibility: input.visibility,
-    attachedPath: input.attachedPath
+    attachedPath: input.attachedPath,
+    tags: input.record.tags,
+    idempotencyKey: input.record.idempotencyKey,
+    actor: input.record.actor
   });
   appendEvidenceIndex(input.taskDir, evidence);
   if (input.visibility === 'private') {
@@ -239,12 +252,16 @@ function createEvidenceV2Record(input: {
   result: EvidenceRecord['result'];
   visibility: NonNullable<EvidenceRecord['visibility']>;
   attachedPath?: string;
+  tags?: string[];
+  idempotencyKey?: string;
+  actor?: HadaraActorContext;
 }): EvidenceV2IndexRecord {
   const legacy = {
     kind: input.kind,
     result: input.result,
     ...(input.visibility === 'public' && input.attachedPath ? { evidencePath: input.attachedPath } : {})
   };
+  const tags = Array.from(new Set([...extractEvidenceTags(input.summary), ...(input.tags ?? [])]));
   const recordWithoutIdentity = {
     schemaVersion: 'hadara.evidence.v2' as const,
     time: input.time,
@@ -263,7 +280,9 @@ function createEvidenceV2Record(input: {
             }
           ]
         : [],
-    tags: extractEvidenceTags(input.summary),
+    tags,
+    ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}),
+    ...(input.actor ? { actor: input.actor } : {}),
     legacy
   };
   const fingerprint = createEvidenceV2Fingerprint(recordWithoutIdentity);
@@ -294,6 +313,8 @@ function createEvidenceV2Fingerprint(record: Omit<EvidenceV2IndexRecord, 'id' | 
         summary: redactSecrets(record.summary),
         artifacts: record.artifacts,
         tags: record.tags,
+        idempotencyKey: record.idempotencyKey,
+        actor: record.actor,
         legacy: record.legacy
       }),
       'utf8'

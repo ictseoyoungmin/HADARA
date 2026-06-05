@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { appendEvidence } from '../evidence/evidence';
+import { appendEvidenceWithResult } from '../evidence/evidence';
 import { createEvidenceLintReport, EvidenceLintReport } from '../services/evidence-lint';
 import { createHarnessValidateReport, HarnessValidateResult } from '../services/harness-service';
 import { createTaskProtocolConsistencyReport, ProtocolConsistencyReport } from '../services/protocol-consistency';
@@ -53,10 +53,18 @@ export interface TaskCloseReport {
     markdownPath?: string;
     evidencePath?: string;
   };
+  closeEvidenceWrite?: TaskCloseEvidenceWrite;
   lifecycle: TaskCloseLifecycleGuidance;
   nextActions: TaskCloseNextAction[];
   primaryNextAction?: TaskCloseNextAction;
   issues: TaskCloseIssue[];
+}
+
+export interface TaskCloseEvidenceWrite {
+  idempotencyKey: string;
+  duplicateFound: boolean;
+  duplicateAction: 'no-op' | 'append' | 'warning';
+  supersedes?: string[];
 }
 
 export interface TaskCloseLifecycleGuidance {
@@ -110,7 +118,8 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
 
   collectBlockingIssues(validation, evidenceLint, protocolDoctor, issues);
   const ok = !issues.some((issue) => issue.severity === 'error');
-  const nextActions = createNextActions(taskId, ok, mode);
+  const closeEvidenceWrite = createCloseEvidenceWritePlan(path.join(task.dir, 'evidence.jsonl'), taskId, sourceHash, validationReportHash, ok);
+  const nextActions = createNextActions(taskId, ok, mode, closeEvidenceWrite);
   return {
     schemaVersion: 'hadara.task.close.v1',
     command: 'task.close',
@@ -141,7 +150,7 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
       issueCount: protocolDoctor.issues.length
     },
     closeEvidence: {
-      planned: ok,
+      planned: ok && closeEvidenceWrite.duplicateAction !== 'no-op',
       appended: false,
       kind: 'command-log',
       result: ok ? 'passed' : 'blocked',
@@ -150,6 +159,7 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
       validationReportHash,
       sourceHash
     },
+    closeEvidenceWrite,
     lifecycle: createCloseLifecycleGuidance(taskId, mode),
     nextActions,
     ...(selectPrimaryNextAction(nextActions) ? { primaryNextAction: selectPrimaryNextAction(nextActions) } : {}),
@@ -170,9 +180,37 @@ function collectBlockingIssues(validation: HarnessValidateResult, evidenceLint: 
   }
 }
 
-function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode): TaskCloseNextAction[] {
+function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode, closeEvidenceWrite?: TaskCloseEvidenceWrite): TaskCloseNextAction[] {
   if (mode === 'execute') {
     if (ok) {
+      if (closeEvidenceWrite?.duplicateAction === 'no-op') {
+        return [
+          {
+            id: 'close-evidence-duplicate-noop',
+            kind: 'review',
+            required: false,
+            message: 'Matching close evidence already exists; no duplicate close evidence was appended.',
+            summary: 'Matching close evidence already exists; no duplicate close evidence was appended.',
+            writeBoundary: 'read-only',
+            recommendedActorRole: 'reviewer',
+            requiresBeforeHash: false,
+            stalePlanRisk: 'none',
+            loopBoundary: true
+          },
+          {
+            id: 'audit-close',
+            required: false,
+            command: `hadara task audit-close --task ${taskId} --json`,
+            message: 'Optionally audit the existing close record in a later read-only pass.',
+            summary: 'Optionally audit the existing close record in a later read-only pass.',
+            writeBoundary: 'read-only',
+            recommendedActorRole: 'reviewer',
+            requiresBeforeHash: false,
+            stalePlanRisk: 'none',
+            kind: 'command'
+          }
+        ];
+      }
       return [
         {
           id: 'close-evidence-appended',
@@ -238,17 +276,30 @@ function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode): Ta
     })
   ];
   if (ok) {
-    actions.push(createTaskLifecycleNextAction({
-      id: 'append-close-evidence',
-      required: true,
-      command: `hadara task close --task ${taskId} --execute --json`,
-      message: 'Append close audit evidence after reviewing this dry-run plan.',
-      writeBoundary: 'evidence-append',
-      recommendedActorRole: 'worker',
-      requiresBeforeHash: false,
-      stalePlanRisk: 'low',
-      loopBoundary: true
-    }));
+    if (closeEvidenceWrite?.duplicateAction === 'no-op') {
+      actions.push(createTaskLifecycleNextAction({
+        id: 'audit-close',
+        required: false,
+        command: `hadara task audit-close --task ${taskId} --json`,
+        message: 'Matching close evidence already exists; audit the existing close record.',
+        writeBoundary: 'read-only',
+        recommendedActorRole: 'reviewer',
+        requiresBeforeHash: false,
+        stalePlanRisk: 'none'
+      }));
+    } else {
+      actions.push(createTaskLifecycleNextAction({
+        id: 'append-close-evidence',
+        required: true,
+        command: `hadara task close --task ${taskId} --execute --json`,
+        message: 'Append close audit evidence after reviewing this dry-run plan.',
+        writeBoundary: 'evidence-append',
+        recommendedActorRole: 'worker',
+        requiresBeforeHash: false,
+        stalePlanRisk: 'low',
+        loopBoundary: true
+      }));
+    }
   } else {
     actions.push(createTaskLifecycleNextAction({
       id: 'resolve-close-blockers',
@@ -364,15 +415,22 @@ function hashCloseRelevantSource(projectRoot: string, taskDir: string): string {
 }
 
 export function executeTaskCloseEvidence(projectRoot: string, report: TaskCloseReport): void {
-  const markdownPath = appendEvidence(projectRoot, {
+  if (report.closeEvidenceWrite?.duplicateAction === 'no-op') {
+    report.closeEvidence.appended = false;
+    return;
+  }
+  const result = appendEvidenceWithResult(projectRoot, {
     taskId: report.taskId,
     kind: 'command-log',
     summary: report.closeEvidence.summary,
     result: report.closeEvidence.result,
-    visibility: 'public'
+    visibility: 'public',
+    tags: createCloseEvidenceTags(report),
+    idempotencyKey: report.closeEvidenceWrite?.idempotencyKey,
+    actor: report.actor
   });
   report.closeEvidence.appended = true;
-  report.closeEvidence.markdownPath = toPortablePath(path.relative(projectRoot, markdownPath));
+  report.closeEvidence.markdownPath = toPortablePath(path.relative(projectRoot, result.markdownPath));
   const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === report.taskId);
   if (task) {
     report.closeEvidence.evidencePath = toPortablePath(path.relative(projectRoot, path.join(task.dir, 'evidence.jsonl')));
@@ -395,15 +453,24 @@ export interface TaskAuditCloseReport {
   currentSourceHash: string;
   latestCloseEvidence?: {
     time: string;
+    id?: string;
     summary: string;
     result: string;
     validationReportHash?: string;
     sourceHash?: string;
   };
   auditVerdict: TaskAuditCloseVerdict;
+  closeEvidenceAudit?: TaskCloseEvidenceAudit;
   nextActions: TaskCloseNextAction[];
   primaryNextAction?: TaskCloseNextAction;
   issues: TaskCloseIssue[];
+}
+
+export interface TaskCloseEvidenceAudit {
+  latestCloseEvidenceId?: string;
+  supersededCloseEvidenceIds: string[];
+  duplicateCloseEvidenceCount: number;
+  verdict: 'valid' | 'not-closed' | 'duplicate-warning' | 'stale' | 'unknown';
 }
 
 export interface TaskAuditCloseVerdict {
@@ -434,6 +501,7 @@ export function createTaskAuditCloseReport(projectRoot: string, taskId: string):
   const closePlan = createTaskCloseReport(projectRoot, taskId, 'dry-run');
   const evidencePath = path.join(task.dir, 'evidence.jsonl');
   const records = readCloseEvidenceRecords(evidencePath);
+  const closeEvidenceAudit = createCloseEvidenceAudit(records, taskId);
   if (records.length === 0) {
     issues.push({
       severity: 'error',
@@ -442,7 +510,7 @@ export function createTaskAuditCloseReport(projectRoot: string, taskId: string):
       path: toPortablePath(path.relative(projectRoot, evidencePath))
     });
   }
-  const latest = records.at(-1);
+  const latest = closeEvidenceAudit.latestRecord;
   const latestHash = latest ? extractReportHash(latest.summary) : undefined;
   const latestSourceHash = latest ? extractSourceHash(latest.summary) : undefined;
   if (latest && latest.kind !== 'command-log') {
@@ -498,7 +566,8 @@ export function createTaskAuditCloseReport(projectRoot: string, taskId: string):
     closePlan.validation.validatedBeforeCloseEvidenceReportHash,
     closePlan.validation.validatedBeforeCloseEvidenceSourceHash,
     records,
-    issues
+    issues,
+    closeEvidenceAudit
   );
 }
 
@@ -545,11 +614,13 @@ function buildAuditReport(
   taskId: string,
   currentHash: string,
   currentSourceHash: string,
-  records: Array<{ time: string; kind: string; summary: string; result: string }>,
-  issues: TaskCloseIssue[]
+  records: CloseEvidenceRecord[],
+  issues: TaskCloseIssue[],
+  closeEvidenceAudit?: InternalCloseEvidenceAudit
 ): TaskAuditCloseReport {
-  const latest = records.at(-1);
+  const latest = closeEvidenceAudit?.latestRecord ?? records.at(-1);
   const nextActions = createAuditNextActions(taskId, latest === undefined);
+  const auditVerdict = createAuditVerdict(currentHash, currentSourceHash, latest, issues);
   return {
     schemaVersion: 'hadara.task.audit_close.v1',
     command: 'task.audit-close',
@@ -568,6 +639,7 @@ function buildAuditReport(
       ? {
           latestCloseEvidence: {
             time: latest.time,
+            ...(latest.id ? { id: latest.id } : {}),
             summary: latest.summary,
             result: latest.result,
             ...(extractReportHash(latest.summary) ? { validationReportHash: extractReportHash(latest.summary) } : {}),
@@ -575,7 +647,17 @@ function buildAuditReport(
           }
         }
       : {}),
-    auditVerdict: createAuditVerdict(currentHash, currentSourceHash, latest, issues),
+    auditVerdict,
+    ...(closeEvidenceAudit
+      ? {
+          closeEvidenceAudit: {
+            ...(closeEvidenceAudit.latestRecord?.id ? { latestCloseEvidenceId: closeEvidenceAudit.latestRecord.id } : {}),
+            supersededCloseEvidenceIds: closeEvidenceAudit.supersededCloseEvidenceIds,
+            duplicateCloseEvidenceCount: closeEvidenceAudit.duplicateCloseEvidenceCount,
+            verdict: createCloseEvidenceAuditVerdict(auditVerdict, closeEvidenceAudit.duplicateCloseEvidenceCount)
+          }
+        }
+      : {}),
     nextActions,
     ...(selectPrimaryNextAction(nextActions) ? { primaryNextAction: selectPrimaryNextAction(nextActions) } : {}),
     issues
@@ -601,7 +683,7 @@ function createAuditNextActions(taskId: string, closeMissing: boolean): TaskClos
 function createAuditVerdict(
   currentHash: string,
   currentSourceHash: string,
-  latest: { time: string; kind: string; summary: string; result: string } | undefined,
+  latest: CloseEvidenceRecord | undefined,
   issues: TaskCloseIssue[]
 ): TaskAuditCloseVerdict {
   const blockers = issues.filter((issue) => issue.severity === 'error').length;
@@ -635,7 +717,7 @@ function createAuditVerdict(
   };
 }
 
-function readCloseEvidenceRecords(evidencePath: string): Array<{ time: string; kind: string; summary: string; result: string }> {
+function readCloseEvidenceRecords(evidencePath: string): CloseEvidenceRecord[] {
   if (!fs.existsSync(evidencePath)) return [];
   return fs
     .readFileSync(evidencePath, 'utf8')
@@ -644,9 +726,20 @@ function readCloseEvidenceRecords(evidencePath: string): Array<{ time: string; k
     .filter(Boolean)
     .flatMap((line) => {
       try {
-        const record = JSON.parse(line) as { schemaVersion?: unknown; time?: unknown; kind?: unknown; summary?: unknown; result?: unknown; legacy?: { kind?: unknown; result?: unknown } };
+        const record = JSON.parse(line) as {
+          schemaVersion?: unknown;
+          id?: unknown;
+          time?: unknown;
+          kind?: unknown;
+          summary?: unknown;
+          result?: unknown;
+          tags?: unknown;
+          idempotencyKey?: unknown;
+          legacy?: { kind?: unknown; result?: unknown };
+        };
         const kind = record.schemaVersion === 'hadara.evidence.v2' ? record.legacy?.kind : record.kind;
         const result = record.schemaVersion === 'hadara.evidence.v2' ? record.legacy?.result : record.result;
+        const tags = Array.isArray(record.tags) ? record.tags.map(String) : [];
         if (
           typeof record.time === 'string' &&
           typeof kind === 'string' &&
@@ -654,13 +747,108 @@ function readCloseEvidenceRecords(evidencePath: string): Array<{ time: string; k
           typeof result === 'string' &&
           /Task close validation .* before close evidence append/.test(record.summary)
         ) {
-          return [{ time: record.time, kind, summary: record.summary, result }];
+          return [
+            {
+              ...(typeof record.id === 'string' ? { id: record.id } : {}),
+              time: record.time,
+              kind,
+              summary: record.summary,
+              result,
+              tags,
+              ...(typeof record.idempotencyKey === 'string' ? { idempotencyKey: record.idempotencyKey } : {})
+            }
+          ];
         }
       } catch {
         return [];
       }
       return [];
     });
+}
+
+interface CloseEvidenceRecord {
+  id?: string;
+  time: string;
+  kind: string;
+  summary: string;
+  result: string;
+  tags: string[];
+  idempotencyKey?: string;
+}
+
+interface InternalCloseEvidenceAudit {
+  latestRecord?: CloseEvidenceRecord;
+  supersededCloseEvidenceIds: string[];
+  duplicateCloseEvidenceCount: number;
+}
+
+function createCloseEvidenceWritePlan(evidencePath: string, taskId: string, sourceHash: string, reportHash: string, ok: boolean): TaskCloseEvidenceWrite {
+  const idempotencyKey = createCloseEvidenceIdempotencyKey(taskId, sourceHash, reportHash);
+  if (!ok) return { idempotencyKey, duplicateFound: false, duplicateAction: 'warning' };
+
+  const records = readCloseEvidenceRecords(evidencePath);
+  const duplicateFound = records.some((record) => closeEvidenceRecordKey(record, taskId) === idempotencyKey);
+  if (duplicateFound) return { idempotencyKey, duplicateFound: true, duplicateAction: 'no-op' };
+
+  const audit = createCloseEvidenceAudit(records, taskId);
+  const supersedes = audit.latestRecord?.id ? [audit.latestRecord.id] : [];
+  return {
+    idempotencyKey,
+    duplicateFound: false,
+    duplicateAction: 'append',
+    ...(supersedes.length > 0 ? { supersedes } : {})
+  };
+}
+
+function createCloseEvidenceIdempotencyKey(taskId: string, sourceHash: string, reportHash: string): string {
+  return `close:${taskId}:${sourceHash}:${reportHash}`;
+}
+
+function createCloseEvidenceTags(report: TaskCloseReport): string[] {
+  const tags = ['close-proof'];
+  if (report.closeEvidenceWrite?.idempotencyKey) tags.push(`idempotency:${report.closeEvidenceWrite.idempotencyKey}`);
+  for (const supersededId of report.closeEvidenceWrite?.supersedes ?? []) tags.push(`supersedes:${supersededId}`);
+  return tags;
+}
+
+function closeEvidenceRecordKey(record: CloseEvidenceRecord, taskId: string): string | undefined {
+  if (record.idempotencyKey) return record.idempotencyKey;
+  const idempotencyTag = record.tags.find((tag) => tag.startsWith('idempotency:close:'));
+  if (idempotencyTag) return idempotencyTag.replace(/^idempotency:/, '');
+  const sourceHash = extractSourceHash(record.summary);
+  const reportHash = extractReportHash(record.summary);
+  if (sourceHash && reportHash) return createCloseEvidenceIdempotencyKey(taskId, sourceHash, reportHash);
+  return undefined;
+}
+
+function createCloseEvidenceAudit(records: CloseEvidenceRecord[], taskId: string): InternalCloseEvidenceAudit {
+  const superseded = new Set<string>();
+  for (const record of records) {
+    for (const tag of record.tags) {
+      if (tag.startsWith('supersedes:')) superseded.add(tag.slice('supersedes:'.length));
+    }
+  }
+  const latestRecord = [...records].reverse().find((record) => !record.id || !superseded.has(record.id)) ?? records.at(-1);
+  const keyCounts = new Map<string, number>();
+  for (const record of records) {
+    const key = closeEvidenceRecordKey(record, taskId);
+    if (!key) continue;
+    keyCounts.set(key, (keyCounts.get(key) ?? 0) + 1);
+  }
+  const duplicateCloseEvidenceCount = Array.from(keyCounts.values()).reduce((total, count) => total + Math.max(0, count - 1), 0);
+  return {
+    latestRecord,
+    supersededCloseEvidenceIds: Array.from(superseded),
+    duplicateCloseEvidenceCount
+  };
+}
+
+function createCloseEvidenceAuditVerdict(auditVerdict: TaskAuditCloseVerdict, duplicateCloseEvidenceCount: number): TaskCloseEvidenceAudit['verdict'] {
+  if (!auditVerdict.closeEvidenceFound) return 'not-closed';
+  if (duplicateCloseEvidenceCount > 0) return 'duplicate-warning';
+  if (auditVerdict.verdict === 'closed-valid') return 'valid';
+  if (auditVerdict.verdict === 'closed-with-drift-warnings' || auditVerdict.verdict === 'close-evidence-invalid') return 'stale';
+  return 'unknown';
 }
 
 function extractReportHash(summary: string): string | undefined {

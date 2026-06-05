@@ -49,6 +49,17 @@
         "model": { "const": "validation-close-audit" }
       }
     },
+    "closeEvidenceAudit": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["supersededCloseEvidenceIds", "duplicateCloseEvidenceCount", "verdict"],
+      "properties": {
+        "latestCloseEvidenceId": { "type": "string" },
+        "supersededCloseEvidenceIds": { "type": "array", "items": { "type": "string" } },
+        "duplicateCloseEvidenceCount": { "type": "number" },
+        "verdict": { "enum": ["valid", "not-closed", "duplicate-warning", "stale", "unknown"] }
+      }
+    },
     "nextActions": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "primaryNextAction": { "type": "object", "additionalProperties": true },
     "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
