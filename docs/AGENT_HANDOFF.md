@@ -4,24 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0268 Release Candidate Freeze and Artifact Refresh is complete. |
-| Current Phase | Phase 6 / 6.1 release candidate evidence refresh complete | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0268 Release Candidate Freeze and Artifact Refresh | `hadara@0.2.0-rc.0` metadata, release docs, release artifact evidence, release dry-run, and publish dry-run are refreshed without publish/deploy mutation. |
-| Active / Next Task | T-0269 Approval-Gated npm Publish for 0.2.0-rc.0 | Release dry-run and publish dry-run rechecks passed without mutation; README publish-state docs were updated; `NPM_TOKEN` is missing and actual publish remains blocked. |
-| Validation Baseline | T-0268 RC readiness passed | Focused/full Docker validation passed; package smoke passed; clean-checkout smoke passed; current-HEAD release artifact passed; release dry-run ready with blockers 0; publish dry-run ok with token warnings only. |
+| Branch | main | T-0270 Repository Skeleton Cleanup is complete. |
+| Current Phase | Phase 6 / 6.1 release candidate evidence refresh and skeleton cleanup complete | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0270 Repository Skeleton Cleanup | Removed unused root bootstrap launchers while preserving Hermes/.hadara context files and npm package entrypoint metadata. |
+| Active / Next Task | T-0269 Approval-Gated npm Publish for 0.2.0-rc.0 | Release dry-run and publish dry-run rechecks passed without mutation; README publish-state docs were updated; actual publish verification remains separate and approval-gated. |
+| Validation Baseline | T-0270 focused cleanup checks passed | Reference search found only portable/historical launcher references outside T-0270 docs; `git diff --check` passed; package metadata still points `bin.hadara` at `./dist/cli/main.js`; `/tmp` cache `npm pack --dry-run --json` passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0270 Repository Skeleton Cleanup | Removed root `START.bat`, `start.sh`, `hadara`, and `hadara.cmd`; preserved `.hermes.md`, `HERMES.md`, `.hadara/context/HADARA_CONTEXT.md`, and examples; package publish surface remains `dist/`, `README.md`, `LICENSE`, and `package.json`. | T-0270 evidence: focused launcher reference search, `git diff --check`, package metadata check, `/tmp` cache `npm pack --dry-run --json`, and Hermes/.hadara inventory passed. |
 | T-0268 Release Candidate Freeze and Artifact Refresh | Package metadata and release docs now target `hadara@0.2.0-rc.0`; release metadata readiness is generalized for next RCs; package-smoke handles empty npm/installed CLI stdout capture; release evidence was refreshed without publish/deploy mutation. | T-0268 evidence: focused Docker tests passed package-smoke/release/operational-debt/release-publish coverage; package smoke, clean-checkout smoke, current-HEAD release artifact, release dry-run, and release publish dry-run passed. |
 | T-0267 Task Finish EOF Normalization | `task finish` generated text writes now normalize trailing whitespace/blank EOF to a single final newline through the shared dry-run/execute content path, preventing repeated `git diff --check` cleanup and close source-hash churn. | T-0267 evidence: focused Docker wrapper passed task-finish/schema tests; Docker sync-build passed 100 files / 673 tests; built task finish smoke returned finish `ok:true`, single newline EOF, and no trailing blank EOF. |
-| T-0266 Handoff Suggestion Fragment Polish | `handoff suggest` section fragments now include exact `targetBeforeHash`, `sectionTitle`, and `suggestedReplacementMarkdown`, preserve compatibility `suggestedMarkdown`, and keep read-only/execute-refusal behavior. | T-0266 evidence: focused Docker wrapper passed handoff-suggestion/schema tests; Docker sync-build passed 100 files / 673 tests; built CLI smokes verified precise fragments and `HANDOFF_SUGGEST_EXECUTE_UNSUPPORTED`. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
+| Root bootstrap launchers were removed in T-0270. | Local habits such as `./hadara`, `./start.sh`, or `START.bat` no longer work from the repo root. | Use `npm run dev -- ...`, `node dist/cli/main.js ...`, or the documented Docker workflow. Historical portable launcher specs remain separate from current root skeleton files. |
 | T-0255 close evidence is now stale after T-0256 Task Board changes. | `task audit-close --task T-0255 --json` remains `ok:true` but reports `closeEvidenceAudit.verdict: stale` because the close-relevant source hash includes `docs/TASK_BOARD.md` and T-0256 added a row. | This is expected changed-source behavior; use T-0256 supersedes metadata if re-closing T-0255 is ever required. |
 | Release publish remains approval-gated/manual. | T-0269 release dry-run and publish dry-run rechecks passed, but `NPM_TOKEN` is missing and README changes mean fresh package/release evidence is required before real publish. | Do not run publish/deploy execute, manual publish script, or `npm publish` unless the operator explicitly approves, tokens are configured outside the repo, and fresh post-README evidence is recorded. |
 | README asset package rendering needs a final choice. | README uses a GitHub raw URL for `docs/assets/hadara_sub_right_name.png`; `docs/assets/` is appropriate for repo docs, but the asset must be committed/pushed for npm README rendering, or the package whitelist must deliberately include it. | Before publishing, ensure the image URL resolves from the published README context or refresh package artifacts after including the asset. |
@@ -68,7 +69,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Resolve T-0269 publish blockers | T-0269 has updated README and rechecked dry-runs, but publish cannot proceed with missing token and stale package artifact evidence relative to README changes. | Commit README/asset changes, configure token outside the repo, regenerate package/release evidence, then request explicit publish approval. |
+| Resolve T-0269 publish verification | T-0270 cleanup is complete; T-0269 remains the approval-gated release/publish capsule and must not be conflated with skeleton cleanup. | Configure token outside the repo if needed, regenerate package/release evidence from the intended publish commit, verify registry state, then request explicit publish approval before any publish mutation. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
