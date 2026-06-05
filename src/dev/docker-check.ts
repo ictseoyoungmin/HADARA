@@ -48,7 +48,10 @@ export interface DevDockerCheckReport {
     conflictDetected: boolean;
     beforeHashAvailable: boolean;
     outputChanged: boolean;
-    requiresBeforeHash: false;
+    requiresBeforeHash: boolean;
+    reviewedBeforeHash?: string;
+    beforeHashMatched?: boolean;
+    allowMissingBeforeHash: boolean;
   };
   evidenceSummary: {
     summary: string;
@@ -84,6 +87,8 @@ export interface DevDockerCheckOptions {
   workspace?: string;
   tmpWorkdir?: string;
   actor?: HadaraActorContext;
+  distBeforeHash?: string;
+  allowMissingBeforeHash?: boolean;
 }
 
 export interface DevDockerCommandRunner {
@@ -107,6 +112,8 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
   const focusedTests = normalizeFocusedTests(options.focusedTests ?? []);
   const runFullCheck = options.fullCheck ?? focusedTests.length === 0;
   const syncDist = options.syncDist === true;
+  const reviewedBeforeHash = normalizeOptionalString(options.distBeforeHash);
+  const allowMissingBeforeHash = options.allowMissingBeforeHash === true;
   const mode: DevDockerCheckReport['mode'] = focusedTests.length > 0 && runFullCheck ? 'focused-and-full' : focusedTests.length > 0 ? 'focused' : 'full';
   const container = options.container ?? process.env.HADARA_DEV_CONTAINER ?? 'hadara-dev';
   const workspace = options.workspace ?? process.env.HADARA_WORKSPACE ?? '/workspace';
@@ -129,9 +136,10 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
   };
   const issues: DevDockerCheckIssue[] = [];
   const beforeHash = syncDist ? hashFile(path.join(projectRoot, 'dist', 'cli', 'main.js')) : undefined;
+  const syncGuard = evaluateDistSyncGuard(syncDist, beforeHash, reviewedBeforeHash, allowMissingBeforeHash, issues);
   const steps: DevDockerCheckStep[] = [];
 
-  const internalSteps = buildSteps(focusedTests, runFullCheck, syncDist);
+  const internalSteps = buildSteps(focusedTests, runFullCheck, syncDist, syncGuard.allowed);
   let blocked = false;
   for (const step of internalSteps) {
     if (!step.runWhen || blocked) {
@@ -163,13 +171,16 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
   const distSyncReport: DevDockerCheckReport['distSync'] = {
     requested: syncDist,
     executed: execution.distSyncExecuted,
-    conflictDetected: syncDist && execution.distSyncExecuted && beforeHash === undefined,
+    conflictDetected: syncDist && !syncGuard.allowed,
     beforeHashAvailable: beforeHash !== undefined,
     outputChanged: beforeHash !== afterHash,
-    requiresBeforeHash: false
+    requiresBeforeHash: syncDist,
+    allowMissingBeforeHash
   };
   if (beforeHash) distSyncReport.beforeHash = beforeHash;
   if (afterHash) distSyncReport.afterHash = afterHash;
+  if (reviewedBeforeHash) distSyncReport.reviewedBeforeHash = reviewedBeforeHash;
+  if (syncDist && reviewedBeforeHash) distSyncReport.beforeHashMatched = beforeHash === reviewedBeforeHash;
   return {
     schemaVersion: 'hadara.dev.docker_check.v1',
     command: 'dev.dockerCheck',
@@ -210,7 +221,7 @@ export function formatDevDockerCheckReport(report: DevDockerCheckReport): string
   return lines.join('\n');
 }
 
-function buildSteps(focusedTests: string[], runFullCheck: boolean, syncDist: boolean): InternalStep[] {
+function buildSteps(focusedTests: string[], runFullCheck: boolean, syncDistRequested: boolean, syncDistAllowed: boolean): InternalStep[] {
   return [
     {
       id: 'temp-workspace',
@@ -245,14 +256,14 @@ function buildSteps(focusedTests: string[], runFullCheck: boolean, syncDist: boo
       summary: 'Built dist in the Docker temp workspace for explicit sync.',
       script: 'cd "$HADARA_TMP_WORKDIR" && npm run build',
       mark: null,
-      runWhen: syncDist && !runFullCheck
+      runWhen: syncDistRequested && !runFullCheck
     },
     {
       id: 'dist-sync',
       summary: 'Copied Docker-built dist output back to the workspace after explicit --sync-dist.',
       script: 'mkdir -p "$HADARA_WORKSPACE/dist" && cp -R "$HADARA_TMP_WORKDIR/dist/." "$HADARA_WORKSPACE/dist/"',
       mark: 'distSyncExecuted',
-      runWhen: syncDist
+      runWhen: syncDistRequested && syncDistAllowed
     }
   ];
 }
@@ -298,6 +309,42 @@ function normalizeFocusedTests(values: string[]): string[] {
 function hashFile(filePath: string): string | undefined {
   if (!fs.existsSync(filePath)) return undefined;
   return `sha256:${crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex')}`;
+}
+
+function evaluateDistSyncGuard(syncDist: boolean, beforeHash: string | undefined, reviewedBeforeHash: string | undefined, allowMissingBeforeHash: boolean, issues: DevDockerCheckIssue[]): { allowed: boolean } {
+  if (!syncDist) return { allowed: false };
+  if (beforeHash === undefined) {
+    if (allowMissingBeforeHash && reviewedBeforeHash === undefined) return { allowed: true };
+    issues.push({
+      severity: 'error',
+      code: 'HADARA_DIST_SYNC_BEFORE_HASH_REQUIRED',
+      message: 'dev docker-check --sync-dist requires --allow-missing-before-hash without --before-hash when workspace dist has no pre-sync hash.'
+    });
+    return { allowed: false };
+  }
+  if (!reviewedBeforeHash) {
+    issues.push({
+      severity: 'error',
+      code: 'HADARA_DIST_SYNC_BEFORE_HASH_REQUIRED',
+      message: `dev docker-check --sync-dist requires --before-hash ${beforeHash} before copying Docker-built dist to the workspace.`
+    });
+    return { allowed: false };
+  }
+  if (reviewedBeforeHash !== beforeHash) {
+    issues.push({
+      severity: 'error',
+      code: 'HADARA_DIST_SYNC_BEFORE_HASH_MISMATCH',
+      message: 'Workspace dist changed since the reviewed before-hash; rerun dev docker-check and review the current dist hash before syncing.'
+    });
+    return { allowed: false };
+  }
+  return { allowed: true };
+}
+
+function normalizeOptionalString(value: string | null | undefined): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
 }
 
 function hashSourceHints(projectRoot: string): string | undefined {

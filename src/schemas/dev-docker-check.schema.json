@@ -86,7 +86,10 @@
         "conflictDetected": { "type": "boolean" },
         "beforeHashAvailable": { "type": "boolean" },
         "outputChanged": { "type": "boolean" },
-        "requiresBeforeHash": { "const": false }
+        "requiresBeforeHash": { "type": "boolean" },
+        "reviewedBeforeHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "beforeHashMatched": { "type": "boolean" },
+        "allowMissingBeforeHash": { "type": "boolean" }
       }
     },
     "evidenceSummary": {

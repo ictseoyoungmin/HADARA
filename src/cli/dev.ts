@@ -1,6 +1,6 @@
 import { createDevDockerCheckReport, formatDevDockerCheckReport } from '../dev/docker-check';
 import { getActorContextOption } from './actor';
-import { getFlag } from './args';
+import { getFlag, getStringOption } from './args';
 
 export interface DevCommandInput {
   args: string[];
@@ -15,7 +15,9 @@ export function handleDevCommand(input: DevCommandInput): boolean {
     focusedTests: getFocusedTests(input.args),
     syncDist: getFlag(input.args, '--sync-dist'),
     fullCheck: getFlag(input.args, '--full'),
-    actor: getActorContextOption(input.args)
+    actor: getActorContextOption(input.args),
+    distBeforeHash: getStringOption(input.args, '--before-hash'),
+    allowMissingBeforeHash: getFlag(input.args, '--allow-missing-before-hash')
   });
   if (input.jsonOutput) {
     console.log(JSON.stringify(report, null, 2));

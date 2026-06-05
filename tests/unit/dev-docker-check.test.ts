@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -25,10 +26,12 @@ describe('dev docker-check report', () => {
   it('runs focused Docker validation with explicit dist sync and redacted output', () => {
     const root = tempProject();
     const runner = fakeRunner(root);
+    const beforeHash = hashDist(root);
 
     const report = createDevDockerCheckReport(root, {
       focusedTests: ['tests/unit/schema-runtime.test.ts', 'tests/unit/dev-docker-check.test.ts'],
       syncDist: true,
+      distBeforeHash: beforeHash,
       workspace: '/workspace',
       tmpWorkdir: '/tmp/hadara-dev-check-test'
     }, runner);
@@ -61,7 +64,10 @@ describe('dev docker-check report', () => {
     expect(report.distSync?.conflictDetected).toBe(false);
     expect(report.distSync?.beforeHashAvailable).toBe(true);
     expect(report.distSync?.outputChanged).toBe(true);
-    expect(report.distSync?.requiresBeforeHash).toBe(false);
+    expect(report.distSync?.requiresBeforeHash).toBe(true);
+    expect(report.distSync?.reviewedBeforeHash).toBe(beforeHash);
+    expect(report.distSync?.beforeHashMatched).toBe(true);
+    expect(report.distSync?.allowMissingBeforeHash).toBe(false);
     expect(report.distSync?.beforeHash).not.toBe(report.distSync?.afterHash);
     expect(report.evidenceSummary.suggestedEvidenceCommand).toContain('hadara evidence add-command');
     expect(JSON.stringify(report)).not.toContain(root);
@@ -92,17 +98,71 @@ describe('dev docker-check report', () => {
     expect(report.execution.focusedTestsExecuted).toBe(false);
     expect(report.execution.distSyncExecuted).toBe(false);
     expect(report.execution.outputMutation).toBe(false);
-    expect(report.distSync).toMatchObject({ requested: false, executed: false, conflictDetected: false, beforeHashAvailable: false, outputChanged: false, requiresBeforeHash: false });
+    expect(report.distSync).toMatchObject({ requested: false, executed: false, conflictDetected: false, beforeHashAvailable: false, outputChanged: false, requiresBeforeHash: false, allowMissingBeforeHash: false });
     expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
   });
 
-  it('flags dist sync conflict metadata when no workspace dist hash existed before sync', () => {
+  it('blocks dist sync when no reviewed before-hash is supplied', () => {
+    const root = tempProject();
+
+    const report = createDevDockerCheckReport(root, {
+      focusedTests: ['tests/unit/dev-docker-check.test.ts'],
+      syncDist: true,
+      workspace: '/workspace',
+      tmpWorkdir: '/tmp/hadara-dev-check-test'
+    }, fakeRunner(root));
+
+    expect(report.ok).toBe(false);
+    expect(report.execution.outputMutation).toBe(false);
+    expect(report.execution.distSyncExecuted).toBe(false);
+    expect(report.distSync).toMatchObject({
+      requested: true,
+      executed: false,
+      conflictDetected: true,
+      beforeHashAvailable: true,
+      outputChanged: false,
+      requiresBeforeHash: true,
+      allowMissingBeforeHash: false
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'HADARA_DIST_SYNC_BEFORE_HASH_REQUIRED' }));
+    expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
+  });
+
+  it('blocks dist sync when the reviewed before-hash is stale', () => {
+    const root = tempProject();
+
+    const report = createDevDockerCheckReport(root, {
+      focusedTests: ['tests/unit/dev-docker-check.test.ts'],
+      syncDist: true,
+      distBeforeHash: 'sha256:0000000000000000000000000000000000000000000000000000000000000000',
+      workspace: '/workspace',
+      tmpWorkdir: '/tmp/hadara-dev-check-test'
+    }, fakeRunner(root));
+
+    expect(report.ok).toBe(false);
+    expect(report.execution.outputMutation).toBe(false);
+    expect(report.distSync).toMatchObject({
+      requested: true,
+      executed: false,
+      conflictDetected: true,
+      beforeHashAvailable: true,
+      outputChanged: false,
+      requiresBeforeHash: true,
+      beforeHashMatched: false,
+      allowMissingBeforeHash: false
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'HADARA_DIST_SYNC_BEFORE_HASH_MISMATCH' }));
+    expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
+  });
+
+  it('allows first-time dist sync only with an explicit missing-before-hash escape hatch', () => {
     const root = tempProject();
     fs.rmSync(path.join(root, 'dist'), { recursive: true, force: true });
 
     const report = createDevDockerCheckReport(root, {
       focusedTests: ['tests/unit/dev-docker-check.test.ts'],
       syncDist: true,
+      allowMissingBeforeHash: true,
       workspace: '/workspace',
       tmpWorkdir: '/tmp/hadara-dev-check-test'
     }, fakeRunner(root));
@@ -112,10 +172,11 @@ describe('dev docker-check report', () => {
     expect(report.distSync).toMatchObject({
       requested: true,
       executed: true,
-      conflictDetected: true,
+      conflictDetected: false,
       beforeHashAvailable: false,
       outputChanged: true,
-      requiresBeforeHash: false
+      requiresBeforeHash: true,
+      allowMissingBeforeHash: true
     });
     expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
   });
@@ -158,4 +219,9 @@ function classifyScript(script: string): string {
   if (script.includes('npm run build')) return 'dist-build';
   if (script.includes('cp -R')) return 'dist-sync';
   return 'unknown';
+}
+
+function hashDist(root: string): string {
+  const content = fs.readFileSync(path.join(root, 'dist', 'cli', 'main.js'), 'utf8');
+  return `sha256:${crypto.createHash('sha256').update(content, 'utf8').digest('hex')}`;
 }
