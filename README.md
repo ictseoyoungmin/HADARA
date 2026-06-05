@@ -1,58 +1,140 @@
 # HADARA
 
-**HADARA** is a portable agentic development workbench.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ictseoyoungmin/HADARA-dev/main/docs/assets/hadara_sub_right_name.png" alt="HADARA" width="720">
+</p>
+
+**HADARA** is a portable agentic development workbench for keeping long-running AI-assisted software work inspectable, resumable, and evidence-backed.
 
 > Unbroken Context, Verified Development.
 
 HADARA is named from **Harness + Dara**. A harness safely binds and controls complex systems; Dara carries layered associations of holding, wisdom, durability, and continuity. HADARA binds non-deterministic LLM agent work into a production-oriented workflow through Task Capsules, Session Continuity, Policy Layers, Evidence Logs, and Handoff Protocols.
 
-This repository is both the source checkout for HADARA and the protocol workspace used to build it. The first npm release candidate, `hadara@0.1.0-rc.0`, is published for early CLI evaluation. The source checkout is currently frozen for the next release-candidate evidence refresh at `hadara@0.2.0-rc.0`.
+This repository is both the HADARA source checkout and the HADARA protocol workspace used to build it.
 
-## Quick Start
+## Release Status
 
-### Install the RC Package
+The current source checkout targets:
+
+```text
+hadara@0.2.0-rc.0
+```
+
+T-0268 refreshed package smoke, clean-checkout smoke, release artifact, release dry-run, and publish dry-run evidence for `0.2.0-rc.0`. T-0269 is the approval-gated publish capsule for this RC.
+
+Current publish boundaries:
+
+| Surface | Status |
+|---|---|
+| npm package | Primary release target. |
+| `hadara@0.1.0-rc.0` | Published first RC. |
+| `hadara@0.2.0-rc.0` | Current source and publish-candidate version. |
+| GitHub Release | Secondary target, still approval-gated. |
+| Docker image | Deferred. |
+| PyPI/Python package | Advisory preview only. |
+| Installer scripts / USB launchers | Deferred. |
+
+No release command should publish, create a GitHub Release, build Docker images, upload artifacts, or load token values unless an operator explicitly approves the mutation path for the active release capsule.
+
+## Install
 
 Requires Node.js 22.
 
+After `0.2.0-rc.0` is published:
+
 ```bash
-npm install -g hadara@0.1.0-rc.0
+npm install -g hadara@0.2.0-rc.0
 hadara doctor --json
 hadara task list --json
 hadara tools list --json
 ```
 
-You can also run the package without a global install:
+Run without a global install:
 
 ```bash
+npx hadara@0.2.0-rc.0 doctor --json
+npx hadara@0.2.0-rc.0 tools list --json
+```
+
+Until `0.2.0-rc.0` is visible on npm, use the currently published RC:
+
+```bash
+npm install -g hadara@0.1.0-rc.0
 npx hadara@0.1.0-rc.0 doctor --json
 ```
 
-The published RC package includes the built CLI, README, license, and package metadata. The next RC target is `0.2.0-rc.0`; release evidence for it is dry-run/readiness only until an explicit publish capsule approves mutation. GitHub Release archives, installer scripts, USB portable launchers, Docker images, and installed-CLI matrix evidence are still deferred.
+## What HADARA Gives You
 
-### Develop from Source
+| Capability | Purpose |
+|---|---|
+| Task Capsules | Keep each unit of work scoped, evidenced, and resumable. |
+| Evidence Logs | Record public, reduced proof of validation without raw private logs. |
+| Handoff Protocol | Preserve current state for the next operator or agent. |
+| Policy Surfaces | Inspect command risk and release boundaries before mutation. |
+| CLI JSON Reports | Give agents and automation stable read models. |
+| Read-only MCP Bridge | Expose project/task/evidence state without default write tools. |
+| Dashboard and TUI | Provide local operator observation surfaces over existing read models. |
+| Release Gates | Check release readiness through evidence-backed dry-run reports. |
+
+HADARA is deliberately conservative. Read surfaces are broad; write and release surfaces are narrow, explicit, and evidence-oriented.
+
+## Common Commands
+
+Project and protocol health:
 
 ```bash
-npm install
-npm run dev -- doctor
-npm run dev -- task create "implement ProviderClient contract"
-npm run dev -- task list
-npm run check
+hadara doctor --json
+hadara status --json
+hadara ops status --json
+hadara tools list --json
+hadara protocol doctor --json
+hadara protocol doctor --scope docs --json
 ```
 
-Build and run the compiled source checkout CLI:
+Task workflow:
 
 ```bash
-npm run build
-node dist/cli/main.js doctor --json
+hadara task next --json
+hadara task create "implement a focused change" --json
+hadara task status --task T-0001 --json
+hadara task ready --task T-0001 --level done --json
+hadara task finish --task T-0001 --json
+hadara task finish --task T-0001 --execute --json
+hadara task close --task T-0001 --json
+hadara task close --task T-0001 --execute --json
+hadara task audit-close --task T-0001 --json
 ```
 
-### Complete a Task Capsule
+Evidence and handoff:
+
+```bash
+hadara evidence collect --task T-0001 --json
+hadara evidence add-command --task T-0001 --summary "Focused validation passed." --result passed --json
+hadara evidence list --task T-0001 --json
+hadara handoff suggest --task T-0001 --json
+```
+
+Release and package readiness:
+
+```bash
+hadara package smoke --dry-run --json
+hadara package smoke --execute --attach-evidence --task T-0001 --json
+hadara smoke clean-checkout --execute --attach-evidence --task T-0001 --json
+hadara release gate --mode strict --json
+hadara release dry-run --json
+hadara release publish --mode dry-run --json
+```
+
+`release publish --mode dry-run` reports readiness, token presence by name, approval requirements, and mutation privacy flags. The current CLI publish report does not run `npm publish`; actual npm publishing remains a separate approval-gated manual release path.
+
+## Task Capsule Lifecycle
 
 HADARA task workflow commands have distinct read/write boundaries. The full command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`.
 
 ```bash
 hadara task next --json
 hadara task status --task T-XXXX --json
+hadara task complete --task T-XXXX --json
 
 # work...
 
@@ -68,13 +150,22 @@ hadara task close --task T-XXXX --execute --json
 hadara task audit-close --task T-XXXX --json
 ```
 
-`task status` is a read-only operator console; its `ok` field means the report was generated, not that the task is ready. `task finish --execute` is bounded to `TASK.md` and `docs/TASK_BOARD.md`. `task close --execute` appends close evidence only.
+Important distinctions:
 
-### Initialize a Project
+| Command | Boundary |
+|---|---|
+| `task status` | Read-only operator console. `ok:true` means the report was generated, not that the task is ready. |
+| `task complete` | Read-only workflow compressor. It reports the current stage and next action. |
+| `task finish --execute` | Writes only bounded status bookkeeping in `TASK.md` and `docs/TASK_BOARD.md`. |
+| `task close --execute` | Appends close evidence only. |
+| `task audit-close` | Read-only close proof audit. |
+
+## Initialize a Project
 
 ```bash
-hadara init                  # default: standard
-hadara init --profile basic  # smallest scaffold
+hadara init
+hadara init --profile basic
+hadara init --profile standard
 hadara init --profile governed
 ```
 
@@ -93,96 +184,56 @@ hadara init register-doc --path docs/specs/LOCAL.md --when "Local work" --purpos
 hadara init enable-integration --integration mcp --json
 ```
 
-`register-doc` can use `--require-exists` when missing referenced docs should be treated as an error. `enable-integration` registers project guidance docs only; it does not enable Hermes/MCP runtime behavior or change capability gates.
-`upgrade` creates missing scaffold docs and updates known generated profile metadata; it does not rewrite unrelated user-authored content.
+`register-doc` can use `--require-exists` when missing referenced docs should be treated as an error. `enable-integration` registers project guidance docs only; it does not enable Hermes/MCP runtime behavior or change capability gates. `upgrade` creates missing scaffold docs and updates known generated profile metadata; it does not rewrite unrelated user-authored content.
 
-## Current CLI Surfaces
+## Develop from Source
 
-Common read and protocol commands:
-
-```bash
-hadara init
-hadara init doctor --json
-hadara protocol doctor --json
-hadara protocol doctor --task T-0001 --json
-hadara protocol doctor --scope docs --json
-hadara protocol doctor --scope profile --json
-hadara protocol doctor --scope all --json
-hadara protocol remediate --fix task-board-row --task T-0001 --json
-hadara doctor
-hadara task create "..."
-hadara task next --json
-hadara task status --task T-0001 --json
-hadara task ready --task T-0001 --level done --json
-hadara task finish --task T-0001 --json
-hadara task finish --task T-0001 --execute --json
-hadara task close --task T-0001 --json
-hadara task close --task T-0001 --execute --json
-hadara task audit-close --task T-0001 --json
-hadara task list
-hadara task show T-0001
-hadara task upgrade-scaffold --task T-0001 --json
-hadara evidence collect --task T-0001
-hadara handoff update --task T-0001
-```
-
-`protocol doctor` is read-only and diagnostic-first. `ok: true` means there are no blocking errors; warning issues may still report consistency drift, and profile-scope reports can include optional manual `remediations` guidance. Profile reports expose `summary.profile.declared`, `summary.profile.detected`, and `summary.profile.target`: declared comes from project metadata, detected comes from the committed protocol document set, and target is the higher intended profile from metadata plus doc-set evidence. `protocol remediate` is dry-run-first; use `--json` to review the plan and add `--execute` only after intentionally accepting one of the bounded fixes: `task-board-row`, `decisions-table-frame`, `project-state-profile`, or `evidence-jsonl`. `task upgrade-scaffold` is also dry-run-first and only inserts missing Task Capsule v2 frames or creates missing standard capsule files when `--execute` is explicitly supplied.
-
-Read-only operations and validation surfaces:
+Use Node.js 22.
 
 ```bash
-hadara status --json
-hadara ops status --json
-hadara tools list --json
-hadara release gate --mode advisory --json
-hadara smoke run --profile core --json
-hadara tui --snapshot
+npm install
+npm run build
+node dist/cli/main.js doctor --json
+npm run check
 ```
 
-Release, package, and install planning surfaces are intentionally explicit:
+For HADARA-dev itself, Docker is the preferred validation path because host `node_modules` on mounted workspaces can be unreliable:
 
 ```bash
-hadara package smoke --dry-run --json
-hadara install plan --platform linux --json
-hadara release dry-run --json
-hadara release publish --mode dry-run --json
+npm run dev:docker-check
+npm run dev:docker-sync-build
 ```
 
-These planning commands are reduced/reporting surfaces unless their help or current Task Capsule explicitly says otherwise.
-
-## Optional / Deferred Integrations
-
-Hermes and MCP surfaces exist for compatibility experiments and read-only bridge work. They are not generated by `hadara init` and are not part of the default scaffold. Use them only when a project explicitly opts into that integration guidance. The init enable command creates and registers project docs; it does not turn runtime behavior on or off.
+Focused validation:
 
 ```bash
-hadara init enable-integration --integration hermes --execute --json
-hadara init enable-integration --integration mcp --execute --json
-hadara hermes detect
-hadara hermes export-context
-hadara mcp serve
+npm run test:focused -- tests/unit/release-dry-run.test.ts
 ```
 
-The default MCP server remains read-only; evidence attach is opt-in and approval-recorded.
+## Release Discipline
 
-## Development Protocol
+HADARA release work is evidence-first.
 
-HADARA development must dogfood the HADARA workflow:
+Before any npm publish:
 
-1. Read `docs/PROJECT_STATE.md`
-2. Read `docs/AGENT_HANDOFF.md`
-3. Read `docs/TASK_BOARD.md`
-4. Work inside a Task Capsule
-5. Follow `docs/TASK_WORKFLOW_COMMANDS.md` for evidence, ready, finish, close, and audit commands
-6. Attach evidence before marking work complete
-7. Update handoff before stopping
+1. Confirm the git worktree is clean.
+2. Run `hadara release dry-run --json`.
+3. Run `hadara release publish --mode dry-run --json`.
+4. Confirm `NPM_TOKEN` presence without printing the token value.
+5. Confirm the exact package version is not already on npm.
+6. Generate fresh package, clean-checkout, and release-artifact evidence for the active release capsule.
+7. Publish only after explicit operator approval.
+8. Verify with `npm view hadara@<version> version`.
+9. Attach reduced publish evidence.
+10. Update release notes, Project State, Agent Handoff, and the active Task Capsule.
+
+Never write token values, private logs, raw npm output, private paths, or local machine state into committed evidence.
 
 ## Store Separation
 
-HADARA separates **portable runtime state** from **project-owned development state**.
+HADARA separates portable runtime state from project-owned development state.
 
-### Portable / USB Store
-
-Located under the HADARA installation root:
+Portable/local runtime state:
 
 ```text
 data/
@@ -195,11 +246,7 @@ data/
   exports/
 ```
 
-This is **not committed**. It is local, portable, and may live on a USB drive.
-
-### Project Repo Store
-
-Located inside each project repository:
+Project-owned reproducible state:
 
 ```text
 docs/
@@ -208,30 +255,34 @@ tasks/
 AGENTS.md
 ```
 
-This is committed when it represents reproducible project state, conventions, or agent context.
+Portable/local state is not committed. Project docs, Task Capsules, and reduced public evidence are committed when they represent reproducible context.
 
-## Initial CLI Commands
+## Optional Integrations
 
-```bash
-hadara init
-hadara doctor
-hadara task create "..."
-hadara task list
-hadara task show T-0001
-hadara evidence collect --task T-0001
-hadara handoff update --task T-0001
-```
-
-Current CLI execution is still deliberately bounded. Real provider execution, shell execution through agents, broad write-capable MCP tools, GitHub Release automation, installer scripts, USB portable launchers, Docker image publishing, and live dashboard streaming are deferred to later Task Capsules.
-
-## Test Suites
+Hermes and MCP surfaces exist for compatibility experiments and read-only bridge work. They are not generated by `hadara init` and are not part of the default scaffold. Use them only when a project explicitly opts into integration guidance.
 
 ```bash
-npm run test:unit
-npm run test:contract
-npm run test:harness
-npm run check
+hadara init enable-integration --integration hermes --execute --json
+hadara init enable-integration --integration mcp --execute --json
+hadara hermes detect --json
+hadara hermes export-context --json
+hadara mcp serve
 ```
+
+The default MCP server remains read-only. Evidence attach is opt-in, approval-recorded, and audited.
+
+## Deferred
+
+These are intentionally not part of the current default runtime:
+
+- Full multi-agent scheduler/controller.
+- Broad MCP write tools.
+- Shell execution through agents.
+- Real provider execution as the default path.
+- GitHub Release automation as a default path.
+- Docker image publishing.
+- Installer scripts and USB portable launchers.
+- Live dashboard streaming.
 
 ## License
 

@@ -1,0 +1,12 @@
+# Evidence
+
+| Time | Kind | Summary | Result | Visibility | JSONL |
+|---|---|---|---|---|---|
+| 2026-06-05T15:03:36.434Z | command-log | Pre-capsule git status check returned a clean worktree before creating T-0269; no publish or registry mutation was attempted. | passed | public | evidence.jsonl |
+| 2026-06-05T15:03:47.787Z | command-log | Release dry-run recheck passed for hadara@0.2.0-rc.0 at commit 707fe60d327792b8340d2ad96d7eeaf63bf5ae59: readiness ready, blockers 0, warnings 0, no publish/GitHub/Docker mutation. | passed | public | evidence.jsonl |
+| 2026-06-05T15:03:59.221Z | command-log | Release publish dry-run recheck passed for hadara@0.2.0-rc.0 with approval actor/reason recorded; NPM_TOKEN and GitHub Release token were absent as warnings; all release targets willExecute false and mutation flags false. | passed | public | evidence.jsonl |
+| 2026-06-05T15:04:11.217Z | command-log | Token condition check reported NPM_TOKEN missing and GitHub Release token missing without printing token values; publish execute remains blocked. | passed | public | evidence.jsonl |
+| 2026-06-05T15:04:28.076Z | command-log | README was rewritten for the 0.2.0-rc.0 publish candidate with top HADARA image, install/npx examples, release discipline, task lifecycle, and current deferred boundaries; actual publish requires fresh evidence after README/asset changes are committed. | passed | public | evidence.jsonl |
+| 2026-06-05T15:05:59.035Z | command-log | Release notes, release readiness, Project State, Agent Handoff, Development Slices, and T-0269 capsule docs were updated to reflect pre-publish readiness, missing NPM_TOKEN, README asset/package boundary, and no publish execution. | passed | public | evidence.jsonl |
+| 2026-06-05T15:07:02.668Z | command-log | Post-edit validation passed: git diff --check returned no whitespace errors, evidence lint reported 6 records with 0 issues, and task status generated successfully with expected Draft blockers because publish remains incomplete. | passed | public | evidence.jsonl |
+| 2026-06-05T15:17:26.217Z | command-log | Hardened scripts/release/manual-publish-rc.sh for T-0269: explicit task id required, clean worktree preflight, approval metadata on publish dry-run gate, post-publish npm view verification, and publish evidence attach; bash -n and git diff --check passed. | passed | public | evidence.jsonl |

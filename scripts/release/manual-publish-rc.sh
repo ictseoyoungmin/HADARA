@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TASK_ID="T-0143"
+TASK_ID=""
 MODE="dry-run"
 CREATE_GITHUB_DRAFT="false"
 REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org}"
@@ -9,11 +9,13 @@ PACKAGE_NAME="hadara"
 DIST_DIR="dist-release"
 GITHUB_RELEASE_NOTE=""
 GITHUB_TOKEN_ENV=""
+APPROVAL_ACTOR="${HADARA_RELEASE_APPROVAL_ACTOR:-local-operator}"
+APPROVAL_REASON="${HADARA_RELEASE_APPROVAL_REASON:-Manual approval-gated npm publish for current RC}"
 
 usage() {
 cat <<'EOF'
 Usage:
-scripts/release/manual-publish-rc.sh [TASK_ID] [options]
+scripts/release/manual-publish-rc.sh TASK_ID [options]
 
 Options:
 --execute          Allow actual npm publish after interactive confirmation.
@@ -22,6 +24,10 @@ Options:
                    Markdown file to use as the GitHub Release draft notes.
 --github-token-env <name>
                    Environment variable name containing a GitHub token for gh auth.
+--approval-actor <name>
+                   Approval actor recorded in HADARA publish dry-run gates.
+--approval-reason <text>
+                   Approval reason recorded in HADARA publish dry-run gates.
 --registry <url>  npm registry URL. Default: https://registry.npmjs.org
 --dist-dir <dir>  Release artifact output directory. Default: dist-release
 --package <name>  npm package name. Default: hadara
@@ -41,16 +47,16 @@ gh auth login
 
 # Safe default: validation + artifact + npm publish dry-run only.
 
-scripts/release/manual-publish-rc.sh T-0143
+scripts/release/manual-publish-rc.sh T-0269
 
 # Actual npm publish after typing "publish".
 
-scripts/release/manual-publish-rc.sh T-0143 --execute
+scripts/release/manual-publish-rc.sh T-0269 --execute
 
 # Actual npm publish, then GitHub Release draft after typing "github-draft".
 
-scripts/release/manual-publish-rc.sh T-0143 --execute --github-draft \
-  --github-release-note tasks/T-0143-manual-rc-publish-dry-run/GITHUB_RELEASE_NOTE.md
+scripts/release/manual-publish-rc.sh T-0269 --execute --github-draft \
+  --github-release-note tasks/T-0269-approval-gated-npm-publish-for-0-2-0-rc-0/GITHUB_RELEASE_NOTE.md
 EOF
 }
 
@@ -79,6 +85,16 @@ GITHUB_TOKEN_ENV="${2:-}"
 [[ -n "${GITHUB_TOKEN_ENV}" ]] || { echo "--github-token-env requires a value"; exit 1; }
 shift 2
 ;;
+--approval-actor)
+APPROVAL_ACTOR="${2:-}"
+[[ -n "${APPROVAL_ACTOR}" ]] || { echo "--approval-actor requires a value"; exit 1; }
+shift 2
+;;
+--approval-reason)
+APPROVAL_REASON="${2:-}"
+[[ -n "${APPROVAL_REASON}" ]] || { echo "--approval-reason requires a value"; exit 1; }
+shift 2
+;;
 --registry)
 REGISTRY="${2:-}"
 [[ -n "${REGISTRY}" ]] || { echo "--registry requires a value"; exit 1; }
@@ -105,6 +121,12 @@ exit 1
 ;;
 esac
 done
+
+if [[ -z "${TASK_ID}" ]]; then
+echo "TASK_ID is required."
+usage
+exit 1
+fi
 
 require_cmd() {
 command -v "$1" >/dev/null 2>&1 || {
@@ -188,6 +210,8 @@ echo "GitHub token env: ${GITHUB_TOKEN_ENV:-<gh existing auth or GH_TOKEN>}"
 echo "Registry: ${REGISTRY}"
 echo "Package: ${PACKAGE_NAME}"
 echo "Dist dir: ${DIST_DIR}"
+echo "Approval actor: ${APPROVAL_ACTOR}"
+echo "Approval reason: ${APPROVAL_REASON}"
 echo
 
 echo "== 0. Preflight =="
@@ -205,6 +229,13 @@ fi
 fi
 
 echo "HADARA command: ${HADARA_CMD[*]}"
+
+GIT_STATUS="$(git status --porcelain)"
+if [[ -n "${GIT_STATUS}" ]]; then
+echo "Git worktree must be clean before manual publish."
+echo "${GIT_STATUS}"
+exit 1
+fi
 
 npm whoami --registry="${REGISTRY}" >/dev/null
 echo "npm user: $(npm whoami --registry="${REGISTRY}")"
@@ -268,7 +299,10 @@ echo
 echo "== 4. Final HADARA gates =="
 run_hadara release gate --mode strict --json
 run_hadara release dry-run --json
-run_hadara release publish --mode dry-run --json
+run_hadara release publish --mode dry-run \
+  --approval-actor "${APPROVAL_ACTOR}" \
+  --approval-reason "${APPROVAL_REASON}" \
+  --json
 
 echo
 echo "== 5. User-only pre-publish checks =="
@@ -331,6 +365,21 @@ npm publish "${NPM_TARBALL}" --registry="${REGISTRY}"
 
 echo
 echo "npm publish completed."
+
+PUBLISHED_VERSION="$(npm view "${PACKAGE_NAME}@${VERSION}" version --registry="${REGISTRY}")"
+if [[ "${PUBLISHED_VERSION}" != "${VERSION}" ]]; then
+echo "npm view verification failed after publish."
+echo "Expected: ${VERSION}"
+echo "Actual: ${PUBLISHED_VERSION}"
+exit 1
+fi
+
+echo "npm view verified: ${PACKAGE_NAME}@${PUBLISHED_VERSION}"
+run_hadara evidence add-command \
+  --task "${TASK_ID}" \
+  --summary "Published ${PACKAGE_NAME}@${VERSION} to npm and verified npm view returned ${PUBLISHED_VERSION}; GitHub Release draft requested: ${CREATE_GITHUB_DRAFT}." \
+  --result passed \
+  --json
 
 if [[ "${CREATE_GITHUB_DRAFT}" != "true" ]]; then
 echo
@@ -407,3 +456,8 @@ gh release create "${TAG}" \
 echo
 echo "GitHub Release draft created."
 echo "Review it in GitHub UI, then publish the draft manually if everything is correct."
+run_hadara evidence add-command \
+  --task "${TASK_ID}" \
+  --summary "Created GitHub Release draft ${TAG} with tarball, checksum, and manifest assets after npm publish." \
+  --result passed \
+  --json

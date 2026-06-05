@@ -12,6 +12,8 @@ Current release-candidate metadata mode:
 - npm registry observation: `hadara@0.1.0-rc.0` is published; recheck registry state immediately before any later publish.
 - Current version is `0.2.0-rc.0`.
 - Previous published release candidate is `0.1.0-rc.0`.
+- T-0269 pre-publish dry-run recheck passed for `0.2.0-rc.0`, but `NPM_TOKEN` was missing and no publish mutation was executed.
+- README now includes a top image from `docs/assets/hadara_sub_right_name.png`; because package `files` currently excludes `docs/assets/`, publish readiness requires either a committed/pushed GitHub raw image URL or a deliberate package whitelist change with refreshed release artifact evidence.
 - Current package is `private: false`.
 - Current package metadata includes `"license": "MIT"`.
 - Current binary remains `bin.hadara` at `./dist/cli/main.js`.

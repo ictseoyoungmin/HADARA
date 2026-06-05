@@ -7,7 +7,7 @@
 | Branch | main | T-0268 Release Candidate Freeze and Artifact Refresh is complete. |
 | Current Phase | Phase 6 / 6.1 release candidate evidence refresh complete | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
 | Latest Completed Task | T-0268 Release Candidate Freeze and Artifact Refresh | `hadara@0.2.0-rc.0` metadata, release docs, release artifact evidence, release dry-run, and publish dry-run are refreshed without publish/deploy mutation. |
-| Active / Next Task | Publish remains approval-gated/manual | Review T-0268 evidence before any explicit publish capsule; do not run publish execute by default. |
+| Active / Next Task | T-0269 Approval-Gated npm Publish for 0.2.0-rc.0 | Release dry-run and publish dry-run rechecks passed without mutation; README publish-state docs were updated; `NPM_TOKEN` is missing and actual publish remains blocked. |
 | Validation Baseline | T-0268 RC readiness passed | Focused/full Docker validation passed; package smoke passed; clean-checkout smoke passed; current-HEAD release artifact passed; release dry-run ready with blockers 0; publish dry-run ok with token warnings only. |
 
 ## Last 3 Completed Tasks
@@ -23,7 +23,8 @@
 | Issue | Impact | Next Step |
 |---|---|---|
 | T-0255 close evidence is now stale after T-0256 Task Board changes. | `task audit-close --task T-0255 --json` remains `ok:true` but reports `closeEvidenceAudit.verdict: stale` because the close-relevant source hash includes `docs/TASK_BOARD.md` and T-0256 added a row. | This is expected changed-source behavior; use T-0256 supersedes metadata if re-closing T-0255 is ever required. |
-| Release publish remains approval-gated/manual. | `release dry-run` is ready after T-0245, and `release publish --mode dry-run` is ok, but actual publish/deploy mutation still requires explicit approval metadata, confirmation, tokens, and future mutation-capable handling. | Do not run publish/deploy execute unless an operator explicitly requests the approval-gated release path. |
+| Release publish remains approval-gated/manual. | T-0269 release dry-run and publish dry-run rechecks passed, but `NPM_TOKEN` is missing and README changes mean fresh package/release evidence is required before real publish. | Do not run publish/deploy execute, manual publish script, or `npm publish` unless the operator explicitly approves, tokens are configured outside the repo, and fresh post-README evidence is recorded. |
+| README asset package rendering needs a final choice. | README uses a GitHub raw URL for `docs/assets/hadara_sub_right_name.png`; `docs/assets/` is appropriate for repo docs, but the asset must be committed/pushed for npm README rendering, or the package whitelist must deliberately include it. | Before publishing, ensure the image URL resolves from the published README context or refresh package artifacts after including the asset. |
 | Python package smoke and release advisory are non-blocking preview surfaces. | T-0250 surfaces Python smoke evidence as `providerAdvisories` only. T-0249 makes network behavior explicit: default is environment-inherited, `--network-policy offline` is best-effort with `enforced:false`, and local execution still depends on Python packaging tools such as `build`, `twine`, and pip. HADARA still does not load PyPI credentials or publish to PyPI. | Use dry-run first; treat Python local execution failures as environment/tooling failures, not publish readiness. Python advisory evidence must not be used to unblock or block the npm release gate. |
 | Release target configuration remains preview-only. | T-0252 surfaces unsupported/invalid `.hadara/release-targets.json` as warning/advisory metadata, but the parser still only reads `primaryTarget` and effective primary remains npm. | Define `hadara.releaseTargetConfig.v1` before real config support, including supported/ignored/unsupported fields, non-blocking warnings, and migration behavior. |
 | Python TOML parsing remains preview-only. | `pyproject.toml` detection uses a lightweight parser for static name/version/backend metadata only. | Use a formal TOML parser before Python release readiness, artifact gates, or publish behavior depend on TOML data. |
@@ -67,7 +68,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Approval-gated publish review, if requested | T-0268 proves RC readiness only; actual publish/deploy mutation is still intentionally blocked by default. | Review T-0268 release dry-run and publish dry-run evidence, then run publish execute only under an explicit future publish capsule with required tokens/confirmation. |
+| Resolve T-0269 publish blockers | T-0269 has updated README and rechecked dry-runs, but publish cannot proceed with missing token and stale package artifact evidence relative to README changes. | Commit README/asset changes, configure token outside the repo, regenerate package/release evidence, then request explicit publish approval. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
