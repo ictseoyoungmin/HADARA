@@ -260,3 +260,4 @@
 | T-0257 | Handoff Patch Suggestion | Done | tasks/T-0257-handoff-patch-suggestion | |
 | T-0258 | Dev Docker Validation Wrapper | Done | tasks/T-0258-dev-docker-validation-wrapper | |
 | T-0259 | Task Capsule Templates | Done | tasks/T-0259-task-capsule-templates | |
+| T-0260 | Release Dry-Run Service Decomposition | Done | tasks/T-0260-release-dry-run-service-decomposition | |

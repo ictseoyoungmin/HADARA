@@ -78,6 +78,7 @@ Evidence freshness and cross-check implementation for T-0140:
 - The dry-run verifies the strict release gate, then cross-checks package-smoke, clean-checkout smoke, and release-artifact public evidence records.
 - Release gate strictness means evidence existence, artifact schema validity, source/report `ok`, and expected category/mode/result.
 - Release dry-run strictness is release gate strictness plus freshness checks for current package version, release artifact manifest hash, and git commit when public evidence artifacts include git commit metadata.
+- T-0260 decomposes release dry-run internals into target configuration, provider advisory, evidence validation, readiness, and diagnostics services without changing the `hadara.releaseDryRun.v1` report shape or adding release mutation.
 - Release artifact evidence flow is explicit: run `hadara release artifact --execute --json --output dist-release --attach-evidence --task <task-id>` to attach the reduced `hadara.releaseArtifact.v1` report under `tasks/<task-id>/artifacts/release-artifact/`.
 - T-0140 still performs no publish, no GitHub Release creation, no Docker image build, no registry mutation, no GitHub API call, and no token loading.
 
