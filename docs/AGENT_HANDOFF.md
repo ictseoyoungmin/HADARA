@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0252 Release Target Config Warning Surfacing is complete. |
-| Current Phase | Phase 6 Operator Workflow Compression & Multi-Agent Compatibility staged | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup; next core work should follow the Phase 6 spec. |
-| Latest Completed Task | T-0252 Release Target Config Warning Surfacing | Release dry-run now surfaces `.hadara/release-targets.json` preview issues as non-blocking warning checks and `diagnostics.advisories` while keeping npm primary. |
-| Active / Next Task | T-0253 Multi-Agent Command Context Contract | Start Phase 6 from the common actor/run/plan/idempotency metadata contract before adding task complete dry-run, Docker wrapper, handoff suggestion, or execute orchestration. |
-| Validation Baseline | T-0252 Docker validation passed | Focused Docker tests passed 2 files / 31 tests; Docker full check passed 92 files / 626 tests; built release dry-run emitted additive `diagnostics.advisories`. |
+| Branch | main | T-0253 Multi-Agent Command Context Contract is complete. |
+| Current Phase | Phase 6 Operator Workflow Compression & Multi-Agent Compatibility active | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup; next core work should continue the Phase 6 spec. |
+| Latest Completed Task | T-0253 Multi-Agent Command Context Contract | Added common actor/run context, plan context, next-action/write-boundary/stale-plan vocabulary, multi-agent issue codes, schema fixtures, and docs without changing existing command behavior. |
+| Active / Next Task | T-0254 Task Lifecycle Next Action Metadata | Add structured next-action metadata and actor context to task lifecycle reports before `task complete` dry-run, handoff suggestion, Docker wrapper, or execute orchestration. |
+| Validation Baseline | T-0253 Docker validation passed | Focused Docker tests passed 3 files / 27 tests; Docker sync-build passed 93 files / 632 tests; built CLI version smoke returned `ok:true` and `distLooksStale:false`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0253 Multi-Agent Command Context Contract | Added Phase 6 common actor context, plan context, next-action, write-boundary, stale-plan risk, role, and issue-code vocabulary with registered schemas. | T-0253 evidence: Docker focused tests passed 3 files / 27 tests; Docker sync-build passed 93 files / 632 tests; built CLI version smoke returned `ok:true`, `distLooksStale:false`. |
 | T-0252 Release Target Config Warning Surfacing | Added non-blocking `RELEASE_TARGET_CONFIGURATION` warning checks and `diagnostics.advisories` for config preview issues, including unsupported primary and invalid JSON. | T-0252 evidence: Docker focused tests passed 2 files / 31 tests; Docker full check passed 92 files / 626 tests; built release dry-run emitted `diagnostics.advisories: []` on default config with expected stale artifact blocker. |
 | T-0251 Release Target Configuration Preview | Added additive release dry-run target configuration preview with npm primary, Python preview, Docker deferred, `autoPromotion:false`, and unsupported-primary warnings. | T-0251 evidence: Docker focused tests passed 2 files / 30 tests; Docker full check passed 92 files / 625 tests; built release dry-run emitted effective primary `npm-package`, Python preview, Docker deferred, and `autoPromotion:false`. |
-| T-0250 Python Release Advisory Read Model | Added additive release dry-run `providerAdvisories` for Python preview smoke evidence present/missing/stale, always non-blocking. | T-0250 evidence: Docker focused tests passed 2 files / 29 tests; Docker full check passed 92 files / 624 tests; built release dry-run emitted Python advisory `smokeEvidence: missing`, `blocking:false`. |
 
 ## Current Known Problems
 
@@ -26,7 +26,7 @@
 | Python package smoke and release advisory are non-blocking preview surfaces. | T-0250 surfaces Python smoke evidence as `providerAdvisories` only. T-0249 makes network behavior explicit: default is environment-inherited, `--network-policy offline` is best-effort with `enforced:false`, and local execution still depends on Python packaging tools such as `build`, `twine`, and pip. HADARA still does not load PyPI credentials or publish to PyPI. | Use dry-run first; treat Python local execution failures as environment/tooling failures, not publish readiness. Python advisory evidence must not be used to unblock or block the npm release gate. |
 | Release target configuration remains preview-only. | T-0252 surfaces unsupported/invalid `.hadara/release-targets.json` as warning/advisory metadata, but the parser still only reads `primaryTarget` and effective primary remains npm. | Define `hadara.releaseTargetConfig.v1` before real config support, including supported/ignored/unsupported fields, non-blocking warnings, and migration behavior. |
 | Python TOML parsing remains preview-only. | `pyproject.toml` detection uses a lightweight parser for static name/version/backend metadata only. | Use a formal TOML parser before Python release readiness, artifact gates, or publish behavior depend on TOML data. |
-| Phase 6 is not a full multi-agent runtime. | The next phase adds compatibility metadata, dry-run orchestration, idempotency, patch suggestions, and safer wrappers; it must not add hidden shared-doc writes, `task complete --execute`, scheduler behavior, publish automation, or release mutation early. | Begin with T-0253 and keep write surfaces additive/dry-run-first. Read the local ignored Phase 6 agent-UX spec explicitly when present. |
+| Phase 6 is not a full multi-agent runtime. | T-0253 added compatibility metadata only. Later Phase 6 work adds lifecycle next actions, dry-run orchestration, idempotency, patch suggestions, and safer wrappers; it must not add hidden shared-doc writes, `task complete --execute`, scheduler behavior, publish automation, or release mutation early. | Continue with T-0254 and keep write surfaces additive/dry-run-first. Read the local ignored Phase 6 agent-UX spec explicitly when present. |
 | Release artifact refresh now requires a clean git worktree. | In active development, `release artifact --execute` will return `RELEASE_ARTIFACT_WORKTREE_DIRTY` and skip `npm pack` until pending changes are committed or otherwise cleaned. | Treat this as intentional release safety, not a release artifact failure; do not bypass it with dirty worktree evidence. |
 | Release dry-run latency is currently dominated by the strict release gate. | Built `/mnt/f` smoke reported total duration about 13.8s with `strict-release-gate` about 12.5s; this is now visible but not optimized. | Treat timing diagnostics as metadata; optimize strict release-gate reads only if release operators need faster repeated dry-runs. |
 | `task upgrade-scaffold --execute` and `protocol remediate --execute` now require `--before-hash` when writes are planned. | Old execute-only copy-paste commands fail closed. | Run the dry-run first, review `summary.beforeHash`, then execute with `--before-hash <hash>`. |
@@ -65,13 +65,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create T-0253 Multi-Agent Command Context Contract. | Phase 6 must establish actor/run/plan/idempotency metadata before workflow-compression commands are added. | Required reading: `docs/specs/agent-ux/HADARA_Phase6_Operator_Workflow_Compression_Multi_Agent_Compatibility_Spec.md`, `docs/CLI_JSON_CONTRACT.md`, and `docs/TASK_WORKFLOW_COMMANDS.md`. |
+| Create T-0254 Task Lifecycle Next Action Metadata. | Phase 6 common context metadata exists; task lifecycle reports should now expose structured next actions, write boundaries, and actor context before `task complete` dry-run orchestration. | Required reading: `docs/specs/agent-ux/HADARA_Phase6_Operator_Workflow_Compression_Multi_Agent_Compatibility_Spec.md`, `docs/CLI_JSON_CONTRACT.md`, and `docs/TASK_WORKFLOW_COMMANDS.md`. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| Multi-agent command context contract full check | Docker focused tests passed 3 files / 27 tests; Docker `npm run check` passed 93 files / 632 tests during T-0253. | Registered `hadara.actor_context.v1`, `hadara.plan_context.v1`, and `hadara.next_action.v1`; built CLI version smoke returned `ok:true`, `distLooksStale:false`; no existing command behavior changed. |
 | Release target config warning surfacing full check | Docker focused tests passed 2 files / 31 tests; Docker `npm run check` passed 92 files / 626 tests during T-0252. | Unsupported primary and invalid JSON config preview issues now surface through non-blocking `RELEASE_TARGET_CONFIGURATION` warnings and exact-code `diagnostics.advisories`; built release dry-run emitted additive `diagnostics.advisories`. |
 | Release target configuration preview full check | Docker focused tests passed 2 files / 30 tests; Docker `npm run check` passed 92 files / 625 tests during T-0251. | Built release dry-run emitted `releaseTargetConfiguration.source: default`, effective primary `npm-package`, Python preview, Docker deferred, `autoPromotion:false`, and readiness remained npm-primary. |
 | Python release advisory read model full check | Docker focused tests passed 2 files / 29 tests; Docker `npm run check` passed 92 files / 624 tests during T-0250. | Built release dry-run emitted Python advisory `status: preview`, `smokeEvidence: missing`, `blocking:false`; release readiness remained ready and npm remained primary. |

@@ -2,6 +2,13 @@
   "schemaVersion": "hadara.schema.index.v1",
   "schemas": [
     {
+      "id": "hadara.actor_context.v1",
+      "path": "src/schemas/actor-context.schema.json",
+      "status": "fixture",
+      "owner": "core/actor-context",
+      "notes": "Documents the Phase 6 common actor/run context for future workflow-compression and multi-agent compatible reports."
+    },
+    {
       "id": "hadara.dashboard.bootstrap.v1",
       "path": "src/schemas/dashboard-bootstrap.schema.json",
       "status": "fixture",
@@ -198,11 +205,25 @@
       "notes": "Documents dry-run installer planning reports before any install mutation implementation."
     },
     {
+      "id": "hadara.next_action.v1",
+      "path": "src/schemas/next-action.schema.json",
+      "status": "fixture",
+      "owner": "core/next-action",
+      "notes": "Documents structured next-action metadata with write-boundary, actor-role, before-hash, and stale-plan guidance."
+    },
+    {
       "id": "hadara.packageSmoke.v1",
       "path": "src/schemas/package-smoke.schema.json",
       "status": "fixture",
       "owner": "package-smoke/report",
       "notes": "Documents reduced package-smoke reports before dry-run or executable package-smoke command implementation."
+    },
+    {
+      "id": "hadara.plan_context.v1",
+      "path": "src/schemas/plan-context.schema.json",
+      "status": "fixture",
+      "owner": "core/plan-context",
+      "notes": "Documents unreviewed dry-run plan metadata including affected files, optional before-hash, and idempotency key."
     },
     {
       "id": "hadara.featureSmoke.v1",

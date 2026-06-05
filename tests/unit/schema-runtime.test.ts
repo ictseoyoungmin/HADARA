@@ -13,6 +13,44 @@ describe('runtime schema validation', () => {
     });
   });
 
+  it('validates Phase 6 common context fixtures', () => {
+    expect(
+      validateSchema('hadara.actor_context.v1', {
+        schemaVersion: 'hadara.actor_context.v1',
+        agentId: 'worker-1',
+        runId: 'run-0253',
+        role: 'worker',
+        parentRunId: null
+      }).ok
+    ).toBe(true);
+
+    expect(
+      validateSchema('hadara.plan_context.v1', {
+        schemaVersion: 'hadara.plan_context.v1',
+        planId: 'plan_1234',
+        generatedAt: '2026-06-05T00:00:00.000Z',
+        affectedFiles: ['docs/AGENT_HANDOFF.md'],
+        beforeHash: 'sha256:abc',
+        idempotencyKey: 'handoff:T-0253',
+        reviewed: false
+      }).ok
+    ).toBe(true);
+
+    expect(
+      validateSchema('hadara.next_action.v1', {
+        schemaVersion: 'hadara.next_action.v1',
+        id: 'finish-first',
+        command: 'hadara task finish --task T-0253 --json',
+        summary: 'Preview finish writes before done-level readiness.',
+        required: true,
+        writeBoundary: 'task-local',
+        recommendedActorRole: 'worker',
+        requiresBeforeHash: false,
+        stalePlanRisk: 'low'
+      }).ok
+    ).toBe(true);
+  });
+
   it('validates an active-run projection report against the fixture schema', () => {
     const report = {
       schemaVersion: 'hadara.active_run.projection.v1',

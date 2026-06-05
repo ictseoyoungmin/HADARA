@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.next_action.v1",
+  "x-hadara-schema-id": "hadara.next_action.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "summary",
+    "required",
+    "writeBoundary",
+    "recommendedActorRole",
+    "requiresBeforeHash",
+    "stalePlanRisk"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.next_action.v1" },
+    "id": { "type": "string", "minLength": 1 },
+    "command": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string", "minLength": 1 },
+    "required": { "type": "boolean" },
+    "writeBoundary": {
+      "type": "string",
+      "enum": [
+        "read-only",
+        "task-local",
+        "evidence-append",
+        "shared-doc",
+        "dist-sync",
+        "release-artifact",
+        "external-subprocess",
+        "release-mutation",
+        "unknown"
+      ]
+    },
+    "recommendedActorRole": {
+      "type": "string",
+      "enum": ["operator", "coordinator", "worker", "reviewer", "unknown"]
+    },
+    "requiresBeforeHash": { "type": "boolean" },
+    "stalePlanRisk": {
+      "type": "string",
+      "enum": ["none", "low", "medium", "high", "unknown"]
+    }
+  }
+}

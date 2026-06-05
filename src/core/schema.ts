@@ -1,4 +1,5 @@
 import schemaIndexJson from '../schemas/schema-index.json';
+import actorContextSchemaJson from '../schemas/actor-context.schema.json';
 import activeRunProjectionSchemaJson from '../schemas/active-run-projection.schema.json';
 import activeRunResumeSchemaJson from '../schemas/active-run-resume.schema.json';
 import cleanCheckoutSmokeSchemaJson from '../schemas/clean-checkout-smoke.schema.json';
@@ -13,7 +14,9 @@ import evidenceMigrationPreviewSchemaJson from '../schemas/evidence-migration-pr
 import eventSchemaJson from '../schemas/event.schema.json';
 import featureSmokeSchemaJson from '../schemas/feature-smoke.schema.json';
 import installPlanSchemaJson from '../schemas/install-plan.schema.json';
+import nextActionSchemaJson from '../schemas/next-action.schema.json';
 import packageSmokeSchemaJson from '../schemas/package-smoke.schema.json';
+import planContextSchemaJson from '../schemas/plan-context.schema.json';
 import privateEvidenceSchemaJson from '../schemas/private-evidence.schema.json';
 import protocolConsistencySchemaJson from '../schemas/protocol-consistency.schema.json';
 import protocolRemediationSchemaJson from '../schemas/protocol-remediation.schema.json';
@@ -75,6 +78,7 @@ interface SchemaIndex {
 const schemaIndex = schemaIndexJson as SchemaIndex;
 
 const registeredSchemas: Record<string, JsonObject> = {
+  'hadara.actor_context.v1': actorContextSchemaJson as JsonObject,
   'hadara.active_run.projection.v1': activeRunProjectionSchemaJson as JsonObject,
   'hadara.active_run.resume.v1': activeRunResumeSchemaJson as JsonObject,
   'hadara.cleanCheckoutSmoke.v1': cleanCheckoutSmokeSchemaJson as JsonObject,
@@ -89,7 +93,9 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.event.v1': eventSchemaJson as JsonObject,
   'hadara.featureSmoke.v1': featureSmokeSchemaJson as JsonObject,
   'hadara.install.plan.v1': installPlanSchemaJson as JsonObject,
+  'hadara.next_action.v1': nextActionSchemaJson as JsonObject,
   'hadara.packageSmoke.v1': packageSmokeSchemaJson as JsonObject,
+  'hadara.plan_context.v1': planContextSchemaJson as JsonObject,
   'hadara.privateEvidence.v1': privateEvidenceSchemaJson as JsonObject,
   'hadara.protocol.consistency.v1': protocolConsistencySchemaJson as JsonObject,
   'hadara.protocol.remediation.v1': protocolRemediationSchemaJson as JsonObject,

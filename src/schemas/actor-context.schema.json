@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.actor_context.v1",
+  "x-hadara-schema-id": "hadara.actor_context.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "agentId", "runId", "role", "parentRunId"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.actor_context.v1" },
+    "agentId": { "type": "string", "minLength": 1 },
+    "runId": { "type": "string", "minLength": 1 },
+    "role": { "type": "string", "enum": ["operator", "coordinator", "worker", "reviewer", "unknown"] },
+    "parentRunId": { "type": ["string", "null"] }
+  }
+}

@@ -26,6 +26,7 @@ describe('schema fixtures', () => {
     expect(index.schemas.map((entry) => entry.id).sort()).toEqual([
       'hadara.active_run.projection.v1',
       'hadara.active_run.resume.v1',
+      'hadara.actor_context.v1',
       'hadara.cleanCheckoutSmoke.v1',
       'hadara.context.export.v1',
       'hadara.dashboard.bootstrap.v1',
@@ -38,7 +39,9 @@ describe('schema fixtures', () => {
       'hadara.evidence.migration_preview.v1',
       'hadara.featureSmoke.v1',
       'hadara.install.plan.v1',
+      'hadara.next_action.v1',
       'hadara.packageSmoke.v1',
+      'hadara.plan_context.v1',
       'hadara.privateEvidence.v1',
       'hadara.protocol.consistency.v1',
       'hadara.protocol.remediation.v1',
@@ -71,7 +74,7 @@ describe('schema fixtures', () => {
       expect(schema['x-hadara-schema-id']).toBe(entry.id);
       expect(schema.properties?.schemaVersion?.const).toBe(entry.id);
       expect(schema.required).toContain('schemaVersion');
-      if (schema.properties?.command) {
+      if (schema.properties?.command?.const) {
         expect(schema.required).toContain('command');
         expect(schema.required).toContain('issues');
       }

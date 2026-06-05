@@ -253,3 +253,4 @@
 | T-0250 | Python Release Advisory Read Model | Done | tasks/T-0250-python-release-advisory-read-model | |
 | T-0251 | Release Target Configuration Preview | Done | tasks/T-0251-release-target-configuration-preview | |
 | T-0252 | Release Target Config Warning Surfacing | Done | tasks/T-0252-release-target-config-warning-surfacing | |
+| T-0253 | Multi-Agent Command Context Contract | Done | tasks/T-0253-multi-agent-command-context-contract | |

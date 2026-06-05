@@ -6,6 +6,16 @@ This document defines HADARA CLI JSON output behavior for external agents and fu
 
 HADARA CLI commands may expose command-specific JSON schemas. External agents should inspect `schemaVersion`, `command`, and `ok` before reading command-specific fields.
 
+Phase 6 workflow-compression reports should also expose common multi-agent-compatible metadata where applicable:
+
+| Common Schema | Purpose |
+|---|---|
+| `hadara.actor_context.v1` | Actor/run identity with default `unknown` / `local` / `operator` / `null` values when optional CLI actor metadata is absent. |
+| `hadara.plan_context.v1` | Dry-run plan identity, affected files, optional before-hash, optional idempotency key, and `reviewed:false`. |
+| `hadara.next_action.v1` | Structured next command guidance with write boundary, recommended actor role, before-hash requirement, and stale-plan risk. |
+
+Future Phase 6 commands should use optional actor CLI option names consistently: `--agent-id`, `--run-id`, `--actor-role`, `--parent-run-id`, and `--idempotency-key`. Existing commands do not require these options unless a later capsule explicitly changes a command contract.
+
 Failure output has two layers:
 
 1. Normal command failures use the command-specific schema for that command.
