@@ -142,6 +142,13 @@
       "notes": "Documents read-only task completion flow reports that compose finish, ready, close, and audit guidance."
     },
     {
+      "id": "hadara.task.create.v1",
+      "path": "src/schemas/task-create.schema.json",
+      "status": "fixture",
+      "owner": "task/create",
+      "notes": "Documents task create reports and optional Task Capsule template metadata."
+    },
+    {
       "id": "hadara.task.audit_close.v1",
       "path": "src/schemas/task-audit-close.schema.json",
       "status": "fixture",

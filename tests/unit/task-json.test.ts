@@ -177,5 +177,7 @@ describe('CLI task JSON reports', () => {
 
   it('extracts task create title without global flags', () => {
     expect(extractTaskCreateTitle(['task', 'create', 'Foo', '--project', '/tmp/repo', '--json'])).toBe('Foo');
+    expect(extractTaskCreateTitle(['task', 'create', '--from', 'release-read-model', '--title', 'Release Model', '--json'])).toBe('Release Model');
+    expect(extractTaskCreateTitle(['task', 'create', 'Lifecycle', '--from', 'lifecycle-hardening', '--json'])).toBe('Lifecycle');
   });
 });

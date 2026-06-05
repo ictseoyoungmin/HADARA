@@ -1,6 +1,6 @@
-import { createTaskCapsule } from '../task/task-capsule';
 import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../task/task-close';
 import { createTaskCompleteFlowReport, formatTaskCompleteFlowReport } from '../task/task-complete-flow';
+import { createTaskCreateReport, formatTaskCreateReport } from '../task/task-create';
 import { createTaskReadyReport } from '../task/task-ready';
 import { createTaskFinishReport, formatTaskFinishReport } from '../task/task-finish';
 import { createTaskNextReport, formatTaskNextReport } from '../task/task-next';
@@ -20,9 +20,13 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   if (sub === 'create') {
     const title = extractTaskCreateTitle(input.args);
     if (!title) throw new Error('task create requires a title');
-    const task = createTaskCapsule(input.projectRoot, title);
-    console.log(`[HADARA] Created ${task.id}: ${task.title}`);
-    console.log(task.dir);
+    const report = createTaskCreateReport(input.projectRoot, title, { templateId: getStringOption(input.args, '--from') });
+    if (input.jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log(formatTaskCreateReport(report));
+    }
+    if (!report.ok) process.exitCode = 6;
     return true;
   }
 
@@ -166,7 +170,9 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
 }
 
 export function extractTaskCreateTitle(args: string[]): string {
-  const optionsWithValues = new Set(['--project']);
+  const explicitTitle = getStringOption(args, '--title');
+  if (explicitTitle) return explicitTitle.trim();
+  const optionsWithValues = new Set(['--project', '--from', '--title']);
   const titleParts: string[] = [];
   for (let index = 2; index < args.length; index += 1) {
     const value = args[index];

@@ -34,6 +34,7 @@ import smokeEvidenceSummarySchemaJson from '../schemas/smoke-evidence-summary.sc
 import taskAuditCloseSchemaJson from '../schemas/task-audit-close.schema.json';
 import taskCloseSchemaJson from '../schemas/task-close.schema.json';
 import taskCompleteFlowSchemaJson from '../schemas/task-complete-flow.schema.json';
+import taskCreateSchemaJson from '../schemas/task-create.schema.json';
 import taskFinishSchemaJson from '../schemas/task-finish.schema.json';
 import taskNextSchemaJson from '../schemas/task-next.schema.json';
 import taskReadySchemaJson from '../schemas/task-ready.schema.json';
@@ -116,6 +117,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.task.audit_close.v1': taskAuditCloseSchemaJson as JsonObject,
   'hadara.task.close.v1': taskCloseSchemaJson as JsonObject,
   'hadara.task.complete_flow.v1': taskCompleteFlowSchemaJson as JsonObject,
+  'hadara.task.create.v1': taskCreateSchemaJson as JsonObject,
   'hadara.task.finish.v1': taskFinishSchemaJson as JsonObject,
   'hadara.task.next.v1': taskNextSchemaJson as JsonObject,
   'hadara.task.ready.v1': taskReadySchemaJson as JsonObject,

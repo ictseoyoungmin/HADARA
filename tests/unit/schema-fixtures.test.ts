@@ -59,6 +59,7 @@ describe('schema fixtures', () => {
       'hadara.task.audit_close.v1',
       'hadara.task.close.v1',
       'hadara.task.complete_flow.v1',
+      'hadara.task.create.v1',
       'hadara.task.finish.v1',
       'hadara.task.next.v1',
       'hadara.task.ready.v1',

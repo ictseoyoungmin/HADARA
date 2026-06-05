@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDir, slugify, writeFileIfMissing } from '../core/fs';
 import { readMarkdownSection } from '../services/markdown-table';
+import { getTaskTemplate } from './task-templates';
 
 export interface TaskCapsule {
   id: string;
@@ -61,7 +62,11 @@ export function nextTaskId(tasksDir: string): string {
   return `T-${String(max + 1).padStart(4, '0')}`;
 }
 
-export function createTaskCapsule(projectRoot: string, title: string): TaskCapsule {
+export interface CreateTaskCapsuleOptions {
+  templateId?: string;
+}
+
+export function createTaskCapsule(projectRoot: string, title: string, options: CreateTaskCapsuleOptions = {}): TaskCapsule {
   const tasksDir = path.join(projectRoot, 'tasks');
   const id = nextTaskId(tasksDir);
   const slug = slugify(title);
@@ -71,6 +76,12 @@ export function createTaskCapsule(projectRoot: string, title: string): TaskCapsu
   ensureDir(dir);
   for (const [fileName, factory] of Object.entries(TASK_FILES)) {
     writeFileIfMissing(path.join(dir, fileName), factory(task));
+  }
+  const template = getTaskTemplate(options.templateId);
+  if (template) {
+    for (const [fileName, factory] of Object.entries(template.files)) {
+      if (factory) fs.writeFileSync(path.join(dir, fileName), factory(task), 'utf8');
+    }
   }
 
   const taskBoard = path.join(projectRoot, 'docs', 'TASK_BOARD.md');

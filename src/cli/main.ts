@@ -15,7 +15,8 @@ Usage:
   hadara version [--verbose] [--json]
   hadara doctor
   hadara dev docker-check [--focused <test...>] [--full] [--sync-dist] [--json]
-  hadara task create <title>
+  hadara task create <title> [--from <template-id>] [--json]
+  hadara task create --from <template-id> --title <title> [--json]
   hadara task list
   hadara task show <task-id>
   hadara task next [--json]

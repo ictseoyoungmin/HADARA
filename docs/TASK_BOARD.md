@@ -259,3 +259,4 @@
 | T-0256 | Close Evidence Idempotency / Supersedes | Done | tasks/T-0256-close-evidence-idempotency-supersedes | |
 | T-0257 | Handoff Patch Suggestion | Done | tasks/T-0257-handoff-patch-suggestion | |
 | T-0258 | Dev Docker Validation Wrapper | Done | tasks/T-0258-dev-docker-validation-wrapper | |
+| T-0259 | Task Capsule Templates | Done | tasks/T-0259-task-capsule-templates | |
