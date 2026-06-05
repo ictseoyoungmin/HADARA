@@ -68,6 +68,20 @@ describe('dev docker-check report', () => {
     expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
   });
 
+  it('accepts explicit actor context for dev docker-check reports', () => {
+    const root = tempProject();
+
+    const report = createDevDockerCheckReport(root, {
+      focusedTests: ['tests/unit/dev-docker-check.test.ts'],
+      workspace: '/workspace',
+      tmpWorkdir: '/tmp/hadara-dev-check-test',
+      actor: { agentId: 'worker-docker', runId: 'run-docker', role: 'worker', parentRunId: 'coord-docker' }
+    }, fakeRunner(root));
+
+    expect(report.actor).toEqual({ agentId: 'worker-docker', runId: 'run-docker', role: 'worker', parentRunId: 'coord-docker' });
+    expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
+  });
+
   it('runs full check without dist sync by default', () => {
     const root = tempProject();
     const report = createDevDockerCheckReport(root, { workspace: '/workspace', tmpWorkdir: '/tmp/hadara-dev-check-test' }, fakeRunner(root));

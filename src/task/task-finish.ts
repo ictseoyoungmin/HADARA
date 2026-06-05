@@ -77,7 +77,12 @@ export interface TaskFinishIssue {
   path?: string;
 }
 
-export function createTaskFinishReport(projectRoot: string, taskId: string, mode: TaskFinishMode): TaskFinishReport {
+export interface TaskFinishOptions {
+  actor?: HadaraActorContext;
+}
+
+export function createTaskFinishReport(projectRoot: string, taskId: string, mode: TaskFinishMode, options: TaskFinishOptions = {}): TaskFinishReport {
+  const actor = options.actor ?? defaultTaskLifecycleActor();
   const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
   const issues: TaskFinishIssue[] = [];
   if (!task) {
@@ -88,7 +93,7 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
       mode,
       taskId,
       projectRoot,
-      actor: defaultTaskLifecycleActor(),
+      actor,
       status: { taskStatus: null, taskBoardStatus: null, taskBoardPresent: false },
       summary: { plannedWrites: 0, appliedWrites: 0, advisoryOnly: 0, stateDocsPending: 0 },
       writes: [],
@@ -117,7 +122,7 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
     mode,
     taskId,
     projectRoot,
-    actor: defaultTaskLifecycleActor(),
+    actor,
     task: {
       id: task.id,
       title: task.title,

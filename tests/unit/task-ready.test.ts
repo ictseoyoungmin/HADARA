@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { handleTaskCommand } from '../../src/cli/task';
 import { appendEvidence } from '../../src/evidence/evidence';
 import { createTaskReadyReport } from '../../src/task/task-ready';
 import { createTaskCapsule } from '../../src/task/task-capsule';
@@ -16,6 +17,7 @@ function tempProject(): string {
 
 afterEach(() => {
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
+  process.exitCode = undefined;
 });
 
 describe('task ready report', () => {
@@ -62,6 +64,31 @@ describe('task ready report', () => {
       stalePlanRisk: 'low'
     });
     expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'resolve-ready-blockers', required: true }));
+  });
+
+  it('threads explicit actor CLI options into task ready reports', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Ready actor task');
+    completeTask(root, task.id, task.dir);
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+    try {
+      expect(
+        handleTaskCommand({
+          args: ['task', 'ready', '--task', task.id, '--agent-id', 'worker-ready', '--run-id', 'run-ready', '--actor-role', 'worker', '--json'],
+          projectRoot: root,
+          jsonOutput: true
+        })
+      ).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    const report = JSON.parse(output.join('\n'));
+    expect(report.actor).toEqual({ agentId: 'worker-ready', runId: 'run-ready', role: 'worker', parentRunId: null });
   });
 });
 

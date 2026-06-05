@@ -93,6 +93,31 @@ describe('handoff suggestion report', () => {
     expect(report.target.writeBoundary).toBe('shared-doc');
     expect(fs.readFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), 'utf8')).toBe(beforeHandoff);
   });
+
+  it('threads explicit actor CLI options into handoff suggestion reports', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'CLI handoff actor');
+    writeFixtureHandoff(root);
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+    try {
+      expect(
+        handleHandoffCommand({
+          args: ['handoff', 'suggest', '--task', task.id, '--agent-id', 'coord-handoff', '--run-id', 'run-handoff', '--actor-role', 'coordinator', '--json'],
+          projectRoot: root,
+          jsonOutput: true
+        })
+      ).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    const report = JSON.parse(output.join('\n'));
+    expect(report.actor).toEqual({ agentId: 'coord-handoff', runId: 'run-handoff', role: 'coordinator', parentRunId: null });
+  });
 });
 
 function completeTask(root: string, taskId: string, taskDir: string): void {

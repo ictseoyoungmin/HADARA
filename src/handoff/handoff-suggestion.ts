@@ -49,6 +49,7 @@ export interface HandoffSuggestionIssue {
 
 export interface HandoffSuggestionOptions {
   executeRequested?: boolean;
+  actor?: HadaraActorContext;
 }
 
 interface TaskSnapshot {
@@ -60,6 +61,7 @@ interface TaskSnapshot {
 }
 
 export function createHandoffSuggestionReport(projectRoot: string, taskId: string, options: HandoffSuggestionOptions = {}): HandoffSuggestionReport {
+  const actor = options.actor ?? defaultTaskLifecycleActor();
   const handoffPath = path.join(projectRoot, 'docs', 'AGENT_HANDOFF.md');
   const handoffExists = fs.existsSync(handoffPath);
   const handoffContent = handoffExists ? fs.readFileSync(handoffPath, 'utf8') : '';
@@ -79,7 +81,7 @@ export function createHandoffSuggestionReport(projectRoot: string, taskId: strin
     ok: !issues.some((issue) => issue.severity === 'error'),
     readOnly: true,
     generatedAt: new Date().toISOString(),
-    actor: defaultTaskLifecycleActor(),
+    actor,
     target: {
       path: 'docs/AGENT_HANDOFF.md',
       beforeHash: hashContent(handoffContent),

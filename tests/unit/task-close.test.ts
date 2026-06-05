@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { handleTaskCommand } from '../../src/cli/task';
 import { appendEvidence } from '../../src/evidence/evidence';
 import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../../src/task/task-close';
 import { createTaskCapsule } from '../../src/task/task-capsule';
@@ -16,6 +17,7 @@ function tempProject(): string {
 
 afterEach(() => {
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
+  process.exitCode = undefined;
 });
 
 describe('task close report', () => {
@@ -208,6 +210,40 @@ describe('task close report', () => {
       reportHashMatches: true,
       sourceHashMatches: true
     });
+  });
+
+  it('threads explicit actor CLI options into close and audit reports', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close actor CLI');
+    completeTask(root, task.id, task.dir);
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+    try {
+      expect(
+        handleTaskCommand({
+          args: ['task', 'close', '--task', task.id, '--agent-id', 'worker-close', '--run-id', 'run-close', '--actor-role', 'worker', '--json'],
+          projectRoot: root,
+          jsonOutput: true
+        })
+      ).toBe(true);
+      expect(
+        handleTaskCommand({
+          args: ['task', 'audit-close', '--task', task.id, '--agent-id', 'reviewer-1', '--run-id', 'run-audit', '--actor-role', 'reviewer', '--json'],
+          projectRoot: root,
+          jsonOutput: true
+        })
+      ).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    const closeReport = JSON.parse(output[0]);
+    const auditReport = JSON.parse(output[1]);
+    expect(closeReport.actor).toEqual({ agentId: 'worker-close', runId: 'run-close', role: 'worker', parentRunId: null });
+    expect(auditReport.actor).toEqual({ agentId: 'reviewer-1', runId: 'run-audit', role: 'reviewer', parentRunId: null });
   });
 
   it('audits close evidence and reports hash drift as a warning', () => {

@@ -1,4 +1,5 @@
 import { createDevDockerCheckReport, formatDevDockerCheckReport } from '../dev/docker-check';
+import { getActorContextOption } from './actor';
 import { getFlag } from './args';
 
 export interface DevCommandInput {
@@ -13,7 +14,8 @@ export function handleDevCommand(input: DevCommandInput): boolean {
   const report = createDevDockerCheckReport(input.projectRoot, {
     focusedTests: getFocusedTests(input.args),
     syncDist: getFlag(input.args, '--sync-dist'),
-    fullCheck: getFlag(input.args, '--full')
+    fullCheck: getFlag(input.args, '--full'),
+    actor: getActorContextOption(input.args)
   });
   if (input.jsonOutput) {
     console.log(JSON.stringify(report, null, 2));

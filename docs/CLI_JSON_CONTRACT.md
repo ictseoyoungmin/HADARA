@@ -14,7 +14,7 @@ Phase 6 workflow-compression reports should also expose common multi-agent-compa
 | `hadara.plan_context.v1` | Dry-run plan identity, affected files, optional before-hash, optional idempotency key, and `reviewed:false`. |
 | `hadara.next_action.v1` | Structured next command guidance with write boundary, recommended actor role, before-hash requirement, and stale-plan risk. |
 
-Future Phase 6 commands should use optional actor CLI option names consistently: `--agent-id`, `--run-id`, `--actor-role`, `--parent-run-id`, and `--idempotency-key`. Existing commands do not require these options unless a later capsule explicitly changes a command contract.
+Phase 6.1 workflow-compression commands use optional actor CLI option names consistently: task finish/ready/close/audit-close/complete, handoff suggest, and dev docker-check accept `--agent-id`, `--run-id`, `--actor-role`, and `--parent-run-id`. Existing defaults remain valid when the options are absent. Future reviewed-plan commands should use `--idempotency-key` where a command contract accepts caller-supplied idempotency metadata.
 
 T-0254 adds this common metadata to task lifecycle reports (`hadara.task.finish.v1`, `hadara.task.ready.v1`, `hadara.task.close.v1`, and `hadara.task.audit_close.v1`) as additive report fields. Existing command invocations still do not accept actor options; reports use the default local operator actor context until later command-specific adoption.
 

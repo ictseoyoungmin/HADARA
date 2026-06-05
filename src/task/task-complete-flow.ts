@@ -60,6 +60,7 @@ export interface TaskCompleteFlowIssue {
 
 export interface TaskCompleteFlowOptions {
   executeRequested?: boolean;
+  actor?: HadaraActorContext;
 }
 
 interface LifecycleReports {
@@ -70,7 +71,7 @@ interface LifecycleReports {
 }
 
 export function createTaskCompleteFlowReport(projectRoot: string, taskId: string, options: TaskCompleteFlowOptions = {}): TaskCompleteFlowReport {
-  const actor = defaultTaskLifecycleActor();
+  const actor = options.actor ?? defaultTaskLifecycleActor();
   if (options.executeRequested) {
     return buildReport(taskId, actor, 'blocked', [], [
       { id: 'finish', status: 'skipped', summary: 'Task complete has no execute mode.' },
@@ -87,10 +88,10 @@ export function createTaskCompleteFlowReport(projectRoot: string, taskId: string
   }
 
   const reports: LifecycleReports = {
-    finish: createTaskFinishReport(projectRoot, taskId, 'dry-run'),
-    ready: createTaskReadyReport(projectRoot, taskId, 'done'),
-    close: createTaskCloseReport(projectRoot, taskId, 'dry-run'),
-    audit: createTaskAuditCloseReport(projectRoot, taskId)
+    finish: createTaskFinishReport(projectRoot, taskId, 'dry-run', { actor }),
+    ready: createTaskReadyReport(projectRoot, taskId, 'done', { actor }),
+    close: createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor }),
+    audit: createTaskAuditCloseReport(projectRoot, taskId, { actor })
   };
 
   const stateDocs = summarizeStateDocs(reports.finish);

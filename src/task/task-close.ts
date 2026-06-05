@@ -101,12 +101,17 @@ export interface TaskCloseIssue {
   path?: string;
 }
 
-export function createTaskCloseReport(projectRoot: string, taskId: string, mode: TaskCloseMode): TaskCloseReport {
+export interface TaskCloseOptions {
+  actor?: HadaraActorContext;
+}
+
+export function createTaskCloseReport(projectRoot: string, taskId: string, mode: TaskCloseMode, options: TaskCloseOptions = {}): TaskCloseReport {
+  const actor = options.actor ?? defaultTaskLifecycleActor();
   const issues: TaskCloseIssue[] = [];
   const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
   if (!task) {
     issues.push({ severity: 'error', code: 'TASK_NOT_FOUND', message: `Task Capsule not found: ${taskId}` });
-    return buildMissingTaskReport(projectRoot, taskId, mode, issues);
+    return buildMissingTaskReport(projectRoot, taskId, mode, issues, actor);
   }
 
   const validation = createHarnessValidateReport(projectRoot, taskId, { level: 'done' });
@@ -127,7 +132,7 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
     mode,
     taskId,
     projectRoot,
-    actor: defaultTaskLifecycleActor(),
+    actor,
     summary: {
       blockers: issues.filter((issue) => issue.severity === 'error').length,
       warnings: issues.filter((issue) => issue.severity === 'warning').length,
@@ -315,7 +320,7 @@ function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode, clo
   return actions;
 }
 
-function buildMissingTaskReport(projectRoot: string, taskId: string, mode: TaskCloseMode, issues: TaskCloseIssue[]): TaskCloseReport {
+function buildMissingTaskReport(projectRoot: string, taskId: string, mode: TaskCloseMode, issues: TaskCloseIssue[], actor: HadaraActorContext = defaultTaskLifecycleActor()): TaskCloseReport {
   return {
     schemaVersion: 'hadara.task.close.v1',
     command: 'task.close',
@@ -323,7 +328,7 @@ function buildMissingTaskReport(projectRoot: string, taskId: string, mode: TaskC
     mode,
     taskId,
     projectRoot,
-    actor: defaultTaskLifecycleActor(),
+    actor,
     summary: { blockers: issues.length, warnings: 0, nextActions: 0 },
     validation: {
       ok: false,
@@ -490,15 +495,20 @@ export interface TaskAuditCloseVerdict {
   model: 'validation-close-audit';
 }
 
-export function createTaskAuditCloseReport(projectRoot: string, taskId: string): TaskAuditCloseReport {
+export interface TaskAuditCloseOptions {
+  actor?: HadaraActorContext;
+}
+
+export function createTaskAuditCloseReport(projectRoot: string, taskId: string, options: TaskAuditCloseOptions = {}): TaskAuditCloseReport {
+  const actor = options.actor ?? defaultTaskLifecycleActor();
   const issues: TaskCloseIssue[] = [];
   const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
   if (!task) {
     issues.push({ severity: 'error', code: 'TASK_NOT_FOUND', message: `Task Capsule not found: ${taskId}` });
-    return buildAuditReport(projectRoot, taskId, 'sha256:missing-task', 'sha256:missing-task', [], issues);
+    return buildAuditReport(projectRoot, taskId, 'sha256:missing-task', 'sha256:missing-task', [], issues, undefined, actor);
   }
 
-  const closePlan = createTaskCloseReport(projectRoot, taskId, 'dry-run');
+  const closePlan = createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor });
   const evidencePath = path.join(task.dir, 'evidence.jsonl');
   const records = readCloseEvidenceRecords(evidencePath);
   const closeEvidenceAudit = createCloseEvidenceAudit(records, taskId);
@@ -567,7 +577,8 @@ export function createTaskAuditCloseReport(projectRoot: string, taskId: string):
     closePlan.validation.validatedBeforeCloseEvidenceSourceHash,
     records,
     issues,
-    closeEvidenceAudit
+    closeEvidenceAudit,
+    actor
   );
 }
 
@@ -616,7 +627,8 @@ function buildAuditReport(
   currentSourceHash: string,
   records: CloseEvidenceRecord[],
   issues: TaskCloseIssue[],
-  closeEvidenceAudit?: InternalCloseEvidenceAudit
+  closeEvidenceAudit?: InternalCloseEvidenceAudit,
+  actor: HadaraActorContext = defaultTaskLifecycleActor()
 ): TaskAuditCloseReport {
   const latest = closeEvidenceAudit?.latestRecord ?? records.at(-1);
   const nextActions = createAuditNextActions(taskId, latest === undefined);
@@ -627,7 +639,7 @@ function buildAuditReport(
     ok: !issues.some((issue) => issue.severity === 'error'),
     taskId,
     projectRoot,
-    actor: defaultTaskLifecycleActor(),
+    actor,
     summary: {
       closeEvidenceRecords: records.length,
       blockers: issues.filter((issue) => issue.severity === 'error').length,

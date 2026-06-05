@@ -1,5 +1,6 @@
 import { updateHandoff } from '../handoff/handoff';
 import { createHandoffSuggestionReport, formatHandoffSuggestionReport } from '../handoff/handoff-suggestion';
+import { getActorContextOption } from './actor';
 import { getFlag, getStringOption } from './args';
 
 export interface HandoffCommandInput {
@@ -13,7 +14,7 @@ export function handleHandoffCommand(input: HandoffCommandInput): boolean {
   if (sub === 'suggest') {
     const taskId = getStringOption(input.args, '--task') ?? input.args[2];
     if (!taskId || taskId.startsWith('--')) throw new Error('handoff suggest requires --task <task-id>');
-    const report = createHandoffSuggestionReport(input.projectRoot, taskId, { executeRequested: getFlag(input.args, '--execute') });
+    const report = createHandoffSuggestionReport(input.projectRoot, taskId, { executeRequested: getFlag(input.args, '--execute'), actor: getActorContextOption(input.args) });
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {

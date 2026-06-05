@@ -155,6 +155,30 @@ describe('task complete flow report', () => {
     expect(report.stage).toBe('finish-required');
     expect(process.exitCode).toBe(6);
   });
+
+  it('threads explicit actor CLI options into task complete reports', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'CLI complete actor');
+    const writes: string[] = [];
+    const originalLog = console.log;
+    console.log = (message?: unknown) => {
+      writes.push(String(message));
+    };
+    try {
+      expect(
+        handleTaskCommand({
+          args: ['task', 'complete', '--task', task.id, '--agent-id', 'coord-2', '--run-id', 'run-complete', '--actor-role', 'coordinator', '--json'],
+          projectRoot: root,
+          jsonOutput: true
+        })
+      ).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    const report = JSON.parse(writes.join('\n'));
+    expect(report.actor).toEqual({ agentId: 'coord-2', runId: 'run-complete', role: 'coordinator', parentRunId: null });
+  });
 });
 
 function snapshotFiles(root: string): Record<string, string> {

@@ -205,6 +205,36 @@ describe('task finish status sync', () => {
     const payload = JSON.parse(String(log.mock.calls[0][0]));
     expect(payload).toMatchObject({ schemaVersion: 'hadara.task.finish.v1', ok: false, issues: [expect.objectContaining({ code: 'TASK_NOT_FOUND' })] });
   });
+
+  it('threads explicit actor CLI options into task finish reports', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finish actor context');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleTaskCommand({
+      args: [
+        'task',
+        'finish',
+        '--task',
+        task.id,
+        '--agent-id',
+        'worker-7',
+        '--run-id',
+        'run-0262',
+        '--actor-role',
+        'worker',
+        '--parent-run-id',
+        'coord-1',
+        '--json'
+      ],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls[0][0]));
+    expect(payload.actor).toEqual({ agentId: 'worker-7', runId: 'run-0262', role: 'worker', parentRunId: 'coord-1' });
+  });
 });
 
 function tempProject(): string {

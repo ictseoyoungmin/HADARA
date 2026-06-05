@@ -41,9 +41,10 @@ Phase 6 workflow-compression commands must preserve dry-run reviewability and fu
 | `plan` | Uses `hadara.plan_context.v1` for dry-run plans, affected files, optional before-hash, optional idempotency key, and `reviewed:false`. |
 | `nextActions` | Uses `hadara.next_action.v1` records so future workers/coordinators can distinguish read-only, task-local, evidence-append, shared-doc, dist-sync, release-artifact, external-subprocess, and release-mutation boundaries. |
 
-Future commands should use `--agent-id`, `--run-id`, `--actor-role`, `--parent-run-id`, and `--idempotency-key` for optional actor/plan input. Existing task workflow commands do not require these options yet.
+Phase 6.1 adds optional actor CLI input for existing workflow-compression surfaces: task finish/ready/close/audit-close/complete, handoff suggest, and dev docker-check accept `--agent-id`, `--run-id`, `--actor-role`, and `--parent-run-id`. These options remain optional; absent metadata preserves the default local operator actor. Future plan/idempotency work should use `--idempotency-key` where a command accepts reviewed write plans.
 
 T-0254 applies this metadata to existing task lifecycle reports without adding orchestration. `task finish`, `task ready`, `task close`, and `task audit-close` now include default local operator `actor` context, structured `nextActions`, and optional `primaryNextAction`. T-0255 adds read-only `task complete` orchestration that composes those lifecycle reports, selects the current stage, and returns one primary next action while incomplete. It has no execute mode and does not run lifecycle commands.
+T-0262 threads explicit actor CLI options through task lifecycle reports, `handoff suggest`, and `dev docker-check`; it does not add scheduling, assignment, or automatic coordinator/worker routing.
 
 T-0257 adds read-only `handoff suggest` reports for coordinator-reviewed `docs/AGENT_HANDOFF.md` updates. The command returns target before-hash and shared-doc write-boundary metadata plus section fragments; it does not apply the fragments and has no execute mode.
 

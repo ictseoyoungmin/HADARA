@@ -6,6 +6,7 @@ import { createTaskFinishReport, formatTaskFinishReport } from '../task/task-fin
 import { createTaskNextReport, formatTaskNextReport } from '../task/task-next';
 import { createTaskUpgradeScaffoldReport, formatTaskUpgradeScaffoldReport } from '../task/task-upgrade-scaffold';
 import { createTaskWorkbenchReport, formatTaskWorkbenchReport } from '../services/task-workbench';
+import { getActorContextOption } from './actor';
 import { getFlag, getStringOption } from './args';
 import { createTaskListReport, createTaskShowReport, formatTaskListReport } from './task-json';
 
@@ -84,7 +85,8 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   if (sub === 'close') {
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) throw new Error('task close requires --task <task-id>');
-    const report = createTaskCloseReport(input.projectRoot, id, getFlag(input.args, '--execute') ? 'execute' : 'dry-run');
+    const actor = getActorContextOption(input.args);
+    const report = createTaskCloseReport(input.projectRoot, id, getFlag(input.args, '--execute') ? 'execute' : 'dry-run', { actor });
     if (getFlag(input.args, '--execute') && report.ok) executeTaskCloseEvidence(input.projectRoot, report);
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
@@ -113,7 +115,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   if (sub === 'complete') {
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) throw new Error('task complete requires --task <task-id>');
-    const report = createTaskCompleteFlowReport(input.projectRoot, id, { executeRequested: getFlag(input.args, '--execute') });
+    const report = createTaskCompleteFlowReport(input.projectRoot, id, { executeRequested: getFlag(input.args, '--execute'), actor: getActorContextOption(input.args) });
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {
@@ -126,7 +128,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   if (sub === 'finish') {
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) throw new Error('task finish requires --task <task-id>');
-    const report = createTaskFinishReport(input.projectRoot, id, getFlag(input.args, '--execute') ? 'execute' : 'dry-run');
+    const report = createTaskFinishReport(input.projectRoot, id, getFlag(input.args, '--execute') ? 'execute' : 'dry-run', { actor: getActorContextOption(input.args) });
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {
@@ -139,7 +141,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   if (sub === 'audit-close') {
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) throw new Error('task audit-close requires --task <task-id>');
-    const report = createTaskAuditCloseReport(input.projectRoot, id);
+    const report = createTaskAuditCloseReport(input.projectRoot, id, { actor: getActorContextOption(input.args) });
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {
@@ -154,7 +156,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
     if (!id || id.startsWith('--')) throw new Error('task ready requires --task <task-id>');
     const level = getStringOption(input.args, '--level', 'done') ?? 'done';
     if (level !== 'done') throw new Error(`unsupported task ready level: ${level}`);
-    const report = createTaskReadyReport(input.projectRoot, id, 'done');
+    const report = createTaskReadyReport(input.projectRoot, id, 'done', { actor: getActorContextOption(input.args) });
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {
