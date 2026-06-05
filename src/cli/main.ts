@@ -38,6 +38,7 @@ Usage:
   hadara protocol remediate --fix task-board-row|decisions-table-frame|project-state-profile|evidence-jsonl [--task <task-id>] [--profile basic|standard|governed] [--execute --before-hash <hash>] [--json]
   hadara tools list [--json]
   hadara handoff update --task <task-id> [--summary <text>] [--next <text>]
+  hadara handoff suggest --task <task-id> [--json]
   hadara write preflight <command...> [--json]
   hadara policy check-shell <command> [--mode readonly|assisted|trusted|auto|release]
   hadara policy preflight-shell <command> [--mode readonly|assisted|trusted|auto|release] [--json]
@@ -131,7 +132,7 @@ async function main(args = process.argv.slice(2)): Promise<void> {
 
     case 'handoff': {
       const { handleHandoffCommand } = await import('./handoff');
-      if (handleHandoffCommand({ args, projectRoot: paths.projectRoot })) return;
+      if (handleHandoffCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 

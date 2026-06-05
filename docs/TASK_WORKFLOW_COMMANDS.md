@@ -45,6 +45,8 @@ Future commands should use `--agent-id`, `--run-id`, `--actor-role`, `--parent-r
 
 T-0254 applies this metadata to existing task lifecycle reports without adding orchestration. `task finish`, `task ready`, `task close`, and `task audit-close` now include default local operator `actor` context, structured `nextActions`, and optional `primaryNextAction`. T-0255 adds read-only `task complete` orchestration that composes those lifecycle reports, selects the current stage, and returns one primary next action while incomplete. It has no execute mode and does not run lifecycle commands.
 
+T-0257 adds read-only `handoff suggest` reports for coordinator-reviewed `docs/AGENT_HANDOFF.md` updates. The command returns target before-hash and shared-doc write-boundary metadata plus section fragments; it does not apply the fragments and has no execute mode.
+
 Example:
 
 ```bash
@@ -59,6 +61,7 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 | `hadara task next --json` | Recommend next work from handoff, roadmap, and board state. | Read-only report. | No. | Recommendation report was generated. | Task-style failures use 6. |
 | `hadara task status --task T-XXXX --json` | Operator console projection for one task. | Read-only report. | No. | Report was generated for an existing task, not that the task is ready. | Task-style failures use 6. |
 | `hadara task complete --task T-XXXX --json` | Summarize the completion workflow stage and primary next command. | Read-only report. | No. | The task is fully closed and audited. | Task-style failures use 6. |
+| `hadara handoff suggest --task T-XXXX --json` | Suggest coordinator-reviewed handoff section fragments for a task. | Read-only report. | No. | Suggestion report generated without blocking issues. | Task-style failures use 6. |
 | `hadara evidence add-command --task T-XXXX --summary "..." --result passed --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence. | Evidence append succeeded. | Evidence/task-style failures use 6. |
 | `hadara task ready --task T-XXXX --level done --json` | Readiness preflight before finish/close. | Read-only report. | No. | Requested readiness level passed. | Task-style failures use 6. |
 | `hadara task finish --task T-XXXX --json` | Preview bounded status bookkeeping for `TASK.md` and `docs/TASK_BOARD.md`. | Dry-run report. | No. | Finish plan has no blocking issues. | Task-style failures use 6. |
@@ -72,6 +75,7 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 - `task next` chooses work; it does not create a capsule or infer completion. Handoff-first recommendations may use `taskId: TBD`; consumers must inspect `sourceKind`, `taskCapsulePresent`, `createCommand`, and `backlog`.
 - `task status` is an operator console; `ok: true` means report generation succeeded. Readiness lives in `state.ready`, `summary.blockers`, and `issues`.
 - `task complete` is a read-only workflow compressor. It may report `finish-required`, `ready-required`, `close-required`, `audit-required`, `handoff-update-suggested`, or `complete`, but it must not execute or append evidence. `--execute` returns a blocked `hadara.task.complete_flow.v1` report.
+- `handoff suggest` is a read-only shared-doc suggestion surface. It reports `docs/AGENT_HANDOFF.md` before-hash and section fragments for coordinator review, but it must not update the handoff or any other state document. `--execute` returns a blocked `hadara.handoff.suggestion.v1` report.
 - `task ready` checks whether the capsule can satisfy a requested validation level; it does not write evidence or status.
 - `evidence add-command` records an operator-supplied command result; it does not execute shell commands or capture stdout/stderr.
 - `task finish` may update only the Task Capsule `TASK.md` status and matching `docs/TASK_BOARD.md` status/path row.
