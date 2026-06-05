@@ -366,11 +366,25 @@ npm publish "${NPM_TARBALL}" --registry="${REGISTRY}"
 echo
 echo "npm publish completed."
 
-PUBLISHED_VERSION="$(npm view "${PACKAGE_NAME}@${VERSION}" version --registry="${REGISTRY}")"
+PUBLISHED_VERSION=""
+for attempt in 1 2 3 4 5 6 7 8 9 10; do
+set +e
+PUBLISHED_VERSION="$(npm view "${PACKAGE_NAME}@${VERSION}" version --registry="${REGISTRY}" 2>/dev/null)"
+NPM_VIEW_STATUS=$?
+set -e
+if [[ "${NPM_VIEW_STATUS}" -eq 0 && "${PUBLISHED_VERSION}" == "${VERSION}" ]]; then
+break
+fi
+if [[ "${attempt}" -lt 10 ]]; then
+echo "npm view has not observed ${PACKAGE_NAME}@${VERSION} yet; retrying (${attempt}/10)."
+sleep 10
+fi
+done
+
 if [[ "${PUBLISHED_VERSION}" != "${VERSION}" ]]; then
 echo "npm view verification failed after publish."
 echo "Expected: ${VERSION}"
-echo "Actual: ${PUBLISHED_VERSION}"
+echo "Actual: ${PUBLISHED_VERSION:-<not found>}"
 exit 1
 fi
 
