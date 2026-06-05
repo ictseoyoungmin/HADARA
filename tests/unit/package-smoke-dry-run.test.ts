@@ -330,10 +330,10 @@ describe('package smoke dry-run', () => {
 describe('package smoke local execution', () => {
   it('creates a reduced schema-valid local execution report with cleanup', () => {
     const root = tempProject();
-    const calls: Array<{ command: string; args: string[]; cwd: string }> = [];
+    const calls: Array<{ command: string; args: string[]; cwd: string; env?: NodeJS.ProcessEnv }> = [];
     let workspace = '';
     const runner: PackageSmokeCommandRunner = (command, args, options) => {
-      calls.push({ command, args, cwd: options.cwd });
+      calls.push({ command, args, cwd: options.cwd, env: options.env });
       if (args[0] === 'pack') {
         workspace = String(args[args.indexOf('--pack-destination') + 1]);
         fs.writeFileSync(path.join(workspace, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
@@ -414,6 +414,10 @@ describe('package smoke local execution', () => {
     expect(encoded).not.toContain(workspace);
     expect(encoded).not.toContain('npm notice');
     expect(calls.map((call) => call.args[0])).toEqual(['pack', 'install', 'doctor', 'smoke']);
+    expect(calls.find((call) => call.args[0] === 'doctor')?.args).toEqual(['doctor', '--json']);
+    expect(calls.find((call) => call.args[0] === 'smoke')?.args).toEqual(['smoke', 'run', '--profile', 'core', '--json']);
+    expect(calls.find((call) => call.args[0] === 'doctor')?.env?.HADARA_PROJECT_ROOT).toBe(root);
+    expect(calls.find((call) => call.args[0] === 'smoke')?.env?.HADARA_PROJECT_ROOT).toBe(root);
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
   });
 
@@ -462,6 +466,45 @@ describe('package smoke local execution', () => {
       })
     );
     expect(encoded).not.toContain('/home/alice/private');
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
+  it('uses the single workspace tarball when npm pack returns no JSON stdout', () => {
+    const root = tempProject();
+    const runner: PackageSmokeCommandRunner = (_command, args) => {
+      if (args[0] === 'pack') {
+        const workspace = String(args[args.indexOf('--pack-destination') + 1]);
+        fs.writeFileSync(path.join(workspace, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
+        return {
+          status: 0,
+          stdout: '',
+          stderr: '',
+          elapsedMs: 10
+        };
+      }
+      if (args[0] === 'install') {
+        return { status: 0, stdout: 'added 1 package', stderr: '', elapsedMs: 12 };
+      }
+      return { status: 0, stdout: '', stderr: '', elapsedMs: 1 };
+    };
+
+    const report = createPackageSmokeLocalReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      runner,
+      timeoutSeconds: 30
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.steps.find((step) => step.id === 'npm-pack')).toMatchObject({
+      status: 'passed',
+      summary: 'npm pack produced a temporary package tarball.'
+    });
+    expect(report.artifacts).toContainEqual(
+      expect.objectContaining({
+        kind: 'package-artifact',
+        relativePath: 'hadara-0.0.0-bootstrap.tgz'
+      })
+    );
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
   });
 

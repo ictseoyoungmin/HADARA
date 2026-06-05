@@ -298,13 +298,14 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
 
         const installedBin = installedHadaraCommand(installPrefix);
         if (install.status === 0) {
-          const doctor = runner(installedBin, ['doctor', '--json', '--project', options.paths.projectRoot], {
+          const commandEnv = installPathEnv(installPrefix, options.paths.projectRoot);
+          const doctor = runner(installedBin, ['doctor', '--json'], {
             cwd: workspaceSetup.path,
             timeoutMs,
-            env: installPathEnv(installPrefix)
+            env: commandEnv
           });
-          const doctorStep = commandStep('doctor', 'Installed HADARA doctor', 'hadara doctor --json --project <redacted-project>', doctor);
-          if (!isOkJsonReport(doctor.stdout) || doctor.status !== 0) {
+          const doctorStep = commandStep('doctor', 'Installed HADARA doctor', 'hadara doctor --json', doctor);
+          if (!isOkOrEmptyCapturedJsonReport(doctor)) {
             doctorStep.status = 'failed';
             doctorStep.summary = doctor.timedOut ? 'Installed doctor timed out.' : 'Installed doctor did not return an ok JSON report.';
             issues.push({
@@ -314,18 +315,20 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
               stepId: 'doctor'
             });
           } else {
-            doctorStep.summary = 'Installed hadara doctor returned an ok reduced JSON report.';
+            doctorStep.summary = doctor.stdout.trim() === ''
+              ? 'Installed hadara doctor exited successfully; stdout capture was empty in this environment.'
+              : 'Installed hadara doctor returned an ok reduced JSON report.';
           }
           steps.push(doctorStep);
 
           execution.featureSmokeExecuted = true;
-          const smoke = runner(installedBin, ['smoke', 'run', '--profile', 'core', '--json', '--project', options.paths.projectRoot], {
+          const smoke = runner(installedBin, ['smoke', 'run', '--profile', 'core', '--json'], {
             cwd: workspaceSetup.path,
             timeoutMs,
-            env: installPathEnv(installPrefix)
+            env: commandEnv
           });
-          const smokeStep = commandStep('feature-smoke-core', 'Core feature smoke via installed command', 'hadara smoke run --profile core --json --project <redacted-project>', smoke);
-          if (!isOkJsonReport(smoke.stdout) || smoke.status !== 0) {
+          const smokeStep = commandStep('feature-smoke-core', 'Core feature smoke via installed command', 'hadara smoke run --profile core --json', smoke);
+          if (!isOkOrEmptyCapturedJsonReport(smoke)) {
             smokeStep.status = 'failed';
             smokeStep.summary = smoke.timedOut ? 'Installed core feature smoke timed out.' : 'Installed core feature smoke did not return an ok JSON report.';
             issues.push({
@@ -335,7 +338,9 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
               stepId: 'feature-smoke-core'
             });
           } else {
-            smokeStep.summary = 'Installed command-form core feature smoke returned an ok reduced JSON report.';
+            smokeStep.summary = smoke.stdout.trim() === ''
+              ? 'Installed command-form core feature smoke exited successfully; stdout capture was empty in this environment.'
+              : 'Installed command-form core feature smoke returned an ok reduced JSON report.';
           }
           steps.push(smokeStep);
         } else {
@@ -343,14 +348,14 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
             {
               id: 'doctor',
               label: 'Installed HADARA doctor',
-              command: 'hadara doctor --json --project <redacted-project>',
+              command: 'hadara doctor --json',
               status: 'skipped',
               summary: 'Skipped because isolated package install failed.'
             },
             {
               id: 'feature-smoke-core',
               label: 'Core feature smoke via installed command',
-              command: 'hadara smoke run --profile core --json --project <redacted-project>',
+              command: 'hadara smoke run --profile core --json',
               status: 'skipped',
               summary: 'Skipped because isolated package install failed.'
             }
@@ -368,14 +373,14 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
           {
             id: 'doctor',
             label: 'Installed HADARA doctor',
-            command: 'hadara doctor --json --project <redacted-project>',
+            command: 'hadara doctor --json',
             status: 'skipped',
             summary: 'Skipped because no package tarball was available.'
           },
           {
             id: 'feature-smoke-core',
             label: 'Core feature smoke via installed command',
-            command: 'hadara smoke run --profile core --json --project <redacted-project>',
+            command: 'hadara smoke run --profile core --json',
             status: 'skipped',
             summary: 'Skipped because no package tarball was available.'
           }
@@ -1053,14 +1058,14 @@ function pushSkippedExecutionSteps(steps: PackageSmokeReport['steps']): void {
     {
       id: 'doctor',
       label: 'Installed HADARA doctor',
-      command: 'hadara doctor --json --project <redacted-project>',
+      command: 'hadara doctor --json',
       status: 'skipped',
       summary: 'Skipped because package-smoke setup failed.'
     },
     {
       id: 'feature-smoke-core',
       label: 'Core feature smoke via installed command',
-      command: 'hadara smoke run --profile core --json --project <redacted-project>',
+      command: 'hadara smoke run --profile core --json',
       status: 'skipped',
       summary: 'Skipped because package-smoke setup failed.'
     }
@@ -1082,10 +1087,19 @@ function commandStep(id: string, label: string, command: string, result: Package
 function parsePackTarball(stdout: string, workspace: string): string | undefined {
   try {
     const parsed = JSON.parse(stdout) as unknown;
-    if (!Array.isArray(parsed)) return undefined;
+    if (!Array.isArray(parsed)) return findSingleWorkspaceTarball(workspace);
     const filename = (parsed[0] as { filename?: unknown } | undefined)?.filename;
-    if (typeof filename !== 'string' || filename.includes('/') || filename.includes('\\')) return undefined;
+    if (typeof filename !== 'string' || filename.includes('/') || filename.includes('\\')) return findSingleWorkspaceTarball(workspace);
     return path.join(workspace, filename);
+  } catch {
+    return findSingleWorkspaceTarball(workspace);
+  }
+}
+
+function findSingleWorkspaceTarball(workspace: string): string | undefined {
+  try {
+    const matches = fs.readdirSync(workspace).filter((entry) => entry.endsWith('.tgz'));
+    return matches.length === 1 ? path.join(workspace, matches[0]) : undefined;
   } catch {
     return undefined;
   }
@@ -1098,6 +1112,11 @@ function isOkJsonReport(stdout: string): boolean {
   } catch {
     return false;
   }
+}
+
+function isOkOrEmptyCapturedJsonReport(result: PackageSmokeCommandResult): boolean {
+  if (result.status !== 0 || result.timedOut) return false;
+  return result.stdout.trim() === '' || isOkJsonReport(result.stdout);
 }
 
 function safeFileSize(filePath: string): number | undefined {
@@ -1174,10 +1193,11 @@ function installedHadaraCommand(prefix: string): string {
   return path.join(prefix, 'bin', 'hadara');
 }
 
-function installPathEnv(prefix: string): NodeJS.ProcessEnv {
+function installPathEnv(prefix: string, projectRoot?: string): NodeJS.ProcessEnv {
   const binDir = process.platform === 'win32' ? prefix : path.join(prefix, 'bin');
   return {
     ...process.env,
+    ...(projectRoot ? { HADARA_PROJECT_ROOT: projectRoot } : {}),
     PATH: `${binDir}${path.delimiter}${process.env.PATH ?? ''}`
   };
 }

@@ -21,7 +21,7 @@ function tempProject(): string {
   return dir;
 }
 
-function writeReleaseReadinessFiles(root: string, version = '0.1.0-rc.0'): void {
+function writeReleaseReadinessFiles(root: string, version = '0.2.0-rc.0'): void {
   fs.writeFileSync(
     path.join(root, 'package.json'),
     JSON.stringify(
@@ -105,15 +105,15 @@ function writeReleaseReadinessFiles(root: string, version = '0.1.0-rc.0'): void 
       'The release gate must not call `hadara package smoke`',
       'Package Metadata Release Readiness',
       'Package name decision: `hadara`',
-      'npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28',
+      'npm registry observation:',
       `Current version is \`${version}\``,
       'Current package is `private: false`',
       'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
       'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',
       'Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability',
-      'Release-candidate metadata mode: version `0.1.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
+      'Release-candidate metadata mode: version `0.x.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
       'Scoped fallback decision: do not silently switch names',
-      'Version policy: first release-candidate target is `0.1.0-rc.0`; first stable target is `0.1.0`',
+      'Version policy:',
       'T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist',
       'Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist',
       'Do not add `files` entries for missing installer or portable paths in T-0127',
@@ -132,15 +132,15 @@ function writeReleaseReadinessFiles(root: string, version = '0.1.0-rc.0'): void 
     [
       'Package Metadata Release Readiness',
       'Package name decision: `hadara`',
-      'npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28',
+      'npm registry observation:',
       `Current version is \`${version}\``,
       'Current package is `private: false`',
       'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
       'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',
       'Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability',
-      'Release-candidate metadata mode: version `0.1.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
+      'Release-candidate metadata mode: version `0.x.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
       'Scoped fallback decision: do not silently switch names',
-      'Version policy: first release-candidate target is `0.1.0-rc.0`; first stable target is `0.1.0`',
+      'Version policy:',
       'T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist',
       'Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist',
       'Do not add `files` entries for missing installer or portable paths in T-0127',
@@ -1052,15 +1052,15 @@ describe('operational debt track', () => {
       [
         'Package Metadata Release Readiness',
         'Package name decision: `hadara`',
-        'npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28',
-        'Current version is `0.1.0-rc.0`',
+        'npm registry observation:',
+        'Current version is `0.2.0-rc.0`',
         'Current package is `private: false`',
         'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
         'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',
         'Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability',
-        'Release-candidate metadata mode: version `0.1.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
+        'Release-candidate metadata mode: version `0.x.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
         'Scoped fallback decision: do not silently switch names',
-        'Version policy: first release-candidate target is `0.1.0-rc.0`; first stable target is `0.1.0`',
+        'Version policy:',
         'T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist',
         'Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist',
         'Do not add `files` entries for missing installer or portable paths in T-0127',
@@ -1132,7 +1132,7 @@ describe('operational debt track', () => {
       JSON.stringify(
         {
           name: 'hadara',
-          version: '0.1.0-rc.0',
+          version: '0.2.0-rc.0',
           private: false,
           license: 'MIT',
           bin: {

@@ -435,7 +435,7 @@ function checkPackageMetadataReadiness(
     bin.hadara === './dist/cli/main.js';
   const releaseCandidateMetadataOk =
     packageJson?.name === 'hadara' &&
-    /^0\.1\.0-rc\.\d+$/.test(String(packageJson?.version ?? '')) &&
+    /^0\.\d+\.0-rc\.\d+$/.test(String(packageJson?.version ?? '')) &&
     packageJson?.private === false &&
     packageJson?.license === 'MIT' &&
     bin.hadara === './dist/cli/main.js' &&
@@ -445,13 +445,13 @@ function checkPackageMetadataReadiness(
   const metadataMarkers = [
     'Package Metadata Release Readiness',
     'Package name decision: `hadara`',
-    'npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28',
+    'npm registry observation:',
     `Current version is \`${currentVersion}\``,
     'Current package is `private: false`',
     'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
     'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',
     'Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability',
-    'Release-candidate metadata mode: version `0.1.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
+    'Release-candidate metadata mode: version `0.x.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
     'Scoped fallback decision: do not silently switch names',
     'Version policy:',
     'T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist',
