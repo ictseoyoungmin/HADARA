@@ -81,7 +81,6 @@ export function getOrCreateCachedReport<T>(
   create: () => T
 ): DashboardCacheResult<T> {
   const nowMs = options.now?.() ?? Date.now();
-  const nowIso = new Date(nowMs).toISOString();
   const existing = entries.get(key) as DashboardCacheEntry<T> | undefined;
 
   if (!options.bypass && existing && existing.expiresAtMs > nowMs) {
@@ -98,14 +97,15 @@ export function getOrCreateCachedReport<T>(
   }
 
   const value = create();
-  const expiresAtMs = nowMs + options.ttlMs;
+  const generatedAtMs = options.now?.() ?? Date.now();
+  const expiresAtMs = generatedAtMs + options.ttlMs;
   const status: DashboardCacheStatus = options.bypass ? 'bypass' : existing ? 'stale' : 'miss';
 
   if (!options.bypass) {
     entries.set(key, {
       key,
       value: cloneReport(value),
-      generatedAtMs: nowMs,
+      generatedAtMs,
       expiresAtMs
     });
   }
@@ -116,7 +116,7 @@ export function getOrCreateCachedReport<T>(
       status,
       key,
       ttlMs: options.ttlMs,
-      generatedAt: nowIso,
+      generatedAt: new Date(generatedAtMs).toISOString(),
       expiresAt: new Date(expiresAtMs).toISOString()
     }
   };

@@ -57,6 +57,28 @@ describe('dashboard process-memory cache', () => {
     expect(afterBypass.value.value).toBe(2);
   });
 
+  it('starts miss TTL after slow report creation completes', () => {
+    let nowMs = 0;
+    const key = createDashboardCacheKey(process.cwd(), 'bootstrap', 'slow');
+    const first = getOrCreateCachedReport(
+      key,
+      { ttlMs: 10, now: () => nowMs },
+      () => {
+        nowMs = 20;
+        return { value: 'first' };
+      }
+    );
+    const second = getOrCreateCachedReport(key, { ttlMs: 10, now: () => 21 }, () => ({ value: 'second' }));
+
+    expect(first.cache).toMatchObject({
+      status: 'miss',
+      generatedAt: '1970-01-01T00:00:00.020Z',
+      expiresAt: '1970-01-01T00:00:00.030Z'
+    });
+    expect(second.cache.status).toBe('hit');
+    expect(second.value.value).toBe('first');
+  });
+
   it('isolates dashboard cache keys by redacted project fingerprint', () => {
     const firstRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-dashboard-cache-a-'));
     const secondRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-dashboard-cache-b-'));

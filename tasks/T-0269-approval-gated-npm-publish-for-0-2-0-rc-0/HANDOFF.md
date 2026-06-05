@@ -21,6 +21,8 @@
 | Hardened the manual npm publish helper. | `manual-publish-rc.sh` now requires an explicit task id, checks for a clean worktree, uses T-0269 examples, passes approval metadata to publish dry-run gates, and records evidence after post-publish `npm view` verification. |
 | Fixed reviewer-provided focused regressions. | README init-profile command/comment and optional/deferred integration heading were restored; dashboard cache TTLs were widened; Docker focused tests passed `init.test.ts` and `dashboard-static.test.ts`. |
 | Fixed slow-container dashboard cache test flake. | In `hadara-rc-dryrun`, the test source was current, but the cache hit assertion was still placed after slow later read-model calls; moving hit/bypass checks next to the first bootstrap miss made `dashboard-static.test.ts` pass. |
+| Fixed dashboard cache self-expiry for slow report creation. | Cache miss/stale writes now compute `generatedAt` and `expiresAt` after report creation completes, so a slow first bootstrap report is still hittable immediately afterward. |
+| Clarified task lifecycle docs. | README, TASK_WORKFLOW_COMMANDS, and IMPLEMENTATION_SOP now include the `task create` branch and place `task complete` as optional post-ready workflow compression rather than an early mandatory step. |
 
 ## Next Recommended Step
 

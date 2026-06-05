@@ -105,12 +105,21 @@ The authoritative command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`. Fo
 
 ```bash
 hadara task next --json
+
+# If a matching capsule already exists:
 hadara task status --task T-XXXX --json
 
-# work...
+# If no matching capsule exists, create one first:
+hadara task create "task title" --json
+hadara task status --task T-XXXX --json
+
+# Do the scoped work.
 
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
 hadara task ready --task T-XXXX --level done --json
+
+# Optional workflow compression / next action preview:
+hadara task complete --task T-XXXX --json
 
 hadara task finish --task T-XXXX --json
 hadara task finish --task T-XXXX --execute --json
