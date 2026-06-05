@@ -4,6 +4,7 @@
 |---|---|---|---|
 | `README.md` | Updated | Align public install/npx examples and release boundary language with `hadara@0.2.0-rc.0` publish candidate. | Done |
 | `scripts/release/manual-publish-rc.sh` | Updated | Remove stale T-0143 default/examples, require explicit task id, add clean worktree guard, carry approval metadata through dry-run gates, and attach post-publish evidence after npm view verification. | Done |
+| `src/services/dashboard-cache.ts` | Updated | Increase dashboard bootstrap/timeline/task-detail TTLs so slow full-suite dashboard static tests do not expire the cache before the expected warm-hit assertion. | Done |
 | `docs/assets/hadara_sub_right_name.png` | Referenced | Place HADARA image at README top. | Done |
 | `docs/RELEASE_NOTES.md` | Updated | Record T-0269 pre-publish status without claiming publish. | Done |
 | `docs/RELEASE_READINESS.md` | Updated | Record T-0269 dry-run/token status and README asset/package boundary. | Done |

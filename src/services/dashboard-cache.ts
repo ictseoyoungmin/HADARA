@@ -34,9 +34,9 @@ export interface DashboardCacheResult<T> {
 // filesystems) read, subsequent navigation and refresh land on a warm cache.
 // Manual Refresh uses ?cache=bypass to force a fresh read when needed.
 export const DASHBOARD_CACHE_TTLS = {
-  bootstrap: 15_000,
-  timeline: 15_000,
-  taskDetail: 30_000,
+  bootstrap: 60_000,
+  timeline: 60_000,
+  taskDetail: 60_000,
   evidenceLint: 30_000,
   debt: 30_000
 } as const;
