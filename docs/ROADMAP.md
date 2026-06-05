@@ -58,15 +58,9 @@ Phase 5 is complete through T-0196 and Phase 5.5 Dashboard production-readiness 
 
 Phase 5.7 dashboard projection/read-model hardening and TUI shared-read-model alignment are now sufficient for current operator observation needs. Dashboard and TUI UI work is paused after T-0232. Do not continue polishing dashboards or terminal UI unless a concrete operator blocker appears. Deferred UI/performance items are dashboard streaming task scan, dashboard projection freshness manifests, TUI fast/full mode contract documentation, deeper tab-by-tab TUI productization, and visual/detail polish only after core workflows progress.
 
-The next roadmap emphasis should return to HADARA's core evidence and task lifecycle value. Preferred order:
+Phase 6 should focus on Operator Workflow Compression & Multi-Agent Compatibility. The intended order is common actor/run/plan/idempotency metadata first, then task lifecycle next-action metadata, task complete dry-run, close evidence idempotency/supersedes, handoff suggestion, Docker validation wrapper, task capsule templates, and release dry-run service decomposition. The phase is not a full multi-agent runtime and must not add early `task complete --execute`, hidden shared-doc writes, publish automation, or scheduler behavior. The local ignored Phase 6 agent-UX spec under `docs/specs/agent-ux/` is explicit required reading in this workspace, while remaining intentionally uncommitted.
 
-1. Evidence v2 writer / persisted evidence IDs.
-2. Task finish / ready / close / audit workflow hardening.
-3. Task capsule upgrade/remediation dry-run.
-4. Release/package readiness hardening.
-5. Hermes/MCP integration polish.
-
-Evidence v2 writer work is the strongest next candidate because legacy generated evidence ids remain unstable compatibility read-model ids, the writer still persists v1 records, and migration-preview behavior is already planned but not implemented. If that scope is too large for one capsule, start with a smaller finish/close workflow hardening capsule that reduces manual completion bookkeeping while preserving dry-run-first and bounded-write guarantees.
+The previous core evidence/release readiness emphasis has been completed through T-0252: Evidence v2 writer and migration support, task finish/ready/close/audit hardening, task upgrade/remediation dry-run guards, and release/package readiness hardening are now in place. The next roadmap emphasis is Phase 6 workflow compression, starting with T-0253 Multi-Agent Command Context Contract so later convenience commands share actor/run/plan/idempotency metadata instead of retrofitting provenance after writes exist.
 
 ## v0.4 Single-Agent Run State
 

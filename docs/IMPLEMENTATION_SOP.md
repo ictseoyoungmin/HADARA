@@ -47,10 +47,13 @@ This repository operates as the `governed` HADARA profile because it has long-li
 | `docs/DASHBOARD_REFRESH_RESPONSIVENESS_MEASUREMENT.md` | Dashboard refresh responsiveness, projection progress, or stage duration measurement work only | Operational command and interpretation guide for refresh responsiveness measurements. |
 | `docs/specs/tui/HADARA_TUI_Shared_Operator_Read_Model_Spec.md` | TUI read-model, projection status, cache, task detail, timeline/debt, or evidence-proof display work only | Source design for projection-first TUI behavior over shared operator read models after Dashboard Phase 5.7 is paused. |
 | `docs/specs/HADARA_Task_Next_Handoff_Priority_Refactor.md` | Task next recommendation policy, roadmap entry-point selection, or backlog fallback work only | Source design for handoff-first `task next` recommendations and legacy Task Board fallback handling. |
+| `docs/specs/agent-ux/HADARA_Phase6_Operator_Workflow_Compression_Multi_Agent_Compatibility_Spec.md` | Phase 6 operator workflow compression, multi-agent compatibility metadata, task complete dry-run, close idempotency, handoff suggestion, Docker validation wrapper, task templates, or release dry-run decomposition work only | Local-only ignored source design for Phase 6 workflow compression while preserving dry-run-first, hash-guarded, actor/run-aware, coordinator/worker-safe command boundaries. |
 
 When adding project-specific specs, contracts, or roadmap files, add them to this table and explain when agents must read them. Use `hadara init register-doc --path <path> --when <text> --purpose <text> --json` to preview registration, and add `--execute` to update this table.
 
 If the local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` exists in this workspace, agents may use it as supporting planning context for release/install work, but it is not required committed context.
+
+The Phase 6 agent-UX spec under `docs/specs/agent-ux/` is intentionally local-only and ignored, but in this workspace it is explicit required reading for Phase 6 operator workflow compression and multi-agent compatibility work.
 
 ## Init Profile Matrix
 
