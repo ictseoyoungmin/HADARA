@@ -53,6 +53,56 @@ describe('task create templates', () => {
     expect(validateSchema('hadara.task.create.v1', report).ok).toBe(true);
   });
 
+  it('retries when the selected task directory appears before mkdir', () => {
+    const root = tempProject();
+    let raced = false;
+
+    const report = createTaskCreateReport(root, 'Collision retry task', {
+      onBeforeCreateAttempt: ({ dir, attempt }) => {
+        if (attempt !== 1 || raced) return;
+        raced = true;
+        fs.mkdirSync(dir, { recursive: true });
+      }
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.task?.id).toBe('T-0002');
+    expect(report.task?.capsule).toBe('tasks/T-0002-collision-retry-task');
+    expect(fs.existsSync(path.join(root, 'tasks', 'T-0001-collision-retry-task', 'TASK.md'))).toBe(false);
+    expect(fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8')).toContain('| T-0002 | Collision retry task | Draft | tasks/T-0002-collision-retry-task | |');
+    expect(validateSchema('hadara.task.create.v1', report).ok).toBe(true);
+  });
+
+  it('fails clearly when task create collision retries are exhausted', () => {
+    const root = tempProject();
+
+    const report = createTaskCreateReport(root, 'Collision exhausted task', {
+      maxCreateRetries: 1,
+      onBeforeCreateAttempt: ({ dir }) => {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.task).toBeUndefined();
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CREATE_COLLISION_RETRIES_EXHAUSTED' }));
+    expect(fs.existsSync(path.join(root, 'docs', 'TASK_BOARD.md'))).toBe(false);
+    expect(validateSchema('hadara.task.create.v1', report).ok).toBe(true);
+  });
+
+  it('skips task ids already present in the Task Board even when no capsule directory exists', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(rootTaskBoard(root), '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n| T-0001 | Existing board row | Draft | tasks/T-0001-existing-board-row | |\n', 'utf8');
+
+    const report = createTaskCreateReport(root, 'Board collision task');
+
+    expect(report.ok).toBe(true);
+    expect(report.task?.id).toBe('T-0002');
+    expect(fs.readFileSync(rootTaskBoard(root), 'utf8')).toContain('| T-0002 | Board collision task | Draft | tasks/T-0002-board-collision-task | |');
+    expect(validateSchema('hadara.task.create.v1', report).ok).toBe(true);
+  });
+
   it('rejects unknown templates without creating a capsule', () => {
     const root = tempProject();
 
@@ -86,3 +136,7 @@ describe('task create templates', () => {
     expect(fs.readFileSync(path.join(root, report.task.capsule, 'TASK.md'), 'utf8')).toContain('No publish execution');
   });
 });
+
+function rootTaskBoard(root: string): string {
+  return path.join(root, 'docs', 'TASK_BOARD.md');
+}

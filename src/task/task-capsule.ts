@@ -49,7 +49,7 @@ export function isTaskCapsuleScaffoldContent(task: TaskCapsule, fileName: string
   return normalizeMarkdown(content) === normalizeMarkdown(factory(task));
 }
 
-export function nextTaskId(tasksDir: string): string {
+export function nextTaskId(tasksDir: string, blockedIds: Set<string> = new Set()): string {
   ensureDir(tasksDir);
   const max = fs
     .readdirSync(tasksDir, { withFileTypes: true })
@@ -59,44 +59,93 @@ export function nextTaskId(tasksDir: string): string {
     .map(Number)
     .reduce((acc, value) => Math.max(acc, value), 0);
 
-  return `T-${String(max + 1).padStart(4, '0')}`;
+  let next = max + 1;
+  let id = `T-${String(next).padStart(4, '0')}`;
+  while (blockedIds.has(id)) {
+    next += 1;
+    id = `T-${String(next).padStart(4, '0')}`;
+  }
+  return id;
 }
 
 export interface CreateTaskCapsuleOptions {
   templateId?: string;
+  maxCreateRetries?: number;
+  onBeforeCreateAttempt?: (attempt: { id: string; dir: string; attempt: number }) => void;
+}
+
+export class TaskCapsuleCreateCollisionError extends Error {
+  readonly code = 'TASK_CREATE_COLLISION_RETRIES_EXHAUSTED';
+  readonly attempts: number;
+
+  constructor(attempts: number) {
+    super(`Task Capsule creation collided ${attempts} time(s); retry limit exhausted.`);
+    this.attempts = attempts;
+  }
 }
 
 export function createTaskCapsule(projectRoot: string, title: string, options: CreateTaskCapsuleOptions = {}): TaskCapsule {
   const tasksDir = path.join(projectRoot, 'tasks');
-  const id = nextTaskId(tasksDir);
   const slug = slugify(title);
-  const dir = path.join(tasksDir, `${id}-${slug}`);
-  const task: TaskCapsule = { id, title, slug, dir };
+  ensureDir(tasksDir);
+  const maxCreateRetries = Math.max(1, options.maxCreateRetries ?? 5);
+  const blockedIds = new Set<string>();
 
-  ensureDir(dir);
-  for (const [fileName, factory] of Object.entries(TASK_FILES)) {
-    writeFileIfMissing(path.join(dir, fileName), factory(task));
-  }
-  const template = getTaskTemplate(options.templateId);
-  if (template) {
-    for (const [fileName, factory] of Object.entries(template.files)) {
-      if (factory) fs.writeFileSync(path.join(dir, fileName), factory(task), 'utf8');
+  for (let attempt = 1; attempt <= maxCreateRetries; attempt += 1) {
+    const id = nextTaskId(tasksDir, blockedIds);
+    const dir = path.join(tasksDir, `${id}-${slug}`);
+    const task: TaskCapsule = { id, title, slug, dir };
+
+    if (taskBoardContainsId(projectRoot, id)) {
+      blockedIds.add(id);
+      continue;
     }
+
+    options.onBeforeCreateAttempt?.({ id, dir, attempt });
+    try {
+      fs.mkdirSync(dir);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
+        blockedIds.add(id);
+        continue;
+      }
+      throw error;
+    }
+
+    for (const [fileName, factory] of Object.entries(TASK_FILES)) {
+      writeFileIfMissing(path.join(dir, fileName), factory(task));
+    }
+    const template = getTaskTemplate(options.templateId);
+    if (template) {
+      for (const [fileName, factory] of Object.entries(template.files)) {
+        if (factory) fs.writeFileSync(path.join(dir, fileName), factory(task), 'utf8');
+      }
+    }
+
+    appendTaskBoardRow(projectRoot, task);
+    return task;
   }
 
+  throw new TaskCapsuleCreateCollisionError(maxCreateRetries);
+}
+
+function appendTaskBoardRow(projectRoot: string, task: TaskCapsule): void {
   const taskBoard = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
   ensureDir(path.dirname(taskBoard));
-  const line = `| ${id} | ${title.replace(/\|/g, '/')} | Draft | ${path.relative(projectRoot, dir)} | |\n`;
+  const line = `| ${task.id} | ${task.title.replace(/\|/g, '/')} | Draft | ${path.relative(projectRoot, task.dir)} | |\n`;
   if (!fs.existsSync(taskBoard)) {
     fs.writeFileSync(taskBoard, `# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n${line}`, 'utf8');
-  } else {
-    const current = fs.readFileSync(taskBoard, 'utf8');
-    if (!current.includes(`| ${id} |`)) {
-      fs.appendFileSync(taskBoard, line, 'utf8');
-    }
+    return;
   }
+  const current = fs.readFileSync(taskBoard, 'utf8');
+  if (current.includes(`| ${task.id} |`)) throw new TaskCapsuleCreateCollisionError(1);
+  fs.appendFileSync(taskBoard, line, 'utf8');
+}
 
-  return task;
+function taskBoardContainsId(projectRoot: string, id: string): boolean {
+  const taskBoard = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
+  if (!fs.existsSync(taskBoard)) return false;
+  return fs.readFileSync(taskBoard, 'utf8').includes(`| ${id} |`);
 }
 
 export function listTaskCapsules(projectRoot: string): TaskCapsule[] {

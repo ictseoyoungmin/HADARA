@@ -1,6 +1,6 @@
 import path from 'node:path';
 import type { TaskCapsule } from './task-capsule';
-import { createTaskCapsule } from './task-capsule';
+import { createTaskCapsule, TaskCapsuleCreateCollisionError, type CreateTaskCapsuleOptions } from './task-capsule';
 import { getTaskTemplate, supportedTaskTemplateIds, templateSummary, type TaskTemplateSummary } from './task-templates';
 
 export interface TaskCreateReport {
@@ -27,9 +27,10 @@ export interface TaskCreateReport {
   }>;
 }
 
-export function createTaskCreateReport(projectRoot: string, title: string, options: { templateId?: string } = {}): TaskCreateReport {
+export function createTaskCreateReport(projectRoot: string, title: string, options: Pick<CreateTaskCapsuleOptions, 'templateId' | 'maxCreateRetries' | 'onBeforeCreateAttempt'> = {}): TaskCreateReport {
   const supportedTemplates = supportedTaskTemplateIds();
   const template = getTaskTemplate(options.templateId);
+  const templateReport = templateSummary(template);
   if (options.templateId && !template) {
     return {
       schemaVersion: 'hadara.task.create.v1',
@@ -53,13 +54,34 @@ export function createTaskCreateReport(projectRoot: string, title: string, optio
     };
   }
 
-  const task = createTaskCapsule(projectRoot, title, { templateId: template?.id });
+  let task: TaskCapsule;
+  try {
+    task = createTaskCapsule(projectRoot, title, { templateId: template?.id, maxCreateRetries: options.maxCreateRetries, onBeforeCreateAttempt: options.onBeforeCreateAttempt });
+  } catch (error) {
+    if (error instanceof TaskCapsuleCreateCollisionError) {
+      return {
+        schemaVersion: 'hadara.task.create.v1',
+        command: 'task.create',
+        ok: false,
+        ...(templateReport ? { template: templateReport } : {}),
+        supportedTemplates,
+        issues: [
+          {
+            severity: 'error',
+            code: error.code,
+            message: `${error.message} Re-run task create after refreshing task state.`
+          }
+        ]
+      };
+    }
+    throw error;
+  }
   return {
     schemaVersion: 'hadara.task.create.v1',
     command: 'task.create',
     ok: true,
     task: taskSummary(projectRoot, task),
-    template: templateSummary(template),
+    ...(templateReport ? { template: templateReport } : {}),
     supportedTemplates,
     issues: []
   };
