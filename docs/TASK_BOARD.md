@@ -267,3 +267,4 @@
 | T-0264 | Close Evidence Append Race Recheck | Done | tasks/T-0264-close-evidence-append-race-recheck | |
 | T-0265 | Task Create Collision Guard | Done | tasks/T-0265-task-create-collision-guard | |
 | T-0266 | Handoff Suggestion Fragment Polish | Done | tasks/T-0266-handoff-suggestion-fragment-polish | |
+| T-0267 | Task Finish EOF Normalization | Done | tasks/T-0267-task-finish-eof-normalization | |

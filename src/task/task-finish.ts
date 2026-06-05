@@ -234,7 +234,7 @@ function planWrites(
   if (taskStatus !== 'Done' || statusHistoryStatus !== 'Done') {
     const taskPath = path.join(task.dir, 'TASK.md');
     const taskContent = fs.existsSync(taskPath) ? fs.readFileSync(taskPath, 'utf8') : '';
-    const nextTaskContent = replaceTaskStatus(taskContent, 'Done');
+    const nextTaskContent = normalizeAtomicTextDocument(replaceTaskStatus(taskContent, 'Done'));
     if (nextTaskContent === taskContent || latestStatusHistoryStatus(nextTaskContent) !== 'Done') {
       issues.push({
         severity: 'error',
@@ -270,7 +270,7 @@ function planWrites(
   if (!board.present) {
     const beforeContent = board.content ?? defaultTaskBoard();
     const afterRow = formatTaskBoardRow(task, capsule, 'Done');
-    const afterContent = appendTaskBoardRow(beforeContent, afterRow);
+    const afterContent = normalizeAtomicTextDocument(appendTaskBoardRow(beforeContent, afterRow));
     writes.push({
       path: 'docs/TASK_BOARD.md',
       action: 'insert',
@@ -298,7 +298,7 @@ function planWrites(
   const expected = formatTaskBoardRow(task, capsule, 'Done');
   if (board.line !== expected) {
     const beforeContent = board.content ?? '';
-    const afterContent = replaceTaskBoardRow(beforeContent, task.id, expected);
+    const afterContent = normalizeAtomicTextDocument(replaceTaskBoardRow(beforeContent, task.id, expected));
     if (afterContent === beforeContent) {
       issues.push({
         severity: 'error',
@@ -483,11 +483,15 @@ function replaceTaskStatus(content: string, status: string): string {
 }
 
 function nextWriteContent(current: string, write: TaskFinishWrite): string {
-  if (write.field === 'task-status') return replaceTaskStatus(current, write.after);
-  if (write.action === 'insert') return appendTaskBoardRow(current || defaultTaskBoard(), write.after);
+  if (write.field === 'task-status') return normalizeAtomicTextDocument(replaceTaskStatus(current, write.after));
+  if (write.action === 'insert') return normalizeAtomicTextDocument(appendTaskBoardRow(current || defaultTaskBoard(), write.after));
   const taskId = write.after.match(/^\|\s*(T-\d{4})\s*\|/)?.[1];
   if (!taskId) return current;
-  return replaceTaskBoardRow(current, taskId, write.after);
+  return normalizeAtomicTextDocument(replaceTaskBoardRow(current, taskId, write.after));
+}
+
+function normalizeAtomicTextDocument(content: string): string {
+  return `${content.replace(/[ \t\r\n]+$/, '')}\n`;
 }
 
 function missingFileBaseline(write: TaskFinishWrite): string {

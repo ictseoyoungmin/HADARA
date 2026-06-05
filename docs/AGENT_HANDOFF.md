@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0266 Handoff Suggestion Fragment Polish is complete. |
+| Branch | main | T-0267 Task Finish EOF Normalization is complete. |
 | Current Phase | Phase 6.1 Reviewer Feedback Hardening complete | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0266 Handoff Suggestion Fragment Polish | Handoff suggestion fragments now include exact target before-hash, section title, and suggested replacement Markdown. |
-| Active / Next Task | Release Candidate Freeze / Artifact Refresh | Phase 6.1 reviewer-feedback hardening is complete through T-0266. |
-| Validation Baseline | T-0266 Docker validation passed | Focused Docker wrapper passed handoff-suggestion/schema tests; Docker sync-build passed 100 files / 673 tests; built handoff suggest smokes verified precise fragments and execute refusal. |
+| Latest Completed Task | T-0267 Task Finish EOF Normalization | `task finish` generated writes now normalize trailing blank EOF to a single final newline. |
+| Active / Next Task | Release Candidate Freeze / Artifact Refresh | Phase 6.1 reviewer-feedback hardening and the T-0267 finish hygiene hotfix are complete. |
+| Validation Baseline | T-0267 Docker validation passed | Focused Docker wrapper passed task-finish/schema tests; Docker sync-build passed 100 files / 673 tests; built task finish smoke verified no trailing blank EOF. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0267 Task Finish EOF Normalization | `task finish` generated text writes now normalize trailing whitespace/blank EOF to a single final newline through the shared dry-run/execute content path, preventing repeated `git diff --check` cleanup and close source-hash churn. | T-0267 evidence: focused Docker wrapper passed task-finish/schema tests; Docker sync-build passed 100 files / 673 tests; built task finish smoke returned finish `ok:true`, single newline EOF, and no trailing blank EOF. |
 | T-0266 Handoff Suggestion Fragment Polish | `handoff suggest` section fragments now include exact `targetBeforeHash`, `sectionTitle`, and `suggestedReplacementMarkdown`, preserve compatibility `suggestedMarkdown`, and keep read-only/execute-refusal behavior. | T-0266 evidence: focused Docker wrapper passed handoff-suggestion/schema tests; Docker sync-build passed 100 files / 673 tests; built CLI smokes verified precise fragments and `HANDOFF_SUGGEST_EXECUTE_UNSUPPORTED`. |
 | T-0265 Task Create Collision Guard | `createTaskCapsule()` now retries selected-directory collisions, skips Task Board candidate-id collisions, fails exhausted retries with `TASK_CREATE_COLLISION_RETRIES_EXHAUSTED`, and keeps no-template create reports schema-valid. | T-0265 evidence: focused Docker wrapper passed task-create/schema tests; Docker sync-build passed 100 files / 673 tests; built task-create smoke in `/tmp` returned ok:true. |
-| T-0264 Close Evidence Append Race Recheck | `task close --execute` now recomputes close evidence write metadata from latest `evidence.jsonl` immediately before append, exposes optional execute recheck metadata, and no-ops stale same-key execute reports without duplicate evidence. | T-0264 evidence: focused Docker wrapper passed task-close/schema tests; Docker sync-build passed 100 files / 670 tests; regression covers stale same-hash no-op with duplicate count 0. |
 
 ## Current Known Problems
 
@@ -67,13 +67,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Release Candidate Freeze / Artifact Refresh | Phase 6.1 reviewer-feedback hardening is complete through T-0266. | Refresh release artifacts from a clean worktree, then run release dry-run/readiness checks before any approval-gated publish path. |
+| Release Candidate Freeze / Artifact Refresh | Phase 6.1 reviewer-feedback hardening and T-0267 finish hygiene hotfix are complete. | Refresh release artifacts from a clean worktree, then run release dry-run/readiness checks before any approval-gated publish path. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| Task finish EOF normalization full check | Docker `npm run dev:docker-sync-build` passed 100 files / 673 tests during T-0267. | Focused wrapper covered task-finish/schema tests; regression checks `TASK.md` and Task Board no trailing blank EOF after finish execute; built smoke verified single newline EOF and finish `ok:true`. |
 | Handoff suggestion fragment polish full check | Docker `npm run dev:docker-sync-build` passed 100 files / 673 tests during T-0266. | Focused wrapper covered handoff-suggestion/schema tests; built handoff suggest smoke returned exact `targetBeforeHash`, `sectionTitle`, and `suggestedReplacementMarkdown`; built `--execute` smoke returned `HANDOFF_SUGGEST_EXECUTE_UNSUPPORTED`. |
 | Task create collision guard full check | Docker `npm run dev:docker-sync-build` passed 100 files / 673 tests during T-0265. | Focused wrapper covered task-create/schema tests; regression covers selected-dir race retry, retry exhaustion, Task Board id collision skip, and no-template schema validity; built task-create smoke in `/tmp` returned ok:true. |
 | Close evidence append race recheck full check | Docker `npm run dev:docker-sync-build` passed 100 files / 670 tests during T-0264. | Focused wrapper covered task-close/schema tests; regression covers stale same-hash execute recheck no-op, `closeEvidenceWrite.executeRecheck`, and audit duplicate count 0. |
