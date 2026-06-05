@@ -79,6 +79,13 @@
       "notes": "Documents read-only Agent Handoff section-fragment suggestions with shared-doc before-hash metadata."
     },
     {
+      "id": "hadara.dev.docker_check.v1",
+      "path": "src/schemas/dev-docker-check.schema.json",
+      "status": "fixture",
+      "owner": "dev/docker-check",
+      "notes": "Documents the Docker temp-copy validation wrapper with focused/full modes, explicit dist sync, and redacted evidence-ready output."
+    },
+    {
       "id": "hadara.active_run.projection.v1",
       "path": "src/schemas/active-run-projection.schema.json",
       "status": "fixture",

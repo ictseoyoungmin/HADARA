@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0257 Handoff Patch Suggestion is complete. |
+| Branch | main | T-0258 Dev Docker Validation Wrapper is complete. |
 | Current Phase | Phase 6 Operator Workflow Compression & Multi-Agent Compatibility active | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup; next core work should continue the Phase 6 spec. |
-| Latest Completed Task | T-0257 Handoff Patch Suggestion | Added read-only `hadara handoff suggest --task <id> --json` reports with target before-hash, shared-doc/coordinator metadata, task snapshot, section fragments, schema fixture, and explicit `--execute` rejection. |
-| Active / Next Task | T-0258 Dev Docker Validation Wrapper | Add the next Phase 6 validation wrapper while preserving Docker/dist freshness boundaries and no hidden command execution. |
-| Validation Baseline | T-0257 Docker validation passed | Docker sync-build passed 95 files / 644 tests; built CLI handoff suggestion smoke returned `hadara.handoff.suggestion.v1`, `ok:true`, `readOnly:true`; built `--execute` smoke returned exit 6 with `HANDOFF_SUGGEST_EXECUTE_UNSUPPORTED`. |
+| Latest Completed Task | T-0258 Dev Docker Validation Wrapper | Added `hadara dev docker-check` as the official Docker temp-copy validation wrapper with focused/full modes, explicit `--sync-dist`, redacted JSON, dist hash metadata, and evidence-ready summaries. |
+| Active / Next Task | T-0259 Task Capsule Templates | Add reusable Task Capsule templates while preserving existing task create safety and protocol validation. |
+| Validation Baseline | T-0258 Docker validation passed | Docker sync-build passed 96 files / 647 tests; built `dev docker-check --focused tests/unit/dev-docker-check.test.ts --sync-dist --json` returned `hadara.dev.docker_check.v1`, `ok:true`, `distSync.executed:true`, `conflictDetected:false`, and privacy booleans all false. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0258 Dev Docker Validation Wrapper | Added the official `hadara dev docker-check` JSON wrapper for Docker temp-copy validation, focused/full modes, explicit dist sync, redacted output, schema fixture, and compact evidence summaries. | T-0258 evidence: Docker sync-build passed 96 files / 647 tests; built wrapper smoke ran focused `tests/unit/dev-docker-check.test.ts` with explicit dist sync and returned `ok:true`. |
 | T-0257 Handoff Patch Suggestion | Added a read-only handoff suggestion command and schema that proposes Agent Handoff section fragments with before-hash and coordinator/shared-doc metadata, without applying shared-doc writes. | T-0257 evidence: Docker sync-build passed 95 files / 644 tests; built `handoff suggest --task T-0257 --json` returned `ok:true`, `readOnly:true`; built `--execute` smoke returned `HANDOFF_SUGGEST_EXECUTE_UNSUPPORTED`. |
 | T-0256 Close Evidence Idempotency / Supersedes | Added close-proof idempotency keys, close-proof/supersedes tags, actor metadata on close evidence, duplicate same-hash close no-op behavior, and audit reporting for latest non-superseded proof id, superseded ids, duplicate counts, and idempotency verdicts. | T-0256 evidence: Docker sync-build passed 94 files / 641 tests; built close dry-run smoke on T-0255 reported `closeEvidenceWrite.duplicateAction: append` with `supersedes` after Task Board changed; built audit smoke reported `closeEvidenceAudit.verdict: stale`. |
-| T-0255 Task Complete Flow Dry-Run | Added read-only task completion flow orchestration over finish/ready/close/audit lifecycle reports with one primary next action while incomplete and command-specific `--execute` rejection. | T-0255 evidence: Docker sync-build passed 94 files / 638 tests; built CLI version smoke returned `ok:true`, `distLooksStale:false`; built `task complete` smoke returned `hadara.task.complete_flow.v1`. |
 
 ## Current Known Problems
 
@@ -27,7 +27,7 @@
 | Python package smoke and release advisory are non-blocking preview surfaces. | T-0250 surfaces Python smoke evidence as `providerAdvisories` only. T-0249 makes network behavior explicit: default is environment-inherited, `--network-policy offline` is best-effort with `enforced:false`, and local execution still depends on Python packaging tools such as `build`, `twine`, and pip. HADARA still does not load PyPI credentials or publish to PyPI. | Use dry-run first; treat Python local execution failures as environment/tooling failures, not publish readiness. Python advisory evidence must not be used to unblock or block the npm release gate. |
 | Release target configuration remains preview-only. | T-0252 surfaces unsupported/invalid `.hadara/release-targets.json` as warning/advisory metadata, but the parser still only reads `primaryTarget` and effective primary remains npm. | Define `hadara.releaseTargetConfig.v1` before real config support, including supported/ignored/unsupported fields, non-blocking warnings, and migration behavior. |
 | Python TOML parsing remains preview-only. | `pyproject.toml` detection uses a lightweight parser for static name/version/backend metadata only. | Use a formal TOML parser before Python release readiness, artifact gates, or publish behavior depend on TOML data. |
-| Phase 6 is not a full multi-agent runtime. | T-0253 added common metadata, T-0254 added lifecycle next-action metadata, T-0255 added read-only task completion orchestration, T-0256 added close evidence idempotency, and T-0257 added handoff suggestions only. Later Phase 6 work adds safer validation wrappers; it must not add hidden shared-doc writes, `task complete --execute`, scheduler behavior, publish automation, or release mutation early. | Continue with T-0258 and keep write surfaces additive/dry-run-first. Read the local ignored Phase 6 agent-UX spec explicitly when present. |
+| Phase 6 is not a full multi-agent runtime. | T-0253 added common metadata, T-0254 added lifecycle next-action metadata, T-0255 added read-only task completion orchestration, T-0256 added close evidence idempotency, T-0257 added handoff suggestions, and T-0258 added a Docker validation wrapper only. Later Phase 6 work adds templates and service decomposition; it must not add hidden shared-doc writes, `task complete --execute`, scheduler behavior, publish automation, or release mutation early. | Continue with T-0259 and keep write surfaces additive/dry-run-first. Read the local ignored Phase 6 agent-UX spec explicitly when present. |
 | Release artifact refresh now requires a clean git worktree. | In active development, `release artifact --execute` will return `RELEASE_ARTIFACT_WORKTREE_DIRTY` and skip `npm pack` until pending changes are committed or otherwise cleaned. | Treat this as intentional release safety, not a release artifact failure; do not bypass it with dirty worktree evidence. |
 | Release dry-run latency is currently dominated by the strict release gate. | Built `/mnt/f` smoke reported total duration about 13.8s with `strict-release-gate` about 12.5s; this is now visible but not optimized. | Treat timing diagnostics as metadata; optimize strict release-gate reads only if release operators need faster repeated dry-runs. |
 | `task upgrade-scaffold --execute` and `protocol remediate --execute` now require `--before-hash` when writes are planned. | Old execute-only copy-paste commands fail closed. | Run the dry-run first, review `summary.beforeHash`, then execute with `--before-hash <hash>`. |
@@ -66,13 +66,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create T-0258 Dev Docker Validation Wrapper. | The next Phase 6 workflow-compression step should make the reusable Docker validation/dist refresh path easier to invoke and evidence without weakening subprocess or dist freshness boundaries. | Required reading: Phase 6 spec T-0258, `docs/IMPLEMENTATION_SOP.md`, `docs/CLI_JSON_CONTRACT.md`, and `docs/TASK_WORKFLOW_COMMANDS.md`. |
+| Create T-0259 Task Capsule Templates. | The next Phase 6 workflow-compression step should reduce repeated capsule authoring while preserving task create safety, protocol validation, and explicit template scope. | Required reading: Phase 6 spec T-0259, `docs/IMPLEMENTATION_SOP.md`, `docs/CLI_JSON_CONTRACT.md`, and `docs/TASK_WORKFLOW_COMMANDS.md`. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| Dev Docker validation wrapper full check | Docker `npm run dev:docker-sync-build` passed 96 files / 647 tests during T-0258. | Covered `hadara.dev.docker_check.v1`, focused/full mode metadata, temp-copy exclusion boundaries, explicit dist sync, redacted output/privacy booleans, evidence summary, schema fixture, and built wrapper smoke. |
 | Handoff patch suggestion full check | Docker `npm run dev:docker-sync-build` passed 95 files / 644 tests during T-0257. | Covered `hadara.handoff.suggestion.v1`, CLI `handoff suggest`, target before-hash/shared-doc/coordinator metadata, section fragments, read-only no-write behavior, execute rejection, and built CLI smokes. |
 | Close evidence idempotency/supersedes full check | Docker `npm run dev:docker-sync-build` passed 94 files / 641 tests during T-0256. | Covered close write idempotency keys, same-hash no-op, changed-hash supersedes, audit latest non-superseded proof metadata, evidence v2 metadata preservation, schema fixtures, and built close/audit smokes. |
 | Task complete flow dry-run full check | Docker `npm run dev:docker-sync-build` passed 94 files / 638 tests during T-0255. | Added `hadara.task.complete_flow.v1`, CLI `task complete`, execute rejection, lifecycle composition, schema fixtures, and built CLI complete-flow smoke. |

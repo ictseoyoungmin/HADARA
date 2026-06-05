@@ -26,7 +26,15 @@ Run dependency-heavy work in `/tmp/hadara` inside that container, not directly o
 docker exec hadara-dev bash -lc 'rm -rf /tmp/hadara && mkdir -p /tmp/hadara && tar --exclude=node_modules --exclude=dist -cf - -C /workspace . | tar -xf - -C /tmp/hadara && cd /tmp/hadara && npm ci && npm run check'
 ```
 
-The preferred HADARA-dev helper for this repeated workflow is:
+The preferred HADARA-dev JSON wrapper for focused/full Docker validation is:
+
+```bash
+hadara dev docker-check --focused tests/unit/<file>.test.ts --sync-dist --json
+```
+
+It reports `hadara.dev.docker_check.v1`, redacts raw paths/logs/secrets from JSON, creates a run-scoped temp copy, runs `npm ci`, and only refreshes `/workspace/dist` when `--sync-dist` is explicit.
+
+The reusable npm helper for this repeated workflow remains:
 
 ```bash
 npm run dev:docker-check

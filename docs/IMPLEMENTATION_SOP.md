@@ -160,7 +160,15 @@ docker exec hadara-dev bash -lc 'rm -rf /tmp/hadara && mkdir -p /tmp/hadara && t
 
 For repeated validation, reuse `/tmp/hadara` when it is fresh; resync from `/workspace` after source changes.
 
-The preferred repo helper for the standard sync/check/build/smoke path is:
+The preferred JSON wrapper for focused or full Docker validation is:
+
+```bash
+hadara dev docker-check --focused tests/unit/<file>.test.ts --sync-dist --json
+```
+
+It creates a run-scoped Docker temp copy while excluding `.git`, `.hadara`, `node_modules`, and `dist`, runs `npm ci`, runs focused tests and/or the full check, and only refreshes `/workspace/dist` when `--sync-dist` is explicit. The JSON report is `hadara.dev.docker_check.v1` and intentionally omits raw subprocess logs, private paths, and environment secrets.
+
+The repo helper for the standard sync/check/build/smoke path is:
 
 ```bash
 npm run dev:docker-sync-build

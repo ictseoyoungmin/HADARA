@@ -33,6 +33,7 @@ describe('schema fixtures', () => {
       'hadara.dashboard.core.v1',
       'hadara.dashboard.task_detail.v1',
       'hadara.dashboard.timeline.v1',
+      'hadara.dev.docker_check.v1',
       'hadara.event.v1',
       'hadara.evidence.lint.v1',
       'hadara.evidence.list.v1',

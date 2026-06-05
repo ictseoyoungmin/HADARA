@@ -14,6 +14,7 @@ Usage:
   hadara init enable-integration --integration hermes|mcp [--execute] [--json]
   hadara version [--verbose] [--json]
   hadara doctor
+  hadara dev docker-check [--focused <test...>] [--full] [--sync-dist] [--json]
   hadara task create <title>
   hadara task list
   hadara task show <task-id>
@@ -97,6 +98,12 @@ async function main(args = process.argv.slice(2)): Promise<void> {
     case 'doctor': {
       const { handleDoctorCommand } = await import('./doctor');
       if (handleDoctorCommand({ paths, jsonOutput })) return;
+      break;
+    }
+
+    case 'dev': {
+      const { handleDevCommand } = await import('./dev');
+      if (handleDevCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 

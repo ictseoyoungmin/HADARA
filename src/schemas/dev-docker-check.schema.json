@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.dev.docker_check.v1",
+  "x-hadara-schema-id": "hadara.dev.docker_check.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "mode", "generatedAt", "actor", "execution", "source", "workspace", "focusedTests", "steps", "evidenceSummary", "privacy", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.dev.docker_check.v1" },
+    "command": { "const": "dev.dockerCheck" },
+    "ok": { "type": "boolean" },
+    "mode": { "enum": ["focused", "full", "focused-and-full"] },
+    "generatedAt": { "type": "string" },
+    "actor": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["agentId", "runId", "role", "parentRunId"],
+      "properties": {
+        "agentId": { "type": "string" },
+        "runId": { "type": "string" },
+        "role": { "enum": ["operator", "coordinator", "worker", "reviewer", "unknown"] },
+        "parentRunId": { "type": ["string", "null"] }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["subprocessExecuted", "dockerUsed", "projectMutation", "tempWorkspaceCreated", "npmCiExecuted", "focusedTestsExecuted", "fullCheckExecuted", "distSyncExecuted"],
+      "properties": {
+        "subprocessExecuted": { "const": true },
+        "dockerUsed": { "const": true },
+        "projectMutation": { "const": false },
+        "tempWorkspaceCreated": { "type": "boolean" },
+        "npmCiExecuted": { "type": "boolean" },
+        "focusedTestsExecuted": { "type": "boolean" },
+        "fullCheckExecuted": { "type": "boolean" },
+        "distSyncExecuted": { "type": "boolean" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["projectRootRedacted"],
+      "properties": {
+        "projectRootRedacted": { "const": true },
+        "sourceHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+      }
+    },
+    "workspace": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "pathRedacted", "retention", "runScoped"],
+      "properties": {
+        "kind": { "const": "temp-copy" },
+        "pathRedacted": { "const": true },
+        "retention": { "enum": ["deleted", "kept-temporary"] },
+        "runScoped": { "const": true }
+      }
+    },
+    "focusedTests": { "type": "array", "items": { "type": "string" } },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "status", "summary"],
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "enum": ["passed", "failed", "skipped"] },
+          "elapsedMs": { "type": "number" },
+          "summary": { "type": "string" }
+        }
+      }
+    },
+    "distSync": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["requested", "executed", "conflictDetected"],
+      "properties": {
+        "requested": { "type": "boolean" },
+        "executed": { "type": "boolean" },
+        "beforeHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "afterHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "conflictDetected": { "type": "boolean" }
+      }
+    },
+    "evidenceSummary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["summary"],
+      "properties": {
+        "summary": { "type": "string" },
+        "suggestedEvidenceCommand": { "type": "string" }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["rawLogsIncluded", "privatePathsIncluded", "environmentSecretsIncluded"],
+      "properties": {
+        "rawLogsIncluded": { "const": false },
+        "privatePathsIncluded": { "const": false },
+        "environmentSecretsIncluded": { "const": false }
+      }
+    },
+    "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+  }
+}

@@ -258,3 +258,4 @@
 | T-0255 | Task Complete Flow Dry-Run | Done | tasks/T-0255-task-complete-flow-dry-run | |
 | T-0256 | Close Evidence Idempotency / Supersedes | Done | tasks/T-0256-close-evidence-idempotency-supersedes | |
 | T-0257 | Handoff Patch Suggestion | Done | tasks/T-0257-handoff-patch-suggestion | |
+| T-0258 | Dev Docker Validation Wrapper | Done | tasks/T-0258-dev-docker-validation-wrapper | |
