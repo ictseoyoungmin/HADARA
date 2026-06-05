@@ -257,12 +257,7 @@ echo "== 1. Final local validation =="
 npm run check
 
 echo
-echo "== 2. Fresh release evidence =="
-run_hadara package smoke --execute --attach-evidence --task "${TASK_ID}" --json
-run_hadara smoke clean-checkout --execute --attach-evidence --task "${TASK_ID}" --json
-
-echo
-echo "== 3. Build release artifact =="
+echo "== 2. Build release artifact =="
 rm -rf "${DIST_DIR}"
 mkdir -p "${DIST_DIR}"
 
@@ -294,6 +289,11 @@ exit 1
 fi
 
 echo "Manifest file: ${MANIFEST_FILE}"
+
+echo
+echo "== 3. Fresh release evidence =="
+run_hadara package smoke --execute --attach-evidence --task "${TASK_ID}" --json
+run_hadara smoke clean-checkout --execute --attach-evidence --task "${TASK_ID}" --json
 
 echo
 echo "== 4. Final HADARA gates =="
