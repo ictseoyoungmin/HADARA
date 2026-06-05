@@ -5,7 +5,9 @@ import { appendEvidence } from '../evidence/evidence';
 import { createEvidenceLintReport, EvidenceLintReport } from '../services/evidence-lint';
 import { createHarnessValidateReport, HarnessValidateResult } from '../services/harness-service';
 import { createTaskProtocolConsistencyReport, ProtocolConsistencyReport } from '../services/protocol-consistency';
+import type { HadaraActorContext } from '../core/actor-context';
 import { listTaskCapsules } from './task-capsule';
+import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from './lifecycle-next-actions';
 
 export type TaskCloseMode = 'dry-run' | 'execute';
 
@@ -16,6 +18,7 @@ export interface TaskCloseReport {
   mode: TaskCloseMode;
   taskId: string;
   projectRoot: string;
+  actor: HadaraActorContext;
   summary: {
     blockers: number;
     warnings: number;
@@ -52,6 +55,7 @@ export interface TaskCloseReport {
   };
   lifecycle: TaskCloseLifecycleGuidance;
   nextActions: TaskCloseNextAction[];
+  primaryNextAction?: TaskCloseNextAction;
   issues: TaskCloseIssue[];
 }
 
@@ -80,14 +84,7 @@ export interface TaskCloseLifecycleGuidance {
   };
 }
 
-export interface TaskCloseNextAction {
-  id: string;
-  kind: 'command' | 'review';
-  required: boolean;
-  command?: string;
-  message: string;
-  loopBoundary?: boolean;
-}
+export type TaskCloseNextAction = TaskLifecycleNextAction;
 
 export interface TaskCloseIssue {
   severity: 'error' | 'warning' | 'info';
@@ -121,6 +118,7 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
     mode,
     taskId,
     projectRoot,
+    actor: defaultTaskLifecycleActor(),
     summary: {
       blockers: issues.filter((issue) => issue.severity === 'error').length,
       warnings: issues.filter((issue) => issue.severity === 'warning').length,
@@ -154,6 +152,7 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
     },
     lifecycle: createCloseLifecycleGuidance(taskId, mode),
     nextActions,
+    ...(selectPrimaryNextAction(nextActions) ? { primaryNextAction: selectPrimaryNextAction(nextActions) } : {}),
     issues
   };
 }
@@ -180,14 +179,24 @@ function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode): Ta
           kind: 'review',
           required: false,
           message: 'Close audit evidence was appended through the canonical evidence writer.',
+          summary: 'Close audit evidence was appended through the canonical evidence writer.',
+          writeBoundary: 'read-only',
+          recommendedActorRole: 'reviewer',
+          requiresBeforeHash: false,
+          stalePlanRisk: 'none',
           loopBoundary: true
         },
         {
           id: 'audit-close',
-          kind: 'command',
           required: false,
           command: `hadara task audit-close --task ${taskId} --json`,
-          message: 'Optionally audit the close record in a later read-only pass.'
+          message: 'Optionally audit the close record in a later read-only pass.',
+          summary: 'Optionally audit the close record in a later read-only pass.',
+          writeBoundary: 'read-only',
+          recommendedActorRole: 'reviewer',
+          requiresBeforeHash: false,
+          stalePlanRisk: 'none',
+          kind: 'command'
         }
       ];
     }
@@ -196,43 +205,61 @@ function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode): Ta
         id: 'resolve-close-blockers',
         kind: 'review',
         required: true,
-        message: 'Resolve blocking issues before appending close evidence.'
+        message: 'Resolve blocking issues before appending close evidence.',
+        summary: 'Resolve blocking issues before appending close evidence.',
+        writeBoundary: 'read-only',
+        recommendedActorRole: 'worker',
+        requiresBeforeHash: false,
+        stalePlanRisk: 'none'
       }
     ];
   }
 
   const actions: TaskCloseNextAction[] = [
-    {
+    createTaskLifecycleNextAction({
       id: 'run-done-validation',
-      kind: 'command',
       required: true,
       command: `hadara harness validate --task ${taskId} --level done --json`,
-      message: 'Verify done-level readiness before closing.'
-    },
-    {
+      message: 'Verify done-level readiness before closing.',
+      writeBoundary: 'read-only',
+      recommendedActorRole: 'worker',
+      requiresBeforeHash: false,
+      stalePlanRisk: 'none'
+    }),
+    createTaskLifecycleNextAction({
       id: 'run-evidence-lint',
-      kind: 'command',
       required: true,
       command: `hadara evidence lint --task ${taskId} --json`,
-      message: 'Verify evidence index syntax, enums, task ids, and rough Markdown/JSONL alignment.'
-    }
+      message: 'Verify evidence index syntax, enums, task ids, and rough Markdown/JSONL alignment.',
+      writeBoundary: 'read-only',
+      recommendedActorRole: 'worker',
+      requiresBeforeHash: false,
+      stalePlanRisk: 'none'
+    })
   ];
   if (ok) {
-    actions.push({
+    actions.push(createTaskLifecycleNextAction({
       id: 'append-close-evidence',
-      kind: 'command',
       required: true,
       command: `hadara task close --task ${taskId} --execute --json`,
       message: 'Append close audit evidence after reviewing this dry-run plan.',
+      writeBoundary: 'evidence-append',
+      recommendedActorRole: 'worker',
+      requiresBeforeHash: false,
+      stalePlanRisk: 'low',
       loopBoundary: true
-    });
+    }));
   } else {
-    actions.push({
+    actions.push(createTaskLifecycleNextAction({
       id: 'resolve-close-blockers',
-      kind: 'review',
       required: true,
-      message: 'Resolve blocking issues before appending close evidence.'
-    });
+      message: 'Resolve blocking issues before appending close evidence.',
+      writeBoundary: 'read-only',
+      recommendedActorRole: 'worker',
+      requiresBeforeHash: false,
+      stalePlanRisk: 'none',
+      kind: 'review'
+    }));
   }
   return actions;
 }
@@ -245,6 +272,7 @@ function buildMissingTaskReport(projectRoot: string, taskId: string, mode: TaskC
     mode,
     taskId,
     projectRoot,
+    actor: defaultTaskLifecycleActor(),
     summary: { blockers: issues.length, warnings: 0, nextActions: 0 },
     validation: {
       ok: false,
@@ -357,6 +385,7 @@ export interface TaskAuditCloseReport {
   ok: boolean;
   taskId: string;
   projectRoot: string;
+  actor: HadaraActorContext;
   summary: {
     closeEvidenceRecords: number;
     blockers: number;
@@ -372,6 +401,8 @@ export interface TaskAuditCloseReport {
     sourceHash?: string;
   };
   auditVerdict: TaskAuditCloseVerdict;
+  nextActions: TaskCloseNextAction[];
+  primaryNextAction?: TaskCloseNextAction;
   issues: TaskCloseIssue[];
 }
 
@@ -518,12 +549,14 @@ function buildAuditReport(
   issues: TaskCloseIssue[]
 ): TaskAuditCloseReport {
   const latest = records.at(-1);
+  const nextActions = createAuditNextActions(taskId, latest === undefined);
   return {
     schemaVersion: 'hadara.task.audit_close.v1',
     command: 'task.audit-close',
     ok: !issues.some((issue) => issue.severity === 'error'),
     taskId,
     projectRoot,
+    actor: defaultTaskLifecycleActor(),
     summary: {
       closeEvidenceRecords: records.length,
       blockers: issues.filter((issue) => issue.severity === 'error').length,
@@ -543,8 +576,26 @@ function buildAuditReport(
         }
       : {}),
     auditVerdict: createAuditVerdict(currentHash, currentSourceHash, latest, issues),
+    nextActions,
+    ...(selectPrimaryNextAction(nextActions) ? { primaryNextAction: selectPrimaryNextAction(nextActions) } : {}),
     issues
   };
+}
+
+function createAuditNextActions(taskId: string, closeMissing: boolean): TaskCloseNextAction[] {
+  if (!closeMissing) return [];
+  return [
+    createTaskLifecycleNextAction({
+      id: 'close-first',
+      required: true,
+      command: `hadara task close --task ${taskId} --json`,
+      message: 'Preview close evidence before audit-close.',
+      writeBoundary: 'read-only',
+      recommendedActorRole: 'worker',
+      requiresBeforeHash: false,
+      stalePlanRisk: 'none'
+    })
+  ];
 }
 
 function createAuditVerdict(

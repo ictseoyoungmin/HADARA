@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import path from 'node:path';
+import type { HadaraActorContext } from '../core/actor-context';
 import { readMarkdownSection, readMarkdownSectionWithHeading } from '../services/markdown-table';
+import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from './lifecycle-next-actions';
 import { listTaskCapsules, TaskCapsule } from './task-capsule';
 
 export type TaskFinishMode = 'dry-run' | 'execute';
@@ -13,6 +15,7 @@ export interface TaskFinishReport {
   mode: TaskFinishMode;
   taskId: string;
   projectRoot: string;
+  actor: HadaraActorContext;
   task?: {
     id: string;
     title: string;
@@ -32,8 +35,12 @@ export interface TaskFinishReport {
   writes: TaskFinishWrite[];
   advisories: TaskFinishAdvisory[];
   stateDocs: TaskFinishStateDoc[];
+  nextActions: TaskFinishNextAction[];
+  primaryNextAction?: TaskFinishNextAction;
   issues: TaskFinishIssue[];
 }
+
+export type TaskFinishNextAction = TaskLifecycleNextAction;
 
 export interface TaskFinishWrite {
   path: string;
@@ -81,11 +88,13 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
       mode,
       taskId,
       projectRoot,
+      actor: defaultTaskLifecycleActor(),
       status: { taskStatus: null, taskBoardStatus: null, taskBoardPresent: false },
       summary: { plannedWrites: 0, appliedWrites: 0, advisoryOnly: 0, stateDocsPending: 0 },
       writes: [],
       advisories: [],
       stateDocs: [],
+      nextActions: [],
       issues: [{ severity: 'error', code: 'TASK_NOT_FOUND', message: `Task Capsule not found: ${taskId}` }]
     };
   }
@@ -99,6 +108,7 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
   if (mode === 'execute' && !issues.some((issue) => issue.severity === 'error')) {
     applyWrites(projectRoot, writes, issues);
   }
+  const nextActions = createFinishNextActions(taskId, mode, writes, stateDocs, issues);
 
   return {
     schemaVersion: 'hadara.task.finish.v1',
@@ -107,6 +117,7 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
     mode,
     taskId,
     projectRoot,
+    actor: defaultTaskLifecycleActor(),
     task: {
       id: task.id,
       title: task.title,
@@ -126,8 +137,68 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
     writes,
     advisories: stateDocs.map((doc) => ({ path: doc.path, reason: doc.reason, mode: 'dry-run-only' as const, state: doc.state })),
     stateDocs,
+    nextActions,
+    ...(selectPrimaryNextAction(nextActions) ? { primaryNextAction: selectPrimaryNextAction(nextActions) } : {}),
     issues
   };
+}
+
+function createFinishNextActions(taskId: string, mode: TaskFinishMode, writes: TaskFinishWrite[], stateDocs: TaskFinishStateDoc[], issues: TaskFinishIssue[]): TaskFinishNextAction[] {
+  if (issues.some((issue) => issue.severity === 'error')) {
+    return [
+      createTaskLifecycleNextAction({
+        id: 'resolve-finish-blockers',
+        kind: 'review',
+        required: true,
+        message: 'Resolve finish blockers before applying task status bookkeeping.',
+        writeBoundary: 'read-only',
+        recommendedActorRole: 'worker',
+        requiresBeforeHash: false,
+        stalePlanRisk: 'none'
+      })
+    ];
+  }
+  if (mode === 'dry-run' && writes.length > 0) {
+    return [
+      createTaskLifecycleNextAction({
+        id: 'execute-finish',
+        required: true,
+        command: `hadara task finish --task ${taskId} --execute --json`,
+        message: 'Apply bounded task status and Task Board bookkeeping after reviewing this dry-run plan.',
+        writeBoundary: 'task-local',
+        recommendedActorRole: 'worker',
+        requiresBeforeHash: false,
+        stalePlanRisk: 'low'
+      })
+    ];
+  }
+  const pendingStateDocs = stateDocs.filter((doc) => doc.state !== 'current');
+  if (pendingStateDocs.length > 0) {
+    return [
+      createTaskLifecycleNextAction({
+        id: 'update-state-docs',
+        kind: 'review',
+        required: true,
+        message: 'Update shared state docs before done-level readiness.',
+        writeBoundary: 'shared-doc',
+        recommendedActorRole: 'coordinator',
+        requiresBeforeHash: true,
+        stalePlanRisk: 'medium'
+      })
+    ];
+  }
+  return [
+    createTaskLifecycleNextAction({
+      id: 'check-ready',
+      required: false,
+      command: `hadara task ready --task ${taskId} --level done --json`,
+      message: 'Run done-level readiness before closing the task.',
+      writeBoundary: 'read-only',
+      recommendedActorRole: 'worker',
+      requiresBeforeHash: false,
+      stalePlanRisk: 'none'
+    })
+  ];
 }
 
 export function formatTaskFinishReport(report: TaskFinishReport): string {

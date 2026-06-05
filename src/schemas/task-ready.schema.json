@@ -4,13 +4,24 @@
   "x-hadara-schema-id": "hadara.task.ready.v1",
   "type": "object",
   "additionalProperties": true,
-  "required": ["schemaVersion", "command", "ok", "taskId", "projectRoot", "level", "summary", "checks", "nextActions", "issues"],
+  "required": ["schemaVersion", "command", "ok", "taskId", "projectRoot", "actor", "level", "summary", "checks", "nextActions", "issues"],
   "properties": {
     "schemaVersion": { "const": "hadara.task.ready.v1" },
     "command": { "const": "task.ready" },
     "ok": { "type": "boolean" },
     "taskId": { "type": "string" },
     "projectRoot": { "type": "string" },
+    "actor": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["agentId", "runId", "role", "parentRunId"],
+      "properties": {
+        "agentId": { "type": "string" },
+        "runId": { "type": "string" },
+        "role": { "enum": ["operator", "coordinator", "worker", "reviewer", "unknown"] },
+        "parentRunId": { "type": ["string", "null"] }
+      }
+    },
     "level": { "const": "done" },
     "summary": {
       "type": "object",
@@ -33,6 +44,7 @@
       }
     },
     "nextActions": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "primaryNextAction": { "type": "object", "additionalProperties": true },
     "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
   }
 }

@@ -1,4 +1,6 @@
 import { createTaskCloseReport, TaskCloseIssue, TaskCloseNextAction } from './task-close';
+import type { HadaraActorContext } from '../core/actor-context';
+import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction } from './lifecycle-next-actions';
 
 export type TaskReadyLevel = 'done';
 
@@ -8,6 +10,7 @@ export interface TaskReadyReport {
   ok: boolean;
   taskId: string;
   projectRoot: string;
+  actor: HadaraActorContext;
   level: TaskReadyLevel;
   summary: {
     ready: boolean;
@@ -20,6 +23,7 @@ export interface TaskReadyReport {
     protocolDoctor: boolean;
   };
   nextActions: TaskCloseNextAction[];
+  primaryNextAction?: TaskCloseNextAction;
   issues: TaskCloseIssue[];
 }
 
@@ -28,23 +32,18 @@ export function createTaskReadyReport(projectRoot: string, taskId: string, level
   const ready = closePlan.ok;
   const nextActions: TaskCloseNextAction[] = ready
     ? [
-        {
+        createTaskLifecycleNextAction({
           id: 'run-task-close',
-          kind: 'command',
           required: false,
           command: `hadara task close --task ${taskId} --json`,
-          message: 'Review the close plan before appending close evidence.'
-        }
+          message: 'Review the close plan before appending close evidence.',
+          writeBoundary: 'read-only',
+          recommendedActorRole: 'worker',
+          requiresBeforeHash: false,
+          stalePlanRisk: 'none'
+        })
       ]
-    : [
-        ...closePlan.nextActions.filter((action) => action.id !== 'append-close-evidence'),
-        {
-          id: 'resolve-ready-blockers',
-          kind: 'review',
-          required: true,
-          message: 'Resolve blockers before running task close.'
-        }
-      ];
+    : createBlockedReadyActions(taskId, closePlan.nextActions, closePlan.issues);
 
   return {
     schemaVersion: 'hadara.task.ready.v1',
@@ -52,6 +51,7 @@ export function createTaskReadyReport(projectRoot: string, taskId: string, level
     ok: ready,
     taskId,
     projectRoot,
+    actor: defaultTaskLifecycleActor(),
     level,
     summary: {
       ready,
@@ -64,6 +64,52 @@ export function createTaskReadyReport(projectRoot: string, taskId: string, level
       protocolDoctor: closePlan.protocolDoctor.ok
     },
     nextActions,
+    ...(selectPrimaryNextAction(nextActions) ? { primaryNextAction: selectPrimaryNextAction(nextActions) } : {}),
     issues: closePlan.issues
   };
+}
+
+function createBlockedReadyActions(taskId: string, closeActions: TaskCloseNextAction[], issues: TaskCloseIssue[]): TaskCloseNextAction[] {
+  const actions = closeActions.filter((action) => action.id !== 'append-close-evidence');
+  if (issues.some((issue) => issue.code === 'HARNESS_TASK_STATUS_NOT_DONE')) {
+    actions.unshift(
+      createTaskLifecycleNextAction({
+        id: 'finish-first',
+        required: true,
+        command: `hadara task finish --task ${taskId} --json`,
+        message: 'Preview finish writes before checking done-level readiness.',
+        writeBoundary: 'task-local',
+        recommendedActorRole: 'worker',
+        requiresBeforeHash: false,
+        stalePlanRisk: 'low'
+      })
+    );
+  }
+  if (issues.some((issue) => issue.code.startsWith('EVIDENCE_LINT_') || issue.code === 'HARNESS_EVIDENCE_REQUIRED')) {
+    actions.push(
+      createTaskLifecycleNextAction({
+        id: 'refresh-evidence',
+        required: true,
+        command: `hadara evidence lint --task ${taskId} --json`,
+        message: 'Inspect evidence semantics before done-level readiness.',
+        writeBoundary: 'read-only',
+        recommendedActorRole: 'worker',
+        requiresBeforeHash: false,
+        stalePlanRisk: 'none'
+      })
+    );
+  }
+  actions.push(
+    createTaskLifecycleNextAction({
+      id: 'resolve-ready-blockers',
+      kind: 'review',
+      required: true,
+      message: 'Resolve blockers before running task close.',
+      writeBoundary: 'read-only',
+      recommendedActorRole: 'worker',
+      requiresBeforeHash: false,
+      stalePlanRisk: 'none'
+    })
+  );
+  return actions;
 }

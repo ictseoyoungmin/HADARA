@@ -4,7 +4,7 @@
   "x-hadara-schema-id": "hadara.task.close.v1",
   "type": "object",
   "additionalProperties": true,
-  "required": ["schemaVersion", "command", "ok", "mode", "taskId", "projectRoot", "summary", "validation", "evidenceLint", "protocolDoctor", "closeEvidence", "nextActions", "issues"],
+  "required": ["schemaVersion", "command", "ok", "mode", "taskId", "projectRoot", "actor", "summary", "validation", "evidenceLint", "protocolDoctor", "closeEvidence", "nextActions", "issues"],
   "properties": {
     "schemaVersion": { "const": "hadara.task.close.v1" },
     "command": { "const": "task.close" },
@@ -12,6 +12,17 @@
     "mode": { "enum": ["dry-run", "execute"] },
     "taskId": { "type": "string" },
     "projectRoot": { "type": "string" },
+    "actor": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["agentId", "runId", "role", "parentRunId"],
+      "properties": {
+        "agentId": { "type": "string" },
+        "runId": { "type": "string" },
+        "role": { "enum": ["operator", "coordinator", "worker", "reviewer", "unknown"] },
+        "parentRunId": { "type": ["string", "null"] }
+      }
+    },
     "summary": {
       "type": "object",
       "additionalProperties": true,
@@ -91,6 +102,7 @@
       "type": "array",
       "items": { "type": "object", "additionalProperties": true }
     },
+    "primaryNextAction": { "type": "object", "additionalProperties": true },
     "issues": {
       "type": "array",
       "items": {

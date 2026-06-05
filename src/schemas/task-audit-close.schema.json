@@ -4,13 +4,24 @@
   "x-hadara-schema-id": "hadara.task.audit_close.v1",
   "type": "object",
   "additionalProperties": true,
-  "required": ["schemaVersion", "command", "ok", "taskId", "projectRoot", "summary", "currentValidationReportHash", "currentSourceHash", "issues"],
+  "required": ["schemaVersion", "command", "ok", "taskId", "projectRoot", "actor", "summary", "currentValidationReportHash", "currentSourceHash", "nextActions", "issues"],
   "properties": {
     "schemaVersion": { "const": "hadara.task.audit_close.v1" },
     "command": { "const": "task.audit-close" },
     "ok": { "type": "boolean" },
     "taskId": { "type": "string" },
     "projectRoot": { "type": "string" },
+    "actor": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["agentId", "runId", "role", "parentRunId"],
+      "properties": {
+        "agentId": { "type": "string" },
+        "runId": { "type": "string" },
+        "role": { "enum": ["operator", "coordinator", "worker", "reviewer", "unknown"] },
+        "parentRunId": { "type": ["string", "null"] }
+      }
+    },
     "summary": {
       "type": "object",
       "additionalProperties": true,
@@ -38,6 +49,8 @@
         "model": { "const": "validation-close-audit" }
       }
     },
+    "nextActions": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "primaryNextAction": { "type": "object", "additionalProperties": true },
     "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
   }
 }

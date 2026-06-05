@@ -31,10 +31,18 @@ describe('task ready report', () => {
       command: 'task.ready',
       ok: true,
       level: 'done',
+      actor: { agentId: 'unknown', runId: 'local', role: 'operator', parentRunId: null },
       summary: { ready: true, blockers: 0 },
       checks: { doneValidation: true, evidenceLint: true, protocolDoctor: true }
     });
-    expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'run-task-close', command: `hadara task close --task ${task.id} --json` }));
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'run-task-close',
+      command: `hadara task close --task ${task.id} --json`,
+      writeBoundary: 'read-only',
+      recommendedActorRole: 'worker',
+      requiresBeforeHash: false,
+      stalePlanRisk: 'none'
+    });
   });
 
   it('returns blockers and remediation-oriented actions for a draft task', () => {
@@ -46,6 +54,13 @@ describe('task ready report', () => {
     expect(report.ok).toBe(false);
     expect(report.summary.ready).toBe(false);
     expect(report.summary.blockers).toBeGreaterThan(0);
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'finish-first',
+      command: `hadara task finish --task ${task.id} --json`,
+      writeBoundary: 'task-local',
+      recommendedActorRole: 'worker',
+      stalePlanRisk: 'low'
+    });
     expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'resolve-ready-blockers', required: true }));
   });
 });

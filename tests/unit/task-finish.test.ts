@@ -30,8 +30,17 @@ describe('task finish status sync', () => {
       ok: true,
       mode: 'dry-run',
       taskId: task.id,
+      actor: { agentId: 'unknown', runId: 'local', role: 'operator', parentRunId: null },
       status: { taskStatus: 'Draft', taskBoardStatus: 'Draft', taskBoardPresent: true },
       summary: { plannedWrites: 2, appliedWrites: 0, advisoryOnly: 3, stateDocsPending: 3 }
+    });
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'execute-finish',
+      command: `hadara task finish --task ${task.id} --execute --json`,
+      writeBoundary: 'task-local',
+      recommendedActorRole: 'worker',
+      requiresBeforeHash: false,
+      stalePlanRisk: 'low'
     });
     expect(report.writes.map((write) => write.field).sort()).toEqual(['task-board-row', 'task-status']);
     for (const write of report.writes) {
@@ -68,6 +77,13 @@ describe('task finish status sync', () => {
 
     expect(report.ok).toBe(true);
     expect(report.summary.stateDocsPending).toBe(1);
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'update-state-docs',
+      writeBoundary: 'shared-doc',
+      recommendedActorRole: 'coordinator',
+      requiresBeforeHash: true,
+      stalePlanRisk: 'medium'
+    });
     expect(report.stateDocs).toEqual([
       expect.objectContaining({ path: 'docs/DEVELOPMENT_SLICES.md', present: true, mentionsTask: true, state: 'current' }),
       expect.objectContaining({ path: 'docs/PROJECT_STATE.md', present: true, mentionsTask: false, state: 'pending' }),
@@ -86,6 +102,12 @@ describe('task finish status sync', () => {
 
     expect(report.ok).toBe(true);
     expect(report.summary).toMatchObject({ plannedWrites: 2, appliedWrites: 2 });
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'update-state-docs',
+      writeBoundary: 'shared-doc',
+      recommendedActorRole: 'coordinator',
+      requiresBeforeHash: true
+    });
     expect(readTask(root, task.id)).toContain('| Status | Done |');
     expect(readTask(root, task.id)).toContain('## Status\n\nDone\n');
     expect(readTask(root, task.id)).toMatch(/\|\s*\d{4}-\d{2}-\d{2}\s*\|\s*Done\s*\|\s*Finished task capsule\.\s*\|\s*`hadara task finish --execute`\s*\|/);

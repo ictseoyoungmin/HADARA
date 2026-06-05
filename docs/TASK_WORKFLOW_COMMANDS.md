@@ -42,6 +42,8 @@ Phase 6 workflow-compression commands must preserve dry-run reviewability and fu
 
 Future commands should use `--agent-id`, `--run-id`, `--actor-role`, `--parent-run-id`, and `--idempotency-key` for optional actor/plan input. Existing task workflow commands do not require these options yet.
 
+T-0254 applies this metadata to existing task lifecycle reports without adding orchestration. `task finish`, `task ready`, `task close`, and `task audit-close` now include default local operator `actor` context, structured `nextActions`, and optional `primaryNextAction`. These fields are guidance only; the commands do not execute each other.
+
 Example:
 
 ```bash

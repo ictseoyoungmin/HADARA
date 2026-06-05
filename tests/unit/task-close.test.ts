@@ -32,6 +32,7 @@ describe('task close report', () => {
       ok: true,
       mode: 'dry-run',
       taskId: task.id,
+      actor: { agentId: 'unknown', runId: 'local', role: 'operator', parentRunId: null },
       validation: {
         ok: true,
         level: 'done',
@@ -77,9 +78,14 @@ describe('task close report', () => {
       expect.objectContaining({
         id: 'append-close-evidence',
         loopBoundary: true,
-        command: `hadara task close --task ${task.id} --execute --json`
+        command: `hadara task close --task ${task.id} --execute --json`,
+        writeBoundary: 'evidence-append',
+        recommendedActorRole: 'worker',
+        requiresBeforeHash: false,
+        stalePlanRisk: 'low'
       })
     );
+    expect(report.primaryNextAction).toMatchObject({ id: 'run-done-validation', writeBoundary: 'read-only', recommendedActorRole: 'worker' });
   });
 
   it('reports blockers for tasks that are not done-ready', () => {
@@ -91,6 +97,7 @@ describe('task close report', () => {
     expect(report.ok).toBe(false);
     expect(report.summary.blockers).toBeGreaterThan(0);
     expect(report.closeEvidence.planned).toBe(false);
+    expect(report.primaryNextAction).toMatchObject({ id: 'run-done-validation', writeBoundary: 'read-only' });
     expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'resolve-close-blockers', required: true }));
   });
 
@@ -119,7 +126,7 @@ describe('task close report', () => {
     expect(report.closeEvidence.markdownPath).toBe(`tasks/${task.id}-close-execute-evidence/EVIDENCE.md`);
     expect(report.closeEvidence.evidencePath).toBe(`tasks/${task.id}-close-execute-evidence/evidence.jsonl`);
     expect(report.nextActions.map((action) => action.id)).toEqual(['close-evidence-appended', 'audit-close']);
-    expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'audit-close', command: `hadara task audit-close --task ${task.id} --json` }));
+    expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'audit-close', command: `hadara task audit-close --task ${task.id} --json`, writeBoundary: 'read-only', recommendedActorRole: 'reviewer' }));
   });
 
   it('audits close evidence and reports hash drift as a warning', () => {
@@ -134,8 +141,10 @@ describe('task close report', () => {
       schemaVersion: 'hadara.task.audit_close.v1',
       command: 'task.audit-close',
       ok: true,
+      actor: { agentId: 'unknown', runId: 'local', role: 'operator', parentRunId: null },
       summary: { closeEvidenceRecords: 1, blockers: 0 }
     });
+    expect(audit.nextActions).toEqual([]);
     expect(audit.latestCloseEvidence?.validationReportHash).toBe(closeReport.validation.validatedBeforeCloseEvidenceReportHash);
     expect(audit.latestCloseEvidence?.sourceHash).toBe(closeReport.validation.validatedBeforeCloseEvidenceSourceHash);
     expect(audit.auditVerdict).toMatchObject({
@@ -188,6 +197,14 @@ describe('task close report', () => {
       closeEvidenceValid: false,
       blockers: 1,
       writeBoundary: 'read-only'
+    });
+    expect(audit.primaryNextAction).toMatchObject({
+      id: 'close-first',
+      command: `hadara task close --task ${task.id} --json`,
+      writeBoundary: 'read-only',
+      recommendedActorRole: 'worker',
+      requiresBeforeHash: false,
+      stalePlanRisk: 'none'
     });
     expect(audit.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_EVIDENCE_MISSING' }));
   });

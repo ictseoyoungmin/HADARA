@@ -10,7 +10,7 @@ T-0079 added fixture registration only. T-0092 added a lightweight runtime valid
 
 T-0197 registers `hadara.dashboard.bootstrap.v1` as the first-paint aggregate read model for status, task summary, active-run/debt summaries, timeline overview, optional compact selected-task proof, source metadata, cache metadata, and issues. T-0199 registers `hadara.dashboard.task_detail.v1` as the selected-task aggregate over workbench, evidence lint, sanitized evidence list, timeline, semantic proof summary, and copyable command guidance. T-0196/T-0200 register and harden `hadara.dashboard.timeline.v1` as the deterministic dashboard timeline read model with normalized evidence identity metadata where available. T-0216 registers `hadara.dashboard.core.v1` as the Phase 5.7 first-actionable projection contract with explicit freshness, completeness, refresh-state, stale-section, and pending-section metadata before projection storage or routes are implemented. These schemas must remain read-only, additive where possible, and free of private raw paths or mutation/execution fields.
 
-T-0253 registers Phase 6 common context fixtures: `hadara.actor_context.v1`, `hadara.plan_context.v1`, and `hadara.next_action.v1`. These are vocabulary/metadata fixtures for future workflow-compression reports, not new command execution surfaces.
+T-0253 registers Phase 6 common context fixtures: `hadara.actor_context.v1`, `hadara.plan_context.v1`, and `hadara.next_action.v1`. These are vocabulary/metadata fixtures for future workflow-compression reports, not new command execution surfaces. T-0254 adopts the common actor and next-action vocabulary in task finish, ready, close, and audit-close schemas as additive fields while preserving existing schema ids.
 
 ## Registry
 
