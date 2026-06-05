@@ -5,9 +5,9 @@
 </p>
 
 <p align="center">
-  <strong>Current RC:</strong> <code>hadara@0.2.0-rc.0</code> ·
-  <strong>Node.js:</strong> <code>22+</code> ·
-  <strong>License:</strong> MIT
+  <img alt="Release candidate" src="https://img.shields.io/badge/release-0.2.0--rc.0-blue">
+  <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>
 
 **HADARA** is a portable agentic development workbench for keeping long-running AI-assisted software work inspectable, resumable, and evidence-backed.
