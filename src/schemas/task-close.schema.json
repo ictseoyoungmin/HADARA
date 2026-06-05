@@ -73,7 +73,16 @@
         "idempotencyKey": { "type": "string" },
         "duplicateFound": { "type": "boolean" },
         "duplicateAction": { "enum": ["no-op", "append", "warning"] },
-        "supersedes": { "type": "array", "items": { "type": "string" } }
+        "supersedes": { "type": "array", "items": { "type": "string" } },
+        "executeRecheck": {
+          "type": "object",
+          "required": ["performed", "duplicateFound", "action"],
+          "properties": {
+            "performed": { "type": "boolean" },
+            "duplicateFound": { "type": "boolean" },
+            "action": { "enum": ["no-op", "append"] }
+          }
+        }
       }
     },
     "lifecycle": {

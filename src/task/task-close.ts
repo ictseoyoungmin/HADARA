@@ -65,6 +65,11 @@ export interface TaskCloseEvidenceWrite {
   duplicateFound: boolean;
   duplicateAction: 'no-op' | 'append' | 'warning';
   supersedes?: string[];
+  executeRecheck?: {
+    performed: boolean;
+    duplicateFound: boolean;
+    action: 'no-op' | 'append';
+  };
 }
 
 export interface TaskCloseLifecycleGuidance {
@@ -424,6 +429,42 @@ export function executeTaskCloseEvidence(projectRoot: string, report: TaskCloseR
     report.closeEvidence.appended = false;
     return;
   }
+  const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === report.taskId);
+  const recheckedWrite = task
+    ? createCloseEvidenceWritePlan(
+        path.join(task.dir, 'evidence.jsonl'),
+        report.taskId,
+        report.validation.validatedBeforeCloseEvidenceSourceHash,
+        report.validation.validatedBeforeCloseEvidenceReportHash,
+        report.ok
+      )
+    : undefined;
+  if (recheckedWrite) {
+    if (recheckedWrite.duplicateAction === 'no-op') {
+      report.closeEvidenceWrite = {
+        ...recheckedWrite,
+        executeRecheck: {
+          performed: true,
+          duplicateFound: true,
+          action: 'no-op'
+        }
+      };
+      report.closeEvidence.planned = false;
+      report.closeEvidence.appended = false;
+      report.nextActions = createNextActions(report.taskId, report.ok, report.mode, report.closeEvidenceWrite);
+      const primaryNextAction = selectPrimaryNextAction(report.nextActions);
+      if (primaryNextAction) report.primaryNextAction = primaryNextAction;
+      return;
+    }
+    report.closeEvidenceWrite = {
+      ...recheckedWrite,
+      executeRecheck: {
+        performed: true,
+        duplicateFound: false,
+        action: 'append'
+      }
+    };
+  }
   const result = appendEvidenceWithResult(projectRoot, {
     taskId: report.taskId,
     kind: 'command-log',
@@ -436,7 +477,6 @@ export function executeTaskCloseEvidence(projectRoot: string, report: TaskCloseR
   });
   report.closeEvidence.appended = true;
   report.closeEvidence.markdownPath = toPortablePath(path.relative(projectRoot, result.markdownPath));
-  const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === report.taskId);
   if (task) {
     report.closeEvidence.evidencePath = toPortablePath(path.relative(projectRoot, path.join(task.dir, 'evidence.jsonl')));
   }

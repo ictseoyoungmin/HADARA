@@ -264,3 +264,4 @@
 | T-0261 | Phase 6 Reviewer Feedback Hardening | Done | tasks/T-0261-phase-6-reviewer-feedback-hardening | |
 | T-0262 | Actor Context CLI Option Plumbing | Done | tasks/T-0262-actor-context-cli-option-plumbing | |
 | T-0263 | Dev Docker Sync Dist Before-Hash Guard | Done | tasks/T-0263-dev-docker-sync-dist-before-hash-guard | |
+| T-0264 | Close Evidence Append Race Recheck | Done | tasks/T-0264-close-evidence-append-race-recheck | |

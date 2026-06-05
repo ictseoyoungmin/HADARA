@@ -90,7 +90,7 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 - `evidence add-command` records an operator-supplied command result; it does not execute shell commands or capture stdout/stderr.
 - `task finish` may update only the Task Capsule `TASK.md` status and matching `docs/TASK_BOARD.md` status/path row.
 - `task close` may append only close evidence. It must not update status docs, Task Board rows, handoff, Project State, Development Slices, or arbitrary evidence.
-- `task close` reports additive close-evidence idempotency metadata. Repeating close with the same task/source/report hash is a no-op in execute mode; a changed source/report hash may append a new close proof with supersedes metadata for the previous proof.
+- `task close` reports additive close-evidence idempotency metadata. Repeating close with the same task/source/report hash is a no-op in execute mode; a changed source/report hash may append a new close proof with supersedes metadata for the previous proof. T-0264 rechecks `evidence.jsonl` immediately before append, so an execute report created before another same-key close proof was appended is converted to a no-op instead of appending a duplicate. This is a local append race recheck, not a global lock service.
 - `task audit-close` is read-only and should be run after `task close --execute`.
 
 ## State Documents

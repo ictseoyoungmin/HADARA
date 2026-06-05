@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0263 Dev Docker Sync Dist Before-Hash Guard is complete. |
+| Branch | main | T-0264 Close Evidence Append Race Recheck is complete. |
 | Current Phase | Phase 6.1 Reviewer Feedback Hardening in progress | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0263 Dev Docker Sync Dist Before-Hash Guard | Added reviewed before-hash guard for `dev docker-check --sync-dist`, first-time missing-hash escape hatch, and conflict metadata. |
-| Active / Next Task | T-0264 Close Evidence Append Race Recheck | Continue Phase 6.1 reviewer-feedback hardening before release candidate freeze. |
-| Validation Baseline | T-0263 Docker validation passed | Focused Docker wrapper passed dev-docker-check/schema tests; Docker sync-build passed 100 files / 669 tests; built dev docker-check smokes verified matching-hash sync and no-hash conflict/no output mutation. |
+| Latest Completed Task | T-0264 Close Evidence Append Race Recheck | Added execute-time close evidence recheck so stale same-key close execute reports no-op instead of appending duplicate close proof records. |
+| Active / Next Task | T-0265 Task Create Collision Guard | Continue Phase 6.1 reviewer-feedback hardening before release candidate freeze. |
+| Validation Baseline | T-0264 Docker validation passed | Focused Docker wrapper passed task-close/schema tests; Docker sync-build passed 100 files / 670 tests; regression covers stale same-hash close execute recheck no-op with duplicate count 0. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0264 Close Evidence Append Race Recheck | `task close --execute` now recomputes close evidence write metadata from latest `evidence.jsonl` immediately before append, exposes optional execute recheck metadata, and no-ops stale same-key execute reports without duplicate evidence. | T-0264 evidence: focused Docker wrapper passed task-close/schema tests; Docker sync-build passed 100 files / 670 tests; regression covers stale same-hash no-op with duplicate count 0. |
 | T-0263 Dev Docker Sync Dist Before-Hash Guard | Required matching `--before-hash` before `dev docker-check --sync-dist` can copy Docker-built `dist`, exposed reviewed hash/match/escape-hatch metadata, and blocked no-hash/stale-hash sync without output mutation. | T-0263 evidence: focused Docker wrapper passed dev-docker-check/schema tests; Docker sync-build passed 100 files / 669 tests; built CLI smokes verified matching-hash sync and no-hash conflict/no output mutation. |
 | T-0262 Actor Context CLI Option Plumbing | Added shared actor CLI parsing for `--agent-id`, `--run-id`, `--actor-role`, and `--parent-run-id`, then threaded explicit actor context through task finish/ready/close/audit-close/complete, handoff suggest, and dev docker-check reports while preserving defaults. | T-0262 evidence: focused Docker wrapper passed actor plumbing tests; Docker sync-build passed 100 files / 667 tests; built task complete actor smoke returned explicit coordinator metadata. |
-| T-0261 Phase 6 Reviewer Feedback Hardening | Clarified `hadara.dev.docker_check.v1` source/output mutation vocabulary for `--sync-dist` and added the Phase 6.1 reviewer-feedback hardening spec. | T-0261 evidence: focused Docker wrapper passed dev-docker-check/schema/workflow docs tests; Docker sync-build passed 100 files / 661 tests; built dev docker-check sync-dist smoke returned the clarified metadata. |
 
 ## Current Known Problems
 
@@ -28,7 +28,7 @@
 | Release target configuration remains preview-only. | T-0252 surfaces unsupported/invalid `.hadara/release-targets.json` as warning/advisory metadata, but the parser still only reads `primaryTarget` and effective primary remains npm. | Define `hadara.releaseTargetConfig.v1` before real config support, including supported/ignored/unsupported fields, non-blocking warnings, and migration behavior. |
 | Python TOML parsing remains preview-only. | `pyproject.toml` detection uses a lightweight parser for static name/version/backend metadata only. | Use a formal TOML parser before Python release readiness, artifact gates, or publish behavior depend on TOML data. |
 | Phase 6 is not a full multi-agent runtime. | T-0253 through T-0260 added metadata, read-only orchestration, idempotent close evidence, handoff suggestions, Docker validation wrapper, task templates, and release dry-run service decomposition. It did not add hidden shared-doc writes, `task complete --execute`, scheduler behavior, publish automation, or release mutation. | Treat Phase 6 as foundation metadata/workflow compression only; future multi-agent runtime work needs its own capsules and safety gates. |
-| Phase 6.1 reviewer feedback remains planned follow-up work. | T-0262 closed actor CLI option plumbing and T-0263 closed stricter sync-dist before-hash conflict handling, but close evidence append race recheck, task create collision guard, and handoff fragment polish are still deferred. | Continue with T-0264, then T-0265, and optionally T-0266 before release candidate freeze. |
+| Phase 6.1 reviewer feedback remains planned follow-up work. | T-0262 closed actor CLI option plumbing, T-0263 closed stricter sync-dist before-hash conflict handling, and T-0264 closed close evidence append race recheck, but task create collision guard and handoff fragment polish are still deferred. | Continue with T-0265 and optionally T-0266 before release candidate freeze. |
 | Release artifact refresh now requires a clean git worktree. | In active development, `release artifact --execute` will return `RELEASE_ARTIFACT_WORKTREE_DIRTY` and skip `npm pack` until pending changes are committed or otherwise cleaned. | Treat this as intentional release safety, not a release artifact failure; do not bypass it with dirty worktree evidence. |
 | Release dry-run latency is currently dominated by the strict release gate. | Built `/mnt/f` smoke reported total duration about 13.8s with `strict-release-gate` about 12.5s; this is now visible but not optimized. | Treat timing diagnostics as metadata; optimize strict release-gate reads only if release operators need faster repeated dry-runs. |
 | `task upgrade-scaffold --execute` and `protocol remediate --execute` now require `--before-hash` when writes are planned. | Old execute-only copy-paste commands fail closed. | Run the dry-run first, review `summary.beforeHash`, then execute with `--before-hash <hash>`. |
@@ -67,13 +67,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| T-0264 Close Evidence Append Race Recheck | T-0263 closed guarded Docker output sync; the next release-relevant Phase 6.1 risk is concurrent close evidence append duplication. | Read `docs/specs/agent-ux/HADARA_Phase6_1_Reviewer_Feedback_Hardening_Spec.md`, `src/task/close.ts`, and `tests/unit/task-close.test.ts`; create the capsule before implementation. |
+| T-0265 Task Create Collision Guard | T-0264 closed close evidence append race recheck; the next release-relevant Phase 6.1 risk is parallel task id allocation. | Read `docs/specs/agent-ux/HADARA_Phase6_1_Reviewer_Feedback_Hardening_Spec.md`, `src/task/task-create.ts` or task capsule creation code, and `tests/unit/task-create.test.ts`; create the capsule before implementation. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| Close evidence append race recheck full check | Docker `npm run dev:docker-sync-build` passed 100 files / 670 tests during T-0264. | Focused wrapper covered task-close/schema tests; regression covers stale same-hash execute recheck no-op, `closeEvidenceWrite.executeRecheck`, and audit duplicate count 0. |
 | Dev Docker sync-dist before-hash guard full check | Docker `npm run dev:docker-sync-build` passed 100 files / 669 tests during T-0263. | Focused wrapper covered dev-docker-check/schema tests; built dev docker-check matching-hash smoke executed dist sync with `beforeHashMatched:true`; built no-hash smoke returned `HADARA_DIST_SYNC_BEFORE_HASH_REQUIRED`, `conflictDetected:true`, and `outputMutation:false`. |
 | Actor context CLI option plumbing full check | Docker `npm run dev:docker-sync-build` passed 100 files / 667 tests during T-0262. | Focused wrapper covered task finish/ready/close/audit-close/complete, handoff suggestion, and dev docker-check actor plumbing; built task complete actor smoke returned explicit `coord-0262/run-0262/coordinator/root-run` metadata. |
 | Phase 6 reviewer feedback hardening full check | Docker `npm run dev:docker-sync-build` passed 100 files / 661 tests during T-0261. | Focused wrapper covered dev-docker-check/schema/workflow docs tests; built dev docker-check sync-dist smoke returned `projectSourceMutation:false`, `outputMutation:true`, `beforeHashAvailable:true`, `requiresBeforeHash:false`, and `conflictDetected:false`. |

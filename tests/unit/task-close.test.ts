@@ -138,6 +138,7 @@ describe('task close report', () => {
       idempotencyKey: report.closeEvidenceWrite?.idempotencyKey,
       actor: { agentId: 'unknown', runId: 'local', role: 'operator', parentRunId: null }
     });
+    expect(report.closeEvidenceWrite?.executeRecheck).toEqual({ performed: true, duplicateFound: false, action: 'append' });
     expect(closeRecord.tags).toEqual(expect.arrayContaining(['close-proof', `idempotency:${report.closeEvidenceWrite?.idempotencyKey}`]));
     expect(report.nextActions.map((action) => action.id)).toEqual(['close-evidence-appended', 'audit-close']);
     expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'audit-close', command: `hadara task audit-close --task ${task.id} --json`, writeBoundary: 'read-only', recommendedActorRole: 'reviewer' }));
@@ -168,6 +169,39 @@ describe('task close report', () => {
     expect(audit.closeEvidenceAudit).toMatchObject({
       latestCloseEvidenceId: expect.stringMatching(new RegExp(`^ev:${task.id}:`)),
       supersededCloseEvidenceIds: [],
+      duplicateCloseEvidenceCount: 0,
+      verdict: 'valid'
+    });
+  });
+
+  it('rechecks evidence immediately before append and no-ops a stale same-hash execute report', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Close race recheck');
+    completeTask(root, task.id, task.dir);
+    const staleExecuteReport = createTaskCloseReport(root, task.id, 'execute');
+    const firstReport = createTaskCloseReport(root, task.id, 'execute');
+    executeTaskCloseEvidence(root, firstReport);
+    const afterFirst = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
+
+    executeTaskCloseEvidence(root, staleExecuteReport);
+    const afterStaleExecute = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
+
+    expect(staleExecuteReport.closeEvidenceWrite).toMatchObject({
+      idempotencyKey: firstReport.closeEvidenceWrite?.idempotencyKey,
+      duplicateFound: true,
+      duplicateAction: 'no-op',
+      executeRecheck: {
+        performed: true,
+        duplicateFound: true,
+        action: 'no-op'
+      }
+    });
+    expect(staleExecuteReport.closeEvidence.planned).toBe(false);
+    expect(staleExecuteReport.closeEvidence.appended).toBe(false);
+    expect(staleExecuteReport.nextActions).toContainEqual(expect.objectContaining({ id: 'close-evidence-duplicate-noop', writeBoundary: 'read-only' }));
+    expect(afterStaleExecute).toBe(afterFirst);
+    const audit = createTaskAuditCloseReport(root, task.id);
+    expect(audit.closeEvidenceAudit).toMatchObject({
       duplicateCloseEvidenceCount: 0,
       verdict: 'valid'
     });
