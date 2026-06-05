@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0265 Task Create Collision Guard is complete. |
-| Current Phase | Phase 6.1 Reviewer Feedback Hardening in progress | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0265 Task Create Collision Guard | Added bounded retry for task create directory/Task Board ID collisions and clear exhausted-retry failure. |
-| Active / Next Task | T-0266 Handoff Suggestion Fragment Polish | Final optional Phase 6.1 reviewer-feedback polish before release candidate freeze. |
-| Validation Baseline | T-0265 Docker validation passed | Focused Docker wrapper passed task-create/schema tests; Docker sync-build passed 100 files / 673 tests; built task-create smoke in `/tmp` returned ok:true. |
+| Branch | main | T-0266 Handoff Suggestion Fragment Polish is complete. |
+| Current Phase | Phase 6.1 Reviewer Feedback Hardening complete | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0266 Handoff Suggestion Fragment Polish | Handoff suggestion fragments now include exact target before-hash, section title, and suggested replacement Markdown. |
+| Active / Next Task | Release Candidate Freeze / Artifact Refresh | Phase 6.1 reviewer-feedback hardening is complete through T-0266. |
+| Validation Baseline | T-0266 Docker validation passed | Focused Docker wrapper passed handoff-suggestion/schema tests; Docker sync-build passed 100 files / 673 tests; built handoff suggest smokes verified precise fragments and execute refusal. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0266 Handoff Suggestion Fragment Polish | `handoff suggest` section fragments now include exact `targetBeforeHash`, `sectionTitle`, and `suggestedReplacementMarkdown`, preserve compatibility `suggestedMarkdown`, and keep read-only/execute-refusal behavior. | T-0266 evidence: focused Docker wrapper passed handoff-suggestion/schema tests; Docker sync-build passed 100 files / 673 tests; built CLI smokes verified precise fragments and `HANDOFF_SUGGEST_EXECUTE_UNSUPPORTED`. |
 | T-0265 Task Create Collision Guard | `createTaskCapsule()` now retries selected-directory collisions, skips Task Board candidate-id collisions, fails exhausted retries with `TASK_CREATE_COLLISION_RETRIES_EXHAUSTED`, and keeps no-template create reports schema-valid. | T-0265 evidence: focused Docker wrapper passed task-create/schema tests; Docker sync-build passed 100 files / 673 tests; built task-create smoke in `/tmp` returned ok:true. |
 | T-0264 Close Evidence Append Race Recheck | `task close --execute` now recomputes close evidence write metadata from latest `evidence.jsonl` immediately before append, exposes optional execute recheck metadata, and no-ops stale same-key execute reports without duplicate evidence. | T-0264 evidence: focused Docker wrapper passed task-close/schema tests; Docker sync-build passed 100 files / 670 tests; regression covers stale same-hash no-op with duplicate count 0. |
-| T-0263 Dev Docker Sync Dist Before-Hash Guard | Required matching `--before-hash` before `dev docker-check --sync-dist` can copy Docker-built `dist`, exposed reviewed hash/match/escape-hatch metadata, and blocked no-hash/stale-hash sync without output mutation. | T-0263 evidence: focused Docker wrapper passed dev-docker-check/schema tests; Docker sync-build passed 100 files / 669 tests; built CLI smokes verified matching-hash sync and no-hash conflict/no output mutation. |
 
 ## Current Known Problems
 
@@ -28,7 +28,7 @@
 | Release target configuration remains preview-only. | T-0252 surfaces unsupported/invalid `.hadara/release-targets.json` as warning/advisory metadata, but the parser still only reads `primaryTarget` and effective primary remains npm. | Define `hadara.releaseTargetConfig.v1` before real config support, including supported/ignored/unsupported fields, non-blocking warnings, and migration behavior. |
 | Python TOML parsing remains preview-only. | `pyproject.toml` detection uses a lightweight parser for static name/version/backend metadata only. | Use a formal TOML parser before Python release readiness, artifact gates, or publish behavior depend on TOML data. |
 | Phase 6 is not a full multi-agent runtime. | T-0253 through T-0260 added metadata, read-only orchestration, idempotent close evidence, handoff suggestions, Docker validation wrapper, task templates, and release dry-run service decomposition. It did not add hidden shared-doc writes, `task complete --execute`, scheduler behavior, publish automation, or release mutation. | Treat Phase 6 as foundation metadata/workflow compression only; future multi-agent runtime work needs its own capsules and safety gates. |
-| Phase 6.1 reviewer feedback remains planned follow-up work. | T-0262 closed actor CLI option plumbing, T-0263 closed stricter sync-dist before-hash conflict handling, T-0264 closed close evidence append race recheck, and T-0265 closed task create collision guard. Handoff fragment polish is still deferred. | Continue with optional T-0266 before release candidate freeze. |
+| Phase 6.1 reviewer-feedback hardening is complete. | T-0262 closed actor CLI option plumbing, T-0263 closed stricter sync-dist before-hash conflict handling, T-0264 closed close evidence append race recheck, T-0265 closed task create collision guard, and T-0266 closed handoff fragment polish. | Proceed to release candidate freeze / artifact refresh with conservative Phase 6 messaging. |
 | Release artifact refresh now requires a clean git worktree. | In active development, `release artifact --execute` will return `RELEASE_ARTIFACT_WORKTREE_DIRTY` and skip `npm pack` until pending changes are committed or otherwise cleaned. | Treat this as intentional release safety, not a release artifact failure; do not bypass it with dirty worktree evidence. |
 | Release dry-run latency is currently dominated by the strict release gate. | Built `/mnt/f` smoke reported total duration about 13.8s with `strict-release-gate` about 12.5s; this is now visible but not optimized. | Treat timing diagnostics as metadata; optimize strict release-gate reads only if release operators need faster repeated dry-runs. |
 | `task upgrade-scaffold --execute` and `protocol remediate --execute` now require `--before-hash` when writes are planned. | Old execute-only copy-paste commands fail closed. | Run the dry-run first, review `summary.beforeHash`, then execute with `--before-hash <hash>`. |
@@ -67,13 +67,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| T-0266 Handoff Suggestion Fragment Polish | T-0265 closed task create collision guard; remaining Phase 6.1 item is coordinator usability polish for handoff suggestion fragments. | Read `docs/specs/agent-ux/HADARA_Phase6_1_Reviewer_Feedback_Hardening_Spec.md`, `src/handoff/handoff-suggestion.ts`, and `tests/unit/handoff-suggestion.test.ts`; create the capsule before implementation. |
+| Release Candidate Freeze / Artifact Refresh | Phase 6.1 reviewer-feedback hardening is complete through T-0266. | Refresh release artifacts from a clean worktree, then run release dry-run/readiness checks before any approval-gated publish path. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| Handoff suggestion fragment polish full check | Docker `npm run dev:docker-sync-build` passed 100 files / 673 tests during T-0266. | Focused wrapper covered handoff-suggestion/schema tests; built handoff suggest smoke returned exact `targetBeforeHash`, `sectionTitle`, and `suggestedReplacementMarkdown`; built `--execute` smoke returned `HANDOFF_SUGGEST_EXECUTE_UNSUPPORTED`. |
 | Task create collision guard full check | Docker `npm run dev:docker-sync-build` passed 100 files / 673 tests during T-0265. | Focused wrapper covered task-create/schema tests; regression covers selected-dir race retry, retry exhaustion, Task Board id collision skip, and no-template schema validity; built task-create smoke in `/tmp` returned ok:true. |
 | Close evidence append race recheck full check | Docker `npm run dev:docker-sync-build` passed 100 files / 670 tests during T-0264. | Focused wrapper covered task-close/schema tests; regression covers stale same-hash execute recheck no-op, `closeEvidenceWrite.executeRecheck`, and audit duplicate count 0. |
 | Dev Docker sync-dist before-hash guard full check | Docker `npm run dev:docker-sync-build` passed 100 files / 669 tests during T-0263. | Focused wrapper covered dev-docker-check/schema tests; built dev docker-check matching-hash smoke executed dist sync with `beforeHashMatched:true`; built no-hash smoke returned `HADARA_DIST_SYNC_BEFORE_HASH_REQUIRED`, `conflictDetected:true`, and `outputMutation:false`. |

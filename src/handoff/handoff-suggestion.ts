@@ -35,8 +35,11 @@ export interface HandoffSuggestionReport {
 export interface HandoffSuggestionSection {
   id: 'current-state' | 'last-completed' | 'known-problems' | 'next-recommended-step' | 'validation-baseline';
   heading: string;
+  sectionTitle?: string;
   action: 'replace-row' | 'append-row' | 'manual-review';
   summary: string;
+  targetBeforeHash?: string;
+  suggestedReplacementMarkdown?: string;
   suggestedMarkdown?: string;
 }
 
@@ -74,7 +77,8 @@ export function createHandoffSuggestionReport(projectRoot: string, taskId: strin
   }
 
   const task = readTaskSnapshot(projectRoot, taskId, issues);
-  const sections = createSections(task, options.executeRequested);
+  const targetBeforeHash = hashContent(handoffContent);
+  const sections = createSections(task, targetBeforeHash, options.executeRequested);
   return {
     schemaVersion: 'hadara.handoff.suggestion.v1',
     command: 'handoff.suggest',
@@ -84,7 +88,7 @@ export function createHandoffSuggestionReport(projectRoot: string, taskId: strin
     actor,
     target: {
       path: 'docs/AGENT_HANDOFF.md',
-      beforeHash: hashContent(handoffContent),
+        beforeHash: targetBeforeHash,
       writeBoundary: 'shared-doc',
       recommendedActorRole: 'coordinator'
     },
@@ -121,54 +125,75 @@ function readTaskSnapshot(projectRoot: string, taskId: string, issues: HandoffSu
   };
 }
 
-function createSections(task: TaskSnapshot, executeRequested?: boolean): HandoffSuggestionSection[] {
+function createSections(task: TaskSnapshot, targetBeforeHash: string, executeRequested?: boolean): HandoffSuggestionSection[] {
   const displayName = [task.taskId, task.title].filter(Boolean).join(' ');
   const evidence = task.evidenceSummary ?? 'Review task evidence and validation records.';
   const nextTask = executeRequested ? 'Remove --execute and review this suggestion report.' : 'Run `hadara task next --json` and create the next Phase 6 capsule.';
   return [
-    {
+    section({
       id: 'current-state',
       heading: 'Current State',
       action: 'replace-row',
       summary: 'Update latest completed and active/next rows.',
-      suggestedMarkdown: [
+      targetBeforeHash,
+      suggestedReplacementMarkdown: [
         `| Latest Completed Task | ${displayName} | ${task.status ?? 'unknown'}; ${evidence} |`,
         `| Active / Next Task | TBD | ${nextTask} |`
       ].join('\n')
-    },
-    {
+    }),
+    section({
       id: 'last-completed',
       heading: 'Last 3 Completed Tasks',
       action: 'append-row',
       summary: 'Add the completed task summary near the top of recent completed tasks.',
-      suggestedMarkdown: `| ${displayName} | ${task.status ?? 'unknown'}; read-only handoff suggestion prepared. | Evidence: ${evidence} |`
-    },
-    {
+      targetBeforeHash,
+      suggestedReplacementMarkdown: `| ${displayName} | ${task.status ?? 'unknown'}; read-only handoff suggestion prepared. | Evidence: ${evidence} |`
+    }),
+    section({
       id: 'known-problems',
       heading: 'Current Known Problems',
       action: 'manual-review',
       summary: 'Review whether any task-specific warning should be carried forward.',
-      suggestedMarkdown: `| Handoff suggestions are read-only. | Operators must still review and apply shared-doc changes manually. | Use beforeHash ${task.taskId} suggestion report target hash before editing. |`
-    },
-    {
+      targetBeforeHash,
+      suggestedReplacementMarkdown: `| Handoff suggestions are read-only. | Operators must still review and apply shared-doc changes manually. | Apply only after confirming target beforeHash ${targetBeforeHash}. |`
+    }),
+    section({
       id: 'next-recommended-step',
       heading: 'Next Recommended Step',
       action: 'replace-row',
       summary: 'Point the next step at task discovery rather than applying this report automatically.',
-      suggestedMarkdown: `| Select the next task with \`hadara task next --json\`. | Continue Phase 6 in order after ${task.taskId}. | Required reading: Phase 6 spec, \`docs/CLI_JSON_CONTRACT.md\`, \`docs/TASK_WORKFLOW_COMMANDS.md\`. |`
-    },
-    {
+      targetBeforeHash,
+      suggestedReplacementMarkdown: `| Select the next task with \`hadara task next --json\`. | Continue Phase 6 in order after ${task.taskId}. | Required reading: Phase 6 spec, \`docs/CLI_JSON_CONTRACT.md\`, \`docs/TASK_WORKFLOW_COMMANDS.md\`. |`
+    }),
+    section({
       id: 'validation-baseline',
       heading: 'Validation Baseline',
       action: 'append-row',
       summary: 'Carry forward the latest task evidence as a validation baseline candidate.',
-      suggestedMarkdown: `| ${displayName} validation | ${evidence} | Confirm exact command output before applying handoff updates. |`
-    }
+      targetBeforeHash,
+      suggestedReplacementMarkdown: `| ${displayName} validation | ${evidence} | Confirm exact command output before applying handoff updates. |`
+    })
   ];
 }
 
+function section(input: Omit<HandoffSuggestionSection, 'sectionTitle' | 'suggestedMarkdown'>): HandoffSuggestionSection {
+  return {
+    ...input,
+    sectionTitle: input.heading,
+    suggestedMarkdown: input.suggestedReplacementMarkdown
+  };
+}
+
 function formatSectionFragment(section: HandoffSuggestionSection): string {
-  return [`## ${section.heading}`, `<!-- ${section.action}: ${section.summary} -->`, section.suggestedMarkdown ?? ''].join('\n');
+  return [
+    `## docs/AGENT_HANDOFF.md :: ${section.sectionTitle ?? section.heading}`,
+    `Target beforeHash: ${section.targetBeforeHash ?? 'unknown'}`,
+    `Action: ${section.action}`,
+    `Summary: ${section.summary}`,
+    '',
+    'Suggested replacement Markdown:',
+    section.suggestedReplacementMarkdown ?? section.suggestedMarkdown ?? ''
+  ].join('\n');
 }
 
 function readTaskStatus(taskDir: string): string | undefined {

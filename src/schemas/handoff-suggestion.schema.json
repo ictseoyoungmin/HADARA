@@ -53,8 +53,11 @@
         "properties": {
           "id": { "enum": ["current-state", "last-completed", "known-problems", "next-recommended-step", "validation-baseline"] },
           "heading": { "type": "string" },
+          "sectionTitle": { "type": "string" },
           "action": { "enum": ["replace-row", "append-row", "manual-review"] },
           "summary": { "type": "string" },
+          "targetBeforeHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+          "suggestedReplacementMarkdown": { "type": "string" },
           "suggestedMarkdown": { "type": "string" }
         }
       }

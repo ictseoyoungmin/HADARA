@@ -55,7 +55,14 @@ describe('handoff suggestion report', () => {
     });
     expect(report.sections.map((section) => section.id)).toEqual(['current-state', 'last-completed', 'known-problems', 'next-recommended-step', 'validation-baseline']);
     expect(report.sections.every((section) => section.suggestedMarkdown && section.suggestedMarkdown.length > 0)).toBe(true);
+    expect(report.sections.every((section) => section.sectionTitle === section.heading)).toBe(true);
+    expect(report.sections.every((section) => section.targetBeforeHash === report.target.beforeHash)).toBe(true);
+    expect(report.sections.every((section) => section.suggestedReplacementMarkdown === section.suggestedMarkdown)).toBe(true);
+    expect(report.sections.find((section) => section.id === 'known-problems')?.suggestedReplacementMarkdown).toContain(report.target.beforeHash);
     expect(report.patchPreview).toMatchObject({ format: 'section-fragments' });
+    expect(report.patchPreview?.content).toContain(`## docs/AGENT_HANDOFF.md :: Current State`);
+    expect(report.patchPreview?.content).toContain(`Target beforeHash: ${report.target.beforeHash}`);
+    expect(report.patchPreview?.content).toContain('Suggested replacement Markdown:');
     expect(validateSchema('hadara.handoff.suggestion.v1', report).ok).toBe(true);
   });
 
