@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0260 Release Dry-Run Service Decomposition is complete. |
-| Current Phase | Phase 6 Operator Workflow Compression & Multi-Agent Compatibility complete through planned range | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0260 Release Dry-Run Service Decomposition | Split release dry-run target configuration, provider advisories, evidence validation/freshness, readiness summary, and diagnostics into dedicated services while preserving `hadara.releaseDryRun.v1` and no release mutation. |
-| Active / Next Task | TBD | Phase 6 planned capsule range T-0253 through T-0260 is complete; choose the next roadmap capsule before implementation. |
-| Validation Baseline | T-0260 Docker validation passed | Focused Docker wrapper passed release dry-run/schema/service tests; Docker sync-build passed 100 files / 660 tests; built release dry-run smoke returned `ok:true`, readiness ready, blockers 0, and mutation flags false. |
+| Branch | main | T-0261 Phase 6 Reviewer Feedback Hardening is complete. |
+| Current Phase | Phase 6 Operator Workflow Compression & Multi-Agent Compatibility complete through reviewer hardening | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0261 Phase 6 Reviewer Feedback Hardening | Clarified `dev docker-check --sync-dist` mutation metadata and documented deferred Phase 6.1 reviewer-feedback hardening. |
+| Active / Next Task | TBD | Phase 6 planned capsule range plus T-0261 reviewer hardening is complete; choose a Phase 6.1 follow-up or next roadmap capsule before implementation. |
+| Validation Baseline | T-0261 Docker validation passed | Focused Docker wrapper passed dev-docker-check/schema/workflow docs tests; Docker sync-build passed 100 files / 661 tests; built dev docker-check sync-dist smoke returned `projectSourceMutation:false`, `outputMutation:true`, and `beforeHashAvailable:true`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0261 Phase 6 Reviewer Feedback Hardening | Clarified `hadara.dev.docker_check.v1` source/output mutation vocabulary for `--sync-dist` and added the Phase 6.1 reviewer-feedback hardening spec. | T-0261 evidence: focused Docker wrapper passed dev-docker-check/schema/workflow docs tests; Docker sync-build passed 100 files / 661 tests; built dev docker-check sync-dist smoke returned the clarified metadata. |
 | T-0260 Release Dry-Run Service Decomposition | Extracted release dry-run target configuration, provider advisories, evidence validation/freshness, readiness summary, and diagnostics helpers into dedicated services while preserving the report contract and no-mutation boundaries. | T-0260 evidence: focused Docker wrapper passed release dry-run/schema/service tests; Docker sync-build passed 100 files / 660 tests; built release dry-run smoke returned ready/no-mutation output. |
 | T-0259 Task Capsule Templates | Added Draft-only Task Capsule templates for release, evidence, lifecycle, operator workflow, protocol remediation, and UI polish work; `task create` now returns schema-valid JSON with optional template metadata and safe unknown-template failure. | T-0259 evidence: Docker sync-build passed 97 files / 651 tests; built release template smoke returned `hadara.task.create.v1`; unknown template smoke returned `TASK_TEMPLATE_UNKNOWN`. |
-| T-0258 Dev Docker Validation Wrapper | Added the official `hadara dev docker-check` JSON wrapper for Docker temp-copy validation, focused/full modes, explicit dist sync, redacted output, schema fixture, and compact evidence summaries. | T-0258 evidence: Docker sync-build passed 96 files / 647 tests; built wrapper smoke ran focused `tests/unit/dev-docker-check.test.ts` with explicit dist sync and returned `ok:true`. |
 
 ## Current Known Problems
 
@@ -28,6 +28,7 @@
 | Release target configuration remains preview-only. | T-0252 surfaces unsupported/invalid `.hadara/release-targets.json` as warning/advisory metadata, but the parser still only reads `primaryTarget` and effective primary remains npm. | Define `hadara.releaseTargetConfig.v1` before real config support, including supported/ignored/unsupported fields, non-blocking warnings, and migration behavior. |
 | Python TOML parsing remains preview-only. | `pyproject.toml` detection uses a lightweight parser for static name/version/backend metadata only. | Use a formal TOML parser before Python release readiness, artifact gates, or publish behavior depend on TOML data. |
 | Phase 6 is not a full multi-agent runtime. | T-0253 through T-0260 added metadata, read-only orchestration, idempotent close evidence, handoff suggestions, Docker validation wrapper, task templates, and release dry-run service decomposition. It did not add hidden shared-doc writes, `task complete --execute`, scheduler behavior, publish automation, or release mutation. | Treat Phase 6 as foundation metadata/workflow compression only; future multi-agent runtime work needs its own capsules and safety gates. |
+| Phase 6.1 reviewer feedback remains planned follow-up work. | T-0261 fixed the immediate `dev docker-check --sync-dist` metadata ambiguity, but actor CLI option plumbing, stricter sync-dist before-hash conflict handling, close evidence append race recheck, task create collision guard, and handoff fragment polish are deferred. | Use `docs/specs/agent-ux/HADARA_Phase6_1_Reviewer_Feedback_Hardening_Spec.md` to create follow-up capsules such as T-0262 through T-0266. |
 | Release artifact refresh now requires a clean git worktree. | In active development, `release artifact --execute` will return `RELEASE_ARTIFACT_WORKTREE_DIRTY` and skip `npm pack` until pending changes are committed or otherwise cleaned. | Treat this as intentional release safety, not a release artifact failure; do not bypass it with dirty worktree evidence. |
 | Release dry-run latency is currently dominated by the strict release gate. | Built `/mnt/f` smoke reported total duration about 13.8s with `strict-release-gate` about 12.5s; this is now visible but not optimized. | Treat timing diagnostics as metadata; optimize strict release-gate reads only if release operators need faster repeated dry-runs. |
 | `task upgrade-scaffold --execute` and `protocol remediate --execute` now require `--before-hash` when writes are planned. | Old execute-only copy-paste commands fail closed. | Run the dry-run first, review `summary.beforeHash`, then execute with `--before-hash <hash>`. |
@@ -66,13 +67,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Choose the next post-Phase-6 roadmap capsule. | Phase 6 planned capsule range T-0253 through T-0260 is complete. | Start from `task next`, `docs/ROADMAP.md`, `docs/PROJECT_STATE.md`, and `docs/DEVELOPMENT_SLICES.md`; create a new capsule before implementation. |
+| Choose a Phase 6.1 follow-up or the next post-Phase-6 roadmap capsule. | Phase 6 planned capsule range and T-0261 reviewer hardening are complete; deferred reviewer feedback is now specified. | Start from `docs/specs/agent-ux/HADARA_Phase6_1_Reviewer_Feedback_Hardening_Spec.md`, `task next`, `docs/ROADMAP.md`, `docs/PROJECT_STATE.md`, and `docs/DEVELOPMENT_SLICES.md`; create a capsule before implementation. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| Phase 6 reviewer feedback hardening full check | Docker `npm run dev:docker-sync-build` passed 100 files / 661 tests during T-0261. | Focused wrapper covered dev-docker-check/schema/workflow docs tests; built dev docker-check sync-dist smoke returned `projectSourceMutation:false`, `outputMutation:true`, `beforeHashAvailable:true`, `requiresBeforeHash:false`, and `conflictDetected:false`. |
 | Release dry-run service decomposition full check | Docker `npm run dev:docker-sync-build` passed 100 files / 660 tests during T-0260. | Focused wrapper covered release dry-run/schema/service tests; built release dry-run smoke returned `ok:true`, readiness ready, blockers 0, and publish/GitHub/Docker mutation flags false. |
 | Task Capsule templates full check | Docker `npm run dev:docker-sync-build` passed 97 files / 651 tests during T-0259. | Covered `hadara.task.create.v1`, release/lifecycle templates, unknown-template failure, template title parsing, schema fixture, and built task-create smokes. |
 | Dev Docker validation wrapper full check | Docker `npm run dev:docker-sync-build` passed 96 files / 647 tests during T-0258. | Covered `hadara.dev.docker_check.v1`, focused/full mode metadata, temp-copy exclusion boundaries, explicit dist sync, redacted output/privacy booleans, evidence summary, schema fixture, and built wrapper smoke. |

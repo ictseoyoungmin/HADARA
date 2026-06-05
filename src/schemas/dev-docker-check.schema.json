@@ -30,6 +30,8 @@
         "subprocessExecuted": { "const": true },
         "dockerUsed": { "const": true },
         "projectMutation": { "const": false },
+        "projectSourceMutation": { "const": false },
+        "outputMutation": { "type": "boolean" },
         "tempWorkspaceCreated": { "type": "boolean" },
         "npmCiExecuted": { "type": "boolean" },
         "focusedTestsExecuted": { "type": "boolean" },
@@ -81,7 +83,10 @@
         "executed": { "type": "boolean" },
         "beforeHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
         "afterHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
-        "conflictDetected": { "type": "boolean" }
+        "conflictDetected": { "type": "boolean" },
+        "beforeHashAvailable": { "type": "boolean" },
+        "outputChanged": { "type": "boolean" },
+        "requiresBeforeHash": { "const": false }
       }
     },
     "evidenceSummary": {

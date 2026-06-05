@@ -42,6 +42,8 @@ describe('dev docker-check report', () => {
         subprocessExecuted: true,
         dockerUsed: true,
         projectMutation: false,
+        projectSourceMutation: false,
+        outputMutation: true,
         tempWorkspaceCreated: true,
         npmCiExecuted: true,
         focusedTestsExecuted: true,
@@ -57,6 +59,9 @@ describe('dev docker-check report', () => {
     expect(report.distSync?.requested).toBe(true);
     expect(report.distSync?.executed).toBe(true);
     expect(report.distSync?.conflictDetected).toBe(false);
+    expect(report.distSync?.beforeHashAvailable).toBe(true);
+    expect(report.distSync?.outputChanged).toBe(true);
+    expect(report.distSync?.requiresBeforeHash).toBe(false);
     expect(report.distSync?.beforeHash).not.toBe(report.distSync?.afterHash);
     expect(report.evidenceSummary.suggestedEvidenceCommand).toContain('hadara evidence add-command');
     expect(JSON.stringify(report)).not.toContain(root);
@@ -72,7 +77,32 @@ describe('dev docker-check report', () => {
     expect(report.execution.fullCheckExecuted).toBe(true);
     expect(report.execution.focusedTestsExecuted).toBe(false);
     expect(report.execution.distSyncExecuted).toBe(false);
-    expect(report.distSync).toMatchObject({ requested: false, executed: false, conflictDetected: false });
+    expect(report.execution.outputMutation).toBe(false);
+    expect(report.distSync).toMatchObject({ requested: false, executed: false, conflictDetected: false, beforeHashAvailable: false, outputChanged: false, requiresBeforeHash: false });
+    expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
+  });
+
+  it('flags dist sync conflict metadata when no workspace dist hash existed before sync', () => {
+    const root = tempProject();
+    fs.rmSync(path.join(root, 'dist'), { recursive: true, force: true });
+
+    const report = createDevDockerCheckReport(root, {
+      focusedTests: ['tests/unit/dev-docker-check.test.ts'],
+      syncDist: true,
+      workspace: '/workspace',
+      tmpWorkdir: '/tmp/hadara-dev-check-test'
+    }, fakeRunner(root));
+
+    expect(report.ok).toBe(true);
+    expect(report.execution.outputMutation).toBe(true);
+    expect(report.distSync).toMatchObject({
+      requested: true,
+      executed: true,
+      conflictDetected: true,
+      beforeHashAvailable: false,
+      outputChanged: true,
+      requiresBeforeHash: false
+    });
     expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
   });
 
@@ -97,7 +127,10 @@ function fakeRunner(root: string, failStep?: string): DevDockerCommandRunner {
       const script = args.at(-1) ?? '';
       const stepId = classifyScript(script);
       if (stepId === failStep) return { ok: false, exitCode: 1 };
-      if (stepId === 'dist-sync') fs.writeFileSync(path.join(root, 'dist', 'cli', 'main.js'), 'new\n', 'utf8');
+      if (stepId === 'dist-sync') {
+        fs.mkdirSync(path.join(root, 'dist', 'cli'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'dist', 'cli', 'main.js'), 'new\n', 'utf8');
+      }
       return { ok: true, exitCode: 0 };
     }
   };

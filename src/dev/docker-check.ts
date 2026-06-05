@@ -15,7 +15,13 @@ export interface DevDockerCheckReport {
   execution: {
     subprocessExecuted: true;
     dockerUsed: true;
+    /**
+     * Compatibility alias from T-0258. It means project source files are not
+     * mutated; use projectSourceMutation/outputMutation for precise meaning.
+     */
     projectMutation: false;
+    projectSourceMutation: false;
+    outputMutation: boolean;
     tempWorkspaceCreated: boolean;
     npmCiExecuted: boolean;
     focusedTestsExecuted: boolean;
@@ -40,6 +46,9 @@ export interface DevDockerCheckReport {
     beforeHash?: string;
     afterHash?: string;
     conflictDetected: boolean;
+    beforeHashAvailable: boolean;
+    outputChanged: boolean;
+    requiresBeforeHash: false;
   };
   evidenceSummary: {
     summary: string;
@@ -110,6 +119,8 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
     subprocessExecuted: true,
     dockerUsed: true,
     projectMutation: false,
+    projectSourceMutation: false,
+    outputMutation: false,
     tempWorkspaceCreated: false,
     npmCiExecuted: false,
     focusedTestsExecuted: false,
@@ -146,12 +157,16 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
   }
 
   const afterHash = syncDist ? hashFile(path.join(projectRoot, 'dist', 'cli', 'main.js')) : undefined;
+  execution.outputMutation = execution.distSyncExecuted;
   const ok = issues.every((issue) => issue.severity !== 'error');
   const evidenceSummary = buildEvidenceSummary(ok, mode, focusedTests, syncDist, execution);
   const distSyncReport: DevDockerCheckReport['distSync'] = {
     requested: syncDist,
     executed: execution.distSyncExecuted,
-    conflictDetected: false
+    conflictDetected: syncDist && execution.distSyncExecuted && beforeHash === undefined,
+    beforeHashAvailable: beforeHash !== undefined,
+    outputChanged: beforeHash !== afterHash,
+    requiresBeforeHash: false
   };
   if (beforeHash) distSyncReport.beforeHash = beforeHash;
   if (afterHash) distSyncReport.afterHash = afterHash;
@@ -189,7 +204,7 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
 export function formatDevDockerCheckReport(report: DevDockerCheckReport): string {
   const lines = [`[HADARA] dev docker-check ${report.mode}: ${report.ok ? 'ok' : 'failed'}`];
   lines.push(report.evidenceSummary.summary);
-  if (report.distSync?.requested) lines.push(`dist-sync=${report.distSync.executed ? 'executed' : 'not-executed'} conflict=${report.distSync.conflictDetected}`);
+  if (report.distSync?.requested) lines.push(`dist-sync=${report.distSync.executed ? 'executed' : 'not-executed'} output-mutation=${report.execution.outputMutation} conflict=${report.distSync.conflictDetected}`);
   for (const step of report.steps) lines.push(`${step.status}\t${step.id}\t${step.summary}`);
   for (const issue of report.issues) lines.push(`[${issue.severity}] ${issue.code}: ${issue.message}`);
   return lines.join('\n');
@@ -262,6 +277,8 @@ function markExecution(execution: DevDockerCheckReport['execution'], mark: keyof
     case 'subprocessExecuted':
     case 'dockerUsed':
     case 'projectMutation':
+    case 'projectSourceMutation':
+    case 'outputMutation':
       break;
   }
 }

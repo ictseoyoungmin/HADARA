@@ -47,7 +47,7 @@ T-0254 applies this metadata to existing task lifecycle reports without adding o
 
 T-0257 adds read-only `handoff suggest` reports for coordinator-reviewed `docs/AGENT_HANDOFF.md` updates. The command returns target before-hash and shared-doc write-boundary metadata plus section fragments; it does not apply the fragments and has no execute mode.
 
-T-0258 adds `dev docker-check` as an explicit external-subprocess validation wrapper. It reports Docker/temp-copy/npm/focused/full/dist-sync steps with actor metadata, redacted source/workspace metadata, privacy booleans, and an evidence-ready summary. `--sync-dist` is required before workspace `dist` is refreshed.
+T-0258 adds `dev docker-check` as an explicit external-subprocess validation wrapper. It reports Docker/temp-copy/npm/focused/full/dist-sync steps with actor metadata, redacted source/workspace metadata, privacy booleans, and an evidence-ready summary. `--sync-dist` is required before workspace `dist` is refreshed. T-0261 clarifies that `projectMutation:false` is a compatibility alias for no source mutation; `outputMutation:true` is reported when explicit dist sync writes workspace output.
 
 T-0259 adds `task create --from <template-id>` templates for common capsule types. Templates prefill Draft capsule docs with scope boundaries, expected evidence, and out-of-scope rows, but they do not attach evidence, mark work Done, run validation, or close the task.
 
@@ -84,6 +84,7 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 - `task complete` is a read-only workflow compressor. It may report `finish-required`, `ready-required`, `close-required`, `audit-required`, `handoff-update-suggested`, or `complete`, but it must not execute or append evidence. `--execute` returns a blocked `hadara.task.complete_flow.v1` report.
 - `handoff suggest` is a read-only shared-doc suggestion surface. It reports `docs/AGENT_HANDOFF.md` before-hash and section fragments for coordinator review, but it must not update the handoff or any other state document. `--execute` returns a blocked `hadara.handoff.suggestion.v1` report.
 - `dev docker-check` is intentionally an external-subprocess command. It must keep raw Docker/npm logs out of JSON output, redact workspace paths, create a run-scoped temp copy, and require explicit `--sync-dist` before copying Docker-built `dist` to the workspace.
+- `dev docker-check --sync-dist` is an output write. Reports distinguish source mutation from output mutation and expose whether a pre-sync dist hash was available. A future Phase 6.1 capsule may require a reviewed before-hash before dist sync.
 - `task ready` checks whether the capsule can satisfy a requested validation level; it does not write evidence or status.
 - `evidence add-command` records an operator-supplied command result; it does not execute shell commands or capture stdout/stderr.
 - `task finish` may update only the Task Capsule `TASK.md` status and matching `docs/TASK_BOARD.md` status/path row.
