@@ -121,6 +121,13 @@
       "notes": "Documents task close plan and execute reports with close-evidence loop-boundary metadata."
     },
     {
+      "id": "hadara.task.complete_flow.v1",
+      "path": "src/schemas/task-complete-flow.schema.json",
+      "status": "fixture",
+      "owner": "task/complete-flow",
+      "notes": "Documents read-only task completion flow reports that compose finish, ready, close, and audit guidance."
+    },
+    {
       "id": "hadara.task.audit_close.v1",
       "path": "src/schemas/task-audit-close.schema.json",
       "status": "fixture",

@@ -19,6 +19,7 @@ Usage:
   hadara task show <task-id>
   hadara task next [--json]
   hadara task status --task <task-id> [--json]
+  hadara task complete --task <task-id> [--json]
   hadara task finish --task <task-id> [--execute] [--json]
   hadara task upgrade-scaffold --task <task-id> [--execute --before-hash <hash>] [--json]
   hadara task close --task <task-id> [--execute] [--json]

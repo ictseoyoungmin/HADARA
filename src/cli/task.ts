@@ -1,5 +1,6 @@
 import { createTaskCapsule } from '../task/task-capsule';
 import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../task/task-close';
+import { createTaskCompleteFlowReport, formatTaskCompleteFlowReport } from '../task/task-complete-flow';
 import { createTaskReadyReport } from '../task/task-ready';
 import { createTaskFinishReport, formatTaskFinishReport } from '../task/task-finish';
 import { createTaskNextReport, formatTaskNextReport } from '../task/task-next';
@@ -100,6 +101,19 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
       console.log(JSON.stringify(report, null, 2));
     } else {
       console.log(formatTaskWorkbenchReport(report));
+    }
+    if (!report.ok) process.exitCode = 6;
+    return true;
+  }
+
+  if (sub === 'complete') {
+    const id = getStringOption(input.args, '--task') ?? input.args[2];
+    if (!id || id.startsWith('--')) throw new Error('task complete requires --task <task-id>');
+    const report = createTaskCompleteFlowReport(input.projectRoot, id, { executeRequested: getFlag(input.args, '--execute') });
+    if (input.jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log(formatTaskCompleteFlowReport(report));
     }
     if (!report.ok) process.exitCode = 6;
     return true;
