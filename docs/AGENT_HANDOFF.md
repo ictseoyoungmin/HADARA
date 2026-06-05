@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0251 Release Target Configuration Preview is complete. |
+| Branch | main | T-0252 Release Target Config Warning Surfacing is complete. |
 | Current Phase | Dashboard/TUI UI work paused; core evidence/task lifecycle work resumed | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0251 Release Target Configuration Preview | Release dry-run now emits `releaseTargetConfiguration` with npm primary, Python preview, Docker deferred, and `autoPromotion:false`; config requests cannot promote Python primary. |
-| Active / Next Task | Return to roadmap value work or explicitly scope the next release-provider hardening capsule. | T-0249 through T-0251 completed the attached boundary/advisory/config preview sequence without Python publish or primary-target support. |
-| Validation Baseline | T-0251 Docker validation passed | Focused Docker tests passed 2 files / 30 tests; Docker full check passed 92 files / 625 tests; built release dry-run emitted target config preview with effective primary `npm-package` and `autoPromotion:false`. |
+| Latest Completed Task | T-0252 Release Target Config Warning Surfacing | Release dry-run now surfaces `.hadara/release-targets.json` preview issues as non-blocking warning checks and `diagnostics.advisories` while keeping npm primary. |
+| Active / Next Task | Return to roadmap value work or explicitly plan release target config UX/schema hardening. | T-0249 through T-0252 completed the boundary/advisory/config preview sequence without Python publish or primary-target support. |
+| Validation Baseline | T-0252 Docker validation passed | Focused Docker tests passed 2 files / 31 tests; Docker full check passed 92 files / 626 tests; built release dry-run emitted additive `diagnostics.advisories`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0252 Release Target Config Warning Surfacing | Added non-blocking `RELEASE_TARGET_CONFIGURATION` warning checks and `diagnostics.advisories` for config preview issues, including unsupported primary and invalid JSON. | T-0252 evidence: Docker focused tests passed 2 files / 31 tests; Docker full check passed 92 files / 626 tests; built release dry-run emitted `diagnostics.advisories: []` on default config with expected stale artifact blocker. |
 | T-0251 Release Target Configuration Preview | Added additive release dry-run target configuration preview with npm primary, Python preview, Docker deferred, `autoPromotion:false`, and unsupported-primary warnings. | T-0251 evidence: Docker focused tests passed 2 files / 30 tests; Docker full check passed 92 files / 625 tests; built release dry-run emitted effective primary `npm-package`, Python preview, Docker deferred, and `autoPromotion:false`. |
 | T-0250 Python Release Advisory Read Model | Added additive release dry-run `providerAdvisories` for Python preview smoke evidence present/missing/stale, always non-blocking. | T-0250 evidence: Docker focused tests passed 2 files / 29 tests; Docker full check passed 92 files / 624 tests; built release dry-run emitted Python advisory `smokeEvidence: missing`, `blocking:false`. |
-| T-0249 Python Package Smoke Boundary Hardening | Added package-smoke `networkPolicy`, Python best-effort offline command flags, Python reduced evidence attach, and release dry-run npm package-smoke proof separation. | T-0249 evidence: Docker focused tests passed 3 files / 32 tests; Docker full check passed 92 files / 623 tests; built CLI Python offline dry-run emitted `offline-best-effort`, `enforced:false`, `python -m build --no-isolation`, and pip `--no-index --no-deps`. |
 
 ## Current Known Problems
 
@@ -24,6 +24,8 @@
 |---|---|---|
 | Release publish remains approval-gated/manual. | `release dry-run` is ready after T-0245, and `release publish --mode dry-run` is ok, but actual publish/deploy mutation still requires explicit approval metadata, confirmation, tokens, and future mutation-capable handling. | Do not run publish/deploy execute unless an operator explicitly requests the approval-gated release path. |
 | Python package smoke and release advisory are non-blocking preview surfaces. | T-0250 surfaces Python smoke evidence as `providerAdvisories` only. T-0249 makes network behavior explicit: default is environment-inherited, `--network-policy offline` is best-effort with `enforced:false`, and local execution still depends on Python packaging tools such as `build`, `twine`, and pip. HADARA still does not load PyPI credentials or publish to PyPI. | Use dry-run first; treat Python local execution failures as environment/tooling failures, not publish readiness. Python advisory evidence must not be used to unblock or block the npm release gate. |
+| Release target configuration remains preview-only. | T-0252 surfaces unsupported/invalid `.hadara/release-targets.json` as warning/advisory metadata, but the parser still only reads `primaryTarget` and effective primary remains npm. | Define `hadara.releaseTargetConfig.v1` before real config support, including supported/ignored/unsupported fields, non-blocking warnings, and migration behavior. |
+| Python TOML parsing remains preview-only. | `pyproject.toml` detection uses a lightweight parser for static name/version/backend metadata only. | Use a formal TOML parser before Python release readiness, artifact gates, or publish behavior depend on TOML data. |
 | Release artifact refresh now requires a clean git worktree. | In active development, `release artifact --execute` will return `RELEASE_ARTIFACT_WORKTREE_DIRTY` and skip `npm pack` until pending changes are committed or otherwise cleaned. | Treat this as intentional release safety, not a release artifact failure; do not bypass it with dirty worktree evidence. |
 | Release dry-run latency is currently dominated by the strict release gate. | Built `/mnt/f` smoke reported total duration about 13.8s with `strict-release-gate` about 12.5s; this is now visible but not optimized. | Treat timing diagnostics as metadata; optimize strict release-gate reads only if release operators need faster repeated dry-runs. |
 | `task upgrade-scaffold --execute` and `protocol remediate --execute` now require `--before-hash` when writes are planned. | Old execute-only copy-paste commands fail closed. | Run the dry-run first, review `summary.beforeHash`, then execute with `--before-hash <hash>`. |
@@ -62,13 +64,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Return to roadmap value work or explicitly scope the next release-provider hardening capsule. | T-0249 through T-0251 completed package-smoke boundary hardening, Python release advisory read model, and target configuration preview. | Current evidence: T-0251 Docker check passed 92 files / 625 tests; no PyPI token loading, publish behavior, or Python primary target behavior added. |
+| Return to roadmap value work or explicitly plan release target config UX/schema hardening. | T-0249 through T-0252 completed package-smoke boundary hardening, Python release advisory read model, target configuration preview, and config warning surfacing. | Current evidence: T-0252 Docker check passed 92 files / 626 tests; no PyPI token loading, publish behavior, or Python primary target behavior added. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| Release target config warning surfacing full check | Docker focused tests passed 2 files / 31 tests; Docker `npm run check` passed 92 files / 626 tests during T-0252. | Unsupported primary and invalid JSON config preview issues now surface through non-blocking `RELEASE_TARGET_CONFIGURATION` warnings and exact-code `diagnostics.advisories`; built release dry-run emitted additive `diagnostics.advisories`. |
 | Release target configuration preview full check | Docker focused tests passed 2 files / 30 tests; Docker `npm run check` passed 92 files / 625 tests during T-0251. | Built release dry-run emitted `releaseTargetConfiguration.source: default`, effective primary `npm-package`, Python preview, Docker deferred, `autoPromotion:false`, and readiness remained npm-primary. |
 | Python release advisory read model full check | Docker focused tests passed 2 files / 29 tests; Docker `npm run check` passed 92 files / 624 tests during T-0250. | Built release dry-run emitted Python advisory `status: preview`, `smokeEvidence: missing`, `blocking:false`; release readiness remained ready and npm remained primary. |
 | Python package smoke boundary hardening full check | Docker focused tests passed 3 files / 32 tests; Docker `npm run check` passed 92 files / 623 tests during T-0249. | Built Python offline dry-run emitted `offline-best-effort`, `enforced:false`, `python -m build --no-isolation`, and pip `--no-index --no-deps`; Python evidence attach is reduced public evidence but does not satisfy the npm release gate. |

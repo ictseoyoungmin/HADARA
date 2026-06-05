@@ -95,6 +95,13 @@ export interface ReleaseDryRunReport {
   diagnostics: {
     generatedAt: string;
     durationMs: number;
+    advisories: Array<{
+      area: 'release-target-configuration';
+      severity: 'warning';
+      code: string;
+      message: string;
+      blocking: false;
+    }>;
     stageTimings: Array<{
       stage: string;
       durationMs: number;
@@ -147,6 +154,7 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
   const evidence = timeStage(timings, 'release-evidence-validation', () => evidenceRequirements().map((requirement) => validateEvidenceRequirement(evidenceRecords, requirement)));
   const providerAdvisories = timeStage(timings, 'provider-advisories', () => createProviderAdvisories(evidenceRecords));
   const gitFreshness = createGitFreshnessChecker(projectRoot, gitCommit);
+  const releaseTargetConfigurationCheck = createReleaseTargetConfigurationCheck(releaseTargetConfiguration);
   const checks = [
     {
       code: 'STRICT_RELEASE_GATE',
@@ -154,6 +162,7 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
       status: releaseGate.ok ? ('passed' as const) : ('error' as const),
       summary: releaseGate.ok ? 'Strict read-only release gate passes before release dry-run planning.' : 'Strict read-only release gate must pass before release dry-run planning.'
     },
+    ...(releaseTargetConfigurationCheck ? [releaseTargetConfigurationCheck] : []),
     ...evidence.map((item) => ({
       code: item.code,
       name: evidenceName(item.code),
@@ -176,7 +185,7 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
     }));
   applyStageStatuses(timings, releaseGate.ok, checks);
   const readiness = createReadinessSummary(checks, evidence, packageMetadata.version, gitCommit, gitFreshness);
-  const diagnostics = createDiagnostics(generatedAt, startedAt, timings);
+  const diagnostics = createDiagnostics(generatedAt, startedAt, timings, releaseTargetConfiguration);
 
   const report: ReleaseDryRunReport = {
     schemaVersion: 'hadara.releaseDryRun.v1',
@@ -294,6 +303,19 @@ function readReleaseTargetConfiguration(projectRoot: string): ReleaseDryRunRepor
   }
 }
 
+function createReleaseTargetConfigurationCheck(
+  releaseTargetConfiguration: ReleaseDryRunReport['releaseTargetConfiguration']
+): ReleaseDryRunReport['checks'][number] | null {
+  if (releaseTargetConfiguration.issues.length === 0) return null;
+  const plural = releaseTargetConfiguration.issues.length === 1 ? 'advisory' : 'advisories';
+  return {
+    code: 'RELEASE_TARGET_CONFIGURATION',
+    name: 'Release target configuration',
+    status: 'warning',
+    summary: `${releaseTargetConfiguration.issues.length} non-blocking release target configuration ${plural}; effective primary remains npm-package.`
+  };
+}
+
 function createProviderAdvisories(records: ReleaseEvidenceRecord[]): ReleaseDryRunReport['providerAdvisories'] {
   const pythonSmokeRecords = records
     .map((record) => ({ record, artifact: validateReleaseEvidenceArtifact(record) }))
@@ -366,12 +388,20 @@ function applyStageStatuses(timings: ReleaseDryRunReport['diagnostics']['stageTi
 function createDiagnostics(
   generatedAt: string,
   startedAt: number,
-  stageTimings: ReleaseDryRunReport['diagnostics']['stageTimings']
+  stageTimings: ReleaseDryRunReport['diagnostics']['stageTimings'],
+  releaseTargetConfiguration: ReleaseDryRunReport['releaseTargetConfiguration']
 ): ReleaseDryRunReport['diagnostics'] {
   const thresholdMs = 5000;
   return {
     generatedAt,
     durationMs: Date.now() - startedAt,
+    advisories: releaseTargetConfiguration.issues.map((issue) => ({
+      area: 'release-target-configuration',
+      severity: 'warning',
+      code: issue.code,
+      message: issue.message,
+      blocking: false
+    })),
     stageTimings,
     slowStageWarnings: stageTimings
       .filter((timing) => timing.durationMs >= thresholdMs)

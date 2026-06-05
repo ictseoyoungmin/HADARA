@@ -124,6 +124,7 @@ describe('release dry-run', () => {
       blockers: 0,
       warnings: 0
     });
+    expect(report.diagnostics.advisories).toEqual([]);
     expect(report.readiness.nextActions).toContainEqual(
       expect.objectContaining({
         id: 'review-publish-dry-run',
@@ -416,7 +417,84 @@ describe('release dry-run', () => {
         })
       ]
     });
+    expect(report.checks).toContainEqual(
+      expect.objectContaining({
+        code: 'RELEASE_TARGET_CONFIGURATION',
+        status: 'warning',
+        summary: expect.stringContaining('effective primary remains npm-package')
+      })
+    );
+    expect(report.readiness).toMatchObject({
+      status: 'ready',
+      blockers: 0,
+      warnings: 1
+    });
+    expect(report.diagnostics.advisories).toContainEqual(
+      expect.objectContaining({
+        area: 'release-target-configuration',
+        severity: 'warning',
+        code: 'RELEASE_TARGET_PRIMARY_UNSUPPORTED',
+        blocking: false,
+        message: expect.stringContaining('effective primary remains npm-package')
+      })
+    );
+    expect(report.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'warning',
+        code: 'RELEASE_TARGET_CONFIGURATION_NOT_READY'
+      })
+    );
     expect(report.issues).not.toContainEqual(expect.objectContaining({ code: 'RELEASE_TARGET_PRIMARY_UNSUPPORTED' }));
+    expect(report.readiness.nextActions).toContainEqual(
+      expect.objectContaining({
+        id: 'review-publish-dry-run',
+        required: false
+      })
+    );
+    expect(validateSchema('hadara.releaseDryRun.v1', report).ok).toBe(true);
+  });
+
+  it('surfaces invalid release target config JSON as a non-blocking diagnostic advisory', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root);
+    writeStrongEvidence(root);
+    fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'release-targets.json'), '{ "primaryTarget": ', 'utf8');
+
+    const report = createReleaseDryRunReport(root);
+
+    expect(report.ok).toBe(true);
+    expect(report.releaseTargets.primary).toBe('npm-package');
+    expect(report.releaseTargetConfiguration).toMatchObject({
+      source: 'project-file',
+      effectivePrimaryTarget: 'npm-package',
+      autoPromotion: false,
+      supported: false,
+      issues: [
+        expect.objectContaining({
+          severity: 'warning',
+          code: 'RELEASE_TARGET_CONFIG_INVALID_JSON'
+        })
+      ]
+    });
+    expect(report.checks).toContainEqual(
+      expect.objectContaining({
+        code: 'RELEASE_TARGET_CONFIGURATION',
+        status: 'warning'
+      })
+    );
+    expect(report.readiness).toMatchObject({
+      status: 'ready',
+      blockers: 0,
+      warnings: 1
+    });
+    expect(report.diagnostics.advisories).toContainEqual(
+      expect.objectContaining({
+        area: 'release-target-configuration',
+        code: 'RELEASE_TARGET_CONFIG_INVALID_JSON',
+        blocking: false
+      })
+    );
     expect(validateSchema('hadara.releaseDryRun.v1', report).ok).toBe(true);
   });
 

@@ -110,6 +110,10 @@
       "properties": {
         "generatedAt": { "type": "string", "minLength": 1 },
         "durationMs": { "type": "number" },
+        "advisories": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/diagnosticAdvisory" }
+        },
         "stageTimings": {
           "type": "array",
           "items": { "$ref": "#/$defs/stageTiming" }
@@ -303,6 +307,18 @@
         "durationMs": { "type": "number" },
         "thresholdMs": { "type": "number" },
         "summary": { "type": "string", "minLength": 1 }
+      }
+    },
+    "diagnosticAdvisory": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["area", "severity", "code", "message", "blocking"],
+      "properties": {
+        "area": { "type": "string", "enum": ["release-target-configuration"] },
+        "severity": { "type": "string", "enum": ["warning"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "blocking": { "const": false }
       }
     },
     "issue": {

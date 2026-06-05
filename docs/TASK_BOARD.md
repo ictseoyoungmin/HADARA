@@ -252,3 +252,4 @@
 | T-0249 | Python Package Smoke Boundary Hardening | Done | tasks/T-0249-python-package-smoke-boundary-hardening | |
 | T-0250 | Python Release Advisory Read Model | Done | tasks/T-0250-python-release-advisory-read-model | |
 | T-0251 | Release Target Configuration Preview | Done | tasks/T-0251-release-target-configuration-preview | |
+| T-0252 | Release Target Config Warning Surfacing | Done | tasks/T-0252-release-target-config-warning-surfacing | |
