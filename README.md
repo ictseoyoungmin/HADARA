@@ -6,7 +6,7 @@
 
 HADARA is named from **Harness + Dara**. A harness safely binds and controls complex systems; Dara carries layered associations of holding, wisdom, durability, and continuity. HADARA binds non-deterministic LLM agent work into a production-oriented workflow through Task Capsules, Session Continuity, Policy Layers, Evidence Logs, and Handoff Protocols.
 
-This repository is both the source checkout for HADARA and the protocol workspace used to build it. The first npm release candidate, `hadara@0.1.0-rc.0`, is published for early CLI evaluation.
+This repository is both the source checkout for HADARA and the protocol workspace used to build it. The first npm release candidate, `hadara@0.1.0-rc.0`, is published for early CLI evaluation. The source checkout is currently frozen for the next release-candidate evidence refresh at `hadara@0.2.0-rc.0`.
 
 ## Quick Start
 
@@ -27,7 +27,7 @@ You can also run the package without a global install:
 npx hadara@0.1.0-rc.0 doctor --json
 ```
 
-The RC package includes the built CLI, README, license, and package metadata. GitHub Release archives, installer scripts, USB portable launchers, Docker images, and installed-CLI matrix evidence are still deferred.
+The published RC package includes the built CLI, README, license, and package metadata. The next RC target is `0.2.0-rc.0`; release evidence for it is dry-run/readiness only until an explicit publish capsule approves mutation. GitHub Release archives, installer scripts, USB portable launchers, Docker images, and installed-CLI matrix evidence are still deferred.
 
 ### Develop from Source
 

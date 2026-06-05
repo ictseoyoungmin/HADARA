@@ -9,16 +9,17 @@ This document is the dedicated tracked source for release, install, installer, p
 Current release-candidate metadata mode:
 
 - Package name decision: `hadara`.
-- npm registry observation: `npm view hadara name version --registry=https://registry.npmjs.org` returned 404 on 2026-05-28; recheck immediately before publish.
-- Current version is `0.1.0-rc.0`.
+- npm registry observation: `hadara@0.1.0-rc.0` is published; recheck registry state immediately before any later publish.
+- Current version is `0.2.0-rc.0`.
+- Previous published release candidate is `0.1.0-rc.0`.
 - Current package is `private: false`.
 - Current package metadata includes `"license": "MIT"`.
 - Current binary remains `bin.hadara` at `./dist/cli/main.js`.
 - Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`.
 - Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability.
-- Release-candidate metadata mode: version `0.1.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present.
+- Release-candidate metadata mode: version `0.x.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present.
 - Scoped fallback decision: do not silently switch names; choose and document an explicit scope in a later release-target capsule if `hadara` is unavailable.
-- Version policy: first release-candidate target is `0.1.0-rc.0`; first stable target is `0.1.0`.
+- Version policy: first release-candidate target was `0.1.0-rc.0`; the next release-candidate evidence refresh target is `0.2.0-rc.0`. Stable release targets remain approval-gated and must be set in a later release capsule.
 - T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist.
 - Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist.
 - Do not add `files` entries for missing installer or portable paths in T-0127.
