@@ -2,7 +2,7 @@
 
 ## 0.2.0-rc.1
 
-Release-candidate target after the npm-installed recycle fixes from T-0272 through T-0274 and publish-readiness refresh in T-0275.
+Release candidate published to npm after the npm-installed recycle fixes from T-0272 through T-0274 and publish-readiness refresh in T-0275.
 
 Highlights:
 
@@ -11,11 +11,12 @@ Highlights:
 - Improves lifecycle status clarity and mounted-workspace performance for single-task finish/read/evidence commands.
 - Adds redacted failed-step diagnostics to `dev docker-check` reports while continuing to omit raw subprocess logs.
 - Refreshes package metadata, README install examples, package smoke, clean-checkout smoke, release artifact, release dry-run, and publish dry-run evidence for the rc.1 source state.
+- Publishes `hadara@0.2.0-rc.1` to npm through the approval-gated manual helper and verifies `npm view hadara@0.2.0-rc.1 version` returns `0.2.0-rc.1`.
 
 Boundaries:
 
-- Actual npm publish remains operator-gated. The intended handoff is: commit the rc.1 source/evidence state, run `npm login`, then use `scripts/release/manual-publish-rc.sh T-0275 --execute` and type the script confirmation when ready.
-- GitHub Release creation remains optional and separately confirmed through the helper's `--github-draft` path.
+- npm publish was completed as an operator-confirmed release mutation after the readiness capsule was closed.
+- GitHub Release creation remains optional and was not requested during the npm publish helper run.
 - Docker image publishing, PyPI publishing, installer execution, and MCP release/package execution remain deferred.
 
 ## 0.2.0-rc.0

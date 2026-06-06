@@ -30,15 +30,15 @@
 
 | Out of Scope | Reason |
 |---|---|
-| No publish execution | Template boundary. |
+| No publish execution in readiness implementation | The T-0275 implementation stopped before publish mutation; post-completion operator publish evidence is recorded separately in Status History and Evidence. |
 | No token loading | Template boundary. |
-| No registry mutation | Template boundary. |
+| No registry mutation in readiness implementation | The T-0275 implementation stopped before registry mutation; post-completion operator publish evidence is recorded separately in Status History and Evidence. |
 | No GitHub Release creation | Template boundary. |
 | No Docker image build | Template boundary. |
 | No PyPI upload | Template boundary. |
 | No release mutation | Template boundary. |
 | No npm login or token setup | Operator-only boundary; token values must not enter repository files or public evidence. |
-| No `npm publish` | The operator will run the manual helper with `--execute` after reviewing the completed capsule. |
+| No `npm publish` during implementation | The operator ran the manual helper with `--execute` after reviewing the completed capsule; that post-completion action is recorded separately. |
 | No git push or tag push | Publishing source control state is an operator action unless explicitly requested. |
 
 ## Status
@@ -52,3 +52,4 @@ Done
 | TBD | Draft | Initial task scaffold from template. | Template defaults. |
 | 2026-06-06 | Draft | Created T-0275 and started rc.1 publish-readiness alignment. | `hadara task create --from release-read-model`. |
 | 2026-06-06 | Done | Finished task capsule. | `hadara task finish --execute` |
+| 2026-06-06 | Done | Post-completion operator npm publish completed outside the implementation scope; publish helper evidence was attached after `npm view` verified `0.2.0-rc.1`. | `scripts/release/manual-publish-rc.sh T-0275 --execute`; evidence `ev:T-0275:7128f86e613349aa8c3b6343`. |
