@@ -302,7 +302,7 @@ Current package metadata is release-candidate stage:
 
 - Package name decision: `hadara`.
 - npm registry observation: `hadara@0.1.0-rc.0` is published; recheck registry state immediately before any later publish.
-- Current version is `0.2.0-rc.0`.
+- Current version is `0.2.0-rc.1`.
 - Previous published release candidate is `0.1.0-rc.0`.
 - Current package is `private: false`.
 - Current binary remains `bin.hadara` at `./dist/cli/main.js`.
@@ -316,7 +316,7 @@ Release metadata modes:
 Release-candidate transition policy:
 
 - Scoped fallback decision: do not silently switch names; choose and document an explicit scope in a later release-target capsule if `hadara` is unavailable.
-- Version policy: first release-candidate target was `0.1.0-rc.0`; the next release-candidate evidence refresh target is `0.2.0-rc.0`. Stable release targets remain approval-gated and must be set in a later release capsule after package smoke, install matrix, release-gate evidence freeze, public docs alignment, and license finalization.
+- Version policy: first release-candidate target was `0.1.0-rc.0`; the current release-candidate evidence refresh target is `0.2.0-rc.1`. Stable release targets remain approval-gated and must be set in a later release capsule after package smoke, install matrix, release-gate evidence freeze, public docs alignment, and license finalization.
 - T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist.
 - Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist.
 - Do not add `files` entries for missing installer or portable paths in T-0127.

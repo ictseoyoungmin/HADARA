@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img alt="Release candidate" src="https://img.shields.io/badge/release-0.2.0--rc.0-blue">
+  <img alt="Release candidate" src="https://img.shields.io/badge/release-0.2.0--rc.1-blue">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>
@@ -23,10 +23,10 @@ This repository is both the HADARA source checkout and the HADARA protocol works
 The current source checkout targets:
 
 ```text
-hadara@0.2.0-rc.0
+hadara@0.2.0-rc.1
 ```
 
-T-0268 refreshed package smoke, clean-checkout smoke, release artifact, release dry-run, and publish dry-run evidence for `0.2.0-rc.0`. T-0269 is the approval-gated publish capsule for this RC.
+T-0275 refreshes package smoke, clean-checkout smoke, release artifact, release dry-run, and publish dry-run evidence for `0.2.0-rc.1`. T-0269 prepared the previous `0.2.0-rc.0` publish path, but rc.1 supersedes it after the installed-package recycle fixes.
 
 Current publish boundaries:
 
@@ -34,7 +34,8 @@ Current publish boundaries:
 |---|---|
 | npm package | Primary release target. |
 | `hadara@0.1.0-rc.0` | Published first RC. |
-| `hadara@0.2.0-rc.0` | Current source and publish-candidate version. |
+| `hadara@0.2.0-rc.0` | Superseded internal publish candidate after recycle findings. |
+| `hadara@0.2.0-rc.1` | Current source and publish-candidate version. |
 | GitHub Release | Secondary target, still approval-gated. |
 | Docker image | Deferred. |
 | PyPI/Python package | Advisory preview only. |
@@ -49,7 +50,7 @@ Requires Node.js 22.
 Install the current RC:
 
 ```bash
-npm install -g hadara@0.2.0-rc.0
+npm install -g hadara@0.2.0-rc.1
 hadara doctor --json
 hadara task list --json
 hadara tools list --json
@@ -58,11 +59,11 @@ hadara tools list --json
 Run without a global install:
 
 ```bash
-npx hadara@0.2.0-rc.0 doctor --json
-npx hadara@0.2.0-rc.0 tools list --json
+npx hadara@0.2.0-rc.1 doctor --json
+npx hadara@0.2.0-rc.1 tools list --json
 ```
 
-Previous RC: `hadara@0.1.0-rc.0` remains available on npm for comparison or rollback, but new installs should use the current RC once it is published.
+Previous published RC: `hadara@0.1.0-rc.0` remains available on npm for comparison or rollback, but new installs should use the current RC once it is published.
 
 ## What HADARA Gives You
 
@@ -177,7 +178,7 @@ Important distinctions:
 ## Initialize a Project
 
 ```bash
-hadara init --json           # default: standard
+hadara init                  # default: standard
 hadara init --profile basic
 hadara init --profile standard
 hadara init --profile governed

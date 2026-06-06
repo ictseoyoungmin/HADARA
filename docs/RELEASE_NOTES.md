@@ -1,5 +1,23 @@
 # RELEASE_NOTES
 
+## 0.2.0-rc.1
+
+Release-candidate target after the npm-installed recycle fixes from T-0272 through T-0274 and publish-readiness refresh in T-0275.
+
+Highlights:
+
+- Fixes generated deterministic `run scaffold` scripts so fake-shell JSON observations match successfully.
+- Hardens fresh initialized project UX for `init --json`, init doctor, status/TUI phase parsing, handoff update JSON, generic handoff suggestions, and context artifact paths.
+- Improves lifecycle status clarity and mounted-workspace performance for single-task finish/read/evidence commands.
+- Adds redacted failed-step diagnostics to `dev docker-check` reports while continuing to omit raw subprocess logs.
+- Refreshes package metadata, README install examples, package smoke, clean-checkout smoke, release artifact, release dry-run, and publish dry-run evidence for the rc.1 source state.
+
+Boundaries:
+
+- Actual npm publish remains operator-gated. The intended handoff is: commit the rc.1 source/evidence state, run `npm login`, then use `scripts/release/manual-publish-rc.sh T-0275 --execute` and type the script confirmation when ready.
+- GitHub Release creation remains optional and separately confirmed through the helper's `--github-draft` path.
+- Docker image publishing, PyPI publishing, installer execution, and MCP release/package execution remain deferred.
+
 ## 0.2.0-rc.0
 
 Release-candidate freeze target for Phase 6 and Phase 6.1 work. T-0269 is preparing the approval-gated npm publish path, but this version is not yet confirmed published in this workspace state.

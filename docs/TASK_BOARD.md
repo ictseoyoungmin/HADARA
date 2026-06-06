@@ -275,3 +275,4 @@
 | T-0272 | Run Scaffold Observation Match Hardening | Done | tasks/T-0272-run-scaffold-observation-match-hardening | |
 | T-0273 | Fresh Init and Generic Project UX Hardening | Done | tasks/T-0273-fresh-init-and-generic-project-ux-hardening | |
 | T-0274 | Lifecycle Status Clarity and Performance Hardening | Done | tasks/T-0274-lifecycle-status-clarity-and-performance-hardening | |
+| T-0275 | Release Candidate 0.2.0-rc.1 Publish Readiness | Draft | tasks/T-0275-release-candidate-0-2-0-rc-1-publish-readiness | |
