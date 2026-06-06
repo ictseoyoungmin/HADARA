@@ -140,6 +140,34 @@ describe('run CLI input validation', () => {
     });
   });
 
+  it('scaffolds scripts that match JSON fake shell observations when stdout has newlines', async () => {
+    const root = tempProject();
+    const report = scaffoldRunScenario(root, {
+      taskId: 'T-0001',
+      command: 'node src/notes.js',
+      stdout: '1. install hadara\n2. create a task\n3. record evidence',
+      stderr: '',
+      exitCode: 0
+    });
+
+    const script = readScriptedProviderSteps(root, report.scriptPath);
+    expect(script[1]?.match).toBe('"status":"completed"');
+
+    const result = await runAgentLoop({
+      taskId: 'T-0001',
+      request: 'Run T-0001 scaffolded command',
+      provider: new ScriptedProvider(script),
+      mode: 'trusted',
+      fakeShellFixtures: readFakeShellFixtures(root, report.fixturesPath)
+    });
+
+    expect(result).toMatchObject({
+      ok: true,
+      finalResponse: 'Scaffolded fake-shell command completed: node src/notes.js',
+      issues: []
+    });
+  });
+
   it('rejects duplicate run scaffold files instead of keeping stale output', () => {
     const root = tempProject();
     scaffoldRunScenario(root, {

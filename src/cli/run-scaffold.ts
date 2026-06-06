@@ -37,7 +37,7 @@ export function scaffoldRunScenario(projectRoot: string, input: RunScenarioScaff
       finishReason: 'tool_call'
     },
     {
-      match: input.stdout,
+      match: '"status":"completed"',
       response: `Scaffolded fake-shell command completed: ${input.command}`
     }
   ];

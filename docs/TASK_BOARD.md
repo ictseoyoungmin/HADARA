@@ -272,3 +272,4 @@
 | T-0269 | Approval-Gated npm Publish for 0.2.0-rc.0 | Draft | tasks/T-0269-approval-gated-npm-publish-for-0-2-0-rc-0 | |
 | T-0270 | Repository Skeleton Cleanup | Done | tasks/T-0270-repository-skeleton-cleanup | |
 | T-0271 | npm Installed Toy Project Interface Recycle | Done | tasks/T-0271-npm-installed-toy-project-interface-recycle | |
+| T-0272 | Run Scaffold Observation Match Hardening | Done | tasks/T-0272-run-scaffold-observation-match-hardening | |
