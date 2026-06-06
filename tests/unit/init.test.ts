@@ -73,6 +73,26 @@ describe('init profiles', () => {
     expect(read(root, 'docs/ARCHITECTURE.md')).toContain('| HADARA Profile | standard |');
   });
 
+  it('prints JSON for init and keeps a fresh governed scaffold warning-clean', () => {
+    const root = tempProject();
+
+    handleInitCommand({ args: ['init', '--profile', 'governed', '--json'], projectRoot: root, jsonOutput: true });
+    const initReport = lastJsonLog();
+
+    expect(initReport).toMatchObject({
+      schemaVersion: 'hadara.init.v1',
+      command: 'init',
+      ok: true,
+      profile: 'governed'
+    });
+    expect(initReport.actions).toContainEqual(expect.objectContaining({ path: 'docs/IMPLEMENTATION_SOP.md', status: 'created' }));
+
+    handleInitCommand({ args: ['init', 'doctor', '--json'], projectRoot: root, jsonOutput: true });
+    const doctorReport = lastJsonLog();
+    expect(doctorReport.ok).toBe(true);
+    expect(doctorReport.issues).not.toContainEqual(expect.objectContaining({ code: 'INIT_OLD_PROFILE_NAME' }));
+  });
+
   it('creates structured general-purpose protocol guidance without project-specific Hermes or MCP assumptions', () => {
     const root = tempProject();
 

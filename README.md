@@ -177,7 +177,7 @@ Important distinctions:
 ## Initialize a Project
 
 ```bash
-hadara init                  # default: standard
+hadara init --json           # default: standard
 hadara init --profile basic
 hadara init --profile standard
 hadara init --profile governed

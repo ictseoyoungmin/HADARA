@@ -4,26 +4,27 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0272 Run Scaffold Observation Match Hardening is complete. |
+| Branch | main | T-0273 Fresh Init and Generic Project UX Hardening is complete. |
 | Current Phase | Phase 6 / 6.1 release candidate recycle fixes for `0.2.0-rc.1` | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0272 Run Scaffold Observation Match Hardening | Generated `run scaffold` scripts now match fake-shell JSON observation success metadata; multiline stdout smoke passed. |
-| Active / Next Task | T-0273 Fresh Init and Generic Project UX Hardening | Group remaining T-0271 fresh-init/status/handoff/doctor JSON-output findings for `0.2.0-rc.1`. |
-| Validation Baseline | T-0272 focused regression and built smoke passed | Docker temp-copy focused tests passed 2 files / 15 tests; built CLI `/tmp/hadara-t0272-smoke` deterministic run returned `ok:true`; `git diff --check` passed. |
+| Latest Completed Task | T-0273 Fresh Init and Generic Project UX Hardening | Init/status/handoff/doctor first-run UX findings from T-0271 are fixed. |
+| Active / Next Task | T-0274 Lifecycle Status Clarity and Performance Hardening | Remaining T-0271 findings concern task status close-proof/current-readiness clarity and lifecycle command latency. |
+| Validation Baseline | T-0273 focused regressions and built smoke passed | Docker temp-copy focused tests passed 5 files / 42 tests; built fresh scaffold smoke verified init JSON, init doctor, status phase, doctor context path, handoff update JSON, and generic handoff suggestion. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0273 Fresh Init and Generic Project UX Hardening | Added structured `init --json` and `handoff update --json`, fixed fresh init doctor old-profile false positive, parsed table-first Project State phase rows, made handoff suggestions generic, and clarified doctor context path. | T-0273 evidence: focused Docker tests passed 5 files / 42 tests, built fresh scaffold smoke passed, and `git diff --check` passed. |
 | T-0272 Run Scaffold Observation Match Hardening | Fixed generated deterministic run scripts so the second provider step matches `"status":"completed"` in the JSON fake-shell observation instead of raw stdout. | T-0272 evidence: focused Docker temp-copy tests passed, built CLI multiline stdout smoke passed, and `git diff --check` passed. |
 | T-0271 npm Installed Toy Project Interface Recycle | Installed `hadara@0.2.0-rc.0` into `/tmp/hadara-recycle-toy-0271` inside `hadara-recycle`, initialized a governed toy project, exercised representative installed interfaces, and recorded bugs/strengths/improvements. | T-0271 evidence and `FINDINGS.md`; package install passed; toy task reached `closed-valid`; MCP/dashboard/TUI/release/task/evidence surfaces worked; manually fixed deterministic run script passed. |
-| T-0270 Repository Skeleton Cleanup | Removed root `START.bat`, `start.sh`, `hadara`, and `hadara.cmd`; preserved `.hermes.md`, `HERMES.md`, `.hadara/context/HADARA_CONTEXT.md`, and examples; package publish surface remains `dist/`, `README.md`, `LICENSE`, and `package.json`. | T-0270 evidence: focused launcher reference search, `git diff --check`, package metadata check, `/tmp` cache `npm pack --dry-run --json`, and Hermes/.hadara inventory passed. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| Official `dev docker-check` wrapper failed at temp-workspace in `hadara-recycle` while raw logs were omitted. | Operators can see only `DEV_DOCKER_CHECK_STEP_FAILED`, making container/setup diagnosis harder. | Investigate in the next legacy/UX hardening capsule; manual Docker temp-copy validation remains available. |
-| Fresh governed init emits scaffold/status polish warnings. | New users can see `INIT_OLD_PROFILE_NAME`, table-frame handoff warnings after simple handoff update, and status/dashboard phase as `| Field | Value |`. | Track as follow-up polish after the run scaffold bug fix. |
+| `task status` can show `closed-valid` while current readiness is false after post-close failed evidence. | Semantically correct but confusing unless the UI explains close-proof validity separately from current readiness. | Fix in T-0274 lifecycle status clarity capsule. |
+| T-0271 evidence lint and task finish were slow on the mounted workspace. | Operators may perceive simple lifecycle checks as hung. | Inspect and optimize in T-0274 if root cause is local/bounded enough; otherwise document residual mounted-filesystem cost. |
+| Official `dev docker-check` wrapper failed at temp-workspace in `hadara-recycle` while raw logs were omitted. | Operators can see only `DEV_DOCKER_CHECK_STEP_FAILED`, making container/setup diagnosis harder. | Investigate with lifecycle/performance hardening if it shares wrapper/loggability root cause. |
 | Root bootstrap launchers were removed in T-0270. | Local habits such as `./hadara`, `./start.sh`, or `START.bat` no longer work from the repo root. | Use `npm run dev -- ...`, `node dist/cli/main.js ...`, or the documented Docker workflow. Historical portable launcher specs remain separate from current root skeleton files. |
 | T-0255 close evidence is now stale after T-0256 Task Board changes. | `task audit-close --task T-0255 --json` remains `ok:true` but reports `closeEvidenceAudit.verdict: stale` because the close-relevant source hash includes `docs/TASK_BOARD.md` and T-0256 added a row. | This is expected changed-source behavior; use T-0256 supersedes metadata if re-closing T-0255 is ever required. |
 | Release publish remains approval-gated/manual. | T-0269 release dry-run and publish dry-run rechecks passed, but `NPM_TOKEN` is missing and README changes mean fresh package/release evidence is required before real publish. | Do not run publish/deploy execute, manual publish script, or `npm publish` unless the operator explicitly approves, tokens are configured outside the repo, and fresh post-README evidence is recorded. |
@@ -71,7 +72,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Fix remaining T-0271 fresh-init/status/handoff/doctor findings | These are visible first-run UX issues for `0.2.0-rc.1`, including generic project status parsing and JSON-output consistency. | Open T-0273 and group related init/status/handoff/doctor fixes with focused recycle smokes. |
+| Fix lifecycle status clarity and mounted-workspace command latency findings | These are the remaining T-0271 findings needed for `0.2.0-rc.1` after T-0272/T-0273. | Open T-0274, add focused task-workbench/lifecycle tests, and record timing evidence. |
 | Resolve T-0269 publish verification | T-0269 remains the approval-gated release/publish capsule and must not be conflated with recycle testing. | Configure token outside the repo if needed, regenerate package/release evidence from the intended publish commit, verify registry state, then request explicit publish approval before any publish mutation. |
 | Migrate selected historical evidence only when explicitly requested. | Execute mode exists, but broad migration is not required for normal roadmap progress. | Run dry-run first, then execute with the returned `beforeHash` for one task at a time. |
 

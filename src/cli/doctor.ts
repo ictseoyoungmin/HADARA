@@ -29,7 +29,7 @@ export function createDoctorReport(paths: HadaraPaths, nodeVersion = process.ver
   const checks: DoctorCheck[] = [
     pathCheck('docs', paths.projectDocsDir),
     pathCheck('tasks', paths.projectTasksDir),
-    pathCheck('project-context', paths.projectHadaraDir)
+    pathCheck('project-context', `${paths.projectContextDir}/HADARA_CONTEXT.md`)
   ];
 
   return {
@@ -86,6 +86,6 @@ function pathCheck(id: string, targetPath: string): DoctorCheck {
 function formatCheckLabel(id: string): string {
   if (id === 'docs') return 'docs/:       ';
   if (id === 'tasks') return 'tasks/:      ';
-  if (id === 'project-context') return '.hadara/:    ';
+  if (id === 'project-context') return '.hadara/context/HADARA_CONTEXT.md: ';
   return `${id}: `;
 }

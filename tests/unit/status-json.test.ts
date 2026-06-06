@@ -228,6 +228,33 @@ describe('Operations Status JSON', () => {
     expect(report.issues).toEqual([]);
   });
 
+  it('parses table-first Project State current phase rows', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, 'docs', 'PROJECT_STATE.md'),
+      [
+        '# PROJECT_STATE',
+        '',
+        '## Current Phase',
+        '',
+        '| Field | Value |',
+        '|---|---|',
+        '| Phase | bootstrap-development |',
+        '| Status | initialized |'
+      ].join('\n'),
+      'utf8'
+    );
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\n## Current State\n\n- Ready.\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'VALIDATION_HISTORY.md'), '# VALIDATION_HISTORY\n', 'utf8');
+
+    const report = createOpsStatusReport(root);
+
+    expect(report.project.phase).toBe('bootstrap-development');
+  });
+
   it('prefers table-first handoff validation over older validation history', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });

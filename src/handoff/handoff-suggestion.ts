@@ -128,7 +128,7 @@ function readTaskSnapshot(projectRoot: string, taskId: string, issues: HandoffSu
 function createSections(task: TaskSnapshot, targetBeforeHash: string, executeRequested?: boolean): HandoffSuggestionSection[] {
   const displayName = [task.taskId, task.title].filter(Boolean).join(' ');
   const evidence = task.evidenceSummary ?? 'Review task evidence and validation records.';
-  const nextTask = executeRequested ? 'Remove --execute and review this suggestion report.' : 'Run `hadara task next --json` and create the next Phase 6 capsule.';
+  const nextTask = executeRequested ? 'Remove --execute and review this suggestion report.' : 'Run `hadara task next --json` and create or select the next capsule.';
   return [
     section({
       id: 'current-state',
@@ -163,7 +163,7 @@ function createSections(task: TaskSnapshot, targetBeforeHash: string, executeReq
       action: 'replace-row',
       summary: 'Point the next step at task discovery rather than applying this report automatically.',
       targetBeforeHash,
-      suggestedReplacementMarkdown: `| Select the next task with \`hadara task next --json\`. | Continue Phase 6 in order after ${task.taskId}. | Required reading: Phase 6 spec, \`docs/CLI_JSON_CONTRACT.md\`, \`docs/TASK_WORKFLOW_COMMANDS.md\`. |`
+      suggestedReplacementMarkdown: `| Select the next task with \`hadara task next --json\`. | Continue project work after ${task.taskId} using the current Task Board and handoff. | Required reading: \`docs/AGENT_HANDOFF.md\`, \`docs/TASK_BOARD.md\`, and \`docs/TASK_WORKFLOW_COMMANDS.md\`. |`
     }),
     section({
       id: 'validation-baseline',

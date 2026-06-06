@@ -22,7 +22,8 @@ describe('CLI doctor report', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
     fs.mkdirSync(path.join(root, 'tasks'), { recursive: true });
-    fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
+    fs.mkdirSync(path.join(root, '.hadara', 'context'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'), '# HADARA_CONTEXT\n', 'utf8');
 
     const paths = resolveHadaraPaths({ projectRoot: root });
     const report = createDoctorReport(paths, 'v22.0.0-test');
@@ -42,7 +43,7 @@ describe('CLI doctor report', () => {
       checks: [
         { id: 'docs', status: 'ok', path: path.join(root, 'docs') },
         { id: 'tasks', status: 'ok', path: path.join(root, 'tasks') },
-        { id: 'project-context', status: 'ok', path: path.join(root, '.hadara') }
+        { id: 'project-context', status: 'ok', path: path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md') }
       ]
     });
   });
@@ -54,8 +55,9 @@ describe('CLI doctor report', () => {
 
     expect(report.ok).toBe(false);
     expect(report.checks.map((check) => check.status)).toEqual(['missing', 'missing', 'missing']);
+    expect(report.checks[2]?.path).toBe(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'));
     expect(formatDoctorReport(report)).toContain('[HADARA] Doctor');
     expect(formatDoctorReport(report)).toContain('docs/:       missing');
+    expect(formatDoctorReport(report)).toContain('.hadara/context/HADARA_CONTEXT.md: missing');
   });
 });
-

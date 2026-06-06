@@ -29,6 +29,7 @@ If a command can safely construct its normal report, it should return that comma
 
 Examples include:
 
+- `hadara.init.v1`
 - `hadara.doctor.v1`
 - `hadara.task.list.v1`
 - `hadara.task.show.v1`
@@ -42,6 +43,7 @@ Examples include:
 - `hadara.operational_debt.v1`
 - `hadara.operational_debt.show.v1`
 - `hadara.tools.list.v1`
+- `hadara.handoff.update.v1`
 - `hadara.harness.validate.v1`
 - `hadara.harness.replay.v1`
 - `hadara.agent.loop.v1`
@@ -59,6 +61,8 @@ Agents should treat `issues` as the primary machine-readable failure detail when
 
 `hadara protocol doctor --json` defaults to the broad read-only all-scope protocol report. It returns `hadara.protocol.consistency.v1` with `scope: "all"`, aggregating docs, profile, and active-task detail without writing files.
 
+`hadara init [--profile basic|standard|governed] --json` returns `hadara.init.v1`. It creates missing scaffold files without overwriting existing files, reports relative scaffold file actions as `created` or `exists`, and keeps text initialization logs out of JSON output. `hadara init doctor --json`, `init upgrade`, `init register-doc`, and `init enable-integration` remain follow-up reports under `hadara.init.followup.v1`.
+
 `hadara task upgrade-scaffold --task <id> --json` returns `hadara.task.upgrade_scaffold.v1` in dry-run mode by default. It previews missing Task Capsule v2 frame insertions and missing standard capsule file creation; planned writes expose `summary.beforeHash`, and execute mode requires `--execute --before-hash <hash>` with the reviewed dry-run hash before applying writes. Writes also use per-action before-hash/existence checks and must not delete user-authored content.
 
 `hadara task create <title> [--from <template-id>] --json` returns `hadara.task.create.v1`. It creates a Draft Task Capsule and matching Task Board row, and may include additive `template` metadata when `--from` selects a supported template. Templates prefill capsule docs with expected evidence and out-of-scope boundaries, but they must not mark the task Done, attach evidence, run validation, or close the task. Unknown templates return `TASK_TEMPLATE_UNKNOWN` with `supportedTemplates` and create no capsule. T-0265 adds bounded collision retry for sequential task ids; exhausted directory/Task Board id collisions return `TASK_CREATE_COLLISION_RETRIES_EXHAUSTED` instead of silently reusing an id.
@@ -70,6 +74,8 @@ Agents should treat `issues` as the primary machine-readable failure detail when
 `hadara task complete --task <id> --json` returns `hadara.task.complete_flow.v1`. It is a read-only workflow compression report over the existing `task finish`, `task ready`, `task close`, and `task audit-close` read models. It returns default actor context, a current `stage`, lifecycle `steps`, shared-doc `stateDocs` counts when applicable, conflicts, issues, and exactly one `primaryNextAction` while incomplete. It must not write files, append evidence, update handoff/state docs, run shell commands, or execute the reported next action. `--execute` is intentionally unsupported and returns a blocked complete-flow report with `TASK_COMPLETE_EXECUTE_UNSUPPORTED`.
 
 `hadara handoff suggest --task <id> --json` returns `hadara.handoff.suggestion.v1`. It is a read-only shared-doc suggestion report for `docs/AGENT_HANDOFF.md`; it includes default actor context, target before-hash, `writeBoundary: "shared-doc"`, `recommendedActorRole: "coordinator"`, task snapshot metadata, section fragments, and issues. Section fragments include additive coordinator-review fields for exact target before-hash, section title, and suggested replacement Markdown while preserving the compatibility `suggestedMarkdown` field. It must not write the handoff, Task Capsule files, project state docs, evidence, or Task Board rows. `--execute` is intentionally unsupported and returns the same schema with `ok:false` and `HANDOFF_SUGGEST_EXECUTE_UNSUPPORTED`.
+
+`hadara handoff update --task <id> --summary <text> --next <text> --json` returns `hadara.handoff.update.v1`. It writes `docs/AGENT_HANDOFF.md` through the existing CLI-owned handoff update path, reports the shared-doc write boundary, and summarizes whether task id, summary, and next-step inputs were provided. This is a write command, not a dry-run suggestion surface; use `handoff suggest --json` for read-only coordinator-reviewed fragments.
 
 `hadara dev docker-check [--focused <test...>] [--full] [--sync-dist --before-hash <hash>] --json` returns `hadara.dev.docker_check.v1`. It is the official Phase 6 Docker validation wrapper for reproducible temp-copy validation. It runs Docker as an external subprocess, creates a run-scoped temp workspace with `.git`, `.hadara`, `node_modules`, and `dist` excluded, runs `npm ci`, then focused tests, a full check, or both. `--sync-dist` must be explicit before the wrapper copies Docker-built `dist` back to the workspace, and T-0263 requires the reviewed `--before-hash` to match the current workspace `dist/cli/main.js` hash before the copy executes. If no pre-sync hash exists, operators must use explicit `--allow-missing-before-hash`; otherwise the report returns `HADARA_DIST_SYNC_BEFORE_HASH_REQUIRED` or `HADARA_DIST_SYNC_BEFORE_HASH_MISMATCH` with `distSync.conflictDetected:true` and no output mutation. Reports include dist sync before/after hashes, `reviewedBeforeHash`, `beforeHashMatched`, `allowMissingBeforeHash`, and conflict metadata. T-0261 clarifies mutation fields: compatibility `execution.projectMutation:false` means no project source mutation, `execution.projectSourceMutation:false` says that directly, and `execution.outputMutation:true` means workspace output such as `dist` was changed. JSON output omits raw subprocess logs, private paths, and environment secrets, and includes an evidence-ready summary.
 
@@ -99,6 +105,7 @@ The task workflow surface is intentionally staged. `docs/TASK_WORKFLOW_COMMANDS.
 | `task create <title> [--from <template-id>] --json` | `hadara.task.create.v1` | Writes a Draft Task Capsule and Task Board row only. | Capsule creation succeeded. |
 | `task status --task T-XXXX --json` | `hadara.task.workbench.v1` | Read-only. | Report generation succeeded for an existing task; not a readiness gate. |
 | `task complete --task T-XXXX --json` | `hadara.task.complete_flow.v1` | Read-only; no execute mode. | Task is fully closed and audited. |
+| `handoff update --task T-XXXX ... --json` | `hadara.handoff.update.v1` | Writes `docs/AGENT_HANDOFF.md`. | Handoff update write succeeded. |
 | `handoff suggest --task T-XXXX --json` | `hadara.handoff.suggestion.v1` | Read-only; no execute mode. | Handoff suggestion report was generated without blocking issues. |
 | `dev docker-check [--focused <test...>] [--full] [--sync-dist --before-hash <hash>] --json` | `hadara.dev.docker_check.v1` | Runs Docker subprocess; writes workspace `dist` only when `--sync-dist` is explicit and the reviewed before-hash guard passes. | Requested Docker validation completed without blocking issues, including any requested dist-sync freshness guard. |
 | `evidence add-command --task T-XXXX ... --json` | `hadara.evidence.collect.v1` evidence append response | Writes command-log evidence only. | Evidence append succeeded. |

@@ -29,7 +29,11 @@ export function handleHandoffCommand(input: HandoffCommandInput): boolean {
   const taskId = getStringOption(input.args, '--task');
   const summary = getStringOption(input.args, '--summary');
   const nextStep = getStringOption(input.args, '--next');
-  const filePath = updateHandoff({ projectRoot: input.projectRoot, taskId, summary, nextStep });
-  console.log(`[HADARA] Handoff updated: ${filePath}`);
+  const report = updateHandoff({ projectRoot: input.projectRoot, taskId, summary, nextStep });
+  if (input.jsonOutput) {
+    console.log(JSON.stringify(report, null, 2));
+  } else {
+    console.log(`[HADARA] Handoff updated: ${report.target.path}`);
+  }
   return true;
 }

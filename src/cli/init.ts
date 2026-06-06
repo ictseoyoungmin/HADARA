@@ -40,6 +40,15 @@ interface InitIssue {
   message: string;
 }
 
+interface InitReport {
+  schemaVersion: 'hadara.init.v1';
+  command: 'init';
+  ok: true;
+  profile: InitProfile;
+  actions: InitAction[];
+  issues: [];
+}
+
 interface InitFollowUpReport {
   schemaVersion: 'hadara.init.followup.v1';
   command: string;
@@ -60,6 +69,10 @@ interface GeneratedScaffoldFile {
 interface InitWriteOperation {
   path: string;
   content: string;
+}
+
+interface InitProjectOptions {
+  silent?: boolean;
 }
 
 const INIT_PROFILE_SPECS: Record<InitProfile, InitProfileSpec> = {
@@ -110,19 +123,39 @@ const INIT_PROFILE_SPECS: Record<InitProfile, InitProfileSpec> = {
   }
 };
 
-export function initProject(projectRoot: string, profile = 'standard'): void {
+export function initProject(projectRoot: string, profile = 'standard', options: InitProjectOptions = {}): InitReport {
   const normalizedProfile = parseInitProfile(profile);
   const spec = INIT_PROFILE_SPECS[normalizedProfile];
   const paths = resolveHadaraPaths({ projectRoot });
   ensureDir(paths.projectDocsDir);
   ensureDir(paths.projectTasksDir);
 
+  const actions: InitAction[] = [];
   for (const file of createGeneratedScaffoldFiles(normalizedProfile)) {
+    const absolutePath = path.join(projectRoot, file.path);
+    const existed = fs.existsSync(absolutePath);
     writeFileIfMissing(path.join(projectRoot, file.path), file.content);
+    actions.push({
+      action: 'init-doc',
+      path: file.path,
+      status: existed ? 'exists' : 'created',
+      summary: existed ? `${file.path} already existed and was not overwritten.` : `${file.path} was created.`
+    });
   }
 
-  console.log(`[HADARA] Initialized project: ${projectRoot}`);
-  console.log(`[HADARA] Init profile: ${normalizedProfile}`);
+  const report: InitReport = {
+    schemaVersion: 'hadara.init.v1',
+    command: 'init',
+    ok: true,
+    profile: normalizedProfile,
+    actions,
+    issues: []
+  };
+  if (!options.silent) {
+    console.log(`[HADARA] Initialized project: ${projectRoot}`);
+    console.log(`[HADARA] Init profile: ${normalizedProfile}`);
+  }
+  return report;
 }
 
 export function parseInitProfile(value: string): InitProfile {
@@ -167,7 +200,8 @@ export function handleInitCommand(input: InitCommandInput): boolean {
     printInitFollowUpReport(report, input.jsonOutput);
     return true;
   }
-  initProject(input.projectRoot, getStringOption(input.args, '--profile', 'standard') ?? 'standard');
+  const report = initProject(input.projectRoot, getStringOption(input.args, '--profile', 'standard') ?? 'standard', { silent: input.jsonOutput });
+  if (input.jsonOutput) console.log(JSON.stringify(report, null, 2));
   return true;
 }
 
@@ -219,7 +253,7 @@ function createInitDoctorReport(projectRoot: string): InitFollowUpReport {
   }
 
   const sop = readProjectText(projectRoot, 'docs/IMPLEMENTATION_SOP.md');
-  if (sop !== null && /minimal|full|hadara-protocol/.test(sop)) {
+  if (sop !== null && mentionsLegacyInitProfile(sop)) {
     issues.push({ severity: 'warning', code: 'INIT_OLD_PROFILE_NAME', path: 'docs/IMPLEMENTATION_SOP.md', message: 'SOP mentions old init profile names.' });
   }
 
@@ -245,6 +279,10 @@ function createInitDoctorReport(projectRoot: string): InitFollowUpReport {
     actions,
     issues
   };
+}
+
+function mentionsLegacyInitProfile(content: string): boolean {
+  return /(?:initialized with|profile(?:\s+name)?|init profile)\s+(?:the\s+)?`?(minimal|full|hadara-protocol)`?/i.test(content);
 }
 
 function createInitUpgradeReport(projectRoot: string, profile: InitProfile, mode: InitFollowUpMode): InitFollowUpReport {

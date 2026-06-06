@@ -201,7 +201,11 @@ describe('TUI read-model aggregator', () => {
 
 function writeProjectDocs(root: string, activeTaskId = 'T-0001'): void {
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
-  fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\n## Current Phase\n\nPhase 0 / Phase 1 boundary.\n', 'utf8');
+  fs.writeFileSync(
+    path.join(root, 'docs', 'PROJECT_STATE.md'),
+    '# PROJECT_STATE\n\n## Current Phase\n\n| Field | Value |\n|---|---|\n| Phase | bootstrap-development |\n| Status | initialized |\n',
+    'utf8'
+  );
   fs.writeFileSync(
     path.join(root, 'docs', 'AGENT_HANDOFF.md'),
     [

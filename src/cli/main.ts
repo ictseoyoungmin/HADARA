@@ -7,7 +7,7 @@ function printHelp(): void {
   console.log(`HADARA bootstrap CLI
 
 Usage:
-  hadara init [--project <path>] [--profile basic|standard|governed]
+  hadara init [--project <path>] [--profile basic|standard|governed] [--json]
   hadara init doctor [--json]
   hadara init upgrade --profile basic|standard|governed [--execute] [--json]
   hadara init register-doc --path <path> --when <text> --purpose <text> [--require-exists] [--execute] [--json]
@@ -39,7 +39,7 @@ Usage:
   hadara protocol doctor --scope docs|profile|all [--json]
   hadara protocol remediate --fix task-board-row|decisions-table-frame|project-state-profile|evidence-jsonl [--task <task-id>] [--profile basic|standard|governed] [--execute --before-hash <hash>] [--json]
   hadara tools list [--json]
-  hadara handoff update --task <task-id> [--summary <text>] [--next <text>]
+  hadara handoff update --task <task-id> [--summary <text>] [--next <text>] [--json]
   hadara handoff suggest --task <task-id> [--json]
   hadara write preflight <command...> [--json]
   hadara policy check-shell <command> [--mode readonly|assisted|trusted|auto|release]

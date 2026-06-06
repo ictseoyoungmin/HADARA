@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ActiveRunProjection, safeCreateActiveRunProjection } from './active-run-state';
 import { extractHandoffSectionValues, extractValidationBaselineSummary } from './handoff-summary-parser';
+import { findMarkdownRowByCell, parseMarkdownRowsUnderHeading } from './markdown-table';
 import { createOperationalDebtReport, OperationalDebtAggregate } from './operational-debt';
 import { extractSection, ProjectReadSources, readProjectSources } from './project-read-model';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
@@ -147,10 +148,12 @@ function readGitBranch(projectRoot: string): string {
 
 function extractProjectPhase(projectState: string): string {
   const section = extractSection(projectState, '## Current Phase');
+  const phaseRow = findMarkdownRowByCell(parseMarkdownRowsUnderHeading(projectState, '## Current Phase'), 0, 'Phase');
+  if (phaseRow?.[1]) return phaseRow[1].trim();
   const line = section
     .split(/\r?\n/)
     .map((value) => value.trim())
-    .find(Boolean);
+    .find((value) => value && !value.startsWith('|'));
   if (!line) return 'unknown';
   const explicit = line.match(/^Phase:\s*(.+)$/i);
   if (explicit) return explicit[1].trim();

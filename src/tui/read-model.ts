@@ -7,7 +7,7 @@ import { readDashboardTaskProjectionIndex } from '../services/dashboard-task-pro
 import { createEvidenceListReport, EvidenceListReport, parseEvidenceIndexFile } from '../services/evidence-list';
 import { createOperationalDebtReport, createReleaseGateReport, OperationalDebtReport, ReleaseGateReport } from '../services/operational-debt';
 import { createOpsStatusReport, OpsStatusReport } from '../services/operations-status-service';
-import { parseMarkdownRows } from '../services/markdown-table';
+import { findMarkdownRowByCell, parseMarkdownRows, parseMarkdownRowsUnderHeading } from '../services/markdown-table';
 import { extractHandoffSectionValues } from '../services/handoff-summary-parser';
 import { extractSection, readProjectSources } from '../services/project-read-model';
 import { createTaskListReport, TaskJsonSummary, TaskListReport, TaskReadOptions, TaskReadReport } from '../services/task-read-model';
@@ -767,10 +767,12 @@ function readGitBranch(projectRoot: string): string {
 
 function extractProjectPhase(projectState: string): string {
   const section = extractSection(projectState, '## Current Phase');
+  const phaseRow = findMarkdownRowByCell(parseMarkdownRowsUnderHeading(projectState, '## Current Phase'), 0, 'Phase');
+  if (phaseRow?.[1]) return phaseRow[1].trim();
   const line = section
     .split(/\r?\n/)
     .map((value) => value.trim())
-    .find(Boolean);
+    .find((value) => value && !value.startsWith('|'));
   if (!line) return 'unknown';
   const explicit = line.match(/^Phase:\s*(.+)$/i);
   if (explicit) return explicit[1].trim();

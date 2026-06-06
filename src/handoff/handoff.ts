@@ -9,7 +9,23 @@ export interface HandoffUpdateInput {
   nextStep?: string;
 }
 
-export function updateHandoff(input: HandoffUpdateInput): string {
+export interface HandoffUpdateReport {
+  schemaVersion: 'hadara.handoff.update.v1';
+  command: 'handoff.update';
+  ok: boolean;
+  target: {
+    path: 'docs/AGENT_HANDOFF.md';
+    writeBoundary: 'shared-doc';
+  };
+  input: {
+    taskId: string | null;
+    summaryProvided: boolean;
+    nextStepProvided: boolean;
+  };
+  issues: [];
+}
+
+export function updateHandoff(input: HandoffUpdateInput): HandoffUpdateReport {
   const docsDir = path.join(input.projectRoot, 'docs');
   ensureDir(docsDir);
   const filePath = path.join(docsDir, 'AGENT_HANDOFF.md');
@@ -49,5 +65,19 @@ Attach test logs, command outputs, and diff summaries under the active Task Caps
 `;
 
   fs.writeFileSync(filePath, content, 'utf8');
-  return filePath;
+  return {
+    schemaVersion: 'hadara.handoff.update.v1',
+    command: 'handoff.update',
+    ok: true,
+    target: {
+      path: 'docs/AGENT_HANDOFF.md',
+      writeBoundary: 'shared-doc'
+    },
+    input: {
+      taskId: input.taskId ?? null,
+      summaryProvided: typeof input.summary === 'string',
+      nextStepProvided: typeof input.nextStep === 'string'
+    },
+    issues: []
+  };
 }
