@@ -77,6 +77,8 @@ export interface DevDockerCheckIssue {
   code: string;
   message: string;
   stepId?: string;
+  exitCode?: number;
+  debugHint?: string;
 }
 
 export interface DevDockerCheckOptions {
@@ -157,8 +159,10 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
       issues.push({
         severity: 'error',
         code: 'DEV_DOCKER_CHECK_STEP_FAILED',
-        message: `Docker validation step failed: ${step.id}. Raw subprocess logs are intentionally omitted from the JSON report.`,
-        stepId: step.id
+        message: `Docker validation step failed: ${step.id}${typeof result.exitCode === 'number' ? ` (exit code ${result.exitCode})` : ''}. Raw subprocess logs are intentionally omitted from the JSON report.`,
+        stepId: step.id,
+        ...(typeof result.exitCode === 'number' ? { exitCode: result.exitCode } : {}),
+        debugHint: `Rerun dev docker-check without --json, or inspect the Docker container step ${step.id}; JSON reports keep subprocess logs private.`
       });
       blocked = true;
     }
@@ -217,7 +221,7 @@ export function formatDevDockerCheckReport(report: DevDockerCheckReport): string
   lines.push(report.evidenceSummary.summary);
   if (report.distSync?.requested) lines.push(`dist-sync=${report.distSync.executed ? 'executed' : 'not-executed'} output-mutation=${report.execution.outputMutation} conflict=${report.distSync.conflictDetected}`);
   for (const step of report.steps) lines.push(`${step.status}\t${step.id}\t${step.summary}`);
-  for (const issue of report.issues) lines.push(`[${issue.severity}] ${issue.code}: ${issue.message}`);
+  for (const issue of report.issues) lines.push(`[${issue.severity}] ${issue.code}: ${issue.message}${typeof issue.exitCode === 'number' ? ` exitCode=${issue.exitCode}` : ''}`);
   return lines.join('\n');
 }
 

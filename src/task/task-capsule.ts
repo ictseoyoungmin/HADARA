@@ -170,6 +170,34 @@ export function listTaskCapsules(projectRoot: string): TaskCapsule[] {
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
+export function findTaskCapsule(projectRoot: string, taskId: string): TaskCapsule | undefined {
+  if (!/^T-\d{4}$/.test(taskId)) return undefined;
+  const tasksDir = path.join(projectRoot, 'tasks');
+  if (!fs.existsSync(tasksDir)) return undefined;
+
+  const entry = fs
+    .readdirSync(tasksDir, { withFileTypes: true })
+    .find((candidate) => candidate.isDirectory() && candidate.name.startsWith(`${taskId}-`));
+  if (!entry) return undefined;
+
+  const slug = entry.name.slice(`${taskId}-`.length);
+  const dir = path.join(tasksDir, entry.name);
+  return {
+    id: taskId,
+    title: readTaskCapsuleTitle(dir, taskId, slug),
+    slug,
+    dir
+  };
+}
+
+function readTaskCapsuleTitle(dir: string, taskId: string, fallback: string): string {
+  const taskMd = path.join(dir, 'TASK.md');
+  if (!fs.existsSync(taskMd)) return fallback;
+  const firstLine = fs.readFileSync(taskMd, 'utf8').split('\n')[0] ?? '';
+  const title = firstLine.replace(new RegExp(`^#\\s*${taskId}\\s*`), '').trim();
+  return title || fallback;
+}
+
 function isPlaceholderSection(value: string): boolean {
   const normalized = value.trim();
   if (normalized.length === 0 || /^TBD\.?$/i.test(normalized)) return true;

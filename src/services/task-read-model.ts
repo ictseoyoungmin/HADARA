@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { PersistedEvidenceRecord } from '../evidence/evidence';
-import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
+import { findTaskCapsule, listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 import { EvidenceListIssue, parseEvidenceIndexFile } from './evidence-list';
 
 const TASK_CAPSULE_FILES = [
@@ -74,7 +74,7 @@ export function createTaskListReport(projectRoot: string): TaskListReport {
 }
 
 export function createTaskShowReport(projectRoot: string, taskId: string): TaskShowReport {
-  const task = listTaskCapsules(projectRoot).find((item) => item.id === taskId);
+  const task = findTaskCapsule(projectRoot, taskId);
   if (!task) {
     return {
       schemaVersion: 'hadara.task.show.v1',
@@ -103,7 +103,7 @@ export function createTaskShowReport(projectRoot: string, taskId: string): TaskS
 }
 
 export function createTaskReadReport(projectRoot: string, taskId: string, options: TaskReadOptions = {}): TaskReadReport {
-  const task = listTaskCapsules(projectRoot).find((item) => item.id === taskId);
+  const task = findTaskCapsule(projectRoot, taskId);
   if (!task) {
     return {
       schemaVersion: 'hadara.task.read.v1',

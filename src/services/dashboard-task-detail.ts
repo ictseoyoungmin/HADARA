@@ -12,7 +12,7 @@ import {
   DashboardProjectReference,
   disabledDashboardCacheMetadata
 } from './dashboard-cache';
-import { TaskWorkbenchReport } from './task-workbench';
+import { buildTaskWorkbenchReadiness, TaskWorkbenchReport } from './task-workbench';
 
 export interface DashboardTaskDetailIssue {
   severity: 'warning' | 'error';
@@ -145,6 +145,7 @@ function createFastTaskWorkbenchReport(
     state: {
       closeState,
       ready: closePlanOk,
+      readiness: buildTaskWorkbenchReadiness(closePlanOk, closedValid),
       closeEvidenceFound,
       closedValid,
       closed: closedValid,

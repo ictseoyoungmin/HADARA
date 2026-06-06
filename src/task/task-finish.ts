@@ -4,7 +4,7 @@ import path from 'node:path';
 import type { HadaraActorContext } from '../core/actor-context';
 import { readMarkdownSection, readMarkdownSectionWithHeading } from '../services/markdown-table';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from './lifecycle-next-actions';
-import { listTaskCapsules, TaskCapsule } from './task-capsule';
+import { findTaskCapsule, TaskCapsule } from './task-capsule';
 
 export type TaskFinishMode = 'dry-run' | 'execute';
 
@@ -83,7 +83,7 @@ export interface TaskFinishOptions {
 
 export function createTaskFinishReport(projectRoot: string, taskId: string, mode: TaskFinishMode, options: TaskFinishOptions = {}): TaskFinishReport {
   const actor = options.actor ?? defaultTaskLifecycleActor();
-  const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
+  const task = findTaskCapsule(projectRoot, taskId);
   const issues: TaskFinishIssue[] = [];
   if (!task) {
     return {

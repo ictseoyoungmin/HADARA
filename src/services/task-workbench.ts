@@ -9,6 +9,14 @@ import { createDocsProtocolConsistencyReport, createProfileProtocolConsistencyRe
 import { buildWorkbenchNextActions, WorkbenchNextAction } from './workbench-next-actions';
 
 type CloseState = 'not-closed' | 'closed-valid' | 'close-evidence-found-invalid' | 'close-evidence-malformed';
+type ReadinessStatus = 'ready' | 'current-blocked' | 'closed-valid-current-blocked' | 'missing-task';
+
+export interface TaskWorkbenchReadiness {
+  status: ReadinessStatus;
+  currentReady: boolean;
+  closeProofValid: boolean;
+  summary: string;
+}
 
 export interface TaskWorkbenchReport {
   schemaVersion: 'hadara.task.workbench.v1';
@@ -28,6 +36,7 @@ export interface TaskWorkbenchReport {
   state: {
     closeState: CloseState;
     ready: boolean;
+    readiness: TaskWorkbenchReadiness;
     closeEvidenceFound: boolean;
     closedValid: boolean;
     closed: boolean;
@@ -94,6 +103,7 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
   const closeState = getCloseState(evidenceList.records);
   const closeEvidenceFound = closeState !== 'not-closed';
   const closedValid = closeState === 'closed-valid';
+  const readiness = buildTaskWorkbenchReadiness(closePlan.ok, closedValid);
   const issues = [
     ...closePlan.issues,
     ...buildTaskBoardIssues(taskShow.task.id, taskShow.task.status, taskShow.task.capsule, taskBoard),
@@ -129,6 +139,7 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
     state: {
       closeState,
       ready: closePlan.ok,
+      readiness,
       closeEvidenceFound,
       closedValid,
       closed: closedValid,
@@ -184,6 +195,7 @@ export function formatTaskWorkbenchReport(report: TaskWorkbenchReport): string {
     `- Task Board status: ${report.task.taskBoardPresent ? report.task.taskBoardStatus : 'missing'}`,
     `- Close state: ${report.state.closeState}`,
     `- Ready for Done: ${report.state.ready ? 'yes' : 'no'}`,
+    `- Readiness note: ${report.state.readiness.summary}`,
     '',
     'Evidence',
     `- Lint: ${report.sources.evidenceLint.ok ? 'ok' : 'issues'}`,
@@ -233,6 +245,7 @@ function buildMissingTaskReport(projectRoot: string, taskId: string, generatedAt
     state: {
       closeState: 'not-closed',
       ready: false,
+      readiness: buildMissingTaskReadiness(),
       closeEvidenceFound: false,
       closedValid: false,
       closed: false,
@@ -254,6 +267,42 @@ function buildMissingTaskReport(projectRoot: string, taskId: string, generatedAt
     },
     issues,
     nextActions: []
+  };
+}
+
+export function buildTaskWorkbenchReadiness(currentReady: boolean, closeProofValid: boolean): TaskWorkbenchReadiness {
+  if (currentReady) {
+    return {
+      status: 'ready',
+      currentReady,
+      closeProofValid,
+      summary: closeProofValid
+        ? 'Current done-level readiness passes and a valid close proof is present.'
+        : 'Current done-level readiness passes; no valid close proof is required for this read-only status report.'
+    };
+  }
+  if (closeProofValid) {
+    return {
+      status: 'closed-valid-current-blocked',
+      currentReady,
+      closeProofValid,
+      summary: 'A valid close proof exists, but current done-level readiness is blocked by changed or newly failed task state.'
+    };
+  }
+  return {
+    status: 'current-blocked',
+    currentReady,
+    closeProofValid,
+    summary: 'Current done-level readiness is blocked; inspect blockers before closing or completing the task.'
+  };
+}
+
+function buildMissingTaskReadiness(): TaskWorkbenchReadiness {
+  return {
+    status: 'missing-task',
+    currentReady: false,
+    closeProofValid: false,
+    summary: 'Task Capsule was not found, so done-level readiness cannot be evaluated.'
   };
 }
 

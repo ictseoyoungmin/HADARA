@@ -3,7 +3,7 @@ import path from 'node:path';
 import { EvidenceIndexRecord, EvidenceV2IndexRecord, PersistedEvidenceRecord } from '../evidence/evidence';
 import { EvidenceIndexRecordWithSourceLine, normalizeEvidenceRecordsWithSourceLines } from '../evidence/normalizer';
 import { analyzeTaskEvidenceSemantics, EvidenceSemanticIssue, EvidenceSemanticSummary } from '../evidence/semantics';
-import { listTaskCapsules } from '../task/task-capsule';
+import { findTaskCapsule } from '../task/task-capsule';
 import { parseMarkdownRows, readMarkdownSection } from './markdown-table';
 
 export interface EvidenceLintReport {
@@ -43,7 +43,7 @@ const EVIDENCE_VISIBILITIES = new Set(['public', 'private']);
 
 export function createEvidenceLintReport(projectRoot: string, taskId: string): EvidenceLintReport {
   const issues: EvidenceLintIssue[] = [];
-  const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
+  const task = findTaskCapsule(projectRoot, taskId);
   if (!task) {
     issues.push({ severity: 'error', code: 'TASK_NOT_FOUND', message: `Task Capsule not found: ${taskId}` });
     return buildReport(projectRoot, taskId, [], 0, issues);

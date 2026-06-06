@@ -190,7 +190,14 @@ describe('dev docker-check report', () => {
     expect(report.ok).toBe(false);
     expect(report.steps.find((step) => step.id === 'focused-tests')?.status).toBe('failed');
     expect(report.steps.find((step) => step.id === 'dist-sync')?.status).toBe('skipped');
-    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'DEV_DOCKER_CHECK_STEP_FAILED', stepId: 'focused-tests' }));
+    expect(report.issues).toContainEqual(
+      expect.objectContaining({
+        code: 'DEV_DOCKER_CHECK_STEP_FAILED',
+        stepId: 'focused-tests',
+        exitCode: 1,
+        debugHint: expect.stringContaining('without --json')
+      })
+    );
     expect(JSON.stringify(report)).not.toContain('npm error');
     expect(validateSchema('hadara.dev.docker_check.v1', report).ok).toBe(true);
   });

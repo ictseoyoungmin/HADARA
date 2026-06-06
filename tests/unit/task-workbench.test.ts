@@ -51,6 +51,11 @@ describe('task workbench status report', () => {
       state: {
         closeState: 'not-closed',
         ready: false,
+        readiness: {
+          status: 'current-blocked',
+          currentReady: false,
+          closeProofValid: false
+        },
         closeEvidenceFound: false,
         closedValid: false,
         closed: false
@@ -65,6 +70,7 @@ describe('task workbench status report', () => {
     expect(report.nextActions.length).toBeGreaterThan(0);
     expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
     expect(formatTaskWorkbenchReport(report)).toContain('State\n- Capsule:');
+    expect(formatTaskWorkbenchReport(report)).toContain('Readiness note: Current done-level readiness is blocked');
     expect(formatTaskWorkbenchReport(report)).toContain('Evidence\n- Lint: ok');
     expect(formatTaskWorkbenchReport(report)).toContain('Protocol\n- Task doctor:');
     expect(formatTaskWorkbenchReport(report)).toContain('Close\n- Close plan:');
@@ -89,7 +95,8 @@ describe('task workbench status report', () => {
       schemaVersion: 'hadara.task.workbench.v1',
       command: 'task.status',
       ok: false,
-      task: { id: 'T-9999', taskStatus: 'Missing', taskBoardStatus: 'Missing', taskBoardPresent: false }
+      task: { id: 'T-9999', taskStatus: 'Missing', taskBoardStatus: 'Missing', taskBoardPresent: false },
+      state: { readiness: { status: 'missing-task', currentReady: false, closeProofValid: false } }
     });
   });
 
@@ -180,6 +187,12 @@ describe('task workbench status report', () => {
 
     expect(report.state).toMatchObject({
       closeState: 'closed-valid',
+      ready: false,
+      readiness: {
+        status: 'closed-valid-current-blocked',
+        currentReady: false,
+        closeProofValid: true
+      },
       closeEvidenceFound: true,
       closedValid: true,
       closed: true,

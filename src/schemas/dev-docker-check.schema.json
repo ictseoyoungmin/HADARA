@@ -111,6 +111,20 @@
         "environmentSecretsIncluded": { "const": false }
       }
     },
-    "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "severity": { "enum": ["error", "warning", "info"] },
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "stepId": { "type": "string" },
+          "exitCode": { "type": "number" },
+          "debugHint": { "type": "string" }
+        }
+      }
+    }
   }
 }

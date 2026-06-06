@@ -29,6 +29,7 @@
       }
     ],
     "additive": [
+      "state.readiness",
       "sources.*",
       "nextActions.*"
     ],
@@ -67,6 +68,17 @@
       "properties": {
         "closeState": { "enum": ["not-closed", "closed", "closed-valid", "close-evidence-found-invalid", "close-evidence-malformed"] },
         "ready": { "type": "boolean" },
+        "readiness": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["status", "currentReady", "closeProofValid", "summary"],
+          "properties": {
+            "status": { "enum": ["ready", "current-blocked", "closed-valid-current-blocked", "missing-task"] },
+            "currentReady": { "type": "boolean" },
+            "closeProofValid": { "type": "boolean" },
+            "summary": { "type": "string" }
+          }
+        },
         "closeEvidenceFound": { "type": "boolean" },
         "closedValid": { "type": "boolean" },
         "closed": { "type": "boolean" },

@@ -274,3 +274,4 @@
 | T-0271 | npm Installed Toy Project Interface Recycle | Done | tasks/T-0271-npm-installed-toy-project-interface-recycle | |
 | T-0272 | Run Scaffold Observation Match Hardening | Done | tasks/T-0272-run-scaffold-observation-match-hardening | |
 | T-0273 | Fresh Init and Generic Project UX Hardening | Done | tasks/T-0273-fresh-init-and-generic-project-ux-hardening | |
+| T-0274 | Lifecycle Status Clarity and Performance Hardening | Done | tasks/T-0274-lifecycle-status-clarity-and-performance-hardening | |

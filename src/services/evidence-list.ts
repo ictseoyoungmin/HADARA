@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { redactSecrets } from '../core/redaction';
 import { EvidenceIndexRecord, EvidenceV2IndexRecord, PersistedEvidenceRecord } from '../evidence/evidence';
-import { listTaskCapsules } from '../task/task-capsule';
+import { findTaskCapsule } from '../task/task-capsule';
 
 export interface EvidenceListInput {
   taskId: string;
@@ -29,7 +29,7 @@ export interface EvidenceListReport {
 const DEFAULT_LIMIT = 50;
 
 export function createEvidenceListReport(projectRoot: string, input: EvidenceListInput): EvidenceListReport {
-  const task = listTaskCapsules(projectRoot).find((item) => item.id === input.taskId);
+  const task = findTaskCapsule(projectRoot, input.taskId);
   if (!task) {
     return {
       schemaVersion: 'hadara.evidence.list.v1',

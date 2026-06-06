@@ -65,6 +65,19 @@ describe('task finish status sync', () => {
     expect(formatTaskFinishReport(report)).toContain('ADVISORY\tdocs/AGENT_HANDOFF.md\tmissing');
   });
 
+  it('looks up the requested task without reading unrelated task capsules', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finish direct lookup');
+    const unrelated = createTaskCapsule(root, 'Unrelated slow capsule');
+    const unrelatedTaskPath = path.join(unrelated.dir, 'TASK.md');
+    const readSpy = vi.spyOn(fs, 'readFileSync');
+
+    const report = createTaskFinishReport(root, task.id, 'dry-run');
+
+    expect(report.ok).toBe(true);
+    expect(readSpy.mock.calls.map((call) => String(call[0]))).not.toContain(unrelatedTaskPath);
+  });
+
   it('reports state document freshness without writing broad docs', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Finish state docs');
