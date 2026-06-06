@@ -20,7 +20,7 @@ Boundaries:
 
 ## 0.2.0-rc.0
 
-Release-candidate freeze target for Phase 6 and Phase 6.1 work. T-0269 is preparing the approval-gated npm publish path, but this version is not yet confirmed published in this workspace state.
+Release-candidate freeze target for Phase 6 and Phase 6.1 work. T-0269 prepared the approval-gated npm publish path, but this candidate was superseded by `0.2.0-rc.1` in T-0275 before any publish mutation.
 
 Highlights:
 
@@ -33,7 +33,7 @@ Boundaries:
 
 - This RC target does not claim full multi-agent runtime safety, lock-safe shared execution across all commands, or a complete multi-agent controller.
 - Publish execution, registry mutation, GitHub Release creation, Docker image build/push, PyPI publish/token loading, and release mutation remain out of scope.
-- Actual npm publish remains blocked until explicit operator approval, token presence, committed README/asset changes, fresh post-README package/release evidence, and npm registry verification.
+- Actual npm publish for this rc.0 candidate should not proceed; use the superseding `0.2.0-rc.1` T-0275 helper path instead.
 
 ## 0.1.0-rc.0
 

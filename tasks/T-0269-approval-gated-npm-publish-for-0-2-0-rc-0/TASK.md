@@ -6,9 +6,9 @@
 |---|---|
 | ID | T-0269 |
 | Title | Approval-Gated npm Publish for 0.2.0-rc.0 |
-| Status | Draft |
+| Status | Superseded |
 | Created | 2026-06-05 |
-| Updated | 2026-06-05 |
+| Updated | 2026-06-06 |
 
 ## Goal
 
@@ -41,7 +41,7 @@
 
 ## Status
 
-Draft
+Superseded
 
 ## Status History
 
@@ -51,3 +51,4 @@ Draft
 | 2026-06-05 | Draft | Created approval-gated publish capsule and confirmed pre-capsule HEAD was clean. | `git status --short` returned no output before T-0269 task creation. |
 | 2026-06-05 | Draft | Re-ran release dry-run and publish dry-run. | Release dry-run ready; publish dry-run ok with token absence warnings only. |
 | 2026-06-05 | Draft | Updated README for `0.2.0-rc.0` publish-state install guidance and top asset placement. | `README.md`, `docs/assets/hadara_sub_right_name.png`. |
+| 2026-06-06 | Superseded | T-0275 replaced the rc.0 publish candidate with `hadara@0.2.0-rc.1` after recycle fixes and fresh release evidence. | `tasks/T-0275-release-candidate-0-2-0-rc-1-publish-readiness/`. |

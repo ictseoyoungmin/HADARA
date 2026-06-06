@@ -269,10 +269,10 @@
 | T-0266 | Handoff Suggestion Fragment Polish | Done | tasks/T-0266-handoff-suggestion-fragment-polish | |
 | T-0267 | Task Finish EOF Normalization | Done | tasks/T-0267-task-finish-eof-normalization | |
 | T-0268 | Release Candidate Freeze and Artifact Refresh | Done | tasks/T-0268-release-candidate-freeze-and-artifact-refresh | |
-| T-0269 | Approval-Gated npm Publish for 0.2.0-rc.0 | Draft | tasks/T-0269-approval-gated-npm-publish-for-0-2-0-rc-0 | |
+| T-0269 | Approval-Gated npm Publish for 0.2.0-rc.0 | Superseded | tasks/T-0269-approval-gated-npm-publish-for-0-2-0-rc-0 | Superseded by T-0275 rc.1 publish readiness. |
 | T-0270 | Repository Skeleton Cleanup | Done | tasks/T-0270-repository-skeleton-cleanup | |
 | T-0271 | npm Installed Toy Project Interface Recycle | Done | tasks/T-0271-npm-installed-toy-project-interface-recycle | |
 | T-0272 | Run Scaffold Observation Match Hardening | Done | tasks/T-0272-run-scaffold-observation-match-hardening | |
 | T-0273 | Fresh Init and Generic Project UX Hardening | Done | tasks/T-0273-fresh-init-and-generic-project-ux-hardening | |
 | T-0274 | Lifecycle Status Clarity and Performance Hardening | Done | tasks/T-0274-lifecycle-status-clarity-and-performance-hardening | |
-| T-0275 | Release Candidate 0.2.0-rc.1 Publish Readiness | Draft | tasks/T-0275-release-candidate-0-2-0-rc-1-publish-readiness | |
+| T-0275 | Release Candidate 0.2.0-rc.1 Publish Readiness | Done | tasks/T-0275-release-candidate-0-2-0-rc-1-publish-readiness | |

@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0275 |
 | Title | Release Candidate 0.2.0-rc.1 Publish Readiness |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-06-06 |
 | Updated | 2026-06-06 |
 
@@ -43,7 +43,7 @@
 
 ## Status
 
-Draft
+Done
 
 ## Status History
 
@@ -51,3 +51,4 @@ Draft
 |---|---|---|---|
 | TBD | Draft | Initial task scaffold from template. | Template defaults. |
 | 2026-06-06 | Draft | Created T-0275 and started rc.1 publish-readiness alignment. | `hadara task create --from release-read-model`. |
+| 2026-06-06 | Done | Finished task capsule. | `hadara task finish --execute` |

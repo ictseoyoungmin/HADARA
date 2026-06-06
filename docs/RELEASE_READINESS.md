@@ -13,7 +13,9 @@ Current release-candidate metadata mode:
 - Current version is `0.2.0-rc.1`.
 - Previous published release candidate is `0.1.0-rc.0`.
 - T-0269 pre-publish dry-run recheck passed for `0.2.0-rc.0`, but `NPM_TOKEN` was missing and no publish mutation was executed; T-0275 supersedes that candidate with `0.2.0-rc.1` after recycle fixes.
-- README now includes a top image from `docs/assets/hadara_sub_right_name.png`; because package `files` currently excludes `docs/assets/`, publish readiness requires either a committed/pushed GitHub raw image URL or a deliberate package whitelist change with refreshed release artifact evidence.
+- T-0275 refreshed publish-readiness evidence for `hadara@0.2.0-rc.1`: focused Docker tests passed 8 files / 73 tests plus feature-smoke 1 file / 3 tests; Docker full check passed 100 files / 680 tests and refreshed `dist`; release artifact, package smoke, clean-checkout smoke, strict release gate, release dry-run, and release publish dry-run passed without publish/GitHub/Docker/PyPI mutation; a read-only npm registry check returned E404 no match for `hadara@0.2.0-rc.1`.
+- Current operator publish path: after final T-0275 state is committed and the operator has authenticated with `npm login --registry=https://registry.npmjs.org`, run `scripts/release/manual-publish-rc.sh T-0275 --execute` and type `publish` only after the helper's own checks pass.
+- README now includes a top image from `docs/assets/hadara_sub_right_name.png`; because package `files` currently excludes `docs/assets/`, publish readiness uses the GitHub raw image URL. T-0275 verified `docs/assets/hadara_sub_right_name.png` is tracked and the raw URL returned HTTP 200.
 - Current package is `private: false`.
 - Current package metadata includes `"license": "MIT"`.
 - Current binary remains `bin.hadara` at `./dist/cli/main.js`.
