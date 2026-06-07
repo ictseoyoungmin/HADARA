@@ -216,6 +216,7 @@ function createGeneratedScaffoldFiles(profile: InitProfile): GeneratedScaffoldFi
     { path: 'docs/TASK_BOARD.md', content: '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n' },
     { path: 'docs/AGENT_HANDOFF.md', content: createAgentHandoffDoc() },
     { path: 'docs/IMPLEMENTATION_SOP.md', content: createImplementationSopDoc(spec) },
+    { path: 'docs/TASK_WORKFLOW_COMMANDS.md', content: createTaskWorkflowCommandsDoc() },
     { path: 'AGENTS.md', content: createAgentsDoc(spec) },
     { path: '.gitignore', content: createGitignoreDoc() }
   ];
@@ -232,7 +233,7 @@ function createGeneratedScaffoldFiles(profile: InitProfile): GeneratedScaffoldFi
 function createInitDoctorReport(projectRoot: string): InitFollowUpReport {
   const issues: InitIssue[] = [];
   const actions: InitAction[] = [];
-  const requiredCore = ['AGENTS.md', '.gitignore', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/IMPLEMENTATION_SOP.md'];
+  const requiredCore = ['AGENTS.md', '.gitignore', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/IMPLEMENTATION_SOP.md', 'docs/TASK_WORKFLOW_COMMANDS.md'];
   for (const relativePath of requiredCore) {
     if (!fs.existsSync(path.join(projectRoot, relativePath))) {
       issues.push({ severity: 'error', code: 'INIT_CORE_DOC_MISSING', path: relativePath, message: `${relativePath} is missing from the init scaffold.` });
@@ -488,6 +489,7 @@ const CANONICAL_TABLE_HEADERS: Record<string, string[]> = {
   'docs/AGENT_HANDOFF.md': ['| Area | State | Notes |', '| Task | Summary | Evidence |', '| Issue | Impact | Next Step |', '| Step | Reason | Done Evidence |', '| Check | Latest Evidence | Notes |', '| History Type | Path | When to Use |'],
   'docs/TASK_BOARD.md': ['| ID | Title | Status | Capsule | Notes |'],
   'docs/IMPLEMENTATION_SOP.md': ['| Document | When to Read | Purpose |', '| Profile | Scale | Generated Docs | Intended Use | Special Notes |', '| Document | Required Structure |'],
+  'docs/TASK_WORKFLOW_COMMANDS.md': ['| Command | Default Write Behavior | Notes |'],
   'docs/ARCHITECTURE.md': ['| Field | Value |', '| Boundary | Rule | Notes |', '| Component | Path / Surface | Responsibility | Status |'],
   'docs/DEVELOPMENT_SLICES.md': ['| Order | Slice | Capsule | Purpose | Done Evidence |'],
   'docs/DECISIONS.md': ['| ID | Date | Decision | Status | Rationale | Evidence |'],
@@ -604,7 +606,8 @@ function sopRequiredReadingRowsForProfile(profile: InitProfile): string[][] {
     ['`docs/PROJECT_STATE.md`', 'Every session', 'Current product state and source-of-truth map.'],
     ['`docs/AGENT_HANDOFF.md`', 'Every session', 'Compact handoff and next recommended step.'],
     ['`docs/TASK_BOARD.md`', 'Every session', 'Work queue and task status.'],
-    ['`docs/IMPLEMENTATION_SOP.md`', 'Every session', 'Local HADARA workflow rules and project-specific required-reading registry.']
+    ['`docs/IMPLEMENTATION_SOP.md`', 'Every session', 'Local HADARA workflow rules and project-specific required-reading registry.'],
+    ['`docs/TASK_WORKFLOW_COMMANDS.md`', 'Starting, finishing, closing, auditing, or explaining task workflow commands', 'Standard task loop, dry-run boundaries, and command `ok` semantics.']
   ];
   if (profile === 'standard' || profile === 'governed') {
     rows.push(
@@ -629,7 +632,8 @@ function agentsRequiredReadingRowsForProfile(profile: InitProfile): Array<{ docu
     { document: '`docs/PROJECT_STATE.md`', when: 'Every session', purpose: 'Current product and capability state.' },
     { document: '`docs/AGENT_HANDOFF.md`', when: 'Every session', purpose: 'Compact continuation state.' },
     { document: '`docs/TASK_BOARD.md`', when: 'Every session', purpose: 'Current task queue and status.' },
-    { document: '`docs/IMPLEMENTATION_SOP.md`', when: 'Every session', purpose: 'Local workflow and required-reading registry.' }
+    { document: '`docs/IMPLEMENTATION_SOP.md`', when: 'Every session', purpose: 'Local workflow and required-reading registry.' },
+    { document: '`docs/TASK_WORKFLOW_COMMANDS.md`', when: 'Starting, finishing, closing, auditing, or explaining task workflow commands', purpose: 'Standard task loop, dry-run boundaries, and command `ok` semantics.' }
   ];
   if (profile === 'standard' || profile === 'governed') {
     rows.push(
@@ -763,7 +767,7 @@ function inferProfileFromGeneratedDocs(projectRoot: string): InitProfile {
 }
 
 function requiredDocsForProfile(profile: InitProfile): string[] {
-  const docs = ['docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/IMPLEMENTATION_SOP.md'];
+  const docs = ['docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/IMPLEMENTATION_SOP.md', 'docs/TASK_WORKFLOW_COMMANDS.md'];
   if (profile === 'standard' || profile === 'governed') {
     docs.push('docs/ARCHITECTURE.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/DECISIONS.md', 'docs/TEST_STRATEGY.md');
   }
@@ -979,7 +983,8 @@ function createImplementationSopDoc(spec: InitProfileSpec): string {
     ['`docs/PROJECT_STATE.md`', 'Every session', 'Current product state and source-of-truth map.'],
     ['`docs/AGENT_HANDOFF.md`', 'Every session', 'Compact handoff and next recommended step.'],
     ['`docs/TASK_BOARD.md`', 'Every session', 'Work queue and task status.'],
-    ['`docs/IMPLEMENTATION_SOP.md`', 'Every session', 'Local HADARA workflow rules and project-specific required-reading registry.']
+    ['`docs/IMPLEMENTATION_SOP.md`', 'Every session', 'Local HADARA workflow rules and project-specific required-reading registry.'],
+    ['`docs/TASK_WORKFLOW_COMMANDS.md`', 'Starting, finishing, closing, auditing, or explaining task workflow commands', 'Standard task loop, dry-run boundaries, and command `ok` semantics.']
   ];
   if (spec.docs.architecture) {
     requiredReadingRows.push(['`docs/ARCHITECTURE.md`', 'Architecture, component, or boundary work', 'Current system shape and ownership boundaries.']);
@@ -1012,7 +1017,8 @@ function createImplementationSopDoc(spec: InitProfileSpec): string {
     ['`docs/PROJECT_STATE.md`', 'Product, Current Phase, Current Status, and Single Source of Truth sections.'],
     ['`docs/AGENT_HANDOFF.md`', 'Current State, Last 3 Completed Tasks, Current Known Problems, Next Recommended Step, Validation Baseline, and Historical Index sections.'],
     ['`docs/TASK_BOARD.md`', 'One task table with ID, Title, Status, Capsule, and Notes columns.'],
-    ['`docs/IMPLEMENTATION_SOP.md`', 'Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Validation, Session End, and Handoff Compaction sections.']
+    ['`docs/IMPLEMENTATION_SOP.md`', 'Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Standard Task Workflow Loop, Validation, Session End, and Handoff Compaction sections.'],
+    ['`docs/TASK_WORKFLOW_COMMANDS.md`', 'Standard Task Loop, Command Semantics, Non-Overlap Rules, and State Documents sections.']
   ];
   if (spec.docs.architecture) structureRows.push(['`docs/ARCHITECTURE.md`', 'Overview, Boundaries, and Current Components sections.']);
   if (spec.docs.developmentSlices) structureRows.push(['`docs/DEVELOPMENT_SLICES.md`', 'Evidence-backed slice table with ordering and done evidence.']);
@@ -1065,6 +1071,42 @@ Prefer tables for repeated records and \`##\`/\`###\` headings for durable secti
 2. Preserve the portable/project store boundary.
 3. Make the smallest coherent change that satisfies acceptance criteria.
 4. Update task-local docs when scope changes.
+
+## Standard Task Workflow Loop
+
+The authoritative command semantics live in \`docs/TASK_WORKFLOW_COMMANDS.md\`. For ordinary implementation capsules, use this loop:
+
+\`\`\`bash
+hadara task next --json
+hadara task status --task T-XXXX --json
+
+# If no matching capsule exists:
+hadara task create "task title" --json
+hadara task status --task T-XXXX --json
+
+# Do the scoped work.
+
+hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
+hadara task ready --task T-XXXX --level done --json
+
+hadara task finish --task T-XXXX --json
+hadara task finish --task T-XXXX --execute --json
+
+hadara task close --task T-XXXX --json
+hadara task close --task T-XXXX --execute --json
+
+hadara task audit-close --task T-XXXX --json
+\`\`\`
+
+| Command | Default Write Behavior | Notes |
+|---|---|---|
+| \`task next\` | Read-only | Recommends work; does not create tasks. |
+| \`task status\` | Read-only | \`ok\` means report generation succeeded; readiness is in \`state.ready\`, \`summary.blockers\`, and \`issues\`. |
+| \`evidence add-command\` | Write | Appends command-log evidence; does not execute shell commands. |
+| \`task ready\` | Read-only | Checks readiness; does not mutate evidence or status docs. |
+| \`task finish\` | Dry-run by default; writes only with \`--execute\` | Bounded to \`TASK.md\` and \`docs/TASK_BOARD.md\`. |
+| \`task close\` | Dry-run by default; writes only with \`--execute\` | Bounded to close evidence append. |
+| \`task audit-close\` | Read-only | Verifies close evidence after close. |
 
 ## Validation
 
@@ -1215,14 +1257,81 @@ function createRoadmapDoc(): string {
 `;
 }
 
+function createTaskWorkflowCommandsDoc(): string {
+  return `# TASK_WORKFLOW_COMMANDS
+
+HADARA task workflow commands are split by responsibility. Similar-looking commands are not interchangeable: some only report state, some check readiness, some perform bounded bookkeeping writes, and some append close evidence.
+
+## Standard Task Loop
+
+Use this loop for ordinary implementation capsules:
+
+\`\`\`bash
+hadara task next --json
+
+# If a matching capsule already exists:
+hadara task status --task T-XXXX --json
+
+# If no matching capsule exists, create one first:
+hadara task create "task title" --json
+hadara task status --task T-XXXX --json
+
+# Do the scoped work.
+
+hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
+hadara task ready --task T-XXXX --level done --json
+
+hadara task finish --task T-XXXX --json
+hadara task finish --task T-XXXX --execute --json
+
+hadara task close --task T-XXXX --json
+hadara task close --task T-XXXX --execute --json
+
+hadara task audit-close --task T-XXXX --json
+\`\`\`
+
+\`task finish\` and \`task close\` are intentionally separate. \`finish\` synchronizes bounded status bookkeeping. \`close\` records close evidence after validation succeeds. \`audit-close\` checks the resulting close evidence after the write.
+
+The close model has three separate phases: validation proves readiness, close records the proof, and audit checks the already-recorded close evidence. Close evidence is excluded from the current validation loop because it is appended after validation; requiring it as a same-run precondition would create a fixed-point loop.
+
+## Command Semantics
+
+| Command | Default Write Behavior | Notes |
+|---|---|---|
+| \`task next\` | Read-only | Recommends work; does not create tasks. |
+| \`task status\` | Read-only | \`ok\` means report generation succeeded; readiness is in \`state.ready\`, \`summary.blockers\`, and \`issues\`. |
+| \`task create\` | Write | Creates a Draft Task Capsule and Task Board row. It does not imply the task is ready or done. |
+| \`evidence add-command\` | Write | Appends operator-supplied command-log evidence. It does not execute shell commands or capture stdout/stderr. |
+| \`task ready\` | Read-only | Checks whether the task can satisfy the requested readiness level. |
+| \`task finish\` | Dry-run by default; writes only with \`--execute\` | Updates only \`TASK.md\` status bookkeeping and the matching \`docs/TASK_BOARD.md\` row. |
+| \`task close\` | Dry-run by default; writes only with \`--execute\` | Appends only canonical close evidence after close preconditions pass. |
+| \`task audit-close\` | Read-only | Verifies close evidence after close. |
+
+## Non-Overlap Rules
+
+- \`task next\` chooses work; it does not create a capsule or infer completion.
+- \`task status\` is an operator console; \`ok: true\` means report generation succeeded, not that the task is ready.
+- \`task ready\` checks readiness; it does not write evidence or status.
+- \`evidence add-command\` records an operator-supplied command result; it does not run the command.
+- \`task finish\` may update only the Task Capsule \`TASK.md\` status and matching \`docs/TASK_BOARD.md\` status/path row.
+- \`task close\` may append only close evidence. It must not update status docs, Task Board rows, handoff, Project State, roadmap docs, or arbitrary evidence.
+- \`task audit-close\` is read-only and should be run after \`task close --execute\`.
+
+## State Documents
+
+\`task finish --execute\` deliberately does not update broad prose state. Operators still update \`docs/PROJECT_STATE.md\`, \`docs/AGENT_HANDOFF.md\`, and any roadmap/slice docs generated for the selected profile when the task changes project state.
+`;
+}
+
 function createAgentsDoc(spec: InitProfileSpec): string {
   const requiredReadingRows = [
     ['1', '`docs/PROJECT_STATE.md`', 'Every session', 'Current product and capability state.'],
     ['2', '`docs/AGENT_HANDOFF.md`', 'Every session', 'Compact continuation state.'],
     ['3', '`docs/TASK_BOARD.md`', 'Every session', 'Current task queue and status.'],
-    ['4', '`docs/IMPLEMENTATION_SOP.md`', 'Every session', 'Local workflow and required-reading registry.']
+    ['4', '`docs/IMPLEMENTATION_SOP.md`', 'Every session', 'Local workflow and required-reading registry.'],
+    ['5', '`docs/TASK_WORKFLOW_COMMANDS.md`', 'Starting, finishing, closing, auditing, or explaining task workflow commands', 'Standard task loop, dry-run boundaries, and command `ok` semantics.']
   ];
-  let order = 5;
+  let order = 6;
   if (spec.docs.architecture) requiredReadingRows.push([String(order++), '`docs/ARCHITECTURE.md`', 'Architecture, component, or boundary work', 'Current system shape and ownership boundaries.']);
   if (spec.docs.developmentSlices) requiredReadingRows.push([String(order++), '`docs/DEVELOPMENT_SLICES.md`', 'Starting, completing, or reclassifying a development slice', 'Roadmap ordering, prerequisites, and completion evidence.']);
   if (spec.docs.decisions) requiredReadingRows.push([String(order++), '`docs/DECISIONS.md`', 'Project-level decision work', 'Durable project decisions.']);
@@ -1240,6 +1349,7 @@ function createAgentsDoc(spec: InitProfileSpec): string {
     ['Task boundary', 'Keep work inside one Task Capsule whenever possible.', 'Active Task Capsule'],
     ['Task creation', 'If no suitable capsule exists, create one with `hadara task create <title>`.', '`docs/TASK_BOARD.md`'],
     ['Evidence', 'Do not mark work done without evidence.', '`EVIDENCE.md`, `evidence.jsonl`'],
+    ['Task workflow', 'For task workflow commands, follow `docs/TASK_WORKFLOW_COMMANDS.md`: record evidence, run `task ready`, preview and execute `task finish`, preview and execute `task close`, then run `task audit-close`.', 'Task Capsule evidence'],
     ['Safety', 'Do not execute dangerous commands without explicit user approval.', 'Task Capsule evidence'],
     ['Secrets', 'Do not write secrets, private logs, or machine-local state into committed files.', 'Changed-file review'],
     ['Store boundary', 'Preserve the portable/project store boundary.', spec.docs.architecture ? '`.gitignore`, `docs/ARCHITECTURE.md`' : '`.gitignore`'],

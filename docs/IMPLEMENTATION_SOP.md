@@ -61,7 +61,7 @@ The Phase 6 agent-UX spec under `docs/specs/agent-ux/` is intentionally local-on
 
 | Profile | Scale | Generated Docs | SOP Required Reading Adds | Intended Use |
 |---|---|---|---|---|
-| `basic` | Small | `AGENTS.md`, `.gitignore`, `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, `docs/TASK_BOARD.md`, `docs/IMPLEMENTATION_SOP.md` | Core docs and active Task Capsule docs only. | Small projects that need Task Capsules, evidence, and handoff discipline without planning overhead. |
+| `basic` | Small | `AGENTS.md`, `.gitignore`, `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, `docs/TASK_BOARD.md`, `docs/IMPLEMENTATION_SOP.md`, `docs/TASK_WORKFLOW_COMMANDS.md` | Core docs, task workflow docs, and active Task Capsule docs only. | Small projects that need Task Capsules, evidence, and handoff discipline without planning overhead. |
 | `standard` | Medium, default | Basic docs plus `docs/ARCHITECTURE.md`, `docs/DEVELOPMENT_SLICES.md`, `docs/DECISIONS.md`, and `docs/TEST_STRATEGY.md` | Architecture, slice, decision, and validation rows. | Most multi-session projects that need roadmap slices and repeatable validation. |
 | `governed` | Heavy | Standard docs plus `docs/SECURITY_MODEL.md`, `docs/REFACTOR_LOG.md`, and `docs/ROADMAP.md` | Security, refactor, and roadmap rows. | Long-lived projects with stronger governance, security boundaries, refactor history, or roadmap-level planning. |
 
@@ -77,7 +77,8 @@ Generated HADARA docs should follow a stable structure so agents do not reinterp
 | `docs/PROJECT_STATE.md` | Product, Current Phase, Current Status, and Single Source of Truth sections. |
 | `docs/AGENT_HANDOFF.md` | Current State, Last 3 Completed Tasks, Current Known Problems, Next Recommended Step, Validation Baseline, and Historical Index sections. |
 | `docs/TASK_BOARD.md` | One task table with ID, Title, Status, Capsule, and Notes columns. |
-| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Validation, Session End, and Handoff Compaction sections. |
+| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Standard Task Workflow Loop, Validation, Session End, and Handoff Compaction sections. |
+| `docs/TASK_WORKFLOW_COMMANDS.md` | Standard Task Loop, Command Semantics, Non-Overlap Rules, and State Documents sections. |
 | `docs/ARCHITECTURE.md` | Overview, Boundaries, and Current Components sections. |
 | `docs/DEVELOPMENT_SLICES.md` | Evidence-backed slice table with ordering and done evidence. |
 | `docs/DECISIONS.md` | Decision table with ID, Date, Decision, Status, Rationale, and Evidence columns. |

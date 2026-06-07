@@ -64,6 +64,7 @@ describe('init profiles', () => {
     expect(fs.existsSync(path.join(root, '.hermes.md'))).toBe(false);
     expect(fs.existsSync(path.join(root, 'docs', 'ARCHITECTURE.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'docs', 'TASK_WORKFLOW_COMMANDS.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'docs', 'DECISIONS.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'docs', 'TEST_STRATEGY.md'))).toBe(true);
@@ -104,6 +105,8 @@ describe('init profiles', () => {
     expect(agents).toContain('## Rules');
     expect(agents).toContain('| Rule | Requirement | Evidence / Update Location |');
     expect(agents).toContain('docs/IMPLEMENTATION_SOP.md');
+    expect(agents).toContain('docs/TASK_WORKFLOW_COMMANDS.md');
+    expect(agents).toContain('For task workflow commands, follow `docs/TASK_WORKFLOW_COMMANDS.md`');
     expect(agents).toContain('Project-specific registered docs');
     expectNoGenericOptionalIntegrationDefaults(agents);
 
@@ -114,7 +117,14 @@ describe('init profiles', () => {
     expect(sop).toContain('This project was initialized with the `standard` HADARA profile.');
     expect(sop).toContain('| `standard` | Medium, default |');
     expect(sop).toContain('## Scaffold Document Structure');
-    expect(sop).toContain('| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Validation, Session End, and Handoff Compaction sections. |');
+    expect(sop).toContain('| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Standard Task Workflow Loop, Validation, Session End, and Handoff Compaction sections. |');
+    expect(sop).toContain('| `docs/TASK_WORKFLOW_COMMANDS.md` | Standard Task Loop, Command Semantics, Non-Overlap Rules, and State Documents sections. |');
+    expect(sop).toContain('## Standard Task Workflow Loop');
+    expect(sop).toContain('hadara task ready --task T-XXXX --level done --json');
+    expect(sop).toContain('hadara task finish --task T-XXXX --execute --json');
+    expect(sop).toContain('hadara task close --task T-XXXX --execute --json');
+    expect(sop).toContain('hadara task audit-close --task T-XXXX --json');
+    expect(sop).toContain('| `task status` | Read-only | `ok` means report generation succeeded; readiness is in `state.ready`, `summary.blockers`, and `issues`. |');
     expect(sop).toContain('`docs/ARCHITECTURE.md`');
     expect(sop).toContain('`docs/DEVELOPMENT_SLICES.md`');
     expect(sop).toContain('`docs/TEST_STRATEGY.md`');
@@ -127,6 +137,16 @@ describe('init profiles', () => {
     expect(sop).toContain('add `--execute` to update this table');
     expect(sop).not.toContain('A future HADARA command may automate this registration');
     expectNoGenericOptionalIntegrationDefaults(sop);
+
+    const workflow = fs.readFileSync(path.join(root, 'docs', 'TASK_WORKFLOW_COMMANDS.md'), 'utf8');
+    expect(workflow).toContain('## Standard Task Loop');
+    expect(workflow).toContain('## Command Semantics');
+    expect(workflow).toContain('## Non-Overlap Rules');
+    expect(workflow).toContain('## State Documents');
+    expect(workflow).toContain('hadara evidence add-command --task T-XXXX --summary "..." --result passed --json');
+    expect(workflow).toContain('`task finish` and `task close` are intentionally separate.');
+    expect(workflow).toContain('| `task close` | Dry-run by default; writes only with `--execute` | Appends only canonical close evidence after close preconditions pass. |');
+    expectNoGenericOptionalIntegrationDefaults(workflow);
 
     const testStrategy = fs.readFileSync(path.join(root, 'docs', 'TEST_STRATEGY.md'), 'utf8');
     expect(testStrategy).toContain('## Suites');
@@ -166,6 +186,9 @@ describe('init profiles', () => {
       '| Profile | Scale | Generated Docs | Intended Use | Special Notes |',
       '| Document | Required Structure |'
     ]);
+    expectTableFrames(root, 'docs/TASK_WORKFLOW_COMMANDS.md', [
+      '| Command | Default Write Behavior | Notes |'
+    ]);
     expectTableFrames(root, 'docs/ARCHITECTURE.md', [
       '| Field | Value |',
       '| Boundary | Rule | Notes |',
@@ -190,6 +213,7 @@ describe('init profiles', () => {
     expect(fs.existsSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'docs', 'TASK_BOARD.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'docs', 'TASK_WORKFLOW_COMMANDS.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'docs', 'ARCHITECTURE.md'))).toBe(false);
     expect(fs.existsSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'))).toBe(false);
     expect(fs.existsSync(path.join(root, 'docs', 'DECISIONS.md'))).toBe(false);
@@ -200,6 +224,7 @@ describe('init profiles', () => {
 
     const sop = fs.readFileSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'), 'utf8');
     expect(sop).toContain('This project was initialized with the `basic` HADARA profile.');
+    expect(sop).toContain('docs/TASK_WORKFLOW_COMMANDS.md');
     expect(sop).not.toContain('`docs/ARCHITECTURE.md`');
     expect(sop).not.toContain('`docs/DEVELOPMENT_SLICES.md`');
     expect(sop).not.toContain('`docs/DECISIONS.md`');
@@ -211,6 +236,7 @@ describe('init profiles', () => {
     const agents = fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8');
     expect(agents).toContain('| Order | Document | When | Purpose |');
     expect(agents).toContain('| Rule | Requirement | Evidence / Update Location |');
+    expect(agents).toContain('docs/TASK_WORKFLOW_COMMANDS.md');
     expect(agents).not.toContain('docs/ARCHITECTURE.md');
     expect(agents).not.toContain('docs/DEVELOPMENT_SLICES.md');
     expect(agents).not.toContain('docs/DECISIONS.md');
@@ -251,6 +277,7 @@ describe('init profiles', () => {
 
     const sop = fs.readFileSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'), 'utf8');
     expect(sop).toContain('This project was initialized with the `governed` HADARA profile.');
+    expect(sop).toContain('`docs/TASK_WORKFLOW_COMMANDS.md`');
     expect(sop).toContain('`docs/SECURITY_MODEL.md`');
     expect(sop).toContain('`docs/REFACTOR_LOG.md`');
     expect(sop).toContain('`docs/ROADMAP.md`');
@@ -296,6 +323,21 @@ describe('init profiles', () => {
     expect(fs.readFileSync(path.join(root, 'HERMES.md'), 'utf8')).toBe('# stale\n');
   });
 
+  it('reports missing task workflow command docs as core scaffold drift', () => {
+    const root = tempProject();
+    initProject(root);
+    fs.rmSync(path.join(root, 'docs', 'TASK_WORKFLOW_COMMANDS.md'), { force: true });
+
+    handleInitCommand({ args: ['init', 'doctor', '--json'], projectRoot: root, jsonOutput: true });
+
+    const report = lastJsonLog();
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'INIT_CORE_DOC_MISSING',
+      path: 'docs/TASK_WORKFLOW_COMMANDS.md'
+    }));
+  });
+
   it('reports profile metadata drift when higher-profile docs exist without core metadata merge', () => {
     const root = tempProject();
     initProject(root, 'basic');
@@ -335,8 +377,10 @@ describe('init profiles', () => {
     expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(true);
     expect(read(root, 'docs/PROJECT_STATE.md')).toContain('| HADARA Profile | governed |');
     expect(read(root, 'docs/IMPLEMENTATION_SOP.md')).toContain('This project uses the `governed` HADARA profile.');
+    expect(read(root, 'docs/IMPLEMENTATION_SOP.md')).toContain('`docs/TASK_WORKFLOW_COMMANDS.md`');
     expect(read(root, 'docs/IMPLEMENTATION_SOP.md')).toContain('`docs/SECURITY_MODEL.md`');
     expect(read(root, 'AGENTS.md')).toContain('`docs/SECURITY_MODEL.md`');
+    expect(read(root, 'AGENTS.md')).toContain('`docs/TASK_WORKFLOW_COMMANDS.md`');
     expect(fs.readFileSync(path.join(root, 'docs', 'DECISIONS.md'), 'utf8')).toBe('# Custom decisions\n');
 
     handleInitCommand({ args: ['init', 'doctor', '--json'], projectRoot: root, jsonOutput: true });
@@ -486,7 +530,8 @@ describe('init profiles', () => {
     expect(sop).toContain('Long-lived projects with stronger governance, security boundaries, refactor history, or roadmap-level planning.');
     expect(sop).not.toContain('Long-lived projects with stronger governance, release planning');
     expect(sop).toContain('## Scaffold Document Structure');
-    expect(sop).toContain('| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Validation, Session End, and Handoff Compaction sections. |');
+    expect(sop).toContain('| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Standard Task Workflow Loop, Validation, Session End, and Handoff Compaction sections. |');
+    expect(sop).toContain('| `docs/TASK_WORKFLOW_COMMANDS.md` | Standard Task Loop, Command Semantics, Non-Overlap Rules, and State Documents sections. |');
     expect(sop).toContain('docs/SECURITY_MODEL.md');
     expect(sop).toContain('docs/ROADMAP.md');
     expect(sop).toContain('docs/CLI_JSON_CONTRACT.md');

@@ -279,3 +279,4 @@
 | T-0276 | Python Bridge Package Preview | Done | tasks/T-0276-python-bridge-package-preview | Local `python/` PyPI bridge scaffold and validation; no TestPyPI/PyPI upload. |
 | T-0277 | Python Trusted Publisher Workflow | Done | tasks/T-0277-python-trusted-publisher-workflow | |
 | T-0278 | Python Bridge Version Alignment for rc.1 | Done | tasks/T-0278-python-bridge-version-alignment-for-rc-1 | |
+| T-0279 | Init Scaffold Lifecycle Docs Alignment | Done | tasks/T-0279-init-scaffold-lifecycle-docs-alignment | |
