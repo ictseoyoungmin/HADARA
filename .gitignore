@@ -18,6 +18,12 @@ Thumbs.db
 
 # dev only
 .env
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+build/
 docs/specs/
 docs/design/mockups/*
 !docs/design/mockups/HADARA_web_ui_v0.1_comfort_dark.html

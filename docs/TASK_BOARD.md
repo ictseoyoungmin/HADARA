@@ -276,3 +276,4 @@
 | T-0273 | Fresh Init and Generic Project UX Hardening | Done | tasks/T-0273-fresh-init-and-generic-project-ux-hardening | |
 | T-0274 | Lifecycle Status Clarity and Performance Hardening | Done | tasks/T-0274-lifecycle-status-clarity-and-performance-hardening | |
 | T-0275 | Release Candidate 0.2.0-rc.1 Publish Readiness | Done | tasks/T-0275-release-candidate-0-2-0-rc-1-publish-readiness | Operator npm publish completed; npm view verified `0.2.0-rc.1`. |
+| T-0276 | Python Bridge Package Preview | Done | tasks/T-0276-python-bridge-package-preview | Local `python/` PyPI bridge scaffold and validation; no TestPyPI/PyPI upload. |
