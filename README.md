@@ -26,7 +26,7 @@ The current source checkout targets:
 hadara@0.2.0-rc.2
 ```
 
-T-0282 refreshes the npm release-candidate source state for `0.2.0-rc.2` after the init scaffold protocol guidance follow-up. T-0275 published the previous `0.2.0-rc.1` RC after the installed-package recycle fixes.
+T-0282 refreshed the npm release-candidate source state for `0.2.0-rc.2` after the init scaffold protocol guidance follow-up, then the operator published `hadara@0.2.0-rc.2` through the approval-gated manual helper. The helper regenerated release artifacts, reran package/clean-checkout evidence, published to npm, and verified `npm view` returned `0.2.0-rc.2`.
 
 Current publish boundaries:
 
@@ -35,8 +35,8 @@ Current publish boundaries:
 | npm package | Primary release target. |
 | `hadara@0.1.0-rc.0` | Published first RC. |
 | `hadara@0.2.0-rc.0` | Superseded internal publish candidate after recycle findings. |
-| `hadara@0.2.0-rc.1` | Current published npm RC until rc.2 is operator-published. |
-| `hadara@0.2.0-rc.2` | Current source version and next npm RC target. |
+| `hadara@0.2.0-rc.1` | Previous published npm RC. |
+| `hadara@0.2.0-rc.2` | Current published npm RC and current source version. |
 | GitHub Release | Secondary target, still approval-gated. |
 | Docker image | Deferred. |
 | PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
@@ -64,7 +64,7 @@ npx hadara@0.2.0-rc.2 doctor --json
 npx hadara@0.2.0-rc.2 tools list --json
 ```
 
-Previous published RCs: `hadara@0.2.0-rc.1` and `hadara@0.1.0-rc.0` remain available on npm for comparison or rollback, but new installs should use the current RC after the operator publishes it.
+Previous published RCs: `hadara@0.2.0-rc.1` and `hadara@0.1.0-rc.0` remain available on npm for comparison or rollback, but new installs should use the current RC.
 
 ## What HADARA Gives You
 

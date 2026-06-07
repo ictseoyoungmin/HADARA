@@ -282,4 +282,4 @@
 | T-0279 | Init Scaffold Lifecycle Docs Alignment | Done | tasks/T-0279-init-scaffold-lifecycle-docs-alignment | |
 | T-0280 | Init scaffold lifecycle wording follow-up | Done | tasks/T-0280-init-scaffold-lifecycle-wording-follow-up | |
 | T-0281 | Init scaffold protocol guidance follow-up | Done | tasks/T-0281-init-scaffold-protocol-guidance-follow-up | |
-| T-0282 | Release candidate 0.2.0-rc.2 publish readiness | Done | tasks/T-0282-release-candidate-0-2-0-rc-2-publish-readiness | rc2 metadata/docs/build/package/clean-checkout readiness prepared; final release artifact and publish remain approval-gated through the manual helper. |
+| T-0282 | Release candidate 0.2.0-rc.2 publish readiness | Done | tasks/T-0282-release-candidate-0-2-0-rc-2-publish-readiness | Operator npm publish completed; npm view verified `0.2.0-rc.2`; GitHub draft false. |

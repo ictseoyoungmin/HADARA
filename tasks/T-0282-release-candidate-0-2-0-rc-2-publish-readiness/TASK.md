@@ -14,7 +14,7 @@
 
 | Goal | Notes |
 |---|---|
-| Prepare `hadara@0.2.0-rc.2` for approval-gated npm publish. | The operator should only need npm authentication, a clean committed worktree, and `scripts/release/manual-publish-rc.sh T-0282 --execute`; the helper performs final validation, artifact refresh, dry-runs, confirmation, publish, and npm view verification. |
+| Prepare and publish `hadara@0.2.0-rc.2` through the approval-gated npm helper. | The operator needed only npm authentication, a clean committed worktree, and `scripts/release/manual-publish-rc.sh T-0282 --execute`; the helper performed final validation, artifact refresh, dry-runs, confirmation, publish, and npm view verification. |
 
 ## Scope
 
@@ -30,7 +30,7 @@
 
 | Out of Scope | Reason |
 |---|---|
-| npm publish execution. | Reserved for the operator running the approval-gated helper with npm login and explicit `publish` confirmation. |
+| npm publish execution outside the approval-gated helper. | Registry mutation must remain operator-confirmed and helper-mediated. |
 | GitHub Release creation or tag push. | Optional and still gated by `--github-draft` plus helper confirmation. |
 | Docker image publishing. | Deferred release target. |
 | PyPI/TestPyPI publish or Python bridge version bump. | The Python bridge is a separately published `hadara==0.2.0rc1` preview bridge and is not part of this npm RC. |
@@ -46,4 +46,5 @@ Done
 |---|---|---|---|
 | 2026-06-07 | Draft | Initial task scaffold. | Task create output. |
 | 2026-06-07 | Active | Preparing npm `0.2.0-rc.2` publish readiness. | This capsule. |
-| 2026-06-07 | Done | rc2 source metadata/docs/build/package/clean-checkout readiness are prepared; final release artifact evidence and npm publish remain delegated to the clean-worktree manual helper. | T-0282 evidence. |
+| 2026-06-07 | Done | rc2 source metadata/docs/build/package/clean-checkout readiness were prepared and closed before the operator helper run. | T-0282 evidence. |
+| 2026-06-07 | Done | Operator helper regenerated release artifact/package/clean evidence, published `hadara@0.2.0-rc.2` to npm, and verified npm view returned `0.2.0-rc.2`; GitHub draft was not requested. | T-0282 publish evidence. |

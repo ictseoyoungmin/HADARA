@@ -2,7 +2,7 @@
 
 ## 0.2.0-rc.2
 
-Release candidate prepared for npm after the init scaffold lifecycle/protocol guidance hardening from T-0279 through T-0281.
+Release candidate published to npm after the init scaffold lifecycle/protocol guidance hardening from T-0279 through T-0281 and the T-0282 publish-readiness refresh.
 
 Highlights:
 
@@ -10,12 +10,13 @@ Highlights:
 - Adds common multi-language local artifact hygiene to generated `.gitignore`, including Python virtualenv/cache/SQLite patterns needed by FastAPI/pytest-style dogfooding projects.
 - Clarifies close-source stability before `task close` so agents avoid repeated close/audit churn from post-close documentation edits.
 - Refreshes npm package metadata, README install examples, release readiness docs, and manual publish helper examples for `hadara@0.2.0-rc.2`.
+- Publishes `hadara@0.2.0-rc.2` to npm through the approval-gated manual helper and verifies `npm view` returned `0.2.0-rc.2`.
 
 Boundaries:
 
-- npm publish remains operator-confirmed through `scripts/release/manual-publish-rc.sh T-0282 --execute`.
+- npm publish was completed as an operator-confirmed release mutation after the helper regenerated release artifact, package smoke, and clean-checkout smoke evidence.
 - The Python bridge remains the separately published preview package `hadara==0.2.0rc1` and is not changed by this npm RC.
-- GitHub Release creation remains optional; Docker image publishing, installer execution, PyPI publishing, and MCP release/package execution remain deferred unless a future capsule explicitly enables them.
+- GitHub Release creation remains optional and was not requested during the npm publish helper run; Docker image publishing, installer execution, PyPI publishing, and MCP release/package execution remain deferred unless a future capsule explicitly enables them.
 
 ## 0.2.0-rc.1
 
