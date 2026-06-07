@@ -51,7 +51,16 @@ This repository operates as the `governed` HADARA profile because it has long-li
 | `docs/specs/agent-ux/HADARA_Phase6_Operator_Workflow_Compression_Multi_Agent_Compatibility_Spec.md` | Phase 6 operator workflow compression, multi-agent compatibility metadata, task complete dry-run, close idempotency, handoff suggestion, Docker validation wrapper, task templates, or release dry-run decomposition work only | Local-only ignored source design for Phase 6 workflow compression while preserving dry-run-first, hash-guarded, actor/run-aware, coordinator/worker-safe command boundaries. |
 | `docs/specs/agent-ux/HADARA_Phase6_1_Reviewer_Feedback_Hardening_Spec.md` | Phase 6.1 reviewer-feedback hardening, actor CLI metadata, dev docker-check dist sync guards, close idempotency race hardening, task create collision handling, or handoff suggestion polish | Follow-up hardening plan for Phase 6 reviewer feedback without adding a full multi-agent runtime or hidden write orchestration. |
 
-When adding project-specific specs, contracts, or roadmap files, add them to this table and explain when agents must read them. Use `hadara init register-doc --path <path> --when <text> --purpose <text> --json` to preview registration, and add `--execute` to update this table.
+## Project-Specific Documents
+
+When adding project-specific specs, contracts, roadmap files, or human/agent operating notes, register them in the Required Reading table before expecting people or agents to rely on them. Each row must explain when to read the document and what decision or workflow boundary it owns.
+
+```bash
+hadara init register-doc --path docs/specs/example.md --when "When changing example behavior" --purpose "Example behavior contract" --json
+hadara init register-doc --path docs/specs/example.md --when "When changing example behavior" --purpose "Example behavior contract" --execute --json
+```
+
+Use `--require-exists` when the document must already exist before registration. Keep local-only notes out of committed required reading unless they are intentionally part of the project handoff.
 
 If the local-only ignored file `docs/specs/HADARA_Release_Install_Package_Smoke_Capsule_Plan.md` exists in this workspace, agents may use it as supporting planning context for release/install work, but it is not required committed context.
 
@@ -77,7 +86,7 @@ Generated HADARA docs should follow a stable structure so agents do not reinterp
 | `docs/PROJECT_STATE.md` | Product, Current Phase, Current Status, and Single Source of Truth sections. |
 | `docs/AGENT_HANDOFF.md` | Current State, Last 3 Completed Tasks, Current Known Problems, Next Recommended Step, Validation Baseline, and Historical Index sections. |
 | `docs/TASK_BOARD.md` | One task table with ID, Title, Status, Capsule, and Notes columns. |
-| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Standard Task Workflow Loop, Validation, Session End, and Handoff Compaction sections. |
+| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Project-Specific Documents, Init Profile Matrix, Scaffold Document Structure, Implementation, Standard Task Workflow Loop, Validation, Evidence Records, Session End, and Handoff Compaction sections. |
 | `docs/TASK_WORKFLOW_COMMANDS.md` | Standard Task Loop, Command Semantics, Non-Overlap Rules, and State Documents sections. |
 | `docs/ARCHITECTURE.md` | Overview, Boundaries, and Current Components sections. |
 | `docs/DEVELOPMENT_SLICES.md` | Evidence-backed slice table with ordering and done evidence. |
@@ -122,6 +131,8 @@ hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
 hadara task finish --task T-XXXX --json
 hadara task finish --task T-XXXX --execute --json
 
+# Finalize Task Capsule docs and tracked state docs before closing.
+
 hadara task ready --task T-XXXX --level done --json
 
 # Optional workflow compression / next action preview:
@@ -142,6 +153,8 @@ hadara task audit-close --task T-XXXX --json
 | `task finish` | Dry-run by default; writes only with `--execute` | Bounded to `TASK.md` and `docs/TASK_BOARD.md`. |
 | `task close` | Dry-run by default; writes only with `--execute` | Bounded to close evidence append. |
 | `task audit-close` | Read-only | Verifies close evidence after close. |
+
+Before running `task ready` and `task close`, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, `docs/TASK_BOARD.md`, and tracked state docs such as `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, and `docs/DEVELOPMENT_SLICES.md` when they apply. After `task close --execute --json`, do not edit those close-source documents unless you intend to rerun `task ready`, `task close`, and `task audit-close`. Avoid writing volatile close evidence ids into close-source docs; use stable wording such as "close evidence appended; audit returned closed-valid".
 
 For dry-run-first remediation commands outside the ordinary close loop, follow the reviewed-hash pattern:
 
@@ -225,10 +238,13 @@ Then run built-CLI smokes through `node /workspace/dist/cli/main.js ... --projec
 2. Use validation constraints from `docs/AGENT_HANDOFF.md`; for example, prefer Docker-based Node/npm validation when the handoff records host Node/npm problems.
 3. Record meaningful validation evidence in `EVIDENCE.md` and `evidence.jsonl`.
 4. Preview and execute `task finish` to synchronize bounded status bookkeeping.
-5. Run `hadara task ready --task <task-id> --level done --json` after finish and before close.
-6. Preview and execute `task close`, then run `task audit-close` using the Standard Task Workflow Loop.
-7. Add security, release, install, provider, MCP, dashboard, or deployment smoke checks only after those surfaces exist and are documented for this project.
-8. If a required check cannot run, record the reason and residual risk in `EVIDENCE.md`, `evidence.jsonl`, and `HANDOFF.md`.
+5. Finalize Task Capsule docs and tracked state docs before close so the close source hash remains stable.
+6. Run `hadara task ready --task <task-id> --level done --json` after finish and before close.
+7. Preview and execute `task close`, then run `task audit-close` using the Standard Task Workflow Loop.
+8. Add security, release, install, provider, MCP, dashboard, or deployment smoke checks only after those surfaces exist and are documented for this project.
+9. If a required check cannot run, record the reason and residual risk in `EVIDENCE.md`, `evidence.jsonl`, and `HANDOFF.md`.
+
+`task ready` and `task close` include done-level Task Capsule validation. Use `hadara harness validate --task <task-id> --level done --json` directly when you need to debug capsule format or done-level validation failures.
 
 ## Evidence Records
 

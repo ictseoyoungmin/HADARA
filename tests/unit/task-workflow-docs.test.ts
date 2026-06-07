@@ -19,6 +19,7 @@ describe('task workflow command semantics docs', () => {
       'hadara evidence add-command --task T-XXXX --summary "..." --result passed --json',
       'hadara task finish --task T-XXXX --json',
       'hadara task finish --task T-XXXX --execute --json',
+      '# Finalize Task Capsule docs and tracked state docs before closing.',
       'hadara task ready --task T-XXXX --level done --json',
       'hadara task complete --task T-XXXX --json',
       'hadara task close --task T-XXXX --json',
@@ -64,7 +65,17 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('| `hadara task ready --task T-XXXX --level done --json` | Readiness preflight after finish and before close. | Read-only report. | No. |');
     expect(workflow).toContain('| `hadara task close --task T-XXXX --execute --json` | Append canonical close evidence after close preconditions pass. | Execute after dry-run review. | Yes, close evidence only. |');
     expect(workflow).toContain('`task status` is an operator console; `ok: true` means report generation succeeded.');
+    expect(workflow).toContain('Use `hadara harness validate --task T-XXXX --level done --json` directly when debugging capsule format');
+    expect(workflow).toContain('`harness validate` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence.');
+    expect(workflow).toContain('Before close, finish all close-source edits');
+    expect(workflow).toContain('changing those documents changes the close source hash and requires rerunning `task ready`, `task close`, and `task audit-close`');
+    expect(workflow).toContain('After `task close --execute --json`, close-source document edits intentionally invalidate the previous close proof.');
     expect(sop).toContain('| `task status` | Read-only | `ok` means report generation succeeded; readiness is in `state.ready`, `summary.blockers`, and `issues`. |');
+    expect(sop).toContain('Before running `task ready` and `task close`, finish all close-source edits');
+    expect(sop).toContain('Avoid writing volatile close evidence ids into close-source docs');
+    expect(sop).toContain('## Evidence Records');
+    expect(sop).toContain('Do not hand-edit Task Capsule `evidence.jsonl`.');
+    expect(sop).toContain('Use `hadara harness validate --task <task-id> --level done --json` directly when you need to debug capsule format or done-level validation failures.');
     expect(contract).toContain('| `task status --task T-XXXX --json` | `hadara.task.workbench.v1` | Read-only. | Report generation succeeded for an existing task; not a readiness gate. |');
   });
 

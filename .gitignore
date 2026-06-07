@@ -22,7 +22,13 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .venv/
+venv/
+*.db
+*.sqlite
+*.sqlite3
 build/
 docs/specs/
 docs/design/mockups/*

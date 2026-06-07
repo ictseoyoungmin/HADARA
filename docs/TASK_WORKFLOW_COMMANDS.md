@@ -23,6 +23,8 @@ hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
 hadara task finish --task T-XXXX --json
 hadara task finish --task T-XXXX --execute --json
 
+# Finalize Task Capsule docs and tracked state docs before closing.
+
 hadara task ready --task T-XXXX --level done --json
 
 # Optional workflow compression / next action preview:
@@ -37,6 +39,10 @@ hadara task audit-close --task T-XXXX --json
 `task finish`, `task ready`, and `task close` are intentionally separate. `finish` synchronizes bounded status bookkeeping first. `ready` then validates the Done-level state. `close` records close evidence after validation succeeds. `audit-close` checks the resulting close evidence after the write.
 
 The close model has three separate phases: validation proves readiness, close records the proof, and audit checks the already-recorded close evidence. Close evidence is excluded from the current validation loop because it is appended after validation; requiring it as a same-run precondition would create a fixed-point loop.
+
+`task ready` and `task close` include done-level Task Capsule validation. Use `hadara harness validate --task T-XXXX --level done --json` directly when debugging capsule format, status-history, acceptance, evidence, or handoff validation failures.
+
+Before close, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, `docs/TASK_BOARD.md`, and tracked state docs such as `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, and `docs/DEVELOPMENT_SLICES.md` when they apply. After `task close --execute --json`, changing those documents changes the close source hash and requires rerunning `task ready`, `task close`, and `task audit-close`. Do not paste volatile close evidence ids into close-source docs; prefer stable wording such as "close evidence appended; audit returned closed-valid".
 
 Dry-run-first remediation commands use a separate guard: when `task upgrade-scaffold` or `protocol remediate` reports planned writes, the dry-run report includes `summary.beforeHash`. Execute mode requires `--before-hash <hash>` from that reviewed dry-run before it will apply those writes. This extra copy step is intentional UX friction: old execute-only commands fail closed so operators review the current plan before any scaffold/remediation write.
 
@@ -97,9 +103,11 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 - `dev docker-check` is intentionally an external-subprocess command. It must keep raw Docker/npm logs out of JSON output, redact workspace paths, create a run-scoped temp copy, and require explicit `--sync-dist --before-hash <current dist hash>` before copying Docker-built `dist` to the workspace.
 - `dev docker-check --sync-dist` is an output write. Reports distinguish source mutation from output mutation and expose whether a pre-sync dist hash was available, which hash the operator reviewed, whether it matched, whether sync was allowed through the first-time missing-hash escape hatch, and whether a conflict blocked the copy.
 - `task ready` checks whether the capsule can satisfy a requested validation level; it does not write evidence or status.
+- `harness validate` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence.
 - `evidence add-command` records an operator-supplied command result; it does not execute shell commands or capture stdout/stderr.
 - `task finish` may update only the Task Capsule `TASK.md` status and matching `docs/TASK_BOARD.md` status/path row.
 - `task close` may append only close evidence. It must not update status docs, Task Board rows, handoff, Project State, Development Slices, or arbitrary evidence.
+- After `task close --execute --json`, close-source document edits intentionally invalidate the previous close proof. Make those edits before close, or rerun ready/close/audit if the edit is unavoidable.
 - `task close` reports additive close-evidence idempotency metadata. Repeating close with the same task/source/report hash is a no-op in execute mode; a changed source/report hash may append a new close proof with supersedes metadata for the previous proof. T-0264 rechecks `evidence.jsonl` immediately before append, so an execute report created before another same-key close proof was appended is converted to a no-op instead of appending a duplicate. This is a local append race recheck, not a global lock service.
 - `task audit-close` is read-only and should be run after `task close --execute`.
 

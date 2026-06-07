@@ -1017,7 +1017,7 @@ function createImplementationSopDoc(spec: InitProfileSpec): string {
     ['`docs/PROJECT_STATE.md`', 'Product, Current Phase, Current Status, and Single Source of Truth sections.'],
     ['`docs/AGENT_HANDOFF.md`', 'Current State, Last 3 Completed Tasks, Current Known Problems, Next Recommended Step, Validation Baseline, and Historical Index sections.'],
     ['`docs/TASK_BOARD.md`', 'One task table with ID, Title, Status, Capsule, and Notes columns.'],
-    ['`docs/IMPLEMENTATION_SOP.md`', 'Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Standard Task Workflow Loop, Validation, Session End, and Handoff Compaction sections.'],
+    ['`docs/IMPLEMENTATION_SOP.md`', 'Session Start, Required Reading, Project-Specific Documents, Init Profile Matrix, Scaffold Document Structure, Implementation, Standard Task Workflow Loop, Validation, Evidence Records, Session End, and Handoff Compaction sections.'],
     ['`docs/TASK_WORKFLOW_COMMANDS.md`', 'Standard Task Loop, Command Semantics, Non-Overlap Rules, and State Documents sections.']
   ];
   if (spec.docs.architecture) structureRows.push(['`docs/ARCHITECTURE.md`', 'Overview, Boundaries, and Current Components sections.']);
@@ -1045,7 +1045,16 @@ ${numberedList(sessionStart)}
 |---|---|---|
 ${requiredReadingRows.map(formatTableRow).join('\n')}
 
-When adding project-specific specs, contracts, or roadmap files, add them to this table and explain when agents must read them. Use \`hadara init register-doc --path <path> --when <text> --purpose <text> --json\` to preview registration, and add \`--execute\` to update this table.
+## Project-Specific Documents
+
+When adding project-specific specs, contracts, roadmap files, or human/agent operating notes, register them in the Required Reading table before expecting people or agents to rely on them. Each row must explain when to read the document and what decision or workflow boundary it owns.
+
+\`\`\`bash
+hadara init register-doc --path docs/specs/example.md --when "When changing example behavior" --purpose "Example behavior contract" --json
+hadara init register-doc --path docs/specs/example.md --when "When changing example behavior" --purpose "Example behavior contract" --execute --json
+\`\`\`
+
+Use \`--require-exists\` when the document must already exist before registration. Keep local-only notes out of committed required reading unless they are intentionally part of the project handoff.
 
 ## Init Profile Matrix
 
@@ -1093,6 +1102,8 @@ hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
 hadara task finish --task T-XXXX --json
 hadara task finish --task T-XXXX --execute --json
 
+# Finalize Task Capsule docs and tracked state docs before closing.
+
 hadara task ready --task T-XXXX --level done --json
 
 # Optional workflow compression / next action preview:
@@ -1114,14 +1125,27 @@ hadara task audit-close --task T-XXXX --json
 | \`task close\` | Dry-run by default; writes only with \`--execute\` | Bounded to close evidence append. |
 | \`task audit-close\` | Read-only | Verifies close evidence after close. |
 
+Before running \`task ready\` and \`task close\`, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, \`docs/TASK_BOARD.md\`, and tracked state docs such as \`docs/PROJECT_STATE.md\`, \`docs/AGENT_HANDOFF.md\`, and roadmap/slice docs when they apply. After \`task close --execute --json\`, do not edit those close-source documents unless you intend to rerun \`task ready\`, \`task close\`, and \`task audit-close\`. Avoid writing volatile close evidence ids into close-source docs; use stable wording such as "close evidence appended; audit returned closed-valid".
+
 ## Validation
 
 1. Run relevant tests.
 2. Record meaningful evidence in \`EVIDENCE.md\` and \`evidence.jsonl\`.
 3. Preview and execute \`hadara task finish --task <task-id> --json\` and \`hadara task finish --task <task-id> --execute --json\`.
-4. Run \`hadara task ready --task <task-id> --level done --json\` after finish and before close.
-5. Preview and execute \`hadara task close --task <task-id> --json\` and \`hadara task close --task <task-id> --execute --json\`, then run \`hadara task audit-close --task <task-id> --json\`.
-6. Add project-specific integration or deployment smoke checks only after those surfaces exist and are documented for this project.
+4. Finalize Task Capsule docs and tracked state docs before close so the close source hash remains stable.
+5. Run \`hadara task ready --task <task-id> --level done --json\` after finish and before close.
+6. Preview and execute \`hadara task close --task <task-id> --json\` and \`hadara task close --task <task-id> --execute --json\`, then run \`hadara task audit-close --task <task-id> --json\`.
+7. Add project-specific integration or deployment smoke checks only after those surfaces exist and are documented for this project.
+
+\`task ready\` and \`task close\` include done-level Task Capsule validation. Use \`hadara harness validate --task <task-id> --level done --json\` directly when you need to debug capsule format or done-level validation failures.
+
+## Evidence Records
+
+1. Do not hand-edit Task Capsule \`evidence.jsonl\`.
+2. Append evidence through HADARA commands so schema, visibility, and artifact-safety checks run consistently.
+3. Record failed or blocked checks honestly. Do not replace them later with optimistic summaries; add newer evidence that explains the fix or residual risk.
+4. Use \`hadara evidence add-command --task <task-id> --summary <text> --result passed|failed|blocked|unknown --json\` for command results when no artifact file is attached.
+5. Use \`hadara evidence lint --task <task-id> --json\` when evidence drift is suspected or before close if evidence files were touched manually by mistake.
 
 ## Session End
 
@@ -1235,8 +1259,16 @@ function createTestStrategyDoc(): string {
 | 1 | Run the relevant suite from the table above. | Task Capsule \`EVIDENCE.md\` |
 | 2 | Record meaningful evidence in the Task Capsule. | Task Capsule \`EVIDENCE.md\` and \`evidence.jsonl\` |
 | 3 | Preview and execute \`task finish\` to synchronize status bookkeeping. | Task Capsule \`TASK.md\` and \`docs/TASK_BOARD.md\` |
-| 4 | Run \`hadara task ready --task <task-id> --level done --json\` after finish and before close. | Task Capsule \`EVIDENCE.md\` and \`evidence.jsonl\` |
-| 5 | Preview and execute \`task close\`, then run \`task audit-close\`. | Task Capsule close evidence |
+| 4 | Finalize Task Capsule docs and tracked state docs before close. | Task Capsule docs and tracked state docs |
+| 5 | Run \`hadara task ready --task <task-id> --level done --json\` after finish and before close. | Task Capsule \`EVIDENCE.md\` and \`evidence.jsonl\` |
+| 6 | Preview and execute \`task close\`, then run \`task audit-close\`. | Task Capsule close evidence |
+
+## Diagnostic Checks
+
+| Check | Command | When To Use |
+|---|---|---|
+| Task Capsule format | \`hadara harness validate --task <task-id> --level done --json\` | \`task ready\` or \`task close\` reports done-level validation failures. |
+| Evidence index | \`hadara evidence lint --task <task-id> --json\` | Evidence files were touched manually by mistake or evidence drift is suspected. |
 
 ## Special-Case Checks
 
@@ -1293,6 +1325,8 @@ hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
 hadara task finish --task T-XXXX --json
 hadara task finish --task T-XXXX --execute --json
 
+# Finalize Task Capsule docs and tracked state docs before closing.
+
 hadara task ready --task T-XXXX --level done --json
 
 # Optional workflow compression / next action preview:
@@ -1307,6 +1341,10 @@ hadara task audit-close --task T-XXXX --json
 \`task finish\`, \`task ready\`, and \`task close\` are intentionally separate. \`finish\` synchronizes bounded status bookkeeping first. \`ready\` then validates the Done-level state. \`close\` records close evidence after validation succeeds. \`audit-close\` checks the resulting close evidence after the write.
 
 The close model has three separate phases: validation proves readiness, close records the proof, and audit checks the already-recorded close evidence. Close evidence is excluded from the current validation loop because it is appended after validation; requiring it as a same-run precondition would create a fixed-point loop.
+
+\`task ready\` and \`task close\` include done-level Task Capsule validation. Use \`hadara harness validate --task T-XXXX --level done --json\` directly when debugging capsule format, status-history, acceptance, evidence, or handoff validation failures.
+
+Before close, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, \`docs/TASK_BOARD.md\`, and tracked state docs such as \`docs/PROJECT_STATE.md\`, \`docs/AGENT_HANDOFF.md\`, and roadmap/slice docs when they apply. After \`task close --execute --json\`, changing those documents changes the close source hash and requires rerunning \`task ready\`, \`task close\`, and \`task audit-close\`. Do not paste volatile close evidence ids into close-source docs; prefer stable wording such as "close evidence appended; audit returned closed-valid".
 
 ## Command Semantics
 
@@ -1327,10 +1365,12 @@ The close model has three separate phases: validation proves readiness, close re
 - \`task next\` chooses work; it does not create a capsule or infer completion.
 - \`task status\` is an operator console; \`ok: true\` means report generation succeeded, not that the task is ready.
 - \`task ready\` checks readiness; it does not write evidence or status.
+- \`harness validate\` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence.
 - \`task complete\` is a read-only workflow compressor. It may report the next lifecycle command, but it must not execute finish, ready, close, or audit commands.
 - \`evidence add-command\` records an operator-supplied command result; it does not run the command.
 - \`task finish\` may update only the Task Capsule \`TASK.md\` status and matching \`docs/TASK_BOARD.md\` status/path row.
 - \`task close\` may append only close evidence. It must not update status docs, Task Board rows, handoff, Project State, roadmap docs, or arbitrary evidence.
+- After \`task close --execute --json\`, close-source document edits intentionally invalidate the previous close proof. Make those edits before close, or rerun ready/close/audit if the edit is unavoidable.
 - \`task audit-close\` is read-only and should be run after \`task close --execute --json\`.
 
 ## State Documents
@@ -1364,8 +1404,8 @@ function createAgentsDoc(spec: InitProfileSpec): string {
   const ruleRows = [
     ['Task boundary', 'Keep work inside one Task Capsule whenever possible.', 'Active Task Capsule'],
     ['Task creation', 'If no suitable capsule exists, create one with `hadara task create <title>`.', '`docs/TASK_BOARD.md`'],
-    ['Evidence', 'Do not mark work done without evidence.', '`EVIDENCE.md`, `evidence.jsonl`'],
-    ['Task workflow', 'For task workflow commands, follow `docs/TASK_WORKFLOW_COMMANDS.md`: record evidence, preview and execute `task finish`, run `task ready`, preview and execute `task close`, then run `task audit-close`.', 'Task Capsule evidence'],
+    ['Evidence', 'Do not mark work done without evidence. Do not hand-edit `evidence.jsonl`; record failed or blocked checks honestly instead of replacing them with optimistic summaries.', '`EVIDENCE.md`, `evidence.jsonl`'],
+    ['Task workflow', 'For task workflow commands, follow `docs/TASK_WORKFLOW_COMMANDS.md`: record evidence, preview and execute `task finish`, finalize close-source docs, run `task ready`, preview and execute `task close`, then run `task audit-close`.', 'Task Capsule evidence'],
     ['Safety', 'Do not execute dangerous commands without explicit user approval.', 'Task Capsule evidence'],
     ['Secrets', 'Do not write secrets, private logs, or machine-local state into committed files.', 'Changed-file review'],
     ['Store boundary', 'Preserve the portable/project store boundary.', spec.docs.architecture ? '`.gitignore`, `docs/ARCHITECTURE.md`' : '`.gitignore`'],
@@ -1409,6 +1449,22 @@ function createGitignoreDoc(): string {
 dist/
 coverage/
 *.log
+
+# Python and test artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+*.db
+*.sqlite
+*.sqlite3
 
 # HADARA local/private state
 .hadara/local/

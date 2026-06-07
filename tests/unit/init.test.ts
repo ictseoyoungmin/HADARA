@@ -107,6 +107,7 @@ describe('init profiles', () => {
     expect(agents).toContain('docs/IMPLEMENTATION_SOP.md');
     expect(agents).toContain('docs/TASK_WORKFLOW_COMMANDS.md');
     expect(agents).toContain('For task workflow commands, follow `docs/TASK_WORKFLOW_COMMANDS.md`');
+    expect(agents).toContain('Do not hand-edit `evidence.jsonl`; record failed or blocked checks honestly');
     expect(agents).toContain('Project-specific registered docs');
     expectNoGenericOptionalIntegrationDefaults(agents);
 
@@ -121,7 +122,7 @@ describe('init profiles', () => {
     expect(sop).not.toContain('Core session docs only');
     expect(sop).not.toContain('SOP required reading references only core docs plus active Task Capsule docs.');
     expect(sop).toContain('## Scaffold Document Structure');
-    expect(sop).toContain('| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Standard Task Workflow Loop, Validation, Session End, and Handoff Compaction sections. |');
+    expect(sop).toContain('| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Project-Specific Documents, Init Profile Matrix, Scaffold Document Structure, Implementation, Standard Task Workflow Loop, Validation, Evidence Records, Session End, and Handoff Compaction sections. |');
     expect(sop).toContain('| `docs/TASK_WORKFLOW_COMMANDS.md` | Standard Task Loop, Command Semantics, Non-Overlap Rules, and State Documents sections. |');
     expect(sop).toContain('## Standard Task Workflow Loop');
     expect(sop).toContain('# If a matching capsule already exists:');
@@ -131,10 +132,23 @@ describe('init profiles', () => {
     expect(sop).toContain('hadara task finish --task T-XXXX --execute --json');
     expect(sop).toContain('hadara task close --task T-XXXX --execute --json');
     expect(sop).toContain('hadara task audit-close --task T-XXXX --json');
+    expect(sop).toContain('# Finalize Task Capsule docs and tracked state docs before closing.');
     expect(sop.indexOf('hadara task finish --task T-XXXX --execute --json')).toBeLessThan(sop.indexOf('hadara task ready --task T-XXXX --level done --json'));
     expect(sop.indexOf('hadara task ready --task T-XXXX --level done --json')).toBeLessThan(sop.indexOf('hadara task close --task T-XXXX --json'));
+    expect(sop).toContain('Before running `task ready` and `task close`, finish all close-source edits');
+    expect(sop).toContain('After `task close --execute --json`, do not edit those close-source documents unless you intend to rerun `task ready`, `task close`, and `task audit-close`.');
+    expect(sop).toContain('Avoid writing volatile close evidence ids into close-source docs');
     expect(sop).toContain('Run `hadara task ready --task <task-id> --level done --json` after finish and before close.');
+    expect(sop).toContain('Finalize Task Capsule docs and tracked state docs before close so the close source hash remains stable.');
     expect(sop).not.toContain('Run `hadara harness validate --task <task-id> --json`.');
+    expect(sop).toContain('## Project-Specific Documents');
+    expect(sop).toContain('human/agent operating notes');
+    expect(sop).toContain('Use `--require-exists` when the document must already exist before registration.');
+    expect(sop).toContain('## Evidence Records');
+    expect(sop).toContain('Do not hand-edit Task Capsule `evidence.jsonl`.');
+    expect(sop).toContain('Record failed or blocked checks honestly.');
+    expect(sop).toContain('Use `hadara evidence lint --task <task-id> --json` when evidence drift is suspected');
+    expect(sop).toContain('Use `hadara harness validate --task <task-id> --level done --json` directly when you need to debug capsule format or done-level validation failures.');
     expect(sop).toContain('| `task status` | Read-only | `ok` means report generation succeeded; readiness is in `state.ready`, `summary.blockers`, and `issues`. |');
     expect(sop).toContain('`docs/ARCHITECTURE.md`');
     expect(sop).toContain('`docs/DEVELOPMENT_SLICES.md`');
@@ -143,9 +157,9 @@ describe('init profiles', () => {
     expect(sop).not.toContain('`docs/REFACTOR_LOG.md`');
     expect(sop).not.toContain('`docs/ROADMAP.md`');
     expect(sop).toContain('## Handoff Compaction');
-    expect(sop).toContain('When adding project-specific specs, contracts, or roadmap files, add them to this table');
-    expect(sop).toContain('hadara init register-doc --path <path> --when <text> --purpose <text> --json');
-    expect(sop).toContain('add `--execute` to update this table');
+    expect(sop).toContain('When adding project-specific specs, contracts, roadmap files, or human/agent operating notes');
+    expect(sop).toContain('hadara init register-doc --path docs/specs/example.md --when "When changing example behavior" --purpose "Example behavior contract" --json');
+    expect(sop).toContain('hadara init register-doc --path docs/specs/example.md --when "When changing example behavior" --purpose "Example behavior contract" --execute --json');
     expect(sop).not.toContain('A future HADARA command may automate this registration');
     expectNoGenericOptionalIntegrationDefaults(sop);
 
@@ -159,10 +173,17 @@ describe('init profiles', () => {
     expect(workflow).toContain('`ready` then validates the Done-level state.');
     expect(workflow).toContain('hadara task complete --task T-XXXX --json');
     expect(workflow).toContain('| `task complete` | Read-only | Summarizes the current completion stage and next command; it does not execute lifecycle writes. |');
+    expect(workflow).toContain('# Finalize Task Capsule docs and tracked state docs before closing.');
     expect(workflow.indexOf('hadara task finish --task T-XXXX --execute --json')).toBeLessThan(workflow.indexOf('hadara task ready --task T-XXXX --level done --json'));
     expect(workflow.indexOf('hadara task ready --task T-XXXX --level done --json')).toBeLessThan(workflow.indexOf('hadara task close --task T-XXXX --json'));
     expect(workflow).toContain('| `task close` | Dry-run by default; writes only with `--execute` | Appends only canonical close evidence after close preconditions pass. |');
     expect(workflow).toContain('after `task close --execute --json`');
+    expect(workflow).toContain('Before close, finish all close-source edits');
+    expect(workflow).toContain('changing those documents changes the close source hash and requires rerunning `task ready`, `task close`, and `task audit-close`');
+    expect(workflow).toContain('Do not paste volatile close evidence ids into close-source docs');
+    expect(workflow).toContain('After `task close --execute --json`, close-source document edits intentionally invalidate the previous close proof.');
+    expect(workflow).toContain('Use `hadara harness validate --task T-XXXX --level done --json` directly when debugging capsule format');
+    expect(workflow).toContain('`harness validate` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence.');
     expect(workflow).toContain('`task finish --execute --json` deliberately does not update broad prose state.');
     expectNoGenericOptionalIntegrationDefaults(workflow);
 
@@ -171,9 +192,12 @@ describe('init profiles', () => {
     expect(testStrategy).toContain('| Suite | Command | Purpose | Required For Done |');
     expect(testStrategy).toContain('| Step | Check | Evidence Location |');
     expect(testStrategy).toContain('Preview and execute `task finish` to synchronize status bookkeeping.');
+    expect(testStrategy).toContain('Finalize Task Capsule docs and tracked state docs before close.');
     expect(testStrategy).toContain('Run `hadara task ready --task <task-id> --level done --json` after finish and before close.');
     expect(testStrategy).toContain('Preview and execute `task close`, then run `task audit-close`.');
-    expect(testStrategy).not.toContain('Run `hadara harness validate --task <task-id> --json`.');
+    expect(testStrategy).toContain('## Diagnostic Checks');
+    expect(testStrategy).toContain('| Task Capsule format | `hadara harness validate --task <task-id> --level done --json` | `task ready` or `task close` reports done-level validation failures. |');
+    expect(testStrategy).toContain('| Evidence index | `hadara evidence lint --task <task-id> --json` | Evidence files were touched manually by mistake or evidence drift is suspected. |');
     expect(testStrategy).toContain('## Special-Case Checks');
     expect(testStrategy).toContain('| Security smoke | The project has documented security boundaries or secret-handling behavior. |');
     expect(testStrategy).not.toContain('Run unit, contract, harness, security, and release smoke tests.');
@@ -278,6 +302,9 @@ describe('init profiles', () => {
     const gitignore = fs.readFileSync(path.join(root, '.gitignore'), 'utf8');
     expect(gitignore).toContain('.hadara/local/');
     expect(gitignore).toContain('node_modules/');
+    expect(gitignore).toContain('__pycache__/');
+    expect(gitignore).toContain('.venv/');
+    expect(gitignore).toContain('*.sqlite3');
     expect(gitignore).toContain('.env');
     expect(gitignore).not.toContain('\ndata/\n');
     expect(fs.existsSync(path.join(root, '.hadara', 'local', 'portable'))).toBe(false);
@@ -556,7 +583,7 @@ describe('init profiles', () => {
     expect(sop).toContain('Run `hadara task ready --task <task-id> --level done --json` after finish and before close.');
     expect(sop).not.toContain('Run `hadara harness validate --task <task-id> --json` before marking a Task Capsule Done.');
     expect(sop).toContain('## Scaffold Document Structure');
-    expect(sop).toContain('| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Init Profile Matrix, Scaffold Document Structure, Implementation, Standard Task Workflow Loop, Validation, Session End, and Handoff Compaction sections. |');
+    expect(sop).toContain('| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Project-Specific Documents, Init Profile Matrix, Scaffold Document Structure, Implementation, Standard Task Workflow Loop, Validation, Evidence Records, Session End, and Handoff Compaction sections. |');
     expect(sop).toContain('| `docs/TASK_WORKFLOW_COMMANDS.md` | Standard Task Loop, Command Semantics, Non-Overlap Rules, and State Documents sections. |');
     expect(sop).toContain('docs/SECURITY_MODEL.md');
     expect(sop).toContain('docs/ROADMAP.md');

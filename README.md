@@ -155,6 +155,8 @@ hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
 hadara task finish --task T-XXXX --json
 hadara task finish --task T-XXXX --execute --json
 
+# Finalize Task Capsule docs and tracked state docs before closing.
+
 hadara task ready --task T-XXXX --level done --json
 
 # Optional workflow compression / next action preview:
@@ -175,6 +177,8 @@ Important distinctions:
 | `task finish --execute` | Writes only bounded status bookkeeping in `TASK.md` and `docs/TASK_BOARD.md`. |
 | `task close --execute` | Appends close evidence only. |
 | `task audit-close` | Read-only close proof audit. |
+
+Before `task close --execute`, finish Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, Task Board updates, and tracked state docs. After close execute, changing those close-source docs intentionally invalidates the previous close proof and requires rerunning ready/close/audit. Use stable wording for close results instead of pasting volatile close evidence ids into close-source docs.
 
 ## Initialize a Project
 

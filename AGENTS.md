@@ -30,8 +30,9 @@ This repository must be developed using the HADARA protocol.
 - If no suitable Task Capsule exists, create one before implementation with `hadara task create <title>` by default.
 - If host Node/npm is unavailable, use the reusable Docker workflow in `docs/IMPLEMENTATION_SOP.md` to run the HADARA CLI against the workspace.
 - For HADARA-dev CLI development, prefer the reusable `hadara-dev` Docker workflow over host-local Node/npm. After changing CLI code, build in Docker and refresh `/workspace/dist` from the Docker build output before running built-CLI smokes or treating the workspace CLI as current. Do not assume the container-global `/usr/local/bin/hadara` is the latest development build.
-- Do not mark work done without evidence.
-- For task workflow commands, follow `docs/TASK_WORKFLOW_COMMANDS.md`: start from `task next`/`task status`, record evidence, run `task ready`, preview and execute `task finish`, preview and execute `task close`, then run `task audit-close`.
+- Do not mark work done without evidence. Do not hand-edit `evidence.jsonl`; record failed or blocked checks honestly instead of replacing them with optimistic summaries.
+- For task workflow commands, follow `docs/TASK_WORKFLOW_COMMANDS.md`: start from `task next`/`task status`, record evidence, preview and execute `task finish`, finalize close-source docs, run `task ready`, preview and execute `task close`, then run `task audit-close`.
+- Before `task close --execute`, finish Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, Task Board updates, and tracked state docs. After close execute, do not edit those close-source docs unless you intentionally rerun ready/close/audit; avoid writing volatile close evidence ids into close-source docs.
 - Do not execute dangerous commands.
 - Do not write secrets, private logs, or machine-local state into committed files.
 - Preserve the portable/project store boundary.
