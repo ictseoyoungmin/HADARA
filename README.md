@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img alt="Release candidate" src="https://img.shields.io/badge/release-0.2.0--rc.1-blue">
+  <img alt="Release candidate" src="https://img.shields.io/badge/release-0.2.0--rc.2-blue">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>
@@ -23,10 +23,10 @@ This repository is both the HADARA source checkout and the HADARA protocol works
 The current source checkout targets:
 
 ```text
-hadara@0.2.0-rc.1
+hadara@0.2.0-rc.2
 ```
 
-T-0275 refreshes package smoke, clean-checkout smoke, release artifact, release dry-run, and publish dry-run evidence for `0.2.0-rc.1`. T-0269 prepared the previous `0.2.0-rc.0` publish path, but rc.1 supersedes it after the installed-package recycle fixes.
+T-0282 refreshes the npm release-candidate source state for `0.2.0-rc.2` after the init scaffold protocol guidance follow-up. T-0275 published the previous `0.2.0-rc.1` RC after the installed-package recycle fixes.
 
 Current publish boundaries:
 
@@ -35,7 +35,8 @@ Current publish boundaries:
 | npm package | Primary release target. |
 | `hadara@0.1.0-rc.0` | Published first RC. |
 | `hadara@0.2.0-rc.0` | Superseded internal publish candidate after recycle findings. |
-| `hadara@0.2.0-rc.1` | Current published npm RC and source version. |
+| `hadara@0.2.0-rc.1` | Current published npm RC until rc.2 is operator-published. |
+| `hadara@0.2.0-rc.2` | Current source version and next npm RC target. |
 | GitHub Release | Secondary target, still approval-gated. |
 | Docker image | Deferred. |
 | PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
@@ -50,7 +51,7 @@ Requires Node.js 22.
 Install the current RC:
 
 ```bash
-npm install -g hadara@0.2.0-rc.1
+npm install -g hadara@0.2.0-rc.2
 hadara doctor --json
 hadara task list --json
 hadara tools list --json
@@ -59,11 +60,11 @@ hadara tools list --json
 Run without a global install:
 
 ```bash
-npx hadara@0.2.0-rc.1 doctor --json
-npx hadara@0.2.0-rc.1 tools list --json
+npx hadara@0.2.0-rc.2 doctor --json
+npx hadara@0.2.0-rc.2 tools list --json
 ```
 
-Previous published RC: `hadara@0.1.0-rc.0` remains available on npm for comparison or rollback, but new installs should use the current RC.
+Previous published RCs: `hadara@0.2.0-rc.1` and `hadara@0.1.0-rc.0` remain available on npm for comparison or rollback, but new installs should use the current RC after the operator publishes it.
 
 ## What HADARA Gives You
 

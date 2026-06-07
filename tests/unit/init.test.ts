@@ -598,7 +598,8 @@ describe('init profiles', () => {
     expect(readme).toContain('hadara init --profile basic');
     expect(readme).toContain('hadara init --profile governed');
     expect(readme).toContain('| `basic` | Small project, only task/handoff discipline needed. |');
-    expect(readme).toContain('| `hadara@0.2.0-rc.1` | Current published npm RC and source version. |');
+    expect(readme).toContain('| `hadara@0.2.0-rc.1` | Current published npm RC until rc.2 is operator-published. |');
+    expect(readme).toContain('| `hadara@0.2.0-rc.2` | Current source version and next npm RC target. |');
     expect(readme).toContain('| PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |');
     expect(readme).not.toContain('Current source and publish-candidate version.');
     expect(readme).not.toContain('once it is published');

@@ -1,5 +1,22 @@
 # RELEASE_NOTES
 
+## 0.2.0-rc.2
+
+Release candidate prepared for npm after the init scaffold lifecycle/protocol guidance hardening from T-0279 through T-0281.
+
+Highlights:
+
+- Updates generated `hadara init` docs so new projects get current task workflow guidance, evidence integrity rules, project-specific document registration guidance, and direct `harness validate --level done` diagnostics.
+- Adds common multi-language local artifact hygiene to generated `.gitignore`, including Python virtualenv/cache/SQLite patterns needed by FastAPI/pytest-style dogfooding projects.
+- Clarifies close-source stability before `task close` so agents avoid repeated close/audit churn from post-close documentation edits.
+- Refreshes npm package metadata, README install examples, release readiness docs, and manual publish helper examples for `hadara@0.2.0-rc.2`.
+
+Boundaries:
+
+- npm publish remains operator-confirmed through `scripts/release/manual-publish-rc.sh T-0282 --execute`.
+- The Python bridge remains the separately published preview package `hadara==0.2.0rc1` and is not changed by this npm RC.
+- GitHub Release creation remains optional; Docker image publishing, installer execution, PyPI publishing, and MCP release/package execution remain deferred unless a future capsule explicitly enables them.
+
 ## 0.2.0-rc.1
 
 Release candidate published to npm after the npm-installed recycle fixes from T-0272 through T-0274 and publish-readiness refresh in T-0275.

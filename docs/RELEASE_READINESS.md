@@ -10,11 +10,12 @@ Current release-candidate metadata mode:
 
 - Package name decision: `hadara`.
 - npm registry observation: `hadara@0.1.0-rc.0` is published; recheck registry state immediately before any later publish.
-- Current version is `0.2.0-rc.1`.
-- Previous published release candidate is `0.1.0-rc.0`.
+- Current version is `0.2.0-rc.2`.
+- Previous published release candidate is `0.2.0-rc.1`.
 - T-0269 pre-publish dry-run recheck passed for `0.2.0-rc.0`, but `NPM_TOKEN` was missing and no publish mutation was executed; T-0275 supersedes that candidate with `0.2.0-rc.1` after recycle fixes.
-- T-0275 refreshed publish-readiness evidence for `hadara@0.2.0-rc.1`: focused Docker tests passed 8 files / 73 tests plus feature-smoke 1 file / 3 tests; Docker full check passed 100 files / 680 tests and refreshed `dist`; release artifact, package smoke, clean-checkout smoke, strict release gate, release dry-run, and release publish dry-run passed without publish/GitHub/Docker/PyPI mutation; a read-only npm registry check returned E404 no match for `hadara@0.2.0-rc.1`.
-- Current operator publish path: after final T-0275 state is committed and the operator has authenticated with `npm login --registry=https://registry.npmjs.org`, run `scripts/release/manual-publish-rc.sh T-0275 --execute` and type `publish` only after the helper's own checks pass.
+- T-0275 refreshed publish-readiness evidence for `hadara@0.2.0-rc.1` and the operator published it to npm; `npm view hadara@0.2.0-rc.1 version --registry=https://registry.npmjs.org` returned `0.2.0-rc.1`.
+- T-0282 refreshes publish-readiness for `hadara@0.2.0-rc.2` after the init scaffold protocol guidance follow-up: package metadata/docs/helper examples target rc2; Docker `npm run dev:docker-sync-build` passed 100 files / 681 tests and refreshed `dist`; built CLI version smoke reported `0.2.0-rc.2`; strict release gate passed; rc2 package smoke and clean-checkout smoke evidence passed; `npm pack --dry-run --json` produced rc2 tarball metadata; read-only `npm view hadara@0.2.0-rc.2 version --registry=https://registry.npmjs.org` returned E404 no match. Release dry-run currently has one expected blocker because release-artifact evidence still points to T-0275 rc1; the final helper run must regenerate release artifact evidence from a clean committed rc2 worktree before any npm mutation.
+- Current operator publish path: after final T-0282 state is committed and the operator has authenticated with `npm login --registry=https://registry.npmjs.org`, run `scripts/release/manual-publish-rc.sh T-0282 --execute` and type `publish` only after the helper's own checks pass.
 - README now includes a top image from `docs/assets/hadara_sub_right_name.png`; because package `files` currently excludes `docs/assets/`, publish readiness uses the GitHub raw image URL. T-0275 verified `docs/assets/hadara_sub_right_name.png` is tracked and the raw URL returned HTTP 200.
 - Current package is `private: false`.
 - Current package metadata includes `"license": "MIT"`.
@@ -23,7 +24,7 @@ Current release-candidate metadata mode:
 - Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability.
 - Release-candidate metadata mode: version `0.x.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present.
 - Scoped fallback decision: do not silently switch names; choose and document an explicit scope in a later release-target capsule if `hadara` is unavailable.
-- Version policy: first release-candidate target was `0.1.0-rc.0`; the current release-candidate evidence refresh target is `0.2.0-rc.1`. Stable release targets remain approval-gated and must be set in a later release capsule.
+- Version policy: first release-candidate target was `0.1.0-rc.0`; the current release-candidate evidence refresh target is `0.2.0-rc.2`. Stable release targets remain approval-gated and must be set in a later release capsule.
 - T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist.
 - Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist.
 - Do not add `files` entries for missing installer or portable paths in T-0127.
