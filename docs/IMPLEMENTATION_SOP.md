@@ -118,13 +118,14 @@ hadara task status --task T-XXXX --json
 # Do the scoped work.
 
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
+
+hadara task finish --task T-XXXX --json
+hadara task finish --task T-XXXX --execute --json
+
 hadara task ready --task T-XXXX --level done --json
 
 # Optional workflow compression / next action preview:
 hadara task complete --task T-XXXX --json
-
-hadara task finish --task T-XXXX --json
-hadara task finish --task T-XXXX --execute --json
 
 hadara task close --task T-XXXX --json
 hadara task close --task T-XXXX --execute --json
@@ -222,9 +223,12 @@ Then run built-CLI smokes through `node /workspace/dist/cli/main.js ... --projec
 
 1. Run the checks named in the active Task Capsule `TESTS.md`.
 2. Use validation constraints from `docs/AGENT_HANDOFF.md`; for example, prefer Docker-based Node/npm validation when the handoff records host Node/npm problems.
-3. Run `hadara harness validate --task <task-id> --json` before marking a Task Capsule Done.
-4. Add security, release, install, provider, MCP, dashboard, or deployment smoke checks only after those surfaces exist and are documented for this project.
-5. If a required check cannot run, record the reason and residual risk in `EVIDENCE.md`, `evidence.jsonl`, and `HANDOFF.md`.
+3. Record meaningful validation evidence in `EVIDENCE.md` and `evidence.jsonl`.
+4. Preview and execute `task finish` to synchronize bounded status bookkeeping.
+5. Run `hadara task ready --task <task-id> --level done --json` after finish and before close.
+6. Preview and execute `task close`, then run `task audit-close` using the Standard Task Workflow Loop.
+7. Add security, release, install, provider, MCP, dashboard, or deployment smoke checks only after those surfaces exist and are documented for this project.
+8. If a required check cannot run, record the reason and residual risk in `EVIDENCE.md`, `evidence.jsonl`, and `HANDOFF.md`.
 
 ## Evidence Records
 

@@ -5,6 +5,10 @@ This runbook covers the HADARA Python bridge package under `python/`.
 The package name is `hadara`, the Python bridge version is `0.2.0rc1`, and the
 official runtime remains the npm package `hadara@0.2.0-rc.1`.
 
+Current rc.1 status: `hadara==0.2.0rc1` has been published to both TestPyPI and
+PyPI through this Trusted Publisher workflow. Keep the workflow manual-only for
+future Python bridge releases.
+
 ## Boundary
 
 Trusted Publishing uses GitHub Actions OIDC. Do not create, store, or commit a
@@ -21,7 +25,7 @@ publication.
 | Workflow file | `.github/workflows/python-publish.yml` |
 | Workflow filename for PyPI | `python-publish.yml` |
 | GitHub owner | `ictseoyoungmin` |
-| GitHub repository | `HADARA-dev` |
+| GitHub repository | `HADARA` |
 | Package directory | `python/` |
 | Package name | `hadara` |
 | Python package version | `0.2.0rc1` |
@@ -40,9 +44,10 @@ job fails if `python/pyproject.toml` contains a different version.
 
 ## PyPI Setup
 
-Because `hadara` is not published on PyPI yet, configure a pending publisher on
-PyPI before the first real publish. A pending publisher does not reserve the
-project name until it is used for the first publish.
+For the first real publish of a future new project, configure a pending
+publisher on PyPI before publishing. After the project exists, manage Trusted
+Publishers from the PyPI project's Publishing page instead of using a pending
+publisher.
 
 On PyPI:
 
@@ -51,7 +56,7 @@ On PyPI:
 | Project name | `hadara` |
 | Publisher | GitHub Actions |
 | Organization or user | `ictseoyoungmin` |
-| Repository | `HADARA-dev` |
+| Repository | `HADARA` |
 | Workflow filename | `python-publish.yml` |
 | Environment name | `pypi` |
 | Allowed actions | Select package publishing/upload. |
@@ -70,7 +75,7 @@ On TestPyPI:
 | Project name | `hadara` |
 | Publisher | GitHub Actions |
 | Organization or user | `ictseoyoungmin` |
-| Repository | `HADARA-dev` |
+| Repository | `HADARA` |
 | Workflow filename | `python-publish.yml` |
 | Environment name | `testpypi` |
 | Allowed actions | Select package publishing/upload. |
@@ -81,7 +86,7 @@ than `pypi`, but it should still be explicit.
 ## Operator Flow
 
 1. Ensure the workflow file exists on the branch you will run from.
-2. Configure the pending publisher on TestPyPI using the exact values above.
+2. Ensure the TestPyPI project Trusted Publisher uses the exact values above.
 3. In GitHub Actions, run `Python Publish` with:
    - `target`: `testpypi`
    - `expected_version`: `0.2.0rc1`
@@ -93,7 +98,7 @@ hadara --help
 hadara doctor --json
 ```
 
-5. Configure the pending publisher on PyPI using the exact values above.
+5. Ensure the PyPI project Trusted Publisher uses the exact values above.
 6. In GitHub Actions, run `Python Publish` with:
    - `target`: `pypi`
    - `expected_version`: `0.2.0rc1`

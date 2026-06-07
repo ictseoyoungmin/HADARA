@@ -1153,7 +1153,7 @@ T-0147 through T-0150 converted `hadara init` from a HADARA-dev-shaped bootstrap
 
 | Profile | Scale | Generated Doc Level | Required Behavior |
 |---|---|---|---|
-| `basic` | Small | Core session docs only | Generates `AGENTS.md`, `.gitignore`, `PROJECT_STATE`, `AGENT_HANDOFF`, `TASK_BOARD`, and `IMPLEMENTATION_SOP`; generated SOP/AGENTS do not reference standard/governed-only docs. |
+| `basic` | Small | Core session docs plus task workflow commands | Generates `AGENTS.md`, `.gitignore`, `PROJECT_STATE`, `AGENT_HANDOFF`, `TASK_BOARD`, `IMPLEMENTATION_SOP`, and `TASK_WORKFLOW_COMMANDS`; generated SOP/AGENTS do not reference standard/governed-only docs. |
 | `standard` | Medium, default | Core plus planning/architecture/decision/validation docs | Generates architecture, development slices, decisions, and test strategy docs; does not assume optional integration surfaces. |
 | `governed` | Heavy | Standard plus governance docs | Adds security model, refactor log, and roadmap docs; project-specific contracts still require explicit Required Reading registration. |
 

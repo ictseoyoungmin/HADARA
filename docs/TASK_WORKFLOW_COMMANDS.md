@@ -19,13 +19,14 @@ hadara task status --task T-XXXX --json
 # Do the scoped work.
 
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
+
+hadara task finish --task T-XXXX --json
+hadara task finish --task T-XXXX --execute --json
+
 hadara task ready --task T-XXXX --level done --json
 
 # Optional workflow compression / next action preview:
 hadara task complete --task T-XXXX --json
-
-hadara task finish --task T-XXXX --json
-hadara task finish --task T-XXXX --execute --json
 
 hadara task close --task T-XXXX --json
 hadara task close --task T-XXXX --execute --json
@@ -33,7 +34,7 @@ hadara task close --task T-XXXX --execute --json
 hadara task audit-close --task T-XXXX --json
 ```
 
-`task finish` and `task close` are intentionally separate. `finish` synchronizes bounded status bookkeeping. `close` records close evidence after validation succeeds. `audit-close` checks the resulting close evidence after the write.
+`task finish`, `task ready`, and `task close` are intentionally separate. `finish` synchronizes bounded status bookkeeping first. `ready` then validates the Done-level state. `close` records close evidence after validation succeeds. `audit-close` checks the resulting close evidence after the write.
 
 The close model has three separate phases: validation proves readiness, close records the proof, and audit checks the already-recorded close evidence. Close evidence is excluded from the current validation loop because it is appended after validation; requiring it as a same-run precondition would create a fixed-point loop.
 
@@ -78,9 +79,9 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 | `hadara handoff suggest --task T-XXXX --json` | Suggest coordinator-reviewed handoff section fragments for a task. | Read-only report. | No. | Suggestion report generated without blocking issues. | Task-style failures use 6. |
 | `hadara dev docker-check --focused tests/unit/foo.test.ts --sync-dist --before-hash sha256:... --json` | Run Docker temp-copy validation with optional focused tests and explicit dist sync. | Execute report. | Runs Docker; may write workspace `dist` only with `--sync-dist` and a matching reviewed before-hash. | Requested Docker validation completed and any requested dist sync freshness guard passed. | Task-style failures use 6. |
 | `hadara evidence add-command --task T-XXXX --summary "..." --result passed --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence. | Evidence append succeeded. | Evidence/task-style failures use 6. |
-| `hadara task ready --task T-XXXX --level done --json` | Readiness preflight before finish/close. | Read-only report. | No. | Requested readiness level passed. | Task-style failures use 6. |
 | `hadara task finish --task T-XXXX --json` | Preview bounded status bookkeeping for `TASK.md` and `docs/TASK_BOARD.md`. | Dry-run report. | No. | Finish plan has no blocking issues. | Task-style failures use 6. |
 | `hadara task finish --task T-XXXX --execute --json` | Apply bounded status bookkeeping for `TASK.md` and `docs/TASK_BOARD.md`. | Execute after dry-run review. | Yes, bounded to those files. | Planned bookkeeping writes succeeded or no write was needed. | Task-style failures use 6. |
+| `hadara task ready --task T-XXXX --level done --json` | Readiness preflight after finish and before close. | Read-only report. | No. | Requested readiness level passed. | Task-style failures use 6. |
 | `hadara task close --task T-XXXX --json` | Preview close validation and close-evidence append. | Dry-run report. | No. | Close preconditions passed. | Task-style failures use 6. |
 | `hadara task close --task T-XXXX --execute --json` | Append canonical close evidence after close preconditions pass. | Execute after dry-run review. | Yes, close evidence only. | Close evidence append succeeded. | Task-style failures use 6. |
 | `hadara task audit-close --task T-XXXX --json` | Verify close evidence after close. | Read-only report. | No. | Valid close evidence exists and no audit blockers remain. | Task-style failures use 6. |

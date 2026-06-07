@@ -280,3 +280,4 @@
 | T-0277 | Python Trusted Publisher Workflow | Done | tasks/T-0277-python-trusted-publisher-workflow | |
 | T-0278 | Python Bridge Version Alignment for rc.1 | Done | tasks/T-0278-python-bridge-version-alignment-for-rc-1 | |
 | T-0279 | Init Scaffold Lifecycle Docs Alignment | Done | tasks/T-0279-init-scaffold-lifecycle-docs-alignment | |
+| T-0280 | Init scaffold lifecycle wording follow-up | Done | tasks/T-0280-init-scaffold-lifecycle-wording-follow-up | |

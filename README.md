@@ -1,7 +1,7 @@
 # HADARA
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/ictseoyoungmin/HADARA-dev/main/docs/assets/hadara_sub_right_name.png" alt="HADARA" width="720">
+  <img src="https://raw.githubusercontent.com/ictseoyoungmin/HADARA/main/docs/assets/hadara_sub_right_name.png" alt="HADARA" width="720">
 </p>
 
 <p align="center">
@@ -35,10 +35,10 @@ Current publish boundaries:
 | npm package | Primary release target. |
 | `hadara@0.1.0-rc.0` | Published first RC. |
 | `hadara@0.2.0-rc.0` | Superseded internal publish candidate after recycle findings. |
-| `hadara@0.2.0-rc.1` | Current source and publish-candidate version. |
+| `hadara@0.2.0-rc.1` | Current published npm RC and source version. |
 | GitHub Release | Secondary target, still approval-gated. |
 | Docker image | Deferred. |
-| PyPI/Python package | Advisory preview only. |
+| PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
 | Installer scripts / USB launchers | Deferred. |
 
 No release command should publish, create a GitHub Release, build Docker images, upload artifacts, or load token values unless an operator explicitly approves the mutation path for the active release capsule.
@@ -63,7 +63,7 @@ npx hadara@0.2.0-rc.1 doctor --json
 npx hadara@0.2.0-rc.1 tools list --json
 ```
 
-Previous published RC: `hadara@0.1.0-rc.0` remains available on npm for comparison or rollback, but new installs should use the current RC once it is published.
+Previous published RC: `hadara@0.1.0-rc.0` remains available on npm for comparison or rollback, but new installs should use the current RC.
 
 ## What HADARA Gives You
 
@@ -99,9 +99,9 @@ Task workflow:
 hadara task next --json
 hadara task create "implement a focused change" --json
 hadara task status --task T-0001 --json
-hadara task ready --task T-0001 --level done --json
 hadara task finish --task T-0001 --json
 hadara task finish --task T-0001 --execute --json
+hadara task ready --task T-0001 --level done --json
 hadara task close --task T-0001 --json
 hadara task close --task T-0001 --execute --json
 hadara task audit-close --task T-0001 --json
@@ -151,13 +151,14 @@ hadara task status --task T-XXXX --json
 # Do the scoped work.
 
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
+
+hadara task finish --task T-XXXX --json
+hadara task finish --task T-XXXX --execute --json
+
 hadara task ready --task T-XXXX --level done --json
 
 # Optional workflow compression / next action preview:
 hadara task complete --task T-XXXX --json
-
-hadara task finish --task T-XXXX --json
-hadara task finish --task T-XXXX --execute --json
 
 hadara task close --task T-XXXX --json
 hadara task close --task T-XXXX --execute --json
@@ -183,6 +184,8 @@ hadara init --profile basic
 hadara init --profile standard
 hadara init --profile governed
 ```
+
+Every profile generates `docs/TASK_WORKFLOW_COMMANDS.md` so fresh projects get the current evidence, ready, finish, close, and audit-close loop.
 
 | Profile | Use When |
 |---|---|

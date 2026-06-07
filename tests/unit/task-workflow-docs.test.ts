@@ -17,9 +17,10 @@ describe('task workflow command semantics docs', () => {
       'hadara task next --json',
       'hadara task status --task T-XXXX --json',
       'hadara evidence add-command --task T-XXXX --summary "..." --result passed --json',
-      'hadara task ready --task T-XXXX --level done --json',
       'hadara task finish --task T-XXXX --json',
       'hadara task finish --task T-XXXX --execute --json',
+      'hadara task ready --task T-XXXX --level done --json',
+      'hadara task complete --task T-XXXX --json',
       'hadara task close --task T-XXXX --json',
       'hadara task close --task T-XXXX --execute --json',
       'hadara task audit-close --task T-XXXX --json',
@@ -29,6 +30,11 @@ describe('task workflow command semantics docs', () => {
       expect(workflow).toContain(command);
       expect(sop).toContain(command);
       expect(readme).toContain(command);
+    }
+
+    for (const doc of [workflow, sop, readme]) {
+      expect(doc.indexOf('hadara task finish --task T-XXXX --execute --json')).toBeLessThan(doc.indexOf('hadara task ready --task T-XXXX --level done --json'));
+      expect(doc.indexOf('hadara task ready --task T-XXXX --level done --json')).toBeLessThan(doc.indexOf('hadara task close --task T-XXXX --json'));
     }
   });
 
@@ -43,6 +49,7 @@ describe('task workflow command semantics docs', () => {
       'evidence add-command',
       'task ready',
       'task finish',
+      'task complete',
       'task close',
       'task audit-close',
     ]) {
@@ -54,6 +61,7 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('| `hadara task status --task T-XXXX --json` | Operator console projection for one task. | Read-only report. | No. |');
     expect(workflow).toContain('| `hadara evidence add-command --task T-XXXX --summary "..." --result passed --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence. |');
     expect(workflow).toContain('| `hadara task finish --task T-XXXX --execute --json` | Apply bounded status bookkeeping for `TASK.md` and `docs/TASK_BOARD.md`. | Execute after dry-run review. | Yes, bounded to those files. |');
+    expect(workflow).toContain('| `hadara task ready --task T-XXXX --level done --json` | Readiness preflight after finish and before close. | Read-only report. | No. |');
     expect(workflow).toContain('| `hadara task close --task T-XXXX --execute --json` | Append canonical close evidence after close preconditions pass. | Execute after dry-run review. | Yes, close evidence only. |');
     expect(workflow).toContain('`task status` is an operator console; `ok: true` means report generation succeeded.');
     expect(sop).toContain('| `task status` | Read-only | `ok` means report generation succeeded; readiness is in `state.ready`, `summary.blockers`, and `issues`. |');
