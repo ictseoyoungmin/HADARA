@@ -33,6 +33,7 @@ This repository operates as the `governed` HADARA profile because it has long-li
 | `docs/SECURITY_MODEL.md` | Security, secret, permission, or evidence-safety work | Project security invariants and special checks. |
 | `docs/REFACTOR_LOG.md` | Refactor, migration, removal, or replacement work | Project-level refactor history. |
 | `docs/ROADMAP.md` | Roadmap, milestone, release, or scope planning | Longer-term priorities and deferred work. |
+| `docs/PYPI_TRUSTED_PUBLISHING.md` | PyPI/TestPyPI Trusted Publisher setup or Python bridge publish work | OIDC publisher field values, GitHub workflow boundary, and operator verification flow. |
 | `docs/TASK_WORKFLOW_COMMANDS.md` | Starting, finishing, closing, auditing, or changing task workflow commands | Standard task loop, read/write boundaries, dry-run rules, and command `ok` semantics. |
 | Active `tasks/T-*/TASK.md` | Working a task | Task-specific goal, scope, status, and acceptance frame. |
 | Active Task Capsule docs | Working a task | `DECISIONS.md`, `PLAN.md`, `CONTEXT.md`, `ACCEPTANCE.md`, `FILES.md`, `TESTS.md`, `RISKS.md`, and `HANDOFF.md`. |

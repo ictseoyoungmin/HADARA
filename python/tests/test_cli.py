@@ -9,7 +9,7 @@ from hadara import cli
 
 
 def test_version_is_python_bridge_preview() -> None:
-    assert __version__ == "0.0.1"
+    assert __version__ == "0.2.0rc1"
 
 
 def test_main_prints_friendly_message_when_node_is_missing(

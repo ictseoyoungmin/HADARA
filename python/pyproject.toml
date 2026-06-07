@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hadara"
-version = "0.0.1"
+version = "0.2.0rc1"
 description = "Python bridge package for HADARA. The current runtime requires Node.js."
 readme = "README.md"
 requires-python = ">=3.9"
