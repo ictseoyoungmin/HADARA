@@ -16,5 +16,6 @@
 | Package smoke | Yes | Verify package contents and installed CLI behavior. | Passed | package-smoke artifact |
 | Clean-checkout smoke | Yes | Verify disposable clean checkout build/check/built CLI release gate. | Passed | clean-checkout-smoke artifact |
 | Fresh init/recycle smoke | Yes | Verify installed-package recycle workflow against built CLI. | Passed | T-0287 command evidence |
-| Release dry-run | Yes | Identify publish-readiness blockers. | Blocked | Missing rc3 release artifact evidence |
-| Release artifact | Yes | Refresh rc3 release artifact evidence. | Blocked | Dirty-worktree guard requires checkpoint commit first |
+| Release artifact | Yes | Refresh rc3 release artifact evidence. | Passed | release-artifact artifact |
+| Release dry-run | Yes | Identify publish-readiness blockers. | Passed | readiness ready, blockers 0 |
+| Release publish dry-run | Yes | Confirm approval/token/no-mutation boundary. | Passed | ok:true; warnings for absent tokens only |

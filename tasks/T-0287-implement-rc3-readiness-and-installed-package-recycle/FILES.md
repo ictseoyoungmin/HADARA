@@ -8,4 +8,4 @@
 | `docs/RELEASE_READINESS.md` | Modified | Record rc3 release-readiness source state without publish mutation. | Done |
 | `docs/RELEASE_NOTES.md` | Modified | Add rc3 source-candidate notes. | Done |
 | `tests/unit/init.test.ts` | Modified | Update README contract expectations for rc3 source-candidate wording. | Done |
-| `tasks/T-0287-implement-rc3-readiness-and-installed-package-recycle/` | Added | Capsule docs, evidence, and reduced public artifacts. | In Progress |
+| `tasks/T-0287-implement-rc3-readiness-and-installed-package-recycle/` | Added | Capsule docs, evidence, and reduced public artifacts. | Done |

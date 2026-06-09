@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0287 |
 | Title | Implement rc3 readiness and installed-package recycle |
-| Status | In Progress |
+| Status | Done |
 | Created | 2026-06-09 |
 | Updated | 2026-06-09 |
 
@@ -34,7 +34,7 @@
 
 ## Status
 
-In Progress. A checkpoint commit is required before release artifact generation because the artifact builder intentionally refuses dirty worktrees.
+Done
 
 ## Status History
 
@@ -42,3 +42,4 @@ In Progress. A checkpoint commit is required before release artifact generation 
 |---|---|---|---|
 | 2026-06-09 | Draft | Initial task scaffold. | task create |
 | 2026-06-09 | In Progress | rc3 metadata/docs and recycle smoke validation are underway; release artifact refresh is blocked until a clean checkpoint commit exists. | T-0287 evidence |
+| 2026-06-09 | Done | rc3 package, clean-checkout, release artifact, release dry-run, publish dry-run, and fresh init/recycle evidence passed without publish mutation. | T-0287 evidence |
