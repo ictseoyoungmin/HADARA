@@ -116,6 +116,7 @@ hadara evidence add-command --task T-0001 --summary "Focused validation passed."
 hadara evidence list --task T-0001 --json
 hadara proof status --task T-0001 --json
 hadara proof explain --task T-0001 --json
+hadara ci gate --mode advisory --task T-0001 --json
 hadara handoff suggest --task T-0001 --json
 ```
 

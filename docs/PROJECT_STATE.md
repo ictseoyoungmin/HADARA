@@ -9,7 +9,7 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0285 Implement proof status explain freshness MVP |
+| Latest Completed Task | T-0286 Implement rc3 CI gate MVP |
 
 ## Current Phase
 
@@ -53,12 +53,12 @@ T-0281 followed up on generated init protocol guidance after review. Generated s
 
 T-0282 prepared and published npm `hadara@0.2.0-rc.2` after the init scaffold guidance work. Package metadata and lockfile target rc2, README/release notes/release readiness/manual helper examples point to rc2 and T-0282, and `tasks/T-0282-release-candidate-0-2-0-rc-2-publish-readiness/GITHUB_RELEASE_NOTE.md` is ready for an optional draft GitHub Release. Docker `npm run dev:docker-sync-build` passed 100 files / 681 tests and refreshed `dist`; built CLI version smoke reported `0.2.0-rc.2` with `distLooksStale:false`; strict release gate passed; rc2 package smoke and clean-checkout smoke evidence passed; npm pack dry-run reported `hadara-0.2.0-rc.2.tgz`; the manual helper regenerated release artifact/package/clean-checkout evidence from a clean committed worktree, published to npm, and verified `npm view` returned `0.2.0-rc.2`. No GitHub Release draft, Docker publish, PyPI/TestPyPI publish, installer execution, or MCP release/package execution was requested.
 
-T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/specs/rc3-proof-reliability/`. The plan explicitly uses the `0.2.0-rc.2` comparative Bookmark API dogfooding result and reviewer judgment to prioritize evidence writer idempotency/concurrency hardening before proof status/explain/freshness MVP, CI gate MVP, and rc3 readiness/recycle work. T-0284 completed the P0 writer hardening: evidence append returns the exact writer result, explicit `--idempotency-key` same-key replays return existing records without appending duplicate Markdown/JSONL rows, keyless writes remain append-only, and task evidence writes are guarded by `.hadara/local/locks/evidence/<task>.lock/`. T-0285 completed the P1 proof MVP: `hadara proof status --task <id> --json` and `hadara proof explain --task <id> --json` produce read-only task-readiness proof verdicts, evidence blockers/warnings, supporting evidence, and close-proof freshness. `session start`, project graph/projection generalization, mutation plan engine, protocol migration, multi-agent coordination, and release target provider expansion remain deferred until supported by later findings.
+T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/specs/rc3-proof-reliability/`. The plan explicitly uses the `0.2.0-rc.2` comparative Bookmark API dogfooding result and reviewer judgment to prioritize evidence writer idempotency/concurrency hardening before proof status/explain/freshness MVP, CI gate MVP, and rc3 readiness/recycle work. T-0284 completed the P0 writer hardening: evidence append returns the exact writer result, explicit `--idempotency-key` same-key replays return existing records without appending duplicate Markdown/JSONL rows, keyless writes remain append-only, and task evidence writes are guarded by `.hadara/local/locks/evidence/<task>.lock/`. T-0285 completed the P1 proof MVP: `hadara proof status --task <id> --json` and `hadara proof explain --task <id> --json` produce read-only task-readiness proof verdicts, evidence blockers/warnings, supporting evidence, and close-proof freshness. T-0286 completed the P2 CI gate MVP: `hadara ci gate --mode advisory|strict [--task <id>] --json` aggregates protocol, evidence, proof, and deferred release checks with advisory vs strict blocker behavior. `session start`, project graph/projection generalization, mutation plan engine, protocol migration, multi-agent coordination, and release target provider expansion remain deferred until supported by later findings.
 
 ## Current Status
 
-- Latest completed task is T-0285 Implement proof status explain freshness MVP.
-- Latest implementation update is T-0285 proof MVP; next implementation priority is CI gate MVP.
+- Latest completed task is T-0286 Implement rc3 CI gate MVP.
+- Latest implementation update is T-0286 CI gate MVP; next implementation priority is rc3 readiness and installed-package recycle.
 - Skeleton repository exists.
 - Seed CLI exists.
 - MockProvider contract exists.
