@@ -9,7 +9,7 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0282 Release Candidate 0.2.0-rc.2 Publish Readiness |
+| Latest Completed Task | T-0283 Document rc3 proof reliability dogfooding plan |
 
 ## Current Phase
 
@@ -53,9 +53,12 @@ T-0281 followed up on generated init protocol guidance after review. Generated s
 
 T-0282 prepared and published npm `hadara@0.2.0-rc.2` after the init scaffold guidance work. Package metadata and lockfile target rc2, README/release notes/release readiness/manual helper examples point to rc2 and T-0282, and `tasks/T-0282-release-candidate-0-2-0-rc-2-publish-readiness/GITHUB_RELEASE_NOTE.md` is ready for an optional draft GitHub Release. Docker `npm run dev:docker-sync-build` passed 100 files / 681 tests and refreshed `dist`; built CLI version smoke reported `0.2.0-rc.2` with `distLooksStale:false`; strict release gate passed; rc2 package smoke and clean-checkout smoke evidence passed; npm pack dry-run reported `hadara-0.2.0-rc.2.tgz`; the manual helper regenerated release artifact/package/clean-checkout evidence from a clean committed worktree, published to npm, and verified `npm view` returned `0.2.0-rc.2`. No GitHub Release draft, Docker publish, PyPI/TestPyPI publish, installer execution, or MCP release/package execution was requested.
 
+T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/specs/rc3-proof-reliability/`. The plan explicitly uses the `0.2.0-rc.2` comparative Bookmark API dogfooding result and reviewer judgment to prioritize evidence writer idempotency/concurrency hardening before proof status/explain/freshness MVP, CI gate MVP, and rc3 readiness/recycle work. `session start`, project graph/projection generalization, mutation plan engine, protocol migration, multi-agent coordination, and release target provider expansion remain deferred until supported by later findings.
+
 ## Current Status
 
-- Latest completed task is T-0282 Release Candidate 0.2.0-rc.2 Publish Readiness.
+- Latest completed task is T-0283 Document rc3 proof reliability dogfooding plan.
+- Latest planning update is T-0283 rc3 proof reliability planning; next implementation priority is evidence append idempotency and locking.
 - Skeleton repository exists.
 - Seed CLI exists.
 - MockProvider contract exists.

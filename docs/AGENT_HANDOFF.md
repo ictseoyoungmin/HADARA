@@ -6,17 +6,17 @@
 |---|---|---|
 | Branch | main | T-0282 Release candidate 0.2.0-rc.2 publish readiness and operator npm publish are complete; T-0275 operator npm publish and Python bridge PyPI/TestPyPI publish are also complete. |
 | Current Phase | Post npm rc.2 publish after `hadara@0.2.0-rc.2` npm publish and `hadara==0.2.0rc1` PyPI publish | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0282 Release Candidate 0.2.0-rc.2 Publish Readiness | rc2 package metadata/docs/build/package/clean-checkout readiness prepared; the manual helper regenerated release artifacts, published to npm, and verified npm view returned `0.2.0-rc.2`. |
-| Active / Next Task | Post-publish installed-package recycle for `hadara@0.2.0-rc.2` | Use a fresh capsule before testing the published package in a disposable project; optional GitHub Release draft remains a separate operator-confirmed path. |
+| Latest Completed Task | T-0283 Document rc3 proof reliability dogfooding plan | `docs/specs/rc3-proof-reliability/` now records the dogfooding-backed rc3 trust/readiness plan. |
+| Active / Next Task | Evidence append idempotency and locking | Start a fresh capsule for P0 evidence writer hardening before proof MVP, CI gate, or rc3 readiness work. |
 | Validation Baseline | T-0282 rc2 publish validation passed | Docker full check passed 100 files / 681 tests and refreshed `dist`; built version smoke, strict release gate, package smoke, clean-checkout smoke, npm pack dry-run, release artifact refresh, package/clean evidence reruns, npm publish, and npm view verification passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0283 Document rc3 proof reliability dogfooding plan | Added `docs/specs/rc3-proof-reliability/` with rc3 plan index, evidence append hardening spec, proof MVP spec, CI gate MVP spec, and rc3 readiness/recycle spec based on `0.2.0-rc.2` comparative dogfooding findings and reviewer judgment. | Spec file existence check and `git diff --check` passed; T-0283 evidence recorded. |
 | T-0282 Release Candidate 0.2.0-rc.2 Publish Readiness | Prepared npm rc2 metadata/docs/build, ran the operator helper, published to npm, and verified `npm view` returned `0.2.0-rc.2`; GitHub Release, Docker publish, PyPI publish, installer execution, and MCP release/package execution did not run. | T-0282 evidence: Docker full check passed 100 files / 681 tests and refreshed `dist`; built CLI version reported `0.2.0-rc.2`; strict release gate passed; rc2 package smoke and clean-checkout smoke passed; npm pack dry-run reported `hadara-0.2.0-rc.2.tgz`; helper regenerated release artifact/package/clean evidence; npm publish completed; npm view verified `0.2.0-rc.2`. |
 | T-0281 Init Scaffold Protocol Guidance Follow-up | Added generated/root guidance for common Python/SQLite local ignores, evidence integrity, project-specific document registration, direct `harness validate --level done` diagnostics, and close-source stability before `task close`. | T-0281 evidence: focused Docker tests passed 2 files / 24 tests; generated basic/standard/governed init/doctor smoke passed; direct harness validate smoke returned `ok:true`; Docker full check passed 100 files / 681 tests and refreshed `dist`; workspace built-CLI init smoke and `git diff --check` passed. |
-| T-0280 Init Scaffold Lifecycle Wording Follow-up | Removed stale init scaffold lifecycle wording, aligned docs to `finish -> ready -> close -> audit`, and recorded that Python bridge rc.1 is published on TestPyPI and PyPI. | T-0280 evidence: focused Docker tests passed 2 files / 24 tests; generated basic/standard/governed scaffold smoke passed; Docker full check passed 100 files / 681 tests and refreshed `dist`; workspace built-CLI init smoke and `git diff --check` passed. |
 
 ## Current Known Problems
 
@@ -74,7 +74,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Recycle the published npm rc2 package in a disposable project. | `hadara@0.2.0-rc.2` is now published and should be observed as an installed package before further release work. | Create a fresh capsule, install `hadara@0.2.0-rc.2` in a disposable project, and record reduced public evidence for `hadara doctor`, init, and representative lifecycle commands. |
+| Implement evidence append idempotency and locking. | The `0.2.0-rc.2` Bookmark API dogfooding result exposed duplicate failed evidence records under parallel writes; proof MVP depends on reliable evidence writes. | Create a fresh capsule, implement `docs/specs/rc3-proof-reliability/01_Evidence_Append_Idempotency_and_Locking.md`, run focused evidence tests, then proceed to proof MVP. |
 | Optionally create a GitHub draft release. | GitHub Release remains secondary and token-gated. | Use `scripts/release/manual-publish-rc.sh T-0282 --execute --github-draft --github-release-note tasks/T-0282-release-candidate-0-2-0-rc-2-publish-readiness/GITHUB_RELEASE_NOTE.md` if a separate operator-confirmed draft release is desired. |
 
 ## Validation Baseline
