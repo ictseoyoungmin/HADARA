@@ -287,3 +287,4 @@
 | T-0284 | Implement evidence append idempotency and locking | Done | tasks/T-0284-implement-evidence-append-idempotency-and-locking | |
 | T-0285 | Implement proof status explain freshness MVP | Done | tasks/T-0285-implement-proof-status-explain-freshness-mvp | |
 | T-0286 | Implement rc3 CI gate MVP | Done | tasks/T-0286-implement-rc3-ci-gate-mvp | |
+| T-0287 | Implement rc3 readiness and installed-package recycle | Draft | tasks/T-0287-implement-rc3-readiness-and-installed-package-recycle | |

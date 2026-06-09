@@ -1,0 +1,13 @@
+# Evidence
+
+| Time | Kind | Summary | Result | Visibility | JSONL |
+|---|---|---|---|---|---|
+| 2026-06-09T09:41:19.467Z | command-log | Package smoke local failed with reduced public evidence. (artifacts/package-smoke/2026-06-09T09-41-19.467Z-summary.json) | failed | public | artifacts/package-smoke/2026-06-09T09-41-19.467Z-summary.json |
+| 2026-06-09T09:42:42.890Z | command-log | Package smoke local passed with reduced public evidence. (artifacts/package-smoke/2026-06-09T09-42-42.890Z-summary.json) | passed | public | artifacts/package-smoke/2026-06-09T09-42-42.890Z-summary.json |
+| 2026-06-09T09:45:32.367Z | command-log | Clean-checkout smoke failed with reduced public evidence. (artifacts/clean-checkout-smoke/2026-06-09T09-45-32.367Z-summary.json) | failed | public | artifacts/clean-checkout-smoke/2026-06-09T09-45-32.367Z-summary.json |
+| 2026-06-09T09:47:27.093Z | command-log | Clean-checkout smoke failed with reduced public evidence. (artifacts/clean-checkout-smoke/2026-06-09T09-47-27.093Z-summary.json) | failed | public | artifacts/clean-checkout-smoke/2026-06-09T09-47-27.093Z-summary.json |
+| 2026-06-09T09:50:48.747Z | command-log | Clean-checkout smoke failed with reduced public evidence. (artifacts/clean-checkout-smoke/2026-06-09T09-50-48.747Z-summary.json) | failed | public | artifacts/clean-checkout-smoke/2026-06-09T09-50-48.747Z-summary.json |
+| 2026-06-09T09:53:29.658Z | command-log | Clean-checkout smoke passed with reduced public evidence. (artifacts/clean-checkout-smoke/2026-06-09T09-53-29.658Z-summary.json) | passed | public | artifacts/clean-checkout-smoke/2026-06-09T09-53-29.658Z-summary.json |
+| 2026-06-09T09:55:44.646Z | command-log | hadara release artifact --execute --attach-evidence --json generated tarball/checksum/manifest metadata, retained public report artifact, and emitted hadara.releaseArtifact.v1. (artifacts/release-artifact/2026-06-09T09-55-44.646Z-report.json) | failed | public | artifacts/release-artifact/2026-06-09T09-55-44.646Z-report.json |
+| 2026-06-09T09:56:32.443Z | command-log | /tmp validation passed: npm ci --ignore-scripts, npm run build, focused release/package/proof/ci/init tests (7 files, 69 tests), and unsandboxed npm run check (102 files, 690 tests). | passed | public | evidence.jsonl |
+| 2026-06-09T09:56:42.531Z | command-log | Built CLI rc3 recycle smoke passed: version reported 0.2.0-rc.3; package smoke passed with rc3 tarball install; clean-checkout smoke passed after tmp npm cache and release-readiness marker fix; basic/standard/governed init passed; standard recycle evidence idempotency replay returned existing:true append:false; proof status and focused ci gate advisory returned ok:true. | passed | public | evidence.jsonl |

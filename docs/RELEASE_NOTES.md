@@ -1,5 +1,21 @@
 # RELEASE_NOTES
 
+## 0.2.0-rc.3
+
+Source publish candidate prepared after the `0.2.0-rc.2` dogfooding findings around proof reliability, evidence append races, and CI gate visibility.
+
+Highlights:
+
+- Hardens evidence append writes with task-scoped locking and explicit idempotency keys so parallel evidence writes do not create duplicate failed records for the same logical command.
+- Adds `hadara proof status` and `hadara proof explain` for evidence sufficiency, close-audit freshness, and operator-readable proof diagnostics.
+- Adds `hadara ci gate --mode advisory|strict` as an aggregating local gate over protocol, evidence, proof, and deferred release checks.
+- Refreshes package metadata, README release status, and release-readiness docs for the rc3 source candidate.
+
+Boundaries:
+
+- This entry describes the source publish candidate. npm publish, GitHub Release creation, Docker image publishing, installer execution, and registry mutation remain out of scope until a separate operator-approved publish capsule runs.
+- The latest npm-published release candidate before rc3 publication remains `hadara@0.2.0-rc.2`.
+
 ## 0.2.0-rc.2
 
 Release candidate published to npm after the init scaffold lifecycle/protocol guidance hardening from T-0279 through T-0281 and the T-0282 publish-readiness refresh.

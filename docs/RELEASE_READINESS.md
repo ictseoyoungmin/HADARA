@@ -10,9 +10,11 @@ Current release-candidate metadata mode:
 
 - Package name decision: `hadara`.
 - npm registry observation: `hadara@0.1.0-rc.0` is published; recheck registry state immediately before any later publish.
-- Current version is `0.2.0-rc.2`.
+- Current version is `0.2.0-rc.3`.
+- Current source version is `0.2.0-rc.3`.
 - Current published npm release candidate is `0.2.0-rc.2`.
 - Previous published release candidate is `0.2.0-rc.1`.
+- T-0287 prepares `hadara@0.2.0-rc.3` as a source publish candidate based on the `0.2.0-rc.2` dogfooding results and the proof reliability fixes from T-0284 through T-0286; this capsule performs no npm publish, GitHub Release creation, Docker image build, registry mutation, or token loading.
 - T-0269 pre-publish dry-run recheck passed for `0.2.0-rc.0`, but `NPM_TOKEN` was missing and no publish mutation was executed; T-0275 supersedes that candidate with `0.2.0-rc.1` after recycle fixes.
 - T-0275 refreshed publish-readiness evidence for `hadara@0.2.0-rc.1` and the operator published it to npm; `npm view hadara@0.2.0-rc.1 version --registry=https://registry.npmjs.org` returned `0.2.0-rc.1`.
 - T-0282 refreshed and published `hadara@0.2.0-rc.2` after the init scaffold protocol guidance follow-up: package metadata/docs/helper examples target rc2; Docker `npm run dev:docker-sync-build` passed 100 files / 681 tests and refreshed `dist`; built CLI version smoke reported `0.2.0-rc.2`; strict release gate passed; rc2 package smoke and clean-checkout smoke evidence passed; `npm pack --dry-run --json` produced rc2 tarball metadata; the manual helper regenerated release artifact/package/clean-checkout evidence from a clean committed worktree, published to npm, and verified `npm view` returned `0.2.0-rc.2`.
@@ -25,7 +27,7 @@ Current release-candidate metadata mode:
 - Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability.
 - Release-candidate metadata mode: version `0.x.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present.
 - Scoped fallback decision: do not silently switch names; choose and document an explicit scope in a later release-target capsule if `hadara` is unavailable.
-- Version policy: first release-candidate target was `0.1.0-rc.0`; the current release-candidate evidence refresh target is `0.2.0-rc.2`. Stable release targets remain approval-gated and must be set in a later release capsule.
+- Version policy: first release-candidate target was `0.1.0-rc.0`; the current source publish-candidate target is `0.2.0-rc.3`. Stable release targets remain approval-gated and must be set in a later release capsule.
 - T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist.
 - Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist.
 - Do not add `files` entries for missing installer or portable paths in T-0127.

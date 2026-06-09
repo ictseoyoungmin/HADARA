@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img alt="Release candidate" src="https://img.shields.io/badge/release-0.2.0--rc.2-blue">
+  <img alt="Release candidate" src="https://img.shields.io/badge/release-0.2.0--rc.3-blue">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>
@@ -23,10 +23,10 @@ This repository is both the HADARA source checkout and the HADARA protocol works
 The current source checkout targets:
 
 ```text
-hadara@0.2.0-rc.2
+hadara@0.2.0-rc.3
 ```
 
-T-0282 refreshed the npm release-candidate source state for `0.2.0-rc.2` after the init scaffold protocol guidance follow-up, then the operator published `hadara@0.2.0-rc.2` through the approval-gated manual helper. The helper regenerated release artifacts, reran package/clean-checkout evidence, published to npm, and verified `npm view` returned `0.2.0-rc.2`.
+T-0287 prepares the source checkout for `0.2.0-rc.3` after the rc2 dogfooding findings and the T-0284 through T-0286 proof reliability hardening. `hadara@0.2.0-rc.3` is a publish candidate until an operator explicitly runs an approval-gated publish capsule. The latest npm-published release candidate remains `hadara@0.2.0-rc.2`.
 
 Current publish boundaries:
 
@@ -36,7 +36,8 @@ Current publish boundaries:
 | `hadara@0.1.0-rc.0` | Published first RC. |
 | `hadara@0.2.0-rc.0` | Superseded internal publish candidate after recycle findings. |
 | `hadara@0.2.0-rc.1` | Previous published npm RC. |
-| `hadara@0.2.0-rc.2` | Current published npm RC and current source version. |
+| `hadara@0.2.0-rc.2` | Current published npm RC. |
+| `hadara@0.2.0-rc.3` | Current source publish candidate; not published by this capsule. |
 | GitHub Release | Secondary target, still approval-gated. |
 | Docker image | Deferred. |
 | PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
@@ -48,7 +49,7 @@ No release command should publish, create a GitHub Release, build Docker images,
 
 Requires Node.js 22.
 
-Install the current RC:
+Install the current published RC:
 
 ```bash
 npm install -g hadara@0.2.0-rc.2
@@ -64,7 +65,7 @@ npx hadara@0.2.0-rc.2 doctor --json
 npx hadara@0.2.0-rc.2 tools list --json
 ```
 
-Previous published RCs: `hadara@0.2.0-rc.1` and `hadara@0.1.0-rc.0` remain available on npm for comparison or rollback, but new installs should use the current RC.
+After an operator publishes rc3, use `hadara@0.2.0-rc.3` in the install and npx commands above. Previous published RCs remain available on npm for comparison or rollback.
 
 ## What HADARA Gives You
 
