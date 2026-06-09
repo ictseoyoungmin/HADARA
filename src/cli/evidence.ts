@@ -76,18 +76,20 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
     const summary = getStringOption(input.args, '--summary') ?? 'Command completed.';
     const result = parseEvidenceResult(getStringOption(input.args, '--result', 'unknown') ?? 'unknown');
     const visibility = parseEvidenceVisibility(getStringOption(input.args, '--visibility', 'public') ?? 'public', getFlag(input.args, '--private'));
+    const idempotencyKey = getStringOption(input.args, '--idempotency-key');
     if (input.jsonOutput) {
       const report = createEvidenceCollectReport(input.projectRoot, {
         taskId,
         kind: 'command-log',
         summary,
         result,
-        visibility
+        visibility,
+        idempotencyKey
       });
       console.log(JSON.stringify({ ...report, command: 'evidence.add-command' }, null, 2));
       if (!report.ok) process.exitCode = 6;
     } else {
-      const filePath = appendEvidence(input.projectRoot, { taskId, kind: 'command-log', summary, result, visibility });
+      const filePath = appendEvidence(input.projectRoot, { taskId, kind: 'command-log', summary, result, visibility, idempotencyKey });
       console.log(`[HADARA] Command evidence updated: ${filePath}`);
     }
     return true;
@@ -101,6 +103,7 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
   const result = parseEvidenceResult(getStringOption(input.args, '--result', 'unknown') ?? 'unknown');
   const evidenceFile = getStringOption(input.args, '--path');
   const visibility = parseEvidenceVisibility(getStringOption(input.args, '--visibility', 'public') ?? 'public', getFlag(input.args, '--private'));
+  const idempotencyKey = getStringOption(input.args, '--idempotency-key');
 
   if (input.jsonOutput) {
     const report = createEvidenceCollectReport(input.projectRoot, {
@@ -109,12 +112,13 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
       path: evidenceFile,
       summary,
       result,
-      visibility
+      visibility,
+      idempotencyKey
     });
     console.log(JSON.stringify(report, null, 2));
     if (!report.ok) process.exitCode = 6;
   } else {
-    const filePath = appendEvidence(input.projectRoot, { taskId, kind, path: evidenceFile, summary, result, visibility });
+    const filePath = appendEvidence(input.projectRoot, { taskId, kind, path: evidenceFile, summary, result, visibility, idempotencyKey });
     console.log(`[HADARA] Evidence updated: ${filePath}`);
   }
 

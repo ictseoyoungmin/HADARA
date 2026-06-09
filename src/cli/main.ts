@@ -28,7 +28,7 @@ Usage:
   hadara task audit-close --task <task-id> [--json]
   hadara task ready --task <task-id> [--level done] [--json]
   hadara evidence collect --task <task-id> [--kind note|test-log|command-log|diff-summary|screenshot] [--path <path>] [--summary <text>] [--result passed|failed|blocked|unknown] [--private|--visibility public|private]
-  hadara evidence add-command --task <task-id> --summary <text> [--result passed|failed|blocked|unknown] [--private|--visibility public|private] [--json]
+  hadara evidence add-command --task <task-id> --summary <text> [--result passed|failed|blocked|unknown] [--idempotency-key <key>] [--private|--visibility public|private] [--json]
   hadara evidence list --task <task-id> [--limit <n>] [--include-private] [--json]
   hadara evidence lint --task <task-id> [--json]
   hadara evidence migrate --task <task-id> --to v2 [--execute --before-hash <hash>] [--json]

@@ -93,9 +93,13 @@ export function persistedEvidencePath(record: PersistedEvidenceRecord): string |
 export interface EvidenceAppendResult {
   markdownPath: string;
   evidence: PersistedEvidenceRecord;
+  markdownAppended: boolean;
+  jsonlAppended: boolean;
+  existing: boolean;
 }
 
 export type EvidenceArtifactPolicyErrorCode = 'PUBLIC_ARTIFACT_BINARY_REJECTED' | 'PUBLIC_ARTIFACT_SECRET_DETECTED';
+export type EvidenceAppendErrorCode = 'EVIDENCE_APPEND_LOCK_TIMEOUT';
 
 export interface PublicEvidenceArtifactPolicyReport {
   schemaVersion: 'hadara.evidence_artifact_policy.v1';
@@ -125,6 +129,15 @@ export class EvidenceArtifactPolicyError extends Error {
   }
 }
 
+export class EvidenceAppendLockError extends Error {
+  public readonly code: EvidenceAppendErrorCode = 'EVIDENCE_APPEND_LOCK_TIMEOUT';
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'EvidenceAppendLockError';
+  }
+}
+
 export function appendEvidence(projectRoot: string, record: Omit<EvidenceRecord, 'time'>): string {
   return appendEvidenceWithResult(projectRoot, record).markdownPath;
 }
@@ -137,8 +150,14 @@ export function appendEvidenceWithResult(projectRoot: string, record: Omit<Evide
 
   const time = new Date().toISOString();
   const visibility = record.visibility ?? 'public';
-  const attachedPath = copyPublicEvidenceArtifact({ projectRoot, taskDir, kind: record.kind, sourcePath: record.path, time, visibility });
-  return appendEvidenceRecord({ projectRoot, taskDir, time, record, visibility, attachedPath });
+  return appendEvidenceRecord({
+    projectRoot,
+    taskDir,
+    time,
+    record,
+    visibility,
+    createAttachedPath: () => copyPublicEvidenceArtifact({ projectRoot, taskDir, kind: record.kind, sourcePath: record.path, time, visibility })
+  });
 }
 
 export function appendEvidenceTextArtifact(
@@ -154,19 +173,25 @@ export function appendEvidenceTextArtifact(
 
   const time = new Date().toISOString();
   const visibility = record.visibility ?? 'public';
-  const attachedPath =
-    visibility === 'public'
-      ? writePublicEvidenceTextArtifact({
-          taskDir,
-          kind: record.kind,
-          time,
-          fileName: artifact.fileName,
-          content: artifact.content,
-          artifactDirName: artifact.artifactDirName,
-          policyOptions: options
-        })
-      : undefined;
-  return appendEvidenceRecord({ projectRoot, taskDir, time, record, visibility, attachedPath });
+  return appendEvidenceRecord({
+    projectRoot,
+    taskDir,
+    time,
+    record,
+    visibility,
+    createAttachedPath: () =>
+      visibility === 'public'
+        ? writePublicEvidenceTextArtifact({
+            taskDir,
+            kind: record.kind,
+            time,
+            fileName: artifact.fileName,
+            content: artifact.content,
+            artifactDirName: artifact.artifactDirName,
+            policyOptions: options
+          })
+        : undefined
+  });
 }
 
 export function createPublicEvidenceArtifactPolicyReport(
@@ -197,51 +222,128 @@ function appendEvidenceIndex(taskDir: string, record: PersistedEvidenceRecord): 
   fs.appendFileSync(path.join(taskDir, 'evidence.jsonl'), `${JSON.stringify(record)}\n`, 'utf8');
 }
 
+function readEvidenceIndex(taskDir: string): PersistedEvidenceRecord[] {
+  const indexPath = path.join(taskDir, 'evidence.jsonl');
+  if (!fs.existsSync(indexPath)) return [];
+  return fs
+    .readFileSync(indexPath, 'utf8')
+    .split(/\r?\n/)
+    .filter((line) => line.trim() !== '')
+    .map((line) => JSON.parse(line) as PersistedEvidenceRecord);
+}
+
+function persistedEvidenceIdempotencyKey(record: PersistedEvidenceRecord): string | undefined {
+  if (record.schemaVersion !== 'hadara.evidence.v2') return undefined;
+  if (record.idempotencyKey) return record.idempotencyKey;
+  const tag = record.tags.find((item) => item.startsWith('idempotency:'));
+  return tag ? tag.replace(/^idempotency:/, '') : undefined;
+}
+
+function withEvidenceAppendLock<T>(projectRoot: string, taskId: string, fn: () => T): T {
+  const lockRoot = path.join(projectRoot, '.hadara', 'local', 'locks', 'evidence');
+  ensureDir(lockRoot);
+  const lockDir = path.join(lockRoot, `${safeFilePart(taskId)}.lock`);
+  const started = Date.now();
+  const timeoutMs = 5000;
+
+  while (true) {
+    try {
+      fs.mkdirSync(lockDir);
+      break;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+      if (Date.now() - started >= timeoutMs) {
+        throw new EvidenceAppendLockError(`Timed out waiting for evidence append lock for ${taskId}.`);
+      }
+      sleepSync(25);
+    }
+  }
+
+  try {
+    return fn();
+  } finally {
+    try {
+      fs.rmdirSync(lockDir);
+    } catch {
+      // Best-effort cleanup; later writers fail closed through the timeout.
+    }
+  }
+}
+
+function sleepSync(ms: number): void {
+  const signal = new Int32Array(new SharedArrayBuffer(4));
+  Atomics.wait(signal, 0, 0, ms);
+}
+
 function appendEvidenceRecord(input: {
   projectRoot: string;
   taskDir: string;
   time: string;
   record: Omit<EvidenceRecord, 'time'>;
   visibility: NonNullable<EvidenceRecord['visibility']>;
-  attachedPath?: string;
+  createAttachedPath: () => string | undefined;
 }): EvidenceAppendResult {
   const summary = redactSecrets(input.record.summary.replace(/\|/g, '/'));
   const markdownPath = path.join(input.taskDir, 'EVIDENCE.md');
-  const rowSummary = input.visibility === 'private' || !input.attachedPath ? summary : `${summary} (${input.attachedPath})`;
-  const jsonlMarker = input.visibility === 'public' && input.attachedPath ? input.attachedPath : 'evidence.jsonl';
-  const row = `| ${input.time} | ${input.record.kind} | ${rowSummary} | ${input.record.result} | ${input.visibility} | ${jsonlMarker} |\n`;
 
-  if (!fs.existsSync(markdownPath)) {
-    fs.writeFileSync(markdownPath, '# Evidence\n\n| Time | Kind | Summary | Result | Visibility | JSONL |\n|---|---|---|---|---|---|\n', 'utf8');
-  }
-  fs.appendFileSync(markdownPath, row, 'utf8');
+  return withEvidenceAppendLock(input.projectRoot, input.record.taskId, () => {
+    const idempotencyKey = input.record.idempotencyKey;
+    if (idempotencyKey) {
+      const existing = readEvidenceIndex(input.taskDir).find((record) => persistedEvidenceIdempotencyKey(record) === idempotencyKey);
+      if (existing) {
+        return {
+          markdownPath,
+          evidence: existing,
+          markdownAppended: false,
+          jsonlAppended: false,
+          existing: true
+        };
+      }
+    }
 
-  const evidence = createEvidenceV2Record({
-    time: input.time,
-    taskId: input.record.taskId,
-    kind: input.record.kind,
-    summary,
-    result: input.record.result,
-    visibility: input.visibility,
-    attachedPath: input.attachedPath,
-    tags: input.record.tags,
-    idempotencyKey: input.record.idempotencyKey,
-    actor: input.record.actor
-  });
-  appendEvidenceIndex(input.taskDir, evidence);
-  if (input.visibility === 'private') {
-    writePrivateEvidenceManifest({
-      projectRoot: input.projectRoot,
+    const attachedPath = input.createAttachedPath();
+    const rowSummary = input.visibility === 'private' || !attachedPath ? summary : `${summary} (${attachedPath})`;
+    const jsonlMarker = input.visibility === 'public' && attachedPath ? attachedPath : 'evidence.jsonl';
+    const row = `| ${input.time} | ${input.record.kind} | ${rowSummary} | ${input.record.result} | ${input.visibility} | ${jsonlMarker} |\n`;
+
+    if (!fs.existsSync(markdownPath)) {
+      fs.writeFileSync(markdownPath, '# Evidence\n\n| Time | Kind | Summary | Result | Visibility | JSONL |\n|---|---|---|---|---|---|\n', 'utf8');
+    }
+    fs.appendFileSync(markdownPath, row, 'utf8');
+
+    const evidence = createEvidenceV2Record({
+      time: input.time,
       taskId: input.record.taskId,
       kind: input.record.kind,
       summary,
       result: input.record.result,
-      sourcePath: input.record.path,
-      time: input.time
+      visibility: input.visibility,
+      attachedPath,
+      tags: input.record.tags,
+      idempotencyKey: input.record.idempotencyKey,
+      actor: input.record.actor
     });
-  }
+    appendEvidenceIndex(input.taskDir, evidence);
+    if (input.visibility === 'private') {
+      writePrivateEvidenceManifest({
+        projectRoot: input.projectRoot,
+        taskId: input.record.taskId,
+        kind: input.record.kind,
+        summary,
+        result: input.record.result,
+        sourcePath: input.record.path,
+        time: input.time
+      });
+    }
 
-  return { markdownPath, evidence };
+    return {
+      markdownPath,
+      evidence,
+      markdownAppended: true,
+      jsonlAppended: true,
+      existing: false
+    };
+  });
 }
 
 function createEvidenceV2Record(input: {

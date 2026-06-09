@@ -16,7 +16,7 @@ describe('task workflow command semantics docs', () => {
     const commands = [
       'hadara task next --json',
       'hadara task status --task T-XXXX --json',
-      'hadara evidence add-command --task T-XXXX --summary "..." --result passed --json',
+      'hadara evidence add-command --task T-XXXX --summary "..." --result passed --idempotency-key "command:T-XXXX:check" --json',
       'hadara task finish --task T-XXXX --json',
       'hadara task finish --task T-XXXX --execute --json',
       '# Finalize Task Capsule docs and tracked state docs before closing.',
@@ -60,7 +60,7 @@ describe('task workflow command semantics docs', () => {
 
     expect(workflow).toContain('| `hadara task next --json` | Recommend next work from handoff, roadmap, and board state. | Read-only report. | No. |');
     expect(workflow).toContain('| `hadara task status --task T-XXXX --json` | Operator console projection for one task. | Read-only report. | No. |');
-    expect(workflow).toContain('| `hadara evidence add-command --task T-XXXX --summary "..." --result passed --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence. |');
+    expect(workflow).toContain('| `hadara evidence add-command --task T-XXXX --summary "..." --result passed [--idempotency-key <key>] --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence unless an explicit idempotency key already exists. |');
     expect(workflow).toContain('| `hadara task finish --task T-XXXX --execute --json` | Apply bounded status bookkeeping for `TASK.md` and `docs/TASK_BOARD.md`. | Execute after dry-run review. | Yes, bounded to those files. |');
     expect(workflow).toContain('| `hadara task ready --task T-XXXX --level done --json` | Readiness preflight after finish and before close. | Read-only report. | No. |');
     expect(workflow).toContain('| `hadara task close --task T-XXXX --execute --json` | Append canonical close evidence after close preconditions pass. | Execute after dry-run review. | Yes, close evidence only. |');

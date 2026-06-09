@@ -1,6 +1,5 @@
-import fs from 'node:fs';
 import path from 'node:path';
-import { appendEvidence, EvidenceArtifactPolicyError, EvidenceRecord, PersistedEvidenceRecord } from '../evidence/evidence';
+import { appendEvidenceWithResult, EvidenceAppendLockError, EvidenceArtifactPolicyError, EvidenceRecord, PersistedEvidenceRecord } from '../evidence/evidence';
 import { listTaskCapsules } from '../task/task-capsule';
 import { WorkspaceFileError } from '../core/workspace';
 
@@ -11,6 +10,7 @@ export interface EvidenceCollectInput {
   summary: string;
   result: EvidenceRecord['result'];
   visibility: NonNullable<EvidenceRecord['visibility']>;
+  idempotencyKey?: string;
 }
 
 export interface EvidenceCollectReport {
@@ -19,6 +19,9 @@ export interface EvidenceCollectReport {
   ok: boolean;
   evidence?: PersistedEvidenceRecord & {
     markdownPath: string;
+    markdownAppended: boolean;
+    jsonlAppended: boolean;
+    existing: boolean;
   };
   issues: Array<{
     severity: 'error';
@@ -44,18 +47,19 @@ export function createEvidenceCollectReport(projectRoot: string, input: Evidence
     };
   }
 
-  let markdownPath: string;
+  let appendResult: ReturnType<typeof appendEvidenceWithResult>;
   try {
-    markdownPath = appendEvidence(projectRoot, {
+    appendResult = appendEvidenceWithResult(projectRoot, {
       taskId: input.taskId,
       kind: input.kind,
       path: input.path,
       summary: input.summary,
       result: input.result,
-      visibility: input.visibility
+      visibility: input.visibility,
+      idempotencyKey: input.idempotencyKey
     });
   } catch (error) {
-    if (error instanceof WorkspaceFileError || error instanceof EvidenceArtifactPolicyError) {
+    if (error instanceof WorkspaceFileError || error instanceof EvidenceArtifactPolicyError || error instanceof EvidenceAppendLockError) {
       return {
         schemaVersion: 'hadara.evidence.collect.v1',
         command: 'evidence.collect',
@@ -71,24 +75,20 @@ export function createEvidenceCollectReport(projectRoot: string, input: Evidence
     }
     throw error;
   }
-  const indexRecord = readLastEvidenceIndexRecord(task.dir);
 
   return {
     schemaVersion: 'hadara.evidence.collect.v1',
     command: 'evidence.collect',
     ok: true,
     evidence: {
-      ...indexRecord,
-      markdownPath: toPortablePath(path.relative(projectRoot, markdownPath))
+      ...appendResult.evidence,
+      markdownPath: toPortablePath(path.relative(projectRoot, appendResult.markdownPath)),
+      markdownAppended: appendResult.markdownAppended,
+      jsonlAppended: appendResult.jsonlAppended,
+      existing: appendResult.existing
     },
     issues: []
   };
-}
-
-function readLastEvidenceIndexRecord(taskDir: string): PersistedEvidenceRecord {
-  const indexPath = path.join(taskDir, 'evidence.jsonl');
-  const lines = fs.readFileSync(indexPath, 'utf8').trim().split(/\r?\n/);
-  return JSON.parse(lines.at(-1) ?? '{}') as PersistedEvidenceRecord;
 }
 
 function toPortablePath(value: string): string {

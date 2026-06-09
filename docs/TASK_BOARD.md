@@ -284,3 +284,4 @@
 | T-0281 | Init scaffold protocol guidance follow-up | Done | tasks/T-0281-init-scaffold-protocol-guidance-follow-up | |
 | T-0282 | Release candidate 0.2.0-rc.2 publish readiness | Done | tasks/T-0282-release-candidate-0-2-0-rc-2-publish-readiness | Operator npm publish completed; npm view verified `0.2.0-rc.2`; GitHub draft false. |
 | T-0283 | Document rc3 proof reliability dogfooding plan | Done | tasks/T-0283-document-rc3-proof-reliability-dogfooding-plan | |
+| T-0284 | Implement evidence append idempotency and locking | Done | tasks/T-0284-implement-evidence-append-idempotency-and-locking | |

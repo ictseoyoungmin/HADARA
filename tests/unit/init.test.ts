@@ -168,7 +168,7 @@ describe('init profiles', () => {
     expect(workflow).toContain('## Command Semantics');
     expect(workflow).toContain('## Non-Overlap Rules');
     expect(workflow).toContain('## State Documents');
-    expect(workflow).toContain('hadara evidence add-command --task T-XXXX --summary "..." --result passed --json');
+    expect(workflow).toContain('hadara evidence add-command --task T-XXXX --summary "..." --result passed --idempotency-key "command:T-XXXX:check" --json');
     expect(workflow).toContain('`task finish`, `task ready`, and `task close` are intentionally separate.');
     expect(workflow).toContain('`ready` then validates the Done-level state.');
     expect(workflow).toContain('hadara task complete --task T-XXXX --json');
@@ -598,8 +598,8 @@ describe('init profiles', () => {
     expect(readme).toContain('hadara init --profile basic');
     expect(readme).toContain('hadara init --profile governed');
     expect(readme).toContain('| `basic` | Small project, only task/handoff discipline needed. |');
-    expect(readme).toContain('| `hadara@0.2.0-rc.1` | Current published npm RC until rc.2 is operator-published. |');
-    expect(readme).toContain('| `hadara@0.2.0-rc.2` | Current source version and next npm RC target. |');
+    expect(readme).toContain('| `hadara@0.2.0-rc.1` | Previous published npm RC. |');
+    expect(readme).toContain('| `hadara@0.2.0-rc.2` | Current published npm RC and current source version. |');
     expect(readme).toContain('| PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |');
     expect(readme).not.toContain('Current source and publish-candidate version.');
     expect(readme).not.toContain('once it is published');

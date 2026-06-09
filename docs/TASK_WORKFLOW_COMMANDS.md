@@ -18,7 +18,7 @@ hadara task status --task T-XXXX --json
 
 # Do the scoped work.
 
-hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
+hadara evidence add-command --task T-XXXX --summary "..." --result passed --idempotency-key "command:T-XXXX:check" --json
 
 hadara task finish --task T-XXXX --json
 hadara task finish --task T-XXXX --execute --json
@@ -84,7 +84,7 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 | `hadara task complete --task T-XXXX --json` | Summarize the completion workflow stage and primary next command. | Read-only report. | No. | The task is fully closed and audited. | Task-style failures use 6. |
 | `hadara handoff suggest --task T-XXXX --json` | Suggest coordinator-reviewed handoff section fragments for a task. | Read-only report. | No. | Suggestion report generated without blocking issues. | Task-style failures use 6. |
 | `hadara dev docker-check --focused tests/unit/foo.test.ts --sync-dist --before-hash sha256:... --json` | Run Docker temp-copy validation with optional focused tests and explicit dist sync. | Execute report. | Runs Docker; may write workspace `dist` only with `--sync-dist` and a matching reviewed before-hash. | Requested Docker validation completed and any requested dist sync freshness guard passed. | Task-style failures use 6. |
-| `hadara evidence add-command --task T-XXXX --summary "..." --result passed --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence. | Evidence append succeeded. | Evidence/task-style failures use 6. |
+| `hadara evidence add-command --task T-XXXX --summary "..." --result passed [--idempotency-key <key>] --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence unless an explicit idempotency key already exists. | Evidence append succeeded or returned the existing keyed record. | Evidence/task-style failures use 6. |
 | `hadara task finish --task T-XXXX --json` | Preview bounded status bookkeeping for `TASK.md` and `docs/TASK_BOARD.md`. | Dry-run report. | No. | Finish plan has no blocking issues. | Task-style failures use 6. |
 | `hadara task finish --task T-XXXX --execute --json` | Apply bounded status bookkeeping for `TASK.md` and `docs/TASK_BOARD.md`. | Execute after dry-run review. | Yes, bounded to those files. | Planned bookkeeping writes succeeded or no write was needed. | Task-style failures use 6. |
 | `hadara task ready --task T-XXXX --level done --json` | Readiness preflight after finish and before close. | Read-only report. | No. | Requested readiness level passed. | Task-style failures use 6. |
@@ -104,7 +104,7 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 - `dev docker-check --sync-dist` is an output write. Reports distinguish source mutation from output mutation and expose whether a pre-sync dist hash was available, which hash the operator reviewed, whether it matched, whether sync was allowed through the first-time missing-hash escape hatch, and whether a conflict blocked the copy.
 - `task ready` checks whether the capsule can satisfy a requested validation level; it does not write evidence or status.
 - `harness validate` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence.
-- `evidence add-command` records an operator-supplied command result; it does not execute shell commands or capture stdout/stderr.
+- `evidence add-command` records an operator-supplied command result; it does not execute shell commands or capture stdout/stderr. `--idempotency-key` is optional; when supplied, same-key repeats return the existing record without appending duplicate Markdown or JSONL rows.
 - `task finish` may update only the Task Capsule `TASK.md` status and matching `docs/TASK_BOARD.md` status/path row.
 - `task close` may append only close evidence. It must not update status docs, Task Board rows, handoff, Project State, Development Slices, or arbitrary evidence.
 - After `task close --execute --json`, close-source document edits intentionally invalidate the previous close proof. Make those edits before close, or rerun ready/close/audit if the edit is unavoidable.

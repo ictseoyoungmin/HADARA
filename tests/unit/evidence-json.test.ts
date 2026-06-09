@@ -114,10 +114,94 @@ describe('CLI evidence JSON reports', () => {
         summary: 'Done-level harness returned ok:true',
         outcome: 'passed',
         legacy: { kind: 'command-log', result: 'passed' },
-        visibility: 'public'
+        visibility: 'public',
+        markdownAppended: true,
+        jsonlAppended: true,
+        existing: false
       }
     });
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('"schemaVersion":"hadara.evidence.v2"');
+  });
+
+  it('deduplicates add-command evidence when an explicit idempotency key is reused', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Idempotent command evidence');
+    const args = [
+      'evidence',
+      'add-command',
+      '--task',
+      task.id,
+      '--summary',
+      'Phase 6 pytest failed',
+      '--result',
+      'failed',
+      '--idempotency-key',
+      `command:${task.id}:phase-6-pytest`,
+      '--json'
+    ];
+
+    const firstOutput: string[] = [];
+    const secondOutput: string[] = [];
+    const originalLog = console.log;
+    try {
+      console.log = (value?: unknown) => {
+        firstOutput.push(String(value));
+      };
+      expect(handleEvidenceCommand({ args, projectRoot: root, jsonOutput: true })).toBe(true);
+
+      console.log = (value?: unknown) => {
+        secondOutput.push(String(value));
+      };
+      expect(handleEvidenceCommand({ args, projectRoot: root, jsonOutput: true })).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    const first = JSON.parse(firstOutput.join('\n'));
+    const second = JSON.parse(secondOutput.join('\n'));
+    expect(first.evidence).toMatchObject({
+      idempotencyKey: `command:${task.id}:phase-6-pytest`,
+      markdownAppended: true,
+      jsonlAppended: true,
+      existing: false
+    });
+    expect(second.evidence).toMatchObject({
+      id: first.evidence.id,
+      idempotencyKey: `command:${task.id}:phase-6-pytest`,
+      markdownAppended: false,
+      jsonlAppended: false,
+      existing: true
+    });
+
+    const jsonlLines = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8').trim().split(/\r?\n/);
+    expect(jsonlLines).toHaveLength(1);
+    const markdown = fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8');
+    expect(markdown.match(/Phase 6 pytest failed/g)).toHaveLength(1);
+  });
+
+  it('keeps keyless command evidence append-only', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Keyless command evidence');
+
+    appendEvidenceWithResult(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Repeated manual command result',
+      result: 'failed',
+      visibility: 'public'
+    });
+    appendEvidenceWithResult(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Repeated manual command result',
+      result: 'failed',
+      visibility: 'public'
+    });
+
+    const jsonlLines = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8').trim().split(/\r?\n/);
+    expect(jsonlLines).toHaveLength(2);
+    const markdown = fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8');
+    expect(markdown.match(/Repeated manual command result/g)).toHaveLength(2);
   });
 
   it('preserves optional v2 idempotency, tags, and actor metadata', () => {
@@ -140,6 +224,11 @@ describe('CLI evidence JSON reports', () => {
       tags: ['close-proof', 'idempotency:close:T-0001:source:report'],
       idempotencyKey: 'close:T-0001:source:report',
       actor: { agentId: 'worker-1', runId: 'run-1', role: 'worker', parentRunId: null }
+    });
+    expect(result).toMatchObject({
+      markdownAppended: true,
+      jsonlAppended: true,
+      existing: false
     });
   });
 
