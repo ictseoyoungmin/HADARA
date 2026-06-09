@@ -54,6 +54,40 @@ describe('ci gate report', () => {
     expect(strict.ok).toBe(false);
   });
 
+  it('fails strict mode when there are no Done task capsules to validate', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Draft only task');
+
+    const report = createCiGateReport(root, 'strict');
+
+    expect(report.scope).toMatchObject({ taskCount: 0, allowEmpty: false });
+    expect(report.ok).toBe(false);
+    expect(report.blockers).toContainEqual(expect.objectContaining({ source: 'proof', code: 'CI_GATE_NO_DONE_TASKS' }));
+    expect(report.warnings).not.toContainEqual(expect.objectContaining({ code: 'CI_GATE_NO_DONE_TASKS' }));
+  });
+
+  it('passes strict mode with an empty Done scope only when --allow-empty is set', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Draft only task');
+
+    const report = createCiGateReport(root, 'strict', { allowEmpty: true });
+
+    expect(report.scope).toMatchObject({ taskCount: 0, allowEmpty: true });
+    expect(report.warnings).toContainEqual(expect.objectContaining({ source: 'proof', code: 'CI_GATE_NO_DONE_TASKS' }));
+    expect(report.blockers).not.toContainEqual(expect.objectContaining({ code: 'CI_GATE_NO_DONE_TASKS' }));
+  });
+
+  it('blocks strict mode when an explicit --task is not found', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Existing task');
+
+    const report = createCiGateReport(root, 'strict', { taskId: 'T-9999' });
+
+    expect(report.scope).toMatchObject({ taskId: 'T-9999', taskCount: 0 });
+    expect(report.ok).toBe(false);
+    expect(report.blockers).toContainEqual(expect.objectContaining({ source: 'proof', code: 'CI_GATE_TASK_NOT_FOUND', taskId: 'T-9999' }));
+  });
+
   it('prints ci gate JSON through the CLI handler', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'CI gate cli');

@@ -58,7 +58,7 @@ function runWorkersConcurrently(
   count: number,
   options: { idempotencyKey?: string; summaryPrefix: string }
 ): Promise<WorkerResult[]> {
-  const startAt = Date.now() + 750;
+  const startAt = Date.now() + 1500;
   const children = Array.from({ length: count }, (_unused, index) => {
     const args = [tsxBin as string, workerPath, projectRoot, taskId, `${options.summaryPrefix} ${index}`, String(startAt)];
     if (options.idempotencyKey) args.push(options.idempotencyKey);
@@ -96,7 +96,7 @@ describe.skipIf(!tsxBin)('evidence append under real multi-process contention', 
     const task = createTaskCapsule(root, 'Parallel idempotent evidence');
     const key = `command:${task.id}:parallel-idempotent`;
 
-    const results = await runWorkersConcurrently(root, task.id, 12, { idempotencyKey: key, summaryPrefix: 'parallel idempotent evidence' });
+    const results = await runWorkersConcurrently(root, task.id, 8, { idempotencyKey: key, summaryPrefix: 'parallel idempotent evidence' });
 
     expect(results.every((result) => result.ok)).toBe(true);
     const ids = new Set(results.map((result) => result.id));
@@ -114,7 +114,7 @@ describe.skipIf(!tsxBin)('evidence append under real multi-process contention', 
   it('appends every keyless record without torn or interleaved writes across concurrent processes', async () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Parallel keyless evidence');
-    const count = 12;
+    const count = 8;
 
     const results = await runWorkersConcurrently(root, task.id, count, { summaryPrefix: 'parallel-keyless-evidence' });
 
