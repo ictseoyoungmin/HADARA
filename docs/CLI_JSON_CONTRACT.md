@@ -109,6 +109,8 @@ The task workflow surface is intentionally staged. `docs/TASK_WORKFLOW_COMMANDS.
 | `handoff suggest --task T-XXXX --json` | `hadara.handoff.suggestion.v1` | Read-only; no execute mode. | Handoff suggestion report was generated without blocking issues. |
 | `dev docker-check [--focused <test...>] [--full] [--sync-dist --before-hash <hash>] --json` | `hadara.dev.docker_check.v1` | Runs Docker subprocess; writes workspace `dist` only when `--sync-dist` is explicit and the reviewed before-hash guard passes. | Requested Docker validation completed without blocking issues, including any requested dist-sync freshness guard. |
 | `evidence add-command --task T-XXXX ... [--idempotency-key <key>] --json` | `hadara.evidence.collect.v1` evidence append response | Writes command-log evidence only; an explicit idempotency key returns an existing same-key record without appending duplicates. | Evidence append succeeded or returned the existing keyed record. |
+| `proof status --task T-XXXX --json` | `hadara.proof.status.v1` | Read-only. | Proof status was generated; `verdict` and `freshness.status` carry confidence. |
+| `proof explain --task T-XXXX --json` | `hadara.proof.explain.v1` | Read-only. | Proof explanation was generated; blockers/warnings and explanation rules describe the verdict. |
 | `task ready --task T-XXXX --level done --json` | `hadara.task.ready.v1` | Read-only. | Requested readiness level passed. |
 | `task finish --task T-XXXX --json` | `hadara.task.finish.v1` | Read-only dry-run. | Bounded finish plan has no blockers. |
 | `task finish --task T-XXXX --execute --json` | `hadara.task.finish.v1` | Writes only `TASK.md` and `docs/TASK_BOARD.md` status/path changes. | Bounded writes succeeded or no write was needed. |

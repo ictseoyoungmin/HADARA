@@ -6,17 +6,17 @@
 |---|---|---|
 | Branch | main | T-0282 Release candidate 0.2.0-rc.2 publish readiness and operator npm publish are complete; T-0275 operator npm publish and Python bridge PyPI/TestPyPI publish are also complete. |
 | Current Phase | Post npm rc.2 publish after `hadara@0.2.0-rc.2` npm publish and `hadara==0.2.0rc1` PyPI publish | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0284 Implement evidence append idempotency and locking | Evidence writes now return exact append metadata, accept explicit idempotency keys, dedupe same-key replays, and use a task-scoped local append lock. |
-| Active / Next Task | Proof status, explain, and freshness MVP | Start the P1 proof MVP capsule from the rc3 reliability plan. |
+| Latest Completed Task | T-0285 Implement proof status explain freshness MVP | `proof status` and `proof explain` now provide read-only task-readiness proof verdicts, evidence blockers/warnings, and close-proof freshness. |
+| Active / Next Task | CI gate MVP | Start the P2 CI gate capsule from the rc3 reliability plan. |
 | Validation Baseline | T-0282 rc2 publish validation passed | Docker full check passed 100 files / 681 tests and refreshed `dist`; built version smoke, strict release gate, package smoke, clean-checkout smoke, npm pack dry-run, release artifact refresh, package/clean evidence reruns, npm publish, and npm view verification passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0285 Implement proof status explain freshness MVP | Added read-only proof status/explain reports over evidence lint semantics and task close audit freshness, with verdicts for sufficient, insufficient, blocked, warning, and unknown states. | `/tmp` validation copy build passed; focused proof/evidence/close tests passed 3 files / 22 tests; built proof status smoke on T-0284 returned stale freshness warning. |
 | T-0284 Implement evidence append idempotency and locking | Hardened evidence append so JSON reports use the exact writer result, same explicit idempotency keys return existing records without duplicate Markdown/JSONL rows, keyless writes remain append-only, and task writes use `.hadara/local/locks/evidence/<task>.lock/`. | `/tmp` validation copy build passed; focused tests passed 3 files / 41 tests; built CLI idempotency replay returned existing/no-append metadata; Docker validation was blocked by daemon timeout. |
 | T-0283 Document rc3 proof reliability dogfooding plan | Added `docs/specs/rc3-proof-reliability/` with rc3 plan index, evidence append hardening spec, proof MVP spec, CI gate MVP spec, and rc3 readiness/recycle spec based on `0.2.0-rc.2` comparative dogfooding findings and reviewer judgment. | Spec file existence check and `git diff --check` passed; T-0283 evidence recorded. |
-| T-0282 Release Candidate 0.2.0-rc.2 Publish Readiness | Prepared npm rc2 metadata/docs/build, ran the operator helper, published to npm, and verified `npm view` returned `0.2.0-rc.2`; GitHub Release, Docker publish, PyPI publish, installer execution, and MCP release/package execution did not run. | T-0282 evidence: Docker full check passed 100 files / 681 tests and refreshed `dist`; built CLI version reported `0.2.0-rc.2`; strict release gate passed; rc2 package smoke and clean-checkout smoke passed; npm pack dry-run reported `hadara-0.2.0-rc.2.tgz`; helper regenerated release artifact/package/clean evidence; npm publish completed; npm view verified `0.2.0-rc.2`. |
 
 ## Current Known Problems
 
@@ -75,7 +75,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Implement proof status, explain, and freshness MVP. | Evidence append hardening is complete; proof MVP is the next rc3 reliability priority before CI gate and rc3 readiness/recycle work. | Create a fresh capsule from `docs/specs/rc3-proof-reliability/02_Proof_Status_Explain_Freshness_MVP.md`, run focused proof/evidence tests, then proceed to CI gate MVP. |
+| Implement CI gate MVP. | Proof MVP is complete; rc3 next priority is a proof/evidence gate suitable for local CI before rc3 readiness/recycle work. | Create a fresh capsule from `docs/specs/rc3-proof-reliability/03_CI_Gate_MVP.md`, run focused proof/CI gate tests, then proceed to rc3 readiness/recycle. |
 | Optionally create a GitHub draft release. | GitHub Release remains secondary and token-gated. | Use `scripts/release/manual-publish-rc.sh T-0282 --execute --github-draft --github-release-note tasks/T-0282-release-candidate-0-2-0-rc-2-publish-readiness/GITHUB_RELEASE_NOTE.md` if a separate operator-confirmed draft release is desired. |
 
 ## Validation Baseline

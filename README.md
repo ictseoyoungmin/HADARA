@@ -114,6 +114,8 @@ Evidence and handoff:
 hadara evidence collect --task T-0001 --json
 hadara evidence add-command --task T-0001 --summary "Focused validation passed." --result passed --json
 hadara evidence list --task T-0001 --json
+hadara proof status --task T-0001 --json
+hadara proof explain --task T-0001 --json
 hadara handoff suggest --task T-0001 --json
 ```
 

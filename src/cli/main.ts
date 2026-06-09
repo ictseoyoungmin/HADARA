@@ -32,6 +32,8 @@ Usage:
   hadara evidence list --task <task-id> [--limit <n>] [--include-private] [--json]
   hadara evidence lint --task <task-id> [--json]
   hadara evidence migrate --task <task-id> --to v2 [--execute --before-hash <hash>] [--json]
+  hadara proof status --task <task-id> [--json]
+  hadara proof explain --task <task-id> [--json]
   hadara debt list [--json]
   hadara debt show <id> [--json]
   hadara protocol doctor [--json]
@@ -117,6 +119,12 @@ async function main(args = process.argv.slice(2)): Promise<void> {
     case 'evidence': {
       const { handleEvidenceCommand } = await import('./evidence');
       if (handleEvidenceCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
+      break;
+    }
+
+    case 'proof': {
+      const { handleProofCommand } = await import('./proof');
+      if (handleProofCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 
