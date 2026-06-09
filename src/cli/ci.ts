@@ -1,4 +1,4 @@
-import { getStringOption } from './args';
+import { getFlag, getStringOption } from './args';
 import { createCiGateReport, CiGateMode } from '../services/ci-gate';
 
 export interface CiCommandInput {
@@ -10,7 +10,10 @@ export interface CiCommandInput {
 export function handleCiCommand(input: CiCommandInput): boolean {
   if (input.args[0] !== 'ci' || input.args[1] !== 'gate') return false;
   const mode = parseCiGateMode(getStringOption(input.args, '--mode', 'advisory') ?? 'advisory');
-  const report = createCiGateReport(input.projectRoot, mode, { taskId: getStringOption(input.args, '--task') });
+  const report = createCiGateReport(input.projectRoot, mode, {
+    taskId: getStringOption(input.args, '--task'),
+    allowEmpty: getFlag(input.args, '--allow-empty')
+  });
   if (input.jsonOutput) {
     console.log(JSON.stringify(report, null, 2));
   } else {

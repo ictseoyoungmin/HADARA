@@ -34,7 +34,7 @@ Usage:
   hadara evidence migrate --task <task-id> --to v2 [--execute --before-hash <hash>] [--json]
   hadara proof status --task <task-id> [--json]
   hadara proof explain --task <task-id> [--json]
-  hadara ci gate [--mode advisory|strict] [--task <task-id>] [--json]
+  hadara ci gate [--mode advisory|strict] [--task <task-id>] [--allow-empty] [--json]
   hadara debt list [--json]
   hadara debt show <id> [--json]
   hadara protocol doctor [--json]

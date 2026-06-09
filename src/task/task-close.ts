@@ -398,8 +398,8 @@ function hashValidationInputs(validation: HarnessValidateResult, evidenceLint: E
   return `sha256:${crypto.createHash('sha256').update(payload, 'utf8').digest('hex')}`;
 }
 
-function hashCloseRelevantSource(projectRoot: string, taskDir: string): string {
-  const relativePaths = [
+export function closeRelevantSourceRelativePaths(projectRoot: string, taskDir: string): string[] {
+  return [
     path.relative(projectRoot, path.join(taskDir, 'TASK.md')),
     path.relative(projectRoot, path.join(taskDir, 'PLAN.md')),
     path.relative(projectRoot, path.join(taskDir, 'CONTEXT.md')),
@@ -413,6 +413,10 @@ function hashCloseRelevantSource(projectRoot: string, taskDir: string): string {
   ]
     .map(toPortablePath)
     .sort();
+}
+
+function hashCloseRelevantSource(projectRoot: string, taskDir: string): string {
+  const relativePaths = closeRelevantSourceRelativePaths(projectRoot, taskDir);
   const payload = relativePaths.map((relativePath) => {
     const absolutePath = path.join(projectRoot, relativePath);
     return {

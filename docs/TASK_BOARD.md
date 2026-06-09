@@ -288,3 +288,4 @@
 | T-0285 | Implement proof status explain freshness MVP | Done | tasks/T-0285-implement-proof-status-explain-freshness-mvp | |
 | T-0286 | Implement rc3 CI gate MVP | Done | tasks/T-0286-implement-rc3-ci-gate-mvp | |
 | T-0287 | Implement rc3 readiness and installed-package recycle | Done | tasks/T-0287-implement-rc3-readiness-and-installed-package-recycle | Prepared `hadara@0.2.0-rc.3` source candidate; package, clean-checkout, release artifact, release dry-run, publish dry-run, and fresh init/recycle smokes passed without publish mutation. |
+| T-0288 | rc3 proof reliability hardening patch | Done | tasks/T-0288-rc3-proof-reliability-hardening-patch | |

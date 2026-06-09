@@ -1,4 +1,4 @@
-import { appendEvidence, EvidenceRecord, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
+import { appendEvidenceWithResult, EvidenceRecord, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
 import { createEvidenceCollectReport } from './evidence-json';
 import { createEvidenceLintReport } from '../services/evidence-lint';
 import { createEvidenceListReport } from '../services/evidence-list';
@@ -89,8 +89,12 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
       console.log(JSON.stringify({ ...report, command: 'evidence.add-command' }, null, 2));
       if (!report.ok) process.exitCode = 6;
     } else {
-      const filePath = appendEvidence(input.projectRoot, { taskId, kind: 'command-log', summary, result, visibility, idempotencyKey });
-      console.log(`[HADARA] Command evidence updated: ${filePath}`);
+      const appendResult = appendEvidenceWithResult(input.projectRoot, { taskId, kind: 'command-log', summary, result, visibility, idempotencyKey });
+      if (appendResult.existing) {
+        console.log(`[HADARA] Command evidence already exists: ${persistedEvidenceId(appendResult.evidence)}`);
+      } else {
+        console.log(`[HADARA] Command evidence recorded: ${appendResult.markdownPath}`);
+      }
     }
     return true;
   }
@@ -118,11 +122,19 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
     console.log(JSON.stringify(report, null, 2));
     if (!report.ok) process.exitCode = 6;
   } else {
-    const filePath = appendEvidence(input.projectRoot, { taskId, kind, path: evidenceFile, summary, result, visibility, idempotencyKey });
-    console.log(`[HADARA] Evidence updated: ${filePath}`);
+    const appendResult = appendEvidenceWithResult(input.projectRoot, { taskId, kind, path: evidenceFile, summary, result, visibility, idempotencyKey });
+    if (appendResult.existing) {
+      console.log(`[HADARA] Evidence already exists: ${persistedEvidenceId(appendResult.evidence)}`);
+    } else {
+      console.log(`[HADARA] Evidence recorded: ${appendResult.markdownPath}`);
+    }
   }
 
   return true;
+}
+
+function persistedEvidenceId(record: { schemaVersion: string; id?: string }): string {
+  return record.schemaVersion === 'hadara.evidence.v2' && record.id ? record.id : 'evidence.jsonl';
 }
 
 export function parseEvidenceKind(value: string): EvidenceRecord['kind'] {

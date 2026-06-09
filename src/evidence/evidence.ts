@@ -232,7 +232,7 @@ function readEvidenceIndex(taskDir: string): PersistedEvidenceRecord[] {
     .map((line) => JSON.parse(line) as PersistedEvidenceRecord);
 }
 
-function persistedEvidenceIdempotencyKey(record: PersistedEvidenceRecord): string | undefined {
+export function persistedEvidenceIdempotencyKey(record: PersistedEvidenceRecord): string | undefined {
   if (record.schemaVersion !== 'hadara.evidence.v2') return undefined;
   if (record.idempotencyKey) return record.idempotencyKey;
   const tag = record.tags.find((item) => item.startsWith('idempotency:'));
@@ -243,6 +243,7 @@ function withEvidenceAppendLock<T>(projectRoot: string, taskId: string, fn: () =
   const lockRoot = path.join(projectRoot, '.hadara', 'local', 'locks', 'evidence');
   ensureDir(lockRoot);
   const lockDir = path.join(lockRoot, `${safeFilePart(taskId)}.lock`);
+  const lockPortablePath = toPortablePath(path.relative(projectRoot, lockDir));
   const started = Date.now();
   const timeoutMs = 5000;
 
@@ -253,20 +254,36 @@ function withEvidenceAppendLock<T>(projectRoot: string, taskId: string, fn: () =
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
       if (Date.now() - started >= timeoutMs) {
-        throw new EvidenceAppendLockError(`Timed out waiting for evidence append lock for ${taskId}.`);
+        throw new EvidenceAppendLockError(
+          `Timed out waiting for the evidence append lock for ${taskId}. Lock directory: ${lockPortablePath}. ` +
+            `If no HADARA process is writing evidence, the lock is stale (inspect ${lockPortablePath}/lock.json for the owning pid); remove the lock directory and retry.`
+        );
       }
       sleepSync(25);
     }
   }
 
+  writeLockMetadata(lockDir, taskId);
   try {
     return fn();
   } finally {
     try {
-      fs.rmdirSync(lockDir);
+      fs.rmSync(lockDir, { recursive: true, force: true });
     } catch {
       // Best-effort cleanup; later writers fail closed through the timeout.
     }
+  }
+}
+
+function writeLockMetadata(lockDir: string, taskId: string): void {
+  try {
+    fs.writeFileSync(
+      path.join(lockDir, 'lock.json'),
+      `${JSON.stringify({ pid: process.pid, taskId, command: 'evidence.append', createdAt: new Date().toISOString() })}\n`,
+      'utf8'
+    );
+  } catch {
+    // Lock ownership is held by the directory; metadata is a best-effort diagnostic aid only.
   }
 }
 

@@ -6,17 +6,17 @@
 |---|---|---|
 | Branch | main | T-0282 Release candidate 0.2.0-rc.2 publish readiness and operator npm publish are complete; T-0275 operator npm publish and Python bridge PyPI/TestPyPI publish are also complete. |
 | Current Phase | Post npm rc.2 publish after `hadara@0.2.0-rc.2` npm publish and `hadara==0.2.0rc1` PyPI publish | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0287 Implement rc3 readiness and installed-package recycle | `hadara@0.2.0-rc.3` source candidate is ready; package, clean-checkout, release artifact, release dry-run, publish dry-run, and fresh init/recycle smokes passed without publish mutation. |
-| Active / Next Task | Optional rc3 npm publish | Publish remains operator-approved and mutation-gated; no automatic publish was run. |
-| Validation Baseline | T-0287 rc3 readiness validation passed | `/tmp` full check passed 102 files / 690 tests; package smoke, clean-checkout smoke, release artifact, release dry-run, release publish dry-run, and fresh init/recycle smokes passed. |
+| Latest Completed Task | T-0288 rc3 proof reliability hardening patch | Closed valid: CI gate empty-scope guard, real multi-process evidence append regression, lock diagnostics, proof freshness source accuracy, idempotent non-JSON evidence UX. Working tree is not git-committed. |
+| Active / Next Task | Optional rc3 npm publish (after Docker baseline) | Publish remains operator-approved and mutation-gated; T-0288 working tree is uncommitted and wants the reproducible Docker baseline before publish. |
+| Validation Baseline | T-0288 hardening patch validation passed | `/tmp` npm-ci copy: tsc build exit 0 and full `npm test` 103 files / 692 tests; focused 26 tests; real multi-process parallel append 2 tests; built-CLI ci gate / proof / evidence smokes passed. Reproducible Docker baseline not run (hadara-dev container absent). |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0288 rc3 proof reliability hardening patch | Closed the rc3 review's blocking gaps and hardening items: strict CI gate empty-scope guard (`CI_GATE_NO_DONE_TASKS`/`CI_GATE_TASK_NOT_FOUND`/`--allow-empty`), real multi-process evidence append regression, append-lock stale metadata/diagnostics, proof freshness `checkedSources` reflecting the real close-source set, and idempotent non-JSON evidence UX. Closed valid; working tree not git-committed. | `/tmp` npm-ci copy tsc build exit 0 and full `npm test` 103 files / 692 tests; focused 26 tests; real multi-process parallel append 2 tests; built-CLI ci gate / proof / evidence smokes; audit-close `closed-valid`. |
 | T-0287 Implement rc3 readiness and installed-package recycle | Prepared `hadara@0.2.0-rc.3` source candidate, updated release docs, verified package/clean-checkout/release artifact evidence, release dry-run readiness, publish dry-run no-mutation boundary, and fresh init/recycle surfaces. | `/tmp` full check passed 102 files / 690 tests; package, clean-checkout, release artifact, release dry-run, release publish dry-run, and fresh init/recycle command evidence passed. |
 | T-0286 Implement rc3 CI gate MVP | Added `hadara ci gate --mode advisory|strict [--task <id>] --json` with advisory vs strict blocker semantics over protocol, evidence, proof, and deferred release checks. | `/tmp` validation copy build passed; focused CI/proof/protocol tests passed 3 files / 26 tests; built CI gate smoke on T-0285 returned advisory stale-proof warning. |
-| T-0285 Implement proof status explain freshness MVP | Added read-only proof status/explain reports over evidence lint semantics and task close audit freshness, with verdicts for sufficient, insufficient, blocked, warning, and unknown states. | `/tmp` validation copy build passed; focused proof/evidence/close tests passed 3 files / 22 tests; built proof status smoke on T-0284 returned stale freshness warning. |
 
 ## Current Known Problems
 

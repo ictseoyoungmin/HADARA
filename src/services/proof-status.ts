@@ -2,7 +2,7 @@ import path from 'node:path';
 import { normalizeEvidenceRecordsInMemoryOrder, NormalizedEvidenceRecord } from '../evidence/normalizer';
 import { classifyEvidenceStrength } from '../evidence/semantics';
 import { findTaskCapsule } from '../task/task-capsule';
-import { createTaskAuditCloseReport } from '../task/task-close';
+import { closeRelevantSourceRelativePaths, createTaskAuditCloseReport } from '../task/task-close';
 import { createEvidenceLintReport, EvidenceLintIssue } from './evidence-lint';
 
 export type ProofVerdict = 'sufficient' | 'insufficient' | 'blocked' | 'warning' | 'unknown';
@@ -133,11 +133,15 @@ function summarizeProofEvidence(records: NormalizedEvidenceRecord[]): ProofEvide
 }
 
 function createFreshness(projectRoot: string, taskDir: string, audit: ReturnType<typeof createTaskAuditCloseReport>): ProofStatusReport['freshness'] {
-  const checkedSources = [
-    path.relative(projectRoot, path.join(taskDir, 'TASK.md')),
-    path.relative(projectRoot, path.join(taskDir, 'evidence.jsonl')),
-    path.relative(projectRoot, path.join(taskDir, 'EVIDENCE.md'))
-  ].map(toPortablePath);
+  // Freshness is derived from the task close audit, whose source hash covers the full
+  // close-relevant document set; expose that same set plus the evidence files the proof reads.
+  const checkedSources = Array.from(
+    new Set([
+      ...closeRelevantSourceRelativePaths(projectRoot, taskDir),
+      toPortablePath(path.relative(projectRoot, path.join(taskDir, 'evidence.jsonl'))),
+      toPortablePath(path.relative(projectRoot, path.join(taskDir, 'EVIDENCE.md')))
+    ])
+  ).sort();
   const verdict = audit.auditVerdict.verdict;
   const status: ProofFreshnessStatus = !audit.auditVerdict.closeEvidenceFound
     ? 'missing'
