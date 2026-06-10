@@ -9,7 +9,7 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0288 rc3 proof reliability hardening patch |
+| Latest Completed Task | T-0289 rc3 post-hardening release readiness refresh |
 
 ## Current Phase
 
@@ -57,9 +57,9 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0288 rc3 proof reliability hardening patch (committed and pushed as `e4e281e`).
-- Latest implementation update is the rc3 proof-reliability hardening patch: strict CI gate empty-scope guard, real multi-process evidence append regression coverage, append-lock stale diagnostics, proof freshness source accuracy, and idempotent non-JSON evidence UX.
-- Next step is a post-hardening rc3 release readiness refresh (package smoke, clean-checkout smoke, release artifact/dry-run, publish dry-run) before any operator-approved npm publish for `hadara@0.2.0-rc.3`.
+- Latest completed task is T-0289 rc3 post-hardening release readiness refresh.
+- rc3 release readiness is re-proven after T-0288 in the Docker baseline: package smoke and clean-checkout smoke passed, release gate strict / dry-run (ready, 0 blockers) / publish dry-run are green, and the full suite passes 695 tests; the parallel evidence test was reduced 8->4 workers so it no longer destabilizes `npm run check` under Docker worker-pool contention.
+- Next step is the operator publish of `hadara@0.2.0-rc.3`: commit a clean worktree, `npm login`, then `scripts/release/manual-publish-rc.sh T-0289 --execute` from an environment where `npm run check` passes (not the raw `/mnt/f` host). Registry mutation remains operator- and approval-gated.
 - Skeleton repository exists.
 - Seed CLI exists.
 - MockProvider contract exists.
