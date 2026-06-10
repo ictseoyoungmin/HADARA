@@ -4,11 +4,11 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0282 Release candidate 0.2.0-rc.2 publish readiness and operator npm publish are complete; T-0275 operator npm publish and Python bridge PyPI/TestPyPI publish are also complete. |
-| Current Phase | Post npm rc.2 publish after `hadara@0.2.0-rc.2` npm publish and `hadara==0.2.0rc1` PyPI publish | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0289 rc3 post-hardening release readiness refresh | Closed valid. rc3 readiness re-proven in the Docker baseline after T-0288: package smoke + clean-checkout passed, release gates green, full suite 695 tests. Reduced the parallel evidence test 8->4 workers to stop it destabilizing `npm run check` under Docker worker-pool contention. Working tree carries T-0289 + state docs (not committed by the agent). |
-| Active / Next Task | Operator publish of `hadara@0.2.0-rc.3` | Only operator steps remain: (1) commit a clean worktree, (2) `npm login`, (3) `scripts/release/manual-publish-rc.sh T-0289 --execute` (run without `--execute` first). Run from an environment where `npm run check` passes, not the raw `/mnt/f` host. |
-| Validation Baseline | T-0289 release readiness validation passed | Docker `hadara-dev`: package smoke `--execute` all steps passed; clean-checkout `--execute` ok:true (`check` exit 0); release gate strict / dry-run (ready, 0 blockers) / publish dry-run green; full suite 695 tests in a fresh container copy. |
+| Branch | main | T-0289 rc3 post-hardening release readiness refresh and `hadara@0.2.0-rc.3` publish are complete; T-0275 operator npm publish and Python bridge PyPI/TestPyPI publish are also complete. |
+| Current Phase | Post npm rc.3 publish after `hadara@0.2.0-rc.3` npm publish and `hadara==0.2.0rc1` PyPI publish | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0289 rc3 post-hardening release readiness refresh | Closed valid. rc3 readiness re-proven in the Docker baseline after T-0288: package smoke + clean-checkout passed, release gates green, full suite 695 tests. `hadara@0.2.0-rc.3` was then published to npm and verified by `npm view`. |
+| Active / Next Task | Optional operator-approved GitHub Release draft for `hadara@0.2.0-rc.3` | rc3 publish is complete; optional token-gated draft remains. If needed, run `scripts/release/manual-publish-rc.sh T-0289 --execute --github-draft` with the proper release note file. |
+| Validation Baseline | T-0289 release readiness validation passed | Docker `hadara-dev`: package smoke `--execute` all steps passed; clean-checkout `--execute` ok:true (`check` exit 0); release gate strict / dry-run (ready, 0 blockers) / publish dry-run green; npm publish completed with `npm view` verification for `hadara@0.2.0-rc.3`; full suite 695 tests in a fresh container copy. |
 
 ## Last 3 Completed Tasks
 
@@ -75,13 +75,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Optional operator-approved npm publish for `hadara@0.2.0-rc.3`. | rc3 source readiness is complete; registry mutation remains explicit operator work. | Start a publish capsule, confirm clean worktree and token presence without printing values, then use the approval-gated publish helper only after operator confirmation. |
-| Optionally create a GitHub draft release. | GitHub Release remains secondary and token-gated. | Use `scripts/release/manual-publish-rc.sh T-0282 --execute --github-draft --github-release-note tasks/T-0282-release-candidate-0-2-0-rc-2-publish-readiness/GITHUB_RELEASE_NOTE.md` if a separate operator-confirmed draft release is desired. |
+| Optional operator-approved GitHub Release draft for `hadara@0.2.0-rc.3`. | GitHub Release remains secondary and token-gated. | If needed, use `scripts/release/manual-publish-rc.sh T-0289 --execute --github-draft` with operator confirmation and a prepared release-note file. |
+| Optional: installer/OS pack publish path. | Not required for this rc. | No installer/OS pack publish was run in T-0289; run via the approved host flow only if requested. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0289 rc3 publication and close completion | Docker `hadara-dev` proofs and helper flow completed: package smoke, clean-checkout smoke, strict release gate, release dry-run, publish dry-run, and `hadara@0.2.0-rc.3` npm publish; `npm view` verification passed; `task close --execute` and `task audit-close` returned `closed-valid`. | GitHub Release draft was not requested. |
 | T-0282 rc2 release readiness and npm publish | Docker full check passed 100 files / 681 tests and refreshed workspace `dist`; built CLI version smoke returned `0.2.0-rc.2` with `distLooksStale:false`; strict release gate returned `ok:true`; package smoke and clean-checkout smoke passed with reduced public evidence; npm pack dry-run reported `hadara-0.2.0-rc.2.tgz`; helper regenerated release artifact/package/clean evidence; npm publish completed; npm view verified `0.2.0-rc.2`. | GitHub Release draft was not requested; Docker publish, PyPI/TestPyPI publish, installer execution, and MCP release/package execution did not run for rc2. |
 | T-0281 init scaffold protocol guidance follow-up | Focused Docker tests passed 2 files / 24 tests; generated basic/standard/governed init/doctor smoke passed; direct harness validate smoke returned `ok:true`; Docker full check passed 100 files / 681 tests and refreshed workspace `dist`; workspace built-CLI standard init smoke and `git diff --check` passed. | Generated/root docs now include Python/SQLite local ignore defaults, evidence integrity rules, Project-Specific Documents registration guidance, direct `harness validate --level done` diagnostics, and close-source stability guidance before `task close`. |
 | T-0280 init scaffold lifecycle wording follow-up | Focused Docker tests passed 2 files / 24 tests; generated basic/standard/governed scaffold smoke passed; Docker full check passed 100 files / 681 tests and refreshed workspace `dist`; workspace built-CLI basic init smoke and `git diff --check` passed. | Corrected generated/root docs to the observed `finish -> ready -> close -> audit` lifecycle and recorded TestPyPI/PyPI `hadara==0.2.0rc1` as published. |

@@ -8,7 +8,7 @@
 | Title | rc3 post-hardening release readiness refresh |
 | Status | Done |
 | Created | 2026-06-09 |
-| Updated | 2026-06-09 |
+| Updated | 2026-06-10 |
 
 ## Goal
 
@@ -44,3 +44,4 @@ Done
 | 2026-06-09T00:00:00.000Z | Draft | Initial task scaffold. | Scaffold. |
 | 2026-06-09T00:00:01.000Z | In Progress | Re-proving rc3 release readiness after T-0288 in the Docker baseline. | package smoke, clean-checkout smoke, and release gates; see EVIDENCE.md. |
 | 2026-06-09T00:00:02.000Z | Done | rc3 release readiness re-proven; only operator commit/login/publish remain. | package smoke + clean-checkout passed; release gates green; full suite 695 tests; see EVIDENCE.md. |
+| 2026-06-10T04:06:48.470Z | Done | `hadara@0.2.0-rc.3` published to npm and verified by `npm view`; GitHub draft was intentionally skipped. | evidence record `ev:T-0289:fcc37b314b9b488d811f0883`; package publish summary. |

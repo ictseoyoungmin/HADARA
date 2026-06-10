@@ -15,6 +15,7 @@
 | release gate --mode strict | Yes | Release gate must be green for publish. | Passed | ok:true, no blockers. |
 | release dry-run | Yes | Release readiness must report ready. | Passed | ok:true, readiness ready, 0 blockers. |
 | release publish --mode dry-run | Yes | Publish path must report no mutation and no blockers. | Passed | ok:true, all targets willExecute:false. |
+| npm publish (manual) `hadara@0.2.0-rc.3` | Yes | Confirmed registry mutation after readiness proof and helper checks. | Passed | Published `hadara@0.2.0-rc.3`; `npm view` verified `0.2.0-rc.3`. |
 | Parallel evidence append regression | Yes | rc3 core bug was parallel evidence writes. | Passed | evidence-parallel-append.test.ts (2 tests); reduced 8->4 concurrent workers to avoid destabilizing the full `npm run check` under Docker worker-pool contention. |
 
 ## Notes

@@ -59,7 +59,7 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 - Latest completed task is T-0289 rc3 post-hardening release readiness refresh.
 - rc3 release readiness is re-proven after T-0288 in the Docker baseline: package smoke and clean-checkout smoke passed, release gate strict / dry-run (ready, 0 blockers) / publish dry-run are green, and the full suite passes 695 tests; the parallel evidence test was reduced 8->4 workers so it no longer destabilizes `npm run check` under Docker worker-pool contention.
-- Next step is the operator publish of `hadara@0.2.0-rc.3`: commit a clean worktree, `npm login`, then `scripts/release/manual-publish-rc.sh T-0289 --execute` from an environment where `npm run check` passes (not the raw `/mnt/f` host). Registry mutation remains operator- and approval-gated.
+- `hadara@0.2.0-rc.3` publish is complete, with `npm view hadara@0.2.0-rc.3` verification.
 - Skeleton repository exists.
 - Seed CLI exists.
 - MockProvider contract exists.
