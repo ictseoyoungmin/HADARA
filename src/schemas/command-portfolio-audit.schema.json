@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.command_portfolio_audit.v1",
+  "x-hadara-schema-id": "hadara.command_portfolio_audit.v1",
+  "title": "HADARA Command Portfolio Audit Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "primaryCommandIds", "diagnosticCommandIds", "advancedFamilies", "decisions", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.command_portfolio_audit.v1" },
+    "command": { "const": "command.portfolio-audit" },
+    "ok": { "const": true },
+    "primaryCommandIds": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "diagnosticCommandIds": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "advancedFamilies": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/advancedFamily" }
+    },
+    "decisions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/decision" }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "advancedFamily": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["family", "commandIds", "useWhen"],
+      "properties": {
+        "family": { "type": "string", "minLength": 1 },
+        "commandIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "useWhen": { "type": "string", "minLength": 1 }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["decision", "commands", "rule", "evidence"],
+      "properties": {
+        "decision": { "type": "string", "minLength": 1 },
+        "commands": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "rule": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "string", "minLength": 1 }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

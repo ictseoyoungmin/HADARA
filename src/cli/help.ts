@@ -4,6 +4,7 @@ import {
   findCommandRegistryEntry,
   listCommandRegistryEntries
 } from '../services/capability-registry';
+import { createLifecycleGuideReport } from '../services/lifecycle-guide';
 
 export interface HelpCommandInput {
   args: string[];
@@ -19,6 +20,10 @@ export function handleHelpCommand(input: HelpCommandInput): boolean {
   }
 
   if (topic === 'lifecycle') {
+    if (input.args.includes('--json')) {
+      console.log(JSON.stringify(createLifecycleGuideReport(), null, 2));
+      return true;
+    }
     console.log(renderLifecycleHelp());
     return true;
   }
@@ -77,35 +82,28 @@ export function renderDefaultHelp(): string {
 }
 
 export function renderLifecycleHelp(): string {
-  const primary = listCommandRegistryEntries({ family: 'capsule-lifecycle', requiredness: 'primary' }).filter((entry) => entry.canonical);
+  const report = createLifecycleGuideReport();
   const diagnostics = listCommandRegistryEntries({ family: 'proof-diagnostics' }).filter((entry) => entry.requiredness === 'diagnostic');
-  const byStage = new Map<string, CommandRegistryEntry[]>();
-  for (const entry of primary) {
-    const list = byStage.get(entry.lifecycleStage) ?? [];
-    list.push(entry);
-    byStage.set(entry.lifecycleStage, list);
-  }
 
   const lines = [
     'HADARA canonical task lifecycle',
     '',
-    'Loop:',
-    '  discover/create -> inspect -> evidence -> finish -> ready -> close -> audit -> handoff',
-    '',
-    'Primary commands:'
+    'Primary capsule lifecycle:'
   ];
 
-  for (const stage of LIFECYCLE_ORDER) {
-    const entries = byStage.get(stage);
-    if (!entries?.length) continue;
-    lines.push(`  ${stage}:`);
-    for (const entry of entries) lines.push(`    ${entry.id}  ${entry.command}`);
+  for (const step of report.primaryPath) {
+    lines.push(`  ${step.order} ${step.stage.padEnd(9)} ${step.command}`);
+    if (step.commandId === 'task.finish') lines.push('             hadara task finish --task T-XXXX --execute --json');
+    if (step.commandId === 'task.close') lines.push('             hadara task close --task T-XXXX --execute --json');
   }
 
-  lines.push('', 'Diagnostic side paths:');
+  lines.push(
+    '',
+    'Diagnostics when blocked:'
+  );
   for (const entry of diagnostics) lines.push(`  ${entry.id}  ${entry.command}`);
 
-  lines.push('', 'Close loop:', '  task finish --dry-run/review -> task finish --execute -> task ready -> task close dry-run -> task close --execute -> task audit-close');
+  lines.push('', 'Advanced:', '  release/package, dev docker-check, dashboard/tui, integrations, run harness');
 
   return lines.join('\n');
 }

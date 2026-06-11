@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.lifecycle.guide.v1",
+  "x-hadara-schema-id": "hadara.lifecycle.guide.v1",
+  "title": "HADARA Lifecycle Guide Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "primaryPath", "diagnostics", "advanced", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.lifecycle.guide.v1" },
+    "command": { "const": "help.lifecycle" },
+    "ok": { "type": "boolean" },
+    "primaryPath": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/primaryStep" }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/diagnostic" }
+    },
+    "advanced": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/advancedFamily" }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "primaryStep": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["order", "stage", "commandId", "command", "summary", "requiredness", "writeBoundary", "readOnly", "when"],
+      "properties": {
+        "order": { "type": "integer", "minimum": 1 },
+        "stage": { "type": "string", "minLength": 1 },
+        "commandId": { "type": "string", "minLength": 1 },
+        "command": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 },
+        "requiredness": { "const": "primary" },
+        "writeBoundary": { "type": "string", "minLength": 1 },
+        "readOnly": { "type": "boolean" },
+        "when": { "type": "string", "minLength": 1 }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["commandId", "command", "useWhen"],
+      "properties": {
+        "commandId": { "type": "string", "minLength": 1 },
+        "command": { "type": "string", "minLength": 1 },
+        "useWhen": { "type": "string", "minLength": 1 }
+      }
+    },
+    "advancedFamily": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["family", "commandIds", "useWhen"],
+      "properties": {
+        "family": { "type": "string", "minLength": 1 },
+        "commandIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "useWhen": { "type": "string", "minLength": 1 }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

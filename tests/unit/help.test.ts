@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderCommandHelp, renderDefaultHelp, renderFamilyHelp, renderLifecycleHelp } from '../../src/cli/help';
 import { findCommandRegistryEntry } from '../../src/services/capability-registry';
+import { createLifecycleGuideReport } from '../../src/services/lifecycle-guide';
 
 describe('registry-backed help', () => {
   it('renders short lifecycle-oriented default help', () => {
@@ -10,6 +11,8 @@ describe('registry-backed help', () => {
     expect(output).toContain('hadara help lifecycle');
     expect(output).toContain('hadara task next --json');
     expect(output).toContain('Primary capsule lifecycle');
+    expect(output).toContain('evidence.add-command');
+    expect(output).toContain('handoff.update');
     expect(output).toContain('hadara commands --json');
     expect(output).not.toContain('hadara release publish');
     expect(output).not.toContain('hadara dashboard serve');
@@ -22,12 +25,20 @@ describe('registry-backed help', () => {
     const output = renderLifecycleHelp();
 
     expect(output).toContain('HADARA canonical task lifecycle');
-    expect(output).toContain('task.next');
-    expect(output).toContain('task.finish');
-    expect(output).toContain('task.close');
-    expect(output).toContain('task.audit-close');
-    expect(output).toContain('Diagnostic side paths');
+    expect(output).toContain('1 discover');
+    expect(output).toContain('task finish --task T-XXXX --execute --json');
+    expect(output).toContain('task close --task T-XXXX --execute --json');
+    expect(output).toContain('Diagnostics when blocked');
     expect(output).toContain('harness.validate');
+  });
+
+  it('can render lifecycle guide JSON projection data', () => {
+    const report = createLifecycleGuideReport();
+
+    expect(report.schemaVersion).toBe('hadara.lifecycle.guide.v1');
+    expect(report.primaryPath.map((step) => step.commandId)).toContain('evidence.add-command');
+    expect(report.primaryPath.map((step) => step.commandId)).toContain('handoff.update');
+    expect(report.diagnostics.map((item) => item.commandId)).toContain('harness.validate');
   });
 
   it('explains a command with registry metadata', () => {

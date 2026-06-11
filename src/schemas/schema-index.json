@@ -72,11 +72,25 @@
       "notes": "Documents registry-backed command help projection metadata for Phase 7.1 structured command discovery."
     },
     {
+      "id": "hadara.command_portfolio_audit.v1",
+      "path": "src/schemas/command-portfolio-audit.schema.json",
+      "status": "fixture",
+      "owner": "services/lifecycle-guide",
+      "notes": "Documents the Phase 7.2 command portfolio audit projection over canonical, alias, diagnostic, advanced, dev-only, and release-only decisions."
+    },
+    {
       "id": "hadara.commands.registry.v1",
       "path": "src/schemas/commands-registry.schema.json",
       "status": "fixture",
       "owner": "services/capability-registry",
       "notes": "Documents the Phase 7.1 machine-readable command registry projection used by hadara commands --json."
+    },
+    {
+      "id": "hadara.lifecycle.guide.v1",
+      "path": "src/schemas/lifecycle-guide.schema.json",
+      "status": "fixture",
+      "owner": "services/lifecycle-guide",
+      "notes": "Documents the Phase 7.2 registry-backed lifecycle guide returned by hadara help lifecycle --json."
     },
     {
       "id": "hadara.tools.list.v1",

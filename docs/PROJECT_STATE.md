@@ -9,13 +9,13 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0291 Implement Phase 7.1 command surface registry and structured help |
+| Latest Completed Task | T-0292 Phase 7.2 Lifecycle Guide and Command Portfolio Audit |
 
 ## Next Planned Line
 
-Phase 7 Surface Refactor is the planned 0.3.0 line. It covers command registry/help, lifecycle guide, document registry, managed sections, docs cleanup, and release hardening. The Phase 7 specs are staged under `docs/specs/0.3.0/`; Phase 7.0 and Phase 7.1 are implemented, and Phase 7.2+ remain planned until their corresponding Task Capsules close valid.
+Phase 7 Surface Refactor is the planned 0.3.0 line. It covers command registry/help, lifecycle guide, document registry, managed sections, docs cleanup, and release hardening. The Phase 7 specs are staged under `docs/specs/0.3.0/`; Phase 7.0 through Phase 7.2 are implemented, and Phase 7.3+ remain planned until their corresponding Task Capsules close valid.
 
-T-0291 implemented the Phase 7.1 command surface registry and structured help. `src/services/capability-registry.ts` is now the authoritative command registry, `hadara help` and `hadara commands --json` are registry-backed, and `tools list` remains a compatibility projection from the same registry. Full-suite validation has residual timeout-only dashboard/dogfooding blockers recorded in the T-0291 capsule; focused Phase 7.1, schema/tools, init/MCP/feature-smoke checks passed.
+T-0292 implemented the Phase 7.2 lifecycle guide and command portfolio audit. `hadara help lifecycle --json` now emits `hadara.lifecycle.guide.v1`, `docs/LIFECYCLE_GUIDE.md` records the primary Task Capsule lifecycle, and `docs/COMMAND_PORTFOLIO_AUDIT.md` records confusable-command/non-overlap decisions without changing command semantics. Standard Docker wrapper validation still times out without output; Docker direct TypeScript, focused lifecycle/portfolio/help/schema/registry/tools tests, regression init/MCP/feature-smoke tests, built CLI smokes, and `git diff --check` passed.
 
 ## Current Phase
 
@@ -63,7 +63,7 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0289 rc3 post-hardening release readiness refresh.
+- Latest completed task is T-0292 Phase 7.2 Lifecycle Guide and Command Portfolio Audit.
 - rc3 release readiness is re-proven after T-0288 in the Docker baseline: package smoke and clean-checkout smoke passed, release gate strict / dry-run (ready, 0 blockers) / publish dry-run are green, and the full suite passes 695 tests; the parallel evidence test was reduced 8->4 workers so it no longer destabilizes `npm run check` under Docker worker-pool contention.
 - `hadara@0.2.0-rc.3` publish is complete, with `npm view hadara@0.2.0-rc.3` verification.
 - Skeleton repository exists.

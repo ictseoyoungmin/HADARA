@@ -292,3 +292,4 @@
 | T-0289 | rc3 post-hardening release readiness refresh | Done | tasks/T-0289-rc3-post-hardening-release-readiness-refresh | |
 | T-0290 | Stage Phase 7 surface refactor specs | Done | tasks/T-0290-stage-phase-7-surface-refactor-specs | |
 | T-0291 | Implement Phase 7.1 command surface registry and structured help | Done | tasks/T-0291-implement-phase-7-1-command-surface-registry-and-structured-help | |
+| T-0292 | Phase 7.2 Lifecycle Guide and Command Portfolio Audit | Done | tasks/T-0292-phase-7-2-lifecycle-guide-and-command-portfolio-audit | |
