@@ -20,7 +20,7 @@ This repository is both the HADARA source checkout and the HADARA protocol works
 
 ## Release Status
 
-Current source candidate:
+Current release candidate prepared for operator publish:
 
 ```text
 hadara@0.3.0-rc.1
@@ -43,7 +43,7 @@ Phase 7.x labels are internal implementation phases, not npm release-candidate l
 | `hadara@0.2.0-rc.2` | Previous published npm RC. |
 | `hadara@0.2.0-rc.3` | Previous published npm RC. |
 | `hadara@0.3.0-rc.0` | Current published npm RC; package metadata lacks the intended discovery fields. |
-| `hadara@0.3.0-rc.1` | Current source candidate; npm publish is deferred until later feature/fix work and a final readiness capsule. |
+| `hadara@0.3.0-rc.1` | Current publish candidate; T-0301 prepares the operator-confirmed npm publish path. |
 | GitHub Release | Secondary target, approval-gated. |
 | Docker image | Deferred. |
 | PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
@@ -55,7 +55,7 @@ No release command should publish, create a GitHub Release, build Docker images,
 
 Requires Node.js 22.
 
-Install the latest published RC:
+Install the latest published RC before the T-0301 publish step:
 
 ```bash
 npm install -g hadara@0.3.0-rc.0
@@ -68,6 +68,14 @@ Run without a global install:
 ```bash
 npx hadara@0.3.0-rc.0 help
 npx hadara@0.3.0-rc.0 doctor --json
+```
+
+After the T-0301 npm publish helper verifies `hadara@0.3.0-rc.1` on the registry, install the new RC:
+
+```bash
+npm install -g hadara@0.3.0-rc.1
+hadara help
+hadara doctor --json
 ```
 
 ## What HADARA Gives You

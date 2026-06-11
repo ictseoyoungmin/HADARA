@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0300 fixes the task-scoped protocol migration evidence preservation blocker while keeping rc.1 publish deferred. |
-| Current Phase | 0.3.0-rc.1 source candidate feature work in progress; publish deferred | `hadara@0.3.0-rc.0` remains the latest published npm release. Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0300 Protocol Migrate Task Evidence Preservation Blocker Fix | Existing task `evidence.jsonl` is now skipped/preserved by task-scoped migration instead of being planned as an empty update; missing indexes are still created. |
-| Active / Next Task | None | Continue planned feature/fix work for eventual `0.3.0-rc.1`; open a later final readiness/publish capsule before any npm publish. |
-| Validation Baseline | T-0300 evidence preservation blocker validation | Focused protocol migration tests passed 1 file / 4 tests; TypeScript build passed; workspace `dist` refreshed; built CLI smoke preserved existing task `evidence.jsonl` content after `protocol migrate --task --execute`; T-0299 re-close/audit returned closed-valid. |
+| Branch | main | T-0301 prepares `hadara@0.3.0-rc.1` for operator npm publish; no publish mutation has been executed in this checkout. |
+| Current Phase | 0.3.0-rc.1 final readiness prepared; operator publish pending | `hadara@0.3.0-rc.0` remains the latest published npm release until the T-0301 helper is executed. Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0301 0.3.0-rc.1 Final Readiness and Publish Preparation | Release notes, README/release-readiness docs, manual helper task/version guard, and dry-run cleanup path are ready for rc.1 operator publish. |
+| Active / Next Task | None | If publishing now, use a fresh `/tmp/hadara-publish` clone and run `bash scripts/release/manual-publish-rc.sh T-0301`, then `bash scripts/release/manual-publish-rc.sh T-0301 --execute`. Do not use T-0297 for rc.1. |
+| Validation Baseline | T-0301 rc.1 readiness validation | `bash -n` passed for the helper; helper rejects mismatched T-0297 before npm auth; dry-run cleanup smoke left temp repo clean; sandbox-external `/tmp` `npm run check` passed 117 files / 749 tests. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0301 0.3.0-rc.1 Final Readiness and Publish Preparation | Prepared rc.1 release-facing docs, feature-focused notes, helper task/version guard, and dry-run cleanup for the operator publish clone. | `/tmp` `npm run check` passed 117 files / 749 tests; helper syntax/guard/cleanup smokes passed. |
 | T-0300 Protocol Migrate Task Evidence Preservation Blocker Fix | Fixed task-scoped protocol migration so existing `evidence.jsonl` is never overwritten; corrected and reclosed T-0299 handoff drift. | Focused migration regression 1 file / 4 tests; build/dist refresh; built CLI preservation smoke; T-0299 audit-close closed-valid. |
 | T-0299 0.3.0-rc.1 Protocol Migration for 0.3 Adoption | Added rc1 migration spec and `protocol migrate --target 0.3.0` project/task scoped dry-run-first adoption support; README install guidance now targets published rc.0 while rc.1 remains source candidate. | Focused tests; Docker full check partial pass with standalone dashboard retry; built CLI migration execute smoke; workspace dist version smoke. |
-| T-0298 0.3.0-rc.1 Publish Metadata Hardening | Bumped package/readiness/README to rc.1, made the manual publish helper prefer the current built CLI over global `hadara`, and added blocking tarball package metadata verification. | Focused tests 3 files / 31 tests; Docker full check with standalone dashboard-static retry; release artifact; tarball package metadata inspection; npm publish dry-run. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
 | Published `0.3.0-rc.0` npm metadata still shows the old package description and no keywords. | The immutable rc.0 package remains metadata-limited, but T-0298 prepares rc.1 metadata guards so the next publish can include the intended discovery fields. | Keep the helper guard; before the eventual rc.1 publish, regenerate artifacts after all remaining feature work and verify tarball metadata again. |
-| `0.3.0-rc.1` release notes and final readiness are still pending. | Source work has continued after T-0298/T-0299/T-0300, but npm does not have rc.1 and release notes still need a final rc.1 entry. | Open a later final readiness/publish capsule to update release notes and rerun package smoke, clean-checkout smoke, release artifact, strict gate, release dry-run, and publish dry-run before publish. |
+| `0.3.0-rc.1` is prepared but not yet published to npm. | Source/readiness state is ready for operator publish, but registry still has `0.3.0-rc.0` as latest until the helper execute step completes. | Publish from a clean `/tmp/hadara-publish` clone with T-0301; after publish, verify `npm view hadara@0.3.0-rc.1 version description keywords repository homepage bugs --json`. |
 | T-0291/T-0292/T-0293/T-0294 full wrapper validation had timeout-only residual blockers, while T-0295 wrapper validation passed. | Older Phase 7 focused checks passed, and T-0295 restored a clean standard wrapper baseline for current changes. | Use T-0295's 115-file / 741-test wrapper pass as the latest validation baseline, while treating older timeout notes as historical. |
 | Combined parallel focused dashboard/static validation can timeout under worker contention. | Standalone dashboard-static passed quickly, but a parallel focused run timed out once. | Run dashboard-static standalone or serialize dashboard validation when investigating route behavior. |
 | `dev docker-check` run from sandboxed Node subprocess can fail before Docker temp workspace creation even when direct `docker exec` succeeds. | JSON reports may show `temp-workspace exitCode=1` without raw logs. | Use explicit container env and rerun outside sandbox, or inspect with direct `docker exec`; T-0274 now exposes failed step and exit code. |

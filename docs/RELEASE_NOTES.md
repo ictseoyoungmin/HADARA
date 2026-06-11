@@ -1,5 +1,26 @@
 # RELEASE_NOTES
 
+## 0.3.0-rc.1
+
+Release candidate prepared after the 0.3.0-rc.0 publish exposed two adoption problems: existing projects need a safe path onto the new 0.3 protocol surface, and npm package discovery metadata must be present in the published tarball before the next registry mutation.
+
+Highlights:
+
+- Adds `hadara protocol migrate` as a dry-run-first upgrade path for existing HADARA projects that were initialized before the 0.3 surface refactor.
+- Reports protocol version state and planned changes before mutation so operators can see whether a project is already current or still on an older scaffold.
+- Supports selected project/task scoped migration for docs registry insertion, managed section markers, command surface documentation refresh, and Required Reading cleanup.
+- Uses before-hash guarded execute plans so migration writes are rejected when a target file changed after the dry-run plan.
+- Preserves task evidence during task-scoped migration: existing `evidence.jsonl` files are never overwritten, and a missing task evidence log is created only when needed.
+- Keeps task status history rows inside the managed status table when finishing capsules, preventing malformed Markdown from release and migration workflows.
+- Hardens npm publish metadata by validating the staged tarball `package/package.json` for description, keywords, repository, homepage, and bugs fields before publish.
+- Tightens the manual rc publish helper so the release capsule must match the package version and a successful dry-run can be followed by `--execute` in the same clean `/tmp` clone.
+
+Boundaries:
+
+- This release candidate prepares the npm package for operator-confirmed publish; it does not itself publish to npm, create a GitHub Release, build Docker images, publish PyPI artifacts, or run installer mutation.
+- Protocol migration is scoped and hash-guarded; it is not a broad historical rewrite engine and does not delete archived or superseded documents.
+- GitHub Release creation remains optional through the manual helper after npm publish.
+
 ## 0.3.0-rc.0
 
 Source candidate prepared during Phase 7.6 after the Phase 7 surface-refactor slices completed. This entry describes implemented behavior only; npm publish remains approval-gated and is not performed by the source-candidate documentation update.

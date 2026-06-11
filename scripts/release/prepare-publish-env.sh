@@ -8,10 +8,9 @@
 #   helper must run from a clone on the container's native ext4 filesystem.
 # - Cloning the mounted repo as root triggers git "dubious ownership"; this adds the
 #   required `safe.directory` entries.
-# - The container ships a stale global `hadara` (bootstrap CLI). `manual-publish-rc.sh`
-#   prefers a global `hadara` over the freshly built dist, and the stale build fails the
-#   strict release gate (PACKAGE_METADATA_RELEASE_READINESS). This removes it so the helper
-#   uses the clone's freshly built `dist/cli/main.js`.
+# - A container may have a stale global `hadara` on PATH. `manual-publish-rc.sh`
+#   prefers the clone's freshly built `dist/cli/main.js` when it exists, but this script
+#   still removes the stale global binary to keep diagnostics unambiguous.
 # 
 # Example flow:
 # docker exec -it hadara-dev bash
@@ -20,13 +19,13 @@
 # bash scripts/release/manual-publish-rc.sh <TASK_ID> --execute   # 프롬프트에 publish
 #
 # Before running this script, the operator should have already:
-# 1) 버전 올리기 (예: rc.3 → rc.4)
-#    package.json "version": "0.2.0-rc.4"
-# 2) release gate가 요구하는 버전 마커도 같이 맞추기
-#    docs/RELEASE_READINESS.md:13
-#    - Current version is `0.2.0-rc.4`.
-# 3) 커밋 (clean worktree). fresh clone이 커밋된 내용만 가져감
-# git add -A && git commit -m "Prepare 0.2.0-rc.4 publish readiness"
+# 1) Version and release docs already point at the intended RC.
+#    For the current rc.1 path:
+#    package.json "version": "0.3.0-rc.1"
+#    docs/RELEASE_READINESS.md:
+#    - Current version is `0.3.0-rc.1`.
+# 2) Commit the readiness state. Fresh clones only contain committed content.
+# git add -A && git commit -m "Prepare 0.3.0-rc.1 publish readiness"
 #
 #
 # What it does:
@@ -53,7 +52,7 @@
 #   -h, --help           Show this help.
 #
 # Run it from the host repo root:
-#   bash scripts/release/prepare-publish-env.sh T-0290
+#   bash scripts/release/prepare-publish-env.sh T-0301
 
 set -euo pipefail
 
@@ -83,7 +82,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$TASK_ID" ]]; then
-  echo "TASK_ID is required (the release Task Capsule id, e.g. T-0290)."
+  echo "TASK_ID is required (the release Task Capsule id, e.g. T-0301)."
   usage
   exit 1
 fi

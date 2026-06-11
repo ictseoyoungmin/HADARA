@@ -301,3 +301,4 @@
 | T-0298 | 0.3.0-rc.1 publish metadata hardening | Done | tasks/T-0298-0-3-0-rc-1-publish-metadata-hardening | |
 | T-0299 | 0.3.0-rc.1 protocol migration for 0.3 adoption | Done | tasks/T-0299-0-3-0-rc-1-protocol-migration-for-0-3-adoption | |
 | T-0300 | Protocol migrate task evidence preservation blocker fix | Done | tasks/T-0300-protocol-migrate-task-evidence-preservation-blocker-fix | |
+| T-0301 | 0.3.0-rc.1 final readiness and publish preparation | Done | tasks/T-0301-0-3-0-rc-1-final-readiness-and-publish-preparation | |

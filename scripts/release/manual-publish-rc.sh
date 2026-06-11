@@ -47,16 +47,16 @@ gh auth login
 
 # Safe default: validation + artifact + npm publish dry-run only.
 
-scripts/release/manual-publish-rc.sh T-0282
+scripts/release/manual-publish-rc.sh T-0301
 
 # Actual npm publish after typing "publish".
 
-scripts/release/manual-publish-rc.sh T-0282 --execute
+scripts/release/manual-publish-rc.sh T-0301 --execute
 
 # Actual npm publish, then GitHub Release draft after typing "github-draft".
 
-scripts/release/manual-publish-rc.sh T-0282 --execute --github-draft \
-  --github-release-note tasks/T-0282-release-candidate-0-2-0-rc-2-publish-readiness/GITHUB_RELEASE_NOTE.md
+scripts/release/manual-publish-rc.sh T-0301 --execute --github-draft \
+  --github-release-note tasks/T-0301-0-3-0-rc-1-final-readiness-and-publish-preparation/GITHUB_RELEASE_NOTE.md
 EOF
 }
 
@@ -181,6 +181,85 @@ printf './%s\n' "${file_path}"
 esac
 }
 
+resolve_task_capsule_dir() {
+local matches=()
+shopt -s nullglob
+matches=(tasks/"${TASK_ID}"-*)
+shopt -u nullglob
+
+if [[ "${#matches[@]}" -ne 1 ]]; then
+echo "Expected exactly one task capsule directory for ${TASK_ID}; found ${#matches[@]}."
+printf '  %s\n' "${matches[@]}"
+exit 1
+fi
+
+TASK_CAPSULE_DIR="${matches[0]}"
+}
+
+verify_release_task_matches_version() {
+if [[ ! -f "${TASK_CAPSULE_DIR}/TASK.md" ]]; then
+echo "Task capsule is missing TASK.md: ${TASK_CAPSULE_DIR}"
+exit 1
+fi
+
+if ! grep -Fq "${VERSION}" "${TASK_CAPSULE_DIR}/TASK.md"; then
+echo "Task ${TASK_ID} does not appear to be the release capsule for ${PACKAGE_NAME}@${VERSION}."
+echo "Task capsule: ${TASK_CAPSULE_DIR}"
+echo "Use the current release-readiness task for this package version."
+exit 1
+fi
+}
+
+dirty_paths_are_release_outputs_only() {
+local status_lines="$1"
+local line
+local path
+
+while IFS= read -r line; do
+[[ -n "${line}" ]] || continue
+path="${line:3}"
+case "${path}" in
+"${DIST_DIR}"|"${DIST_DIR}"/*|\
+"${TASK_CAPSULE_DIR}/EVIDENCE.md"|\
+"${TASK_CAPSULE_DIR}/evidence.jsonl"|\
+"${TASK_CAPSULE_DIR}/artifacts"|\
+"${TASK_CAPSULE_DIR}/artifacts"/*)
+;;
+*)
+return 1
+;;
+esac
+done <<< "${status_lines}"
+
+return 0
+}
+
+cleanup_release_dry_run_outputs() {
+local status_lines
+
+status_lines="$(git status --porcelain)"
+if [[ -z "${status_lines}" ]]; then
+return
+fi
+
+if ! dirty_paths_are_release_outputs_only "${status_lines}"; then
+echo "Git worktree has changes outside release dry-run outputs."
+echo "${status_lines}"
+exit 1
+fi
+
+echo "Cleaning release dry-run outputs so the publish clone stays reusable..."
+git checkout -- "${TASK_CAPSULE_DIR}/EVIDENCE.md" "${TASK_CAPSULE_DIR}/evidence.jsonl"
+git clean -fd -- "${DIST_DIR}" "${TASK_CAPSULE_DIR}/artifacts" >/dev/null
+
+status_lines="$(git status --porcelain)"
+if [[ -n "${status_lines}" ]]; then
+echo "Git worktree is still dirty after release dry-run cleanup."
+echo "${status_lines}"
+exit 1
+fi
+}
+
 verify_tarball_package_metadata() {
 local tarball="$1"
 local expected_name="$2"
@@ -258,6 +337,11 @@ require_cmd npm
 require_cmd node
 require_cmd git
 detect_hadara_cmd
+VERSION="$(node -p "require('./package.json').version")"
+PACKAGE_JSON_NAME="$(node -p "require('./package.json').name")"
+PACKAGE_PRIVATE="$(node -p "String(require('./package.json').private)")"
+resolve_task_capsule_dir
+verify_release_task_matches_version
 
 if [[ "${CREATE_GITHUB_DRAFT}" == "true" ]]; then
 require_cmd gh
@@ -268,8 +352,14 @@ fi
 fi
 
 echo "HADARA command: ${HADARA_CMD[*]}"
+echo "Task capsule: ${TASK_CAPSULE_DIR}"
 
 GIT_STATUS="$(git status --porcelain)"
+if [[ -n "${GIT_STATUS}" ]]; then
+cleanup_release_dry_run_outputs
+GIT_STATUS="$(git status --porcelain)"
+fi
+
 if [[ -n "${GIT_STATUS}" ]]; then
 echo "Git worktree must be clean before manual publish."
 echo "${GIT_STATUS}"
@@ -278,10 +368,6 @@ fi
 
 npm whoami --registry="${REGISTRY}" >/dev/null
 echo "npm user: $(npm whoami --registry="${REGISTRY}")"
-
-VERSION="$(node -p "require('./package.json').version")"
-PACKAGE_JSON_NAME="$(node -p "require('./package.json').name")"
-PACKAGE_PRIVATE="$(node -p "String(require('./package.json').private)")"
 
 if [[ "${PACKAGE_JSON_NAME}" != "${PACKAGE_NAME}" ]]; then
 echo "package.json name (${PACKAGE_JSON_NAME}) does not match expected package (${PACKAGE_NAME})."
@@ -368,6 +454,7 @@ echo "Dry-run inspect the exact tarball that would be published:"
 npm publish "${NPM_TARBALL}" --dry-run --registry="${REGISTRY}"
 
 if [[ "${MODE}" != "execute" ]]; then
+cleanup_release_dry_run_outputs
 echo
 echo "============================================================"
 echo "DRY-RUN COMPLETED"
