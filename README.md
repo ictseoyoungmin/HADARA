@@ -26,7 +26,7 @@ The current source checkout targets:
 hadara@0.2.0-rc.3
 ```
 
-T-0287 prepares the source checkout for `0.2.0-rc.3` after the rc2 dogfooding findings and the T-0284 through T-0286 proof reliability hardening. `hadara@0.2.0-rc.3` is a publish candidate until an operator explicitly runs an approval-gated publish capsule. The latest npm-published release candidate remains `hadara@0.2.0-rc.2`.
+T-0289 completed the rc3 post-hardening release readiness refresh and repository handoff records that the operator published `hadara@0.2.0-rc.3` to npm with `npm view` verification.
 
 Current publish boundaries:
 
@@ -36,14 +36,20 @@ Current publish boundaries:
 | `hadara@0.1.0-rc.0` | Published first RC. |
 | `hadara@0.2.0-rc.0` | Superseded internal publish candidate after recycle findings. |
 | `hadara@0.2.0-rc.1` | Previous published npm RC. |
-| `hadara@0.2.0-rc.2` | Current published npm RC. |
-| `hadara@0.2.0-rc.3` | Current source publish candidate; not published by this capsule. |
+| `hadara@0.2.0-rc.2` | Previous published npm RC. |
+| `hadara@0.2.0-rc.3` | Current published npm RC. |
 | GitHub Release | Secondary target, still approval-gated. |
 | Docker image | Deferred. |
 | PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
 | Installer scripts / USB launchers | Deferred. |
 
 No release command should publish, create a GitHub Release, build Docker images, upload artifacts, or load token values unless an operator explicitly approves the mutation path for the active release capsule.
+
+### Planned 0.3.0 Direction
+
+The planned 0.3.0 line is Phase 7 Surface Refactor. It organizes HADARA's existing task, evidence, proof, lifecycle, release, and document surfaces so agents can distinguish primary lifecycle commands, diagnostics, advanced surfaces, canonical documents, historical documents, and safe Markdown update boundaries.
+
+Phase 7.x labels are internal implementation phases, not npm release-candidate labels. A new external release should be prepared only after all required Phase 7.x work passes Phase 7.6 hardening and installed-package validation.
 
 ## Install
 
@@ -52,7 +58,7 @@ Requires Node.js 22.
 Install the current published RC:
 
 ```bash
-npm install -g hadara@0.2.0-rc.2
+npm install -g hadara@0.2.0-rc.3
 hadara doctor --json
 hadara task list --json
 hadara tools list --json
@@ -61,11 +67,11 @@ hadara tools list --json
 Run without a global install:
 
 ```bash
-npx hadara@0.2.0-rc.2 doctor --json
-npx hadara@0.2.0-rc.2 tools list --json
+npx hadara@0.2.0-rc.3 doctor --json
+npx hadara@0.2.0-rc.3 tools list --json
 ```
 
-After an operator publishes rc3, use `hadara@0.2.0-rc.3` in the install and npx commands above. Previous published RCs remain available on npm for comparison or rollback.
+Previous published RCs remain available on npm for comparison or rollback.
 
 ## What HADARA Gives You
 

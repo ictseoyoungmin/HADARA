@@ -2,7 +2,7 @@
 
 ## 0.2.0-rc.3
 
-Source publish candidate prepared after the `0.2.0-rc.2` dogfooding findings around proof reliability, evidence append races, and CI gate visibility.
+Release candidate published to npm after the `0.2.0-rc.2` dogfooding findings around proof reliability, evidence append races, and CI gate visibility, followed by the T-0289 post-hardening readiness refresh.
 
 Highlights:
 
@@ -10,11 +10,12 @@ Highlights:
 - Adds `hadara proof status` and `hadara proof explain` for evidence sufficiency, close-audit freshness, and operator-readable proof diagnostics.
 - Adds `hadara ci gate --mode advisory|strict` as an aggregating local gate over protocol, evidence, proof, and deferred release checks.
 - Refreshes package metadata, README release status, and release-readiness docs for the rc3 source candidate.
+- Publishes `hadara@0.2.0-rc.3` to npm through the approval-gated manual helper and verifies `npm view` returned `0.2.0-rc.3`.
 
 Boundaries:
 
-- This entry describes the source publish candidate. npm publish, GitHub Release creation, Docker image publishing, installer execution, and registry mutation remain out of scope until a separate operator-approved publish capsule runs.
-- The latest npm-published release candidate before rc3 publication remains `hadara@0.2.0-rc.2`.
+- npm publish was completed as an operator-confirmed release mutation after T-0289 re-proved package smoke, clean-checkout, release gate, release dry-run, publish dry-run, and full Docker-suite readiness.
+- GitHub Release creation remains optional and was not requested during the npm publish helper run; Docker image publishing, installer execution, PyPI publishing, and MCP release/package execution remain deferred unless a future capsule explicitly enables them.
 
 ## 0.2.0-rc.2
 

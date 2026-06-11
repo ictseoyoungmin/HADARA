@@ -4,24 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0289 rc3 post-hardening release readiness refresh and `hadara@0.2.0-rc.3` publish are complete; T-0275 operator npm publish and Python bridge PyPI/TestPyPI publish are also complete. |
-| Current Phase | Post npm rc.3 publish after `hadara@0.2.0-rc.3` npm publish and `hadara==0.2.0rc1` PyPI publish | Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0289 rc3 post-hardening release readiness refresh | Closed valid. rc3 readiness re-proven in the Docker baseline after T-0288: package smoke + clean-checkout passed, release gates green, full suite 695 tests. `hadara@0.2.0-rc.3` was then published to npm and verified by `npm view`. |
-| Active / Next Task | Optional operator-approved GitHub Release draft for `hadara@0.2.0-rc.3` | rc3 publish is complete; optional token-gated draft remains. If needed, run `scripts/release/manual-publish-rc.sh T-0289 --execute --github-draft` with the proper release note file. |
-| Validation Baseline | T-0289 release readiness validation passed | Docker `hadara-dev`: package smoke `--execute` all steps passed; clean-checkout `--execute` ok:true (`check` exit 0); release gate strict / dry-run (ready, 0 blockers) / publish dry-run green; npm publish completed with `npm view` verification for `hadara@0.2.0-rc.3`; full suite 695 tests in a fresh container copy. |
+| Branch | main | T-0290 stages Phase 7 Surface Refactor specs for the planned 0.3.0 line; T-0289 rc3 post-hardening release readiness refresh and `hadara@0.2.0-rc.3` publish are complete. |
+| Current Phase | Phase 7.0 Surface Refactor planning staged after npm rc.3 publish | Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0290 Stage Phase 7 surface refactor specs | Closed valid after docs-only staging and release-state reconciliation; no runtime behavior was implemented. |
+| Active / Next Task | Phase 7.1 Command Surface Registry and Structured Help | Create the next capsule from `docs/specs/0.3.0/02_Phase_7_1_Command_Surface_Registry_and_Structured_Help.md`; required reading includes the Phase 7 program spec, `docs/TASK_WORKFLOW_COMMANDS.md`, `src/cli/main.ts`, `src/services/capability-registry.ts`, `src/services/tools-list.ts`, `docs/SCHEMAS.md`, and `src/schemas/schema-index.json`. |
+| Validation Baseline | T-0290 docs-only staging validation | `git diff --check` and focused protocol/init tests recorded in T-0290 evidence; Phase 7.1+ runtime work must run the phase-specific focused tests, build/full tests, and Docker baseline required by its spec. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0290 Stage Phase 7 surface refactor specs | Staged the Phase 7 Surface Refactor specs under `docs/specs/0.3.0/`, reconciled README/release notes with rc3 publish evidence, added Phase 7 planning state, and recorded the Phase 7.x internal-label decision. Closed valid. | Specs present; docs-only validation passed; audit-close `closed-valid`. |
 | T-0289 rc3 post-hardening release readiness refresh | Re-proved `hadara@0.2.0-rc.3` release readiness after T-0288 in the Docker baseline and reduced the parallel evidence test 8->4 workers so it no longer destabilizes `npm run check` under Docker worker-pool contention. Closed valid. | package smoke `--execute` all steps passed; clean-checkout `--execute` ok:true (`check` exit 0); release gate strict / dry-run (ready, 0 blockers) / publish dry-run green; full suite 695 tests; audit-close `closed-valid`. |
 | T-0288 rc3 proof reliability hardening patch | Closed the rc3 review's blocking gaps and hardening items: strict CI gate empty-scope guard (`CI_GATE_NO_DONE_TASKS`/`CI_GATE_TASK_NOT_FOUND`/`--allow-empty`), real multi-process evidence append regression, append-lock stale metadata/diagnostics, proof freshness `checkedSources` reflecting the real close-source set, and idempotent non-JSON evidence UX. Closed valid; committed and pushed as `e4e281e`. | Docker `dev:docker-sync-build` full check; ci gate unit tests cover empty-scope/allow-empty/task-not-found; real multi-process parallel append 2 tests; built-CLI ci gate / proof / evidence smokes; audit-close `closed-valid`. |
-| T-0286 Implement rc3 CI gate MVP | Added `hadara ci gate --mode advisory|strict [--task <id>] --json` with advisory vs strict blocker semantics over protocol, evidence, proof, and deferred release checks. | `/tmp` validation copy build passed; focused CI/proof/protocol tests passed 3 files / 26 tests; built CI gate smoke on T-0285 returned advisory stale-proof warning. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
+| Phase 7.1+ surfaces are planned, not implemented by T-0290. | Agents must not assume `hadara help lifecycle`, `hadara commands --json`, docs registry, managed patches, docs cleanup, or 0.3.0 release-hardening behavior exists yet. | Implement each Phase 7.x slice in order, starting with Phase 7.1. |
 | Combined parallel focused dashboard/static validation can timeout under worker contention. | Standalone dashboard-static passed quickly, but a parallel focused run timed out once. | Run dashboard-static standalone or serialize dashboard validation when investigating route behavior. |
 | `dev docker-check` run from sandboxed Node subprocess can fail before Docker temp workspace creation even when direct `docker exec` succeeds. | JSON reports may show `temp-workspace exitCode=1` without raw logs. | Use explicit container env and rerun outside sandbox, or inspect with direct `docker exec`; T-0274 now exposes failed step and exit code. |
 | Root bootstrap launchers were removed in T-0270. | Local habits such as `./hadara`, `./start.sh`, or `START.bat` no longer work from the repo root. | Use `npm run dev -- ...`, `node dist/cli/main.js ...`, or the documented Docker workflow. Historical portable launcher specs remain separate from current root skeleton files. |
@@ -75,8 +76,8 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Optional operator-approved GitHub Release draft for `hadara@0.2.0-rc.3`. | GitHub Release remains secondary and token-gated. | If needed, use `scripts/release/manual-publish-rc.sh T-0289 --execute --github-draft` with operator confirmation and a prepared release-note file. |
-| Optional: installer/OS pack publish path. | Not required for this rc. | No installer/OS pack publish was run in T-0289; run via the approved host flow only if requested. |
+| Phase 7.1 Command Surface Registry and Structured Help. | Phase 7.0 staging is complete; command registry/help is the first implementation dependency for the planned 0.3.0 surface-refactor line. | Create a new capsule and follow `docs/specs/0.3.0/02_Phase_7_1_Command_Surface_Registry_and_Structured_Help.md`. |
+| Optional operator-approved GitHub Release draft for `hadara@0.2.0-rc.3`. | GitHub Release remains secondary and token-gated, and is not required before Phase 7.1 unless the operator requests it. | If needed, use `scripts/release/manual-publish-rc.sh T-0289 --execute --github-draft` with operator confirmation and a prepared release-note file. |
 
 ## Validation Baseline
 

@@ -290,3 +290,4 @@
 | T-0287 | Implement rc3 readiness and installed-package recycle | Done | tasks/T-0287-implement-rc3-readiness-and-installed-package-recycle | Prepared `hadara@0.2.0-rc.3` source candidate; package, clean-checkout, release artifact, release dry-run, publish dry-run, and fresh init/recycle smokes passed without publish mutation. |
 | T-0288 | rc3 proof reliability hardening patch | Done | tasks/T-0288-rc3-proof-reliability-hardening-patch | |
 | T-0289 | rc3 post-hardening release readiness refresh | Done | tasks/T-0289-rc3-post-hardening-release-readiness-refresh | |
+| T-0290 | Stage Phase 7 surface refactor specs | Done | tasks/T-0290-stage-phase-7-surface-refactor-specs | |

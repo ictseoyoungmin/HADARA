@@ -30,7 +30,7 @@ venv/
 *.sqlite
 *.sqlite3
 build/
-docs/specs/
+docs/specs/*
 docs/design/mockups/*
 !docs/design/mockups/HADARA_web_ui_v0.1_comfort_dark.html
 .dockerignore
@@ -41,3 +41,8 @@ docs/design/mockups/*
 
 # Phase 5.6 dashboard visual baselines (generated)
 .dashboard-visual/
+
+!docs/specs/0.3.0/
+!docs/specs/0.3.0/**
+!docs/specs/phase7_surface_refactor/
+!docs/specs/phase7_surface_refactor/**

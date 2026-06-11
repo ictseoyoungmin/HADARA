@@ -91,3 +91,11 @@ Reason:
 - Validation: full Docker `npm ci && npm run build && vitest` passed (84 files / 562 tests) with the rewritten `dashboard-static.test.ts`; `scripts/dashboard-visual-check.sh` (Playwright + axe-core) passed home/detail/empty/degraded with no critical/serious a11y violations.
 - Not yet locked: this is uncommitted reviewer work; capsules `T-0207`–`T-0214` are not closed and may be revised or rolled back after review.
 - 2026-06-02 fix pass (post hands-on UX review, `docs/specs/dashboard/HADARA_Dashboard_Phase5_6_UX_Diagnosis.md`): sidebar tabs now render distinct per-view content (no dead tabs); the data layer separates **live** reads (`loadLiveRuntime`: bootstrap→status) from **non-live fallback** (`loadFallbackRuntime`: fixture→inline) so a refresh that loses live retains the last good live view and raises the degraded banner instead of silently showing stale sample data; loading is optimized (per-source timeout 6s→2.5s, instant inline preview at 350 ms, `syncing` indicator); proof gains an evidence drill link; offline empty states are labelled "Unavailable offline"; mobile uses a compact horizontal nav strip. Re-validated: Docker 84 files / 562 tests, dashboard visual+a11y gate all pass.
+
+## D-0012: 0.3.0 surface refactor uses Phase 7.x internal implementation labels
+
+Reason:
+- The project already has Phase 6 and Phase 6.1 planning/history, so reusing rc4-rc9 as internal implementation phase labels would confuse implementation sequencing with external npm prerelease labels.
+- Phase 7.x labels are internal Task Capsule implementation phases only; they do not authorize per-phase external publishing.
+- The next external 0.3.0 release may be prepared only after all required Phase 7.x slices pass Phase 7.6 release hardening and installed-package recycle.
+- Evidence: `docs/specs/0.3.0/00_HADARA_0_3_0_Phase_7_Surface_Refactor_Program.md` and T-0290.

@@ -9,7 +9,13 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0289 rc3 post-hardening release readiness refresh |
+| Latest Completed Task | T-0290 Stage Phase 7 surface refactor specs |
+
+## Next Planned Line
+
+Phase 7 Surface Refactor is the planned 0.3.0 line. It covers command registry/help, lifecycle guide, document registry, managed sections, docs cleanup, and release hardening. These specs are staged under `docs/specs/0.3.0/` and remain planned until their corresponding Task Capsules close valid.
+
+T-0290 staged the Phase 7 specs and reconciled the current release-state docs after `hadara@0.2.0-rc.3` publication. No runtime Phase 7.1+ behavior was implemented in T-0290.
 
 ## Current Phase
 
