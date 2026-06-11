@@ -78,6 +78,7 @@ The implementation must account for these existing HADARA surfaces:
 | Phase 7.4 | Managed Sections and Safe Patch Plans | HADARA can plan and apply bounded Markdown updates only inside declared managed sections or existing bounded write paths. |
 | Phase 7.5 | Docs Cleanup Operations | Stale/superseded docs can be marked, explained, and excluded from default required reading through dry-run-first operations. |
 | Phase 7.6 | 0.3.0 Release Hardening and Installed-Package Recycle | Installed-package recycle, fresh-init installed-package recycle, docs registry installed-package recycle, managed-patch validation, and release readiness. |
+| Post-7.6 rc.1 adoption | Protocol Migration for 0.3 Adoption | Existing HADARA projects and selected Task Capsules can dry-run-first migrate onto 0.3 command/docs/managed-section surfaces before a later rc.1 final readiness capsule. |
 
 ## Dependency Rules
 
@@ -91,6 +92,7 @@ Implement in order:
   -> 7.4 Managed Sections
   -> 7.5 Docs Cleanup
   -> 7.6 Release Hardening
+  -> rc.1 adoption migration before later final readiness/publish
 ```
 
 Rules:

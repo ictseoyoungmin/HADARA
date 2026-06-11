@@ -57,6 +57,7 @@ describe('schema fixtures', () => {
       'hadara.plan_context.v1',
       'hadara.privateEvidence.v1',
       'hadara.protocol.consistency.v1',
+      'hadara.protocol.migration.v1',
       'hadara.protocol.remediation.v1',
       'hadara.provider.call.v1',
       'hadara.provider.config.v1',

@@ -198,6 +198,13 @@
       "notes": "Documents dry-run-first protocol remediation plans, report-level before-hash guards, and bounded execute reports."
     },
     {
+      "id": "hadara.protocol.migration.v1",
+      "path": "src/schemas/protocol-migration.schema.json",
+      "status": "fixture",
+      "owner": "protocol/migration",
+      "notes": "Documents dry-run-first 0.3 protocol migration plans for existing project and selected Task Capsule scopes."
+    },
+    {
       "id": "hadara.task.upgrade_scaffold.v1",
       "path": "src/schemas/task-upgrade-scaffold.schema.json",
       "status": "fixture",

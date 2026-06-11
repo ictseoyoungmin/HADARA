@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0298 prepares `hadara@0.3.0-rc.1` after the rc.0 npm metadata gap. |
-| Current Phase | 0.3.0-rc.1 metadata hardening complete; publish deferred pending additional feature work | Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0298 0.3.0-rc.1 Publish Metadata Hardening | Package/readiness/README target rc.1; manual publish helper prefers `node dist/cli/main.js` and blocks incomplete tarball metadata before publish; rc.1 tarball metadata and npm publish dry-run passed. |
-| Active / Next Task | None | Continue planned feature/fix work for the eventual `0.3.0-rc.1`; open a later final readiness/publish capsule before any npm publish. |
-| Validation Baseline | T-0298 rc.1 metadata/readiness validation | Focused tests passed 3 files / 31 tests; Docker full check built TypeScript and passed 115 files / 743 tests with one dashboard-static parallel timeout, then dashboard-static standalone passed 1 file / 15 tests; workspace built CLI version smoke returned `0.3.0-rc.1`; release artifact, tarball metadata inspection, and npm publish dry-run passed. |
+| Branch | main | T-0299 adds 0.3 adoption migration support while keeping rc.1 publish deferred. |
+| Current Phase | 0.3.0-rc.1 source candidate feature work in progress; publish deferred | `hadara@0.3.0-rc.0` remains the latest published npm release. Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0299 0.3.0-rc.1 Protocol Migration for 0.3 Adoption | Adds `protocol migrate --target 0.3.0` for project/task scoped dry-run-first adoption, before-hash execute guards, protocol-version reporting, docs registry/managed marker/command docs adoption, and README/package metadata alignment for deferred rc.1 publish. |
+| Active / Next Task | None | Continue planned feature/fix work for eventual `0.3.0-rc.1`; open a later final readiness/publish capsule before any npm publish. |
+| Validation Baseline | T-0299 protocol migration validation | Focused tests passed; Docker full check built TypeScript and passed 115 files / 746 tests with a dashboard bootstrap/static parallel timeout, then dashboard bootstrap/static standalone passed 2 files / 18 tests; built CLI migration execute smoke returned `ok:true`, `changed:3`, protocol marker present; workspace built CLI version smoke returned `0.3.0-rc.1` with `distLooksStale:false`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0299 0.3.0-rc.1 Protocol Migration for 0.3 Adoption | Added rc1 migration spec and `protocol migrate --target 0.3.0` project/task scoped dry-run-first adoption support; README install guidance now targets published rc.0 while rc.1 remains source candidate. | Focused tests; Docker full check partial pass with standalone dashboard retry; built CLI migration execute smoke; workspace dist version smoke. |
 | T-0298 0.3.0-rc.1 Publish Metadata Hardening | Bumped package/readiness/README to rc.1, made the manual publish helper prefer the current built CLI over global `hadara`, and added blocking tarball package metadata verification. | Focused tests 3 files / 31 tests; Docker full check with standalone dashboard-static retry; release artifact; tarball package metadata inspection; npm publish dry-run. |
 | T-0297 0.3.0-rc.0 Prepublish Cleanup and Final Readiness | Fixed package-facing README/install text and npm discovery metadata, removed duplicate Phase 7 bundle docs, reclosed T-0296 after handoff correction, refreshed final readiness evidence, and verified operator npm publish. | Focused tests 3 files / 31 tests; Docker sync build 115 files / 741 tests; package smoke; Docker clean-checkout smoke; release artifact; strict release gate; release dry-run; publish dry-run; npm view verified `0.3.0-rc.0` and `latest`. |
-| T-0296 Phase 7.6 0.3.0 Release Hardening and Installed-Package Recycle | Prepared `0.3.0-rc.0` source candidate docs/version and validated installed-package/fresh-init/release dry-run surfaces without publish mutation. | Docker sync build 115 files / 741 tests; package smoke; Docker clean-checkout smoke; installed recycle; release artifact; release dry-run; publish dry-run. |
 
 ## Current Known Problems
 

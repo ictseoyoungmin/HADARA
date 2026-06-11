@@ -112,11 +112,11 @@ const RELEASE_PACKAGE_KEYWORDS = [
 ];
 const RELEASE_PACKAGE_REPOSITORY = {
   type: 'git',
-  url: 'git+https://github.com/ictseoyoungmin/HADARA-dev.git'
+  url: 'git+https://github.com/ictseoyoungmin/HADARA.git'
 };
-const RELEASE_PACKAGE_HOMEPAGE = 'https://github.com/ictseoyoungmin/HADARA-dev#readme';
+const RELEASE_PACKAGE_HOMEPAGE = 'https://github.com/ictseoyoungmin/HADARA#readme';
 const RELEASE_PACKAGE_BUGS = {
-  url: 'https://github.com/ictseoyoungmin/HADARA-dev/issues'
+  url: 'https://github.com/ictseoyoungmin/HADARA/issues'
 };
 
 interface PackageMetadata {

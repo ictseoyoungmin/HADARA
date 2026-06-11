@@ -850,6 +850,31 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     conflictsWith: []
   }),
   commandEntry({
+    id: 'protocol.migrate',
+    command: 'hadara protocol migrate --target 0.3.0 [--task <task-id>] [--profile basic|standard|governed|hadara-dev] [--execute --before-hash <hash>] [--json]',
+    summary: 'Preview or apply the 0.3 protocol migration for existing HADARA projects or selected Task Capsules.',
+    canonical: true,
+    appearsInDefaultHelp: false,
+    family: 'docs-governance',
+    scope: 'project',
+    lifecycleStage: 'work',
+    requiredness: 'conditional',
+    writeBoundary: 'shared-doc-write',
+    readOnly: false,
+    risk: 'medium',
+    actor: 'operator',
+    status: 'stable',
+    schemaVersion: 'hadara.protocol.migration.v1',
+    since: '0.3.0-rc.1',
+    docs: ['docs/specs/0.3.0/rc1/00_Protocol_Migration_for_0_3_Adoption.md', 'docs/IMPLEMENTATION_SOP.md'],
+    examples: [
+      example('Preview project migration', 'hadara protocol migrate --target 0.3.0 --json', 'When upgrading a pre-0.3 initialized HADARA project.'),
+      example('Preview task migration', 'hadara protocol migrate --target 0.3.0 --task T-0001 --json', 'When migrating one selected older Task Capsule.')
+    ],
+    related: ['protocol.doctor', 'docs.doctor', 'docs.managed.list', 'init.upgrade'],
+    conflictsWith: []
+  }),
+  commandEntry({
     id: 'docs.list',
     command: 'hadara docs list [--status <status>] [--read-when <read-when>] [--json]',
     summary: 'List registered HADARA project documents with optional status and read-time filters.',

@@ -5,6 +5,7 @@ import {
   createTaskProtocolConsistencyReport,
   ProtocolConsistencyReport
 } from '../services/protocol-consistency';
+import { createProtocolMigrationReport } from '../services/protocol-migration';
 import { createProtocolRemediateReport, ProtocolRemediationFix } from '../services/protocol-remediation';
 import { CliArgsError, getFlag, getStringOption } from './args';
 
@@ -16,6 +17,7 @@ export interface ProtocolCommandInput {
 
 export function handleProtocolCommand(input: ProtocolCommandInput): boolean {
   const sub = input.args[1];
+  if (sub === 'migrate') return handleProtocolMigrateCommand(input);
   if (sub === 'remediate') return handleProtocolRemediateCommand(input);
   if (sub !== 'doctor') return false;
 
@@ -59,6 +61,38 @@ export function handleProtocolCommand(input: ProtocolCommandInput): boolean {
     for (const issue of report.issues) {
       console.log(`- ${issue.code}: ${issue.message}${issue.path ? ` (${issue.path})` : ''}`);
     }
+  }
+
+  if (!report.ok) process.exitCode = 6;
+  return true;
+}
+
+function handleProtocolMigrateCommand(input: ProtocolCommandInput): boolean {
+  const target = getStringOption(input.args, '--target', '0.3.0') ?? '0.3.0';
+  if (target !== '0.3.0') throw new CliArgsError('CLI_OPTION_INVALID_VALUE', `unsupported protocol migration target: ${target}`);
+  const profile = getStringOption(input.args, '--profile');
+  if (profile !== undefined && profile !== 'basic' && profile !== 'standard' && profile !== 'governed' && profile !== 'hadara-dev') {
+    throw new CliArgsError('CLI_OPTION_INVALID_VALUE', `unsupported HADARA profile: ${profile}`);
+  }
+  const report = createProtocolMigrationReport({
+    projectRoot: input.projectRoot,
+    target,
+    mode: getFlag(input.args, '--execute') ? 'execute' : 'dry-run',
+    beforeHash: getStringOption(input.args, '--before-hash'),
+    taskId: getStringOption(input.args, '--task'),
+    profile
+  });
+
+  if (input.jsonOutput) {
+    console.log(JSON.stringify(report, null, 2));
+  } else if (report.ok) {
+    console.log(`[HADARA] Protocol migration ${report.mode}: ${target}`);
+    for (const action of report.actions) {
+      console.log(`- ${action.status}: ${action.summary}${action.path ? ` (${action.path})` : ''}`);
+    }
+  } else {
+    console.log(`[HADARA] Protocol migration failed: ${target}`);
+    for (const issue of report.issues) console.log(`- ${issue.code}: ${issue.message}${issue.path ? ` (${issue.path})` : ''}`);
   }
 
   if (!report.ok) process.exitCode = 6;

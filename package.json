@@ -22,11 +22,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ictseoyoungmin/HADARA-dev.git"
+    "url": "git+https://github.com/ictseoyoungmin/HADARA.git"
   },
-  "homepage": "https://github.com/ictseoyoungmin/HADARA-dev#readme",
+  "homepage": "https://github.com/ictseoyoungmin/HADARA#readme",
   "bugs": {
-    "url": "https://github.com/ictseoyoungmin/HADARA-dev/issues"
+    "url": "https://github.com/ictseoyoungmin/HADARA/issues"
   },
   "bin": {
     "hadara": "./dist/cli/main.js"

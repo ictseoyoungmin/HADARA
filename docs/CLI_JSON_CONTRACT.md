@@ -52,6 +52,7 @@ Examples include:
 - `hadara.active_run.resume.v1`
 - `hadara.protocol.consistency.v1`
 - `hadara.protocol.remediation.v1`
+- `hadara.protocol.migration.v1`
 - `hadara.releaseGate.v1`
 - `hadara.context.export.v1` (MCP read-only memory payload)
 
@@ -68,6 +69,8 @@ Agents should treat `issues` as the primary machine-readable failure detail when
 `hadara task create <title> [--from <template-id>] --json` returns `hadara.task.create.v1`. It creates a Draft Task Capsule and matching Task Board row, and may include additive `template` metadata when `--from` selects a supported template. Templates prefill capsule docs with expected evidence and out-of-scope boundaries, but they must not mark the task Done, attach evidence, run validation, or close the task. Unknown templates return `TASK_TEMPLATE_UNKNOWN` with `supportedTemplates` and create no capsule. T-0265 adds bounded collision retry for sequential task ids; exhausted directory/Task Board id collisions return `TASK_CREATE_COLLISION_RETRIES_EXHAUSTED` instead of silently reusing an id.
 
 `hadara protocol remediate --fix <name> --json` returns `hadara.protocol.remediation.v1` in dry-run mode by default. It previews only allowlisted bounded fixes; planned writes expose `summary.beforeHash`, and execute mode requires `--execute --before-hash <hash>` with the reviewed dry-run hash before applying writes. Execute keeps per-action before-hash/existence checks, temp-file writes, rollback-attempt issue reporting, and no broad document rewrite behavior.
+
+`hadara protocol migrate --target 0.3.0 --json` returns `hadara.protocol.migration.v1` in dry-run mode by default. It detects pre-0.3, partial-0.3, and 0.3 scaffold signals, then plans bounded project-scope adoption writes for docs registry, command-surface docs, managed Required Reading markers, and protocol version metadata. `--task <task-id>` limits migration to the selected Task Capsule. Execute mode requires `--execute --before-hash <hash>` from the reviewed dry-run report and rechecks per-action before existence/hash before writing.
 
 `hadara task status --task <id> --json` returns `hadara.task.workbench.v1`. It is the Phase 3 read-only task operator console projection and aggregates task identity, Task Board status from `docs/TASK_BOARD.md`, evidence list/lint summary, task close dry-run readiness, task protocol doctor summary, docs/profile protocol summaries, close state, and next actions. Its top-level `ok` means the report was generated for an existing task, not that the task is ready or closable; readiness is represented by `state.ready`, `summary.blockers`, and `issues`. Task Board fields are split as `task.taskStatus`, `task.taskBoardStatus`, `task.taskBoardPath`, and `task.taskBoardPresent`, and close state is split as `state.closeEvidenceFound`, `state.closedValid`, `state.closeState`, and the compatibility alias `state.closed`. It must not append evidence, mutate Task Capsule files, update project docs, run shell commands, call providers, or rerun done-level harness validation separately from the close dry-run source.
 

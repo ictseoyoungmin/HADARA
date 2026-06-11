@@ -50,6 +50,7 @@ This repository operates as the `governed` HADARA profile because it has long-li
 | `docs/specs/HADARA_Task_Next_Handoff_Priority_Refactor.md` | Task next recommendation policy, roadmap entry-point selection, or backlog fallback work only | Source design for handoff-first `task next` recommendations and legacy Task Board fallback handling. |
 | `docs/specs/agent-ux/HADARA_Phase6_Operator_Workflow_Compression_Multi_Agent_Compatibility_Spec.md` | Phase 6 operator workflow compression, multi-agent compatibility metadata, task complete dry-run, close idempotency, handoff suggestion, Docker validation wrapper, task templates, or release dry-run decomposition work only | Local-only ignored source design for Phase 6 workflow compression while preserving dry-run-first, hash-guarded, actor/run-aware, coordinator/worker-safe command boundaries. |
 | `docs/specs/agent-ux/HADARA_Phase6_1_Reviewer_Feedback_Hardening_Spec.md` | Phase 6.1 reviewer-feedback hardening, actor CLI metadata, dev docker-check dist sync guards, close idempotency race hardening, task create collision handling, or handoff suggestion polish | Follow-up hardening plan for Phase 6 reviewer feedback without adding a full multi-agent runtime or hidden write orchestration. |
+| `docs/specs/0.3.0/rc1/00_Protocol_Migration_for_0_3_Adoption.md` | 0.3 protocol migration, docs registry adoption, managed marker insertion, or existing-project upgrade work | Source design for dry-run-first `protocol migrate --target 0.3.0` project/task scoped adoption. |
 
 ## Project-Specific Documents
 

@@ -42,6 +42,7 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'debt.show',
   'protocol.doctor',
   'protocol.remediate',
+  'protocol.migrate',
   'docs.list',
   'docs.doctor',
   'docs.explain',

@@ -84,9 +84,9 @@ describe('release artifact builder', () => {
       expect(stagedPackage.keywords).toContain('ai');
       expect(stagedPackage.keywords).toContain('coding-agent');
       expect(stagedPackage.keywords).toContain('hadara');
-      expect(stagedPackage.repository).toEqual({ type: 'git', url: 'git+https://github.com/ictseoyoungmin/HADARA-dev.git' });
-      expect(stagedPackage.homepage).toBe('https://github.com/ictseoyoungmin/HADARA-dev#readme');
-      expect(stagedPackage.bugs).toEqual({ url: 'https://github.com/ictseoyoungmin/HADARA-dev/issues' });
+      expect(stagedPackage.repository).toEqual({ type: 'git', url: 'git+https://github.com/ictseoyoungmin/HADARA.git' });
+      expect(stagedPackage.homepage).toBe('https://github.com/ictseoyoungmin/HADARA#readme');
+      expect(stagedPackage.bugs).toEqual({ url: 'https://github.com/ictseoyoungmin/HADARA/issues' });
       return {
         status: 0,
         stdout: JSON.stringify([

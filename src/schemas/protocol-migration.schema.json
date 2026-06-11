@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.protocol.migration.v1",
+  "x-hadara-schema-id": "hadara.protocol.migration.v1",
+  "title": "HADARA Protocol Migration Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "mode", "target", "scope", "projectRoot", "detection", "summary", "actions", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.protocol.migration.v1" },
+    "command": { "const": "protocol.migrate" },
+    "ok": { "type": "boolean" },
+    "mode": { "type": "string", "enum": ["dry-run", "execute"] },
+    "target": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["protocolVersion"],
+      "properties": {
+        "protocolVersion": { "const": "0.3.0" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "taskId"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["project", "task"] },
+        "taskId": {
+          "anyOf": [
+            { "type": "string", "pattern": "^T-[0-9]{4,}$" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "projectRoot": { "type": "string", "minLength": 1 },
+    "detection": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["scaffoldGeneration", "profile", "docsRegistryPresent", "docsRegistryValid", "commandSurfaceDocPresent", "requiredReadingManaged", "managedSectionsPresent", "taskCapsulePresent"],
+      "properties": {
+        "scaffoldGeneration": { "type": "string", "enum": ["pre-0.3", "0.3", "partial-0.3", "unknown"] },
+        "profile": { "type": "string", "enum": ["basic", "standard", "governed", "hadara-dev"] },
+        "docsRegistryPresent": { "type": "boolean" },
+        "docsRegistryValid": { "type": "boolean" },
+        "commandSurfaceDocPresent": { "type": "boolean" },
+        "requiredReadingManaged": { "type": "boolean" },
+        "managedSectionsPresent": { "type": "boolean" },
+        "taskCapsulePresent": {
+          "anyOf": [
+            { "type": "boolean" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["planned", "changed", "skipped", "beforeHash"],
+      "properties": {
+        "planned": { "type": "integer" },
+        "changed": { "type": "integer" },
+        "skipped": { "type": "integer" },
+        "beforeHash": {
+          "anyOf": [
+            { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/action" }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "action": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "path", "status", "summary"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["planned", "created", "updated", "skipped"] },
+        "summary": { "type": "string", "minLength": 1 },
+        "before": { "type": "string" },
+        "after": { "type": "string" },
+        "expectedBeforeExists": { "type": "boolean" },
+        "expectedBeforeHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "afterHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["error", "warning", "info"] },
+        "code": { "type": "string", "minLength": 1, "pattern": "^[A-Z0-9_:-]+$" },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

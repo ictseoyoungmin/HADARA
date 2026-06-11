@@ -216,6 +216,28 @@ describe('protocol CLI command handler', () => {
     expect(fs.readFileSync(boardPath, 'utf8')).not.toContain(`| ${task.id} |`);
   });
 
+  it('prints JSON for protocol migrate dry-run', () => {
+    const root = tempProject();
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleProtocolCommand({
+      args: ['protocol', 'migrate', '--target', '0.3.0', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls[0][0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.protocol.migration.v1',
+      command: 'protocol.migrate',
+      ok: true,
+      mode: 'dry-run',
+      target: { protocolVersion: '0.3.0' }
+    });
+    expect(validateSchema('hadara.protocol.migration.v1', payload).ok).toBe(true);
+  });
+
   it('rejects unsupported protocol remediation fixes', () => {
     expect(() =>
       handleProtocolCommand({
