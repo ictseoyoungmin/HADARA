@@ -6,5 +6,5 @@
 | AC-2 | Manual publish helper prefers `node dist/cli/main.js` over global `hadara`. | Done | `scripts/release/manual-publish-rc.sh`; `tests/unit/manual-publish-script.test.ts`. |
 | AC-3 | Manual publish helper validates tarball package metadata before npm publish dry-run/execute. | Done | `scripts/release/manual-publish-rc.sh`; `tests/unit/manual-publish-script.test.ts`. |
 | AC-4 | Focused tests cover the publish helper guard and affected README version expectation. | Done | Docker focused tests passed 3 files / 31 tests. |
-| AC-5 | Release artifact/package metadata smoke proves the generated rc.1 tarball contains description, keywords, repository, homepage, and bugs metadata. | Pending | TBD |
-| AC-6 | Evidence is attached and handoff/state docs are updated. | Pending | TBD |
+| AC-5 | Release artifact/package metadata smoke proves the generated rc.1 tarball contains description, keywords, repository, homepage, and bugs metadata. | Done | `dist-release/hadara-0.3.0-rc.1.tgz` package metadata inspection passed with description, 14 keywords, repository, homepage, and bugs. |
+| AC-6 | Evidence is attached and handoff/state docs are updated. | Done | `EVIDENCE.md`, `evidence.jsonl`, `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, and `docs/DEVELOPMENT_SLICES.md` updated. |

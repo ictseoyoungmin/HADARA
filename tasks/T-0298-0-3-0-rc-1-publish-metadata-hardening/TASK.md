@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0298 |
 | Title | 0.3.0-rc.1 publish metadata hardening |
-| Status | In Progress |
+| Status | Done |
 | Created | 2026-06-11 |
 | Updated | 2026-06-11 |
 
@@ -34,7 +34,7 @@
 
 ## Status
 
-In Progress
+Done
 
 ## Status History
 
@@ -44,3 +44,4 @@ In Progress
 | 2026-06-11 | Draft | Initial task scaffold. | Created by `task create`. |
 | 2026-06-11 | In Progress | Started rc.1 publish metadata hardening. | Required docs reviewed; implementation started. |
 <!-- hadara:managed:end task-status-history -->
+| 2026-06-11 | Done | Finished task capsule. | `hadara task finish --execute` |

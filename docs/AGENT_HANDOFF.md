@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0297 prepared `0.3.0-rc.0`; operator npm publish is complete and npm registry verification passed. |
-| Current Phase | 0.3.0-rc.0 npm publish complete pending final T-0297 reclose commit | Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0297 0.3.0-rc.0 Prepublish Cleanup and Final Readiness | README/package metadata/lifecycle wording fixed for npm package page; duplicate Phase 7 bundle removed; T-0296 handoff reclosed; release readiness rerun; operator published `hadara@0.3.0-rc.0` to npm. |
-| Active / Next Task | None | Next recommended work is a follow-up metadata/recycle capsule if search metadata for the immutable `0.3.0-rc.0` package needs correction in a later RC. |
-| Validation Baseline | T-0297 prepublish and npm publish verification | Focused tests passed 3 files / 31 tests; Docker sync build passed 115 files / 741 tests and refreshed `dist`; package smoke, Docker clean-checkout smoke, release artifact, strict release gate, release dry-run, publish dry-run, and npm registry verification passed. |
+| Branch | main | T-0298 prepares `hadara@0.3.0-rc.1` after the rc.0 npm metadata gap. |
+| Current Phase | 0.3.0-rc.1 publish metadata hardening complete pending T-0298 close | Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0298 0.3.0-rc.1 Publish Metadata Hardening | Package/readiness/README target rc.1; manual publish helper prefers `node dist/cli/main.js` and blocks incomplete tarball metadata before publish; rc.1 tarball metadata and npm publish dry-run passed. |
+| Active / Next Task | None after T-0298 close | Next operator step is approval-gated npm publish for `hadara@0.3.0-rc.1` from repo root. |
+| Validation Baseline | T-0298 rc.1 metadata/readiness validation | Focused tests passed 3 files / 31 tests; Docker full check built TypeScript and passed 115 files / 743 tests with one dashboard-static parallel timeout, then dashboard-static standalone passed 1 file / 15 tests; workspace built CLI version smoke returned `0.3.0-rc.1`; release artifact, tarball metadata inspection, and npm publish dry-run passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0298 0.3.0-rc.1 Publish Metadata Hardening | Bumped package/readiness/README to rc.1, made the manual publish helper prefer the current built CLI over global `hadara`, and added blocking tarball package metadata verification. | Focused tests 3 files / 31 tests; Docker full check with standalone dashboard-static retry; release artifact; tarball package metadata inspection; npm publish dry-run. |
 | T-0297 0.3.0-rc.0 Prepublish Cleanup and Final Readiness | Fixed package-facing README/install text and npm discovery metadata, removed duplicate Phase 7 bundle docs, reclosed T-0296 after handoff correction, refreshed final readiness evidence, and verified operator npm publish. | Focused tests 3 files / 31 tests; Docker sync build 115 files / 741 tests; package smoke; Docker clean-checkout smoke; release artifact; strict release gate; release dry-run; publish dry-run; npm view verified `0.3.0-rc.0` and `latest`. |
 | T-0296 Phase 7.6 0.3.0 Release Hardening and Installed-Package Recycle | Prepared `0.3.0-rc.0` source candidate docs/version and validated installed-package/fresh-init/release dry-run surfaces without publish mutation. | Docker sync build 115 files / 741 tests; package smoke; Docker clean-checkout smoke; installed recycle; release artifact; release dry-run; publish dry-run. |
-| T-0295 Phase 7.5 Docs Cleanup Operations | Added registry-only docs mark dry-run/execute, dry-run archive candidate planning, effective required-reading reports, cleanup doctor diagnostics, schemas, and tests. Closed valid. | Docker direct TypeScript build passed; focused cleanup/schema/registry tests passed; built CLI cleanup smoke passed; standard Docker wrapper passed 115 files / 741 tests. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| Published `0.3.0-rc.0` npm metadata still shows the old package description and no keywords. | The package exists and `latest` points to it, but npm search visibility may not reflect the intended metadata improvements for this immutable version. | For the next RC, ensure the helper uses current `node dist/cli/main.js` or a freshly installed `hadara`; rerun package metadata verification before typing `publish`. |
+| Published `0.3.0-rc.0` npm metadata still shows the old package description and no keywords. | The immutable rc.0 package remains metadata-limited, but T-0298 prepares rc.1 with correct tarball metadata and a blocking helper check. | Publish `hadara@0.3.0-rc.1` through the updated helper; verify npm view metadata after publish. |
 | T-0291/T-0292/T-0293/T-0294 full wrapper validation had timeout-only residual blockers, while T-0295 wrapper validation passed. | Older Phase 7 focused checks passed, and T-0295 restored a clean standard wrapper baseline for current changes. | Use T-0295's 115-file / 741-test wrapper pass as the latest validation baseline, while treating older timeout notes as historical. |
 | Combined parallel focused dashboard/static validation can timeout under worker contention. | Standalone dashboard-static passed quickly, but a parallel focused run timed out once. | Run dashboard-static standalone or serialize dashboard validation when investigating route behavior. |
 | `dev docker-check` run from sandboxed Node subprocess can fail before Docker temp workspace creation even when direct `docker exec` succeeds. | JSON reports may show `temp-workspace exitCode=1` without raw logs. | Use explicit container env and rerun outside sandbox, or inspect with direct `docker exec`; T-0274 now exposes failed step and exit code. |
@@ -77,13 +77,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Operator-approved npm publish for `hadara@0.3.0-rc.0`. | T-0297 release dry-run is ready with blockers 0; publish remains a manual external mutation. | From `/mnt/f/NowWorking/HADARA-dev`, run `npm login --registry=https://registry.npmjs.org`, `npm whoami --registry=https://registry.npmjs.org`, then `bash scripts/release/manual-publish-rc.sh T-0297 --execute` and type `publish` only at the helper prompt. |
-| Optional operator-approved GitHub Release draft for `hadara@0.3.0-rc.0`. | GitHub Release remains secondary and token-gated. | After npm publish, rerun the helper with `--execute --github-draft` only if a draft GitHub Release is desired and `gh` auth is configured. |
+| Operator-approved npm publish for `hadara@0.3.0-rc.1`. | T-0298 rc.1 tarball metadata and publish dry-run passed; publish remains a manual external mutation. | From `/mnt/f/NowWorking/HADARA-dev`, run `npm login --registry=https://registry.npmjs.org`, `npm whoami --registry=https://registry.npmjs.org`, then `bash scripts/release/manual-publish-rc.sh T-0298 --execute` and type `publish` only at the helper prompt. |
+| Optional operator-approved GitHub Release draft for `hadara@0.3.0-rc.1`. | GitHub Release remains secondary and token-gated. | After npm publish, rerun the helper with `--execute --github-draft` only if a draft GitHub Release is desired and `gh` auth is configured. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0298 rc.1 metadata/readiness validation | Focused Docker tests passed 3 files / 31 tests; Docker `npm run check` built TypeScript and passed 115 files / 743 tests before one dashboard-static parallel timeout; dashboard-static standalone passed 1 file / 15 tests; workspace built CLI version smoke returned `0.3.0-rc.1` and `distLooksStale:false`; release artifact passed with 207 files and verified package contents; tarball package metadata inspection found description, 14 keywords, repository, homepage, and bugs; npm publish dry-run passed with package.json 859B. | Latest prepublish baseline for `hadara@0.3.0-rc.1`; no npm publish, GitHub Release, Docker image build, registry mutation, or token values. |
 | T-0297 prepublish readiness validation | Focused Docker tests passed 3 files / 31 tests; Docker sync build passed 115 files / 741 tests and refreshed `dist`; package smoke passed; host clean-checkout failed at `npm ci` but Docker clean-checkout passed; release artifact passed from checkpoint commit `34916db`; strict release gate and release dry-run passed with readiness ready/blockers 0; publish dry-run passed with token warnings only and mutation flags false. | Latest prepublish baseline for `hadara@0.3.0-rc.0`; no npm publish, GitHub Release, Docker image build, registry mutation, or token values. |
 | T-0296 release hardening validation | Docker sync build passed 115 files / 741 tests and refreshed `dist`; package smoke passed; Docker clean-checkout smoke passed; installed package recycle passed from `hadara-0.3.0-rc.0.tgz`; release artifact passed; strict release gate and release dry-run passed with readiness ready/blockers 0; publish dry-run passed with token warnings only and mutation flags false. | Latest release-hardening baseline for the current workspace; no npm publish, GitHub Release, Docker image build, or token values. |
 | T-0295 docs cleanup validation | Docker direct TypeScript build passed; focused cleanup/schema/registry tests passed 6 files / 21 tests; built CLI cleanup smoke passed; `git diff --check` passed; standard Docker wrapper passed 115 files / 741 tests. | Previous clean full-wrapper baseline. |

@@ -11,6 +11,6 @@
 
 | Check | Required? | Reason | Latest Result | Evidence |
 |---|---|---|---|---|
-| `node dist/cli/main.js release artifact --execute --json --output dist-release --attach-evidence --task T-0298` | Generate rc.1 release artifact evidence from current built CLI. | Yes | Not Run | TBD |
-| `tar -xOf dist-release/hadara-0.3.0-rc.1.tgz package/package.json` | Inspect exact tarball package metadata before operator publish. | Yes | Not Run | TBD |
-| `npm publish dist-release/hadara-0.3.0-rc.1.tgz --dry-run --registry=https://registry.npmjs.org` | Confirm npm dry-run sees the exact tarball that would be published without registry mutation. | Yes | Not Run | TBD |
+| `node dist/cli/main.js release artifact --execute --json --output dist-release --attach-evidence --task T-0298` | Generate rc.1 release artifact evidence from current built CLI. | Yes | Passed | Generated `hadara-0.3.0-rc.1.tgz`, checksum, and manifest; package contents verified 207 files. |
+| `tar -xOf dist-release/hadara-0.3.0-rc.1.tgz package/package.json` | Inspect exact tarball package metadata before operator publish. | Yes | Passed | Tarball package metadata includes description, 14 keywords, repository, homepage, and bugs. |
+| `npm publish ./dist-release/hadara-0.3.0-rc.1.tgz --dry-run --registry=https://registry.npmjs.org --cache /tmp/hadara-npm-cache` | Confirm npm dry-run sees the exact tarball that would be published without registry mutation. | Yes | Passed | npm dry-run reported package.json 859B and `+ hadara@0.3.0-rc.1`. |

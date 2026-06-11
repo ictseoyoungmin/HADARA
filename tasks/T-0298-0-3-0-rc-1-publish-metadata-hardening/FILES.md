@@ -10,3 +10,6 @@
 | `tests/unit/manual-publish-script.test.ts` | Add | Regression coverage for helper behavior. | Done |
 | `tests/unit/init.test.ts` | Edit | Align package-facing README expectation with rc.1. | Done |
 | `dist/` | Refresh | Keep built workspace CLI aligned with rc.1 source. | Done |
+| `docs/PROJECT_STATE.md` | Edit | Record rc.1 publish metadata hardening as the latest release state. | Done |
+| `docs/AGENT_HANDOFF.md` | Edit | Hand off rc.1 operator publish instructions and validation baseline. | Done |
+| `docs/DEVELOPMENT_SLICES.md` | Edit | Add T-0298 release slice completion evidence. | Done |
