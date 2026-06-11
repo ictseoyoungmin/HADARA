@@ -22,11 +22,11 @@
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Operator may publish `hadara@0.3.0-rc.1` from the repository root after pulling the final T-0298 close commit. | rc.1 tarball metadata and npm publish dry-run are green; publish remains approval-gated. | `docs/RELEASE_READINESS.md`, `scripts/release/manual-publish-rc.sh` |
+| Continue planned feature/fix work before any `hadara@0.3.0-rc.1` publish. | T-0298 only hardens metadata and helper behavior; it is not the final rc.1 release-readiness capsule. | Next feature/fix task capsule, then a later final rc.1 readiness/publish capsule. |
 
 ## Carry Forward Warnings
 
 | Warning | Impact | Mitigation |
 |---|---|---|
-| Do not publish from this agent turn. | Publish remains operator-only and requires interactive confirmation. | Stop at dry-run/evidence and provide exact operator commands. |
-| Use the updated helper from repo root. | The helper now prefers local `dist/cli/main.js` and verifies tarball package metadata before publish. | Run `bash scripts/release/manual-publish-rc.sh T-0298 --execute`; do not use an older copied helper. |
+| Do not publish from T-0298 alone. | More features/fixes are planned before the rc.1 npm release. | Treat T-0298 evidence as metadata-guard proof only; rerun full release readiness after later changes. |
+| Use the updated helper from repo root when the final readiness capsule eventually approves publish. | The helper now prefers local `dist/cli/main.js` and verifies tarball package metadata before publish. | Run the helper only from the final readiness capsule after fresh artifacts and metadata inspection pass. |
