@@ -136,10 +136,10 @@ exit 1
 }
 
 detect_hadara_cmd() {
-if command -v hadara >/dev/null 2>&1; then
-HADARA_CMD=(hadara)
-elif [[ -f "dist/cli/main.js" ]]; then
+if [[ -f "dist/cli/main.js" ]]; then
 HADARA_CMD=(node dist/cli/main.js)
+elif command -v hadara >/dev/null 2>&1; then
+HADARA_CMD=(hadara)
 else
 echo "hadara command not found and dist/cli/main.js does not exist."
 echo "Run npm run build, install/link hadara, or run this script from the HADARA repo root."
@@ -179,6 +179,45 @@ printf '%s\n' "${file_path}"
 printf './%s\n' "${file_path}"
 ;;
 esac
+}
+
+verify_tarball_package_metadata() {
+local tarball="$1"
+local expected_name="$2"
+local expected_version="$3"
+
+node - "${tarball}" "${expected_name}" "${expected_version}" <<'NODE'
+const { execFileSync } = require('node:child_process');
+
+const [tarball, expectedName, expectedVersion] = process.argv.slice(2);
+const raw = execFileSync('tar', ['-xOf', tarball, 'package/package.json'], { encoding: 'utf8' });
+const parsed = JSON.parse(raw);
+const issues = [];
+
+if (parsed.name !== expectedName) issues.push(`name expected ${expectedName}, got ${parsed.name}`);
+if (parsed.version !== expectedVersion) issues.push(`version expected ${expectedVersion}, got ${parsed.version}`);
+if (typeof parsed.description !== 'string' || !parsed.description.includes('Portable AI-assisted development workbench')) {
+  issues.push('description is missing the release discovery wording');
+}
+for (const keyword of ['ai', 'agent', 'coding-agent', 'developer-tools', 'hadara']) {
+  if (!Array.isArray(parsed.keywords) || !parsed.keywords.includes(keyword)) {
+    issues.push(`keywords missing ${keyword}`);
+  }
+}
+if (!parsed.repository || parsed.repository.type !== 'git' || typeof parsed.repository.url !== 'string') {
+  issues.push('repository metadata is missing');
+}
+if (typeof parsed.homepage !== 'string' || parsed.homepage.length === 0) issues.push('homepage metadata is missing');
+if (!parsed.bugs || typeof parsed.bugs.url !== 'string') issues.push('bugs metadata is missing');
+
+if (issues.length > 0) {
+  console.error('Release tarball package.json metadata validation failed:');
+  for (const issue of issues) console.error(`- ${issue}`);
+  process.exit(1);
+}
+
+console.log(`Release tarball package metadata verified: ${parsed.name}@${parsed.version}`);
+NODE
 }
 
 ensure_gh_auth() {
@@ -289,6 +328,7 @@ exit 1
 fi
 
 echo "Manifest file: ${MANIFEST_FILE}"
+verify_tarball_package_metadata "${TARBALL}" "${PACKAGE_NAME}" "${VERSION}"
 
 echo
 echo "== 3. Fresh release evidence =="

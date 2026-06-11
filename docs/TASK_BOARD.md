@@ -298,3 +298,4 @@
 | T-0295 | Phase 7.5 Docs Cleanup Operations | Done | tasks/T-0295-phase-7-5-docs-cleanup-operations | Added `docs mark`, `docs archive`, `docs required-reading`, cleanup doctor warnings, schemas, focused tests, built CLI smoke, and full wrapper validation. |
 | T-0296 | Phase 7.6 0.3.0 Release Hardening and Installed-Package Recycle | Done | tasks/T-0296-phase-7-6-0-3-0-release-hardening-and-installed-package-recycle | |
 | T-0297 | 0.3.0-rc.0 prepublish cleanup and final readiness | Done | tasks/T-0297-0-3-0-rc-0-prepublish-cleanup-and-final-readiness | |
+| T-0298 | 0.3.0-rc.1 publish metadata hardening | In Progress | tasks/T-0298-0-3-0-rc-1-publish-metadata-hardening | Harden publish helper metadata validation before rc.1 operator publish. |

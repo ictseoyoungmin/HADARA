@@ -1,0 +1,33 @@
+import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { describe, expect, it } from 'vitest';
+
+describe('manual publish release script', () => {
+  const scriptPath = path.join(process.cwd(), 'scripts', 'release', 'manual-publish-rc.sh');
+
+  it('passes shell syntax validation', () => {
+    expect(() => execFileSync('bash', ['-n', scriptPath], { stdio: 'pipe' })).not.toThrow();
+  });
+
+  it('prefers the current repository built CLI over a global hadara command', () => {
+    const script = fs.readFileSync(scriptPath, 'utf8');
+    const localBuiltCliIndex = script.indexOf('if [[ -f "dist/cli/main.js" ]]; then');
+    const globalCliIndex = script.indexOf('elif command -v hadara >/dev/null 2>&1; then');
+
+    expect(localBuiltCliIndex).toBeGreaterThan(-1);
+    expect(globalCliIndex).toBeGreaterThan(-1);
+    expect(localBuiltCliIndex).toBeLessThan(globalCliIndex);
+    expect(script).toContain('HADARA_CMD=(node dist/cli/main.js)');
+  });
+
+  it('blocks publish when the generated tarball package metadata is incomplete', () => {
+    const script = fs.readFileSync(scriptPath, 'utf8');
+
+    expect(script).toContain('verify_tarball_package_metadata "${TARBALL}" "${PACKAGE_NAME}" "${VERSION}"');
+    expect(script).toContain('Release tarball package.json metadata validation failed');
+    expect(script).toContain("parsed.description.includes('Portable AI-assisted development workbench')");
+    expect(script).toContain("['ai', 'agent', 'coding-agent', 'developer-tools', 'hadara']");
+    expect(script).toContain('repository metadata is missing');
+  });
+});
