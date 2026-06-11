@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.docs.requiredReading.v1",
+  "x-hadara-schema-id": "hadara.docs.requiredReading.v1",
+  "title": "HADARA Docs Required Reading Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "documents", "excluded", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.docs.requiredReading.v1" },
+    "command": { "const": "docs.required-reading" },
+    "ok": { "type": "boolean" },
+    "documents": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/document" }
+    },
+    "excluded": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/excluded" }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "document": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "status", "readWhen", "reason"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["canonical", "active", "reference"] },
+        "readWhen": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "excluded": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "status", "reason"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["historical", "superseded", "archived"] },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

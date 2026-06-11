@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0294 implements Phase 7.4 managed sections and safe patch plans for the planned 0.3.0 line; T-0289 rc3 post-hardening release readiness refresh and `hadara@0.2.0-rc.3` publish are complete. |
-| Current Phase | Phase 7.4 Managed Sections and Safe Patch Plans implemented after Phase 7.3 docs registry | Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0294 Phase 7.4 Managed Sections and Safe Patch Plans | Closed after adding managed marker parser, docs managed inspection, docs patch plan/execute, safe init/task markers, schema, and focused tests. |
-| Active / Next Task | Phase 7.5 Docs Cleanup Operations | Create the next capsule from `docs/specs/0.3.0/06_Phase_7_5_Docs_Cleanup_Operations.md`; use T-0293 registry and T-0294 managed patch boundaries as cleanup context. |
-| Validation Baseline | T-0294 managed sections/patch validation | Docker direct TypeScript build passed; focused managed-sections/docs-patch/init/task-create/task-finish/schema/command-registry tests passed; built CLI init/docs managed/docs patch smokes passed. Standard Docker sync-check timed out without output and is recorded in T-0294 evidence. |
+| Branch | main | T-0295 implements Phase 7.5 docs cleanup operations for the planned 0.3.0 line; T-0289 rc3 post-hardening release readiness refresh and `hadara@0.2.0-rc.3` publish are complete. |
+| Current Phase | Phase 7.5 Docs Cleanup Operations implemented after Phase 7.4 managed sections | Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0295 Phase 7.5 Docs Cleanup Operations | Closed after adding `docs mark`, `docs archive`, `docs required-reading`, cleanup doctor warnings, schemas, and focused tests. |
+| Active / Next Task | Phase 7.6 0.3.0 Release Hardening and Installed-Package Recycle | Create the next capsule from `docs/specs/0.3.0/07_Phase_7_6_0_3_0_Release_Hardening_and_Installed_Package_Recycle.md`; use Phase 7.1-7.5 surfaces as release/recycle context. |
+| Validation Baseline | T-0295 docs cleanup validation | Docker direct TypeScript build passed; focused cleanup/schema/command-registry tests passed 6 files / 21 tests; built CLI cleanup smoke passed; standard Docker wrapper passed 115 files / 741 tests. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0295 Phase 7.5 Docs Cleanup Operations | Added registry-only docs mark dry-run/execute, dry-run archive candidate planning, effective required-reading reports, cleanup doctor diagnostics, schemas, and tests. Closed valid. | Docker direct TypeScript build passed; focused cleanup/schema/registry tests passed; built CLI cleanup smoke passed; standard Docker wrapper passed 115 files / 741 tests. |
 | T-0294 Phase 7.4 Managed Sections and Safe Patch Plans | Added managed marker parser, read-only managed section inspection, hash-guarded `docs patch`, safe generated markers, patch-plan schema, and focused tests. Closed valid. | Docker direct TypeScript build passed; focused managed-section/docs-patch/init/task-create/task-finish/schema/registry tests passed; built CLI managed patch smokes passed; standard Docker wrapper timeout is documented. |
 | T-0293 Phase 7.3 Document Registry and Docs Doctor | Added `.hadara/docs-registry.json` seed/projection, read-only `docs list/doctor/explain`, Phase 7.3 schemas, init upgrade registry merge, and focused drift tests. Closed valid. | Docker direct TypeScript build passed; focused docs/init/schema/registry/tools tests passed; built CLI init/docs smokes passed; standard Docker wrapper timeout is documented. |
-| T-0292 Phase 7.2 Lifecycle Guide and Command Portfolio Audit | Added registry-backed lifecycle guide projections, `hadara help lifecycle --json`, lifecycle guide docs, command portfolio audit docs, schemas, and focused drift tests. Closed valid. | Docker direct TypeScript build passed; focused lifecycle/portfolio/help/schema/registry/tools tests passed; init/MCP/feature-smoke regression tests passed; built CLI lifecycle/commands smokes passed; standard Docker wrapper timeout is documented. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| Phase 7.5+ surfaces are planned, not implemented by T-0294. | Agents may use Phase 7.1 command registry/help/commands, Phase 7.2 lifecycle-guide/portfolio-audit, Phase 7.3 docs registry/list/doctor/explain, and Phase 7.4 managed patch surfaces, but must not assume docs cleanup/archive execution or 0.3.0 release-hardening behavior exists yet. | Implement each remaining Phase 7.x slice in order, starting with Phase 7.5. |
-| T-0291/T-0292/T-0293/T-0294 full wrapper validation has timeout-only residual blockers. | Focused Phase 7.1/7.2/7.3/7.4 and regression checks passed, but full Docker direct Vitest previously timed out in dashboard/dogfooding tests and standard Docker sync-check timed out without output. | Treat the focused Phase 7 checks as the scoped validation baseline; rerun or investigate dashboard/dogfooding/wrapper timeout behavior before claiming a clean full-suite baseline. |
+| Phase 7.6 surfaces are planned, not implemented by T-0295. | Agents may use Phase 7.1 command registry/help/commands, Phase 7.2 lifecycle-guide/portfolio-audit, Phase 7.3 docs registry/list/doctor/explain, Phase 7.4 managed patch surfaces, and Phase 7.5 cleanup surfaces, but must not assume 0.3.0 release-hardening behavior exists yet. | Implement Phase 7.6 from its spec before claiming 0.3.0 release hardening complete. |
+| T-0291/T-0292/T-0293/T-0294 full wrapper validation had timeout-only residual blockers, while T-0295 wrapper validation passed. | Older Phase 7 focused checks passed, and T-0295 restored a clean standard wrapper baseline for current changes. | Use T-0295's 115-file / 741-test wrapper pass as the latest validation baseline, while treating older timeout notes as historical. |
 | Combined parallel focused dashboard/static validation can timeout under worker contention. | Standalone dashboard-static passed quickly, but a parallel focused run timed out once. | Run dashboard-static standalone or serialize dashboard validation when investigating route behavior. |
 | `dev docker-check` run from sandboxed Node subprocess can fail before Docker temp workspace creation even when direct `docker exec` succeeds. | JSON reports may show `temp-workspace exitCode=1` without raw logs. | Use explicit container env and rerun outside sandbox, or inspect with direct `docker exec`; T-0274 now exposes failed step and exit code. |
 | Root bootstrap launchers were removed in T-0270. | Local habits such as `./hadara`, `./start.sh`, or `START.bat` no longer work from the repo root. | Use `npm run dev -- ...`, `node dist/cli/main.js ...`, or the documented Docker workflow. Historical portable launcher specs remain separate from current root skeleton files. |
@@ -77,13 +77,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Phase 7.5 Docs Cleanup Operations. | Phase 7.4 managed sections/safe patch plans are complete; docs cleanup/archive planning is the next implementation dependency for the planned 0.3.0 surface-refactor line. | Create a new capsule and follow `docs/specs/0.3.0/06_Phase_7_5_Docs_Cleanup_Operations.md`. |
+| Phase 7.6 0.3.0 Release Hardening and Installed-Package Recycle. | Phase 7.5 docs cleanup operations are complete; release hardening and installed-package recycle are the final planned Phase 7 dependency before external 0.3.0 release work. | Create a new capsule and follow `docs/specs/0.3.0/07_Phase_7_6_0_3_0_Release_Hardening_and_Installed_Package_Recycle.md`. |
 | Optional operator-approved GitHub Release draft for `hadara@0.2.0-rc.3`. | GitHub Release remains secondary and token-gated, and is not required before Phase 7.1 unless the operator requests it. | If needed, use `scripts/release/manual-publish-rc.sh T-0289 --execute --github-draft` with operator confirmation and a prepared release-note file. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0295 docs cleanup validation | Docker direct TypeScript build passed; focused cleanup/schema/registry tests passed 6 files / 21 tests; built CLI cleanup smoke passed; `git diff --check` passed; standard Docker wrapper passed 115 files / 741 tests. | Latest clean full-wrapper baseline for the current workspace. |
 | T-0292 lifecycle guide/portfolio validation | Docker direct TypeScript build passed; focused lifecycle guide, command portfolio audit, help, schema, registry, and tools-list tests passed 7 files / 27 tests; init/MCP tools/feature-smoke regression tests passed 3 files / 38 tests; built CLI lifecycle text/JSON and commands primary smokes passed. | Standard Docker sync-check timed out without output; do not claim clean full-wrapper baseline. |
 | T-0291 command registry/help validation | Docker direct TypeScript build passed; focused registry/help/tools/schema tests passed; init/MCP tools/feature-smoke regression tests passed; built CLI help/commands/tools smokes passed. | Full Docker direct Vitest and standard Docker sync-check are blocked by timeout-only failures recorded in T-0291 evidence; do not claim clean full-suite baseline. |
 | T-0289 rc3 publication and close completion | Docker `hadara-dev` proofs and helper flow completed: package smoke, clean-checkout smoke, strict release gate, release dry-run, publish dry-run, and `hadara@0.2.0-rc.3` npm publish; `npm view` verification passed; `task close --execute` and `task audit-close` returned `closed-valid`. | GitHub Release draft was not requested. |

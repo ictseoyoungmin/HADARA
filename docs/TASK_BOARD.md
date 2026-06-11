@@ -295,3 +295,4 @@
 | T-0292 | Phase 7.2 Lifecycle Guide and Command Portfolio Audit | Done | tasks/T-0292-phase-7-2-lifecycle-guide-and-command-portfolio-audit | |
 | T-0293 | Phase 7.3 Document Registry and Docs Doctor | Done | tasks/T-0293-phase-7-3-document-registry-and-docs-doctor | Added `.hadara/docs-registry.json` seed/projection, `docs list/doctor/explain`, schemas, tests, and built CLI smokes; standard wrapper timeout recorded. |
 | T-0294 | Phase 7.4 Managed Sections and Safe Patch Plans | Done | tasks/T-0294-phase-7-4-managed-sections-and-safe-patch-plans | Added managed markers, `docs managed list/explain`, `docs patch`, patch-plan schema, tests, and built CLI smokes; standard wrapper timeout recorded. |
+| T-0295 | Phase 7.5 Docs Cleanup Operations | Done | tasks/T-0295-phase-7-5-docs-cleanup-operations | Added `docs mark`, `docs archive`, `docs required-reading`, cleanup doctor warnings, schemas, focused tests, built CLI smoke, and full wrapper validation. |

@@ -100,6 +100,27 @@
       "notes": "Documents the Phase 7.3 document registry list projection returned by hadara docs list --json."
     },
     {
+      "id": "hadara.docs.mark.v1",
+      "path": "src/schemas/docs-mark.schema.json",
+      "status": "fixture",
+      "owner": "services/docs-cleanup",
+      "notes": "Documents the Phase 7.5 registry-only document cleanup status transition report returned by hadara docs mark --json."
+    },
+    {
+      "id": "hadara.docs.archivePlan.v1",
+      "path": "src/schemas/docs-archive-plan.schema.json",
+      "status": "fixture",
+      "owner": "services/docs-cleanup",
+      "notes": "Documents the Phase 7.5 dry-run archive candidate plan returned by hadara docs archive --json without moving files."
+    },
+    {
+      "id": "hadara.docs.requiredReading.v1",
+      "path": "src/schemas/docs-required-reading.schema.json",
+      "status": "fixture",
+      "owner": "services/docs-cleanup",
+      "notes": "Documents the Phase 7.5 effective required-reading projection after historical, superseded, and archived cleanup exclusions."
+    },
+    {
       "id": "hadara.docs.doctor.v1",
       "path": "src/schemas/docs-doctor.schema.json",
       "status": "fixture",

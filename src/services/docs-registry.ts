@@ -180,7 +180,7 @@ export function createDocsDoctorReport(projectRoot: string, scope: string = 'all
     registeredDocuments: state.registry.documents.length,
     missingRegisteredDocuments: issues.filter((issue) => issue.code === 'DOC_REGISTERED_FILE_MISSING').length,
     unregisteredActiveLookingDocuments: issues.filter((issue) => issue.code === 'DOC_UNREGISTERED_ACTIVE_LOOKING').length,
-    requiredReadingIssues: issues.filter((issue) => issue.code === 'DOC_UNREGISTERED_REQUIRED_READING' || issue.code === 'DOC_SUPERSEDED_REQUIRED_READING').length,
+    requiredReadingIssues: issues.filter((issue) => issue.code === 'DOC_UNREGISTERED_REQUIRED_READING' || issue.code === 'DOC_SUPERSEDED_REQUIRED_READING' || issue.code === 'DOC_HISTORICAL_REQUIRED_READING').length,
     canonicalConflicts: issues.filter((issue) => issue.code === 'DOC_CANONICAL_CONFLICT').length
   };
   return {
@@ -280,6 +280,12 @@ function validateRegistry(projectRoot: string, registry: DocumentRegistryFile): 
       if (existing) issues.push({ severity: 'error', code: 'DOC_CANONICAL_CONFLICT', path: doc.path, message: `${doc.path} conflicts with canonical ${existing} for ${key}.` });
       seenCanonical.set(key, doc.path);
     }
+    if (doc.status === 'superseded' && (!doc.supersededBy || !registry.documents.some((candidate) => candidate.path === doc.supersededBy))) {
+      issues.push({ severity: 'error', code: 'DOC_SUPERSEDES_MISSING_TARGET', path: doc.path, message: `${doc.path} is superseded but does not point to a registered replacement.` });
+    }
+    if (doc.status === 'superseded' || doc.status === 'historical') {
+      issues.push({ severity: 'warning', code: 'DOC_ARCHIVE_CANDIDATE', path: doc.path, message: `${doc.path} can be considered for dry-run archive planning.` });
+    }
   }
   for (const requiredPath of parseRequiredReading(projectRoot)) {
     const registered = registry.documents.find((doc) => doc.path === requiredPath);
@@ -287,6 +293,8 @@ function validateRegistry(projectRoot: string, registry: DocumentRegistryFile): 
       issues.push({ severity: 'warning', code: 'DOC_UNREGISTERED_REQUIRED_READING', path: requiredPath, message: `${requiredPath} appears in Required Reading but is not registered.` });
     } else if (registered.status === 'superseded') {
       issues.push({ severity: 'warning', code: 'DOC_SUPERSEDED_REQUIRED_READING', path: requiredPath, message: `${requiredPath} is superseded but appears in Required Reading.` });
+    } else if (registered.status === 'historical') {
+      issues.push({ severity: 'warning', code: 'DOC_HISTORICAL_REQUIRED_READING', path: requiredPath, message: `${requiredPath} is historical but appears in Required Reading.` });
     }
   }
   for (const activePath of findActiveLookingDocs(projectRoot)) {
@@ -400,7 +408,7 @@ function parseScope(value: string): DocsDoctorReport['scope'] | null {
 
 function filterIssuesByScope(issues: DocsIssue[], scope: DocsDoctorReport['scope']): DocsIssue[] {
   if (scope === 'all') return issues;
-  if (scope === 'registry') return issues.filter((issue) => issue.code.startsWith('DOC_REGISTRY') || issue.code === 'DOC_REGISTERED_FILE_MISSING' || issue.code === 'DOC_CANONICAL_CONFLICT' || issue.code === 'DOC_UNKNOWN_STATUS');
+  if (scope === 'registry') return issues.filter((issue) => issue.code.startsWith('DOC_REGISTRY') || issue.code === 'DOC_REGISTERED_FILE_MISSING' || issue.code === 'DOC_CANONICAL_CONFLICT' || issue.code === 'DOC_UNKNOWN_STATUS' || issue.code === 'DOC_SUPERSEDES_MISSING_TARGET' || issue.code === 'DOC_ARCHIVE_CANDIDATE');
   if (scope === 'required-reading') return issues.filter((issue) => issue.code.includes('REQUIRED_READING'));
   if (scope === 'links') return issues.filter((issue) => issue.code === 'DOC_UNREGISTERED_ACTIVE_LOOKING');
   if (scope === 'profile') return issues.filter((issue) => issue.code === 'DOC_INIT_PROFILE_DRIFT');

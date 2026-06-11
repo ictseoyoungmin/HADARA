@@ -1,4 +1,5 @@
 import { getFlag, getRequiredStringOption, getStringOption } from './args';
+import { createDocsArchivePlanReport, createDocsMarkReport, createDocsRequiredReadingReport } from '../services/docs-cleanup';
 import { createDocsDoctorReport, createDocsExplainReport, createDocsListReport } from '../services/docs-registry';
 import { createDocsPatchPlanReport, createManagedSectionExplainReport, createManagedSectionsListReport } from '../services/managed-sections';
 
@@ -50,6 +51,27 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
       owner: getStringOption(input.args, '--owner', 'operator') ?? 'operator'
     });
     printReport(report, input.jsonOutput);
+    return true;
+  }
+  if (sub === 'mark') {
+    const report = createDocsMarkReport(input.projectRoot, {
+      documentPath: getRequiredStringOption(input.args, '--path'),
+      status: getRequiredStringOption(input.args, '--status'),
+      reason: getStringOption(input.args, '--reason'),
+      by: getStringOption(input.args, '--by'),
+      mode: getFlag(input.args, '--execute') ? 'execute' : 'dry-run',
+      beforeHash: getStringOption(input.args, '--before-hash'),
+      forceCanonical: getFlag(input.args, '--force-canonical')
+    });
+    printReport(report, input.jsonOutput);
+    return true;
+  }
+  if (sub === 'archive') {
+    printReport(createDocsArchivePlanReport(input.projectRoot, getStringOption(input.args, '--status')), input.jsonOutput);
+    return true;
+  }
+  if (sub === 'required-reading') {
+    printReport(createDocsRequiredReadingReport(input.projectRoot), input.jsonOutput);
     return true;
   }
   return false;

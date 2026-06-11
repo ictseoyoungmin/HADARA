@@ -139,4 +139,30 @@ describe('Phase 7.3 docs doctor', () => {
       path: 'docs/specs/ACTIVE_PLAN.md'
     }));
   });
+
+  it('reports stale required-reading docs and missing superseded targets', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    fs.appendFileSync(path.join(root, 'AGENTS.md'), '\n| `docs/TASK_BOARD.md` | Local work | Local task board. |\n', 'utf8');
+    fs.appendFileSync(path.join(root, 'AGENTS.md'), '| `docs/DEVELOPMENT_SLICES.md` | Local work | Local roadmap. |\n', 'utf8');
+    mutateRegistry(root, (registry) => {
+      registry.documents.find((doc) => doc.path === 'docs/TASK_BOARD.md')!.status = 'superseded';
+      registry.documents.find((doc) => doc.path === 'docs/DEVELOPMENT_SLICES.md')!.status = 'historical';
+    });
+
+    const requiredReading = createDocsDoctorReport(root, 'required-reading');
+    const registry = createDocsDoctorReport(root, 'registry');
+
+    expect(requiredReading.ok).toBe(true);
+    expect(requiredReading.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'DOC_SUPERSEDED_REQUIRED_READING', severity: 'warning', path: 'docs/TASK_BOARD.md' }),
+      expect.objectContaining({ code: 'DOC_HISTORICAL_REQUIRED_READING', severity: 'warning', path: 'docs/DEVELOPMENT_SLICES.md' })
+    ]));
+    expect(registry.ok).toBe(false);
+    expect(registry.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'DOC_SUPERSEDES_MISSING_TARGET', severity: 'error', path: 'docs/TASK_BOARD.md' }),
+      expect.objectContaining({ code: 'DOC_ARCHIVE_CANDIDATE', severity: 'warning', path: 'docs/TASK_BOARD.md' }),
+      expect.objectContaining({ code: 'DOC_ARCHIVE_CANDIDATE', severity: 'warning', path: 'docs/DEVELOPMENT_SLICES.md' })
+    ]));
+  });
 });
