@@ -8,8 +8,8 @@
 | Docker sync build | Rebuild and refresh `dist` from Docker. | Yes | Passed | Docker sync build passed 115 files / 741 tests; built CLI smoke `distLooksStale:false`. |
 | Package smoke | Verify installable package behavior from current workspace. | Yes | Passed | `package smoke --execute --attach-evidence --task T-0297` passed and attached public summary. |
 | Clean-checkout smoke | Verify clean checkout build/check/gate behavior. | Yes | Passed | Host clean-checkout failed at `npm ci`; Docker clean-checkout passed and attached public summary. |
-| Release artifact | Build reduced release artifact report and attach evidence. | Yes | Not Run | TBD |
-| Release dry-run / publish dry-run | Verify readiness without external mutation or token capture. | Yes | Not Run | TBD |
+| Release artifact | Build reduced release artifact report and attach evidence. | Yes | Passed | `release artifact --execute --attach-evidence --task T-0297` passed from checkpoint commit `34916db`. |
+| Release dry-run / publish dry-run | Verify readiness without external mutation or token capture. | Yes | Passed | Strict release gate, release dry-run, and publish dry-run passed; publish dry-run reported token warnings only and mutation flags false. |
 
 ## Special Checks
 

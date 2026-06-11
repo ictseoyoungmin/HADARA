@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0297 |
 | Title | 0.3.0-rc.0 prepublish cleanup and final readiness |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-06-11 |
 | Updated | 2026-06-11 |
 
@@ -38,7 +38,7 @@
 
 ## Status
 
-Draft
+Done
 
 ## Status History
 
@@ -47,3 +47,4 @@ Draft
 |---|---|---|---|
 | TBD | Draft | Initial task scaffold. | TBD |
 <!-- hadara:managed:end task-status-history -->
+| 2026-06-11 | Done | Finished task capsule. | `hadara task finish --execute` |
