@@ -40,6 +40,7 @@ describe('schema fixtures', () => {
       'hadara.docs.doctor.v1',
       'hadara.docs.explain.v1',
       'hadara.docs.list.v1',
+      'hadara.docs.patchPlan.v1',
       'hadara.event.v1',
       'hadara.evidence.lint.v1',
       'hadara.evidence.list.v1',

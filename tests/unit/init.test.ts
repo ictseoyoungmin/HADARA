@@ -75,6 +75,12 @@ describe('init profiles', () => {
     expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(false);
     expect(read(root, 'docs/ARCHITECTURE.md')).toContain('| HADARA Profile | standard |');
     expect(read(root, 'docs/DOC_REGISTRY.md')).toContain('| `docs/PROJECT_STATE.md` | project-state | canonical | session-start | yes | hadara-docs |');
+    expect(read(root, 'docs/TASK_BOARD.md')).toContain('hadara:managed:start task-board');
+    expect(read(root, 'docs/DOC_REGISTRY.md')).toContain('hadara:managed:start doc-registry-summary');
+    expect(read(root, 'docs/PROJECT_STATE.md')).toContain('hadara:managed:start project-state-metadata');
+    expect(read(root, 'docs/AGENT_HANDOFF.md')).toContain('hadara:managed:start current-state');
+    expect(read(root, 'docs/IMPLEMENTATION_SOP.md')).toContain('hadara:managed:start required-reading');
+    expect(read(root, 'docs/ARCHITECTURE.md')).not.toContain('hadara:managed:start');
   });
 
   it('prints JSON for init and keeps a fresh governed scaffold warning-clean', () => {

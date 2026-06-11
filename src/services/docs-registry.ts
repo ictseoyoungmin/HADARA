@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { InitProfile } from '../cli/init';
+import { managedSectionBlock } from './managed-sections';
 
 export type DocumentStatus = 'canonical' | 'active' | 'reference' | 'historical' | 'superseded' | 'archived';
 export type DocumentKind =
@@ -122,14 +123,25 @@ export function createSeedDocumentRegistry(profile: InitProfile | 'hadara-dev' =
 }
 
 export function renderDocRegistryMarkdown(registry: DocumentRegistryFile): string {
+  const table = [
+    '| Path | Kind | Status | Read When | Required | Owner |',
+    '|---|---|---|---|---|---|',
+    ...registry.documents.map((doc) => `| \`${doc.path}\` | ${doc.kind} | ${doc.status} | ${doc.readWhen.join(', ')} | ${doc.requiredReading ? 'yes' : 'no'} | ${doc.owner} |`)
+  ].join('\n');
   return [
     '# DOC_REGISTRY',
     '',
     `Schema: \`${registry.schemaVersion}\``,
     '',
-    '| Path | Kind | Status | Read When | Required | Owner |',
-    '|---|---|---|---|---|---|',
-    ...registry.documents.map((doc) => `| \`${doc.path}\` | ${doc.kind} | ${doc.status} | ${doc.readWhen.join(', ')} | ${doc.requiredReading ? 'yes' : 'no'} | ${doc.owner} |`),
+    managedSectionBlock('doc-registry-summary', {
+      schema: 'hadara.managedSection.v1',
+      owner: 'docs.registry',
+      kind: 'markdown-table',
+      mode: 'replace',
+      version: 1,
+      required: true,
+      closeSourceRole: 'included'
+    }, table),
     ''
   ].join('\n');
 }

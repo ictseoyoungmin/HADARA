@@ -1,5 +1,6 @@
 import type { HadaraActorRole } from '../core/actor-context';
 import type { TaskCapsule } from './task-capsule';
+import { managedSectionBlock } from '../services/managed-sections';
 
 export type TaskTemplateId = 'release-read-model' | 'evidence-v2' | 'lifecycle-hardening' | 'operator-workflow' | 'protocol-remediation' | 'ui-polish';
 
@@ -104,7 +105,7 @@ function simpleTemplate(id: TaskTemplateId, goal: string, expectedEvidence: stri
 }
 
 function taskMarkdown(task: TaskCapsule, goal: string, notes: string, scopeRows: string[], outOfScope: string[]): string {
-  return `# ${task.id} ${task.title}\n\n## Metadata\n\n| Field | Value |\n|---|---|\n| ID | ${task.id} |\n| Title | ${task.title.replace(/\|/g, '/')} |\n| Status | Draft |\n| Created | TBD |\n| Updated | TBD |\n\n## Goal\n\n| Goal | Notes |\n|---|---|\n| ${goal} | ${notes} |\n\n## Scope\n\n| In Scope | Reason |\n|---|---|\n${scopeRows.map((row) => `| ${row} |`).join('\n')}\n\n## Out of Scope\n\n| Out of Scope | Reason |\n|---|---|\n${outOfScope.map((item) => `| ${item} | Template boundary. |`).join('\n')}\n\n## Status\n\nDraft\n\n## Status History\n\n| Time | Status | Reason | Evidence |\n|---|---|---|---|\n| TBD | Draft | Initial task scaffold from template. | Template defaults. |\n`;
+  return `# ${task.id} ${task.title}\n\n## Metadata\n\n| Field | Value |\n|---|---|\n| ID | ${task.id} |\n| Title | ${task.title.replace(/\|/g, '/')} |\n| Status | Draft |\n| Created | TBD |\n| Updated | TBD |\n\n## Goal\n\n| Goal | Notes |\n|---|---|\n| ${goal} | ${notes} |\n\n## Scope\n\n| In Scope | Reason |\n|---|---|\n${scopeRows.map((row) => `| ${row} |`).join('\n')}\n\n## Out of Scope\n\n| Out of Scope | Reason |\n|---|---|\n${outOfScope.map((item) => `| ${item} | Template boundary. |`).join('\n')}\n\n## Status\n\nDraft\n\n## Status History\n\n${managedSectionBlock('task-status-history', { schema: 'hadara.managedSection.v1', owner: 'task.finish', kind: 'markdown-table', mode: 'update-row', version: 1, required: true, closeSourceRole: 'included' }, `| Time | Status | Reason | Evidence |\n|---|---|---|---|\n| TBD | Draft | Initial task scaffold from template. | Template defaults. |\n`)}\n`;
 }
 
 function acceptance(criteria: string[]): string {

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDir, slugify, writeFileIfMissing } from '../core/fs';
+import { managedSectionBlock } from '../services/managed-sections';
 import { readMarkdownSection } from '../services/markdown-table';
 import { getTaskTemplate } from './task-templates';
 
@@ -12,7 +13,7 @@ export interface TaskCapsule {
 }
 
 export const TASK_FILES: Record<string, (task: TaskCapsule) => string> = {
-  'TASK.md': (task) => `# ${task.id} ${task.title}\n\n## Metadata\n\n| Field | Value |\n|---|---|\n| ID | ${task.id} |\n| Title | ${task.title.replace(/\|/g, '/')} |\n| Status | Draft |\n| Created | TBD |\n| Updated | TBD |\n\n## Goal\n\n| Goal | Notes |\n|---|---|\n| TBD | Replace with the smallest verifiable outcome. |\n\n## Scope\n\n| In Scope | Reason |\n|---|---|\n| TBD | TBD |\n\n## Out of Scope\n\n| Out of Scope | Reason |\n|---|---|\n| TBD | TBD |\n\n## Status\n\nDraft\n\n## Status History\n\n| Time | Status | Reason | Evidence |\n|---|---|---|---|\n| TBD | Draft | Initial task scaffold. | TBD |\n`,
+  'TASK.md': (task) => `# ${task.id} ${task.title}\n\n## Metadata\n\n| Field | Value |\n|---|---|\n| ID | ${task.id} |\n| Title | ${task.title.replace(/\|/g, '/')} |\n| Status | Draft |\n| Created | TBD |\n| Updated | TBD |\n\n## Goal\n\n| Goal | Notes |\n|---|---|\n| TBD | Replace with the smallest verifiable outcome. |\n\n## Scope\n\n| In Scope | Reason |\n|---|---|\n| TBD | TBD |\n\n## Out of Scope\n\n| Out of Scope | Reason |\n|---|---|\n| TBD | TBD |\n\n## Status\n\nDraft\n\n## Status History\n\n${managedSectionBlock('task-status-history', { schema: 'hadara.managedSection.v1', owner: 'task.finish', kind: 'markdown-table', mode: 'update-row', version: 1, required: true, closeSourceRole: 'included' }, `| Time | Status | Reason | Evidence |\n|---|---|---|---|\n| TBD | Draft | Initial task scaffold. | TBD |\n`)}\n`,
   'PLAN.md': () => `# Plan\n\n| Step | Action | Status | Evidence |\n|---|---|---|---|\n| 1 | Read required project docs. | Pending | TBD |\n| 2 | Implement the smallest useful slice. | Pending | TBD |\n| 3 | Run validation. | Pending | TBD |\n| 4 | Attach evidence. | Pending | TBD |\n| 5 | Update handoff. | Pending | TBD |\n`,
   'CONTEXT.md': () => `# Context\n\n## Required Reading Used\n\n| Document | Why It Matters | Read Status |\n|---|---|---|\n| docs/PROJECT_STATE.md | Current project state. | Pending |\n| docs/AGENT_HANDOFF.md | Current handoff. | Pending |\n| docs/TASK_BOARD.md | Task queue and status. | Pending |\n| docs/IMPLEMENTATION_SOP.md | Workflow rules. | Pending |\n\n## Assumptions\n\n| Assumption | Source | Risk If Wrong |\n|---|---|---|\n| TBD | TBD | TBD |\n\n## Constraints\n\n| Constraint | Source | Notes |\n|---|---|---|\n| TBD | TBD | TBD |\n`,
   'FILES.md': () => `# Files\n\n| Path | Action | Reason | Status |\n|---|---|---|---|\n`,
@@ -22,7 +23,7 @@ export const TASK_FILES: Record<string, (task: TaskCapsule) => string> = {
   'DECISIONS.md': () => `# Decisions\n\n| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n`,
   'EVIDENCE.md': () => `# Evidence\n\n| Time | Kind | Summary | Result | Visibility | JSONL |\n|---|---|---|---|---|---|\n`,
   'evidence.jsonl': () => '',
-  'HANDOFF.md': (task) => `# Handoff\n\n## Current State\n\n| Field | Value |\n|---|---|\n| Task | ${task.id} |\n| Status | Draft |\n| Last Updated | TBD |\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| TBD | TBD |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| TBD | TBD | TBD |\n\n## Carry Forward Warnings\n\n| Warning | Impact | Mitigation |\n|---|---|---|\n`
+  'HANDOFF.md': (task) => `# Handoff\n\n## Current State\n\n${managedSectionBlock('task-handoff-current-state', { schema: 'hadara.managedSection.v1', owner: 'handoff.update', kind: 'key-value-table', mode: 'update-row', version: 1, required: true, closeSourceRole: 'included' }, `| Field | Value |\n|---|---|\n| Task | ${task.id} |\n| Status | Draft |\n| Last Updated | TBD |\n`)}\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| TBD | TBD |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| TBD | TBD | TBD |\n\n## Carry Forward Warnings\n\n| Warning | Impact | Mitigation |\n|---|---|---|\n`
 };
 
 export function isTaskCapsuleScaffoldContent(task: TaskCapsule, fileName: string, content: string): boolean {
@@ -134,11 +135,16 @@ function appendTaskBoardRow(projectRoot: string, task: TaskCapsule): void {
   ensureDir(path.dirname(taskBoard));
   const line = `| ${task.id} | ${task.title.replace(/\|/g, '/')} | Draft | ${path.relative(projectRoot, task.dir)} | |\n`;
   if (!fs.existsSync(taskBoard)) {
-    fs.writeFileSync(taskBoard, `# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n${line}`, 'utf8');
+    fs.writeFileSync(taskBoard, `# TASK_BOARD\n\n${managedSectionBlock('task-board', { schema: 'hadara.managedSection.v1', owner: 'task.create', kind: 'markdown-table', mode: 'update-row', version: 1, required: true, closeSourceRole: 'included' }, `| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n${line}`)}\n`, 'utf8');
     return;
   }
   const current = fs.readFileSync(taskBoard, 'utf8');
   if (current.includes(`| ${task.id} |`)) throw new TaskCapsuleCreateCollisionError(1);
+  const marker = '<!-- hadara:managed:end task-board -->';
+  if (current.includes(marker)) {
+    fs.writeFileSync(taskBoard, current.replace(marker, `${line}${marker}`), 'utf8');
+    return;
+  }
   fs.appendFileSync(taskBoard, line, 'utf8');
 }
 

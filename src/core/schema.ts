@@ -12,6 +12,7 @@ import devDockerCheckSchemaJson from '../schemas/dev-docker-check.schema.json';
 import docsDoctorSchemaJson from '../schemas/docs-doctor.schema.json';
 import docsExplainSchemaJson from '../schemas/docs-explain.schema.json';
 import docsListSchemaJson from '../schemas/docs-list.schema.json';
+import docsPatchPlanSchemaJson from '../schemas/docs-patch-plan.schema.json';
 import evidenceLintSchemaJson from '../schemas/evidence-lint.schema.json';
 import evidenceListSchemaJson from '../schemas/evidence-list.schema.json';
 import evidenceMigrationPreviewSchemaJson from '../schemas/evidence-migration-preview.schema.json';
@@ -98,6 +99,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.docs.doctor.v1': docsDoctorSchemaJson as JsonObject,
   'hadara.docs.explain.v1': docsExplainSchemaJson as JsonObject,
   'hadara.docs.list.v1': docsListSchemaJson as JsonObject,
+  'hadara.docs.patchPlan.v1': docsPatchPlanSchemaJson as JsonObject,
   'hadara.evidence.lint.v1': evidenceLintSchemaJson as JsonObject,
   'hadara.evidence.list.v1': evidenceListSchemaJson as JsonObject,
   'hadara.evidence.migration_preview.v1': evidenceMigrationPreviewSchemaJson as JsonObject,

@@ -9,13 +9,13 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0293 Phase 7.3 Document Registry and Docs Doctor |
+| Latest Completed Task | T-0294 Phase 7.4 Managed Sections and Safe Patch Plans |
 
 ## Next Planned Line
 
-Phase 7 Surface Refactor is the planned 0.3.0 line. It covers command registry/help, lifecycle guide, document registry, managed sections, docs cleanup, and release hardening. The Phase 7 specs are staged under `docs/specs/0.3.0/`; Phase 7.0 through Phase 7.3 are implemented, and Phase 7.4+ remain planned until their corresponding Task Capsules close valid.
+Phase 7 Surface Refactor is the planned 0.3.0 line. It covers command registry/help, lifecycle guide, document registry, managed sections, docs cleanup, and release hardening. The Phase 7 specs are staged under `docs/specs/0.3.0/`; Phase 7.0 through Phase 7.4 are implemented, and Phase 7.5+ remain planned until their corresponding Task Capsules close valid.
 
-T-0293 implemented the Phase 7.3 document registry and docs doctor. Fresh `hadara init` now seeds `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md`, `init upgrade --execute` can merge missing profile seed entries, and read-only `hadara docs list|doctor|explain --json` surfaces emit `hadara.docs.list.v1`, `hadara.docs.doctor.v1`, and `hadara.docs.explain.v1`. Docker direct TypeScript, focused docs/init/schema/registry/tools tests, built CLI docs smokes, and `git diff --check` passed; standard Docker wrapper validation still times out without output and is recorded in T-0293 evidence.
+T-0294 implemented Phase 7.4 managed sections and safe patch plans. Fresh init/task scaffolds now add managed markers only around safe generated sections, `hadara docs managed list|explain --json` inspects section ownership, and `hadara docs patch --json` emits `hadara.docs.patchPlan.v1` with dry-run-first section-body replacement and hash-guarded execute. Docker direct TypeScript, focused managed-section/docs-patch/init/task-create/task-finish/schema/registry tests, built CLI managed patch smokes, and `git diff --check` passed; standard Docker wrapper validation still times out without output and is recorded in T-0294 evidence.
 
 ## Current Phase
 

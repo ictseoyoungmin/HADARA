@@ -4,6 +4,7 @@ import { resolveHadaraPaths } from '../core/paths';
 import { ensureDir, writeFileIfMissing } from '../core/fs';
 import { getFlag, getRequiredStringOption, getStringOption } from './args';
 import { DOCS_REGISTRY_PATH, createSeedDocumentRegistry, registryJson, renderDocRegistryMarkdown } from '../services/docs-registry';
+import { managedSectionBlock } from '../services/managed-sections';
 import type { DocumentRegistryFile } from '../services/docs-registry';
 
 export type InitProfile = 'basic' | 'standard' | 'governed';
@@ -218,7 +219,7 @@ function createGeneratedScaffoldFiles(profile: InitProfile): GeneratedScaffoldFi
     { path: '.hadara/docs-registry.json', content: registryJson(docsRegistry) },
     { path: 'docs/DOC_REGISTRY.md', content: renderDocRegistryMarkdown(docsRegistry) },
     { path: 'docs/PROJECT_STATE.md', content: createProjectStateDoc(profile) },
-    { path: 'docs/TASK_BOARD.md', content: '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n' },
+    { path: 'docs/TASK_BOARD.md', content: createTaskBoardDoc() },
     { path: 'docs/AGENT_HANDOFF.md', content: createAgentHandoffDoc() },
     { path: 'docs/IMPLEMENTATION_SOP.md', content: createImplementationSopDoc(spec) },
     { path: 'docs/TASK_WORKFLOW_COMMANDS.md', content: createTaskWorkflowCommandsDoc() },
@@ -930,15 +931,25 @@ function createMcpIntegrationDoc(): string {
 }
 
 function createProjectStateDoc(profile: InitProfile): string {
-  return `# PROJECT_STATE
-
-## Product
-
-| Field | Value |
+  const productTable = managedSectionBlock('project-state-metadata', {
+    schema: 'hadara.managedSection.v1',
+    owner: 'project-state.update',
+    kind: 'key-value-table',
+    mode: 'update-row',
+    version: 1,
+    required: true,
+    closeSourceRole: 'included'
+  }, `| Field | Value |
 |---|---|
 | Name | TBD |
 | Purpose | Describe the project in one or two sentences. |
 | HADARA Profile | ${profile} |
+`);
+  return `# PROJECT_STATE
+
+## Product
+
+${productTable}
 
 ## Current Phase
 
@@ -966,15 +977,43 @@ function createProjectStateDoc(profile: InitProfile): string {
 `;
 }
 
+function createTaskBoardDoc(): string {
+  const taskBoardTable = managedSectionBlock('task-board', {
+    schema: 'hadara.managedSection.v1',
+    owner: 'task.finish',
+    kind: 'markdown-table',
+    mode: 'update-row',
+    version: 1,
+    required: true,
+    closeSourceRole: 'included'
+  }, `| ID | Title | Status | Capsule | Notes |
+|---|---|---|---|---|
+`);
+  return `# TASK_BOARD
+
+${taskBoardTable}
+`;
+}
+
 function createAgentHandoffDoc(): string {
+  const currentStateTable = managedSectionBlock('current-state', {
+    schema: 'hadara.managedSection.v1',
+    owner: 'handoff.update',
+    kind: 'markdown-table',
+    mode: 'update-row',
+    version: 1,
+    required: true,
+    closeSourceRole: 'included'
+  }, `| Area | State | Notes |
+|---|---|---|
+| Scaffold | Initialized | HADARA protocol scaffold is initialized. |
+| Required Reading | Pending | Read \`PROJECT_STATE\`, \`AGENT_HANDOFF\`, \`TASK_BOARD\`, \`IMPLEMENTATION_SOP\`, and \`TASK_WORKFLOW_COMMANDS\` before starting. |
+`);
   return `# AGENT_HANDOFF
 
 ## Current State
 
-| Area | State | Notes |
-|---|---|---|
-| Scaffold | Initialized | HADARA protocol scaffold is initialized. |
-| Required Reading | Pending | Read \`PROJECT_STATE\`, \`AGENT_HANDOFF\`, \`TASK_BOARD\`, \`IMPLEMENTATION_SOP\`, and \`TASK_WORKFLOW_COMMANDS\` before starting. |
+${currentStateTable}
 
 ## Last 3 Completed Tasks
 
@@ -1083,6 +1122,18 @@ function createImplementationSopDoc(spec: InitProfileSpec): string {
     ['Active `tasks/T-*/TASK.md`', 'Working a task', 'Task-specific goal, scope, and status.'],
     ['Active Task Capsule docs', 'Working a task', '`DECISIONS.md`, `PLAN.md`, `CONTEXT.md`, `ACCEPTANCE.md`, `FILES.md`, `TESTS.md`, `RISKS.md`, and `HANDOFF.md`.']
   );
+  const requiredReadingTable = managedSectionBlock('required-reading', {
+    schema: 'hadara.managedSection.v1',
+    owner: 'init.register-doc',
+    kind: 'markdown-table',
+    mode: 'insert-row',
+    version: 1,
+    required: true,
+    closeSourceRole: 'included'
+  }, `| Document | When to Read | Purpose |
+|---|---|---|
+${requiredReadingRows.map(formatTableRow).join('\n')}
+`);
 
   const structureRows = [
     ['`AGENTS.md`', 'Required Reading and Rules sections.'],
@@ -1113,9 +1164,7 @@ ${numberedList(sessionStart)}
 
 ## Required Reading
 
-| Document | When to Read | Purpose |
-|---|---|---|
-${requiredReadingRows.map(formatTableRow).join('\n')}
+${requiredReadingTable}
 
 ## Project-Specific Documents
 

@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.docs.patchPlan.v1",
+  "x-hadara-schema-id": "hadara.docs.patchPlan.v1",
+  "title": "HADARA Docs Managed Patch Plan Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "mode", "ok", "targetPath", "targetBeforeHash", "sections", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.docs.patchPlan.v1" },
+    "command": { "const": "docs.patch" },
+    "mode": { "type": "string", "enum": ["dry-run", "execute"] },
+    "ok": { "type": "boolean" },
+    "targetPath": { "type": "string" },
+    "targetBeforeHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "executeCommand": { "type": "string", "minLength": 1 },
+    "sections": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sectionPatch" }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "sectionPatch": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["sectionId", "owner", "kind", "operation", "sectionBeforeHash", "sectionAfterHash", "changed", "preview"],
+      "properties": {
+        "sectionId": { "type": "string", "minLength": 1 },
+        "owner": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "operation": { "type": "string", "enum": ["replace", "insert-row", "update-row", "append-block", "noop"] },
+        "sectionBeforeHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "sectionAfterHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "changed": { "type": "boolean" },
+        "preview": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["diffSummary"],
+          "properties": {
+            "beforeExcerpt": { "type": "string" },
+            "afterExcerpt": { "type": "string" },
+            "diffSummary": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["info", "warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "sectionId": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

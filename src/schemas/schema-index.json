@@ -114,6 +114,13 @@
       "notes": "Documents the Phase 7.3 per-document registry explanation returned by hadara docs explain --json."
     },
     {
+      "id": "hadara.docs.patchPlan.v1",
+      "path": "src/schemas/docs-patch-plan.schema.json",
+      "status": "fixture",
+      "owner": "services/managed-sections",
+      "notes": "Documents the Phase 7.4 managed Markdown section patch plan and hash-guarded execute report returned by hadara docs patch --json."
+    },
+    {
       "id": "hadara.tools.list.v1",
       "path": "src/schemas/tools-list.schema.json",
       "status": "fixture",
