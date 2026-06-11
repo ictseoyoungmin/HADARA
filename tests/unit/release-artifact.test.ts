@@ -70,13 +70,23 @@ describe('release artifact builder', () => {
     const runner: ReleaseArtifactCommandRunner = (_command, args, options) => {
       const stagedPackage = JSON.parse(fs.readFileSync(path.join(options.cwd, 'package.json'), 'utf8')) as {
         description?: string;
+        keywords?: string[];
+        repository?: { type?: string; url?: string };
+        homepage?: string;
+        bugs?: { url?: string };
       };
       const outputDir = String(args[args.indexOf('--pack-destination') + 1]);
       expect(options.env?.NPM_CONFIG_CACHE).toContain('hadara-release-artifact-npm-cache-');
       expect(options.env?.npm_config_cache).toBe(options.env?.NPM_CONFIG_CACHE);
       fs.writeFileSync(path.join(outputDir, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
       expect(stagedPackage.description).not.toContain('bootstrap skeleton');
-      expect(stagedPackage.description).toBe('HADARA: portable agentic development workbench');
+      expect(stagedPackage.description).toBe('Portable AI-assisted development workbench for evidence-backed task capsules, handoffs, and release gates.');
+      expect(stagedPackage.keywords).toContain('ai');
+      expect(stagedPackage.keywords).toContain('coding-agent');
+      expect(stagedPackage.keywords).toContain('hadara');
+      expect(stagedPackage.repository).toEqual({ type: 'git', url: 'git+https://github.com/ictseoyoungmin/HADARA-dev.git' });
+      expect(stagedPackage.homepage).toBe('https://github.com/ictseoyoungmin/HADARA-dev#readme');
+      expect(stagedPackage.bugs).toEqual({ url: 'https://github.com/ictseoyoungmin/HADARA-dev/issues' });
       return {
         status: 0,
         stdout: JSON.stringify([

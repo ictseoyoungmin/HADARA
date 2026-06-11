@@ -44,5 +44,3 @@ docs/design/mockups/*
 
 !docs/specs/0.3.0/
 !docs/specs/0.3.0/**
-!docs/specs/phase7_surface_refactor/
-!docs/specs/phase7_surface_refactor/**

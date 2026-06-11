@@ -5,8 +5,7 @@
 </p>
 
 <p align="center">
-  <img alt="Source candidate" src="https://img.shields.io/badge/source-0.3.0--rc.0-blue">
-  <img alt="Published RC" src="https://img.shields.io/badge/npm-0.2.0--rc.3-lightgrey">
+  <img alt="Release candidate" src="https://img.shields.io/badge/npm-0.3.0--rc.0-blue">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>
@@ -21,16 +20,10 @@ This repository is both the HADARA source checkout and the HADARA protocol works
 
 ## Release Status
 
-Current source candidate:
+Current release candidate:
 
 ```text
 hadara@0.3.0-rc.0
-```
-
-Current published npm release:
-
-```text
-hadara@0.2.0-rc.3
 ```
 
 The 0.3.0 line is the Phase 7 Surface Refactor. It organizes HADARA's existing task, evidence, proof, lifecycle, release, and document surfaces so agents can distinguish primary lifecycle commands, diagnostics, advanced surfaces, canonical documents, historical documents, and safe Markdown update boundaries.
@@ -42,8 +35,8 @@ Phase 7.x labels are internal implementation phases, not npm release-candidate l
 | npm package | Primary release target. |
 | `hadara@0.2.0-rc.1` | Previous published npm RC. |
 | `hadara@0.2.0-rc.2` | Previous published npm RC. |
-| `hadara@0.2.0-rc.3` | Current published npm RC. |
-| `hadara@0.3.0-rc.0` | Current source candidate; not published by this README update. |
+| `hadara@0.2.0-rc.3` | Previous published npm RC. |
+| `hadara@0.3.0-rc.0` | Current release candidate. |
 | GitHub Release | Secondary target, approval-gated. |
 | Docker image | Deferred. |
 | PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
@@ -55,21 +48,20 @@ No release command should publish, create a GitHub Release, build Docker images,
 
 Requires Node.js 22.
 
-Install the latest published RC:
+Install this release candidate:
 
 ```bash
-npm install -g hadara@0.2.0-rc.3
+npm install -g hadara@0.3.0-rc.0
+hadara help
 hadara doctor --json
 ```
 
 Run without a global install:
 
 ```bash
-npx hadara@0.2.0-rc.3 doctor --json
-npx hadara@0.2.0-rc.3 help
+npx hadara@0.3.0-rc.0 help
+npx hadara@0.3.0-rc.0 doctor --json
 ```
-
-Use the source checkout or packed artifact when validating the unpublished `0.3.0-rc.0` candidate.
 
 ## What HADARA Gives You
 
@@ -118,11 +110,16 @@ hadara task finish --task T-XXXX --json
 hadara task finish --task T-XXXX --execute --json
 # Finalize Task Capsule docs and tracked state docs before closing.
 hadara task ready --task T-XXXX --level done --json
-hadara task complete --task T-XXXX --json
 hadara task close --task T-XXXX --json
 hadara task close --task T-XXXX --execute --json
 hadara task audit-close --task T-XXXX --json
 hadara handoff suggest --task T-XXXX --json
+```
+
+Optional workflow compression is read-only. Use it separately when you want a compact current-stage report and next recommended action:
+
+```bash
+hadara task complete --task T-XXXX --json
 ```
 
 Important boundaries:

@@ -6,7 +6,7 @@
 | Field | Value |
 |---|---|
 | Task | T-0296 |
-| Status | Done pending close |
+| Status | Done / closed |
 | Last Updated | 2026-06-11 |
 <!-- hadara:managed:end task-handoff-current-state -->
 
@@ -23,7 +23,7 @@
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Finish, ready, close, audit, and commit final T-0296 evidence/state docs. | Release hardening work is complete and needs HADARA lifecycle closure. | `docs/TASK_WORKFLOW_COMMANDS.md` |
+| Operator may run the approval-gated publish capsule/helper for `hadara@0.3.0-rc.0` after final release-readiness recheck. | T-0296 is closed; publish remains explicit operator-only mutation. | `docs/RELEASE_READINESS.md`, `scripts/release/manual-publish-rc.sh` |
 
 ## Carry Forward Warnings
 

@@ -93,6 +93,44 @@ export type ReleaseArtifactCommandRunner = (
   options: { cwd: string; timeoutMs: number; env?: NodeJS.ProcessEnv }
 ) => ReleaseArtifactCommandResult;
 
+const RELEASE_PACKAGE_DESCRIPTION = 'Portable AI-assisted development workbench for evidence-backed task capsules, handoffs, and release gates.';
+const RELEASE_PACKAGE_KEYWORDS = [
+  'ai',
+  'agent',
+  'agents',
+  'coding-agent',
+  'developer-tools',
+  'cli',
+  'workflow',
+  'automation',
+  'task-management',
+  'evidence',
+  'handoff',
+  'release-management',
+  'mcp',
+  'hadara'
+];
+const RELEASE_PACKAGE_REPOSITORY = {
+  type: 'git',
+  url: 'git+https://github.com/ictseoyoungmin/HADARA-dev.git'
+};
+const RELEASE_PACKAGE_HOMEPAGE = 'https://github.com/ictseoyoungmin/HADARA-dev#readme';
+const RELEASE_PACKAGE_BUGS = {
+  url: 'https://github.com/ictseoyoungmin/HADARA-dev/issues'
+};
+
+interface PackageMetadata {
+  name: string;
+  version: string;
+  private: boolean;
+  license?: string;
+  description: string;
+  keywords: string[];
+  repository: { type: string; url: string };
+  homepage: string;
+  bugs: { url: string };
+}
+
 interface PackFile {
   path: string;
   size?: number;
@@ -251,10 +289,14 @@ export function createReleaseArtifactReport(options: ReleaseArtifactOptions): Re
   return report;
 }
 
-function readPackageMetadata(projectRoot: string, issues: ReleaseArtifactIssue[]): { name: string; version: string; private: boolean; license?: string } {
+function readPackageMetadata(projectRoot: string, issues: ReleaseArtifactIssue[]): PackageMetadata {
   try {
     const parsed = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8')) as Record<string, unknown>;
     const bin = isRecord(parsed.bin) ? parsed.bin : {};
+    const repository = isRecord(parsed.repository) && typeof parsed.repository.type === 'string' && typeof parsed.repository.url === 'string'
+      ? { type: parsed.repository.type, url: parsed.repository.url }
+      : RELEASE_PACKAGE_REPOSITORY;
+    const bugs = isRecord(parsed.bugs) && typeof parsed.bugs.url === 'string' ? { url: parsed.bugs.url } : RELEASE_PACKAGE_BUGS;
     if (parsed.name !== 'hadara') {
       issues.push({ severity: 'error', code: 'RELEASE_ARTIFACT_PACKAGE_NAME_INVALID', message: 'Release artifact package name must be hadara.' });
     }
@@ -265,7 +307,12 @@ function readPackageMetadata(projectRoot: string, issues: ReleaseArtifactIssue[]
       name: typeof parsed.name === 'string' ? parsed.name : 'unknown',
       version: typeof parsed.version === 'string' ? parsed.version : '0.0.0',
       private: parsed.private === true,
-      ...(typeof parsed.license === 'string' ? { license: parsed.license } : {})
+      ...(typeof parsed.license === 'string' ? { license: parsed.license } : {}),
+      description: typeof parsed.description === 'string' ? parsed.description : RELEASE_PACKAGE_DESCRIPTION,
+      keywords: Array.isArray(parsed.keywords) && parsed.keywords.every((keyword) => typeof keyword === 'string') ? parsed.keywords : RELEASE_PACKAGE_KEYWORDS,
+      repository,
+      homepage: typeof parsed.homepage === 'string' ? parsed.homepage : RELEASE_PACKAGE_HOMEPAGE,
+      bugs
     };
   } catch {
     issues.push({
@@ -273,7 +320,16 @@ function readPackageMetadata(projectRoot: string, issues: ReleaseArtifactIssue[]
       code: 'RELEASE_ARTIFACT_PACKAGE_JSON_MISSING',
       message: 'Release artifact builder requires readable package.json metadata.'
     });
-    return { name: 'unknown', version: '0.0.0', private: true };
+    return {
+      name: 'unknown',
+      version: '0.0.0',
+      private: true,
+      description: RELEASE_PACKAGE_DESCRIPTION,
+      keywords: RELEASE_PACKAGE_KEYWORDS,
+      repository: RELEASE_PACKAGE_REPOSITORY,
+      homepage: RELEASE_PACKAGE_HOMEPAGE,
+      bugs: RELEASE_PACKAGE_BUGS
+    };
   }
 }
 
@@ -343,7 +399,7 @@ function prepareStaging(projectRoot: string, issues: ReleaseArtifactIssue[]): { 
   return { path: staging };
 }
 
-function copyWhitelistedPackage(projectRoot: string, staging: string, metadata: { name: string; version: string; private: boolean; license?: string }, issues: ReleaseArtifactIssue[]): void {
+function copyWhitelistedPackage(projectRoot: string, staging: string, metadata: PackageMetadata, issues: ReleaseArtifactIssue[]): void {
   try {
     fs.cpSync(path.join(projectRoot, 'dist'), path.join(staging, 'dist'), { recursive: true });
     fs.copyFileSync(path.join(projectRoot, 'README.md'), path.join(staging, 'README.md'));
@@ -356,7 +412,11 @@ function copyWhitelistedPackage(projectRoot: string, staging: string, metadata: 
           version: metadata.version,
           private: metadata.private,
           ...(metadata.license ? { license: metadata.license } : {}),
-          description: 'HADARA: portable agentic development workbench',
+          description: metadata.description,
+          keywords: metadata.keywords,
+          repository: metadata.repository,
+          homepage: metadata.homepage,
+          bugs: metadata.bugs,
           bin: { hadara: './dist/cli/main.js' },
           files: ['dist/', 'README.md', 'LICENSE', 'package.json']
         },

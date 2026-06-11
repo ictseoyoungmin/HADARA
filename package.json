@@ -3,7 +3,31 @@
   "version": "0.3.0-rc.0",
   "private": false,
   "license": "MIT",
-  "description": "HADARA: portable agentic development workbench",
+  "description": "Portable AI-assisted development workbench for evidence-backed task capsules, handoffs, and release gates.",
+  "keywords": [
+    "ai",
+    "agent",
+    "agents",
+    "coding-agent",
+    "developer-tools",
+    "cli",
+    "workflow",
+    "automation",
+    "task-management",
+    "evidence",
+    "handoff",
+    "release-management",
+    "mcp",
+    "hadara"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ictseoyoungmin/HADARA-dev.git"
+  },
+  "homepage": "https://github.com/ictseoyoungmin/HADARA-dev#readme",
+  "bugs": {
+    "url": "https://github.com/ictseoyoungmin/HADARA-dev/issues"
+  },
   "bin": {
     "hadara": "./dist/cli/main.js"
   },

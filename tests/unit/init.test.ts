@@ -614,10 +614,13 @@ describe('init profiles', () => {
     expect(readme).toContain('| `basic` | Small project, only task/handoff discipline needed. |');
     expect(readme).toContain('| `hadara@0.2.0-rc.1` | Previous published npm RC. |');
     expect(readme).toContain('| `hadara@0.2.0-rc.2` | Previous published npm RC. |');
-    expect(readme).toContain('| `hadara@0.2.0-rc.3` | Current published npm RC. |');
-    expect(readme).toContain('| `hadara@0.3.0-rc.0` | Current source candidate; not published by this README update. |');
+    expect(readme).toContain('| `hadara@0.2.0-rc.3` | Previous published npm RC. |');
+    expect(readme).toContain('| `hadara@0.3.0-rc.0` | Current release candidate. |');
+    expect(readme).toContain('npm install -g hadara@0.3.0-rc.0');
+    expect(readme).toContain('npx hadara@0.3.0-rc.0 help');
     expect(readme).toContain('| PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |');
     expect(readme).not.toContain('Current source and publish-candidate version.');
+    expect(readme).not.toContain('npm install -g hadara@0.2.0-rc.3');
     expect(readme).toContain('## Start Here');
     expect(readme).toContain('## Primary Capsule Lifecycle');
     expect(readme).toContain('## Document Governance');

@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "hadara.smokeEvidenceSummary.v1",
+  "time": "2026-06-11T09:51:36.216Z",
+  "taskId": "T-0297",
+  "category": "clean-checkout-smoke",
+  "sourceReport": {
+    "schemaVersion": "hadara.cleanCheckoutSmoke.v1",
+    "command": "smoke.cleanCheckout",
+    "mode": "execute",
+    "ok": false
+  },
+  "execution": {
+    "sourceCopied": true,
+    "dependencyInstallExecuted": true,
+    "buildExecuted": false,
+    "checkExecuted": false,
+    "builtCliSmokeExecuted": false,
+    "packageInstallExecuted": false,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "steps": [
+    {
+      "id": "copy-source",
+      "label": "Copy source checkout",
+      "status": "passed",
+      "summary": "Source checkout was copied into a disposable workspace without including dependency, build, local, or private store directories."
+    },
+    {
+      "id": "npm-ci",
+      "label": "Clean dependency install",
+      "status": "failed",
+      "exitCode": 1,
+      "elapsedMs": 70465,
+      "summary": "Clean dependency install failed with a reduced exit summary."
+    },
+    {
+      "id": "build",
+      "label": "Build clean checkout",
+      "status": "skipped",
+      "summary": "Skipped because a previous clean-checkout step failed."
+    },
+    {
+      "id": "check",
+      "label": "Check clean checkout",
+      "status": "skipped",
+      "summary": "Skipped because a previous clean-checkout step failed."
+    },
+    {
+      "id": "doctor",
+      "label": "Built CLI doctor",
+      "status": "skipped",
+      "summary": "Skipped because a previous clean-checkout step failed."
+    },
+    {
+      "id": "ops-status",
+      "label": "Built CLI operations status",
+      "status": "skipped",
+      "summary": "Skipped because a previous clean-checkout step failed."
+    },
+    {
+      "id": "release-gate-strict",
+      "label": "Built CLI strict release gate",
+      "status": "skipped",
+      "summary": "Skipped because a previous clean-checkout step failed."
+    },
+    {
+      "id": "cleanup",
+      "label": "Cleanup disposable workspace",
+      "status": "passed",
+      "summary": "Disposable clean checkout was removed."
+    }
+  ],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [
+    {
+      "severity": "error",
+      "code": "CLEAN_CHECKOUT_STEP_FAILED",
+      "message": "npm ci failed during clean-checkout smoke.",
+      "stepId": "npm-ci"
+    }
+  ],
+  "rawLogsIncluded": false,
+  "privatePathsIncluded": false,
+  "rawPackageContentsIncluded": false
+}

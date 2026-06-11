@@ -21,7 +21,6 @@ describe('task workflow command semantics docs', () => {
       'hadara task finish --task T-XXXX --execute --json',
       '# Finalize Task Capsule docs and tracked state docs before closing.',
       'hadara task ready --task T-XXXX --level done --json',
-      'hadara task complete --task T-XXXX --json',
       'hadara task close --task T-XXXX --json',
       'hadara task close --task T-XXXX --execute --json',
       'hadara task audit-close --task T-XXXX --json',
@@ -32,6 +31,11 @@ describe('task workflow command semantics docs', () => {
       expect(sop).toContain(command);
       expect(readme).toContain(command);
     }
+
+    expect(workflow).toContain('hadara task complete --task T-XXXX --json');
+    expect(sop).toContain('hadara task complete --task T-XXXX --json');
+    expect(readme).toContain('Optional workflow compression is read-only.');
+    expect(readme).toContain('hadara task complete --task T-XXXX --json');
 
     for (const doc of [workflow, sop, readme]) {
       expect(doc.indexOf('hadara task finish --task T-XXXX --execute --json')).toBeLessThan(doc.indexOf('hadara task ready --task T-XXXX --level done --json'));
