@@ -10,6 +10,7 @@
 | Clean-checkout smoke | Verify clean checkout build/check/gate behavior. | Yes | Passed | Host clean-checkout failed at `npm ci`; Docker clean-checkout passed and attached public summary. |
 | Release artifact | Build reduced release artifact report and attach evidence. | Yes | Passed | `release artifact --execute --attach-evidence --task T-0297` passed from checkpoint commit `34916db`. |
 | Release dry-run / publish dry-run | Verify readiness without external mutation or token capture. | Yes | Passed | Strict release gate, release dry-run, and publish dry-run passed; publish dry-run reported token warnings only and mutation flags false. |
+| npm registry verification | Confirm operator publish reached npm. | Yes | Passed | `npm view hadara@0.3.0-rc.0 version` returned `0.3.0-rc.0`; `latest` dist-tag points to `0.3.0-rc.0`. |
 
 ## Special Checks
 
