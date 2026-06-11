@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.docs.explain.v1",
+  "x-hadara-schema-id": "hadara.docs.explain.v1",
+  "title": "HADARA Docs Explain Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "path", "document", "guidance", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.docs.explain.v1" },
+    "command": { "const": "docs.explain" },
+    "ok": { "type": "boolean" },
+    "path": { "type": "string" },
+    "document": { "oneOf": [{ "$ref": "#/$defs/document" }, { "type": "null" }] },
+    "guidance": { "oneOf": [{ "$ref": "#/$defs/guidance" }, { "type": "null" }] },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "document": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "title", "kind", "status", "readWhen", "requiredReading", "updateOwner", "managedSections"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "minLength": 1 },
+        "readWhen": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "requiredReading": { "type": "boolean" },
+        "updateOwner": { "type": "string", "minLength": 1 },
+        "managedSections": {
+          "type": "array",
+          "items": { "type": "object", "additionalProperties": true }
+        }
+      }
+    },
+    "guidance": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["shouldReadNow", "reason", "safeToAutoUpdate", "managedSections"],
+      "properties": {
+        "shouldReadNow": { "type": "boolean" },
+        "reason": { "type": "string", "minLength": 1 },
+        "safeToAutoUpdate": { "type": "boolean" },
+        "managedSections": {
+          "type": "array",
+          "items": { "type": "object", "additionalProperties": true }
+        }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0292 implements the Phase 7.2 lifecycle guide and command portfolio audit for the planned 0.3.0 line; T-0289 rc3 post-hardening release readiness refresh and `hadara@0.2.0-rc.3` publish are complete. |
-| Current Phase | Phase 7.2 Lifecycle Guide and Command Portfolio Audit implemented after Phase 7.1 registry/help | Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0292 Phase 7.2 Lifecycle Guide and Command Portfolio Audit | Closed after adding `hadara.lifecycle.guide.v1`, lifecycle guide docs, command portfolio audit docs, schemas, and focused tests. |
-| Active / Next Task | Phase 7.3 Document Registry and Docs Doctor | Create the next capsule from `docs/specs/0.3.0/04_Phase_7_3_Document_Registry_and_Docs_Doctor.md`; required reading includes the Phase 7 program spec, `docs/COMMAND_SURFACE.md`, `docs/LIFECYCLE_GUIDE.md`, and the T-0292 capsule handoff. |
-| Validation Baseline | T-0292 lifecycle guide/portfolio validation | Docker direct TypeScript build passed; focused lifecycle/portfolio/help/schema/registry/tools tests passed; init/MCP tools/feature-smoke regression tests passed; built CLI lifecycle text/JSON and commands primary smokes passed. Standard Docker sync-check timed out without output and is recorded in T-0292 evidence. |
+| Branch | main | T-0293 implements the Phase 7.3 document registry and docs doctor for the planned 0.3.0 line; T-0289 rc3 post-hardening release readiness refresh and `hadara@0.2.0-rc.3` publish are complete. |
+| Current Phase | Phase 7.3 Document Registry and Docs Doctor implemented after Phase 7.2 lifecycle guide/portfolio audit | Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0293 Phase 7.3 Document Registry and Docs Doctor | Closed after adding docs registry seed/projection, docs list/doctor/explain surfaces, schemas, init upgrade registry merge, and focused tests. |
+| Active / Next Task | Phase 7.4 Managed Sections and Safe Patch Plans | Create the next capsule from `docs/specs/0.3.0/05_Phase_7_4_Managed_Sections_and_Safe_Patch_Plans.md`; use T-0293 registry metadata as document classification context. |
+| Validation Baseline | T-0293 document registry/docs doctor validation | Docker direct TypeScript build passed; focused docs-registry/docs-doctor/init/schema/command-registry/tools tests passed; built CLI init/docs list/docs doctor/docs explain smokes passed. Standard Docker sync-check timed out without output and is recorded in T-0293 evidence. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0293 Phase 7.3 Document Registry and Docs Doctor | Added `.hadara/docs-registry.json` seed/projection, read-only `docs list/doctor/explain`, Phase 7.3 schemas, init upgrade registry merge, and focused drift tests. Closed valid. | Docker direct TypeScript build passed; focused docs/init/schema/registry/tools tests passed; built CLI init/docs smokes passed; standard Docker wrapper timeout is documented. |
 | T-0292 Phase 7.2 Lifecycle Guide and Command Portfolio Audit | Added registry-backed lifecycle guide projections, `hadara help lifecycle --json`, lifecycle guide docs, command portfolio audit docs, schemas, and focused drift tests. Closed valid. | Docker direct TypeScript build passed; focused lifecycle/portfolio/help/schema/registry/tools tests passed; init/MCP/feature-smoke regression tests passed; built CLI lifecycle/commands smokes passed; standard Docker wrapper timeout is documented. |
 | T-0291 Implement Phase 7.1 command surface registry and structured help | Added the authoritative command registry, registry-backed `hadara help` and `hadara commands --json`, compatible `tools list` projection, command-surface docs, schemas, and focused drift tests. Closed valid. | Docker direct TypeScript build passed; focused registry/help/tools/schema and init/MCP/feature-smoke regression tests passed; built CLI help/commands/tools smokes passed; residual full-suite timeout blockers are documented. |
-| T-0290 Stage Phase 7 surface refactor specs | Staged the Phase 7 Surface Refactor specs under `docs/specs/0.3.0/`, reconciled README/release notes with rc3 publish evidence, added Phase 7 planning state, and recorded the Phase 7.x internal-label decision. Closed valid. | Specs present; docs-only validation passed; audit-close `closed-valid`. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| Phase 7.3+ surfaces are planned, not implemented by T-0292. | Agents may use Phase 7.1 command registry/help/commands and Phase 7.2 lifecycle-guide/portfolio-audit surfaces, but must not assume docs registry, managed patches, docs cleanup, or 0.3.0 release-hardening behavior exists yet. | Implement each remaining Phase 7.x slice in order, starting with Phase 7.3. |
-| T-0291/T-0292 full wrapper validation has timeout-only residual blockers. | Focused Phase 7.1/7.2 and regression checks passed, but full Docker direct Vitest previously timed out in dashboard/dogfooding tests and standard Docker sync-check timed out without output. | Treat the focused Phase 7 checks as the scoped validation baseline; rerun or investigate dashboard/dogfooding/wrapper timeout behavior before claiming a clean full-suite baseline. |
+| Phase 7.4+ surfaces are planned, not implemented by T-0293. | Agents may use Phase 7.1 command registry/help/commands, Phase 7.2 lifecycle-guide/portfolio-audit, and Phase 7.3 docs registry/list/doctor/explain surfaces, but must not assume managed patches, docs cleanup/archive, or 0.3.0 release-hardening behavior exists yet. | Implement each remaining Phase 7.x slice in order, starting with Phase 7.4. |
+| T-0291/T-0292/T-0293 full wrapper validation has timeout-only residual blockers. | Focused Phase 7.1/7.2/7.3 and regression checks passed, but full Docker direct Vitest previously timed out in dashboard/dogfooding tests and standard Docker sync-check timed out without output. | Treat the focused Phase 7 checks as the scoped validation baseline; rerun or investigate dashboard/dogfooding/wrapper timeout behavior before claiming a clean full-suite baseline. |
 | Combined parallel focused dashboard/static validation can timeout under worker contention. | Standalone dashboard-static passed quickly, but a parallel focused run timed out once. | Run dashboard-static standalone or serialize dashboard validation when investigating route behavior. |
 | `dev docker-check` run from sandboxed Node subprocess can fail before Docker temp workspace creation even when direct `docker exec` succeeds. | JSON reports may show `temp-workspace exitCode=1` without raw logs. | Use explicit container env and rerun outside sandbox, or inspect with direct `docker exec`; T-0274 now exposes failed step and exit code. |
 | Root bootstrap launchers were removed in T-0270. | Local habits such as `./hadara`, `./start.sh`, or `START.bat` no longer work from the repo root. | Use `npm run dev -- ...`, `node dist/cli/main.js ...`, or the documented Docker workflow. Historical portable launcher specs remain separate from current root skeleton files. |
@@ -77,7 +77,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Phase 7.3 Document Registry and Docs Doctor. | Phase 7.2 lifecycle guide/portfolio audit is complete; document registry work is the next implementation dependency for the planned 0.3.0 surface-refactor line. | Create a new capsule and follow `docs/specs/0.3.0/04_Phase_7_3_Document_Registry_and_Docs_Doctor.md`. |
+| Phase 7.4 Managed Sections and Safe Patch Plans. | Phase 7.3 document registry/docs doctor is complete; managed section metadata and safe patch planning are the next implementation dependency for the planned 0.3.0 surface-refactor line. | Create a new capsule and follow `docs/specs/0.3.0/05_Phase_7_4_Managed_Sections_and_Safe_Patch_Plans.md`. |
 | Optional operator-approved GitHub Release draft for `hadara@0.2.0-rc.3`. | GitHub Release remains secondary and token-gated, and is not required before Phase 7.1 unless the operator requests it. | If needed, use `scripts/release/manual-publish-rc.sh T-0289 --execute --github-draft` with operator confirmation and a prepared release-note file. |
 
 ## Validation Baseline

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.docs.list.v1",
+  "x-hadara-schema-id": "hadara.docs.list.v1",
+  "title": "HADARA Docs List Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "source", "filters", "documents", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.docs.list.v1" },
+    "command": { "const": "docs.list" },
+    "ok": { "type": "boolean" },
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["registryPath", "registryPresent", "inferred"],
+      "properties": {
+        "registryPath": { "const": ".hadara/docs-registry.json" },
+        "registryPresent": { "type": "boolean" },
+        "inferred": { "type": "boolean" }
+      }
+    },
+    "filters": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["status", "readWhen"],
+      "properties": {
+        "status": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+        "readWhen": { "oneOf": [{ "type": "string" }, { "type": "null" }] }
+      }
+    },
+    "documents": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/document" }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "document": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "title", "kind", "status", "readWhen", "requiredReading", "updateOwner", "managedSections"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "minLength": 1 },
+        "readWhen": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "requiredReading": { "type": "boolean" },
+        "updateOwner": { "type": "string", "minLength": 1 },
+        "managedSections": {
+          "type": "array",
+          "items": { "type": "object", "additionalProperties": true }
+        }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

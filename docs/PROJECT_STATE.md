@@ -9,13 +9,13 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0292 Phase 7.2 Lifecycle Guide and Command Portfolio Audit |
+| Latest Completed Task | T-0293 Phase 7.3 Document Registry and Docs Doctor |
 
 ## Next Planned Line
 
-Phase 7 Surface Refactor is the planned 0.3.0 line. It covers command registry/help, lifecycle guide, document registry, managed sections, docs cleanup, and release hardening. The Phase 7 specs are staged under `docs/specs/0.3.0/`; Phase 7.0 through Phase 7.2 are implemented, and Phase 7.3+ remain planned until their corresponding Task Capsules close valid.
+Phase 7 Surface Refactor is the planned 0.3.0 line. It covers command registry/help, lifecycle guide, document registry, managed sections, docs cleanup, and release hardening. The Phase 7 specs are staged under `docs/specs/0.3.0/`; Phase 7.0 through Phase 7.3 are implemented, and Phase 7.4+ remain planned until their corresponding Task Capsules close valid.
 
-T-0292 implemented the Phase 7.2 lifecycle guide and command portfolio audit. `hadara help lifecycle --json` now emits `hadara.lifecycle.guide.v1`, `docs/LIFECYCLE_GUIDE.md` records the primary Task Capsule lifecycle, and `docs/COMMAND_PORTFOLIO_AUDIT.md` records confusable-command/non-overlap decisions without changing command semantics. Standard Docker wrapper validation still times out without output; Docker direct TypeScript, focused lifecycle/portfolio/help/schema/registry/tools tests, regression init/MCP/feature-smoke tests, built CLI smokes, and `git diff --check` passed.
+T-0293 implemented the Phase 7.3 document registry and docs doctor. Fresh `hadara init` now seeds `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md`, `init upgrade --execute` can merge missing profile seed entries, and read-only `hadara docs list|doctor|explain --json` surfaces emit `hadara.docs.list.v1`, `hadara.docs.doctor.v1`, and `hadara.docs.explain.v1`. Docker direct TypeScript, focused docs/init/schema/registry/tools tests, built CLI docs smokes, and `git diff --check` passed; standard Docker wrapper validation still times out without output and is recorded in T-0293 evidence.
 
 ## Current Phase
 

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.docs.doctor.v1",
+  "x-hadara-schema-id": "hadara.docs.doctor.v1",
+  "title": "HADARA Docs Doctor Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "scope", "summary", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.docs.doctor.v1" },
+    "command": { "const": "docs.doctor" },
+    "ok": { "type": "boolean" },
+    "scope": { "type": "string", "enum": ["registry", "profile", "required-reading", "links", "all"] },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["registryPresent", "registeredDocuments", "missingRegisteredDocuments", "unregisteredActiveLookingDocuments", "requiredReadingIssues", "canonicalConflicts"],
+      "properties": {
+        "registryPresent": { "type": "boolean" },
+        "registeredDocuments": { "type": "integer", "minimum": 0 },
+        "missingRegisteredDocuments": { "type": "integer", "minimum": 0 },
+        "unregisteredActiveLookingDocuments": { "type": "integer", "minimum": 0 },
+        "requiredReadingIssues": { "type": "integer", "minimum": 0 },
+        "canonicalConflicts": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

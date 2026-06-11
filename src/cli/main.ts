@@ -46,6 +46,12 @@ async function main(args = process.argv.slice(2)): Promise<void> {
       break;
     }
 
+    case 'docs': {
+      const { handleDocsCommand } = await import('./docs');
+      if (handleDocsCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
+      break;
+    }
+
     case 'dev': {
       const { handleDevCommand } = await import('./dev');
       if (handleDevCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;

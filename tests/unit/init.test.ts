@@ -60,6 +60,8 @@ describe('init profiles', () => {
 
     expect(fs.existsSync(path.join(root, 'AGENTS.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, '.gitignore'))).toBe(true);
+    expect(fs.existsSync(path.join(root, '.hadara', 'docs-registry.json'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'docs', 'DOC_REGISTRY.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'HERMES.md'))).toBe(false);
     expect(fs.existsSync(path.join(root, '.hermes.md'))).toBe(false);
     expect(fs.existsSync(path.join(root, 'docs', 'ARCHITECTURE.md'))).toBe(true);
@@ -72,6 +74,7 @@ describe('init profiles', () => {
     expect(fs.existsSync(path.join(root, 'docs', 'REFACTOR_LOG.md'))).toBe(false);
     expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(false);
     expect(read(root, 'docs/ARCHITECTURE.md')).toContain('| HADARA Profile | standard |');
+    expect(read(root, 'docs/DOC_REGISTRY.md')).toContain('| `docs/PROJECT_STATE.md` | project-state | canonical | session-start | yes | hadara-docs |');
   });
 
   it('prints JSON for init and keeps a fresh governed scaffold warning-clean', () => {
@@ -260,6 +263,8 @@ describe('init profiles', () => {
     expect(fs.existsSync(path.join(root, 'docs', 'TASK_BOARD.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'docs', 'TASK_WORKFLOW_COMMANDS.md'))).toBe(true);
+    expect(fs.existsSync(path.join(root, '.hadara', 'docs-registry.json'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'docs', 'DOC_REGISTRY.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'docs', 'ARCHITECTURE.md'))).toBe(false);
     expect(fs.existsSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'))).toBe(false);
     expect(fs.existsSync(path.join(root, 'docs', 'DECISIONS.md'))).toBe(false);
@@ -416,6 +421,7 @@ describe('init profiles', () => {
     expect(dryRun.mode).toBe('dry-run');
     expect(dryRun.summary).toContain('creates missing scaffold docs and updates generated profile metadata');
     expect(dryRun.actions).toContainEqual(expect.objectContaining({ path: 'docs/ROADMAP.md', status: 'planned' }));
+    expect(dryRun.actions).toContainEqual(expect.objectContaining({ action: 'upgrade-docs-registry', path: '.hadara/docs-registry.json', status: 'planned' }));
     expect(dryRun.actions).toContainEqual(expect.objectContaining({ action: 'upgrade-profile-metadata', path: 'docs/PROJECT_STATE.md', status: 'planned' }));
     expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(false);
     expect(read(root, 'docs/PROJECT_STATE.md')).toContain('| HADARA Profile | basic |');
@@ -424,6 +430,7 @@ describe('init profiles', () => {
     const executed = lastJsonLog();
     expect(executed.mode).toBe('execute');
     expect(executed.actions).toContainEqual(expect.objectContaining({ path: 'docs/ROADMAP.md', status: 'created' }));
+    expect(executed.actions).toContainEqual(expect.objectContaining({ action: 'upgrade-docs-registry', path: '.hadara/docs-registry.json', status: 'updated' }));
     expect(executed.actions).toContainEqual(expect.objectContaining({ action: 'upgrade-profile-metadata', path: 'docs/PROJECT_STATE.md', status: 'updated' }));
     expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(true);
     expect(read(root, 'docs/PROJECT_STATE.md')).toContain('| HADARA Profile | governed |');
@@ -432,6 +439,7 @@ describe('init profiles', () => {
     expect(read(root, 'docs/IMPLEMENTATION_SOP.md')).toContain('`docs/SECURITY_MODEL.md`');
     expect(read(root, 'AGENTS.md')).toContain('`docs/SECURITY_MODEL.md`');
     expect(read(root, 'AGENTS.md')).toContain('`docs/TASK_WORKFLOW_COMMANDS.md`');
+    expect(read(root, '.hadara/docs-registry.json')).toContain('"path": "docs/SECURITY_MODEL.md"');
     expect(fs.readFileSync(path.join(root, 'docs', 'DECISIONS.md'), 'utf8')).toBe('# Custom decisions\n');
 
     handleInitCommand({ args: ['init', 'doctor', '--json'], projectRoot: root, jsonOutput: true });

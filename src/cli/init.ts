@@ -3,6 +3,8 @@ import path from 'node:path';
 import { resolveHadaraPaths } from '../core/paths';
 import { ensureDir, writeFileIfMissing } from '../core/fs';
 import { getFlag, getRequiredStringOption, getStringOption } from './args';
+import { DOCS_REGISTRY_PATH, createSeedDocumentRegistry, registryJson, renderDocRegistryMarkdown } from '../services/docs-registry';
+import type { DocumentRegistryFile } from '../services/docs-registry';
 
 export type InitProfile = 'basic' | 'standard' | 'governed';
 
@@ -211,7 +213,10 @@ function getInitFollowUpMode(args: string[]): InitFollowUpMode {
 
 function createGeneratedScaffoldFiles(profile: InitProfile): GeneratedScaffoldFile[] {
   const spec = INIT_PROFILE_SPECS[profile];
+  const docsRegistry = createSeedDocumentRegistry(profile);
   const files: GeneratedScaffoldFile[] = [
+    { path: '.hadara/docs-registry.json', content: registryJson(docsRegistry) },
+    { path: 'docs/DOC_REGISTRY.md', content: renderDocRegistryMarkdown(docsRegistry) },
     { path: 'docs/PROJECT_STATE.md', content: createProjectStateDoc(profile) },
     { path: 'docs/TASK_BOARD.md', content: '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n' },
     { path: 'docs/AGENT_HANDOFF.md', content: createAgentHandoffDoc() },
@@ -308,6 +313,10 @@ function createInitUpgradeReport(projectRoot: string, profile: InitProfile, mode
   actions.push(...metadataMerge.actions);
   writes.push(...metadataMerge.writes);
   issues.push(...metadataMerge.issues);
+  const registryMerge = createDocsRegistryProfileMerge(projectRoot, profile, mode);
+  actions.push(...registryMerge.actions);
+  writes.push(...registryMerge.writes);
+  issues.push(...registryMerge.issues);
   if (mode === 'execute') {
     issues.push(...writeFilesAtomically(projectRoot, writes));
   }
@@ -321,6 +330,69 @@ function createInitUpgradeReport(projectRoot: string, profile: InitProfile, mode
     actions,
     issues
   };
+}
+
+function createDocsRegistryProfileMerge(projectRoot: string, profile: InitProfile, mode: InitFollowUpMode): {
+  actions: InitAction[];
+  writes: InitWriteOperation[];
+  issues: InitIssue[];
+} {
+  const registryPath = path.join(projectRoot, DOCS_REGISTRY_PATH);
+  if (!fs.existsSync(registryPath)) {
+    return { actions: [], writes: [], issues: [] };
+  }
+  let registry: DocumentRegistryFile;
+  try {
+    registry = JSON.parse(fs.readFileSync(registryPath, 'utf8')) as DocumentRegistryFile;
+  } catch (error) {
+    return {
+      actions: [],
+      writes: [],
+      issues: [{
+        severity: 'error',
+        code: 'INIT_DOCS_REGISTRY_INVALID_JSON',
+        path: DOCS_REGISTRY_PATH,
+        message: `.hadara docs registry could not be parsed: ${error instanceof Error ? error.message : String(error)}`
+      }]
+    };
+  }
+  const seed = createSeedDocumentRegistry(profile);
+  const existingPaths = new Set(registry.documents.map((doc) => doc.path));
+  const missing = seed.documents.filter((doc) => !existingPaths.has(doc.path));
+  const profileMatches = registry.projectProfile === profile;
+  if (missing.length === 0 && profileMatches) {
+    return {
+      actions: [{
+        action: 'upgrade-docs-registry',
+        path: DOCS_REGISTRY_PATH,
+        status: 'exists',
+        summary: `Docs registry already matches the ${profile} seed.`
+      }],
+      writes: [],
+      issues: []
+    };
+  }
+  const merged: DocumentRegistryFile = {
+    ...registry,
+    projectProfile: profile,
+    documents: [...registry.documents, ...missing]
+  };
+  return {
+    actions: [{
+      action: 'upgrade-docs-registry',
+      path: DOCS_REGISTRY_PATH,
+      status: mode === 'execute' ? 'updated' : 'planned',
+      summary: describeDocsRegistryProfileMerge(profile, mode, missing.length)
+    }],
+    writes: mode === 'execute' ? [{ path: DOCS_REGISTRY_PATH, content: registryJson(merged) }] : [],
+    issues: []
+  };
+}
+
+function describeDocsRegistryProfileMerge(profile: InitProfile, mode: InitFollowUpMode, missingCount: number): string {
+  const verb = mode === 'execute' ? 'was' : 'would be';
+  if (missingCount === 0) return `Docs registry profile metadata ${verb} updated to ${profile}.`;
+  return `Docs registry ${verb} updated with ${missingCount} ${profile} profile seed entr${missingCount === 1 ? 'y' : 'ies'}.`;
 }
 
 function createRequiredReadingRegistrationReport(

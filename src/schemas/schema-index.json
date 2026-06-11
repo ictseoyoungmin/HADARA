@@ -93,6 +93,27 @@
       "notes": "Documents the Phase 7.2 registry-backed lifecycle guide returned by hadara help lifecycle --json."
     },
     {
+      "id": "hadara.docs.list.v1",
+      "path": "src/schemas/docs-list.schema.json",
+      "status": "fixture",
+      "owner": "services/docs-registry",
+      "notes": "Documents the Phase 7.3 document registry list projection returned by hadara docs list --json."
+    },
+    {
+      "id": "hadara.docs.doctor.v1",
+      "path": "src/schemas/docs-doctor.schema.json",
+      "status": "fixture",
+      "owner": "services/docs-registry",
+      "notes": "Documents the Phase 7.3 document registry doctor report returned by hadara docs doctor --json."
+    },
+    {
+      "id": "hadara.docs.explain.v1",
+      "path": "src/schemas/docs-explain.schema.json",
+      "status": "fixture",
+      "owner": "services/docs-registry",
+      "notes": "Documents the Phase 7.3 per-document registry explanation returned by hadara docs explain --json."
+    },
+    {
       "id": "hadara.tools.list.v1",
       "path": "src/schemas/tools-list.schema.json",
       "status": "fixture",

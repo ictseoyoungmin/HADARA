@@ -293,3 +293,4 @@
 | T-0290 | Stage Phase 7 surface refactor specs | Done | tasks/T-0290-stage-phase-7-surface-refactor-specs | |
 | T-0291 | Implement Phase 7.1 command surface registry and structured help | Done | tasks/T-0291-implement-phase-7-1-command-surface-registry-and-structured-help | |
 | T-0292 | Phase 7.2 Lifecycle Guide and Command Portfolio Audit | Done | tasks/T-0292-phase-7-2-lifecycle-guide-and-command-portfolio-audit | |
+| T-0293 | Phase 7.3 Document Registry and Docs Doctor | Done | tasks/T-0293-phase-7-3-document-registry-and-docs-doctor | Added `.hadara/docs-registry.json` seed/projection, `docs list/doctor/explain`, schemas, tests, and built CLI smokes; standard wrapper timeout recorded. |
