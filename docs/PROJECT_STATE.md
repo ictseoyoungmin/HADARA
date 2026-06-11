@@ -10,12 +10,13 @@ HADARA - Portable Agentic Development Workbench
 |---|---|
 | HADARA Profile | governed |
 | Latest Completed Task | T-0295 Phase 7.5 Docs Cleanup Operations |
+| Active Task | T-0296 Phase 7.6 0.3.0 Release Hardening and Installed-Package Recycle |
 
 ## Next Planned Line
 
-Phase 7 Surface Refactor is the planned 0.3.0 line. It covers command registry/help, lifecycle guide, document registry, managed sections, docs cleanup, and release hardening. The Phase 7 specs are staged under `docs/specs/0.3.0/`; Phase 7.0 through Phase 7.5 are implemented, and Phase 7.6 remains planned until its corresponding Task Capsule closes valid.
+Phase 7 Surface Refactor is the planned 0.3.0 line. It covers command registry/help, lifecycle guide, document registry, managed sections, docs cleanup, and release hardening. The Phase 7 specs are staged under `docs/specs/0.3.0/`; Phase 7.0 through Phase 7.5 are implemented, and T-0296 is actively hardening the `0.3.0-rc.0` source candidate without publish mutation.
 
-T-0295 implemented Phase 7.5 docs cleanup operations. `hadara docs mark --json` now previews and hash-guarded executes registry-only document status transitions, `hadara docs archive --json` plans superseded/historical archive candidates without moving files, and `hadara docs required-reading --json` reports effective default reading with historical/superseded/archived docs excluded. Docs doctor now reports stale required-reading entries, missing superseded targets, and archive candidates. Docker direct TypeScript, focused cleanup/schema/registry tests, built CLI cleanup smoke, `git diff --check`, and the standard Docker wrapper passed; the wrapper ran 115 test files / 741 tests.
+T-0296 has updated the source candidate to `0.3.0-rc.0`, reworked README/release notes/release readiness to distinguish the source candidate from the current published npm `0.2.0-rc.3`, and validated the candidate through Docker sync build, package smoke, Docker clean-checkout smoke, and installed-package recycle. Release artifact, release dry-run, and publish dry-run remain pending because `release artifact --execute` intentionally requires a clean git worktree.
 
 ## Current Phase
 
