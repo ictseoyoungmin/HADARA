@@ -331,14 +331,14 @@ describe('MCP read tools', () => {
     expect(payload.surfaces.cli).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          name: 'hadara evidence list --task <task-id> --json',
+          name: 'hadara evidence list --task <task-id> [--limit <n>] [--include-private] [--json]',
           category: 'read',
           readOnly: true,
           stable: true,
           schemaVersion: 'hadara.evidence.list.v1'
         }),
         expect.objectContaining({
-          name: 'hadara debt list --json',
+          name: 'hadara debt list [--json]',
           category: 'read',
           readOnly: true,
           stable: true,

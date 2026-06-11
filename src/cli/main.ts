@@ -2,84 +2,13 @@
 import { resolveHadaraPaths } from '../core/paths';
 import { getFlag, getStringOption } from './args';
 import { cliErrorExitCode, createCliErrorReport } from './errors';
-
-function printHelp(): void {
-  console.log(`HADARA bootstrap CLI
-
-Usage:
-  hadara init [--project <path>] [--profile basic|standard|governed] [--json]
-  hadara init doctor [--json]
-  hadara init upgrade --profile basic|standard|governed [--execute] [--json]
-  hadara init register-doc --path <path> --when <text> --purpose <text> [--require-exists] [--execute] [--json]
-  hadara init enable-integration --integration hermes|mcp [--execute] [--json]
-  hadara version [--verbose] [--json]
-  hadara doctor
-  hadara dev docker-check [--focused <test...>] [--full] [--sync-dist] [--json]
-  hadara task create <title> [--from <template-id>] [--json]
-  hadara task create --from <template-id> --title <title> [--json]
-  hadara task list
-  hadara task show <task-id>
-  hadara task next [--json]
-  hadara task status --task <task-id> [--json]
-  hadara task complete --task <task-id> [--json]
-  hadara task finish --task <task-id> [--execute] [--json]
-  hadara task upgrade-scaffold --task <task-id> [--execute --before-hash <hash>] [--json]
-  hadara task close --task <task-id> [--execute] [--json]
-  hadara task audit-close --task <task-id> [--json]
-  hadara task ready --task <task-id> [--level done] [--json]
-  hadara evidence collect --task <task-id> [--kind note|test-log|command-log|diff-summary|screenshot] [--path <path>] [--summary <text>] [--result passed|failed|blocked|unknown] [--private|--visibility public|private]
-  hadara evidence add-command --task <task-id> --summary <text> [--result passed|failed|blocked|unknown] [--idempotency-key <key>] [--private|--visibility public|private] [--json]
-  hadara evidence list --task <task-id> [--limit <n>] [--include-private] [--json]
-  hadara evidence lint --task <task-id> [--json]
-  hadara evidence migrate --task <task-id> --to v2 [--execute --before-hash <hash>] [--json]
-  hadara proof status --task <task-id> [--json]
-  hadara proof explain --task <task-id> [--json]
-  hadara ci gate [--mode advisory|strict] [--task <task-id>] [--allow-empty] [--json]
-  hadara debt list [--json]
-  hadara debt show <id> [--json]
-  hadara protocol doctor [--json]
-  hadara protocol doctor --task <task-id> [--json]
-  hadara protocol doctor --scope docs|profile|all [--json]
-  hadara protocol remediate --fix task-board-row|decisions-table-frame|project-state-profile|evidence-jsonl [--task <task-id>] [--profile basic|standard|governed] [--execute --before-hash <hash>] [--json]
-  hadara tools list [--json]
-  hadara handoff update --task <task-id> [--summary <text>] [--next <text>] [--json]
-  hadara handoff suggest --task <task-id> [--json]
-  hadara write preflight <command...> [--json]
-  hadara policy check-shell <command> [--mode readonly|assisted|trusted|auto|release]
-  hadara policy preflight-shell <command> [--mode readonly|assisted|trusted|auto|release] [--json]
-  hadara harness validate --task <task-id> [--level draft|done] [--json]
-  hadara harness replay <scenario.jsonl> [--json]
-  hadara hermes detect
-  hadara hermes export-context
-  hadara mcp serve [--enable-evidence-attach]
-  hadara status [--json]
-  hadara ops status [--json]
-  hadara run-state show [--json]
-  hadara run-state resume [--json]  # read-only guidance; does not resume a process
-  hadara install plan [--platform linux|windows|wsl|usb|posix] [--source <path>] [--source-kind tarball|directory|portable-bundle] [--target <path>] [--usb-root <path>] [--prefix <path>] [--launcher <path>] [--mode dry-run|execute] [--json]
-  hadara smoke run [--profile core|release-readiness] [--json]
-  hadara smoke clean-checkout --execute [--workspace <dir>] [--task <task-id>] [--timeout <seconds>] [--keep-temp] [--no-evidence|--attach-evidence] [--json]
-  hadara package smoke [--dry-run|--execute] [--from <tarball|dir>] [--workspace <dir>] [--task <task-id>] [--timeout <seconds>] [--keep-temp] [--no-evidence|--attach-evidence] [--private-logs] [--json]
-  hadara release dry-run [--json]
-  hadara release publish [--mode dry-run|execute] [--approval-actor <name>] [--approval-reason <text>] [--confirm publish-deploy] [--json]
-  hadara release artifact --execute [--output <dir>] [--task <task-id>] [--attach-evidence] [--timeout <seconds>] [--keep-temp] [--json]
-  hadara release gate [--mode advisory|strict] [--json]
-  hadara dashboard serve [--host <host>] [--port <port>]
-  hadara tui [--snapshot] [--compact] [--width <n>] [--height <n>] [--json]
-  hadara run scaffold --task <task-id> --command <command> [--stdout <text>] [--stderr <text>] [--exit-code <n>] [--json]
-  hadara run [request] --script <script.json> [--task <task-id>] [--fake-shell-fixtures <fixtures.json>] [--mode readonly|assisted|trusted|auto|release] [--max-steps <n>] [--json]
-
-Environment:
-  HADARA_HOME           Portable/USB root. Defaults to current working directory.
-  HADARA_PROJECT_ROOT   Project repo root. Defaults to current working directory.
-`);
-}
+import { renderDefaultHelp } from './help';
 
 async function main(args = process.argv.slice(2)): Promise<void> {
   const command = args[0];
 
   if (!command || command === '--help' || command === '-h') {
-    printHelp();
+    console.log(renderDefaultHelp());
     return;
   }
 
@@ -87,6 +16,18 @@ async function main(args = process.argv.slice(2)): Promise<void> {
   const jsonOutput = getFlag(args, '--json');
 
   switch (command) {
+    case 'help': {
+      const { handleHelpCommand } = await import('./help');
+      if (handleHelpCommand({ args })) return;
+      break;
+    }
+
+    case 'commands': {
+      const { handleCommandsCommand } = await import('./commands');
+      if (handleCommandsCommand({ args, jsonOutput })) return;
+      break;
+    }
+
     case 'version': {
       const { handleVersionCommand } = await import('./version');
       if (handleVersionCommand({ args, projectRoot: paths.projectRoot, jsonOutput, cliEntry: process.argv[1] })) return;
@@ -256,7 +197,7 @@ async function main(args = process.argv.slice(2)): Promise<void> {
     }
   }
 
-  printHelp();
+  console.log(renderDefaultHelp());
   process.exitCode = 1;
 }
 

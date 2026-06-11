@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.command_help.v1",
+  "x-hadara-schema-id": "hadara.command_help.v1",
+  "title": "HADARA Command Help Projection",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "entry", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.command_help.v1" },
+    "command": { "const": "help.command" },
+    "ok": { "type": "boolean" },
+    "entry": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "command": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 },
+        "family": { "type": "string", "minLength": 1 },
+        "scope": { "type": "string", "minLength": 1 },
+        "lifecycleStage": { "type": "string", "minLength": 1 },
+        "requiredness": { "type": "string", "minLength": 1 },
+        "writeBoundary": { "type": "string", "minLength": 1 },
+        "readOnly": { "type": "boolean" },
+        "risk": { "type": "string", "enum": ["low", "medium", "high"] },
+        "docs": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "examples": { "type": "array" },
+        "related": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "conflictsWith": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "type": "string", "enum": ["warning", "error"] },
+          "code": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

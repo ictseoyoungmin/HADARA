@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.commands.registry.v1",
+  "x-hadara-schema-id": "hadara.commands.registry.v1",
+  "title": "HADARA Commands Registry Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "registryVersion", "filters", "commands", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.commands.registry.v1" },
+    "command": { "const": "commands" },
+    "ok": { "const": true },
+    "registryVersion": { "type": "integer", "minimum": 1 },
+    "filters": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["family", "requiredness"],
+      "properties": {
+        "family": { "type": ["string", "null"] },
+        "requiredness": { "type": ["string", "null"] }
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/commandEntry" }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "commandEntry": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "command",
+        "summary",
+        "canonical",
+        "appearsInDefaultHelp",
+        "family",
+        "scope",
+        "lifecycleStage",
+        "requiredness",
+        "writeBoundary",
+        "readOnly",
+        "risk",
+        "actor",
+        "status",
+        "docs",
+        "examples",
+        "related",
+        "conflictsWith"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "command": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 },
+        "canonical": { "type": "boolean" },
+        "aliasFor": { "type": "string", "minLength": 1 },
+        "deprecatedCandidate": { "type": "boolean" },
+        "appearsInDefaultHelp": { "type": "boolean" },
+        "family": {
+          "type": "string",
+          "enum": [
+            "start",
+            "capsule-lifecycle",
+            "proof-diagnostics",
+            "project-health",
+            "docs-governance",
+            "release-package",
+            "dev-validation",
+            "integrations",
+            "ui",
+            "agent-loop",
+            "install",
+            "advanced"
+          ]
+        },
+        "scope": { "type": "string", "minLength": 1 },
+        "lifecycleStage": { "type": "string", "minLength": 1 },
+        "requiredness": { "type": "string", "minLength": 1 },
+        "writeBoundary": { "type": "string", "minLength": 1 },
+        "readOnly": { "type": "boolean" },
+        "risk": { "type": "string", "enum": ["low", "medium", "high"] },
+        "actor": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "minLength": 1 },
+        "schemaVersion": { "type": "string", "minLength": 1 },
+        "docs": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "examples": { "type": "array", "items": { "$ref": "#/$defs/example" } },
+        "related": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "conflictsWith": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "example": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["title", "command", "when"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "command": { "type": "string", "minLength": 1 },
+        "when": { "type": "string", "minLength": 1 }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

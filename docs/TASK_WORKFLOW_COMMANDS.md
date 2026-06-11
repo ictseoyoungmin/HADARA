@@ -2,6 +2,16 @@
 
 HADARA task workflow commands are split by responsibility. Similar-looking commands are not interchangeable: some only report state, some check readiness, some perform bounded bookkeeping writes, and some append close evidence.
 
+For command discovery, use the registry-backed surfaces instead of copying command tables into task instructions:
+
+```bash
+hadara help lifecycle
+hadara help command task.close
+hadara commands --json
+```
+
+The authoritative command inventory is `src/services/capability-registry.ts`. `docs/COMMAND_SURFACE.md` documents the family, requiredness, and write-boundary taxonomy; `tools list` remains a compatibility projection from that same registry.
+
 ## Standard Task Loop
 
 Use this loop for ordinary implementation capsules:

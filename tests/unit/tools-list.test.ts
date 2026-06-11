@@ -15,7 +15,7 @@ describe('tools list read model', () => {
     expect(report.surfaces.cli).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          name: 'hadara tools list --json',
+          name: 'hadara tools list [--json]',
           category: 'read',
           readOnly: true,
           stable: true,
@@ -23,7 +23,7 @@ describe('tools list read model', () => {
           risk: 'low'
         }),
         expect.objectContaining({
-          name: 'hadara hermes export-context --json',
+          name: 'hadara hermes export-context [--json]',
           category: 'write',
           readOnly: false,
           stable: true,
@@ -31,7 +31,7 @@ describe('tools list read model', () => {
           risk: 'medium'
         }),
         expect.objectContaining({
-          name: 'hadara evidence collect --task <task-id> ... --json',
+          name: 'hadara evidence collect --task <task-id> [--kind <kind>] [--path <path>] [--summary <text>] [--result <result>] [--json]',
           category: 'write',
           readOnly: false,
           schemaVersion: 'hadara.evidence.collect.v1'
@@ -47,29 +47,29 @@ describe('tools list read model', () => {
           readOnly: true
         }),
         expect.objectContaining({
-          name: 'hadara tui [--snapshot]',
+          name: 'hadara tui [--snapshot] [--compact] [--json]',
           category: 'read',
           readOnly: true
         }),
         expect.objectContaining({
-          name: 'hadara run scaffold --task <task-id> --command <command> --json',
+          name: 'hadara run scaffold --task <task-id> --command <command> [--json]',
           category: 'write',
           readOnly: false
         }),
         expect.objectContaining({
-          name: 'hadara run-state show --json',
+          name: 'hadara run-state show [--json]',
           category: 'read',
           readOnly: true,
           schemaVersion: 'hadara.active_run.projection.v1'
         }),
         expect.objectContaining({
-          name: 'hadara install plan --json',
+          name: 'hadara install plan [--platform <platform>] [--source <path>] [--target <path>] [--json]',
           category: 'read',
           readOnly: true,
           schemaVersion: 'hadara.install.plan.v1'
         }),
         expect.objectContaining({
-          name: 'hadara smoke run --profile core --json',
+          name: 'hadara smoke run [--profile core|release-readiness] [--json]',
           category: 'read',
           readOnly: true,
           schemaVersion: 'hadara.featureSmoke.v1'
@@ -81,19 +81,19 @@ describe('tools list read model', () => {
           schemaVersion: 'hadara.packageSmoke.v1'
         }),
         expect.objectContaining({
-          name: 'hadara debt list --json',
+          name: 'hadara debt list [--json]',
           category: 'read',
           readOnly: true,
           schemaVersion: 'hadara.operational_debt.v1'
         }),
         expect.objectContaining({
-          name: 'hadara release gate --mode advisory|strict --json',
+          name: 'hadara release gate [--mode advisory|strict] [--json]',
           category: 'release',
           readOnly: true,
           schemaVersion: 'hadara.releaseGate.v1'
         }),
         expect.objectContaining({
-          name: 'hadara release dry-run --json',
+          name: 'hadara release dry-run [--json]',
           category: 'release',
           readOnly: true,
           schemaVersion: 'hadara.releaseDryRun.v1'
@@ -114,7 +114,7 @@ describe('tools list read model', () => {
           schemaVersion: 'hadara.releasePublish.v1'
         }),
         expect.objectContaining({
-          name: 'hadara release artifact --execute --json',
+          name: 'hadara release artifact --execute [--output <dir>] [--task <task-id>] [--json]',
           category: 'release',
           readOnly: false,
           schemaVersion: 'hadara.releaseArtifact.v1'

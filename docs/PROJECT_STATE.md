@@ -9,13 +9,13 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0290 Stage Phase 7 surface refactor specs |
+| Latest Completed Task | T-0291 Implement Phase 7.1 command surface registry and structured help |
 
 ## Next Planned Line
 
-Phase 7 Surface Refactor is the planned 0.3.0 line. It covers command registry/help, lifecycle guide, document registry, managed sections, docs cleanup, and release hardening. These specs are staged under `docs/specs/0.3.0/` and remain planned until their corresponding Task Capsules close valid.
+Phase 7 Surface Refactor is the planned 0.3.0 line. It covers command registry/help, lifecycle guide, document registry, managed sections, docs cleanup, and release hardening. The Phase 7 specs are staged under `docs/specs/0.3.0/`; Phase 7.0 and Phase 7.1 are implemented, and Phase 7.2+ remain planned until their corresponding Task Capsules close valid.
 
-T-0290 staged the Phase 7 specs and reconciled the current release-state docs after `hadara@0.2.0-rc.3` publication. No runtime Phase 7.1+ behavior was implemented in T-0290.
+T-0291 implemented the Phase 7.1 command surface registry and structured help. `src/services/capability-registry.ts` is now the authoritative command registry, `hadara help` and `hadara commands --json` are registry-backed, and `tools list` remains a compatibility projection from the same registry. Full-suite validation has residual timeout-only dashboard/dogfooding blockers recorded in the T-0291 capsule; focused Phase 7.1, schema/tools, init/MCP/feature-smoke checks passed.
 
 ## Current Phase
 

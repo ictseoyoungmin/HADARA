@@ -65,6 +65,20 @@
       "notes": "Documents read-only MCP memory-mode context export; CLI export-context remains file-writing."
     },
     {
+      "id": "hadara.command_help.v1",
+      "path": "src/schemas/command-help.schema.json",
+      "status": "fixture",
+      "owner": "cli/help",
+      "notes": "Documents registry-backed command help projection metadata for Phase 7.1 structured command discovery."
+    },
+    {
+      "id": "hadara.commands.registry.v1",
+      "path": "src/schemas/commands-registry.schema.json",
+      "status": "fixture",
+      "owner": "services/capability-registry",
+      "notes": "Documents the Phase 7.1 machine-readable command registry projection used by hadara commands --json."
+    },
+    {
       "id": "hadara.tools.list.v1",
       "path": "src/schemas/tools-list.schema.json",
       "status": "fixture",

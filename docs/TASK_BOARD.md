@@ -291,3 +291,4 @@
 | T-0288 | rc3 proof reliability hardening patch | Done | tasks/T-0288-rc3-proof-reliability-hardening-patch | |
 | T-0289 | rc3 post-hardening release readiness refresh | Done | tasks/T-0289-rc3-post-hardening-release-readiness-refresh | |
 | T-0290 | Stage Phase 7 surface refactor specs | Done | tasks/T-0290-stage-phase-7-surface-refactor-specs | |
+| T-0291 | Implement Phase 7.1 command surface registry and structured help | Done | tasks/T-0291-implement-phase-7-1-command-surface-registry-and-structured-help | |
