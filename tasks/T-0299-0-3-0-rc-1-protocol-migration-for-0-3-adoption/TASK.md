@@ -46,5 +46,5 @@ Done
 |---|---|---|---|
 | 2026-06-11 | Draft | Initial task scaffold. | Created by `hadara task create`. |
 | 2026-06-11 | In Progress | Implementing rc.1 protocol migration adoption scope. | T-0299 capsule docs updated. |
-<!-- hadara:managed:end task-status-history -->
 | 2026-06-11 | Done | Finished task capsule. | `hadara task finish --execute` |
+<!-- hadara:managed:end task-status-history -->

@@ -151,7 +151,14 @@ function planTaskScopedMigration(input: ProtocolMigrationInput, actions: Protoco
     return;
   }
   const relativeTaskPath = toPortablePath(path.relative(input.projectRoot, task.dir));
-  planWrite(input.projectRoot, actions, 'task-evidence-jsonl', `${relativeTaskPath}/evidence.jsonl`, '', `Ensure ${task.id} has an evidence JSONL index.`);
+  planEnsureMissingFile(
+    input.projectRoot,
+    actions,
+    'task-evidence-jsonl',
+    `${relativeTaskPath}/evidence.jsonl`,
+    `Create missing evidence JSONL index for ${task.id}.`,
+    `${relativeTaskPath}/evidence.jsonl already exists; protocol migration preserves existing evidence history.`
+  );
   planTaskStatusHistoryMarkers(input.projectRoot, `${relativeTaskPath}/TASK.md`, actions, issues);
 }
 
@@ -297,6 +304,27 @@ function planWrite(projectRoot: string, actions: ProtocolMigrationAction[], id: 
     after: content,
     expectedBeforeExists: exists
   }, summary);
+}
+
+function planEnsureMissingFile(
+  projectRoot: string,
+  actions: ProtocolMigrationAction[],
+  id: string,
+  relativePath: string,
+  createSummary: string,
+  existsSummary: string
+): void {
+  if (fs.existsSync(path.join(projectRoot, relativePath))) {
+    actions.push({ id, path: relativePath, status: 'skipped', summary: existsSummary });
+    return;
+  }
+  addPlannedAction(actions, {
+    id,
+    path: relativePath,
+    before: '',
+    after: '',
+    expectedBeforeExists: false
+  }, createSummary);
 }
 
 function addPlannedAction(actions: ProtocolMigrationAction[], write: PlannedWrite, summary: string): void {

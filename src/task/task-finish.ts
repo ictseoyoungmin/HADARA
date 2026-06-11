@@ -517,6 +517,13 @@ function appendStatusHistoryDone(content: string): string {
   const prefix = content.slice(0, start);
   const suffix = content.slice(end);
   const row = `| ${new Date().toISOString().slice(0, 10)} | Done | Finished task capsule. | \`hadara task finish --execute\` |`;
+  const managedEnd = '<!-- hadara:managed:end task-status-history -->';
+  const managedEndIndex = section.indexOf(managedEnd);
+  if (managedEndIndex >= 0) {
+    const beforeMarker = section.slice(0, managedEndIndex).replace(/[ \t\r\n]+$/, '');
+    const afterMarker = section.slice(managedEndIndex);
+    return `${prefix}${beforeMarker}\n${row}\n${afterMarker}${suffix}`;
+  }
   const separator = section.endsWith('\n') ? '' : '\n';
   return `${prefix}${section}${separator}${row}\n${suffix}`;
 }

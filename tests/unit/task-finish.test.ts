@@ -124,6 +124,7 @@ describe('task finish status sync', () => {
     expect(readTask(root, task.id)).toContain('| Status | Done |');
     expect(readTask(root, task.id)).toContain('## Status\n\nDone\n');
     expect(readTask(root, task.id)).toMatch(/\|\s*\d{4}-\d{2}-\d{2}\s*\|\s*Done\s*\|\s*Finished task capsule\.\s*\|\s*`hadara task finish --execute`\s*\|/);
+    expect(readTask(root, task.id).indexOf('| Done | Finished task capsule. |')).toBeLessThan(readTask(root, task.id).indexOf('<!-- hadara:managed:end task-status-history -->'));
     expect(readTask(root, task.id)).not.toMatch(/\n\n$/);
     expect(readBoard(root)).toContain(`| ${task.id} | Finish execute | Done | tasks/${task.id}-finish-execute | |`);
     expect(readBoard(root)).not.toMatch(/\n\n$/);
@@ -145,6 +146,7 @@ describe('task finish status sync', () => {
     expect(report.ok).toBe(true);
     expect(report.writes).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'task-status', applied: true })]));
     expect(readTask(root, task.id)).toMatch(/\|\s*\d{4}-\d{2}-\d{2}\s*\|\s*Done\s*\|\s*Finished task capsule\.\s*\|\s*`hadara task finish --execute`\s*\|/);
+    expect(readTask(root, task.id).indexOf('| Done | Finished task capsule. |')).toBeLessThan(readTask(root, task.id).indexOf('<!-- hadara:managed:end task-status-history -->'));
     expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
   });
 

@@ -113,4 +113,36 @@ describe('protocol migration service', () => {
     expect(fs.readFileSync(taskPath, 'utf8')).toContain('hadara:managed:start task-status-history');
     expect(fs.existsSync(path.join(root, '.hadara', 'docs-registry.json'))).toBe(false);
   });
+
+  it('does not overwrite existing task evidence during task-scoped migration', () => {
+    const root = tempLegacyProject();
+    const task = createTaskCapsule(root, 'Existing evidence task');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs.readFileSync(taskPath, 'utf8')
+        .replace(/<!-- hadara:managed:start task-status-history[^\n]*-->\n/, '')
+        .replace(/<!-- hadara:managed:end task-status-history -->\n/, ''),
+      'utf8'
+    );
+    const evidencePath = path.join(task.dir, 'evidence.jsonl');
+    const existingEvidence = '{"schemaVersion":"hadara.evidence.v1","taskId":"T-9999","time":"2026-06-11T00:00:00.000Z","kind":"command-log","summary":"existing evidence","result":"passed","visibility":"public"}\n';
+    fs.writeFileSync(evidencePath, existingEvidence, 'utf8');
+
+    const dryRun = createProtocolMigrationReport({ projectRoot: root, target: '0.3.0', mode: 'dry-run', taskId: task.id });
+    expect(dryRun.actions.find((action) => action.id === 'task-evidence-jsonl')).toMatchObject({
+      id: 'task-evidence-jsonl',
+      status: 'skipped'
+    });
+    expect(fs.readFileSync(evidencePath, 'utf8')).toBe(existingEvidence);
+
+    const executed = createProtocolMigrationReport({ projectRoot: root, target: '0.3.0', mode: 'execute', taskId: task.id, beforeHash: dryRun.summary.beforeHash ?? undefined });
+    expect(executed.ok).toBe(true);
+    expect(executed.actions.find((action) => action.id === 'task-evidence-jsonl')).toMatchObject({
+      id: 'task-evidence-jsonl',
+      status: 'skipped'
+    });
+    expect(fs.readFileSync(evidencePath, 'utf8')).toBe(existingEvidence);
+    expect(fs.readFileSync(taskPath, 'utf8')).toContain('hadara:managed:start task-status-history');
+  });
 });

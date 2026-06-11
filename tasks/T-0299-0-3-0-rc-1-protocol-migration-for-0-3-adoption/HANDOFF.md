@@ -6,7 +6,7 @@
 | Field | Value |
 |---|---|
 | Task | T-0299 |
-| Status | Ready for close |
+| Status | Done / closed-valid |
 | Last Updated | 2026-06-11 |
 <!-- hadara:managed:end task-handoff-current-state -->
 
@@ -22,7 +22,7 @@
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Finish, ready, close, audit, and commit T-0299. | Implementation and validation evidence are recorded; release/publish remains deferred to a later final readiness capsule. | `docs/TASK_WORKFLOW_COMMANDS.md`, active capsule docs. |
+| Open a later final readiness/publish capsule after remaining rc.1 feature/fix work. | T-0299 is closed as migration/adoption work; npm publish remains explicitly out of scope. | `docs/TASK_WORKFLOW_COMMANDS.md`, `docs/RELEASE_NOTES.md`, release readiness capsule docs. |
 
 ## Carry Forward Warnings
 
