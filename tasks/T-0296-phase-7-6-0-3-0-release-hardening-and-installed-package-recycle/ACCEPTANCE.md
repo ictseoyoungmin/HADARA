@@ -12,5 +12,5 @@
 | AC-8 | AC-7.6-8: Managed patch plans are hash-guarded and do not overwrite freeform prose. | Done | Installed CLI rejected marker-inclusive content, rejected wrong before-hash, and accepted correct body-only hash-guarded patch. |
 | AC-9 | AC-7.6-9: Docs cleanup marks status without deleting or moving historical files by default. | Done | Installed CLI `docs mark --execute` changed registry status and `docs archive --status superseded --json` stayed dry-run with `executeSupported:false`. |
 | AC-10 | AC-7.6-10: README and release notes describe implemented behavior only. | Done | README/release notes/readiness docs updated for 0.3.0-rc.0 source candidate and explicit no-publish boundary. |
-| AC-11 | AC-7.6-11: Release dry-run and publish dry-run pass with no unintended mutation. | Pending | release dry-run evidence |
-| AC-12 | AC-7.6-12: No publish mutation occurs without explicit operator approval. | Pending | release publish dry-run evidence |
+| AC-11 | AC-7.6-11: Release dry-run and publish dry-run pass with no unintended mutation. | Done | Release strict gate, release dry-run, and release publish dry-run passed for `hadara@0.3.0-rc.0`. |
+| AC-12 | AC-7.6-12: No publish mutation occurs without explicit operator approval. | Done | Release artifact, release dry-run, and publish dry-run reported publish/GitHub/Docker mutation flags false; publish dry-run reported approval/token warnings only. |

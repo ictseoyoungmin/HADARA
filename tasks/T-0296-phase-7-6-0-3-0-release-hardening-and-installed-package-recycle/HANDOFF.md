@@ -6,7 +6,7 @@
 | Field | Value |
 |---|---|
 | Task | T-0296 |
-| Status | In Progress |
+| Status | Done pending close |
 | Last Updated | 2026-06-11 |
 <!-- hadara:managed:end task-handoff-current-state -->
 
@@ -17,12 +17,13 @@
 | README, package version, release notes, and release readiness docs updated for `0.3.0-rc.0` source candidate. | `README.md`, `package.json`, `docs/RELEASE_NOTES.md`, `docs/RELEASE_READINESS.md` |
 | Docker sync build passed and refreshed `dist`. | `command:T-0296:docker-sync-build` |
 | Package smoke, Docker clean-checkout smoke, and installed package recycle passed. | package/clean-checkout artifacts; `command:T-0296:installed-package-recycle` |
+| Release artifact, release dry-run, and release publish dry-run passed without publish mutation. | release artifact report; `command:T-0296:release-dry-run`; `command:T-0296:release-publish-dry-run` |
 
 ## Next Recommended Step
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Commit the current cleanable source/docs state, then run `release artifact --execute`, `release dry-run`, and `release publish --mode dry-run`. | `release artifact --execute` requires clean git worktree. | `docs/specs/0.3.0/07_Phase_7_6_0_3_0_Release_Hardening_and_Installed_Package_Recycle.md` |
+| Finish, ready, close, audit, and commit final T-0296 evidence/state docs. | Release hardening work is complete and needs HADARA lifecycle closure. | `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Carry Forward Warnings
 

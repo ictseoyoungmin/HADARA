@@ -17,4 +17,7 @@
 |---|---|---|---|---|
 | Host `package smoke --execute` without npm cache override | No | Initial environment probe exposed read-only npm home cache. | Failed as expected | Followed by passed `/tmp` npm cache run. |
 | Host `smoke clean-checkout --execute` | No | Initial environment probe exposed registry DNS `EAI_AGAIN`/npm exit-handler issue. | Failed as expected | Followed by passed Docker clean-checkout run. |
-| `release artifact`, `release dry-run`, `release publish --mode dry-run` | Yes | Release readiness proof requires clean worktree. | Pending | Run after clean commit. |
+| `env npm_config_cache=/tmp/hadara-npm-cache node dist/cli/main.js release artifact --execute --json --output dist-release --attach-evidence --task T-0296` | Yes | Build local tarball/checksum/manifest and attach public evidence. | Passed | release artifact report artifact |
+| `node dist/cli/main.js release gate --mode strict --json` | Yes | Strict release gate before release dry-run. | Passed | release dry-run evidence |
+| `node dist/cli/main.js release dry-run --json` | Yes | Confirm release readiness and evidence freshness without mutation. | Passed | `command:T-0296:release-dry-run` |
+| `node dist/cli/main.js release publish --mode dry-run --json` | Yes | Confirm approval/token gates and no publish/GitHub/Docker mutation. | Passed | `command:T-0296:release-publish-dry-run` |

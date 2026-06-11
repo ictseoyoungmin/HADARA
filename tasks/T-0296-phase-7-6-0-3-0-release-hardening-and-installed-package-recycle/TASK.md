@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0296 |
 | Title | Phase 7.6 0.3.0 Release Hardening and Installed-Package Recycle |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-06-11 |
 | Updated | 2026-06-11 |
 
@@ -37,13 +37,15 @@
 
 ## Status
 
-Draft
+Done
 
 ## Status History
 
 <!-- hadara:managed:start task-status-history {"schema":"hadara.managedSection.v1","owner":"task.finish","kind":"markdown-table","mode":"update-row","version":1,"required":true,"closeSourceRole":"included"} -->
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
-| TBD | Draft | Initial task scaffold. | TBD |
+| 2026-06-11 | Draft | Initial task scaffold. | `hadara task create` |
 | 2026-06-11 | Draft | Phase 7.6 scope prepared from release-hardening spec. | `TASK.md`, `PLAN.md` |
+| 2026-06-11 | In Progress | README/version/release docs, Docker baseline, package/clean-checkout smokes, installed recycle, release artifact, release dry-run, and publish dry-run completed. | `EVIDENCE.md` |
 <!-- hadara:managed:end task-status-history -->
+| 2026-06-11 | Done | Finished task capsule. | `hadara task finish --execute` |
