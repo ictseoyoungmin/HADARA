@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { atomicWriteTextFile } from '../core/fs';
 import {
   DOCS_REGISTRY_PATH,
   DocumentRegistryEntry,
@@ -92,12 +93,17 @@ export function createDocsMarkReport(projectRoot: string, options: DocsMarkOptio
   if (options.mode === 'execute' && options.beforeHash && options.beforeHash !== state.beforeHash) {
     issues.push({ severity: 'error', code: 'DOC_CLEANUP_BEFORE_HASH_MISMATCH', path: DOCS_REGISTRY_PATH, message: `Registry hash ${state.beforeHash} does not match reviewed hash ${options.beforeHash}.` });
   }
-  const ok = issues.every((issue) => issue.severity !== 'error');
+  let ok = issues.every((issue) => issue.severity !== 'error');
   if (options.mode === 'execute' && ok && state.registry && entry && afterStatus) {
     entry.status = afterStatus;
     entry.notes = options.reason ? `${entry.notes ? `${entry.notes} ` : ''}Cleanup reason: ${options.reason}` : entry.notes;
     if (afterStatus === 'superseded') entry.supersededBy = normalizePath(options.by ?? '');
-    fs.writeFileSync(path.join(projectRoot, DOCS_REGISTRY_PATH), registryJson(state.registry), 'utf8');
+    try {
+      atomicWriteTextFile(projectRoot, DOCS_REGISTRY_PATH, registryJson(state.registry));
+    } catch (error) {
+      ok = false;
+      issues.push({ severity: 'error', code: 'DOC_CLEANUP_ATOMIC_WRITE_FAILED', path: DOCS_REGISTRY_PATH, message: `Could not write docs registry atomically: ${error instanceof Error ? error.message : String(error)}` });
+    }
   }
   return {
     schemaVersion: 'hadara.docs.mark.v1',

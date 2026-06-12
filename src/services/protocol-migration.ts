@@ -2,6 +2,13 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { InitProfile } from '../cli/init';
+import {
+  PreparedAtomicTextFileWrite,
+  cleanupPreparedAtomicTextFileWrite,
+  commitPreparedAtomicTextFileWrite,
+  prepareAtomicTextFileWrite,
+  rollbackPreparedAtomicTextFileWrite
+} from '../core/fs';
 import { listTaskCapsules } from '../task/task-capsule';
 import { HADARA_COMMAND_REGISTRY } from './capability-registry';
 import {
@@ -84,6 +91,14 @@ interface PlannedWrite {
   before: string;
   after: string;
   expectedBeforeExists: boolean;
+}
+
+interface PlannedMigrationWrite {
+  path: string;
+  actions: ProtocolMigrationAction[];
+  expectedBeforeExists: boolean;
+  expectedBeforeHash: string;
+  after: string;
 }
 
 export function createProtocolMigrationReport(input: ProtocolMigrationInput): ProtocolMigrationReport {
@@ -374,28 +389,102 @@ function addPlannedAction(actions: ProtocolMigrationAction[], write: PlannedWrit
 }
 
 function applyMigrationActions(projectRoot: string, actions: ProtocolMigrationAction[], issues: ProtocolMigrationIssue[]): void {
-  for (const action of actions) {
-    if (action.status !== 'planned' || action.after === undefined || action.expectedBeforeHash === undefined) continue;
-    const absolutePath = path.join(projectRoot, action.path);
+  const plannedActions = actions.filter((action) => action.status === 'planned' && action.after !== undefined && action.expectedBeforeHash !== undefined);
+  const plannedWrites = coalescePlannedWrites(plannedActions, issues);
+  if (issues.some((issue) => issue.severity === 'error')) {
+    for (const action of plannedActions) action.status = 'skipped';
+    return;
+  }
+
+  const conflicts = plannedWrites.filter((write) => {
+    const absolutePath = path.join(projectRoot, write.path);
     const currentExists = fs.existsSync(absolutePath);
     const current = readIfExists(absolutePath);
-    if (currentExists !== (action.expectedBeforeExists ?? false) || hashContent(current) !== action.expectedBeforeHash) {
-      action.status = 'skipped';
-      issues.push({ severity: 'error', code: 'PROTOCOL_MIGRATION_WRITE_CONFLICT', path: action.path, message: `${action.path} changed after dry-run planning; rerun migration dry-run.` });
-      continue;
+    return currentExists !== write.expectedBeforeExists || hashContent(current) !== write.expectedBeforeHash;
+  });
+  if (conflicts.length > 0) {
+    for (const action of plannedActions) action.status = 'skipped';
+    for (const write of conflicts) {
+      issues.push({ severity: 'error', code: 'PROTOCOL_MIGRATION_WRITE_CONFLICT', path: write.path, message: `${write.path} changed after dry-run planning; no migration files were written. Rerun migration dry-run.` });
     }
-    const tmp = path.join(path.dirname(absolutePath), `.hadara-migrate-${process.pid}-${Date.now()}-${path.basename(absolutePath)}`);
-    try {
-      fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
-      fs.writeFileSync(tmp, action.after, { encoding: 'utf8', flag: 'wx' });
-      fs.renameSync(tmp, absolutePath);
-      action.status = currentExists ? 'updated' : 'created';
-    } catch (error) {
-      if (fs.existsSync(tmp)) fs.rmSync(tmp, { force: true });
-      action.status = 'skipped';
-      issues.push({ severity: 'error', code: 'PROTOCOL_MIGRATION_ATOMIC_WRITE_FAILED', path: action.path, message: `Could not write ${action.path}: ${error instanceof Error ? error.message : String(error)}` });
+    return;
+  }
+
+  const preparedWrites: Array<{ planned: PlannedMigrationWrite; write: PreparedAtomicTextFileWrite }> = [];
+  try {
+    for (const planned of plannedWrites) {
+      preparedWrites.push({ planned, write: prepareAtomicTextFileWrite(projectRoot, planned.path, planned.after) });
+    }
+  } catch (error) {
+    for (const prepared of preparedWrites) cleanupPreparedAtomicTextFileWrite(prepared.write);
+    for (const action of plannedActions) action.status = 'skipped';
+    issues.push({ severity: 'error', code: 'PROTOCOL_MIGRATION_ATOMIC_PREPARE_FAILED', message: `Could not prepare migration temp files; no migration files were written: ${error instanceof Error ? error.message : String(error)}` });
+    return;
+  }
+
+  const committedWrites: Array<{ planned: PlannedMigrationWrite; write: PreparedAtomicTextFileWrite }> = [];
+  try {
+    for (const prepared of preparedWrites) {
+      commitPreparedAtomicTextFileWrite(prepared.write);
+      committedWrites.push(prepared);
+      for (const action of prepared.planned.actions) action.status = prepared.write.previousExists ? 'updated' : 'created';
+    }
+  } catch (error) {
+    for (const action of plannedActions) action.status = 'skipped';
+    const failedWrite = preparedWrites.find((prepared) => !committedWrites.includes(prepared));
+    issues.push({
+      severity: 'error',
+      code: 'PROTOCOL_MIGRATION_ATOMIC_WRITE_FAILED',
+      path: failedWrite?.planned.path,
+      message: `Could not commit migration writes; rollback attempted for already-written files: ${error instanceof Error ? error.message : String(error)}`
+    });
+    for (const prepared of preparedWrites) {
+      if (!committedWrites.includes(prepared)) cleanupPreparedAtomicTextFileWrite(prepared.write);
+    }
+    for (const prepared of committedWrites.reverse()) {
+      try {
+        rollbackPreparedAtomicTextFileWrite(prepared.write);
+      } catch (rollbackError) {
+        issues.push({
+          severity: 'error',
+          code: 'PROTOCOL_MIGRATION_ROLLBACK_FAILED',
+          path: prepared.planned.path,
+          message: `Could not roll back ${prepared.planned.path}: ${rollbackError instanceof Error ? rollbackError.message : String(rollbackError)}`
+        });
+      }
     }
   }
+}
+
+function coalescePlannedWrites(plannedActions: ProtocolMigrationAction[], issues: ProtocolMigrationIssue[]): PlannedMigrationWrite[] {
+  const byPath = new Map<string, PlannedMigrationWrite>();
+  for (const action of plannedActions) {
+    const after = action.after ?? '';
+    const expectedBeforeHash = action.expectedBeforeHash ?? hashContent('');
+    const existing = byPath.get(action.path);
+    if (!existing) {
+      byPath.set(action.path, {
+        path: action.path,
+        actions: [action],
+        expectedBeforeExists: action.expectedBeforeExists ?? false,
+        expectedBeforeHash,
+        after
+      });
+      continue;
+    }
+    if (hashContent(existing.after) !== expectedBeforeHash) {
+      issues.push({
+        severity: 'error',
+        code: 'PROTOCOL_MIGRATION_PLAN_CHAIN_CONFLICT',
+        path: action.path,
+        message: `${action.path} has incompatible sequential migration actions; no migration files were written.`
+      });
+      continue;
+    }
+    existing.actions.push(action);
+    existing.after = after;
+  }
+  return [...byPath.values()];
 }
 
 function validateBeforeHash(beforeHash: string | undefined, expected: string, issues: ProtocolMigrationIssue[]): void {

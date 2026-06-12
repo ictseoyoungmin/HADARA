@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0308 is the latest completed `0.3.0-rc.2` workflow UX hardening slice after T-0302 post-publish recycle. GitHub Release draft was not requested. |
-| Current Phase | 0.3.0-rc.2 workflow UX hardening in progress | `hadara@0.3.0-rc.1` remains the current published npm RC; source now includes context scaffold/migration, workflow timing guidance, Task Board row-preservation hardening, ready/close failure hints, Required Reading tier guidance, and required-reading JSON tier metadata toward rc.2. Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0308 Required Reading Command Output Tiering | `docs required-reading --json` now emits additive `tier` metadata for `current-state`, `task-work`, `conditional-reference`, `historical`, and `excluded` entries while preserving existing arrays. |
-| Active / Next Task | None | Recommended next capsule is T-0309 0.3.0-rc.2 Readiness and Publish Preparation. |
-| Validation Baseline | T-0308 required-reading command output focused validation | Docker focused tests passed 2 files / 2 tests; Docker build refreshed workspace `dist`; built CLI required-reading tier smoke and `git diff --check` passed. |
+| Branch | main | T-0309 is the latest completed `0.3.0-rc.2` workflow UX hardening slice after T-0302 post-publish recycle. GitHub Release draft was not requested. |
+| Current Phase | 0.3.0-rc.2 workflow UX hardening in progress | `hadara@0.3.0-rc.1` remains the current published npm RC; source now includes context scaffold/migration, workflow timing guidance, Task Board row-preservation hardening, ready/close failure hints, Required Reading tier guidance, required-reading JSON tier metadata, and atomic adoption-write hardening toward rc.2. Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0309 Protocol Migration Atomic Execute Hardening | `protocol migrate --execute` now preflights/coalesces/prepares/commits/rolls back planned writes; `docs mark --execute` writes the docs registry through temp+rename. |
+| Active / Next Task | None | Recommended next capsule is T-0310 0.3.0-rc.2 Readiness and Publish Preparation. |
+| Validation Baseline | T-0309 atomic execute hardening focused validation | Docker focused tests passed 2 files / 10 tests; Docker build refreshed workspace `dist`; built CLI protocol migrate/docs mark smokes and `git diff --check` passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0309 Protocol Migration Atomic Execute Hardening | Added shared atomic text write helpers; hardened `protocol migrate --execute` against partial multi-file writes; changed `docs mark --execute` registry writes to temp+rename; shifted rc.2 readiness/recycle to T-0310/T-0311. | Docker focused tests passed 2 files / 10 tests; Docker build refreshed `dist`; built CLI migration/docs mark smokes and `git diff --check` passed. |
 | T-0308 Required Reading Command Output Tiering | Added additive `tier` metadata to `docs required-reading --json`, updated required-reading schema/docs, and covered all five tier values in tests while preserving existing arrays. | Docker focused tests passed 2 files / 2 tests; Docker build refreshed `dist`; built CLI required-reading tier smoke and `git diff --check` passed. |
 | T-0307 Required Reading Tier Guidance | Added compact/current-state-first Required Reading tier guidance to root docs, generated init docs, and workflow docs while leaving command output/schema behavior for T-0308. | Docker focused tests passed 2 files / 25 tests; Docker build refreshed `dist`; built CLI init tier-guidance smoke and `git diff --check` passed. |
-| T-0306 Ready/Close Failure Guidance Improvement | Added additive remediation hints to harness validation issues and propagated them through task ready/close reports; registered harness validation schema fixture and updated ready/close issue schemas. | Docker focused tests passed 5 files / 57 tests; Docker build refreshed `dist`; built CLI blocked ready/close hint smoke and `git diff --check` passed. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
 | Published `0.3.0-rc.0` npm metadata still shows the old package description and no keywords. | The immutable rc.0 package remains metadata-limited, but rc.1 is now published with metadata guardrails. | Treat rc.0 as historical; use `hadara@0.3.0-rc.1` for current installs. |
-| T-0303/T-0304/T-0305/T-0306/T-0307/T-0308 full suite was intentionally not run. | Touched surfaces are covered by focused tests/build/built smokes, but unrelated surfaces did not get a full wrapper pass in these narrow capsules. | Run broader validation in T-0309 release readiness or if later capsules touch shared runtime behavior. |
+| T-0303/T-0304/T-0305/T-0306/T-0307/T-0308/T-0309 full suite was intentionally not run. | Touched surfaces are covered by focused tests/build/built smokes, but unrelated surfaces did not get a full wrapper pass in these narrow capsules. | Run broader validation in T-0310 release readiness or if later capsules touch shared runtime behavior. |
 | T-0291/T-0292/T-0293/T-0294 full wrapper validation had timeout-only residual blockers, while T-0295 wrapper validation passed. | Older Phase 7 focused checks passed, and T-0295 restored a clean standard wrapper baseline for current changes. | Use T-0295's 115-file / 741-test wrapper pass as the latest validation baseline, while treating older timeout notes as historical. |
 | Combined parallel focused dashboard/static validation can timeout under worker contention. | Standalone dashboard-static passed quickly, but a parallel focused run timed out once. | Run dashboard-static standalone or serialize dashboard validation when investigating route behavior. |
 | `dev docker-check` run from sandboxed Node subprocess can fail before Docker temp workspace creation even when direct `docker exec` succeeds. | JSON reports may show `temp-workspace exitCode=1` without raw logs. | Use explicit container env and rerun outside sandbox, or inspect with direct `docker exec`; T-0274 now exposes failed step and exit code. |
@@ -78,7 +78,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start T-0309 0.3.0-rc.2 Readiness and Publish Preparation. | T-0308 completed required-reading command output tiering; the rc.2 plan next calls for release readiness, package metadata updates, and publish preparation checks. | Use `hadara task create "0.3.0-rc.2 Readiness and Publish Preparation"` and follow `docs/specs/0.3.0/rc2/HADARA_0.3.0-rc.2_Workflow_UX_Hardening_Plan.md`. |
+| Start T-0310 0.3.0-rc.2 Readiness and Publish Preparation. | T-0309 completed atomic adoption-write hardening; the rc.2 plan next calls for release readiness, package metadata updates, full validation, and publish preparation checks. | Use `hadara task create "0.3.0-rc.2 Readiness and Publish Preparation"` and follow `docs/specs/0.3.0/rc2/HADARA_0.3.0-rc.2_Workflow_UX_Hardening_Plan.md`. |
 | Optional GitHub Release draft for `v0.3.0-rc.1`. | The npm helper skipped GitHub Release draft because `--github-draft` was not requested. | Use the T-0301 release note draft only if the operator wants a GitHub Release draft. |
 
 ## Validation Baseline

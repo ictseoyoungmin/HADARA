@@ -309,3 +309,4 @@
 | T-0306 | Ready/Close Failure Guidance Improvement | Done | tasks/T-0306-ready-close-failure-guidance-improvement | |
 | T-0307 | Required Reading Tier Guidance | Done | tasks/T-0307-required-reading-tier-guidance | |
 | T-0308 | Required Reading Command Output Tiering | Done | tasks/T-0308-required-reading-command-output-tiering | |
+| T-0309 | Protocol Migration Atomic Execute Hardening | Done | tasks/T-0309-protocol-migration-atomic-execute-hardening | |

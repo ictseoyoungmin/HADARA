@@ -26,6 +26,65 @@ export function writeJsonl(filePath: string, event: unknown): void {
   appendLine(filePath, JSON.stringify(event));
 }
 
+export interface PreparedAtomicTextFileWrite {
+  relativePath: string;
+  targetPath: string;
+  tempPath: string;
+  content: string;
+  previousExists: boolean;
+  previousContent: string;
+}
+
+export function prepareAtomicTextFileWrite(projectRoot: string, relativePath: string, content: string): PreparedAtomicTextFileWrite {
+  const targetPath = path.join(projectRoot, relativePath);
+  ensureDir(path.dirname(targetPath));
+  const previousExists = fs.existsSync(targetPath);
+  const previousContent = previousExists ? fs.readFileSync(targetPath, 'utf8') : '';
+  const tempPath = uniqueTempPath(targetPath, 'write');
+  fs.writeFileSync(tempPath, content, { encoding: 'utf8', flag: 'wx' });
+  return { relativePath, targetPath, tempPath, content, previousExists, previousContent };
+}
+
+export function commitPreparedAtomicTextFileWrite(write: PreparedAtomicTextFileWrite): void {
+  fs.renameSync(write.tempPath, write.targetPath);
+}
+
+export function cleanupPreparedAtomicTextFileWrite(write: PreparedAtomicTextFileWrite): void {
+  if (fs.existsSync(write.tempPath)) fs.rmSync(write.tempPath, { force: true });
+}
+
+export function rollbackPreparedAtomicTextFileWrite(write: PreparedAtomicTextFileWrite): void {
+  cleanupPreparedAtomicTextFileWrite(write);
+  if (write.previousExists) {
+    const rollbackTempPath = uniqueTempPath(write.targetPath, 'rollback');
+    fs.writeFileSync(rollbackTempPath, write.previousContent, { encoding: 'utf8', flag: 'wx' });
+    fs.renameSync(rollbackTempPath, write.targetPath);
+  } else if (fs.existsSync(write.targetPath)) {
+    fs.rmSync(write.targetPath, { force: true });
+  }
+}
+
+export function atomicWriteTextFile(projectRoot: string, relativePath: string, content: string): void {
+  const prepared = prepareAtomicTextFileWrite(projectRoot, relativePath, content);
+  try {
+    commitPreparedAtomicTextFileWrite(prepared);
+  } catch (error) {
+    cleanupPreparedAtomicTextFileWrite(prepared);
+    throw error;
+  }
+}
+
+function uniqueTempPath(targetPath: string, purpose: 'write' | 'rollback'): string {
+  const dir = path.dirname(targetPath);
+  const base = path.basename(targetPath);
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const suffix = `${process.pid}-${Date.now()}-${attempt}-${Math.random().toString(16).slice(2)}`;
+    const candidate = path.join(dir, `.hadara-atomic-${purpose}-${suffix}-${base}`);
+    if (!fs.existsSync(candidate)) return candidate;
+  }
+  throw new Error(`Could not allocate temporary path for ${targetPath}`);
+}
+
 export function slugify(input: string): string {
   return input
     .normalize('NFKD')

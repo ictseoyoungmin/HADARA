@@ -58,8 +58,9 @@ T-0305 Task Board Row Preservation in task finish
 T-0306 Ready/Close Failure Guidance Improvement
 T-0307 Required Reading Tier Guidance
 T-0308 Required Reading Command Output Tiering
-T-0309 0.3.0-rc.2 Readiness and Publish Preparation
-T-0310 0.3.0-rc.2 Post-Publish Installed-Package Recycle
+T-0309 Protocol Migration Atomic Execute Hardening
+T-0310 0.3.0-rc.2 Readiness and Publish Preparation
+T-0311 0.3.0-rc.2 Post-Publish Installed-Package Recycle
 ```
 
 ---
@@ -809,7 +810,58 @@ npm run build
 
 ---
 
-# T-0309 — 0.3.0-rc.2 Readiness and Publish Preparation
+# T-0309 — Protocol Migration Atomic Execute Hardening
+
+## Goal
+
+Harden rc.2 adoption writes before release readiness so migration and docs cleanup execute paths do not leave partial or corrupted state.
+
+## Scope
+
+```text
+common atomic text write helper
+protocol migrate --execute all-file preflight
+protocol migrate --execute prepare-all temp writes before commit
+protocol migrate --execute rollback of already-renamed files on later commit failure
+docs mark --execute registry temp+rename write
+focused tests for conflict no-write, rollback, and registry write failure preservation
+renumber later rc.2 tasks
+```
+
+## Out of Scope
+
+```text
+0.3.0-rc.2 package version bump
+release artifact/package/clean-checkout smokes
+post-publish installed-package recycle
+broad migration redesign beyond current execute write safety
+```
+
+## Acceptance Criteria
+
+- AC-1: `protocol migrate --execute` validates all planned file hashes before writing any file.
+- AC-2: if any migration preflight conflict exists, no planned migration file is written.
+- AC-3: migration execute prepares temp files before commit and rolls back already-renamed files when a later commit fails.
+- AC-4: `docs mark --execute` writes `.hadara/docs-registry.json` through temp+rename and reports write failures without corrupting the registry.
+- AC-5: release readiness and post-publish recycle are renumbered to T-0310 and T-0311.
+- AC-6: focused tests and built CLI smokes pass.
+
+## Validation
+
+```bash
+npm run test:focused -- tests/unit/protocol-migration.test.ts tests/unit/docs-mark.test.ts
+npm run build
+
+# built smokes
+hadara protocol migrate --target 0.3.0 --json --project <legacy>
+hadara protocol migrate --target 0.3.0 --execute --before-hash <hash> --json --project <legacy>
+hadara docs mark --path docs/specs/old.md --status superseded --by docs/specs/new.md --reason "replaced" --json --project <tmp>
+hadara docs mark --path docs/specs/old.md --status superseded --by docs/specs/new.md --reason "replaced" --execute --before-hash <hash> --json --project <tmp>
+```
+
+---
+
+# T-0310 — 0.3.0-rc.2 Readiness and Publish Preparation
 
 ## Goal
 
@@ -844,7 +896,7 @@ Docker/PyPI/installer publish
 
 - AC-1: package metadata targets `0.3.0-rc.2`.
 - AC-2: README and release readiness distinguish current published rc.1 from source rc.2 before publish.
-- AC-3: release notes summarize T-0303 through T-0308 user-facing changes.
+- AC-3: release notes summarize T-0303 through T-0309 user-facing changes.
 - AC-4: release artifact/package/clean-checkout/strict gate/dry-run/publish dry-run pass.
 - AC-5: manual helper blocks mismatched task/version.
 - AC-6: operator publish evidence is recorded if publish is executed.
@@ -852,18 +904,27 @@ Docker/PyPI/installer publish
 ## Validation
 
 ```bash
+npm run dev:docker-sync-build
 npm run check
-hadara release artifact --execute --output dist-release --attach-evidence --task T-0309 --json
-hadara package smoke --execute --attach-evidence --task T-0309 --json
-hadara smoke clean-checkout --execute --attach-evidence --task T-0309 --json
+hadara release artifact --execute --output dist-release --attach-evidence --task T-0310 --json
+hadara package smoke --execute --attach-evidence --task T-0310 --json
+hadara smoke clean-checkout --execute --attach-evidence --task T-0310 --json
 hadara release gate --mode strict --json
 hadara release dry-run --json
 hadara release publish --mode dry-run --json
+
+# extra rc.2 workflow UX smokes
+hadara init --profile basic --json --project <tmp>
+hadara doctor --json --project <tmp>
+hadara docs required-reading --json --project <tmp>
+hadara protocol migrate --target 0.3.0 --json --project <legacy>
+hadara protocol migrate --target 0.3.0 --execute --before-hash <hash> --json --project <legacy>
+hadara task finish --task <task> --execute --json --project <tmp>
 ```
 
 ---
 
-# T-0310 — 0.3.0-rc.2 Post-Publish Installed-Package Recycle
+# T-0311 — 0.3.0-rc.2 Post-Publish Installed-Package Recycle
 
 ## Goal
 
@@ -983,4 +1044,4 @@ Decision:
 No.
 ```
 
-Use T-0309 for readiness/publish and T-0310 for post-publish installed-package recycle. This keeps release mutation and consumer validation evidence cleanly separated.
+Use T-0310 for readiness/publish and T-0311 for post-publish installed-package recycle. This keeps release mutation and consumer validation evidence cleanly separated.

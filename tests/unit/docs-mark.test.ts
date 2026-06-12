@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { assertSchema } from '../../src/core/schema';
 import { initProject } from '../../src/cli/init';
 import { createDocsMarkReport } from '../../src/services/docs-cleanup';
@@ -52,6 +52,7 @@ function addDoc(root: string, entry: Partial<DocumentRegistryEntry> & { path: st
 }
 
 afterEach(() => {
+  vi.restoreAllMocks();
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -132,6 +133,42 @@ describe('Phase 7.5 docs mark', () => {
     expect(updated.status).toBe('superseded');
     expect(updated.supersededBy).toBe('docs/specs/new.md');
     expect(fs.readFileSync(targetPath, 'utf8')).toBe(beforeFile);
+  });
+
+  it('reports atomic registry write failure without corrupting the registry', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    addDoc(root, { path: 'docs/specs/old.md', requiredReading: true });
+    addDoc(root, { path: 'docs/specs/new.md' });
+    const beforeRegistry = fs.readFileSync(registryPath(root), 'utf8');
+    const dryRun = createDocsMarkReport(root, {
+      documentPath: 'docs/specs/old.md',
+      status: 'superseded',
+      by: 'docs/specs/new.md',
+      reason: 'Replaced by current Phase 7 plan.',
+      mode: 'dry-run'
+    });
+    const realRenameSync = fs.renameSync.bind(fs);
+    vi.spyOn(fs, 'renameSync').mockImplementation((oldPath, newPath) => {
+      if (String(oldPath).includes('.hadara-atomic-write-') && String(newPath).endsWith(path.join('.hadara', 'docs-registry.json'))) {
+        throw new Error('simulated registry rename failure');
+      }
+      return realRenameSync(oldPath, newPath);
+    });
+
+    const executed = createDocsMarkReport(root, {
+      documentPath: 'docs/specs/old.md',
+      status: 'superseded',
+      by: 'docs/specs/new.md',
+      reason: 'Replaced by current Phase 7 plan.',
+      mode: 'execute',
+      beforeHash: dryRun.beforeHash
+    });
+
+    expect(executed.ok).toBe(false);
+    expect(executed.issues).toContainEqual(expect.objectContaining({ code: 'DOC_CLEANUP_ATOMIC_WRITE_FAILED' }));
+    expect(fs.readFileSync(registryPath(root), 'utf8')).toBe(beforeRegistry);
+    expect(readRegistry(root).documents.find((doc) => doc.path === 'docs/specs/old.md')!.status).toBe('active');
   });
 
   it('rejects invalid, canonical, and missing-target cleanup transitions', () => {

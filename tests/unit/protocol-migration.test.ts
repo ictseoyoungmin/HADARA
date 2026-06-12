@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { validateSchema } from '../../src/core/schema';
 import { createProtocolMigrationReport } from '../../src/services/protocol-migration';
 import { createTaskCapsule } from '../../src/task/task-capsule';
@@ -32,6 +32,7 @@ function tempLegacyProject(): string {
 }
 
 afterEach(() => {
+  vi.restoreAllMocks();
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -90,6 +91,36 @@ describe('protocol migration service', () => {
     const stale = createProtocolMigrationReport({ projectRoot: root, target: '0.3.0', mode: 'execute', beforeHash: '0'.repeat(64) });
     expect(stale.ok).toBe(false);
     expect(stale.issues).toContainEqual(expect.objectContaining({ code: 'PROTOCOL_MIGRATION_BEFORE_HASH_MISMATCH' }));
+    expect(fs.existsSync(path.join(root, '.hadara', 'protocol-version.json'))).toBe(false);
+  });
+
+  it('rolls back already committed project migration files when a later atomic commit fails', () => {
+    const root = tempLegacyProject();
+    const dryRun = createProtocolMigrationReport({ projectRoot: root, target: '0.3.0', mode: 'dry-run' });
+    const realRenameSync = fs.renameSync.bind(fs);
+    vi.spyOn(fs, 'renameSync').mockImplementation((oldPath, newPath) => {
+      if (
+        String(oldPath).includes('.hadara-atomic-write-')
+        && String(newPath).endsWith(path.join('.hadara', 'context', 'HADARA_CONTEXT.md'))
+      ) {
+        throw new Error('simulated context rename failure');
+      }
+      return realRenameSync(oldPath, newPath);
+    });
+
+    const executed = createProtocolMigrationReport({
+      projectRoot: root,
+      target: '0.3.0',
+      mode: 'execute',
+      beforeHash: dryRun.summary.beforeHash ?? undefined
+    });
+
+    expect(executed.ok).toBe(false);
+    expect(executed.summary.changed).toBe(0);
+    expect(executed.issues).toContainEqual(expect.objectContaining({ code: 'PROTOCOL_MIGRATION_ATOMIC_WRITE_FAILED' }));
+    expect(fs.existsSync(path.join(root, '.hadara', 'protocol-version.json'))).toBe(false);
+    expect(fs.existsSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'))).toBe(false);
+    expect(fs.existsSync(path.join(root, '.hadara', 'docs-registry.json'))).toBe(false);
   });
 
   it('migrates one selected legacy task capsule without applying project-wide writes', () => {
