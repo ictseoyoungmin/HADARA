@@ -1,0 +1,39 @@
+== continued recycle ==
+2026-06-12T03:34:11Z
+\n== fresh init profiles with nonzero capture ==
+basic statuses: init=0 docs-list=0 required-reading=0 doctor=7
+standard statuses: init=0 docs-list=0 required-reading=0 doctor=7
+governed statuses: init=0 docs-list=0 required-reading=0 doctor=7
+\n== protocol migrate dry-run/execute ==
+protocol migrate statuses: dry-run=0 execute=0 evidence_sha_before=36a0158b4567f48861caa23e9770f3a5adb84da899db1fec5ec22950438ad040 evidence_sha_after=36a0158b4567f48861caa23e9770f3a5adb84da899db1fec5ec22950438ad040
+\n== dogfood project 10 capsules ==
+1	T-0001	create=0	status=0	evidence=0	finish=0	finish_execute=0	ready=6	close=6	close_execute=6	audit=6
+2	T-0002	create=0	status=0	evidence=0	finish=0	finish_execute=0	ready=6	close=6	close_execute=6	audit=6
+3	T-0003	create=0	status=0	evidence=0	finish=0	finish_execute=0	ready=6	close=6	close_execute=6	audit=6
+4	T-0004	create=0	status=0	evidence=0	finish=0	finish_execute=0	ready=6	close=6	close_execute=6	audit=6
+5	T-0005	create=0	status=0	evidence=0	finish=0	finish_execute=0	ready=6	close=6	close_execute=6	audit=6
+6	T-0006	create=0	status=0	evidence=0	finish=0	finish_execute=0	ready=6	close=6	close_execute=6	audit=6
+7	T-0007	create=0	status=0	evidence=0	finish=0	finish_execute=0	ready=6	close=6	close_execute=6	audit=6
+8	T-0008	create=0	status=0	evidence=0	finish=0	finish_execute=0	ready=6	close=6	close_execute=6	audit=6
+9	T-0009	create=0	status=0	evidence=0	finish=0	finish_execute=0	ready=6	close=6	close_execute=6	audit=6
+10	T-0010	create=0	status=0	evidence=0	finish=0	finish_execute=0	ready=6	close=6	close_execute=6	audit=6
+\n== status summary ==
+fresh-basic-init	0
+fresh-basic-docs-list	0
+fresh-basic-required-reading	0
+fresh-basic-doctor	7
+fresh-standard-init	0
+fresh-standard-docs-list	0
+fresh-standard-required-reading	0
+fresh-standard-doctor	7
+fresh-governed-init	0
+fresh-governed-docs-list	0
+fresh-governed-required-reading	0
+fresh-governed-doctor	7
+protocol-migrate-dry-run	0
+protocol-migrate-execute	0
+protocol-migrate-evidence-preserved	0
+dogfood-init	0
+dogfood-doctor	0
+dogfood-docs-list	0
+dogfood-required-reading	0

@@ -1,0 +1,118 @@
+== HADARA 0.3.0-rc.1 post-publish recycle ==
+2026-06-12T03:31:22Z
+v22.22.3
+10.9.8
+\n== npm registry metadata ==
+{
+  "version": "0.3.0-rc.1",
+  "time": {
+    "created": "2026-05-29T03:03:17.137Z",
+    "modified": "2026-06-12T02:22:26.456Z",
+    "0.1.0-rc.0": "2026-05-29T03:03:17.378Z",
+    "0.2.0-rc.0": "2026-06-05T18:04:45.387Z",
+    "0.2.0-rc.1": "2026-06-06T10:17:09.160Z",
+    "0.2.0-rc.2": "2026-06-07T14:00:16.402Z",
+    "0.2.0-rc.3": "2026-06-10T04:06:36.265Z",
+    "0.3.0-rc.0": "2026-06-11T10:43:37.012Z",
+    "0.3.0-rc.1": "2026-06-12T02:22:26.361Z"
+  },
+  "dist-tags": {
+    "latest": "0.3.0-rc.1"
+  }
+}
+{
+  "description": "Portable AI-assisted development workbench for evidence-backed task capsules, handoffs, and release gates.",
+  "keywords": [
+    "ai",
+    "agent",
+    "agents",
+    "coding-agent",
+    "developer-tools",
+    "cli",
+    "workflow",
+    "automation",
+    "task-management",
+    "evidence",
+    "handoff",
+    "release-management",
+    "mcp",
+    "hadara"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ictseoyoungmin/HADARA.git"
+  },
+  "homepage": "https://github.com/ictseoyoungmin/HADARA#readme",
+  "bugs": {
+    "url": "https://github.com/ictseoyoungmin/HADARA/issues"
+  }
+}
+\n== npx smoke ==
+0.3.0-rc.1
+HADARA - project-local operating layer for evidence-backed agent work
+
+Start:
+  hadara help lifecycle
+  hadara task next --json
+  hadara task status --task T-XXXX --json
+
+Primary capsule lifecycle:
+  task.next -> task.create -> task.status -> evidence.add-command -> task.finish -> task.ready -> task.close -> task.audit-close -> handoff.update
+
+Core diagnostics:
+  hadara proof status --task <task-id> [--json]  Summarize proof/readiness state for a Task Capsule.
+
+Use:
+  hadara help lifecycle       Show the canonical task loop.
+  hadara help command <id>    Explain one command.
+  hadara help family <family> Show one command family.
+  hadara commands --json      Machine-readable command registry.
+
+Advanced surfaces:
+\n== global install smoke ==
+
+changed 1 package in 689ms
+/usr/local/bin/hadara
+0.3.0-rc.1
+HADARA - project-local operating layer for evidence-backed agent work
+
+Start:
+  hadara help lifecycle
+  hadara task next --json
+  hadara task status --task T-XXXX --json
+
+Primary capsule lifecycle:
+  task.next -> task.create -> task.status -> evidence.add-command -> task.finish -> task.ready -> task.close -> task.audit-close -> handoff.update
+
+Core diagnostics:
+  hadara proof status --task <task-id> [--json]  Summarize proof/readiness state for a Task Capsule.
+
+Use:
+  hadara help lifecycle       Show the canonical task loop.
+  hadara help command <id>    Explain one command.
+  hadara help family <family> Show one command family.
+  hadara commands --json      Machine-readable command registry.
+
+Advanced surfaces:
+HADARA canonical task lifecycle
+
+Primary capsule lifecycle:
+  1 discover  hadara task next [--json]
+  2 create    hadara task create "..." --json
+  3 inspect   hadara task status --task T-XXXX --json
+  4 evidence  hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
+  5 finish    hadara task finish --task T-XXXX --json
+             hadara task finish --task T-XXXX --execute --json
+  6 ready     hadara task ready --task T-XXXX --level done --json
+  7 close     hadara task close --task T-XXXX --json
+             hadara task close --task T-XXXX --execute --json
+  8 audit     hadara task audit-close --task T-XXXX --json
+  9 handoff   hadara handoff update --task T-XXXX --json
+
+Diagnostics when blocked:
+  evidence.lint  hadara evidence lint --task <task-id> [--json]
+  proof.status  hadara proof status --task <task-id> [--json]
+  proof.explain  hadara proof explain --task <task-id> [--json]
+  ci.gate  hadara ci gate [--mode advisory|strict] [--task <task-id>] [--allow-empty] [--json]
+commands json ok true 70
+\n== fresh init profiles ==

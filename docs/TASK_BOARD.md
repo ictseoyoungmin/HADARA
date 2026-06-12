@@ -302,3 +302,4 @@
 | T-0299 | 0.3.0-rc.1 protocol migration for 0.3 adoption | Done | tasks/T-0299-0-3-0-rc-1-protocol-migration-for-0-3-adoption | |
 | T-0300 | Protocol migrate task evidence preservation blocker fix | Done | tasks/T-0300-protocol-migrate-task-evidence-preservation-blocker-fix | |
 | T-0301 | 0.3.0-rc.1 final readiness and publish preparation | Done | tasks/T-0301-0-3-0-rc-1-final-readiness-and-publish-preparation | Operator npm publish completed; npm view verified `0.3.0-rc.1`; GitHub draft false. |
+| T-0302 | 0.3.0-rc.1 post-publish installed-package recycle | Done | tasks/T-0302-0-3-0-rc-1-post-publish-installed-package-recycle | Published package registry/npx/global/help/docs/migration/lifecycle recycle passed; fresh-init doctor context friction recorded. |
