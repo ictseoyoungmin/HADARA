@@ -125,9 +125,27 @@ describe('init profiles', () => {
     expect(agents).toContain('Parallelize read-only discovery and independent validation');
     expect(agents).toContain('serialize evidence append, Task Capsule doc writes, shared state doc writes');
     expect(agents).toContain('Project-specific registered docs');
+    expect(agents).toContain('## Required Reading Tiers');
+    expect(agents).toContain('| `current-state` | Compact docs that establish the live project state and route deeper reading. | Read first at session start or resume. |');
+    expect(agents).toContain('| `task-work` | Active Task Capsule docs and task workflow docs needed to safely perform lifecycle commands. |');
+    expect(agents).toContain('| `conditional-reference` | Architecture, security, roadmap, validation, release, or project-specific specs. |');
+    expect(agents).toContain('| `historical` | Completed-task history, older validation records, and previous-state detail. | Never default required reading; read only when investigating history. |');
+    expect(agents).toContain('| `excluded` | Superseded, archived, local-only, or intentionally non-default material. | Never default required reading unless explicitly reclassified. |');
+    expect(agents).toContain('`.hadara/context/HADARA_CONTEXT.md` is the current-state entry point.');
+    expect(agents).toContain('Full historical review of `docs/PROJECT_STATE.md` is not mandatory every session');
+    expect(agents).toContain('Historical and superseded docs are never default required reading.');
     expectNoGenericOptionalIntegrationDefaults(agents);
 
     const sop = fs.readFileSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'), 'utf8');
+    expect(sop).toContain('## Required Reading Tiers');
+    expect(sop).toContain('| `current-state` | Compact docs that establish live project state and route deeper reading, starting with `.hadara/context/HADARA_CONTEXT.md`. |');
+    expect(sop).toContain('| `task-work` | Active Task Capsule docs, `docs/TASK_BOARD.md`, and `docs/TASK_WORKFLOW_COMMANDS.md`. |');
+    expect(sop).toContain('| `conditional-reference` | Architecture, security, roadmap, validation, release, or project-specific specs. |');
+    expect(sop).toContain('| `historical` | Completed-task history, older validation records, and previous-state detail. | Never default required reading; read only when investigating history through the handoff Historical Index. |');
+    expect(sop).toContain('| `excluded` | Superseded, archived, local-only, or intentionally non-default material. | Never default required reading unless explicitly reclassified. |');
+    expect(sop).toContain('`.hadara/context/HADARA_CONTEXT.md` is the current-state entry point and read-routing guide.');
+    expect(sop).toContain('Full historical review of `docs/PROJECT_STATE.md` is not mandatory every session');
+    expect(sop).toContain('Historical and superseded docs are never default required reading.');
     expect(sop).toContain('## Required Reading');
     expect(sop).toContain('Read `.hadara/context/HADARA_CONTEXT.md` as the compact project-local context anchor.');
     expect(sop).toContain('| `.hadara/context/HADARA_CONTEXT.md` | Every session | Compact project-local context anchor and read-routing guide. |');
@@ -178,6 +196,7 @@ describe('init profiles', () => {
     expect(sop).toContain('`docs/DEVELOPMENT_SLICES.md`');
     expect(sop).toContain('`docs/TEST_STRATEGY.md`');
     expect(sop).not.toContain('`docs/SECURITY_MODEL.md`');
+
     expect(sop).not.toContain('`docs/REFACTOR_LOG.md`');
     expect(sop).not.toContain('`docs/ROADMAP.md`');
     expect(sop).toContain('## Handoff Compaction');
@@ -188,6 +207,9 @@ describe('init profiles', () => {
     expectNoGenericOptionalIntegrationDefaults(sop);
 
     const workflow = fs.readFileSync(path.join(root, 'docs', 'TASK_WORKFLOW_COMMANDS.md'), 'utf8');
+    expect(workflow).toContain('## Required Reading Tier');
+    expect(workflow).toContain('`docs/TASK_WORKFLOW_COMMANDS.md` is `task-work` required reading.');
+    expect(workflow).toContain('Start from `.hadara/context/HADARA_CONTEXT.md` and compact state docs');
     expect(workflow).toContain('## Standard Task Loop');
     expect(workflow).toContain('## Command Semantics');
     expect(workflow).toContain('## Non-Overlap Rules');

@@ -1165,6 +1165,20 @@ This project was initialized with the \`${spec.profile}\` HADARA profile.
 
 ${numberedList(sessionStart)}
 
+## Required Reading Tiers
+
+Use semantic tiers to keep session startup compact and deterministic:
+
+| Tier | Meaning | Default Read Behavior |
+|---|---|---|
+| \`current-state\` | Compact docs that establish live project state and route deeper reading, starting with \`.hadara/context/HADARA_CONTEXT.md\`. | Read first at session start or resume. |
+| \`task-work\` | Active Task Capsule docs, \`docs/TASK_BOARD.md\`, and \`docs/TASK_WORKFLOW_COMMANDS.md\`. | Read when selecting, implementing, finishing, closing, or auditing a task. |
+| \`conditional-reference\` | Architecture, security, roadmap, validation, release, or project-specific specs. | Read only when the task type, capsule, or Required Reading row condition applies. |
+| \`historical\` | Completed-task history, older validation records, and previous-state detail. | Never default required reading; read only when investigating history through the handoff Historical Index. |
+| \`excluded\` | Superseded, archived, local-only, or intentionally non-default material. | Never default required reading unless explicitly reclassified. |
+
+\`.hadara/context/HADARA_CONTEXT.md\` is the current-state entry point and read-routing guide. Full historical review of \`docs/PROJECT_STATE.md\` is not mandatory every session; rely on compact current-state docs first and follow \`docs/AGENT_HANDOFF.md\` Historical Index only when older history matters. Historical and superseded docs are never default required reading.
+
 ## Required Reading
 
 ${requiredReadingTable}
@@ -1444,6 +1458,10 @@ function createTaskWorkflowCommandsDoc(): string {
 
 HADARA task workflow commands are split by responsibility. Similar-looking commands are not interchangeable: some only report state, some check readiness, some perform bounded bookkeeping writes, and some append close evidence.
 
+## Required Reading Tier
+
+\`docs/TASK_WORKFLOW_COMMANDS.md\` is \`task-work\` required reading. Read it when selecting, implementing, finishing, closing, auditing, or changing task workflow commands; do not treat it as a historical archive or a replacement for current-state docs. Start from \`.hadara/context/HADARA_CONTEXT.md\` and compact state docs, then use this document for lifecycle command semantics.
+
 ## Standard Task Loop
 
 Use this loop for ordinary implementation capsules:
@@ -1580,6 +1598,20 @@ This repository must be developed using the HADARA protocol.
 ${requiredReadingRows.map(formatTableRow).join('\n')}
 
 \`docs/AGENT_HANDOFF.md\` is compact current-state handoff, not full project history. Follow its Historical Index when older completed-task or validation history is needed.
+
+## Required Reading Tiers
+
+Use semantic tiers to keep session startup compact:
+
+| Tier | Meaning | Default Read Behavior |
+|---|---|---|
+| \`current-state\` | Compact docs that establish the live project state and route deeper reading. | Read first at session start or resume. |
+| \`task-work\` | Active Task Capsule docs and task workflow docs needed to safely perform lifecycle commands. | Read when selecting, implementing, finishing, closing, or auditing a task. |
+| \`conditional-reference\` | Architecture, security, roadmap, validation, release, or project-specific specs. | Read only when the task type or active capsule references them. |
+| \`historical\` | Completed-task history, older validation records, and previous-state detail. | Never default required reading; read only when investigating history. |
+| \`excluded\` | Superseded, archived, local-only, or intentionally non-default material. | Never default required reading unless explicitly reclassified. |
+
+\`.hadara/context/HADARA_CONTEXT.md\` is the current-state entry point. It should route readers to compact state before task-work or conditional-reference docs. Full historical review of \`docs/PROJECT_STATE.md\` is not mandatory every session; use \`docs/AGENT_HANDOFF.md\` and its Historical Index when older history is needed. Historical and superseded docs are never default required reading.
 
 ## Rules
 

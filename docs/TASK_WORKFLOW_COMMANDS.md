@@ -12,6 +12,10 @@ hadara commands --json
 
 The authoritative command inventory is `src/services/capability-registry.ts`. `docs/COMMAND_SURFACE.md` documents the family, requiredness, and write-boundary taxonomy; `docs/LIFECYCLE_GUIDE.md` documents the primary lifecycle path and non-substitute diagnostics; `tools list` remains a compatibility projection from that same registry.
 
+## Required Reading Tier
+
+`docs/TASK_WORKFLOW_COMMANDS.md` is `task-work` required reading. Read it when selecting, implementing, finishing, closing, auditing, or changing task workflow commands; do not treat it as a historical archive or a replacement for current-state docs. Start from `.hadara/context/HADARA_CONTEXT.md` and compact state docs, then use this document for lifecycle command semantics.
+
 ## Standard Task Loop
 
 Use this loop for ordinary implementation capsules:

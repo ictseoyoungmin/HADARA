@@ -25,6 +25,20 @@ This repository must be developed using the HADARA protocol.
 
 `docs/AGENT_HANDOFF.md` is compact current-state handoff, not full project history. Follow its Historical Index when older completed-task or validation history is needed.
 
+## Required Reading Tiers
+
+Use semantic tiers to keep session startup compact:
+
+| Tier | Meaning | Default Read Behavior |
+|---|---|---|
+| `current-state` | Compact docs that establish the live project state and route deeper reading. | Read first at session start or resume. |
+| `task-work` | Active Task Capsule docs and task workflow docs needed to safely perform lifecycle commands. | Read when selecting, implementing, finishing, closing, or auditing a task. |
+| `conditional-reference` | Architecture, security, roadmap, validation, release, MCP, or project-specific specs. | Read only when the task type or active capsule references them. |
+| `historical` | Completed-task history, older validation records, and previous-state detail. | Never default required reading; read only when investigating history. |
+| `excluded` | Superseded, archived, local-only, or intentionally non-default material. | Never default required reading unless explicitly reclassified. |
+
+`.hadara/context/HADARA_CONTEXT.md` is the current-state entry point. It should route readers to compact state before task-work or conditional-reference docs. Full historical review of `docs/PROJECT_STATE.md` is not mandatory every session; use `docs/AGENT_HANDOFF.md` and its Historical Index when older history is needed. Historical and superseded docs are never default required reading.
+
 ## Rules
 
 - Keep work inside one Task Capsule whenever possible.

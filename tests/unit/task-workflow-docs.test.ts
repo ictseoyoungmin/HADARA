@@ -107,4 +107,26 @@ describe('task workflow command semantics docs', () => {
     expect(sop).toContain('| `docs/TASK_WORKFLOW_COMMANDS.md` | Starting, finishing, closing, auditing, or changing task workflow commands |');
     expect(readme).toContain('The full command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`.');
   });
+
+  it('documents required-reading tiers for compact session startup', () => {
+    const agents = read('AGENTS.md');
+    const sop = read('docs/IMPLEMENTATION_SOP.md');
+    const workflow = read('docs/TASK_WORKFLOW_COMMANDS.md');
+
+    for (const doc of [agents, sop]) {
+      expect(doc).toContain('## Required Reading Tiers');
+      expect(doc).toContain('`current-state`');
+      expect(doc).toContain('`task-work`');
+      expect(doc).toContain('`conditional-reference`');
+      expect(doc).toContain('`historical`');
+      expect(doc).toContain('`excluded`');
+      expect(doc).toContain('`.hadara/context/HADARA_CONTEXT.md` is the current-state entry point');
+      expect(doc).toContain('Full historical review of `docs/PROJECT_STATE.md` is not mandatory every session');
+      expect(doc).toContain('Historical and superseded docs are never default required reading.');
+    }
+
+    expect(workflow).toContain('## Required Reading Tier');
+    expect(workflow).toContain('`docs/TASK_WORKFLOW_COMMANDS.md` is `task-work` required reading.');
+    expect(workflow).toContain('Start from `.hadara/context/HADARA_CONTEXT.md` and compact state docs');
+  });
 });

@@ -19,6 +19,20 @@ This repository operates as the `governed` HADARA profile because it has long-li
 11. Identify the active Task Capsule and explain why it fits the work.
 12. Propose or choose the smallest useful implementation slice.
 
+## Required Reading Tiers
+
+Use semantic tiers to keep session startup compact and deterministic:
+
+| Tier | Meaning | Default Read Behavior |
+|---|---|---|
+| `current-state` | Compact docs that establish live project state and route deeper reading, starting with `.hadara/context/HADARA_CONTEXT.md`. | Read first at session start or resume. |
+| `task-work` | Active Task Capsule docs, `docs/TASK_BOARD.md`, and `docs/TASK_WORKFLOW_COMMANDS.md`. | Read when selecting, implementing, finishing, closing, or auditing a task. |
+| `conditional-reference` | Architecture, security, roadmap, validation, release, MCP, dashboard, or project-specific specs. | Read only when the task type, capsule, or Required Reading row condition applies. |
+| `historical` | Completed-task history, older validation records, and previous-state detail. | Never default required reading; read only when investigating history through the handoff Historical Index. |
+| `excluded` | Superseded, archived, local-only, or intentionally non-default material. | Never default required reading unless explicitly reclassified. |
+
+`.hadara/context/HADARA_CONTEXT.md` is the current-state entry point and read-routing guide. Full historical review of `docs/PROJECT_STATE.md` is not mandatory every session; rely on compact current-state docs first and follow `docs/AGENT_HANDOFF.md` Historical Index only when older history matters. Historical and superseded docs are never default required reading.
+
 ## Required Reading
 
 | Document | When to Read | Purpose |
