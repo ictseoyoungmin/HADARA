@@ -46,6 +46,7 @@ describe('task workflow command semantics docs', () => {
   it('keeps read-only, dry-run, write, and ok semantics visible to operators and JSON consumers', () => {
     const workflow = read('docs/TASK_WORKFLOW_COMMANDS.md');
     const sop = read('docs/IMPLEMENTATION_SOP.md');
+    const agents = read('AGENTS.md');
     const contract = read('docs/CLI_JSON_CONTRACT.md');
 
     for (const command of [
@@ -72,14 +73,26 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('Use `hadara harness validate --task T-XXXX --level done --json` directly when debugging capsule format');
     expect(workflow).toContain('`harness validate` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence.');
     expect(workflow).toContain('Before close, finish all close-source edits');
+    expect(workflow).toContain('## Documentation Timing and Write Coordination');
+    expect(workflow).toContain('Do not defer all documentation until after implementation.');
+    expect(workflow).toContain('Parallelize read-only discovery, `rg`/file inspection, independent validation commands');
+    expect(workflow).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes');
     expect(workflow).toContain('changing those documents changes the close source hash and requires rerunning `task ready`, `task close`, and `task audit-close`');
     expect(workflow).toContain('After `task close --execute --json`, close-source document edits intentionally invalidate the previous close proof.');
     expect(sop).toContain('| `task status` | Read-only | `ok` means report generation succeeded; readiness is in `state.ready`, `summary.blockers`, and `issues`. |');
     expect(sop).toContain('Before running `task ready` and `task close`, finish all close-source edits');
+    expect(sop).toContain('## Documentation Timing and Write Coordination');
+    expect(sop).toContain('Documentation is part of the work, not a post-work report.');
+    expect(sop).toContain('| Before execution | `PLAN.md` |');
+    expect(sop).toContain('Parallelize read-only discovery, `rg`/file inspection, independent validation commands');
+    expect(sop).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes');
     expect(sop).toContain('Avoid writing volatile close evidence ids into close-source docs');
     expect(sop).toContain('## Evidence Records');
     expect(sop).toContain('Do not hand-edit Task Capsule `evidence.jsonl`.');
     expect(sop).toContain('Use `hadara harness validate --task <task-id> --level done --json` directly when you need to debug capsule format or done-level validation failures.');
+    expect(agents).toContain('Do not defer all documentation until after implementation.');
+    expect(agents).toContain('Parallelize read-only discovery, file inspection, independent validation');
+    expect(agents).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes');
     expect(contract).toContain('| `task status --task T-XXXX --json` | `hadara.task.workbench.v1` | Read-only. | Report generation succeeded for an existing task; not a readiness gate. |');
   });
 

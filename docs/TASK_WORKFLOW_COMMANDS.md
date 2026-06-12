@@ -54,6 +54,14 @@ The close model has three separate phases: validation proves readiness, close re
 
 Before close, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, `docs/TASK_BOARD.md`, and tracked state docs such as `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, and `docs/DEVELOPMENT_SLICES.md` when they apply. After `task close --execute --json`, changing those documents changes the close source hash and requires rerunning `task ready`, `task close`, and `task audit-close`. Do not paste volatile close evidence ids into close-source docs; prefer stable wording such as "close evidence appended; audit returned closed-valid".
 
+## Documentation Timing and Write Coordination
+
+Do not defer all documentation until after implementation. Keep `PLAN.md` current before execution; update `DECISIONS.md`, `RISKS.md`, and `FILES.md` during execution; update `TESTS.md` and `EVIDENCE.md` immediately after validation; update `ACCEPTANCE.md`, `HANDOFF.md`, and shared state docs before finish/ready/close; and update shared close-source docs before the close-source hash is captured.
+
+Parallelize read-only discovery, `rg`/file inspection, independent validation commands, package or registry metadata inspection, read-only diagnostics, and draft preparation before writes.
+
+Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, `task finish --execute`, `task close --execute`, and release artifact or publish operations.
+
 Dry-run-first remediation commands use a separate guard: when `task upgrade-scaffold` or `protocol remediate` reports planned writes, the dry-run report includes `summary.beforeHash`. Execute mode requires `--before-hash <hash>` from that reviewed dry-run before it will apply those writes. This extra copy step is intentional UX friction: old execute-only commands fail closed so operators review the current plan before any scaffold/remediation write.
 
 ## Phase 6 Metadata Vocabulary

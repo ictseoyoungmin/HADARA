@@ -121,6 +121,9 @@ describe('init profiles', () => {
     expect(agents).toContain('docs/TASK_WORKFLOW_COMMANDS.md');
     expect(agents).toContain('For task workflow commands, follow `docs/TASK_WORKFLOW_COMMANDS.md`');
     expect(agents).toContain('Do not hand-edit `evidence.jsonl`; record failed or blocked checks honestly');
+    expect(agents).toContain('Do not defer all documentation until after implementation');
+    expect(agents).toContain('Parallelize read-only discovery and independent validation');
+    expect(agents).toContain('serialize evidence append, Task Capsule doc writes, shared state doc writes');
     expect(agents).toContain('Project-specific registered docs');
     expectNoGenericOptionalIntegrationDefaults(agents);
 
@@ -137,6 +140,12 @@ describe('init profiles', () => {
     expect(sop).not.toContain('Core session docs only');
     expect(sop).not.toContain('SOP required reading references only core docs plus active Task Capsule docs.');
     expect(sop).toContain('## Scaffold Document Structure');
+    expect(sop).toContain('## Documentation Timing and Write Coordination');
+    expect(sop).toContain('Documentation is part of the work, not a post-work report.');
+    expect(sop).toContain('| Before execution | `PLAN.md` |');
+    expect(sop).toContain('| During execution | `DECISIONS.md`, `RISKS.md`, and `FILES.md` |');
+    expect(sop).toContain('Parallelize read-only discovery, `rg`/file inspection, independent validation commands');
+    expect(sop).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes');
     expect(sop).toContain('| `docs/IMPLEMENTATION_SOP.md` | Session Start, Required Reading, Project-Specific Documents, Init Profile Matrix, Scaffold Document Structure, Implementation, Standard Task Workflow Loop, Validation, Evidence Records, Session End, and Handoff Compaction sections. |');
     expect(sop).toContain('| `docs/TASK_WORKFLOW_COMMANDS.md` | Standard Task Loop, Command Semantics, Non-Overlap Rules, and State Documents sections. |');
     expect(sop).toContain('## Standard Task Workflow Loop');
@@ -183,6 +192,10 @@ describe('init profiles', () => {
     expect(workflow).toContain('## Command Semantics');
     expect(workflow).toContain('## Non-Overlap Rules');
     expect(workflow).toContain('## State Documents');
+    expect(workflow).toContain('## Documentation Timing and Write Coordination');
+    expect(workflow).toContain('Do not defer all documentation until after implementation.');
+    expect(workflow).toContain('Parallelize read-only discovery, `rg`/file inspection, independent validation commands');
+    expect(workflow).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes');
     expect(workflow).toContain('hadara evidence add-command --task T-XXXX --summary "..." --result passed --idempotency-key "command:T-XXXX:check" --json');
     expect(workflow).toContain('`task finish`, `task ready`, and `task close` are intentionally separate.');
     expect(workflow).toContain('`ready` then validates the Done-level state.');

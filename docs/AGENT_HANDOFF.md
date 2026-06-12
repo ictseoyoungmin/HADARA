@@ -6,24 +6,24 @@
 |---|---|---|
 | Branch | main | T-0303 implemented the first `0.3.0-rc.2` workflow UX hardening slice after T-0302 post-publish recycle. GitHub Release draft was not requested. |
 | Current Phase | 0.3.0-rc.2 workflow UX hardening in progress | `hadara@0.3.0-rc.1` remains the current published npm RC; source now includes T-0303 context scaffold/migration hardening toward rc.2. Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0303 Fresh Init + Migration Context Scaffold and Doctor/Docs Cleanliness | Fresh init now creates `.hadara/context/HADARA_CONTEXT.md`; docs registry/required-reading expose it; project migration plans missing context creation while preserving existing context; task-scoped migration does not touch project context. |
-| Active / Next Task | None | Recommended next capsule is T-0304 Workflow Documentation Timing and Concurrency Guidance. |
-| Validation Baseline | T-0303 context scaffold focused validation | Docker focused tests passed 5 files / 33 tests; Docker build refreshed workspace `dist`; built CLI smoke passed for basic/standard/governed init+doctor+docs surfaces and protocol migrate context planning; `git diff --check` passed. |
+| Latest Completed Task | T-0304 Workflow Documentation Timing and Concurrency Guidance | Root and generated workflow docs now explain incremental documentation timing, read-only parallelization, and write-boundary serialization. |
+| Active / Next Task | None | Recommended next capsule is T-0305 Task Board Row Preservation in task finish. |
+| Validation Baseline | T-0304 workflow docs focused validation | Docker focused tests passed 2 files / 24 tests; Docker build refreshed workspace `dist`; built standard init smoke confirmed guidance in generated AGENTS, SOP, and TASK_WORKFLOW_COMMANDS. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0304 Workflow Documentation Timing and Concurrency Guidance | Added root and generated workflow guidance for incremental docs updates, read-only parallelization, and serialized HADARA writes. | Docker focused tests passed 2 files / 24 tests; build/dist sync and built fresh-init smoke passed. |
 | T-0303 Fresh Init + Migration Context Scaffold and Doctor/Docs Cleanliness | Added committed project-context scaffold behavior for fresh init and project migration, registered context in docs surfaces, refreshed HADARA-dev context, and staged rc.2 planned slices T-0303 through T-0308. | Docker focused tests passed 5 files / 33 tests; build/dist sync and built CLI smokes passed; `git diff --check` passed. |
 | T-0302 0.3.0-rc.1 Post-Publish Installed-Package Recycle | Verified the published npm package from `hadara-recycle` and `/tmp/hadara-recycle/0.3.0-rc.1/`, including registry metadata, npx/global install, CLI help/docs/migration surfaces, and 10 lifecycle dogfood capsules. | `artifacts/recycle/FINDINGS.md`; `dogfood-success-rerun-task-log.tsv` shows 10/10 ready/close/audit passed. |
-| T-0301 0.3.0-rc.1 Final Readiness and Publish Preparation | Prepared rc.1 release-facing docs, feature-focused notes, helper task/version guard, dry-run cleanup, and operator npm publish verification. | `/tmp` `npm run check` passed 117 files / 749 tests; helper syntax/guard/cleanup smokes passed; release artifact/package/clean-checkout evidence refreshed; npm publish and npm view verification passed. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
 | Published `0.3.0-rc.0` npm metadata still shows the old package description and no keywords. | The immutable rc.0 package remains metadata-limited, but rc.1 is now published with metadata guardrails. | Treat rc.0 as historical; use `hadara@0.3.0-rc.1` for current installs. |
-| T-0303 full suite was intentionally not run. | Touched surfaces are covered by focused tests/build/built smokes, but unrelated surfaces did not get a full wrapper pass in this capsule. | Run broader validation in T-0309 release readiness or if later capsules touch shared runtime behavior. |
+| T-0303/T-0304 full suite was intentionally not run. | Touched surfaces are covered by focused tests/build/built smokes, but unrelated surfaces did not get a full wrapper pass in these narrow capsules. | Run broader validation in T-0309 release readiness or if later capsules touch shared runtime behavior. |
 | T-0291/T-0292/T-0293/T-0294 full wrapper validation had timeout-only residual blockers, while T-0295 wrapper validation passed. | Older Phase 7 focused checks passed, and T-0295 restored a clean standard wrapper baseline for current changes. | Use T-0295's 115-file / 741-test wrapper pass as the latest validation baseline, while treating older timeout notes as historical. |
 | Combined parallel focused dashboard/static validation can timeout under worker contention. | Standalone dashboard-static passed quickly, but a parallel focused run timed out once. | Run dashboard-static standalone or serialize dashboard validation when investigating route behavior. |
 | `dev docker-check` run from sandboxed Node subprocess can fail before Docker temp workspace creation even when direct `docker exec` succeeds. | JSON reports may show `temp-workspace exitCode=1` without raw logs. | Use explicit container env and rerun outside sandbox, or inspect with direct `docker exec`; T-0274 now exposes failed step and exit code. |
@@ -78,13 +78,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start T-0304 Workflow Documentation Timing and Concurrency Guidance. | T-0303 closed the fresh-init doctor context friction; the rc.2 plan next calls for incremental documentation timing and read-parallel/write-serialized guidance. | Use `hadara task create "Workflow Documentation Timing and Concurrency Guidance"` and follow `docs/specs/0.3.0/rc2/HADARA_0.3.0-rc.2_Workflow_UX_Hardening_Plan.md`. |
+| Start T-0305 Task Board Row Preservation in `task finish`. | T-0304 completed guidance-only workflow docs; the rc.2 plan next calls for preserving human-authored Task Board notes and extra cells during finish. | Use `hadara task create "Task Board Row Preservation in task finish"` and follow `docs/specs/0.3.0/rc2/HADARA_0.3.0-rc.2_Workflow_UX_Hardening_Plan.md`. |
 | Optional GitHub Release draft for `v0.3.0-rc.1`. | The npm helper skipped GitHub Release draft because `--github-draft` was not requested. | Use the T-0301 release note draft only if the operator wants a GitHub Release draft. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0304 workflow docs focused validation | Docker focused tests passed 2 files / 24 tests for init and task-workflow docs; Docker build refreshed workspace `dist`; built standard init smoke confirmed documentation timing and write coordination guidance in generated AGENTS, SOP, and TASK_WORKFLOW_COMMANDS. | Full Docker check was not run for this narrow capsule. |
 | T-0303 context scaffold focused validation | Docker focused tests passed 5 files / 33 tests for init, doctor, protocol migration, docs registry, and required-reading; Docker build refreshed workspace `dist`; built CLI smoke passed for basic/standard/governed init+doctor+docs surfaces and protocol migrate context planning; `git diff --check` passed. | Full Docker check was not run for this narrow capsule. |
 | T-0302 rc.1 installed-package recycle | `hadara-recycle` verified registry metadata, npx/global install, help/lifecycle/commands/docs surfaces, protocol migrate dry-run/execute evidence preservation, and 10 temporary lifecycle capsules. | No blocker-level product regression found; T-0303 addressed the fresh-init doctor context friction follow-up. |
 | T-0298 rc.1 metadata hardening validation | Focused Docker tests passed 3 files / 31 tests; Docker `npm run check` built TypeScript and passed 115 files / 743 tests before one dashboard-static parallel timeout; dashboard-static standalone passed 1 file / 15 tests; workspace built CLI version smoke returned `0.3.0-rc.1` and `distLooksStale:false`; release artifact passed with 207 files and verified package contents; tarball package metadata inspection found description, 14 keywords, repository, homepage, and bugs; npm publish dry-run passed with package.json 859B. | Metadata/publish-helper guard baseline only; rerun all release readiness checks after later feature/fix changes before publishing. |

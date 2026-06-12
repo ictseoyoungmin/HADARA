@@ -1205,6 +1205,22 @@ Prefer tables for repeated records and \`##\`/\`###\` headings for durable secti
 3. Make the smallest coherent change that satisfies acceptance criteria.
 4. Update task-local docs when scope changes.
 
+## Documentation Timing and Write Coordination
+
+Do not defer all documentation until after implementation. Documentation is part of the work, not a post-work report.
+
+Keep capsule docs current as work changes:
+
+| Timing | Documents |
+|---|---|
+| Before execution | \`PLAN.md\` |
+| During execution | \`DECISIONS.md\`, \`RISKS.md\`, and \`FILES.md\` |
+| Immediately after validation | \`TESTS.md\` and \`EVIDENCE.md\` |
+| Before finish/ready/close | \`ACCEPTANCE.md\`, \`HANDOFF.md\`, and shared state docs |
+| Before close-source hash is captured | \`docs/TASK_BOARD.md\`, \`docs/PROJECT_STATE.md\`, \`docs/AGENT_HANDOFF.md\`, and roadmap/slice docs when applicable |
+
+Parallelize read-only discovery, \`rg\`/file inspection, independent validation commands, package or registry metadata inspection, read-only diagnostics, and draft preparation before writes. Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, \`task finish --execute\`, \`task close --execute\`, and release artifact or publish operations.
+
 ## Standard Task Workflow Loop
 
 The authoritative command semantics live in \`docs/TASK_WORKFLOW_COMMANDS.md\`. For ordinary implementation capsules, use this loop:
@@ -1470,6 +1486,14 @@ The close model has three separate phases: validation proves readiness, close re
 
 Before close, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, \`docs/TASK_BOARD.md\`, and tracked state docs such as \`docs/PROJECT_STATE.md\`, \`docs/AGENT_HANDOFF.md\`, and roadmap/slice docs when they apply. After \`task close --execute --json\`, changing those documents changes the close source hash and requires rerunning \`task ready\`, \`task close\`, and \`task audit-close\`. Do not paste volatile close evidence ids into close-source docs; prefer stable wording such as "close evidence appended; audit returned closed-valid".
 
+## Documentation Timing and Write Coordination
+
+Do not defer all documentation until after implementation. Keep \`PLAN.md\` current before execution; update \`DECISIONS.md\`, \`RISKS.md\`, and \`FILES.md\` during execution; update \`TESTS.md\` and \`EVIDENCE.md\` immediately after validation; update \`ACCEPTANCE.md\`, \`HANDOFF.md\`, and shared state docs before finish/ready/close; and update shared close-source docs before the close-source hash is captured.
+
+Parallelize read-only discovery, \`rg\`/file inspection, independent validation commands, package or registry metadata inspection, read-only diagnostics, and draft preparation before writes.
+
+Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, \`task finish --execute\`, \`task close --execute\`, and release artifact or publish operations.
+
 ## Command Semantics
 
 | Command | Default Write Behavior | Notes |
@@ -1530,6 +1554,8 @@ function createAgentsDoc(spec: InitProfileSpec): string {
     ['Task boundary', 'Keep work inside one Task Capsule whenever possible.', 'Active Task Capsule'],
     ['Task creation', 'If no suitable capsule exists, create one with `hadara task create <title>`.', '`docs/TASK_BOARD.md`'],
     ['Evidence', 'Do not mark work done without evidence. Do not hand-edit `evidence.jsonl`; record failed or blocked checks honestly instead of replacing them with optimistic summaries.', '`EVIDENCE.md`, `evidence.jsonl`'],
+    ['Documentation timing', 'Do not defer all documentation until after implementation; keep capsule docs current as work changes.', 'Task Capsule docs and shared state docs'],
+    ['Write coordination', 'Parallelize read-only discovery and independent validation; serialize evidence append, Task Capsule doc writes, shared state doc writes, before-hash executes, finish/close executes, and release/publish operations.', 'Task Capsule evidence'],
     ['Task workflow', 'For task workflow commands, follow `docs/TASK_WORKFLOW_COMMANDS.md`: record evidence, preview and execute `task finish`, finalize close-source docs, run `task ready`, preview and execute `task close`, then run `task audit-close`.', 'Task Capsule evidence'],
     ['Safety', 'Do not execute dangerous commands without explicit user approval.', 'Task Capsule evidence'],
     ['Secrets', 'Do not write secrets, private logs, or machine-local state into committed files.', 'Changed-file review'],

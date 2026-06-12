@@ -114,6 +114,22 @@ Prefer tables for repeated records and `##`/`###` headings for durable sections.
 8. Update `PLAN.md`, `FILES.md`, `DECISIONS.md`, and task-local docs when the implementation scope changes.
 9. Do not add MCP write tools, shell execution, provider calls, or server behavior before the read-only bridge contract and follow-up implementation slices allow them.
 
+## Documentation Timing and Write Coordination
+
+Do not defer all documentation until after implementation. Documentation is part of the work, not a post-work report.
+
+Keep capsule docs current as work changes:
+
+| Timing | Documents |
+|---|---|
+| Before execution | `PLAN.md` |
+| During execution | `DECISIONS.md`, `RISKS.md`, and `FILES.md` |
+| Immediately after validation | `TESTS.md` and `EVIDENCE.md` |
+| Before finish/ready/close | `ACCEPTANCE.md`, `HANDOFF.md`, and shared state docs |
+| Before close-source hash is captured | `docs/TASK_BOARD.md`, `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, and `docs/DEVELOPMENT_SLICES.md` when applicable |
+
+Parallelize read-only discovery, `rg`/file inspection, independent validation commands, package or registry metadata inspection, read-only diagnostics, and draft preparation before writes. Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, `task finish --execute`, `task close --execute`, and release artifact or publish operations.
+
 ## Standard Task Workflow Loop
 
 The authoritative command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`. For ordinary implementation capsules, use this loop:
