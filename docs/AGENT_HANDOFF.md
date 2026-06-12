@@ -4,17 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0301 prepares `hadara@0.3.0-rc.1` for operator npm publish; no publish mutation has been executed in this checkout. |
-| Current Phase | 0.3.0-rc.1 final readiness prepared; operator publish pending | `hadara@0.3.0-rc.0` remains the latest published npm release until the T-0301 helper is executed. Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0301 0.3.0-rc.1 Final Readiness and Publish Preparation | Release notes, README/release-readiness docs, manual helper task/version guard, and dry-run cleanup path are ready for rc.1 operator publish. |
-| Active / Next Task | None | If publishing now, use a fresh `/tmp/hadara-publish` clone and run `bash scripts/release/manual-publish-rc.sh T-0301`, then `bash scripts/release/manual-publish-rc.sh T-0301 --execute`. Do not use T-0297 for rc.1. |
-| Validation Baseline | T-0301 rc.1 readiness validation | `bash -n` passed for the helper; helper rejects mismatched T-0297 before npm auth; dry-run cleanup smoke left temp repo clean; sandbox-external `/tmp` `npm run check` passed 117 files / 749 tests. |
+| Branch | main | T-0301 published `hadara@0.3.0-rc.1` to npm through the approval-gated helper; GitHub Release draft was not requested. |
+| Current Phase | 0.3.0-rc.1 npm publish complete | `hadara@0.3.0-rc.1` is now the current published npm RC. Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0301 0.3.0-rc.1 Final Readiness and Publish Preparation | Release artifact, package smoke, clean-checkout smoke, npm publish, and npm view verification evidence are attached to the T-0301 capsule. |
+| Active / Next Task | None | Recommended next capsule is post-publish installed-package recycle for `hadara@0.3.0-rc.1`, unless the operator wants to create an optional GitHub Release draft first. |
+| Validation Baseline | T-0301 rc.1 publish validation | `bash -n` passed for the helper; helper rejects mismatched T-0297 before npm auth; dry-run cleanup smoke left temp repo clean; sandbox-external `/tmp` `npm run check` passed 117 files / 749 tests; helper refreshed release/package/clean-checkout evidence and verified npm view returned `0.3.0-rc.1`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0301 0.3.0-rc.1 Final Readiness and Publish Preparation | Prepared rc.1 release-facing docs, feature-focused notes, helper task/version guard, and dry-run cleanup for the operator publish clone. | `/tmp` `npm run check` passed 117 files / 749 tests; helper syntax/guard/cleanup smokes passed. |
+| T-0301 0.3.0-rc.1 Final Readiness and Publish Preparation | Prepared rc.1 release-facing docs, feature-focused notes, helper task/version guard, dry-run cleanup, and operator npm publish verification. | `/tmp` `npm run check` passed 117 files / 749 tests; helper syntax/guard/cleanup smokes passed; release artifact/package/clean-checkout evidence refreshed; npm publish and npm view verification passed. |
 | T-0300 Protocol Migrate Task Evidence Preservation Blocker Fix | Fixed task-scoped protocol migration so existing `evidence.jsonl` is never overwritten; corrected and reclosed T-0299 handoff drift. | Focused migration regression 1 file / 4 tests; build/dist refresh; built CLI preservation smoke; T-0299 audit-close closed-valid. |
 | T-0299 0.3.0-rc.1 Protocol Migration for 0.3 Adoption | Added rc1 migration spec and `protocol migrate --target 0.3.0` project/task scoped dry-run-first adoption support; README install guidance now targets published rc.0 while rc.1 remains source candidate. | Focused tests; Docker full check partial pass with standalone dashboard retry; built CLI migration execute smoke; workspace dist version smoke. |
 
@@ -22,8 +22,8 @@
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| Published `0.3.0-rc.0` npm metadata still shows the old package description and no keywords. | The immutable rc.0 package remains metadata-limited, but T-0298 prepares rc.1 metadata guards so the next publish can include the intended discovery fields. | Keep the helper guard; before the eventual rc.1 publish, regenerate artifacts after all remaining feature work and verify tarball metadata again. |
-| `0.3.0-rc.1` is prepared but not yet published to npm. | Source/readiness state is ready for operator publish, but registry still has `0.3.0-rc.0` as latest until the helper execute step completes. | Publish from a clean `/tmp/hadara-publish` clone with T-0301; after publish, verify `npm view hadara@0.3.0-rc.1 version description keywords repository homepage bugs --json`. |
+| Published `0.3.0-rc.0` npm metadata still shows the old package description and no keywords. | The immutable rc.0 package remains metadata-limited, but rc.1 is now published with metadata guardrails. | Treat rc.0 as historical; use `hadara@0.3.0-rc.1` for current installs. |
+| Post-publish installed-package recycle for `0.3.0-rc.1` is not done yet. | npm publish succeeded, but the newly installed registry package still needs a fresh consumer/recycle smoke if stronger adoption proof is desired. | Open the next capsule for installed-package recycle and registry metadata verification. |
 | T-0291/T-0292/T-0293/T-0294 full wrapper validation had timeout-only residual blockers, while T-0295 wrapper validation passed. | Older Phase 7 focused checks passed, and T-0295 restored a clean standard wrapper baseline for current changes. | Use T-0295's 115-file / 741-test wrapper pass as the latest validation baseline, while treating older timeout notes as historical. |
 | Combined parallel focused dashboard/static validation can timeout under worker contention. | Standalone dashboard-static passed quickly, but a parallel focused run timed out once. | Run dashboard-static standalone or serialize dashboard validation when investigating route behavior. |
 | `dev docker-check` run from sandboxed Node subprocess can fail before Docker temp workspace creation even when direct `docker exec` succeeds. | JSON reports may show `temp-workspace exitCode=1` without raw logs. | Use explicit container env and rerun outside sandbox, or inspect with direct `docker exec`; T-0274 now exposes failed step and exit code. |
@@ -78,13 +78,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Continue `0.3.0-rc.1` feature/fix work before publish. | T-0298 only hardened metadata and publish-helper behavior; it is not the final rc.1 release-readiness capsule. | Open the next scoped task capsule for planned feature/fix work. After those changes are complete, create a final rc.1 readiness/publish capsule and rerun release artifact, package smoke, clean-checkout smoke, strict release gate, release dry-run, and publish dry-run. |
-| Later operator-approved npm publish for `hadara@0.3.0-rc.1`. | Publish remains a manual external mutation after final readiness, not after T-0298 alone. | Use the updated `scripts/release/manual-publish-rc.sh` only from the final readiness capsule after fresh artifacts and metadata inspection pass. |
+| Run post-publish installed-package recycle for `hadara@0.3.0-rc.1`. | npm publish is complete; the next useful proof is installing from registry and exercising fresh project/adoption flows. | Open a new capsule and verify `npm view` metadata, `npm install -g hadara@0.3.0-rc.1`, `hadara doctor --json`, and representative init/protocol migrate smokes. |
+| Optional GitHub Release draft for `v0.3.0-rc.1`. | The npm helper skipped GitHub Release draft because `--github-draft` was not requested. | Use the T-0301 release note draft only if the operator wants a GitHub Release draft. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0301 rc.1 npm publish | Helper refreshed release artifact, package smoke, and clean-checkout smoke evidence in `/tmp/hadara-publish`; npm publish completed; `npm view` verified `hadara@0.3.0-rc.1`; GitHub Release draft requested false. | Current published npm RC is `hadara@0.3.0-rc.1`; post-publish installed-package recycle remains the recommended next capsule. |
 | T-0298 rc.1 metadata hardening validation | Focused Docker tests passed 3 files / 31 tests; Docker `npm run check` built TypeScript and passed 115 files / 743 tests before one dashboard-static parallel timeout; dashboard-static standalone passed 1 file / 15 tests; workspace built CLI version smoke returned `0.3.0-rc.1` and `distLooksStale:false`; release artifact passed with 207 files and verified package contents; tarball package metadata inspection found description, 14 keywords, repository, homepage, and bugs; npm publish dry-run passed with package.json 859B. | Metadata/publish-helper guard baseline only; rerun all release readiness checks after later feature/fix changes before publishing. |
 | T-0297 prepublish readiness validation | Focused Docker tests passed 3 files / 31 tests; Docker sync build passed 115 files / 741 tests and refreshed `dist`; package smoke passed; host clean-checkout failed at `npm ci` but Docker clean-checkout passed; release artifact passed from checkpoint commit `34916db`; strict release gate and release dry-run passed with readiness ready/blockers 0; publish dry-run passed with token warnings only and mutation flags false. | Latest prepublish baseline for `hadara@0.3.0-rc.0`; no npm publish, GitHub Release, Docker image build, registry mutation, or token values. |
 | T-0296 release hardening validation | Docker sync build passed 115 files / 741 tests and refreshed `dist`; package smoke passed; Docker clean-checkout smoke passed; installed package recycle passed from `hadara-0.3.0-rc.0.tgz`; release artifact passed; strict release gate and release dry-run passed with readiness ready/blockers 0; publish dry-run passed with token warnings only and mutation flags false. | Latest release-hardening baseline for the current workspace; no npm publish, GitHub Release, Docker image build, or token values. |

@@ -15,4 +15,4 @@
 | `manual-publish-rc.sh T-0297` guard smoke | Yes | Prevent rc.1 publish evidence from being attached to the old rc.0 capsule. | Passed | `T-0301:manual-publish-task-version-guard`. |
 | Dry-run cleanup smoke | Yes | Prove generated release outputs are cleaned before npm auth/execute reuse. | Passed | `T-0301:manual-publish-dry-run-cleanup`. |
 | Security smoke | No | No secret storage, permission, MCP, or execution boundary changed beyond release helper guardrails. | Not Run | N/A |
-| Integration smoke | No | Actual npm publish remains operator-only. | Not Run | N/A |
+| Manual publish execute | Yes | Operator executed external npm publish after dry-run/readiness checks. | Passed | Published `hadara@0.3.0-rc.1`; npm view verified `0.3.0-rc.1`; GitHub draft false. |

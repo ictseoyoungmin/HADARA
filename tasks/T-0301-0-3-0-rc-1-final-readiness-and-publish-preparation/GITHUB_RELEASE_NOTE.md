@@ -13,13 +13,8 @@ This release candidate focuses on 0.3 adoption for existing HADARA projects and 
 - Hardens npm package discovery metadata and verifies staged tarball metadata before publish.
 - Tightens the manual publish helper so the release capsule must match the package version and a successful dry-run can be followed by `--execute` from the same clean publish clone.
 
-## Publish Boundary
+## Publish Status
 
-The source checkout prepares the release candidate. npm publish remains an explicit operator-confirmed action through:
+The npm package was published through the approval-gated T-0301 helper and `npm view` verified `hadara@0.3.0-rc.1`.
 
-```bash
-bash scripts/release/manual-publish-rc.sh T-0301
-bash scripts/release/manual-publish-rc.sh T-0301 --execute
-```
-
-GitHub Release creation remains optional through `--github-draft`.
+GitHub Release creation remains optional and was not requested during the npm publish helper run.

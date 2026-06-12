@@ -2,7 +2,7 @@
 
 ## 0.3.0-rc.1
 
-Release candidate prepared after the 0.3.0-rc.0 publish exposed two adoption problems: existing projects need a safe path onto the new 0.3 protocol surface, and npm package discovery metadata must be present in the published tarball before the next registry mutation.
+Release candidate published after the 0.3.0-rc.0 publish exposed two adoption problems: existing projects need a safe path onto the new 0.3 protocol surface, and npm package discovery metadata must be present in the published tarball before the next registry mutation.
 
 Highlights:
 
@@ -17,9 +17,9 @@ Highlights:
 
 Boundaries:
 
-- This release candidate prepares the npm package for operator-confirmed publish; it does not itself publish to npm, create a GitHub Release, build Docker images, publish PyPI artifacts, or run installer mutation.
+- npm publish was completed as an operator-confirmed release mutation through the T-0301 helper; `npm view` verified `hadara@0.3.0-rc.1`.
 - Protocol migration is scoped and hash-guarded; it is not a broad historical rewrite engine and does not delete archived or superseded documents.
-- GitHub Release creation remains optional through the manual helper after npm publish.
+- GitHub Release creation remains optional and was not requested during the npm publish helper run; Docker image publishing, PyPI publishing, and installer mutation remain deferred.
 
 ## 0.3.0-rc.0
 
