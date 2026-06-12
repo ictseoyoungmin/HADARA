@@ -36,7 +36,7 @@ export interface PreparedAtomicTextFileWrite {
 }
 
 export function prepareAtomicTextFileWrite(projectRoot: string, relativePath: string, content: string): PreparedAtomicTextFileWrite {
-  const targetPath = path.join(projectRoot, relativePath);
+  const targetPath = resolveProjectRelativeWritePath(projectRoot, relativePath);
   ensureDir(path.dirname(targetPath));
   const previousExists = fs.existsSync(targetPath);
   const previousContent = previousExists ? fs.readFileSync(targetPath, 'utf8') : '';
@@ -83,6 +83,16 @@ function uniqueTempPath(targetPath: string, purpose: 'write' | 'rollback'): stri
     if (!fs.existsSync(candidate)) return candidate;
   }
   throw new Error(`Could not allocate temporary path for ${targetPath}`);
+}
+
+function resolveProjectRelativeWritePath(projectRoot: string, relativePath: string): string {
+  const rootPath = path.resolve(projectRoot);
+  const targetPath = path.resolve(rootPath, relativePath);
+  const relative = path.relative(rootPath, targetPath);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error(`Refusing to write outside project: ${relativePath}`);
+  }
+  return targetPath;
 }
 
 export function slugify(input: string): string {

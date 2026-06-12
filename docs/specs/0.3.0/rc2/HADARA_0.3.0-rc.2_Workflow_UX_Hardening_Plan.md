@@ -60,7 +60,8 @@ T-0307 Required Reading Tier Guidance
 T-0308 Required Reading Command Output Tiering
 T-0309 Protocol Migration Atomic Execute Hardening
 T-0310 0.3.0-rc.2 Readiness and Publish Preparation
-T-0311 0.3.0-rc.2 Post-Publish Installed-Package Recycle
+T-0311 Atomic Write Path Containment Hardening
+T-0312 0.3.0-rc.2 Post-Publish Installed-Package Recycle
 ```
 
 ---
@@ -843,7 +844,7 @@ broad migration redesign beyond current execute write safety
 - AC-2: if any migration preflight conflict exists, no planned migration file is written.
 - AC-3: migration execute prepares temp files before commit and rolls back already-renamed files when a later commit fails.
 - AC-4: `docs mark --execute` writes `.hadara/docs-registry.json` through temp+rename and reports write failures without corrupting the registry.
-- AC-5: release readiness and post-publish recycle are renumbered to T-0310 and T-0311.
+- AC-5: release readiness and post-publish recycle are renumbered to T-0310 and T-0312, with T-0311 reserved for follow-up atomic helper containment hardening.
 - AC-6: focused tests and built CLI smokes pass.
 
 ## Validation
@@ -924,7 +925,49 @@ hadara task finish --task <task> --execute --json --project <tmp>
 
 ---
 
-# T-0311 — 0.3.0-rc.2 Post-Publish Installed-Package Recycle
+# T-0311 — Atomic Write Path Containment Hardening
+
+## Goal
+
+Harden the shared atomic text write helper so future call sites cannot write outside the project root through `relativePath`.
+
+## Scope
+
+```text
+prepareAtomicTextFileWrite project-root containment guard
+atomicWriteTextFile inherited containment behavior
+focused regression tests for normal writes, parent traversal, and absolute paths
+rc.2 plan numbering update so post-publish recycle moves to T-0312
+```
+
+## Out of Scope
+
+```text
+npm publish for hadara@0.3.0-rc.2
+post-publish installed-package recycle
+broad release readiness revalidation
+symlink/realpath write-policy redesign
+```
+
+## Acceptance Criteria
+
+- AC-1: atomic text write target paths are resolved against `projectRoot`.
+- AC-2: parent-directory traversal is rejected before temp file creation.
+- AC-3: absolute paths outside the project are rejected before temp file creation.
+- AC-4: current migration/docs cleanup atomic callers still pass focused regression coverage.
+- AC-5: post-publish installed-package recycle is renumbered to T-0312.
+
+## Validation
+
+```bash
+npm run test:focused -- tests/unit/core-fs.test.ts tests/unit/protocol-migration.test.ts tests/unit/docs-mark.test.ts
+npm run dev:docker-sync-build
+git diff --check
+```
+
+---
+
+# T-0312 — 0.3.0-rc.2 Post-Publish Installed-Package Recycle
 
 ## Goal
 
@@ -1044,4 +1087,4 @@ Decision:
 No.
 ```
 
-Use T-0310 for readiness/publish and T-0311 for post-publish installed-package recycle. This keeps release mutation and consumer validation evidence cleanly separated.
+Use T-0310 for readiness/publish, T-0311 for atomic helper containment hardening, and T-0312 for post-publish installed-package recycle. This keeps release mutation, local write-boundary hardening, and consumer validation evidence cleanly separated.
