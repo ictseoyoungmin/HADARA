@@ -12,6 +12,18 @@ export interface HarnessValidationIssue {
   code: string;
   message: string;
   path?: string;
+  heading?: string;
+  fixHint?: string;
+  example?: string;
+  remediationHint?: RemediationHint;
+}
+
+export interface RemediationHint {
+  path: string;
+  heading?: string;
+  requiredChange: string;
+  example?: string;
+  blocking: boolean;
 }
 
 export interface HarnessValidateResult {
@@ -90,7 +102,13 @@ export function validateTaskCapsule(projectRoot: string, taskId: string, options
         severity: 'error',
         code: 'MISSING_TASK_FILE',
         message: `Required Task Capsule file is missing: ${fileName}`,
-        path: relativePath
+        path: relativePath,
+        fixHint: `Create ${fileName} using the Task Capsule scaffold for this task.`,
+        remediationHint: {
+          path: relativePath,
+          requiredChange: `Create the missing required Task Capsule file ${fileName}.`,
+          blocking: true
+        }
       });
     }
   }
@@ -134,7 +152,15 @@ function validateTaskMarkdown(projectRoot: string, task: TaskCapsule, issues: Ha
         severity: 'error',
         code: 'TASK_SECTION_MISSING',
         message: `TASK.md is missing required section: ${heading}`,
-        path: relativePath
+        path: relativePath,
+        heading,
+        fixHint: `Add the ${heading} section to TASK.md and fill it with task-specific content.`,
+        remediationHint: {
+          path: relativePath,
+          heading,
+          requiredChange: `Add the missing ${heading} section to TASK.md.`,
+          blocking: true
+        }
       });
     }
   }
@@ -181,7 +207,15 @@ function validateMarkdownFile(
         severity: 'error',
         code: check.code,
         message: `${fileName} is missing standard Task Capsule format marker: ${check.anyText.join(' or ')}`,
-        path: relativePath
+        path: relativePath,
+        fixHint: `Restore the standard ${fileName} Task Capsule frame: ${check.anyText.join(' or ')}.`,
+        example: check.anyText[0],
+        remediationHint: {
+          path: relativePath,
+          requiredChange: `Restore the standard ${fileName} format marker.`,
+          example: check.anyText[0],
+          blocking: true
+        }
       });
     }
   }
@@ -199,7 +233,17 @@ function validateEvidenceMarkdown(projectRoot: string, task: TaskCapsule, issues
       severity: 'error',
       code: 'EVIDENCE_TABLE_INVALID',
       message: 'EVIDENCE.md must contain the standard evidence table header.',
-      path: relativePath
+      path: relativePath,
+      heading: 'Evidence',
+      fixHint: 'Restore the standard EVIDENCE.md table header.',
+      example: '| Time | Kind | Summary | Result | Visibility | JSONL |',
+      remediationHint: {
+        path: relativePath,
+        heading: 'Evidence',
+        requiredChange: 'Restore the standard EVIDENCE.md table header.',
+        example: '| Time | Kind | Summary | Result | Visibility | JSONL |',
+        blocking: true
+      }
     });
   }
 }
@@ -415,7 +459,17 @@ function validateTaskMetadataComplete(projectRoot: string, task: TaskCapsule, is
       severity: 'error',
       code: 'TASK_METADATA_PLACEHOLDER',
       message: `Done-level validation requires TASK.md metadata field(s) to be concrete dates, not TBD: ${missing.join(', ')}.`,
-      path: relativePath
+      path: relativePath,
+      heading: 'Metadata',
+      fixHint: 'Replace TASK.md Created and Updated metadata placeholders with YYYY-MM-DD dates.',
+      example: '| Created | 2026-06-12 |',
+      remediationHint: {
+        path: relativePath,
+        heading: 'Metadata',
+        requiredChange: 'Replace Created and Updated metadata placeholders with concrete YYYY-MM-DD dates.',
+        example: '| Created | 2026-06-12 |',
+        blocking: true
+      }
     });
     return;
   }
@@ -424,7 +478,17 @@ function validateTaskMetadataComplete(projectRoot: string, task: TaskCapsule, is
       severity: 'error',
       code: 'TASK_METADATA_DATE_INVALID',
       message: 'Done-level validation requires TASK.md Created and Updated metadata to use YYYY-MM-DD dates.',
-      path: relativePath
+      path: relativePath,
+      heading: 'Metadata',
+      fixHint: 'Use YYYY-MM-DD values for TASK.md Created and Updated metadata.',
+      example: '| Updated | 2026-06-12 |',
+      remediationHint: {
+        path: relativePath,
+        heading: 'Metadata',
+        requiredChange: 'Use YYYY-MM-DD values for Created and Updated metadata.',
+        example: '| Updated | 2026-06-12 |',
+        blocking: true
+      }
     });
   }
 }
@@ -440,7 +504,17 @@ function validateTaskStatusDone(projectRoot: string, task: TaskCapsule, issues: 
       severity: 'error',
       code: 'TASK_STATUS_NOT_DONE',
       message: 'Done-level validation requires TASK.md status to be Done.',
-      path: relativePath
+      path: relativePath,
+      heading: 'Status',
+      fixHint: 'Run `hadara task finish --task <task-id> --execute --json` or set the TASK.md status section to Done after the capsule is actually complete.',
+      example: '## Status\n\nDone',
+      remediationHint: {
+        path: relativePath,
+        heading: 'Status',
+        requiredChange: 'Set TASK.md status to Done after the capsule is complete.',
+        example: '## Status\n\nDone',
+        blocking: true
+      }
     });
   }
 }
@@ -456,7 +530,17 @@ function validateTaskStatusHistoryDone(projectRoot: string, task: TaskCapsule, i
       severity: 'error',
       code: 'TASK_STATUS_HISTORY_NOT_DONE',
       message: 'Done-level validation requires TASK.md Status History to end with Done.',
-      path: relativePath
+      path: relativePath,
+      heading: 'Status History',
+      fixHint: 'Run `hadara task finish --task <task-id> --execute --json` so Status History ends with a Done row.',
+      example: '| 2026-06-12 | Done | Finished task capsule. | `hadara task finish --execute` |',
+      remediationHint: {
+        path: relativePath,
+        heading: 'Status History',
+        requiredChange: 'Append or repair the latest Status History row so it records Done.',
+        example: '| 2026-06-12 | Done | Finished task capsule. | `hadara task finish --execute` |',
+        blocking: true
+      }
     });
   }
 }
@@ -483,7 +567,17 @@ function validateAcceptanceDone(projectRoot: string, task: TaskCapsule, issues: 
       severity: 'error',
       code: 'ACCEPTANCE_INCOMPLETE',
       message: 'Done-level validation requires all acceptance criteria to be complete.',
-      path: relativePath
+      path: relativePath,
+      heading: 'Acceptance Criteria',
+      fixHint: 'Mark each acceptance criterion complete with concrete evidence, or replace placeholder checklist rows with completed task-specific criteria.',
+      example: '| AC-1 | Scope is implemented. | Done | evidence id or summary |',
+      remediationHint: {
+        path: relativePath,
+        heading: 'Acceptance Criteria',
+        requiredChange: 'Complete every acceptance criterion with evidence before closing.',
+        example: '| AC-1 | Scope is implemented. | Done | evidence id or summary |',
+        blocking: true
+      }
     });
   }
 }
@@ -547,7 +641,17 @@ function validateDoneLevelScaffoldContent(projectRoot: string, task: TaskCapsule
         severity: 'error',
         code: check.code,
         message: check.message,
-        path: toPortablePath(path.relative(projectRoot, filePath))
+        path: toPortablePath(path.relative(projectRoot, filePath)),
+        heading: scaffoldHeadingForFile(check.fileName),
+        fixHint: scaffoldFixHint(check.fileName),
+        example: scaffoldExample(check.fileName),
+        remediationHint: {
+          path: toPortablePath(path.relative(projectRoot, filePath)),
+          heading: scaffoldHeadingForFile(check.fileName),
+          requiredChange: scaffoldRequiredChange(check.fileName),
+          example: scaffoldExample(check.fileName),
+          blocking: true
+        }
       });
     }
   }
@@ -563,7 +667,15 @@ function validateEvidenceIndexHasRecords(projectRoot: string, task: TaskCapsule,
       severity: 'error',
       code: 'EVIDENCE_REQUIRED',
       message: 'Done-level validation requires at least one evidence.jsonl record.',
-      path: relativePath
+      path: relativePath,
+      fixHint: 'Record validation evidence with `hadara evidence add-command --task <task-id> --summary "..." --result passed --json`.',
+      example: 'hadara evidence add-command --task T-0001 --summary "Focused tests passed." --result passed --json',
+      remediationHint: {
+        path: relativePath,
+        requiredChange: 'Append at least one substantive evidence record through the canonical evidence writer.',
+        example: 'hadara evidence add-command --task T-0001 --summary "Focused tests passed." --result passed --json',
+        blocking: true
+      }
     });
   }
 }
@@ -576,7 +688,15 @@ function validateEvidenceSemanticGates(projectRoot: string, task: TaskCapsule, i
       severity: issue.severity === 'warning' ? 'warning' : 'error',
       code: issue.code,
       message: issue.message,
-      path: issue.path
+      path: issue.path,
+      fixHint: issue.severity === 'warning' ? 'Review evidence quality and add public validation evidence if needed.' : 'Add substantive passed validation evidence before closing.',
+      remediationHint: issue.path
+        ? {
+            path: issue.path,
+            requiredChange: issue.severity === 'warning' ? 'Review evidence quality for the task.' : 'Add substantive passed validation evidence for the task.',
+            blocking: issue.severity !== 'warning'
+          }
+        : undefined
     });
   }
 }
@@ -593,7 +713,17 @@ function validateEvidenceMarkdownSingleTable(projectRoot: string, task: TaskCaps
       severity: 'error',
       code: 'EVIDENCE_TABLE_DUPLICATE_HEADER',
       message: `Done-level validation requires EVIDENCE.md to contain exactly one evidence table header; found ${tableHeaderCount}.`,
-      path: relativePath
+      path: relativePath,
+      heading: 'Evidence',
+      fixHint: 'Remove duplicate EVIDENCE.md table headers and keep one canonical evidence table.',
+      example: '| Time | Kind | Summary | Result | Visibility | JSONL |',
+      remediationHint: {
+        path: relativePath,
+        heading: 'Evidence',
+        requiredChange: 'Remove duplicate EVIDENCE.md table headers and keep one canonical table.',
+        example: '| Time | Kind | Summary | Result | Visibility | JSONL |',
+        blocking: true
+      }
     });
   }
 }
@@ -610,7 +740,17 @@ function validateHandoffDone(projectRoot: string, task: TaskCapsule, issues: Har
       severity: 'error',
       code: 'HANDOFF_PLACEHOLDER',
       message: 'Done-level validation requires non-placeholder handoff sections.',
-      path: relativePath
+      path: relativePath,
+      heading: 'Last Completed / Next Recommended Step',
+      fixHint: 'Replace HANDOFF.md placeholder rows with concrete last-completed work and next-step guidance.',
+      example: '| Continue with T-0002. | T-0001 is closed-valid. | docs/TASK_BOARD.md |',
+      remediationHint: {
+        path: relativePath,
+        heading: 'Last Completed / Next Recommended Step',
+        requiredChange: 'Replace handoff placeholders with concrete last-completed and next recommended step rows.',
+        example: '| Continue with T-0002. | T-0001 is closed-valid. | docs/TASK_BOARD.md |',
+        blocking: true
+      }
     });
   }
 }
@@ -625,7 +765,17 @@ function validateTaskBoardDone(projectRoot: string, task: TaskCapsule, issues: H
       severity: 'error',
       code: 'TASK_BOARD_MISSING',
       message: 'Done-level validation requires docs/TASK_BOARD.md to contain the completed task row.',
-      path: relativePath
+      path: relativePath,
+      heading: 'TASK_BOARD',
+      fixHint: 'Restore docs/TASK_BOARD.md with the canonical task table and a row for this task.',
+      example: '| ID | Title | Status | Capsule | Notes |',
+      remediationHint: {
+        path: relativePath,
+        heading: 'TASK_BOARD',
+        requiredChange: 'Restore docs/TASK_BOARD.md with the canonical task table and completed task row.',
+        example: '| ID | Title | Status | Capsule | Notes |',
+        blocking: true
+      }
     });
     return;
   }
@@ -636,7 +786,17 @@ function validateTaskBoardDone(projectRoot: string, task: TaskCapsule, issues: H
       severity: 'error',
       code: 'TASK_BOARD_ROW_MISSING',
       message: `Done-level validation requires docs/TASK_BOARD.md to contain exactly one row for ${task.id}.`,
-      path: relativePath
+      path: relativePath,
+      heading: 'TASK_BOARD',
+      fixHint: `Add a docs/TASK_BOARD.md row for ${task.id}, or rerun the task workflow command that should synchronize it.`,
+      example: `| ${task.id} | ${task.title} | Done | ${toPortablePath(path.relative(projectRoot, task.dir))} | |`,
+      remediationHint: {
+        path: relativePath,
+        heading: 'TASK_BOARD',
+        requiredChange: `Add exactly one Task Board row for ${task.id}.`,
+        example: `| ${task.id} | ${task.title} | Done | ${toPortablePath(path.relative(projectRoot, task.dir))} | |`,
+        blocking: true
+      }
     });
     return;
   }
@@ -645,7 +805,15 @@ function validateTaskBoardDone(projectRoot: string, task: TaskCapsule, issues: H
       severity: 'error',
       code: 'TASK_BOARD_ROW_DUPLICATE',
       message: `docs/TASK_BOARD.md contains ${rows.length} rows for ${task.id}; expected exactly one.`,
-      path: relativePath
+      path: relativePath,
+      heading: 'TASK_BOARD',
+      fixHint: `Remove duplicate docs/TASK_BOARD.md rows for ${task.id} so exactly one row remains.`,
+      remediationHint: {
+        path: relativePath,
+        heading: 'TASK_BOARD',
+        requiredChange: `Remove duplicate Task Board rows for ${task.id}.`,
+        blocking: true
+      }
     });
     return;
   }
@@ -657,7 +825,17 @@ function validateTaskBoardDone(projectRoot: string, task: TaskCapsule, issues: H
       severity: 'error',
       code: 'TASK_BOARD_STATUS_NOT_DONE',
       message: `Done-level validation requires docs/TASK_BOARD.md status for ${task.id} to be Done.`,
-      path: relativePath
+      path: relativePath,
+      heading: 'TASK_BOARD',
+      fixHint: `Run \`hadara task finish --task ${task.id} --execute --json\` or update the Task Board status cell for ${task.id} to Done.`,
+      example: `| ${task.id} | ${row.title} | Done | ${row.capsule} | ${row.notes} |`,
+      remediationHint: {
+        path: relativePath,
+        heading: 'TASK_BOARD',
+        requiredChange: `Set the Task Board status cell for ${task.id} to Done.`,
+        example: `| ${task.id} | ${row.title} | Done | ${row.capsule} | ${row.notes} |`,
+        blocking: true
+      }
     });
   }
   if (row.capsule !== expectedCapsule) {
@@ -665,7 +843,17 @@ function validateTaskBoardDone(projectRoot: string, task: TaskCapsule, issues: H
       severity: 'error',
       code: 'TASK_BOARD_CAPSULE_MISMATCH',
       message: `docs/TASK_BOARD.md capsule for ${task.id} is ${row.capsule || '(empty)'}, expected ${expectedCapsule}.`,
-      path: relativePath
+      path: relativePath,
+      heading: 'TASK_BOARD',
+      fixHint: `Update the Task Board capsule cell for ${task.id} to ${expectedCapsule}.`,
+      example: `| ${task.id} | ${row.title} | ${row.status} | ${expectedCapsule} | ${row.notes} |`,
+      remediationHint: {
+        path: relativePath,
+        heading: 'TASK_BOARD',
+        requiredChange: `Set the Task Board capsule cell for ${task.id} to ${expectedCapsule}.`,
+        example: `| ${task.id} | ${row.title} | ${row.status} | ${expectedCapsule} | ${row.notes} |`,
+        blocking: true
+      }
     });
   }
 }
@@ -740,6 +928,47 @@ function isMetadataPlaceholder(value: string): boolean {
 
 function isIsoDate(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value.trim());
+}
+
+function scaffoldHeadingForFile(fileName: string): string | undefined {
+  const headings: Record<string, string> = {
+    'TASK.md': 'Goal / Scope / Out of Scope',
+    'PLAN.md': 'Plan',
+    'CONTEXT.md': 'Context',
+    'FILES.md': 'Files',
+    'ACCEPTANCE.md': 'Acceptance Criteria',
+    'TESTS.md': 'Tests',
+    'RISKS.md': 'Risks',
+    'DECISIONS.md': 'Decisions',
+    'EVIDENCE.md': 'Evidence'
+  };
+  return headings[fileName];
+}
+
+function scaffoldRequiredChange(fileName: string): string {
+  const heading = scaffoldHeadingForFile(fileName);
+  return heading
+    ? `Replace scaffold placeholder content in ${fileName} under ${heading} with task-specific content.`
+    : `Replace scaffold placeholder content in ${fileName} with task-specific content.`;
+}
+
+function scaffoldFixHint(fileName: string): string {
+  return `${scaffoldRequiredChange(fileName)} Mark rows Done only after the work and evidence are real.`;
+}
+
+function scaffoldExample(fileName: string): string {
+  const examples: Record<string, string> = {
+    'TASK.md': '| Preserve Task Board notes. | `task finish` must not erase human-authored cells. |',
+    'PLAN.md': '| 1 | Implement focused fix. | Done | evidence id or summary |',
+    'CONTEXT.md': '| docs/TASK_BOARD.md | Task Board source of truth. | Read |',
+    'FILES.md': '| src/task/task-close.ts | Modify | Add hints. | Done |',
+    'ACCEPTANCE.md': '| AC-1 | Scope is implemented. | Done | evidence id or summary |',
+    'TESTS.md': '| npm run test:focused -- tests/unit/task-ready.test.ts | Validate hints. | Yes | Passed | evidence id |',
+    'RISKS.md': '| Consumer rejects additive fields. | Medium | Low | Keep fields optional. | Mitigated |',
+    'DECISIONS.md': '| D-1 | Add additive hints only. | Accepted | Preserve issue-code compatibility. | Tests. |',
+    'EVIDENCE.md': '| 2026-06-12T00:00:00.000Z | command-log | Focused tests passed. | passed | public | evidence.jsonl |'
+  };
+  return examples[fileName] ?? 'Replace TBD rows with task-specific content.';
 }
 
 function toPortablePath(value: string): string {

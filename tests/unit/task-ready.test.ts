@@ -64,6 +64,21 @@ describe('task ready report', () => {
       stalePlanRisk: 'low'
     });
     expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'resolve-ready-blockers', required: true }));
+    expect(report.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'HARNESS_ACCEPTANCE_INCOMPLETE',
+          path: `tasks/${task.id}-blocked-ready-task/ACCEPTANCE.md`,
+          heading: 'Acceptance Criteria',
+          fixHint: expect.stringContaining('acceptance criterion'),
+          remediationHint: expect.objectContaining({
+            path: `tasks/${task.id}-blocked-ready-task/ACCEPTANCE.md`,
+            heading: 'Acceptance Criteria',
+            blocking: true
+          })
+        })
+      ])
+    );
   });
 
   it('threads explicit actor CLI options into task ready reports', () => {

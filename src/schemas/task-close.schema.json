@@ -133,8 +133,26 @@
           "severity": { "enum": ["error", "warning", "info"] },
           "code": { "type": "string" },
           "message": { "type": "string" },
-          "path": { "type": "string" }
+          "path": { "type": "string" },
+          "heading": { "type": "string" },
+          "fixHint": { "type": "string" },
+          "example": { "type": "string" },
+          "remediationHint": { "$ref": "#/$defs/remediationHint" }
         }
+      }
+    }
+  },
+  "$defs": {
+    "remediationHint": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "requiredChange", "blocking"],
+      "properties": {
+        "path": { "type": "string" },
+        "heading": { "type": "string" },
+        "requiredChange": { "type": "string" },
+        "example": { "type": "string" },
+        "blocking": { "type": "boolean" }
       }
     }
   }

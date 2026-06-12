@@ -306,3 +306,4 @@
 | T-0303 | Fresh Init + Migration Context Scaffold and Doctor/Docs Cleanliness | Done | tasks/T-0303-fresh-init-migration-context-scaffold-and-doctor-docs-cleanlines | |
 | T-0304 | Workflow Documentation Timing and Concurrency Guidance | Done | tasks/T-0304-workflow-documentation-timing-and-concurrency-guidance | |
 | T-0305 | Task Board Row Preservation in task finish | Done | tasks/T-0305-task-board-row-preservation-in-task-finish | |
+| T-0306 | Ready/Close Failure Guidance Improvement | Done | tasks/T-0306-ready-close-failure-guidance-improvement | |

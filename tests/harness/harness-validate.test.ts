@@ -71,6 +71,45 @@ describe('Harness Task Capsule validation', () => {
     expect(result.issues.map((issue) => issue.code)).toEqual(
       expect.arrayContaining(['TASK_STATUS_NOT_DONE', 'TASK_STATUS_HISTORY_NOT_DONE', 'ACCEPTANCE_INCOMPLETE', 'EVIDENCE_REQUIRED', 'HANDOFF_PLACEHOLDER'])
     );
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'ACCEPTANCE_INCOMPLETE',
+          path: `tasks/${task.id}-incomplete-done/ACCEPTANCE.md`,
+          heading: 'Acceptance Criteria',
+          fixHint: expect.stringContaining('acceptance criterion'),
+          remediationHint: expect.objectContaining({
+            path: `tasks/${task.id}-incomplete-done/ACCEPTANCE.md`,
+            heading: 'Acceptance Criteria',
+            blocking: true
+          })
+        })
+      ])
+    );
+  });
+
+  it('adds heading and fix hints to missing TASK.md section issues', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Missing task heading');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('## Goal', '## Missing Goal'), 'utf8');
+
+    const result = validateTaskCapsule(root, task.id, { level: 'draft' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        code: 'TASK_SECTION_MISSING',
+        path: `tasks/${task.id}-missing-task-heading/TASK.md`,
+        heading: '## Goal',
+        fixHint: expect.stringContaining('Add the ## Goal section'),
+        remediationHint: expect.objectContaining({
+          path: `tasks/${task.id}-missing-task-heading/TASK.md`,
+          heading: '## Goal',
+          blocking: true
+        })
+      })
+    );
   });
 
   it('rejects completed capsules that still contain scaffold Markdown defaults', () => {
@@ -123,12 +162,16 @@ describe('Harness Task Capsule validation', () => {
     const result = validateTaskCapsule(root, task.id, { level: 'done' });
 
     expect(result.ok).toBe(false);
-    expect(result.issues).toContainEqual({
-      severity: 'error',
-      code: 'TASK_METADATA_PLACEHOLDER',
-      message: 'Done-level validation requires TASK.md metadata field(s) to be concrete dates, not TBD: Created, Updated.',
-      path: `tasks/${task.id}-placeholder-metadata/TASK.md`
-    });
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'error',
+        code: 'TASK_METADATA_PLACEHOLDER',
+        message: 'Done-level validation requires TASK.md metadata field(s) to be concrete dates, not TBD: Created, Updated.',
+        path: `tasks/${task.id}-placeholder-metadata/TASK.md`,
+        heading: 'Metadata',
+        fixHint: expect.stringContaining('YYYY-MM-DD')
+      })
+    );
   });
 
   it('rejects done-level capsules whose Status History does not end with Done', () => {
@@ -149,12 +192,16 @@ describe('Harness Task Capsule validation', () => {
     const result = validateTaskCapsule(root, task.id, { level: 'done' });
 
     expect(result.ok).toBe(false);
-    expect(result.issues).toContainEqual({
-      severity: 'error',
-      code: 'TASK_STATUS_HISTORY_NOT_DONE',
-      message: 'Done-level validation requires TASK.md Status History to end with Done.',
-      path: `tasks/${task.id}-history-missing-done/TASK.md`
-    });
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'error',
+        code: 'TASK_STATUS_HISTORY_NOT_DONE',
+        message: 'Done-level validation requires TASK.md Status History to end with Done.',
+        path: `tasks/${task.id}-history-missing-done/TASK.md`,
+        heading: 'Status History',
+        fixHint: expect.stringContaining('task finish')
+      })
+    );
   });
 
   it('accepts done-level validation for completed capsules', () => {
@@ -249,12 +296,16 @@ describe('Harness Task Capsule validation', () => {
     const result = validateTaskCapsule(root, task.id, { level: 'done' });
 
     expect(result.ok).toBe(false);
-    expect(result.issues).toContainEqual({
-      severity: 'error',
-      code: 'EVIDENCE_TABLE_DUPLICATE_HEADER',
-      message: 'Done-level validation requires EVIDENCE.md to contain exactly one evidence table header; found 2.',
-      path: `tasks/${task.id}-duplicate-evidence-header/EVIDENCE.md`
-    });
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'error',
+        code: 'EVIDENCE_TABLE_DUPLICATE_HEADER',
+        message: 'Done-level validation requires EVIDENCE.md to contain exactly one evidence table header; found 2.',
+        path: `tasks/${task.id}-duplicate-evidence-header/EVIDENCE.md`,
+        heading: 'Evidence',
+        fixHint: expect.stringContaining('duplicate')
+      })
+    );
   });
 
   it('rejects duplicate task board rows during done-level validation', () => {
@@ -280,12 +331,16 @@ describe('Harness Task Capsule validation', () => {
     const result = validateTaskCapsule(root, task.id, { level: 'done' });
 
     expect(result.ok).toBe(false);
-    expect(result.issues).toContainEqual({
-      severity: 'error',
-      code: 'TASK_BOARD_ROW_DUPLICATE',
-      message: `docs/TASK_BOARD.md contains 2 rows for ${task.id}; expected exactly one.`,
-      path: 'docs/TASK_BOARD.md'
-    });
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'error',
+        code: 'TASK_BOARD_ROW_DUPLICATE',
+        message: `docs/TASK_BOARD.md contains 2 rows for ${task.id}; expected exactly one.`,
+        path: 'docs/TASK_BOARD.md',
+        heading: 'TASK_BOARD',
+        fixHint: expect.stringContaining('duplicate')
+      })
+    );
   });
 
   it('rejects stale task board status and capsule path during done-level validation', () => {

@@ -345,6 +345,13 @@
       "notes": "Documents reduced read-only major feature smoke reports for core service/read-model validation; installed binary and launcher checks are deferred."
     },
     {
+      "id": "hadara.harness.validate.v1",
+      "path": "src/schemas/harness-validate.schema.json",
+      "status": "fixture",
+      "owner": "harness/validate",
+      "notes": "Documents Task Capsule draft/done validation reports with additive remediation hints."
+    },
+    {
       "id": "hadara.cleanCheckoutSmoke.v1",
       "path": "src/schemas/clean-checkout-smoke.schema.json",
       "status": "fixture",

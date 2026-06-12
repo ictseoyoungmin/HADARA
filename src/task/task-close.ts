@@ -4,6 +4,7 @@ import path from 'node:path';
 import { appendEvidenceWithResult } from '../evidence/evidence';
 import { createEvidenceLintReport, EvidenceLintReport } from '../services/evidence-lint';
 import { createHarnessValidateReport, HarnessValidateResult } from '../services/harness-service';
+import type { RemediationHint } from '../harness/validate';
 import { createTaskProtocolConsistencyReport, ProtocolConsistencyReport } from '../services/protocol-consistency';
 import type { HadaraActorContext } from '../core/actor-context';
 import { listTaskCapsules } from './task-capsule';
@@ -104,6 +105,10 @@ export interface TaskCloseIssue {
   code: string;
   message: string;
   path?: string;
+  heading?: string;
+  fixHint?: string;
+  example?: string;
+  remediationHint?: RemediationHint;
 }
 
 export interface TaskCloseOptions {
@@ -179,7 +184,16 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
 
 function collectBlockingIssues(validation: HarnessValidateResult, evidenceLint: EvidenceLintReport, protocolDoctor: ProtocolConsistencyReport, issues: TaskCloseIssue[]): void {
   for (const issue of validation.issues) {
-    issues.push({ severity: issue.severity, code: `HARNESS_${issue.code}`, message: issue.message, path: issue.path });
+    issues.push({
+      severity: issue.severity,
+      code: `HARNESS_${issue.code}`,
+      message: issue.message,
+      path: issue.path,
+      heading: issue.heading,
+      fixHint: issue.fixHint,
+      example: issue.example,
+      remediationHint: issue.remediationHint
+    });
   }
   for (const issue of evidenceLint.issues) {
     issues.push({ severity: issue.severity, code: `EVIDENCE_LINT_${issue.code}`, message: issue.message, path: issue.path });

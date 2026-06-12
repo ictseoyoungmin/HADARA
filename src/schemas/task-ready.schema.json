@@ -45,6 +45,35 @@
     },
     "nextActions": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "primaryNextAction": { "type": "object", "additionalProperties": true },
-    "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+    "issues": { "type": "array", "items": { "$ref": "#/$defs/issue" } }
+  },
+  "$defs": {
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "enum": ["error", "warning", "info"] },
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "path": { "type": "string" },
+        "heading": { "type": "string" },
+        "fixHint": { "type": "string" },
+        "example": { "type": "string" },
+        "remediationHint": { "$ref": "#/$defs/remediationHint" }
+      }
+    },
+    "remediationHint": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "requiredChange", "blocking"],
+      "properties": {
+        "path": { "type": "string" },
+        "heading": { "type": "string" },
+        "requiredChange": { "type": "string" },
+        "example": { "type": "string" },
+        "blocking": { "type": "boolean" }
+      }
+    }
   }
 }

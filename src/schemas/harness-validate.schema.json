@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.harness.validate.v1",
+  "x-hadara-schema-id": "hadara.harness.validate.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "level", "task", "checkedFiles", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.harness.validate.v1" },
+    "command": { "const": "harness.validate" },
+    "ok": { "type": "boolean" },
+    "level": { "enum": ["draft", "done"] },
+    "task": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "title", "capsule"],
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "capsule": { "type": "string" }
+      }
+    },
+    "checkedFiles": { "type": "array", "items": { "type": "string" } },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "enum": ["error", "warning"] },
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "path": { "type": "string" },
+        "heading": { "type": "string" },
+        "fixHint": { "type": "string" },
+        "example": { "type": "string" },
+        "remediationHint": { "$ref": "#/$defs/remediationHint" }
+      }
+    },
+    "remediationHint": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "requiredChange", "blocking"],
+      "properties": {
+        "path": { "type": "string" },
+        "heading": { "type": "string" },
+        "requiredChange": { "type": "string" },
+        "example": { "type": "string" },
+        "blocking": { "type": "boolean" }
+      }
+    }
+  }
+}
