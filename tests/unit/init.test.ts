@@ -60,6 +60,7 @@ describe('init profiles', () => {
 
     expect(fs.existsSync(path.join(root, 'AGENTS.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, '.gitignore'))).toBe(true);
+    expect(fs.existsSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, '.hadara', 'docs-registry.json'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'docs', 'DOC_REGISTRY.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'HERMES.md'))).toBe(false);
@@ -74,7 +75,9 @@ describe('init profiles', () => {
     expect(fs.existsSync(path.join(root, 'docs', 'REFACTOR_LOG.md'))).toBe(false);
     expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(false);
     expect(read(root, 'docs/ARCHITECTURE.md')).toContain('| HADARA Profile | standard |');
-    expect(read(root, 'docs/DOC_REGISTRY.md')).toContain('| `docs/PROJECT_STATE.md` | project-state | canonical | session-start | yes | hadara-docs |');
+    expect(read(root, 'docs/DOC_REGISTRY.md')).toContain('| `.hadara/context/HADARA_CONTEXT.md` | project-context | canonical | session-start | yes | hadara-docs |');
+    expect(read(root, '.hadara/context/HADARA_CONTEXT.md')).toContain('## Read Routing');
+    expect(read(root, '.hadara/context/HADARA_CONTEXT.md')).toContain('Do not store credentials, private logs, raw model transcripts');
     expect(read(root, 'docs/TASK_BOARD.md')).toContain('hadara:managed:start task-board');
     expect(read(root, 'docs/DOC_REGISTRY.md')).toContain('hadara:managed:start doc-registry-summary');
     expect(read(root, 'docs/PROJECT_STATE.md')).toContain('hadara:managed:start project-state-metadata');
@@ -111,6 +114,7 @@ describe('init profiles', () => {
     const agents = fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8');
     expect(agents).toContain('## Required Reading');
     expect(agents).toContain('| Order | Document | When | Purpose |');
+    expect(agents).toContain('`.hadara/context/HADARA_CONTEXT.md`');
     expect(agents).toContain('## Rules');
     expect(agents).toContain('| Rule | Requirement | Evidence / Update Location |');
     expect(agents).toContain('docs/IMPLEMENTATION_SOP.md');
@@ -122,6 +126,8 @@ describe('init profiles', () => {
 
     const sop = fs.readFileSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'), 'utf8');
     expect(sop).toContain('## Required Reading');
+    expect(sop).toContain('Read `.hadara/context/HADARA_CONTEXT.md` as the compact project-local context anchor.');
+    expect(sop).toContain('| `.hadara/context/HADARA_CONTEXT.md` | Every session | Compact project-local context anchor and read-routing guide. |');
     expect(sop).toContain('| Document | When to Read | Purpose |');
     expect(sop).toContain('## Init Profile Matrix');
     expect(sop).toContain('This project was initialized with the `standard` HADARA profile.');

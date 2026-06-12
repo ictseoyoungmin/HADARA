@@ -53,6 +53,7 @@ describe('protocol migration service', () => {
     expect(dryRun.summary.beforeHash).toMatch(/^[a-f0-9]{64}$/);
     expect(dryRun.actions.map((action) => action.id)).toEqual(expect.arrayContaining([
       'protocol-version',
+      'context-anchor',
       'docs-registry-json',
       'doc-registry-markdown',
       'command-surface-doc',
@@ -72,7 +73,9 @@ describe('protocol migration service', () => {
     expect(executed.ok).toBe(true);
     expect(validateSchema('hadara.protocol.migration.v1', executed).ok).toBe(true);
     expect(fs.readFileSync(path.join(root, '.hadara', 'protocol-version.json'), 'utf8')).toContain('"protocolVersion": "0.3.0"');
+    expect(fs.readFileSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'), 'utf8')).toContain('## Read Routing');
     expect(fs.readFileSync(path.join(root, '.hadara', 'docs-registry.json'), 'utf8')).toContain('"schemaVersion": "hadara.docs.registry.v1"');
+    expect(fs.readFileSync(path.join(root, '.hadara', 'docs-registry.json'), 'utf8')).toContain('"kind": "project-context"');
     expect(fs.readFileSync(path.join(root, 'docs', 'DOC_REGISTRY.md'), 'utf8')).toContain('hadara:managed:start doc-registry-summary');
     expect(fs.readFileSync(path.join(root, 'docs', 'COMMAND_SURFACE.md'), 'utf8')).toContain('`protocol.migrate`');
     expect(fs.readFileSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'), 'utf8')).toContain('hadara:managed:start required-reading');
@@ -112,6 +115,29 @@ describe('protocol migration service', () => {
     expect(fs.existsSync(path.join(task.dir, 'evidence.jsonl'))).toBe(true);
     expect(fs.readFileSync(taskPath, 'utf8')).toContain('hadara:managed:start task-status-history');
     expect(fs.existsSync(path.join(root, '.hadara', 'docs-registry.json'))).toBe(false);
+    expect(fs.existsSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'))).toBe(false);
+  });
+
+  it('preserves an existing project context during project migration', () => {
+    const root = tempLegacyProject();
+    const contextPath = path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md');
+    fs.mkdirSync(path.dirname(contextPath), { recursive: true });
+    fs.writeFileSync(contextPath, '# Custom context\n\nKeep this.\n', 'utf8');
+
+    const dryRun = createProtocolMigrationReport({ projectRoot: root, target: '0.3.0', mode: 'dry-run' });
+    expect(dryRun.actions.find((action) => action.id === 'context-anchor')).toMatchObject({
+      status: 'skipped',
+      summary: expect.stringContaining('preserves existing project context')
+    });
+
+    const executed = createProtocolMigrationReport({
+      projectRoot: root,
+      target: '0.3.0',
+      mode: 'execute',
+      beforeHash: dryRun.summary.beforeHash ?? undefined
+    });
+    expect(executed.ok).toBe(true);
+    expect(fs.readFileSync(contextPath, 'utf8')).toBe('# Custom context\n\nKeep this.\n');
   });
 
   it('does not overwrite existing task evidence during task-scoped migration', () => {

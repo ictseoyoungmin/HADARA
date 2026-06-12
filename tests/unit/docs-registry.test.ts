@@ -38,7 +38,15 @@ describe('Phase 7.3 docs registry', () => {
     initProject(governed, 'governed', { silent: true });
 
     expect(fs.existsSync(path.join(standard, DOCS_REGISTRY_PATH))).toBe(true);
+    expect(fs.existsSync(path.join(standard, '.hadara', 'context', 'HADARA_CONTEXT.md'))).toBe(true);
     expect(fs.existsSync(path.join(standard, 'docs', 'DOC_REGISTRY.md'))).toBe(true);
+    expect(readRegistry(basic).documents.map((doc) => doc.path)).toContain('.hadara/context/HADARA_CONTEXT.md');
+    expect(readRegistry(basic).documents.find((doc) => doc.path === '.hadara/context/HADARA_CONTEXT.md')).toMatchObject({
+      kind: 'project-context',
+      status: 'canonical',
+      requiredReading: true,
+      readWhen: ['session-start']
+    });
     expect(readRegistry(basic).documents.map((doc) => doc.path)).not.toContain('docs/ARCHITECTURE.md');
     expect(readRegistry(standard).documents.map((doc) => doc.path)).toEqual(
       expect.arrayContaining(['docs/ARCHITECTURE.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/TEST_STRATEGY.md'])

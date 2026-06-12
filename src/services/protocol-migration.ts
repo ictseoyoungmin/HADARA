@@ -7,6 +7,7 @@ import { HADARA_COMMAND_REGISTRY } from './capability-registry';
 import {
   DOCS_REGISTRY_PATH,
   DocumentRegistryFile,
+  createHadaraContextDoc,
   createSeedDocumentRegistry,
   registryJson,
   renderDocRegistryMarkdown
@@ -134,6 +135,15 @@ function planProjectScopedMigration(
     protocolVersion: '0.3.0',
     source: 'protocol.migrate'
   }, null, 2) + '\n', 'Record the project protocol version marker for 0.3.0 migration.');
+  planCreateMissingFile(
+    projectRoot,
+    actions,
+    'context-anchor',
+    '.hadara/context/HADARA_CONTEXT.md',
+    createHadaraContextDoc(profile, path.basename(projectRoot), 'protocol migrate'),
+    'Create the compact project-local HADARA context anchor.',
+    '.hadara/context/HADARA_CONTEXT.md already exists; protocol migration preserves existing project context.'
+  );
 
   const seed = createSeedDocumentRegistry(profile);
   const registry = mergeExistingRegistry(projectRoot, seed, issues);
@@ -323,6 +333,28 @@ function planEnsureMissingFile(
     path: relativePath,
     before: '',
     after: '',
+    expectedBeforeExists: false
+  }, createSummary);
+}
+
+function planCreateMissingFile(
+  projectRoot: string,
+  actions: ProtocolMigrationAction[],
+  id: string,
+  relativePath: string,
+  content: string,
+  createSummary: string,
+  existsSummary: string
+): void {
+  if (fs.existsSync(path.join(projectRoot, relativePath))) {
+    actions.push({ id, path: relativePath, status: 'skipped', summary: existsSummary });
+    return;
+  }
+  addPlannedAction(actions, {
+    id,
+    path: relativePath,
+    before: '',
+    after: content,
     expectedBeforeExists: false
   }, createSummary);
 }

@@ -6,6 +6,7 @@ This repository must be developed using the HADARA protocol.
 
 | Document | When to Read | Purpose |
 |---|---|---|
+| `.hadara/context/HADARA_CONTEXT.md` | Every session | Compact project-local context anchor and read-routing guide. |
 | `docs/PROJECT_STATE.md` | Every session | Current project state. |
 | `docs/AGENT_HANDOFF.md` | Every session | Compact current-state handoff. |
 | `docs/TASK_BOARD.md` | Every session | Task queue and capsule paths. |

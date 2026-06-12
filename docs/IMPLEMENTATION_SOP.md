@@ -6,22 +6,24 @@ This repository operates as the `governed` HADARA profile because it has long-li
 
 ## Session Start
 
-1. Read `docs/PROJECT_STATE.md`.
-2. Read `docs/AGENT_HANDOFF.md`.
-3. Read `docs/TASK_BOARD.md`.
-4. Read `docs/DEVELOPMENT_SLICES.md` when the work may start, complete, or reclassify a roadmap slice.
-5. Follow the Historical Index in `docs/AGENT_HANDOFF.md` when older completed-task or validation history is needed.
-6. Pick or create one Task Capsule. Create new capsules through `hadara task create <title>` by default.
-7. Read `TASK.md`, `DECISIONS.md`, `PLAN.md`, `CONTEXT.md`, `ACCEPTANCE.md`, `FILES.md`, `TESTS.md`, `RISKS.md`, and `HANDOFF.md` for the active Task Capsule.
-8. Read project-specific specs, contracts, or roadmap documents listed in the Required Reading table below when their condition applies.
-9. Summarize the current state from the required docs.
-10. Identify the active Task Capsule and explain why it fits the work.
-11. Propose or choose the smallest useful implementation slice.
+1. Read `.hadara/context/HADARA_CONTEXT.md` as the compact project-local context anchor.
+2. Read `docs/PROJECT_STATE.md`.
+3. Read `docs/AGENT_HANDOFF.md`.
+4. Read `docs/TASK_BOARD.md`.
+5. Read `docs/DEVELOPMENT_SLICES.md` when the work may start, complete, or reclassify a roadmap slice.
+6. Follow the Historical Index in `docs/AGENT_HANDOFF.md` when older completed-task or validation history is needed.
+7. Pick or create one Task Capsule. Create new capsules through `hadara task create <title>` by default.
+8. Read `TASK.md`, `DECISIONS.md`, `PLAN.md`, `CONTEXT.md`, `ACCEPTANCE.md`, `FILES.md`, `TESTS.md`, `RISKS.md`, and `HANDOFF.md` for the active Task Capsule.
+9. Read project-specific specs, contracts, or roadmap documents listed in the Required Reading table below when their condition applies.
+10. Summarize the current state from the required docs.
+11. Identify the active Task Capsule and explain why it fits the work.
+12. Propose or choose the smallest useful implementation slice.
 
 ## Required Reading
 
 | Document | When to Read | Purpose |
 |---|---|---|
+| `.hadara/context/HADARA_CONTEXT.md` | Every session | Compact project-local context anchor and read-routing guide. |
 | `docs/PROJECT_STATE.md` | Every session | Current product state, capability boundaries, and source-of-truth map. |
 | `docs/AGENT_HANDOFF.md` | Every session | Compact current-state handoff, latest validation baseline, and next recommended step. |
 | `docs/TASK_BOARD.md` | Every session | Work queue, task status, and capsule paths. |
@@ -51,6 +53,7 @@ This repository operates as the `governed` HADARA profile because it has long-li
 | `docs/specs/agent-ux/HADARA_Phase6_Operator_Workflow_Compression_Multi_Agent_Compatibility_Spec.md` | Phase 6 operator workflow compression, multi-agent compatibility metadata, task complete dry-run, close idempotency, handoff suggestion, Docker validation wrapper, task templates, or release dry-run decomposition work only | Local-only ignored source design for Phase 6 workflow compression while preserving dry-run-first, hash-guarded, actor/run-aware, coordinator/worker-safe command boundaries. |
 | `docs/specs/agent-ux/HADARA_Phase6_1_Reviewer_Feedback_Hardening_Spec.md` | Phase 6.1 reviewer-feedback hardening, actor CLI metadata, dev docker-check dist sync guards, close idempotency race hardening, task create collision handling, or handoff suggestion polish | Follow-up hardening plan for Phase 6 reviewer feedback without adding a full multi-agent runtime or hidden write orchestration. |
 | `docs/specs/0.3.0/rc1/00_Protocol_Migration_for_0_3_Adoption.md` | 0.3 protocol migration, docs registry adoption, managed marker insertion, or existing-project upgrade work | Source design for dry-run-first `protocol migrate --target 0.3.0` project/task scoped adoption. |
+| `docs/specs/0.3.0/rc2/HADARA_0.3.0-rc.2_Workflow_UX_Hardening_Plan.md` | 0.3.0-rc.2 workflow UX hardening, context scaffold, docs timing/concurrency, Task Board preservation, ready/close guidance, or required-reading tier work | Source design and capsule sequence for T-0303 through T-0310. |
 
 ## Project-Specific Documents
 

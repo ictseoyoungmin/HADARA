@@ -71,6 +71,12 @@ describe('Phase 7.5 docs required-reading', () => {
       ok: true
     });
     expect(report.documents.map((doc) => doc.path)).toContain('docs/specs/current.md');
+    expect(report.documents).toContainEqual(expect.objectContaining({
+      path: '.hadara/context/HADARA_CONTEXT.md',
+      status: 'canonical',
+      readWhen: ['session-start'],
+      reason: 'canonical project-context doc'
+    }));
     expect(report.documents.map((doc) => doc.path)).not.toEqual(expect.arrayContaining([
       'docs/specs/old.md',
       'docs/specs/history.md',

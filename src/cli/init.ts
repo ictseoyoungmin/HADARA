@@ -3,7 +3,7 @@ import path from 'node:path';
 import { resolveHadaraPaths } from '../core/paths';
 import { ensureDir, writeFileIfMissing } from '../core/fs';
 import { getFlag, getRequiredStringOption, getStringOption } from './args';
-import { DOCS_REGISTRY_PATH, createSeedDocumentRegistry, registryJson, renderDocRegistryMarkdown } from '../services/docs-registry';
+import { DOCS_REGISTRY_PATH, createHadaraContextDoc, createSeedDocumentRegistry, registryJson, renderDocRegistryMarkdown } from '../services/docs-registry';
 import { managedSectionBlock } from '../services/managed-sections';
 import type { DocumentRegistryFile } from '../services/docs-registry';
 
@@ -216,6 +216,7 @@ function createGeneratedScaffoldFiles(profile: InitProfile): GeneratedScaffoldFi
   const spec = INIT_PROFILE_SPECS[profile];
   const docsRegistry = createSeedDocumentRegistry(profile);
   const files: GeneratedScaffoldFile[] = [
+    { path: '.hadara/context/HADARA_CONTEXT.md', content: createHadaraContextDoc(profile) },
     { path: '.hadara/docs-registry.json', content: registryJson(docsRegistry) },
     { path: 'docs/DOC_REGISTRY.md', content: renderDocRegistryMarkdown(docsRegistry) },
     { path: 'docs/PROJECT_STATE.md', content: createProjectStateDoc(profile) },
@@ -239,7 +240,7 @@ function createGeneratedScaffoldFiles(profile: InitProfile): GeneratedScaffoldFi
 function createInitDoctorReport(projectRoot: string): InitFollowUpReport {
   const issues: InitIssue[] = [];
   const actions: InitAction[] = [];
-  const requiredCore = ['AGENTS.md', '.gitignore', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/IMPLEMENTATION_SOP.md', 'docs/TASK_WORKFLOW_COMMANDS.md'];
+  const requiredCore = ['AGENTS.md', '.gitignore', '.hadara/context/HADARA_CONTEXT.md', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/IMPLEMENTATION_SOP.md', 'docs/TASK_WORKFLOW_COMMANDS.md'];
   for (const relativePath of requiredCore) {
     if (!fs.existsSync(path.join(projectRoot, relativePath))) {
       issues.push({ severity: 'error', code: 'INIT_CORE_DOC_MISSING', path: relativePath, message: `${relativePath} is missing from the init scaffold.` });
@@ -1075,6 +1076,7 @@ function createArchitectureDoc(profile: InitProfile): string {
 
 function createImplementationSopDoc(spec: InitProfileSpec): string {
   const sessionStart = [
+    'Read `.hadara/context/HADARA_CONTEXT.md` as the compact project-local context anchor.',
     'Read `docs/PROJECT_STATE.md`.',
     'Read `docs/AGENT_HANDOFF.md`.',
     'Read `docs/TASK_BOARD.md`.',
@@ -1091,6 +1093,7 @@ function createImplementationSopDoc(spec: InitProfileSpec): string {
   ];
 
   const requiredReadingRows = [
+    ['`.hadara/context/HADARA_CONTEXT.md`', 'Every session', 'Compact project-local context anchor and read-routing guide.'],
     ['`docs/PROJECT_STATE.md`', 'Every session', 'Current product state and source-of-truth map.'],
     ['`docs/AGENT_HANDOFF.md`', 'Every session', 'Compact handoff and next recommended step.'],
     ['`docs/TASK_BOARD.md`', 'Every session', 'Work queue and task status.'],
@@ -1502,13 +1505,14 @@ Before close, finish all close-source edits: Task Capsule docs, acceptance/tests
 
 function createAgentsDoc(spec: InitProfileSpec): string {
   const requiredReadingRows = [
-    ['1', '`docs/PROJECT_STATE.md`', 'Every session', 'Current product and capability state.'],
-    ['2', '`docs/AGENT_HANDOFF.md`', 'Every session', 'Compact continuation state.'],
-    ['3', '`docs/TASK_BOARD.md`', 'Every session', 'Current task queue and status.'],
-    ['4', '`docs/IMPLEMENTATION_SOP.md`', 'Every session', 'Local workflow and required-reading registry.'],
-    ['5', '`docs/TASK_WORKFLOW_COMMANDS.md`', 'Starting, finishing, closing, auditing, or explaining task workflow commands', 'Standard task loop, dry-run boundaries, and command `ok` semantics.']
+    ['1', '`.hadara/context/HADARA_CONTEXT.md`', 'Every session', 'Compact project-local context anchor and read routing.'],
+    ['2', '`docs/PROJECT_STATE.md`', 'Every session', 'Current product and capability state.'],
+    ['3', '`docs/AGENT_HANDOFF.md`', 'Every session', 'Compact continuation state.'],
+    ['4', '`docs/TASK_BOARD.md`', 'Every session', 'Current task queue and status.'],
+    ['5', '`docs/IMPLEMENTATION_SOP.md`', 'Every session', 'Local workflow and required-reading registry.'],
+    ['6', '`docs/TASK_WORKFLOW_COMMANDS.md`', 'Starting, finishing, closing, auditing, or explaining task workflow commands', 'Standard task loop, dry-run boundaries, and command `ok` semantics.']
   ];
-  let order = 6;
+  let order = 7;
   if (spec.docs.architecture) requiredReadingRows.push([String(order++), '`docs/ARCHITECTURE.md`', 'Architecture, component, or boundary work', 'Current system shape and ownership boundaries.']);
   if (spec.docs.developmentSlices) requiredReadingRows.push([String(order++), '`docs/DEVELOPMENT_SLICES.md`', 'Starting, completing, or reclassifying a development slice', 'Roadmap ordering, prerequisites, and completion evidence.']);
   if (spec.docs.decisions) requiredReadingRows.push([String(order++), '`docs/DECISIONS.md`', 'Project-level decision work', 'Durable project decisions.']);
