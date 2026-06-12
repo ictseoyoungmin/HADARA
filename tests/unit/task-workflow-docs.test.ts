@@ -79,6 +79,8 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes');
     expect(workflow).toContain('changing those documents changes the close source hash and requires rerunning `task ready`, `task close`, and `task audit-close`');
     expect(workflow).toContain('After `task close --execute --json`, close-source document edits intentionally invalidate the previous close proof.');
+    expect(workflow).toContain("matching `docs/TASK_BOARD.md` row's command-owned cells");
+    expect(workflow).toContain('human/mixed-owned `Notes` and any extra cells');
     expect(sop).toContain('| `task status` | Read-only | `ok` means report generation succeeded; readiness is in `state.ready`, `summary.blockers`, and `issues`. |');
     expect(sop).toContain('Before running `task ready` and `task close`, finish all close-source edits');
     expect(sop).toContain('## Documentation Timing and Write Coordination');

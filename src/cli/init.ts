@@ -1516,7 +1516,7 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 - \`harness validate\` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence.
 - \`task complete\` is a read-only workflow compressor. It may report the next lifecycle command, but it must not execute finish, ready, close, or audit commands.
 - \`evidence add-command\` records an operator-supplied command result; it does not run the command. \`--idempotency-key\` is optional; when supplied, same-key repeats return the existing record without appending duplicate Markdown or JSONL rows.
-- \`task finish\` may update only the Task Capsule \`TASK.md\` status and matching \`docs/TASK_BOARD.md\` status/path row.
+- \`task finish\` may update only the Task Capsule \`TASK.md\` status and the matching \`docs/TASK_BOARD.md\` row's command-owned cells: \`ID\`, \`Title\`, \`Status\`, and \`Capsule\`. It preserves human/mixed-owned \`Notes\` and any extra cells.
 - \`task close\` may append only close evidence. It must not update status docs, Task Board rows, handoff, Project State, roadmap docs, or arbitrary evidence.
 - After \`task close --execute --json\`, close-source document edits intentionally invalidate the previous close proof. Make those edits before close, or rerun ready/close/audit if the edit is unavoidable.
 - \`task audit-close\` is read-only and should be run after \`task close --execute --json\`.

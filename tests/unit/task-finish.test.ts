@@ -131,6 +131,59 @@ describe('task finish status sync', () => {
     expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
   });
 
+  it('preserves Task Board Notes and extra cells while updating command-owned cells', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Original board title');
+    updateTaskHeading(root, task.id, 'Updated board title');
+    replaceBoardRow(
+      root,
+      task.id,
+      `| ${task.id} | Old board title | Draft | tasks/stale-capsule | keep this note | owner-a | evidence note |`
+    );
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    fs.writeFileSync(
+      boardPath,
+      fs.readFileSync(boardPath, 'utf8').replace('| ID | Title | Status | Capsule | Notes |', '| ID | Title | Status | Capsule | Notes | Owner | Evidence |').replace('|---|---|---|---|---|', '|---|---|---|---|---|---|---|'),
+      'utf8'
+    );
+
+    const report = createTaskFinishReport(root, task.id, 'execute');
+
+    expect(report.ok).toBe(true);
+    expect(readBoard(root)).toContain(`| ${task.id} | Updated board title | Done | tasks/${task.id}-original-board-title | keep this note | owner-a | evidence note |`);
+    expect(readBoard(root)).not.toContain('tasks/stale-capsule');
+    expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
+  });
+
+  it('preserves escaped and inline-code pipes in human-owned Task Board cells', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finish escaped note');
+    replaceBoardRow(
+      root,
+      task.id,
+      `| ${task.id} | Finish escaped note | Draft | tasks/${task.id}-finish-escaped-note | keep A \\| B and \`x | y\` | reviewer \\| one |`
+    );
+
+    const report = createTaskFinishReport(root, task.id, 'execute');
+
+    expect(report.ok).toBe(true);
+    expect(readBoard(root)).toContain(`| ${task.id} | Finish escaped note | Done | tasks/${task.id}-finish-escaped-note | keep A \\| B and \`x | y\` | reviewer \\| one |`);
+    expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
+  });
+
+  it('sanitizes generated Task Board titles that contain raw pipes', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finish raw | pipe');
+    removeBoardRow(root, task.id);
+
+    const report = createTaskFinishReport(root, task.id, 'execute');
+
+    expect(report.ok).toBe(true);
+    expect(readBoard(root)).toContain(`| ${task.id} | Finish raw / pipe | Done | tasks/${task.id}-finish-raw-pipe | |`);
+    expect(readBoard(root)).not.toContain('Finish raw | pipe');
+    expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
+  });
+
   it('updates Status History when TASK.md status is already Done', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Finish history only');
@@ -279,4 +332,22 @@ function removeBoardRow(root: string, taskId: string): void {
     .filter((line) => !line.startsWith(`| ${taskId} |`))
     .join('\n');
   fs.writeFileSync(boardPath, next, 'utf8');
+}
+
+function replaceBoardRow(root: string, taskId: string, row: string): void {
+  const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+  const next = fs
+    .readFileSync(boardPath, 'utf8')
+    .split(/\r?\n/)
+    .map((line) => (line.startsWith(`| ${taskId} |`) ? row : line))
+    .join('\n');
+  fs.writeFileSync(boardPath, next, 'utf8');
+}
+
+function updateTaskHeading(root: string, taskId: string, title: string): void {
+  const taskDir = fs.readdirSync(path.join(root, 'tasks')).find((entry) => entry.startsWith(`${taskId}-`));
+  if (!taskDir) throw new Error(`Missing task dir ${taskId}`);
+  const taskPath = path.join(root, 'tasks', taskDir, 'TASK.md');
+  const current = fs.readFileSync(taskPath, 'utf8');
+  fs.writeFileSync(taskPath, current.replace(new RegExp(`^# ${taskId} .*$`, 'm'), `# ${taskId} ${title}`).replace(/^\| Title \|.*\|$/m, `| Title | ${title} |`), 'utf8');
 }

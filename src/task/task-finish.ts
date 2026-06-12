@@ -295,7 +295,7 @@ function planWrites(
     return writes;
   }
 
-  const expected = formatTaskBoardRow(task, capsule, 'Done');
+  const expected = formatTaskBoardRow(task, capsule, 'Done', board.cells ?? undefined);
   if (board.line !== expected) {
     const beforeContent = board.content ?? '';
     const afterContent = normalizeAtomicTextDocument(replaceTaskBoardRow(beforeContent, task.id, expected));
@@ -444,23 +444,21 @@ interface TaskBoardProjection {
   duplicates: boolean;
   tableFramePresent: boolean;
   line: string | null;
+  cells: string[] | null;
   status: string | null;
   content: string | null;
 }
 
 function readTaskBoard(projectRoot: string, taskId: string): TaskBoardProjection {
   const taskBoardPath = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
-  if (!fs.existsSync(taskBoardPath)) return { exists: false, present: false, duplicates: false, tableFramePresent: false, line: null, status: null, content: null };
+  if (!fs.existsSync(taskBoardPath)) return { exists: false, present: false, duplicates: false, tableFramePresent: false, line: null, cells: null, status: null, content: null };
   const content = fs.readFileSync(taskBoardPath, 'utf8');
   const lines = content.split(/\r?\n/);
   const matches = lines.filter((line) => line.startsWith(`| ${taskId} |`));
   const tableFramePresent = hasTaskBoardTableFrame(lines);
-  if (matches.length === 0) return { exists: true, present: false, duplicates: false, tableFramePresent, line: null, status: null, content };
-  const cells = matches[0]
-    .slice(1, -1)
-    .split('|')
-    .map((cell) => cell.trim());
-  return { exists: true, present: true, duplicates: matches.length > 1, tableFramePresent, line: matches[0], status: cells[2] ?? null, content };
+  if (matches.length === 0) return { exists: true, present: false, duplicates: false, tableFramePresent, line: null, cells: null, status: null, content };
+  const cells = splitTaskBoardRowCells(matches[0]);
+  return { exists: true, present: true, duplicates: matches.length > 1, tableFramePresent, line: matches[0], cells, status: cells[2] ?? null, content };
 }
 
 function readTaskStatus(task: TaskCapsule): string {
@@ -547,8 +545,11 @@ function appendTaskBoardRow(content: string, row: string): string {
   return `${normalized}${row}\n`;
 }
 
-function formatTaskBoardRow(task: TaskCapsule, capsule: string, status: string): string {
-  return `| ${task.id} | ${task.title.replace(/\|/g, '/')} | ${status} | ${capsule} | |`;
+function formatTaskBoardRow(task: TaskCapsule, capsule: string, status: string, existingCells: string[] = []): string {
+  const preservedHumanCells = existingCells.slice(4);
+  const cells = [task.id, sanitizeTaskBoardCell(task.title), status, capsule, ...preservedHumanCells];
+  if (cells.length < 5) cells.push('');
+  return formatTaskBoardCells(cells);
 }
 
 function defaultTaskBoard(): string {
@@ -556,7 +557,51 @@ function defaultTaskBoard(): string {
 }
 
 function hasTaskBoardTableFrame(lines: string[]): boolean {
-  return lines.some((line) => line.trim() === '| ID | Title | Status | Capsule | Notes |') && lines.some((line) => /^\|\s*-+\s*\|\s*-+\s*\|\s*-+\s*\|\s*-+\s*\|\s*-+\s*\|$/.test(line.trim()));
+  return (
+    lines.some((line) => {
+      const cells = splitTaskBoardRowCells(line);
+      return cells[0] === 'ID' && cells[1] === 'Title' && cells[2] === 'Status' && cells[3] === 'Capsule' && cells[4] === 'Notes';
+    }) && lines.some((line) => /^\|\s*-+\s*\|\s*-+\s*\|\s*-+\s*\|\s*-+\s*\|\s*-+/.test(line.trim()))
+  );
+}
+
+function splitTaskBoardRowCells(line: string): string[] {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) return [];
+  const cells: string[] = [];
+  let current = '';
+  let inInlineCode = false;
+  const body = trimmed.slice(1, -1);
+  for (let index = 0; index < body.length; index += 1) {
+    const char = body[index];
+    const previous = index > 0 ? body[index - 1] : '';
+    const escaped = previous === '\\';
+    if (char === '`' && !escaped) {
+      inInlineCode = !inInlineCode;
+      current += char;
+      continue;
+    }
+    if (char === '|' && !escaped && !inInlineCode) {
+      cells.push(current.trim());
+      current = '';
+      continue;
+    }
+    current += char;
+  }
+  cells.push(current.trim());
+  return cells;
+}
+
+function sanitizeTaskBoardCell(value: string): string {
+  return value.replace(/\|/g, '/').replace(/\r?\n/g, ' ').trim();
+}
+
+function formatTaskBoardCells(cells: string[]): string {
+  return cells.reduce((row, cell, index) => {
+    const value = cell.trim();
+    if (value === '' && index === cells.length - 1) return `${row} |`;
+    return `${row} ${value} |`;
+  }, '|');
 }
 
 function hashContent(content: string): string {

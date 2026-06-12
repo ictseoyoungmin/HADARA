@@ -198,6 +198,8 @@ describe('init profiles', () => {
     expect(workflow).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes');
     expect(workflow).toContain('hadara evidence add-command --task T-XXXX --summary "..." --result passed --idempotency-key "command:T-XXXX:check" --json');
     expect(workflow).toContain('`task finish`, `task ready`, and `task close` are intentionally separate.');
+    expect(workflow).toContain("matching `docs/TASK_BOARD.md` row's command-owned cells");
+    expect(workflow).toContain('human/mixed-owned `Notes` and any extra cells');
     expect(workflow).toContain('`ready` then validates the Done-level state.');
     expect(workflow).toContain('hadara task complete --task T-XXXX --json');
     expect(workflow).toContain('| `task complete` | Read-only | Summarizes the current completion stage and next command; it does not execute lifecycle writes. |');
