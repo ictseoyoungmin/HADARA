@@ -20,7 +20,7 @@ T-0293 registers `hadara.docs.list.v1`, `hadara.docs.doctor.v1`, and `hadara.doc
 
 T-0294 registers `hadara.docs.patchPlan.v1` for Phase 7.4 managed Markdown section patch plans and hash-guarded execute reports. This fixture documents the dry-run-first section patch boundary, target before-hash, section body hashes, preview excerpts, and managed patch issue taxonomy.
 
-T-0295 registers `hadara.docs.mark.v1`, `hadara.docs.archivePlan.v1`, and `hadara.docs.requiredReading.v1` for Phase 7.5 document cleanup operations. These fixtures document registry-only status transitions, dry-run archive candidate planning, and effective required-reading exclusions for historical, superseded, and archived documents.
+T-0295 registers `hadara.docs.mark.v1`, `hadara.docs.archivePlan.v1`, and `hadara.docs.requiredReading.v1` for Phase 7.5 document cleanup operations. These fixtures document registry-only status transitions, dry-run archive candidate planning, and effective required-reading exclusions for historical, superseded, and archived documents. T-0308 adds additive semantic `tier` metadata to `hadara.docs.requiredReading.v1` entries with values `current-state`, `task-work`, `conditional-reference`, `historical`, and `excluded`.
 
 T-0299 registers `hadara.protocol.migration.v1` for the 0.3 adoption migration surface. The fixture documents project and selected-task scoped dry-run plans, scaffold detection, action hashes, and before-hash guarded execute reports for existing projects moving onto the Phase 7 command/docs/managed-section surfaces.
 
@@ -54,7 +54,7 @@ Initial fixtures:
 | `hadara.docs.mark.v1` | `src/schemas/docs-mark.schema.json` | fixture | Documents `hadara docs mark --json` registry-only cleanup status transition reports. |
 | `hadara.docs.archivePlan.v1` | `src/schemas/docs-archive-plan.schema.json` | fixture | Documents `hadara docs archive --json` dry-run archive candidate plans without file moves. |
 | `hadara.docs.patchPlan.v1` | `src/schemas/docs-patch-plan.schema.json` | fixture | Documents `hadara docs patch --json` managed section dry-run and hash-guarded execute reports. |
-| `hadara.docs.requiredReading.v1` | `src/schemas/docs-required-reading.schema.json` | fixture | Documents `hadara docs required-reading --json` effective default reading after cleanup exclusions. |
+| `hadara.docs.requiredReading.v1` | `src/schemas/docs-required-reading.schema.json` | fixture | Documents `hadara docs required-reading --json` effective default reading after cleanup exclusions, including additive semantic `tier` metadata. |
 | `hadara.lifecycle.guide.v1` | `src/schemas/lifecycle-guide.schema.json` | fixture | Documents `hadara help lifecycle --json` lifecycle guide reports. |
 | `hadara.plan_context.v1` | `src/schemas/plan-context.schema.json` | fixture | Documents dry-run plan metadata including affected files, optional before-hash, idempotency key, and `reviewed:false`. |
 | `hadara.next_action.v1` | `src/schemas/next-action.schema.json` | fixture | Documents structured next-action records with write-boundary, actor-role, before-hash, and stale-plan guidance. |

@@ -75,7 +75,18 @@ describe('Phase 7.5 docs required-reading', () => {
       path: '.hadara/context/HADARA_CONTEXT.md',
       status: 'canonical',
       readWhen: ['session-start'],
+      tier: 'current-state',
       reason: 'canonical project-context doc'
+    }));
+    expect(report.documents).toContainEqual(expect.objectContaining({
+      path: 'docs/TASK_WORKFLOW_COMMANDS.md',
+      status: 'canonical',
+      tier: 'task-work'
+    }));
+    expect(report.documents).toContainEqual(expect.objectContaining({
+      path: 'docs/specs/current.md',
+      status: 'active',
+      tier: 'conditional-reference'
     }));
     expect(report.documents.map((doc) => doc.path)).not.toEqual(expect.arrayContaining([
       'docs/specs/old.md',
@@ -83,9 +94,9 @@ describe('Phase 7.5 docs required-reading', () => {
       'docs/specs/archive.md'
     ]));
     expect(report.excluded).toEqual(expect.arrayContaining([
-      expect.objectContaining({ path: 'docs/specs/old.md', status: 'superseded' }),
-      expect.objectContaining({ path: 'docs/specs/history.md', status: 'historical' }),
-      expect.objectContaining({ path: 'docs/specs/archive.md', status: 'archived' })
+      expect.objectContaining({ path: 'docs/specs/old.md', status: 'superseded', tier: 'excluded' }),
+      expect.objectContaining({ path: 'docs/specs/history.md', status: 'historical', tier: 'historical' }),
+      expect.objectContaining({ path: 'docs/specs/archive.md', status: 'archived', tier: 'excluded' })
     ]));
     assertSchema('hadara.docs.requiredReading.v1', report);
   });

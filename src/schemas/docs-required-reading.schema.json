@@ -35,6 +35,7 @@
           "type": "array",
           "items": { "type": "string", "minLength": 1 }
         },
+        "tier": { "$ref": "#/$defs/tier" },
         "reason": { "type": "string", "minLength": 1 }
       }
     },
@@ -45,8 +46,13 @@
       "properties": {
         "path": { "type": "string", "minLength": 1 },
         "status": { "type": "string", "enum": ["historical", "superseded", "archived"] },
+        "tier": { "$ref": "#/$defs/tier" },
         "reason": { "type": "string", "minLength": 1 }
       }
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["current-state", "task-work", "conditional-reference", "historical", "excluded"]
     },
     "issue": {
       "type": "object",

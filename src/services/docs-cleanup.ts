@@ -53,10 +53,12 @@ export interface DocsRequiredReadingReport {
   schemaVersion: 'hadara.docs.requiredReading.v1';
   command: 'docs.required-reading';
   ok: boolean;
-  documents: Array<{ path: string; status: DocumentStatus; readWhen: string[]; reason: string }>;
-  excluded: Array<{ path: string; status: DocumentStatus; reason: string }>;
+  documents: Array<{ path: string; status: DocumentStatus; readWhen: string[]; tier: RequiredReadingTier; reason: string }>;
+  excluded: Array<{ path: string; status: DocumentStatus; tier: RequiredReadingTier; reason: string }>;
   issues: DocsIssue[];
 }
+
+export type RequiredReadingTier = 'current-state' | 'task-work' | 'conditional-reference' | 'historical' | 'excluded';
 
 export interface DocsMarkOptions {
   documentPath: string;
@@ -147,10 +149,11 @@ export function createDocsRequiredReadingReport(projectRoot: string): DocsRequir
   const excluded: DocsRequiredReadingReport['excluded'] = [];
   for (const doc of state.registry?.documents ?? []) {
     if (!doc.requiredReading) continue;
+    const tier = requiredReadingTier(doc);
     if (EXCLUDED_REQUIRED_READING_STATUSES.has(doc.status)) {
-      excluded.push({ path: doc.path, status: doc.status, reason: `${doc.status} docs are not default required reading` });
+      excluded.push({ path: doc.path, status: doc.status, tier, reason: `${doc.status} docs are not default required reading` });
     } else {
-      documents.push({ path: doc.path, status: doc.status, readWhen: doc.readWhen, reason: `${doc.status} ${doc.kind} doc` });
+      documents.push({ path: doc.path, status: doc.status, readWhen: doc.readWhen, tier, reason: `${doc.status} ${doc.kind} doc` });
     }
   }
   return {
@@ -161,6 +164,18 @@ export function createDocsRequiredReadingReport(projectRoot: string): DocsRequir
     excluded,
     issues
   };
+}
+
+function requiredReadingTier(doc: DocumentRegistryEntry): RequiredReadingTier {
+  if (doc.status === 'superseded' || doc.status === 'archived') return 'excluded';
+  if (doc.status === 'historical') return 'historical';
+  if (doc.kind === 'workflow-guide' || doc.kind === 'task-board' || doc.kind === 'task-capsule' || doc.readWhen.some((readWhen) => readWhen === 'task-start' || readWhen === 'task-close')) {
+    return 'task-work';
+  }
+  if (doc.kind === 'project-context' || doc.kind === 'project-state' || doc.kind === 'handoff' || doc.kind === 'protocol' || doc.readWhen.includes('session-start')) {
+    return 'current-state';
+  }
+  return 'conditional-reference';
 }
 
 function validateTransition(entry: DocumentRegistryEntry, afterStatus: DocumentStatus, options: DocsMarkOptions): DocsIssue[] {

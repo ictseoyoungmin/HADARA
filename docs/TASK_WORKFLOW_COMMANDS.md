@@ -16,6 +16,8 @@ The authoritative command inventory is `src/services/capability-registry.ts`. `d
 
 `docs/TASK_WORKFLOW_COMMANDS.md` is `task-work` required reading. Read it when selecting, implementing, finishing, closing, auditing, or changing task workflow commands; do not treat it as a historical archive or a replacement for current-state docs. Start from `.hadara/context/HADARA_CONTEXT.md` and compact state docs, then use this document for lifecycle command semantics.
 
+`hadara docs required-reading --json` exposes the same semantic model with additive entry-level `tier` metadata while preserving the existing `documents` and `excluded` arrays.
+
 ## Standard Task Loop
 
 Use this loop for ordinary implementation capsules:

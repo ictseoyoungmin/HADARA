@@ -308,3 +308,4 @@
 | T-0305 | Task Board Row Preservation in task finish | Done | tasks/T-0305-task-board-row-preservation-in-task-finish | |
 | T-0306 | Ready/Close Failure Guidance Improvement | Done | tasks/T-0306-ready-close-failure-guidance-improvement | |
 | T-0307 | Required Reading Tier Guidance | Done | tasks/T-0307-required-reading-tier-guidance | |
+| T-0308 | Required Reading Command Output Tiering | Done | tasks/T-0308-required-reading-command-output-tiering | |
