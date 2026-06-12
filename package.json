@@ -1,6 +1,6 @@
 {
   "name": "hadara",
-  "version": "0.3.0-rc.1",
+  "version": "0.3.0-rc.2",
   "private": false,
   "license": "MIT",
   "description": "Portable AI-assisted development workbench for evidence-backed task capsules, handoffs, and release gates.",

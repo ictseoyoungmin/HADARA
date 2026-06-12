@@ -47,16 +47,16 @@ gh auth login
 
 # Safe default: validation + artifact + npm publish dry-run only.
 
-scripts/release/manual-publish-rc.sh T-0301
+scripts/release/manual-publish-rc.sh T-0310
 
 # Actual npm publish after typing "publish".
 
-scripts/release/manual-publish-rc.sh T-0301 --execute
+scripts/release/manual-publish-rc.sh T-0310 --execute
 
 # Actual npm publish, then GitHub Release draft after typing "github-draft".
 
-scripts/release/manual-publish-rc.sh T-0301 --execute --github-draft \
-  --github-release-note tasks/T-0301-0-3-0-rc-1-final-readiness-and-publish-preparation/GITHUB_RELEASE_NOTE.md
+scripts/release/manual-publish-rc.sh T-0310 --execute --github-draft \
+  --github-release-note tasks/T-0310-0-3-0-rc-2-readiness-and-publish-preparation/GITHUB_RELEASE_NOTE.md
 EOF
 }
 

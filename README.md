@@ -6,6 +6,7 @@
 
 <p align="center">
   <img alt="Published npm release" src="https://img.shields.io/badge/npm-0.3.0--rc.1-blue">
+  <img alt="Source candidate" src="https://img.shields.io/badge/source-0.3.0--rc.2-orange">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>
@@ -26,6 +27,12 @@ Current published npm release:
 hadara@0.3.0-rc.1
 ```
 
+Current source release candidate:
+
+```text
+hadara@0.3.0-rc.2
+```
+
 Previous published npm release:
 
 ```text
@@ -44,6 +51,7 @@ Phase 7.x labels are internal implementation phases, not npm release-candidate l
 | `hadara@0.2.0-rc.3` | Previous published npm RC. |
 | `hadara@0.3.0-rc.0` | Previous published npm RC; package metadata lacks the intended discovery fields. |
 | `hadara@0.3.0-rc.1` | Current published npm RC; T-0301 publish evidence verified `npm view` returned `0.3.0-rc.1`. |
+| `hadara@0.3.0-rc.2` | Current source candidate prepared by T-0310; publish remains approval-gated. |
 | GitHub Release | Secondary target, approval-gated. |
 | Docker image | Deferred. |
 | PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |

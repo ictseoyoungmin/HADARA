@@ -310,3 +310,4 @@
 | T-0307 | Required Reading Tier Guidance | Done | tasks/T-0307-required-reading-tier-guidance | |
 | T-0308 | Required Reading Command Output Tiering | Done | tasks/T-0308-required-reading-command-output-tiering | |
 | T-0309 | Protocol Migration Atomic Execute Hardening | Done | tasks/T-0309-protocol-migration-atomic-execute-hardening | |
+| T-0310 | 0.3.0-rc.2 Readiness and Publish Preparation | Done | tasks/T-0310-0-3-0-rc-2-readiness-and-publish-preparation | |

@@ -4,26 +4,27 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | T-0309 is the latest completed `0.3.0-rc.2` workflow UX hardening slice after T-0302 post-publish recycle. GitHub Release draft was not requested. |
-| Current Phase | 0.3.0-rc.2 workflow UX hardening in progress | `hadara@0.3.0-rc.1` remains the current published npm RC; source now includes context scaffold/migration, workflow timing guidance, Task Board row-preservation hardening, ready/close failure hints, Required Reading tier guidance, required-reading JSON tier metadata, and atomic adoption-write hardening toward rc.2. Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0309 Protocol Migration Atomic Execute Hardening | `protocol migrate --execute` now preflights/coalesces/prepares/commits/rolls back planned writes; `docs mark --execute` writes the docs registry through temp+rename. |
-| Active / Next Task | None | Recommended next capsule is T-0310 0.3.0-rc.2 Readiness and Publish Preparation. |
-| Validation Baseline | T-0309 atomic execute hardening focused validation | Docker focused tests passed 2 files / 10 tests; Docker build refreshed workspace `dist`; built CLI protocol migrate/docs mark smokes and `git diff --check` passed. |
+| Branch | main | T-0310 prepared the `hadara@0.3.0-rc.2` source candidate after T-0309 atomic adoption-write hardening. GitHub Release draft was not requested. |
+| Current Phase | 0.3.0-rc.2 source readiness complete; publish remains operator-gated | `hadara@0.3.0-rc.1` remains the current published npm RC; source now targets `0.3.0-rc.2` with context scaffold/migration, workflow timing guidance, Task Board row-preservation hardening, ready/close failure hints, Required Reading tier guidance/JSON metadata, atomic adoption-write hardening, and refreshed release readiness evidence. Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0310 0.3.0-rc.2 Readiness and Publish Preparation | Source/package metadata target `0.3.0-rc.2`; release docs/helper examples are aligned; full Docker validation and release/package readiness dry-runs passed without npm/GitHub/Docker/PyPI mutation. |
+| Active / Next Task | None | Recommended next capsule is T-0311 0.3.0-rc.2 Post-Publish Installed-Package Recycle after the operator publishes rc.2, or operator-run approval-gated npm publish if publish has not yet occurred. |
+| Validation Baseline | T-0310 rc.2 release readiness validation | Docker full check passed 117 files / 758 tests and refreshed workspace `dist`; release artifact, package smoke, Docker clean-checkout smoke, strict gate, release dry-run, publish dry-run, helper mismatch guard, and extra rc.2 workflow smokes passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0310 0.3.0-rc.2 Readiness and Publish Preparation | Bumped source/package metadata to `0.3.0-rc.2`, aligned README/release notes/readiness/helper examples, refreshed release evidence, and proved publish dry-run without external mutation. | Docker full check passed 117 files / 758 tests; release artifact/package/clean smokes, strict gate, release dry-run, publish dry-run, helper guard, and rc.2 workflow smokes passed. |
 | T-0309 Protocol Migration Atomic Execute Hardening | Added shared atomic text write helpers; hardened `protocol migrate --execute` against partial multi-file writes; changed `docs mark --execute` registry writes to temp+rename; shifted rc.2 readiness/recycle to T-0310/T-0311. | Docker focused tests passed 2 files / 10 tests; Docker build refreshed `dist`; built CLI migration/docs mark smokes and `git diff --check` passed. |
 | T-0308 Required Reading Command Output Tiering | Added additive `tier` metadata to `docs required-reading --json`, updated required-reading schema/docs, and covered all five tier values in tests while preserving existing arrays. | Docker focused tests passed 2 files / 2 tests; Docker build refreshed `dist`; built CLI required-reading tier smoke and `git diff --check` passed. |
-| T-0307 Required Reading Tier Guidance | Added compact/current-state-first Required Reading tier guidance to root docs, generated init docs, and workflow docs while leaving command output/schema behavior for T-0308. | Docker focused tests passed 2 files / 25 tests; Docker build refreshed `dist`; built CLI init tier-guidance smoke and `git diff --check` passed. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
 | Published `0.3.0-rc.0` npm metadata still shows the old package description and no keywords. | The immutable rc.0 package remains metadata-limited, but rc.1 is now published with metadata guardrails. | Treat rc.0 as historical; use `hadara@0.3.0-rc.1` for current installs. |
-| T-0303/T-0304/T-0305/T-0306/T-0307/T-0308/T-0309 full suite was intentionally not run. | Touched surfaces are covered by focused tests/build/built smokes, but unrelated surfaces did not get a full wrapper pass in these narrow capsules. | Run broader validation in T-0310 release readiness or if later capsules touch shared runtime behavior. |
+| T-0310 source readiness does not mean rc.2 is published. | `package.json` targets `0.3.0-rc.2`, but npm users still install `hadara@0.3.0-rc.1` until operator publish evidence exists. | Run the approval-gated manual helper only with explicit operator confirmation; then run T-0311 post-publish installed-package recycle. |
+| Host npm remains unreliable for some release smokes. | Host package smoke first failed on a read-only npm cache and host clean-checkout hit an npm internal error, while Docker/npm paths passed. | Use `NPM_CONFIG_CACHE=/tmp/...` for host package smoke and Docker ext4 for clean-checkout smoke. |
 | T-0291/T-0292/T-0293/T-0294 full wrapper validation had timeout-only residual blockers, while T-0295 wrapper validation passed. | Older Phase 7 focused checks passed, and T-0295 restored a clean standard wrapper baseline for current changes. | Use T-0295's 115-file / 741-test wrapper pass as the latest validation baseline, while treating older timeout notes as historical. |
 | Combined parallel focused dashboard/static validation can timeout under worker contention. | Standalone dashboard-static passed quickly, but a parallel focused run timed out once. | Run dashboard-static standalone or serialize dashboard validation when investigating route behavior. |
 | `dev docker-check` run from sandboxed Node subprocess can fail before Docker temp workspace creation even when direct `docker exec` succeeds. | JSON reports may show `temp-workspace exitCode=1` without raw logs. | Use explicit container env and rerun outside sandbox, or inspect with direct `docker exec`; T-0274 now exposes failed step and exit code. |
@@ -78,8 +79,8 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start T-0310 0.3.0-rc.2 Readiness and Publish Preparation. | T-0309 completed atomic adoption-write hardening; the rc.2 plan next calls for release readiness, package metadata updates, full validation, and publish preparation checks. | Use `hadara task create "0.3.0-rc.2 Readiness and Publish Preparation"` and follow `docs/specs/0.3.0/rc2/HADARA_0.3.0-rc.2_Workflow_UX_Hardening_Plan.md`. |
-| Optional GitHub Release draft for `v0.3.0-rc.1`. | The npm helper skipped GitHub Release draft because `--github-draft` was not requested. | Use the T-0301 release note draft only if the operator wants a GitHub Release draft. |
+| Run approval-gated npm publish for `hadara@0.3.0-rc.2` if the operator explicitly chooses to publish. | T-0310 prepared source rc.2 and all readiness/publish dry-run evidence, but did not execute npm publish. | Use `scripts/release/prepare-publish-env.sh T-0310` or `scripts/release/manual-publish-rc.sh T-0310 --execute` from a clean prepared clone after npm auth; type `publish` only when approved. |
+| Start T-0311 0.3.0-rc.2 Post-Publish Installed-Package Recycle after rc.2 is visible on npm. | Consumer validation belongs after registry publication. | Verify npm view/npx/global install/fresh init/docs/migration/task lifecycle surfaces from the published package. |
 
 ## Validation Baseline
 

@@ -1,5 +1,25 @@
 # RELEASE_NOTES
 
+## 0.3.0-rc.2
+
+Source candidate prepared after the `0.3.0-rc.1` installed-package recycle found workflow UX issues in fresh init, task completion, Required Reading, and migration safety.
+
+Highlights:
+
+- Adds `.hadara/context/HADARA_CONTEXT.md` as a generated and migration-managed project context anchor so fresh projects and migrated projects have a compact current-state entry point.
+- Clarifies documentation timing and write coordination in root and generated workflow docs: keep capsule docs current during implementation, parallelize read-only discovery/validation, and serialize evidence, shared-doc, before-hash, finish/close, and release writes.
+- Preserves human-authored Task Board `Notes` and extra cells when `task finish --execute` updates command-owned task row fields.
+- Adds actionable remediation hints to harness, ready, and close blockers while preserving existing issue codes.
+- Documents semantic Required Reading tiers and exposes additive `tier` metadata from `docs required-reading --json`.
+- Hardens `protocol migrate --execute` so project-scoped multi-file migration writes are preflighted, prepared, committed, and rolled back on failure.
+- Writes `docs mark --execute` registry updates through temp-file/rename atomic writes.
+
+Boundaries:
+
+- T-0310 prepares `hadara@0.3.0-rc.2` source metadata, release docs, and release readiness evidence; npm publish remains approval-gated and must be explicitly confirmed by the operator.
+- Post-publish installed-package recycle is deferred to T-0311 after `hadara@0.3.0-rc.2` is visible on npm.
+- GitHub Release creation remains optional; Docker image publishing, PyPI publishing, installer execution, and MCP release/package execution remain deferred.
+
 ## 0.3.0-rc.1
 
 Release candidate published after the 0.3.0-rc.0 publish exposed two adoption problems: existing projects need a safe path onto the new 0.3 protocol surface, and npm package discovery metadata must be present in the published tarball before the next registry mutation.
