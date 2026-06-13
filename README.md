@@ -24,19 +24,13 @@ This repository is both the HADARA source checkout and the HADARA protocol works
 Current published npm release:
 
 ```text
-hadara@0.3.0-rc.1
-```
-
-Current source release candidate:
-
-```text
 hadara@0.3.0-rc.2
 ```
 
 Previous published npm release:
 
 ```text
-hadara@0.3.0-rc.0
+hadara@0.3.0-rc.1
 ```
 
 The 0.3.0 line is the Phase 7 Surface Refactor. It organizes HADARA's existing task, evidence, proof, lifecycle, release, and document surfaces so agents can distinguish primary lifecycle commands, diagnostics, advanced surfaces, canonical documents, historical documents, and safe Markdown update boundaries.
@@ -50,8 +44,8 @@ Phase 7.x labels are internal implementation phases, not npm release-candidate l
 | `hadara@0.2.0-rc.2` | Previous published npm RC. |
 | `hadara@0.2.0-rc.3` | Previous published npm RC. |
 | `hadara@0.3.0-rc.0` | Previous published npm RC; package metadata lacks the intended discovery fields. |
-| `hadara@0.3.0-rc.1` | Current published npm RC; T-0301 publish evidence verified `npm view` returned `0.3.0-rc.1`. |
-| `hadara@0.3.0-rc.2` | Current source candidate prepared by T-0310; publish remains approval-gated. |
+| `hadara@0.3.0-rc.1` | Previous published npm RC; T-0301 publish evidence verified `npm view` returned `0.3.0-rc.1`. |
+| `hadara@0.3.0-rc.2` | Current published npm RC; T-0310 publish evidence verified `npm view` returned `0.3.0-rc.2`. |
 | GitHub Release | Secondary target, approval-gated. |
 | Docker image | Deferred. |
 | PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
@@ -66,7 +60,7 @@ Requires Node.js 22.
 Install the latest published RC:
 
 ```bash
-npm install -g hadara@0.3.0-rc.1
+npm install -g hadara@0.3.0-rc.2
 hadara help
 hadara doctor --json
 ```
@@ -74,8 +68,8 @@ hadara doctor --json
 Run without a global install:
 
 ```bash
-npx hadara@0.3.0-rc.1 help
-npx hadara@0.3.0-rc.1 doctor --json
+npx hadara@0.3.0-rc.2 help
+npx hadara@0.3.0-rc.2 doctor --json
 ```
 
 ## What HADARA Gives You

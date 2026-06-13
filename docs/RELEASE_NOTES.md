@@ -2,7 +2,7 @@
 
 ## 0.3.0-rc.2
 
-Source candidate prepared after the `0.3.0-rc.1` installed-package recycle found workflow UX issues in fresh init, task completion, Required Reading, and migration safety.
+Release candidate published after the `0.3.0-rc.1` installed-package recycle found workflow UX issues in fresh init, task completion, Required Reading, and migration safety.
 
 Highlights:
 
@@ -13,11 +13,13 @@ Highlights:
 - Documents semantic Required Reading tiers and exposes additive `tier` metadata from `docs required-reading --json`.
 - Hardens `protocol migrate --execute` so project-scoped multi-file migration writes are preflighted, prepared, committed, and rolled back on failure.
 - Writes `docs mark --execute` registry updates through temp-file/rename atomic writes.
+- Adds project-root containment validation to the shared atomic text write helper so future callers cannot escape through parent traversal or absolute outside paths.
 
 Boundaries:
 
-- T-0310 prepares `hadara@0.3.0-rc.2` source metadata, release docs, and release readiness evidence; npm publish remains approval-gated and must be explicitly confirmed by the operator.
-- Post-publish installed-package recycle is deferred to T-0311 after `hadara@0.3.0-rc.2` is visible on npm.
+- T-0310 prepared `hadara@0.3.0-rc.2` source metadata, release docs, and release readiness evidence; the operator then ran the approval-gated helper, published to npm, and verified `npm view` returned `0.3.0-rc.2`.
+- T-0311 added atomic helper path-containment hardening before publish/recycle.
+- Post-publish installed-package recycle is deferred to T-0312 after `hadara@0.3.0-rc.2` is visible on npm.
 - GitHub Release creation remains optional; Docker image publishing, PyPI publishing, installer execution, and MCP release/package execution remain deferred.
 
 ## 0.3.0-rc.1
