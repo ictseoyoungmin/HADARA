@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "hadara.releaseArtifact.v1",
+  "command": "release.artifact",
+  "ok": true,
+  "mode": "execute",
+  "execution": {
+    "stagingCreated": true,
+    "npmPackExecuted": true,
+    "checksumGenerated": true,
+    "manifestGenerated": true,
+    "packageContentsVerified": true,
+    "publishExecuted": false,
+    "githubReleaseCreated": false,
+    "dockerImageBuilt": false
+  },
+  "output": {
+    "kind": "explicit",
+    "displayPath": "./dist-release",
+    "pathRedacted": true,
+    "relativePath": "dist-release",
+    "retention": "explicit-output"
+  },
+  "package": {
+    "name": "hadara",
+    "version": "0.3.0",
+    "private": false,
+    "filesWhitelistApplied": true
+  },
+  "artifacts": [
+    {
+      "kind": "tarball",
+      "visibility": "local",
+      "fileName": "hadara-0.3.0.tgz",
+      "relativePath": "dist-release/hadara-0.3.0.tgz",
+      "pathRedacted": true,
+      "byteLength": 281777,
+      "hash": "sha256:6a929a89dd21e0b41aae5ffca9b00312fddd2b4a68f1b22c3f64a96248d0c5f1",
+      "rawContentIncluded": false
+    },
+    {
+      "kind": "checksum",
+      "visibility": "local",
+      "fileName": "hadara-0.3.0.tgz.sha256",
+      "relativePath": "dist-release/hadara-0.3.0.tgz.sha256",
+      "pathRedacted": true,
+      "byteLength": 83,
+      "hash": "sha256:7bb3bcf298d67a4dd72401db97ca09c93d98d88e446f880ab4549787f3d69ae3",
+      "rawContentIncluded": false
+    },
+    {
+      "kind": "manifest",
+      "visibility": "local",
+      "fileName": "hadara-0.3.0.tgz.manifest.json",
+      "relativePath": "dist-release/hadara-0.3.0.tgz.manifest.json",
+      "pathRedacted": true,
+      "byteLength": 19108,
+      "hash": "sha256:1d5e73171142e8fc34f834ad6202fed4d13693991f5dfcb4293f2213082f4510",
+      "rawContentIncluded": false
+    }
+  ],
+  "packageContents": {
+    "verified": true,
+    "fileCount": 210,
+    "allowedRoots": [
+      "dist/",
+      "README.md",
+      "LICENSE",
+      "package.json"
+    ],
+    "requiredFiles": [
+      "package.json",
+      "README.md",
+      "LICENSE",
+      "dist/cli/main.js"
+    ],
+    "forbiddenMatches": []
+  },
+  "privacy": {
+    "rawLogsIncluded": false,
+    "packageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [],
+  "evidence": {
+    "time": "2026-06-14T13:50:41.648Z",
+    "taskId": "T-0315",
+    "gitCommit": "53e0b25ea6350d261b9378727c211b723e9189a5"
+  }
+}

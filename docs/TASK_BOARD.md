@@ -315,4 +315,4 @@
 | T-0312 | 0.3.0-rc.2 Post-Publish Installed-Package Recycle | Done | tasks/T-0312-0-3-0-rc-2-post-publish-installed-package-recycle | |
 | T-0313 | HADARA-dev Docs Registry Artifact Dogfooding | Done | tasks/T-0313-hadara-dev-docs-registry-artifact-dogfooding | |
 | T-0314 | Docs Patch Execute Atomic Write Hardening | Done | tasks/T-0314-docs-patch-execute-atomic-write-hardening | |
-| T-0315 | Stable 0.3.0 Release Readiness Preparation | Draft | tasks/T-0315-stable-0-3-0-release-readiness-preparation | |
+| T-0315 | Stable 0.3.0 Release Readiness Preparation | Done | tasks/T-0315-stable-0-3-0-release-readiness-preparation | Stable `0.3.0` source/readiness prepared; publish remains T-0316. |

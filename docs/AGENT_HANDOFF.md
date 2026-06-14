@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | `hadara@0.3.0-rc.2` was published and post-publish recycled. GitHub Release draft was not requested. |
-| Current Phase | 0.3.0-rc.2 npm publish/recycle plus follow-up hardening complete | `hadara@0.3.0-rc.2` is the current published npm RC; T-0312 validated the registry package, T-0313 committed HADARA-dev docs registry artifacts, and T-0314 hardened `docs patch --execute` atomic writes. Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0314 Docs Patch Execute Atomic Write Hardening | `docs patch --execute` now uses the shared atomic text write helper, reports atomic write failures, and has target-preservation/temp-cleanup regression coverage. |
-| Active / Next Task | None | No immediate rc.2 blocker remains; choose the next focused stable-0.3 hardening or readiness item from current reviewer feedback. |
-| Validation Baseline | T-0314 Docker full validation plus built docs patch smoke | T-0314 Docker focused tests passed 4 files / 31 tests; Docker sync-build passed 118 files / 763 tests and refreshed `dist`; built CLI docs patch dry-run/hash/execute smoke passed. |
+| Branch | main | `hadara@0.3.0-rc.2` remains the current published npm RC; stable `hadara@0.3.0` source/readiness is prepared but not published. |
+| Current Phase | Stable 0.3.0 readiness complete; approval-gated publish next | T-0315 prepared stable source metadata/readiness and fixed stable publishability guards. Phase 7.x labels are internal implementation phases, not external npm labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0315 Stable 0.3.0 Release Readiness Preparation | Source/package metadata target `0.3.0`; stable release gate and publish dry-run checks accept stable `0.x.0`; final release artifact/package/clean-checkout/gate/dry-run evidence passed without publish mutation. |
+| Active / Next Task | T-0316 Stable 0.3.0 Approval-Gated Publish | Run only with explicit operator approval. npm publish, optional GitHub Release draft, and registry verification belong to T-0316, not T-0315. |
+| Validation Baseline | T-0315 stable readiness validation | Focused tests passed 5 files / 66 tests and 3 files / 43 tests; final Docker sync-build passed 118 files / 765 tests and refreshed `dist`; final release artifact, package smoke, Docker clean-checkout smoke, strict gate, release dry-run, and publish dry-run passed. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0315 Stable 0.3.0 Release Readiness Preparation | Prepared stable source/readiness without publish mutation. | Package metadata/lockfile target `0.3.0`; README/release notes/readiness/helper guidance aligned; release gate and publish dry-run accept stable `0.x.0`; focused/full Docker validation and final release readiness checks passed. |
 | T-0314 Docs Patch Execute Atomic Write Hardening | Hardened managed patch execute writes before stable 0.3. | `docs patch --execute` now uses `atomicWriteTextFile()` and reports `MANAGED_PATCH_WRITE_FAILED`; regression covers rename-failure preservation/temp cleanup; README rc.2 test drift fixed; Docker focused/full validation and built docs patch smoke passed. |
 | T-0313 HADARA-dev Docs Registry Artifact Dogfooding | Added committed docs registry artifacts so HADARA-dev context routing no longer points to absent files. | Baseline missing registry recorded; `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md` generated from service output; docs list/doctor/required-reading/explain/protocol doctor and `git diff --check` passed; broad migration execute was not run. |
-| T-0312 0.3.0-rc.2 Post-Publish Installed-Package Recycle | Verified the published rc.2 package and fixed package-facing docs drift. | npm metadata/latest dist-tag verified rc.2; `npx` and temp-prefix installed bin reported rc.2; fresh init/docs, protocol migration execute, and task finish row-preservation smokes passed; README badge/release readiness drift fixed. |
 
 ## Current Known Problems
 
@@ -31,6 +31,7 @@
 | Root bootstrap launchers were removed in T-0270. | Local habits such as `./hadara`, `./start.sh`, or `START.bat` no longer work from the repo root. | Use `npm run dev -- ...`, `node dist/cli/main.js ...`, or the documented Docker workflow. Historical portable launcher specs remain separate from current root skeleton files. |
 | T-0255 close evidence is now stale after T-0256 Task Board changes. | `task audit-close --task T-0255 --json` remains `ok:true` but reports `closeEvidenceAudit.verdict: stale` because the close-relevant source hash includes `docs/TASK_BOARD.md` and T-0256 added a row. | This is expected changed-source behavior; use T-0256 supersedes metadata if re-closing T-0255 is ever required. |
 | Future release publish remains approval-gated/manual. | T-0275's rc.1 npm publish, T-0282's rc.2 npm publish, and the Python bridge rc.1 PyPI publish are complete; GitHub Release creation, Docker build/publish, and future npm/PyPI publish mutations remain explicit operator actions. | Use the approval-gated helper path; never run publish commands without operator confirmation. |
+| Stable `0.3.0` is source-ready but not yet published. | README/install examples now target `hadara@0.3.0` for after-publish usage, while npm still serves `0.3.0-rc.2` as the latest published RC until T-0316 runs. | Start T-0316 only with explicit publish approval; verify npm registry after publish. |
 | README asset package rendering depends on the remote raw URL. | README uses a GitHub raw URL for `docs/assets/hadara_sub_right_name.png`; package `files` intentionally excludes `docs/assets/`. | T-0275 verified the asset is tracked and the raw URL returned HTTP 200; keep the asset available on the referenced branch. |
 | Python package smoke and release advisory are non-blocking preview surfaces. | T-0250 surfaces Python smoke evidence as `providerAdvisories` only. T-0249 makes network behavior explicit: default is environment-inherited, `--network-policy offline` is best-effort with `enforced:false`, and local execution still depends on Python packaging tools such as `build`, `twine`, and pip. Local HADARA release advisory code still does not load PyPI credentials or perform PyPI publish mutation. | Use dry-run first; treat Python local execution failures as environment/tooling failures, not publish readiness. Python advisory evidence must not be used to unblock or block the npm release gate. |
 | Python bridge package is published as a preview bridge. | `hadara==0.2.0rc1` is published on TestPyPI and PyPI, but it delegates to the npm runtime and is not Python-native. | Use `docs/PYPI_TRUSTED_PUBLISHING.md` for future manual publishes; run disposable install/doctor smoke when stronger registry verification evidence is needed. |
@@ -79,7 +80,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Select the next focused stable-0.3 hardening or readiness item. | T-0312 through T-0314 closed rc.2 recycle, HADARA-dev docs registry dogfooding, and managed patch atomic write follow-up; no immediate rc.2 blocker is open in this handoff. | Start from `docs/PROJECT_STATE.md`, this handoff, `docs/TASK_BOARD.md`, and current reviewer feedback. |
+| Start T-0316 Stable 0.3.0 Approval-Gated Publish when approved. | T-0315 completed stable readiness without mutation. Publish must remain explicit and operator-gated. | Start from `docs/PROJECT_STATE.md`, this handoff, `docs/TASK_BOARD.md`, `docs/RELEASE_READINESS.md`, and `scripts/release/manual-publish-rc.sh`. |
 
 ## Validation Baseline
 

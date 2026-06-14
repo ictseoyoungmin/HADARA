@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "hadara.smokeEvidenceSummary.v1",
+  "time": "2026-06-14T13:51:30.602Z",
+  "taskId": "T-0315",
+  "category": "package-smoke",
+  "sourceReport": {
+    "schemaVersion": "hadara.packageSmoke.v1",
+    "command": "package.smoke",
+    "mode": "local",
+    "ok": true,
+    "provider": {
+      "ecosystem": "npm",
+      "smokeProfile": "npm-package-smoke",
+      "command": "package.smoke"
+    },
+    "networkPolicy": {
+      "mode": "environment-inherited",
+      "enforced": false,
+      "notes": [
+        "Package-smoke commands inherit the current environment network behavior.",
+        "HADARA does not enforce OS-level network isolation for local package tooling."
+      ]
+    }
+  },
+  "execution": {
+    "npmPackExecuted": true,
+    "packageInstallExecuted": true,
+    "featureSmokeExecuted": true,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "steps": [
+    {
+      "id": "validate-source",
+      "label": "Validate package source",
+      "status": "passed",
+      "summary": "Package source metadata was checked without exposing package contents."
+    },
+    {
+      "id": "plan-workspace",
+      "label": "Prepare disposable workspace",
+      "status": "passed",
+      "summary": "Disposable package-smoke workspace was prepared outside the project source."
+    },
+    {
+      "id": "npm-pack",
+      "label": "npm pack",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 851,
+      "summary": "npm pack produced a temporary package tarball."
+    },
+    {
+      "id": "install-cli",
+      "label": "Install package into isolated prefix",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 914,
+      "summary": "Package installed into an isolated temporary prefix."
+    },
+    {
+      "id": "doctor",
+      "label": "Installed HADARA doctor",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 48,
+      "summary": "Installed hadara doctor exited successfully; stdout capture was empty in this environment."
+    },
+    {
+      "id": "feature-smoke-core",
+      "label": "Core feature smoke via installed command",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 40390,
+      "summary": "Installed command-form core feature smoke exited successfully; stdout capture was empty in this environment."
+    },
+    {
+      "id": "cleanup",
+      "label": "Cleanup disposable workspace",
+      "status": "passed",
+      "summary": "Disposable workspace was removed."
+    }
+  ],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "rawPackageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [],
+  "rawLogsIncluded": false,
+  "privatePathsIncluded": false,
+  "rawPackageContentsIncluded": false
+}

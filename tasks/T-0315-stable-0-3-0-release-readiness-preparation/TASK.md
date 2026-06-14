@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0315 |
 | Title | Stable 0.3.0 Release Readiness Preparation |
-| Status | In Progress |
+| Status | Done |
 | Created | 2026-06-14 |
 | Updated | 2026-06-14 |
 
@@ -38,7 +38,7 @@
 
 ## Status
 
-In Progress
+Done
 
 ## Status History
 
@@ -47,4 +47,5 @@ In Progress
 |---|---|---|---|
 | 2026-06-14 | Draft | Initial task scaffold. | Task created. |
 | 2026-06-14 | In Progress | Stable `0.3.0` metadata/docs update started. | Package and release docs edits in progress. |
+| 2026-06-14 | Done | Finished task capsule. | `hadara task finish --execute` |
 <!-- hadara:managed:end task-status-history -->
