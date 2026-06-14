@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <img alt="Published npm release" src="https://img.shields.io/badge/npm-0.3.0--rc.2-blue">
-  <img alt="Source version" src="https://img.shields.io/badge/source-0.3.0--rc.2-orange">
+  <img alt="Stable npm target" src="https://img.shields.io/badge/npm-0.3.0-blue">
+  <img alt="Source version" src="https://img.shields.io/badge/source-0.3.0-orange">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>
@@ -21,21 +21,21 @@ This repository is both the HADARA source checkout and the HADARA protocol works
 
 ## Release Status
 
-Current published npm release:
+Current stable npm release target:
+
+```text
+hadara@0.3.0
+```
+
+Previous published npm release candidate:
 
 ```text
 hadara@0.3.0-rc.2
 ```
 
-Previous published npm release:
-
-```text
-hadara@0.3.0-rc.1
-```
-
 The 0.3.0 line is the Phase 7 Surface Refactor. It organizes HADARA's existing task, evidence, proof, lifecycle, release, and document surfaces so agents can distinguish primary lifecycle commands, diagnostics, advanced surfaces, canonical documents, historical documents, and safe Markdown update boundaries.
 
-Phase 7.x labels are internal implementation phases, not npm release-candidate labels. Publishing any later release still requires the approval-gated release path and explicit operator confirmation.
+Phase 7.x labels are internal implementation phases, not npm release-candidate labels. Publishing the stable `0.3.0` package still requires the approval-gated release path and explicit operator confirmation.
 
 | Surface | Status |
 |---|---|
@@ -45,7 +45,8 @@ Phase 7.x labels are internal implementation phases, not npm release-candidate l
 | `hadara@0.2.0-rc.3` | Previous published npm RC. |
 | `hadara@0.3.0-rc.0` | Previous published npm RC; package metadata lacks the intended discovery fields. |
 | `hadara@0.3.0-rc.1` | Previous published npm RC; T-0301 publish evidence verified `npm view` returned `0.3.0-rc.1`. |
-| `hadara@0.3.0-rc.2` | Current published npm RC; T-0310 publish evidence verified `npm view` returned `0.3.0-rc.2`. |
+| `hadara@0.3.0-rc.2` | Previous published npm RC; T-0310 publish evidence verified `npm view` returned `0.3.0-rc.2`. |
+| `hadara@0.3.0` | Stable source target prepared by T-0315; npm publish is not yet performed until the approval-gated T-0316 path. |
 | GitHub Release | Secondary target, approval-gated. |
 | Docker image | Deferred. |
 | PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
@@ -57,10 +58,10 @@ No release command should publish, create a GitHub Release, build Docker images,
 
 Requires Node.js 22.
 
-Install the latest published RC:
+Install the stable release after publish:
 
 ```bash
-npm install -g hadara@0.3.0-rc.2
+npm install -g hadara@0.3.0
 hadara help
 hadara doctor --json
 ```
@@ -68,8 +69,8 @@ hadara doctor --json
 Run without a global install:
 
 ```bash
-npx hadara@0.3.0-rc.2 help
-npx hadara@0.3.0-rc.2 doctor --json
+npx hadara@0.3.0 help
+npx hadara@0.3.0 doctor --json
 ```
 
 ## What HADARA Gives You

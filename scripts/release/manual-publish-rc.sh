@@ -10,7 +10,7 @@ DIST_DIR="dist-release"
 GITHUB_RELEASE_NOTE=""
 GITHUB_TOKEN_ENV=""
 APPROVAL_ACTOR="${HADARA_RELEASE_APPROVAL_ACTOR:-local-operator}"
-APPROVAL_REASON="${HADARA_RELEASE_APPROVAL_REASON:-Manual approval-gated npm publish for current RC}"
+APPROVAL_REASON="${HADARA_RELEASE_APPROVAL_REASON:-Manual approval-gated npm publish for current package version}"
 
 usage() {
 cat <<'EOF'
@@ -47,16 +47,16 @@ gh auth login
 
 # Safe default: validation + artifact + npm publish dry-run only.
 
-scripts/release/manual-publish-rc.sh T-0310
+scripts/release/manual-publish-rc.sh T-0316
 
 # Actual npm publish after typing "publish".
 
-scripts/release/manual-publish-rc.sh T-0310 --execute
+scripts/release/manual-publish-rc.sh T-0316 --execute
 
 # Actual npm publish, then GitHub Release draft after typing "github-draft".
 
-scripts/release/manual-publish-rc.sh T-0310 --execute --github-draft \
-  --github-release-note tasks/T-0310-0-3-0-rc-2-readiness-and-publish-preparation/GITHUB_RELEASE_NOTE.md
+scripts/release/manual-publish-rc.sh T-0316 --execute --github-draft \
+  --github-release-note tasks/T-0316-stable-0-3-0-approval-gated-publish/GITHUB_RELEASE_NOTE.md
 EOF
 }
 
@@ -319,7 +319,7 @@ echo "Run gh auth login first, set GH_TOKEN for gh, or pass --github-token-env <
 exit 1
 }
 
-echo "== HADARA release candidate manual publish flow =="
+echo "== HADARA manual npm publish flow =="
 echo "Task: ${TASK_ID}"
 echo "Mode: ${MODE}"
 echo "GitHub Release draft: ${CREATE_GITHUB_DRAFT}"
@@ -580,7 +580,7 @@ fi
 
 echo
 echo "Creating GitHub Release draft with release assets..."
-GH_RELEASE_NOTE_ARGS=(--notes "HADARA ${VERSION} release candidate. See attached tarball, checksum, and manifest.")
+GH_RELEASE_NOTE_ARGS=(--notes "HADARA ${VERSION} release. See attached tarball, checksum, and manifest.")
 if [[ -n "${GITHUB_RELEASE_NOTE}" ]]; then
 GH_RELEASE_NOTE_ARGS=(--notes-file "${GITHUB_RELEASE_NOTE}")
 fi

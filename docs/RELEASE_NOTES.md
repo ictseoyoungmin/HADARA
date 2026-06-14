@@ -1,5 +1,25 @@
 # RELEASE_NOTES
 
+## 0.3.0
+
+Stable release target for the Phase 7 Surface Refactor after `0.3.0-rc.2` post-publish recycle, HADARA-dev docs registry artifact dogfooding, and docs patch atomic write hardening.
+
+Highlights:
+
+- Adds structured command help and a machine-readable command registry so agents can distinguish primary lifecycle commands from diagnostics, advanced, release-only, UI, integration, and compatibility surfaces.
+- Adds canonical lifecycle guidance and command portfolio audit rules for confusable command boundaries.
+- Adds document registry, docs doctor, Required Reading tiers, and HADARA-dev registry artifact dogfooding.
+- Adds managed Markdown section discovery and hash-guarded patch plans.
+- Hardens `docs patch --execute` through the shared atomic text write helper with target-preservation failure coverage.
+- Adds dry-run-first docs cleanup status marking and archive planning without moving or deleting historical files by default.
+- Preserves release, publish, Docker, PyPI, MCP write, and shell execution boundaries.
+
+Boundaries:
+
+- T-0315 prepares stable `hadara@0.3.0` source metadata, release docs, and release readiness evidence only.
+- This release is not a full agent runtime, Rack/enterprise release, broad document rewrite engine, automatic historical deletion release, or release automation expansion.
+- Publish mutation, GitHub Release creation, Docker image publishing, and PyPI publication remain explicit operator-approved actions.
+
 ## 0.3.0-rc.2
 
 Release candidate published after the `0.3.0-rc.1` installed-package recycle found workflow UX issues in fresh init, task completion, Required Reading, and migration safety.

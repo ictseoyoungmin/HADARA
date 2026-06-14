@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prepare a clean, validated rc-publish environment inside the hadara-dev container,
+# Prepare a clean, validated publish environment inside the hadara-dev container,
 # so the operator only has to `npm login` and run `manual-publish-rc.sh <TASK> --execute`.
 #
 # Why this script exists (the traps it removes):
@@ -19,13 +19,13 @@
 # bash scripts/release/manual-publish-rc.sh <TASK_ID> --execute   # 프롬프트에 publish
 #
 # Before running this script, the operator should have already:
-# 1) Version and release docs already point at the intended RC.
-#    For the current rc.2 path:
-#    package.json "version": "0.3.0-rc.2"
+# 1) Version and release docs already point at the intended package version.
+#    For the current stable 0.3.0 path:
+#    package.json "version": "0.3.0"
 #    docs/RELEASE_READINESS.md:
-#    - Current version is `0.3.0-rc.2`.
+#    - Current version is `0.3.0`.
 # 2) Commit the readiness state. Fresh clones only contain committed content.
-# git add -A && git commit -m "Prepare 0.3.0-rc.2 publish readiness"
+# git add -A && git commit -m "T-0315 Stable 0.3.0 Release Readiness Preparation"
 #
 #
 # What it does:
@@ -52,7 +52,7 @@
 #   -h, --help           Show this help.
 #
 # Run it from the host repo root:
-#   bash scripts/release/prepare-publish-env.sh T-0310
+#   bash scripts/release/prepare-publish-env.sh T-0316
 
 set -euo pipefail
 
@@ -82,7 +82,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$TASK_ID" ]]; then
-  echo "TASK_ID is required (the release Task Capsule id, e.g. T-0310)."
+  echo "TASK_ID is required (the release Task Capsule id, e.g. T-0316)."
   usage
   exit 1
 fi

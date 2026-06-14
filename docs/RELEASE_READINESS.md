@@ -6,14 +6,15 @@ This document is the dedicated tracked source for release, install, installer, p
 
 ## Package Metadata Release Readiness
 
-Current release-candidate metadata mode:
+Current stable-release metadata mode:
 
 - Package name decision: `hadara`.
 - Historical npm registry observation: `hadara@0.1.0-rc.0` was the first published HADARA release candidate.
-- Current version is `0.3.0-rc.2`.
-- Current source version is `0.3.0-rc.2`.
-- Current published npm release candidate is `0.3.0-rc.2`.
-- Previous published release candidate is `0.3.0-rc.1`.
+- Current version is `0.3.0`.
+- Current source version is `0.3.0`.
+- Current release target is stable `0.3.0`.
+- Current stable npm publish status: not yet performed; T-0315 prepares readiness only.
+- Previous published npm release candidate is `0.3.0-rc.2`.
 - T-0287 prepares `hadara@0.2.0-rc.3` as a source publish candidate based on the `0.2.0-rc.2` dogfooding results and the proof reliability fixes from T-0284 through T-0286; this capsule performs no npm publish, GitHub Release creation, Docker image build, registry mutation, or token loading.
 - T-0289 refreshed and published `hadara@0.2.0-rc.3`; npm registry verification returned `0.2.0-rc.3`.
 - T-0296 prepared `hadara@0.3.0-rc.0` as a Phase 7 source candidate after command/help, lifecycle, docs registry, managed patch, and docs cleanup surfaces were implemented; T-0297 then verified the operator npm publish. The published rc.0 tarball has current dist/README content but package metadata lacks intended discovery fields, so T-0298 prepared `hadara@0.3.0-rc.1` source metadata with hardened publish-helper metadata verification.
@@ -22,10 +23,13 @@ Current release-candidate metadata mode:
 - T-0301 prepared and published `hadara@0.3.0-rc.1` through the approval-gated manual helper. The helper refreshed release artifact, package smoke, and clean-checkout smoke evidence; npm publish completed; `npm view` observed `hadara@0.3.0-rc.1` after two retries; GitHub Release draft was not requested.
 - T-0303 through T-0309 prepared the `0.3.0-rc.2` workflow UX hardening line: context scaffold and migration support, incremental documentation/write coordination guidance, Task Board row preservation, actionable ready/close hints, Required Reading tier docs and JSON metadata, and atomic migration/docs cleanup execute writes.
 - T-0310 prepared and published `hadara@0.3.0-rc.2` through the approval-gated manual helper. The helper refreshed final validation, release artifact, package smoke, clean-checkout smoke, strict gate, dry-run, and publish dry-run evidence; npm publish completed; `npm view` verified `hadara@0.3.0-rc.2`; GitHub Release draft was not requested.
+- T-0313 committed HADARA-dev's own `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md` artifacts from existing docs-registry service output so context routing no longer points at absent files.
+- T-0314 hardened `docs patch --execute` by replacing direct target overwrite with the shared atomic text write helper and adding failure-preservation/temp-cleanup regression coverage.
+- T-0315 prepares stable `hadara@0.3.0` source metadata and release readiness evidence after T-0313/T-0314 follow-up hardening. It performs no npm publish, GitHub Release creation, Docker image build/push, PyPI publish, registry mutation, or token loading.
 - T-0269 pre-publish dry-run recheck passed for `0.2.0-rc.0`, but `NPM_TOKEN` was missing and no publish mutation was executed; T-0275 supersedes that candidate with `0.2.0-rc.1` after recycle fixes.
 - T-0275 refreshed publish-readiness evidence for `hadara@0.2.0-rc.1` and the operator published it to npm; `npm view hadara@0.2.0-rc.1 version --registry=https://registry.npmjs.org` returned `0.2.0-rc.1`.
 - T-0282 refreshed and published `hadara@0.2.0-rc.2` after the init scaffold protocol guidance follow-up: package metadata/docs/helper examples target rc2; Docker `npm run dev:docker-sync-build` passed 100 files / 681 tests and refreshed `dist`; built CLI version smoke reported `0.2.0-rc.2`; strict release gate passed; rc2 package smoke and clean-checkout smoke evidence passed; `npm pack --dry-run --json` produced rc2 tarball metadata; the manual helper regenerated release artifact/package/clean-checkout evidence from a clean committed worktree, published to npm, and verified `npm view` returned `0.2.0-rc.2`.
-- Current operator publish status: `hadara@0.3.0-rc.2` npm publish completed for T-0310. Post-publish installed-package recycle remains T-0312.
+- Current operator publish status: `hadara@0.3.0-rc.2` npm publish and T-0312 post-publish installed-package recycle are complete; stable `hadara@0.3.0` publish is deferred to the approval-gated T-0316 capsule after T-0315 closes.
 - README now includes a top image from `docs/assets/hadara_sub_right_name.png`; because package `files` currently excludes `docs/assets/`, publish readiness uses the GitHub raw image URL. T-0275 verified `docs/assets/hadara_sub_right_name.png` is tracked and the raw URL returned HTTP 200.
 - Current package is `private: false`.
 - Current package metadata includes `"license": "MIT"`.
@@ -34,7 +38,7 @@ Current release-candidate metadata mode:
 - Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability.
 - Release-candidate metadata mode: version `0.x.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present.
 - Scoped fallback decision: do not silently switch names; choose and document an explicit scope in a later release-target capsule if `hadara` is unavailable.
-- Version policy: first release-candidate target was `0.1.0-rc.0`; the current source publish-candidate target is `0.3.0-rc.2`. Stable release targets remain approval-gated and must be set in a later release capsule.
+- Version policy: first release-candidate target was `0.1.0-rc.0`; the current source target is stable `0.3.0`. Stable publish remains approval-gated and belongs to T-0316, not T-0315.
 - T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist.
 - Final `files` whitelist target: `dist/`, `README.md`, `LICENSE`, `package.json`, plus installer and portable files only after those files exist.
 - Do not add `files` entries for missing installer or portable paths in T-0127.
