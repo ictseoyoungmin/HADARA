@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <img alt="Published npm release" src="https://img.shields.io/badge/npm-0.3.0--rc.1-blue">
-  <img alt="Source candidate" src="https://img.shields.io/badge/source-0.3.0--rc.2-orange">
+  <img alt="Published npm release" src="https://img.shields.io/badge/npm-0.3.0--rc.2-blue">
+  <img alt="Source version" src="https://img.shields.io/badge/source-0.3.0--rc.2-orange">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>

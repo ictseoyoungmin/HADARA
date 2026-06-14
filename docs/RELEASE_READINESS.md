@@ -9,7 +9,7 @@ This document is the dedicated tracked source for release, install, installer, p
 Current release-candidate metadata mode:
 
 - Package name decision: `hadara`.
-- npm registry observation: `hadara@0.1.0-rc.0` is published; recheck registry state immediately before any later publish.
+- Historical npm registry observation: `hadara@0.1.0-rc.0` was the first published HADARA release candidate.
 - Current version is `0.3.0-rc.2`.
 - Current source version is `0.3.0-rc.2`.
 - Current published npm release candidate is `0.3.0-rc.2`.

@@ -312,3 +312,4 @@
 | T-0309 | Protocol Migration Atomic Execute Hardening | Done | tasks/T-0309-protocol-migration-atomic-execute-hardening | |
 | T-0310 | 0.3.0-rc.2 Readiness and Publish Preparation | Done | tasks/T-0310-0-3-0-rc-2-readiness-and-publish-preparation | |
 | T-0311 | Atomic Write Path Containment Hardening | Done | tasks/T-0311-atomic-write-path-containment-hardening | |
+| T-0312 | 0.3.0-rc.2 Post-Publish Installed-Package Recycle | Done | tasks/T-0312-0-3-0-rc-2-post-publish-installed-package-recycle | |
