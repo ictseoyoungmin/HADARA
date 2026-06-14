@@ -314,3 +314,4 @@
 | T-0311 | Atomic Write Path Containment Hardening | Done | tasks/T-0311-atomic-write-path-containment-hardening | |
 | T-0312 | 0.3.0-rc.2 Post-Publish Installed-Package Recycle | Done | tasks/T-0312-0-3-0-rc-2-post-publish-installed-package-recycle | |
 | T-0313 | HADARA-dev Docs Registry Artifact Dogfooding | Done | tasks/T-0313-hadara-dev-docs-registry-artifact-dogfooding | |
+| T-0314 | Docs Patch Execute Atomic Write Hardening | Done | tasks/T-0314-docs-patch-execute-atomic-write-hardening | |

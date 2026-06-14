@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { atomicWriteTextFile } from '../core/fs';
 
 export type ManagedSectionKind = 'markdown-table' | 'key-value-table' | 'markdown-list' | 'single-block' | 'json-code-block';
 export type ManagedSectionMode = 'replace' | 'insert-row' | 'update-row' | 'append-block';
@@ -231,7 +232,17 @@ export function createDocsPatchPlanReport(projectRoot: string, options: DocsPatc
   const patches = patch ? [patch] : [];
   if (options.mode === 'execute' && patch && issues.every((issue) => issue.severity !== 'error')) {
     const nextContent = replaceSectionBody(targetContent, section!, contentFileResult.content!);
-    fs.writeFileSync(targetAbsolutePath, nextContent, 'utf8');
+    try {
+      atomicWriteTextFile(projectRoot, targetPath, nextContent);
+    } catch (error) {
+      issues.push({
+        severity: 'error',
+        code: 'MANAGED_PATCH_WRITE_FAILED',
+        path: targetPath,
+        sectionId: section!.id,
+        message: `Could not apply managed patch atomically; target file was preserved if the atomic rename failed: ${error instanceof Error ? error.message : String(error)}`
+      });
+    }
   }
   return {
     schemaVersion: 'hadara.docs.patchPlan.v1',

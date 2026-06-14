@@ -659,9 +659,10 @@ describe('init profiles', () => {
     expect(readme).toContain('| `hadara@0.2.0-rc.2` | Previous published npm RC. |');
     expect(readme).toContain('| `hadara@0.2.0-rc.3` | Previous published npm RC. |');
     expect(readme).toContain('| `hadara@0.3.0-rc.0` | Previous published npm RC; package metadata lacks the intended discovery fields. |');
-    expect(readme).toContain('| `hadara@0.3.0-rc.1` | Current published npm RC; T-0301 publish evidence verified `npm view` returned `0.3.0-rc.1`. |');
-    expect(readme).toContain('npm install -g hadara@0.3.0-rc.1');
-    expect(readme).toContain('npx hadara@0.3.0-rc.1 help');
+    expect(readme).toContain('| `hadara@0.3.0-rc.1` | Previous published npm RC; T-0301 publish evidence verified `npm view` returned `0.3.0-rc.1`. |');
+    expect(readme).toContain('| `hadara@0.3.0-rc.2` | Current published npm RC; T-0310 publish evidence verified `npm view` returned `0.3.0-rc.2`. |');
+    expect(readme).toContain('npm install -g hadara@0.3.0-rc.2');
+    expect(readme).toContain('npx hadara@0.3.0-rc.2 help');
     expect(readme).toContain('| PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |');
     expect(readme).not.toContain('Current source and publish-candidate version.');
     expect(readme).not.toContain('npm install -g hadara@0.2.0-rc.3');

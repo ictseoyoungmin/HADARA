@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { assertSchema } from '../../src/core/schema';
 import { initProject } from '../../src/cli/init';
 import { createDocsPatchPlanReport } from '../../src/services/managed-sections';
@@ -88,6 +88,37 @@ describe('Phase 7.4 docs patch', () => {
     });
     expect(executed.ok).toBe(true);
     expect(fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8')).toContain('| T-0001 | Example | Done |');
+  });
+
+  it('preserves the target and cleans up temp files when atomic execute rename fails', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    const contentFile = writePatch(root, '| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n| T-0001 | Example | Done | tasks/T-0001-example | ok |\n');
+    const targetPath = path.join(root, 'docs', 'TASK_BOARD.md');
+    const before = fs.readFileSync(targetPath, 'utf8');
+    const dryRun = createDocsPatchPlanReport(root, {
+      targetPath: 'docs/TASK_BOARD.md',
+      sectionId: 'task-board',
+      contentFile,
+      mode: 'dry-run'
+    });
+    const renameSpy = vi.spyOn(fs, 'renameSync').mockImplementationOnce(() => {
+      throw new Error('simulated rename failure');
+    });
+
+    const executed = createDocsPatchPlanReport(root, {
+      targetPath: 'docs/TASK_BOARD.md',
+      sectionId: 'task-board',
+      contentFile,
+      mode: 'execute',
+      beforeHash: dryRun.targetBeforeHash
+    });
+
+    renameSpy.mockRestore();
+    expect(executed.ok).toBe(false);
+    expect(executed.issues).toContainEqual(expect.objectContaining({ code: 'MANAGED_PATCH_WRITE_FAILED' }));
+    expect(fs.readFileSync(targetPath, 'utf8')).toBe(before);
+    expect(fs.readdirSync(path.dirname(targetPath)).filter((name) => name.startsWith('.hadara-atomic-write-'))).toEqual([]);
   });
 
   it('rejects marker-bearing patch content and missing before hash in execute mode', () => {
