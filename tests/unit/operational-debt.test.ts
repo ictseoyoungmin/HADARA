@@ -530,7 +530,7 @@ describe('operational debt track', () => {
         name: 'Package metadata release readiness',
         status: 'passed',
         summary:
-          'Package name, release-candidate version, private transition, files target, license path, publish target, and installed CLI verification decisions are documented without publishing.'
+          'Package name, publishable version, private transition, files target, license path, publish target, and installed CLI verification decisions are documented without publishing.'
       },
       {
         code: 'CI_RELEASE_WORKFLOW_TARGET_DECISION',
@@ -613,6 +613,23 @@ describe('operational debt track', () => {
       status: 'passed',
       summary: 'No open high-severity operational debt records.'
     });
+  });
+
+  it('accepts stable 0.x.0 package metadata for release readiness', () => {
+    const root = tempProject();
+    writeReleaseReadinessFiles(root, '0.3.0');
+
+    const report = createReleaseGateReport(root, 'strict');
+
+    expect(report.ok).toBe(true);
+    expect(report.checks).toContainEqual(
+      expect.objectContaining({
+        code: 'PACKAGE_METADATA_RELEASE_READINESS',
+        status: 'passed',
+        summary:
+          'Package name, publishable version, private transition, files target, license path, publish target, and installed CLI verification decisions are documented without publishing.'
+      })
+    );
   });
 
   it('uses package metadata instead of a fixed RC version for release readiness markers', () => {
@@ -1170,7 +1187,7 @@ describe('operational debt track', () => {
       name: 'Package metadata release readiness',
       status: 'passed',
       summary:
-        'Package name, release-candidate version, private transition, files target, license path, publish target, and installed CLI verification decisions are documented without publishing.'
+        'Package name, publishable version, private transition, files target, license path, publish target, and installed CLI verification decisions are documented without publishing.'
     });
   });
 

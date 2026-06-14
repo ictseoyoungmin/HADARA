@@ -433,9 +433,9 @@ function checkPackageMetadataReadiness(
     packageJson?.version === '0.0.0-bootstrap' &&
     packageJson?.private === true &&
     bin.hadara === './dist/cli/main.js';
-  const releaseCandidateMetadataOk =
+  const publishablePackageMetadataOk =
     packageJson?.name === 'hadara' &&
-    /^0\.\d+\.0-rc\.\d+$/.test(String(packageJson?.version ?? '')) &&
+    (/^0\.\d+\.0-rc\.\d+$/.test(String(packageJson?.version ?? '')) || /^0\.\d+\.0$/.test(String(packageJson?.version ?? ''))) &&
     packageJson?.private === false &&
     packageJson?.license === 'MIT' &&
     bin.hadara === './dist/cli/main.js' &&
@@ -464,13 +464,13 @@ function checkPackageMetadataReadiness(
     'Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`'
   ];
   const docsOk = includesAll(testStrategy, metadataMarkers) || includesAll(releaseReadiness, metadataMarkers);
-  const ok = (bootstrapMetadataOk || releaseCandidateMetadataOk) && docsOk;
+  const ok = (bootstrapMetadataOk || publishablePackageMetadataOk) && docsOk;
   return {
     code: 'PACKAGE_METADATA_RELEASE_READINESS',
     name: 'Package metadata release readiness',
     status: ok ? 'passed' : readinessFailureStatus(mode),
     summary: ok
-      ? 'Package name, release-candidate version, private transition, files target, license path, publish target, and installed CLI verification decisions are documented without publishing.'
+      ? 'Package name, publishable version, private transition, files target, license path, publish target, and installed CLI verification decisions are documented without publishing.'
       : 'Package metadata release-readiness decisions must be documented before publishability is accepted.'
   };
 }
