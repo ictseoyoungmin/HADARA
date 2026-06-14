@@ -313,3 +313,4 @@
 | T-0310 | 0.3.0-rc.2 Readiness and Publish Preparation | Done | tasks/T-0310-0-3-0-rc-2-readiness-and-publish-preparation | |
 | T-0311 | Atomic Write Path Containment Hardening | Done | tasks/T-0311-atomic-write-path-containment-hardening | |
 | T-0312 | 0.3.0-rc.2 Post-Publish Installed-Package Recycle | Done | tasks/T-0312-0-3-0-rc-2-post-publish-installed-package-recycle | |
+| T-0313 | HADARA-dev Docs Registry Artifact Dogfooding | Done | tasks/T-0313-hadara-dev-docs-registry-artifact-dogfooding | |

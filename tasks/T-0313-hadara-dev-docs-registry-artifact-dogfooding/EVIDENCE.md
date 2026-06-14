@@ -1,0 +1,11 @@
+# Evidence
+
+| Time | Kind | Summary | Result | Visibility | JSONL |
+|---|---|---|---|---|---|
+| 2026-06-14T11:17:17.959Z | command-log | Baseline docs registry check confirmed the HADARA-dev source checkout was relying on inference before T-0313: docs list reported registryPresent:false inferred:true with DOC_REGISTRY_MISSING, and docs required-reading failed with DOC_REGISTRY_MISSING. | passed | public | evidence.jsonl |
+| 2026-06-14T11:17:17.962Z | command-log | Generated HADARA-dev docs registry artifacts using existing docs-registry service output: createSeedDocumentRegistry('hadara-dev'), registryJson(...), and renderDocRegistryMarkdown(...), adding .hadara/docs-registry.json and docs/DOC_REGISTRY.md without running broad protocol migrate execute. | passed | public | evidence.jsonl |
+| 2026-06-14T11:17:18.694Z | command-log | Protocol safety check passed: protocol migrate --target 0.3.0 was run in dry-run mode only and still planned broader project-wide writes, so no broad self-migration execute was run in T-0313. | passed | public | evidence.jsonl |
+| 2026-06-14T11:17:18.701Z | command-log | Docs registry validation passed after artifact adoption: docs list reported registryPresent:true inferred:false with no issues; docs required-reading returned ok:true with tier metadata; docs explain for docs/PROJECT_STATE.md returned canonical project-state guidance; docs doctor returned ok:true with no DOC_REGISTRY_MISSING issue. | passed | public | evidence.jsonl |
+| 2026-06-14T11:17:18.858Z | command-log | Validation checks passed: protocol doctor --scope docs returned ok:true with warning-only historical drift, and git diff --check returned no whitespace issues. | passed | public | evidence.jsonl |
+| 2026-06-14T11:20:31.982Z | command-log | Final draft validation passed before finish: git diff --check returned no whitespace issues and harness validate --task T-0313 --level draft --json returned ok:true with no issues. | passed | public | evidence.jsonl |
+| 2026-06-14T11:21:20.343Z | command-log | Task close validation for T-0313 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:f9b72cbefa206397b250adc788837b98ac7802bc96b901fae08238cf9e799142. | passed | public | evidence.jsonl |

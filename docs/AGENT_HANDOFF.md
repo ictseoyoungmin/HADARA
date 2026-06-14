@@ -5,26 +5,26 @@
 | Area | State | Notes |
 |---|---|---|
 | Branch | main | `hadara@0.3.0-rc.2` was published and post-publish recycled. GitHub Release draft was not requested. |
-| Current Phase | 0.3.0-rc.2 npm publish and post-publish recycle complete | `hadara@0.3.0-rc.2` is the current published npm RC; T-0312 validated the registry package from a consumer perspective. Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0312 0.3.0-rc.2 Post-Publish Installed-Package Recycle | Registry metadata, npx/temp-prefix install, fresh init/docs, protocol migration execute, and task finish row-preservation smokes passed from the published package. |
-| Active / Next Task | None | Open a focused follow-up for HADARA-dev docs registry artifact dogfooding, then `docs patch --execute` atomic write hardening before stable 0.3. |
-| Validation Baseline | T-0312 published-package recycle plus T-0311 source hardening | T-0312 package smokes passed from `hadara@0.3.0-rc.2`; T-0311 Docker focused tests passed 3 files / 14 tests, Docker sync-build passed 118 files / 762 tests and refreshed workspace `dist`, and `git diff --check` passed. |
+| Current Phase | 0.3.0-rc.2 npm publish/recycle plus docs registry dogfooding complete | `hadara@0.3.0-rc.2` is the current published npm RC; T-0312 validated the registry package and T-0313 committed HADARA-dev docs registry artifacts. Phase 7.x labels are internal implementation phases, not external npm RC labels. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0313 HADARA-dev Docs Registry Artifact Dogfooding | `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md` were added from existing docs-registry service output, and docs registry surfaces now use the committed registry. |
+| Active / Next Task | None | Open `docs patch --execute` atomic write hardening before stable 0.3. |
+| Validation Baseline | T-0313 docs registry validation plus T-0312 published-package recycle | T-0313 docs list/doctor/required-reading/explain/protocol doctor and `git diff --check` passed; T-0312 package smokes passed from `hadara@0.3.0-rc.2`; T-0311 Docker sync-build remains the recent source full validation baseline. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0313 HADARA-dev Docs Registry Artifact Dogfooding | Added committed docs registry artifacts so HADARA-dev context routing no longer points to absent files. | Baseline missing registry recorded; `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md` generated from service output; docs list/doctor/required-reading/explain/protocol doctor and `git diff --check` passed; broad migration execute was not run. |
 | T-0312 0.3.0-rc.2 Post-Publish Installed-Package Recycle | Verified the published rc.2 package and fixed package-facing docs drift. | npm metadata/latest dist-tag verified rc.2; `npx` and temp-prefix installed bin reported rc.2; fresh init/docs, protocol migration execute, and task finish row-preservation smokes passed; README badge/release readiness drift fixed. |
 | T-0311 Atomic Write Path Containment Hardening | Added project-root containment validation to shared atomic text writes and renumbered post-publish recycle to T-0312. | Docker focused tests passed 3 files / 14 tests; Docker sync-build passed 118 files / 762 tests and refreshed `dist`; `git diff --check` passed. |
-| T-0310 0.3.0-rc.2 Readiness and Publish Preparation | Bumped source/package metadata to `0.3.0-rc.2`, aligned README/release notes/readiness/helper examples, refreshed release evidence, and published npm through the approval-gated helper. | Docker full check passed 117 files / 758 tests; release artifact/package/clean smokes, strict gate, release dry-run, publish dry-run, helper guard, rc.2 workflow smokes passed, and npm publish evidence verified `0.3.0-rc.2`. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
 | Published `0.3.0-rc.0` npm metadata still shows the old package description and no keywords. | The immutable rc.0 package remains metadata-limited, while rc.1 and rc.2 were published with metadata guardrails. | Treat rc.0 as historical; use `hadara@0.3.0-rc.2` for current installs. |
-| HADARA-dev docs registry artifacts are absent from the source checkout. | `.hadara/context/HADARA_CONTEXT.md` routes readers to `docs/DOC_REGISTRY.md` and `.hadara/docs-registry.json`, and fresh init creates those files, but this repo currently lacks them. | Open a focused follow-up to decide and apply the HADARA-dev docs registry artifact policy; avoid broad self-migration unless the full plan is reviewed. |
 | `docs patch --execute` atomic write hardening remains pending. | Managed patch writes should use the shared atomic helper before stable 0.3. | Open a focused hardening capsule with containment, temp cleanup, and failure-preservation tests. |
+| `docs/DOC_REGISTRY.md` projection is not registered as a registry entry by the current seed. | `docs explain --path docs/DOC_REGISTRY.md` reports `DOC_NOT_REGISTERED`, while the artifact exists and is managed. | Treat as accepted current seed behavior unless a future schema/seed capsule decides self-registration is required. |
 | Host npm remains unreliable for some release smokes. | Host package smoke first failed on a read-only npm cache and host clean-checkout hit an npm internal error, while Docker/npm paths passed. | Use `NPM_CONFIG_CACHE=/tmp/...` for host package smoke and Docker ext4 for clean-checkout smoke. |
 | T-0291/T-0292/T-0293/T-0294 full wrapper validation had timeout-only residual blockers, while T-0295 wrapper validation passed. | Older Phase 7 focused checks passed, and T-0295 restored a clean standard wrapper baseline for current changes. | Use T-0295's 115-file / 741-test wrapper pass as the latest validation baseline, while treating older timeout notes as historical. |
 | Combined parallel focused dashboard/static validation can timeout under worker contention. | Standalone dashboard-static passed quickly, but a parallel focused run timed out once. | Run dashboard-static standalone or serialize dashboard validation when investigating route behavior. |
@@ -80,7 +80,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create a focused follow-up for HADARA-dev docs registry artifact dogfooding. | T-0312 found that fresh init creates `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md`, but the HADARA-dev source checkout lacks those files while `.hadara/context/HADARA_CONTEXT.md` routes readers to them. | Decide whether to commit those project-owned registry artifacts or adjust the context/documentation policy; then handle `docs patch --execute` atomic write hardening as the next focused item. |
+| Open `docs patch --execute` atomic write hardening. | T-0312/T-0313 closed rc.2 publish recycle and docs registry dogfooding; managed patch execute still needs shared atomic helper/path-containment/failure-preservation coverage before stable 0.3. | Read `tasks/T-0312-0-3-0-rc-2-post-publish-installed-package-recycle/FINDINGS.md`, `src/services/managed-sections.ts`, `tests/unit/docs-patch.test.ts`, and `src/core/fs.ts`. |
 
 ## Validation Baseline
 

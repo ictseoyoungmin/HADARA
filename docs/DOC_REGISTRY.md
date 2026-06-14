@@ -1,0 +1,22 @@
+# DOC_REGISTRY
+
+Schema: `hadara.docs.registry.v1`
+
+<!-- hadara:managed:start doc-registry-summary {"schema":"hadara.managedSection.v1","owner":"docs.registry","kind":"markdown-table","mode":"replace","version":1,"required":true,"closeSourceRole":"included"} -->
+| Path | Kind | Status | Read When | Required | Owner |
+|---|---|---|---|---|---|
+| `.hadara/context/HADARA_CONTEXT.md` | project-context | canonical | session-start | yes | hadara-docs |
+| `AGENTS.md` | protocol | canonical | session-start | yes | hadara-docs |
+| `docs/IMPLEMENTATION_SOP.md` | protocol | canonical | session-start | yes | hadara-docs |
+| `docs/TASK_WORKFLOW_COMMANDS.md` | workflow-guide | canonical | task-start | yes | hadara-docs |
+| `docs/PROJECT_STATE.md` | project-state | canonical | session-start | yes | hadara-docs |
+| `docs/AGENT_HANDOFF.md` | handoff | canonical | session-start | yes | hadara-docs |
+| `docs/TASK_BOARD.md` | task-board | active | task-start | yes | hadara-docs |
+| `docs/ARCHITECTURE.md` | architecture | reference | only-when-linked | no | hadara-docs |
+| `docs/DEVELOPMENT_SLICES.md` | roadmap | active | task-start | yes | hadara-docs |
+| `docs/DECISIONS.md` | decision-log | reference | only-when-linked | no | hadara-docs |
+| `docs/TEST_STRATEGY.md` | test-strategy | reference | debugging | no | hadara-docs |
+| `docs/SECURITY_MODEL.md` | security-model | reference | only-when-linked | no | hadara-docs |
+| `docs/REFACTOR_LOG.md` | historical-plan | historical | never-default | no | hadara-docs |
+| `docs/ROADMAP.md` | roadmap | reference | only-when-linked | no | hadara-docs |
+<!-- hadara:managed:end doc-registry-summary -->
