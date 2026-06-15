@@ -319,3 +319,4 @@
 | T-0316 | Stable 0.3.0 Approval-Gated Publish | Done | tasks/T-0316-stable-0-3-0-approval-gated-publish | Operator npm publish completed; npm view verified `0.3.0`; GitHub draft false. |
 | T-0317 | Stable 0.3.0 Post-Publish Installed-Package Recycle | Done | tasks/T-0317-stable-0-3-0-post-publish-installed-package-recycle | |
 | T-0318 | Stage Phase 8 0.3.1 status governance specs | Done | tasks/T-0318-stage-phase-8-0-3-1-status-governance-specs | |
+| T-0319 | Phase 8.1 Status Token Policy and Document Ownership | Done | tasks/T-0319-phase-8-1-status-token-policy-and-document-ownership | |

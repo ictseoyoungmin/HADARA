@@ -144,6 +144,16 @@ Keep capsule docs current as work changes:
 
 Parallelize read-only discovery, `rg`/file inspection, independent validation commands, package or registry metadata inspection, read-only diagnostics, and draft preparation before writes. Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, `task finish --execute`, `task close --execute`, and release artifact or publish operations.
 
+## Status Token And Document Ownership Policy
+
+Use distinct token families for persistent task state, close proof state, document registry state, and evidence outcomes. `TaskStatus` belongs to Task Capsule metadata, `TASK.md` Status/Status History, and command-owned `docs/TASK_BOARD.md` cells. Valid persistent task tokens are `Draft`, `In Progress`, `Blocked`, `Done`, `Partial`, `Superseded`, and `Archived`.
+
+`CloseState` is derived from close evidence and `task audit-close`; do not write close proof values as `TaskStatus`. Canonical close-state tokens are `not-closed`, `closed-valid`, `closed-stale`, `closed-invalid`, and `unknown`. Compatibility diagnostics such as `close-evidence-found-invalid`, `close-evidence-malformed`, and `closed-with-drift-warnings` are close-state details, not task status.
+
+`DocStatus` belongs only to the docs registry and uses `canonical`, `active`, `reference`, `historical`, `superseded`, and `archived`. Evidence outcomes are `passed`, `failed`, `blocked`, and `unknown`; preserve failed or blocked evidence and append newer corrective evidence instead of rewriting history.
+
+Ownership boundaries follow the lifecycle command model. `task finish --execute` owns bounded status bookkeeping in `TASK.md` and command-owned `docs/TASK_BOARD.md` cells. `task close --execute` owns only close evidence append. Operators own close-source prose and shared state docs before close, then rerun ready/close/audit after any intentional close-source edit.
+
 ## Standard Task Workflow Loop
 
 The authoritative command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`. For ordinary implementation capsules, use this loop:

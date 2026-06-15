@@ -1235,6 +1235,16 @@ Keep capsule docs current as work changes:
 
 Parallelize read-only discovery, \`rg\`/file inspection, independent validation commands, package or registry metadata inspection, read-only diagnostics, and draft preparation before writes. Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, \`task finish --execute\`, \`task close --execute\`, and release artifact or publish operations.
 
+## Status Token And Document Ownership Policy
+
+Use distinct token families for persistent task state, close proof state, document registry state, and evidence outcomes. \`TaskStatus\` belongs to Task Capsule metadata, \`TASK.md\` Status/Status History, and command-owned \`docs/TASK_BOARD.md\` cells. Valid persistent task tokens are \`Draft\`, \`In Progress\`, \`Blocked\`, \`Done\`, \`Partial\`, \`Superseded\`, and \`Archived\`.
+
+\`CloseState\` is derived from close evidence and \`task audit-close\`; do not write close proof values as \`TaskStatus\`. Canonical close-state tokens are \`not-closed\`, \`closed-valid\`, \`closed-stale\`, \`closed-invalid\`, and \`unknown\`. Compatibility diagnostics such as \`close-evidence-found-invalid\`, \`close-evidence-malformed\`, and \`closed-with-drift-warnings\` are close-state details, not task status.
+
+\`DocStatus\` belongs only to the docs registry and uses \`canonical\`, \`active\`, \`reference\`, \`historical\`, \`superseded\`, and \`archived\`. Evidence outcomes are \`passed\`, \`failed\`, \`blocked\`, and \`unknown\`; preserve failed or blocked evidence and append newer corrective evidence instead of rewriting history.
+
+Ownership boundaries follow the lifecycle command model. \`task finish --execute\` owns bounded status bookkeeping in \`TASK.md\` and command-owned \`docs/TASK_BOARD.md\` cells. \`task close --execute\` owns only close evidence append. Operators own close-source prose and shared state docs before close, then rerun ready/close/audit after any intentional close-source edit.
+
 ## Standard Task Workflow Loop
 
 The authoritative command semantics live in \`docs/TASK_WORKFLOW_COMMANDS.md\`. For ordinary implementation capsules, use this loop:
@@ -1501,6 +1511,68 @@ hadara task audit-close --task T-XXXX --json
 The close model has three separate phases: validation proves readiness, close records the proof, and audit checks the already-recorded close evidence. Close evidence is excluded from the current validation loop because it is appended after validation; requiring it as a same-run precondition would create a fixed-point loop.
 
 \`task ready\` and \`task close\` include done-level Task Capsule validation. Use \`hadara harness validate --task T-XXXX --level done --json\` directly when debugging capsule format, status-history, acceptance, evidence, or handoff validation failures.
+
+## Status Token And Ownership Policy
+
+HADARA uses separate token families for persistent state, derived proof state, document registry state, and evidence outcomes. Do not collapse these families into a single Markdown \`Status\` field.
+
+### TaskStatus
+
+\`TaskStatus\` is persistent task lifecycle state in \`TASK.md\` metadata, the \`## Status\` section, Status History rows, and the command-owned cells of \`docs/TASK_BOARD.md\`.
+
+| Token | Meaning | Writer |
+|---|---|---|
+| \`Draft\` | Task capsule exists but implementation is not started or not yet ready for done-level validation. | \`task create\`, worker docs |
+| \`In Progress\` | Work is actively being performed. | Worker docs |
+| \`Blocked\` | Work cannot proceed without a recorded blocker. | Worker docs |
+| \`Done\` | Scoped work is implemented and ready for done-level validation/close. | \`task finish --execute\` |
+| \`Partial\` | Deliberate partial completion with remaining scope deferred or split. | Worker/coordinator docs |
+| \`Superseded\` | Task has been replaced by another task or line. | Worker/coordinator docs |
+| \`Archived\` | Task is no longer active state and is retained only for history. | Worker/coordinator docs |
+
+Reserved non-TaskStatus strings include \`Closed\`, \`Ready\`, \`Approved\`, \`Complete\`, \`closed-valid\`, \`not-closed\`, and phrases such as \`Done pending lifecycle close\`. Use \`TaskStatus: Done\` plus a separate close-state note instead.
+
+### CloseState
+
+\`CloseState\` is derived proof state from close evidence and \`task audit-close\`; it is not written as persistent \`TaskStatus\`.
+
+| Canonical Token | Meaning |
+|---|---|
+| \`not-closed\` | No valid close proof has been recorded. |
+| \`closed-valid\` | Close evidence exists and audit reports current/fresh proof. |
+| \`closed-stale\` | Close evidence exists but source or validation hashes drifted after close. |
+| \`closed-invalid\` | Close-like evidence exists but audit reports invalid shape, failed result, or mismatch. |
+| \`unknown\` | The projection cannot determine close state. |
+
+Current compatibility read models may expose more specific diagnostic values such as \`close-evidence-found-invalid\`, \`close-evidence-malformed\`, or \`closed-with-drift-warnings\`. Treat those as CloseState diagnostics, not TaskStatus values.
+
+### DocStatus
+
+\`DocStatus\` is stored in the document registry only.
+
+| Token | Meaning |
+|---|---|
+| \`canonical\` | Core scaffold/current-state document. |
+| \`active\` | Active working document or task-work document. |
+| \`reference\` | Conditional reference document. |
+| \`historical\` | Historical context, never default required reading. |
+| \`superseded\` | Replaced by another registered document. |
+| \`archived\` | Retained only as archive candidate/history. |
+
+### EvidenceOutcome
+
+Evidence outcome tokens are \`passed\`, \`failed\`, \`blocked\`, and \`unknown\`. Failed or blocked evidence must remain visible; add newer evidence that explains the fix or residual risk instead of editing old records.
+
+### Write Ownership
+
+| Surface | Ownership |
+|---|---|
+| \`TASK.md\` status metadata, \`## Status\`, and Status History | Command-owned for finish bookkeeping; worker-owned before finish. |
+| \`docs/TASK_BOARD.md\` ID/title/status/capsule cells | Command-owned by \`task finish\`; Notes and extra cells are mixed/human-owned. |
+| \`EVIDENCE.md\` and \`evidence.jsonl\` | Evidence writer-owned; do not hand-edit \`evidence.jsonl\`. |
+| \`HANDOFF.md\` managed current-state table | Managed/mixed; Phase 8.2 will split TaskStatus and CloseState in new scaffolds. |
+| Shared state docs | Mixed/human-owned; update before close when they are close-source relevant. |
+| \`.hadara/docs-registry.json\` and \`docs/DOC_REGISTRY.md\` | Docs registry-owned; registry mutations should stay dry-run-first or explicitly scoped. |
 
 Before close, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, \`docs/TASK_BOARD.md\`, and tracked state docs such as \`docs/PROJECT_STATE.md\`, \`docs/AGENT_HANDOFF.md\`, and roadmap/slice docs when they apply. After \`task close --execute --json\`, changing those documents changes the close source hash and requires rerunning \`task ready\`, \`task close\`, and \`task audit-close\`. Do not paste volatile close evidence ids into close-source docs; prefer stable wording such as "close evidence appended; audit returned closed-valid".
 
