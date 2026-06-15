@@ -160,7 +160,10 @@ export function listTaskCapsules(projectRoot: string): TaskCapsule[] {
 
   return fs
     .readdirSync(tasksDir, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && /^T-\d{4}-/.test(entry.name))
+    .filter((entry) => {
+      if (!entry.isDirectory() || !/^T-\d{4}-/.test(entry.name)) return false;
+      return fs.existsSync(path.join(tasksDir, entry.name, 'TASK.md'));
+    })
     .map((entry) => {
       const [id, ...slugParts] = entry.name.split('-');
       const number = slugParts.shift();
@@ -188,6 +191,7 @@ export function findTaskCapsule(projectRoot: string, taskId: string): TaskCapsul
 
   const slug = entry.name.slice(`${taskId}-`.length);
   const dir = path.join(tasksDir, entry.name);
+  if (!fs.existsSync(path.join(dir, 'TASK.md'))) return undefined;
   return {
     id: taskId,
     title: readTaskCapsuleTitle(dir, taskId, slug),

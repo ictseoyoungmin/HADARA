@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { appendEvidence, createSessionEvidenceDirs } from '../../src/evidence/evidence';
-import { createTaskCapsule, listTaskCapsules } from '../../src/task/task-capsule';
+import { createTaskCapsule, findTaskCapsule, listTaskCapsules } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
 
@@ -142,5 +142,14 @@ describe('Task Capsule harness', () => {
     const tasks = listTaskCapsules(root);
     expect(tasks).toHaveLength(2);
     expect(tasks[1].id).toBe('T-0002');
+  });
+
+  it('ignores task-like directories without a TASK.md source document', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Tracked task');
+    fs.mkdirSync(path.join(root, 'tasks', 'T-0002-empty-local-leftover'));
+
+    expect(listTaskCapsules(root).map((capsule) => capsule.id)).toEqual([task.id]);
+    expect(findTaskCapsule(root, 'T-0002')).toBeUndefined();
   });
 });
