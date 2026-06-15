@@ -7,7 +7,6 @@
 |---|---|
 | Task | T-0320 |
 | TaskStatus | Done |
-| CloseState | not-closed |
 | Last Updated | 2026-06-15 |
 <!-- hadara:managed:end task-handoff-current-state -->
 
@@ -15,7 +14,7 @@
 
 | Item | Evidence |
 |---|---|
-| Handoff scaffold now separates `TaskStatus` and `CloseState`; legacy exact `Status` tokens remain compatible. | `src/task/task-capsule.ts`; `tests/unit/task-capsule.test.ts`; `command:T-0320:docker-focused` |
+| Handoff scaffold now separates persistent `TaskStatus` from derived close proof state; legacy exact `Status` tokens remain compatible. | `src/task/task-capsule.ts`; `tests/unit/task-capsule.test.ts`; `command:T-0320:docker-focused` |
 | Done-level validation rejects stale `pending lifecycle close` wording and `PLAN.md` rows left `In Progress`. | `src/harness/validate.ts`; `tests/harness/harness-validate.test.ts`; `tests/unit/task-ready.test.ts` |
 | Full Docker validation passed after dashboard-bootstrap selected-task proof compatibility was made tolerant of historical validation drift. | `command:T-0320:docker-full-sync-build` |
 
@@ -29,4 +28,4 @@
 
 | Warning | Impact | Mitigation |
 |---|---|---|
-| CloseState in this handoff is `not-closed` because close proof is appended after close-source docs are finalized. | Do not treat the handoff row as close evidence. | Use `task close --execute` and `task audit-close` evidence for final CloseState. |
+| Close proof state is intentionally not stored in task-local HANDOFF current state. | Stored close state in a close-source handoff creates fixed-point drift after close evidence is appended. | Use `task status`, `task audit-close`, proof status, or `state verify` read models for derived close state. |

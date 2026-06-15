@@ -139,7 +139,7 @@ Phase 8 keeps two state families separate.
 | Family | Meaning | Source |
 |---|---|---|
 | `TaskStatus` | Persistent task status in `TASK.md` and `docs/TASK_BOARD.md`. | CLI task lifecycle bookkeeping. |
-| `CloseState` | Derived proof state from close evidence and audit. | `task audit-close` / proof read models. |
+| `CloseState` | Derived proof state from close evidence and audit. | `task status`, `task audit-close`, proof status, or `state verify` read models. |
 
 The desired task-local handoff current-state shape is:
 
@@ -148,10 +148,10 @@ The desired task-local handoff current-state shape is:
 |---|---|
 | Task | T-XXXX |
 | TaskStatus | Done |
-| CloseState | closed-valid |
-| Status Note | Latest audit-close returned closed-valid. |
 | Last Updated | YYYY-MM-DD |
 ```
+
+Close proof state is intentionally omitted from the close-source handoff table. Operators should read it from audit/proof/state projection surfaces after close evidence is appended.
 
 ## 0.3.1 rc1 Boundary
 

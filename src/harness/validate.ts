@@ -58,16 +58,6 @@ const EVIDENCE_KINDS = new Set(['test-log', 'command-log', 'diff-summary', 'scre
 const EVIDENCE_RESULTS = new Set(['passed', 'failed', 'blocked', 'unknown']);
 const EVIDENCE_VISIBILITIES = new Set(['public', 'private']);
 const TASK_STATUS_TOKENS = new Set(['draft', 'in progress', 'blocked', 'done', 'partial', 'superseded', 'archived']);
-const CLOSE_STATE_TOKENS = new Set([
-  'not-closed',
-  'closed-valid',
-  'closed-stale',
-  'closed-invalid',
-  'unknown',
-  'close-evidence-found-invalid',
-  'close-evidence-malformed',
-  'closed-with-drift-warnings'
-]);
 const STALE_PENDING_CLOSE_PATTERN = /\b(?:done\s+pending\s+lifecycle\s+close|pending\s+lifecycle\s+close)\b/i;
 const DONE_SEMANTIC_EVIDENCE_CODES = new Set([
   'TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE',
@@ -806,20 +796,20 @@ function validateHandoffCurrentStateTokens(projectRoot: string, task: TaskCapsul
     );
   }
 
-  if (closeState && !isCloseStateToken(closeState)) {
+  if (closeState) {
     issues.push({
       severity: 'error',
-      code: 'TASK_HANDOFF_CLOSE_STATE_INVALID',
-      message: `HANDOFF.md CloseState uses unsupported value "${closeState}".`,
+      code: 'TASK_HANDOFF_CLOSE_STATE_PERSISTED',
+      message: `HANDOFF.md persists derived CloseState value "${closeState}".`,
       path: relativePath,
       heading: 'Current State',
-      fixHint: 'Use a canonical CloseState such as `not-closed`, `closed-valid`, `closed-stale`, `closed-invalid`, or `unknown`; compatibility diagnostic values belong to CloseState, not TaskStatus.',
-      example: '| CloseState | not-closed |',
+      fixHint: 'Remove the CloseState row from task-local HANDOFF.md; use task status, audit-close, proof status, or state verify read models for derived close state.',
+      example: '| TaskStatus | Done |',
       remediationHint: {
         path: relativePath,
         heading: 'Current State',
-        requiredChange: 'Set CloseState to a supported close-state token or remove the row for legacy handoff compatibility.',
-        example: '| CloseState | not-closed |',
+        requiredChange: 'Remove persistent CloseState from this close-source handoff table.',
+        example: '| TaskStatus | Done |',
         blocking: true
       }
     });
@@ -842,13 +832,13 @@ function handoffStatusIssue(relativePath: string, message: string): HarnessValid
     message,
     path: relativePath,
     heading: 'Current State',
-    fixHint: 'Use `TaskStatus` for lifecycle state and a separate `CloseState` row for close proof state; avoid phrases such as `Done pending lifecycle close`.',
-    example: '| TaskStatus | Done |\n| CloseState | not-closed |',
+    fixHint: 'Use `TaskStatus` for lifecycle state only; close proof state is derived from audit-close/proof/status read models.',
+    example: '| TaskStatus | Done |',
     remediationHint: {
       path: relativePath,
       heading: 'Current State',
-      requiredChange: 'Replace ambiguous Status wording with canonical TaskStatus plus separate CloseState.',
-      example: '| TaskStatus | Done |\n| CloseState | not-closed |',
+      requiredChange: 'Replace ambiguous Status wording with canonical TaskStatus and remove close-proof wording from HANDOFF.md.',
+      example: '| TaskStatus | Done |',
       blocking: true
     }
   };
@@ -886,10 +876,6 @@ function validatePlanStatusDrift(projectRoot: string, task: TaskCapsule, issues:
 
 function isTaskStatusToken(value: string): boolean {
   return TASK_STATUS_TOKENS.has(value.trim().toLowerCase());
-}
-
-function isCloseStateToken(value: string): boolean {
-  return CLOSE_STATE_TOKENS.has(value.trim().toLowerCase());
 }
 
 function normalizeFieldName(value: string): string {

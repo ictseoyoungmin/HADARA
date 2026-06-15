@@ -28,7 +28,7 @@ describe('Task Capsule scaffold frames', () => {
     const handoff = fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8');
     expect(handoff).toContain('## Current State');
     expect(handoff).toContain('| TaskStatus | Draft |');
-    expect(handoff).toContain('| CloseState | not-closed |');
+    expect(handoff).not.toContain('| CloseState |');
     expect(handoff).not.toContain('| Status | Draft |');
     expect(handoff).toContain('## Next Recommended Step');
     expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain('| Time | Kind | Summary | Result | Visibility | JSONL |');

@@ -325,3 +325,4 @@
 | T-0322 | Phase 8.4 State Consistency Projection Read Model | Done | tasks/T-0322-phase-8-4-state-consistency-projection-read-model | |
 | T-0323 | Phase 8.5 State Verify Doctor and Advisory Gates | Done | tasks/T-0323-phase-8-5-state-verify-doctor-and-advisory-gates | |
 | T-0324 | Phase 8.6 rc1 Review and Hardening Cleanup | Done | tasks/T-0324-phase-8-6-rc1-review-and-hardening-cleanup | |
+| T-0325 | Phase 8 CloseState handoff drift cleanup | Done | tasks/T-0325-phase-8-closestate-handoff-drift-cleanup | |

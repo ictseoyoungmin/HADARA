@@ -149,7 +149,7 @@ Parallelize read-only discovery, `rg`/file inspection, independent validation co
 
 Use distinct token families for persistent task state, close proof state, document registry state, and evidence outcomes. `TaskStatus` belongs to Task Capsule metadata, `TASK.md` Status/Status History, and command-owned `docs/TASK_BOARD.md` cells. Valid persistent task tokens are `Draft`, `In Progress`, `Blocked`, `Done`, `Partial`, `Superseded`, and `Archived`.
 
-`CloseState` is derived from close evidence and `task audit-close`; do not write close proof values as `TaskStatus`. Canonical close-state tokens are `not-closed`, `closed-valid`, `closed-stale`, `closed-invalid`, and `unknown`. Compatibility diagnostics such as `close-evidence-found-invalid`, `close-evidence-malformed`, and `closed-with-drift-warnings` are close-state details, not task status.
+`CloseState` is derived from close evidence and `task audit-close`; do not write close proof values as `TaskStatus`, and do not persist `CloseState` in task-local `HANDOFF.md` close-source current-state tables. Canonical close-state tokens are `not-closed`, `closed-valid`, `closed-stale`, `closed-invalid`, and `unknown`. Compatibility diagnostics such as `close-evidence-found-invalid`, `close-evidence-malformed`, and `closed-with-drift-warnings` are close-state details, not task status.
 
 `DocStatus` belongs only to the docs registry and uses `canonical`, `active`, `reference`, `historical`, `superseded`, and `archived`. Evidence outcomes are `passed`, `failed`, `blocked`, and `unknown`; preserve failed or blocked evidence and append newer corrective evidence instead of rewriting history.
 

@@ -7,7 +7,6 @@
 |---|---|
 | Task | T-0324 |
 | TaskStatus | Done |
-| CloseState | not-closed |
 | Last Updated | 2026-06-15 |
 <!-- hadara:managed:end task-handoff-current-state -->
 

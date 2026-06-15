@@ -17,7 +17,7 @@ The CLI correctly appended and audited close proof, but it did not validate the 
 
 ## Goal
 
-Make task-local handoff current-state explicit enough that workers and validators can distinguish persistent task status from derived close state.
+Make task-local handoff current-state explicit enough that workers and validators can distinguish persistent task status from derived close state without storing close proof state in close-source handoff docs.
 
 ## Non-Goals
 
@@ -37,10 +37,10 @@ New or upgraded task-local `HANDOFF.md` current-state sections should prefer:
 |---|---|
 | Task | T-XXXX |
 | TaskStatus | Done |
-| CloseState | closed-valid |
-| Status Note | Latest audit-close returned closed-valid. |
 | Last Updated | YYYY-MM-DD |
 ```
+
+`CloseState` is intentionally omitted from this close-source table because close proof evidence is appended after the table is finalized. Close proof state belongs to `task status`, `task audit-close`, proof status, and `state verify` read models.
 
 Compatibility rule:
 
@@ -57,14 +57,14 @@ Minimum warning rules:
 |---|---|---|
 | Done task plus handoff phrase `pending lifecycle close` | warning initially, future error | This phrase is stale after close/audit. |
 | Done task plus `PLAN.md` row still `In Progress` | error for done-level readiness | Plan drift is close-source drift. |
-| Handoff has `CloseState` outside allowed set | warning initially | Rollout should not break historical tasks. |
+| Handoff persists any `CloseState` row | error for done-level readiness | Stored close proof state in a close-source handoff creates fixed-point drift after close evidence append. |
 | Handoff has `TaskStatus` outside allowed set | warning initially | Prevent schema drift without mass migration. |
 
 Candidate issue codes:
 
 ```text
 TASK_HANDOFF_STATUS_DRIFT
-TASK_HANDOFF_CLOSE_STATE_INVALID
+TASK_HANDOFF_CLOSE_STATE_PERSISTED
 TASK_PLAN_STATUS_DRIFT
 TASK_STATUS_TOKEN_RESERVED
 ```
@@ -78,10 +78,10 @@ Recommended behavior:
 | `task create` | Generate the new current-state shape once the template is updated. |
 | `task finish --execute` | May update `TaskStatus` to `Done` if the managed section has the new field. |
 | `task ready --level done` | Warn or block on stale pending-close wording and plan drift. |
-| `task close --execute` | May update managed `CloseState` only if a dedicated bounded managed patch is implemented; otherwise leave to future handoff update. |
+| `task close --execute` | Append close evidence only; do not update close-source handoff prose. |
 | `task audit-close` | Read-only; reports drift if detected but does not write. |
 
-Minimal rc1 implementation can avoid `task close` writes and rely on validation warnings plus updated templates.
+Minimal rc1 implementation avoids handoff writes from close commands and relies on validation plus updated templates.
 
 ## Worker Ergonomics
 
@@ -97,8 +97,8 @@ Which command should fix it?
 The report should provide a concrete fix hint:
 
 ```text
-Replace `Status | Done pending lifecycle close` with `TaskStatus | Done`
-and `CloseState | closed-valid` after audit-close returns closed-valid.
+Replace `Status | Done pending lifecycle close` with `TaskStatus | Done`.
+Read close proof state from audit-close/proof/status/state read models after close.
 ```
 
 ## Tests
@@ -108,7 +108,8 @@ Focused tests should cover:
 ```text
 Done task + HANDOFF pending lifecycle close produces drift issue.
 Done task + PLAN In Progress produces done-level blocker.
-Clean TaskStatus Done + CloseState closed-valid passes.
+Clean TaskStatus Done with no persisted CloseState row passes.
+TaskStatus Done plus any persisted CloseState row produces a done-level blocker.
 Existing legacy Status row remains warning-only unless stale phrase is present.
 ```
 
@@ -123,7 +124,7 @@ git diff --check
 
 | ID | Criterion |
 |---|---|
-| AC-1 | New handoff current-state shape is documented. |
+| AC-1 | New handoff current-state shape is documented without a persistent CloseState row. |
 | AC-2 | Done-level validation detects stale pending-close handoff wording. |
 | AC-3 | Done-level validation detects remaining `PLAN.md` In Progress rows. |
 | AC-4 | Compatibility behavior for legacy `Status` rows is documented. |

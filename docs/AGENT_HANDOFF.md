@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, recycled from installed-package consumer paths through T-0317, Phase 8 planning was staged through T-0318, and Phase 8.1 through 8.6 status governance/hardening completed through T-0324. |
-| Current Phase | Phase 8 / 0.3.1 rc1 implementation complete | Phase 8 carried Work Item A/F into status-token governance, document ownership/write boundaries, task handoff close-state clarity, installed-package findings cleanup, state consistency projection, advisory verification gates, and final rc1 hardening. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0324 Phase 8.6 rc1 Review and Hardening Cleanup | Hardened Task Capsule discovery so empty task-like local directories without `TASK.md` no longer project as real task drift. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, recycled from installed-package consumer paths through T-0317, Phase 8 planning was staged through T-0318, Phase 8.1 through 8.6 completed through T-0324, and T-0325 completed follow-up CloseState derived-state cleanup. |
+| Current Phase | Phase 8 / 0.3.1 rc1 implementation complete after CloseState cleanup | Phase 8 carried Work Item A/F into status-token governance, document ownership/write boundaries, task handoff close-state clarity, installed-package findings cleanup, state consistency projection, advisory verification gates, final rc1 hardening, and T-0325 fixed the close-source HANDOFF fixed-point issue. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0325 Phase 8 CloseState handoff drift cleanup | Removed persistent `CloseState` from task-local close-source HANDOFF current-state tables, made it derived through read models, repaired recent Phase 8 handoffs, and hardened `findTaskCapsule()` same-id leftover handling. |
 | Active / Next Task | `0.3.1-rc1` release readiness/prep not created | Open a dedicated release-readiness/prep capsule only if proceeding toward package version bump, artifact refresh, publish, and installed-package recycle. |
-| Validation Baseline | T-0324 full Docker sync-build plus focused state-discovery validation | T-0324 passed focused Docker validation for 5 files / 44 tests, full Docker sync-build for 119 files / 777 tests with `distLooksStale:false`, built CLI state/protocol/CI advisory smokes, and `git diff --check`. |
+| Validation Baseline | T-0325 full Docker sync-build plus focused CloseState/discovery validation | T-0325 passed focused Docker temp-copy validation for 7 files / 83 tests, full Docker sync-build for 119 files / 778 tests with `distLooksStale:false`, built CLI scaffold/harness smoke, and `git diff --check`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0325 Phase 8 CloseState handoff drift cleanup | Removed `CloseState` from generated task handoffs, turned persisted handoff CloseState into done-level drift, updated state projection/docs/specs, repaired T-0320 through T-0325 handoffs, and hardened same-id leftover discovery. | `src/task/task-capsule.ts`, `src/harness/validate.ts`, `src/services/state-projection.ts`, focused Docker 7 files / 83 tests, full Docker sync-build 119 files / 778 tests. |
 | T-0324 Phase 8.6 rc1 Review and Hardening Cleanup | Self-reviewed Phase 8 rc1 state governance, fixed phantom T-0073 drift by requiring `TASK.md` for task discovery, and confirmed advisory state surfaces still behave as non-blocking. | `src/task/task-capsule.ts`, `tests/harness/task-capsule.test.ts`, focused Docker 5 files / 44 tests, full Docker sync-build 119 files / 777 tests. |
 | T-0323 Phase 8.5 State Verify Doctor and Advisory Gates | Added direct `state verify`, compact state consistency summaries in status/protocol doctor, and advisory CI state warnings while preserving strict gate conservatism. | `src/cli/state.ts`, status/protocol/CI services, command registry/docs, focused Docker 5 files / 50 tests, full Docker sync-build 119 files / 776 tests. |
-| T-0322 Phase 8.4 State Consistency Projection Read Model | Added the read-only state consistency projection service/schema and warning-level issue model for Task Board, capsule, shared-doc, registry, release-readiness, and close-proof drift. | `src/services/state-projection.ts`, `src/schemas/state-projection.schema.json`, schema registration, focused Docker 2 files / 4 tests, full Docker sync-build 119 files / 775 tests. |
 
 ## Current Known Problems
 
@@ -87,6 +87,7 @@
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0325 CloseState handoff drift cleanup validation | Focused Docker temp-copy validation passed 7 files / 83 tests for task capsule scaffold, task discovery, harness validation, state projection, init, workflow docs, and protocol consistency; full Docker sync-build passed 119 files / 778 tests and refreshed `dist`; built CLI scaffold/harness smoke and `git diff --check` passed. | Current source full-suite baseline for Phase 8. |
 | T-0324 rc1 review/hardening validation | Focused Docker validation passed 5 files / 44 tests for task discovery, task create, state projection, protocol consistency, and CI gate; full Docker sync-build passed 119 files / 777 tests and refreshed `dist`; built CLI state/protocol/CI advisory smokes and `git diff --check` passed. | Current source full-suite baseline for Phase 8. |
 | T-0323 state verify/doctor/CI advisory validation | Focused Docker validation passed 5 files / 50 tests for state projection, status JSON, protocol consistency/CLI, and CI gate surfaces; full Docker sync-build passed 119 files / 776 tests and refreshed `dist`; built CLI state/status/protocol/CI smokes and `git diff --check` passed. | Previous Phase 8 source full-suite baseline. |
 | T-0322 state projection read-model validation | Focused Docker validation passed 2 files / 4 tests for state projection and schema fixtures; full Docker sync-build passed 119 files / 775 tests and refreshed `dist`; repo smokes passed `git diff --check`, draft harness validation, and built current-repo projection smoke. | Previous Phase 8 source full-suite baseline. |

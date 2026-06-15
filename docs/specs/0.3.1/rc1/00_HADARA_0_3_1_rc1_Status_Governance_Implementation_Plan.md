@@ -13,7 +13,7 @@ Implement the first Phase 8 slice set: status token governance, task-local hando
 | Order | Candidate Capsule | Primary Spec | Outcome |
 |---:|---|---|---|
 | 1 | Status Token Policy and Document Ownership | `rc1/01_Status_Token_Policy_and_Document_Ownership.md` | Current docs and generated guidance define TaskStatus, CloseState, DocStatus, EvidenceOutcome, ownership, and write boundaries. |
-| 2 | Task Handoff Current-State and CloseState | `rc1/02_Task_Handoff_Current_State_and_CloseState.md` | New task handoffs separate TaskStatus and CloseState; validation detects stale pending-close wording and plan drift. |
+| 2 | Task Handoff Current-State and CloseState | `rc1/02_Task_Handoff_Current_State_and_CloseState.md` | New task handoffs persist TaskStatus only; CloseState is derived through read models; validation detects stale pending-close wording, persisted CloseState drift, and plan drift. |
 | 3 | Installed-Package Findings Cleanup | `rc1/03_Installed_Package_Findings_Cleanup.md` | T-0317 exact npx and governed docs doctor findings are resolved or downgraded with clear guidance. |
 | 4 | State Consistency Projection Read Model | `rc1/04_State_Consistency_Projection_Read_Model.md` | Read-only state projection service/report detects state drift across core artifacts. |
 | 5 | State Verify, Doctor, and CI Integration | `rc1/05_State_Verify_Doctor_and_CI_Integration.md` | Projection issues surface through existing read-only/advisory operator paths. |

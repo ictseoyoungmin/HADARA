@@ -7,7 +7,6 @@
 |---|---|
 | Task | T-0321 |
 | TaskStatus | Done |
-| CloseState | not-closed |
 | Last Updated | 2026-06-15 |
 <!-- hadara:managed:end task-handoff-current-state -->
 
@@ -15,7 +14,7 @@
 
 | Item | Evidence |
 |---|---|
-| T-0320 separated TaskStatus/CloseState and closed valid. | `4eb5c82`; T-0320 audit-close `closed-valid` |
+| T-0320 separated persistent TaskStatus from derived close proof state and closed valid. | `4eb5c82`; T-0320 audit-close `closed-valid` |
 
 ## Next Recommended Step
 

@@ -60,7 +60,7 @@ describe('state consistency projection', () => {
           id: task.id,
           task: { exists: true, status: 'Done' },
           taskBoard: { present: true, status: 'Done' },
-          handoff: { exists: true, taskStatus: 'Done', closeState: 'closed-valid' },
+          handoff: { exists: true, taskStatus: 'Done', closeState: null },
           plan: { pendingRows: 0, inProgressRows: 0 },
           closeProof: { state: 'closed-valid' }
         }
@@ -94,6 +94,7 @@ describe('state consistency projection', () => {
       'STATE_TASK_BOARD_CAPSULE_DRIFT',
       'STATE_TASK_HANDOFF_STATUS_INVALID',
       'STATE_TASK_HANDOFF_STATUS_CLOSE_STATE_MIXED',
+      'STATE_TASK_HANDOFF_CLOSE_STATE_PERSISTED',
       'STATE_TASK_HANDOFF_CLOSE_STATE_INVALID',
       'STATE_TASK_PLAN_DRIFT',
       'STATE_LATEST_CLOSE_PROOF_STALE'
@@ -199,7 +200,7 @@ function writeDocsRegistry(root: string): void {
 
 function completeTask(root: string, task: TaskCapsule): void {
   setTaskStatus(task.dir, 'Done');
-  setTaskHandoff(task.dir, 'Done', 'closed-valid');
+  setTaskHandoff(task.dir, 'Done');
   fs.writeFileSync(path.join(task.dir, 'PLAN.md'), `# Plan
 
 | Step | Action | Status | Evidence |
@@ -217,12 +218,23 @@ function setTaskStatus(taskDir: string, status: string): void {
     .replace(/## Status\n\n[\s\S]*?\n\n## Status History/, `## Status\n\n${status}\n\n## Status History`), 'utf8');
 }
 
-function setTaskHandoff(taskDir: string, taskStatus: string, closeState: string): void {
+function setTaskHandoff(taskDir: string, taskStatus: string, closeState?: string): void {
   const handoffPath = path.join(taskDir, 'HANDOFF.md');
   const current = fs.readFileSync(handoffPath, 'utf8');
-  fs.writeFileSync(handoffPath, current
+  let next = current
     .replace(/\| TaskStatus \| [^|]+ \|/, `| TaskStatus | ${taskStatus} |`)
-    .replace(/\| CloseState \| [^|]+ \|/, `| CloseState | ${closeState} |`), 'utf8');
+    .replace(/\| CloseState \| [^|]+ \|\r?\n?/g, '');
+  if (closeState) {
+    next = next.replace(
+      new RegExp(`\\| TaskStatus \\| ${escapeRegExp(taskStatus)} \\|\\r?\\n`),
+      `| TaskStatus | ${taskStatus} |\n| CloseState | ${closeState} |\n`
+    );
+  }
+  fs.writeFileSync(handoffPath, next, 'utf8');
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function replaceTaskBoardRow(root: string, taskId: string, row: string): void {

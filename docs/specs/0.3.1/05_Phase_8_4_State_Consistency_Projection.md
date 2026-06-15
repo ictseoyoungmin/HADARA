@@ -106,7 +106,7 @@ export interface StateConsistencyIssue {
 | Active task consistency | Compare Project State active task, Agent Handoff active/next, and Task Board rows. |
 | Capsule existence | Ensure referenced task capsule paths exist. |
 | Close proof freshness | Use latest close evidence/audit state for the latest completed task when available. |
-| Handoff status drift | Detect stale pending-close wording and mismatched TaskStatus/CloseState. |
+| Handoff status drift | Detect stale pending-close wording, mixed TaskStatus/close-proof wording, and persisted CloseState rows. |
 | Plan status drift | Detect In Progress plan rows after Done completion. |
 | Release state freshness | Compare release readiness text with latest release/recycle evidence where practical. |
 | Docs registry availability | Ensure registry exists and required reading is not stale. |

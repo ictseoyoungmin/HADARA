@@ -76,11 +76,11 @@ HADARA uses separate token families for persistent state, derived proof state, d
 | `Superseded` | Task has been replaced by another task or line. | Worker/coordinator docs |
 | `Archived` | Task is no longer active state and is retained only for history. | Worker/coordinator docs |
 
-Reserved non-TaskStatus strings include `Closed`, `Ready`, `Approved`, `Complete`, `closed-valid`, `not-closed`, and phrases such as `Done pending lifecycle close`. Use `TaskStatus: Done` plus a separate close-state note instead.
+Reserved non-TaskStatus strings include `Closed`, `Ready`, `Approved`, `Complete`, `closed-valid`, `not-closed`, and phrases such as `Done pending lifecycle close`. Use `TaskStatus: Done`; get close proof state from `task status`, `task audit-close`, proof status, or `state verify` read models.
 
 ### CloseState
 
-`CloseState` is derived proof state from close evidence and `task audit-close`; it is not written as persistent `TaskStatus`.
+`CloseState` is derived proof state from close evidence and `task audit-close`; it is not written as persistent `TaskStatus` and should not be stored in task-local `HANDOFF.md` current-state tables.
 
 | Canonical Token | Meaning |
 |---|---|
@@ -116,7 +116,7 @@ Evidence outcome tokens are `passed`, `failed`, `blocked`, and `unknown`. Failed
 | `TASK.md` status metadata, `## Status`, and Status History | Command-owned for finish bookkeeping; worker-owned before finish. |
 | `docs/TASK_BOARD.md` ID/title/status/capsule cells | Command-owned by `task finish`; Notes and extra cells are mixed/human-owned. |
 | `EVIDENCE.md` and `evidence.jsonl` | Evidence writer-owned; do not hand-edit `evidence.jsonl`. |
-| `HANDOFF.md` managed current-state table | Managed/mixed; Phase 8.2 will split TaskStatus and CloseState in new scaffolds. |
+| `HANDOFF.md` managed current-state table | Managed/mixed; persist `TaskStatus` only. `CloseState` is derived by status/audit/proof/state read models and should not be written into close-source handoff tables. |
 | Shared state docs | Mixed/human-owned; update before close when they are close-source relevant. |
 | `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md` | Docs registry-owned; registry mutations should stay dry-run-first or explicitly scoped. |
 

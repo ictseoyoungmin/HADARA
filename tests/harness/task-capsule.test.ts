@@ -152,4 +152,20 @@ describe('Task Capsule harness', () => {
     expect(listTaskCapsules(root).map((capsule) => capsule.id)).toEqual([task.id]);
     expect(findTaskCapsule(root, 'T-0002')).toBeUndefined();
   });
+
+  it('finds a later real task capsule when an earlier same-id leftover lacks TASK.md', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Tracked task');
+    fs.mkdirSync(path.join(root, 'tasks', 'T-0002-empty-local-leftover'));
+    const realDir = path.join(root, 'tasks', 'T-0002-real-task');
+    fs.mkdirSync(realDir);
+    fs.writeFileSync(path.join(realDir, 'TASK.md'), '# T-0002 Real task\n', 'utf8');
+
+    expect(findTaskCapsule(root, 'T-0002')).toMatchObject({
+      id: 'T-0002',
+      title: 'Real task',
+      slug: 'real-task',
+      dir: realDir
+    });
+  });
 });

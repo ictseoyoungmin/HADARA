@@ -62,7 +62,7 @@ Example:
         "severity": "warning",
         "code": "STATE_HANDOFF_STATUS_DRIFT",
         "paths": ["tasks/T-0317.../HANDOFF.md"],
-        "fixHint": "Separate TaskStatus from CloseState."
+        "fixHint": "Persist TaskStatus only; read CloseState from audit/proof/state read models."
       }
     ]
   }

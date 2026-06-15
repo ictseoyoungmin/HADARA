@@ -261,7 +261,7 @@ describe('Harness Task Capsule validation', () => {
     );
   });
 
-  it('rejects unsupported explicit handoff CloseState values', () => {
+  it('rejects explicit handoff CloseState values in close-source handoff', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Invalid close state');
     markTaskDone(root, task.id);
@@ -287,10 +287,10 @@ describe('Harness Task Capsule validation', () => {
     expect(result.issues).toContainEqual(
       expect.objectContaining({
         severity: 'error',
-        code: 'TASK_HANDOFF_CLOSE_STATE_INVALID',
+        code: 'TASK_HANDOFF_CLOSE_STATE_PERSISTED',
         path: `tasks/${task.id}-invalid-close-state/HANDOFF.md`,
         heading: 'Current State',
-        fixHint: expect.stringContaining('not-closed')
+        fixHint: expect.stringContaining('Remove the CloseState row')
       })
     );
   });
