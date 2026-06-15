@@ -17,6 +17,7 @@
 | T-0316 capsule created. | `task create` returned ok:true. |
 | Package-facing README/release docs staged for stable 0.3.0 publish. | README.md / docs/RELEASE_NOTES.md / docs/RELEASE_READINESS.md |
 | Pre-publish prep checks passed. | `command:T-0316:prepublish-prep` |
+| README release-status unit expectation updated. | `command:T-0316:readme-test-update` |
 
 ## Next Recommended Step
 

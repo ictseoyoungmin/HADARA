@@ -6,6 +6,7 @@
 |---|---|---|---|---|
 | `git diff --check` | Verify documentation whitespace before pre-publish commit. | Yes | Passed | `command:T-0316:prepublish-prep` |
 | `bash -n scripts/release/manual-publish-rc.sh scripts/release/prepare-publish-env.sh` | Check publish helper shell syntax. | Yes | Passed | `command:T-0316:prepublish-prep` |
+| `npx vitest run tests/unit/init.test.ts` | Verify README/init-profile expectations after package-facing README wording change. | Yes | Passed | `command:T-0316:readme-test-update`; Docker `/tmp/hadara` focused run passed 1 file / 21 tests. |
 | `scripts/release/manual-publish-rc.sh T-0316 --execute` | Operator-run approval-gated npm publish helper. | Yes, before Done | Not Run | Pending operator npm login |
 | `npm view hadara@0.3.0 version --registry=https://registry.npmjs.org` | Registry verification after publish. | Yes, before Done | Not Run | Pending operator output |
 
