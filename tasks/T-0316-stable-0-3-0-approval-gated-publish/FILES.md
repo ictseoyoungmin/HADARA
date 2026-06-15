@@ -10,4 +10,4 @@
 | `docs/AGENT_HANDOFF.md` | Modified | Hand off exact operator publish command and evidence boundary. | Done |
 | `docs/DEVELOPMENT_SLICES.md` | Modified | Add T-0316 release slice. | Done |
 | `tests/unit/init.test.ts` | Modified | Align README release-status expectations with T-0316 post-publish package-page wording. | Done |
-| `tasks/T-0316-stable-0-3-0-approval-gated-publish/*` | Created/Modified | Publish capsule docs, evidence, and handoff. | In Progress |
+| `tasks/T-0316-stable-0-3-0-approval-gated-publish/*` | Created/Modified | Publish capsule docs, evidence, and handoff. | Done |

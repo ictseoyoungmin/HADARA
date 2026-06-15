@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0316 |
 | Title | Stable 0.3.0 Approval-Gated Publish |
-| Status | In Progress |
+| Status | Done |
 | Created | 2026-06-15 |
 | Updated | 2026-06-15 |
 
@@ -36,7 +36,7 @@
 
 ## Status
 
-In Progress
+Done
 
 ## Status History
 
@@ -44,4 +44,5 @@ In Progress
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-15 | In Progress | Capsule created for approval-gated stable npm publish and package-facing README staging. | T-0315 readiness complete; operator publish pending. |
+| 2026-06-15 | Done | Finished task capsule. | `hadara task finish --execute` |
 <!-- hadara:managed:end task-status-history -->

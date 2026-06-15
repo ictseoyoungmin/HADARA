@@ -316,4 +316,4 @@
 | T-0313 | HADARA-dev Docs Registry Artifact Dogfooding | Done | tasks/T-0313-hadara-dev-docs-registry-artifact-dogfooding | |
 | T-0314 | Docs Patch Execute Atomic Write Hardening | Done | tasks/T-0314-docs-patch-execute-atomic-write-hardening | |
 | T-0315 | Stable 0.3.0 Release Readiness Preparation | Done | tasks/T-0315-stable-0-3-0-release-readiness-preparation | Stable `0.3.0` source/readiness prepared; publish remains T-0316. |
-| T-0316 | Stable 0.3.0 Approval-Gated Publish | In Progress | tasks/T-0316-stable-0-3-0-approval-gated-publish | Package-facing README staged for post-publish npmjs rendering; operator npm login + helper execute pending. |
+| T-0316 | Stable 0.3.0 Approval-Gated Publish | Done | tasks/T-0316-stable-0-3-0-approval-gated-publish | Operator npm publish completed; npm view verified `0.3.0`; GitHub draft false. |
