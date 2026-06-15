@@ -57,6 +57,18 @@ const REQUIRED_TASK_FILES = [
 const EVIDENCE_KINDS = new Set(['test-log', 'command-log', 'diff-summary', 'screenshot', 'note']);
 const EVIDENCE_RESULTS = new Set(['passed', 'failed', 'blocked', 'unknown']);
 const EVIDENCE_VISIBILITIES = new Set(['public', 'private']);
+const TASK_STATUS_TOKENS = new Set(['draft', 'in progress', 'blocked', 'done', 'partial', 'superseded', 'archived']);
+const CLOSE_STATE_TOKENS = new Set([
+  'not-closed',
+  'closed-valid',
+  'closed-stale',
+  'closed-invalid',
+  'unknown',
+  'close-evidence-found-invalid',
+  'close-evidence-malformed',
+  'closed-with-drift-warnings'
+]);
+const STALE_PENDING_CLOSE_PATTERN = /\b(?:done\s+pending\s+lifecycle\s+close|pending\s+lifecycle\s+close)\b/i;
 const DONE_SEMANTIC_EVIDENCE_CODES = new Set([
   'TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE',
   'TASK_DONE_WITH_FAILED_EVIDENCE',
@@ -437,6 +449,8 @@ function validateDoneLevel(projectRoot: string, task: TaskCapsule, issues: Harne
   validateEvidenceIndexHasRecords(projectRoot, task, issues);
   validateEvidenceSemanticGates(projectRoot, task, issues);
   validateHandoffDone(projectRoot, task, issues);
+  validateHandoffCurrentStateTokens(projectRoot, task, issues);
+  validatePlanStatusDrift(projectRoot, task, issues);
   validateTaskBoardDone(projectRoot, task, issues, checkedFiles);
 }
 
@@ -753,6 +767,133 @@ function validateHandoffDone(projectRoot: string, task: TaskCapsule, issues: Har
       }
     });
   }
+}
+
+function validateHandoffCurrentStateTokens(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+  const handoffPath = path.join(task.dir, 'HANDOFF.md');
+  if (!fs.existsSync(handoffPath)) return;
+
+  const relativePath = toPortablePath(path.relative(projectRoot, handoffPath));
+  const currentState = readSectionBody(handoffPath, '## Current State');
+  const fields = handoffCurrentStateFields(currentState);
+  const taskStatus = fields.get('taskstatus') ?? fields.get('task status');
+  const legacyStatus = fields.get('status');
+  const closeState = fields.get('closestate') ?? fields.get('close state');
+
+  if (taskStatus && !isTaskStatusToken(taskStatus)) {
+    issues.push(handoffStatusIssue(relativePath, `HANDOFF.md TaskStatus uses non-canonical value "${taskStatus}".`));
+  }
+
+  if (legacyStatus) {
+    if (STALE_PENDING_CLOSE_PATTERN.test(legacyStatus)) {
+      issues.push(
+        handoffStatusIssue(
+          relativePath,
+          'HANDOFF.md legacy Status mixes lifecycle state with pending close proof wording.'
+        )
+      );
+    } else if (!isTaskStatusToken(legacyStatus)) {
+      issues.push(handoffStatusIssue(relativePath, `HANDOFF.md legacy Status uses non-canonical value "${legacyStatus}".`));
+    }
+  }
+
+  if (STALE_PENDING_CLOSE_PATTERN.test(currentState) && (!legacyStatus || !STALE_PENDING_CLOSE_PATTERN.test(legacyStatus))) {
+    issues.push(
+      handoffStatusIssue(
+        relativePath,
+        'HANDOFF.md Current State contains stale pending lifecycle close wording.'
+      )
+    );
+  }
+
+  if (closeState && !isCloseStateToken(closeState)) {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_HANDOFF_CLOSE_STATE_INVALID',
+      message: `HANDOFF.md CloseState uses unsupported value "${closeState}".`,
+      path: relativePath,
+      heading: 'Current State',
+      fixHint: 'Use a canonical CloseState such as `not-closed`, `closed-valid`, `closed-stale`, `closed-invalid`, or `unknown`; compatibility diagnostic values belong to CloseState, not TaskStatus.',
+      example: '| CloseState | not-closed |',
+      remediationHint: {
+        path: relativePath,
+        heading: 'Current State',
+        requiredChange: 'Set CloseState to a supported close-state token or remove the row for legacy handoff compatibility.',
+        example: '| CloseState | not-closed |',
+        blocking: true
+      }
+    });
+  }
+}
+
+function handoffCurrentStateFields(currentState: string): Map<string, string> {
+  const fields = new Map<string, string>();
+  for (const cells of parseMarkdownRows(currentState)) {
+    if (cells.length < 2 || /^field$/i.test(cells[0] ?? '')) continue;
+    fields.set(normalizeFieldName(cells[0] ?? ''), cells[1]?.trim() ?? '');
+  }
+  return fields;
+}
+
+function handoffStatusIssue(relativePath: string, message: string): HarnessValidationIssue {
+  return {
+    severity: 'error',
+    code: 'TASK_HANDOFF_STATUS_DRIFT',
+    message,
+    path: relativePath,
+    heading: 'Current State',
+    fixHint: 'Use `TaskStatus` for lifecycle state and a separate `CloseState` row for close proof state; avoid phrases such as `Done pending lifecycle close`.',
+    example: '| TaskStatus | Done |\n| CloseState | not-closed |',
+    remediationHint: {
+      path: relativePath,
+      heading: 'Current State',
+      requiredChange: 'Replace ambiguous Status wording with canonical TaskStatus plus separate CloseState.',
+      example: '| TaskStatus | Done |\n| CloseState | not-closed |',
+      blocking: true
+    }
+  };
+}
+
+function validatePlanStatusDrift(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+  const planPath = path.join(task.dir, 'PLAN.md');
+  if (!fs.existsSync(planPath)) return;
+
+  const relativePath = toPortablePath(path.relative(projectRoot, planPath));
+  const rows = parseMarkdownRows(fs.readFileSync(planPath, 'utf8'));
+  const inProgressRows = rows.filter((cells) => {
+    if (/^step$/i.test(cells[0] ?? '')) return false;
+    return (cells[2] ?? '').trim().toLowerCase() === 'in progress';
+  });
+  if (inProgressRows.length === 0) return;
+
+  issues.push({
+    severity: 'error',
+    code: 'TASK_PLAN_STATUS_DRIFT',
+    message: `PLAN.md has ${inProgressRows.length} row(s) still marked In Progress while the task is Done.`,
+    path: relativePath,
+    heading: 'Plan',
+    fixHint: 'Before closing a Done task, mark completed plan rows Done or split/defer unfinished work explicitly instead of leaving rows In Progress.',
+    example: '| 3 | Commit the pre-publish preparation. | Done | `command:T-XXXX:check` |',
+    remediationHint: {
+      path: relativePath,
+      heading: 'Plan',
+      requiredChange: 'Update PLAN.md rows that are no longer active from In Progress to Done, Blocked, Partial, or a task-specific final status with evidence.',
+      example: '| 3 | Commit the pre-publish preparation. | Done | `command:T-XXXX:check` |',
+      blocking: true
+    }
+  });
+}
+
+function isTaskStatusToken(value: string): boolean {
+  return TASK_STATUS_TOKENS.has(value.trim().toLowerCase());
+}
+
+function isCloseStateToken(value: string): boolean {
+  return CLOSE_STATE_TOKENS.has(value.trim().toLowerCase());
+}
+
+function normalizeFieldName(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
 function validateTaskBoardDone(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[], checkedFiles: string[]): void {

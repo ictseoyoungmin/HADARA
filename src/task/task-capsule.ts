@@ -23,7 +23,7 @@ export const TASK_FILES: Record<string, (task: TaskCapsule) => string> = {
   'DECISIONS.md': () => `# Decisions\n\n| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n`,
   'EVIDENCE.md': () => `# Evidence\n\n| Time | Kind | Summary | Result | Visibility | JSONL |\n|---|---|---|---|---|---|\n`,
   'evidence.jsonl': () => '',
-  'HANDOFF.md': (task) => `# Handoff\n\n## Current State\n\n${managedSectionBlock('task-handoff-current-state', { schema: 'hadara.managedSection.v1', owner: 'handoff.update', kind: 'key-value-table', mode: 'update-row', version: 1, required: true, closeSourceRole: 'included' }, `| Field | Value |\n|---|---|\n| Task | ${task.id} |\n| Status | Draft |\n| Last Updated | TBD |\n`)}\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| TBD | TBD |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| TBD | TBD | TBD |\n\n## Carry Forward Warnings\n\n| Warning | Impact | Mitigation |\n|---|---|---|\n`
+  'HANDOFF.md': (task) => `# Handoff\n\n## Current State\n\n${managedSectionBlock('task-handoff-current-state', { schema: 'hadara.managedSection.v1', owner: 'handoff.update', kind: 'key-value-table', mode: 'update-row', version: 1, required: true, closeSourceRole: 'included' }, `| Field | Value |\n|---|---|\n| Task | ${task.id} |\n| TaskStatus | Draft |\n| CloseState | not-closed |\n| Last Updated | TBD |\n`)}\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| TBD | TBD |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| TBD | TBD | TBD |\n\n## Carry Forward Warnings\n\n| Warning | Impact | Mitigation |\n|---|---|---|\n`
 };
 
 export function isTaskCapsuleScaffoldContent(task: TaskCapsule, fileName: string, content: string): boolean {

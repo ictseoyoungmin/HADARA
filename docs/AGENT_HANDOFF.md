@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, recycled from installed-package consumer paths through T-0317, Phase 8 planning was staged through T-0318, and Phase 8.1 status governance completed through T-0319. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, recycled from installed-package consumer paths through T-0317, Phase 8 planning was staged through T-0318, and Phase 8.1/8.2 status governance completed through T-0320. |
 | Current Phase | Phase 8 / 0.3.1 status governance in progress | Phase 8 carries Work Item A/F into status-token governance, document ownership/write boundaries, task handoff close-state clarity, installed-package findings cleanup, state consistency projection, and advisory verification gates. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0319 Phase 8.1 Status Token Policy and Document Ownership | Root and generated workflow/SOP docs now define TaskStatus, CloseState, DocStatus, EvidenceOutcome, reserved non-status strings, and write ownership boundaries. |
-| Active / Next Task | Phase 8.2 Task Handoff Current-State and Close-State Governance | Start from `docs/specs/0.3.1/rc1/02_Task_Handoff_Current_State_and_CloseState.md`; separate persistent TaskStatus from derived CloseState in handoff/task projections. |
-| Validation Baseline | T-0319 focused policy/template validation plus T-0315 stable source baseline | T-0319 passed focused Docker init/template validation, docs required-reading, docs doctor, built CLI smoke, and draft harness validation; full Docker wrapper timed out on existing docs archive/required-reading tests. T-0315 remains the latest stable source full-Docker readiness baseline. |
+| Latest Completed Task | T-0320 Phase 8.2 Task Handoff Current-State and Close-State Governance | New task handoffs now separate `TaskStatus` and `CloseState`; done-level validation catches stale pending-close status wording and `PLAN.md` rows left `In Progress`. |
+| Active / Next Task | Phase 8.3 Installed-Package Findings Cleanup | Start from `docs/specs/0.3.1/rc1/03_Installed_Package_Findings_Cleanup.md`; resolve or explicitly document T-0317 exact-npx/global-path ambiguity and governed docs doctor warnings. |
+| Validation Baseline | T-0320 full Docker sync-build plus focused handoff validation | T-0320 passed focused Docker validation for 5 files / 40 tests, full Docker sync-build for 118 files / 769 tests with `distLooksStale:false`, docs required-reading, docs doctor, `git diff --check`, and draft harness validation. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0320 Phase 8.2 Task Handoff Current-State and Close-State Governance | Separated task-local `TaskStatus` from `CloseState` and added done-level drift checks for stale pending-close wording and `PLAN.md` In Progress rows. | `src/task/task-capsule.ts`, `src/harness/validate.ts`, focused regression tests, full Docker sync-build 118 files / 769 tests. |
 | T-0319 Phase 8.1 Status Token Policy and Document Ownership | Documented canonical status token families and write ownership boundaries in root/generated workflow guidance. | `docs/TASK_WORKFLOW_COMMANDS.md`, `docs/IMPLEMENTATION_SOP.md`, `src/cli/init.ts`, `tests/unit/init.test.ts`; focused validation evidence attached, full Docker timeout retained. |
 | T-0318 Stage Phase 8 0.3.1 Status Governance Specs | Staged the next Phase 8 / 0.3.1 planning and rc1 implementation specs. | `docs/specs/0.3.1/`, `docs/specs/0.3.1/rc1/`, SOP required-reading registration, shared-state updates, and docs-focused validation evidence. |
-| T-0317 Stable 0.3.0 Post-Publish Installed-Package Recycle | Verified stable `hadara@0.3.0` from consumer install paths. | Registry metadata, temp-prefix installed execution, fresh init/docs, migration execute, task finish preservation, and mini lifecycle close/audit evidence appended; exact npx and governed docs warnings recorded in `FINDINGS.md`. |
 
 ## Current Known Problems
 
@@ -26,7 +26,7 @@
 | `docs/DOC_REGISTRY.md` projection is not registered as a registry entry by the current seed. | `docs explain --path docs/DOC_REGISTRY.md` reports `DOC_NOT_REGISTERED`, while the artifact exists and is managed. | Treat as accepted current seed behavior unless a future schema/seed capsule decides self-registration is required. |
 | Host npm remains unreliable for some release smokes. | Host package smoke first failed on a read-only npm cache and host clean-checkout hit an npm internal error, while Docker/npm paths passed. | Use `NPM_CONFIG_CACHE=/tmp/...` for host package smoke and Docker ext4 for clean-checkout smoke. |
 | T-0291/T-0292/T-0293/T-0294 full wrapper validation had timeout-only residual blockers, while T-0295 wrapper validation passed. | Older Phase 7 focused checks passed, and T-0295 restored a clean standard wrapper baseline for current changes. | Use T-0295's 115-file / 741-test wrapper pass as the latest validation baseline, while treating older timeout notes as historical. |
-| T-0319 full Docker wrapper timed out on docs archive/required-reading tests. | The Phase 8.1 policy/template capsule has focused passing evidence, but not a clean full-suite wrapper baseline. | Treat as non-blocking for T-0319; revisit in the Phase 8 review/hardening capsule if the timeout repeats. |
+| T-0319 full Docker wrapper timed out on docs archive/required-reading tests. | Historical T-0319 evidence lacks a clean full-suite wrapper baseline, but T-0320 has since passed full Docker sync-build. | Treat as historical for T-0319; use T-0320 as the current source full-suite baseline unless the timeout repeats. |
 | Combined parallel focused dashboard/static validation can timeout under worker contention. | Standalone dashboard-static passed quickly, but a parallel focused run timed out once. | Run dashboard-static standalone or serialize dashboard validation when investigating route behavior. |
 | `dev docker-check` run from sandboxed Node subprocess can fail before Docker temp workspace creation even when direct `docker exec` succeeds. | JSON reports may show `temp-workspace exitCode=1` without raw logs. | Use explicit container env and rerun outside sandbox, or inspect with direct `docker exec`; T-0274 now exposes failed step and exit code. |
 | Root bootstrap launchers were removed in T-0270. | Local habits such as `./hadara`, `./start.sh`, or `START.bat` no longer work from the repo root. | Use `npm run dev -- ...`, `node dist/cli/main.js ...`, or the documented Docker workflow. Historical portable launcher specs remain separate from current root skeleton files. |
@@ -82,12 +82,13 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Open the Phase 8.2 task handoff current-state and close-state governance capsule. | Phase 8.1 locked the vocabulary; the next slice should stop handoff/task projections from mixing persistent TaskStatus with derived CloseState. | `docs/specs/0.3.1/rc1/02_Task_Handoff_Current_State_and_CloseState.md` |
+| Open the Phase 8.3 installed-package findings cleanup capsule. | Phase 8.2 locked handoff close-state vocabulary; the next slice should resolve or explicitly document the remaining T-0317 consumer recycle findings. | `docs/specs/0.3.1/rc1/03_Installed_Package_Findings_Cleanup.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0320 handoff/close-state governance validation | Focused Docker validation passed 5 files / 40 tests for harness validate, task ready, task capsule, task create, and dashboard bootstrap compatibility; full Docker sync-build passed 118 files / 769 tests and refreshed `dist`; docs required-reading, docs doctor, `git diff --check`, and T-0320 draft harness validation passed. | Current source full-suite baseline for Phase 8. |
 | T-0319 status token policy validation | Root and generated workflow/SOP docs define TaskStatus, CloseState, DocStatus, EvidenceOutcome, reserved non-status strings, and write ownership boundaries; focused Docker init/template validation passed 21 tests, workspace `dist` was refreshed, built CLI version smoke reported `distLooksStale:false`, docs required-reading passed, docs doctor stayed `ok:true` with existing warnings, and draft harness validation passed. | Full Docker wrapper was attempted but timed out on existing docs archive/required-reading 5s tests; do not claim a clean full-suite baseline for T-0319. |
 | T-0318 Phase 8 spec staging | Phase 8 program and rc1 implementation specs were added, new required-reading rows were registered, completed 0.3.0 active spec registrations were removed, shared state docs were updated, and docs-focused validation passed. | Planning/spec-only capsule; no runtime CLI behavior changed. |
 | T-0317 stable installed-package recycle | Registry metadata/latest dist-tag verified `0.3.0`; temp-prefix installed bin reported stable 0.3.0; fresh init/docs, migration execute, finish preservation, and mini lifecycle smokes passed; exact npx and governed docs warnings recorded. | Published-package validation layer for stable `0.3.0`; not a source full-Docker validation replacement. |

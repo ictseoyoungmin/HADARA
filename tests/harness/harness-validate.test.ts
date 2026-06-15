@@ -227,6 +227,104 @@ describe('Harness Task Capsule validation', () => {
     expect(result.issues).toEqual([]);
   });
 
+  it('rejects done-level handoff status that mixes pending close wording into TaskStatus', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Pending close wording');
+    markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
+    markAcceptanceDone(task.dir);
+    writeCompletedCapsuleDocs(task.dir);
+    writeHandoffDone(task.dir);
+    fs.writeFileSync(
+      path.join(task.dir, 'HANDOFF.md'),
+      fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8').replace('| Status | Done |', '| Status | Done pending lifecycle close |'),
+      'utf8'
+    );
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Done-level validation evidence',
+      result: 'passed'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'error',
+        code: 'TASK_HANDOFF_STATUS_DRIFT',
+        path: `tasks/${task.id}-pending-close-wording/HANDOFF.md`,
+        heading: 'Current State',
+        fixHint: expect.stringContaining('TaskStatus')
+      })
+    );
+  });
+
+  it('rejects unsupported explicit handoff CloseState values', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Invalid close state');
+    markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
+    markAcceptanceDone(task.dir);
+    writeCompletedCapsuleDocs(task.dir);
+    writeHandoffDone(task.dir);
+    fs.writeFileSync(
+      path.join(task.dir, 'HANDOFF.md'),
+      fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8').replace('| Status | Done |', '| TaskStatus | Done |\n| CloseState | almost-closed |'),
+      'utf8'
+    );
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Done-level validation evidence',
+      result: 'passed'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'error',
+        code: 'TASK_HANDOFF_CLOSE_STATE_INVALID',
+        path: `tasks/${task.id}-invalid-close-state/HANDOFF.md`,
+        heading: 'Current State',
+        fixHint: expect.stringContaining('not-closed')
+      })
+    );
+  });
+
+  it('rejects done-level capsules whose plan rows are still In Progress', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Plan status drift');
+    markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
+    markAcceptanceDone(task.dir);
+    writeCompletedCapsuleDocs(task.dir);
+    writeHandoffDone(task.dir);
+    fs.appendFileSync(path.join(task.dir, 'PLAN.md'), '| 3 | Commit the preparation. | In Progress | git commit pending. |\n', 'utf8');
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Done-level validation evidence',
+      result: 'passed'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'error',
+        code: 'TASK_PLAN_STATUS_DRIFT',
+        path: `tasks/${task.id}-plan-status-drift/PLAN.md`,
+        heading: 'Plan',
+        fixHint: expect.stringContaining('In Progress')
+      })
+    );
+  });
+
   it('blocks done-level validation for note-only evidence', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Weak done evidence');

@@ -81,6 +81,25 @@ describe('task ready report', () => {
     );
   });
 
+  it('surfaces plan status drift blockers from done-level harness validation', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Ready plan drift task');
+    completeTask(root, task.id, task.dir);
+    fs.appendFileSync(path.join(task.dir, 'PLAN.md'), '| 2 | Finish stale work. | In Progress | Pending. |\n', 'utf8');
+
+    const report = createTaskReadyReport(root, task.id);
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(
+      expect.objectContaining({
+        code: 'HARNESS_TASK_PLAN_STATUS_DRIFT',
+        path: `tasks/${task.id}-ready-plan-drift-task/PLAN.md`,
+        fixHint: expect.stringContaining('In Progress')
+      })
+    );
+    expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'resolve-ready-blockers', required: true }));
+  });
+
   it('threads explicit actor CLI options into task ready reports', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Ready actor task');

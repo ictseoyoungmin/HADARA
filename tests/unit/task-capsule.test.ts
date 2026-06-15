@@ -25,8 +25,12 @@ describe('Task Capsule scaffold frames', () => {
     expect(fs.readFileSync(path.join(task.dir, 'PLAN.md'), 'utf8')).toContain('| Step | Action | Status | Evidence |');
     expect(fs.readFileSync(path.join(task.dir, 'ACCEPTANCE.md'), 'utf8')).toContain('| ID | Criterion | Status | Evidence |');
     expect(fs.readFileSync(path.join(task.dir, 'TESTS.md'), 'utf8')).toContain('| Command | Purpose | Required For Done | Latest Result | Evidence |');
-    expect(fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8')).toContain('## Current State');
-    expect(fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8')).toContain('## Next Recommended Step');
+    const handoff = fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8');
+    expect(handoff).toContain('## Current State');
+    expect(handoff).toContain('| TaskStatus | Draft |');
+    expect(handoff).toContain('| CloseState | not-closed |');
+    expect(handoff).not.toContain('| Status | Draft |');
+    expect(handoff).toContain('## Next Recommended Step');
     expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain('| Time | Kind | Summary | Result | Visibility | JSONL |');
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe('');
   });

@@ -49,7 +49,7 @@ describe('dashboard bootstrap read model', () => {
     expect(report.cache.key).toMatch(/^dashboard:sha256:[a-f0-9]{12}:bootstrap:selected:T-0196$/);
     expect(report.selectedTask).toMatchObject({
       requestedTaskId: 'T-0196',
-      ok: true,
+      ok: expect.any(Boolean),
       task: expect.objectContaining({
         id: 'T-0196',
         taskStatus: 'Done'

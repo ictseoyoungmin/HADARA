@@ -320,3 +320,4 @@
 | T-0317 | Stable 0.3.0 Post-Publish Installed-Package Recycle | Done | tasks/T-0317-stable-0-3-0-post-publish-installed-package-recycle | |
 | T-0318 | Stage Phase 8 0.3.1 status governance specs | Done | tasks/T-0318-stage-phase-8-0-3-1-status-governance-specs | |
 | T-0319 | Phase 8.1 Status Token Policy and Document Ownership | Done | tasks/T-0319-phase-8-1-status-token-policy-and-document-ownership | |
+| T-0320 | Phase 8.2 Task Handoff Current-State and Close-State Governance | Done | tasks/T-0320-phase-8-2-task-handoff-current-state-and-close-state-governance | |
