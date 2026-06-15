@@ -13,7 +13,7 @@ Current stable-release metadata mode:
 - Current version is `0.3.0`.
 - Current source version is `0.3.0`.
 - Current release target is stable `0.3.0`.
-- Current stable npm publish status: not yet performed; T-0315 prepares readiness only.
+- Current stable npm publish status: approval-gated T-0316 capsule active; README is staged with post-publish package-page wording so npmjs renders the stable release clearly immediately after publish.
 - Previous published npm release candidate is `0.3.0-rc.2`.
 - T-0287 prepares `hadara@0.2.0-rc.3` as a source publish candidate based on the `0.2.0-rc.2` dogfooding results and the proof reliability fixes from T-0284 through T-0286; this capsule performs no npm publish, GitHub Release creation, Docker image build, registry mutation, or token loading.
 - T-0289 refreshed and published `hadara@0.2.0-rc.3`; npm registry verification returned `0.2.0-rc.3`.
@@ -25,11 +25,12 @@ Current stable-release metadata mode:
 - T-0310 prepared and published `hadara@0.3.0-rc.2` through the approval-gated manual helper. The helper refreshed final validation, release artifact, package smoke, clean-checkout smoke, strict gate, dry-run, and publish dry-run evidence; npm publish completed; `npm view` verified `hadara@0.3.0-rc.2`; GitHub Release draft was not requested.
 - T-0313 committed HADARA-dev's own `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md` artifacts from existing docs-registry service output so context routing no longer points at absent files.
 - T-0314 hardened `docs patch --execute` by replacing direct target overwrite with the shared atomic text write helper and adding failure-preservation/temp-cleanup regression coverage.
-- T-0315 prepares stable `hadara@0.3.0` source metadata and release readiness evidence after T-0313/T-0314 follow-up hardening. It performs no npm publish, GitHub Release creation, Docker image build/push, PyPI publish, registry mutation, or token loading.
+- T-0315 prepared stable `hadara@0.3.0` source metadata and release readiness evidence after T-0313/T-0314 follow-up hardening. It performed no npm publish, GitHub Release creation, Docker image build/push, PyPI publish, registry mutation, or token loading.
+- T-0316 is the approval-gated stable npm publish capsule. Its pre-publish repo update intentionally stages the README as post-publish package-facing content; actual npm publish and `npm view` verification evidence must be attached to T-0316 after the operator runs the helper.
 - T-0269 pre-publish dry-run recheck passed for `0.2.0-rc.0`, but `NPM_TOKEN` was missing and no publish mutation was executed; T-0275 supersedes that candidate with `0.2.0-rc.1` after recycle fixes.
 - T-0275 refreshed publish-readiness evidence for `hadara@0.2.0-rc.1` and the operator published it to npm; `npm view hadara@0.2.0-rc.1 version --registry=https://registry.npmjs.org` returned `0.2.0-rc.1`.
 - T-0282 refreshed and published `hadara@0.2.0-rc.2` after the init scaffold protocol guidance follow-up: package metadata/docs/helper examples target rc2; Docker `npm run dev:docker-sync-build` passed 100 files / 681 tests and refreshed `dist`; built CLI version smoke reported `0.2.0-rc.2`; strict release gate passed; rc2 package smoke and clean-checkout smoke evidence passed; `npm pack --dry-run --json` produced rc2 tarball metadata; the manual helper regenerated release artifact/package/clean-checkout evidence from a clean committed worktree, published to npm, and verified `npm view` returned `0.2.0-rc.2`.
-- Current operator publish status: `hadara@0.3.0-rc.2` npm publish and T-0312 post-publish installed-package recycle are complete; stable `hadara@0.3.0` publish is deferred to the approval-gated T-0316 capsule after T-0315 closes.
+- Current operator publish status: `hadara@0.3.0-rc.2` npm publish and T-0312 post-publish installed-package recycle are complete; stable `hadara@0.3.0` publish is active in the approval-gated T-0316 capsule and remains pending until operator execution output is attached.
 - README now includes a top image from `docs/assets/hadara_sub_right_name.png`; because package `files` currently excludes `docs/assets/`, publish readiness uses the GitHub raw image URL. T-0275 verified `docs/assets/hadara_sub_right_name.png` is tracked and the raw URL returned HTTP 200.
 - Current package is `private: false`.
 - Current package metadata includes `"license": "MIT"`.

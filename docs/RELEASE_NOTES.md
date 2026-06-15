@@ -2,7 +2,7 @@
 
 ## 0.3.0
 
-Stable release target for the Phase 7 Surface Refactor after `0.3.0-rc.2` post-publish recycle, HADARA-dev docs registry artifact dogfooding, and docs patch atomic write hardening.
+Stable release for the Phase 7 Surface Refactor after `0.3.0-rc.2` post-publish recycle, HADARA-dev docs registry artifact dogfooding, and docs patch atomic write hardening.
 
 Highlights:
 
@@ -16,7 +16,8 @@ Highlights:
 
 Boundaries:
 
-- T-0315 prepares stable `hadara@0.3.0` source metadata, release docs, and release readiness evidence only.
+- T-0315 prepared stable `hadara@0.3.0` source metadata, release docs, and release readiness evidence.
+- T-0316 is the approval-gated npm publish capsule for stable `hadara@0.3.0`; registry verification evidence belongs to T-0316.
 - This release is not a full agent runtime, Rack/enterprise release, broad document rewrite engine, automatic historical deletion release, or release automation expansion.
 - Publish mutation, GitHub Release creation, Docker image publishing, and PyPI publication remain explicit operator-approved actions.
 
