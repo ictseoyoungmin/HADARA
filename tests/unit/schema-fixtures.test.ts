@@ -69,6 +69,7 @@ describe('schema fixtures', () => {
       'hadara.releasePublish.v1',
       'hadara.runtime.version.v1',
       'hadara.smokeEvidenceSummary.v1',
+      'hadara.stateProjection.v1',
       'hadara.task.audit_close.v1',
       'hadara.task.close.v1',
       'hadara.task.complete_flow.v1',

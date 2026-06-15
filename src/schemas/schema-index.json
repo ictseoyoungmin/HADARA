@@ -275,6 +275,13 @@
       "notes": "Documents read-only CLI origin, package, git, Node, and build freshness reports from hadara version --verbose."
     },
     {
+      "id": "hadara.stateProjection.v1",
+      "path": "src/schemas/state-projection.schema.json",
+      "status": "fixture",
+      "owner": "services/state-projection",
+      "notes": "Documents the Phase 8.4 read-only state consistency projection over Task Board, Task Capsules, handoff, close evidence, docs registry, and release readiness state."
+    },
+    {
       "id": "hadara.releaseGate.v1",
       "path": "src/schemas/release-gate.schema.json",
       "status": "fixture",

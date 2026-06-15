@@ -322,3 +322,4 @@
 | T-0319 | Phase 8.1 Status Token Policy and Document Ownership | Done | tasks/T-0319-phase-8-1-status-token-policy-and-document-ownership | |
 | T-0320 | Phase 8.2 Task Handoff Current-State and Close-State Governance | Done | tasks/T-0320-phase-8-2-task-handoff-current-state-and-close-state-governance | |
 | T-0321 | Phase 8.3 Installed-Package Findings Cleanup | Done | tasks/T-0321-phase-8-3-installed-package-findings-cleanup | |
+| T-0322 | Phase 8.4 State Consistency Projection Read Model | Done | tasks/T-0322-phase-8-4-state-consistency-projection-read-model | |

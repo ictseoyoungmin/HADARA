@@ -40,6 +40,7 @@ import releaseGateSchemaJson from '../schemas/release-gate.schema.json';
 import releasePublishSchemaJson from '../schemas/release-publish.schema.json';
 import runtimeVersionSchemaJson from '../schemas/runtime-version.schema.json';
 import smokeEvidenceSummarySchemaJson from '../schemas/smoke-evidence-summary.schema.json';
+import stateProjectionSchemaJson from '../schemas/state-projection.schema.json';
 import taskAuditCloseSchemaJson from '../schemas/task-audit-close.schema.json';
 import taskCloseSchemaJson from '../schemas/task-close.schema.json';
 import taskCompleteFlowSchemaJson from '../schemas/task-complete-flow.schema.json';
@@ -132,6 +133,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.releasePublish.v1': releasePublishSchemaJson as JsonObject,
   'hadara.runtime.version.v1': runtimeVersionSchemaJson as JsonObject,
   'hadara.smokeEvidenceSummary.v1': smokeEvidenceSummarySchemaJson as JsonObject,
+  'hadara.stateProjection.v1': stateProjectionSchemaJson as JsonObject,
   'hadara.task.audit_close.v1': taskAuditCloseSchemaJson as JsonObject,
   'hadara.task.close.v1': taskCloseSchemaJson as JsonObject,
   'hadara.task.complete_flow.v1': taskCompleteFlowSchemaJson as JsonObject,

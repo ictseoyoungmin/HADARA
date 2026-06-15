@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.stateProjection.v1",
+  "x-hadara-schema-id": "hadara.stateProjection.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "generatedAt", "projectRoot", "summary", "sources", "tasks", "issues"],
+  "properties": {
+    "schemaVersion": {
+      "const": "hadara.stateProjection.v1"
+    },
+    "command": {
+      "const": "state.projection"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "generatedAt": {
+      "type": "string"
+    },
+    "projectRoot": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "object",
+      "required": ["consistent", "issueCounts", "latestDoneTaskId", "activeTaskIds", "checkedTasks"],
+      "additionalProperties": true,
+      "properties": {
+        "consistent": {
+          "type": "boolean"
+        },
+        "issueCounts": {
+          "type": "object"
+        },
+        "latestDoneTaskId": {
+          "type": ["string", "null"]
+        },
+        "activeTaskIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "checkedTasks": {
+          "type": "number"
+        }
+      }
+    },
+    "sources": {
+      "type": "object"
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "capsule", "task", "taskBoard", "handoff", "plan", "closeProof"],
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "capsule": {
+            "type": "string"
+          },
+          "task": {
+            "type": "object"
+          },
+          "taskBoard": {
+            "type": "object"
+          },
+          "handoff": {
+            "type": "object"
+          },
+          "plan": {
+            "type": "object"
+          },
+          "closeProof": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "code", "message", "fixHint"],
+        "additionalProperties": true,
+        "properties": {
+          "severity": {
+            "enum": ["error", "warning", "info"]
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "taskId": {
+            "type": "string"
+          },
+          "fixHint": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

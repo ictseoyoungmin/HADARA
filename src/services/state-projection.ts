@@ -1,0 +1,509 @@
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
+import { closeRelevantSourceRelativePaths } from '../task/task-close';
+import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
+import { parseEvidenceIndexFile } from './evidence-list';
+import { findMarkdownRowByCell, parseMarkdownRows, parseMarkdownRowsUnderHeading, readMarkdownSection } from './markdown-table';
+
+export type StateProjectionSeverity = 'error' | 'warning' | 'info';
+
+export interface StateProjectionIssue {
+  severity: StateProjectionSeverity;
+  code: string;
+  message: string;
+  path?: string;
+  taskId?: string;
+  expected?: string;
+  actual?: string;
+  fixHint: string;
+}
+
+export interface StateProjectionSourceValue {
+  path: string;
+  exists: boolean;
+}
+
+export interface StateProjectionTask {
+  id: string;
+  title: string;
+  capsule: string;
+  task: {
+    path: string;
+    exists: boolean;
+    status: string | null;
+  };
+  taskBoard: {
+    path: 'docs/TASK_BOARD.md';
+    present: boolean;
+    status: string | null;
+    capsule: string | null;
+  };
+  handoff: {
+    path: string;
+    exists: boolean;
+    taskStatus: string | null;
+    closeState: string | null;
+  };
+  plan: {
+    path: string;
+    exists: boolean;
+    totalRows: number;
+    doneRows: number;
+    pendingRows: number;
+    inProgressRows: number;
+  };
+  closeProof: {
+    path: string;
+    state: 'not-closed' | 'closed-valid' | 'closed-invalid' | 'closed-stale' | 'unknown';
+    sourceHash: string | null;
+    currentSourceHash: string | null;
+  };
+}
+
+export interface StateProjectionReport {
+  schemaVersion: 'hadara.stateProjection.v1';
+  command: 'state.projection';
+  ok: true;
+  generatedAt: string;
+  projectRoot: string;
+  summary: {
+    consistent: boolean;
+    issueCounts: Record<StateProjectionSeverity, number>;
+    latestDoneTaskId: string | null;
+    activeTaskIds: string[];
+    checkedTasks: number;
+  };
+  sources: {
+    projectState: StateProjectionSourceValue & {
+      latestCompletedTaskId: string | null;
+      activeTaskId: string | null;
+    };
+    agentHandoff: StateProjectionSourceValue & {
+      latestCompletedTaskId: string | null;
+      activeTaskId: string | null;
+    };
+    taskBoard: StateProjectionSourceValue & {
+      rows: number;
+      latestDoneTaskId: string | null;
+      activeTaskIds: string[];
+    };
+    developmentSlices: StateProjectionSourceValue & {
+      latestDoneTaskId: string | null;
+    };
+    docsRegistry: StateProjectionSourceValue & {
+      registeredDocuments: number | null;
+      statusCounts: Record<string, number>;
+    };
+    releaseReadiness: StateProjectionSourceValue;
+  };
+  tasks: StateProjectionTask[];
+  issues: StateProjectionIssue[];
+}
+
+interface TaskBoardRow {
+  id: string;
+  title: string;
+  status: string;
+  capsule: string;
+}
+
+const TASK_STATUS_TOKENS = new Set(['Draft', 'In Progress', 'Blocked', 'Done', 'Partial', 'Superseded', 'Archived']);
+const CLOSE_STATE_TOKENS = new Set(['not-closed', 'closed-valid', 'closed-stale', 'closed-invalid', 'unknown']);
+
+export function createStateProjectionReport(projectRoot: string, now = new Date()): StateProjectionReport {
+  const issues: StateProjectionIssue[] = [];
+  const sourceTexts = readSources(projectRoot, issues);
+  const taskBoardRows = parseTaskBoardRows(sourceTexts.taskBoard.content);
+  const tasks = listTaskCapsules(projectRoot);
+  const taskById = new Map(tasks.map((task) => [task.id, task]));
+  const taskIds = new Set([...tasks.map((task) => task.id), ...taskBoardRows.map((row) => row.id)]);
+  const basicTaskStates = [...taskIds].sort().map((taskId) => ({
+    id: taskId,
+    taskStatus: taskById.get(taskId) ? readTaskStatus(path.join(taskById.get(taskId)!.dir, 'TASK.md')) : null,
+    taskBoardStatus: taskBoardRows.find((row) => row.id === taskId)?.status ?? null
+  }));
+  const latestDoneTaskId = latestTaskId(basicTaskStates.filter((task) => isDone(task.taskStatus) || isDone(task.taskBoardStatus)).map((task) => task.id));
+  const activeTaskIds = basicTaskStates.filter((task) => isActive(task.taskBoardStatus)).map((task) => task.id);
+  const deepCheckTaskIds = new Set([latestDoneTaskId, ...activeTaskIds].filter((value): value is string => Boolean(value)));
+  const projectedTasks = [...taskIds]
+    .sort()
+    .map((taskId) => buildTaskProjection(projectRoot, taskId, taskById.get(taskId), taskBoardRows.find((row) => row.id === taskId), deepCheckTaskIds.has(taskId), issues));
+  checkLatestCloseProof(projectedTasks, latestDoneTaskId, issues);
+  const projectState = extractProjectState(sourceTexts.projectState);
+  const agentHandoff = extractAgentHandoff(sourceTexts.agentHandoff);
+  const developmentSlices = extractDevelopmentSlices(sourceTexts.developmentSlices);
+  const docsRegistry = extractDocsRegistry(projectRoot, issues);
+  const releaseReadiness = readSource(projectRoot, 'docs/RELEASE_READINESS.md');
+
+  if (!releaseReadiness.exists) {
+    issues.push(warning('STATE_RELEASE_READINESS_MISSING', releaseReadiness.path, 'docs/RELEASE_READINESS.md is missing.', 'Create or register release readiness docs before release work depends on this projection.'));
+  }
+
+  compareLatestTask('STATE_PROJECT_STATE_LATEST_MISMATCH', 'docs/PROJECT_STATE.md', projectState.latestCompletedTaskId, latestDoneTaskId, issues);
+  compareLatestTask('STATE_HANDOFF_LATEST_MISMATCH', 'docs/AGENT_HANDOFF.md', agentHandoff.latestCompletedTaskId, latestDoneTaskId, issues);
+  compareLatestTask('STATE_DEVELOPMENT_SLICES_LATEST_MISMATCH', 'docs/DEVELOPMENT_SLICES.md', developmentSlices.latestDoneTaskId, latestDoneTaskId, issues);
+  compareActiveTasks(projectState.activeTaskId, agentHandoff.activeTaskId, activeTaskIds, issues);
+
+  const counts = countIssues(issues);
+  return {
+    schemaVersion: 'hadara.stateProjection.v1',
+    command: 'state.projection',
+    ok: true,
+    generatedAt: now.toISOString(),
+    projectRoot,
+    summary: {
+      consistent: counts.error === 0 && counts.warning === 0,
+      issueCounts: counts,
+      latestDoneTaskId,
+      activeTaskIds,
+      checkedTasks: projectedTasks.length
+    },
+    sources: {
+      projectState: {
+        path: sourceTexts.projectState.path,
+        exists: sourceTexts.projectState.exists,
+        latestCompletedTaskId: projectState.latestCompletedTaskId,
+        activeTaskId: projectState.activeTaskId
+      },
+      agentHandoff: {
+        path: sourceTexts.agentHandoff.path,
+        exists: sourceTexts.agentHandoff.exists,
+        latestCompletedTaskId: agentHandoff.latestCompletedTaskId,
+        activeTaskId: agentHandoff.activeTaskId
+      },
+      taskBoard: {
+        path: sourceTexts.taskBoard.path,
+        exists: sourceTexts.taskBoard.exists,
+        rows: taskBoardRows.length,
+        latestDoneTaskId: latestTaskId(taskBoardRows.filter((row) => isDone(row.status)).map((row) => row.id)),
+        activeTaskIds
+      },
+      developmentSlices: {
+        path: sourceTexts.developmentSlices.path,
+        exists: sourceTexts.developmentSlices.exists,
+        latestDoneTaskId: developmentSlices.latestDoneTaskId
+      },
+      docsRegistry,
+      releaseReadiness: {
+        path: releaseReadiness.path,
+        exists: releaseReadiness.exists
+      }
+    },
+    tasks: projectedTasks,
+    issues
+  };
+}
+
+function readSources(projectRoot: string, issues: StateProjectionIssue[]): {
+  projectState: SourceText;
+  agentHandoff: SourceText;
+  taskBoard: SourceText;
+  developmentSlices: SourceText;
+} {
+  const projectState = readSource(projectRoot, 'docs/PROJECT_STATE.md');
+  const agentHandoff = readSource(projectRoot, 'docs/AGENT_HANDOFF.md');
+  const taskBoard = readSource(projectRoot, 'docs/TASK_BOARD.md');
+  const developmentSlices = readSource(projectRoot, 'docs/DEVELOPMENT_SLICES.md');
+  for (const source of [projectState, agentHandoff, taskBoard, developmentSlices]) {
+    if (!source.exists) issues.push(warning('STATE_SOURCE_MISSING', source.path, `${source.path} is missing.`, `Restore ${source.path} or run the relevant HADARA init/profile remediation.`));
+  }
+  return { projectState, agentHandoff, taskBoard, developmentSlices };
+}
+
+interface SourceText extends StateProjectionSourceValue {
+  content: string;
+}
+
+function readSource(projectRoot: string, relativePath: string): SourceText {
+  const absolutePath = path.join(projectRoot, relativePath);
+  const exists = fs.existsSync(absolutePath);
+  return {
+    path: relativePath,
+    exists,
+    content: exists ? fs.readFileSync(absolutePath, 'utf8') : ''
+  };
+}
+
+function parseTaskBoardRows(content: string): TaskBoardRow[] {
+  return parseMarkdownRows(content)
+    .filter((row) => /^T-\d{4}$/.test(row[0] ?? ''))
+    .map((row) => ({
+      id: row[0],
+      title: row[1] ?? '',
+      status: row[2] ?? '',
+      capsule: row[3] ?? ''
+    }));
+}
+
+function buildTaskProjection(
+  projectRoot: string,
+  taskId: string,
+  task: TaskCapsule | undefined,
+  taskBoard: TaskBoardRow | undefined,
+  deepCheck: boolean,
+  issues: StateProjectionIssue[]
+): StateProjectionTask {
+  const taskPath = task ? toPortablePath(path.relative(projectRoot, path.join(task.dir, 'TASK.md'))) : '';
+  const handoffPath = task ? toPortablePath(path.relative(projectRoot, path.join(task.dir, 'HANDOFF.md'))) : '';
+  const planPath = task ? toPortablePath(path.relative(projectRoot, path.join(task.dir, 'PLAN.md'))) : '';
+  const taskStatus = task ? readTaskStatus(path.join(task.dir, 'TASK.md')) : null;
+  const taskHandoff = task && deepCheck ? readTaskHandoff(path.join(task.dir, 'HANDOFF.md')) : { exists: task ? fs.existsSync(path.join(task.dir, 'HANDOFF.md')) : false, taskStatus: null, closeState: null };
+  const plan = task && deepCheck ? readPlanState(path.join(task.dir, 'PLAN.md')) : { exists: task ? fs.existsSync(path.join(task.dir, 'PLAN.md')) : false, totalRows: 0, doneRows: 0, pendingRows: 0, inProgressRows: 0 };
+  const closeProof = task && deepCheck ? readCloseProof(projectRoot, task) : { path: task ? toPortablePath(path.relative(projectRoot, path.join(task.dir, 'evidence.jsonl'))) : '', state: 'unknown' as const, sourceHash: null, currentSourceHash: null };
+  const capsule = task ? toPortablePath(path.relative(projectRoot, task.dir)) : taskBoard?.capsule ?? '';
+
+  if (!task && taskBoard) {
+    issues.push(warning('STATE_TASK_BOARD_CAPSULE_MISSING', 'docs/TASK_BOARD.md', `Task Board row ${taskId} points at ${taskBoard.capsule || '(empty)'}, but no matching capsule was found.`, `Create the missing capsule or update/remove the ${taskId} Task Board row.`, taskId));
+  }
+  if (task && !taskBoard) {
+    issues.push(warning('STATE_TASK_BOARD_ROW_MISSING', 'docs/TASK_BOARD.md', `Task Capsule ${taskId} exists but has no Task Board row.`, `Run task workflow remediation or add a Task Board row for ${taskId}.`, taskId));
+  }
+  if (task && taskBoard && taskBoard.capsule !== capsule) {
+    issues.push(warning('STATE_TASK_BOARD_CAPSULE_DRIFT', 'docs/TASK_BOARD.md', `Task Board capsule for ${taskId} is ${taskBoard.capsule || '(empty)'}, expected ${capsule}.`, `Update the Task Board capsule cell for ${taskId}.`, taskId, capsule, taskBoard.capsule || '(empty)'));
+  }
+  if (taskStatus && taskBoard?.status && taskStatus !== taskBoard.status) {
+    issues.push(warning('STATE_TASK_BOARD_STATUS_DRIFT', 'docs/TASK_BOARD.md', `Task Board status for ${taskId} is ${taskBoard.status}, but TASK.md status is ${taskStatus}.`, `Run hadara task finish --task ${taskId} --execute --json after the capsule is complete, or align the status source intentionally.`, taskId, taskStatus, taskBoard.status));
+  }
+  if (deepCheck && taskHandoff.taskStatus && !TASK_STATUS_TOKENS.has(taskHandoff.taskStatus)) {
+    issues.push(warning('STATE_TASK_HANDOFF_STATUS_INVALID', handoffPath, `Task handoff TaskStatus for ${taskId} is not a canonical task status token: ${taskHandoff.taskStatus}.`, 'Use a canonical TaskStatus token and put close proof state in CloseState.', taskId));
+  }
+  if (deepCheck && taskHandoff.taskStatus && /pending lifecycle close|closed-valid|not-closed/i.test(taskHandoff.taskStatus)) {
+    issues.push(warning('STATE_TASK_HANDOFF_STATUS_CLOSE_STATE_MIXED', handoffPath, `Task handoff TaskStatus for ${taskId} appears to mix task status and close proof state.`, 'Use TaskStatus: Done and CloseState: not-closed/closed-valid as separate fields.', taskId));
+  }
+  if (deepCheck && taskHandoff.closeState && !CLOSE_STATE_TOKENS.has(taskHandoff.closeState)) {
+    issues.push(warning('STATE_TASK_HANDOFF_CLOSE_STATE_INVALID', handoffPath, `Task handoff CloseState for ${taskId} is not canonical: ${taskHandoff.closeState}.`, 'Use not-closed, closed-valid, closed-stale, closed-invalid, or unknown.', taskId));
+  }
+  if (deepCheck && (isDone(taskStatus) || isDone(taskBoard?.status)) && (plan.pendingRows > 0 || plan.inProgressRows > 0)) {
+    issues.push(warning('STATE_TASK_PLAN_DRIFT', planPath, `Done task ${taskId} has PLAN rows still Pending or In Progress.`, 'Update PLAN.md rows to Done or record an explicit residual-risk decision before closing.', taskId));
+  }
+
+  return {
+    id: taskId,
+    title: task?.title ?? taskBoard?.title ?? 'Unknown',
+    capsule,
+    task: {
+      path: taskPath,
+      exists: Boolean(task),
+      status: taskStatus
+    },
+    taskBoard: {
+      path: 'docs/TASK_BOARD.md',
+      present: Boolean(taskBoard),
+      status: taskBoard?.status ?? null,
+      capsule: taskBoard?.capsule ?? null
+    },
+    handoff: {
+      path: handoffPath,
+      exists: taskHandoff.exists,
+      taskStatus: taskHandoff.taskStatus,
+      closeState: taskHandoff.closeState
+    },
+    plan: {
+      ...plan,
+      path: planPath
+    },
+    closeProof
+  };
+}
+
+function readTaskStatus(taskPath: string): string | null {
+  if (!fs.existsSync(taskPath)) return null;
+  const section = readMarkdownSection(fs.readFileSync(taskPath, 'utf8'), '## Status');
+  return section.trim().split(/\r?\n/)[0]?.trim() || null;
+}
+
+function readTaskHandoff(handoffPath: string): { exists: boolean; taskStatus: string | null; closeState: string | null } {
+  if (!fs.existsSync(handoffPath)) return { exists: false, taskStatus: null, closeState: null };
+  const rows = parseMarkdownRowsUnderHeading(fs.readFileSync(handoffPath, 'utf8'), '## Current State');
+  return {
+    exists: true,
+    taskStatus: findMarkdownRowByCell(rows, 0, 'TaskStatus')?.[1] ?? findMarkdownRowByCell(rows, 0, 'Status')?.[1] ?? null,
+    closeState: findMarkdownRowByCell(rows, 0, 'CloseState')?.[1] ?? null
+  };
+}
+
+function readPlanState(planPath: string): StateProjectionTask['plan'] {
+  if (!fs.existsSync(planPath)) {
+    return { path: '', exists: false, totalRows: 0, doneRows: 0, pendingRows: 0, inProgressRows: 0 };
+  }
+  const rows = parseMarkdownRows(fs.readFileSync(planPath, 'utf8')).filter((row) => /^\d+$/.test(row[0] ?? ''));
+  return {
+    path: toPortablePath(planPath),
+    exists: true,
+    totalRows: rows.length,
+    doneRows: rows.filter((row) => normalizeStatus(row[2]) === 'done').length,
+    pendingRows: rows.filter((row) => normalizeStatus(row[2]) === 'pending').length,
+    inProgressRows: rows.filter((row) => normalizeStatus(row[2]) === 'inprogress').length
+  };
+}
+
+function readCloseProof(projectRoot: string, task: TaskCapsule): StateProjectionTask['closeProof'] {
+  const evidencePath = path.join(task.dir, 'evidence.jsonl');
+  const relativeEvidencePath = toPortablePath(path.relative(projectRoot, evidencePath));
+  const records = parseEvidenceIndexFile(evidencePath, task.id).records.filter((record) => persistedEvidenceKind(record) === 'command-log' && /Task close validation .* before close evidence append/.test(record.summary));
+  const latest = records.at(-1);
+  const currentSourceHash = hashCloseRelevantSource(projectRoot, task.dir);
+  if (!latest) return { path: relativeEvidencePath, state: 'not-closed', sourceHash: null, currentSourceHash };
+  const sourceHash = extractSourceHash(latest.summary);
+  const passed = persistedEvidenceResult(latest) === 'passed';
+  const state = !passed ? 'closed-invalid' : sourceHash && sourceHash !== currentSourceHash ? 'closed-stale' : 'closed-valid';
+  return { path: relativeEvidencePath, state, sourceHash, currentSourceHash };
+}
+
+function extractProjectState(source: SourceText): { latestCompletedTaskId: string | null; activeTaskId: string | null } {
+  const rows = parseMarkdownRowsUnderHeading(source.content, '## Metadata');
+  return {
+    latestCompletedTaskId: extractTaskId(findMarkdownRowByCell(rows, 0, 'Latest Completed Task')?.[1] ?? ''),
+    activeTaskId: extractTaskId(findMarkdownRowByCell(rows, 0, 'Active Task')?.[1] ?? '')
+  };
+}
+
+function extractAgentHandoff(source: SourceText): { latestCompletedTaskId: string | null; activeTaskId: string | null } {
+  const currentRows = parseMarkdownRowsUnderHeading(source.content, '## Current State');
+  const latest = findMarkdownRowByCell(currentRows, 0, 'Latest Completed Task')?.[1] ?? '';
+  const active = findMarkdownRowByCell(currentRows, 0, 'Active / Next Task')?.[1] ?? '';
+  const lastThreeRows = parseMarkdownRowsUnderHeading(source.content, '## Last 3 Completed Tasks');
+  return {
+    latestCompletedTaskId: extractTaskId(latest) ?? extractTaskId(lastThreeRows.find((row) => /^T-\d{4}/.test(row[0] ?? ''))?.[0] ?? ''),
+    activeTaskId: extractTaskId(active)
+  };
+}
+
+function extractDevelopmentSlices(source: SourceText): { latestDoneTaskId: string | null } {
+  const rows = parseMarkdownRows(source.content);
+  const doneIds = rows
+    .filter((row) => /^T-\d{4}$/.test(row[2] ?? '') && /^Done\b/.test(row[4] ?? ''))
+    .map((row) => row[2]);
+  return { latestDoneTaskId: latestTaskId(doneIds) };
+}
+
+function extractDocsRegistry(projectRoot: string, issues: StateProjectionIssue[]): StateProjectionReport['sources']['docsRegistry'] {
+  const source = readSource(projectRoot, '.hadara/docs-registry.json');
+  if (!source.exists) {
+    issues.push(warning('STATE_DOCS_REGISTRY_MISSING', source.path, '.hadara/docs-registry.json is missing.', 'Run docs registry generation or protocol migration before relying on docs state projection.'));
+    return { path: source.path, exists: false, registeredDocuments: null, statusCounts: {} };
+  }
+  try {
+    const parsed = JSON.parse(source.content) as { documents?: Array<{ status?: string }> };
+    const documents = Array.isArray(parsed.documents) ? parsed.documents : [];
+    return {
+      path: source.path,
+      exists: true,
+      registeredDocuments: documents.length,
+      statusCounts: documents.reduce<Record<string, number>>((acc, doc) => {
+        const status = doc.status ?? 'unknown';
+        acc[status] = (acc[status] ?? 0) + 1;
+        return acc;
+      }, {})
+    };
+  } catch (error) {
+    issues.push(warning('STATE_DOCS_REGISTRY_INVALID_JSON', source.path, `.hadara/docs-registry.json could not be parsed: ${error instanceof Error ? error.message : String(error)}`, 'Repair the docs registry JSON before relying on document state projection.'));
+    return { path: source.path, exists: true, registeredDocuments: null, statusCounts: {} };
+  }
+}
+
+function compareLatestTask(
+  code: string,
+  sourcePath: string,
+  actual: string | null,
+  expected: string | null,
+  issues: StateProjectionIssue[]
+): void {
+  if (!actual || !expected || actual === expected) return;
+  issues.push(warning(code, sourcePath, `${sourcePath} points to latest completed task ${actual}, but the projected latest Done task is ${expected}.`, `Update ${sourcePath} latest completed task state to ${expected} or correct the Done task source.`, undefined, expected, actual));
+}
+
+function compareActiveTasks(projectActive: string | null, handoffActive: string | null, activeTaskIds: string[], issues: StateProjectionIssue[]): void {
+  const expected = activeTaskIds[0] ?? null;
+  if (activeTaskIds.length > 1) {
+    issues.push(warning('STATE_MULTIPLE_ACTIVE_TASKS', 'docs/TASK_BOARD.md', `Task Board has multiple active tasks: ${activeTaskIds.join(', ')}.`, 'Keep only one In Progress task unless a future coordinator explicitly supports parallel active work.'));
+  }
+  if (expected && projectActive && projectActive !== expected) {
+    issues.push(warning('STATE_PROJECT_ACTIVE_TASK_MISMATCH', 'docs/PROJECT_STATE.md', `Project State active task is ${projectActive}, but Task Board active task is ${expected}.`, `Update Project State Active Task to ${expected} or finish/reclassify the Task Board row.`, undefined, expected, projectActive));
+  }
+  if (expected && handoffActive && handoffActive !== expected) {
+    issues.push(warning('STATE_HANDOFF_ACTIVE_TASK_MISMATCH', 'docs/AGENT_HANDOFF.md', `Agent Handoff active task is ${handoffActive}, but Task Board active task is ${expected}.`, `Update Agent Handoff Active / Next Task to ${expected} or finish/reclassify the Task Board row.`, undefined, expected, handoffActive));
+  }
+  if (!expected && projectActive) {
+    issues.push(warning('STATE_PROJECT_ACTIVE_TASK_STALE', 'docs/PROJECT_STATE.md', `Project State names active task ${projectActive}, but Task Board has no In Progress task.`, 'Set Active Task to None or mark the active Task Board row In Progress.', undefined, 'None', projectActive));
+  }
+}
+
+function checkLatestCloseProof(projectedTasks: StateProjectionTask[], latestDoneTaskId: string | null, issues: StateProjectionIssue[]): void {
+  if (!latestDoneTaskId) return;
+  const task = projectedTasks.find((candidate) => candidate.id === latestDoneTaskId);
+  if (!task) return;
+  if (task.closeProof.state === 'closed-valid') return;
+  if (task.closeProof.state === 'not-closed') {
+    issues.push(warning('STATE_LATEST_CLOSE_PROOF_MISSING', task.closeProof.path, `Latest Done task ${latestDoneTaskId} has no close proof.`, `Run hadara task ready --task ${latestDoneTaskId} --level done --json, then task close/audit-close.`, latestDoneTaskId));
+    return;
+  }
+  if (task.closeProof.state === 'closed-stale') {
+    issues.push(warning('STATE_LATEST_CLOSE_PROOF_STALE', task.closeProof.path, `Latest Done task ${latestDoneTaskId} has stale close proof.`, `Rerun hadara task ready --task ${latestDoneTaskId} --level done --json, then task close/audit-close after intentional close-source edits.`, latestDoneTaskId, task.closeProof.currentSourceHash ?? undefined, task.closeProof.sourceHash ?? undefined));
+    return;
+  }
+  issues.push(warning('STATE_LATEST_CLOSE_PROOF_INVALID', task.closeProof.path, `Latest Done task ${latestDoneTaskId} close proof is ${task.closeProof.state}.`, `Rerun task close/audit-close for ${latestDoneTaskId} after resolving validation blockers.`, latestDoneTaskId));
+}
+
+function hashCloseRelevantSource(projectRoot: string, taskDir: string): string {
+  const payload = closeRelevantSourceRelativePaths(projectRoot, taskDir).map((relativePath) => {
+    const absolutePath = path.join(projectRoot, relativePath);
+    return {
+      path: relativePath,
+      exists: fs.existsSync(absolutePath),
+      sha256: fs.existsSync(absolutePath) ? crypto.createHash('sha256').update(fs.readFileSync(absolutePath)).digest('hex') : null
+    };
+  });
+  return `sha256:${crypto.createHash('sha256').update(JSON.stringify(payload), 'utf8').digest('hex')}`;
+}
+
+function extractSourceHash(summary: string): string | null {
+  return summary.match(/sourceHash\s+(sha256:[a-f0-9]+)/)?.[1] ?? null;
+}
+
+function extractTaskId(value: string): string | null {
+  return value.match(/\bT-\d{4}\b/)?.[0] ?? null;
+}
+
+function latestTaskId(ids: string[]): string | null {
+  return ids.sort().at(-1) ?? null;
+}
+
+function normalizeStatus(value: string | null | undefined): string {
+  return (value ?? '').trim().toLowerCase().replace(/[\s_-]+/g, '');
+}
+
+function isDone(value: string | null | undefined): boolean {
+  return normalizeStatus(value) === 'done';
+}
+
+function isActive(value: string | null | undefined): boolean {
+  return normalizeStatus(value) === 'inprogress';
+}
+
+function countIssues(issues: StateProjectionIssue[]): Record<StateProjectionSeverity, number> {
+  return {
+    error: issues.filter((issue) => issue.severity === 'error').length,
+    warning: issues.filter((issue) => issue.severity === 'warning').length,
+    info: issues.filter((issue) => issue.severity === 'info').length
+  };
+}
+
+function warning(code: string, pathValue: string, message: string, fixHint: string, taskId?: string, expected?: string, actual?: string): StateProjectionIssue {
+  return {
+    severity: 'warning',
+    code,
+    path: pathValue,
+    ...(taskId ? { taskId } : {}),
+    message,
+    ...(expected ? { expected } : {}),
+    ...(actual ? { actual } : {}),
+    fixHint
+  };
+}
+
+function toPortablePath(value: string): string {
+  return value.split(path.sep).join('/');
+}
