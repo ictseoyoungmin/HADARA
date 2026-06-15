@@ -68,6 +68,16 @@ npx hadara@0.3.0 help
 npx hadara@0.3.0 doctor --json
 ```
 
+For release or recycle evidence, prefer an isolated prefix install when PATH, global installs, or `npx` cache behavior may be stale:
+
+```bash
+tmp="$(mktemp -d)"
+npm --prefix "$tmp" install hadara@0.3.0
+"$tmp/node_modules/.bin/hadara" version --json
+```
+
+`npx hadara@0.3.0 ...` remains convenient for normal use. The isolated installed-bin path is stronger proof that the published package installed and executed from the intended package tree.
+
 ## What HADARA Gives You
 
 | Capability | Purpose |

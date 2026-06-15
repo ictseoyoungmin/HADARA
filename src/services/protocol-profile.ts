@@ -281,7 +281,7 @@ function requiredDocsForProfile(profile: TargetProtocolProfile): string[] {
 }
 
 function requiredReadingDocsForProfile(profile: TargetProtocolProfile): string[] {
-  return requiredDocsForProfile(profile).filter((relativePath) => relativePath !== 'AGENTS.md');
+  return requiredDocsForProfile(profile).filter((relativePath) => relativePath !== 'AGENTS.md' && relativePath !== 'docs/REFACTOR_LOG.md');
 }
 
 function readProfileMetadata(projectRoot: string): { projectState: TargetProtocolProfile | null; sop: TargetProtocolProfile | null } {

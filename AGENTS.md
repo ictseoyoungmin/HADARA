@@ -16,14 +16,13 @@ This repository must be developed using the HADARA protocol.
 | `docs/DECISIONS.md` | Adding or revising decisions. | Decision record. |
 | `docs/TEST_STRATEGY.md` | Changing validation expectations. | Validation baseline. |
 | `docs/SECURITY_MODEL.md` | Changing permissions, secrets, storage, MCP, or execution boundaries. | Security constraints. |
-| `docs/REFACTOR_LOG.md` | Doing broad refactors or cleanup sequences. | Refactor continuity. |
 | `docs/ROADMAP.md` | Changing release, scope, or deferred-work boundaries. | Roadmap and scope boundaries. |
 | `docs/TASK_WORKFLOW_COMMANDS.md` | Starting, finishing, closing, auditing, or explaining task workflow commands. | Standard task loop, read/write boundaries, dry-run rules, and `ok` semantics. |
 | Active `tasks/T-*/TASK.md` | Every implementation session. | Active capsule scope. |
 | Task Capsule files required by `docs/IMPLEMENTATION_SOP.md` | Every implementation session. | Capsule evidence and handoff. |
 | Project-specific specs or roadmap documents referenced by the current task | When referenced by the active task. | Task-specific constraints. |
 
-`docs/AGENT_HANDOFF.md` is compact current-state handoff, not full project history. Follow its Historical Index when older completed-task or validation history is needed.
+`docs/AGENT_HANDOFF.md` is compact current-state handoff, not full project history. Follow its Historical Index when older completed-task, validation, or refactor history is needed.
 
 ## Required Reading Tiers
 

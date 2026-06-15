@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { handleInitCommand, initProject, parseInitProfile } from '../../src/cli/init';
+import { readMarkdownSection } from '../../src/services/markdown-table';
 
 const roots: string[] = [];
 let logSpy: ReturnType<typeof vi.spyOn>;
@@ -394,11 +395,13 @@ describe('init profiles', () => {
     expect(fs.existsSync(path.join(root, 'docs', 'ROADMAP.md'))).toBe(true);
 
     const sop = fs.readFileSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'), 'utf8');
+    const sopRequiredReading = readMarkdownSection(sop, '## Required Reading');
     expect(sop).toContain('This project was initialized with the `governed` HADARA profile.');
     expect(sop).toContain('`docs/TASK_WORKFLOW_COMMANDS.md`');
-    expect(sop).toContain('`docs/SECURITY_MODEL.md`');
+    expect(sopRequiredReading).toContain('`docs/SECURITY_MODEL.md`');
+    expect(sopRequiredReading).not.toContain('`docs/REFACTOR_LOG.md`');
+    expect(sopRequiredReading).toContain('`docs/ROADMAP.md`');
     expect(sop).toContain('`docs/REFACTOR_LOG.md`');
-    expect(sop).toContain('`docs/ROADMAP.md`');
 
     const security = fs.readFileSync(path.join(root, 'docs', 'SECURITY_MODEL.md'), 'utf8');
     expect(security).toContain('## Invariants');
@@ -499,7 +502,9 @@ describe('init profiles', () => {
     expect(read(root, 'docs/IMPLEMENTATION_SOP.md')).toContain('This project uses the `governed` HADARA profile.');
     expect(read(root, 'docs/IMPLEMENTATION_SOP.md')).toContain('`docs/TASK_WORKFLOW_COMMANDS.md`');
     expect(read(root, 'docs/IMPLEMENTATION_SOP.md')).toContain('`docs/SECURITY_MODEL.md`');
+    expect(readMarkdownSection(read(root, 'docs/IMPLEMENTATION_SOP.md'), '## Required Reading')).not.toContain('`docs/REFACTOR_LOG.md`');
     expect(read(root, 'AGENTS.md')).toContain('`docs/SECURITY_MODEL.md`');
+    expect(readMarkdownSection(read(root, 'AGENTS.md'), '## Required Reading')).not.toContain('`docs/REFACTOR_LOG.md`');
     expect(read(root, 'AGENTS.md')).toContain('`docs/TASK_WORKFLOW_COMMANDS.md`');
     expect(read(root, '.hadara/docs-registry.json')).toContain('"path": "docs/SECURITY_MODEL.md"');
     expect(fs.readFileSync(path.join(root, 'docs', 'DECISIONS.md'), 'utf8')).toBe('# Custom decisions\n');

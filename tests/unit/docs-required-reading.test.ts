@@ -100,4 +100,19 @@ describe('Phase 7.5 docs required-reading', () => {
     ]));
     assertSchema('hadara.docs.requiredReading.v1', report);
   });
+
+  it('keeps governed historical docs out of effective required reading', () => {
+    const root = tempProject();
+    initProject(root, 'governed', { silent: true });
+
+    const report = createDocsRequiredReadingReport(root);
+
+    expect(report.ok).toBe(true);
+    expect(report.documents.map((doc) => doc.path)).not.toContain('docs/REFACTOR_LOG.md');
+    expect(readRegistry(root).documents.find((doc) => doc.path === 'docs/REFACTOR_LOG.md')).toMatchObject({
+      status: 'historical',
+      requiredReading: false,
+      readWhen: ['never-default']
+    });
+  });
 });

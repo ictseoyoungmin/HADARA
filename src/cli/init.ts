@@ -694,7 +694,6 @@ function sopRequiredReadingRowsForProfile(profile: InitProfile): string[][] {
   if (profile === 'governed') {
     rows.push(
       ['`docs/SECURITY_MODEL.md`', 'Security, secret, permission, or evidence-safety work', 'Project security invariants and special checks.'],
-      ['`docs/REFACTOR_LOG.md`', 'Refactor, migration, removal, or replacement work', 'Project-level refactor history.'],
       ['`docs/ROADMAP.md`', 'Roadmap, milestone, or scope planning', 'Longer-term priorities and deferred work.']
     );
   }
@@ -720,7 +719,6 @@ function agentsRequiredReadingRowsForProfile(profile: InitProfile): Array<{ docu
   if (profile === 'governed') {
     rows.push(
       { document: '`docs/SECURITY_MODEL.md`', when: 'Security, secret, permission, or evidence-safety work', purpose: 'Project security invariants.' },
-      { document: '`docs/REFACTOR_LOG.md`', when: 'Refactor, migration, removal, or replacement work', purpose: 'Project-level refactor history.' },
       { document: '`docs/ROADMAP.md`', when: 'Roadmap, milestone, or scope planning', purpose: 'Longer-term priorities and deferred work.' }
     );
   }
@@ -846,7 +844,7 @@ function requiredDocsForProfile(profile: InitProfile): string[] {
     docs.push('docs/ARCHITECTURE.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/DECISIONS.md', 'docs/TEST_STRATEGY.md');
   }
   if (profile === 'governed') {
-    docs.push('docs/SECURITY_MODEL.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md');
+    docs.push('docs/SECURITY_MODEL.md', 'docs/ROADMAP.md');
   }
   return docs;
 }
@@ -1114,9 +1112,6 @@ function createImplementationSopDoc(spec: InitProfileSpec): string {
   }
   if (spec.docs.securityModel) {
     requiredReadingRows.push(['`docs/SECURITY_MODEL.md`', 'Security, secret, permission, or evidence-safety work', 'Project security invariants and special checks.']);
-  }
-  if (spec.docs.refactorLog) {
-    requiredReadingRows.push(['`docs/REFACTOR_LOG.md`', 'Refactor, migration, removal, or replacement work', 'Project-level refactor history.']);
   }
   if (spec.docs.roadmap) {
     requiredReadingRows.push(['`docs/ROADMAP.md`', 'Roadmap, milestone, release, or scope planning', 'Longer-term priorities and deferred work.']);
@@ -1632,7 +1627,6 @@ function createAgentsDoc(spec: InitProfileSpec): string {
   if (spec.docs.decisions) requiredReadingRows.push([String(order++), '`docs/DECISIONS.md`', 'Project-level decision work', 'Durable project decisions.']);
   if (spec.docs.testStrategy) requiredReadingRows.push([String(order++), '`docs/TEST_STRATEGY.md`', 'Validation planning or completion checks', 'Routine suites and special-case checks.']);
   if (spec.docs.securityModel) requiredReadingRows.push([String(order++), '`docs/SECURITY_MODEL.md`', 'Security, secret, permission, or evidence-safety work', 'Project security invariants.']);
-  if (spec.docs.refactorLog) requiredReadingRows.push([String(order++), '`docs/REFACTOR_LOG.md`', 'Refactor, migration, removal, or replacement work', 'Project-level refactor history.']);
   if (spec.docs.roadmap) requiredReadingRows.push([String(order++), '`docs/ROADMAP.md`', 'Roadmap, milestone, or scope planning', 'Longer-term priorities and deferred work.']);
   requiredReadingRows.push(
     [String(order++), 'Active `tasks/T-*/TASK.md`', 'Working a task', 'Task-specific goal, scope, and status.'],

@@ -321,3 +321,4 @@
 | T-0318 | Stage Phase 8 0.3.1 status governance specs | Done | tasks/T-0318-stage-phase-8-0-3-1-status-governance-specs | |
 | T-0319 | Phase 8.1 Status Token Policy and Document Ownership | Done | tasks/T-0319-phase-8-1-status-token-policy-and-document-ownership | |
 | T-0320 | Phase 8.2 Task Handoff Current-State and Close-State Governance | Done | tasks/T-0320-phase-8-2-task-handoff-current-state-and-close-state-governance | |
+| T-0321 | Phase 8.3 Installed-Package Findings Cleanup | Done | tasks/T-0321-phase-8-3-installed-package-findings-cleanup | |

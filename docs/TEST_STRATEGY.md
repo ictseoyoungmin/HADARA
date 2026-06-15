@@ -102,6 +102,18 @@ Remote CI observation and GitHub Actions observation are release-readiness signa
 
 When remote CI is observed, record the exact workflow, branch, commit SHA, run URL, conclusion, and relevant job steps in `docs/VALIDATION_HISTORY.md` or the active Task Capsule evidence. The release gate checks that this observation has been documented, but it does not call GitHub, create releases, deploy, or execute remote jobs.
 
+## Installed Package Consumer Proof
+
+For post-publish recycle evidence, an isolated temp-prefix installed bin is the canonical consumer proof when global PATH, existing global installs, or `npx` cache behavior may be stale:
+
+```bash
+tmp="$(mktemp -d)"
+npm --prefix "$tmp" install hadara@<version>
+"$tmp/node_modules/.bin/hadara" version --json
+```
+
+This proves npm installed the selected published package into a disposable prefix and that the bin executed from that package tree. `npx hadara@<version> ...` remains a useful convenience smoke, but exact `npx` output can be affected by registry/DNS availability, cache state, current working directory, and PATH resolution. Treat `npx` failures as environment evidence unless the isolated installed-bin proof also fails.
+
 ## Clean Checkout Package Smoke Plan
 
 This plan defines release-readiness observation, not release execution. Run it only in a disposable Docker/container filesystem copy of the repository, and keep committed source, Task Capsules, evidence, private state, generated context, package artifacts, and local cache boundaries unchanged unless a later Task Capsule explicitly approves a write path.

@@ -464,6 +464,7 @@ describe('Profile protocol consistency report', () => {
       code: 'PROFILE_REQUIRED_READING_DRIFT',
       expected: expect.stringContaining('docs/ROADMAP.md')
     });
+    expect(report.issues.find((issue) => issue.path === 'AGENTS.md')?.expected).not.toContain('docs/REFACTOR_LOG.md');
   });
 });
 

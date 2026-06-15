@@ -47,7 +47,6 @@ Use semantic tiers to keep session startup compact and deterministic:
 | `docs/DECISIONS.md` | Project-level decision work | Durable decisions that affect architecture or workflow. |
 | `docs/TEST_STRATEGY.md` | Release, install, installer, package-smoke, install-matrix, publish/deploy, validation-surface work, or completion checks | Tracked validation requirements and special-case smoke boundaries. |
 | `docs/SECURITY_MODEL.md` | Security, secret, permission, or evidence-safety work | Project security invariants and special checks. |
-| `docs/REFACTOR_LOG.md` | Refactor, migration, removal, or replacement work | Project-level refactor history. |
 | `docs/ROADMAP.md` | Roadmap, milestone, release, or scope planning | Longer-term priorities and deferred work. |
 | `docs/PYPI_TRUSTED_PUBLISHING.md` | PyPI/TestPyPI Trusted Publisher setup or Python bridge publish work | OIDC publisher field values, GitHub workflow boundary, and operator verification flow. |
 | `docs/TASK_WORKFLOW_COMMANDS.md` | Starting, finishing, closing, auditing, or changing task workflow commands | Standard task loop, read/write boundaries, dry-run rules, and command `ok` semantics. |
@@ -73,6 +72,8 @@ Use semantic tiers to keep session startup compact and deterministic:
 
 When adding project-specific specs, contracts, roadmap files, or human/agent operating notes, register them in the Required Reading table before expecting people or agents to rely on them. Each row must explain when to read the document and what decision or workflow boundary it owns.
 
+Historical documents such as `docs/REFACTOR_LOG.md` should not be default Required Reading. Route to them through `docs/AGENT_HANDOFF.md` Historical Index or a task-specific context row when older refactor history is directly relevant.
+
 ```bash
 hadara init register-doc --path docs/specs/example.md --when "When changing example behavior" --purpose "Example behavior contract" --json
 hadara init register-doc --path docs/specs/example.md --when "When changing example behavior" --purpose "Example behavior contract" --execute --json
@@ -90,7 +91,7 @@ The Phase 6 agent-UX spec under `docs/specs/agent-ux/` is intentionally local-on
 |---|---|---|---|---|
 | `basic` | Small | `AGENTS.md`, `.gitignore`, `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, `docs/TASK_BOARD.md`, `docs/IMPLEMENTATION_SOP.md`, `docs/TASK_WORKFLOW_COMMANDS.md` | Core docs, task workflow docs, and active Task Capsule docs only. | Small projects that need Task Capsules, evidence, and handoff discipline without planning overhead. |
 | `standard` | Medium, default | Basic docs plus `docs/ARCHITECTURE.md`, `docs/DEVELOPMENT_SLICES.md`, `docs/DECISIONS.md`, and `docs/TEST_STRATEGY.md` | Architecture, slice, decision, and validation rows. | Most multi-session projects that need roadmap slices and repeatable validation. |
-| `governed` | Heavy | Standard docs plus `docs/SECURITY_MODEL.md`, `docs/REFACTOR_LOG.md`, and `docs/ROADMAP.md` | Security, refactor, and roadmap rows. | Long-lived projects with stronger governance, security boundaries, refactor history, or roadmap-level planning. |
+| `governed` | Heavy | Standard docs plus `docs/SECURITY_MODEL.md`, `docs/REFACTOR_LOG.md`, and `docs/ROADMAP.md` | Security and roadmap rows; refactor history remains historical, not default Required Reading. | Long-lived projects with stronger governance, security boundaries, refactor history, or roadmap-level planning. |
 
 HADARA-dev uses `governed`. Project-specific rows such as MCP, v1.0 hardening, release-readiness support specs, and other manually added contracts are local registrations, not generic scaffold defaults.
 

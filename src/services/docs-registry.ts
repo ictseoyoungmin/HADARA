@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { InitProfile } from '../cli/init';
 import { managedSectionBlock } from './managed-sections';
+import { readMarkdownSection } from './markdown-table';
 
 export type DocumentStatus = 'canonical' | 'active' | 'reference' | 'historical' | 'superseded' | 'archived';
 export type DocumentKind =
@@ -417,7 +418,8 @@ function parseRequiredReading(projectRoot: string): string[] {
   const found = new Set<string>();
   for (const file of files) {
     const text = fs.existsSync(path.join(projectRoot, file)) ? fs.readFileSync(path.join(projectRoot, file), 'utf8') : '';
-    for (const match of text.matchAll(/`([^`]+\.(?:md|MD))`/g)) {
+    const requiredReading = readMarkdownSection(text, '## Required Reading');
+    for (const match of requiredReading.matchAll(/`([^`]+\.(?:md|MD))`/g)) {
       const value = normalizePath(match[1]);
       if (value !== 'AGENTS.md' && !value.startsWith('docs/') && value !== '.hadara/context/HADARA_CONTEXT.md') continue;
       if (!value.startsWith('tasks/')) found.add(value);

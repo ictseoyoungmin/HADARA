@@ -28,6 +28,12 @@ function mutateRegistry(root: string, mutate: (registry: DocumentRegistryFile) =
   fs.writeFileSync(registryPath(root), `${JSON.stringify(registry, null, 2)}\n`, 'utf8');
 }
 
+function insertAgentsRequiredReadingRow(root: string, row: string): void {
+  const filePath = path.join(root, 'AGENTS.md');
+  const current = fs.readFileSync(filePath, 'utf8');
+  fs.writeFileSync(filePath, current.replace('|---|---|---|---|\n', `|---|---|---|---|\n${row}\n`), 'utf8');
+}
+
 afterEach(() => {
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
 });
@@ -73,7 +79,7 @@ describe('Phase 7.3 docs doctor', () => {
   it('reports unregistered Required Reading entries', () => {
     const root = tempProject();
     initProject(root, 'standard', { silent: true });
-    fs.appendFileSync(path.join(root, 'AGENTS.md'), '\n| `docs/specs/UNREGISTERED.md` | Local work | Local spec. |\n', 'utf8');
+    insertAgentsRequiredReadingRow(root, '| 99 | `docs/specs/UNREGISTERED.md` | Local work | Local spec. |');
 
     const report = createDocsDoctorReport(root, 'required-reading');
 
@@ -82,6 +88,33 @@ describe('Phase 7.3 docs doctor', () => {
       code: 'DOC_UNREGISTERED_REQUIRED_READING',
       severity: 'warning',
       path: 'docs/specs/UNREGISTERED.md'
+    }));
+  });
+
+  it('ignores Markdown references outside Required Reading sections', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    fs.appendFileSync(path.join(root, 'AGENTS.md'), '\n## Notes\n\nSee `docs/specs/UNREGISTERED.md` only when investigating old plans.\n', 'utf8');
+
+    const report = createDocsDoctorReport(root, 'required-reading');
+
+    expect(report.ok).toBe(true);
+    expect(report.issues).not.toContainEqual(expect.objectContaining({
+      code: 'DOC_UNREGISTERED_REQUIRED_READING',
+      path: 'docs/specs/UNREGISTERED.md'
+    }));
+  });
+
+  it('does not report governed historical docs as Required Reading by default', () => {
+    const root = tempProject();
+    initProject(root, 'governed', { silent: true });
+
+    const report = createDocsDoctorReport(root, 'required-reading');
+
+    expect(report.ok).toBe(true);
+    expect(report.issues).not.toContainEqual(expect.objectContaining({
+      code: 'DOC_HISTORICAL_REQUIRED_READING',
+      path: 'docs/REFACTOR_LOG.md'
     }));
   });
 
