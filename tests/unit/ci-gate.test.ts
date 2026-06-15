@@ -35,9 +35,14 @@ describe('ci gate report', () => {
       ok: true,
       mode: 'strict',
       scope: { taskId: task.id, taskCount: 1 },
-      blockers: []
+      blockers: [],
+      stateConsistency: {
+        mode: 'advisory',
+        strictBlocking: false
+      }
     });
-    expect(report.checks.map((check) => check.source)).toEqual(expect.arrayContaining(['protocol', 'evidence', 'proof', 'release']));
+    expect(report.checks.map((check) => check.source)).toEqual(expect.arrayContaining(['protocol', 'evidence', 'proof', 'release', 'state']));
+    expect(report.warnings).toContainEqual(expect.objectContaining({ source: 'state', code: expect.any(String), fixHint: expect.any(String) }));
   });
 
   it('keeps advisory mode ok while surfacing blockers', () => {

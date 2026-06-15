@@ -3,6 +3,7 @@ import path from 'node:path';
 import { createProfileConsistencyDiagnostics, createProtocolProfileSummary, ProtocolProfileSummary } from './protocol-profile';
 import { createEvidenceLintReport } from './evidence-lint';
 import { parseMarkdownRows, readMarkdownSection } from './markdown-table';
+import { createStateProjectionReport, StateProjectionAdvisory, toStateProjectionAdvisory } from './state-projection';
 import { ProtocolRemediationFix } from './protocol-remediation';
 import { isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule, TASK_FILES } from '../task/task-capsule';
 
@@ -74,6 +75,7 @@ export interface ProtocolConsistencyReport {
     taskStatus: string;
     taskBoardStatus: string | null;
   };
+  stateConsistency?: StateProjectionAdvisory;
   issues: ProtocolConsistencyIssue[];
   remediations: ProtocolRemediation[];
 }
@@ -207,6 +209,7 @@ export function createAllProtocolConsistencyReport(projectRoot: string, now = ne
     }
   }
   const counts = countIssues(issues);
+  const stateConsistency = toStateProjectionAdvisory(createStateProjectionReport(projectRoot, now), 10);
 
   return {
     schemaVersion: 'hadara.protocol.consistency.v1',
@@ -223,6 +226,7 @@ export function createAllProtocolConsistencyReport(projectRoot: string, now = ne
       profile: profileReport.summary.profile,
       issueCounts: counts
     },
+    stateConsistency,
     issues,
     remediations
   };

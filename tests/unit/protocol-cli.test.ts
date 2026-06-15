@@ -172,8 +172,15 @@ describe('protocol CLI command handler', () => {
     expect(payload).toMatchObject({
       schemaVersion: 'hadara.protocol.consistency.v1',
       command: 'protocol.doctor',
-      scope: 'all'
+      scope: 'all',
+      stateConsistency: {
+        mode: 'advisory',
+        strictBlocking: false,
+        issueCounts: expect.any(Object),
+        issues: expect.any(Array)
+      }
     });
+    expect(payload.stateConsistency.issues[0]).toEqual(expect.objectContaining({ code: expect.any(String), severity: expect.any(String), fixHint: expect.any(String) }));
     expect(validateSchema('hadara.protocol.consistency.v1', payload).ok).toBe(true);
   });
 

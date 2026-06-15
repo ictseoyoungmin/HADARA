@@ -359,6 +359,16 @@ describe('Operations Status JSON', () => {
     expect(second.schemaVersion).toBe('hadara.ops.status.v1');
     expect(first.command).toBe('ops.status');
     expect(second.command).toBe('ops.status');
+    expect(first.stateConsistency).toMatchObject({
+      mode: 'advisory',
+      strictBlocking: false,
+      issueCounts: expect.any(Object),
+      issues: expect.any(Array)
+    });
+    expect(second.stateConsistency).toMatchObject({
+      mode: 'advisory',
+      strictBlocking: false
+    });
   });
 
   it('keeps the dashboard sample fixture aligned with the status schema', () => {

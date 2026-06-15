@@ -3,13 +3,14 @@ import path from 'node:path';
 import { createProofStatusReport, ProofStatusReport } from './proof-status';
 import { createEvidenceLintReport } from './evidence-lint';
 import { createAllProtocolConsistencyReport, createTaskProtocolConsistencyReport } from './protocol-consistency';
+import { createStateProjectionReport, StateProjectionAdvisory, toStateProjectionAdvisory } from './state-projection';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 
 export type CiGateMode = 'advisory' | 'strict';
 
 export interface CiGateCheck {
   id: string;
-  source: 'protocol' | 'evidence' | 'proof' | 'release';
+  source: 'protocol' | 'evidence' | 'proof' | 'release' | 'state';
   ok: boolean;
   taskId?: string;
   summary: string;
@@ -17,11 +18,12 @@ export interface CiGateCheck {
 
 export interface CiGateIssue {
   severity: 'error' | 'warning' | 'info';
-  source: 'protocol' | 'evidence' | 'proof' | 'release';
+  source: 'protocol' | 'evidence' | 'proof' | 'release' | 'state';
   code: string;
   message: string;
   taskId?: string;
   path?: string;
+  fixHint?: string;
 }
 
 export interface CiGateReport {
@@ -34,6 +36,7 @@ export interface CiGateReport {
     taskCount: number;
     allowEmpty: boolean;
   };
+  stateConsistency: StateProjectionAdvisory;
   checks: CiGateCheck[];
   blockers: CiGateIssue[];
   warnings: CiGateIssue[];
@@ -64,6 +67,28 @@ export function createCiGateReport(projectRoot: string, mode: CiGateMode, option
   for (const issue of protocol.issues) {
     const target = issue.severity === 'error' ? blockers : warnings;
     target.push({ severity: issue.severity, source: 'protocol', code: issue.code, message: issue.message, path: issue.path });
+  }
+
+  const stateProjection = createStateProjectionReport(projectRoot);
+  const stateConsistency = toStateProjectionAdvisory(stateProjection, 10);
+  checks.push({
+    id: 'state:consistency',
+    source: 'state',
+    ok: true,
+    summary: stateConsistency.consistent
+      ? 'State consistency projection found no drift.'
+      : `State consistency projection is advisory: warnings ${stateConsistency.issueCounts.warning}, errors ${stateConsistency.issueCounts.error}.`
+  });
+  for (const issue of stateConsistency.issues) {
+    warnings.push({
+      severity: issue.severity,
+      source: 'state',
+      code: issue.code,
+      message: issue.message,
+      taskId: issue.taskId,
+      path: issue.path,
+      fixHint: issue.fixHint
+    });
   }
 
   for (const task of tasks) {
@@ -101,6 +126,7 @@ export function createCiGateReport(projectRoot: string, mode: CiGateMode, option
     ok: mode === 'advisory' ? true : blockers.length === 0,
     mode,
     scope: { ...(options.taskId ? { taskId: options.taskId } : {}), taskCount: tasks.length, allowEmpty },
+    stateConsistency,
     checks,
     blockers,
     warnings

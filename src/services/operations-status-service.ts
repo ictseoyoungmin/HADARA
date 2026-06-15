@@ -5,6 +5,7 @@ import { extractHandoffSectionValues, extractValidationBaselineSummary } from '.
 import { findMarkdownRowByCell, parseMarkdownRowsUnderHeading } from './markdown-table';
 import { createOperationalDebtReport, OperationalDebtAggregate } from './operational-debt';
 import { extractSection, ProjectReadSources, readProjectSources } from './project-read-model';
+import { createStateProjectionReport, StateProjectionAdvisory, toStateProjectionAdvisory } from './state-projection';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 
 export interface OpsStatusReport {
@@ -41,6 +42,7 @@ export interface OpsStatusReport {
   };
   activeRun: ActiveRunProjection;
   debt: OperationalDebtAggregate;
+  stateConsistency?: StateProjectionAdvisory;
   mcp: {
     defaultMode: 'read-only';
     evidenceAttach: {
@@ -62,6 +64,8 @@ export interface OpsStatusOptions {
   // large/slow filesystems) and return a zeroed debt aggregate. Used by the
   // dashboard "core" tier, which loads debt separately in the background.
   includeDebt?: boolean;
+  includeStateConsistency?: boolean;
+  stateIssueLimit?: number;
 }
 
 const EMPTY_DEBT_AGGREGATE: OperationalDebtAggregate = {
@@ -87,6 +91,9 @@ export function createOpsStatusReport(projectRoot: string, options: OpsStatusOpt
   const validation = extractValidationBaselineSummary(sources.handoff.content, sources.validationHistory.content);
   const activeRun = safeCreateActiveRunProjection(projectRoot);
   const debtAggregate = includeDebt ? createOperationalDebtReport(projectRoot).aggregate : EMPTY_DEBT_AGGREGATE;
+  const stateConsistency = options.includeStateConsistency
+    ? toStateProjectionAdvisory(createStateProjectionReport(projectRoot), options.stateIssueLimit ?? 10)
+    : undefined;
   const issues = [...collectIssues(sources, validation), ...activeRun.issues];
 
   return {
@@ -109,6 +116,7 @@ export function createOpsStatusReport(projectRoot: string, options: OpsStatusOpt
     validation,
     activeRun,
     debt: debtAggregate,
+    ...(stateConsistency ? { stateConsistency } : {}),
     mcp: {
       defaultMode: 'read-only',
       evidenceAttach: {
@@ -132,6 +140,12 @@ export function formatOpsStatusReport(report: OpsStatusReport): string {
     `branch: ${report.project.branch}`,
     `tasks: ${counts}`,
     `debt: open ${report.debt.open}, highOpen ${report.debt.highOpen}`,
+    ...(report.stateConsistency
+      ? [
+          `stateConsistency: ${report.stateConsistency.consistent ? 'consistent' : 'drift'} ` +
+            `(errors ${report.stateConsistency.issueCounts.error}, warnings ${report.stateConsistency.issueCounts.warning}, info ${report.stateConsistency.issueCounts.info})`
+        ]
+      : []),
     `lastCompleted: ${report.tasks.lastCompleted.join(', ') || 'none'}`,
     `nextRecommended: ${report.tasks.nextRecommended ?? 'none'}`
   ].join('\n');

@@ -323,3 +323,4 @@
 | T-0320 | Phase 8.2 Task Handoff Current-State and Close-State Governance | Done | tasks/T-0320-phase-8-2-task-handoff-current-state-and-close-state-governance | |
 | T-0321 | Phase 8.3 Installed-Package Findings Cleanup | Done | tasks/T-0321-phase-8-3-installed-package-findings-cleanup | |
 | T-0322 | Phase 8.4 State Consistency Projection Read Model | Done | tasks/T-0322-phase-8-4-state-consistency-projection-read-model | |
+| T-0323 | Phase 8.5 State Verify Doctor and Advisory Gates | Done | tasks/T-0323-phase-8-5-state-verify-doctor-and-advisory-gates | |

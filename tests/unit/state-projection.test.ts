@@ -2,7 +2,8 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { handleStateCommand } from '../../src/cli/state';
 import { appendEvidence } from '../../src/evidence/evidence';
 import { validateSchema } from '../../src/core/schema';
 import { createStateProjectionReport } from '../../src/services/state-projection';
@@ -117,6 +118,32 @@ describe('state consistency projection', () => {
       'STATE_RELEASE_READINESS_MISSING'
     ]));
     expect(validateSchema('hadara.stateProjection.v1', report).ok).toBe(true);
+  });
+
+  it('prints full projection JSON through state verify', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Projection CLI task');
+    completeTask(root, task);
+    writeSharedState(root, task.id);
+    writeDocsRegistry(root);
+    fs.writeFileSync(path.join(root, 'docs', 'RELEASE_READINESS.md'), '# RELEASE_READINESS\n\nReady.\n', 'utf8');
+    appendCloseEvidence(root, task, currentSourceHash(root, task.dir));
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleStateCommand({ args: ['state', 'verify', '--json'], projectRoot: root, jsonOutput: true });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.stateProjection.v1',
+      command: 'state.projection',
+      summary: {
+        consistent: true,
+        latestDoneTaskId: task.id
+      },
+      issues: []
+    });
+    expect(validateSchema('hadara.stateProjection.v1', payload).ok).toBe(true);
   });
 });
 

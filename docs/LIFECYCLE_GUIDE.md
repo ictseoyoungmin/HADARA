@@ -27,6 +27,7 @@ Diagnostics explain blockers. They do not replace the primary lifecycle.
 | `proof.explain` | Proof status is stale, weak, or confusing. |
 | `ci.gate` | You need an aggregated advisory or strict project/task gate. |
 | `protocol.doctor` | Protocol docs, task board rows, or profile state may be inconsistent. |
+| `state.verify` | Shared task/state projection looks inconsistent or needs concise drift evidence. |
 | `harness.validate` | `task ready` reports format or done-level blockers. |
 
 ## Advanced Families

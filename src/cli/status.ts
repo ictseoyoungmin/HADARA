@@ -19,7 +19,7 @@ export function handleOpsCommand(input: StatusCommandInput): boolean {
 }
 
 function printStatus(projectRoot: string, jsonOutput: boolean): void {
-  const report = createOpsStatusReport(projectRoot);
+  const report = createOpsStatusReport(projectRoot, { includeStateConsistency: true });
   if (jsonOutput) {
     console.log(JSON.stringify(report, null, 2));
   } else {

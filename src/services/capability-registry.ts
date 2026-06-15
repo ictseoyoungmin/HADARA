@@ -748,7 +748,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   {
     id: 'ci.gate',
     command: 'hadara ci gate [--mode advisory|strict] [--task <task-id>] [--allow-empty] [--json]',
-    summary: 'Evaluate CI-style task proof gates.',
+    summary: 'Evaluate CI-style task proof gates with advisory state consistency signals.',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'proof-diagnostics',
@@ -762,7 +762,28 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     docs: ['docs/IMPLEMENTATION_SOP.md'],
     examples: [example('Run strict CI gate', 'hadara ci gate --mode strict --task T-0001 --json', 'In automated validation paths.')],
-    related: ['task.ready', 'proof.status'],
+    related: ['task.ready', 'proof.status', 'state.verify'],
+    conflictsWith: []
+  },
+  {
+    id: 'state.verify',
+    command: 'hadara state verify [--json]',
+    summary: 'Read the state consistency projection and concise drift issues.',
+    canonical: true,
+    appearsInDefaultHelp: false,
+    family: 'proof-diagnostics',
+    scope: 'project',
+    lifecycleStage: 'ready',
+    requiredness: 'diagnostic',
+    writeBoundary: 'read-only',
+    readOnly: true,
+    risk: 'low',
+    actor: 'agent-worker',
+    status: 'stable',
+    schemaVersion: 'hadara.stateProjection.v1',
+    docs: ['docs/COMMAND_SURFACE.md', 'docs/SCHEMAS.md'],
+    examples: [example('Verify state drift', 'hadara state verify --json', 'Before close or when shared-doc state looks inconsistent.')],
+    related: ['status', 'protocol.doctor', 'ci.gate'],
     conflictsWith: []
   },
   commandEntry({
@@ -825,7 +846,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.protocol.consistency.v1',
     docs: ['docs/IMPLEMENTATION_SOP.md'],
     examples: [example('Run protocol doctor', 'hadara protocol doctor --scope all --json', 'When project protocol files may be inconsistent.')],
-    related: ['protocol.remediate', 'doctor'],
+    related: ['protocol.remediate', 'doctor', 'state.verify'],
     conflictsWith: []
   }),
   commandEntry({
@@ -1333,7 +1354,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.ops.status.v1',
     docs: ['docs/PROJECT_STATE.md'],
     examples: [example('Read status', 'hadara status --json', 'When checking project health and active task signals.')],
-    related: ['ops.status', 'doctor'],
+    related: ['ops.status', 'doctor', 'state.verify'],
     conflictsWith: []
   }),
   commandEntry({

@@ -102,6 +102,18 @@ export interface StateProjectionReport {
   issues: StateProjectionIssue[];
 }
 
+export interface StateProjectionAdvisory {
+  mode: 'advisory';
+  strictBlocking: false;
+  consistent: boolean;
+  issueCounts: Record<StateProjectionSeverity, number>;
+  latestDoneTaskId: string | null;
+  activeTaskIds: string[];
+  checkedTasks: number;
+  issues: StateProjectionIssue[];
+  truncatedIssues: number;
+}
+
 interface TaskBoardRow {
   id: string;
   title: string;
@@ -194,6 +206,40 @@ export function createStateProjectionReport(projectRoot: string, now = new Date(
     tasks: projectedTasks,
     issues
   };
+}
+
+export function toStateProjectionAdvisory(report: StateProjectionReport, issueLimit = 10): StateProjectionAdvisory {
+  const limit = Math.max(0, issueLimit);
+  return {
+    mode: 'advisory',
+    strictBlocking: false,
+    consistent: report.summary.consistent,
+    issueCounts: report.summary.issueCounts,
+    latestDoneTaskId: report.summary.latestDoneTaskId,
+    activeTaskIds: report.summary.activeTaskIds,
+    checkedTasks: report.summary.checkedTasks,
+    issues: report.issues.slice(0, limit),
+    truncatedIssues: Math.max(0, report.issues.length - limit)
+  };
+}
+
+export function formatStateProjectionReport(report: StateProjectionReport, issueLimit = 10): string {
+  const advisory = toStateProjectionAdvisory(report, issueLimit);
+  const counts = `errors ${advisory.issueCounts.error}, warnings ${advisory.issueCounts.warning}, info ${advisory.issueCounts.info}`;
+  const lines = [
+    '[HADARA] State verify',
+    `consistent: ${advisory.consistent}`,
+    `issues: ${counts}`,
+    `latestDoneTaskId: ${advisory.latestDoneTaskId ?? 'none'}`,
+    `activeTaskIds: ${advisory.activeTaskIds.join(', ') || 'none'}`,
+    `checkedTasks: ${advisory.checkedTasks}`,
+    'rollout: advisory only; strict gates do not block on state projection drift yet.'
+  ];
+  for (const issue of advisory.issues) {
+    lines.push(`- ${issue.severity} ${issue.code}: ${issue.message}${issue.path ? ` (${issue.path})` : ''}`);
+  }
+  if (advisory.truncatedIssues > 0) lines.push(`- ... ${advisory.truncatedIssues} more issue(s) omitted`);
+  return lines.join('\n');
 }
 
 function readSources(projectRoot: string, issues: StateProjectionIssue[]): {
