@@ -328,6 +328,51 @@
       "closeSourceRole": "task-dependent",
       "supersedes": [],
       "generatedBy": "hadara init"
+    },
+    {
+      "path": "docs/specs/0.3.1/00_HADARA_0_3_1_Phase_8_State_Governance_Program.md",
+      "title": "HADARA 0.3.1 Phase 8 State Governance Program",
+      "owner": "hadara-dev",
+      "kind": "roadmap",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [
+        "docs/specs/tmp_dir_hadara_work_items_architecture_specs/work_items/A_Stable_Recycle_Findings_Cleanup_and_Status_Governance.md",
+        "docs/specs/tmp_dir_hadara_work_items_architecture_specs/work_items/F_State_Consistency_Projection.md"
+      ],
+      "generatedBy": "T-0318"
+    },
+    {
+      "path": "docs/specs/0.3.1/rc1/00_HADARA_0_3_1_rc1_Status_Governance_Implementation_Plan.md",
+      "title": "HADARA 0.3.1 rc1 Status Governance Implementation Plan",
+      "owner": "hadara-dev",
+      "kind": "roadmap",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0318"
     }
   ]
 }

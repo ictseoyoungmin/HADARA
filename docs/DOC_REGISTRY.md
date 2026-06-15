@@ -19,4 +19,6 @@ Schema: `hadara.docs.registry.v1`
 | `docs/SECURITY_MODEL.md` | security-model | reference | only-when-linked | no | hadara-docs |
 | `docs/REFACTOR_LOG.md` | historical-plan | historical | never-default | no | hadara-docs |
 | `docs/ROADMAP.md` | roadmap | reference | only-when-linked | no | hadara-docs |
+| `docs/specs/0.3.1/00_HADARA_0_3_1_Phase_8_State_Governance_Program.md` | roadmap | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.3.1/rc1/00_HADARA_0_3_1_rc1_Status_Governance_Implementation_Plan.md` | roadmap | reference | only-when-linked | no | hadara-dev |
 <!-- hadara:managed:end doc-registry-summary -->

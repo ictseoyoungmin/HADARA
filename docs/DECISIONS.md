@@ -99,3 +99,11 @@ Reason:
 - Phase 7.x labels are internal Task Capsule implementation phases only; they do not authorize per-phase external publishing.
 - The next external 0.3.0 release may be prepared only after all required Phase 7.x slices pass Phase 7.6 release hardening and installed-package recycle.
 - Evidence: `docs/specs/0.3.0/00_HADARA_0_3_0_Phase_7_Surface_Refactor_Program.md` and T-0290.
+
+## D-0013: Work Item A/F form the 0.3.1 Phase 8 state governance line
+
+Reason:
+- Stable `hadara@0.3.0` publish and consumer recycle are complete, so follow-up status/document consistency work should not extend the 0.3.0 release-hardening line.
+- Work Item A and Work Item F both address state coherence: canonical status tokens, document ownership/write boundaries, handoff close-state clarity, installed-package findings cleanup, state consistency projection, and advisory verification.
+- The implementation order should lock vocabulary and write ownership before introducing projection or gate surfaces; otherwise projections will encode the same ambiguous status strings they are meant to detect.
+- Evidence: `docs/specs/0.3.1/00_HADARA_0_3_1_Phase_8_State_Governance_Program.md`, `docs/specs/0.3.1/rc1/00_HADARA_0_3_1_rc1_Status_Governance_Implementation_Plan.md`, and T-0318.

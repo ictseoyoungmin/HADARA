@@ -62,6 +62,8 @@ Phase 6 should focus on Operator Workflow Compression & Multi-Agent Compatibilit
 
 The previous core evidence/release readiness emphasis has been completed through T-0252: Evidence v2 writer and migration support, task finish/ready/close/audit hardening, task upgrade/remediation dry-run guards, and release/package readiness hardening are now in place. The next roadmap emphasis is Phase 6 workflow compression, starting with T-0253 Multi-Agent Command Context Contract so later convenience commands share actor/run/plan/idempotency metadata instead of retrofitting provenance after writes exist.
 
+Stable `hadara@0.3.0` is published and consumer-recycled. The next roadmap emphasis is Phase 8 / `0.3.1` state governance: canonical status token policy, document ownership/write-boundary governance, task handoff close-state clarity, installed-package findings cleanup, read-only state consistency projection, and advisory verification gates. The program is staged under `docs/specs/0.3.1/`; the first rc1 implementation sequence is staged under `docs/specs/0.3.1/rc1/`.
+
 ## v0.4 Single-Agent Run State
 
 Track the active task/run explicitly so agents do not infer current work only from the last visible capsule or compact handoff.
