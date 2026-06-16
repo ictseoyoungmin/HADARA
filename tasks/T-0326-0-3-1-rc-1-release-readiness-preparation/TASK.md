@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0326 |
 | Title | 0.3.1-rc.1 Release Readiness Preparation |
-| Status | In Progress |
+| Status | Done |
 | Created | 2026-06-16 |
 | Updated | 2026-06-16 |
 
@@ -38,7 +38,7 @@
 
 ## Status
 
-In Progress
+Done
 
 ## Status History
 
@@ -47,4 +47,5 @@ In Progress
 |---|---|---|---|
 | 2026-06-16 | Draft | Initial task scaffold. | `node dist/cli/main.js task create "0.3.1-rc.1 Release Readiness Preparation" --json` |
 | 2026-06-16 | In Progress | Release-readiness scope and validation plan defined. | T-0326 capsule docs |
+| 2026-06-16 | Done | Finished task capsule. | `hadara task finish --execute` |
 <!-- hadara:managed:end task-status-history -->

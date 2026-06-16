@@ -4,19 +4,19 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, recycled from installed-package consumer paths through T-0317, Phase 8 planning was staged through T-0318, Phase 8.1 through 8.6 completed through T-0324, T-0325 completed follow-up CloseState derived-state cleanup, and T-0326 is preparing `0.3.1-rc.1` release readiness. |
-| Current Phase | Phase 8 / 0.3.1 rc1 release readiness in progress | Phase 8 carried Work Item A/F into status governance through T-0325; T-0326 is bumping source/package metadata to `0.3.1-rc.1`, refreshing package-facing release docs, and proving readiness without publish mutation. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0325 Phase 8 CloseState handoff drift cleanup | Removed persistent `CloseState` from task-local close-source HANDOFF current-state tables, made it derived through read models, repaired recent Phase 8 handoffs, and hardened `findTaskCapsule()` same-id leftover handling. |
-| Active / Next Task | T-0326 0.3.1-rc.1 Release Readiness Preparation | T-0327 and T-0328 are pre-created Draft follow-ups for approval-gated npm publish and post-publish installed-package recycle. |
-| Validation Baseline | T-0325 full Docker sync-build plus focused CloseState/discovery validation; T-0326 validation pending | T-0325 passed focused Docker temp-copy validation for 7 files / 83 tests, full Docker sync-build for 119 files / 778 tests with `distLooksStale:false`, built CLI scaffold/harness smoke, and `git diff --check`. T-0326 must refresh Docker, artifact, package, clean-checkout, strict gate, dry-run, publish dry-run, and diff-check evidence. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, recycled from installed-package consumer paths through T-0317, Phase 8 planning was staged through T-0318, Phase 8.1 through 8.6 completed through T-0324, T-0325 completed follow-up CloseState derived-state cleanup, and T-0326 prepared `0.3.1-rc.1` release readiness. |
+| Current Phase | Phase 8 / 0.3.1 rc1 publish pending | Phase 8 carried Work Item A/F into status governance through T-0325; T-0326 bumped source/package metadata to `0.3.1-rc.1`, refreshed package-facing release docs, and proved readiness without publish mutation. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0326 0.3.1-rc.1 Release Readiness Preparation | Prepared rc1 source/readiness, refreshed release artifact/package/clean-checkout evidence, passed strict gate, release dry-run, publish dry-run, full Docker validation, and `git diff --check` without publish mutation. |
+| Active / Next Task | None | Next draft task is T-0327 0.3.1-rc.1 Approval-Gated Publish; T-0328 remains the post-publish installed-package recycle capsule. |
+| Validation Baseline | T-0326 full release readiness validation | T-0326 passed Docker sync-build on rerun (119 files / 779 tests), release artifact, package smoke, clean-checkout smoke, strict release gate, release dry-run, publish dry-run, and `git diff --check`; first package smoke attempt failed only because sandbox npm cache was read-only. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0326 0.3.1-rc.1 Release Readiness Preparation | Prepared rc1 package metadata/docs/helper guidance, accepted patch-line rc publishability checks, refreshed release artifact/package/clean-checkout evidence, and verified strict gate/dry-run/publish dry-run without mutation. | Docker sync-build rerun 119 files / 779 tests; release artifact, package smoke, clean-checkout smoke, strict gate, release dry-run, publish dry-run, and `git diff --check` evidence in T-0326. |
 | T-0325 Phase 8 CloseState handoff drift cleanup | Removed `CloseState` from generated task handoffs, turned persisted handoff CloseState into done-level drift, updated state projection/docs/specs, repaired T-0320 through T-0325 handoffs, and hardened same-id leftover discovery. | `src/task/task-capsule.ts`, `src/harness/validate.ts`, `src/services/state-projection.ts`, focused Docker 7 files / 83 tests, full Docker sync-build 119 files / 778 tests. |
 | T-0324 Phase 8.6 rc1 Review and Hardening Cleanup | Self-reviewed Phase 8 rc1 state governance, fixed phantom T-0073 drift by requiring `TASK.md` for task discovery, and confirmed advisory state surfaces still behave as non-blocking. | `src/task/task-capsule.ts`, `tests/harness/task-capsule.test.ts`, focused Docker 5 files / 44 tests, full Docker sync-build 119 files / 777 tests. |
-| T-0323 Phase 8.5 State Verify Doctor and Advisory Gates | Added direct `state verify`, compact state consistency summaries in status/protocol doctor, and advisory CI state warnings while preserving strict gate conservatism. | `src/cli/state.ts`, status/protocol/CI services, command registry/docs, focused Docker 5 files / 50 tests, full Docker sync-build 119 files / 776 tests. |
 
 ## Current Known Problems
 
@@ -24,7 +24,7 @@
 |---|---|---|
 | Published `0.3.0-rc.0` npm metadata still shows the old package description and no keywords. | The immutable rc.0 package remains metadata-limited, while later rc packages and stable `0.3.0` were published with metadata guardrails. | Treat rc.0 as historical; use stable `hadara@0.3.0` for current installs. |
 | `docs/DOC_REGISTRY.md` projection is not registered as a registry entry by the current seed. | `docs explain --path docs/DOC_REGISTRY.md` reports `DOC_NOT_REGISTERED`, while the artifact exists and is managed. | Treat as accepted current seed behavior unless a future schema/seed capsule decides self-registration is required. |
-| Host npm remains unreliable for some release smokes. | Host package smoke first failed on a read-only npm cache and host clean-checkout hit an npm internal error, while Docker/npm paths passed. | Use `NPM_CONFIG_CACHE=/tmp/...` for host package smoke and Docker ext4 for clean-checkout smoke. |
+| Host npm remains unreliable for some release smokes under sandboxed home/cache permissions. | T-0326 package smoke first failed with npm cache `EROFS` in the sandbox, then passed on approved escalated rerun; clean-checkout smoke also ran escalated. | Use the Docker validation path for HADARA-dev and run npm package tooling outside read-only sandbox constraints when required. |
 | T-0291/T-0292/T-0293/T-0294 full wrapper validation had timeout-only residual blockers, while T-0295 wrapper validation passed. | Older Phase 7 focused checks passed, and T-0295 restored a clean standard wrapper baseline for current changes. | Use T-0295's 115-file / 741-test wrapper pass as the latest validation baseline, while treating older timeout notes as historical. |
 | T-0319 full Docker wrapper timed out on docs archive/required-reading tests. | Historical T-0319 evidence lacks a clean full-suite wrapper baseline, but T-0320 through T-0323 have since passed full Docker sync-build. | Treat as historical for T-0319; use T-0323 as the current source full-suite baseline unless a newer timeout repeats. |
 | Combined parallel focused dashboard/static validation can timeout under worker contention. | Standalone dashboard-static passed quickly, but a parallel focused run timed out once. | Run dashboard-static standalone or serialize dashboard validation when investigating route behavior. |
@@ -81,7 +81,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Complete T-0326 release readiness, then proceed to T-0327 approval-gated publish. | T-0326 is the no-publish source/readiness capsule for `hadara@0.3.1-rc.1`; actual npm publish belongs to pre-created Draft T-0327, and installed-package recycle belongs to T-0328. | T-0326 required validation: Docker sync-build, release artifact, package smoke, clean-checkout smoke, strict gate, release dry-run, publish dry-run, and `git diff --check`. |
+| Proceed to T-0327 approval-gated publish. | T-0326 completed no-publish source/readiness for `hadara@0.3.1-rc.1`; actual npm publish belongs to pre-created Draft T-0327, and installed-package recycle belongs to T-0328. | `tasks/T-0327-0-3-1-rc-1-approval-gated-publish/TASK.md`; `scripts/release/manual-publish-rc.sh`; `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 

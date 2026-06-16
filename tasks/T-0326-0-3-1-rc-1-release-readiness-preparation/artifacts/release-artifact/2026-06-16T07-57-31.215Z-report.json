@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "hadara.releaseArtifact.v1",
+  "command": "release.artifact",
+  "ok": true,
+  "mode": "execute",
+  "execution": {
+    "stagingCreated": true,
+    "npmPackExecuted": true,
+    "checksumGenerated": true,
+    "manifestGenerated": true,
+    "packageContentsVerified": true,
+    "publishExecuted": false,
+    "githubReleaseCreated": false,
+    "dockerImageBuilt": false
+  },
+  "output": {
+    "kind": "disposable",
+    "displayPath": "<redacted-release-artifact-output>",
+    "pathRedacted": true,
+    "retention": "deleted"
+  },
+  "package": {
+    "name": "hadara",
+    "version": "0.3.1-rc.1",
+    "private": false,
+    "filesWhitelistApplied": true
+  },
+  "artifacts": [
+    {
+      "kind": "tarball",
+      "visibility": "temporary",
+      "fileName": "hadara-0.3.1-rc.1.tgz",
+      "pathRedacted": true,
+      "byteLength": 292034,
+      "hash": "sha256:a6c586d005a12444cd2a8e02908a82cdf29c4ad2d31452640010463715a9b0ba",
+      "rawContentIncluded": false
+    },
+    {
+      "kind": "checksum",
+      "visibility": "temporary",
+      "fileName": "hadara-0.3.1-rc.1.tgz.sha256",
+      "pathRedacted": true,
+      "byteLength": 88,
+      "hash": "sha256:26e98ea10b9eba47dbd466733fba09b50e6f0184191f59c2254582e044edcf32",
+      "rawContentIncluded": false
+    },
+    {
+      "kind": "manifest",
+      "visibility": "temporary",
+      "fileName": "hadara-0.3.1-rc.1.tgz.manifest.json",
+      "pathRedacted": true,
+      "byteLength": 19377,
+      "hash": "sha256:4532058f279bdec068d407f794edd381707fecdfd3c33530b666f230889799d0",
+      "rawContentIncluded": false
+    }
+  ],
+  "packageContents": {
+    "verified": true,
+    "fileCount": 213,
+    "allowedRoots": [
+      "dist/",
+      "README.md",
+      "LICENSE",
+      "package.json"
+    ],
+    "requiredFiles": [
+      "package.json",
+      "README.md",
+      "LICENSE",
+      "dist/cli/main.js"
+    ],
+    "forbiddenMatches": []
+  },
+  "privacy": {
+    "rawLogsIncluded": false,
+    "packageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [],
+  "evidence": {
+    "time": "2026-06-16T07:57:31.205Z",
+    "taskId": "T-0326",
+    "gitCommit": "657e97e47b4fbfe4b0ceee3507a3a9dbed88c89d"
+  }
+}
