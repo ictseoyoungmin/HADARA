@@ -4,17 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, recycled from installed-package consumer paths through T-0317, Phase 8 planning was staged through T-0318, Phase 8.1 through 8.6 completed through T-0324, T-0325 completed follow-up CloseState derived-state cleanup, T-0326 prepared `0.3.1-rc.1` release readiness, and T-0327 published rc1 with corrected dist-tags. |
-| Current Phase | Phase 8 / 0.3.1 rc1 post-publish recycle pending | Phase 8 carried Work Item A/F into status governance through T-0325; T-0326 bumped source/package metadata to `0.3.1-rc.1`, refreshed package-facing release docs, and proved readiness without publish mutation; T-0327 published rc1, verified registry/tarball visibility, and corrected npm dist-tags so stable remains `latest` and rc1 is `next`. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0327 0.3.1-rc.1 Approval-Gated Publish | Published `hadara@0.3.1-rc.1`, verified registry/tarball/README visibility, hardened future rc publishes to default to npm `next`, and verified dist-tags `latest=0.3.0` and `next=0.3.1-rc.1`. |
-| Active / Next Task | T-0328 0.3.1-rc.1 Post-Publish Installed-Package Recycle | T-0328 should verify the corrected rc1 package from clean consumer install paths after T-0327 close/audit. |
-| Validation Baseline | T-0327 publish/registry/dist-tag evidence plus T-0326 full release readiness validation | T-0327 recorded npm publish, registry/tarball verification, helper tag hardening, and corrected dist-tag verification; T-0326 passed Docker sync-build on rerun (119 files / 779 tests), release artifact, package smoke, clean-checkout smoke, strict release gate, release dry-run, publish dry-run, and `git diff --check`; first package smoke attempt failed only because sandbox npm cache was read-only. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, recycled from installed-package consumer paths through T-0317, Phase 8 planning was staged through T-0318, Phase 8.1 through 8.6 completed through T-0324, T-0325 completed follow-up CloseState derived-state cleanup, T-0326 prepared `0.3.1-rc.1` release readiness, T-0327 published rc1 with corrected dist-tags, and T-0328 recycled the installed rc1 package. |
+| Current Phase | Phase 8 / 0.3.1 rc1 publish and recycle complete | Phase 8 carried Work Item A/F into status governance through T-0325; T-0326 bumped source/package metadata to `0.3.1-rc.1`, refreshed package-facing release docs, and proved readiness without publish mutation; T-0327 published rc1, verified registry/tarball visibility, and corrected npm dist-tags; T-0328 verified the installed package command surface from consumer paths. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0328 0.3.1-rc.1 Post-Publish Installed-Package Recycle | Verified `hadara@0.3.1-rc.1` through registry/dist-tags, exact npx, temp-prefix installed bin, 71-entry command registry, broad command-family matrix, source release dry-runs, MCP initialize, TUI snapshot, run scaffold/run, disposable lifecycle surfaces, and temp-folder cleanup in the `hadara-dev` container. |
+| Active / Next Task | None | Select the next roadmap slice from Development Slices or open a new capsule if a concrete follow-up is chosen. |
+| Validation Baseline | T-0328 installed-package recycle plus T-0327 publish/registry/dist-tag evidence plus T-0326 full release readiness validation | T-0328 passed published-package consumer recycle in the container; T-0327 recorded npm publish, registry/tarball verification, helper tag hardening, and corrected dist-tag verification; T-0326 passed Docker sync-build on rerun (119 files / 779 tests), release artifact, package smoke, clean-checkout smoke, strict release gate, release dry-run, publish dry-run, and `git diff --check`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0328 0.3.1-rc.1 Post-Publish Installed-Package Recycle | Draft capsule is staged to verify `hadara@0.3.1-rc.1` through installed-package consumer paths after publish/tag correction. | T-0327 publish evidence; T-0328 capsule. |
+| None | No active capsule after T-0328 close/audit. | Next task should be selected from roadmap/handoff. |
 
 ## Last 3 Completed Tasks
 
@@ -87,7 +87,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start T-0328 post-publish installed-package recycle. | T-0327 published rc1, verified registry/tarball visibility, and corrected npm dist-tags; the remaining release line proof is consumer install/recycle validation. | `tasks/T-0328-0-3-1-rc-1-post-publish-installed-package-recycle/TASK.md`; `docs/RELEASE_READINESS.md`; `docs/TEST_STRATEGY.md` |
+| Select the next roadmap slice. | `0.3.1-rc.1` publish and installed-package recycle are complete; no follow-up blocker was found in T-0328 beyond bounded server/Docker environment notes. | `docs/DEVELOPMENT_SLICES.md`; `docs/PROJECT_STATE.md`; `docs/TASK_BOARD.md` |
 
 ## Validation Baseline
 

@@ -6,7 +6,7 @@
 | Field | Value |
 |---|---|
 | Task | T-0328 |
-| TaskStatus | Draft |
+| TaskStatus | Done |
 | Last Updated | 2026-06-16 |
 <!-- hadara:managed:end task-handoff-current-state -->
 
@@ -14,13 +14,14 @@
 
 | Item | Evidence |
 |---|---|
-| Draft recycle capsule is ready for T-0327 handoff. | Scope lists the minimum consumer validation expected for `hadara@0.3.1-rc.1`. |
+| Published `hadara@0.3.1-rc.1` installed-package recycle passed in the `hadara-dev` container. | `command:T-0328:published-cli-surface-recycle` |
+| Temporary recycle folders were removed after validation. | `command:T-0328:published-cli-surface-recycle` |
 
 ## Next Recommended Step
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Wait for T-0327 npm publish and registry verification. | Recycle cannot start before the package exists on npm. | `docs/TEST_STRATEGY.md`, `docs/RELEASE_READINESS.md` |
+| Select the next post-rc1 roadmap slice after T-0328 close/audit. | rc1 publish and installed-package recycle are complete; next work should come from handoff/roadmap rather than release mutation. | `docs/AGENT_HANDOFF.md`, `docs/DEVELOPMENT_SLICES.md` |
 
 ## Carry Forward Warnings
 

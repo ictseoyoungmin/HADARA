@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0328 |
 | Title | 0.3.1-rc.1 Post-Publish Installed-Package Recycle |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-06-16 |
 | Updated | 2026-06-16 |
 
@@ -36,7 +36,7 @@
 
 ## Status
 
-Draft
+Done
 
 ## Status History
 
@@ -44,4 +44,6 @@ Draft
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-16 | Draft | Recycle capsule pre-created for handoff after T-0327 publishes `0.3.1-rc.1`. | T-0326 |
+| 2026-06-16 | In Progress | T-0327 closed valid; consumer installed-package recycle started in the `hadara-dev` container. | T-0327 |
+| 2026-06-16 | Done | Finished task capsule. | `hadara task finish --execute` |
 <!-- hadara:managed:end task-status-history -->

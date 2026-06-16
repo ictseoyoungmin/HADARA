@@ -328,4 +328,4 @@
 | T-0325 | Phase 8 CloseState handoff drift cleanup | Done | tasks/T-0325-phase-8-closestate-handoff-drift-cleanup | |
 | T-0326 | 0.3.1-rc.1 Release Readiness Preparation | Done | tasks/T-0326-0-3-1-rc-1-release-readiness-preparation | Readiness validation complete; no publish mutation; publish remains T-0327. |
 | T-0327 | 0.3.1-rc.1 Approval-Gated Publish | Done | tasks/T-0327-0-3-1-rc-1-approval-gated-publish | npm publish, registry/tarball verification, and dist-tag correction passed; close workflow pending. |
-| T-0328 | 0.3.1-rc.1 Post-Publish Installed-Package Recycle | Draft | tasks/T-0328-0-3-1-rc-1-post-publish-installed-package-recycle | Ready after T-0327 close/audit. |
+| T-0328 | 0.3.1-rc.1 Post-Publish Installed-Package Recycle | Done | tasks/T-0328-0-3-1-rc-1-post-publish-installed-package-recycle | Installed-package recycle passed; close workflow pending. |

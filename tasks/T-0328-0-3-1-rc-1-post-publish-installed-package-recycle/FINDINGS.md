@@ -1,0 +1,9 @@
+# Findings
+
+| ID | Finding | Impact | Resolution | Evidence |
+|---|---|---|---|---|
+| F-1 | Published `hadara@0.3.1-rc.1` installed and ran from a temp-prefix bin inside the `hadara-dev` container. | Confirms canonical consumer install proof for the exact rc1 package. | Passed; installed `version --json` reported package version `0.3.1-rc.1` with non-stale dist. | `command:T-0328:published-cli-surface-recycle` |
+| F-2 | Exact `npx hadara@0.3.1-rc.1 version --json` passed in the container. | Confirms the convenience consumer path worked for this recycle run. | Passed; temp-prefix installed-bin remains the canonical proof if future npx cache or DNS ambiguity returns. | `command:T-0328:published-cli-surface-recycle` |
+| F-3 | Installed command registry exposed 71 CLI entries and broad command-family smokes passed. | Confirms the published package can dispatch the current CLI surface from an installed consumer path. | Passed across registry/help/init/docs/task/evidence/proof/protocol/state/ci/debt/policy/harness/run/hermes/MCP/status/install/smoke/package/release/TUI surfaces using safe read/dry-run/disposable-project modes. | `command:T-0328:published-cli-surface-recycle` |
+| F-4 | Long-running or environment-dependent commands need bounded interpretation. | `dashboard serve` intentionally stays running until stopped, and `dev docker-check` cannot run nested Docker from this container context. | Treated as expected bounded/environment outcomes: dashboard startup was bounded by `timeout`, and dev docker-check reported the environment limitation without affecting installed CLI proof. | `command:T-0328:published-cli-surface-recycle` |
+| F-5 | Temporary recycle folders were removed. | Prevents disposable package install/project state from lingering after validation. | Verified `/tmp/hadara-recycle-T-0328*` and `/tmp/hadara-help-probe` paths were removed in the container. | `command:T-0328:published-cli-surface-recycle` |

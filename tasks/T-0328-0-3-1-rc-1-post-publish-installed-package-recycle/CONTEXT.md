@@ -4,12 +4,12 @@
 
 | Document | Why It Matters | Read Status |
 |---|---|---|
-| docs/PROJECT_STATE.md | Confirms T-0327 publish state. | Pending |
-| docs/AGENT_HANDOFF.md | Current handoff into recycle. | Pending |
-| docs/TASK_BOARD.md | Task queue and status. | Pending |
-| docs/IMPLEMENTATION_SOP.md | Workflow rules. | Pending |
-| docs/TEST_STRATEGY.md | Installed package consumer proof and temp-prefix guidance. | Pending |
-| docs/RELEASE_READINESS.md | Release/recycle status source. | Pending |
+| docs/PROJECT_STATE.md | Confirms T-0327 publish state. | Done |
+| docs/AGENT_HANDOFF.md | Current handoff into recycle. | Done |
+| docs/TASK_BOARD.md | Task queue and status. | Done |
+| docs/IMPLEMENTATION_SOP.md | Workflow rules. | Done |
+| docs/TEST_STRATEGY.md | Installed package consumer proof and temp-prefix guidance. | Done |
+| docs/RELEASE_READINESS.md | Release/recycle status source. | Done |
 
 ## Assumptions
 
