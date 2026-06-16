@@ -323,7 +323,7 @@ Current package metadata is release-candidate stage:
 Release metadata modes:
 
 - Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability.
-- Release-candidate metadata mode: version `0.x.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present.
+- Release-candidate metadata mode: version `0.x.y-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present.
 
 Release-candidate transition policy:
 

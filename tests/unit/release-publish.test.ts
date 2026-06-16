@@ -101,13 +101,35 @@ describe('release publish', () => {
     expect(auditText).not.toContain('github_secret_value');
   });
 
-  it('accepts stable 0.x.0 package metadata as publishable', () => {
+  it('accepts stable 0.x.y package metadata as publishable', () => {
     const root = tempProject();
     fs.writeFileSync(
       path.join(root, 'package.json'),
       JSON.stringify({
         name: 'hadara',
-        version: '0.3.0',
+        version: '0.3.1',
+        private: false
+      }),
+      'utf8'
+    );
+
+    const report = createReleasePublishReport({ projectRoot: root });
+
+    expect(report.checks).toContainEqual({
+      code: 'PACKAGE_PUBLISHABLE_METADATA',
+      name: 'Package publishable metadata',
+      status: 'passed',
+      summary: 'Package metadata is in publishable version mode.'
+    });
+  });
+
+  it('accepts patch release-candidate metadata as publishable', () => {
+    const root = tempProject();
+    fs.writeFileSync(
+      path.join(root, 'package.json'),
+      JSON.stringify({
+        name: 'hadara',
+        version: '0.3.1-rc.1',
         private: false
       }),
       'utf8'

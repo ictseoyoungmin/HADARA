@@ -1,5 +1,26 @@
 # RELEASE_NOTES
 
+## 0.3.1-rc.1
+
+Release candidate for the Phase 8 State Governance line after stable `0.3.0` publish/recycle and the T-0325 CloseState derived-state cleanup.
+
+Highlights:
+
+- Defines persistent `TaskStatus`, derived `CloseState`, document registry `DocStatus`, and evidence outcome token families in root and generated workflow docs.
+- Removes persistent `CloseState` from task-local close-source handoff current-state tables and keeps close proof state derived through status, audit, proof, and state read models.
+- Adds done-level validation for stale pending-close wording, persisted handoff `CloseState`, and `PLAN.md` rows left `In Progress`.
+- Resolves installed-package recycle findings by documenting temp-prefix installed-bin proof as canonical when PATH, global installs, `npx`, or DNS/cache behavior is ambiguous.
+- Adds read-only state consistency projection and `hadara state verify --json`, with advisory protocol doctor/status/CI integration.
+- Hardens task discovery so task-like leftover directories without `TASK.md` are ignored rather than projected as real capsules.
+- Expands npm publishable metadata checks from the previous `0.x.0[-rc.N]` release pattern to patch-line versions such as `0.3.1-rc.1`.
+
+Boundaries:
+
+- T-0326 prepares `hadara@0.3.1-rc.1` source metadata, release docs, and release readiness evidence only.
+- npm publish belongs to the approval-gated T-0327 capsule after operator authentication and explicit confirmation.
+- Post-publish installed-package recycle belongs to T-0328 after `hadara@0.3.1-rc.1` is visible on npm.
+- GitHub Release creation remains optional; Docker image publishing, PyPI publishing, installer execution, MCP release/package execution, and token loading remain deferred unless a future capsule explicitly enables them.
+
 ## 0.3.0
 
 Stable release for the Phase 7 Surface Refactor after `0.3.0-rc.2` post-publish recycle, HADARA-dev docs registry artifact dogfooding, and docs patch atomic write hardening.

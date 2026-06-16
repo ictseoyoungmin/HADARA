@@ -111,7 +111,7 @@ function writeReleaseReadinessFiles(root: string, version = '0.2.0-rc.0'): void 
       'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
       'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',
       'Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability',
-      'Release-candidate metadata mode: version `0.x.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
+      'Release-candidate metadata mode: version `0.x.y-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
       'Scoped fallback decision: do not silently switch names',
       'Version policy:',
       'T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist',
@@ -138,7 +138,7 @@ function writeReleaseReadinessFiles(root: string, version = '0.2.0-rc.0'): void 
       'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
       'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',
       'Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability',
-      'Release-candidate metadata mode: version `0.x.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
+      'Release-candidate metadata mode: version `0.x.y-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
       'Scoped fallback decision: do not silently switch names',
       'Version policy:',
       'T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist',
@@ -615,9 +615,9 @@ describe('operational debt track', () => {
     });
   });
 
-  it('accepts stable 0.x.0 package metadata for release readiness', () => {
+  it('accepts stable 0.x.y package metadata for release readiness', () => {
     const root = tempProject();
-    writeReleaseReadinessFiles(root, '0.3.0');
+    writeReleaseReadinessFiles(root, '0.3.1');
 
     const report = createReleaseGateReport(root, 'strict');
 
@@ -634,7 +634,7 @@ describe('operational debt track', () => {
 
   it('uses package metadata instead of a fixed RC version for release readiness markers', () => {
     const root = tempProject();
-    writeReleaseReadinessFiles(root, '0.1.0-rc.7');
+    writeReleaseReadinessFiles(root, '0.3.1-rc.1');
 
     const strict = createReleaseGateReport(root, 'strict');
 
@@ -1075,7 +1075,7 @@ describe('operational debt track', () => {
         'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
         'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',
         'Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability',
-        'Release-candidate metadata mode: version `0.x.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
+        'Release-candidate metadata mode: version `0.x.y-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
         'Scoped fallback decision: do not silently switch names',
         'Version policy:',
         'T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist',

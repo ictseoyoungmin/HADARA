@@ -67,12 +67,13 @@ export interface ReleasePublishReport {
 }
 
 const CONFIRMATION_PHRASE = 'publish-deploy';
+const NPM_PUBLISHABLE_VERSION_PATTERN = /^0\.\d+\.\d+(?:-rc\.\d+)?$/;
 
 export function createReleasePublishReport(options: ReleasePublishOptions): ReleasePublishReport {
   const mode = options.mode ?? 'dry-run';
   const env = options.env ?? process.env;
   const metadata = readPackageMetadata(options.projectRoot);
-  const metadataPublishable = !metadata.private && (/^0\.\d+\.0-rc\.\d+$/.test(metadata.packageVersion) || /^0\.\d+\.0$/.test(metadata.packageVersion));
+  const metadataPublishable = !metadata.private && NPM_PUBLISHABLE_VERSION_PATTERN.test(metadata.packageVersion);
   const dryRun = createReleaseDryRunReport(options.projectRoot);
   const approval = {
     required: true as const,
@@ -95,7 +96,7 @@ export function createReleasePublishReport(options: ReleasePublishOptions): Rele
       summary:
         metadataPublishable
           ? 'Package metadata is in publishable version mode.'
-          : 'Package metadata must be 0.x.0-rc.N or 0.x.0 with private false before publish/deploy readiness can pass.'
+          : 'Package metadata must be 0.x.y-rc.N or 0.x.y with private false before publish/deploy readiness can pass.'
     },
     {
       code: 'APPROVAL_RECORD',

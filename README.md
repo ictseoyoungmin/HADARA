@@ -6,7 +6,7 @@
 
 <p align="center">
   <img alt="Stable npm release" src="https://img.shields.io/badge/npm-0.3.0-blue">
-  <img alt="Source version" src="https://img.shields.io/badge/source-0.3.0-orange">
+  <img alt="Source version" src="https://img.shields.io/badge/source-0.3.1--rc.1-orange">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>
@@ -27,21 +27,22 @@ Current stable npm release:
 hadara@0.3.0
 ```
 
-Previous npm release candidate:
+Current release candidate:
 
 ```text
-hadara@0.3.0-rc.2
+hadara@0.3.1-rc.1
 ```
 
-The 0.3.0 line is the Phase 7 Surface Refactor. It organizes HADARA's existing task, evidence, proof, lifecycle, release, and document surfaces so agents can distinguish primary lifecycle commands, diagnostics, advanced surfaces, canonical documents, historical documents, and safe Markdown update boundaries.
+The 0.3.1-rc.1 line is the Phase 8 State Governance release candidate. It hardens status-token vocabulary, document ownership/write boundaries, handoff close-state handling, installed-package finding guidance, and state consistency verification surfaces after the stable 0.3.0 publish/recycle.
 
-Phase 7.x labels are internal implementation phases, not npm release-candidate labels. The stable `0.3.0` package is published through the approval-gated release path with explicit operator confirmation.
+Phase 8.x labels are internal implementation phases, not npm release-candidate labels. The stable `0.3.0` package remains the default install target; the `0.3.1-rc.1` package is for explicit release-candidate evaluation.
 
 | Surface | Status |
 |---|---|
-| Current stable | `hadara@0.3.0` |
-| Previous RC | `hadara@0.3.0-rc.2` |
-| Historical RCs | See `docs/RELEASE_READINESS.md`. |
+| Current stable | [`hadara@0.3.0`](docs/RELEASE_NOTES.md#030) |
+| Current RC | [`hadara@0.3.1-rc.1`](docs/RELEASE_NOTES.md#031-rc1) |
+| Previous RC | [`hadara@0.3.0-rc.2`](docs/RELEASE_NOTES.md#030-rc2) |
+| Historical RCs | See [Release Notes](docs/RELEASE_NOTES.md). |
 | GitHub Release | Secondary target, approval-gated. |
 | Docker image | Deferred. |
 | PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
@@ -66,6 +67,13 @@ Run without a global install:
 ```bash
 npx hadara@0.3.0 help
 npx hadara@0.3.0 doctor --json
+```
+
+Evaluate the release candidate explicitly:
+
+```bash
+npm install -g hadara@0.3.1-rc.1
+npx hadara@0.3.1-rc.1 help
 ```
 
 For release or recycle evidence, prefer an isolated prefix install when PATH, global installs, or `npx` cache behavior may be stale:
@@ -224,7 +232,7 @@ Dashboard, TUI, Hermes, MCP, installer, package, release, and run commands stay 
 
 ## Safety Boundaries
 
-HADARA 0.3.0 is not:
+HADARA 0.3.1-rc.1 is not:
 
 - a full agent runtime;
 - Rack/enterprise behavior;

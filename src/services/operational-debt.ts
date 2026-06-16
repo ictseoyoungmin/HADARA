@@ -435,7 +435,7 @@ function checkPackageMetadataReadiness(
     bin.hadara === './dist/cli/main.js';
   const publishablePackageMetadataOk =
     packageJson?.name === 'hadara' &&
-    (/^0\.\d+\.0-rc\.\d+$/.test(String(packageJson?.version ?? '')) || /^0\.\d+\.0$/.test(String(packageJson?.version ?? ''))) &&
+    /^0\.\d+\.\d+(?:-rc\.\d+)?$/.test(String(packageJson?.version ?? '')) &&
     packageJson?.private === false &&
     packageJson?.license === 'MIT' &&
     bin.hadara === './dist/cli/main.js' &&
@@ -451,7 +451,7 @@ function checkPackageMetadataReadiness(
     'Current binary remains `bin.hadara` at `./dist/cli/main.js`',
     'Current `files` whitelist is `dist/`, `README.md`, `LICENSE`, and `package.json`',
     'Bootstrap metadata mode: version `0.0.0-bootstrap`, `private: true`, no package publishability',
-    'Release-candidate metadata mode: version `0.x.0-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
+    'Release-candidate metadata mode: version `0.x.y-rc.N`, `private: false`, `files` whitelist present, `LICENSE` present, package smoke evidence present',
     'Scoped fallback decision: do not silently switch names',
     'Version policy:',
     'T-0142 transitions `private` to false only after the package files whitelist, root README, license decision, and package-smoke evidence gates exist',

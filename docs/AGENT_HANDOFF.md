@@ -4,11 +4,11 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, recycled from installed-package consumer paths through T-0317, Phase 8 planning was staged through T-0318, Phase 8.1 through 8.6 completed through T-0324, and T-0325 completed follow-up CloseState derived-state cleanup. |
-| Current Phase | Phase 8 / 0.3.1 rc1 implementation complete after CloseState cleanup | Phase 8 carried Work Item A/F into status-token governance, document ownership/write boundaries, task handoff close-state clarity, installed-package findings cleanup, state consistency projection, advisory verification gates, final rc1 hardening, and T-0325 fixed the close-source HANDOFF fixed-point issue. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, recycled from installed-package consumer paths through T-0317, Phase 8 planning was staged through T-0318, Phase 8.1 through 8.6 completed through T-0324, T-0325 completed follow-up CloseState derived-state cleanup, and T-0326 is preparing `0.3.1-rc.1` release readiness. |
+| Current Phase | Phase 8 / 0.3.1 rc1 release readiness in progress | Phase 8 carried Work Item A/F into status governance through T-0325; T-0326 is bumping source/package metadata to `0.3.1-rc.1`, refreshing package-facing release docs, and proving readiness without publish mutation. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
 | Latest Completed Task | T-0325 Phase 8 CloseState handoff drift cleanup | Removed persistent `CloseState` from task-local close-source HANDOFF current-state tables, made it derived through read models, repaired recent Phase 8 handoffs, and hardened `findTaskCapsule()` same-id leftover handling. |
-| Active / Next Task | `0.3.1-rc1` release readiness/prep not created | Open a dedicated release-readiness/prep capsule only if proceeding toward package version bump, artifact refresh, publish, and installed-package recycle. |
-| Validation Baseline | T-0325 full Docker sync-build plus focused CloseState/discovery validation | T-0325 passed focused Docker temp-copy validation for 7 files / 83 tests, full Docker sync-build for 119 files / 778 tests with `distLooksStale:false`, built CLI scaffold/harness smoke, and `git diff --check`. |
+| Active / Next Task | T-0326 0.3.1-rc.1 Release Readiness Preparation | T-0327 and T-0328 are pre-created Draft follow-ups for approval-gated npm publish and post-publish installed-package recycle. |
+| Validation Baseline | T-0325 full Docker sync-build plus focused CloseState/discovery validation; T-0326 validation pending | T-0325 passed focused Docker temp-copy validation for 7 files / 83 tests, full Docker sync-build for 119 files / 778 tests with `distLooksStale:false`, built CLI scaffold/harness smoke, and `git diff --check`. T-0326 must refresh Docker, artifact, package, clean-checkout, strict gate, dry-run, publish dry-run, and diff-check evidence. |
 
 ## Last 3 Completed Tasks
 
@@ -81,7 +81,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Open a `0.3.1-rc1` release-readiness/prep capsule only if proceeding toward packaging. | Phase 8 rc1 implementation and self-review hardening are complete, but package version bump, release artifact refresh, publish, and installed-package recycle are separate release work. | `docs/specs/0.3.1/rc1/00_HADARA_0_3_1_rc1_Status_Governance_Implementation_Plan.md`; `docs/RELEASE_READINESS.md` |
+| Complete T-0326 release readiness, then proceed to T-0327 approval-gated publish. | T-0326 is the no-publish source/readiness capsule for `hadara@0.3.1-rc.1`; actual npm publish belongs to pre-created Draft T-0327, and installed-package recycle belongs to T-0328. | T-0326 required validation: Docker sync-build, release artifact, package smoke, clean-checkout smoke, strict gate, release dry-run, publish dry-run, and `git diff --check`. |
 
 ## Validation Baseline
 
