@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0327 |
 | Title | 0.3.1-rc.1 Approval-Gated Publish |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-06-16 |
 | Updated | 2026-06-16 |
 
@@ -36,7 +36,7 @@
 
 ## Status
 
-Draft
+Done
 
 ## Status History
 
@@ -44,4 +44,6 @@ Draft
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-16 | Draft | Publish capsule pre-created so the helper can validate task/version alignment after T-0326. | T-0326 |
+| 2026-06-16 | In Progress | npm publish completed and registry visibility was verified; close now waits for npm dist-tag correction because the RC was initially published as `latest`. | `command:T-0327:npm-publish`; `command:T-0327:registry-tarball-verify`; `command:T-0327:dist-tag-drift-observed` |
+| 2026-06-16 | Done | Finished task capsule. | `hadara task finish --execute` |
 <!-- hadara:managed:end task-status-history -->

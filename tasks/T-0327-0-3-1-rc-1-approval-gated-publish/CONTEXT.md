@@ -4,14 +4,14 @@
 
 | Document | Why It Matters | Read Status |
 |---|---|---|
-| docs/PROJECT_STATE.md | Confirms T-0326 readiness and next publish boundary. | Pending |
-| docs/AGENT_HANDOFF.md | Current operator handoff for publish. | Pending |
-| docs/TASK_BOARD.md | Task queue and status. | Pending |
-| docs/IMPLEMENTATION_SOP.md | Workflow rules and release write serialization. | Pending |
-| docs/TASK_WORKFLOW_COMMANDS.md | Finish/ready/close/audit loop. | Pending |
-| docs/RELEASE_READINESS.md | Release target, evidence, and publish boundary. | Pending |
-| scripts/release/manual-publish-rc.sh | Approval-gated npm publish helper. | Pending |
-| scripts/release/prepare-publish-env.sh | Optional clean publish clone helper. | Pending |
+| docs/PROJECT_STATE.md | Confirms T-0326 readiness and next publish boundary. | Done |
+| docs/AGENT_HANDOFF.md | Current operator handoff for publish. | Done |
+| docs/TASK_BOARD.md | Task queue and status. | Done |
+| docs/IMPLEMENTATION_SOP.md | Workflow rules and release write serialization. | Done |
+| docs/TASK_WORKFLOW_COMMANDS.md | Finish/ready/close/audit loop. | Done |
+| docs/RELEASE_READINESS.md | Release target, evidence, and publish boundary. | Done |
+| scripts/release/manual-publish-rc.sh | Approval-gated npm publish helper. | Done |
+| scripts/release/prepare-publish-env.sh | Optional clean publish clone helper. | Done |
 
 ## Assumptions
 

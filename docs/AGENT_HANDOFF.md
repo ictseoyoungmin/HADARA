@@ -4,11 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, recycled from installed-package consumer paths through T-0317, Phase 8 planning was staged through T-0318, Phase 8.1 through 8.6 completed through T-0324, T-0325 completed follow-up CloseState derived-state cleanup, and T-0326 prepared `0.3.1-rc.1` release readiness. |
-| Current Phase | Phase 8 / 0.3.1 rc1 publish pending | Phase 8 carried Work Item A/F into status governance through T-0325; T-0326 bumped source/package metadata to `0.3.1-rc.1`, refreshed package-facing release docs, and proved readiness without publish mutation. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0326 0.3.1-rc.1 Release Readiness Preparation | Prepared rc1 source/readiness, refreshed release artifact/package/clean-checkout evidence, passed strict gate, release dry-run, publish dry-run, full Docker validation, and `git diff --check` without publish mutation. |
-| Active / Next Task | None | Next draft task is T-0327 0.3.1-rc.1 Approval-Gated Publish; T-0328 remains the post-publish installed-package recycle capsule. |
-| Validation Baseline | T-0326 full release readiness validation | T-0326 passed Docker sync-build on rerun (119 files / 779 tests), release artifact, package smoke, clean-checkout smoke, strict release gate, release dry-run, publish dry-run, and `git diff --check`; first package smoke attempt failed only because sandbox npm cache was read-only. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, recycled from installed-package consumer paths through T-0317, Phase 8 planning was staged through T-0318, Phase 8.1 through 8.6 completed through T-0324, T-0325 completed follow-up CloseState derived-state cleanup, T-0326 prepared `0.3.1-rc.1` release readiness, and T-0327 published rc1 with corrected dist-tags. |
+| Current Phase | Phase 8 / 0.3.1 rc1 post-publish recycle pending | Phase 8 carried Work Item A/F into status governance through T-0325; T-0326 bumped source/package metadata to `0.3.1-rc.1`, refreshed package-facing release docs, and proved readiness without publish mutation; T-0327 published rc1, verified registry/tarball visibility, and corrected npm dist-tags so stable remains `latest` and rc1 is `next`. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0327 0.3.1-rc.1 Approval-Gated Publish | Published `hadara@0.3.1-rc.1`, verified registry/tarball/README visibility, hardened future rc publishes to default to npm `next`, and verified dist-tags `latest=0.3.0` and `next=0.3.1-rc.1`. |
+| Active / Next Task | T-0328 0.3.1-rc.1 Post-Publish Installed-Package Recycle | T-0328 should verify the corrected rc1 package from clean consumer install paths after T-0327 close/audit. |
+| Validation Baseline | T-0327 publish/registry/dist-tag evidence plus T-0326 full release readiness validation | T-0327 recorded npm publish, registry/tarball verification, helper tag hardening, and corrected dist-tag verification; T-0326 passed Docker sync-build on rerun (119 files / 779 tests), release artifact, package smoke, clean-checkout smoke, strict release gate, release dry-run, publish dry-run, and `git diff --check`; first package smoke attempt failed only because sandbox npm cache was read-only. |
+
+## Active Work
+
+| Task | Summary | Evidence |
+|---|---|---|
+| T-0328 0.3.1-rc.1 Post-Publish Installed-Package Recycle | Draft capsule is staged to verify `hadara@0.3.1-rc.1` through installed-package consumer paths after publish/tag correction. | T-0327 publish evidence; T-0328 capsule. |
 
 ## Last 3 Completed Tasks
 
@@ -81,7 +87,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Proceed to T-0327 approval-gated publish. | T-0326 completed no-publish source/readiness for `hadara@0.3.1-rc.1`; actual npm publish belongs to pre-created Draft T-0327, and installed-package recycle belongs to T-0328. | `tasks/T-0327-0-3-1-rc-1-approval-gated-publish/TASK.md`; `scripts/release/manual-publish-rc.sh`; `docs/TASK_WORKFLOW_COMMANDS.md` |
+| Start T-0328 post-publish installed-package recycle. | T-0327 published rc1, verified registry/tarball visibility, and corrected npm dist-tags; the remaining release line proof is consumer install/recycle validation. | `tasks/T-0328-0-3-1-rc-1-post-publish-installed-package-recycle/TASK.md`; `docs/RELEASE_READINESS.md`; `docs/TEST_STRATEGY.md` |
 
 ## Validation Baseline
 

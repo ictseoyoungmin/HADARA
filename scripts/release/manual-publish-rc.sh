@@ -7,6 +7,7 @@ CREATE_GITHUB_DRAFT="false"
 REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org}"
 PACKAGE_NAME="hadara"
 DIST_DIR="dist-release"
+NPM_TAG="${NPM_TAG:-}"
 GITHUB_RELEASE_NOTE=""
 GITHUB_TOKEN_ENV=""
 APPROVAL_ACTOR="${HADARA_RELEASE_APPROVAL_ACTOR:-local-operator}"
@@ -31,6 +32,7 @@ Options:
 --registry <url>  npm registry URL. Default: https://registry.npmjs.org
 --dist-dir <dir>  Release artifact output directory. Default: dist-release
 --package <name>  npm package name. Default: hadara
+--npm-tag <tag>   npm dist-tag for publish. Default: next for rc versions, latest otherwise.
 -h, --help         Show this help.
 
 Examples:
@@ -110,6 +112,11 @@ PACKAGE_NAME="${2:-}"
 [[ -n "${PACKAGE_NAME}" ]] || { echo "--package requires a value"; exit 1; }
 shift 2
 ;;
+--npm-tag)
+NPM_TAG="${2:-}"
+[[ -n "${NPM_TAG}" ]] || { echo "--npm-tag requires a value"; exit 1; }
+shift 2
+;;
 -h|--help)
 usage
 exit 0
@@ -177,6 +184,19 @@ printf '%s\n' "${file_path}"
 ;;
 *)
 printf './%s\n' "${file_path}"
+;;
+esac
+}
+
+default_npm_tag_for_version() {
+local version="$1"
+
+case "${version}" in
+*-rc.*)
+printf 'next\n'
+;;
+*)
+printf 'latest\n'
 ;;
 esac
 }
@@ -338,6 +358,10 @@ require_cmd node
 require_cmd git
 detect_hadara_cmd
 VERSION="$(node -p "require('./package.json').version")"
+if [[ -z "${NPM_TAG}" ]]; then
+NPM_TAG="$(default_npm_tag_for_version "${VERSION}")"
+fi
+echo "npm tag: ${NPM_TAG}"
 PACKAGE_JSON_NAME="$(node -p "require('./package.json').name")"
 PACKAGE_PRIVATE="$(node -p "String(require('./package.json').private)")"
 resolve_task_capsule_dir
@@ -451,7 +475,7 @@ fi
 
 echo
 echo "Dry-run inspect the exact tarball that would be published:"
-npm publish "${NPM_TARBALL}" --dry-run --registry="${REGISTRY}"
+npm publish "${NPM_TARBALL}" --dry-run --registry="${REGISTRY}" --tag="${NPM_TAG}"
 
 if [[ "${MODE}" != "execute" ]]; then
 cleanup_release_dry_run_outputs
@@ -474,10 +498,11 @@ echo "============================================================"
 echo "READY FOR REAL NPM PUBLISH"
 echo "Tarball: ${TARBALL}"
 echo "Registry: ${REGISTRY}"
+echo "npm tag: ${NPM_TAG}"
 echo
 echo "This next command will publish to npm:"
 echo
-echo "  npm publish ${NPM_TARBALL} --registry=${REGISTRY}"
+echo "  npm publish ${NPM_TARBALL} --registry=${REGISTRY} --tag=${NPM_TAG}"
 echo
 echo "Type exactly: publish"
 echo "============================================================"
@@ -488,7 +513,7 @@ echo "Publish cancelled."
 exit 1
 fi
 
-npm publish "${NPM_TARBALL}" --registry="${REGISTRY}"
+npm publish "${NPM_TARBALL}" --registry="${REGISTRY}" --tag="${NPM_TAG}"
 
 echo
 echo "npm publish completed."
