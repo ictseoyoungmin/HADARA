@@ -9,7 +9,7 @@ import {
 } from '../evidence/evidence';
 import { createEvidenceCollectReport } from './evidence-json';
 import { createEvidenceLintReport } from '../services/evidence-lint';
-import { createEvidenceListReport } from '../services/evidence-list';
+import { createEvidenceListReport, EvidenceListRecord } from '../services/evidence-list';
 import { createEvidenceMigrationPreviewReport } from '../services/evidence-migration';
 import { getFlag, getIntegerOption, getRequiredStringOption, getStringOption } from './args';
 
@@ -32,7 +32,7 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
       console.log(JSON.stringify(report, null, 2));
     } else {
       for (const record of report.records) {
-        console.log(`${record.time} | ${persistedEvidenceKind(record)} | ${persistedEvidenceResult(record)} | ${record.visibility} | ${record.summary}`);
+        console.log(`[${evidenceListDisplayId(record)}] ${record.time} | ${evidenceListCategory(record)}/${evidenceListOutcome(record)} | ${record.visibility} | ${record.summary}`);
       }
       for (const issue of report.issues) {
         console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
@@ -166,6 +166,18 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
 
 function persistedEvidenceId(record: { schemaVersion: string; id?: string }): string {
   return record.schemaVersion === 'hadara.evidence.v2' && record.id ? record.id : 'evidence.jsonl';
+}
+
+function evidenceListDisplayId(record: EvidenceListRecord): string {
+  return record.id;
+}
+
+function evidenceListCategory(record: EvidenceListRecord): string {
+  return record.category;
+}
+
+function evidenceListOutcome(record: EvidenceListRecord): string {
+  return record.outcome;
 }
 
 export function parseEvidenceKind(value: string): EvidenceRecord['kind'] {

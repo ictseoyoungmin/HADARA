@@ -125,15 +125,27 @@ describe('CLI task JSON reports', () => {
     expect(JSON.stringify(report)).not.toContain('absolutePath');
 
     const privateReport = createTaskReadReport(root, task.id, { includePrivate: true });
-    expect(privateReport.evidenceIndex).toEqual([
+    expect(privateReport.evidenceIndex).toMatchObject([
       {
         schemaVersion: 'hadara.evidence.v1',
+        id: expect.stringMatching(new RegExp(`^legacy:${task.id}:1:[a-f0-9]{12}$`)),
+        sourceLine: 1,
+        idSource: 'line-fallback',
+        idStability: 'unstable-on-reorder',
+        persistedSchemaVersion: 'hadara.evidence.v1',
         time: '2026-05-24T00:00:00.000Z',
         taskId: task.id,
         kind: 'command-log',
         summary: 'token=[REDACTED]',
         result: 'passed',
-        visibility: 'private'
+        visibility: 'private',
+        category: 'operation',
+        outcome: 'passed',
+        tags: [],
+        legacy: {
+          kind: 'command-log',
+          result: 'passed'
+        }
       }
     ]);
     expect(privateReport.issues).toEqual([
@@ -148,9 +160,28 @@ describe('CLI task JSON reports', () => {
         message: 'evidence.jsonl line 3 is not valid JSON.'
       }
     ]);
-    expect(privateReport.files?.['evidence.jsonl']).toBe(
-      '{"schemaVersion":"hadara.evidence.v1","time":"2026-05-24T00:00:00.000Z","taskId":"T-0001","kind":"command-log","summary":"token=[REDACTED]","result":"passed","visibility":"private"}\n'
-    );
+    const embeddedEvidence = JSON.parse(privateReport.files?.['evidence.jsonl']?.trim() ?? '{}');
+    expect(embeddedEvidence).toMatchObject({
+      schemaVersion: 'hadara.evidence.v1',
+      id: expect.stringMatching(new RegExp(`^legacy:${task.id}:1:[a-f0-9]{12}$`)),
+      sourceLine: 1,
+      idSource: 'line-fallback',
+      idStability: 'unstable-on-reorder',
+      persistedSchemaVersion: 'hadara.evidence.v1',
+      time: '2026-05-24T00:00:00.000Z',
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'token=[REDACTED]',
+      result: 'passed',
+      visibility: 'private',
+      category: 'operation',
+      outcome: 'passed',
+      tags: [],
+      legacy: {
+        kind: 'command-log',
+        result: 'passed'
+      }
+    });
     expect(JSON.stringify(privateReport)).not.toContain('private.log');
     expect(JSON.stringify(privateReport)).not.toContain('secret-value');
     expect(JSON.stringify(privateReport)).not.toContain('absolutePath');

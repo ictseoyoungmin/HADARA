@@ -4,7 +4,7 @@ import { createDashboardCoreReport, DashboardCoreReport } from '../services/dash
 import { createDashboardProjectionStatusReport, DashboardProjectionStatusReport } from '../services/dashboard-refresh';
 import { createDashboardTaskDetailReport, DashboardTaskDetailProof, DashboardTaskDetailReport } from '../services/dashboard-task-detail';
 import { readDashboardTaskProjectionIndex } from '../services/dashboard-task-projection';
-import { createEvidenceListReport, EvidenceListReport, parseEvidenceIndexFile } from '../services/evidence-list';
+import { createEvidenceListReport, EvidenceListRecord, EvidenceListReport, parseEvidenceIndexFile } from '../services/evidence-list';
 import { createOperationalDebtReport, createReleaseGateReport, OperationalDebtReport, ReleaseGateReport } from '../services/operational-debt';
 import { createOpsStatusReport, OpsStatusReport } from '../services/operations-status-service';
 import { findMarkdownRowByCell, parseMarkdownRows, parseMarkdownRowsUnderHeading } from '../services/markdown-table';
@@ -422,7 +422,7 @@ function createFastSelectedTaskReadModel(
   options: TuiReadModelOptions
 ): NonNullable<TuiReadModel['selectedTask']> {
   const detail = createTaskDocumentReadReportFromSummary(projectRoot, summary, { includePrivate: false });
-  const evidenceIndex = detail.evidenceIndex ?? [];
+  const evidenceIndex = (detail.evidenceIndex ?? []) as EvidenceListRecord[];
   const evidence = limitEvidenceListReport(
     {
       schemaVersion: 'hadara.evidence.list.v1',

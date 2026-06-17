@@ -70,11 +70,47 @@ describe('CLI evidence JSON reports', () => {
       count: 1,
       records: [
         {
+          id: expect.stringMatching(new RegExp(`^ev:${task.id}:[a-f0-9]{24}$`)),
+          idSource: 'persisted',
+          idStability: 'durable',
+          persistedSchemaVersion: 'hadara.evidence.v2',
+          category: 'note',
+          outcome: 'passed',
+          tags: [],
+          legacy: { kind: 'note', result: 'passed' },
           summary: 'Listed through CLI'
         }
       ],
       issues: []
     });
+  });
+
+  it('prints evidence list text with copyable ids and category/outcome', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'List text evidence');
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Docker focused validation passed',
+      result: 'passed',
+      visibility: 'public',
+      category: 'validation',
+      outcome: 'passed'
+    });
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+
+    try {
+      expect(handleEvidenceCommand({ args: ['evidence', 'list', '--task', task.id], projectRoot: root, jsonOutput: false })).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    expect(output).toHaveLength(1);
+    expect(output[0]).toMatch(new RegExp(`^\\[ev:${task.id}:[a-f0-9]{24}\\] .+ \\| validation/passed \\| public \\| Docker focused validation passed$`));
   });
 
   it('adds command-log evidence through the command-result UX without executing a command', () => {

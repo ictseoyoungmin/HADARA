@@ -121,15 +121,27 @@ describe('MCP read tools', () => {
     expect(JSON.stringify(defaultPayload)).not.toContain('private.log');
 
     const privatePayload = parseToolPayload(callTool(root, 'hadara.task.read', { taskId: task.id, includePrivate: true }));
-    expect(privatePayload.evidenceIndex).toEqual([
+    expect(privatePayload.evidenceIndex).toMatchObject([
       {
         schemaVersion: 'hadara.evidence.v1',
+        id: expect.stringMatching(new RegExp(`^legacy:${task.id}:1:[a-f0-9]{12}$`)),
+        sourceLine: 1,
+        idSource: 'line-fallback',
+        idStability: 'unstable-on-reorder',
+        persistedSchemaVersion: 'hadara.evidence.v1',
         time: '2026-05-24T00:00:00.000Z',
         taskId: task.id,
         kind: 'note',
         summary: 'private note',
         result: 'passed',
-        visibility: 'private'
+        visibility: 'private',
+        category: 'note',
+        outcome: 'passed',
+        tags: [],
+        legacy: {
+          kind: 'note',
+          result: 'passed'
+        }
       }
     ]);
     expect(privatePayload.files['evidence.jsonl']).toContain('"visibility":"private"');

@@ -42,10 +42,15 @@ describe('evidence list read model', () => {
         {
           schemaVersion: 'hadara.evidence.v2',
           id: expect.stringMatching(new RegExp(`^ev:${task.id}:[a-f0-9]{24}$`)),
+          sourceLine: 1,
+          persistedSchemaVersion: 'hadara.evidence.v2',
+          idSource: 'persisted',
+          idStability: 'durable',
           taskId: task.id,
           category: 'note',
           summary: 'First public record',
           outcome: 'passed',
+          tags: [],
           visibility: 'public',
           legacy: { kind: 'note', result: 'passed' }
         }
@@ -153,12 +158,24 @@ describe('evidence list read model', () => {
     expect(report.records).toEqual([
       {
         schemaVersion: 'hadara.evidence.v1',
+        id: expect.stringMatching(new RegExp(`^legacy:${task.id}:1:[a-f0-9]{12}$`)),
+        sourceLine: 1,
+        idSource: 'line-fallback',
+        idStability: 'unstable-on-reorder',
+        persistedSchemaVersion: 'hadara.evidence.v1',
         time: '2026-05-24T00:00:00.000Z',
         taskId: task.id,
         kind: 'command-log',
         summary: 'token=[REDACTED]',
         result: 'passed',
-        visibility: 'private'
+        visibility: 'private',
+        category: 'operation',
+        outcome: 'passed',
+        tags: [],
+        legacy: {
+          kind: 'command-log',
+          result: 'passed'
+        }
       }
     ]);
     expect(JSON.stringify(report)).not.toContain('evidencePath');
@@ -200,6 +217,17 @@ describe('evidence list read model', () => {
     expect(report.ok).toBe(true);
     expect(report.count).toBe(1);
     expect(report.records[0].summary).toBe('right task');
+    expect(report.records[0]).toMatchObject({
+      id: expect.stringMatching(new RegExp(`^legacy:${task.id}:2:[a-f0-9]{12}$`)),
+      sourceLine: 2,
+      idSource: 'line-fallback',
+      idStability: 'unstable-on-reorder',
+      persistedSchemaVersion: 'hadara.evidence.v1',
+      category: 'note',
+      outcome: 'passed',
+      tags: [],
+      legacy: { kind: 'note', result: 'passed' }
+    });
     expect(report.issues).toEqual([
       {
         severity: 'warning',

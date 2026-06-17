@@ -25,25 +25,44 @@
     "evidenceV1": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["schemaVersion", "time", "taskId", "kind", "summary", "result", "visibility"],
+      "required": ["schemaVersion", "id", "sourceLine", "idSource", "idStability", "persistedSchemaVersion", "time", "taskId", "kind", "summary", "result", "visibility", "category", "outcome", "tags", "legacy"],
       "properties": {
         "schemaVersion": { "const": "hadara.evidence.v1" },
+        "id": { "type": "string", "pattern": "^legacy:T-[0-9]{4}:[0-9]+:[a-f0-9]{12}$" },
+        "sourceLine": { "type": "integer", "minimum": 1 },
+        "idSource": { "const": "line-fallback" },
+        "idStability": { "const": "unstable-on-reorder" },
+        "persistedSchemaVersion": { "const": "hadara.evidence.v1" },
         "time": { "type": "string", "minLength": 1 },
         "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
         "kind": { "type": "string", "enum": ["test-log", "command-log", "diff-summary", "screenshot", "note"] },
         "summary": { "type": "string", "minLength": 1 },
         "result": { "type": "string", "enum": ["passed", "failed", "blocked", "unknown"] },
-        "visibility": { "type": "string", "enum": ["public", "private"] }
+        "visibility": { "type": "string", "enum": ["public", "private"] },
+        "category": { "type": "string", "enum": ["validation", "implementation", "release", "security", "policy", "operation", "decision", "handoff", "audit", "note", "observation"] },
+        "outcome": { "type": "string", "enum": ["passed", "failed", "blocked", "unknown", "recorded", "not-applicable"] },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "legacy": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["kind", "result"],
+          "properties": {
+            "kind": { "type": "string", "enum": ["test-log", "command-log", "diff-summary", "screenshot", "note"] },
+            "result": { "type": "string", "enum": ["passed", "failed", "blocked", "unknown"] },
+            "evidencePath": { "type": "string", "minLength": 1 }
+          }
+        }
       }
     },
     "evidenceV2": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["schemaVersion", "id", "fingerprint", "idSource", "idStability", "time", "taskId", "category", "outcome", "visibility", "summary", "artifacts", "tags", "legacy"],
+      "required": ["schemaVersion", "id", "sourceLine", "persistedSchemaVersion", "fingerprint", "idSource", "idStability", "time", "taskId", "category", "outcome", "visibility", "summary", "artifacts", "tags", "legacy"],
       "properties": {
         "schemaVersion": { "const": "hadara.evidence.v2" },
         "id": { "type": "string", "minLength": 1 },
         "sourceLine": { "type": "integer", "minimum": 1 },
+        "persistedSchemaVersion": { "const": "hadara.evidence.v2" },
         "fingerprint": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
         "idSource": { "const": "persisted" },
         "idStability": { "const": "durable" },

@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { redactSecrets } from '../core/redaction';
-import { EvidenceIndexRecord, EvidenceV2IndexRecord, PersistedEvidenceRecord } from '../evidence/evidence';
+import { EvidenceCategory, EvidenceIndexRecord, EvidenceOutcome, EvidenceV2IndexRecord, PersistedEvidenceRecord } from '../evidence/evidence';
+import { normalizeEvidenceRecord } from '../evidence/normalizer';
 import { findTaskCapsule } from '../task/task-capsule';
 
 export interface EvidenceListInput {
@@ -22,9 +23,30 @@ export interface EvidenceListReport {
   ok: boolean;
   taskId: string;
   count: number;
-  records: PersistedEvidenceRecord[];
+  records: EvidenceListRecord[];
   issues: EvidenceListIssue[];
 }
+
+export type EvidenceListRecord =
+  | (EvidenceIndexRecord & {
+      id: string;
+      sourceLine: number;
+      idSource: 'line-fallback';
+      idStability: 'unstable-on-reorder';
+      persistedSchemaVersion: 'hadara.evidence.v1';
+      category: EvidenceCategory;
+      outcome: EvidenceOutcome;
+      tags: string[];
+      legacy: {
+        kind: EvidenceIndexRecord['kind'];
+        result: EvidenceIndexRecord['result'];
+        evidencePath?: string;
+      };
+    })
+  | (EvidenceV2IndexRecord & {
+      sourceLine: number;
+      persistedSchemaVersion: 'hadara.evidence.v2';
+    });
 
 const DEFAULT_LIMIT = 50;
 
@@ -65,7 +87,7 @@ export function createEvidenceListReport(projectRoot: string, input: EvidenceLis
 }
 
 export function parseEvidenceIndexFile(indexPath: string, taskId: string): {
-  records: PersistedEvidenceRecord[];
+  records: EvidenceListRecord[];
   issues: EvidenceListIssue[];
 } {
   if (!fs.existsSync(indexPath)) {
@@ -84,7 +106,7 @@ export function parseEvidenceIndexFile(indexPath: string, taskId: string): {
   const content = fs.readFileSync(indexPath, 'utf8').trim();
   if (!content) return { records: [], issues: [] };
 
-  const records: PersistedEvidenceRecord[] = [];
+  const records: EvidenceListRecord[] = [];
   const issues: EvidenceListIssue[] = [];
   content.split(/\r?\n/).forEach((line, index) => {
     try {
@@ -98,7 +120,7 @@ export function parseEvidenceIndexFile(indexPath: string, taskId: string): {
           });
           return;
         }
-        records.push(normalizeEvidenceIndexRecord(record));
+        records.push(normalizeEvidenceIndexRecord(record, index + 1));
         return;
       }
       issues.push({
@@ -160,8 +182,9 @@ function isEvidenceV2IndexRecord(value: unknown): value is EvidenceV2IndexRecord
   );
 }
 
-function normalizeEvidenceIndexRecord(record: PersistedEvidenceRecord): PersistedEvidenceRecord {
-  if (record.schemaVersion === 'hadara.evidence.v2') return normalizeEvidenceV2IndexRecord(record);
+function normalizeEvidenceIndexRecord(record: PersistedEvidenceRecord, sourceLine: number): EvidenceListRecord {
+  if (record.schemaVersion === 'hadara.evidence.v2') return normalizeEvidenceV2IndexRecord(record, sourceLine);
+  const normalizedRecord = normalizeEvidenceRecord(record, { lineNumber: sourceLine });
   const normalized: EvidenceIndexRecord = {
     schemaVersion: 'hadara.evidence.v1',
     time: record.time,
@@ -174,14 +197,30 @@ function normalizeEvidenceIndexRecord(record: PersistedEvidenceRecord): Persiste
   if (record.visibility === 'public' && record.evidencePath) {
     normalized.evidencePath = record.evidencePath;
   }
-  return normalized;
+  return {
+    ...normalized,
+    id: normalizedRecord.id,
+    sourceLine,
+    idSource: 'line-fallback',
+    idStability: 'unstable-on-reorder',
+    persistedSchemaVersion: 'hadara.evidence.v1',
+    category: normalizedRecord.category,
+    outcome: normalizedRecord.outcome,
+    tags: normalizedRecord.tags,
+    legacy: {
+      kind: normalized.kind,
+      result: normalized.result,
+      ...(normalized.evidencePath ? { evidencePath: normalized.evidencePath } : {})
+    }
+  };
 }
 
-function normalizeEvidenceV2IndexRecord(record: EvidenceV2IndexRecord): EvidenceV2IndexRecord {
+function normalizeEvidenceV2IndexRecord(record: EvidenceV2IndexRecord, sourceLine: number): EvidenceListRecord {
   return {
     schemaVersion: 'hadara.evidence.v2',
     id: record.id,
-    ...(record.sourceLine ? { sourceLine: record.sourceLine } : {}),
+    sourceLine: record.sourceLine ?? sourceLine,
+    persistedSchemaVersion: 'hadara.evidence.v2',
     fingerprint: record.fingerprint,
     idSource: 'persisted',
     idStability: 'durable',

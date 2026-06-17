@@ -642,12 +642,13 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Record command evidence', 'hadara evidence add-command --task T-0001 --summary "npm test passed" --result passed --category validation --json', 'After meaningful validation.')
     ],
     related: ['evidence.list', 'evidence.lint', 'task.ready'],
+    notes: 'The collect response remains `hadara.evidence.collect.v1` with additive v2 metadata. A new add-command report schema id, check-id, and subject fields are deferred candidate scope.',
     conflictsWith: []
   },
   {
     id: 'evidence.list',
     command: 'hadara evidence list --task <task-id> [--limit <n>] [--include-private] [--json]',
-    summary: 'List public evidence index records for a Task Capsule.',
+    summary: 'List Task Capsule evidence ids, category/outcome metadata, and sanitized evidence summaries.',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'capsule-lifecycle',
@@ -661,7 +662,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     schemaVersion: 'hadara.evidence.list.v1',
     docs: ['docs/IMPLEMENTATION_SOP.md'],
-    examples: [example('List evidence', 'hadara evidence list --task T-0001 --json', 'When auditing a capsule evidence trail.')],
+    examples: [example('List evidence ids', 'hadara evidence list --task T-0001', 'Before copying a durable ev: id into --resolves or --supersedes.')],
     related: ['evidence.add-command', 'evidence.lint'],
     conflictsWith: []
   },
@@ -702,9 +703,10 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'operator',
     status: 'stable',
     schemaVersion: 'hadara.evidence.migration_preview.v1',
-    docs: ['docs/EVIDENCE_SEMANTIC_CONTRACT.md'],
+    docs: ['docs/EVIDENCE_SEMANTIC_CONTRACT.md', 'docs/CLI_JSON_CONTRACT.md'],
     examples: [example('Preview evidence migration', 'hadara evidence migrate --task T-0001 --to v2 --json', 'When older evidence files need migration.')],
     related: ['evidence.lint', 'protocol.remediate'],
+    notes: 'This is an operator-selected JSONL migration surface, not evidence rebuild. 0.3.2 does not register or implement `hadara evidence rebuild`; `EVIDENCE.md` remains a non-canonical human summary.',
     conflictsWith: []
   },
   {

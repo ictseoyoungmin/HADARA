@@ -1,5 +1,22 @@
 # RELEASE_NOTES
 
+## 0.3.2-rc.0
+
+Release candidate preparation line for Evidence v2 writer stabilization, id discovery, and docs consolidation after `0.3.1-rc.1` post-publish recycle.
+
+Highlights:
+
+- Adds explicit Evidence v2 command metadata to `evidence add-command`: `--category`, `--outcome`, `--resolves`, `--supersedes`, and optional `--idempotency-key`.
+- Rejects incompatible explicit `--result`/`--outcome` combinations at both CLI and core writer append boundaries with `EVIDENCE_RESULT_OUTCOME_MISMATCH`.
+- Makes `evidence list` the supported durable evidence id discovery surface: text output includes copyable ids and category/outcome, while JSON records expose id stability and persisted schema metadata.
+- Documents exact marker workflow for durable persisted `ev:` ids and cautions that legacy compatibility ids are inspection-only.
+- Documents the evidence rebuild boundary: canonical append-only `evidence.jsonl`, non-canonical `EVIDENCE.md`, no 0.3.2 rebuild preview/execute, and future drift-class plus before-hash requirements.
+
+Boundaries:
+
+- Rebuild preview/execute, `check-id`, `subject`, and a new add-command report schema id remain deferred candidate scope.
+- Broad historical migration, shell execution through evidence commands, and release/publish mutation remain outside this docs consolidation line.
+
 ## 0.3.1-rc.1
 
 Release candidate for the Phase 8 State Governance line after stable `0.3.0` publish/recycle and the T-0325 CloseState derived-state cleanup.
