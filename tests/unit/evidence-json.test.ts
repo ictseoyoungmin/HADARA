@@ -176,6 +176,114 @@ describe('CLI evidence JSON reports', () => {
     });
   });
 
+  it('rejects conflicting explicit command result and outcome values', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Reject result outcome mismatch');
+    const output: string[] = [];
+    const originalLog = console.log;
+    const originalExitCode = process.exitCode;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+
+    try {
+      expect(
+        handleEvidenceCommand({
+          args: [
+            'evidence',
+            'add-command',
+            '--task',
+            task.id,
+            '--summary',
+            'Mismatch should fail',
+            '--result',
+            'failed',
+            '--outcome',
+            'passed',
+            '--json'
+          ],
+          projectRoot: root,
+          jsonOutput: true
+        })
+      ).toBe(true);
+      expect(process.exitCode).toBe(6);
+    } finally {
+      console.log = originalLog;
+      process.exitCode = originalExitCode;
+    }
+
+    expect(JSON.parse(output.join('\n'))).toMatchObject({
+      schemaVersion: 'hadara.evidence.collect.v1',
+      command: 'evidence.add-command',
+      ok: false,
+      issues: [
+        {
+          severity: 'error',
+          code: 'EVIDENCE_RESULT_OUTCOME_MISMATCH'
+        }
+      ]
+    });
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe('');
+  });
+
+  it('keeps recorded outcome legacy result unknown and rejects incompatible explicit result', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Recorded outcome compatibility');
+    const passed = createEvidenceCollectReport(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Decision recorded',
+      result: 'unknown',
+      visibility: 'public',
+      category: 'decision',
+      outcome: 'recorded'
+    });
+
+    expect(passed.ok).toBe(true);
+    expect(passed.evidence).toMatchObject({
+      schemaVersion: 'hadara.evidence.v2',
+      outcome: 'recorded',
+      legacy: { result: 'unknown' }
+    });
+
+    const output: string[] = [];
+    const originalLog = console.log;
+    const originalExitCode = process.exitCode;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+
+    try {
+      expect(
+        handleEvidenceCommand({
+          args: [
+            'evidence',
+            'add-command',
+            '--task',
+            task.id,
+            '--summary',
+            'Bad recorded result',
+            '--result',
+            'passed',
+            '--outcome',
+            'recorded',
+            '--json'
+          ],
+          projectRoot: root,
+          jsonOutput: true
+        })
+      ).toBe(true);
+      expect(process.exitCode).toBe(6);
+    } finally {
+      console.log = originalLog;
+      process.exitCode = originalExitCode;
+    }
+
+    expect(JSON.parse(output.join('\n')).issues).toEqual([
+      expect.objectContaining({ code: 'EVIDENCE_RESULT_OUTCOME_MISMATCH' })
+    ]);
+  });
+
   it('deduplicates add-command evidence when an explicit idempotency key is reused', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Idempotent command evidence');
@@ -527,6 +635,36 @@ describe('CLI evidence JSON reports', () => {
         }
       ]
     });
+  });
+
+  it('returns a JSON issue for ambiguous same-id task capsule directories', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Primary task');
+    const duplicateDir = path.join(root, 'tasks', `${task.id}-duplicate-task`);
+    fs.mkdirSync(duplicateDir);
+    fs.writeFileSync(path.join(duplicateDir, 'TASK.md'), `# ${task.id} Duplicate task\n`, 'utf8');
+
+    const report = createEvidenceCollectReport(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Should not write into ambiguous task',
+      result: 'passed',
+      visibility: 'public'
+    });
+
+    expect(report).toEqual({
+      schemaVersion: 'hadara.evidence.collect.v1',
+      command: 'evidence.collect',
+      ok: false,
+      issues: [
+        {
+          severity: 'error',
+          code: 'TASK_CAPSULE_AMBIGUOUS',
+          message: `Multiple Task Capsules found for ${task.id}; remove or repair duplicate TASK.md-bearing directories before recording evidence.`
+        }
+      ]
+    });
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe('');
   });
 
   it('returns a JSON issue when public artifact path escapes the workspace', () => {

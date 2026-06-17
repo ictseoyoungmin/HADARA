@@ -107,7 +107,7 @@ Current compatibility read models may expose more specific diagnostic values suc
 
 ### EvidenceOutcome
 
-Evidence outcome tokens are `passed`, `failed`, `blocked`, and `unknown`. Failed or blocked evidence must remain visible; add newer evidence that explains the fix or residual risk instead of editing old records.
+Evidence outcome tokens are `passed`, `failed`, `blocked`, `unknown`, `recorded`, and `not-applicable`. Failed or blocked evidence must remain visible; add newer evidence that explains the fix or residual risk instead of editing old records.
 
 ### Write Ownership
 
@@ -190,7 +190,7 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 - `dev docker-check --sync-dist` is an output write. Reports distinguish source mutation from output mutation and expose whether a pre-sync dist hash was available, which hash the operator reviewed, whether it matched, whether sync was allowed through the first-time missing-hash escape hatch, and whether a conflict blocked the copy.
 - `task ready` checks whether the capsule can satisfy a requested validation level; it does not write evidence or status.
 - `harness validate` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence.
-- `evidence add-command` records an operator-supplied command result; it does not execute shell commands or capture stdout/stderr. `--category` and `--outcome` set persisted v2 metadata explicitly, while `--result` remains the legacy-compatible command result. `--resolves` and `--supersedes` append exact v2 resolution tags. `--idempotency-key` is optional; when supplied, same-key repeats return the existing record without appending duplicate Markdown or JSONL rows.
+- `evidence add-command` records an operator-supplied command result; it does not execute shell commands or capture stdout/stderr. `--category` and `--outcome` set persisted v2 metadata explicitly, while `--result` remains the legacy-compatible command result. When both are supplied, `--result` must match `--outcome` for `passed`, `failed`, `blocked`, and `unknown`; `recorded` and `not-applicable` require `--result unknown` or no explicit `--result`. Mismatches fail with `EVIDENCE_RESULT_OUTCOME_MISMATCH`. `--resolves` and `--supersedes` append exact v2 resolution tags, and only later `passed` or `recorded` evidence can resolve earlier failed evidence through those tags. `--idempotency-key` is optional; when supplied, same-key repeats return the existing record without appending duplicate Markdown or JSONL rows.
 - `task finish` may update only the Task Capsule `TASK.md` status and the matching `docs/TASK_BOARD.md` row's command-owned cells: `ID`, `Title`, `Status`, and `Capsule`. It preserves human/mixed-owned `Notes` and any extra cells.
 - `task close` may append only close evidence. It must not update status docs, Task Board rows, handoff, Project State, Development Slices, or arbitrary evidence.
 - After `task close --execute --json`, close-source document edits intentionally invalidate the previous close proof. Make those edits before close, or rerun ready/close/audit if the edit is unavoidable.

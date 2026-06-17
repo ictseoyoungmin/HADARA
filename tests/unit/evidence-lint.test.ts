@@ -204,6 +204,39 @@ describe('evidence lint', () => {
     expect(report.summary.semantics).toMatchObject({ legacyRecords: 0 });
   });
 
+  it('does not accept failed exact v2 resolution markers for failed evidence resolution', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Evidence lint failed marker does not resolve');
+    markTaskDone(root, task.id, task.dir);
+    const failed = appendEvidenceWithResult(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Focused vitest failed.',
+      result: 'failed',
+      visibility: 'public'
+    });
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Another failed result with a marker.',
+      result: 'failed',
+      visibility: 'public',
+      tags: failed.evidence.schemaVersion === 'hadara.evidence.v2' ? [`resolves:${failed.evidence.id}`] : []
+    });
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Unrelated substantive pass.',
+      result: 'passed',
+      visibility: 'public'
+    });
+
+    const report = createEvidenceLintReport(root, task.id);
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_DONE_WITH_FAILED_EVIDENCE', evidenceId: failed.evidence.id }));
+  });
+
   it('reports semantic errors for Done tasks with unexplained blocked evidence', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Evidence lint blocked done');

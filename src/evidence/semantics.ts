@@ -257,6 +257,7 @@ function isRecordOnlyCategory(category: EvidenceCategory): boolean {
 }
 
 function hasExactResolutionMarker(record: NormalizedEvidenceRecord, evidenceId: string): boolean {
+  if (record.outcome !== 'passed' && record.outcome !== 'recorded') return false;
   return record.tags.includes(`supersedes:${evidenceId}`) || record.tags.includes(`resolves:${evidenceId}`);
 }
 

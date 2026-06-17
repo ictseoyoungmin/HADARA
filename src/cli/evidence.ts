@@ -82,7 +82,24 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
     const taskId = getRequiredStringOption(input.args, '--task');
     const summary = getStringOption(input.args, '--summary') ?? 'Command completed.';
     const outcome = parseOptionalEvidenceOutcome(getStringOption(input.args, '--outcome'));
-    const result = parseEvidenceResult(getStringOption(input.args, '--result', outcomeToLegacyResult(outcome)) ?? 'unknown');
+    const explicitResult = getStringOption(input.args, '--result');
+    const result = parseEvidenceResult(explicitResult ?? outcomeToLegacyResult(outcome));
+    const resultOutcomeIssue = validateResultOutcomeCompatibility({ result, outcome, explicitResultProvided: explicitResult !== undefined });
+    if (resultOutcomeIssue) {
+      const report = {
+        schemaVersion: 'hadara.evidence.collect.v1',
+        command: 'evidence.add-command',
+        ok: false,
+        issues: [resultOutcomeIssue]
+      };
+      if (input.jsonOutput) {
+        console.log(JSON.stringify(report, null, 2));
+      } else {
+        console.log(`[error] ${resultOutcomeIssue.code}: ${resultOutcomeIssue.message}`);
+      }
+      process.exitCode = 6;
+      return true;
+    }
     const visibility = parseEvidenceVisibility(getStringOption(input.args, '--visibility', 'public') ?? 'public', getFlag(input.args, '--private'));
     const idempotencyKey = getStringOption(input.args, '--idempotency-key');
     const category = parseOptionalEvidenceCategory(getStringOption(input.args, '--category'));
@@ -195,6 +212,30 @@ function parseOptionalEvidenceOutcome(value: string | undefined): EvidenceOutcom
 function outcomeToLegacyResult(outcome: EvidenceOutcome | undefined): EvidenceRecord['result'] {
   if (outcome === 'passed' || outcome === 'failed' || outcome === 'blocked' || outcome === 'unknown') return outcome;
   return 'unknown';
+}
+
+function validateResultOutcomeCompatibility(input: {
+  result: EvidenceRecord['result'];
+  outcome: EvidenceOutcome | undefined;
+  explicitResultProvided: boolean;
+}): { severity: 'error'; code: 'EVIDENCE_RESULT_OUTCOME_MISMATCH'; message: string } | undefined {
+  if (!input.outcome || !input.explicitResultProvided) return undefined;
+  if (input.outcome === 'passed' || input.outcome === 'failed' || input.outcome === 'blocked' || input.outcome === 'unknown') {
+    if (input.result === input.outcome) return undefined;
+    return {
+      severity: 'error',
+      code: 'EVIDENCE_RESULT_OUTCOME_MISMATCH',
+      message: `--result ${input.result} conflicts with --outcome ${input.outcome}; matching evidence outcomes must use the same legacy result.`
+    };
+  }
+  if ((input.outcome === 'recorded' || input.outcome === 'not-applicable') && input.result !== 'unknown') {
+    return {
+      severity: 'error',
+      code: 'EVIDENCE_RESULT_OUTCOME_MISMATCH',
+      message: `--outcome ${input.outcome} is record-only/non-applicable evidence and requires --result unknown or no --result.`
+    };
+  }
+  return undefined;
 }
 
 function resolutionTagsFromArgs(args: string[]): string[] | undefined {

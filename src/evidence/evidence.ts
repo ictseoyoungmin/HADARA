@@ -101,7 +101,7 @@ export interface EvidenceAppendResult {
 }
 
 export type EvidenceArtifactPolicyErrorCode = 'PUBLIC_ARTIFACT_BINARY_REJECTED' | 'PUBLIC_ARTIFACT_SECRET_DETECTED';
-export type EvidenceAppendErrorCode = 'EVIDENCE_APPEND_LOCK_TIMEOUT';
+export type EvidenceAppendErrorCode = 'EVIDENCE_APPEND_LOCK_TIMEOUT' | 'TASK_NOT_FOUND' | 'TASK_CAPSULE_AMBIGUOUS';
 
 export interface PublicEvidenceArtifactPolicyReport {
   schemaVersion: 'hadara.evidence_artifact_policy.v1';
@@ -140,6 +140,16 @@ export class EvidenceAppendLockError extends Error {
   }
 }
 
+export class EvidenceTaskDirectoryError extends Error {
+  constructor(
+    public readonly code: Extract<EvidenceAppendErrorCode, 'TASK_NOT_FOUND' | 'TASK_CAPSULE_AMBIGUOUS'>,
+    message: string
+  ) {
+    super(message);
+    this.name = 'EvidenceTaskDirectoryError';
+  }
+}
+
 export function appendEvidence(projectRoot: string, record: Omit<EvidenceRecord, 'time'>): string {
   return appendEvidenceWithResult(projectRoot, record).markdownPath;
 }
@@ -147,7 +157,7 @@ export function appendEvidence(projectRoot: string, record: Omit<EvidenceRecord,
 export function appendEvidenceWithResult(projectRoot: string, record: Omit<EvidenceRecord, 'time'>): EvidenceAppendResult {
   const taskDir = findTaskDir(projectRoot, record.taskId);
   if (!taskDir) {
-    throw new Error(`Task capsule not found: ${record.taskId}`);
+    throw new EvidenceTaskDirectoryError('TASK_NOT_FOUND', `Task Capsule not found: ${record.taskId}`);
   }
 
   const time = new Date().toISOString();
@@ -170,7 +180,7 @@ export function appendEvidenceTextArtifact(
 ): EvidenceAppendResult {
   const taskDir = findTaskDir(projectRoot, record.taskId);
   if (!taskDir) {
-    throw new Error(`Task capsule not found: ${record.taskId}`);
+    throw new EvidenceTaskDirectoryError('TASK_NOT_FOUND', `Task Capsule not found: ${record.taskId}`);
   }
 
   const time = new Date().toISOString();
@@ -548,8 +558,16 @@ function isTextBuffer(content: Buffer): boolean {
 function findTaskDir(projectRoot: string, taskId: string): string | null {
   const tasksDir = path.join(projectRoot, 'tasks');
   if (!fs.existsSync(tasksDir)) return null;
-  const entry = fs.readdirSync(tasksDir).find((name) => name.startsWith(`${taskId}-`));
-  return entry ? path.join(tasksDir, entry) : null;
+  const entries = fs
+    .readdirSync(tasksDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name.startsWith(`${taskId}-`) && fs.existsSync(path.join(tasksDir, entry.name, 'TASK.md')));
+  if (entries.length > 1) {
+    throw new EvidenceTaskDirectoryError(
+      'TASK_CAPSULE_AMBIGUOUS',
+      `Multiple Task Capsules found for ${taskId}; remove or repair duplicate TASK.md-bearing directories before recording evidence.`
+    );
+  }
+  return entries[0] ? path.join(tasksDir, entries[0].name) : null;
 }
 
 export function createSessionEvidenceDirs(dataRoot: string, sessionId: string): string {

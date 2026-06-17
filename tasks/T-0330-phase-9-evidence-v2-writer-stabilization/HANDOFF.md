@@ -20,7 +20,7 @@
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Run finish/ready/close/audit for T-0330. | Implementation, docs, and validation are complete; lifecycle closure is next. | `docs/TASK_WORKFLOW_COMMANDS.md`; this Task Capsule |
+| Continue with T-0331 Evidence v2 writer hardening before release or larger phase work. | T-0330 is closed, but follow-up review identified result/outcome mismatch, resolution-marker outcome, task-directory discovery, and handoff cleanup hardening. | `tasks/T-0331-evidence-v2-writer-hardening-and-handoff-cleanup/TASK.md`; `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Carry Forward Warnings
 

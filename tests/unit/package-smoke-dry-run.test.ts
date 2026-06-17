@@ -14,6 +14,7 @@ function tempProject(): string {
   roots.push(root);
   fs.mkdirSync(path.join(root, 'tasks', 'T-0133-package-smoke-dry-run-implementation'), { recursive: true });
   fs.mkdirSync(path.join(root, 'tasks', 'T-0136-smoke-evidence-integration'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'tasks', 'T-0136-smoke-evidence-integration', 'TASK.md'), '# T-0136 Smoke evidence integration\n', 'utf8');
   fs.writeFileSync(
     path.join(root, 'package.json'),
     JSON.stringify(

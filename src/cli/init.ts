@@ -1278,7 +1278,7 @@ hadara task audit-close --task T-XXXX --json
 |---|---|---|
 | \`task next\` | Read-only | Recommends work; does not create tasks. |
 | \`task status\` | Read-only | \`ok\` means report generation succeeded; readiness is in \`state.ready\`, \`summary.blockers\`, and \`issues\`. |
-| \`evidence add-command\` | Write | Appends command-log evidence; does not execute shell commands; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, and optional \`--idempotency-key\` prevents duplicate same-key records. |
+| \`evidence add-command\` | Write | Appends command-log evidence; does not execute shell commands; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, and optional \`--idempotency-key\` prevents duplicate same-key records. |
 | \`task ready\` | Read-only | Checks readiness; does not mutate evidence or status docs. |
 | \`task finish\` | Dry-run by default; writes only with \`--execute\` | Bounded to \`TASK.md\` and \`docs/TASK_BOARD.md\`. |
 | \`task close\` | Dry-run by default; writes only with \`--execute\` | Bounded to close evidence append. |
@@ -1303,7 +1303,7 @@ Before running \`task ready\` and \`task close\`, finish all close-source edits:
 1. Do not hand-edit Task Capsule \`evidence.jsonl\`.
 2. Append evidence through HADARA commands so schema, visibility, and artifact-safety checks run consistently.
 3. Record failed or blocked checks honestly. Do not replace them later with optimistic summaries; add newer evidence that explains the fix or residual risk.
-4. Use \`hadara evidence add-command --task <task-id> --summary <text> --result passed|failed|blocked|unknown --json\` for command results when no artifact file is attached. Add \`--category <category>\` or \`--outcome <outcome>\` when summary heuristics are not precise enough, \`--resolves <evidence-id>\` or \`--supersedes <evidence-id>\` for exact v2 resolution markers, and \`--idempotency-key <key>\` when rerunning the same logical check should report one durable evidence identity instead of appending duplicates.
+4. Use \`hadara evidence add-command --task <task-id> --summary <text> --result passed|failed|blocked|unknown --json\` for command results when no artifact file is attached. Add \`--category <category>\` or \`--outcome <outcome>\` when summary heuristics are not precise enough; if both \`--result\` and \`--outcome\` are supplied, matching outcomes must match the legacy result, while \`recorded\` and \`not-applicable\` require \`--result unknown\` or no explicit result. Use \`--resolves <evidence-id>\` or \`--supersedes <evidence-id>\` for exact v2 resolution markers from passed or recorded follow-up evidence, and \`--idempotency-key <key>\` when rerunning the same logical check should report one durable evidence identity instead of appending duplicates.
 5. Use \`hadara evidence lint --task <task-id> --json\` when evidence drift is suspected or before close if evidence files were touched manually by mistake.
 
 ## Session End
@@ -1586,7 +1586,7 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 | \`task next\` | Read-only | Recommends work; does not create tasks. |
 | \`task status\` | Read-only | \`ok\` means report generation succeeded; readiness is in \`state.ready\`, \`summary.blockers\`, and \`issues\`. |
 | \`task create\` | Write | Creates a Draft Task Capsule and Task Board row. It does not imply the task is ready or done. |
-| \`evidence add-command\` | Write | Appends operator-supplied command-log evidence. It does not execute shell commands or capture stdout/stderr; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, and optional \`--idempotency-key\` prevents duplicate same-key records. |
+| \`evidence add-command\` | Write | Appends operator-supplied command-log evidence. It does not execute shell commands or capture stdout/stderr; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, and optional \`--idempotency-key\` prevents duplicate same-key records. |
 | \`task finish\` | Dry-run by default; writes only with \`--execute\` | Updates only \`TASK.md\` status bookkeeping and the matching \`docs/TASK_BOARD.md\` row. |
 | \`task ready\` | Read-only | Checks whether the task can satisfy the requested readiness level after finish. |
 | \`task complete\` | Read-only | Summarizes the current completion stage and next command; it does not execute lifecycle writes. |
@@ -1600,7 +1600,7 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 - \`task ready\` checks readiness; it does not write evidence or status.
 - \`harness validate\` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence.
 - \`task complete\` is a read-only workflow compressor. It may report the next lifecycle command, but it must not execute finish, ready, close, or audit commands.
-- \`evidence add-command\` records an operator-supplied command result; it does not run the command. \`--category\` and \`--outcome\` set persisted v2 metadata explicitly, while \`--result\` remains the legacy-compatible command result. \`--resolves\` and \`--supersedes\` append exact v2 resolution tags. \`--idempotency-key\` is optional; when supplied, same-key repeats return the existing record without appending duplicate Markdown or JSONL rows.
+- \`evidence add-command\` records an operator-supplied command result; it does not run the command. \`--category\` and \`--outcome\` set persisted v2 metadata explicitly, while \`--result\` remains the legacy-compatible command result. When both are supplied, \`--result\` must match \`--outcome\` for \`passed\`, \`failed\`, \`blocked\`, and \`unknown\`; \`recorded\` and \`not-applicable\` require \`--result unknown\` or no explicit \`--result\`. \`--resolves\` and \`--supersedes\` append exact v2 resolution tags from passed or recorded follow-up evidence. \`--idempotency-key\` is optional; when supplied, same-key repeats return the existing record without appending duplicate Markdown or JSONL rows.
 - \`task finish\` may update only the Task Capsule \`TASK.md\` status and the matching \`docs/TASK_BOARD.md\` row's command-owned cells: \`ID\`, \`Title\`, \`Status\`, and \`Capsule\`. It preserves human/mixed-owned \`Notes\` and any extra cells.
 - \`task close\` may append only close evidence. It must not update status docs, Task Board rows, handoff, Project State, roadmap docs, or arbitrary evidence.
 - After \`task close --execute --json\`, close-source document edits intentionally invalidate the previous close proof. Make those edits before close, or rerun ready/close/audit if the edit is unavoidable.

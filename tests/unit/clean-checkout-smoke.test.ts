@@ -15,6 +15,7 @@ function tempProject(): string {
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
   fs.mkdirSync(path.join(root, 'tasks'), { recursive: true });
   fs.mkdirSync(path.join(root, 'tasks', 'T-0136-smoke-evidence-integration'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'tasks', 'T-0136-smoke-evidence-integration', 'TASK.md'), '# T-0136 Smoke evidence integration\n', 'utf8');
   fs.mkdirSync(path.join(root, '.hadara', 'local', 'portable', 'data', 'private-evidence'), { recursive: true });
   fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
   fs.mkdirSync(path.join(root, 'node_modules'), { recursive: true });

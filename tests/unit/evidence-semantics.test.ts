@@ -151,6 +151,57 @@ describe('evidence semantics', () => {
     expect(findUnresolvedFailedEvidence([failedV2, exactMarkerV2])).toEqual([]);
   });
 
+  it('requires exact v2 resolution markers to come from passed or recorded evidence', () => {
+    const failedV2 = normalizeEvidenceRecord(
+      v2({
+        id: 'ev:T-0001:failedfailedfailedfailed',
+        outcome: 'failed',
+        summary: 'vitest failed',
+        legacy: { kind: 'command-log', result: 'failed' }
+      }),
+      { lineNumber: 1 }
+    );
+
+    for (const outcome of ['failed', 'blocked', 'unknown', 'not-applicable'] as const) {
+      const nonResolving = normalizeEvidenceRecord(
+        v2({
+          id: `ev:T-0001:${outcome.replace('-', '').padEnd(24, 'x').slice(0, 24)}`,
+          outcome,
+          summary: `${outcome} marker does not resolve`,
+          tags: [`resolves:${failedV2.id}`],
+          legacy: { kind: 'command-log', result: outcome === 'failed' || outcome === 'blocked' || outcome === 'unknown' ? outcome : 'unknown' }
+        }),
+        { lineNumber: 2 }
+      );
+      expect(findUnresolvedFailedEvidence([failedV2, nonResolving]).map((record) => record.id)).toContain(failedV2.id);
+    }
+
+    const passedResolution = normalizeEvidenceRecord(
+      v2({
+        id: 'ev:T-0001:passedpassedpassedpassed',
+        outcome: 'passed',
+        summary: 'passed marker resolves',
+        tags: [`resolves:${failedV2.id}`],
+        legacy: { kind: 'command-log', result: 'passed' }
+      }),
+      { lineNumber: 3 }
+    );
+    const recordedResolution = normalizeEvidenceRecord(
+      v2({
+        id: 'ev:T-0001:recordedrecordedrecord',
+        category: 'decision',
+        outcome: 'recorded',
+        summary: 'recorded marker resolves',
+        tags: [`supersedes:${failedV2.id}`],
+        legacy: { kind: 'command-log', result: 'unknown' }
+      }),
+      { lineNumber: 4 }
+    );
+
+    expect(findUnresolvedFailedEvidence([failedV2, passedResolution])).toEqual([]);
+    expect(findUnresolvedFailedEvidence([failedV2, recordedResolution])).toEqual([]);
+  });
+
   it('reports unresolved failed evidence for Done tasks', () => {
     const failed = normalizeEvidenceRecord(v1({ kind: 'test-log', result: 'failed', summary: 'unit tests failed' }));
 

@@ -139,6 +139,8 @@ hadara task audit-close --task T-XXXX --json
 hadara handoff suggest --task T-XXXX --json
 ```
 
+When `evidence add-command` uses both legacy `--result` and v2 `--outcome`, matching outcomes must agree with the legacy result. `recorded` and `not-applicable` outcomes keep legacy result `unknown`; incompatible combinations fail before evidence is appended.
+
 Optional workflow compression is read-only. Use it separately when you want a compact current-stage report and next recommended action:
 
 ```bash

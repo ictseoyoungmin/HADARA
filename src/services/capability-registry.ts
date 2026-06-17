@@ -624,7 +624,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   {
     id: 'evidence.add-command',
     command: 'hadara evidence add-command --task <task-id> --summary <text> [--result <result>] [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] [--json]',
-    summary: 'Append command-log evidence to a Task Capsule.',
+    summary: 'Append command-log evidence to a Task Capsule, rejecting incompatible result/outcome metadata.',
     canonical: true,
     appearsInDefaultHelp: true,
     family: 'capsule-lifecycle',

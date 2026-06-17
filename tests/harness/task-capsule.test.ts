@@ -168,4 +168,47 @@ describe('Task Capsule harness', () => {
       dir: realDir
     });
   });
+
+  it('writes evidence to the TASK.md-bearing capsule when same-id leftovers exist', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Tracked task');
+    fs.mkdirSync(path.join(root, 'tasks', 'T-0002-empty-local-leftover'));
+    const realDir = path.join(root, 'tasks', 'T-0002-real-task');
+    fs.mkdirSync(realDir);
+    fs.writeFileSync(path.join(realDir, 'TASK.md'), '# T-0002 Real task\n', 'utf8');
+    fs.writeFileSync(path.join(realDir, 'EVIDENCE.md'), '# Evidence\n\n| Time | Kind | Summary | Result | Visibility | JSONL |\n|---|---|---|---|---|---|\n', 'utf8');
+    fs.writeFileSync(path.join(realDir, 'evidence.jsonl'), '', 'utf8');
+
+    appendEvidence(root, {
+      taskId: 'T-0002',
+      kind: 'command-log',
+      summary: 'Evidence lands in real capsule',
+      result: 'passed',
+      visibility: 'public'
+    });
+
+    expect(fs.existsSync(path.join(root, 'tasks', 'T-0002-empty-local-leftover', 'evidence.jsonl'))).toBe(false);
+    expect(fs.readFileSync(path.join(realDir, 'evidence.jsonl'), 'utf8')).toContain('Evidence lands in real capsule');
+  });
+
+  it('rejects evidence writes when same-id TASK.md-bearing capsules are ambiguous', () => {
+    const root = tempProject();
+    const firstDir = path.join(root, 'tasks', 'T-0002-first-task');
+    const secondDir = path.join(root, 'tasks', 'T-0002-second-task');
+    fs.mkdirSync(path.join(root, 'tasks'), { recursive: true });
+    fs.mkdirSync(firstDir);
+    fs.mkdirSync(secondDir);
+    fs.writeFileSync(path.join(firstDir, 'TASK.md'), '# T-0002 First task\n', 'utf8');
+    fs.writeFileSync(path.join(secondDir, 'TASK.md'), '# T-0002 Second task\n', 'utf8');
+
+    expect(() =>
+      appendEvidence(root, {
+        taskId: 'T-0002',
+        kind: 'command-log',
+        summary: 'Ambiguous evidence',
+        result: 'passed',
+        visibility: 'public'
+      })
+    ).toThrow(/Multiple Task Capsules found for T-0002/);
+  });
 });

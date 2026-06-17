@@ -111,7 +111,7 @@ The task workflow surface is intentionally staged. `docs/TASK_WORKFLOW_COMMANDS.
 | `handoff update --task T-XXXX ... --json` | `hadara.handoff.update.v1` | Writes `docs/AGENT_HANDOFF.md`. | Handoff update write succeeded. |
 | `handoff suggest --task T-XXXX --json` | `hadara.handoff.suggestion.v1` | Read-only; no execute mode. | Handoff suggestion report was generated without blocking issues. |
 | `dev docker-check [--focused <test...>] [--full] [--sync-dist --before-hash <hash>] --json` | `hadara.dev.docker_check.v1` | Runs Docker subprocess; writes workspace `dist` only when `--sync-dist` is explicit and the reviewed before-hash guard passes. | Requested Docker validation completed without blocking issues, including any requested dist-sync freshness guard. |
-| `evidence add-command --task T-XXXX ... [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] --json` | `hadara.evidence.collect.v1` evidence append response | Writes command-log evidence only; explicit v2 metadata/tags are additive, and an explicit idempotency key returns an existing same-key record without appending duplicates. | Evidence append succeeded or returned the existing keyed record. |
+| `evidence add-command --task T-XXXX ... [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] --json` | `hadara.evidence.collect.v1` evidence append response | Writes command-log evidence only; explicit v2 metadata/tags are additive, result/outcome mismatches fail before append, and an explicit idempotency key returns an existing same-key record without appending duplicates. | Evidence append succeeded or returned the existing keyed record. |
 | `proof status --task T-XXXX --json` | `hadara.proof.status.v1` | Read-only. | Proof status was generated; `verdict` and `freshness.status` carry confidence. |
 | `proof explain --task T-XXXX --json` | `hadara.proof.explain.v1` | Read-only. | Proof explanation was generated; blockers/warnings and explanation rules describe the verdict. |
 | `ci gate --mode advisory|strict [--task T-XXXX] [--allow-empty] --json` | `hadara.ci.gate.v1` | Read-only. | CI gate report was generated; strict mode returns `ok:false` on blockers, advisory mode keeps blockers advisory. An unknown `--task` is a `CI_GATE_TASK_NOT_FOUND` blocker; an empty Done scope is a `CI_GATE_NO_DONE_TASKS` blocker in strict mode unless `--allow-empty` is set (warning otherwise). `scope.allowEmpty` echoes the flag. |
@@ -151,6 +151,7 @@ Known fallback issue codes include:
 |---|---|
 | `PERMISSION_MODE_UNSUPPORTED` | `--mode` is not one of `readonly`, `assisted`, `trusted`, `auto`, or `release`. |
 | `EVIDENCE_RESULT_UNSUPPORTED` | `--result` is not one of `passed`, `failed`, `blocked`, or `unknown`. |
+| `EVIDENCE_RESULT_OUTCOME_MISMATCH` | `evidence add-command` received incompatible explicit `--result` and `--outcome` values. |
 | `EVIDENCE_VISIBILITY_UNSUPPORTED` | `--visibility` is not one of `public` or `private`. |
 | `HARNESS_LEVEL_UNSUPPORTED` | `--level` is not one of `draft` or `done`. |
 | `CLI_ARGS_*` | Strict CLI argument parsing rejected a malformed option. |

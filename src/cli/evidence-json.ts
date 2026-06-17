@@ -1,5 +1,12 @@
 import path from 'node:path';
-import { appendEvidenceWithResult, EvidenceAppendLockError, EvidenceArtifactPolicyError, EvidenceRecord, PersistedEvidenceRecord } from '../evidence/evidence';
+import {
+  appendEvidenceWithResult,
+  EvidenceAppendLockError,
+  EvidenceArtifactPolicyError,
+  EvidenceRecord,
+  EvidenceTaskDirectoryError,
+  PersistedEvidenceRecord
+} from '../evidence/evidence';
 import { listTaskCapsules } from '../task/task-capsule';
 import { WorkspaceFileError } from '../core/workspace';
 
@@ -65,7 +72,12 @@ export function createEvidenceCollectReport(projectRoot: string, input: Evidence
       idempotencyKey: input.idempotencyKey
     });
   } catch (error) {
-    if (error instanceof WorkspaceFileError || error instanceof EvidenceArtifactPolicyError || error instanceof EvidenceAppendLockError) {
+    if (
+      error instanceof WorkspaceFileError ||
+      error instanceof EvidenceArtifactPolicyError ||
+      error instanceof EvidenceAppendLockError ||
+      error instanceof EvidenceTaskDirectoryError
+    ) {
       return {
         schemaVersion: 'hadara.evidence.collect.v1',
         command: 'evidence.collect',
