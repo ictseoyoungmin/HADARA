@@ -337,3 +337,4 @@
 | T-0334 | Evidence Rebuild Boundary Design Only | Done | tasks/T-0334-evidence-rebuild-boundary-design-only | |
 | T-0335 | Evidence v2 Docs Consolidation | Done | tasks/T-0335-evidence-v2-docs-consolidation | |
 | T-0336 | 0.3.2-rc.0 Release Readiness Preparation | Done | tasks/T-0336-0-3-2-rc-0-release-readiness-preparation | |
+| T-0337 | 0.3.2-rc.0 Approval-Gated Publish | In Progress | tasks/T-0337-0-3-2-rc-0-approval-gated-publish | Approval-gated npm publish handoff prepared; awaiting operator npm auth and explicit publish confirmation. |

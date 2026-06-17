@@ -7,14 +7,14 @@
 | Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 writer/docs/readiness work completed through T-0336. |
 | Current Phase | 0.3.2 Evidence v2 refactor in progress | T-0336 prepared `hadara@0.3.2-rc.0` source/readiness without publish mutation after T-0333 through T-0335 Evidence v2 id/list/docs consolidation. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
 | Latest Completed Task | T-0336 0.3.2-rc.0 Release Readiness Preparation | Prepared source/package metadata and release docs for `hadara@0.3.2-rc.0`; release artifact, package smoke, clean-checkout smoke, strict gate, release dry-run, publish dry-run, Docker sync-build, and diff check passed without publish mutation. |
-| Active / Next Task | T-0337 0.3.2-rc.0 Approval-Gated Publish | Continue with `docs/specs/0.3.2/capsules/T-0337_0_3_2_rc0_Approval_Gated_Publish.md`; require clean worktree, npm auth, explicit confirmation, npm `next` tag verification, and no GitHub Release unless requested. |
+| Active / Next Task | T-0337 0.3.2-rc.0 Approval-Gated Publish | Capsule opened at `tasks/T-0337-0-3-2-rc-0-approval-gated-publish`; require clean worktree, npm auth, explicit confirmation, npm `next` tag verification, and no GitHub Release unless requested. |
 | Validation Baseline | T-0336 rc0 release readiness matrix | T-0336 passed Docker full sync-build (119 files / 791 tests, `distLooksStale:false`), release artifact, package smoke, clean-checkout smoke, strict gate, release dry-run, publish dry-run, and `git diff --check`; no publish/GitHub/Docker mutation occurred. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0337 | Next capsule has not been created yet; create/start it after closing T-0336. | Use `docs/specs/0.3.2/02_Worker_Agent_Instructions.md` plus `docs/specs/0.3.2/capsules/T-0337_0_3_2_rc0_Approval_Gated_Publish.md`; do not run publish mutation without operator approval/auth. |
+| T-0337 | Capsule opened and scoped for approval-gated npm publish; publish mutation not yet run. | Use `scripts/release/manual-publish-rc.sh T-0337` for dry-run first, then `scripts/release/manual-publish-rc.sh T-0337 --execute` only after npm auth and explicit operator confirmation; do not pass `--github-draft` unless requested. |
 
 ## Last 3 Completed Tasks
 
@@ -88,7 +88,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start T-0337 0.3.2-rc.0 Approval-Gated Publish. | T-0336 prepared rc0 source/readiness without mutation; the next planned capsule owns the operator-approved npm publish. | `docs/specs/0.3.2/02_Worker_Agent_Instructions.md`; `docs/specs/0.3.2/00_Evidence_v2_Refactor_Release_Design.md`; `docs/specs/0.3.2/capsules/T-0337_0_3_2_rc0_Approval_Gated_Publish.md` |
+| Run the T-0337 manual publish helper from the repository root after npm auth is ready. | T-0337 is open; the helper performs dry-run validation/evidence refresh first and requires explicit confirmation before npm publish mutation. | `scripts/release/manual-publish-rc.sh`; `docs/specs/0.3.2/capsules/T-0337_0_3_2_rc0_Approval_Gated_Publish.md`; `docs/RELEASE_READINESS.md` |
 
 ## Validation Baseline
 
