@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0340 |
 | Title | Stable 0.3.2 Approval-Gated Publish |
-| Status | Draft |
+| Status | Blocked |
 | Created | 2026-06-17 |
 | Updated | 2026-06-17 |
 
@@ -34,7 +34,7 @@
 
 ## Status
 
-Draft
+Blocked
 
 ## Status History
 
@@ -42,4 +42,6 @@ Draft
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-17T12:37:36Z | Draft | Created after T-0339 selected stable `0.3.2` publish. | T-0339 D-2 |
+| 2026-06-17T13:05:00Z | In Progress | Started stable `0.3.2` source/readiness preparation; publish mutation remains approval-gated. | T-0340 PLAN |
+| 2026-06-17T13:06:00Z | Blocked | Stable source/readiness updates and local validation are prepared, but release artifact and helper publish flow require a clean committed worktree plus explicit operator approval/authentication. | `ev:T-0340:d364684c5ab6459498683f5c` |
 <!-- hadara:managed:end task-status-history -->

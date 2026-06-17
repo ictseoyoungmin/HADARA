@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <img alt="Stable npm release" src="https://img.shields.io/badge/npm-0.3.0-blue">
-  <img alt="Source version" src="https://img.shields.io/badge/source-0.3.2--rc.0-orange">
+  <img alt="Stable npm release" src="https://img.shields.io/badge/npm-0.3.2-blue">
+  <img alt="Source version" src="https://img.shields.io/badge/source-0.3.2-blue">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>
@@ -24,7 +24,7 @@ This repository is both the HADARA source checkout and the HADARA protocol works
 Current stable npm release:
 
 ```text
-hadara@0.3.0
+hadara@0.3.2
 ```
 
 Current release candidate:
@@ -33,13 +33,13 @@ Current release candidate:
 hadara@0.3.2-rc.0
 ```
 
-The 0.3.2-rc.0 line is the Evidence v2 refactor release candidate. It hardens evidence writer metadata, exact resolution markers, durable evidence id discovery, canonical/derived evidence boundaries, and release-facing docs after the 0.3.1 post-publish recycle.
+The 0.3.2 line is the Evidence v2 refactor release. It hardens evidence writer metadata, exact resolution markers, durable evidence id discovery, canonical/derived evidence boundaries, and release-facing docs after the 0.3.1 post-publish recycle.
 
-Phase labels are internal implementation phases, not npm release-candidate labels. The stable `0.3.0` package remains the default install target; the `0.3.2-rc.0` package is for explicit release-candidate evaluation.
+Phase labels are internal implementation phases, not npm release-candidate labels. The stable `0.3.2` source is prepared for approval-gated npm publish; the `0.3.2-rc.0` package remains the prior release-candidate evaluation build until stable publish is executed.
 
 | Surface | Status |
 |---|---|
-| Current stable | [`hadara@0.3.0`](docs/RELEASE_NOTES.md#030) |
+| Current stable | [`hadara@0.3.2`](docs/RELEASE_NOTES.md#032) |
 | Current RC | [`hadara@0.3.2-rc.0`](docs/RELEASE_NOTES.md#032-rc0) |
 | Previous RC | [`hadara@0.3.1-rc.1`](docs/RELEASE_NOTES.md#031-rc1) |
 | Historical RCs | See [Release Notes](docs/RELEASE_NOTES.md). |
@@ -57,7 +57,7 @@ Requires Node.js 22.
 Install the stable release:
 
 ```bash
-npm install -g hadara@0.3.0
+npm install -g hadara@0.3.2
 hadara help
 hadara doctor --json
 ```
@@ -65,8 +65,8 @@ hadara doctor --json
 Run without a global install:
 
 ```bash
-npx hadara@0.3.0 help
-npx hadara@0.3.0 doctor --json
+npx hadara@0.3.2 help
+npx hadara@0.3.2 doctor --json
 ```
 
 Evaluate the release candidate explicitly:
@@ -80,11 +80,11 @@ For release or recycle evidence, prefer an isolated prefix install when PATH, gl
 
 ```bash
 tmp="$(mktemp -d)"
-npm --prefix "$tmp" install hadara@0.3.0
+npm --prefix "$tmp" install hadara@0.3.2
 "$tmp/node_modules/.bin/hadara" version --json
 ```
 
-`npx hadara@0.3.0 ...` remains convenient for normal use. The isolated installed-bin path is stronger proof that the published package installed and executed from the intended package tree.
+`npx hadara@0.3.2 ...` remains convenient for normal use. The isolated installed-bin path is stronger proof that the published package installed and executed from the intended package tree.
 
 ## What HADARA Gives You
 
@@ -245,7 +245,7 @@ Dashboard, TUI, Hermes, MCP, installer, package, release, and run commands stay 
 
 ## Safety Boundaries
 
-HADARA 0.3.2-rc.0 is not:
+HADARA 0.3.2 is not:
 
 - a full agent runtime;
 - Rack/enterprise behavior;

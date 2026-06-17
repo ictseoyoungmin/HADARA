@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "hadara.releaseArtifact.v1",
+  "command": "release.artifact",
+  "ok": false,
+  "mode": "execute",
+  "execution": {
+    "stagingCreated": false,
+    "npmPackExecuted": false,
+    "checksumGenerated": false,
+    "manifestGenerated": false,
+    "packageContentsVerified": false,
+    "publishExecuted": false,
+    "githubReleaseCreated": false,
+    "dockerImageBuilt": false
+  },
+  "output": {
+    "kind": "explicit",
+    "displayPath": "./dist-release",
+    "pathRedacted": true,
+    "relativePath": "dist-release",
+    "retention": "explicit-output"
+  },
+  "package": {
+    "name": "hadara",
+    "version": "0.3.2",
+    "private": false,
+    "filesWhitelistApplied": true
+  },
+  "artifacts": [],
+  "packageContents": {
+    "verified": false,
+    "fileCount": 0,
+    "allowedRoots": [
+      "dist/",
+      "README.md",
+      "LICENSE",
+      "package.json"
+    ],
+    "requiredFiles": [
+      "package.json",
+      "README.md",
+      "LICENSE",
+      "dist/cli/main.js"
+    ],
+    "forbiddenMatches": []
+  },
+  "privacy": {
+    "rawLogsIncluded": false,
+    "packageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [
+    {
+      "severity": "error",
+      "code": "RELEASE_ARTIFACT_WORKTREE_DIRTY",
+      "message": "Release artifact builder requires a clean git worktree so git commit metadata describes the artifact contents."
+    }
+  ],
+  "evidence": {
+    "time": "2026-06-17T12:56:24.335Z",
+    "taskId": "T-0340",
+    "gitCommit": "e81ecf61717aec506464fe60dc84623cfdeb6777"
+  }
+}

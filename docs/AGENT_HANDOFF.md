@@ -5,16 +5,16 @@
 | Area | State | Notes |
 |---|---|---|
 | Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 writer/docs/readiness/publish/recycle/decision work completed through T-0339. |
-| Current Phase | 0.3.2 Evidence v2 refactor stable publish pending | T-0339 selected stable `0.3.2` publish after T-0336 readiness, T-0337 publish, T-0338 recycle, and T-0339 dogfooding. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Current Phase | 0.3.2 Evidence v2 refactor stable publish blocked | T-0340 prepared stable `0.3.2` source/readiness and partial validation; release artifact/dry-run/publish now require clean worktree plus explicit operator approval/authentication. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
 | Latest Completed Task | T-0339 Stable 0.3.2 Decision | Release readiness wording cleanup, docker-compose dogfooding findings, stable publish decision, and T-0340 publish capsule creation completed. |
-| Active / Next Task | T-0340 Stable 0.3.2 Approval-Gated Publish | Prepare and run stable `hadara@0.3.2` approval-gated npm publish only with explicit operator approval/authentication, then verify registry version and dist-tags. |
-| Validation Baseline | T-0339 stable decision evidence | T-0339 recorded decision evidence `ev:T-0339:c99adfd72cb447e69f60a072`; T-0338 recycle evidence `ev:T-0338:59d881bdd12749f6a3a1ea87`; T-0336 readiness and T-0337 publish verification remain supporting release-line evidence. |
+| Active / Next Task | T-0340 Stable 0.3.2 Approval-Gated Publish | Blocked after stable source/readiness prep: release artifact/dry-run/publish require a clean committed worktree plus explicit operator approval/authentication. |
+| Validation Baseline | T-0340 partial stable publish preparation evidence | Docker check passed `ev:T-0340:f46635f835ed42389a0ce9c6`; package smoke passed `ev:T-0340:1dfd79eb8e5a4302a2afee7b`; clean-checkout smoke passed `ev:T-0340:2d7fdf0a5fe1481782a90338`; strict release gate passed `ev:T-0340:d364684c5ab6459498683f5c`; npm registry pre-publish check passed `ev:T-0340:c623c949e1d94c89bd87529c`; release dry-run remains blocked until fresh `0.3.2` release artifact evidence is generated from a clean worktree. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0340 | Stable 0.3.2 approval-gated publish is next after T-0339 selected stable publish. | Use `tasks/T-0340-stable-0-3-2-approval-gated-publish`; cite T-0339 decision evidence `ev:T-0339:c99adfd72cb447e69f60a072`; actual npm publish requires explicit operator approval/authentication. |
+| T-0340 | Stable 0.3.2 source/readiness preparation is done, but publish flow is blocked by clean-worktree and explicit-approval requirements. | Use `tasks/T-0340-stable-0-3-2-approval-gated-publish`; cite T-0340 validation evidence; actual npm publish requires fresh release artifact/dry-run evidence plus explicit operator approval/authentication. |
 
 ## Last 3 Completed Tasks
 
@@ -89,7 +89,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start T-0340 Stable 0.3.2 Approval-Gated Publish. | T-0339 selected stable `0.3.2` publish and created the publish capsule; actual publish remains approval-gated. | `tasks/T-0340-stable-0-3-2-approval-gated-publish`; `docs/RELEASE_READINESS.md`; `docs/RELEASE_NOTES.md`; T-0339 evidence `ev:T-0339:c99adfd72cb447e69f60a072` |
+| Clean/commit T-0340 release preparation changes, then rerun `release artifact`, `release dry-run`, and publish dry-run before any execute publish. | T-0340 stable source/readiness is prepared, but release artifact returned `RELEASE_ARTIFACT_WORKTREE_DIRTY`; actual publish remains approval-gated. | `tasks/T-0340-stable-0-3-2-approval-gated-publish`; `docs/RELEASE_READINESS.md`; `scripts/release/manual-publish-rc.sh`; T-0340 evidence `ev:T-0340:d364684c5ab6459498683f5c` |
 
 ## Validation Baseline
 
@@ -97,6 +97,7 @@
 |---|---|---|
 | T-0338 rc0 installed-package recycle | Registry/dist-tags passed; temp-prefix installed bin reported `packageVersion:"0.3.2-rc.0"`; installed Evidence v2 list/add-command exact resolution workflow passed; fresh init/docs passed; disposable lifecycle smoke reached `closed-valid`; temp folders were removed. | Evidence `ev:T-0338:59d881bdd12749f6a3a1ea87`; exact `npx` stale-shim behavior is an environment finding, not a package blocker. |
 | T-0339 stable decision and dogfooding | Release readiness wording cleanup passed; temporary docker-compose HADARA dogfood project reached `closed-valid`; stable `0.3.2` publish was selected and T-0340 was created. | Evidence `ev:T-0339:c13115df6d8e471791753886`; `ev:T-0339:49cceff9e094481a85b7b4b0`; `ev:T-0339:c99adfd72cb447e69f60a072`. |
+| T-0340 stable source/readiness preparation | Package metadata/lockfile, README, release notes/readiness, dist, and README test expectations now target stable `0.3.2`; Docker check, package smoke, clean-checkout smoke, strict release gate, and npm registry pre-publish check passed; release artifact/dry-run/publish are blocked by clean-worktree and approval requirements. | Evidence `ev:T-0340:f46635f835ed42389a0ce9c6`; `ev:T-0340:1dfd79eb8e5a4302a2afee7b`; `ev:T-0340:2d7fdf0a5fe1481782a90338`; `ev:T-0340:d364684c5ab6459498683f5c`; `ev:T-0340:c623c949e1d94c89bd87529c`. |
 | T-0330 Evidence v2 writer stabilization validation | Docker focused Evidence v2 writer stabilization suite passed 7 files / 70 tests; Docker full `npm run check` passed 119 files / 781 tests; `npm run build` passed and workspace `dist` was refreshed; built CLI explicit v2 metadata smoke recorded `category: decision`, `outcome: recorded`, and exact resolution tags. | Host focused validation was blocked by missing `vitest` in host `node_modules`; Docker validation is the baseline. |
 | T-0329 post-rc1 docs cleanup validation | Focused docs checks confirmed `docs/AGENT_HANDOFF.md` includes T-0329/T-0328/T-0327 in `Last 3 Completed Tasks`, `docs/RELEASE_NOTES.md` uses completed T-0326/T-0327/T-0328 boundary wording for `0.3.1-rc.1`, and `git diff --check` passed. | Docs-only cleanup; no runtime/source behavior changed. |
 | T-0328 rc1 installed-package recycle | Registry/dist-tags, exact npx, temp-prefix installed bin, 71-entry command registry, broad CLI command-family matrix, source release dry-runs, MCP initialize, TUI snapshot, run scaffold/run, disposable lifecycle surfaces, and temporary folder cleanup passed in the `hadara-dev` container. | Published-package validation layer for `0.3.1-rc.1`; richer machine-readable recycle artifacts remain future evidence-quality work. |
