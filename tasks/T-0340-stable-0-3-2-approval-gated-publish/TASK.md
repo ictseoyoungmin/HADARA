@@ -43,5 +43,6 @@ Blocked
 |---|---|---|---|
 | 2026-06-17T12:37:36Z | Draft | Created after T-0339 selected stable `0.3.2` publish. | T-0339 D-2 |
 | 2026-06-17T13:05:00Z | In Progress | Started stable `0.3.2` source/readiness preparation; publish mutation remains approval-gated. | T-0340 PLAN |
-| 2026-06-17T13:06:00Z | Blocked | Stable source/readiness updates and local validation are prepared, but release artifact and helper publish flow require a clean committed worktree plus explicit operator approval/authentication. | `ev:T-0340:d364684c5ab6459498683f5c` |
+| 2026-06-17T13:06:00Z | Blocked | Stable source/readiness updates and local validation were prepared, but release artifact and helper publish flow required a clean committed worktree plus explicit operator approval/authentication. | `ev:T-0340:d364684c5ab6459498683f5c` |
+| 2026-06-17T13:19:00Z | Blocked | Post-commit release artifact, release dry-run, release publish dry-run, and npm tarball publish dry-run passed; actual npm publish remains blocked on explicit operator approval/authentication and npm token availability. | `ev:T-0340:06a838ce79be45d4978a2dfd` |
 <!-- hadara:managed:end task-status-history -->
