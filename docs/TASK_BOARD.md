@@ -337,4 +337,5 @@
 | T-0334 | Evidence Rebuild Boundary Design Only | Done | tasks/T-0334-evidence-rebuild-boundary-design-only | |
 | T-0335 | Evidence v2 Docs Consolidation | Done | tasks/T-0335-evidence-v2-docs-consolidation | |
 | T-0336 | 0.3.2-rc.0 Release Readiness Preparation | Done | tasks/T-0336-0-3-2-rc-0-release-readiness-preparation | |
-| T-0337 | 0.3.2-rc.0 Approval-Gated Publish | In Progress | tasks/T-0337-0-3-2-rc-0-approval-gated-publish | Approval-gated npm publish handoff prepared; awaiting operator npm auth and explicit publish confirmation. |
+| T-0337 | 0.3.2-rc.0 Approval-Gated Publish | Done | tasks/T-0337-0-3-2-rc-0-approval-gated-publish | Published `hadara@0.3.2-rc.0` to npm with `next`; verified `latest=0.3.0`, `next=0.3.2-rc.0`, README/tarball metadata; no GitHub Release draft. |
+| T-0338 | 0.3.2-rc.0 Post-Publish Installed-Package Recycle | Draft | tasks/T-0338-0-3-2-rc-0-post-publish-installed-package-recycle | Next: verify installed package consumer paths, Evidence v2 list/add-command workflow, fresh init, lifecycle smoke, and cleanup. |

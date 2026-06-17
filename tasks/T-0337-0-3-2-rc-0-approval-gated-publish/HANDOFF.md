@@ -6,7 +6,7 @@
 | Field | Value |
 |---|---|
 | Task | T-0337 |
-| TaskStatus | In Progress |
+| TaskStatus | Done |
 | Last Updated | 2026-06-17 |
 <!-- hadara:managed:end task-handoff-current-state -->
 
@@ -16,17 +16,18 @@
 |---|---|
 | T-0337 capsule created and scoped for approval-gated npm publish. | `ev:T-0337:67d9ffcaf2b74ee1b2901ae1` |
 | README reviewed as appropriate for staged rc0 package-facing release posture; capsule-local release note added. | `RELEASE_NOTE.md` |
+| `hadara@0.3.2-rc.0` published to npm with no GitHub Release draft. | `ev:T-0337:26b2d2a2606c40ab81ca31f3` |
+| Registry verification passed: `latest=0.3.0`, `next=0.3.2-rc.0`, README and tarball metadata visible. | `ev:T-0337:ba28cd4d16fb4952ab3aefd7` |
+| Done-level readiness passed before close. | `ev:T-0337:d23bb3db3fd9407e9b125931` |
 
 ## Next Recommended Step
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| From repo root, run `scripts/release/manual-publish-rc.sh T-0337` for the safe dry-run path. | Refreshes final validation/evidence and proves the exact tarball without publishing. | `scripts/release/manual-publish-rc.sh`; `docs/RELEASE_READINESS.md` |
-| After dry-run passes and npm auth is ready, run `scripts/release/manual-publish-rc.sh T-0337 --execute` and type `publish` only if the final prompt is correct. | Performs npm publish mutation and verifies `npm view`. | T-0337 spec |
+| Start T-0338 post-publish installed-package recycle. | Published rc0 is visible on npm; recycle must verify installed consumer paths and Evidence v2 workflows from the package. | `docs/specs/0.3.2/capsules/T-0338_0_3_2_rc0_Post_Publish_Installed_Package_Recycle.md` |
 
 ## Carry Forward Warnings
 
 | Warning | Impact | Mitigation |
 |---|---|---|
-| Do not pass `--github-draft` unless explicitly requested. | Would create optional GitHub Release draft outside default T-0337 scope. | Keep default helper invocation npm-only. |
-| Publish requires npm auth. | Helper will fail at `npm whoami` if unauthenticated. | Run `npm login --registry=https://registry.npmjs.org` or configure token before execute. |
+| T-0338 proof must come from installed package paths, not source checkout. | Source checkout can mask packaging regressions. | Use temp-prefix installed bin as primary proof. |

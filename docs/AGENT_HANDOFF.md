@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 writer/docs/readiness work completed through T-0336. |
-| Current Phase | 0.3.2 Evidence v2 refactor in progress | T-0336 prepared `hadara@0.3.2-rc.0` source/readiness without publish mutation after T-0333 through T-0335 Evidence v2 id/list/docs consolidation. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0336 0.3.2-rc.0 Release Readiness Preparation | Prepared source/package metadata and release docs for `hadara@0.3.2-rc.0`; release artifact, package smoke, clean-checkout smoke, strict gate, release dry-run, publish dry-run, Docker sync-build, and diff check passed without publish mutation. |
-| Active / Next Task | T-0337 0.3.2-rc.0 Approval-Gated Publish | Capsule opened at `tasks/T-0337-0-3-2-rc-0-approval-gated-publish`; require clean worktree, npm auth, explicit confirmation, npm `next` tag verification, and no GitHub Release unless requested. |
-| Validation Baseline | T-0336 rc0 release readiness matrix | T-0336 passed Docker full sync-build (119 files / 791 tests, `distLooksStale:false`), release artifact, package smoke, clean-checkout smoke, strict gate, release dry-run, publish dry-run, and `git diff --check`; no publish/GitHub/Docker mutation occurred. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 writer/docs/readiness/publish work completed through T-0337. |
+| Current Phase | 0.3.2 Evidence v2 refactor in progress | T-0337 published `hadara@0.3.2-rc.0` with npm `next` tag after T-0333 through T-0336 Evidence v2 id/list/docs/readiness work. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0337 0.3.2-rc.0 Approval-Gated Publish | Published `hadara@0.3.2-rc.0`; npm view returned `0.3.2-rc.0`; dist-tags verified `latest=0.3.0` and `next=0.3.2-rc.0`; README/tarball metadata were visible; GitHub Release draft was not requested. |
+| Active / Next Task | T-0338 0.3.2-rc.0 Post-Publish Installed-Package Recycle | Capsule opened at `tasks/T-0338-0-3-2-rc-0-post-publish-installed-package-recycle`; verify installed package behavior from temp-prefix consumer paths, including Evidence v2 list/add-command exact resolution workflow. |
+| Validation Baseline | T-0337 approval-gated publish evidence | T-0337 recorded publish evidence `ev:T-0337:26b2d2a2606c40ab81ca31f3` and registry verification `ev:T-0337:ba28cd4d16fb4952ab3aefd7`; prior T-0336 readiness matrix remains the source validation baseline. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0337 | Capsule opened and scoped for approval-gated npm publish; publish mutation not yet run. | Use `scripts/release/manual-publish-rc.sh T-0337` for dry-run first, then `scripts/release/manual-publish-rc.sh T-0337 --execute` only after npm auth and explicit operator confirmation; do not pass `--github-draft` unless requested. |
+| T-0338 | Next capsule has been created as Draft for post-publish installed-package recycle. | Use `docs/specs/0.3.2/capsules/T-0338_0_3_2_rc0_Post_Publish_Installed_Package_Recycle.md`; primary proof must come from temp-prefix installed bin, not source checkout. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0337 0.3.2-rc.0 Approval-Gated Publish | Published `hadara@0.3.2-rc.0` to npm with `next`; verified version, dist-tags, README/tarball metadata, and no GitHub Release draft. | `ev:T-0337:26b2d2a2606c40ab81ca31f3`; `ev:T-0337:ba28cd4d16fb4952ab3aefd7`. |
 | T-0336 0.3.2-rc.0 Release Readiness Preparation | Prepared source/package metadata and release docs for `hadara@0.3.2-rc.0` without publish mutation. | Docker full sync-build passed 119 files / 791 tests and refreshed `dist`; release artifact, package smoke, clean-checkout smoke, strict gate, release dry-run, publish dry-run, and `git diff --check` passed. |
 | T-0335 Evidence v2 Docs Consolidation | Consolidated Evidence v2 package-facing, JSON contract, workflow, generated init, command registry, release note, and release readiness guidance around durable ids, exact markers, canonical evidence, non-canonical summaries, and deferred scope. | Docker full sync-build passed 119 files / 791 tests and refreshed `dist`; `git diff --check` passed. |
-| T-0334 Evidence Rebuild Boundary Design Only | Documented that 0.3.2 has no rebuild preview/execute command, `evidence.jsonl` is canonical, `EVIDENCE.md` is non-canonical, future `wouldChange` needs drift classes, and future rebuild execute must be dry-run-first and before-hash guarded. | Docker full sync-build passed 119 files / 791 tests and refreshed `dist`; `git diff --check` passed. |
 
 ## Current Known Problems
 
@@ -88,7 +88,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Run the T-0337 manual publish helper from the repository root after npm auth is ready. | T-0337 is open; the helper performs dry-run validation/evidence refresh first and requires explicit confirmation before npm publish mutation. | `scripts/release/manual-publish-rc.sh`; `docs/specs/0.3.2/capsules/T-0337_0_3_2_rc0_Approval_Gated_Publish.md`; `docs/RELEASE_READINESS.md` |
+| Start T-0338 post-publish installed-package recycle. | `hadara@0.3.2-rc.0` is published on npm; recycle must prove installed package behavior from consumer paths before stable 0.3.2 decision work. | `docs/specs/0.3.2/capsules/T-0338_0_3_2_rc0_Post_Publish_Installed_Package_Recycle.md`; `docs/RELEASE_READINESS.md`; `tasks/T-0338-0-3-2-rc-0-post-publish-installed-package-recycle/TASK.md` |
 
 ## Validation Baseline
 
