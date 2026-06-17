@@ -1,0 +1,7 @@
+# Evidence
+
+| Time | Kind | Summary | Result | Visibility | JSONL |
+|---|---|---|---|---|---|
+| 2026-06-17T14:01:23.748Z | command-log | Stable hadara@0.3.2 installed-package recycle passed: npm registry returned 0.3.2; dist-tags were latest=0.3.2 and next=0.3.2-rc.0; temp-prefix npm install hadara@latest passed; installed version reported packageVersion 0.3.2 with build.distLooksStale false; governed init passed; evidence list exposed durable id ev:T-0001:779b4482e58b47818385bdb3; evidence add-command --resolves durable id passed; disposable lifecycle ready/close/audit reached closed-valid; temp prefix/cache/project folders were removed. Finding: current version JSON exposes dist freshness at build.distLooksStale rather than root distLooksStale. | passed | public | evidence.jsonl |
+| 2026-06-17T14:05:48.036Z | command-log | Task close validation for T-0341 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:7e7ec97e132dfaf1fa1e30e7f991a0f1257c4787e4feeea7a20414ca7c58e11a. | passed | public | evidence.jsonl |
+| 2026-06-17T14:07:08.351Z | command-log | Task close validation for T-0341 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:48b02b6f446cf81f71f7a76ba5dccb4fd2fd4131be9001ff7cdcd7c635649488. | passed | public | evidence.jsonl |

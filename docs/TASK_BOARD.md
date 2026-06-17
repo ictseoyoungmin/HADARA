@@ -341,3 +341,4 @@
 | T-0338 | 0.3.2-rc.0 Post-Publish Installed-Package Recycle | Done | tasks/T-0338-0-3-2-rc-0-post-publish-installed-package-recycle | Installed-package recycle passed from temp-prefix bin; exact `npx` resolved stale local shim and is recorded as environment finding. |
 | T-0339 | Stable 0.3.2 Decision | Done | tasks/T-0339-stable-0-3-2-decision | Stable `0.3.2` publish selected; T-0340 created for approval-gated publish. |
 | T-0340 | Stable 0.3.2 Approval-Gated Publish | Done | tasks/T-0340-stable-0-3-2-approval-gated-publish | Published `hadara@0.3.2` to npm; npm view verified `0.3.2`; dist-tags verified `latest=0.3.2` and `next=0.3.2-rc.0`; GitHub Release draft was not requested. |
+| T-0341 | Stable 0.3.2 Post-Publish Installed-Package Recycle | Done | tasks/T-0341-stable-0-3-2-post-publish-installed-package-recycle | Installed-package recycle passed from temp-prefix bin. |

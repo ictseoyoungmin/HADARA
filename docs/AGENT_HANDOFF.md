@@ -4,30 +4,31 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, and Phase 9 writer/docs/readiness/publish/recycle/decision/stable-publish work completed through T-0340. |
-| Current Phase | 0.3.2 Evidence v2 refactor stable publish complete | T-0340 published stable `hadara@0.3.2` to npm with `latest`; post-publish installed-package recycle from consumer paths is next. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0340 Stable 0.3.2 Approval-Gated Publish | Stable npm publish completed; npm view verified `0.3.2`; dist-tags verified `latest=0.3.2` and `next=0.3.2-rc.0`; GitHub Release draft was not requested. |
-| Active / Next Task | TBD Stable 0.3.2 Post-Publish Installed-Package Recycle | Create/start the next recycle capsule to verify the published stable package from installed consumer paths. |
-| Validation Baseline | T-0340 stable publish evidence | Docker check passed `ev:T-0340:f46635f835ed42389a0ce9c6`; package smoke passed `ev:T-0340:1dfd79eb8e5a4302a2afee7b`; clean-checkout smoke passed `ev:T-0340:2d7fdf0a5fe1481782a90338`; strict release gate passed `ev:T-0340:d364684c5ab6459498683f5c`; npm registry pre-publish check passed `ev:T-0340:c623c949e1d94c89bd87529c`; post-commit release artifact/release dry-run/publish dry-run/npm tarball dry-run passed `ev:T-0340:06a838ce79be45d4978a2dfd`; npm publish and registry/dist-tag verification passed `ev:T-0340:8e7dc68139594113a63ade0f`; earlier failed pre-publish attempts resolved `ev:T-0340:b1f45d604d6947539c19a24e`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, and Phase 9 / 0.3.2 writer/docs/readiness/publish/recycle/decision/stable-publish/stable-recycle work completed through T-0341. |
+| Current Phase | 0.3.2 Evidence v2 refactor stable line complete | T-0341 verified stable `hadara@0.3.2` from installed consumer paths after T-0340 publish. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0341 Stable 0.3.2 Post-Publish Installed-Package Recycle | Stable installed-package recycle completed; registry/dist-tags, temp-prefix installed bin, governed init, Evidence v2 exact resolution workflow, disposable lifecycle smoke, and cleanup passed. |
+| Active / Next Task | TBD Select next roadmap/handoff item | Stable 0.3.2 line is complete through publish and installed-package recycle; choose the next highest-value roadmap or handoff item before starting implementation. |
+| Validation Baseline | T-0341 stable installed-package recycle evidence | Stable recycle passed `ev:T-0341:3208efa9002b47cc8ea68363`; T-0340 stable publish passed `ev:T-0340:8e7dc68139594113a63ade0f`; T-0340 release gate/package/clean-checkout/artifact evidence remains the source readiness baseline. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Stable 0.3.2 post-publish installed-package recycle is next after T-0340 publish. | Create a new recycle capsule; verify npm registry metadata/dist-tags, temp-prefix installed bin, fresh init/docs, lifecycle, and cleanup from consumer paths. |
+| TBD | Select the next roadmap/handoff item now that stable 0.3.2 publish and installed-package recycle are complete. | Use `hadara task next --json`; current non-primary backlog still includes T-0006 Partial. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0341 Stable 0.3.2 Post-Publish Installed-Package Recycle | Verified stable `hadara@0.3.2` from installed consumer paths: registry/dist-tags, temp-prefix installed `hadara@latest`, Evidence v2 list/add-command exact resolution workflow, governed init, disposable lifecycle smoke, and cleanup passed. | `ev:T-0341:3208efa9002b47cc8ea68363`. |
 | T-0340 Stable 0.3.2 Approval-Gated Publish | Published `hadara@0.3.2` to npm with `latest`, verified npm view and dist-tags, skipped GitHub Release draft, and resolved earlier failed pre-publish validation attempts with successful rerun evidence. | `ev:T-0340:8e7dc68139594113a63ade0f`; `ev:T-0340:b1f45d604d6947539c19a24e`. |
 | T-0339 Stable 0.3.2 Decision | Corrected release readiness wording, completed temporary docker-compose HADARA dogfooding, selected stable `0.3.2` publish, and created T-0340 approval-gated publish capsule. | `ev:T-0339:c13115df6d8e471791753886`; `ev:T-0339:49cceff9e094481a85b7b4b0`; `ev:T-0339:c99adfd72cb447e69f60a072`. |
-| T-0338 0.3.2-rc.0 Post-Publish Installed-Package Recycle | Verified the published rc0 package from installed consumer paths: registry/dist-tags, temp-prefix installed bin, Evidence v2 list/add-command exact resolution workflow, fresh init/docs, disposable lifecycle smoke, and cleanup passed; exact `npx` stale-shim behavior recorded as environment finding. | `ev:T-0338:59d881bdd12749f6a3a1ea87`. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
+| Installed `hadara@0.3.2 version --json` reports dist freshness at `build.distLooksStale:false`, not root `distLooksStale`. | Consumers using shorthand root-field checks may miss the current schema location. | Treat `hadara.runtime.version.v1` output as authoritative; root compatibility can be a future docs/JSON compatibility follow-up if needed. |
 | Exact `npx hadara@0.3.2-rc.0 version --json` resolved a stale fnm/global shim in this workspace and reported `0.3.0-rc.2`. | `npx` is not reliable as canonical package proof in this local environment. | Use isolated temp-prefix installed-bin proof for T-0338/T-0339 decisions; it reported `packageVersion:"0.3.2-rc.0"` and passed recycle. |
 | Published `0.3.0-rc.0` npm metadata still shows the old package description and no keywords. | The immutable rc.0 package remains metadata-limited, while later rc packages and stable `0.3.0` were published with metadata guardrails. | Treat rc.0 as historical; use stable `hadara@0.3.0` for current installs. |
 | `docs/DOC_REGISTRY.md` projection is not registered as a registry entry by the current seed. | `docs explain --path docs/DOC_REGISTRY.md` reports `DOC_NOT_REGISTERED`, while the artifact exists and is managed. | Treat as accepted current seed behavior unless a future schema/seed capsule decides self-registration is required. |
