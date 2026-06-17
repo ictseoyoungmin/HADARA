@@ -101,7 +101,11 @@ export interface EvidenceAppendResult {
 }
 
 export type EvidenceArtifactPolicyErrorCode = 'PUBLIC_ARTIFACT_BINARY_REJECTED' | 'PUBLIC_ARTIFACT_SECRET_DETECTED';
-export type EvidenceAppendErrorCode = 'EVIDENCE_APPEND_LOCK_TIMEOUT' | 'TASK_NOT_FOUND' | 'TASK_CAPSULE_AMBIGUOUS';
+export type EvidenceAppendErrorCode =
+  | 'EVIDENCE_APPEND_LOCK_TIMEOUT'
+  | 'EVIDENCE_RESULT_OUTCOME_MISMATCH'
+  | 'TASK_NOT_FOUND'
+  | 'TASK_CAPSULE_AMBIGUOUS';
 
 export interface PublicEvidenceArtifactPolicyReport {
   schemaVersion: 'hadara.evidence_artifact_policy.v1';
@@ -140,6 +144,21 @@ export class EvidenceAppendLockError extends Error {
   }
 }
 
+export interface EvidenceResultOutcomeCompatibilityIssue {
+  severity: 'error';
+  code: 'EVIDENCE_RESULT_OUTCOME_MISMATCH';
+  message: string;
+}
+
+export class EvidenceResultOutcomeMismatchError extends Error {
+  public readonly code: EvidenceAppendErrorCode = 'EVIDENCE_RESULT_OUTCOME_MISMATCH';
+
+  constructor(public readonly issue: EvidenceResultOutcomeCompatibilityIssue) {
+    super(issue.message);
+    this.name = 'EvidenceResultOutcomeMismatchError';
+  }
+}
+
 export class EvidenceTaskDirectoryError extends Error {
   constructor(
     public readonly code: Extract<EvidenceAppendErrorCode, 'TASK_NOT_FOUND' | 'TASK_CAPSULE_AMBIGUOUS'>,
@@ -148,6 +167,29 @@ export class EvidenceTaskDirectoryError extends Error {
     super(message);
     this.name = 'EvidenceTaskDirectoryError';
   }
+}
+
+export function validateEvidenceResultOutcomeCompatibility(input: {
+  result: EvidenceRecord['result'];
+  outcome: EvidenceOutcome | undefined;
+}): EvidenceResultOutcomeCompatibilityIssue | undefined {
+  if (!input.outcome) return undefined;
+  if (input.outcome === 'passed' || input.outcome === 'failed' || input.outcome === 'blocked' || input.outcome === 'unknown') {
+    if (input.result === input.outcome) return undefined;
+    return {
+      severity: 'error',
+      code: 'EVIDENCE_RESULT_OUTCOME_MISMATCH',
+      message: `Evidence result ${input.result} conflicts with outcome ${input.outcome}; matching evidence outcomes must use the same legacy result.`
+    };
+  }
+  if ((input.outcome === 'recorded' || input.outcome === 'not-applicable') && input.result !== 'unknown') {
+    return {
+      severity: 'error',
+      code: 'EVIDENCE_RESULT_OUTCOME_MISMATCH',
+      message: `Evidence outcome ${input.outcome} is record-only/non-applicable evidence and requires legacy result unknown.`
+    };
+  }
+  return undefined;
 }
 
 export function appendEvidence(projectRoot: string, record: Omit<EvidenceRecord, 'time'>): string {
@@ -312,6 +354,14 @@ function appendEvidenceRecord(input: {
   visibility: NonNullable<EvidenceRecord['visibility']>;
   createAttachedPath: () => string | undefined;
 }): EvidenceAppendResult {
+  const resultOutcomeIssue = validateEvidenceResultOutcomeCompatibility({
+    result: input.record.result,
+    outcome: input.record.outcome
+  });
+  if (resultOutcomeIssue) {
+    throw new EvidenceResultOutcomeMismatchError(resultOutcomeIssue);
+  }
+
   const summary = redactSecrets(input.record.summary.replace(/\|/g, '/'));
   const markdownPath = path.join(input.taskDir, 'EVIDENCE.md');
 

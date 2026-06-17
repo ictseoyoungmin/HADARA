@@ -226,6 +226,59 @@ describe('CLI evidence JSON reports', () => {
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe('');
   });
 
+  it('rejects result/outcome mismatches in the core evidence writer before appending files', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Core writer result outcome guard');
+
+    let caught: unknown;
+    try {
+      appendEvidenceWithResult(root, {
+        taskId: task.id,
+        kind: 'command-log',
+        summary: 'Core writer mismatch should fail',
+        result: 'failed',
+        outcome: 'passed',
+        visibility: 'public'
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toMatchObject({
+      code: 'EVIDENCE_RESULT_OUTCOME_MISMATCH'
+    });
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe('');
+    expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).not.toContain('Core writer mismatch should fail');
+  });
+
+  it('returns result/outcome mismatch issues from collect reports that call the core writer directly', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Collect report writer mismatch');
+
+    const report = createEvidenceCollectReport(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Collect report mismatch should fail',
+      result: 'passed',
+      visibility: 'public',
+      category: 'decision',
+      outcome: 'recorded'
+    });
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.evidence.collect.v1',
+      command: 'evidence.collect',
+      ok: false,
+      issues: [
+        {
+          severity: 'error',
+          code: 'EVIDENCE_RESULT_OUTCOME_MISMATCH'
+        }
+      ]
+    });
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe('');
+  });
+
   it('keeps recorded outcome legacy result unknown and rejects incompatible explicit result', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Recorded outcome compatibility');

@@ -332,3 +332,4 @@
 | T-0329 | Post rc1 state docs cleanup | Done | tasks/T-0329-post-rc1-state-docs-cleanup | |
 | T-0330 | Phase 9 Evidence v2 Writer Stabilization | Done | tasks/T-0330-phase-9-evidence-v2-writer-stabilization | |
 | T-0331 | Evidence v2 Writer Hardening and Handoff Cleanup | Done | tasks/T-0331-evidence-v2-writer-hardening-and-handoff-cleanup | |
+| T-0332 | Evidence v2 Core Writer Guard | Done | tasks/T-0332-evidence-v2-core-writer-guard | |

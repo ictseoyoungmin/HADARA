@@ -4,7 +4,8 @@ import {
   EvidenceOutcome,
   EvidenceRecord,
   persistedEvidenceKind,
-  persistedEvidenceResult
+  persistedEvidenceResult,
+  validateEvidenceResultOutcomeCompatibility
 } from '../evidence/evidence';
 import { createEvidenceCollectReport } from './evidence-json';
 import { createEvidenceLintReport } from '../services/evidence-lint';
@@ -84,7 +85,7 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
     const outcome = parseOptionalEvidenceOutcome(getStringOption(input.args, '--outcome'));
     const explicitResult = getStringOption(input.args, '--result');
     const result = parseEvidenceResult(explicitResult ?? outcomeToLegacyResult(outcome));
-    const resultOutcomeIssue = validateResultOutcomeCompatibility({ result, outcome, explicitResultProvided: explicitResult !== undefined });
+    const resultOutcomeIssue = validateEvidenceResultOutcomeCompatibility({ result, outcome });
     if (resultOutcomeIssue) {
       const report = {
         schemaVersion: 'hadara.evidence.collect.v1',
@@ -212,30 +213,6 @@ function parseOptionalEvidenceOutcome(value: string | undefined): EvidenceOutcom
 function outcomeToLegacyResult(outcome: EvidenceOutcome | undefined): EvidenceRecord['result'] {
   if (outcome === 'passed' || outcome === 'failed' || outcome === 'blocked' || outcome === 'unknown') return outcome;
   return 'unknown';
-}
-
-function validateResultOutcomeCompatibility(input: {
-  result: EvidenceRecord['result'];
-  outcome: EvidenceOutcome | undefined;
-  explicitResultProvided: boolean;
-}): { severity: 'error'; code: 'EVIDENCE_RESULT_OUTCOME_MISMATCH'; message: string } | undefined {
-  if (!input.outcome || !input.explicitResultProvided) return undefined;
-  if (input.outcome === 'passed' || input.outcome === 'failed' || input.outcome === 'blocked' || input.outcome === 'unknown') {
-    if (input.result === input.outcome) return undefined;
-    return {
-      severity: 'error',
-      code: 'EVIDENCE_RESULT_OUTCOME_MISMATCH',
-      message: `--result ${input.result} conflicts with --outcome ${input.outcome}; matching evidence outcomes must use the same legacy result.`
-    };
-  }
-  if ((input.outcome === 'recorded' || input.outcome === 'not-applicable') && input.result !== 'unknown') {
-    return {
-      severity: 'error',
-      code: 'EVIDENCE_RESULT_OUTCOME_MISMATCH',
-      message: `--outcome ${input.outcome} is record-only/non-applicable evidence and requires --result unknown or no --result.`
-    };
-  }
-  return undefined;
 }
 
 function resolutionTagsFromArgs(args: string[]): string[] | undefined {
