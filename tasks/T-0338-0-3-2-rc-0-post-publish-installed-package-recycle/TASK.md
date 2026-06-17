@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0338 |
 | Title | 0.3.2-rc.0 Post-Publish Installed-Package Recycle |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-06-17 |
 | Updated | 2026-06-17 |
 
@@ -38,7 +38,7 @@
 
 ## Status
 
-Draft
+Done
 
 ## Status History
 
@@ -46,4 +46,5 @@ Draft
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
 | 2026-06-17 | Draft | Initial task scaffold for post-publish recycle. | T-0337 handoff |
+| 2026-06-17 | Done | Finished task capsule. | `hadara task finish --execute` |
 <!-- hadara:managed:end task-status-history -->

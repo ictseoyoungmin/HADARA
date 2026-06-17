@@ -4,30 +4,31 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 writer/docs/readiness/publish work completed through T-0337. |
-| Current Phase | 0.3.2 Evidence v2 refactor in progress | T-0337 published `hadara@0.3.2-rc.0` with npm `next` tag after T-0333 through T-0336 Evidence v2 id/list/docs/readiness work. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0337 0.3.2-rc.0 Approval-Gated Publish | Published `hadara@0.3.2-rc.0`; npm view returned `0.3.2-rc.0`; dist-tags verified `latest=0.3.0` and `next=0.3.2-rc.0`; README/tarball metadata were visible; GitHub Release draft was not requested. |
-| Active / Next Task | T-0338 0.3.2-rc.0 Post-Publish Installed-Package Recycle | Capsule opened at `tasks/T-0338-0-3-2-rc-0-post-publish-installed-package-recycle`; verify installed package behavior from temp-prefix consumer paths, including Evidence v2 list/add-command exact resolution workflow. |
-| Validation Baseline | T-0337 approval-gated publish evidence | T-0337 recorded publish evidence `ev:T-0337:26b2d2a2606c40ab81ca31f3` and registry verification `ev:T-0337:ba28cd4d16fb4952ab3aefd7`; prior T-0336 readiness matrix remains the source validation baseline. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 writer/docs/readiness/publish/recycle work completed through T-0338. |
+| Current Phase | 0.3.2 Evidence v2 refactor in progress | T-0338 verified published `hadara@0.3.2-rc.0` from temp-prefix installed package paths after T-0337 publish. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0338 0.3.2-rc.0 Post-Publish Installed-Package Recycle | Registry/dist-tags, temp-prefix installed version, installed Evidence v2 list/add-command exact resolution workflow, fresh init/docs, disposable lifecycle smoke, and cleanup passed; exact `npx` resolved a stale local shim and is recorded as environment finding. |
+| Active / Next Task | T-0339 Stable 0.3.2 Decision | Use T-0336 readiness, T-0337 publish, and T-0338 recycle evidence to decide stable 0.3.2 publish, rc1, or deferral. |
+| Validation Baseline | T-0338 installed-package recycle evidence | T-0338 recorded installed-package recycle evidence `ev:T-0338:59d881bdd12749f6a3a1ea87`; prior T-0336 readiness matrix and T-0337 publish verification remain supporting release-line evidence. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0338 | Next capsule has been created as Draft for post-publish installed-package recycle. | Use `docs/specs/0.3.2/capsules/T-0338_0_3_2_rc0_Post_Publish_Installed_Package_Recycle.md`; primary proof must come from temp-prefix installed bin, not source checkout. |
+| T-0339 | Stable 0.3.2 decision is next after rc0 recycle passed. | Use `docs/specs/0.3.2/capsules/T-0339_Stable_0_3_2_Decision.md`; cite `ev:T-0338:59d881bdd12749f6a3a1ea87` plus T-0336/T-0337 evidence. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0338 0.3.2-rc.0 Post-Publish Installed-Package Recycle | Verified the published rc0 package from installed consumer paths: registry/dist-tags, temp-prefix installed bin, Evidence v2 list/add-command exact resolution workflow, fresh init/docs, disposable lifecycle smoke, and cleanup passed; exact `npx` stale-shim behavior recorded as environment finding. | `ev:T-0338:59d881bdd12749f6a3a1ea87`. |
 | T-0337 0.3.2-rc.0 Approval-Gated Publish | Published `hadara@0.3.2-rc.0` to npm with `next`; verified version, dist-tags, README/tarball metadata, and no GitHub Release draft. | `ev:T-0337:26b2d2a2606c40ab81ca31f3`; `ev:T-0337:ba28cd4d16fb4952ab3aefd7`. |
 | T-0336 0.3.2-rc.0 Release Readiness Preparation | Prepared source/package metadata and release docs for `hadara@0.3.2-rc.0` without publish mutation. | Docker full sync-build passed 119 files / 791 tests and refreshed `dist`; release artifact, package smoke, clean-checkout smoke, strict gate, release dry-run, publish dry-run, and `git diff --check` passed. |
-| T-0335 Evidence v2 Docs Consolidation | Consolidated Evidence v2 package-facing, JSON contract, workflow, generated init, command registry, release note, and release readiness guidance around durable ids, exact markers, canonical evidence, non-canonical summaries, and deferred scope. | Docker full sync-build passed 119 files / 791 tests and refreshed `dist`; `git diff --check` passed. |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
+| Exact `npx hadara@0.3.2-rc.0 version --json` resolved a stale fnm/global shim in this workspace and reported `0.3.0-rc.2`. | `npx` is not reliable as canonical package proof in this local environment. | Use isolated temp-prefix installed-bin proof for T-0338/T-0339 decisions; it reported `packageVersion:"0.3.2-rc.0"` and passed recycle. |
 | Published `0.3.0-rc.0` npm metadata still shows the old package description and no keywords. | The immutable rc.0 package remains metadata-limited, while later rc packages and stable `0.3.0` were published with metadata guardrails. | Treat rc.0 as historical; use stable `hadara@0.3.0` for current installs. |
 | `docs/DOC_REGISTRY.md` projection is not registered as a registry entry by the current seed. | `docs explain --path docs/DOC_REGISTRY.md` reports `DOC_NOT_REGISTERED`, while the artifact exists and is managed. | Treat as accepted current seed behavior unless a future schema/seed capsule decides self-registration is required. |
 | Host npm remains unreliable for some release smokes under sandboxed home/cache permissions. | T-0326 package smoke first failed with npm cache `EROFS` in the sandbox, then passed on approved escalated rerun; clean-checkout smoke also ran escalated. | Use the Docker validation path for HADARA-dev and run npm package tooling outside read-only sandbox constraints when required. |
@@ -88,12 +89,13 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start T-0338 post-publish installed-package recycle. | `hadara@0.3.2-rc.0` is published on npm; recycle must prove installed package behavior from consumer paths before stable 0.3.2 decision work. | `docs/specs/0.3.2/capsules/T-0338_0_3_2_rc0_Post_Publish_Installed_Package_Recycle.md`; `docs/RELEASE_READINESS.md`; `tasks/T-0338-0-3-2-rc-0-post-publish-installed-package-recycle/TASK.md` |
+| Start T-0339 Stable 0.3.2 Decision. | `hadara@0.3.2-rc.0` readiness, publish, and installed-package recycle have passed; decide stable 0.3.2 publish, rc1, or deferral. | `docs/specs/0.3.2/capsules/T-0339_Stable_0_3_2_Decision.md`; T-0336 readiness evidence; T-0337 publish evidence; `ev:T-0338:59d881bdd12749f6a3a1ea87` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0338 rc0 installed-package recycle | Registry/dist-tags passed; temp-prefix installed bin reported `packageVersion:"0.3.2-rc.0"`; installed Evidence v2 list/add-command exact resolution workflow passed; fresh init/docs passed; disposable lifecycle smoke reached `closed-valid`; temp folders were removed. | Evidence `ev:T-0338:59d881bdd12749f6a3a1ea87`; exact `npx` stale-shim behavior is an environment finding, not a package blocker. |
 | T-0330 Evidence v2 writer stabilization validation | Docker focused Evidence v2 writer stabilization suite passed 7 files / 70 tests; Docker full `npm run check` passed 119 files / 781 tests; `npm run build` passed and workspace `dist` was refreshed; built CLI explicit v2 metadata smoke recorded `category: decision`, `outcome: recorded`, and exact resolution tags. | Host focused validation was blocked by missing `vitest` in host `node_modules`; Docker validation is the baseline. |
 | T-0329 post-rc1 docs cleanup validation | Focused docs checks confirmed `docs/AGENT_HANDOFF.md` includes T-0329/T-0328/T-0327 in `Last 3 Completed Tasks`, `docs/RELEASE_NOTES.md` uses completed T-0326/T-0327/T-0328 boundary wording for `0.3.1-rc.1`, and `git diff --check` passed. | Docs-only cleanup; no runtime/source behavior changed. |
 | T-0328 rc1 installed-package recycle | Registry/dist-tags, exact npx, temp-prefix installed bin, 71-entry command registry, broad CLI command-family matrix, source release dry-runs, MCP initialize, TUI snapshot, run scaffold/run, disposable lifecycle surfaces, and temporary folder cleanup passed in the `hadara-dev` container. | Published-package validation layer for `0.3.1-rc.1`; richer machine-readable recycle artifacts remain future evidence-quality work. |
