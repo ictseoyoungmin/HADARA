@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { appendEvidence } from '../../src/evidence/evidence';
+import { appendEvidence, appendEvidenceWithResult } from '../../src/evidence/evidence';
 import { createEvidenceLintReport } from '../../src/services/evidence-lint';
 import { createTaskProtocolConsistencyReport } from '../../src/services/protocol-consistency';
 import { createTaskCapsule } from '../../src/task/task-capsule';
@@ -177,11 +177,11 @@ describe('evidence lint', () => {
     );
   });
 
-  it('accepts later passed same-category evidence as failed evidence resolution', () => {
+  it('accepts exact v2 resolution markers for failed evidence resolution', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Evidence lint resolved failed done');
     markTaskDone(root, task.id, task.dir);
-    appendEvidence(root, {
+    const failed = appendEvidenceWithResult(root, {
       taskId: task.id,
       kind: 'test-log',
       summary: 'Focused vitest failed.',
@@ -193,7 +193,8 @@ describe('evidence lint', () => {
       kind: 'test-log',
       summary: 'Focused vitest rerun passed.',
       result: 'passed',
-      visibility: 'public'
+      visibility: 'public',
+      tags: failed.evidence.schemaVersion === 'hadara.evidence.v2' ? [`resolves:${failed.evidence.id}`] : []
     });
 
     const report = createEvidenceLintReport(root, task.id);

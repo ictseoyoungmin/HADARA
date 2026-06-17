@@ -225,7 +225,7 @@ describe('init profiles', () => {
     expect(workflow).toContain('Do not defer all documentation until after implementation.');
     expect(workflow).toContain('Parallelize read-only discovery, `rg`/file inspection, independent validation commands');
     expect(workflow).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes');
-    expect(workflow).toContain('hadara evidence add-command --task T-XXXX --summary "..." --result passed --idempotency-key "command:T-XXXX:check" --json');
+    expect(workflow).toContain('hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json');
     expect(workflow).toContain('`task finish`, `task ready`, and `task close` are intentionally separate.');
     expect(workflow).toContain("matching `docs/TASK_BOARD.md` row's command-owned cells");
     expect(workflow).toContain('human/mixed-owned `Notes` and any extra cells');

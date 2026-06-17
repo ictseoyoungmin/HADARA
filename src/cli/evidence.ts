@@ -1,4 +1,11 @@
-import { appendEvidenceWithResult, EvidenceRecord, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
+import {
+  appendEvidenceWithResult,
+  EvidenceCategory,
+  EvidenceOutcome,
+  EvidenceRecord,
+  persistedEvidenceKind,
+  persistedEvidenceResult
+} from '../evidence/evidence';
 import { createEvidenceCollectReport } from './evidence-json';
 import { createEvidenceLintReport } from '../services/evidence-lint';
 import { createEvidenceListReport } from '../services/evidence-list';
@@ -74,9 +81,12 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
   if (sub === 'add-command') {
     const taskId = getRequiredStringOption(input.args, '--task');
     const summary = getStringOption(input.args, '--summary') ?? 'Command completed.';
-    const result = parseEvidenceResult(getStringOption(input.args, '--result', 'unknown') ?? 'unknown');
+    const outcome = parseOptionalEvidenceOutcome(getStringOption(input.args, '--outcome'));
+    const result = parseEvidenceResult(getStringOption(input.args, '--result', outcomeToLegacyResult(outcome)) ?? 'unknown');
     const visibility = parseEvidenceVisibility(getStringOption(input.args, '--visibility', 'public') ?? 'public', getFlag(input.args, '--private'));
     const idempotencyKey = getStringOption(input.args, '--idempotency-key');
+    const category = parseOptionalEvidenceCategory(getStringOption(input.args, '--category'));
+    const tags = resolutionTagsFromArgs(input.args);
     if (input.jsonOutput) {
       const report = createEvidenceCollectReport(input.projectRoot, {
         taskId,
@@ -84,12 +94,15 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
         summary,
         result,
         visibility,
+        category,
+        outcome,
+        tags,
         idempotencyKey
       });
       console.log(JSON.stringify({ ...report, command: 'evidence.add-command' }, null, 2));
       if (!report.ok) process.exitCode = 6;
     } else {
-      const appendResult = appendEvidenceWithResult(input.projectRoot, { taskId, kind: 'command-log', summary, result, visibility, idempotencyKey });
+      const appendResult = appendEvidenceWithResult(input.projectRoot, { taskId, kind: 'command-log', summary, result, visibility, category, outcome, tags, idempotencyKey });
       if (appendResult.existing) {
         console.log(`[HADARA] Command evidence already exists: ${persistedEvidenceId(appendResult.evidence)}`);
       } else {
@@ -155,4 +168,49 @@ export function parseEvidenceVisibility(value: string, privateFlag = false): Non
   if (privateFlag) return 'private';
   if (value === 'public' || value === 'private') return value;
   throw new Error(`unsupported evidence visibility: ${value}`);
+}
+
+export function parseEvidenceCategory(value: string): EvidenceCategory {
+  if (['validation', 'implementation', 'release', 'security', 'policy', 'operation', 'decision', 'handoff', 'audit', 'note', 'observation'].includes(value)) {
+    return value as EvidenceCategory;
+  }
+  throw new Error(`unsupported evidence category: ${value}`);
+}
+
+export function parseEvidenceOutcome(value: string): EvidenceOutcome {
+  if (value === 'passed' || value === 'failed' || value === 'blocked' || value === 'unknown' || value === 'recorded' || value === 'not-applicable') {
+    return value;
+  }
+  throw new Error(`unsupported evidence outcome: ${value}`);
+}
+
+function parseOptionalEvidenceCategory(value: string | undefined): EvidenceCategory | undefined {
+  return value ? parseEvidenceCategory(value) : undefined;
+}
+
+function parseOptionalEvidenceOutcome(value: string | undefined): EvidenceOutcome | undefined {
+  return value ? parseEvidenceOutcome(value) : undefined;
+}
+
+function outcomeToLegacyResult(outcome: EvidenceOutcome | undefined): EvidenceRecord['result'] {
+  if (outcome === 'passed' || outcome === 'failed' || outcome === 'blocked' || outcome === 'unknown') return outcome;
+  return 'unknown';
+}
+
+function resolutionTagsFromArgs(args: string[]): string[] | undefined {
+  const tags: string[] = [];
+  for (const id of getRepeatedStringOptions(args, '--resolves')) tags.push(`resolves:${id}`);
+  for (const id of getRepeatedStringOptions(args, '--supersedes')) tags.push(`supersedes:${id}`);
+  return tags.length > 0 ? tags : undefined;
+}
+
+function getRepeatedStringOptions(args: string[], option: string): string[] {
+  const values: string[] = [];
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] !== option) continue;
+    const value = args[index + 1];
+    if (!value || value.startsWith('--')) throw new Error(`missing value for ${option}`);
+    values.push(value);
+  }
+  return values;
 }

@@ -330,3 +330,4 @@
 | T-0327 | 0.3.1-rc.1 Approval-Gated Publish | Done | tasks/T-0327-0-3-1-rc-1-approval-gated-publish | npm publish, registry/tarball verification, and dist-tag correction passed; close workflow pending. |
 | T-0328 | 0.3.1-rc.1 Post-Publish Installed-Package Recycle | Done | tasks/T-0328-0-3-1-rc-1-post-publish-installed-package-recycle | Installed-package recycle passed; close workflow pending. |
 | T-0329 | Post rc1 state docs cleanup | Done | tasks/T-0329-post-rc1-state-docs-cleanup | |
+| T-0330 | Phase 9 Evidence v2 Writer Stabilization | Done | tasks/T-0330-phase-9-evidence-v2-writer-stabilization | |

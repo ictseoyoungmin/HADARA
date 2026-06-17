@@ -15,6 +15,8 @@ export interface EvidenceRecord {
   summary: string;
   result: 'passed' | 'failed' | 'blocked' | 'unknown';
   visibility?: 'public' | 'private';
+  category?: EvidenceCategory;
+  outcome?: EvidenceOutcome;
   tags?: string[];
   idempotencyKey?: string;
   actor?: HadaraActorContext;
@@ -334,6 +336,8 @@ function appendEvidenceRecord(input: {
       kind: input.record.kind,
       summary,
       result: input.record.result,
+      category: input.record.category,
+      outcome: input.record.outcome,
       visibility: input.visibility,
       attachedPath,
       tags: input.record.tags,
@@ -369,6 +373,8 @@ function createEvidenceV2Record(input: {
   kind: EvidenceRecord['kind'];
   summary: string;
   result: EvidenceRecord['result'];
+  category?: EvidenceCategory;
+  outcome?: EvidenceOutcome;
   visibility: NonNullable<EvidenceRecord['visibility']>;
   attachedPath?: string;
   tags?: string[];
@@ -385,8 +391,8 @@ function createEvidenceV2Record(input: {
     schemaVersion: 'hadara.evidence.v2' as const,
     time: input.time,
     taskId: input.taskId,
-    category: deriveEvidenceCategory(input.kind, input.summary),
-    outcome: normalizeEvidenceOutcome(input.result),
+    category: input.category ?? deriveEvidenceCategory(input.kind, input.summary),
+    outcome: input.outcome ?? normalizeEvidenceOutcome(input.result),
     visibility: input.visibility,
     summary: input.summary,
     artifacts:

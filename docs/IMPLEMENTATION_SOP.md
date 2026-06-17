@@ -171,7 +171,7 @@ hadara task status --task T-XXXX --json
 
 # Do the scoped work.
 
-hadara evidence add-command --task T-XXXX --summary "..." --result passed --idempotency-key "command:T-XXXX:check" --json
+hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
 
 hadara task finish --task T-XXXX --json
 hadara task finish --task T-XXXX --execute --json
@@ -193,7 +193,7 @@ hadara task audit-close --task T-XXXX --json
 |---|---|---|
 | `task next` | Read-only | Recommends work; does not create tasks. |
 | `task status` | Read-only | `ok` means report generation succeeded; readiness is in `state.ready`, `summary.blockers`, and `issues`. |
-| `evidence add-command` | Write | Appends command-log evidence; does not execute shell commands; optional `--idempotency-key` prevents duplicate same-key records. |
+| `evidence add-command` | Write | Appends command-log evidence; does not execute shell commands; optional `--category`/`--outcome`/`--resolves`/`--supersedes` enrich v2 metadata, and optional `--idempotency-key` prevents duplicate same-key records. |
 | `task ready` | Read-only | Checks readiness; does not mutate evidence or status docs. |
 | `task finish` | Dry-run by default; writes only with `--execute` | Bounded to `TASK.md` and `docs/TASK_BOARD.md`. |
 | `task close` | Dry-run by default; writes only with `--execute` | Bounded to close evidence append. |
@@ -296,7 +296,7 @@ Then run built-CLI smokes through `node /workspace/dist/cli/main.js ... --projec
 1. Do not hand-edit Task Capsule `evidence.jsonl`.
 2. Append evidence through HADARA evidence commands or command-specific evidence attachment helpers so kind, result, visibility, artifact policy, and redaction checks run consistently.
 3. Treat close validation output as close audit evidence, not as a prerequisite for the same validation run.
-4. Use `hadara evidence add-command --task <task-id> --summary <text> --result passed|failed|blocked|unknown --json` for harness, doctor, build, test, and CLI smoke command results when no artifact file is being attached. Add `--idempotency-key <key>` when rerunning the same logical check should update/report one durable evidence identity instead of appending duplicates.
+4. Use `hadara evidence add-command --task <task-id> --summary <text> --result passed|failed|blocked|unknown --json` for harness, doctor, build, test, and CLI smoke command results when no artifact file is being attached. Add `--category <category>` or `--outcome <outcome>` when summary heuristics are not precise enough, `--resolves <evidence-id>` or `--supersedes <evidence-id>` for exact v2 resolution markers, and `--idempotency-key <key>` when rerunning the same logical check should update/report one durable evidence identity instead of appending duplicates.
 5. Use `hadara evidence lint --task <task-id> --json` or task-scoped protocol doctor before close when evidence drift is suspected.
 6. Treat Evidence v2 migration as selected-task maintenance, not a default broad migration. Run `hadara evidence migrate --task <id> --to v2 --json`, review `beforeHash`, then execute only for that task with `--before-hash <hash>` when migration is explicitly needed.
 7. Persisted v2 evidence ids live in `evidence.jsonl` and read models; the current `EVIDENCE.md` table remains a human summary and does not show durable v2 ids.

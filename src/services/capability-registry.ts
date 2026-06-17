@@ -623,7 +623,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   },
   {
     id: 'evidence.add-command',
-    command: 'hadara evidence add-command --task <task-id> --summary <text> [--result <result>] [--idempotency-key <key>] [--json]',
+    command: 'hadara evidence add-command --task <task-id> --summary <text> [--result <result>] [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] [--json]',
     summary: 'Append command-log evidence to a Task Capsule.',
     canonical: true,
     appearsInDefaultHelp: true,
@@ -638,7 +638,9 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     schemaVersion: 'hadara.evidence.collect.v1',
     docs: ['docs/IMPLEMENTATION_SOP.md'],
-    examples: [example('Record command evidence', 'hadara evidence add-command --task T-0001 --summary "npm test passed" --result passed --json', 'After meaningful validation.')],
+    examples: [
+      example('Record command evidence', 'hadara evidence add-command --task T-0001 --summary "npm test passed" --result passed --category validation --json', 'After meaningful validation.')
+    ],
     related: ['evidence.list', 'evidence.lint', 'task.ready'],
     conflictsWith: []
   },

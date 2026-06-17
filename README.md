@@ -128,7 +128,7 @@ The primary path is intentionally small:
 hadara task next --json
 hadara task create "implement a focused change" --json
 hadara task status --task T-XXXX --json
-hadara evidence add-command --task T-XXXX --summary "..." --result passed --idempotency-key "command:T-XXXX:check" --json
+hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
 hadara task finish --task T-XXXX --json
 hadara task finish --task T-XXXX --execute --json
 # Finalize Task Capsule docs and tracked state docs before closing.

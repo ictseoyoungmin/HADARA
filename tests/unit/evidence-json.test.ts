@@ -123,6 +123,59 @@ describe('CLI evidence JSON reports', () => {
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('"schemaVersion":"hadara.evidence.v2"');
   });
 
+  it('adds command evidence with explicit v2 category, outcome, and resolution tags', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Add explicit v2 evidence metadata');
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+
+    try {
+      expect(
+        handleEvidenceCommand({
+          args: [
+            'evidence',
+            'add-command',
+            '--task',
+            task.id,
+            '--summary',
+            'Recorded follow-up decision',
+            '--outcome',
+            'recorded',
+            '--category',
+            'decision',
+            '--resolves',
+            `ev:${task.id}:aaaaaaaaaaaaaaaaaaaaaaaa`,
+            '--supersedes',
+            `ev:${task.id}:bbbbbbbbbbbbbbbbbbbbbbbb`,
+            '--json'
+          ],
+          projectRoot: root,
+          jsonOutput: true
+        })
+      ).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    const report = JSON.parse(output.join('\n'));
+    expect(report.evidence).toMatchObject({
+      schemaVersion: 'hadara.evidence.v2',
+      category: 'decision',
+      outcome: 'recorded',
+      legacy: { kind: 'command-log', result: 'unknown' },
+      tags: [`resolves:ev:${task.id}:aaaaaaaaaaaaaaaaaaaaaaaa`, `supersedes:ev:${task.id}:bbbbbbbbbbbbbbbbbbbbbbbb`]
+    });
+    const persisted = JSON.parse(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8').trim());
+    expect(persisted).toMatchObject({
+      category: 'decision',
+      outcome: 'recorded',
+      tags: [`resolves:ev:${task.id}:aaaaaaaaaaaaaaaaaaaaaaaa`, `supersedes:ev:${task.id}:bbbbbbbbbbbbbbbbbbbbbbbb`]
+    });
+  });
+
   it('deduplicates add-command evidence when an explicit idempotency key is reused', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Idempotent command evidence');

@@ -131,8 +131,8 @@ export function findUnresolvedFailedEvidence(
   return records.filter((record, index) => {
     if (record.outcome !== 'failed') return false;
     const laterRecords = records.slice(index + 1);
-    if (laterRecords.some((candidate) => candidate.outcome === 'passed' && candidate.category === record.category)) return false;
     if (laterRecords.some((candidate) => hasExactResolutionMarker(candidate, record.id))) return false;
+    if (usesLegacySameCategoryFallback(record, laterRecords)) return false;
     if (hasResidualRiskDocumentation(record, taskDocs)) return false;
     return true;
   });
@@ -190,7 +190,7 @@ export function analyzeTaskEvidenceSemantics(input: AnalyzeTaskEvidenceSemantics
       message: 'Task has unresolved failed evidence while marked Done.',
       evidenceId: record.id,
       path: `${input.taskDir}/evidence.jsonl`,
-      expected: `later passed same-category evidence, supersedes:${record.id}, resolves:${record.id}, or explicit residual-risk documentation`,
+      expected: `supersedes:${record.id}, resolves:${record.id}, legacy same-category passed evidence, or explicit residual-risk documentation`,
       actual: 'failed evidence has no resolution signal'
     });
   }
@@ -258,6 +258,16 @@ function isRecordOnlyCategory(category: EvidenceCategory): boolean {
 
 function hasExactResolutionMarker(record: NormalizedEvidenceRecord, evidenceId: string): boolean {
   return record.tags.includes(`supersedes:${evidenceId}`) || record.tags.includes(`resolves:${evidenceId}`);
+}
+
+function usesLegacySameCategoryFallback(record: NormalizedEvidenceRecord, laterRecords: NormalizedEvidenceRecord[]): boolean {
+  if (record.persistedSchemaVersion !== 'hadara.evidence.v1') return false;
+  return laterRecords.some(
+    (candidate) =>
+      candidate.persistedSchemaVersion === 'hadara.evidence.v1' &&
+      candidate.outcome === 'passed' &&
+      candidate.category === record.category
+  );
 }
 
 function hasResidualRiskDocumentation(

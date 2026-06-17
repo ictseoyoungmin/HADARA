@@ -10,6 +10,9 @@ export interface EvidenceCollectInput {
   summary: string;
   result: EvidenceRecord['result'];
   visibility: NonNullable<EvidenceRecord['visibility']>;
+  category?: EvidenceRecord['category'];
+  outcome?: EvidenceRecord['outcome'];
+  tags?: string[];
   idempotencyKey?: string;
 }
 
@@ -56,6 +59,9 @@ export function createEvidenceCollectReport(projectRoot: string, input: Evidence
       summary: input.summary,
       result: input.result,
       visibility: input.visibility,
+      category: input.category,
+      outcome: input.outcome,
+      tags: input.tags,
       idempotencyKey: input.idempotencyKey
     });
   } catch (error) {

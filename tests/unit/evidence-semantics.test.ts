@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EvidenceIndexRecord } from '../../src/evidence/evidence';
+import { EvidenceIndexRecord, EvidenceV2IndexRecord } from '../../src/evidence/evidence';
 import { normalizeEvidenceRecord } from '../../src/evidence/normalizer';
 import {
   analyzeTaskEvidenceSemantics,
@@ -20,6 +20,26 @@ function v1(overrides: Partial<EvidenceIndexRecord> = {}): EvidenceIndexRecord {
     summary: 'npm run check passed',
     result: 'passed',
     visibility: 'public',
+    ...overrides
+  };
+}
+
+function v2(overrides: Partial<EvidenceV2IndexRecord> = {}): EvidenceV2IndexRecord {
+  return {
+    schemaVersion: 'hadara.evidence.v2',
+    id: 'ev:T-0001:aaaaaaaaaaaaaaaaaaaaaaaa',
+    fingerprint: 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    idSource: 'persisted',
+    idStability: 'durable',
+    time: '2026-06-01T00:00:00.000Z',
+    taskId: 'T-0001',
+    category: 'validation',
+    outcome: 'passed',
+    visibility: 'public',
+    summary: 'npm run check passed',
+    artifacts: [],
+    tags: [],
+    legacy: { kind: 'command-log', result: 'passed' },
     ...overrides
   };
 }
@@ -101,6 +121,34 @@ describe('evidence semantics', () => {
         normalizeEvidenceRecord(v1({ kind: 'test-log', result: 'passed', summary: 'vitest rerun passed' }), { lineNumber: 4 })
       ])
     ).toEqual([]);
+  });
+
+  it('keeps same-category resolution fallback legacy-only for persisted v2 evidence', () => {
+    const failedV2 = normalizeEvidenceRecord(
+      v2({
+        id: 'ev:T-0001:failedfailedfailedfailed',
+        outcome: 'failed',
+        summary: 'vitest failed',
+        legacy: { kind: 'command-log', result: 'failed' }
+      }),
+      { lineNumber: 1 }
+    );
+    const laterPassedV2 = normalizeEvidenceRecord(
+      v2({
+        id: 'ev:T-0001:passedpassedpassedpassed',
+        outcome: 'passed',
+        summary: 'vitest passed',
+        legacy: { kind: 'command-log', result: 'passed' }
+      }),
+      { lineNumber: 2 }
+    );
+    const exactMarkerV2 = {
+      ...laterPassedV2,
+      tags: [`resolves:${failedV2.id}`]
+    };
+
+    expect(findUnresolvedFailedEvidence([failedV2, laterPassedV2]).map((record) => record.id)).toEqual([failedV2.id]);
+    expect(findUnresolvedFailedEvidence([failedV2, exactMarkerV2])).toEqual([]);
   });
 
   it('reports unresolved failed evidence for Done tasks', () => {
