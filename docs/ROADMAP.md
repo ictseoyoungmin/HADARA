@@ -64,6 +64,8 @@ The previous core evidence/release readiness emphasis has been completed through
 
 Stable `hadara@0.3.0` is published and consumer-recycled. The next roadmap emphasis is Phase 8 / `0.3.1` state governance: canonical status token policy, document ownership/write-boundary governance, task handoff close-state clarity, installed-package findings cleanup, read-only state consistency projection, and advisory verification gates. The program is staged under `docs/specs/0.3.1/`; the first rc1 implementation sequence is staged under `docs/specs/0.3.1/rc1/`.
 
+Future documentation-routing refactor: define a lifecycle for Required Reading spec registration so completed implementation specs can move out of active routing and into historical/reference discovery without being deleted. The follow-up is recorded in `docs/REQUIRED_READING_LIFECYCLE_FOLLOWUP.md` and should be handled as a separate phase, not as a detour before the next `0.3.2` Evidence v2 task.
+
 ## v0.4 Single-Agent Run State
 
 Track the active task/run explicitly so agents do not infer current work only from the last visible capsule or compact handoff.

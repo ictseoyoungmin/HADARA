@@ -67,6 +67,15 @@ Use semantic tiers to keep session startup compact and deterministic:
 | `docs/specs/agent-ux/HADARA_Phase6_1_Reviewer_Feedback_Hardening_Spec.md` | Phase 6.1 reviewer-feedback hardening, actor CLI metadata, dev docker-check dist sync guards, close idempotency race hardening, task create collision handling, or handoff suggestion polish | Follow-up hardening plan for Phase 6 reviewer feedback without adding a full multi-agent runtime or hidden write orchestration. |
 | `docs/specs/0.3.1/00_HADARA_0_3_1_Phase_8_State_Governance_Program.md` | Phase 8 status governance, document ownership, task handoff close-state, installed-package findings, or state consistency projection work | Program plan for the 0.3.1 Phase 8 state governance line |
 | `docs/specs/0.3.1/rc1/00_HADARA_0_3_1_rc1_Status_Governance_Implementation_Plan.md` | Implementing the first 0.3.1 rc1 status governance, handoff close-state, installed-package findings cleanup, or state projection capsules | Capsule sequence and worker guidance for the first 0.3.1 rc1 status governance implementation line |
+| `docs/specs/0.3.2/02_Worker_Agent_Instructions.md` | Starting any 0.3.2 Evidence v2 refactor capsule | Compact read-routing and non-negotiable boundaries for the 0.3.2 Evidence v2 refactor line |
+| `docs/specs/0.3.2/00_Evidence_v2_Refactor_Release_Design.md` | Implementing or reviewing 0.3.2 Evidence v2 refactor behavior, docs, readiness, publish, or recycle work | Release-line design, scope boundaries, evidence id safety rules, and T-0333 through T-0339 sequence |
+| `docs/specs/0.3.2/capsules/T-0333_Evidence_v2_ID_Visibility_and_List_UX.md` | Implementing T-0333 Evidence v2 ID visibility/list UX | Capsule-specific scope, acceptance, and validation for making `evidence list` the supported id discovery surface |
+| `docs/specs/0.3.2/capsules/T-0334_Evidence_Rebuild_Boundary_Design_Only.md` | Implementing T-0334 rebuild boundary design-only docs | Capsule-specific boundary for documenting rebuild deferral without preview/execute implementation |
+| `docs/specs/0.3.2/capsules/T-0335_Evidence_v2_Docs_Consolidation.md` | Implementing T-0335 Evidence v2 docs consolidation | Capsule-specific scope for root/generated/CLI documentation consolidation after T-0333/T-0334 |
+| `docs/specs/0.3.2/capsules/T-0336_0_3_2_rc0_Release_Readiness_Preparation.md` | Preparing 0.3.2-rc.0 source/readiness without publish mutation | Capsule-specific release readiness scope and validation commands for rc0 preparation |
+| `docs/specs/0.3.2/capsules/T-0337_0_3_2_rc0_Approval_Gated_Publish.md` | Performing approval-gated npm publish for 0.3.2-rc.0 | Capsule-specific publish prerequisites, boundaries, and acceptance |
+| `docs/specs/0.3.2/capsules/T-0338_0_3_2_rc0_Post_Publish_Installed_Package_Recycle.md` | Verifying published 0.3.2-rc.0 from installed-package consumer paths | Capsule-specific installed-package recycle checks and acceptance |
+| `docs/specs/0.3.2/capsules/T-0339_Stable_0_3_2_Decision.md` | Deciding stable 0.3.2 publish, rc1, or deferral after rc0 recycle | Capsule-specific decision inputs and acceptance |
 
 ## Project-Specific Documents
 
@@ -167,7 +176,6 @@ hadara task status --task T-XXXX --json
 
 # If no matching capsule exists, create one first:
 hadara task create "task title" --json
-hadara task status --task T-XXXX --json
 
 # Do the scoped work.
 
