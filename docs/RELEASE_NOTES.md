@@ -16,9 +16,9 @@ Highlights:
 
 Boundaries:
 
-- T-0326 prepares `hadara@0.3.1-rc.1` source metadata, release docs, and release readiness evidence only.
-- npm publish belongs to the approval-gated T-0327 capsule after operator authentication and explicit confirmation.
-- Post-publish installed-package recycle belongs to T-0328 after `hadara@0.3.1-rc.1` is visible on npm.
+- T-0326 prepared `hadara@0.3.1-rc.1` source metadata, release docs, and release readiness evidence without publish mutation.
+- T-0327 published `hadara@0.3.1-rc.1` through the approval-gated helper and corrected npm dist-tags so stable `0.3.0` remains `latest` while rc1 is available as `next`.
+- T-0328 verified the published package through installed-package recycle, including registry/dist-tags, exact npx, temp-prefix installed bin, command registry, broad CLI command-family, release dry-run, MCP, TUI, run scaffold, lifecycle, and cleanup surfaces.
 - GitHub Release creation remains optional; Docker image publishing, PyPI publishing, installer execution, MCP release/package execution, and token loading remain deferred unless a future capsule explicitly enables them.
 
 ## 0.3.0
