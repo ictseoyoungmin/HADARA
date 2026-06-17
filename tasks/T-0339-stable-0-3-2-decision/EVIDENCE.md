@@ -1,0 +1,8 @@
+# Evidence
+
+| Time | Kind | Summary | Result | Visibility | JSONL |
+|---|---|---|---|---|---|
+| 2026-06-17T11:56:33.470Z | command-log | Release readiness wording cleanup passed: docs/RELEASE_READINESS.md now states hadara@0.3.2-rc.0 is published with next through T-0337 and installed-package recycle is complete through T-0338; git diff --check passed and targeted rg found no active-in-T-0338 wording. | passed | public | evidence.jsonl |
+| 2026-06-17T12:12:08.868Z | command-log | HADARA dogfooding completed in temporary docker-compose backend/frontend project /tmp/hadara-dogfood-asteroid-ops: governed init, task create, evidence add/list, finish, ready, close, and audit-close passed; T-0001 reached closed-valid; compose config, backend/frontend syntax checks, and approved local backend runtime smoke passed; structured findings recorded in FINDINGS.md. | passed | public | evidence.jsonl |
+| 2026-06-17T12:39:14.726Z | command-log | Stable 0.3.2 publish decision recorded: T-0339 selected stable publish based on T-0336 readiness, T-0337 publish verification, T-0338 installed-package recycle, and T-0339 dogfooding findings; T-0340 Stable 0.3.2 Approval-Gated Publish capsule was created for the actual approval-gated publish flow. | passed | public | evidence.jsonl |
+| 2026-06-17T12:42:09.382Z | command-log | Task close validation for T-0339 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:9895debb2b6ceb7658f4a755dcd30d062d1d102325f6560a7508881e8ac71fbb. | passed | public | evidence.jsonl |

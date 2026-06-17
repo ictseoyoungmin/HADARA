@@ -339,3 +339,5 @@
 | T-0336 | 0.3.2-rc.0 Release Readiness Preparation | Done | tasks/T-0336-0-3-2-rc-0-release-readiness-preparation | |
 | T-0337 | 0.3.2-rc.0 Approval-Gated Publish | Done | tasks/T-0337-0-3-2-rc-0-approval-gated-publish | Published `hadara@0.3.2-rc.0` to npm with `next`; verified `latest=0.3.0`, `next=0.3.2-rc.0`, README/tarball metadata; no GitHub Release draft. |
 | T-0338 | 0.3.2-rc.0 Post-Publish Installed-Package Recycle | Done | tasks/T-0338-0-3-2-rc-0-post-publish-installed-package-recycle | Installed-package recycle passed from temp-prefix bin; exact `npx` resolved stale local shim and is recorded as environment finding. |
+| T-0339 | Stable 0.3.2 Decision | Done | tasks/T-0339-stable-0-3-2-decision | Stable `0.3.2` publish selected; T-0340 created for approval-gated publish. |
+| T-0340 | Stable 0.3.2 Approval-Gated Publish | Draft | tasks/T-0340-stable-0-3-2-approval-gated-publish | Publish mutation remains approval-gated; no npm publish executed yet. |
