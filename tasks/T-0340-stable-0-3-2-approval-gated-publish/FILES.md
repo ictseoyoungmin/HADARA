@@ -10,4 +10,4 @@
 | `tasks/T-0340-stable-0-3-2-approval-gated-publish/RELEASE_NOTE.md` | Add | Capsule-local stable release note for npm/GitHub release text parity with T-0337. | Done |
 | `tests/unit/init.test.ts` | Update | Keep README entry-surface test aligned with stable `0.3.2` package-facing text. | Done |
 | `dist/` | Update | Docker sync-build refreshed built CLI for source version `0.3.2`. | Done |
-| `tasks/T-0340-stable-0-3-2-approval-gated-publish/*` | Update | Maintain capsule plan, decisions, risks, acceptance, tests, evidence, and handoff. | In Progress |
+| `tasks/T-0340-stable-0-3-2-approval-gated-publish/*` | Update | Maintain capsule plan, decisions, risks, acceptance, tests, evidence, and handoff. | Done |

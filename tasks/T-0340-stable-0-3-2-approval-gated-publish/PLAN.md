@@ -5,6 +5,6 @@
 | 1 | Read T-0339 decision, release readiness, release notes, and publish helper docs. | Done | Session read; T-0339 D-2; `docs/RELEASE_READINESS.md`; `docs/RELEASE_NOTES.md`; `scripts/release/manual-publish-rc.sh`. |
 | 2 | Prepare stable `0.3.2` source/readiness updates if required. | Done | `package.json`; `package-lock.json`; `README.md`; `docs/RELEASE_NOTES.md`; `docs/RELEASE_READINESS.md`. |
 | 3 | Run release validation and publish dry-run. | Done | Docker check passed `ev:T-0340:f46635f835ed42389a0ce9c6`; package smoke and clean-checkout smoke passed after environment retries; npm registry pre-publish check passed `ev:T-0340:c623c949e1d94c89bd87529c`; strict gate passed `ev:T-0340:d364684c5ab6459498683f5c`; post-commit release artifact/release dry-run/publish dry-run/npm tarball dry-run passed `ev:T-0340:06a838ce79be45d4978a2dfd`. |
-| 4 | Execute approval-gated npm publish only with explicit operator approval/authentication. | Blocked | Requires explicit operator approval/authentication and npm token availability; no publish mutation executed. |
-| 5 | Verify registry visibility/dist-tags and attach evidence. | Pending | Requires publish execute. |
-| 6 | Update shared state docs and handoff. | In Progress | Shared docs updated to reflect publish-approval blocker. |
+| 4 | Execute approval-gated npm publish only with explicit operator approval/authentication. | Done | npm publish completed after operator authentication/approval; evidence `ev:T-0340:8e7dc68139594113a63ade0f`. |
+| 5 | Verify registry visibility/dist-tags and attach evidence. | Done | `npm view hadara@0.3.2 version` returned `0.3.2`; dist-tags verified `latest=0.3.2` and `next=0.3.2-rc.0`; evidence `ev:T-0340:8e7dc68139594113a63ade0f`. |
+| 6 | Update shared state docs and handoff. | Done | Shared docs updated for stable publish completion. |

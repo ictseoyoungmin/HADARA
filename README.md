@@ -35,7 +35,7 @@ hadara@0.3.2-rc.0
 
 The 0.3.2 line is the Evidence v2 refactor release. It hardens evidence writer metadata, exact resolution markers, durable evidence id discovery, canonical/derived evidence boundaries, and release-facing docs after the 0.3.1 post-publish recycle.
 
-Phase labels are internal implementation phases, not npm release-candidate labels. The stable `0.3.2` source is prepared for approval-gated npm publish; the `0.3.2-rc.0` package remains the prior release-candidate evaluation build until stable publish is executed.
+Phase labels are internal implementation phases, not npm release-candidate labels. The stable `0.3.2` package is the default install target; the `0.3.2-rc.0` package remains the prior release-candidate evaluation build on the `next` dist-tag.
 
 | Surface | Status |
 |---|---|

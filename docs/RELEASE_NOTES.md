@@ -15,7 +15,7 @@ Highlights:
 
 Boundaries:
 
-- Stable npm publish is approval-gated in T-0340 and must use `latest` only after explicit operator confirmation.
+- T-0340 published stable `hadara@0.3.2` to npm with `latest`; `next` remains on `0.3.2-rc.0`.
 - Rebuild preview/execute, `check-id`, `subject`, and a new add-command report schema id remain deferred candidate scope.
 - Broad historical migration, shell execution through evidence commands, and non-npm release mutations remain outside this release.
 
