@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 writer stabilization completed through T-0332, and Evidence v2 docs are consolidated through T-0335. |
-| Current Phase | 0.3.2 Evidence v2 refactor in progress | T-0335 aligned README, CLI JSON contract, workflow docs, generated init docs, command registry metadata, release notes, and release readiness around durable ids, legacy id caution, exact markers, canonical/derived evidence boundary, and deferred scope. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0335 Evidence v2 Docs Consolidation | Consolidated Evidence v2 docs after T-0333/T-0334, including release notes/readiness narrative and deferred scope for rebuild/check-id/subject/add-command report schema v2. |
-| Active / Next Task | T-0336 0.3.2-rc.0 Release Readiness Preparation | Continue with `docs/specs/0.3.2/capsules/T-0336_0_3_2_rc0_Release_Readiness_Preparation.md`; prepare source/readiness for `hadara@0.3.2-rc.0` without publish mutation. |
-| Validation Baseline | T-0335 Docker full sync-build and diff check | T-0335 passed Docker full sync-build (119 files / 791 tests) with generated-doc/command-registry coverage and `distLooksStale:false`; `git diff --check` passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 writer/docs/readiness work completed through T-0336. |
+| Current Phase | 0.3.2 Evidence v2 refactor in progress | T-0336 prepared `hadara@0.3.2-rc.0` source/readiness without publish mutation after T-0333 through T-0335 Evidence v2 id/list/docs consolidation. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0336 0.3.2-rc.0 Release Readiness Preparation | Prepared source/package metadata and release docs for `hadara@0.3.2-rc.0`; release artifact, package smoke, clean-checkout smoke, strict gate, release dry-run, publish dry-run, Docker sync-build, and diff check passed without publish mutation. |
+| Active / Next Task | T-0337 0.3.2-rc.0 Approval-Gated Publish | Continue with `docs/specs/0.3.2/capsules/T-0337_0_3_2_rc0_Approval_Gated_Publish.md`; require clean worktree, npm auth, explicit confirmation, npm `next` tag verification, and no GitHub Release unless requested. |
+| Validation Baseline | T-0336 rc0 release readiness matrix | T-0336 passed Docker full sync-build (119 files / 791 tests, `distLooksStale:false`), release artifact, package smoke, clean-checkout smoke, strict gate, release dry-run, publish dry-run, and `git diff --check`; no publish/GitHub/Docker mutation occurred. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0336 | Next capsule has not been created yet; create/start it after closing T-0335. | Use `docs/specs/0.3.2/02_Worker_Agent_Instructions.md` plus `docs/specs/0.3.2/capsules/T-0336_0_3_2_rc0_Release_Readiness_Preparation.md`. |
+| T-0337 | Next capsule has not been created yet; create/start it after closing T-0336. | Use `docs/specs/0.3.2/02_Worker_Agent_Instructions.md` plus `docs/specs/0.3.2/capsules/T-0337_0_3_2_rc0_Approval_Gated_Publish.md`; do not run publish mutation without operator approval/auth. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0336 0.3.2-rc.0 Release Readiness Preparation | Prepared source/package metadata and release docs for `hadara@0.3.2-rc.0` without publish mutation. | Docker full sync-build passed 119 files / 791 tests and refreshed `dist`; release artifact, package smoke, clean-checkout smoke, strict gate, release dry-run, publish dry-run, and `git diff --check` passed. |
 | T-0335 Evidence v2 Docs Consolidation | Consolidated Evidence v2 package-facing, JSON contract, workflow, generated init, command registry, release note, and release readiness guidance around durable ids, exact markers, canonical evidence, non-canonical summaries, and deferred scope. | Docker full sync-build passed 119 files / 791 tests and refreshed `dist`; `git diff --check` passed. |
 | T-0334 Evidence Rebuild Boundary Design Only | Documented that 0.3.2 has no rebuild preview/execute command, `evidence.jsonl` is canonical, `EVIDENCE.md` is non-canonical, future `wouldChange` needs drift classes, and future rebuild execute must be dry-run-first and before-hash guarded. | Docker full sync-build passed 119 files / 791 tests and refreshed `dist`; `git diff --check` passed. |
-| T-0333 Evidence v2 ID Visibility and List UX | Made `evidence list` the supported durable id discovery surface, with text ids/category/outcome, additive JSON id stability fields, docs/generated guidance, and adjacency updates for task read/MCP/TUI. | Docker focused suite passed 5 files / 64 tests; targeted rerun passed 4 files / 46 tests; Docker full sync-build passed 119 files / 791 tests and refreshed `dist`; built text/JSON evidence-list smokes passed. |
 
 ## Current Known Problems
 
@@ -39,7 +39,7 @@
 | T-0255 close evidence is now stale after T-0256 Task Board changes. | `task audit-close --task T-0255 --json` remains `ok:true` but reports `closeEvidenceAudit.verdict: stale` because the close-relevant source hash includes `docs/TASK_BOARD.md` and T-0256 added a row. | This is expected changed-source behavior; use T-0256 supersedes metadata if re-closing T-0255 is ever required. |
 | Future release publish remains approval-gated/manual. | T-0275's rc.1 npm publish, T-0282's rc.2 npm publish, and the Python bridge rc.1 PyPI publish are complete; GitHub Release creation, Docker build/publish, and future npm/PyPI publish mutations remain explicit operator actions. | Use the approval-gated helper path; never run publish commands without operator confirmation. |
 | Current repo docs doctor still has pre-existing warning-only documentation cleanup items. | T-0321 removed the fresh governed historical Required Reading warning, but the current repo still has unregistered Required Reading warnings for older project-specific docs and an archive candidate for `docs/REFACTOR_LOG.md`. | Treat as warning-only; Phase 8.5 may surface clearer advisory routing without making historical docs cleanup a strict gate. |
-| Required Reading lacks a completed-spec lifecycle. | `docs/IMPLEMENTATION_SOP.md` has tier concepts, but no explicit rule for demoting completed implementation specs out of active routing once their phase is done. | Do not detour before T-0336; the future refactor note is recorded in `docs/REQUIRED_READING_LIFECYCLE_FOLLOWUP.md`. |
+| Required Reading lacks a completed-spec lifecycle. | `docs/IMPLEMENTATION_SOP.md` has tier concepts, but no explicit rule for demoting completed implementation specs out of active routing once their phase is done. | Do not detour before T-0337; the future refactor note is recorded in `docs/REQUIRED_READING_LIFECYCLE_FOLLOWUP.md`. |
 | README asset package rendering depends on the remote raw URL. | README uses a GitHub raw URL for `docs/assets/hadara_sub_right_name.png`; package `files` intentionally excludes `docs/assets/`. | T-0275 verified the asset is tracked and the raw URL returned HTTP 200; keep the asset available on the referenced branch. |
 | Python package smoke and release advisory are non-blocking preview surfaces. | T-0250 surfaces Python smoke evidence as `providerAdvisories` only. T-0249 makes network behavior explicit: default is environment-inherited, `--network-policy offline` is best-effort with `enforced:false`, and local execution still depends on Python packaging tools such as `build`, `twine`, and pip. Local HADARA release advisory code still does not load PyPI credentials or perform PyPI publish mutation. | Use dry-run first; treat Python local execution failures as environment/tooling failures, not publish readiness. Python advisory evidence must not be used to unblock or block the npm release gate. |
 | Python bridge package is published as a preview bridge. | `hadara==0.2.0rc1` is published on TestPyPI and PyPI, but it delegates to the npm runtime and is not Python-native. | Use `docs/PYPI_TRUSTED_PUBLISHING.md` for future manual publishes; run disposable install/doctor smoke when stronger registry verification evidence is needed. |
@@ -88,7 +88,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start T-0336 0.3.2-rc.0 Release Readiness Preparation. | 0.3.2 Evidence v2 Refactor specs are staged under the actual repository path `docs/specs/0.3.2/`, and the next planned capsule is T-0336. | `docs/specs/0.3.2/02_Worker_Agent_Instructions.md`; `docs/specs/0.3.2/00_Evidence_v2_Refactor_Release_Design.md`; `docs/specs/0.3.2/capsules/T-0336_0_3_2_rc0_Release_Readiness_Preparation.md` |
+| Start T-0337 0.3.2-rc.0 Approval-Gated Publish. | T-0336 prepared rc0 source/readiness without mutation; the next planned capsule owns the operator-approved npm publish. | `docs/specs/0.3.2/02_Worker_Agent_Instructions.md`; `docs/specs/0.3.2/00_Evidence_v2_Refactor_Release_Design.md`; `docs/specs/0.3.2/capsules/T-0337_0_3_2_rc0_Approval_Gated_Publish.md` |
 
 ## Validation Baseline
 

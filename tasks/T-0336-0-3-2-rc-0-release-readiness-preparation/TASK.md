@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0336 |
 | Title | 0.3.2-rc.0 Release Readiness Preparation |
-| Status | In Progress |
+| Status | Done |
 | Created | 2026-06-17 |
 | Updated | 2026-06-17 |
 
@@ -40,7 +40,7 @@
 
 ## Status
 
-In Progress
+Done
 
 ## Status History
 
@@ -49,4 +49,5 @@ In Progress
 |---|---|---|---|
 | 2026-06-17 | Draft | Initial task scaffold. | `task create` |
 | 2026-06-17 | In Progress | Started 0.3.2-rc.0 release readiness preparation. | Required reading and T-0336 capsule spec |
+| 2026-06-17 | Done | Finished task capsule. | `hadara task finish --execute` |
 <!-- hadara:managed:end task-status-history -->

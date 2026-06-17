@@ -336,4 +336,4 @@
 | T-0333 | Evidence v2 ID Visibility and List UX | Done | tasks/T-0333-evidence-v2-id-visibility-and-list-ux | |
 | T-0334 | Evidence Rebuild Boundary Design Only | Done | tasks/T-0334-evidence-rebuild-boundary-design-only | |
 | T-0335 | Evidence v2 Docs Consolidation | Done | tasks/T-0335-evidence-v2-docs-consolidation | |
-| T-0336 | 0.3.2-rc.0 Release Readiness Preparation | Draft | tasks/T-0336-0-3-2-rc-0-release-readiness-preparation | |
+| T-0336 | 0.3.2-rc.0 Release Readiness Preparation | Done | tasks/T-0336-0-3-2-rc-0-release-readiness-preparation | |
