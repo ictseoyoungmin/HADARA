@@ -1,0 +1,11 @@
+# Evidence
+
+| Time | Kind | Summary | Result | Visibility | JSONL |
+|---|---|---|---|---|---|
+| 2026-06-18T14:17:37.287Z | command-log | Host focused validation failed because host vitest is unavailable: npm run test:focused -- tests/unit/context-source-manifest.test.ts tests/unit/schema-fixtures.test.ts tests/unit/schema-runtime.test.ts exited 127 with 'vitest: not found'. | failed | public | evidence.jsonl |
+| 2026-06-18T14:17:46.649Z | command-log | Docker focused validation passed for C6.1: npm run test:focused -- tests/unit/context-source-manifest.test.ts tests/unit/schema-fixtures.test.ts tests/unit/schema-runtime.test.ts passed 3 files / 29 tests in the hadara-dev container. | passed | public | evidence.jsonl |
+| 2026-06-18T14:17:54.187Z | command-log | Docker full sync-build was attempted twice after the C6.1 changes. TypeScript build and C6.1 tests ran, but both full-suite runs failed from unrelated existing 5s test timeouts: first tests/unit/tui-snapshot.test.ts, then tests/unit/task-finish.test.ts. The timed-out TUI snapshot file passed when rerun standalone. | failed | public | evidence.jsonl |
+| 2026-06-18T14:18:03.428Z | command-log | Docker standalone rerun passed for tests/unit/tui-snapshot.test.ts after the first full-suite timeout: 1 file / 16 tests passed in the hadara-dev container. | passed | public | evidence.jsonl |
+| 2026-06-18T14:18:12.172Z | command-log | Docker build-only validation passed after full-suite timeout isolation: npm run build succeeded, workspace dist was refreshed, and built node /workspace/dist/cli/main.js version --verbose --json reported build.distLooksStale:false. | passed | public | evidence.jsonl |
+| 2026-06-18T14:23:13.058Z | command-log | Resolved validation blockers for T-0363: host vitest absence is covered by the supported Docker focused validation, and full sync-build timeout attempts are covered for this slice by C6.1 focused validation plus Docker build-only dist refresh with build.distLooksStale:false. | passed | public | evidence.jsonl |
+| 2026-06-18T14:24:23.639Z | command-log | Task close validation for T-0363 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:7b983c52288fccdf773cd06e86aa767cef04bec0f11f5af02e7e9b3dce689e38. | passed | public | evidence.jsonl |

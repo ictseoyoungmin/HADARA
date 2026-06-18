@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.context.sourceManifest.v1",
+  "x-hadara-schema-id": "hadara.context.sourceManifest.v1",
+  "title": "HADARA Context Source Manifest",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "generatedAt",
+    "projectFingerprint",
+    "cacheVersion",
+    "manifestHash",
+    "ignoreConfigHash",
+    "extractorVersions",
+    "sources",
+    "summary",
+    "budget",
+    "issues"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.context.sourceManifest.v1" },
+    "generatedAt": { "type": "string" },
+    "projectFingerprint": { "type": "string" },
+    "cacheVersion": { "type": "string" },
+    "manifestHash": { "type": "string" },
+    "ignoreConfigHash": { "type": "string" },
+    "extractorVersions": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "sources": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/source" }
+    },
+    "summary": { "$ref": "#/$defs/summary" },
+    "budget": { "$ref": "#/$defs/budget" },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "sourceKind": {
+      "enum": [
+        "task-board",
+        "task-capsule",
+        "evidence",
+        "docs-registry",
+        "command-registry",
+        "managed-section-source",
+        "source-file",
+        "test-file",
+        "fixture-file",
+        "config-file",
+        "release-doc",
+        "handoff-doc",
+        "project-state-doc",
+        "spec-doc",
+        "other-doc"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "path",
+        "kind",
+        "sizeBytes",
+        "metadataHash",
+        "extractorKeys"
+      ],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "kind": { "$ref": "#/$defs/sourceKind" },
+        "sizeBytes": { "type": "number" },
+        "mtimeMs": { "type": "number" },
+        "mtimeNs": { "type": "string" },
+        "contentHash": { "type": "string" },
+        "metadataHash": { "type": "string", "minLength": 1 },
+        "extractorKeys": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "parseState": { "enum": ["ok", "skipped", "failed"] },
+        "issueCodes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "sourceCount",
+        "totalBytes",
+        "hashedSourceCount",
+        "skippedSourceCount"
+      ],
+      "properties": {
+        "sourceCount": { "type": "number" },
+        "totalBytes": { "type": "number" },
+        "hashedSourceCount": { "type": "number" },
+        "skippedSourceCount": { "type": "number" },
+        "generatedByCommand": { "type": "string" }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "maxSourceFiles",
+        "maxSourceBytes",
+        "maxSingleSourceBytes",
+        "discoveredSourceCount",
+        "discoveredBytes",
+        "skippedSourceCount"
+      ],
+      "properties": {
+        "maxSourceFiles": { "type": "number" },
+        "maxSourceBytes": { "type": "number" },
+        "maxSingleSourceBytes": { "type": "number" },
+        "discoveredSourceCount": { "type": "number" },
+        "discoveredBytes": { "type": "number" },
+        "skippedSourceCount": { "type": "number" }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "enum": ["info", "warning", "error"] },
+        "code": {
+          "enum": [
+            "SOURCE_MANIFEST_READ_FAILED",
+            "SOURCE_MANIFEST_PARTIAL"
+          ]
+        },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string" },
+        "fixHint": { "type": "string" }
+      }
+    }
+  }
+}

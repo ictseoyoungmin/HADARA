@@ -33,6 +33,7 @@ describe('schema fixtures', () => {
       'hadara.command_portfolio_audit.v1',
       'hadara.commands.registry.v1',
       'hadara.context.export.v1',
+      'hadara.context.sourceManifest.v1',
       'hadara.contextGraph.v1',
       'hadara.contextPack.v1',
       'hadara.dashboard.bootstrap.v1',
