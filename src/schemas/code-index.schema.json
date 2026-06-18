@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.codeIndex.v1",
+  "x-hadara-schema-id": "hadara.codeIndex.v1",
+  "title": "HADARA Code Index Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "command",
+    "ok",
+    "generatedAt",
+    "projectRoot",
+    "sourceHash",
+    "files",
+    "symbols",
+    "edges",
+    "summary",
+    "issues"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.codeIndex.v1" },
+    "command": { "const": "code.index" },
+    "ok": { "type": "boolean" },
+    "generatedAt": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "sourceHash": { "type": "string", "minLength": 1 },
+    "files": { "type": "array", "items": { "$ref": "#/$defs/file" } },
+    "symbols": { "type": "array", "items": { "$ref": "#/$defs/symbol" } },
+    "edges": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["sourceFiles", "testFiles", "fixtureFiles", "configFiles", "symbols", "edges", "degraded"],
+      "properties": {
+        "sourceFiles": { "type": "number" },
+        "testFiles": { "type": "number" },
+        "fixtureFiles": { "type": "number" },
+        "configFiles": { "type": "number" },
+        "symbols": { "type": "number" },
+        "edges": { "type": "number" },
+        "degraded": { "type": "boolean" }
+      }
+    },
+    "cache": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["used", "hit"],
+      "properties": {
+        "used": { "type": "boolean" },
+        "hit": { "type": "boolean" },
+        "manifestHash": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "cachePath": { "type": "string" }
+      }
+    },
+    "issues": { "type": "array", "items": { "$ref": "#/$defs/issue" } }
+  },
+  "$defs": {
+    "confidence": { "enum": ["explicit", "derived", "heuristic"] },
+    "fileKind": { "enum": ["source", "test", "fixture", "script", "config", "unknown"] },
+    "language": { "enum": ["typescript", "javascript", "json", "markdown", "unknown"] },
+    "symbolKind": { "enum": ["function", "class", "type", "interface", "const", "handler", "unknown"] },
+    "edgeType": {
+      "enum": [
+        "IMPORTS",
+        "EXPORTS",
+        "DEFINES_SYMBOL",
+        "TESTS_FILE",
+        "IMPLEMENTS_COMMAND",
+        "REFERENCED_BY_DOC",
+        "VALIDATED_BY_EVIDENCE"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "extractor"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "line": { "type": "number" },
+        "hash": { "type": "string" },
+        "extractor": { "type": "string", "minLength": 1 }
+      }
+    },
+    "file": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "path", "kind", "language", "hash", "lineCount", "exports", "imports", "commandFamilies"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "kind": { "$ref": "#/$defs/fileKind" },
+        "language": { "$ref": "#/$defs/language" },
+        "hash": { "type": "string", "minLength": 1 },
+        "lineCount": { "type": "number" },
+        "exports": { "type": "array", "items": { "type": "string" } },
+        "imports": { "type": "array", "items": { "type": "string" } },
+        "commandFamilies": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "symbol": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "name", "kind", "path", "exported"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "$ref": "#/$defs/symbolKind" },
+        "path": { "type": "string", "minLength": 1 },
+        "exported": { "type": "boolean" },
+        "line": { "type": "number" },
+        "endLine": { "type": "number" }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "from", "to", "type", "confidence", "reason", "source"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "from": { "type": "string", "minLength": 1 },
+        "to": { "type": "string", "minLength": 1 },
+        "type": { "$ref": "#/$defs/edgeType" },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "reason": { "type": "string", "minLength": 1 },
+        "source": { "$ref": "#/$defs/source" }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "enum": ["info", "warning", "error"] },
+        "code": {
+          "enum": [
+            "CODE_INDEX_FILE_READ_FAILED",
+            "CODE_INDEX_PARSE_DEGRADED",
+            "CODE_INDEX_TOO_LARGE",
+            "CODE_INDEX_UNSUPPORTED_LANGUAGE",
+            "CODE_INDEX_IMPORT_UNRESOLVED"
+          ]
+        },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string" },
+        "fixHint": { "type": "string" }
+      }
+    }
+  }
+}

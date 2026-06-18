@@ -26,6 +26,8 @@ T-0299 registers `hadara.protocol.migration.v1` for the 0.3 adoption migration s
 
 T-0322 registers `hadara.stateProjection.v1` for the Phase 8.4 read-only state consistency projection over Task Board rows, Task Capsule status/plan/handoff/close evidence, Project State, Agent Handoff, Development Slices, docs registry, and release readiness presence. This is a service/read-model fixture; CLI, protocol doctor, and CI advisory exposure are separate rollout work.
 
+T-0353 registers `hadara.codeIndex.v1` for the 0.3.3 C2 Code Link Layer foundation. This fixture documents read-only code index reports over source, test, fixture, script, config, symbol, and edge candidates. T-0353 implements schema/runtime registration plus deterministic ignore rules and file discovery only; import/export extraction, symbol extraction, command hints, test relation edges, graph integration, and public CLI exposure remain later C2 work.
+
 ## Registry
 
 Schema fixtures live under `src/schemas/`.
@@ -50,6 +52,7 @@ Initial fixtures:
 | `hadara.command_help.v1` | `src/schemas/command-help.schema.json` | fixture | Documents registry-backed command-help projection metadata. |
 | `hadara.command_portfolio_audit.v1` | `src/schemas/command-portfolio-audit.schema.json` | fixture | Documents the Phase 7.2 command portfolio audit projection over canonical, alias, diagnostic, advanced, dev-only, and release-only decisions. |
 | `hadara.commands.registry.v1` | `src/schemas/commands-registry.schema.json` | fixture | Documents `hadara commands --json` machine-readable command registry reports. |
+| `hadara.codeIndex.v1` | `src/schemas/code-index.schema.json` | fixture | Documents the C2 read-only code index report; public CLI and graph integration are future C2 work. |
 | `hadara.docs.doctor.v1` | `src/schemas/docs-doctor.schema.json` | fixture | Documents `hadara docs doctor --json` registry, profile, required-reading, and active-link diagnostics. |
 | `hadara.docs.explain.v1` | `src/schemas/docs-explain.schema.json` | fixture | Documents `hadara docs explain --path <path> --json` per-document classification and guidance reports. |
 | `hadara.docs.list.v1` | `src/schemas/docs-list.schema.json` | fixture | Documents `hadara docs list --json` document registry list and filter reports. |

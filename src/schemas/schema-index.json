@@ -65,6 +65,13 @@
       "notes": "Documents read-only MCP memory-mode context export; CLI export-context remains file-writing."
     },
     {
+      "id": "hadara.codeIndex.v1",
+      "path": "src/schemas/code-index.schema.json",
+      "status": "fixture",
+      "owner": "context/code-index",
+      "notes": "Documents deterministic read-only C2 code index reports over source, test, fixture, script, config, symbol, and code relation candidates."
+    },
+    {
       "id": "hadara.contextGraph.v1",
       "path": "src/schemas/context-graph.schema.json",
       "status": "fixture",

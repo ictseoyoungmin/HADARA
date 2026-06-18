@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, and T-0343-T-0352 completed C1 through the CLI/read surface. |
-| Current Phase | 0.3.3 context-routing C2 implementation next | T-0352 exposed the C1 graph report and task context report through read-only `hadara context graph` CLI output. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0352 Create/start C1 Context Graph CLI and Read Surface | Added the read-only `context graph` CLI surface, command registry metadata, JSON/read-only docs, and focused CLI coverage over the C1 graph builder. |
-| Active / Next Task | TBD Start C2 Code Link Layer Schema and Ignore Rules | Start the C2 Code Link Layer with code index schema, ignore rules, and worker-plan routing from the 0.3.3 context-routing specs. |
-| Validation Baseline | T-0352 context graph CLI/read surface validation | Docker focused context graph CLI/registry/schema tests passed 4 files / 15 tests; Docker `npm run check` passed 129 files / 823 tests; Docker build/dist refresh, built context graph CLI smoke, built CLI version smoke, and `git diff --check` passed in `ev:T-0352:d70ee6360acf43948d7cf620`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, and T-0353 started C2. |
+| Current Phase | 0.3.3 context-routing C2 implementation | T-0353 added the C2 code index schema/read-model foundation plus deterministic ignore and discovery helpers. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0353 C2 Code Index Schema and Ignore Rules | Added `hadara.codeIndex.v1`, schema runtime/index registration, ignore rules, file classification/discovery, internal report building, docs, and focused code-index tests. |
+| Active / Next Task | TBD Start C2 Import and Export Extraction | Add import/export extraction over discovered TypeScript/JavaScript files while keeping graph integration and public CLI behavior for later C2 capsules. |
+| Validation Baseline | T-0353 code index schema/ignore validation | Docker focused code-index/schema tests passed 2 files / 6 tests; Docker `npm run check` passed 130 files / 828 tests; Docker build/dist refresh, built internal code-index schema smoke, built CLI version smoke, and `git diff --check` passed in `ev:T-0353:b72d5284ef1d42afa39232a0`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Start C2 Code Link Layer schema and ignore rules. | Use T-0343-T-0352 C1 graph/schema/CLI outputs as the read foundation; read `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md` plus `06_Worker_Agent_Implementation_Plan.md`. |
+| TBD | Start C2 import/export extraction over the code index discovery foundation. | Use T-0353 `src/context/code-index.ts` file discovery/report builder as the base; read `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md` plus `06_Worker_Agent_Implementation_Plan.md`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0353 C2 Code Index Schema and Ignore Rules | Added the C2 code index contract, JSON schema fixture, runtime registration, deterministic ignore rules, file classification/discovery, internal report builder, and focused code-index tests. | `ev:T-0353:b72d5284ef1d42afa39232a0`. |
 | T-0352 Create/start C1 Context Graph CLI and Read Surface | Exposed the C1 graph builder through `hadara context graph --json` and task-scoped `--task` output, registered command metadata, documented the JSON/read-only contract, and added focused CLI coverage. | `ev:T-0352:d70ee6360acf43948d7cf620`. |
 | T-0351 C1 Graph Builder and Task Context Report | Added internal graph report assembly, default extractor collection, state projection inclusion, graph summaries, and task context candidate derivation; no public CLI surface added. | `ev:T-0351:8783d5087eed426ca228ce02`. |
-| T-0350 C1 State Projection and Consistency Diagnostics | Added compact C1 state projection diagnostics over extractor outputs, plus Project State and Agent Handoff state sources; no public CLI surface added. | `ev:T-0350:b540a670f64b48babe233d22`. |
 
 ## Current Known Problems
 
@@ -90,12 +90,13 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create/start C2 Code Link Layer Schema and Ignore Rules. | C1 is now implemented through the dedicated read-only graph CLI surface; the next context-routing layer is the code index schema and ignore-rule boundary. | T-0352 validation evidence `ev:T-0352:d70ee6360acf43948d7cf620`; read `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md`, `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
+| Create/start C2 Import and Export Extraction. | T-0353 established the code index schema/discovery boundary; the next worker-plan C2 capsule is import/export extraction over discovered TypeScript/JavaScript files. | T-0353 validation evidence `ev:T-0353:b72d5284ef1d42afa39232a0`; read `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md`, `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0353 code index schema/ignore foundation | Docker focused code-index/schema tests passed 2 files / 6 tests; Docker `npm run check` passed 130 files / 828 tests; Docker build passed and `/workspace/dist` was refreshed; built internal code-index schema smoke, built CLI version smoke, and `git diff --check` passed. | Evidence `ev:T-0353:b72d5284ef1d42afa39232a0`; import/export extraction, symbols, command hints, test edges, graph integration, and public CLI remain later C2 scope. |
 | T-0352 context graph CLI/read surface | Docker focused context graph CLI/registry/schema tests passed 4 files / 15 tests; Docker `npm run check` passed 129 files / 823 tests; Docker build passed and `/workspace/dist` was refreshed; built context graph CLI smoke, built CLI version smoke, and `git diff --check` passed. | Evidence `ev:T-0352:d70ee6360acf43948d7cf620`; persistent graph cache remains unimplemented by design. |
 | T-0351 context graph builder/task context report | Docker focused builder/projection/schema tests passed 3 files / 9 tests; Docker `npm run check` passed 128 files / 821 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke and `git diff --check` passed. | Evidence `ev:T-0351:8783d5087eed426ca228ce02`; no public CLI surface was added. |
 | T-0350 context graph state projection diagnostics | Docker focused projection/context tests passed 5 files / 19 tests; Docker `npm run check` passed 127 files / 818 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke and `git diff --check` passed. | Evidence `ev:T-0350:b540a670f64b48babe233d22`; no public CLI surface was added. |
