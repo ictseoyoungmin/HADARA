@@ -347,3 +347,4 @@
 | T-0344 | Context Graph Extractor Contract | Done | tasks/T-0344-context-graph-extractor-contract | |
 | T-0345 | Context Graph Task Extractors | Done | tasks/T-0345-context-graph-task-extractors | |
 | T-0346 | Context Graph Registry Extractors | Done | tasks/T-0346-context-graph-registry-extractors | |
+| T-0347 | Context Graph Evidence Extractor | Done | tasks/T-0347-context-graph-evidence-extractor | |

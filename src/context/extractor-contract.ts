@@ -101,6 +101,10 @@ export function createCommandNodeId(commandId: string): string {
   return `command:${commandId}`;
 }
 
+export function createEvidenceNodeId(evidenceId: string): string {
+  return evidenceId;
+}
+
 export function createReleaseCheckNodeId(name: string): string {
   return `release-check:${normalizeIdPart(name)}`;
 }
