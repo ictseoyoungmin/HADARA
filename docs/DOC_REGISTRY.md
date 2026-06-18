@@ -21,4 +21,11 @@ Schema: `hadara.docs.registry.v1`
 | `docs/ROADMAP.md` | roadmap | reference | only-when-linked | no | hadara-docs |
 | `docs/specs/0.3.1/00_HADARA_0_3_1_Phase_8_State_Governance_Program.md` | roadmap | reference | only-when-linked | no | hadara-dev |
 | `docs/specs/0.3.1/rc1/00_HADARA_0_3_1_rc1_Status_Governance_Implementation_Plan.md` | roadmap | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.3.3/context-routing/03_Context_Pack_and_Session_Start_Spec.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.3.3/context-routing/04_Deterministic_Context_Slice_Raw_Adapter_Spec.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.3.3/context-routing/05_Indexing_Cache_Invalidation_and_Performance_Spec.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md` | implementation-guide | reference | only-when-linked | no | hadara-dev |
 <!-- hadara:managed:end doc-registry-summary -->

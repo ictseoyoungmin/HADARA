@@ -76,6 +76,13 @@ Use semantic tiers to keep session startup compact and deterministic:
 | `docs/specs/0.3.2/capsules/T-0337_0_3_2_rc0_Approval_Gated_Publish.md` | Performing approval-gated npm publish for 0.3.2-rc.0 | Capsule-specific publish prerequisites, boundaries, and acceptance |
 | `docs/specs/0.3.2/capsules/T-0338_0_3_2_rc0_Post_Publish_Installed_Package_Recycle.md` | Verifying published 0.3.2-rc.0 from installed-package consumer paths | Capsule-specific installed-package recycle checks and acceptance |
 | `docs/specs/0.3.2/capsules/T-0339_Stable_0_3_2_Decision.md` | Deciding stable 0.3.2 publish, rc1, or deferral after rc0 recycle | Capsule-specific decision inputs and acceptance |
+| `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md` | Architecture review or starting any 0.3.3 context-routing work | Context-routing architecture, non-goals, sequence, and read-only projection principles |
+| `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md` | Implementing or reviewing C1 project context graph, task context, or state projection work | C1 graph/state JSON contracts, extractor boundaries, evidence id policy, and acceptance |
+| `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md` | Implementing or reviewing C2 source/test/symbol code-link work | Code index contract, TypeScript/JavaScript extraction scope, ignore rules, and graph integration |
+| `docs/specs/0.3.3/context-routing/03_Context_Pack_and_Session_Start_Spec.md` | Implementing or reviewing C3 context pack or C5 session start work | Agent-facing read plan, ranking rules, state projection integration, and session-start composition |
+| `docs/specs/0.3.3/context-routing/04_Deterministic_Context_Slice_Raw_Adapter_Spec.md` | Implementing or reviewing C4 deterministic context slicing work | Source-addressed original text slice contract, strategies, and safety rules |
+| `docs/specs/0.3.3/context-routing/05_Indexing_Cache_Invalidation_and_Performance_Spec.md` | Implementing or reviewing C6 context cache, invalidation, or performance work | Local rebuildable cache location, manifest contract, invalidation rules, and degraded-mode budget |
+| `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md` | Selecting or handing off 0.3.3 context-routing implementation capsules | Worker routing plan, phase order, active-spec reading rule, and per-capsule done criteria |
 
 ## Project-Specific Documents
 

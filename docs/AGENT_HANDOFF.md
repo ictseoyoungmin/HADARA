@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, and Phase 9 / 0.3.2 writer/docs/readiness/publish/recycle/decision/stable-publish/stable-recycle work completed through T-0341. |
-| Current Phase | 0.3.2 Evidence v2 refactor stable line complete | T-0341 verified stable `hadara@0.3.2` from installed consumer paths after T-0340 publish. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0341 Stable 0.3.2 Post-Publish Installed-Package Recycle | Stable installed-package recycle completed; registry/dist-tags, temp-prefix installed bin, governed init, Evidence v2 exact resolution workflow, disposable lifecycle smoke, and cleanup passed. |
-| Active / Next Task | TBD Select next roadmap/handoff item | Stable 0.3.2 line is complete through publish and installed-package recycle; choose the next highest-value roadmap or handoff item before starting implementation. |
-| Validation Baseline | T-0341 stable installed-package recycle evidence | Stable recycle passed `ev:T-0341:3208efa9002b47cc8ea68363`; T-0340 stable publish passed `ev:T-0340:8e7dc68139594113a63ade0f`; T-0340 release gate/package/clean-checkout/artifact evidence remains the source readiness baseline. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, and T-0342 registered the 0.3.3 context-routing spec line in docs routing. |
+| Current Phase | 0.3.3 context-routing implementation staging | T-0342 made the 0.3.3 context-routing specs discoverable and corrected the worker-plan path. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0342 Context Routing Spec Docs Registration | Registered 0.3.3 context-routing specs in SOP and docs registry, unignored `docs/specs/0.3.3/**`, corrected stale worker-plan path, and passed documentation routing validation. |
+| Active / Next Task | TBD Start C1 Project Context Graph Foundation | Use `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`: read the overview plus `01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md`, then create the first C1 capsule. |
+| Validation Baseline | T-0342 documentation routing validation evidence | Docs registry JSON parse, stale path `rg`, docs registry doctor/explain, and `git diff --check` passed in `ev:T-0342:19cd8d65d2e94ee1a605c0f2`. Stable recycle baseline remains `ev:T-0341:3208efa9002b47cc8ea68363`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Select the next roadmap/handoff item now that stable 0.3.2 publish and installed-package recycle are complete. | Use `hadara task next --json`; current non-primary backlog still includes T-0006 Partial. |
+| TBD | Start C1 Project Context Graph Foundation now that 0.3.3 context-routing specs are registered. | Create the first C1 capsule from `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`; read the overview and `01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0342 Context Routing Spec Docs Registration | Registered 0.3.3 context-routing specs in SOP/docs registry surfaces, corrected the worker-plan path to `docs/specs/0.3.3/context-routing/...`, and unignored `docs/specs/0.3.3/**`. | `ev:T-0342:19cd8d65d2e94ee1a605c0f2`. |
 | T-0341 Stable 0.3.2 Post-Publish Installed-Package Recycle | Verified stable `hadara@0.3.2` from installed consumer paths: registry/dist-tags, temp-prefix installed `hadara@latest`, Evidence v2 list/add-command exact resolution workflow, governed init, disposable lifecycle smoke, and cleanup passed. | `ev:T-0341:3208efa9002b47cc8ea68363`. |
 | T-0340 Stable 0.3.2 Approval-Gated Publish | Published `hadara@0.3.2` to npm with `latest`, verified npm view and dist-tags, skipped GitHub Release draft, and resolved earlier failed pre-publish validation attempts with successful rerun evidence. | `ev:T-0340:8e7dc68139594113a63ade0f`; `ev:T-0340:b1f45d604d6947539c19a24e`. |
-| T-0339 Stable 0.3.2 Decision | Corrected release readiness wording, completed temporary docker-compose HADARA dogfooding, selected stable `0.3.2` publish, and created T-0340 approval-gated publish capsule. | `ev:T-0339:c13115df6d8e471791753886`; `ev:T-0339:49cceff9e094481a85b7b4b0`; `ev:T-0339:c99adfd72cb447e69f60a072`. |
 
 ## Current Known Problems
 

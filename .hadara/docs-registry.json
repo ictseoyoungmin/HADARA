@@ -373,6 +373,153 @@
       "closeSourceRole": "task-dependent",
       "supersedes": [],
       "generatedBy": "T-0318"
+    },
+    {
+      "path": "docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md",
+      "title": "Context Routing Architecture Overview",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0342"
+    },
+    {
+      "path": "docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md",
+      "title": "Project Context Graph Foundation and State Projection Spec",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0342"
+    },
+    {
+      "path": "docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md",
+      "title": "Code Link Layer Spec",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0342"
+    },
+    {
+      "path": "docs/specs/0.3.3/context-routing/03_Context_Pack_and_Session_Start_Spec.md",
+      "title": "Context Pack and Session Start Spec",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0342"
+    },
+    {
+      "path": "docs/specs/0.3.3/context-routing/04_Deterministic_Context_Slice_Raw_Adapter_Spec.md",
+      "title": "Deterministic Context Slice Raw Adapter Spec",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0342"
+    },
+    {
+      "path": "docs/specs/0.3.3/context-routing/05_Indexing_Cache_Invalidation_and_Performance_Spec.md",
+      "title": "Indexing, Cache, Invalidation, and Performance Spec",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0342"
+    },
+    {
+      "path": "docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md",
+      "title": "Worker Agent Implementation Plan",
+      "owner": "hadara-dev",
+      "kind": "implementation-guide",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0342"
     }
   ]
 }
