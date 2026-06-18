@@ -90,7 +90,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create/start stable `0.3.2` post-publish installed-package recycle. | T-0340 published stable `hadara@0.3.2`; registry/dist-tags were verified, but consumer-path installed-package recycle is intentionally outside T-0340. | T-0340 publish evidence `ev:T-0340:8e7dc68139594113a63ade0f`; use previous recycle capsules T-0338/T-0317 as workflow references. |
+| Create/start C1 Project Context Graph Foundation. | T-0342 registered the 0.3.3 context-routing specs and made them discoverable from SOP and docs registry surfaces; C1 is the first implementation phase. | T-0342 documentation routing evidence `ev:T-0342:19cd8d65d2e94ee1a605c0f2`; read `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md`, `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
 
 ## Validation Baseline
 
