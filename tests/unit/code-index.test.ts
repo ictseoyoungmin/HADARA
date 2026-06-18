@@ -13,6 +13,7 @@ import {
   createCodeFileNode,
   detectCodeFileLanguage,
   discoverCodeIndexFiles,
+  extractCodeFileReferences,
   shouldIgnoreCodeIndexPath
 } from '../../src/context/code-index';
 
@@ -123,7 +124,7 @@ describe('code index schema and ignore rules', () => {
       fixtureFiles: 1,
       configFiles: 2,
       symbols: 0,
-      edges: 0,
+      edges: 2,
       degraded: false
     });
     expect(report.cache).toEqual({ used: false, hit: false });
@@ -131,7 +132,7 @@ describe('code index schema and ignore rules', () => {
       id: 'file:src/cli/main.ts',
       kind: 'source',
       language: 'typescript',
-      exports: [],
+      exports: ['main'],
       imports: [],
       commandFamilies: []
     });
@@ -169,5 +170,99 @@ describe('code index schema and ignore rules', () => {
       path: '$.files[0].hash',
       code: 'SCHEMA_REQUIRED_MISSING'
     }));
+  });
+
+  it('extracts spec-listed imports, exports, resolved edges, and unresolved warnings', () => {
+    const root = createTempProject();
+    writeFile(root, 'src/cli/main.ts', [
+      "import runDefault from './runner';",
+      "import { helper } from './helpers';",
+      "import type { Options } from './types';",
+      "import fs from 'node:fs';",
+      "const legacy = require('./legacy');",
+      "export { helper as exportedHelper } from './helpers';",
+      "export function run() {}",
+      "export async function runAsync() {}",
+      "export class Main {}",
+      "export interface MainOptions {}",
+      "export type MainModel = {};",
+      "export const mainValue = 1;",
+      "import missing from './missing';",
+      ''
+    ].join('\n'));
+    writeFile(root, 'src/cli/runner.ts', 'export default function runner() {}\n');
+    writeFile(root, 'src/cli/helpers.ts', 'export const helper = true;\n');
+    writeFile(root, 'src/cli/types.ts', 'export interface Options {}\n');
+    writeFile(root, 'src/cli/legacy.js', 'module.exports = {};\n');
+
+    const references = extractCodeFileReferences({
+      projectRoot: root,
+      path: 'src/cli/main.ts',
+      content: fs.readFileSync(path.join(root, 'src/cli/main.ts'), 'utf8')
+    });
+
+    expect(references.imports.map((importReference) => importReference.resolvedPath ?? importReference.specifier)).toEqual([
+      'src/cli/runner.ts',
+      'src/cli/helpers.ts',
+      'src/cli/types.ts',
+      'node:fs',
+      'src/cli/legacy.js',
+      'src/cli/helpers.ts',
+      './missing'
+    ]);
+    expect(references.exports.map((exportReference) => exportReference.name)).toEqual([
+      'exportedHelper',
+      'run',
+      'runAsync',
+      'Main',
+      'MainOptions',
+      'MainModel',
+      'mainValue'
+    ]);
+    expect(references.issues).toContainEqual(expect.objectContaining({
+      severity: 'warning',
+      code: 'CODE_INDEX_IMPORT_UNRESOLVED',
+      path: 'src/cli/main.ts'
+    }));
+
+    const report = buildCodeIndexReport({ projectRoot: root, generatedAt: '2026-06-18T10:30:00.000Z' });
+    const mainFile = report.files.find((file) => file.path === 'src/cli/main.ts');
+    expect(mainFile).toMatchObject({
+      imports: [
+        './missing',
+        'node:fs',
+        'src/cli/helpers.ts',
+        'src/cli/legacy.js',
+        'src/cli/runner.ts',
+        'src/cli/types.ts'
+      ],
+      exports: ['Main', 'MainModel', 'MainOptions', 'exportedHelper', 'mainValue', 'run', 'runAsync']
+    });
+    expect(report.ok).toBe(true);
+    expect(report.summary.degraded).toBe(true);
+    expect(report.summary.edges).toBe(5);
+    expect(report.edges).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        from: 'file:src/cli/main.ts',
+        to: 'file:src/cli/runner.ts',
+        type: 'IMPORTS',
+        confidence: 'explicit',
+        source: expect.objectContaining({
+          path: 'src/cli/main.ts',
+          line: 1,
+          extractor: 'extractCodeImports'
+        })
+      }),
+      expect.objectContaining({
+        from: 'file:src/cli/main.ts',
+        to: 'file:src/cli/helpers.ts',
+        type: 'IMPORTS'
+      })
+    ]));
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'CODE_INDEX_IMPORT_UNRESOLVED',
+      path: 'src/cli/main.ts'
+    }));
+    assertSchema('hadara.codeIndex.v1', report);
   });
 });

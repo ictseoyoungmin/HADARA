@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { type ContextCacheMetadata, type ContextConfidence, type ContextGraphSourceRef } from './context-graph';
 import {
+  createContextGraphSourceRef,
   hashContextGraphSources,
   hashContextGraphText,
   normalizeContextGraphPath,
@@ -131,17 +132,45 @@ export interface BuildCodeIndexReportOptions {
   generatedAt?: string;
 }
 
+export interface CodeImportReference {
+  specifier: string;
+  resolvedPath?: string;
+  line: number;
+}
+
+export interface CodeExportReference {
+  name: string;
+  line: number;
+}
+
+export interface CodeFileReferenceExtractionResult {
+  imports: CodeImportReference[];
+  exports: CodeExportReference[];
+  issues: CodeIndexIssue[];
+}
+
 export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): CodeIndexReport {
   const generatedAt = options.generatedAt ?? new Date().toISOString();
   const discovered = discoverCodeIndexFiles(options.projectRoot);
   const files: CodeFileNode[] = [];
+  const importReferences: Array<{ filePath: string; content: string; imports: CodeImportReference[] }> = [];
   const issues: CodeIndexIssue[] = [...discovered.issues];
 
   for (const relativePath of discovered.paths) {
     const absolutePath = path.join(options.projectRoot, relativePath);
     try {
       const content = fs.readFileSync(absolutePath, 'utf8');
-      files.push(createCodeFileNode(relativePath, content));
+      const references = extractCodeFileReferences({
+        projectRoot: options.projectRoot,
+        path: relativePath,
+        content
+      });
+      issues.push(...references.issues);
+      importReferences.push({ filePath: relativePath, content, imports: references.imports });
+      files.push(createCodeFileNode(relativePath, content, {
+        imports: references.imports.map((importReference) => importReference.resolvedPath ?? importReference.specifier),
+        exports: references.exports.map((exportReference) => exportReference.name)
+      }));
     } catch (error) {
       issues.push({
         severity: 'warning',
@@ -152,6 +181,7 @@ export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): Code
       });
     }
   }
+  const edges = createImportEdges(importReferences);
 
   return {
     schemaVersion: CODE_INDEX_SCHEMA_ID,
@@ -162,8 +192,8 @@ export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): Code
     sourceHash: hashContextGraphSources(files.map((file) => ({ path: file.path, hash: file.hash }))),
     files,
     symbols: [],
-    edges: [],
-    summary: summarizeCodeIndex(files, [], [], issues),
+    edges,
+    summary: summarizeCodeIndex(files, [], edges, issues),
     cache: { used: false, hit: false },
     issues
   };
@@ -208,7 +238,11 @@ export function discoverCodeIndexFiles(projectRoot: string): { paths: string[]; 
   return { paths: Array.from(new Set(paths)).sort(), issues };
 }
 
-export function createCodeFileNode(relativePath: string, content: string): CodeFileNode {
+export function createCodeFileNode(
+  relativePath: string,
+  content: string,
+  metadata: { imports?: string[]; exports?: string[]; commandFamilies?: string[] } = {}
+): CodeFileNode {
   const normalizedPath = normalizeContextGraphPath(relativePath);
   return {
     id: createCodeFileNodeId(normalizedPath),
@@ -217,9 +251,61 @@ export function createCodeFileNode(relativePath: string, content: string): CodeF
     language: detectCodeFileLanguage(normalizedPath),
     hash: hashContextGraphText(content),
     lineCount: countLines(content),
-    exports: [],
-    imports: [],
-    commandFamilies: []
+    exports: uniqueSorted(metadata.exports ?? []),
+    imports: uniqueSorted(metadata.imports ?? []),
+    commandFamilies: uniqueSorted(metadata.commandFamilies ?? [])
+  };
+}
+
+export function extractCodeFileReferences(input: {
+  projectRoot: string;
+  path: string;
+  content: string;
+}): CodeFileReferenceExtractionResult {
+  const imports: CodeImportReference[] = [];
+  const exports: CodeExportReference[] = [];
+  const issues: CodeIndexIssue[] = [];
+  const normalizedPath = normalizeContextGraphPath(input.path);
+  const language = detectCodeFileLanguage(normalizedPath);
+
+  if (language !== 'typescript' && language !== 'javascript') {
+    return { imports, exports, issues };
+  }
+
+  const lines = input.content.split(/\r?\n/);
+  lines.forEach((line, index) => {
+    const lineNumber = index + 1;
+    for (const specifier of extractImportSpecifiersFromLine(line)) {
+      const resolvedPath = resolveRelativeCodeImport({
+        projectRoot: input.projectRoot,
+        fromPath: normalizedPath,
+        specifier
+      });
+      imports.push({
+        specifier,
+        ...(resolvedPath ? { resolvedPath } : {}),
+        line: lineNumber
+      });
+      if (isRelativeImportSpecifier(specifier) && !resolvedPath) {
+        issues.push({
+          severity: 'warning',
+          code: 'CODE_INDEX_IMPORT_UNRESOLVED',
+          message: `Could not resolve relative import ${specifier} from ${normalizedPath}.`,
+          path: normalizedPath,
+          fixHint: 'Check that the import target exists, uses a supported extension, and is not ignored by code index rules.'
+        });
+      }
+    }
+
+    for (const name of extractExportNamesFromLine(line)) {
+      exports.push({ name, line: lineNumber });
+    }
+  });
+
+  return {
+    imports: dedupeImports(imports),
+    exports: dedupeExports(exports),
+    issues
   };
 }
 
@@ -282,4 +368,153 @@ export function summarizeCodeIndex(
 function countLines(content: string): number {
   if (content.length === 0) return 0;
   return content.endsWith('\n') ? content.split('\n').length - 1 : content.split('\n').length;
+}
+
+function extractImportSpecifiersFromLine(line: string): string[] {
+  const specifiers: string[] = [];
+  const importMatch = line.match(/^\s*import\s+(?:type\s+)?(?:.+?\s+from\s+)?['"]([^'"]+)['"]/);
+  if (importMatch?.[1]) specifiers.push(importMatch[1]);
+
+  const exportFromMatch = line.match(/^\s*export\s+(?:type\s+)?\{[^}]*\}\s+from\s+['"]([^'"]+)['"]/);
+  if (exportFromMatch?.[1]) specifiers.push(exportFromMatch[1]);
+
+  const requirePattern = /require\(\s*['"]([^'"]+)['"]\s*\)/g;
+  for (const requireMatch of line.matchAll(requirePattern)) {
+    if (requireMatch[1]) specifiers.push(requireMatch[1]);
+  }
+
+  return specifiers;
+}
+
+function extractExportNamesFromLine(line: string): string[] {
+  const trimmed = line.trim();
+  const names: string[] = [];
+  const declarationMatch = trimmed.match(/^export\s+(?:async\s+)?(function|class|interface|type|const)\s+([A-Za-z_$][\w$]*)/);
+  if (declarationMatch?.[2]) names.push(declarationMatch[2]);
+
+  const listMatch = trimmed.match(/^export\s+(?:type\s+)?\{([^}]+)\}/);
+  if (listMatch?.[1]) {
+    for (const part of listMatch[1].split(',')) {
+      const candidate = part.trim();
+      if (!candidate) continue;
+      const aliasParts = candidate.split(/\s+as\s+/);
+      const exportedName = (aliasParts[aliasParts.length - 1] ?? '').trim();
+      if (/^[A-Za-z_$][\w$]*$/.test(exportedName)) names.push(exportedName);
+    }
+  }
+
+  return names;
+}
+
+function resolveRelativeCodeImport(input: {
+  projectRoot: string;
+  fromPath: string;
+  specifier: string;
+}): string | undefined {
+  if (!isRelativeImportSpecifier(input.specifier)) return undefined;
+  const fromDir = path.posix.dirname(normalizeContextGraphPath(input.fromPath));
+  const basePath = normalizeContextGraphPath(path.posix.join(fromDir, input.specifier));
+  const candidates = [
+    basePath,
+    `${basePath}.ts`,
+    `${basePath}.js`,
+    `${basePath}.json`,
+    `${basePath}/index.ts`,
+    `${basePath}/index.js`,
+    `${basePath}/index.json`
+  ];
+
+  for (const candidate of candidates) {
+    if (shouldIgnoreCodeIndexPath(candidate) || classifyCodeFile(candidate) === 'unknown') continue;
+    if (fs.existsSync(path.join(input.projectRoot, candidate))) return candidate;
+  }
+  return undefined;
+}
+
+function createImportEdges(importReferences: Array<{ filePath: string; content: string; imports: CodeImportReference[] }>): CodeEdge[] {
+  const edges: CodeEdge[] = [];
+  const seen = new Set<string>();
+  for (const sourceFile of importReferences) {
+    const from = createCodeFileNodeId(sourceFile.filePath);
+    for (const importReference of sourceFile.imports) {
+      if (!importReference.resolvedPath) continue;
+      const source = createContextGraphSourceRef({
+        path: sourceFile.filePath,
+        line: importReference.line,
+        content: sourceFile.content,
+        extractor: 'extractCodeImports'
+      });
+      const edge: CodeEdge = {
+        id: createCodeEdgeId({
+          type: 'IMPORTS',
+          from,
+          to: createCodeFileNodeId(importReference.resolvedPath),
+          source,
+          reason: `File ${sourceFile.filePath} imports ${importReference.resolvedPath}.`
+        }),
+        from,
+        to: createCodeFileNodeId(importReference.resolvedPath),
+        type: 'IMPORTS',
+        confidence: 'explicit',
+        reason: `File ${sourceFile.filePath} imports ${importReference.resolvedPath}.`,
+        source
+      };
+      if (seen.has(edge.id)) continue;
+      seen.add(edge.id);
+      edges.push(edge);
+    }
+  }
+  return edges.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function createCodeEdgeId(input: {
+  type: CodeEdgeType;
+  from: string;
+  to: string;
+  source: ContextGraphSourceRef;
+  reason: string;
+}): string {
+  const fingerprint = hashContextGraphText(JSON.stringify({
+    type: input.type,
+    from: input.from,
+    to: input.to,
+    source: {
+      path: input.source.path,
+      line: input.source.line ?? null,
+      extractor: input.source.extractor
+    },
+    reason: input.reason
+  })).replace(/^sha256:/, '');
+  return `code-edge:${input.type}:${fingerprint}`;
+}
+
+function isRelativeImportSpecifier(specifier: string): boolean {
+  return specifier.startsWith('./') || specifier.startsWith('../');
+}
+
+function dedupeImports(imports: CodeImportReference[]): CodeImportReference[] {
+  const seen = new Set<string>();
+  const deduped: CodeImportReference[] = [];
+  for (const importReference of imports) {
+    const key = `${importReference.specifier}\0${importReference.resolvedPath ?? ''}\0${importReference.line}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(importReference);
+  }
+  return deduped;
+}
+
+function dedupeExports(exports: CodeExportReference[]): CodeExportReference[] {
+  const seen = new Set<string>();
+  const deduped: CodeExportReference[] = [];
+  for (const exportReference of exports) {
+    if (seen.has(exportReference.name)) continue;
+    seen.add(exportReference.name);
+    deduped.push(exportReference);
+  }
+  return deduped;
+}
+
+function uniqueSorted(values: string[]): string[] {
+  return Array.from(new Set(values)).sort();
 }

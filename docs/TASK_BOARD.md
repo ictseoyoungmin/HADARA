@@ -354,3 +354,4 @@
 | T-0351 | C1 Graph Builder and Task Context Report | Done | tasks/T-0351-c1-graph-builder-and-task-context-report | |
 | T-0352 | Create/start C1 Context Graph CLI and Read Surface | Done | tasks/T-0352-create-start-c1-context-graph-cli-and-read-surface | |
 | T-0353 | C2 Code Index Schema and Ignore Rules | Done | tasks/T-0353-c2-code-index-schema-and-ignore-rules | |
+| T-0354 | C2 Import and Export Extraction | Done | tasks/T-0354-c2-import-and-export-extraction | |
