@@ -108,6 +108,7 @@ function codeIndexStateSource(report: CodeIndexReport): StateSource {
       command: report.command,
       schemaVersion: report.schemaVersion,
       summary: report.summary,
+      budget: report.budget,
       cache: report.cache ?? { used: false, hit: false },
       issues: report.issues.length
     }

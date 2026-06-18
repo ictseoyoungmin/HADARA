@@ -14,6 +14,11 @@ import { listCommandRegistryEntries, type CommandFamily, type CommandRegistryEnt
 export const CODE_INDEX_SCHEMA_ID = 'hadara.codeIndex.v1' as const;
 export const CODE_INDEX_COMMAND = 'code.index' as const;
 export const CODE_INDEX_CACHE_ROOT = '.hadara/local/cache/context' as const;
+export const CODE_INDEX_DEFAULT_BUDGETS: CodeIndexBudget = {
+  maxIndexedFiles: 2000,
+  maxIndexedBytes: 20 * 1024 * 1024,
+  maxSingleFileBytes: 1024 * 1024
+};
 
 export type CodeIndexSchemaVersion = typeof CODE_INDEX_SCHEMA_ID;
 export type CodeIndexCommand = typeof CODE_INDEX_COMMAND;
@@ -87,6 +92,18 @@ export interface CodeIndexSummary {
   degraded: boolean;
 }
 
+export interface CodeIndexBudget {
+  maxIndexedFiles: number;
+  maxIndexedBytes: number;
+  maxSingleFileBytes: number;
+}
+
+export interface CodeIndexBudgetUsage extends CodeIndexBudget {
+  indexedFiles: number;
+  indexedBytes: number;
+  skippedFiles: number;
+}
+
 export interface CodeIndexReport {
   schemaVersion: CodeIndexSchemaVersion;
   command: CodeIndexCommand;
@@ -98,6 +115,7 @@ export interface CodeIndexReport {
   symbols: CodeSymbolNode[];
   edges: CodeEdge[];
   summary: CodeIndexSummary;
+  budget: CodeIndexBudgetUsage;
   cache?: ContextCacheMetadata;
   issues: CodeIndexIssue[];
 }
@@ -132,6 +150,7 @@ export const CODE_FILE_LANGUAGES: CodeFileLanguage[] = ['typescript', 'javascrip
 export interface BuildCodeIndexReportOptions {
   projectRoot: string;
   generatedAt?: string;
+  budgets?: Partial<CodeIndexBudget>;
 }
 
 export interface CodeImportReference {
@@ -165,7 +184,8 @@ const COMMAND_REGISTRY_SOURCE_PATH = 'src/services/capability-registry.ts';
 
 export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): CodeIndexReport {
   const generatedAt = options.generatedAt ?? new Date().toISOString();
-  const discovered = discoverCodeIndexFiles(options.projectRoot);
+  const budgets = normalizeCodeIndexBudgets(options.budgets);
+  const discovered = discoverCodeIndexFiles(options.projectRoot, { budgets });
   const fileReferences: Array<{
     filePath: string;
     content: string;
@@ -173,11 +193,33 @@ export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): Code
     exports: CodeExportReference[];
   }> = [];
   const issues: CodeIndexIssue[] = [...discovered.issues];
+  let indexedBytes = 0;
+  let skippedFiles = discovered.skippedFiles;
 
   for (const relativePath of discovered.paths) {
     const absolutePath = path.join(options.projectRoot, relativePath);
     try {
+      const stats = fs.statSync(absolutePath);
+      if (stats.size > budgets.maxSingleFileBytes) {
+        skippedFiles += 1;
+        issues.push(createBudgetIssue({
+          message: `Skipped ${relativePath} because it exceeds the single-file code index budget (${stats.size} bytes > ${budgets.maxSingleFileBytes} bytes).`,
+          path: relativePath,
+          fixHint: 'Reduce the file size or wait for a future configurable code index budget.'
+        }));
+        continue;
+      }
+      if (indexedBytes + stats.size > budgets.maxIndexedBytes) {
+        skippedFiles += 1;
+        issues.push(createBudgetIssue({
+          message: `Skipped ${relativePath} because the code index byte budget would be exceeded (${indexedBytes + stats.size} bytes > ${budgets.maxIndexedBytes} bytes).`,
+          path: relativePath,
+          fixHint: 'Reduce indexed source size or wait for a future configurable code index budget.'
+        }));
+        continue;
+      }
       const content = fs.readFileSync(absolutePath, 'utf8');
+      indexedBytes += stats.size;
       const references = extractCodeFileReferences({
         projectRoot: options.projectRoot,
         path: relativePath,
@@ -221,14 +263,26 @@ export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): Code
     symbols,
     edges,
     summary: summarizeCodeIndex(files, symbols, edges, issues),
+    budget: {
+      ...budgets,
+      indexedFiles: files.length,
+      indexedBytes,
+      skippedFiles
+    },
     cache: { used: false, hit: false },
     issues
   };
 }
 
-export function discoverCodeIndexFiles(projectRoot: string): { paths: string[]; issues: CodeIndexIssue[] } {
+export function discoverCodeIndexFiles(
+  projectRoot: string,
+  options: { budgets?: Partial<CodeIndexBudget> } = {}
+): { paths: string[]; issues: CodeIndexIssue[]; skippedFiles: number } {
+  const budgets = normalizeCodeIndexBudgets(options.budgets);
   const paths: string[] = [];
   const issues: CodeIndexIssue[] = [];
+  let skippedFiles = 0;
+  let fileBudgetIssueRecorded = false;
   const root = path.resolve(projectRoot);
 
   function visit(relativeDir: string): void {
@@ -256,13 +310,48 @@ export function discoverCodeIndexFiles(projectRoot: string): { paths: string[]; 
         continue;
       }
       if (entry.isFile() && classifyCodeFile(relativePath) !== 'unknown') {
+        if (paths.length >= budgets.maxIndexedFiles) {
+          skippedFiles += 1;
+          if (!fileBudgetIssueRecorded) {
+            fileBudgetIssueRecorded = true;
+            issues.push(createBudgetIssue({
+              message: `Code index exceeded max indexed files budget (${budgets.maxIndexedFiles}); partial results returned.`,
+              path: relativePath,
+              fixHint: 'Reduce indexed files or wait for a future configurable code index budget.'
+            }));
+          }
+          continue;
+        }
         paths.push(relativePath);
       }
     }
   }
 
   visit('');
-  return { paths: Array.from(new Set(paths)).sort(), issues };
+  return { paths: Array.from(new Set(paths)).sort(), issues, skippedFiles };
+}
+
+function normalizeCodeIndexBudgets(input: Partial<CodeIndexBudget> = {}): CodeIndexBudget {
+  return {
+    maxIndexedFiles: normalizeBudgetValue(input.maxIndexedFiles, CODE_INDEX_DEFAULT_BUDGETS.maxIndexedFiles),
+    maxIndexedBytes: normalizeBudgetValue(input.maxIndexedBytes, CODE_INDEX_DEFAULT_BUDGETS.maxIndexedBytes),
+    maxSingleFileBytes: normalizeBudgetValue(input.maxSingleFileBytes, CODE_INDEX_DEFAULT_BUDGETS.maxSingleFileBytes)
+  };
+}
+
+function normalizeBudgetValue(value: number | undefined, fallback: number): number {
+  if (value === undefined || !Number.isFinite(value)) return fallback;
+  return Math.max(0, Math.floor(value));
+}
+
+function createBudgetIssue(input: { message: string; path?: string; fixHint: string }): CodeIndexIssue {
+  return {
+    severity: 'warning',
+    code: 'CODE_INDEX_TOO_LARGE',
+    message: input.message,
+    ...(input.path ? { path: input.path } : {}),
+    fixHint: input.fixHint
+  };
 }
 
 export function createCodeFileNode(

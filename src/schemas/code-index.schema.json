@@ -42,6 +42,26 @@
         "degraded": { "type": "boolean" }
       }
     },
+    "budget": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "maxIndexedFiles",
+        "maxIndexedBytes",
+        "maxSingleFileBytes",
+        "indexedFiles",
+        "indexedBytes",
+        "skippedFiles"
+      ],
+      "properties": {
+        "maxIndexedFiles": { "type": "number" },
+        "maxIndexedBytes": { "type": "number" },
+        "maxSingleFileBytes": { "type": "number" },
+        "indexedFiles": { "type": "number" },
+        "indexedBytes": { "type": "number" },
+        "skippedFiles": { "type": "number" }
+      }
+    },
     "cache": {
       "type": "object",
       "additionalProperties": true,

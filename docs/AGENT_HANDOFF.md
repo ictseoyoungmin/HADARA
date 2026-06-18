@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, and T-0353-T-0358 implemented C2 through graph integration. |
-| Current Phase | 0.3.3 context-routing C2 hardening / transition review | T-0358 added opt-in code-aware context graph output after the T-0353 schema/discovery foundation, T-0354 imports/exports, T-0355 symbols, T-0356 command hints, and T-0357 test relation edges. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0358 C2 Context Graph Integration | Added `context graph --include-code` as an additive read-only graph extension with SourceFile/TestFile/FixtureFile/ConfigFile/Symbol nodes, code relation edges, and code-index state source projection while preserving default C1 graph output. |
-| Active / Next Task | TBD Start C2 Hardening and Performance Review | Review the remaining C2 performance/degraded-mode/cache/documentation boundary before moving to C3 context packs. |
-| Validation Baseline | T-0358 context graph integration validation | Docker focused context graph/code index/registry tests passed 4 files / 24 tests; Docker `npm run check` passed 130 files / 835 tests; Docker build/dist refresh, built version smoke, built `context graph --include-code` smoke, and `git diff --check` passed in `ev:T-0358:407b29c183f246d390f162f9`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, and T-0353-T-0359 completed C2 with graph integration plus budget/degraded hardening. |
+| Current Phase | 0.3.3 context-routing C3 context-pack start | C1 project graph/state projection and C2 code-link/index output are implemented; T-0359 added explicit code-index budget/degraded metadata while persistent cache remains deferred. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0359 C2 Code Index Budget Hardening | Added default file-count, total-byte, and single-file read budgets to the internal code index, warning-level degraded partial output, additive `budget` schema/report metadata, and code-index budget projection through `context graph --include-code`. |
+| Active / Next Task | TBD Start C3 Context Pack Schema and Ranking | Start C3 over the completed C1/C2 foundation; read `03_Context_Pack_and_Session_Start_Spec.md` and keep C4/C5/C6 deferred unless the active capsule requires them. |
+| Validation Baseline | T-0359 code index budget hardening validation | Docker focused code-index/context/schema tests passed 3 files / 14 tests; Docker `npm run check` passed 130 files / 836 tests; Docker build/dist refresh, built version smoke, built `context graph --include-code` budget smoke, and `git diff --check` passed in `ev:T-0359:5bd5521857864638b2abde7a`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Start C2 hardening and performance review. | Use T-0358 graph-integrated code index output as the base; read `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md` plus `05_Indexing_Cache_Invalidation_and_Performance_Spec.md` if adding cache/performance behavior. |
+| TBD | Start C3 context pack schema and ranking. | Use the completed C1 graph/state projection and C2 code-aware graph/index output as inputs; read `docs/specs/0.3.3/context-routing/03_Context_Pack_and_Session_Start_Spec.md`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0359 C2 Code Index Budget Hardening | Added explicit code-index file/byte/single-file budgets, degraded partial-output warnings, budget metadata, and include-code graph projection. | `ev:T-0359:5bd5521857864638b2abde7a`. |
 | T-0358 C2 Context Graph Integration | Added opt-in code-aware context graph output while preserving default C1 graph behavior. | `ev:T-0358:407b29c183f246d390f162f9`. |
 | T-0357 C2 Test Relation Edges | Added explicit, derived, heuristic, and evidence-backed test relation edges to the code index. | `ev:T-0357:6406481495244038961bd0de`. |
-| T-0356 C2 Command Implementation and Test File Hints | Added registry implementation/test-file hints, command family metadata on code files, and command hint edges with explicit/heuristic confidence. | `ev:T-0356:3f6509b1f0da4c569b03befa`. |
 
 ## Current Known Problems
 

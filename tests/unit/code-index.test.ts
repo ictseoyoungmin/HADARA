@@ -8,6 +8,7 @@ import {
   classifyCodeFile,
   CODE_FILE_KINDS,
   CODE_INDEX_CACHE_ROOT,
+  CODE_INDEX_DEFAULT_BUDGETS,
   CODE_INDEX_EDGE_TYPES,
   CODE_INDEX_IGNORED_PATHS,
   createCodeFileNode,
@@ -103,6 +104,7 @@ describe('code index schema and ignore rules', () => {
 
     const discovered = discoverCodeIndexFiles(root);
     expect(discovered.issues).toEqual([]);
+    expect(discovered.skippedFiles).toBe(0);
     expect(discovered.paths).toEqual([
       'package.json',
       'scripts/release.sh',
@@ -127,6 +129,12 @@ describe('code index schema and ignore rules', () => {
       edges: 8,
       degraded: false
     });
+    expect(report.budget).toMatchObject({
+      ...CODE_INDEX_DEFAULT_BUDGETS,
+      indexedFiles: 8,
+      skippedFiles: 0
+    });
+    expect(report.budget.indexedBytes).toBeGreaterThan(0);
     expect(report.cache).toEqual({ used: false, hit: false });
     expect(report.files.find((file) => file.path === 'src/cli/main.ts')).toMatchObject({
       id: 'file:src/cli/main.ts',
@@ -137,6 +145,53 @@ describe('code index schema and ignore rules', () => {
       commandFamilies: []
     });
     assertSchema('hadara.codeIndex.v1', report);
+  });
+
+  it('returns explicit degraded output when code index budgets are exceeded', () => {
+    const root = createTempProject();
+    writeFile(root, 'src/a.ts', 'export const a = 1;\n');
+    writeFile(root, 'src/b.ts', 'export const b = 2;\n');
+    writeFile(root, 'src/huge.ts', `${'x'.repeat(32)}\n`);
+
+    const discovered = discoverCodeIndexFiles(root, { budgets: { maxIndexedFiles: 2 } });
+    expect(discovered.paths).toEqual(['src/a.ts', 'src/b.ts']);
+    expect(discovered.skippedFiles).toBe(1);
+    expect(discovered.issues).toEqual([
+      expect.objectContaining({
+        severity: 'warning',
+        code: 'CODE_INDEX_TOO_LARGE',
+        path: 'src/huge.ts'
+      })
+    ]);
+
+    const singleFileReport = buildCodeIndexReport({
+      projectRoot: root,
+      generatedAt: '2026-06-18T10:10:00.000Z',
+      budgets: { maxSingleFileBytes: 20 }
+    });
+    expect(singleFileReport.ok).toBe(true);
+    expect(singleFileReport.summary.degraded).toBe(true);
+    expect(singleFileReport.budget.skippedFiles).toBe(1);
+    expect(singleFileReport.files.map((file) => file.path)).toEqual(['src/a.ts', 'src/b.ts']);
+    expect(singleFileReport.issues).toContainEqual(expect.objectContaining({
+      code: 'CODE_INDEX_TOO_LARGE',
+      path: 'src/huge.ts'
+    }));
+    assertSchema('hadara.codeIndex.v1', singleFileReport);
+
+    const byteBudgetReport = buildCodeIndexReport({
+      projectRoot: root,
+      generatedAt: '2026-06-18T10:20:00.000Z',
+      budgets: { maxIndexedBytes: 25, maxSingleFileBytes: 100 }
+    });
+    expect(byteBudgetReport.ok).toBe(true);
+    expect(byteBudgetReport.summary.degraded).toBe(true);
+    expect(byteBudgetReport.budget.indexedBytes).toBeLessThanOrEqual(25);
+    expect(byteBudgetReport.budget.skippedFiles).toBeGreaterThan(0);
+    expect(byteBudgetReport.issues).toContainEqual(expect.objectContaining({
+      code: 'CODE_INDEX_TOO_LARGE'
+    }));
+    assertSchema('hadara.codeIndex.v1', byteBudgetReport);
   });
 
   it('requires code file hash metadata in schema validation', () => {
