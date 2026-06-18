@@ -346,3 +346,4 @@
 | T-0343 | Context Graph Schema Types and Fixtures | Done | tasks/T-0343-context-graph-schema-types-and-fixtures | |
 | T-0344 | Context Graph Extractor Contract | Done | tasks/T-0344-context-graph-extractor-contract | |
 | T-0345 | Context Graph Task Extractors | Done | tasks/T-0345-context-graph-task-extractors | |
+| T-0346 | Context Graph Registry Extractors | Done | tasks/T-0346-context-graph-registry-extractors | |
