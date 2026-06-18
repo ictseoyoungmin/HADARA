@@ -344,3 +344,4 @@
 | T-0341 | Stable 0.3.2 Post-Publish Installed-Package Recycle | Done | tasks/T-0341-stable-0-3-2-post-publish-installed-package-recycle | Installed-package recycle passed from temp-prefix bin. |
 | T-0342 | Context Routing Spec Docs Registration | Done | tasks/T-0342-context-routing-spec-docs-registration | |
 | T-0343 | Context Graph Schema Types and Fixtures | Done | tasks/T-0343-context-graph-schema-types-and-fixtures | |
+| T-0344 | Context Graph Extractor Contract | Done | tasks/T-0344-context-graph-extractor-contract | |
