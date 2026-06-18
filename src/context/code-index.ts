@@ -140,6 +140,7 @@ export interface CodeImportReference {
 
 export interface CodeExportReference {
   name: string;
+  kind: CodeSymbolKind;
   line: number;
 }
 
@@ -153,7 +154,12 @@ export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): Code
   const generatedAt = options.generatedAt ?? new Date().toISOString();
   const discovered = discoverCodeIndexFiles(options.projectRoot);
   const files: CodeFileNode[] = [];
-  const importReferences: Array<{ filePath: string; content: string; imports: CodeImportReference[] }> = [];
+  const fileReferences: Array<{
+    filePath: string;
+    content: string;
+    imports: CodeImportReference[];
+    exports: CodeExportReference[];
+  }> = [];
   const issues: CodeIndexIssue[] = [...discovered.issues];
 
   for (const relativePath of discovered.paths) {
@@ -166,7 +172,7 @@ export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): Code
         content
       });
       issues.push(...references.issues);
-      importReferences.push({ filePath: relativePath, content, imports: references.imports });
+      fileReferences.push({ filePath: relativePath, content, imports: references.imports, exports: references.exports });
       files.push(createCodeFileNode(relativePath, content, {
         imports: references.imports.map((importReference) => importReference.resolvedPath ?? importReference.specifier),
         exports: references.exports.map((exportReference) => exportReference.name)
@@ -181,7 +187,11 @@ export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): Code
       });
     }
   }
-  const edges = createImportEdges(importReferences);
+  const symbols = createCodeSymbolNodes(fileReferences);
+  const edges = [
+    ...createImportEdges(fileReferences),
+    ...createSymbolEdges(fileReferences)
+  ].sort((a, b) => a.id.localeCompare(b.id));
 
   return {
     schemaVersion: CODE_INDEX_SCHEMA_ID,
@@ -191,9 +201,9 @@ export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): Code
     projectRoot: options.projectRoot,
     sourceHash: hashContextGraphSources(files.map((file) => ({ path: file.path, hash: file.hash }))),
     files,
-    symbols: [],
+    symbols,
     edges,
-    summary: summarizeCodeIndex(files, [], edges, issues),
+    summary: summarizeCodeIndex(files, symbols, edges, issues),
     cache: { used: false, hit: false },
     issues
   };
@@ -297,8 +307,8 @@ export function extractCodeFileReferences(input: {
       }
     }
 
-    for (const name of extractExportNamesFromLine(line)) {
-      exports.push({ name, line: lineNumber });
+    for (const exportReference of extractExportReferencesFromLine(line)) {
+      exports.push({ ...exportReference, line: lineNumber });
     }
   });
 
@@ -386,11 +396,16 @@ function extractImportSpecifiersFromLine(line: string): string[] {
   return specifiers;
 }
 
-function extractExportNamesFromLine(line: string): string[] {
+function extractExportReferencesFromLine(line: string): Array<Omit<CodeExportReference, 'line'>> {
   const trimmed = line.trim();
-  const names: string[] = [];
+  const exports: Array<Omit<CodeExportReference, 'line'>> = [];
   const declarationMatch = trimmed.match(/^export\s+(?:async\s+)?(function|class|interface|type|const)\s+([A-Za-z_$][\w$]*)/);
-  if (declarationMatch?.[2]) names.push(declarationMatch[2]);
+  if (declarationMatch?.[1] && declarationMatch[2]) {
+    exports.push({
+      name: declarationMatch[2],
+      kind: declarationMatch[1] as CodeSymbolKind
+    });
+  }
 
   const listMatch = trimmed.match(/^export\s+(?:type\s+)?\{([^}]+)\}/);
   if (listMatch?.[1]) {
@@ -399,11 +414,14 @@ function extractExportNamesFromLine(line: string): string[] {
       if (!candidate) continue;
       const aliasParts = candidate.split(/\s+as\s+/);
       const exportedName = (aliasParts[aliasParts.length - 1] ?? '').trim();
-      if (/^[A-Za-z_$][\w$]*$/.test(exportedName)) names.push(exportedName);
+      if (/^[A-Za-z_$][\w$]*$/.test(exportedName)) exports.push({
+        name: exportedName,
+        kind: 'unknown'
+      });
     }
   }
 
-  return names;
+  return exports;
 }
 
 function resolveRelativeCodeImport(input: {
@@ -462,6 +480,62 @@ function createImportEdges(importReferences: Array<{ filePath: string; content: 
       if (seen.has(edge.id)) continue;
       seen.add(edge.id);
       edges.push(edge);
+    }
+  }
+  return edges.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function createCodeSymbolNodes(fileReferences: Array<{ filePath: string; exports: CodeExportReference[] }>): CodeSymbolNode[] {
+  const symbols: CodeSymbolNode[] = [];
+  const seen = new Set<string>();
+  for (const sourceFile of fileReferences) {
+    for (const exportReference of sourceFile.exports) {
+      const id = createCodeSymbolNodeId(sourceFile.filePath, exportReference.name);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      symbols.push({
+        id,
+        name: exportReference.name,
+        kind: exportReference.kind,
+        path: normalizeContextGraphPath(sourceFile.filePath),
+        exported: true,
+        line: exportReference.line
+      });
+    }
+  }
+  return symbols.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function createSymbolEdges(fileReferences: Array<{ filePath: string; content: string; exports: CodeExportReference[] }>): CodeEdge[] {
+  const edges: CodeEdge[] = [];
+  const seen = new Set<string>();
+  for (const sourceFile of fileReferences) {
+    const from = createCodeFileNodeId(sourceFile.filePath);
+    for (const exportReference of sourceFile.exports) {
+      const to = createCodeSymbolNodeId(sourceFile.filePath, exportReference.name);
+      const source = createContextGraphSourceRef({
+        path: sourceFile.filePath,
+        line: exportReference.line,
+        content: sourceFile.content,
+        extractor: 'extractCodeSymbols'
+      });
+      for (const type of ['DEFINES_SYMBOL', 'EXPORTS'] as CodeEdgeType[]) {
+        const reason = type === 'DEFINES_SYMBOL'
+          ? `File ${sourceFile.filePath} defines exported symbol ${exportReference.name}.`
+          : `File ${sourceFile.filePath} exports symbol ${exportReference.name}.`;
+        const edge: CodeEdge = {
+          id: createCodeEdgeId({ type, from, to, source, reason }),
+          from,
+          to,
+          type,
+          confidence: 'explicit',
+          reason,
+          source
+        };
+        if (seen.has(edge.id)) continue;
+        seen.add(edge.id);
+        edges.push(edge);
+      }
     }
   }
   return edges.sort((a, b) => a.id.localeCompare(b.id));

@@ -123,8 +123,8 @@ describe('code index schema and ignore rules', () => {
       testFiles: 2,
       fixtureFiles: 1,
       configFiles: 2,
-      symbols: 0,
-      edges: 2,
+      symbols: 1,
+      edges: 4,
       degraded: false
     });
     expect(report.cache).toEqual({ used: false, hit: false });
@@ -240,7 +240,32 @@ describe('code index schema and ignore rules', () => {
     });
     expect(report.ok).toBe(true);
     expect(report.summary.degraded).toBe(true);
-    expect(report.summary.edges).toBe(5);
+    expect(report.summary.symbols).toBe(9);
+    expect(report.summary.edges).toBe(23);
+    expect(report.symbols).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'symbol:src/cli/main.ts#run',
+        name: 'run',
+        kind: 'function',
+        path: 'src/cli/main.ts',
+        exported: true,
+        line: 7
+      }),
+      expect.objectContaining({
+        id: 'symbol:src/cli/main.ts#Main',
+        name: 'Main',
+        kind: 'class',
+        exported: true,
+        line: 9
+      }),
+      expect.objectContaining({
+        id: 'symbol:src/cli/main.ts#exportedHelper',
+        name: 'exportedHelper',
+        kind: 'unknown',
+        exported: true,
+        line: 6
+      })
+    ]));
     expect(report.edges).toEqual(expect.arrayContaining([
       expect.objectContaining({
         from: 'file:src/cli/main.ts',
@@ -257,6 +282,23 @@ describe('code index schema and ignore rules', () => {
         from: 'file:src/cli/main.ts',
         to: 'file:src/cli/helpers.ts',
         type: 'IMPORTS'
+      }),
+      expect.objectContaining({
+        from: 'file:src/cli/main.ts',
+        to: 'symbol:src/cli/main.ts#run',
+        type: 'DEFINES_SYMBOL',
+        confidence: 'explicit',
+        source: expect.objectContaining({
+          path: 'src/cli/main.ts',
+          line: 7,
+          extractor: 'extractCodeSymbols'
+        })
+      }),
+      expect.objectContaining({
+        from: 'file:src/cli/main.ts',
+        to: 'symbol:src/cli/main.ts#run',
+        type: 'EXPORTS',
+        confidence: 'explicit'
       })
     ]));
     expect(report.issues).toContainEqual(expect.objectContaining({

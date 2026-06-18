@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, and T-0353-T-0354 started C2. |
-| Current Phase | 0.3.3 context-routing C2 implementation | T-0354 added deterministic file-level import/export extraction and resolved `IMPORTS` code index edges after the T-0353 schema/discovery foundation. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0354 C2 Import and Export Extraction | Added spec-listed TS/JS import/export extraction, relative import resolution, warning-only unresolved relative import degradation, file-level `imports`/`exports`, and resolved `IMPORTS` edges. |
-| Active / Next Task | TBD Start C2 Symbol Extraction | Create `CodeSymbolNode` records and additive symbol/export relation edges from the existing exported-name metadata while keeping command hints, test edges, graph integration, and public CLI for later C2 capsules. |
-| Validation Baseline | T-0354 import/export extraction validation | Docker focused code-index tests passed 1 file / 6 tests; Docker `npm run check` passed 130 files / 829 tests; Docker build/dist refresh, built internal code-index schema smoke, built CLI version smoke, and `git diff --check` passed in `ev:T-0354:9093ae17f3c64a54b46b319c`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, and T-0353-T-0355 started C2. |
+| Current Phase | 0.3.3 context-routing C2 implementation | T-0355 added exported symbol extraction with `CodeSymbolNode` records and `DEFINES_SYMBOL`/`EXPORTS` edges after the T-0353 schema/discovery foundation and T-0354 import/export extraction. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0355 C2 Symbol Extraction | Added exported symbol nodes with kind/path/line/exported metadata and deterministic source-addressed `DEFINES_SYMBOL` and `EXPORTS` code index edges. |
+| Active / Next Task | TBD Start C2 Command Implementation and Test File Hints | Add command implementation/test-file hints over the code index while keeping test relation edges, graph integration, and public CLI behavior for later C2 capsules. |
+| Validation Baseline | T-0355 symbol extraction validation | Docker focused code-index tests passed 1 file / 6 tests; Docker `npm run check` passed 130 files / 829 tests; Docker build/dist refresh, built internal code-index schema smoke, built CLI version smoke, and `git diff --check` passed in `ev:T-0355:2ab6f20fb61b4b4e8701a037`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Start C2 symbol extraction over the import/export-aware code index. | Use T-0354 file-level exported names and import edges as the base; read `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md` plus `06_Worker_Agent_Implementation_Plan.md`. |
+| TBD | Start C2 command implementation/test-file hints over the symbol-aware code index. | Use T-0355 exported symbol nodes and T-0354 import edges as the base; read `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md` plus `06_Worker_Agent_Implementation_Plan.md`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0355 C2 Symbol Extraction | Added exported `CodeSymbolNode` records with kind/line metadata plus deterministic `DEFINES_SYMBOL` and `EXPORTS` code index edges. | `ev:T-0355:2ab6f20fb61b4b4e8701a037`. |
 | T-0354 C2 Import and Export Extraction | Added spec-listed TS/JS import/export extraction, relative import resolution, warning-only unresolved relative import degradation, file-level imports/exports, and resolved `IMPORTS` code index edges. | `ev:T-0354:9093ae17f3c64a54b46b319c`. |
 | T-0353 C2 Code Index Schema and Ignore Rules | Added the C2 code index contract, JSON schema fixture, runtime registration, deterministic ignore rules, file classification/discovery, internal report builder, and focused code-index tests. | `ev:T-0353:b72d5284ef1d42afa39232a0`. |
-| T-0352 Create/start C1 Context Graph CLI and Read Surface | Exposed the C1 graph builder through `hadara context graph --json` and task-scoped `--task` output, registered command metadata, documented the JSON/read-only contract, and added focused CLI coverage. | `ev:T-0352:d70ee6360acf43948d7cf620`. |
 
 ## Current Known Problems
 
@@ -90,12 +90,13 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create/start C2 Symbol Extraction. | T-0354 made imports/exports available at file level; the next worker-plan C2 capsule is symbol extraction and additive symbol/export code index edges. | T-0354 validation evidence `ev:T-0354:9093ae17f3c64a54b46b319c`; read `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md`, `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
+| Create/start C2 Command Implementation and Test File Hints. | T-0355 made exported symbols available in the code index; the next worker-plan C2 capsule should add command implementation/test-file hints without adding test relation edges, graph integration, or public CLI behavior yet. | T-0355 validation evidence `ev:T-0355:2ab6f20fb61b4b4e8701a037`; read `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md`, `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0355 code index symbol extraction | Docker focused code-index tests passed 1 file / 6 tests; Docker `npm run check` passed 130 files / 829 tests; Docker build passed and `/workspace/dist` was refreshed; built internal code-index schema smoke, built CLI version smoke, and `git diff --check` passed. | Evidence `ev:T-0355:2ab6f20fb61b4b4e8701a037`; command hints, test relation edges, graph integration, and public CLI remain later C2 scope. |
 | T-0354 code index import/export extraction | Docker focused code-index tests passed 1 file / 6 tests; Docker `npm run check` passed 130 files / 829 tests; Docker build passed and `/workspace/dist` was refreshed; built internal code-index schema smoke, built CLI version smoke, and `git diff --check` passed. | Evidence `ev:T-0354:9093ae17f3c64a54b46b319c`; symbol nodes, command hints, test edges, graph integration, and public CLI remain later C2 scope. |
 | T-0353 code index schema/ignore foundation | Docker focused code-index/schema tests passed 2 files / 6 tests; Docker `npm run check` passed 130 files / 828 tests; Docker build passed and `/workspace/dist` was refreshed; built internal code-index schema smoke, built CLI version smoke, and `git diff --check` passed. | Evidence `ev:T-0353:b72d5284ef1d42afa39232a0`; import/export extraction, symbols, command hints, test edges, graph integration, and public CLI remain later C2 scope. |
 | T-0352 context graph CLI/read surface | Docker focused context graph CLI/registry/schema tests passed 4 files / 15 tests; Docker `npm run check` passed 129 files / 823 tests; Docker build passed and `/workspace/dist` was refreshed; built context graph CLI smoke, built CLI version smoke, and `git diff --check` passed. | Evidence `ev:T-0352:d70ee6360acf43948d7cf620`; persistent graph cache remains unimplemented by design. |
