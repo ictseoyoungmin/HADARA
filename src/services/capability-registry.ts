@@ -855,6 +855,33 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     notes: 'Read-only C3 projection; C4 slicing and persistent C6 cache writes are not implemented by this command.'
   }),
   commandEntry({
+    id: 'context.cache.status',
+    command: 'hadara context cache status --json',
+    summary: 'Inspect read-only C6 context cache freshness, source-manifest staleness, and extractor invalidation keys.',
+    canonical: true,
+    appearsInDefaultHelp: false,
+    family: 'project-health',
+    scope: 'local-state',
+    lifecycleStage: 'inspect',
+    requiredness: 'diagnostic',
+    writeBoundary: 'read-only',
+    readOnly: true,
+    risk: 'low',
+    actor: 'agent-worker',
+    status: 'experimental',
+    schemaVersion: 'hadara.context.cacheStatus.v1',
+    since: '0.3.3',
+    docs: ['docs/CLI_JSON_CONTRACT.md', 'docs/COMMAND_SURFACE.md', 'docs/SCHEMAS.md'],
+    implementationFiles: ['src/cli/context.ts', 'src/context/context-cache-store.ts', 'src/context/source-manifest.ts'],
+    testFiles: ['tests/unit/context-cache-store.test.ts', 'tests/unit/context-graph-cli.test.ts'],
+    examples: [
+      example('Read context cache status', 'hadara context cache status --json', 'Before relying on C6 cache-backed context routing performance.')
+    ],
+    related: ['context.graph', 'context.pack', 'state.verify'],
+    conflictsWith: [],
+    notes: 'Read-only status command; it does not create or update cache files. Cache warm/write integration remains future C6 work.'
+  }),
+  commandEntry({
     id: 'debt.list',
     command: 'hadara debt list [--json]',
     summary: 'List operational debt records.',

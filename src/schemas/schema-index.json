@@ -65,6 +65,20 @@
       "notes": "Documents read-only MCP memory-mode context export; CLI export-context remains file-writing."
     },
     {
+      "id": "hadara.context.cacheRecord.v1",
+      "path": "src/schemas/context-cache-record.schema.json",
+      "status": "fixture",
+      "owner": "context/cache",
+      "notes": "Documents C6 context cache record envelopes for projection payloads keyed by source manifests, source subsets, and extractor versions."
+    },
+    {
+      "id": "hadara.context.cacheStatus.v1",
+      "path": "src/schemas/context-cache-status.schema.json",
+      "status": "fixture",
+      "owner": "context/cache",
+      "notes": "Documents read-only C6 context cache status reports for source-manifest cache hit, miss, stale, and corrupt states."
+    },
+    {
       "id": "hadara.codeIndex.v1",
       "path": "src/schemas/code-index.schema.json",
       "status": "fixture",

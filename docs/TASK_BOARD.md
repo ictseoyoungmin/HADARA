@@ -364,3 +364,4 @@
 | T-0361 | C3 Context Pack Schema and Ranking | Done | tasks/T-0361-c3-context-pack-schema-and-ranking | Internal `hadara.contextPack.v1` schema/ranking builder; public CLI and C4 slicing deferred. |
 | T-0362 | C3 Context Pack CLI from Graph Only | Done | tasks/T-0362-c3-context-pack-cli-from-graph-only | Public read-only context pack CLI implemented; C6.1 speed work next. |
 | T-0363 | C6.1 Source Manifest and Shared Discovery | Done | tasks/T-0363-c6-1-source-manifest-and-shared-discovery | Internal source manifest schema/helper added; C6.2 cache store/status next. |
+| T-0364 | C6.2 Cache Store and Status Read Model | Done | tasks/T-0364-c6-2-cache-store-and-status-read-model | Cache store/status implemented; C6.3 warm/integration next before C4. |

@@ -213,6 +213,36 @@ describe('context graph CLI', () => {
     expect(payload.readFirst.length).toBeLessThanOrEqual(2);
     expect(validateSchema('hadara.contextPack.v1', payload).ok).toBe(true);
   });
+
+  it('prints read-only context cache status without creating cache files', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
+    const before = snapshotProject(root);
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleContextCommand({
+      args: ['context', 'cache', 'status', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.context.cacheStatus.v1',
+      command: 'context.cache.status',
+      ok: true,
+      projectRoot: root,
+      readOnly: true,
+      summary: {
+        mode: 'miss',
+        cachePresent: false,
+        cacheFresh: false
+      }
+    });
+    expect(validateSchema('hadara.context.cacheStatus.v1', payload).ok).toBe(true);
+    expect(snapshotProject(root)).toEqual(before);
+  });
 });
 
 function snapshotProject(root: string): Record<string, string> {

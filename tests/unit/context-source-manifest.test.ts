@@ -138,6 +138,24 @@ describe('context source manifest', () => {
     expect(getSource(changed, 'src/a.ts')?.contentHash).toBeUndefined();
   });
 
+  it('keeps manifest hashes stable across generatedAt and generatedByCommand changes', () => {
+    const root = createTempProject();
+    writeFile(root, 'docs/TASK_BOARD.md', '# TASK_BOARD\n');
+
+    const first = buildContextSourceManifest({
+      projectRoot: root,
+      generatedAt: '2026-06-18T14:13:00.000Z',
+      generatedByCommand: 'context.graph'
+    });
+    const second = buildContextSourceManifest({
+      projectRoot: root,
+      generatedAt: '2026-06-18T14:14:00.000Z',
+      generatedByCommand: 'context.cache.status'
+    });
+
+    expect(second.manifestHash).toBe(first.manifestHash);
+  });
+
   it('compares manifests and maps stale sources to extractor keys without invalidating unrelated groups', () => {
     const root = createTempProject();
     writeFile(root, 'docs/TASK_BOARD.md', '# TASK_BOARD\n');

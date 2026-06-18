@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.context.cacheStatus.v1",
+  "x-hadara-schema-id": "hadara.context.cacheStatus.v1",
+  "title": "HADARA Context Cache Status",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "command",
+    "ok",
+    "generatedAt",
+    "projectRoot",
+    "cacheRoot",
+    "readOnly",
+    "summary",
+    "manifest",
+    "issues"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.context.cacheStatus.v1" },
+    "command": { "const": "context.cache.status" },
+    "ok": { "type": "boolean" },
+    "generatedAt": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "cacheRoot": { "type": "string" },
+    "readOnly": { "const": true },
+    "summary": { "$ref": "#/$defs/summary" },
+    "manifest": { "$ref": "#/$defs/manifestStatus" },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["mode", "cachePresent", "cacheFresh", "degraded", "staleExtractorKeys"],
+      "properties": {
+        "mode": { "enum": ["miss", "hit", "stale", "corrupt"] },
+        "cachePresent": { "type": "boolean" },
+        "cacheFresh": { "type": "boolean" },
+        "degraded": { "type": "boolean" },
+        "staleExtractorKeys": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "manifestStatus": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "cachePath",
+        "status",
+        "currentManifestHash",
+        "currentSourceCount",
+        "currentSkippedSourceCount",
+        "addedPaths",
+        "removedPaths",
+        "changedPaths",
+        "unchangedSourceCount",
+        "staleExtractorKeys"
+      ],
+      "properties": {
+        "cachePath": { "type": "string" },
+        "status": { "enum": ["missing", "fresh", "stale", "corrupt", "schema-mismatch"] },
+        "currentManifestHash": { "type": "string" },
+        "currentSourceCount": { "type": "number" },
+        "currentSkippedSourceCount": { "type": "number" },
+        "cachedManifestHash": { "type": "string" },
+        "cachedGeneratedAt": { "type": "string" },
+        "cachedSourceCount": { "type": "number" },
+        "addedPaths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "removedPaths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "changedPaths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "unchangedSourceCount": { "type": "number" },
+        "staleExtractorKeys": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "enum": ["info", "warning", "error"] },
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "path": { "type": "string" },
+        "fixHint": { "type": "string" }
+      }
+    }
+  }
+}

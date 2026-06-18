@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.context.cacheRecord.v1",
+  "x-hadara-schema-id": "hadara.context.cacheRecord.v1",
+  "title": "HADARA Context Cache Record",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "cacheRecordVersion",
+    "cacheKey",
+    "projection",
+    "projectionSchemaVersion",
+    "createdAt",
+    "manifestHash",
+    "sourceSubsetHash",
+    "extractorVersions",
+    "degraded",
+    "issues",
+    "payload"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.context.cacheRecord.v1" },
+    "cacheRecordVersion": { "type": "string" },
+    "cacheKey": { "type": "string", "minLength": 1 },
+    "projection": { "type": "string", "minLength": 1 },
+    "projectionSchemaVersion": { "type": "string", "minLength": 1 },
+    "createdAt": { "type": "string" },
+    "manifestHash": { "type": "string", "minLength": 1 },
+    "sourceSubsetHash": { "type": "string", "minLength": 1 },
+    "extractorVersions": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "degraded": { "type": "boolean" },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    },
+    "payload": {}
+  },
+  "$defs": {
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "enum": ["info", "warning", "error"] },
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "path": { "type": "string" },
+        "fixHint": { "type": "string" }
+      }
+    }
+  }
+}

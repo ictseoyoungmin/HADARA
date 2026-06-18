@@ -276,7 +276,7 @@ export function buildContextSourceManifest(options: BuildContextSourceManifestOp
 
   return {
     ...manifestWithoutHash,
-    manifestHash: hashContextGraphJson(manifestWithoutHash)
+    manifestHash: createStableContextSourceManifestHash(manifestWithoutHash)
   };
 }
 
@@ -441,6 +441,36 @@ function createContextSourceMetadataHash(input: {
     ignoreConfigHash: input.ignoreConfigHash,
     extractorKeys: input.extractorKeys,
     extractorVersions: Object.fromEntries(input.extractorKeys.map((key) => [key, input.extractorVersions[key] ?? 'unknown']).sort())
+  });
+}
+
+function createStableContextSourceManifestHash(input: Omit<ContextSourceManifest, 'manifestHash'>): string {
+  return hashContextGraphJson({
+    schemaVersion: input.schemaVersion,
+    projectFingerprint: input.projectFingerprint,
+    cacheVersion: input.cacheVersion,
+    ignoreConfigHash: input.ignoreConfigHash,
+    extractorVersions: input.extractorVersions,
+    sources: input.sources.map((source) => ({
+      path: source.path,
+      kind: source.kind,
+      sizeBytes: source.sizeBytes,
+      mtimeMs: source.mtimeMs ?? null,
+      mtimeNs: source.mtimeNs ?? null,
+      contentHash: source.contentHash ?? null,
+      metadataHash: source.metadataHash,
+      extractorKeys: source.extractorKeys,
+      parseState: source.parseState ?? null,
+      issueCodes: source.issueCodes ?? []
+    })),
+    summary: {
+      sourceCount: input.summary.sourceCount,
+      totalBytes: input.summary.totalBytes,
+      hashedSourceCount: input.summary.hashedSourceCount,
+      skippedSourceCount: input.summary.skippedSourceCount
+    },
+    budget: input.budget,
+    issues: input.issues
   });
 }
 
