@@ -4,6 +4,7 @@ import activeRunProjectionSchemaJson from '../schemas/active-run-projection.sche
 import activeRunResumeSchemaJson from '../schemas/active-run-resume.schema.json';
 import cleanCheckoutSmokeSchemaJson from '../schemas/clean-checkout-smoke.schema.json';
 import codeIndexSchemaJson from '../schemas/code-index.schema.json';
+import contextPackSchemaJson from '../schemas/context-pack.schema.json';
 import contextGraphSchemaJson from '../schemas/context-graph.schema.json';
 import contextExportSchemaJson from '../schemas/context-export.schema.json';
 import dashboardBootstrapSchemaJson from '../schemas/dashboard-bootstrap.schema.json';
@@ -100,6 +101,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.active_run.resume.v1': activeRunResumeSchemaJson as JsonObject,
   'hadara.cleanCheckoutSmoke.v1': cleanCheckoutSmokeSchemaJson as JsonObject,
   'hadara.codeIndex.v1': codeIndexSchemaJson as JsonObject,
+  'hadara.contextPack.v1': contextPackSchemaJson as JsonObject,
   'hadara.context.export.v1': contextExportSchemaJson as JsonObject,
   'hadara.contextGraph.v1': contextGraphSchemaJson as JsonObject,
   'hadara.dashboard.bootstrap.v1': dashboardBootstrapSchemaJson as JsonObject,

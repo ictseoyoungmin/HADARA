@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.contextPack.v1",
+  "x-hadara-schema-id": "hadara.contextPack.v1",
+  "title": "HADARA Context Pack Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "command",
+    "ok",
+    "generatedAt",
+    "projectRoot",
+    "budget",
+    "readFirst",
+    "readIfNeeded",
+    "doNotReadByDefault",
+    "validateWith",
+    "writeBoundaries",
+    "sliceCandidates",
+    "knownProblems",
+    "stateProjection",
+    "sourceSummary",
+    "cache",
+    "issues"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.contextPack.v1" },
+    "command": { "const": "context.pack" },
+    "ok": { "type": "boolean" },
+    "generatedAt": { "type": "string" },
+    "taskId": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "budget": { "$ref": "#/$defs/budget" },
+    "readFirst": { "type": "array", "items": { "$ref": "#/$defs/item" } },
+    "readIfNeeded": { "type": "array", "items": { "$ref": "#/$defs/item" } },
+    "doNotReadByDefault": { "type": "array", "items": { "$ref": "#/$defs/item" } },
+    "validateWith": { "type": "array", "items": { "$ref": "#/$defs/validationSuggestion" } },
+    "writeBoundaries": { "type": "array", "items": { "$ref": "#/$defs/writeBoundary" } },
+    "sliceCandidates": { "type": "array", "items": { "$ref": "#/$defs/sliceCandidate" } },
+    "knownProblems": { "type": "array", "items": { "$ref": "#/$defs/item" } },
+    "stateProjection": { "$ref": "#/$defs/stateProjection" },
+    "sourceSummary": { "$ref": "#/$defs/sourceSummary" },
+    "cache": { "$ref": "#/$defs/cache" },
+    "issues": { "type": "array", "items": { "$ref": "#/$defs/issue" } }
+  },
+  "$defs": {
+    "confidence": { "enum": ["explicit", "derived", "heuristic"] },
+    "itemType": {
+      "enum": [
+        "Task",
+        "Document",
+        "ManagedSection",
+        "Evidence",
+        "Command",
+        "ReleaseCheck",
+        "Decision",
+        "KnownProblem",
+        "SourceFile",
+        "TestFile",
+        "FixtureFile",
+        "ConfigFile",
+        "Symbol"
+      ]
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["maxReadFirstItems", "mode"],
+      "properties": {
+        "targetTokens": { "type": "number" },
+        "maxItems": { "type": "number" },
+        "maxReadFirstItems": { "type": "number" },
+        "mode": { "enum": ["minimal", "bounded", "expanded"] }
+      }
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "type", "reason", "confidence", "required"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "$ref": "#/$defs/itemType" },
+        "path": { "type": "string" },
+        "lineStart": { "type": "number" },
+        "lineEnd": { "type": "number" },
+        "title": { "type": "string" },
+        "reason": { "type": "string", "minLength": 1 },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "sourceHash": { "type": "string" },
+        "estimatedTokens": { "type": "number" },
+        "required": { "type": "boolean" }
+      }
+    },
+    "validationSuggestion": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["command", "reason", "requiredForClose", "source"],
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "requiredForClose": { "type": "boolean" },
+        "source": { "enum": ["task-tests", "command-registry", "evidence-history", "release-readiness", "heuristic"] }
+      }
+    },
+    "writeBoundary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "boundary", "reason"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "boundary": {
+          "enum": ["read-only", "agent-freeform", "managed-section", "append-only", "dry-run-first", "release-mutation"]
+        },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "sliceCandidate": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "path", "strategy", "reason", "suggestedCommand"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "strategy": {
+          "enum": ["explicit-range", "symbol-neighborhood", "keyword-window", "tail-window", "diff-hunk", "managed-section"]
+        },
+        "reason": { "type": "string", "minLength": 1 },
+        "suggestedCommand": { "type": "string", "minLength": 1 }
+      }
+    },
+    "stateProjection": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["stateConsistency", "issues"],
+      "properties": {
+        "latestCompletedTask": { "type": "string" },
+        "activeTask": { "type": "string" },
+        "latestClosedTask": { "type": "string" },
+        "releaseState": { "type": "string" },
+        "stateConsistency": { "enum": ["consistent", "warning", "error", "unknown"] },
+        "issues": { "type": "array", "items": { "$ref": "#/$defs/stateIssue" } }
+      }
+    },
+    "sourceSummary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "graphAvailable",
+        "codeIndexAvailable",
+        "stateProjectionAvailable",
+        "docsRegistryAvailable",
+        "commandRegistryAvailable",
+        "degraded"
+      ],
+      "properties": {
+        "graphAvailable": { "type": "boolean" },
+        "codeIndexAvailable": { "type": "boolean" },
+        "stateProjectionAvailable": { "type": "boolean" },
+        "docsRegistryAvailable": { "type": "boolean" },
+        "commandRegistryAvailable": { "type": "boolean" },
+        "degraded": { "type": "boolean" },
+        "graphSourceHash": { "type": "string" },
+        "sourcesRead": { "type": "number" }
+      }
+    },
+    "cache": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["used", "hit"],
+      "properties": {
+        "used": { "type": "boolean" },
+        "hit": { "type": "boolean" },
+        "manifestHash": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "cachePath": { "type": "string" }
+      }
+    },
+    "stateIssue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message", "paths"],
+      "properties": {
+        "severity": { "enum": ["info", "warning", "error"] },
+        "code": {
+          "enum": [
+            "STATE_LATEST_TASK_MISMATCH",
+            "STATE_ACTIVE_TASK_MISMATCH",
+            "STATE_TASK_BOARD_MISSING_ROW",
+            "STATE_TASK_CAPSULE_MISSING",
+            "STATE_CLOSE_PROOF_STALE",
+            "STATE_RELEASE_EVIDENCE_STALE",
+            "STATE_DOC_REQUIRED_READING_DRIFT",
+            "STATE_UNKNOWN"
+          ]
+        },
+        "message": { "type": "string", "minLength": 1 },
+        "paths": { "type": "array", "items": { "type": "string" } },
+        "fixHint": { "type": "string" }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "enum": ["info", "warning", "error"] },
+        "code": {
+          "enum": [
+            "CONTEXT_PACK_TASK_NOT_FOUND",
+            "CONTEXT_PACK_GRAPH_UNAVAILABLE",
+            "CONTEXT_PACK_CODE_INDEX_UNAVAILABLE",
+            "CONTEXT_PACK_STATE_PROJECTION_UNAVAILABLE",
+            "CONTEXT_PACK_BUDGET_TRUNCATED",
+            "CONTEXT_PACK_DEGRADED"
+          ]
+        },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string" },
+        "fixHint": { "type": "string" }
+      }
+    }
+  }
+}

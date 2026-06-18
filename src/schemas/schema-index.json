@@ -72,6 +72,13 @@
       "notes": "Documents deterministic read-only C2 code index reports over source, test, fixture, script, config, symbol, and code relation candidates."
     },
     {
+      "id": "hadara.contextPack.v1",
+      "path": "src/schemas/context-pack.schema.json",
+      "status": "fixture",
+      "owner": "context/context-pack",
+      "notes": "Documents deterministic read-only C3 context pack reports over graph-ranked task, document, command, evidence, code, known-problem, validation, write-boundary, and slice-candidate items."
+    },
+    {
       "id": "hadara.contextGraph.v1",
       "path": "src/schemas/context-graph.schema.json",
       "status": "fixture",

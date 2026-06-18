@@ -34,6 +34,7 @@ describe('schema fixtures', () => {
       'hadara.commands.registry.v1',
       'hadara.context.export.v1',
       'hadara.contextGraph.v1',
+      'hadara.contextPack.v1',
       'hadara.dashboard.bootstrap.v1',
       'hadara.dashboard.core.v1',
       'hadara.dashboard.task_detail.v1',
