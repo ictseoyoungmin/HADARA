@@ -21,6 +21,7 @@ export type ContextGraphExtractorName =
   | 'extractManagedSections'
   | 'extractEvidence'
   | 'extractReleaseReadiness'
+  | 'extractProjectState'
   | 'extractAgentHandoff'
   | 'extractDecisions';
 

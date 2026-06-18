@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { ContextGraphEdge, ContextGraphIssue, ContextGraphNode, ContextGraphSourceRef, GraphExtractionResult } from './context-graph';
+import type { ContextGraphEdge, ContextGraphIssue, ContextGraphNode, ContextGraphSourceRef, GraphExtractionResult, StateSource } from './context-graph';
 import {
   createContextGraphEdgeId,
   createContextGraphSourceRef,
@@ -15,7 +15,7 @@ import {
   toProjectRelativeContextPath
 } from './extractor-contract';
 import { parseManagedSections, type ManagedPatchIssue, type ManagedSection } from '../services/managed-sections';
-import { parseMarkdownRowsUnderHeading } from '../services/markdown-table';
+import { findMarkdownRowByCell, parseMarkdownRowsUnderHeading } from '../services/markdown-table';
 import { listTaskCapsules, type TaskCapsule } from '../task/task-capsule';
 
 interface DecisionRecord {
@@ -68,6 +68,26 @@ export function extractManagedSections(projectRoot: string): GraphExtractionResu
   return result;
 }
 
+export function extractProjectState(projectRoot: string): GraphExtractionResult {
+  const relativePath = 'docs/PROJECT_STATE.md';
+  const content = readOptionalText(path.join(projectRoot, relativePath));
+  const result = createEmptyExtractionResult('extractProjectState', [{ path: relativePath, content }]);
+  if (content == null) {
+    result.issues.push({
+      severity: 'warning',
+      code: 'CONTEXT_GRAPH_SOURCE_MISSING',
+      path: relativePath,
+      message: 'docs/PROJECT_STATE.md is missing; project-state hints cannot be extracted.',
+      fixHint: 'Restore docs/PROJECT_STATE.md before relying on state projection context routing.'
+    });
+    return result;
+  }
+
+  const sourceHash = hashContextGraphText(content);
+  result.stateSources?.push(projectStateSource(relativePath, sourceHash, extractProjectStateHints(content)));
+  return result;
+}
+
 export function extractDecisions(projectRoot: string): GraphExtractionResult {
   const targets = listDecisionTargets(projectRoot);
   const sources = targets.map((target) => readSource(projectRoot, target.path));
@@ -110,7 +130,9 @@ export function extractAgentHandoff(projectRoot: string): GraphExtractionResult 
   }
 
   const sourceHash = hashContextGraphText(content);
-  for (const problem of parseKnownProblems(content)) {
+  const knownProblems = parseKnownProblems(content);
+  result.stateSources?.push(agentHandoffStateSource(relativePath, sourceHash, extractAgentHandoffHints(content), knownProblems.length));
+  for (const problem of knownProblems) {
     const source = createContextGraphSourceRef({
       path: relativePath,
       extractor: 'extractAgentHandoff',
@@ -123,6 +145,74 @@ export function extractAgentHandoff(projectRoot: string): GraphExtractionResult 
   }
 
   return result;
+}
+
+function projectStateSource(relativePath: string, sourceHash: string, hints: SharedStateHints): StateSource {
+  return {
+    id: 'state-source:project-state',
+    path: normalizeContextGraphPath(relativePath),
+    kind: 'project-state',
+    hash: sourceHash,
+    extracted: hints
+  };
+}
+
+function agentHandoffStateSource(relativePath: string, sourceHash: string, hints: SharedStateHints, knownProblems: number): StateSource {
+  return {
+    id: 'state-source:agent-handoff',
+    path: normalizeContextGraphPath(relativePath),
+    kind: 'agent-handoff',
+    hash: sourceHash,
+    extracted: {
+      ...hints,
+      knownProblems
+    }
+  };
+}
+
+type SharedStateHints = Record<string, unknown> & {
+  latestCompletedTask: string | null;
+  activeTask: string | null;
+  latestCompletedRaw: string | null;
+  activeRaw: string | null;
+};
+
+function extractProjectStateHints(content: string): SharedStateHints {
+  const rows = parseMarkdownRowsUnderHeading(content, '## Metadata');
+  const latestRaw = findMarkdownRowByCell(rows, 0, 'Latest Completed Task')?.[1] ?? findLineValue(content, /latest completed task is\s+([^\n.]+)/i);
+  const activeRaw = findMarkdownRowByCell(rows, 0, 'Active Task')?.[1] ?? null;
+  return {
+    latestCompletedTask: normalizeTaskHint(latestRaw),
+    activeTask: normalizeTaskHint(activeRaw),
+    latestCompletedRaw: latestRaw ?? null,
+    activeRaw: activeRaw ?? null
+  };
+}
+
+function extractAgentHandoffHints(content: string): SharedStateHints {
+  const rows = parseMarkdownRowsUnderHeading(content, '## Current State');
+  const latestRaw = findMarkdownRowByCell(rows, 0, 'Latest Completed Task')?.[1] ?? null;
+  const activeRaw = findMarkdownRowByCell(rows, 0, 'Active / Next Task')?.[1] ?? findMarkdownRowByCell(rows, 0, 'Active Task')?.[1] ?? null;
+  return {
+    latestCompletedTask: normalizeTaskHint(latestRaw),
+    activeTask: normalizeTaskHint(activeRaw),
+    latestCompletedRaw: latestRaw,
+    activeRaw: activeRaw
+  };
+}
+
+function normalizeTaskHint(value: string | null | undefined): string | null {
+  if (!value) return null;
+  if (/^(none|n\/a|tbd)\b/i.test(value.trim())) return null;
+  return value.match(/\bT-\d{4}\b/)?.[0] ?? null;
+}
+
+function findLineValue(content: string, pattern: RegExp): string | null {
+  for (const line of content.split(/\r?\n/)) {
+    const match = line.match(pattern);
+    if (match?.[1]) return match[1].trim();
+  }
+  return null;
 }
 
 function managedSectionNode(section: ManagedSection, source: ContextGraphSourceRef): ContextGraphNode {

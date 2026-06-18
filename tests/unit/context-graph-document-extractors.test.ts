@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { extractAgentHandoff, extractDecisions, extractManagedSections } from '../../src/context/document-extractors';
+import { extractAgentHandoff, extractDecisions, extractManagedSections, extractProjectState } from '../../src/context/document-extractors';
 import { managedSectionBlock } from '../../src/services/managed-sections';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
@@ -153,5 +153,57 @@ Reason:
       confidence: 'explicit'
     })]);
     expect(result.issues).toEqual([]);
+  });
+
+  it('extracts Project State and Agent Handoff state sources', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), `# PROJECT_STATE
+
+## Metadata
+
+| Field | Value |
+|---|---|
+| Latest Completed Task | T-0349 Context Graph Release Readiness Extractor |
+| Active Task | T-0350 C1 State Projection and Consistency Diagnostics |
+`, 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF
+
+## Current State
+
+| Area | State | Notes |
+|---|---|---|
+| Latest Completed Task | T-0349 Context Graph Release Readiness Extractor | Fixture. |
+| Active / Next Task | T-0350 C1 State Projection and Consistency Diagnostics | Fixture. |
+
+## Current Known Problems
+
+| Issue | Impact | Next Step |
+|---|---|---|
+| Fixture issue. | Fixture impact. | Fixture next. |
+`, 'utf8');
+
+    expect(extractProjectState(root).stateSources).toEqual([expect.objectContaining({
+      id: 'state-source:project-state',
+      kind: 'project-state',
+      path: 'docs/PROJECT_STATE.md',
+      extracted: {
+        latestCompletedTask: 'T-0349',
+        activeTask: 'T-0350',
+        latestCompletedRaw: 'T-0349 Context Graph Release Readiness Extractor',
+        activeRaw: 'T-0350 C1 State Projection and Consistency Diagnostics'
+      }
+    })]);
+    expect(extractAgentHandoff(root).stateSources).toEqual([expect.objectContaining({
+      id: 'state-source:agent-handoff',
+      kind: 'agent-handoff',
+      path: 'docs/AGENT_HANDOFF.md',
+      extracted: {
+        latestCompletedTask: 'T-0349',
+        activeTask: 'T-0350',
+        latestCompletedRaw: 'T-0349 Context Graph Release Readiness Extractor',
+        activeRaw: 'T-0350 C1 State Projection and Consistency Diagnostics',
+        knownProblems: 1
+      }
+    })]);
   });
 });

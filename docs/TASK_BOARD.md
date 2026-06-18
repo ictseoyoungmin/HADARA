@@ -350,3 +350,4 @@
 | T-0347 | Context Graph Evidence Extractor | Done | tasks/T-0347-context-graph-evidence-extractor | |
 | T-0348 | Context Graph Managed Section Decision Extractors | Done | tasks/T-0348-context-graph-managed-section-decision-extractors | |
 | T-0349 | Context Graph Release Readiness Extractor | Done | tasks/T-0349-context-graph-release-readiness-extractor | |
+| T-0350 | C1 State Projection and Consistency Diagnostics | Done | tasks/T-0350-c1-state-projection-and-consistency-diagnostics | |
