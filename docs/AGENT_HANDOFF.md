@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, and T-0343/T-0344 started C1 implementation. |
-| Current Phase | 0.3.3 context-routing C1 implementation | T-0344 added shared extractor contract helpers after T-0343 registered context graph/task context contracts. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0344 Context Graph Extractor Contract | Added shared extractor contract helpers for source hashes, deterministic IDs, merged extraction results, and count summaries with focused and full Docker validation. |
-| Active / Next Task | TBD Create C1 Task Board and Task Capsule Extractors | Implement the first source-specific C1 extractors against `src/context/extractor-contract.ts`; keep public CLI/read surfaces for later graph builder integration. |
-| Validation Baseline | T-0344 extractor contract validation | Docker focused extractor/schema tests passed 2 files / 8 tests; Docker `npm run check` passed 121 files / 799 tests; Docker build/dist refresh, built CLI version smoke, and `git diff --check` passed in `ev:T-0344:567e18dd540c4ea085934770`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, and T-0343-T-0345 started C1 implementation. |
+| Current Phase | 0.3.3 context-routing C1 implementation | T-0345 added Task Board and Task Capsule extractors after T-0344 extractor helpers and T-0343 schema contracts. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0345 Context Graph Task Extractors | Added read-only Task Board and Task Capsule extractors that emit Task nodes and task-related state sources with source hashes/line refs. |
+| Active / Next Task | TBD Create C1 Docs Registry and Command Registry Extractors | Implement Document and Command node extraction from `.hadara/docs-registry.json` and the command registry before evidence/managed-section extractors. |
+| Validation Baseline | T-0345 task extractor validation | Docker focused task extractor/context tests passed 3 files / 11 tests; Docker `npm run check` passed 122 files / 802 tests; Docker build/dist refresh, built CLI version smoke, and `git diff --check` passed in `ev:T-0345:e510d77f85444cbe9f00dccb`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Create the next C1 capsule for Task Board + Task Capsule extractors. | Use T-0344 extractor helpers and read `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md` plus `06_Worker_Agent_Implementation_Plan.md`. |
+| TBD | Create the next C1 capsule for docs registry + command registry extractors. | Use T-0344 extractor helpers and T-0345 task extractor patterns; read `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md` plus `06_Worker_Agent_Implementation_Plan.md`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0345 Context Graph Task Extractors | Added Task Board and Task Capsule extractors that emit Task nodes/state sources with source hashes and row line refs; no CLI surface added. | `ev:T-0345:e510d77f85444cbe9f00dccb`. |
 | T-0344 Context Graph Extractor Contract | Added shared extractor contract helpers for deterministic source hashing, node/edge ids, source refs, result merging, and extraction summaries. | `ev:T-0344:567e18dd540c4ea085934770`. |
 | T-0343 Context Graph Schema Types and Fixtures | Added context graph/task context TypeScript contracts, registered `hadara.contextGraph.v1` and `hadara.taskContext.v1`, and validated focused schema fixtures plus full Docker check. | `ev:T-0343:52220ea996ec416ab6d508fc`. |
-| T-0342 Context Routing Spec Docs Registration | Registered 0.3.3 context-routing specs in SOP/docs registry surfaces, corrected the worker-plan path to `docs/specs/0.3.3/context-routing/...`, and unignored `docs/specs/0.3.3/**`. | `ev:T-0342:19cd8d65d2e94ee1a605c0f2`. |
 
 ## Current Known Problems
 
@@ -90,12 +90,13 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create/start C1 Task Board and Task Capsule Extractors. | T-0344 provides shared extractor helpers; the next step is extracting Task nodes/state sources from `docs/TASK_BOARD.md` and `tasks/T-*/TASK.md`/handoff basics without adding public CLI surfaces. | T-0344 validation evidence `ev:T-0344:567e18dd540c4ea085934770`; read `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md`, `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
+| Create/start C1 Docs Registry and Command Registry Extractors. | T-0345 implemented task source extraction; the next source-specific step is Document and Command nodes before evidence and managed-section extraction. | T-0345 validation evidence `ev:T-0345:e510d77f85444cbe9f00dccb`; read `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md`, `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0345 context graph task extractors | Docker focused task extractor/context tests passed 3 files / 11 tests; Docker `npm run check` passed 122 files / 802 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke and `git diff --check` passed. | Evidence `ev:T-0345:e510d77f85444cbe9f00dccb`; no public CLI surface was added. |
 | T-0344 context graph extractor contract | Docker focused extractor/schema tests passed 2 files / 8 tests; Docker `npm run check` passed 121 files / 799 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke and `git diff --check` passed. | Evidence `ev:T-0344:567e18dd540c4ea085934770`; no public CLI surface was added. |
 | T-0343 context graph schema/type fixtures | Docker focused schema tests passed 2 files / 4 tests; Docker `npm run check` passed 120 files / 794 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version/docs smokes and `git diff --check` passed. | Evidence `ev:T-0343:52220ea996ec416ab6d508fc`; host focused/build attempts were blocked by missing `vitest`/`tsc`, so Docker is the baseline. |
 | T-0338 rc0 installed-package recycle | Registry/dist-tags passed; temp-prefix installed bin reported `packageVersion:"0.3.2-rc.0"`; installed Evidence v2 list/add-command exact resolution workflow passed; fresh init/docs passed; disposable lifecycle smoke reached `closed-valid`; temp folders were removed. | Evidence `ev:T-0338:59d881bdd12749f6a3a1ea87`; exact `npx` stale-shim behavior is an environment finding, not a package blocker. |
