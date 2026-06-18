@@ -356,3 +356,4 @@
 | T-0353 | C2 Code Index Schema and Ignore Rules | Done | tasks/T-0353-c2-code-index-schema-and-ignore-rules | |
 | T-0354 | C2 Import and Export Extraction | Done | tasks/T-0354-c2-import-and-export-extraction | |
 | T-0355 | C2 Symbol Extraction | Done | tasks/T-0355-c2-symbol-extraction | |
+| T-0356 | C2 Command Implementation and Test File Hints | Done | tasks/T-0356-c2-command-implementation-and-test-file-hints | |

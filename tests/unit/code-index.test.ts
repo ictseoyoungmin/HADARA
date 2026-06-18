@@ -307,4 +307,70 @@ describe('code index schema and ignore rules', () => {
     }));
     assertSchema('hadara.codeIndex.v1', report);
   });
+
+  it('projects command registry implementation and test file hints into code index routing edges', () => {
+    const root = createTempProject();
+    writeFile(root, 'src/services/capability-registry.ts', [
+      "const help = { id: 'help' };",
+      "const context = { id: 'context.graph' };",
+      ''
+    ].join('\n'));
+    writeFile(root, 'src/cli/help.ts', 'export function showHelp() {}\n');
+    writeFile(root, 'src/cli/context.ts', 'export function runContextGraph() {}\n');
+    writeFile(root, 'src/context/context-graph-builder.ts', 'export function buildContextGraphReport() {}\n');
+    writeFile(root, 'tests/unit/context-graph-cli.test.ts', 'import "../../src/cli/context";\n');
+    writeFile(root, 'tests/unit/context-graph-builder.test.ts', 'import "../../src/context/context-graph-builder";\n');
+
+    const report = buildCodeIndexReport({ projectRoot: root, generatedAt: '2026-06-18T11:20:00.000Z' });
+
+    expect(report.files.find((file) => file.path === 'src/cli/context.ts')).toMatchObject({
+      commandFamilies: ['project-health']
+    });
+    expect(report.files.find((file) => file.path === 'tests/unit/context-graph-cli.test.ts')).toMatchObject({
+      commandFamilies: ['project-health']
+    });
+    expect(report.files.find((file) => file.path === 'src/cli/help.ts')).toMatchObject({
+      commandFamilies: ['start']
+    });
+    expect(report.edges).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        from: 'file:src/cli/context.ts',
+        to: 'command:context.graph',
+        type: 'IMPLEMENTS_COMMAND',
+        confidence: 'explicit',
+        source: expect.objectContaining({
+          path: 'src/services/capability-registry.ts',
+          line: 2,
+          extractor: 'extractCommandHints'
+        })
+      }),
+      expect.objectContaining({
+        from: 'file:tests/unit/context-graph-cli.test.ts',
+        to: 'command:context.graph',
+        type: 'TESTS_FILE',
+        confidence: 'explicit',
+        source: expect.objectContaining({
+          path: 'src/services/capability-registry.ts',
+          line: 2,
+          extractor: 'extractCommandHints'
+        })
+      }),
+      expect.objectContaining({
+        from: 'file:src/cli/help.ts',
+        to: 'command:help',
+        type: 'IMPLEMENTS_COMMAND',
+        confidence: 'heuristic',
+        source: expect.objectContaining({
+          path: 'src/services/capability-registry.ts',
+          line: 1,
+          extractor: 'extractCommandHints'
+        })
+      })
+    ]));
+    expect(report.edges).not.toContainEqual(expect.objectContaining({
+      to: 'command:help',
+      type: 'TESTS_FILE'
+    }));
+    assertSchema('hadara.codeIndex.v1', report);
+  });
 });

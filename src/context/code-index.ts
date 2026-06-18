@@ -2,12 +2,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { type ContextCacheMetadata, type ContextConfidence, type ContextGraphSourceRef } from './context-graph';
 import {
+  createCommandNodeId,
   createContextGraphSourceRef,
   hashContextGraphSources,
   hashContextGraphText,
   normalizeContextGraphPath,
   toProjectRelativeContextPath
 } from './extractor-contract';
+import { listCommandRegistryEntries, type CommandFamily, type CommandRegistryEntry } from '../services/capability-registry';
 
 export const CODE_INDEX_SCHEMA_ID = 'hadara.codeIndex.v1' as const;
 export const CODE_INDEX_COMMAND = 'code.index' as const;
@@ -150,10 +152,20 @@ export interface CodeFileReferenceExtractionResult {
   issues: CodeIndexIssue[];
 }
 
+interface CodeCommandHint {
+  commandId: string;
+  commandFamily: CommandFamily;
+  implementationFiles: string[];
+  implementationConfidence: ContextConfidence;
+  testFiles: string[];
+  sourceLine?: number;
+}
+
+const COMMAND_REGISTRY_SOURCE_PATH = 'src/services/capability-registry.ts';
+
 export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): CodeIndexReport {
   const generatedAt = options.generatedAt ?? new Date().toISOString();
   const discovered = discoverCodeIndexFiles(options.projectRoot);
-  const files: CodeFileNode[] = [];
   const fileReferences: Array<{
     filePath: string;
     content: string;
@@ -173,10 +185,6 @@ export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): Code
       });
       issues.push(...references.issues);
       fileReferences.push({ filePath: relativePath, content, imports: references.imports, exports: references.exports });
-      files.push(createCodeFileNode(relativePath, content, {
-        imports: references.imports.map((importReference) => importReference.resolvedPath ?? importReference.specifier),
-        exports: references.exports.map((exportReference) => exportReference.name)
-      }));
     } catch (error) {
       issues.push({
         severity: 'warning',
@@ -187,10 +195,18 @@ export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): Code
       });
     }
   }
+  const commandHints = createCommandHints(fileReferences);
+  const commandFamiliesByPath = createCommandFamiliesByPath(commandHints);
+  const files = fileReferences.map((reference) => createCodeFileNode(reference.filePath, reference.content, {
+    imports: reference.imports.map((importReference) => importReference.resolvedPath ?? importReference.specifier),
+    exports: reference.exports.map((exportReference) => exportReference.name),
+    commandFamilies: commandFamiliesByPath.get(reference.filePath) ?? []
+  }));
   const symbols = createCodeSymbolNodes(fileReferences);
   const edges = [
     ...createImportEdges(fileReferences),
-    ...createSymbolEdges(fileReferences)
+    ...createSymbolEdges(fileReferences),
+    ...createCommandHintEdges(fileReferences, commandHints)
   ].sort((a, b) => a.id.localeCompare(b.id));
 
   return {
@@ -539,6 +555,149 @@ function createSymbolEdges(fileReferences: Array<{ filePath: string; content: st
     }
   }
   return edges.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function createCommandHints(fileReferences: Array<{ filePath: string; content: string }>): CodeCommandHint[] {
+  const availablePaths = new Set(fileReferences.map((reference) => reference.filePath));
+  const registryContent = fileReferences.find((reference) => reference.filePath === COMMAND_REGISTRY_SOURCE_PATH)?.content;
+  const registryLineByCommand = createRegistryLineMap(registryContent ?? '');
+  const hints: CodeCommandHint[] = [];
+
+  for (const entry of listCommandRegistryEntries()) {
+    const explicitImplementationFiles = normalizeExistingHintPaths(entry.implementationFiles ?? [], availablePaths);
+    const heuristicImplementationFiles = explicitImplementationFiles.length > 0
+      ? []
+      : normalizeExistingHintPaths(inferCommandImplementationFiles(entry), availablePaths);
+    const testFiles = normalizeExistingHintPaths(entry.testFiles ?? [], availablePaths);
+    if (explicitImplementationFiles.length === 0 && heuristicImplementationFiles.length === 0 && testFiles.length === 0) {
+      continue;
+    }
+    hints.push({
+      commandId: entry.id,
+      commandFamily: entry.family,
+      implementationFiles: explicitImplementationFiles.length > 0 ? explicitImplementationFiles : heuristicImplementationFiles,
+      implementationConfidence: explicitImplementationFiles.length > 0 ? 'explicit' : 'heuristic',
+      testFiles,
+      sourceLine: registryLineByCommand.get(entry.id)
+    });
+  }
+
+  return hints.sort((a, b) => a.commandId.localeCompare(b.commandId));
+}
+
+function createCommandFamiliesByPath(hints: CodeCommandHint[]): Map<string, string[]> {
+  const familiesByPath = new Map<string, Set<string>>();
+  for (const hint of hints) {
+    for (const filePath of [...hint.implementationFiles, ...hint.testFiles]) {
+      const families = familiesByPath.get(filePath) ?? new Set<string>();
+      families.add(hint.commandFamily);
+      familiesByPath.set(filePath, families);
+    }
+  }
+  return new Map([...familiesByPath.entries()].map(([filePath, families]) => [filePath, [...families].sort()]));
+}
+
+function createCommandHintEdges(fileReferences: Array<{ filePath: string; content: string }>, hints: CodeCommandHint[]): CodeEdge[] {
+  const contentByPath = new Map(fileReferences.map((reference) => [reference.filePath, reference.content]));
+  const edges: CodeEdge[] = [];
+  const seen = new Set<string>();
+  for (const hint of hints) {
+    const commandNodeId = createCommandNodeId(hint.commandId);
+    const source = createContextGraphSourceRef({
+      path: COMMAND_REGISTRY_SOURCE_PATH,
+      ...(hint.sourceLine === undefined ? {} : { line: hint.sourceLine }),
+      content: contentByPath.get(COMMAND_REGISTRY_SOURCE_PATH),
+      extractor: 'extractCommandHints'
+    });
+
+    for (const filePath of hint.implementationFiles) {
+      const from = createCodeFileNodeId(filePath);
+      const reason = hint.implementationConfidence === 'explicit'
+        ? `Command registry explicitly maps command ${hint.commandId} to implementation file ${filePath}.`
+        : `Command ${hint.commandId} maps heuristically to CLI handler file ${filePath}.`;
+      const edge: CodeEdge = {
+        id: createCodeEdgeId({ type: 'IMPLEMENTS_COMMAND', from, to: commandNodeId, source, reason }),
+        from,
+        to: commandNodeId,
+        type: 'IMPLEMENTS_COMMAND',
+        confidence: hint.implementationConfidence,
+        reason,
+        source
+      };
+      if (!seen.has(edge.id)) {
+        seen.add(edge.id);
+        edges.push(edge);
+      }
+    }
+
+    for (const filePath of hint.testFiles) {
+      const from = createCodeFileNodeId(filePath);
+      const reason = `Command registry explicitly maps command ${hint.commandId} to test file ${filePath}.`;
+      const edge: CodeEdge = {
+        id: createCodeEdgeId({ type: 'TESTS_FILE', from, to: commandNodeId, source, reason }),
+        from,
+        to: commandNodeId,
+        type: 'TESTS_FILE',
+        confidence: 'explicit',
+        reason,
+        source
+      };
+      if (!seen.has(edge.id)) {
+        seen.add(edge.id);
+        edges.push(edge);
+      }
+    }
+  }
+  return edges.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function normalizeExistingHintPaths(paths: string[], availablePaths: Set<string>): string[] {
+  return uniqueSorted(paths.map(normalizeContextGraphPath).filter((filePath) => availablePaths.has(filePath)));
+}
+
+function createRegistryLineMap(content: string): Map<string, number> {
+  const lineByCommand = new Map<string, number>();
+  const lines = content.split(/\r?\n/);
+  lines.forEach((line, index) => {
+    const match = line.match(/\bid:\s*['"]([^'"]+)['"]/);
+    if (match?.[1] && !lineByCommand.has(match[1])) lineByCommand.set(match[1], index + 1);
+  });
+  return lineByCommand;
+}
+
+function inferCommandImplementationFiles(entry: CommandRegistryEntry): string[] {
+  const exact: Record<string, string[]> = {
+    'ci.gate': ['src/cli/ci.ts'],
+    'context.graph': ['src/cli/context.ts'],
+    'dev.docker-check': ['src/cli/dev.ts'],
+    'docs.managed.list': ['src/cli/docs.ts'],
+    'docs.managed.explain': ['src/cli/docs.ts'],
+    'docs.required-reading': ['src/cli/docs.ts'],
+    'evidence.add-command': ['src/cli/evidence.ts'],
+    'evidence.collect': ['src/cli/evidence.ts'],
+    'install.plan': ['src/cli/install.ts'],
+    'mcp.serve': ['src/cli/mcp.ts'],
+    'ops.status': ['src/cli/status.ts'],
+    'package.smoke': ['src/cli/package-smoke.ts'],
+    'policy.check-shell': ['src/cli/policy.ts'],
+    'policy.preflight-shell': ['src/cli/policy.ts'],
+    'release.artifact': ['src/cli/release-artifact.ts'],
+    'release.dry-run': ['src/cli/release-dry-run.ts'],
+    'release.gate': ['src/cli/release-gate.ts'],
+    'release.publish': ['src/cli/release-publish.ts'],
+    'run.scaffold': ['src/cli/run-scaffold.ts'],
+    'run-state.resume': ['src/cli/run-state.ts'],
+    'run-state.show': ['src/cli/run-state.ts'],
+    'smoke.clean-checkout': ['src/cli/smoke.ts'],
+    'smoke.run': ['src/cli/smoke.ts'],
+    'task.audit-close': ['src/cli/task.ts'],
+    'task.upgrade-scaffold': ['src/cli/task.ts'],
+    'write.preflight': ['src/cli/write-preflight.ts']
+  };
+  if (exact[entry.id]) return exact[entry.id];
+  const familyPrefix = entry.id.split('.')[0] ?? entry.id;
+  const familyPath = `src/cli/${familyPrefix}.ts`;
+  return [familyPath];
 }
 
 function createCodeEdgeId(input: {

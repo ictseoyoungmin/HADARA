@@ -124,6 +124,17 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('dashboard.serve')).toMatchObject({ family: 'ui', appearsInDefaultHelp: false });
   });
 
+  it('exposes explicit code index implementation and test file hints where available', () => {
+    expect(findCommandRegistryEntry('context.graph')).toMatchObject({
+      implementationFiles: ['src/cli/context.ts', 'src/context/context-graph-builder.ts'],
+      testFiles: ['tests/unit/context-graph-cli.test.ts', 'tests/unit/context-graph-builder.test.ts']
+    });
+    expect(findCommandRegistryEntry('task.close')).toMatchObject({
+      implementationFiles: ['src/cli/task.ts', 'src/task/task-close.ts'],
+      testFiles: ['tests/unit/task-close.test.ts']
+    });
+  });
+
   it('filters the commands JSON report by family and requiredness', () => {
     const familyReport = createCommandsRegistryReport({ family: 'capsule-lifecycle' });
     expect(familyReport).toMatchObject({

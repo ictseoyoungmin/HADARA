@@ -111,6 +111,8 @@ export interface CommandRegistryEntry {
   schemaVersion?: string;
   since?: string;
   aliases?: string[];
+  implementationFiles?: string[];
+  testFiles?: string[];
   docs: string[];
   examples: CommandRegistryExample[];
   related: string[];
@@ -570,6 +572,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     schemaVersion: 'hadara.task.close.v1',
     docs: TASK_DOCS,
+    implementationFiles: ['src/cli/task.ts', 'src/task/task-close.ts'],
+    testFiles: ['tests/unit/task-close.test.ts'],
     examples: [
       example('Preview close', 'hadara task close --task T-0001 --json', 'After task ready passes.'),
       example('Append close proof', 'hadara task close --task T-0001 --execute --json', 'After reviewing the dry-run report.')
@@ -662,6 +666,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     schemaVersion: 'hadara.evidence.list.v1',
     docs: ['docs/IMPLEMENTATION_SOP.md'],
+    implementationFiles: ['src/cli/evidence.ts', 'src/services/evidence-list.ts'],
+    testFiles: ['tests/unit/evidence-list.test.ts', 'tests/unit/evidence-json.test.ts'],
     examples: [example('List evidence ids', 'hadara evidence list --task T-0001', 'Before copying a durable ev: id into --resolves or --supersedes.')],
     related: ['evidence.add-command', 'evidence.lint'],
     conflictsWith: []
@@ -808,6 +814,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.contextGraph.v1',
     since: '0.3.3',
     docs: ['docs/CLI_JSON_CONTRACT.md', 'docs/COMMAND_SURFACE.md', 'docs/SCHEMAS.md'],
+    implementationFiles: ['src/cli/context.ts', 'src/context/context-graph-builder.ts'],
+    testFiles: ['tests/unit/context-graph-cli.test.ts', 'tests/unit/context-graph-builder.test.ts'],
     examples: [
       example('Read full context graph', 'hadara context graph --json', 'When a worker needs project context routing signals.'),
       example('Read task context graph', 'hadara context graph --task T-0001 --json', 'When a worker needs task-scoped docs, evidence, commands, and known problems.')
@@ -1579,6 +1587,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     schemaVersion: 'hadara.releaseDryRun.v1',
     docs: ['docs/RELEASE_READINESS.md'],
+    implementationFiles: ['src/cli/release-dry-run.ts', 'src/services/release-dry-run.ts'],
+    testFiles: ['tests/unit/release-dry-run.test.ts'],
     examples: [example('Run release dry-run', 'hadara release dry-run --json', 'Before publish/deploy readiness checks.')],
     related: ['release.gate', 'release.publish', 'release.artifact'],
     conflictsWith: []
@@ -1795,6 +1805,8 @@ function cloneCommandRegistryEntry(entry: CommandRegistryEntry): CommandRegistry
   return {
     ...entry,
     aliases: entry.aliases ? [...entry.aliases] : undefined,
+    implementationFiles: entry.implementationFiles ? [...entry.implementationFiles] : undefined,
+    testFiles: entry.testFiles ? [...entry.testFiles] : undefined,
     docs: [...entry.docs],
     examples: entry.examples.map((item) => ({ ...item })),
     related: [...entry.related],

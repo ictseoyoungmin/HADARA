@@ -135,6 +135,8 @@ function commandNode(entry: CommandRegistryEntry, source: ReturnType<typeof crea
       readOnly: entry.readOnly,
       risk: entry.risk,
       schemaVersion: entry.schemaVersion ?? null,
+      implementationFiles: entry.implementationFiles ?? [],
+      testFiles: entry.testFiles ?? [],
       docs: entry.docs,
       related: entry.related
     },
