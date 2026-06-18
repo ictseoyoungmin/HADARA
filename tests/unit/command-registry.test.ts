@@ -39,6 +39,7 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'proof.explain',
   'ci.gate',
   'context.graph',
+  'context.pack',
   'debt.list',
   'debt.show',
   'protocol.doctor',
@@ -128,6 +129,10 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('context.graph')).toMatchObject({
       implementationFiles: ['src/cli/context.ts', 'src/context/context-graph-builder.ts', 'src/context/code-graph-extractor.ts'],
       testFiles: ['tests/unit/context-graph-cli.test.ts', 'tests/unit/context-graph-builder.test.ts']
+    });
+    expect(findCommandRegistryEntry('context.pack')).toMatchObject({
+      implementationFiles: ['src/cli/context.ts', 'src/context/context-pack.ts', 'src/context/context-graph-builder.ts'],
+      testFiles: ['tests/unit/context-graph-cli.test.ts', 'tests/unit/context-pack.test.ts']
     });
     expect(findCommandRegistryEntry('task.close')).toMatchObject({
       implementationFiles: ['src/cli/task.ts', 'src/task/task-close.ts'],

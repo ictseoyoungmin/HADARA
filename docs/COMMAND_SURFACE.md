@@ -94,6 +94,8 @@ State consistency rollout is advisory in `0.3.1-rc.1`: `ci gate --mode strict` p
 
 `hadara context graph --json` emits the read-only `hadara.contextGraph.v1` report. `hadara context graph --task T-XXXX --json` includes the task-scoped context report with read-first, read-if-needed, do-not-read, related evidence, related commands, known problems, validation suggestions, and state issues. `hadara context graph --include-code --json` additively includes C2 source, test, fixture, config, symbol, import/export, command implementation, test relation, and evidence validation projections without changing the default C1 graph output. Code-index file/byte/single-file budgets are explicit degraded partial-output warnings, not cache writes or command failures. The command is a projection only: it does not write cache files, append evidence, run validation, or patch documents.
 
+`hadara context pack --task T-XXXX --json` emits the read-only `hadara.contextPack.v1` bounded read plan over the current context graph. `--include-code` makes the underlying graph code-aware, `--budget <tokens>` records the target token budget, and `--max-items` / `--max-read-first` cap selected output. The command returns slice candidates as metadata only; it does not implement `context slice`, create cache files, append evidence, run validation, or mutate source/docs.
+
 ## Advanced Surfaces
 
 Release/package, dev validation, integrations, dashboard/TUI, installer planning, and deterministic agent-loop harness commands remain available through `hadara commands --json` and `hadara help family <family>`. They are intentionally hidden from default help because ordinary worker agents should not infer release, UI, integration, or harness actions as part of every capsule.

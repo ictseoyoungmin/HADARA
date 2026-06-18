@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, T-0360 added the detailed C6 fast cache implementation spec, and T-0361 added the C3 context pack schema/ranking foundation. |
-| Current Phase | 0.3.3 context-routing C3 context pack implementation | C1 project graph/state projection and C2 code-link/index output are implemented; T-0361 adds internal bounded context-pack ranking while preserving C6 graph/cache injection paths. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0361 C3 Context Pack Schema and Ranking | Added `hadara.contextPack.v1` TypeScript/schema contracts, runtime/schema-index registration, and deterministic graph-report-based ranking with source/cache/degraded metadata. |
-| Active / Next Task | TBD Start C3 Context Pack CLI from Graph Only | Expose the internal `buildContextPackReport()` through the public read-only context pack command before implementing C4 raw slicing. |
-| Validation Baseline | T-0361 Docker sync-build | Docker sync-build passed TypeScript build and full Vitest suite with 131 files / 839 tests, refreshed workspace `dist`, and built version smoke returned `distLooksStale:false` in `ev:T-0361:dc44300239e5445fbc519132`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, T-0360 added the detailed C6 fast cache implementation spec, T-0361 added the C3 context pack schema/ranking foundation, and T-0362 exposed the public read-only context pack CLI. |
+| Current Phase | 0.3.3 context-routing speed-first C6.1 preparation | C1 project graph/state projection, C2 code-link/index output, and C3 public context pack read plans are implemented. Built T-0362 smokes show live graph/index reads are too slow for routine session start without C6 source manifest/cache infrastructure. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0362 C3 Context Pack CLI from Graph Only | Added public `hadara context pack --task T-XXXX --json` over the current graph, with `--include-code`, budget/item caps, registry metadata, CLI docs, tests, Docker validation, and built smokes. |
+| Active / Next Task | TBD Start C6.1 Source Manifest and Shared Discovery | Implement the speed-first shared discovery/source manifest foundation from the C6 spec before depending on context pack for fast session start. |
+| Validation Baseline | T-0362 Docker sync-build | Docker sync-build passed TypeScript build and full Vitest suite with 131 files / 842 tests, refreshed workspace `dist`, and built version smoke returned `distLooksStale:false` in `ev:T-0362:7532361940774df48a734813`; built context pack smokes passed in `ev:T-0362:b9c56d667eb144f08d44ab03`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Start C3 Context Pack CLI from Graph Only. | Reuse T-0361's internal context pack builder; read the C3 spec, C4 spec for future slice boundaries, and T-0360's C6 performance spec before choosing cache/source-manifest work. |
+| TBD | Start C6.1 Source Manifest and Shared Discovery. | Built context pack smokes passed but graph-only/include-code live reads were slow and cache-free (`sourcesRead:990` / `1307`), so the next useful work is shared discovery and source manifest invalidation from the C6 spec. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0362 C3 Context Pack CLI from Graph Only | Exposed public read-only `hadara context pack --task T-XXXX --json` with include-code and budget caps over the current graph. | `ev:T-0362:7532361940774df48a734813`, `ev:T-0362:b9c56d667eb144f08d44ab03`. |
 | T-0361 C3 Context Pack Schema and Ranking | Added internal `hadara.contextPack.v1` schema/types and bounded graph-report ranking for C3. | `ev:T-0361:dc44300239e5445fbc519132`. |
 | T-0360 C6 Fast Context Cache Spec | Added detailed speed-first C6 cache/performance implementation spec, linked routing docs, and registered the spec in SOP/docs registry surfaces. | `ev:T-0360:4b9fb9a2f39c4361a4f65eab`. |
-| T-0359 C2 Code Index Budget Hardening | Added explicit code-index file/byte/single-file budgets, degraded partial-output warnings, budget metadata, and include-code graph projection. | `ev:T-0359:5bd5521857864638b2abde7a`. |
 
 ## Current Known Problems
 

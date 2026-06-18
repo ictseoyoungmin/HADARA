@@ -826,6 +826,35 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     notes: 'Read-only projection; persistent cache support is not implemented yet.'
   }),
   commandEntry({
+    id: 'context.pack',
+    command: 'hadara context pack --task <task-id> [--include-code] [--budget <tokens>] [--max-items <count>] [--max-read-first <count>] --json',
+    summary: 'Emit the bounded task-scoped context pack read plan from the current context graph.',
+    canonical: true,
+    appearsInDefaultHelp: false,
+    family: 'project-health',
+    scope: 'task',
+    lifecycleStage: 'inspect',
+    requiredness: 'diagnostic',
+    writeBoundary: 'read-only',
+    readOnly: true,
+    risk: 'low',
+    actor: 'agent-worker',
+    status: 'experimental',
+    schemaVersion: 'hadara.contextPack.v1',
+    since: '0.3.3',
+    docs: ['docs/CLI_JSON_CONTRACT.md', 'docs/COMMAND_SURFACE.md', 'docs/SCHEMAS.md'],
+    implementationFiles: ['src/cli/context.ts', 'src/context/context-pack.ts', 'src/context/context-graph-builder.ts'],
+    testFiles: ['tests/unit/context-graph-cli.test.ts', 'tests/unit/context-pack.test.ts'],
+    examples: [
+      example('Read task context pack', 'hadara context pack --task T-0001 --json', 'When a worker needs the bounded first-read plan for a task.'),
+      example('Read code-aware context pack', 'hadara context pack --task T-0001 --include-code --json', 'When source, test, and symbol candidates should be included.'),
+      example('Read smaller context pack', 'hadara context pack --task T-0001 --max-read-first 3 --max-items 12 --json', 'When a worker needs a tighter bounded read plan.')
+    ],
+    related: ['context.graph', 'state.verify', 'docs.required-reading', 'task.status'],
+    conflictsWith: [],
+    notes: 'Read-only C3 projection; C4 slicing and persistent C6 cache writes are not implemented by this command.'
+  }),
+  commandEntry({
     id: 'debt.list',
     command: 'hadara debt list [--json]',
     summary: 'List operational debt records.',

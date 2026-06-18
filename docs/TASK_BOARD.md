@@ -362,3 +362,4 @@
 | T-0359 | C2 Code Index Budget Hardening | Done | tasks/T-0359-c2-code-index-budget-hardening | |
 | T-0360 | C6 Fast Context Cache Spec | Done | tasks/T-0360-c6-fast-context-cache-spec | Added detailed C6 speed-first cache/performance spec, linked C6 routing docs, and registered the spec in SOP/docs registry surfaces. |
 | T-0361 | C3 Context Pack Schema and Ranking | Done | tasks/T-0361-c3-context-pack-schema-and-ranking | Internal `hadara.contextPack.v1` schema/ranking builder; public CLI and C4 slicing deferred. |
+| T-0362 | C3 Context Pack CLI from Graph Only | Done | tasks/T-0362-c3-context-pack-cli-from-graph-only | Public read-only context pack CLI implemented; C6.1 speed work next. |
