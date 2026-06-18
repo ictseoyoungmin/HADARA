@@ -124,7 +124,7 @@ describe('code index schema and ignore rules', () => {
       fixtureFiles: 1,
       configFiles: 2,
       symbols: 1,
-      edges: 4,
+      edges: 8,
       degraded: false
     });
     expect(report.cache).toEqual({ used: false, hit: false });
@@ -371,6 +371,83 @@ describe('code index schema and ignore rules', () => {
       to: 'command:help',
       type: 'TESTS_FILE'
     }));
+    assertSchema('hadara.codeIndex.v1', report);
+  });
+
+  it('adds test relation edges from imports, filename matches, command mentions, and evidence references', () => {
+    const root = createTempProject();
+    writeFile(root, 'src/context/code-index.ts', 'export function buildCodeIndexReport() {}\n');
+    writeFile(root, 'tests/unit/code-index.test.ts', [
+      "import { buildCodeIndexReport } from '../../src/context/code-index';",
+      "it('covers context.graph routing', () => buildCodeIndexReport());",
+      ''
+    ].join('\n'));
+    writeFile(root, 'tasks/T-0001-sample/TASK.md', '# T-0001 Sample\n');
+    writeFile(root, 'tasks/T-0001-sample/evidence.jsonl', `${JSON.stringify({
+      schemaVersion: 'hadara.evidence.v2',
+      id: 'ev:T-0001:test-ref',
+      fingerprint: 'sha256:test',
+      idSource: 'persisted',
+      idStability: 'durable',
+      time: '2026-06-18T11:30:00.000Z',
+      taskId: 'T-0001',
+      category: 'validation',
+      outcome: 'passed',
+      visibility: 'public',
+      summary: 'Focused tests/unit/code-index.test.ts passed.',
+      artifacts: [],
+      tags: [],
+      legacy: { kind: 'command-log', result: 'passed' }
+    })}\n`);
+
+    const report = buildCodeIndexReport({ projectRoot: root, generatedAt: '2026-06-18T11:30:00.000Z' });
+
+    expect(report.edges).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        from: 'file:tests/unit/code-index.test.ts',
+        to: 'file:src/context/code-index.ts',
+        type: 'TESTS_FILE',
+        confidence: 'explicit',
+        source: expect.objectContaining({
+          path: 'tests/unit/code-index.test.ts',
+          line: 1,
+          extractor: 'extractTestRelations'
+        })
+      }),
+      expect.objectContaining({
+        from: 'file:tests/unit/code-index.test.ts',
+        to: 'file:src/context/code-index.ts',
+        type: 'TESTS_FILE',
+        confidence: 'derived',
+        source: expect.objectContaining({
+          path: 'tests/unit/code-index.test.ts',
+          line: 1,
+          extractor: 'extractTestRelations'
+        })
+      }),
+      expect.objectContaining({
+        from: 'file:tests/unit/code-index.test.ts',
+        to: 'command:context.graph',
+        type: 'TESTS_FILE',
+        confidence: 'heuristic',
+        source: expect.objectContaining({
+          path: 'tests/unit/code-index.test.ts',
+          line: 2,
+          extractor: 'extractTestRelations'
+        })
+      }),
+      expect.objectContaining({
+        from: 'file:tests/unit/code-index.test.ts',
+        to: 'ev:T-0001:test-ref',
+        type: 'VALIDATED_BY_EVIDENCE',
+        confidence: 'explicit',
+        source: expect.objectContaining({
+          path: 'tasks/T-0001-sample/evidence.jsonl',
+          line: 1,
+          extractor: 'extractEvidenceTestReferences'
+        })
+      })
+    ]));
     assertSchema('hadara.codeIndex.v1', report);
   });
 });

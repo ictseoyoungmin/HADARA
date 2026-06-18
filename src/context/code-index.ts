@@ -206,7 +206,8 @@ export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): Code
   const edges = [
     ...createImportEdges(fileReferences),
     ...createSymbolEdges(fileReferences),
-    ...createCommandHintEdges(fileReferences, commandHints)
+    ...createCommandHintEdges(fileReferences, commandHints),
+    ...createTestRelationEdges(options.projectRoot, fileReferences)
   ].sort((a, b) => a.id.localeCompare(b.id));
 
   return {
@@ -651,6 +652,199 @@ function createCommandHintEdges(fileReferences: Array<{ filePath: string; conten
   return edges.sort((a, b) => a.id.localeCompare(b.id));
 }
 
+function createTestRelationEdges(projectRoot: string, fileReferences: Array<{
+  filePath: string;
+  content: string;
+  imports: CodeImportReference[];
+}>): CodeEdge[] {
+  const edges: CodeEdge[] = [];
+  const seen = new Set<string>();
+  const sourceFiles = fileReferences.filter((reference) => classifyCodeFile(reference.filePath) === 'source');
+  const testFiles = fileReferences.filter((reference) => classifyCodeFile(reference.filePath) === 'test');
+  const sourceFilesByStem = createSourceFilesByStem(sourceFiles);
+  const commandEntries = listCommandRegistryEntries();
+  const testPaths = new Set(testFiles.map((reference) => reference.filePath));
+
+  for (const testFile of testFiles) {
+    const testNodeId = createCodeFileNodeId(testFile.filePath);
+    for (const importReference of testFile.imports) {
+      if (!importReference.resolvedPath || classifyCodeFile(importReference.resolvedPath) !== 'source') continue;
+      const source = createContextGraphSourceRef({
+        path: testFile.filePath,
+        line: importReference.line,
+        content: testFile.content,
+        extractor: 'extractTestRelations'
+      });
+      pushUniqueCodeEdge(edges, seen, {
+        type: 'TESTS_FILE',
+        from: testNodeId,
+        to: createCodeFileNodeId(importReference.resolvedPath),
+        confidence: 'explicit',
+        reason: `Test file ${testFile.filePath} imports source file ${importReference.resolvedPath}.`,
+        source
+      });
+    }
+
+    for (const sourceFile of sourceFilesByStem.get(testFileStem(testFile.filePath)) ?? []) {
+      const source = createContextGraphSourceRef({
+        path: testFile.filePath,
+        line: 1,
+        content: testFile.content,
+        extractor: 'extractTestRelations'
+      });
+      pushUniqueCodeEdge(edges, seen, {
+        type: 'TESTS_FILE',
+        from: testNodeId,
+        to: createCodeFileNodeId(sourceFile.filePath),
+        confidence: 'derived',
+        reason: `Test file ${testFile.filePath} matches source file ${sourceFile.filePath} by filename stem.`,
+        source
+      });
+    }
+
+    for (const entry of commandEntries) {
+      const line = findCommandMentionLine(testFile.content, entry.id);
+      if (line === undefined) continue;
+      const source = createContextGraphSourceRef({
+        path: testFile.filePath,
+        line,
+        content: testFile.content,
+        extractor: 'extractTestRelations'
+      });
+      pushUniqueCodeEdge(edges, seen, {
+        type: 'TESTS_FILE',
+        from: testNodeId,
+        to: createCommandNodeId(entry.id),
+        confidence: 'heuristic',
+        reason: `Test file ${testFile.filePath} mentions command id ${entry.id}.`,
+        source
+      });
+    }
+  }
+
+  for (const evidenceReference of readEvidenceTestReferences(projectRoot, testPaths)) {
+    const source = createContextGraphSourceRef({
+      path: evidenceReference.evidencePath,
+      line: evidenceReference.line,
+      content: evidenceReference.content,
+      extractor: 'extractEvidenceTestReferences'
+    });
+    pushUniqueCodeEdge(edges, seen, {
+      type: 'VALIDATED_BY_EVIDENCE',
+      from: createCodeFileNodeId(evidenceReference.testPath),
+      to: evidenceReference.evidenceId,
+      confidence: 'explicit',
+      reason: `Evidence record ${evidenceReference.evidenceId} references indexed test file ${evidenceReference.testPath}.`,
+      source
+    });
+  }
+
+  return edges.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function pushUniqueCodeEdge(edges: CodeEdge[], seen: Set<string>, input: {
+  type: CodeEdgeType;
+  from: string;
+  to: string;
+  confidence: ContextConfidence;
+  reason: string;
+  source: ContextGraphSourceRef;
+}): void {
+  const edge: CodeEdge = {
+    id: createCodeEdgeId(input),
+    from: input.from,
+    to: input.to,
+    type: input.type,
+    confidence: input.confidence,
+    reason: input.reason,
+    source: input.source
+  };
+  if (seen.has(edge.id)) return;
+  seen.add(edge.id);
+  edges.push(edge);
+}
+
+function createSourceFilesByStem(sourceFiles: Array<{ filePath: string }>): Map<string, Array<{ filePath: string }>> {
+  const filesByStem = new Map<string, Array<{ filePath: string }>>();
+  for (const sourceFile of sourceFiles) {
+    const stem = sourceFileStem(sourceFile.filePath);
+    const files = filesByStem.get(stem) ?? [];
+    files.push(sourceFile);
+    filesByStem.set(stem, files.sort((a, b) => a.filePath.localeCompare(b.filePath)));
+  }
+  return filesByStem;
+}
+
+function sourceFileStem(filePath: string): string {
+  return path.posix.basename(normalizeContextGraphPath(filePath)).replace(/\.(?:ts|js|json)$/, '');
+}
+
+function testFileStem(filePath: string): string {
+  return path.posix.basename(normalizeContextGraphPath(filePath)).replace(/\.(?:test|spec)\.(?:ts|js)$/, '');
+}
+
+function findCommandMentionLine(content: string, commandId: string): number | undefined {
+  const pattern = new RegExp(`(^|[^A-Za-z0-9_.-])${escapeRegex(commandId)}([^A-Za-z0-9_.-]|$)`);
+  const lines = content.split(/\r?\n/);
+  const index = lines.findIndex((line) => pattern.test(line));
+  return index >= 0 ? index + 1 : undefined;
+}
+
+interface EvidenceTestReference {
+  evidencePath: string;
+  line: number;
+  content: string;
+  evidenceId: string;
+  testPath: string;
+}
+
+function readEvidenceTestReferences(projectRoot: string, testPaths: Set<string>): EvidenceTestReference[] {
+  const tasksDir = path.join(projectRoot, 'tasks');
+  if (!fs.existsSync(tasksDir)) return [];
+  const references: EvidenceTestReference[] = [];
+  const taskDirs = fs.readdirSync(tasksDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+  for (const taskDir of taskDirs) {
+    const evidencePath = normalizeContextGraphPath(path.posix.join('tasks', taskDir, 'evidence.jsonl'));
+    const absolutePath = path.join(projectRoot, evidencePath);
+    if (!fs.existsSync(absolutePath)) continue;
+    let content: string;
+    try {
+      content = fs.readFileSync(absolutePath, 'utf8');
+    } catch {
+      continue;
+    }
+    content.split(/\r?\n/).forEach((line, index) => {
+      if (!line.trim()) return;
+      const evidenceId = readEvidenceIdFromLine(line) ?? `evidence:${evidencePath}#L${index + 1}`;
+      for (const testPath of testPaths) {
+        if (!line.includes(testPath)) continue;
+        references.push({
+          evidencePath,
+          line: index + 1,
+          content,
+          evidenceId,
+          testPath
+        });
+      }
+    });
+  }
+  return references.sort((a, b) =>
+    `${a.evidencePath}:${a.line}:${a.testPath}`.localeCompare(`${b.evidencePath}:${b.line}:${b.testPath}`)
+  );
+}
+
+function readEvidenceIdFromLine(line: string): string | undefined {
+  try {
+    const parsed = JSON.parse(line) as { id?: unknown };
+    return typeof parsed.id === 'string' && parsed.id.length > 0 ? parsed.id : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function normalizeExistingHintPaths(paths: string[], availablePaths: Set<string>): string[] {
   return uniqueSorted(paths.map(normalizeContextGraphPath).filter((filePath) => availablePaths.has(filePath)));
 }
@@ -719,6 +913,10 @@ function createCodeEdgeId(input: {
     reason: input.reason
   })).replace(/^sha256:/, '');
   return `code-edge:${input.type}:${fingerprint}`;
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function isRelativeImportSpecifier(specifier: string): boolean {
