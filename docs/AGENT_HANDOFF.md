@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, and T-0343-T-0347 started C1 implementation. |
-| Current Phase | 0.3.3 context-routing C1 implementation | T-0347 added Evidence extraction after T-0346 registry extractors, T-0345 task extractors, T-0344 extractor helpers, and T-0343 schema contracts. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0347 Context Graph Evidence Extractor | Added read-only Evidence extraction that emits Evidence nodes, `HAS_EVIDENCE`, `CLOSES_WITH`, `DEPENDS_ON_EVIDENCE` edges, and evidence state sources from Task Capsule `evidence.jsonl`. |
-| Active / Next Task | TBD Create C1 Managed Section / Decision / Known Problem Extractors | Implement managed-section, decision, and known-problem extraction before release readiness extraction, graph assembly, and state projection compatibility alignment. |
-| Validation Baseline | T-0347 evidence extractor validation | Docker focused context graph tests passed 5 files / 17 tests; Docker `npm run check` passed 124 files / 808 tests; Docker build/dist refresh, built CLI version smoke, and `git diff --check` passed in `ev:T-0347:dde6dc9eee154d8daa4afff7`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, and T-0343-T-0348 started C1 implementation. |
+| Current Phase | 0.3.3 context-routing C1 implementation | T-0348 added managed-section, decision, and known-problem extraction after T-0347 Evidence extraction. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0348 Context Graph Managed Section Decision Extractors | Added read-only ManagedSection, Decision, and KnownProblem extraction with document/task relationship edges. |
+| Active / Next Task | TBD Create C1 Release Readiness Extractor | Implement release readiness extraction before graph assembly and state projection compatibility alignment. |
+| Validation Baseline | T-0348 document extractor validation | Docker focused context graph tests passed 6 files / 20 tests; Docker `npm run check` passed 125 files / 811 tests; Docker build/dist refresh, built CLI version smoke, and `git diff --check` passed in `ev:T-0348:7bfdb4f1005e4c23b9d6ad03`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Create the next C1 capsule for managed-section, decision, and known-problem extraction. | Use T-0344 extractor helpers plus T-0345/T-0347 source extractor patterns; read `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md` plus `06_Worker_Agent_Implementation_Plan.md`. |
+| TBD | Create the next C1 capsule for release readiness extraction. | Use T-0344 extractor helpers plus T-0345-T-0348 source extractor patterns; read `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md` plus `06_Worker_Agent_Implementation_Plan.md`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0348 Context Graph Managed Section Decision Extractors | Added ManagedSection, Decision, and KnownProblem nodes plus document/task relationship edges; no CLI surface added. | `ev:T-0348:7bfdb4f1005e4c23b9d6ad03`. |
 | T-0347 Context Graph Evidence Extractor | Added Evidence nodes, task evidence edges, close-proof edges, dependency edges, and per-task evidence state extraction; no CLI surface added. | `ev:T-0347:dde6dc9eee154d8daa4afff7`. |
 | T-0346 Context Graph Registry Extractors | Added docs registry and command registry extractors that emit Document/Command nodes, supersession edges, document-command edges, and docs-registry state; no CLI surface added. | `ev:T-0346:013ad0cd2fd843ccb006d900`. |
-| T-0345 Context Graph Task Extractors | Added Task Board and Task Capsule extractors that emit Task nodes/state sources with source hashes and row line refs; no CLI surface added. | `ev:T-0345:e510d77f85444cbe9f00dccb`. |
 
 ## Current Known Problems
 
@@ -90,12 +90,13 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create/start C1 Managed Section, Decision, and Known Problem Extractors. | T-0347 completed Evidence source extraction; the next source-specific step is managed-section/document-section extraction plus decision and known-problem nodes before release readiness extraction and graph assembly. | T-0347 validation evidence `ev:T-0347:dde6dc9eee154d8daa4afff7`; read `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md`, `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
+| Create/start C1 Release Readiness Extractor. | T-0348 completed ManagedSection, Decision, and KnownProblem extraction; release readiness is the remaining source-specific input before graph assembly. | T-0348 validation evidence `ev:T-0348:7bfdb4f1005e4c23b9d6ad03`; read `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md`, `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0348 context graph document extractors | Docker focused context graph extractor/schema tests passed 6 files / 20 tests; Docker `npm run check` passed 125 files / 811 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke and `git diff --check` passed. | Evidence `ev:T-0348:7bfdb4f1005e4c23b9d6ad03`; no public CLI surface was added. |
 | T-0347 context graph evidence extractor | Docker focused context graph extractor/schema tests passed 5 files / 17 tests; Docker `npm run check` passed 124 files / 808 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke and `git diff --check` passed. | Evidence `ev:T-0347:dde6dc9eee154d8daa4afff7`; no public CLI surface was added. |
 | T-0346 context graph registry extractors | Docker focused context graph extractor/schema tests passed 4 files / 14 tests; Docker `npm run check` passed 123 files / 805 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke and `git diff --check` passed. | Evidence `ev:T-0346:013ad0cd2fd843ccb006d900`; no public CLI surface was added. |
 | T-0345 context graph task extractors | Docker focused task extractor/context tests passed 3 files / 11 tests; Docker `npm run check` passed 122 files / 802 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke and `git diff --check` passed. | Evidence `ev:T-0345:e510d77f85444cbe9f00dccb`; no public CLI surface was added. |
