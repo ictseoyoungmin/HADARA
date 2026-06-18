@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, and T-0343-T-0350 started C1 implementation. |
-| Current Phase | 0.3.3 context-routing C1 implementation | T-0350 added compact state projection diagnostics after T-0349 release readiness extraction. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0350 C1 State Projection and Consistency Diagnostics | Added Project State / Agent Handoff state sources and compact C1 state projection diagnostics over extractor outputs. |
-| Active / Next Task | TBD Create C1 Graph Builder and Task Context Report | Build the context graph report and task context report before CLI/read surface integration. |
-| Validation Baseline | T-0350 state projection diagnostics validation | Docker focused projection/context tests passed 5 files / 19 tests; Docker `npm run check` passed 127 files / 818 tests; Docker build/dist refresh, built CLI version smoke, and `git diff --check` passed in `ev:T-0350:b540a670f64b48babe233d22`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, and T-0343-T-0351 started C1 implementation. |
+| Current Phase | 0.3.3 context-routing C1 implementation | T-0351 added internal graph report and task context report assembly after T-0350 state projection diagnostics. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0351 C1 Graph Builder and Task Context Report | Added internal context graph builder and task context report derivation over extractor outputs. |
+| Active / Next Task | TBD Add C1 Context Graph CLI and Read Surface | Expose the internal graph/task-context builder through the planned CLI/read surface; keep persistent cache as separate follow-up unless cache invalidation is specified. |
+| Validation Baseline | T-0351 graph builder/task context validation | Docker focused builder/projection/schema tests passed 3 files / 9 tests; Docker `npm run check` passed 128 files / 821 tests; Docker build/dist refresh, built CLI version smoke, and `git diff --check` passed in `ev:T-0351:8783d5087eed426ca228ce02`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Create the next C1 capsule for graph builder and task context report. | Use T-0344-T-0350 extractor/projection helpers; read `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md` plus `06_Worker_Agent_Implementation_Plan.md`. |
+| TBD | Add the C1 context graph CLI/read surface over the internal builder. | Use T-0344-T-0351 extractor/projection/builder helpers; read `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md` plus `06_Worker_Agent_Implementation_Plan.md`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0351 C1 Graph Builder and Task Context Report | Added internal graph report assembly, default extractor collection, state projection inclusion, graph summaries, and task context candidate derivation; no public CLI surface added. | `ev:T-0351:8783d5087eed426ca228ce02`. |
 | T-0350 C1 State Projection and Consistency Diagnostics | Added compact C1 state projection diagnostics over extractor outputs, plus Project State and Agent Handoff state sources; no public CLI surface added. | `ev:T-0350:b540a670f64b48babe233d22`. |
 | T-0349 Context Graph Release Readiness Extractor | Added ReleaseCheck nodes plus release-readiness document, command, evidence dependency, and StateSource outputs; no CLI surface added. | `ev:T-0349:95e6ccd6f23244d7b4f5f85e`. |
-| T-0348 Context Graph Managed Section Decision Extractors | Added ManagedSection, Decision, and KnownProblem nodes plus document/task relationship edges; no CLI surface added. | `ev:T-0348:7bfdb4f1005e4c23b9d6ad03`. |
 
 ## Current Known Problems
 
@@ -90,12 +90,13 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create/start C1 Graph Builder and Task Context Report. | T-0350 completed compact state projection diagnostics; worker plan places graph builder/task context report before CLI/read surface integration. | T-0350 validation evidence `ev:T-0350:b540a670f64b48babe233d22`; read `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md`, `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
+| Create/start C1 Context Graph CLI and Read Surface. | T-0351 completed the internal builder and task context report; the next useful C1 step is to expose it through the planned command/read surface without claiming persistent cache support yet. | T-0351 validation evidence `ev:T-0351:8783d5087eed426ca228ce02`; read `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md`, `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0351 context graph builder/task context report | Docker focused builder/projection/schema tests passed 3 files / 9 tests; Docker `npm run check` passed 128 files / 821 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke and `git diff --check` passed. | Evidence `ev:T-0351:8783d5087eed426ca228ce02`; no public CLI surface was added. |
 | T-0350 context graph state projection diagnostics | Docker focused projection/context tests passed 5 files / 19 tests; Docker `npm run check` passed 127 files / 818 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke and `git diff --check` passed. | Evidence `ev:T-0350:b540a670f64b48babe233d22`; no public CLI surface was added. |
 | T-0349 context graph release readiness extractor | Docker focused context graph extractor/schema tests passed 7 files / 23 tests; Docker `npm run check` passed 126 files / 814 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke and `git diff --check` passed. | Evidence `ev:T-0349:95e6ccd6f23244d7b4f5f85e`; no public CLI surface was added. |
 | T-0348 context graph document extractors | Docker focused context graph extractor/schema tests passed 6 files / 20 tests; Docker `npm run check` passed 125 files / 811 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke and `git diff --check` passed. | Evidence `ev:T-0348:7bfdb4f1005e4c23b9d6ad03`; no public CLI surface was added. |

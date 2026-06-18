@@ -351,3 +351,4 @@
 | T-0348 | Context Graph Managed Section Decision Extractors | Done | tasks/T-0348-context-graph-managed-section-decision-extractors | |
 | T-0349 | Context Graph Release Readiness Extractor | Done | tasks/T-0349-context-graph-release-readiness-extractor | |
 | T-0350 | C1 State Projection and Consistency Diagnostics | Done | tasks/T-0350-c1-state-projection-and-consistency-diagnostics | |
+| T-0351 | C1 Graph Builder and Task Context Report | Done | tasks/T-0351-c1-graph-builder-and-task-context-report | |
