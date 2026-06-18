@@ -126,7 +126,7 @@ describe('Phase 7.1 command registry', () => {
 
   it('exposes explicit code index implementation and test file hints where available', () => {
     expect(findCommandRegistryEntry('context.graph')).toMatchObject({
-      implementationFiles: ['src/cli/context.ts', 'src/context/context-graph-builder.ts'],
+      implementationFiles: ['src/cli/context.ts', 'src/context/context-graph-builder.ts', 'src/context/code-graph-extractor.ts'],
       testFiles: ['tests/unit/context-graph-cli.test.ts', 'tests/unit/context-graph-builder.test.ts']
     });
     expect(findCommandRegistryEntry('task.close')).toMatchObject({

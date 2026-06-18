@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, and T-0353-T-0357 started C2. |
-| Current Phase | 0.3.3 context-routing C2 implementation | T-0357 added confidence-scored test relation and evidence validation edges after the T-0353 schema/discovery foundation, T-0354 imports/exports, T-0355 symbols, and T-0356 command hints. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0357 C2 Test Relation Edges | Added explicit test-import, derived filename-match, heuristic command-mention, and evidence-referenced validation edges to the code index. |
-| Active / Next Task | TBD Start C2 Context Graph Integration | Merge code index file/symbol/edge outputs into the C1 graph as additive SourceFile/TestFile/FixtureFile/ConfigFile/Symbol nodes and code edges. |
-| Validation Baseline | T-0357 test relation edges validation | Docker focused code-index tests passed 1 file / 8 tests; Docker `npm run check` passed 130 files / 832 tests; Docker build/dist refresh, built internal code-index schema smoke, built CLI version smoke, and `git diff --check` passed in `ev:T-0357:6406481495244038961bd0de`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, and T-0353-T-0358 implemented C2 through graph integration. |
+| Current Phase | 0.3.3 context-routing C2 hardening / transition review | T-0358 added opt-in code-aware context graph output after the T-0353 schema/discovery foundation, T-0354 imports/exports, T-0355 symbols, T-0356 command hints, and T-0357 test relation edges. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0358 C2 Context Graph Integration | Added `context graph --include-code` as an additive read-only graph extension with SourceFile/TestFile/FixtureFile/ConfigFile/Symbol nodes, code relation edges, and code-index state source projection while preserving default C1 graph output. |
+| Active / Next Task | TBD Start C2 Hardening and Performance Review | Review the remaining C2 performance/degraded-mode/cache/documentation boundary before moving to C3 context packs. |
+| Validation Baseline | T-0358 context graph integration validation | Docker focused context graph/code index/registry tests passed 4 files / 24 tests; Docker `npm run check` passed 130 files / 835 tests; Docker build/dist refresh, built version smoke, built `context graph --include-code` smoke, and `git diff --check` passed in `ev:T-0358:407b29c183f246d390f162f9`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Start C2 context graph integration over the test-aware code index. | Use T-0357 code index nodes/edges as the base; read `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md` plus `01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md`. |
+| TBD | Start C2 hardening and performance review. | Use T-0358 graph-integrated code index output as the base; read `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md` plus `05_Indexing_Cache_Invalidation_and_Performance_Spec.md` if adding cache/performance behavior. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0358 C2 Context Graph Integration | Added opt-in code-aware context graph output while preserving default C1 graph behavior. | `ev:T-0358:407b29c183f246d390f162f9`. |
 | T-0357 C2 Test Relation Edges | Added explicit, derived, heuristic, and evidence-backed test relation edges to the code index. | `ev:T-0357:6406481495244038961bd0de`. |
 | T-0356 C2 Command Implementation and Test File Hints | Added registry implementation/test-file hints, command family metadata on code files, and command hint edges with explicit/heuristic confidence. | `ev:T-0356:3f6509b1f0da4c569b03befa`. |
-| T-0355 C2 Symbol Extraction | Added exported `CodeSymbolNode` records with kind/line metadata plus deterministic `DEFINES_SYMBOL` and `EXPORTS` code index edges. | `ev:T-0355:2ab6f20fb61b4b4e8701a037`. |
 
 ## Current Known Problems
 
@@ -90,13 +90,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create/start C2 Context Graph Integration. | T-0357 made test relation edges available; the next worker-plan C2 capsule should merge code index nodes/edges into the context graph additively. | T-0357 validation evidence `ev:T-0357:6406481495244038961bd0de`; read `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md`, `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md`, `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
+| Create/start C2 Hardening and Performance Review. | T-0358 completed the worker-plan C2 graph integration capsule; strict/full implementation should review remaining C2 performance/degraded-mode/cache/documentation acceptance before C3. | T-0358 validation evidence `ev:T-0358:407b29c183f246d390f162f9`; read `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md`, `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md`, `docs/specs/0.3.3/context-routing/05_Indexing_Cache_Invalidation_and_Performance_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| T-0357 code index test relation edges | Docker focused code-index tests passed 1 file / 8 tests; Docker `npm run check` passed 130 files / 832 tests; Docker build passed and `/workspace/dist` was refreshed; built internal code-index schema smoke, built CLI version smoke, and `git diff --check` passed. | Evidence `ev:T-0357:6406481495244038961bd0de`; graph integration and public CLI remain later C2 scope. |
+| T-0358 context graph integration | Docker focused context graph/code index/registry tests passed 4 files / 24 tests; Docker `npm run check` passed 130 files / 835 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke, built `context graph --include-code` smoke, and `git diff --check` passed. | Evidence `ev:T-0358:407b29c183f246d390f162f9`; remaining C2 review should focus on performance/degraded-mode/cache/docs before C3. |
+| T-0357 code index test relation edges | Docker focused code-index tests passed 1 file / 8 tests; Docker `npm run check` passed 130 files / 832 tests; Docker build passed and `/workspace/dist` was refreshed; built internal code-index schema smoke, built CLI version smoke, and `git diff --check` passed. | Evidence `ev:T-0357:6406481495244038961bd0de`; graph integration completed in T-0358. |
 | T-0356 code index command implementation/test-file hints | Docker focused code-index and command-registry tests passed 2 files / 15 tests; Docker `npm run check` passed 130 files / 831 tests; Docker build passed and `/workspace/dist` was refreshed; built internal code-index schema smoke, built CLI version smoke, and `git diff --check` passed. | Evidence `ev:T-0356:3f6509b1f0da4c569b03befa`; broader test relation heuristics, graph integration, and public CLI remain later C2 scope. |
 | T-0355 code index symbol extraction | Docker focused code-index tests passed 1 file / 6 tests; Docker `npm run check` passed 130 files / 829 tests; Docker build passed and `/workspace/dist` was refreshed; built internal code-index schema smoke, built CLI version smoke, and `git diff --check` passed. | Evidence `ev:T-0355:2ab6f20fb61b4b4e8701a037`; command hints, test relation edges, graph integration, and public CLI remain later C2 scope. |
 | T-0354 code index import/export extraction | Docker focused code-index tests passed 1 file / 6 tests; Docker `npm run check` passed 130 files / 829 tests; Docker build passed and `/workspace/dist` was refreshed; built internal code-index schema smoke, built CLI version smoke, and `git diff --check` passed. | Evidence `ev:T-0354:9093ae17f3c64a54b46b319c`; symbol nodes, command hints, test edges, graph integration, and public CLI remain later C2 scope. |

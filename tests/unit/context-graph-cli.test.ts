@@ -76,6 +76,64 @@ describe('context graph CLI', () => {
     expect(validateSchema('hadara.contextGraph.v1', payload).ok).toBe(true);
     expect(validateSchema('hadara.taskContext.v1', payload.taskContext).ok).toBe(true);
   });
+
+  it('prints code-aware graph output when --include-code is supplied', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'RELEASE_READINESS.md'), '# RELEASE_READINESS\n', 'utf8');
+    fs.mkdirSync(path.join(root, 'src', 'cli'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'src', 'cli', 'context.ts'), 'export function handleContextCommand() {}\n', 'utf8');
+    const before = snapshotProject(root);
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleContextCommand({
+      args: ['context', 'graph', '--include-code', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
+    expect(payload.nodes).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'file:src/cli/context.ts', type: 'SourceFile' }),
+      expect.objectContaining({ id: 'symbol:src/cli/context.ts#handleContextCommand', type: 'Symbol' })
+    ]));
+    expect(payload.edges).toEqual(expect.arrayContaining([
+      expect.objectContaining({ from: 'file:src/cli/context.ts', to: 'command:context.graph', type: 'IMPLEMENTS_COMMAND' })
+    ]));
+    expect(validateSchema('hadara.contextGraph.v1', payload).ok).toBe(true);
+    expect(snapshotProject(root)).toEqual(before);
+  });
+
+  it('prints task-scoped code-aware graph output when --task and --include-code are supplied together', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'CLI task context with code');
+    fs.mkdirSync(path.join(root, 'src', 'cli'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'src', 'cli', 'context.ts'), 'export function handleContextCommand() {}\n', 'utf8');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleContextCommand({
+      args: ['context', 'graph', '--task', task.id, '--include-code', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
+    expect(payload).toMatchObject({
+      mode: 'task',
+      taskId: task.id,
+      taskContext: {
+        taskId: task.id
+      }
+    });
+    expect(payload.nodes).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'file:src/cli/context.ts', type: 'SourceFile' })
+    ]));
+    expect(validateSchema('hadara.contextGraph.v1', payload).ok).toBe(true);
+    expect(validateSchema('hadara.taskContext.v1', payload.taskContext).ok).toBe(true);
+  });
 });
 
 function snapshotProject(root: string): Record<string, string> {

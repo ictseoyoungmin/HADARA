@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { assertSchema } from '../../src/core/schema';
 import type {
@@ -127,6 +130,41 @@ describe('context graph builder', () => {
     });
 
     expect(context.stateIssues.map((issue) => issue.code)).toEqual(['STATE_TASK_CAPSULE_MISSING']);
+  });
+
+  it('adds code index nodes and edges only when includeCode is requested', () => {
+    const root = createCodeGraphProject();
+    try {
+      const defaultReport = buildContextGraphReport({
+        projectRoot: root,
+        generatedAt
+      });
+      expect(defaultReport.nodes.some((node) => node.type === 'SourceFile')).toBe(false);
+      expect(defaultReport.summary.nodeCounts.SourceFile).toBe(0);
+
+      const codeReport = buildContextGraphReport({
+        projectRoot: root,
+        generatedAt,
+        includeCode: true
+      });
+      const nodeTypes = new Set(codeReport.nodes.map((node) => node.type));
+      const edgeTypes = new Set(codeReport.edges.map((edge) => edge.type));
+      expect(nodeTypes.has('SourceFile')).toBe(true);
+      expect(nodeTypes.has('TestFile')).toBe(true);
+      expect(nodeTypes.has('ConfigFile')).toBe(true);
+      expect(nodeTypes.has('Symbol')).toBe(true);
+      expect(edgeTypes.has('IMPORTS')).toBe(true);
+      expect(edgeTypes.has('DEFINES_SYMBOL')).toBe(true);
+      expect(edgeTypes.has('EXPORTS')).toBe(true);
+      expect(edgeTypes.has('TESTS_FILE')).toBe(true);
+      expect(edgeTypes.has('IMPLEMENTS_COMMAND')).toBe(true);
+      expect(edgeTypes.has('VALIDATED_BY_EVIDENCE')).toBe(true);
+      expect(codeReport.stateProjection.sources.some((source) => source.kind === 'code-index')).toBe(true);
+      expect(codeReport.summary.edgeCounts.TESTS_FILE).toBeGreaterThan(0);
+      assertSchema('hadara.contextGraph.v1', codeReport);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
   });
 });
 
@@ -308,4 +346,24 @@ function stateSources(): StateSource[] {
       statusCounts: { documented: 1 }
     }
   }];
+}
+
+function createCodeGraphProject(): string {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-context-graph-code-'));
+  write(root, 'docs/PROJECT_STATE.md', '# PROJECT_STATE\n');
+  write(root, 'docs/AGENT_HANDOFF.md', '# AGENT_HANDOFF\n');
+  write(root, 'docs/RELEASE_READINESS.md', '# RELEASE_READINESS\n');
+  write(root, 'package.json', '{"scripts":{"test":"vitest"}}\n');
+  write(root, 'tsconfig.json', '{"compilerOptions":{"module":"NodeNext"}}\n');
+  write(root, 'src/context/helper.ts', 'export const helper = 1;\n');
+  write(root, 'src/cli/context.ts', "import { helper } from '../context/helper';\nexport function handleContextCommand() { return helper; }\n");
+  write(root, 'tests/unit/context-graph-cli.test.ts', "import { handleContextCommand } from '../../src/cli/context';\nit('mentions context.graph', () => handleContextCommand());\n");
+  write(root, 'tasks/T-0001-fixture/evidence.jsonl', '{"id":"ev:T-0001:abc","summary":"npm run test:focused -- tests/unit/context-graph-cli.test.ts passed"}\n');
+  return root;
+}
+
+function write(root: string, relativePath: string, content: string): void {
+  const absolutePath = path.join(root, relativePath);
+  fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+  fs.writeFileSync(absolutePath, content, 'utf8');
 }

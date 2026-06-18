@@ -798,8 +798,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   },
   commandEntry({
     id: 'context.graph',
-    command: 'hadara context graph [--task <task-id>] --json',
-    summary: 'Emit the read-only C1 project context graph and optional task context report.',
+    command: 'hadara context graph [--task <task-id>] [--include-code] --json',
+    summary: 'Emit the read-only project context graph, optional task context report, and opt-in code graph extension.',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'project-health',
@@ -814,11 +814,12 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.contextGraph.v1',
     since: '0.3.3',
     docs: ['docs/CLI_JSON_CONTRACT.md', 'docs/COMMAND_SURFACE.md', 'docs/SCHEMAS.md'],
-    implementationFiles: ['src/cli/context.ts', 'src/context/context-graph-builder.ts'],
+    implementationFiles: ['src/cli/context.ts', 'src/context/context-graph-builder.ts', 'src/context/code-graph-extractor.ts'],
     testFiles: ['tests/unit/context-graph-cli.test.ts', 'tests/unit/context-graph-builder.test.ts'],
     examples: [
       example('Read full context graph', 'hadara context graph --json', 'When a worker needs project context routing signals.'),
-      example('Read task context graph', 'hadara context graph --task T-0001 --json', 'When a worker needs task-scoped docs, evidence, commands, and known problems.')
+      example('Read task context graph', 'hadara context graph --task T-0001 --json', 'When a worker needs task-scoped docs, evidence, commands, and known problems.'),
+      example('Read code-aware context graph', 'hadara context graph --include-code --json', 'When a worker needs source, test, symbol, and code relation candidates.')
     ],
     related: ['state.verify', 'docs.required-reading', 'task.status'],
     conflictsWith: [],

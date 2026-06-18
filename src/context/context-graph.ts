@@ -16,7 +16,12 @@ export type ContextGraphNodeType =
   | 'Command'
   | 'ReleaseCheck'
   | 'Decision'
-  | 'KnownProblem';
+  | 'KnownProblem'
+  | 'SourceFile'
+  | 'TestFile'
+  | 'FixtureFile'
+  | 'ConfigFile'
+  | 'Symbol';
 
 export type ContextGraphEdgeType =
   | 'HAS_EVIDENCE'
@@ -30,7 +35,14 @@ export type ContextGraphEdgeType =
   | 'AFFECTS_SURFACE'
   | 'DEPENDS_ON_EVIDENCE'
   | 'HAS_DECISION'
-  | 'HAS_KNOWN_PROBLEM';
+  | 'HAS_KNOWN_PROBLEM'
+  | 'IMPORTS'
+  | 'EXPORTS'
+  | 'DEFINES_SYMBOL'
+  | 'TESTS_FILE'
+  | 'IMPLEMENTS_COMMAND'
+  | 'REFERENCED_BY_DOC'
+  | 'VALIDATED_BY_EVIDENCE';
 
 export type ContextGraphIssueCode =
   | 'CONTEXT_GRAPH_SOURCE_MISSING'
@@ -47,7 +59,8 @@ export type StateSourceKind =
   | 'agent-handoff'
   | 'docs-registry'
   | 'release-readiness'
-  | 'evidence';
+  | 'evidence'
+  | 'code-index';
 
 export type StateConsistencyIssueCode =
   | 'STATE_LATEST_TASK_MISMATCH'
@@ -207,7 +220,12 @@ export const CONTEXT_GRAPH_NODE_TYPES: ContextGraphNodeType[] = [
   'Command',
   'ReleaseCheck',
   'Decision',
-  'KnownProblem'
+  'KnownProblem',
+  'SourceFile',
+  'TestFile',
+  'FixtureFile',
+  'ConfigFile',
+  'Symbol'
 ];
 
 export const CONTEXT_GRAPH_EDGE_TYPES: ContextGraphEdgeType[] = [
@@ -222,7 +240,14 @@ export const CONTEXT_GRAPH_EDGE_TYPES: ContextGraphEdgeType[] = [
   'AFFECTS_SURFACE',
   'DEPENDS_ON_EVIDENCE',
   'HAS_DECISION',
-  'HAS_KNOWN_PROBLEM'
+  'HAS_KNOWN_PROBLEM',
+  'IMPORTS',
+  'EXPORTS',
+  'DEFINES_SYMBOL',
+  'TESTS_FILE',
+  'IMPLEMENTS_COMMAND',
+  'REFERENCED_BY_DOC',
+  'VALIDATED_BY_EVIDENCE'
 ];
 
 export const CONTEXT_CONFIDENCE_LEVELS: ContextConfidence[] = ['explicit', 'derived', 'heuristic'];

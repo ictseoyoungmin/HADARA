@@ -60,7 +60,21 @@
   "$defs": {
     "confidence": { "enum": ["explicit", "derived", "heuristic"] },
     "nodeType": {
-      "enum": ["Task", "Document", "ManagedSection", "Evidence", "Command", "ReleaseCheck", "Decision", "KnownProblem"]
+      "enum": [
+        "Task",
+        "Document",
+        "ManagedSection",
+        "Evidence",
+        "Command",
+        "ReleaseCheck",
+        "Decision",
+        "KnownProblem",
+        "SourceFile",
+        "TestFile",
+        "FixtureFile",
+        "ConfigFile",
+        "Symbol"
+      ]
     },
     "edgeType": {
       "enum": [
@@ -75,7 +89,14 @@
         "AFFECTS_SURFACE",
         "DEPENDS_ON_EVIDENCE",
         "HAS_DECISION",
-        "HAS_KNOWN_PROBLEM"
+        "HAS_KNOWN_PROBLEM",
+        "IMPORTS",
+        "EXPORTS",
+        "DEFINES_SYMBOL",
+        "TESTS_FILE",
+        "IMPLEMENTS_COMMAND",
+        "REFERENCED_BY_DOC",
+        "VALIDATED_BY_EVIDENCE"
       ]
     },
     "source": {
@@ -196,7 +217,7 @@
         "id": { "type": "string", "minLength": 1 },
         "path": { "type": "string", "minLength": 1 },
         "kind": {
-          "enum": ["task-board", "task-capsule", "project-state", "agent-handoff", "docs-registry", "release-readiness", "evidence"]
+          "enum": ["task-board", "task-capsule", "project-state", "agent-handoff", "docs-registry", "release-readiness", "evidence", "code-index"]
         },
         "hash": { "type": "string" },
         "extracted": { "type": "object" }

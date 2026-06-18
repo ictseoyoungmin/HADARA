@@ -27,6 +27,9 @@ export function createContextStateProjectionReport(input: ContextStateProjection
   const nodes = input.extractionResults.flatMap((result) => result.nodes);
   const graphIssues = input.extractionResults.flatMap((result) => result.issues);
   const taskIndex = indexTaskNodes(nodes);
+  const latestCompleted = chooseTaskHint(latestCompletedCandidates(stateSources));
+  const active = chooseTaskHint(activeTaskCandidates(stateSources));
+  const latestClosed = latestClosedTask(stateSources);
   const issues = [
     ...stateSourceConsistencyIssues(stateSources),
     ...taskPresenceIssues(taskIndex),
@@ -40,9 +43,9 @@ export function createContextStateProjectionReport(input: ContextStateProjection
     ok: issues.every((issue) => issue.severity !== 'error'),
     generatedAt: input.generatedAt,
     summary: {
-      latestCompletedTask: chooseTaskHint(latestCompletedCandidates(stateSources)) ?? undefined,
-      activeTask: chooseTaskHint(activeTaskCandidates(stateSources)) ?? undefined,
-      latestClosedTask: latestClosedTask(stateSources) ?? undefined,
+      ...(latestCompleted ? { latestCompletedTask: latestCompleted } : {}),
+      ...(active ? { activeTask: active } : {}),
+      ...(latestClosed ? { latestClosedTask: latestClosed } : {}),
       releaseState: releaseState(stateSources),
       stateConsistency: stateConsistency(issues)
     },

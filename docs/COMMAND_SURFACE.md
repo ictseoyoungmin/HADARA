@@ -92,7 +92,7 @@ State consistency rollout is advisory in `0.3.1-rc.1`: `ci gate --mode strict` p
 
 ## Context Routing
 
-`hadara context graph --json` emits the read-only `hadara.contextGraph.v1` report. `hadara context graph --task T-XXXX --json` includes the task-scoped context report with read-first, read-if-needed, do-not-read, related evidence, related commands, known problems, validation suggestions, and state issues. The command is a projection only: it does not write cache files, append evidence, run validation, or patch documents.
+`hadara context graph --json` emits the read-only `hadara.contextGraph.v1` report. `hadara context graph --task T-XXXX --json` includes the task-scoped context report with read-first, read-if-needed, do-not-read, related evidence, related commands, known problems, validation suggestions, and state issues. `hadara context graph --include-code --json` additively includes C2 source, test, fixture, config, symbol, import/export, command implementation, test relation, and evidence validation projections without changing the default C1 graph output. The command is a projection only: it does not write cache files, append evidence, run validation, or patch documents.
 
 ## Advanced Surfaces
 

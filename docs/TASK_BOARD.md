@@ -358,3 +358,4 @@
 | T-0355 | C2 Symbol Extraction | Done | tasks/T-0355-c2-symbol-extraction | |
 | T-0356 | C2 Command Implementation and Test File Hints | Done | tasks/T-0356-c2-command-implementation-and-test-file-hints | |
 | T-0357 | C2 Test Relation Edges | Done | tasks/T-0357-c2-test-relation-edges | |
+| T-0358 | C2 Context Graph Integration | Done | tasks/T-0358-c2-context-graph-integration | |

@@ -136,7 +136,12 @@ function sampleContextGraph(): ContextGraphReport {
         Command: 0,
         ReleaseCheck: 0,
         Decision: 0,
-        KnownProblem: 0
+        KnownProblem: 0,
+        SourceFile: 0,
+        TestFile: 0,
+        FixtureFile: 0,
+        ConfigFile: 0,
+        Symbol: 0
       },
       edgeCounts: {
         HAS_EVIDENCE: 0,
@@ -150,7 +155,14 @@ function sampleContextGraph(): ContextGraphReport {
         AFFECTS_SURFACE: 0,
         DEPENDS_ON_EVIDENCE: 0,
         HAS_DECISION: 0,
-        HAS_KNOWN_PROBLEM: 0
+        HAS_KNOWN_PROBLEM: 0,
+        IMPORTS: 0,
+        EXPORTS: 0,
+        DEFINES_SYMBOL: 0,
+        TESTS_FILE: 0,
+        IMPLEMENTS_COMMAND: 0,
+        REFERENCED_BY_DOC: 0,
+        VALIDATED_BY_EVIDENCE: 0
       },
       sourcesRead: 2,
       degraded: false
@@ -164,7 +176,7 @@ function sampleContextGraph(): ContextGraphReport {
 }
 
 describe('context graph schema contracts', () => {
-  it('exports the C1 node, edge, and confidence vocabularies', () => {
+  it('exports the additive C1/C2 node, edge, and confidence vocabularies', () => {
     expect(CONTEXT_GRAPH_NODE_TYPES).toEqual([
       'Task',
       'Document',
@@ -173,7 +185,33 @@ describe('context graph schema contracts', () => {
       'Command',
       'ReleaseCheck',
       'Decision',
-      'KnownProblem'
+      'KnownProblem',
+      'SourceFile',
+      'TestFile',
+      'FixtureFile',
+      'ConfigFile',
+      'Symbol'
+    ]);
+    expect(CONTEXT_GRAPH_EDGE_TYPES).toEqual([
+      'HAS_EVIDENCE',
+      'CLOSES_WITH',
+      'REFERENCES_DOC',
+      'REQUIRED_FOR',
+      'SUPERSEDES',
+      'DESCRIBES_COMMAND',
+      'BELONGS_TO_DOCUMENT',
+      'CHECKS_COMMAND',
+      'AFFECTS_SURFACE',
+      'DEPENDS_ON_EVIDENCE',
+      'HAS_DECISION',
+      'HAS_KNOWN_PROBLEM',
+      'IMPORTS',
+      'EXPORTS',
+      'DEFINES_SYMBOL',
+      'TESTS_FILE',
+      'IMPLEMENTS_COMMAND',
+      'REFERENCED_BY_DOC',
+      'VALIDATED_BY_EVIDENCE'
     ]);
     expect(CONTEXT_GRAPH_EDGE_TYPES).toContain('REFERENCES_DOC');
     expect(CONTEXT_CONFIDENCE_LEVELS).toEqual(['explicit', 'derived', 'heuristic']);

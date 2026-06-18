@@ -1,4 +1,4 @@
-import { getStringOption } from './args';
+import { getFlag, getStringOption } from './args';
 import { buildContextGraphReport } from '../context/context-graph-builder';
 
 export interface ContextCommandInput {
@@ -12,8 +12,10 @@ export function handleContextCommand(input: ContextCommandInput): boolean {
   if (sub !== 'graph') return false;
 
   const taskId = getStringOption(input.args, '--task');
+  const includeCode = getFlag(input.args, '--include-code');
   const report = buildContextGraphReport({
     projectRoot: input.projectRoot,
+    includeCode,
     ...(taskId ? { taskId, mode: 'task' } : { mode: 'full' })
   });
 

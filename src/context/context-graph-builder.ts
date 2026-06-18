@@ -27,6 +27,7 @@ import { extractCommandRegistry, extractDocsRegistry } from './registry-extracto
 import { extractReleaseReadiness } from './release-extractors';
 import { createContextStateProjectionReport } from './state-projection';
 import { extractTaskBoard, extractTaskCapsules } from './task-extractors';
+import { extractCodeIndexGraph } from './code-graph-extractor';
 
 export interface BuildContextGraphReportInput {
   projectRoot: string;
@@ -35,6 +36,7 @@ export interface BuildContextGraphReportInput {
   taskId?: string;
   extractionResults?: GraphExtractionResult[];
   cache?: ContextCacheMetadata;
+  includeCode?: boolean;
 }
 
 export interface CreateTaskContextReportInput {
@@ -45,8 +47,8 @@ export interface CreateTaskContextReportInput {
   issues: ContextGraphIssue[];
 }
 
-export function collectContextGraphExtractions(projectRoot: string): GraphExtractionResult[] {
-  return [
+export function collectContextGraphExtractions(projectRoot: string, options: { includeCode?: boolean; generatedAt?: string } = {}): GraphExtractionResult[] {
+  const results = [
     extractTaskCapsules(projectRoot),
     extractTaskBoard(projectRoot),
     extractDocsRegistry(projectRoot),
@@ -58,11 +60,16 @@ export function collectContextGraphExtractions(projectRoot: string): GraphExtrac
     extractEvidence(projectRoot),
     extractReleaseReadiness(projectRoot)
   ];
+  if (options.includeCode) results.push(extractCodeIndexGraph(projectRoot, options.generatedAt));
+  return results;
 }
 
 export function buildContextGraphReport(input: BuildContextGraphReportInput): ContextGraphReport {
   const generatedAt = input.generatedAt ?? new Date().toISOString();
-  const extractionResults = input.extractionResults ?? collectContextGraphExtractions(input.projectRoot);
+  const extractionResults = input.extractionResults ?? collectContextGraphExtractions(input.projectRoot, {
+    includeCode: input.includeCode,
+    generatedAt
+  });
   const merged = mergeGraphExtractionResults(extractionResults);
   const stateProjection = createContextStateProjectionReport({ generatedAt, extractionResults });
   const mode = input.mode ?? (input.taskId ? 'task' : 'full');
