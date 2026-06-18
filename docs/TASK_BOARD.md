@@ -343,3 +343,4 @@
 | T-0340 | Stable 0.3.2 Approval-Gated Publish | Done | tasks/T-0340-stable-0-3-2-approval-gated-publish | Published `hadara@0.3.2` to npm; npm view verified `0.3.2`; dist-tags verified `latest=0.3.2` and `next=0.3.2-rc.0`; GitHub Release draft was not requested. |
 | T-0341 | Stable 0.3.2 Post-Publish Installed-Package Recycle | Done | tasks/T-0341-stable-0-3-2-post-publish-installed-package-recycle | Installed-package recycle passed from temp-prefix bin. |
 | T-0342 | Context Routing Spec Docs Registration | Done | tasks/T-0342-context-routing-spec-docs-registration | |
+| T-0343 | Context Graph Schema Types and Fixtures | Done | tasks/T-0343-context-graph-schema-types-and-fixtures | |

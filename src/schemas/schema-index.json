@@ -65,6 +65,13 @@
       "notes": "Documents read-only MCP memory-mode context export; CLI export-context remains file-writing."
     },
     {
+      "id": "hadara.contextGraph.v1",
+      "path": "src/schemas/context-graph.schema.json",
+      "status": "fixture",
+      "owner": "context/graph",
+      "notes": "Documents deterministic read-only C1 project context graph reports over task, document, evidence, command, release, decision, and known-problem nodes."
+    },
+    {
       "id": "hadara.command_help.v1",
       "path": "src/schemas/command-help.schema.json",
       "status": "fixture",
@@ -224,6 +231,13 @@
       "status": "fixture",
       "owner": "task/complete-flow",
       "notes": "Documents read-only task completion flow reports that compose finish, ready, close, and audit guidance."
+    },
+    {
+      "id": "hadara.taskContext.v1",
+      "path": "src/schemas/task-context.schema.json",
+      "status": "fixture",
+      "owner": "context/task-context",
+      "notes": "Documents task-centered C1 context reports used to avoid reading the full graph for a selected task."
     },
     {
       "id": "hadara.task.create.v1",

@@ -32,6 +32,7 @@ describe('schema fixtures', () => {
       'hadara.command_portfolio_audit.v1',
       'hadara.commands.registry.v1',
       'hadara.context.export.v1',
+      'hadara.contextGraph.v1',
       'hadara.dashboard.bootstrap.v1',
       'hadara.dashboard.core.v1',
       'hadara.dashboard.task_detail.v1',
@@ -79,6 +80,7 @@ describe('schema fixtures', () => {
       'hadara.task.ready.v1',
       'hadara.task.upgrade_scaffold.v1',
       'hadara.task.workbench.v1',
+      'hadara.taskContext.v1',
       'hadara.tools.list.v1',
       'hadara.write.preflight.v1'
     ]);

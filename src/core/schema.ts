@@ -3,6 +3,7 @@ import actorContextSchemaJson from '../schemas/actor-context.schema.json';
 import activeRunProjectionSchemaJson from '../schemas/active-run-projection.schema.json';
 import activeRunResumeSchemaJson from '../schemas/active-run-resume.schema.json';
 import cleanCheckoutSmokeSchemaJson from '../schemas/clean-checkout-smoke.schema.json';
+import contextGraphSchemaJson from '../schemas/context-graph.schema.json';
 import contextExportSchemaJson from '../schemas/context-export.schema.json';
 import dashboardBootstrapSchemaJson from '../schemas/dashboard-bootstrap.schema.json';
 import dashboardCoreSchemaJson from '../schemas/dashboard-core.schema.json';
@@ -44,6 +45,7 @@ import stateProjectionSchemaJson from '../schemas/state-projection.schema.json';
 import taskAuditCloseSchemaJson from '../schemas/task-audit-close.schema.json';
 import taskCloseSchemaJson from '../schemas/task-close.schema.json';
 import taskCompleteFlowSchemaJson from '../schemas/task-complete-flow.schema.json';
+import taskContextSchemaJson from '../schemas/task-context.schema.json';
 import taskCreateSchemaJson from '../schemas/task-create.schema.json';
 import taskFinishSchemaJson from '../schemas/task-finish.schema.json';
 import taskNextSchemaJson from '../schemas/task-next.schema.json';
@@ -97,6 +99,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.active_run.resume.v1': activeRunResumeSchemaJson as JsonObject,
   'hadara.cleanCheckoutSmoke.v1': cleanCheckoutSmokeSchemaJson as JsonObject,
   'hadara.context.export.v1': contextExportSchemaJson as JsonObject,
+  'hadara.contextGraph.v1': contextGraphSchemaJson as JsonObject,
   'hadara.dashboard.bootstrap.v1': dashboardBootstrapSchemaJson as JsonObject,
   'hadara.dashboard.core.v1': dashboardCoreSchemaJson as JsonObject,
   'hadara.dashboard.task_detail.v1': dashboardTaskDetailSchemaJson as JsonObject,
@@ -137,6 +140,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.task.audit_close.v1': taskAuditCloseSchemaJson as JsonObject,
   'hadara.task.close.v1': taskCloseSchemaJson as JsonObject,
   'hadara.task.complete_flow.v1': taskCompleteFlowSchemaJson as JsonObject,
+  'hadara.taskContext.v1': taskContextSchemaJson as JsonObject,
   'hadara.task.create.v1': taskCreateSchemaJson as JsonObject,
   'hadara.task.finish.v1': taskFinishSchemaJson as JsonObject,
   'hadara.task.next.v1': taskNextSchemaJson as JsonObject,

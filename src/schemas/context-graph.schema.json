@@ -1,0 +1,250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.contextGraph.v1",
+  "x-hadara-schema-id": "hadara.contextGraph.v1",
+  "title": "HADARA Context Graph Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "command",
+    "ok",
+    "generatedAt",
+    "projectRoot",
+    "sourceHash",
+    "mode",
+    "nodes",
+    "edges",
+    "stateProjection",
+    "summary",
+    "issues"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.contextGraph.v1" },
+    "command": { "const": "context.graph" },
+    "ok": { "type": "boolean" },
+    "generatedAt": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "sourceHash": { "type": "string", "minLength": 1 },
+    "mode": { "enum": ["full", "task"] },
+    "taskId": { "type": "string" },
+    "nodes": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+    "edges": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
+    "taskContext": { "$ref": "#/$defs/taskContext" },
+    "stateProjection": { "$ref": "#/$defs/stateProjection" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["nodeCounts", "edgeCounts", "sourcesRead", "degraded"],
+      "properties": {
+        "nodeCounts": { "type": "object" },
+        "edgeCounts": { "type": "object" },
+        "sourcesRead": { "type": "number" },
+        "degraded": { "type": "boolean" }
+      }
+    },
+    "cache": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["used", "hit"],
+      "properties": {
+        "used": { "type": "boolean" },
+        "hit": { "type": "boolean" },
+        "manifestHash": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "cachePath": { "type": "string" }
+      }
+    },
+    "issues": { "type": "array", "items": { "$ref": "#/$defs/graphIssue" } }
+  },
+  "$defs": {
+    "confidence": { "enum": ["explicit", "derived", "heuristic"] },
+    "nodeType": {
+      "enum": ["Task", "Document", "ManagedSection", "Evidence", "Command", "ReleaseCheck", "Decision", "KnownProblem"]
+    },
+    "edgeType": {
+      "enum": [
+        "HAS_EVIDENCE",
+        "CLOSES_WITH",
+        "REFERENCES_DOC",
+        "REQUIRED_FOR",
+        "SUPERSEDES",
+        "DESCRIBES_COMMAND",
+        "BELONGS_TO_DOCUMENT",
+        "CHECKS_COMMAND",
+        "AFFECTS_SURFACE",
+        "DEPENDS_ON_EVIDENCE",
+        "HAS_DECISION",
+        "HAS_KNOWN_PROBLEM"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "extractor"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "line": { "type": "number" },
+        "hash": { "type": "string" },
+        "extractor": { "type": "string", "minLength": 1 }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "type", "label", "source"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "$ref": "#/$defs/nodeType" },
+        "label": { "type": "string", "minLength": 1 },
+        "path": { "type": "string" },
+        "status": { "type": "string" },
+        "kind": { "type": "string" },
+        "owner": { "type": "string" },
+        "metadata": { "type": "object" },
+        "source": { "$ref": "#/$defs/source" }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "from", "to", "type", "confidence", "reason", "source"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "from": { "type": "string", "minLength": 1 },
+        "to": { "type": "string", "minLength": 1 },
+        "type": { "$ref": "#/$defs/edgeType" },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "reason": { "type": "string", "minLength": 1 },
+        "source": { "$ref": "#/$defs/source" }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "type", "reason", "confidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "$ref": "#/$defs/nodeType" },
+        "path": { "type": "string" },
+        "reason": { "type": "string", "minLength": 1 },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "sourceHash": { "type": "string" }
+      }
+    },
+    "taskContext": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schemaVersion",
+        "taskId",
+        "readFirst",
+        "readIfNeeded",
+        "doNotReadByDefault",
+        "relatedEvidence",
+        "relatedCommands",
+        "knownProblems",
+        "validationSuggestions",
+        "stateIssues",
+        "issues"
+      ],
+      "properties": {
+        "schemaVersion": { "const": "hadara.taskContext.v1" },
+        "taskId": { "type": "string", "minLength": 1 },
+        "task": { "$ref": "#/$defs/node" },
+        "readFirst": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+        "readIfNeeded": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+        "doNotReadByDefault": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+        "relatedEvidence": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+        "relatedCommands": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+        "knownProblems": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+        "validationSuggestions": { "type": "array", "items": { "type": "string" } },
+        "stateIssues": { "type": "array", "items": { "$ref": "#/$defs/stateIssue" } },
+        "issues": { "type": "array", "items": { "$ref": "#/$defs/graphIssue" } }
+      }
+    },
+    "stateProjection": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["schemaVersion", "command", "ok", "generatedAt", "summary", "sources", "issues"],
+      "properties": {
+        "schemaVersion": { "const": "hadara.stateProjection.v1" },
+        "command": { "const": "state.projection" },
+        "ok": { "type": "boolean" },
+        "generatedAt": { "type": "string" },
+        "summary": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["stateConsistency"],
+          "properties": {
+            "latestCompletedTask": { "type": "string" },
+            "activeTask": { "type": "string" },
+            "latestClosedTask": { "type": "string" },
+            "releaseState": { "type": "string" },
+            "stateConsistency": { "enum": ["consistent", "warning", "error", "unknown"] }
+          }
+        },
+        "sources": { "type": "array", "items": { "$ref": "#/$defs/stateSource" } },
+        "issues": { "type": "array", "items": { "$ref": "#/$defs/stateIssue" } }
+      }
+    },
+    "stateSource": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "path", "kind", "extracted"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "kind": {
+          "enum": ["task-board", "task-capsule", "project-state", "agent-handoff", "docs-registry", "release-readiness", "evidence"]
+        },
+        "hash": { "type": "string" },
+        "extracted": { "type": "object" }
+      }
+    },
+    "stateIssue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message", "paths"],
+      "properties": {
+        "severity": { "enum": ["info", "warning", "error"] },
+        "code": {
+          "enum": [
+            "STATE_LATEST_TASK_MISMATCH",
+            "STATE_ACTIVE_TASK_MISMATCH",
+            "STATE_TASK_BOARD_MISSING_ROW",
+            "STATE_TASK_CAPSULE_MISSING",
+            "STATE_CLOSE_PROOF_STALE",
+            "STATE_RELEASE_EVIDENCE_STALE",
+            "STATE_DOC_REQUIRED_READING_DRIFT",
+            "STATE_UNKNOWN"
+          ]
+        },
+        "message": { "type": "string", "minLength": 1 },
+        "paths": { "type": "array", "items": { "type": "string" } },
+        "fixHint": { "type": "string" }
+      }
+    },
+    "graphIssue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "enum": ["info", "warning", "error"] },
+        "code": {
+          "enum": [
+            "CONTEXT_GRAPH_SOURCE_MISSING",
+            "CONTEXT_GRAPH_PARSE_FAILED",
+            "CONTEXT_GRAPH_DOC_REGISTRY_MISSING",
+            "CONTEXT_GRAPH_COMMAND_REGISTRY_MISSING",
+            "CONTEXT_GRAPH_EVIDENCE_READ_FAILED",
+            "CONTEXT_GRAPH_DEGRADED"
+          ]
+        },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string" },
+        "fixHint": { "type": "string" }
+      }
+    }
+  }
+}
