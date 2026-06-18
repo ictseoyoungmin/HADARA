@@ -90,6 +90,10 @@ Diagnostics such as `harness.validate`, `proof.status`, `proof.explain`, `eviden
 
 State consistency rollout is advisory in `0.3.1-rc.1`: `ci gate --mode strict` preserves state projection issues as warnings and does not promote historical state drift to blockers.
 
+## Context Routing
+
+`hadara context graph --json` emits the read-only `hadara.contextGraph.v1` report. `hadara context graph --task T-XXXX --json` includes the task-scoped context report with read-first, read-if-needed, do-not-read, related evidence, related commands, known problems, validation suggestions, and state issues. The command is a projection only: it does not write cache files, append evidence, run validation, or patch documents.
+
 ## Advanced Surfaces
 
 Release/package, dev validation, integrations, dashboard/TUI, installer planning, and deterministic agent-loop harness commands remain available through `hadara commands --json` and `hadara help family <family>`. They are intentionally hidden from default help because ordinary worker agents should not infer release, UI, integration, or harness actions as part of every capsule.

@@ -38,6 +38,7 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'proof.status',
   'proof.explain',
   'ci.gate',
+  'context.graph',
   'debt.list',
   'debt.show',
   'protocol.doctor',

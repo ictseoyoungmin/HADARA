@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, and T-0343-T-0351 started C1 implementation. |
-| Current Phase | 0.3.3 context-routing C1 implementation | T-0351 added internal graph report and task context report assembly after T-0350 state projection diagnostics. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0351 C1 Graph Builder and Task Context Report | Added internal context graph builder and task context report derivation over extractor outputs. |
-| Active / Next Task | TBD Add C1 Context Graph CLI and Read Surface | Expose the internal graph/task-context builder through the planned CLI/read surface; keep persistent cache as separate follow-up unless cache invalidation is specified. |
-| Validation Baseline | T-0351 graph builder/task context validation | Docker focused builder/projection/schema tests passed 3 files / 9 tests; Docker `npm run check` passed 128 files / 821 tests; Docker build/dist refresh, built CLI version smoke, and `git diff --check` passed in `ev:T-0351:8783d5087eed426ca228ce02`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, and T-0343-T-0352 completed C1 through the CLI/read surface. |
+| Current Phase | 0.3.3 context-routing C2 implementation next | T-0352 exposed the C1 graph report and task context report through read-only `hadara context graph` CLI output. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0352 Create/start C1 Context Graph CLI and Read Surface | Added the read-only `context graph` CLI surface, command registry metadata, JSON/read-only docs, and focused CLI coverage over the C1 graph builder. |
+| Active / Next Task | TBD Start C2 Code Link Layer Schema and Ignore Rules | Start the C2 Code Link Layer with code index schema, ignore rules, and worker-plan routing from the 0.3.3 context-routing specs. |
+| Validation Baseline | T-0352 context graph CLI/read surface validation | Docker focused context graph CLI/registry/schema tests passed 4 files / 15 tests; Docker `npm run check` passed 129 files / 823 tests; Docker build/dist refresh, built context graph CLI smoke, built CLI version smoke, and `git diff --check` passed in `ev:T-0352:d70ee6360acf43948d7cf620`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Add the C1 context graph CLI/read surface over the internal builder. | Use T-0344-T-0351 extractor/projection/builder helpers; read `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md` plus `06_Worker_Agent_Implementation_Plan.md`. |
+| TBD | Start C2 Code Link Layer schema and ignore rules. | Use T-0343-T-0352 C1 graph/schema/CLI outputs as the read foundation; read `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md` plus `06_Worker_Agent_Implementation_Plan.md`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0352 Create/start C1 Context Graph CLI and Read Surface | Exposed the C1 graph builder through `hadara context graph --json` and task-scoped `--task` output, registered command metadata, documented the JSON/read-only contract, and added focused CLI coverage. | `ev:T-0352:d70ee6360acf43948d7cf620`. |
 | T-0351 C1 Graph Builder and Task Context Report | Added internal graph report assembly, default extractor collection, state projection inclusion, graph summaries, and task context candidate derivation; no public CLI surface added. | `ev:T-0351:8783d5087eed426ca228ce02`. |
 | T-0350 C1 State Projection and Consistency Diagnostics | Added compact C1 state projection diagnostics over extractor outputs, plus Project State and Agent Handoff state sources; no public CLI surface added. | `ev:T-0350:b540a670f64b48babe233d22`. |
-| T-0349 Context Graph Release Readiness Extractor | Added ReleaseCheck nodes plus release-readiness document, command, evidence dependency, and StateSource outputs; no CLI surface added. | `ev:T-0349:95e6ccd6f23244d7b4f5f85e`. |
 
 ## Current Known Problems
 
@@ -90,12 +90,13 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create/start C1 Context Graph CLI and Read Surface. | T-0351 completed the internal builder and task context report; the next useful C1 step is to expose it through the planned command/read surface without claiming persistent cache support yet. | T-0351 validation evidence `ev:T-0351:8783d5087eed426ca228ce02`; read `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md`, `docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
+| Create/start C2 Code Link Layer Schema and Ignore Rules. | C1 is now implemented through the dedicated read-only graph CLI surface; the next context-routing layer is the code index schema and ignore-rule boundary. | T-0352 validation evidence `ev:T-0352:d70ee6360acf43948d7cf620`; read `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md`, `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0352 context graph CLI/read surface | Docker focused context graph CLI/registry/schema tests passed 4 files / 15 tests; Docker `npm run check` passed 129 files / 823 tests; Docker build passed and `/workspace/dist` was refreshed; built context graph CLI smoke, built CLI version smoke, and `git diff --check` passed. | Evidence `ev:T-0352:d70ee6360acf43948d7cf620`; persistent graph cache remains unimplemented by design. |
 | T-0351 context graph builder/task context report | Docker focused builder/projection/schema tests passed 3 files / 9 tests; Docker `npm run check` passed 128 files / 821 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke and `git diff --check` passed. | Evidence `ev:T-0351:8783d5087eed426ca228ce02`; no public CLI surface was added. |
 | T-0350 context graph state projection diagnostics | Docker focused projection/context tests passed 5 files / 19 tests; Docker `npm run check` passed 127 files / 818 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke and `git diff --check` passed. | Evidence `ev:T-0350:b540a670f64b48babe233d22`; no public CLI surface was added. |
 | T-0349 context graph release readiness extractor | Docker focused context graph extractor/schema tests passed 7 files / 23 tests; Docker `npm run check` passed 126 files / 814 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke and `git diff --check` passed. | Evidence `ev:T-0349:95e6ccd6f23244d7b4f5f85e`; no public CLI surface was added. |

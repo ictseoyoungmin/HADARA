@@ -791,6 +791,32 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     conflictsWith: []
   },
   commandEntry({
+    id: 'context.graph',
+    command: 'hadara context graph [--task <task-id>] --json',
+    summary: 'Emit the read-only C1 project context graph and optional task context report.',
+    canonical: true,
+    appearsInDefaultHelp: false,
+    family: 'project-health',
+    scope: 'project',
+    lifecycleStage: 'inspect',
+    requiredness: 'diagnostic',
+    writeBoundary: 'read-only',
+    readOnly: true,
+    risk: 'low',
+    actor: 'agent-worker',
+    status: 'experimental',
+    schemaVersion: 'hadara.contextGraph.v1',
+    since: '0.3.3',
+    docs: ['docs/CLI_JSON_CONTRACT.md', 'docs/COMMAND_SURFACE.md', 'docs/SCHEMAS.md'],
+    examples: [
+      example('Read full context graph', 'hadara context graph --json', 'When a worker needs project context routing signals.'),
+      example('Read task context graph', 'hadara context graph --task T-0001 --json', 'When a worker needs task-scoped docs, evidence, commands, and known problems.')
+    ],
+    related: ['state.verify', 'docs.required-reading', 'task.status'],
+    conflictsWith: [],
+    notes: 'Read-only projection; persistent cache support is not implemented yet.'
+  }),
+  commandEntry({
     id: 'debt.list',
     command: 'hadara debt list [--json]',
     summary: 'List operational debt records.',
