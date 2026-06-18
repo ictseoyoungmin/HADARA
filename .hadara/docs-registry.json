@@ -520,6 +520,27 @@
       "closeSourceRole": "task-dependent",
       "supersedes": [],
       "generatedBy": "T-0342"
+    },
+    {
+      "path": "docs/specs/0.3.3/context-routing/07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md",
+      "title": "C6 Fast Context Cache and Performance Implementation Spec",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0360"
     }
   ]
 }

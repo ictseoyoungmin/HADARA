@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, and T-0353-T-0359 completed C2 with graph integration plus budget/degraded hardening. |
-| Current Phase | 0.3.3 context-routing C3 context-pack start | C1 project graph/state projection and C2 code-link/index output are implemented; T-0359 added explicit code-index budget/degraded metadata while persistent cache remains deferred. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0359 C2 Code Index Budget Hardening | Added default file-count, total-byte, and single-file read budgets to the internal code index, warning-level degraded partial output, additive `budget` schema/report metadata, and code-index budget projection through `context graph --include-code`. |
-| Active / Next Task | TBD Start C3 Context Pack Schema and Ranking | Start C3 over the completed C1/C2 foundation; read `03_Context_Pack_and_Session_Start_Spec.md` and keep C4/C5/C6 deferred unless the active capsule requires them. |
-| Validation Baseline | T-0359 code index budget hardening validation | Docker focused code-index/context/schema tests passed 3 files / 14 tests; Docker `npm run check` passed 130 files / 836 tests; Docker build/dist refresh, built version smoke, built `context graph --include-code` budget smoke, and `git diff --check` passed in `ev:T-0359:5bd5521857864638b2abde7a`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, and T-0360 added the detailed C6 fast cache implementation spec. |
+| Current Phase | 0.3.3 context-routing C6 speed-first cache planning | C1 project graph/state projection and C2 code-link/index output are implemented; T-0360 documents how to implement fast manifest/cache/warm graph paths without weakening read-only context command boundaries. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0360 C6 Fast Context Cache Spec | Added `07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md`, linked it from the C6 summary and worker plan, and registered it in SOP/docs registry surfaces. |
+| Active / Next Task | TBD Start C6 Source Manifest and Shared Discovery | If speed remains the priority, implement C6.1 source manifest/shared discovery first; otherwise return to C3 context pack schema/ranking. |
+| Validation Baseline | T-0360 docs-only C6 spec validation | `git diff --check`, `docs required-reading`, `docs list`, and new C6 spec/link path checks passed in `ev:T-0360:4b9fb9a2f39c4361a4f65eab`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Start C3 context pack schema and ranking. | Use the completed C1 graph/state projection and C2 code-aware graph/index output as inputs; read `docs/specs/0.3.3/context-routing/03_Context_Pack_and_Session_Start_Spec.md`. |
+| TBD | Start C6 Source Manifest and Shared Discovery if speed remains the priority. | Use T-0360's detailed C6 spec; read `docs/specs/0.3.3/context-routing/05_Indexing_Cache_Invalidation_and_Performance_Spec.md`, `docs/specs/0.3.3/context-routing/07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0360 C6 Fast Context Cache Spec | Added detailed speed-first C6 cache/performance implementation spec, linked routing docs, and registered the spec in SOP/docs registry surfaces. | `ev:T-0360:4b9fb9a2f39c4361a4f65eab`. |
 | T-0359 C2 Code Index Budget Hardening | Added explicit code-index file/byte/single-file budgets, degraded partial-output warnings, budget metadata, and include-code graph projection. | `ev:T-0359:5bd5521857864638b2abde7a`. |
 | T-0358 C2 Context Graph Integration | Added opt-in code-aware context graph output while preserving default C1 graph behavior. | `ev:T-0358:407b29c183f246d390f162f9`. |
-| T-0357 C2 Test Relation Edges | Added explicit, derived, heuristic, and evidence-backed test relation edges to the code index. | `ev:T-0357:6406481495244038961bd0de`. |
 
 ## Current Known Problems
 
@@ -90,12 +90,13 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create/start C2 Hardening and Performance Review. | T-0358 completed the worker-plan C2 graph integration capsule; strict/full implementation should review remaining C2 performance/degraded-mode/cache/documentation acceptance before C3. | T-0358 validation evidence `ev:T-0358:407b29c183f246d390f162f9`; read `docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md`, `docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md`, `docs/specs/0.3.3/context-routing/05_Indexing_Cache_Invalidation_and_Performance_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
+| Create/start C6 Source Manifest and Shared Discovery. | T-0360 created the speed-first C6 implementation spec; the first implementation slice is source manifest/shared discovery so later cache invalidation can avoid rereading unchanged files. | Read `docs/specs/0.3.3/context-routing/05_Indexing_Cache_Invalidation_and_Performance_Spec.md`, `docs/specs/0.3.3/context-routing/07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md`, and `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md`. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0360 C6 fast cache spec docs validation | `git diff --check`, `docs required-reading`, `docs list`, and new C6 spec/link path checks passed. | Evidence `ev:T-0360:4b9fb9a2f39c4361a4f65eab`; no runtime/source behavior changed. |
 | T-0358 context graph integration | Docker focused context graph/code index/registry tests passed 4 files / 24 tests; Docker `npm run check` passed 130 files / 835 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke, built `context graph --include-code` smoke, and `git diff --check` passed. | Evidence `ev:T-0358:407b29c183f246d390f162f9`; remaining C2 review should focus on performance/degraded-mode/cache/docs before C3. |
 | T-0357 code index test relation edges | Docker focused code-index tests passed 1 file / 8 tests; Docker `npm run check` passed 130 files / 832 tests; Docker build passed and `/workspace/dist` was refreshed; built internal code-index schema smoke, built CLI version smoke, and `git diff --check` passed. | Evidence `ev:T-0357:6406481495244038961bd0de`; graph integration completed in T-0358. |
 | T-0356 code index command implementation/test-file hints | Docker focused code-index and command-registry tests passed 2 files / 15 tests; Docker `npm run check` passed 130 files / 831 tests; Docker build passed and `/workspace/dist` was refreshed; built internal code-index schema smoke, built CLI version smoke, and `git diff --check` passed. | Evidence `ev:T-0356:3f6509b1f0da4c569b03befa`; broader test relation heuristics, graph integration, and public CLI remain later C2 scope. |

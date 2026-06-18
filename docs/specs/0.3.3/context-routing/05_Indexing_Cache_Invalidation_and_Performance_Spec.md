@@ -4,6 +4,16 @@
 
 Merged final planning specification.
 
+## Detailed Implementation Spec
+
+For speed-first C6 implementation details, read:
+
+```text
+docs/specs/0.3.3/context-routing/07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md
+```
+
+That document extends this compact cache contract with cold-build optimization, warm-cache fast paths, Graphify-adapted manifest/update lessons, command write boundaries, and existing code changes required for implementation.
+
 ## Goal
 
 Define how context graph, code index, and context pack projections can be computed efficiently without becoming new sources of truth.

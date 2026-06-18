@@ -360,3 +360,4 @@
 | T-0357 | C2 Test Relation Edges | Done | tasks/T-0357-c2-test-relation-edges | |
 | T-0358 | C2 Context Graph Integration | Done | tasks/T-0358-c2-context-graph-integration | |
 | T-0359 | C2 Code Index Budget Hardening | Done | tasks/T-0359-c2-code-index-budget-hardening | |
+| T-0360 | C6 Fast Context Cache Spec | Done | tasks/T-0360-c6-fast-context-cache-spec | Added detailed C6 speed-first cache/performance spec, linked C6 routing docs, and registered the spec in SOP/docs registry surfaces. |

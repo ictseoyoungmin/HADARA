@@ -28,4 +28,5 @@ Schema: `hadara.docs.registry.v1`
 | `docs/specs/0.3.3/context-routing/04_Deterministic_Context_Slice_Raw_Adapter_Spec.md` | spec | reference | only-when-linked | no | hadara-dev |
 | `docs/specs/0.3.3/context-routing/05_Indexing_Cache_Invalidation_and_Performance_Spec.md` | spec | reference | only-when-linked | no | hadara-dev |
 | `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md` | implementation-guide | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.3.3/context-routing/07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md` | spec | reference | only-when-linked | no | hadara-dev |
 <!-- hadara:managed:end doc-registry-summary -->

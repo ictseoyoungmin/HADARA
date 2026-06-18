@@ -117,15 +117,18 @@ Read:
 
 ```text
 05_Indexing_Cache_Invalidation_and_Performance_Spec.md
+07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md
 ```
 
 Suggested capsules:
 
-1. Source manifest.
-2. Cache invalidation.
-3. Local cache atomic write.
-4. Performance budget/degraded mode.
-5. Cache integration with graph/code index.
+1. Source manifest and shared discovery.
+2. Cache store and status read model.
+3. Extractor shards and invalidation.
+4. Fast cold build and graph budgets.
+5. Code index cache integration.
+6. Context pack warm path.
+7. Optional cache warm command.
 
 ## General Rules
 
