@@ -252,9 +252,9 @@ Parser-backed extraction is allowed only when it improves accuracy without makin
 
 | Capsule | Scope | Done When |
 |---|---|---|
-| C6.6 Code Index Shard Persistence | Per-file code extraction cache and manifest-fed code index. | Warm `context graph --include-code` avoids unchanged file parsing. |
-| C6.7 Graph-Core Shard Reuse | Cache-aware graph orchestration for P0/P1/P2 shards. | Warm non-code `context graph` reads from shards within target. |
-| C6.8 Context Pack Warm Path | C3 pack consumes cached graph/code summaries. | Warm `context pack --task` does not rebuild graph/code index. |
+| C6.6 Code Index Shard Persistence | Per-file code extraction cache and manifest-fed code index. | Implemented through T-0375/T-0377; warm `context graph --include-code` avoids unchanged file parsing. |
+| C6.7 Graph-Core Shard Reuse | Cache-aware graph orchestration for P0/P1/P2 shards. | Implemented through T-0374; warm non-code `context graph` reads graph-core read-only. |
+| C6.8 Context Pack Warm Path | C3 pack consumes cached graph/code summaries. | Implemented through T-0374/T-0375 for graph-core/code-index consumption; T-0379 extends default Session Start to consume proven-fresh warm pack inputs. |
 | C6.9 Warm Execute Shard Phases | Extend `context cache warm --execute` to extractor/code/graph/pack shards. | Dry-run predicts stale shards; execute writes only planned shards. |
 | C6.10 Performance Budgets and Regression Fixtures | Add cold/warm timing fixtures and degraded tests. | CI or focused tests fail on major repeated-walk regressions where deterministic. |
 

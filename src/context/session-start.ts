@@ -7,6 +7,14 @@ import type {
 } from './context-pack';
 import { CONTEXT_PACK_COMMAND, CONTEXT_PACK_SCHEMA_ID, buildContextPackReport } from './context-pack';
 import type { ContextCacheMetadata } from './context-graph';
+import { buildContextGraphReport } from './context-graph-builder';
+import {
+  readContextCodeIndexShard,
+  readContextGraphCoreShard,
+  readContextSourceManifestCache
+} from './context-cache-store';
+import { checkContextSourceManifestFastFreshness } from './source-manifest';
+import { codeIndexReportToGraphExtraction } from './code-graph-extractor';
 
 export const SESSION_START_SCHEMA_ID = 'hadara.sessionStart.v1' as const;
 export const SESSION_START_COMMAND = 'session.start' as const;
@@ -71,7 +79,13 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
         ...(input.taskId ? { taskId: input.taskId } : {}),
         ...(input.budget ? { budget: input.budget } : {})
       })
-    : buildBoundedContextPackReport({
+    : buildWarmCachedContextPackReport({
+        projectRoot: input.projectRoot,
+        generatedAt,
+        taskId: input.taskId,
+        includeCode: input.includeCode,
+        budget: input.budget
+      }) ?? buildBoundedContextPackReport({
         projectRoot: input.projectRoot,
         generatedAt,
         taskId: input.taskId,
@@ -108,6 +122,76 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
     },
     issues
   };
+}
+
+function buildWarmCachedContextPackReport(input: {
+  projectRoot: string;
+  generatedAt: string;
+  taskId?: string;
+  includeCode?: boolean;
+  budget?: Partial<ContextBudget>;
+}): ContextPackReport | undefined {
+  const cachedManifest = readContextSourceManifestCache(input.projectRoot);
+  if (cachedManifest.status !== 'valid' || !cachedManifest.manifest) return undefined;
+
+  const fastFreshness = checkContextSourceManifestFastFreshness(input.projectRoot, cachedManifest.manifest);
+  if (!fastFreshness.ok) return undefined;
+
+  const graphCore = readContextGraphCoreShard({
+    projectRoot: input.projectRoot,
+    manifest: cachedManifest.manifest
+  });
+  if (!graphCore.hit || !graphCore.result) return undefined;
+
+  const extractionResults = [graphCore.result];
+  const code = input.includeCode
+    ? readContextCodeIndexShard({
+      projectRoot: input.projectRoot,
+      manifest: cachedManifest.manifest
+    })
+    : undefined;
+  if (code?.hit && code.result) {
+    extractionResults.push(codeIndexReportToGraphExtraction(code.result));
+  }
+
+  const cache: ContextCacheMetadata = {
+    used: true,
+    hit: !input.includeCode || Boolean(code?.hit),
+    mode: input.includeCode
+      ? code?.hit ? 'graph-core+code-index' : `graph-core+code-index-${code?.status ?? 'missing'}`
+      : 'graph-core',
+    manifestHash: cachedManifest.manifest.manifestHash,
+    readShardCount: 1 + (input.includeCode ? 1 : 0),
+    hitShardCount: 1 + (code?.hit ? 1 : 0),
+    missShardCount: code?.status === 'missing' ? 1 : 0,
+    staleShardCount: code?.status === 'stale' ? 1 : 0,
+    corruptShardCount: code?.status === 'corrupt' ? 1 : 0,
+    schemaMismatchShardCount: code?.status === 'schema-mismatch' ? 1 : 0,
+    shardPaths: [graphCore.path, ...(code ? [code.path] : [])].sort(),
+    staleExtractorKeys: code?.status === 'stale' ? ['codeIndex'] : [],
+    ...(graphCore.record ? { createdAt: graphCore.record.createdAt, cachePath: graphCore.path } : {}),
+    sourceManifestCacheFresh: true,
+    sourceManifestFastPath: 'hit',
+    sourceManifestFastPathReason: fastFreshness.reason,
+    ...(fastFreshness.strategy ? { sourceManifestFastPathStrategy: fastFreshness.strategy } : {})
+  };
+  const graphReport = buildContextGraphReport({
+    projectRoot: input.projectRoot,
+    generatedAt: input.generatedAt,
+    ...(input.taskId ? { taskId: input.taskId, mode: 'task' as const } : { mode: 'full' as const }),
+    extractionResults,
+    cache
+  });
+
+  return buildContextPackReport({
+    projectRoot: input.projectRoot,
+    generatedAt: input.generatedAt,
+    ...(input.taskId ? { taskId: input.taskId } : {}),
+    ...(input.budget ? { budget: input.budget } : {}),
+    includeCode: input.includeCode,
+    graphReport,
+    cache
+  });
 }
 
 function lifecycleForSessionStart(taskId: string | undefined, contextPack: ContextPackReport): SessionStartLifecycle {

@@ -30,10 +30,11 @@ The design must:
 |---|---|---|
 | C6.1 Source Manifest and Shared Discovery | Implemented through T-0363. | Reuse it as the single source discovery/stat path for graph, code index, and cache warm. |
 | C6.2 Cache Store and Status Read Model | Implemented through T-0364. | Keep `context cache status` read-only; use it to prove hit/stale/corrupt states before writes. |
-| C6.3 Cache Warm / Integration | Phase 1 implemented through T-0366 for source-manifest cache warm only. | Add extractor/code-index/graph shard consumption before C4 work depends on fast reads. |
-| C4 Context Slice | Not implemented. | Consume source-addressed graph/pack candidates without forcing broad rescans. |
+| C6.3 Cache Warm / Integration | Source-manifest warm, extractor shards, graph-core, code-index shard, per-file code-index summaries, and context-pack warm graph consumption are implemented through T-0377. | Continue refining warm consumers and add deterministic performance regression fixtures. |
+| C4 Context Slice | Implemented through T-0370 and hardened through T-0372/T-0376. | Keep raw slices bounded, source-addressed, and excluded from cache/local generated surfaces. |
+| C5 Session Start | Bounded no-live MVP implemented through T-0378; T-0379 refines default warm-cache consumption. | Broaden only through proven-fresh warm cache or explicit `--live`, never through hidden default scans. |
 
-The immediate priority after T-0366 is C6.4/C6.5 shard invalidation and cold-build reduction. A slow context graph makes C3/C4 theoretically correct but operationally weak; agents will fall back to manual broad reads if routine graph/pack calls are not fast.
+The immediate priority after T-0378 is warm-pack/session-start refinement and deterministic performance regression coverage. A slow live graph remains unacceptable as a default on mounted workspaces, so C5 must consume warmed cache when freshness is proven and otherwise degrade explicitly.
 
 ## Speed-First Decision Summary
 

@@ -1,10 +1,12 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { afterEach, describe, expect, it } from 'vitest';
 import { validateSchema } from '../../src/core/schema';
 import { buildSessionStartReport } from '../../src/context/session-start';
 import { createTaskCapsule } from '../../src/task/task-capsule';
+import { createContextCacheWarmReport } from '../../src/context/context-cache-store';
 
 const roots: string[] = [];
 
@@ -62,6 +64,123 @@ describe('session start', () => {
     expect(snapshotProject(root)).toEqual(before);
   });
 
+  it('uses fresh warm graph-core cache by default without live writes', () => {
+    const root = tempProject();
+    initGit(root);
+    const task = createTaskCapsule(root, 'Warm session start task');
+    const warm = createContextCacheWarmReport({
+      projectRoot: root,
+      execute: true,
+      generatedAt: '2026-06-19T12:05:00.000Z'
+    });
+    expect(warm.shards.items).toContainEqual(expect.objectContaining({
+      extractorKey: 'graphCore',
+      executed: true
+    }));
+    const before = snapshotProject(root);
+
+    const report = buildSessionStartReport({
+      projectRoot: root,
+      taskId: task.id,
+      generatedAt: '2026-06-19T12:06:00.000Z',
+      budget: { maxReadFirstItems: 5, maxItems: 12 }
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.cache).toMatchObject({
+      used: true,
+      hit: true,
+      mode: 'graph-core',
+      sourceManifestCacheFresh: true,
+      sourceManifestFastPath: 'hit'
+    });
+    expect(report.contextPack.sourceSummary.graphAvailable).toBe(true);
+    expect(report.contextPack.readFirst[0]).toEqual(expect.objectContaining({
+      id: `task:${task.id}`,
+      type: 'Task'
+    }));
+    expect(report.issues).not.toContainEqual(expect.objectContaining({
+      code: 'CONTEXT_PACK_DEGRADED',
+      message: expect.stringContaining('bounded no-live')
+    }));
+    expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
+    expect(snapshotProject(root)).toEqual(before);
+  });
+
+  it('uses fresh warm code-index cache for include-code session start', () => {
+    const root = tempProject();
+    initGit(root);
+    fs.mkdirSync(path.join(root, 'src'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'src', 'feature.ts'), 'export function feature() { return 1; }\n');
+    const task = createTaskCapsule(root, 'Warm code session start task');
+    const warm = createContextCacheWarmReport({
+      projectRoot: root,
+      execute: true,
+      generatedAt: '2026-06-19T12:07:00.000Z',
+      includeCode: true
+    });
+    expect(warm.shards.items).toContainEqual(expect.objectContaining({
+      extractorKey: 'codeIndex',
+      executed: true
+    }));
+    const before = snapshotProject(root);
+
+    const report = buildSessionStartReport({
+      projectRoot: root,
+      taskId: task.id,
+      includeCode: true,
+      generatedAt: '2026-06-19T12:08:00.000Z'
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.cache).toMatchObject({
+      used: true,
+      hit: true,
+      mode: 'graph-core+code-index',
+      readShardCount: 2,
+      hitShardCount: 2
+    });
+    expect(report.contextPack.sourceSummary.codeIndexAvailable).toBe(true);
+    expect(report.issues).not.toContainEqual(expect.objectContaining({
+      code: 'CONTEXT_PACK_CODE_INDEX_UNAVAILABLE'
+    }));
+    expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
+    expect(snapshotProject(root)).toEqual(before);
+  });
+
+  it('keeps bounded no-live fallback when warm freshness cannot be proven', () => {
+    const root = tempProject();
+    initGit(root);
+    const task = createTaskCapsule(root, 'Stale warm session start task');
+    createContextCacheWarmReport({
+      projectRoot: root,
+      execute: true,
+      generatedAt: '2026-06-19T12:09:00.000Z'
+    });
+    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# changed after warm\n');
+    const before = snapshotProject(root);
+
+    const report = buildSessionStartReport({
+      projectRoot: root,
+      taskId: task.id,
+      generatedAt: '2026-06-19T12:10:00.000Z'
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.cache).toMatchObject({
+      used: false,
+      hit: false,
+      mode: 'session-start-bounded-no-live'
+    });
+    expect(report.contextPack.sourceSummary.graphAvailable).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'CONTEXT_PACK_DEGRADED',
+      message: expect.stringContaining('bounded no-live')
+    }));
+    expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
+    expect(snapshotProject(root)).toEqual(before);
+  });
+
   it('surfaces context-pack errors when no task is available', () => {
     const root = tempProject();
 
@@ -78,6 +197,13 @@ describe('session start', () => {
     expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
   });
 });
+
+function initGit(root: string): void {
+  const result = spawnSync('git', ['init'], { cwd: root, encoding: 'utf8' });
+  if (result.status !== 0) {
+    throw new Error(`git init failed: ${result.stderr || result.stdout}`);
+  }
+}
 
 function snapshotProject(root: string): string[] {
   const entries: string[] = [];
