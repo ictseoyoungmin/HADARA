@@ -14,6 +14,10 @@ import {
   buildContextGraphReport,
   createTaskContextReport
 } from '../../src/context/context-graph-builder';
+import {
+  contextCodeIndexShardCachePath,
+  createContextCacheWarmReport
+} from '../../src/context/context-cache-store';
 
 const generatedAt = '2026-06-18T12:00:00.000Z';
 const taskId = 'T-0002';
@@ -162,6 +166,81 @@ describe('context graph builder', () => {
       expect(codeReport.stateProjection.sources.some((source) => source.kind === 'code-index')).toBe(true);
       expect(codeReport.summary.edgeCounts.TESTS_FILE).toBeGreaterThan(0);
       assertSchema('hadara.contextGraph.v1', codeReport);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('serves include-code graph reports from fresh graph-core and code-index shards without writes', () => {
+    const root = createCodeGraphProject();
+    try {
+      const warm = createContextCacheWarmReport({
+        projectRoot: root,
+        execute: true,
+        generatedAt
+      });
+      expect(warm.shards.items).toEqual(expect.arrayContaining([
+        expect.objectContaining({ extractorKey: 'graphCore', executed: true }),
+        expect.objectContaining({ extractorKey: 'codeIndex', executed: true })
+      ]));
+
+      const before = snapshotProject(root);
+      const report = buildContextGraphReport({
+        projectRoot: root,
+        generatedAt,
+        includeCode: true
+      });
+
+      expect(report.cache).toMatchObject({
+        used: true,
+        hit: true,
+        mode: 'graph-core+code-index',
+        readShardCount: 2,
+        hitShardCount: 2
+      });
+      expect(report.cache.shardPaths).toContain(contextCodeIndexShardCachePath());
+      expect(report.nodes.some((node) => node.type === 'SourceFile')).toBe(true);
+      expect(report.stateProjection.sources.some((source) =>
+        source.kind === 'code-index' && source.extracted.cache && typeof source.extracted.cache === 'object'
+      )).toBe(true);
+      assertSchema('hadara.contextGraph.v1', report);
+      expect(snapshotProject(root)).toEqual(before);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('falls back to live include-code extraction when the code-index shard is stale without writing cache files', () => {
+    const root = createCodeGraphProject();
+    try {
+      createContextCacheWarmReport({
+        projectRoot: root,
+        execute: true,
+        generatedAt
+      });
+      write(root, 'src/context/helper.ts', 'export const helper = 12345;\n');
+
+      const before = snapshotProject(root);
+      const report = buildContextGraphReport({
+        projectRoot: root,
+        generatedAt: '2026-06-18T12:01:00.000Z',
+        includeCode: true
+      });
+
+      expect(report.cache).toMatchObject({
+        used: true,
+        hit: true,
+        mode: 'graph-core+live-code',
+        readShardCount: 2,
+        hitShardCount: 1,
+        staleShardCount: 1
+      });
+      expect(report.cache.staleExtractorKeys).toContain('codeIndex');
+      expect(report.nodes).toEqual(expect.arrayContaining([
+        expect.objectContaining({ id: 'file:src/context/helper.ts', type: 'SourceFile' })
+      ]));
+      assertSchema('hadara.contextGraph.v1', report);
+      expect(snapshotProject(root)).toEqual(before);
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
@@ -366,4 +445,24 @@ function write(root: string, relativePath: string, content: string): void {
   const absolutePath = path.join(root, relativePath);
   fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
   fs.writeFileSync(absolutePath, content, 'utf8');
+}
+
+function snapshotProject(root: string): Record<string, string> {
+  const snapshot: Record<string, string> = {};
+  for (const filePath of listFiles(root)) {
+    snapshot[path.relative(root, filePath).replace(/\\/g, '/')] = fs.readFileSync(filePath, 'utf8');
+  }
+  return snapshot;
+}
+
+function listFiles(dir: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  const files: string[] = [];
+  for (const entry of entries) {
+    const entryPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...listFiles(entryPath));
+    if (entry.isFile()) files.push(entryPath);
+  }
+  return files.sort();
 }

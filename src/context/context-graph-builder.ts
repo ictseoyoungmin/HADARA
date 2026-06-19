@@ -14,6 +14,7 @@ import type {
 import {
   collectContextGraphExtractorShards,
   createSourceManifestCacheAnalysis,
+  readContextCodeIndexShard,
   readContextGraphCoreShard
 } from './context-cache-store';
 import {
@@ -32,7 +33,7 @@ import { extractCommandRegistry, extractDocsRegistry } from './registry-extracto
 import { extractReleaseReadiness } from './release-extractors';
 import { createContextStateProjectionReport } from './state-projection';
 import { extractTaskBoard, extractTaskCapsules } from './task-extractors';
-import { extractCodeIndexGraph } from './code-graph-extractor';
+import { codeIndexReportToGraphExtraction, extractCodeIndexGraph } from './code-graph-extractor';
 
 export interface BuildContextGraphReportInput {
   projectRoot: string;
@@ -47,6 +48,11 @@ export interface BuildContextGraphReportInput {
 
 interface CollectContextGraphExtractionsResult {
   extractionResults: GraphExtractionResult[];
+  cache: ContextCacheMetadata;
+}
+
+interface CodeGraphExtractionWithCache {
+  result: GraphExtractionResult;
   cache: ContextCacheMetadata;
 }
 
@@ -95,22 +101,28 @@ export function collectContextGraphExtractionsWithCache(
   const graphCore = readContextGraphCoreShard({ projectRoot, manifest: analysis.currentManifest });
   if (graphCore.hit && graphCore.result) {
     const results = [graphCore.result];
-    if (options.includeCode) results.push(extractCodeIndexGraph(projectRoot, generatedAt));
+    const code = options.includeCode
+      ? collectCodeGraphExtractionWithCache(projectRoot, {
+        manifest: analysis.currentManifest,
+        generatedAt
+      })
+      : undefined;
+    if (code) results.push(code.result);
     return {
       extractionResults: results,
       cache: {
         used: true,
         hit: true,
-        mode: options.includeCode ? 'graph-core+live-code' : 'graph-core',
+        mode: options.includeCode ? code?.cache.mode ?? 'graph-core+live-code' : 'graph-core',
         manifestHash: analysis.currentManifest.manifestHash,
-        readShardCount: 1,
-        hitShardCount: 1,
-        missShardCount: 0,
-        staleShardCount: 0,
-        corruptShardCount: 0,
-        schemaMismatchShardCount: 0,
-        shardPaths: [graphCore.path],
-        staleExtractorKeys: [],
+        readShardCount: 1 + (code?.cache.readShardCount ?? 0),
+        hitShardCount: 1 + (code?.cache.hitShardCount ?? 0),
+        missShardCount: code?.cache.missShardCount ?? 0,
+        staleShardCount: code?.cache.staleShardCount ?? 0,
+        corruptShardCount: code?.cache.corruptShardCount ?? 0,
+        schemaMismatchShardCount: code?.cache.schemaMismatchShardCount ?? 0,
+        shardPaths: [graphCore.path, ...(code?.cache.shardPaths ?? [])].sort(),
+        staleExtractorKeys: code?.cache.staleExtractorKeys ?? [],
         ...(graphCore.record ? { createdAt: graphCore.record.createdAt, cachePath: graphCore.path } : {}),
         sourceManifestCacheFresh: analysis.cacheFresh,
         sourceManifestFastPath: analysis.fastPath,
@@ -132,16 +144,87 @@ export function collectContextGraphExtractionsWithCache(
     extractEvidence(projectRoot),
     extractReleaseReadiness(projectRoot)
   ];
-  if (options.includeCode) results.push(extractCodeIndexGraph(projectRoot, generatedAt));
+  const code = options.includeCode
+    ? collectCodeGraphExtractionWithCache(projectRoot, {
+      manifest: analysis.currentManifest,
+      generatedAt
+    })
+    : undefined;
+  if (code) results.push(code.result);
   return {
     extractionResults: results,
     cache: {
-      ...shards.cache,
+      ...mergeCodeCacheMetadata(shards.cache, code?.cache),
       sourceManifestCacheFresh: analysis.cacheFresh,
       sourceManifestFastPath: analysis.fastPath,
       ...(analysis.fastPathReason ? { sourceManifestFastPathReason: analysis.fastPathReason } : {}),
       ...(analysis.fastPathStrategy ? { sourceManifestFastPathStrategy: analysis.fastPathStrategy } : {})
     }
+  };
+}
+
+function collectCodeGraphExtractionWithCache(
+  projectRoot: string,
+  input: { manifest: Parameters<typeof readContextCodeIndexShard>[0]['manifest']; generatedAt: string }
+): CodeGraphExtractionWithCache {
+  const read = readContextCodeIndexShard({ projectRoot, manifest: input.manifest });
+  if (read.hit && read.result) {
+    return {
+      result: codeIndexReportToGraphExtraction(read.result),
+      cache: {
+        used: true,
+        hit: true,
+        mode: 'graph-core+code-index',
+        manifestHash: input.manifest.manifestHash,
+        readShardCount: 1,
+        hitShardCount: 1,
+        missShardCount: 0,
+        staleShardCount: 0,
+        corruptShardCount: 0,
+        schemaMismatchShardCount: 0,
+        shardPaths: [read.path],
+        staleExtractorKeys: [],
+        ...(read.record ? { createdAt: read.record.createdAt, cachePath: read.path } : {})
+      }
+    };
+  }
+
+  return {
+    result: extractCodeIndexGraph(projectRoot, input.generatedAt),
+    cache: {
+      used: false,
+      hit: false,
+      mode: 'graph-core+live-code',
+      manifestHash: input.manifest.manifestHash,
+      readShardCount: 1,
+      hitShardCount: 0,
+      missShardCount: read.status === 'missing' ? 1 : 0,
+      staleShardCount: read.status === 'stale' ? 1 : 0,
+      corruptShardCount: read.status === 'corrupt' ? 1 : 0,
+      schemaMismatchShardCount: read.status === 'schema-mismatch' ? 1 : 0,
+      shardPaths: [read.path],
+      staleExtractorKeys: read.status === 'stale' ? ['codeIndex'] : []
+    }
+  };
+}
+
+function mergeCodeCacheMetadata(base: ContextCacheMetadata, code?: ContextCacheMetadata): ContextCacheMetadata {
+  if (!code) return base;
+  return {
+    ...base,
+    used: base.used || code.used,
+    hit: base.hit || code.hit,
+    mode: code.hit ? 'extractor-shards+code-index' : 'extractor-shards+live-code',
+    readShardCount: (base.readShardCount ?? 0) + (code.readShardCount ?? 0),
+    hitShardCount: (base.hitShardCount ?? 0) + (code.hitShardCount ?? 0),
+    missShardCount: (base.missShardCount ?? 0) + (code.missShardCount ?? 0),
+    staleShardCount: (base.staleShardCount ?? 0) + (code.staleShardCount ?? 0),
+    corruptShardCount: (base.corruptShardCount ?? 0) + (code.corruptShardCount ?? 0),
+    schemaMismatchShardCount: (base.schemaMismatchShardCount ?? 0) + (code.schemaMismatchShardCount ?? 0),
+    shardPaths: [...(base.shardPaths ?? []), ...(code.shardPaths ?? [])].sort(),
+    staleExtractorKeys: [...(base.staleExtractorKeys ?? []), ...(code.staleExtractorKeys ?? [])].sort(),
+    ...(code.hit && code.cachePath ? { cachePath: code.cachePath } : {}),
+    ...(code.hit && code.createdAt ? { createdAt: code.createdAt } : {})
   };
 }
 

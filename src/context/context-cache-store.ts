@@ -13,6 +13,7 @@ import {
   type ContextSourceManifest
 } from './source-manifest';
 import type { ContextCacheMetadata, GraphExtractionResult } from './context-graph';
+import { buildCodeIndexReport, CODE_INDEX_SCHEMA_ID, type CodeIndexReport } from './code-index';
 import { hashContextGraphJson, mergeGraphExtractionResults, normalizeContextGraphPath } from './extractor-contract';
 import {
   extractAgentHandoff,
@@ -43,7 +44,7 @@ export type ContextGraphExtractorShardKey =
   | 'extractDocsRegistry'
   | 'extractCommandRegistry';
 
-export type ContextGraphCacheShardKey = ContextGraphExtractorShardKey | 'graphCore';
+export type ContextGraphCacheShardKey = ContextGraphExtractorShardKey | 'graphCore' | 'codeIndex';
 
 export interface ContextCacheIssue {
   severity: 'info' | 'warning' | 'error';
@@ -233,6 +234,16 @@ export interface ContextGraphCoreShardReadResult {
   issues: ContextCacheIssue[];
 }
 
+export interface ContextCodeIndexShardReadResult {
+  ok: boolean;
+  hit: boolean;
+  status: ContextGraphExtractorShardReadStatus;
+  path: string;
+  record?: ContextCacheRecord<CodeIndexReport>;
+  result?: CodeIndexReport;
+  issues: ContextCacheIssue[];
+}
+
 export interface ContextSourceManifestCacheAnalysis {
   generatedAt: string;
   cached: ContextSourceManifestCacheReadResult;
@@ -249,8 +260,10 @@ export interface ContextSourceManifestCacheAnalysis {
 
 const CONTEXT_GRAPH_EXTRACTOR_SHARD_PROJECTION_PREFIX = 'context.graph.extractor' as const;
 const CONTEXT_GRAPH_CORE_PROJECTION = 'context.graph.core' as const;
+const CONTEXT_CODE_INDEX_PROJECTION = 'context.codeIndex' as const;
 const CONTEXT_GRAPH_EXTRACTOR_SHARD_SCHEMA_VERSION = 'hadara.contextGraph.v1' as const;
 const CONTEXT_GRAPH_CORE_CACHE_PATH = `${CONTEXT_SOURCE_MANIFEST_CACHE_ROOT}/graph-core.json` as const;
+const CONTEXT_CODE_INDEX_CACHE_PATH = `${CONTEXT_SOURCE_MANIFEST_CACHE_ROOT}/code-index.json` as const;
 
 const CONTEXT_GRAPH_EXTRACTOR_SHARD_KEYS: ContextGraphExtractorShardKey[] = [
   'extractTaskBoard',
@@ -440,6 +453,10 @@ export function contextGraphExtractorShardCachePath(extractorKey: ContextGraphEx
 
 export function contextGraphCoreShardCachePath(): string {
   return CONTEXT_GRAPH_CORE_CACHE_PATH;
+}
+
+export function contextCodeIndexShardCachePath(): string {
+  return CONTEXT_CODE_INDEX_CACHE_PATH;
 }
 
 export function buildContextGraphExtractorShardRecord(input: {
@@ -676,6 +693,94 @@ export function readContextGraphCoreShard(input: {
   };
 }
 
+export function buildContextCodeIndexShardRecord(input: {
+  manifest: ContextSourceManifest;
+  result: CodeIndexReport;
+  createdAt?: string;
+}): ContextCacheRecord<CodeIndexReport> {
+  return buildContextCacheRecord({
+    projection: CONTEXT_CODE_INDEX_PROJECTION,
+    projectionSchemaVersion: CODE_INDEX_SCHEMA_ID,
+    manifest: input.manifest,
+    extractorKeys: ['codeIndex'],
+    payload: input.result,
+    createdAt: input.createdAt,
+    degraded: input.result.summary.degraded || input.result.issues.some((issue) => issue.severity === 'warning' || issue.severity === 'error')
+  });
+}
+
+export function writeContextCodeIndexShard(input: {
+  projectRoot: string;
+  manifest: ContextSourceManifest;
+  result: CodeIndexReport;
+  createdAt?: string;
+}): ContextCacheRecord<CodeIndexReport> {
+  const record = buildContextCodeIndexShardRecord(input);
+  writeContextCacheRecord(input.projectRoot, CONTEXT_CODE_INDEX_CACHE_PATH, record);
+  return record;
+}
+
+export function readContextCodeIndexShard(input: {
+  projectRoot: string;
+  manifest: ContextSourceManifest;
+}): ContextCodeIndexShardReadResult {
+  const read = readContextCacheRecord<CodeIndexReport>(input.projectRoot, CONTEXT_CODE_INDEX_CACHE_PATH);
+  if (!read.ok || !read.record) {
+    return {
+      ok: false,
+      hit: false,
+      status: read.status === 'valid' ? 'schema-mismatch' : read.status,
+      path: read.path,
+      issues: read.issues
+    };
+  }
+
+  const expected = buildContextCacheRecord({
+    projection: CONTEXT_CODE_INDEX_PROJECTION,
+    projectionSchemaVersion: CODE_INDEX_SCHEMA_ID,
+    manifest: input.manifest,
+    extractorKeys: ['codeIndex'],
+    payload: read.record.payload,
+    createdAt: read.record.createdAt
+  });
+  const shapeIssue = validateCodeIndexPayload(read.record.payload, read.path);
+  if (shapeIssue) {
+    return {
+      ok: false,
+      hit: false,
+      status: 'schema-mismatch',
+      path: read.path,
+      record: read.record,
+      issues: [shapeIssue]
+    };
+  }
+  if (
+    read.record.projection !== expected.projection
+    || read.record.projectionSchemaVersion !== expected.projectionSchemaVersion
+    || read.record.sourceSubsetHash !== expected.sourceSubsetHash
+    || !sameRecord(read.record.extractorVersions, expected.extractorVersions)
+  ) {
+    return {
+      ok: false,
+      hit: false,
+      status: 'stale',
+      path: read.path,
+      record: read.record,
+      issues: [contextCacheIssue('warning', 'CONTEXT_CACHE_STALE', 'Context code-index shard is stale.', read.path)]
+    };
+  }
+
+  return {
+    ok: true,
+    hit: true,
+    status: 'fresh',
+    path: read.path,
+    record: read.record,
+    result: withCodeIndexCacheHitMetadata(read.record.payload, read.record, read.path),
+    issues: []
+  };
+}
+
 export function createContextCacheStatusReport(input: { projectRoot: string; generatedAt?: string }): ContextCacheStatusReport {
   const analysis = createSourceManifestCacheAnalysis({
     projectRoot: input.projectRoot,
@@ -834,8 +939,60 @@ function createContextGraphExtractorShardWarmItems(input: {
       ...(graphCoreRead.record ? { beforeCacheKey: graphCoreRead.record.cacheKey } : {}),
       ...(graphCoreAfterCacheKey ? { afterCacheKey: graphCoreAfterCacheKey } : {}),
       ...(!graphCorePlanned ? { skippedReason: 'cache-fresh' as const } : {})
-    }
+    },
+    createContextCodeIndexShardWarmItem(input)
   ];
+}
+
+function createContextCodeIndexShardWarmItem(input: {
+  projectRoot: string;
+  manifest: ContextSourceManifest;
+  execute: boolean;
+  generatedAt: string;
+}): ContextGraphExtractorShardWarmItem {
+  const read = readContextCodeIndexShard({
+    projectRoot: input.projectRoot,
+    manifest: input.manifest
+  });
+  const planned = !read.hit;
+  let afterCacheKey: string | undefined;
+  if (input.execute && planned) {
+    const result = buildCodeIndexReport({
+      projectRoot: input.projectRoot,
+      generatedAt: input.generatedAt
+    });
+    const record = writeContextCodeIndexShard({
+      projectRoot: input.projectRoot,
+      manifest: input.manifest,
+      result,
+      createdAt: input.generatedAt
+    });
+    afterCacheKey = record.cacheKey;
+  }
+  return {
+    extractorKey: 'codeIndex',
+    cachePath: read.path,
+    beforeStatus: read.status,
+    planned,
+    executed: input.execute && planned,
+    ...(read.record ? { beforeCacheKey: read.record.cacheKey } : {}),
+    ...(afterCacheKey ? { afterCacheKey } : {}),
+    ...(!planned ? { skippedReason: 'cache-fresh' as const } : {})
+  };
+}
+
+function withCodeIndexCacheHitMetadata(report: CodeIndexReport, record: ContextCacheRecord<CodeIndexReport>, cachePath: string): CodeIndexReport {
+  return {
+    ...report,
+    cache: {
+      used: true,
+      hit: true,
+      mode: 'code-index',
+      manifestHash: record.manifestHash,
+      createdAt: record.createdAt,
+      cachePath
+    }
+  };
 }
 
 export function createSourceManifestCacheAnalysis(input: { projectRoot: string; generatedAt?: string; generatedByCommand: string }): ContextSourceManifestCacheAnalysis {
@@ -974,6 +1131,14 @@ function validateGraphCorePayload(payload: GraphExtractionResult, cachePath: str
     || !Array.isArray(payload.issues)
   ) {
     return contextCacheIssue('warning', 'CONTEXT_CACHE_SCHEMA_MISMATCH', 'Context graph core shard payload is not a valid merged extraction result.', cachePath);
+  }
+  return undefined;
+}
+
+function validateCodeIndexPayload(payload: CodeIndexReport, cachePath: string): ContextCacheIssue | undefined {
+  const validation = validateSchema(CODE_INDEX_SCHEMA_ID, payload);
+  if (!validation.ok) {
+    return contextCacheIssue('warning', 'CONTEXT_CACHE_SCHEMA_MISMATCH', `Context code-index shard payload is not a valid ${CODE_INDEX_SCHEMA_ID} report.`, cachePath);
   }
   return undefined;
 }

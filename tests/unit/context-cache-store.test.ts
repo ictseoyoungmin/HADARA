@@ -6,10 +6,12 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { assertSchema } from '../../src/core/schema';
 import {
   buildContextCacheRecord,
+  contextCodeIndexShardCachePath,
   contextGraphCoreShardCachePath,
   contextGraphExtractorShardCachePath,
   createContextCacheStatusReport,
   createContextCacheWarmReport,
+  readContextCodeIndexShard,
   readContextGraphExtractorShard,
   readContextGraphCoreShard,
   readContextCacheRecord,
@@ -97,7 +99,8 @@ describe('context cache store', () => {
           expect.objectContaining({ extractorKey: 'extractTaskBoard', beforeStatus: 'missing', planned: true, executed: false }),
           expect.objectContaining({ extractorKey: 'extractDocsRegistry', beforeStatus: 'missing', planned: true, executed: false }),
           expect.objectContaining({ extractorKey: 'extractCommandRegistry', beforeStatus: 'missing', planned: true, executed: false }),
-          expect.objectContaining({ extractorKey: 'graphCore', beforeStatus: 'missing', planned: true, executed: false })
+          expect.objectContaining({ extractorKey: 'graphCore', beforeStatus: 'missing', planned: true, executed: false }),
+          expect.objectContaining({ extractorKey: 'codeIndex', beforeStatus: 'missing', planned: true, executed: false })
         ])
       }
     });
@@ -133,7 +136,8 @@ describe('context cache store', () => {
         expect.objectContaining({ extractorKey: 'extractTaskBoard', executed: true }),
         expect.objectContaining({ extractorKey: 'extractDocsRegistry', executed: true }),
         expect.objectContaining({ extractorKey: 'extractCommandRegistry', executed: true }),
-        expect.objectContaining({ extractorKey: 'graphCore', executed: true })
+        expect.objectContaining({ extractorKey: 'graphCore', executed: true }),
+        expect.objectContaining({ extractorKey: 'codeIndex', executed: true })
       ])
     });
     assertSchema('hadara.context.cacheWarm.v1', report);
@@ -145,6 +149,7 @@ describe('context cache store', () => {
     expect(readContextCacheRecord(root, contextGraphExtractorShardCachePath('extractDocsRegistry')).status).toBe('valid');
     expect(readContextCacheRecord(root, contextGraphExtractorShardCachePath('extractCommandRegistry')).status).toBe('valid');
     expect(readContextCacheRecord(root, contextGraphCoreShardCachePath()).status).toBe('valid');
+    expect(readContextCacheRecord(root, contextCodeIndexShardCachePath()).status).toBe('valid');
 
     const status = createContextCacheStatusReport({
       projectRoot: root,
@@ -212,6 +217,61 @@ describe('context cache store', () => {
     ]));
     assertSchema('hadara.contextGraph.v1', graph);
     expect(snapshotProject(root)).toEqual(before);
+  });
+
+  it('writes code-index shard records and invalidates them only for code-index source changes', () => {
+    const root = tempProject();
+    write(root, 'docs/TASK_BOARD.md', '# TASK_BOARD\n');
+    write(root, 'src/example.ts', 'export const before = 1;\n');
+    write(root, 'tests/unit/example.test.ts', "import { before } from '../../src/example';\nit('uses before', () => before);\n");
+
+    const warm = createContextCacheWarmReport({
+      projectRoot: root,
+      execute: true,
+      generatedAt: '2026-06-18T15:00:55.000Z'
+    });
+    expect(warm.shards.items).toContainEqual(expect.objectContaining({
+      extractorKey: 'codeIndex',
+      executed: true
+    }));
+
+    const cached = readContextSourceManifestCache(root);
+    expect(cached.status).toBe('valid');
+    const codeIndex = readContextCodeIndexShard({
+      projectRoot: root,
+      manifest: cached.manifest!
+    });
+
+    expect(codeIndex).toMatchObject({
+      ok: true,
+      hit: true,
+      status: 'fresh',
+      path: contextCodeIndexShardCachePath()
+    });
+    expect(codeIndex.result?.cache).toMatchObject({
+      used: true,
+      hit: true,
+      mode: 'code-index',
+      cachePath: contextCodeIndexShardCachePath()
+    });
+    expect(codeIndex.result?.files.map((file) => file.path)).toEqual(expect.arrayContaining([
+      'src/example.ts',
+      'tests/unit/example.test.ts'
+    ]));
+    assertSchema('hadara.codeIndex.v1', codeIndex.result);
+
+    write(root, 'src/example.ts', 'export const after = 22;\n');
+    const changedManifest = buildContextSourceManifest({
+      projectRoot: root,
+      generatedAt: '2026-06-18T15:01:05.000Z',
+      previousManifest: cached.manifest
+    });
+    const stale = readContextCodeIndexShard({
+      projectRoot: root,
+      manifest: changedManifest
+    });
+    expect(stale.status).toBe('stale');
+    expect(stale.hit).toBe(false);
   });
 
   it('writes and reads source-manifest cache as a fresh hit across generatedAt changes', () => {

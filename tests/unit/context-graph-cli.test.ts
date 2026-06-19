@@ -430,6 +430,7 @@ describe('context graph CLI', () => {
     expect(snapshotProject(root)).toHaveProperty('.hadara/local/cache/context/source-manifest.json');
     expect(snapshotProject(root)).toHaveProperty('.hadara/local/cache/context/extractors/task-board.json');
     expect(snapshotProject(root)).toHaveProperty('.hadara/local/cache/context/graph-core.json');
+    expect(snapshotProject(root)).toHaveProperty('.hadara/local/cache/context/code-index.json');
   });
 });
 

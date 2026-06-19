@@ -375,3 +375,4 @@
 | T-0372 | C4 Context Slice Boundary and Proof Drift Hardening | Done | tasks/T-0372-c4-context-slice-boundary-and-proof-drift-hardening | |
 | T-0373 | C6 ext4 Mounted Performance Baseline | Done | tasks/T-0373-c6-ext4-mounted-performance-baseline | |
 | T-0374 | C6 Graph Core and Context Pack Warm Path | Done | tasks/T-0374-c6-graph-core-and-context-pack-warm-path | |
+| T-0375 | C6 Code Index Shard Persistence | Done | tasks/T-0375-c6-code-index-shard-persistence | |
