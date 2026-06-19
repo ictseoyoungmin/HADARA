@@ -294,12 +294,37 @@ export interface SessionStartReport {
     primaryNextCommands: string[];
     diagnosticCommands: string[];
   };
+  guidance: {
+    mode: 'live-context-pack' | 'warm-cache' | 'bounded-no-live';
+    primaryNextAction: 'select-task' | 'inspect-task';
+    reason: string;
+    taskRequired: boolean;
+    liveContextPackAvailable: boolean;
+    commands: Array<{
+      id: string;
+      command: string;
+      args: string[];
+      reason: string;
+    }>;
+  };
   knownProblems: ContextPackItem[];
+  sourceSummary: ContextPackSourceSummary;
+  cache: ContextCacheMetadata;
+  summary: {
+    degraded: boolean;
+    readFirstCount: number;
+    readIfNeededCount: number;
+    sliceCandidateCount: number;
+    knownProblemCount: number;
+    issueCount: number;
+  };
   issues: ContextPackIssue[];
 }
 ```
 
-Session Start must not scan independently. It composes:
+Session Start must not scan independently. Default bounded Session Start must not run broad live graph/context-pack discovery. If no task is supplied and no proven-fresh warm cache can provide one, it should still return `ok:true` with degraded task-selection guidance, `guidance.primaryNextAction:"select-task"`, and a warning issue instead of failing solely because no task id was supplied.
+
+Session Start composes:
 
 ```text
 context pack

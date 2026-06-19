@@ -34,6 +34,25 @@ export interface SessionStartLifecycle {
   diagnosticCommands: string[];
 }
 
+export type SessionStartMode = 'live-context-pack' | 'warm-cache' | 'bounded-no-live';
+export type SessionStartPrimaryNextAction = 'select-task' | 'inspect-task';
+
+export interface SessionStartGuidanceCommand {
+  id: string;
+  command: string;
+  args: string[];
+  reason: string;
+}
+
+export interface SessionStartGuidance {
+  mode: SessionStartMode;
+  primaryNextAction: SessionStartPrimaryNextAction;
+  reason: string;
+  taskRequired: boolean;
+  liveContextPackAvailable: boolean;
+  commands: SessionStartGuidanceCommand[];
+}
+
 export interface SessionStartSummary {
   degraded: boolean;
   readFirstCount: number;
@@ -52,6 +71,7 @@ export interface SessionStartReport {
   currentState: SessionStartCurrentState;
   contextPack: ContextPackReport;
   lifecycle: SessionStartLifecycle;
+  guidance: SessionStartGuidance;
   knownProblems: ContextPackItem[];
   sourceSummary: ContextPackSourceSummary;
   cache: ContextCacheMetadata;
@@ -94,6 +114,13 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
   const stateProjection = contextPack.stateProjection;
   const taskId = contextPack.taskId ?? input.taskId ?? stateProjection.activeTask;
   const issues = [...contextPack.issues];
+  const lifecycle = lifecycleForSessionStart(taskId, contextPack);
+  const guidance = guidanceForSessionStart({
+    taskId,
+    contextPack,
+    lifecycle,
+    allowLiveContextPack: Boolean(input.allowLiveContextPack)
+  });
 
   return {
     schemaVersion: SESSION_START_SCHEMA_ID,
@@ -108,7 +135,8 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
       ...(stateProjection.releaseState ? { releaseState: stateProjection.releaseState } : {})
     },
     contextPack,
-    lifecycle: lifecycleForSessionStart(taskId, contextPack),
+    lifecycle,
+    guidance,
     knownProblems: contextPack.knownProblems,
     sourceSummary: contextPack.sourceSummary,
     cache: contextPack.cache,
@@ -225,6 +253,79 @@ function lifecycleForSessionStart(taskId: string | undefined, contextPack: Conte
   };
 }
 
+function guidanceForSessionStart(input: {
+  taskId?: string;
+  contextPack: ContextPackReport;
+  lifecycle: SessionStartLifecycle;
+  allowLiveContextPack: boolean;
+}): SessionStartGuidance {
+  const mode: SessionStartMode = input.allowLiveContextPack
+    ? 'live-context-pack'
+    : input.contextPack.cache.used
+      ? 'warm-cache'
+      : 'bounded-no-live';
+  const taskId = input.taskId;
+  const taskRequired = !taskId;
+  const primaryNextAction: SessionStartPrimaryNextAction = taskRequired ? 'select-task' : 'inspect-task';
+  const reason = taskRequired
+    ? 'No task id was supplied, so bounded Session Start returned task-selection guidance without running live graph discovery.'
+    : mode === 'warm-cache'
+      ? 'Session Start used proven-fresh warm cache and preserved read-only behavior.'
+      : mode === 'live-context-pack'
+        ? 'Session Start used explicit live context-pack discovery because --live was supplied.'
+        : 'Session Start used the bounded no-live packet and avoided broad live graph discovery.';
+  const commands: SessionStartGuidanceCommand[] = [];
+
+  if (!taskId) {
+    commands.push({
+      id: 'task-next',
+      command: 'node dist/cli/main.js task next --json',
+      args: ['task', 'next', '--json'],
+      reason: 'Choose the next task before requesting task-scoped context.'
+    });
+  } else {
+    commands.push({
+      id: 'task-status',
+      command: `node dist/cli/main.js task status --task ${taskId} --json`,
+      args: ['task', 'status', '--task', taskId, '--json'],
+      reason: 'Inspect task readiness, evidence, and lifecycle state.'
+    });
+    commands.push({
+      id: 'context-pack',
+      command: `node dist/cli/main.js context pack --task ${taskId} --json`,
+      args: ['context', 'pack', '--task', taskId, '--json'],
+      reason: 'Inspect the bounded task read plan without slicing raw source text.'
+    });
+  }
+
+  commands.push({
+    id: 'cache-warm',
+    command: 'node dist/cli/main.js context cache warm --json',
+    args: ['context', 'cache', 'warm', '--json'],
+    reason: 'Preview stale cache shards without writing cache.'
+  });
+
+  commands.push({
+    id: 'session-start-live',
+    command: taskId
+      ? `node dist/cli/main.js session start --task ${taskId} --live --json`
+      : 'node dist/cli/main.js session start --live --json',
+    args: taskId
+      ? ['session', 'start', '--task', taskId, '--live', '--json']
+      : ['session', 'start', '--live', '--json'],
+    reason: 'Opt into slower live context-pack discovery only when broad graph reads are acceptable.'
+  });
+
+  return {
+    mode,
+    primaryNextAction,
+    reason,
+    taskRequired,
+    liveContextPackAvailable: true,
+    commands
+  };
+}
+
 function buildBoundedContextPackReport(input: {
   projectRoot: string;
   generatedAt: string;
@@ -245,10 +346,10 @@ function buildBoundedContextPackReport(input: {
         fixHint: 'Run hadara context cache warm --execute --json before relying on broad graph-backed session context.'
       }]
     : [{
-        severity: 'error',
+        severity: 'warning',
         code: 'CONTEXT_PACK_TASK_NOT_FOUND',
-        message: 'Bounded session start requires --task because it does not perform live project discovery by default.',
-        fixHint: 'Pass --task <task-id>, or run hadara task next --json to choose the next task.'
+        message: 'No task id was supplied. Bounded session start returned task-selection guidance without running live project discovery.',
+        fixHint: 'Run hadara task next --json, then rerun hadara session start --task <task-id> --json.'
       }];
   const readFirst: ContextPackItem[] = input.taskId
     ? [{

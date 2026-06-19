@@ -46,6 +46,11 @@ describe('session start', () => {
         schemaVersion: 'hadara.contextPack.v1',
         taskId: task.id
       },
+      guidance: {
+        mode: 'bounded-no-live',
+        primaryNextAction: 'inspect-task',
+        taskRequired: false
+      },
       cache: { used: false, hit: false }
     });
     expect(report.contextPack.readFirst.length).toBeLessThanOrEqual(3);
@@ -58,6 +63,20 @@ describe('session start', () => {
       'node dist/cli/main.js context cache status --json',
       `node dist/cli/main.js context graph --task ${task.id} --json`,
       'node dist/cli/main.js state verify --json'
+    ]));
+    expect(report.guidance.commands).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'task-status',
+        args: ['task', 'status', '--task', task.id, '--json']
+      }),
+      expect.objectContaining({
+        id: 'cache-warm',
+        args: ['context', 'cache', 'warm', '--json']
+      }),
+      expect.objectContaining({
+        id: 'session-start-live',
+        args: ['session', 'start', '--task', task.id, '--live', '--json']
+      })
     ]));
     expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
     expect(validateSchema('hadara.contextPack.v1', report.contextPack).ok).toBe(true);
@@ -93,6 +112,11 @@ describe('session start', () => {
       mode: 'graph-core',
       sourceManifestCacheFresh: true,
       sourceManifestFastPath: 'hit'
+    });
+    expect(report.guidance).toMatchObject({
+      mode: 'warm-cache',
+      primaryNextAction: 'inspect-task',
+      taskRequired: false
     });
     expect(report.contextPack.sourceSummary.graphAvailable).toBe(true);
     expect(report.contextPack.readFirst[0]).toEqual(expect.objectContaining({
@@ -140,6 +164,7 @@ describe('session start', () => {
       readShardCount: 2,
       hitShardCount: 2
     });
+    expect(report.guidance.mode).toBe('warm-cache');
     expect(report.contextPack.sourceSummary.codeIndexAvailable).toBe(true);
     expect(report.issues).not.toContainEqual(expect.objectContaining({
       code: 'CONTEXT_PACK_CODE_INDEX_UNAVAILABLE'
@@ -181,7 +206,7 @@ describe('session start', () => {
     expect(snapshotProject(root)).toEqual(before);
   });
 
-  it('surfaces context-pack errors when no task is available', () => {
+  it('returns degraded task-selection guidance when no task is available', () => {
     const root = tempProject();
 
     const report = buildSessionStartReport({
@@ -189,10 +214,22 @@ describe('session start', () => {
       generatedAt: '2026-06-19T12:00:00.000Z'
     });
 
-    expect(report.ok).toBe(false);
+    expect(report.ok).toBe(true);
+    expect(report.summary.degraded).toBe(true);
     expect(report.lifecycle.primaryNextCommands).toEqual(['node dist/cli/main.js task next --json']);
+    expect(report.guidance).toMatchObject({
+      mode: 'bounded-no-live',
+      primaryNextAction: 'select-task',
+      taskRequired: true
+    });
+    expect(report.guidance.commands).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'task-next',
+        args: ['task', 'next', '--json']
+      })
+    ]));
     expect(report.issues).toEqual(expect.arrayContaining([
-      expect.objectContaining({ code: 'CONTEXT_PACK_TASK_NOT_FOUND', severity: 'error' })
+      expect.objectContaining({ code: 'CONTEXT_PACK_TASK_NOT_FOUND', severity: 'warning' })
     ]));
     expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
   });

@@ -263,6 +263,11 @@ describe('context graph CLI', () => {
       currentState: {
         recommendedNextTask: task.id
       },
+      guidance: {
+        mode: 'bounded-no-live',
+        primaryNextAction: 'inspect-task',
+        taskRequired: false
+      },
       contextPack: {
         schemaVersion: 'hadara.contextPack.v1',
         taskId: task.id,
@@ -272,6 +277,12 @@ describe('context graph CLI', () => {
     expect(payload.contextPack.readFirst.length).toBeLessThanOrEqual(3);
     expect(payload.lifecycle.primaryNextCommands).toEqual(expect.arrayContaining([
       `node dist/cli/main.js task status --task ${task.id} --json`
+    ]));
+    expect(payload.guidance.commands).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'task-status',
+        args: ['task', 'status', '--task', task.id, '--json']
+      })
     ]));
     expect(validateSchema('hadara.sessionStart.v1', payload).ok).toBe(true);
     expect(snapshotProject(root)).toEqual(before);
