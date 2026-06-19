@@ -4,30 +4,31 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, T-0360 added the detailed C6 fast cache implementation spec, T-0361-T-0362 completed C3 context pack schema/CLI work, T-0363-T-0368 completed the C6 source-manifest/cache warm/shard/fast-fingerprint line needed before C4, T-0369 added the C4 core raw slice command, T-0371 added the focused C6 speed-first graph/cache warm-path spec, T-0370 completed the remaining C4 symbol/candidate slicing surface, T-0372 hardened C4 byte/local boundaries plus acceptance drift validation before C5, T-0373 measured mounted/ext4 C6 performance, T-0374 added graph-core/context-pack warm shard consumption, T-0375 added code-index shard persistence for code-aware graph reads, T-0376 handled review hardening, T-0377 added incremental per-file code-index recompute for explicit warm execute, T-0378 added bounded default `hadara session start --json`, T-0379 made default Session Start consume proven-fresh warm graph-core/code-index cache read-only before fallback, T-0380 added advisory C6 performance regression fixtures, T-0381 added the implementation completion audit, and T-0382 hardened Session Start JSON/UX. |
-| Current Phase | 0.3.3 context-routing hardening/cleanup | C1-C6 core read/cache surfaces, implementation audit, and Session Start guidance polish are in place. Remaining 0.3.3 work is cleanup/hardening: E2E smoke pack, cache diagnostics cleanup, readiness cleanup, lifecycle acceptance parser follow-up, and security boundary audit. |
-| Latest Completed Task | T-0382 Session Start JSON UX Hardening | Added `hadara.sessionStart.v1.guidance`, made no-task bounded Session Start degraded-ok/task-selection guidance, and preserved no-hidden-live-scan behavior. |
-| Active / Next Task | T-0383 Context Routing E2E Smoke Pack | Next capsule should consolidate built-CLI smoke coverage across graph, pack, slice, session-start, and cache warm/status surfaces. |
-| Validation Baseline | T-0382 Docker sync-build and built Session Start smokes | Focused Docker tests passed 3 files / 20 tests; Docker sync-build passed 136 files / 898 tests and refreshed `dist`; built no-task and task-scoped Session Start smokes returned `ok:true` with expected guidance. Evidence: `ev:T-0382:93c876280718445e833270ba`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, T-0360 added the detailed C6 fast cache implementation spec, T-0361-T-0362 completed C3 context pack schema/CLI work, T-0363-T-0368 completed the C6 source-manifest/cache warm/shard/fast-fingerprint line needed before C4, T-0369 added the C4 core raw slice command, T-0371 added the focused C6 speed-first graph/cache warm-path spec, T-0370 completed the remaining C4 symbol/candidate slicing surface, T-0372 hardened C4 byte/local boundaries plus acceptance drift validation before C5, T-0373 measured mounted/ext4 C6 performance, T-0374 added graph-core/context-pack warm shard consumption, T-0375 added code-index shard persistence for code-aware graph reads, T-0376 handled review hardening, T-0377 added incremental per-file code-index recompute for explicit warm execute, T-0378 added bounded default `hadara session start --json`, T-0379 made default Session Start consume proven-fresh warm graph-core/code-index cache read-only before fallback, T-0380 added advisory C6 performance regression fixtures, T-0381 added the implementation completion audit, T-0382 hardened Session Start JSON/UX, and T-0383 added the context-routing E2E smoke pack. |
+| Current Phase | 0.3.3 context-routing hardening/cleanup | C1-C6 core read/cache surfaces, implementation audit, Session Start guidance polish, and fast E2E smoke coverage are in place. Remaining 0.3.3 work is cleanup/hardening: cache diagnostics cleanup, readiness cleanup, lifecycle acceptance parser follow-up, and security boundary audit. |
+| Latest Completed Task | T-0383 Context Routing E2E Smoke Pack | Added `scripts/context-routing-e2e-smoke.mjs`, `npm run smoke:context-routing`, fast/full/custom workload profiles, and cache no-write fingerprint checks. |
+| Active / Next Task | T-0384 Cache Warm Diagnostics Cleanup | Next capsule should improve cache status/warm stale, corrupt, partial, and timeout diagnostics after T-0383's mounted full-profile probes. |
+| Validation Baseline | T-0383 Docker sync-build and built context-routing fast smoke | Docker sync-build passed 137 files / 901 tests and refreshed `dist`; built fast smoke passed 4 workloads with cache fingerprint unchanged. Evidence: `ev:T-0383:d013f3d6e2be494bb6372a41`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0383 | Context Routing E2E Smoke Pack is next. | Build a focused smoke pack over the current context-routing surfaces now that Session Start JSON/UX is stable. |
+| T-0384 | Cache Warm Diagnostics Cleanup is next. | Improve operator-readable cache diagnostics for stale/corrupt/partial and slow mounted warm/status paths. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0383 Context Routing E2E Smoke Pack | Added fast/full context-routing smoke profiles with cache no-write fingerprint checks. | `ev:T-0383:d013f3d6e2be494bb6372a41` |
 | T-0382 Session Start JSON UX Hardening | Added structured Session Start guidance and no-task degraded-ok behavior. | `ev:T-0382:93c876280718445e833270ba` |
 | T-0381 Context Routing Spec Completion Audit | Added a registered completion audit and reconciled stale C6 spec status wording. | `ev:T-0381:45c7ad2200ce4ec1bbb2fb33` |
-| T-0380 C6 Performance Regression Fixtures | Added advisory threshold fixture support and Session Start workloads to the context-routing performance baseline script. | `ev:T-0380:ff1d277e8bbb467e9f9f20af`, `ev:T-0380:e9559e47ff9940999f1171cf`, `ev:T-0380:4bf9cfb9548c411b9a94cc20` |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
+| T-0383 mounted full-profile probes exceeded a 20s workload budget for cache status/warm, graph task, graph include-code, and context pack. | These workloads are not suitable for the default fast smoke loop on mounted filesystems. | Keep `smoke:context-routing` defaulting to fast profile; use `--profile full` explicitly and improve diagnostics in T-0384. |
 | Installed `hadara@0.3.2 version --json` reports dist freshness at `build.distLooksStale:false`, not root `distLooksStale`. | Consumers using shorthand root-field checks may miss the current schema location. | Treat `hadara.runtime.version.v1` output as authoritative; root compatibility can be a future docs/JSON compatibility follow-up if needed. |
 | Exact `npx hadara@0.3.2-rc.0 version --json` resolved a stale fnm/global shim in this workspace and reported `0.3.0-rc.2`. | `npx` is not reliable as canonical package proof in this local environment. | Use isolated temp-prefix installed-bin proof for T-0338/T-0339 decisions; it reported `packageVersion:"0.3.2-rc.0"` and passed recycle. |
 | Published `0.3.0-rc.0` npm metadata still shows the old package description and no keywords. | The immutable rc.0 package remains metadata-limited, while later rc packages and stable `0.3.0` were published with metadata guardrails. | Treat rc.0 as historical; use stable `hadara@0.3.0` for current installs. |

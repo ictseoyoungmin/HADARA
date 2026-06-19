@@ -383,3 +383,4 @@
 | T-0380 | C6 Performance Regression Fixtures | Done | tasks/T-0380-c6-performance-regression-fixtures | |
 | T-0381 | Context Routing Spec Completion Audit | Done | tasks/T-0381-context-routing-spec-completion-audit | Added registered implementation completion audit and routed T-0382 next. |
 | T-0382 | Session Start JSON UX Hardening | Done | tasks/T-0382-session-start-json-ux-hardening | Added structured Session Start guidance and no-task degraded-ok UX. |
+| T-0383 | Context Routing E2E Smoke Pack | Done | tasks/T-0383-context-routing-e2e-smoke-pack | Added fast/full context-routing E2E smoke script profiles with cache no-write fingerprint checks. |
