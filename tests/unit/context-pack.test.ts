@@ -1,4 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
 import { assertSchema } from '../../src/core/schema';
 import type {
   ContextGraphEdge,
@@ -10,6 +13,7 @@ import {
   buildContextPackReport,
   CONTEXT_PACK_DEFAULT_BUDGET
 } from '../../src/context/context-pack';
+import { createContextCacheWarmReport } from '../../src/context/context-cache-store';
 
 const generatedAt = '2026-06-18T13:00:00.000Z';
 const taskId = 'T-0003';
@@ -18,6 +22,13 @@ const source: ContextGraphSourceRef = {
   extractor: 'fixture',
   hash: 'sha256:task'
 };
+const roots: string[] = [];
+
+afterEach(() => {
+  for (const root of roots.splice(0)) {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
 
 describe('context pack', () => {
   it('builds a schema-valid bounded context pack from an injected graph report', () => {
@@ -104,6 +115,61 @@ describe('context pack', () => {
       code: 'CONTEXT_PACK_CODE_INDEX_UNAVAILABLE'
     }));
     assertSchema('hadara.contextPack.v1', report);
+  });
+
+  it('uses a fresh graph-core cache shard when building a live context pack', () => {
+    const root = tempProject();
+    write(root, 'docs/TASK_BOARD.md', [
+      '# TASK_BOARD',
+      '',
+      '| ID | Title | Status | Capsule | Notes |',
+      '|---|---|---|---|---|',
+      `| ${taskId} | Cached pack fixture | In Progress | tasks/${taskId}-cached-pack-fixture | |`,
+      ''
+    ].join('\n'));
+    write(root, `tasks/${taskId}-cached-pack-fixture/TASK.md`, [
+      `# ${taskId} Cached pack fixture`,
+      '',
+      '## Metadata',
+      '',
+      '| Field | Value |',
+      '|---|---|',
+      `| ID | ${taskId} |`,
+      '| Title | Cached pack fixture |',
+      '| Status | In Progress |',
+      '| Created | 2026-06-18 |',
+      '| Updated | 2026-06-18 |',
+      ''
+    ].join('\n'));
+    const warm = createContextCacheWarmReport({
+      projectRoot: root,
+      execute: true,
+      generatedAt: '2026-06-18T13:30:00.000Z'
+    });
+    expect(warm.shards.items).toContainEqual(expect.objectContaining({
+      extractorKey: 'graphCore',
+      executed: true
+    }));
+
+    const before = snapshotProject(root);
+    const report = buildContextPackReport({
+      projectRoot: root,
+      generatedAt: '2026-06-18T13:30:10.000Z',
+      taskId
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.cache).toMatchObject({
+      used: true,
+      hit: true,
+      mode: 'graph-core'
+    });
+    expect(report.readFirst[0]).toEqual(expect.objectContaining({
+      id: `task:${taskId}`,
+      type: 'Task'
+    }));
+    assertSchema('hadara.contextPack.v1', report);
+    expect(snapshotProject(root)).toEqual(before);
   });
 });
 
@@ -214,6 +280,38 @@ function sampleGraphReport(options: { includeCode?: boolean } = {}): ContextGrap
     cache: { used: false, hit: false },
     issues: []
   };
+}
+
+function tempProject(): string {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-context-pack-'));
+  roots.push(root);
+  return root;
+}
+
+function write(root: string, relativePath: string, content: string): void {
+  const target = path.join(root, relativePath);
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, content, 'utf8');
+}
+
+function snapshotProject(root: string): Record<string, string> {
+  const snapshot: Record<string, string> = {};
+  for (const filePath of listFiles(root)) {
+    snapshot[path.relative(root, filePath).replace(/\\/g, '/')] = fs.readFileSync(filePath, 'utf8');
+  }
+  return snapshot;
+}
+
+function listFiles(dir: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  const files: string[] = [];
+  for (const entry of entries) {
+    const entryPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...listFiles(entryPath));
+    if (entry.isFile()) files.push(entryPath);
+  }
+  return files.sort();
 }
 
 function taskNode(id: string): ContextGraphNode {

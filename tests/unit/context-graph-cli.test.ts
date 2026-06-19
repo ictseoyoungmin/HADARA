@@ -429,6 +429,7 @@ describe('context graph CLI', () => {
     expect(validateSchema('hadara.context.cacheWarm.v1', payload).ok).toBe(true);
     expect(snapshotProject(root)).toHaveProperty('.hadara/local/cache/context/source-manifest.json');
     expect(snapshotProject(root)).toHaveProperty('.hadara/local/cache/context/extractors/task-board.json');
+    expect(snapshotProject(root)).toHaveProperty('.hadara/local/cache/context/graph-core.json');
   });
 });
 

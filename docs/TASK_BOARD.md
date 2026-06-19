@@ -374,3 +374,4 @@
 | T-0371 | C6 Speed-First Graph Cache Spec Refresh | Done | tasks/T-0371-c6-speed-first-graph-cache-spec-refresh | Added registered `08_C6_Speed_First_Graph_Build_and_Warm_Path_Spec.md` with Graphify-aware speed-first cold/warm graph, code-index, and context-pack cache design. |
 | T-0372 | C4 Context Slice Boundary and Proof Drift Hardening | Done | tasks/T-0372-c4-context-slice-boundary-and-proof-drift-hardening | |
 | T-0373 | C6 ext4 Mounted Performance Baseline | Done | tasks/T-0373-c6-ext4-mounted-performance-baseline | |
+| T-0374 | C6 Graph Core and Context Pack Warm Path | Done | tasks/T-0374-c6-graph-core-and-context-pack-warm-path | |

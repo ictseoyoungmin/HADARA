@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0373 C6 ext4 Mounted Performance Baseline |
-| Active Task | TBD C6 graph-core/context-pack warm path, then C5 Session Start |
+| Latest Completed Task | T-0374 C6 Graph Core and Context Pack Warm Path |
+| Active Task | TBD C6 code-index shard persistence or bounded C5 Session Start |
 
 ## Next Planned Line
 
@@ -47,6 +47,8 @@ T-0370 follow-up note: C4 now supports `hadara context slice --path <path> --sym
 T-0372 follow-up note: C4 context slice now enforces the 512 KiB byte budget as a hard failure: over-budget requests return `ok:false`, `CONTEXT_SLICE_TOO_LARGE`, `summary.truncated:true`, and `slices:[]` instead of warning while carrying oversized raw text. Raw context-slice reads from `.hadara/local/**` are denied by default with `CONTEXT_SLICE_OUTSIDE_PROJECT` because local cache/private state is not canonical source text. T-0370 AC-6 drift was repaired, and done-level harness/protocol validation now treats `ACCEPTANCE.md` rows marked `In Progress` or `Partial` as incomplete. Docker focused validation passed 3 files / 57 tests, Docker sync-build passed 134 files / 880 tests and refreshed `dist`, built CLI boundary smokes passed, and `git diff --check` passed. Evidence: `ev:T-0372:153fbfd1cc37407a99fd7ec1`.
 
 T-0373 follow-up note: C6 now has a repeatable context-routing performance benchmark at `scripts/context-routing-performance-baseline.mjs` and a registered result document at `docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md`. Built CLI measurements with one sample showed mounted `/mnt/f` behavior is the hard constraint: cache status 14.1s mounted vs 1.7s ext4, cache warm dry-run 14.0s vs 1.6s, graph 44.7s vs 2.2s, graph include-code 65.0s vs 2.9s, and context pack 53.6s vs 2.2s. The C6 speed-first spec now routes the next implementation toward mounted-safe freshness proof and graph-core/context-pack warm shard consumption before C5 consumes graph/pack live. Validation included script syntax, docs registry JSON parse, mounted/ext4 measurement, `git diff --check`, a focused rerun for an initial dashboard-static timeout, and full Docker sync-build retry passing 134 files / 880 tests with refreshed `dist`. Evidence: `ev:T-0373:24fae15138814164be27956f`.
+
+T-0374 follow-up note: C6 graph-core/context-pack warm path is now implemented. `context cache warm --execute` writes a merged non-code graph-core shard at `.hadara/local/cache/context/graph-core.json`; `context graph --json` consumes a fresh graph-core shard read-only before live fallback; and `context pack --task <id> --json` inherits that warm graph path without writing cache state. Focused Docker validation passed 4 files / 33 tests, Docker sync-build passed 134 files / 882 tests and refreshed `dist`, built CLI cache warm/graph/pack smoke passed from `/workspace/dist`, and `git diff --check` passed. Code-aware `context graph --include-code` still performs live code-index extraction after the graph-core hit, so C6 code-index shard persistence remains the next speed-sensitive follow-up before code-heavy C5 defaults. Evidence: `ev:T-0374:860bb8bc1a8845eb8fd03eb8`, `ev:T-0374:86aabccd90cc46b3875731f7`, `ev:T-0374:1500f663db95403ea409838c`.
 
 ## Current Phase
 
@@ -96,8 +98,8 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0367 C6.4 High Impact Extractor Shard Cache.
-- Active task is TBD C4 Context Slice or C6.6 Code Index Shard Persistence.
+- Latest completed task is T-0374 C6 Graph Core and Context Pack Warm Path.
+- Active task is TBD C6 Code Index Shard Persistence or bounded C5 Session Start.
 - Stable `hadara@0.3.0` publish and installed-package consumer recycle are complete through T-0316/T-0317.
 - Phase 8 / `0.3.1` planning is staged under `docs/specs/0.3.1/`; Phase 8.1 status token/document ownership governance, Phase 8.2 task handoff close-state governance, Phase 8.3 installed-package findings cleanup, Phase 8.4 state consistency projection read model, Phase 8.5 advisory verify/doctor/CI integration, Phase 8.6 rc1 review/hardening cleanup, T-0325 CloseState derived-state cleanup, T-0326 rc1 release-readiness preparation, T-0327 approval-gated publish, T-0328 installed-package recycle, and T-0329 post-rc1 docs cleanup are complete.
 - `0.3.1-rc.1` source/readiness is complete through T-0326; npm package visibility, tarball inspection, and corrected dist-tags are confirmed through T-0327; installed-package recycle is complete through T-0328; post-rc1 shared-doc wording cleanup is complete through T-0329.

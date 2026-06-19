@@ -13,7 +13,8 @@ import type {
 } from './context-graph';
 import {
   collectContextGraphExtractorShards,
-  createSourceManifestCacheAnalysis
+  createSourceManifestCacheAnalysis,
+  readContextGraphCoreShard
 } from './context-cache-store';
 import {
   createTaskNodeId,
@@ -91,6 +92,33 @@ export function collectContextGraphExtractionsWithCache(
     generatedAt,
     generatedByCommand: 'context.graph'
   });
+  const graphCore = readContextGraphCoreShard({ projectRoot, manifest: analysis.currentManifest });
+  if (graphCore.hit && graphCore.result) {
+    const results = [graphCore.result];
+    if (options.includeCode) results.push(extractCodeIndexGraph(projectRoot, generatedAt));
+    return {
+      extractionResults: results,
+      cache: {
+        used: true,
+        hit: true,
+        mode: options.includeCode ? 'graph-core+live-code' : 'graph-core',
+        manifestHash: analysis.currentManifest.manifestHash,
+        readShardCount: 1,
+        hitShardCount: 1,
+        missShardCount: 0,
+        staleShardCount: 0,
+        corruptShardCount: 0,
+        schemaMismatchShardCount: 0,
+        shardPaths: [graphCore.path],
+        staleExtractorKeys: [],
+        ...(graphCore.record ? { createdAt: graphCore.record.createdAt, cachePath: graphCore.path } : {}),
+        sourceManifestCacheFresh: analysis.cacheFresh,
+        sourceManifestFastPath: analysis.fastPath,
+        ...(analysis.fastPathReason ? { sourceManifestFastPathReason: analysis.fastPathReason } : {}),
+        ...(analysis.fastPathStrategy ? { sourceManifestFastPathStrategy: analysis.fastPathStrategy } : {})
+      }
+    };
+  }
   const shards = collectContextGraphExtractorShards({ projectRoot, manifest: analysis.currentManifest });
   const results = [
     extractTaskCapsules(projectRoot),

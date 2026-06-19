@@ -6,10 +6,12 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { assertSchema } from '../../src/core/schema';
 import {
   buildContextCacheRecord,
+  contextGraphCoreShardCachePath,
   contextGraphExtractorShardCachePath,
   createContextCacheStatusReport,
   createContextCacheWarmReport,
   readContextGraphExtractorShard,
+  readContextGraphCoreShard,
   readContextCacheRecord,
   readContextSourceManifestCache,
   writeContextCacheRecord,
@@ -94,7 +96,8 @@ describe('context cache store', () => {
         items: expect.arrayContaining([
           expect.objectContaining({ extractorKey: 'extractTaskBoard', beforeStatus: 'missing', planned: true, executed: false }),
           expect.objectContaining({ extractorKey: 'extractDocsRegistry', beforeStatus: 'missing', planned: true, executed: false }),
-          expect.objectContaining({ extractorKey: 'extractCommandRegistry', beforeStatus: 'missing', planned: true, executed: false })
+          expect.objectContaining({ extractorKey: 'extractCommandRegistry', beforeStatus: 'missing', planned: true, executed: false }),
+          expect.objectContaining({ extractorKey: 'graphCore', beforeStatus: 'missing', planned: true, executed: false })
         ])
       }
     });
@@ -129,7 +132,8 @@ describe('context cache store', () => {
       items: expect.arrayContaining([
         expect.objectContaining({ extractorKey: 'extractTaskBoard', executed: true }),
         expect.objectContaining({ extractorKey: 'extractDocsRegistry', executed: true }),
-        expect.objectContaining({ extractorKey: 'extractCommandRegistry', executed: true })
+        expect.objectContaining({ extractorKey: 'extractCommandRegistry', executed: true }),
+        expect.objectContaining({ extractorKey: 'graphCore', executed: true })
       ])
     });
     assertSchema('hadara.context.cacheWarm.v1', report);
@@ -140,6 +144,7 @@ describe('context cache store', () => {
     expect(readContextCacheRecord(root, contextGraphExtractorShardCachePath('extractTaskBoard')).status).toBe('valid');
     expect(readContextCacheRecord(root, contextGraphExtractorShardCachePath('extractDocsRegistry')).status).toBe('valid');
     expect(readContextCacheRecord(root, contextGraphExtractorShardCachePath('extractCommandRegistry')).status).toBe('valid');
+    expect(readContextCacheRecord(root, contextGraphCoreShardCachePath()).status).toBe('valid');
 
     const status = createContextCacheStatusReport({
       projectRoot: root,
@@ -147,6 +152,66 @@ describe('context cache store', () => {
     });
     expect(status.summary.mode).toBe('hit');
     expect(status.manifest.status).toBe('fresh');
+  });
+
+  it('serves graph reports from a fresh graph-core shard without read-command writes', () => {
+    const root = tempProject();
+    write(root, 'docs/TASK_BOARD.md', [
+      '# TASK_BOARD',
+      '',
+      '| ID | Title | Status | Capsule | Notes |',
+      '|---|---|---|---|---|',
+      '| T-0001 | Cached graph fixture | In Progress | tasks/T-0001-cached-graph-fixture | |',
+      ''
+    ].join('\n'));
+    write(root, 'tasks/T-0001-cached-graph-fixture/TASK.md', [
+      '# T-0001 Cached graph fixture',
+      '',
+      '## Metadata',
+      '',
+      '| Field | Value |',
+      '|---|---|',
+      '| ID | T-0001 |',
+      '| Title | Cached graph fixture |',
+      '| Status | In Progress |',
+      '| Created | 2026-06-18 |',
+      '| Updated | 2026-06-18 |',
+      ''
+    ].join('\n'));
+    const warm = createContextCacheWarmReport({
+      projectRoot: root,
+      execute: true,
+      generatedAt: '2026-06-18T15:00:45.000Z'
+    });
+    expect(warm.shards.items).toContainEqual(expect.objectContaining({
+      extractorKey: 'graphCore',
+      executed: true
+    }));
+    const cached = readContextSourceManifestCache(root);
+    expect(cached.status).toBe('valid');
+    const graphCore = readContextGraphCoreShard({
+      projectRoot: root,
+      manifest: cached.manifest!
+    });
+    expect(graphCore.hit).toBe(true);
+
+    const before = snapshotProject(root);
+    const graph = buildContextGraphReport({
+      projectRoot: root,
+      generatedAt: '2026-06-18T15:00:50.000Z'
+    });
+
+    expect(graph.cache).toMatchObject({
+      used: true,
+      hit: true,
+      mode: 'graph-core',
+      cachePath: contextGraphCoreShardCachePath()
+    });
+    expect(graph.nodes).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'task:T-0001' })
+    ]));
+    assertSchema('hadara.contextGraph.v1', graph);
+    expect(snapshotProject(root)).toEqual(before);
   });
 
   it('writes and reads source-manifest cache as a fresh hit across generatedAt changes', () => {
