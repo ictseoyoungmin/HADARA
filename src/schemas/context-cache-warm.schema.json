@@ -30,6 +30,7 @@
     "manifest": { "$ref": "#/$defs/manifestStatus" },
     "write": { "$ref": "#/$defs/write" },
     "shards": { "$ref": "#/$defs/shards" },
+    "diagnostics": { "$ref": "#/$defs/diagnostics" },
     "issues": {
       "type": "array",
       "items": { "$ref": "#/$defs/issue" }
@@ -156,6 +157,65 @@
         "message": { "type": "string" },
         "path": { "type": "string" },
         "fixHint": { "type": "string" }
+      }
+    },
+    "diagnostics": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["state", "operatorSummary", "slowPath", "manifestChanges", "shardSummary"],
+      "properties": {
+        "state": { "enum": ["fresh", "missing", "stale", "corrupt", "partial"] },
+        "operatorSummary": { "type": "string" },
+        "recommendedCommand": { "type": "string" },
+        "recommendedCommandArgs": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "slowPath": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["mountedWorkspace", "fullManifestBuilt", "fastPath"],
+          "properties": {
+            "mountedWorkspace": { "type": "boolean" },
+            "fullManifestBuilt": { "type": "boolean" },
+            "fastPath": { "enum": ["hit", "miss", "skipped"] },
+            "reason": { "type": "string" },
+            "strategy": { "type": "string" }
+          }
+        },
+        "manifestChanges": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["addedPathCount", "removedPathCount", "changedPathCount", "unchangedSourceCount", "staleExtractorKeys"],
+          "properties": {
+            "addedPathCount": { "type": "number" },
+            "removedPathCount": { "type": "number" },
+            "changedPathCount": { "type": "number" },
+            "unchangedSourceCount": { "type": "number" },
+            "staleExtractorKeys": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "shardSummary": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["total", "fresh", "missing", "stale", "corrupt", "schemaMismatch", "planned", "plannedShardKeys"],
+          "properties": {
+            "total": { "type": "number" },
+            "fresh": { "type": "number" },
+            "missing": { "type": "number" },
+            "stale": { "type": "number" },
+            "corrupt": { "type": "number" },
+            "schemaMismatch": { "type": "number" },
+            "planned": { "type": "number" },
+            "plannedShardKeys": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
       }
     }
   }

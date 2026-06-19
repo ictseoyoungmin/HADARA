@@ -131,6 +131,7 @@ export interface ContextCacheStatusReport {
     fastPathReason?: string;
     fastPathStrategy?: string;
   };
+  diagnostics: ContextCacheDiagnostics;
   issues: ContextCacheIssue[];
 }
 
@@ -192,7 +193,39 @@ export interface ContextCacheWarmReport {
     executed: boolean;
     items: ContextGraphExtractorShardWarmItem[];
   };
+  diagnostics: ContextCacheDiagnostics;
   issues: ContextCacheIssue[];
+}
+
+export interface ContextCacheDiagnostics {
+  state: 'fresh' | 'missing' | 'stale' | 'corrupt' | 'partial';
+  operatorSummary: string;
+  recommendedCommand?: string;
+  recommendedCommandArgs?: string[];
+  slowPath: {
+    mountedWorkspace: boolean;
+    fullManifestBuilt: boolean;
+    fastPath: 'hit' | 'miss' | 'skipped';
+    reason?: string;
+    strategy?: string;
+  };
+  manifestChanges: {
+    addedPathCount: number;
+    removedPathCount: number;
+    changedPathCount: number;
+    unchangedSourceCount: number;
+    staleExtractorKeys: string[];
+  };
+  shardSummary: {
+    total: number;
+    fresh: number;
+    missing: number;
+    stale: number;
+    corrupt: number;
+    schemaMismatch: number;
+    planned: number;
+    plannedShardKeys: string[];
+  };
 }
 
 export interface ContextGraphExtractorShardWarmItem {
@@ -794,6 +827,12 @@ export function createContextCacheStatusReport(input: { projectRoot: string; gen
     generatedAt: input.generatedAt,
     generatedByCommand: CONTEXT_CACHE_STATUS_COMMAND
   });
+  const shardItems = createContextGraphExtractorShardWarmItems({
+    projectRoot: input.projectRoot,
+    manifest: analysis.currentManifest,
+    execute: false,
+    generatedAt: analysis.generatedAt
+  });
 
   return {
     schemaVersion: CONTEXT_CACHE_STATUS_SCHEMA_ID,
@@ -812,6 +851,11 @@ export function createContextCacheStatusReport(input: { projectRoot: string; gen
       staleExtractorKeys: analysis.staleExtractorKeys
     },
     manifest: createManifestReportSection(analysis),
+    diagnostics: createContextCacheDiagnostics({
+      projectRoot: input.projectRoot,
+      analysis,
+      shardItems
+    }),
     issues: analysis.issues
   };
 }
@@ -879,8 +923,71 @@ export function createContextCacheWarmReport(input: { projectRoot: string; execu
       executed: shardWriteExecuted,
       items: shardItems
     },
+    diagnostics: createContextCacheDiagnostics({
+      projectRoot: input.projectRoot,
+      analysis,
+      shardItems
+    }),
     issues: analysis.issues
   };
+}
+
+function createContextCacheDiagnostics(input: {
+  projectRoot: string;
+  analysis: ContextSourceManifestCacheAnalysis;
+  shardItems: ContextGraphExtractorShardWarmItem[];
+}): ContextCacheDiagnostics {
+  const shardSummary = {
+    total: input.shardItems.length,
+    fresh: input.shardItems.filter((item) => item.beforeStatus === 'fresh').length,
+    missing: input.shardItems.filter((item) => item.beforeStatus === 'missing').length,
+    stale: input.shardItems.filter((item) => item.beforeStatus === 'stale').length,
+    corrupt: input.shardItems.filter((item) => item.beforeStatus === 'corrupt').length,
+    schemaMismatch: input.shardItems.filter((item) => item.beforeStatus === 'schema-mismatch').length,
+    planned: input.shardItems.filter((item) => item.planned).length,
+    plannedShardKeys: input.shardItems.filter((item) => item.planned).map((item) => item.extractorKey).sort()
+  };
+  const manifestCorrupt = input.analysis.cached.status === 'corrupt' || input.analysis.cached.status === 'schema-mismatch';
+  const hasPartialShards = input.analysis.cacheFresh && shardSummary.planned > 0;
+  const state: ContextCacheDiagnostics['state'] = manifestCorrupt
+    ? 'corrupt'
+    : input.analysis.cached.status === 'missing'
+      ? 'missing'
+      : input.analysis.cacheFresh
+        ? hasPartialShards ? 'partial' : 'fresh'
+        : 'stale';
+  const needsWarm = state !== 'fresh';
+  return {
+    state,
+    operatorSummary: contextCacheOperatorSummary(state, shardSummary.planned),
+    ...(needsWarm ? {
+      recommendedCommand: 'hadara context cache warm --execute --json',
+      recommendedCommandArgs: ['context', 'cache', 'warm', '--execute', '--json']
+    } : {}),
+    slowPath: {
+      mountedWorkspace: input.projectRoot.startsWith('/mnt/'),
+      fullManifestBuilt: input.analysis.fastPath !== 'hit',
+      fastPath: input.analysis.fastPath,
+      ...(input.analysis.fastPathReason ? { reason: input.analysis.fastPathReason } : {}),
+      ...(input.analysis.fastPathStrategy ? { strategy: input.analysis.fastPathStrategy } : {})
+    },
+    manifestChanges: {
+      addedPathCount: input.analysis.comparison.addedPaths.length,
+      removedPathCount: input.analysis.comparison.removedPaths.length,
+      changedPathCount: input.analysis.comparison.changedPaths.length,
+      unchangedSourceCount: input.analysis.comparison.unchangedPaths.length,
+      staleExtractorKeys: input.analysis.staleExtractorKeys
+    },
+    shardSummary
+  };
+}
+
+function contextCacheOperatorSummary(state: ContextCacheDiagnostics['state'], plannedShardCount: number): string {
+  if (state === 'fresh') return 'Context cache is fresh and all warm shards are available.';
+  if (state === 'missing') return 'Context cache is missing; run an explicit warm execute to populate source manifest and shards.';
+  if (state === 'corrupt') return 'Context cache has corrupt or schema-mismatched records; run an explicit warm execute to repair it.';
+  if (state === 'partial') return `Source manifest is fresh but ${plannedShardCount} warm shard(s) are missing, stale, corrupt, or schema-mismatched.`;
+  return 'Context cache is stale relative to current project source metadata; run an explicit warm execute to refresh it.';
 }
 
 function createContextGraphExtractorShardWarmItems(input: {

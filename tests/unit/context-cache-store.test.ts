@@ -58,6 +58,18 @@ describe('context cache store', () => {
       manifest: {
         status: 'missing',
         cachePath: CONTEXT_SOURCE_MANIFEST_CACHE_PATH
+      },
+      diagnostics: {
+        state: 'missing',
+        recommendedCommandArgs: ['context', 'cache', 'warm', '--execute', '--json'],
+        slowPath: {
+          fullManifestBuilt: true
+        },
+        shardSummary: {
+          total: 5,
+          planned: 5,
+          plannedShardKeys: ['codeIndex', 'extractCommandRegistry', 'extractDocsRegistry', 'extractTaskBoard', 'graphCore']
+        }
       }
     });
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'CONTEXT_CACHE_MISS' }));
@@ -103,6 +115,14 @@ describe('context cache store', () => {
           expect.objectContaining({ extractorKey: 'graphCore', beforeStatus: 'missing', planned: true, executed: false }),
           expect.objectContaining({ extractorKey: 'codeIndex', beforeStatus: 'missing', planned: true, executed: false })
         ])
+      },
+      diagnostics: {
+        state: 'missing',
+        recommendedCommand: 'hadara context cache warm --execute --json',
+        shardSummary: {
+          missing: 5,
+          planned: 5
+        }
       }
     });
     assertSchema('hadara.context.cacheWarm.v1', report);
@@ -158,6 +178,48 @@ describe('context cache store', () => {
     });
     expect(status.summary.mode).toBe('hit');
     expect(status.manifest.status).toBe('fresh');
+    expect(status.diagnostics).toMatchObject({
+      state: 'fresh',
+      shardSummary: {
+        total: 5,
+        fresh: 5,
+        planned: 0,
+        plannedShardKeys: []
+      }
+    });
+  });
+
+  it('reports partial cache diagnostics when source manifest is fresh but a warm shard is missing', () => {
+    const root = tempProject();
+    write(root, 'docs/TASK_BOARD.md', '# TASK_BOARD\n');
+    createContextCacheWarmReport({
+      projectRoot: root,
+      execute: true,
+      generatedAt: '2026-06-18T15:00:45.000Z'
+    });
+    fs.rmSync(path.join(root, contextCodeIndexShardCachePath()), { force: true });
+
+    const status = createContextCacheStatusReport({
+      projectRoot: root,
+      generatedAt: '2026-06-18T15:00:50.000Z'
+    });
+
+    expect(status.summary).toMatchObject({
+      mode: 'hit',
+      cacheFresh: true
+    });
+    expect(status.diagnostics).toMatchObject({
+      state: 'partial',
+      recommendedCommandArgs: ['context', 'cache', 'warm', '--execute', '--json'],
+      shardSummary: {
+        total: 5,
+        fresh: 4,
+        missing: 1,
+        planned: 1,
+        plannedShardKeys: ['codeIndex']
+      }
+    });
+    assertSchema('hadara.context.cacheStatus.v1', status);
   });
 
   it('serves graph reports from a fresh graph-core shard without read-command writes', () => {
@@ -512,6 +574,17 @@ describe('context cache store', () => {
     expect(report.manifest.status).toBe('stale');
     expect(report.manifest.changedPaths).toEqual(['docs/TASK_BOARD.md']);
     expect(report.summary.staleExtractorKeys).toContain('extractTaskBoard');
+    expect(report.diagnostics).toMatchObject({
+      state: 'stale',
+      recommendedCommand: 'hadara context cache warm --execute --json',
+      manifestChanges: {
+        changedPathCount: 1,
+        staleExtractorKeys: expect.arrayContaining(['extractTaskBoard'])
+      },
+      shardSummary: {
+        plannedShardKeys: expect.arrayContaining(['extractTaskBoard', 'graphCore'])
+      }
+    });
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'CONTEXT_CACHE_STALE' }));
     assertSchema('hadara.context.cacheStatus.v1', report);
   });
@@ -562,6 +635,10 @@ describe('context cache store', () => {
 
     expect(report.summary.mode).toBe('corrupt');
     expect(report.manifest.status).toBe('corrupt');
+    expect(report.diagnostics).toMatchObject({
+      state: 'corrupt',
+      recommendedCommandArgs: ['context', 'cache', 'warm', '--execute', '--json']
+    });
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'CONTEXT_CACHE_CORRUPT' }));
     assertSchema('hadara.context.cacheStatus.v1', report);
   });
