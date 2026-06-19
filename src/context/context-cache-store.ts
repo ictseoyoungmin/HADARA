@@ -11,7 +11,10 @@ import {
   createContextSourceSubsetHash,
   type ContextSourceManifest
 } from './source-manifest';
+import type { ContextCacheMetadata, GraphExtractionResult } from './context-graph';
 import { hashContextGraphJson, normalizeContextGraphPath } from './extractor-contract';
+import { extractCommandRegistry, extractDocsRegistry } from './registry-extractors';
+import { extractTaskBoard } from './task-extractors';
 
 export const CONTEXT_CACHE_RECORD_SCHEMA_ID = 'hadara.context.cacheRecord.v1' as const;
 export const CONTEXT_CACHE_STATUS_SCHEMA_ID = 'hadara.context.cacheStatus.v1' as const;
@@ -25,6 +28,11 @@ export type ContextCacheIssueCode =
   | 'CONTEXT_CACHE_STALE'
   | 'CONTEXT_CACHE_CORRUPT'
   | 'CONTEXT_CACHE_SCHEMA_MISMATCH';
+
+export type ContextGraphExtractorShardKey =
+  | 'extractTaskBoard'
+  | 'extractDocsRegistry'
+  | 'extractCommandRegistry';
 
 export interface ContextCacheIssue {
   severity: 'info' | 'warning' | 'error';
@@ -124,6 +132,13 @@ export interface ContextCacheWarmReport {
     cacheFresh: boolean;
     writePlanned: boolean;
     writeExecuted: boolean;
+    shardWritePlanned: boolean;
+    shardWriteExecuted: boolean;
+    shardHitCount: number;
+    shardMissCount: number;
+    shardStaleCount: number;
+    shardCorruptCount: number;
+    shardSchemaMismatchCount: number;
     degraded: boolean;
     staleExtractorKeys: string[];
   };
@@ -152,6 +167,40 @@ export interface ContextCacheWarmReport {
     afterManifestHash: string;
     skippedReason?: 'cache-fresh';
   };
+  shards: {
+    planned: boolean;
+    executed: boolean;
+    items: ContextGraphExtractorShardWarmItem[];
+  };
+  issues: ContextCacheIssue[];
+}
+
+export interface ContextGraphExtractorShardWarmItem {
+  extractorKey: ContextGraphExtractorShardKey;
+  cachePath: string;
+  beforeStatus: ContextGraphExtractorShardReadStatus;
+  planned: boolean;
+  executed: boolean;
+  beforeCacheKey?: string;
+  afterCacheKey?: string;
+  skippedReason?: 'cache-fresh';
+}
+
+export type ContextGraphExtractorShardReadStatus =
+  | 'missing'
+  | 'fresh'
+  | 'stale'
+  | 'corrupt'
+  | 'schema-mismatch';
+
+export interface ContextGraphExtractorShardReadResult {
+  ok: boolean;
+  hit: boolean;
+  status: ContextGraphExtractorShardReadStatus;
+  extractorKey: ContextGraphExtractorShardKey;
+  path: string;
+  record?: ContextCacheRecord<GraphExtractionResult>;
+  result?: GraphExtractionResult;
   issues: ContextCacheIssue[];
 }
 
@@ -165,6 +214,27 @@ interface ContextSourceManifestCacheAnalysis {
   degraded: boolean;
   issues: ContextCacheIssue[];
 }
+
+const CONTEXT_GRAPH_EXTRACTOR_SHARD_PROJECTION_PREFIX = 'context.graph.extractor' as const;
+const CONTEXT_GRAPH_EXTRACTOR_SHARD_SCHEMA_VERSION = 'hadara.contextGraph.v1' as const;
+
+const CONTEXT_GRAPH_EXTRACTOR_SHARD_KEYS: ContextGraphExtractorShardKey[] = [
+  'extractTaskBoard',
+  'extractDocsRegistry',
+  'extractCommandRegistry'
+];
+
+const CONTEXT_GRAPH_EXTRACTOR_SHARD_CACHE_PATHS: Record<ContextGraphExtractorShardKey, string> = {
+  extractTaskBoard: `${CONTEXT_SOURCE_MANIFEST_CACHE_ROOT}/extractors/task-board.json`,
+  extractDocsRegistry: `${CONTEXT_SOURCE_MANIFEST_CACHE_ROOT}/extractors/docs-registry.json`,
+  extractCommandRegistry: `${CONTEXT_SOURCE_MANIFEST_CACHE_ROOT}/extractors/command-registry.json`
+};
+
+const CONTEXT_GRAPH_EXTRACTOR_SHARD_EXTRACTORS: Record<ContextGraphExtractorShardKey, (projectRoot: string) => GraphExtractionResult> = {
+  extractTaskBoard,
+  extractDocsRegistry,
+  extractCommandRegistry
+};
 
 export function buildContextCacheRecord<TPayload>(options: BuildContextCacheRecordOptions<TPayload>): ContextCacheRecord<TPayload> {
   const extractorKeys = options.extractorKeys?.length ? [...options.extractorKeys].sort() : undefined;
@@ -313,6 +383,145 @@ export function writeContextSourceManifestCache(projectRoot: string, manifest: C
   atomicWriteTextFile(projectRoot, CONTEXT_SOURCE_MANIFEST_CACHE_PATH, `${JSON.stringify(manifest, null, 2)}\n`);
 }
 
+export function listContextGraphExtractorShardKeys(): ContextGraphExtractorShardKey[] {
+  return [...CONTEXT_GRAPH_EXTRACTOR_SHARD_KEYS];
+}
+
+export function contextGraphExtractorShardCachePath(extractorKey: ContextGraphExtractorShardKey): string {
+  return CONTEXT_GRAPH_EXTRACTOR_SHARD_CACHE_PATHS[extractorKey];
+}
+
+export function buildContextGraphExtractorShardRecord(input: {
+  manifest: ContextSourceManifest;
+  extractorKey: ContextGraphExtractorShardKey;
+  result: GraphExtractionResult;
+  createdAt?: string;
+}): ContextCacheRecord<GraphExtractionResult> {
+  return buildContextCacheRecord({
+    projection: contextGraphExtractorShardProjection(input.extractorKey),
+    projectionSchemaVersion: CONTEXT_GRAPH_EXTRACTOR_SHARD_SCHEMA_VERSION,
+    manifest: input.manifest,
+    extractorKeys: [input.extractorKey],
+    payload: input.result,
+    createdAt: input.createdAt,
+    degraded: input.result.issues.some((issue) => issue.severity === 'warning' || issue.severity === 'error')
+  });
+}
+
+export function writeContextGraphExtractorShard(input: {
+  projectRoot: string;
+  manifest: ContextSourceManifest;
+  extractorKey: ContextGraphExtractorShardKey;
+  result: GraphExtractionResult;
+  createdAt?: string;
+}): ContextCacheRecord<GraphExtractionResult> {
+  const record = buildContextGraphExtractorShardRecord(input);
+  writeContextCacheRecord(input.projectRoot, contextGraphExtractorShardCachePath(input.extractorKey), record);
+  return record;
+}
+
+export function readContextGraphExtractorShard(input: {
+  projectRoot: string;
+  manifest: ContextSourceManifest;
+  extractorKey: ContextGraphExtractorShardKey;
+}): ContextGraphExtractorShardReadResult {
+  const cachePath = contextGraphExtractorShardCachePath(input.extractorKey);
+  const read = readContextCacheRecord<GraphExtractionResult>(input.projectRoot, cachePath);
+  if (!read.ok || !read.record) {
+    return {
+      ok: false,
+      hit: false,
+      status: read.status === 'valid' ? 'schema-mismatch' : read.status,
+      extractorKey: input.extractorKey,
+      path: read.path,
+      issues: read.issues
+    };
+  }
+
+  const expected = buildContextCacheRecord({
+    projection: contextGraphExtractorShardProjection(input.extractorKey),
+    projectionSchemaVersion: CONTEXT_GRAPH_EXTRACTOR_SHARD_SCHEMA_VERSION,
+    manifest: input.manifest,
+    extractorKeys: [input.extractorKey],
+    payload: read.record.payload,
+    createdAt: read.record.createdAt
+  });
+  const shapeIssue = validateGraphExtractionPayload(read.record.payload, input.extractorKey, read.path);
+  if (shapeIssue) {
+    return {
+      ok: false,
+      hit: false,
+      status: 'schema-mismatch',
+      extractorKey: input.extractorKey,
+      path: read.path,
+      record: read.record,
+      issues: [shapeIssue]
+    };
+  }
+  if (
+    read.record.projection !== expected.projection
+    || read.record.projectionSchemaVersion !== expected.projectionSchemaVersion
+    || read.record.sourceSubsetHash !== expected.sourceSubsetHash
+    || !sameRecord(read.record.extractorVersions, expected.extractorVersions)
+  ) {
+    return {
+      ok: false,
+      hit: false,
+      status: 'stale',
+      extractorKey: input.extractorKey,
+      path: read.path,
+      record: read.record,
+      issues: [contextCacheIssue('warning', 'CONTEXT_CACHE_STALE', `Context graph extractor shard ${input.extractorKey} is stale.`, read.path)]
+    };
+  }
+
+  return {
+    ok: true,
+    hit: true,
+    status: 'fresh',
+    extractorKey: input.extractorKey,
+    path: read.path,
+    record: read.record,
+    result: read.record.payload,
+    issues: []
+  };
+}
+
+export function collectContextGraphExtractorShards(input: {
+  projectRoot: string;
+  manifest: ContextSourceManifest;
+}): { results: Partial<Record<ContextGraphExtractorShardKey, GraphExtractionResult>>; cache: ContextCacheMetadata; issues: ContextCacheIssue[] } {
+  const results: Partial<Record<ContextGraphExtractorShardKey, GraphExtractionResult>> = {};
+  const reads = CONTEXT_GRAPH_EXTRACTOR_SHARD_KEYS.map((extractorKey) =>
+    readContextGraphExtractorShard({ projectRoot: input.projectRoot, manifest: input.manifest, extractorKey })
+  );
+  for (const read of reads) {
+    if (read.hit && read.result) results[read.extractorKey] = read.result;
+  }
+  const hitReads = reads.filter((read) => read.hit);
+  const staleReads = reads.filter((read) => read.status === 'stale');
+  const cache: ContextCacheMetadata = {
+    used: hitReads.length > 0,
+    hit: hitReads.length > 0,
+    mode: 'extractor-shards',
+    manifestHash: input.manifest.manifestHash,
+    readShardCount: reads.length,
+    hitShardCount: hitReads.length,
+    missShardCount: reads.filter((read) => read.status === 'missing').length,
+    staleShardCount: staleReads.length,
+    corruptShardCount: reads.filter((read) => read.status === 'corrupt').length,
+    schemaMismatchShardCount: reads.filter((read) => read.status === 'schema-mismatch').length,
+    shardPaths: reads.map((read) => read.path).sort(),
+    staleExtractorKeys: staleReads.map((read) => read.extractorKey).sort(),
+    ...(hitReads[0]?.record ? { createdAt: hitReads[0].record.createdAt, cachePath: hitReads[0].path } : {})
+  };
+  return {
+    results,
+    cache,
+    issues: reads.flatMap((read) => read.issues)
+  };
+}
+
 export function createContextCacheStatusReport(input: { projectRoot: string; generatedAt?: string }): ContextCacheStatusReport {
   const analysis = createSourceManifestCacheAnalysis({
     projectRoot: input.projectRoot,
@@ -347,6 +556,14 @@ export function createContextCacheWarmReport(input: { projectRoot: string; execu
     generatedAt: input.generatedAt,
     generatedByCommand: CONTEXT_CACHE_WARM_COMMAND
   });
+  const shardItems = createContextGraphExtractorShardWarmItems({
+    projectRoot: input.projectRoot,
+    manifest: analysis.currentManifest,
+    execute,
+    generatedAt: analysis.generatedAt
+  });
+  const shardWritePlanned = shardItems.some((item) => item.planned);
+  const shardWriteExecuted = shardItems.some((item) => item.executed);
   const writePlanned = !analysis.cacheFresh;
   let writeExecuted = false;
   if (execute && writePlanned) {
@@ -366,8 +583,15 @@ export function createContextCacheWarmReport(input: { projectRoot: string; execu
       cacheMode: analysis.cacheFresh ? 'fresh' : analysis.cached.status === 'missing' ? 'miss' : analysis.cached.status === 'valid' ? 'stale' : 'corrupt',
       cachePresent: analysis.cached.status !== 'missing',
       cacheFresh: analysis.cacheFresh,
-      writePlanned,
-      writeExecuted,
+      writePlanned: writePlanned || shardWritePlanned,
+      writeExecuted: writeExecuted || shardWriteExecuted,
+      shardWritePlanned,
+      shardWriteExecuted,
+      shardHitCount: shardItems.filter((item) => item.beforeStatus === 'fresh').length,
+      shardMissCount: shardItems.filter((item) => item.beforeStatus === 'missing').length,
+      shardStaleCount: shardItems.filter((item) => item.beforeStatus === 'stale').length,
+      shardCorruptCount: shardItems.filter((item) => item.beforeStatus === 'corrupt').length,
+      shardSchemaMismatchCount: shardItems.filter((item) => item.beforeStatus === 'schema-mismatch').length,
       degraded: analysis.degraded,
       staleExtractorKeys: analysis.staleExtractorKeys
     },
@@ -382,8 +606,51 @@ export function createContextCacheWarmReport(input: { projectRoot: string; execu
       afterManifestHash: analysis.currentManifest.manifestHash,
       ...(!writePlanned ? { skippedReason: 'cache-fresh' as const } : {})
     },
+    shards: {
+      planned: shardWritePlanned,
+      executed: shardWriteExecuted,
+      items: shardItems
+    },
     issues: analysis.issues
   };
+}
+
+function createContextGraphExtractorShardWarmItems(input: {
+  projectRoot: string;
+  manifest: ContextSourceManifest;
+  execute: boolean;
+  generatedAt: string;
+}): ContextGraphExtractorShardWarmItem[] {
+  return CONTEXT_GRAPH_EXTRACTOR_SHARD_KEYS.map((extractorKey) => {
+    const read = readContextGraphExtractorShard({
+      projectRoot: input.projectRoot,
+      manifest: input.manifest,
+      extractorKey
+    });
+    const planned = !read.hit;
+    let afterCacheKey: string | undefined;
+    if (input.execute && planned) {
+      const result = CONTEXT_GRAPH_EXTRACTOR_SHARD_EXTRACTORS[extractorKey](input.projectRoot);
+      const record = writeContextGraphExtractorShard({
+        projectRoot: input.projectRoot,
+        manifest: input.manifest,
+        extractorKey,
+        result,
+        createdAt: input.generatedAt
+      });
+      afterCacheKey = record.cacheKey;
+    }
+    return {
+      extractorKey,
+      cachePath: read.path,
+      beforeStatus: read.status,
+      planned,
+      executed: input.execute && planned,
+      ...(read.record ? { beforeCacheKey: read.record.cacheKey } : {}),
+      ...(afterCacheKey ? { afterCacheKey } : {}),
+      ...(!planned ? { skippedReason: 'cache-fresh' as const } : {})
+    };
+  });
 }
 
 function createSourceManifestCacheAnalysis(input: { projectRoot: string; generatedAt?: string; generatedByCommand: string }): ContextSourceManifestCacheAnalysis {
@@ -452,6 +719,34 @@ function normalizeContextCachePath(inputPath: string): string {
     throw new Error(`Context cache path must stay under ${CONTEXT_SOURCE_MANIFEST_CACHE_ROOT}: ${inputPath}`);
   }
   return normalizedPath;
+}
+
+function contextGraphExtractorShardProjection(extractorKey: ContextGraphExtractorShardKey): string {
+  return `${CONTEXT_GRAPH_EXTRACTOR_SHARD_PROJECTION_PREFIX}.${extractorKey}`;
+}
+
+function validateGraphExtractionPayload(payload: GraphExtractionResult, extractorKey: ContextGraphExtractorShardKey, cachePath: string): ContextCacheIssue | undefined {
+  if (
+    !payload
+    || typeof payload !== 'object'
+    || !payload.source
+    || payload.source.extractor !== extractorKey
+    || !Array.isArray(payload.source.paths)
+    || typeof payload.source.sourceHash !== 'string'
+    || !Array.isArray(payload.nodes)
+    || !Array.isArray(payload.edges)
+    || !Array.isArray(payload.issues)
+  ) {
+    return contextCacheIssue('warning', 'CONTEXT_CACHE_SCHEMA_MISMATCH', `Context graph extractor shard ${extractorKey} payload is not a valid extraction result.`, cachePath);
+  }
+  return undefined;
+}
+
+function sameRecord(left: Record<string, string>, right: Record<string, string>): boolean {
+  const leftKeys = Object.keys(left).sort();
+  const rightKeys = Object.keys(right).sort();
+  return leftKeys.length === rightKeys.length
+    && leftKeys.every((key, index) => key === rightKeys[index] && left[key] === right[key]);
 }
 
 function contextCacheIssue(

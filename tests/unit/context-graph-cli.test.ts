@@ -4,6 +4,8 @@ import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleContextCommand } from '../../src/cli/context';
 import { validateSchema } from '../../src/core/schema';
+import { writeContextGraphExtractorShard } from '../../src/context/context-cache-store';
+import { buildContextSourceManifest } from '../../src/context/source-manifest';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -45,6 +47,75 @@ describe('context graph CLI', () => {
       mode: 'full',
       cache: { used: false, hit: false }
     });
+    expect(validateSchema('hadara.contextGraph.v1', payload).ok).toBe(true);
+    expect(snapshotProject(root)).toEqual(before);
+  });
+
+  it('prints full context graph using fresh extractor shards without writing files', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'RELEASE_READINESS.md'), '# RELEASE_READINESS\n', 'utf8');
+    const manifest = buildContextSourceManifest({
+      projectRoot: root,
+      generatedAt: '2026-06-18T16:00:00.000Z'
+    });
+    writeContextGraphExtractorShard({
+      projectRoot: root,
+      manifest,
+      extractorKey: 'extractTaskBoard',
+      createdAt: '2026-06-18T16:00:00.000Z',
+      result: {
+        source: {
+          extractor: 'extractTaskBoard',
+          paths: ['docs/TASK_BOARD.md'],
+          sourceHash: 'sha256:cached-task-board'
+        },
+        nodes: [{
+          id: 'task:T-9999',
+          type: 'Task',
+          label: 'T-9999 Cached Task',
+          path: 'tasks/T-9999-cached/TASK.md',
+          status: 'Cached',
+          kind: 'task-board-row',
+          source: {
+            path: 'docs/TASK_BOARD.md',
+            extractor: 'extractTaskBoard',
+            hash: 'sha256:cached-task-board'
+          }
+        }],
+        edges: [],
+        stateSources: [{
+          id: 'state-source:task-board',
+          path: 'docs/TASK_BOARD.md',
+          kind: 'task-board',
+          hash: 'sha256:cached-task-board',
+          extracted: { rows: 1, latestDoneTask: null, activeTasks: [] }
+        }],
+        issues: []
+      }
+    });
+    const before = snapshotProject(root);
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleContextCommand({
+      args: ['context', 'graph', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
+    expect(payload.cache).toMatchObject({
+      used: true,
+      hit: true,
+      mode: 'extractor-shards',
+      hitShardCount: 1
+    });
+    expect(payload.nodes).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'task:T-9999', label: 'T-9999 Cached Task' })
+    ]));
     expect(validateSchema('hadara.contextGraph.v1', payload).ok).toBe(true);
     expect(snapshotProject(root)).toEqual(before);
   });
@@ -299,6 +370,7 @@ describe('context graph CLI', () => {
     });
     expect(validateSchema('hadara.context.cacheWarm.v1', payload).ok).toBe(true);
     expect(snapshotProject(root)).toHaveProperty('.hadara/local/cache/context/source-manifest.json');
+    expect(snapshotProject(root)).toHaveProperty('.hadara/local/cache/context/extractors/task-board.json');
   });
 });
 

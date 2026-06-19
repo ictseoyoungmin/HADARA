@@ -367,3 +367,4 @@
 | T-0364 | C6.2 Cache Store and Status Read Model | Done | tasks/T-0364-c6-2-cache-store-and-status-read-model | Cache store/status implemented; C6.3 warm/integration next before C4. |
 | T-0365 | C6.3 Cache Warm or Graph Code Index Cache Integration | Done | tasks/T-0365-c6-3-cache-warm-or-graph-code-index-cache-integration | C6 performance spec hardening in progress before cache-warm implementation. |
 | T-0366 | C6.3 Cache Warm Phase 1 Implementation | Done | tasks/T-0366-c6-3-cache-warm-phase-1-implementation | Source-manifest cache warm phase 1. |
+| T-0367 | C6.4 High Impact Extractor Shard Cache | Done | tasks/T-0367-c6-4-high-impact-extractor-shard-cache | |

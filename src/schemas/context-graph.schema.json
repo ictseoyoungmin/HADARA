@@ -52,7 +52,22 @@
         "hit": { "type": "boolean" },
         "manifestHash": { "type": "string" },
         "createdAt": { "type": "string" },
-        "cachePath": { "type": "string" }
+        "cachePath": { "type": "string" },
+        "mode": { "type": "string" },
+        "readShardCount": { "type": "number" },
+        "hitShardCount": { "type": "number" },
+        "missShardCount": { "type": "number" },
+        "staleShardCount": { "type": "number" },
+        "corruptShardCount": { "type": "number" },
+        "schemaMismatchShardCount": { "type": "number" },
+        "shardPaths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "staleExtractorKeys": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
       }
     },
     "issues": { "type": "array", "items": { "$ref": "#/$defs/graphIssue" } }

@@ -5,8 +5,10 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { assertSchema } from '../../src/core/schema';
 import {
   buildContextCacheRecord,
+  contextGraphExtractorShardCachePath,
   createContextCacheStatusReport,
   createContextCacheWarmReport,
+  readContextGraphExtractorShard,
   readContextCacheRecord,
   readContextSourceManifestCache,
   writeContextCacheRecord,
@@ -83,6 +85,15 @@ describe('context cache store', () => {
         planned: true,
         executed: false,
         beforeStatus: 'missing'
+      },
+      shards: {
+        planned: true,
+        executed: false,
+        items: expect.arrayContaining([
+          expect.objectContaining({ extractorKey: 'extractTaskBoard', beforeStatus: 'missing', planned: true, executed: false }),
+          expect.objectContaining({ extractorKey: 'extractDocsRegistry', beforeStatus: 'missing', planned: true, executed: false }),
+          expect.objectContaining({ extractorKey: 'extractCommandRegistry', beforeStatus: 'missing', planned: true, executed: false })
+        ])
       }
     });
     assertSchema('hadara.context.cacheWarm.v1', report);
@@ -110,11 +121,23 @@ describe('context cache store', () => {
       executed: true,
       beforeStatus: 'missing'
     });
+    expect(report.shards).toMatchObject({
+      planned: true,
+      executed: true,
+      items: expect.arrayContaining([
+        expect.objectContaining({ extractorKey: 'extractTaskBoard', executed: true }),
+        expect.objectContaining({ extractorKey: 'extractDocsRegistry', executed: true }),
+        expect.objectContaining({ extractorKey: 'extractCommandRegistry', executed: true })
+      ])
+    });
     assertSchema('hadara.context.cacheWarm.v1', report);
 
     const cached = readContextSourceManifestCache(root);
     expect(cached.status).toBe('valid');
     expect(cached.manifest?.manifestHash).toBe(report.write.afterManifestHash);
+    expect(readContextCacheRecord(root, contextGraphExtractorShardCachePath('extractTaskBoard')).status).toBe('valid');
+    expect(readContextCacheRecord(root, contextGraphExtractorShardCachePath('extractDocsRegistry')).status).toBe('valid');
+    expect(readContextCacheRecord(root, contextGraphExtractorShardCachePath('extractCommandRegistry')).status).toBe('valid');
 
     const status = createContextCacheStatusReport({
       projectRoot: root,
@@ -257,6 +280,48 @@ describe('context cache store', () => {
 
     const cached = readContextSourceManifestCache(root);
     expect(cached.status).toBe('valid');
+  });
+
+  it('keeps task-board shard fresh across unrelated source-code changes and stales it on task-board edits', () => {
+    const root = tempProject();
+    write(root, 'docs/TASK_BOARD.md', '# TASK_BOARD\n');
+    write(root, 'src/example.ts', 'export const before = 1;\n');
+    const warm = createContextCacheWarmReport({
+      projectRoot: root,
+      execute: true,
+      generatedAt: '2026-06-18T15:05:45.000Z'
+    });
+    const cached = readContextSourceManifestCache(root);
+    expect(cached.status).toBe('valid');
+    expect(warm.shards.items.find((item) => item.extractorKey === 'extractTaskBoard')?.executed).toBe(true);
+
+    write(root, 'src/example.ts', 'export const after = 2;\n');
+    const sourceOnlyManifest = buildContextSourceManifest({
+      projectRoot: root,
+      generatedAt: '2026-06-18T15:05:50.000Z',
+      previousManifest: cached.manifest
+    });
+    const sourceOnlyRead = readContextGraphExtractorShard({
+      projectRoot: root,
+      manifest: sourceOnlyManifest,
+      extractorKey: 'extractTaskBoard'
+    });
+    expect(sourceOnlyRead.status).toBe('fresh');
+    expect(sourceOnlyRead.hit).toBe(true);
+
+    write(root, 'docs/TASK_BOARD.md', '# TASK_BOARD\n\nChanged\n');
+    const taskBoardChangedManifest = buildContextSourceManifest({
+      projectRoot: root,
+      generatedAt: '2026-06-18T15:05:55.000Z',
+      previousManifest: sourceOnlyManifest
+    });
+    const taskBoardRead = readContextGraphExtractorShard({
+      projectRoot: root,
+      manifest: taskBoardChangedManifest,
+      extractorKey: 'extractTaskBoard'
+    });
+    expect(taskBoardRead.status).toBe('stale');
+    expect(taskBoardRead.hit).toBe(false);
   });
 
   it('builds schema-valid projection cache records and constrains cache paths', () => {

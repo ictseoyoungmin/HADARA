@@ -180,6 +180,15 @@ export interface ContextCacheMetadata {
   manifestHash?: string;
   createdAt?: string;
   cachePath?: string;
+  mode?: string;
+  readShardCount?: number;
+  hitShardCount?: number;
+  missShardCount?: number;
+  staleShardCount?: number;
+  corruptShardCount?: number;
+  schemaMismatchShardCount?: number;
+  shardPaths?: string[];
+  staleExtractorKeys?: string[];
 }
 
 export interface ContextGraphReport {

@@ -12,10 +12,15 @@ import type {
   TaskContextReport
 } from './context-graph';
 import {
+  collectContextGraphExtractorShards,
+  readContextSourceManifestCache
+} from './context-cache-store';
+import {
   createTaskNodeId,
   mergeGraphExtractionResults,
   summarizeContextGraphExtraction
 } from './extractor-contract';
+import { buildContextSourceManifest } from './source-manifest';
 import {
   extractAgentHandoff,
   extractDecisions,
@@ -37,6 +42,12 @@ export interface BuildContextGraphReportInput {
   extractionResults?: GraphExtractionResult[];
   cache?: ContextCacheMetadata;
   includeCode?: boolean;
+  cacheStrategy?: 'read-only' | 'disabled';
+}
+
+interface CollectContextGraphExtractionsResult {
+  extractionResults: GraphExtractionResult[];
+  cache: ContextCacheMetadata;
 }
 
 export interface CreateTaskContextReportInput {
@@ -64,12 +75,53 @@ export function collectContextGraphExtractions(projectRoot: string, options: { i
   return results;
 }
 
+export function collectContextGraphExtractionsWithCache(
+  projectRoot: string,
+  options: { includeCode?: boolean; generatedAt?: string; cacheStrategy?: 'read-only' | 'disabled' } = {}
+): CollectContextGraphExtractionsResult {
+  if (options.cacheStrategy === 'disabled') {
+    return {
+      extractionResults: collectContextGraphExtractions(projectRoot, options),
+      cache: { used: false, hit: false }
+    };
+  }
+
+  const generatedAt = options.generatedAt ?? new Date().toISOString();
+  const cachedManifest = readContextSourceManifestCache(projectRoot);
+  const manifest = buildContextSourceManifest({
+    projectRoot,
+    generatedAt,
+    generatedByCommand: 'context.graph',
+    ...(cachedManifest.status === 'valid' && cachedManifest.manifest ? { previousManifest: cachedManifest.manifest } : {})
+  });
+  const shards = collectContextGraphExtractorShards({ projectRoot, manifest });
+  const results = [
+    extractTaskCapsules(projectRoot),
+    shards.results.extractTaskBoard ?? extractTaskBoard(projectRoot),
+    shards.results.extractDocsRegistry ?? extractDocsRegistry(projectRoot),
+    shards.results.extractCommandRegistry ?? extractCommandRegistry(projectRoot),
+    extractManagedSections(projectRoot),
+    extractProjectState(projectRoot),
+    extractDecisions(projectRoot),
+    extractAgentHandoff(projectRoot),
+    extractEvidence(projectRoot),
+    extractReleaseReadiness(projectRoot)
+  ];
+  if (options.includeCode) results.push(extractCodeIndexGraph(projectRoot, generatedAt));
+  return {
+    extractionResults: results,
+    cache: shards.cache
+  };
+}
+
 export function buildContextGraphReport(input: BuildContextGraphReportInput): ContextGraphReport {
   const generatedAt = input.generatedAt ?? new Date().toISOString();
-  const extractionResults = input.extractionResults ?? collectContextGraphExtractions(input.projectRoot, {
+  const collected = input.extractionResults ? undefined : collectContextGraphExtractionsWithCache(input.projectRoot, {
     includeCode: input.includeCode,
-    generatedAt
+    generatedAt,
+    cacheStrategy: input.cacheStrategy
   });
+  const extractionResults = input.extractionResults ?? collected?.extractionResults ?? [];
   const merged = mergeGraphExtractionResults(extractionResults);
   const stateProjection = createContextStateProjectionReport({ generatedAt, extractionResults });
   const mode = input.mode ?? (input.taskId ? 'task' : 'full');
@@ -97,7 +149,7 @@ export function buildContextGraphReport(input: BuildContextGraphReportInput): Co
     ...(taskContext ? { taskContext } : {}),
     stateProjection,
     summary: summarizeContextGraphExtraction(merged.nodes, merged.edges, merged.issues),
-    cache: input.cache ?? { used: false, hit: false },
+    cache: input.cache ?? collected?.cache ?? { used: false, hit: false },
     issues: merged.issues
   };
 }

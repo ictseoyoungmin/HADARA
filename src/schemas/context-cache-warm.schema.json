@@ -29,6 +29,7 @@
     "summary": { "$ref": "#/$defs/summary" },
     "manifest": { "$ref": "#/$defs/manifestStatus" },
     "write": { "$ref": "#/$defs/write" },
+    "shards": { "$ref": "#/$defs/shards" },
     "issues": {
       "type": "array",
       "items": { "$ref": "#/$defs/issue" }
@@ -45,6 +46,13 @@
         "cacheFresh": { "type": "boolean" },
         "writePlanned": { "type": "boolean" },
         "writeExecuted": { "type": "boolean" },
+        "shardWritePlanned": { "type": "boolean" },
+        "shardWriteExecuted": { "type": "boolean" },
+        "shardHitCount": { "type": "number" },
+        "shardMissCount": { "type": "number" },
+        "shardStaleCount": { "type": "number" },
+        "shardCorruptCount": { "type": "number" },
+        "shardSchemaMismatchCount": { "type": "number" },
         "degraded": { "type": "boolean" },
         "staleExtractorKeys": {
           "type": "array",
@@ -107,6 +115,34 @@
         "beforeStatus": { "enum": ["missing", "valid", "corrupt", "schema-mismatch"] },
         "beforeManifestHash": { "type": "string" },
         "afterManifestHash": { "type": "string" },
+        "skippedReason": { "enum": ["cache-fresh"] }
+      }
+    },
+    "shards": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["planned", "executed", "items"],
+      "properties": {
+        "planned": { "type": "boolean" },
+        "executed": { "type": "boolean" },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/shardItem" }
+        }
+      }
+    },
+    "shardItem": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["extractorKey", "cachePath", "beforeStatus", "planned", "executed"],
+      "properties": {
+        "extractorKey": { "type": "string" },
+        "cachePath": { "type": "string" },
+        "beforeStatus": { "enum": ["missing", "fresh", "stale", "corrupt", "schema-mismatch"] },
+        "planned": { "type": "boolean" },
+        "executed": { "type": "boolean" },
+        "beforeCacheKey": { "type": "string" },
+        "afterCacheKey": { "type": "string" },
         "skippedReason": { "enum": ["cache-fresh"] }
       }
     },
