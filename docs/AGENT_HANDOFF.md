@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, T-0360 added the detailed C6 fast cache implementation spec, T-0361-T-0362 completed C3 context pack schema/CLI work, T-0363 added the C6.1 source manifest foundation, T-0364 added the C6.2 cache store/status foundation, and T-0365 hardened the C6 speed-first spec/worker sequence. |
-| Current Phase | 0.3.3 context-routing speed-first C6.3 preparation | C1 project graph/state projection, C2 code-link/index output, C3 public context pack read plans, C6.1 metadata-first source manifests, and C6.2 cache record/status schemas plus read-only cache status CLI are implemented. T-0365 hardened the registered C6 speed spec and worker sequence so C6.3 starts with source-manifest cache warm phase 1 before shard/code-index integration. Live graph/index reads are still used until C6.3 warm/integration lands. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0365 C6.3 Cache Warm Sequence Spec Hardening | Hardened the registered C6 detailed spec with speed-first decisions, Graphify comparison, latency architecture, first-build/warm-cache optimizations, cache warm phases, code-change requirements, and aligned the worker sequence. |
-| Active / Next Task | TBD C6.3 Cache Warm Phase 1 Implementation | The next implementation step should add `context cache warm --json` / `--execute --json` phase 1 or explicitly choose graph/code-index cache integration. `context graph`, `context pack`, and code index still use live scans. |
-| Validation Baseline | T-0365 docs-only validation plus T-0364 runtime baseline | T-0365 `git diff --check` and targeted spec/worker-plan `rg` checks passed in `ev:T-0365:31c8a5a12de74b5ca975e2ac`. Latest runtime baseline remains T-0364 Docker focused/full sync-build and built cache-status smoke: `ev:T-0364:e80f8a290ea74e8c97ff34c1`, `ev:T-0364:dab623159edd409a9767f25a`, `ev:T-0364:1e4fa5a72fbe4ad08d016cf6`, `ev:T-0364:9a5fef9dea9f4b3ba308ab17`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, T-0360 added the detailed C6 fast cache implementation spec, T-0361-T-0362 completed C3 context pack schema/CLI work, T-0363 added the C6.1 source manifest foundation, T-0364 added the C6.2 cache store/status foundation, T-0365 hardened the C6 speed-first spec/worker sequence, and T-0366 implemented C6.3 source-manifest cache warm phase 1. |
+| Current Phase | 0.3.3 context-routing speed-first C6 cache integration | C1 project graph/state projection, C2 code-link/index output, C3 public context pack read plans, C6.1 metadata-first source manifests, C6.2 cache record/status schemas plus read-only cache status CLI, and C6.3 source-manifest cache warm are implemented. `context graph`, `context pack`, and code index still do not consume cache shards; C6.4/C6.5 shard invalidation and fast hot path remain before broad C4 slicing. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0366 C6.3 Cache Warm Phase 1 Implementation | Added `hadara context cache warm [--execute] --json`, `hadara.context.cacheWarm.v1`, command/docs/schema registration, source-manifest execute writes, stale/corrupt repair coverage, built CLI smokes, and safe git candidate enumeration before filesystem fallback. |
+| Active / Next Task | TBD C6.4/C6.5 Extractor Shards and Fast Cache Hot Path | Add shard fingerprints/invalidation and graph/code-index/cache consumption before C4 broad slicing depends on context speed. Fresh source-manifest status/warm checks still perform safe metadata comparison and measured about 10.6s on this mounted 4k+ source workspace. |
+| Validation Baseline | T-0366 Docker full validation and built CLI warm smokes | `npm run dev:docker-check` passed 133 files / 861 tests (`ev:T-0366:bb820cfa71dd40659552eb35`); `npm run dev:docker-sync-build` passed 133 files / 861 tests, refreshed `dist`, and built version smoke reported `distLooksStale:false` (`ev:T-0366:35afe89a67644c92b2434ef6`); built cache warm/status smokes passed (`ev:T-0366:4f6faf93c8a545c3bd703eef`). |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Start C6.3 cache warm phase 1 implementation. | T-0365 hardened the spec/worker sequence; runtime cache warm/integration remains next. |
+| TBD | Start C6.4/C6.5 shard invalidation and fast cache hot-path work. | T-0366 warms source-manifest cache only; graph/code-index/context-pack still need shard cache consumption and faster fresh checks. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0366 C6.3 Cache Warm Phase 1 Implementation | Added dry-run-first source-manifest cache warm command and schema, refreshed docs/registry/tests, and recorded residual hot-path performance risk. | `ev:T-0366:bb820cfa71dd40659552eb35`, `ev:T-0366:35afe89a67644c92b2434ef6`, `ev:T-0366:4f6faf93c8a545c3bd703eef` |
 | T-0365 C6.3 Cache Warm Sequence Spec Hardening | Hardened the C6 speed-first implementation spec and worker sequence before cache-warm implementation. | `ev:T-0365:31c8a5a12de74b5ca975e2ac` |
 | T-0364 C6.2 Cache Store and Status Read Model | Added schema-guarded cache record/source-manifest store helpers and read-only `context cache status --json`. | `ev:T-0364:e80f8a290ea74e8c97ff34c1`, `ev:T-0364:dab623159edd409a9767f25a`, `ev:T-0364:1e4fa5a72fbe4ad08d016cf6`. |
-| T-0363 C6.1 Source Manifest and Shared Discovery | Added internal metadata-first source manifest schema/helper/comparison/subset-hash foundation for C6 cache invalidation. | `ev:T-0363:0fc9286c6a1e45b0ac9b6c53`, `ev:T-0363:b845f1b45c524d66b79e5936`. |
 
 ## Current Known Problems
 
@@ -90,14 +90,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Finish/close T-0365 or continue directly into C6.3 cache warm phase 1 implementation. | T-0365 hardened the speed-first spec and worker plan, but no read path consumes cached projections yet; cache warm or graph/code-index integration should land before C4 slicing. | Read `docs/specs/0.3.3/context-routing/07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md`, `05_Indexing_Cache_Invalidation_and_Performance_Spec.md`, and the T-0365 capsule handoff. |
+| Start C6.4/C6.5 extractor shard invalidation and fast cache hot-path work before broad C4 slicing. | T-0366 added source-manifest cache warm only; graph/code-index/context-pack still do not consume cache shards, and fresh source-manifest checks remain metadata-scan bound on mounted worktrees. | Read `docs/specs/0.3.3/context-routing/07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md`, `05_Indexing_Cache_Invalidation_and_Performance_Spec.md`, and the T-0366 capsule handoff. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0366 C6.3 cache warm phase 1 | Docker full check passed 133 files / 861 tests; Docker sync-build passed 133 files / 861 tests, refreshed `dist`, and built version smoke reported `distLooksStale:false`; built cache warm dry-run/execute/status/fresh no-op smokes passed. | Evidence `ev:T-0366:bb820cfa71dd40659552eb35`, `ev:T-0366:35afe89a67644c92b2434ef6`, `ev:T-0366:4f6faf93c8a545c3bd703eef`. |
 | T-0365 C6 performance spec hardening | Docs-only validation passed: `git diff --check` and targeted `rg` checks confirmed speed-first, Graphify comparison, warm-cache, code-change, and C6.3 sequence sections. | Evidence `ev:T-0365:31c8a5a12de74b5ca975e2ac`; no runtime/source behavior changed. |
-| T-0364 C6.2 cache store/status full baseline | Docker focused build/cache/schema/CLI tests passed; Docker sync-build rerun passed TypeScript build and full Vitest suite with 133 files / 855 tests, refreshed workspace `dist`, built `context cache status --json` smoke passed, and final post-docs focused revalidation passed 8 files / 56 tests. | Evidence `ev:T-0364:e80f8a290ea74e8c97ff34c1`, `ev:T-0364:dab623159edd409a9767f25a`, `ev:T-0364:1e4fa5a72fbe4ad08d016cf6`, `ev:T-0364:9a5fef9dea9f4b3ba308ab17`. |
 | T-0363 C6.1 source manifest focused/build validation | Docker focused source-manifest/schema validation passed 3 files / 29 tests; Docker build-only refresh succeeded after full-suite timeout isolation; built `version --verbose --json` returned `build.distLooksStale:false`. | Evidence `ev:T-0363:0fc9286c6a1e45b0ac9b6c53`, `ev:T-0363:b845f1b45c524d66b79e5936`; full sync-build timeout failure recorded as `ev:T-0363:d1b2b1425c9b4d939f001d1c`. |
 | T-0360 C6 fast cache spec docs validation | `git diff --check`, `docs required-reading`, `docs list`, and new C6 spec/link path checks passed. | Evidence `ev:T-0360:4b9fb9a2f39c4361a4f65eab`; no runtime/source behavior changed. |
 | T-0358 context graph integration | Docker focused context graph/code index/registry tests passed 4 files / 24 tests; Docker `npm run check` passed 130 files / 835 tests; Docker build passed and `/workspace/dist` was refreshed; built CLI version smoke, built `context graph --include-code` smoke, and `git diff --check` passed. | Evidence `ev:T-0358:407b29c183f246d390f162f9`; remaining C2 review should focus on performance/degraded-mode/cache/docs before C3. |

@@ -1,5 +1,5 @@
 import { getFlag, getIntegerOption, getStringOption } from './args';
-import { createContextCacheStatusReport } from '../context/context-cache-store';
+import { createContextCacheStatusReport, createContextCacheWarmReport } from '../context/context-cache-store';
 import { buildContextGraphReport } from '../context/context-graph-builder';
 import { buildContextPackReport, type ContextBudget } from '../context/context-pack';
 
@@ -57,8 +57,10 @@ function handleContextPackCommand(input: ContextCommandInput): boolean {
 
 function handleContextCacheCommand(input: ContextCommandInput): boolean {
   const action = input.args[2];
-  if (action !== 'status') return false;
-  const report = createContextCacheStatusReport({ projectRoot: input.projectRoot });
+  if (action !== 'status' && action !== 'warm') return false;
+  const report = action === 'status'
+    ? createContextCacheStatusReport({ projectRoot: input.projectRoot })
+    : createContextCacheWarmReport({ projectRoot: input.projectRoot, execute: getFlag(input.args, '--execute') });
   if (input.jsonOutput) {
     console.log(JSON.stringify(report, null, 2));
   } else {

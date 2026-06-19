@@ -79,6 +79,13 @@
       "notes": "Documents read-only C6 context cache status reports for source-manifest cache hit, miss, stale, and corrupt states."
     },
     {
+      "id": "hadara.context.cacheWarm.v1",
+      "path": "src/schemas/context-cache-warm.schema.json",
+      "status": "fixture",
+      "owner": "context/cache",
+      "notes": "Documents dry-run-first C6 context cache warm reports for source-manifest cache population."
+    },
+    {
       "id": "hadara.codeIndex.v1",
       "path": "src/schemas/code-index.schema.json",
       "status": "fixture",

@@ -243,6 +243,63 @@ describe('context graph CLI', () => {
     expect(validateSchema('hadara.context.cacheStatus.v1', payload).ok).toBe(true);
     expect(snapshotProject(root)).toEqual(before);
   });
+
+  it('prints dry-run context cache warm without creating cache files', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
+    const before = snapshotProject(root);
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleContextCommand({
+      args: ['context', 'cache', 'warm', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.context.cacheWarm.v1',
+      command: 'context.cache.warm',
+      ok: true,
+      mode: 'dry-run',
+      summary: {
+        cacheMode: 'miss',
+        writePlanned: true,
+        writeExecuted: false
+      }
+    });
+    expect(validateSchema('hadara.context.cacheWarm.v1', payload).ok).toBe(true);
+    expect(snapshotProject(root)).toEqual(before);
+  });
+
+  it('executes context cache warm and writes source manifest cache', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleContextCommand({
+      args: ['context', 'cache', 'warm', '--execute', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.context.cacheWarm.v1',
+      command: 'context.cache.warm',
+      ok: true,
+      mode: 'execute',
+      summary: {
+        cacheMode: 'miss',
+        writePlanned: true,
+        writeExecuted: true
+      }
+    });
+    expect(validateSchema('hadara.context.cacheWarm.v1', payload).ok).toBe(true);
+    expect(snapshotProject(root)).toHaveProperty('.hadara/local/cache/context/source-manifest.json');
+  });
 });
 
 function snapshotProject(root: string): Record<string, string> {

@@ -28,10 +28,10 @@ The design must:
 |---|---|---|
 | C6.1 Source Manifest and Shared Discovery | Implemented through T-0363. | Reuse it as the single source discovery/stat path for graph, code index, and cache warm. |
 | C6.2 Cache Store and Status Read Model | Implemented through T-0364. | Keep `context cache status` read-only; use it to prove hit/stale/corrupt states before writes. |
-| C6.3 Cache Warm / Integration | Not implemented. | Add an explicit dry-run/execute cache warm surface or graph/code-index cache integration before C4 work depends on fast reads. |
+| C6.3 Cache Warm / Integration | Phase 1 implemented through T-0366 for source-manifest cache warm only. | Add extractor/code-index/graph shard consumption before C4 work depends on fast reads. |
 | C4 Context Slice | Not implemented. | Consume source-addressed graph/pack candidates without forcing broad rescans. |
 
-The immediate priority is C6.3. A slow context graph makes C3/C4 theoretically correct but operationally weak; agents will fall back to manual broad reads if routine graph/pack calls are not fast.
+The immediate priority after T-0366 is C6.4/C6.5 shard invalidation and cold-build reduction. A slow context graph makes C3/C4 theoretically correct but operationally weak; agents will fall back to manual broad reads if routine graph/pack calls are not fast.
 
 ## Speed-First Decision Summary
 
@@ -360,7 +360,7 @@ They must not:
 - mutate manifests;
 - hide degraded output.
 
-Future explicit cache commands:
+Explicit cache commands:
 
 ```bash
 hadara context cache status --json
@@ -368,7 +368,7 @@ hadara context cache warm --json
 hadara context cache warm --execute --json
 ```
 
-`context cache status` is read-only. `context cache warm` without `--execute` is a dry-run plan. `context cache warm --execute` writes local ignored cache files using atomic temp+rename. If these commands are added, they need command registry metadata and CLI JSON contract documentation.
+`context cache status` is read-only. `context cache warm` without `--execute` is a dry-run plan. `context cache warm --execute` writes local ignored cache files using atomic temp+rename. T-0366 implements the phase 1 source-manifest write surface, command registry entry, schema, and CLI JSON contract documentation.
 
 `context cache warm` should be the first write surface because it lets operators pay the cold-build cost once, inspect the plan, and keep all ordinary context reads non-mutating. It should start narrow:
 
@@ -380,6 +380,8 @@ hadara context cache warm --execute --json
 | Warm phase 4 | merged graph-core shard | `context pack` can rank from cached summaries without broad graph rebuild. |
 
 Do not add implicit background writes to `context graph`, `context pack`, or C4 `context slice`.
+
+T-0366 also adds a safe source-manifest discovery optimization: git worktrees use `git ls-files --cached --others --exclude-standard -z` to avoid broad generated/local directory walks before falling back to the existing ignore-aware filesystem walk. This reduces cold candidate discovery while preserving explicit stat-based freshness checks. It is not a full hot-cache solution; fresh status/warm checks still compare current metadata and remain too slow on large mounted worktrees until C6.4/C6.5 add shard fingerprints, watch/index acceleration, or bounded degraded checks.
 
 ## Cache Metadata in Reports
 
@@ -430,10 +432,10 @@ Required issue codes:
 | `src/context/code-graph-extractor.ts` | Projects code index output into context graph state. | Read from cached code-index shard when fresh; preserve budget/degraded projection. |
 | `src/context/*extractor*.ts` | Existing extractors read their own inputs directly. | Make each extractor declare input source entries or source patterns so invalidation can be extractor-specific. |
 | `src/context/context-pack.ts` | Builds read plans from current graph reports. | Prefer cached graph/code summaries when fresh and requested; keep ranking additive-compatible. |
-| `src/context/context-source-manifest.ts` | Builds source manifests and compares cached/current metadata. | Expose a reusable discovery result so graph builder and code index do not duplicate walks. |
-| `src/context/context-cache-store.ts` | Reads/writes schema-guarded cache records and source manifest cache. | Add warm-plan reporting, shard listing, header-first reads, and manifest/write phases. |
-| `src/cli/context.ts` or equivalent command handler | `context graph` is read-only and computes live output; `context cache status` is read-only. | Add cache read support without writes; add `context cache warm` only with command registry and JSON contract updates. |
-| `src/schemas/*` | Graph, code-index, source-manifest, cache-record, and cache-status schemas exist. | Add cache-warm and shard-specific schemas only when public warm/shard commands land. |
+| `src/context/source-manifest.ts` | Builds source manifests and compares cached/current metadata; T-0366 adds git candidate enumeration before filesystem fallback. | Expose a reusable discovery result so graph builder and code index do not duplicate walks; add safe hot-path fingerprints only when they can preserve freshness. |
+| `src/context/context-cache-store.ts` | Reads/writes schema-guarded cache records and source manifest cache; T-0366 adds source-manifest warm reports and execute writes. | Add shard listing, header-first reads, and shard write phases. |
+| `src/cli/context.ts` or equivalent command handler | `context graph` is read-only and computes live output; `context cache status` is read-only; T-0366 adds `context cache warm [--execute]`. | Add cache read support for graph/pack without implicit writes. |
+| `src/schemas/*` | Graph, code-index, source-manifest, cache-record, cache-status, and cache-warm schemas exist. | Add shard-specific schemas only when public warm/shard commands land. |
 | `tests/unit/context-graph*.test.ts` | Covers graph builder and CLI behavior. | Add cache-hit, cache-miss, stale-shard, corrupt-cache, and read-command-no-write tests. |
 | `tests/unit/code-index.test.ts` | Covers ignore, extraction, relations, and budgets. | Add shared discovery and manifest carry-forward tests. |
 
@@ -446,7 +448,7 @@ New implementation modules should be small and focused:
 | `src/context/context-cache.ts` | Cache orchestration, stale analysis, report metadata. |
 | `src/context/context-cache-commands.ts` | Optional future CLI surfaces for status/warm. |
 
-The module names can follow the current codebase naming (`context-source-manifest.ts`, `context-cache-store.ts`) rather than the sketch above. The architectural requirement is separation of concerns: discovery, cache storage, cache orchestration, and CLI reporting should not collapse into one large graph builder.
+The module names can follow the current codebase naming (`source-manifest.ts`, `context-cache-store.ts`) rather than the sketch above. The architectural requirement is separation of concerns: discovery, cache storage, cache orchestration, and CLI reporting should not collapse into one large graph builder.
 
 ## Implementation Capsules
 
@@ -456,7 +458,7 @@ Recommended C6 capsule split:
 |---|---|---|
 | C6.1 Source Manifest and Shared Discovery | Add source manifest types, schema, ignore-aware stat collector, and source subset hash helpers. | Manifest records project-relative paths, kinds, size/mtime metadata, extractor versions, and budget issues. Completed by T-0363. |
 | C6.2 Cache Store and Status Read Model | Add cache record envelope, safe read path, corrupt-cache diagnostics, and read-only status report. | Cache status can report missing/hit/stale/corrupt without writing. Completed by T-0364. |
-| C6.3 Cache Warm Command, Phase 1 | Add explicit dry-run/execute warm command for source-manifest cache population. | Read commands remain non-mutating; warm execute writes atomically and makes status hit when sources are unchanged. |
+| C6.3 Cache Warm Command, Phase 1 | Add explicit dry-run/execute warm command for source-manifest cache population. | Read commands remain non-mutating; warm execute writes atomically and makes status hit when sources are unchanged. Completed by T-0366. |
 | C6.4 Extractor Shards and Invalidation | Add extractor keys/versions and stale-shard recomputation planning. | Task docs changes do not invalidate code index; source-code changes do not invalidate task-board shard. |
 | C6.5 Fast Cold Build and Graph Budgets | Share directory discovery, parallelize independent extractors, and enforce graph node/edge/time budgets. | Cold graph build avoids duplicate walks and returns explicit degraded output when capped. |
 | C6.6 Code Index Cache Integration | Connect code index to manifest/cache store and real cache metadata. | Warm include-code graph can use cached code-index output. |

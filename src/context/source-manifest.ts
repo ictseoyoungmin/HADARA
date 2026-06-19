@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { CODE_INDEX_IGNORED_PATHS, classifyCodeFile } from './code-index';
 import { hashContextGraphJson, normalizeContextGraphPath } from './extractor-contract';
 
@@ -143,6 +144,89 @@ export function buildContextSourceManifest(options: BuildContextSourceManifestOp
   let fileBudgetIssueRecorded = false;
   const root = path.resolve(options.projectRoot);
 
+  function addSource(relativePath: string, input: { skipMissing?: boolean } = {}): void {
+    if (shouldIgnoreContextSourcePath(relativePath)) return;
+    const kind = classifyContextSourcePath(relativePath);
+    if (!kind) return;
+    if (sources.length >= budgets.maxSourceFiles) {
+      skippedSourceCount += 1;
+      if (!fileBudgetIssueRecorded) {
+        fileBudgetIssueRecorded = true;
+        issues.push(createPartialIssue({
+          message: `Context source manifest exceeded max source file budget (${budgets.maxSourceFiles}); partial manifest returned.`,
+          path: relativePath,
+          fixHint: 'Reduce context source count or increase the future configurable source manifest budget.'
+        }));
+      }
+      return;
+    }
+
+    const absolutePath = path.join(root, relativePath);
+    let stats: fs.Stats;
+    try {
+      stats = fs.statSync(absolutePath);
+    } catch (error) {
+      if (input.skipMissing && isMissingFileError(error)) return;
+      skippedSourceCount += 1;
+      issues.push({
+        severity: 'warning',
+        code: 'SOURCE_MANIFEST_READ_FAILED',
+        message: `Failed to stat context source ${relativePath}: ${error instanceof Error ? error.message : String(error)}.`,
+        path: relativePath,
+        fixHint: 'Check file permissions or remove the unreadable file from context source paths.'
+      });
+      return;
+    }
+    if (!stats.isFile()) return;
+
+    if (stats.size > budgets.maxSingleSourceBytes) {
+      skippedSourceCount += 1;
+      issues.push(createPartialIssue({
+        message: `Skipped ${relativePath} because it exceeds the single-source manifest budget (${stats.size} bytes > ${budgets.maxSingleSourceBytes} bytes).`,
+        path: relativePath,
+        fixHint: 'Reduce the file size or wait for a future configurable source manifest budget.'
+      }));
+      return;
+    }
+    if (discoveredBytes + stats.size > budgets.maxSourceBytes) {
+      skippedSourceCount += 1;
+      issues.push(createPartialIssue({
+        message: `Skipped ${relativePath} because the source manifest byte budget would be exceeded (${discoveredBytes + stats.size} bytes > ${budgets.maxSourceBytes} bytes).`,
+        path: relativePath,
+        fixHint: 'Reduce context source size or wait for a future configurable source manifest budget.'
+      }));
+      return;
+    }
+
+    discoveredBytes += stats.size;
+    const extractorKeys = extractorKeysForContextSource(relativePath, kind);
+    const metadataHash = createContextSourceMetadataHash({
+      path: relativePath,
+      kind,
+      sizeBytes: stats.size,
+      mtimeMs: stats.mtimeMs,
+      ignoreConfigHash,
+      extractorKeys,
+      extractorVersions
+    });
+    const previous = previousByPath.get(relativePath);
+    const contentHash = previous && canCarryForwardContentHash(previous, {
+      kind,
+      sizeBytes: stats.size,
+      mtimeMs: stats.mtimeMs
+    }) ? previous.contentHash : undefined;
+    sources.push({
+      path: relativePath,
+      kind,
+      sizeBytes: stats.size,
+      mtimeMs: stats.mtimeMs,
+      metadataHash,
+      extractorKeys,
+      ...(contentHash ? { contentHash } : {}),
+      parseState: 'ok'
+    });
+  }
+
   function visit(relativeDir: string): void {
     if (relativeDir && shouldIgnoreContextSourcePath(relativeDir)) return;
     const absoluteDir = path.join(root, relativeDir);
@@ -168,87 +252,16 @@ export function buildContextSourceManifest(options: BuildContextSourceManifestOp
         continue;
       }
       if (!entry.isFile()) continue;
-      const kind = classifyContextSourcePath(relativePath);
-      if (!kind) continue;
-      if (sources.length >= budgets.maxSourceFiles) {
-        skippedSourceCount += 1;
-        if (!fileBudgetIssueRecorded) {
-          fileBudgetIssueRecorded = true;
-          issues.push(createPartialIssue({
-            message: `Context source manifest exceeded max source file budget (${budgets.maxSourceFiles}); partial manifest returned.`,
-            path: relativePath,
-            fixHint: 'Reduce context source count or increase the future configurable source manifest budget.'
-          }));
-        }
-        continue;
-      }
-
-      const absolutePath = path.join(root, relativePath);
-      let stats: fs.Stats;
-      try {
-        stats = fs.statSync(absolutePath);
-      } catch (error) {
-        skippedSourceCount += 1;
-        issues.push({
-          severity: 'warning',
-          code: 'SOURCE_MANIFEST_READ_FAILED',
-          message: `Failed to stat context source ${relativePath}: ${error instanceof Error ? error.message : String(error)}.`,
-          path: relativePath,
-          fixHint: 'Check file permissions or remove the unreadable file from context source paths.'
-        });
-        continue;
-      }
-
-      if (stats.size > budgets.maxSingleSourceBytes) {
-        skippedSourceCount += 1;
-        issues.push(createPartialIssue({
-          message: `Skipped ${relativePath} because it exceeds the single-source manifest budget (${stats.size} bytes > ${budgets.maxSingleSourceBytes} bytes).`,
-          path: relativePath,
-          fixHint: 'Reduce the file size or wait for a future configurable source manifest budget.'
-        }));
-        continue;
-      }
-      if (discoveredBytes + stats.size > budgets.maxSourceBytes) {
-        skippedSourceCount += 1;
-        issues.push(createPartialIssue({
-          message: `Skipped ${relativePath} because the source manifest byte budget would be exceeded (${discoveredBytes + stats.size} bytes > ${budgets.maxSourceBytes} bytes).`,
-          path: relativePath,
-          fixHint: 'Reduce context source size or wait for a future configurable source manifest budget.'
-        }));
-        continue;
-      }
-
-      discoveredBytes += stats.size;
-      const extractorKeys = extractorKeysForContextSource(relativePath, kind);
-      const metadataHash = createContextSourceMetadataHash({
-        path: relativePath,
-        kind,
-        sizeBytes: stats.size,
-        mtimeMs: stats.mtimeMs,
-        ignoreConfigHash,
-        extractorKeys,
-        extractorVersions
-      });
-      const previous = previousByPath.get(relativePath);
-      const contentHash = previous && canCarryForwardContentHash(previous, {
-        kind,
-        sizeBytes: stats.size,
-        mtimeMs: stats.mtimeMs
-      }) ? previous.contentHash : undefined;
-      sources.push({
-        path: relativePath,
-        kind,
-        sizeBytes: stats.size,
-        mtimeMs: stats.mtimeMs,
-        metadataHash,
-        extractorKeys,
-        ...(contentHash ? { contentHash } : {}),
-        parseState: 'ok'
-      });
+      addSource(relativePath);
     }
   }
 
-  visit('');
+  const gitCandidatePaths = listGitContextSourceCandidatePaths(root);
+  if (gitCandidatePaths) {
+    for (const relativePath of gitCandidatePaths) addSource(relativePath, { skipMissing: true });
+  } else {
+    visit('');
+  }
   const sortedSources = sources.sort((a, b) => a.path.localeCompare(b.path));
   const manifestWithoutHash = {
     schemaVersion: CONTEXT_SOURCE_MANIFEST_SCHEMA_ID,
@@ -399,6 +412,29 @@ export function shouldIgnoreContextSourcePath(inputPath: string): boolean {
   return CONTEXT_SOURCE_MANIFEST_IGNORED_PATHS.some((ignoredPath) =>
     normalizedPath === ignoredPath || normalizedPath.startsWith(`${ignoredPath}/`)
   );
+}
+
+function listGitContextSourceCandidatePaths(root: string): string[] | undefined {
+  if (!fs.existsSync(path.join(root, '.git'))) return undefined;
+  try {
+    const output = execFileSync('git', ['-C', root, 'ls-files', '-z', '--cached', '--others', '--exclude-standard'], {
+      encoding: 'utf8',
+      maxBuffer: 50 * 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'ignore'],
+      timeout: 5000
+    });
+    return Array.from(new Set(output
+      .split('\0')
+      .map((entry) => normalizeContextGraphPath(entry))
+      .filter((entry) => entry && !shouldIgnoreContextSourcePath(entry))))
+      .sort((a, b) => a.localeCompare(b));
+  } catch {
+    return undefined;
+  }
+}
+
+function isMissingFileError(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && (error as { code?: unknown }).code === 'ENOENT';
 }
 
 function normalizeContextSourceManifestBudgets(input: Partial<ContextSourceManifestBudget> = {}): ContextSourceManifestBudget {

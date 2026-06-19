@@ -96,7 +96,9 @@ State consistency rollout is advisory in `0.3.1-rc.1`: `ci gate --mode strict` p
 
 `hadara context pack --task T-XXXX --json` emits the read-only `hadara.contextPack.v1` bounded read plan over the current context graph. `--include-code` makes the underlying graph code-aware, `--budget <tokens>` records the target token budget, and `--max-items` / `--max-read-first` cap selected output. The command returns slice candidates as metadata only; it does not implement `context slice`, create cache files, append evidence, run validation, or mutate source/docs.
 
-`hadara context cache status --json` emits the read-only `hadara.context.cacheStatus.v1` report. It inspects the local source-manifest cache path, compares any cached manifest with current metadata-first source discovery, and reports hit, miss, stale, or corrupt status plus stale extractor keys. It does not create cache files, warm projections, append evidence, run validation, or mutate source/docs; warm/write integration remains a later C6 step.
+`hadara context cache status --json` emits the read-only `hadara.context.cacheStatus.v1` report. It inspects the local source-manifest cache path, compares any cached manifest with current metadata-first source discovery, and reports hit, miss, stale, or corrupt status plus stale extractor keys. It does not create cache files, warm projections, append evidence, run validation, or mutate source/docs.
+
+`hadara context cache warm --json` emits the dry-run `hadara.context.cacheWarm.v1` report. It runs the same metadata-first source discovery and reports whether the source-manifest cache write is planned. `hadara context cache warm --execute --json` writes only `.hadara/local/cache/context/source-manifest.json` when the cache is missing, stale, corrupt, or schema-mismatched. It does not warm graph, code-index, context-pack, or context-slice projections, append evidence, run validation, or mutate source/docs.
 
 ## Advanced Surfaces
 

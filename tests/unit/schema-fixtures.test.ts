@@ -34,6 +34,7 @@ describe('schema fixtures', () => {
       'hadara.commands.registry.v1',
       'hadara.context.cacheRecord.v1',
       'hadara.context.cacheStatus.v1',
+      'hadara.context.cacheWarm.v1',
       'hadara.context.export.v1',
       'hadara.context.sourceManifest.v1',
       'hadara.contextGraph.v1',

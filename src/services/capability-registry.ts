@@ -879,7 +879,35 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     ],
     related: ['context.graph', 'context.pack', 'state.verify'],
     conflictsWith: [],
-    notes: 'Read-only status command; it does not create or update cache files. Cache warm/write integration remains future C6 work.'
+    notes: 'Read-only status command; it does not create or update cache files. Use context.cache.warm for explicit source-manifest cache writes.'
+  }),
+  commandEntry({
+    id: 'context.cache.warm',
+    command: 'hadara context cache warm [--execute] --json',
+    summary: 'Dry-run or execute C6 source-manifest cache warm phase 1 under the ignored local context cache.',
+    canonical: true,
+    appearsInDefaultHelp: false,
+    family: 'project-health',
+    scope: 'local-state',
+    lifecycleStage: 'work',
+    requiredness: 'diagnostic',
+    writeBoundary: 'local-cache',
+    readOnly: false,
+    risk: 'low',
+    actor: 'agent-worker',
+    status: 'experimental',
+    schemaVersion: 'hadara.context.cacheWarm.v1',
+    since: '0.3.3',
+    docs: ['docs/CLI_JSON_CONTRACT.md', 'docs/COMMAND_SURFACE.md', 'docs/SCHEMAS.md'],
+    implementationFiles: ['src/cli/context.ts', 'src/context/context-cache-store.ts', 'src/context/source-manifest.ts'],
+    testFiles: ['tests/unit/context-cache-store.test.ts', 'tests/unit/context-graph-cli.test.ts'],
+    examples: [
+      example('Preview context cache warm', 'hadara context cache warm --json', 'Before writing the local source-manifest cache.'),
+      example('Execute context cache warm', 'hadara context cache warm --execute --json', 'After reviewing the warm plan and accepting the ignored local cache write.')
+    ],
+    related: ['context.cache.status', 'context.graph', 'context.pack'],
+    conflictsWith: [],
+    notes: 'Phase 1 warm command writes only source-manifest cache. It does not warm graph, code-index, context-pack, or slice caches.'
   }),
   commandEntry({
     id: 'debt.list',

@@ -41,6 +41,7 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'context.graph',
   'context.pack',
   'context.cache.status',
+  'context.cache.warm',
   'debt.list',
   'debt.show',
   'protocol.doctor',
@@ -136,6 +137,10 @@ describe('Phase 7.1 command registry', () => {
       testFiles: ['tests/unit/context-graph-cli.test.ts', 'tests/unit/context-pack.test.ts']
     });
     expect(findCommandRegistryEntry('context.cache.status')).toMatchObject({
+      implementationFiles: ['src/cli/context.ts', 'src/context/context-cache-store.ts', 'src/context/source-manifest.ts'],
+      testFiles: ['tests/unit/context-cache-store.test.ts', 'tests/unit/context-graph-cli.test.ts']
+    });
+    expect(findCommandRegistryEntry('context.cache.warm')).toMatchObject({
       implementationFiles: ['src/cli/context.ts', 'src/context/context-cache-store.ts', 'src/context/source-manifest.ts'],
       testFiles: ['tests/unit/context-cache-store.test.ts', 'tests/unit/context-graph-cli.test.ts']
     });

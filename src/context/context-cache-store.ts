@@ -15,8 +15,10 @@ import { hashContextGraphJson, normalizeContextGraphPath } from './extractor-con
 
 export const CONTEXT_CACHE_RECORD_SCHEMA_ID = 'hadara.context.cacheRecord.v1' as const;
 export const CONTEXT_CACHE_STATUS_SCHEMA_ID = 'hadara.context.cacheStatus.v1' as const;
+export const CONTEXT_CACHE_WARM_SCHEMA_ID = 'hadara.context.cacheWarm.v1' as const;
 export const CONTEXT_CACHE_RECORD_VERSION = 'c6.2-cache-record-v1' as const;
 export const CONTEXT_CACHE_STATUS_COMMAND = 'context.cache.status' as const;
+export const CONTEXT_CACHE_WARM_COMMAND = 'context.cache.warm' as const;
 
 export type ContextCacheIssueCode =
   | 'CONTEXT_CACHE_MISS'
@@ -105,6 +107,62 @@ export interface ContextCacheStatusReport {
     unchangedSourceCount: number;
     staleExtractorKeys: string[];
   };
+  issues: ContextCacheIssue[];
+}
+
+export interface ContextCacheWarmReport {
+  schemaVersion: typeof CONTEXT_CACHE_WARM_SCHEMA_ID;
+  command: typeof CONTEXT_CACHE_WARM_COMMAND;
+  ok: boolean;
+  generatedAt: string;
+  projectRoot: string;
+  cacheRoot: typeof CONTEXT_SOURCE_MANIFEST_CACHE_ROOT;
+  mode: 'dry-run' | 'execute';
+  summary: {
+    cacheMode: 'miss' | 'fresh' | 'stale' | 'corrupt';
+    cachePresent: boolean;
+    cacheFresh: boolean;
+    writePlanned: boolean;
+    writeExecuted: boolean;
+    degraded: boolean;
+    staleExtractorKeys: string[];
+  };
+  manifest: {
+    cachePath: typeof CONTEXT_SOURCE_MANIFEST_CACHE_PATH;
+    status: 'missing' | 'fresh' | 'stale' | 'corrupt' | 'schema-mismatch';
+    currentManifestHash: string;
+    currentSourceCount: number;
+    currentSkippedSourceCount: number;
+    cachedManifestHash?: string;
+    cachedGeneratedAt?: string;
+    cachedSourceCount?: number;
+    addedPaths: string[];
+    removedPaths: string[];
+    changedPaths: string[];
+    unchangedSourceCount: number;
+    staleExtractorKeys: string[];
+  };
+  write: {
+    policy: 'dry-run' | 'execute';
+    planned: boolean;
+    executed: boolean;
+    cachePath: typeof CONTEXT_SOURCE_MANIFEST_CACHE_PATH;
+    beforeStatus: ContextSourceManifestCacheReadResult['status'];
+    beforeManifestHash?: string;
+    afterManifestHash: string;
+    skippedReason?: 'cache-fresh';
+  };
+  issues: ContextCacheIssue[];
+}
+
+interface ContextSourceManifestCacheAnalysis {
+  generatedAt: string;
+  cached: ContextSourceManifestCacheReadResult;
+  currentManifest: ContextSourceManifest;
+  comparison: ReturnType<typeof compareContextSourceManifests>;
+  staleExtractorKeys: string[];
+  cacheFresh: boolean;
+  degraded: boolean;
   issues: ContextCacheIssue[];
 }
 
@@ -256,12 +314,85 @@ export function writeContextSourceManifestCache(projectRoot: string, manifest: C
 }
 
 export function createContextCacheStatusReport(input: { projectRoot: string; generatedAt?: string }): ContextCacheStatusReport {
+  const analysis = createSourceManifestCacheAnalysis({
+    projectRoot: input.projectRoot,
+    generatedAt: input.generatedAt,
+    generatedByCommand: CONTEXT_CACHE_STATUS_COMMAND
+  });
+
+  return {
+    schemaVersion: CONTEXT_CACHE_STATUS_SCHEMA_ID,
+    command: CONTEXT_CACHE_STATUS_COMMAND,
+    ok: true,
+    generatedAt: analysis.generatedAt,
+    projectRoot: input.projectRoot,
+    cacheRoot: CONTEXT_SOURCE_MANIFEST_CACHE_ROOT,
+    readOnly: true,
+    summary: {
+      mode: analysis.cacheFresh ? 'hit' : analysis.cached.status === 'missing' ? 'miss' : analysis.cached.status === 'valid' ? 'stale' : 'corrupt',
+      cachePresent: analysis.cached.status !== 'missing',
+      cacheFresh: analysis.cacheFresh,
+      degraded: analysis.degraded,
+      staleExtractorKeys: analysis.staleExtractorKeys
+    },
+    manifest: createManifestReportSection(analysis),
+    issues: analysis.issues
+  };
+}
+
+export function createContextCacheWarmReport(input: { projectRoot: string; execute?: boolean; generatedAt?: string }): ContextCacheWarmReport {
+  const execute = input.execute ?? false;
+  const analysis = createSourceManifestCacheAnalysis({
+    projectRoot: input.projectRoot,
+    generatedAt: input.generatedAt,
+    generatedByCommand: CONTEXT_CACHE_WARM_COMMAND
+  });
+  const writePlanned = !analysis.cacheFresh;
+  let writeExecuted = false;
+  if (execute && writePlanned) {
+    writeContextSourceManifestCache(input.projectRoot, analysis.currentManifest);
+    writeExecuted = true;
+  }
+
+  return {
+    schemaVersion: CONTEXT_CACHE_WARM_SCHEMA_ID,
+    command: CONTEXT_CACHE_WARM_COMMAND,
+    ok: true,
+    generatedAt: analysis.generatedAt,
+    projectRoot: input.projectRoot,
+    cacheRoot: CONTEXT_SOURCE_MANIFEST_CACHE_ROOT,
+    mode: execute ? 'execute' : 'dry-run',
+    summary: {
+      cacheMode: analysis.cacheFresh ? 'fresh' : analysis.cached.status === 'missing' ? 'miss' : analysis.cached.status === 'valid' ? 'stale' : 'corrupt',
+      cachePresent: analysis.cached.status !== 'missing',
+      cacheFresh: analysis.cacheFresh,
+      writePlanned,
+      writeExecuted,
+      degraded: analysis.degraded,
+      staleExtractorKeys: analysis.staleExtractorKeys
+    },
+    manifest: createManifestReportSection(analysis),
+    write: {
+      policy: execute ? 'execute' : 'dry-run',
+      planned: writePlanned,
+      executed: writeExecuted,
+      cachePath: CONTEXT_SOURCE_MANIFEST_CACHE_PATH,
+      beforeStatus: analysis.cached.status,
+      ...(analysis.cached.manifest ? { beforeManifestHash: analysis.cached.manifest.manifestHash } : {}),
+      afterManifestHash: analysis.currentManifest.manifestHash,
+      ...(!writePlanned ? { skippedReason: 'cache-fresh' as const } : {})
+    },
+    issues: analysis.issues
+  };
+}
+
+function createSourceManifestCacheAnalysis(input: { projectRoot: string; generatedAt?: string; generatedByCommand: string }): ContextSourceManifestCacheAnalysis {
   const generatedAt = input.generatedAt ?? new Date().toISOString();
   const cached = readContextSourceManifestCache(input.projectRoot);
   const currentManifest = buildContextSourceManifest({
     projectRoot: input.projectRoot,
     generatedAt,
-    generatedByCommand: CONTEXT_CACHE_STATUS_COMMAND,
+    generatedByCommand: input.generatedByCommand,
     ...(cached.status === 'valid' && cached.manifest ? { previousManifest: cached.manifest } : {})
   });
   const comparison = cached.manifest
@@ -281,38 +412,34 @@ export function createContextCacheStatusReport(input: { projectRoot: string; gen
   }
 
   return {
-    schemaVersion: CONTEXT_CACHE_STATUS_SCHEMA_ID,
-    command: CONTEXT_CACHE_STATUS_COMMAND,
-    ok: true,
     generatedAt,
-    projectRoot: input.projectRoot,
-    cacheRoot: CONTEXT_SOURCE_MANIFEST_CACHE_ROOT,
-    readOnly: true,
-    summary: {
-      mode: cacheFresh ? 'hit' : cached.status === 'missing' ? 'miss' : cached.status === 'valid' ? 'stale' : 'corrupt',
-      cachePresent: cached.status !== 'missing',
-      cacheFresh,
-      degraded,
-      staleExtractorKeys
-    },
-    manifest: {
-      cachePath: CONTEXT_SOURCE_MANIFEST_CACHE_PATH,
-      status: cacheFresh ? 'fresh' : cached.status === 'valid' ? 'stale' : cached.status,
-      currentManifestHash: currentManifest.manifestHash,
-      currentSourceCount: currentManifest.summary.sourceCount,
-      currentSkippedSourceCount: currentManifest.summary.skippedSourceCount,
-      ...(cached.manifest ? {
-        cachedManifestHash: cached.manifest.manifestHash,
-        cachedGeneratedAt: cached.manifest.generatedAt,
-        cachedSourceCount: cached.manifest.summary.sourceCount
-      } : {}),
-      addedPaths: comparison.addedPaths,
-      removedPaths: comparison.removedPaths,
-      changedPaths: comparison.changedPaths,
-      unchangedSourceCount: comparison.unchangedPaths.length,
-      staleExtractorKeys
-    },
+    cached,
+    currentManifest,
+    comparison,
+    staleExtractorKeys,
+    cacheFresh,
+    degraded,
     issues
+  };
+}
+
+function createManifestReportSection(analysis: ContextSourceManifestCacheAnalysis): ContextCacheStatusReport['manifest'] {
+  return {
+    cachePath: CONTEXT_SOURCE_MANIFEST_CACHE_PATH,
+    status: analysis.cacheFresh ? 'fresh' : analysis.cached.status === 'valid' ? 'stale' : analysis.cached.status,
+    currentManifestHash: analysis.currentManifest.manifestHash,
+    currentSourceCount: analysis.currentManifest.summary.sourceCount,
+    currentSkippedSourceCount: analysis.currentManifest.summary.skippedSourceCount,
+    ...(analysis.cached.manifest ? {
+      cachedManifestHash: analysis.cached.manifest.manifestHash,
+      cachedGeneratedAt: analysis.cached.manifest.generatedAt,
+      cachedSourceCount: analysis.cached.manifest.summary.sourceCount
+    } : {}),
+    addedPaths: analysis.comparison.addedPaths,
+    removedPaths: analysis.comparison.removedPaths,
+    changedPaths: analysis.comparison.changedPaths,
+    unchangedSourceCount: analysis.comparison.unchangedPaths.length,
+    staleExtractorKeys: analysis.staleExtractorKeys
   };
 }
 

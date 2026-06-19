@@ -6,6 +6,7 @@ import cleanCheckoutSmokeSchemaJson from '../schemas/clean-checkout-smoke.schema
 import codeIndexSchemaJson from '../schemas/code-index.schema.json';
 import contextCacheRecordSchemaJson from '../schemas/context-cache-record.schema.json';
 import contextCacheStatusSchemaJson from '../schemas/context-cache-status.schema.json';
+import contextCacheWarmSchemaJson from '../schemas/context-cache-warm.schema.json';
 import contextSourceManifestSchemaJson from '../schemas/context-source-manifest.schema.json';
 import contextPackSchemaJson from '../schemas/context-pack.schema.json';
 import contextGraphSchemaJson from '../schemas/context-graph.schema.json';
@@ -106,6 +107,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.codeIndex.v1': codeIndexSchemaJson as JsonObject,
   'hadara.context.cacheRecord.v1': contextCacheRecordSchemaJson as JsonObject,
   'hadara.context.cacheStatus.v1': contextCacheStatusSchemaJson as JsonObject,
+  'hadara.context.cacheWarm.v1': contextCacheWarmSchemaJson as JsonObject,
   'hadara.context.sourceManifest.v1': contextSourceManifestSchemaJson as JsonObject,
   'hadara.contextPack.v1': contextPackSchemaJson as JsonObject,
   'hadara.context.export.v1': contextExportSchemaJson as JsonObject,

@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.context.cacheWarm.v1",
+  "x-hadara-schema-id": "hadara.context.cacheWarm.v1",
+  "title": "HADARA Context Cache Warm",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "command",
+    "ok",
+    "generatedAt",
+    "projectRoot",
+    "cacheRoot",
+    "mode",
+    "summary",
+    "manifest",
+    "write",
+    "issues"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.context.cacheWarm.v1" },
+    "command": { "const": "context.cache.warm" },
+    "ok": { "type": "boolean" },
+    "generatedAt": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "cacheRoot": { "type": "string" },
+    "mode": { "enum": ["dry-run", "execute"] },
+    "summary": { "$ref": "#/$defs/summary" },
+    "manifest": { "$ref": "#/$defs/manifestStatus" },
+    "write": { "$ref": "#/$defs/write" },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["cacheMode", "cachePresent", "cacheFresh", "writePlanned", "writeExecuted", "degraded", "staleExtractorKeys"],
+      "properties": {
+        "cacheMode": { "enum": ["miss", "fresh", "stale", "corrupt"] },
+        "cachePresent": { "type": "boolean" },
+        "cacheFresh": { "type": "boolean" },
+        "writePlanned": { "type": "boolean" },
+        "writeExecuted": { "type": "boolean" },
+        "degraded": { "type": "boolean" },
+        "staleExtractorKeys": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "manifestStatus": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "cachePath",
+        "status",
+        "currentManifestHash",
+        "currentSourceCount",
+        "currentSkippedSourceCount",
+        "addedPaths",
+        "removedPaths",
+        "changedPaths",
+        "unchangedSourceCount",
+        "staleExtractorKeys"
+      ],
+      "properties": {
+        "cachePath": { "type": "string" },
+        "status": { "enum": ["missing", "fresh", "stale", "corrupt", "schema-mismatch"] },
+        "currentManifestHash": { "type": "string" },
+        "currentSourceCount": { "type": "number" },
+        "currentSkippedSourceCount": { "type": "number" },
+        "cachedManifestHash": { "type": "string" },
+        "cachedGeneratedAt": { "type": "string" },
+        "cachedSourceCount": { "type": "number" },
+        "addedPaths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "removedPaths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "changedPaths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "unchangedSourceCount": { "type": "number" },
+        "staleExtractorKeys": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "write": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["policy", "planned", "executed", "cachePath", "beforeStatus", "afterManifestHash"],
+      "properties": {
+        "policy": { "enum": ["dry-run", "execute"] },
+        "planned": { "type": "boolean" },
+        "executed": { "type": "boolean" },
+        "cachePath": { "type": "string" },
+        "beforeStatus": { "enum": ["missing", "valid", "corrupt", "schema-mismatch"] },
+        "beforeManifestHash": { "type": "string" },
+        "afterManifestHash": { "type": "string" },
+        "skippedReason": { "enum": ["cache-fresh"] }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "enum": ["info", "warning", "error"] },
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "path": { "type": "string" },
+        "fixHint": { "type": "string" }
+      }
+    }
+  }
+}
