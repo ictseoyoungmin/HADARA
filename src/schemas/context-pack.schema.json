@@ -118,7 +118,7 @@
     "sliceCandidate": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["id", "path", "strategy", "reason", "suggestedCommand"],
+      "required": ["id", "path", "strategy", "reason", "suggestedCommand", "suggestedCommandArgs"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "path": { "type": "string", "minLength": 1 },
@@ -130,7 +130,12 @@
         "symbol": { "type": "string" },
         "managedSection": { "type": "string" },
         "reason": { "type": "string", "minLength": 1 },
-        "suggestedCommand": { "type": "string", "minLength": 1 }
+        "suggestedCommand": { "type": "string", "minLength": 1 },
+        "suggestedCommandArgs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
       }
     },
     "stateProjection": {

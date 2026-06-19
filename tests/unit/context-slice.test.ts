@@ -256,25 +256,48 @@ describe('context slice report', () => {
     expect(validateSchema('hadara.contextSlice.v1', report).ok).toBe(true);
   });
 
-  it('rejects local HADARA cache and private-state paths as raw slice sources', () => {
+  it('rejects ignored and private HADARA paths as raw slice sources while allowing public HADARA docs', () => {
     const root = tempProject();
-    fs.mkdirSync(path.join(root, '.hadara', 'local', 'cache', 'context'), { recursive: true });
-    fs.writeFileSync(path.join(root, '.hadara', 'local', 'cache', 'context', 'source-manifest.json'), '{"cache":true}\n', 'utf8');
+    const deniedPaths = [
+      '.hadara/local/cache/context/source-manifest.json',
+      '.hadara/tmp/generated.txt',
+      '.hadara/run/current.json',
+      '.hadara/private-state.txt',
+      '.dashboard-visual/state.json'
+    ];
+    for (const deniedPath of deniedPaths) {
+      fs.mkdirSync(path.dirname(path.join(root, deniedPath)), { recursive: true });
+      fs.writeFileSync(path.join(root, deniedPath), 'private or derived state\n', 'utf8');
+    }
 
-    const report = buildContextSliceReport({
+    for (const deniedPath of deniedPaths) {
+      const report = buildContextSliceReport({
+        projectRoot: root,
+        path: deniedPath,
+        from: 1,
+        to: 1
+      });
+
+      expect(report.ok).toBe(false);
+      expect(report.slices).toEqual([]);
+      expect(report.issues).toContainEqual(expect.objectContaining({
+        code: 'CONTEXT_SLICE_OUTSIDE_PROJECT',
+        path: deniedPath
+      }));
+      expect(validateSchema('hadara.contextSlice.v1', report).ok).toBe(true);
+    }
+
+    fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'docs-registry.json'), '{"docs":[]}\n', 'utf8');
+    const allowed = buildContextSliceReport({
       projectRoot: root,
-      path: '.hadara/local/cache/context/source-manifest.json',
+      path: '.hadara/docs-registry.json',
       from: 1,
       to: 1
     });
-
-    expect(report.ok).toBe(false);
-    expect(report.slices).toEqual([]);
-    expect(report.issues).toContainEqual(expect.objectContaining({
-      code: 'CONTEXT_SLICE_OUTSIDE_PROJECT',
-      path: '.hadara/local/cache/context/source-manifest.json'
-    }));
-    expect(validateSchema('hadara.contextSlice.v1', report).ok).toBe(true);
+    expect(allowed.ok).toBe(true);
+    expect(allowed.slices[0]?.path).toBe('.hadara/docs-registry.json');
+    expect(validateSchema('hadara.contextSlice.v1', allowed).ok).toBe(true);
   });
 });
 
@@ -299,7 +322,8 @@ function contextPackWithCandidate(root: string, candidateId: string): ContextPac
       lineStart: 2,
       lineEnd: 3,
       reason: 'Injected candidate for context slice test.',
-      suggestedCommand: 'hadara context slice --path docs/candidate.md --from 2 --to 3 --json'
+      suggestedCommand: 'hadara context slice --path docs/candidate.md --from 2 --to 3 --json',
+      suggestedCommandArgs: ['context', 'slice', '--path', 'docs/candidate.md', '--from', '2', '--to', '3', '--json']
     }],
     knownProblems: [],
     stateProjection: { stateConsistency: 'consistent', issues: [] },

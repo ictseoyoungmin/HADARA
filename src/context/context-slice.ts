@@ -108,6 +108,17 @@ const MAX_RANGE_LINES = 300;
 const MAX_TAIL_LINES = 500;
 const MAX_KEYWORD_WINDOWS = 3;
 const MAX_SLICE_BYTES = 512 * 1024;
+const CONTEXT_SLICE_HADARA_ALLOWLIST = new Set([
+  '.hadara/context/HADARA_CONTEXT.md',
+  '.hadara/docs-registry.json'
+]);
+const CONTEXT_SLICE_DENIED_PATHS = [
+  '.git',
+  'node_modules',
+  '.hadara/tmp',
+  '.hadara/run',
+  '.dashboard-visual'
+];
 
 export function buildContextSliceReport(input: BuildContextSliceOptions): ContextSliceReport {
   const generatedAt = input.generatedAt ?? new Date().toISOString();
@@ -174,13 +185,7 @@ function resolveContextSlicePath(projectRoot: string, inputPath: string | undefi
       }
     };
   }
-  if (
-    normalized === '.git' ||
-    normalized.startsWith('.git/') ||
-    normalized.startsWith('node_modules/') ||
-    normalized === '.hadara/local' ||
-    normalized.startsWith('.hadara/local/')
-  ) {
+  if (isDeniedContextSlicePath(normalized)) {
     return {
       path: normalized,
       absolutePath,
@@ -194,6 +199,11 @@ function resolveContextSlicePath(projectRoot: string, inputPath: string | undefi
     };
   }
   return { path: normalized, absolutePath };
+}
+
+function isDeniedContextSlicePath(normalized: string): boolean {
+  if (normalized.startsWith('.hadara/') && !CONTEXT_SLICE_HADARA_ALLOWLIST.has(normalized)) return true;
+  return CONTEXT_SLICE_DENIED_PATHS.some((denied) => normalized === denied || normalized.startsWith(`${denied}/`));
 }
 
 function readContextSliceSource(filePath: string, absolutePath: string): { source: SourceFile; issue?: undefined } | { source?: undefined; issue: ContextSliceIssue } {

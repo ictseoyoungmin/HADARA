@@ -78,7 +78,38 @@ describe('context pack', () => {
       path: `tasks/${taskId}-fixture/TASK.md`,
       boundary: 'dry-run-first'
     }));
-    expect(report.sliceCandidates.some((candidate) => candidate.suggestedCommand.startsWith('hadara context slice --path'))).toBe(true);
+    const firstSliceCandidate = report.sliceCandidates[0];
+    expect(firstSliceCandidate?.suggestedCommand).toMatch(/^hadara context slice --path /);
+    expect(firstSliceCandidate?.suggestedCommandArgs).toEqual(expect.arrayContaining(['context', 'slice', '--path']));
+    assertSchema('hadara.contextPack.v1', report);
+  });
+
+  it('publishes structured slice command args and shell-quotes the display command', () => {
+    const graph = sampleGraphReport();
+    const requiredDoc = graph.nodes.find((node) => node.id === 'doc:docs/IMPLEMENTATION_SOP.md');
+    expect(requiredDoc).toBeDefined();
+    requiredDoc!.label = 'space name.md';
+    requiredDoc!.path = 'docs/space name.md';
+    requiredDoc!.source = {
+      path: 'docs/space name.md',
+      line: 7,
+      extractor: 'extractDocsRegistry',
+      hash: 'sha256:space-name'
+    };
+
+    const report = buildContextPackReport({
+      projectRoot: '/workspace',
+      generatedAt,
+      taskId,
+      graphReport: graph
+    });
+    const candidate = report.sliceCandidates.find((item) => item.path === 'docs/space name.md');
+
+    expect(candidate).toEqual(expect.objectContaining({
+      strategy: 'explicit-range',
+      suggestedCommandArgs: ['context', 'slice', '--path', 'docs/space name.md', '--from', '7', '--to', '7', '--json']
+    }));
+    expect(candidate?.suggestedCommand).toContain("--path 'docs/space name.md'");
     assertSchema('hadara.contextPack.v1', report);
   });
 

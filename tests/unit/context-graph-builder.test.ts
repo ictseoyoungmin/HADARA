@@ -16,6 +16,7 @@ import {
 } from '../../src/context/context-graph-builder';
 import {
   contextCodeIndexShardCachePath,
+  contextGraphCoreShardCachePath,
   createContextCacheWarmReport
 } from '../../src/context/context-cache-store';
 
@@ -198,6 +199,7 @@ describe('context graph builder', () => {
         readShardCount: 2,
         hitShardCount: 2
       });
+      expect(report.cache.shardPaths).toContain(contextGraphCoreShardCachePath());
       expect(report.cache.shardPaths).toContain(contextCodeIndexShardCachePath());
       expect(report.nodes.some((node) => node.type === 'SourceFile')).toBe(true);
       expect(report.stateProjection.sources.some((source) =>

@@ -219,6 +219,92 @@ describe('context cache store', () => {
     expect(snapshotProject(root)).toEqual(before);
   });
 
+  it('marks graph-core shard stale when core graph sources change', () => {
+    const changes = [
+      {
+        path: 'tasks/T-0001-cached-graph-fixture/TASK.md',
+        content: '# T-0001 Cached graph fixture\n\nChanged task body\n'
+      },
+      {
+        path: 'docs/PROJECT_STATE.md',
+        content: '# PROJECT_STATE\n\nChanged project state\n'
+      },
+      {
+        path: 'docs/AGENT_HANDOFF.md',
+        content: '# AGENT_HANDOFF\n\nChanged handoff\n'
+      },
+      {
+        path: 'tasks/T-0001-cached-graph-fixture/evidence.jsonl',
+        content: '{"taskId":"T-0001","summary":"changed evidence"}\n'
+      }
+    ];
+
+    for (const change of changes) {
+      const root = graphCoreFixtureProject();
+      createContextCacheWarmReport({
+        projectRoot: root,
+        execute: true,
+        generatedAt: '2026-06-18T15:00:45.000Z'
+      });
+      const cached = readContextSourceManifestCache(root);
+      expect(cached.status).toBe('valid');
+
+      write(root, change.path, change.content);
+      const changedManifest = buildContextSourceManifest({
+        projectRoot: root,
+        generatedAt: '2026-06-18T15:01:45.000Z',
+        previousManifest: cached.manifest
+      });
+      const graphCore = readContextGraphCoreShard({
+        projectRoot: root,
+        manifest: changedManifest
+      });
+
+      expect(graphCore).toMatchObject({
+        ok: false,
+        hit: false,
+        status: 'stale',
+        path: contextGraphCoreShardCachePath()
+      });
+      expect(graphCore.issues).toContainEqual(expect.objectContaining({ code: 'CONTEXT_CACHE_STALE' }));
+    }
+  });
+
+  it('reports corrupt graph-core payload shape as schema-mismatch without throwing', () => {
+    const root = graphCoreFixtureProject();
+    createContextCacheWarmReport({
+      projectRoot: root,
+      execute: true,
+      generatedAt: '2026-06-18T15:00:45.000Z'
+    });
+    const cached = readContextSourceManifestCache(root);
+    const graphCoreRecord = readContextCacheRecord(root, contextGraphCoreShardCachePath());
+    expect(cached.status).toBe('valid');
+    expect(graphCoreRecord.status).toBe('valid');
+
+    writeContextCacheRecord(root, contextGraphCoreShardCachePath(), {
+      ...graphCoreRecord.record!,
+      payload: {
+        source: { extractor: 'notMergeGraphExtractionResults' },
+        nodes: [],
+        edges: [],
+        issues: []
+      }
+    });
+
+    const graphCore = readContextGraphCoreShard({
+      projectRoot: root,
+      manifest: cached.manifest!
+    });
+    expect(graphCore).toMatchObject({
+      ok: false,
+      hit: false,
+      status: 'schema-mismatch',
+      path: contextGraphCoreShardCachePath()
+    });
+    expect(graphCore.issues).toContainEqual(expect.objectContaining({ code: 'CONTEXT_CACHE_SCHEMA_MISMATCH' }));
+  });
+
   it('writes code-index shard records and invalidates them only for code-index source changes', () => {
     const root = tempProject();
     write(root, 'docs/TASK_BOARD.md', '# TASK_BOARD\n');
@@ -541,6 +627,36 @@ describe('context cache store', () => {
 function tempProject(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-context-cache-'));
   roots.push(root);
+  return root;
+}
+
+function graphCoreFixtureProject(): string {
+  const root = tempProject();
+  write(root, 'docs/TASK_BOARD.md', [
+    '# TASK_BOARD',
+    '',
+    '| ID | Title | Status | Capsule | Notes |',
+    '|---|---|---|---|---|',
+    '| T-0001 | Cached graph fixture | In Progress | tasks/T-0001-cached-graph-fixture | |',
+    ''
+  ].join('\n'));
+  write(root, 'docs/PROJECT_STATE.md', '# PROJECT_STATE\n\nActive task: T-0001\n');
+  write(root, 'docs/AGENT_HANDOFF.md', '# AGENT_HANDOFF\n\nActive task: T-0001\n');
+  write(root, 'tasks/T-0001-cached-graph-fixture/TASK.md', [
+    '# T-0001 Cached graph fixture',
+    '',
+    '## Metadata',
+    '',
+    '| Field | Value |',
+    '|---|---|',
+    '| ID | T-0001 |',
+    '| Title | Cached graph fixture |',
+    '| Status | In Progress |',
+    '| Created | 2026-06-18 |',
+    '| Updated | 2026-06-18 |',
+    ''
+  ].join('\n'));
+  write(root, 'tasks/T-0001-cached-graph-fixture/evidence.jsonl', '{"taskId":"T-0001","summary":"initial evidence"}\n');
   return root;
 }
 

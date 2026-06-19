@@ -87,6 +87,7 @@ export interface SliceCandidate {
   managedSection?: string;
   reason: string;
   suggestedCommand: string;
+  suggestedCommandArgs: string[];
 }
 
 export interface ContextPackSourceSummary {
@@ -482,6 +483,7 @@ function sliceCandidatesForItems(items: ContextPackItem[], nodes: ContextGraphNo
       const lineEnd = item.lineEnd ?? numberMetadata(node, 'endLine') ?? (lineStart ? Math.max(lineStart, lineStart + 80) : undefined);
       const symbol = node?.type === 'Symbol' ? node.label : undefined;
       const managedSection = node?.type === 'ManagedSection' ? node.label : undefined;
+      const suggestedCommandArgs = suggestedSliceCommandArgs(path, strategy, node, { lineStart, lineEnd, symbol, managedSection });
       return {
         id: `slice-candidate:${index + 1}:${item.id}`,
         path,
@@ -491,7 +493,8 @@ function sliceCandidatesForItems(items: ContextPackItem[], nodes: ContextGraphNo
         ...(symbol ? { symbol } : {}),
         ...(managedSection ? { managedSection } : {}),
         reason: `Candidate slice for ${item.id} selected by context pack ranking.`,
-        suggestedCommand: suggestedSliceCommand(path, strategy, node, { lineStart, lineEnd, symbol, managedSection })
+        suggestedCommand: suggestedSliceCommand(suggestedCommandArgs),
+        suggestedCommandArgs
       };
     });
 }
@@ -502,17 +505,27 @@ function sliceStrategyForNode(node: ContextGraphNode | undefined): SliceCandidat
   return 'explicit-range';
 }
 
-function suggestedSliceCommand(
+function suggestedSliceCommandArgs(
   path: string,
   strategy: SliceCandidate['strategy'],
   node: ContextGraphNode | undefined,
   hints: { lineStart?: number; lineEnd?: number; symbol?: string; managedSection?: string } = {}
-): string {
-  if (strategy === 'managed-section') return `hadara context slice --path ${path} --managed-section ${hints.managedSection ?? node?.label ?? '<section-id>'} --json`;
-  if (strategy === 'symbol-neighborhood') return `hadara context slice --path ${path} --symbol ${hints.symbol ?? node?.label ?? '<symbol>'} --json`;
+): string[] {
+  const base = ['context', 'slice', '--path', path];
+  if (strategy === 'managed-section') return [...base, '--managed-section', hints.managedSection ?? node?.label ?? '<section-id>', '--json'];
+  if (strategy === 'symbol-neighborhood') return [...base, '--symbol', hints.symbol ?? node?.label ?? '<symbol>', '--json'];
   const startLine = hints.lineStart ?? node?.source.line ?? 1;
   const endLine = hints.lineEnd ?? Math.max(startLine, startLine + 80);
-  return `hadara context slice --path ${path} --from ${startLine} --to ${endLine} --json`;
+  return [...base, '--from', String(startLine), '--to', String(endLine), '--json'];
+}
+
+function suggestedSliceCommand(args: string[]): string {
+  return ['hadara', ...args].map(shellQuote).join(' ');
+}
+
+function shellQuote(value: string): string {
+  if (/^[A-Za-z0-9_./:@+-]+$/.test(value)) return value;
+  return `'${value.replace(/'/g, "'\\''")}'`;
 }
 
 function numberMetadata(node: ContextGraphNode | undefined, key: string): number | undefined {

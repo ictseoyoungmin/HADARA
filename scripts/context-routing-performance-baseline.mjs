@@ -13,6 +13,7 @@ const cliPath = path.resolve(cwd, String(args.get('--cli') ?? 'dist/cli/main.js'
 const taskId = String(args.get('--task') ?? 'T-0373');
 const sampleCount = numberArg('--samples', 1);
 const timeoutMs = numberArg('--timeout-ms', 75_000);
+const killGraceMs = numberArg('--kill-grace-ms', 3_000);
 const markdownPath = args.has('--markdown') ? path.resolve(cwd, String(args.get('--markdown'))) : null;
 
 if (!fs.existsSync(cliPath)) {
@@ -74,6 +75,7 @@ const report = {
   taskId,
   sampleCount,
   timeoutMs,
+  killGraceMs,
   targets: results,
   notes: [
     'Measurements invoke the built CLI and suppress raw command output.',
@@ -90,7 +92,7 @@ console.log(JSON.stringify(report, null, 2));
 
 async function measureCommand(label, commandArgs, projectRoot) {
   const started = performance.now();
-  const result = await runProcess(process.execPath, [cliPath, ...commandArgs], { timeoutMs });
+  const result = await runProcess(process.execPath, [cliPath, ...commandArgs], { timeoutMs, killGraceMs });
   const durationMs = round(performance.now() - started);
   const outputBytes = Buffer.byteLength(result.stdout);
   let parsed = null;
@@ -107,6 +109,8 @@ async function measureCommand(label, commandArgs, projectRoot) {
     command: `node ${path.relative(cwd, cliPath)} ${commandArgs.map(quoteArg).join(' ')}`,
     exitCode: result.code,
     timedOut: result.timedOut,
+    killedSignal: result.killedSignal,
+    processError: result.error,
     durationMs,
     outputBytes,
     ok: parsed?.ok ?? false,
@@ -156,31 +160,73 @@ function runProcess(command, commandArgs, options) {
     const stdoutPath = path.join('/tmp', `hadara-context-routing-perf-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}.json`);
     const stdoutFd = fs.openSync(stdoutPath, 'w');
     let timedOut = false;
+    let killedSignal = null;
     const child = spawn(command, commandArgs, {
       cwd,
       stdio: ['ignore', stdoutFd, 'pipe']
     });
     const stderr = [];
     let settled = false;
+    let killTimer = null;
     const timer = setTimeout(() => {
       timedOut = true;
-      child.kill('SIGTERM');
+      if (child.kill('SIGTERM')) killedSignal = 'SIGTERM';
+      killTimer = setTimeout(() => {
+        if (settled || child.exitCode !== null) return;
+        if (child.kill('SIGKILL')) killedSignal = 'SIGKILL';
+      }, options.killGraceMs);
     }, options.timeoutMs);
     child.stderr.on('data', (chunk) => stderr.push(String(chunk)));
-    child.on('close', (code) => {
+    child.on('error', (error) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      fs.closeSync(stdoutFd);
-      let stdout = '';
-      try {
-        stdout = fs.readFileSync(stdoutPath, 'utf8');
-      } finally {
-        fs.rmSync(stdoutPath, { force: true });
-      }
-      resolve({ code: timedOut ? 124 : code, stdout, stderr: stderr.join(''), timedOut });
+      if (killTimer) clearTimeout(killTimer);
+      resolveProcessResult({
+        code: 1,
+        stdoutFd,
+        stdoutPath,
+        stderr,
+        timedOut,
+        killedSignal,
+        error: error instanceof Error ? error.message : String(error),
+        resolve
+      });
+    });
+    child.on('close', (code, signal) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (killTimer) clearTimeout(killTimer);
+      resolveProcessResult({
+        code: timedOut ? 124 : code,
+        stdoutFd,
+        stdoutPath,
+        stderr,
+        timedOut,
+        killedSignal: killedSignal ?? signal ?? null,
+        error: null,
+        resolve
+      });
     });
   });
+}
+
+function resolveProcessResult({ code, stdoutFd, stdoutPath, stderr, timedOut, killedSignal, error, resolve }) {
+  try {
+    fs.closeSync(stdoutFd);
+  } catch {
+    // Process startup can fail before stdio is fully owned by the child.
+  }
+  let stdout = '';
+  try {
+    stdout = fs.readFileSync(stdoutPath, 'utf8');
+  } catch {
+    stdout = '';
+  } finally {
+    fs.rmSync(stdoutPath, { force: true });
+  }
+  resolve({ code, stdout, stderr: stderr.join(''), timedOut, killedSignal, error });
 }
 
 function toMarkdown(report) {
@@ -216,6 +262,8 @@ Task: \`${report.taskId}\`
 Samples per workload: ${report.sampleCount}
 
 Timeout: ${report.timeoutMs} ms
+
+Kill grace: ${report.killGraceMs} ms
 
 ${sections}
 
