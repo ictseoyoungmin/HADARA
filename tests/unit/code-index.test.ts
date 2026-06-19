@@ -7,10 +7,12 @@ import {
   buildCodeIndexReport,
   classifyCodeFile,
   CODE_FILE_KINDS,
+  CODE_INDEX_FILE_SUMMARY_CACHE_ROOT,
   CODE_INDEX_CACHE_ROOT,
   CODE_INDEX_DEFAULT_BUDGETS,
   CODE_INDEX_EDGE_TYPES,
   CODE_INDEX_IGNORED_PATHS,
+  codeIndexFileSummaryCachePath,
   createCodeFileNode,
   detectCodeFileLanguage,
   discoverCodeIndexFiles,
@@ -192,6 +194,74 @@ describe('code index schema and ignore rules', () => {
       code: 'CODE_INDEX_TOO_LARGE'
     }));
     assertSchema('hadara.codeIndex.v1', byteBudgetReport);
+  });
+
+  it('reuses unchanged per-file summaries and recomputes changed or corrupt entries', () => {
+    const root = createTempProject();
+    writeFile(root, 'src/a.ts', 'export const a = 1;\n');
+    writeFile(root, 'src/b.ts', 'export const b = 2;\n');
+
+    const first = buildCodeIndexReport({
+      projectRoot: root,
+      generatedAt: '2026-06-18T10:25:00.000Z',
+      fileSummaryCache: {
+        mode: 'read-write',
+        createdAt: '2026-06-18T10:25:00.000Z'
+      }
+    });
+    expect(first.cache).toMatchObject({
+      used: false,
+      hit: false,
+      mode: 'code-index-file-summaries',
+      cachePath: CODE_INDEX_FILE_SUMMARY_CACHE_ROOT,
+      readFileSummaryCount: 2,
+      reusedFileSummaryCount: 0,
+      recomputedFileSummaryCount: 2,
+      missingFileSummaryCount: 2
+    });
+    const bCachePath = codeIndexFileSummaryCachePath('src/b.ts');
+    const bCacheBefore = fs.readFileSync(path.join(root, bCachePath), 'utf8');
+
+    writeFile(root, 'src/a.ts', 'export const after = 22;\n');
+    const second = buildCodeIndexReport({
+      projectRoot: root,
+      generatedAt: '2026-06-18T10:26:00.000Z',
+      fileSummaryCache: {
+        mode: 'read-write',
+        createdAt: '2026-06-18T10:26:00.000Z'
+      }
+    });
+    expect(second.cache).toMatchObject({
+      used: true,
+      hit: false,
+      readFileSummaryCount: 2,
+      reusedFileSummaryCount: 1,
+      recomputedFileSummaryCount: 1,
+      staleFileSummaryCount: 1
+    });
+    expect(second.files.find((file) => file.path === 'src/a.ts')?.exports).toEqual(['after']);
+    expect(fs.readFileSync(path.join(root, bCachePath), 'utf8')).toBe(bCacheBefore);
+
+    writeFile(root, bCachePath, '{not-json');
+    const third = buildCodeIndexReport({
+      projectRoot: root,
+      generatedAt: '2026-06-18T10:27:00.000Z',
+      fileSummaryCache: {
+        mode: 'read-write',
+        createdAt: '2026-06-18T10:27:00.000Z'
+      }
+    });
+    expect(third.cache).toMatchObject({
+      readFileSummaryCount: 2,
+      reusedFileSummaryCount: 1,
+      recomputedFileSummaryCount: 1,
+      corruptFileSummaryCount: 1
+    });
+    expect(third.issues).toContainEqual(expect.objectContaining({
+      code: 'CODE_INDEX_FILE_CACHE_CORRUPT',
+      path: 'src/b.ts'
+    }));
+    assertSchema('hadara.codeIndex.v1', third);
   });
 
   it('requires code file hash metadata in schema validation', () => {

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { CODE_INDEX_IGNORED_PATHS, classifyCodeFile } from './code-index';
+import { CODE_INDEX_EXTRACTOR_VERSION, CODE_INDEX_IGNORED_PATHS, classifyCodeFile } from './code-index';
 import { hashContextGraphJson, normalizeContextGraphPath } from './extractor-contract';
 
 export const CONTEXT_SOURCE_MANIFEST_SCHEMA_ID = 'hadara.context.sourceManifest.v1' as const;
@@ -141,7 +141,7 @@ export interface ContextSourceManifestFastFreshnessResult {
 }
 
 const DEFAULT_EXTRACTOR_VERSIONS: Record<string, string> = {
-  codeIndex: 'c2-code-index-v1',
+  codeIndex: CODE_INDEX_EXTRACTOR_VERSION,
   extractAgentHandoff: 'c1-agent-handoff-v1',
   extractCommandRegistry: 'c1-command-registry-v1',
   extractDecisions: 'c1-decisions-v1',

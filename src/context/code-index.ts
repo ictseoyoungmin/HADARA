@@ -1,9 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { atomicWriteTextFile } from '../core/fs';
 import { type ContextCacheMetadata, type ContextConfidence, type ContextGraphSourceRef } from './context-graph';
 import {
   createCommandNodeId,
   createContextGraphSourceRef,
+  hashContextGraphJson,
   hashContextGraphSources,
   hashContextGraphText,
   normalizeContextGraphPath,
@@ -13,7 +15,11 @@ import { listCommandRegistryEntries, type CommandFamily, type CommandRegistryEnt
 
 export const CODE_INDEX_SCHEMA_ID = 'hadara.codeIndex.v1' as const;
 export const CODE_INDEX_COMMAND = 'code.index' as const;
+export const CODE_INDEX_EXTRACTOR_VERSION = 'c2-code-index-v1' as const;
 export const CODE_INDEX_CACHE_ROOT = '.hadara/local/cache/context' as const;
+export const CODE_INDEX_FILE_SUMMARY_CACHE_ROOT = `${CODE_INDEX_CACHE_ROOT}/code-index-files` as const;
+export const CODE_INDEX_FILE_SUMMARY_CACHE_SCHEMA_ID = 'hadara.codeIndex.fileSummaryCacheRecord.v1' as const;
+export const CODE_INDEX_FILE_SUMMARY_CACHE_VERSION = 'c6.6-code-index-file-summary-v1' as const;
 export const CODE_INDEX_DEFAULT_BUDGETS: CodeIndexBudget = {
   maxIndexedFiles: 2000,
   maxIndexedBytes: 20 * 1024 * 1024,
@@ -40,7 +46,9 @@ export type CodeIndexIssueCode =
   | 'CODE_INDEX_PARSE_DEGRADED'
   | 'CODE_INDEX_TOO_LARGE'
   | 'CODE_INDEX_UNSUPPORTED_LANGUAGE'
-  | 'CODE_INDEX_IMPORT_UNRESOLVED';
+  | 'CODE_INDEX_IMPORT_UNRESOLVED'
+  | 'CODE_INDEX_FILE_CACHE_CORRUPT'
+  | 'CODE_INDEX_FILE_CACHE_SCHEMA_MISMATCH';
 
 export interface CodeFileNode {
   id: string;
@@ -151,6 +159,8 @@ export interface BuildCodeIndexReportOptions {
   projectRoot: string;
   generatedAt?: string;
   budgets?: Partial<CodeIndexBudget>;
+  sourceEntries?: CodeIndexSourceEntry[];
+  fileSummaryCache?: CodeIndexFileSummaryCacheOptions;
 }
 
 export interface CodeImportReference {
@@ -171,6 +181,64 @@ export interface CodeFileReferenceExtractionResult {
   issues: CodeIndexIssue[];
 }
 
+export interface CodeIndexSourceEntry {
+  path: string;
+  sizeBytes: number;
+  mtimeMs?: number;
+  contentHash?: string;
+  metadataHash?: string;
+  extractorKeys?: string[];
+}
+
+export interface CodeIndexFileSummaryCacheOptions {
+  mode: 'read-only' | 'read-write';
+  createdAt?: string;
+  extractorVersion?: string;
+}
+
+export interface CodeCommandMention {
+  commandId: string;
+  line: number;
+}
+
+export interface CodeFileExtractionSummary {
+  filePath: string;
+  kind: CodeFileKind;
+  language: CodeFileLanguage;
+  hash: string;
+  lineCount: number;
+  sizeBytes: number;
+  imports: CodeImportReference[];
+  exports: CodeExportReference[];
+  commandMentions: CodeCommandMention[];
+  commandIdLines?: Record<string, number>;
+  issues: CodeIndexIssue[];
+}
+
+export interface CodeIndexFileSummaryCacheRecord {
+  schemaVersion: typeof CODE_INDEX_FILE_SUMMARY_CACHE_SCHEMA_ID;
+  cacheRecordVersion: typeof CODE_INDEX_FILE_SUMMARY_CACHE_VERSION;
+  createdAt: string;
+  path: string;
+  extractorVersion: string;
+  source: {
+    path: string;
+    sizeBytes: number;
+    mtimeMs?: number;
+    contentHash?: string;
+    metadataHash?: string;
+  };
+  summary: CodeFileExtractionSummary;
+}
+
+interface CodeIndexFileSummaryCacheReadResult {
+  status: 'disabled' | 'missing' | 'fresh' | 'stale' | 'corrupt' | 'schema-mismatch';
+  path?: string;
+  record?: CodeIndexFileSummaryCacheRecord;
+  summary?: CodeFileExtractionSummary;
+  issue?: CodeIndexIssue;
+}
+
 interface CodeCommandHint {
   commandId: string;
   commandFamily: CommandFamily;
@@ -185,48 +253,73 @@ const COMMAND_REGISTRY_SOURCE_PATH = 'src/services/capability-registry.ts';
 export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): CodeIndexReport {
   const generatedAt = options.generatedAt ?? new Date().toISOString();
   const budgets = normalizeCodeIndexBudgets(options.budgets);
-  const discovered = discoverCodeIndexFiles(options.projectRoot, { budgets });
-  const fileReferences: Array<{
-    filePath: string;
-    content: string;
-    imports: CodeImportReference[];
-    exports: CodeExportReference[];
-  }> = [];
+  const discovered = discoverCodeIndexInputs(options.projectRoot, {
+    budgets,
+    sourceEntries: options.sourceEntries
+  });
+  const rawSummaries: CodeFileExtractionSummary[] = [];
   const issues: CodeIndexIssue[] = [...discovered.issues];
   let indexedBytes = 0;
   let skippedFiles = discovered.skippedFiles;
+  const cacheStats = createCodeIndexFileSummaryCacheStats();
+  const cacheOptions = options.fileSummaryCache;
+  const extractorVersion = cacheOptions?.extractorVersion ?? CODE_INDEX_EXTRACTOR_VERSION;
 
   for (const relativePath of discovered.paths) {
     const absolutePath = path.join(options.projectRoot, relativePath);
     try {
-      const stats = fs.statSync(absolutePath);
-      if (stats.size > budgets.maxSingleFileBytes) {
+      const sourceEntry = discovered.sourceEntriesByPath.get(relativePath) ?? createCodeIndexSourceEntry(options.projectRoot, relativePath);
+      if (sourceEntry.sizeBytes > budgets.maxSingleFileBytes) {
         skippedFiles += 1;
         issues.push(createBudgetIssue({
-          message: `Skipped ${relativePath} because it exceeds the single-file code index budget (${stats.size} bytes > ${budgets.maxSingleFileBytes} bytes).`,
+          message: `Skipped ${relativePath} because it exceeds the single-file code index budget (${sourceEntry.sizeBytes} bytes > ${budgets.maxSingleFileBytes} bytes).`,
           path: relativePath,
           fixHint: 'Reduce the file size or wait for a future configurable code index budget.'
         }));
         continue;
       }
-      if (indexedBytes + stats.size > budgets.maxIndexedBytes) {
+      if (indexedBytes + sourceEntry.sizeBytes > budgets.maxIndexedBytes) {
         skippedFiles += 1;
         issues.push(createBudgetIssue({
-          message: `Skipped ${relativePath} because the code index byte budget would be exceeded (${indexedBytes + stats.size} bytes > ${budgets.maxIndexedBytes} bytes).`,
+          message: `Skipped ${relativePath} because the code index byte budget would be exceeded (${indexedBytes + sourceEntry.sizeBytes} bytes > ${budgets.maxIndexedBytes} bytes).`,
           path: relativePath,
           fixHint: 'Reduce indexed source size or wait for a future configurable code index budget.'
         }));
         continue;
       }
+      const cached = readCodeIndexFileSummaryCache({
+        projectRoot: options.projectRoot,
+        sourceEntry,
+        cacheOptions,
+        extractorVersion
+      });
+      updateCodeIndexFileSummaryCacheStats(cacheStats, cached.status);
+      if (cached.issue) issues.push(cached.issue);
+      if (cached.summary) {
+        rawSummaries.push(cached.summary);
+        indexedBytes += sourceEntry.sizeBytes;
+        continue;
+      }
+
       const content = fs.readFileSync(absolutePath, 'utf8');
-      indexedBytes += stats.size;
-      const references = extractCodeFileReferences({
+      indexedBytes += sourceEntry.sizeBytes;
+      const summary = extractCodeFileSummary({
         projectRoot: options.projectRoot,
         path: relativePath,
-        content
+        content,
+        sizeBytes: sourceEntry.sizeBytes
       });
-      issues.push(...references.issues);
-      fileReferences.push({ filePath: relativePath, content, imports: references.imports, exports: references.exports });
+      issues.push(...summary.issues);
+      rawSummaries.push(summary);
+      if (cacheOptions?.mode === 'read-write') {
+        writeCodeIndexFileSummaryCache({
+          projectRoot: options.projectRoot,
+          sourceEntry,
+          summary,
+          createdAt: cacheOptions.createdAt ?? generatedAt,
+          extractorVersion
+        });
+      }
     } catch (error) {
       issues.push({
         severity: 'warning',
@@ -237,19 +330,22 @@ export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): Code
       });
     }
   }
-  const commandHints = createCommandHints(fileReferences);
+  const sanitized = sanitizeCodeFileSummaries(rawSummaries);
+  const fileSummaries = sanitized.summaries;
+  issues.push(...sanitized.issues);
+  const commandHints = createCommandHints(fileSummaries);
   const commandFamiliesByPath = createCommandFamiliesByPath(commandHints);
-  const files = fileReferences.map((reference) => createCodeFileNode(reference.filePath, reference.content, {
-    imports: reference.imports.map((importReference) => importReference.resolvedPath ?? importReference.specifier),
-    exports: reference.exports.map((exportReference) => exportReference.name),
-    commandFamilies: commandFamiliesByPath.get(reference.filePath) ?? []
+  const files = fileSummaries.map((summary) => createCodeFileNodeFromSummary(summary, {
+    imports: summary.imports.map((importReference) => importReference.resolvedPath ?? importReference.specifier),
+    exports: summary.exports.map((exportReference) => exportReference.name),
+    commandFamilies: commandFamiliesByPath.get(summary.filePath) ?? []
   }));
-  const symbols = createCodeSymbolNodes(fileReferences);
+  const symbols = createCodeSymbolNodes(fileSummaries);
   const edges = [
-    ...createImportEdges(fileReferences),
-    ...createSymbolEdges(fileReferences),
-    ...createCommandHintEdges(fileReferences, commandHints),
-    ...createTestRelationEdges(options.projectRoot, fileReferences)
+    ...createImportEdges(fileSummaries),
+    ...createSymbolEdges(fileSummaries),
+    ...createCommandHintEdges(fileSummaries, commandHints),
+    ...createTestRelationEdges(options.projectRoot, fileSummaries)
   ].sort((a, b) => a.id.localeCompare(b.id));
 
   return {
@@ -269,9 +365,15 @@ export function buildCodeIndexReport(options: BuildCodeIndexReportOptions): Code
       indexedBytes,
       skippedFiles
     },
-    cache: { used: false, hit: false },
+    cache: createCodeIndexCacheMetadata(cacheOptions, cacheStats),
     issues
   };
+}
+
+export function codeIndexFileSummaryCachePath(relativePath: string): string {
+  const normalizedPath = normalizeContextGraphPath(relativePath);
+  const fingerprint = hashContextGraphText(normalizedPath).replace(/^sha256:/, '');
+  return `${CODE_INDEX_FILE_SUMMARY_CACHE_ROOT}/${fingerprint}.json`;
 }
 
 export function discoverCodeIndexFiles(
@@ -331,6 +433,75 @@ export function discoverCodeIndexFiles(
   return { paths: Array.from(new Set(paths)).sort(), issues, skippedFiles };
 }
 
+function discoverCodeIndexInputs(
+  projectRoot: string,
+  options: { budgets: CodeIndexBudget; sourceEntries?: CodeIndexSourceEntry[] }
+): {
+  paths: string[];
+  sourceEntriesByPath: Map<string, CodeIndexSourceEntry>;
+  issues: CodeIndexIssue[];
+  skippedFiles: number;
+} {
+  if (!options.sourceEntries) {
+    const discovered = discoverCodeIndexFiles(projectRoot, { budgets: options.budgets });
+    return {
+      ...discovered,
+      sourceEntriesByPath: new Map()
+    };
+  }
+
+  const sourceEntriesByPath = new Map<string, CodeIndexSourceEntry>();
+  const paths: string[] = [];
+  const issues: CodeIndexIssue[] = [];
+  let skippedFiles = 0;
+  let fileBudgetIssueRecorded = false;
+  for (const sourceEntry of options.sourceEntries) {
+    if (!sourceEntry.extractorKeys?.includes('codeIndex')) continue;
+    const relativePath = normalizeContextGraphPath(sourceEntry.path);
+    if (shouldIgnoreCodeIndexPath(relativePath) || classifyCodeFile(relativePath) === 'unknown') continue;
+    if (paths.length >= options.budgets.maxIndexedFiles) {
+      skippedFiles += 1;
+      if (!fileBudgetIssueRecorded) {
+        fileBudgetIssueRecorded = true;
+        issues.push(createBudgetIssue({
+          message: `Code index exceeded max indexed files budget (${options.budgets.maxIndexedFiles}); partial results returned.`,
+          path: relativePath,
+          fixHint: 'Reduce indexed files or wait for a future configurable code index budget.'
+        }));
+      }
+      continue;
+    }
+    const normalizedEntry = {
+      ...sourceEntry,
+      path: relativePath
+    };
+    paths.push(relativePath);
+    sourceEntriesByPath.set(relativePath, normalizedEntry);
+  }
+  return {
+    paths: Array.from(new Set(paths)).sort(),
+    sourceEntriesByPath,
+    issues,
+    skippedFiles
+  };
+}
+
+function createCodeIndexSourceEntry(projectRoot: string, relativePath: string): CodeIndexSourceEntry {
+  const normalizedPath = normalizeContextGraphPath(relativePath);
+  const stats = fs.statSync(path.join(projectRoot, normalizedPath));
+  return {
+    path: normalizedPath,
+    sizeBytes: stats.size,
+    mtimeMs: stats.mtimeMs,
+    metadataHash: hashContextGraphJson({
+      path: normalizedPath,
+      sizeBytes: stats.size,
+      mtimeMs: stats.mtimeMs
+    }),
+    extractorKeys: ['codeIndex']
+  };
+}
+
 function normalizeCodeIndexBudgets(input: Partial<CodeIndexBudget> = {}): CodeIndexBudget {
   return {
     maxIndexedFiles: normalizeBudgetValue(input.maxIndexedFiles, CODE_INDEX_DEFAULT_BUDGETS.maxIndexedFiles),
@@ -367,6 +538,23 @@ export function createCodeFileNode(
     language: detectCodeFileLanguage(normalizedPath),
     hash: hashContextGraphText(content),
     lineCount: countLines(content),
+    exports: uniqueSorted(metadata.exports ?? []),
+    imports: uniqueSorted(metadata.imports ?? []),
+    commandFamilies: uniqueSorted(metadata.commandFamilies ?? [])
+  };
+}
+
+function createCodeFileNodeFromSummary(
+  summary: CodeFileExtractionSummary,
+  metadata: { imports?: string[]; exports?: string[]; commandFamilies?: string[] } = {}
+): CodeFileNode {
+  return {
+    id: createCodeFileNodeId(summary.filePath),
+    path: normalizeContextGraphPath(summary.filePath),
+    kind: summary.kind,
+    language: summary.language,
+    hash: summary.hash,
+    lineCount: summary.lineCount,
     exports: uniqueSorted(metadata.exports ?? []),
     imports: uniqueSorted(metadata.imports ?? []),
     commandFamilies: uniqueSorted(metadata.commandFamilies ?? [])
@@ -425,6 +613,44 @@ export function extractCodeFileReferences(input: {
   };
 }
 
+function extractCodeFileSummary(input: {
+  projectRoot: string;
+  path: string;
+  content: string;
+  sizeBytes: number;
+}): CodeFileExtractionSummary {
+  const normalizedPath = normalizeContextGraphPath(input.path);
+  const references = extractCodeFileReferences({
+    projectRoot: input.projectRoot,
+    path: normalizedPath,
+    content: input.content
+  });
+  return {
+    filePath: normalizedPath,
+    kind: classifyCodeFile(normalizedPath),
+    language: detectCodeFileLanguage(normalizedPath),
+    hash: hashContextGraphText(input.content),
+    lineCount: countLines(input.content),
+    sizeBytes: input.sizeBytes,
+    imports: references.imports,
+    exports: references.exports,
+    commandMentions: extractCommandMentions(input.content),
+    ...(normalizedPath === COMMAND_REGISTRY_SOURCE_PATH
+      ? { commandIdLines: Object.fromEntries(createRegistryLineMap(input.content).entries()) }
+      : {}),
+    issues: references.issues
+  };
+}
+
+function extractCommandMentions(content: string): CodeCommandMention[] {
+  const mentions: CodeCommandMention[] = [];
+  for (const entry of listCommandRegistryEntries()) {
+    const line = findCommandMentionLine(content, entry.id);
+    if (line !== undefined) mentions.push({ commandId: entry.id, line });
+  }
+  return mentions.sort((a, b) => `${a.commandId}:${a.line}`.localeCompare(`${b.commandId}:${b.line}`));
+}
+
 export function classifyCodeFile(inputPath: string): CodeFileKind {
   const filePath = normalizeContextGraphPath(inputPath);
   if (filePath === 'package.json' || filePath === 'tsconfig.json') return 'config';
@@ -479,6 +705,213 @@ export function summarizeCodeIndex(
     edges: edges.length,
     degraded: issues.some((issue) => issue.severity === 'warning' || issue.severity === 'error')
   };
+}
+
+function sanitizeCodeFileSummaries(summaries: CodeFileExtractionSummary[]): {
+  summaries: CodeFileExtractionSummary[];
+  issues: CodeIndexIssue[];
+} {
+  const availablePaths = new Set(summaries.map((summary) => summary.filePath));
+  const issues: CodeIndexIssue[] = [];
+  return {
+    summaries: summaries.map((summary) => {
+      const imports = summary.imports.map((importReference) => {
+        if (!importReference.resolvedPath || availablePaths.has(importReference.resolvedPath)) return importReference;
+        if (isRelativeImportSpecifier(importReference.specifier)) {
+          issues.push({
+            severity: 'warning',
+            code: 'CODE_INDEX_IMPORT_UNRESOLVED',
+            message: `Could not resolve relative import ${importReference.specifier} from ${summary.filePath}.`,
+            path: summary.filePath,
+            fixHint: 'Check that the import target exists, uses a supported extension, and is not ignored by code index rules.'
+          });
+        }
+        return {
+          specifier: importReference.specifier,
+          line: importReference.line
+        };
+      });
+      return { ...summary, imports: dedupeImports(imports) };
+    }),
+    issues
+  };
+}
+
+function createCodeIndexFileSummaryCacheStats(): {
+  readCount: number;
+  reusedFileCount: number;
+  recomputedFileCount: number;
+  missingFileCount: number;
+  staleFileCount: number;
+  corruptFileCount: number;
+  schemaMismatchFileCount: number;
+} {
+  return {
+    readCount: 0,
+    reusedFileCount: 0,
+    recomputedFileCount: 0,
+    missingFileCount: 0,
+    staleFileCount: 0,
+    corruptFileCount: 0,
+    schemaMismatchFileCount: 0
+  };
+}
+
+function updateCodeIndexFileSummaryCacheStats(
+  stats: ReturnType<typeof createCodeIndexFileSummaryCacheStats>,
+  status: CodeIndexFileSummaryCacheReadResult['status']
+): void {
+  if (status === 'disabled') return;
+  stats.readCount += 1;
+  if (status === 'fresh') stats.reusedFileCount += 1;
+  else {
+    stats.recomputedFileCount += 1;
+    if (status === 'missing') stats.missingFileCount += 1;
+    if (status === 'stale') stats.staleFileCount += 1;
+    if (status === 'corrupt') stats.corruptFileCount += 1;
+    if (status === 'schema-mismatch') stats.schemaMismatchFileCount += 1;
+  }
+}
+
+function createCodeIndexCacheMetadata(
+  cacheOptions: CodeIndexFileSummaryCacheOptions | undefined,
+  stats: ReturnType<typeof createCodeIndexFileSummaryCacheStats>
+): ContextCacheMetadata {
+  if (!cacheOptions) return { used: false, hit: false };
+  return {
+    used: stats.reusedFileCount > 0,
+    hit: stats.readCount > 0 && stats.recomputedFileCount === 0,
+    mode: 'code-index-file-summaries',
+    cachePath: CODE_INDEX_FILE_SUMMARY_CACHE_ROOT,
+    readFileSummaryCount: stats.readCount,
+    reusedFileSummaryCount: stats.reusedFileCount,
+    recomputedFileSummaryCount: stats.recomputedFileCount,
+    missingFileSummaryCount: stats.missingFileCount,
+    staleFileSummaryCount: stats.staleFileCount,
+    corruptFileSummaryCount: stats.corruptFileCount,
+    schemaMismatchFileSummaryCount: stats.schemaMismatchFileCount
+  };
+}
+
+function readCodeIndexFileSummaryCache(input: {
+  projectRoot: string;
+  sourceEntry: CodeIndexSourceEntry;
+  cacheOptions?: CodeIndexFileSummaryCacheOptions;
+  extractorVersion: string;
+}): CodeIndexFileSummaryCacheReadResult {
+  if (!input.cacheOptions) return { status: 'disabled' };
+  const cachePath = codeIndexFileSummaryCachePath(input.sourceEntry.path);
+  const absolutePath = path.join(input.projectRoot, cachePath);
+  if (!fs.existsSync(absolutePath)) return { status: 'missing', path: cachePath };
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(fs.readFileSync(absolutePath, 'utf8'));
+  } catch (error) {
+    return {
+      status: 'corrupt',
+      path: cachePath,
+      issue: {
+        severity: 'warning',
+        code: 'CODE_INDEX_FILE_CACHE_CORRUPT',
+        message: `Code index file summary cache at ${cachePath} could not be parsed: ${error instanceof Error ? error.message : String(error)}.`,
+        path: input.sourceEntry.path,
+        fixHint: 'Refresh the context cache with context cache warm --execute.'
+      }
+    };
+  }
+
+  if (!isCodeIndexFileSummaryCacheRecord(parsed)) {
+    return {
+      status: 'schema-mismatch',
+      path: cachePath,
+      issue: {
+        severity: 'warning',
+        code: 'CODE_INDEX_FILE_CACHE_SCHEMA_MISMATCH',
+        message: `Code index file summary cache at ${cachePath} does not match ${CODE_INDEX_FILE_SUMMARY_CACHE_SCHEMA_ID}.`,
+        path: input.sourceEntry.path,
+        fixHint: 'Refresh the context cache with context cache warm --execute.'
+      }
+    };
+  }
+
+  if (!isFreshCodeIndexFileSummaryCacheRecord(parsed, input.sourceEntry, input.extractorVersion)) {
+    return { status: 'stale', path: cachePath, record: parsed };
+  }
+  return { status: 'fresh', path: cachePath, record: parsed, summary: parsed.summary };
+}
+
+function writeCodeIndexFileSummaryCache(input: {
+  projectRoot: string;
+  sourceEntry: CodeIndexSourceEntry;
+  summary: CodeFileExtractionSummary;
+  createdAt: string;
+  extractorVersion: string;
+}): CodeIndexFileSummaryCacheRecord {
+  const normalizedPath = normalizeContextGraphPath(input.sourceEntry.path);
+  const record: CodeIndexFileSummaryCacheRecord = {
+    schemaVersion: CODE_INDEX_FILE_SUMMARY_CACHE_SCHEMA_ID,
+    cacheRecordVersion: CODE_INDEX_FILE_SUMMARY_CACHE_VERSION,
+    createdAt: input.createdAt,
+    path: normalizedPath,
+    extractorVersion: input.extractorVersion,
+    source: {
+      path: normalizedPath,
+      sizeBytes: input.sourceEntry.sizeBytes,
+      ...(input.sourceEntry.mtimeMs === undefined ? {} : { mtimeMs: input.sourceEntry.mtimeMs }),
+      ...(input.sourceEntry.contentHash ? { contentHash: input.sourceEntry.contentHash } : {}),
+      ...(input.sourceEntry.metadataHash ? { metadataHash: input.sourceEntry.metadataHash } : {})
+    },
+    summary: input.summary
+  };
+  atomicWriteTextFile(input.projectRoot, codeIndexFileSummaryCachePath(normalizedPath), `${JSON.stringify(record, null, 2)}\n`);
+  return record;
+}
+
+function isFreshCodeIndexFileSummaryCacheRecord(
+  record: CodeIndexFileSummaryCacheRecord,
+  sourceEntry: CodeIndexSourceEntry,
+  extractorVersion: string
+): boolean {
+  const normalizedPath = normalizeContextGraphPath(sourceEntry.path);
+  return record.path === normalizedPath
+    && record.source.path === normalizedPath
+    && record.summary.filePath === normalizedPath
+    && record.extractorVersion === extractorVersion
+    && record.source.sizeBytes === sourceEntry.sizeBytes
+    && record.source.mtimeMs === sourceEntry.mtimeMs
+    && record.source.contentHash === sourceEntry.contentHash
+    && record.source.metadataHash === sourceEntry.metadataHash;
+}
+
+function isCodeIndexFileSummaryCacheRecord(value: unknown): value is CodeIndexFileSummaryCacheRecord {
+  if (!value || typeof value !== 'object') return false;
+  const record = value as CodeIndexFileSummaryCacheRecord;
+  return record.schemaVersion === CODE_INDEX_FILE_SUMMARY_CACHE_SCHEMA_ID
+    && record.cacheRecordVersion === CODE_INDEX_FILE_SUMMARY_CACHE_VERSION
+    && typeof record.createdAt === 'string'
+    && typeof record.path === 'string'
+    && typeof record.extractorVersion === 'string'
+    && Boolean(record.source)
+    && typeof record.source === 'object'
+    && typeof record.source.path === 'string'
+    && typeof record.source.sizeBytes === 'number'
+    && isCodeFileExtractionSummary(record.summary);
+}
+
+function isCodeFileExtractionSummary(value: unknown): value is CodeFileExtractionSummary {
+  if (!value || typeof value !== 'object') return false;
+  const summary = value as CodeFileExtractionSummary;
+  return typeof summary.filePath === 'string'
+    && CODE_FILE_KINDS.includes(summary.kind)
+    && CODE_FILE_LANGUAGES.includes(summary.language)
+    && typeof summary.hash === 'string'
+    && typeof summary.lineCount === 'number'
+    && typeof summary.sizeBytes === 'number'
+    && Array.isArray(summary.imports)
+    && Array.isArray(summary.exports)
+    && Array.isArray(summary.commandMentions)
+    && Array.isArray(summary.issues);
 }
 
 function countLines(content: string): number {
@@ -555,7 +988,7 @@ function resolveRelativeCodeImport(input: {
   return undefined;
 }
 
-function createImportEdges(importReferences: Array<{ filePath: string; content: string; imports: CodeImportReference[] }>): CodeEdge[] {
+function createImportEdges(importReferences: CodeFileExtractionSummary[]): CodeEdge[] {
   const edges: CodeEdge[] = [];
   const seen = new Set<string>();
   for (const sourceFile of importReferences) {
@@ -565,7 +998,7 @@ function createImportEdges(importReferences: Array<{ filePath: string; content: 
       const source = createContextGraphSourceRef({
         path: sourceFile.filePath,
         line: importReference.line,
-        content: sourceFile.content,
+        hash: sourceFile.hash,
         extractor: 'extractCodeImports'
       });
       const edge: CodeEdge = {
@@ -612,7 +1045,7 @@ function createCodeSymbolNodes(fileReferences: Array<{ filePath: string; exports
   return symbols.sort((a, b) => a.id.localeCompare(b.id));
 }
 
-function createSymbolEdges(fileReferences: Array<{ filePath: string; content: string; exports: CodeExportReference[] }>): CodeEdge[] {
+function createSymbolEdges(fileReferences: CodeFileExtractionSummary[]): CodeEdge[] {
   const edges: CodeEdge[] = [];
   const seen = new Set<string>();
   for (const sourceFile of fileReferences) {
@@ -622,7 +1055,7 @@ function createSymbolEdges(fileReferences: Array<{ filePath: string; content: st
       const source = createContextGraphSourceRef({
         path: sourceFile.filePath,
         line: exportReference.line,
-        content: sourceFile.content,
+        hash: sourceFile.hash,
         extractor: 'extractCodeSymbols'
       });
       for (const type of ['DEFINES_SYMBOL', 'EXPORTS'] as CodeEdgeType[]) {
@@ -647,10 +1080,11 @@ function createSymbolEdges(fileReferences: Array<{ filePath: string; content: st
   return edges.sort((a, b) => a.id.localeCompare(b.id));
 }
 
-function createCommandHints(fileReferences: Array<{ filePath: string; content: string }>): CodeCommandHint[] {
+function createCommandHints(fileReferences: CodeFileExtractionSummary[]): CodeCommandHint[] {
   const availablePaths = new Set(fileReferences.map((reference) => reference.filePath));
-  const registryContent = fileReferences.find((reference) => reference.filePath === COMMAND_REGISTRY_SOURCE_PATH)?.content;
-  const registryLineByCommand = createRegistryLineMap(registryContent ?? '');
+  const registryLineByCommand = new Map(Object.entries(
+    fileReferences.find((reference) => reference.filePath === COMMAND_REGISTRY_SOURCE_PATH)?.commandIdLines ?? {}
+  ));
   const hints: CodeCommandHint[] = [];
 
   for (const entry of listCommandRegistryEntries()) {
@@ -687,16 +1121,17 @@ function createCommandFamiliesByPath(hints: CodeCommandHint[]): Map<string, stri
   return new Map([...familiesByPath.entries()].map(([filePath, families]) => [filePath, [...families].sort()]));
 }
 
-function createCommandHintEdges(fileReferences: Array<{ filePath: string; content: string }>, hints: CodeCommandHint[]): CodeEdge[] {
-  const contentByPath = new Map(fileReferences.map((reference) => [reference.filePath, reference.content]));
+function createCommandHintEdges(fileReferences: CodeFileExtractionSummary[], hints: CodeCommandHint[]): CodeEdge[] {
+  const summaryByPath = new Map(fileReferences.map((reference) => [reference.filePath, reference]));
   const edges: CodeEdge[] = [];
   const seen = new Set<string>();
   for (const hint of hints) {
     const commandNodeId = createCommandNodeId(hint.commandId);
+    const registrySummary = summaryByPath.get(COMMAND_REGISTRY_SOURCE_PATH);
     const source = createContextGraphSourceRef({
       path: COMMAND_REGISTRY_SOURCE_PATH,
       ...(hint.sourceLine === undefined ? {} : { line: hint.sourceLine }),
-      content: contentByPath.get(COMMAND_REGISTRY_SOURCE_PATH),
+      ...(registrySummary ? { hash: registrySummary.hash } : {}),
       extractor: 'extractCommandHints'
     });
 
@@ -743,15 +1178,15 @@ function createCommandHintEdges(fileReferences: Array<{ filePath: string; conten
 
 function createTestRelationEdges(projectRoot: string, fileReferences: Array<{
   filePath: string;
-  content: string;
+  hash: string;
   imports: CodeImportReference[];
+  commandMentions: CodeCommandMention[];
 }>): CodeEdge[] {
   const edges: CodeEdge[] = [];
   const seen = new Set<string>();
   const sourceFiles = fileReferences.filter((reference) => classifyCodeFile(reference.filePath) === 'source');
   const testFiles = fileReferences.filter((reference) => classifyCodeFile(reference.filePath) === 'test');
   const sourceFilesByStem = createSourceFilesByStem(sourceFiles);
-  const commandEntries = listCommandRegistryEntries();
   const testPaths = new Set(testFiles.map((reference) => reference.filePath));
 
   for (const testFile of testFiles) {
@@ -761,7 +1196,7 @@ function createTestRelationEdges(projectRoot: string, fileReferences: Array<{
       const source = createContextGraphSourceRef({
         path: testFile.filePath,
         line: importReference.line,
-        content: testFile.content,
+        hash: testFile.hash,
         extractor: 'extractTestRelations'
       });
       pushUniqueCodeEdge(edges, seen, {
@@ -778,7 +1213,7 @@ function createTestRelationEdges(projectRoot: string, fileReferences: Array<{
       const source = createContextGraphSourceRef({
         path: testFile.filePath,
         line: 1,
-        content: testFile.content,
+        hash: testFile.hash,
         extractor: 'extractTestRelations'
       });
       pushUniqueCodeEdge(edges, seen, {
@@ -791,21 +1226,19 @@ function createTestRelationEdges(projectRoot: string, fileReferences: Array<{
       });
     }
 
-    for (const entry of commandEntries) {
-      const line = findCommandMentionLine(testFile.content, entry.id);
-      if (line === undefined) continue;
+    for (const mention of testFile.commandMentions) {
       const source = createContextGraphSourceRef({
         path: testFile.filePath,
-        line,
-        content: testFile.content,
+        line: mention.line,
+        hash: testFile.hash,
         extractor: 'extractTestRelations'
       });
       pushUniqueCodeEdge(edges, seen, {
         type: 'TESTS_FILE',
         from: testNodeId,
-        to: createCommandNodeId(entry.id),
+        to: createCommandNodeId(mention.commandId),
         confidence: 'heuristic',
-        reason: `Test file ${testFile.filePath} mentions command id ${entry.id}.`,
+        reason: `Test file ${testFile.filePath} mentions command id ${mention.commandId}.`,
         source
       });
     }

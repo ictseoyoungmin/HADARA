@@ -377,3 +377,4 @@
 | T-0374 | C6 Graph Core and Context Pack Warm Path | Done | tasks/T-0374-c6-graph-core-and-context-pack-warm-path | |
 | T-0375 | C6 Code Index Shard Persistence | Done | tasks/T-0375-c6-code-index-shard-persistence | |
 | T-0376 | Context Boundary and Warm Path Review Hardening | Done | tasks/T-0376-context-boundary-and-warm-path-review-hardening | Review items 1-4 hardened slice boundaries, graph-core tests, benchmark timeout handling, and context-pack command args. |
+| T-0377 | C6 Incremental Code Index Recompute | Done | tasks/T-0377-c6-incremental-code-index-recompute | Explicit warm execute now reuses per-file code-index summaries and recomputes only changed/bad files. |

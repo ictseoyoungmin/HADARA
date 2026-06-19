@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, T-0360 added the detailed C6 fast cache implementation spec, T-0361-T-0362 completed C3 context pack schema/CLI work, T-0363-T-0368 completed the C6 source-manifest/cache warm/shard/fast-fingerprint line needed before C4, T-0369 added the C4 core raw slice command, T-0371 added the focused C6 speed-first graph/cache warm-path spec, T-0370 completed the remaining C4 symbol/candidate slicing surface, T-0372 hardened C4 byte/local boundaries plus acceptance drift validation before C5, T-0373 measured mounted/ext4 C6 performance, T-0374 added graph-core/context-pack warm shard consumption, T-0375 added code-index shard persistence for code-aware graph reads, and T-0376 handled review hardening for raw slice boundaries, graph-core regression coverage, benchmark timeout behavior, and structured context-pack slice command args. |
-| Current Phase | 0.3.3 context-routing C6 warm-cache hardening before broad C5 defaults | C1 project graph/state projection, C2 code-link/index output, C3 public context pack read plans, C4 public context slice strategies, C6.1-C6.5 cache/fingerprint acceleration, graph-core/context-pack warm reads, code-index shard persistence, and T-0376 review hardening are in place. Fresh `context graph --include-code` can reuse `.hadara/local/cache/context/code-index.json` read-only; first warm still builds the whole code index, and per-file incremental recompute remains follow-up. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0376 Context Boundary and Warm Path Review Hardening | Hardened context-slice raw read boundaries, added graph-core stale/corrupt/include-code regression coverage, made the benchmark timeout path SIGKILL-capable, and added structured context-pack slice command args. |
-| Active / Next Task | TBD C6 incremental code-index recompute or bounded C5 Session Start | Review items 1-4 are complete. Return to the original plan: either make first code-index warm cheaper through changed-file/per-file recompute, or keep C5 session-start defaults bounded/degraded for mounted workspaces. |
-| Validation Baseline | T-0376 focused tests, Docker ext4 temp-workspace full check, built CLI smokes, and pending close audit | Docker focused review-hardening tests passed 5 files / 38 tests; Docker ext4 temp-workspace `npm run check` passed 135 files / 889 tests with refreshed `dist`; built CLI version and context-slice boundary smokes passed. Evidence: `ev:T-0376:fc7d0da873a64f9b879d6f84`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, T-0360 added the detailed C6 fast cache implementation spec, T-0361-T-0362 completed C3 context pack schema/CLI work, T-0363-T-0368 completed the C6 source-manifest/cache warm/shard/fast-fingerprint line needed before C4, T-0369 added the C4 core raw slice command, T-0371 added the focused C6 speed-first graph/cache warm-path spec, T-0370 completed the remaining C4 symbol/candidate slicing surface, T-0372 hardened C4 byte/local boundaries plus acceptance drift validation before C5, T-0373 measured mounted/ext4 C6 performance, T-0374 added graph-core/context-pack warm shard consumption, T-0375 added code-index shard persistence for code-aware graph reads, T-0376 handled review hardening, and T-0377 added incremental per-file code-index recompute for explicit warm execute. |
+| Current Phase | 0.3.3 context-routing C6 warm-cache hardening before broad C5 defaults | C1 project graph/state projection, C2 code-link/index output, C3 public context pack read plans, C4 public context slice strategies, C6.1-C6.5 cache/fingerprint acceleration, graph-core/context-pack warm reads, code-index shard persistence, review hardening, and per-file code-index warm recompute are in place. `context cache warm --execute` can now reuse unchanged local per-file summaries while `context graph --include-code` remains read-only over fresh merged shards or live fallback. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0377 C6 Incremental Code Index Recompute | Added local per-file code-index summary cache records used only by explicit warm execute; changed/corrupt entries fall back to live extraction; read commands do not write per-file cache. |
+| Active / Next Task | TBD bounded C5 Session Start or remaining context-routing performance hardening | C6 warm path is now bounded for unchanged code files. The next useful slice is to consume context pack/slice/code-index safely in C5 Session Start with strict budgets/degraded-mode behavior, unless another C6 perf blocker appears. |
+| Validation Baseline | T-0377 focused tests, Docker ext4 temp-workspace full check, dist sync, and built CLI smokes | Focused Docker validation passed 2 files / 26 tests; Docker sync-build passed 135 files / 891 tests and refreshed `dist`; built CLI cache warm execute and task-scoped include-code graph smokes passed. Evidence: `ev:T-0377:0dc1b0f01e0f4902aebe2b82`, `ev:T-0377:d6bf4440e99f41938bef26e7`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0376 | Close/audit context boundary and warm-path review hardening, then continue with incremental code-index recompute or bounded C5 session-start integration. | Implementation validation passed: `ev:T-0376:fc7d0da873a64f9b879d6f84`. |
+| T-0377 | Finalize lifecycle close/audit for incremental code-index recompute, then continue with bounded C5 Session Start or remaining context-routing performance hardening. | Implementation validation passed: `ev:T-0377:0dc1b0f01e0f4902aebe2b82`, `ev:T-0377:d6bf4440e99f41938bef26e7`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0377 C6 Incremental Code Index Recompute | Added explicit-warm-only per-file code-index summary reuse and fallback diagnostics. | `ev:T-0377:0dc1b0f01e0f4902aebe2b82`, `ev:T-0377:d6bf4440e99f41938bef26e7` |
 | T-0376 Context Boundary and Warm Path Review Hardening | Hardened raw slice boundaries, graph-core regression coverage, benchmark timeout handling, and context-pack slice command argv output. | `ev:T-0376:fc7d0da873a64f9b879d6f84` |
 | T-0375 C6 Code Index Shard Persistence | Added code-index cache shard persistence and made include-code graph reads consume fresh code-index cache without writes. | `ev:T-0375:b292024f4a504e08b624f834`, `ev:T-0375:cf8bf56ec33d4847be643074` |
-| T-0374 C6 Graph Core and Context Pack Warm Path | Added graph-core cache shard write/read support and made graph/pack reads use fresh graph-core cache without cache writes. | `ev:T-0374:860bb8bc1a8845eb8fd03eb8`, `ev:T-0374:1500f663db95403ea409838c` |
 
 ## Current Known Problems
 
@@ -90,7 +90,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Continue with C6 incremental code-index recompute or bounded C5 Session Start. | T-0376 closed the bounded review hardening items; first code-index warm still rebuilds the whole code index and mounted workspaces remain the hard constraint. | Read `docs/specs/0.3.3/context-routing/08_C6_Speed_First_Graph_Build_and_Warm_Path_Spec.md`, `docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md`, and the T-0376 capsule handoff. |
+| Continue with bounded C5 Session Start or remaining context-routing performance hardening. | T-0377 made explicit code-index warm reuse unchanged per-file summaries; mounted workspaces remain the hard constraint for any broad session-start default. | Read `docs/specs/0.3.3/context-routing/08_C6_Speed_First_Graph_Build_and_Warm_Path_Spec.md`, `docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md`, and the T-0377 capsule handoff. |
 
 ## Validation Baseline
 

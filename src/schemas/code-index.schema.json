@@ -159,7 +159,9 @@
             "CODE_INDEX_PARSE_DEGRADED",
             "CODE_INDEX_TOO_LARGE",
             "CODE_INDEX_UNSUPPORTED_LANGUAGE",
-            "CODE_INDEX_IMPORT_UNRESOLVED"
+            "CODE_INDEX_IMPORT_UNRESOLVED",
+            "CODE_INDEX_FILE_CACHE_CORRUPT",
+            "CODE_INDEX_FILE_CACHE_SCHEMA_MISMATCH"
           ]
         },
         "message": { "type": "string", "minLength": 1 },

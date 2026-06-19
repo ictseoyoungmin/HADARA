@@ -19,6 +19,7 @@ import {
   writeContextCacheRecord,
   writeContextSourceManifestCache
 } from '../../src/context/context-cache-store';
+import { codeIndexFileSummaryCachePath } from '../../src/context/code-index';
 import { buildContextGraphReport } from '../../src/context/context-graph-builder';
 import {
   buildContextSourceManifest,
@@ -358,6 +359,47 @@ describe('context cache store', () => {
     });
     expect(stale.status).toBe('stale');
     expect(stale.hit).toBe(false);
+  });
+
+  it('reuses unchanged per-file code-index summaries during stale warm execute', () => {
+    const root = tempProject();
+    write(root, 'docs/TASK_BOARD.md', '# TASK_BOARD\n');
+    write(root, 'src/example.ts', 'export const before = 1;\n');
+    write(root, 'src/helper.ts', 'export const helper = 2;\n');
+
+    const firstWarm = createContextCacheWarmReport({
+      projectRoot: root,
+      execute: true,
+      generatedAt: '2026-06-18T15:01:10.000Z'
+    });
+    expect(firstWarm.shards.items).toContainEqual(expect.objectContaining({
+      extractorKey: 'codeIndex',
+      executed: true,
+      readFileSummaryCount: 2,
+      reusedFileSummaryCount: 0,
+      recomputedFileSummaryCount: 2,
+      missingFileSummaryCount: 2
+    }));
+    const helperCachePath = codeIndexFileSummaryCachePath('src/helper.ts');
+    const helperCacheBefore = fs.readFileSync(path.join(root, helperCachePath), 'utf8');
+
+    write(root, 'src/example.ts', 'export const after = 22;\n');
+    const secondWarm = createContextCacheWarmReport({
+      projectRoot: root,
+      execute: true,
+      generatedAt: '2026-06-18T15:01:20.000Z'
+    });
+    expect(secondWarm.shards.items).toContainEqual(expect.objectContaining({
+      extractorKey: 'codeIndex',
+      beforeStatus: 'stale',
+      executed: true,
+      readFileSummaryCount: 2,
+      reusedFileSummaryCount: 1,
+      recomputedFileSummaryCount: 1,
+      staleFileSummaryCount: 1
+    }));
+    expect(fs.readFileSync(path.join(root, helperCachePath), 'utf8')).toBe(helperCacheBefore);
+    assertSchema('hadara.context.cacheWarm.v1', secondWarm);
   });
 
   it('writes and reads source-manifest cache as a fresh hit across generatedAt changes', () => {

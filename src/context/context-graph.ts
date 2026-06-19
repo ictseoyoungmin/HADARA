@@ -189,6 +189,13 @@ export interface ContextCacheMetadata {
   schemaMismatchShardCount?: number;
   shardPaths?: string[];
   staleExtractorKeys?: string[];
+  readFileSummaryCount?: number;
+  reusedFileSummaryCount?: number;
+  recomputedFileSummaryCount?: number;
+  missingFileSummaryCount?: number;
+  staleFileSummaryCount?: number;
+  corruptFileSummaryCount?: number;
+  schemaMismatchFileSummaryCount?: number;
   sourceManifestCacheFresh?: boolean;
   sourceManifestFastPath?: 'hit' | 'miss' | 'skipped';
   sourceManifestFastPathReason?: string;

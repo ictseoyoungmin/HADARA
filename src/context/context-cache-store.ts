@@ -13,7 +13,7 @@ import {
   type ContextSourceManifest
 } from './source-manifest';
 import type { ContextCacheMetadata, GraphExtractionResult } from './context-graph';
-import { buildCodeIndexReport, CODE_INDEX_SCHEMA_ID, type CodeIndexReport } from './code-index';
+import { buildCodeIndexReport, CODE_INDEX_SCHEMA_ID, type CodeIndexReport, type CodeIndexSourceEntry } from './code-index';
 import { hashContextGraphJson, mergeGraphExtractionResults, normalizeContextGraphPath } from './extractor-contract';
 import {
   extractAgentHandoff,
@@ -204,6 +204,13 @@ export interface ContextGraphExtractorShardWarmItem {
   beforeCacheKey?: string;
   afterCacheKey?: string;
   skippedReason?: 'cache-fresh';
+  readFileSummaryCount?: number;
+  reusedFileSummaryCount?: number;
+  recomputedFileSummaryCount?: number;
+  missingFileSummaryCount?: number;
+  staleFileSummaryCount?: number;
+  corruptFileSummaryCount?: number;
+  schemaMismatchFileSummaryCount?: number;
 }
 
 export type ContextGraphExtractorShardReadStatus =
@@ -956,10 +963,17 @@ function createContextCodeIndexShardWarmItem(input: {
   });
   const planned = !read.hit;
   let afterCacheKey: string | undefined;
+  let result: CodeIndexReport | undefined;
   if (input.execute && planned) {
-    const result = buildCodeIndexReport({
+    result = buildCodeIndexReport({
       projectRoot: input.projectRoot,
-      generatedAt: input.generatedAt
+      generatedAt: input.generatedAt,
+      sourceEntries: codeIndexSourceEntries(input.manifest),
+      fileSummaryCache: {
+        mode: 'read-write',
+        createdAt: input.generatedAt,
+        extractorVersion: input.manifest.extractorVersions.codeIndex
+      }
     });
     const record = writeContextCodeIndexShard({
       projectRoot: input.projectRoot,
@@ -977,8 +991,30 @@ function createContextCodeIndexShardWarmItem(input: {
     executed: input.execute && planned,
     ...(read.record ? { beforeCacheKey: read.record.cacheKey } : {}),
     ...(afterCacheKey ? { afterCacheKey } : {}),
+    ...(result?.cache?.readFileSummaryCount === undefined ? {} : {
+      readFileSummaryCount: result.cache.readFileSummaryCount,
+      reusedFileSummaryCount: result.cache.reusedFileSummaryCount,
+      recomputedFileSummaryCount: result.cache.recomputedFileSummaryCount,
+      missingFileSummaryCount: result.cache.missingFileSummaryCount,
+      staleFileSummaryCount: result.cache.staleFileSummaryCount,
+      corruptFileSummaryCount: result.cache.corruptFileSummaryCount,
+      schemaMismatchFileSummaryCount: result.cache.schemaMismatchFileSummaryCount
+    }),
     ...(!planned ? { skippedReason: 'cache-fresh' as const } : {})
   };
+}
+
+function codeIndexSourceEntries(manifest: ContextSourceManifest): CodeIndexSourceEntry[] {
+  return manifest.sources
+    .filter((source) => source.extractorKeys.includes('codeIndex'))
+    .map((source) => ({
+      path: source.path,
+      sizeBytes: source.sizeBytes,
+      ...(source.mtimeMs === undefined ? {} : { mtimeMs: source.mtimeMs }),
+      ...(source.contentHash ? { contentHash: source.contentHash } : {}),
+      metadataHash: source.metadataHash,
+      extractorKeys: source.extractorKeys
+    }));
 }
 
 function withCodeIndexCacheHitMetadata(report: CodeIndexReport, record: ContextCacheRecord<CodeIndexReport>, cachePath: string): CodeIndexReport {
