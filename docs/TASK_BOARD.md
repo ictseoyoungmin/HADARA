@@ -385,3 +385,4 @@
 | T-0382 | Session Start JSON UX Hardening | Done | tasks/T-0382-session-start-json-ux-hardening | Added structured Session Start guidance and no-task degraded-ok UX. |
 | T-0383 | Context Routing E2E Smoke Pack | Done | tasks/T-0383-context-routing-e2e-smoke-pack | Added fast/full context-routing E2E smoke script profiles with cache no-write fingerprint checks. |
 | T-0384 | Cache Warm Diagnostics Cleanup | Done | tasks/T-0384-cache-warm-diagnostics-cleanup | Added additive cache diagnostics for stale/corrupt/partial states, slow-path metadata, and warm command args. |
+| T-0385 | 0.3.3 Readiness Cleanup | Done | tasks/T-0385-0-3-3-readiness-cleanup | |

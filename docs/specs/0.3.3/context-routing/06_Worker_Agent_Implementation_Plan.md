@@ -135,15 +135,15 @@ Suggested capsules:
 8. Cache warm command shard phases.
 9. Performance budget regression fixtures.
 
-Current cleanup capsules after T-0380:
+Cleanup status after T-0385:
 
-1. T-0381 Context Routing Spec Completion Audit.
-2. T-0382 Session Start JSON/UX Hardening.
-3. T-0383 Context Routing E2E Smoke Pack.
-4. T-0384 Cache Warm Diagnostics Cleanup.
-5. T-0385 0.3.3 Readiness Cleanup.
-6. T-0386 Acceptance Parser v2 / Lifecycle Close Contract follow-up.
-7. T-0387 Context Slice/Pack Security Boundary Final Audit.
+1. T-0381 Context Routing Spec Completion Audit: complete.
+2. T-0382 Session Start JSON/UX Hardening: complete.
+3. T-0383 Context Routing E2E Smoke Pack: complete.
+4. T-0384 Cache Warm Diagnostics Cleanup: complete.
+5. T-0385 0.3.3 Readiness Cleanup: complete.
+6. T-0386 Acceptance Parser v2 / Lifecycle Close Contract follow-up: remaining.
+7. T-0387 Context Slice/Pack Security Boundary Final Audit: remaining.
 
 ## General Rules
 

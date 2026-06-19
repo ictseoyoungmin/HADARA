@@ -2,9 +2,9 @@
 
 ## Status
 
-Detailed C6 implementation specification with implementation snapshot.
+Detailed C6 implementation specification with readiness snapshot.
 
-Updated 2026-06-19 by T-0381 to reflect implementation through T-0380. Use `09_Context_Routing_Implementation_Completion_Audit.md` for the current completion snapshot and cleanup queue.
+Updated 2026-06-19 by T-0385 to reflect implementation and cleanup through T-0384. Use `09_Context_Routing_Implementation_Completion_Audit.md` for the current completion snapshot and remaining follow-up queue.
 
 This document extends `05_Indexing_Cache_Invalidation_and_Performance_Spec.md`. The `05` spec remains the compact contract for cache location, invalidation, degraded output, and default budgets. This document defines the speed-first implementation shape and records what has landed.
 
@@ -30,11 +30,11 @@ The design must:
 |---|---|---|
 | C6.1 Source Manifest and Shared Discovery | Implemented through T-0363. | Reuse it as the single source discovery/stat path for graph, code index, and cache warm. |
 | C6.2 Cache Store and Status Read Model | Implemented through T-0364. | Keep `context cache status` read-only; use it to prove hit/stale/corrupt states before writes. |
-| C6.3 Cache Warm / Integration | Source-manifest warm, extractor shards, graph-core, code-index shard, per-file code-index summaries, context-pack warm graph consumption, Session Start warm consumption, and advisory performance regression fixtures are implemented through T-0380. | Continue with cleanup capsules T-0382 through T-0387; do not add hidden default scans. |
+| C6.3 Cache Warm / Integration | Source-manifest warm, extractor shards, graph-core, code-index shard, per-file code-index summaries, context-pack warm graph consumption, Session Start warm consumption, advisory performance regression fixtures, E2E smoke coverage, and cache diagnostics are implemented through T-0384. | Continue with T-0386/T-0387 hardening; do not add hidden default scans. |
 | C4 Context Slice | Implemented through T-0370 and hardened through T-0372/T-0376. | Keep raw slices bounded, source-addressed, and excluded from cache/local generated surfaces. |
-| C5 Session Start | Bounded no-live MVP implemented through T-0378; T-0379 added proven-fresh warm-cache consumption before fallback. | T-0382 should polish JSON/UX while preserving bounded default behavior. |
+| C5 Session Start | Bounded no-live MVP implemented through T-0378; T-0379 added proven-fresh warm-cache consumption before fallback; T-0382 added structured guidance/no-task UX. | Preserve bounded default behavior and explicit live opt-in. |
 
-The immediate priority after T-0380 is cleanup/hardening. A slow live graph remains unacceptable as a default on mounted workspaces, so C5 must consume warmed cache when freshness is proven and otherwise degrade explicitly.
+T-0382 through T-0385 completed the post-T-0380 readiness cleanup. A slow live graph remains unacceptable as a default on mounted workspaces, so C5 must consume warmed cache when freshness is proven and otherwise degrade explicitly. Broad cache/graph/pack reads may remain slower explicit operations on mounted filesystems.
 
 ## Speed-First Decision Summary
 
@@ -427,18 +427,18 @@ Required issue codes:
 
 ## Existing Code Change Status
 
-| Area | Implementation State After T-0380 | Residual Follow-up |
+| Area | Implementation State After T-0385 | Residual Follow-up |
 |---|---|---|
-| `src/context/context-graph-builder.ts` | Cache-aware orchestration can consume fresh graph-core/extractor shards read-only and fall back live. | T-0384 should improve diagnostics for stale/corrupt/partial cache paths. |
+| `src/context/context-graph-builder.ts` | Cache-aware orchestration can consume fresh graph-core/extractor shards read-only, fall back live, and report clearer stale/corrupt/partial cache diagnostics through the cache status/warm surface. | Keep new extractor cache metadata additive and source-addressed. |
 | `src/context/context-graph-extractor.ts` | Extractor keys/versions and source subset validation support the warmed shard path. | Keep extractor metadata additive when new extractors land. |
 | `src/context/code-index.ts` | Source-manifest-fed code-index caching and incremental per-file reuse are implemented. | Parser-backed extraction remains deferred. |
-| `src/context/code-graph-extractor.ts` | Fresh code-index cache can feed `context graph --include-code`; stale/corrupt/missing cache falls back live. | T-0383 should add E2E smoke coverage for include-code warm behavior. |
+| `src/context/code-graph-extractor.ts` | Fresh code-index cache can feed `context graph --include-code`; stale/corrupt/missing cache falls back live; explicit full-profile smoke coverage exists. | Keep include-code reads out of default fast smoke/session-start paths unless freshness is proven. |
 | `src/context/context-pack.ts` | Context pack can consume cached graph/code summaries when fresh. | Pack-specific persisted shard is not required for 0.3.3 unless later measurements justify it. |
 | `src/context/source-manifest.ts` | Source manifests, git candidate enumeration, git fingerprint fast proof, and subset hashes are implemented. | Mounted cold broad graph reads can still be slow; bounded Session Start avoids this by default. |
 | `src/context/context-cache-store.ts` | Schema-guarded cache records, source manifest cache, extractor/graph-core/code-index writes, and atomic writes are implemented. | Header-first optimization remains a design preference, not a required separate 0.3.3 deliverable. |
-| `src/cli/context.ts` or equivalent command handler | `context graph`, `context pack`, and Session Start consume cache read-only; `context cache warm --execute` is the explicit write surface. | T-0384 should make cache diagnostics clearer. |
+| `src/cli/context.ts` or equivalent command handler | `context graph`, `context pack`, and Session Start consume cache read-only; `context cache warm --execute` is the explicit write surface; cache status/warm expose structured diagnostics and warm command args. | Preserve the read/write split. |
 | `src/schemas/*` | Public context-routing schemas include graph/code/source-manifest/cache/status/warm/pack/slice/session-start surfaces. | Add new shard schemas only when a new public persisted shard is exposed. |
-| `tests/unit/*` | Cache hit/miss/stale/corrupt/no-write coverage exists across graph/cache/code/session-start work. | T-0383 should consolidate built-CLI E2E smoke coverage. |
+| `tests/unit/*` | Cache hit/miss/stale/corrupt/no-write coverage exists across graph/cache/code/session-start work, and built-CLI smoke coverage exists for the default context-routing path. | Keep full-profile mounted workloads explicit because they can exceed short budgets. |
 
 New implementation modules should be small and focused:
 
