@@ -8,6 +8,8 @@ Updated 2026-06-19 to make speed the primary C6 design constraint, sharpen the G
 
 This document extends `05_Indexing_Cache_Invalidation_and_Performance_Spec.md`. The `05` spec remains the compact contract for cache location, invalidation, degraded output, and default budgets. This document defines the speed-first implementation shape for future capsules.
 
+For the most execution-focused C6 performance blueprint after the initial source-manifest/cache/shard work, also read `08_C6_Speed_First_Graph_Build_and_Warm_Path_Spec.md`. It narrows the next C6 work around cold graph ordering, warm shard reads, code-index persistence, context-pack warm paths, and the concrete code changes required to keep graph routing fast.
+
 ## Goal
 
 Make context graph, state projection, code index, and context pack startup fast enough that agents can use them on every session start without hesitation.

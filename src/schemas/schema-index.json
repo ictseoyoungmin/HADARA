@@ -107,6 +107,13 @@
       "notes": "Documents deterministic read-only C3 context pack reports over graph-ranked task, document, command, evidence, code, known-problem, validation, write-boundary, and slice-candidate items."
     },
     {
+      "id": "hadara.contextSlice.v1",
+      "path": "src/schemas/context-slice.schema.json",
+      "status": "fixture",
+      "owner": "context/context-slice",
+      "notes": "Documents deterministic read-only C4 raw context slice reports for explicit ranges, tail windows, keyword windows, managed sections, symbol neighborhoods, and context-pack candidates."
+    },
+    {
       "id": "hadara.contextGraph.v1",
       "path": "src/schemas/context-graph.schema.json",
       "status": "fixture",

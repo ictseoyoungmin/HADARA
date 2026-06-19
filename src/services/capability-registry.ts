@@ -855,6 +855,37 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     notes: 'Read-only C3 projection; C4 slicing and persistent C6 cache writes are not implemented by this command.'
   }),
   commandEntry({
+    id: 'context.slice',
+    command: 'hadara context slice (--path <path> (--from <line> --to <line>|--symbol <name>|--keyword <text> [--window <lines>]|--tail <lines>|--managed-section <section-id>)|--task <task-id> --candidate <candidate-id> [--include-code]) --json',
+    summary: 'Emit deterministic read-only raw context slices from one explicit project file or context-pack candidate.',
+    canonical: true,
+    appearsInDefaultHelp: false,
+    family: 'project-health',
+    scope: 'project',
+    lifecycleStage: 'inspect',
+    requiredness: 'diagnostic',
+    writeBoundary: 'read-only',
+    readOnly: true,
+    risk: 'low',
+    actor: 'agent-worker',
+    status: 'experimental',
+    schemaVersion: 'hadara.contextSlice.v1',
+    since: '0.3.3',
+    docs: ['docs/CLI_JSON_CONTRACT.md', 'docs/COMMAND_SURFACE.md', 'docs/SCHEMAS.md'],
+    implementationFiles: ['src/cli/context.ts', 'src/context/context-slice.ts'],
+    testFiles: ['tests/unit/context-slice.test.ts', 'tests/unit/context-graph-cli.test.ts'],
+    examples: [
+      example('Read an explicit range', 'hadara context slice --path docs/AGENT_HANDOFF.md --from 1 --to 80 --json', 'When a worker needs exact source text from a known range.'),
+      example('Read a symbol neighborhood', 'hadara context slice --path src/cli/context.ts --symbol handleContextCommand --json', 'When a worker needs bounded source around one exported symbol.'),
+      example('Read keyword windows', 'hadara context slice --path docs/TASK_BOARD.md --keyword T-0001 --window 20 --json', 'When a worker needs bounded context around known text.'),
+      example('Read a managed section', 'hadara context slice --path docs/TASK_BOARD.md --managed-section task-board --json', 'When a worker needs marker-bounded managed content.'),
+      example('Read a context-pack candidate', 'hadara context slice --task T-0001 --candidate slice-candidate:1:doc:docs/IMPLEMENTATION_SOP.md --json', 'When a worker wants exact text for a C3 slice candidate.')
+    ],
+    related: ['context.pack', 'context.graph', 'docs.managed.list'],
+    conflictsWith: [],
+    notes: 'C4 implementation reads exact source text through bounded strategies. Candidate slicing resolves against the current C3 context pack and remains read-only.'
+  }),
+  commandEntry({
     id: 'context.cache.status',
     command: 'hadara context cache status --json',
     summary: 'Inspect read-only C6 context cache freshness, source-manifest staleness, and extractor invalidation keys.',

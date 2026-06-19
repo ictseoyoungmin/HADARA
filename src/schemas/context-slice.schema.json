@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.contextSlice.v1",
+  "x-hadara-schema-id": "hadara.contextSlice.v1",
+  "title": "HADARA Context Slice Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "command",
+    "ok",
+    "generatedAt",
+    "projectRoot",
+    "path",
+    "sourceHash",
+    "lineCount",
+    "strategy",
+    "slices",
+    "summary",
+    "issues"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.contextSlice.v1" },
+    "command": { "const": "context.slice" },
+    "ok": { "type": "boolean" },
+    "generatedAt": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "path": { "type": "string" },
+    "sourceHash": { "type": "string" },
+    "lineCount": { "type": "number" },
+    "strategy": { "$ref": "#/$defs/strategy" },
+    "slices": { "type": "array", "items": { "$ref": "#/$defs/slice" } },
+    "summary": { "$ref": "#/$defs/summary" },
+    "issues": { "type": "array", "items": { "$ref": "#/$defs/issue" } }
+  },
+  "$defs": {
+    "strategy": {
+      "enum": ["explicit-range", "symbol-neighborhood", "keyword-window", "tail-window", "diff-hunk", "managed-section", "context-candidate"]
+    },
+    "slice": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "path", "strategy", "startLine", "endLine", "text", "sourceHash", "reason", "confidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "strategy": { "$ref": "#/$defs/strategy" },
+        "startLine": { "type": "number" },
+        "endLine": { "type": "number" },
+        "text": { "type": "string" },
+        "sourceHash": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "confidence": { "enum": ["explicit", "derived", "heuristic"] }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["sliceCount", "totalLines", "totalBytes", "truncated"],
+      "properties": {
+        "sliceCount": { "type": "number" },
+        "totalLines": { "type": "number" },
+        "totalBytes": { "type": "number" },
+        "truncated": { "type": "boolean" }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "enum": ["info", "warning", "error"] },
+        "code": {
+          "enum": [
+            "CONTEXT_SLICE_FILE_NOT_FOUND",
+            "CONTEXT_SLICE_OUTSIDE_PROJECT",
+            "CONTEXT_SLICE_BINARY_FILE",
+            "CONTEXT_SLICE_RANGE_INVALID",
+            "CONTEXT_SLICE_RANGE_CLAMPED",
+            "CONTEXT_SLICE_SYMBOL_NOT_FOUND",
+            "CONTEXT_SLICE_KEYWORD_NOT_FOUND",
+            "CONTEXT_SLICE_CANDIDATE_NOT_FOUND",
+            "CONTEXT_SLICE_TOO_LARGE",
+            "CONTEXT_SLICE_UNSUPPORTED_STRATEGY",
+            "CONTEXT_SLICE_DEGRADED"
+          ]
+        },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string" },
+        "fixHint": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,10 +1,12 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { afterEach, describe, expect, it } from 'vitest';
 import { assertSchema } from '../../src/core/schema';
 import {
   buildContextSourceManifest,
+  checkContextSourceManifestFastFreshness,
   classifyContextSourcePath,
   compareContextSourceManifests,
   CONTEXT_SOURCE_MANIFEST_CACHE_PATH,
@@ -37,6 +39,12 @@ function writeFile(root: string, relativePath: string, content: string): void {
 
 function getSource(manifest: ContextSourceManifest, relativePath: string) {
   return manifest.sources.find((source) => source.path === relativePath);
+}
+
+function initGitRepository(root: string): void {
+  execFileSync('git', ['-C', root, 'init'], { stdio: 'ignore' });
+  execFileSync('git', ['-C', root, 'add', '.'], { stdio: 'ignore' });
+  execFileSync('git', ['-C', root, '-c', 'user.name=Hadara Test', '-c', 'user.email=hadara@example.test', 'commit', '-m', 'init'], { stdio: 'ignore' });
 }
 
 describe('context source manifest', () => {
@@ -154,6 +162,39 @@ describe('context source manifest', () => {
     });
 
     expect(second.manifestHash).toBe(first.manifestHash);
+  });
+
+  it('uses a git worktree fingerprint for fast freshness without mtime-only invalidation', () => {
+    const root = createTempProject();
+    writeFile(root, 'docs/TASK_BOARD.md', '# TASK_BOARD\n');
+    initGitRepository(root);
+
+    const manifest = buildContextSourceManifest({
+      projectRoot: root,
+      generatedAt: '2026-06-18T14:15:00.000Z'
+    });
+    expect(manifest.fingerprint).toMatchObject({
+      strategy: 'git-worktree-v1'
+    });
+    expect(checkContextSourceManifestFastFreshness(root, manifest)).toMatchObject({
+      ok: true,
+      reason: 'fresh'
+    });
+
+    const taskBoard = path.join(root, 'docs/TASK_BOARD.md');
+    const nextTime = new Date('2026-06-18T14:16:00.000Z');
+    fs.utimesSync(taskBoard, nextTime, nextTime);
+    expect(checkContextSourceManifestFastFreshness(root, manifest)).toMatchObject({
+      ok: true,
+      reason: 'fresh'
+    });
+
+    writeFile(root, 'docs/TASK_BOARD.md', '# TASK_BOARD\n\nChanged\n');
+    expect(checkContextSourceManifestFastFreshness(root, manifest)).toMatchObject({
+      ok: false,
+      reason: 'fingerprint-mismatch'
+    });
+    assertSchema('hadara.context.sourceManifest.v1', manifest);
   });
 
   it('compares manifests and maps stale sources to extractor keys without invalidating unrelated groups', () => {

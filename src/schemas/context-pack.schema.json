@@ -125,6 +125,10 @@
         "strategy": {
           "enum": ["explicit-range", "symbol-neighborhood", "keyword-window", "tail-window", "diff-hunk", "managed-section"]
         },
+        "lineStart": { "type": "number" },
+        "lineEnd": { "type": "number" },
+        "symbol": { "type": "string" },
+        "managedSection": { "type": "string" },
         "reason": { "type": "string", "minLength": 1 },
         "suggestedCommand": { "type": "string", "minLength": 1 }
       }

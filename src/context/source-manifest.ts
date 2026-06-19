@@ -86,6 +86,17 @@ export interface ContextSourceManifestSummary {
   generatedByCommand?: string;
 }
 
+export interface ContextSourceManifestFingerprint {
+  strategy: 'git-worktree-v1';
+  projectFingerprint: string;
+  cacheVersion: string;
+  ignoreConfigHash: string;
+  extractorVersionsHash: string;
+  gitHead: string;
+  gitStatusHash: string;
+  dirtyContextSourceMetadataHash: string;
+}
+
 export interface ContextSourceManifest {
   schemaVersion: ContextSourceManifestSchemaVersion;
   generatedAt: string;
@@ -94,6 +105,7 @@ export interface ContextSourceManifest {
   manifestHash: string;
   ignoreConfigHash: string;
   extractorVersions: Record<string, string>;
+  fingerprint?: ContextSourceManifestFingerprint;
   sources: ContextSourceEntry[];
   summary: ContextSourceManifestSummary;
   budget: ContextSourceManifestBudgetUsage;
@@ -115,6 +127,17 @@ export interface ContextSourceManifestComparison {
   changedPaths: string[];
   unchangedPaths: string[];
   staleExtractorKeys: string[];
+}
+
+export interface ContextSourceManifestFastFreshnessResult {
+  ok: boolean;
+  strategy?: ContextSourceManifestFingerprint['strategy'];
+  reason:
+    | 'fresh'
+    | 'missing-fingerprint'
+    | 'fingerprint-mismatch'
+    | 'fingerprint-unavailable';
+  currentFingerprint?: ContextSourceManifestFingerprint;
 }
 
 const DEFAULT_EXTRACTOR_VERSIONS: Record<string, string> = {
@@ -263,13 +286,22 @@ export function buildContextSourceManifest(options: BuildContextSourceManifestOp
     visit('');
   }
   const sortedSources = sources.sort((a, b) => a.path.localeCompare(b.path));
+  const projectFingerprint = hashContextGraphJson({ rootName: path.basename(root) });
+  const fingerprint = createContextSourceManifestFingerprint({
+    projectRoot: root,
+    projectFingerprint,
+    cacheVersion: CONTEXT_SOURCE_MANIFEST_CACHE_VERSION,
+    ignoreConfigHash,
+    extractorVersions
+  });
   const manifestWithoutHash = {
     schemaVersion: CONTEXT_SOURCE_MANIFEST_SCHEMA_ID,
     generatedAt,
-    projectFingerprint: hashContextGraphJson({ rootName: path.basename(root) }),
+    projectFingerprint,
     cacheVersion: CONTEXT_SOURCE_MANIFEST_CACHE_VERSION,
     ignoreConfigHash,
     extractorVersions,
+    ...(fingerprint ? { fingerprint } : {}),
     sources: sortedSources,
     summary: {
       sourceCount: sortedSources.length,
@@ -290,6 +322,39 @@ export function buildContextSourceManifest(options: BuildContextSourceManifestOp
   return {
     ...manifestWithoutHash,
     manifestHash: createStableContextSourceManifestHash(manifestWithoutHash)
+  };
+}
+
+export function checkContextSourceManifestFastFreshness(
+  projectRoot: string,
+  manifest: ContextSourceManifest
+): ContextSourceManifestFastFreshnessResult {
+  if (!manifest.fingerprint) {
+    return { ok: false, reason: 'missing-fingerprint' };
+  }
+  const currentFingerprint = createContextSourceManifestFingerprint({
+    projectRoot,
+    projectFingerprint: manifest.projectFingerprint,
+    cacheVersion: manifest.cacheVersion,
+    ignoreConfigHash: manifest.ignoreConfigHash,
+    extractorVersions: manifest.extractorVersions
+  });
+  if (!currentFingerprint) {
+    return { ok: false, reason: 'fingerprint-unavailable' };
+  }
+  if (sameContextSourceManifestFingerprint(manifest.fingerprint, currentFingerprint)) {
+    return {
+      ok: true,
+      strategy: currentFingerprint.strategy,
+      reason: 'fresh',
+      currentFingerprint
+    };
+  }
+  return {
+    ok: false,
+    strategy: currentFingerprint.strategy,
+    reason: 'fingerprint-mismatch',
+    currentFingerprint
   };
 }
 
@@ -431,6 +496,114 @@ function listGitContextSourceCandidatePaths(root: string): string[] | undefined 
   } catch {
     return undefined;
   }
+}
+
+function createContextSourceManifestFingerprint(input: {
+  projectRoot: string;
+  projectFingerprint: string;
+  cacheVersion: string;
+  ignoreConfigHash: string;
+  extractorVersions: Record<string, string>;
+}): ContextSourceManifestFingerprint | undefined {
+  if (!fs.existsSync(path.join(input.projectRoot, '.git'))) return undefined;
+  const gitHead = readGitOutput(input.projectRoot, ['rev-parse', 'HEAD']) ?? 'UNBORN';
+  const gitStatus = readGitOutput(input.projectRoot, ['status', '--porcelain=v1', '-z', '--untracked-files=all']);
+  if (gitStatus === undefined) return undefined;
+  const relevantStatusEntries = contextRelevantGitStatusEntriesFromGitStatus(gitStatus);
+  if (!relevantStatusEntries) return undefined;
+  const dirtyMetadataHash = createDirtyContextSourceMetadataHash(input.projectRoot, gitStatus);
+  if (!dirtyMetadataHash) return undefined;
+  return {
+    strategy: 'git-worktree-v1',
+    projectFingerprint: input.projectFingerprint,
+    cacheVersion: input.cacheVersion,
+    ignoreConfigHash: input.ignoreConfigHash,
+    extractorVersionsHash: hashContextGraphJson(input.extractorVersions),
+    gitHead,
+    gitStatusHash: hashContextGraphJson(relevantStatusEntries),
+    dirtyContextSourceMetadataHash: dirtyMetadataHash
+  };
+}
+
+function readGitOutput(root: string, args: string[]): string | undefined {
+  try {
+    return execFileSync('git', ['-C', root, ...args], {
+      encoding: 'utf8',
+      maxBuffer: 50 * 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'ignore'],
+      timeout: 5000
+    });
+  } catch {
+    return undefined;
+  }
+}
+
+function createDirtyContextSourceMetadataHash(root: string, gitStatus: string): string | undefined {
+  const dirtyPaths = dirtyContextSourcePathsFromGitStatus(gitStatus);
+  if (!dirtyPaths) return undefined;
+  const metadata: Array<{ path: string; sizeBytes: number; mtimeMs: number }> = [];
+  for (const relativePath of dirtyPaths) {
+    try {
+      const stats = fs.statSync(path.join(root, relativePath));
+      if (stats.isFile()) {
+        metadata.push({
+          path: relativePath,
+          sizeBytes: stats.size,
+          mtimeMs: stats.mtimeMs
+        });
+      }
+    } catch (error) {
+      if (!isMissingFileError(error)) return undefined;
+    }
+  }
+  return hashContextGraphJson(metadata.sort((a, b) => a.path.localeCompare(b.path)));
+}
+
+function dirtyContextSourcePathsFromGitStatus(gitStatus: string): string[] | undefined {
+  const entries = contextRelevantGitStatusEntriesFromGitStatus(gitStatus);
+  if (!entries) return undefined;
+  return entries.map((entry) => entry.path).sort((a, b) => a.localeCompare(b));
+}
+
+function contextRelevantGitStatusEntriesFromGitStatus(gitStatus: string): Array<{ status: string; path: string }> | undefined {
+  const paths = new Set<string>();
+  const entriesByPath = new Map<string, { status: string; path: string }>();
+  const entries = gitStatus.split('\0').filter(Boolean);
+  for (const entry of entries) {
+    if (entry.length < 4) continue;
+    const indexStatus = entry[0];
+    const worktreeStatus = entry[1];
+    if (indexStatus === 'R' || worktreeStatus === 'R' || indexStatus === 'C' || worktreeStatus === 'C') {
+      return undefined;
+    }
+    const relativePath = normalizeContextGraphPath(entry.slice(3));
+    if (!relativePath || shouldIgnoreContextSourcePath(relativePath)) continue;
+    const kind = classifyContextSourcePath(relativePath);
+    if (!kind) continue;
+    paths.add(relativePath);
+    entriesByPath.set(relativePath, {
+      status: `${indexStatus}${worktreeStatus}`,
+      path: relativePath
+    });
+  }
+  return Array.from(paths)
+    .sort((a, b) => a.localeCompare(b))
+    .map((relativePath) => entriesByPath.get(relativePath))
+    .filter((entry): entry is { status: string; path: string } => Boolean(entry));
+}
+
+function sameContextSourceManifestFingerprint(
+  left: ContextSourceManifestFingerprint,
+  right: ContextSourceManifestFingerprint
+): boolean {
+  return left.strategy === right.strategy
+    && left.projectFingerprint === right.projectFingerprint
+    && left.cacheVersion === right.cacheVersion
+    && left.ignoreConfigHash === right.ignoreConfigHash
+    && left.extractorVersionsHash === right.extractorVersionsHash
+    && left.gitHead === right.gitHead
+    && left.gitStatusHash === right.gitStatusHash
+    && left.dirtyContextSourceMetadataHash === right.dirtyContextSourceMetadataHash;
 }
 
 function isMissingFileError(error: unknown): boolean {

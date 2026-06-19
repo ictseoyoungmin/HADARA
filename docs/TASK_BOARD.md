@@ -368,3 +368,7 @@
 | T-0365 | C6.3 Cache Warm or Graph Code Index Cache Integration | Done | tasks/T-0365-c6-3-cache-warm-or-graph-code-index-cache-integration | C6 performance spec hardening in progress before cache-warm implementation. |
 | T-0366 | C6.3 Cache Warm Phase 1 Implementation | Done | tasks/T-0366-c6-3-cache-warm-phase-1-implementation | Source-manifest cache warm phase 1. |
 | T-0367 | C6.4 High Impact Extractor Shard Cache | Done | tasks/T-0367-c6-4-high-impact-extractor-shard-cache | |
+| T-0368 | C6.5 Fast Cold Build and Graph Hot Path | Done | tasks/T-0368-c6-5-fast-cold-build-and-graph-hot-path | Added git worktree source-manifest fingerprints and fast cached-manifest reuse for cache status/warm and context graph shard reads. |
+| T-0369 | C4 Deterministic Context Slice Core | Done | tasks/T-0369-c4-deterministic-context-slice-core | Added `hadara context slice` with schema-valid read-only explicit range, tail, keyword-window, and managed-section strategies. |
+| T-0370 | C4 Symbol and Context Candidate Slicing | Done | tasks/T-0370-c4-symbol-and-context-candidate-slicing | Added read-only `context slice --symbol` and `--task --candidate` support over C2 symbols and C3 slice candidates. |
+| T-0371 | C6 Speed-First Graph Cache Spec Refresh | Done | tasks/T-0371-c6-speed-first-graph-cache-spec-refresh | Added registered `08_C6_Speed_First_Graph_Build_and_Warm_Path_Spec.md` with Graphify-aware speed-first cold/warm graph, code-index, and context-pack cache design. |

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { afterEach, describe, expect, it } from 'vitest';
 import { assertSchema } from '../../src/core/schema';
 import {
@@ -14,6 +15,7 @@ import {
   writeContextCacheRecord,
   writeContextSourceManifestCache
 } from '../../src/context/context-cache-store';
+import { buildContextGraphReport } from '../../src/context/context-graph-builder';
 import {
   buildContextSourceManifest,
   CONTEXT_SOURCE_MANIFEST_CACHE_PATH
@@ -181,6 +183,61 @@ describe('context cache store', () => {
       unchangedSourceCount: manifest.sources.length
     });
     assertSchema('hadara.context.cacheStatus.v1', report);
+  });
+
+  it('reuses a cached source manifest through the git fingerprint fast path', () => {
+    const root = tempProject();
+    write(root, 'docs/TASK_BOARD.md', '# TASK_BOARD\n');
+    initGitRepository(root);
+    const warm = createContextCacheWarmReport({
+      projectRoot: root,
+      execute: true,
+      generatedAt: '2026-06-18T15:02:30.000Z'
+    });
+    expect(warm.summary.cacheFresh).toBe(false);
+
+    const taskBoard = path.join(root, 'docs/TASK_BOARD.md');
+    const nextTime = new Date('2026-06-18T15:02:40.000Z');
+    fs.utimesSync(taskBoard, nextTime, nextTime);
+    const report = createContextCacheStatusReport({
+      projectRoot: root,
+      generatedAt: '2026-06-18T15:02:45.000Z'
+    });
+    expect(report.summary).toMatchObject({
+      mode: 'hit',
+      cacheFresh: true,
+      fastPath: 'hit'
+    });
+    expect(report.manifest).toMatchObject({
+      status: 'fresh',
+      fastPath: 'hit',
+      fastPathStrategy: 'git-worktree-v1',
+      unchangedSourceCount: 1
+    });
+    assertSchema('hadara.context.cacheStatus.v1', report);
+
+    const graph = buildContextGraphReport({
+      projectRoot: root,
+      generatedAt: '2026-06-18T15:02:50.000Z'
+    });
+    expect(graph.cache).toMatchObject({
+      sourceManifestCacheFresh: true,
+      sourceManifestFastPath: 'hit'
+    });
+    assertSchema('hadara.contextGraph.v1', graph);
+
+    write(root, 'docs/TASK_BOARD.md', '# TASK_BOARD\n\nChanged\n');
+    const stale = createContextCacheStatusReport({
+      projectRoot: root,
+      generatedAt: '2026-06-18T15:02:55.000Z'
+    });
+    expect(stale.summary).toMatchObject({
+      mode: 'stale',
+      cacheFresh: false,
+      fastPath: 'miss'
+    });
+    expect(stale.manifest.changedPaths).toEqual(['docs/TASK_BOARD.md']);
+    expect(stale.manifest.fastPathReason).toBe('fingerprint-mismatch');
   });
 
   it('marks stale cache by changed source metadata and returns extractor invalidation keys', () => {
@@ -366,6 +423,12 @@ function write(root: string, relativePath: string, content: string): void {
   const target = path.join(root, relativePath);
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.writeFileSync(target, content, 'utf8');
+}
+
+function initGitRepository(root: string): void {
+  execFileSync('git', ['-C', root, 'init'], { stdio: 'ignore' });
+  execFileSync('git', ['-C', root, 'add', '.'], { stdio: 'ignore' });
+  execFileSync('git', ['-C', root, '-c', 'user.name=Hadara Test', '-c', 'user.email=hadara@example.test', 'commit', '-m', 'init'], { stdio: 'ignore' });
 }
 
 function snapshotProject(root: string): Record<string, string> {

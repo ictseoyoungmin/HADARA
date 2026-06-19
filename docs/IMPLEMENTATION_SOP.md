@@ -84,6 +84,7 @@ Use semantic tiers to keep session startup compact and deterministic:
 | `docs/specs/0.3.3/context-routing/05_Indexing_Cache_Invalidation_and_Performance_Spec.md` | Implementing or reviewing C6 context cache, invalidation, or performance work | Local rebuildable cache location, manifest contract, invalidation rules, and degraded-mode budget |
 | `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md` | Selecting or handing off 0.3.3 context-routing implementation capsules | Worker routing plan, phase order, active-spec reading rule, and per-capsule done criteria |
 | `docs/specs/0.3.3/context-routing/07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md` | Implementing or reviewing C6 fast context cache, warm graph/index paths, source manifest, cache status/warm command, or performance optimization work | Detailed C6 speed-first implementation plan, Graphify-adapted cache lessons, command write boundaries, and required code changes |
+| `docs/specs/0.3.3/context-routing/08_C6_Speed_First_Graph_Build_and_Warm_Path_Spec.md` | Implementing or reviewing C6 code-index shard persistence, graph-core shard reuse, context-pack warm paths, or performance budget work | Execution-focused speed-first graph/cache design, Graphify comparison, cold/warm algorithms, required shards, and code change requirements |
 
 ## Project-Specific Documents
 

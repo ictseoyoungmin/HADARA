@@ -285,6 +285,64 @@ describe('context graph CLI', () => {
     expect(validateSchema('hadara.contextPack.v1', payload).ok).toBe(true);
   });
 
+  it('prints a schema-valid context slice report without writing files', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'docs', 'slice.md'), 'alpha\nbeta\ngamma\n', 'utf8');
+    const before = snapshotProject(root);
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleContextCommand({
+      args: ['context', 'slice', '--path', 'docs/slice.md', '--from', '2', '--to', '3', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.contextSlice.v1',
+      command: 'context.slice',
+      ok: true,
+      path: 'docs/slice.md',
+      strategy: 'explicit-range',
+      slices: [expect.objectContaining({ startLine: 2, endLine: 3, text: 'beta\ngamma\n' })]
+    });
+    expect(validateSchema('hadara.contextSlice.v1', payload).ok).toBe(true);
+    expect(snapshotProject(root)).toEqual(before);
+  });
+
+  it('prints a schema-valid context symbol slice report without writing files', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'src', 'cli'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'src', 'cli', 'symbol.ts'), [
+      'const before = true;',
+      'export function handleSymbolSlice() {',
+      '  return before;',
+      '}'
+    ].join('\n'), 'utf8');
+    const before = snapshotProject(root);
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleContextCommand({
+      args: ['context', 'slice', '--path', 'src/cli/symbol.ts', '--symbol', 'handleSymbolSlice', '--window', '1', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.contextSlice.v1',
+      command: 'context.slice',
+      ok: true,
+      path: 'src/cli/symbol.ts',
+      strategy: 'symbol-neighborhood',
+      slices: [expect.objectContaining({ startLine: 1, endLine: 3, confidence: 'derived' })]
+    });
+    expect(validateSchema('hadara.contextSlice.v1', payload).ok).toBe(true);
+    expect(snapshotProject(root)).toEqual(before);
+  });
+
   it('prints read-only context cache status without creating cache files', () => {
     const root = tempProject();
     fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');

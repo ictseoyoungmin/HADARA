@@ -541,6 +541,27 @@
       "closeSourceRole": "task-dependent",
       "supersedes": [],
       "generatedBy": "T-0360"
+    },
+    {
+      "path": "docs/specs/0.3.3/context-routing/08_C6_Speed_First_Graph_Build_and_Warm_Path_Spec.md",
+      "title": "C6 Speed-First Graph Build and Warm Path Spec",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0371"
     }
   ]
 }

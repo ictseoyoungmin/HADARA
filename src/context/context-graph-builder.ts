@@ -13,14 +13,13 @@ import type {
 } from './context-graph';
 import {
   collectContextGraphExtractorShards,
-  readContextSourceManifestCache
+  createSourceManifestCacheAnalysis
 } from './context-cache-store';
 import {
   createTaskNodeId,
   mergeGraphExtractionResults,
   summarizeContextGraphExtraction
 } from './extractor-contract';
-import { buildContextSourceManifest } from './source-manifest';
 import {
   extractAgentHandoff,
   extractDecisions,
@@ -87,14 +86,12 @@ export function collectContextGraphExtractionsWithCache(
   }
 
   const generatedAt = options.generatedAt ?? new Date().toISOString();
-  const cachedManifest = readContextSourceManifestCache(projectRoot);
-  const manifest = buildContextSourceManifest({
+  const analysis = createSourceManifestCacheAnalysis({
     projectRoot,
     generatedAt,
-    generatedByCommand: 'context.graph',
-    ...(cachedManifest.status === 'valid' && cachedManifest.manifest ? { previousManifest: cachedManifest.manifest } : {})
+    generatedByCommand: 'context.graph'
   });
-  const shards = collectContextGraphExtractorShards({ projectRoot, manifest });
+  const shards = collectContextGraphExtractorShards({ projectRoot, manifest: analysis.currentManifest });
   const results = [
     extractTaskCapsules(projectRoot),
     shards.results.extractTaskBoard ?? extractTaskBoard(projectRoot),
@@ -110,7 +107,13 @@ export function collectContextGraphExtractionsWithCache(
   if (options.includeCode) results.push(extractCodeIndexGraph(projectRoot, generatedAt));
   return {
     extractionResults: results,
-    cache: shards.cache
+    cache: {
+      ...shards.cache,
+      sourceManifestCacheFresh: analysis.cacheFresh,
+      sourceManifestFastPath: analysis.fastPath,
+      ...(analysis.fastPathReason ? { sourceManifestFastPathReason: analysis.fastPathReason } : {}),
+      ...(analysis.fastPathStrategy ? { sourceManifestFastPathStrategy: analysis.fastPathStrategy } : {})
+    }
   };
 }
 

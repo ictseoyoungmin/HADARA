@@ -4,6 +4,7 @@ import { atomicWriteTextFile } from '../core/fs';
 import { validateSchema } from '../core/schema';
 import {
   buildContextSourceManifest,
+  checkContextSourceManifestFastFreshness,
   compareContextSourceManifests,
   CONTEXT_SOURCE_MANIFEST_CACHE_PATH,
   CONTEXT_SOURCE_MANIFEST_CACHE_ROOT,
@@ -97,6 +98,7 @@ export interface ContextCacheStatusReport {
     mode: 'miss' | 'hit' | 'stale' | 'corrupt';
     cachePresent: boolean;
     cacheFresh: boolean;
+    fastPath?: 'hit' | 'miss' | 'skipped';
     degraded: boolean;
     staleExtractorKeys: string[];
   };
@@ -114,6 +116,9 @@ export interface ContextCacheStatusReport {
     changedPaths: string[];
     unchangedSourceCount: number;
     staleExtractorKeys: string[];
+    fastPath?: 'hit' | 'miss' | 'skipped';
+    fastPathReason?: string;
+    fastPathStrategy?: string;
   };
   issues: ContextCacheIssue[];
 }
@@ -130,6 +135,7 @@ export interface ContextCacheWarmReport {
     cacheMode: 'miss' | 'fresh' | 'stale' | 'corrupt';
     cachePresent: boolean;
     cacheFresh: boolean;
+    fastPath?: 'hit' | 'miss' | 'skipped';
     writePlanned: boolean;
     writeExecuted: boolean;
     shardWritePlanned: boolean;
@@ -156,6 +162,9 @@ export interface ContextCacheWarmReport {
     changedPaths: string[];
     unchangedSourceCount: number;
     staleExtractorKeys: string[];
+    fastPath?: 'hit' | 'miss' | 'skipped';
+    fastPathReason?: string;
+    fastPathStrategy?: string;
   };
   write: {
     policy: 'dry-run' | 'execute';
@@ -204,13 +213,16 @@ export interface ContextGraphExtractorShardReadResult {
   issues: ContextCacheIssue[];
 }
 
-interface ContextSourceManifestCacheAnalysis {
+export interface ContextSourceManifestCacheAnalysis {
   generatedAt: string;
   cached: ContextSourceManifestCacheReadResult;
   currentManifest: ContextSourceManifest;
   comparison: ReturnType<typeof compareContextSourceManifests>;
   staleExtractorKeys: string[];
   cacheFresh: boolean;
+  fastPath: 'hit' | 'miss' | 'skipped';
+  fastPathReason?: string;
+  fastPathStrategy?: string;
   degraded: boolean;
   issues: ContextCacheIssue[];
 }
@@ -541,6 +553,7 @@ export function createContextCacheStatusReport(input: { projectRoot: string; gen
       mode: analysis.cacheFresh ? 'hit' : analysis.cached.status === 'missing' ? 'miss' : analysis.cached.status === 'valid' ? 'stale' : 'corrupt',
       cachePresent: analysis.cached.status !== 'missing',
       cacheFresh: analysis.cacheFresh,
+      fastPath: analysis.fastPath,
       degraded: analysis.degraded,
       staleExtractorKeys: analysis.staleExtractorKeys
     },
@@ -583,6 +596,7 @@ export function createContextCacheWarmReport(input: { projectRoot: string; execu
       cacheMode: analysis.cacheFresh ? 'fresh' : analysis.cached.status === 'missing' ? 'miss' : analysis.cached.status === 'valid' ? 'stale' : 'corrupt',
       cachePresent: analysis.cached.status !== 'missing',
       cacheFresh: analysis.cacheFresh,
+      fastPath: analysis.fastPath,
       writePlanned: writePlanned || shardWritePlanned,
       writeExecuted: writeExecuted || shardWriteExecuted,
       shardWritePlanned,
@@ -653,9 +667,35 @@ function createContextGraphExtractorShardWarmItems(input: {
   });
 }
 
-function createSourceManifestCacheAnalysis(input: { projectRoot: string; generatedAt?: string; generatedByCommand: string }): ContextSourceManifestCacheAnalysis {
+export function createSourceManifestCacheAnalysis(input: { projectRoot: string; generatedAt?: string; generatedByCommand: string }): ContextSourceManifestCacheAnalysis {
   const generatedAt = input.generatedAt ?? new Date().toISOString();
   const cached = readContextSourceManifestCache(input.projectRoot);
+  const fastFreshness = cached.status === 'valid' && cached.manifest
+    ? checkContextSourceManifestFastFreshness(input.projectRoot, cached.manifest)
+    : undefined;
+  if (cached.status === 'valid' && cached.manifest) {
+    if (fastFreshness?.ok) {
+      return {
+        generatedAt,
+        cached,
+        currentManifest: cached.manifest,
+        comparison: {
+          addedPaths: [],
+          removedPaths: [],
+          changedPaths: [],
+          unchangedPaths: cached.manifest.sources.map((source) => source.path).sort(),
+          staleExtractorKeys: []
+        },
+        staleExtractorKeys: [],
+        cacheFresh: true,
+        fastPath: 'hit',
+        fastPathReason: fastFreshness.reason,
+        fastPathStrategy: fastFreshness.strategy,
+        degraded: cached.manifest.issues.some((issue) => issue.severity === 'warning' || issue.severity === 'error'),
+        issues: [...cached.issues]
+      };
+    }
+  }
   const currentManifest = buildContextSourceManifest({
     projectRoot: input.projectRoot,
     generatedAt,
@@ -685,6 +725,11 @@ function createSourceManifestCacheAnalysis(input: { projectRoot: string; generat
     comparison,
     staleExtractorKeys,
     cacheFresh,
+    fastPath: fastFreshness ? 'miss' : 'skipped',
+    ...(fastFreshness ? {
+      fastPathReason: fastFreshness.reason,
+      ...(fastFreshness.strategy ? { fastPathStrategy: fastFreshness.strategy } : {})
+    } : {}),
     degraded,
     issues
   };
@@ -706,7 +751,10 @@ function createManifestReportSection(analysis: ContextSourceManifestCacheAnalysi
     removedPaths: analysis.comparison.removedPaths,
     changedPaths: analysis.comparison.changedPaths,
     unchangedSourceCount: analysis.comparison.unchangedPaths.length,
-    staleExtractorKeys: analysis.staleExtractorKeys
+    staleExtractorKeys: analysis.staleExtractorKeys,
+    fastPath: analysis.fastPath,
+    ...(analysis.fastPathReason ? { fastPathReason: analysis.fastPathReason } : {}),
+    ...(analysis.fastPathStrategy ? { fastPathStrategy: analysis.fastPathStrategy } : {})
   };
 }
 

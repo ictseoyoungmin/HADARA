@@ -118,6 +118,7 @@ Read:
 ```text
 05_Indexing_Cache_Invalidation_and_Performance_Spec.md
 07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md
+08_C6_Speed_First_Graph_Build_and_Warm_Path_Spec.md
 ```
 
 Suggested capsules:
@@ -130,6 +131,7 @@ Suggested capsules:
 6. Code index cache integration.
 7. Context pack warm path.
 8. Cache warm command shard phases.
+9. Performance budget regression fixtures.
 
 ## General Rules
 

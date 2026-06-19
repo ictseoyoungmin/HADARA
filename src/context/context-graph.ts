@@ -189,6 +189,10 @@ export interface ContextCacheMetadata {
   schemaMismatchShardCount?: number;
   shardPaths?: string[];
   staleExtractorKeys?: string[];
+  sourceManifestCacheFresh?: boolean;
+  sourceManifestFastPath?: 'hit' | 'miss' | 'skipped';
+  sourceManifestFastPathReason?: string;
+  sourceManifestFastPathStrategy?: string;
 }
 
 export interface ContextGraphReport {
