@@ -2,18 +2,18 @@
 
 ## Status
 
-Active C6 performance design specification.
+Active C6 performance design specification with implementation snapshot through T-0380.
 
 This document extends:
 
 - `05_Indexing_Cache_Invalidation_and_Performance_Spec.md`
 - `07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md`
 
-Use this document when implementing the next C6 capsules after T-0368, especially code-index shard persistence, context-pack warm paths, graph-core shard reuse, and any cold-build optimization. The central requirement is speed: context routing that is slow in routine use is not operationally useful.
+Use this document when reviewing or refining the C6 work completed after T-0368: code-index shard persistence, graph-core shard reuse, context-pack warm paths, Session Start warm consumption, and advisory performance fixtures. The central requirement remains speed: context routing that is slow in routine use is not operationally useful.
 
 ## Goal
 
-Make HADARA context graph, code index, context pack, and future session-start reads fast enough that an agent can call them by default instead of manually reading broad files.
+Make HADARA context graph, code index, context pack, and session-start reads fast enough that an agent can call them by default instead of manually reading broad files.
 
 The target user experience:
 
@@ -27,7 +27,7 @@ The target user experience:
 | Rule | Requirement |
 |---|---|
 | Cache is not truth | Canonical state remains project files, docs, task capsules, source, and evidence. Cache is rebuildable. |
-| Read commands do not write | `context graph`, `context pack`, `context slice`, and future `session start` may read cache but must not update cache files. |
+| Read commands do not write | `context graph`, `context pack`, `context slice`, and `session start` may read cache but must not update cache files. |
 | Writes are explicit | Cache writes happen only through `context cache warm --execute` or another accepted execute-mode command. |
 | One discovery result | A command invocation must not independently walk the repository for graph, code index, and context pack. |
 | Source-addressed output | Graph/pack/slice outputs must keep project-relative paths and line ranges when available. |
@@ -45,7 +45,7 @@ HADARA should absorb the fast graph workflow ideas, not the generated-graph-as-m
 | Re-extract changed files only | Use source manifest fingerprints, extractor versions, and subset hashes to identify stale shards. |
 | Portable manifest | Persist project-relative source keys and stable fingerprints only. |
 | Local code extraction | Keep C2 deterministic/offline; add parser-backed extraction only behind changed-file gates. |
-| Assistant query-first workflow | Make `context pack` and future session start prefer graph/cache summaries over broad raw reads. |
+| Assistant query-first workflow | Make `context pack` and Session Start prefer graph/cache summaries over broad raw reads. |
 | Optional hooks | Defer hooks until explicit warm/status behavior is stable and evidence-friendly. |
 
 | Graphify Behavior | Not Adopted for C6 |
@@ -215,7 +215,7 @@ If any required shard is stale or missing:
 
 ## Code Index Warm Path
 
-C2 code index is the largest remaining performance risk for code-heavy C4/C5 flows.
+C2 code index was the largest performance risk for code-heavy C4/C5 flows. T-0375/T-0377 added code-index shard persistence and incremental per-file reuse; first warm and code-heavy cold paths remain the residual risk.
 
 Required behavior:
 
@@ -255,8 +255,8 @@ Parser-backed extraction is allowed only when it improves accuracy without makin
 | C6.6 Code Index Shard Persistence | Per-file code extraction cache and manifest-fed code index. | Implemented through T-0375/T-0377; warm `context graph --include-code` avoids unchanged file parsing. |
 | C6.7 Graph-Core Shard Reuse | Cache-aware graph orchestration for P0/P1/P2 shards. | Implemented through T-0374; warm non-code `context graph` reads graph-core read-only. |
 | C6.8 Context Pack Warm Path | C3 pack consumes cached graph/code summaries. | Implemented through T-0374/T-0375 for graph-core/code-index consumption; T-0379 extends default Session Start to consume proven-fresh warm pack inputs. |
-| C6.9 Warm Execute Shard Phases | Extend `context cache warm --execute` to extractor/code/graph/pack shards. | Dry-run predicts stale shards; execute writes only planned shards. |
-| C6.10 Performance Budgets and Regression Fixtures | Add cold/warm timing fixtures and degraded tests. | CI or focused tests fail on major repeated-walk regressions where deterministic. |
+| C6.9 Warm Execute Shard Phases | Extend `context cache warm --execute` to source-manifest/extractor/code/graph shards. | Implemented through T-0374/T-0377; dry-run predicts stale shards and execute writes only planned shards. Pack-specific persisted shards are not required for 0.3.3. |
+| C6.10 Performance Budgets and Regression Fixtures | Add cold/warm timing fixtures and degraded tests. | Implemented through T-0373/T-0380 as mounted/ext4 measurement plus advisory threshold fixtures; `--fail-on-regression` is opt-in for deterministic gates. |
 
 ## Validation Requirements
 

@@ -2,11 +2,11 @@
 
 ## Status
 
-Active detailed implementation specification for C6.
+Detailed C6 implementation specification with implementation snapshot.
 
-Updated 2026-06-19 to make speed the primary C6 design constraint, sharpen the Graphify comparison, and record the existing code changes required before C4/C5 can rely on fast context routing.
+Updated 2026-06-19 by T-0381 to reflect implementation through T-0380. Use `09_Context_Routing_Implementation_Completion_Audit.md` for the current completion snapshot and cleanup queue.
 
-This document extends `05_Indexing_Cache_Invalidation_and_Performance_Spec.md`. The `05` spec remains the compact contract for cache location, invalidation, degraded output, and default budgets. This document defines the speed-first implementation shape for future capsules.
+This document extends `05_Indexing_Cache_Invalidation_and_Performance_Spec.md`. The `05` spec remains the compact contract for cache location, invalidation, degraded output, and default budgets. This document defines the speed-first implementation shape and records what has landed.
 
 For the most execution-focused C6 performance blueprint after the initial source-manifest/cache/shard work, also read `08_C6_Speed_First_Graph_Build_and_Warm_Path_Spec.md`. It narrows the next C6 work around cold graph ordering, warm shard reads, code-index persistence, context-pack warm paths, and the concrete code changes required to keep graph routing fast.
 
@@ -30,11 +30,11 @@ The design must:
 |---|---|---|
 | C6.1 Source Manifest and Shared Discovery | Implemented through T-0363. | Reuse it as the single source discovery/stat path for graph, code index, and cache warm. |
 | C6.2 Cache Store and Status Read Model | Implemented through T-0364. | Keep `context cache status` read-only; use it to prove hit/stale/corrupt states before writes. |
-| C6.3 Cache Warm / Integration | Source-manifest warm, extractor shards, graph-core, code-index shard, per-file code-index summaries, and context-pack warm graph consumption are implemented through T-0377. | Continue refining warm consumers and add deterministic performance regression fixtures. |
+| C6.3 Cache Warm / Integration | Source-manifest warm, extractor shards, graph-core, code-index shard, per-file code-index summaries, context-pack warm graph consumption, Session Start warm consumption, and advisory performance regression fixtures are implemented through T-0380. | Continue with cleanup capsules T-0382 through T-0387; do not add hidden default scans. |
 | C4 Context Slice | Implemented through T-0370 and hardened through T-0372/T-0376. | Keep raw slices bounded, source-addressed, and excluded from cache/local generated surfaces. |
-| C5 Session Start | Bounded no-live MVP implemented through T-0378; T-0379 refines default warm-cache consumption. | Broaden only through proven-fresh warm cache or explicit `--live`, never through hidden default scans. |
+| C5 Session Start | Bounded no-live MVP implemented through T-0378; T-0379 added proven-fresh warm-cache consumption before fallback. | T-0382 should polish JSON/UX while preserving bounded default behavior. |
 
-The immediate priority after T-0378 is warm-pack/session-start refinement and deterministic performance regression coverage. A slow live graph remains unacceptable as a default on mounted workspaces, so C5 must consume warmed cache when freshness is proven and otherwise degrade explicitly.
+The immediate priority after T-0380 is cleanup/hardening. A slow live graph remains unacceptable as a default on mounted workspaces, so C5 must consume warmed cache when freshness is proven and otherwise degrade explicitly.
 
 ## Speed-First Decision Summary
 
@@ -54,7 +54,7 @@ The immediate priority after T-0378 is warm-pack/session-start refinement and de
 | Committed graph artifacts | HADARA source of truth remains project files, docs, task capsules, command registry, evidence, and code. |
 | Provider or LLM-based indexing | C6 performance must work offline and deterministically. |
 | HTML/wiki graph output | Useful for exploration, but not needed for agent session-start speed. |
-| Full filesystem watcher runtime | Optional future convenience. C6 should work from explicit CLI reads and cache warm commands first. |
+| Full filesystem watcher runtime | Optional deferred convenience. C6 works from explicit CLI reads and cache warm commands first. |
 | Replacing C3/C4/C5 behavior | C6 accelerates graph/index/pack inputs; it does not redefine context ranking or slicing semantics. |
 
 ## Design Principles
@@ -63,7 +63,7 @@ The immediate priority after T-0378 is warm-pack/session-start refinement and de
 |---|---|
 | Cache is not truth | Every cache record must be derivable from canonical sources. Cache miss or corrupt cache must fall back to live reads or explicit degraded output. |
 | Speed is a product requirement | Context routing that is too slow will not be used. Budgets and fast paths are part of correctness. |
-| Read commands do not write | `context graph`, future `context pack`, and future `session start` may read cache, but must not create or update cache files unless a later accepted command contract explicitly allows it. |
+| Read commands do not write | `context graph`, `context pack`, `context slice`, and `session start` may read cache, but must not create or update cache files unless a later accepted command contract explicitly allows it. |
 | Explicit write surface | Cache writes belong behind an explicit warm/status command or an operator-accepted lifecycle surface. |
 | Manifest before content | Fast invalidation should use path, size, mtime, and extractor version before content reads. Hash content only when metadata indicates possible change or stronger proof is needed. |
 | Incremental by extractor | Recompute only stale extractor groups. Do not rebuild code index because Task Board changed, and do not rescan task capsules because a source file changed. |
@@ -116,7 +116,7 @@ Targets are measured on a warm Node process when possible and include JSON seria
 | `context graph --json`, warm cache hit | < 75 ms | < 150 ms | < 500 ms |
 | `context graph --include-code --json`, no cache | < 900 ms | < 4 s | < 10 s degraded |
 | `context graph --include-code --json`, warm cache hit | < 125 ms | < 300 ms | < 750 ms |
-| future `context pack`, warm graph/index | < 75 ms | < 150 ms | < 300 ms |
+| `context pack`, warm graph/index | < 75 ms | < 150 ms | < 300 ms |
 | `context cache status --json`, manifest check only | < 75 ms | < 250 ms | < 1 s |
 
 Cold first graph creation can be slower than warm reads, but must still avoid broad unnecessary IO. On mounted filesystems, degraded output is better than blocking indefinitely.
@@ -167,7 +167,7 @@ Graphify patterns worth adapting:
 | `--update` changed-file extraction | Use source-manifest comparison, extractor versions, and subset hashes to recompute only stale shards. |
 | Portable manifest | Persist project-relative paths and stable hashes; never persist machine-local absolute paths as cache keys. |
 | Local AST extraction for code | Keep C2 deterministic and offline; optionally add parser-backed extraction later behind per-file changed-source gates. |
-| Assistant query-first UX | Make `context pack` and future session-start consume graph/cache summaries so agents do not reread broad docs manually. |
+| Assistant query-first UX | Make `context pack` and Session Start consume graph/cache summaries so agents do not reread broad docs manually. |
 | Optional hooks | Treat hooks as a future convenience only after explicit cache warm works and is evidence-friendly. |
 | Graph query server / MCP | Future read-only MCP can serve cached graph projections, but C6 does not add new truth or write tools. |
 
@@ -388,7 +388,7 @@ T-0366 also adds a safe source-manifest discovery optimization: git worktrees us
 
 ## Cache Metadata in Reports
 
-Graph, code index, and future context pack reports should share additive cache metadata:
+Graph, code index, context pack, and Session Start reports should share additive cache metadata:
 
 ```ts
 export interface ContextCacheMetadata {
@@ -425,22 +425,20 @@ Required issue codes:
 | `CODE_INDEX_TOO_LARGE` | Existing code-index budget warning, preserved. |
 | `SOURCE_MANIFEST_PARTIAL` | Source discovery or hashing was incomplete by budget. |
 
-## Required Existing Code Changes
+## Existing Code Change Status
 
-| Area | Current State | Required Future Change |
+| Area | Implementation State After T-0380 | Residual Follow-up |
 |---|---|---|
-| `src/context/context-graph-builder.ts` | Builds graph by collecting extractors and merging results in one read path. | Add a cache-aware orchestration layer that can load fresh extractor shards, recompute stale shards, and merge once. |
-| `src/context/context-graph-extractor.ts` | Extractors return graph fragments, state sources, and issues. | Extend extractor metadata with `extractorKey`, `extractorVersion`, source kinds, source dependency declarations, and source subset hashing. |
-| `src/context/code-index.ts` | Has file/byte/single-file budgets and placeholder cache metadata. | Split discovery/stat collection from content extraction so source manifest and code index share one file list; populate real cache metadata and skip unchanged files. |
-| `src/context/code-graph-extractor.ts` | Projects code index output into context graph state. | Read from cached code-index shard when fresh; preserve budget/degraded projection. |
-| `src/context/*extractor*.ts` | Existing extractors read their own inputs directly. | Make each extractor declare input source entries or source patterns so invalidation can be extractor-specific. |
-| `src/context/context-pack.ts` | Builds read plans from current graph reports. | Prefer cached graph/code summaries when fresh and requested; keep ranking additive-compatible. |
-| `src/context/source-manifest.ts` | Builds source manifests and compares cached/current metadata; T-0366 adds git candidate enumeration before filesystem fallback. | Expose a reusable discovery result so graph builder and code index do not duplicate walks; add safe hot-path fingerprints only when they can preserve freshness. |
-| `src/context/context-cache-store.ts` | Reads/writes schema-guarded cache records and source manifest cache; T-0366 adds source-manifest warm reports and execute writes. | Add shard listing, header-first reads, and shard write phases. |
-| `src/cli/context.ts` or equivalent command handler | `context graph` is read-only and computes live output; `context cache status` is read-only; T-0366 adds `context cache warm [--execute]`. | Add cache read support for graph/pack without implicit writes. |
-| `src/schemas/*` | Graph, code-index, source-manifest, cache-record, cache-status, and cache-warm schemas exist. | Add shard-specific schemas only when public warm/shard commands land. |
-| `tests/unit/context-graph*.test.ts` | Covers graph builder and CLI behavior. | Add cache-hit, cache-miss, stale-shard, corrupt-cache, and read-command-no-write tests. |
-| `tests/unit/code-index.test.ts` | Covers ignore, extraction, relations, and budgets. | Add shared discovery and manifest carry-forward tests. |
+| `src/context/context-graph-builder.ts` | Cache-aware orchestration can consume fresh graph-core/extractor shards read-only and fall back live. | T-0384 should improve diagnostics for stale/corrupt/partial cache paths. |
+| `src/context/context-graph-extractor.ts` | Extractor keys/versions and source subset validation support the warmed shard path. | Keep extractor metadata additive when new extractors land. |
+| `src/context/code-index.ts` | Source-manifest-fed code-index caching and incremental per-file reuse are implemented. | Parser-backed extraction remains deferred. |
+| `src/context/code-graph-extractor.ts` | Fresh code-index cache can feed `context graph --include-code`; stale/corrupt/missing cache falls back live. | T-0383 should add E2E smoke coverage for include-code warm behavior. |
+| `src/context/context-pack.ts` | Context pack can consume cached graph/code summaries when fresh. | Pack-specific persisted shard is not required for 0.3.3 unless later measurements justify it. |
+| `src/context/source-manifest.ts` | Source manifests, git candidate enumeration, git fingerprint fast proof, and subset hashes are implemented. | Mounted cold broad graph reads can still be slow; bounded Session Start avoids this by default. |
+| `src/context/context-cache-store.ts` | Schema-guarded cache records, source manifest cache, extractor/graph-core/code-index writes, and atomic writes are implemented. | Header-first optimization remains a design preference, not a required separate 0.3.3 deliverable. |
+| `src/cli/context.ts` or equivalent command handler | `context graph`, `context pack`, and Session Start consume cache read-only; `context cache warm --execute` is the explicit write surface. | T-0384 should make cache diagnostics clearer. |
+| `src/schemas/*` | Public context-routing schemas include graph/code/source-manifest/cache/status/warm/pack/slice/session-start surfaces. | Add new shard schemas only when a new public persisted shard is exposed. |
+| `tests/unit/*` | Cache hit/miss/stale/corrupt/no-write coverage exists across graph/cache/code/session-start work. | T-0383 should consolidate built-CLI E2E smoke coverage. |
 
 New implementation modules should be small and focused:
 
@@ -449,7 +447,7 @@ New implementation modules should be small and focused:
 | `src/context/source-manifest.ts` | Source discovery, stat metadata, source subset hashing, manifest comparison. |
 | `src/context/context-cache-store.ts` | Read/write cache records, schema guard, atomic temp+rename write. |
 | `src/context/context-cache.ts` | Cache orchestration, stale analysis, report metadata. |
-| `src/context/context-cache-commands.ts` | Optional future CLI surfaces for status/warm. |
+| `src/context/context-cache-commands.ts` | Cache status/warm command services and reports. |
 
 The module names can follow the current codebase naming (`source-manifest.ts`, `context-cache-store.ts`) rather than the sketch above. The architectural requirement is separation of concerns: discovery, cache storage, cache orchestration, and CLI reporting should not collapse into one large graph builder.
 
@@ -462,13 +460,14 @@ Recommended C6 capsule split:
 | C6.1 Source Manifest and Shared Discovery | Add source manifest types, schema, ignore-aware stat collector, and source subset hash helpers. | Manifest records project-relative paths, kinds, size/mtime metadata, extractor versions, and budget issues. Completed by T-0363. |
 | C6.2 Cache Store and Status Read Model | Add cache record envelope, safe read path, corrupt-cache diagnostics, and read-only status report. | Cache status can report missing/hit/stale/corrupt without writing. Completed by T-0364. |
 | C6.3 Cache Warm Command, Phase 1 | Add explicit dry-run/execute warm command for source-manifest cache population. | Read commands remain non-mutating; warm execute writes atomically and makes status hit when sources are unchanged. Completed by T-0366. |
-| C6.4 Extractor Shards and Invalidation | Add extractor keys/versions and stale-shard recomputation planning. | Task docs changes do not invalidate code index; source-code changes do not invalidate task-board shard. |
-| C6.5 Fast Cold Build and Graph Budgets | Share directory discovery, parallelize independent extractors, and enforce graph node/edge/time budgets. | Cold graph build avoids duplicate walks and returns explicit degraded output when capped. |
-| C6.6 Code Index Cache Integration | Connect code index to manifest/cache store and real cache metadata. | Warm include-code graph can use cached code-index output. |
-| C6.7 Context Pack Warm Path | Make C3 context pack consume cached graph/index summaries when present. | Warm pack generation avoids project-wide rescans. |
-| C6.8 Cache Warm Command, Shard Phases | Extend warm to extractor/code/graph shards only after shard schemas exist. | Warm execute can refresh stale shards while preserving dry-run-first write boundaries. |
+| C6.4 Extractor Shards and Invalidation | Add extractor keys/versions and stale-shard recomputation planning. | Completed through T-0367/T-0374; T-0376 added stale/corrupt coverage. |
+| C6.5 Fast Cold Build and Graph Budgets | Share discovery/fingerprint work and avoid repeated mounted scans where freshness can be proven. | Implemented as fast freshness/source-manifest reuse through T-0368; broad cold graph latency remains a residual measured risk, mitigated by warm/bounded defaults. |
+| C6.6 Code Index Cache Integration | Connect code index to manifest/cache store and real cache metadata. | Completed through T-0375/T-0377. |
+| C6.7 Context Pack Warm Path | Make C3 context pack consume cached graph/index summaries when present. | Completed through T-0374/T-0375; T-0379 extends this to default Session Start warm consumption. |
+| C6.8 Cache Warm Command, Shard Phases | Extend warm to extractor/code/graph shards. | Implemented for source-manifest, extractor, graph-core, code-index, and per-file code summaries through T-0374/T-0377; no pack-specific persisted shard is required for 0.3.3. |
+| C6.9 Performance Regression Fixtures | Add advisory mounted/ext4/session-start performance thresholds. | Completed through T-0373/T-0380 with optional `--fail-on-regression`. |
 
-Do not start C4 broad slicing until at least C6.3 is complete and C6.4/C6.5 are either implemented or explicitly scoped as acceptable residual performance risk.
+T-0381 audit note: C4/C5 proceeded after C6.3 through C6.5 were implemented or scoped with explicit residual performance risk. Remaining work is cleanup/hardening, not prerequisite graph/cache construction.
 
 ## Tests
 
@@ -513,4 +512,4 @@ Performance tests should include:
 | C6-AC7 | Corrupt, stale, missing, or partial cache states are explicit in JSON issues. |
 | C6-AC8 | Existing C1/C2 graph and code-index JSON contracts remain additive-compatible. |
 | C6-AC9 | Cache writes, when added, use atomic temp+rename and preserve the previous cache on failure. |
-| C6-AC10 | Future C3 context pack can consume cached graph/index summaries without rescanning the full project. |
+| C6-AC10 | C3 context pack can consume cached graph/index summaries without rescanning the full project when fresh shards are available. |

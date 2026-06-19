@@ -381,3 +381,4 @@
 | T-0378 | Bounded C5 Session Start MVP | Done | tasks/T-0378-bounded-c5-session-start-mvp | |
 | T-0379 | C6 Warm Pack and Session Start Cache Refinement | Done | tasks/T-0379-c6-warm-pack-and-session-start-cache-refinement | |
 | T-0380 | C6 Performance Regression Fixtures | Done | tasks/T-0380-c6-performance-regression-fixtures | |
+| T-0381 | Context Routing Spec Completion Audit | Done | tasks/T-0381-context-routing-spec-completion-audit | Added registered implementation completion audit and routed T-0382 next. |

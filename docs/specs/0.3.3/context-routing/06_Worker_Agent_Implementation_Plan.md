@@ -4,6 +4,8 @@
 
 This document tells a worker agent how to implement the context routing specs without reading every future roadmap document.
 
+T-0381 audit note: C1 through C6 core implementation work is complete through T-0380. Use `09_Context_Routing_Implementation_Completion_Audit.md` for the current implemented/partial/deferred state, and treat the phase lists below as historical routing guidance unless a current task explicitly reopens one item.
+
 ## Required Reading
 
 For any context-routing task, read:
@@ -132,6 +134,16 @@ Suggested capsules:
 7. Context pack warm path.
 8. Cache warm command shard phases.
 9. Performance budget regression fixtures.
+
+Current cleanup capsules after T-0380:
+
+1. T-0381 Context Routing Spec Completion Audit.
+2. T-0382 Session Start JSON/UX Hardening.
+3. T-0383 Context Routing E2E Smoke Pack.
+4. T-0384 Cache Warm Diagnostics Cleanup.
+5. T-0385 0.3.3 Readiness Cleanup.
+6. T-0386 Acceptance Parser v2 / Lifecycle Close Contract follow-up.
+7. T-0387 Context Slice/Pack Security Boundary Final Audit.
 
 ## General Rules
 
