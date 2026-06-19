@@ -21,9 +21,8 @@ This document does not replace the individual context-routing specs. It records 
 | C5 Session Start | Implemented bounded default with guidance | T-0378 added bounded default `session start --json`; T-0379 made default Session Start consume proven-fresh warm graph-core/code-index cache read-only before fallback; T-0382 added structured guidance/no-task UX. |
 | C6 Cache and Performance | Implemented for explicit warm/cache consumption with diagnostics | T-0363 through T-0384 added source manifests, cache records/status, warm execute, graph-core/code-index shards, incremental warm recompute, Session Start warm path, advisory regression fixtures, E2E smoke coverage, and cache diagnostics. |
 
-The 0.3.3 context-routing core is ready for bounded/default consumption. T-0382 through T-0385 completed the post-T-0380 readiness cleanup. Two follow-up hardening items remain before calling the line fully closed:
+The 0.3.3 context-routing core is ready for bounded/default consumption. T-0382 through T-0386 completed the post-T-0380 readiness cleanup and lifecycle acceptance follow-up. One follow-up hardening item remains before calling the line fully closed:
 
-- T-0386 Acceptance Parser v2 / Lifecycle Close Contract follow-up
 - T-0387 Context Slice/Pack Security Boundary Final Audit
 
 Mounted broad cache/graph/pack commands can still be slow on cold or stale workspaces. That is an accepted residual for explicit diagnostic/warm/full-profile commands in 0.3.3; it is not acceptable for default Session Start, which must remain bounded and prefer proven-fresh cache before degrading.
@@ -68,7 +67,7 @@ Mounted broad cache/graph/pack commands can still be slow on cold or stale works
 | Parser-backed code extraction | Deferred | Static deterministic extraction is sufficient for 0.3.3; parser-backed changed-file extraction can be future accuracy work. |
 | Filesystem watcher/hooks | Deferred | Explicit warm execute remains the accepted write boundary. |
 | Query server/MCP graph service | Deferred | C6 does not add a graph server or write-capable MCP surface. |
-| Acceptance parser v2 / lifecycle close contract | Follow-up | T-0386 should handle richer acceptance state semantics instead of expanding ad-hoc status strings. |
+| Acceptance parser v2 / lifecycle close contract | Implemented first hardening slice | T-0386 added shared legacy/v2 acceptance parsing for done-level harness/protocol checks while preserving existing issue-code compatibility. |
 
 ## Cleanup Queue
 
@@ -78,7 +77,7 @@ Mounted broad cache/graph/pack commands can still be slow on cold or stale works
 | T-0383 | Context Routing E2E Smoke Pack | Completed: focused built-CLI smoke coverage across slice/session-start/cache surfaces with explicit full-profile probes. |
 | T-0384 | Cache Warm Diagnostics Cleanup | Completed: stale/corrupt/partial diagnostics and operator readability. |
 | T-0385 | 0.3.3 Readiness Cleanup | Completed: final docs/readiness alignment for context routing. |
-| T-0386 | Acceptance Parser v2 / Lifecycle Close Contract follow-up | Remaining: richer acceptance parser semantics for deferred/follow-up/risk statuses. |
+| T-0386 | Acceptance Parser v2 / Lifecycle Close Contract follow-up | Completed: shared acceptance parser v2 lifecycle hardening for done-level checks. |
 | T-0387 | Context Slice/Pack Security Boundary Final Audit | Remaining: final denylist/allowlist and candidate-command safety review. |
 
 ## Audit Rule

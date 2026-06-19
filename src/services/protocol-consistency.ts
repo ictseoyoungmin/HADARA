@@ -5,6 +5,7 @@ import { createEvidenceLintReport } from './evidence-lint';
 import { parseMarkdownRows, readMarkdownSection } from './markdown-table';
 import { createStateProjectionReport, StateProjectionAdvisory, toStateProjectionAdvisory } from './state-projection';
 import { ProtocolRemediationFix } from './protocol-remediation';
+import { analyzeAcceptanceReadiness } from '../task/acceptance';
 import { isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule, TASK_FILES } from '../task/task-capsule';
 
 export type ProtocolConsistencyScope = 'docs' | 'tasks' | 'profile' | 'all';
@@ -800,24 +801,22 @@ function checkDoneAcceptance(projectRoot: string, task: TaskCapsule, taskLooksDo
   if (!fs.existsSync(acceptancePath)) return;
 
   const content = fs.readFileSync(acceptancePath, 'utf8');
-  const rows = parseMarkdownRows(content).filter((cells) => /^AC-\d+$/i.test(cells[0] ?? ''));
-  const pendingRows = rows.filter((cells) => {
-    const status = cells[2]?.trim().toLowerCase();
-    return !status || status === 'pending' || status === 'blocked' || status === 'in progress' || status === 'partial';
-  });
+  const acceptance = analyzeAcceptanceReadiness(content);
   const checklistPending = content
     .split(/\r?\n/)
     .map((line) => line.trim())
     .some((line) => /^-\s+\[\s\]/.test(line));
 
-  if (pendingRows.length > 0 || (rows.length === 0 && checklistPending)) {
+  if (acceptance.blockers.length > 0 || (acceptance.rows.length === 0 && checklistPending)) {
+    const blockerSummary =
+      acceptance.blockers.length > 0 ? ` Blockers: ${acceptance.blockers.map((blocker) => `${blocker.code}(${blocker.row.id})`).join(', ')}.` : '';
     pushIssue(issues, {
       code: 'TASK_DONE_ACCEPTANCE_PENDING',
       severity: 'error',
       area: 'validation',
       taskId: task.id,
       path: toPortablePath(path.relative(projectRoot, acceptancePath)),
-      message: 'Task is marked Done but ACCEPTANCE.md still has pending, blocked, or in-progress criteria.',
+      message: `Task is marked Done but ACCEPTANCE.md still has pending, blocked, or in-progress criteria.${blockerSummary}`,
       expected: 'all acceptance criteria complete',
       actual: 'incomplete criteria found'
     });

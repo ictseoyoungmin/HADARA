@@ -260,6 +260,31 @@ describe('Harness Task Capsule validation', () => {
     );
   });
 
+  it('accepts justified deferrable v2 acceptance rows at done level', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'V2 acceptance');
+    markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
+    writeCompletedCapsuleDocs(task.dir);
+    writeHandoffDone(task.dir);
+    fs.writeFileSync(
+      path.join(task.dir, 'ACCEPTANCE.md'),
+      '# Acceptance Criteria\n\n| ID | Criterion | Origin | Required | Deferrable | Status | Evidence | Decision / Risk / Follow-up |\n|---|---|---|---|---|---|---|---|\n| AC-1 | Required scope is complete. | original | Yes | No | Met | Fixture evidence. | |\n| AC-2 | Discovered polish is tracked separately. | discovered | No | Yes | Follow-up Created | Fixture evidence. | D-1; T-0999 |\n',
+      'utf8'
+    );
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Done-level validation evidence',
+      result: 'passed'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(true);
+    expect(result.issues).toEqual([]);
+  });
+
   it('rejects done-level handoff status that mixes pending close wording into TaskStatus', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Pending close wording');

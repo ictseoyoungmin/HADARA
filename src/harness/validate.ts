@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
 import { createEvidenceLintReport } from '../services/evidence-lint';
+import { analyzeAcceptanceReadiness } from '../task/acceptance';
 import { isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 
 export type HarnessValidationSeverity = 'error' | 'warning';
@@ -171,7 +172,7 @@ function validateTaskMarkdown(projectRoot: string, task: TaskCapsule, issues: Ha
 function validateCapsuleFormatMarkdown(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
   validateMarkdownFile(projectRoot, task, issues, 'ACCEPTANCE.md', [
     { code: 'ACCEPTANCE_HEADING_INVALID', anyText: ['# Acceptance Criteria'] },
-    { code: 'ACCEPTANCE_CHECKLIST_MISSING', anyText: ['- [ ]', '- [x]', '| ID | Criterion | Status | Evidence |'] }
+    { code: 'ACCEPTANCE_CHECKLIST_MISSING', anyText: ['- [ ]', '- [x]', '| ID | Criterion | Status | Evidence |', '| ID | Criterion | Origin | Required | Deferrable | Status | Evidence |'] }
   ]);
   validateMarkdownFile(projectRoot, task, issues, 'FILES.md', [
     { code: 'FILES_TABLE_INVALID', anyText: ['| Path | Action | Reason |', '| Path | Action | Reason | Status |'] },
@@ -558,19 +559,16 @@ function validateAcceptanceDone(projectRoot: string, task: TaskCapsule, issues: 
   const checklistLines = content
     .split(/\r?\n/)
     .filter((line) => /^-\s+\[[ xX]\]/.test(line.trim()));
-  const tableRows = parseMarkdownRows(content).filter((cells) => /^AC-\d+$/i.test(cells[0] ?? ''));
-  const tableIncomplete =
-    tableRows.length > 0 &&
-    tableRows.some((cells) => {
-      const status = cells[2]?.trim().toLowerCase();
-      return !status || status === 'pending' || status === 'blocked' || status === 'in progress' || status === 'partial';
-    });
+  const acceptance = analyzeAcceptanceReadiness(content);
+  const tableRows = acceptance.rows;
+  const tableIncomplete = tableRows.length > 0 && acceptance.blockers.length > 0;
   const checklistIncomplete = checklistLines.length > 0 && checklistLines.some((line) => /^-\s+\[\s\]/.test(line.trim()));
   if ((tableRows.length > 0 && tableIncomplete) || (tableRows.length === 0 && (checklistLines.length === 0 || checklistIncomplete))) {
+    const blockerSummary = acceptance.blockers.length > 0 ? ` Blockers: ${acceptance.blockers.map((blocker) => `${blocker.code}(${blocker.row.id})`).join(', ')}.` : '';
     issues.push({
       severity: 'error',
       code: 'ACCEPTANCE_INCOMPLETE',
-      message: 'Done-level validation requires all acceptance criteria to be complete.',
+      message: `Done-level validation requires all acceptance criteria to be complete.${blockerSummary}`,
       path: relativePath,
       heading: 'Acceptance Criteria',
       fixHint: 'Mark each acceptance criterion complete with concrete evidence, or replace placeholder checklist rows with completed task-specific criteria.',
