@@ -113,6 +113,28 @@ describe('context pack', () => {
     assertSchema('hadara.contextPack.v1', report);
   });
 
+  it('does not publish slice candidates for paths outside the raw slice boundary', () => {
+    const graph = sampleGraphReport({ includeCode: false });
+    graph.nodes.push(
+      documentNode('.hadara/local/cache/context/source-manifest.json', { requiredReading: true, status: 'canonical', kind: 'local-cache' }),
+      documentNode('.dashboard-visual/state.json', { requiredReading: true, status: 'canonical', kind: 'generated' }),
+      documentNode('.hadara/docs-registry.json', { requiredReading: true, status: 'canonical', kind: 'docs-registry' })
+    );
+
+    const report = buildContextPackReport({
+      projectRoot: '/workspace',
+      generatedAt,
+      taskId,
+      graphReport: graph,
+      budget: { maxReadFirstItems: 10, maxItems: 20 }
+    });
+
+    expect(report.sliceCandidates.map((candidate) => candidate.path)).not.toContain('.hadara/local/cache/context/source-manifest.json');
+    expect(report.sliceCandidates.map((candidate) => candidate.path)).not.toContain('.dashboard-visual/state.json');
+    expect(report.sliceCandidates.map((candidate) => candidate.path)).toContain('.hadara/docs-registry.json');
+    assertSchema('hadara.contextPack.v1', report);
+  });
+
   it('returns an explicit task-not-found error when graph has no matching task', () => {
     const report = buildContextPackReport({
       projectRoot: '/workspace',

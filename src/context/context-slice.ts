@@ -3,6 +3,7 @@ import path from 'node:path';
 import { buildContextPackReport, type ContextPackReport, type SliceCandidate } from './context-pack';
 import { extractCodeFileReferences } from './code-index';
 import { hashContextGraphText, normalizeContextGraphPath } from './extractor-contract';
+import { isDeniedContextSlicePath, normalizeContextSliceInputPath } from './context-slice-boundary';
 import { parseManagedSections } from '../services/managed-sections';
 
 export const CONTEXT_SLICE_SCHEMA_ID = 'hadara.contextSlice.v1' as const;
@@ -108,18 +109,6 @@ const MAX_RANGE_LINES = 300;
 const MAX_TAIL_LINES = 500;
 const MAX_KEYWORD_WINDOWS = 3;
 const MAX_SLICE_BYTES = 512 * 1024;
-const CONTEXT_SLICE_HADARA_ALLOWLIST = new Set([
-  '.hadara/context/HADARA_CONTEXT.md',
-  '.hadara/docs-registry.json'
-]);
-const CONTEXT_SLICE_DENIED_PATHS = [
-  '.git',
-  'node_modules',
-  '.hadara/tmp',
-  '.hadara/run',
-  '.dashboard-visual'
-];
-
 export function buildContextSliceReport(input: BuildContextSliceOptions): ContextSliceReport {
   const generatedAt = input.generatedAt ?? new Date().toISOString();
   const requestedStrategy = inferStrategy(input);
@@ -169,7 +158,7 @@ function inferStrategy(input: BuildContextSliceOptions): ContextSliceStrategy {
 }
 
 function resolveContextSlicePath(projectRoot: string, inputPath: string | undefined): { path: string; absolutePath: string; issue?: ContextSliceIssue } {
-  const normalized = inputPath ? normalizeContextGraphPath(inputPath.replace(/^\.?\//, '')) : '';
+  const normalized = normalizeContextSliceInputPath(inputPath);
   const root = path.resolve(projectRoot);
   const absolutePath = normalized ? path.resolve(root, normalized) : root;
   if (!normalized || path.isAbsolute(inputPath ?? '') || normalized.split('/').includes('..') || absolutePath !== root && !absolutePath.startsWith(`${root}${path.sep}`)) {
@@ -199,11 +188,6 @@ function resolveContextSlicePath(projectRoot: string, inputPath: string | undefi
     };
   }
   return { path: normalized, absolutePath };
-}
-
-function isDeniedContextSlicePath(normalized: string): boolean {
-  if (normalized.startsWith('.hadara/') && !CONTEXT_SLICE_HADARA_ALLOWLIST.has(normalized)) return true;
-  return CONTEXT_SLICE_DENIED_PATHS.some((denied) => normalized === denied || normalized.startsWith(`${denied}/`));
 }
 
 function readContextSliceSource(filePath: string, absolutePath: string): { source: SourceFile; issue?: undefined } | { source?: undefined; issue: ContextSliceIssue } {

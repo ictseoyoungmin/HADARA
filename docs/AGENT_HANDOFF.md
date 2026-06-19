@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, T-0360 added the detailed C6 fast cache implementation spec, T-0361-T-0362 completed C3 context pack schema/CLI work, T-0363-T-0368 completed the C6 source-manifest/cache warm/shard/fast-fingerprint line needed before C4, T-0369 added the C4 core raw slice command, T-0371 added the focused C6 speed-first graph/cache warm-path spec, T-0370 completed the remaining C4 symbol/candidate slicing surface, T-0372 hardened C4 byte/local boundaries plus acceptance drift validation before C5, T-0373 measured mounted/ext4 C6 performance, T-0374 added graph-core/context-pack warm shard consumption, T-0375 added code-index shard persistence for code-aware graph reads, T-0376 handled review hardening, T-0377 added incremental per-file code-index recompute for explicit warm execute, T-0378 added bounded default `hadara session start --json`, T-0379 made default Session Start consume proven-fresh warm graph-core/code-index cache read-only before fallback, T-0380 added advisory C6 performance regression fixtures, T-0381 added the implementation completion audit, T-0382 hardened Session Start JSON/UX, T-0383 added the context-routing E2E smoke pack, T-0384 added cache warm diagnostics cleanup, T-0385 aligned 0.3.3 readiness docs, and T-0386 added shared acceptance parser v2 lifecycle hardening. |
-| Current Phase | 0.3.3 context-routing hardening/cleanup | C1-C6 core read/cache surfaces, implementation audit, Session Start guidance polish, fast E2E smoke coverage, cache diagnostics cleanup, readiness alignment, and acceptance parser lifecycle hardening are in place. Remaining 0.3.3 work is the security boundary audit. |
-| Latest Completed Task | T-0386 Acceptance Parser v2 Lifecycle Follow-up | Added shared acceptance parser/readiness analysis for legacy and v2 tables, wired harness/protocol checks, and preserved issue-code compatibility. |
-| Active / Next Task | T-0387 Context Slice/Pack Security Boundary Final Audit | Next capsule should audit raw slice and context-pack candidate read boundaries plus suggested command safety. |
-| Validation Baseline | T-0386 Docker sync-build | Focused Docker temp-copy tests passed 3 files / 50 tests; full Docker sync-build passed 138 files / 906 tests and refreshed `dist`; evidence `ev:T-0386:4413cd420e354248bb671461`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, T-0360 added the detailed C6 fast cache implementation spec, T-0361-T-0362 completed C3 context pack schema/CLI work, T-0363-T-0368 completed the C6 source-manifest/cache warm/shard/fast-fingerprint line needed before C4, T-0369 added the C4 core raw slice command, T-0371 added the focused C6 speed-first graph/cache warm-path spec, T-0370 completed the remaining C4 symbol/candidate slicing surface, T-0372 hardened C4 byte/local boundaries plus acceptance drift validation before C5, T-0373 measured mounted/ext4 C6 performance, T-0374 added graph-core/context-pack warm shard consumption, T-0375 added code-index shard persistence for code-aware graph reads, T-0376 handled review hardening, T-0377 added incremental per-file code-index recompute for explicit warm execute, T-0378 added bounded default `hadara session start --json`, T-0379 made default Session Start consume proven-fresh warm graph-core/code-index cache read-only before fallback, T-0380 added advisory C6 performance regression fixtures, T-0381 added the implementation completion audit, T-0382 hardened Session Start JSON/UX, T-0383 added the context-routing E2E smoke pack, T-0384 added cache warm diagnostics cleanup, T-0385 aligned 0.3.3 readiness docs, T-0386 added shared acceptance parser v2 lifecycle hardening, and T-0387 completed the context slice/pack security boundary audit. |
+| Current Phase | 0.3.3 context-routing hardening/cleanup complete | C1-C6 core read/cache surfaces, implementation audit, Session Start guidance polish, fast E2E smoke coverage, cache diagnostics cleanup, readiness alignment, acceptance parser lifecycle hardening, and slice/pack boundary audit are in place. |
+| Latest Completed Task | T-0387 Context Slice/Pack Security Boundary Final Audit | Shared the raw slice path boundary helper with context pack and filtered pack slice candidates through it. |
+| Active / Next Task | Task selection pending | Run `task next` or choose the next release/readiness capsule after the 8-capsule context-routing cleanup batch. |
+| Validation Baseline | T-0387 Docker sync-build retry | Focused Docker temp-copy tests passed 3 files / 31 tests; first full sync-build timed out in `tests/unit/protocol-consistency.test.ts`, retry passed 138 files / 907 tests and refreshed `dist`; evidence `ev:T-0387:561d66c217184e529964d5ee`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0387 | Context Slice/Pack Security Boundary Final Audit is next. | Final review of raw slice and context-pack candidate read boundaries plus suggested command safety. |
+| None | T-0387 completed the approved 8-capsule context-routing cleanup batch. | Next task selection is pending. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0387 Context Slice/Pack Security Boundary Final Audit | Shared raw slice boundaries with context pack and filtered denied slice candidates before publishing suggested commands. | `ev:T-0387:561d66c217184e529964d5ee` |
 | T-0386 Acceptance Parser v2 Lifecycle Follow-up | Added shared acceptance parser/readiness analysis and v2 table support for done-level lifecycle checks. | `ev:T-0386:4413cd420e354248bb671461` |
 | T-0385 0.3.3 Readiness Cleanup | Aligned context-routing readiness docs and accepted mounted broad-command latency as an explicit-command residual. | `ev:T-0385:502833bf598b4d31b22d27db` |
-| T-0384 Cache Warm Diagnostics Cleanup | Added cache diagnostics for stale/corrupt/partial states and slow-path/shard summaries. | `ev:T-0384:5cf534a97e2c4ff7a8355fd6` |
 
 ## Current Known Problems
 
@@ -92,7 +92,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Continue T-0387 Context Slice/Pack Security Boundary Final Audit. | T-0386 closed the acceptance lifecycle follow-up; the last approved cleanup capsule is the final boundary and candidate-command audit. | Read `docs/specs/0.3.3/context-routing/04_Deterministic_Context_Slice_Raw_Adapter_Spec.md`, `docs/specs/0.3.3/context-routing/03_Context_Pack_and_Session_Start_Spec.md`, and `docs/SECURITY_MODEL.md`. |
+| Run `task next --json` or select the next release/readiness capsule. | The approved 8-capsule context-routing cleanup batch is complete through T-0387. | Review `docs/PROJECT_STATE.md`, `docs/TASK_BOARD.md`, and `docs/DEVELOPMENT_SLICES.md`. |
 
 ## Validation Baseline
 

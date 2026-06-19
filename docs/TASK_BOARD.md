@@ -387,3 +387,4 @@
 | T-0384 | Cache Warm Diagnostics Cleanup | Done | tasks/T-0384-cache-warm-diagnostics-cleanup | Added additive cache diagnostics for stale/corrupt/partial states, slow-path metadata, and warm command args. |
 | T-0385 | 0.3.3 Readiness Cleanup | Done | tasks/T-0385-0-3-3-readiness-cleanup | |
 | T-0386 | Acceptance Parser v2 Lifecycle Follow-up | Done | tasks/T-0386-acceptance-parser-v2-lifecycle-follow-up | |
+| T-0387 | Context Slice/Pack Security Boundary Final Audit | Done | tasks/T-0387-context-slice-pack-security-boundary-final-audit | |

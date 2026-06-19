@@ -9,6 +9,7 @@ import type {
   StateConsistencyIssue
 } from './context-graph';
 import { buildContextGraphReport } from './context-graph-builder';
+import { isContextSliceProjectRelativePath } from './context-slice-boundary';
 import { createTaskNodeId } from './extractor-contract';
 
 export const CONTEXT_PACK_SCHEMA_ID = 'hadara.contextPack.v1' as const;
@@ -473,6 +474,7 @@ function sliceCandidatesForItems(items: ContextPackItem[], nodes: ContextGraphNo
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
   return items
     .filter((item) => item.path)
+    .filter((item) => isContextSliceProjectRelativePath(item.path))
     .filter((item) => ['Document', 'ManagedSection', 'SourceFile', 'TestFile', 'Symbol'].includes(item.type))
     .slice(0, 10)
     .map((item, index) => {
