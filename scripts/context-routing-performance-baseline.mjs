@@ -15,10 +15,16 @@ const sampleCount = numberArg('--samples', 1);
 const timeoutMs = numberArg('--timeout-ms', 75_000);
 const killGraceMs = numberArg('--kill-grace-ms', 3_000);
 const markdownPath = args.has('--markdown') ? path.resolve(cwd, String(args.get('--markdown'))) : null;
+const thresholdsPath = args.has('--thresholds') ? path.resolve(cwd, String(args.get('--thresholds'))) : null;
+const failOnRegression = args.has('--fail-on-regression');
+const selectedWorkloads = args.has('--workloads')
+  ? new Set(String(args.get('--workloads')).split(',').map((value) => value.trim()).filter(Boolean))
+  : null;
 
 if (!fs.existsSync(cliPath)) {
   throw new Error(`CLI path does not exist: ${cliPath}`);
 }
+const thresholds = thresholdsPath ? readThresholds(thresholdsPath) : null;
 
 const targets = [
   { label: 'mounted', projectRoot: mountedProject },
@@ -35,6 +41,14 @@ const workloads = [
     args: (projectRoot) => ['context', 'cache', 'warm', '--project', projectRoot, '--json']
   },
   {
+    label: 'session_start',
+    args: (projectRoot) => ['session', 'start', '--task', taskId, '--project', projectRoot, '--max-read-first', '5', '--max-items', '12', '--json']
+  },
+  {
+    label: 'session_start_include_code',
+    args: (projectRoot) => ['session', 'start', '--task', taskId, '--include-code', '--project', projectRoot, '--max-read-first', '5', '--max-items', '12', '--json']
+  },
+  {
     label: 'graph',
     args: (projectRoot) => ['context', 'graph', '--project', projectRoot, '--json']
   },
@@ -46,7 +60,11 @@ const workloads = [
     label: 'context_pack',
     args: (projectRoot) => ['context', 'pack', '--task', taskId, '--project', projectRoot, '--json']
   }
-];
+].filter((workload) => !selectedWorkloads || selectedWorkloads.has(workload.label));
+
+if (workloads.length === 0) {
+  throw new Error('--workloads did not match any known workload.');
+}
 
 const results = [];
 for (const target of targets) {
@@ -66,21 +84,26 @@ for (const target of targets) {
   });
 }
 
+const commandOk = results.every((target) => target.workloads.every((workload) => workload.ok));
+const regression = thresholds ? compareThresholds(results, thresholds, thresholdsPath) : null;
 const report = {
   schemaVersion: 'hadara.contextRouting.performanceBaseline.v1',
   command: 'context.routing.performance.baseline',
-  ok: true,
+  ok: commandOk && (!failOnRegression || !regression || regression.ok),
   generatedAt: new Date().toISOString(),
   cliPath: path.relative(cwd, cliPath) || cliPath,
   taskId,
   sampleCount,
   timeoutMs,
   killGraceMs,
+  ...(selectedWorkloads ? { selectedWorkloads: [...selectedWorkloads].sort() } : {}),
+  ...(regression ? { regression } : {}),
   targets: results,
   notes: [
     'Measurements invoke the built CLI and suppress raw command output.',
     'context cache warm is measured in dry-run mode only; this script does not write cache records.',
-    'Durations are local observations for comparing mounted and ext4 behavior, not stable CI gates.'
+    'Durations are local observations for comparing mounted and ext4 behavior, not stable CI gates.',
+    'Threshold comparison is advisory unless --fail-on-regression is provided.'
   ]
 };
 
@@ -89,6 +112,9 @@ if (markdownPath) {
 }
 
 console.log(JSON.stringify(report, null, 2));
+if (failOnRegression && regression && !regression.ok) {
+  process.exitCode = 1;
+}
 
 async function measureCommand(label, commandArgs, projectRoot) {
   const started = performance.now();
@@ -151,7 +177,74 @@ function summarizeJson(data) {
     nodeCount: nodeCounts ? sumObjectValues(nodeCounts) : null,
     edgeCount: edgeCounts ? sumObjectValues(edgeCounts) : null,
     readFirstCount: Array.isArray(data.readFirst) ? data.readFirst.length : null,
+    contextPackReadFirstCount: Array.isArray(data.contextPack?.readFirst) ? data.contextPack.readFirst.length : null,
     includeCode: Boolean(data.sourceSummary?.codeIndexAvailable)
+  };
+}
+
+function readThresholds(filePath) {
+  let parsed;
+  try {
+    parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch (error) {
+    throw new Error(`Failed to read performance thresholds ${filePath}: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.budgets)) {
+    throw new Error('Performance thresholds must be a JSON object with a budgets array.');
+  }
+  return parsed;
+}
+
+function compareThresholds(targets, thresholdConfig, filePath) {
+  const issues = [];
+  let checked = 0;
+  for (const budget of thresholdConfig.budgets) {
+    if (!budget || typeof budget !== 'object') continue;
+    const targetLabel = String(budget.target ?? '');
+    const workloadLabel = String(budget.workload ?? '');
+    const target = targets.find((item) => item.label === targetLabel);
+    if (!target) {
+      issues.push(regressionIssue('warning', 'PERFORMANCE_BUDGET_TARGET_MISSING', `No measured target named ${targetLabel}.`, budget));
+      continue;
+    }
+    const workload = target.workloads.find((item) => item.label === workloadLabel);
+    if (!workload) {
+      issues.push(regressionIssue('warning', 'PERFORMANCE_BUDGET_WORKLOAD_MISSING', `No measured workload named ${workloadLabel} for target ${targetLabel}.`, budget));
+      continue;
+    }
+    checked += 1;
+    if (typeof budget.maxAvgMs === 'number' && workload.avgMs > budget.maxAvgMs) {
+      issues.push(regressionIssue('error', 'PERFORMANCE_BUDGET_AVG_EXCEEDED', `${targetLabel}/${workloadLabel} avg ${workload.avgMs} ms exceeded budget ${budget.maxAvgMs} ms.`, budget, workload));
+    }
+    if (typeof budget.maxMaxMs === 'number' && workload.maxMs > budget.maxMaxMs) {
+      issues.push(regressionIssue('error', 'PERFORMANCE_BUDGET_MAX_EXCEEDED', `${targetLabel}/${workloadLabel} max ${workload.maxMs} ms exceeded budget ${budget.maxMaxMs} ms.`, budget, workload));
+    }
+  }
+  const errorCount = issues.filter((issue) => issue.severity === 'error').length;
+  const warningCount = issues.filter((issue) => issue.severity === 'warning').length;
+  return {
+    schemaVersion: 'hadara.contextRouting.performanceRegression.v1',
+    ok: errorCount === 0,
+    thresholdsPath: path.relative(cwd, filePath) || filePath,
+    checkedBudgetCount: checked,
+    errorCount,
+    warningCount,
+    issues
+  };
+}
+
+function regressionIssue(severity, code, message, budget, workload = null) {
+  return {
+    severity,
+    code,
+    message,
+    target: budget.target ?? null,
+    workload: budget.workload ?? null,
+    budget: {
+      ...(typeof budget.maxAvgMs === 'number' ? { maxAvgMs: budget.maxAvgMs } : {}),
+      ...(typeof budget.maxMaxMs === 'number' ? { maxMaxMs: budget.maxMaxMs } : {})
+    },
+    ...(workload ? { observed: { avgMs: workload.avgMs, maxMs: workload.maxMs, ok: workload.ok, timedOut: workload.timedOut } } : {})
   };
 }
 
@@ -250,6 +343,9 @@ Source: ${target.source}
 ${rows}`;
     })
     .join('\n\n');
+  const regressionSection = report.regression
+    ? `\n\n## Regression Check\n\nThresholds: \`${report.regression.thresholdsPath}\`\n\nStatus: ${report.regression.ok ? 'ok' : 'regression'}\n\nChecked budgets: ${report.regression.checkedBudgetCount}\n\nErrors: ${report.regression.errorCount}\n\nWarnings: ${report.regression.warningCount}\n\n${report.regression.issues.length > 0 ? report.regression.issues.map((issue) => `- ${issue.severity}: ${issue.code} - ${issue.message}`).join('\n') : '- No threshold issues.'}`
+    : '';
 
   return `# Context Routing Performance Baseline
 
@@ -266,6 +362,7 @@ Timeout: ${report.timeoutMs} ms
 Kill grace: ${report.killGraceMs} ms
 
 ${sections}
+${regressionSection}
 
 ## Notes
 

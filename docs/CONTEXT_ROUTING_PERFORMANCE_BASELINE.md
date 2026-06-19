@@ -10,6 +10,22 @@ Samples per workload: 1
 
 Timeout: 75000 ms
 
+Threshold fixture: `docs/CONTEXT_ROUTING_PERFORMANCE_THRESHOLDS.json`
+
+Re-run with advisory comparison:
+
+```bash
+node scripts/context-routing-performance-baseline.mjs --mounted /mnt/f/NowWorking/HADARA-dev --ext4 /tmp/hadara-context-perf-t0373 --task T-0379 --thresholds docs/CONTEXT_ROUTING_PERFORMANCE_THRESHOLDS.json --markdown docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md
+```
+
+For a quick Session Start-only regression smoke:
+
+```bash
+node scripts/context-routing-performance-baseline.mjs --mounted /mnt/f/NowWorking/HADARA-dev --task T-0379 --workloads session_start,session_start_include_code --thresholds docs/CONTEXT_ROUTING_PERFORMANCE_THRESHOLDS.json
+```
+
+Add `--fail-on-regression` only for an explicit local gate. The threshold file is intentionally generous and local-environment-aware; it is not a stable CI SLA.
+
 ## mounted
 
 Project root: `/mnt/f/NowWorking/HADARA-dev`

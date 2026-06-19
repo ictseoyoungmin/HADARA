@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "hadara.contextRouting.performanceThresholds.v1",
+  "updatedAt": "2026-06-19",
+  "basis": "T-0373 mounted/ext4 observations plus T-0379 warm Session Start behavior. Budgets are advisory unless the benchmark script is run with --fail-on-regression.",
+  "budgets": [
+    { "target": "mounted", "workload": "cache_status", "maxAvgMs": 25000, "maxMaxMs": 30000 },
+    { "target": "mounted", "workload": "cache_warm_dry_run", "maxAvgMs": 25000, "maxMaxMs": 30000 },
+    { "target": "mounted", "workload": "session_start", "maxAvgMs": 12000, "maxMaxMs": 15000 },
+    { "target": "mounted", "workload": "session_start_include_code", "maxAvgMs": 12000, "maxMaxMs": 15000 },
+    { "target": "mounted", "workload": "graph", "maxAvgMs": 90000, "maxMaxMs": 105000 },
+    { "target": "mounted", "workload": "graph_include_code", "maxAvgMs": 120000, "maxMaxMs": 135000 },
+    { "target": "mounted", "workload": "context_pack", "maxAvgMs": 90000, "maxMaxMs": 105000 },
+    { "target": "ext4", "workload": "cache_status", "maxAvgMs": 5000, "maxMaxMs": 7000 },
+    { "target": "ext4", "workload": "cache_warm_dry_run", "maxAvgMs": 5000, "maxMaxMs": 7000 },
+    { "target": "ext4", "workload": "session_start", "maxAvgMs": 5000, "maxMaxMs": 7000 },
+    { "target": "ext4", "workload": "session_start_include_code", "maxAvgMs": 5000, "maxMaxMs": 7000 },
+    { "target": "ext4", "workload": "graph", "maxAvgMs": 8000, "maxMaxMs": 10000 },
+    { "target": "ext4", "workload": "graph_include_code", "maxAvgMs": 10000, "maxMaxMs": 12000 },
+    { "target": "ext4", "workload": "context_pack", "maxAvgMs": 8000, "maxMaxMs": 10000 }
+  ]
+}

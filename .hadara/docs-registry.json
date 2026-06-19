@@ -583,6 +583,27 @@
       "closeSourceRole": "task-dependent",
       "supersedes": [],
       "generatedBy": "T-0373"
+    },
+    {
+      "path": "docs/CONTEXT_ROUTING_PERFORMANCE_THRESHOLDS.json",
+      "title": "Context Routing Performance Thresholds",
+      "owner": "hadara-dev",
+      "kind": "performance-thresholds",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0380"
     }
   ]
 }

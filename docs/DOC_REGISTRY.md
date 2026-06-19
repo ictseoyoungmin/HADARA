@@ -31,4 +31,5 @@ Schema: `hadara.docs.registry.v1`
 | `docs/specs/0.3.3/context-routing/07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md` | spec | reference | only-when-linked | no | hadara-dev |
 | `docs/specs/0.3.3/context-routing/08_C6_Speed_First_Graph_Build_and_Warm_Path_Spec.md` | spec | reference | only-when-linked | no | hadara-dev |
 | `docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md` | performance-baseline | reference | only-when-linked | no | hadara-dev |
+| `docs/CONTEXT_ROUTING_PERFORMANCE_THRESHOLDS.json` | performance-thresholds | reference | only-when-linked | no | hadara-dev |
 <!-- hadara:managed:end doc-registry-summary -->

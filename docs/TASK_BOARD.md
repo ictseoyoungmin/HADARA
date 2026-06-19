@@ -380,3 +380,4 @@
 | T-0377 | C6 Incremental Code Index Recompute | Done | tasks/T-0377-c6-incremental-code-index-recompute | Explicit warm execute now reuses per-file code-index summaries and recomputes only changed/bad files. |
 | T-0378 | Bounded C5 Session Start MVP | Done | tasks/T-0378-bounded-c5-session-start-mvp | |
 | T-0379 | C6 Warm Pack and Session Start Cache Refinement | Done | tasks/T-0379-c6-warm-pack-and-session-start-cache-refinement | |
+| T-0380 | C6 Performance Regression Fixtures | Done | tasks/T-0380-c6-performance-regression-fixtures | |
