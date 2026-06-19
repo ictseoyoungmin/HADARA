@@ -121,6 +121,13 @@
       "notes": "Documents deterministic read-only C1 project context graph reports over task, document, evidence, command, release, decision, and known-problem nodes."
     },
     {
+      "id": "hadara.sessionStart.v1",
+      "path": "src/schemas/session-start.schema.json",
+      "status": "fixture",
+      "owner": "context/session-start",
+      "notes": "Documents bounded read-only C5 session-start packets composed from context pack, state projection, lifecycle guidance, and cache/degraded metadata."
+    },
+    {
       "id": "hadara.command_help.v1",
       "path": "src/schemas/command-help.schema.json",
       "status": "fixture",

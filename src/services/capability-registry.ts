@@ -886,6 +886,36 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     notes: 'C4 implementation reads exact source text through bounded strategies. Candidate slicing resolves against the current C3 context pack and remains read-only.'
   }),
   commandEntry({
+    id: 'session.start',
+    command: 'hadara session start [--task <task-id>] [--include-code] [--budget <tokens>] [--max-items <count>] [--max-read-first <count>] [--live] --json',
+    summary: 'Emit a bounded read-only session-start packet composed from context pack, state projection, lifecycle guidance, and cache metadata.',
+    canonical: true,
+    appearsInDefaultHelp: false,
+    family: 'project-health',
+    scope: 'project',
+    lifecycleStage: 'inspect',
+    requiredness: 'diagnostic',
+    writeBoundary: 'read-only',
+    readOnly: true,
+    risk: 'low',
+    actor: 'agent-worker',
+    status: 'experimental',
+    schemaVersion: 'hadara.sessionStart.v1',
+    since: '0.3.3',
+    docs: ['docs/CLI_JSON_CONTRACT.md', 'docs/COMMAND_SURFACE.md', 'docs/SCHEMAS.md'],
+    implementationFiles: ['src/cli/session.ts', 'src/context/session-start.ts', 'src/context/context-pack.ts'],
+    testFiles: ['tests/unit/session-start.test.ts', 'tests/unit/context-graph-cli.test.ts'],
+    examples: [
+      example('Start a bounded session', 'hadara session start --json', 'When a worker needs the default first-read packet for the current project state.'),
+      example('Start a task-scoped session', 'hadara session start --task T-0001 --json', 'When a worker needs bounded context and lifecycle commands for one task.'),
+      example('Start a smaller session packet', 'hadara session start --task T-0001 --max-read-first 3 --max-items 10 --json', 'When a worker needs a tighter packet for limited context windows.'),
+      example('Start a full live session packet', 'hadara session start --task T-0001 --live --json', 'When a worker explicitly accepts live context-pack graph discovery.')
+    ],
+    related: ['context.pack', 'context.graph', 'context.cache.status', 'task.next', 'task.status'],
+    conflictsWith: [],
+    notes: 'C5 MVP is read-only. The default path returns a bounded no-live packet; --live explicitly permits the underlying context-pack graph read.'
+  }),
+  commandEntry({
     id: 'context.cache.status',
     command: 'hadara context cache status --json',
     summary: 'Inspect read-only C6 context cache freshness, source-manifest staleness, and extractor invalidation keys.',

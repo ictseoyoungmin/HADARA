@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleContextCommand } from '../../src/cli/context';
+import { handleSessionCommand } from '../../src/cli/session';
 import { validateSchema } from '../../src/core/schema';
 import { writeContextGraphExtractorShard } from '../../src/context/context-cache-store';
 import { buildContextSourceManifest } from '../../src/context/source-manifest';
@@ -237,6 +238,42 @@ describe('context graph CLI', () => {
     ]));
     expect(payload.validateWith.some((item: { command: string }) => item.command.includes(`task ready --task ${task.id}`))).toBe(true);
     expect(validateSchema('hadara.contextPack.v1', payload).ok).toBe(true);
+    expect(snapshotProject(root)).toEqual(before);
+  });
+
+  it('prints a schema-valid session start report for a task without writing files', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'CLI session start');
+    const before = snapshotProject(root);
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleSessionCommand({
+      args: ['session', 'start', '--task', task.id, '--max-read-first', '3', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.sessionStart.v1',
+      command: 'session.start',
+      ok: true,
+      projectRoot: root,
+      currentState: {
+        recommendedNextTask: task.id
+      },
+      contextPack: {
+        schemaVersion: 'hadara.contextPack.v1',
+        taskId: task.id,
+        cache: { used: false, hit: false }
+      }
+    });
+    expect(payload.contextPack.readFirst.length).toBeLessThanOrEqual(3);
+    expect(payload.lifecycle.primaryNextCommands).toEqual(expect.arrayContaining([
+      `node dist/cli/main.js task status --task ${task.id} --json`
+    ]));
+    expect(validateSchema('hadara.sessionStart.v1', payload).ok).toBe(true);
     expect(snapshotProject(root)).toEqual(before);
   });
 

@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.sessionStart.v1",
+  "x-hadara-schema-id": "hadara.sessionStart.v1",
+  "title": "HADARA Session Start Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "command",
+    "ok",
+    "generatedAt",
+    "projectRoot",
+    "currentState",
+    "contextPack",
+    "lifecycle",
+    "knownProblems",
+    "sourceSummary",
+    "cache",
+    "summary",
+    "issues"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.sessionStart.v1" },
+    "command": { "const": "session.start" },
+    "ok": { "type": "boolean" },
+    "generatedAt": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "currentState": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "activeTask": { "type": "string" },
+        "latestCompletedTask": { "type": "string" },
+        "recommendedNextTask": { "type": "string" },
+        "releaseState": { "type": "string" }
+      }
+    },
+    "contextPack": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["schemaVersion", "command", "ok", "readFirst", "readIfNeeded", "issues"],
+      "properties": {
+        "schemaVersion": { "const": "hadara.contextPack.v1" },
+        "command": { "const": "context.pack" },
+        "ok": { "type": "boolean" },
+        "readFirst": { "type": "array" },
+        "readIfNeeded": { "type": "array" },
+        "issues": { "type": "array" }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["primaryNextCommands", "diagnosticCommands"],
+      "properties": {
+        "primaryNextCommands": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "diagnosticCommands": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "knownProblems": { "type": "array" },
+    "sourceSummary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["graphAvailable", "stateProjectionAvailable", "degraded"],
+      "properties": {
+        "graphAvailable": { "type": "boolean" },
+        "stateProjectionAvailable": { "type": "boolean" },
+        "degraded": { "type": "boolean" }
+      }
+    },
+    "cache": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["used", "hit"],
+      "properties": {
+        "used": { "type": "boolean" },
+        "hit": { "type": "boolean" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "degraded",
+        "readFirstCount",
+        "readIfNeededCount",
+        "sliceCandidateCount",
+        "knownProblemCount",
+        "issueCount"
+      ],
+      "properties": {
+        "degraded": { "type": "boolean" },
+        "readFirstCount": { "type": "number" },
+        "readIfNeededCount": { "type": "number" },
+        "sliceCandidateCount": { "type": "number" },
+        "knownProblemCount": { "type": "number" },
+        "issueCount": { "type": "number" }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "enum": ["info", "warning", "error"] },
+          "code": { "type": "string" },
+          "message": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

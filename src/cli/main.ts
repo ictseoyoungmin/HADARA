@@ -154,6 +154,12 @@ async function main(args = process.argv.slice(2)): Promise<void> {
       break;
     }
 
+    case 'session': {
+      const { handleSessionCommand } = await import('./session');
+      if (handleSessionCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
+      break;
+    }
+
     case 'dashboard': {
       const { handleDashboardCommand } = await import('./dashboard');
       if (handleDashboardCommand({ args, projectRoot: paths.projectRoot })) return;
