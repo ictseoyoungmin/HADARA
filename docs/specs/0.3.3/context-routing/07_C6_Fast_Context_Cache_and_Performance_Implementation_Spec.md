@@ -2,7 +2,9 @@
 
 ## Status
 
-Draft detailed implementation specification for C6.
+Active detailed implementation specification for C6.
+
+Updated 2026-06-19 to make speed the primary C6 design constraint, sharpen the Graphify comparison, and record the existing code changes required before C4/C5 can rely on fast context routing.
 
 This document extends `05_Indexing_Cache_Invalidation_and_Performance_Spec.md`. The `05` spec remains the compact contract for cache location, invalidation, degraded output, and default budgets. This document defines the speed-first implementation shape for future capsules.
 
@@ -19,6 +21,28 @@ The design must:
 - preserve read-only semantics for context read commands;
 - expose degraded output explicitly when budgets are exceeded;
 - define the existing code changes needed for implementation.
+
+## Implementation Status Snapshot
+
+| Slice | Current State | Next Requirement |
+|---|---|---|
+| C6.1 Source Manifest and Shared Discovery | Implemented through T-0363. | Reuse it as the single source discovery/stat path for graph, code index, and cache warm. |
+| C6.2 Cache Store and Status Read Model | Implemented through T-0364. | Keep `context cache status` read-only; use it to prove hit/stale/corrupt states before writes. |
+| C6.3 Cache Warm / Integration | Not implemented. | Add an explicit dry-run/execute cache warm surface or graph/code-index cache integration before C4 work depends on fast reads. |
+| C4 Context Slice | Not implemented. | Consume source-addressed graph/pack candidates without forcing broad rescans. |
+
+The immediate priority is C6.3. A slow context graph makes C3/C4 theoretically correct but operationally weak; agents will fall back to manual broad reads if routine graph/pack calls are not fast.
+
+## Speed-First Decision Summary
+
+| Decision | Requirement |
+|---|---|
+| Optimize first build, not only warm reads | Cold graph generation still scans sources, but it must avoid duplicate walks, historical deep reads, and oversized file reads. |
+| Build a manifest before extracting content | Metadata-first discovery is the gate for all extractors. Content reads happen only for relevant, in-budget sources. |
+| Shard by extractor and source subset | A task doc edit must not invalidate code index output; a code file edit must not invalidate Task Board or evidence shards. |
+| Make writes explicit | Read commands may report stale/missing cache but must not warm cache implicitly. |
+| Keep graph/cache lower authority than files | Cache corruption, misses, or stale state fall back to live reads or explicit degraded output. |
+| Measure and report speed state | JSON outputs should say whether cache was used, skipped, stale, partial, or unavailable. |
 
 ## Non-Goals
 
@@ -94,31 +118,81 @@ Targets are measured on a warm Node process when possible and include JSON seria
 
 Cold first graph creation can be slower than warm reads, but must still avoid broad unnecessary IO. On mounted filesystems, degraded output is better than blocking indefinitely.
 
-## Graphify Lessons
+## Latency Architecture
 
-Graphify's useful ideas for HADARA:
+C6 should make context routing fast by changing the shape of work, not by hiding slow work behind cache alone.
+
+| Layer | Cold Path | Warm Path | Failure / Degraded Behavior |
+|---|---|---|---|
+| Source discovery | One ignore-aware walk produces a source manifest and source-kind buckets. | Stat-only comparison against prior manifest. | Return `SOURCE_MANIFEST_PARTIAL` if file/byte/time caps stop discovery. |
+| Extraction | Run only extractors whose source buckets are requested and in budget. | Load fresh shard records and recompute only stale shards. | Return partial graph with extractor-level warning issues. |
+| Merge | Merge extractor fragments once into graph/state/code projections. | Merge cached shards, or read a compact merged graph shard when fresh. | If merge budget is exceeded, emit `CONTEXT_GRAPH_BUDGET_EXCEEDED`. |
+| Context pack | Rank from graph/code summaries and active task hints. | Use cached graph/index summaries; avoid source rereads. | Return bounded pack with excluded candidates and reasons. |
+| Context slice | Read exact source ranges requested by pack or explicit command. | No persistent slice cache by default; source hash guards each read. | Fail or degrade per slice; never use stale text. |
+
+The target architecture is:
+
+```text
+single source manifest
+  -> extractor source subsets
+  -> extractor cache shards
+  -> merged graph/state/code summaries
+  -> context pack candidates
+  -> deterministic source slices
+```
+
+Avoid this anti-pattern:
+
+```text
+context graph walks files
+context pack walks files again
+code index walks files again
+context slice guesses ranges from broad reads
+```
+
+## Graphify Comparison and Lessons
+
+The referenced [`safishamsi/graphify`](https://github.com/safishamsi/graphify) project builds a queryable knowledge graph from code, docs, SQL schemas, scripts, media, and other project artifacts. Its README describes three default outputs under `graphify-out/`: `graph.html`, `GRAPH_REPORT.md`, and `graph.json`; an update mode that re-extracts changed files; a portable manifest; optional cache sharing; local tree-sitter extraction for code; and assistant integrations that nudge agents toward querying the graph before grepping or opening many files.
+
+HADARA should absorb the performance ideas, not the authority model.
+
+Graphify patterns worth adapting:
 
 | Graphify Pattern | HADARA Adaptation |
 |---|---|
-| Persistent graph output | Keep local rebuildable graph/index cache under `.hadara/local/cache/context/`; do not commit it by default. |
-| Manifest and update mode | Use a source manifest plus extractor-version stamps to identify stale shards. |
-| Watch/post-commit convenience | Defer to future optional cache-warm integrations. First implement explicit status/warm commands. |
-| Query-first graph representation | Store compact adjacency and source-addressed nodes so pack/ranking can avoid rescanning project files. |
-| Cache split for changed/unchanged files | Shard by extractor and source kind, then update only affected shards. |
+| Persistent graph output | Keep rebuildable graph/index shards under `.hadara/local/cache/context/`; do not commit them by default. |
+| `--update` changed-file extraction | Use source-manifest comparison, extractor versions, and subset hashes to recompute only stale shards. |
+| Portable manifest | Persist project-relative paths and stable hashes; never persist machine-local absolute paths as cache keys. |
+| Local AST extraction for code | Keep C2 deterministic and offline; optionally add parser-backed extraction later behind per-file changed-source gates. |
+| Assistant query-first UX | Make `context pack` and future session-start consume graph/cache summaries so agents do not reread broad docs manually. |
+| Optional hooks | Treat hooks as a future convenience only after explicit cache warm works and is evidence-friendly. |
+| Graph query server / MCP | Future read-only MCP can serve cached graph projections, but C6 does not add new truth or write tools. |
 
 Graphify behaviors not adopted for C6:
 
 | Behavior | Reason |
 |---|---|
-| Committing generated graph directories | HADARA cache must remain optional and ignored. |
+| Committing generated graph directories as team bootstrap state | HADARA cache must remain optional and ignored; canonical state is committed docs/tasks/code/evidence. |
 | Model/API extraction for docs/images/PDFs | C6 must remain deterministic, local, and fast. |
 | HTML/wiki/report generation | Not needed for agent context routing fast path. |
 | Global graph as truth | HADARA graph is a projection over canonical project state. |
 | Automatic write hooks by default | HADARA write surfaces must be explicit and evidence-friendly. |
+| Broad multimodal ingestion | HADARA 0.3.3 context routing is scoped to project docs, tasks, evidence, commands, and code links. |
+
+The practical distinction:
+
+| Dimension | Graphify | HADARA C6 |
+|---|---|---|
+| Primary artifact | Queryable generated graph/report output. | Fast local cache for deterministic read models. |
+| Default output location | `graphify-out/`, optionally committed as team map. | `.hadara/local/cache/context/`, ignored and rebuildable. |
+| Extraction scope | Broad corpus including media and model-assisted semantic extraction. | Deterministic project protocol/code/docs sources only. |
+| Agent UX | Ask graph queries instead of grepping. | Use graph/pack/slice/session-start to route exact source-addressed context. |
+| Freshness model | Update changed files, hooks, portable manifest. | Manifest + extractor versions + subset hashes + explicit warm/write boundary. |
+| Authority | Generated graph is useful project memory. | Graph/cache never satisfy proof, evidence, release, or state truth alone. |
 
 ## Source Manifest Contract
 
-The existing `hadara.context.sourceManifest.v1` sketch should be implemented with enough metadata to avoid unnecessary reads.
+The implemented `hadara.context.sourceManifest.v1` contract is the base for metadata-first freshness checks. Future cache integration should preserve at least the following shape and extend it additively when shard-level invalidation needs more metadata.
 
 ```ts
 export interface ContextSourceManifest {
@@ -210,6 +284,17 @@ Cold first build:
 7. Merge extractor results once, then derive state projection and summaries.
 8. Return degraded partial output if budgets or time caps are reached.
 
+Cold first build must not wait for expensive non-essential sources before returning the core project state. The order should be:
+
+1. read compact state docs: `.hadara/context/HADARA_CONTEXT.md`, `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, `docs/TASK_BOARD.md`;
+2. read active task capsule docs if a task is requested;
+3. read docs registry and command registry surfaces;
+4. discover eligible source/test files by metadata only;
+5. run task/doc/evidence/command extractors and code index in bounded parallel lanes;
+6. stop or degrade before broad historical capsule/code reads exceed budget.
+
+This keeps first-run behavior useful even before any cache exists.
+
 ## First Build Optimizations
 
 | Area | Required Optimization |
@@ -223,6 +308,34 @@ Cold first build:
 | Code parsing | Keep current regex/static extraction fast. If a parser such as tree-sitter is added later, make it optional and run it only for changed eligible files. |
 | JSON work | Store compact shards and avoid repeated stringify/parse loops during one command. |
 | Time caps | Support internal caps that return explicit degraded output rather than blocking large mounted workspaces. |
+
+## Warm Cache Optimizations
+
+| Area | Required Optimization |
+|---|---|
+| Header-first cache reads | Read small cache headers or envelopes before parsing large payloads. If manifest/schema/extractor versions mismatch, skip full payload parse. |
+| Shard-local JSON | Prefer multiple compact shard files over one monolithic graph cache for invalidation and parse cost. |
+| Stable source subset hashes | Use subset hashes to prove unaffected shards fresh without comparing every source against every projection. |
+| Carry-forward hashes | If path, kind, size, mtime, ignore config, and extractor version match, carry forward prior content hashes. |
+| Lazy code index payload | `context graph` without `--include-code` should not parse full code-index payloads. |
+| Bounded cache repair | Corrupt cache should be reported and ignored; repair only through explicit warm execute. |
+| In-memory reuse per command | Within one CLI invocation, build the manifest once and pass it through graph/index/pack assembly. |
+
+## Required Cache Shards
+
+The initial shard set should be biased toward high-impact reuse:
+
+| Shard | Projection | Inputs | Why First |
+|---|---|---|---|
+| `source-manifest.json` | `hadara.context.sourceManifest.v1` | all eligible source metadata | Foundation for every cache decision. |
+| `extractors/task-board.json` | Task nodes and task state source | `docs/TASK_BOARD.md` | Small, high-value routing source. |
+| `extractors/active-task-capsule.json` | Active task docs/evidence edges | active task capsule files | Needed by context pack/session start. |
+| `extractors/docs-registry.json` | Document nodes/edges | docs registry surfaces | Required for read-routing. |
+| `extractors/command-registry.json` | Command nodes/implementation hints | command registry source | Required for workflow suggestions. |
+| `extractors/code-index.json` | Source/test/symbol/import summaries | source/test files | Largest performance win for include-code graph/pack. |
+| `graph-core.json` | merged non-code graph/state projection | extractor shards | Lets common graph/pack calls avoid recomputing merge. |
+
+Historical task capsules, release readiness, managed sections, decisions, and full evidence shards can follow once the first high-impact path is fast.
 
 ## Cache Command Boundary
 
@@ -256,6 +369,17 @@ hadara context cache warm --execute --json
 ```
 
 `context cache status` is read-only. `context cache warm` without `--execute` is a dry-run plan. `context cache warm --execute` writes local ignored cache files using atomic temp+rename. If these commands are added, they need command registry metadata and CLI JSON contract documentation.
+
+`context cache warm` should be the first write surface because it lets operators pay the cold-build cost once, inspect the plan, and keep all ordinary context reads non-mutating. It should start narrow:
+
+| Warm Phase | Write Scope | Acceptance |
+|---|---|---|
+| Warm phase 1 | `source-manifest.json` only | `context cache status` can move from miss/stale/corrupt to hit after execute. |
+| Warm phase 2 | source manifest plus high-impact extractor shards | Task/docs/command shards can be reused by `context graph`. |
+| Warm phase 3 | code-index shard | `context graph --include-code` can avoid unchanged source parsing. |
+| Warm phase 4 | merged graph-core shard | `context pack` can rank from cached summaries without broad graph rebuild. |
+
+Do not add implicit background writes to `context graph`, `context pack`, or C4 `context slice`.
 
 ## Cache Metadata in Reports
 
@@ -301,12 +425,15 @@ Required issue codes:
 | Area | Current State | Required Future Change |
 |---|---|---|
 | `src/context/context-graph-builder.ts` | Builds graph by collecting extractors and merging results in one read path. | Add a cache-aware orchestration layer that can load fresh extractor shards, recompute stale shards, and merge once. |
-| `src/context/context-graph-extractor.ts` | Extractors return graph fragments, state sources, and issues. | Extend extractor metadata with `extractorKey`, `extractorVersion`, source kinds, and source subset hashing. |
-| `src/context/code-index.ts` | Has file/byte/single-file budgets and placeholder cache metadata. | Split discovery/stat collection from content extraction so source manifest and code index share one file list; populate real cache metadata. |
+| `src/context/context-graph-extractor.ts` | Extractors return graph fragments, state sources, and issues. | Extend extractor metadata with `extractorKey`, `extractorVersion`, source kinds, source dependency declarations, and source subset hashing. |
+| `src/context/code-index.ts` | Has file/byte/single-file budgets and placeholder cache metadata. | Split discovery/stat collection from content extraction so source manifest and code index share one file list; populate real cache metadata and skip unchanged files. |
 | `src/context/code-graph-extractor.ts` | Projects code index output into context graph state. | Read from cached code-index shard when fresh; preserve budget/degraded projection. |
 | `src/context/*extractor*.ts` | Existing extractors read their own inputs directly. | Make each extractor declare input source entries or source patterns so invalidation can be extractor-specific. |
-| `src/cli/context.ts` or equivalent command handler | `context graph` is read-only and computes live output. | Add cache read support without writes; add future `context cache status/warm` only with command registry and JSON contract updates. |
-| `src/schemas/*` | Graph and code-index schemas exist; source manifest/cache schema is not implemented. | Add source manifest, cache status, and cache record schema fixtures before public cache commands. |
+| `src/context/context-pack.ts` | Builds read plans from current graph reports. | Prefer cached graph/code summaries when fresh and requested; keep ranking additive-compatible. |
+| `src/context/context-source-manifest.ts` | Builds source manifests and compares cached/current metadata. | Expose a reusable discovery result so graph builder and code index do not duplicate walks. |
+| `src/context/context-cache-store.ts` | Reads/writes schema-guarded cache records and source manifest cache. | Add warm-plan reporting, shard listing, header-first reads, and manifest/write phases. |
+| `src/cli/context.ts` or equivalent command handler | `context graph` is read-only and computes live output; `context cache status` is read-only. | Add cache read support without writes; add `context cache warm` only with command registry and JSON contract updates. |
+| `src/schemas/*` | Graph, code-index, source-manifest, cache-record, and cache-status schemas exist. | Add cache-warm and shard-specific schemas only when public warm/shard commands land. |
 | `tests/unit/context-graph*.test.ts` | Covers graph builder and CLI behavior. | Add cache-hit, cache-miss, stale-shard, corrupt-cache, and read-command-no-write tests. |
 | `tests/unit/code-index.test.ts` | Covers ignore, extraction, relations, and budgets. | Add shared discovery and manifest carry-forward tests. |
 
@@ -319,19 +446,24 @@ New implementation modules should be small and focused:
 | `src/context/context-cache.ts` | Cache orchestration, stale analysis, report metadata. |
 | `src/context/context-cache-commands.ts` | Optional future CLI surfaces for status/warm. |
 
+The module names can follow the current codebase naming (`context-source-manifest.ts`, `context-cache-store.ts`) rather than the sketch above. The architectural requirement is separation of concerns: discovery, cache storage, cache orchestration, and CLI reporting should not collapse into one large graph builder.
+
 ## Implementation Capsules
 
 Recommended C6 capsule split:
 
 | Capsule | Scope | Acceptance |
 |---|---|---|
-| C6.1 Source Manifest and Shared Discovery | Add source manifest types, schema, ignore-aware stat collector, and source subset hash helpers. | Manifest records project-relative paths, kinds, size/mtime metadata, extractor versions, and budget issues. |
-| C6.2 Cache Store and Status Read Model | Add cache record envelope, safe read path, corrupt-cache diagnostics, and optional read-only status report. | Cache status can report missing/hit/stale/corrupt without writing. |
-| C6.3 Extractor Shards and Invalidation | Add extractor keys/versions and stale-shard recomputation planning. | Task docs changes do not invalidate code index; source-code changes do not invalidate task-board shard. |
-| C6.4 Fast Cold Build and Graph Budgets | Share directory discovery, parallelize independent extractors, and enforce graph node/edge/time budgets. | Cold graph build avoids duplicate walks and returns explicit degraded output when capped. |
-| C6.5 Code Index Cache Integration | Connect code index to manifest/cache store and real cache metadata. | Warm include-code graph can use cached code-index output. |
-| C6.6 Context Pack Warm Path | Make C3 context pack consume cached graph/index summaries when present. | Warm pack generation avoids project-wide rescans. |
-| C6.7 Cache Warm Command | Add explicit dry-run/execute cache warm command if needed. | Read commands remain non-mutating; warm execute writes atomically and is registered. |
+| C6.1 Source Manifest and Shared Discovery | Add source manifest types, schema, ignore-aware stat collector, and source subset hash helpers. | Manifest records project-relative paths, kinds, size/mtime metadata, extractor versions, and budget issues. Completed by T-0363. |
+| C6.2 Cache Store and Status Read Model | Add cache record envelope, safe read path, corrupt-cache diagnostics, and read-only status report. | Cache status can report missing/hit/stale/corrupt without writing. Completed by T-0364. |
+| C6.3 Cache Warm Command, Phase 1 | Add explicit dry-run/execute warm command for source-manifest cache population. | Read commands remain non-mutating; warm execute writes atomically and makes status hit when sources are unchanged. |
+| C6.4 Extractor Shards and Invalidation | Add extractor keys/versions and stale-shard recomputation planning. | Task docs changes do not invalidate code index; source-code changes do not invalidate task-board shard. |
+| C6.5 Fast Cold Build and Graph Budgets | Share directory discovery, parallelize independent extractors, and enforce graph node/edge/time budgets. | Cold graph build avoids duplicate walks and returns explicit degraded output when capped. |
+| C6.6 Code Index Cache Integration | Connect code index to manifest/cache store and real cache metadata. | Warm include-code graph can use cached code-index output. |
+| C6.7 Context Pack Warm Path | Make C3 context pack consume cached graph/index summaries when present. | Warm pack generation avoids project-wide rescans. |
+| C6.8 Cache Warm Command, Shard Phases | Extend warm to extractor/code/graph shards only after shard schemas exist. | Warm execute can refresh stale shards while preserving dry-run-first write boundaries. |
+
+Do not start C4 broad slicing until at least C6.3 is complete and C6.4/C6.5 are either implemented or explicitly scoped as acceptable residual performance risk.
 
 ## Tests
 

@@ -124,11 +124,12 @@ Suggested capsules:
 
 1. Source manifest and shared discovery.
 2. Cache store and status read model.
-3. Extractor shards and invalidation.
-4. Fast cold build and graph budgets.
-5. Code index cache integration.
-6. Context pack warm path.
-7. Optional cache warm command.
+3. Cache warm command, phase 1 for source-manifest cache population.
+4. Extractor shards and invalidation.
+5. Fast cold build and graph budgets.
+6. Code index cache integration.
+7. Context pack warm path.
+8. Cache warm command shard phases.
 
 ## General Rules
 

@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0364 C6.2 Cache Store and Status Read Model |
-| Active Task | TBD Start C6.3 Cache Warm or Graph/Code-Index Cache Integration |
+| Latest Completed Task | T-0365 C6.3 Cache Warm Sequence Spec Hardening |
+| Active Task | TBD C6.3 Cache Warm Phase 1 Implementation |
 
 ## Next Planned Line
 
@@ -28,7 +28,9 @@ T-0362 follow-up note: public `hadara context pack --task T-XXXX --json` now exp
 
 T-0363 follow-up note: C6.1 now has an internal `hadara.context.sourceManifest.v1` schema and metadata-first manifest builder for project-relative source discovery, source kind/extractor-key mapping, optional previous content-hash carry-forward, manifest comparison, subset hashes, ignore boundaries, and budget/degraded warnings.
 
-T-0364 follow-up note: C6.2 now has `hadara.context.cacheRecord.v1` and `hadara.context.cacheStatus.v1`, schema-guarded cache record/source-manifest helpers under `.hadara/local/cache/context`, stable source manifest hashes that ignore generation timestamp/caller command, read-only `hadara context cache status --json`, and command registry metadata. Focused Docker build/tests passed, full Docker sync-build passed on rerun with 133 files / 855 tests and refreshed `dist`, and built cache-status smoke passed. It still does not populate cache through a public warm command or rewire `context graph`, `context pack`, or code index to consume cached records. The next capsule should be C6.3 cache warm or graph/code-index cache integration before C4 slicing.
+T-0364 follow-up note: C6.2 now has `hadara.context.cacheRecord.v1` and `hadara.context.cacheStatus.v1`, schema-guarded cache record/source-manifest helpers under `.hadara/local/cache/context`, stable source manifest hashes that ignore generation timestamp/caller command, read-only `hadara context cache status --json`, and command registry metadata. Focused Docker build/tests passed, full Docker sync-build passed on rerun with 133 files / 855 tests and refreshed `dist`, and built cache-status smoke passed. It still does not populate cache through a public warm command or rewire `context graph`, `context pack`, or code index to consume cached records.
+
+T-0365 active note: the registered C6 detailed spec was hardened so speed is the primary design constraint. `docs/specs/0.3.3/context-routing/07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md` now records Graphify-inspired lessons and HADARA-specific boundaries, first-build and warm-cache optimization requirements, cache warm phases, required code changes, and a cache-warm-first C6.3 sequence. `docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md` now routes C6.3 to source-manifest cache warm phase 1 before shard/code-index integration. No runtime cache behavior was implemented in this docs-only slice; the next implementation step should add `context cache warm --json` / `--execute --json` phase 1 or explicitly choose graph/code-index cache integration.
 
 ## Current Phase
 
@@ -79,7 +81,7 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 ## Current Status
 
 - Latest completed task is T-0364 C6.2 Cache Store and Status Read Model.
-- Active task is TBD Start C6.3 Cache Warm or Graph/Code-Index Cache Integration.
+- Active task is T-0365 C6.3 Cache Warm or Graph Code Index Cache Integration.
 - Stable `hadara@0.3.0` publish and installed-package consumer recycle are complete through T-0316/T-0317.
 - Phase 8 / `0.3.1` planning is staged under `docs/specs/0.3.1/`; Phase 8.1 status token/document ownership governance, Phase 8.2 task handoff close-state governance, Phase 8.3 installed-package findings cleanup, Phase 8.4 state consistency projection read model, Phase 8.5 advisory verify/doctor/CI integration, Phase 8.6 rc1 review/hardening cleanup, T-0325 CloseState derived-state cleanup, T-0326 rc1 release-readiness preparation, T-0327 approval-gated publish, T-0328 installed-package recycle, and T-0329 post-rc1 docs cleanup are complete.
 - `0.3.1-rc.1` source/readiness is complete through T-0326; npm package visibility, tarball inspection, and corrected dist-tags are confirmed through T-0327; installed-package recycle is complete through T-0328; post-rc1 shared-doc wording cleanup is complete through T-0329.
