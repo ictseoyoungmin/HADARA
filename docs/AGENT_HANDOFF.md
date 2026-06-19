@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, T-0360 added the detailed C6 fast cache implementation spec, T-0361-T-0362 completed C3 context pack schema/CLI work, T-0363-T-0368 completed the C6 source-manifest/cache warm/shard/fast-fingerprint line needed before C4, T-0369 added the C4 core raw slice command, T-0371 added the focused C6 speed-first graph/cache warm-path spec, T-0370 completed the remaining C4 symbol/candidate slicing surface, and T-0372 hardened C4 byte/local boundaries plus acceptance drift validation before C5. |
-| Current Phase | 0.3.3 context-routing C6 measurement then C5/C6 follow-up | C1 project graph/state projection, C2 code-link/index output, C3 public context pack read plans, C4 public context slice strategies, C6.1-C6.5 cache/fingerprint acceleration, and the C6 speed-first implementation blueprint are in place. Next measure C6 graph/cache/pack behavior on both mounted and ext4/tmp environments, then choose C5 session start composition or C6.6 code-index shard persistence if repeated candidate/code-aware paths are too slow. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0372 C4 Context Slice Boundary and Proof Drift Hardening | Enforced context-slice byte payload as a hard failure with no raw text, denied `.hadara/local/**` raw slice reads, repaired T-0370 AC-6, and hardened Done-level acceptance drift gates. |
-| Active / Next Task | TBD C6 ext4/mounted Performance Baseline | T-0371 was docs-only and did not compare environments. Measure mounted vs ext4/tmp for context cache status/warm, graph, include-code graph, and context pack before returning to C5 or C6.6. |
-| Validation Baseline | T-0372 Docker full sync-build and built CLI boundary smokes | Docker focused tests passed 3 files / 57 tests; `npm run dev:docker-sync-build` passed 134 files / 880 tests, refreshed `dist`, and built CLI over-budget/local-boundary smokes passed with expected exit 6 failure contracts. Evidence: `ev:T-0372:153fbfd1cc37407a99fd7ec1`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, T-0360 added the detailed C6 fast cache implementation spec, T-0361-T-0362 completed C3 context pack schema/CLI work, T-0363-T-0368 completed the C6 source-manifest/cache warm/shard/fast-fingerprint line needed before C4, T-0369 added the C4 core raw slice command, T-0371 added the focused C6 speed-first graph/cache warm-path spec, T-0370 completed the remaining C4 symbol/candidate slicing surface, T-0372 hardened C4 byte/local boundaries plus acceptance drift validation before C5, and T-0373 measured mounted/ext4 C6 performance. |
+| Current Phase | 0.3.3 context-routing C6 warm-path follow-up before C5 | C1 project graph/state projection, C2 code-link/index output, C3 public context pack read plans, C4 public context slice strategies, C6.1-C6.5 cache/fingerprint acceleration, and the C6 speed-first implementation blueprint are in place. T-0373 proved mounted live graph/pack paths are too slow for C5 session-start default consumption, so next work should add mounted-safe freshness proof plus graph-core/context-pack warm shard consumption before C5 calls graph/pack live. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0373 C6 ext4 Mounted Performance Baseline | Added a repeatable context-routing benchmark, measured mounted vs ext4 built CLI workloads, registered `docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md`, and updated the C6 speed-first spec with observed timings and next priority. |
+| Active / Next Task | TBD C6 graph-core/context-pack warm path, then C5 Session Start | T-0373 measured mounted graph 44.7s, include-code graph 65.0s, and context pack 53.6s, while ext4 was about 2.2-2.9s. Do not make C5 consume live graph/pack on mounted workspaces before warm shards or bounded degraded behavior are implemented. |
+| Validation Baseline | T-0373 benchmark/script checks and Docker full sync-build retry | Script syntax, docs registry JSON parse, mounted/ext4 measurement, `git diff --check`, and full Docker sync-build retry passed 134 files / 880 tests with refreshed `dist`. Initial full Docker run hit one dashboard-static 5s timeout; focused rerun and full retry passed. Evidence: `ev:T-0373:24fae15138814164be27956f`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Create a C6 performance baseline capsule comparing mounted workspace and ext4/tmp copy behavior, then return to C5 session-start or C6.6 code-index shard persistence. | T-0372 completed C4 safety/proof-drift hardening; T-0371 defined the speed-first targets but did not run the ext4/mounted comparison. |
+| TBD | Implement C6 graph-core/context-pack warm path and mounted-safe freshness proof before C5 session-start defaults. | T-0373 measured mounted graph/pack at 44.7-65.0s and updated C6 priority; evidence `ev:T-0373:24fae15138814164be27956f`. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0373 C6 ext4 Mounted Performance Baseline | Added repeatable mounted/ext4 context-routing benchmark, measured built CLI graph/cache/pack timings, and updated C6 spec/registry with the measured priority. | `ev:T-0373:24fae15138814164be27956f` |
 | T-0372 C4 Context Slice Boundary and Proof Drift Hardening | Enforced byte-budget hard failure for context slice, denied `.hadara/local/**` raw reads, repaired T-0370 AC-6, and hardened acceptance drift validation for Done tasks. | `ev:T-0372:153fbfd1cc37407a99fd7ec1` |
 | T-0370 C4 Symbol and Context Candidate Slicing | Added bounded C2 symbol-neighborhood slicing and exact C3 context-pack candidate delegation to `hadara context slice`; kept the command read-only and cache-write-free. | `ev:T-0370:70db496bc8f5489c8a6cb5b1`, `ev:T-0370:a247c6412f2b49c6ad49efbd` |
-| T-0371 C6 Speed-First Graph Cache Spec Refresh | Added registered `08_C6_Speed_First_Graph_Build_and_Warm_Path_Spec.md` with Graphify-aware cold/warm graph strategy, shard plan, code-index warm path, context-pack warm path, and required code changes. | `ev:T-0371:32ca91e0fcb248688b17900b` |
 
 ## Current Known Problems
 
@@ -90,7 +90,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start C4 deterministic raw context slicing, or C6.6 code-index shard persistence if C4 code-heavy reads are still too slow. | T-0368 removed the full source-manifest rebuild from fresh cached graph/cache reads, so C4 can use the faster graph/cache path; code-index shard persistence is the remaining major cache gap. | Read `docs/specs/0.3.3/context-routing/04_Deterministic_Context_Slice_Raw_Adapter_Spec.md`, `07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md`, and the T-0368 capsule handoff. |
+| Start C6 graph-core/context-pack warm path and mounted-safe freshness proof. | T-0373 measured live mounted graph/pack paths at 44.7-65.0s, so C5 session-start must not depend on live graph/pack by default until warm shard reads or bounded degraded behavior exist. | Read `docs/specs/0.3.3/context-routing/08_C6_Speed_First_Graph_Build_and_Warm_Path_Spec.md`, `docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md`, and the T-0373 capsule handoff. |
 
 ## Validation Baseline
 

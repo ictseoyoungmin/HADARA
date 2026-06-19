@@ -71,6 +71,27 @@ Targets apply to this repository profile and similar medium projects. Large moun
 
 The warm targets are product requirements. If they are not met, the implementation must either optimize further or report measured cache miss/stale/degraded state so the caller knows why the slow path happened.
 
+## Observed Baseline
+
+T-0373 measured the built CLI against both the current `/mnt/f` mounted workspace and an ext4 `/tmp` copy. Full results are recorded in `docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md`.
+
+| Workload | Mounted `/mnt/f` | ext4 `/tmp` | Mounted / ext4 |
+|---|---:|---:|---:|
+| `context cache status --json` | 14.1 s | 1.7 s | 8.4x |
+| `context cache warm --json` dry-run | 14.0 s | 1.6 s | 8.6x |
+| `context graph --json` | 44.7 s | 2.2 s | 20.6x |
+| `context graph --include-code --json` | 65.0 s | 2.9 s | 22.7x |
+| `context pack --task T-0373 --json` | 53.6 s | 2.2 s | 24.7x |
+
+The ext4 numbers are close enough to keep cold graph work usable while still above the cold targets for several commands. The mounted numbers are operationally unacceptable for session-start consumption. C5 must not call live graph/pack paths on mounted workspaces unless a bounded degraded mode or warm shard hit is already proven.
+
+Immediate implementation priority from this measurement:
+
+1. Add mounted-safe fast freshness proofs that avoid full manifest rebuilds for status/warm dry-runs.
+2. Persist and consume graph-core/task/docs/command/current-state shards before expanding code-index scope.
+3. Make `context pack` consume graph-core/pack-index shards instead of rebuilding the live graph.
+4. Keep code-index shard persistence as the next code-aware speed step, but do not let it delay non-code graph/pack warm paths.
+
 ## Cold First Graph Strategy
 
 Cold graph creation cannot be free, but it can avoid waste.

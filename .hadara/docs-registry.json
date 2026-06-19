@@ -562,6 +562,27 @@
       "closeSourceRole": "task-dependent",
       "supersedes": [],
       "generatedBy": "T-0371"
+    },
+    {
+      "path": "docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md",
+      "title": "Context Routing Performance Baseline",
+      "owner": "hadara-dev",
+      "kind": "performance-baseline",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0373"
     }
   ]
 }
