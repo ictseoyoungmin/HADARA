@@ -372,3 +372,4 @@
 | T-0369 | C4 Deterministic Context Slice Core | Done | tasks/T-0369-c4-deterministic-context-slice-core | Added `hadara context slice` with schema-valid read-only explicit range, tail, keyword-window, and managed-section strategies. |
 | T-0370 | C4 Symbol and Context Candidate Slicing | Done | tasks/T-0370-c4-symbol-and-context-candidate-slicing | Added read-only `context slice --symbol` and `--task --candidate` support over C2 symbols and C3 slice candidates. |
 | T-0371 | C6 Speed-First Graph Cache Spec Refresh | Done | tasks/T-0371-c6-speed-first-graph-cache-spec-refresh | Added registered `08_C6_Speed_First_Graph_Build_and_Warm_Path_Spec.md` with Graphify-aware speed-first cold/warm graph, code-index, and context-pack cache design. |
+| T-0372 | C4 Context Slice Boundary and Proof Drift Hardening | Done | tasks/T-0372-c4-context-slice-boundary-and-proof-drift-hardening | |

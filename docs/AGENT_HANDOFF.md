@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, T-0360 added the detailed C6 fast cache implementation spec, T-0361-T-0362 completed C3 context pack schema/CLI work, T-0363-T-0368 completed the C6 source-manifest/cache warm/shard/fast-fingerprint line needed before C4, T-0369 added the C4 core raw slice command, T-0371 added the focused C6 speed-first graph/cache warm-path spec, and T-0370 completed the remaining C4 symbol/candidate slicing surface. |
-| Current Phase | 0.3.3 context-routing C5/C6 follow-up | C1 project graph/state projection, C2 code-link/index output, C3 public context pack read plans, C4 public context slice strategies, C6.1-C6.5 cache/fingerprint acceleration, and the C6 speed-first implementation blueprint are in place. Next choose C5 session start composition or C6.6 code-index shard persistence if repeated candidate/code-aware paths are too slow. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
-| Latest Completed Task | T-0370 C4 Symbol and Context Candidate Slicing | Added `--symbol` and `--task --candidate` support to `hadara context slice`, including schema/registry/docs/tests and built CLI smokes. |
-| Active / Next Task | TBD C5 Session Start or C6.6 Code Index Shard Persistence | C3 and C4 public read/slice surfaces are complete; C5 can compose session-start from them, while C6.6/C6.8 should be pulled forward if cold context-pack candidate resolution remains too slow for routine use. |
-| Validation Baseline | T-0370 Docker full sync-build and built CLI smokes | Initial `dev:docker-check` hit a dashboard-static timeout, resolved by standalone dashboard-static and later full sync-build. `npm run dev:docker-sync-build` passed 134 files / 876 tests, refreshed `dist`, and built CLI symbol/candidate smokes passed. Evidence: `ev:T-0370:70db496bc8f5489c8a6cb5b1`, `ev:T-0370:a247c6412f2b49c6ad49efbd`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, T-0360 added the detailed C6 fast cache implementation spec, T-0361-T-0362 completed C3 context pack schema/CLI work, T-0363-T-0368 completed the C6 source-manifest/cache warm/shard/fast-fingerprint line needed before C4, T-0369 added the C4 core raw slice command, T-0371 added the focused C6 speed-first graph/cache warm-path spec, T-0370 completed the remaining C4 symbol/candidate slicing surface, and T-0372 hardened C4 byte/local boundaries plus acceptance drift validation before C5. |
+| Current Phase | 0.3.3 context-routing C6 measurement then C5/C6 follow-up | C1 project graph/state projection, C2 code-link/index output, C3 public context pack read plans, C4 public context slice strategies, C6.1-C6.5 cache/fingerprint acceleration, and the C6 speed-first implementation blueprint are in place. Next measure C6 graph/cache/pack behavior on both mounted and ext4/tmp environments, then choose C5 session start composition or C6.6 code-index shard persistence if repeated candidate/code-aware paths are too slow. Dashboard is paused after Phase 5.7 refresh/read-model hardening; TUI is paused after T-0232 `/mnt/f` snapshot/table cleanup. |
+| Latest Completed Task | T-0372 C4 Context Slice Boundary and Proof Drift Hardening | Enforced context-slice byte payload as a hard failure with no raw text, denied `.hadara/local/**` raw slice reads, repaired T-0370 AC-6, and hardened Done-level acceptance drift gates. |
+| Active / Next Task | TBD C6 ext4/mounted Performance Baseline | T-0371 was docs-only and did not compare environments. Measure mounted vs ext4/tmp for context cache status/warm, graph, include-code graph, and context pack before returning to C5 or C6.6. |
+| Validation Baseline | T-0372 Docker full sync-build and built CLI boundary smokes | Docker focused tests passed 3 files / 57 tests; `npm run dev:docker-sync-build` passed 134 files / 880 tests, refreshed `dist`, and built CLI over-budget/local-boundary smokes passed with expected exit 6 failure contracts. Evidence: `ev:T-0372:153fbfd1cc37407a99fd7ec1`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Start C5 session-start composition, or pull C6.6 code-index shard persistence forward if candidate/code-aware paths are too slow. | T-0370 completed C4 symbol/candidate slicing; T-0371 added the speed-first C6 implementation blueprint for code-index shards/pack warm paths. |
+| TBD | Create a C6 performance baseline capsule comparing mounted workspace and ext4/tmp copy behavior, then return to C5 session-start or C6.6 code-index shard persistence. | T-0372 completed C4 safety/proof-drift hardening; T-0371 defined the speed-first targets but did not run the ext4/mounted comparison. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0372 C4 Context Slice Boundary and Proof Drift Hardening | Enforced byte-budget hard failure for context slice, denied `.hadara/local/**` raw reads, repaired T-0370 AC-6, and hardened acceptance drift validation for Done tasks. | `ev:T-0372:153fbfd1cc37407a99fd7ec1` |
 | T-0370 C4 Symbol and Context Candidate Slicing | Added bounded C2 symbol-neighborhood slicing and exact C3 context-pack candidate delegation to `hadara context slice`; kept the command read-only and cache-write-free. | `ev:T-0370:70db496bc8f5489c8a6cb5b1`, `ev:T-0370:a247c6412f2b49c6ad49efbd` |
 | T-0371 C6 Speed-First Graph Cache Spec Refresh | Added registered `08_C6_Speed_First_Graph_Build_and_Warm_Path_Spec.md` with Graphify-aware cold/warm graph strategy, shard plan, code-index warm path, context-pack warm path, and required code changes. | `ev:T-0371:32ca91e0fcb248688b17900b` |
-| T-0369 C4 Deterministic Context Slice Core | Added `hadara context slice` for explicit ranges, tail windows, keyword windows with overlap merge, and managed-section slices. | `ev:T-0369:905e29de909447c792f65df0`, `ev:T-0369:0d173cea1f054b8680afe2b5`, `ev:T-0369:fc46ecd5d91943e986e1af23` |
 
 ## Current Known Problems
 

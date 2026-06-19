@@ -227,6 +227,39 @@ describe('Harness Task Capsule validation', () => {
     expect(result.issues).toEqual([]);
   });
 
+  it('rejects done-level acceptance rows that remain in progress', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Acceptance still active');
+    markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
+    markAcceptanceDone(task.dir);
+    writeCompletedCapsuleDocs(task.dir);
+    writeHandoffDone(task.dir);
+    const acceptancePath = path.join(task.dir, 'ACCEPTANCE.md');
+    fs.writeFileSync(
+      acceptancePath,
+      fs.readFileSync(acceptancePath, 'utf8').replace('| AC-2 | Evidence is attached. | Met |', '| AC-2 | Evidence is attached. | In Progress |'),
+      'utf8'
+    );
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Done-level validation evidence',
+      result: 'passed'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'error',
+        code: 'ACCEPTANCE_INCOMPLETE',
+        path: `tasks/${task.id}-acceptance-still-active/ACCEPTANCE.md`
+      })
+    );
+  });
+
   it('rejects done-level handoff status that mixes pending close wording into TaskStatus', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Pending close wording');

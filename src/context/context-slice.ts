@@ -130,7 +130,7 @@ export function buildContextSliceReport(input: BuildContextSliceOptions): Contex
     slices = buildSlicesForStrategy(source, effectiveStrategy, resolvedInput ?? input, issues);
   }
 
-  const summary = summarizeSlices(slices, issues);
+  const { slices: boundedSlices, summary } = enforceSlicePayloadBudget(slices, issues);
   return {
     schemaVersion: CONTEXT_SLICE_SCHEMA_ID,
     command: CONTEXT_SLICE_COMMAND,
@@ -141,7 +141,7 @@ export function buildContextSliceReport(input: BuildContextSliceOptions): Contex
     sourceHash: source?.sourceHash ?? 'sha256:unavailable',
     lineCount: source?.lines.length ?? 0,
     strategy: requestedStrategy,
-    slices,
+    slices: boundedSlices,
     summary,
     issues
   };
@@ -174,7 +174,13 @@ function resolveContextSlicePath(projectRoot: string, inputPath: string | undefi
       }
     };
   }
-  if (normalized.startsWith('.git/') || normalized === '.git' || normalized.startsWith('node_modules/') || normalized.startsWith('.hadara/local/private/')) {
+  if (
+    normalized === '.git' ||
+    normalized.startsWith('.git/') ||
+    normalized.startsWith('node_modules/') ||
+    normalized === '.hadara/local' ||
+    normalized.startsWith('.hadara/local/')
+  ) {
     return {
       path: normalized,
       absolutePath,
@@ -531,27 +537,41 @@ function clampRangeLineBudget(filePath: string, range: Range, maxLines: number, 
   return { startLine: range.startLine, endLine: range.startLine + maxLines - 1 };
 }
 
-function summarizeSlices(slices: ContextSlice[], issues: ContextSliceIssue[]): ContextSliceSummary {
+function enforceSlicePayloadBudget(
+  slices: ContextSlice[],
+  issues: ContextSliceIssue[]
+): { slices: ContextSlice[]; summary: ContextSliceSummary } {
   let totalBytes = 0;
   let totalLines = 0;
-  let truncatedByBytes = false;
   for (const slice of slices) {
     totalBytes += Buffer.byteLength(slice.text, 'utf8');
     totalLines += slice.endLine - slice.startLine + 1;
   }
   if (totalBytes > MAX_SLICE_BYTES) {
-    truncatedByBytes = true;
     issues.push({
-      severity: 'warning',
+      severity: 'error',
       code: 'CONTEXT_SLICE_TOO_LARGE',
-      message: `Context slice payload is ${totalBytes} bytes, above the ${MAX_SLICE_BYTES} byte budget.`
+      message: `Requested slice payload is ${totalBytes} bytes, above the ${MAX_SLICE_BYTES} byte budget.`,
+      fixHint: 'Use narrower --from/--to, --tail, or --window options.'
     });
+    return {
+      slices: [],
+      summary: {
+        sliceCount: 0,
+        totalLines: 0,
+        totalBytes: 0,
+        truncated: true
+      }
+    };
   }
   return {
-    sliceCount: slices.length,
-    totalLines,
-    totalBytes,
-    truncated: truncatedByBytes || issues.some((issue) => issue.code === 'CONTEXT_SLICE_RANGE_CLAMPED' || issue.code === 'CONTEXT_SLICE_TOO_LARGE')
+    slices,
+    summary: {
+      sliceCount: slices.length,
+      totalLines,
+      totalBytes,
+      truncated: issues.some((issue) => issue.code === 'CONTEXT_SLICE_RANGE_CLAMPED' || issue.code === 'CONTEXT_SLICE_TOO_LARGE')
+    }
   };
 }
 

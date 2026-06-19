@@ -560,6 +560,30 @@ describe('Task protocol consistency report', () => {
     expect(report.issues.filter((issue) => issue.code === 'TASK_SCAFFOLD_PLACEHOLDER').length).toBeGreaterThan(1);
   });
 
+  it('reports Done capsules with in-progress acceptance rows', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'In progress acceptance');
+    markTaskDone(root, task.id);
+    const acceptancePath = path.join(task.dir, 'ACCEPTANCE.md');
+    fs.writeFileSync(
+      acceptancePath,
+      fs.readFileSync(acceptancePath, 'utf8').replace(/\| Pending \|/g, '| In Progress |'),
+      'utf8'
+    );
+
+    const report = createTaskProtocolConsistencyReport(root, task.id, new Date('2026-05-30T00:00:00.000Z'));
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(
+      expect.objectContaining({
+        code: 'TASK_DONE_ACCEPTANCE_PENDING',
+        severity: 'error',
+        area: 'validation',
+        actual: 'incomplete criteria found'
+      })
+    );
+  });
+
   it('surfaces task-scoped evidence semantic issues through protocol doctor', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Protocol semantic evidence');

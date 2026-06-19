@@ -803,7 +803,7 @@ function checkDoneAcceptance(projectRoot: string, task: TaskCapsule, taskLooksDo
   const rows = parseMarkdownRows(content).filter((cells) => /^AC-\d+$/i.test(cells[0] ?? ''));
   const pendingRows = rows.filter((cells) => {
     const status = cells[2]?.trim().toLowerCase();
-    return !status || status === 'pending' || status === 'blocked';
+    return !status || status === 'pending' || status === 'blocked' || status === 'in progress' || status === 'partial';
   });
   const checklistPending = content
     .split(/\r?\n/)
@@ -817,9 +817,9 @@ function checkDoneAcceptance(projectRoot: string, task: TaskCapsule, taskLooksDo
       area: 'validation',
       taskId: task.id,
       path: toPortablePath(path.relative(projectRoot, acceptancePath)),
-      message: 'Task is marked Done but ACCEPTANCE.md still has pending or blocked criteria.',
+      message: 'Task is marked Done but ACCEPTANCE.md still has pending, blocked, or in-progress criteria.',
       expected: 'all acceptance criteria complete',
-      actual: 'pending criteria found'
+      actual: 'incomplete criteria found'
     });
   }
 }

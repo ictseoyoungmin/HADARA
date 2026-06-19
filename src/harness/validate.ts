@@ -563,7 +563,7 @@ function validateAcceptanceDone(projectRoot: string, task: TaskCapsule, issues: 
     tableRows.length > 0 &&
     tableRows.some((cells) => {
       const status = cells[2]?.trim().toLowerCase();
-      return status === 'pending' || status === 'blocked' || !status;
+      return !status || status === 'pending' || status === 'blocked' || status === 'in progress' || status === 'partial';
     });
   const checklistIncomplete = checklistLines.length > 0 && checklistLines.some((line) => /^-\s+\[\s\]/.test(line.trim()));
   if ((tableRows.length > 0 && tableIncomplete) || (tableRows.length === 0 && (checklistLines.length === 0 || checklistIncomplete))) {

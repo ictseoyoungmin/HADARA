@@ -227,6 +227,55 @@ describe('context slice report', () => {
     expect(binary.issues).toContainEqual(expect.objectContaining({ code: 'CONTEXT_SLICE_BINARY_FILE' }));
     expect(validateSchema('hadara.contextSlice.v1', binary).ok).toBe(true);
   });
+
+  it('rejects over-budget slice payloads without returning raw text', () => {
+    const root = tempProject();
+    const longLine = `${'x'.repeat(3_000)}\n`;
+    fs.writeFileSync(path.join(root, 'docs', 'long-lines.md'), longLine.repeat(200), 'utf8');
+
+    const report = buildContextSliceReport({
+      projectRoot: root,
+      path: 'docs/long-lines.md',
+      from: 1,
+      to: 200
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.slices).toEqual([]);
+    expect(report.summary).toMatchObject({
+      sliceCount: 0,
+      totalLines: 0,
+      totalBytes: 0,
+      truncated: true
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      severity: 'error',
+      code: 'CONTEXT_SLICE_TOO_LARGE',
+      fixHint: expect.stringContaining('narrower')
+    }));
+    expect(validateSchema('hadara.contextSlice.v1', report).ok).toBe(true);
+  });
+
+  it('rejects local HADARA cache and private-state paths as raw slice sources', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, '.hadara', 'local', 'cache', 'context'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'local', 'cache', 'context', 'source-manifest.json'), '{"cache":true}\n', 'utf8');
+
+    const report = buildContextSliceReport({
+      projectRoot: root,
+      path: '.hadara/local/cache/context/source-manifest.json',
+      from: 1,
+      to: 1
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.slices).toEqual([]);
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'CONTEXT_SLICE_OUTSIDE_PROJECT',
+      path: '.hadara/local/cache/context/source-manifest.json'
+    }));
+    expect(validateSchema('hadara.contextSlice.v1', report).ok).toBe(true);
+  });
 });
 
 function contextPackWithCandidate(root: string, candidateId: string): ContextPackReport {
