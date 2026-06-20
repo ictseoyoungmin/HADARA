@@ -18,7 +18,8 @@ Highlights:
 
 Boundaries:
 
-- T-0401 prepares source/readiness only. npm publish, GitHub Release creation, Docker image publish, PyPI publish, installer execution, and MCP release/package execution remain out of scope.
+- T-0401 prepared source/readiness only. T-0402 then published `hadara@0.3.3-rc.0` to npm with the `next` dist-tag, verified registry visibility, verified `latest` remains `0.3.2`, and passed a temporary-prefix installed-bin smoke.
+- GitHub Release creation, Docker image publish, PyPI publish, installer execution, and MCP release/package execution remain out of scope unless a future capsule explicitly approves them.
 - Context cache writes remain explicit warm actions under `.hadara/local/cache/context`; ordinary read commands do not update cache.
 - Mounted-filesystem broad graph/cache/pack latency remains an explicit-command residual; default Session Start stays bounded/cache-preferential.
 - Real provider integration, dashboard productization, full agent-controller work, evidence rebuild preview/execute, and non-npm release targets remain deferred candidate scope.

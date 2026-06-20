@@ -35,7 +35,7 @@ hadara@0.3.3-rc.0
 
 The 0.3.3-rc.0 line is the context-routing and lifecycle release candidate. It adds project context graph, context pack/slice/session-start surfaces, explicit context cache warm paths, and makes the finalize-first lifecycle the default agent-facing task loop.
 
-Phase labels are internal implementation phases, not npm release-candidate labels. The stable `0.3.2` package is the default install target; `0.3.3-rc.0` is the current source candidate for the next `next` dist-tag publish.
+Phase labels are internal implementation phases, not npm release-candidate labels. The stable `0.3.2` package is the default install target; `0.3.3-rc.0` is published on npm for explicit RC evaluation through the `next` dist-tag.
 
 | Surface | Status |
 |---|---|
@@ -48,7 +48,7 @@ Phase labels are internal implementation phases, not npm release-candidate label
 | PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
 | Installer scripts / USB launchers | Deferred. |
 
-No release command should publish, create a GitHub Release, build Docker images, upload artifacts, or load token values unless an operator explicitly approves the mutation path for the active release capsule.
+No release command should publish, create a GitHub Release, build Docker images, upload artifacts, or load token values unless an operator explicitly approves the mutation path for the active release capsule. The `0.3.3-rc.0` npm publish was completed through that approval-gated path; GitHub Release, Docker/PyPI publish, installer execution, and MCP release/package execution remain separate explicit mutations.
 
 ## Install
 

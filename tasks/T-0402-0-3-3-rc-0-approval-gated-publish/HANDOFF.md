@@ -6,28 +6,28 @@
 | Field | Value |
 |---|---|
 | Task | T-0402 |
-| TaskStatus | In Progress |
-| Last Updated | 2026-06-20 |
+| TaskStatus | Done |
+| Last Updated | 2026-06-21 |
 <!-- hadara:managed:end task-handoff-current-state -->
 
 ## Last Completed
 
 | Item | Evidence |
 |---|---|
-| T-0402 capsule prepared. | Publish-only docs and operator handoff are ready. |
+| `hadara@0.3.3-rc.0` npm publish completed. | ev:T-0402:400a8a3c43b248cc8d4fcb0f |
+| npm registry and dist-tag verification passed. | ev:T-0402:4addcdd15a8149afb69c2e40 |
+| Published package installed and executed from a clean consumer prefix. | ev:T-0402:708f2b933fff46a3917b01dc |
 | T-0401 readiness is complete. | `ev:T-0401:34875afe7c1c4a6c802a0a0d`, `ev:T-0401:9bffce41eea94e728636609a` |
 
 ## Next Recommended Step
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Operator runs npm login and helper dry-run/execute. | Actual publish requires npm auth and interactive `publish` confirmation. | `docs/RELEASE_READINESS.md`, `scripts/release/manual-publish-rc.sh` |
-| After publish, record registry and installed-package verification evidence. | Publish is not complete until registry visibility and consumer execution are proven. | T-0402 TESTS.md |
+| Decide whether to run a broader post-publish recycle capsule. | T-0402 proved publish, registry visibility, dist-tags, tarball metadata, and one installed-bin smoke; broader command-family recycle remains optional follow-up. | `docs/RELEASE_READINESS.md`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Carry Forward Warnings
 
 | Warning | Impact | Mitigation |
 |---|---|---|
-| Do not pass `--github-draft` unless explicitly requested. | GitHub Release draft is a separate mutation outside default T-0402 scope. | Use `bash scripts/release/manual-publish-rc.sh T-0402 --execute` only. |
-| Verify helper prints `npm tag: next` before typing `publish`. | Wrong tag could affect stable install guidance. | Stop if tag is not `next`. |
-| Keep worktree clean before helper execution. | Helper refuses dirty worktree. | Commit this capsule preparation first. |
+| GitHub Release draft was not requested. | The rc is npm-visible but has no GitHub Release draft. | Create a separate explicitly approved capsule if a draft release is needed. |
+| Stable `latest` remains `0.3.2`. | Normal installs should still use stable by default. | Use `hadara@0.3.3-rc.0` or the `next` tag only for RC evaluation. |

@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, and `0.3.3-rc.0` readiness is complete through T-0401. |
-| Current Phase | 0.3.3-rc.0 approval-gated publish | `hadara@0.3.3-rc.0` source/readiness passed; T-0402 is prepared for operator npm login and helper execution. |
-| Latest Completed Task | T-0401 0.3.3-rc.0 Release Readiness Preparation | Prepared source/readiness for `hadara@0.3.3-rc.0` without npm publish, GitHub Release, Docker/PyPI publish, installer execution, or MCP release/package mutation. |
-| Active / Next Task | T-0402 0.3.3-rc.0 Approval-Gated Publish | Operator should run npm login, then `bash scripts/release/manual-publish-rc.sh T-0402` dry-run and `bash scripts/release/manual-publish-rc.sh T-0402 --execute` only after confirming `npm tag: next`. |
-| Validation Baseline | T-0401 release readiness validation | Docker sync-build passed 141 files / 929 tests with refreshed `dist`; built version smoke reported `packageVersion:"0.3.3-rc.0"` and `distLooksStale:false`; release artifact, package smoke, clean-checkout smoke, strict release gate, release dry-run, publish dry-run, and `git diff --check` passed. Sandbox npm cache caused initial package/clean-checkout smoke failures; approved external reruns passed. Evidence `ev:T-0401:1046d97d72a54ca6bd9dabf3`, `ev:T-0401:125c51d2304a4d689c957bab`, `ev:T-0401:698672f04c9e4ba394e616c2`, `ev:T-0401:211f174377cf41eaba9f707b`, `ev:T-0401:34875afe7c1c4a6c802a0a0d`, `ev:T-0401:9bffce41eea94e728636609a`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, `0.3.3-rc.0` readiness completed through T-0401, and npm publish completed through T-0402. |
+| Current Phase | 0.3.3-rc.0 published on npm | `hadara@0.3.3-rc.0` is published with `next`; stable `latest` remains `0.3.2`. |
+| Latest Completed Task | T-0402 0.3.3-rc.0 Approval-Gated Publish | Published `hadara@0.3.3-rc.0` to npm, verified registry version/dist-tags/tarball metadata, and passed temporary-prefix installed-bin smoke. |
+| Active / Next Task | TBD post-publish recycle decision | Decide whether to open a broader post-publish installed-package recycle capsule before stable 0.3.3 decisions. |
+| Validation Baseline | T-0401 readiness plus T-0402 publish verification | T-0401 Docker sync-build passed 141 files / 929 tests with refreshed `dist`; T-0402 publish completed, registry version returned `0.3.3-rc.0`, dist-tags returned `next=0.3.3-rc.0` and `latest=0.3.2`, tarball shasum matched `3088fca4b4a91b257680ffddf53ab8a0543d6264`, and temp-prefix installed-bin smoke passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0402 | Publish-only capsule is prepared; actual npm publish is pending operator npm authentication and explicit helper confirmation. | `ev:T-0402:33d58950283b4fb29306ba72` |
+| TBD | Decide whether to run a broader `0.3.3-rc.0` post-publish installed-package recycle capsule. | T-0402 publish evidence: `ev:T-0402:400a8a3c43b248cc8d4fcb0f`, `ev:T-0402:4addcdd15a8149afb69c2e40`, `ev:T-0402:708f2b933fff46a3917b01dc` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0402 0.3.3-rc.0 Approval-Gated Publish | Published `hadara@0.3.3-rc.0` to npm with `next`, verified `latest` remains `0.3.2`, checked tarball metadata, and passed temp-prefix installed-bin smoke; GitHub Release draft was not requested. | `ev:T-0402:400a8a3c43b248cc8d4fcb0f`, `ev:T-0402:4addcdd15a8149afb69c2e40`, `ev:T-0402:708f2b933fff46a3917b01dc` |
 | T-0401 0.3.3-rc.0 Release Readiness Preparation | Prepared package metadata/docs/readiness for `hadara@0.3.3-rc.0`, passed Docker validation and release readiness gates, and kept publish/GitHub/Docker/PyPI mutations out of scope. | `ev:T-0401:1046d97d72a54ca6bd9dabf3`, `ev:T-0401:125c51d2304a4d689c957bab`, `ev:T-0401:698672f04c9e4ba394e616c2`, `ev:T-0401:211f174377cf41eaba9f707b`, `ev:T-0401:34875afe7c1c4a6c802a0a0d` |
 | T-0400 Default Lifecycle Finalize Documentation | Made `task lifecycle` plus reviewed/guarded `task finalize` the default 0.3.3 agent-facing lifecycle across root docs, generated init docs, registry-backed help, and lifecycle projection. | `ev:T-0400:8bfd40cfd47f4f4b88882d64`, `ev:T-0400:d792e4cabcdb49398eed875b`, `ev:T-0400:e1d131f54fc247d38022fe3a` |
-| T-0399 Finalize Evidence Guidance and Lifecycle Speed Hardening | Added lazy evaluated/skipped report diagnostics to `task finalize`, avoided unnecessary ready/close/audit composition on unfinished tasks, and routed weak Done evidence blockers to a concrete passed-validation evidence command. | `ev:T-0399:c213cedb4cfe4d20a8858fd9`, `ev:T-0399:8aa7e7dc564e429393a1ea67`, `ev:T-0399:ac178da8a71f482a9d8e702a` |
 
 ## Current Known Problems
 
@@ -41,7 +41,7 @@
 | `dev docker-check` run from sandboxed Node subprocess can fail before Docker temp workspace creation even when direct `docker exec` succeeds. | JSON reports may show `temp-workspace exitCode=1` without raw logs. | Use explicit container env and rerun outside sandbox, or inspect with direct `docker exec`; T-0274 now exposes failed step and exit code. |
 | Root bootstrap launchers were removed in T-0270. | Local habits such as `./hadara`, `./start.sh`, or `START.bat` no longer work from the repo root. | Use `npm run dev -- ...`, `node dist/cli/main.js ...`, or the documented Docker workflow. Historical portable launcher specs remain separate from current root skeleton files. |
 | T-0255 close evidence is now stale after T-0256 Task Board changes. | `task audit-close --task T-0255 --json` remains `ok:true` but reports `closeEvidenceAudit.verdict: stale` because the close-relevant source hash includes `docs/TASK_BOARD.md` and T-0256 added a row. | This is expected changed-source behavior; use T-0256 supersedes metadata if re-closing T-0255 is ever required. |
-| Future release publish remains approval-gated/manual. | T-0275's rc.1 npm publish, T-0282's rc.2 npm publish, and the Python bridge rc.1 PyPI publish are complete; GitHub Release creation, Docker build/publish, and future npm/PyPI publish mutations remain explicit operator actions. | Use the approval-gated helper path; never run publish commands without operator confirmation. |
+| Future release publish remains approval-gated/manual. | T-0402's rc publish, T-0275's rc.1 npm publish, T-0282's rc.2 npm publish, and the Python bridge rc.1 PyPI publish are complete; GitHub Release creation, Docker build/publish, and future npm/PyPI publish mutations remain explicit operator actions. | Use the approval-gated helper path; never run publish commands without operator confirmation. |
 | Current repo docs doctor still has pre-existing warning-only documentation cleanup items. | T-0321 removed the fresh governed historical Required Reading warning, but the current repo still has unregistered Required Reading warnings for older project-specific docs and an archive candidate for `docs/REFACTOR_LOG.md`. | Treat as warning-only; Phase 8.5 may surface clearer advisory routing without making historical docs cleanup a strict gate. |
 | Required Reading lacks a completed-spec lifecycle. | `docs/IMPLEMENTATION_SOP.md` has tier concepts, but no explicit rule for demoting completed implementation specs out of active routing once their phase is done. | Do not detour before T-0337; the future refactor note is recorded in `docs/REQUIRED_READING_LIFECYCLE_FOLLOWUP.md`. |
 | README asset package rendering depends on the remote raw URL. | README uses a GitHub raw URL for `docs/assets/hadara_sub_right_name.png`; package `files` intentionally excludes `docs/assets/`. | T-0275 verified the asset is tracked and the raw URL returned HTTP 200; keep the asset available on the referenced branch. |

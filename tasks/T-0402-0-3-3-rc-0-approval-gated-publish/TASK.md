@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0402 |
 | Title | 0.3.3-rc.0 Approval-Gated Publish |
-| Status | In Progress |
+| Status | Done |
 | Created | 2026-06-20 |
 | Updated | 2026-06-20 |
 
@@ -40,7 +40,7 @@
 
 ## Status
 
-In Progress
+Done
 
 ## Status History
 
@@ -49,4 +49,5 @@ In Progress
 |---|---|---|---|
 | 2026-06-20 | Draft | Initial task scaffold. | `task create` |
 | 2026-06-20 | In Progress | Publish-only capsule prepared; awaiting operator npm login and explicit helper execute. | T-0402 capsule docs |
+| 2026-06-20 | Done | Finished task capsule. | `hadara task finish --execute` |
 <!-- hadara:managed:end task-status-history -->
