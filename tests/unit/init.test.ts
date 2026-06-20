@@ -673,13 +673,13 @@ describe('init profiles', () => {
     expect(readme).toContain('Current stable npm release:');
     expect(readme).toContain('Current release candidate:');
     expect(readme).toContain('| Current stable | [`hadara@0.3.2`](docs/RELEASE_NOTES.md#032) |');
-    expect(readme).toContain('| Current RC | [`hadara@0.3.2-rc.0`](docs/RELEASE_NOTES.md#032-rc0) |');
-    expect(readme).toContain('| Previous RC | [`hadara@0.3.1-rc.1`](docs/RELEASE_NOTES.md#031-rc1) |');
+    expect(readme).toContain('| Current RC | [`hadara@0.3.3-rc.0`](docs/RELEASE_NOTES.md#033-rc0) |');
+    expect(readme).toContain('| Previous RC | [`hadara@0.3.2-rc.0`](docs/RELEASE_NOTES.md#032-rc0) |');
     expect(readme).toContain('| Historical RCs | See [Release Notes](docs/RELEASE_NOTES.md). |');
     expect(readme).toContain('Install the stable release:');
     expect(readme).toContain('npm install -g hadara@0.3.2');
     expect(readme).toContain('npx hadara@0.3.2 help');
-    expect(readme).toContain('npm install -g hadara@0.3.2-rc.0');
+    expect(readme).toContain('npm install -g hadara@0.3.3-rc.0');
     expect(readme).toContain('| PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |');
     expect(readme).not.toContain('Current source and publish-candidate version.');
     expect(readme).not.toContain('npm install -g hadara@0.2.0-rc.3');

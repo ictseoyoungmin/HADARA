@@ -1,5 +1,28 @@
 # RELEASE_NOTES
 
+## 0.3.3-rc.0
+
+Release candidate preparation line for context routing, speed-first context cache paths, bounded session-start context, and the finalize-first agent lifecycle after stable `0.3.2`.
+
+Highlights:
+
+- Adds 0.3.3 context routing surfaces: `hadara context graph`, `hadara context pack`, `hadara context slice`, `hadara context cache status`, `hadara context cache warm`, and `hadara session start`.
+- Builds project context graph/state projection over tasks, docs registry, command registry, evidence, managed sections, decisions, handoff known problems, and release readiness sources.
+- Adds code link/index extraction for imports, exports, symbols, command/test file hints, and optional code-aware graph reads.
+- Adds deterministic context pack and raw context slice support with path denylist/allowlist hardening, byte-budget enforcement, bounded ranges/windows, and source-addressed output.
+- Adds explicit context cache warm paths for source manifests, graph-core shards, code-index shards, incremental per-file code-index reuse, and read-only warm cache consumption.
+- Adds bounded `session start` guidance with degraded fast default behavior and explicit `--live` opt-in for broader graph/context-pack work.
+- Adds context-routing performance fixtures for mounted/ext4 observations, advisory thresholds, and fast E2E smoke profiles.
+- Adds lifecycle convenience surfaces: `task lifecycle`, `task close-repair-plan`, read-only `task finalize`, and guarded `task finalize --execute --plan-hash`.
+- Makes the 0.3.3 finalize-first path the default agent-facing lifecycle while preserving low-level `task finish`, `task ready`, `task close`, and `task audit-close` as proof-boundary commands for debugging and recovery.
+
+Boundaries:
+
+- T-0401 prepares source/readiness only. npm publish, GitHub Release creation, Docker image publish, PyPI publish, installer execution, and MCP release/package execution remain out of scope.
+- Context cache writes remain explicit warm actions under `.hadara/local/cache/context`; ordinary read commands do not update cache.
+- Mounted-filesystem broad graph/cache/pack latency remains an explicit-command residual; default Session Start stays bounded/cache-preferential.
+- Real provider integration, dashboard productization, full agent-controller work, evidence rebuild preview/execute, and non-npm release targets remain deferred candidate scope.
+
 ## 0.3.2
 
 Stable release for the Evidence v2 refactor line after `0.3.2-rc.0` publish verification, installed-package recycle, and T-0339 dogfooding found no release-blocking issue.

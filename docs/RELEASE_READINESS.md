@@ -10,12 +10,12 @@ Current release-candidate metadata mode:
 
 - Package name decision: `hadara`.
 - Historical npm registry observation: `hadara@0.1.0-rc.0` was the first published HADARA release candidate.
-- Current version is `0.3.2`.
-- Current source version is `0.3.2`.
-- Current release target is stable `0.3.2`.
+- Current version is `0.3.3-rc.0`.
+- Current source version is `0.3.3-rc.0`.
+- Current release target is release candidate `0.3.3-rc.0`.
 - Current stable npm release is `0.3.2`.
 - Current stable npm publish status: complete; T-0340 published `hadara@0.3.2` to npm, verified `npm view hadara@0.3.2 version` returned `0.3.2`, and verified dist-tags `latest=0.3.2` plus `next=0.3.2-rc.0`. T-0316 previously published `hadara@0.3.0`.
-- Previous published npm release candidate before the current rc line was `0.3.1-rc.1`.
+- Previous published npm release candidate before the current rc line was `0.3.2-rc.0`.
 - T-0287 prepares `hadara@0.2.0-rc.3` as a source publish candidate based on the `0.2.0-rc.2` dogfooding results and the proof reliability fixes from T-0284 through T-0286; this capsule performs no npm publish, GitHub Release creation, Docker image build, registry mutation, or token loading.
 - T-0289 refreshed and published `hadara@0.2.0-rc.3`; npm registry verification returned `0.2.0-rc.3`.
 - T-0296 prepared `hadara@0.3.0-rc.0` as a Phase 7 source candidate after command/help, lifecycle, docs registry, managed patch, and docs cleanup surfaces were implemented; T-0297 then verified the operator npm publish. The published rc.0 tarball has current dist/README content but package metadata lacks intended discovery fields, so T-0298 prepared `hadara@0.3.0-rc.1` source metadata with hardened publish-helper metadata verification.
@@ -39,8 +39,10 @@ Current release-candidate metadata mode:
 - T-0275 refreshed publish-readiness evidence for `hadara@0.2.0-rc.1` and the operator published it to npm; `npm view hadara@0.2.0-rc.1 version --registry=https://registry.npmjs.org` returned `0.2.0-rc.1`.
 - T-0282 refreshed and published `hadara@0.2.0-rc.2` after the init scaffold protocol guidance follow-up: package metadata/docs/helper examples target rc2; Docker `npm run dev:docker-sync-build` passed 100 files / 681 tests and refreshed `dist`; built CLI version smoke reported `0.2.0-rc.2`; strict release gate passed; rc2 package smoke and clean-checkout smoke evidence passed; `npm pack --dry-run --json` produced rc2 tarball metadata; the manual helper regenerated release artifact/package/clean-checkout evidence from a clean committed worktree, published to npm, and verified `npm view` returned `0.2.0-rc.2`.
 - Current stable line status: stable `hadara@0.3.2` npm publish is complete through T-0340; post-publish installed-package recycle is the next release-line follow-up.
-- Current release-candidate line status: `hadara@0.3.2-rc.0` is published on npm with `next` dist-tag through T-0337; installed-package recycle from consumer paths is complete through T-0338.
+- Previous release-candidate line status: `hadara@0.3.2-rc.0` was published on npm with `next` dist-tag through T-0337; installed-package recycle from consumer paths is complete through T-0338.
 - Stable `0.3.2` decision status: T-0339 selected stable publish after T-0336 readiness, T-0337 publish verification, T-0338 installed-package recycle, and T-0339 docker-compose dogfooding found no release-blocking issue; T-0340 source metadata targeted stable `0.3.2`, Docker check/package smoke/clean-checkout smoke/strict gate/release artifact/release dry-run/publish dry-run/direct npm tarball dry-run passed, npm publish completed, and registry/dist-tags verification passed.
+- T-0342 through T-0400 completed the 0.3.3 context-routing and lifecycle preparation line: context graph/state projection, code index links, context pack, raw context slice, speed-first explicit cache warm paths, warm graph/code index consumption, bounded Session Start, performance fixtures, context-routing completion audit and hardening, task lifecycle/close-repair/finalize convenience APIs, guarded finalize execute, and finalize-first default agent lifecycle docs/help/projection. T-0401 prepares `hadara@0.3.3-rc.0` source/readiness only and performs no npm publish, GitHub Release creation, Docker image build/push, PyPI publish, registry mutation, installer execution, or token loading.
+- Current release-candidate line status: `hadara@0.3.3-rc.0` is the current source/readiness target. npm publish is not executed in T-0401 and belongs to a separate approval-gated publish capsule after release readiness passes.
 - README now includes a top image from `docs/assets/hadara_sub_right_name.png`; because package `files` currently excludes `docs/assets/`, publish readiness uses the GitHub raw image URL. T-0275 verified `docs/assets/hadara_sub_right_name.png` is tracked and the raw URL returned HTTP 200.
 - Current package is `private: false`.
 - Current package metadata includes `"license": "MIT"`.
