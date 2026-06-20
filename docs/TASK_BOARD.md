@@ -399,3 +399,4 @@
 | T-0396 | Task Finalize Dry-Run Plan | Done | tasks/T-0396-task-finalize-dry-run-plan | |
 | T-0397 | Task Finalize Execute Guard | Done | tasks/T-0397-task-finalize-execute-guard | |
 | T-0398 | Lifecycle Scenario Docs and Init Alignment | Done | tasks/T-0398-lifecycle-scenario-docs-and-init-alignment | |
+| T-0399 | Finalize Evidence Guidance and Lifecycle Speed Hardening | Done | tasks/T-0399-finalize-evidence-guidance-and-lifecycle-speed-hardening | |

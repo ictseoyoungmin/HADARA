@@ -34,6 +34,10 @@ export interface TaskReadyOptions {
 export function createTaskReadyReport(projectRoot: string, taskId: string, level: TaskReadyLevel = 'done', options: TaskReadyOptions = {}): TaskReadyReport {
   const actor = options.actor ?? defaultTaskLifecycleActor();
   const closePlan = createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor });
+  return createTaskReadyReportFromClosePlan(projectRoot, taskId, level, closePlan, actor);
+}
+
+export function createTaskReadyReportFromClosePlan(projectRoot: string, taskId: string, level: TaskReadyLevel, closePlan: ReturnType<typeof createTaskCloseReport>, actor: HadaraActorContext): TaskReadyReport {
   const ready = closePlan.ok;
   const nextActions: TaskCloseNextAction[] = ready
     ? [

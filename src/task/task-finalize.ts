@@ -4,7 +4,7 @@ import type { HadaraNextAction } from '../core/next-action';
 import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, TaskAuditCloseReport, TaskCloseReport } from './task-close';
 import { createTaskFinishReport, TaskFinishReport } from './task-finish';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor } from './lifecycle-next-actions';
-import { createTaskReadyReport, TaskReadyReport } from './task-ready';
+import { createTaskReadyReportFromClosePlan, TaskReadyReport } from './task-ready';
 
 export type TaskFinalizeMode = 'dry-run' | 'execute' | 'execute-refused';
 export type TaskFinalizeStepId = 'finish' | 'ready' | 'close' | 'audit-close';
@@ -26,6 +26,8 @@ export interface TaskFinalizeReport {
     blocked: number;
     satisfied: number;
     executeSupported: boolean;
+    evaluatedReports?: string[];
+    skippedReports?: string[];
   };
   steps: TaskFinalizeStep[];
   execution?: TaskFinalizeExecution;
@@ -51,6 +53,8 @@ export interface TaskFinalizeIssue {
   code: string;
   message: string;
   path?: string;
+  fixHint?: string;
+  example?: string;
 }
 
 export interface TaskFinalizeExecution {
@@ -79,9 +83,9 @@ export interface TaskFinalizeOptions {
 
 interface FinalizeReports {
   finish: TaskFinishReport;
-  ready: TaskReadyReport;
-  close: TaskCloseReport;
-  audit: TaskAuditCloseReport;
+  ready?: TaskReadyReport;
+  close?: TaskCloseReport;
+  audit?: TaskAuditCloseReport;
 }
 
 export function createTaskFinalizeReport(projectRoot: string, taskId: string, options: TaskFinalizeOptions = {}): TaskFinalizeReport {
@@ -91,7 +95,7 @@ export function createTaskFinalizeReport(projectRoot: string, taskId: string, op
   const issues = collectIssues(reports);
   const planHash = hashPlan(taskId, steps);
   if (options.executeRequested) return executeFinalizePlan(projectRoot, taskId, actor, reports, steps, issues, planHash, options.planHash);
-  return createFinalizeReport(taskId, actor, 'dry-run', true, steps, issues, planHash);
+  return createFinalizeReport(taskId, actor, 'dry-run', true, steps, issues, planHash, undefined, reports);
 }
 
 export function formatTaskFinalizeReport(report: TaskFinalizeReport): string {
@@ -134,13 +138,23 @@ function executeFinalizePlan(
   const executedSteps: TaskFinalizeExecutedStep[] = [];
   const initialBlocker = initialSteps.find((step) => step.status === 'blocked');
   if (initialBlocker) {
-    return createFinalizeReport(taskId, actor, 'execute', false, initialSteps, initialIssues, currentPlanHash, {
-      requestedPlanHash,
+    return createFinalizeReport(
+      taskId,
+      actor,
+      'execute',
+      false,
+      initialSteps,
+      initialIssues,
       currentPlanHash,
-      planHashMatched: true,
-      executedSteps: [createExecutedStep(initialBlocker, false, initialReports[reportKeyForStep(initialBlocker.id)], 'blocked')],
-      stoppedAt: initialBlocker.id
-    });
+      {
+        requestedPlanHash,
+        currentPlanHash,
+        planHashMatched: true,
+        executedSteps: [createExecutedStep(initialBlocker, false, initialReports[reportKeyForStep(initialBlocker.id)], 'blocked')],
+        stoppedAt: initialBlocker.id
+      },
+      initialReports
+    );
   }
 
   let reports = initialReports;
@@ -158,7 +172,8 @@ function executeFinalizePlan(
 
   const readyStep = steps.find((step) => step.id === 'ready');
   if (readyStep?.status !== 'satisfied') {
-    executedSteps.push(createExecutedStep(readyStep ?? fallbackStep(taskId, 'ready'), reports.ready.ok, reports.ready, reports.ready.ok ? 'satisfied' : 'blocked'));
+    const readyReport = reports.ready;
+    executedSteps.push(createExecutedStep(readyStep ?? fallbackStep(taskId, 'ready'), readyReport?.ok ?? false, readyReport, readyReport?.ok ? 'satisfied' : 'blocked'));
     return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'ready');
   }
   executedSteps.push(createExecutedStep(readyStep, true, reports.ready, 'satisfied'));
@@ -179,8 +194,9 @@ function executeFinalizePlan(
   }
 
   const auditStep = steps.find((step) => step.id === 'audit-close');
-  executedSteps.push(createExecutedStep(auditStep ?? fallbackStep(taskId, 'audit-close'), reports.audit.ok, reports.audit, reports.audit.ok ? 'satisfied' : 'blocked'));
-  return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, reports.audit.ok ? undefined : 'audit-close');
+  const auditReport = reports.audit;
+  executedSteps.push(createExecutedStep(auditStep ?? fallbackStep(taskId, 'audit-close'), auditReport?.ok ?? false, auditReport, auditReport?.ok ? 'satisfied' : 'blocked'));
+  return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, auditReport?.ok ? undefined : 'audit-close');
 }
 
 function createPostExecutionReport(
@@ -195,8 +211,8 @@ function createPostExecutionReport(
   const reports = createFinalizeReports(projectRoot, taskId, actor);
   const steps = createSteps(taskId, reports);
   const issues = collectIssues(reports);
-  const nextAction = createPrimaryNextAction(taskId, steps);
-  const finalAudit = reports.audit.auditVerdict.verdict === 'closed-valid';
+  const nextAction = createPrimaryNextAction(taskId, steps, issues);
+  const finalAudit = reports.audit?.auditVerdict.verdict === 'closed-valid';
   const execution: TaskFinalizeExecution = {
     requestedPlanHash,
     currentPlanHash: reviewedPlanHash,
@@ -214,7 +230,7 @@ function createPostExecutionReport(
     generatedAt: new Date().toISOString(),
     actor,
     planHash: reviewedPlanHash,
-    summary: summarizeSteps(steps),
+    summary: summarizeSteps(steps, reports),
     steps,
     execution,
     ...(nextAction ? { primaryNextAction: nextAction } : {}),
@@ -231,9 +247,10 @@ function createFinalizeReport(
   steps: TaskFinalizeStep[],
   issues: TaskFinalizeIssue[],
   planHash?: string,
-  execution?: TaskFinalizeExecution
+  execution?: TaskFinalizeExecution,
+  reports?: FinalizeReports
 ): TaskFinalizeReport {
-  const nextAction = createPrimaryNextAction(taskId, steps);
+  const nextAction = createPrimaryNextAction(taskId, steps, issues);
   return {
     schemaVersion: 'hadara.task.finalize.v1',
     command: 'task.finalize',
@@ -244,7 +261,7 @@ function createFinalizeReport(
     generatedAt: new Date().toISOString(),
     actor,
     ...(planHash ? { planHash } : {}),
-    summary: summarizeSteps(steps),
+    summary: summarizeSteps(steps, reports),
     steps,
     ...(execution ? { execution } : {}),
     ...(nextAction ? { primaryNextAction: nextAction } : {}),
@@ -269,19 +286,31 @@ function createExecuteRefusal(
 }
 
 function createFinalizeReports(projectRoot: string, taskId: string, actor: HadaraActorContext): FinalizeReports {
-  return {
-    finish: createTaskFinishReport(projectRoot, taskId, 'dry-run', { actor }),
-    ready: createTaskReadyReport(projectRoot, taskId, 'done', { actor }),
-    close: createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor }),
-    audit: createTaskAuditCloseReport(projectRoot, taskId, { actor })
-  };
+  const finish = createTaskFinishReport(projectRoot, taskId, 'dry-run', { actor });
+  const finishStatus = getFinishStatus(finish);
+  if (finishStatus === 'blocked') return { finish };
+  if (finishStatus === 'required' && finish.status.taskStatus !== 'Done') return { finish };
+
+  const close = createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor });
+  const ready = createTaskReadyReportFromClosePlan(projectRoot, taskId, 'done', close, actor);
+  if (!ready.ok) return { finish, ready, close };
+
+  const audit = createTaskAuditCloseReport(projectRoot, taskId, { actor });
+  return { finish, ready, close, audit };
 }
 
 function createSteps(taskId: string, reports: FinalizeReports): TaskFinalizeStep[] {
-  const finishStatus = reports.finish.ok ? (reports.finish.summary.plannedWrites > 0 ? 'required' : 'satisfied') : 'blocked';
-  const readyStatus = finishStatus === 'satisfied' ? (reports.ready.ok ? 'satisfied' : 'required') : 'pending';
-  const closeStatus = readyStatus === 'satisfied' ? (reports.audit.auditVerdict.closeEvidenceFound ? 'satisfied' : reports.close.ok ? 'required' : 'blocked') : 'pending';
-  const auditStatus = reports.audit.auditVerdict.closeEvidenceFound ? (reports.audit.ok ? 'satisfied' : 'required') : 'pending';
+  const finishStatus = getFinishStatus(reports.finish);
+  const readyStatus = finishStatus === 'satisfied' ? (reports.ready ? (reports.ready.ok ? 'satisfied' : 'required') : 'pending') : 'pending';
+  const closeStatus =
+    readyStatus === 'satisfied'
+      ? reports.audit?.auditVerdict.closeEvidenceFound
+        ? 'satisfied'
+        : reports.close?.ok
+          ? 'required'
+          : 'blocked'
+      : 'pending';
+  const auditStatus = reports.audit ? (reports.audit.auditVerdict.closeEvidenceFound ? (reports.audit.ok ? 'satisfied' : 'required') : 'pending') : 'pending';
   return [
     {
       id: 'finish',
@@ -333,18 +362,50 @@ function createSteps(taskId: string, reports: FinalizeReports): TaskFinalizeStep
 function collectIssues(reports: FinalizeReports): TaskFinalizeIssue[] {
   const seen = new Set<string>();
   const issues: TaskFinalizeIssue[] = [];
-  for (const issue of [...reports.finish.issues, ...reports.ready.issues, ...reports.close.issues, ...reports.audit.issues]) {
+  const reportIssues = [...reports.finish.issues, ...(reports.ready?.issues ?? []), ...(reports.close?.issues ?? []), ...(reports.audit?.issues ?? [])];
+  for (const issue of reportIssues) {
     const key = `${issue.severity}:${issue.code}:${issue.path ?? ''}:${issue.message}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    issues.push({ severity: issue.severity, code: issue.code, message: issue.message, ...(issue.path ? { path: issue.path } : {}) });
+    issues.push({
+      severity: issue.severity,
+      code: issue.code,
+      message: issue.message,
+      ...(issue.path ? { path: issue.path } : {}),
+      ...('fixHint' in issue && issue.fixHint ? { fixHint: issue.fixHint } : {}),
+      ...('example' in issue && issue.example ? { example: issue.example } : {})
+    });
+  }
+  const evidenceQualityIssue = issues.find(isEvidenceQualityIssue);
+  if (evidenceQualityIssue) {
+    issues.push({
+      severity: 'info',
+      code: 'TASK_FINALIZE_EVIDENCE_QUALITY_HINT',
+      message: 'Done-level evidence is missing substantive passed proof. Record validation evidence with --result passed and --category validation after a meaningful check succeeds.',
+      path: evidenceQualityIssue.path,
+      fixHint: 'Use evidence add-command with an explicit passed result/category for real validation output; do not rewrite existing unknown/failed evidence.',
+      example: 'hadara evidence add-command --task T-XXXX --summary "Focused validation passed." --result passed --category validation --json'
+    });
   }
   return issues;
 }
 
-function createPrimaryNextAction(taskId: string, steps: TaskFinalizeStep[]): HadaraNextAction | undefined {
+function createPrimaryNextAction(taskId: string, steps: TaskFinalizeStep[], issues: TaskFinalizeIssue[]): HadaraNextAction | undefined {
   const nextStep = steps.find((step) => step.status === 'required' || step.status === 'blocked');
   if (!nextStep) return undefined;
+  if (nextStep.id === 'ready' && issues.some(isEvidenceQualityIssue)) {
+    return createTaskLifecycleNextAction({
+      id: 'finalize-record-passed-evidence',
+      kind: 'command',
+      required: true,
+      command: `hadara evidence add-command --task ${taskId} --summary "Focused validation passed." --result passed --category validation --json`,
+      message: 'Record substantive passed validation evidence before rerunning readiness.',
+      writeBoundary: 'evidence-append',
+      recommendedActorRole: 'worker',
+      requiresBeforeHash: false,
+      stalePlanRisk: 'low'
+    });
+  }
   return createTaskLifecycleNextAction({
     id: `finalize-${nextStep.id}`,
     kind: nextStep.status === 'blocked' ? 'review' : 'command',
@@ -358,13 +419,17 @@ function createPrimaryNextAction(taskId: string, steps: TaskFinalizeStep[]): Had
   });
 }
 
-function summarizeSteps(steps: TaskFinalizeStep[]): TaskFinalizeReport['summary'] {
+function summarizeSteps(steps: TaskFinalizeStep[], reports?: FinalizeReports): TaskFinalizeReport['summary'] {
+  const evaluatedReports = evaluatedReportNames(steps, reports);
+  const skippedReports = ['finish', 'ready', 'close', 'audit-close'].filter((name) => !evaluatedReports.includes(name));
   return {
     steps: steps.length,
     required: steps.filter((step) => step.status === 'required').length,
     blocked: steps.filter((step) => step.status === 'blocked').length,
     satisfied: steps.filter((step) => step.status === 'satisfied').length,
-    executeSupported: true
+    executeSupported: true,
+    evaluatedReports,
+    skippedReports
   };
 }
 
@@ -389,6 +454,31 @@ function reportKeyForStep(stepId: TaskFinalizeStepId): keyof FinalizeReports {
   if (stepId === 'ready') return 'ready';
   if (stepId === 'close') return 'close';
   return 'audit';
+}
+
+function getFinishStatus(finish: TaskFinishReport): TaskFinalizeStepStatus {
+  return finish.ok ? (finish.summary.plannedWrites > 0 ? 'required' : 'satisfied') : 'blocked';
+}
+
+function evaluatedReportNames(steps: TaskFinalizeStep[], reports?: FinalizeReports): string[] {
+  if (reports) return ['finish', ...(reports.ready ? ['ready'] : []), ...(reports.close ? ['close'] : []), ...(reports.audit ? ['audit-close'] : [])];
+  const evaluated = new Set<string>(['finish']);
+  for (const step of steps) {
+    if (step.id === 'ready' && step.status !== 'pending') evaluated.add('ready');
+    if (step.id === 'close' && step.status !== 'pending') evaluated.add('close');
+    if (step.id === 'audit-close' && step.status !== 'pending') evaluated.add('audit-close');
+  }
+  return [...evaluated];
+}
+
+function isEvidenceQualityIssue(issue: TaskFinalizeIssue): boolean {
+  return (
+    issue.code.includes('TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE') ||
+    issue.code.includes('TASK_DONE_WITH_ONLY_WEAK_EVIDENCE') ||
+    issue.code.includes('EVIDENCE_REQUIRED') ||
+    issue.code.includes('WITHOUT_SUBSTANTIVE_EVIDENCE') ||
+    issue.code.includes('ONLY_WEAK_EVIDENCE')
+  );
 }
 
 function fallbackStep(taskId: string, id: TaskFinalizeStepId): TaskFinalizeStep {

@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/hardening completed through T-0391, and the lifecycle convenience line is complete through T-0398. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/hardening completed through T-0391, and the lifecycle convenience line plus dogfood hardening is complete through T-0399. |
 | Current Phase | 0.3.3 lifecycle/context-routing readiness review | Context-routing hardening and lifecycle ergonomics are complete through the current budget; next work should be operator-selected. |
-| Latest Completed Task | T-0398 Lifecycle Scenario Docs and Init Alignment | Root docs, generated init docs, and command-surface examples now teach the additive lifecycle convenience flow. |
-| Active / Next Task | 0.3.3 readiness review or operator-selected next capsule | The lifecycle convenience budget defined in T-0392 is complete through T-0398. |
-| Validation Baseline | T-0398 lifecycle scenario docs/init alignment validation | Focused validation passed 4 files / 34 tests, full Docker sync-build passed 141 files / 928 tests with refreshed `dist`, built command registry smoke passed, final `git diff --check` passed, and substantive passed validation evidence is recorded. Evidence `ev:T-0398:7226b21db0564b008a4a8dc3`, `ev:T-0398:1d161be5bec2445292c76cb5`, `ev:T-0398:9f630cc9e133415495f689c2`, `ev:T-0398:e0be2ec555684f0a9e12b8df`, `ev:T-0398:d69e62e8e4254bebbfd5d89b`. |
+| Latest Completed Task | T-0399 Finalize Evidence Guidance and Lifecycle Speed Hardening | `task finalize` now avoids unnecessary later report work and gives direct weak-evidence repair guidance. |
+| Active / Next Task | 0.3.3 readiness review or operator-selected next capsule | The lifecycle convenience budget defined in T-0392 is complete through T-0399. |
+| Validation Baseline | T-0399 finalize guidance/speed hardening validation | Focused validation passed 3 files / 13 tests, full Docker sync-build retry passed 141 files / 929 tests with refreshed `dist`, built finalize smoke passed, final `git diff --check` passed, and the first full-run dashboard-static timeout was recorded and resolved by retry evidence. Evidence `ev:T-0399:c213cedb4cfe4d20a8858fd9`, `ev:T-0399:8aa7e7dc564e429393a1ea67`, `ev:T-0399:ac178da8a71f482a9d8e702a`, `ev:T-0399:cda485bcea7242448c0da511`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| None | T-0398 completed lifecycle scenario docs and init alignment. | Review 0.3.3 readiness or select the next capsule. |
+| None | T-0399 completed finalize evidence guidance and lifecycle speed hardening. | Review 0.3.3 readiness or select the next capsule. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0399 Finalize Evidence Guidance and Lifecycle Speed Hardening | Added lazy evaluated/skipped report diagnostics to `task finalize`, avoided unnecessary ready/close/audit composition on unfinished tasks, and routed weak Done evidence blockers to a concrete passed-validation evidence command. | `ev:T-0399:c213cedb4cfe4d20a8858fd9`, `ev:T-0399:8aa7e7dc564e429393a1ea67`, `ev:T-0399:ac178da8a71f482a9d8e702a` |
 | T-0398 Lifecycle Scenario Docs and Init Alignment | Aligned README, SOP, command-surface docs, and generated init source with lifecycle/repair/finalize convenience guidance while preserving canonical proof boundaries. | `ev:T-0398:7226b21db0564b008a4a8dc3`, `ev:T-0398:1d161be5bec2445292c76cb5`, `ev:T-0398:d69e62e8e4254bebbfd5d89b` |
 | T-0397 Task Finalize Execute Guard | Added guarded `task finalize --execute --plan-hash` orchestration with missing/stale hash refusal, serial execution, stop-on-blocker behavior, execution metadata, and final audit proof. | `ev:T-0397:59085932aced47be89c4532d`, `ev:T-0397:fd38f35a791e4b179285cc9d`, `ev:T-0397:454daf3e664843cba5db3b1a` |
-| T-0396 Task Finalize Dry-Run Plan | Added `hadara.task.finalize.v1`, `hadara task finalize --task T --json`, stable plan hash, ordered lifecycle step metadata, expected write paths, and execute refusal. | `ev:T-0396:874095dd00434f5195eb144a`, `ev:T-0396:1057e733697c467aa0fbc9cd`, `ev:T-0396:d7b3975a5e4849f9ab74da22` |
 
 ## Current Known Problems
 
@@ -92,12 +92,13 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Review 0.3.3 lifecycle/context-routing readiness or choose the next operator-directed capsule. | The T-0392 lifecycle convenience budget is complete through T-0398. | `docs/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md`, `docs/PROJECT_STATE.md` |
+| Review 0.3.3 lifecycle/context-routing readiness or choose the next operator-directed capsule. | The T-0392 lifecycle convenience budget and T-0399 dogfood hardening are complete. | `docs/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md`, `docs/PROJECT_STATE.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0399 finalize evidence guidance/speed hardening | Focused validation passed 3 files / 13 tests; full Docker sync-build retry passed 141 files / 929 tests and refreshed `dist`; built finalize smoke passed with finish-only evaluation for Draft T-0399; final `git diff --check` passed; first full-run dashboard-static timeout was recorded and resolved. | Evidence `ev:T-0399:c213cedb4cfe4d20a8858fd9`, `ev:T-0399:8aa7e7dc564e429393a1ea67`, `ev:T-0399:ac178da8a71f482a9d8e702a`, `ev:T-0399:cda485bcea7242448c0da511`; failed timeout `ev:T-0399:eba26dcf11c5461395d90965` resolved by retry. |
 | T-0398 lifecycle scenario docs/init alignment | Focused validation passed 4 files / 34 tests; full Docker sync-build passed 141 files / 928 tests and refreshed `dist`; built command registry smoke passed; final `git diff --check` passed; substantive passed validation evidence is recorded. | Evidence `ev:T-0398:7226b21db0564b008a4a8dc3`, `ev:T-0398:1d161be5bec2445292c76cb5`, `ev:T-0398:9f630cc9e133415495f689c2`, `ev:T-0398:e0be2ec555684f0a9e12b8df`, `ev:T-0398:d69e62e8e4254bebbfd5d89b`; docs/generated init guidance only, no runtime command change. |
 | T-0397 finalize execute guard | Focused validation passed 4 files / 21 tests; full Docker sync-build passed 141 files / 928 tests and refreshed `dist`; built dry-run/missing-hash/stale-hash smokes passed; `git diff --check` passed. | Evidence `ev:T-0397:59085932aced47be89c4532d`, `ev:T-0397:fd38f35a791e4b179285cc9d`, `ev:T-0397:924236021b714ecaa783c7ec`, `ev:T-0397:454daf3e664843cba5db3b1a`, `ev:T-0397:3436c55fab2344789c6183b9`; unit coverage proves matching execute reaches `closed-valid`. |
 | T-0394 close repair plan read model | Focused validation passed 5 files / 28 tests; full Docker sync-build passed 140 files / 921 tests and refreshed `dist`; built `task close-repair-plan` smoke passed; `git diff --check` passed. | Evidence `ev:T-0394:f0875b6093844de1ac01053e`, `ev:T-0394:8c47406cc61a4314bde168b0`, `ev:T-0394:a32fcb73ccde4179a56cc267`, `ev:T-0394:e22abfd41b9048a492203406`; mounted built smoke took about 22s because the report composes existing close/audit checks. |

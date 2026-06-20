@@ -38,7 +38,7 @@ describe('task finalize dry-run plan', () => {
       readOnly: true,
       mode: 'dry-run',
       taskId: task.id,
-      summary: { steps: 4, required: 1, blocked: 0, executeSupported: true },
+      summary: { steps: 4, required: 1, blocked: 0, executeSupported: true, evaluatedReports: ['finish'], skippedReports: ['ready', 'close', 'audit-close'] },
       primaryNextAction: {
         id: 'finalize-finish',
         command: `hadara task finish --task ${task.id} --execute --json`,
@@ -48,12 +48,41 @@ describe('task finalize dry-run plan', () => {
     expect(report.planHash).toMatch(/^sha256:[a-f0-9]{64}$/);
     expect(second.planHash).toBe(report.planHash);
     expect(report.steps.map((step) => step.id)).toEqual(['finish', 'ready', 'close', 'audit-close']);
+    expect(report.steps.find((step) => step.id === 'ready')).toMatchObject({ status: 'pending', sourceReport: 'hadara.task.ready.v1' });
     expect(report.steps.find((step) => step.id === 'finish')).toMatchObject({
       status: 'required',
       mode: 'execute',
       writeBoundary: 'task-local',
       expectedWritePaths: expect.arrayContaining([`tasks/${task.id}-finalize-draft/TASK.md`, 'docs/TASK_BOARD.md'])
     });
+    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
+  });
+
+  it('points weak done evidence blockers at passed validation evidence instead of another readiness rerun', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finalize weak evidence');
+    completeTask(root, task.id, task.dir, 'unknown');
+    markStateDocsCurrent(root, task.id);
+
+    const report = createTaskFinalizeReport(root, task.id);
+
+    expect(report.ok).toBe(false);
+    expect(report.summary.evaluatedReports).toEqual(['finish', 'ready', 'close']);
+    expect(report.summary.skippedReports).toEqual(['audit-close']);
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'finalize-record-passed-evidence',
+      command: `hadara evidence add-command --task ${task.id} --summary "Focused validation passed." --result passed --category validation --json`,
+      writeBoundary: 'evidence-append'
+    });
+    expect(report.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'TASK_FINALIZE_EVIDENCE_QUALITY_HINT',
+          severity: 'info',
+          example: 'hadara evidence add-command --task T-XXXX --summary "Focused validation passed." --result passed --category validation --json'
+        })
+      ])
+    );
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
   });
 
@@ -210,7 +239,7 @@ function walk(dir: string, visit: (filePath: string) => void): void {
   }
 }
 
-function completeTask(root: string, taskId: string, taskDir: string): void {
+function completeTask(root: string, taskId: string, taskDir: string, evidenceResult: 'passed' | 'failed' | 'blocked' | 'unknown' = 'passed'): void {
   fs.writeFileSync(
     path.join(taskDir, 'TASK.md'),
     fs
@@ -242,7 +271,7 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
   fs.writeFileSync(path.join(taskDir, 'RISKS.md'), '# Risks\n\n| Risk | Impact | Likelihood | Mitigation | Status |\n|---|---|---|---|---|\n| Fixture drift | Low | Low | Keep local. | Mitigated |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'DECISIONS.md'), '# Decisions\n\n| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n| D-1 | Use finalize fixture. | Accepted | Test plan report. | Test. |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'HANDOFF.md'), '# Handoff\n\n## Current State\n\n| Field | Value |\n|---|---|\n| Status | Done |\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| Fixture complete. | Evidence. |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| Continue. | Done. | docs/TASK_BOARD.md |\n', 'utf8');
-  appendEvidence(root, { taskId, kind: 'test-log', summary: 'Finalize fixture validation passed.', result: 'passed', visibility: 'public' });
+  appendEvidence(root, { taskId, kind: 'test-log', summary: 'Finalize fixture validation passed.', result: evidenceResult, visibility: 'public' });
 }
 
 function markStateDocsCurrent(root: string, taskId: string): void {

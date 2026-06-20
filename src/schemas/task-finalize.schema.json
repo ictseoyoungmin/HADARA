@@ -24,7 +24,9 @@
         "required": { "type": "number" },
         "blocked": { "type": "number" },
         "satisfied": { "type": "number" },
-        "executeSupported": { "type": "boolean" }
+        "executeSupported": { "type": "boolean" },
+        "evaluatedReports": { "type": "array", "items": { "type": "string" } },
+        "skippedReports": { "type": "array", "items": { "type": "string" } }
       }
     },
     "steps": {
@@ -86,7 +88,9 @@
           "severity": { "enum": ["error", "warning", "info"] },
           "code": { "type": "string" },
           "message": { "type": "string" },
-          "path": { "type": "string" }
+          "path": { "type": "string" },
+          "fixHint": { "type": "string" },
+          "example": { "type": "string" }
         }
       }
     }
