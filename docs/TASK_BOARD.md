@@ -389,3 +389,4 @@
 | T-0386 | Acceptance Parser v2 Lifecycle Follow-up | Done | tasks/T-0386-acceptance-parser-v2-lifecycle-follow-up | |
 | T-0387 | Context Slice/Pack Security Boundary Final Audit | Done | tasks/T-0387-context-slice-pack-security-boundary-final-audit | |
 | T-0388 | Context Pack Read Recommendation Boundary Metadata | Done | tasks/T-0388-context-pack-read-recommendation-boundary-metadata | |
+| T-0389 | Context Pack Item Source Hash Fidelity | Done | tasks/T-0389-context-pack-item-source-hash-fidelity | |

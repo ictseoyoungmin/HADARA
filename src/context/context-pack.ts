@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import type {
   ContextCacheMetadata,
   ContextConfidence,
@@ -9,8 +11,8 @@ import type {
   StateConsistencyIssue
 } from './context-graph';
 import { buildContextGraphReport } from './context-graph-builder';
-import { isContextSliceProjectRelativePath } from './context-slice-boundary';
-import { createTaskNodeId } from './extractor-contract';
+import { isContextSliceProjectRelativePath, normalizeContextSliceInputPath } from './context-slice-boundary';
+import { createTaskNodeId, hashContextGraphText } from './extractor-contract';
 
 export const CONTEXT_PACK_SCHEMA_ID = 'hadara.contextPack.v1' as const;
 export const CONTEXT_PACK_COMMAND = 'context.pack' as const;
@@ -209,7 +211,7 @@ export function buildContextPackReport(input: BuildContextPackReportOptions): Co
   const readFirstRanked = rankedNodes.filter((ranked) => isReadFirstAllowed(ranked.node));
   const readFirst = readFirstRanked
     .slice(0, budget.maxReadFirstItems)
-    .map((ranked) => itemFromRankedNode(ranked, true));
+    .map((ranked) => itemFromRankedNode(ranked, true, input.projectRoot));
   if (readFirstRanked.length > readFirst.length) {
     issues.push({
       severity: 'warning',
@@ -225,7 +227,7 @@ export function buildContextPackReport(input: BuildContextPackReportOptions): Co
     .filter((ranked) => !isDoNotReadByDefault(ranked.node));
   const readIfNeeded = readIfNeededRanked
     .slice(0, maxReadIfNeeded)
-    .map((ranked) => itemFromRankedNode(ranked, false));
+    .map((ranked) => itemFromRankedNode(ranked, false, input.projectRoot));
   if (readIfNeededRanked.length > readIfNeeded.length) {
     issues.push({
       severity: 'warning',
@@ -242,7 +244,7 @@ export function buildContextPackReport(input: BuildContextPackReportOptions): Co
       reason: 'Historical, archived, superseded, or excluded document is not read by default.',
       confidence: 'derived',
       score: 0
-    }, false))
+    }, false, input.projectRoot))
     .sort(compareItems);
 
   const knownProblems = graphReport.nodes
@@ -252,7 +254,7 @@ export function buildContextPackReport(input: BuildContextPackReportOptions): Co
       reason: 'Current project handoff records this known problem.',
       confidence: 'explicit',
       score: 0
-    }, false))
+    }, false, input.projectRoot))
     .sort(compareItems);
 
   const cache = input.cache ?? graphReport.cache ?? { used: false, hit: false };
@@ -395,8 +397,9 @@ function isDoNotReadByDefault(node: ContextGraphNode): boolean {
     || (metadataBoolean(node, 'requiredReading') === false && kind.includes('archive'));
 }
 
-function itemFromRankedNode(ranked: RankedNode, required: boolean): ContextPackItem {
+function itemFromRankedNode(ranked: RankedNode, required: boolean, projectRoot: string): ContextPackItem {
   const line = ranked.node.source.line;
+  const sourceHash = sourceHashForItem(projectRoot, ranked.node);
   return {
     id: ranked.node.id,
     type: ranked.node.type,
@@ -405,11 +408,26 @@ function itemFromRankedNode(ranked: RankedNode, required: boolean): ContextPackI
     title: ranked.node.label,
     reason: ranked.reason,
     confidence: ranked.confidence,
-    ...(ranked.node.source.hash ? { sourceHash: ranked.node.source.hash } : {}),
+    ...(sourceHash ? { sourceHash } : {}),
     ...(ranked.node.path ? { estimatedTokens: estimateTokens(ranked.node) } : {}),
     required,
     sourceAccess: sourceAccessForNode(ranked.node)
   };
+}
+
+function sourceHashForItem(projectRoot: string, node: ContextGraphNode): string | undefined {
+  if (!node.path || !isContextSliceProjectRelativePath(node.path)) return node.source.hash;
+  const normalized = normalizeContextSliceInputPath(node.path);
+  const root = path.resolve(projectRoot);
+  const absolutePath = path.resolve(root, normalized);
+  if (absolutePath !== root && !absolutePath.startsWith(`${root}${path.sep}`)) return node.source.hash;
+  try {
+    const stat = fs.statSync(absolutePath);
+    if (!stat.isFile()) return node.source.hash;
+    return hashContextGraphText(fs.readFileSync(absolutePath, 'utf8'));
+  } catch {
+    return node.source.hash;
+  }
 }
 
 function sourceAccessForNode(node: ContextGraphNode): ContextPackItem['sourceAccess'] {

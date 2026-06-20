@@ -14,6 +14,7 @@ import {
   CONTEXT_PACK_DEFAULT_BUDGET
 } from '../../src/context/context-pack';
 import { createContextCacheWarmReport } from '../../src/context/context-cache-store';
+import { hashContextGraphText } from '../../src/context/extractor-contract';
 
 const generatedAt = '2026-06-18T13:00:00.000Z';
 const taskId = 'T-0003';
@@ -114,6 +115,31 @@ describe('context pack', () => {
       suggestedCommandArgs: ['context', 'slice', '--path', 'docs/space name.md', '--from', '7', '--to', '7', '--json']
     }));
     expect(candidate?.suggestedCommand).toContain("--path 'docs/space name.md'");
+    assertSchema('hadara.contextPack.v1', report);
+  });
+
+  it('uses actual sliceable item file hashes when available', () => {
+    const root = tempProject();
+    const taskContent = '# Fixture task\n';
+    const docContent = '# Implementation SOP\n\nCurrent source text.\n';
+    write(root, `tasks/${taskId}-fixture/TASK.md`, taskContent);
+    write(root, 'docs/IMPLEMENTATION_SOP.md', docContent);
+
+    const report = buildContextPackReport({
+      projectRoot: root,
+      generatedAt,
+      taskId,
+      graphReport: sampleGraphReport(),
+      budget: { maxReadFirstItems: 4, maxItems: 10 }
+    });
+    const taskItem = [...report.readFirst, ...report.readIfNeeded].find((item) => item.path === `tasks/${taskId}-fixture/TASK.md`);
+    const docItem = [...report.readFirst, ...report.readIfNeeded].find((item) => item.path === 'docs/IMPLEMENTATION_SOP.md');
+    const missingDocItem = report.doNotReadByDefault.find((item) => item.path === 'docs/OLD_STATE.md');
+
+    expect(taskItem?.sourceHash).toBe(hashContextGraphText(taskContent));
+    expect(docItem?.sourceHash).toBe(hashContextGraphText(docContent));
+    expect(docItem?.sourceHash).not.toBe('sha256:docs');
+    expect(missingDocItem?.sourceHash).toBe('sha256:docs');
     assertSchema('hadara.contextPack.v1', report);
   });
 

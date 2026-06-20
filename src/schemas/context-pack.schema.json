@@ -87,7 +87,10 @@
         "title": { "type": "string" },
         "reason": { "type": "string", "minLength": 1 },
         "confidence": { "$ref": "#/$defs/confidence" },
-        "sourceHash": { "type": "string" },
+        "sourceHash": {
+          "type": "string",
+          "description": "Hash of the raw-sliceable item file text when available, otherwise the graph node source hash."
+        },
         "estimatedTokens": { "type": "number" },
         "required": { "type": "boolean" },
         "sourceAccess": { "$ref": "#/$defs/sourceAccess" }

@@ -2,7 +2,7 @@
 
 ## Status
 
-Implementation readiness audit snapshot after T-0387.
+Implementation readiness audit snapshot after T-0389.
 
 This document does not replace the individual context-routing specs. It records which parts of `docs/specs/0.3.3/context-routing/` are implemented, partial, deferred, or queued for final hardening so later agents do not infer completion from stale planning language.
 
@@ -16,12 +16,12 @@ This document does not replace the individual context-routing specs. It records 
 |---|---|---|
 | C1 Project Context Graph and State Projection | Implemented | T-0343 through T-0352 completed graph/state projection and read-only `hadara context graph`. |
 | C2 Code Link Layer | Implemented | T-0353 through T-0359 completed code index, symbols, command/test hints, relation edges, and graph integration. |
-| C3 Context Pack | Implemented with warm-path refinements and source-access metadata | T-0361/T-0362 added the public context pack read surface; T-0374/T-0375/T-0379 refined warm graph/code consumption; T-0383 added built-CLI smoke coverage; T-0388 clarified raw-sliceability for read recommendations. |
+| C3 Context Pack | Implemented with warm-path refinements, source-access metadata, and item source-hash fidelity | T-0361/T-0362 added the public context pack read surface; T-0374/T-0375/T-0379 refined warm graph/code consumption; T-0383 added built-CLI smoke coverage; T-0388 clarified raw-sliceability for read recommendations; T-0389 made raw-sliceable item source hashes prefer current file text. |
 | C4 Context Slice | Implemented and hardened | T-0369/T-0370 added raw range/tail/keyword/managed-section/symbol/candidate slicing; T-0372/T-0376 hardened byte and generated/local boundaries. |
 | C5 Session Start | Implemented bounded default with guidance | T-0378 added bounded default `session start --json`; T-0379 made default Session Start consume proven-fresh warm graph-core/code-index cache read-only before fallback; T-0382 added structured guidance/no-task UX. |
 | C6 Cache and Performance | Implemented for explicit warm/cache consumption with diagnostics | T-0363 through T-0384 added source manifests, cache records/status, warm execute, graph-core/code-index shards, incremental warm recompute, Session Start warm path, advisory regression fixtures, E2E smoke coverage, and cache diagnostics. |
 
-The 0.3.3 context-routing core is ready for bounded/default consumption. T-0382 through T-0387 completed the post-T-0380 cleanup batch: Session Start JSON/UX hardening, E2E smoke coverage, cache diagnostics cleanup, readiness alignment, acceptance parser lifecycle hardening, and the final context slice/pack security boundary audit.
+The 0.3.3 context-routing core is ready for bounded/default consumption. T-0382 through T-0389 completed the post-T-0380 cleanup batch: Session Start JSON/UX hardening, E2E smoke coverage, cache diagnostics cleanup, readiness alignment, acceptance parser lifecycle hardening, the final context slice/pack security boundary audit, context pack source-access metadata, and context pack item source-hash fidelity.
 
 Mounted broad cache/graph/pack commands can still be slow on cold or stale workspaces. That is an accepted residual for explicit diagnostic/warm/full-profile commands in 0.3.3; it is not acceptable for default Session Start, which must remain bounded and prefer proven-fresh cache before degrading.
 
@@ -56,6 +56,7 @@ Mounted broad cache/graph/pack commands can still be slow on cold or stale works
 | Built-CLI context-routing smoke coverage is available. | Implemented through T-0383 with a default fast no-write profile and explicit full/custom profiles. |
 | Cache status/warm diagnostics explain stale/corrupt/partial states. | Implemented through T-0384. |
 | Context pack read recommendations distinguish graph relevance from raw sliceability. | Implemented through T-0388 with additive `sourceAccess.rawSlice` metadata. |
+| Context pack item `sourceHash` identifies raw-sliceable item file text when available. | Implemented through T-0389 with graph-source fallback for missing or non-sliceable paths. |
 
 ## Partial Or Deferred Items
 
@@ -69,6 +70,7 @@ Mounted broad cache/graph/pack commands can still be slow on cold or stale works
 | Acceptance parser v2 / lifecycle close contract | Implemented first hardening slice | T-0386 added shared legacy/v2 acceptance parsing for done-level harness/protocol checks while preserving existing issue-code compatibility. |
 | Context slice/pack boundary sharing | Implemented final hardening slice | T-0387 added the shared raw slice boundary helper and filtered context-pack slice candidates through it. |
 | Context pack read recommendation raw-slice metadata | Implemented follow-up hardening slice | T-0388 marks readFirst/readIfNeeded items as `sliceable`, `not-sliceable`, or `not-applicable` without dropping graph-relevant items. |
+| Context pack item source-hash fidelity | Implemented follow-up hardening slice | T-0389 makes raw-sliceable context pack items prefer the current item file text hash while retaining graph-source fallback. |
 
 ## Cleanup Queue
 
@@ -80,6 +82,8 @@ Mounted broad cache/graph/pack commands can still be slow on cold or stale works
 | T-0385 | 0.3.3 Readiness Cleanup | Completed: final docs/readiness alignment for context routing. |
 | T-0386 | Acceptance Parser v2 / Lifecycle Close Contract follow-up | Completed: shared acceptance parser v2 lifecycle hardening for done-level checks. |
 | T-0387 | Context Slice/Pack Security Boundary Final Audit | Completed: shared denylist/allowlist helper and context-pack candidate filtering. |
+| T-0388 | Context Pack Read Recommendation Boundary Metadata | Completed: item-level raw-sliceability metadata for graph-relevant read recommendations. |
+| T-0389 | Context Pack Item Source Hash Fidelity | Completed: sourceHash now prefers current raw-sliceable item file text hash with graph-source fallback. |
 
 ## Audit Rule
 

@@ -125,6 +125,8 @@ export interface ContextPackItem {
 
 `readFirst` and `readIfNeeded` express graph relevance, not guaranteed raw-text readability. Consumers that intend to call `hadara context slice` must check `sourceAccess.rawSlice === 'sliceable'` or use `sliceCandidates`, which only contains executable raw-slice suggestions. Non-sliceable items may still remain in `readFirst` or `readIfNeeded` as graph context when their paths point at local/generated/cache surfaces.
 
+When a `ContextPackItem` has a raw-sliceable project file path and that file is available, `sourceHash` should identify the item path's current source text. If the file is unavailable or not raw-sliceable, implementations may fall back to the graph node source hash that explains where the graph item came from.
+
 ### ValidationSuggestion
 
 ```ts
