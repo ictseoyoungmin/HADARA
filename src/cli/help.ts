@@ -10,7 +10,7 @@ export interface HelpCommandInput {
   args: string[];
 }
 
-const LIFECYCLE_ORDER = ['discover', 'create', 'inspect', 'evidence', 'finish', 'ready', 'close', 'audit', 'handoff'];
+const LIFECYCLE_ORDER = ['discover', 'create', 'inspect', 'evidence', 'phase-check', 'finalize', 'handoff'];
 
 export function handleHelpCommand(input: HelpCommandInput): boolean {
   const topic = input.args[1];
@@ -86,16 +86,17 @@ export function renderLifecycleHelp(): string {
   const diagnostics = listCommandRegistryEntries({ family: 'proof-diagnostics' }).filter((entry) => entry.requiredness === 'diagnostic');
 
   const lines = [
-    'HADARA canonical task lifecycle',
+    'HADARA 0.3.3 primary task lifecycle',
     '',
     'Primary capsule lifecycle:'
   ];
 
   for (const step of report.primaryPath) {
-    lines.push(`  ${step.order} ${step.stage.padEnd(9)} ${step.command}`);
-    if (step.commandId === 'task.finish') lines.push('             hadara task finish --task T-XXXX --execute --json');
-    if (step.commandId === 'task.close') lines.push('             hadara task close --task T-XXXX --execute --json');
+    lines.push(`  ${step.order} ${step.stage.padEnd(11)} ${step.command}`);
+    if (step.commandId === 'task.finalize') lines.push('               hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json');
   }
+
+  lines.push('', 'Low-level proof-boundary commands are available through `hadara help family capsule-lifecycle`.');
 
   lines.push(
     '',

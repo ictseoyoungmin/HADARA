@@ -400,3 +400,4 @@
 | T-0397 | Task Finalize Execute Guard | Done | tasks/T-0397-task-finalize-execute-guard | |
 | T-0398 | Lifecycle Scenario Docs and Init Alignment | Done | tasks/T-0398-lifecycle-scenario-docs-and-init-alignment | |
 | T-0399 | Finalize Evidence Guidance and Lifecycle Speed Hardening | Done | tasks/T-0399-finalize-evidence-guidance-and-lifecycle-speed-hardening | |
+| T-0400 | Default Lifecycle Finalize Documentation | Done | tasks/T-0400-default-lifecycle-finalize-documentation | Made the 0.3.3 finalize-first lifecycle the default agent-facing path in docs, init templates, help, registry, and lifecycle projection. |

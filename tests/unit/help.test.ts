@@ -24,10 +24,13 @@ describe('registry-backed help', () => {
   it('renders lifecycle help from primary registry entries', () => {
     const output = renderLifecycleHelp();
 
-    expect(output).toContain('HADARA canonical task lifecycle');
+    expect(output).toContain('HADARA 0.3.3 primary task lifecycle');
     expect(output).toContain('1 discover');
-    expect(output).toContain('task finish --task T-XXXX --execute --json');
-    expect(output).toContain('task close --task T-XXXX --execute --json');
+    expect(output).toContain('task lifecycle --task T-XXXX --json');
+    expect(output).toContain('task finalize --task T-XXXX --json');
+    expect(output).toContain('task finalize --task T-XXXX --execute --plan-hash sha256:... --json');
+    expect(output).not.toContain('task finish --task T-XXXX --execute --json');
+    expect(output).not.toContain('task close --task T-XXXX --execute --json');
     expect(output).toContain('Diagnostics when blocked');
     expect(output).toContain('harness.validate');
   });
@@ -37,7 +40,11 @@ describe('registry-backed help', () => {
 
     expect(report.schemaVersion).toBe('hadara.lifecycle.guide.v1');
     expect(report.primaryPath.map((step) => step.commandId)).toContain('evidence.add-command');
+    expect(report.primaryPath.map((step) => step.commandId)).toContain('task.lifecycle');
+    expect(report.primaryPath.map((step) => step.commandId)).toContain('task.finalize');
     expect(report.primaryPath.map((step) => step.commandId)).toContain('handoff.update');
+    expect(report.primaryPath.map((step) => step.commandId)).not.toContain('task.finish');
+    expect(report.primaryPath.map((step) => step.commandId)).not.toContain('task.close');
     expect(report.diagnostics.map((item) => item.commandId)).toContain('harness.validate');
   });
 
@@ -50,7 +57,7 @@ describe('registry-backed help', () => {
     expect(output).toContain('Family: capsule-lifecycle');
     expect(output).toContain('Scope: capsule');
     expect(output).toContain('Lifecycle stage: close');
-    expect(output).toContain('Requiredness: primary');
+    expect(output).toContain('Requiredness: advanced');
     expect(output).toContain('Write boundary: close-evidence-append');
     expect(output).toContain('Examples:');
     expect(output).toContain('docs/TASK_WORKFLOW_COMMANDS.md');
@@ -62,6 +69,7 @@ describe('registry-backed help', () => {
     const output = renderFamilyHelp('capsule-lifecycle');
 
     expect(output).toContain('task.create');
+    expect(output).toContain('task.finalize');
     expect(output).toContain('task.close');
     expect(output).not.toContain('release.publish');
     expect(output).not.toContain('dashboard.serve');

@@ -49,6 +49,8 @@ export type LifecycleStage =
   | 'inspect'
   | 'work'
   | 'evidence'
+  | 'phase-check'
+  | 'finalize'
   | 'finish'
   | 'ready'
   | 'close'
@@ -488,18 +490,18 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     examples: [example('Show completion guide', 'hadara task complete --task T-0001 --json', 'When debugging the task close loop.')],
     related: ['task.finish', 'task.ready', 'task.close', 'task.audit-close'],
     conflictsWith: [],
-    notes: 'Primary lifecycle help should show the explicit finish/ready/close/audit sequence.'
+    notes: 'Legacy read-only workflow compressor. Primary lifecycle help should show the 0.3.3 finalize-first path.'
   },
   {
     id: 'task.finalize',
     command: 'hadara task finalize --task <task-id> [--execute --plan-hash <hash>] [--json]',
     summary: 'Create a reviewed finalize plan or execute the matching plan through the guarded lifecycle sequence.',
     canonical: true,
-    appearsInDefaultHelp: false,
+    appearsInDefaultHelp: true,
     family: 'capsule-lifecycle',
     scope: 'capsule',
-    lifecycleStage: 'finish',
-    requiredness: 'conditional',
+    lifecycleStage: 'finalize',
+    requiredness: 'primary',
     writeBoundary: 'task-status-bookkeeping',
     readOnly: false,
     risk: 'medium',
@@ -510,7 +512,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     implementationFiles: ['src/cli/task.ts', 'src/task/task-finalize.ts'],
     testFiles: ['tests/unit/task-finalize.test.ts'],
     examples: [
-      example('Review finalize plan', 'hadara task finalize --task T-0001 --json', 'When an agent wants one reviewed finish/ready/close/audit plan before executing canonical commands.'),
+      example('Review finalize plan', 'hadara task finalize --task T-0001 --json', 'When an agent wants one reviewed finish/ready/close/audit plan before executing the default close path.'),
       example('Execute reviewed finalize plan', 'hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json', 'After reviewing a current dry-run plan hash.')
     ],
     related: ['task.lifecycle', 'task.finish', 'task.ready', 'task.close', 'task.audit-close'],
@@ -522,11 +524,11 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     command: 'hadara task lifecycle --task <task-id> [--json]',
     summary: 'Read normalized lifecycle phase, checks, satisfied state, blockers, and next action for one task.',
     canonical: true,
-    appearsInDefaultHelp: false,
+    appearsInDefaultHelp: true,
     family: 'capsule-lifecycle',
     scope: 'capsule',
-    lifecycleStage: 'inspect',
-    requiredness: 'conditional',
+    lifecycleStage: 'phase-check',
+    requiredness: 'primary',
     writeBoundary: 'read-only',
     readOnly: true,
     risk: 'low',
@@ -539,7 +541,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     examples: [example('Inspect lifecycle phase', 'hadara task lifecycle --task T-0001 --json', 'When an agent needs one read-only phase report before deciding the next lifecycle command.')],
     related: ['task.status', 'task.finish', 'task.ready', 'task.close', 'task.audit-close'],
     conflictsWith: [],
-    notes: 'This command does not replace the canonical finish/ready/close/audit-close proof commands.'
+    notes: 'Default 0.3.3 agent-facing phase report. Low-level finish/ready/close/audit-close proof commands remain available for debugging and recovery.'
   },
   {
     id: 'task.close-repair-plan',
@@ -570,11 +572,11 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     command: 'hadara task finish --task <task-id> [--execute] [--json]',
     summary: 'Preview or apply bounded Task Capsule status and close-source documentation updates.',
     canonical: true,
-    appearsInDefaultHelp: true,
+    appearsInDefaultHelp: false,
     family: 'capsule-lifecycle',
     scope: 'capsule',
     lifecycleStage: 'finish',
-    requiredness: 'primary',
+    requiredness: 'advanced',
     writeBoundary: 'task-status-bookkeeping',
     readOnly: false,
     risk: 'medium',
@@ -614,11 +616,11 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     command: 'hadara task ready --task <task-id> [--level done] [--json]',
     summary: 'Run read-only readiness checks before close evidence is appended.',
     canonical: true,
-    appearsInDefaultHelp: true,
+    appearsInDefaultHelp: false,
     family: 'capsule-lifecycle',
     scope: 'capsule',
     lifecycleStage: 'ready',
-    requiredness: 'primary',
+    requiredness: 'advanced',
     writeBoundary: 'read-only',
     readOnly: true,
     risk: 'low',
@@ -635,11 +637,11 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     command: 'hadara task close --task <task-id> [--execute] [--json]',
     summary: 'Preview or append close proof after readiness passes.',
     canonical: true,
-    appearsInDefaultHelp: true,
+    appearsInDefaultHelp: false,
     family: 'capsule-lifecycle',
     scope: 'capsule',
     lifecycleStage: 'close',
-    requiredness: 'primary',
+    requiredness: 'advanced',
     writeBoundary: 'close-evidence-append',
     readOnly: false,
     risk: 'medium',
@@ -661,11 +663,11 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     command: 'hadara task audit-close --task <task-id> [--json]',
     summary: 'Audit appended close proof and detect post-close drift.',
     canonical: true,
-    appearsInDefaultHelp: true,
+    appearsInDefaultHelp: false,
     family: 'capsule-lifecycle',
     scope: 'capsule',
     lifecycleStage: 'audit',
-    requiredness: 'primary',
+    requiredness: 'advanced',
     writeBoundary: 'read-only',
     readOnly: true,
     risk: 'low',

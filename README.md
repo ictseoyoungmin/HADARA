@@ -122,22 +122,21 @@ hadara help command task.close
 
 ## Primary Capsule Lifecycle
 
-The primary path is intentionally small:
+The 0.3.3 primary path is intentionally small. Agents should use `task finalize` as the default lifecycle close path:
 
 ```bash
 hadara task next --json
 hadara task create "implement a focused change" --json
 hadara task status --task T-XXXX --json
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
-hadara task finish --task T-XXXX --json
-hadara task finish --task T-XXXX --execute --json
 # Finalize Task Capsule docs and tracked state docs before closing.
-hadara task ready --task T-XXXX --level done --json
-hadara task close --task T-XXXX --json
-hadara task close --task T-XXXX --execute --json
-hadara task audit-close --task T-XXXX --json
+hadara task lifecycle --task T-XXXX --json
+hadara task finalize --task T-XXXX --json
+hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 hadara handoff suggest --task T-XXXX --json
 ```
+
+`task finalize --json` is the reviewed dry-run. It reports the current lifecycle step, write boundaries, expected write paths, and a current `planHash`. `task finalize --execute --plan-hash ...` rechecks that plan hash, executes phases serially, stops on blockers, and succeeds only after final close audit is `closed-valid`.
 
 When `evidence add-command` uses both legacy `--result` and v2 `--outcome`, matching outcomes must agree with the legacy result. `recorded` and `not-applicable` outcomes keep legacy result `unknown`; incompatible combinations fail before evidence is appended.
 
@@ -152,22 +151,26 @@ Legacy compatibility ids are inspection-only and are not the preferred durable r
 
 Deferred Evidence v2 scope is explicit: rebuild preview/execute, `check-id`, `subject`, and a new add-command report schema id are future candidates, not current command behavior. Treat `evidence.jsonl` as canonical append-only evidence and `EVIDENCE.md` as a non-canonical human summary.
 
-Optional workflow compression is read-only. Use it separately when you want a compact current-stage report and next recommended action:
+Use read-only lifecycle diagnostics when you want a compact current-stage report, next recommended action, or close-proof repair explanation:
 
 ```bash
 hadara task complete --task T-XXXX --json
 hadara task lifecycle --task T-XXXX --json
 hadara task close-repair-plan --task T-XXXX --json
-hadara task finalize --task T-XXXX --json
 ```
 
-When `task finalize --json` returns a reviewed current `planHash`, agents may use the optional guarded wrapper instead of manually running each remaining phase:
+Low-level proof-boundary commands remain available for debugging, recovery, and command implementation work:
 
 ```bash
-hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
+hadara task finish --task T-XXXX --json
+hadara task finish --task T-XXXX --execute --json
+hadara task ready --task T-XXXX --level done --json
+hadara task close --task T-XXXX --json
+hadara task close --task T-XXXX --execute --json
+hadara task audit-close --task T-XXXX --json
 ```
 
-This wrapper rechecks the plan hash, executes phases serially, stops on blockers, and succeeds only after final `audit-close` is `closed-valid`. The explicit finish/ready/close/audit commands remain canonical.
+Those commands are canonical proof boundaries under the wrapper, but they are no longer the default agent-facing cycle.
 
 Important boundaries:
 
@@ -175,14 +178,12 @@ Important boundaries:
 |---|---|
 | `task status` | Read-only operator console. `ok:true` means the report was generated, not that the task is ready. |
 | `task complete` | Optional read-only workflow compressor. It reports the current stage and next action. |
-| `task lifecycle` | Optional read-only normalized lifecycle phase report. |
-| `task close-repair-plan` | Optional read-only close-proof repair classifier. |
-| `task finalize` | Read-only by default; guarded execute requires a matching current `planHash` and preserves underlying write boundaries. |
-| `task finish --execute` | Writes only bounded status bookkeeping in `TASK.md` and `docs/TASK_BOARD.md`. |
-| `task close --execute` | Appends close evidence only. |
-| `task audit-close` | Read-only close proof audit. |
+| `task lifecycle` | Read-only normalized lifecycle phase report for agents. |
+| `task close-repair-plan` | Read-only close-proof repair classifier. |
+| `task finalize` | Default agent close path. Read-only by default; guarded execute requires a matching current `planHash` and preserves underlying write boundaries. |
+| `task finish` / `task ready` / `task close` / `task audit-close` | Low-level proof-boundary commands for debugging and recovery. |
 
-Before `task close --execute`, finish Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, Task Board updates, and tracked state docs. After close execute, changing close-source docs intentionally invalidates the previous close proof and requires rerunning ready/close/audit.
+Before executing `task finalize`, finish Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, Task Board updates, and tracked state docs. After final close proof, changing close-source docs intentionally invalidates the previous close proof and requires rerunning finalize or the low-level ready/close/audit sequence.
 
 The full command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`.
 
@@ -312,7 +313,7 @@ hadara init --profile standard
 hadara init --profile governed
 ```
 
-Every profile generates `docs/TASK_WORKFLOW_COMMANDS.md` so fresh projects get the current evidence, ready, finish, close, and audit-close loop.
+Every profile generates `docs/TASK_WORKFLOW_COMMANDS.md` so fresh projects get the current 0.3.3 finalize-first lifecycle loop plus low-level proof-boundary reference commands.
 
 | Profile | Use When |
 |---|---|

@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/hardening completed through T-0391, and the lifecycle convenience line plus dogfood hardening is complete through T-0399. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/hardening completed through T-0391, and the lifecycle convenience/default-agent-cycle line is complete through T-0400. |
 | Current Phase | 0.3.3 lifecycle/context-routing readiness review | Context-routing hardening and lifecycle ergonomics are complete through the current budget; next work should be operator-selected. |
-| Latest Completed Task | T-0399 Finalize Evidence Guidance and Lifecycle Speed Hardening | `task finalize` now avoids unnecessary later report work and gives direct weak-evidence repair guidance. |
-| Active / Next Task | 0.3.3 readiness review or operator-selected next capsule | The lifecycle convenience budget defined in T-0392 is complete through T-0399. |
-| Validation Baseline | T-0399 finalize guidance/speed hardening validation | Focused validation passed 3 files / 13 tests, full Docker sync-build retry passed 141 files / 929 tests with refreshed `dist`, built finalize smoke passed, final `git diff --check` passed, and the first full-run dashboard-static timeout was recorded and resolved by retry evidence. Evidence `ev:T-0399:c213cedb4cfe4d20a8858fd9`, `ev:T-0399:8aa7e7dc564e429393a1ea67`, `ev:T-0399:ac178da8a71f482a9d8e702a`, `ev:T-0399:cda485bcea7242448c0da511`. |
+| Latest Completed Task | T-0400 Default Lifecycle Finalize Documentation | 0.3.3 agents should use `task lifecycle` and reviewed `task finalize` as the default close path; low-level proof-boundary commands remain for debugging/recovery. |
+| Active / Next Task | 0.3.3 readiness review or operator-selected next capsule | The lifecycle convenience budget defined in T-0392 is complete through T-0400. |
+| Validation Baseline | T-0400 default lifecycle validation | `git diff --check` passed; Docker focused validation passed 6 files / 46 tests; full Docker sync-build passed 141 files / 929 tests with refreshed `dist` and `distLooksStale:false`; built CLI help/init smoke passed. Host focused vitest failed because local node_modules lacked vitest and was resolved by Docker/built CLI evidence. Evidence `ev:T-0400:d04cbca880124d57a3e5174d`, `ev:T-0400:8bfd40cfd47f4f4b88882d64`, `ev:T-0400:d792e4cabcdb49398eed875b`, `ev:T-0400:e1d131f54fc247d38022fe3a`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| None | T-0399 completed finalize evidence guidance and lifecycle speed hardening. | Review 0.3.3 readiness or select the next capsule. |
+| None | T-0400 made finalize-first the default 0.3.3 agent-facing lifecycle in docs, generated init templates, help, registry, and lifecycle projection. | Review 0.3.3 readiness or select the next capsule. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0400 Default Lifecycle Finalize Documentation | Made `task lifecycle` plus reviewed/guarded `task finalize` the default 0.3.3 agent-facing lifecycle across root docs, generated init docs, registry-backed help, and lifecycle projection. | `ev:T-0400:8bfd40cfd47f4f4b88882d64`, `ev:T-0400:d792e4cabcdb49398eed875b`, `ev:T-0400:e1d131f54fc247d38022fe3a` |
 | T-0399 Finalize Evidence Guidance and Lifecycle Speed Hardening | Added lazy evaluated/skipped report diagnostics to `task finalize`, avoided unnecessary ready/close/audit composition on unfinished tasks, and routed weak Done evidence blockers to a concrete passed-validation evidence command. | `ev:T-0399:c213cedb4cfe4d20a8858fd9`, `ev:T-0399:8aa7e7dc564e429393a1ea67`, `ev:T-0399:ac178da8a71f482a9d8e702a` |
 | T-0398 Lifecycle Scenario Docs and Init Alignment | Aligned README, SOP, command-surface docs, and generated init source with lifecycle/repair/finalize convenience guidance while preserving canonical proof boundaries. | `ev:T-0398:7226b21db0564b008a4a8dc3`, `ev:T-0398:1d161be5bec2445292c76cb5`, `ev:T-0398:d69e62e8e4254bebbfd5d89b` |
-| T-0397 Task Finalize Execute Guard | Added guarded `task finalize --execute --plan-hash` orchestration with missing/stale hash refusal, serial execution, stop-on-blocker behavior, execution metadata, and final audit proof. | `ev:T-0397:59085932aced47be89c4532d`, `ev:T-0397:fd38f35a791e4b179285cc9d`, `ev:T-0397:454daf3e664843cba5db3b1a` |
 
 ## Current Known Problems
 

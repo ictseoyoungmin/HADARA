@@ -8,17 +8,15 @@ import {
   listCommandRegistryEntries
 } from './capability-registry';
 
-export const PRIMARY_LIFECYCLE_ORDER: LifecycleStage[] = ['discover', 'create', 'inspect', 'evidence', 'finish', 'ready', 'close', 'audit', 'handoff'];
+export const PRIMARY_LIFECYCLE_ORDER: LifecycleStage[] = ['discover', 'create', 'inspect', 'evidence', 'phase-check', 'finalize', 'handoff'];
 
 const PRIMARY_WHEN: Record<string, string> = {
   'task.next': 'At session start or after completing a task.',
   'task.create': 'When no suitable Task Capsule exists.',
   'task.status': 'Before editing, validating, or closing a capsule.',
   'evidence.add-command': 'After running project validation or recording relevant work proof.',
-  'task.finish': 'After implementation and evidence are ready, before readiness checks.',
-  'task.ready': 'Before executing task close.',
-  'task.close': 'After task ready passes and the close plan is reviewed.',
-  'task.audit-close': 'Immediately after close evidence is appended.',
+  'task.lifecycle': 'When the agent needs a compact phase report and next action.',
+  'task.finalize': 'After implementation, evidence, capsule docs, and tracked state docs are ready.',
   'handoff.update': 'Before stopping after meaningful task progress or completion.'
 };
 
@@ -28,7 +26,7 @@ const DIAGNOSTIC_USE_WHEN: Record<string, string> = {
   'proof.explain': 'Proof status is stale, weak, or confusing.',
   'ci.gate': 'You need an aggregated advisory or strict project/task gate.',
   'protocol.doctor': 'Protocol docs, task board rows, or profile state may be inconsistent.',
-  'harness.validate': 'task ready reports format or done-level blockers.'
+  'harness.validate': 'task finalize or low-level task ready reports format or done-level blockers.'
 };
 
 const ADVANCED_FAMILY_USE_WHEN: Array<{ family: CommandFamily; useWhen: string }> = [
@@ -101,27 +99,27 @@ export interface PortfolioAuditReport {
 
 export const PORTFOLIO_AUDIT_DECISIONS: PortfolioAuditDecision[] = [
   {
-    decision: 'Task inspection is separate from readiness.',
-    commands: ['task.status', 'task.ready', 'harness.validate'],
-    rule: '`task status` report generation success is not readiness; readiness lives in readiness/proof fields and `task ready`.',
-    evidence: 'Phase 7.2 non-overlap rules.'
+    decision: 'Task inspection is separate from lifecycle phase and readiness.',
+    commands: ['task.status', 'task.lifecycle', 'task.finalize', 'task.ready', 'harness.validate'],
+    rule: '`task status` report generation success is not readiness; 0.3.3 agents use `task lifecycle` for phase and `task finalize` for guarded close execution, while low-level readiness remains in `task ready`.',
+    evidence: '0.3.3 finalize-first lifecycle default.'
   },
   {
-    decision: 'Completion guidance is read-only, finish is bookkeeping.',
-    commands: ['task.complete', 'task.finish'],
-    rule: '`task complete` is a read-only workflow compressor; `task finish` may update only bounded task status bookkeeping.',
-    evidence: 'Phase 7.2 confusable command audit.'
+    decision: 'Finalize is the default agent close path; finish is low-level bookkeeping.',
+    commands: ['task.finalize', 'task.complete', 'task.finish'],
+    rule: '`task finalize` is the default reviewed close path. `task complete` is a legacy read-only workflow compressor; low-level `task finish` may update only bounded task status bookkeeping.',
+    evidence: '0.3.3 lifecycle convenience contract.'
   },
   {
-    decision: 'Close appends proof, audit verifies proof.',
-    commands: ['task.close', 'task.audit-close'],
-    rule: '`task close --execute` appends close evidence only; `task audit-close` is read-only post-close verification.',
-    evidence: 'Phase 7.2 non-overlap rules.'
+    decision: 'Close appends proof, audit verifies proof, finalize composes both.',
+    commands: ['task.finalize', 'task.close', 'task.audit-close'],
+    rule: '`task finalize --execute --plan-hash <hash>` preserves the underlying boundaries: low-level `task close --execute` appends close evidence only and `task audit-close` is read-only post-close verification.',
+    evidence: '0.3.3 finalize-first lifecycle default.'
   },
   {
     decision: 'Proof and CI gates diagnose, they do not replace close.',
-    commands: ['proof.status', 'proof.explain', 'ci.gate', 'task.close'],
-    rule: 'Proof and CI reports explain readiness; they do not append close proof or substitute for audit.',
+    commands: ['proof.status', 'proof.explain', 'ci.gate', 'task.finalize', 'task.close'],
+    rule: 'Proof and CI reports explain readiness; they do not append close proof or substitute for finalize/audit.',
     evidence: 'Phase 7.2 non-overlap rules.'
   },
   {
@@ -132,7 +130,7 @@ export const PORTFOLIO_AUDIT_DECISIONS: PortfolioAuditDecision[] = [
   },
   {
     decision: 'Release and dev validation are not ordinary capsule lifecycle steps.',
-    commands: ['release.gate', 'task.ready', 'dev.docker-check'],
+    commands: ['release.gate', 'task.finalize', 'task.ready', 'dev.docker-check'],
     rule: 'Release/dev commands are operator or HADARA-dev validation surfaces and stay hidden from primary lifecycle help.',
     evidence: 'Phase 7.2 advanced family boundary.'
   }
@@ -245,14 +243,10 @@ function primaryCommandForEntry(entry: CommandRegistryEntry): string {
       return 'hadara task status --task T-XXXX --json';
     case 'evidence.add-command':
       return 'hadara evidence add-command --task T-XXXX --summary "..." --result passed --json';
-    case 'task.finish':
-      return 'hadara task finish --task T-XXXX --json';
-    case 'task.ready':
-      return 'hadara task ready --task T-XXXX --level done --json';
-    case 'task.close':
-      return 'hadara task close --task T-XXXX --json';
-    case 'task.audit-close':
-      return 'hadara task audit-close --task T-XXXX --json';
+    case 'task.lifecycle':
+      return 'hadara task lifecycle --task T-XXXX --json';
+    case 'task.finalize':
+      return 'hadara task finalize --task T-XXXX --json';
     case 'handoff.update':
       return 'hadara handoff update --task T-XXXX --json';
     default:

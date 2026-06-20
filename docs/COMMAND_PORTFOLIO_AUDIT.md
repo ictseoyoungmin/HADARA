@@ -12,22 +12,22 @@ This audit records why overlapping HADARA commands exist and which ones belong i
 | create | `task.create` | Create a Task Capsule when needed. | `task-capsule-create` | Implementation work must live in a capsule. |
 | inspect | `task.status` | Read current capsule state. | `read-only` | It is the canonical task inspection surface. |
 | evidence | `evidence.add-command` | Append command-log validation evidence. | `evidence-append` | Command evidence is the current primary proof path. |
-| finish | `task.finish` | Preview/apply bounded status bookkeeping. | `task-status-bookkeeping` | It syncs close-source task status before readiness. |
-| ready | `task.ready` | Run done-level readiness checks. | `read-only` | It is the primary readiness gate. |
-| close | `task.close` | Preview/append close proof. | `close-evidence-append` | It records the readiness proof after review. |
-| audit | `task.audit-close` | Verify appended close proof. | `read-only` | It proves the close record still matches the source hash. |
+| phase-check | `task.lifecycle` | Read normalized phase and next action. | `read-only` | Agents need one compact phase report before close work. |
+| finalize | `task.finalize` | Review or execute the guarded close path. | `task-status-bookkeeping` | It composes finish, readiness, close, and audit while preserving their write boundaries. |
 | handoff | `handoff.update` | Update next-session handoff state. | `shared-doc-write` | Work should not stop without current handoff state. |
+
+Low-level `task.finish`, `task.ready`, `task.close`, and `task.audit-close` remain canonical proof-boundary commands for debugging, recovery, and command implementation work, but they are hidden from the 0.3.3 primary agent lifecycle.
 
 ## Diagnostic Commands
 
 | Command ID | Looks Similar To | Diagnostic Role | Not Primary Because |
 |---|---|---|---|
-| `harness.validate` | `task.ready` | Direct done-level capsule validation. | It explains/isolates blockers; `task ready` is the primary gate. |
-| `evidence.lint` | `task.ready` | Evidence syntax and semantic proof diagnostics. | It checks one subsystem, not full readiness. |
-| `proof.status` | `task.ready`, `task.close` | Compact task proof/readiness read model. | It does not append close proof or run the close loop. |
+| `harness.validate` | `task.finalize`, `task.ready` | Direct done-level capsule validation. | It explains/isolates blockers; `task finalize` is the default close path. |
+| `evidence.lint` | `task.finalize`, `task.ready` | Evidence syntax and semantic proof diagnostics. | It checks one subsystem, not full readiness. |
+| `proof.status` | `task.finalize`, `task.ready`, `task.close` | Compact task proof/readiness read model. | It does not append close proof or run the close loop. |
 | `proof.explain` | `proof.status` | Detailed proof blocker explanation. | It is explanatory and does not change lifecycle state. |
-| `ci.gate` | `task.ready`, `release.gate` | Aggregated advisory/strict task/project gate. | It is a diagnostic gate, not a capsule close command. |
-| `protocol.doctor` | `doctor`, `task.ready` | Protocol consistency diagnostics. | It reports drift and does not substitute for readiness/close. |
+| `ci.gate` | `task.finalize`, `task.ready`, `release.gate` | Aggregated advisory/strict task/project gate. | It is a diagnostic gate, not a capsule close command. |
+| `protocol.doctor` | `doctor`, `task.finalize`, `task.ready` | Protocol consistency diagnostics. | It reports drift and does not substitute for readiness/close. |
 
 ## Project/Release/Dev/UI/Integration Commands
 
@@ -46,12 +46,12 @@ This audit records why overlapping HADARA commands exist and which ones belong i
 
 | Decision | Commands | Rule | Evidence |
 |---|---|---|---|
-| Task inspection is separate from readiness. | `task.status`, `task.ready`, `harness.validate` | `task status` report generation success is not readiness; readiness lives in readiness/proof fields and `task ready`. | Phase 7.2 non-overlap rules. |
-| Completion guidance is read-only, finish is bookkeeping. | `task.complete`, `task.finish` | `task complete` is a read-only workflow compressor; `task finish` may update only bounded task status bookkeeping. | Phase 7.2 confusable command audit. |
-| Close appends proof, audit verifies proof. | `task.close`, `task.audit-close` | `task close --execute` appends close evidence only; `task audit-close` is read-only post-close verification. | Phase 7.2 non-overlap rules. |
-| Proof and CI gates diagnose, they do not replace close. | `proof.status`, `proof.explain`, `ci.gate`, `task.close` | Proof and CI reports explain readiness; they do not append close proof or substitute for audit. | Phase 7.2 non-overlap rules. |
+| Task inspection is separate from lifecycle phase and readiness. | `task.status`, `task.lifecycle`, `task.finalize`, `task.ready`, `harness.validate` | `task status` report generation success is not readiness; 0.3.3 agents use `task lifecycle` for phase and `task finalize` for guarded close execution, while low-level readiness remains in `task ready`. | 0.3.3 finalize-first lifecycle default. |
+| Finalize is the default agent close path; finish is low-level bookkeeping. | `task.finalize`, `task.complete`, `task.finish` | `task finalize` is the default reviewed close path. `task complete` is a legacy read-only workflow compressor; low-level `task finish` may update only bounded task status bookkeeping. | 0.3.3 lifecycle convenience contract. |
+| Close appends proof, audit verifies proof, finalize composes both. | `task.finalize`, `task.close`, `task.audit-close` | `task finalize --execute --plan-hash <hash>` preserves the underlying boundaries: low-level `task close --execute` appends close evidence only and `task audit-close` is read-only post-close verification. | 0.3.3 finalize-first lifecycle default. |
+| Proof and CI gates diagnose, they do not replace close. | `proof.status`, `proof.explain`, `ci.gate`, `task.finalize`, `task.close` | Proof and CI reports explain readiness; they do not append close proof or substitute for finalize/audit. | Phase 7.2 non-overlap rules. |
 | Handoff suggestion is read-only, handoff update writes shared docs. | `handoff.suggest`, `handoff.update` | `handoff suggest` is a coordinator suggestion surface; `handoff update` writes bounded handoff text. | Phase 7.2 confusable command audit. |
-| Release and dev validation are not ordinary capsule lifecycle steps. | `release.gate`, `task.ready`, `dev.docker-check` | Release/dev commands are operator or HADARA-dev validation surfaces and stay hidden from primary lifecycle help. | Phase 7.2 advanced family boundary. |
+| Release and dev validation are not ordinary capsule lifecycle steps. | `release.gate`, `task.finalize`, `task.ready`, `dev.docker-check` | Release/dev commands are operator or HADARA-dev validation surfaces and stay hidden from primary lifecycle help. | Phase 7.2 advanced family boundary. |
 
 ## Deprecation Candidates
 

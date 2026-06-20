@@ -67,28 +67,23 @@ Use these surfaces for command discovery:
 
 ## Primary Lifecycle
 
-The ordinary worker loop is:
+The 0.3.3 primary agent loop is:
 
 ```bash
 hadara task next --json
 hadara task status --task T-XXXX --json
+hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
 hadara task lifecycle --task T-XXXX --json
-hadara task close-repair-plan --task T-XXXX --json
 hadara task finalize --task T-XXXX --json
 hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
-hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
-hadara task finish --task T-XXXX --json
-hadara task finish --task T-XXXX --execute --json
-hadara task ready --task T-XXXX --level done --json
-hadara task close --task T-XXXX --json
-hadara task close --task T-XXXX --execute --json
-hadara task audit-close --task T-XXXX --json
 hadara handoff update --task T-XXXX --json
 ```
 
+`task finish`, `task ready`, `task close`, and `task audit-close` remain low-level proof-boundary commands for debugging, recovery, and command implementation work. `task close-repair-plan` remains the read-only repair classifier when close proof is stale, invalid, or missing.
+
 `task next` is read-only. It prefers actionable handoff work, then planned development slices, then Task Board fallback rows. It ignores handoff meta-guidance that merely tells the operator to run or select with `task next`, so consumers do not receive a self-referential `createCommand`. During Task Board fallback it prefers primary open rows before legacy `Partial` rows, leaving `Partial` visible as backlog when stronger open work exists.
 
-Diagnostics such as `harness.validate`, `proof.status`, `proof.explain`, `evidence.lint`, `protocol.doctor`, and `state.verify` explain blockers or drift. They do not replace the primary close loop.
+Diagnostics such as `harness.validate`, `proof.status`, `proof.explain`, `evidence.lint`, `protocol.doctor`, and `state.verify` explain blockers or drift. They do not replace the primary finalize loop.
 
 ## State Consistency
 

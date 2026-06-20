@@ -18,10 +18,8 @@ describe('Phase 7.2 lifecycle guide', () => {
       'task.create',
       'task.status',
       'evidence.add-command',
-      'task.finish',
-      'task.ready',
-      'task.close',
-      'task.audit-close',
+      'task.lifecycle',
+      'task.finalize',
       'handoff.update'
     ]);
   });
@@ -52,8 +50,12 @@ describe('Phase 7.2 lifecycle guide', () => {
 
     expect(output).toContain('Primary capsule lifecycle:');
     expect(output).toContain('1 discover');
-    expect(output).toContain('4 evidence  hadara evidence add-command');
-    expect(output).toContain('9 handoff   hadara handoff update');
+    expect(output).toMatch(/4 evidence\s+hadara evidence add-command/);
+    expect(output).toMatch(/5 phase-check\s+hadara task lifecycle/);
+    expect(output).toMatch(/6 finalize\s+hadara task finalize/);
+    expect(output).toMatch(/7 handoff\s+hadara handoff update/);
+    expect(output).not.toContain('task finish --task T-XXXX --execute --json');
+    expect(output).not.toContain('task close --task T-XXXX --execute --json');
     expect(output).toContain('Diagnostics when blocked:');
     expect(output).toContain('harness.validate');
     expect(output).not.toContain('task.show');

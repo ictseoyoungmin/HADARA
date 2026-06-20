@@ -10,11 +10,10 @@ This guide is the short operational path for ordinary HADARA Task Capsule work. 
 | 2 | create | `task.create` | `hadara task create "..." --json` | `task-capsule-create` | When no suitable Task Capsule exists. |
 | 3 | inspect | `task.status` | `hadara task status --task T-XXXX --json` | `read-only` | Before editing, validating, or closing a capsule. |
 | 4 | evidence | `evidence.add-command` | `hadara evidence add-command --task T-XXXX --summary "..." --result passed --json` | `evidence-append` | After meaningful validation or work proof. |
-| 5 | finish | `task.finish` | `hadara task finish --task T-XXXX --json`, then `--execute` after review | `task-status-bookkeeping` | After implementation and evidence are ready. |
-| 6 | ready | `task.ready` | `hadara task ready --task T-XXXX --level done --json` | `read-only` | Before executing task close. |
-| 7 | close | `task.close` | `hadara task close --task T-XXXX --json`, then `--execute` after review | `close-evidence-append` | After readiness passes. |
-| 8 | audit | `task.audit-close` | `hadara task audit-close --task T-XXXX --json` | `read-only` | Immediately after close evidence is appended. |
-| 9 | handoff | `handoff.update` | `hadara handoff update --task T-XXXX --json` | `shared-doc-write` | Before stopping after meaningful progress or completion. |
+| 5 | phase-check | `task.lifecycle` | `hadara task lifecycle --task T-XXXX --json` | `read-only` | When the agent needs a compact phase and next action. |
+| 6 | finalize-review | `task.finalize` | `hadara task finalize --task T-XXXX --json` | `read-only` | After implementation, evidence, capsule docs, and tracked state docs are ready. |
+| 7 | finalize-execute | `task.finalize` | `hadara task finalize --task T-XXXX --execute --plan-hash <hash> --json` | `task-status-bookkeeping` + `close-evidence-append` | After reviewing the current plan hash and write boundaries. |
+| 8 | handoff | `handoff.update` | `hadara handoff update --task T-XXXX --json` | `shared-doc-write` | Before stopping after meaningful progress or completion. |
 
 ## Diagnostics
 
@@ -28,7 +27,18 @@ Diagnostics explain blockers. They do not replace the primary lifecycle.
 | `ci.gate` | You need an aggregated advisory or strict project/task gate. |
 | `protocol.doctor` | Protocol docs, task board rows, or profile state may be inconsistent. |
 | `state.verify` | Shared task/state projection looks inconsistent or needs concise drift evidence. |
-| `harness.validate` | `task ready` reports format or done-level blockers. |
+| `harness.validate` | `task finalize` or low-level `task ready` reports format or done-level blockers. |
+
+## Low-Level Proof Boundaries
+
+`task finalize` is the default 0.3.3 agent-facing close path. The underlying proof-boundary commands remain available for debugging, recovery, and command implementation work:
+
+| Command ID | Boundary |
+|---|---|
+| `task.finish` | Bounded `TASK.md` and `docs/TASK_BOARD.md` status bookkeeping. |
+| `task.ready` | Done-level readiness check with no writes. |
+| `task.close` | Close evidence dry-run/append only. |
+| `task.audit-close` | Read-only close evidence audit. |
 
 ## Advanced Families
 
@@ -46,7 +56,7 @@ Release/package, dev validation, UI, integration, installer, and deterministic a
 
 ## Rules
 
-`task status` success is not readiness. Use `task ready` for readiness and `task audit-close` after close.
+`task status` success is not readiness. Use `task lifecycle` or `task finalize` for agent-facing lifecycle state.
 
 `task complete` is a read-only workflow compressor. It must not execute lifecycle steps.
 

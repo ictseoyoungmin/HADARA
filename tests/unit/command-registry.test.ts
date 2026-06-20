@@ -25,6 +25,9 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'task.next',
   'task.status',
   'task.complete',
+  'task.finalize',
+  'task.lifecycle',
+  'task.close-repair-plan',
   'task.finish',
   'task.upgrade-scaffold',
   'task.ready',
@@ -127,6 +130,10 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('dev.docker-check')).toMatchObject({ requiredness: 'dev-only', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('release.publish')).toMatchObject({ requiredness: 'release-only', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('dashboard.serve')).toMatchObject({ family: 'ui', appearsInDefaultHelp: false });
+    expect(findCommandRegistryEntry('task.lifecycle')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
+    expect(findCommandRegistryEntry('task.finalize')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
+    expect(findCommandRegistryEntry('task.finish')).toMatchObject({ requiredness: 'advanced', appearsInDefaultHelp: false });
+    expect(findCommandRegistryEntry('task.close')).toMatchObject({ requiredness: 'advanced', appearsInDefaultHelp: false });
   });
 
   it('exposes explicit code index implementation and test file hints where available', () => {
