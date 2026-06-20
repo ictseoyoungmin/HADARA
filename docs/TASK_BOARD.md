@@ -395,3 +395,4 @@
 | T-0392 | Lifecycle Workflow Agent Convenience Spec and Budget | Done | tasks/T-0392-lifecycle-workflow-agent-convenience-spec-and-budget | |
 | T-0393 | Task Lifecycle Read Model | Done | tasks/T-0393-task-lifecycle-read-model | |
 | T-0394 | Close Repair Plan Read Model | Done | tasks/T-0394-close-repair-plan-read-model | |
+| T-0395 | Lifecycle Guidance Dedup Hardening | Done | tasks/T-0395-lifecycle-guidance-dedup-hardening | |

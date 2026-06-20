@@ -81,18 +81,16 @@ describe('task close report', () => {
         excludedFromCurrentValidationLoop: true
       }
     });
-    expect(report.nextActions).toContainEqual(
-      expect.objectContaining({
-        id: 'append-close-evidence',
-        loopBoundary: true,
-        command: `hadara task close --task ${task.id} --execute --json`,
-        writeBoundary: 'evidence-append',
-        recommendedActorRole: 'worker',
-        requiresBeforeHash: false,
-        stalePlanRisk: 'low'
-      })
-    );
-    expect(report.primaryNextAction).toMatchObject({ id: 'run-done-validation', writeBoundary: 'read-only', recommendedActorRole: 'worker' });
+    expect(report.nextActions.map((action) => action.id)).toEqual(['append-close-evidence']);
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'append-close-evidence',
+      loopBoundary: true,
+      command: `hadara task close --task ${task.id} --execute --json`,
+      writeBoundary: 'evidence-append',
+      recommendedActorRole: 'worker',
+      requiresBeforeHash: false,
+      stalePlanRisk: 'low'
+    });
   });
 
   it('reports blockers for tasks that are not done-ready', () => {

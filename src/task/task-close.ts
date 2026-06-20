@@ -277,7 +277,37 @@ function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode, clo
     ];
   }
 
-  const actions: TaskCloseNextAction[] = [
+  if (ok) {
+    if (closeEvidenceWrite?.duplicateAction === 'no-op') {
+      return [
+        createTaskLifecycleNextAction({
+          id: 'audit-close',
+          required: false,
+          command: `hadara task audit-close --task ${taskId} --json`,
+          message: 'Matching close evidence already exists; audit the existing close record.',
+          writeBoundary: 'read-only',
+          recommendedActorRole: 'reviewer',
+          requiresBeforeHash: false,
+          stalePlanRisk: 'none'
+        })
+      ];
+    }
+    return [
+      createTaskLifecycleNextAction({
+        id: 'append-close-evidence',
+        required: true,
+        command: `hadara task close --task ${taskId} --execute --json`,
+        message: 'Append close audit evidence after reviewing this dry-run plan.',
+        writeBoundary: 'evidence-append',
+        recommendedActorRole: 'worker',
+        requiresBeforeHash: false,
+        stalePlanRisk: 'low',
+        loopBoundary: true
+      })
+    ];
+  }
+
+  return [
     createTaskLifecycleNextAction({
       id: 'run-done-validation',
       required: true,
@@ -297,35 +327,8 @@ function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode, clo
       recommendedActorRole: 'worker',
       requiresBeforeHash: false,
       stalePlanRisk: 'none'
-    })
-  ];
-  if (ok) {
-    if (closeEvidenceWrite?.duplicateAction === 'no-op') {
-      actions.push(createTaskLifecycleNextAction({
-        id: 'audit-close',
-        required: false,
-        command: `hadara task audit-close --task ${taskId} --json`,
-        message: 'Matching close evidence already exists; audit the existing close record.',
-        writeBoundary: 'read-only',
-        recommendedActorRole: 'reviewer',
-        requiresBeforeHash: false,
-        stalePlanRisk: 'none'
-      }));
-    } else {
-      actions.push(createTaskLifecycleNextAction({
-        id: 'append-close-evidence',
-        required: true,
-        command: `hadara task close --task ${taskId} --execute --json`,
-        message: 'Append close audit evidence after reviewing this dry-run plan.',
-        writeBoundary: 'evidence-append',
-        recommendedActorRole: 'worker',
-        requiresBeforeHash: false,
-        stalePlanRisk: 'low',
-        loopBoundary: true
-      }));
-    }
-  } else {
-    actions.push(createTaskLifecycleNextAction({
+    }),
+    createTaskLifecycleNextAction({
       id: 'resolve-close-blockers',
       required: true,
       message: 'Resolve blocking issues before appending close evidence.',
@@ -334,9 +337,8 @@ function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode, clo
       requiresBeforeHash: false,
       stalePlanRisk: 'none',
       kind: 'review'
-    }));
-  }
-  return actions;
+    })
+  ];
 }
 
 function buildMissingTaskReport(projectRoot: string, taskId: string, mode: TaskCloseMode, issues: TaskCloseIssue[], actor: HadaraActorContext = defaultTaskLifecycleActor()): TaskCloseReport {

@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/hardening completed through T-0391, and the lifecycle convenience line is complete through T-0394. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/hardening completed through T-0391, and the lifecycle convenience line is complete through T-0395. |
 | Current Phase | 0.3.3 lifecycle convenience line in progress | Context-routing hardening remains complete; lifecycle ergonomics now continue with additive read-only/guarded convenience surfaces. |
-| Latest Completed Task | T-0394 Close Repair Plan Read Model | Added read-only `hadara task close-repair-plan --task T --json` over `hadara.task.closeRepairPlan.v1`. |
-| Active / Next Task | T-0395 Lifecycle Guidance Dedup Hardening | Next budgeted lifecycle capsule; create it before implementation. |
-| Validation Baseline | T-0394 close repair plan validation | Focused validation passed 5 files / 28 tests, full Docker sync-build passed 140 files / 921 tests with refreshed `dist`, built CLI smoke passed, and `git diff --check` passed. Evidence `ev:T-0394:f0875b6093844de1ac01053e`, `ev:T-0394:8c47406cc61a4314bde168b0`, `ev:T-0394:a32fcb73ccde4179a56cc267`, `ev:T-0394:e22abfd41b9048a492203406`. |
+| Latest Completed Task | T-0395 Lifecycle Guidance Dedup Hardening | Successful close dry-runs now point directly to close execute after embedded validation passes. |
+| Active / Next Task | T-0396 Task Finalize Dry-Run Plan | Next budgeted lifecycle capsule; create it before implementation. |
+| Validation Baseline | T-0395 lifecycle guidance dedup validation | Focused validation passed 4 files / 24 tests, full Docker sync-build passed 140 files / 921 tests with refreshed `dist`, built CLI smoke passed, and `git diff --check` passed. Evidence `ev:T-0395:0bfa119bfc5e43a489d31794`, `ev:T-0395:6c210dc953974c32acf008b7`, `ev:T-0395:a2c33196f7704223ae5e0044`, `ev:T-0395:7626ac62b2db4570ac2a87c8`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| None | T-0394 completed the read-only close repair plan API. | Next implementation capsule is T-0395 Lifecycle Guidance Dedup Hardening. |
+| None | T-0395 completed successful close dry-run guidance dedup. | Next implementation capsule is T-0396 Task Finalize Dry-Run Plan. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0395 Lifecycle Guidance Dedup Hardening | Successful close dry-runs now return one primary `append-close-evidence` action after embedded validation passes, while failed close plans retain validation/lint/blocker guidance. | `ev:T-0395:0bfa119bfc5e43a489d31794`, `ev:T-0395:6c210dc953974c32acf008b7`, `ev:T-0395:a2c33196f7704223ae5e0044` |
 | T-0394 Close Repair Plan Read Model | Added `hadara.task.closeRepairPlan.v1`, CLI/registry/docs wiring, and read-only not-closed/stale/invalid/duplicate/valid close repair classification. | `ev:T-0394:f0875b6093844de1ac01053e`, `ev:T-0394:8c47406cc61a4314bde168b0`, `ev:T-0394:a32fcb73ccde4179a56cc267` |
 | T-0393 Task Lifecycle Read Model | Added `hadara.task.lifecycle.v1`, CLI/registry/docs wiring, and read-only normalized phase/check/next-action reporting. | `ev:T-0393:bc944ecc2c894e869dd7e557`, `ev:T-0393:5ec89716142c4e19b7e3abe0`, `ev:T-0393:03d977cfde444c83862cfd3c` |
-| T-0392 Lifecycle Workflow Agent Convenience Spec and Budget | Added the registered lifecycle convenience spec, improved agent scenario, and capsule budget. | `ev:T-0392:46f350146736461ea9712b18` |
 
 ## Current Known Problems
 
@@ -92,12 +92,13 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create/start T-0395 Lifecycle Guidance Dedup Hardening. | T-0394 added the dedicated close repair plan; the next budgeted capsule should reduce redundant ready/close next-action guidance when the close dry-run already embeds current validation. | `docs/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md` |
+| Create/start T-0396 Task Finalize Dry-Run Plan. | T-0395 reduced redundant close guidance; the next lifecycle budget item is the read-only high-level finalize plan with step list and plan hash. | `docs/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0395 lifecycle guidance dedup | Focused validation passed 4 files / 24 tests; full Docker sync-build passed 140 files / 921 tests and refreshed `dist`; built close dry-run smoke passed; `git diff --check` passed. | Evidence `ev:T-0395:0bfa119bfc5e43a489d31794`, `ev:T-0395:6c210dc953974c32acf008b7`, `ev:T-0395:a2c33196f7704223ae5e0044`, `ev:T-0395:7626ac62b2db4570ac2a87c8`; smoke confirmed `nextActions: 1` and primary `append-close-evidence`. |
 | T-0394 close repair plan read model | Focused validation passed 5 files / 28 tests; full Docker sync-build passed 140 files / 921 tests and refreshed `dist`; built `task close-repair-plan` smoke passed; `git diff --check` passed. | Evidence `ev:T-0394:f0875b6093844de1ac01053e`, `ev:T-0394:8c47406cc61a4314bde168b0`, `ev:T-0394:a32fcb73ccde4179a56cc267`, `ev:T-0394:e22abfd41b9048a492203406`; mounted built smoke took about 22s because the report composes existing close/audit checks. |
 | T-0393 task lifecycle read model | Focused lifecycle validation passed 4 files / 20 tests; full Docker sync-build passed 139 files / 915 tests and refreshed `dist`; built `task lifecycle` smoke passed. | Evidence `ev:T-0393:bc944ecc2c894e869dd7e557`, `ev:T-0393:5ec89716142c4e19b7e3abe0`, `ev:T-0393:03d977cfde444c83862cfd3c`; mounted built smoke took about 24s because the report composes existing lifecycle checks. |
 | T-0392 lifecycle convenience spec | Focused docs registry validation passed 2 files / 6 tests and `git diff --check` passed. | Evidence `ev:T-0392:46f350146736461ea9712b18`; no runtime behavior changed. |
