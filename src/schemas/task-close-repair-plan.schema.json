@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.task.closeRepairPlan.v1",
+  "x-hadara-schema-id": "hadara.task.closeRepairPlan.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "readOnly", "taskId", "generatedAt", "actor", "classification", "repairNeeded", "summary", "evidence", "causes", "nextActions", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.task.closeRepairPlan.v1" },
+    "command": { "const": "task.close-repair-plan" },
+    "ok": { "type": "boolean" },
+    "readOnly": { "const": true },
+    "taskId": { "type": "string" },
+    "generatedAt": { "type": "string" },
+    "actor": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["agentId", "runId", "role", "parentRunId"],
+      "properties": {
+        "agentId": { "type": "string" },
+        "runId": { "type": "string" },
+        "role": { "enum": ["operator", "coordinator", "worker", "reviewer", "unknown"] },
+        "parentRunId": { "type": ["string", "null"] }
+      }
+    },
+    "classification": { "enum": ["not-closed", "closed-stale", "closed-invalid", "duplicate-close-proof", "closed-valid", "unknown"] },
+    "repairNeeded": { "type": "boolean" },
+    "summary": { "type": "string" },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["closeEvidenceFound", "closeEvidenceValid", "closeEvidenceRecords", "currentValidationReportHash", "currentSourceHash"],
+      "properties": {
+        "closeEvidenceFound": { "type": "boolean" },
+        "closeEvidenceValid": { "type": "boolean" },
+        "closeEvidenceRecords": { "type": "number" },
+        "latestCloseEvidenceId": { "type": "string" },
+        "duplicateCloseEvidenceCount": { "type": "number" },
+        "supersededCloseEvidenceIds": { "type": "array", "items": { "type": "string" } },
+        "recordedValidationReportHash": { "type": "string" },
+        "currentValidationReportHash": { "type": "string" },
+        "reportHashMatches": { "type": "boolean" },
+        "recordedSourceHash": { "type": "string" },
+        "currentSourceHash": { "type": "string" },
+        "sourceHashMatches": { "type": "boolean" }
+      }
+    },
+    "causes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["code", "severity", "summary", "sourceReport"],
+        "properties": {
+          "code": { "type": "string" },
+          "severity": { "enum": ["error", "warning", "info"] },
+          "summary": { "type": "string" },
+          "sourceReport": { "enum": ["hadara.task.audit_close.v1", "hadara.task.close.v1"] },
+          "path": { "type": "string" }
+        }
+      }
+    },
+    "primaryNextAction": { "type": "object", "additionalProperties": true },
+    "nextActions": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+  }
+}

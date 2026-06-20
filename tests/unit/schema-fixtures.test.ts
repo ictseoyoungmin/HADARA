@@ -81,6 +81,7 @@ describe('schema fixtures', () => {
       'hadara.stateProjection.v1',
       'hadara.task.audit_close.v1',
       'hadara.task.close.v1',
+      'hadara.task.closeRepairPlan.v1',
       'hadara.task.complete_flow.v1',
       'hadara.task.create.v1',
       'hadara.task.finish.v1',

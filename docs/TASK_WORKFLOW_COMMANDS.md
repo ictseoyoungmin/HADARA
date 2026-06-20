@@ -46,6 +46,7 @@ hadara task ready --task T-XXXX --level done --json
 # Optional workflow compression / next action preview:
 hadara task complete --task T-XXXX --json
 hadara task lifecycle --task T-XXXX --json
+hadara task close-repair-plan --task T-XXXX --json
 
 hadara task close --task T-XXXX --json
 hadara task close --task T-XXXX --execute --json
@@ -172,6 +173,7 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 | `hadara task status --task T-XXXX --json` | Operator console projection for one task. | Read-only report. | No. | Report was generated for an existing task, not that the task is ready. | Task-style failures use 6. |
 | `hadara task complete --task T-XXXX --json` | Summarize the completion workflow stage and primary next command. | Read-only report. | No. | The task is fully closed and audited. | Task-style failures use 6. |
 | `hadara task lifecycle --task T-XXXX --json` | Report normalized lifecycle phase, checks, satisfied state, blockers, and one next action. | Read-only report. | No. | Report was generated for an existing task. | Task-style failures use 6. |
+| `hadara task close-repair-plan --task T-XXXX --json` | Classify close proof repair state and return exact repair next actions. | Read-only report. | No. | Report was generated for an existing task. | Task-style failures use 6. |
 | `hadara handoff suggest --task T-XXXX --json` | Suggest coordinator-reviewed handoff section fragments for a task. | Read-only report. | No. | Suggestion report generated without blocking issues. | Task-style failures use 6. |
 | `hadara dev docker-check --focused tests/unit/foo.test.ts --sync-dist --before-hash sha256:... --json` | Run Docker temp-copy validation with optional focused tests and explicit dist sync. | Execute report. | Runs Docker; may write workspace `dist` only with `--sync-dist` and a matching reviewed before-hash. | Requested Docker validation completed and any requested dist sync freshness guard passed. | Task-style failures use 6. |
 | `hadara evidence list --task T-XXXX [--json]` | Discover Task Capsule evidence ids and semantic metadata. | Read-only report. | No. | Evidence list report was generated. | Evidence/task-style failures use 6. |
@@ -191,6 +193,7 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 - `task status` is an operator console; `ok: true` means report generation succeeded. Readiness lives in `state.ready`, `summary.blockers`, and `issues`.
 - `task complete` is a read-only workflow compressor. It may report `finish-required`, `ready-required`, `close-required`, `audit-required`, `handoff-update-suggested`, or `complete`, but it must not execute or append evidence. `--execute` returns a blocked `hadara.task.complete_flow.v1` report.
 - `task lifecycle` is a read-only normalized phase API for agents. It composes existing lifecycle reports into `phase`, `checks`, `satisfied`, `blockers`, optional `repair`, and one primary next action. It does not replace the canonical finish/ready/close/audit-close commands.
+- `task close-repair-plan` is a read-only close-proof repair API. It classifies `not-closed`, `closed-stale`, `closed-invalid`, `duplicate-close-proof`, `closed-valid`, or `unknown` from audit-close state and returns exact next commands without appending evidence.
 - `handoff suggest` is a read-only shared-doc suggestion surface. It reports `docs/AGENT_HANDOFF.md` before-hash and section fragments for coordinator review, but it must not update the handoff or any other state document. `--execute` returns a blocked `hadara.handoff.suggestion.v1` report.
 - `dev docker-check` is intentionally an external-subprocess command. It must keep raw Docker/npm logs out of JSON output, redact workspace paths, create a run-scoped temp copy, and require explicit `--sync-dist --before-hash <current dist hash>` before copying Docker-built `dist` to the workspace.
 - `dev docker-check --sync-dist` is an output write. Reports distinguish source mutation from output mutation and expose whether a pre-sync dist hash was available, which hash the operator reviewed, whether it matched, whether sync was allowed through the first-time missing-hash escape hatch, and whether a conflict blocked the copy.

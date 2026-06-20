@@ -394,3 +394,4 @@
 | T-0391 | Task Next Self Referential Handoff Guidance Hardening | Done | tasks/T-0391-task-next-self-referential-handoff-guidance-hardening | |
 | T-0392 | Lifecycle Workflow Agent Convenience Spec and Budget | Done | tasks/T-0392-lifecycle-workflow-agent-convenience-spec-and-budget | |
 | T-0393 | Task Lifecycle Read Model | Done | tasks/T-0393-task-lifecycle-read-model | |
+| T-0394 | Close Repair Plan Read Model | Done | tasks/T-0394-close-repair-plan-read-model | |
