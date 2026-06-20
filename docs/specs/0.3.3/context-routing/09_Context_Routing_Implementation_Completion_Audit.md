@@ -16,7 +16,7 @@ This document does not replace the individual context-routing specs. It records 
 |---|---|---|
 | C1 Project Context Graph and State Projection | Implemented | T-0343 through T-0352 completed graph/state projection and read-only `hadara context graph`. |
 | C2 Code Link Layer | Implemented | T-0353 through T-0359 completed code index, symbols, command/test hints, relation edges, and graph integration. |
-| C3 Context Pack | Implemented with warm-path refinements | T-0361/T-0362 added the public context pack read surface; T-0374/T-0375/T-0379 refined warm graph/code consumption; T-0383 added built-CLI smoke coverage. |
+| C3 Context Pack | Implemented with warm-path refinements and source-access metadata | T-0361/T-0362 added the public context pack read surface; T-0374/T-0375/T-0379 refined warm graph/code consumption; T-0383 added built-CLI smoke coverage; T-0388 clarified raw-sliceability for read recommendations. |
 | C4 Context Slice | Implemented and hardened | T-0369/T-0370 added raw range/tail/keyword/managed-section/symbol/candidate slicing; T-0372/T-0376 hardened byte and generated/local boundaries. |
 | C5 Session Start | Implemented bounded default with guidance | T-0378 added bounded default `session start --json`; T-0379 made default Session Start consume proven-fresh warm graph-core/code-index cache read-only before fallback; T-0382 added structured guidance/no-task UX. |
 | C6 Cache and Performance | Implemented for explicit warm/cache consumption with diagnostics | T-0363 through T-0384 added source manifests, cache records/status, warm execute, graph-core/code-index shards, incremental warm recompute, Session Start warm path, advisory regression fixtures, E2E smoke coverage, and cache diagnostics. |
@@ -55,6 +55,7 @@ Mounted broad cache/graph/pack commands can still be slow on cold or stale works
 | Performance regression fixtures are available. | Implemented through T-0380 as advisory thresholds with opt-in `--fail-on-regression`. |
 | Built-CLI context-routing smoke coverage is available. | Implemented through T-0383 with a default fast no-write profile and explicit full/custom profiles. |
 | Cache status/warm diagnostics explain stale/corrupt/partial states. | Implemented through T-0384. |
+| Context pack read recommendations distinguish graph relevance from raw sliceability. | Implemented through T-0388 with additive `sourceAccess.rawSlice` metadata. |
 
 ## Partial Or Deferred Items
 
@@ -67,6 +68,7 @@ Mounted broad cache/graph/pack commands can still be slow on cold or stale works
 | Query server/MCP graph service | Deferred | C6 does not add a graph server or write-capable MCP surface. |
 | Acceptance parser v2 / lifecycle close contract | Implemented first hardening slice | T-0386 added shared legacy/v2 acceptance parsing for done-level harness/protocol checks while preserving existing issue-code compatibility. |
 | Context slice/pack boundary sharing | Implemented final hardening slice | T-0387 added the shared raw slice boundary helper and filtered context-pack slice candidates through it. |
+| Context pack read recommendation raw-slice metadata | Implemented follow-up hardening slice | T-0388 marks readFirst/readIfNeeded items as `sliceable`, `not-sliceable`, or `not-applicable` without dropping graph-relevant items. |
 
 ## Cleanup Queue
 

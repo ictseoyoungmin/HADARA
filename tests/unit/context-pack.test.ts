@@ -37,7 +37,7 @@ describe('context pack', () => {
       generatedAt,
       taskId,
       graphReport: sampleGraphReport(),
-      budget: { maxReadFirstItems: 2, maxItems: 6 }
+      budget: { maxReadFirstItems: 2, maxItems: 10 }
     });
 
     expect(report).toEqual(expect.objectContaining({
@@ -57,7 +57,11 @@ describe('context pack', () => {
       id: `task:${taskId}`,
       type: 'Task',
       required: true,
-      confidence: 'explicit'
+      confidence: 'explicit',
+      sourceAccess: {
+        rawSlice: 'sliceable',
+        reason: 'This item path is inside the raw context-slice read boundary.'
+      }
     }));
     expect(report.issues).toContainEqual(expect.objectContaining({
       severity: 'warning',
@@ -132,6 +136,63 @@ describe('context pack', () => {
     expect(report.sliceCandidates.map((candidate) => candidate.path)).not.toContain('.hadara/local/cache/context/source-manifest.json');
     expect(report.sliceCandidates.map((candidate) => candidate.path)).not.toContain('.dashboard-visual/state.json');
     expect(report.sliceCandidates.map((candidate) => candidate.path)).toContain('.hadara/docs-registry.json');
+    assertSchema('hadara.contextPack.v1', report);
+  });
+
+  it('keeps non-sliceable graph context while marking raw slice access explicitly', () => {
+    const graph = sampleGraphReport({ includeCode: false });
+    graph.nodes.push(
+      documentNode('.hadara/local/cache/context/source-manifest.json', { requiredReading: true, status: 'canonical', kind: 'local-cache' }),
+      documentNode('.dashboard-visual/state.json', { requiredReading: true, status: 'canonical', kind: 'generated' }),
+      documentNode('.hadara/docs-registry.json', { requiredReading: true, status: 'canonical', kind: 'docs-registry' }),
+      {
+        id: 'doc:no-path',
+        type: 'Document',
+        label: 'No path document',
+        status: 'canonical',
+        kind: 'protocol',
+        metadata: { requiredReading: true },
+        source: {
+          path: '.hadara/docs-registry.json',
+          extractor: 'extractDocsRegistry',
+          hash: 'sha256:docs'
+        }
+      }
+    );
+    graph.edges.push(edge('REFERENCES_DOC', `task:${taskId}`, 'doc:no-path', 'Task references a pathless context node.', 'explicit'));
+
+    const report = buildContextPackReport({
+      projectRoot: '/workspace',
+      generatedAt,
+      taskId,
+      graphReport: graph,
+      budget: { maxReadFirstItems: 20, maxItems: 30 }
+    });
+    const items = [...report.readFirst, ...report.readIfNeeded];
+
+    expect(items.find((item) => item.path === '.hadara/local/cache/context/source-manifest.json')).toEqual(expect.objectContaining({
+      sourceAccess: expect.objectContaining({
+        rawSlice: 'not-sliceable'
+      })
+    }));
+    expect(items.find((item) => item.path === '.dashboard-visual/state.json')).toEqual(expect.objectContaining({
+      sourceAccess: expect.objectContaining({
+        rawSlice: 'not-sliceable'
+      })
+    }));
+    expect(items.find((item) => item.path === '.hadara/docs-registry.json')).toEqual(expect.objectContaining({
+      sourceAccess: expect.objectContaining({
+        rawSlice: 'sliceable'
+      })
+    }));
+    expect(items.find((item) => item.id === 'doc:no-path')).toEqual(expect.objectContaining({
+      sourceAccess: {
+        rawSlice: 'not-applicable',
+        reason: 'This context item has no project file path for raw context slicing.'
+      }
+    }));
+    expect(report.sliceCandidates.map((candidate) => candidate.path)).not.toContain('.hadara/local/cache/context/source-manifest.json');
+    expect(report.sliceCandidates.map((candidate) => candidate.path)).not.toContain('.dashboard-visual/state.json');
     assertSchema('hadara.contextPack.v1', report);
   });
 

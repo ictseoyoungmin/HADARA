@@ -24,6 +24,7 @@ export type ContextPackSchemaVersion = typeof CONTEXT_PACK_SCHEMA_ID;
 export type ContextPackCommand = typeof CONTEXT_PACK_COMMAND;
 export type ContextBudgetMode = 'minimal' | 'bounded' | 'expanded';
 export type ContextPackItemType = ContextGraphNodeType;
+export type ContextPackRawSliceAccess = 'sliceable' | 'not-sliceable' | 'not-applicable';
 export type ContextPackIssueCode =
   | 'CONTEXT_PACK_TASK_NOT_FOUND'
   | 'CONTEXT_PACK_GRAPH_UNAVAILABLE'
@@ -51,6 +52,10 @@ export interface ContextPackItem {
   sourceHash?: string;
   estimatedTokens?: number;
   required: boolean;
+  sourceAccess?: {
+    rawSlice: ContextPackRawSliceAccess;
+    reason: string;
+  };
 }
 
 export interface ValidationSuggestion {
@@ -402,7 +407,27 @@ function itemFromRankedNode(ranked: RankedNode, required: boolean): ContextPackI
     confidence: ranked.confidence,
     ...(ranked.node.source.hash ? { sourceHash: ranked.node.source.hash } : {}),
     ...(ranked.node.path ? { estimatedTokens: estimateTokens(ranked.node) } : {}),
-    required
+    required,
+    sourceAccess: sourceAccessForNode(ranked.node)
+  };
+}
+
+function sourceAccessForNode(node: ContextGraphNode): ContextPackItem['sourceAccess'] {
+  if (!node.path) {
+    return {
+      rawSlice: 'not-applicable',
+      reason: 'This context item has no project file path for raw context slicing.'
+    };
+  }
+  if (isContextSliceProjectRelativePath(node.path)) {
+    return {
+      rawSlice: 'sliceable',
+      reason: 'This item path is inside the raw context-slice read boundary.'
+    };
+  }
+  return {
+    rawSlice: 'not-sliceable',
+    reason: 'This item remains graph context, but its path is outside the raw context-slice read boundary.'
   };
 }
 

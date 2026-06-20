@@ -116,8 +116,14 @@ export interface ContextPackItem {
   sourceHash?: string;
   estimatedTokens?: number;
   required: boolean;
+  sourceAccess?: {
+    rawSlice: 'sliceable' | 'not-sliceable' | 'not-applicable';
+    reason: string;
+  };
 }
 ```
+
+`readFirst` and `readIfNeeded` express graph relevance, not guaranteed raw-text readability. Consumers that intend to call `hadara context slice` must check `sourceAccess.rawSlice === 'sliceable'` or use `sliceCandidates`, which only contains executable raw-slice suggestions. Non-sliceable items may still remain in `readFirst` or `readIfNeeded` as graph context when their paths point at local/generated/cache surfaces.
 
 ### ValidationSuggestion
 
@@ -219,6 +225,13 @@ Not allowed by default:
 - broad release docs for non-release tasks;
 - broad dashboard/TUI docs for non-UI tasks;
 - heuristic-only candidates unless no better context exists.
+
+Raw slice boundary:
+
+- `readFirst` may include graph-relevant items whose path is not raw-sliceable.
+- Such items must be marked with `sourceAccess.rawSlice: "not-sliceable"`.
+- Agents must not turn those items into raw `context slice` calls.
+- `sliceCandidates` remains the executable raw-slice command list.
 
 ### readIfNeeded
 

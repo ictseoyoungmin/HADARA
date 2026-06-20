@@ -89,7 +89,17 @@
         "confidence": { "$ref": "#/$defs/confidence" },
         "sourceHash": { "type": "string" },
         "estimatedTokens": { "type": "number" },
-        "required": { "type": "boolean" }
+        "required": { "type": "boolean" },
+        "sourceAccess": { "$ref": "#/$defs/sourceAccess" }
+      }
+    },
+    "sourceAccess": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["rawSlice", "reason"],
+      "properties": {
+        "rawSlice": { "enum": ["sliceable", "not-sliceable", "not-applicable"] },
+        "reason": { "type": "string", "minLength": 1 }
       }
     },
     "validationSuggestion": {
