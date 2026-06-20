@@ -1,12 +1,12 @@
 import crypto from 'node:crypto';
 import type { HadaraActorContext } from '../core/actor-context';
 import type { HadaraNextAction } from '../core/next-action';
-import { createTaskAuditCloseReport, createTaskCloseReport, TaskAuditCloseReport, TaskCloseReport } from './task-close';
+import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, TaskAuditCloseReport, TaskCloseReport } from './task-close';
 import { createTaskFinishReport, TaskFinishReport } from './task-finish';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor } from './lifecycle-next-actions';
 import { createTaskReadyReport, TaskReadyReport } from './task-ready';
 
-export type TaskFinalizeMode = 'dry-run' | 'execute-refused';
+export type TaskFinalizeMode = 'dry-run' | 'execute' | 'execute-refused';
 export type TaskFinalizeStepId = 'finish' | 'ready' | 'close' | 'audit-close';
 export type TaskFinalizeStepStatus = 'satisfied' | 'required' | 'blocked' | 'pending' | 'unknown';
 
@@ -14,7 +14,7 @@ export interface TaskFinalizeReport {
   schemaVersion: 'hadara.task.finalize.v1';
   command: 'task.finalize';
   ok: boolean;
-  readOnly: true;
+  readOnly: boolean;
   mode: TaskFinalizeMode;
   taskId: string;
   generatedAt: string;
@@ -25,9 +25,10 @@ export interface TaskFinalizeReport {
     required: number;
     blocked: number;
     satisfied: number;
-    executeSupported: false;
+    executeSupported: boolean;
   };
   steps: TaskFinalizeStep[];
+  execution?: TaskFinalizeExecution;
   primaryNextAction?: HadaraNextAction;
   nextActions: HadaraNextAction[];
   issues: TaskFinalizeIssue[];
@@ -52,6 +53,24 @@ export interface TaskFinalizeIssue {
   path?: string;
 }
 
+export interface TaskFinalizeExecution {
+  requestedPlanHash?: string;
+  currentPlanHash?: string;
+  planHashMatched: boolean;
+  executedSteps: TaskFinalizeExecutedStep[];
+  stoppedAt?: TaskFinalizeStepId;
+}
+
+export interface TaskFinalizeExecutedStep {
+  id: TaskFinalizeStepId;
+  status: 'executed' | 'satisfied' | 'blocked' | 'skipped';
+  command: string;
+  ok: boolean;
+  reportHash: string;
+  summary: string;
+  writeBoundary: 'read-only' | 'task-local' | 'evidence-append';
+}
+
 export interface TaskFinalizeOptions {
   executeRequested?: boolean;
   planHash?: string;
@@ -67,33 +86,12 @@ interface FinalizeReports {
 
 export function createTaskFinalizeReport(projectRoot: string, taskId: string, options: TaskFinalizeOptions = {}): TaskFinalizeReport {
   const actor = options.actor ?? defaultTaskLifecycleActor();
-  if (options.executeRequested) return createExecuteRefusal(taskId, actor, options.planHash);
-  const reports: FinalizeReports = {
-    finish: createTaskFinishReport(projectRoot, taskId, 'dry-run', { actor }),
-    ready: createTaskReadyReport(projectRoot, taskId, 'done', { actor }),
-    close: createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor }),
-    audit: createTaskAuditCloseReport(projectRoot, taskId, { actor })
-  };
+  const reports = createFinalizeReports(projectRoot, taskId, actor);
   const steps = createSteps(taskId, reports);
   const issues = collectIssues(reports);
-  const nextAction = createPrimaryNextAction(taskId, steps);
   const planHash = hashPlan(taskId, steps);
-  return {
-    schemaVersion: 'hadara.task.finalize.v1',
-    command: 'task.finalize',
-    ok: issues.every((issue) => issue.severity !== 'error') && steps.every((step) => step.status === 'satisfied'),
-    readOnly: true,
-    mode: 'dry-run',
-    taskId,
-    generatedAt: new Date().toISOString(),
-    actor,
-    planHash,
-    summary: summarizeSteps(steps),
-    steps,
-    ...(nextAction ? { primaryNextAction: nextAction } : {}),
-    nextActions: nextAction ? [nextAction] : [],
-    issues
-  };
+  if (options.executeRequested) return executeFinalizePlan(projectRoot, taskId, actor, reports, steps, issues, planHash, options.planHash);
+  return createFinalizeReport(taskId, actor, 'dry-run', true, steps, issues, planHash);
 }
 
 export function formatTaskFinalizeReport(report: TaskFinalizeReport): string {
@@ -105,24 +103,177 @@ export function formatTaskFinalizeReport(report: TaskFinalizeReport): string {
   return lines.join('\n');
 }
 
-function createExecuteRefusal(taskId: string, actor: HadaraActorContext, planHash?: string): TaskFinalizeReport {
-  const code = planHash ? 'TASK_FINALIZE_EXECUTE_DEFERRED' : 'TASK_FINALIZE_PLAN_HASH_REQUIRED';
-  const message = planHash
-    ? 'task finalize execute is reserved for a later guarded orchestration capsule.'
-    : 'task finalize --execute requires a reviewed --plan-hash from a dry-run report.';
+function executeFinalizePlan(
+  projectRoot: string,
+  taskId: string,
+  actor: HadaraActorContext,
+  initialReports: FinalizeReports,
+  initialSteps: TaskFinalizeStep[],
+  initialIssues: TaskFinalizeIssue[],
+  currentPlanHash: string,
+  requestedPlanHash?: string
+): TaskFinalizeReport {
+  if (!requestedPlanHash) return createExecuteRefusal(taskId, actor, 'TASK_FINALIZE_PLAN_HASH_REQUIRED', 'task finalize --execute requires a reviewed --plan-hash from a dry-run report.', currentPlanHash, initialSteps);
+  if (requestedPlanHash !== currentPlanHash) {
+    return createExecuteRefusal(
+      taskId,
+      actor,
+      'TASK_FINALIZE_PLAN_HASH_MISMATCH',
+      'task finalize --execute refused because --plan-hash does not match the current dry-run plan.',
+      currentPlanHash,
+      initialSteps,
+      {
+        requestedPlanHash,
+        currentPlanHash,
+        planHashMatched: false,
+        executedSteps: []
+      }
+    );
+  }
+
+  const executedSteps: TaskFinalizeExecutedStep[] = [];
+  const initialBlocker = initialSteps.find((step) => step.status === 'blocked');
+  if (initialBlocker) {
+    return createFinalizeReport(taskId, actor, 'execute', false, initialSteps, initialIssues, currentPlanHash, {
+      requestedPlanHash,
+      currentPlanHash,
+      planHashMatched: true,
+      executedSteps: [createExecutedStep(initialBlocker, false, initialReports[reportKeyForStep(initialBlocker.id)], 'blocked')],
+      stoppedAt: initialBlocker.id
+    });
+  }
+
+  let reports = initialReports;
+  let steps = initialSteps;
+  let finishStep = steps.find((step) => step.id === 'finish');
+  if (finishStep?.status === 'required') {
+    const finishReport = createTaskFinishReport(projectRoot, taskId, 'execute', { actor });
+    executedSteps.push(createExecutedStep(finishStep, finishReport.ok, finishReport, finishReport.ok ? 'executed' : 'blocked'));
+    if (!finishReport.ok) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'finish');
+    reports = createFinalizeReports(projectRoot, taskId, actor);
+    steps = createSteps(taskId, reports);
+  } else if (finishStep?.status === 'satisfied') {
+    executedSteps.push(createExecutedStep(finishStep, true, reports.finish, 'satisfied'));
+  }
+
+  const readyStep = steps.find((step) => step.id === 'ready');
+  if (readyStep?.status !== 'satisfied') {
+    executedSteps.push(createExecutedStep(readyStep ?? fallbackStep(taskId, 'ready'), reports.ready.ok, reports.ready, reports.ready.ok ? 'satisfied' : 'blocked'));
+    return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'ready');
+  }
+  executedSteps.push(createExecutedStep(readyStep, true, reports.ready, 'satisfied'));
+
+  const closeStep = steps.find((step) => step.id === 'close');
+  if (closeStep?.status === 'required') {
+    const closeReport = createTaskCloseReport(projectRoot, taskId, 'execute', { actor });
+    if (closeReport.ok) executeTaskCloseEvidence(projectRoot, closeReport);
+    executedSteps.push(createExecutedStep(closeStep, closeReport.ok, closeReport, closeReport.ok ? 'executed' : 'blocked'));
+    if (!closeReport.ok) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'close');
+    reports = createFinalizeReports(projectRoot, taskId, actor);
+    steps = createSteps(taskId, reports);
+  } else if (closeStep?.status === 'satisfied') {
+    executedSteps.push(createExecutedStep(closeStep, true, reports.close, 'satisfied'));
+  } else {
+    executedSteps.push(createExecutedStep(closeStep ?? fallbackStep(taskId, 'close'), false, reports.close, 'blocked'));
+    return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'close');
+  }
+
+  const auditStep = steps.find((step) => step.id === 'audit-close');
+  executedSteps.push(createExecutedStep(auditStep ?? fallbackStep(taskId, 'audit-close'), reports.audit.ok, reports.audit, reports.audit.ok ? 'satisfied' : 'blocked'));
+  return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, reports.audit.ok ? undefined : 'audit-close');
+}
+
+function createPostExecutionReport(
+  projectRoot: string,
+  taskId: string,
+  actor: HadaraActorContext,
+  requestedPlanHash: string,
+  reviewedPlanHash: string,
+  executedSteps: TaskFinalizeExecutedStep[],
+  stoppedAt?: TaskFinalizeStepId
+): TaskFinalizeReport {
+  const reports = createFinalizeReports(projectRoot, taskId, actor);
+  const steps = createSteps(taskId, reports);
+  const issues = collectIssues(reports);
+  const nextAction = createPrimaryNextAction(taskId, steps);
+  const finalAudit = reports.audit.auditVerdict.verdict === 'closed-valid';
+  const execution: TaskFinalizeExecution = {
+    requestedPlanHash,
+    currentPlanHash: reviewedPlanHash,
+    planHashMatched: true,
+    executedSteps,
+    ...(stoppedAt ? { stoppedAt } : {})
+  };
   return {
     schemaVersion: 'hadara.task.finalize.v1',
     command: 'task.finalize',
-    ok: false,
-    readOnly: true,
-    mode: 'execute-refused',
+    ok: finalAudit && issues.every((issue) => issue.severity !== 'error') && steps.every((step) => step.status === 'satisfied'),
+    readOnly: false,
+    mode: 'execute',
     taskId,
     generatedAt: new Date().toISOString(),
     actor,
-    summary: { steps: 0, required: 0, blocked: 1, satisfied: 0, executeSupported: false },
-    steps: [],
-    nextActions: [],
-    issues: [{ severity: 'error', code, message }]
+    planHash: reviewedPlanHash,
+    summary: summarizeSteps(steps),
+    steps,
+    execution,
+    ...(nextAction ? { primaryNextAction: nextAction } : {}),
+    nextActions: nextAction ? [nextAction] : [],
+    issues
+  };
+}
+
+function createFinalizeReport(
+  taskId: string,
+  actor: HadaraActorContext,
+  mode: TaskFinalizeMode,
+  readOnly: boolean,
+  steps: TaskFinalizeStep[],
+  issues: TaskFinalizeIssue[],
+  planHash?: string,
+  execution?: TaskFinalizeExecution
+): TaskFinalizeReport {
+  const nextAction = createPrimaryNextAction(taskId, steps);
+  return {
+    schemaVersion: 'hadara.task.finalize.v1',
+    command: 'task.finalize',
+    ok: mode === 'execute' ? false : issues.every((issue) => issue.severity !== 'error') && steps.every((step) => step.status === 'satisfied'),
+    readOnly,
+    mode,
+    taskId,
+    generatedAt: new Date().toISOString(),
+    actor,
+    ...(planHash ? { planHash } : {}),
+    summary: summarizeSteps(steps),
+    steps,
+    ...(execution ? { execution } : {}),
+    ...(nextAction ? { primaryNextAction: nextAction } : {}),
+    nextActions: nextAction ? [nextAction] : [],
+    issues
+  };
+}
+
+function createExecuteRefusal(
+  taskId: string,
+  actor: HadaraActorContext,
+  code: string,
+  message: string,
+  currentPlanHash: string,
+  steps: TaskFinalizeStep[],
+  execution?: TaskFinalizeExecution
+): TaskFinalizeReport {
+  return {
+    ...createFinalizeReport(taskId, actor, 'execute-refused', true, steps, [{ severity: 'error', code, message }], currentPlanHash, execution),
+    ok: false
+  };
+}
+
+function createFinalizeReports(projectRoot: string, taskId: string, actor: HadaraActorContext): FinalizeReports {
+  return {
+    finish: createTaskFinishReport(projectRoot, taskId, 'dry-run', { actor }),
+    ready: createTaskReadyReport(projectRoot, taskId, 'done', { actor }),
+    close: createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor }),
+    audit: createTaskAuditCloseReport(projectRoot, taskId, { actor })
   };
 }
 
@@ -213,7 +364,44 @@ function summarizeSteps(steps: TaskFinalizeStep[]): TaskFinalizeReport['summary'
     required: steps.filter((step) => step.status === 'required').length,
     blocked: steps.filter((step) => step.status === 'blocked').length,
     satisfied: steps.filter((step) => step.status === 'satisfied').length,
-    executeSupported: false
+    executeSupported: true
+  };
+}
+
+function createExecutedStep(step: TaskFinalizeStep, ok: boolean, report: unknown, status: TaskFinalizeExecutedStep['status']): TaskFinalizeExecutedStep {
+  return {
+    id: step.id,
+    status,
+    command: step.command,
+    ok,
+    reportHash: hashReport(report),
+    summary: step.summary,
+    writeBoundary: step.writeBoundary
+  };
+}
+
+function hashReport(report: unknown): string {
+  return `sha256:${crypto.createHash('sha256').update(JSON.stringify(report)).digest('hex')}`;
+}
+
+function reportKeyForStep(stepId: TaskFinalizeStepId): keyof FinalizeReports {
+  if (stepId === 'finish') return 'finish';
+  if (stepId === 'ready') return 'ready';
+  if (stepId === 'close') return 'close';
+  return 'audit';
+}
+
+function fallbackStep(taskId: string, id: TaskFinalizeStepId): TaskFinalizeStep {
+  return {
+    id,
+    status: 'unknown',
+    summary: 'Step state could not be determined.',
+    command: id === 'audit-close' ? `hadara task audit-close --task ${taskId} --json` : `hadara task ${id} --task ${taskId} --json`,
+    mode: 'read-only',
+    writeBoundary: 'read-only',
+    expectedWritePaths: [],
+    alreadySatisfied: false,
+    sourceReport: 'unknown'
   };
 }
 

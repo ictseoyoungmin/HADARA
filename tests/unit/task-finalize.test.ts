@@ -38,7 +38,7 @@ describe('task finalize dry-run plan', () => {
       readOnly: true,
       mode: 'dry-run',
       taskId: task.id,
-      summary: { steps: 4, required: 1, blocked: 0, executeSupported: false },
+      summary: { steps: 4, required: 1, blocked: 0, executeSupported: true },
       primaryNextAction: {
         id: 'finalize-finish',
         command: `hadara task finish --task ${task.id} --execute --json`,
@@ -89,10 +89,85 @@ describe('task finalize dry-run plan', () => {
       ok: false,
       readOnly: true,
       mode: 'execute-refused',
-      summary: { executeSupported: false },
+      summary: { executeSupported: true },
       issues: [{ severity: 'error', code: 'TASK_FINALIZE_PLAN_HASH_REQUIRED' }]
     });
-    expect(report.planHash).toBeUndefined();
+    expect(report.planHash).toMatch(/^sha256:/);
+    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
+  });
+
+  it('refuses execute when the reviewed plan hash is stale and does not write', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finalize stale hash');
+    const before = snapshotFiles(root);
+
+    const report = createTaskFinalizeReport(root, task.id, { executeRequested: true, planHash: 'sha256:0000000000000000000000000000000000000000000000000000000000000000' });
+
+    expect(snapshotFiles(root)).toEqual(before);
+    expect(report).toMatchObject({
+      ok: false,
+      readOnly: true,
+      mode: 'execute-refused',
+      execution: {
+        requestedPlanHash: 'sha256:0000000000000000000000000000000000000000000000000000000000000000',
+        planHashMatched: false,
+        executedSteps: []
+      },
+      issues: [{ severity: 'error', code: 'TASK_FINALIZE_PLAN_HASH_MISMATCH' }]
+    });
+    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
+  });
+
+  it('executes matching finish then stops before close when readiness blocks', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finalize stop on blocker');
+    const plan = createTaskFinalizeReport(root, task.id);
+
+    const report = createTaskFinalizeReport(root, task.id, { executeRequested: true, planHash: plan.planHash });
+
+    expect(report).toMatchObject({
+      ok: false,
+      readOnly: false,
+      mode: 'execute',
+      execution: {
+        requestedPlanHash: plan.planHash,
+        planHashMatched: true,
+        stoppedAt: 'ready'
+      }
+    });
+    expect(report.execution?.executedSteps.map((step) => step.id)).toEqual(['finish', 'ready']);
+    expect(report.execution?.executedSteps[0]).toMatchObject({ id: 'finish', status: 'executed', ok: true, writeBoundary: 'task-local' });
+    expect(report.execution?.executedSteps[1]).toMatchObject({ id: 'ready', status: 'blocked', ok: false, writeBoundary: 'read-only' });
+    expect(snapshotFiles(root)[`tasks/${task.id}-finalize-stop-on-blocker/evidence.jsonl`]).not.toContain('Task close validation');
+    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
+  });
+
+  it('executes matching close evidence append and returns closed-valid after audit', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finalize execute close');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const plan = createTaskFinalizeReport(root, task.id);
+
+    const report = createTaskFinalizeReport(root, task.id, { executeRequested: true, planHash: plan.planHash });
+
+    expect(report).toMatchObject({
+      ok: true,
+      readOnly: false,
+      mode: 'execute',
+      summary: { required: 0, blocked: 0, satisfied: 4 },
+      execution: {
+        requestedPlanHash: plan.planHash,
+        planHashMatched: true
+      },
+      steps: expect.arrayContaining([
+        expect.objectContaining({ id: 'close', status: 'satisfied' }),
+        expect.objectContaining({ id: 'audit-close', status: 'satisfied' })
+      ])
+    });
+    expect(report.execution?.executedSteps.map((step) => step.id)).toEqual(['finish', 'ready', 'close', 'audit-close']);
+    expect(report.execution?.executedSteps.find((step) => step.id === 'close')).toMatchObject({ status: 'executed', ok: true, writeBoundary: 'evidence-append' });
+    expect(snapshotFiles(root)[`tasks/${task.id}-finalize-execute-close/evidence.jsonl`]).toContain('Task close validation');
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
   });
 

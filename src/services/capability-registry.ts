@@ -492,27 +492,30 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   },
   {
     id: 'task.finalize',
-    command: 'hadara task finalize --task <task-id> [--json]',
-    summary: 'Create a read-only reviewed finalize plan with lifecycle steps, write boundaries, and a plan hash.',
+    command: 'hadara task finalize --task <task-id> [--execute --plan-hash <hash>] [--json]',
+    summary: 'Create a reviewed finalize plan or execute the matching plan through the guarded lifecycle sequence.',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'capsule-lifecycle',
     scope: 'capsule',
     lifecycleStage: 'finish',
     requiredness: 'conditional',
-    writeBoundary: 'read-only',
-    readOnly: true,
-    risk: 'low',
+    writeBoundary: 'task-status-bookkeeping',
+    readOnly: false,
+    risk: 'medium',
     actor: 'agent-worker',
     status: 'stable',
     schemaVersion: 'hadara.task.finalize.v1',
     docs: TASK_DOCS,
     implementationFiles: ['src/cli/task.ts', 'src/task/task-finalize.ts'],
     testFiles: ['tests/unit/task-finalize.test.ts'],
-    examples: [example('Review finalize plan', 'hadara task finalize --task T-0001 --json', 'When an agent wants one reviewed finish/ready/close/audit plan before executing canonical commands.')],
+    examples: [
+      example('Review finalize plan', 'hadara task finalize --task T-0001 --json', 'When an agent wants one reviewed finish/ready/close/audit plan before executing canonical commands.'),
+      example('Execute reviewed finalize plan', 'hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json', 'After reviewing a current dry-run plan hash.')
+    ],
     related: ['task.lifecycle', 'task.finish', 'task.ready', 'task.close', 'task.audit-close'],
     conflictsWith: [],
-    notes: 'T-0396 is dry-run/read-only only; execute orchestration remains deferred to the guarded follow-up capsule.'
+    notes: 'Default mode is read-only. Execute requires a matching current dry-run plan hash, runs phases serially, preserves the underlying finish/close write boundaries, and stops on the first blocker.'
   },
   {
     id: 'task.lifecycle',

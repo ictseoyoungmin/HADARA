@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/hardening completed through T-0391, and the lifecycle convenience line is complete through T-0396. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/hardening completed through T-0391, and the lifecycle convenience line is complete through T-0397. |
 | Current Phase | 0.3.3 lifecycle convenience line in progress | Context-routing hardening remains complete; lifecycle ergonomics now continue with additive read-only/guarded convenience surfaces. |
-| Latest Completed Task | T-0396 Task Finalize Dry-Run Plan | `task finalize` now provides a read-only ordered lifecycle plan with plan hash and explicit execute refusal. |
-| Active / Next Task | T-0397 Task Finalize Execute Guard | Next budgeted lifecycle capsule; decide and implement the guarded execute behavior after the dry-run contract. |
-| Validation Baseline | T-0396 finalize dry-run validation | Focused validation passed 7 files / 37 tests, full Docker sync-build passed 141 files / 925 tests with refreshed `dist`, built dry-run and execute-refusal smokes passed, and `git diff --check` passed. Evidence `ev:T-0396:874095dd00434f5195eb144a`, `ev:T-0396:1057e733697c467aa0fbc9cd`, `ev:T-0396:d7b3975a5e4849f9ab74da22`, `ev:T-0396:7d3e8d90a33149be8a8e2e94`, `ev:T-0396:c1bb5501c5d8471f81406164`. |
+| Latest Completed Task | T-0397 Task Finalize Execute Guard | `task finalize --execute --plan-hash` now runs guarded serial lifecycle orchestration after current-plan hash matching. |
+| Active / Next Task | T-0398 Lifecycle Scenario Docs and Init Alignment | Next budgeted lifecycle capsule; teach the new canonical/convenience workflow in generated docs and session guidance. |
+| Validation Baseline | T-0397 finalize execute guard validation | Focused validation passed 4 files / 21 tests, full Docker sync-build passed 141 files / 928 tests with refreshed `dist`, built dry-run/missing-hash/stale-hash smokes passed, and `git diff --check` passed. Evidence `ev:T-0397:59085932aced47be89c4532d`, `ev:T-0397:fd38f35a791e4b179285cc9d`, `ev:T-0397:924236021b714ecaa783c7ec`, `ev:T-0397:454daf3e664843cba5db3b1a`, `ev:T-0397:3436c55fab2344789c6183b9`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| None | T-0396 completed the read-only finalize dry-run plan surface. | Next implementation capsule is T-0397 Task Finalize Execute Guard. |
+| None | T-0397 completed guarded finalize execute orchestration. | Next implementation capsule is T-0398 Lifecycle Scenario Docs and Init Alignment. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0397 Task Finalize Execute Guard | Added guarded `task finalize --execute --plan-hash` orchestration with missing/stale hash refusal, serial execution, stop-on-blocker behavior, execution metadata, and final audit proof. | `ev:T-0397:59085932aced47be89c4532d`, `ev:T-0397:fd38f35a791e4b179285cc9d`, `ev:T-0397:454daf3e664843cba5db3b1a` |
 | T-0396 Task Finalize Dry-Run Plan | Added `hadara.task.finalize.v1`, `hadara task finalize --task T --json`, stable plan hash, ordered lifecycle step metadata, expected write paths, and execute refusal. | `ev:T-0396:874095dd00434f5195eb144a`, `ev:T-0396:1057e733697c467aa0fbc9cd`, `ev:T-0396:d7b3975a5e4849f9ab74da22` |
 | T-0395 Lifecycle Guidance Dedup Hardening | Successful close dry-runs now return one primary `append-close-evidence` action after embedded validation passes, while failed close plans retain validation/lint/blocker guidance. | `ev:T-0395:0bfa119bfc5e43a489d31794`, `ev:T-0395:6c210dc953974c32acf008b7`, `ev:T-0395:a2c33196f7704223ae5e0044` |
-| T-0394 Close Repair Plan Read Model | Added `hadara.task.closeRepairPlan.v1`, CLI/registry/docs wiring, and read-only not-closed/stale/invalid/duplicate/valid close repair classification. | `ev:T-0394:f0875b6093844de1ac01053e`, `ev:T-0394:8c47406cc61a4314bde168b0`, `ev:T-0394:a32fcb73ccde4179a56cc267` |
 
 ## Current Known Problems
 
@@ -92,13 +92,13 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create/start T-0397 Task Finalize Execute Guard. | T-0396 proves the read-only finalize plan; the next lifecycle budget item should add or explicitly defer reviewed guarded execution. | `docs/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md` |
+| Create/start T-0398 Lifecycle Scenario Docs and Init Alignment. | T-0397 completes the guarded finalize execute surface; the next lifecycle budget item should align generated docs/session guidance. | `docs/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| T-0396 finalize dry-run plan | Focused validation passed 7 files / 37 tests; full Docker sync-build passed 141 files / 925 tests and refreshed `dist`; built finalize dry-run and execute-refusal smokes passed; `git diff --check` passed. | Evidence `ev:T-0396:874095dd00434f5195eb144a`, `ev:T-0396:1057e733697c467aa0fbc9cd`, `ev:T-0396:d7b3975a5e4849f9ab74da22`, `ev:T-0396:7d3e8d90a33149be8a8e2e94`, `ev:T-0396:c1bb5501c5d8471f81406164`; execute smoke confirmed `TASK_FINALIZE_PLAN_HASH_REQUIRED` and no writes. |
+| T-0397 finalize execute guard | Focused validation passed 4 files / 21 tests; full Docker sync-build passed 141 files / 928 tests and refreshed `dist`; built dry-run/missing-hash/stale-hash smokes passed; `git diff --check` passed. | Evidence `ev:T-0397:59085932aced47be89c4532d`, `ev:T-0397:fd38f35a791e4b179285cc9d`, `ev:T-0397:924236021b714ecaa783c7ec`, `ev:T-0397:454daf3e664843cba5db3b1a`, `ev:T-0397:3436c55fab2344789c6183b9`; unit coverage proves matching execute reaches `closed-valid`. |
 | T-0394 close repair plan read model | Focused validation passed 5 files / 28 tests; full Docker sync-build passed 140 files / 921 tests and refreshed `dist`; built `task close-repair-plan` smoke passed; `git diff --check` passed. | Evidence `ev:T-0394:f0875b6093844de1ac01053e`, `ev:T-0394:8c47406cc61a4314bde168b0`, `ev:T-0394:a32fcb73ccde4179a56cc267`, `ev:T-0394:e22abfd41b9048a492203406`; mounted built smoke took about 22s because the report composes existing close/audit checks. |
 | T-0393 task lifecycle read model | Focused lifecycle validation passed 4 files / 20 tests; full Docker sync-build passed 139 files / 915 tests and refreshed `dist`; built `task lifecycle` smoke passed. | Evidence `ev:T-0393:bc944ecc2c894e869dd7e557`, `ev:T-0393:5ec89716142c4e19b7e3abe0`, `ev:T-0393:03d977cfde444c83862cfd3c`; mounted built smoke took about 24s because the report composes existing lifecycle checks. |
 | T-0392 lifecycle convenience spec | Focused docs registry validation passed 2 files / 6 tests and `git diff --check` passed. | Evidence `ev:T-0392:46f350146736461ea9712b18`; no runtime behavior changed. |

@@ -9,8 +9,8 @@
     "schemaVersion": { "const": "hadara.task.finalize.v1" },
     "command": { "const": "task.finalize" },
     "ok": { "type": "boolean" },
-    "readOnly": { "const": true },
-    "mode": { "enum": ["dry-run", "execute-refused"] },
+    "readOnly": { "type": "boolean" },
+    "mode": { "enum": ["dry-run", "execute", "execute-refused"] },
     "taskId": { "type": "string" },
     "generatedAt": { "type": "string" },
     "actor": { "type": "object", "additionalProperties": true },
@@ -24,7 +24,7 @@
         "required": { "type": "number" },
         "blocked": { "type": "number" },
         "satisfied": { "type": "number" },
-        "executeSupported": { "const": false }
+        "executeSupported": { "type": "boolean" }
       }
     },
     "steps": {
@@ -43,6 +43,34 @@
           "expectedWritePaths": { "type": "array", "items": { "type": "string" } },
           "alreadySatisfied": { "type": "boolean" },
           "sourceReport": { "type": "string" }
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["planHashMatched", "executedSteps"],
+      "properties": {
+        "requestedPlanHash": { "type": "string" },
+        "currentPlanHash": { "type": "string" },
+        "planHashMatched": { "type": "boolean" },
+        "stoppedAt": { "enum": ["finish", "ready", "close", "audit-close"] },
+        "executedSteps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["id", "status", "command", "ok", "reportHash", "summary", "writeBoundary"],
+            "properties": {
+              "id": { "enum": ["finish", "ready", "close", "audit-close"] },
+              "status": { "enum": ["executed", "satisfied", "blocked", "skipped"] },
+              "command": { "type": "string" },
+              "ok": { "type": "boolean" },
+              "reportHash": { "type": "string" },
+              "summary": { "type": "string" },
+              "writeBoundary": { "enum": ["read-only", "task-local", "evidence-append"] }
+            }
+          }
         }
       }
     },
