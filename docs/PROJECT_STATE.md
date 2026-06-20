@@ -10,7 +10,7 @@ HADARA - Portable Agentic Development Workbench
 |---|---|
 | HADARA Profile | governed |
 | Latest Completed Task | T-0401 0.3.3-rc.0 Release Readiness Preparation |
-| Active Task | Approval-gated `0.3.3-rc.0` publish decision or operator-selected next capsule |
+| Active Task | T-0402 0.3.3-rc.0 Approval-Gated Publish |
 
 ## Next Planned Line
 
@@ -155,7 +155,7 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 ## Current Status
 
 - Latest completed task is T-0401 0.3.3-rc.0 Release Readiness Preparation.
-- Active task selection is approval-gated `0.3.3-rc.0` publish decision or operator-selected next capsule.
+- Active task is T-0402 0.3.3-rc.0 Approval-Gated Publish; operator npm login and approval-gated helper execution are pending.
 - Stable `hadara@0.3.0` publish and installed-package consumer recycle are complete through T-0316/T-0317.
 - Phase 8 / `0.3.1` planning is staged under `docs/specs/0.3.1/`; Phase 8.1 status token/document ownership governance, Phase 8.2 task handoff close-state governance, Phase 8.3 installed-package findings cleanup, Phase 8.4 state consistency projection read model, Phase 8.5 advisory verify/doctor/CI integration, Phase 8.6 rc1 review/hardening cleanup, T-0325 CloseState derived-state cleanup, T-0326 rc1 release-readiness preparation, T-0327 approval-gated publish, T-0328 installed-package recycle, and T-0329 post-rc1 docs cleanup are complete.
 - `0.3.1-rc.1` source/readiness is complete through T-0326; npm package visibility, tarball inspection, and corrected dist-tags are confirmed through T-0327; installed-package recycle is complete through T-0328; post-rc1 shared-doc wording cleanup is complete through T-0329.

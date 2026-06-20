@@ -402,3 +402,4 @@
 | T-0399 | Finalize Evidence Guidance and Lifecycle Speed Hardening | Done | tasks/T-0399-finalize-evidence-guidance-and-lifecycle-speed-hardening | |
 | T-0400 | Default Lifecycle Finalize Documentation | Done | tasks/T-0400-default-lifecycle-finalize-documentation | Made the 0.3.3 finalize-first lifecycle the default agent-facing path in docs, init templates, help, registry, and lifecycle projection. |
 | T-0401 | 0.3.3-rc.0 Release Readiness Preparation | Done | tasks/T-0401-0-3-3-rc-0-release-readiness-preparation | Prepared `hadara@0.3.3-rc.0` source/readiness; Docker validation, release artifact, package smoke, clean-checkout smoke, strict gate, release dry-run, and publish dry-run passed without publish mutation. |
+| T-0402 | 0.3.3-rc.0 Approval-Gated Publish | In Progress | tasks/T-0402-0-3-3-rc-0-approval-gated-publish | Publish-only capsule prepared; awaiting operator npm login and approval-gated helper execution. |

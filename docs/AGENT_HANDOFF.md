@@ -5,16 +5,16 @@
 | Area | State | Notes |
 |---|---|---|
 | Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, and `0.3.3-rc.0` readiness is complete through T-0401. |
-| Current Phase | 0.3.3-rc.0 publish decision | `hadara@0.3.3-rc.0` source/readiness passed; publish remains separate and approval-gated. |
+| Current Phase | 0.3.3-rc.0 approval-gated publish | `hadara@0.3.3-rc.0` source/readiness passed; T-0402 is prepared for operator npm login and helper execution. |
 | Latest Completed Task | T-0401 0.3.3-rc.0 Release Readiness Preparation | Prepared source/readiness for `hadara@0.3.3-rc.0` without npm publish, GitHub Release, Docker/PyPI publish, installer execution, or MCP release/package mutation. |
-| Active / Next Task | Approval-gated `0.3.3-rc.0` publish decision or operator-selected next capsule | If publishing, create a dedicated approval-gated publish capsule and verify registry/tarball/install paths afterward. |
+| Active / Next Task | T-0402 0.3.3-rc.0 Approval-Gated Publish | Operator should run npm login, then `bash scripts/release/manual-publish-rc.sh T-0402` dry-run and `bash scripts/release/manual-publish-rc.sh T-0402 --execute` only after confirming `npm tag: next`. |
 | Validation Baseline | T-0401 release readiness validation | Docker sync-build passed 141 files / 929 tests with refreshed `dist`; built version smoke reported `packageVersion:"0.3.3-rc.0"` and `distLooksStale:false`; release artifact, package smoke, clean-checkout smoke, strict release gate, release dry-run, publish dry-run, and `git diff --check` passed. Sandbox npm cache caused initial package/clean-checkout smoke failures; approved external reruns passed. Evidence `ev:T-0401:1046d97d72a54ca6bd9dabf3`, `ev:T-0401:125c51d2304a4d689c957bab`, `ev:T-0401:698672f04c9e4ba394e616c2`, `ev:T-0401:211f174377cf41eaba9f707b`, `ev:T-0401:34875afe7c1c4a6c802a0a0d`, `ev:T-0401:9bffce41eea94e728636609a`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| None | T-0401 prepared `hadara@0.3.3-rc.0` source/readiness without release mutation. | Decide whether to open approval-gated publish capsule or select next work. |
+| T-0402 | Publish-only capsule is prepared; actual npm publish is pending operator npm authentication and explicit helper confirmation. | `ev:T-0402:33d58950283b4fb29306ba72` |
 
 ## Last 3 Completed Tasks
 
