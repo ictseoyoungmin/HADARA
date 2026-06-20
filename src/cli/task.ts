@@ -2,6 +2,7 @@ import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvid
 import { createTaskCloseRepairPlanReport, formatTaskCloseRepairPlanReport } from '../task/task-close-repair-plan';
 import { createTaskCompleteFlowReport, formatTaskCompleteFlowReport } from '../task/task-complete-flow';
 import { createTaskCreateReport, formatTaskCreateReport } from '../task/task-create';
+import { createTaskFinalizeReport, formatTaskFinalizeReport } from '../task/task-finalize';
 import { createTaskLifecycleReport, formatTaskLifecycleReport } from '../task/task-lifecycle';
 import { createTaskReadyReport } from '../task/task-ready';
 import { createTaskFinishReport, formatTaskFinishReport } from '../task/task-finish';
@@ -122,6 +123,23 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
       console.log(JSON.stringify(report, null, 2));
     } else {
       console.log(formatTaskCompleteFlowReport(report));
+    }
+    if (!report.ok) process.exitCode = 6;
+    return true;
+  }
+
+  if (sub === 'finalize') {
+    const id = getStringOption(input.args, '--task') ?? input.args[2];
+    if (!id || id.startsWith('--')) throw new Error('task finalize requires --task <task-id>');
+    const report = createTaskFinalizeReport(input.projectRoot, id, {
+      executeRequested: getFlag(input.args, '--execute'),
+      planHash: getStringOption(input.args, '--plan-hash'),
+      actor: getActorContextOption(input.args)
+    });
+    if (input.jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log(formatTaskFinalizeReport(report));
     }
     if (!report.ok) process.exitCode = 6;
     return true;

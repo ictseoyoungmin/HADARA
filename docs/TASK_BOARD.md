@@ -396,3 +396,4 @@
 | T-0393 | Task Lifecycle Read Model | Done | tasks/T-0393-task-lifecycle-read-model | |
 | T-0394 | Close Repair Plan Read Model | Done | tasks/T-0394-close-repair-plan-read-model | |
 | T-0395 | Lifecycle Guidance Dedup Hardening | Done | tasks/T-0395-lifecycle-guidance-dedup-hardening | |
+| T-0396 | Task Finalize Dry-Run Plan | Done | tasks/T-0396-task-finalize-dry-run-plan | |

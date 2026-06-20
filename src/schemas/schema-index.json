@@ -296,6 +296,13 @@
       "notes": "Documents read-only task completion flow reports that compose finish, ready, close, and audit guidance."
     },
     {
+      "id": "hadara.task.finalize.v1",
+      "path": "src/schemas/task-finalize.schema.json",
+      "status": "fixture",
+      "owner": "task/finalize",
+      "notes": "Documents read-only finalize dry-run plans with plan hashes, lifecycle steps, write boundaries, and execute refusal metadata."
+    },
+    {
       "id": "hadara.task.lifecycle.v1",
       "path": "src/schemas/task-lifecycle.schema.json",
       "status": "fixture",

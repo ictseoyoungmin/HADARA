@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.task.finalize.v1",
+  "x-hadara-schema-id": "hadara.task.finalize.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "readOnly", "mode", "taskId", "generatedAt", "actor", "summary", "steps", "nextActions", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.task.finalize.v1" },
+    "command": { "const": "task.finalize" },
+    "ok": { "type": "boolean" },
+    "readOnly": { "const": true },
+    "mode": { "enum": ["dry-run", "execute-refused"] },
+    "taskId": { "type": "string" },
+    "generatedAt": { "type": "string" },
+    "actor": { "type": "object", "additionalProperties": true },
+    "planHash": { "type": "string" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["steps", "required", "blocked", "satisfied", "executeSupported"],
+      "properties": {
+        "steps": { "type": "number" },
+        "required": { "type": "number" },
+        "blocked": { "type": "number" },
+        "satisfied": { "type": "number" },
+        "executeSupported": { "const": false }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "status", "summary", "command", "mode", "writeBoundary", "expectedWritePaths", "alreadySatisfied", "sourceReport"],
+        "properties": {
+          "id": { "enum": ["finish", "ready", "close", "audit-close"] },
+          "status": { "enum": ["satisfied", "required", "blocked", "pending", "unknown"] },
+          "summary": { "type": "string" },
+          "command": { "type": "string" },
+          "mode": { "enum": ["dry-run", "execute", "read-only"] },
+          "writeBoundary": { "enum": ["read-only", "task-local", "evidence-append"] },
+          "expectedWritePaths": { "type": "array", "items": { "type": "string" } },
+          "alreadySatisfied": { "type": "boolean" },
+          "sourceReport": { "type": "string" }
+        }
+      }
+    },
+    "primaryNextAction": { "type": "object", "additionalProperties": true },
+    "nextActions": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "enum": ["error", "warning", "info"] },
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "path": { "type": "string" }
+        }
+      }
+    }
+  }
+}
