@@ -391,3 +391,4 @@
 | T-0388 | Context Pack Read Recommendation Boundary Metadata | Done | tasks/T-0388-context-pack-read-recommendation-boundary-metadata | |
 | T-0389 | Context Pack Item Source Hash Fidelity | Done | tasks/T-0389-context-pack-item-source-hash-fidelity | |
 | T-0390 | Context Pack Slice Candidate Range Hardening | Done | tasks/T-0390-context-pack-slice-candidate-range-hardening | |
+| T-0391 | Task Next Self Referential Handoff Guidance Hardening | Done | tasks/T-0391-task-next-self-referential-handoff-guidance-hardening | |

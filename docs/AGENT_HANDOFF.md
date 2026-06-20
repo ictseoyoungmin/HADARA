@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, T-0360 added the detailed C6 fast cache implementation spec, T-0361-T-0362 completed C3 context pack schema/CLI work, T-0363-T-0368 completed the C6 source-manifest/cache warm/shard/fast-fingerprint line needed before C4, T-0369 added the C4 core raw slice command, T-0371 added the focused C6 speed-first graph/cache warm-path spec, T-0370 completed the remaining C4 symbol/candidate slicing surface, T-0372 hardened C4 byte/local boundaries plus acceptance drift validation before C5, T-0373 measured mounted/ext4 C6 performance, T-0374 added graph-core/context-pack warm shard consumption, T-0375 added code-index shard persistence for code-aware graph reads, T-0376 handled review hardening, T-0377 added incremental per-file code-index recompute for explicit warm execute, T-0378 added bounded default `hadara session start --json`, T-0379 made default Session Start consume proven-fresh warm graph-core/code-index cache read-only before fallback, T-0380 added advisory C6 performance regression fixtures, T-0381 added the implementation completion audit, T-0382 hardened Session Start JSON/UX, T-0383 added the context-routing E2E smoke pack, T-0384 added cache warm diagnostics cleanup, T-0385 aligned 0.3.3 readiness docs, T-0386 added shared acceptance parser v2 lifecycle hardening, T-0387 completed the context slice/pack security boundary audit, T-0388 added context pack source-access metadata for read recommendations, T-0389 hardened context pack item source-hash fidelity after dogfooding, and T-0390 hardened context pack slice candidate ranges. |
-| Current Phase | 0.3.3 context-routing hardening/cleanup complete | C1-C6 core read/cache surfaces, implementation audit, Session Start guidance polish, fast E2E smoke coverage, cache diagnostics cleanup, readiness alignment, acceptance parser lifecycle hardening, slice/pack boundary audit, context pack source-access metadata, item source-hash fidelity, and bounded slice candidate ranges are in place. |
-| Latest Completed Task | T-0390 Context Pack Slice Candidate Range Hardening | Explicit-range slice candidates now use bounded source windows when only a single graph source line is known, while preserving real ranges. |
-| Active / Next Task | Task selection pending | Run `task next` or choose the next release/readiness capsule after the context pack slice candidate range hardening. |
-| Validation Baseline | T-0390 Docker sync-build | Focused Docker temp-copy tests passed 2 files / 19 tests; full Docker sync-build passed 138 files / 909 tests and refreshed `dist`; evidence `ev:T-0390:3696103d7d274411b7cc706f`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, T-0342 registered the 0.3.3 context-routing spec line, T-0343-T-0352 completed C1, T-0353-T-0359 completed C2, T-0360 added the detailed C6 fast cache implementation spec, T-0361-T-0362 completed C3 context pack schema/CLI work, T-0363-T-0368 completed the C6 source-manifest/cache warm/shard/fast-fingerprint line needed before C4, T-0369 added the C4 core raw slice command, T-0371 added the focused C6 speed-first graph/cache warm-path spec, T-0370 completed the remaining C4 symbol/candidate slicing surface, T-0372 hardened C4 byte/local boundaries plus acceptance drift validation before C5, T-0373 measured mounted/ext4 C6 performance, T-0374 added graph-core/context-pack warm shard consumption, T-0375 added code-index shard persistence for code-aware graph reads, T-0376 handled review hardening, T-0377 added incremental per-file code-index recompute for explicit warm execute, T-0378 added bounded default `hadara session start --json`, T-0379 made default Session Start consume proven-fresh warm graph-core/code-index cache read-only before fallback, T-0380 added advisory C6 performance regression fixtures, T-0381 added the implementation completion audit, T-0382 hardened Session Start JSON/UX, T-0383 added the context-routing E2E smoke pack, T-0384 added cache warm diagnostics cleanup, T-0385 aligned 0.3.3 readiness docs, T-0386 added shared acceptance parser v2 lifecycle hardening, T-0387 completed the context slice/pack security boundary audit, T-0388 added context pack source-access metadata for read recommendations, T-0389 hardened context pack item source-hash fidelity after dogfooding, T-0390 hardened context pack slice candidate ranges, and T-0391 hardened task-next self-referential handoff guidance after dogfooding. |
+| Current Phase | 0.3.3 context-routing hardening/cleanup complete | C1-C6 core read/cache surfaces, implementation audit, Session Start guidance polish, fast E2E smoke coverage, cache diagnostics cleanup, readiness alignment, acceptance parser lifecycle hardening, slice/pack boundary audit, context pack source-access metadata, item source-hash fidelity, bounded slice candidate ranges, and task-next agent-usage hardening are in place. |
+| Latest Completed Task | T-0391 Task Next Self Referential Handoff Guidance Hardening | `task next` ignores self-referential handoff meta-guidance and keeps legacy Partial rows behind primary open Task Board rows. |
+| Active / Next Task | Task selection pending | Run `task next` or choose the next release/readiness capsule after the task-next dogfood hardening. |
+| Validation Baseline | T-0391 Docker sync-build | Focused Docker temp-copy tests passed 2 files / 12 tests; full Docker sync-build passed 138 files / 911 tests and refreshed `dist`; evidence `ev:T-0391:ce4b816c3ef64b6eb1154083`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| None | T-0390 completed the context pack slice-candidate range hardening follow-up after dogfooding 0.3.3 context routing. | Next task selection is pending. |
+| None | T-0391 completed the task-next dogfood hardening follow-up after using Session Start and Task Next as an agent. | Next task selection is pending. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0391 Task Next Self Referential Handoff Guidance Hardening | Ignored self-referential task-next handoff guidance and kept legacy Partial rows behind primary open Task Board rows. | `ev:T-0391:ce4b816c3ef64b6eb1154083` |
 | T-0390 Context Pack Slice Candidate Range Hardening | Made explicit-range slice candidates default to bounded source windows when only a single source line is known, while preserving real ranges. | `ev:T-0390:3696103d7d274411b7cc706f` |
 | T-0389 Context Pack Item Source Hash Fidelity | Made raw-sliceable context pack items prefer current item file text hashes with graph-source fallback for missing/non-sliceable paths. | `ev:T-0389:7e68c43ca20f44409d090d95` |
-| T-0388 Context Pack Read Recommendation Boundary Metadata | Added item-level `sourceAccess.rawSlice` metadata so graph-relevant read recommendations can remain present while marking raw sliceability explicitly. | `ev:T-0388:d63eccfe33c34ca3a3990647` |
 
 ## Current Known Problems
 
@@ -92,12 +92,13 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Run `task next --json` or select the next release/readiness capsule. | The context pack slice-candidate range hardening follow-up is complete through T-0390. | Review `docs/PROJECT_STATE.md`, `docs/TASK_BOARD.md`, and `docs/DEVELOPMENT_SLICES.md`. |
+| Run `task next --json` or select the next release/readiness capsule. | The task-next dogfood hardening follow-up is complete through T-0391. | Review `docs/PROJECT_STATE.md`, `docs/TASK_BOARD.md`, and `docs/DEVELOPMENT_SLICES.md`. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0391 task-next dogfood hardening | Focused Docker temp-copy tests passed 2 files / 12 tests; full Docker sync-build passed 138 files / 911 tests and refreshed `dist`; built dogfood smoke passed. | Evidence `ev:T-0391:cc5750565e7149598bd68683`, `ev:T-0391:ce4b816c3ef64b6eb1154083`, `ev:T-0391:d22ebea228d34e9b966efe53`; `task next` now ignores self-referential handoff meta-guidance and keeps Partial as backlog behind primary open work. |
 | T-0390 context pack slice candidate range hardening | Focused Docker temp-copy tests passed 2 files / 19 tests; full Docker sync-build passed 138 files / 909 tests and refreshed `dist`. | Evidence `ev:T-0390:d6ab0cb842d3479faf06b351`, `ev:T-0390:3696103d7d274411b7cc706f`; dogfood hardening keeps candidate slices useful when graph items only have a single source line. |
 | T-0389 context pack source-hash fidelity | Focused Docker temp-copy tests passed 1 file / 8 tests; full Docker sync-build passed 138 files / 909 tests and refreshed `dist`. | Evidence `ev:T-0389:61eafa48eb174f6ea4051e36`, `ev:T-0389:7e68c43ca20f44409d090d95`; dogfood hardening keeps graph-source fallback for missing/non-sliceable paths. |
 | T-0388 context pack source-access metadata | Focused Docker temp-copy tests passed 4 files / 27 tests; full Docker sync-build retry passed 138 files / 908 tests and refreshed `dist`. | Evidence `ev:T-0388:d63eccfe33c34ca3a3990647`; first full sync-build timeout `ev:T-0388:7faddfa5522e43c9adbb2988` was resolved by the retry. |

@@ -161,7 +161,7 @@ function recommendationFromHandoff(projectRoot: string, step: string, boardRows:
 }
 
 function recommendationFromTaskBoard(boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskNextRecommendation | null {
-  const row = boardRows.find((candidate) => isOpenBoardStatus(candidate.status));
+  const row = boardRows.find((candidate) => isPrimaryOpenBoardStatus(candidate.status)) ?? boardRows.find((candidate) => isOpenBoardStatus(candidate.status));
   if (!row) return null;
   const capsule = capsules.find((task) => task.id === row.taskId);
   return {
@@ -235,8 +235,14 @@ function readAgentHandoff(projectRoot: string): { present: boolean; activeNext: 
 function isActionableHandoffStep(step: string): boolean {
   const normalized = step.trim().toLowerCase();
   if (!normalized || normalized === 'step' || normalized === 'tbd') return false;
+  if (isTaskNextMetaGuidance(normalized)) return false;
   if (normalized.startsWith('migrate selected historical evidence only when explicitly requested')) return false;
   return true;
+}
+
+function isTaskNextMetaGuidance(normalizedStep: string): boolean {
+  const compact = normalizedStep.replace(/[`*_]/g, '').replace(/\s+/g, ' ');
+  return /\b(hadara\s+)?task\s+next\b/.test(compact) && /\b(run|select|choose|create)\b/.test(compact);
 }
 
 function normalizeHandoffTitle(step: string): string {
@@ -256,6 +262,10 @@ function isOpenSliceStatus(status: string): boolean {
 function isOpenBoardStatus(status: string): boolean {
   const normalized = status.trim().toLowerCase();
   return Boolean(normalized) && !normalized.startsWith('done') && !normalized.startsWith('superseded');
+}
+
+function isPrimaryOpenBoardStatus(status: string): boolean {
+  return isOpenBoardStatus(status) && !status.trim().toLowerCase().startsWith('partial');
 }
 
 function toPortablePath(value: string): string {

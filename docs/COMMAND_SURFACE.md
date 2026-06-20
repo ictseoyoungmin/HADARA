@@ -82,6 +82,8 @@ hadara task audit-close --task T-XXXX --json
 hadara handoff update --task T-XXXX --json
 ```
 
+`task next` is read-only. It prefers actionable handoff work, then planned development slices, then Task Board fallback rows. It ignores handoff meta-guidance that merely tells the operator to run or select with `task next`, so consumers do not receive a self-referential `createCommand`. During Task Board fallback it prefers primary open rows before legacy `Partial` rows, leaving `Partial` visible as backlog when stronger open work exists.
+
 Diagnostics such as `harness.validate`, `proof.status`, `proof.explain`, `evidence.lint`, `protocol.doctor`, and `state.verify` explain blockers or drift. They do not replace the primary close loop.
 
 ## State Consistency

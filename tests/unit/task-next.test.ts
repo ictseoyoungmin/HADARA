@@ -58,6 +58,33 @@ describe('task next recommendation', () => {
     expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
   });
 
+  it('ignores self-referential handoff task-next guidance and falls back to planned slices', () => {
+    const root = tempProject({
+      handoffNextStep: 'Run `task next --json` or select the next release/readiness capsule.',
+      developmentRows: ['| 1 | Planned Follow-up | T-0190 | Continue. | Planned after current. |']
+    });
+
+    const report = createTaskNextReport(root);
+
+    expect(report).toMatchObject({
+      summary: { recommendations: 1, source: 'docs/DEVELOPMENT_SLICES.md', policy: 'handoff-first' },
+      recommendations: [
+        expect.objectContaining({
+          taskId: 'T-0190',
+          title: 'Planned Follow-up',
+          sourceKind: 'development-slices',
+          createCommand: "hadara task create 'Planned Follow-up'"
+        })
+      ],
+      sources: {
+        agentHandoff: expect.objectContaining({
+          nextRecommendedStep: null
+        })
+      }
+    });
+    expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
+  });
+
   it('recommends the first incomplete Development Slices row with existing capsule metadata', () => {
     const root = tempProject();
     const done = createTaskCapsule(root, 'Already Done');
@@ -128,6 +155,31 @@ describe('task next recommendation', () => {
       source: 'docs/TASK_BOARD.md',
       sourceKind: 'task-board-fallback'
     });
+    expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
+  });
+
+  it('keeps legacy Partial Task Board rows behind primary open rows during fallback', () => {
+    const root = tempProject();
+    const legacy = createTaskCapsule(root, 'Legacy Partial');
+    updateTaskBoardStatus(root, legacy.id, 'Partial');
+    const active = createTaskCapsule(root, 'Active Draft');
+    writeDevelopmentSlices(root, [`| 1 | Completed | T-0001 | Done. | Done: complete. |`]);
+
+    const report = createTaskNextReport(root);
+
+    expect(report.recommendations[0]).toMatchObject({
+      taskId: active.id,
+      title: 'Active Draft',
+      reason: 'First incomplete Task Board row with status Draft.',
+      sourceKind: 'task-board-fallback'
+    });
+    expect(report.backlog).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        taskId: legacy.id,
+        title: 'Legacy Partial',
+        status: 'Partial'
+      })
+    ]));
     expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
   });
 
