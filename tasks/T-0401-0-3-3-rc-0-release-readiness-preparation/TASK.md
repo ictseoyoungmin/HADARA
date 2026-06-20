@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0401 |
 | Title | 0.3.3-rc.0 Release Readiness Preparation |
-| Status | In Progress |
+| Status | Done |
 | Created | 2026-06-20 |
 | Updated | 2026-06-20 |
 
@@ -40,7 +40,7 @@
 
 ## Status
 
-In Progress
+Done
 
 ## Status History
 
@@ -49,4 +49,5 @@ In Progress
 |---|---|---|---|
 | 2026-06-20 | Draft | Initial task scaffold. | `task create` |
 | 2026-06-20 | In Progress | Started 0.3.3-rc.0 release readiness preparation. | Required reading and T-0401 capsule spec |
+| 2026-06-20 | Done | Prepared `hadara@0.3.3-rc.0` source/readiness and passed release readiness gates without publish mutation. | ev:T-0401:1046d97d72a54ca6bd9dabf3, ev:T-0401:125c51d2304a4d689c957bab, ev:T-0401:698672f04c9e4ba394e616c2, ev:T-0401:211f174377cf41eaba9f707b, ev:T-0401:34875afe7c1c4a6c802a0a0d |
 <!-- hadara:managed:end task-status-history -->

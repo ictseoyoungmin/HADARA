@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0400 Default Lifecycle Finalize Documentation |
-| Active Task | 0.3.3 readiness review or operator-selected next capsule |
+| Latest Completed Task | T-0401 0.3.3-rc.0 Release Readiness Preparation |
+| Active Task | Approval-gated `0.3.3-rc.0` publish decision or operator-selected next capsule |
 
 ## Next Planned Line
 
@@ -19,6 +19,8 @@ Phase 9 Evidence v2 writer/docs work is complete through T-0341, and stable `had
 Evidence v2 current boundary: `evidence add-command` writes explicit v2 `category`/`outcome` metadata and exact `resolves:`/`supersedes:` tags without shell execution or broad migration. Incompatible explicit `--result`/`--outcome` pairs are rejected with `EVIDENCE_RESULT_OUTCOME_MISMATCH`, exact resolution markers only resolve earlier failed evidence when the later evidence outcome is passed or recorded, evidence writer task lookup ignores `TASK.md`-less leftovers while rejecting ambiguous same-id valid capsules, and `evidence list` is the supported id discovery surface. T-0334 through T-0341 completed the 0.3.2 rebuild-boundary/docs/readiness/publish/recycle line.
 
 T-0400 follow-up note: 0.3.3 agents now use the finalize-first lifecycle as the default path. Root docs, generated init docs, registry-backed `help lifecycle`, and the lifecycle guide JSON projection present `task lifecycle` followed by reviewed `task finalize --json` / guarded `task finalize --execute --plan-hash <hash>` as the ordinary close loop. Low-level `task finish`, `task ready`, `task close`, and `task audit-close` remain available for debugging, recovery, and command implementation work, but they are no longer the primary agent-facing lifecycle.
+
+T-0401 follow-up note: `hadara@0.3.3-rc.0` source/readiness is prepared without publish mutation. Package metadata and lockfile target `0.3.3-rc.0`; README, release notes, release readiness, and README assertions are aligned; Docker sync-build passed 141 files / 929 tests with refreshed `dist`; release artifact, package smoke, clean-checkout smoke, strict release gate, release dry-run, publish dry-run, built version smoke, and `git diff --check` passed. Package smoke and clean-checkout smoke first failed under sandbox npm cache constraints, then passed on approved external reruns. npm publish, GitHub Release creation, Docker/PyPI publish, installer execution, and MCP release/package execution did not run.
 
 Phase 8 / 0.3.1 is complete through post-rc1 documentation cleanup. It carried Work Item A and Work Item F into implementation as status token governance, document ownership/write-boundary governance, task handoff close-state clarity, installed-package recycle findings cleanup, state consistency projection, and advisory verification gates. The Phase 8 specs are staged under `docs/specs/0.3.1/`; the first rc1 implementation sequence is staged under `docs/specs/0.3.1/rc1/`. Phase 8.1 through Phase 8.6 are complete through T-0324, T-0325 completed the follow-up CloseState derived-state cleanup after review, T-0326 prepared `hadara@0.3.1-rc.1` release readiness without publish mutation, T-0327 published `hadara@0.3.1-rc.1`, verified npm visibility/tarball contents, hardened future rc publish tags, and corrected npm dist-tags so stable `0.3.0` stays on `latest` while rc1 is available as `next`, T-0328 verified the published rc1 package from installed consumer paths in the `hadara-dev` container, and T-0329 refreshed post-rc1 handoff/release-note wording after reviewer feedback.
 
@@ -152,8 +154,8 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0400 Default Lifecycle Finalize Documentation.
-- Active task selection is 0.3.3 readiness review or operator-selected next capsule.
+- Latest completed task is T-0401 0.3.3-rc.0 Release Readiness Preparation.
+- Active task selection is approval-gated `0.3.3-rc.0` publish decision or operator-selected next capsule.
 - Stable `hadara@0.3.0` publish and installed-package consumer recycle are complete through T-0316/T-0317.
 - Phase 8 / `0.3.1` planning is staged under `docs/specs/0.3.1/`; Phase 8.1 status token/document ownership governance, Phase 8.2 task handoff close-state governance, Phase 8.3 installed-package findings cleanup, Phase 8.4 state consistency projection read model, Phase 8.5 advisory verify/doctor/CI integration, Phase 8.6 rc1 review/hardening cleanup, T-0325 CloseState derived-state cleanup, T-0326 rc1 release-readiness preparation, T-0327 approval-gated publish, T-0328 installed-package recycle, and T-0329 post-rc1 docs cleanup are complete.
 - `0.3.1-rc.1` source/readiness is complete through T-0326; npm package visibility, tarball inspection, and corrected dist-tags are confirmed through T-0327; installed-package recycle is complete through T-0328; post-rc1 shared-doc wording cleanup is complete through T-0329.

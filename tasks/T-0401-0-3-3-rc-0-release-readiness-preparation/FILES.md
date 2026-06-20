@@ -8,4 +8,4 @@
 | `docs/RELEASE_NOTES.md` | Update | Add `0.3.3-rc.0` release-candidate notes and boundaries. | Done |
 | `docs/RELEASE_READINESS.md` | Update | Record current release-readiness target and no-publish boundary. | Done |
 | `tests/unit/init.test.ts` | Update | Align README release-status assertions with current RC. | Done |
-| `tasks/T-0401-0-3-3-rc-0-release-readiness-preparation/*` | Update | Track release-readiness plan, decisions, risks, files, evidence, tests, acceptance, and handoff. | In Progress |
+| `tasks/T-0401-0-3-3-rc-0-release-readiness-preparation/*` | Update | Track release-readiness plan, decisions, risks, files, evidence, tests, acceptance, and handoff. | Done |
