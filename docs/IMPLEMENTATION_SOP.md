@@ -88,6 +88,7 @@ Use semantic tiers to keep session startup compact and deterministic:
 | `docs/specs/0.3.3/context-routing/09_Context_Routing_Implementation_Completion_Audit.md` | Auditing 0.3.3 context-routing completion state, selecting cleanup capsules, or deciding whether a spec item is implemented, partial, deferred, or follow-up | Current implementation completion snapshot after T-0380 and cleanup queue for T-0382 through T-0387 |
 | `docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md` | Implementing or reviewing C6 mounted/ext4 performance behavior or changing C5 session-start graph/pack consumption | Observed built-CLI mounted vs ext4 timings for cache status, cache warm dry-run, graph, graph include-code, and context pack |
 | `docs/CONTEXT_ROUTING_PERFORMANCE_THRESHOLDS.json` | Running or changing context-routing performance regression checks | Advisory mounted/ext4 workload budgets for the context-routing performance baseline script |
+| `docs/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md` | Implementing or reviewing lifecycle convenience, task lifecycle, close repair, or finalize workflow work | 0.3.3 lifecycle convenience design, improved agent scenarios, and capsule budget |
 
 ## Project-Specific Documents
 

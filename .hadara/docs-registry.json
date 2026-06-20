@@ -585,6 +585,27 @@
       "generatedBy": "T-0381"
     },
     {
+      "path": "docs/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md",
+      "title": "Lifecycle Workflow Agent Convenience Spec",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0392"
+    },
+    {
       "path": "docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md",
       "title": "Context Routing Performance Baseline",
       "owner": "hadara-dev",

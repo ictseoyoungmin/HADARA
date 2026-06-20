@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0391 Task Next Self Referential Handoff Guidance Hardening |
-| Active Task | Task selection pending after task-next dogfood hardening |
+| Latest Completed Task | T-0392 Lifecycle Workflow Agent Convenience Spec and Budget |
+| Active Task | T-0393 Task Lifecycle Read Model is next |
 
 ## Next Planned Line
 
@@ -83,6 +83,8 @@ T-0389 follow-up note: Context pack item `sourceHash` now prefers the current te
 T-0390 follow-up note: Context pack explicit-range slice candidates now treat a single graph source line as an anchor and emit a bounded source window instead of a one-line range, while preserving real multi-line metadata ranges. This fixes the dogfooded `context pack` -> `context slice --task --candidate` scenario where an `AGENT_HANDOFF.md` candidate returned only the heading line. Focused Docker temp-copy validation passed 2 files / 19 tests; full Docker sync-build passed 138 files / 909 tests, refreshed `dist`, and reported `distLooksStale:false`. Evidence: `ev:T-0390:d6ab0cb842d3479faf06b351`, `ev:T-0390:3696103d7d274411b7cc706f`.
 
 T-0391 follow-up note: The dogfooded `session start --json` -> `task next --json` flow now avoids self-referential next-work recommendations. `task next` ignores handoff meta-guidance that merely tells the operator to run/select with `task next`, falls back to concrete work sources, and prefers primary open Task Board rows before legacy `Partial` rows while keeping Partial visible in backlog. `tasks/T-0391-task-next-self-referential-handoff-guidance-hardening/FINDINGS.md` records the agent-usage findings and future improvement ideas. Focused Docker temp-copy validation passed 2 files / 12 tests; full Docker sync-build passed 138 files / 911 tests, refreshed `dist`, and reported `distLooksStale:false`; built dogfood smoke confirmed T-0391 primary and T-0006 Partial backlog. Evidence: `ev:T-0391:cc5750565e7149598bd68683`, `ev:T-0391:ce4b816c3ef64b6eb1154083`, `ev:T-0391:d22ebea228d34e9b966efe53`.
+
+T-0392 follow-up note: The 0.3.3 lifecycle convenience line is specified in `docs/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md`. The plan keeps `task finish`, `task ready`, `task close`, and `task audit-close` as canonical proof boundaries, then adds additive agent-friendly surfaces in follow-up capsules: read-only `task lifecycle`, read-only `task close-repair-plan`, lifecycle guidance dedup hardening, dry-run `task finalize`, optional guarded finalize execute, and generated-doc/session guidance alignment. Focused docs registry validation passed 2 files / 6 tests and `git diff --check` passed. Evidence: `ev:T-0392:46f350146736461ea9712b18`.
 
 ## Current Phase
 
