@@ -72,6 +72,7 @@ The ordinary worker loop is:
 ```bash
 hadara task next --json
 hadara task status --task T-XXXX --json
+hadara task lifecycle --task T-XXXX --json
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
 hadara task finish --task T-XXXX --json
 hadara task finish --task T-XXXX --execute --json

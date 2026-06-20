@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, and 0.3.3 context-routing/hardening completed through T-0391. T-0392 added the lifecycle convenience spec and capsule budget for agent-friendly finish/ready/close/audit use without weakening proof boundaries. |
-| Current Phase | 0.3.3 lifecycle convenience line started | Context-routing hardening remains complete; lifecycle ergonomics now continue with additive read-only/guarded convenience surfaces. |
-| Latest Completed Task | T-0392 Lifecycle Workflow Agent Convenience Spec and Budget | Registered `docs/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md` with improved scenario and T-0392 through T-0398 capsule budget. |
-| Active / Next Task | T-0393 Task Lifecycle Read Model | Implement the read-only normalized phase API first. |
-| Validation Baseline | T-0392 focused docs validation | Focused docs registry validation passed 2 files / 6 tests and `git diff --check` passed; evidence `ev:T-0392:46f350146736461ea9712b18`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/hardening completed through T-0391, and the lifecycle convenience line is complete through T-0393. |
+| Current Phase | 0.3.3 lifecycle convenience line in progress | Context-routing hardening remains complete; lifecycle ergonomics now continue with additive read-only/guarded convenience surfaces. |
+| Latest Completed Task | T-0393 Task Lifecycle Read Model | Added read-only `hadara task lifecycle --task T --json` over `hadara.task.lifecycle.v1`. |
+| Active / Next Task | T-0394 Close Repair Plan Read Model | Implement dedicated close repair classifications and next commands. |
+| Validation Baseline | T-0393 lifecycle read model validation | Focused lifecycle validation passed 4 files / 20 tests, full Docker sync-build passed 139 files / 915 tests with refreshed `dist`, and built CLI smoke passed. Evidence `ev:T-0393:bc944ecc2c894e869dd7e557`, `ev:T-0393:5ec89716142c4e19b7e3abe0`, `ev:T-0393:03d977cfde444c83862cfd3c`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| None | T-0392 completed the lifecycle convenience spec and budget. | Next implementation capsule is T-0393 Task Lifecycle Read Model. |
+| None | T-0393 completed the read-only lifecycle phase API. | Next implementation capsule is T-0394 Close Repair Plan Read Model. |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0393 Task Lifecycle Read Model | Added `hadara.task.lifecycle.v1`, CLI/registry/docs wiring, and read-only normalized phase/check/next-action reporting. | `ev:T-0393:bc944ecc2c894e869dd7e557`, `ev:T-0393:5ec89716142c4e19b7e3abe0`, `ev:T-0393:03d977cfde444c83862cfd3c` |
 | T-0392 Lifecycle Workflow Agent Convenience Spec and Budget | Added the registered lifecycle convenience spec, improved agent scenario, and capsule budget. | `ev:T-0392:46f350146736461ea9712b18` |
 | T-0391 Task Next Self Referential Handoff Guidance Hardening | Ignored self-referential task-next handoff guidance and kept legacy Partial rows behind primary open Task Board rows. | `ev:T-0391:ce4b816c3ef64b6eb1154083` |
-| T-0390 Context Pack Slice Candidate Range Hardening | Made explicit-range slice candidates default to bounded source windows when only a single source line is known, while preserving real ranges. | `ev:T-0390:3696103d7d274411b7cc706f` |
 
 ## Current Known Problems
 
@@ -92,15 +92,15 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Start T-0393 Task Lifecycle Read Model. | T-0392 defined the lifecycle convenience budget; the first implementation slice is the read-only normalized lifecycle phase API. | `docs/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md` |
+| Start T-0394 Close Repair Plan Read Model. | T-0393 added the general read-only lifecycle phase API; the next lifecycle capsule should make stale/invalid/not-closed repair guidance explicit and fixture-tested. | `docs/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0393 task lifecycle read model | Focused lifecycle validation passed 4 files / 20 tests; full Docker sync-build passed 139 files / 915 tests and refreshed `dist`; built `task lifecycle` smoke passed. | Evidence `ev:T-0393:bc944ecc2c894e869dd7e557`, `ev:T-0393:5ec89716142c4e19b7e3abe0`, `ev:T-0393:03d977cfde444c83862cfd3c`; mounted built smoke took about 24s because the report composes existing lifecycle checks. |
 | T-0392 lifecycle convenience spec | Focused docs registry validation passed 2 files / 6 tests and `git diff --check` passed. | Evidence `ev:T-0392:46f350146736461ea9712b18`; no runtime behavior changed. |
 | T-0391 task-next dogfood hardening | Focused Docker temp-copy tests passed 2 files / 12 tests; full Docker sync-build passed 138 files / 911 tests and refreshed `dist`; built dogfood smoke passed. | Evidence `ev:T-0391:cc5750565e7149598bd68683`, `ev:T-0391:ce4b816c3ef64b6eb1154083`, `ev:T-0391:d22ebea228d34e9b966efe53`; `task next` now ignores self-referential handoff meta-guidance and keeps Partial as backlog behind primary open work. |
-| T-0390 context pack slice candidate range hardening | Focused Docker temp-copy tests passed 2 files / 19 tests; full Docker sync-build passed 138 files / 909 tests and refreshed `dist`. | Evidence `ev:T-0390:d6ab0cb842d3479faf06b351`, `ev:T-0390:3696103d7d274411b7cc706f`; dogfood hardening keeps candidate slices useful when graph items only have a single source line. |
 | T-0389 context pack source-hash fidelity | Focused Docker temp-copy tests passed 1 file / 8 tests; full Docker sync-build passed 138 files / 909 tests and refreshed `dist`. | Evidence `ev:T-0389:61eafa48eb174f6ea4051e36`, `ev:T-0389:7e68c43ca20f44409d090d95`; dogfood hardening keeps graph-source fallback for missing/non-sliceable paths. |
 | T-0388 context pack source-access metadata | Focused Docker temp-copy tests passed 4 files / 27 tests; full Docker sync-build retry passed 138 files / 908 tests and refreshed `dist`. | Evidence `ev:T-0388:d63eccfe33c34ca3a3990647`; first full sync-build timeout `ev:T-0388:7faddfa5522e43c9adbb2988` was resolved by the retry. |
 | T-0378 bounded session start | Docker check passed 136 files / 894 tests; Docker sync-build passed and refreshed `dist`; built session-start smoke passed in about 1.6s; evidence lint passed. | Evidence `ev:T-0378:b3e1cc3b1b6d44b4a68c9bf0`, `ev:T-0378:2c321128b97c4efda50ee1ba`, `ev:T-0378:dd42b8f8ded34d988a2090a1`, `ev:T-0378:59772865b91049d6b79fa3ce`; initial live-default timeout `ev:T-0378:b530c04adb3e4d50ac3ef0b4` is resolved by bounded no-live smoke. |

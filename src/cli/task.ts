@@ -1,6 +1,7 @@
 import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../task/task-close';
 import { createTaskCompleteFlowReport, formatTaskCompleteFlowReport } from '../task/task-complete-flow';
 import { createTaskCreateReport, formatTaskCreateReport } from '../task/task-create';
+import { createTaskLifecycleReport, formatTaskLifecycleReport } from '../task/task-lifecycle';
 import { createTaskReadyReport } from '../task/task-ready';
 import { createTaskFinishReport, formatTaskFinishReport } from '../task/task-finish';
 import { createTaskNextReport, formatTaskNextReport } from '../task/task-next';
@@ -120,6 +121,19 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
       console.log(JSON.stringify(report, null, 2));
     } else {
       console.log(formatTaskCompleteFlowReport(report));
+    }
+    if (!report.ok) process.exitCode = 6;
+    return true;
+  }
+
+  if (sub === 'lifecycle') {
+    const id = getStringOption(input.args, '--task') ?? input.args[2];
+    if (!id || id.startsWith('--')) throw new Error('task lifecycle requires --task <task-id>');
+    const report = createTaskLifecycleReport(input.projectRoot, id, { actor: getActorContextOption(input.args) });
+    if (input.jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log(formatTaskLifecycleReport(report));
     }
     if (!report.ok) process.exitCode = 6;
     return true;

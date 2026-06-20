@@ -289,6 +289,13 @@
       "notes": "Documents read-only task completion flow reports that compose finish, ready, close, and audit guidance."
     },
     {
+      "id": "hadara.task.lifecycle.v1",
+      "path": "src/schemas/task-lifecycle.schema.json",
+      "status": "fixture",
+      "owner": "task/lifecycle",
+      "notes": "Documents read-only normalized lifecycle phase reports that compose finish, ready, close, and audit state."
+    },
+    {
       "id": "hadara.taskContext.v1",
       "path": "src/schemas/task-context.schema.json",
       "status": "fixture",

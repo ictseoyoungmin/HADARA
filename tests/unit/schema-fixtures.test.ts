@@ -84,6 +84,7 @@ describe('schema fixtures', () => {
       'hadara.task.complete_flow.v1',
       'hadara.task.create.v1',
       'hadara.task.finish.v1',
+      'hadara.task.lifecycle.v1',
       'hadara.task.next.v1',
       'hadara.task.ready.v1',
       'hadara.task.upgrade_scaffold.v1',

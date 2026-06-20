@@ -56,6 +56,7 @@ import taskCompleteFlowSchemaJson from '../schemas/task-complete-flow.schema.jso
 import taskContextSchemaJson from '../schemas/task-context.schema.json';
 import taskCreateSchemaJson from '../schemas/task-create.schema.json';
 import taskFinishSchemaJson from '../schemas/task-finish.schema.json';
+import taskLifecycleSchemaJson from '../schemas/task-lifecycle.schema.json';
 import taskNextSchemaJson from '../schemas/task-next.schema.json';
 import taskReadySchemaJson from '../schemas/task-ready.schema.json';
 import taskUpgradeScaffoldSchemaJson from '../schemas/task-upgrade-scaffold.schema.json';
@@ -159,6 +160,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.taskContext.v1': taskContextSchemaJson as JsonObject,
   'hadara.task.create.v1': taskCreateSchemaJson as JsonObject,
   'hadara.task.finish.v1': taskFinishSchemaJson as JsonObject,
+  'hadara.task.lifecycle.v1': taskLifecycleSchemaJson as JsonObject,
   'hadara.task.next.v1': taskNextSchemaJson as JsonObject,
   'hadara.task.ready.v1': taskReadySchemaJson as JsonObject,
   'hadara.task.upgrade_scaffold.v1': taskUpgradeScaffoldSchemaJson as JsonObject,
