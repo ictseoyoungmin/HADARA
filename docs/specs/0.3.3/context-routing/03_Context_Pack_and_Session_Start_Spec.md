@@ -127,6 +127,8 @@ export interface ContextPackItem {
 
 When a `ContextPackItem` has a raw-sliceable project file path and that file is available, `sourceHash` should identify the item path's current source text. If the file is unavailable or not raw-sliceable, implementations may fall back to the graph node source hash that explains where the graph item came from.
 
+When a `sliceCandidates[]` entry uses an explicit source range from a pack item that only has one graph source line, the candidate should treat that line as an anchor and use a bounded source window instead of emitting a one-line range. Real multi-line metadata ranges remain authoritative and must be preserved.
+
 ### ValidationSuggestion
 
 ```ts
@@ -234,6 +236,7 @@ Raw slice boundary:
 - Such items must be marked with `sourceAccess.rawSlice: "not-sliceable"`.
 - Agents must not turn those items into raw `context slice` calls.
 - `sliceCandidates` remains the executable raw-slice command list.
+- `sliceCandidates` explicit ranges should be useful bounded source windows when only a single source line is known, while preserving real multi-line source ranges.
 
 ### readIfNeeded
 

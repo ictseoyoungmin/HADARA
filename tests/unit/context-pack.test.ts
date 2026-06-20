@@ -86,6 +86,11 @@ describe('context pack', () => {
     const firstSliceCandidate = report.sliceCandidates[0];
     expect(firstSliceCandidate?.suggestedCommand).toMatch(/^hadara context slice --path /);
     expect(firstSliceCandidate?.suggestedCommandArgs).toEqual(expect.arrayContaining(['context', 'slice', '--path']));
+    expect(firstSliceCandidate).toEqual(expect.objectContaining({
+      strategy: 'explicit-range',
+      lineStart: 1,
+      lineEnd: 81
+    }));
     assertSchema('hadara.contextPack.v1', report);
   });
 
@@ -112,7 +117,9 @@ describe('context pack', () => {
 
     expect(candidate).toEqual(expect.objectContaining({
       strategy: 'explicit-range',
-      suggestedCommandArgs: ['context', 'slice', '--path', 'docs/space name.md', '--from', '7', '--to', '7', '--json']
+      lineStart: 7,
+      lineEnd: 87,
+      suggestedCommandArgs: ['context', 'slice', '--path', 'docs/space name.md', '--from', '7', '--to', '87', '--json']
     }));
     expect(candidate?.suggestedCommand).toContain("--path 'docs/space name.md'");
     assertSchema('hadara.contextPack.v1', report);

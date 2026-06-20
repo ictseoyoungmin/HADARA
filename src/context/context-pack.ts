@@ -524,8 +524,9 @@ function sliceCandidatesForItems(items: ContextPackItem[], nodes: ContextGraphNo
       const node = nodeById.get(item.id);
       const strategy = sliceStrategyForNode(node);
       const path = item.path as string;
-      const lineStart = item.lineStart ?? numberMetadata(node, 'startLine') ?? node?.source.line;
-      const lineEnd = item.lineEnd ?? numberMetadata(node, 'endLine') ?? (lineStart ? Math.max(lineStart, lineStart + 80) : undefined);
+      const range = explicitRangeForCandidate(item, node);
+      const lineStart = range?.lineStart;
+      const lineEnd = range?.lineEnd;
       const symbol = node?.type === 'Symbol' ? node.label : undefined;
       const managedSection = node?.type === 'ManagedSection' ? node.label : undefined;
       const suggestedCommandArgs = suggestedSliceCommandArgs(path, strategy, node, { lineStart, lineEnd, symbol, managedSection });
@@ -542,6 +543,14 @@ function sliceCandidatesForItems(items: ContextPackItem[], nodes: ContextGraphNo
         suggestedCommandArgs
       };
     });
+}
+
+function explicitRangeForCandidate(item: ContextPackItem, node: ContextGraphNode | undefined): { lineStart: number; lineEnd: number } | undefined {
+  const lineStart = item.lineStart ?? numberMetadata(node, 'startLine') ?? node?.source.line ?? 1;
+  const metadataEnd = numberMetadata(node, 'endLine');
+  if (metadataEnd !== undefined && metadataEnd > lineStart) return { lineStart, lineEnd: metadataEnd };
+  if (item.lineEnd !== undefined && item.lineEnd > lineStart) return { lineStart, lineEnd: item.lineEnd };
+  return { lineStart, lineEnd: Math.max(lineStart, lineStart + 80) };
 }
 
 function sliceStrategyForNode(node: ContextGraphNode | undefined): SliceCandidate['strategy'] {
