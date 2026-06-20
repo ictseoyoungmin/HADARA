@@ -75,6 +75,7 @@ hadara task status --task T-XXXX --json
 hadara task lifecycle --task T-XXXX --json
 hadara task close-repair-plan --task T-XXXX --json
 hadara task finalize --task T-XXXX --json
+hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
 hadara task finish --task T-XXXX --json
 hadara task finish --task T-XXXX --execute --json

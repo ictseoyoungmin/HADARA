@@ -156,7 +156,18 @@ Optional workflow compression is read-only. Use it separately when you want a co
 
 ```bash
 hadara task complete --task T-XXXX --json
+hadara task lifecycle --task T-XXXX --json
+hadara task close-repair-plan --task T-XXXX --json
+hadara task finalize --task T-XXXX --json
 ```
+
+When `task finalize --json` returns a reviewed current `planHash`, agents may use the optional guarded wrapper instead of manually running each remaining phase:
+
+```bash
+hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
+```
+
+This wrapper rechecks the plan hash, executes phases serially, stops on blockers, and succeeds only after final `audit-close` is `closed-valid`. The explicit finish/ready/close/audit commands remain canonical.
 
 Important boundaries:
 
@@ -164,6 +175,9 @@ Important boundaries:
 |---|---|
 | `task status` | Read-only operator console. `ok:true` means the report was generated, not that the task is ready. |
 | `task complete` | Optional read-only workflow compressor. It reports the current stage and next action. |
+| `task lifecycle` | Optional read-only normalized lifecycle phase report. |
+| `task close-repair-plan` | Optional read-only close-proof repair classifier. |
+| `task finalize` | Read-only by default; guarded execute requires a matching current `planHash` and preserves underlying write boundaries. |
 | `task finish --execute` | Writes only bounded status bookkeeping in `TASK.md` and `docs/TASK_BOARD.md`. |
 | `task close --execute` | Appends close evidence only. |
 | `task audit-close` | Read-only close proof audit. |

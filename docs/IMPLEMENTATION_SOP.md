@@ -203,6 +203,12 @@ hadara task ready --task T-XXXX --level done --json
 
 # Optional workflow compression / next action preview:
 hadara task complete --task T-XXXX --json
+hadara task lifecycle --task T-XXXX --json
+hadara task close-repair-plan --task T-XXXX --json
+hadara task finalize --task T-XXXX --json
+
+# Optional guarded convenience execute after reviewing the current finalize planHash:
+hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 
 hadara task close --task T-XXXX --json
 hadara task close --task T-XXXX --execute --json
@@ -217,6 +223,9 @@ hadara task audit-close --task T-XXXX --json
 | `evidence add-command` | Write | Appends command-log evidence; does not execute shell commands; optional `--category`/`--outcome`/`--resolves`/`--supersedes` enrich v2 metadata, result/outcome mismatches are rejected, and optional `--idempotency-key` prevents duplicate same-key records. |
 | `task ready` | Read-only | Checks readiness; does not mutate evidence or status docs. |
 | `task finish` | Dry-run by default; writes only with `--execute` | Bounded to `TASK.md` and `docs/TASK_BOARD.md`. |
+| `task lifecycle` | Read-only | Reports normalized lifecycle phase, checks, blockers, and one next action. |
+| `task close-repair-plan` | Read-only | Classifies close proof repair state and exact repair command. |
+| `task finalize` | Read-only by default; guarded execute requires `--plan-hash` | Rechecks the current plan hash, executes phases serially, stops on blockers, and preserves finish/close write boundaries. |
 | `task close` | Dry-run by default; writes only with `--execute` | Bounded to close evidence append. |
 | `task audit-close` | Read-only | Verifies close evidence after close. |
 
