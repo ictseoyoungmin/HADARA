@@ -4,31 +4,32 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, `0.3.3-rc.0` readiness/publish completed through T-0402, dogfood SaaS planning completed through T-0403, and dogfood findings hardening completed through T-0404. |
-| Current Phase | 0.3.3 stable release hardening complete | `hadara@0.3.3-rc.0` is published with `next`; PatternForge dogfood findings PF-F-012 and PF-F-010 are fixed in source and refreshed `dist`. |
-| Latest Completed Task | T-0404 0.3.3 dogfood findings release hardening | Imported PatternForge dogfood findings and stable decision input, fixed cached Task Board node classification and warning-only post-close handoff next actions, and verified the fixes with focused Docker plus built PatternForge smokes. |
-| Active / Next Task | TBD 0.3.3 stable release readiness refresh | Rerun full readiness/package/release gates after T-0404 before promoting or publishing stable `hadara@0.3.3`. |
-| Validation Baseline | T-0401 readiness, T-0402 publish verification, T-0403 docs validation, and T-0404 focused hardening | T-0401 Docker sync-build passed 141 files / 929 tests with refreshed `dist`; T-0402 publish/registry/dist-tag/tarball/install smoke passed; T-0403 docs/spec validation passed; T-0404 focused Docker validation and PatternForge built smokes passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, `0.3.3-rc.0` readiness/publish completed through T-0402, dogfood SaaS planning/hardening completed through T-0404, and stable `0.3.3` readiness completed through T-0405. |
+| Current Phase | 0.3.3 stable release readiness complete | Source metadata and package-facing docs target stable `hadara@0.3.3`; publish remains the next approval-gated mutation after operator npm login. |
+| Latest Completed Task | T-0405 0.3.3 stable release readiness refresh | Prepared stable `0.3.3` source/readiness after T-0404 dogfood hardening, refreshed `dist`, generated fresh release/package/clean-checkout evidence, passed strict release gate and release dry-run, and verified npm registry has no existing `hadara@0.3.3`. |
+| Active / Next Task | TBD 0.3.3 stable approval-gated publish | Create the publish capsule, have the operator log into npm, rerun the manual helper, and publish stable `hadara@0.3.3` only after explicit approval. |
+| Validation Baseline | T-0405 stable readiness | T-0405 Docker validation, guarded dist sync, release artifact, package smoke, clean-checkout smoke, strict release gate, release dry-run, and npm pre-publish registry check passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Prepare stable `hadara@0.3.3` readiness from the hardened T-0404 source, then decide whether to promote/publish stable or continue PatternForge dogfooding. | `docs/RELEASE_READINESS.md`, `docs/RELEASE_NOTES.md`, `tasks/T-0404-0-3-3-dogfood-findings-release-hardening/HANDOFF.md` |
+| TBD | Publish stable `hadara@0.3.3` through an approval-gated capsule, or stop before mutation if the operator wants another review pass. | `docs/RELEASE_READINESS.md`, `docs/RELEASE_NOTES.md`, `tasks/T-0405-0-3-3-stable-release-readiness-refresh/HANDOFF.md` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0405 0.3.3 stable release readiness refresh | Prepared stable `hadara@0.3.3` source/readiness, refreshed `dist`, generated fresh release artifact/package/clean-checkout evidence, passed strict release gate and release dry-run, and verified npm has no existing `0.3.3`. | `ev:T-0405:d2c9fce2d4fb423ea98c171e`, `ev:T-0405:47d23e856dbe4b7f94502aa8`, `ev:T-0405:7222082ccc8449468c2b3f47`, `ev:T-0405:6fb57bb7c06a46aca53b38a0`, `ev:T-0405:f3a1bd62ec254e5abeb83de6`, `ev:T-0405:79a290abc677408b85064993`, `ev:T-0405:98c78116db1242319eaf3759` |
 | T-0404 0.3.3 dogfood findings release hardening | Imported PatternForge findings into the capsule, fixed PF-F-012 cached Task Board node classification, fixed PF-F-010 warning-only post-close handoff next actions, and verified with focused Docker plus built PatternForge smokes. | `ev:T-0404:b6deb46e7b9d4a3283f88d57` |
 | T-0403 0.3.3 dogfood SaaS spec and capsule budget | Added registered PatternForge dogfood spec for a Docker Compose procedural material SaaS, including `grass-field-v1`, no-GPU default architecture, 22-capsule budget, and HADARA dogfood evaluation criteria. | `ev:T-0403:d087eb9162d34a17afa8fa9d` |
-| T-0402 0.3.3-rc.0 Approval-Gated Publish | Published `hadara@0.3.3-rc.0` to npm with `next`, verified `latest` remains `0.3.2`, checked tarball metadata, and passed temp-prefix installed-bin smoke; GitHub Release draft was not requested. | `ev:T-0402:400a8a3c43b248cc8d4fcb0f`, `ev:T-0402:4addcdd15a8149afb69c2e40`, `ev:T-0402:708f2b933fff46a3917b01dc` |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| T-0404 focused hardening has not been through the full stable release gate. | Stable `hadara@0.3.3` publish would be premature if it relies only on focused tests and dogfood smokes. | Create a stable release readiness capsule and rerun full Docker/package/release gates before publish or dist-tag promotion. |
+| Stable `hadara@0.3.3` is prepared but not published. | Package-facing docs/source target `0.3.3`, while npm still needs operator-approved registry mutation. | Create the stable publish capsule, log into npm, rerun the manual helper, and publish only after explicit approval. |
+| `bash scripts/release/manual-publish-rc.sh T-0405` stopped at npm `whoami` E401. | This environment is not logged into npm, so the helper cannot complete publish preflight here. | Operator logs into npm in the publish environment; T-0405 verified `npm view hadara@0.3.3` returns E404 before publish. |
 | T-0383 mounted full-profile probes exceeded a 20s workload budget for cache status/warm, graph task, graph include-code, and context pack. | These workloads are not suitable for the default fast smoke loop on mounted filesystems. | Keep `smoke:context-routing` defaulting to fast profile; use `--profile full` explicitly for diagnostic/full-path checks. |
 | Built cache status still took about 19.6s on `/mnt/f` while producing diagnostics. | Diagnostics are clearer, but mounted broad source-manifest cost remains. | T-0385 classified this as an accepted residual for explicit diagnostic/warm/full-profile commands; default Session Start remains bounded/cache-preferential. |
 | Installed `hadara@0.3.2 version --json` reports dist freshness at `build.distLooksStale:false`, not root `distLooksStale`. | Consumers using shorthand root-field checks may miss the current schema location. | Treat `hadara.runtime.version.v1` output as authoritative; root compatibility can be a future docs/JSON compatibility follow-up if needed. |

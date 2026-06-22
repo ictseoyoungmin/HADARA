@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0405 |
 | Title | 0.3.3 stable release readiness refresh |
-| Status | In Progress |
+| Status | Done |
 | Created | 2026-06-22 |
 | Updated | 2026-06-22 |
 
@@ -35,7 +35,7 @@
 
 ## Status
 
-In Progress
+Done
 
 ## Status History
 
@@ -44,4 +44,5 @@ In Progress
 |---|---|---|---|
 | 2026-06-22 | Draft | Initial task scaffold. | `hadara task create` |
 | 2026-06-22 | In Progress | Started stable `0.3.3` readiness refresh after T-0404 dogfood hardening. | T-0405 task docs |
+| 2026-06-22 | Done | Finished task capsule. | `hadara task finish --execute` |
 <!-- hadara:managed:end task-status-history -->
