@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, `0.3.3-rc.0` readiness/publish completed through T-0402, dogfood SaaS planning/hardening completed through T-0404, and stable `0.3.3` readiness completed through T-0405. |
-| Current Phase | 0.3.3 stable approval-gated publish staged | Source metadata and package-facing docs target stable `hadara@0.3.3`; T-0406 stages the operator npm publish path. |
-| Latest Completed Task | T-0405 0.3.3 stable release readiness refresh | Prepared stable `0.3.3` source/readiness after T-0404 dogfood hardening, refreshed `dist`, generated fresh release/package/clean-checkout evidence, passed strict release gate and release dry-run, and verified npm registry has no existing `hadara@0.3.3`. |
-| Active / Next Task | T-0406 0.3.3 stable approval-gated publish | Operator logs into npm, reruns the manual helper, and publishes stable `hadara@0.3.3` only after explicit approval. |
-| Validation Baseline | T-0405 stable readiness | T-0405 Docker validation, guarded dist sync, release artifact, package smoke, clean-checkout smoke, strict release gate, release dry-run, and npm pre-publish registry check passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, `0.3.3-rc.0` readiness/publish completed through T-0402, dogfood SaaS planning/hardening completed through T-0404, stable `0.3.3` readiness completed through T-0405, and stable `0.3.3` npm publish completed through T-0406. |
+| Current Phase | 0.3.3 stable npm publish complete | `hadara@0.3.3` is published on npm with `latest`; registry/dist-tags and temporary-prefix installed-bin smoke passed. |
+| Latest Completed Task | T-0406 0.3.3 stable approval-gated publish | Published stable `hadara@0.3.3` to npm, verified `latest=0.3.3` and `next=0.3.3-rc.0`, and passed installed-bin smoke. |
+| Active / Next Task | TBD post-0.3.3 release follow-up | Decide whether to create an optional GitHub Release draft, installed-package recycle capsule, or begin the next planned line. |
+| Validation Baseline | T-0406 stable publish | T-0406 npm publish, registry/dist-tag verification, and temp-prefix installed-bin smoke passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0406 | Publish stable `hadara@0.3.3` through the approval-gated helper after npm login, or stop before mutation if the operator wants another review pass. | `docs/RELEASE_READINESS.md`, `docs/RELEASE_NOTES.md`, `tasks/T-0406-0-3-3-stable-approval-gated-publish/HANDOFF.md` |
+| TBD | Choose post-0.3.3 release follow-up: optional GitHub Release draft, installed-package recycle, or next planned line. | `docs/RELEASE_READINESS.md`, `tasks/T-0406-0-3-3-stable-approval-gated-publish/HANDOFF.md` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0406 0.3.3 stable approval-gated publish | Published stable `hadara@0.3.3` to npm, verified registry/dist-tags, and passed temporary-prefix installed-bin smoke. | `ev:T-0406:8f35fa0295e34e93973136fa`, `ev:T-0406:630c4761c6c44250943f86e0`, `ev:T-0406:b284424247cc414ba9787fc4` |
 | T-0405 0.3.3 stable release readiness refresh | Prepared stable `hadara@0.3.3` source/readiness, refreshed `dist`, generated fresh release artifact/package/clean-checkout evidence, passed strict release gate and release dry-run, and verified npm has no existing `0.3.3`. | `ev:T-0405:d2c9fce2d4fb423ea98c171e`, `ev:T-0405:47d23e856dbe4b7f94502aa8`, `ev:T-0405:7222082ccc8449468c2b3f47`, `ev:T-0405:6fb57bb7c06a46aca53b38a0`, `ev:T-0405:f3a1bd62ec254e5abeb83de6`, `ev:T-0405:79a290abc677408b85064993`, `ev:T-0405:98c78116db1242319eaf3759` |
 | T-0404 0.3.3 dogfood findings release hardening | Imported PatternForge findings into the capsule, fixed PF-F-012 cached Task Board node classification, fixed PF-F-010 warning-only post-close handoff next actions, and verified with focused Docker plus built PatternForge smokes. | `ev:T-0404:b6deb46e7b9d4a3283f88d57` |
-| T-0403 0.3.3 dogfood SaaS spec and capsule budget | Added registered PatternForge dogfood spec for a Docker Compose procedural material SaaS, including `grass-field-v1`, no-GPU default architecture, 22-capsule budget, and HADARA dogfood evaluation criteria. | `ev:T-0403:d087eb9162d34a17afa8fa9d` |
 
 ## Current Known Problems
 

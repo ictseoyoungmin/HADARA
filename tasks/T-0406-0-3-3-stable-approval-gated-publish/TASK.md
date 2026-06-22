@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0406 |
 | Title | 0.3.3 stable approval-gated publish |
-| Status | In Progress |
+| Status | Done |
 | Created | 2026-06-22 |
 | Updated | 2026-06-22 |
 
@@ -35,7 +35,7 @@
 
 ## Status
 
-In Progress
+Done
 
 ## Status History
 
@@ -44,4 +44,5 @@ In Progress
 |---|---|---|---|
 | 2026-06-22 | Draft | Initial task scaffold. | `hadara task create` |
 | 2026-06-22 | In Progress | Staged stable `0.3.3` approval-gated publish capsule and package-facing docs. | T-0406 task docs |
+| 2026-06-22 | Done | Published stable `hadara@0.3.3`, verified registry dist-tags, and passed temporary consumer installed-bin smoke. | `ev:T-0406:8f35fa0295e34e93973136fa`, `ev:T-0406:630c4761c6c44250943f86e0`, `ev:T-0406:b284424247cc414ba9787fc4` |
 <!-- hadara:managed:end task-status-history -->

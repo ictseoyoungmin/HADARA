@@ -6,7 +6,7 @@
 | Field | Value |
 |---|---|
 | Task | T-0406 |
-| TaskStatus | In Progress |
+| TaskStatus | Done |
 | Last Updated | 2026-06-22 |
 <!-- hadara:managed:end task-handoff-current-state -->
 
@@ -17,16 +17,17 @@
 | T-0406 capsule staged | `TASK.md`, `PLAN.md`, `ACCEPTANCE.md`, `TESTS.md`, `ev:T-0406:fc31d6e1d65a491da0210e85` |
 | Package-facing README assumes stable `0.3.3` after npm upload | `README.md`, `ev:T-0406:fc31d6e1d65a491da0210e85` |
 | Shared state routed to T-0406 | `docs/PROJECT_STATE.md`, `docs/TASK_BOARD.md`, `docs/AGENT_HANDOFF.md` |
+| Stable npm publish completed | `ev:T-0406:8f35fa0295e34e93973136fa` |
+| Registry and installed-bin verification passed | `ev:T-0406:630c4761c6c44250943f86e0`, `ev:T-0406:b284424247cc414ba9787fc4` |
 
 ## Next Recommended Step
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Operator npm login and publish helper dry-run/execute | Publishing is the remaining mutation; T-0405 readiness is complete. | `scripts/release/manual-publish-rc.sh`, `docs/RELEASE_READINESS.md` |
+| Commit T-0406 close artifacts | Publish, verification, and guarded finalize are complete. | `tasks/T-0406-0-3-3-stable-approval-gated-publish/EVIDENCE.md`, `docs/RELEASE_READINESS.md` |
 
 ## Carry Forward Warnings
 
 | Warning | Impact | Mitigation |
 |---|---|---|
-| No publish has been run in T-0406 yet. | npm registry still needs operator mutation and verification. | Run helper after npm login and record registry evidence. |
-| README is package-facing and assumes publish completion. | Source checkout may look ahead of registry until publish executes. | Keep T-0406 active until publish/registry proof is recorded. |
+| GitHub Release draft was not requested. | npm stable publish is complete, but GitHub release notes are not published as a draft release. | Create a separate explicit capsule if a GitHub Release draft is desired. |
