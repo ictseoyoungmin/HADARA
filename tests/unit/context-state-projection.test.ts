@@ -113,6 +113,34 @@ describe('context state projection', () => {
     expect(report.issues.every((issue) => issue.paths.length > 0 && issue.fixHint)).toBe(true);
   });
 
+  it('uses source metadata to classify cached task board nodes when kind is absent', () => {
+    const report = createContextStateProjectionReport({
+      generatedAt: '2026-06-18T10:01:30.000Z',
+      extractionResults: [result({
+        stateSources: [
+          stateSource('state-source:task-board', 'docs/TASK_BOARD.md', 'task-board', {
+            latestDoneTask: 'T-0002',
+            rows: 1
+          }),
+          stateSource('state-source:release-readiness', 'docs/RELEASE_READINESS.md', 'release-readiness', {
+            checks: 1,
+            statusCounts: { documented: 1 }
+          })
+        ],
+        nodes: [
+          {
+            ...taskNode('T-0002', 'task-board-row'),
+            kind: undefined,
+            source: { path: 'docs/TASK_BOARD.md', extractor: 'extractTaskBoard', hash: 'sha256:task-board' }
+          },
+          taskNode('T-0002', 'task-capsule')
+        ]
+      })]
+    });
+
+    expect(report.issues.map((issue) => issue.code)).not.toContain('STATE_TASK_BOARD_MISSING_ROW');
+  });
+
   it('converts extraction warnings into bounded state issues', () => {
     const report = createContextStateProjectionReport({
       generatedAt: '2026-06-18T10:02:00.000Z',
@@ -158,13 +186,16 @@ function stateSource(id: string, path: string, kind: StateSource['kind'], extrac
 }
 
 function taskNode(taskId: string, kind: 'task-board-row' | 'task-capsule'): ContextGraphNode {
+  const path = kind === 'task-board-row' ? `tasks/${taskId.toLowerCase()}-fixture/TASK.md` : `tasks/${taskId}-fixture/TASK.md`;
   return {
     id: `task:${taskId}`,
     type: 'Task',
     label: `${taskId} Fixture`,
-    path: kind === 'task-board-row' ? `tasks/${taskId.toLowerCase()}-fixture/TASK.md` : `tasks/${taskId}-fixture/TASK.md`,
+    path,
     status: kind === 'task-board-row' ? 'Done' : 'In Progress',
     kind,
-    source
+    source: kind === 'task-board-row'
+      ? source
+      : { path, extractor: 'extractTaskCapsules', hash: `sha256:${taskId}` }
   };
 }

@@ -85,6 +85,49 @@ describe('workbench next actions', () => {
     ]);
   });
 
+  it('does not require handoff refresh for warning-only closed-valid status drift', () => {
+    const actions = buildWorkbenchNextActions({
+      taskId: 'T-0172',
+      closed: true,
+      closePlanOk: true,
+      evidenceRecords: 3,
+      closeActions: [],
+      issues: [
+        {
+          severity: 'warning',
+          code: 'PROTOCOL_DOCS_PROJECT_HANDOFF_ACTIVE_TASK_STALE',
+          message: 'docs/AGENT_HANDOFF.md Active / Next Task is stale.',
+          path: 'docs/AGENT_HANDOFF.md'
+        }
+      ]
+    });
+
+    expect(actions.map((action) => action.id)).toEqual(['audit-close']);
+    expect(actions.some((action) => action.id === 'update-handoff' || action.required)).toBe(false);
+    expect(validateSchema('hadara.task.workbench.v1', fixtureReport(actions)).ok).toBe(true);
+  });
+
+  it('keeps error-level handoff issues actionable even after close', () => {
+    const actions = buildWorkbenchNextActions({
+      taskId: 'T-0172',
+      closed: true,
+      closePlanOk: true,
+      evidenceRecords: 3,
+      closeActions: [],
+      issues: [
+        {
+          severity: 'error',
+          code: 'PROTOCOL_DOCS_PROJECT_HANDOFF_MISSING',
+          message: 'docs/AGENT_HANDOFF.md is missing.',
+          path: 'docs/AGENT_HANDOFF.md'
+        }
+      ]
+    });
+
+    expect(actions).toContainEqual(expect.objectContaining({ id: 'update-handoff', required: true }));
+    expect(actions).toContainEqual(expect.objectContaining({ id: 'audit-close', required: false }));
+  });
+
   it('pairs close execute commands with dry-run commands when converting close actions', () => {
     const actions = buildWorkbenchNextActions({
       taskId: 'T-0172',

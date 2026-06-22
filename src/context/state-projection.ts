@@ -219,16 +219,28 @@ function indexTaskNodes(nodes: ContextGraphNode[]): TaskNodeIndex {
     if (node.type !== 'Task') continue;
     const taskId = normalizeTaskId(node.id);
     if (!taskId) continue;
-    if (node.kind === 'task-board-row') {
+    if (isTaskBoardNode(node)) {
       taskBoardTaskIds.add(taskId);
       taskBoardPaths.set(taskId, node.source.path);
     }
-    if (node.kind === 'task-capsule') {
+    if (isTaskCapsuleNode(node)) {
       taskCapsuleTaskIds.add(taskId);
       taskCapsulePaths.set(taskId, node.path ?? node.source.path);
     }
   }
   return { taskBoardTaskIds, taskCapsuleTaskIds, taskBoardPaths, taskCapsulePaths };
+}
+
+function isTaskBoardNode(node: ContextGraphNode): boolean {
+  if (node.kind === 'task-board-row') return true;
+  return node.source.extractor === 'extractTaskBoard' || node.source.path === 'docs/TASK_BOARD.md';
+}
+
+function isTaskCapsuleNode(node: ContextGraphNode): boolean {
+  if (node.kind === 'task-capsule') return true;
+  if (node.source.extractor === 'extractTaskCapsules') return true;
+  const nodePath = node.path ?? node.source.path;
+  return /^tasks\/T-\d{4}-.+\/TASK\.md$/.test(nodePath);
 }
 
 function evidenceSourcePaths(stateSources: StateSource[], latestTaskId: string): string[] {

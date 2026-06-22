@@ -27,6 +27,7 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
   const actions = new Map<string, WorkbenchNextAction>();
 
   for (const issue of input.issues) {
+    if (input.closed && issue.severity !== 'error' && issue.code.includes('HANDOFF')) continue;
     addIssueAction(actions, input.taskId, issue);
   }
 
