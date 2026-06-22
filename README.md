@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <img alt="Stable npm release" src="https://img.shields.io/badge/npm-0.3.2-blue">
-  <img alt="Source version" src="https://img.shields.io/badge/source-0.3.3--rc.0-blue">
+  <img alt="Stable npm release" src="https://img.shields.io/badge/npm-0.3.3-blue">
+  <img alt="Source version" src="https://img.shields.io/badge/source-0.3.3-blue">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>
@@ -24,31 +24,31 @@ This repository is both the HADARA source checkout and the HADARA protocol works
 Current stable npm release:
 
 ```text
-hadara@0.3.2
+hadara@0.3.3
 ```
 
-Current release candidate:
+Previous release candidate:
 
 ```text
 hadara@0.3.3-rc.0
 ```
 
-The 0.3.3-rc.0 line is the context-routing and lifecycle release candidate. It adds project context graph, context pack/slice/session-start surfaces, explicit context cache warm paths, and makes the finalize-first lifecycle the default agent-facing task loop.
+The 0.3.3 line promotes the context-routing and lifecycle release candidate after dogfood hardening. It adds project context graph, context pack/slice/session-start surfaces, explicit context cache warm paths, and makes the finalize-first lifecycle the default agent-facing task loop.
 
-Phase labels are internal implementation phases, not npm release-candidate labels. The stable `0.3.2` package is the default install target; `0.3.3-rc.0` is published on npm for explicit RC evaluation through the `next` dist-tag.
+Phase labels are internal implementation phases, not npm release-candidate labels. The stable `0.3.3` package is the default install target after the approval-gated stable publish completes; `0.3.3-rc.0` remains the previous npm release candidate on the `next` dist-tag until the stable publish capsule updates registry tags.
 
 | Surface | Status |
 |---|---|
-| Current stable | [`hadara@0.3.2`](docs/RELEASE_NOTES.md#032) |
-| Current RC | [`hadara@0.3.3-rc.0`](docs/RELEASE_NOTES.md#033-rc0) |
-| Previous RC | [`hadara@0.3.2-rc.0`](docs/RELEASE_NOTES.md#032-rc0) |
+| Current stable | [`hadara@0.3.3`](docs/RELEASE_NOTES.md#033) |
+| Previous RC | [`hadara@0.3.3-rc.0`](docs/RELEASE_NOTES.md#033-rc0) |
+| Previous stable | [`hadara@0.3.2`](docs/RELEASE_NOTES.md#032) |
 | Historical RCs | See [Release Notes](docs/RELEASE_NOTES.md). |
 | GitHub Release | Secondary target, approval-gated. |
 | Docker image | Deferred. |
 | PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
 | Installer scripts / USB launchers | Deferred. |
 
-No release command should publish, create a GitHub Release, build Docker images, upload artifacts, or load token values unless an operator explicitly approves the mutation path for the active release capsule. The `0.3.3-rc.0` npm publish was completed through that approval-gated path; GitHub Release, Docker/PyPI publish, installer execution, and MCP release/package execution remain separate explicit mutations.
+No release command should publish, create a GitHub Release, build Docker images, upload artifacts, or load token values unless an operator explicitly approves the mutation path for the active release capsule. The `0.3.3` source/readiness path prepares stable package metadata only; npm publish, GitHub Release, Docker/PyPI publish, installer execution, and MCP release/package execution remain separate explicit mutations.
 
 ## Install
 
@@ -57,7 +57,7 @@ Requires Node.js 22.
 Install the stable release:
 
 ```bash
-npm install -g hadara@0.3.2
+npm install -g hadara@0.3.3
 hadara help
 hadara doctor --json
 ```
@@ -65,11 +65,11 @@ hadara doctor --json
 Run without a global install:
 
 ```bash
-npx hadara@0.3.2 help
-npx hadara@0.3.2 doctor --json
+npx hadara@0.3.3 help
+npx hadara@0.3.3 doctor --json
 ```
 
-Evaluate the release candidate explicitly:
+Evaluate the previous release candidate explicitly:
 
 ```bash
 npm install -g hadara@0.3.3-rc.0
@@ -80,11 +80,11 @@ For release or recycle evidence, prefer an isolated prefix install when PATH, gl
 
 ```bash
 tmp="$(mktemp -d)"
-npm --prefix "$tmp" install hadara@0.3.2
+npm --prefix "$tmp" install hadara@0.3.3
 "$tmp/node_modules/.bin/hadara" version --json
 ```
 
-`npx hadara@0.3.2 ...` remains convenient for normal use. The isolated installed-bin path is stronger proof that the published package installed and executed from the intended package tree.
+`npx hadara@0.3.3 ...` remains convenient for normal use after stable publish. The isolated installed-bin path is stronger proof that the published package installed and executed from the intended package tree.
 
 ## What HADARA Gives You
 
@@ -260,7 +260,7 @@ Dashboard, TUI, Hermes, MCP, installer, package, release, and run commands stay 
 
 ## Safety Boundaries
 
-HADARA 0.3.3-rc.0 is not:
+HADARA 0.3.3 is not:
 
 - a full agent runtime;
 - Rack/enterprise behavior;
@@ -300,7 +300,7 @@ Portable/local state is not committed. Project docs, Task Capsules, and reduced 
 
 `evidence.jsonl` is the canonical Task Capsule evidence source. `EVIDENCE.md` is a non-canonical human summary that can help review validation history, but it must not be treated as the source of truth for rebuild, migration, or resolution logic.
 
-0.3.3-rc.0 does not implement `hadara evidence rebuild --json` or an execute mode. Future rebuild work must first define whether a difference is formatting regeneration, managed-section drift, or data inconsistency before reporting `wouldChange`. Any later write-capable rebuild flow must be dry-run-first, reviewed, and before-hash guarded before it rewrites derived Markdown.
+0.3.3 does not implement `hadara evidence rebuild --json` or an execute mode. Future rebuild work must first define whether a difference is formatting regeneration, managed-section drift, or data inconsistency before reporting `wouldChange`. Any later write-capable rebuild flow must be dry-run-first, reviewed, and before-hash guarded before it rewrites derived Markdown.
 
 ## Development / Contributing
 

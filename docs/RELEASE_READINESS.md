@@ -6,16 +6,16 @@ This document is the dedicated tracked source for release, install, installer, p
 
 ## Package Metadata Release Readiness
 
-Current release-candidate metadata mode:
+Current stable metadata preparation mode:
 
 - Package name decision: `hadara`.
 - Historical npm registry observation: `hadara@0.1.0-rc.0` was the first published HADARA release candidate.
-- Current version is `0.3.3-rc.0`.
-- Current source version is `0.3.3-rc.0`.
-- Current release target is release candidate `0.3.3-rc.0`.
-- Current stable npm release is `0.3.2`.
-- Current stable npm publish status: complete; T-0340 published `hadara@0.3.2` to npm, verified `npm view hadara@0.3.2 version` returned `0.3.2`, and verified dist-tags `latest=0.3.2` plus `next=0.3.2-rc.0`. T-0316 previously published `hadara@0.3.0`.
-- Previous published npm release candidate before the current rc line was `0.3.2-rc.0`.
+- Current version is `0.3.3`.
+- Current source version is `0.3.3`.
+- Current release target is stable `0.3.3`.
+- Current published stable npm release is `0.3.2` until the approval-gated stable publish capsule completes.
+- Current stable npm publish status: pending for `0.3.3`; T-0340 published `hadara@0.3.2` to npm, verified `npm view hadara@0.3.2 version` returned `0.3.2`, and verified dist-tags `latest=0.3.2` plus `next=0.3.2-rc.0`. T-0316 previously published `hadara@0.3.0`.
+- Previous published npm release candidate before the current stable target is `0.3.3-rc.0`.
 - T-0287 prepares `hadara@0.2.0-rc.3` as a source publish candidate based on the `0.2.0-rc.2` dogfooding results and the proof reliability fixes from T-0284 through T-0286; this capsule performs no npm publish, GitHub Release creation, Docker image build, registry mutation, or token loading.
 - T-0289 refreshed and published `hadara@0.2.0-rc.3`; npm registry verification returned `0.2.0-rc.3`.
 - T-0296 prepared `hadara@0.3.0-rc.0` as a Phase 7 source candidate after command/help, lifecycle, docs registry, managed patch, and docs cleanup surfaces were implemented; T-0297 then verified the operator npm publish. The published rc.0 tarball has current dist/README content but package metadata lacks intended discovery fields, so T-0298 prepared `hadara@0.3.0-rc.1` source metadata with hardened publish-helper metadata verification.
@@ -43,6 +43,7 @@ Current release-candidate metadata mode:
 - Stable `0.3.2` decision status: T-0339 selected stable publish after T-0336 readiness, T-0337 publish verification, T-0338 installed-package recycle, and T-0339 docker-compose dogfooding found no release-blocking issue; T-0340 source metadata targeted stable `0.3.2`, Docker check/package smoke/clean-checkout smoke/strict gate/release artifact/release dry-run/publish dry-run/direct npm tarball dry-run passed, npm publish completed, and registry/dist-tags verification passed.
 - T-0342 through T-0400 completed the 0.3.3 context-routing and lifecycle preparation line: context graph/state projection, code index links, context pack, raw context slice, speed-first explicit cache warm paths, warm graph/code index consumption, bounded Session Start, performance fixtures, context-routing completion audit and hardening, task lifecycle/close-repair/finalize convenience APIs, guarded finalize execute, and finalize-first default agent lifecycle docs/help/projection. T-0401 prepared `hadara@0.3.3-rc.0` source/readiness only and performed no npm publish, GitHub Release creation, Docker image build/push, PyPI publish, registry mutation, installer execution, or token loading.
 - Current release-candidate line status: `hadara@0.3.3-rc.0` is published on npm with dist-tag `next` through T-0402. Registry verification returned version `0.3.3-rc.0`, dist-tags `next=0.3.3-rc.0` and `latest=0.3.2`, tarball shasum `3088fca4b4a91b257680ffddf53ab8a0543d6264`, and installed-bin smoke passed from a temporary consumer prefix. GitHub Release creation, Docker/PyPI publish, installer execution, and MCP release/package execution did not run.
+- Stable `0.3.3` readiness status: T-0404 imported PatternForge dogfood findings and stable decision input, fixed PF-F-012 cached Task Board node classification, fixed PF-F-010 warning-only post-close handoff next actions, passed focused Docker validation with guarded dist sync, and verified built PatternForge smokes. T-0405 prepares stable `0.3.3` source/readiness without publish mutation; stable npm publish belongs to a separate approval-gated capsule.
 - README now includes a top image from `docs/assets/hadara_sub_right_name.png`; because package `files` currently excludes `docs/assets/`, publish readiness uses the GitHub raw image URL. T-0275 verified `docs/assets/hadara_sub_right_name.png` is tracked and the raw URL returned HTTP 200.
 - Current package is `private: false`.
 - Current package metadata includes `"license": "MIT"`.

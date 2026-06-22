@@ -405,3 +405,4 @@
 | T-0402 | 0.3.3-rc.0 Approval-Gated Publish | Done | tasks/T-0402-0-3-3-rc-0-approval-gated-publish | Published `hadara@0.3.3-rc.0` to npm with `next`; registry, dist-tags, tarball metadata, temp-prefix installed-bin smoke, and close audit passed. |
 | T-0403 | 0.3.3 dogfood SaaS spec and capsule budget | Done | tasks/T-0403-0-3-3-dogfood-saas-spec-and-capsule-budget | Adds PatternForge procedural asset SaaS dogfood spec with 22-capsule budget and HADARA init/lifecycle/context evaluation criteria. |
 | T-0404 | 0.3.3 dogfood findings release hardening | Done | tasks/T-0404-0-3-3-dogfood-findings-release-hardening | |
+| T-0405 | 0.3.3 stable release readiness refresh | Draft | tasks/T-0405-0-3-3-stable-release-readiness-refresh | |
