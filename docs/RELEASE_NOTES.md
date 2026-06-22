@@ -19,7 +19,7 @@ Highlights:
 
 Boundaries:
 
-- T-0405 prepares source/readiness only. Stable npm publish remains a separate approval-gated capsule.
+- T-0406 published stable `hadara@0.3.3` to npm with `latest`; T-0407 verified the published package from installed consumer paths.
 - GitHub Release creation, Docker image publish, PyPI publish, installer execution, and MCP release/package execution remain out of scope unless a future capsule explicitly approves them.
 - Context cache writes remain explicit warm actions under `.hadara/local/cache/context`; ordinary read commands do not update cache.
 - Mounted-filesystem broad graph/cache/pack latency remains an explicit-command residual; default Session Start stays bounded/cache-preferential.

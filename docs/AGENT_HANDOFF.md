@@ -4,32 +4,30 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, `0.3.3-rc.0` readiness/publish completed through T-0402, dogfood SaaS planning/hardening completed through T-0404, stable `0.3.3` readiness completed through T-0405, and stable `0.3.3` npm publish completed through T-0406. |
-| Current Phase | 0.3.3 stable npm publish complete | `hadara@0.3.3` is published on npm with `latest`; registry/dist-tags and temporary-prefix installed-bin smoke passed. |
-| Latest Completed Task | T-0406 0.3.3 stable approval-gated publish | Published stable `hadara@0.3.3` to npm, verified `latest=0.3.3` and `next=0.3.3-rc.0`, and passed installed-bin smoke. |
-| Active / Next Task | TBD post-0.3.3 release follow-up | Decide whether to create an optional GitHub Release draft, installed-package recycle capsule, or begin the next planned line. |
-| Validation Baseline | T-0406 stable publish | T-0406 npm publish, registry/dist-tag verification, and temp-prefix installed-bin smoke passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, `0.3.3-rc.0` readiness/publish completed through T-0402, dogfood SaaS planning/hardening completed through T-0404, stable `0.3.3` readiness/publish completed through T-0406, and stable `0.3.3` installed-package recycle completed through T-0407. |
+| Current Phase | 0.3.3 stable published and recycled | `hadara@0.3.3` is published on npm with `latest` and verified from installed consumer paths. |
+| Latest Completed Task | T-0407 Stable 0.3.3 post-publish installed-package recycle | Verified npm registry/dist-tags, `hadara@latest` temp-prefix install, installed bin, governed init, lifecycle/finalize, context graph/pack/slice/cache/session-start, and cleanup. |
+| Active / Next Task | TBD post-0.3.3 strategic follow-up | Choose optional GitHub Release draft, PatternForge dogfood execution, or 0.3.4 dogfood UX hardening planning. |
+| Validation Baseline | T-0407 installed-package recycle | Published `hadara@0.3.3` passed consumer install and disposable project smoke coverage. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Choose post-0.3.3 release follow-up: optional GitHub Release draft, installed-package recycle, or next planned line. | `docs/RELEASE_READINESS.md`, `tasks/T-0406-0-3-3-stable-approval-gated-publish/HANDOFF.md` |
+| TBD | Choose post-0.3.3 strategic follow-up: optional GitHub Release draft, PatternForge dogfood execution, or 0.3.4 dogfood UX hardening planning. | `docs/RELEASE_READINESS.md`, `tasks/T-0407-stable-0-3-3-post-publish-installed-package-recycle/HANDOFF.md` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0407 Stable 0.3.3 post-publish installed-package recycle | Verified published `hadara@0.3.3` from npm consumer paths, including registry/dist-tags, temp-prefix install, installed bin, governed init, lifecycle/finalize, context, cache, session start, and cleanup. | `ev:T-0407:339f60f3bccd4aa09b5fcfaa` |
 | T-0406 0.3.3 stable approval-gated publish | Published stable `hadara@0.3.3` to npm, verified registry/dist-tags, and passed temporary-prefix installed-bin smoke. | `ev:T-0406:8f35fa0295e34e93973136fa`, `ev:T-0406:630c4761c6c44250943f86e0`, `ev:T-0406:b284424247cc414ba9787fc4` |
 | T-0405 0.3.3 stable release readiness refresh | Prepared stable `hadara@0.3.3` source/readiness, refreshed `dist`, generated fresh release artifact/package/clean-checkout evidence, passed strict release gate and release dry-run, and verified npm has no existing `0.3.3`. | `ev:T-0405:d2c9fce2d4fb423ea98c171e`, `ev:T-0405:47d23e856dbe4b7f94502aa8`, `ev:T-0405:7222082ccc8449468c2b3f47`, `ev:T-0405:6fb57bb7c06a46aca53b38a0`, `ev:T-0405:f3a1bd62ec254e5abeb83de6`, `ev:T-0405:79a290abc677408b85064993`, `ev:T-0405:98c78116db1242319eaf3759` |
-| T-0404 0.3.3 dogfood findings release hardening | Imported PatternForge findings into the capsule, fixed PF-F-012 cached Task Board node classification, fixed PF-F-010 warning-only post-close handoff next actions, and verified with focused Docker plus built PatternForge smokes. | `ev:T-0404:b6deb46e7b9d4a3283f88d57` |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| Stable `hadara@0.3.3` is prepared but not published. | Package-facing docs/source target `0.3.3`, while npm still needs operator-approved registry mutation. | Create the stable publish capsule, log into npm, rerun the manual helper, and publish only after explicit approval. |
-| `bash scripts/release/manual-publish-rc.sh T-0405` stopped at npm `whoami` E401. | This environment is not logged into npm, so the helper cannot complete publish preflight here. | Operator logs into npm in the publish environment; T-0405 verified `npm view hadara@0.3.3` returns E404 before publish. |
 | T-0383 mounted full-profile probes exceeded a 20s workload budget for cache status/warm, graph task, graph include-code, and context pack. | These workloads are not suitable for the default fast smoke loop on mounted filesystems. | Keep `smoke:context-routing` defaulting to fast profile; use `--profile full` explicitly for diagnostic/full-path checks. |
 | Built cache status still took about 19.6s on `/mnt/f` while producing diagnostics. | Diagnostics are clearer, but mounted broad source-manifest cost remains. | T-0385 classified this as an accepted residual for explicit diagnostic/warm/full-profile commands; default Session Start remains bounded/cache-preferential. |
 | Installed `hadara@0.3.2 version --json` reports dist freshness at `build.distLooksStale:false`, not root `distLooksStale`. | Consumers using shorthand root-field checks may miss the current schema location. | Treat `hadara.runtime.version.v1` output as authoritative; root compatibility can be a future docs/JSON compatibility follow-up if needed. |

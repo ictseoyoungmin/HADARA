@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0406 0.3.3 stable approval-gated publish |
-| Active Task | TBD post-0.3.3 release follow-up |
+| Latest Completed Task | T-0407 Stable 0.3.3 post-publish installed-package recycle |
+| Active Task | TBD post-0.3.3 strategic follow-up |
 
 ## Next Planned Line
 
@@ -31,6 +31,8 @@ T-0404 follow-up note: PatternForge dogfood findings and stable decision input w
 T-0405 follow-up note: stable `hadara@0.3.3` source/readiness is prepared without publish mutation. Package metadata and lockfile target `0.3.3`; README, release notes, release readiness, and README assertion tests are aligned with stable `0.3.3`; Docker focused validation with guarded `dist` sync passed after raw full Docker validation passed on rerun; release artifact evidence, package smoke evidence, clean-checkout smoke evidence, strict release gate, release dry-run, and `git diff --check` passed. `npm view hadara@0.3.3 version` returned E404, confirming the exact stable version is not yet published. The manual publish helper stopped at npm `whoami` E401 because this environment is not logged into npm; the next capsule should handle operator npm login and approval-gated stable publish.
 
 T-0406 follow-up note: stable `hadara@0.3.3` is published on npm with the `latest` dist-tag. The operator ran the approval-gated helper, npm publish completed, registry verification returned `0.3.3`, dist-tags verified `latest=0.3.3` and `next=0.3.3-rc.0`, and a temporary-prefix consumer install executed the published `hadara` bin with `packageVersion: 0.3.3` plus `help lifecycle` returning `ok:true`. GitHub Release draft was not requested; Docker/PyPI publish, installer execution, and MCP release/package execution did not run.
+
+T-0407 follow-up note: stable `hadara@0.3.3` is recycled from installed npm consumer paths. A temporary prefix installed `hadara@latest`, the installed bin reported `packageVersion: 0.3.3`, `help lifecycle` returned `ok:true`, governed `init` worked in a disposable project, task create/status/lifecycle/finalize read-model surfaces worked, context graph/pack/slice/cache status/cache warm/cache warm execute/session start smokes passed, and temporary prefix/project cleanup completed. Fresh-project context commands produced expected degraded/minimal-project warnings while returning `ok:true`.
 
 Phase 8 / 0.3.1 is complete through post-rc1 documentation cleanup. It carried Work Item A and Work Item F into implementation as status token governance, document ownership/write-boundary governance, task handoff close-state clarity, installed-package recycle findings cleanup, state consistency projection, and advisory verification gates. The Phase 8 specs are staged under `docs/specs/0.3.1/`; the first rc1 implementation sequence is staged under `docs/specs/0.3.1/rc1/`. Phase 8.1 through Phase 8.6 are complete through T-0324, T-0325 completed the follow-up CloseState derived-state cleanup after review, T-0326 prepared `hadara@0.3.1-rc.1` release readiness without publish mutation, T-0327 published `hadara@0.3.1-rc.1`, verified npm visibility/tarball contents, hardened future rc publish tags, and corrected npm dist-tags so stable `0.3.0` stays on `latest` while rc1 is available as `next`, T-0328 verified the published rc1 package from installed consumer paths in the `hadara-dev` container, and T-0329 refreshed post-rc1 handoff/release-note wording after reviewer feedback.
 
@@ -164,8 +166,8 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0406 0.3.3 stable approval-gated publish.
-- Active task is TBD post-0.3.3 release follow-up; choose optional GitHub Release draft, installed-package recycle, or the next planned implementation line.
+- Latest completed task is T-0407 Stable 0.3.3 post-publish installed-package recycle.
+- Active task is TBD post-0.3.3 strategic follow-up; choose optional GitHub Release draft, PatternForge dogfood execution, or 0.3.4 dogfood UX hardening planning.
 - Stable `hadara@0.3.0` publish and installed-package consumer recycle are complete through T-0316/T-0317.
 - Phase 8 / `0.3.1` planning is staged under `docs/specs/0.3.1/`; Phase 8.1 status token/document ownership governance, Phase 8.2 task handoff close-state governance, Phase 8.3 installed-package findings cleanup, Phase 8.4 state consistency projection read model, Phase 8.5 advisory verify/doctor/CI integration, Phase 8.6 rc1 review/hardening cleanup, T-0325 CloseState derived-state cleanup, T-0326 rc1 release-readiness preparation, T-0327 approval-gated publish, T-0328 installed-package recycle, and T-0329 post-rc1 docs cleanup are complete.
 - `0.3.1-rc.1` source/readiness is complete through T-0326; npm package visibility, tarball inspection, and corrected dist-tags are confirmed through T-0327; installed-package recycle is complete through T-0328; post-rc1 shared-doc wording cleanup is complete through T-0329.

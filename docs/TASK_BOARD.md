@@ -407,3 +407,4 @@
 | T-0404 | 0.3.3 dogfood findings release hardening | Done | tasks/T-0404-0-3-3-dogfood-findings-release-hardening | |
 | T-0405 | 0.3.3 stable release readiness refresh | Done | tasks/T-0405-0-3-3-stable-release-readiness-refresh | |
 | T-0406 | 0.3.3 stable approval-gated publish | Done | tasks/T-0406-0-3-3-stable-approval-gated-publish | Published `hadara@0.3.3` to npm with `latest`; registry/dist-tags and temporary-prefix installed-bin smoke passed. |
+| T-0407 | Stable 0.3.3 post-publish installed-package recycle | Done | tasks/T-0407-stable-0-3-3-post-publish-installed-package-recycle | Verified published `hadara@0.3.3` from npm consumer paths: registry/dist-tags, temp-prefix install, installed bin, init, lifecycle/finalize, context, cache, session start, and cleanup passed. |
