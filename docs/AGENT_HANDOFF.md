@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, `0.3.3-rc.0` readiness completed through T-0401, and npm publish completed through T-0402. |
-| Current Phase | 0.3.3-rc.0 published on npm | `hadara@0.3.3-rc.0` is published with `next`; stable `latest` remains `0.3.2`. |
-| Latest Completed Task | T-0402 0.3.3-rc.0 Approval-Gated Publish | Published `hadara@0.3.3-rc.0` to npm, verified registry version/dist-tags/tarball metadata, and passed temporary-prefix installed-bin smoke. |
-| Active / Next Task | TBD post-publish recycle decision | Decide whether to open a broader post-publish installed-package recycle capsule before stable 0.3.3 decisions. |
-| Validation Baseline | T-0401 readiness plus T-0402 publish verification | T-0401 Docker sync-build passed 141 files / 929 tests with refreshed `dist`; T-0402 publish completed, registry version returned `0.3.3-rc.0`, dist-tags returned `next=0.3.3-rc.0` and `latest=0.3.2`, tarball shasum matched `3088fca4b4a91b257680ffddf53ab8a0543d6264`, and temp-prefix installed-bin smoke passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, `0.3.3-rc.0` readiness/publish completed through T-0402, and dogfood SaaS planning completed through T-0403. |
+| Current Phase | 0.3.3 dogfood planning complete | `hadara@0.3.3-rc.0` is published with `next`; PatternForge dogfood project spec is ready for a separate installed-package init. |
+| Latest Completed Task | T-0403 0.3.3 dogfood SaaS spec and capsule budget | Added the registered PatternForge procedural asset SaaS dogfood spec with feasibility, architecture, 22-capsule budget, and HADARA init/lifecycle/context evaluation criteria. |
+| Active / Next Task | TBD PatternForge dogfood project initialization | Create the separate dogfood project from installed `hadara@0.3.3-rc.0` and start PF-001 only if the operator chooses dogfooding before stable 0.3.3. |
+| Validation Baseline | T-0401 readiness, T-0402 publish verification, and T-0403 docs validation | T-0401 Docker sync-build passed 141 files / 929 tests with refreshed `dist`; T-0402 publish/registry/dist-tag/tarball/install smoke passed; T-0403 docs/spec validation passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Decide whether to run a broader `0.3.3-rc.0` post-publish installed-package recycle capsule. | T-0402 publish evidence: `ev:T-0402:400a8a3c43b248cc8d4fcb0f`, `ev:T-0402:4addcdd15a8149afb69c2e40`, `ev:T-0402:708f2b933fff46a3917b01dc` |
+| TBD | Start PF-001 PatternForge dogfood project initialization, or choose a smaller post-publish recycle/stable 0.3.3 path. | `docs/specs/0.3.3/dogfood/00_Procedural_Asset_SaaS_Dogfood_Spec.md` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0403 0.3.3 dogfood SaaS spec and capsule budget | Added registered PatternForge dogfood spec for a Docker Compose procedural material SaaS, including `grass-field-v1`, no-GPU default architecture, 22-capsule budget, and HADARA dogfood evaluation criteria. | `ev:T-0403:d087eb9162d34a17afa8fa9d` |
 | T-0402 0.3.3-rc.0 Approval-Gated Publish | Published `hadara@0.3.3-rc.0` to npm with `next`, verified `latest` remains `0.3.2`, checked tarball metadata, and passed temp-prefix installed-bin smoke; GitHub Release draft was not requested. | `ev:T-0402:400a8a3c43b248cc8d4fcb0f`, `ev:T-0402:4addcdd15a8149afb69c2e40`, `ev:T-0402:708f2b933fff46a3917b01dc` |
 | T-0401 0.3.3-rc.0 Release Readiness Preparation | Prepared package metadata/docs/readiness for `hadara@0.3.3-rc.0`, passed Docker validation and release readiness gates, and kept publish/GitHub/Docker/PyPI mutations out of scope. | `ev:T-0401:1046d97d72a54ca6bd9dabf3`, `ev:T-0401:125c51d2304a4d689c957bab`, `ev:T-0401:698672f04c9e4ba394e616c2`, `ev:T-0401:211f174377cf41eaba9f707b`, `ev:T-0401:34875afe7c1c4a6c802a0a0d` |
-| T-0400 Default Lifecycle Finalize Documentation | Made `task lifecycle` plus reviewed/guarded `task finalize` the default 0.3.3 agent-facing lifecycle across root docs, generated init docs, registry-backed help, and lifecycle projection. | `ev:T-0400:8bfd40cfd47f4f4b88882d64`, `ev:T-0400:d792e4cabcdb49398eed875b`, `ev:T-0400:e1d131f54fc247d38022fe3a` |
 
 ## Current Known Problems
 

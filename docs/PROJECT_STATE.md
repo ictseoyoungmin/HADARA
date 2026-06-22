@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0402 0.3.3-rc.0 Approval-Gated Publish |
-| Active Task | TBD post-publish recycle decision |
+| Latest Completed Task | T-0403 0.3.3 dogfood SaaS spec and capsule budget |
+| Active Task | TBD PatternForge dogfood project initialization |
 
 ## Next Planned Line
 
@@ -23,6 +23,8 @@ T-0400 follow-up note: 0.3.3 agents now use the finalize-first lifecycle as the 
 T-0401 follow-up note: `hadara@0.3.3-rc.0` source/readiness was prepared without publish mutation. Package metadata and lockfile target `0.3.3-rc.0`; README, release notes, release readiness, and README assertions are aligned; Docker sync-build passed 141 files / 929 tests with refreshed `dist`; release artifact, package smoke, clean-checkout smoke, strict release gate, release dry-run, publish dry-run, built version smoke, and `git diff --check` passed. Package smoke and clean-checkout smoke first failed under sandbox npm cache constraints, then passed on approved external reruns. npm publish, GitHub Release creation, Docker/PyPI publish, installer execution, and MCP release/package execution did not run in T-0401.
 
 T-0402 follow-up note: `hadara@0.3.3-rc.0` is published on npm with dist-tag `next`. The approval-gated helper completed npm publish, npm registry verification returned version `0.3.3-rc.0`, dist-tags verified `next=0.3.3-rc.0` and `latest=0.3.2`, tarball shasum matched `3088fca4b4a91b257680ffddf53ab8a0543d6264`, and a temporary-prefix consumer install executed the published `hadara` bin successfully. GitHub Release draft was not requested; Docker/PyPI publish, installer execution, and MCP release/package execution did not run. A broader post-publish recycle capsule remains an optional next release-line decision.
+
+T-0403 follow-up note: the 0.3.3 dogfood SaaS line is specified at `docs/specs/0.3.3/dogfood/00_Procedural_Asset_SaaS_Dogfood_Spec.md` and registered in SOP/docs registry surfaces. The spec defines PatternForge, a Docker Compose runnable procedural material asset SaaS focused on user-assisted image-region-to-editable-material extraction. The first product family is `grass-field-v1`; the default path uses deterministic local CPU image processing and user-assisted masks, with optional ML segmentation deferred behind a future profile. Fifteen capsules are enough for a demo-grade MVP, so the spec allocates 22 capsules to cover product MVP, production hardening, HADARA init/lifecycle/context dogfood audits, consolidated findings, and stable 0.3.3 decision input.
 
 Phase 8 / 0.3.1 is complete through post-rc1 documentation cleanup. It carried Work Item A and Work Item F into implementation as status token governance, document ownership/write-boundary governance, task handoff close-state clarity, installed-package recycle findings cleanup, state consistency projection, and advisory verification gates. The Phase 8 specs are staged under `docs/specs/0.3.1/`; the first rc1 implementation sequence is staged under `docs/specs/0.3.1/rc1/`. Phase 8.1 through Phase 8.6 are complete through T-0324, T-0325 completed the follow-up CloseState derived-state cleanup after review, T-0326 prepared `hadara@0.3.1-rc.1` release readiness without publish mutation, T-0327 published `hadara@0.3.1-rc.1`, verified npm visibility/tarball contents, hardened future rc publish tags, and corrected npm dist-tags so stable `0.3.0` stays on `latest` while rc1 is available as `next`, T-0328 verified the published rc1 package from installed consumer paths in the `hadara-dev` container, and T-0329 refreshed post-rc1 handoff/release-note wording after reviewer feedback.
 
@@ -156,8 +158,8 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0402 0.3.3-rc.0 Approval-Gated Publish.
-- Active task is TBD post-publish recycle decision; T-0402 proved npm publish, registry visibility, dist-tags, tarball metadata, and one installed-bin smoke.
+- Latest completed task is T-0403 0.3.3 dogfood SaaS spec and capsule budget.
+- Active task is TBD PatternForge dogfood project initialization; T-0403 specifies the product scope and 22-capsule dogfood budget before creating the separate initialized project.
 - Stable `hadara@0.3.0` publish and installed-package consumer recycle are complete through T-0316/T-0317.
 - Phase 8 / `0.3.1` planning is staged under `docs/specs/0.3.1/`; Phase 8.1 status token/document ownership governance, Phase 8.2 task handoff close-state governance, Phase 8.3 installed-package findings cleanup, Phase 8.4 state consistency projection read model, Phase 8.5 advisory verify/doctor/CI integration, Phase 8.6 rc1 review/hardening cleanup, T-0325 CloseState derived-state cleanup, T-0326 rc1 release-readiness preparation, T-0327 approval-gated publish, T-0328 installed-package recycle, and T-0329 post-rc1 docs cleanup are complete.
 - `0.3.1-rc.1` source/readiness is complete through T-0326; npm package visibility, tarball inspection, and corrected dist-tags are confirmed through T-0327; installed-package recycle is complete through T-0328; post-rc1 shared-doc wording cleanup is complete through T-0329.
