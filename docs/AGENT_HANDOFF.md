@@ -5,16 +5,16 @@
 | Area | State | Notes |
 |---|---|---|
 | Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, `0.3.3-rc.0` readiness/publish completed through T-0402, dogfood SaaS planning/hardening completed through T-0404, and stable `0.3.3` readiness completed through T-0405. |
-| Current Phase | 0.3.3 stable release readiness complete | Source metadata and package-facing docs target stable `hadara@0.3.3`; publish remains the next approval-gated mutation after operator npm login. |
+| Current Phase | 0.3.3 stable approval-gated publish staged | Source metadata and package-facing docs target stable `hadara@0.3.3`; T-0406 stages the operator npm publish path. |
 | Latest Completed Task | T-0405 0.3.3 stable release readiness refresh | Prepared stable `0.3.3` source/readiness after T-0404 dogfood hardening, refreshed `dist`, generated fresh release/package/clean-checkout evidence, passed strict release gate and release dry-run, and verified npm registry has no existing `hadara@0.3.3`. |
-| Active / Next Task | TBD 0.3.3 stable approval-gated publish | Create the publish capsule, have the operator log into npm, rerun the manual helper, and publish stable `hadara@0.3.3` only after explicit approval. |
+| Active / Next Task | T-0406 0.3.3 stable approval-gated publish | Operator logs into npm, reruns the manual helper, and publishes stable `hadara@0.3.3` only after explicit approval. |
 | Validation Baseline | T-0405 stable readiness | T-0405 Docker validation, guarded dist sync, release artifact, package smoke, clean-checkout smoke, strict release gate, release dry-run, and npm pre-publish registry check passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Publish stable `hadara@0.3.3` through an approval-gated capsule, or stop before mutation if the operator wants another review pass. | `docs/RELEASE_READINESS.md`, `docs/RELEASE_NOTES.md`, `tasks/T-0405-0-3-3-stable-release-readiness-refresh/HANDOFF.md` |
+| T-0406 | Publish stable `hadara@0.3.3` through the approval-gated helper after npm login, or stop before mutation if the operator wants another review pass. | `docs/RELEASE_READINESS.md`, `docs/RELEASE_NOTES.md`, `tasks/T-0406-0-3-3-stable-approval-gated-publish/HANDOFF.md` |
 
 ## Last 3 Completed Tasks
 

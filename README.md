@@ -35,7 +35,7 @@ hadara@0.3.3-rc.0
 
 The 0.3.3 line promotes the context-routing and lifecycle release candidate after dogfood hardening. It adds project context graph, context pack/slice/session-start surfaces, explicit context cache warm paths, and makes the finalize-first lifecycle the default agent-facing task loop.
 
-Phase labels are internal implementation phases, not npm release-candidate labels. The stable `0.3.3` package is the default install target after the approval-gated stable publish completes; `0.3.3-rc.0` remains the previous npm release candidate on the `next` dist-tag until the stable publish capsule updates registry tags.
+Phase labels are internal implementation phases, not npm release-candidate labels. The stable `0.3.3` package is the default install target; `0.3.3-rc.0` remains the previous release candidate.
 
 | Surface | Status |
 |---|---|
@@ -48,7 +48,7 @@ Phase labels are internal implementation phases, not npm release-candidate label
 | PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
 | Installer scripts / USB launchers | Deferred. |
 
-No release command should publish, create a GitHub Release, build Docker images, upload artifacts, or load token values unless an operator explicitly approves the mutation path for the active release capsule. The `0.3.3` source/readiness path prepares stable package metadata only; npm publish, GitHub Release, Docker/PyPI publish, installer execution, and MCP release/package execution remain separate explicit mutations.
+No release command should publish, create a GitHub Release, build Docker images, upload artifacts, or load token values unless an operator explicitly approves the mutation path for the active release capsule. Stable `0.3.3` is the npm package line; GitHub Release, Docker/PyPI publish, installer execution, and MCP release/package execution remain separate explicit mutations.
 
 ## Install
 
@@ -84,7 +84,7 @@ npm --prefix "$tmp" install hadara@0.3.3
 "$tmp/node_modules/.bin/hadara" version --json
 ```
 
-`npx hadara@0.3.3 ...` remains convenient for normal use after stable publish. The isolated installed-bin path is stronger proof that the published package installed and executed from the intended package tree.
+`npx hadara@0.3.3 ...` remains convenient for normal use. The isolated installed-bin path is stronger proof that the published package installed and executed from the intended package tree.
 
 ## What HADARA Gives You
 

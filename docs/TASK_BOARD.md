@@ -406,3 +406,4 @@
 | T-0403 | 0.3.3 dogfood SaaS spec and capsule budget | Done | tasks/T-0403-0-3-3-dogfood-saas-spec-and-capsule-budget | Adds PatternForge procedural asset SaaS dogfood spec with 22-capsule budget and HADARA init/lifecycle/context evaluation criteria. |
 | T-0404 | 0.3.3 dogfood findings release hardening | Done | tasks/T-0404-0-3-3-dogfood-findings-release-hardening | |
 | T-0405 | 0.3.3 stable release readiness refresh | Done | tasks/T-0405-0-3-3-stable-release-readiness-refresh | |
+| T-0406 | 0.3.3 stable approval-gated publish | In Progress | tasks/T-0406-0-3-3-stable-approval-gated-publish | Publish capsule and package-facing docs staged; operator npm login, approval-gated publish, registry proof, and close remain pending. |
