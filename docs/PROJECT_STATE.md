@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0411 Evidence Compact ID UX |
-| Active Task | T-0412 Finalize Post-Close Drift Guidance |
+| Latest Completed Task | T-0412 Finalize Post-Close Drift Guidance |
+| Active Task | T-0413 Installed-Package Recycle Script UX |
 
 ## Next Planned Line
 
@@ -41,6 +41,8 @@ T-0409 follow-up note: `hadara handoff stale-problems --json` now emits `hadara.
 T-0410 follow-up note: `hadara release closeout --version <version> --task <task-id> --json` now emits `hadara.releaseCloseout.v1` as a read-only release closeout planning report. It inspects release readiness, release notes, shared state docs, and selected release capsule docs; classifies surfaces as `current`, `stale`, or `missing`; reports expected/matched/missing signals and roles; and returns suggested Markdown fragments without writing files, appending evidence, building artifacts, publishing packages, or creating GitHub releases. Focused Docker build/tests passed for release-closeout/schema fixtures, workspace `dist` was refreshed, built CLI smoke returned `ok:true` for `0.3.4`/`T-0410`, and `git diff --check` passed.
 
 T-0411 follow-up note: `hadara evidence summary --task <task-id> --json` now emits `hadara.evidence.summary.v1` as a read-only compact evidence id report over the existing evidence list source. It returns compact records, latest evidence, latest close evidence, and copy hints for durable ids without appending evidence, rewriting `EVIDENCE.md`, migrating evidence, or changing `evidence list` semantics. Text mode abbreviates long summaries and idempotency tags for terminal use while JSON keeps full records. Focused Docker build/tests passed for evidence-summary/evidence-json/schema fixtures, focused workflow/schema docs tests passed, workspace `dist` was refreshed, built CLI JSON/text smokes returned `ok:true` for T-0410 evidence, and `git diff --check` passed.
+
+T-0412 follow-up note: `task finalize` and `task lifecycle` now classify close-source drift from audit verdicts instead of treating warning-only audit reports as closed-valid. When the latest close proof no longer matches current close-source files, finalize marks the audit step required, adds `TASK_FINALIZE_CLOSE_SOURCE_DRIFT_GUIDANCE`, and routes agents to `hadara task close-repair-plan --task <task-id> --json`; lifecycle reports `repair-required` with `closed-stale` repair metadata. The lifecycle read model also omits undefined optional command fields. Docker build passed, focused finalize/lifecycle tests passed 14 tests, focused workflow docs tests passed 4 tests, workspace `dist` was refreshed, built CLI finalize/lifecycle smokes returned expected guidance, and `git diff --check` passed.
 
 Phase 8 / 0.3.1 is complete through post-rc1 documentation cleanup. It carried Work Item A and Work Item F into implementation as status token governance, document ownership/write-boundary governance, task handoff close-state clarity, installed-package recycle findings cleanup, state consistency projection, and advisory verification gates. The Phase 8 specs are staged under `docs/specs/0.3.1/`; the first rc1 implementation sequence is staged under `docs/specs/0.3.1/rc1/`. Phase 8.1 through Phase 8.6 are complete through T-0324, T-0325 completed the follow-up CloseState derived-state cleanup after review, T-0326 prepared `hadara@0.3.1-rc.1` release readiness without publish mutation, T-0327 published `hadara@0.3.1-rc.1`, verified npm visibility/tarball contents, hardened future rc publish tags, and corrected npm dist-tags so stable `0.3.0` stays on `latest` while rc1 is available as `next`, T-0328 verified the published rc1 package from installed consumer paths in the `hadara-dev` container, and T-0329 refreshed post-rc1 handoff/release-note wording after reviewer feedback.
 
@@ -174,8 +176,8 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0411 Evidence Compact ID UX.
-- Active task is T-0412 Finalize Post-Close Drift Guidance, the next implementation capsule in the 0.3.4 budget.
+- Latest completed task is T-0412 Finalize Post-Close Drift Guidance.
+- Active task is T-0413 Installed-Package Recycle Script UX, the next implementation capsule in the 0.3.4 budget.
 - Stable `hadara@0.3.0` publish and installed-package consumer recycle are complete through T-0316/T-0317.
 - Phase 8 / `0.3.1` planning is staged under `docs/specs/0.3.1/`; Phase 8.1 status token/document ownership governance, Phase 8.2 task handoff close-state governance, Phase 8.3 installed-package findings cleanup, Phase 8.4 state consistency projection read model, Phase 8.5 advisory verify/doctor/CI integration, Phase 8.6 rc1 review/hardening cleanup, T-0325 CloseState derived-state cleanup, T-0326 rc1 release-readiness preparation, T-0327 approval-gated publish, T-0328 installed-package recycle, and T-0329 post-rc1 docs cleanup are complete.
 - `0.3.1-rc.1` source/readiness is complete through T-0326; npm package visibility, tarball inspection, and corrected dist-tags are confirmed through T-0327; installed-package recycle is complete through T-0328; post-rc1 shared-doc wording cleanup is complete through T-0329.

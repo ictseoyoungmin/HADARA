@@ -87,6 +87,33 @@ describe('task lifecycle read model', () => {
     expect(report.satisfied).toEqual(expect.arrayContaining(['finish', 'sharedDocs', 'ready', 'close', 'audit']));
   });
 
+  it('reports repair-required when close-source docs changed after close evidence', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Lifecycle close-source drift');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    appendCloseEvidence(root, task.id);
+    fs.appendFileSync(path.join(task.dir, 'HANDOFF.md'), '\nPost-close close-source edit.\n', 'utf8');
+
+    const report = createTaskLifecycleReport(root, task.id);
+
+    expect(report.phase).toBe('repair-required');
+    expect(report.checks.audit).toMatchObject({
+      status: 'required',
+      summary: 'Close audit requires repair.'
+    });
+    expect(report.repair).toMatchObject({
+      classification: 'closed-stale',
+      nextCommand: `hadara task close --task ${task.id} --json`
+    });
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'repair-close-proof',
+      command: `hadara task close --task ${task.id} --json`,
+      writeBoundary: 'read-only'
+    });
+    expect(validateSchema('hadara.task.lifecycle.v1', report).ok).toBe(true);
+  });
+
   it('routes the CLI task lifecycle command through the read-only report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'CLI lifecycle');

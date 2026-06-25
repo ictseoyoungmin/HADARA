@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening is implemented through T-0411. |
-| Current Phase | 0.3.4 Agent UX Hardening in progress | T-0411 added compact evidence id UX; next capsule is finalize post-close drift guidance. |
-| Latest Completed Task | T-0411 Evidence Compact ID UX | Added read-only `evidence summary --task --json` compact id/copy-hint report with schema, CLI routing, registry/docs entries, focused tests, and built CLI smokes. |
-| Active / Next Task | T-0412 Finalize Post-Close Drift Guidance | Improve finalize/audit guidance for post-close close-source edits and rerun paths. |
-| Validation Baseline | T-0411 focused Docker/build smoke | Docker `/tmp/hadara` build passed; focused evidence-summary/evidence-json/schema tests passed 27 tests; focused workflow/schema docs tests passed 5 tests; workspace `dist` refreshed; built CLI evidence summary JSON/text smokes returned `ok:true`; `git diff --check` passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening is implemented through T-0412. |
+| Current Phase | 0.3.4 Agent UX Hardening in progress | T-0412 hardened post-close drift guidance; next capsule is installed-package recycle script UX. |
+| Latest Completed Task | T-0412 Finalize Post-Close Drift Guidance | Finalize/lifecycle now classify close-source drift as repair-required and route to close repair planning instead of treating warning-only drift as closed-valid. |
+| Active / Next Task | T-0413 Installed-Package Recycle Script UX | Package consumer recycle should be easier to run from published installs without hand-stitching commands. |
+| Validation Baseline | T-0412 focused Docker/build smoke | Docker `/tmp/hadara` build passed; focused finalize/lifecycle tests passed 14 tests; focused workflow docs tests passed 4 tests; workspace `dist` refreshed; built CLI finalize/lifecycle smokes returned expected guidance; `git diff --check` passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0412 | Improve finalize post-close drift guidance. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md`, `docs/TASK_WORKFLOW_COMMANDS.md`, `docs/CLI_JSON_CONTRACT.md` |
+| T-0413 | Improve installed-package recycle scripting UX. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md`, `docs/RELEASE_READINESS.md`, `docs/CLI_JSON_CONTRACT.md` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0412 Finalize Post-Close Drift Guidance | Made close-source drift repair-required in finalize/lifecycle guidance. | `ev:T-0412:32fdb139512446aaa3806924` |
 | T-0411 Evidence Compact ID UX | Added compact evidence id/copy-hint summary reports. | `ev:T-0411:0072b5ef53bb42378fe5c58b` |
 | T-0410 Release Closeout Read-Only Plan | Added read-only release closeout planning across release docs, shared state docs, and release capsule docs. | `ev:T-0410:299ccfde6ed84a22bc1e6a2e` |
-| T-0409 Handoff Stale Known-Problem Detector | Added read-only stale known-problem candidate detection for Agent Handoff rows. | `ev:T-0409:733b5dd43ab7400ab1e77e87` |
 
 ## Current Known Problems
 

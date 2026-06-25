@@ -138,7 +138,7 @@ function createChecks(taskId: string, reports: LifecycleReports): TaskLifecycleC
       status: reports.finish.ok ? (reports.finish.summary.plannedWrites > 0 ? 'required' : 'satisfied') : 'blocked',
       summary: reports.finish.summary.plannedWrites > 0 ? 'Task status bookkeeping has planned writes.' : reports.finish.ok ? 'Task finish bookkeeping is current.' : 'Task finish blockers exist.',
       sourceReport: 'hadara.task.finish.v1',
-      command: reports.finish.summary.plannedWrites > 0 ? `hadara task finish --task ${taskId} --json` : undefined
+      ...(reports.finish.summary.plannedWrites > 0 ? { command: `hadara task finish --task ${taskId} --json` } : {})
     },
     sharedDocs: {
       status: sharedDocsPending.length > 0 ? 'warning' : reports.finish.ok ? 'satisfied' : 'pending',
@@ -155,11 +155,11 @@ function createChecks(taskId: string, reports: LifecycleReports): TaskLifecycleC
       status: reports.audit.auditVerdict.closeEvidenceFound ? 'satisfied' : reports.close.ok ? 'required' : 'blocked',
       summary: reports.audit.auditVerdict.closeEvidenceFound ? 'Close evidence exists.' : reports.close.ok ? 'Close evidence has not been appended.' : 'Close preconditions have blockers.',
       sourceReport: 'hadara.task.close.v1',
-      command: reports.audit.auditVerdict.closeEvidenceFound ? undefined : `hadara task close --task ${taskId} --json`
+      ...(reports.audit.auditVerdict.closeEvidenceFound ? {} : { command: `hadara task close --task ${taskId} --json` })
     },
     audit: {
-      status: reports.audit.ok ? 'satisfied' : reports.audit.auditVerdict.closeEvidenceFound ? 'required' : 'pending',
-      summary: reports.audit.ok ? 'Close audit passed.' : reports.audit.auditVerdict.closeEvidenceFound ? 'Close audit requires repair.' : 'Audit waits for close evidence.',
+      status: reports.audit.auditVerdict.verdict === 'closed-valid' ? 'satisfied' : reports.audit.auditVerdict.closeEvidenceFound ? 'required' : 'pending',
+      summary: reports.audit.auditVerdict.verdict === 'closed-valid' ? 'Close audit passed.' : reports.audit.auditVerdict.closeEvidenceFound ? 'Close audit requires repair.' : 'Audit waits for close evidence.',
       sourceReport: 'hadara.task.audit_close.v1',
       command: `hadara task audit-close --task ${taskId} --json`
     }
@@ -174,7 +174,7 @@ function choosePhase(reports: LifecycleReports, checks: TaskLifecycleChecks, rep
   if (!reports.ready.ok) return 'ready-required';
   if (!reports.close.ok) return 'ready-required';
   if (!reports.audit.auditVerdict.closeEvidenceFound) return 'close-required';
-  if (reports.audit.ok) return 'closed-valid';
+  if (reports.audit.auditVerdict.verdict === 'closed-valid') return 'closed-valid';
   if (repair && repair.classification !== 'closed-valid') return 'repair-required';
   return 'audit-required';
 }
@@ -203,7 +203,7 @@ function chooseNextAction(
 }
 
 function createRepair(taskId: string, audit: TaskAuditCloseReport): TaskLifecycleRepair | undefined {
-  if (audit.ok) {
+  if (audit.auditVerdict.verdict === 'closed-valid') {
     return {
       classification: 'closed-valid',
       summary: 'Close proof is current and valid.',

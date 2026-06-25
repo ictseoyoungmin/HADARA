@@ -92,7 +92,7 @@ export function createTaskFinalizeReport(projectRoot: string, taskId: string, op
   const actor = options.actor ?? defaultTaskLifecycleActor();
   const reports = createFinalizeReports(projectRoot, taskId, actor);
   const steps = createSteps(taskId, reports);
-  const issues = collectIssues(reports);
+  const issues = collectIssues(taskId, reports);
   const planHash = hashPlan(taskId, steps);
   if (options.executeRequested) return executeFinalizePlan(projectRoot, taskId, actor, reports, steps, issues, planHash, options.planHash);
   return createFinalizeReport(taskId, actor, 'dry-run', true, steps, issues, planHash, undefined, reports);
@@ -210,7 +210,7 @@ function createPostExecutionReport(
 ): TaskFinalizeReport {
   const reports = createFinalizeReports(projectRoot, taskId, actor);
   const steps = createSteps(taskId, reports);
-  const issues = collectIssues(reports);
+  const issues = collectIssues(taskId, reports);
   const nextAction = createPrimaryNextAction(taskId, steps, issues);
   const finalAudit = reports.audit?.auditVerdict.verdict === 'closed-valid';
   const execution: TaskFinalizeExecution = {
@@ -310,7 +310,7 @@ function createSteps(taskId: string, reports: FinalizeReports): TaskFinalizeStep
           ? 'required'
           : 'blocked'
       : 'pending';
-  const auditStatus = reports.audit ? (reports.audit.auditVerdict.closeEvidenceFound ? (reports.audit.ok ? 'satisfied' : 'required') : 'pending') : 'pending';
+  const auditStatus = reports.audit ? (reports.audit.auditVerdict.closeEvidenceFound ? (reports.audit.auditVerdict.verdict === 'closed-valid' ? 'satisfied' : 'required') : 'pending') : 'pending';
   return [
     {
       id: 'finish',
@@ -348,7 +348,14 @@ function createSteps(taskId: string, reports: FinalizeReports): TaskFinalizeStep
     {
       id: 'audit-close',
       status: auditStatus,
-      summary: auditStatus === 'satisfied' ? 'Close audit passed.' : auditStatus === 'pending' ? 'Audit waits for close evidence.' : 'Run close audit and repair any drift.',
+      summary:
+        auditStatus === 'satisfied'
+          ? 'Close audit passed.'
+          : auditStatus === 'pending'
+            ? 'Audit waits for close evidence.'
+            : reports.audit?.auditVerdict.verdict === 'closed-with-drift-warnings'
+              ? 'Close audit found close-source drift; review repair plan, then append fresh close proof.'
+              : 'Run close audit and repair any drift.',
       command: `hadara task audit-close --task ${taskId} --json`,
       mode: 'read-only',
       writeBoundary: 'read-only',
@@ -359,7 +366,7 @@ function createSteps(taskId: string, reports: FinalizeReports): TaskFinalizeStep
   ];
 }
 
-function collectIssues(reports: FinalizeReports): TaskFinalizeIssue[] {
+function collectIssues(taskId: string, reports: FinalizeReports): TaskFinalizeIssue[] {
   const seen = new Set<string>();
   const issues: TaskFinalizeIssue[] = [];
   const reportIssues = [...reports.finish.issues, ...(reports.ready?.issues ?? []), ...(reports.close?.issues ?? []), ...(reports.audit?.issues ?? [])];
@@ -387,6 +394,15 @@ function collectIssues(reports: FinalizeReports): TaskFinalizeIssue[] {
       example: 'hadara evidence add-command --task T-XXXX --summary "Focused validation passed." --result passed --category validation --json'
     });
   }
+  if (issues.some(isCloseDriftIssue)) {
+    issues.push({
+      severity: 'info',
+      code: 'TASK_FINALIZE_CLOSE_SOURCE_DRIFT_GUIDANCE',
+      message: 'Close-source files changed after the recorded close proof. Review the repair plan, finish intended doc edits, then append a fresh close proof and audit it.',
+      fixHint: 'Use close-repair-plan for the read-only diagnosis, then rerun the guarded close/finalize path after close-source edits are complete.',
+      example: `hadara task close-repair-plan --task ${taskId} --json`
+    });
+  }
   return issues;
 }
 
@@ -406,6 +422,19 @@ function createPrimaryNextAction(taskId: string, steps: TaskFinalizeStep[], issu
       stalePlanRisk: 'low'
     });
   }
+  if (nextStep.id === 'audit-close' && issues.some(isCloseDriftIssue)) {
+    return createTaskLifecycleNextAction({
+      id: 'finalize-review-close-repair-plan',
+      kind: 'command',
+      required: true,
+      command: `hadara task close-repair-plan --task ${taskId} --json`,
+      message: 'Close-source drift was detected. Review the close repair plan before appending fresh close proof.',
+      writeBoundary: 'read-only',
+      recommendedActorRole: 'reviewer',
+      requiresBeforeHash: false,
+      stalePlanRisk: 'none'
+    });
+  }
   return createTaskLifecycleNextAction({
     id: `finalize-${nextStep.id}`,
     kind: nextStep.status === 'blocked' ? 'review' : 'command',
@@ -417,6 +446,10 @@ function createPrimaryNextAction(taskId: string, steps: TaskFinalizeStep[], issu
     requiresBeforeHash: false,
     stalePlanRisk: nextStep.writeBoundary === 'read-only' ? 'none' : 'low'
   });
+}
+
+function isCloseDriftIssue(issue: TaskFinalizeIssue): boolean {
+  return issue.code === 'TASK_CLOSE_AUDIT_SOURCE_HASH_DRIFT' || issue.code === 'TASK_CLOSE_AUDIT_CURRENT_REPORT_HASH_DRIFT';
 }
 
 function summarizeSteps(steps: TaskFinalizeStep[], reports?: FinalizeReports): TaskFinalizeReport['summary'] {

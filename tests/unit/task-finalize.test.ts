@@ -200,6 +200,41 @@ describe('task finalize dry-run plan', () => {
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
   });
 
+  it('reports close-source drift as repair-required instead of closed-valid', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finalize drift guidance');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const plan = createTaskFinalizeReport(root, task.id);
+    const closed = createTaskFinalizeReport(root, task.id, { executeRequested: true, planHash: plan.planHash });
+    expect(closed.ok).toBe(true);
+
+    fs.appendFileSync(path.join(task.dir, 'HANDOFF.md'), '\nPost-close close-source edit.\n', 'utf8');
+    const report = createTaskFinalizeReport(root, task.id);
+
+    expect(report.ok).toBe(false);
+    expect(report.steps.find((step) => step.id === 'audit-close')).toMatchObject({
+      status: 'required',
+      summary: 'Close audit found close-source drift; review repair plan, then append fresh close proof.'
+    });
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'finalize-review-close-repair-plan',
+      command: `hadara task close-repair-plan --task ${task.id} --json`,
+      writeBoundary: 'read-only'
+    });
+    expect(report.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'TASK_CLOSE_AUDIT_SOURCE_HASH_DRIFT', severity: 'warning' }),
+        expect.objectContaining({
+          code: 'TASK_FINALIZE_CLOSE_SOURCE_DRIFT_GUIDANCE',
+          severity: 'info',
+          example: `hadara task close-repair-plan --task ${task.id} --json`
+        })
+      ])
+    );
+    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
+  });
+
   it('routes the CLI task finalize command through the read-only report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'CLI finalize');
