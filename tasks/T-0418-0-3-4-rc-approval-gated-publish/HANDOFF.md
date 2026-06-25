@@ -19,16 +19,17 @@
 | Ext4 release publish dry-run returned `ok:true` with expected approval/token warnings and no mutation. | release publish dry-run |
 | `/root/hadara-publish` ext4 clone was recreated cleanly, `npm ci` and build passed, built CLI reports `0.3.4-rc.0`, and strict release gate passed. | `ev:T-0418:d834f79b3a96479098c96d4d` |
 | Operator publish attempt failed once because `/root/hadara-publish` was stale at `d349586`; the clone has now been refreshed to `f097ad5`, rebuilt, and strict release gate passed. | `ev:T-0418:e5dcae54f6fa43309b713862` |
+| After T-0419/T-0420 hotfixes, `/root/hadara-publish` was refreshed to `9f2640f`; build, full Vitest suite, and version smoke passed. | `ev:T-0418:9a2654535ebf4fc8b579af9f` |
 
 ## Next Recommended Step
 
 | Step | Reason | Required Reading |
 |---|---|---|
-| Operator publishes from `/root/hadara-publish` with `bash scripts/release/manual-publish-rc.sh T-0418 --execute`, then types exactly `publish`. | npm authentication and interactive confirmation are required. | `PUBLISH_OPERATOR_STEPS.md` |
+| Operator publishes from `/root/hadara-publish` with `bash scripts/release/manual-publish-rc.sh T-0418 --execute`, then types exactly `publish`. | The clone is now refreshed to `9f2640f` and full-suite validation passed; npm authentication and interactive confirmation are still required. | `PUBLISH_OPERATOR_STEPS.md` |
 
 ## Carry Forward Warnings
 
 | Warning | Impact | Mitigation |
 |---|---|---|
 | This capsule should not be closed as Done until npm publish and registry verification complete, unless the operator explicitly defers publish. | Publish requires external authentication and confirmation. | Keep status In Progress/Blocked until operator action is complete or explicitly deferred. |
-| The first publish-env preparation attempt was interrupted and the first operator publish attempt used a stale clone. | A stale clone can have D/?? git state, missing `dist`, or a T-0418 `TASK.md` without `0.3.4-rc.0`. | The clone is now refreshed to `f097ad5`; before publishing, rerun `git status --short` and `node dist/cli/main.js version --json` in `/root/hadara-publish`. |
+| Earlier publish attempts used stale or pre-hotfix clones. | A stale clone can fail release-capsule checks or full-suite validation. | The clone is now refreshed to `9f2640f`; before publishing, use task `T-0418` and rerun `git status --short` plus `node dist/cli/main.js version --json` in `/root/hadara-publish` if anything changes. |
