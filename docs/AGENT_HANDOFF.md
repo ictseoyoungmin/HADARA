@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, `0.3.3-rc.0` readiness/publish completed through T-0402, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening planning completed through T-0408. |
-| Current Phase | 0.3.4 Agent UX Hardening started | Spec and capsule budget are registered; implementation begins with handoff stale known-problem detection. |
-| Latest Completed Task | T-0408 0.3.4 Agent UX Hardening spec and capsule budget | Added registered 0.3.4 spec covering handoff stale checks, release closeout plans, evidence id UX, finalize drift guidance, package recycle scripting, session-start guidance, context-pack actionability, generated docs cleanup, and release discipline. |
-| Active / Next Task | T-0409 Handoff Stale Known-Problem Detector | Add read-only stale known-problem candidate detection for `docs/AGENT_HANDOFF.md`. |
-| Validation Baseline | T-0408 docs/spec validation | Docs registry parse/explain, registration path checks, and `git diff --check` cover the spec capsule. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening is implemented through T-0409. |
+| Current Phase | 0.3.4 Agent UX Hardening in progress | T-0409 added handoff stale known-problem detection; next capsule is release closeout planning. |
+| Latest Completed Task | T-0409 Handoff Stale Known-Problem Detector | Added read-only `handoff stale-problems --json` candidate report with schema, CLI routing, registry/docs entries, focused tests, and built CLI smoke. |
+| Active / Next Task | T-0410 Release Closeout Read-Only Plan | Add a read-only release closeout planning report for release-state files and suggested fragments. |
+| Validation Baseline | T-0409 focused Docker/build smoke | Docker `/tmp/hadara` build passed; focused handoff/schema tests passed 9 tests; workspace `dist` refreshed; built CLI stale-problems smoke returned `ok:true`; `git diff --check` passed. Full sync-build attempt hit pre-existing dashboard/evidence timeouts and is recorded separately. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0409 | Implement read-only stale known-problem candidate detection for handoff rows, without automatic deletion. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md`, `docs/AGENT_HANDOFF.md` |
+| T-0410 | Implement read-only release closeout planning for version/task release-state files. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md`, `docs/RELEASE_READINESS.md`, `docs/RELEASE_NOTES.md` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0409 Handoff Stale Known-Problem Detector | Added read-only stale known-problem candidate detection for Agent Handoff rows. | `ev:T-0409:733b5dd43ab7400ab1e77e87` |
 | T-0408 0.3.4 Agent UX Hardening spec and capsule budget | Added registered 0.3.4 Agent UX Hardening spec and implementation/release budget. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md` |
 | T-0407 Stable 0.3.3 post-publish installed-package recycle | Verified published `hadara@0.3.3` from npm consumer paths, including registry/dist-tags, temp-prefix install, installed bin, governed init, lifecycle/finalize, context, cache, session start, and cleanup. | `ev:T-0407:339f60f3bccd4aa09b5fcfaa` |
-| T-0406 0.3.3 stable approval-gated publish | Published stable `hadara@0.3.3` to npm, verified registry/dist-tags, and passed temporary-prefix installed-bin smoke. | `ev:T-0406:8f35fa0295e34e93973136fa`, `ev:T-0406:630c4761c6c44250943f86e0`, `ev:T-0406:b284424247cc414ba9787fc4` |
 
 ## Current Known Problems
 

@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.handoff.staleProblems.v1",
+  "x-hadara-schema-id": "hadara.handoff.staleProblems.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "readOnly", "generatedAt", "target", "summary", "candidates", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.handoff.staleProblems.v1" },
+    "command": { "const": "handoff.stale-problems" },
+    "ok": { "type": "boolean" },
+    "readOnly": { "const": true },
+    "generatedAt": { "type": "string" },
+    "target": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "beforeHash", "writeBoundary"],
+      "properties": {
+        "path": { "const": "docs/AGENT_HANDOFF.md" },
+        "beforeHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "writeBoundary": { "const": "read-only" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["knownProblemRows", "candidates"],
+      "properties": {
+        "knownProblemRows": { "type": "integer", "minimum": 0 },
+        "candidates": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "rowIndex", "cells", "rowText", "confidence", "reason", "matchedSources", "suggestedAction"],
+        "properties": {
+          "id": { "type": "string" },
+          "rowIndex": { "type": "integer", "minimum": 1 },
+          "cells": { "type": "array", "items": { "type": "string" } },
+          "rowText": { "type": "string" },
+          "confidence": { "enum": ["medium", "high"] },
+          "reason": { "type": "string" },
+          "matchedSources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "required": ["path", "summary"],
+              "properties": {
+                "path": { "type": "string" },
+                "summary": { "type": "string" }
+              }
+            }
+          },
+          "suggestedAction": { "type": "string" }
+        }
+      }
+    },
+    "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+  }
+}

@@ -1406,6 +1406,27 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     conflictsWith: []
   }),
   commandEntry({
+    id: 'handoff.stale-problems',
+    command: 'hadara handoff stale-problems [--json]',
+    summary: 'Report advisory stale candidates in `docs/AGENT_HANDOFF.md` Current Known Problems.',
+    canonical: true,
+    appearsInDefaultHelp: false,
+    family: 'capsule-lifecycle',
+    scope: 'docs',
+    lifecycleStage: 'handoff',
+    requiredness: 'conditional',
+    writeBoundary: 'read-only',
+    readOnly: true,
+    risk: 'low',
+    actor: 'agent-worker',
+    status: 'stable',
+    schemaVersion: 'hadara.handoff.staleProblems.v1',
+    docs: ['docs/AGENT_HANDOFF.md'],
+    examples: [example('Find stale known problems', 'hadara handoff stale-problems --json', 'When reviewing whether handoff known-problem rows were resolved by later tasks or releases.')],
+    related: ['handoff.suggest', 'handoff.update', 'task.audit-close'],
+    conflictsWith: []
+  }),
+  commandEntry({
     id: 'write.preflight',
     command: 'hadara write preflight <command...> [--json]',
     summary: 'Compatibility alias for shell/write-boundary policy preflight.',
