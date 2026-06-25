@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.evidence.summary.v1",
+  "x-hadara-schema-id": "hadara.evidence.summary.v1",
+  "title": "HADARA Evidence Summary Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "readOnly", "taskId", "summary", "records", "latest", "latestCloseEvidence", "copyHints", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.evidence.summary.v1" },
+    "command": { "const": "evidence.summary" },
+    "ok": { "type": "boolean" },
+    "readOnly": { "const": true },
+    "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["count", "durableCount", "unstableCount", "privateIncluded", "latestId", "latestCloseEvidenceId"],
+      "properties": {
+        "count": { "type": "integer", "minimum": 0 },
+        "durableCount": { "type": "integer", "minimum": 0 },
+        "unstableCount": { "type": "integer", "minimum": 0 },
+        "privateIncluded": { "type": "boolean" },
+        "latestId": { "type": ["string", "null"] },
+        "latestCloseEvidenceId": { "type": ["string", "null"] }
+      }
+    },
+    "records": { "type": "array", "items": { "$ref": "#/$defs/summaryRecord" } },
+    "latest": { "oneOf": [{ "$ref": "#/$defs/summaryRecord" }, { "type": "null" }] },
+    "latestCloseEvidence": { "oneOf": [{ "$ref": "#/$defs/summaryRecord" }, { "type": "null" }] },
+    "copyHints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["latestId", "latestCloseEvidenceId", "durableIds"],
+      "properties": {
+        "latestId": { "type": ["string", "null"] },
+        "latestCloseEvidenceId": { "type": ["string", "null"] },
+        "durableIds": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "issues": { "type": "array", "items": { "$ref": "#/$defs/issue" } }
+  },
+  "$defs": {
+    "summaryRecord": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "time", "category", "outcome", "visibility", "summary", "tags", "sourceLine", "idSource", "idStability", "persistedSchemaVersion"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "time": { "type": "string", "minLength": 1 },
+        "category": { "type": "string", "enum": ["validation", "implementation", "release", "security", "policy", "operation", "decision", "handoff", "audit", "note", "observation"] },
+        "outcome": { "type": "string", "enum": ["passed", "failed", "blocked", "unknown", "recorded", "not-applicable"] },
+        "visibility": { "type": "string", "enum": ["public", "private"] },
+        "summary": { "type": "string", "minLength": 1 },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "sourceLine": { "type": "integer", "minimum": 1 },
+        "idSource": { "type": "string", "enum": ["persisted", "line-fallback"] },
+        "idStability": { "type": "string", "enum": ["durable", "unstable-on-reorder"] },
+        "persistedSchemaVersion": { "type": "string", "enum": ["hadara.evidence.v1", "hadara.evidence.v2"] }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

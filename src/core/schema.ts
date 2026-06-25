@@ -27,6 +27,7 @@ import docsRequiredReadingSchemaJson from '../schemas/docs-required-reading.sche
 import evidenceLintSchemaJson from '../schemas/evidence-lint.schema.json';
 import evidenceListSchemaJson from '../schemas/evidence-list.schema.json';
 import evidenceMigrationPreviewSchemaJson from '../schemas/evidence-migration-preview.schema.json';
+import evidenceSummarySchemaJson from '../schemas/evidence-summary.schema.json';
 import eventSchemaJson from '../schemas/event.schema.json';
 import featureSmokeSchemaJson from '../schemas/feature-smoke.schema.json';
 import harnessValidateSchemaJson from '../schemas/harness-validate.schema.json';
@@ -135,6 +136,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.evidence.lint.v1': evidenceLintSchemaJson as JsonObject,
   'hadara.evidence.list.v1': evidenceListSchemaJson as JsonObject,
   'hadara.evidence.migration_preview.v1': evidenceMigrationPreviewSchemaJson as JsonObject,
+  'hadara.evidence.summary.v1': evidenceSummarySchemaJson as JsonObject,
   'hadara.event.v1': eventSchemaJson as JsonObject,
   'hadara.featureSmoke.v1': featureSmokeSchemaJson as JsonObject,
   'hadara.harness.validate.v1': harnessValidateSchemaJson as JsonObject,

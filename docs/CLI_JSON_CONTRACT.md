@@ -40,6 +40,7 @@ Examples include:
 - `hadara.hermes.export-context.v1`
 - `hadara.evidence.collect.v1`
 - `hadara.evidence.list.v1`
+- `hadara.evidence.summary.v1`
 - `hadara.operational_debt.v1`
 - `hadara.operational_debt.show.v1`
 - `hadara.tools.list.v1`
@@ -106,6 +107,8 @@ As of T-0254, task lifecycle reports expose additive `actor`, `nextActions`, and
 
 `hadara evidence list --task <id> --json` returns `hadara.evidence.list.v1`. Each record exposes the persisted evidence shape plus id-discovery fields: `id`, `idSource`, `idStability`, `persistedSchemaVersion`, `category`, `outcome`, `tags`, and `legacy`. Persisted v2 records use durable `ev:` ids with `idSource: "persisted"` and `idStability: "durable"`; legacy compatibility ids are exposed for inspection and are not the preferred durable reference for `resolves:` or `supersedes:` examples.
 
+`hadara evidence summary --task <id> --json` returns `hadara.evidence.summary.v1`. It is a read-only compact evidence id report built from the same evidence list source. It exposes compact `records`, `latest`, `latestCloseEvidence`, and `copyHints` fields so agents can copy durable `ev:` ids and find close-proof evidence without scanning full persisted records. It must not append evidence, rewrite `EVIDENCE.md`, migrate evidence, or alter list semantics.
+
 `hadara evidence migrate --task <id> --to v2 --json` returns `hadara.evidence.migration_preview.v1`. Dry-run mode is read-only and reports `beforeHash`, planned v2 transforms, skipped records, warning issues, and execution metadata. Execute mode requires `--execute --before-hash <hash>`, rewrites only the selected task's `evidence.jsonl` through temp-file/rename when the hash matches and no blocking skipped records exist, preserves existing v2 records, and must not rewrite `EVIDENCE.md`, other tasks, artifacts, or project docs. Migration is operator-selected per task; agents should not infer broad historical migration as the default next step.
 
 0.3.2 does not define a JSON schema for `hadara evidence rebuild` and does not implement rebuild preview or execute behavior. `evidence.jsonl` remains the canonical append-only evidence source, while `EVIDENCE.md` is a non-canonical human summary. Future rebuild design must define whether a reported `wouldChange` means formatting regeneration, managed-section drift, or data inconsistency before exposing preview semantics, and any later execute path must be dry-run-first and before-hash guarded.
@@ -132,6 +135,7 @@ The task workflow surface is intentionally staged. `docs/TASK_WORKFLOW_COMMANDS.
 | `handoff stale-problems --json` | `hadara.handoff.staleProblems.v1` | Read-only advisory report; no execute mode. | Stale known-problem candidate report was generated without blocking issues. |
 | `dev docker-check [--focused <test...>] [--full] [--sync-dist --before-hash <hash>] --json` | `hadara.dev.docker_check.v1` | Runs Docker subprocess; writes workspace `dist` only when `--sync-dist` is explicit and the reviewed before-hash guard passes. | Requested Docker validation completed without blocking issues, including any requested dist-sync freshness guard. |
 | `evidence list --task T-XXXX [--json]` | `hadara.evidence.list.v1` | Read-only evidence id discovery; no evidence append or rebuild. | Evidence list report was generated. |
+| `evidence summary --task T-XXXX [--json]` | `hadara.evidence.summary.v1` | Read-only compact id/copy-hint report over evidence list; no evidence append or rewrite. | Evidence summary report was generated. |
 | `evidence add-command --task T-XXXX ... [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] --json` | `hadara.evidence.collect.v1` evidence append response | Writes command-log evidence only; explicit v2 metadata/tags are additive, result/outcome mismatches fail before append, and an explicit idempotency key returns an existing same-key record without appending duplicates. | Evidence append succeeded or returned the existing keyed record. |
 | `proof status --task T-XXXX --json` | `hadara.proof.status.v1` | Read-only. | Proof status was generated; `verdict` and `freshness.status` carry confidence. |
 | `proof explain --task T-XXXX --json` | `hadara.proof.explain.v1` | Read-only. | Proof explanation was generated; blockers/warnings and explanation rules describe the verdict. |

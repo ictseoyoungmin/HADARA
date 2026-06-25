@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening is implemented through T-0410. |
-| Current Phase | 0.3.4 Agent UX Hardening in progress | T-0410 added release closeout planning; next capsule is evidence compact id UX. |
-| Latest Completed Task | T-0410 Release Closeout Read-Only Plan | Added read-only `release closeout --version --task --json` planning report with schema, CLI routing, registry/docs entries, focused tests, and built CLI smoke. |
-| Active / Next Task | T-0411 Evidence Compact ID UX | Improve task evidence id discovery/reporting without rewriting `EVIDENCE.md`. |
-| Validation Baseline | T-0410 focused Docker/build smoke | Docker `/tmp/hadara` build passed; focused release-closeout/schema tests passed 4 tests; workspace `dist` refreshed; built CLI release closeout smoke returned `ok:true`; `git diff --check` passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening is implemented through T-0411. |
+| Current Phase | 0.3.4 Agent UX Hardening in progress | T-0411 added compact evidence id UX; next capsule is finalize post-close drift guidance. |
+| Latest Completed Task | T-0411 Evidence Compact ID UX | Added read-only `evidence summary --task --json` compact id/copy-hint report with schema, CLI routing, registry/docs entries, focused tests, and built CLI smokes. |
+| Active / Next Task | T-0412 Finalize Post-Close Drift Guidance | Improve finalize/audit guidance for post-close close-source edits and rerun paths. |
+| Validation Baseline | T-0411 focused Docker/build smoke | Docker `/tmp/hadara` build passed; focused evidence-summary/evidence-json/schema tests passed 27 tests; focused workflow/schema docs tests passed 5 tests; workspace `dist` refreshed; built CLI evidence summary JSON/text smokes returned `ok:true`; `git diff --check` passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0411 | Improve evidence compact id discovery/reporting. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md`, `docs/SCHEMAS.md`, `docs/CLI_JSON_CONTRACT.md` |
+| T-0412 | Improve finalize post-close drift guidance. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md`, `docs/TASK_WORKFLOW_COMMANDS.md`, `docs/CLI_JSON_CONTRACT.md` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0411 Evidence Compact ID UX | Added compact evidence id/copy-hint summary reports. | `ev:T-0411:0072b5ef53bb42378fe5c58b` |
 | T-0410 Release Closeout Read-Only Plan | Added read-only release closeout planning across release docs, shared state docs, and release capsule docs. | `ev:T-0410:299ccfde6ed84a22bc1e6a2e` |
 | T-0409 Handoff Stale Known-Problem Detector | Added read-only stale known-problem candidate detection for Agent Handoff rows. | `ev:T-0409:733b5dd43ab7400ab1e77e87` |
-| T-0408 0.3.4 Agent UX Hardening spec and capsule budget | Added registered 0.3.4 Agent UX Hardening spec and implementation/release budget. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md` |
 
 ## Current Known Problems
 

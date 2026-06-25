@@ -56,6 +56,7 @@ describe('schema fixtures', () => {
       'hadara.evidence.lint.v1',
       'hadara.evidence.list.v1',
       'hadara.evidence.migration_preview.v1',
+      'hadara.evidence.summary.v1',
       'hadara.featureSmoke.v1',
       'hadara.handoff.staleProblems.v1',
       'hadara.handoff.suggestion.v1',

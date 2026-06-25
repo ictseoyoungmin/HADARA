@@ -11,6 +11,7 @@ import { createEvidenceCollectReport } from './evidence-json';
 import { createEvidenceLintReport } from '../services/evidence-lint';
 import { createEvidenceListReport, EvidenceListRecord } from '../services/evidence-list';
 import { createEvidenceMigrationPreviewReport } from '../services/evidence-migration';
+import { createEvidenceSummaryReport, EvidenceSummaryRecord } from '../services/evidence-summary';
 import { getFlag, getIntegerOption, getRequiredStringOption, getStringOption } from './args';
 
 export interface EvidenceCommandInput {
@@ -49,6 +50,28 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
       console.log(JSON.stringify(report, null, 2));
     } else {
       console.log(`[HADARA] evidence lint ${taskId}: ${report.ok ? 'ok' : 'issues'}`);
+      for (const issue of report.issues) {
+        console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
+      }
+    }
+    if (!report.ok) process.exitCode = 6;
+    return true;
+  }
+
+  if (sub === 'summary') {
+    const taskId = getRequiredStringOption(input.args, '--task');
+    const report = createEvidenceSummaryReport(input.projectRoot, {
+      taskId,
+      limit: getIntegerOption(input.args, '--limit', { min: 0, max: 500 }),
+      includePrivate: getFlag(input.args, '--include-private')
+    });
+    if (input.jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log(`[HADARA] evidence summary ${taskId}: ${report.ok ? 'ok' : 'issues'} | records ${report.summary.count} | durable ${report.summary.durableCount}`);
+      if (report.latest) console.log(`latest: ${evidenceSummaryDisplay(report.latest)}`);
+      if (report.latestCloseEvidence) console.log(`latest-close: ${evidenceSummaryDisplay(report.latestCloseEvidence)}`);
+      for (const record of report.records) console.log(`- ${evidenceSummaryDisplay(record)}`);
       for (const issue of report.issues) {
         console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
       }
@@ -178,6 +201,22 @@ function evidenceListCategory(record: EvidenceListRecord): string {
 
 function evidenceListOutcome(record: EvidenceListRecord): string {
   return record.outcome;
+}
+
+function evidenceSummaryDisplay(record: EvidenceSummaryRecord): string {
+  const tags = record.tags.length > 0 ? ` | tags:${record.tags.slice(0, 3).map(compactEvidenceTag).join(',')}${record.tags.length > 3 ? ',...' : ''}` : '';
+  return `${record.id} | ${record.time} | ${record.category}/${record.outcome} | ${record.visibility} | ${truncateSummary(record.summary)}${tags}`;
+}
+
+function truncateSummary(value: string): string {
+  const maxLength = 160;
+  if (value.length <= maxLength) return value;
+  return `${value.slice(0, maxLength - 3)}...`;
+}
+
+function compactEvidenceTag(value: string): string {
+  if (value.startsWith('idempotency:')) return 'idempotency:*';
+  return truncateSummary(value);
 }
 
 export function parseEvidenceKind(value: string): EvidenceRecord['kind'] {
