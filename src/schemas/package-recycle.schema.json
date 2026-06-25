@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.packageRecycle.v1",
+  "x-hadara-schema-id": "hadara.packageRecycle.v1",
+  "title": "HADARA Installed Package Recycle Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "command",
+    "ok",
+    "mode",
+    "readOnly",
+    "package",
+    "networkPolicy",
+    "execution",
+    "workspace",
+    "steps",
+    "artifacts",
+    "privacy",
+    "issues"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.packageRecycle.v1" },
+    "command": { "const": "package.recycle" },
+    "ok": { "type": "boolean" },
+    "mode": { "type": "string", "enum": ["dry-run", "execute"] },
+    "readOnly": { "type": "boolean" },
+    "package": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["specifier", "name", "expectedVersion", "observedVersion", "latestVersion", "distTags"],
+      "properties": {
+        "specifier": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "expectedVersion": { "type": ["string", "null"] },
+        "observedVersion": { "type": ["string", "null"] },
+        "latestVersion": { "type": ["string", "null"] },
+        "distTags": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "networkPolicy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["mode", "enforced", "notes"],
+      "properties": {
+        "mode": { "const": "environment-inherited" },
+        "enforced": { "const": false },
+        "notes": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "npmViewExecuted",
+        "npmDistTagExecuted",
+        "packageInstallExecuted",
+        "installedVersionExecuted",
+        "lifecycleHelpExecuted",
+        "initExecuted",
+        "taskLifecycleExecuted",
+        "contextSmokeExecuted",
+        "releaseMutationExecuted",
+        "publishExecuted"
+      ],
+      "properties": {
+        "npmViewExecuted": { "type": "boolean" },
+        "npmDistTagExecuted": { "type": "boolean" },
+        "packageInstallExecuted": { "type": "boolean" },
+        "installedVersionExecuted": { "type": "boolean" },
+        "lifecycleHelpExecuted": { "type": "boolean" },
+        "initExecuted": { "type": "boolean" },
+        "taskLifecycleExecuted": { "type": "boolean" },
+        "contextSmokeExecuted": { "type": "boolean" },
+        "releaseMutationExecuted": { "const": false },
+        "publishExecuted": { "const": false }
+      }
+    },
+    "workspace": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "displayPath", "pathRedacted", "retention"],
+      "properties": {
+        "kind": { "const": "disposable" },
+        "displayPath": { "type": "string", "minLength": 1 },
+        "pathRedacted": { "const": true },
+        "retention": { "type": "string", "enum": ["deleted", "kept-temporary"] }
+      }
+    },
+    "steps": { "type": "array", "items": { "$ref": "#/$defs/step" } },
+    "artifacts": { "type": "array", "items": { "$ref": "#/$defs/artifact" } },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["rawLogsIncluded", "rawPackageContentsIncluded", "privatePathsIncluded", "environmentSecretsIncluded", "privateStorePathsIncluded"],
+      "properties": {
+        "rawLogsIncluded": { "const": false },
+        "rawPackageContentsIncluded": { "const": false },
+        "privatePathsIncluded": { "const": false },
+        "environmentSecretsIncluded": { "const": false },
+        "privateStorePathsIncluded": { "const": false }
+      }
+    },
+    "issues": { "type": "array", "items": { "$ref": "#/$defs/issue" } }
+  },
+  "$defs": {
+    "step": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "label", "status", "summary"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["planned", "passed", "failed", "skipped"] },
+        "command": { "type": "string", "minLength": 1 },
+        "exitCode": { "type": ["integer", "null"] },
+        "elapsedMs": { "type": "integer" },
+        "summary": { "type": "string", "minLength": 1 }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind", "visibility", "rawContentIncluded"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["summary", "command-log", "install-tree"] },
+        "visibility": { "type": "string", "enum": ["public", "private", "temporary"] },
+        "evidencePath": { "type": "string", "pattern": "^tasks/T-[0-9]{4}-.+/artifacts/package-recycle/.+" },
+        "relativePath": { "type": "string", "minLength": 1 },
+        "pathRedacted": { "const": true },
+        "rawContentIncluded": { "const": false }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "stepId": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -35,6 +35,7 @@ import handoffStaleProblemsSchemaJson from '../schemas/handoff-stale-problems.sc
 import handoffSuggestionSchemaJson from '../schemas/handoff-suggestion.schema.json';
 import installPlanSchemaJson from '../schemas/install-plan.schema.json';
 import nextActionSchemaJson from '../schemas/next-action.schema.json';
+import packageRecycleSchemaJson from '../schemas/package-recycle.schema.json';
 import packageSmokeSchemaJson from '../schemas/package-smoke.schema.json';
 import planContextSchemaJson from '../schemas/plan-context.schema.json';
 import privateEvidenceSchemaJson from '../schemas/private-evidence.schema.json';
@@ -144,6 +145,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.handoff.suggestion.v1': handoffSuggestionSchemaJson as JsonObject,
   'hadara.install.plan.v1': installPlanSchemaJson as JsonObject,
   'hadara.next_action.v1': nextActionSchemaJson as JsonObject,
+  'hadara.packageRecycle.v1': packageRecycleSchemaJson as JsonObject,
   'hadara.packageSmoke.v1': packageSmokeSchemaJson as JsonObject,
   'hadara.plan_context.v1': planContextSchemaJson as JsonObject,
   'hadara.privateEvidence.v1': privateEvidenceSchemaJson as JsonObject,

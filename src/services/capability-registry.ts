@@ -1838,6 +1838,56 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     ]
   }),
   commandEntry({
+    id: 'package.recycle',
+    command: 'hadara package recycle [--execute] [--package <specifier>] [--expected-version <version>] [--json]',
+    summary: 'Preview or execute installed-package recycle validation from the package registry.',
+    canonical: true,
+    appearsInDefaultHelp: false,
+    family: 'release-package',
+    scope: 'package',
+    lifecycleStage: 'ready',
+    requiredness: 'release-only',
+    writeBoundary: 'external-subprocess',
+    readOnly: false,
+    risk: 'medium',
+    actor: 'release-operator',
+    status: 'stable',
+    schemaVersion: 'hadara.packageRecycle.v1',
+    implementationFiles: ['src/cli/package-smoke.ts', 'src/services/package-recycle.ts'],
+    testFiles: ['tests/unit/package-recycle.test.ts'],
+    docs: ['docs/RELEASE_READINESS.md', 'docs/CLI_JSON_CONTRACT.md'],
+    examples: [
+      example('Preview installed-package recycle', 'hadara package recycle --package hadara@latest --expected-version 0.3.3 --json', 'Before running registry-backed consumer install validation.'),
+      example('Execute installed-package recycle', 'hadara package recycle --execute --package hadara@latest --expected-version 0.3.3 --task T-XXXX --attach-evidence --json', 'After an npm publish when verifying consumer install paths.')
+    ],
+    related: ['package.smoke', 'release.closeout', 'release.publish'],
+    conflictsWith: [],
+    capabilitySurfaces: [
+      {
+        name: 'hadara package recycle --json',
+        category: 'read',
+        stable: true,
+        readOnly: true,
+        enabledByDefault: true,
+        availability: 'default',
+        risk: 'low',
+        schemaVersion: 'hadara.packageRecycle.v1',
+        notes: 'Read-only installed-package recycle dry-run planner.'
+      },
+      {
+        name: 'hadara package recycle --execute --json',
+        category: 'execute',
+        stable: true,
+        readOnly: false,
+        enabledByDefault: true,
+        availability: 'default',
+        risk: 'medium',
+        schemaVersion: 'hadara.packageRecycle.v1',
+        notes: 'Explicit npm registry and isolated-prefix consumer package validation.'
+      }
+    ]
+  }),
+  commandEntry({
     id: 'release.dry-run',
     command: 'hadara release dry-run [--json]',
     summary: 'Run final read-only release readiness dry-run.',

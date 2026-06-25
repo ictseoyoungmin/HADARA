@@ -19,6 +19,8 @@ describe('tools list command registry projection', () => {
 
     expect(names).toContain('hadara package smoke --dry-run --json');
     expect(names).toContain('hadara package smoke --execute --json');
+    expect(names).toContain('hadara package recycle --json');
+    expect(names).toContain('hadara package recycle --execute --json');
     expect(names).toContain('hadara release publish --mode dry-run --json');
     expect(names).toContain('hadara release publish --mode execute --json');
   });
@@ -27,8 +29,10 @@ describe('tools list command registry projection', () => {
     const commandIds = HADARA_COMMAND_REGISTRY.map((entry) => entry.id);
 
     expect(commandIds).toContain('package.smoke');
+    expect(commandIds).toContain('package.recycle');
     expect(commandIds).toContain('release.publish');
     expect(commandIds.filter((id) => id === 'package.smoke')).toHaveLength(1);
+    expect(commandIds.filter((id) => id === 'package.recycle')).toHaveLength(1);
     expect(commandIds.filter((id) => id === 'release.publish')).toHaveLength(1);
   });
 });

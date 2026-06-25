@@ -443,6 +443,13 @@
       "notes": "Documents reduced package-smoke reports before dry-run or executable package-smoke command implementation."
     },
     {
+      "id": "hadara.packageRecycle.v1",
+      "path": "src/schemas/package-recycle.schema.json",
+      "status": "fixture",
+      "owner": "package-recycle/report",
+      "notes": "Documents reduced installed-package recycle reports for npm registry/package consumer smoke validation."
+    },
+    {
       "id": "hadara.plan_context.v1",
       "path": "src/schemas/plan-context.schema.json",
       "status": "fixture",

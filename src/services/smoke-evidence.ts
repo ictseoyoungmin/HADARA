@@ -19,7 +19,7 @@ export interface SmokeEvidenceArtifact {
 export interface SmokeEvidenceInput {
   projectRoot: string;
   taskId: string;
-  category: 'package-smoke' | 'clean-checkout-smoke';
+  category: 'package-smoke' | 'package-recycle' | 'clean-checkout-smoke';
   kind: EvidenceRecord['kind'];
   summary: string;
   result: EvidenceRecord['result'];

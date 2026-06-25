@@ -59,6 +59,7 @@ Current stable metadata preparation mode:
 - MIT license decision: adopt MIT; `LICENSE` exists and is included in the package whitelist.
 - Publish target decision: npm package first, GitHub Release second, Docker image deferred.
 - Installed CLI verification must use `hadara doctor --json`.
+- Post-publish installed-package recycle should use `hadara package recycle --execute --package hadara@latest --expected-version <version> --task <task-id> --attach-evidence --json` from a dedicated release follow-up capsule. The command is dry-run-first by default, uses an isolated temporary prefix/project in execute mode, verifies registry metadata, installed version, lifecycle/init/task/context/session surfaces, and cleanup, and must not publish packages or create release artifacts.
 - T-0142 performs no publish, no GitHub Release creation, no Docker image build, and no registry mutation; it transitions metadata and regenerates reduced release evidence only.
 - Before adding more T-0128+ release/install/package-smoke readiness markers, prefer moving the structured readiness source to `docs/RELEASE_READINESS.md` or `docs/release-readiness.json`.
 

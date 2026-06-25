@@ -23,7 +23,7 @@
     "schemaVersion": { "const": "hadara.smokeEvidenceSummary.v1" },
     "time": { "type": "string", "minLength": 1 },
     "taskId": { "type": "string", "pattern": "^T-[0-9]{4}$" },
-    "category": { "type": "string", "enum": ["package-smoke", "clean-checkout-smoke"] },
+    "category": { "type": "string", "enum": ["package-smoke", "package-recycle", "clean-checkout-smoke"] },
     "sourceReport": {
       "type": "object",
       "additionalProperties": true,

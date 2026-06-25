@@ -81,6 +81,7 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'smoke.run',
   'smoke.clean-checkout',
   'package.smoke',
+  'package.recycle',
   'release.dry-run',
   'release.publish',
   'release.artifact',

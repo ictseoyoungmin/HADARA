@@ -64,6 +64,7 @@ describe('schema fixtures', () => {
       'hadara.install.plan.v1',
       'hadara.lifecycle.guide.v1',
       'hadara.next_action.v1',
+      'hadara.packageRecycle.v1',
       'hadara.packageSmoke.v1',
       'hadara.plan_context.v1',
       'hadara.privateEvidence.v1',
