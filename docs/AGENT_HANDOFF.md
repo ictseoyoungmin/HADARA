@@ -5,16 +5,16 @@
 | Area | State | Notes |
 |---|---|---|
 | Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening source/readiness is prepared through T-0417 with T-0419/T-0420/T-0421 release-validation hotfixes applied. |
-| Current Phase | 0.3.4 RC publish retry next | T-0418 approval-gated npm publish remains active; refresh the publish clone to include T-0421 before rerunning the helper. |
+| Current Phase | 0.3.4 RC post-publish recycle next | `hadara@0.3.4-rc.0` is published on npm with dist-tag `next`; T-0418 should be finalized, then a post-publish installed-package recycle capsule should run. |
 | Latest Completed Task | T-0421 Clean Checkout Publish Smoke Failure Hardening | Fixed the remaining clean-checkout dashboard API route bottleneck by routing legacy `/api/debt` through the fast dashboard debt projection. |
-| Active / Next Task | T-0418 0.3.4 RC Approval-Gated Publish | Publish `hadara@0.3.4-rc.0` to npm with `next` only after explicit operator approval/authentication, using a clone refreshed to the T-0421 commit. |
+| Active / Next Task | T-0418 0.3.4 RC Approval-Gated Publish | Finish/close the release capsule now that npm publish and npm view verification are complete. |
 | Validation Baseline | T-0421 focused and clean-checkout validation | Docker ext4 focused dashboard validation passed; clean-checkout full check passed 144 files / 947 tests after the route fix; workspace `dist` refreshed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0418 | Approval-gated publish of `hadara@0.3.4-rc.0` to npm `next`; pre-publish preparation is complete, but the publish clone must be refreshed after T-0421 before operator authentication/confirmation retry. | `tasks/T-0418-0-3-4-rc-approval-gated-publish/PUBLISH_OPERATOR_STEPS.md`, `ev:T-0418:847b8df0510f4010a451a67a`, `ev:T-0418:5050dfc2b6694a3195d8d29a`, `ev:T-0418:d834f79b3a96479098c96d4d` |
+| T-0418 | Approval-gated publish of `hadara@0.3.4-rc.0` to npm `next`; npm publish completed and npm view verified the exact version. | `ev:T-0418:0a5bb04d6fbd4487ad7f22c5`, `ev:T-0418:47db95bf83574903a247fda8`, `tasks/T-0418-0-3-4-rc-approval-gated-publish/PUBLISH_OPERATOR_STEPS.md` |
 
 ## Last 3 Completed Tasks
 
@@ -28,7 +28,7 @@
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| T-0418 publish helper failed first on full-suite/dashboard timeouts before T-0419/T-0420/T-0421. | A stale publish clone can reproduce the timeout failures and block the RC publish helper. | Refresh `/root/hadara-publish` to include T-0421, rebuild, then rerun the approval-gated publish helper with T-0418. |
+| Post-publish installed-package recycle for `hadara@0.3.4-rc.0` has not run yet. | npm publish succeeded, but consumer install paths still need proof before stable readiness decisions. | Create the next capsule and run installed-package recycle from a disposable prefix. |
 | T-0383 mounted full-profile probes exceeded a 20s workload budget for cache status/warm, graph task, graph include-code, and context pack. | These workloads are not suitable for the default fast smoke loop on mounted filesystems. | Keep `smoke:context-routing` defaulting to fast profile; use `--profile full` explicitly for diagnostic/full-path checks. |
 | Built cache status still took about 19.6s on `/mnt/f` while producing diagnostics. | Diagnostics are clearer, but mounted broad source-manifest cost remains. | T-0385 classified this as an accepted residual for explicit diagnostic/warm/full-profile commands; default Session Start remains bounded/cache-preferential. |
 | Installed `hadara@0.3.2 version --json` reports dist freshness at `build.distLooksStale:false`, not root `distLooksStale`. | Consumers using shorthand root-field checks may miss the current schema location. | Treat `hadara.runtime.version.v1` output as authoritative; root compatibility can be a future docs/JSON compatibility follow-up if needed. |
@@ -94,7 +94,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Refresh `/root/hadara-publish` to include T-0421, rebuild, then rerun the `hadara@0.3.4-rc.0` approval-gated publish helper with task `T-0418`. | The publish clone previously hit dashboard/full-suite validation timeouts; T-0419/T-0420/T-0421 fix those release-validation paths, and T-0418 remains the release capsule. | `ev:T-0421:98e0dd670b3c489484bdebfb`, `ev:T-0421:88bc742a31814e089efcdb66`, `tasks/T-0418-0-3-4-rc-approval-gated-publish/PUBLISH_OPERATOR_STEPS.md` |
+| Finalize T-0418, then create the post-publish recycle capsule for `hadara@0.3.4-rc.0`. | npm publish and npm view verification are complete; the next proof should exercise the package from consumer install paths. | `ev:T-0418:0a5bb04d6fbd4487ad7f22c5`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
