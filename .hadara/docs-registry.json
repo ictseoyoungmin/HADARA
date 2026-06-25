@@ -627,6 +627,27 @@
       "generatedBy": "T-0403"
     },
     {
+      "path": "docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md",
+      "title": "Agent UX Hardening Spec",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0408"
+    },
+    {
       "path": "docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md",
       "title": "Context Routing Performance Baseline",
       "owner": "hadara-dev",

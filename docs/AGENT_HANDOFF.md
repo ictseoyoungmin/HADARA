@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, `0.3.3-rc.0` readiness/publish completed through T-0402, dogfood SaaS planning/hardening completed through T-0404, stable `0.3.3` readiness/publish completed through T-0406, and stable `0.3.3` installed-package recycle completed through T-0407. |
-| Current Phase | 0.3.3 stable published and recycled | `hadara@0.3.3` is published on npm with `latest` and verified from installed consumer paths. |
-| Latest Completed Task | T-0407 Stable 0.3.3 post-publish installed-package recycle | Verified npm registry/dist-tags, `hadara@latest` temp-prefix install, installed bin, governed init, lifecycle/finalize, context graph/pack/slice/cache/session-start, and cleanup. |
-| Active / Next Task | TBD post-0.3.3 strategic follow-up | Choose optional GitHub Release draft, PatternForge dogfood execution, or 0.3.4 dogfood UX hardening planning. |
-| Validation Baseline | T-0407 installed-package recycle | Published `hadara@0.3.3` passed consumer install and disposable project smoke coverage. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, `0.3.3-rc.0` readiness/publish completed through T-0402, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening planning completed through T-0408. |
+| Current Phase | 0.3.4 Agent UX Hardening started | Spec and capsule budget are registered; implementation begins with handoff stale known-problem detection. |
+| Latest Completed Task | T-0408 0.3.4 Agent UX Hardening spec and capsule budget | Added registered 0.3.4 spec covering handoff stale checks, release closeout plans, evidence id UX, finalize drift guidance, package recycle scripting, session-start guidance, context-pack actionability, generated docs cleanup, and release discipline. |
+| Active / Next Task | T-0409 Handoff Stale Known-Problem Detector | Add read-only stale known-problem candidate detection for `docs/AGENT_HANDOFF.md`. |
+| Validation Baseline | T-0408 docs/spec validation | Docs registry parse/explain, registration path checks, and `git diff --check` cover the spec capsule. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| TBD | Choose post-0.3.3 strategic follow-up: optional GitHub Release draft, PatternForge dogfood execution, or 0.3.4 dogfood UX hardening planning. | `docs/RELEASE_READINESS.md`, `tasks/T-0407-stable-0-3-3-post-publish-installed-package-recycle/HANDOFF.md` |
+| T-0409 | Implement read-only stale known-problem candidate detection for handoff rows, without automatic deletion. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md`, `docs/AGENT_HANDOFF.md` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0408 0.3.4 Agent UX Hardening spec and capsule budget | Added registered 0.3.4 Agent UX Hardening spec and implementation/release budget. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md` |
 | T-0407 Stable 0.3.3 post-publish installed-package recycle | Verified published `hadara@0.3.3` from npm consumer paths, including registry/dist-tags, temp-prefix install, installed bin, governed init, lifecycle/finalize, context, cache, session start, and cleanup. | `ev:T-0407:339f60f3bccd4aa09b5fcfaa` |
 | T-0406 0.3.3 stable approval-gated publish | Published stable `hadara@0.3.3` to npm, verified registry/dist-tags, and passed temporary-prefix installed-bin smoke. | `ev:T-0406:8f35fa0295e34e93973136fa`, `ev:T-0406:630c4761c6c44250943f86e0`, `ev:T-0406:b284424247cc414ba9787fc4` |
-| T-0405 0.3.3 stable release readiness refresh | Prepared stable `hadara@0.3.3` source/readiness, refreshed `dist`, generated fresh release artifact/package/clean-checkout evidence, passed strict release gate and release dry-run, and verified npm has no existing `0.3.3`. | `ev:T-0405:d2c9fce2d4fb423ea98c171e`, `ev:T-0405:47d23e856dbe4b7f94502aa8`, `ev:T-0405:7222082ccc8449468c2b3f47`, `ev:T-0405:6fb57bb7c06a46aca53b38a0`, `ev:T-0405:f3a1bd62ec254e5abeb83de6`, `ev:T-0405:79a290abc677408b85064993`, `ev:T-0405:98c78116db1242319eaf3759` |
 
 ## Current Known Problems
 

@@ -90,6 +90,7 @@ Use semantic tiers to keep session startup compact and deterministic:
 | `docs/CONTEXT_ROUTING_PERFORMANCE_THRESHOLDS.json` | Running or changing context-routing performance regression checks | Advisory mounted/ext4 workload budgets for the context-routing performance baseline script |
 | `docs/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md` | Implementing or reviewing lifecycle convenience, task lifecycle, close repair, or finalize workflow work | 0.3.3 lifecycle convenience design, improved agent scenarios, and capsule budget |
 | `docs/specs/0.3.3/dogfood/00_Procedural_Asset_SaaS_Dogfood_Spec.md` | Planning or implementing the PatternForge 0.3.3 dogfood SaaS, HADARA init/lifecycle/context dogfooding, or stable 0.3.3 decision input from that dogfood line | Product feasibility, architecture, capsule budget, and HADARA dogfood evaluation contract for the procedural asset SaaS project |
+| `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md` | Planning or implementing 0.3.4 Agent UX Hardening work | Scope boundaries, observed HADARA-dev friction, and capsule budget for handoff stale checks, release closeout plans, evidence id UX, finalize drift guidance, package recycle scripting, session-start guidance, context-pack actionability, and init docs cleanup |
 
 ## Project-Specific Documents
 
