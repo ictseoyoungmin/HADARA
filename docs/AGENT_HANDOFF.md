@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening is implemented through T-0416. |
-| Current Phase | 0.3.4 Agent UX Hardening release preparation next | T-0416 finished generated init guidance cleanup; next capsule is 0.3.4 RC readiness preparation. |
-| Latest Completed Task | T-0416 Init Generated Docs Agent Guidance Cleanup | Fresh generated docs now prioritize `task next`, `session start`, `task lifecycle`, and reviewed `task finalize`. |
-| Active / Next Task | T-0417 0.3.4 RC Readiness Preparation | Prepare `hadara@0.3.4-rc.0` source/readiness without publish mutation. |
-| Validation Baseline | T-0416 focused Docker/build smoke | Docker `/tmp/hadara` build passed; focused init/schema tests passed 2 files / 22 tests; workspace `dist` refreshed; disposable `/tmp` built CLI init smoke confirmed generated AGENTS/SOP/task workflow guidance. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening source/readiness is prepared through T-0417. |
+| Current Phase | 0.3.4 RC publish next | T-0417 prepared `hadara@0.3.4-rc.0` source/readiness without publish mutation; next capsule is approval-gated npm publish to `next`. |
+| Latest Completed Task | T-0417 0.3.4 RC Readiness Preparation | Source/package metadata, README, release notes/readiness, release artifact, release dry-run, publish dry-run, package smoke dry-run, and validation evidence are ready for `0.3.4-rc.0`. |
+| Active / Next Task | T-0418 0.3.4 RC Approval-Gated Publish | Publish `hadara@0.3.4-rc.0` to npm with `next` only after explicit operator approval/authentication. |
+| Validation Baseline | T-0417 0.3.4 RC readiness | Docker focused tests passed; built CLI version reports `0.3.4-rc.0`; release artifact passed; ext4 release dry-run readiness is ready with blockers 0; publish dry-run reports ok true with expected approval/token warnings and no mutation. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0417 | Prepare 0.3.4 RC source/readiness without publish mutation. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md`, `docs/RELEASE_READINESS.md`, `docs/RELEASE_NOTES.md` |
+| T-0418 | Approval-gated publish of `hadara@0.3.4-rc.0` to npm `next`. | `docs/RELEASE_READINESS.md`, `docs/RELEASE_NOTES.md`, `tasks/T-0417-0-3-4-rc-readiness-preparation/HANDOFF.md` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0417 0.3.4 RC Readiness Preparation | Prepared `hadara@0.3.4-rc.0` source/readiness without publish mutation. | `ev:T-0417:08b2899cd422471ab020fab8`, `ev:T-0417:12f0252b75924831872e82b0`, `ev:T-0417:8dac1b2a716949d29310c171` |
 | T-0416 Init Generated Docs Agent Guidance Cleanup | Updated generated init docs to show the 0.3.4 context-aware agent loop before broader protocol text. | `ev:T-0416:54d2ca94759b4088ae2fbb7e` |
 | T-0415 Context Pack Agent Actionability | Added read-only `agentActions` and clearer context-pack ranking reasons for immediate agent reads. | `ev:T-0415:6c8f98833d5549ea84a7bcdd` |
-| T-0414 Session Start Primary-Action Hardening | Added concrete Session Start primary action guidance and task-scoped lifecycle-first startup. | `ev:T-0414:598d8358ab004c6faf3164a6` |
 
 ## Current Known Problems
 
@@ -35,6 +35,7 @@
 | Published `0.3.0-rc.0` npm metadata still shows the old package description and no keywords. | The immutable rc.0 package remains metadata-limited, while later rc packages and stable `0.3.0` were published with metadata guardrails. | Treat rc.0 as historical; use stable `hadara@0.3.0` for current installs. |
 | `docs/DOC_REGISTRY.md` projection is not registered as a registry entry by the current seed. | `docs explain --path docs/DOC_REGISTRY.md` reports `DOC_NOT_REGISTERED`, while the artifact exists and is managed. | Treat as accepted current seed behavior unless a future schema/seed capsule decides self-registration is required. |
 | Host npm remains unreliable for some release smokes under sandboxed home/cache permissions. | T-0401 package smoke and clean-checkout smoke first failed under sandbox npm cache / disposable npm constraints, then passed on approved external reruns. | Use the Docker validation path for HADARA-dev and run npm package tooling outside read-only sandbox constraints when required. |
+| Mounted release dry-run exceeded 30s during T-0417 after 0.3.4-rc.0 artifact creation. | Broad release gate/dry-run reads on `/mnt/f` can still be slow and may look stuck. | Use an ext4 `/tmp/hadara` validation copy for release readiness proof; T-0417 ext4 release dry-run passed with blockers 0 and no slow-stage warnings. |
 | T-0291/T-0292/T-0293/T-0294 full wrapper validation had timeout-only residual blockers, while T-0295 wrapper validation passed. | Older Phase 7 focused checks passed, and T-0295 restored a clean standard wrapper baseline for current changes. | Use T-0295's 115-file / 741-test wrapper pass as the latest validation baseline, while treating older timeout notes as historical. |
 | T-0319 full Docker wrapper timed out on docs archive/required-reading tests. | Historical T-0319 evidence lacks a clean full-suite wrapper baseline, but T-0320 through T-0323 have since passed full Docker sync-build. | Treat as historical for T-0319; use T-0323 as the current source full-suite baseline unless a newer timeout repeats. |
 | Combined parallel focused dashboard/static validation can timeout under worker contention. | Standalone dashboard-static passed quickly, but a parallel focused run timed out once. | Run dashboard-static standalone or serialize dashboard validation when investigating route behavior. |
@@ -92,7 +93,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create and run T-0417 0.3.4 RC Readiness Preparation. | T-0416 completed the last planned 0.3.4 UX-hardening implementation capsule; the next step is source/readiness preparation for `0.3.4-rc.0` without publish mutation. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md`, `docs/RELEASE_READINESS.md`, `docs/RELEASE_NOTES.md` |
+| Run T-0418 0.3.4 RC Approval-Gated Publish. | T-0417 source/readiness passed; the next step is npm publish to `next` only after explicit operator approval/authentication. | `ev:T-0417:08b2899cd422471ab020fab8`, `ev:T-0417:12f0252b75924831872e82b0`, `ev:T-0417:8dac1b2a716949d29310c171` |
 
 ## Validation Baseline
 

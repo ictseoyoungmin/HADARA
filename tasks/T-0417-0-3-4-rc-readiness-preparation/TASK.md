@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0417 |
 | Title | 0.3.4 RC Readiness Preparation |
-| Status | In Progress |
+| Status | Done |
 | Created | 2026-06-25 |
 | Updated | 2026-06-25 |
 
@@ -36,7 +36,7 @@
 
 ## Status
 
-In Progress
+Done
 
 ## Status History
 
@@ -45,4 +45,5 @@ In Progress
 |---|---|---|---|
 | TBD | Draft | Initial task scaffold. | TBD |
 | 2026-06-25 | In Progress | Preparing `hadara@0.3.4-rc.0` source/readiness after 0.3.4 agent UX hardening. | TBD |
+| 2026-06-25 | Done | Finished task capsule. | `hadara task finish --execute` |
 <!-- hadara:managed:end task-status-history -->
