@@ -11,7 +11,7 @@ docker exec -it hadara-dev bash
 cd /root/hadara-publish
 ```
 
-The clone is on ext4, not the mounted `/workspace` filesystem. It was prepared at commit `d349586` and built with `packageVersion` `0.3.4-rc.0`.
+The clone is on ext4, not the mounted `/workspace` filesystem. It was refreshed to commit `f097ad5` and built with `packageVersion` `0.3.4-rc.0`.
 
 ## Pre-Publish Checks
 
@@ -30,6 +30,7 @@ Expected before publish:
 
 - `git status --short` is empty.
 - `packageVersion` is `0.3.4-rc.0`.
+- `git.head` in the version report is `f097ad5391e74476b77902e1ea38aae60ebae4b9`.
 - strict release gate is `ok:true`.
 - publish dry-run is `ok:true` with approval/token warnings only.
 - `npm view hadara@0.3.4-rc.0 version` returns npm `E404`.
