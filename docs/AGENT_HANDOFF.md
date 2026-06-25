@@ -8,13 +8,13 @@
 | Current Phase | 0.3.4 RC publish next | T-0417 prepared `hadara@0.3.4-rc.0` source/readiness without publish mutation; next capsule is approval-gated npm publish to `next`. |
 | Latest Completed Task | T-0417 0.3.4 RC Readiness Preparation | Source/package metadata, README, release notes/readiness, release artifact, release dry-run, publish dry-run, package smoke dry-run, and validation evidence are ready for `0.3.4-rc.0`. |
 | Active / Next Task | T-0418 0.3.4 RC Approval-Gated Publish | Publish `hadara@0.3.4-rc.0` to npm with `next` only after explicit operator approval/authentication. |
-| Validation Baseline | T-0417 0.3.4 RC readiness | Docker focused tests passed; built CLI version reports `0.3.4-rc.0`; release artifact passed; ext4 release dry-run readiness is ready with blockers 0; publish dry-run reports ok true with expected approval/token warnings and no mutation. |
+| Validation Baseline | T-0418 pre-publish preparation | Registry pre-check found `hadara@0.3.4-rc.0` absent and dist-tags `latest=0.3.3`, `next=0.3.3-rc.0`; ext4 publish dry-run returned `ok:true` with expected approval/token warnings; `/root/hadara-publish` clone/build/gate preparation passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0418 | Approval-gated publish of `hadara@0.3.4-rc.0` to npm `next`. | `docs/RELEASE_READINESS.md`, `docs/RELEASE_NOTES.md`, `tasks/T-0417-0-3-4-rc-readiness-preparation/HANDOFF.md` |
+| T-0418 | Approval-gated publish of `hadara@0.3.4-rc.0` to npm `next`; pre-publish preparation is complete and operator authentication/confirmation is next. | `tasks/T-0418-0-3-4-rc-approval-gated-publish/PUBLISH_OPERATOR_STEPS.md`, `ev:T-0418:847b8df0510f4010a451a67a`, `ev:T-0418:5050dfc2b6694a3195d8d29a`, `ev:T-0418:d834f79b3a96479098c96d4d` |
 
 ## Last 3 Completed Tasks
 
@@ -93,7 +93,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Run T-0418 0.3.4 RC Approval-Gated Publish. | T-0417 source/readiness passed; the next step is npm publish to `next` only after explicit operator approval/authentication. | `ev:T-0417:08b2899cd422471ab020fab8`, `ev:T-0417:12f0252b75924831872e82b0`, `ev:T-0417:8dac1b2a716949d29310c171` |
+| Operator publishes `hadara@0.3.4-rc.0` from `/root/hadara-publish`. | Pre-publish checks passed; remaining action needs npm authentication and typing `publish` into the helper prompt. | `tasks/T-0418-0-3-4-rc-approval-gated-publish/PUBLISH_OPERATOR_STEPS.md` |
 
 ## Validation Baseline
 
