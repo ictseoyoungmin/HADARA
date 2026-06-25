@@ -414,3 +414,4 @@
 | T-0411 | Evidence Compact ID UX | Done | tasks/T-0411-evidence-compact-id-ux | Added read-only `evidence summary --task --json` compact id/copy-hint report with schema, CLI routing, registry/docs entries, focused tests, and built smokes. |
 | T-0412 | Finalize Post-Close Drift Guidance | Done | tasks/T-0412-finalize-post-close-drift-guidance | Finalize/lifecycle now treat close-source drift as repair-required and route to close repair guidance; focused tests and built smokes passed. |
 | T-0413 | Installed-Package Recycle Script UX | Done | tasks/T-0413-installed-package-recycle-script-ux | Added dry-run-first `hadara package recycle` with schema/docs/tests for post-publish installed-package consumer-path validation. |
+| T-0414 | Session Start Primary-Action Hardening | Done | tasks/T-0414-session-start-primary-action-hardening | Session Start now exposes concrete primaryAction/nextCommandArgs guidance and task-scoped starts prioritize task lifecycle. |

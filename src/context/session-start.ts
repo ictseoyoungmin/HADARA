@@ -44,9 +44,23 @@ export interface SessionStartGuidanceCommand {
   reason: string;
 }
 
+export interface SessionStartPrimaryAction {
+  id: string;
+  label: string;
+  command: string;
+  args: string[];
+  reason: string;
+  writeBoundary: 'read-only';
+  recommendedActorRole: 'agent-worker';
+}
+
 export interface SessionStartGuidance {
   mode: SessionStartMode;
   primaryNextAction: SessionStartPrimaryNextAction;
+  primaryAction: SessionStartPrimaryAction;
+  whyThisNow: string;
+  avoidForNow: string[];
+  nextCommandArgs: string[];
   reason: string;
   taskRequired: boolean;
   liveContextPackAvailable: boolean;
@@ -225,6 +239,7 @@ function buildWarmCachedContextPackReport(input: {
 function lifecycleForSessionStart(taskId: string | undefined, contextPack: ContextPackReport): SessionStartLifecycle {
   const primaryNextCommands = taskId
     ? [
+        `node dist/cli/main.js task lifecycle --task ${taskId} --json`,
         `node dist/cli/main.js task status --task ${taskId} --json`,
         `node dist/cli/main.js context pack --task ${taskId} --json`
       ]
@@ -275,8 +290,18 @@ function guidanceForSessionStart(input: {
         ? 'Session Start used explicit live context-pack discovery because --live was supplied.'
         : 'Session Start used the bounded no-live packet and avoided broad live graph discovery.';
   const commands: SessionStartGuidanceCommand[] = [];
+  let primaryAction: SessionStartPrimaryAction;
 
   if (!taskId) {
+    primaryAction = {
+      id: 'task-next',
+      label: 'Select the next task',
+      command: 'node dist/cli/main.js task next --json',
+      args: ['task', 'next', '--json'],
+      reason: 'No task id is available, so the next useful step is to select a concrete task before reading task-scoped context.',
+      writeBoundary: 'read-only',
+      recommendedActorRole: 'agent-worker'
+    };
     commands.push({
       id: 'task-next',
       command: 'node dist/cli/main.js task next --json',
@@ -284,6 +309,21 @@ function guidanceForSessionStart(input: {
       reason: 'Choose the next task before requesting task-scoped context.'
     });
   } else {
+    primaryAction = {
+      id: 'task-lifecycle',
+      label: 'Inspect task lifecycle phase',
+      command: `node dist/cli/main.js task lifecycle --task ${taskId} --json`,
+      args: ['task', 'lifecycle', '--task', taskId, '--json'],
+      reason: 'A task id is available, so the fastest safe first step is to inspect lifecycle phase and blockers before editing files.',
+      writeBoundary: 'read-only',
+      recommendedActorRole: 'agent-worker'
+    };
+    commands.push({
+      id: 'task-lifecycle',
+      command: `node dist/cli/main.js task lifecycle --task ${taskId} --json`,
+      args: ['task', 'lifecycle', '--task', taskId, '--json'],
+      reason: 'Inspect the task phase and the one primary lifecycle next action before editing.'
+    });
     commands.push({
       id: 'task-status',
       command: `node dist/cli/main.js task status --task ${taskId} --json`,
@@ -319,6 +359,18 @@ function guidanceForSessionStart(input: {
   return {
     mode,
     primaryNextAction,
+    primaryAction,
+    whyThisNow: primaryAction.reason,
+    avoidForNow: taskId
+      ? [
+          'Do not run task finalize before reviewing lifecycle blockers and required reads.',
+          'Do not opt into --live context reads unless the bounded or warm packet is insufficient.'
+        ]
+      : [
+          'Do not infer a task id from broad project files.',
+          'Do not run live context discovery before selecting a task.'
+        ],
+    nextCommandArgs: primaryAction.args,
     reason,
     taskRequired,
     liveContextPackAvailable: true,

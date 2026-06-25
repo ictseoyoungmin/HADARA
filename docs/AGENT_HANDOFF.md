@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening is implemented through T-0413. |
-| Current Phase | 0.3.4 Agent UX Hardening in progress | T-0413 standardized installed-package recycle scripting; next capsule is session-start primary-action hardening. |
-| Latest Completed Task | T-0413 Installed-Package Recycle Script UX | Added dry-run-first `hadara package recycle` for published npm consumer-path validation. |
-| Active / Next Task | T-0414 Session Start Primary-Action Hardening | Make Session Start produce clearer primary next actions for agents entering active work. |
-| Validation Baseline | T-0413 focused Docker/build smoke | Docker `/tmp/hadara` build passed; focused package recycle/registry/tools/schema tests passed 5 files / 19 tests; workspace `dist` refreshed; built CLI package recycle dry-run returned `ok:true` with no registry/install execution. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening is implemented through T-0414. |
+| Current Phase | 0.3.4 Agent UX Hardening in progress | T-0414 hardened Session Start first-action guidance; next capsule is context-pack agent actionability. |
+| Latest Completed Task | T-0414 Session Start Primary-Action Hardening | Session Start now exposes concrete primaryAction/nextCommandArgs guidance and task-scoped starts prioritize task lifecycle. |
+| Active / Next Task | T-0415 Context Pack Agent Actionability | Make context-pack read recommendations easier for agents to turn into immediate reads/actions. |
+| Validation Baseline | T-0414 focused Docker/build smoke | Docker `/tmp/hadara` build passed; focused session-start/context CLI/e2e/schema tests passed 4 files / 23 tests; workspace `dist` refreshed; built CLI Session Start for T-0414 returned `primaryAction.id=task-lifecycle`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0414 | Harden Session Start primary-action guidance. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md`, `docs/CLI_JSON_CONTRACT.md`, `docs/SCHEMAS.md` |
+| T-0415 | Improve context-pack agent actionability. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md`, `docs/CLI_JSON_CONTRACT.md`, `docs/SCHEMAS.md` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0414 Session Start Primary-Action Hardening | Added concrete Session Start primary action guidance and task-scoped lifecycle-first startup. | `ev:T-0414:598d8358ab004c6faf3164a6` |
 | T-0413 Installed-Package Recycle Script UX | Added dry-run-first `hadara package recycle` with schema/docs/tests for post-publish consumer-path validation. | `ev:T-0413:db037677d84640d39722a7c7` |
 | T-0412 Finalize Post-Close Drift Guidance | Made close-source drift repair-required in finalize/lifecycle guidance. | `ev:T-0412:32fdb139512446aaa3806924` |
-| T-0411 Evidence Compact ID UX | Added compact evidence id/copy-hint summary reports. | `ev:T-0411:0072b5ef53bb42378fe5c58b` |
 
 ## Current Known Problems
 
@@ -92,12 +92,13 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create and run T-0414 Session Start Primary-Action Hardening. | T-0413 completed the installed-package recycle workstream; the next 0.3.4 friction point is making Session Start action guidance clearer for agents. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md` |
+| Create and run T-0415 Context Pack Agent Actionability. | T-0414 completed Session Start first-action guidance; the next 0.3.4 friction point is making context-pack read recommendations more directly actionable. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0414 session-start primary-action hardening | Docker `/tmp/hadara` build passed; focused session-start, context CLI, e2e smoke script, and schema fixture tests passed 4 files / 23 tests; workspace `dist` refreshed; built CLI Session Start for T-0414 returned `guidance.primaryAction.id=task-lifecycle` and `nextCommandArgs`. | Evidence `ev:T-0414:598d8358ab004c6faf3164a6`; live context discovery was not run because this capsule only changes read-only guidance fields. |
 | T-0413 installed-package recycle script UX | Docker `/tmp/hadara` build passed; focused package recycle, command registry, tools projection, and schema fixture tests passed 5 files / 19 tests; workspace `dist` refreshed; built CLI package recycle dry-run returned `hadara.packageRecycle.v1` `ok:true` with all registry/install execution flags false. | Evidence `ev:T-0413:db037677d84640d39722a7c7`; live npm registry execute recycle is release-operator/environment dependent and was not run in this implementation capsule. |
 | T-0399 finalize evidence guidance/speed hardening | Focused validation passed 3 files / 13 tests; full Docker sync-build retry passed 141 files / 929 tests and refreshed `dist`; built finalize smoke passed with finish-only evaluation for Draft T-0399; final `git diff --check` passed; first full-run dashboard-static timeout was recorded and resolved. | Evidence `ev:T-0399:c213cedb4cfe4d20a8858fd9`, `ev:T-0399:8aa7e7dc564e429393a1ea67`, `ev:T-0399:ac178da8a71f482a9d8e702a`, `ev:T-0399:cda485bcea7242448c0da511`; failed timeout `ev:T-0399:eba26dcf11c5461395d90965` resolved by retry. |
 | T-0398 lifecycle scenario docs/init alignment | Focused validation passed 4 files / 34 tests; full Docker sync-build passed 141 files / 928 tests and refreshed `dist`; built command registry smoke passed; final `git diff --check` passed; substantive passed validation evidence is recorded. | Evidence `ev:T-0398:7226b21db0564b008a4a8dc3`, `ev:T-0398:1d161be5bec2445292c76cb5`, `ev:T-0398:9f630cc9e133415495f689c2`, `ev:T-0398:e0be2ec555684f0a9e12b8df`, `ev:T-0398:d69e62e8e4254bebbfd5d89b`; docs/generated init guidance only, no runtime command change. |
