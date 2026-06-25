@@ -191,6 +191,8 @@ async function main(args = process.argv.slice(2)): Promise<void> {
     }
 
     case 'release': {
+      const { handleReleaseCloseoutCommand } = await import('./release-closeout');
+      if (handleReleaseCloseoutCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       const { handleReleaseDryRunCommand } = await import('./release-dry-run');
       if (handleReleaseDryRunCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       const { handleReleasePublishCommand } = await import('./release-publish');

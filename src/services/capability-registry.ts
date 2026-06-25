@@ -1838,6 +1838,27 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     conflictsWith: []
   }),
   commandEntry({
+    id: 'release.closeout',
+    command: 'hadara release closeout --version <version> --task <task-id> [--json]',
+    summary: 'Plan release closeout document updates without writing files.',
+    canonical: true,
+    appearsInDefaultHelp: false,
+    family: 'release-package',
+    scope: 'release',
+    lifecycleStage: 'ready',
+    requiredness: 'release-only',
+    writeBoundary: 'read-only',
+    readOnly: true,
+    risk: 'low',
+    actor: 'release-operator',
+    status: 'stable',
+    schemaVersion: 'hadara.releaseCloseout.v1',
+    docs: ['docs/RELEASE_READINESS.md', 'docs/RELEASE_NOTES.md', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md'],
+    examples: [example('Plan release closeout', 'hadara release closeout --version 0.3.4 --task T-0418 --json', 'After publish/recycle work when aligning release state docs.')],
+    related: ['release.dry-run', 'release.publish', 'release.gate'],
+    conflictsWith: []
+  }),
+  commandEntry({
     id: 'release.publish',
     command: 'hadara release publish [--mode dry-run|execute] [--json]',
     summary: 'Check or request approval-gated publish/deploy readiness.',

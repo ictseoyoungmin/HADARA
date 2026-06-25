@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0409 Handoff Stale Known-Problem Detector |
-| Active Task | T-0410 Release Closeout Read-Only Plan |
+| Latest Completed Task | T-0410 Release Closeout Read-Only Plan |
+| Active Task | T-0411 Evidence Compact ID UX |
 
 ## Next Planned Line
 
@@ -37,6 +37,8 @@ T-0407 follow-up note: stable `hadara@0.3.3` is recycled from installed npm cons
 T-0408 follow-up note: 0.3.4 is defined as Agent UX Hardening in `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md` and registered in the docs registry/SOP. The line is based on HADARA-dev usage friction after 0.3.3 rather than another PatternForge repeat. The budget starts with T-0409 Handoff Stale Known-Problem Detector, then release closeout planning, evidence compact id UX, finalize post-close drift guidance, installed-package recycle scripting, session-start primary-action hardening, context-pack actionability, init generated-doc cleanup, and 0.3.4 release readiness/publish/recycle. Dashboard productization, full agent runtime, broader MCP writes, vector retrieval, and default provider execution remain deferred.
 
 T-0409 follow-up note: `hadara handoff stale-problems --json` now emits `hadara.handoff.staleProblems.v1` as a read-only advisory report over `docs/AGENT_HANDOFF.md` Current Known Problems rows. It reports target before-hash, row counts, candidate stale rows, confidence, matched sources, reasons, and suggested human actions without deleting or rewriting handoff rows. Candidate detection is conservative: completed-task matches require stale review wording such as `needs closeout`, while release/version matches require publish/recycle pending-style wording. Focused Docker build/tests passed for handoff/schema fixtures, workspace `dist` was refreshed, built CLI smoke returned `ok:true` and `candidates:0` on the current repo, and `git diff --check` passed. A full `npm run dev:docker-sync-build` attempt failed on pre-existing dashboard/evidence timeout behavior and is recorded as failed evidence, not as a T-0409 feature failure.
+
+T-0410 follow-up note: `hadara release closeout --version <version> --task <task-id> --json` now emits `hadara.releaseCloseout.v1` as a read-only release closeout planning report. It inspects release readiness, release notes, shared state docs, and selected release capsule docs; classifies surfaces as `current`, `stale`, or `missing`; reports expected/matched/missing signals and roles; and returns suggested Markdown fragments without writing files, appending evidence, building artifacts, publishing packages, or creating GitHub releases. Focused Docker build/tests passed for release-closeout/schema fixtures, workspace `dist` was refreshed, built CLI smoke returned `ok:true` for `0.3.4`/`T-0410`, and `git diff --check` passed.
 
 Phase 8 / 0.3.1 is complete through post-rc1 documentation cleanup. It carried Work Item A and Work Item F into implementation as status token governance, document ownership/write-boundary governance, task handoff close-state clarity, installed-package recycle findings cleanup, state consistency projection, and advisory verification gates. The Phase 8 specs are staged under `docs/specs/0.3.1/`; the first rc1 implementation sequence is staged under `docs/specs/0.3.1/rc1/`. Phase 8.1 through Phase 8.6 are complete through T-0324, T-0325 completed the follow-up CloseState derived-state cleanup after review, T-0326 prepared `hadara@0.3.1-rc.1` release readiness without publish mutation, T-0327 published `hadara@0.3.1-rc.1`, verified npm visibility/tarball contents, hardened future rc publish tags, and corrected npm dist-tags so stable `0.3.0` stays on `latest` while rc1 is available as `next`, T-0328 verified the published rc1 package from installed consumer paths in the `hadara-dev` container, and T-0329 refreshed post-rc1 handoff/release-note wording after reviewer feedback.
 
@@ -170,8 +172,8 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0409 Handoff Stale Known-Problem Detector.
-- Active task is T-0410 Release Closeout Read-Only Plan, the next implementation capsule in the 0.3.4 budget.
+- Latest completed task is T-0410 Release Closeout Read-Only Plan.
+- Active task is T-0411 Evidence Compact ID UX, the next implementation capsule in the 0.3.4 budget.
 - Stable `hadara@0.3.0` publish and installed-package consumer recycle are complete through T-0316/T-0317.
 - Phase 8 / `0.3.1` planning is staged under `docs/specs/0.3.1/`; Phase 8.1 status token/document ownership governance, Phase 8.2 task handoff close-state governance, Phase 8.3 installed-package findings cleanup, Phase 8.4 state consistency projection read model, Phase 8.5 advisory verify/doctor/CI integration, Phase 8.6 rc1 review/hardening cleanup, T-0325 CloseState derived-state cleanup, T-0326 rc1 release-readiness preparation, T-0327 approval-gated publish, T-0328 installed-package recycle, and T-0329 post-rc1 docs cleanup are complete.
 - `0.3.1-rc.1` source/readiness is complete through T-0326; npm package visibility, tarball inspection, and corrected dist-tags are confirmed through T-0327; installed-package recycle is complete through T-0328; post-rc1 shared-doc wording cleanup is complete through T-0329.

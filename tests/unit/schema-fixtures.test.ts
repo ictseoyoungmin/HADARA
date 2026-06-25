@@ -73,6 +73,7 @@ describe('schema fixtures', () => {
       'hadara.provider.config.v1',
       'hadara.releaseArtifact.manifest.v1',
       'hadara.releaseArtifact.v1',
+      'hadara.releaseCloseout.v1',
       'hadara.releaseDryRun.v1',
       'hadara.releaseGate.v1',
       'hadara.releasePublish.v1',

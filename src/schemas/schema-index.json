@@ -478,6 +478,13 @@
       "notes": "Documents read-only final release dry-run reports that cross-check public evidence artifacts and planned release targets without publish or GitHub Release mutation."
     },
     {
+      "id": "hadara.releaseCloseout.v1",
+      "path": "src/schemas/release-closeout.schema.json",
+      "status": "fixture",
+      "owner": "release/closeout",
+      "notes": "Documents read-only release closeout planning across release docs, shared state docs, and active release capsule files."
+    },
+    {
       "id": "hadara.releasePublish.v1",
       "path": "src/schemas/release-publish.schema.json",
       "status": "fixture",
