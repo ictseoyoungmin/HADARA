@@ -90,13 +90,13 @@ export interface DashboardBootstrapInput {
   selectedTaskId?: string;
   // 'core' skips the expensive operational-debt computation for a fast first
   // paint; the frontend loads debt in the background and merges it. 'full'
-  // (default) includes everything and is unchanged.
+  // includes everything and must be requested explicitly.
   tier?: 'core' | 'full';
 }
 
 export function createDashboardBootstrapReport(projectRoot: string, input: DashboardBootstrapInput = {}, now = new Date()): DashboardBootstrapReport {
   const generatedAt = now.toISOString();
-  const core = input.tier === 'core';
+  const core = input.tier !== 'full';
   const status = createOpsStatusReport(projectRoot, { includeDebt: !core });
   const tasks = createTaskListReport(projectRoot);
   // Reuse the already-computed status/tasks so the timeline does not re-run the
@@ -123,8 +123,8 @@ export function createDashboardBootstrapReport(projectRoot: string, input: Dashb
     },
     cache: disabledDashboardCacheMetadata(
       selectedTaskId
-        ? createDashboardCacheKey(projectRoot, 'bootstrap', 'selected', selectedTaskId)
-        : createDashboardCacheKey(projectRoot, 'bootstrap'),
+        ? createDashboardCacheKey(projectRoot, 'bootstrap', core ? 'core' : 'full', 'selected', selectedTaskId)
+        : createDashboardCacheKey(projectRoot, 'bootstrap', core ? 'core' : 'full'),
       generatedAt
     ),
     tier: core ? 'core' : 'full',

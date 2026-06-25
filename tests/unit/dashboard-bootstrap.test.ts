@@ -22,11 +22,12 @@ describe('dashboard bootstrap read model', () => {
       },
       cache: {
         status: 'disabled',
-        key: expect.stringMatching(/^dashboard:sha256:[a-f0-9]{12}:bootstrap$/),
+        key: expect.stringMatching(/^dashboard:sha256:[a-f0-9]{12}:bootstrap:core$/),
         ttlMs: null,
         generatedAt: '2026-06-01T00:00:00.000Z',
         expiresAt: null
       },
+      tier: 'core',
       status: {
         schemaVersion: 'hadara.ops.status.v1',
         command: 'ops.status'
@@ -38,6 +39,7 @@ describe('dashboard bootstrap read model', () => {
     expect(report.taskSummary.total).toBeGreaterThan(0);
     expect(report.taskSummary.recent.length).toBeLessThanOrEqual(8);
     expect(report.timelineOverview.events.every((event) => event.readOnly === true)).toBe(true);
+    expect(report.debtSummary.pending).toBe(true);
     expect(report.selectedTask).toBeNull();
     expect(JSON.stringify(report)).not.toContain('artifacts/');
     expect(validateSchema('hadara.dashboard.bootstrap.v1', report).ok).toBe(true);
@@ -46,7 +48,7 @@ describe('dashboard bootstrap read model', () => {
   it('includes only compact selected-task proof metadata when requested', () => {
     const report = createDashboardBootstrapReport(process.cwd(), { selectedTaskId: 'T-0196' }, new Date('2026-06-01T00:00:00.000Z'));
 
-    expect(report.cache.key).toMatch(/^dashboard:sha256:[a-f0-9]{12}:bootstrap:selected:T-0196$/);
+    expect(report.cache.key).toMatch(/^dashboard:sha256:[a-f0-9]{12}:bootstrap:core:selected:T-0196$/);
     expect(report.selectedTask).toMatchObject({
       requestedTaskId: 'T-0196',
       ok: expect.any(Boolean),
