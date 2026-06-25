@@ -6,7 +6,7 @@
 
 <p align="center">
   <img alt="Stable npm release" src="https://img.shields.io/badge/npm-0.3.3-blue">
-  <img alt="Source version" src="https://img.shields.io/badge/source-0.3.3-blue">
+  <img alt="Source version" src="https://img.shields.io/badge/source-0.3.4--rc.0-blue">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>
@@ -27,19 +27,26 @@ Current stable npm release:
 hadara@0.3.3
 ```
 
-Previous release candidate:
+Current source release candidate:
+
+```text
+hadara@0.3.4-rc.0
+```
+
+Previous published release candidate:
 
 ```text
 hadara@0.3.3-rc.0
 ```
 
-The 0.3.3 line promotes the context-routing and lifecycle release candidate after dogfood hardening. It adds project context graph, context pack/slice/session-start surfaces, explicit context cache warm paths, and makes the finalize-first lifecycle the default agent-facing task loop.
+The 0.3.4 source line is an agent UX hardening release candidate after stable 0.3.3. It keeps the context-routing and finalize-first lifecycle surfaces, then improves the commands agents actually use during HADARA development: session start, context pack, evidence summary, handoff stale-problem checks, release closeout, package recycle, generated init guidance, and close/finalize diagnostics.
 
-Phase labels are internal implementation phases, not npm release-candidate labels. The stable `0.3.3` package is the default install target; `0.3.3-rc.0` remains the previous release candidate.
+Phase labels are internal implementation phases, not npm release-candidate labels. The stable `0.3.3` package is the default install target; `0.3.4-rc.0` is the current source candidate and must not be treated as published until an approval-gated publish capsule completes.
 
 | Surface | Status |
 |---|---|
 | Current stable | [`hadara@0.3.3`](docs/RELEASE_NOTES.md#033) |
+| Source candidate | [`hadara@0.3.4-rc.0`](docs/RELEASE_NOTES.md#034-rc0) |
 | Previous RC | [`hadara@0.3.3-rc.0`](docs/RELEASE_NOTES.md#033-rc0) |
 | Previous stable | [`hadara@0.3.2`](docs/RELEASE_NOTES.md#032) |
 | Historical RCs | See [Release Notes](docs/RELEASE_NOTES.md). |
@@ -48,7 +55,7 @@ Phase labels are internal implementation phases, not npm release-candidate label
 | PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
 | Installer scripts / USB launchers | Deferred. |
 
-No release command should publish, create a GitHub Release, build Docker images, upload artifacts, or load token values unless an operator explicitly approves the mutation path for the active release capsule. Stable `0.3.3` is the npm package line; GitHub Release, Docker/PyPI publish, installer execution, and MCP release/package execution remain separate explicit mutations.
+No release command should publish, create a GitHub Release, build Docker images, upload artifacts, or load token values unless an operator explicitly approves the mutation path for the active release capsule. Stable `0.3.3` is the npm package line until the `0.3.4-rc.0` publish capsule completes; GitHub Release, Docker/PyPI publish, installer execution, and MCP release/package execution remain separate explicit mutations.
 
 ## Install
 
@@ -122,10 +129,11 @@ hadara help command task.close
 
 ## Primary Capsule Lifecycle
 
-The 0.3.3 primary path is intentionally small. Agents should use `task finalize` as the default lifecycle close path:
+The 0.3.4 primary path is intentionally small. Agents should start with compact context and use `task finalize` as the default lifecycle close path:
 
 ```bash
 hadara task next --json
+hadara session start --task T-XXXX --json
 hadara task create "implement a focused change" --json
 hadara task status --task T-XXXX --json
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
@@ -260,7 +268,7 @@ Dashboard, TUI, Hermes, MCP, installer, package, release, and run commands stay 
 
 ## Safety Boundaries
 
-HADARA 0.3.3 is not:
+HADARA 0.3.4-rc.0 is not:
 
 - a full agent runtime;
 - Rack/enterprise behavior;
@@ -300,7 +308,7 @@ Portable/local state is not committed. Project docs, Task Capsules, and reduced 
 
 `evidence.jsonl` is the canonical Task Capsule evidence source. `EVIDENCE.md` is a non-canonical human summary that can help review validation history, but it must not be treated as the source of truth for rebuild, migration, or resolution logic.
 
-0.3.3 does not implement `hadara evidence rebuild --json` or an execute mode. Future rebuild work must first define whether a difference is formatting regeneration, managed-section drift, or data inconsistency before reporting `wouldChange`. Any later write-capable rebuild flow must be dry-run-first, reviewed, and before-hash guarded before it rewrites derived Markdown.
+0.3.4-rc.0 does not implement `hadara evidence rebuild --json` or an execute mode. Future rebuild work must first define whether a difference is formatting regeneration, managed-section drift, or data inconsistency before reporting `wouldChange`. Any later write-capable rebuild flow must be dry-run-first, reviewed, and before-hash guarded before it rewrites derived Markdown.
 
 ## Development / Contributing
 
@@ -313,7 +321,7 @@ hadara init --profile standard
 hadara init --profile governed
 ```
 
-Every profile generates `docs/TASK_WORKFLOW_COMMANDS.md` so fresh projects get the current 0.3.3 finalize-first lifecycle loop plus low-level proof-boundary reference commands.
+Every profile generates `docs/TASK_WORKFLOW_COMMANDS.md` so fresh projects get the current 0.3.4 context-aware finalize-first lifecycle loop plus low-level proof-boundary reference commands.
 
 | Profile | Use When |
 |---|---|

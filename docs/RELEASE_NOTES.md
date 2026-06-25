@@ -1,5 +1,25 @@
 # RELEASE_NOTES
 
+## 0.3.4-rc.0
+
+Release candidate preparation line for agent UX hardening after stable `0.3.3`.
+
+Highlights:
+
+- Keeps the 0.3.3 context graph, context pack, context slice, context cache warm, session start, and finalize-first lifecycle surfaces as the baseline agent workflow.
+- Improves the commands used most during HADARA development: `session start`, `context pack`, `task finalize`, `evidence summary`, `handoff stale-problems`, `release closeout`, and `package recycle`.
+- Adds explicit action hints and argument arrays where agents previously had to infer the next command from prose.
+- Hardens stale handoff and release closeout diagnostics so post-publish and post-close work can be verified without editing proof-source docs after close.
+- Improves context pack recommendation quality with concrete ranking reasons, task-local/source bonuses, and `agentActions` guidance.
+- Updates generated init guidance so new projects start from the context-aware finalize-first lifecycle loop rather than older low-level command sequences.
+
+Boundaries:
+
+- T-0417 prepares source/readiness only for `hadara@0.3.4-rc.0`; it performs no npm publish, GitHub Release creation, Docker image build/push, PyPI publish, registry mutation, installer execution, MCP release/package execution, or token loading.
+- The stable npm package remains `hadara@0.3.3` until a later approval-gated publish capsule completes.
+- GitHub Release creation, Docker image publish, PyPI publish, installer execution, and MCP release/package execution remain out of scope unless a future capsule explicitly approves them.
+- Full agent runtime, scheduler/background runner, dashboard productization, vector DB, local LLM embedding, and provider/plugin write-surface expansion remain deferred.
+
 ## 0.3.3
 
 Stable release for context routing, speed-first context cache paths, bounded session-start context, and the finalize-first agent lifecycle after `0.3.3-rc.0` publish verification and PatternForge dogfood hardening.

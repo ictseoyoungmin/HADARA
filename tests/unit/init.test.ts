@@ -687,8 +687,10 @@ describe('init profiles', () => {
     expect(readme).toContain('hadara init --profile governed');
     expect(readme).toContain('| `basic` | Small project, only task/handoff discipline needed. |');
     expect(readme).toContain('Current stable npm release:');
-    expect(readme).toContain('Previous release candidate:');
+    expect(readme).toContain('Current source release candidate:');
+    expect(readme).toContain('Previous published release candidate:');
     expect(readme).toContain('| Current stable | [`hadara@0.3.3`](docs/RELEASE_NOTES.md#033) |');
+    expect(readme).toContain('| Source candidate | [`hadara@0.3.4-rc.0`](docs/RELEASE_NOTES.md#034-rc0) |');
     expect(readme).toContain('| Previous RC | [`hadara@0.3.3-rc.0`](docs/RELEASE_NOTES.md#033-rc0) |');
     expect(readme).toContain('| Previous stable | [`hadara@0.3.2`](docs/RELEASE_NOTES.md#032) |');
     expect(readme).toContain('| Historical RCs | See [Release Notes](docs/RELEASE_NOTES.md). |');
@@ -701,6 +703,7 @@ describe('init profiles', () => {
     expect(readme).not.toContain('npm install -g hadara@0.2.0-rc.3');
     expect(readme).toContain('## Start Here');
     expect(readme).toContain('## Primary Capsule Lifecycle');
+    expect(readme).toContain('hadara session start --task T-XXXX --json');
     expect(readme).toContain('## Document Governance');
     expect(readme).toContain('## Managed Markdown Safety');
     expect(readme).toContain('## Safety Boundaries');
