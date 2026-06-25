@@ -98,6 +98,21 @@ export interface SliceCandidate {
   suggestedCommandArgs: string[];
 }
 
+export type ContextPackAgentActionKind = 'read-first' | 'slice' | 'validate';
+
+export interface ContextPackAgentAction {
+  id: string;
+  kind: ContextPackAgentActionKind;
+  priority: number;
+  reason: string;
+  command: string;
+  commandArgs?: string[];
+  sourceItemId?: string;
+  sliceCandidateId?: string;
+  path?: string;
+  writeBoundary: 'read-only';
+}
+
 export interface ContextPackSourceSummary {
   graphAvailable: boolean;
   codeIndexAvailable: boolean;
@@ -135,6 +150,7 @@ export interface ContextPackReport {
   validateWith: ValidationSuggestion[];
   writeBoundaries: WriteBoundaryHint[];
   sliceCandidates: SliceCandidate[];
+  agentActions: ContextPackAgentAction[];
   knownProblems: ContextPackItem[];
   stateProjection: ContextPackStateProjection;
   sourceSummary: ContextPackSourceSummary;
@@ -257,6 +273,10 @@ export function buildContextPackReport(input: BuildContextPackReportOptions): Co
     }, false, input.projectRoot))
     .sort(compareItems);
 
+  const validateWith = validationSuggestionsForTask(taskId, graphReport);
+  const writeBoundaries = writeBoundariesForItems([...readFirst, ...readIfNeeded], graphReport.nodes);
+  const sliceCandidates = sliceCandidatesForItems([...readFirst, ...readIfNeeded], graphReport.nodes);
+  const agentActions = agentActionsForContextPack(readFirst, sliceCandidates, validateWith, taskId);
   const cache = input.cache ?? graphReport.cache ?? { used: false, hit: false };
   return {
     schemaVersion: CONTEXT_PACK_SCHEMA_ID,
@@ -269,9 +289,10 @@ export function buildContextPackReport(input: BuildContextPackReportOptions): Co
     readFirst,
     readIfNeeded,
     doNotReadByDefault,
-    validateWith: validationSuggestionsForTask(taskId, graphReport),
-    writeBoundaries: writeBoundariesForItems([...readFirst, ...readIfNeeded], graphReport.nodes),
-    sliceCandidates: sliceCandidatesForItems([...readFirst, ...readIfNeeded], graphReport.nodes),
+    validateWith,
+    writeBoundaries,
+    sliceCandidates,
+    agentActions,
     knownProblems,
     stateProjection: {
       ...graphReport.stateProjection.summary,
@@ -316,7 +337,7 @@ function rankContextPackNodes(
   if (taskNode) {
     ranked.set(taskNode.id, {
       node: taskNode,
-      reason: 'Active task capsule is the first read for task-scoped context routing.',
+      reason: 'Read the active task capsule first; it defines scope, acceptance, test expectations, and close handoff for this task.',
       confidence: 'explicit',
       score: 1000
     });
@@ -330,7 +351,7 @@ function rankContextPackNodes(
       if (!node || node.type === 'Task') continue;
       upsertRankedNode(ranked, {
         node,
-        reason: edge.reason,
+        reason: concreteRankReason(node, edge.reason),
         confidence: edge.confidence,
         score: nodeScore(node, edge.confidence, connectedIds.has(node.id))
       });
@@ -342,7 +363,7 @@ function rankContextPackNodes(
     if (metadataBoolean(node, 'requiredReading')) {
       upsertRankedNode(ranked, {
         node,
-        reason: 'Document registry marks this document as required reading.',
+        reason: 'Required current-state document from the docs registry; read after task-local context if the task needs this surface.',
         confidence: 'explicit',
         score: nodeScore(node, 'explicit', false) - 25
       });
@@ -362,6 +383,8 @@ function upsertRankedNode(ranked: Map<string, RankedNode>, candidate: RankedNode
 function nodeScore(node: ContextGraphNode, confidence: ContextConfidence, connected: boolean): number {
   const confidenceScore = confidence === 'explicit' ? 80 : confidence === 'derived' ? 50 : 20;
   const connectedScore = connected ? 25 : 0;
+  const taskLocalScore = node.path?.startsWith('tasks/') ? 140 : 0;
+  const sourceScore = ['SourceFile', 'TestFile', 'Symbol'].includes(node.type) ? 40 : 0;
   const typeScore: Record<ContextGraphNodeType, number> = {
     Task: 1000,
     Document: 700,
@@ -377,7 +400,29 @@ function nodeScore(node: ContextGraphNode, confidence: ContextConfidence, connec
     FixtureFile: 380,
     ConfigFile: 360
   };
-  return typeScore[node.type] + confidenceScore + connectedScore;
+  return typeScore[node.type] + confidenceScore + connectedScore + taskLocalScore + sourceScore;
+}
+
+function concreteRankReason(node: ContextGraphNode, sourceReason: string): string {
+  if (node.path?.startsWith('tasks/')) {
+    return `Task-local file connected to the active task; read it before broad project history. ${sourceReason}`;
+  }
+  if (node.type === 'SourceFile') {
+    return `Implementation file connected to the active task; inspect it when changing code. ${sourceReason}`;
+  }
+  if (node.type === 'TestFile') {
+    return `Test file connected to the active task; inspect it when planning or verifying changes. ${sourceReason}`;
+  }
+  if (node.type === 'Symbol') {
+    return `Specific symbol connected to the active task; prefer this bounded location over opening the full file. ${sourceReason}`;
+  }
+  if (node.type === 'KnownProblem') {
+    return `Current handoff problem relevant to this task; check whether it changes implementation or validation. ${sourceReason}`;
+  }
+  if (node.type === 'Command') {
+    return `Command surface connected to this task; use it to choose dry-run/read-only validation before mutation. ${sourceReason}`;
+  }
+  return sourceReason;
 }
 
 function isReadFirstAllowed(node: ContextGraphNode): boolean {
@@ -543,6 +588,76 @@ function sliceCandidatesForItems(items: ContextPackItem[], nodes: ContextGraphNo
         suggestedCommandArgs
       };
     });
+}
+
+function agentActionsForContextPack(
+  readFirst: ContextPackItem[],
+  sliceCandidates: SliceCandidate[],
+  validateWith: ValidationSuggestion[],
+  taskId: string | undefined
+): ContextPackAgentAction[] {
+  const actions: ContextPackAgentAction[] = [];
+  const seenCommands = new Set<string>();
+
+  const firstSliceableItem = readFirst.find((item) => item.path && item.sourceAccess?.rawSlice === 'sliceable');
+  if (firstSliceableItem?.path) {
+    const args = suggestedSliceCommandArgs(firstSliceableItem.path, 'explicit-range', undefined, {
+      lineStart: firstSliceableItem.lineStart ?? 1,
+      lineEnd: firstSliceableItem.lineEnd ?? Math.max(firstSliceableItem.lineStart ?? 1, (firstSliceableItem.lineStart ?? 1) + 80)
+    });
+    pushAgentAction(actions, seenCommands, {
+      id: 'agent-action:read-first:1',
+      kind: 'read-first',
+      priority: 100,
+      sourceItemId: firstSliceableItem.id,
+      path: firstSliceableItem.path,
+      reason: `Read the top context item ${firstSliceableItem.id} as a bounded raw slice before opening broader files.`,
+      command: suggestedSliceCommand(args),
+      commandArgs: args,
+      writeBoundary: 'read-only'
+    });
+  }
+
+  for (const [index, candidate] of sliceCandidates.slice(0, 3).entries()) {
+    pushAgentAction(actions, seenCommands, {
+      id: `agent-action:slice:${index + 1}`,
+      kind: 'slice',
+      priority: 90 - index,
+      sliceCandidateId: candidate.id,
+      path: candidate.path,
+      reason: `Use this bounded slice candidate before reading the full file: ${candidate.reason}`,
+      command: candidate.suggestedCommand,
+      commandArgs: candidate.suggestedCommandArgs,
+      writeBoundary: 'read-only'
+    });
+  }
+
+  const requiredValidation = validateWith.find((suggestion) => suggestion.requiredForClose);
+  if (requiredValidation) {
+    pushAgentAction(actions, seenCommands, {
+      id: 'agent-action:validate:required-close',
+      kind: 'validate',
+      priority: 50,
+      reason: taskId
+        ? `Run this read-only readiness check before planning close for ${taskId}.`
+        : 'Run this read-only readiness check before planning close.',
+      command: requiredValidation.command,
+      writeBoundary: 'read-only'
+    });
+  }
+
+  return actions.sort((a, b) => b.priority - a.priority || a.id.localeCompare(b.id));
+}
+
+function pushAgentAction(
+  actions: ContextPackAgentAction[],
+  seenCommands: Set<string>,
+  action: ContextPackAgentAction
+): void {
+  const key = action.commandArgs ? action.commandArgs.join('\0') : action.command;
+  if (seenCommands.has(key)) return;
+  seenCommands.add(key);
+  actions.push(action);
 }
 
 function explicitRangeForCandidate(item: ContextPackItem, node: ContextGraphNode | undefined): { lineStart: number; lineEnd: number } | undefined {

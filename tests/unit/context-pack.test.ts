@@ -91,6 +91,59 @@ describe('context pack', () => {
       lineStart: 1,
       lineEnd: 81
     }));
+    expect(report.agentActions[0]).toEqual(expect.objectContaining({
+      id: 'agent-action:read-first:1',
+      kind: 'read-first',
+      priority: 100,
+      sourceItemId: `task:${taskId}`,
+      path: `tasks/${taskId}-fixture/TASK.md`,
+      writeBoundary: 'read-only',
+      commandArgs: ['context', 'slice', '--path', `tasks/${taskId}-fixture/TASK.md`, '--from', '1', '--to', '81', '--json']
+    }));
+    expect(report.agentActions).toContainEqual(expect.objectContaining({
+      kind: 'slice',
+      sliceCandidateId: firstSliceCandidate?.id,
+      commandArgs: firstSliceCandidate?.suggestedCommandArgs,
+      writeBoundary: 'read-only'
+    }));
+    expect(report.agentActions).toContainEqual(expect.objectContaining({
+      kind: 'validate',
+      command: `node dist/cli/main.js task ready --task ${taskId} --level done --json`,
+      writeBoundary: 'read-only'
+    }));
+    assertSchema('hadara.contextPack.v1', report);
+  });
+
+  it('ranks task-local context before broad required docs and explains why', () => {
+    const graph = sampleGraphReport({ includeCode: false });
+    graph.nodes.push(documentNode(`tasks/${taskId}-fixture/CONTEXT.md`, {
+      requiredReading: false,
+      status: 'canonical',
+      kind: 'task-context'
+    }));
+    graph.edges.push(edge(
+      'REFERENCES_DOC',
+      `task:${taskId}`,
+      `doc:tasks/${taskId}-fixture/CONTEXT.md`,
+      'Task capsule references its local context notes.',
+      'explicit'
+    ));
+
+    const report = buildContextPackReport({
+      projectRoot: '/workspace',
+      generatedAt,
+      taskId,
+      graphReport: graph,
+      budget: { maxReadFirstItems: 4, maxItems: 10 }
+    });
+
+    expect(report.readFirst.slice(0, 3).map((item) => item.id)).toEqual([
+      `task:${taskId}`,
+      `doc:tasks/${taskId}-fixture/CONTEXT.md`,
+      'doc:docs/specs/0.3.3/context-routing/03_Context_Pack_and_Session_Start_Spec.md'
+    ]);
+    expect(report.readFirst[1]?.reason).toContain('Task-local file connected to the active task');
+    expect(report.readFirst[1]?.reason).toContain('read it before broad project history');
     assertSchema('hadara.contextPack.v1', report);
   });
 
@@ -122,6 +175,7 @@ describe('context pack', () => {
       suggestedCommandArgs: ['context', 'slice', '--path', 'docs/space name.md', '--from', '7', '--to', '87', '--json']
     }));
     expect(candidate?.suggestedCommand).toContain("--path 'docs/space name.md'");
+    expect(report.agentActions.some((action) => action.command.includes("--path 'docs/space name.md'"))).toBe(true);
     assertSchema('hadara.contextPack.v1', report);
   });
 

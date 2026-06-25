@@ -18,6 +18,7 @@
     "validateWith",
     "writeBoundaries",
     "sliceCandidates",
+    "agentActions",
     "knownProblems",
     "stateProjection",
     "sourceSummary",
@@ -38,6 +39,7 @@
     "validateWith": { "type": "array", "items": { "$ref": "#/$defs/validationSuggestion" } },
     "writeBoundaries": { "type": "array", "items": { "$ref": "#/$defs/writeBoundary" } },
     "sliceCandidates": { "type": "array", "items": { "$ref": "#/$defs/sliceCandidate" } },
+    "agentActions": { "type": "array", "items": { "$ref": "#/$defs/agentAction" } },
     "knownProblems": { "type": "array", "items": { "$ref": "#/$defs/item" } },
     "stateProjection": { "$ref": "#/$defs/stateProjection" },
     "sourceSummary": { "$ref": "#/$defs/sourceSummary" },
@@ -149,6 +151,27 @@
           "minItems": 1,
           "items": { "type": "string", "minLength": 1 }
         }
+      }
+    },
+    "agentAction": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "kind", "priority", "reason", "command", "writeBoundary"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["read-first", "slice", "validate"] },
+        "priority": { "type": "number" },
+        "reason": { "type": "string", "minLength": 1 },
+        "command": { "type": "string", "minLength": 1 },
+        "commandArgs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "sourceItemId": { "type": "string" },
+        "sliceCandidateId": { "type": "string" },
+        "path": { "type": "string" },
+        "writeBoundary": { "const": "read-only" }
       }
     },
     "stateProjection": {

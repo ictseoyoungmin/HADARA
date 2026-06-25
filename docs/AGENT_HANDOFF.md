@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening is implemented through T-0414. |
-| Current Phase | 0.3.4 Agent UX Hardening in progress | T-0414 hardened Session Start first-action guidance; next capsule is context-pack agent actionability. |
-| Latest Completed Task | T-0414 Session Start Primary-Action Hardening | Session Start now exposes concrete primaryAction/nextCommandArgs guidance and task-scoped starts prioritize task lifecycle. |
-| Active / Next Task | T-0415 Context Pack Agent Actionability | Make context-pack read recommendations easier for agents to turn into immediate reads/actions. |
-| Validation Baseline | T-0414 focused Docker/build smoke | Docker `/tmp/hadara` build passed; focused session-start/context CLI/e2e/schema tests passed 4 files / 23 tests; workspace `dist` refreshed; built CLI Session Start for T-0414 returned `primaryAction.id=task-lifecycle`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening is implemented through T-0415. |
+| Current Phase | 0.3.4 Agent UX Hardening in progress | T-0415 hardened Context Pack actionability; next capsule is init generated-doc guidance cleanup. |
+| Latest Completed Task | T-0415 Context Pack Agent Actionability | Context Pack now exposes read-only prioritized `agentActions` and more concrete task-local/source-specific reasons. |
+| Active / Next Task | T-0416 Init Generated Docs Agent Guidance Cleanup | Improve generated docs for new projects so agents follow the 0.3.4 lifecycle/context guidance without broad protocol noise. |
+| Validation Baseline | T-0415 focused Docker/build smoke | Docker `/tmp/hadara` build passed; focused context-pack/context CLI/session/schema tests passed 4 files / 29 tests; workspace `dist` refreshed; disposable `/tmp` built CLI context pack smoke returned read-only `agentActions`. Mounted full-project context pack timeout remains an accepted broad-read residual. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0415 | Improve context-pack agent actionability. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md`, `docs/CLI_JSON_CONTRACT.md`, `docs/SCHEMAS.md` |
+| T-0416 | Improve init generated-doc guidance for new projects. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md`, generated init docs/tests |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0415 Context Pack Agent Actionability | Added read-only `agentActions` and clearer context-pack ranking reasons for immediate agent reads. | `ev:T-0415:6c8f98833d5549ea84a7bcdd` |
 | T-0414 Session Start Primary-Action Hardening | Added concrete Session Start primary action guidance and task-scoped lifecycle-first startup. | `ev:T-0414:598d8358ab004c6faf3164a6` |
 | T-0413 Installed-Package Recycle Script UX | Added dry-run-first `hadara package recycle` with schema/docs/tests for post-publish consumer-path validation. | `ev:T-0413:db037677d84640d39722a7c7` |
-| T-0412 Finalize Post-Close Drift Guidance | Made close-source drift repair-required in finalize/lifecycle guidance. | `ev:T-0412:32fdb139512446aaa3806924` |
 
 ## Current Known Problems
 
@@ -92,7 +92,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create and run T-0415 Context Pack Agent Actionability. | T-0414 completed Session Start first-action guidance; the next 0.3.4 friction point is making context-pack read recommendations more directly actionable. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md` |
+| Create and run T-0416 Init Generated Docs Agent Guidance Cleanup. | T-0415 completed context-pack actionability; the next 0.3.4 friction point is making fresh generated projects guide agents through the current lifecycle/context flow without broad protocol noise. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md` |
 
 ## Validation Baseline
 

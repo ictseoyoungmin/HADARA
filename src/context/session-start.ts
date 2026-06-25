@@ -435,6 +435,7 @@ function buildBoundedContextPackReport(input: {
       : [],
     writeBoundaries: [],
     sliceCandidates: [],
+    agentActions: [],
     knownProblems: [],
     stateProjection: {
       ...(input.taskId ? { activeTask: input.taskId } : {}),
