@@ -116,7 +116,11 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
   if (!url || !url.pathname.startsWith('/api/')) return null;
 
   const headOnly = normalizedMethod === 'HEAD';
-  if (url.pathname === '/api/status') return jsonResponse(createOpsStatusReport(projectRoot), headOnly);
+  if (url.pathname === '/api/status') {
+    // Dashboard clients fetch operational debt separately; keep the status
+    // route cheap so a single slow debt scan cannot block first API paint.
+    return jsonResponse(createOpsStatusReport(projectRoot, { includeDebt: false }), headOnly);
+  }
   if (url.pathname === '/api/dashboard/core') {
     const bypassProjection = url.searchParams.get('cache') === 'bypass';
     const status = bypassProjection ? null : createDashboardProjectionStatusReport(projectRoot);
@@ -137,7 +141,7 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
   if (url.pathname === '/api/dashboard/debt') return jsonResponse(createProjectedDashboardDebtReport(projectRoot), headOnly);
   if (url.pathname === '/api/dashboard/bootstrap') {
     const selectedTaskId = url.searchParams.get('selectedTaskId')?.trim();
-    const tier = url.searchParams.get('tier') === 'core' ? 'core' : 'full';
+    const tier = url.searchParams.get('tier') === 'full' ? 'full' : 'core';
     const keyParts: string[] = ['bootstrap'];
     if (tier === 'core') keyParts.push('core');
     if (selectedTaskId) keyParts.push('selected', selectedTaskId);

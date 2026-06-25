@@ -4,30 +4,31 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening source/readiness is prepared through T-0417. |
-| Current Phase | 0.3.4 RC publish next | T-0417 prepared `hadara@0.3.4-rc.0` source/readiness without publish mutation; next capsule is approval-gated npm publish to `next`. |
-| Latest Completed Task | T-0417 0.3.4 RC Readiness Preparation | Source/package metadata, README, release notes/readiness, release artifact, release dry-run, publish dry-run, package smoke dry-run, and validation evidence are ready for `0.3.4-rc.0`. |
-| Active / Next Task | T-0418 0.3.4 RC Approval-Gated Publish | Publish `hadara@0.3.4-rc.0` to npm with `next` only after explicit operator approval/authentication. |
-| Validation Baseline | T-0418 pre-publish preparation | Registry pre-check found `hadara@0.3.4-rc.0` absent and dist-tags `latest=0.3.3`, `next=0.3.3-rc.0`; ext4 publish dry-run returned `ok:true` with expected approval/token warnings; `/root/hadara-publish` clone/build/gate preparation passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening source/readiness is prepared through T-0417 with the T-0419 dashboard timeout hotfix applied. |
+| Current Phase | 0.3.4 RC publish retry next | T-0418 approval-gated npm publish remains active; refresh the publish clone to include T-0419 before rerunning the helper. |
+| Latest Completed Task | T-0419 Dashboard API Route Timeout Hardening | Fixed publish-blocking dashboard API route timeout by separating status/debt reads and defaulting bootstrap to the fast core tier. |
+| Active / Next Task | T-0418 0.3.4 RC Approval-Gated Publish | Publish `hadara@0.3.4-rc.0` to npm with `next` only after explicit operator approval/authentication, using a clone refreshed to the T-0419 commit. |
+| Validation Baseline | T-0419 focused dashboard route validation | `tests/unit/dashboard-static.test.ts` passed in Docker after the hotfix: 15 tests passed, route test 945ms, file 3.31s; workspace `dist` refreshed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0418 | Approval-gated publish of `hadara@0.3.4-rc.0` to npm `next`; pre-publish preparation is complete and operator authentication/confirmation is next. | `tasks/T-0418-0-3-4-rc-approval-gated-publish/PUBLISH_OPERATOR_STEPS.md`, `ev:T-0418:847b8df0510f4010a451a67a`, `ev:T-0418:5050dfc2b6694a3195d8d29a`, `ev:T-0418:d834f79b3a96479098c96d4d` |
+| T-0418 | Approval-gated publish of `hadara@0.3.4-rc.0` to npm `next`; pre-publish preparation is complete, but the publish clone must be refreshed after T-0419 before operator authentication/confirmation retry. | `tasks/T-0418-0-3-4-rc-approval-gated-publish/PUBLISH_OPERATOR_STEPS.md`, `ev:T-0418:847b8df0510f4010a451a67a`, `ev:T-0418:5050dfc2b6694a3195d8d29a`, `ev:T-0418:d834f79b3a96479098c96d4d` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0419 Dashboard API Route Timeout Hardening | Fixed publish-blocking dashboard API route timeout; focused Docker dashboard-static validation passed and `dist` was refreshed. | `ev:T-0419:e37deeb8c81f4c19a6bea6e2`, `ev:T-0419:b1f6d6d0181f402589a639fe` |
 | T-0417 0.3.4 RC Readiness Preparation | Prepared `hadara@0.3.4-rc.0` source/readiness without publish mutation. | `ev:T-0417:08b2899cd422471ab020fab8`, `ev:T-0417:12f0252b75924831872e82b0`, `ev:T-0417:8dac1b2a716949d29310c171` |
 | T-0416 Init Generated Docs Agent Guidance Cleanup | Updated generated init docs to show the 0.3.4 context-aware agent loop before broader protocol text. | `ev:T-0416:54d2ca94759b4088ae2fbb7e` |
-| T-0415 Context Pack Agent Actionability | Added read-only `agentActions` and clearer context-pack ranking reasons for immediate agent reads. | `ev:T-0415:6c8f98833d5549ea84a7bcdd` |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
+| T-0418 publish helper failed once on dashboard API route timeout before T-0419. | A stale publish clone can reproduce the timeout and block the RC publish helper. | Refresh `/root/hadara-publish` to include T-0419, rebuild, then rerun the approval-gated publish helper. |
 | T-0383 mounted full-profile probes exceeded a 20s workload budget for cache status/warm, graph task, graph include-code, and context pack. | These workloads are not suitable for the default fast smoke loop on mounted filesystems. | Keep `smoke:context-routing` defaulting to fast profile; use `--profile full` explicitly for diagnostic/full-path checks. |
 | Built cache status still took about 19.6s on `/mnt/f` while producing diagnostics. | Diagnostics are clearer, but mounted broad source-manifest cost remains. | T-0385 classified this as an accepted residual for explicit diagnostic/warm/full-profile commands; default Session Start remains bounded/cache-preferential. |
 | Installed `hadara@0.3.2 version --json` reports dist freshness at `build.distLooksStale:false`, not root `distLooksStale`. | Consumers using shorthand root-field checks may miss the current schema location. | Treat `hadara.runtime.version.v1` output as authoritative; root compatibility can be a future docs/JSON compatibility follow-up if needed. |
@@ -93,12 +94,13 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Operator publishes `hadara@0.3.4-rc.0` from `/root/hadara-publish`. | Pre-publish checks passed; remaining action needs npm authentication and typing `publish` into the helper prompt. | `tasks/T-0418-0-3-4-rc-approval-gated-publish/PUBLISH_OPERATOR_STEPS.md` |
+| Refresh `/root/hadara-publish` to include T-0419, rebuild, then rerun the `hadara@0.3.4-rc.0` approval-gated publish helper. | The first publish helper run hit a dashboard API route timeout that T-0419 fixes; the publish clone must include the hotfix before npm authentication/confirmation retry. | `ev:T-0419:e37deeb8c81f4c19a6bea6e2`, `tasks/T-0418-0-3-4-rc-approval-gated-publish/PUBLISH_OPERATOR_STEPS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0419 dashboard API route timeout hardening | Docker `/tmp/hadara` dashboard-static validation passed 15 tests; the shared read-model API route test completed in 945ms and the file completed in 3.31s; workspace `dist` refreshed from Docker build output. | Evidence `ev:T-0419:e37deeb8c81f4c19a6bea6e2`, `ev:T-0419:b1f6d6d0181f402589a639fe`; this resolves the publish-blocking route timeout observed before T-0418 retry. |
 | T-0414 session-start primary-action hardening | Docker `/tmp/hadara` build passed; focused session-start, context CLI, e2e smoke script, and schema fixture tests passed 4 files / 23 tests; workspace `dist` refreshed; built CLI Session Start for T-0414 returned `guidance.primaryAction.id=task-lifecycle` and `nextCommandArgs`. | Evidence `ev:T-0414:598d8358ab004c6faf3164a6`; live context discovery was not run because this capsule only changes read-only guidance fields. |
 | T-0413 installed-package recycle script UX | Docker `/tmp/hadara` build passed; focused package recycle, command registry, tools projection, and schema fixture tests passed 5 files / 19 tests; workspace `dist` refreshed; built CLI package recycle dry-run returned `hadara.packageRecycle.v1` `ok:true` with all registry/install execution flags false. | Evidence `ev:T-0413:db037677d84640d39722a7c7`; live npm registry execute recycle is release-operator/environment dependent and was not run in this implementation capsule. |
 | T-0399 finalize evidence guidance/speed hardening | Focused validation passed 3 files / 13 tests; full Docker sync-build retry passed 141 files / 929 tests and refreshed `dist`; built finalize smoke passed with finish-only evaluation for Draft T-0399; final `git diff --check` passed; first full-run dashboard-static timeout was recorded and resolved. | Evidence `ev:T-0399:c213cedb4cfe4d20a8858fd9`, `ev:T-0399:8aa7e7dc564e429393a1ea67`, `ev:T-0399:ac178da8a71f482a9d8e702a`, `ev:T-0399:cda485bcea7242448c0da511`; failed timeout `ev:T-0399:eba26dcf11c5461395d90965` resolved by retry. |

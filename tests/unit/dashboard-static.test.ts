@@ -359,12 +359,14 @@ describe('operator console bundle (Phase 5.6)', () => {
     expect(JSON.parse(bootstrap.body)).toMatchObject({
       schemaVersion: 'hadara.dashboard.bootstrap.v1',
       command: 'dashboard.bootstrap',
+      tier: 'core',
+      debtSummary: expect.objectContaining({ pending: true }),
       source: expect.objectContaining({
         projectRootRedacted: true,
         project: expect.objectContaining({ pathRedacted: true, fingerprint: expect.stringMatching(/^sha256:[a-f0-9]{12}$/) })
       }),
       selectedTask: expect.objectContaining({ requestedTaskId: 'T-0196' }),
-      cache: expect.objectContaining({ status: 'miss', key: expect.stringMatching(/^dashboard:sha256:[a-f0-9]{12}:bootstrap:selected:T-0196$/) })
+      cache: expect.objectContaining({ status: 'miss', key: expect.stringMatching(/^dashboard:sha256:[a-f0-9]{12}:bootstrap:core:selected:T-0196$/) })
     });
     expect(JSON.parse(taskDetail.body)).toMatchObject({
       schemaVersion: 'hadara.dashboard.task_detail.v1',
