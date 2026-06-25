@@ -1242,17 +1242,19 @@ Ownership boundaries follow the lifecycle command model. \`task finalize --execu
 
 ## Standard Task Workflow Loop
 
-The authoritative command semantics live in \`docs/TASK_WORKFLOW_COMMANDS.md\`. From 0.3.3 onward, agents should use this loop for ordinary implementation capsules:
+The authoritative command semantics live in \`docs/TASK_WORKFLOW_COMMANDS.md\`. From 0.3.4 onward, agents should start from a compact task/context packet, then use lifecycle/finalize for closure instead of starting with low-level proof-boundary commands:
 
 \`\`\`bash
 hadara task next --json
 
 # If a matching capsule already exists:
 hadara task status --task T-XXXX --json
+hadara session start --task T-XXXX --json
 
 # If no matching capsule exists, create one first:
 hadara task create "task title" --json
 hadara task status --task T-XXXX --json
+hadara session start --task T-XXXX --json
 
 # Do the scoped work.
 
@@ -1462,17 +1464,19 @@ HADARA task workflow commands are split by responsibility. Similar-looking comma
 
 ## Standard Task Loop
 
-From 0.3.3 onward, agents should use the finalize-first loop for ordinary implementation capsules:
+From 0.3.4 onward, agents should use the context-aware finalize-first loop for ordinary implementation capsules:
 
 \`\`\`bash
 hadara task next --json
 
 # If a matching capsule already exists:
 hadara task status --task T-XXXX --json
+hadara session start --task T-XXXX --json
 
 # If no matching capsule exists, create one first:
 hadara task create "task title" --json
 hadara task status --task T-XXXX --json
+hadara session start --task T-XXXX --json
 
 # Do the scoped work.
 
@@ -1680,6 +1684,20 @@ Use semantic tiers to keep session startup compact:
 | \`excluded\` | Superseded, archived, local-only, or intentionally non-default material. | Never default required reading unless explicitly reclassified. |
 
 \`.hadara/context/HADARA_CONTEXT.md\` is the current-state entry point. It should route readers to compact state before task-work or conditional-reference docs. Full historical review of \`docs/PROJECT_STATE.md\` is not mandatory every session; use \`docs/AGENT_HANDOFF.md\` and its Historical Index when older history is needed. Historical and superseded docs are never default required reading.
+
+## Default Agent Loop
+
+For ordinary implementation work, use the current context-aware loop:
+
+\`\`\`bash
+hadara task next --json
+hadara session start --task T-XXXX --json
+hadara task lifecycle --task T-XXXX --json
+hadara task finalize --task T-XXXX --json
+hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
+\`\`\`
+
+Use low-level \`task finish\`, \`task ready\`, \`task close\`, and \`task audit-close\` only when debugging, repairing, or implementing those proof-boundary commands.
 
 ## Rules
 

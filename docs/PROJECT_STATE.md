@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0415 Context Pack Agent Actionability |
-| Active Task | T-0416 Init Generated Docs Agent Guidance Cleanup |
+| Latest Completed Task | T-0416 Init Generated Docs Agent Guidance Cleanup |
+| Active Task | T-0417 0.3.4 RC Readiness Preparation |
 
 ## Next Planned Line
 
@@ -49,6 +49,8 @@ T-0413 follow-up note: `hadara package recycle --json` now emits `hadara.package
 T-0414 follow-up note: `hadara session start --json` now includes additive concrete first-action guidance: `guidance.primaryAction`, `guidance.whyThisNow`, `guidance.avoidForNow`, and `guidance.nextCommandArgs`. Task-scoped Session Start prioritizes the read-only `task lifecycle --task <id> --json` command before status/context/finalize decisions, while no-task Session Start points to `task next --json`. Session Start remains read-only and does not warm cache, append evidence, run validation, read raw slices, or mutate project state. Focused Docker build/tests passed 4 files / 23 tests, workspace `dist` was refreshed, and built CLI Session Start for T-0414 returned `primaryAction.id=task-lifecycle`.
 
 T-0415 follow-up note: `hadara context pack --json` now includes additive read-only `agentActions` with priorities, reasons, commands, structured `commandArgs` where available, source/slice ids, paths, and `writeBoundary:"read-only"`. Ranking reasons now explicitly call out task-local, implementation, test, symbol, known-problem, and command-surface relevance, and graph-connected task-local paths receive a bounded score bonus before broad project docs. Bounded no-live Session Start envelopes include empty `agentActions` to preserve the shared context-pack type. Focused Docker build/tests passed 4 files / 29 tests and refreshed workspace `dist`; built CLI context pack smoke passed in a disposable `/tmp` project. A mounted workspace full-project live context pack smoke produced no output for about 90 seconds and was interrupted; this is recorded as an accepted residual broad-read performance behavior, not a T-0415 feature blocker.
+
+T-0416 follow-up note: generated `hadara init` docs now prioritize the 0.3.4 context-aware agent loop. Fresh generated `AGENTS.md` includes a compact `Default Agent Loop` showing `task next`, `session start`, `task lifecycle`, reviewed `task finalize`, and guarded finalize execute before broader rules. Generated `docs/IMPLEMENTATION_SOP.md` and `docs/TASK_WORKFLOW_COMMANDS.md` now include `hadara session start --task T-XXXX --json` in the standard task loop and describe the path as context-aware while preserving low-level `task finish`, `task ready`, `task close`, and `task audit-close` as debugging/recovery proof-boundary commands. Focused Docker build/tests passed 2 files / 22 tests and refreshed workspace `dist`; built CLI init smoke passed in a disposable `/tmp` project.
 
 Phase 8 / 0.3.1 is complete through post-rc1 documentation cleanup. It carried Work Item A and Work Item F into implementation as status token governance, document ownership/write-boundary governance, task handoff close-state clarity, installed-package recycle findings cleanup, state consistency projection, and advisory verification gates. The Phase 8 specs are staged under `docs/specs/0.3.1/`; the first rc1 implementation sequence is staged under `docs/specs/0.3.1/rc1/`. Phase 8.1 through Phase 8.6 are complete through T-0324, T-0325 completed the follow-up CloseState derived-state cleanup after review, T-0326 prepared `hadara@0.3.1-rc.1` release readiness without publish mutation, T-0327 published `hadara@0.3.1-rc.1`, verified npm visibility/tarball contents, hardened future rc publish tags, and corrected npm dist-tags so stable `0.3.0` stays on `latest` while rc1 is available as `next`, T-0328 verified the published rc1 package from installed consumer paths in the `hadara-dev` container, and T-0329 refreshed post-rc1 handoff/release-note wording after reviewer feedback.
 
@@ -182,8 +184,8 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0415 Context Pack Agent Actionability.
-- Active/next task is T-0416 Init Generated Docs Agent Guidance Cleanup, the next implementation capsule in the 0.3.4 budget.
+- Latest completed task is T-0416 Init Generated Docs Agent Guidance Cleanup.
+- Active/next task is T-0417 0.3.4 RC Readiness Preparation, the next release capsule in the 0.3.4 budget.
 - Stable `hadara@0.3.0` publish and installed-package consumer recycle are complete through T-0316/T-0317.
 - Phase 8 / `0.3.1` planning is staged under `docs/specs/0.3.1/`; Phase 8.1 status token/document ownership governance, Phase 8.2 task handoff close-state governance, Phase 8.3 installed-package findings cleanup, Phase 8.4 state consistency projection read model, Phase 8.5 advisory verify/doctor/CI integration, Phase 8.6 rc1 review/hardening cleanup, T-0325 CloseState derived-state cleanup, T-0326 rc1 release-readiness preparation, T-0327 approval-gated publish, T-0328 installed-package recycle, and T-0329 post-rc1 docs cleanup are complete.
 - `0.3.1-rc.1` source/readiness is complete through T-0326; npm package visibility, tarball inspection, and corrected dist-tags are confirmed through T-0327; installed-package recycle is complete through T-0328; post-rc1 shared-doc wording cleanup is complete through T-0329.

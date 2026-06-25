@@ -135,6 +135,14 @@ describe('init profiles', () => {
     expect(agents).toContain('`.hadara/context/HADARA_CONTEXT.md` is the current-state entry point.');
     expect(agents).toContain('Full historical review of `docs/PROJECT_STATE.md` is not mandatory every session');
     expect(agents).toContain('Historical and superseded docs are never default required reading.');
+    expect(agents).toContain('## Default Agent Loop');
+    expect(agents).toContain('hadara task next --json');
+    expect(agents).toContain('hadara session start --task T-XXXX --json');
+    expect(agents).toContain('hadara task lifecycle --task T-XXXX --json');
+    expect(agents).toContain('hadara task finalize --task T-XXXX --json');
+    expect(agents).toContain('Use low-level `task finish`, `task ready`, `task close`, and `task audit-close` only when debugging, repairing, or implementing those proof-boundary commands.');
+    expect(agents.indexOf('hadara task next --json')).toBeLessThan(agents.indexOf('hadara session start --task T-XXXX --json'));
+    expect(agents.indexOf('hadara session start --task T-XXXX --json')).toBeLessThan(agents.indexOf('hadara task lifecycle --task T-XXXX --json'));
     expectNoGenericOptionalIntegrationDefaults(agents);
 
     const sop = fs.readFileSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'), 'utf8');
@@ -170,11 +178,15 @@ describe('init profiles', () => {
     expect(sop).toContain('## Standard Task Workflow Loop');
     expect(sop).toContain('# If a matching capsule already exists:');
     expect(sop).toContain('# If no matching capsule exists, create one first:');
+    expect(sop).toContain('From 0.3.4 onward, agents should start from a compact task/context packet');
+    expect(sop).toContain('hadara session start --task T-XXXX --json');
     expect(sop).toContain('hadara task lifecycle --task T-XXXX --json');
     expect(sop).toContain('hadara task finalize --task T-XXXX --json');
     expect(sop).toContain('hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json');
     expect(sop).toContain('| `task finish` / `task ready` / `task close` / `task audit-close` | Low-level proof-boundary commands |');
     expect(sop).toContain('# Finalize Task Capsule docs and tracked state docs before closing.');
+    expect(sop.indexOf('hadara task next --json')).toBeLessThan(sop.indexOf('hadara session start --task T-XXXX --json'));
+    expect(sop.indexOf('hadara session start --task T-XXXX --json')).toBeLessThan(sop.indexOf('hadara task lifecycle --task T-XXXX --json'));
     expect(sop.indexOf('hadara task lifecycle --task T-XXXX --json')).toBeLessThan(sop.indexOf('hadara task finalize --task T-XXXX --json'));
     expect(sop.indexOf('hadara task finalize --task T-XXXX --json')).toBeLessThan(sop.indexOf('hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json'));
     expect(sop).toContain('Before running `task finalize --execute`, finish all close-source edits');
@@ -217,6 +229,7 @@ describe('init profiles', () => {
     expect(workflow).toContain('`docs/TASK_WORKFLOW_COMMANDS.md` is `task-work` required reading.');
     expect(workflow).toContain('Start from `.hadara/context/HADARA_CONTEXT.md` and compact state docs');
     expect(workflow).toContain('## Standard Task Loop');
+    expect(workflow).toContain('From 0.3.4 onward, agents should use the context-aware finalize-first loop');
     expect(workflow).toContain('## Command Semantics');
     expect(workflow).toContain('## Non-Overlap Rules');
     expect(workflow).toContain('## State Documents');
@@ -225,6 +238,7 @@ describe('init profiles', () => {
     expect(workflow).toContain('Parallelize read-only discovery, `rg`/file inspection, independent validation commands');
     expect(workflow).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes');
     expect(workflow).toContain('hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json');
+    expect(workflow).toContain('hadara session start --task T-XXXX --json');
     expect(workflow).toContain('`task finish`, `task ready`, `task close`, and `task audit-close` are canonical proof boundaries under `task finalize`');
     expect(workflow).toContain("matching `docs/TASK_BOARD.md` row's command-owned cells");
     expect(workflow).toContain('human/mixed-owned `Notes` and any extra cells');
@@ -232,6 +246,8 @@ describe('init profiles', () => {
     expect(workflow).toContain('hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json');
     expect(workflow).toContain('| `task complete` | Legacy read-only workflow compressor |');
     expect(workflow).toContain('# Finalize Task Capsule docs and tracked state docs before closing.');
+    expect(workflow.indexOf('hadara task next --json')).toBeLessThan(workflow.indexOf('hadara session start --task T-XXXX --json'));
+    expect(workflow.indexOf('hadara session start --task T-XXXX --json')).toBeLessThan(workflow.indexOf('hadara task lifecycle --task T-XXXX --json'));
     expect(workflow.indexOf('hadara task lifecycle --task T-XXXX --json')).toBeLessThan(workflow.indexOf('hadara task finalize --task T-XXXX --json'));
     expect(workflow.indexOf('hadara task finalize --task T-XXXX --json')).toBeLessThan(workflow.indexOf('hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json'));
     expect(workflow).toContain('| `task finish` / `task ready` / `task close` / `task audit-close` | Low-level proof-boundary commands |');

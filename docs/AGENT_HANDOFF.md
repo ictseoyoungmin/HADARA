@@ -4,25 +4,25 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening is implemented through T-0415. |
-| Current Phase | 0.3.4 Agent UX Hardening in progress | T-0415 hardened Context Pack actionability; next capsule is init generated-doc guidance cleanup. |
-| Latest Completed Task | T-0415 Context Pack Agent Actionability | Context Pack now exposes read-only prioritized `agentActions` and more concrete task-local/source-specific reasons. |
-| Active / Next Task | T-0416 Init Generated Docs Agent Guidance Cleanup | Improve generated docs for new projects so agents follow the 0.3.4 lifecycle/context guidance without broad protocol noise. |
-| Validation Baseline | T-0415 focused Docker/build smoke | Docker `/tmp/hadara` build passed; focused context-pack/context CLI/session/schema tests passed 4 files / 29 tests; workspace `dist` refreshed; disposable `/tmp` built CLI context pack smoke returned read-only `agentActions`. Mounted full-project context pack timeout remains an accepted broad-read residual. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening is implemented through T-0416. |
+| Current Phase | 0.3.4 Agent UX Hardening release preparation next | T-0416 finished generated init guidance cleanup; next capsule is 0.3.4 RC readiness preparation. |
+| Latest Completed Task | T-0416 Init Generated Docs Agent Guidance Cleanup | Fresh generated docs now prioritize `task next`, `session start`, `task lifecycle`, and reviewed `task finalize`. |
+| Active / Next Task | T-0417 0.3.4 RC Readiness Preparation | Prepare `hadara@0.3.4-rc.0` source/readiness without publish mutation. |
+| Validation Baseline | T-0416 focused Docker/build smoke | Docker `/tmp/hadara` build passed; focused init/schema tests passed 2 files / 22 tests; workspace `dist` refreshed; disposable `/tmp` built CLI init smoke confirmed generated AGENTS/SOP/task workflow guidance. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0416 | Improve init generated-doc guidance for new projects. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md`, generated init docs/tests |
+| T-0417 | Prepare 0.3.4 RC source/readiness without publish mutation. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md`, `docs/RELEASE_READINESS.md`, `docs/RELEASE_NOTES.md` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0416 Init Generated Docs Agent Guidance Cleanup | Updated generated init docs to show the 0.3.4 context-aware agent loop before broader protocol text. | `ev:T-0416:54d2ca94759b4088ae2fbb7e` |
 | T-0415 Context Pack Agent Actionability | Added read-only `agentActions` and clearer context-pack ranking reasons for immediate agent reads. | `ev:T-0415:6c8f98833d5549ea84a7bcdd` |
 | T-0414 Session Start Primary-Action Hardening | Added concrete Session Start primary action guidance and task-scoped lifecycle-first startup. | `ev:T-0414:598d8358ab004c6faf3164a6` |
-| T-0413 Installed-Package Recycle Script UX | Added dry-run-first `hadara package recycle` with schema/docs/tests for post-publish consumer-path validation. | `ev:T-0413:db037677d84640d39722a7c7` |
 
 ## Current Known Problems
 
@@ -92,7 +92,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create and run T-0416 Init Generated Docs Agent Guidance Cleanup. | T-0415 completed context-pack actionability; the next 0.3.4 friction point is making fresh generated projects guide agents through the current lifecycle/context flow without broad protocol noise. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md` |
+| Create and run T-0417 0.3.4 RC Readiness Preparation. | T-0416 completed the last planned 0.3.4 UX-hardening implementation capsule; the next step is source/readiness preparation for `0.3.4-rc.0` without publish mutation. | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md`, `docs/RELEASE_READINESS.md`, `docs/RELEASE_NOTES.md` |
 
 ## Validation Baseline
 
