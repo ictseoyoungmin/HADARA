@@ -384,8 +384,8 @@ describe('operator console bundle (Phase 5.6)', () => {
       command: 'active-run.projection'
     });
     expect(JSON.parse(debt.body)).toMatchObject({
-      schemaVersion: 'hadara.operational_debt.v1',
-      command: 'operational-debt.report'
+      schemaVersion: 'hadara.dashboard.debt_projection.v1',
+      command: 'dashboard.debt'
     });
 
     const cacheStatus = JSON.parse(createDashboardServerResponse(process.cwd(), '/api/dashboard/cache/status').body);

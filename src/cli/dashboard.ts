@@ -21,7 +21,6 @@ import { createProjectedDashboardDebtReport, createProjectedDashboardTimelineRep
 import { createEvidenceLintReport } from '../services/evidence-lint';
 import { createEvidenceListReport } from '../services/evidence-list';
 import { createDashboardTimelineReport } from '../services/dashboard-timeline';
-import { createOperationalDebtReport } from '../services/operational-debt';
 import { createOpsStatusReport } from '../services/operations-status-service';
 import { createTaskListReport } from '../services/task-read-model';
 import { createTaskWorkbenchReport } from '../services/task-workbench';
@@ -167,7 +166,13 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
   if (url.pathname === '/api/dashboard/cache/status') return jsonResponse(createDashboardCacheStatusReport(), headOnly);
   if (url.pathname === '/api/tasks') return jsonResponse(createTaskListReport(projectRoot), headOnly);
   if (url.pathname === '/api/active-run') return jsonResponse(safeCreateActiveRunProjection(projectRoot), headOnly);
-  if (url.pathname === '/api/debt') return jsonResponse(createOperationalDebtReport(projectRoot), headOnly);
+  if (url.pathname === '/api/debt') {
+    // Keep the legacy dashboard debt route on the same fast aggregate path as
+    // /api/dashboard/debt. The full operational-debt read model remains
+    // available through CLI/MCP surfaces; dashboard request handlers must not
+    // perform broad capsule scans on the hot API path.
+    return jsonResponse(createProjectedDashboardDebtReport(projectRoot), headOnly);
+  }
   if (url.pathname === '/api/timeline') {
     const taskId = url.searchParams.get('taskId')?.trim();
     const key = taskId ? createDashboardCacheKey(projectRoot, 'timeline', taskId) : createDashboardCacheKey(projectRoot, 'timeline');

@@ -4,31 +4,31 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening source/readiness is prepared through T-0417 with T-0419/T-0420 release-validation hotfixes applied. |
-| Current Phase | 0.3.4 RC publish retry next | T-0418 approval-gated npm publish remains active; refresh the publish clone to include T-0420 before rerunning the helper. |
-| Latest Completed Task | T-0420 Full Suite Timeout Release Validation Hardening | Fixed full-suite timeout false failures by aligning bootstrap default with core first-paint and setting explicit Vitest release-validation timeouts. |
-| Active / Next Task | T-0418 0.3.4 RC Approval-Gated Publish | Publish `hadara@0.3.4-rc.0` to npm with `next` only after explicit operator approval/authentication, using a clone refreshed to the T-0420 commit. |
-| Validation Baseline | T-0420 full Vitest validation | Docker ext4 full suite passed: 144 files / 947 tests in 19.61s; workspace `dist` refreshed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening source/readiness is prepared through T-0417 with T-0419/T-0420/T-0421 release-validation hotfixes applied. |
+| Current Phase | 0.3.4 RC publish retry next | T-0418 approval-gated npm publish remains active; refresh the publish clone to include T-0421 before rerunning the helper. |
+| Latest Completed Task | T-0421 Clean Checkout Publish Smoke Failure Hardening | Fixed the remaining clean-checkout dashboard API route bottleneck by routing legacy `/api/debt` through the fast dashboard debt projection. |
+| Active / Next Task | T-0418 0.3.4 RC Approval-Gated Publish | Publish `hadara@0.3.4-rc.0` to npm with `next` only after explicit operator approval/authentication, using a clone refreshed to the T-0421 commit. |
+| Validation Baseline | T-0421 focused and clean-checkout validation | Docker ext4 focused dashboard validation passed; clean-checkout full check passed 144 files / 947 tests after the route fix; workspace `dist` refreshed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0418 | Approval-gated publish of `hadara@0.3.4-rc.0` to npm `next`; pre-publish preparation is complete, but the publish clone must be refreshed after T-0420 before operator authentication/confirmation retry. | `tasks/T-0418-0-3-4-rc-approval-gated-publish/PUBLISH_OPERATOR_STEPS.md`, `ev:T-0418:847b8df0510f4010a451a67a`, `ev:T-0418:5050dfc2b6694a3195d8d29a`, `ev:T-0418:d834f79b3a96479098c96d4d` |
+| T-0418 | Approval-gated publish of `hadara@0.3.4-rc.0` to npm `next`; pre-publish preparation is complete, but the publish clone must be refreshed after T-0421 before operator authentication/confirmation retry. | `tasks/T-0418-0-3-4-rc-approval-gated-publish/PUBLISH_OPERATOR_STEPS.md`, `ev:T-0418:847b8df0510f4010a451a67a`, `ev:T-0418:5050dfc2b6694a3195d8d29a`, `ev:T-0418:d834f79b3a96479098c96d4d` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0421 Clean Checkout Publish Smoke Failure Hardening | Fixed the remaining clean-checkout dashboard API route bottleneck; focused dashboard validation, clean-checkout full check recheck, dist refresh, and whitespace validation passed. | `ev:T-0421:98e0dd670b3c489484bdebfb`, `ev:T-0421:88bc742a31814e089efcdb66`, `ev:T-0421:6a8478700dd842a0b73a4fa4` |
 | T-0420 Full Suite Timeout Release Validation Hardening | Fixed full-suite timeout false failures; Docker ext4 full Vitest suite passed and `dist` was refreshed. | `ev:T-0420:80ee3d2f4d09409c9c3651b9`, `ev:T-0420:68733ec5e4d24f3f8e43de31` |
 | T-0419 Dashboard API Route Timeout Hardening | Fixed publish-blocking dashboard API route timeout; focused Docker dashboard-static validation passed and `dist` was refreshed. | `ev:T-0419:e37deeb8c81f4c19a6bea6e2`, `ev:T-0419:b1f6d6d0181f402589a639fe` |
-| T-0417 0.3.4 RC Readiness Preparation | Prepared `hadara@0.3.4-rc.0` source/readiness without publish mutation. | `ev:T-0417:08b2899cd422471ab020fab8`, `ev:T-0417:12f0252b75924831872e82b0`, `ev:T-0417:8dac1b2a716949d29310c171` |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| T-0418 publish helper failed on full-suite timeouts before T-0419/T-0420. | A stale publish clone can reproduce the timeout failures and block the RC publish helper. | Refresh `/root/hadara-publish` to include T-0420, rebuild, then rerun the approval-gated publish helper with T-0418. |
+| T-0418 publish helper failed first on full-suite/dashboard timeouts before T-0419/T-0420/T-0421. | A stale publish clone can reproduce the timeout failures and block the RC publish helper. | Refresh `/root/hadara-publish` to include T-0421, rebuild, then rerun the approval-gated publish helper with T-0418. |
 | T-0383 mounted full-profile probes exceeded a 20s workload budget for cache status/warm, graph task, graph include-code, and context pack. | These workloads are not suitable for the default fast smoke loop on mounted filesystems. | Keep `smoke:context-routing` defaulting to fast profile; use `--profile full` explicitly for diagnostic/full-path checks. |
 | Built cache status still took about 19.6s on `/mnt/f` while producing diagnostics. | Diagnostics are clearer, but mounted broad source-manifest cost remains. | T-0385 classified this as an accepted residual for explicit diagnostic/warm/full-profile commands; default Session Start remains bounded/cache-preferential. |
 | Installed `hadara@0.3.2 version --json` reports dist freshness at `build.distLooksStale:false`, not root `distLooksStale`. | Consumers using shorthand root-field checks may miss the current schema location. | Treat `hadara.runtime.version.v1` output as authoritative; root compatibility can be a future docs/JSON compatibility follow-up if needed. |
@@ -94,13 +94,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Refresh `/root/hadara-publish` to include T-0420, rebuild, then rerun the `hadara@0.3.4-rc.0` approval-gated publish helper with task `T-0418`. | The publish clone previously hit full-suite timeout failures; T-0420 fixes the bootstrap default and test timeout policy, and T-0418 remains the release capsule. | `ev:T-0420:80ee3d2f4d09409c9c3651b9`, `tasks/T-0418-0-3-4-rc-approval-gated-publish/PUBLISH_OPERATOR_STEPS.md` |
+| Refresh `/root/hadara-publish` to include T-0421, rebuild, then rerun the `hadara@0.3.4-rc.0` approval-gated publish helper with task `T-0418`. | The publish clone previously hit dashboard/full-suite validation timeouts; T-0419/T-0420/T-0421 fix those release-validation paths, and T-0418 remains the release capsule. | `ev:T-0421:98e0dd670b3c489484bdebfb`, `ev:T-0421:88bc742a31814e089efcdb66`, `tasks/T-0418-0-3-4-rc-approval-gated-publish/PUBLISH_OPERATOR_STEPS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| T-0420 full-suite timeout release validation hardening | Docker `/tmp/hadara` full Vitest suite passed 144 files / 947 tests in 19.61s; focused timeout regression set passed 6 files / 34 tests; workspace `dist` refreshed. | Evidence `ev:T-0420:6fc1e031e0d243c3971bc44d`, `ev:T-0420:80ee3d2f4d09409c9c3651b9`, `ev:T-0420:68733ec5e4d24f3f8e43de31`; publish retry should use a clone refreshed to include T-0420. |
+| T-0421 clean-checkout publish smoke failure hardening | Docker `/tmp/hadara` focused dashboard validation passed 2 files / 19 tests; the dashboard API route test completed in 2535ms; preserved clean-checkout full check passed 144 files / 947 tests in 29.59s; workspace `dist` refreshed. | Evidence `ev:T-0421:98e0dd670b3c489484bdebfb`, `ev:T-0421:88bc742a31814e089efcdb66`, `ev:T-0421:6a8478700dd842a0b73a4fa4`; publish retry should use a clone refreshed to include T-0421. |
+| T-0420 full-suite timeout release validation hardening | Docker `/tmp/hadara` full Vitest suite passed 144 files / 947 tests in 19.61s; focused timeout regression set passed 6 files / 34 tests; workspace `dist` refreshed. | Evidence `ev:T-0420:6fc1e031e0d243c3971bc44d`, `ev:T-0420:80ee3d2f4d09409c9c3651b9`, `ev:T-0420:68733ec5e4d24f3f8e43de31`; superseded for retry routing by T-0421. |
 | T-0419 dashboard API route timeout hardening | Docker `/tmp/hadara` dashboard-static validation passed 15 tests; the shared read-model API route test completed in 945ms and the file completed in 3.31s; workspace `dist` refreshed from Docker build output. | Evidence `ev:T-0419:e37deeb8c81f4c19a6bea6e2`, `ev:T-0419:b1f6d6d0181f402589a639fe`; this resolves the publish-blocking route timeout observed before T-0418 retry. |
 | T-0414 session-start primary-action hardening | Docker `/tmp/hadara` build passed; focused session-start, context CLI, e2e smoke script, and schema fixture tests passed 4 files / 23 tests; workspace `dist` refreshed; built CLI Session Start for T-0414 returned `guidance.primaryAction.id=task-lifecycle` and `nextCommandArgs`. | Evidence `ev:T-0414:598d8358ab004c6faf3164a6`; live context discovery was not run because this capsule only changes read-only guidance fields. |
 | T-0413 installed-package recycle script UX | Docker `/tmp/hadara` build passed; focused package recycle, command registry, tools projection, and schema fixture tests passed 5 files / 19 tests; workspace `dist` refreshed; built CLI package recycle dry-run returned `hadara.packageRecycle.v1` `ok:true` with all registry/install execution flags false. | Evidence `ev:T-0413:db037677d84640d39722a7c7`; live npm registry execute recycle is release-operator/environment dependent and was not run in this implementation capsule. |
