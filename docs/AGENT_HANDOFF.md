@@ -4,31 +4,31 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening source/readiness/publish/recycle is complete through T-0422 with T-0419/T-0420/T-0421 release-validation hotfixes applied. |
-| Current Phase | 0.3.4 stable decision/readiness pending | `hadara@0.3.4-rc.0` is published on npm with dist-tag `next`; T-0422 proved the reviewer-requested installed consumer paths, but the published `package recycle` helper has a context-graph residual that must feed the stable decision. |
-| Latest Completed Task | T-0422 0.3.4-rc.0 Post-Publish Installed-Package Recycle | Verified registry version, dist-tags, temp-prefix install, installed version/help/init/session/task/context/finalize dry-run flow, and cleanup from consumer paths. |
-| Active / Next Task | Stable 0.3.4 decision/readiness capsule not yet opened | Decide whether to fix/accept the T-0422 package-recycle helper residual before stable promotion. |
-| Validation Baseline | T-0422 installed-package acceptance plus T-0421 release-validation hotfix baseline | T-0422 manual installed-package acceptance passed; T-0421 clean-checkout full check passed 144 files / 947 tests after the route fix; workspace `dist` refreshed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, and 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423 with T-0419/T-0420/T-0421 release-validation hotfixes applied. |
+| Current Phase | 0.3.4 stable readiness pending | `hadara@0.3.4-rc.0` is published on npm with dist-tag `next`; T-0422 proved installed consumer paths and T-0423 fixed the package-recycle helper residual before stable readiness. |
+| Latest Completed Task | T-0423 Package Recycle Helper Residual Fix | Default package recycle now uses the fast installed-agent UX path, broad `context graph --json` is opt-in via `--include-graph`, inherited source `HADARA_PROJECT_ROOT` is stripped for installed subprocesses, and `hadara@next` installed recycle passed. |
+| Active / Next Task | T-0424 0.3.4 Stable Readiness not yet opened | Prepare stable readiness only after using T-0417 readiness, T-0418 publish, T-0422 installed acceptance, and T-0423 clean helper proof as inputs. |
+| Validation Baseline | T-0423 helper residual fix plus T-0422 installed-package acceptance | T-0423 Docker focused validation and installed `hadara@next` package recycle passed; T-0422 manual installed-package acceptance passed; T-0421 clean-checkout full check passed 144 files / 947 tests after the route fix. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| Stable 0.3.4 decision/readiness | Not yet opened. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and the T-0422 package-recycle helper residual as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0422:158cb7ac06f94b00a09fda08`, `ev:T-0422:ba22c58572db4b3c8c3288da` |
+| Stable 0.3.4 readiness | Not yet opened. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0422 0.3.4-rc.0 Post-Publish Installed-Package Recycle | Verified `hadara@0.3.4-rc.0` from installed consumer paths; recorded a package-recycle helper context-graph residual for stable decision input. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0422:158cb7ac06f94b00a09fda08`, `ev:T-0422:ba22c58572db4b3c8c3288da` |
+| T-0423 Package Recycle Helper Residual Fix | Fixed package recycle default profile and source-workspace env leakage; focused Docker validation and installed `hadara@next` recycle passed. | `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `ev:T-0423:5205a44ac4f546f28d15ae49` |
+| T-0422 0.3.4-rc.0 Post-Publish Installed-Package Recycle | Verified `hadara@0.3.4-rc.0` from installed consumer paths; recorded the package-recycle helper residual later fixed by T-0423. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0422:158cb7ac06f94b00a09fda08`, `ev:T-0422:ba22c58572db4b3c8c3288da` |
 | T-0421 Clean Checkout Publish Smoke Failure Hardening | Fixed the remaining clean-checkout dashboard API route bottleneck; focused dashboard validation, clean-checkout full check recheck, dist refresh, and whitespace validation passed. | `ev:T-0421:98e0dd670b3c489484bdebfb`, `ev:T-0421:88bc742a31814e089efcdb66`, `ev:T-0421:6a8478700dd842a0b73a4fa4` |
-| T-0420 Full Suite Timeout Release Validation Hardening | Fixed full-suite timeout false failures; Docker ext4 full Vitest suite passed and `dist` was refreshed. | `ev:T-0420:80ee3d2f4d09409c9c3651b9`, `ev:T-0420:68733ec5e4d24f3f8e43de31` |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| Published `hadara package recycle --execute` is not fully clean for `hadara@0.3.4-rc.0`. | The helper verified registry/install/version/help/init/task/context-pack/context-slice/session/cleanup, but its extra installed `context graph --json` smoke failed and failed runs created stray source-workspace smoke capsules before cleanup. | Treat T-0422 manual installed-package acceptance as minimum consumer proof, and decide in the stable `0.3.4` capsule whether to fix the helper before stable promotion. |
+| Stable `0.3.4` readiness has not run after the T-0423 helper residual fix. | `hadara@0.3.4-rc.0` is published and consumer/helper proofs are clean, but stable metadata, release docs, release artifacts, strict gates, dry-runs, and publish dry-run still need a dedicated readiness capsule. | Open T-0424 stable readiness; do not publish stable from T-0423. |
 | T-0383 mounted full-profile probes exceeded a 20s workload budget for cache status/warm, graph task, graph include-code, and context pack. | These workloads are not suitable for the default fast smoke loop on mounted filesystems. | Keep `smoke:context-routing` defaulting to fast profile; use `--profile full` explicitly for diagnostic/full-path checks. |
 | Built cache status still took about 19.6s on `/mnt/f` while producing diagnostics. | Diagnostics are clearer, but mounted broad source-manifest cost remains. | T-0385 classified this as an accepted residual for explicit diagnostic/warm/full-profile commands; default Session Start remains bounded/cache-preferential. |
 | Installed `hadara@0.3.2 version --json` reports dist freshness at `build.distLooksStale:false`, not root `distLooksStale`. | Consumers using shorthand root-field checks may miss the current schema location. | Treat `hadara.runtime.version.v1` output as authoritative; root compatibility can be a future docs/JSON compatibility follow-up if needed. |
@@ -94,13 +94,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Open stable `0.3.4` decision/readiness capsule. | `0.3.4-rc.0` is published and the reviewer-requested installed-package consumer checks passed, but the package-recycle helper context-graph residual should be explicitly fixed, accepted, or deferred before stable promotion. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0422:158cb7ac06f94b00a09fda08`, `ev:T-0422:ba22c58572db4b3c8c3288da`, `docs/TASK_WORKFLOW_COMMANDS.md` |
+| Open T-0424 stable `0.3.4` readiness capsule. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should now run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| T-0422 0.3.4-rc.0 installed-package acceptance | Manual disposable installed-bin smoke passed npm view, dist-tags, isolated `hadara@next` install, installed version/help/init/session/task lifecycle/finalize dry-run/context pack/context slice, and cleanup. | Evidence `ev:T-0422:f32c692a502c49d494970f4d`; helper failed context graph in `ev:T-0422:158cb7ac06f94b00a09fda08` and `ev:T-0422:ba22c58572db4b3c8c3288da`. |
+| T-0423 package recycle helper residual fix | Docker focused validation passed for package recycle/registry projections with guarded `dist` sync; built dry-run proved default graph omission and `--include-graph` opt-in; installed `hadara@next` execute recycle passed without context-graph default or stray source capsule creation. | Evidence `ev:T-0423:cd03a65c043f42848901fab0`, `ev:T-0423:5205a44ac4f546f28d15ae49`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`. |
+| T-0422 0.3.4-rc.0 installed-package acceptance | Manual disposable installed-bin smoke passed npm view, dist-tags, isolated `hadara@next` install, installed version/help/init/session/task lifecycle/finalize dry-run/context pack/context slice, and cleanup. | Evidence `ev:T-0422:f32c692a502c49d494970f4d`; helper failed context graph in `ev:T-0422:158cb7ac06f94b00a09fda08` and `ev:T-0422:ba22c58572db4b3c8c3288da`, then T-0423 fixed the helper residual. |
 | T-0421 clean-checkout publish smoke failure hardening | Docker `/tmp/hadara` focused dashboard validation passed 2 files / 19 tests; the dashboard API route test completed in 2535ms; preserved clean-checkout full check passed 144 files / 947 tests in 29.59s; workspace `dist` refreshed. | Evidence `ev:T-0421:98e0dd670b3c489484bdebfb`, `ev:T-0421:88bc742a31814e089efcdb66`, `ev:T-0421:6a8478700dd842a0b73a4fa4`; publish retry should use a clone refreshed to include T-0421. |
 | T-0420 full-suite timeout release validation hardening | Docker `/tmp/hadara` full Vitest suite passed 144 files / 947 tests in 19.61s; focused timeout regression set passed 6 files / 34 tests; workspace `dist` refreshed. | Evidence `ev:T-0420:6fc1e031e0d243c3971bc44d`, `ev:T-0420:80ee3d2f4d09409c9c3651b9`, `ev:T-0420:68733ec5e4d24f3f8e43de31`; superseded for retry routing by T-0421. |
 | T-0419 dashboard API route timeout hardening | Docker `/tmp/hadara` dashboard-static validation passed 15 tests; the shared read-model API route test completed in 945ms and the file completed in 3.31s; workspace `dist` refreshed from Docker build output. | Evidence `ev:T-0419:e37deeb8c81f4c19a6bea6e2`, `ev:T-0419:b1f6d6d0181f402589a639fe`; this resolves the publish-blocking route timeout observed before T-0418 retry. |

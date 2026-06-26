@@ -89,6 +89,7 @@ export interface PackageRecycleOptions {
   attachEvidence?: boolean;
   noEvidence?: boolean;
   keepTemp?: boolean;
+  includeGraph?: boolean;
   timeoutSeconds?: number;
   runner?: PackageRecycleCommandRunner;
 }
@@ -248,8 +249,8 @@ export function createPackageRecycleExecuteReport(options: PackageRecycleOptions
             runner,
             installedBin: installedHadaraCommand(prefix),
             installPrefix: prefix,
-            projectRoot: options.paths.projectRoot,
             workspacePath: workspaceSetup.path,
+            includeGraph: options.includeGraph === true,
             timeoutMs,
             packageInfo,
             execution,
@@ -338,15 +339,15 @@ function runInstalledSmokes(input: {
   runner: PackageRecycleCommandRunner;
   installedBin: string;
   installPrefix: string;
-  projectRoot: string;
   workspacePath: string;
+  includeGraph: boolean;
   timeoutMs: number;
   packageInfo: PackageRecycleReport['package'];
   execution: PackageRecycleReport['execution'];
   steps: PackageRecycleStep[];
   issues: PackageRecycleIssue[];
 }): void {
-  const env = installPathEnv(input.installPrefix, input.projectRoot);
+  const env = installPathEnv(input.installPrefix);
 
   input.execution.installedVersionExecuted = true;
   const version = input.runner(input.installedBin, ['version', '--json'], {
@@ -424,35 +425,44 @@ function runInstalledSmokes(input: {
       args: ['task', 'lifecycle', '--task', taskId, '--json'],
       cwd: disposableProject
     });
+    pushJsonSmokeStep(input, {
+      id: 'session-start',
+      label: 'Verify session start read model',
+      command: 'hadara session start --task <task-id> --json',
+      args: ['session', 'start', '--task', taskId, '--json'],
+      cwd: disposableProject
+    });
+    pushTaskFinalizeSmokeStep(input, {
+      id: 'task-finalize',
+      label: 'Verify task finalize dry-run report',
+      command: 'hadara task finalize --task <task-id> --json',
+      args: ['task', 'finalize', '--task', taskId, '--json'],
+      cwd: disposableProject
+    });
   }
 
   input.execution.contextSmokeExecuted = true;
-  pushJsonSmokeStep(input, {
-    id: 'context-graph',
-    label: 'Verify context graph read model',
-    command: 'hadara context graph --json',
-    args: ['context', 'graph', '--json'],
-    cwd: disposableProject
-  });
+  if (input.includeGraph) {
+    pushJsonSmokeStep(input, {
+      id: 'context-graph',
+      label: 'Verify context graph read model',
+      command: 'hadara context graph --json',
+      args: ['context', 'graph', '--json'],
+      cwd: disposableProject
+    });
+  }
   pushJsonSmokeStep(input, {
     id: 'context-pack',
     label: 'Verify context pack read model',
-    command: 'hadara context pack --json',
-    args: ['context', 'pack', '--json'],
+    command: 'hadara context pack --task <task-id> --json',
+    args: ['context', 'pack', ...(taskId ? ['--task', taskId] : []), '--json'],
     cwd: disposableProject
   });
   pushJsonSmokeStep(input, {
     id: 'context-slice',
     label: 'Verify context slice raw adapter',
-    command: 'hadara context slice --path README.md --from 1 --to 20 --json',
-    args: ['context', 'slice', '--path', 'README.md', '--from', '1', '--to', '20', '--json'],
-    cwd: disposableProject
-  });
-  pushJsonSmokeStep(input, {
-    id: 'session-start',
-    label: 'Verify session start read model',
-    command: 'hadara session start --task <task-id> --json',
-    args: ['session', 'start', ...(taskId ? ['--task', taskId] : []), '--json'],
+    command: 'hadara context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json',
+    args: ['context', 'slice', '--path', 'docs/PROJECT_STATE.md', '--from', '1', '--to', '20', '--json'],
     cwd: disposableProject
   });
 }
@@ -462,7 +472,6 @@ function pushJsonSmokeStep(
     runner: PackageRecycleCommandRunner;
     installedBin: string;
     installPrefix: string;
-    projectRoot: string;
     workspacePath: string;
     timeoutMs: number;
     issues: PackageRecycleIssue[];
@@ -473,7 +482,7 @@ function pushJsonSmokeStep(
   const result = input.runner(input.installedBin, step.args, {
     cwd: step.cwd ?? input.workspacePath,
     timeoutMs: input.timeoutMs,
-    env: installPathEnv(input.installPrefix, input.projectRoot)
+    env: installPathEnv(input.installPrefix)
   });
   const reportStep = commandStep(step.id, step.label, step.command, result);
   if (!isOkJson(result)) {
@@ -486,6 +495,40 @@ function pushJsonSmokeStep(
     });
   } else {
     reportStep.summary = `${step.label} returned an ok JSON report.`;
+  }
+  input.steps.push(reportStep);
+}
+
+function pushTaskFinalizeSmokeStep(
+  input: {
+    runner: PackageRecycleCommandRunner;
+    installedBin: string;
+    installPrefix: string;
+    workspacePath: string;
+    timeoutMs: number;
+    issues: PackageRecycleIssue[];
+    steps: PackageRecycleStep[];
+  },
+  step: { id: string; label: string; command: string; args: string[]; cwd?: string }
+): void {
+  const result = input.runner(input.installedBin, step.args, {
+    cwd: step.cwd ?? input.workspacePath,
+    timeoutMs: input.timeoutMs,
+    env: installPathEnv(input.installPrefix)
+  });
+  const reportStep = commandStep(step.id, step.label, step.command, result);
+  const parsed = parseJsonObject(result.stdout);
+  if (!parsed || parsed.schemaVersion !== 'hadara.task.finalize.v1' || parsed.mode !== 'dry-run') {
+    failStep(reportStep, result.timedOut ? `${step.label} timed out.` : `${step.label} failed or returned no finalize dry-run JSON report.`);
+    input.issues.push({
+      severity: 'error',
+      code: `PACKAGE_RECYCLE_${step.id.toUpperCase().replace(/[^A-Z0-9]+/g, '_')}_FAILED`,
+      message: `${step.label} failed during installed-package recycle.`,
+      stepId: step.id
+    });
+  } else {
+    reportStep.status = 'passed';
+    reportStep.summary = `${step.label} returned a task finalize dry-run report.`;
   }
   input.steps.push(reportStep);
 }
@@ -631,32 +674,43 @@ function createPlannedSteps(packageInfo: PackageRecycleReport['package'], option
       summary: 'Would verify the task lifecycle read model for the disposable task.'
     },
     {
-      id: 'context-graph',
-      label: 'Verify context graph read model',
-      command: 'hadara context graph --json',
-      status: 'planned',
-      summary: 'Would verify context graph on the initialized project.'
-    },
-    {
-      id: 'context-pack',
-      label: 'Verify context pack read model',
-      command: 'hadara context pack --json',
-      status: 'planned',
-      summary: 'Would verify context pack on the initialized project.'
-    },
-    {
-      id: 'context-slice',
-      label: 'Verify context slice raw adapter',
-      command: 'hadara context slice --path README.md --from 1 --to 20 --json',
-      status: 'planned',
-      summary: 'Would verify bounded raw context slicing on initialized docs.'
-    },
-    {
       id: 'session-start',
       label: 'Verify session start read model',
       command: 'hadara session start --task <task-id> --json',
       status: 'planned',
       summary: 'Would verify bounded session start on the disposable task.'
+    },
+    {
+      id: 'task-finalize',
+      label: 'Verify task finalize dry-run report',
+      command: 'hadara task finalize --task <task-id> --json',
+      status: 'planned',
+      summary: 'Would verify finalize-first dry-run guidance on the disposable task.'
+    },
+    ...(options.includeGraph === true
+      ? [
+          {
+            id: 'context-graph',
+            label: 'Verify context graph read model',
+            command: 'hadara context graph --json',
+            status: 'planned' as const,
+            summary: 'Would verify context graph on the initialized project because --include-graph was set.'
+          }
+        ]
+      : []),
+    {
+      id: 'context-pack',
+      label: 'Verify context pack read model',
+      command: 'hadara context pack --task <task-id> --json',
+      status: 'planned',
+      summary: 'Would verify task-scoped context pack on the initialized project.'
+    },
+    {
+      id: 'context-slice',
+      label: 'Verify context slice raw adapter',
+      command: 'hadara context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json',
+      status: 'planned',
+      summary: 'Would verify bounded raw context slicing on initialized docs.'
     },
     {
       id: 'cleanup',
@@ -683,10 +737,10 @@ function createSkippedInstalledSteps(): PackageRecycleStep[] {
     skippedStep('init-project', 'Initialize disposable project with installed CLI', 'hadara init --json', 'Skipped because package install failed.'),
     skippedStep('task-create', 'Create disposable task with installed CLI', 'hadara task create <title> --json', 'Skipped because package install failed.'),
     skippedStep('task-lifecycle', 'Verify task lifecycle read model', 'hadara task lifecycle --task <task-id> --json', 'Skipped because package install failed.'),
-    skippedStep('context-graph', 'Verify context graph read model', 'hadara context graph --json', 'Skipped because package install failed.'),
-    skippedStep('context-pack', 'Verify context pack read model', 'hadara context pack --json', 'Skipped because package install failed.'),
-    skippedStep('context-slice', 'Verify context slice raw adapter', 'hadara context slice --path README.md --from 1 --to 20 --json', 'Skipped because package install failed.'),
-    skippedStep('session-start', 'Verify session start read model', 'hadara session start --task <task-id> --json', 'Skipped because package install failed.')
+    skippedStep('session-start', 'Verify session start read model', 'hadara session start --task <task-id> --json', 'Skipped because package install failed.'),
+    skippedStep('task-finalize', 'Verify task finalize dry-run report', 'hadara task finalize --task <task-id> --json', 'Skipped because package install failed.'),
+    skippedStep('context-pack', 'Verify context pack read model', 'hadara context pack --task <task-id> --json', 'Skipped because package install failed.'),
+    skippedStep('context-slice', 'Verify context slice raw adapter', 'hadara context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json', 'Skipped because package install failed.')
   ];
 }
 
@@ -785,13 +839,23 @@ function installedHadaraCommand(prefix: string): string {
   return process.platform === 'win32' ? path.join(prefix, 'hadara.cmd') : path.join(prefix, 'bin', 'hadara');
 }
 
-function installPathEnv(prefix: string, projectRoot: string): NodeJS.ProcessEnv {
+function installPathEnv(prefix: string): NodeJS.ProcessEnv {
   const bin = process.platform === 'win32' ? prefix : path.join(prefix, 'bin');
+  const env = { ...process.env };
+  delete env.HADARA_PROJECT_ROOT;
   return {
-    ...process.env,
-    PATH: `${bin}${path.delimiter}${process.env.PATH ?? ''}`,
-    HADARA_PROJECT_ROOT: projectRoot
+    ...env,
+    PATH: `${bin}${path.delimiter}${process.env.PATH ?? ''}`
   };
+}
+
+function parseJsonObject(stdout: string): Record<string, unknown> | null {
+  try {
+    const parsed = JSON.parse(stdout);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
 }
 
 function packageNameFromSpecifier(specifier: string): string {

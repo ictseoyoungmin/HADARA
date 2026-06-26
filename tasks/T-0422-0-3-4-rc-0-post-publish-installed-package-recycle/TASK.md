@@ -44,7 +44,7 @@ Done
 <!-- hadara:managed:start task-status-history {"schema":"hadara.managedSection.v1","owner":"task.finish","kind":"markdown-table","mode":"update-row","version":1,"required":true,"closeSourceRole":"included"} -->
 | Time | Status | Reason | Evidence |
 |---|---|---|---|
-| TBD | Draft | Initial task scaffold. | TBD |
+| 2026-06-26 | Draft | Initial task scaffold. | `hadara task create` |
 | 2026-06-26 | In Progress | Started post-publish installed-package recycle for `hadara@0.3.4-rc.0` after reviewer direction. | T-0422 PLAN |
 | 2026-06-26 | Done | Finished task capsule. | `hadara task finish --execute` |
 <!-- hadara:managed:end task-status-history -->

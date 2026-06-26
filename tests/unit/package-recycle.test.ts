@@ -84,12 +84,13 @@ describe('installed package recycle', () => {
       'init-project',
       'task-create',
       'task-lifecycle',
-      'context-graph',
+      'session-start',
+      'task-finalize',
       'context-pack',
       'context-slice',
-      'session-start',
       'cleanup'
     ]);
+    expect(report.steps.map((step) => step.id)).not.toContain('context-graph');
     expect(report.steps.every((step) => step.status === 'planned')).toBe(true);
     expect(validateSchema('hadara.packageRecycle.v1', report).ok).toBe(true);
   });
@@ -97,8 +98,11 @@ describe('installed package recycle', () => {
   it('executes the registry consumer path with a fake runner and keeps output reduced', () => {
     const root = tempProject();
     const calls: string[] = [];
-    const runner: PackageRecycleCommandRunner = (command, args) => {
+    process.env.HADARA_PROJECT_ROOT = root;
+    const projectRoots: Array<string | undefined> = [];
+    const runner: PackageRecycleCommandRunner = (command, args, options) => {
       calls.push([command, ...args].join(' '));
+      if (command !== 'npm') projectRoots.push(options.env?.HADARA_PROJECT_ROOT);
       const joined = args.join(' ');
       if (joined === 'view hadara@latest version --json') return passed('"0.3.3"');
       if (joined === 'dist-tag ls hadara') return passed('latest: 0.3.3\nnext: 0.3.3-rc.0\n');
@@ -108,10 +112,10 @@ describe('installed package recycle', () => {
       if (joined === 'init --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task create Installed package recycle smoke --json') return passed(JSON.stringify({ ok: true, task: { id: 'T-0001' } }));
       if (joined === 'task lifecycle --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
-      if (joined === 'context graph --json') return passed(JSON.stringify({ ok: true }));
-      if (joined === 'context pack --json') return passed(JSON.stringify({ ok: true }));
-      if (joined === 'context slice --path README.md --from 1 --to 20 --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'session start --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'task finalize --task T-0001 --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.finalize.v1', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
+      if (joined === 'context pack --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json') return passed(JSON.stringify({ ok: true }));
       return failed();
     };
 
@@ -146,8 +150,51 @@ describe('installed package recycle', () => {
       publishExecuted: false
     });
     expect(calls).toContain('npm view hadara@latest version --json');
+    expect(calls.some((call) => call.includes('context graph --json'))).toBe(false);
+    expect(calls.some((call) => call.includes('task finalize --task T-0001 --json'))).toBe(true);
+    expect(projectRoots.every((value) => value === undefined)).toBe(true);
     expect(encoded).not.toContain(root);
     expect(encoded).not.toContain('node_modules');
+    expect(validateSchema('hadara.packageRecycle.v1', report).ok).toBe(true);
+  });
+
+  it('includes context graph only when explicitly requested', () => {
+    const root = tempProject();
+    const dryRun = createPackageRecycleDryRunReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      includeGraph: true
+    });
+    expect(dryRun.steps.map((step) => step.id)).toContain('context-graph');
+
+    const calls: string[] = [];
+    const runner: PackageRecycleCommandRunner = (command, args) => {
+      calls.push([command, ...args].join(' '));
+      const joined = args.join(' ');
+      if (joined === 'view hadara@latest version --json') return passed('"0.3.3"');
+      if (joined === 'dist-tag ls hadara') return passed('latest: 0.3.3\nnext: 0.3.3-rc.0\n');
+      if (joined.startsWith('install -g --prefix')) return passed('');
+      if (joined === 'version --json') return passed(JSON.stringify({ ok: true, packageVersion: '0.3.3' }));
+      if (joined === 'help lifecycle --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'init --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'task create Installed package recycle smoke --json') return passed(JSON.stringify({ ok: true, task: { id: 'T-0001' } }));
+      if (joined === 'task lifecycle --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'session start --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'task finalize --task T-0001 --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.finalize.v1', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
+      if (joined === 'context graph --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'context pack --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json') return passed(JSON.stringify({ ok: true }));
+      return failed();
+    };
+
+    const report = createPackageRecycleExecuteReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      expectedVersion: '0.3.3',
+      includeGraph: true,
+      runner
+    });
+
+    expect(report.ok).toBe(true);
+    expect(calls.some((call) => call.includes('context graph --json'))).toBe(true);
     expect(validateSchema('hadara.packageRecycle.v1', report).ok).toBe(true);
   });
 

@@ -23,6 +23,7 @@ export function handlePackageCommand(input: PackageCommandInput): boolean {
       attachEvidence: getFlag(input.args, '--attach-evidence'),
       noEvidence: getFlag(input.args, '--no-evidence'),
       keepTemp: getFlag(input.args, '--keep-temp'),
+      includeGraph: getFlag(input.args, '--include-graph'),
       timeoutSeconds: getIntegerOption(input.args, '--timeout', { min: 1 })
     });
 

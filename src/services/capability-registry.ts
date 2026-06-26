@@ -1839,7 +1839,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   }),
   commandEntry({
     id: 'package.recycle',
-    command: 'hadara package recycle [--execute] [--package <specifier>] [--expected-version <version>] [--json]',
+    command: 'hadara package recycle [--execute] [--package <specifier>] [--expected-version <version>] [--include-graph] [--json]',
     summary: 'Preview or execute installed-package recycle validation from the package registry.',
     canonical: true,
     appearsInDefaultHelp: false,
@@ -1858,7 +1858,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     docs: ['docs/RELEASE_READINESS.md', 'docs/CLI_JSON_CONTRACT.md'],
     examples: [
       example('Preview installed-package recycle', 'hadara package recycle --package hadara@latest --expected-version 0.3.3 --json', 'Before running registry-backed consumer install validation.'),
-      example('Execute installed-package recycle', 'hadara package recycle --execute --package hadara@latest --expected-version 0.3.3 --task T-XXXX --attach-evidence --json', 'After an npm publish when verifying consumer install paths.')
+      example('Execute installed-package recycle', 'hadara package recycle --execute --package hadara@latest --expected-version 0.3.3 --task T-XXXX --attach-evidence --json', 'After an npm publish when verifying consumer install paths.'),
+      example('Execute recycle with graph diagnostics', 'hadara package recycle --execute --package hadara@latest --expected-version 0.3.3 --include-graph --json', 'When intentionally running the broader context graph smoke.')
     ],
     related: ['package.smoke', 'release.closeout', 'release.publish'],
     conflictsWith: [],
@@ -1883,7 +1884,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
         availability: 'default',
         risk: 'medium',
         schemaVersion: 'hadara.packageRecycle.v1',
-        notes: 'Explicit npm registry and isolated-prefix consumer package validation.'
+        notes: 'Explicit npm registry and isolated-prefix consumer package validation. The default smoke profile is the fast installed-agent UX path; broad context graph diagnostics require --include-graph.'
       }
     ]
   }),

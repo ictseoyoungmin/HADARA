@@ -6,7 +6,7 @@
 | Field | Value |
 |---|---|
 | Task | T-0422 |
-| TaskStatus | In Progress |
+| TaskStatus | Done |
 | Last Updated | 2026-06-26 |
 <!-- hadara:managed:end task-handoff-current-state -->
 
@@ -18,6 +18,7 @@
 | `hadara package recycle --execute --package hadara@next --expected-version 0.3.4-rc.0 --task T-0422 --attach-evidence --json` verified registry version, dist-tags, install, installed version, lifecycle help, init, task lifecycle, context pack, context slice, session start, and cleanup, but failed its extra installed `context graph --json` smoke. | `ev:T-0422:158cb7ac06f94b00a09fda08`, `ev:T-0422:ba22c58572db4b3c8c3288da` |
 | Manual disposable installed-bin acceptance smoke passed the reviewer-requested minimum recycle checks and resolved the acceptance proof gap. | `ev:T-0422:f32c692a502c49d494970f4d` |
 | Shared docs were updated and stale T-0418 handoff wording plus whitespace checks passed. | `ev:T-0422:ed2802b97d3d44ec9474890f` |
+| Task finalize completed and audit returned closed-valid. | T-0422 lifecycle close |
 
 ## Next Recommended Step
 
