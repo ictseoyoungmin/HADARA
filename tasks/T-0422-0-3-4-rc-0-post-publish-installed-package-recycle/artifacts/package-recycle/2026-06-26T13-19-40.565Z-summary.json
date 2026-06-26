@@ -1,0 +1,159 @@
+{
+  "schemaVersion": "hadara.smokeEvidenceSummary.v1",
+  "time": "2026-06-26T13:19:40.559Z",
+  "taskId": "T-0422",
+  "category": "package-recycle",
+  "sourceReport": {
+    "schemaVersion": "hadara.packageRecycle.v1",
+    "command": "package.recycle",
+    "mode": "execute",
+    "ok": false,
+    "networkPolicy": {
+      "mode": "environment-inherited",
+      "enforced": false,
+      "notes": [
+        "Installed-package recycle uses npm registry/network access only in explicit --execute mode."
+      ]
+    }
+  },
+  "execution": {
+    "npmViewExecuted": true,
+    "npmDistTagExecuted": true,
+    "packageInstallExecuted": true,
+    "installedVersionExecuted": true,
+    "lifecycleHelpExecuted": true,
+    "initExecuted": true,
+    "taskLifecycleExecuted": true,
+    "contextSmokeExecuted": true,
+    "releaseMutationExecuted": false,
+    "publishExecuted": false
+  },
+  "steps": [
+    {
+      "id": "plan-workspace",
+      "label": "Prepare disposable consumer workspace",
+      "status": "passed",
+      "summary": "Disposable consumer workspace was prepared outside the project source."
+    },
+    {
+      "id": "npm-view-version",
+      "label": "Verify registry package version",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 688,
+      "summary": "Registry resolved package version 0.3.4-rc.0."
+    },
+    {
+      "id": "npm-dist-tags",
+      "label": "Verify registry dist-tags",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 487,
+      "summary": "Registry latest dist-tag points to 0.3.3."
+    },
+    {
+      "id": "install-package",
+      "label": "Install package from registry into isolated prefix",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 1214,
+      "summary": "Package installed into an isolated temporary prefix from the registry."
+    },
+    {
+      "id": "installed-version",
+      "label": "Verify installed CLI version",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 2389,
+      "summary": "Installed CLI reports packageVersion 0.3.4-rc.0."
+    },
+    {
+      "id": "help-lifecycle",
+      "label": "Verify lifecycle help from installed CLI",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 111,
+      "summary": "Verify lifecycle help from installed CLI returned an ok JSON report."
+    },
+    {
+      "id": "init-project",
+      "label": "Initialize disposable project with installed CLI",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 148,
+      "summary": "Initialize disposable project with installed CLI returned an ok JSON report."
+    },
+    {
+      "id": "task-create",
+      "label": "Create disposable task with installed CLI",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 355,
+      "summary": "Disposable task T-0424 was created."
+    },
+    {
+      "id": "task-lifecycle",
+      "label": "Verify task lifecycle read model",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 46720,
+      "summary": "Verify task lifecycle read model returned an ok JSON report."
+    },
+    {
+      "id": "context-graph",
+      "label": "Verify context graph read model",
+      "status": "failed",
+      "exitCode": null,
+      "elapsedMs": 73210,
+      "summary": "Verify context graph read model failed or returned non-ok JSON."
+    },
+    {
+      "id": "context-pack",
+      "label": "Verify context pack read model",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 67965,
+      "summary": "Verify context pack read model returned an ok JSON report."
+    },
+    {
+      "id": "context-slice",
+      "label": "Verify context slice raw adapter",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 86,
+      "summary": "Verify context slice raw adapter returned an ok JSON report."
+    },
+    {
+      "id": "session-start",
+      "label": "Verify session start read model",
+      "status": "passed",
+      "exitCode": 0,
+      "elapsedMs": 5240,
+      "summary": "Verify session start read model returned an ok JSON report."
+    },
+    {
+      "id": "cleanup",
+      "label": "Cleanup disposable workspace",
+      "status": "passed",
+      "summary": "Disposable workspace was removed."
+    }
+  ],
+  "privacy": {
+    "rawLogsIncluded": false,
+    "rawPackageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [
+    {
+      "severity": "error",
+      "code": "PACKAGE_RECYCLE_CONTEXT_GRAPH_FAILED",
+      "message": "Verify context graph read model failed during installed-package recycle.",
+      "stepId": "context-graph"
+    }
+  ],
+  "rawLogsIncluded": false,
+  "privatePathsIncluded": false,
+  "rawPackageContentsIncluded": false
+}

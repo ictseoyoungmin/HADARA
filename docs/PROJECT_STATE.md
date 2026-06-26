@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0421 Clean Checkout Publish Smoke Failure Hardening |
-| Active Task | T-0418 0.3.4 RC Approval-Gated Publish |
+| Latest Completed Task | T-0422 0.3.4-rc.0 Post-Publish Installed-Package Recycle |
+| Active Task | Stable 0.3.4 decision/readiness not yet opened |
 
 ## Next Planned Line
 
@@ -61,6 +61,8 @@ T-0420 follow-up note: the full-suite timeout failures reported from the 0.3.4 R
 T-0421 follow-up note: the next T-0418 publish helper attempt reached clean-checkout smoke and exposed a remaining dashboard API route bottleneck. The legacy dashboard `/api/debt` route now uses the same fast dashboard debt projection as `/api/dashboard/debt` instead of the full operational-debt scan; full operational-debt diagnostics remain on explicit diagnostic surfaces. Docker ext4 focused validation passed 2 files / 19 tests with the dashboard API route test completing in 2535 ms, a preserved clean-checkout full check passed 144 files / 947 tests in 29.59 s, workspace `dist` was refreshed, and `git diff --check` passed. T-0418 remains the approval-gated npm publish capsule; rerun it only from a `/root/hadara-publish` clone refreshed to include T-0421.
 
 T-0418 publish note: `hadara@0.3.4-rc.0` is published on npm with the `next` dist-tag. The approval-gated helper completed npm publish, npm registry verification returned version `0.3.4-rc.0`, and GitHub Release draft creation was intentionally skipped. Post-publish installed-package recycle remains the next release-line proof before deciding stable `0.3.4` readiness.
+
+T-0422 follow-up note: `hadara@0.3.4-rc.0` has post-publish installed-package consumer proof. npm registry checks returned `0.3.4-rc.0`, dist-tags verified `next=0.3.4-rc.0` and `latest=0.3.3`, an isolated temp-prefix `hadara@next` install reported `packageVersion:"0.3.4-rc.0"`, installed `help lifecycle`, fresh init, task-scoped Session Start, task lifecycle, `task finalize --json` dry-run report generation, task-scoped context pack, context slice, and temp cleanup passed. The published `hadara package recycle --execute` helper itself failed its extra installed `context graph --json` smoke and created stray source-workspace smoke capsules during failed runs; those stray T-0423/T-0424 artifacts were removed, and the helper residual is carried into the stable `0.3.4` decision input. Stable `0.3.4` has not been decided.
 
 Phase 8 / 0.3.1 is complete through post-rc1 documentation cleanup. It carried Work Item A and Work Item F into implementation as status token governance, document ownership/write-boundary governance, task handoff close-state clarity, installed-package recycle findings cleanup, state consistency projection, and advisory verification gates. The Phase 8 specs are staged under `docs/specs/0.3.1/`; the first rc1 implementation sequence is staged under `docs/specs/0.3.1/rc1/`. Phase 8.1 through Phase 8.6 are complete through T-0324, T-0325 completed the follow-up CloseState derived-state cleanup after review, T-0326 prepared `hadara@0.3.1-rc.1` release readiness without publish mutation, T-0327 published `hadara@0.3.1-rc.1`, verified npm visibility/tarball contents, hardened future rc publish tags, and corrected npm dist-tags so stable `0.3.0` stays on `latest` while rc1 is available as `next`, T-0328 verified the published rc1 package from installed consumer paths in the `hadara-dev` container, and T-0329 refreshed post-rc1 handoff/release-note wording after reviewer feedback.
 
@@ -194,8 +196,8 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0417 0.3.4 RC Readiness Preparation.
-- Active/next task is T-0418 0.3.4 RC Approval-Gated Publish, the approval-gated npm `next` publish capsule after T-0417 readiness.
+- Latest completed task is T-0422 0.3.4-rc.0 Post-Publish Installed-Package Recycle.
+- Active/next task is the stable `0.3.4` decision/readiness capsule, not yet opened; it must consider T-0422 installed-package proof and the published `package recycle` helper context-graph residual.
 - Stable `hadara@0.3.0` publish and installed-package consumer recycle are complete through T-0316/T-0317.
 - Phase 8 / `0.3.1` planning is staged under `docs/specs/0.3.1/`; Phase 8.1 status token/document ownership governance, Phase 8.2 task handoff close-state governance, Phase 8.3 installed-package findings cleanup, Phase 8.4 state consistency projection read model, Phase 8.5 advisory verify/doctor/CI integration, Phase 8.6 rc1 review/hardening cleanup, T-0325 CloseState derived-state cleanup, T-0326 rc1 release-readiness preparation, T-0327 approval-gated publish, T-0328 installed-package recycle, and T-0329 post-rc1 docs cleanup are complete.
 - `0.3.1-rc.1` source/readiness is complete through T-0326; npm package visibility, tarball inspection, and corrected dist-tags are confirmed through T-0327; installed-package recycle is complete through T-0328; post-rc1 shared-doc wording cleanup is complete through T-0329.

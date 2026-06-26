@@ -1,0 +1,9 @@
+# Evidence
+
+| Time | Kind | Summary | Result | Visibility | JSONL |
+|---|---|---|---|---|---|
+| 2026-06-26T13:16:02.964Z | command-log | Installed-package recycle failed with reduced public evidence. (artifacts/package-recycle/2026-06-26T13-16-02.964Z-summary.json) | failed | public | artifacts/package-recycle/2026-06-26T13-16-02.964Z-summary.json |
+| 2026-06-26T13:19:40.565Z | command-log | Installed-package recycle failed with reduced public evidence. (artifacts/package-recycle/2026-06-26T13-19-40.565Z-summary.json) | failed | public | artifacts/package-recycle/2026-06-26T13-19-40.565Z-summary.json |
+| 2026-06-26T13:23:38.803Z | command-log | Manual installed-package acceptance smoke passed for hadara@next: npm view returned 0.3.4-rc.0; dist-tags were latest=0.3.3 and next=0.3.4-rc.0; temp-prefix install succeeded; installed version reported packageVersion 0.3.4-rc.0; help lifecycle, init, session start, task lifecycle, task finalize dry-run report, context pack --task, context slice docs/PROJECT_STATE.md, and temp cleanup passed. This resolves the T-0422 acceptance proof gap while preserving the package recycle helper context-graph residual. | passed | public | evidence.jsonl |
+| 2026-06-26T13:27:42.502Z | command-log | T-0422 close-source documentation checks passed: stale T-0418 active/finalize handoff wording no longer matches; docs now show T-0418 publish complete, T-0422 installed-package recycle proof complete with helper residual, and stable 0.3.4 decision pending; git diff --check passed. | passed | public | evidence.jsonl |
+| 2026-06-26T13:29:54.108Z | command-log | Task close validation for T-0422 returned ok:true before close evidence append; reportHash sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash sha256:3f9ba6ba832931512ffb434f77e13ab0b2cc00d371fb4816504bc2358ca1597d. | passed | public | evidence.jsonl |
