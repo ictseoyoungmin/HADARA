@@ -48,3 +48,5 @@ docs/design/mockups/*
 !docs/specs/0.3.1/**
 !docs/specs/0.3.3/
 !docs/specs/0.3.3/**
+!docs/specs/0.4.0/
+!docs/specs/0.4.0/**
