@@ -6,7 +6,7 @@ import { handleTaskCommand } from '../../src/cli/task';
 import { validateSchema } from '../../src/core/schema';
 import { appendEvidence } from '../../src/evidence/evidence';
 import { createTaskCapsule } from '../../src/task/task-capsule';
-import { createTaskCloseReport } from '../../src/task/task-close';
+import { createTaskCloseReport, executeTaskCloseEvidence } from '../../src/task/task-close';
 import { createTaskLifecycleReport } from '../../src/task/task-lifecycle';
 
 const roots: string[] = [];
@@ -44,8 +44,14 @@ describe('task lifecycle read model', () => {
         id: 'execute-finish',
         command: `hadara task finish --task ${task.id} --execute --json`,
         writeBoundary: 'task-local'
+      },
+      authoringGuidance: {
+        readOnly: true,
+        writesProse: false,
+        status: 'needs-authoring'
       }
     });
+    expect(report.authoringGuidance.items).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'goal', status: 'placeholder' })]));
     expect(validateSchema('hadara.task.lifecycle.v1', report).ok).toBe(true);
   });
 
@@ -138,13 +144,7 @@ describe('task lifecycle read model', () => {
 
 function appendCloseEvidence(root: string, taskId: string): void {
   const closePlan = createTaskCloseReport(root, taskId, 'dry-run');
-  appendEvidence(root, {
-    taskId,
-    kind: 'command-log',
-    summary: closePlan.closeEvidence.summary,
-    result: 'passed',
-    visibility: 'public'
-  });
+  executeTaskCloseEvidence(root, { ...closePlan, mode: 'execute' });
 }
 
 function snapshotFiles(root: string): Record<string, string> {

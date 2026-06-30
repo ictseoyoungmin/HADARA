@@ -5,6 +5,7 @@ import { createEvidenceLintReport } from './evidence-lint';
 import { createEvidenceListReport, EvidenceListReport } from './evidence-list';
 import { DashboardTimelineReport } from './dashboard-timeline';
 import { parseMarkdownRows } from './markdown-table';
+import { createTaskAuthoringGuidance } from '../task/authoring-guidance';
 import {
   createDashboardCacheKey,
   createDashboardProjectReference,
@@ -186,6 +187,7 @@ function createFastTaskWorkbenchReport(
         issues: 0
       }
     },
+    authoringGuidance: createTaskAuthoringGuidance(projectRoot, taskId),
     issues,
     nextActions
   };

@@ -4,6 +4,7 @@ import { createTaskAuditCloseReport, createTaskCloseReport, TaskAuditCloseReport
 import { createTaskFinishReport, TaskFinishReport } from './task-finish';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor } from './lifecycle-next-actions';
 import { createTaskReadyReport, TaskReadyReport } from './task-ready';
+import { createTaskAuthoringGuidance, TaskAuthoringGuidance } from './authoring-guidance';
 
 export type TaskLifecyclePhase =
   | 'draft'
@@ -32,6 +33,7 @@ export interface TaskLifecycleReport {
   satisfied: string[];
   blockers: TaskLifecycleBlocker[];
   repair?: TaskLifecycleRepair;
+  authoringGuidance: TaskAuthoringGuidance;
   primaryNextAction?: HadaraNextAction;
   nextActions: HadaraNextAction[];
   issues: TaskLifecycleIssue[];
@@ -98,6 +100,7 @@ export function createTaskLifecycleReport(projectRoot: string, taskId: string, o
   const nextAction = chooseNextAction(taskId, phase, reports, checks, repair);
   const issues = collectIssues(reports);
   const blockers = collectBlockers(phase, reports, checks, repair);
+  const authoringGuidance = createTaskAuthoringGuidance(projectRoot, taskId);
   const satisfied = Object.entries(checks)
     .filter(([, check]) => check.status === 'satisfied')
     .map(([id]) => id);
@@ -115,6 +118,7 @@ export function createTaskLifecycleReport(projectRoot: string, taskId: string, o
     satisfied,
     blockers,
     ...(repair ? { repair } : {}),
+    authoringGuidance,
     ...(nextAction ? { primaryNextAction: nextAction } : {}),
     nextActions: nextAction ? [nextAction] : [],
     issues
@@ -125,6 +129,7 @@ export function formatTaskLifecycleReport(report: TaskLifecycleReport): string {
   const lines = [`[HADARA] task lifecycle ${report.taskId}: ${report.phase}`];
   lines.push(`readOnly=${report.readOnly} ok=${report.ok}`);
   if (report.primaryNextAction) lines.push(`next=${report.primaryNextAction.command ?? report.primaryNextAction.summary ?? report.primaryNextAction.id}`);
+  lines.push(`authoring=${report.authoringGuidance.status}\t${report.authoringGuidance.summary}`);
   for (const [id, check] of Object.entries(report.checks)) lines.push(`${check.status.toUpperCase()}\t${id}\t${check.summary}`);
   for (const blocker of report.blockers) lines.push(`[${blocker.severity}] ${blocker.code}: ${blocker.summary}`);
   if (report.repair && report.repair.classification !== 'closed-valid') lines.push(`repair=${report.repair.classification}\t${report.repair.summary}`);

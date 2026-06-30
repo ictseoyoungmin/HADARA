@@ -43,8 +43,14 @@ describe('task finalize dry-run plan', () => {
         id: 'finalize-finish',
         command: `hadara task finish --task ${task.id} --execute --json`,
         writeBoundary: 'task-local'
+      },
+      authoringGuidance: {
+        readOnly: true,
+        writesProse: false,
+        status: 'needs-authoring'
       }
     });
+    expect(report.authoringGuidance.items).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'validation', status: 'placeholder' })]));
     expect(report.planHash).toMatch(/^sha256:[a-f0-9]{64}$/);
     expect(second.planHash).toBe(report.planHash);
     expect(report.steps.map((step) => step.id)).toEqual(['finish', 'ready', 'close', 'audit-close']);

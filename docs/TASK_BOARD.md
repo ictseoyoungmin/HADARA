@@ -443,3 +443,4 @@
 | T-0440 | T-04A13 Legacy Project Boundary | Done | tasks/T-0440-t-04a13-legacy-project-boundary | |
 | T-0441 | T-04A14 Session Start Read-Map Integration | Done | tasks/T-0441-t-04a14-session-start-read-map-integration | |
 | T-0442 | T-04A15 Context Pack Read-Map Integration | Done | tasks/T-0442-t-04a15-context-pack-read-map-integration | |
+| T-0443 | T-04A16 Authoring Guidance Read Models | Done | tasks/T-0443-t-04a16-authoring-guidance-read-models | |

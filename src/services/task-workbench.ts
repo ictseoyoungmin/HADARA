@@ -7,6 +7,7 @@ import { createEvidenceListReport } from './evidence-list';
 import { parseMarkdownRows } from './markdown-table';
 import { createDocsProtocolConsistencyReport, createProfileProtocolConsistencyReport } from './protocol-consistency';
 import { buildWorkbenchNextActions, WorkbenchNextAction } from './workbench-next-actions';
+import { createTaskAuthoringGuidance, TaskAuthoringGuidance } from '../task/authoring-guidance';
 
 type CloseState = 'not-closed' | 'closed-valid' | 'close-evidence-found-invalid' | 'close-evidence-malformed';
 type ReadinessStatus = 'ready' | 'current-blocked' | 'closed-valid-current-blocked' | 'missing-task';
@@ -83,6 +84,7 @@ export interface TaskWorkbenchReport {
       issues: number;
     };
   };
+  authoringGuidance: TaskAuthoringGuidance;
   issues: TaskCloseIssue[];
   nextActions: WorkbenchNextAction[];
 }
@@ -104,6 +106,7 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
   const closeEvidenceFound = closeState !== 'not-closed';
   const closedValid = closeState === 'closed-valid';
   const readiness = buildTaskWorkbenchReadiness(closePlan.ok, closedValid);
+  const authoringGuidance = createTaskAuthoringGuidance(projectRoot, taskId);
   const issues = [
     ...closePlan.issues,
     ...buildTaskBoardIssues(taskShow.task.id, taskShow.task.status, taskShow.task.capsule, taskBoard),
@@ -180,6 +183,7 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
         issues: profileDoctor.issues.length
       }
     },
+    authoringGuidance,
     issues,
     nextActions
   };
@@ -215,6 +219,9 @@ export function formatTaskWorkbenchReport(report: TaskWorkbenchReport): string {
     `- Close plan: ${report.sources.taskClosePlan.ok ? 'ready' : 'blocked'}`,
     `- Blockers: ${report.summary.blockers}`,
     `- Warnings: ${report.summary.warnings}`,
+    '',
+    'Authoring',
+    `- ${report.authoringGuidance.summary}`,
     '',
     'Suggested next'
   );
@@ -264,6 +271,13 @@ function buildMissingTaskReport(projectRoot: string, taskId: string, generatedAt
       protocolTask: { ok: false, issues: 0 },
       protocolDocs: { ok: false, issues: 0 },
       protocolProfile: { ok: false, issues: 0 }
+    },
+    authoringGuidance: {
+      readOnly: true,
+      writesProse: false,
+      status: 'task-missing',
+      summary: 'Task Capsule was not found; no task-owned prose can be inspected.',
+      items: []
     },
     issues,
     nextActions: []

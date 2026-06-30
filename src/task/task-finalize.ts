@@ -5,6 +5,7 @@ import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvid
 import { createTaskFinishReport, TaskFinishReport } from './task-finish';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor } from './lifecycle-next-actions';
 import { createTaskReadyReportFromClosePlan, TaskReadyReport } from './task-ready';
+import { createTaskAuthoringGuidance, TaskAuthoringGuidance } from './authoring-guidance';
 
 export type TaskFinalizeMode = 'dry-run' | 'execute' | 'execute-refused';
 export type TaskFinalizeStepId = 'finish' | 'ready' | 'close' | 'audit-close';
@@ -31,6 +32,7 @@ export interface TaskFinalizeReport {
   };
   steps: TaskFinalizeStep[];
   execution?: TaskFinalizeExecution;
+  authoringGuidance: TaskAuthoringGuidance;
   primaryNextAction?: HadaraNextAction;
   nextActions: HadaraNextAction[];
   issues: TaskFinalizeIssue[];
@@ -102,6 +104,7 @@ export function formatTaskFinalizeReport(report: TaskFinalizeReport): string {
   const lines = [`[HADARA] task finalize ${report.taskId}: ${report.mode}`];
   lines.push(`readOnly=${report.readOnly} ok=${report.ok} planHash=${report.planHash ?? 'none'}`);
   if (report.primaryNextAction) lines.push(`next=${report.primaryNextAction.command ?? report.primaryNextAction.summary ?? report.primaryNextAction.id}`);
+  lines.push(`authoring=${report.authoringGuidance.status}\t${report.authoringGuidance.summary}`);
   for (const step of report.steps) lines.push(`${step.status.toUpperCase()}\t${step.id}\t${step.command}`);
   for (const issue of report.issues) lines.push(`[${issue.severity}] ${issue.code}: ${issue.message}`);
   return lines.join('\n');
@@ -213,6 +216,7 @@ function createPostExecutionReport(
   const issues = collectIssues(taskId, reports);
   const nextAction = createPrimaryNextAction(taskId, steps, issues);
   const finalAudit = reports.audit?.auditVerdict.verdict === 'closed-valid';
+  const authoringGuidance = createTaskAuthoringGuidance(projectRoot, taskId);
   const execution: TaskFinalizeExecution = {
     requestedPlanHash,
     currentPlanHash: reviewedPlanHash,
@@ -233,6 +237,7 @@ function createPostExecutionReport(
     summary: summarizeSteps(steps, reports),
     steps,
     execution,
+    authoringGuidance,
     ...(nextAction ? { primaryNextAction: nextAction } : {}),
     nextActions: nextAction ? [nextAction] : [],
     issues
@@ -251,6 +256,8 @@ function createFinalizeReport(
   reports?: FinalizeReports
 ): TaskFinalizeReport {
   const nextAction = createPrimaryNextAction(taskId, steps, issues);
+  const projectRoot = reports?.finish.projectRoot ?? '';
+  const authoringGuidance: TaskAuthoringGuidance = projectRoot ? createTaskAuthoringGuidance(projectRoot, taskId) : missingTaskAuthoringGuidance();
   return {
     schemaVersion: 'hadara.task.finalize.v1',
     command: 'task.finalize',
@@ -264,9 +271,20 @@ function createFinalizeReport(
     summary: summarizeSteps(steps, reports),
     steps,
     ...(execution ? { execution } : {}),
+    authoringGuidance,
     ...(nextAction ? { primaryNextAction: nextAction } : {}),
     nextActions: nextAction ? [nextAction] : [],
     issues
+  };
+}
+
+function missingTaskAuthoringGuidance(): TaskAuthoringGuidance {
+  return {
+    readOnly: true,
+    writesProse: false,
+    status: 'task-missing',
+    summary: 'Task Capsule was not found; no task-owned prose can be inspected.',
+    items: []
   };
 }
 

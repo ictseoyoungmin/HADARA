@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0442 T-04A15 Context Pack Read-Map Integration |
-| Active Task | T-04A16 Authoring Guidance Read Models (next) |
+| Latest Completed Task | T-0443 T-04A16 Authoring Guidance Read Models |
+| Active Task | T-04A17 Init Doctor and Profile Diagnostics (next) |
 
 ## Next Planned Line
 
@@ -79,6 +79,8 @@ T-0440 follow-up note: full T-04A13 legacy project mutation blocking is implemen
 T-0441 follow-up note: T-04A14 Session Start Read-Map Integration is implemented. Task-scoped `hadara session start --task T-XXXX --json` now includes compact docs read-map metadata derived from `docs read-map`, adds a `docs-read-map` guidance command, and surfaces active task Source Document drift through existing TASK source-hash validation; no-task Session Start remains bounded without task read-map metadata. Docker focused validation passed 3 files / 44 tests, workspace `dist` was refreshed, built CLI smoke passed for T-0441 Session Start read-map metadata, and `git diff --check` passed. Evidence: `ev:T-0441:619636a6d5a34be2a42bf1d9`, `ev:T-0441:22402ccb85324b76a2d2bc79`. The next 0.4 task is T-04A15 Context Pack Read-Map Integration.
 
 T-0442 follow-up note: T-04A15 Context Pack Read-Map Integration is implemented. `hadara context pack --task T-XXXX --json` now consumes docs read-map policy when the canonical docs registry is present, injects read-map active task/spec entries into default read buckets, prioritizes `active-task` and `active-spec` ahead of current-state/workflow docs, and filters read-map `doNotReadByDefault` paths out of default `readFirst`/`readIfNeeded`. Docker focused validation passed 3 files / 24 tests, workspace `dist` was refreshed, built CLI smoke passed for T-0442 context-pack read-map metadata/exclusion behavior, and the initial active-spec budget miss was resolved by `ev:T-0442:fb4472fd84544f7ea682ade0`. Evidence: `ev:T-0442:0442975b9ace4166a801f5a6`, `ev:T-0442:fb4472fd84544f7ea682ade0`. The next 0.4 task is T-04A16 Authoring Guidance Read Models.
+
+T-0443 follow-up note: T-04A16 Authoring Guidance Read Models is implemented. `hadara task status --task T-XXXX --json`, `hadara task lifecycle --task T-XXXX --json`, and `hadara task finalize --task T-XXXX --json` now include additive read-only `authoringGuidance` with `writesProse:false`, task-owned section items, and placeholder/pending/current status so agents can see what prose/table slots to update next without CLI prose mutation. Docker ext4 focused build/tests passed 3 files / 22 tests, workspace `dist` was refreshed, and built CLI smoke passed for T-0443 across all three reports. Evidence: `ev:T-0443:5b1829f6efe44f15913e30b4`, `ev:T-0443:966731c29ab64153af2f79e8`. The next 0.4 task is T-04A17 Init Doctor and Profile Diagnostics.
 
 Phase 8 / 0.3.1 is complete through post-rc1 documentation cleanup. It carried Work Item A and Work Item F into implementation as status token governance, document ownership/write-boundary governance, task handoff close-state clarity, installed-package recycle findings cleanup, state consistency projection, and advisory verification gates. The Phase 8 specs are staged under `docs/specs/0.3.1/`; the first rc1 implementation sequence is staged under `docs/specs/0.3.1/rc1/`. Phase 8.1 through Phase 8.6 are complete through T-0324, T-0325 completed the follow-up CloseState derived-state cleanup after review, T-0326 prepared `hadara@0.3.1-rc.1` release readiness without publish mutation, T-0327 published `hadara@0.3.1-rc.1`, verified npm visibility/tarball contents, hardened future rc publish tags, and corrected npm dist-tags so stable `0.3.0` stays on `latest` while rc1 is available as `next`, T-0328 verified the published rc1 package from installed consumer paths in the `hadara-dev` container, and T-0329 refreshed post-rc1 handoff/release-note wording after reviewer feedback.
 
@@ -212,9 +214,9 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0442 T-04A15 Context Pack Read-Map Integration.
-- Next 0.4 task is T-04A16 Authoring Guidance Read Models; continue from `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md`.
-- T-0442 made task-scoped Context Pack consume docs read-map policy, prioritize active task/spec entries, and filter excluded/unregistered spec paths from default read buckets; focused Docker validation and built CLI smoke passed in `ev:T-0442:0442975b9ace4166a801f5a6` and `ev:T-0442:fb4472fd84544f7ea682ade0`.
+- Latest completed task is T-0443 T-04A16 Authoring Guidance Read Models.
+- Next 0.4 task is T-04A17 Init Doctor and Profile Diagnostics; continue from `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md`.
+- T-0443 made task status, lifecycle, and finalize reports emit additive read-only authoring guidance over task-owned prose/table sections; focused Docker validation and built CLI smoke passed in `ev:T-0443:5b1829f6efe44f15913e30b4` and `ev:T-0443:966731c29ab64153af2f79e8`.
 - T-0431 implemented read-only `hadara docs read-map --task T-XXXX --json` and `hadara docs inbox --json`, added `hadara.docs.readMap.v1` and `hadara.docs.inbox.v1`, command registry/schema fixtures, focused tests, refreshed workspace `dist`, and built CLI smokes passed in `ev:T-0431:a81383c6d7894693a45a95ed`.
 - T-0430 implemented registry-first `hadara docs register --path <path> --json` over `.hadara/docs-registry.json`, added `hadara.docs.register.v1`, command registry/schema fixtures, focused tests, refreshed workspace `dist`, and built CLI smoke passed in `ev:T-0430:1933b10f80184f8abb9540cb`.
 - T-0429 implemented non-overlapping generated templates: `AGENTS.md` owns Required Reading/safety only, `.hadara/context/HADARA_CONTEXT.md` is routing-only, and `docs/HADARA_WORKFLOW.md` owns lifecycle/context/evidence/document timing guidance. Docker build plus focused init tests passed, workspace `dist` was refreshed, and built governed init/doctor template smoke returned `ok:true` in `ev:T-0429:ab675a5933c84286b8d255fc`.

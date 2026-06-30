@@ -64,8 +64,20 @@ describe('task workbench status report', () => {
         evidenceLint: { ok: true, issues: 0 },
         evidenceList: { ok: true, records: 1 },
         taskClosePlan: { ok: false, mode: 'dry-run' }
+      },
+      authoringGuidance: {
+        readOnly: true,
+        writesProse: false,
+        status: 'needs-authoring'
       }
     });
+    expect(report.authoringGuidance.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'source-documents', path: `tasks/${task.id}-workbench-report/TASK.md`, status: 'placeholder' }),
+        expect.objectContaining({ id: 'goal', status: 'placeholder' }),
+        expect.objectContaining({ id: 'acceptance', status: 'placeholder' })
+      ])
+    );
     expect(report.sources.evidenceList.latest).toMatchObject({ kind: 'note', result: 'passed', visibility: 'public' });
     expect(report.nextActions.length).toBeGreaterThan(0);
     expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
@@ -74,6 +86,7 @@ describe('task workbench status report', () => {
     expect(formatTaskWorkbenchReport(report)).toContain('Evidence\n- Lint: ok');
     expect(formatTaskWorkbenchReport(report)).toContain('Protocol\n- Task doctor:');
     expect(formatTaskWorkbenchReport(report)).toContain('Close\n- Close plan:');
+    expect(formatTaskWorkbenchReport(report)).toContain('Authoring\n- ');
     expect(formatTaskWorkbenchReport(report)).toContain('Suggested next');
     expect(snapshotProject(root)).toEqual(before);
   });
@@ -229,7 +242,7 @@ function snapshotProject(root: string): Record<string, string> {
 function setTaskStatus(taskDir: string, status: string): void {
   const taskPath = path.join(taskDir, 'TASK.md');
   const content = fs.readFileSync(taskPath, 'utf8');
-  fs.writeFileSync(taskPath, content.replace(/^## Status\s*\n+[\s\S]*?(?=\n## Status History)/m, `## Status\n\n${status}\n`), 'utf8');
+  fs.writeFileSync(taskPath, content.replace(/\| Status \| Draft \|/g, `| Status | ${status} |`), 'utf8');
 }
 
 function replaceTaskBoardRow(root: string, taskId: string, replacement: string): void {

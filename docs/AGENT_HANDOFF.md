@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0442. |
-| Current Phase | 0.4 context-pack read-map integration complete plus 0.3.4 stable readiness pending | T-0442 makes task-scoped Context Pack consume docs read-map policy; T-04A16 Authoring Guidance Read Models is next. |
-| Latest Completed Task | T-0442 T-04A15 Context Pack Read-Map Integration | Context Pack now prioritizes read-map active task/spec entries and filters read-map excluded/unregistered spec paths out of default read buckets. |
-| Active / Next Task | T-04A16 Authoring Guidance Read Models | Make `task status`, lifecycle, and finalize guidance tell agents what to write next without silently mutating agent-owned prose. |
-| Validation Baseline | T-0442 context-pack read-map integration plus T-0423 helper residual fix | T-0442 Docker focused build/tests and built CLI smoke passed in `ev:T-0442:0442975b9ace4166a801f5a6` and `ev:T-0442:fb4472fd84544f7ea682ade0`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0443. |
+| Current Phase | 0.4 authoring guidance read models complete plus 0.3.4 stable readiness pending | T-0443 makes task status/lifecycle/finalize reports show read-only authoring guidance; T-04A17 Init Doctor and Profile Diagnostics is next. |
+| Latest Completed Task | T-0443 T-04A16 Authoring Guidance Read Models | Task status, lifecycle, and finalize reports now include additive read-only `authoringGuidance` without CLI prose mutation. |
+| Active / Next Task | T-04A17 Init Doctor and Profile Diagnostics | Harden scaffold/profile diagnostics, duplicate-doc detection, and product-default checks. |
+| Validation Baseline | T-0443 authoring guidance read models plus T-0423 helper residual fix | T-0443 Docker focused build/tests and built CLI smoke passed in `ev:T-0443:5b1829f6efe44f15913e30b4` and `ev:T-0443:966731c29ab64153af2f79e8`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-04A16 Authoring Guidance Read Models | Next. Make `task status`, lifecycle, and finalize guidance tell agents what to write next without silently mutating agent-owned prose. | `ev:T-0442:0442975b9ace4166a801f5a6`, `ev:T-0442:fb4472fd84544f7ea682ade0` |
+| T-04A17 Init Doctor and Profile Diagnostics | Next. Harden scaffold/profile diagnostics, duplicate-doc detection, and product-default checks. | `ev:T-0443:5b1829f6efe44f15913e30b4`, `ev:T-0443:966731c29ab64153af2f79e8` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0443 / T-04A16 Authoring Guidance Read Models | Added shared read-only `authoringGuidance` to task status, lifecycle, finalize, and fast dashboard workbench projections; guidance reports task-owned section slots without writing prose. | `ev:T-0443:5b1829f6efe44f15913e30b4`, `ev:T-0443:966731c29ab64153af2f79e8` |
 | T-0442 / T-04A15 Context Pack Read-Map Integration | Added docs read-map consumption to Context Pack, active task/spec read-map priority, excluded spec filtering, focused tests, refreshed `dist`, built CLI smoke coverage, and a dogfood memory note. | `ev:T-0442:0442975b9ace4166a801f5a6`, `ev:T-0442:fb4472fd84544f7ea682ade0` |
 | T-0441 / T-04A14 Session Start Read-Map Integration | Added compact task-scoped Session Start docs read-map metadata, `docs-read-map` guidance, source document drift surfacing, focused tests, refreshed `dist`, and built CLI smoke coverage. | `ev:T-0441:619636a6d5a34be2a42bf1d9`, `ev:T-0441:22402ccb85324b76a2d2bc79` |
-| T-0440 / T-04A13 Legacy Project Boundary | Added shared legacy mutation boundary diagnostics, guarded representative 0.4 mutation CLI surfaces, added HADARA-dev generic scaffold metadata, focused tests, refreshed `dist`, and built CLI smokes. | `ev:T-0440:8ee5f6fde6e74b3e97487556`, `ev:T-0440:ced75760191e43c8aa18b42a`, `ev:T-0440:04b3e65ed59544da89d3ee77` |
 
 ## Current Known Problems
 
@@ -95,14 +95,15 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Open T-04A16 Authoring Guidance Read Models. | T-04A15 made context pack consume read-map policy; the next capsule should improve task status/lifecycle/finalize guidance about what agents should write next. | `ev:T-0442:0442975b9ace4166a801f5a6`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
+| Open T-04A17 Init Doctor and Profile Diagnostics. | T-04A16 added read-only authoring guidance to task status/lifecycle/finalize; the next capsule should harden scaffold/profile diagnostics, duplicate-doc detection, and product-default checks. | `ev:T-0443:5b1829f6efe44f15913e30b4`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| T-0442 / T-04A15 Context Pack Read-Map Integration | Docker ext4 build plus focused context-pack/docs-registry/session-start tests passed 24 tests; workspace `dist` refreshed; built T-0442 `context pack --task T-0442 --json` reported read-map metadata and excluded tmp unregistered specs from default read buckets. | Evidence `ev:T-0442:0442975b9ace4166a801f5a6`, `ev:T-0442:fb4472fd84544f7ea682ade0`; authoring guidance read models remain T-04A16 scope. |
+| T-0443 / T-04A16 Authoring Guidance Read Models | Docker ext4 build plus focused task status/lifecycle/finalize tests passed 22 tests; workspace `dist` refreshed; built T-0443 task status/lifecycle/finalize smokes reported `authoringGuidance.readOnly:true` and `writesProse:false`. | Evidence `ev:T-0443:5b1829f6efe44f15913e30b4`, `ev:T-0443:966731c29ab64153af2f79e8`; init doctor/profile diagnostics remain T-04A17 scope. |
+| T-0442 / T-04A15 Context Pack Read-Map Integration | Docker ext4 build plus focused context-pack/docs-registry/session-start tests passed 24 tests; workspace `dist` refreshed; built T-0442 `context pack --task T-0442 --json` reported read-map metadata and excluded tmp unregistered specs from default read buckets. | Evidence `ev:T-0442:0442975b9ace4166a801f5a6`, `ev:T-0442:fb4472fd84544f7ea682ade0`. |
 | T-0441 / T-04A14 Session Start Read-Map Integration | Docker ext4 build plus focused session-start/docs-registry/harness tests passed 44 tests; workspace `dist` refreshed; built T-0441 `session start --task T-0441 --json` reported docs read-map metadata. | Evidence `ev:T-0441:619636a6d5a34be2a42bf1d9`, `ev:T-0441:22402ccb85324b76a2d2bc79`; context-pack read-map consumption remains T-04A15 scope. |
 | T-0438 / T-04A12 Close Source Contract | Docker ext4 build plus focused close-source/close/finalize/schema/registry tests passed 31 tests; workspace `dist` refreshed; built T-0438 `task close-source` and draft harness returned `ok:true`. | Evidence `ev:T-0438:9462d50758aa418c84318576`; shared-state close-source declarations remain later hardening scope. |
 | T-0437 / T-04A11 Close Proof Placement | Docker build plus focused close/projection/finalize/schema/registry tests passed 31 tests; workspace `dist` refreshed; built T-0437 draft harness returned `ok:true`; built close dry-run returned expected Draft blockers while exposing `closeEvidenceSnapshot`. | Evidence `ev:T-0437:fc850943950547939127f430`; T-0438 later added the close-source payload model. |
