@@ -3,7 +3,7 @@ import path from 'node:path';
 import { resolveHadaraPaths } from '../core/paths';
 import { ensureDir, writeFileIfMissing } from '../core/fs';
 import { getFlag, getRequiredStringOption, getStringOption } from './args';
-import { DOCS_REGISTRY_PATH, createHadaraContextDoc, createSeedDocumentRegistry, registryJson, renderDocRegistryMarkdown } from '../services/docs-registry';
+import { DOCS_REGISTRY_PATH, createHadaraContextDoc, createSeedDocumentRegistry, registryJson } from '../services/docs-registry';
 import { managedSectionBlock } from '../services/managed-sections';
 import type { DocumentRegistryFile } from '../services/docs-registry';
 
@@ -22,6 +22,7 @@ interface InitProfileSpec {
     securityModel: boolean;
     testStrategy: boolean;
     roadmap: boolean;
+    agentHandoff: boolean;
   };
 }
 
@@ -81,9 +82,9 @@ interface InitProjectOptions {
 const INIT_PROFILE_SPECS: Record<InitProfile, InitProfileSpec> = {
   basic: {
     profile: 'basic',
-    generatedDocsDescription: 'Core session docs plus task workflow commands',
+    generatedDocsDescription: 'Core current-state docs, workflow reference, registries, and task directory',
     intendedUse: 'Small projects that need Task Capsules, evidence, and handoff discipline without planning overhead.',
-    specialNotes: 'SOP required reading references core docs, task workflow docs, and active Task Capsule docs.',
+    specialNotes: 'Basic keeps continuation fields in PROJECT_STATE instead of generating AGENT_HANDOFF.',
     docs: {
       architecture: false,
       developmentSlices: false,
@@ -91,37 +92,40 @@ const INIT_PROFILE_SPECS: Record<InitProfile, InitProfileSpec> = {
       refactorLog: false,
       securityModel: false,
       testStrategy: false,
-      roadmap: false
+      roadmap: false,
+      agentHandoff: false
     }
   },
   standard: {
     profile: 'standard',
-    generatedDocsDescription: 'Core docs plus planning, architecture, decision, and validation docs',
-    intendedUse: 'Most multi-session projects that need roadmap slices and repeatable validation.',
+    generatedDocsDescription: 'Core scaffold plus architecture, roadmap, and decision docs',
+    intendedUse: 'Most multi-session projects that need lightweight planning and decision context.',
     specialNotes: 'Default profile. Optional integrations must be registered before agents rely on them.',
     docs: {
       architecture: true,
-      developmentSlices: true,
+      developmentSlices: false,
       decisions: true,
       refactorLog: false,
       securityModel: false,
-      testStrategy: true,
-      roadmap: false
+      testStrategy: false,
+      roadmap: true,
+      agentHandoff: false
     }
   },
   governed: {
     profile: 'governed',
-    generatedDocsDescription: 'Standard docs plus security, refactor log, and roadmap docs',
+    generatedDocsDescription: 'Standard scaffold plus handoff and security docs',
     intendedUse: 'Long-lived projects with stronger governance, security boundaries, refactor history, or roadmap-level planning.',
-    specialNotes: 'Project-specific contracts still must be manually registered in the SOP when they become real.',
+    specialNotes: 'Governed projects generate AGENT_HANDOFF for compact continuation state.',
     docs: {
       architecture: true,
-      developmentSlices: true,
+      developmentSlices: false,
       decisions: true,
-      refactorLog: true,
+      refactorLog: false,
       securityModel: true,
-      testStrategy: true,
-      roadmap: true
+      testStrategy: false,
+      roadmap: true,
+      agentHandoff: true
     }
   }
 };
@@ -217,33 +221,54 @@ function createGeneratedScaffoldFiles(profile: InitProfile): GeneratedScaffoldFi
   const docsRegistry = createSeedDocumentRegistry(profile);
   const files: GeneratedScaffoldFile[] = [
     { path: '.hadara/context/HADARA_CONTEXT.md', content: createHadaraContextDoc(profile) },
+    { path: '.hadara/scaffold.json', content: createScaffoldJson(profile) },
     { path: '.hadara/docs-registry.json', content: registryJson(docsRegistry) },
-    { path: 'docs/DOC_REGISTRY.md', content: renderDocRegistryMarkdown(docsRegistry) },
+    { path: '.hadara/slot-registry.json', content: createSlotRegistryJson() },
     { path: 'docs/PROJECT_STATE.md', content: createProjectStateDoc(profile) },
     { path: 'docs/TASK_BOARD.md', content: createTaskBoardDoc() },
-    { path: 'docs/AGENT_HANDOFF.md', content: createAgentHandoffDoc() },
-    { path: 'docs/IMPLEMENTATION_SOP.md', content: createImplementationSopDoc(spec) },
-    { path: 'docs/TASK_WORKFLOW_COMMANDS.md', content: createTaskWorkflowCommandsDoc() },
+    { path: 'docs/HADARA_WORKFLOW.md', content: createHadaraWorkflowDoc() },
     { path: 'AGENTS.md', content: createAgentsDoc(spec) },
-    { path: '.gitignore', content: createGitignoreDoc() }
+    { path: '.gitignore', content: createGitignoreDoc() },
+    { path: 'tasks/.gitkeep', content: '' }
   ];
   if (spec.docs.architecture) files.push({ path: 'docs/ARCHITECTURE.md', content: createArchitectureDoc(profile) });
-  if (spec.docs.developmentSlices) files.push({ path: 'docs/DEVELOPMENT_SLICES.md', content: createDevelopmentSlicesDoc() });
   if (spec.docs.decisions) files.push({ path: 'docs/DECISIONS.md', content: createDecisionsDoc() });
-  if (spec.docs.refactorLog) files.push({ path: 'docs/REFACTOR_LOG.md', content: createRefactorLogDoc() });
   if (spec.docs.securityModel) files.push({ path: 'docs/SECURITY_MODEL.md', content: createSecurityModelDoc() });
-  if (spec.docs.testStrategy) files.push({ path: 'docs/TEST_STRATEGY.md', content: createTestStrategyDoc() });
   if (spec.docs.roadmap) files.push({ path: 'docs/ROADMAP.md', content: createRoadmapDoc() });
+  if (spec.docs.agentHandoff) files.push({ path: 'docs/AGENT_HANDOFF.md', content: createAgentHandoffDoc() });
   return files;
 }
 
 function createInitDoctorReport(projectRoot: string): InitFollowUpReport {
   const issues: InitIssue[] = [];
   const actions: InitAction[] = [];
-  const requiredCore = ['AGENTS.md', '.gitignore', '.hadara/context/HADARA_CONTEXT.md', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/IMPLEMENTATION_SOP.md', 'docs/TASK_WORKFLOW_COMMANDS.md'];
-  for (const relativePath of requiredCore) {
+  const requiredCore: Array<{ path: string; code: string }> = [
+    { path: 'AGENTS.md', code: 'INIT_CORE_DOC_MISSING' },
+    { path: '.gitignore', code: 'INIT_GITIGNORE_MISSING' },
+    { path: '.hadara/context/HADARA_CONTEXT.md', code: 'INIT_CORE_DOC_MISSING' },
+    { path: '.hadara/scaffold.json', code: 'INIT_PROTOCOL_MISSING' },
+    { path: '.hadara/docs-registry.json', code: 'INIT_DOCS_REGISTRY_MISSING' },
+    { path: '.hadara/slot-registry.json', code: 'INIT_SLOT_REGISTRY_MISSING' },
+    { path: 'docs/PROJECT_STATE.md', code: 'INIT_CORE_DOC_MISSING' },
+    { path: 'docs/TASK_BOARD.md', code: 'INIT_CORE_DOC_MISSING' },
+    { path: 'docs/HADARA_WORKFLOW.md', code: 'INIT_WORKFLOW_DOC_MISSING' }
+  ];
+  for (const required of requiredCore) {
+    const relativePath = required.path;
     if (!fs.existsSync(path.join(projectRoot, relativePath))) {
-      issues.push({ severity: 'error', code: 'INIT_CORE_DOC_MISSING', path: relativePath, message: `${relativePath} is missing from the init scaffold.` });
+      issues.push({ severity: 'error', code: required.code, path: relativePath, message: `${relativePath} is missing from the init scaffold.` });
+    }
+  }
+
+  const scaffold = readProjectText(projectRoot, '.hadara/scaffold.json');
+  if (scaffold !== null) {
+    try {
+      const parsed = JSON.parse(scaffold) as { hadaraProtocol?: unknown };
+      if (parsed.hadaraProtocol !== '0.4') {
+        issues.push({ severity: 'error', code: 'INIT_PROTOCOL_UNSUPPORTED', path: '.hadara/scaffold.json', message: '.hadara/scaffold.json must declare hadaraProtocol "0.4".' });
+      }
+    } catch (error) {
+      issues.push({ severity: 'error', code: 'INIT_PROTOCOL_UNSUPPORTED', path: '.hadara/scaffold.json', message: `.hadara/scaffold.json could not be parsed: ${error instanceof Error ? error.message : String(error)}` });
     }
   }
 
@@ -562,6 +587,7 @@ const CANONICAL_TABLE_HEADERS: Record<string, string[]> = {
   'docs/PROJECT_STATE.md': ['| Field | Value |', '| Area | Status | Notes |', '| Source | Path | Purpose |'],
   'docs/AGENT_HANDOFF.md': ['| Area | State | Notes |', '| Task | Summary | Evidence |', '| Issue | Impact | Next Step |', '| Step | Reason | Done Evidence |', '| Check | Latest Evidence | Notes |', '| History Type | Path | When to Use |'],
   'docs/TASK_BOARD.md': ['| ID | Title | Status | Capsule | Notes |'],
+  'docs/HADARA_WORKFLOW.md': ['| Step | Command / Action | Meaning |', '| Order | Source | Rule |', '| Timing | Update |'],
   'docs/IMPLEMENTATION_SOP.md': ['| Document | When to Read | Purpose |', '| Profile | Scale | Generated Docs | Intended Use | Special Notes |', '| Document | Required Structure |'],
   'docs/TASK_WORKFLOW_COMMANDS.md': ['| Command | Default Write Behavior | Notes |'],
   'docs/ARCHITECTURE.md': ['| Field | Value |', '| Boundary | Rule | Notes |', '| Component | Path / Surface | Responsibility | Status |'],
@@ -829,22 +855,22 @@ function detectProfileMetadataMismatches(projectRoot: string): InitIssue[] {
 }
 
 function inferProfileFromGeneratedDocs(projectRoot: string): InitProfile {
-  if (['docs/SECURITY_MODEL.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md'].some((relativePath) => fs.existsSync(path.join(projectRoot, relativePath)))) {
+  if (['docs/SECURITY_MODEL.md', 'docs/AGENT_HANDOFF.md'].some((relativePath) => fs.existsSync(path.join(projectRoot, relativePath)))) {
     return 'governed';
   }
-  if (['docs/ARCHITECTURE.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/DECISIONS.md', 'docs/TEST_STRATEGY.md'].some((relativePath) => fs.existsSync(path.join(projectRoot, relativePath)))) {
+  if (['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md'].some((relativePath) => fs.existsSync(path.join(projectRoot, relativePath)))) {
     return 'standard';
   }
   return 'basic';
 }
 
 function requiredDocsForProfile(profile: InitProfile): string[] {
-  const docs = ['docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/IMPLEMENTATION_SOP.md', 'docs/TASK_WORKFLOW_COMMANDS.md'];
+  const docs = ['docs/PROJECT_STATE.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
   if (profile === 'standard' || profile === 'governed') {
-    docs.push('docs/ARCHITECTURE.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/DECISIONS.md', 'docs/TEST_STRATEGY.md');
+    docs.push('docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md');
   }
   if (profile === 'governed') {
-    docs.push('docs/SECURITY_MODEL.md', 'docs/ROADMAP.md');
+    docs.push('docs/AGENT_HANDOFF.md', 'docs/SECURITY_MODEL.md');
   }
   return docs;
 }
@@ -886,6 +912,75 @@ function insertRequiredReadingRow(sop: string, row: string): string {
 function parseIntegration(value: string): 'hermes' | 'mcp' {
   if (value === 'hermes' || value === 'mcp') return value;
   throw new Error(`unsupported init integration: ${value}; expected hermes or mcp`);
+}
+
+function createScaffoldJson(profile: InitProfile): string {
+  return `${JSON.stringify({
+    schemaVersion: 'hadara.projectScaffold.v1',
+    hadaraProtocol: '0.4',
+    profile,
+    taskCapsuleSchema: 'hadara.taskCapsule.v1',
+    docsRegistrySchema: 'hadara.docsRegistry.v2',
+    managedSlotSchema: 'hadara.managedSlot.v2',
+    createdWith: 'hadara@0.4.0',
+    docsRegistryPath: '.hadara/docs-registry.json',
+    slotRegistryPath: '.hadara/slot-registry.json'
+  }, null, 2)}\n`;
+}
+
+function createSlotRegistryJson(): string {
+  return `${JSON.stringify({
+    schemaVersion: 'hadara.managedSlot.v2',
+    registryVersion: 1,
+    slots: []
+  }, null, 2)}\n`;
+}
+
+function createHadaraWorkflowDoc(): string {
+  return `# HADARA_WORKFLOW
+
+## Purpose
+
+This document owns the generic HADARA project workflow for this repository.
+
+## Minimal Loop
+
+| Step | Command / Action | Meaning |
+|---|---|---|
+| 1 | \`hadara task next --json\` | Find the next suitable Task Capsule. |
+| 2 | \`hadara task create "<title>" --json\` | Create a capsule when no suitable capsule exists. |
+| 3 | Update active Task Capsule docs | Define goal, plan, context, acceptance, risks, and files before implementation. |
+| 4 | Implement and validate | Keep evidence tied to real command results. |
+| 5 | \`hadara evidence add-command --task T-XXXX --summary "..." --result passed --json\` | Record validation evidence; this records, it does not execute the command. |
+| 6 | \`hadara task finalize --task T-XXXX --json\` | Review the dry-run close plan and plan hash. |
+| 7 | \`hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json\` | Close only after inspecting the dry-run output. |
+
+## Read Authority Rules
+
+Agents should read in this order:
+
+| Order | Source | Rule |
+|---|---|---|
+| 1 | HADARA CLI read models | Prefer task/session/context/status read models before broad manual reads. |
+| 2 | Files returned by read models | Read exact candidates that are relevant to the task. |
+| 3 | Active Task Capsule docs | Keep task-local scope and evidence authoritative. |
+| 4 | Shared state docs | Read only when referenced or when tracked state changes. |
+
+## Documentation Timing
+
+| Timing | Update |
+|---|---|
+| Before implementation | \`TASK.md\`, \`PLAN.md\`, \`CONTEXT.md\`, and \`ACCEPTANCE.md\` |
+| During implementation | \`FILES.md\`, \`RISKS.md\`, and \`DECISIONS.md\` when they change |
+| After validation | \`TESTS.md\`, \`EVIDENCE.md\`, and canonical evidence records |
+| Before finalize execute | \`HANDOFF.md\` and shared state docs when tracked state changed |
+
+## Evidence Rules
+
+Evidence must reflect real execution results. Fabricated or assumed results are invalid.
+
+Do not hand-edit canonical evidence logs.
+`;
 }
 
 function createHermesIntegrationDoc(): string {
@@ -930,6 +1025,9 @@ function createMcpIntegrationDoc(): string {
 }
 
 function createProjectStateDoc(profile: InitProfile): string {
+  const handoffRow = profile === 'governed'
+    ? '| Next-session handoff | `docs/AGENT_HANDOFF.md` | Compact continuation state. |\n'
+    : '';
   const productTable = managedSectionBlock('project-state-metadata', {
     schema: 'hadara.managedSection.v1',
     owner: 'project-state.update',
@@ -971,7 +1069,7 @@ ${productTable}
 |---|---|---|
 | Current state | \`docs/PROJECT_STATE.md\` | Product and capability state. |
 | Work queue | \`docs/TASK_BOARD.md\` | Task status and queue. |
-| Next-session handoff | \`docs/AGENT_HANDOFF.md\` | Compact continuation state. |
+${handoffRow}| Workflow | \`docs/HADARA_WORKFLOW.md\` | Generic HADARA lifecycle and evidence rules. |
 | Task details | \`tasks/T-*/\` | Task-local evidence and decisions. |
 `;
 }
@@ -1006,7 +1104,7 @@ function createAgentHandoffDoc(): string {
   }, `| Area | State | Notes |
 |---|---|---|
 | Scaffold | Initialized | HADARA protocol scaffold is initialized. |
-| Required Reading | Pending | Read \`PROJECT_STATE\`, \`AGENT_HANDOFF\`, \`TASK_BOARD\`, \`IMPLEMENTATION_SOP\`, and \`TASK_WORKFLOW_COMMANDS\` before starting. |
+| Required Reading | Pending | Read \`PROJECT_STATE\`, \`AGENT_HANDOFF\`, \`TASK_BOARD\`, and \`HADARA_WORKFLOW\` before starting. |
 `);
   return `# AGENT_HANDOFF
 
@@ -1068,7 +1166,7 @@ function createArchitectureDoc(profile: InitProfile): string {
 |---|---|---|---|
 | Task Capsules | \`tasks/T-*/\` | Task-local scope, evidence, decisions, and handoff. | Active |
 | Evidence records | \`EVIDENCE.md\`, \`evidence.jsonl\` | Validation evidence and artifact references. | Active |
-| Handoff | \`docs/AGENT_HANDOFF.md\` | Next-session continuation state. | Active |
+| Handoff | \`docs/PROJECT_STATE.md\` or \`docs/AGENT_HANDOFF.md\` | Next-session continuation state. | Active |
 `;
 }
 
@@ -1622,42 +1720,34 @@ function createAgentsDoc(spec: InitProfileSpec): string {
   const requiredReadingRows = [
     ['1', '`.hadara/context/HADARA_CONTEXT.md`', 'Every session', 'Compact project-local context anchor and read routing.'],
     ['2', '`docs/PROJECT_STATE.md`', 'Every session', 'Current product and capability state.'],
-    ['3', '`docs/AGENT_HANDOFF.md`', 'Every session', 'Compact continuation state.'],
-    ['4', '`docs/TASK_BOARD.md`', 'Every session', 'Current task queue and status.'],
-    ['5', '`docs/IMPLEMENTATION_SOP.md`', 'Every session', 'Local workflow and required-reading registry.'],
-    ['6', '`docs/TASK_WORKFLOW_COMMANDS.md`', 'Starting, finishing, closing, auditing, or explaining task workflow commands', 'Standard task loop, dry-run boundaries, and command `ok` semantics.']
+    ['3', '`docs/TASK_BOARD.md`', 'Every session', 'Current task queue and status.'],
+    ['4', '`docs/HADARA_WORKFLOW.md`', 'Every session and task lifecycle work', 'Lifecycle order, read authority, documentation timing, and evidence rules.']
   ];
-  let order = 7;
+  let order = 5;
+  if (spec.docs.agentHandoff) requiredReadingRows.push([String(order++), '`docs/AGENT_HANDOFF.md`', 'Every session', 'Compact continuation state.']);
   if (spec.docs.architecture) requiredReadingRows.push([String(order++), '`docs/ARCHITECTURE.md`', 'Architecture, component, or boundary work', 'Current system shape and ownership boundaries.']);
-  if (spec.docs.developmentSlices) requiredReadingRows.push([String(order++), '`docs/DEVELOPMENT_SLICES.md`', 'Starting, completing, or reclassifying a development slice', 'Roadmap ordering, prerequisites, and completion evidence.']);
   if (spec.docs.decisions) requiredReadingRows.push([String(order++), '`docs/DECISIONS.md`', 'Project-level decision work', 'Durable project decisions.']);
-  if (spec.docs.testStrategy) requiredReadingRows.push([String(order++), '`docs/TEST_STRATEGY.md`', 'Validation planning or completion checks', 'Routine suites and special-case checks.']);
   if (spec.docs.securityModel) requiredReadingRows.push([String(order++), '`docs/SECURITY_MODEL.md`', 'Security, secret, permission, or evidence-safety work', 'Project security invariants.']);
   if (spec.docs.roadmap) requiredReadingRows.push([String(order++), '`docs/ROADMAP.md`', 'Roadmap, milestone, or scope planning', 'Longer-term priorities and deferred work.']);
   requiredReadingRows.push(
     [String(order++), 'Active `tasks/T-*/TASK.md`', 'Working a task', 'Task-specific goal, scope, and status.'],
     [String(order++), 'Active Task Capsule docs', 'Working a task', 'Decisions, plan, context, acceptance, files, tests, risks, handoff, and evidence.'],
-    [String(order++), 'Project-specific registered docs', 'When listed in `docs/IMPLEMENTATION_SOP.md`', 'Specs, contracts, or roadmap files explicitly added by this project.']
+    [String(order++), 'Project-specific registered docs', 'When listed in `.hadara/docs-registry.json` or the active task', 'Specs, contracts, or roadmap files explicitly added by this project.']
   );
-  const trackedStateDocs = ['`docs/TASK_BOARD.md`', '`docs/PROJECT_STATE.md`', ...(spec.docs.developmentSlices ? ['`docs/DEVELOPMENT_SLICES.md`'] : [])];
+  const trackedStateDocs = ['`docs/TASK_BOARD.md`', '`docs/PROJECT_STATE.md`', ...(spec.docs.agentHandoff ? ['`docs/AGENT_HANDOFF.md`'] : [])];
   const ruleRows = [
     ['Task boundary', 'Keep work inside one Task Capsule whenever possible.', 'Active Task Capsule'],
     ['Task creation', 'If no suitable capsule exists, create one with `hadara task create <title>`.', '`docs/TASK_BOARD.md`'],
     ['Evidence', 'Do not mark work done without evidence. Do not hand-edit `evidence.jsonl`; record failed or blocked checks honestly instead of replacing them with optimistic summaries.', '`EVIDENCE.md`, `evidence.jsonl`'],
     ['Documentation timing', 'Do not defer all documentation until after implementation; keep capsule docs current as work changes.', 'Task Capsule docs and shared state docs'],
-    ['Write coordination', 'Parallelize read-only discovery and independent validation; serialize evidence append, Task Capsule doc writes, shared state doc writes, before-hash executes, `task finalize --execute`, low-level finish/close executes, and release/publish operations.', 'Task Capsule evidence'],
-    ['Task workflow', 'For task workflow commands, follow `docs/TASK_WORKFLOW_COMMANDS.md`: from 0.3.3 onward, agents should use `task lifecycle` and reviewed `task finalize --json` / `task finalize --execute --plan-hash <hash>` as the default close path. Use `task finish`, `task ready`, `task close`, and `task audit-close` only as low-level proof-boundary commands for debugging, recovery, or command implementation work.', 'Task Capsule evidence'],
+    ['Task workflow', 'Follow `docs/HADARA_WORKFLOW.md`; inspect `task finalize --json` output before `task finalize --execute --plan-hash <hash>`.', 'Task Capsule evidence'],
     ['Safety', 'Do not execute dangerous commands without explicit user approval.', 'Task Capsule evidence'],
     ['Secrets', 'Do not write secrets, private logs, or machine-local state into committed files.', 'Changed-file review'],
     ['Store boundary', 'Preserve the portable/project store boundary.', spec.docs.architecture ? '`.gitignore`, `docs/ARCHITECTURE.md`' : '`.gitignore`'],
-    ['Validation', 'Follow validation constraints recorded in `docs/AGENT_HANDOFF.md` and the active Task Capsule.', 'Task Capsule evidence'],
+    ['Validation', 'Follow validation constraints recorded in the active Task Capsule and referenced project docs.', 'Task Capsule evidence'],
     ['Tracked state', `Update ${formatInlineList(trackedStateDocs)} when tracked state changes.`, 'Tracked docs'],
-    ['Handoff', 'Update `docs/AGENT_HANDOFF.md` before stopping.', '`docs/AGENT_HANDOFF.md`'],
-    ['Required reading', 'Register project-specific docs in `docs/IMPLEMENTATION_SOP.md` before expecting agents to rely on them.', '`docs/IMPLEMENTATION_SOP.md`']
+    ['Required reading', 'Register or reference project-specific docs before expecting agents to rely on them.', '`.hadara/docs-registry.json` and active Task Capsule docs']
   ];
-  if (spec.docs.developmentSlices) {
-    ruleRows.push(['Slice order', 'Respect prerequisite order in `docs/DEVELOPMENT_SLICES.md`.', '`docs/DEVELOPMENT_SLICES.md`']);
-  }
 
   return `# AGENTS
 
@@ -1668,8 +1758,6 @@ This repository must be developed using the HADARA protocol.
 | Order | Document | When | Purpose |
 |---|---|---|---|
 ${requiredReadingRows.map(formatTableRow).join('\n')}
-
-\`docs/AGENT_HANDOFF.md\` is compact current-state handoff, not full project history. Follow its Historical Index when older completed-task or validation history is needed.
 
 ## Required Reading Tiers
 
@@ -1683,7 +1771,7 @@ Use semantic tiers to keep session startup compact:
 | \`historical\` | Completed-task history, older validation records, and previous-state detail. | Never default required reading; read only when investigating history. |
 | \`excluded\` | Superseded, archived, local-only, or intentionally non-default material. | Never default required reading unless explicitly reclassified. |
 
-\`.hadara/context/HADARA_CONTEXT.md\` is the current-state entry point. It should route readers to compact state before task-work or conditional-reference docs. Full historical review of \`docs/PROJECT_STATE.md\` is not mandatory every session; use \`docs/AGENT_HANDOFF.md\` and its Historical Index when older history is needed. Historical and superseded docs are never default required reading.
+\`.hadara/context/HADARA_CONTEXT.md\` is the current-state entry point. It should route readers to compact state before task-work or conditional-reference docs. Historical and superseded docs are never default required reading.
 
 ## Default Agent Loop
 
@@ -1691,7 +1779,6 @@ For ordinary implementation work, use the current context-aware loop:
 
 \`\`\`bash
 hadara task next --json
-hadara session start --task T-XXXX --json
 hadara task lifecycle --task T-XXXX --json
 hadara task finalize --task T-XXXX --json
 hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json

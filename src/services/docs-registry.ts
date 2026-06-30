@@ -148,10 +148,9 @@ Use it to decide what to read next.
 | Need | Read |
 |---|---|
 | Current project state | \`docs/PROJECT_STATE.md\` |
-| Current/next agent handoff | \`docs/AGENT_HANDOFF.md\` |
+| Current/next agent handoff | \`docs/PROJECT_STATE.md\` or \`docs/AGENT_HANDOFF.md\` when generated |
 | Task list | \`docs/TASK_BOARD.md\` |
-| Command lifecycle | \`docs/TASK_WORKFLOW_COMMANDS.md\` |
-| Document registry | \`docs/DOC_REGISTRY.md\` |
+| Command lifecycle | \`docs/HADARA_WORKFLOW.md\` |
 | Machine-readable docs registry | \`.hadara/docs-registry.json\` |
 
 ## Operating Rules
@@ -359,25 +358,21 @@ function seedEntries(profile: InitProfile | 'hadara-dev'): DocumentRegistryEntry
   const entries: DocumentRegistryEntry[] = [
     entry('.hadara/context/HADARA_CONTEXT.md', 'HADARA_CONTEXT', 'project-context', 'canonical', ['session-start'], true, 'mixed', coreProfiles),
     entry('AGENTS.md', 'AGENTS', 'protocol', 'canonical', ['session-start'], true, 'mixed', coreProfiles, 'repo'),
-    entry('docs/IMPLEMENTATION_SOP.md', 'IMPLEMENTATION_SOP', 'protocol', 'canonical', ['session-start'], true, 'mixed', coreProfiles),
-    entry('docs/TASK_WORKFLOW_COMMANDS.md', 'TASK_WORKFLOW_COMMANDS', 'workflow-guide', 'canonical', ['task-start'], true, 'mixed', coreProfiles),
+    entry('docs/HADARA_WORKFLOW.md', 'HADARA_WORKFLOW', 'workflow-guide', 'canonical', ['session-start', 'task-start'], true, 'mixed', coreProfiles),
     entry('docs/PROJECT_STATE.md', 'PROJECT_STATE', 'project-state', 'canonical', ['session-start'], true, 'mixed', coreProfiles),
-    entry('docs/AGENT_HANDOFF.md', 'AGENT_HANDOFF', 'handoff', 'canonical', ['session-start'], true, 'mixed', coreProfiles),
     entry('docs/TASK_BOARD.md', 'TASK_BOARD', 'task-board', 'active', ['task-start'], true, 'hadara-task', coreProfiles)
   ];
   if (profile !== 'basic') {
     entries.push(
       entry('docs/ARCHITECTURE.md', 'ARCHITECTURE', 'architecture', 'reference', ['only-when-linked'], false, 'human', standardProfiles),
-      entry('docs/DEVELOPMENT_SLICES.md', 'DEVELOPMENT_SLICES', 'roadmap', 'active', ['task-start'], true, 'mixed', standardProfiles),
       entry('docs/DECISIONS.md', 'DECISIONS', 'decision-log', 'reference', ['only-when-linked'], false, 'human', standardProfiles),
-      entry('docs/TEST_STRATEGY.md', 'TEST_STRATEGY', 'test-strategy', 'reference', ['debugging'], false, 'human', standardProfiles)
+      entry('docs/ROADMAP.md', 'ROADMAP', 'roadmap', 'reference', ['only-when-linked'], false, 'human', standardProfiles)
     );
   }
   if (profile === 'governed' || profile === 'hadara-dev') {
     entries.push(
-      entry('docs/SECURITY_MODEL.md', 'SECURITY_MODEL', 'security-model', 'reference', ['only-when-linked'], false, 'human', governedProfiles),
-      entry('docs/REFACTOR_LOG.md', 'REFACTOR_LOG', 'historical-plan', 'historical', ['never-default'], false, 'human', governedProfiles),
-      entry('docs/ROADMAP.md', 'ROADMAP', 'roadmap', 'reference', ['only-when-linked'], false, 'human', governedProfiles)
+      entry('docs/AGENT_HANDOFF.md', 'AGENT_HANDOFF', 'handoff', 'canonical', ['session-start'], true, 'mixed', governedProfiles),
+      entry('docs/SECURITY_MODEL.md', 'SECURITY_MODEL', 'security-model', 'reference', ['only-when-linked'], false, 'human', governedProfiles)
     );
   }
   return entries;

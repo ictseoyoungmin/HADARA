@@ -4,32 +4,32 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization redesign is registered for implementation through T-0427 / T-04A1. |
-| Current Phase | 0.4 init scaffold implementation ready plus 0.3.4 stable readiness pending | T-0427 registered the accepted 0.4 spec package in docs registry surfaces; T-04A2 Init Scaffold Model is next. |
-| Latest Completed Task | T-0427 T-04A1 0.4 Breaking Productization Spec Registration | Registered canonical 0.4 manifest documents, added SOP conditional reading rows, verified registry routing, recreated the `hadara-dev` Docker container, and refreshed workspace built CLI. |
-| Active / Next Task | T-04A2 0.4 Init Scaffold Model | Implement 0.4 scaffold metadata/registries/default docs from `01_Project_Scaffold_Model.md`; do not start release-line work. |
-| Validation Baseline | T-0427 registry validation plus T-0423 helper residual fix | T-0427 Docker build/version smoke and docs registry checks passed in `ev:T-0427:8f087c4cf64747628829a5dc`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation has started through T-0428 / T-04A2. |
+| Current Phase | 0.4 init scaffold implementation complete plus 0.3.4 stable readiness pending | T-0428 implemented the accepted 0.4 init scaffold model; T-04A3 Agent Entry and Workflow Templates is next. |
+| Latest Completed Task | T-0428 T-04A2 0.4 Init Scaffold Model | Implemented the 0.4 init file sets, `.hadara/scaffold.json`, `.hadara/slot-registry.json`, registry seed/context routing, and 0.4 doctor checks; refreshed workspace built CLI. |
+| Active / Next Task | T-04A3 Agent Entry and Workflow Templates | Polish generated `AGENTS.md`, `docs/HADARA_WORKFLOW.md`, and `.hadara/context/HADARA_CONTEXT.md` responsibilities without reintroducing duplicate SOP/task-workflow defaults. |
+| Validation Baseline | T-0428 init scaffold validation plus T-0423 helper residual fix | T-0428 Docker build/focused init tests and built governed init/doctor smoke passed in `ev:T-0428:f09b011734c84cab8034facf`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-04A2 0.4 init scaffold model | Next. Use the registered 0.4 README, worker plan, and `01_Project_Scaffold_Model.md`; keep product defaults generic and no release-line work. | `ev:T-0427:8f087c4cf64747628829a5dc` |
+| T-04A3 Agent Entry and Workflow Templates | Next. Refine generated `AGENTS.md`, `docs/HADARA_WORKFLOW.md`, and `.hadara/context/HADARA_CONTEXT.md` after T-04A2 changed the scaffold surface. | `ev:T-0428:f09b011734c84cab8034facf` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0428 / T-04A2 0.4 Init Scaffold Model | Implemented accepted 0.4 init scaffold file sets, scaffold/slot registries, registry seed/context routing, and 0.4 doctor checks. | `ev:T-0428:f09b011734c84cab8034facf` |
 | T-0427 / T-04A1 0.4 Breaking Productization Spec Registration | Registered the accepted 0.4 productization redesign manifest documents in docs registry surfaces and restored Docker-built workspace CLI. | `ev:T-0427:8f087c4cf64747628829a5dc` |
 | T-0426 0.4 Template Final Review Hold Open | Clarified final 0.4 template/workflow/context split, resolved registry ownership, set the 24-capsule implementation budget with hardening/polish/final-review room, and excluded release-line work from that budget. | `ev:T-0426:496e55c598814f8d8a09cff6` |
-| T-0425 0.4 Workflow Template Clarification | Clarified the 0.4 AGENTS/HADARA_WORKFLOW split: Required Reading stays in AGENTS, lifecycle/document timing lives in workflow, and standalone workflow Release Boundary wording is removed. | `ev:T-0425:721f9033978348c6a0790450` |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| 0.4 init scaffold model is not implemented yet. | The accepted spec package is registered, but `hadara init` still emits the current 0.3.x scaffold model. | Open T-04A2 and implement `docs/specs/0.4.0/productization-redesign/01_Project_Scaffold_Model.md` as the next capsule. |
+| `init register-doc` and optional integration registration still target legacy SOP rows. | T-0428 removed default `docs/IMPLEMENTATION_SOP.md` generation for 0.4 projects, so these follow-up commands need registry-first redesign before being the normal 0.4 docs path. | Open T-04A4 Docs Registry and Registration Workflow after T-04A3. |
 | Stable `0.3.4` readiness has not run after the T-0423 helper residual fix. | `hadara@0.3.4-rc.0` is published and consumer/helper proofs are clean, but stable metadata, release docs, release artifacts, strict gates, dry-runs, and publish dry-run still need a dedicated readiness capsule. | Open a new stable readiness capsule when release work resumes; do not publish stable from T-0423, T-0424, or T-0425. |
 | T-0383 mounted full-profile probes exceeded a 20s workload budget for cache status/warm, graph task, graph include-code, and context pack. | These workloads are not suitable for the default fast smoke loop on mounted filesystems. | Keep `smoke:context-routing` defaulting to fast profile; use `--profile full` explicitly for diagnostic/full-path checks. |
 | Built cache status still took about 19.6s on `/mnt/f` while producing diagnostics. | Diagnostics are clearer, but mounted broad source-manifest cost remains. | T-0385 classified this as an accepted residual for explicit diagnostic/warm/full-profile commands; default Session Start remains bounded/cache-preferential. |
@@ -96,13 +96,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Open T-04A2 0.4 Init Scaffold Model. | T-04A1 registration is complete; the next accepted implementation slice is scaffold metadata, registries, and default docs. | `ev:T-0427:8f087c4cf64747628829a5dc`, `docs/specs/0.4.0/productization-redesign/01_Project_Scaffold_Model.md`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
+| Open T-04A3 Agent Entry and Workflow Templates. | T-04A2 implemented the new 0.4 scaffold surface; the next accepted slice should polish non-overlapping generated `AGENTS.md`, `HADARA_WORKFLOW.md`, and `HADARA_CONTEXT.md` guidance. | `ev:T-0428:f09b011734c84cab8034facf`, `docs/specs/0.4.0/productization-redesign/02_Agent_Entry_and_Workflow_Templates.md`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0428 / T-04A2 init scaffold model | Docker build plus focused init tests passed 7 tests; workspace `dist` refreshed; built governed init/doctor smoke returned `ok:true`. | Evidence `ev:T-0428:f09b011734c84cab8034facf`; register-doc remains a T-04A4 follow-up because it still targets legacy SOP rows. |
 | T-0427 / T-04A1 spec registration | Docker container recreate/build/version smoke passed; 0.4 manifest documents registered in `.hadara/docs-registry.json` and projected in `docs/DOC_REGISTRY.md`; SOP conditional reading rows added; registry doctor/explain checks, canonical path checks, removed nested path check, and `git diff --check` passed. | Evidence `ev:T-0427:8f087c4cf64747628829a5dc`; existing docs doctor archive-candidate warning for `docs/REFACTOR_LOG.md` remains non-blocking. |
 | T-0426 0.4 template final review | Manifest parse, stale section absence, workflow guardrail presence, context/handoff/task semantic presence, document-owner split checks, docs registry ownership checks, 24-capsule budget checks, touched-doc trailing whitespace, and `git diff --check` passed. | Evidence `ev:T-0426:496e55c598814f8d8a09cff6`; operator accepted closure on 2026-06-30. |
 | T-0425 workflow template clarification | Manifest JSON parse passed; workflow-facing release-boundary wording check returned no matches; Required Reading, Project Start, and Task Document Timing sections are present; touched-doc trailing whitespace check returned no matches; `git diff --check` passed. | Evidence `ev:T-0425:721f9033978348c6a0790450`; no CLI/runtime behavior changed. |

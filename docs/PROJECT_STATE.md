@@ -204,8 +204,9 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0427 T-04A1 0.4 Breaking Productization Spec Registration.
-- Next 0.4 task is T-04A2 Init Scaffold Model; start from `docs/specs/0.4.0/productization-redesign/01_Project_Scaffold_Model.md` and the worker plan.
+- Latest completed task is T-0428 T-04A2 0.4 Init Scaffold Model.
+- Next 0.4 task is T-04A3 Agent Entry and Workflow Templates; start from `docs/specs/0.4.0/productization-redesign/02_Agent_Entry_and_Workflow_Templates.md` and the worker plan.
+- T-0428 implemented the accepted 0.4 init scaffold file sets, `.hadara/scaffold.json`, `.hadara/slot-registry.json`, registry seed/context routing, and 0.4 doctor checks; Docker build plus focused init tests passed, workspace `dist` was refreshed, and built governed init/doctor smoke returned `ok:true` in `ev:T-0428:f09b011734c84cab8034facf`.
 - T-0427 registered canonical 0.4 manifest documents in `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md`, added SOP conditional reading rows for the 0.4 README and worker plan, confirmed the removed nested package path is not registered, recreated the `hadara-dev` Docker container, refreshed workspace `dist`, and validated with `ev:T-0427:8f087c4cf64747628829a5dc`.
 - T-0426 accepted the final 0.4 document set, including the 24-capsule post-acceptance implementation budget with self-review hardening, polish/cleanup, final review/docs cleanup, and release-line work intentionally outside that budget. Focused docs validation passed in `ev:T-0426:496e55c598814f8d8a09cff6`.
 - Stable `0.3.4` readiness remains pending as a separate release-line task; it should use T-0417 readiness, T-0418 publish, T-0422 installed-package proof, and T-0423 clean package-recycle helper proof as inputs when release work resumes.
