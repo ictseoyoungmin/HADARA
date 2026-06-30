@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0436 / T-04A10. |
-| Current Phase | 0.4 evidence projection complete plus 0.3.4 stable readiness pending | T-0436 made `EVIDENCE.md` a generated projection from `evidence.jsonl`; T-04A11 Close Proof Placement is next. |
-| Latest Completed Task | T-0436 T-04A10 Evidence Projection | `evidence add-command` refreshes projection slots and `evidence project` can preview/repair projection drift without rewriting canonical evidence. |
-| Active / Next Task | T-04A11 Close Proof Placement | Keep close proof out of `TASK.md` and `HANDOFF.md`, and project close proof through evidence surfaces. |
-| Validation Baseline | T-0436 evidence projection plus T-0423 helper residual fix | T-0436 Docker build/focused tests and built projection/draft smokes passed in `ev:T-0436:f4c57fd4dc6a4d9dbffedfe0`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0437 / T-04A11. |
+| Current Phase | 0.4 close proof placement complete plus 0.3.4 stable readiness pending | T-0437 added structured close evidence snapshots and kept close proof projected through evidence surfaces; T-04A12 Close Readiness Snapshot is next. |
+| Latest Completed Task | T-0437 T-04A11 Close Proof Placement | `task close` records normalized readiness snapshots in close evidence, and `task audit-close` exposes/warns on snapshot drift. |
+| Active / Next Task | T-04A12 Close Readiness Snapshot | Continue close-source normalization work from the evidence plane and close-source contract specs. |
+| Validation Baseline | T-0437 close proof placement plus T-0423 helper residual fix | T-0437 Docker build/focused tests and built draft/close smokes passed in `ev:T-0437:fc850943950547939127f430`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-04A11 Close Proof Placement | Next. Keep close proof out of close-source docs and route proof details through evidence surfaces after projection support. | `ev:T-0436:f4c57fd4dc6a4d9dbffedfe0` |
+| T-04A12 Close Readiness Snapshot | Next. Continue normalizing close-source inputs now that close proof carries a structured evidence readiness snapshot. | `ev:T-0437:fc850943950547939127f430` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0437 / T-04A11 Close Proof Placement | Added structured normalized close evidence snapshots, audit exposure/drift warning, focused tests, refreshed `dist`, and built CLI smokes. | `ev:T-0437:fc850943950547939127f430` |
 | T-0436 / T-04A10 Evidence Projection | Added projection refresh from `evidence.jsonl`, `evidence project`, projection schema/registry coverage, focused tests, refreshed `dist`, and built CLI smokes. | `ev:T-0436:f4c57fd4dc6a4d9dbffedfe0` |
 | T-0435 / T-04A9 Managed Slot v2 Registry Hash | Added managed slot/table registry seed metadata, close/audit slot registry hash reporting, focused tests, refreshed `dist`, and built CLI smokes. | `ev:T-0435:31e917471a95404882ef0bdb` |
-| T-0434 / T-04A8 Source Document Hash and Drift Link | Added Source Documents concrete hash comparison, done-level hash enforcement, focused tests, refreshed `dist`, and built CLI smoke. | `ev:T-0434:ca9cc42e94a44af4b02e893f` |
 
 ## Current Known Problems
 
@@ -95,14 +95,15 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Open T-04A11 Close Proof Placement. | T-04A10 completed deterministic evidence projection; the next accepted slice should keep close proof out of `TASK.md`/`HANDOFF.md` and project it through evidence surfaces. | `ev:T-0436:f4c57fd4dc6a4d9dbffedfe0`, `docs/specs/0.4.0/productization-redesign/07_Evidence_Plane_and_Close_Proof_Projection.md`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
+| Open T-04A12 Close Readiness Snapshot. | T-04A11 added structured close evidence snapshots; the next accepted slice should continue close-source snapshot normalization. | `ev:T-0437:fc850943950547939127f430`, `docs/specs/0.4.0/productization-redesign/07_Evidence_Plane_and_Close_Proof_Projection.md`, `docs/specs/0.4.0/productization-redesign/09_Close_Source_Contract.md`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| T-0436 / T-04A10 Evidence Projection | Docker build plus focused evidence/task/harness/close/finalize/schema/registry tests passed 85 tests; workspace `dist` refreshed; built T-0436 `evidence project` dry-run and draft harness validation returned `ok:true`; post-evidence projection dry-run returned `wouldChange:false`. | Evidence `ev:T-0436:f4c57fd4dc6a4d9dbffedfe0`; close readiness snapshot remains T-04A12 scope. |
+| T-0437 / T-04A11 Close Proof Placement | Docker build plus focused close/projection/finalize/schema/registry tests passed 31 tests; workspace `dist` refreshed; built T-0437 draft harness returned `ok:true`; built close dry-run returned expected Draft blockers while exposing `closeEvidenceSnapshot`. | Evidence `ev:T-0437:fc850943950547939127f430`; broader close-source payload modeling remains T-04A12 scope. |
+| T-0436 / T-04A10 Evidence Projection | Docker build plus focused evidence/task/harness/close/finalize/schema/registry tests passed 85 tests; workspace `dist` refreshed; built T-0436 `evidence project` dry-run and draft harness validation returned `ok:true`; post-evidence projection dry-run returned `wouldChange:false`. | Evidence `ev:T-0436:f4c57fd4dc6a4d9dbffedfe0`. |
 | T-0435 / T-04A9 Managed Slot v2 Registry Hash | Docker build plus focused init/close/finalize/lifecycle tests passed 31 tests; workspace `dist` refreshed; built T-0435 close smoke emitted slot registry hash fields and draft harness validation returned `ok:true`. | Evidence `ev:T-0435:31e917471a95404882ef0bdb`; full registry-driven TASK.md validation remains later close-source/schema alignment scope. |
 | T-0434 / T-04A8 Source Document Hash and Drift Link | Docker build plus focused harness/ready/close/finalize/lifecycle tests passed 57 tests; workspace `dist` refreshed; built T-0434 draft harness validation returned `ok:true`. | Evidence `ev:T-0434:ca9cc42e94a44af4b02e893f`; read-map/session/context drift surfacing remains T-04A14/T-04A15 scope. |
 | T-0433 / T-04A7 TASK.md table schema validation | Docker build plus focused task create/harness/lifecycle/read-model tests passed 77 tests; workspace `dist` refreshed; built `task create` smoke generated 0.4 table headers and T-0433 draft harness validation returned `ok:true`. | Evidence `ev:T-0433:80ed05687f3945c2acdde03e`; source document drift comparison remains T-04A8 scope. |

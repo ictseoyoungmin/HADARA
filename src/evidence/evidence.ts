@@ -20,6 +20,7 @@ export interface EvidenceRecord {
   tags?: string[];
   idempotencyKey?: string;
   actor?: HadaraActorContext;
+  closeEvidenceSnapshot?: CloseEvidenceSnapshot;
 }
 
 export interface EvidenceIndexRecord {
@@ -71,11 +72,24 @@ export interface EvidenceV2IndexRecord {
   tags: string[];
   idempotencyKey?: string;
   actor?: HadaraActorContext;
+  closeEvidenceSnapshot?: CloseEvidenceSnapshot;
   legacy: {
     kind: EvidenceRecord['kind'];
     result: EvidenceRecord['result'];
     evidencePath?: string;
   };
+}
+
+export interface CloseEvidenceSnapshot {
+  requiredAcceptanceIds: string[];
+  evidenceRefsUsedForReadiness: string[];
+  latestFailedOrBlockedEvidenceRefs: string[];
+  unresolvedEvidenceClassifications: Array<{
+    evidenceRef: string;
+    outcome: Extract<EvidenceOutcome, 'failed' | 'blocked'>;
+    summary: string;
+  }>;
+  evidenceSummaryHash: string;
 }
 
 export type PersistedEvidenceRecord = EvidenceIndexRecord | EvidenceV2IndexRecord;
@@ -412,7 +426,8 @@ function appendEvidenceRecord(input: {
       attachedPath,
       tags: input.record.tags,
       idempotencyKey: input.record.idempotencyKey,
-      actor: input.record.actor
+      actor: input.record.actor,
+      closeEvidenceSnapshot: input.record.closeEvidenceSnapshot
     });
     appendEvidenceIndex(input.taskDir, evidence);
     const projection = projectEvidenceMarkdown(input.taskDir, input.record.taskId, true);
@@ -569,6 +584,7 @@ function createEvidenceV2Record(input: {
   tags?: string[];
   idempotencyKey?: string;
   actor?: HadaraActorContext;
+  closeEvidenceSnapshot?: CloseEvidenceSnapshot;
 }): EvidenceV2IndexRecord {
   const legacy = {
     kind: input.kind,
@@ -597,6 +613,7 @@ function createEvidenceV2Record(input: {
     tags,
     ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}),
     ...(input.actor ? { actor: input.actor } : {}),
+    ...(input.closeEvidenceSnapshot ? { closeEvidenceSnapshot: input.closeEvidenceSnapshot } : {}),
     legacy
   };
   const fingerprint = createEvidenceV2Fingerprint(recordWithoutIdentity);
@@ -629,6 +646,7 @@ function createEvidenceV2Fingerprint(record: Omit<EvidenceV2IndexRecord, 'id' | 
         tags: record.tags,
         idempotencyKey: record.idempotencyKey,
         actor: record.actor,
+        closeEvidenceSnapshot: record.closeEvidenceSnapshot,
         legacy: record.legacy
       }),
       'utf8'

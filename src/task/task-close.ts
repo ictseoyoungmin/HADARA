@@ -1,12 +1,13 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { appendEvidenceWithResult } from '../evidence/evidence';
+import { appendEvidenceWithResult, CloseEvidenceSnapshot, EvidenceOutcome } from '../evidence/evidence';
 import { createEvidenceLintReport, EvidenceLintReport } from '../services/evidence-lint';
 import { createHarnessValidateReport, HarnessValidateResult } from '../services/harness-service';
 import type { RemediationHint } from '../harness/validate';
 import { createTaskProtocolConsistencyReport, ProtocolConsistencyReport } from '../services/protocol-consistency';
 import type { HadaraActorContext } from '../core/actor-context';
+import { analyzeAcceptanceReadiness } from './acceptance';
 import { listTaskCapsules } from './task-capsule';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from './lifecycle-next-actions';
 
@@ -55,6 +56,7 @@ export interface TaskCloseReport {
     sourceHash?: string;
     slotRegistryVersion?: number;
     slotRegistryHash?: string;
+    closeEvidenceSnapshot?: CloseEvidenceSnapshot;
     markdownPath?: string;
     evidencePath?: string;
   };
@@ -134,6 +136,7 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
   const validationReportHash = hashValidationInputs(validation, evidenceLint, protocolDoctor);
   const sourceHash = hashCloseRelevantSource(projectRoot, task.dir);
   const slotRegistry = readSlotRegistryMetadata(projectRoot);
+  const closeEvidenceSnapshot = createCloseEvidenceSnapshot(task.dir);
   const slotRegistryVersion = slotRegistry.slotRegistryVersion == null ? 'unknown' : String(slotRegistry.slotRegistryVersion);
   const closeEvidenceSummary = `Task close validation for ${taskId} returned ${validation.ok ? 'ok:true' : 'ok:false'} before close evidence append; reportHash ${validationReportHash}; sourceHash ${sourceHash}; slotRegistryVersion ${slotRegistryVersion}; slotRegistryHash ${slotRegistry.slotRegistryHash}.`;
 
@@ -182,7 +185,8 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
       validationReportHash,
       sourceHash,
       ...(slotRegistry.slotRegistryVersion == null ? {} : { slotRegistryVersion: slotRegistry.slotRegistryVersion }),
-      slotRegistryHash: slotRegistry.slotRegistryHash
+      slotRegistryHash: slotRegistry.slotRegistryHash,
+      closeEvidenceSnapshot
     },
     closeEvidenceWrite,
     lifecycle: createCloseLifecycleGuidance(taskId, mode),
@@ -532,7 +536,8 @@ export function executeTaskCloseEvidence(projectRoot: string, report: TaskCloseR
     visibility: 'public',
     tags: createCloseEvidenceTags(report),
     idempotencyKey: report.closeEvidenceWrite?.idempotencyKey,
-    actor: report.actor
+    actor: report.actor,
+    closeEvidenceSnapshot: report.closeEvidence.closeEvidenceSnapshot
   });
   report.closeEvidence.appended = true;
   report.closeEvidence.markdownPath = toPortablePath(path.relative(projectRoot, result.markdownPath));
@@ -557,6 +562,7 @@ export interface TaskAuditCloseReport {
   currentSourceHash: string;
   currentSlotRegistryHash: string;
   currentSlotRegistryVersion?: number;
+  currentCloseEvidenceSnapshot?: CloseEvidenceSnapshot;
   latestCloseEvidence?: {
     time: string;
     id?: string;
@@ -566,6 +572,7 @@ export interface TaskAuditCloseReport {
     sourceHash?: string;
     slotRegistryHash?: string;
     slotRegistryVersion?: number;
+    closeEvidenceSnapshot?: CloseEvidenceSnapshot;
   };
   auditVerdict: TaskAuditCloseVerdict;
   closeEvidenceAudit?: TaskCloseEvidenceAudit;
@@ -613,7 +620,7 @@ export function createTaskAuditCloseReport(projectRoot: string, taskId: string, 
   const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
   if (!task) {
     issues.push({ severity: 'error', code: 'TASK_NOT_FOUND', message: `Task Capsule not found: ${taskId}` });
-    return buildAuditReport(projectRoot, taskId, 'sha256:missing-task', 'sha256:missing-task', 'sha256:missing-task', undefined, [], issues, undefined, actor);
+    return buildAuditReport(projectRoot, taskId, 'sha256:missing-task', 'sha256:missing-task', 'sha256:missing-task', undefined, undefined, [], issues, undefined, actor);
   }
 
   const closePlan = createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor });
@@ -632,6 +639,7 @@ export function createTaskAuditCloseReport(projectRoot: string, taskId: string, 
   const latestHash = latest ? extractReportHash(latest.summary) : undefined;
   const latestSourceHash = latest ? extractSourceHash(latest.summary) : undefined;
   const latestSlotRegistryHash = latest ? extractSlotRegistryHash(latest.summary) : undefined;
+  const currentSnapshot = createCloseEvidenceSnapshot(task.dir);
   if (latest && latest.kind !== 'command-log') {
     issues.push({
       severity: 'error',
@@ -693,6 +701,21 @@ export function createTaskAuditCloseReport(projectRoot: string, taskId: string, 
       path: toPortablePath(path.relative(projectRoot, evidencePath))
     });
   }
+  if (latest && !latest.closeEvidenceSnapshot) {
+    issues.push({
+      severity: 'warning',
+      code: 'EVIDENCE_SNAPSHOT_MISSING',
+      message: 'Latest close evidence does not include a normalized evidence readiness snapshot.',
+      path: toPortablePath(path.relative(projectRoot, evidencePath))
+    });
+  } else if (latest?.closeEvidenceSnapshot && latest.closeEvidenceSnapshot.evidenceSummaryHash !== currentSnapshot.evidenceSummaryHash) {
+    issues.push({
+      severity: 'warning',
+      code: 'EVIDENCE_SNAPSHOT_DRIFT',
+      message: 'Current evidence readiness snapshot differs from the latest close evidence snapshot.',
+      path: toPortablePath(path.relative(projectRoot, evidencePath))
+    });
+  }
 
   return buildAuditReport(
     projectRoot,
@@ -701,6 +724,7 @@ export function createTaskAuditCloseReport(projectRoot: string, taskId: string, 
     closePlan.validation.validatedBeforeCloseEvidenceSourceHash,
     closePlan.validation.slotRegistryHash,
     closePlan.validation.slotRegistryVersion,
+    currentSnapshot,
     records,
     issues,
     closeEvidenceAudit,
@@ -754,6 +778,7 @@ function buildAuditReport(
   currentSourceHash: string,
   currentSlotRegistryHash: string,
   currentSlotRegistryVersion: number | undefined,
+  currentCloseEvidenceSnapshot: CloseEvidenceSnapshot | undefined,
   records: CloseEvidenceRecord[],
   issues: TaskCloseIssue[],
   closeEvidenceAudit?: InternalCloseEvidenceAudit,
@@ -778,6 +803,7 @@ function buildAuditReport(
     currentSourceHash,
     currentSlotRegistryHash,
     ...(currentSlotRegistryVersion == null ? {} : { currentSlotRegistryVersion }),
+    ...(currentCloseEvidenceSnapshot ? { currentCloseEvidenceSnapshot } : {}),
     ...(latest
       ? {
           latestCloseEvidence: {
@@ -788,7 +814,8 @@ function buildAuditReport(
             ...(extractReportHash(latest.summary) ? { validationReportHash: extractReportHash(latest.summary) } : {}),
             ...(extractSourceHash(latest.summary) ? { sourceHash: extractSourceHash(latest.summary) } : {}),
             ...(extractSlotRegistryHash(latest.summary) ? { slotRegistryHash: extractSlotRegistryHash(latest.summary) } : {}),
-            ...(extractSlotRegistryVersion(latest.summary) == null ? {} : { slotRegistryVersion: extractSlotRegistryVersion(latest.summary) })
+            ...(extractSlotRegistryVersion(latest.summary) == null ? {} : { slotRegistryVersion: extractSlotRegistryVersion(latest.summary) }),
+            ...(latest.closeEvidenceSnapshot ? { closeEvidenceSnapshot: latest.closeEvidenceSnapshot } : {})
           }
         }
       : {}),
@@ -870,6 +897,97 @@ function createAuditVerdict(
   };
 }
 
+function createCloseEvidenceSnapshot(taskDir: string): CloseEvidenceSnapshot {
+  const taskPath = path.join(taskDir, 'TASK.md');
+  const taskContent = fs.existsSync(taskPath) ? fs.readFileSync(taskPath, 'utf8') : '';
+  const acceptancePath = path.join(taskDir, 'ACCEPTANCE.md');
+  const acceptanceContent = fs.existsSync(acceptancePath) ? fs.readFileSync(acceptancePath, 'utf8') : taskContent;
+  const acceptance = analyzeAcceptanceReadiness(acceptanceContent);
+  const evidenceRecords = readSnapshotEvidenceRecords(path.join(taskDir, 'evidence.jsonl'));
+  const unresolvedEvidenceClassifications = evidenceRecords
+    .filter(isUnresolvedSnapshotEvidence)
+    .map((record) => ({
+      evidenceRef: record.id,
+      outcome: record.outcome,
+      summary: record.summary
+    }));
+  const snapshotWithoutHash = {
+    requiredAcceptanceIds: acceptance.rows.filter((row) => row.required).map((row) => row.id).sort(),
+    evidenceRefsUsedForReadiness: Array.from(new Set([...acceptance.rows.flatMap((row) => row.evidenceRefs), ...extractEvidenceRefs(taskContent)])).sort(),
+    latestFailedOrBlockedEvidenceRefs: unresolvedEvidenceClassifications.map((item) => item.evidenceRef).sort(),
+    unresolvedEvidenceClassifications: unresolvedEvidenceClassifications.sort((a, b) => a.evidenceRef.localeCompare(b.evidenceRef))
+  };
+  return {
+    ...snapshotWithoutHash,
+    evidenceSummaryHash: hashText(JSON.stringify(snapshotWithoutHash))
+  };
+}
+
+interface SnapshotEvidenceRecord {
+  id: string;
+  outcome: EvidenceOutcome;
+  summary: string;
+  tags: string[];
+}
+
+function isUnresolvedSnapshotEvidence(record: SnapshotEvidenceRecord): record is SnapshotEvidenceRecord & { outcome: 'failed' | 'blocked' } {
+  return !record.tags.includes('close-proof') && (record.outcome === 'failed' || record.outcome === 'blocked');
+}
+
+function readSnapshotEvidenceRecords(evidencePath: string): SnapshotEvidenceRecord[] {
+  if (!fs.existsSync(evidencePath)) return [];
+  return fs
+    .readFileSync(evidencePath, 'utf8')
+    .trim()
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .flatMap((line) => {
+      try {
+        const record = JSON.parse(line) as {
+          schemaVersion?: unknown;
+          id?: unknown;
+          outcome?: unknown;
+          result?: unknown;
+          summary?: unknown;
+          tags?: unknown;
+          legacy?: { result?: unknown };
+        };
+        const outcome = record.schemaVersion === 'hadara.evidence.v2' ? record.outcome : record.result;
+        if (typeof record.id !== 'string' || !isEvidenceOutcome(outcome) || typeof record.summary !== 'string') return [];
+        return [
+          {
+            id: record.id,
+            outcome,
+            summary: record.summary,
+            tags: Array.isArray(record.tags) ? record.tags.map(String) : []
+          }
+        ];
+      } catch {
+        return [];
+      }
+    });
+}
+
+function extractEvidenceRefs(content: string): string[] {
+  return Array.from(new Set(content.match(/\bev:T-\d{4}:[A-Za-z0-9]+\b/g) ?? []));
+}
+
+function isEvidenceOutcome(value: unknown): value is EvidenceOutcome {
+  return value === 'passed' || value === 'failed' || value === 'blocked' || value === 'unknown' || value === 'recorded' || value === 'not-applicable';
+}
+
+function isCloseEvidenceSnapshot(value: unknown): value is CloseEvidenceSnapshot {
+  if (!value || typeof value !== 'object') return false;
+  const snapshot = value as CloseEvidenceSnapshot;
+  return (
+    Array.isArray(snapshot.requiredAcceptanceIds) &&
+    Array.isArray(snapshot.evidenceRefsUsedForReadiness) &&
+    Array.isArray(snapshot.latestFailedOrBlockedEvidenceRefs) &&
+    Array.isArray(snapshot.unresolvedEvidenceClassifications) &&
+    typeof snapshot.evidenceSummaryHash === 'string'
+  );
+}
+
 function readCloseEvidenceRecords(evidencePath: string): CloseEvidenceRecord[] {
   if (!fs.existsSync(evidencePath)) return [];
   return fs
@@ -888,6 +1006,7 @@ function readCloseEvidenceRecords(evidencePath: string): CloseEvidenceRecord[] {
           result?: unknown;
           tags?: unknown;
           idempotencyKey?: unknown;
+          closeEvidenceSnapshot?: unknown;
           legacy?: { kind?: unknown; result?: unknown };
         };
         const kind = record.schemaVersion === 'hadara.evidence.v2' ? record.legacy?.kind : record.kind;
@@ -908,7 +1027,8 @@ function readCloseEvidenceRecords(evidencePath: string): CloseEvidenceRecord[] {
               summary: record.summary,
               result,
               tags,
-              ...(typeof record.idempotencyKey === 'string' ? { idempotencyKey: record.idempotencyKey } : {})
+              ...(typeof record.idempotencyKey === 'string' ? { idempotencyKey: record.idempotencyKey } : {}),
+              ...(isCloseEvidenceSnapshot(record.closeEvidenceSnapshot) ? { closeEvidenceSnapshot: record.closeEvidenceSnapshot } : {})
             }
           ];
         }
@@ -927,6 +1047,7 @@ interface CloseEvidenceRecord {
   result: string;
   tags: string[];
   idempotencyKey?: string;
+  closeEvidenceSnapshot?: CloseEvidenceSnapshot;
 }
 
 interface InternalCloseEvidenceAudit {

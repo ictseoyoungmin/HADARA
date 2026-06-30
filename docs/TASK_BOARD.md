@@ -437,3 +437,4 @@
 | T-0434 | T-04A8 Source Document Hash and Drift Link | Done | tasks/T-0434-t-04a8-source-document-hash-and-drift-link | Source document hash/drift validation passed in `ev:T-0434:ca9cc42e94a44af4b02e893f`. |
 | T-0435 | T-04A9 Managed Slot v2 Registry Hash | Done | tasks/T-0435-t-04a9-managed-slot-v2-registry-hash | Slot registry close proof validation passed in `ev:T-0435:31e917471a95404882ef0bdb`. |
 | T-0436 | T-04A10 Evidence Projection | Done | tasks/T-0436-t-04a10-evidence-projection | Evidence projection validation passed in `ev:T-0436:f4c57fd4dc6a4d9dbffedfe0`. |
+| T-0437 | T-04A11 Close Proof Placement | Done | tasks/T-0437-t-04a11-close-proof-placement | Close proof placement validation passed in `ev:T-0437:fc850943950547939127f430`. |
