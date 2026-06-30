@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.docs.readMap.v1",
+  "x-hadara-schema-id": "hadara.docs.readMap.v1",
+  "title": "HADARA Docs Read Map Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "taskId", "source", "task", "readFirst", "readIfNeeded", "doNotReadByDefault", "driftWarnings", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.docs.readMap.v1" },
+    "command": { "const": "docs.read-map" },
+    "ok": { "type": "boolean" },
+    "taskId": { "type": "string" },
+    "source": { "$ref": "#/$defs/source" },
+    "task": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["capsulePath", "capsulePresent", "title"],
+      "properties": {
+        "capsulePath": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+        "capsulePresent": { "type": "boolean" },
+        "title": { "oneOf": [{ "type": "string" }, { "type": "null" }] }
+      }
+    },
+    "readFirst": { "type": "array", "items": { "$ref": "#/$defs/entry" } },
+    "readIfNeeded": { "type": "array", "items": { "$ref": "#/$defs/entry" } },
+    "doNotReadByDefault": { "type": "array", "items": { "$ref": "#/$defs/entry" } },
+    "driftWarnings": { "type": "array", "items": { "$ref": "#/$defs/driftWarning" } },
+    "issues": { "type": "array", "items": { "$ref": "#/$defs/issue" } }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["registryPath", "registryPresent", "inferred"],
+      "properties": {
+        "registryPath": { "const": ".hadara/docs-registry.json" },
+        "registryPresent": { "type": "boolean" },
+        "inferred": { "type": "boolean" }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "title", "kind", "status", "readWhen", "readTier", "authority", "editPolicy", "source", "reason"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "minLength": 1 },
+        "readWhen": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "readTier": { "type": "string", "minLength": 1 },
+        "authority": { "type": "string", "minLength": 1 },
+        "editPolicy": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "enum": ["registry", "task-capsule", "discovery"] },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "driftWarning": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["code", "path", "risk", "reviewRequiredBeforeUse", "reason"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "risk": { "type": "string", "enum": ["low", "medium", "high"] },
+        "reviewRequiredBeforeUse": { "type": "boolean" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

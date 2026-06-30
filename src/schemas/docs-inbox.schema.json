@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.docs.inbox.v1",
+  "x-hadara-schema-id": "hadara.docs.inbox.v1",
+  "title": "HADARA Docs Inbox Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "source", "summary", "items", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.docs.inbox.v1" },
+    "command": { "const": "docs.inbox" },
+    "ok": { "type": "boolean" },
+    "source": { "$ref": "#/$defs/source" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["items", "errors", "warnings"],
+      "properties": {
+        "items": { "type": "number" },
+        "errors": { "type": "number" },
+        "warnings": { "type": "number" }
+      }
+    },
+    "items": { "type": "array", "items": { "$ref": "#/$defs/issue" } },
+    "issues": { "type": "array", "items": { "$ref": "#/$defs/issue" } }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["registryPath", "registryPresent", "inferred"],
+      "properties": {
+        "registryPath": { "const": ".hadara/docs-registry.json" },
+        "registryPresent": { "type": "boolean" },
+        "inferred": { "type": "boolean" }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

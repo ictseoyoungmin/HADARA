@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0430 / T-04A4. |
-| Current Phase | 0.4 docs registry registration complete plus 0.3.4 stable readiness pending | T-0430 implemented registry-first `hadara docs register`; T-04A5 Docs Read Map and Inbox Surface is next. |
-| Latest Completed Task | T-0430 T-04A4 Docs Registry Storage and Register Surface | `hadara docs register` now writes `.hadara/docs-registry.json`, has schema/command registry coverage, and avoids prose/projection mutation by default. |
-| Active / Next Task | T-04A5 Docs Read Map and Inbox Surface | Build the read-map/inbox guidance layer over the canonical docs registry. |
-| Validation Baseline | T-0430 docs-register validation plus T-0423 helper residual fix | T-0430 Docker build/focused tests and built docs-register smoke passed in `ev:T-0430:1933b10f80184f8abb9540cb`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0431 / T-04A5. |
+| Current Phase | 0.4 docs read-map/inbox complete plus 0.3.4 stable readiness pending | T-0431 implemented registry-backed `hadara docs read-map` and `hadara docs inbox`; T-04A6 Task Capsule Create Path is next. |
+| Latest Completed Task | T-0431 T-04A5 Docs Read Map and Drift Diagnostics | `hadara docs read-map --task T-XXXX --json` and `hadara docs inbox --json` now provide read guidance, derived metadata axes, and drift/registry attention diagnostics. |
+| Active / Next Task | T-04A6 Task Capsule Create Path | Start the 0.4 Task Capsule creation path from the accepted schema/source-doc plan. |
+| Validation Baseline | T-0431 docs read-map/inbox validation plus T-0423 helper residual fix | T-0431 Docker build/focused tests and built read-map/inbox smokes passed in `ev:T-0431:a81383c6d7894693a45a95ed`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-04A5 Docs Read Map and Inbox Surface | Next. Implement the registry-backed read-map/inbox guidance layer after T-04A4 provided the canonical document registration path. | `ev:T-0430:1933b10f80184f8abb9540cb` |
+| T-04A6 Task Capsule Create Path | Next. Implement the 0.4 Task Capsule creation path after T-04A5 provided registry-backed read guidance. | `ev:T-0431:a81383c6d7894693a45a95ed` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0431 / T-04A5 Docs Read Map and Drift Diagnostics | Implemented read-only `docs read-map` and `docs inbox` with derived metadata axes, drift diagnostics, schemas, command registry coverage, focused tests, refreshed `dist`, and built CLI smokes. | `ev:T-0431:a81383c6d7894693a45a95ed` |
 | T-0430 / T-04A4 Docs Registry Storage and Register Surface | Implemented registry-first `hadara docs register`, schema/command registry coverage, focused tests, and built CLI smoke. | `ev:T-0430:1933b10f80184f8abb9540cb` |
 | T-0429 / T-04A3 Agent Entry and Workflow Templates | Implemented non-overlapping generated `AGENTS.md`, `HADARA_CONTEXT.md`, and `HADARA_WORKFLOW.md` responsibilities with focused tests. | `ev:T-0429:ab675a5933c84286b8d255fc` |
-| T-0428 / T-04A2 0.4 Init Scaffold Model | Implemented accepted 0.4 init scaffold file sets, scaffold/slot registries, registry seed/context routing, and 0.4 doctor checks. | `ev:T-0428:f09b011734c84cab8034facf` |
 
 ## Current Known Problems
 
@@ -95,14 +95,15 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Open T-04A5 Docs Read Map and Inbox Surface. | T-04A4 completed registry-first document registration; the next accepted docs slice should build the read-map/inbox guidance layer over that registry. | `ev:T-0430:1933b10f80184f8abb9540cb`, `docs/specs/0.4.0/productization-redesign/03_Design_Source_Documents_Read_Map_and_Drift.md`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
+| Open T-04A6 Task Capsule Create Path. | T-04A5 completed registry-backed read guidance; the next accepted 0.4 slice should implement the 0.4 Task Capsule creation path. | `ev:T-0431:a81383c6d7894693a45a95ed`, `docs/specs/0.4.0/productization-redesign/04_Task_Capsule_Schema.md`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| T-0430 / T-04A4 docs registry registration | Docker build plus focused docs-registry/command/schema/init tests passed 23 tests; workspace `dist` refreshed; built `docs register --execute --json` smoke returned `ok:true`. | Evidence `ev:T-0430:1933b10f80184f8abb9540cb`; read-map/inbox surfaces remain T-04A5 scope. |
+| T-0431 / T-04A5 docs read-map/inbox diagnostics | Docker build plus focused docs-registry/command/schema/init tests passed 25 tests; workspace `dist` refreshed; built `docs read-map --task T-0431 --json` and `docs inbox --json` smokes returned `ok:true`. | Evidence `ev:T-0431:a81383c6d7894693a45a95ed`; registry metadata write/migration surfaces remain later 0.4 scope. |
+| T-0430 / T-04A4 docs registry registration | Docker build plus focused docs-registry/command/schema/init tests passed 23 tests; workspace `dist` refreshed; built `docs register --execute --json` smoke returned `ok:true`. | Evidence `ev:T-0430:1933b10f80184f8abb9540cb`; superseded for read-map/inbox coverage by T-0431. |
 | T-0429 / T-04A3 agent entry/workflow templates | Docker build plus focused init tests passed 8 tests; workspace `dist` refreshed; built governed init/doctor template smoke returned `ok:true` and verified key ownership strings. | Evidence `ev:T-0429:ab675a5933c84286b8d255fc`; closed before T-0430. |
 | T-0428 / T-04A2 init scaffold model | Docker build plus focused init tests passed 7 tests; workspace `dist` refreshed; built governed init/doctor smoke returned `ok:true`. | Evidence `ev:T-0428:f09b011734c84cab8034facf`; register-doc remains a T-04A4 follow-up because it still targets legacy SOP rows. |
 | T-0427 / T-04A1 spec registration | Docker container recreate/build/version smoke passed; 0.4 manifest documents registered in `.hadara/docs-registry.json` and projected in `docs/DOC_REGISTRY.md`; SOP conditional reading rows added; registry doctor/explain checks, canonical path checks, removed nested path check, and `git diff --check` passed. | Evidence `ev:T-0427:8f087c4cf64747628829a5dc`; existing docs doctor archive-candidate warning for `docs/REFACTOR_LOG.md` remains non-blocking. |

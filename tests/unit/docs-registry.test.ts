@@ -9,7 +9,9 @@ import {
   DOCS_REGISTRY_PATH,
   DocumentRegistryFile,
   createDocsExplainReport,
+  createDocsInboxReport,
   createDocsListReport,
+  createDocsReadMapReport,
   createDocsRegisterReport
 } from '../../src/services/docs-registry';
 
@@ -23,6 +25,10 @@ function tempProject(): string {
 
 function readRegistry(root: string): DocumentRegistryFile {
   return JSON.parse(fs.readFileSync(path.join(root, DOCS_REGISTRY_PATH), 'utf8')) as DocumentRegistryFile;
+}
+
+function writeRegistry(root: string, registry: DocumentRegistryFile): void {
+  fs.writeFileSync(path.join(root, DOCS_REGISTRY_PATH), `${JSON.stringify(registry, null, 2)}\n`);
 }
 
 afterEach(() => {
@@ -168,5 +174,96 @@ describe('Phase 7.3 docs registry', () => {
       updatedByCommands: ['docs.register']
     });
     expect(fs.existsSync(path.join(root, 'docs', 'DOC_REGISTRY.md'))).toBe(false);
+  });
+
+  it('builds a task-scoped read map with derived metadata axes and drift warnings', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    const taskDir = path.join(root, 'tasks', 'T-0001-docs-read-map-and-drift');
+    fs.mkdirSync(taskDir, { recursive: true });
+    fs.writeFileSync(path.join(taskDir, 'TASK.md'), '# T-0001 Docs Read Map and Drift\n');
+    fs.writeFileSync(path.join(taskDir, 'CONTEXT.md'), '# Context\n');
+    fs.writeFileSync(path.join(taskDir, 'HANDOFF.md'), '# Handoff\n');
+    fs.mkdirSync(path.join(root, 'docs', 'specs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'specs', 'read-map-drift.md'), '# Read Map Drift\n');
+    fs.writeFileSync(path.join(root, 'docs', 'specs', 'unregistered.md'), '# Unregistered\n');
+    const registry = readRegistry(root);
+    registry.documents.push({
+      path: 'docs/specs/read-map-drift.md',
+      title: 'Read Map Drift',
+      owner: 'hadara-docs',
+      kind: 'spec',
+      status: 'reference',
+      scope: 'project',
+      profiles: ['standard'],
+      readWhen: ['only-when-linked'],
+      requiredReading: false,
+      updateOwner: 'human',
+      updatedByCommands: ['docs.register'],
+      managedSections: [],
+      closeSourceRole: 'task-dependent',
+      supersedes: []
+    });
+    writeRegistry(root, registry);
+
+    const report = createDocsReadMapReport(root, 'T-0001');
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.docs.readMap.v1',
+      command: 'docs.read-map',
+      ok: true,
+      task: { capsulePresent: true }
+    });
+    expect(report.readFirst.map((entry) => entry.path)).toEqual(expect.arrayContaining([
+      'tasks/T-0001-docs-read-map-and-drift/TASK.md',
+      'docs/specs/read-map-drift.md'
+    ]));
+    expect(report.readFirst.find((entry) => entry.path === 'docs/specs/read-map-drift.md')).toMatchObject({
+      readTier: 'active-spec',
+      authority: 'implementation-source',
+      editPolicy: 'agent-editable-with-review'
+    });
+    expect(report.doNotReadByDefault.find((entry) => entry.path === 'docs/specs/unregistered.md')).toMatchObject({
+      readTier: 'excluded',
+      source: 'discovery'
+    });
+    expect(report.driftWarnings).toContainEqual(expect.objectContaining({ code: 'SPEC_UNREGISTERED', path: 'docs/specs/unregistered.md' }));
+    assertSchema('hadara.docs.readMap.v1', report);
+  });
+
+  it('reports a docs inbox for registry attention items', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    fs.mkdirSync(path.join(root, 'docs', 'specs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'specs', 'unregistered.md'), '# Unregistered\n');
+    const registry = readRegistry(root);
+    registry.documents.push({
+      path: 'docs/MISSING.md',
+      title: 'Missing',
+      owner: 'hadara-docs',
+      kind: 'spec',
+      status: 'reference',
+      scope: 'project',
+      profiles: ['standard'],
+      readWhen: ['only-when-linked'],
+      requiredReading: false,
+      updateOwner: 'human',
+      updatedByCommands: ['docs.register'],
+      managedSections: [],
+      closeSourceRole: 'task-dependent',
+      supersedes: []
+    });
+    writeRegistry(root, registry);
+
+    const report = createDocsInboxReport(root);
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.docs.inbox.v1',
+      command: 'docs.inbox',
+      ok: false
+    });
+    expect(report.items).toContainEqual(expect.objectContaining({ code: 'DOC_REGISTERED_FILE_MISSING', path: 'docs/MISSING.md' }));
+    expect(report.items).toContainEqual(expect.objectContaining({ code: 'DOC_UNREGISTERED_ACTIVE_LOOKING', path: 'docs/specs/unregistered.md' }));
+    assertSchema('hadara.docs.inbox.v1', report);
   });
 });

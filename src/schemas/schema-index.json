@@ -170,6 +170,20 @@
       "notes": "Documents the Phase 7.3 document registry list projection returned by hadara docs list --json."
     },
     {
+      "id": "hadara.docs.readMap.v1",
+      "path": "src/schemas/docs-read-map.schema.json",
+      "status": "fixture",
+      "owner": "services/docs-registry",
+      "notes": "Documents the 0.4 registry-backed docs read-map report returned by hadara docs read-map --json."
+    },
+    {
+      "id": "hadara.docs.inbox.v1",
+      "path": "src/schemas/docs-inbox.schema.json",
+      "status": "fixture",
+      "owner": "services/docs-registry",
+      "notes": "Documents the 0.4 docs inbox report for registry and unregistered-spec attention items."
+    },
+    {
       "id": "hadara.docs.mark.v1",
       "path": "src/schemas/docs-mark.schema.json",
       "status": "fixture",

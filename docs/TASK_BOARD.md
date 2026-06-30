@@ -431,3 +431,4 @@
 | T-0428 | T-04A2 0.4 Init Scaffold Model | Done | tasks/T-0428-t-04a2-0-4-init-scaffold-model | 0.4 init scaffold validation passed in `ev:T-0428:f09b011734c84cab8034facf`; close audit passed. |
 | T-0429 | T-04A3 Agent Entry and Workflow Templates | Done | tasks/T-0429-t-04a3-agent-entry-and-workflow-templates | Agent/workflow template validation passed in `ev:T-0429:ab675a5933c84286b8d255fc`; close audit passed. |
 | T-0430 | T-04A4 Docs Registry Storage and Register Surface | Done | tasks/T-0430-t-04a4-docs-registry-storage-and-register-surface | Docs register validation passed in `ev:T-0430:1933b10f80184f8abb9540cb`; close audit passed. |
+| T-0431 | T-04A5 Docs Read Map and Drift Diagnostics | Done | tasks/T-0431-t-04a5-docs-read-map-and-drift-diagnostics | Docs read-map/inbox validation passed in `ev:T-0431:a81383c6d7894693a45a95ed`; close-ready. |

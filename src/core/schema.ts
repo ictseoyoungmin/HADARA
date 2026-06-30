@@ -20,9 +20,11 @@ import devDockerCheckSchemaJson from '../schemas/dev-docker-check.schema.json';
 import docsArchivePlanSchemaJson from '../schemas/docs-archive-plan.schema.json';
 import docsDoctorSchemaJson from '../schemas/docs-doctor.schema.json';
 import docsExplainSchemaJson from '../schemas/docs-explain.schema.json';
+import docsInboxSchemaJson from '../schemas/docs-inbox.schema.json';
 import docsListSchemaJson from '../schemas/docs-list.schema.json';
 import docsMarkSchemaJson from '../schemas/docs-mark.schema.json';
 import docsPatchPlanSchemaJson from '../schemas/docs-patch-plan.schema.json';
+import docsReadMapSchemaJson from '../schemas/docs-read-map.schema.json';
 import docsRegisterSchemaJson from '../schemas/docs-register.schema.json';
 import docsRequiredReadingSchemaJson from '../schemas/docs-required-reading.schema.json';
 import evidenceLintSchemaJson from '../schemas/evidence-lint.schema.json';
@@ -131,9 +133,11 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.docs.archivePlan.v1': docsArchivePlanSchemaJson as JsonObject,
   'hadara.docs.doctor.v1': docsDoctorSchemaJson as JsonObject,
   'hadara.docs.explain.v1': docsExplainSchemaJson as JsonObject,
+  'hadara.docs.inbox.v1': docsInboxSchemaJson as JsonObject,
   'hadara.docs.list.v1': docsListSchemaJson as JsonObject,
   'hadara.docs.mark.v1': docsMarkSchemaJson as JsonObject,
   'hadara.docs.patchPlan.v1': docsPatchPlanSchemaJson as JsonObject,
+  'hadara.docs.readMap.v1': docsReadMapSchemaJson as JsonObject,
   'hadara.docs.register.v1': docsRegisterSchemaJson as JsonObject,
   'hadara.docs.requiredReading.v1': docsRequiredReadingSchemaJson as JsonObject,
   'hadara.evidence.lint.v1': evidenceLintSchemaJson as JsonObject,

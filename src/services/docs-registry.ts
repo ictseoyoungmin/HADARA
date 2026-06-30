@@ -26,6 +26,9 @@ export type DocumentKind =
   | 'historical-plan'
   | 'unknown';
 export type ReadWhen = 'session-start' | 'task-start' | 'task-close' | 'release-work' | 'docs-work' | 'debugging' | 'integration-work' | 'only-when-linked' | 'never-default';
+export type DocsReadTier = 'bootstrap' | 'current-state' | 'workflow-reference' | 'active-task' | 'active-spec' | 'conditional-reference' | 'implemented-reference' | 'drift-review' | 'historical' | 'excluded';
+export type DocsAuthority = 'exploratory' | 'proposed' | 'approved' | 'normative' | 'implementation-source' | 'reference-only' | 'historical';
+export type DocsEditPolicy = 'human-only' | 'agent-assisted' | 'agent-editable-with-request' | 'agent-editable-with-review' | 'cli-owned' | 'generated-projection';
 
 export interface ManagedSectionRef {
   id: string;
@@ -123,10 +126,58 @@ export interface DocsRegisterReport {
   issues: DocsIssue[];
 }
 
+export interface DocsReadMapEntry {
+  path: string;
+  title: string;
+  kind: string;
+  status: string;
+  readWhen: string[];
+  readTier: DocsReadTier;
+  authority: DocsAuthority;
+  editPolicy: DocsEditPolicy;
+  source: 'registry' | 'task-capsule' | 'discovery';
+  reason: string;
+}
+
+export interface DocsDriftWarning {
+  code: string;
+  path: string;
+  risk: 'low' | 'medium' | 'high';
+  reviewRequiredBeforeUse: boolean;
+  reason: string;
+}
+
+export interface DocsReadMapReport {
+  schemaVersion: 'hadara.docs.readMap.v1';
+  command: 'docs.read-map';
+  ok: boolean;
+  taskId: string;
+  source: { registryPath: '.hadara/docs-registry.json'; registryPresent: boolean; inferred: boolean };
+  task: { capsulePath: string | null; capsulePresent: boolean; title: string | null };
+  readFirst: DocsReadMapEntry[];
+  readIfNeeded: DocsReadMapEntry[];
+  doNotReadByDefault: DocsReadMapEntry[];
+  driftWarnings: DocsDriftWarning[];
+  issues: DocsIssue[];
+}
+
+export interface DocsInboxReport {
+  schemaVersion: 'hadara.docs.inbox.v1';
+  command: 'docs.inbox';
+  ok: boolean;
+  source: { registryPath: '.hadara/docs-registry.json'; registryPresent: boolean; inferred: boolean };
+  summary: { items: number; errors: number; warnings: number };
+  items: DocsIssue[];
+  issues: DocsIssue[];
+}
+
 export const DOCS_REGISTRY_PATH = '.hadara/docs-registry.json';
 
 const VALID_STATUSES: DocumentStatus[] = ['canonical', 'active', 'reference', 'historical', 'superseded', 'archived'];
 const VALID_READ_WHEN: ReadWhen[] = ['session-start', 'task-start', 'task-close', 'release-work', 'docs-work', 'debugging', 'integration-work', 'only-when-linked', 'never-default'];
+const VALID_READ_TIERS: DocsReadTier[] = ['bootstrap', 'current-state', 'workflow-reference', 'active-task', 'active-spec', 'conditional-reference', 'implemented-reference', 'drift-review', 'historical', 'excluded'];
+const VALID_AUTHORITIES: DocsAuthority[] = ['exploratory', 'proposed', 'approved', 'normative', 'implementation-source', 'reference-only', 'historical'];
+const VALID_EDIT_POLICIES: DocsEditPolicy[] = ['human-only', 'agent-assisted', 'agent-editable-with-request', 'agent-editable-with-review', 'cli-owned', 'generated-projection'];
 
 export function createSeedDocumentRegistry(profile: InitProfile | 'hadara-dev' = 'standard'): DocumentRegistryFile {
   return {
@@ -350,6 +401,109 @@ export function createDocsRegisterReport(projectRoot: string, options: {
   };
 }
 
+export function createDocsReadMapReport(projectRoot: string, taskId: string): DocsReadMapReport {
+  const normalizedTaskId = taskId.trim();
+  const state = loadRegistryOrInfer(projectRoot);
+  const task = findTask(projectRoot, normalizedTaskId);
+  const issues = [...state.issues, ...validateRegistryMetadata(state.registry)];
+  if (!normalizedTaskId) issues.push({ severity: 'error', code: 'DOC_READ_MAP_TASK_REQUIRED', message: 'Task id is required.' });
+  if (normalizedTaskId && !task.capsulePath) issues.push({ severity: 'warning', code: 'DOC_READ_MAP_TASK_NOT_FOUND', message: `${normalizedTaskId} task capsule was not found.` });
+
+  const readFirst: DocsReadMapEntry[] = [];
+  const readIfNeeded: DocsReadMapEntry[] = [];
+  const doNotReadByDefault: DocsReadMapEntry[] = [];
+  const driftWarnings: DocsDriftWarning[] = [];
+
+  if (task.capsulePath) {
+    for (const file of ['TASK.md', 'CONTEXT.md', 'HANDOFF.md']) {
+      const relativePath = `${task.capsulePath}/${file}`;
+      if (fs.existsSync(path.join(projectRoot, relativePath))) {
+        readFirst.push({
+          path: relativePath,
+          title: file.replace(/\.md$/, ''),
+          kind: 'task-capsule',
+          status: 'active',
+          readWhen: ['task-start'],
+          readTier: 'active-task',
+          authority: 'implementation-source',
+          editPolicy: 'agent-assisted',
+          source: 'task-capsule',
+          reason: 'Active Task Capsule document.'
+        });
+      }
+    }
+  }
+
+  for (const doc of state.registry.documents) {
+    const entry = createReadMapEntry(doc, normalizedTaskId, task.title);
+    if (entry.readTier === 'historical' || entry.readTier === 'excluded') {
+      doNotReadByDefault.push(entry);
+    } else if (entry.readTier === 'active-spec' || doc.requiredReading || doc.readWhen.includes('session-start') || doc.readWhen.includes('task-start')) {
+      readFirst.push(entry);
+    } else {
+      readIfNeeded.push(entry);
+    }
+    const warning = createDriftWarning(doc);
+    if (warning) driftWarnings.push(warning);
+  }
+
+  for (const activePath of findActiveLookingDocs(projectRoot)) {
+    if (!state.registry.documents.some((doc) => doc.path === activePath)) {
+      doNotReadByDefault.push({
+        path: activePath,
+        title: titleFromPath(activePath),
+        kind: 'spec',
+        status: 'unregistered',
+        readWhen: ['never-default'],
+        readTier: 'excluded',
+        authority: 'historical',
+        editPolicy: 'human-only',
+        source: 'discovery',
+        reason: 'Unregistered spec-looking document; register it before treating it as authority.'
+      });
+      driftWarnings.push({
+        code: 'SPEC_UNREGISTERED',
+        path: activePath,
+        risk: 'medium',
+        reviewRequiredBeforeUse: true,
+        reason: `${activePath} looks active but is not registered.`
+      });
+    }
+  }
+
+  return {
+    schemaVersion: 'hadara.docs.readMap.v1',
+    command: 'docs.read-map',
+    ok: issues.every((issue) => issue.severity !== 'error'),
+    taskId: normalizedTaskId,
+    source: state.source,
+    task: { capsulePath: task.capsulePath, capsulePresent: task.capsulePath !== null, title: task.title },
+    readFirst: sortReadMapEntries(readFirst),
+    readIfNeeded: sortReadMapEntries(readIfNeeded),
+    doNotReadByDefault: sortReadMapEntries(doNotReadByDefault),
+    driftWarnings: driftWarnings.sort((a, b) => a.path.localeCompare(b.path) || a.code.localeCompare(b.code)),
+    issues
+  };
+}
+
+export function createDocsInboxReport(projectRoot: string): DocsInboxReport {
+  const state = loadRegistryOrInfer(projectRoot);
+  const items = [...state.issues, ...validateRegistry(projectRoot, state.registry), ...validateRegistryMetadata(state.registry)];
+  return {
+    schemaVersion: 'hadara.docs.inbox.v1',
+    command: 'docs.inbox',
+    ok: items.every((item) => item.severity !== 'error'),
+    source: state.source,
+    summary: {
+      items: items.length,
+      errors: items.filter((item) => item.severity === 'error').length,
+      warnings: items.filter((item) => item.severity === 'warning').length
+    },
+    items,
+    issues: []
+  };
+}
+
 export function registryJson(registry: DocumentRegistryFile): string {
   return `${JSON.stringify(registry, null, 2)}\n`;
 }
@@ -435,6 +589,23 @@ function validateRegistry(projectRoot: string, registry: DocumentRegistryFile): 
   for (const activePath of findActiveLookingDocs(projectRoot)) {
     if (!registry.documents.some((doc) => doc.path === activePath)) {
       issues.push({ severity: 'warning', code: 'DOC_UNREGISTERED_ACTIVE_LOOKING', path: activePath, message: `${activePath} looks active but is not registered.` });
+    }
+  }
+  return issues;
+}
+
+function validateRegistryMetadata(registry: DocumentRegistryFile): DocsIssue[] {
+  const issues: DocsIssue[] = [];
+  for (const doc of registry.documents) {
+    const raw = doc as DocumentRegistryEntry & { authority?: string; readTier?: string; editPolicy?: string };
+    if (raw.authority !== undefined && !VALID_AUTHORITIES.includes(raw.authority as DocsAuthority)) {
+      issues.push({ severity: 'error', code: 'DOC_AUTHORITY_INVALID_TOKEN', path: doc.path, message: `${doc.path} has invalid authority: ${raw.authority}` });
+    }
+    if (raw.readTier !== undefined && !VALID_READ_TIERS.includes(raw.readTier as DocsReadTier)) {
+      issues.push({ severity: 'error', code: 'DOC_READ_TIER_INVALID_TOKEN', path: doc.path, message: `${doc.path} has invalid readTier: ${raw.readTier}` });
+    }
+    if (raw.editPolicy !== undefined && !VALID_EDIT_POLICIES.includes(raw.editPolicy as DocsEditPolicy)) {
+      issues.push({ severity: 'error', code: 'DOC_EDIT_POLICY_INVALID_TOKEN', path: doc.path, message: `${doc.path} has invalid editPolicy: ${raw.editPolicy}` });
     }
   }
   return issues;
@@ -563,6 +734,114 @@ function guidanceReason(doc: DocumentRegistryEntry): string {
   if (doc.readWhen.includes('task-start')) return `${doc.kind} document used when starting or closing task work.`;
   if (doc.readWhen.includes('never-default')) return `${doc.kind} document is historical and should not be default required reading.`;
   return `${doc.kind} document should be read ${doc.readWhen.join(', ')}.`;
+}
+
+function createReadMapEntry(doc: DocumentRegistryEntry, taskId: string, taskTitle: string | null): DocsReadMapEntry {
+  const raw = doc as DocumentRegistryEntry & { documentKind?: string; authority?: DocsAuthority; readTier?: DocsReadTier; editPolicy?: DocsEditPolicy };
+  const readTier = raw.readTier && VALID_READ_TIERS.includes(raw.readTier) ? raw.readTier : inferReadTier(doc, taskId, taskTitle);
+  return {
+    path: doc.path,
+    title: doc.title,
+    kind: raw.documentKind ?? doc.kind,
+    status: doc.status,
+    readWhen: doc.readWhen,
+    readTier,
+    authority: raw.authority && VALID_AUTHORITIES.includes(raw.authority) ? raw.authority : inferAuthority(doc, readTier),
+    editPolicy: raw.editPolicy && VALID_EDIT_POLICIES.includes(raw.editPolicy) ? raw.editPolicy : inferEditPolicy(doc),
+    source: 'registry',
+    reason: reasonForReadTier(doc, readTier)
+  };
+}
+
+function inferReadTier(doc: DocumentRegistryEntry, taskId: string, taskTitle: string | null): DocsReadTier {
+  if (doc.status === 'archived' || doc.readWhen.includes('never-default')) return 'excluded';
+  if (doc.status === 'historical' || doc.status === 'superseded') return 'historical';
+  if (matchesActiveSpec(doc, taskId, taskTitle)) return 'active-spec';
+  if (doc.kind === 'project-context' || doc.kind === 'project-state' || doc.kind === 'handoff' || doc.kind === 'task-board') return 'current-state';
+  if (doc.kind === 'workflow-guide' || doc.kind === 'protocol') return 'workflow-reference';
+  if (doc.kind === 'spec' && doc.status === 'reference') return 'conditional-reference';
+  return doc.status === 'reference' ? 'conditional-reference' : 'current-state';
+}
+
+function inferAuthority(doc: DocumentRegistryEntry, readTier: DocsReadTier): DocsAuthority {
+  if (readTier === 'historical' || readTier === 'excluded') return 'historical';
+  if (readTier === 'active-spec') return 'implementation-source';
+  if (doc.status === 'canonical' || doc.requiredReading) return 'normative';
+  return 'reference-only';
+}
+
+function inferEditPolicy(doc: DocumentRegistryEntry): DocsEditPolicy {
+  if (doc.updateOwner === 'hadara-init' || doc.updateOwner === 'hadara-task' || doc.updateOwner === 'hadara-docs') return 'cli-owned';
+  if (doc.updateOwner === 'human') return 'agent-editable-with-review';
+  return 'agent-assisted';
+}
+
+function matchesActiveSpec(doc: DocumentRegistryEntry, taskId: string, taskTitle: string | null): boolean {
+  const raw = doc as DocumentRegistryEntry & { activeForTasks?: string[] };
+  if (raw.activeForTasks?.includes(taskId)) return true;
+  if (doc.kind !== 'spec' && doc.kind !== 'implementation-guide') return false;
+  const taskTokens = tokens(`${taskId} ${taskTitle ?? ''}`);
+  if (taskTokens.size === 0) return false;
+  let overlap = 0;
+  for (const token of tokens(`${doc.path} ${doc.title}`)) {
+    if (taskTokens.has(token)) overlap += 1;
+  }
+  return overlap >= 2;
+}
+
+function createDriftWarning(doc: DocumentRegistryEntry): DocsDriftWarning | null {
+  const raw = doc as DocumentRegistryEntry & { drift?: { risk?: string; reviewRequiredBeforeUse?: boolean; reason?: string } };
+  if (raw.drift?.reviewRequiredBeforeUse || raw.drift?.risk === 'medium' || raw.drift?.risk === 'high') {
+    return {
+      code: 'SPEC_DRIFT_RISK_WITHOUT_REVIEW',
+      path: doc.path,
+      risk: raw.drift.risk === 'high' ? 'high' : raw.drift.risk === 'medium' ? 'medium' : 'low',
+      reviewRequiredBeforeUse: raw.drift.reviewRequiredBeforeUse ?? false,
+      reason: raw.drift.reason ?? `${doc.path} is marked as drift risk.`
+    };
+  }
+  if (doc.status === 'historical' || doc.status === 'superseded') {
+    return {
+      code: 'SPEC_ACTIVE_AFTER_IMPLEMENTED',
+      path: doc.path,
+      risk: 'low',
+      reviewRequiredBeforeUse: true,
+      reason: `${doc.path} is ${doc.status} and should not be treated as current authority.`
+    };
+  }
+  return null;
+}
+
+function reasonForReadTier(doc: DocumentRegistryEntry, readTier: DocsReadTier): string {
+  if (readTier === 'active-spec') return 'Matches the active task or registered activeForTasks metadata.';
+  if (readTier === 'current-state') return 'Current project state document.';
+  if (readTier === 'workflow-reference') return 'Workflow or protocol reference.';
+  if (readTier === 'historical') return 'Historical or superseded document.';
+  if (readTier === 'excluded') return 'Excluded from default reading.';
+  if (doc.readWhen.includes('only-when-linked')) return 'Read only when linked by the task or read-map.';
+  return `Read tier derived from ${doc.readWhen.join(', ')}.`;
+}
+
+function findTask(projectRoot: string, taskId: string): { capsulePath: string | null; title: string | null } {
+  if (!taskId) return { capsulePath: null, title: null };
+  const tasksDir = path.join(projectRoot, 'tasks');
+  if (!fs.existsSync(tasksDir)) return { capsulePath: null, title: null };
+  const name = fs.readdirSync(tasksDir).find((entryName) => entryName.startsWith(`${taskId}-`) && fs.statSync(path.join(tasksDir, entryName)).isDirectory());
+  if (!name) return { capsulePath: null, title: null };
+  const capsulePath = `tasks/${name}`;
+  const taskPath = path.join(projectRoot, capsulePath, 'TASK.md');
+  const taskText = fs.existsSync(taskPath) ? fs.readFileSync(taskPath, 'utf8') : '';
+  const titleMatch = taskText.match(/^#\s+(.+)$/m);
+  return { capsulePath, title: titleMatch ? titleMatch[1].replace(new RegExp(`^${taskId}\\s+`), '') : null };
+}
+
+function tokens(value: string): Set<string> {
+  const stop = new Set(['and', 'the', 'for', 'with', 'task', 'docs', 'doc', 'map', 't']);
+  return new Set(value.toLowerCase().split(/[^a-z0-9]+/).filter((token) => token.length > 2 && !stop.has(token)));
+}
+
+function sortReadMapEntries(entries: DocsReadMapEntry[]): DocsReadMapEntry[] {
+  return [...entries].sort((a, b) => a.path.localeCompare(b.path));
 }
 
 function normalizePath(value: string): string {

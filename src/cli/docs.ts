@@ -1,6 +1,6 @@
 import { getFlag, getRequiredStringOption, getStringOption } from './args';
 import { createDocsArchivePlanReport, createDocsMarkReport, createDocsRequiredReadingReport } from '../services/docs-cleanup';
-import { createDocsDoctorReport, createDocsExplainReport, createDocsListReport, createDocsRegisterReport } from '../services/docs-registry';
+import { createDocsDoctorReport, createDocsExplainReport, createDocsInboxReport, createDocsListReport, createDocsReadMapReport, createDocsRegisterReport } from '../services/docs-registry';
 import { createDocsPatchPlanReport, createManagedSectionExplainReport, createManagedSectionsListReport } from '../services/managed-sections';
 
 export interface DocsCommandInput {
@@ -27,6 +27,16 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
   if (sub === 'explain') {
     const documentPath = getStringOption(input.args, '--path') ?? input.args[2] ?? '';
     const report = createDocsExplainReport(input.projectRoot, documentPath);
+    printReport(report, input.jsonOutput);
+    return true;
+  }
+  if (sub === 'read-map') {
+    const report = createDocsReadMapReport(input.projectRoot, getRequiredStringOption(input.args, '--task'));
+    printReport(report, input.jsonOutput);
+    return true;
+  }
+  if (sub === 'inbox') {
+    const report = createDocsInboxReport(input.projectRoot);
     printReport(report, input.jsonOutput);
     return true;
   }
