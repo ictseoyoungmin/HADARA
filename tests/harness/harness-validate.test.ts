@@ -520,7 +520,7 @@ describe('Harness Task Capsule validation', () => {
       summary: 'Done-level validation evidence',
       result: 'passed'
     });
-    fs.appendFileSync(path.join(task.dir, 'EVIDENCE.md'), '\n| Time | Kind | Summary | Result | Visibility | JSONL |\n|---|---|---|---|---|---|\n', 'utf8');
+    fs.appendFileSync(path.join(task.dir, 'EVIDENCE.md'), '\n| Time | Kind | Summary | Result | Visibility | JSONL |\n|---|---|---|---|---|---|\n| Time | Kind | Summary | Result | Visibility | JSONL |\n|---|---|---|---|---|---|\n', 'utf8');
 
     const result = validateTaskCapsule(root, task.id, { level: 'done' });
 

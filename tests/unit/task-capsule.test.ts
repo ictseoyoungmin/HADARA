@@ -48,7 +48,8 @@ describe('Task Capsule scaffold frames', () => {
     expect(evidence).toContain('## Validation Evidence');
     expect(evidence).toContain('## Close Proof');
     expect(evidence).toContain('## Failed / Blocked / Residual Evidence');
-    expect(evidence).toContain('| Time | Kind | Summary | Result | Visibility | JSONL |');
+    expect(evidence).toContain('<!-- hadara:slot evidence.validation-summary -->');
+    expect(evidence).toContain('| Evidence ID | Outcome | Category | Summary |');
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe('');
   });
 });

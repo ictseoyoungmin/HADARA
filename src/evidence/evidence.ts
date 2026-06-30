@@ -100,6 +100,25 @@ export interface EvidenceAppendResult {
   existing: boolean;
 }
 
+export interface EvidenceProjectionReport {
+  schemaVersion: 'hadara.evidence.projection.v1';
+  command: 'evidence.project';
+  ok: boolean;
+  taskId: string;
+  mode: 'dry-run' | 'execute';
+  source: string;
+  target: string;
+  wouldChange: boolean;
+  generatedSlots: string[];
+  beforeHash?: string;
+  afterHash: string;
+  issues: Array<{
+    severity: 'error';
+    code: string;
+    message: string;
+  }>;
+}
+
 export type EvidenceArtifactPolicyErrorCode = 'PUBLIC_ARTIFACT_BINARY_REJECTED' | 'PUBLIC_ARTIFACT_SECRET_DETECTED';
 export type EvidenceAppendErrorCode =
   | 'EVIDENCE_APPEND_LOCK_TIMEOUT'
@@ -381,15 +400,6 @@ function appendEvidenceRecord(input: {
     }
 
     const attachedPath = input.createAttachedPath();
-    const rowSummary = input.visibility === 'private' || !attachedPath ? summary : `${summary} (${attachedPath})`;
-    const jsonlMarker = input.visibility === 'public' && attachedPath ? attachedPath : 'evidence.jsonl';
-    const row = `| ${input.time} | ${input.record.kind} | ${rowSummary} | ${input.record.result} | ${input.visibility} | ${jsonlMarker} |\n`;
-
-    if (!fs.existsSync(markdownPath)) {
-      fs.writeFileSync(markdownPath, '# Evidence\n\n| Time | Kind | Summary | Result | Visibility | JSONL |\n|---|---|---|---|---|---|\n', 'utf8');
-    }
-    fs.appendFileSync(markdownPath, row, 'utf8');
-
     const evidence = createEvidenceV2Record({
       time: input.time,
       taskId: input.record.taskId,
@@ -405,6 +415,7 @@ function appendEvidenceRecord(input: {
       actor: input.record.actor
     });
     appendEvidenceIndex(input.taskDir, evidence);
+    const projection = projectEvidenceMarkdown(input.taskDir, input.record.taskId, true);
     if (input.visibility === 'private') {
       writePrivateEvidenceManifest({
         projectRoot: input.projectRoot,
@@ -420,11 +431,129 @@ function appendEvidenceRecord(input: {
     return {
       markdownPath,
       evidence,
-      markdownAppended: true,
+      markdownAppended: projection.wouldChange,
       jsonlAppended: true,
       existing: false
     };
   });
+}
+
+export function createEvidenceProjectionReport(projectRoot: string, taskId: string, execute = false): EvidenceProjectionReport {
+  const taskDir = findTaskDir(projectRoot, taskId);
+  if (!taskDir) {
+    return {
+      schemaVersion: 'hadara.evidence.projection.v1',
+      command: 'evidence.project',
+      ok: false,
+      taskId,
+      mode: execute ? 'execute' : 'dry-run',
+      source: `tasks/${taskId}/evidence.jsonl`,
+      target: `tasks/${taskId}/EVIDENCE.md`,
+      wouldChange: false,
+      generatedSlots: evidenceProjectionSlots(),
+      afterHash: hashText(''),
+      issues: [{ severity: 'error', code: 'TASK_NOT_FOUND', message: `Task Capsule not found: ${taskId}` }]
+    };
+  }
+  const report = projectEvidenceMarkdown(taskDir, taskId, execute);
+  const source = toPortablePath(path.relative(projectRoot, path.join(taskDir, 'evidence.jsonl')));
+  const target = toPortablePath(path.relative(projectRoot, path.join(taskDir, 'EVIDENCE.md')));
+  return { ...report, source, target };
+}
+
+function projectEvidenceMarkdown(taskDir: string, taskId: string, execute: boolean): EvidenceProjectionReport {
+  const source = path.join(taskDir, 'evidence.jsonl');
+  const target = path.join(taskDir, 'EVIDENCE.md');
+  const records = readEvidenceIndex(taskDir);
+  const next = renderEvidenceProjection(records);
+  const previous = fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : '';
+  const wouldChange = previous !== next;
+  if (execute && wouldChange) fs.writeFileSync(target, next, 'utf8');
+  return {
+    schemaVersion: 'hadara.evidence.projection.v1',
+    command: 'evidence.project',
+    ok: true,
+    taskId,
+    mode: execute ? 'execute' : 'dry-run',
+    source,
+    target,
+    wouldChange,
+    generatedSlots: evidenceProjectionSlots(),
+    ...(previous ? { beforeHash: hashText(previous) } : {}),
+    afterHash: hashText(next),
+    issues: []
+  };
+}
+
+function renderEvidenceProjection(records: PersistedEvidenceRecord[]): string {
+  const validationRows = records.filter((record) => !isCloseProofRecord(record) && !isResidualRecord(record));
+  const closeRows = records.filter(isCloseProofRecord);
+  const residualRows = records.filter(isResidualRecord);
+  return [
+    '# EVIDENCE',
+    '',
+    'This file is a human-readable projection from `evidence.jsonl`.',
+    '',
+    'Do not hand-edit this file.',
+    '',
+    '## Validation Evidence',
+    '',
+    '<!-- hadara:slot evidence.validation-summary -->',
+    '| Evidence ID | Outcome | Category | Summary |',
+    '|---|---|---|---|',
+    ...validationRows.map((record) => `| ${evidenceProjectionId(record)} | ${evidenceProjectionOutcome(record)} | ${evidenceProjectionCategory(record)} | ${evidenceProjectionSummary(record)} |`),
+    '<!-- /hadara:slot -->',
+    '',
+    '## Close Proof',
+    '',
+    '<!-- hadara:slot evidence.close-proof -->',
+    '| Check | Result | Evidence |',
+    '|---|---|---|',
+    ...closeRows.map((record) => `| close evidence | ${evidenceProjectionOutcome(record)} | ${evidenceProjectionId(record)} |`),
+    '<!-- /hadara:slot -->',
+    '',
+    '## Failed / Blocked / Residual Evidence',
+    '',
+    '<!-- hadara:slot evidence.residuals -->',
+    '| Evidence ID | Outcome | Summary | Disposition | Reference |',
+    '|---|---|---|---|---|',
+    ...residualRows.map((record) => `| ${evidenceProjectionId(record)} | ${evidenceProjectionOutcome(record)} | ${evidenceProjectionSummary(record)} | Unresolved | evidence.jsonl |`),
+    '<!-- /hadara:slot -->',
+    ''
+  ].join('\n');
+}
+
+function evidenceProjectionSlots(): string[] {
+  return ['evidence.validation-summary', 'evidence.close-proof', 'evidence.residuals'];
+}
+
+function evidenceProjectionId(record: PersistedEvidenceRecord): string {
+  return record.schemaVersion === 'hadara.evidence.v2' ? record.id : 'evidence.jsonl';
+}
+
+function evidenceProjectionOutcome(record: PersistedEvidenceRecord): EvidenceOutcome {
+  return record.schemaVersion === 'hadara.evidence.v2' ? record.outcome : normalizeEvidenceOutcome(record.result);
+}
+
+function evidenceProjectionCategory(record: PersistedEvidenceRecord): EvidenceCategory {
+  return record.schemaVersion === 'hadara.evidence.v2' ? record.category : deriveEvidenceCategory(record.kind, record.summary);
+}
+
+function evidenceProjectionSummary(record: PersistedEvidenceRecord): string {
+  return record.summary.replace(/\|/g, '/');
+}
+
+function isCloseProofRecord(record: PersistedEvidenceRecord): boolean {
+  return record.schemaVersion === 'hadara.evidence.v2' && record.tags.includes('close-proof');
+}
+
+function isResidualRecord(record: PersistedEvidenceRecord): boolean {
+  const outcome = evidenceProjectionOutcome(record);
+  return outcome === 'failed' || outcome === 'blocked';
+}
+
+function hashText(content: string): string {
+  return `sha256:${crypto.createHash('sha256').update(content, 'utf8').digest('hex')}`;
 }
 
 function createEvidenceV2Record(input: {

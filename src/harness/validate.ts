@@ -460,22 +460,26 @@ function validateEvidenceMarkdown(projectRoot: string, task: TaskCapsule, issues
   if (!fs.existsSync(evidencePath)) return;
 
   const relativePath = toPortablePath(path.relative(projectRoot, evidencePath));
-  const lines = fs.readFileSync(evidencePath, 'utf8').split(/\r?\n/);
+  const content = fs.readFileSync(evidencePath, 'utf8');
+  const lines = content.split(/\r?\n/);
   const headerIndex = lines.findIndex(isEvidenceTableHeader);
-  if (headerIndex < 0 || !isEvidenceSeparator(lines[headerIndex + 1]?.trim())) {
+  const hasProjectionSlots = content.includes('<!-- hadara:slot evidence.validation-summary -->')
+    && content.includes('<!-- hadara:slot evidence.close-proof -->')
+    && content.includes('<!-- hadara:slot evidence.residuals -->');
+  if (!hasProjectionSlots && (headerIndex < 0 || !isEvidenceSeparator(lines[headerIndex + 1]?.trim()))) {
     issues.push({
       severity: 'error',
       code: 'EVIDENCE_TABLE_INVALID',
-      message: 'EVIDENCE.md must contain the standard evidence table header.',
+      message: 'EVIDENCE.md must contain the standard evidence projection slots or legacy evidence table header.',
       path: relativePath,
       heading: 'Evidence',
-      fixHint: 'Restore the standard EVIDENCE.md table header.',
-      example: '| Time | Kind | Summary | Result | Visibility | JSONL |',
+      fixHint: 'Restore the standard EVIDENCE.md projection slots.',
+      example: '<!-- hadara:slot evidence.validation-summary -->',
       remediationHint: {
         path: relativePath,
         heading: 'Evidence',
-        requiredChange: 'Restore the standard EVIDENCE.md table header.',
-        example: '| Time | Kind | Summary | Result | Visibility | JSONL |',
+        requiredChange: 'Restore the standard EVIDENCE.md projection slots.',
+        example: '<!-- hadara:slot evidence.validation-summary -->',
         blocking: true
       }
     });
@@ -952,7 +956,9 @@ function validateEvidenceMarkdownSingleTable(projectRoot: string, task: TaskCaps
 
   const relativePath = toPortablePath(path.relative(projectRoot, evidencePath));
   const lines = fs.readFileSync(evidencePath, 'utf8').split(/\r?\n/);
+  const content = lines.join('\n');
   const tableHeaderCount = lines.filter((line, index) => isEvidenceTableHeader(line) && isEvidenceSeparator(lines[index + 1]?.trim())).length;
+  if (content.includes('<!-- hadara:slot evidence.validation-summary -->') && tableHeaderCount === 0) return;
   if (tableHeaderCount > 1) {
     issues.push({
       severity: 'error',

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.evidence.projection.v1",
+  "x-hadara-schema-id": "hadara.evidence.projection.v1",
+  "title": "HADARA Evidence Projection Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "taskId", "mode", "source", "target", "wouldChange", "generatedSlots", "afterHash", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.evidence.projection.v1" },
+    "command": { "const": "evidence.project" },
+    "ok": { "type": "boolean" },
+    "taskId": { "type": "string", "pattern": "^T-[0-9]{4,}$" },
+    "mode": { "enum": ["dry-run", "execute"] },
+    "source": { "type": "string" },
+    "target": { "type": "string" },
+    "wouldChange": { "type": "boolean" },
+    "generatedSlots": { "type": "array", "items": { "type": "string" } },
+    "beforeHash": { "type": "string" },
+    "afterHash": { "type": "string" },
+    "issues": { "type": "array", "items": { "$ref": "#/$defs/issue" } }
+  },
+  "$defs": {
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "enum": ["error", "warning", "info"] },
+        "code": { "type": "string" },
+        "message": { "type": "string" }
+      }
+    }
+  }
+}

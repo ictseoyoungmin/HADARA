@@ -142,7 +142,10 @@ function lintEvidenceMarkdown(projectRoot: string, evidencePath: string, issues:
     issues.push({ severity: 'warning', code: 'EVIDENCE_MARKDOWN_MISSING', message: 'EVIDENCE.md is missing.', path: relativePath });
     return 0;
   }
-  const rows = parseMarkdownRows(fs.readFileSync(evidencePath, 'utf8'));
+  const content = fs.readFileSync(evidencePath, 'utf8');
+  const rows = parseMarkdownRows(content);
+  const projectedRows = rows.filter((cells) => /^ev:/.test(cells[0] ?? '') || /^ev:/.test(cells[2] ?? '')).length;
+  if (projectedRows > 0 || content.includes('<!-- hadara:slot evidence.validation-summary -->')) return projectedRows;
   return rows.filter((cells) => /^\d{4}-\d{2}-\d{2}T/.test(cells[0] ?? '')).length;
 }
 

@@ -1,5 +1,6 @@
 import {
   appendEvidenceWithResult,
+  createEvidenceProjectionReport,
   EvidenceCategory,
   EvidenceOutcome,
   EvidenceRecord,
@@ -75,6 +76,19 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
       for (const issue of report.issues) {
         console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
       }
+    }
+    if (!report.ok) process.exitCode = 6;
+    return true;
+  }
+
+  if (sub === 'project') {
+    const taskId = getRequiredStringOption(input.args, '--task');
+    const report = createEvidenceProjectionReport(input.projectRoot, taskId, getFlag(input.args, '--execute'));
+    if (input.jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log(`[HADARA] evidence project ${taskId}: ${report.ok ? 'ok' : 'issues'} | mode ${report.mode} | wouldChange ${report.wouldChange}`);
+      for (const issue of report.issues) console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
     }
     if (!report.ok) process.exitCode = 6;
     return true;

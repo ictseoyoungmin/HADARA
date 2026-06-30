@@ -1,0 +1,89 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
+import { handleEvidenceCommand } from '../../src/cli/evidence';
+import { appendEvidence, createEvidenceProjectionReport } from '../../src/evidence/evidence';
+import { createTaskCapsule } from '../../src/task/task-capsule';
+
+const roots: string[] = [];
+
+function tempProject(): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-evidence-projection-'));
+  roots.push(dir);
+  return dir;
+}
+
+afterEach(() => {
+  for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
+  process.exitCode = undefined;
+});
+
+describe('evidence projection', () => {
+  it('refreshes EVIDENCE.md projection from canonical evidence.jsonl on append', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Projection append');
+
+    appendEvidence(root, { taskId: task.id, kind: 'command-log', summary: 'Focused validation passed', result: 'passed', visibility: 'public', category: 'validation' });
+    appendEvidence(root, { taskId: task.id, kind: 'command-log', summary: 'Fixture command failed', result: 'failed', visibility: 'public', category: 'validation' });
+    appendEvidence(root, { taskId: task.id, kind: 'command-log', summary: 'Task close validation returned ok:true', result: 'passed', visibility: 'public', category: 'audit', tags: ['close-proof'] });
+
+    const evidence = fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8');
+    const jsonl = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
+
+    expect(jsonl.trim().split(/\r?\n/)).toHaveLength(3);
+    expect(evidence).toContain('<!-- hadara:slot evidence.validation-summary -->');
+    expect(evidence).toContain('| Evidence ID | Outcome | Category | Summary |');
+    expect(evidence).toContain('| close evidence | passed | ev:');
+    expect(evidence).toContain('| failed | Fixture command failed | Unresolved | evidence.jsonl |');
+    expect(evidence).not.toContain('| Time | Kind | Summary | Result | Visibility | JSONL |');
+  });
+
+  it('reports projection drift and execute rewrites only EVIDENCE.md', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Projection repair');
+    appendEvidence(root, { taskId: task.id, kind: 'note', summary: 'Projection source', result: 'passed', visibility: 'public' });
+    const beforeJsonl = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
+    fs.writeFileSync(path.join(task.dir, 'EVIDENCE.md'), '# EVIDENCE\n\nstale\n', 'utf8');
+
+    const dryRun = createEvidenceProjectionReport(root, task.id);
+    expect(dryRun).toMatchObject({
+      schemaVersion: 'hadara.evidence.projection.v1',
+      command: 'evidence.project',
+      ok: true,
+      mode: 'dry-run',
+      wouldChange: true,
+      generatedSlots: ['evidence.validation-summary', 'evidence.close-proof', 'evidence.residuals']
+    });
+
+    const executed = createEvidenceProjectionReport(root, task.id, true);
+    expect(executed.mode).toBe('execute');
+    expect(executed.wouldChange).toBe(true);
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe(beforeJsonl);
+    expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain('Projection source');
+  });
+
+  it('routes evidence project through the CLI', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Projection CLI');
+    appendEvidence(root, { taskId: task.id, kind: 'note', summary: 'CLI projection source', result: 'passed', visibility: 'public' });
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+    try {
+      expect(handleEvidenceCommand({ args: ['evidence', 'project', '--task', task.id, '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+    expect(JSON.parse(output.join('\n'))).toMatchObject({
+      schemaVersion: 'hadara.evidence.projection.v1',
+      command: 'evidence.project',
+      ok: true,
+      taskId: task.id,
+      mode: 'dry-run',
+      wouldChange: false
+    });
+  });
+});
