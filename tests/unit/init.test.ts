@@ -97,6 +97,7 @@ describe('init profiles', () => {
     expect(scaffold).not.toHaveProperty('taskLayoutDefault');
 
     const registry = JSON.parse(read(root, '.hadara/docs-registry.json'));
+    expect(registry.schemaVersion).toBe('hadara.docsRegistry.v2');
     expect(registry.documents.map((doc: any) => doc.path)).toEqual(expect.arrayContaining([
       '.hadara/context/HADARA_CONTEXT.md',
       'AGENTS.md',

@@ -160,7 +160,7 @@ function planProjectScopedMigration(
     '.hadara/context/HADARA_CONTEXT.md already exists; protocol migration preserves existing project context.'
   );
 
-  const seed = createSeedDocumentRegistry(profile);
+  const seed = createSeedDocumentRegistry(profile, 'hadara.docs.registry.v1');
   const registry = mergeExistingRegistry(projectRoot, seed, issues);
   planWrite(projectRoot, actions, 'docs-registry-json', DOCS_REGISTRY_PATH, registryJson(registry), 'Insert or update the 0.3 docs registry seed.');
   planWrite(projectRoot, actions, 'doc-registry-markdown', 'docs/DOC_REGISTRY.md', renderDocRegistryMarkdown(registry), 'Create managed docs registry Markdown summary.');

@@ -444,3 +444,4 @@
 | T-0441 | T-04A14 Session Start Read-Map Integration | Done | tasks/T-0441-t-04a14-session-start-read-map-integration | |
 | T-0442 | T-04A15 Context Pack Read-Map Integration | Done | tasks/T-0442-t-04a15-context-pack-read-map-integration | |
 | T-0443 | T-04A16 Authoring Guidance Read Models | Done | tasks/T-0443-t-04a16-authoring-guidance-read-models | |
+| T-0444 | Reviewer Feedback Residual Hardening | Done | tasks/T-0444-reviewer-feedback-residual-hardening | Reviewer feedback residual hardening passed in `ev:T-0444:68cba6d6c6e84a9f84e879ca` and `ev:T-0444:5cba035f87e74b3692ac3df6`. |

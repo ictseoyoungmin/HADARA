@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0443. |
-| Current Phase | 0.4 authoring guidance read models complete plus 0.3.4 stable readiness pending | T-0443 makes task status/lifecycle/finalize reports show read-only authoring guidance; T-04A17 Init Doctor and Profile Diagnostics is next. |
-| Latest Completed Task | T-0443 T-04A16 Authoring Guidance Read Models | Task status, lifecycle, and finalize reports now include additive read-only `authoringGuidance` without CLI prose mutation. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0444. |
+| Current Phase | 0.4 reviewer-feedback residual hardening complete plus 0.3.4 stable readiness pending | T-0444 closes the remaining reviewer feedback around docs registry v2 schema alignment, legacy task-doc routing, projection wording, and legacy SOP registration guidance; T-04A17 Init Doctor and Profile Diagnostics is next. |
+| Latest Completed Task | T-0444 Reviewer Feedback Residual Hardening | Fresh 0.4 docs registries use `hadara.docsRegistry.v2`, legacy registry reads remain compatible, read-map legacy `CONTEXT.md` routing is conditional, and projection wording is aligned. |
 | Active / Next Task | T-04A17 Init Doctor and Profile Diagnostics | Harden scaffold/profile diagnostics, duplicate-doc detection, and product-default checks. |
-| Validation Baseline | T-0443 authoring guidance read models plus T-0423 helper residual fix | T-0443 Docker focused build/tests and built CLI smoke passed in `ev:T-0443:5b1829f6efe44f15913e30b4` and `ev:T-0443:966731c29ab64153af2f79e8`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
+| Validation Baseline | T-0444 reviewer-feedback residual hardening plus T-0423 helper residual fix | T-0444 Docker focused build/tests, refreshed `dist`, built CLI smokes, done-level harness validation, and `git diff --check` passed in `ev:T-0444:68cba6d6c6e84a9f84e879ca` and `ev:T-0444:5cba035f87e74b3692ac3df6`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-04A17 Init Doctor and Profile Diagnostics | Next. Harden scaffold/profile diagnostics, duplicate-doc detection, and product-default checks. | `ev:T-0443:5b1829f6efe44f15913e30b4`, `ev:T-0443:966731c29ab64153af2f79e8` |
+| T-04A17 Init Doctor and Profile Diagnostics | Next. Harden scaffold/profile diagnostics, duplicate-doc detection, and product-default checks. | `ev:T-0444:68cba6d6c6e84a9f84e879ca` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0444 / Reviewer Feedback Residual Hardening | Aligned fresh 0.4 docs registry schema to `hadara.docsRegistry.v2`, preserved legacy v1 compatibility, made legacy `CONTEXT.md` read-map routing conditional/historical, aligned generated evidence projection wording, and routed legacy SOP registration guidance to `docs register`. | `ev:T-0444:68cba6d6c6e84a9f84e879ca` |
 | T-0443 / T-04A16 Authoring Guidance Read Models | Added shared read-only `authoringGuidance` to task status, lifecycle, finalize, and fast dashboard workbench projections; guidance reports task-owned section slots without writing prose. | `ev:T-0443:5b1829f6efe44f15913e30b4`, `ev:T-0443:966731c29ab64153af2f79e8` |
 | T-0442 / T-04A15 Context Pack Read-Map Integration | Added docs read-map consumption to Context Pack, active task/spec read-map priority, excluded spec filtering, focused tests, refreshed `dist`, built CLI smoke coverage, and a dogfood memory note. | `ev:T-0442:0442975b9ace4166a801f5a6`, `ev:T-0442:fb4472fd84544f7ea682ade0` |
-| T-0441 / T-04A14 Session Start Read-Map Integration | Added compact task-scoped Session Start docs read-map metadata, `docs-read-map` guidance, source document drift surfacing, focused tests, refreshed `dist`, and built CLI smoke coverage. | `ev:T-0441:619636a6d5a34be2a42bf1d9`, `ev:T-0441:22402ccb85324b76a2d2bc79` |
 
 ## Current Known Problems
 

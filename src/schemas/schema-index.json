@@ -62,7 +62,7 @@
       "path": "src/schemas/evidence-projection.schema.json",
       "status": "fixture",
       "owner": "evidence/evidence",
-      "notes": "Dry-run and execute report for regenerating EVIDENCE.md projection slots from canonical evidence.jsonl."
+      "notes": "Dry-run and execute report for regenerating the EVIDENCE.md projection file from canonical evidence.jsonl."
     },
     {
       "id": "hadara.evidence.lint.v1",

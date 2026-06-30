@@ -565,7 +565,12 @@ function createSopRowUpdatePlan(
   const sopPath = path.join(projectRoot, 'docs', 'IMPLEMENTATION_SOP.md');
   const sop = fs.existsSync(sopPath) ? fs.readFileSync(sopPath, 'utf8') : null;
   if (sop === null) {
-    issues.push({ severity: 'error', code: 'INIT_SOP_MISSING', path: 'docs/IMPLEMENTATION_SOP.md', message: 'SOP Required Reading table cannot be updated because IMPLEMENTATION_SOP.md is missing.' });
+    issues.push({
+      severity: 'error',
+      code: 'INIT_SOP_MISSING',
+      path: 'docs/IMPLEMENTATION_SOP.md',
+      message: 'Legacy SOP Required Reading cannot be updated because IMPLEMENTATION_SOP.md is missing. In 0.4 projects, use `hadara docs register` to write .hadara/docs-registry.json metadata instead.'
+    });
     return { ok: false, actions, issues };
   }
   if (!input.allowMissingDocument && !fs.existsSync(path.join(projectRoot, input.relativePath))) {
@@ -1161,7 +1166,7 @@ HADARA 0.4 Task Capsules contain \`TASK.md\`, \`HANDOFF.md\`, \`EVIDENCE.md\`, a
 | Finalize execute | Do not edit close-source docs during execute. |
 | After close | Only clarify docs if the task contract did not change; rerun finalize after close-source edits. |
 
-Do not hand-edit \`evidence.jsonl\`. Do not hand-edit generated slots in \`EVIDENCE.md\`.
+Do not hand-edit \`evidence.jsonl\`. Treat \`EVIDENCE.md\` as a CLI-generated projection file.
 
 ## Evidence
 
@@ -1175,7 +1180,7 @@ hadara evidence project --task T-XXXX --json
 
 Evidence must reflect real execution results. Fabricated or assumed results are invalid.
 
-\`evidence project\` is the 0.4 projection refresh surface. When implemented, it refreshes generated evidence projection slots without rewriting canonical evidence.
+\`evidence project\` is the 0.4 projection refresh surface. It refreshes the generated \`EVIDENCE.md\` projection file without rewriting canonical evidence.
 
 ## Repair and Diagnostics
 
@@ -1237,7 +1242,7 @@ Document registration writes registry metadata, not prose rows in entry docs. Do
 | \`TASK.md\` prose/tables | Reviews | Authors goal, source documents, plan, acceptance, validation, change summary, risks, and follow-ups | Validates controlled values |
 | \`HANDOFF.md\` | Reviews | Writes continuation guidance | May suggest or project summaries |
 | \`evidence.jsonl\` | Supplies command result facts | Does not hand-edit | Appends canonical evidence |
-| \`EVIDENCE.md\` | Reads | Does not hand-edit generated slots | Regenerates projection |
+| \`EVIDENCE.md\` | Reads | Does not hand-edit generated projection | Regenerates projection file |
 | Close proof | Reviews | Does not write by hand | Appends proof and audits freshness |
 
 ## Automatic Writing Boundary

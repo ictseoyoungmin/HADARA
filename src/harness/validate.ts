@@ -470,15 +470,15 @@ function validateEvidenceMarkdown(projectRoot: string, task: TaskCapsule, issues
     issues.push({
       severity: 'error',
       code: 'EVIDENCE_TABLE_INVALID',
-      message: 'EVIDENCE.md must contain the standard evidence projection slots or legacy evidence table header.',
+      message: 'EVIDENCE.md must use the standard generated evidence projection file shape or a legacy evidence table header.',
       path: relativePath,
       heading: 'Evidence',
-      fixHint: 'Restore the standard EVIDENCE.md projection slots.',
+      fixHint: 'Restore the standard generated EVIDENCE.md projection file shape.',
       example: '<!-- hadara:slot evidence.validation-summary -->',
       remediationHint: {
         path: relativePath,
         heading: 'Evidence',
-        requiredChange: 'Restore the standard EVIDENCE.md projection slots.',
+        requiredChange: 'Restore the standard generated EVIDENCE.md projection file shape.',
         example: '<!-- hadara:slot evidence.validation-summary -->',
         blocking: true
       }

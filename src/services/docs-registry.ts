@@ -67,7 +67,7 @@ export interface DocumentRegistryEntry {
 }
 
 export interface DocumentRegistryFile {
-  schemaVersion: 'hadara.docs.registry.v1';
+  schemaVersion: 'hadara.docs.registry.v1' | 'hadara.docsRegistry.v2';
   registryVersion: number;
   projectProfile?: InitProfile | 'hadara-dev';
   generatedAt?: string;
@@ -189,9 +189,12 @@ const VALID_AUTHORITIES: DocsAuthority[] = ['exploratory', 'proposed', 'approved
 const VALID_EDIT_POLICIES: DocsEditPolicy[] = ['human-only', 'agent-assisted', 'agent-editable-with-request', 'agent-editable-with-review', 'cli-owned', 'generated-projection'];
 const ACTIVE_DOC_DISCOVERY_LIMIT = 200;
 
-export function createSeedDocumentRegistry(profile: InitProfile | 'hadara-dev' = 'standard'): DocumentRegistryFile {
+export function createSeedDocumentRegistry(
+  profile: InitProfile | 'hadara-dev' = 'standard',
+  schemaVersion: DocumentRegistryFile['schemaVersion'] = 'hadara.docsRegistry.v2'
+): DocumentRegistryFile {
   return {
-    schemaVersion: 'hadara.docs.registry.v1',
+    schemaVersion,
     registryVersion: 1,
     projectProfile: profile,
     documents: seedEntries(profile)
@@ -466,6 +469,21 @@ export function createDocsReadMapReport(projectRoot: string, taskId: string): Do
         });
       }
     }
+    const legacyContextPath = `${task.capsulePath}/CONTEXT.md`;
+    if (fs.existsSync(path.join(projectRoot, legacyContextPath))) {
+      readIfNeeded.push({
+        path: legacyContextPath,
+        title: 'CONTEXT',
+        kind: 'task-capsule',
+        status: 'historical',
+        readWhen: ['only-when-linked'],
+        readTier: 'conditional-reference',
+        authority: 'historical',
+        editPolicy: 'human-only',
+        source: 'task-capsule',
+        reason: 'Legacy Task Capsule context document; read only when investigating older capsules or explicit references.'
+      });
+    }
   }
 
   for (const doc of state.registry.documents) {
@@ -577,6 +595,14 @@ function inferRegistry(projectRoot: string): DocumentRegistryFile {
 
 function validateRegistry(projectRoot: string, registry: DocumentRegistryFile): DocsIssue[] {
   const issues: DocsIssue[] = [];
+  if (registry.schemaVersion !== 'hadara.docsRegistry.v2' && registry.schemaVersion !== 'hadara.docs.registry.v1') {
+    issues.push({
+      severity: 'error',
+      code: 'DOC_REGISTRY_SCHEMA_UNSUPPORTED',
+      path: DOCS_REGISTRY_PATH,
+      message: `${DOCS_REGISTRY_PATH} has unsupported schemaVersion: ${String(registry.schemaVersion)}.`
+    });
+  }
   const expectedSeed = registry.projectProfile ? createSeedDocumentRegistry(registry.projectProfile).documents : [];
   const registeredPaths = new Set(registry.documents.map((doc) => doc.path));
   const seenCanonical = new Map<string, string>();

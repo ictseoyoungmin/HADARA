@@ -166,7 +166,7 @@ HADARA 0.4 Task Capsules contain `TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and `ev
 | Finalize execute | `task finalize --execute --plan-hash ...` | Do not edit close-source docs during execute. | Let HADARA perform bounded status bookkeeping and close proof append. |
 | After close | `task audit-close`, `task status` | Only clarify `HANDOFF.md` if the task contract did not change. | Keep close proof fresh; rerun finalize after close-source edits. |
 
-Do not hand-edit `evidence.jsonl`. Do not hand-edit generated slots in `EVIDENCE.md`.
+Do not hand-edit `evidence.jsonl`. Treat `EVIDENCE.md` as a CLI-generated projection file.
 
 ## Evidence
 
@@ -180,7 +180,7 @@ hadara evidence project --task T-XXXX --json
 
 Evidence must reflect real execution results. Fabricated, assumed, or aspirational results are invalid.
 
-`evidence project` is the 0.4 projection refresh surface. When implemented, it refreshes generated evidence projection slots without rewriting canonical evidence.
+`evidence project` is the 0.4 projection refresh surface. It refreshes the generated `EVIDENCE.md` projection file without rewriting canonical evidence.
 
 ## Repair and Diagnostics
 
@@ -242,7 +242,7 @@ Document registration writes registry metadata, not prose rows in entry docs. Do
 | `TASK.md` prose/tables | Reviews | Authors goal, source documents, plan, acceptance, validation, change summary, risks, and follow-ups | Validates controlled values |
 | `HANDOFF.md` | Reviews | Writes continuation guidance | May suggest or project summaries |
 | `evidence.jsonl` | Supplies command result facts | Does not hand-edit | Appends canonical evidence |
-| `EVIDENCE.md` | Reads | Does not hand-edit generated slots | Regenerates projection |
+| `EVIDENCE.md` | Reads | Does not hand-edit generated projection | Regenerates projection file |
 | Close proof | Reviews | Does not write by hand | Appends proof and audits freshness |
 
 ## Automatic Writing Boundary

@@ -144,7 +144,8 @@ describe('protocol migration service', () => {
     const executed = createProtocolMigrationReport({ projectRoot: root, target: '0.3.0', mode: 'execute', taskId: task.id, beforeHash: dryRun.summary.beforeHash ?? undefined });
     expect(executed.ok).toBe(true);
     expect(fs.existsSync(path.join(task.dir, 'evidence.jsonl'))).toBe(true);
-    expect(fs.readFileSync(taskPath, 'utf8')).toContain('hadara:managed:start task-status-history');
+    expect(fs.readFileSync(taskPath, 'utf8')).toContain('## Identity');
+    expect(fs.readFileSync(taskPath, 'utf8')).toContain('| Status | Draft |');
     expect(fs.existsSync(path.join(root, '.hadara', 'docs-registry.json'))).toBe(false);
     expect(fs.existsSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'))).toBe(false);
   });
@@ -200,6 +201,7 @@ describe('protocol migration service', () => {
       status: 'skipped'
     });
     expect(fs.readFileSync(evidencePath, 'utf8')).toBe(existingEvidence);
-    expect(fs.readFileSync(taskPath, 'utf8')).toContain('hadara:managed:start task-status-history');
+    expect(fs.readFileSync(taskPath, 'utf8')).toContain('## Identity');
+    expect(fs.readFileSync(taskPath, 'utf8')).toContain('| Status | Draft |');
   });
 });

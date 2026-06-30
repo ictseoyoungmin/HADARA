@@ -55,6 +55,7 @@ describe('Phase 7.3 docs registry', () => {
       requiredReading: true,
       readWhen: ['session-start']
     });
+    expect(readRegistry(basic).schemaVersion).toBe('hadara.docsRegistry.v2');
     expect(readRegistry(basic).documents.map((doc) => doc.path)).not.toContain('docs/ARCHITECTURE.md');
     expect(readRegistry(standard).documents.map((doc) => doc.path)).toEqual(
       expect.arrayContaining(['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md'])
@@ -205,6 +206,7 @@ describe('Phase 7.3 docs registry', () => {
     fs.writeFileSync(path.join(taskDir, 'TASK.md'), '# T-0001 Docs Read Map and Drift\n');
     fs.writeFileSync(path.join(taskDir, 'HANDOFF.md'), '# Handoff\n');
     fs.writeFileSync(path.join(taskDir, 'EVIDENCE.md'), '# Evidence\n');
+    fs.writeFileSync(path.join(taskDir, 'CONTEXT.md'), '# Legacy Context\n');
     fs.mkdirSync(path.join(root, 'docs', 'specs'), { recursive: true });
     fs.writeFileSync(path.join(root, 'docs', 'specs', 'read-map-drift.md'), '# Read Map Drift\n');
     fs.mkdirSync(path.join(root, 'docs', 'specs', '0.4.0', 'nested'), { recursive: true });
@@ -245,6 +247,10 @@ describe('Phase 7.3 docs registry', () => {
       'docs/specs/read-map-drift.md'
     ]));
     expect(report.readFirst.map((entry) => entry.path)).not.toContain('tasks/T-0001-docs-read-map-and-drift/CONTEXT.md');
+    expect(report.readIfNeeded.find((entry) => entry.path === 'tasks/T-0001-docs-read-map-and-drift/CONTEXT.md')).toMatchObject({
+      readTier: 'conditional-reference',
+      authority: 'historical'
+    });
     expect(report.readFirst.find((entry) => entry.path === 'docs/specs/read-map-drift.md')).toMatchObject({
       readTier: 'active-spec',
       authority: 'implementation-source',
