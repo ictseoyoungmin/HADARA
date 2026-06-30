@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -144,6 +145,51 @@ describe('Harness Task Capsule validation', () => {
         'TASK_RISK_STATE_INVALID_TOKEN'
       ])
     );
+  });
+
+  it('reports changed or missing Source Documents when a concrete hash is recorded', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Source doc drift');
+    const sourcePath = path.join(root, 'docs', 'source.md');
+    fs.mkdirSync(path.dirname(sourcePath), { recursive: true });
+    fs.writeFileSync(sourcePath, 'original\n', 'utf8');
+    const recordedHash = hashText('original\n');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace('| TBD | reference | exploratory | draft | TBD | TBD |', `| docs/source.md | implementation-source | approved | implementing | ${recordedHash} | Fixture source. |`),
+      'utf8'
+    );
+    fs.writeFileSync(sourcePath, 'changed\n', 'utf8');
+
+    const changed = validateTaskCapsule(root, task.id, { level: 'draft' });
+    fs.rmSync(sourcePath);
+    const missing = validateTaskCapsule(root, task.id, { level: 'draft' });
+
+    expect(changed.issues).toContainEqual(expect.objectContaining({ code: 'TASK_SOURCE_DOCUMENT_CHANGED' }));
+    expect(missing.issues).toContainEqual(expect.objectContaining({ code: 'TASK_SOURCE_DOCUMENT_CHANGED' }));
+  });
+
+  it('requires concrete Source Document hashes at done level', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Source doc missing hash');
+    const sourcePath = path.join(root, 'docs', 'source.md');
+    fs.mkdirSync(path.dirname(sourcePath), { recursive: true });
+    fs.writeFileSync(sourcePath, 'source\n', 'utf8');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace('| TBD | reference | exploratory | draft | TBD | TBD |', '| docs/source.md | implementation-source | approved | implementing | TBD | Fixture source. |'),
+      'utf8'
+    );
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.issues).toContainEqual(expect.objectContaining({ code: 'TASK_SOURCE_DOCUMENT_MISSING_HASH' }));
   });
 
   it('rejects completed capsules that still contain scaffold Markdown defaults', () => {
@@ -784,9 +830,14 @@ function markAcceptanceDone(taskDir: string): void {
 
 function writeCompletedCapsuleDocs(taskDir: string, options: { keepMetadataPlaceholders?: boolean; keepStatusHistoryDraft?: boolean } = {}): void {
   const taskPath = path.join(taskDir, 'TASK.md');
+  const projectRoot = path.dirname(path.dirname(taskDir));
+  const fixtureSourcePath = path.join(projectRoot, 'docs', 'fixture-source.md');
+  fs.mkdirSync(path.dirname(fixtureSourcePath), { recursive: true });
+  fs.writeFileSync(fixtureSourcePath, 'fixture source\n', 'utf8');
+  const fixtureSourceHash = hashText('fixture source\n');
   let taskContent = fs
     .readFileSync(taskPath, 'utf8')
-    .replace('| TBD | reference | exploratory | draft | TBD | TBD |', '| docs/specs/0.4.0/productization-redesign/05_TASK_MD_Table_Schema_and_Controlled_Values.md | implementation-source | approved | implementing | TBD | Fixture source. |')
+    .replace('| TBD | reference | exploratory | draft | TBD | TBD |', `| docs/fixture-source.md | implementation-source | approved | implementing | ${fixtureSourceHash} | Fixture source. |`)
     .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Validate done-level completion gates. | Fixture verifies completed capsule docs. |')
     .replace('| 1 | Define the task contract. | Pending | TBD |', '| 1 | Define the task contract. | Done | Fixture setup. |')
     .replace('| 2 | Implement the smallest useful slice. | Pending | TBD |', '| 2 | Implement the smallest useful slice. | Done | Fixture setup. |')
@@ -812,6 +863,10 @@ function writeCompletedCapsuleDocs(taskDir: string, options: { keepMetadataPlace
   fs.writeFileSync(path.join(taskDir, 'TESTS.md'), '# Tests\n\n## Routine Checks\n\n| Command | Purpose | Required For Done | Latest Result | Evidence |\n|---|---|---|---|---|\n| Focused harness validation fixture | Exercise validation. | Yes | Passed | Harness result. |\n\n## Special Checks\n\n| Check | Required? | Reason | Latest Result | Evidence |\n|---|---|---|---|---|\n| None | No | Fixture only. | Not Run | Not applicable |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'RISKS.md'), '# Risks\n\n| Risk | Impact | Likelihood | Mitigation | Status |\n|---|---|---|---|---|\n| Fixture drift | Medium | Low | Keep assertions focused. | Mitigated |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'DECISIONS.md'), '# Decisions\n\n| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n| TD-1 | Use task-specific completed fixture content. | Accepted | Keeps scaffold detection meaningful. | Test fixture. |\n', 'utf8');
+}
+
+function hashText(content: string): string {
+  return `sha256:${crypto.createHash('sha256').update(content, 'utf8').digest('hex')}`;
 }
 
 function writeHandoffDone(taskDir: string): void {

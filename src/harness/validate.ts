@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
@@ -121,7 +122,7 @@ export function validateTaskCapsule(projectRoot: string, taskId: string, options
     }
   }
 
-  validateTaskMarkdown(projectRoot, task, issues);
+  validateTaskMarkdown(projectRoot, task, issues, level);
   validateCapsuleFormatMarkdown(projectRoot, task, issues);
   validateEvidenceMarkdown(projectRoot, task, issues);
   validateEvidenceIndex(projectRoot, task, issues);
@@ -148,7 +149,7 @@ function findTask(projectRoot: string, taskId: string): TaskCapsule | undefined 
   return listTaskCapsules(projectRoot).find((task) => task.id === taskId);
 }
 
-function validateTaskMarkdown(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+function validateTaskMarkdown(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[], level: HarnessValidationLevel): void {
   const taskPath = path.join(task.dir, 'TASK.md');
   if (!fs.existsSync(taskPath)) return;
 
@@ -173,7 +174,7 @@ function validateTaskMarkdown(projectRoot: string, task: TaskCapsule, issues: Ha
     }
   }
   validateTaskIdentityTable(content, relativePath, issues);
-  validateTaskSourceDocumentsTable(content, relativePath, issues);
+  validateTaskSourceDocumentsTable(projectRoot, content, relativePath, issues, level);
   validateTaskPlanTable(content, relativePath, issues);
   validateTaskAcceptanceTable(content, relativePath, issues);
   validateTaskValidationTable(content, relativePath, issues);
@@ -198,7 +199,7 @@ function validateTaskIdentityTable(content: string, relativePath: string, issues
   }
 }
 
-function validateTaskSourceDocumentsTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+function validateTaskSourceDocumentsTable(projectRoot: string, content: string, relativePath: string, issues: HarnessValidationIssue[], level: HarnessValidationLevel): void {
   const heading = '## Source Documents';
   const table = sectionTable(content, heading);
   if (!requireTableHeader(table.rows, ['Path', 'Role', 'Authority', 'Status', 'Source Hash', 'Notes'], relativePath, heading, issues)) return;
@@ -211,8 +212,45 @@ function validateTaskSourceDocumentsTable(content: string, relativePath: string,
     const hash = tableCell(row, table.header, 'Source Hash');
     if (!isSourceHashCell(hash)) {
       issues.push(taskTableIssue('TASK_SOURCE_DOCUMENT_MISSING_HASH', `Source document "${pathCell}" must use Source Hash "TBD" or "sha256:<hex>".`, relativePath, heading));
+      continue;
     }
+    validateSourceDocumentHash(projectRoot, pathCell, hash, relativePath, heading, issues, level);
   }
+}
+
+function validateSourceDocumentHash(
+  projectRoot: string,
+  sourcePath: string,
+  recordedHash: string,
+  relativePath: string,
+  heading: string,
+  issues: HarnessValidationIssue[],
+  level: HarnessValidationLevel
+): void {
+  if (recordedHash === 'TBD') {
+    if (level === 'done') {
+      issues.push(taskTableIssue('TASK_SOURCE_DOCUMENT_MISSING_HASH', `Source document "${sourcePath}" must record a concrete sha256 hash before Done.`, relativePath, heading));
+    }
+    return;
+  }
+  const absolutePath = path.resolve(projectRoot, sourcePath);
+  if (!isProjectRelativePath(projectRoot, absolutePath) || !fs.existsSync(absolutePath)) {
+    issues.push(taskTableIssue('TASK_SOURCE_DOCUMENT_CHANGED', `Source document "${sourcePath}" is missing or outside the project boundary.`, relativePath, heading));
+    return;
+  }
+  const currentHash = hashFile(absolutePath);
+  if (currentHash !== recordedHash) {
+    issues.push(taskTableIssue('TASK_SOURCE_DOCUMENT_CHANGED', `Source document "${sourcePath}" changed: expected ${recordedHash}, current ${currentHash}.`, relativePath, heading));
+  }
+}
+
+function isProjectRelativePath(projectRoot: string, absolutePath: string): boolean {
+  const relative = path.relative(projectRoot, absolutePath);
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+function hashFile(filePath: string): string {
+  return `sha256:${crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex')}`;
 }
 
 function validateTaskPlanTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
