@@ -209,6 +209,18 @@ describe('init profiles', () => {
     expect(JSON.parse(read(governed, '.hadara/scaffold.json')).profile).toBe('governed');
   });
 
+  it('keeps generated 0.4 docs free of product-specific defaults', () => {
+    for (const profile of ['basic', 'standard', 'governed'] as const) {
+      const root = tempProject();
+      initProject(root, profile);
+
+      for (const file of generatedMarkdownFiles(root)) {
+        const content = read(root, file);
+        expect(productDefaultLeak(content), `${profile} ${file}`).toBeNull();
+      }
+    }
+  });
+
   it('prints JSON and keeps a fresh governed scaffold doctor-clean', () => {
     const root = tempProject();
 
@@ -317,6 +329,21 @@ describe('init profiles', () => {
     }));
   });
 
+  it('reports concrete release or package command leakage in generated docs', () => {
+    const root = tempProject();
+    initProject(root);
+    fs.appendFileSync(path.join(root, 'docs', 'HADARA_WORKFLOW.md'), '\nhadara release publish --mode dry-run --json\n', 'utf8');
+
+    handleInitCommand({ args: ['init', 'doctor', '--json'], projectRoot: root, jsonOutput: true });
+
+    expect(jsonLog()).toEqual(expect.objectContaining({
+      ok: true,
+      issues: expect.arrayContaining([
+        expect.objectContaining({ code: 'INIT_PRODUCT_DEFAULT_LEAK', path: 'docs/HADARA_WORKFLOW.md' })
+      ])
+    }));
+  });
+
   it('does not overwrite existing generated files', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
@@ -329,3 +356,35 @@ describe('init profiles', () => {
     expect(read(root, '.gitignore')).toBe('custom\n');
   });
 });
+
+function generatedMarkdownFiles(root: string): string[] {
+  const files: string[] = [];
+  const visit = (relativeDir: string) => {
+    for (const entry of fs.readdirSync(path.join(root, relativeDir), { withFileTypes: true })) {
+      const relativePath = path.join(relativeDir, entry.name).replace(/\\/g, '/');
+      if (entry.isDirectory()) {
+        visit(relativePath);
+      } else if (entry.isFile() && relativePath.endsWith('.md')) {
+        files.push(relativePath);
+      }
+    }
+  };
+  for (const dir of ['docs', '.hadara/context']) {
+    if (fs.existsSync(path.join(root, dir))) visit(dir);
+  }
+  if (fs.existsSync(path.join(root, 'AGENTS.md'))) files.push('AGENTS.md');
+  return files.sort();
+}
+
+function productDefaultLeak(content: string): string | null {
+  const checks: Array<[RegExp, string]> = [
+    [/\bHADARA-dev\b/, 'HADARA-dev'],
+    [/\bDocker\b|\bdocker\s+(?:exec|run|compose|ps|build)\b/i, 'Docker'],
+    [/\bnpm\s+(?:run|publish|view|ci|install|pack)\b/i, 'npm'],
+    [/\bnode\s+dist\/cli\/main\.js\b/i, 'node dist/cli/main.js'],
+    [/\bhadara\s+(?:release|package|smoke)\s+(?:publish|artifact|gate|dry-run|closeout|smoke|recycle|clean-checkout)\b/i, 'release/package command'],
+    [/\/workspace\b|\/mnt\/|[A-Za-z]:\\/, 'machine-local path'],
+    [/\bhadara@\d+\.\d+\.\d+/, 'package version']
+  ];
+  return checks.find(([pattern]) => pattern.test(content))?.[1] ?? null;
+}

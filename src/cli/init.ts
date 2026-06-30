@@ -445,6 +445,7 @@ function productDefaultLeakToken(content: string): string | null {
     [/\bDocker\b|\bdocker\s+(?:exec|run|compose|ps|build)\b/i, 'Docker'],
     [/\bnpm\s+(?:run|publish|view|ci|install|pack)\b/i, 'npm'],
     [/\bnode\s+dist\/cli\/main\.js\b/i, 'node dist/cli/main.js'],
+    [/\bhadara\s+(?:release|package|smoke)\s+(?:publish|artifact|gate|dry-run|closeout|smoke|recycle|clean-checkout)\b/i, 'release/package command'],
     [/\/workspace\b|\/mnt\/|[A-Za-z]:\\/, 'machine-local path'],
     [/\bhadara@\d+\.\d+\.\d+/, 'package version']
   ];

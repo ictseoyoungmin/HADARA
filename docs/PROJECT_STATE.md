@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0446 T-04A18 Command Registry, Help, and Schema Alignment |
-| Active Task | T-04A19 Product Default Cleanup (next) |
+| Latest Completed Task | T-0447 T-04A19 Product Default Cleanup |
+| Active Task | T-04A20 Basic Profile Dogfood (next) |
 
 ## Next Planned Line
 
@@ -87,6 +87,8 @@ T-0444 follow-up note: residual reviewer feedback after T-0439 is implemented. F
 T-0445 follow-up note: T-04A17 Init Doctor and Profile Diagnostics is implemented. `hadara init doctor --json` now reports warning diagnostics for `INIT_AGENTS_COMMAND_COOKBOOK`, `INIT_CONTEXT_DUPLICATES_WORKFLOW`, `INIT_REQUIRED_READING_TOO_BROAD`, and `INIT_PRODUCT_DEFAULT_LEAK` while keeping fresh governed scaffolds doctor-clean. Docker ext4 build/focused tests passed 3 files / 26 tests, workspace `dist` was refreshed, built CLI smokes passed for fresh scaffold cleanliness and the new diagnostics, and `git diff --check` passed. Evidence: `ev:T-0445:c894a34281b648be844445e2`. The next 0.4 task is T-04A18 Command Registry, Help, and Schema Alignment.
 
 T-0446 follow-up note: T-04A18 Command Registry, Help, and Schema Alignment is implemented. The command registry now covers current 0.4/current surfaces including `task.close-source`, `evidence.summary`, `evidence.project`, and `state.verify`, and exposes proposed-but-unimplemented `docs.complete-spec` and `docs.mark-drift` as `status: planned` / `requiredness: disabled` without schema fixtures or CLI handlers. Registry-backed help now uses 0.4 lifecycle wording and prints command status. Docker ext4 build/focused command registry/help/schema tests passed 4 files / 38 tests, workspace `dist` was refreshed, built CLI smokes passed, and `git diff --check` passed. Evidence: `ev:T-0446:1fc3397609c84c049282d0e2`. The next 0.4 task is T-04A19 Product Default Cleanup.
+
+T-0447 follow-up note: T-04A19 Product Default Cleanup is implemented. Product-default leakage detection now flags concrete release/package command guidance in generated scaffold docs while preserving generic safety wording. Generated Markdown across basic, standard, and governed init profiles is statically checked for HADARA-dev, Node/npm, Docker, machine-local path, package-version, and concrete release/package command leakage; fresh governed init remains doctor-clean; and intentional `hadara release publish ...` leakage reports `INIT_PRODUCT_DEFAULT_LEAK`. Docker ext4 build/focused init/docs-registry/command-registry tests passed 3 files / 29 tests, workspace `dist` was refreshed, built CLI smokes passed, and `git diff --check` passed. Evidence: `ev:T-0447:b19bfcb789b64223bb4f4f45`. The next 0.4 task is T-04A20 Basic Profile Dogfood.
 
 Phase 8 / 0.3.1 is complete through post-rc1 documentation cleanup. It carried Work Item A and Work Item F into implementation as status token governance, document ownership/write-boundary governance, task handoff close-state clarity, installed-package recycle findings cleanup, state consistency projection, and advisory verification gates. The Phase 8 specs are staged under `docs/specs/0.3.1/`; the first rc1 implementation sequence is staged under `docs/specs/0.3.1/rc1/`. Phase 8.1 through Phase 8.6 are complete through T-0324, T-0325 completed the follow-up CloseState derived-state cleanup after review, T-0326 prepared `hadara@0.3.1-rc.1` release readiness without publish mutation, T-0327 published `hadara@0.3.1-rc.1`, verified npm visibility/tarball contents, hardened future rc publish tags, and corrected npm dist-tags so stable `0.3.0` stays on `latest` while rc1 is available as `next`, T-0328 verified the published rc1 package from installed consumer paths in the `hadara-dev` container, and T-0329 refreshed post-rc1 handoff/release-note wording after reviewer feedback.
 
@@ -220,9 +222,9 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0443 T-04A16 Authoring Guidance Read Models.
-- Next 0.4 task is T-04A18 Command Registry, Help, and Schema Alignment; continue from `docs/specs/0.4.0/productization-redesign/12_CLI_JSON_Contracts_and_Diagnostics.md` and `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md`.
-- T-0443 made task status, lifecycle, and finalize reports emit additive read-only authoring guidance over task-owned prose/table sections; focused Docker validation and built CLI smoke passed in `ev:T-0443:5b1829f6efe44f15913e30b4` and `ev:T-0443:966731c29ab64153af2f79e8`.
+- Latest completed task is T-0447 T-04A19 Product Default Cleanup.
+- Next 0.4 task is T-04A20 Basic Profile Dogfood; continue from `docs/specs/0.4.0/productization-redesign/01_Project_Scaffold_Model.md` and `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md`.
+- T-0447 added product-default leakage checks for concrete release/package commands, static generated-doc checks across basic/standard/governed profiles, and doctor coverage for intentional release-command leakage. Docker focused validation and built CLI smokes passed in `ev:T-0447:b19bfcb789b64223bb4f4f45`.
 - T-0431 implemented read-only `hadara docs read-map --task T-XXXX --json` and `hadara docs inbox --json`, added `hadara.docs.readMap.v1` and `hadara.docs.inbox.v1`, command registry/schema fixtures, focused tests, refreshed workspace `dist`, and built CLI smokes passed in `ev:T-0431:a81383c6d7894693a45a95ed`.
 - T-0430 implemented registry-first `hadara docs register --path <path> --json` over `.hadara/docs-registry.json`, added `hadara.docs.register.v1`, command registry/schema fixtures, focused tests, refreshed workspace `dist`, and built CLI smoke passed in `ev:T-0430:1933b10f80184f8abb9540cb`.
 - T-0429 implemented non-overlapping generated templates: `AGENTS.md` owns Required Reading/safety only, `.hadara/context/HADARA_CONTEXT.md` is routing-only, and `docs/HADARA_WORKFLOW.md` owns lifecycle/context/evidence/document timing guidance. Docker build plus focused init tests passed, workspace `dist` was refreshed, and built governed init/doctor template smoke returned `ok:true` in `ev:T-0429:ab675a5933c84286b8d255fc`.
