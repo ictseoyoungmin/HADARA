@@ -583,11 +583,11 @@ function createSopRowUpdatePlan(
 }
 
 const CANONICAL_TABLE_HEADERS: Record<string, string[]> = {
-  'AGENTS.md': ['| Order | Document | When | Purpose |', '| Rule | Requirement | Evidence / Update Location |'],
+  'AGENTS.md': ['| Document | When to Read | Purpose |'],
   'docs/PROJECT_STATE.md': ['| Field | Value |', '| Area | Status | Notes |', '| Source | Path | Purpose |'],
   'docs/AGENT_HANDOFF.md': ['| Area | State | Notes |', '| Task | Summary | Evidence |', '| Issue | Impact | Next Step |', '| Step | Reason | Done Evidence |', '| Check | Latest Evidence | Notes |', '| History Type | Path | When to Use |'],
   'docs/TASK_BOARD.md': ['| ID | Title | Status | Capsule | Notes |'],
-  'docs/HADARA_WORKFLOW.md': ['| Step | Command / Action | Meaning |', '| Order | Source | Rule |', '| Timing | Update |'],
+  'docs/HADARA_WORKFLOW.md': ['| Order | Authority | Allowed Reads |', '| Gate | Required State |', '| Timing | Update |', '| Situation | Use | Notes |', '| Surface | Human / Operator | Agent | CLI |'],
   'docs/IMPLEMENTATION_SOP.md': ['| Document | When to Read | Purpose |', '| Profile | Scale | Generated Docs | Intended Use | Special Notes |', '| Document | Required Structure |'],
   'docs/TASK_WORKFLOW_COMMANDS.md': ['| Command | Default Write Behavior | Notes |'],
   'docs/ARCHITECTURE.md': ['| Field | Value |', '| Boundary | Rule | Notes |', '| Component | Path / Surface | Responsibility | Status |'],
@@ -941,45 +941,264 @@ function createHadaraWorkflowDoc(): string {
 
 ## Purpose
 
-This document owns the generic HADARA project workflow for this repository.
+This document explains when to use HADARA CLI surfaces and when to update HADARA documents during normal project work.
+
+Use HADARA read models first. Do not manually read broad project files unless a HADARA command points you there or the task explicitly requires it.
 
 ## Minimal Loop
 
-| Step | Command / Action | Meaning |
-|---|---|---|
-| 1 | \`hadara task next --json\` | Find the next suitable Task Capsule. |
-| 2 | \`hadara task create "<title>" --json\` | Create a capsule when no suitable capsule exists. |
-| 3 | Update active Task Capsule docs | Define goal, plan, context, acceptance, risks, and files before implementation. |
-| 4 | Implement and validate | Keep evidence tied to real command results. |
-| 5 | \`hadara evidence add-command --task T-XXXX --summary "..." --result passed --json\` | Record validation evidence; this records, it does not execute the command. |
-| 6 | \`hadara task finalize --task T-XXXX --json\` | Review the dry-run close plan and plan hash. |
-| 7 | \`hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json\` | Close only after inspecting the dry-run output. |
+\`\`\`text
+1. \`hadara task next --json\`
+2. \`hadara session start --task T-XXXX --json\` when resuming or changing tasks
+3. \`hadara task create "task title" --json\` only when no suitable capsule exists
+4. update \`TASK.md\`
+5. implement the scoped change
+6. run real validation
+7. record evidence
+8. update task/global docs
+9. review \`task finalize --json\`
+10. execute finalize only with the reviewed plan hash
+\`\`\`
 
 ## Read Authority Rules
 
-Agents should read in this order:
+Agents must follow this read order:
 
-| Order | Source | Rule |
+| Order | Authority | Allowed Reads |
+|---:|---|---|
+| 1 | HADARA CLI read models | \`session start\`, \`task status\`, \`context pack\`, docs registry/read-map reports. |
+| 2 | Command-returned paths | Files, ranges, candidates, or docs explicitly returned by those read models. |
+| 3 | Active Task Capsule | \`TASK.md\`, \`HANDOFF.md\`, \`EVIDENCE.md\`, and task-local evidence summaries for the selected task. |
+| 4 | Shared state docs | Only when Required Reading says every session, or when a read model/task explicitly references them. |
+| 5 | Conditional reference docs | Only when the task, registry, read-map, or source document table points to them. |
+
+Agents must not scan the repository, open unrelated docs, or infer current state from directory structure when a HADARA read model can route the read.
+
+## Project Start
+
+Use \`hadara init\` only when creating a new HADARA project or initializing HADARA in an existing project that is not already governed by another HADARA protocol.
+
+\`\`\`bash
+hadara init --json
+hadara init --profile basic --json
+hadara init --profile standard --json
+hadara init --profile governed --json
+hadara init doctor --json
+\`\`\`
+
+After init, review:
+
+| Step | Document | Purpose |
 |---|---|---|
-| 1 | HADARA CLI read models | Prefer task/session/context/status read models before broad manual reads. |
-| 2 | Files returned by read models | Read exact candidates that are relevant to the task. |
-| 3 | Active Task Capsule docs | Keep task-local scope and evidence authoritative. |
-| 4 | Shared state docs | Read only when referenced or when tracked state changes. |
+| 1 | \`AGENTS.md\` | Entry rules and required reading. |
+| 2 | \`.hadara/context/HADARA_CONTEXT.md\` | Compact read routing. |
+| 3 | \`docs/PROJECT_STATE.md\` | Initial project state and next recommended step. |
+| 4 | \`docs/TASK_BOARD.md\` | Task index. |
+| 5 | \`docs/HADARA_WORKFLOW.md\` | How to work with HADARA from this point forward. |
 
-## Documentation Timing
+Use project-specific docs only after they are created and routed through the docs registry, a read-map, or the active task.
+
+## Session Start
+
+Use session start at the beginning of a work session, after switching tasks, or when project state is unclear.
+
+\`\`\`bash
+hadara session start --json
+hadara session start --task T-XXXX --json
+\`\`\`
+
+Session start is a read model. It does not create tasks, append evidence, warm caches, validate completion, or close work.
+
+## Selecting or Creating Work
+
+\`\`\`bash
+hadara task next --json
+hadara task create "task title" --json
+hadara task status --task T-XXXX --json
+\`\`\`
+
+Use \`task next\` to decide what to work on. Use \`task create\` only when no suitable capsule exists. Use \`task status\` to inspect readiness, blockers, evidence, and suggested next actions for a selected task.
+
+## Task Context
+
+\`\`\`bash
+hadara context pack --task T-XXXX --json
+\`\`\`
+
+Use context pack when starting implementation, resuming after a gap, deciding which files to inspect, or avoiding broad manual repo reads. Context pack is reading guidance, not validation.
+
+After context pack:
+
+1. Select only relevant files or candidates from the report.
+2. Use \`context slice\` for exact source reads when a range/candidate is available.
+3. Add or update \`TASK.md\` Source Documents for sources that constrain the work.
+
+## Exact Source Slices
+
+\`\`\`bash
+hadara context slice --path <path> --from <line> --to <line> --json
+hadara context slice --task T-XXXX --candidate <candidate-id> --json
+\`\`\`
+
+Use context slice only after a read model points to a specific file or range.
+
+## Task Capsule Lifecycle
+
+The normal task lifecycle is:
+
+\`\`\`text
+select or create task
+read task context
+author task contract
+do scoped work
+record evidence
+finish task docs and shared state
+review finalize plan
+execute finalize with the reviewed plan hash
+audit close proof
+\`\`\`
+
+Use the high-level lifecycle path for ordinary work:
+
+\`\`\`bash
+hadara task lifecycle --task T-XXXX --json
+hadara task finalize --task T-XXXX --json
+hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
+hadara task audit-close --task T-XXXX --json
+\`\`\`
+
+Low-level lifecycle commands are for debugging, recovery, or command implementation work:
+
+\`\`\`bash
+hadara task finish --task T-XXXX --json
+hadara task ready --task T-XXXX --level done --json
+hadara task close --task T-XXXX --json
+hadara task close-repair-plan --task T-XXXX --json
+\`\`\`
+
+## Lifecycle Entry Gate
+
+Before running \`hadara task lifecycle\`, all of these must be true:
+
+| Gate | Required State |
+|---|---|
+| Goal | \`TASK.md\` has a concrete task goal. |
+| Source Documents | Relevant sources are listed, or the task explicitly records that none are required. |
+| Plan | \`TASK.md\` Plan has the intended work steps. |
+| Acceptance | \`TASK.md\` Acceptance has the completion criteria. |
+| Validation | At least one validation method is defined, or a documented reason explains why validation is not applicable. |
+
+Do not use lifecycle/finalize to discover that the task contract was never authored.
+
+## Task Document Timing
+
+HADARA 0.4 Task Capsules contain \`TASK.md\`, \`HANDOFF.md\`, \`EVIDENCE.md\`, and \`evidence.jsonl\`.
 
 | Timing | Update |
 |---|---|
-| Before implementation | \`TASK.md\`, \`PLAN.md\`, \`CONTEXT.md\`, and \`ACCEPTANCE.md\` |
-| During implementation | \`FILES.md\`, \`RISKS.md\`, and \`DECISIONS.md\` when they change |
-| After validation | \`TESTS.md\`, \`EVIDENCE.md\`, and canonical evidence records |
-| Before finalize execute | \`HANDOFF.md\` and shared state docs when tracked state changed |
+| Capsule created | Start \`TASK.md\` Goal, Source Documents, Plan, and Acceptance. |
+| Before execution | Refine \`TASK.md\` Plan, Source Documents, and Acceptance. |
+| During execution | Update \`TASK.md\` Plan, Change Summary, Risks / Follow-ups; update \`HANDOFF.md\` warnings if continuity changes. |
+| After validation | Record evidence and update \`TASK.md\` Validation and Acceptance with evidence ids or residual notes. |
+| Before finalize dry-run | Finish \`TASK.md\` Change Summary, Acceptance, Validation, Risks / Follow-ups; update \`HANDOFF.md\`; update shared state docs when the task changed them. |
+| Finalize review | Inspect \`task finalize --json\` dry-run output and fix reported blockers before execute. |
+| Finalize execute | Do not edit close-source docs during execute. |
+| After close | Only clarify docs if the task contract did not change; rerun finalize after close-source edits. |
 
-## Evidence Rules
+Do not hand-edit \`evidence.jsonl\`. Do not hand-edit generated slots in \`EVIDENCE.md\`.
+
+## Evidence
+
+\`\`\`bash
+hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --json
+hadara evidence summary --task T-XXXX --json
+hadara evidence project --task T-XXXX --json
+\`\`\`
+
+\`evidence add-command\` records a command result supplied by the operator. It does not execute shell commands. Use \`evidence summary\` to find durable evidence ids for docs and resolution markers.
 
 Evidence must reflect real execution results. Fabricated or assumed results are invalid.
 
-Do not hand-edit canonical evidence logs.
+\`evidence project\` is the 0.4 projection refresh surface. When implemented, it refreshes generated evidence projection slots without rewriting canonical evidence.
+
+## Repair and Diagnostics
+
+\`\`\`bash
+hadara task close-repair-plan --task T-XXXX --json
+hadara task audit-close --task T-XXXX --json
+hadara harness validate --task T-XXXX --level done --json
+hadara init doctor --json
+\`\`\`
+
+Use repair and diagnostic commands when lifecycle or finalize reports blockers. Do not repair close proof by editing evidence files by hand.
+
+Agents must not run \`task finalize --execute\` without inspecting the dry-run output and using the current \`planHash\` from that reviewed dry-run.
+
+## Useful CLI by Situation
+
+| Situation | Use | Notes |
+|---|---|---|
+| New HADARA project | \`hadara init --profile <profile> --json\` | Creates scaffold docs and registries. |
+| Check scaffold health | \`hadara init doctor --json\` | Reports missing or inconsistent scaffold files. |
+| Find next work | \`hadara task next --json\` | Read-only recommendation. |
+| Inspect selected task | \`hadara task status --task T-XXXX --json\` | Readiness and next-action projection. |
+| Find task-specific context | \`hadara context pack --task T-XXXX --json\` | Use before broad manual reads. |
+| Read exact source text | \`hadara context slice ... --json\` | Use after a context candidate points to a range. |
+| Record validation | \`hadara evidence add-command ... --json\` | Append-only evidence writer. |
+| Find evidence ids | \`hadara evidence summary --task T-XXXX --json\` | Compact copy hints. |
+| Review close path | \`hadara task lifecycle --task T-XXXX --json\` | Normal lifecycle state. |
+| Close ordinary work | \`hadara task finalize --task T-XXXX --json\` then execute with its \`planHash\` | Default close path. |
+| Diagnose close drift | \`hadara task close-repair-plan --task T-XXXX --json\` | Read-only repair plan. |
+| Register project-specific docs | \`hadara docs register --path <path> --json\` | 0.4 registry surface. Canonical state belongs in \`.hadara/docs-registry.json\`; use registry-backed help for exact options. |
+| Discover command details | \`hadara help lifecycle\`, \`hadara help command <id>\`, \`hadara commands --json\` | Prefer registry-backed help over copied command tables. |
+
+## Common Failure Modes
+
+| Failure Mode | Correct Behavior |
+|---|---|
+| Skipping read models and scanning the repository. | Start with session/task/context read models and only open routed files. |
+| Opening unrelated specs or historical docs. | Use read tiers, registry metadata, and context pack candidates. |
+| Running lifecycle before \`TASK.md\` is authored. | Satisfy the Lifecycle Entry Gate first. |
+| Treating context pack as validation. | Use it only for read guidance; run real checks separately. |
+| Recording evidence for checks that were not run. | Record only real execution results, including failed or blocked checks. |
+| Running finalize execute from memory. | Review fresh dry-run output and copy its current plan hash. |
+| Putting same-capsule chores in \`HANDOFF.md\` Next Recommended Step. | Use that section for next capsule or global-state recommendations. |
+
+## Design Source Documents and Read Maps
+
+Design source documents may live under \`docs/specs/**\` or other registered paths. Use registry/read-map output to decide whether they are active, conditional, implemented, drift-risk, historical, or excluded.
+
+Do not treat every file under \`docs/specs/**\` as default Required Reading.
+
+Document registration writes registry metadata, not prose rows in entry docs. Do not append project-specific document rows to \`AGENTS.md\`, \`.hadara/context/HADARA_CONTEXT.md\`, or this workflow document.
+
+## Authoring Model
+
+| Surface | Human / Operator | Agent | CLI |
+|---|---|---|---|
+| Requirements and source docs | Provides and approves | Summarizes into task docs | Indexes/read-map only |
+| \`TASK.md\` identity | Reviews | Does not hand-edit CLI-owned fields | Creates and lifecycle-updates |
+| \`TASK.md\` prose/tables | Reviews | Authors goal, source documents, plan, acceptance, validation, change summary, risks, and follow-ups | Validates controlled values |
+| \`HANDOFF.md\` | Reviews | Writes continuation guidance | May suggest or project summaries |
+| \`evidence.jsonl\` | Supplies command result facts | Does not hand-edit | Appends canonical evidence |
+| \`EVIDENCE.md\` | Reads | Does not hand-edit generated slots | Regenerates projection |
+| Close proof | Reviews | Does not write by hand | Appends proof and audits freshness |
+
+## Automatic Writing Boundary
+
+HADARA auto-writes deterministic state, managed slots, indexes, evidence projections, and close snapshots. It reports read-only guidance for missing task prose.
+
+Agents write task-specific goal, source documents, plan, acceptance, validation, change summary, risks, follow-ups, and handoff guidance from user requirements and source documents.
+
+## Drift Avoidance
+
+Do not duplicate command registry metadata. For detailed options, point to registry-backed help:
+
+\`\`\`bash
+hadara help lifecycle
+hadara help command <id>
+hadara commands --json
+\`\`\`
 `;
 }
 
@@ -1718,79 +1937,65 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 
 function createAgentsDoc(spec: InitProfileSpec): string {
   const requiredReadingRows = [
-    ['1', '`.hadara/context/HADARA_CONTEXT.md`', 'Every session', 'Compact project-local context anchor and read routing.'],
-    ['2', '`docs/PROJECT_STATE.md`', 'Every session', 'Current product and capability state.'],
-    ['3', '`docs/TASK_BOARD.md`', 'Every session', 'Current task queue and status.'],
-    ['4', '`docs/HADARA_WORKFLOW.md`', 'Every session and task lifecycle work', 'Lifecycle order, read authority, documentation timing, and evidence rules.']
+    ['`.hadara/context/HADARA_CONTEXT.md`', 'Every session', 'Compact project-local context anchor and read-routing guide.'],
+    ['`docs/PROJECT_STATE.md`', 'Every session', 'Current state, active work, known problems, and next recommended step.'],
+    ['`docs/TASK_BOARD.md`', 'Every session', 'Task queue, task status, and capsule paths.'],
+    ['`docs/HADARA_WORKFLOW.md`', 'Every session; whenever using HADARA CLI workflow commands', 'Project start, task lifecycle, evidence, context, document timing, repair, and useful CLI guidance.']
   ];
-  let order = 5;
-  if (spec.docs.agentHandoff) requiredReadingRows.push([String(order++), '`docs/AGENT_HANDOFF.md`', 'Every session', 'Compact continuation state.']);
-  if (spec.docs.architecture) requiredReadingRows.push([String(order++), '`docs/ARCHITECTURE.md`', 'Architecture, component, or boundary work', 'Current system shape and ownership boundaries.']);
-  if (spec.docs.decisions) requiredReadingRows.push([String(order++), '`docs/DECISIONS.md`', 'Project-level decision work', 'Durable project decisions.']);
-  if (spec.docs.securityModel) requiredReadingRows.push([String(order++), '`docs/SECURITY_MODEL.md`', 'Security, secret, permission, or evidence-safety work', 'Project security invariants.']);
-  if (spec.docs.roadmap) requiredReadingRows.push([String(order++), '`docs/ROADMAP.md`', 'Roadmap, milestone, or scope planning', 'Longer-term priorities and deferred work.']);
+  if (spec.docs.agentHandoff) requiredReadingRows.push(['`docs/AGENT_HANDOFF.md`', 'When present in governed or long-running projects', 'Compact continuation handoff and current coordination notes.']);
+  if (spec.docs.architecture) requiredReadingRows.push(['`docs/ARCHITECTURE.md`', 'Architecture, component, or boundary work', 'Current system shape and ownership boundaries.']);
+  if (spec.docs.decisions) requiredReadingRows.push(['`docs/DECISIONS.md`', 'Project-level decision work', 'Durable project decisions.']);
+  if (spec.docs.securityModel) requiredReadingRows.push(['`docs/SECURITY_MODEL.md`', 'Security, secret, permission, or evidence-safety work', 'Project security invariants.']);
+  if (spec.docs.roadmap) requiredReadingRows.push(['`docs/ROADMAP.md`', 'Roadmap, milestone, or scope planning', 'Longer-term priorities and deferred work.']);
   requiredReadingRows.push(
-    [String(order++), 'Active `tasks/T-*/TASK.md`', 'Working a task', 'Task-specific goal, scope, and status.'],
-    [String(order++), 'Active Task Capsule docs', 'Working a task', 'Decisions, plan, context, acceptance, files, tests, risks, handoff, and evidence.'],
-    [String(order++), 'Project-specific registered docs', 'When listed in `.hadara/docs-registry.json` or the active task', 'Specs, contracts, or roadmap files explicitly added by this project.']
+    ['Active `tasks/T-*/TASK.md`', 'Every task-work session', 'Task scope, source documents, plan, acceptance, validation, and change summary.'],
+    ['Active Task Capsule `HANDOFF.md` and `EVIDENCE.md`', 'Resuming, validating, finishing, or handing off a task', 'Continuation guidance and human-readable evidence projection.'],
+    ['Project-specific docs referenced by the task, registry, or read-map', 'When referenced', 'Task-specific architecture, design, roadmap, validation, security, or integration constraints.']
   );
-  const trackedStateDocs = ['`docs/TASK_BOARD.md`', '`docs/PROJECT_STATE.md`', ...(spec.docs.agentHandoff ? ['`docs/AGENT_HANDOFF.md`'] : [])];
-  const ruleRows = [
-    ['Task boundary', 'Keep work inside one Task Capsule whenever possible.', 'Active Task Capsule'],
-    ['Task creation', 'If no suitable capsule exists, create one with `hadara task create <title>`.', '`docs/TASK_BOARD.md`'],
-    ['Evidence', 'Do not mark work done without evidence. Do not hand-edit `evidence.jsonl`; record failed or blocked checks honestly instead of replacing them with optimistic summaries.', '`EVIDENCE.md`, `evidence.jsonl`'],
-    ['Documentation timing', 'Do not defer all documentation until after implementation; keep capsule docs current as work changes.', 'Task Capsule docs and shared state docs'],
-    ['Task workflow', 'Follow `docs/HADARA_WORKFLOW.md`; inspect `task finalize --json` output before `task finalize --execute --plan-hash <hash>`.', 'Task Capsule evidence'],
-    ['Safety', 'Do not execute dangerous commands without explicit user approval.', 'Task Capsule evidence'],
-    ['Secrets', 'Do not write secrets, private logs, or machine-local state into committed files.', 'Changed-file review'],
-    ['Store boundary', 'Preserve the portable/project store boundary.', spec.docs.architecture ? '`.gitignore`, `docs/ARCHITECTURE.md`' : '`.gitignore`'],
-    ['Validation', 'Follow validation constraints recorded in the active Task Capsule and referenced project docs.', 'Task Capsule evidence'],
-    ['Tracked state', `Update ${formatInlineList(trackedStateDocs)} when tracked state changes.`, 'Tracked docs'],
-    ['Required reading', 'Register or reference project-specific docs before expecting agents to rely on them.', '`.hadara/docs-registry.json` and active Task Capsule docs']
-  ];
 
   return `# AGENTS
 
-This repository must be developed using the HADARA protocol.
+This repository uses the HADARA protocol for scoped, evidenced, resumable AI-assisted development.
 
 ## Required Reading
 
-| Order | Document | When | Purpose |
-|---|---|---|---|
+| Document | When to Read | Purpose |
+|---|---|---|
 ${requiredReadingRows.map(formatTableRow).join('\n')}
+
+\`AGENTS.md\` owns Required Reading. \`.hadara/context/HADARA_CONTEXT.md\` is a compact routing anchor that points to current-state and workflow documents; it is not a second Required Reading authority.
 
 ## Required Reading Tiers
 
-Use semantic tiers to keep session startup compact:
-
 | Tier | Meaning | Default Read Behavior |
 |---|---|---|
-| \`current-state\` | Compact docs that establish the live project state and route deeper reading. | Read first at session start or resume. |
-| \`task-work\` | Active Task Capsule docs and task workflow docs needed to safely perform lifecycle commands. | Read when selecting, implementing, finishing, closing, or auditing a task. |
-| \`conditional-reference\` | Architecture, security, roadmap, validation, release, or project-specific specs. | Read only when the task type or active capsule references them. |
-| \`historical\` | Completed-task history, older validation records, and previous-state detail. | Never default required reading; read only when investigating history. |
-| \`excluded\` | Superseded, archived, local-only, or intentionally non-default material. | Never default required reading unless explicitly reclassified. |
+| \`current-state\` | Compact docs that establish live project state and route deeper reading. | Read first at session start or resume. |
+| \`workflow\` | Shared HADARA workflow and command-use guidance. | Read before selecting, creating, implementing, finishing, closing, or auditing tasks. |
+| \`task-work\` | Active Task Capsule docs and task-local evidence/handoff surfaces. | Read when working inside a task. |
+| \`conditional-reference\` | Architecture, roadmap, decisions, validation, security, integration, or project-specific specs. | Read only when the task or read-map points to them. |
+| \`historical\` | Completed-task history and older validation records. | Do not read by default; use only when investigating history. |
+| \`excluded\` | Superseded, archived, local-only, or intentionally non-default material. | Do not read unless explicitly reclassified. |
 
-\`.hadara/context/HADARA_CONTEXT.md\` is the current-state entry point. It should route readers to compact state before task-work or conditional-reference docs. Historical and superseded docs are never default required reading.
+## Operating Rules
 
-## Default Agent Loop
+- Work inside one Task Capsule whenever possible.
+- If no suitable Task Capsule exists, create one through the HADARA workflow before implementation.
+- Prefer HADARA read models before broad manual file reading.
+- Keep committed state reproducible and project-local.
+- Do not write secrets, private logs, raw transcripts, credentials, or machine-local state into committed files.
+- Do not hand-edit canonical evidence logs.
+- Do not mark work done without evidence.
+- Keep Task Capsule docs current as work changes; do not defer all documentation until after implementation.
+- Do not execute destructive commands.
+- Do not run release, publish, package, installer, or other external mutation workflows without explicit operator approval.
 
-For ordinary implementation work, use the current context-aware loop:
+## Workflow Reference
 
-\`\`\`bash
-hadara task next --json
-hadara task lifecycle --task T-XXXX --json
-hadara task finalize --task T-XXXX --json
-hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
-\`\`\`
+Use \`docs/HADARA_WORKFLOW.md\` for project start, task lifecycle, context, evidence, document timing, repair, docs read-map, and useful CLI guidance.
 
-Use low-level \`task finish\`, \`task ready\`, \`task close\`, and \`task audit-close\` only when debugging, repairing, or implementing those proof-boundary commands.
+## Project Context
 
-## Rules
-
-| Rule | Requirement | Evidence / Update Location |
-|---|---|---|
-${ruleRows.map(formatTableRow).join('\n')}
+Use \`.hadara/context/HADARA_CONTEXT.md\` as the compact project-local context anchor.
 `;
 }
 

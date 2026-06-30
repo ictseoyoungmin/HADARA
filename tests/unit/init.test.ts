@@ -114,9 +114,62 @@ describe('init profiles', () => {
     ]));
 
     expect(read(root, '.hadara/context/HADARA_CONTEXT.md')).toContain('docs/HADARA_WORKFLOW.md');
-    expect(read(root, '.hadara/context/HADARA_CONTEXT.md')).toContain('.hadara/docs-registry.json');
     expect(read(root, 'AGENTS.md')).toContain('docs/HADARA_WORKFLOW.md');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('## Minimal Loop');
+  });
+
+  it('generates non-overlapping 0.4 agent entry, context, and workflow templates', () => {
+    const root = tempProject();
+
+    initProject(root, 'governed');
+
+    const agents = read(root, 'AGENTS.md');
+    expect(agents).toContain('AGENTS.md` owns Required Reading');
+    expect(agents).toContain('## Operating Rules');
+    expect(agents).toContain('## Workflow Reference');
+    expect(agents).not.toContain('hadara task lifecycle --task T-XXXX --json');
+    expect(agents).not.toContain('hadara task finalize --task T-XXXX --json');
+    expect(agents).not.toContain('hadara context pack --task T-XXXX --json');
+    expect(agents).not.toContain('## Default Agent Loop');
+
+    const context = read(root, '.hadara/context/HADARA_CONTEXT.md');
+    expect(context).toContain('Compact project-local context anchor and read router.');
+    expect(context).toContain('not the Required Reading authority');
+    expect(context).toContain('| Required reading and safety rules | `AGENTS.md` |');
+    expect(context).toContain('Prefer `hadara session start --json`');
+    expect(context).not.toContain('| Document | When to Read | Purpose |');
+    expect(context).not.toContain('## Minimal Loop');
+    expect(context).not.toContain('## Task Document Timing');
+
+    const workflow = read(root, 'docs/HADARA_WORKFLOW.md');
+    for (const heading of [
+      '## Minimal Loop',
+      '## Read Authority Rules',
+      '## Project Start',
+      '## Session Start',
+      '## Selecting or Creating Work',
+      '## Task Context',
+      '## Exact Source Slices',
+      '## Task Capsule Lifecycle',
+      '## Lifecycle Entry Gate',
+      '## Task Document Timing',
+      '## Evidence',
+      '## Repair and Diagnostics',
+      '## Useful CLI by Situation',
+      '## Common Failure Modes',
+      '## Design Source Documents and Read Maps',
+      '## Authoring Model',
+      '## Automatic Writing Boundary',
+      '## Drift Avoidance'
+    ]) {
+      expect(workflow).toContain(heading);
+    }
+    expect(workflow).toContain('Agents must not scan the repository');
+    expect(workflow).toContain('Before running `hadara task lifecycle`, all of these must be true');
+    expect(workflow).toContain('Evidence must reflect real execution results');
+    expect(workflow).toContain('Agents must not run `task finalize --execute` without inspecting the dry-run output');
+    expect(workflow).toContain('Document registration writes registry metadata, not prose rows in entry docs.');
+    expect(workflow).toContain('| Surface | Human / Operator | Agent | CLI |');
   });
 
   it('creates the accepted basic and governed profile file sets', () => {

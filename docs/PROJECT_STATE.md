@@ -204,8 +204,9 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0428 T-04A2 0.4 Init Scaffold Model.
-- Next 0.4 task is T-04A3 Agent Entry and Workflow Templates; start from `docs/specs/0.4.0/productization-redesign/02_Agent_Entry_and_Workflow_Templates.md` and the worker plan.
+- Latest completed task is T-0429 T-04A3 Agent Entry and Workflow Templates.
+- Next 0.4 task is T-04A4 Docs Registry Storage and Register Surface; start from `docs/specs/0.4.0/productization-redesign/03_Design_Source_Documents_Read_Map_and_Drift.md` and the worker plan.
+- T-0429 implemented non-overlapping generated templates: `AGENTS.md` owns Required Reading/safety only, `.hadara/context/HADARA_CONTEXT.md` is routing-only, and `docs/HADARA_WORKFLOW.md` owns lifecycle/context/evidence/document timing guidance. Docker build plus focused init tests passed, workspace `dist` was refreshed, and built governed init/doctor template smoke returned `ok:true` in `ev:T-0429:ab675a5933c84286b8d255fc`.
 - T-0428 implemented the accepted 0.4 init scaffold file sets, `.hadara/scaffold.json`, `.hadara/slot-registry.json`, registry seed/context routing, and 0.4 doctor checks; Docker build plus focused init tests passed, workspace `dist` was refreshed, and built governed init/doctor smoke returned `ok:true` in `ev:T-0428:f09b011734c84cab8034facf`.
 - T-0427 registered canonical 0.4 manifest documents in `.hadara/docs-registry.json` and `docs/DOC_REGISTRY.md`, added SOP conditional reading rows for the 0.4 README and worker plan, confirmed the removed nested package path is not registered, recreated the `hadara-dev` Docker container, refreshed workspace `dist`, and validated with `ev:T-0427:8f087c4cf64747628829a5dc`.
 - T-0426 accepted the final 0.4 document set, including the 24-capsule post-acceptance implementation budget with self-review hardening, polish/cleanup, final review/docs cleanup, and release-line work intentionally outside that budget. Focused docs validation passed in `ev:T-0426:496e55c598814f8d8a09cff6`.
