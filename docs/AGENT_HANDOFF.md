@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0445. |
-| Current Phase | 0.4 init doctor/profile diagnostics complete plus 0.3.4 stable readiness pending | T-0445 hardens init doctor diagnostics for duplicated guidance, over-broad default reads, and product-default leakage; T-04A18 Command Registry, Help, and Schema Alignment is next. |
-| Latest Completed Task | T-0445 T-04A17 Init Doctor and Profile Diagnostics | `init doctor` now warns on entry-doc command cookbook duplication, context Required Reading/workflow duplication, over-broad default registry reads, and product-specific generated defaults. |
-| Active / Next Task | T-04A18 Command Registry, Help, and Schema Alignment | Align command registry, structured help, JSON schemas, and current/proposed CLI labels. |
-| Validation Baseline | T-0445 init doctor/profile diagnostics plus T-0423 helper residual fix | T-0445 Docker focused build/tests, refreshed `dist`, built CLI smokes, and `git diff --check` passed in `ev:T-0445:c894a34281b648be844445e2`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0446. |
+| Current Phase | 0.4 command registry/help/schema alignment complete plus 0.3.4 stable readiness pending | T-0446 aligns current/planned command registry labels, 0.4 help wording, and schema docs; T-04A19 Product Default Cleanup is next. |
+| Latest Completed Task | T-0446 T-04A18 Command Registry, Help, and Schema Alignment | Registry now covers current 0.4 surfaces and exposes proposed `docs.complete-spec` / `docs.mark-drift` as planned/disabled metadata. |
+| Active / Next Task | T-04A19 Product Default Cleanup | Remove HADARA-dev-specific defaults from generated docs and add static leakage tests. |
+| Validation Baseline | T-0446 command registry/help/schema alignment plus T-0423 helper residual fix | T-0446 Docker focused build/tests, refreshed `dist`, built CLI smokes, and `git diff --check` passed in `ev:T-0446:1fc3397609c84c049282d0e2`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-04A18 Command Registry, Help, and Schema Alignment | Next. Align command registry, structured help, JSON schemas, and current/proposed CLI labels. | `ev:T-0445:c894a34281b648be844445e2` |
+| T-04A19 Product Default Cleanup | Next. Remove HADARA-dev-specific defaults from generated docs and add static leakage tests. | `ev:T-0446:1fc3397609c84c049282d0e2` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0446 / T-04A18 Command Registry, Help, and Schema Alignment | Added planned/disabled registry metadata for proposed docs commands, expanded current 0.4 command coverage, aligned registry-backed help to 0.4 wording, and clarified schema docs for planned surfaces. | `ev:T-0446:1fc3397609c84c049282d0e2` |
 | T-0445 / T-04A17 Init Doctor and Profile Diagnostics | Added `init doctor` warning diagnostics for duplicated entry-doc command recipes, context Required Reading/workflow duplication, over-broad default registry reads, and product-default leakage while preserving fresh scaffold cleanliness. | `ev:T-0445:c894a34281b648be844445e2` |
 | T-0444 / Reviewer Feedback Residual Hardening | Aligned fresh 0.4 docs registry schema to `hadara.docsRegistry.v2`, preserved legacy v1 compatibility, made legacy `CONTEXT.md` read-map routing conditional/historical, aligned generated evidence projection wording, and routed legacy SOP registration guidance to `docs register`. | `ev:T-0444:68cba6d6c6e84a9f84e879ca` |
-| T-0443 / T-04A16 Authoring Guidance Read Models | Added shared read-only `authoringGuidance` to task status, lifecycle, finalize, and fast dashboard workbench projections; guidance reports task-owned section slots without writing prose. | `ev:T-0443:5b1829f6efe44f15913e30b4`, `ev:T-0443:966731c29ab64153af2f79e8` |
 
 ## Current Known Problems
 
@@ -95,14 +95,15 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Open T-04A18 Command Registry, Help, and Schema Alignment. | T-04A17 hardened init doctor/profile diagnostics; the next capsule should align command registry, structured help, JSON schemas, and current/proposed CLI labels. | `ev:T-0445:c894a34281b648be844445e2`, `docs/specs/0.4.0/productization-redesign/12_CLI_JSON_Contracts_and_Diagnostics.md`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
+| Open T-04A19 Product Default Cleanup. | T-04A18 aligned command registry/help/schema labels; the next capsule should remove HADARA-dev-specific defaults from generated docs and add static leakage tests. | `ev:T-0446:1fc3397609c84c049282d0e2`, `docs/specs/0.4.0/productization-redesign/01_Project_Scaffold_Model.md`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| T-0443 / T-04A16 Authoring Guidance Read Models | Docker ext4 build plus focused task status/lifecycle/finalize tests passed 22 tests; workspace `dist` refreshed; built T-0443 task status/lifecycle/finalize smokes reported `authoringGuidance.readOnly:true` and `writesProse:false`. | Evidence `ev:T-0443:5b1829f6efe44f15913e30b4`, `ev:T-0443:966731c29ab64153af2f79e8`; init doctor/profile diagnostics remain T-04A17 scope. |
+| T-0446 / T-04A18 Command Registry, Help, and Schema Alignment | Docker ext4 build plus focused command registry/help/schema tests passed 38 tests; workspace `dist` refreshed; built CLI smokes verified docs-governance registry planned/current labels, 0.4 lifecycle help, and planned `docs.complete-spec` help. | Evidence `ev:T-0446:1fc3397609c84c049282d0e2`; product-default cleanup remains T-04A19 scope. |
+| T-0445 / T-04A17 Init Doctor and Profile Diagnostics | Docker ext4 build plus focused init/docs-registry/command-registry tests passed 26 tests; workspace `dist` refreshed; built CLI smokes verified fresh governed scaffold cleanliness and duplicate guidance, broad default reading, and product-default leakage diagnostics. | Evidence `ev:T-0445:c894a34281b648be844445e2`. |
 | T-0442 / T-04A15 Context Pack Read-Map Integration | Docker ext4 build plus focused context-pack/docs-registry/session-start tests passed 24 tests; workspace `dist` refreshed; built T-0442 `context pack --task T-0442 --json` reported read-map metadata and excluded tmp unregistered specs from default read buckets. | Evidence `ev:T-0442:0442975b9ace4166a801f5a6`, `ev:T-0442:fb4472fd84544f7ea682ade0`. |
 | T-0441 / T-04A14 Session Start Read-Map Integration | Docker ext4 build plus focused session-start/docs-registry/harness tests passed 44 tests; workspace `dist` refreshed; built T-0441 `session start --task T-0441 --json` reported docs read-map metadata. | Evidence `ev:T-0441:619636a6d5a34be2a42bf1d9`, `ev:T-0441:22402ccb85324b76a2d2bc79`; context-pack read-map consumption remains T-04A15 scope. |
 | T-0438 / T-04A12 Close Source Contract | Docker ext4 build plus focused close-source/close/finalize/schema/registry tests passed 31 tests; workspace `dist` refreshed; built T-0438 `task close-source` and draft harness returned `ok:true`. | Evidence `ev:T-0438:9462d50758aa418c84318576`; shared-state close-source declarations remain later hardening scope. |

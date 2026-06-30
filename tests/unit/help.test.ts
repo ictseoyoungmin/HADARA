@@ -24,7 +24,7 @@ describe('registry-backed help', () => {
   it('renders lifecycle help from primary registry entries', () => {
     const output = renderLifecycleHelp();
 
-    expect(output).toContain('HADARA 0.3.3 primary task lifecycle');
+    expect(output).toContain('HADARA 0.4 primary task lifecycle');
     expect(output).toContain('1 discover');
     expect(output).toContain('task lifecycle --task T-XXXX --json');
     expect(output).toContain('task finalize --task T-XXXX --json');
@@ -58,11 +58,21 @@ describe('registry-backed help', () => {
     expect(output).toContain('Scope: capsule');
     expect(output).toContain('Lifecycle stage: close');
     expect(output).toContain('Requiredness: advanced');
+    expect(output).toContain('Status: stable');
     expect(output).toContain('Write boundary: close-evidence-append');
     expect(output).toContain('Examples:');
     expect(output).toContain('docs/TASK_WORKFLOW_COMMANDS.md');
     expect(output).toContain('Related: task.ready, task.audit-close, proof.status');
     expect(output).toContain('Conflicts: task.finish');
+  });
+
+  it('explains planned 0.4 commands without presenting them as executable current surfaces', () => {
+    const output = renderCommandHelp('docs.complete-spec');
+
+    expect(output).toContain('docs.complete-spec');
+    expect(output).toContain('Requiredness: disabled');
+    expect(output).toContain('Status: planned');
+    expect(output).toContain('no CLI handler or schema is implemented');
   });
 
   it('renders one command family without dumping unrelated surfaces', () => {

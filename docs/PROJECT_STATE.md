@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0445 T-04A17 Init Doctor and Profile Diagnostics |
-| Active Task | T-04A18 Command Registry, Help, and Schema Alignment (next) |
+| Latest Completed Task | T-0446 T-04A18 Command Registry, Help, and Schema Alignment |
+| Active Task | T-04A19 Product Default Cleanup (next) |
 
 ## Next Planned Line
 
@@ -85,6 +85,8 @@ T-0443 follow-up note: T-04A16 Authoring Guidance Read Models is implemented. `h
 T-0444 follow-up note: residual reviewer feedback after T-0439 is implemented. Fresh 0.4 docs registries now use `hadara.docsRegistry.v2` while legacy `hadara.docs.registry.v1` reads and 0.3 protocol migration remain compatible; docs read-map keeps active 0.4 task docs as `TASK.md`, `HANDOFF.md`, and `EVIDENCE.md` while treating legacy `CONTEXT.md` as conditional/historical when present; generated evidence wording now describes `EVIDENCE.md` as a CLI-generated projection file; and legacy SOP registration errors route 0.4 users to `hadara docs register`. Docker ext4 build/focused tests passed 5 files / 53 tests, workspace `dist` was refreshed, built CLI smokes passed, done-level harness validation passed, and `git diff --check` passed. Evidence: `ev:T-0444:68cba6d6c6e84a9f84e879ca`, `ev:T-0444:5cba035f87e74b3692ac3df6`. The next 0.4 task remains T-04A17 Init Doctor and Profile Diagnostics.
 
 T-0445 follow-up note: T-04A17 Init Doctor and Profile Diagnostics is implemented. `hadara init doctor --json` now reports warning diagnostics for `INIT_AGENTS_COMMAND_COOKBOOK`, `INIT_CONTEXT_DUPLICATES_WORKFLOW`, `INIT_REQUIRED_READING_TOO_BROAD`, and `INIT_PRODUCT_DEFAULT_LEAK` while keeping fresh governed scaffolds doctor-clean. Docker ext4 build/focused tests passed 3 files / 26 tests, workspace `dist` was refreshed, built CLI smokes passed for fresh scaffold cleanliness and the new diagnostics, and `git diff --check` passed. Evidence: `ev:T-0445:c894a34281b648be844445e2`. The next 0.4 task is T-04A18 Command Registry, Help, and Schema Alignment.
+
+T-0446 follow-up note: T-04A18 Command Registry, Help, and Schema Alignment is implemented. The command registry now covers current 0.4/current surfaces including `task.close-source`, `evidence.summary`, `evidence.project`, and `state.verify`, and exposes proposed-but-unimplemented `docs.complete-spec` and `docs.mark-drift` as `status: planned` / `requiredness: disabled` without schema fixtures or CLI handlers. Registry-backed help now uses 0.4 lifecycle wording and prints command status. Docker ext4 build/focused command registry/help/schema tests passed 4 files / 38 tests, workspace `dist` was refreshed, built CLI smokes passed, and `git diff --check` passed. Evidence: `ev:T-0446:1fc3397609c84c049282d0e2`. The next 0.4 task is T-04A19 Product Default Cleanup.
 
 Phase 8 / 0.3.1 is complete through post-rc1 documentation cleanup. It carried Work Item A and Work Item F into implementation as status token governance, document ownership/write-boundary governance, task handoff close-state clarity, installed-package recycle findings cleanup, state consistency projection, and advisory verification gates. The Phase 8 specs are staged under `docs/specs/0.3.1/`; the first rc1 implementation sequence is staged under `docs/specs/0.3.1/rc1/`. Phase 8.1 through Phase 8.6 are complete through T-0324, T-0325 completed the follow-up CloseState derived-state cleanup after review, T-0326 prepared `hadara@0.3.1-rc.1` release readiness without publish mutation, T-0327 published `hadara@0.3.1-rc.1`, verified npm visibility/tarball contents, hardened future rc publish tags, and corrected npm dist-tags so stable `0.3.0` stays on `latest` while rc1 is available as `next`, T-0328 verified the published rc1 package from installed consumer paths in the `hadara-dev` container, and T-0329 refreshed post-rc1 handoff/release-note wording after reviewer feedback.
 

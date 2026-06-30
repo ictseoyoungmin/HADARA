@@ -86,7 +86,7 @@ export function renderLifecycleHelp(): string {
   const diagnostics = listCommandRegistryEntries({ family: 'proof-diagnostics' }).filter((entry) => entry.requiredness === 'diagnostic');
 
   const lines = [
-    'HADARA 0.3.3 primary task lifecycle',
+    'HADARA 0.4 primary task lifecycle',
     '',
     'Primary capsule lifecycle:'
   ];
@@ -123,6 +123,7 @@ export function renderCommandHelp(id: string): string {
     `Scope: ${entry.scope}`,
     `Lifecycle stage: ${entry.lifecycleStage}`,
     `Requiredness: ${entry.requiredness}`,
+    `Status: ${entry.status}`,
     `Write boundary: ${entry.writeBoundary}`,
     `Read-only: ${entry.readOnly ? 'yes' : 'no'}`,
     `Risk: ${entry.risk}`,

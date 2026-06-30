@@ -28,6 +28,7 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'task.finalize',
   'task.lifecycle',
   'task.close-repair-plan',
+  'task.close-source',
   'task.finish',
   'task.upgrade-scaffold',
   'task.ready',
@@ -36,11 +37,14 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'evidence.collect',
   'evidence.add-command',
   'evidence.list',
+  'evidence.summary',
+  'evidence.project',
   'evidence.lint',
   'evidence.migrate',
   'proof.status',
   'proof.explain',
   'ci.gate',
+  'state.verify',
   'context.graph',
   'context.pack',
   'context.slice',
@@ -58,6 +62,8 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'docs.read-map',
   'docs.inbox',
   'docs.register',
+  'docs.complete-spec',
+  'docs.mark-drift',
   'docs.managed.list',
   'docs.managed.explain',
   'docs.patch',
@@ -138,6 +144,27 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('task.finalize')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
     expect(findCommandRegistryEntry('task.finish')).toMatchObject({ requiredness: 'advanced', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('task.close')).toMatchObject({ requiredness: 'advanced', appearsInDefaultHelp: false });
+  });
+
+  it('classifies 0.4 current and planned command surfaces explicitly', () => {
+    expect(findCommandRegistryEntry('docs.read-map')).toMatchObject({ status: 'experimental', schemaVersion: 'hadara.docs.readMap.v1' });
+    expect(findCommandRegistryEntry('docs.inbox')).toMatchObject({ status: 'experimental', schemaVersion: 'hadara.docs.inbox.v1' });
+    expect(findCommandRegistryEntry('docs.register')).toMatchObject({ status: 'experimental', schemaVersion: 'hadara.docs.register.v1' });
+    expect(findCommandRegistryEntry('evidence.project')).toMatchObject({ status: 'stable', schemaVersion: 'hadara.evidence.projection.v1' });
+    const completeSpec = findCommandRegistryEntry('docs.complete-spec');
+    const markDrift = findCommandRegistryEntry('docs.mark-drift');
+    expect(completeSpec).toMatchObject({
+      status: 'planned',
+      requiredness: 'disabled',
+      appearsInDefaultHelp: false
+    });
+    expect(markDrift).toMatchObject({
+      status: 'planned',
+      requiredness: 'disabled',
+      appearsInDefaultHelp: false
+    });
+    expect(completeSpec).not.toHaveProperty('schemaVersion');
+    expect(markDrift).not.toHaveProperty('schemaVersion');
   });
 
   it('exposes explicit code index implementation and test file hints where available', () => {

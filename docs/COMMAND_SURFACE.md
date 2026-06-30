@@ -67,7 +67,7 @@ Use these surfaces for command discovery:
 
 ## Primary Lifecycle
 
-The 0.3.3 primary agent loop is:
+The 0.4 primary agent loop is:
 
 ```bash
 hadara task next --json
@@ -84,6 +84,10 @@ hadara handoff update --task T-XXXX --json
 `task next` is read-only. It prefers actionable handoff work, then planned development slices, then Task Board fallback rows. It ignores handoff meta-guidance that merely tells the operator to run or select with `task next`, so consumers do not receive a self-referential `createCommand`. During Task Board fallback it prefers primary open rows before legacy `Partial` rows, leaving `Partial` visible as backlog when stronger open work exists.
 
 Diagnostics such as `harness.validate`, `proof.status`, `proof.explain`, `evidence.lint`, `protocol.doctor`, and `state.verify` explain blockers or drift. They do not replace the primary finalize loop.
+
+## 0.4 Planned Surfaces
+
+`docs.complete-spec` and `docs.mark-drift` are registry-visible planned 0.4 surfaces, not executable current commands. They use `status: planned` and `requiredness: disabled` in `hadara commands --json` until a future capsule implements their mutation semantics and schemas.
 
 ## State Consistency
 
