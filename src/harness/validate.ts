@@ -831,7 +831,7 @@ function validateDoneLevelScaffoldContent(projectRoot: string, task: TaskCapsule
     {
       fileName: 'TASK.md',
       code: 'TASK_SCAFFOLD_PLACEHOLDER',
-      message: 'Done-level validation requires TASK.md Goal, Scope, and Out of Scope to replace scaffold placeholders.'
+      message: 'Done-level validation requires TASK.md Goal, Source Documents, Plan, Acceptance, Validation, Change Summary, and Risks / Follow-ups to replace scaffold placeholders.'
     },
     {
       fileName: 'PLAN.md',

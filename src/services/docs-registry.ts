@@ -51,6 +51,15 @@ export interface DocumentRegistryEntry {
   updatedByCommands: string[];
   managedSections: ManagedSectionRef[];
   closeSourceRole: 'included' | 'excluded' | 'task-dependent' | 'unknown';
+  readTier?: DocsReadTier;
+  authority?: DocsAuthority;
+  editPolicy?: DocsEditPolicy;
+  activeForTasks?: string[];
+  drift?: {
+    risk: 'low' | 'medium' | 'high';
+    reviewRequiredBeforeUse: boolean;
+    reason: string;
+  };
   supersedes: string[];
   supersededBy?: string;
   generatedBy?: string;
@@ -178,6 +187,7 @@ const VALID_READ_WHEN: ReadWhen[] = ['session-start', 'task-start', 'task-close'
 const VALID_READ_TIERS: DocsReadTier[] = ['bootstrap', 'current-state', 'workflow-reference', 'active-task', 'active-spec', 'conditional-reference', 'implemented-reference', 'drift-review', 'historical', 'excluded'];
 const VALID_AUTHORITIES: DocsAuthority[] = ['exploratory', 'proposed', 'approved', 'normative', 'implementation-source', 'reference-only', 'historical'];
 const VALID_EDIT_POLICIES: DocsEditPolicy[] = ['human-only', 'agent-assisted', 'agent-editable-with-request', 'agent-editable-with-review', 'cli-owned', 'generated-projection'];
+const ACTIVE_DOC_DISCOVERY_LIMIT = 200;
 
 export function createSeedDocumentRegistry(profile: InitProfile | 'hadara-dev' = 'standard'): DocumentRegistryFile {
   return {
@@ -332,6 +342,13 @@ export function createDocsRegisterReport(projectRoot: string, options: {
   kind?: string;
   status?: string;
   readWhen?: string;
+  readTier?: string;
+  authority?: string;
+  editPolicy?: string;
+  activeForTasks?: string[];
+  driftRisk?: string;
+  driftReviewRequired?: boolean;
+  driftReason?: string;
   requiredReading?: boolean;
   requireExists?: boolean;
   mode?: 'dry-run' | 'execute';
@@ -343,6 +360,10 @@ export function createDocsRegisterReport(projectRoot: string, options: {
   const kind = parseKind(options.kind);
   const status = parseStatus(options.status ?? 'reference');
   const readWhen = parseReadWhen(options.readWhen ?? 'only-when-linked');
+  const readTier = parseReadTier(options.readTier);
+  const authority = parseAuthority(options.authority);
+  const editPolicy = parseEditPolicy(options.editPolicy);
+  const driftRisk = parseDriftRisk(options.driftRisk);
   if (!normalized) issues.push({ severity: 'error', code: 'DOC_REGISTER_PATH_REQUIRED', message: 'Document path is required.' });
   if (path.isAbsolute(options.documentPath) || normalized.startsWith('../') || normalized.includes('/../')) {
     issues.push({ severity: 'error', code: 'DOC_REGISTER_PATH_OUTSIDE_PROJECT', path: normalized, message: 'Document path must be project-relative.' });
@@ -350,6 +371,10 @@ export function createDocsRegisterReport(projectRoot: string, options: {
   if (options.kind !== undefined && kind === null) issues.push({ severity: 'error', code: 'DOC_UNKNOWN_KIND', path: normalized, message: `Unknown document kind: ${options.kind}` });
   if (status === null) issues.push({ severity: 'error', code: 'DOC_UNKNOWN_STATUS', path: normalized, message: `Unknown document status: ${options.status}` });
   if (readWhen === null) issues.push({ severity: 'error', code: 'DOC_UNKNOWN_READ_WHEN', path: normalized, message: `Unknown read-when value: ${options.readWhen}` });
+  if (options.readTier !== undefined && readTier === null) issues.push({ severity: 'error', code: 'DOC_READ_TIER_INVALID_TOKEN', path: normalized, message: `Invalid readTier: ${options.readTier}` });
+  if (options.authority !== undefined && authority === null) issues.push({ severity: 'error', code: 'DOC_AUTHORITY_INVALID_TOKEN', path: normalized, message: `Invalid authority: ${options.authority}` });
+  if (options.editPolicy !== undefined && editPolicy === null) issues.push({ severity: 'error', code: 'DOC_EDIT_POLICY_INVALID_TOKEN', path: normalized, message: `Invalid editPolicy: ${options.editPolicy}` });
+  if (options.driftRisk !== undefined && driftRisk === null) issues.push({ severity: 'error', code: 'DOC_DRIFT_RISK_INVALID_TOKEN', path: normalized, message: `Invalid drift risk: ${options.driftRisk}` });
   if (options.requireExists && normalized && !fs.existsSync(path.join(projectRoot, normalized))) {
     issues.push({ severity: 'error', code: 'DOC_REGISTER_FILE_MISSING', path: normalized, message: `${normalized} does not exist.` });
   }
@@ -376,6 +401,15 @@ export function createDocsRegisterReport(projectRoot: string, options: {
     kind: kind ?? inferKind(normalized),
     status: status ?? 'reference',
     readWhen: readWhen ?? 'only-when-linked',
+    readTier: readTier ?? undefined,
+    authority: authority ?? undefined,
+    editPolicy: editPolicy ?? undefined,
+    activeForTasks: options.activeForTasks,
+    drift: driftRisk ? {
+      risk: driftRisk,
+      reviewRequiredBeforeUse: options.driftReviewRequired ?? false,
+      reason: options.driftReason ?? `${normalized} is marked as ${driftRisk} drift risk.`
+    } : undefined,
     requiredReading: options.requiredReading ?? false
   });
   if (document && mode === 'execute') {
@@ -415,7 +449,7 @@ export function createDocsReadMapReport(projectRoot: string, taskId: string): Do
   const driftWarnings: DocsDriftWarning[] = [];
 
   if (task.capsulePath) {
-    for (const file of ['TASK.md', 'CONTEXT.md', 'HANDOFF.md']) {
+    for (const file of ['TASK.md', 'HANDOFF.md', 'EVIDENCE.md']) {
       const relativePath = `${task.capsulePath}/${file}`;
       if (fs.existsSync(path.join(projectRoot, relativePath))) {
         readFirst.push({
@@ -447,7 +481,7 @@ export function createDocsReadMapReport(projectRoot: string, taskId: string): Do
     if (warning) driftWarnings.push(warning);
   }
 
-  for (const activePath of findActiveLookingDocs(projectRoot)) {
+  for (const activePath of findActiveLookingDocs(projectRoot, ACTIVE_DOC_DISCOVERY_LIMIT)) {
     if (!state.registry.documents.some((doc) => doc.path === activePath)) {
       doNotReadByDefault.push({
         path: activePath,
@@ -586,7 +620,7 @@ function validateRegistry(projectRoot: string, registry: DocumentRegistryFile): 
       issues.push({ severity: 'warning', code: 'DOC_HISTORICAL_REQUIRED_READING', path: requiredPath, message: `${requiredPath} is historical but appears in Required Reading.` });
     }
   }
-  for (const activePath of findActiveLookingDocs(projectRoot)) {
+  for (const activePath of findActiveLookingDocs(projectRoot, ACTIVE_DOC_DISCOVERY_LIMIT)) {
     if (!registry.documents.some((doc) => doc.path === activePath)) {
       issues.push({ severity: 'warning', code: 'DOC_UNREGISTERED_ACTIVE_LOOKING', path: activePath, message: `${activePath} looks active but is not registered.` });
     }
@@ -683,17 +717,30 @@ function parseRequiredReading(projectRoot: string): string[] {
   return [...found];
 }
 
-function findActiveLookingDocs(projectRoot: string): string[] {
-  const dirs = ['docs/specs', 'docs/specs/0.3.0'];
+function findActiveLookingDocs(projectRoot: string, limit = ACTIVE_DOC_DISCOVERY_LIMIT): string[] {
+  const dirs = ['docs/specs'];
   const found: string[] = [];
   for (const dir of dirs) {
     const full = path.join(projectRoot, dir);
     if (!fs.existsSync(full)) continue;
-    for (const name of fs.readdirSync(full)) {
-      if (name.endsWith('.md')) found.push(`${dir}/${name}`);
-    }
+    collectMarkdownFiles(projectRoot, full, found, limit);
   }
   return found;
+}
+
+function collectMarkdownFiles(projectRoot: string, dir: string, found: string[], limit: number): void {
+  if (found.length >= limit) return;
+  for (const dirent of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (found.length >= limit) return;
+    if (dirent.name.startsWith('.')) continue;
+    const full = path.join(dir, dirent.name);
+    if (dirent.isDirectory()) {
+      if (['temp_plan', '_eval', 'tasks', 'node_modules'].includes(dirent.name)) continue;
+      collectMarkdownFiles(projectRoot, full, found, limit);
+    } else if (dirent.name.endsWith('.md')) {
+      found.push(toPortablePath(path.relative(projectRoot, full)));
+    }
+  }
 }
 
 function parseStatus(value?: string): DocumentStatus | null {
@@ -714,6 +761,26 @@ function parseKind(value?: string): DocumentKind | null {
 function parseReadWhen(value?: string): ReadWhen | null {
   if (value === undefined) return null;
   return VALID_READ_WHEN.includes(value as ReadWhen) ? value as ReadWhen : null;
+}
+
+function parseReadTier(value?: string): DocsReadTier | null {
+  if (value === undefined) return null;
+  return VALID_READ_TIERS.includes(value as DocsReadTier) ? value as DocsReadTier : null;
+}
+
+function parseAuthority(value?: string): DocsAuthority | null {
+  if (value === undefined) return null;
+  return VALID_AUTHORITIES.includes(value as DocsAuthority) ? value as DocsAuthority : null;
+}
+
+function parseEditPolicy(value?: string): DocsEditPolicy | null {
+  if (value === undefined) return null;
+  return VALID_EDIT_POLICIES.includes(value as DocsEditPolicy) ? value as DocsEditPolicy : null;
+}
+
+function parseDriftRisk(value?: string): 'low' | 'medium' | 'high' | null {
+  if (value === undefined) return null;
+  return value === 'low' || value === 'medium' || value === 'high' ? value : null;
 }
 
 function parseScope(value: string): DocsDoctorReport['scope'] | null {
@@ -863,9 +930,14 @@ function buildRegisteredDocument(registry: DocumentRegistryFile, input: {
   kind: DocumentKind;
   status: DocumentStatus;
   readWhen: ReadWhen;
+  readTier?: DocsReadTier;
+  authority?: DocsAuthority;
+  editPolicy?: DocsEditPolicy;
+  activeForTasks?: string[];
+  drift?: DocumentRegistryEntry['drift'];
   requiredReading: boolean;
 }): DocumentRegistryEntry {
-  return {
+  const document: DocumentRegistryEntry = {
     path: input.path,
     title: input.title ?? titleFromPath(input.path),
     owner: 'hadara-docs',
@@ -881,6 +953,12 @@ function buildRegisteredDocument(registry: DocumentRegistryFile, input: {
     closeSourceRole: input.requiredReading ? 'included' : 'task-dependent',
     supersedes: []
   };
+  if (input.readTier) document.readTier = input.readTier;
+  if (input.authority) document.authority = input.authority;
+  if (input.editPolicy) document.editPolicy = input.editPolicy;
+  if (input.activeForTasks && input.activeForTasks.length > 0) document.activeForTasks = input.activeForTasks;
+  if (input.drift) document.drift = input.drift;
+  return document;
 }
 
 function titleFromPath(documentPath: string): string {
@@ -893,4 +971,8 @@ function writeRegistry(projectRoot: string, registry: DocumentRegistryFile): voi
   const temp = `${target}.${process.pid}.tmp`;
   fs.writeFileSync(temp, registryJson(registry));
   fs.renameSync(temp, target);
+}
+
+function toPortablePath(value: string): string {
+  return value.replace(/\\/g, '/');
 }

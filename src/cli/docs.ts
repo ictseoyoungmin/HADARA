@@ -47,6 +47,13 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
       kind: getStringOption(input.args, '--kind'),
       status: getStringOption(input.args, '--status'),
       readWhen: getStringOption(input.args, '--read-when'),
+      readTier: getStringOption(input.args, '--read-tier'),
+      authority: getStringOption(input.args, '--authority'),
+      editPolicy: getStringOption(input.args, '--edit-policy'),
+      activeForTasks: splitCsv(getStringOption(input.args, '--active-for-task')),
+      driftRisk: getStringOption(input.args, '--drift'),
+      driftReviewRequired: getFlag(input.args, '--drift-review-required'),
+      driftReason: getStringOption(input.args, '--drift-reason'),
       requiredReading: getFlag(input.args, '--required-reading'),
       requireExists: getFlag(input.args, '--require-exists'),
       mode: getFlag(input.args, '--execute') ? 'execute' : 'dry-run'
@@ -107,4 +114,10 @@ function printReport(report: unknown, jsonOutput: boolean): void {
     return;
   }
   console.log(JSON.stringify(report, null, 2));
+}
+
+function splitCsv(value: string | undefined): string[] | undefined {
+  if (value === undefined) return undefined;
+  const items = value.split(',').map((item) => item.trim()).filter(Boolean);
+  return items.length > 0 ? items : undefined;
 }

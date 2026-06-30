@@ -798,7 +798,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   {
     id: 'evidence.project',
     command: 'hadara evidence project --task <task-id> [--execute] [--json]',
-    summary: 'Regenerate EVIDENCE.md projection slots from canonical evidence.jsonl without rewriting evidence records.',
+    summary: 'Regenerate the EVIDENCE.md projection file from canonical evidence.jsonl without rewriting evidence records.',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'capsule-lifecycle',
@@ -1332,7 +1332,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   }),
   commandEntry({
     id: 'docs.register',
-    command: 'hadara docs register --path <path> [--title <title>] [--kind <kind>] [--status <status>] [--read-when <read-when>] [--required-reading] [--require-exists] [--execute] [--json]',
+    command: 'hadara docs register --path <path> [--title <title>] [--kind <kind>] [--status <status>] [--read-when <read-when>] [--read-tier <tier>] [--authority <authority>] [--edit-policy <policy>] [--active-for-task <ids>] [--drift <risk>] [--drift-review-required] [--drift-reason <text>] [--required-reading] [--require-exists] [--execute] [--json]',
     summary: 'Register one project document in .hadara/docs-registry.json without mutating AGENTS, context, or workflow prose.',
     canonical: true,
     appearsInDefaultHelp: false,

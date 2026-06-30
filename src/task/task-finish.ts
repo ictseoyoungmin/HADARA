@@ -402,11 +402,28 @@ function applyWrites(projectRoot: string, writes: TaskFinishWrite[], issues: Tas
 }
 
 function createStateDocAdvisories(projectRoot: string, task: TaskCapsule): TaskFinishStateDoc[] {
-  return [
-    stateDoc(projectRoot, task, 'docs/DEVELOPMENT_SLICES.md', 'Slice completion evidence still requires operator-authored summary.', 'Add or update a Development Slices row with Done evidence for this task.'),
-    stateDoc(projectRoot, task, 'docs/PROJECT_STATE.md', 'Latest completed/current task prose remains operator-authored.', 'Update Project State current phase/status text if this task changes project capability state.'),
-    stateDoc(projectRoot, task, 'docs/AGENT_HANDOFF.md', 'Next-session handoff remains operator-authored.', 'Update Agent Handoff latest completed task, validation baseline, known problems, and next recommended step.')
+  return stateDocSpecs(projectRoot).map((spec) => stateDoc(projectRoot, task, spec.path, spec.reason, spec.recommendation));
+}
+
+function stateDocSpecs(projectRoot: string): Array<{ path: TaskFinishStateDoc['path']; reason: string; recommendation: string }> {
+  const specs: Array<{ path: TaskFinishStateDoc['path']; reason: string; recommendation: string }> = [
+    { path: 'docs/DEVELOPMENT_SLICES.md', reason: 'Slice completion evidence still requires operator-authored summary.', recommendation: 'Add or update a Development Slices row with Done evidence for this task.' },
+    { path: 'docs/PROJECT_STATE.md', reason: 'Latest completed/current task prose remains operator-authored.', recommendation: 'Update Project State current phase/status text if this task changes project capability state.' },
+    { path: 'docs/AGENT_HANDOFF.md', reason: 'Next-session handoff remains operator-authored.', recommendation: 'Update Agent Handoff latest completed task, validation baseline, known problems, and next recommended step.' }
   ];
+  const registryPath = path.join(projectRoot, '.hadara', 'docs-registry.json');
+  if (!fs.existsSync(registryPath)) return specs;
+  const registered = readRegisteredDocPaths(registryPath);
+  return specs.filter((spec) => registered.has(spec.path) || fs.existsSync(path.join(projectRoot, spec.path)));
+}
+
+function readRegisteredDocPaths(registryPath: string): Set<string> {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(registryPath, 'utf8')) as { documents?: Array<{ path?: unknown }> };
+    return new Set((parsed.documents ?? []).map((doc) => typeof doc.path === 'string' ? doc.path : '').filter(Boolean));
+  } catch {
+    return new Set();
+  }
 }
 
 function stateDoc(

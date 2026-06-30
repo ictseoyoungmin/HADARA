@@ -154,7 +154,7 @@ These are proposed commands. Implementation must add command registry entries, s
 }
 ```
 
-`--execute` may rewrite only generated projection slots in `EVIDENCE.md`. It must not rewrite `evidence.jsonl` or change evidence outcomes.
+`--execute` may rewrite the generated `EVIDENCE.md` projection file. It must not rewrite `evidence.jsonl` or change evidence outcomes.
 
 ## Proposed `docs read-map` Report
 

@@ -89,7 +89,7 @@ hadara evidence project --task T-XXXX --json
 hadara evidence project --task T-XXXX --execute --json
 ```
 
-`evidence project --json` is a dry-run projection report. `--execute` rewrites only generated projection slots in `EVIDENCE.md` from `evidence.jsonl`; it must not rewrite `evidence.jsonl`, hide failed or blocked evidence, or invent evidence records.
+`evidence project --json` is a dry-run projection report. `--execute` rewrites the generated `EVIDENCE.md` projection file from `evidence.jsonl`; it must not rewrite `evidence.jsonl`, hide failed or blocked evidence, or invent evidence records.
 
 ## Evidence Categories
 

@@ -158,7 +158,19 @@ describe('Phase 7.3 docs registry', () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     try {
       expect(handleDocsCommand({
-        args: ['docs', 'register', '--path', 'docs/specs/cli.md', '--title', 'CLI Spec', '--execute'],
+        args: [
+          'docs', 'register',
+          '--path', 'docs/specs/cli.md',
+          '--title', 'CLI Spec',
+          '--read-tier', 'active-spec',
+          '--authority', 'implementation-source',
+          '--edit-policy', 'agent-editable-with-review',
+          '--active-for-task', 'T-04A13,T-04A14',
+          '--drift', 'medium',
+          '--drift-review-required',
+          '--drift-reason', 'Reviewer requested a fresh read before use.',
+          '--execute'
+        ],
         projectRoot: root,
         jsonOutput: true
       })).toBe(true);
@@ -171,6 +183,15 @@ describe('Phase 7.3 docs registry', () => {
     expect(readRegistry(root).documents.find((doc) => doc.path === 'docs/specs/cli.md')).toMatchObject({
       title: 'CLI Spec',
       kind: 'spec',
+      readTier: 'active-spec',
+      authority: 'implementation-source',
+      editPolicy: 'agent-editable-with-review',
+      activeForTasks: ['T-04A13', 'T-04A14'],
+      drift: {
+        risk: 'medium',
+        reviewRequiredBeforeUse: true,
+        reason: 'Reviewer requested a fresh read before use.'
+      },
       updatedByCommands: ['docs.register']
     });
     expect(fs.existsSync(path.join(root, 'docs', 'DOC_REGISTRY.md'))).toBe(false);
@@ -182,11 +203,14 @@ describe('Phase 7.3 docs registry', () => {
     const taskDir = path.join(root, 'tasks', 'T-0001-docs-read-map-and-drift');
     fs.mkdirSync(taskDir, { recursive: true });
     fs.writeFileSync(path.join(taskDir, 'TASK.md'), '# T-0001 Docs Read Map and Drift\n');
-    fs.writeFileSync(path.join(taskDir, 'CONTEXT.md'), '# Context\n');
     fs.writeFileSync(path.join(taskDir, 'HANDOFF.md'), '# Handoff\n');
+    fs.writeFileSync(path.join(taskDir, 'EVIDENCE.md'), '# Evidence\n');
     fs.mkdirSync(path.join(root, 'docs', 'specs'), { recursive: true });
     fs.writeFileSync(path.join(root, 'docs', 'specs', 'read-map-drift.md'), '# Read Map Drift\n');
-    fs.writeFileSync(path.join(root, 'docs', 'specs', 'unregistered.md'), '# Unregistered\n');
+    fs.mkdirSync(path.join(root, 'docs', 'specs', '0.4.0', 'nested'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'specs', '0.4.0', 'nested', 'unregistered.md'), '# Unregistered\n');
+    fs.mkdirSync(path.join(root, 'docs', 'specs', 'temp_plan'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'specs', 'temp_plan', 'ignored.md'), '# Ignored fixture\n');
     const registry = readRegistry(root);
     registry.documents.push({
       path: 'docs/specs/read-map-drift.md',
@@ -216,18 +240,22 @@ describe('Phase 7.3 docs registry', () => {
     });
     expect(report.readFirst.map((entry) => entry.path)).toEqual(expect.arrayContaining([
       'tasks/T-0001-docs-read-map-and-drift/TASK.md',
+      'tasks/T-0001-docs-read-map-and-drift/HANDOFF.md',
+      'tasks/T-0001-docs-read-map-and-drift/EVIDENCE.md',
       'docs/specs/read-map-drift.md'
     ]));
+    expect(report.readFirst.map((entry) => entry.path)).not.toContain('tasks/T-0001-docs-read-map-and-drift/CONTEXT.md');
     expect(report.readFirst.find((entry) => entry.path === 'docs/specs/read-map-drift.md')).toMatchObject({
       readTier: 'active-spec',
       authority: 'implementation-source',
       editPolicy: 'agent-editable-with-review'
     });
-    expect(report.doNotReadByDefault.find((entry) => entry.path === 'docs/specs/unregistered.md')).toMatchObject({
+    expect(report.doNotReadByDefault.find((entry) => entry.path === 'docs/specs/0.4.0/nested/unregistered.md')).toMatchObject({
       readTier: 'excluded',
       source: 'discovery'
     });
-    expect(report.driftWarnings).toContainEqual(expect.objectContaining({ code: 'SPEC_UNREGISTERED', path: 'docs/specs/unregistered.md' }));
+    expect(report.driftWarnings).toContainEqual(expect.objectContaining({ code: 'SPEC_UNREGISTERED', path: 'docs/specs/0.4.0/nested/unregistered.md' }));
+    expect(report.doNotReadByDefault.map((entry) => entry.path)).not.toContain('docs/specs/temp_plan/ignored.md');
     assertSchema('hadara.docs.readMap.v1', report);
   });
 
@@ -235,7 +263,8 @@ describe('Phase 7.3 docs registry', () => {
     const root = tempProject();
     initProject(root, 'standard', { silent: true });
     fs.mkdirSync(path.join(root, 'docs', 'specs'), { recursive: true });
-    fs.writeFileSync(path.join(root, 'docs', 'specs', 'unregistered.md'), '# Unregistered\n');
+    fs.mkdirSync(path.join(root, 'docs', 'specs', '0.4.0', 'nested'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'specs', '0.4.0', 'nested', 'unregistered.md'), '# Unregistered\n');
     const registry = readRegistry(root);
     registry.documents.push({
       path: 'docs/MISSING.md',
@@ -263,7 +292,7 @@ describe('Phase 7.3 docs registry', () => {
       ok: false
     });
     expect(report.items).toContainEqual(expect.objectContaining({ code: 'DOC_REGISTERED_FILE_MISSING', path: 'docs/MISSING.md' }));
-    expect(report.items).toContainEqual(expect.objectContaining({ code: 'DOC_UNREGISTERED_ACTIVE_LOOKING', path: 'docs/specs/unregistered.md' }));
+    expect(report.items).toContainEqual(expect.objectContaining({ code: 'DOC_UNREGISTERED_ACTIVE_LOOKING', path: 'docs/specs/0.4.0/nested/unregistered.md' }));
     assertSchema('hadara.docs.inbox.v1', report);
   });
 });

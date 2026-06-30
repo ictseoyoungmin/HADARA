@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleTaskCommand } from '../../src/cli/task';
+import { initProject } from '../../src/cli/init';
 import { validateSchema } from '../../src/core/schema';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { createTaskFinishReport, formatTaskFinishReport } from '../../src/task/task-finish';
@@ -107,6 +108,19 @@ describe('task finish status sync', () => {
     expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
   });
 
+  it('uses docs registry to avoid missing advisories for unscaffolded shared docs', () => {
+    const root = tempProject();
+    initProject(root, 'basic', { silent: true });
+    const task = createTaskCapsule(root, 'Finish basic profile');
+
+    const report = createTaskFinishReport(root, task.id, 'dry-run');
+
+    expect(report.summary).toMatchObject({ advisoryOnly: 1, stateDocsPending: 1 });
+    expect(report.stateDocs.map((doc) => doc.path)).toEqual(['docs/PROJECT_STATE.md']);
+    expect(report.stateDocs[0]).toMatchObject({ present: true, mentionsTask: false, state: 'pending' });
+    expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
+  });
+
   it('executes only TASK.md status and Task Board row status/path sync', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Finish execute');
@@ -122,9 +136,6 @@ describe('task finish status sync', () => {
       requiresBeforeHash: true
     });
     expect(readTask(root, task.id)).toContain('| Status | Done |');
-    expect(readTask(root, task.id)).toContain('## Status\n\nDone\n');
-    expect(readTask(root, task.id)).toMatch(/\|\s*\d{4}-\d{2}-\d{2}\s*\|\s*Done\s*\|\s*Finished task capsule\.\s*\|\s*`hadara task finish --execute`\s*\|/);
-    expect(readTask(root, task.id).indexOf('| Done | Finished task capsule. |')).toBeLessThan(readTask(root, task.id).indexOf('<!-- hadara:managed:end task-status-history -->'));
     expect(readTask(root, task.id)).not.toMatch(/\n\n$/);
     expect(readBoard(root)).toContain(`| ${task.id} | Finish execute | Done | tasks/${task.id}-finish-execute | |`);
     expect(readBoard(root)).not.toMatch(/\n\n$/);
@@ -197,9 +208,8 @@ describe('task finish status sync', () => {
     const report = createTaskFinishReport(root, task.id, 'execute');
 
     expect(report.ok).toBe(true);
-    expect(report.writes).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'task-status', applied: true })]));
-    expect(readTask(root, task.id)).toMatch(/\|\s*\d{4}-\d{2}-\d{2}\s*\|\s*Done\s*\|\s*Finished task capsule\.\s*\|\s*`hadara task finish --execute`\s*\|/);
-    expect(readTask(root, task.id).indexOf('| Done | Finished task capsule. |')).toBeLessThan(readTask(root, task.id).indexOf('<!-- hadara:managed:end task-status-history -->'));
+    expect(report.writes).not.toEqual(expect.arrayContaining([expect.objectContaining({ field: 'task-status' })]));
+    expect(readTask(root, task.id)).toContain('| Status | Done |');
     expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
   });
 
@@ -255,7 +265,7 @@ describe('task finish status sync', () => {
 
     expect(report.ok).toBe(false);
     expect(report.summary.appliedWrites).toBe(0);
-    expect(readTask(root, task.id)).toContain('## Status\n\nDraft\n');
+    expect(readTask(root, task.id)).toContain('| Status | Draft |');
     expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'TASK_BOARD_ROW_DUPLICATE' })]));
     expect(validateSchema('hadara.task.finish.v1', report).ok).toBe(true);
   });
