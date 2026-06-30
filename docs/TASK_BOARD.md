@@ -441,3 +441,4 @@
 | T-0438 | T-04A12 Close Source Contract | Done | tasks/T-0438-t-04a12-close-source-contract | Close-source contract validation passed in `ev:T-0438:9462d50758aa418c84318576`. |
 | T-0439 | T-04A13 Legacy Project Boundary | Done | tasks/T-0439-t-04a13-legacy-project-boundary | |
 | T-0440 | T-04A13 Legacy Project Boundary | Done | tasks/T-0440-t-04a13-legacy-project-boundary | |
+| T-0441 | T-04A14 Session Start Read-Map Integration | Done | tasks/T-0441-t-04a14-session-start-read-map-integration | |

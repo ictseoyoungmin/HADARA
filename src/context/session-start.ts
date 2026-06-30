@@ -15,6 +15,8 @@ import {
 } from './context-cache-store';
 import { checkContextSourceManifestFastFreshness } from './source-manifest';
 import { codeIndexReportToGraphExtraction } from './code-graph-extractor';
+import { validateTaskCapsule } from '../harness/validate';
+import { createDocsReadMapReport, type DocsDriftWarning, type DocsReadMapEntry } from '../services/docs-registry';
 
 export const SESSION_START_SCHEMA_ID = 'hadara.sessionStart.v1' as const;
 export const SESSION_START_COMMAND = 'session.start' as const;
@@ -76,6 +78,22 @@ export interface SessionStartSummary {
   issueCount: number;
 }
 
+export interface SessionStartDocsReadMap {
+  taskId: string;
+  command: string;
+  source: { registryPath: '.hadara/docs-registry.json'; registryPresent: boolean; inferred: boolean };
+  task: { capsulePath: string | null; capsulePresent: boolean; title: string | null };
+  readFirstCount: number;
+  readIfNeededCount: number;
+  doNotReadByDefaultCount: number;
+  driftWarningCount: number;
+  sourceDocumentDriftCount: number;
+  readFirst: Array<Pick<DocsReadMapEntry, 'path' | 'readTier' | 'authority' | 'reason'>>;
+  driftWarnings: DocsDriftWarning[];
+  sourceDocumentDrift: Array<{ code: string; message: string; path?: string; heading?: string }>;
+  issues: Array<{ severity: 'warning' | 'error'; code: string; message: string; path?: string }>;
+}
+
 export interface SessionStartReport {
   schemaVersion: SessionStartSchemaVersion;
   command: SessionStartCommand;
@@ -86,6 +104,7 @@ export interface SessionStartReport {
   contextPack: ContextPackReport;
   lifecycle: SessionStartLifecycle;
   guidance: SessionStartGuidance;
+  docsReadMap?: SessionStartDocsReadMap;
   knownProblems: ContextPackItem[];
   sourceSummary: ContextPackSourceSummary;
   cache: ContextCacheMetadata;
@@ -135,6 +154,7 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
     lifecycle,
     allowLiveContextPack: Boolean(input.allowLiveContextPack)
   });
+  const docsReadMap = taskId ? createSessionStartDocsReadMap(input.projectRoot, taskId, input.budget?.maxReadFirstItems ?? 7) : undefined;
 
   return {
     schemaVersion: SESSION_START_SCHEMA_ID,
@@ -151,6 +171,7 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
     contextPack,
     lifecycle,
     guidance,
+    ...(docsReadMap ? { docsReadMap } : {}),
     knownProblems: contextPack.knownProblems,
     sourceSummary: contextPack.sourceSummary,
     cache: contextPack.cache,
@@ -163,6 +184,44 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
       issueCount: issues.length
     },
     issues
+  };
+}
+
+function createSessionStartDocsReadMap(projectRoot: string, taskId: string, maxReadFirst: number): SessionStartDocsReadMap {
+  const readMap = createDocsReadMapReport(projectRoot, taskId);
+  const sourceValidation = validateTaskCapsule(projectRoot, taskId, { level: 'done' });
+  const sourceDocumentDrift = sourceValidation.issues
+    .filter((issue) => issue.code === 'TASK_SOURCE_DOCUMENT_CHANGED' || issue.code === 'TASK_SOURCE_DOCUMENT_MISSING_HASH')
+    .map((issue) => ({
+      code: issue.code,
+      message: issue.message,
+      ...(issue.path ? { path: issue.path } : {}),
+      ...(issue.heading ? { heading: issue.heading } : {})
+    }));
+  return {
+    taskId: readMap.taskId,
+    command: `node dist/cli/main.js docs read-map --task ${taskId} --json`,
+    source: readMap.source,
+    task: readMap.task,
+    readFirstCount: readMap.readFirst.length,
+    readIfNeededCount: readMap.readIfNeeded.length,
+    doNotReadByDefaultCount: readMap.doNotReadByDefault.length,
+    driftWarningCount: readMap.driftWarnings.length,
+    sourceDocumentDriftCount: sourceDocumentDrift.length,
+    readFirst: readMap.readFirst.slice(0, maxReadFirst).map((entry) => ({
+      path: entry.path,
+      readTier: entry.readTier,
+      authority: entry.authority,
+      reason: entry.reason
+    })),
+    driftWarnings: readMap.driftWarnings.slice(0, 10),
+    sourceDocumentDrift,
+    issues: readMap.issues.map((issue) => ({
+      severity: issue.severity,
+      code: issue.code,
+      message: issue.message,
+      ...(issue.path ? { path: issue.path } : {})
+    }))
   };
 }
 
@@ -335,6 +394,12 @@ function guidanceForSessionStart(input: {
       command: `node dist/cli/main.js context pack --task ${taskId} --json`,
       args: ['context', 'pack', '--task', taskId, '--json'],
       reason: 'Inspect the bounded task read plan without slicing raw source text.'
+    });
+    commands.push({
+      id: 'docs-read-map',
+      command: `node dist/cli/main.js docs read-map --task ${taskId} --json`,
+      args: ['docs', 'read-map', '--task', taskId, '--json'],
+      reason: 'Inspect registry-backed task reading guidance and drift warnings before broad manual reads.'
     });
   }
 

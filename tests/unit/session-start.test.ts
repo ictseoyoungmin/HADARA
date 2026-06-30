@@ -7,6 +7,7 @@ import { validateSchema } from '../../src/core/schema';
 import { buildSessionStartReport } from '../../src/context/session-start';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { createContextCacheWarmReport } from '../../src/context/context-cache-store';
+import { initProject } from '../../src/cli/init';
 
 const roots: string[] = [];
 
@@ -80,10 +81,23 @@ describe('session start', () => {
         args: ['context', 'cache', 'warm', '--json']
       }),
       expect.objectContaining({
+        id: 'docs-read-map',
+        args: ['docs', 'read-map', '--task', task.id, '--json']
+      }),
+      expect.objectContaining({
         id: 'session-start-live',
         args: ['session', 'start', '--task', task.id, '--live', '--json']
       })
     ]));
+    expect(report.docsReadMap).toMatchObject({
+      taskId: task.id,
+      command: `node dist/cli/main.js docs read-map --task ${task.id} --json`,
+      task: {
+        capsulePresent: true,
+        title: 'Session start task'
+      }
+    });
+    expect(report.docsReadMap?.readFirstCount).toBeGreaterThanOrEqual(report.docsReadMap?.readFirst.length ?? 0);
     expect(report.guidance.primaryAction).toMatchObject({
       id: 'task-lifecycle',
       command: `node dist/cli/main.js task lifecycle --task ${task.id} --json`,
@@ -253,9 +267,40 @@ describe('session start', () => {
         args: ['task', 'next', '--json']
       })
     ]));
+    expect(report.docsReadMap).toBeUndefined();
     expect(report.issues).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: 'CONTEXT_PACK_TASK_NOT_FOUND', severity: 'warning' })
     ]));
+    expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
+  });
+
+  it('surfaces source document drift through task-scoped session start', () => {
+    const root = tempProject();
+    initProject(root, 'basic', { silent: true });
+    fs.mkdirSync(path.join(root, 'docs', 'specs'), { recursive: true });
+    const sourcePath = path.join(root, 'docs', 'specs', 'source.md');
+    fs.writeFileSync(sourcePath, '# Source\n\nBefore\n', 'utf8');
+    const hash = sha256(sourcePath);
+    const task = createTaskCapsule(root, 'Drift session start task');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const taskMarkdown = fs.readFileSync(taskPath, 'utf8').replace(
+      '| TBD | reference | exploratory | draft | TBD | TBD |',
+      `| docs/specs/source.md | implementation-source | implementation-source | approved | ${hash} | Source for drift check. |`
+    );
+    fs.writeFileSync(taskPath, taskMarkdown, 'utf8');
+    fs.writeFileSync(sourcePath, '# Source\n\nAfter\n', 'utf8');
+
+    const report = buildSessionStartReport({
+      projectRoot: root,
+      taskId: task.id,
+      generatedAt: '2026-06-30T12:00:00.000Z'
+    });
+
+    expect(report.docsReadMap?.sourceDocumentDriftCount).toBe(1);
+    expect(report.docsReadMap?.sourceDocumentDrift).toContainEqual(expect.objectContaining({
+      code: 'TASK_SOURCE_DOCUMENT_CHANGED',
+      message: expect.stringContaining('docs/specs/source.md')
+    }));
     expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
   });
 });
@@ -265,6 +310,12 @@ function initGit(root: string): void {
   if (result.status !== 0) {
     throw new Error(`git init failed: ${result.stderr || result.stdout}`);
   }
+}
+
+function sha256(filePath: string): string {
+  const result = spawnSync('sha256sum', [filePath], { encoding: 'utf8' });
+  if (result.status !== 0) throw new Error(result.stderr);
+  return `sha256:${result.stdout.trim().split(/\s+/)[0]}`;
 }
 
 function snapshotProject(root: string): string[] {
