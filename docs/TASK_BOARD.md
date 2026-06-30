@@ -440,3 +440,4 @@
 | T-0437 | T-04A11 Close Proof Placement | Done | tasks/T-0437-t-04a11-close-proof-placement | Close proof placement validation passed in `ev:T-0437:fc850943950547939127f430`. |
 | T-0438 | T-04A12 Close Source Contract | Done | tasks/T-0438-t-04a12-close-source-contract | Close-source contract validation passed in `ev:T-0438:9462d50758aa418c84318576`. |
 | T-0439 | T-04A13 Legacy Project Boundary | Done | tasks/T-0439-t-04a13-legacy-project-boundary | |
+| T-0440 | T-04A13 Legacy Project Boundary | Done | tasks/T-0440-t-04a13-legacy-project-boundary | |

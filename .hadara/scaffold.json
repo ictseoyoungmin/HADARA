@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "hadara.projectScaffold.v1",
+  "hadaraProtocol": "0.4",
+  "profile": "hadara-dev",
+  "taskCapsuleSchema": "hadara.taskCapsule.v1",
+  "docsRegistrySchema": "hadara.docsRegistry.v2",
+  "managedSlotSchema": "hadara.managedSlot.v2",
+  "createdWith": "hadara@0.4.0",
+  "docsRegistryPath": ".hadara/docs-registry.json",
+  "slotRegistryPath": ".hadara/slot-registry.json"
+}

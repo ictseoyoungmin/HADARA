@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation hardening is complete through T-0439. |
-| Current Phase | 0.4 reviewer-feedback hardening complete plus 0.3.4 stable readiness pending | T-0439 hardened docs registry metadata, read-map active task docs, recursive specs discovery, finish advisories, and stale validation/projection wording; full T-04A13 legacy mutation blocking is next. |
-| Latest Completed Task | T-0439 T-04A13 Reviewer Feedback Hardening | `docs register` accepts v2 metadata for new entries, `docs read-map` uses 0.4 active task docs, nested spec discovery is bounded, and profile-aware finish advisories avoid absent unregistered shared docs. |
-| Active / Next Task | T-04A13 Legacy Project Boundary mutation blocking | Detect old protocol scaffolds and block 0.4 mutation commands. |
-| Validation Baseline | T-0439 feedback hardening plus T-0423 helper residual fix | T-0439 Docker ext4 build/focused tests, built CLI smokes, and `git diff --check` passed in `ev:T-0439:b7d2205ef1744eb5b87ec87c`, `ev:T-0439:86ff7918e98f424eac9686c7`, and `ev:T-0439:62d3893695344992b22ca881`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0440. |
+| Current Phase | 0.4 legacy mutation boundary complete plus 0.3.4 stable readiness pending | T-0440 blocks missing/non-0.4 scaffold projects from 0.4 mutation command writes; T-04A14 Session Start Read-Map Integration is next. |
+| Latest Completed Task | T-0440 T-04A13 Legacy Project Boundary | 0.4 mutation CLI surfaces fail closed with `hadara.legacyProjectBoundary.v1` diagnostics on missing/non-0.4 scaffold metadata, and HADARA-dev now has generic `.hadara/scaffold.json` for dogfood. |
+| Active / Next Task | T-04A14 Session Start Read-Map Integration | Make session start consume docs read-map and source document drift. |
+| Validation Baseline | T-0440 legacy boundary plus T-0423 helper residual fix | T-0440 Docker focused build/tests, built CLI smokes, and `git diff --check` passed in `ev:T-0440:8ee5f6fde6e74b3e97487556`, `ev:T-0440:ced75760191e43c8aa18b42a`, and `ev:T-0440:04b3e65ed59544da89d3ee77`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-04A13 Legacy Project Boundary mutation blocking | Next. Detect old protocol scaffolds and block 0.4 mutation commands; include `.hadara/scaffold.json`/protocol detection and fail-closed mutation-command coverage. | `ev:T-0439:b7d2205ef1744eb5b87ec87c`, `ev:T-0439:86ff7918e98f424eac9686c7` |
+| T-04A14 Session Start Read-Map Integration | Next. Make session start consume docs read-map and source document drift without broad raw docs/specs reads. | `ev:T-0440:8ee5f6fde6e74b3e97487556`, `ev:T-0440:ced75760191e43c8aa18b42a` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0440 / T-04A13 Legacy Project Boundary | Added shared legacy mutation boundary diagnostics, guarded representative 0.4 mutation CLI surfaces, added HADARA-dev generic scaffold metadata, focused tests, refreshed `dist`, and built CLI smokes. | `ev:T-0440:8ee5f6fde6e74b3e97487556`, `ev:T-0440:ced75760191e43c8aa18b42a`, `ev:T-0440:04b3e65ed59544da89d3ee77` |
 | T-0439 / T-04A13 Reviewer Feedback Hardening | Added docs registry v2 metadata registration, 0.4 active task read-map docs, recursive bounded specs discovery, registry-aware finish advisories, stale validation wording cleanup, projection wording alignment, focused tests, refreshed `dist`, and built CLI smokes. | `ev:T-0439:b7d2205ef1744eb5b87ec87c`, `ev:T-0439:86ff7918e98f424eac9686c7`, `ev:T-0439:62d3893695344992b22ca881` |
 | T-0438 / T-04A12 Close Source Contract | Added normalized close-source read model, schema/registry/CLI coverage, close/audit source hash routing, focused tests, refreshed `dist`, and built CLI smokes. | `ev:T-0438:9462d50758aa418c84318576` |
-| T-0437 / T-04A11 Close Proof Placement | Added structured normalized close evidence snapshots, audit exposure/drift warning, focused tests, refreshed `dist`, and built CLI smokes. | `ev:T-0437:fc850943950547939127f430` |
 
 ## Current Known Problems
 

@@ -2,6 +2,7 @@ import { getFlag, getRequiredStringOption, getStringOption } from './args';
 import { createDocsArchivePlanReport, createDocsMarkReport, createDocsRequiredReadingReport } from '../services/docs-cleanup';
 import { createDocsDoctorReport, createDocsExplainReport, createDocsInboxReport, createDocsListReport, createDocsReadMapReport, createDocsRegisterReport } from '../services/docs-registry';
 import { createDocsPatchPlanReport, createManagedSectionExplainReport, createManagedSectionsListReport } from '../services/managed-sections';
+import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 
 export interface DocsCommandInput {
   args: string[];
@@ -41,6 +42,7 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
     return true;
   }
   if (sub === 'register') {
+    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'docs.register')) return true;
     const report = createDocsRegisterReport(input.projectRoot, {
       documentPath: getRequiredStringOption(input.args, '--path'),
       title: getStringOption(input.args, '--title'),
@@ -73,6 +75,7 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
     }
   }
   if (sub === 'patch') {
+    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'docs.patch')) return true;
     const report = createDocsPatchPlanReport(input.projectRoot, {
       targetPath: getRequiredStringOption(input.args, '--path'),
       sectionId: getRequiredStringOption(input.args, '--section'),
@@ -106,6 +109,14 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
     return true;
   }
   return false;
+}
+
+function blockLegacyMutation(input: DocsCommandInput, command: string): boolean {
+  const report = createLegacyMutationBlockedReport(input.projectRoot, command);
+  if (!report) return false;
+  printLegacyMutationBlockedReport(report, input.jsonOutput);
+  process.exitCode = 6;
+  return true;
 }
 
 function printReport(report: unknown, jsonOutput: boolean): void {

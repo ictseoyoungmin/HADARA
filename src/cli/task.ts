@@ -11,6 +11,7 @@ import { createTaskUpgradeScaffoldReport, formatTaskUpgradeScaffoldReport } from
 import { createTaskWorkbenchReport, formatTaskWorkbenchReport } from '../services/task-workbench';
 import { getActorContextOption } from './actor';
 import { getFlag, getStringOption } from './args';
+import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 import { createTaskListReport, createTaskShowReport, formatTaskListReport } from './task-json';
 
 export interface TaskCommandInput {
@@ -22,6 +23,7 @@ export interface TaskCommandInput {
 export function handleTaskCommand(input: TaskCommandInput): boolean {
   const sub = input.args[1];
   if (sub === 'create') {
+    if (blockLegacyMutation(input, 'task.create')) return true;
     const title = extractTaskCreateTitle(input.args);
     if (!title) throw new Error('task create requires a title');
     const report = createTaskCreateReport(input.projectRoot, title, { templateId: getStringOption(input.args, '--from') });
@@ -71,6 +73,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   if (sub === 'upgrade-scaffold') {
+    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'task.upgrade-scaffold')) return true;
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) throw new Error('task upgrade-scaffold requires --task <task-id>');
     const report = createTaskUpgradeScaffoldReport(input.projectRoot, id, getFlag(input.args, '--execute') ? 'execute' : 'dry-run', {
@@ -86,6 +89,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   if (sub === 'close') {
+    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'task.close')) return true;
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) throw new Error('task close requires --task <task-id>');
     const actor = getActorContextOption(input.args);
@@ -132,6 +136,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   if (sub === 'complete') {
+    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'task.complete')) return true;
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) throw new Error('task complete requires --task <task-id>');
     const report = createTaskCompleteFlowReport(input.projectRoot, id, { executeRequested: getFlag(input.args, '--execute'), actor: getActorContextOption(input.args) });
@@ -145,6 +150,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   if (sub === 'finalize') {
+    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'task.finalize')) return true;
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) throw new Error('task finalize requires --task <task-id>');
     const report = createTaskFinalizeReport(input.projectRoot, id, {
@@ -188,6 +194,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   if (sub === 'finish') {
+    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'task.finish')) return true;
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) throw new Error('task finish requires --task <task-id>');
     const report = createTaskFinishReport(input.projectRoot, id, getFlag(input.args, '--execute') ? 'execute' : 'dry-run', { actor: getActorContextOption(input.args) });
@@ -231,6 +238,14 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   return false;
+}
+
+function blockLegacyMutation(input: TaskCommandInput, command: string): boolean {
+  const report = createLegacyMutationBlockedReport(input.projectRoot, command);
+  if (!report) return false;
+  printLegacyMutationBlockedReport(report, input.jsonOutput);
+  process.exitCode = 6;
+  return true;
 }
 
 export function extractTaskCreateTitle(args: string[]): string {

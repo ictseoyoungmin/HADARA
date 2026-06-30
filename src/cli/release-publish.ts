@@ -1,6 +1,7 @@
 import { HadaraPaths } from '../core/paths';
 import { createReleasePublishReport, ReleasePublishMode } from '../services/release-publish';
 import { getFlag, getStringOption } from './args';
+import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 
 export interface ReleasePublishCommandInput {
   args: string[];
@@ -11,6 +12,14 @@ export interface ReleasePublishCommandInput {
 export function handleReleasePublishCommand(input: ReleasePublishCommandInput): boolean {
   if (input.args[0] !== 'release' || input.args[1] !== 'publish') return false;
   const mode = parseMode(input.args);
+  if (mode === 'execute') {
+    const legacyReport = createLegacyMutationBlockedReport(input.paths.projectRoot, 'release.publish');
+    if (legacyReport) {
+      printLegacyMutationBlockedReport(legacyReport, input.jsonOutput);
+      process.exitCode = 6;
+      return true;
+    }
+  }
   const report = createReleasePublishReport({
     projectRoot: input.paths.projectRoot,
     auditDir: input.paths.auditDir,

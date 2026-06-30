@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { initProject } from '../../src/cli/init';
 import { handleTaskCommand } from '../../src/cli/task';
 import { validateSchema } from '../../src/core/schema';
 import { createTaskCreateReport } from '../../src/task/task-create';
@@ -119,6 +120,7 @@ describe('task create templates', () => {
 
   it('routes CLI JSON create with --from and --title', () => {
     const root = tempProject();
+    initProject(root, 'basic', { silent: true });
     const output: string[] = [];
     const originalLog = console.log;
     console.log = (value?: unknown) => {

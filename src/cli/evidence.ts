@@ -14,6 +14,7 @@ import { createEvidenceListReport, EvidenceListRecord } from '../services/eviden
 import { createEvidenceMigrationPreviewReport } from '../services/evidence-migration';
 import { createEvidenceSummaryReport, EvidenceSummaryRecord } from '../services/evidence-summary';
 import { getFlag, getIntegerOption, getRequiredStringOption, getStringOption } from './args';
+import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 
 export interface EvidenceCommandInput {
   args: string[];
@@ -95,6 +96,7 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
   }
 
   if (sub === 'migrate') {
+    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'evidence.migrate')) return true;
     const taskId = getRequiredStringOption(input.args, '--task');
     const report = createEvidenceMigrationPreviewReport({
       projectRoot: input.projectRoot,
@@ -117,6 +119,7 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
   }
 
   if (sub === 'add-command') {
+    if (blockLegacyMutation(input, 'evidence.add-command')) return true;
     const taskId = getRequiredStringOption(input.args, '--task');
     const summary = getStringOption(input.args, '--summary') ?? 'Command completed.';
     const outcome = parseOptionalEvidenceOutcome(getStringOption(input.args, '--outcome'));
@@ -168,6 +171,7 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
   }
 
   if (sub !== 'collect') return false;
+  if (blockLegacyMutation(input, 'evidence.collect')) return true;
 
   const taskId = getRequiredStringOption(input.args, '--task');
   const kind = parseEvidenceKind(getStringOption(input.args, '--kind', 'note') ?? 'note');
@@ -198,6 +202,14 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
     }
   }
 
+  return true;
+}
+
+function blockLegacyMutation(input: EvidenceCommandInput, command: string): boolean {
+  const report = createLegacyMutationBlockedReport(input.projectRoot, command);
+  if (!report) return false;
+  printLegacyMutationBlockedReport(report, input.jsonOutput);
+  process.exitCode = 6;
   return true;
 }
 

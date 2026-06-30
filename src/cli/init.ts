@@ -3,6 +3,7 @@ import path from 'node:path';
 import { resolveHadaraPaths } from '../core/paths';
 import { ensureDir, writeFileIfMissing } from '../core/fs';
 import { getFlag, getRequiredStringOption, getStringOption } from './args';
+import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 import { DOCS_REGISTRY_PATH, createHadaraContextDoc, createSeedDocumentRegistry, registryJson } from '../services/docs-registry';
 import { managedSectionBlock } from '../services/managed-sections';
 import type { DocumentRegistryFile } from '../services/docs-registry';
@@ -183,12 +184,26 @@ export function handleInitCommand(input: InitCommandInput): boolean {
     return true;
   }
   if (subcommand === 'upgrade') {
+    const legacyReport = createLegacyMutationBlockedReport(input.projectRoot, 'init.upgrade');
+    if (legacyReport) {
+      printLegacyMutationBlockedReport(legacyReport, input.jsonOutput === true);
+      process.exitCode = 6;
+      return true;
+    }
     const profile = parseInitProfile(getRequiredStringOption(input.args, '--profile'));
     const report = createInitUpgradeReport(input.projectRoot, profile, getInitFollowUpMode(input.args));
     printInitFollowUpReport(report, input.jsonOutput);
     return true;
   }
   if (subcommand === 'register-doc') {
+    if (getFlag(input.args, '--execute') === true) {
+      const legacyReport = createLegacyMutationBlockedReport(input.projectRoot, 'init.register-doc');
+      if (legacyReport) {
+        printLegacyMutationBlockedReport(legacyReport, input.jsonOutput === true);
+        process.exitCode = 6;
+        return true;
+      }
+    }
     const report = createRequiredReadingRegistrationReport(input.projectRoot, {
       documentPath: getRequiredStringOption(input.args, '--path'),
       when: getRequiredStringOption(input.args, '--when'),
@@ -200,6 +215,14 @@ export function handleInitCommand(input: InitCommandInput): boolean {
     return true;
   }
   if (subcommand === 'enable-integration') {
+    if (getFlag(input.args, '--execute') === true) {
+      const legacyReport = createLegacyMutationBlockedReport(input.projectRoot, 'init.enable-integration');
+      if (legacyReport) {
+        printLegacyMutationBlockedReport(legacyReport, input.jsonOutput === true);
+        process.exitCode = 6;
+        return true;
+      }
+    }
     const report = createIntegrationEnableReport(input.projectRoot, {
       integration: getRequiredStringOption(input.args, '--integration'),
       mode: getInitFollowUpMode(input.args)
