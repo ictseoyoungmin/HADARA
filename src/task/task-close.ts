@@ -7,6 +7,7 @@ import { createHarnessValidateReport, HarnessValidateResult } from '../services/
 import type { RemediationHint } from '../harness/validate';
 import { createTaskProtocolConsistencyReport, ProtocolConsistencyReport } from '../services/protocol-consistency';
 import type { HadaraActorContext } from '../core/actor-context';
+import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
 import { analyzeAcceptanceReadiness } from './acceptance';
 import { listTaskCapsules } from './task-capsule';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from './lifecycle-next-actions';
@@ -119,6 +120,29 @@ export interface TaskCloseIssue {
 
 export interface TaskCloseOptions {
   actor?: HadaraActorContext;
+}
+
+export type CloseSourceUnitKind = 'file' | 'registry' | 'derived-projection';
+export type CloseSourceRole = 'included' | 'consistency-check' | 'snapshot';
+
+export interface CloseSourceUnit {
+  kind: CloseSourceUnitKind;
+  path: string;
+  selector?: string;
+  sha256: string;
+  closeSourceRole: CloseSourceRole;
+}
+
+export interface CloseSourceReport {
+  schemaVersion: 'hadara.closeSource.v1';
+  command: 'task.close-source';
+  ok: boolean;
+  taskId: string;
+  protocol: '0.4';
+  sourceHash: string;
+  sourceUnits: CloseSourceUnit[];
+  excludedRawInputs: string[];
+  issues: TaskCloseIssue[];
 }
 
 export function createTaskCloseReport(projectRoot: string, taskId: string, mode: TaskCloseMode, options: TaskCloseOptions = {}): TaskCloseReport {
@@ -430,6 +454,92 @@ function hashValidationInputs(validation: HarnessValidateResult, evidenceLint: E
 }
 
 export function closeRelevantSourceRelativePaths(projectRoot: string, taskDir: string): string[] {
+  return createTaskCloseSourceReport(projectRoot, path.basename(taskDir).match(/^(T-\d{4})-/)?.[1] ?? '').sourceUnits.map((unit) => unit.path).sort();
+}
+
+export function createTaskCloseSourceReport(projectRoot: string, taskId: string): CloseSourceReport {
+  const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
+  const issues: TaskCloseIssue[] = [];
+  if (!task) {
+    issues.push({ severity: 'error', code: 'CLOSE_SOURCE_TASK_MISSING', message: `Task Capsule not found: ${taskId}` });
+    return {
+      schemaVersion: 'hadara.closeSource.v1',
+      command: 'task.close-source',
+      ok: false,
+      taskId,
+      protocol: '0.4',
+      sourceHash: 'sha256:missing-task',
+      sourceUnits: [],
+      excludedRawInputs: closeSourceExcludedRawInputs(`tasks/${taskId}`),
+      issues
+    };
+  }
+
+  const taskMd = toPortablePath(path.relative(projectRoot, path.join(task.dir, 'TASK.md')));
+  const registryPath = path.join('.hadara', 'slot-registry.json');
+  const taskBoardPath = path.join('docs', 'TASK_BOARD.md');
+  const evidencePath = toPortablePath(path.relative(projectRoot, path.join(task.dir, 'evidence.jsonl')));
+  const handoffPath = toPortablePath(path.relative(projectRoot, path.join(task.dir, 'HANDOFF.md')));
+  const sourceUnits = ([
+    {
+      kind: 'file',
+      path: taskMd,
+      sha256: hashFileIfPresent(projectRoot, taskMd),
+      closeSourceRole: 'included'
+    },
+    {
+      kind: 'registry',
+      path: registryPath,
+      sha256: readSlotRegistryMetadata(projectRoot).slotRegistryHash,
+      closeSourceRole: 'included'
+    },
+    {
+      kind: 'derived-projection',
+      path: taskBoardPath,
+      selector: `task:${taskId}:command-owned-cells`,
+      sha256: hashText(JSON.stringify(taskBoardRowSnapshot(projectRoot, taskId))),
+      closeSourceRole: 'consistency-check'
+    },
+    {
+      kind: 'derived-projection',
+      path: evidencePath,
+      selector: 'readiness-summary',
+      sha256: createCloseEvidenceSnapshot(task.dir).evidenceSummaryHash,
+      closeSourceRole: 'snapshot'
+    },
+    {
+      kind: 'derived-projection',
+      path: handoffPath,
+      selector: 'handoff-summary',
+      sha256: hashText(JSON.stringify(handoffSummarySnapshot(path.join(task.dir, 'HANDOFF.md')))),
+      closeSourceRole: 'snapshot'
+    }
+  ] satisfies CloseSourceUnit[]).sort((a, b) => `${a.path}:${a.selector ?? ''}`.localeCompare(`${b.path}:${b.selector ?? ''}`));
+
+  if (sourceUnits.some((unit) => unit.path === evidencePath && unit.selector !== 'readiness-summary')) {
+    issues.push({ severity: 'error', code: 'CLOSE_SOURCE_EVIDENCE_RAW_HASH', message: 'Close source must use evidence readiness summary, not raw evidence files.', path: evidencePath });
+  }
+  if (sourceUnits.some((unit) => unit.path === handoffPath && !unit.selector)) {
+    issues.push({ severity: 'error', code: 'CLOSE_SOURCE_HANDOFF_RAW_HASH', message: 'Close source must use handoff summary snapshot, not raw HANDOFF.md hash.', path: handoffPath });
+  }
+  if (sourceUnits.some((unit) => unit.path === taskBoardPath && !unit.selector)) {
+    issues.push({ severity: 'error', code: 'CLOSE_SOURCE_TASK_BOARD_WHOLE_FILE', message: 'Close source must use a task-board row selector, not the whole file.', path: taskBoardPath });
+  }
+
+  return {
+    schemaVersion: 'hadara.closeSource.v1',
+    command: 'task.close-source',
+    ok: !issues.some((issue) => issue.severity === 'error'),
+    taskId,
+    protocol: '0.4',
+    sourceHash: hashText(JSON.stringify({ taskId, protocol: '0.4', sourceUnits })),
+    sourceUnits,
+    excludedRawInputs: closeSourceExcludedRawInputs(toPortablePath(path.relative(projectRoot, task.dir))),
+    issues
+  };
+}
+
+function legacyCloseRelevantSourceRelativePaths(projectRoot: string, taskDir: string): string[] {
   return [
     path.relative(projectRoot, path.join(taskDir, 'TASK.md')),
     path.relative(projectRoot, path.join(taskDir, 'PLAN.md')),
@@ -447,16 +557,58 @@ export function closeRelevantSourceRelativePaths(projectRoot: string, taskDir: s
 }
 
 function hashCloseRelevantSource(projectRoot: string, taskDir: string): string {
-  const relativePaths = closeRelevantSourceRelativePaths(projectRoot, taskDir);
-  const payload = relativePaths.map((relativePath) => {
-    const absolutePath = path.join(projectRoot, relativePath);
-    return {
-      path: relativePath,
-      exists: fs.existsSync(absolutePath),
-      sha256: fs.existsSync(absolutePath) ? crypto.createHash('sha256').update(fs.readFileSync(absolutePath)).digest('hex') : null
-    };
-  });
-  return `sha256:${crypto.createHash('sha256').update(JSON.stringify(payload), 'utf8').digest('hex')}`;
+  const taskId = path.basename(taskDir).match(/^(T-\d{4})-/)?.[1];
+  if (!taskId) return hashText(JSON.stringify({ legacyPaths: legacyCloseRelevantSourceRelativePaths(projectRoot, taskDir) }));
+  return createTaskCloseSourceReport(projectRoot, taskId).sourceHash;
+}
+
+function hashFileIfPresent(projectRoot: string, relativePath: string): string {
+  const absolutePath = path.join(projectRoot, relativePath);
+  if (!fs.existsSync(absolutePath)) return hashText(JSON.stringify({ path: relativePath, missing: true }));
+  return `sha256:${crypto.createHash('sha256').update(fs.readFileSync(absolutePath)).digest('hex')}`;
+}
+
+function taskBoardRowSnapshot(projectRoot: string, taskId: string): Record<string, string | boolean> {
+  const taskBoardPath = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
+  const row = fs.existsSync(taskBoardPath) ? parseMarkdownRows(fs.readFileSync(taskBoardPath, 'utf8')).find((cells) => cells[0] === taskId) : undefined;
+  return {
+    selector: `task:${taskId}:command-owned-cells`,
+    present: row !== undefined,
+    id: row?.[0] ?? taskId,
+    title: row?.[1] ?? '',
+    status: row?.[2] ?? '',
+    capsule: row?.[3] ?? ''
+  };
+}
+
+function handoffSummarySnapshot(handoffPath: string): Record<string, string> {
+  if (!fs.existsSync(handoffPath)) return { present: 'false' };
+  const content = fs.readFileSync(handoffPath, 'utf8');
+  return {
+    present: 'true',
+    lastCompleted: normalizeSnapshotText(readMarkdownSection(content, '## Last Completed')),
+    nextRecommendedStep: normalizeSnapshotText(readMarkdownSection(content, '## Next Recommended Step')),
+    carryForwardWarnings: normalizeSnapshotText(readMarkdownSection(content, '## Carry Forward Warnings'))
+  };
+}
+
+function normalizeSnapshotText(value: string): string {
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
+function closeSourceExcludedRawInputs(taskPath: string): string[] {
+  return [
+    `${taskPath}/EVIDENCE.md`,
+    `${taskPath}/evidence.jsonl`,
+    `${taskPath}/HANDOFF.md`,
+    'docs/TASK_BOARD.md',
+    'docs/PROJECT_STATE.md',
+    'docs/AGENT_HANDOFF.md'
+  ];
 }
 
 interface SlotRegistryMetadata {

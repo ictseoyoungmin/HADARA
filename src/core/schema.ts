@@ -3,6 +3,7 @@ import actorContextSchemaJson from '../schemas/actor-context.schema.json';
 import activeRunProjectionSchemaJson from '../schemas/active-run-projection.schema.json';
 import activeRunResumeSchemaJson from '../schemas/active-run-resume.schema.json';
 import cleanCheckoutSmokeSchemaJson from '../schemas/clean-checkout-smoke.schema.json';
+import closeSourceSchemaJson from '../schemas/close-source.schema.json';
 import codeIndexSchemaJson from '../schemas/code-index.schema.json';
 import contextCacheRecordSchemaJson from '../schemas/context-cache-record.schema.json';
 import contextCacheStatusSchemaJson from '../schemas/context-cache-status.schema.json';
@@ -117,6 +118,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.active_run.projection.v1': activeRunProjectionSchemaJson as JsonObject,
   'hadara.active_run.resume.v1': activeRunResumeSchemaJson as JsonObject,
   'hadara.cleanCheckoutSmoke.v1': cleanCheckoutSmokeSchemaJson as JsonObject,
+  'hadara.closeSource.v1': closeSourceSchemaJson as JsonObject,
   'hadara.codeIndex.v1': codeIndexSchemaJson as JsonObject,
   'hadara.context.cacheRecord.v1': contextCacheRecordSchemaJson as JsonObject,
   'hadara.context.cacheStatus.v1': contextCacheStatusSchemaJson as JsonObject,

@@ -1,8 +1,7 @@
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
-import { closeRelevantSourceRelativePaths } from '../task/task-close';
+import { createTaskCloseSourceReport } from '../task/task-close';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 import { parseEvidenceIndexFile } from './evidence-list';
 import { findMarkdownRowByCell, parseMarkdownRows, parseMarkdownRowsUnderHeading, readMarkdownSection } from './markdown-table';
@@ -500,15 +499,8 @@ function checkLatestCloseProof(projectedTasks: StateProjectionTask[], latestDone
 }
 
 function hashCloseRelevantSource(projectRoot: string, taskDir: string): string {
-  const payload = closeRelevantSourceRelativePaths(projectRoot, taskDir).map((relativePath) => {
-    const absolutePath = path.join(projectRoot, relativePath);
-    return {
-      path: relativePath,
-      exists: fs.existsSync(absolutePath),
-      sha256: fs.existsSync(absolutePath) ? crypto.createHash('sha256').update(fs.readFileSync(absolutePath)).digest('hex') : null
-    };
-  });
-  return `sha256:${crypto.createHash('sha256').update(JSON.stringify(payload), 'utf8').digest('hex')}`;
+  const taskId = path.basename(taskDir).match(/^(T-\d{4})-/)?.[1] ?? '';
+  return createTaskCloseSourceReport(projectRoot, taskId).sourceHash;
 }
 
 function extractSourceHash(summary: string): string | null {

@@ -28,6 +28,7 @@ describe('schema fixtures', () => {
       'hadara.active_run.resume.v1',
       'hadara.actor_context.v1',
       'hadara.cleanCheckoutSmoke.v1',
+      'hadara.closeSource.v1',
       'hadara.codeIndex.v1',
       'hadara.command_help.v1',
       'hadara.command_portfolio_audit.v1',

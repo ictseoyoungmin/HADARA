@@ -1,4 +1,4 @@
-import { createTaskAuditCloseReport, createTaskCloseReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../task/task-close';
+import { createTaskAuditCloseReport, createTaskCloseReport, createTaskCloseSourceReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../task/task-close';
 import { createTaskCloseRepairPlanReport, formatTaskCloseRepairPlanReport } from '../task/task-close-repair-plan';
 import { createTaskCompleteFlowReport, formatTaskCompleteFlowReport } from '../task/task-complete-flow';
 import { createTaskCreateReport, formatTaskCreateReport } from '../task/task-create';
@@ -97,6 +97,22 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
       console.log(`[HADARA] task close ${id}: ${report.ok ? 'ok' : 'issues'}`);
       for (const issue of report.issues) console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
       for (const action of report.nextActions) console.log(`${action.required ? 'REQUIRED' : 'OPTIONAL'}\t${action.id}\t${action.command ?? action.message}`);
+    }
+    if (!report.ok) process.exitCode = 6;
+    return true;
+  }
+
+  if (sub === 'close-source') {
+    const id = getStringOption(input.args, '--task') ?? input.args[2];
+    if (!id || id.startsWith('--')) throw new Error('task close-source requires --task <task-id>');
+    const report = createTaskCloseSourceReport(input.projectRoot, id);
+    if (input.jsonOutput) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log(`[HADARA] task close-source ${id}: ${report.ok ? 'ok' : 'issues'}`);
+      console.log(`sourceHash\t${report.sourceHash}`);
+      for (const unit of report.sourceUnits) console.log(`${unit.closeSourceRole}\t${unit.kind}\t${unit.path}\t${unit.selector ?? ''}\t${unit.sha256}`);
+      for (const issue of report.issues) console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
     }
     if (!report.ok) process.exitCode = 6;
     return true;

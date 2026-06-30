@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0437 T-04A11 Close Proof Placement |
-| Active Task | T-04A12 Close Readiness Snapshot (next) |
+| Latest Completed Task | T-0438 T-04A12 Close Source Contract |
+| Active Task | T-04A13 Legacy Project Boundary (next) |
 
 ## Next Planned Line
 
@@ -204,9 +204,9 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0437 T-04A11 Close Proof Placement.
-- Next 0.4 task is T-04A12 Close Readiness Snapshot; continue from `docs/specs/0.4.0/productization-redesign/07_Evidence_Plane_and_Close_Proof_Projection.md`, `docs/specs/0.4.0/productization-redesign/09_Close_Source_Contract.md`, and the worker plan.
-- T-0437 added structured normalized close evidence snapshots to close evidence records, exposed current/recorded snapshots through `task audit-close --json`, warned on snapshot drift, kept close proof out of close-source docs, refreshed workspace `dist`, and passed Docker build/focused tests plus built CLI draft/close smokes in `ev:T-0437:fc850943950547939127f430`.
+- Latest completed task is T-0438 T-04A12 Close Source Contract.
+- Next 0.4 task is T-04A13 Legacy Project Boundary; continue from `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` and the 0.4 scaffold/close-source specs.
+- T-0438 added `hadara.closeSource.v1` through `task close-source --task T-XXXX --json`, routed close/audit source comparison through normalized close-source payload hashes, refreshed workspace `dist`, and passed Docker ext4 build/focused tests plus built CLI close-source/draft smokes in `ev:T-0438:9462d50758aa418c84318576`.
 - T-0431 implemented read-only `hadara docs read-map --task T-XXXX --json` and `hadara docs inbox --json`, added `hadara.docs.readMap.v1` and `hadara.docs.inbox.v1`, command registry/schema fixtures, focused tests, refreshed workspace `dist`, and built CLI smokes passed in `ev:T-0431:a81383c6d7894693a45a95ed`.
 - T-0430 implemented registry-first `hadara docs register --path <path> --json` over `.hadara/docs-registry.json`, added `hadara.docs.register.v1`, command registry/schema fixtures, focused tests, refreshed workspace `dist`, and built CLI smoke passed in `ev:T-0430:1933b10f80184f8abb9540cb`.
 - T-0429 implemented non-overlapping generated templates: `AGENTS.md` owns Required Reading/safety only, `.hadara/context/HADARA_CONTEXT.md` is routing-only, and `docs/HADARA_WORKFLOW.md` owns lifecycle/context/evidence/document timing guidance. Docker build plus focused init tests passed, workspace `dist` was refreshed, and built governed init/doctor template smoke returned `ok:true` in `ev:T-0429:ab675a5933c84286b8d255fc`.

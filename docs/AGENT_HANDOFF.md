@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0437 / T-04A11. |
-| Current Phase | 0.4 close proof placement complete plus 0.3.4 stable readiness pending | T-0437 added structured close evidence snapshots and kept close proof projected through evidence surfaces; T-04A12 Close Readiness Snapshot is next. |
-| Latest Completed Task | T-0437 T-04A11 Close Proof Placement | `task close` records normalized readiness snapshots in close evidence, and `task audit-close` exposes/warns on snapshot drift. |
-| Active / Next Task | T-04A12 Close Readiness Snapshot | Continue close-source normalization work from the evidence plane and close-source contract specs. |
-| Validation Baseline | T-0437 close proof placement plus T-0423 helper residual fix | T-0437 Docker build/focused tests and built draft/close smokes passed in `ev:T-0437:fc850943950547939127f430`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0438 / T-04A12. |
+| Current Phase | 0.4 close-source contract complete plus 0.3.4 stable readiness pending | T-0438 added normalized close-source payloads and routed close/audit source comparison through them; T-04A13 Legacy Project Boundary is next. |
+| Latest Completed Task | T-0438 T-04A12 Close Source Contract | `task close-source` reports normalized source units; `task close` and `task audit-close` use the close-source payload hash. |
+| Active / Next Task | T-04A13 Legacy Project Boundary | Detect old protocol scaffolds and block 0.4 mutation commands. |
+| Validation Baseline | T-0438 close-source contract plus T-0423 helper residual fix | T-0438 Docker ext4 build/focused tests and built close-source/draft smokes passed in `ev:T-0438:9462d50758aa418c84318576`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-04A12 Close Readiness Snapshot | Next. Continue normalizing close-source inputs now that close proof carries a structured evidence readiness snapshot. | `ev:T-0437:fc850943950547939127f430` |
+| T-04A13 Legacy Project Boundary | Next. Detect old protocol scaffolds and block 0.4 mutation commands. | `ev:T-0438:9462d50758aa418c84318576` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0438 / T-04A12 Close Source Contract | Added normalized close-source read model, schema/registry/CLI coverage, close/audit source hash routing, focused tests, refreshed `dist`, and built CLI smokes. | `ev:T-0438:9462d50758aa418c84318576` |
 | T-0437 / T-04A11 Close Proof Placement | Added structured normalized close evidence snapshots, audit exposure/drift warning, focused tests, refreshed `dist`, and built CLI smokes. | `ev:T-0437:fc850943950547939127f430` |
 | T-0436 / T-04A10 Evidence Projection | Added projection refresh from `evidence.jsonl`, `evidence project`, projection schema/registry coverage, focused tests, refreshed `dist`, and built CLI smokes. | `ev:T-0436:f4c57fd4dc6a4d9dbffedfe0` |
-| T-0435 / T-04A9 Managed Slot v2 Registry Hash | Added managed slot/table registry seed metadata, close/audit slot registry hash reporting, focused tests, refreshed `dist`, and built CLI smokes. | `ev:T-0435:31e917471a95404882ef0bdb` |
 
 ## Current Known Problems
 
@@ -95,14 +95,15 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Open T-04A12 Close Readiness Snapshot. | T-04A11 added structured close evidence snapshots; the next accepted slice should continue close-source snapshot normalization. | `ev:T-0437:fc850943950547939127f430`, `docs/specs/0.4.0/productization-redesign/07_Evidence_Plane_and_Close_Proof_Projection.md`, `docs/specs/0.4.0/productization-redesign/09_Close_Source_Contract.md`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
+| Open T-04A13 Legacy Project Boundary. | T-04A12 completed normalized close-source payloads; the next accepted slice should detect legacy protocol scaffolds before 0.4 mutation commands run. | `ev:T-0438:9462d50758aa418c84318576`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| T-0437 / T-04A11 Close Proof Placement | Docker build plus focused close/projection/finalize/schema/registry tests passed 31 tests; workspace `dist` refreshed; built T-0437 draft harness returned `ok:true`; built close dry-run returned expected Draft blockers while exposing `closeEvidenceSnapshot`. | Evidence `ev:T-0437:fc850943950547939127f430`; broader close-source payload modeling remains T-04A12 scope. |
+| T-0438 / T-04A12 Close Source Contract | Docker ext4 build plus focused close-source/close/finalize/schema/registry tests passed 31 tests; workspace `dist` refreshed; built T-0438 `task close-source` and draft harness returned `ok:true`. | Evidence `ev:T-0438:9462d50758aa418c84318576`; shared-state close-source declarations remain later hardening scope. |
+| T-0437 / T-04A11 Close Proof Placement | Docker build plus focused close/projection/finalize/schema/registry tests passed 31 tests; workspace `dist` refreshed; built T-0437 draft harness returned `ok:true`; built close dry-run returned expected Draft blockers while exposing `closeEvidenceSnapshot`. | Evidence `ev:T-0437:fc850943950547939127f430`; T-0438 later added the close-source payload model. |
 | T-0436 / T-04A10 Evidence Projection | Docker build plus focused evidence/task/harness/close/finalize/schema/registry tests passed 85 tests; workspace `dist` refreshed; built T-0436 `evidence project` dry-run and draft harness validation returned `ok:true`; post-evidence projection dry-run returned `wouldChange:false`. | Evidence `ev:T-0436:f4c57fd4dc6a4d9dbffedfe0`. |
 | T-0435 / T-04A9 Managed Slot v2 Registry Hash | Docker build plus focused init/close/finalize/lifecycle tests passed 31 tests; workspace `dist` refreshed; built T-0435 close smoke emitted slot registry hash fields and draft harness validation returned `ok:true`. | Evidence `ev:T-0435:31e917471a95404882ef0bdb`; full registry-driven TASK.md validation remains later close-source/schema alignment scope. |
 | T-0434 / T-04A8 Source Document Hash and Drift Link | Docker build plus focused harness/ready/close/finalize/lifecycle tests passed 57 tests; workspace `dist` refreshed; built T-0434 draft harness validation returned `ok:true`. | Evidence `ev:T-0434:ca9cc42e94a44af4b02e893f`; read-map/session/context drift surfacing remains T-04A14/T-04A15 scope. |

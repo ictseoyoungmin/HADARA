@@ -9,6 +9,13 @@
       "notes": "Documents the Phase 6 common actor/run context for future workflow-compression and multi-agent compatible reports."
     },
     {
+      "id": "hadara.closeSource.v1",
+      "path": "src/schemas/close-source.schema.json",
+      "status": "fixture",
+      "owner": "task/task-close",
+      "notes": "Documents normalized 0.4 close-source payloads and source units for task close/audit proof boundaries."
+    },
+    {
       "id": "hadara.dashboard.bootstrap.v1",
       "path": "src/schemas/dashboard-bootstrap.schema.json",
       "status": "fixture",

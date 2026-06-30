@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.closeSource.v1",
+  "x-hadara-schema-id": "hadara.closeSource.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "taskId", "protocol", "sourceHash", "sourceUnits", "excludedRawInputs", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.closeSource.v1" },
+    "command": { "const": "task.close-source" },
+    "ok": { "type": "boolean" },
+    "taskId": { "type": "string" },
+    "protocol": { "const": "0.4" },
+    "sourceHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$|^sha256:missing-task$" },
+    "sourceUnits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["kind", "path", "sha256", "closeSourceRole"],
+        "properties": {
+          "kind": { "enum": ["file", "registry", "derived-projection"] },
+          "path": { "type": "string" },
+          "selector": { "type": "string" },
+          "sha256": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+          "closeSourceRole": { "enum": ["included", "consistency-check", "snapshot"] }
+        }
+      }
+    },
+    "excludedRawInputs": { "type": "array", "items": { "type": "string" } },
+    "issues": { "type": "array" }
+  }
+}
