@@ -36,7 +36,8 @@ describe('task create templates', () => {
     expect(report.task?.capsule).toBe('tasks/T-0001-release-dry-run-service');
     const taskDir = path.join(root, report.task?.capsule ?? '');
     expect(fs.readFileSync(path.join(taskDir, 'TASK.md'), 'utf8')).toContain('No registry mutation');
-    expect(fs.readFileSync(path.join(taskDir, 'TESTS.md'), 'utf8')).toContain('focused release/schema tests');
+    expect(fs.readdirSync(taskDir).sort()).toEqual(['EVIDENCE.md', 'HANDOFF.md', 'TASK.md', 'evidence.jsonl']);
+    expect(fs.existsSync(path.join(taskDir, 'TESTS.md'))).toBe(false);
     expect(fs.readFileSync(path.join(taskDir, 'evidence.jsonl'), 'utf8')).toBe('');
     expect(validateSchema('hadara.task.create.v1', report).ok).toBe(true);
   });
@@ -48,8 +49,8 @@ describe('task create templates', () => {
 
     expect(report.ok).toBe(true);
     const taskDir = path.join(root, report.task?.capsule ?? '');
-    expect(fs.readFileSync(path.join(taskDir, 'ACCEPTANCE.md'), 'utf8')).toContain('Finish, ready, close, and audit expectations');
     expect(fs.readFileSync(path.join(taskDir, 'TASK.md'), 'utf8')).toContain('No hidden task completion execution');
+    expect(fs.existsSync(path.join(taskDir, 'ACCEPTANCE.md'))).toBe(false);
     expect(validateSchema('hadara.task.create.v1', report).ok).toBe(true);
   });
 
@@ -134,6 +135,7 @@ describe('task create templates', () => {
     expect(report.task.title).toBe('Release Model');
     expect(report.template.id).toBe('release-read-model');
     expect(fs.readFileSync(path.join(root, report.task.capsule, 'TASK.md'), 'utf8')).toContain('No publish execution');
+    expect(fs.readdirSync(path.join(root, report.task.capsule)).sort()).toEqual(['EVIDENCE.md', 'HANDOFF.md', 'TASK.md', 'evidence.jsonl']);
   });
 });
 

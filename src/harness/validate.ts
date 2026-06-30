@@ -43,13 +43,6 @@ export interface HarnessValidateResult {
 
 const REQUIRED_TASK_FILES = [
   'TASK.md',
-  'PLAN.md',
-  'CONTEXT.md',
-  'FILES.md',
-  'ACCEPTANCE.md',
-  'TESTS.md',
-  'RISKS.md',
-  'DECISIONS.md',
   'EVIDENCE.md',
   'evidence.jsonl',
   'HANDOFF.md'
@@ -149,7 +142,7 @@ function validateTaskMarkdown(projectRoot: string, task: TaskCapsule, issues: Ha
 
   const relativePath = toPortablePath(path.relative(projectRoot, taskPath));
   const content = fs.readFileSync(taskPath, 'utf8');
-  for (const heading of ['## Goal', '## Scope', '## Out of Scope', '## Status']) {
+  for (const heading of ['## Identity', '## Source Documents', '## Goal', '## Plan', '## Acceptance', '## Validation', '## Change Summary', '## Risks / Follow-ups']) {
     if (!content.includes(heading)) {
       issues.push({
         severity: 'error',
@@ -170,22 +163,6 @@ function validateTaskMarkdown(projectRoot: string, task: TaskCapsule, issues: Ha
 }
 
 function validateCapsuleFormatMarkdown(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
-  validateMarkdownFile(projectRoot, task, issues, 'ACCEPTANCE.md', [
-    { code: 'ACCEPTANCE_HEADING_INVALID', anyText: ['# Acceptance Criteria'] },
-    { code: 'ACCEPTANCE_CHECKLIST_MISSING', anyText: ['- [ ]', '- [x]', '| ID | Criterion | Status | Evidence |', '| ID | Criterion | Origin | Required | Deferrable | Status | Evidence |'] }
-  ]);
-  validateMarkdownFile(projectRoot, task, issues, 'FILES.md', [
-    { code: 'FILES_TABLE_INVALID', anyText: ['| Path | Action | Reason |', '| Path | Action | Reason | Status |'] },
-    { code: 'FILES_TABLE_INVALID', anyText: ['|---|---|---|', '|---|---|---|---|'] }
-  ]);
-  validateMarkdownFile(projectRoot, task, issues, 'TESTS.md', [
-    { code: 'TESTS_SECTION_MISSING', anyText: ['## Required', '## Routine Checks'] },
-    { code: 'TESTS_SECTION_MISSING', anyText: ['## Optional', '## Special Checks'] }
-  ]);
-  validateMarkdownFile(projectRoot, task, issues, 'RISKS.md', [
-    { code: 'RISKS_TABLE_INVALID', anyText: ['| Risk | Mitigation |', '| Risk | Impact | Likelihood | Mitigation | Status |'] },
-    { code: 'RISKS_TABLE_INVALID', anyText: ['|---|---|', '|---|---|---|---|---|'] }
-  ]);
   validateMarkdownFile(projectRoot, task, issues, 'HANDOFF.md', [
     { code: 'HANDOFF_SECTION_MISSING', anyText: ['## Last Completed'] },
     { code: 'HANDOFF_SECTION_MISSING', anyText: ['## Next Recommended Step'] }
@@ -465,7 +442,7 @@ function validateTaskMetadataComplete(projectRoot: string, task: TaskCapsule, is
       code: 'TASK_METADATA_PLACEHOLDER',
       message: `Done-level validation requires TASK.md metadata field(s) to be concrete dates, not TBD: ${missing.join(', ')}.`,
       path: relativePath,
-      heading: 'Metadata',
+      heading: 'Identity',
       fixHint: 'Replace TASK.md Created and Updated metadata placeholders with YYYY-MM-DD dates.',
       example: '| Created | 2026-06-12 |',
       remediationHint: {
@@ -484,7 +461,7 @@ function validateTaskMetadataComplete(projectRoot: string, task: TaskCapsule, is
       code: 'TASK_METADATA_DATE_INVALID',
       message: 'Done-level validation requires TASK.md Created and Updated metadata to use YYYY-MM-DD dates.',
       path: relativePath,
-      heading: 'Metadata',
+      heading: 'Identity',
       fixHint: 'Use YYYY-MM-DD values for TASK.md Created and Updated metadata.',
       example: '| Updated | 2026-06-12 |',
       remediationHint: {
@@ -503,21 +480,22 @@ function validateTaskStatusDone(projectRoot: string, task: TaskCapsule, issues: 
   if (!fs.existsSync(taskPath)) return;
 
   const relativePath = toPortablePath(path.relative(projectRoot, taskPath));
-  const status = readSectionBody(taskPath, '## Status');
+  const content = fs.readFileSync(taskPath, 'utf8');
+  const status = readStatusTableValue(content) ?? readSectionBody(taskPath, '## Status');
   if (!/^Done\b/i.test(status.trim())) {
     issues.push({
       severity: 'error',
       code: 'TASK_STATUS_NOT_DONE',
       message: 'Done-level validation requires TASK.md status to be Done.',
       path: relativePath,
-      heading: 'Status',
-      fixHint: 'Run `hadara task finish --task <task-id> --execute --json` or set the TASK.md status section to Done after the capsule is actually complete.',
-      example: '## Status\n\nDone',
+      heading: 'Identity',
+      fixHint: 'Run `hadara task finish --task <task-id> --execute --json` or set the TASK.md Identity status row to Done after the capsule is actually complete.',
+      example: '| Status | Done |',
       remediationHint: {
         path: relativePath,
-        heading: 'Status',
-        requiredChange: 'Set TASK.md status to Done after the capsule is complete.',
-        example: '## Status\n\nDone',
+        heading: 'Identity',
+        requiredChange: 'Set TASK.md Identity status to Done after the capsule is complete.',
+        example: '| Status | Done |',
         blocking: true
       }
     });
@@ -529,7 +507,9 @@ function validateTaskStatusHistoryDone(projectRoot: string, task: TaskCapsule, i
   if (!fs.existsSync(taskPath)) return;
 
   const relativePath = toPortablePath(path.relative(projectRoot, taskPath));
-  const latestStatus = latestStatusHistoryStatus(fs.readFileSync(taskPath, 'utf8'));
+  const content = fs.readFileSync(taskPath, 'utf8');
+  if (!content.includes('## Status History')) return;
+  const latestStatus = latestStatusHistoryStatus(content);
   if (latestStatus !== 'Done') {
     issues.push({
       severity: 'error',
@@ -552,10 +532,13 @@ function validateTaskStatusHistoryDone(projectRoot: string, task: TaskCapsule, i
 
 function validateAcceptanceDone(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
   const acceptancePath = path.join(task.dir, 'ACCEPTANCE.md');
-  if (!fs.existsSync(acceptancePath)) return;
+  const taskPath = path.join(task.dir, 'TASK.md');
+  if (!fs.existsSync(acceptancePath) && !fs.existsSync(taskPath)) return;
 
-  const relativePath = toPortablePath(path.relative(projectRoot, acceptancePath));
-  const content = fs.readFileSync(acceptancePath, 'utf8');
+  const relativePath = fs.existsSync(acceptancePath)
+    ? toPortablePath(path.relative(projectRoot, acceptancePath))
+    : toPortablePath(path.relative(projectRoot, taskPath));
+  const content = fs.existsSync(acceptancePath) ? fs.readFileSync(acceptancePath, 'utf8') : readMarkdownSection(fs.readFileSync(taskPath, 'utf8'), '## Acceptance');
   const checklistLines = content
     .split(/\r?\n/)
     .filter((line) => /^-\s+\[[ xX]\]/.test(line.trim()));
@@ -585,6 +568,7 @@ function validateAcceptanceDone(projectRoot: string, task: TaskCapsule, issues: 
 }
 
 function validateDoneLevelScaffoldContent(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
+  const legacySidecarComplete = hasLegacyCompletionSidecars(task.dir);
   const checks: Array<{ fileName: string; code: string; message: string }> = [
     {
       fileName: 'TASK.md',
@@ -634,6 +618,7 @@ function validateDoneLevelScaffoldContent(projectRoot: string, task: TaskCapsule
   ];
 
   for (const check of checks) {
+    if (check.fileName === 'TASK.md' && legacySidecarComplete) continue;
     const filePath = path.join(task.dir, check.fileName);
     if (!fs.existsSync(filePath)) continue;
 
@@ -657,6 +642,10 @@ function validateDoneLevelScaffoldContent(projectRoot: string, task: TaskCapsule
       });
     }
   }
+}
+
+function hasLegacyCompletionSidecars(taskDir: string): boolean {
+  return ['PLAN.md', 'ACCEPTANCE.md', 'TESTS.md', 'FILES.md'].every((fileName) => fs.existsSync(path.join(taskDir, fileName)));
 }
 
 function validateEvidenceIndexHasRecords(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
@@ -1026,11 +1015,17 @@ function isPlaceholderSection(value: string): boolean {
 
 function readMetadataTable(content: string): Map<string, string> {
   const metadata = new Map<string, string>();
-  for (const cells of parseMarkdownRows(readMarkdownSection(content, '## Metadata'))) {
+  const section = readMarkdownSection(content, '## Identity') || readMarkdownSection(content, '## Metadata');
+  for (const cells of parseMarkdownRows(section)) {
     if (cells.length < 2 || cells[0] === 'Field') continue;
     metadata.set(cells[0], cells[1]);
   }
   return metadata;
+}
+
+function readStatusTableValue(content: string): string | null {
+  const match = content.match(/^\|\s*Status\s*\|\s*([^|]+?)\s*\|$/m);
+  return match?.[1]?.trim() || null;
 }
 
 function latestStatusHistoryStatus(content: string): string | null {

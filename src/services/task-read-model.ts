@@ -6,13 +6,6 @@ import { EvidenceListIssue, parseEvidenceIndexFile } from './evidence-list';
 
 const TASK_CAPSULE_FILES = [
   'TASK.md',
-  'PLAN.md',
-  'CONTEXT.md',
-  'ACCEPTANCE.md',
-  'FILES.md',
-  'TESTS.md',
-  'RISKS.md',
-  'DECISIONS.md',
   'EVIDENCE.md',
   'evidence.jsonl',
   'HANDOFF.md'
@@ -163,6 +156,8 @@ function readTaskStatus(task: TaskCapsule): string {
   const taskPath = path.join(task.dir, 'TASK.md');
   if (!fs.existsSync(taskPath)) return 'Unknown';
   const content = fs.readFileSync(taskPath, 'utf8');
+  const tableStatus = content.match(/^\|\s*Status\s*\|\s*([^|]+?)\s*\|$/m)?.[1]?.trim();
+  if (tableStatus) return tableStatus;
   const match = content.match(/^## Status\s*\n+([\s\S]*?)(?:\n## |\s*$)/m);
   return match?.[1]?.trim().split(/\r?\n/)[0]?.trim() || 'Unknown';
 }

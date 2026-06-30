@@ -910,9 +910,11 @@ function checkProjectHandoff(
 
 function checkScaffoldPlaceholders(projectRoot: string, task: TaskCapsule, taskLooksDone: boolean, issues: ProtocolConsistencyIssue[]): void {
   if (!taskLooksDone) return;
+  const legacySidecarComplete = ['PLAN.md', 'ACCEPTANCE.md', 'TESTS.md', 'FILES.md'].every((fileName) => fs.existsSync(path.join(task.dir, fileName)));
 
   for (const fileName of REQUIRED_TASK_FILES) {
     if (fileName === 'evidence.jsonl') continue;
+    if (fileName === 'TASK.md' && legacySidecarComplete) continue;
     const filePath = path.join(task.dir, fileName);
     if (!fs.existsSync(filePath)) continue;
     const content = fs.readFileSync(filePath, 'utf8');

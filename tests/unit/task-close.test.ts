@@ -108,11 +108,11 @@ describe('task close report', () => {
       expect.arrayContaining([
         expect.objectContaining({
           code: 'HARNESS_ACCEPTANCE_INCOMPLETE',
-          path: `tasks/${task.id}-close-blocked-task/ACCEPTANCE.md`,
+          path: `tasks/${task.id}-close-blocked-task/TASK.md`,
           heading: 'Acceptance Criteria',
           fixHint: expect.stringContaining('acceptance criterion'),
           remediationHint: expect.objectContaining({
-            path: `tasks/${task.id}-close-blocked-task/ACCEPTANCE.md`,
+            path: `tasks/${task.id}-close-blocked-task/TASK.md`,
             heading: 'Acceptance Criteria',
             blocking: true
           })

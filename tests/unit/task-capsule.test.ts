@@ -17,21 +17,33 @@ afterEach(() => {
 });
 
 describe('Task Capsule scaffold frames', () => {
-  it('creates table-first v2 Task Capsule files', () => {
+  it('creates the 0.4 four-file Task Capsule scaffold', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Scaffold smoke');
+    const files = fs.readdirSync(task.dir).sort();
 
-    expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toContain('| Field | Value |');
-    expect(fs.readFileSync(path.join(task.dir, 'PLAN.md'), 'utf8')).toContain('| Step | Action | Status | Evidence |');
-    expect(fs.readFileSync(path.join(task.dir, 'ACCEPTANCE.md'), 'utf8')).toContain('| ID | Criterion | Status | Evidence |');
-    expect(fs.readFileSync(path.join(task.dir, 'TESTS.md'), 'utf8')).toContain('| Command | Purpose | Required For Done | Latest Result | Evidence |');
+    expect(files).toEqual(['EVIDENCE.md', 'HANDOFF.md', 'TASK.md', 'evidence.jsonl']);
+    const taskMarkdown = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
+    expect(taskMarkdown).toContain('## Identity');
+    expect(taskMarkdown).toContain('## Source Documents');
+    expect(taskMarkdown).toContain('## Plan');
+    expect(taskMarkdown).toContain('## Acceptance');
+    expect(taskMarkdown).toContain('## Validation');
+    expect(taskMarkdown).toContain('## Change Summary');
+    expect(taskMarkdown).toContain('## Risks / Follow-ups');
+    expect(taskMarkdown).not.toContain('\n## Status\n');
+    expect(taskMarkdown).not.toContain('## Close Proof');
+    expect(taskMarkdown).not.toContain('## Status History');
     const handoff = fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8');
-    expect(handoff).toContain('## Current State');
-    expect(handoff).toContain('| TaskStatus | Draft |');
+    expect(handoff).not.toContain('## Current State');
     expect(handoff).not.toContain('| CloseState |');
     expect(handoff).not.toContain('| Status | Draft |');
     expect(handoff).toContain('## Next Recommended Step');
-    expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain('| Time | Kind | Summary | Result | Visibility | JSONL |');
+    const evidence = fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8');
+    expect(evidence).toContain('## Validation Evidence');
+    expect(evidence).toContain('## Close Proof');
+    expect(evidence).toContain('## Failed / Blocked / Residual Evidence');
+    expect(evidence).toContain('| Time | Kind | Summary | Result | Visibility | JSONL |');
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe('');
   });
 });

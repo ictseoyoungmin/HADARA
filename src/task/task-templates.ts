@@ -1,6 +1,5 @@
 import type { HadaraActorRole } from '../core/actor-context';
 import type { TaskCapsule } from './task-capsule';
-import { managedSectionBlock } from '../services/managed-sections';
 
 export type TaskTemplateId = 'release-read-model' | 'evidence-v2' | 'lifecycle-hardening' | 'operator-workflow' | 'protocol-remediation' | 'ui-polish';
 
@@ -105,7 +104,7 @@ function simpleTemplate(id: TaskTemplateId, goal: string, expectedEvidence: stri
 }
 
 function taskMarkdown(task: TaskCapsule, goal: string, notes: string, scopeRows: string[], outOfScope: string[]): string {
-  return `# ${task.id} ${task.title}\n\n## Metadata\n\n| Field | Value |\n|---|---|\n| ID | ${task.id} |\n| Title | ${task.title.replace(/\|/g, '/')} |\n| Status | Draft |\n| Created | TBD |\n| Updated | TBD |\n\n## Goal\n\n| Goal | Notes |\n|---|---|\n| ${goal} | ${notes} |\n\n## Scope\n\n| In Scope | Reason |\n|---|---|\n${scopeRows.map((row) => `| ${row} |`).join('\n')}\n\n## Out of Scope\n\n| Out of Scope | Reason |\n|---|---|\n${outOfScope.map((item) => `| ${item} | Template boundary. |`).join('\n')}\n\n## Status\n\nDraft\n\n## Status History\n\n${managedSectionBlock('task-status-history', { schema: 'hadara.managedSection.v1', owner: 'task.finish', kind: 'markdown-table', mode: 'update-row', version: 1, required: true, closeSourceRole: 'included' }, `| Time | Status | Reason | Evidence |\n|---|---|---|---|\n| TBD | Draft | Initial task scaffold from template. | Template defaults. |\n`)}\n`;
+  return `# ${task.id} ${task.title}\n\n## Identity\n\n| Field | Value |\n|---|---|\n| ID | ${task.id} |\n| Title | ${task.title.replace(/\|/g, '/')} |\n| Status | Draft |\n| Created | TBD |\n| Updated | TBD |\n\n## Source Documents\n\n| Path | Purpose | Status |\n|---|---|---|\n| TBD | TBD | Pending |\n\n## Goal\n\n| Goal | Notes |\n|---|---|\n| ${goal} | ${notes} |\n\n## Plan\n\n| Step | Action | Status | Evidence |\n|---|---|---|---|\n${scopeRows.map((row, index) => `| ${index + 1} | ${row.replace(/\s*\|\s*/g, ' ')} | Pending | TBD |`).join('\n')}\n| ${scopeRows.length + 1} | Validate and record evidence. | Pending | TBD |\n\n## Acceptance\n\n| ID | Criterion | Status | Evidence |\n|---|---|---|---|\n| AC-1 | Template-specific scope is implemented. | Pending | TBD |\n| AC-2 | Template expected evidence is recorded. | Pending | TBD |\n\n## Validation\n\n| Check | Result | Evidence |\n|---|---|---|\n| TBD | Not Run | TBD |\n\n## Change Summary\n\n| Path | Change | Evidence |\n|---|---|---|\n| TBD | TBD | TBD |\n\n## Risks / Follow-ups\n\n| Item | Status | Notes |\n|---|---|---|\n${outOfScope.map((item) => `| ${item} | Out of Scope | Template boundary. |`).join('\n')}\n`;
 }
 
 function acceptance(criteria: string[]): string {

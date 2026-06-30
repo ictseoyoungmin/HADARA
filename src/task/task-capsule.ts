@@ -13,22 +13,17 @@ export interface TaskCapsule {
 }
 
 export const TASK_FILES: Record<string, (task: TaskCapsule) => string> = {
-  'TASK.md': (task) => `# ${task.id} ${task.title}\n\n## Metadata\n\n| Field | Value |\n|---|---|\n| ID | ${task.id} |\n| Title | ${task.title.replace(/\|/g, '/')} |\n| Status | Draft |\n| Created | TBD |\n| Updated | TBD |\n\n## Goal\n\n| Goal | Notes |\n|---|---|\n| TBD | Replace with the smallest verifiable outcome. |\n\n## Scope\n\n| In Scope | Reason |\n|---|---|\n| TBD | TBD |\n\n## Out of Scope\n\n| Out of Scope | Reason |\n|---|---|\n| TBD | TBD |\n\n## Status\n\nDraft\n\n## Status History\n\n${managedSectionBlock('task-status-history', { schema: 'hadara.managedSection.v1', owner: 'task.finish', kind: 'markdown-table', mode: 'update-row', version: 1, required: true, closeSourceRole: 'included' }, `| Time | Status | Reason | Evidence |\n|---|---|---|---|\n| TBD | Draft | Initial task scaffold. | TBD |\n`)}\n`,
-  'PLAN.md': () => `# Plan\n\n| Step | Action | Status | Evidence |\n|---|---|---|---|\n| 1 | Read required project docs. | Pending | TBD |\n| 2 | Implement the smallest useful slice. | Pending | TBD |\n| 3 | Run validation. | Pending | TBD |\n| 4 | Attach evidence. | Pending | TBD |\n| 5 | Update handoff. | Pending | TBD |\n`,
-  'CONTEXT.md': () => `# Context\n\n## Required Reading Used\n\n| Document | Why It Matters | Read Status |\n|---|---|---|\n| docs/PROJECT_STATE.md | Current project state. | Pending |\n| docs/AGENT_HANDOFF.md | Current handoff. | Pending |\n| docs/TASK_BOARD.md | Task queue and status. | Pending |\n| docs/IMPLEMENTATION_SOP.md | Workflow rules. | Pending |\n\n## Assumptions\n\n| Assumption | Source | Risk If Wrong |\n|---|---|---|\n| TBD | TBD | TBD |\n\n## Constraints\n\n| Constraint | Source | Notes |\n|---|---|---|\n| TBD | TBD | TBD |\n`,
-  'FILES.md': () => `# Files\n\n| Path | Action | Reason | Status |\n|---|---|---|---|\n`,
-  'ACCEPTANCE.md': () => `# Acceptance Criteria\n\n| ID | Criterion | Status | Evidence |\n|---|---|---|---|\n| AC-1 | Scope is implemented. | Pending | TBD |\n| AC-2 | Tests or explicit constraints are recorded. | Pending | TBD |\n| AC-3 | Evidence is attached. | Pending | TBD |\n| AC-4 | Handoff is updated. | Pending | TBD |\n`,
-  'TESTS.md': () => `# Tests\n\n## Routine Checks\n\n| Command | Purpose | Required For Done | Latest Result | Evidence |\n|---|---|---|---|---|\n| npm test | Run the default project test suite. | Yes | Not Run | TBD |\n| npm run check | Run the full repository check when available. | Yes | Not Run | TBD |\n\n## Special Checks\n\n| Check | Required? | Reason | Latest Result | Evidence |\n|---|---|---|---|---|\n| Security smoke | No | Only if security boundary changes. | Not Run | TBD |\n| Integration smoke | No | Only if integration surface changes. | Not Run | TBD |\n`,
-  'RISKS.md': () => `# Risks\n\n| Risk | Impact | Likelihood | Mitigation | Status |\n|---|---|---|---|---|\n`,
-  'DECISIONS.md': () => `# Decisions\n\n| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n`,
-  'EVIDENCE.md': () => `# Evidence\n\n| Time | Kind | Summary | Result | Visibility | JSONL |\n|---|---|---|---|---|---|\n`,
+  'TASK.md': (task) => `# ${task.id} ${task.title}\n\n## Identity\n\n| Field | Value |\n|---|---|\n| ID | ${task.id} |\n| Title | ${task.title.replace(/\|/g, '/')} |\n| Status | Draft |\n| Created | TBD |\n| Updated | TBD |\n\n## Source Documents\n\n| Path | Purpose | Status |\n|---|---|---|\n| TBD | TBD | Pending |\n\n## Goal\n\n| Goal | Notes |\n|---|---|\n| TBD | Replace with the smallest verifiable outcome. |\n\n## Plan\n\n| Step | Action | Status | Evidence |\n|---|---|---|---|\n| 1 | Define the task contract. | Pending | TBD |\n| 2 | Implement the smallest useful slice. | Pending | TBD |\n| 3 | Validate and record evidence. | Pending | TBD |\n\n## Acceptance\n\n| ID | Criterion | Status | Evidence |\n|---|---|---|---|\n| AC-1 | Scope is implemented. | Pending | TBD |\n| AC-2 | Validation evidence is recorded. | Pending | TBD |\n\n## Validation\n\n| Check | Result | Evidence |\n|---|---|---|\n| TBD | Not Run | TBD |\n\n## Change Summary\n\n| Path | Change | Evidence |\n|---|---|---|\n| TBD | TBD | TBD |\n\n## Risks / Follow-ups\n\n| Item | Status | Notes |\n|---|---|---|\n| TBD | Open | TBD |\n`,
+  'HANDOFF.md': () => `# Handoff\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| TBD | TBD |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| TBD | TBD | TBD |\n\n## Carry Forward Warnings\n\n| Warning | Impact | Mitigation |\n|---|---|---|\n`,
+  'EVIDENCE.md': () => `# Evidence\n\n## Validation Evidence\n\n## Close Proof\n\n## Failed / Blocked / Residual Evidence\n\n| Time | Kind | Summary | Result | Visibility | JSONL |\n|---|---|---|---|---|---|\n`,
   'evidence.jsonl': () => '',
-  'HANDOFF.md': (task) => `# Handoff\n\n## Current State\n\n${managedSectionBlock('task-handoff-current-state', { schema: 'hadara.managedSection.v1', owner: 'handoff.update', kind: 'key-value-table', mode: 'update-row', version: 1, required: true, closeSourceRole: 'included' }, `| Field | Value |\n|---|---|\n| Task | ${task.id} |\n| TaskStatus | Draft |\n| Last Updated | TBD |\n`)}\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| TBD | TBD |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| TBD | TBD | TBD |\n\n## Carry Forward Warnings\n\n| Warning | Impact | Mitigation |\n|---|---|---|\n`
 };
 
 export function isTaskCapsuleScaffoldContent(task: TaskCapsule, fileName: string, content: string): boolean {
   if (fileName === 'TASK.md') {
-    return ['## Goal', '## Scope', '## Out of Scope'].some((heading) => isPlaceholderSection(readMarkdownSection(content, heading)));
+    return ['## Goal', '## Plan', '## Acceptance', '## Validation', '## Change Summary', '## Risks / Follow-ups'].some((heading) =>
+      isPlaceholderSection(readMarkdownSection(content, heading))
+    );
   }
 
   if (fileName === 'ACCEPTANCE.md') {
@@ -119,6 +114,7 @@ export function createTaskCapsule(projectRoot: string, title: string, options: C
     const template = getTaskTemplate(options.templateId);
     if (template) {
       for (const [fileName, factory] of Object.entries(template.files)) {
+        if (!TASK_FILES[fileName]) continue;
         if (factory) fs.writeFileSync(path.join(dir, fileName), factory(task), 'utf8');
       }
     }

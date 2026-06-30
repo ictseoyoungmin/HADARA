@@ -231,11 +231,12 @@ function planWrites(
   issues: TaskFinishIssue[]
 ): TaskFinishWrite[] {
   const writes: TaskFinishWrite[] = [];
-  if (taskStatus !== 'Done' || statusHistoryStatus !== 'Done') {
+  if (taskStatus !== 'Done' || (statusHistoryStatus !== null && statusHistoryStatus !== 'Done')) {
     const taskPath = path.join(task.dir, 'TASK.md');
     const taskContent = fs.existsSync(taskPath) ? fs.readFileSync(taskPath, 'utf8') : '';
     const nextTaskContent = normalizeAtomicTextDocument(replaceTaskStatus(taskContent, 'Done'));
-    if (nextTaskContent === taskContent || latestStatusHistoryStatus(nextTaskContent) !== 'Done') {
+    const nextStatusHistoryStatus = latestStatusHistoryStatus(nextTaskContent);
+    if (nextTaskContent === taskContent || (statusHistoryStatus !== null && nextStatusHistoryStatus !== 'Done')) {
       issues.push({
         severity: 'error',
         code: 'TASK_FINISH_TASK_STATUS_REPLACE_FAILED',
@@ -464,7 +465,10 @@ function readTaskBoard(projectRoot: string, taskId: string): TaskBoardProjection
 function readTaskStatus(task: TaskCapsule): string {
   const taskPath = path.join(task.dir, 'TASK.md');
   if (!fs.existsSync(taskPath)) return 'Unknown';
-  const match = fs.readFileSync(taskPath, 'utf8').match(/^## Status\s*\n+([\s\S]*?)(?:\n## |\s*$)/m);
+  const content = fs.readFileSync(taskPath, 'utf8');
+  const tableStatus = readStatusTableValue(content);
+  if (tableStatus) return tableStatus;
+  const match = content.match(/^## Status\s*\n+([\s\S]*?)(?:\n## |\s*$)/m);
   return match?.[1]?.trim().split(/\r?\n/)[0]?.trim() || 'Unknown';
 }
 
@@ -476,8 +480,15 @@ function readLatestStatusHistoryStatus(task: TaskCapsule): string | null {
 
 function replaceTaskStatus(content: string, status: string): string {
   const withMetadata = content.replace(/^(\|\s*Status\s*\|\s*)[^|]*(\|)$/m, `$1${status} $2`);
-  const withStatus = withMetadata.replace(/^## Status\s*\n+[\s\S]*?(?=\n## Status History)/m, `## Status\n\n${status}\n`);
+  const withStatus = withMetadata.includes('## Status History')
+    ? withMetadata.replace(/^## Status\s*\n+[\s\S]*?(?=\n## Status History)/m, `## Status\n\n${status}\n`)
+    : withMetadata;
   return appendStatusHistoryDone(withStatus);
+}
+
+function readStatusTableValue(content: string): string | null {
+  const match = content.match(/^\|\s*Status\s*\|\s*([^|]+?)\s*\|$/m);
+  return match?.[1]?.trim() || null;
 }
 
 function nextWriteContent(current: string, write: TaskFinishWrite): string {

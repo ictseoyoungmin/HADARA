@@ -359,7 +359,10 @@ function buildTaskProjection(
 
 function readTaskStatus(taskPath: string): string | null {
   if (!fs.existsSync(taskPath)) return null;
-  const section = readMarkdownSection(fs.readFileSync(taskPath, 'utf8'), '## Status');
+  const content = fs.readFileSync(taskPath, 'utf8');
+  const tableStatus = content.match(/^\|\s*Status\s*\|\s*([^|]+?)\s*\|$/m)?.[1]?.trim();
+  if (tableStatus) return tableStatus;
+  const section = readMarkdownSection(content, '## Status');
   return section.trim().split(/\r?\n/)[0]?.trim() || null;
 }
 

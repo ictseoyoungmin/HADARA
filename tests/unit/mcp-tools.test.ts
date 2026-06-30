@@ -102,7 +102,8 @@ describe('MCP read tools', () => {
       issues: []
     });
     expect(payload.files['TASK.md']).toContain('# T-0001 MCP task read');
-    expect(payload.files['FILES.md']).toContain('| Path | Action | Reason |');
+    expect(Object.keys(payload.files).sort()).toEqual(['EVIDENCE.md', 'HANDOFF.md', 'TASK.md', 'evidence.jsonl']);
+    expect(payload.files['HANDOFF.md']).toContain('## Next Recommended Step');
   });
 
   it('excludes private task read evidence unless explicitly requested', () => {

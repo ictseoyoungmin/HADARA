@@ -1435,7 +1435,7 @@ function createImplementationSopDoc(spec: InitProfileSpec): string {
   }
   requiredReadingRows.push(
     ['Active `tasks/T-*/TASK.md`', 'Working a task', 'Task-specific goal, scope, and status.'],
-    ['Active Task Capsule docs', 'Working a task', '`DECISIONS.md`, `PLAN.md`, `CONTEXT.md`, `ACCEPTANCE.md`, `FILES.md`, `TESTS.md`, `RISKS.md`, and `HANDOFF.md`.']
+    ['Active Task Capsule docs', 'Working a task', '`TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and task-local evidence summaries.']
   );
   const requiredReadingTable = managedSectionBlock('required-reading', {
     schema: 'hadara.managedSection.v1',
