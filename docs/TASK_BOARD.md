@@ -448,3 +448,4 @@
 | T-0445 | T-04A17 Init Doctor and Profile Diagnostics | Done | tasks/T-0445-t-04a17-init-doctor-and-profile-diagnostics | Init doctor/profile diagnostics validation passed in `ev:T-0445:c894a34281b648be844445e2`. |
 | T-0446 | T-04A18 Command Registry, Help, and Schema Alignment | Done | tasks/T-0446-t-04a18-command-registry-help-and-schema-alignment | Command registry/help/schema alignment validation passed in `ev:T-0446:1fc3397609c84c049282d0e2`. |
 | T-0447 | T-04A19 Product Default Cleanup | Done | tasks/T-0447-t-04a19-product-default-cleanup | Product default cleanup validation passed in `ev:T-0447:b19bfcb789b64223bb4f4f45`. |
+| T-0448 | T-04A20 Basic Profile Dogfood | Done | tasks/T-0448-t-04a20-basic-profile-dogfood | Basic profile dogfood validation passed in `ev:T-0448:9a048c17494b4a9fa625d603`. |

@@ -13,3 +13,7 @@
 ## 2026-06-30 Read-Map Dogfood
 
 - Context routing should prioritize read-map `active-task` and `active-spec` entries before current-state docs; otherwise the right source spec can fall outside the default `readFirst` budget even though read-map integration is technically present.
+
+## 2026-06-30 Basic Profile Dogfood
+
+- Finish task-owned prose and HANDOFF wording before close. If a post-close wording edit is needed, run the repair path and append a fresh close proof; otherwise audit-close correctly reports source-hash drift.
