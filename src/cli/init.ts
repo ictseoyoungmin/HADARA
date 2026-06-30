@@ -313,6 +313,9 @@ function createInitDoctorReport(projectRoot: string): InitFollowUpReport {
     issues.push({ severity: 'warning', code: 'INIT_OLD_PROFILE_NAME', path: 'docs/IMPLEMENTATION_SOP.md', message: 'SOP mentions old init profile names.' });
   }
 
+  issues.push(...detectEntryDocDuplication(projectRoot));
+  issues.push(...detectRequiredReadingTooBroad(projectRoot));
+  issues.push(...detectProductDefaultLeaks(projectRoot));
   issues.push(...detectProfileMetadataMismatches(projectRoot));
 
   for (const [relativePath, headers] of Object.entries(CANONICAL_TABLE_HEADERS)) {
@@ -339,6 +342,113 @@ function createInitDoctorReport(projectRoot: string): InitFollowUpReport {
 
 function mentionsLegacyInitProfile(content: string): boolean {
   return /(?:initialized with|profile(?:\s+name)?|init profile)\s+(?:the\s+)?`?(minimal|full|hadara-protocol)`?/i.test(content);
+}
+
+function detectEntryDocDuplication(projectRoot: string): InitIssue[] {
+  const issues: InitIssue[] = [];
+  const agents = readProjectText(projectRoot, 'AGENTS.md');
+  if (agents !== null && commandRecipeCount(agents) >= 2) {
+    issues.push({
+      severity: 'warning',
+      code: 'INIT_AGENTS_COMMAND_COOKBOOK',
+      path: 'AGENTS.md',
+      message: 'AGENTS.md appears to duplicate lifecycle or context command recipes; keep command usage in docs/HADARA_WORKFLOW.md.'
+    });
+  }
+  const context = readProjectText(projectRoot, '.hadara/context/HADARA_CONTEXT.md');
+  if (context !== null && (context.includes('| Document | When to Read | Purpose |') || context.includes('## Required Reading') || commandRecipeCount(context) >= 2)) {
+    issues.push({
+      severity: 'warning',
+      code: 'INIT_CONTEXT_DUPLICATES_WORKFLOW',
+      path: '.hadara/context/HADARA_CONTEXT.md',
+      message: 'HADARA_CONTEXT.md appears to duplicate Required Reading or command recipes; keep it as a compact routing anchor.'
+    });
+  }
+  return issues;
+}
+
+function commandRecipeCount(content: string): number {
+  const matches = content.match(/^\s*`?hadara\s+(?:task|context|session|evidence|docs|harness|init)\s+[a-z-]+/gm);
+  return new Set(matches ?? []).size;
+}
+
+function detectRequiredReadingTooBroad(projectRoot: string): InitIssue[] {
+  const registry = readDocsRegistryForDoctor(projectRoot);
+  if (registry === null) return [];
+  const broad = registry.documents.filter((doc) => {
+    const raw = doc as DocumentRegistryFile['documents'][number] & {
+      readTier?: string;
+      drift?: { reviewRequiredBeforeUse?: boolean; risk?: string };
+    };
+    const defaultRead = doc.requiredReading || doc.readWhen.includes('session-start') || doc.readWhen.includes('task-start');
+    if (!defaultRead) return false;
+    return doc.status === 'historical'
+      || doc.status === 'superseded'
+      || doc.status === 'archived'
+      || raw.readTier === 'historical'
+      || raw.readTier === 'excluded'
+      || raw.readTier === 'drift-review'
+      || raw.drift?.reviewRequiredBeforeUse === true
+      || raw.drift?.risk === 'medium'
+      || raw.drift?.risk === 'high';
+  });
+  return broad.map((doc) => ({
+    severity: 'warning' as const,
+    code: 'INIT_REQUIRED_READING_TOO_BROAD',
+    path: doc.path,
+    message: `${doc.path} is in the default read path but is historical, excluded, superseded, archived, or drift-risk.`
+  }));
+}
+
+function readDocsRegistryForDoctor(projectRoot: string): DocumentRegistryFile | null {
+  const registryPath = path.join(projectRoot, DOCS_REGISTRY_PATH);
+  if (!fs.existsSync(registryPath)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(registryPath, 'utf8')) as DocumentRegistryFile;
+  } catch {
+    return null;
+  }
+}
+
+function detectProductDefaultLeaks(projectRoot: string): InitIssue[] {
+  const paths = [
+    'AGENTS.md',
+    '.hadara/context/HADARA_CONTEXT.md',
+    'docs/HADARA_WORKFLOW.md',
+    'docs/PROJECT_STATE.md',
+    'docs/AGENT_HANDOFF.md',
+    'docs/ARCHITECTURE.md',
+    'docs/ROADMAP.md',
+    'docs/DECISIONS.md',
+    'docs/SECURITY_MODEL.md'
+  ];
+  const issues: InitIssue[] = [];
+  for (const relativePath of paths) {
+    const content = readProjectText(projectRoot, relativePath);
+    if (content === null) continue;
+    const token = productDefaultLeakToken(content);
+    if (token) {
+      issues.push({
+        severity: 'warning',
+        code: 'INIT_PRODUCT_DEFAULT_LEAK',
+        path: relativePath,
+        message: `${relativePath} appears to contain project-specific generated default text (${token}); product scaffolds must stay generic.`
+      });
+    }
+  }
+  return issues;
+}
+
+function productDefaultLeakToken(content: string): string | null {
+  const checks: Array<[RegExp, string]> = [
+    [/\bHADARA-dev\b/, 'HADARA-dev'],
+    [/\bDocker\b|\bdocker\s+(?:exec|run|compose|ps|build)\b/i, 'Docker'],
+    [/\bnpm\s+(?:run|publish|view|ci|install|pack)\b/i, 'npm'],
+    [/\bnode\s+dist\/cli\/main\.js\b/i, 'node dist/cli/main.js'],
+    [/\/workspace\b|\/mnt\/|[A-Za-z]:\\/, 'machine-local path'],
+    [/\bhadara@\d+\.\d+\.\d+/, 'package version']
+  ];
+  return checks.find(([pattern]) => pattern.test(content))?.[1] ?? null;
 }
 
 function createInitUpgradeReport(projectRoot: string, profile: InitProfile, mode: InitFollowUpMode): InitFollowUpReport {

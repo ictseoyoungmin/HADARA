@@ -265,6 +265,58 @@ describe('init profiles', () => {
     }));
   });
 
+  it('reports duplicated entry-doc command guidance and broad default reading', () => {
+    const root = tempProject();
+    initProject(root);
+
+    fs.appendFileSync(path.join(root, 'AGENTS.md'), '\nhadara task lifecycle --task T-0001 --json\nhadara context pack --task T-0001 --json\n', 'utf8');
+    fs.appendFileSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'), '\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n', 'utf8');
+    const registryPath = path.join(root, '.hadara', 'docs-registry.json');
+    const registry = JSON.parse(read(root, '.hadara/docs-registry.json'));
+    registry.documents.push({
+      path: 'docs/specs/old.md',
+      title: 'Old',
+      owner: 'hadara-docs',
+      kind: 'spec',
+      status: 'historical',
+      scope: 'project',
+      profiles: ['standard'],
+      readWhen: ['session-start'],
+      requiredReading: true,
+      updateOwner: 'human',
+      updatedByCommands: [],
+      managedSections: [],
+      closeSourceRole: 'included',
+      supersedes: []
+    });
+    fs.writeFileSync(registryPath, `${JSON.stringify(registry, null, 2)}\n`, 'utf8');
+
+    handleInitCommand({ args: ['init', 'doctor', '--json'], projectRoot: root, jsonOutput: true });
+    const report = jsonLog();
+
+    expect(report.ok).toBe(true);
+    expect(report.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'INIT_AGENTS_COMMAND_COOKBOOK', path: 'AGENTS.md' }),
+      expect.objectContaining({ code: 'INIT_CONTEXT_DUPLICATES_WORKFLOW', path: '.hadara/context/HADARA_CONTEXT.md' }),
+      expect.objectContaining({ code: 'INIT_REQUIRED_READING_TOO_BROAD', path: 'docs/specs/old.md' })
+    ]));
+  });
+
+  it('reports product-specific generated default leakage', () => {
+    const root = tempProject();
+    initProject(root);
+    fs.appendFileSync(path.join(root, 'docs', 'HADARA_WORKFLOW.md'), '\nHADARA-dev Docker validation uses npm run check.\n', 'utf8');
+
+    handleInitCommand({ args: ['init', 'doctor', '--json'], projectRoot: root, jsonOutput: true });
+
+    expect(jsonLog()).toEqual(expect.objectContaining({
+      ok: true,
+      issues: expect.arrayContaining([
+        expect.objectContaining({ code: 'INIT_PRODUCT_DEFAULT_LEAK', path: 'docs/HADARA_WORKFLOW.md' })
+      ])
+    }));
+  });
+
   it('does not overwrite existing generated files', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
