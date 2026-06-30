@@ -15,6 +15,7 @@ import {
 } from '../../src/context/context-pack';
 import { createContextCacheWarmReport } from '../../src/context/context-cache-store';
 import { hashContextGraphText } from '../../src/context/extractor-contract';
+import { createDocsReadMapReport } from '../../src/services/docs-registry';
 
 const generatedAt = '2026-06-18T13:00:00.000Z';
 const taskId = 'T-0003';
@@ -144,6 +145,69 @@ describe('context pack', () => {
     ]);
     expect(report.readFirst[1]?.reason).toContain('Task-local file connected to the active task');
     expect(report.readFirst[1]?.reason).toContain('read it before broad project history');
+    assertSchema('hadara.contextPack.v1', report);
+  });
+
+  it('consumes docs read-map policy for active specs and excluded specs', () => {
+    const root = tempProject();
+    write(root, `tasks/${taskId}-fixture/TASK.md`, `# ${taskId} Context Pack Read Map\n`);
+    write(root, `tasks/${taskId}-fixture/HANDOFF.md`, '# Handoff\n');
+    write(root, `tasks/${taskId}-fixture/EVIDENCE.md`, '# Evidence\n');
+    write(root, 'docs/specs/active-context-pack.md', '# Active Context Pack Spec\n');
+    write(root, 'docs/specs/unregistered-context-pack.md', '# Unregistered Context Pack Spec\n');
+    write(root, '.hadara/docs-registry.json', JSON.stringify({
+      schemaVersion: 'hadara.docs.registry.v1',
+      registryVersion: 1,
+      projectProfile: 'standard',
+      documents: [{
+        path: 'docs/specs/active-context-pack.md',
+        title: 'Active Context Pack Spec',
+        owner: 'hadara-docs',
+        kind: 'spec',
+        status: 'reference',
+        scope: 'project',
+        profiles: ['standard'],
+        readWhen: ['only-when-linked'],
+        requiredReading: false,
+        updateOwner: 'human',
+        updatedByCommands: [],
+        managedSections: [],
+        closeSourceRole: 'task-dependent',
+        readTier: 'active-spec',
+        authority: 'implementation-source',
+        editPolicy: 'agent-editable-with-review',
+        activeForTasks: [taskId],
+        supersedes: []
+      }]
+    }, null, 2));
+
+    const graph = sampleGraphReport({ includeCode: false });
+    graph.nodes.push(documentNode('docs/specs/unregistered-context-pack.md', { requiredReading: true, status: 'reference', kind: 'spec' }));
+    graph.edges.push(edge(
+      'REFERENCES_DOC',
+      `task:${taskId}`,
+      'doc:docs/specs/unregistered-context-pack.md',
+      'Task graph points at an unregistered spec-looking document.',
+      'explicit'
+    ));
+
+    const report = buildContextPackReport({
+      projectRoot: root,
+      generatedAt,
+      taskId,
+      graphReport: graph,
+      docsReadMap: createDocsReadMapReport(root, taskId),
+      budget: { maxReadFirstItems: 8, maxItems: 20 }
+    });
+    const readablePaths = [...report.readFirst, ...report.readIfNeeded].map((item) => item.path);
+
+    expect(readablePaths).toContain('docs/specs/active-context-pack.md');
+    expect(readablePaths).not.toContain('docs/specs/unregistered-context-pack.md');
+    expect(report.sourceSummary).toMatchObject({
+      docsRegistryAvailable: true,
+      docsReadMapAvailable: true,
+      docsReadMapDoNotReadByDefaultCount: 1
+    });
     assertSchema('hadara.contextPack.v1', report);
   });
 

@@ -13,6 +13,7 @@ import type {
 import { buildContextGraphReport } from './context-graph-builder';
 import { isContextSliceProjectRelativePath, normalizeContextSliceInputPath } from './context-slice-boundary';
 import { createTaskNodeId, hashContextGraphText } from './extractor-contract';
+import { createDocsReadMapReport, type DocsReadMapEntry, type DocsReadMapReport } from '../services/docs-registry';
 
 export const CONTEXT_PACK_SCHEMA_ID = 'hadara.contextPack.v1' as const;
 export const CONTEXT_PACK_COMMAND = 'context.pack' as const;
@@ -122,6 +123,9 @@ export interface ContextPackSourceSummary {
   degraded: boolean;
   graphSourceHash?: string;
   sourcesRead?: number;
+  docsReadMapAvailable?: boolean;
+  docsReadMapReadFirstCount?: number;
+  docsReadMapDoNotReadByDefaultCount?: number;
 }
 
 export interface ContextPackStateProjection extends ContextStateProjectionSummary {
@@ -166,6 +170,7 @@ export interface BuildContextPackReportOptions {
   graphReport?: ContextGraphReport;
   includeCode?: boolean;
   cache?: ContextCacheMetadata;
+  docsReadMap?: DocsReadMapReport;
 }
 
 interface RankedNode {
@@ -223,32 +228,44 @@ export function buildContextPackReport(input: BuildContextPackReportOptions): Co
   }
 
   const connectedIds = taskId ? connectedNodeIds(graphReport.edges, createTaskNodeId(taskId)) : new Set<string>();
+  const docsReadMap = resolveDocsReadMap(input, taskId);
+  const readMapExcludedPaths = new Set((docsReadMap?.doNotReadByDefault ?? []).map((entry) => entry.path));
   const rankedNodes = rankContextPackNodes(graphReport.nodes, graphReport.edges, connectedIds, taskNode);
-  const readFirstRanked = rankedNodes.filter((ranked) => isReadFirstAllowed(ranked.node));
-  const readFirst = readFirstRanked
-    .slice(0, budget.maxReadFirstItems)
-    .map((ranked) => itemFromRankedNode(ranked, true, input.projectRoot));
-  if (readFirstRanked.length > readFirst.length) {
+  const readFirstRanked = rankedNodes
+    .filter((ranked) => isReadFirstAllowed(ranked.node))
+    .filter((ranked) => !isExcludedByReadMap(ranked.node, readMapExcludedPaths));
+  const graphReadFirst = readFirstRanked.map((ranked) => itemFromRankedNode(ranked, true, input.projectRoot));
+  const readFirstCandidates = mergeContextPackItems([
+    ...graphReadFirst.filter((item) => item.id === `task:${taskId}`),
+    ...readMapItems(docsReadMap?.readFirst ?? [], input.projectRoot, true),
+    ...graphReadFirst.filter((item) => item.id !== `task:${taskId}`)
+  ]);
+  const readFirst = readFirstCandidates.slice(0, budget.maxReadFirstItems);
+  if (readFirstCandidates.length > readFirst.length) {
     issues.push({
       severity: 'warning',
       code: 'CONTEXT_PACK_BUDGET_TRUNCATED',
-      message: `Context pack readFirst items were truncated from ${readFirstRanked.length} to ${readFirst.length}.`
+      message: `Context pack readFirst items were truncated from ${readFirstCandidates.length} to ${readFirst.length}.`
     });
   }
 
   const selectedIds = new Set(readFirst.map((item) => item.id));
+  const selectedPaths = new Set(readFirst.map((item) => item.path).filter((value): value is string => Boolean(value)));
   const maxReadIfNeeded = Math.max(0, (budget.maxItems ?? 30) - readFirst.length);
   const readIfNeededRanked = rankedNodes
-    .filter((ranked) => !selectedIds.has(ranked.node.id))
+    .filter((ranked) => !selectedIds.has(ranked.node.id) && (!ranked.node.path || !selectedPaths.has(ranked.node.path)))
+    .filter((ranked) => !isExcludedByReadMap(ranked.node, readMapExcludedPaths))
     .filter((ranked) => !isDoNotReadByDefault(ranked.node));
-  const readIfNeeded = readIfNeededRanked
-    .slice(0, maxReadIfNeeded)
-    .map((ranked) => itemFromRankedNode(ranked, false, input.projectRoot));
-  if (readIfNeededRanked.length > readIfNeeded.length) {
+  const readIfNeededCandidates = mergeContextPackItems([
+    ...readMapItems(docsReadMap?.readIfNeeded ?? [], input.projectRoot, false),
+    ...readIfNeededRanked.map((ranked) => itemFromRankedNode(ranked, false, input.projectRoot))
+  ]).filter((item) => !selectedIds.has(item.id) && (!item.path || !selectedPaths.has(item.path)));
+  const readIfNeeded = readIfNeededCandidates.slice(0, maxReadIfNeeded);
+  if (readIfNeededCandidates.length > readIfNeeded.length) {
     issues.push({
       severity: 'warning',
       code: 'CONTEXT_PACK_BUDGET_TRUNCATED',
-      message: `Context pack readIfNeeded items were truncated from ${readIfNeededRanked.length} to ${readIfNeeded.length}.`
+      message: `Context pack readIfNeeded items were truncated from ${readIfNeededCandidates.length} to ${readIfNeeded.length}.`
     });
   }
 
@@ -302,15 +319,77 @@ export function buildContextPackReport(input: BuildContextPackReportOptions): Co
       graphAvailable: true,
       codeIndexAvailable: codeIndexAvailable(graphReport),
       stateProjectionAvailable: true,
-      docsRegistryAvailable: graphReport.stateProjection.sources.some((source) => source.kind === 'docs-registry'),
+      docsRegistryAvailable: Boolean(docsReadMap?.source.registryPresent) || graphReport.stateProjection.sources.some((source) => source.kind === 'docs-registry'),
       commandRegistryAvailable: graphReport.nodes.some((node) => node.type === 'Command'),
       degraded: graphReport.summary.degraded || issues.some((issue) => issue.severity !== 'info'),
       graphSourceHash: graphReport.sourceHash,
-      sourcesRead: graphReport.summary.sourcesRead
+      sourcesRead: graphReport.summary.sourcesRead,
+      docsReadMapAvailable: Boolean(docsReadMap),
+      docsReadMapReadFirstCount: docsReadMap?.readFirst.length ?? 0,
+      docsReadMapDoNotReadByDefaultCount: docsReadMap?.doNotReadByDefault.length ?? 0
     },
     cache,
     issues
   };
+}
+
+function resolveDocsReadMap(input: BuildContextPackReportOptions, taskId: string | undefined): DocsReadMapReport | undefined {
+  if (input.docsReadMap) return input.docsReadMap;
+  if (input.graphReport || !taskId) return undefined;
+  if (!fs.existsSync(path.join(input.projectRoot, '.hadara', 'docs-registry.json'))) return undefined;
+  return createDocsReadMapReport(input.projectRoot, taskId);
+}
+
+function readMapItems(entries: DocsReadMapEntry[], projectRoot: string, required: boolean): ContextPackItem[] {
+  return [...entries].sort(compareReadMapEntriesForContextPack).map((entry) => {
+    const sourceHash = sourceHashForPath(projectRoot, entry.path);
+    return {
+      id: `doc:${entry.path}`,
+      type: 'Document',
+      path: entry.path,
+      title: entry.title,
+      reason: `Docs read-map ${entry.readTier}: ${entry.reason}`,
+      confidence: entry.readTier === 'active-task' || entry.readTier === 'active-spec' ? 'explicit' : 'derived',
+      ...(sourceHash ? { sourceHash } : {}),
+      estimatedTokens: estimateTokensForPath(entry.path, entry.title),
+      required,
+      sourceAccess: sourceAccessForPath(entry.path)
+    };
+  });
+}
+
+function compareReadMapEntriesForContextPack(a: DocsReadMapEntry, b: DocsReadMapEntry): number {
+  return readMapTierPriority(a.readTier) - readMapTierPriority(b.readTier) || a.path.localeCompare(b.path);
+}
+
+function readMapTierPriority(tier: DocsReadMapEntry['readTier']): number {
+  if (tier === 'active-task') return 0;
+  if (tier === 'active-spec') return 1;
+  if (tier === 'current-state') return 2;
+  if (tier === 'workflow-reference') return 3;
+  if (tier === 'conditional-reference') return 4;
+  if (tier === 'implemented-reference') return 5;
+  if (tier === 'drift-review') return 6;
+  if (tier === 'historical') return 7;
+  return 8;
+}
+
+function mergeContextPackItems(items: ContextPackItem[]): ContextPackItem[] {
+  const seenIds = new Set<string>();
+  const seenPaths = new Set<string>();
+  const merged: ContextPackItem[] = [];
+  for (const item of items) {
+    if (seenIds.has(item.id)) continue;
+    if (item.path && seenPaths.has(item.path)) continue;
+    seenIds.add(item.id);
+    if (item.path) seenPaths.add(item.path);
+    merged.push(item);
+  }
+  return merged;
+}
+
+function isExcludedByReadMap(node: ContextGraphNode, excludedPaths: Set<string>): boolean {
+  return Boolean(node.path && excludedPaths.has(node.path));
 }
 
 function normalizeContextBudget(input: Partial<ContextBudget> = {}): ContextBudget {
@@ -462,16 +541,21 @@ function itemFromRankedNode(ranked: RankedNode, required: boolean, projectRoot: 
 
 function sourceHashForItem(projectRoot: string, node: ContextGraphNode): string | undefined {
   if (!node.path || !isContextSliceProjectRelativePath(node.path)) return node.source.hash;
-  const normalized = normalizeContextSliceInputPath(node.path);
+  return sourceHashForPath(projectRoot, node.path) ?? node.source.hash;
+}
+
+function sourceHashForPath(projectRoot: string, relativePath: string): string | undefined {
+  if (!isContextSliceProjectRelativePath(relativePath)) return undefined;
+  const normalized = normalizeContextSliceInputPath(relativePath);
   const root = path.resolve(projectRoot);
   const absolutePath = path.resolve(root, normalized);
-  if (absolutePath !== root && !absolutePath.startsWith(`${root}${path.sep}`)) return node.source.hash;
+  if (absolutePath !== root && !absolutePath.startsWith(`${root}${path.sep}`)) return undefined;
   try {
     const stat = fs.statSync(absolutePath);
-    if (!stat.isFile()) return node.source.hash;
+    if (!stat.isFile()) return undefined;
     return hashContextGraphText(fs.readFileSync(absolutePath, 'utf8'));
   } catch {
-    return node.source.hash;
+    return undefined;
   }
 }
 
@@ -482,7 +566,11 @@ function sourceAccessForNode(node: ContextGraphNode): ContextPackItem['sourceAcc
       reason: 'This context item has no project file path for raw context slicing.'
     };
   }
-  if (isContextSliceProjectRelativePath(node.path)) {
+  return sourceAccessForPath(node.path);
+}
+
+function sourceAccessForPath(relativePath: string): ContextPackItem['sourceAccess'] {
+  if (isContextSliceProjectRelativePath(relativePath)) {
     return {
       rawSlice: 'sliceable',
       reason: 'This item path is inside the raw context-slice read boundary.'
@@ -498,6 +586,10 @@ function estimateTokens(node: ContextGraphNode): number {
   const labelCost = Math.ceil(node.label.length / 4);
   const pathCost = node.path ? Math.ceil(node.path.length / 4) : 0;
   return Math.max(24, labelCost + pathCost + 16);
+}
+
+function estimateTokensForPath(relativePath: string, title: string): number {
+  return Math.max(24, Math.ceil(title.length / 4) + Math.ceil(relativePath.length / 4) + 16);
 }
 
 function validationSuggestionsForTask(taskId: string | undefined, graphReport: ContextGraphReport): ValidationSuggestion[] {

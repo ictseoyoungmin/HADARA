@@ -9,3 +9,7 @@
 ## 2026-06-30 Legacy Boundary Dogfood
 
 - If 0.4 mutation guards block HADARA-dev itself with `HADARA_PROTOCOL_MISSING`, check whether `.hadara/scaffold.json` exists before weakening product logic. The repository should dogfood the same generic 0.4 scaffold metadata as other supported projects.
+
+## 2026-06-30 Read-Map Dogfood
+
+- Context routing should prioritize read-map `active-task` and `active-spec` entries before current-state docs; otherwise the right source spec can fall outside the default `readFirst` budget even though read-map integration is technically present.
