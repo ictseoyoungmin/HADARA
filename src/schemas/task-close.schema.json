@@ -43,6 +43,8 @@
         "issueCount": { "type": "number" },
         "validatedBeforeCloseEvidenceReportHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$|^sha256:missing-task$" },
         "validatedBeforeCloseEvidenceSourceHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$|^sha256:missing-task$" },
+        "slotRegistryVersion": { "type": "number" },
+        "slotRegistryHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$|^sha256:missing-task$" },
         "validatedBeforeCloseEvidenceHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$|^sha256:missing-task$" }
       }
     },
@@ -61,6 +63,8 @@
         "excludedFromCurrentValidationLoop": { "const": true },
         "validationReportHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
         "sourceHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "slotRegistryVersion": { "type": "number" },
+        "slotRegistryHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
         "markdownPath": { "type": "string" },
         "evidencePath": { "type": "string" }
       }

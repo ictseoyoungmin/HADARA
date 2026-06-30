@@ -435,3 +435,4 @@
 | T-0432 | T-04A6 Task Capsule Create Path | Done | tasks/T-0432-t-04a6-task-capsule-create-path | 0.4 task create validation passed in `ev:T-0432:6e7934c04498493ba76eac8f`; close-ready. |
 | T-0433 | T-04A7 TASK.md Table Schema and Controlled Values | Done | tasks/T-0433-t-04a7-task-md-table-schema-and-controlled-values | |
 | T-0434 | T-04A8 Source Document Hash and Drift Link | Done | tasks/T-0434-t-04a8-source-document-hash-and-drift-link | Source document hash/drift validation passed in `ev:T-0434:ca9cc42e94a44af4b02e893f`. |
+| T-0435 | T-04A9 Managed Slot v2 Registry Hash | Done | tasks/T-0435-t-04a9-managed-slot-v2-registry-hash | Slot registry close proof validation passed in `ev:T-0435:31e917471a95404882ef0bdb`. |

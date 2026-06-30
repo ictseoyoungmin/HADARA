@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0434 / T-04A8. |
-| Current Phase | 0.4 Source Documents hash/drift validation complete plus 0.3.4 stable readiness pending | T-0434 made harness validation compare concrete Source Documents hashes and block missing done-level hashes; T-04A9 Managed Slot v2 Registry Hash is next. |
-| Latest Completed Task | T-0434 T-04A8 Source Document Hash and Drift Link | `harness validate` now detects changed/missing concrete Source Documents and done-level `TBD` source hashes. |
-| Active / Next Task | T-04A9 Managed Slot v2 Registry Hash | Add slot/table schema registry hash metadata for the next close-proof foundation slice. |
-| Validation Baseline | T-0434 source hash validation plus T-0423 helper residual fix | T-0434 Docker build/focused tests and built harness smoke passed in `ev:T-0434:ca9cc42e94a44af4b02e893f`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0435 / T-04A9. |
+| Current Phase | 0.4 managed slot registry hash complete plus 0.3.4 stable readiness pending | T-0435 added slot/table registry metadata and close proof slot registry hash reporting; T-04A10 Evidence Projection is next. |
+| Latest Completed Task | T-0435 T-04A9 Managed Slot v2 Registry Hash | `task close` now records slot registry version/hash and `task audit-close` compares the recorded hash to current registry bytes. |
+| Active / Next Task | T-04A10 Evidence Projection | Make `EVIDENCE.md` a generated projection over canonical `evidence.jsonl` without rewriting evidence outcomes. |
+| Validation Baseline | T-0435 slot registry close proof plus T-0423 helper residual fix | T-0435 Docker build/focused tests and built close/draft smokes passed in `ev:T-0435:31e917471a95404882ef0bdb`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-04A9 Managed Slot v2 Registry Hash | Next. Add slot/table schema registry hash metadata after Source Documents hash validation. | `ev:T-0434:ca9cc42e94a44af4b02e893f` |
+| T-04A10 Evidence Projection | Next. Keep `EVIDENCE.md` as generated projection over canonical `evidence.jsonl` after close proof registry identity is in place. | `ev:T-0435:31e917471a95404882ef0bdb` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0435 / T-04A9 Managed Slot v2 Registry Hash | Added managed slot/table registry seed metadata, close/audit slot registry hash reporting, focused tests, refreshed `dist`, and built CLI smokes. | `ev:T-0435:31e917471a95404882ef0bdb` |
 | T-0434 / T-04A8 Source Document Hash and Drift Link | Added Source Documents concrete hash comparison, done-level hash enforcement, focused tests, refreshed `dist`, and built CLI smoke. | `ev:T-0434:ca9cc42e94a44af4b02e893f` |
 | T-0433 / T-04A7 TASK.md Table Schema and Controlled Values | Updated generated TASK.md tables, added harness controlled-value validation, refreshed `dist`, and built CLI smokes. | `ev:T-0433:80ed05687f3945c2acdde03e` |
-| T-0432 / T-04A6 Task Capsule Create Path | Implemented the 0.4 four-file default Task Capsule, Identity-status compatibility, focused tests, refreshed `dist`, and built CLI create smoke. | `ev:T-0432:6e7934c04498493ba76eac8f` |
 
 ## Current Known Problems
 
@@ -95,13 +95,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Open T-04A9 Managed Slot v2 Registry Hash. | T-04A8 completed Source Documents hash validation; the next accepted slice should add slot/table schema registry hash metadata used by close proof. | `ev:T-0434:ca9cc42e94a44af4b02e893f`, `docs/specs/0.4.0/productization-redesign/06_Managed_Slot_v2_and_Schema_Registry.md`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
+| Open T-04A10 Evidence Projection. | T-04A9 completed slot registry close proof identity; the next accepted slice should make `EVIDENCE.md` a generated projection over canonical `evidence.jsonl`. | `ev:T-0435:31e917471a95404882ef0bdb`, `docs/specs/0.4.0/productization-redesign/07_Evidence_Model_and_Close_Proof.md`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0435 / T-04A9 Managed Slot v2 Registry Hash | Docker build plus focused init/close/finalize/lifecycle tests passed 31 tests; workspace `dist` refreshed; built T-0435 close smoke emitted slot registry hash fields and draft harness validation returned `ok:true`. | Evidence `ev:T-0435:31e917471a95404882ef0bdb`; full registry-driven TASK.md validation remains later close-source/schema alignment scope. |
 | T-0434 / T-04A8 Source Document Hash and Drift Link | Docker build plus focused harness/ready/close/finalize/lifecycle tests passed 57 tests; workspace `dist` refreshed; built T-0434 draft harness validation returned `ok:true`. | Evidence `ev:T-0434:ca9cc42e94a44af4b02e893f`; read-map/session/context drift surfacing remains T-04A14/T-04A15 scope. |
 | T-0433 / T-04A7 TASK.md table schema validation | Docker build plus focused task create/harness/lifecycle/read-model tests passed 77 tests; workspace `dist` refreshed; built `task create` smoke generated 0.4 table headers and T-0433 draft harness validation returned `ok:true`. | Evidence `ev:T-0433:80ed05687f3945c2acdde03e`; source document drift comparison remains T-04A8 scope. |
 | T-0432 / T-04A6 task capsule create path | Docker build plus focused task create/lifecycle/read-model tests passed 77 tests; workspace `dist` refreshed; built `task create` smoke generated exactly `TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and `evidence.jsonl`. | Evidence `ev:T-0432:6e7934c04498493ba76eac8f`; close-source contract, evidence projection regeneration, and legacy upgrade behavior remain later 0.4 scope. |

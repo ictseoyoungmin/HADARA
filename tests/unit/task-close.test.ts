@@ -12,6 +12,12 @@ const roots: string[] = [];
 function tempProject(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-task-close-'));
   roots.push(dir);
+  fs.mkdirSync(path.join(dir, '.hadara'), { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, '.hadara', 'slot-registry.json'),
+    `${JSON.stringify({ schemaVersion: 'hadara.managedSlot.registry.v1', registryVersion: 1, slots: [], tableSchemas: [] }, null, 2)}\n`,
+    'utf8'
+  );
   return dir;
 }
 
@@ -57,6 +63,11 @@ describe('task close report', () => {
     expect(report.closeEvidenceWrite?.idempotencyKey).toBe(`close:${task.id}:${report.validation.validatedBeforeCloseEvidenceSourceHash}:${report.validation.validatedBeforeCloseEvidenceReportHash}`);
     expect(report.validation.validatedBeforeCloseEvidenceReportHash).toMatch(/^sha256:[a-f0-9]{64}$/);
     expect(report.validation.validatedBeforeCloseEvidenceSourceHash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(report.validation.slotRegistryVersion).toBe(1);
+    expect(report.validation.slotRegistryHash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(report.closeEvidence.slotRegistryVersion).toBe(1);
+    expect(report.closeEvidence.slotRegistryHash).toBe(report.validation.slotRegistryHash);
+    expect(report.closeEvidence.summary).toContain(`slotRegistryHash ${report.validation.slotRegistryHash}`);
     expect(report.validation.validatedBeforeCloseEvidenceHash).toBe(report.validation.validatedBeforeCloseEvidenceReportHash);
     expect(report.lifecycle).toMatchObject({
       model: 'validation-close-audit',
@@ -311,6 +322,10 @@ describe('task close report', () => {
     expect(audit.nextActions).toEqual([]);
     expect(audit.latestCloseEvidence?.validationReportHash).toBe(closeReport.validation.validatedBeforeCloseEvidenceReportHash);
     expect(audit.latestCloseEvidence?.sourceHash).toBe(closeReport.validation.validatedBeforeCloseEvidenceSourceHash);
+    expect(audit.latestCloseEvidence?.slotRegistryHash).toBe(closeReport.validation.slotRegistryHash);
+    expect(audit.latestCloseEvidence?.slotRegistryVersion).toBe(closeReport.validation.slotRegistryVersion);
+    expect(audit.currentSlotRegistryHash).toBe(closeReport.validation.slotRegistryHash);
+    expect(audit.currentSlotRegistryVersion).toBe(closeReport.validation.slotRegistryVersion);
     expect(audit.closeEvidenceAudit).toMatchObject({
       latestCloseEvidenceId: expect.stringMatching(new RegExp(`^ev:${task.id}:`)),
       supersededCloseEvidenceIds: [],
@@ -324,10 +339,15 @@ describe('task close report', () => {
       closeEvidenceValid: true,
       reportHashMatches: true,
       sourceHashMatches: true,
+      slotRegistryHashMatches: true,
       recordedValidationReportHash: closeReport.validation.validatedBeforeCloseEvidenceReportHash,
       recordedSourceHash: closeReport.validation.validatedBeforeCloseEvidenceSourceHash,
+      recordedSlotRegistryHash: closeReport.validation.slotRegistryHash,
+      recordedSlotRegistryVersion: closeReport.validation.slotRegistryVersion,
       currentValidationReportHash: audit.currentValidationReportHash,
       currentSourceHash: audit.currentSourceHash,
+      currentSlotRegistryHash: audit.currentSlotRegistryHash,
+      currentSlotRegistryVersion: audit.currentSlotRegistryVersion,
       blockers: 0,
       warnings: 0,
       writeBoundary: 'read-only',
@@ -335,6 +355,7 @@ describe('task close report', () => {
     });
     expect(formatTaskAuditCloseReport(audit)).toContain('State\n- Closed: yes');
     expect(formatTaskAuditCloseReport(audit)).toContain('Close Evidence\n- Latest: passed');
+    expect(formatTaskAuditCloseReport(audit)).toContain('- Slot registry hash: sha256:');
     expect(formatTaskAuditCloseReport(audit)).toContain('Audit\n- Verdict: closed-valid');
     expect(formatTaskAuditCloseReport(audit)).toContain('- Blockers: 0');
     expect(formatTaskAuditCloseReport(audit)).toContain('Suggested next');
@@ -351,6 +372,14 @@ describe('task close report', () => {
       writeBoundary: 'read-only'
     });
     expect(drift.issues).toContainEqual(expect.objectContaining({ severity: 'warning', code: 'TASK_CLOSE_AUDIT_SOURCE_HASH_DRIFT' }));
+
+    fs.appendFileSync(path.join(root, '.hadara', 'slot-registry.json'), '\n', 'utf8');
+    const registryDrift = createTaskAuditCloseReport(root, task.id);
+    expect(registryDrift.auditVerdict).toMatchObject({
+      verdict: 'closed-with-drift-warnings',
+      slotRegistryHashMatches: false
+    });
+    expect(registryDrift.issues).toContainEqual(expect.objectContaining({ severity: 'warning', code: 'TASK_CLOSE_AUDIT_SLOT_REGISTRY_HASH_DRIFT' }));
   });
 
   it('reports missing close evidence during audit', () => {

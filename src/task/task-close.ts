@@ -31,6 +31,8 @@ export interface TaskCloseReport {
     issueCount: number;
     validatedBeforeCloseEvidenceReportHash: string;
     validatedBeforeCloseEvidenceSourceHash: string;
+    slotRegistryVersion?: number;
+    slotRegistryHash: string;
     /** @deprecated Use validatedBeforeCloseEvidenceReportHash. This hashes diagnostic report output, not raw source file content. */
     validatedBeforeCloseEvidenceHash: string;
   };
@@ -51,6 +53,8 @@ export interface TaskCloseReport {
     excludedFromCurrentValidationLoop: true;
     validationReportHash?: string;
     sourceHash?: string;
+    slotRegistryVersion?: number;
+    slotRegistryHash?: string;
     markdownPath?: string;
     evidencePath?: string;
   };
@@ -129,7 +133,9 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
   const protocolDoctor = createTaskProtocolConsistencyReport(projectRoot, taskId);
   const validationReportHash = hashValidationInputs(validation, evidenceLint, protocolDoctor);
   const sourceHash = hashCloseRelevantSource(projectRoot, task.dir);
-  const closeEvidenceSummary = `Task close validation for ${taskId} returned ${validation.ok ? 'ok:true' : 'ok:false'} before close evidence append; reportHash ${validationReportHash}; sourceHash ${sourceHash}.`;
+  const slotRegistry = readSlotRegistryMetadata(projectRoot);
+  const slotRegistryVersion = slotRegistry.slotRegistryVersion == null ? 'unknown' : String(slotRegistry.slotRegistryVersion);
+  const closeEvidenceSummary = `Task close validation for ${taskId} returned ${validation.ok ? 'ok:true' : 'ok:false'} before close evidence append; reportHash ${validationReportHash}; sourceHash ${sourceHash}; slotRegistryVersion ${slotRegistryVersion}; slotRegistryHash ${slotRegistry.slotRegistryHash}.`;
 
   collectBlockingIssues(validation, evidenceLint, protocolDoctor, issues);
   const ok = !issues.some((issue) => issue.severity === 'error');
@@ -154,6 +160,8 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
       issueCount: validation.issues.length,
       validatedBeforeCloseEvidenceReportHash: validationReportHash,
       validatedBeforeCloseEvidenceSourceHash: sourceHash,
+      ...(slotRegistry.slotRegistryVersion == null ? {} : { slotRegistryVersion: slotRegistry.slotRegistryVersion }),
+      slotRegistryHash: slotRegistry.slotRegistryHash,
       validatedBeforeCloseEvidenceHash: validationReportHash
     },
     evidenceLint: {
@@ -172,7 +180,9 @@ export function createTaskCloseReport(projectRoot: string, taskId: string, mode:
       summary: closeEvidenceSummary,
       excludedFromCurrentValidationLoop: true,
       validationReportHash,
-      sourceHash
+      sourceHash,
+      ...(slotRegistry.slotRegistryVersion == null ? {} : { slotRegistryVersion: slotRegistry.slotRegistryVersion }),
+      slotRegistryHash: slotRegistry.slotRegistryHash
     },
     closeEvidenceWrite,
     lifecycle: createCloseLifecycleGuidance(taskId, mode),
@@ -357,6 +367,7 @@ function buildMissingTaskReport(projectRoot: string, taskId: string, mode: TaskC
       issueCount: 0,
       validatedBeforeCloseEvidenceReportHash: 'sha256:missing-task',
       validatedBeforeCloseEvidenceSourceHash: 'sha256:missing-task',
+      slotRegistryHash: 'sha256:missing-task',
       validatedBeforeCloseEvidenceHash: 'sha256:missing-task'
     },
     evidenceLint: { ok: false, issueCount: 0 },
@@ -444,6 +455,34 @@ function hashCloseRelevantSource(projectRoot: string, taskDir: string): string {
   return `sha256:${crypto.createHash('sha256').update(JSON.stringify(payload), 'utf8').digest('hex')}`;
 }
 
+interface SlotRegistryMetadata {
+  slotRegistryVersion?: number;
+  slotRegistryHash: string;
+}
+
+function readSlotRegistryMetadata(projectRoot: string): SlotRegistryMetadata {
+  const registryPath = path.join(projectRoot, '.hadara', 'slot-registry.json');
+  if (!fs.existsSync(registryPath)) {
+    return { slotRegistryHash: hashText(JSON.stringify({ path: '.hadara/slot-registry.json', missing: true })) };
+  }
+  const content = fs.readFileSync(registryPath, 'utf8');
+  let slotRegistryVersion: number | undefined;
+  try {
+    const parsed = JSON.parse(content) as { registryVersion?: unknown };
+    if (typeof parsed.registryVersion === 'number') slotRegistryVersion = parsed.registryVersion;
+  } catch {
+    // Hash still records the exact registry bytes even when the registry is malformed.
+  }
+  return {
+    ...(slotRegistryVersion == null ? {} : { slotRegistryVersion }),
+    slotRegistryHash: hashText(content)
+  };
+}
+
+function hashText(content: string): string {
+  return `sha256:${crypto.createHash('sha256').update(content, 'utf8').digest('hex')}`;
+}
+
 export function executeTaskCloseEvidence(projectRoot: string, report: TaskCloseReport): void {
   if (report.closeEvidenceWrite?.duplicateAction === 'no-op') {
     report.closeEvidence.appended = false;
@@ -516,6 +555,8 @@ export interface TaskAuditCloseReport {
   };
   currentValidationReportHash: string;
   currentSourceHash: string;
+  currentSlotRegistryHash: string;
+  currentSlotRegistryVersion?: number;
   latestCloseEvidence?: {
     time: string;
     id?: string;
@@ -523,6 +564,8 @@ export interface TaskAuditCloseReport {
     result: string;
     validationReportHash?: string;
     sourceHash?: string;
+    slotRegistryHash?: string;
+    slotRegistryVersion?: number;
   };
   auditVerdict: TaskAuditCloseVerdict;
   closeEvidenceAudit?: TaskCloseEvidenceAudit;
@@ -545,10 +588,15 @@ export interface TaskAuditCloseVerdict {
   closeEvidenceValid: boolean;
   reportHashMatches?: boolean;
   sourceHashMatches?: boolean;
+  slotRegistryHashMatches?: boolean;
   recordedValidationReportHash?: string;
   recordedSourceHash?: string;
+  recordedSlotRegistryHash?: string;
+  recordedSlotRegistryVersion?: number;
   currentValidationReportHash: string;
   currentSourceHash: string;
+  currentSlotRegistryHash: string;
+  currentSlotRegistryVersion?: number;
   blockers: number;
   warnings: number;
   writeBoundary: 'read-only';
@@ -565,7 +613,7 @@ export function createTaskAuditCloseReport(projectRoot: string, taskId: string, 
   const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
   if (!task) {
     issues.push({ severity: 'error', code: 'TASK_NOT_FOUND', message: `Task Capsule not found: ${taskId}` });
-    return buildAuditReport(projectRoot, taskId, 'sha256:missing-task', 'sha256:missing-task', [], issues, undefined, actor);
+    return buildAuditReport(projectRoot, taskId, 'sha256:missing-task', 'sha256:missing-task', 'sha256:missing-task', undefined, [], issues, undefined, actor);
   }
 
   const closePlan = createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor });
@@ -583,6 +631,7 @@ export function createTaskAuditCloseReport(projectRoot: string, taskId: string, 
   const latest = closeEvidenceAudit.latestRecord;
   const latestHash = latest ? extractReportHash(latest.summary) : undefined;
   const latestSourceHash = latest ? extractSourceHash(latest.summary) : undefined;
+  const latestSlotRegistryHash = latest ? extractSlotRegistryHash(latest.summary) : undefined;
   if (latest && latest.kind !== 'command-log') {
     issues.push({
       severity: 'error',
@@ -629,12 +678,29 @@ export function createTaskAuditCloseReport(projectRoot: string, taskId: string, 
       path: toPortablePath(path.relative(projectRoot, evidencePath))
     });
   }
+  if (latest && !latestSlotRegistryHash) {
+    issues.push({
+      severity: 'warning',
+      code: 'SLOT_REGISTRY_HASH_MISSING_IN_CLOSE_PROOF',
+      message: 'Latest close evidence does not include a slot registry hash.',
+      path: toPortablePath(path.relative(projectRoot, evidencePath))
+    });
+  } else if (latestSlotRegistryHash && latestSlotRegistryHash !== closePlan.validation.slotRegistryHash) {
+    issues.push({
+      severity: 'warning',
+      code: 'TASK_CLOSE_AUDIT_SLOT_REGISTRY_HASH_DRIFT',
+      message: 'Current slot registry hash differs from the latest close evidence slot registry hash.',
+      path: toPortablePath(path.relative(projectRoot, evidencePath))
+    });
+  }
 
   return buildAuditReport(
     projectRoot,
     taskId,
     closePlan.validation.validatedBeforeCloseEvidenceReportHash,
     closePlan.validation.validatedBeforeCloseEvidenceSourceHash,
+    closePlan.validation.slotRegistryHash,
+    closePlan.validation.slotRegistryVersion,
     records,
     issues,
     closeEvidenceAudit,
@@ -656,6 +722,7 @@ export function formatTaskAuditCloseReport(report: TaskAuditCloseReport): string
     lines.push(`- Latest: ${report.latestCloseEvidence.result} / ${report.latestCloseEvidence.time}`);
     if (report.latestCloseEvidence.validationReportHash) lines.push(`- Report hash: ${report.latestCloseEvidence.validationReportHash}`);
     if (report.latestCloseEvidence.sourceHash) lines.push(`- Source hash: ${report.latestCloseEvidence.sourceHash}`);
+    if (report.latestCloseEvidence.slotRegistryHash) lines.push(`- Slot registry hash: ${report.latestCloseEvidence.slotRegistryHash}`);
   } else {
     lines.push('- Latest: none');
   }
@@ -685,6 +752,8 @@ function buildAuditReport(
   taskId: string,
   currentHash: string,
   currentSourceHash: string,
+  currentSlotRegistryHash: string,
+  currentSlotRegistryVersion: number | undefined,
   records: CloseEvidenceRecord[],
   issues: TaskCloseIssue[],
   closeEvidenceAudit?: InternalCloseEvidenceAudit,
@@ -692,7 +761,7 @@ function buildAuditReport(
 ): TaskAuditCloseReport {
   const latest = closeEvidenceAudit?.latestRecord ?? records.at(-1);
   const nextActions = createAuditNextActions(taskId, latest === undefined);
-  const auditVerdict = createAuditVerdict(currentHash, currentSourceHash, latest, issues);
+  const auditVerdict = createAuditVerdict(currentHash, currentSourceHash, currentSlotRegistryHash, currentSlotRegistryVersion, latest, issues);
   return {
     schemaVersion: 'hadara.task.audit_close.v1',
     command: 'task.audit-close',
@@ -707,6 +776,8 @@ function buildAuditReport(
     },
     currentValidationReportHash: currentHash,
     currentSourceHash,
+    currentSlotRegistryHash,
+    ...(currentSlotRegistryVersion == null ? {} : { currentSlotRegistryVersion }),
     ...(latest
       ? {
           latestCloseEvidence: {
@@ -715,7 +786,9 @@ function buildAuditReport(
             summary: latest.summary,
             result: latest.result,
             ...(extractReportHash(latest.summary) ? { validationReportHash: extractReportHash(latest.summary) } : {}),
-            ...(extractSourceHash(latest.summary) ? { sourceHash: extractSourceHash(latest.summary) } : {})
+            ...(extractSourceHash(latest.summary) ? { sourceHash: extractSourceHash(latest.summary) } : {}),
+            ...(extractSlotRegistryHash(latest.summary) ? { slotRegistryHash: extractSlotRegistryHash(latest.summary) } : {}),
+            ...(extractSlotRegistryVersion(latest.summary) == null ? {} : { slotRegistryVersion: extractSlotRegistryVersion(latest.summary) })
           }
         }
       : {}),
@@ -755,6 +828,8 @@ function createAuditNextActions(taskId: string, closeMissing: boolean): TaskClos
 function createAuditVerdict(
   currentHash: string,
   currentSourceHash: string,
+  currentSlotRegistryHash: string,
+  currentSlotRegistryVersion: number | undefined,
   latest: CloseEvidenceRecord | undefined,
   issues: TaskCloseIssue[]
 ): TaskAuditCloseVerdict {
@@ -762,6 +837,8 @@ function createAuditVerdict(
   const warnings = issues.filter((issue) => issue.severity === 'warning').length;
   const recordedValidationReportHash = latest ? extractReportHash(latest.summary) : undefined;
   const recordedSourceHash = latest ? extractSourceHash(latest.summary) : undefined;
+  const recordedSlotRegistryHash = latest ? extractSlotRegistryHash(latest.summary) : undefined;
+  const recordedSlotRegistryVersion = latest ? extractSlotRegistryVersion(latest.summary) : undefined;
   const closeEvidenceFound = latest !== undefined;
   const closeEvidenceValid = closeEvidenceFound && latest.kind === 'command-log' && latest.result === 'passed';
   let verdict: TaskAuditCloseVerdict['verdict'] = 'closed-valid';
@@ -780,8 +857,12 @@ function createAuditVerdict(
     closeEvidenceValid,
     ...(recordedValidationReportHash ? { recordedValidationReportHash, reportHashMatches: recordedValidationReportHash === currentHash } : {}),
     ...(recordedSourceHash ? { recordedSourceHash, sourceHashMatches: recordedSourceHash === currentSourceHash } : {}),
+    ...(recordedSlotRegistryHash ? { recordedSlotRegistryHash, slotRegistryHashMatches: recordedSlotRegistryHash === currentSlotRegistryHash } : {}),
+    ...(recordedSlotRegistryVersion == null ? {} : { recordedSlotRegistryVersion }),
     currentValidationReportHash: currentHash,
     currentSourceHash,
+    currentSlotRegistryHash,
+    ...(currentSlotRegistryVersion == null ? {} : { currentSlotRegistryVersion }),
     blockers,
     warnings,
     writeBoundary: 'read-only',
@@ -929,6 +1010,15 @@ function extractReportHash(summary: string): string | undefined {
 
 function extractSourceHash(summary: string): string | undefined {
   return summary.match(/sourceHash\s+(sha256:[a-f0-9]{64})/)?.[1];
+}
+
+function extractSlotRegistryHash(summary: string): string | undefined {
+  return summary.match(/slotRegistryHash\s+(sha256:[a-f0-9]{64})/)?.[1];
+}
+
+function extractSlotRegistryVersion(summary: string): number | undefined {
+  const value = summary.match(/slotRegistryVersion\s+([0-9]+)/)?.[1];
+  return value ? Number(value) : undefined;
 }
 
 function toPortablePath(value: string): string {

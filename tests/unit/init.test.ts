@@ -116,6 +116,14 @@ describe('init profiles', () => {
     expect(read(root, '.hadara/context/HADARA_CONTEXT.md')).toContain('docs/HADARA_WORKFLOW.md');
     expect(read(root, 'AGENTS.md')).toContain('docs/HADARA_WORKFLOW.md');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('## Minimal Loop');
+
+    const slotRegistry = JSON.parse(read(root, '.hadara/slot-registry.json'));
+    expect(slotRegistry).toMatchObject({
+      schemaVersion: 'hadara.managedSlot.registry.v1',
+      registryVersion: 1,
+      slots: [expect.objectContaining({ id: 'task.identity', schemaVersion: 'hadara.managedSlot.v2' })],
+      tableSchemas: [expect.objectContaining({ id: 'task.acceptance', kind: 'markdown-table' })]
+    });
   });
 
   it('generates non-overlapping 0.4 agent entry, context, and workflow templates', () => {

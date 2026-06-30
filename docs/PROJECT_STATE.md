@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0434 T-04A8 Source Document Hash and Drift Link |
-| Active Task | T-04A9 Managed Slot v2 Registry Hash (next) |
+| Latest Completed Task | T-0435 T-04A9 Managed Slot v2 Registry Hash |
+| Active Task | T-04A10 Evidence Projection (next) |
 
 ## Next Planned Line
 
@@ -204,9 +204,9 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0434 T-04A8 Source Document Hash and Drift Link.
-- Next 0.4 task is T-04A9 Managed Slot v2 Registry Hash; continue from `docs/specs/0.4.0/productization-redesign/06_Managed_Slot_v2_and_Schema_Registry.md` and the worker plan.
-- T-0434 added Source Documents hash comparison in `harness validate`: concrete hashes detect changed or missing project-local files, done-level validation blocks concrete source paths with `TBD` hashes, workspace `dist` was refreshed, and Docker build/focused tests plus built CLI draft validation passed in `ev:T-0434:ca9cc42e94a44af4b02e893f`.
+- Latest completed task is T-0435 T-04A9 Managed Slot v2 Registry Hash.
+- Next 0.4 task is T-04A10 Evidence Projection; continue from `docs/specs/0.4.0/productization-redesign/07_Evidence_Model_and_Close_Proof.md` and the worker plan.
+- T-0435 added managed slot/table schema metadata to `.hadara/slot-registry.json` and generated 0.4 init registries, threaded slot registry version/hash through `task close` and `task audit-close`, refreshed workspace `dist`, and passed Docker build/focused tests plus built CLI close/draft validation smokes in `ev:T-0435:31e917471a95404882ef0bdb`.
 - T-0431 implemented read-only `hadara docs read-map --task T-XXXX --json` and `hadara docs inbox --json`, added `hadara.docs.readMap.v1` and `hadara.docs.inbox.v1`, command registry/schema fixtures, focused tests, refreshed workspace `dist`, and built CLI smokes passed in `ev:T-0431:a81383c6d7894693a45a95ed`.
 - T-0430 implemented registry-first `hadara docs register --path <path> --json` over `.hadara/docs-registry.json`, added `hadara.docs.register.v1`, command registry/schema fixtures, focused tests, refreshed workspace `dist`, and built CLI smoke passed in `ev:T-0430:1933b10f80184f8abb9540cb`.
 - T-0429 implemented non-overlapping generated templates: `AGENTS.md` owns Required Reading/safety only, `.hadara/context/HADARA_CONTEXT.md` is routing-only, and `docs/HADARA_WORKFLOW.md` owns lifecycle/context/evidence/document timing guidance. Docker build plus focused init tests passed, workspace `dist` was refreshed, and built governed init/doctor template smoke returned `ok:true` in `ev:T-0429:ab675a5933c84286b8d255fc`.
