@@ -36,4 +36,27 @@ Schema: `hadara.docs.registry.v1`
 | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md` | spec | reference | only-when-linked | no | hadara-dev |
 | `docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md` | performance-baseline | reference | only-when-linked | no | hadara-dev |
 | `docs/CONTEXT_ROUTING_PERFORMANCE_THRESHOLDS.json` | performance-thresholds | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/README.md` | spec | reference | task-start | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/00_Decision_and_Productization_Principles.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/01_Project_Scaffold_Model.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/02_Agent_Entry_and_Workflow_Document.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/03_Design_Source_Documents_Read_Map_and_Drift.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/04_Task_Capsule_Schema.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/05_TASK_MD_Table_Schema_and_Controlled_Values.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/06_Managed_Slot_v2_and_Schema_Registry.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/07_Evidence_Plane_and_Close_Proof_Projection.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/08_Project_State_Task_Board_and_Handoff.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/09_Close_Source_Contract.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/10_Context_Routing_and_Session_Start_Integration.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/11_Legacy_Project_Boundary.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/12_CLI_JSON_Contracts_and_Diagnostics.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/13_Test_Dogfood_and_Release_Plan.md` | spec | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` | implementation-guide | reference | task-start | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/15_Current_CLI_Surface_Audit.md` | implementation-guide | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/templates/0.4/AGENTS.md` | protocol | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/templates/0.4/EVIDENCE.md` | task-capsule | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/templates/0.4/HADARA_CONTEXT.md` | project-context | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/templates/0.4/HADARA_WORKFLOW.md` | workflow-guide | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/templates/0.4/HANDOFF.md` | task-capsule | reference | only-when-linked | no | hadara-dev |
+| `docs/specs/0.4.0/productization-redesign/templates/0.4/TASK.md` | task-capsule | reference | only-when-linked | no | hadara-dev |
 <!-- hadara:managed:end doc-registry-summary -->

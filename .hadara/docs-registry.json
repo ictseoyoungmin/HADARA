@@ -688,6 +688,489 @@
       "closeSourceRole": "task-dependent",
       "supersedes": [],
       "generatedBy": "T-0380"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/README.md",
+      "title": "HADARA 0.4.0 Productization Redesign Specs",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "task-start"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/00_Decision_and_Productization_Principles.md",
+      "title": "0.4 Decision and Productization Principles",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/01_Project_Scaffold_Model.md",
+      "title": "0.4 Project Scaffold Model",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/02_Agent_Entry_and_Workflow_Document.md",
+      "title": "0.4 Agent Entry and Workflow Document",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/03_Design_Source_Documents_Read_Map_and_Drift.md",
+      "title": "0.4 Design Source Documents Read Map and Drift",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/04_Task_Capsule_Schema.md",
+      "title": "0.4 Task Capsule Schema",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/05_TASK_MD_Table_Schema_and_Controlled_Values.md",
+      "title": "0.4 TASK.md Table Schema and Controlled Values",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/06_Managed_Slot_v2_and_Schema_Registry.md",
+      "title": "0.4 Managed Slot v2 and Schema Registry",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/07_Evidence_Plane_and_Close_Proof_Projection.md",
+      "title": "0.4 Evidence Plane and Close Proof Projection",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/08_Project_State_Task_Board_and_Handoff.md",
+      "title": "0.4 Project State Task Board and Handoff",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/09_Close_Source_Contract.md",
+      "title": "0.4 Close Source Contract",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/10_Context_Routing_and_Session_Start_Integration.md",
+      "title": "0.4 Context Routing and Session Start Integration",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/11_Legacy_Project_Boundary.md",
+      "title": "0.4 Legacy Project Boundary",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/12_CLI_JSON_Contracts_and_Diagnostics.md",
+      "title": "0.4 CLI JSON Contracts and Diagnostics",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/13_Test_Dogfood_and_Release_Plan.md",
+      "title": "0.4 Test Dogfood and Release Plan",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md",
+      "title": "0.4 Worker Agent Capsule Plan",
+      "owner": "hadara-dev",
+      "kind": "implementation-guide",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "task-start"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/15_Current_CLI_Surface_Audit.md",
+      "title": "0.4 Current CLI Surface Audit",
+      "owner": "hadara-dev",
+      "kind": "implementation-guide",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/templates/0.4/AGENTS.md",
+      "title": "0.4 AGENTS Template",
+      "owner": "hadara-dev",
+      "kind": "protocol",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/templates/0.4/EVIDENCE.md",
+      "title": "0.4 EVIDENCE Projection Template",
+      "owner": "hadara-dev",
+      "kind": "task-capsule",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/templates/0.4/HADARA_CONTEXT.md",
+      "title": "0.4 HADARA_CONTEXT Template",
+      "owner": "hadara-dev",
+      "kind": "project-context",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/templates/0.4/HADARA_WORKFLOW.md",
+      "title": "0.4 HADARA_WORKFLOW Template",
+      "owner": "hadara-dev",
+      "kind": "workflow-guide",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/templates/0.4/HANDOFF.md",
+      "title": "0.4 HANDOFF Template",
+      "owner": "hadara-dev",
+      "kind": "task-capsule",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/specs/0.4.0/productization-redesign/templates/0.4/TASK.md",
+      "title": "0.4 TASK Template",
+      "owner": "hadara-dev",
+      "kind": "task-capsule",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
     }
   ]
 }
