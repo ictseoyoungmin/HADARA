@@ -4,34 +4,32 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization redesign spec finalization plus workflow template clarification is complete through T-0425. |
-| Current Phase | 0.4 final template review open plus 0.3.4 stable readiness pending | T-0426 has focused docs validation evidence but is intentionally open and must not be closed until operator acceptance; Required Reading/docs-registry registration remains deferred to T-04A1 after acceptance. |
-| Latest Completed Task | T-0425 0.4 Workflow Template Clarification | Restored compact Required Reading and tiers in the 0.4 `AGENTS.md` template, expanded `HADARA_WORKFLOW.md` with project start/lifecycle/document timing/useful CLI guidance, removed standalone workflow Release Boundary wording, and recorded focused docs validation. |
-| Active / Next Task | T-0426 0.4 Template Final Review Hold Open | Await operator acceptance of the validated 0.4 templates/specs; do not run finalize/close or proceed to T-04A1 until the operator accepts the document set. |
-| Validation Baseline | T-0425 focused docs validation plus T-0423 helper residual fix | T-0425 manifest parse, workflow-facing release-boundary absence check, Required Reading/document-timing section check, trailing-whitespace scan, and `git diff --check` passed; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization redesign spec finalization plus workflow template final review is complete through T-0426. |
+| Current Phase | 0.4 spec registration ready plus 0.3.4 stable readiness pending | T-0426 accepted the final 0.4 templates/specs, including the 24-capsule implementation budget; Required Reading/docs-registry registration is next in T-04A1. |
+| Latest Completed Task | T-0426 0.4 Template Final Review Hold Open | Clarified context/Required Reading roles, simplified fresh capsule templates, strengthened workflow guardrails, set the 24-capsule implementation budget, excluded release-line work from that budget, and received operator acceptance for closure. |
+| Active / Next Task | T-04A1 0.4 Spec Registration | Register canonical `docs/specs/0.4.0/productization-redesign/` as the next 0.4 capsule; do not register the removed nested package path. |
+| Validation Baseline | T-0426 focused docs validation plus T-0423 helper residual fix | T-0426 focused docs validation passed in `ev:T-0426:496e55c598814f8d8a09cff6`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0426 0.4 template final review | Open. Clarifies context/Required Reading roles, simplifies fresh `TASK.md`, strengthens workflow guardrails, and holds T-04A1 registration until operator acceptance. | `ev:T-0426:9f04410013f0495abac959e0` |
-| 0.4 spec registration | Not yet opened. Use canonical `docs/specs/0.4.0/productization-redesign/` plus T-0424/T-0425/T-0426 evidence after acceptance; do not register the old nested path. | `ev:T-0424:b23c70b10a8945ef8289a073`, `ev:T-0425:721f9033978348c6a0790450`, `ev:T-0426:9f04410013f0495abac959e0` |
+| 0.4 spec registration | Next. Use canonical `docs/specs/0.4.0/productization-redesign/` plus T-0424/T-0425/T-0426 evidence; do not register the old nested path. | `ev:T-0424:b23c70b10a8945ef8289a073`, `ev:T-0425:721f9033978348c6a0790450`, `ev:T-0426:496e55c598814f8d8a09cff6` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0426 0.4 Template Final Review Hold Open | Clarified final 0.4 template/workflow/context split, resolved registry ownership, set the 24-capsule implementation budget with hardening/polish/final-review room, and excluded release-line work from that budget. | `ev:T-0426:496e55c598814f8d8a09cff6` |
 | T-0425 0.4 Workflow Template Clarification | Clarified the 0.4 AGENTS/HADARA_WORKFLOW split: Required Reading stays in AGENTS, lifecycle/document timing lives in workflow, and standalone workflow Release Boundary wording is removed. | `ev:T-0425:721f9033978348c6a0790450` |
 | T-0424 0.4 Spec Finalization and Canonicalization | Finalized/canonicalized 0.4 specs, centralized authoring guidance in workflow docs, clarified evidence projection and task-local handoff close-source boundaries, and kept registration deferred. | `ev:T-0424:b23c70b10a8945ef8289a073` |
-| T-0423 Package Recycle Helper Residual Fix | Fixed package recycle default profile and source-workspace env leakage; focused Docker validation and installed `hadara@next` recycle passed. | `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `ev:T-0423:5205a44ac4f546f28d15ae49` |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| T-0426 final 0.4 template review is still open after focused validation. | The canonical spec tree should not be registered until the operator accepts the final document set. | Do not close T-0426 or open T-04A1 until accepted; validation evidence is `ev:T-0426:9f04410013f0495abac959e0`. |
-| 0.4 finalized and T-0425/T-0426-clarified specs are not yet registered as Required Reading or docs-registry entries. | The canonical spec tree is trackable and registration-ready, but agents will not discover it through registry surfaces until T-04A1. | After operator acceptance, open T-04A1 and register `docs/specs/0.4.0/productization-redesign/`, not the removed nested package path. |
+| 0.4 finalized and T-0425/T-0426-clarified specs are not yet registered as Required Reading or docs-registry entries. | The canonical spec tree is trackable and registration-ready, but agents will not discover it through registry surfaces until T-04A1. | Open T-04A1 and register `docs/specs/0.4.0/productization-redesign/`, not the removed nested package path. |
 | Stable `0.3.4` readiness has not run after the T-0423 helper residual fix. | `hadara@0.3.4-rc.0` is published and consumer/helper proofs are clean, but stable metadata, release docs, release artifacts, strict gates, dry-runs, and publish dry-run still need a dedicated readiness capsule. | Open a new stable readiness capsule when release work resumes; do not publish stable from T-0423, T-0424, or T-0425. |
 | T-0383 mounted full-profile probes exceeded a 20s workload budget for cache status/warm, graph task, graph include-code, and context pack. | These workloads are not suitable for the default fast smoke loop on mounted filesystems. | Keep `smoke:context-routing` defaulting to fast profile; use `--profile full` explicitly for diagnostic/full-path checks. |
 | Built cache status still took about 19.6s on `/mnt/f` while producing diagnostics. | Diagnostics are clearer, but mounted broad source-manifest cost remains. | T-0385 classified this as an accepted residual for explicit diagnostic/warm/full-profile commands; default Session Start remains bounded/cache-preferential. |
@@ -98,15 +96,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Continue T-0426 0.4 template final review and keep the capsule open. | The operator explicitly requested a new capsule and no close until document finalization. | `ev:T-0426:9f04410013f0495abac959e0`, `tasks/T-0426-0-4-template-final-review-hold-open/TASK.md`, `docs/specs/0.4.0/productization-redesign/templates/0.4/` |
-| After operator acceptance, open T-04A1 0.4 spec registration. | T-0424/T-0425/T-0426 clarify the canonical 0.4 spec tree but do not register Required Reading or docs registry entries. | `ev:T-0424:b23c70b10a8945ef8289a073`, `ev:T-0425:721f9033978348c6a0790450`, `ev:T-0426:9f04410013f0495abac959e0`, `docs/specs/0.4.0/productization-redesign/README.md`, `docs/specs/0.4.0/productization-redesign/manifest.json` |
+| Open T-04A1 0.4 spec registration. | T-0424/T-0425/T-0426 clarify and accept the canonical 0.4 spec tree but do not register Required Reading or docs registry entries. | `ev:T-0424:b23c70b10a8945ef8289a073`, `ev:T-0425:721f9033978348c6a0790450`, `ev:T-0426:496e55c598814f8d8a09cff6`, `docs/specs/0.4.0/productization-redesign/README.md`, `docs/specs/0.4.0/productization-redesign/manifest.json` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| T-0426 0.4 template final review | Manifest parse, stale section absence, workflow guardrail presence, context/handoff/task semantic presence, touched-doc trailing whitespace, and `git diff --check` passed. | Evidence `ev:T-0426:9f04410013f0495abac959e0`; T-0426 remains open pending operator acceptance. |
+| T-0426 0.4 template final review | Manifest parse, stale section absence, workflow guardrail presence, context/handoff/task semantic presence, document-owner split checks, docs registry ownership checks, 24-capsule budget checks, touched-doc trailing whitespace, and `git diff --check` passed. | Evidence `ev:T-0426:496e55c598814f8d8a09cff6`; operator accepted closure on 2026-06-30. |
 | T-0425 workflow template clarification | Manifest JSON parse passed; workflow-facing release-boundary wording check returned no matches; Required Reading, Project Start, and Task Document Timing sections are present; touched-doc trailing whitespace check returned no matches; `git diff --check` passed. | Evidence `ev:T-0425:721f9033978348c6a0790450`; no CLI/runtime behavior changed. |
 | T-0423 package recycle helper residual fix | Docker focused validation passed for package recycle/registry projections with guarded `dist` sync; built dry-run proved default graph omission and `--include-graph` opt-in; installed `hadara@next` execute recycle passed without context-graph default or stray source capsule creation. | Evidence `ev:T-0423:cd03a65c043f42848901fab0`, `ev:T-0423:5205a44ac4f546f28d15ae49`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`. |
 | T-0422 0.3.4-rc.0 installed-package acceptance | Manual disposable installed-bin smoke passed npm view, dist-tags, isolated `hadara@next` install, installed version/help/init/session/task lifecycle/finalize dry-run/context pack/context slice, and cleanup. | Evidence `ev:T-0422:f32c692a502c49d494970f4d`; helper failed context graph in `ev:T-0422:158cb7ac06f94b00a09fda08` and `ev:T-0422:ba22c58572db4b3c8c3288da`, then T-0423 fixed the helper residual. |

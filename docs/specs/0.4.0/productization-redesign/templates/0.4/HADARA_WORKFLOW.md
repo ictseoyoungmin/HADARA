@@ -210,7 +210,7 @@ Agents must not run `task finalize --execute` without inspecting the dry-run out
 | Review close path | `hadara task lifecycle --task T-XXXX --json` | Normal lifecycle state. |
 | Close ordinary work | `hadara task finalize --task T-XXXX --json` then execute with its `planHash` | Default close path. |
 | Diagnose close drift | `hadara task close-repair-plan --task T-XXXX --json` | Read-only repair plan. |
-| Register project-specific docs | `hadara init register-doc --path <path> --when "..." --purpose "..." --json` | Use dry-run/review before execute if the command offers execute mode. |
+| Register project-specific docs | `hadara docs register --path <path> --json` | 0.4 registry surface. Canonical state belongs in `.hadara/docs-registry.json`; use registry-backed help for exact options. |
 | Discover command details | `hadara help lifecycle`, `hadara help command <id>`, `hadara commands --json` | Prefer registry-backed help over copied command tables. |
 
 ## Common Failure Modes
@@ -230,6 +230,8 @@ Agents must not run `task finalize --execute` without inspecting the dry-run out
 Design source documents may live under `docs/specs/**` or other registered paths. Use registry/read-map output to decide whether they are active, conditional, implemented, drift-risk, historical, or excluded.
 
 Do not treat every file under `docs/specs/**` as default Required Reading.
+
+Document registration writes registry metadata, not prose rows in entry docs. Do not append project-specific document rows to `AGENTS.md`, `.hadara/context/HADARA_CONTEXT.md`, or this workflow document.
 
 ## Authoring Model
 

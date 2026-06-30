@@ -73,6 +73,8 @@ hadara evidence project --task T-XXXX --execute --json
 
 These are proposed commands. Implementation must add command registry entries, schemas, focused tests, docs, and help text.
 
+`hadara init register-doc` is the preserved 0.3.x/current-baseline compatibility surface. The 0.4 productized surface is `hadara docs register`; it writes canonical metadata to `.hadara/docs-registry.json` and may refresh a generated human projection such as `docs/DOC_REGISTRY.md`. It must not mutate `AGENTS.md`, `.hadara/context/HADARA_CONTEXT.md`, or `docs/HADARA_WORKFLOW.md` to append per-document rows.
+
 ## `task create` 0.4 Report
 
 ```json

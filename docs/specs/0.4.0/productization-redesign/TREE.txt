@@ -22,6 +22,7 @@ docs/specs/0.4.0/productization-redesign/
     └── 0.4/
         ├── AGENTS.md
         ├── EVIDENCE.md
+        ├── HADARA_CONTEXT.md
         ├── HADARA_WORKFLOW.md
         ├── HANDOFF.md
         └── TASK.md

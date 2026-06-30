@@ -23,6 +23,6 @@
 
 | Constraint | Source | Notes |
 |---|---|---|
-| Do not close T-0426 before operator acceptance. | Latest operator instruction. | Leave status In Progress and do not run `task finalize --execute`. |
+| Operator accepted T-0426 closure on 2026-06-30. | Latest operator instruction. | Run reviewed `task finalize` flow and then move to T-04A1 registration. |
 | Keep product defaults generic. | T-0424/T-0425 boundary. | No HADARA-dev-specific defaults. |
 | Do not register specs yet. | T-04A1 boundary. | Registration remains deferred. |

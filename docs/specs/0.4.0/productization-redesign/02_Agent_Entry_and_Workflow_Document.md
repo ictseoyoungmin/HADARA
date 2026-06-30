@@ -56,7 +56,21 @@ This keeps the entry contract visible without copying lifecycle command recipes 
 
 `.hadara/context/HADARA_CONTEXT.md` is a routing anchor, not a command manual.
 
-Suggested content:
+The canonical template is `templates/0.4/HADARA_CONTEXT.md`.
+
+It should not copy:
+
+```text
+Required Reading tables
+full lifecycle command recipes
+task document timing tables
+authoring ownership tables
+release/package approval rules
+```
+
+It should only identify the project and point to the document that owns each kind of reading.
+
+Suggested shape:
 
 ```md
 # HADARA_CONTEXT
@@ -64,6 +78,8 @@ Suggested content:
 ## Purpose
 
 Compact project-local context anchor.
+
+Not the Required Reading authority or workflow manual.
 
 ## Project
 
@@ -79,6 +95,19 @@ Compact project-local context anchor.
 
 Prefer `hadara session start --json` and `hadara context pack --task T-XXXX --json` before broad manual reading.
 ```
+
+## `IMPLEMENTATION_SOP.md` Relationship
+
+In the 0.4 scaffold, `docs/HADARA_WORKFLOW.md` replaces the generic workflow parts previously split across `docs/IMPLEMENTATION_SOP.md` and `docs/TASK_WORKFLOW_COMMANDS.md`.
+
+The split is:
+
+| Concern | 0.4 Owner |
+|---|---|
+| Agent entry, required-reading authority, and safety invariants | `AGENTS.md` |
+| Compact routing to current state and workflow docs | `.hadara/context/HADARA_CONTEXT.md` |
+| CLI lifecycle, context, evidence, document timing, repair, and useful commands | `docs/HADARA_WORKFLOW.md` |
+| Project-specific SOP details | Optional registered project docs, not default scaffold files |
 
 ## `docs/HADARA_WORKFLOW.md` Role
 

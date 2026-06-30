@@ -10,17 +10,19 @@ Validate the 0.4 productization redesign as a breaking protocol line.
 |---|---|
 | Init scaffold tests | basic/standard/governed trees, scaffold metadata, registries, merged docs. |
 | Agent entry tests | `AGENTS.md` contains compact Required Reading, tiers, safety/reference rules, and no lifecycle/context command cookbook. |
+| Context anchor tests | `HADARA_CONTEXT.md` exists, routes to document owners, and does not duplicate Required Reading or lifecycle command recipes. |
 | Workflow doc tests | `HADARA_WORKFLOW.md` explains minimal loop, read authority, project start, session start, context pack/slice next actions, lifecycle entry gate, evidence truthfulness, finalize dry-run review, repair, docs read-map, task document timing, common failure modes, and useful CLI by situation. |
 | Task capsule tests | `task create` generates exactly `TASK.md`, `HANDOFF.md`, `evidence.jsonl`, `EVIDENCE.md`. |
 | Task template simplification tests | Fresh `TASK.md` has no `Scope`, `Out of Scope`, or task-local `Decision` kind by default. |
 | Controlled value tests | Invalid status/result/disposition/read-tier tokens are rejected. |
 | Source document tests | TASK source document hashes detect changes. |
+| Docs registry tests | `docs register` writes `.hadara/docs-registry.json`, does not append rows to `AGENTS.md`, `HADARA_CONTEXT.md`, or `HADARA_WORKFLOW.md`, and treats `docs/DOC_REGISTRY.md` as optional generated projection only. |
 | Evidence tests | `evidence add-command`, `task finalize`, and proposed `evidence project` keep `EVIDENCE.md` as a projection; close proof projects to `EVIDENCE.md`, not `TASK.md` or `HANDOFF.md`. |
 | Close-source tests | Whole `TASK_BOARD.md`, task-local `HANDOFF.md` raw hash, and raw evidence file hashes are not default close-source. |
 | Legacy boundary tests | 0.3-like projects fail closed for mutation commands. |
 | Context routing tests | session start/context pack respect docs registry read tiers and drift warnings. |
 | Authoring guidance tests | `task status`/lifecycle reports tell agents what to write next without silently mutating agent-owned prose. |
-| Release tests | readiness/publish/recycle remain approval-gated and separated. |
+| Release boundary tests | readiness/publish/recycle remain outside the 24-capsule implementation budget and require a later explicit release line. |
 | Product-default tests | Generated scaffold does not mention HADARA-dev-specific Node/npm/Docker/release conventions. |
 
 ## Baseline Current CLI Smoke
@@ -71,6 +73,9 @@ Dogfood acceptance:
 ```text
 No user-facing layout flag.
 No expanded scaffold files.
+No default `IMPLEMENTATION_SOP.md` or `TASK_WORKFLOW_COMMANDS.md` in a new 0.4 scaffold.
+No duplicate Required Reading or lifecycle cookbook across AGENTS, HADARA_CONTEXT, and HADARA_WORKFLOW.
+No per-document registry rows appended to AGENTS, HADARA_CONTEXT, or HADARA_WORKFLOW by docs registration.
 No direct evidence edit.
 No close proof in TASK.md.
 No Scope / Out of Scope sections in fresh TASK.md.
@@ -86,9 +91,11 @@ Authoring guidance is read-only and no command silently writes task-specific pro
 Evidence records real executed checks, not assumptions.
 ```
 
-## Release Sequence
+## Release Work Deferred
 
-Keep release work split.
+Release readiness, publish, package recycle, and stable release work are not part of the 24-capsule 0.4 implementation budget.
+
+Keep future release work split when the operator explicitly starts the release line:
 
 ```text
 0.4.0-rc.0 readiness
@@ -101,6 +108,8 @@ Keep release work split.
 ```
 
 Do not combine readiness, publish, and recycle into one capsule.
+
+The final implementation-budget capsule may prepare release-line decision input, but it must not create release artifacts, run publish/package recycle mutation, or claim release readiness.
 
 ## Release Note Required Statement
 

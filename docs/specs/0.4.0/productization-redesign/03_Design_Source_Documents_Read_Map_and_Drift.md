@@ -69,6 +69,24 @@ File names such as `SKETCH.md` are not required. The registry decides document r
 }
 ```
 
+## Registry Storage and Projection
+
+The canonical registry file is:
+
+```text
+.hadara/docs-registry.json
+```
+
+`hadara docs register --path <path> --json` writes or plans changes to that registry. It must not append per-document rows to `AGENTS.md`, `.hadara/context/HADARA_CONTEXT.md`, `docs/HADARA_WORKFLOW.md`, or a default SOP file.
+
+If a human-readable registry view is needed, it should be a generated projection such as:
+
+```text
+docs/DOC_REGISTRY.md
+```
+
+That projection is optional and derived. `.hadara/docs-registry.json` remains authoritative.
+
 ## Read Map
 
 `hadara docs read-map --task T-XXXX --json` is a proposed 0.4 surface.

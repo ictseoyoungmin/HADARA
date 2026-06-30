@@ -93,6 +93,23 @@ No task-layout option exists in 0.4. The task schema is implied by the 0.4 proto
 
 `AGENT_HANDOFF.md` is generated only for governed / long-running projects. Basic and standard projects keep compact continuation fields in `PROJECT_STATE.md`.
 
+## 0.4 Workflow Document Consolidation
+
+HADARA 0.4 generated projects do not create `docs/IMPLEMENTATION_SOP.md` or `docs/TASK_WORKFLOW_COMMANDS.md` by default.
+
+Their generic scaffold responsibilities are consolidated as follows:
+
+| Older Responsibility | 0.4 Owner |
+|---|---|
+| Required Reading entry table | `AGENTS.md` |
+| Session/task command order | `docs/HADARA_WORKFLOW.md` |
+| Task lifecycle command semantics | `docs/HADARA_WORKFLOW.md` plus registry-backed command help |
+| Documentation timing and write boundaries | `docs/HADARA_WORKFLOW.md` |
+| Project-specific required-reading additions | `.hadara/docs-registry.json` and explicit project docs |
+| Compact current-state routing | `.hadara/context/HADARA_CONTEXT.md` |
+
+Projects may add their own SOP or workflow extension later, but it is a project-specific registered document, not a default 0.4 scaffold file.
+
 ## `.hadara/scaffold.json`
 
 ```json
@@ -169,6 +186,7 @@ docs/SECURITY_MODEL.md
 | `INIT_PROTOCOL_UNSUPPORTED` | Scaffold protocol is not `0.4`. |
 | `INIT_WORKFLOW_DOC_MISSING` | `docs/HADARA_WORKFLOW.md` is missing. |
 | `INIT_AGENTS_COMMAND_COOKBOOK` | `AGENTS.md` appears to duplicate lifecycle/context command recipes. |
+| `INIT_CONTEXT_DUPLICATES_WORKFLOW` | `.hadara/context/HADARA_CONTEXT.md` appears to duplicate Required Reading or lifecycle command recipes instead of routing to owners. |
 | `INIT_DOCS_REGISTRY_MISSING` | `.hadara/docs-registry.json` is missing. |
 | `INIT_SLOT_REGISTRY_MISSING` | `.hadara/slot-registry.json` is missing. |
 | `INIT_REQUIRED_READING_TOO_BROAD` | Registry default read path includes historical/spec drift documents. |
