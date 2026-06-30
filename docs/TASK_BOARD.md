@@ -433,3 +433,4 @@
 | T-0430 | T-04A4 Docs Registry Storage and Register Surface | Done | tasks/T-0430-t-04a4-docs-registry-storage-and-register-surface | Docs register validation passed in `ev:T-0430:1933b10f80184f8abb9540cb`; close audit passed. |
 | T-0431 | T-04A5 Docs Read Map and Drift Diagnostics | Done | tasks/T-0431-t-04a5-docs-read-map-and-drift-diagnostics | Docs read-map/inbox validation passed in `ev:T-0431:a81383c6d7894693a45a95ed`; close-ready. |
 | T-0432 | T-04A6 Task Capsule Create Path | Done | tasks/T-0432-t-04a6-task-capsule-create-path | 0.4 task create validation passed in `ev:T-0432:6e7934c04498493ba76eac8f`; close-ready. |
+| T-0433 | T-04A7 TASK.md Table Schema and Controlled Values | Done | tasks/T-0433-t-04a7-task-md-table-schema-and-controlled-values | |

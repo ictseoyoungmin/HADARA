@@ -69,17 +69,17 @@ describe('Harness Task Capsule validation', () => {
     expect(result.ok).toBe(false);
     expect(result.level).toBe('done');
     expect(result.issues.map((issue) => issue.code)).toEqual(
-      expect.arrayContaining(['TASK_STATUS_NOT_DONE', 'TASK_STATUS_HISTORY_NOT_DONE', 'ACCEPTANCE_INCOMPLETE', 'EVIDENCE_REQUIRED', 'HANDOFF_PLACEHOLDER'])
+      expect.arrayContaining(['TASK_STATUS_NOT_DONE', 'ACCEPTANCE_INCOMPLETE', 'EVIDENCE_REQUIRED', 'HANDOFF_PLACEHOLDER'])
     );
     expect(result.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           code: 'ACCEPTANCE_INCOMPLETE',
-          path: `tasks/${task.id}-incomplete-done/ACCEPTANCE.md`,
+          path: `tasks/${task.id}-incomplete-done/TASK.md`,
           heading: 'Acceptance Criteria',
           fixHint: expect.stringContaining('acceptance criterion'),
           remediationHint: expect.objectContaining({
-            path: `tasks/${task.id}-incomplete-done/ACCEPTANCE.md`,
+            path: `tasks/${task.id}-incomplete-done/TASK.md`,
             heading: 'Acceptance Criteria',
             blocking: true
           })
@@ -112,6 +112,40 @@ describe('Harness Task Capsule validation', () => {
     );
   });
 
+  it('rejects invalid 0.4 TASK.md controlled table values at draft level', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Invalid task table tokens');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace('| Status | Draft |', '| Status | Ready |')
+        .replace('| 1 | Define the task contract. | Pending | TBD |', '| 1 | Define the task contract. | Working | TBD |')
+        .replace('| AC-1 | Scope is implemented. | Yes | Pending | TBD | Required | TBD |', '| AC-1 | Scope is implemented. | Maybe | Started | TBD | Maybe | TBD |')
+        .replace('| TBD | TBD | Yes | Not Run | TBD |', '| TBD | TBD | Maybe | Green | TBD |')
+        .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Decision | TBD | Maybe | TBD |'),
+      'utf8'
+    );
+
+    const result = validateTaskCapsule(root, task.id, { level: 'draft' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining([
+        'TASK_STATUS_INVALID_TOKEN',
+        'TASK_PLAN_STATUS_INVALID_TOKEN',
+        'ACCEPTANCE_REQUIRED_INVALID_TOKEN',
+        'ACCEPTANCE_STATUS_INVALID_TOKEN',
+        'ACCEPTANCE_DISPOSITION_INVALID_TOKEN',
+        'VALIDATION_REQUIRED_INVALID_TOKEN',
+        'VALIDATION_RESULT_INVALID_TOKEN',
+        'TASK_RISK_KIND_INVALID_TOKEN',
+        'TASK_RISK_STATE_INVALID_TOKEN'
+      ])
+    );
+  });
+
   it('rejects completed capsules that still contain scaffold Markdown defaults', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Scaffold leftovers');
@@ -131,14 +165,7 @@ describe('Harness Task Capsule validation', () => {
     expect(result.ok).toBe(false);
     expect(result.issues.map((issue) => issue.code)).toEqual(
       expect.arrayContaining([
-        'TASK_SCAFFOLD_PLACEHOLDER',
-        'PLAN_SCAFFOLD_UNCHANGED',
-        'CONTEXT_SCAFFOLD_UNCHANGED',
-        'FILES_SCAFFOLD_UNCHANGED',
-        'ACCEPTANCE_SCAFFOLD_UNCHANGED',
-        'TESTS_SCAFFOLD_UNCHANGED',
-        'RISKS_SCAFFOLD_UNCHANGED',
-        'DECISIONS_SCAFFOLD_UNCHANGED'
+        'TASK_SCAFFOLD_PLACEHOLDER'
       ])
     );
     expect(result.issues.map((issue) => issue.code)).not.toContain('EVIDENCE_SCAFFOLD_UNCHANGED');
@@ -168,13 +195,13 @@ describe('Harness Task Capsule validation', () => {
         code: 'TASK_METADATA_PLACEHOLDER',
         message: 'Done-level validation requires TASK.md metadata field(s) to be concrete dates, not TBD: Created, Updated.',
         path: `tasks/${task.id}-placeholder-metadata/TASK.md`,
-        heading: 'Metadata',
+        heading: 'Identity',
         fixHint: expect.stringContaining('YYYY-MM-DD')
       })
     );
   });
 
-  it('rejects done-level capsules whose Status History does not end with Done', () => {
+  it('rejects done-level capsules whose legacy Status History does not end with Done', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'History missing done');
     markTaskDone(root, task.id);
@@ -547,7 +574,7 @@ describe('Harness Task Capsule validation', () => {
       summary: 'Validation evidence row',
       result: 'passed'
     });
-    fs.rmSync(path.join(task.dir, 'TESTS.md'));
+    fs.rmSync(path.join(task.dir, 'HANDOFF.md'));
 
     const result = validateTaskCapsule(root, task.id);
 
@@ -556,7 +583,7 @@ describe('Harness Task Capsule validation', () => {
       expect.objectContaining({
         severity: 'error',
         code: 'MISSING_TASK_FILE',
-        path: `tasks/${task.id}-broken-capsule/TESTS.md`
+        path: `tasks/${task.id}-broken-capsule/HANDOFF.md`
       })
     );
   });
@@ -607,10 +634,6 @@ describe('Harness Task Capsule validation', () => {
       summary: 'Validation evidence row',
       result: 'passed'
     });
-    fs.writeFileSync(path.join(task.dir, 'ACCEPTANCE.md'), '# Acceptance\n\n- done\n', 'utf8');
-    fs.writeFileSync(path.join(task.dir, 'FILES.md'), '# Files\n\n- src/example.ts\n', 'utf8');
-    fs.writeFileSync(path.join(task.dir, 'TESTS.md'), '# Tests\n\n- npm test\n', 'utf8');
-    fs.writeFileSync(path.join(task.dir, 'RISKS.md'), '# Risks\n\n- Risk: drift\n', 'utf8');
     fs.writeFileSync(path.join(task.dir, 'HANDOFF.md'), '# Handoff\n\nContinue later.\n', 'utf8');
 
     const result = validateTaskCapsule(root, task.id);
@@ -618,11 +641,6 @@ describe('Harness Task Capsule validation', () => {
     expect(result.ok).toBe(false);
     expect(result.issues.map((issue) => issue.code)).toEqual(
       expect.arrayContaining([
-        'ACCEPTANCE_HEADING_INVALID',
-        'ACCEPTANCE_CHECKLIST_MISSING',
-        'FILES_TABLE_INVALID',
-        'TESTS_SECTION_MISSING',
-        'RISKS_TABLE_INVALID',
         'HANDOFF_SECTION_MISSING'
       ])
     );
@@ -743,6 +761,17 @@ function markTaskBoardDone(projectRoot: string, taskId: string): void {
 
 function markAcceptanceDone(taskDir: string): void {
   const acceptancePath = path.join(taskDir, 'ACCEPTANCE.md');
+  if (!fs.existsSync(acceptancePath)) {
+    const taskPath = path.join(taskDir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace(/\| AC-(\d+) \| ([^|]+) \| Yes \| Pending \| TBD \| Required \| TBD \|/g, '| AC-$1 | $2 | Yes | Met | Done-level fixture evidence. | Required | Fixture evidence. |'),
+      'utf8'
+    );
+    return;
+  }
   fs.writeFileSync(
     acceptancePath,
     fs
@@ -757,17 +786,23 @@ function writeCompletedCapsuleDocs(taskDir: string, options: { keepMetadataPlace
   const taskPath = path.join(taskDir, 'TASK.md');
   let taskContent = fs
     .readFileSync(taskPath, 'utf8')
+    .replace('| TBD | reference | exploratory | draft | TBD | TBD |', '| docs/specs/0.4.0/productization-redesign/05_TASK_MD_Table_Schema_and_Controlled_Values.md | implementation-source | approved | implementing | TBD | Fixture source. |')
     .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Validate done-level completion gates. | Fixture verifies completed capsule docs. |')
-    .replace('| TBD | TBD |', '| Exercise task-specific completed capsule documentation. | Needed for done-level validation. |')
-    .replace('| TBD | TBD |', '| Broad workflow changes. | Outside fixture scope. |')
+    .replace('| 1 | Define the task contract. | Pending | TBD |', '| 1 | Define the task contract. | Done | Fixture setup. |')
+    .replace('| 2 | Implement the smallest useful slice. | Pending | TBD |', '| 2 | Implement the smallest useful slice. | Done | Fixture setup. |')
+    .replace('| 3 | Validate and record evidence. | Pending | TBD |', '| 3 | Validate and record evidence. | Done | Fixture setup. |')
+    .replace(/\| AC-(\d+) \| ([^|]+) \| Yes \| Pending \| TBD \| Required \| TBD \|/g, '| AC-$1 | $2 | Yes | Met | Fixture evidence. | Required | Fixture evidence. |')
+    .replace('| TBD | TBD | Yes | Not Run | TBD |', '| Harness done-level fixture | validateTaskCapsule(..., done) | Yes | Passed | Harness result. |')
+    .replace('| TBD | N/A | TBD | TBD | TBD |', '| src/harness/validate.ts | L1-L20 | Exercise fixture validation. | Done-level harness coverage. | Harness result. |')
+    .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Follow-up | Fixture follow-up. | Closed | Harness result. |')
     .replace('## Goal\n\nTBD.', '## Goal\n\nValidate done-level completion gates.')
     .replace('## Scope\n\nTBD.', '## Scope\n\n- Exercise task-specific completed capsule documentation.')
     .replace('## Out of Scope\n\nTBD.', '## Out of Scope\n\n- Broad workflow changes.');
   if (!options.keepMetadataPlaceholders) {
     taskContent = taskContent.replace('| Created | TBD |', '| Created | 2026-06-02 |').replace('| Updated | TBD |', '| Updated | 2026-06-02 |');
   }
-  if (!options.keepStatusHistoryDraft) {
-    taskContent = `${taskContent.trimEnd()}\n| 2026-06-02 | Done | Fixture completed. | Harness fixture. |\n`;
+  if (options.keepStatusHistoryDraft) {
+    taskContent = `${taskContent.trimEnd()}\n\n## Status History\n\n| Time | Status | Note | Evidence |\n|---|---|---|---|\n| 2026-06-02 | Draft | Legacy fixture. | Harness fixture. |\n`;
   }
   fs.writeFileSync(taskPath, taskContent, 'utf8');
   fs.writeFileSync(path.join(taskDir, 'PLAN.md'), '# Plan\n\n| Step | Action | Status | Evidence |\n|---|---|---|---|\n| 1 | Prepare completed capsule fixture. | Done | Test fixture setup. |\n| 2 | Run done-level validation. | Done | Harness result. |\n', 'utf8');

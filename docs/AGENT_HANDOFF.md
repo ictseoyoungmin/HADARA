@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0432 / T-04A6. |
-| Current Phase | 0.4 task create path complete plus 0.3.4 stable readiness pending | T-0432 made default `task create` emit the 0.4 four-file Task Capsule; T-04A7 TASK.md Table Schema and Controlled Values is next. |
-| Latest Completed Task | T-0432 T-04A6 Task Capsule Create Path | `hadara task create "title" --json` now generates only `TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and `evidence.jsonl` with the accepted 0.4 section contract. |
-| Active / Next Task | T-04A7 TASK.md Table Schema and Controlled Values | Harden TASK.md controlled values, embedded tables, and validation over the new create path. |
-| Validation Baseline | T-0432 task-create validation plus T-0423 helper residual fix | T-0432 Docker build/focused tests and built task-create smoke passed in `ev:T-0432:6e7934c04498493ba76eac8f`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0433 / T-04A7. |
+| Current Phase | 0.4 TASK.md table schema validation complete plus 0.3.4 stable readiness pending | T-0433 made generated TASK.md tables match the accepted 0.4 schema and added controlled-value validation; T-04A8 Source Document Hash and Drift Link is next. |
+| Latest Completed Task | T-0433 T-04A7 TASK.md Table Schema and Controlled Values | Fresh and template TASK.md output use the accepted table schema, and harness validation rejects invalid controlled values. |
+| Active / Next Task | T-04A8 Source Document Hash and Drift Link | Implement source document hash recording/drift behavior beyond T-04A7 token/format validation. |
+| Validation Baseline | T-0433 TASK table schema validation plus T-0423 helper residual fix | T-0433 Docker build/focused tests and built task-create/harness smokes passed in `ev:T-0433:80ed05687f3945c2acdde03e`; T-0423 Docker focused validation and installed `hadara@next` package recycle passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-04A7 TASK.md Table Schema and Controlled Values | Next. Harden the 0.4 TASK.md table schema and controlled values after T-04A6 created the new default capsule shape. | `ev:T-0432:6e7934c04498493ba76eac8f` |
+| T-04A8 Source Document Hash and Drift Link | Next. Strengthen source document hash recording and drift diagnostics after T-04A7 added table shape/token validation. | `ev:T-0433:80ed05687f3945c2acdde03e` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0433 / T-04A7 TASK.md Table Schema and Controlled Values | Updated generated TASK.md tables, added harness controlled-value validation, refreshed `dist`, and built CLI smokes. | `ev:T-0433:80ed05687f3945c2acdde03e` |
 | T-0432 / T-04A6 Task Capsule Create Path | Implemented the 0.4 four-file default Task Capsule, Identity-status compatibility, focused tests, refreshed `dist`, and built CLI create smoke. | `ev:T-0432:6e7934c04498493ba76eac8f` |
 | T-0431 / T-04A5 Docs Read Map and Drift Diagnostics | Implemented read-only `docs read-map` and `docs inbox` with derived metadata axes, drift diagnostics, schemas, command registry coverage, focused tests, refreshed `dist`, and built CLI smokes. | `ev:T-0431:a81383c6d7894693a45a95ed` |
-| T-0430 / T-04A4 Docs Registry Storage and Register Surface | Implemented registry-first `hadara docs register`, schema/command registry coverage, focused tests, and built CLI smoke. | `ev:T-0430:1933b10f80184f8abb9540cb` |
 
 ## Current Known Problems
 
@@ -95,13 +95,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Open T-04A7 TASK.md Table Schema and Controlled Values. | T-04A6 completed the default create path; the next accepted slice should harden TASK.md table schema, controlled values, and validation. | `ev:T-0432:6e7934c04498493ba76eac8f`, `docs/specs/0.4.0/productization-redesign/04_Task_Capsule_Schema.md`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
+| Open T-04A8 Source Document Hash and Drift Link. | T-04A7 validates source document table tokens and hash shape, but actual changed/missing source document drift is the next accepted slice. | `ev:T-0433:80ed05687f3945c2acdde03e`, `docs/specs/0.4.0/productization-redesign/05_TASK_MD_Table_Schema_and_Controlled_Values.md`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0433 / T-04A7 TASK.md table schema validation | Docker build plus focused task create/harness/lifecycle/read-model tests passed 77 tests; workspace `dist` refreshed; built `task create` smoke generated 0.4 table headers and T-0433 draft harness validation returned `ok:true`. | Evidence `ev:T-0433:80ed05687f3945c2acdde03e`; source document drift comparison remains T-04A8 scope. |
 | T-0432 / T-04A6 task capsule create path | Docker build plus focused task create/lifecycle/read-model tests passed 77 tests; workspace `dist` refreshed; built `task create` smoke generated exactly `TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and `evidence.jsonl`. | Evidence `ev:T-0432:6e7934c04498493ba76eac8f`; close-source contract, evidence projection regeneration, and legacy upgrade behavior remain later 0.4 scope. |
 | T-0431 / T-04A5 docs read-map/inbox diagnostics | Docker build plus focused docs-registry/command/schema/init tests passed 25 tests; workspace `dist` refreshed; built `docs read-map --task T-0431 --json` and `docs inbox --json` smokes returned `ok:true`. | Evidence `ev:T-0431:a81383c6d7894693a45a95ed`; registry metadata write/migration surfaces remain later 0.4 scope. |
 | T-0430 / T-04A4 docs registry registration | Docker build plus focused docs-registry/command/schema/init tests passed 23 tests; workspace `dist` refreshed; built `docs register --execute --json` smoke returned `ok:true`. | Evidence `ev:T-0430:1933b10f80184f8abb9540cb`; superseded for read-map/inbox coverage by T-0431. |

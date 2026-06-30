@@ -26,11 +26,16 @@ describe('Task Capsule scaffold frames', () => {
     const taskMarkdown = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
     expect(taskMarkdown).toContain('## Identity');
     expect(taskMarkdown).toContain('## Source Documents');
+    expect(taskMarkdown).toContain('| Path | Role | Authority | Status | Source Hash | Notes |');
     expect(taskMarkdown).toContain('## Plan');
     expect(taskMarkdown).toContain('## Acceptance');
+    expect(taskMarkdown).toContain('| ID | Criterion | Required | Status | Evidence | Disposition | Reference |');
     expect(taskMarkdown).toContain('## Validation');
+    expect(taskMarkdown).toContain('| Check | Command / Method | Required | Latest Result | Evidence |');
     expect(taskMarkdown).toContain('## Change Summary');
+    expect(taskMarkdown).toContain('| Path | Lines | Change | Reason | Evidence |');
     expect(taskMarkdown).toContain('## Risks / Follow-ups');
+    expect(taskMarkdown).toContain('| ID | Kind | Summary | State | Reference |');
     expect(taskMarkdown).not.toContain('\n## Status\n');
     expect(taskMarkdown).not.toContain('## Close Proof');
     expect(taskMarkdown).not.toContain('## Status History');

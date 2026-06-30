@@ -52,6 +52,18 @@ const EVIDENCE_KINDS = new Set(['test-log', 'command-log', 'diff-summary', 'scre
 const EVIDENCE_RESULTS = new Set(['passed', 'failed', 'blocked', 'unknown']);
 const EVIDENCE_VISIBILITIES = new Set(['public', 'private']);
 const TASK_STATUS_TOKENS = new Set(['draft', 'in progress', 'blocked', 'done', 'partial', 'superseded', 'archived']);
+const PLAN_STATUS_TOKENS = new Set(['Pending', 'In Progress', 'Done', 'Blocked', 'Skipped']);
+const SOURCE_DOCUMENT_ROLE_TOKENS = new Set(['implementation-source', 'reference', 'constraint', 'decision', 'background']);
+const SOURCE_DOCUMENT_AUTHORITY_TOKENS = new Set(['exploratory', 'proposed', 'approved', 'normative', 'implementation-source', 'reference-only', 'historical']);
+const SOURCE_DOCUMENT_STATUS_TOKENS = new Set(['draft', 'review', 'approved', 'implementing', 'implemented', 'superseded', 'drift-risk', 'archived']);
+const ACCEPTANCE_REQUIRED_TOKENS = new Set(['Yes', 'No']);
+const ACCEPTANCE_STATUS_TOKENS = new Set(['Pending', 'Met', 'Not Met', 'Blocked', 'Not Applicable']);
+const ACCEPTANCE_DISPOSITION_TOKENS = new Set(['Required', 'Optional', 'Deferred', 'Accepted Risk', 'Not Applicable', 'Superseded']);
+const ACCEPTANCE_DISPOSITIONS_REQUIRING_REFERENCE = new Set(['Deferred', 'Accepted Risk', 'Not Applicable', 'Superseded']);
+const VALIDATION_REQUIRED_TOKENS = new Set(['Yes', 'No']);
+const VALIDATION_RESULT_TOKENS = new Set(['Not Run', 'Passed', 'Failed', 'Blocked', 'Skipped', 'Not Applicable']);
+const RISK_KIND_TOKENS = new Set(['Risk', 'Follow-up', 'Question']);
+const RISK_STATE_TOKENS = new Set(['Open', 'Accepted', 'Mitigated', 'Deferred', 'Closed', 'Superseded', 'Rejected']);
 const STALE_PENDING_CLOSE_PATTERN = /\b(?:done\s+pending\s+lifecycle\s+close|pending\s+lifecycle\s+close)\b/i;
 const DONE_SEMANTIC_EVIDENCE_CODES = new Set([
   'TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE',
@@ -160,6 +172,210 @@ function validateTaskMarkdown(projectRoot: string, task: TaskCapsule, issues: Ha
       });
     }
   }
+  validateTaskIdentityTable(content, relativePath, issues);
+  validateTaskSourceDocumentsTable(content, relativePath, issues);
+  validateTaskPlanTable(content, relativePath, issues);
+  validateTaskAcceptanceTable(content, relativePath, issues);
+  validateTaskValidationTable(content, relativePath, issues);
+  validateTaskChangeSummaryTable(content, relativePath, issues);
+  validateTaskRisksTable(content, relativePath, issues);
+  validateTaskCloseStateBoundaries(content, relativePath, issues);
+}
+
+function validateTaskIdentityTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+  const rows = sectionRows(content, '## Identity');
+  requireTableHeader(rows, ['Field', 'Value'], relativePath, '## Identity', issues);
+  const statusRows = rows.filter((row) => normalizeFieldName(row[0] ?? '') === 'status');
+  if (statusRows.length > 1 || content.includes('\n## Status\n')) {
+    issues.push(taskTableIssue('TASK_STATUS_DUPLICATE_OWNER', 'TASK.md must have exactly one canonical Status owner in the Identity table.', relativePath, '## Identity'));
+  }
+  const status = statusRows[0]?.[1]?.trim();
+  if (status && !isTaskStatusToken(status)) {
+    issues.push(taskTableIssue('TASK_STATUS_INVALID_TOKEN', `TASK.md Status uses invalid token "${status}".`, relativePath, '## Identity'));
+  }
+  if (rows.some((row) => normalizeFieldName(row[0] ?? '') === 'layout')) {
+    issues.push(taskTableIssue('TASK_TABLE_SCHEMA_INVALID', 'TASK.md Identity must not include a Layout field in 0.4 capsules.', relativePath, '## Identity'));
+  }
+}
+
+function validateTaskSourceDocumentsTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+  const heading = '## Source Documents';
+  const table = sectionTable(content, heading);
+  if (!requireTableHeader(table.rows, ['Path', 'Role', 'Authority', 'Status', 'Source Hash', 'Notes'], relativePath, heading, issues)) return;
+  for (const row of table.dataRows) {
+    const pathCell = tableCell(row, table.header, 'Path');
+    if (!pathCell || /^TBD$/i.test(pathCell)) continue;
+    checkToken(tableCell(row, table.header, 'Role'), SOURCE_DOCUMENT_ROLE_TOKENS, 'TASK_SOURCE_DOCUMENT_ROLE_INVALID_TOKEN', relativePath, heading, issues);
+    checkToken(tableCell(row, table.header, 'Authority'), SOURCE_DOCUMENT_AUTHORITY_TOKENS, 'TASK_SOURCE_DOCUMENT_AUTHORITY_INVALID_TOKEN', relativePath, heading, issues);
+    checkToken(tableCell(row, table.header, 'Status'), SOURCE_DOCUMENT_STATUS_TOKENS, 'TASK_SOURCE_DOCUMENT_STATUS_INVALID_TOKEN', relativePath, heading, issues);
+    const hash = tableCell(row, table.header, 'Source Hash');
+    if (!isSourceHashCell(hash)) {
+      issues.push(taskTableIssue('TASK_SOURCE_DOCUMENT_MISSING_HASH', `Source document "${pathCell}" must use Source Hash "TBD" or "sha256:<hex>".`, relativePath, heading));
+    }
+  }
+}
+
+function validateTaskPlanTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+  const heading = '## Plan';
+  const table = sectionTable(content, heading);
+  if (!requireTableHeader(table.rows, ['Step', 'Action', 'Status', 'Evidence'], relativePath, heading, issues)) return;
+  for (const row of table.dataRows) {
+    if (!row.some(Boolean)) continue;
+    checkToken(tableCell(row, table.header, 'Status'), PLAN_STATUS_TOKENS, 'TASK_PLAN_STATUS_INVALID_TOKEN', relativePath, heading, issues);
+  }
+}
+
+function validateTaskAcceptanceTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+  const heading = '## Acceptance';
+  const table = sectionTable(content, heading);
+  if (!requireTableHeader(table.rows, ['ID', 'Criterion', 'Required', 'Status', 'Evidence', 'Disposition', 'Reference'], relativePath, heading, issues)) return;
+  for (const row of table.dataRows) {
+    const id = tableCell(row, table.header, 'ID');
+    if (!id) continue;
+    if (!/^AC-\d+$/.test(id)) {
+      issues.push(taskTableIssue('ACCEPTANCE_ID_INVALID_TOKEN', `Acceptance ID must use AC-1, AC-2, ...; got "${id}".`, relativePath, heading));
+    }
+    checkToken(tableCell(row, table.header, 'Required'), ACCEPTANCE_REQUIRED_TOKENS, 'ACCEPTANCE_REQUIRED_INVALID_TOKEN', relativePath, heading, issues);
+    checkToken(tableCell(row, table.header, 'Status'), ACCEPTANCE_STATUS_TOKENS, 'ACCEPTANCE_STATUS_INVALID_TOKEN', relativePath, heading, issues);
+    const disposition = tableCell(row, table.header, 'Disposition');
+    checkToken(disposition, ACCEPTANCE_DISPOSITION_TOKENS, 'ACCEPTANCE_DISPOSITION_INVALID_TOKEN', relativePath, heading, issues);
+    if (ACCEPTANCE_DISPOSITIONS_REQUIRING_REFERENCE.has(disposition) && isMissingReference(tableCell(row, table.header, 'Reference'))) {
+      issues.push(taskTableIssue('ACCEPTANCE_DISPOSITION_REFERENCE_MISSING', `${id} disposition "${disposition}" requires a concrete reference.`, relativePath, heading));
+    }
+  }
+}
+
+function validateTaskValidationTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+  const heading = '## Validation';
+  const table = sectionTable(content, heading);
+  if (!requireTableHeader(table.rows, ['Check', 'Command / Method', 'Required', 'Latest Result', 'Evidence'], relativePath, heading, issues)) return;
+  for (const row of table.dataRows) {
+    if (!row.some(Boolean)) continue;
+    checkToken(tableCell(row, table.header, 'Required'), VALIDATION_REQUIRED_TOKENS, 'VALIDATION_REQUIRED_INVALID_TOKEN', relativePath, heading, issues);
+    checkToken(tableCell(row, table.header, 'Latest Result'), VALIDATION_RESULT_TOKENS, 'VALIDATION_RESULT_INVALID_TOKEN', relativePath, heading, issues);
+  }
+}
+
+function validateTaskChangeSummaryTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+  const heading = '## Change Summary';
+  const table = sectionTable(content, heading);
+  if (!requireTableHeader(table.rows, ['Path', 'Lines', 'Change', 'Reason', 'Evidence'], relativePath, heading, issues)) return;
+  for (const row of table.dataRows) {
+    if (!row.some(Boolean)) continue;
+    const lines = tableCell(row, table.header, 'Lines');
+    if (!lines) {
+      issues.push(taskTableIssue('CHANGE_SUMMARY_LINE_RANGE_MISSING', 'Change Summary rows require a Lines value.', relativePath, heading));
+    } else if (!isChangeSummaryLines(lines)) {
+      issues.push(taskTableIssue('CHANGE_SUMMARY_LINE_RANGE_INVALID', `Change Summary Lines value "${lines}" is invalid.`, relativePath, heading));
+    }
+  }
+}
+
+function validateTaskRisksTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+  const heading = '## Risks / Follow-ups';
+  const table = sectionTable(content, heading);
+  if (!requireTableHeader(table.rows, ['ID', 'Kind', 'Summary', 'State', 'Reference'], relativePath, heading, issues)) return;
+  for (const row of table.dataRows) {
+    if (!row.some(Boolean)) continue;
+    checkToken(tableCell(row, table.header, 'Kind'), RISK_KIND_TOKENS, 'TASK_RISK_KIND_INVALID_TOKEN', relativePath, heading, issues);
+    checkToken(tableCell(row, table.header, 'State'), RISK_STATE_TOKENS, 'TASK_RISK_STATE_INVALID_TOKEN', relativePath, heading, issues);
+  }
+}
+
+function validateTaskCloseStateBoundaries(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+  if (/^\|\s*CloseState\s*\|/im.test(content) || /^\|\s*Close State\s*\|/im.test(content)) {
+    issues.push(taskTableIssue('TASK_CLOSE_STATE_PERSISTED_IN_TASK', 'TASK.md must not persist derived CloseState values.', relativePath, 'TASK.md'));
+  }
+  if (/\n##\s*Close Proof\b/i.test(content) || /\baudit-close\b/i.test(readMarkdownSection(content, '## Change Summary'))) {
+    issues.push(taskTableIssue('TASK_CLOSE_PROOF_IN_CLOSE_SOURCE', 'TASK.md must not include close proof or audit-close result tables.', relativePath, 'TASK.md'));
+  }
+}
+
+function sectionRows(content: string, heading: string): string[][] {
+  return parseMarkdownRows(readMarkdownSection(content, heading));
+}
+
+function sectionTable(content: string, heading: string): { rows: string[][]; header: string[]; dataRows: string[][] } {
+  const rows = sectionRows(content, heading);
+  return {
+    rows,
+    header: rows[0] ?? [],
+    dataRows: rows.slice(1)
+  };
+}
+
+function requireTableHeader(
+  rows: string[][],
+  expected: string[],
+  relativePath: string,
+  heading: string,
+  issues: HarnessValidationIssue[]
+): boolean {
+  const actual = rows[0] ?? [];
+  if (expected.every((cell, index) => actual[index] === cell)) return true;
+  issues.push(
+    taskTableIssue(
+      'TASK_TABLE_SCHEMA_INVALID',
+      `${heading} table header must be: | ${expected.join(' | ')} |`,
+      relativePath,
+      heading,
+      `| ${expected.join(' | ')} |`
+    )
+  );
+  return false;
+}
+
+function tableCell(row: string[], header: string[], name: string): string {
+  const index = header.findIndex((cell) => cell === name);
+  return index >= 0 ? (row[index] ?? '').trim() : '';
+}
+
+function checkToken(
+  value: string,
+  allowed: Set<string>,
+  code: string,
+  relativePath: string,
+  heading: string,
+  issues: HarnessValidationIssue[]
+): void {
+  if (allowed.has(value)) return;
+  issues.push(taskTableIssue(code, `${heading} uses invalid token "${value}". Allowed: ${Array.from(allowed).join(', ')}.`, relativePath, heading));
+}
+
+function taskTableIssue(code: string, message: string, relativePath: string, heading: string, example?: string): HarnessValidationIssue {
+  return {
+    severity: 'error',
+    code,
+    message,
+    path: relativePath,
+    heading,
+    ...(example ? { example } : {}),
+    remediationHint: {
+      path: relativePath,
+      heading,
+      requiredChange: message,
+      ...(example ? { example } : {}),
+      blocking: true
+    }
+  };
+}
+
+function isSourceHashCell(value: string): boolean {
+  return value === 'TBD' || /^sha256:[a-f0-9]{64}$/.test(value);
+}
+
+function isMissingReference(value: string): boolean {
+  return !value.trim() || /^TBD$/i.test(value) || /^N\/A$/i.test(value);
+}
+
+function isChangeSummaryLines(value: string): boolean {
+  return (
+    value === 'N/A' ||
+    value === 'whole-file' ||
+    value === 'new-file' ||
+    value === 'deleted-file' ||
+    /^L\d+-L\d+(?:,\s*L\d+-L\d+)*$/.test(value)
+  );
 }
 
 function validateCapsuleFormatMarkdown(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
