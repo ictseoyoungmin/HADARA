@@ -55,6 +55,7 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'docs.list',
   'docs.doctor',
   'docs.explain',
+  'docs.register',
   'docs.managed.list',
   'docs.managed.explain',
   'docs.patch',

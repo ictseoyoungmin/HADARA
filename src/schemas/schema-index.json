@@ -177,6 +177,13 @@
       "notes": "Documents the Phase 7.5 registry-only document cleanup status transition report returned by hadara docs mark --json."
     },
     {
+      "id": "hadara.docs.register.v1",
+      "path": "src/schemas/docs-register.schema.json",
+      "status": "fixture",
+      "owner": "services/docs-registry",
+      "notes": "Documents the 0.4 registry-first document registration report returned by hadara docs register --json."
+    },
+    {
       "id": "hadara.docs.archivePlan.v1",
       "path": "src/schemas/docs-archive-plan.schema.json",
       "status": "fixture",

@@ -110,6 +110,19 @@ export interface DocsExplainReport {
   issues: DocsIssue[];
 }
 
+export interface DocsRegisterReport {
+  schemaVersion: 'hadara.docs.register.v1';
+  command: 'docs.register';
+  ok: boolean;
+  mode: 'dry-run' | 'execute';
+  path: string;
+  source: { registryPath: '.hadara/docs-registry.json'; registryPresent: boolean; inferred: boolean };
+  action: 'create' | 'already-registered' | 'blocked';
+  document: DocumentRegistryEntry | null;
+  writes: string[];
+  issues: DocsIssue[];
+}
+
 export const DOCS_REGISTRY_PATH = '.hadara/docs-registry.json';
 
 const VALID_STATUSES: DocumentStatus[] = ['canonical', 'active', 'reference', 'historical', 'superseded', 'archived'];
@@ -258,6 +271,81 @@ export function createDocsExplainReport(projectRoot: string, documentPath: strin
       safeToAutoUpdate: document.updateOwner === 'hadara-init' || document.updateOwner === 'hadara-docs',
       managedSections: document.managedSections
     } : null,
+    issues
+  };
+}
+
+export function createDocsRegisterReport(projectRoot: string, options: {
+  documentPath: string;
+  title?: string;
+  kind?: string;
+  status?: string;
+  readWhen?: string;
+  requiredReading?: boolean;
+  requireExists?: boolean;
+  mode?: 'dry-run' | 'execute';
+}): DocsRegisterReport {
+  const mode = options.mode ?? 'dry-run';
+  const normalized = normalizePath(options.documentPath);
+  const state = loadRegistryOrInfer(projectRoot);
+  const issues = [...state.issues];
+  const kind = parseKind(options.kind);
+  const status = parseStatus(options.status ?? 'reference');
+  const readWhen = parseReadWhen(options.readWhen ?? 'only-when-linked');
+  if (!normalized) issues.push({ severity: 'error', code: 'DOC_REGISTER_PATH_REQUIRED', message: 'Document path is required.' });
+  if (path.isAbsolute(options.documentPath) || normalized.startsWith('../') || normalized.includes('/../')) {
+    issues.push({ severity: 'error', code: 'DOC_REGISTER_PATH_OUTSIDE_PROJECT', path: normalized, message: 'Document path must be project-relative.' });
+  }
+  if (options.kind !== undefined && kind === null) issues.push({ severity: 'error', code: 'DOC_UNKNOWN_KIND', path: normalized, message: `Unknown document kind: ${options.kind}` });
+  if (status === null) issues.push({ severity: 'error', code: 'DOC_UNKNOWN_STATUS', path: normalized, message: `Unknown document status: ${options.status}` });
+  if (readWhen === null) issues.push({ severity: 'error', code: 'DOC_UNKNOWN_READ_WHEN', path: normalized, message: `Unknown read-when value: ${options.readWhen}` });
+  if (options.requireExists && normalized && !fs.existsSync(path.join(projectRoot, normalized))) {
+    issues.push({ severity: 'error', code: 'DOC_REGISTER_FILE_MISSING', path: normalized, message: `${normalized} does not exist.` });
+  }
+
+  const existing = state.registry.documents.find((doc) => doc.path === normalized) ?? null;
+  if (existing) {
+    return {
+      schemaVersion: 'hadara.docs.register.v1',
+      command: 'docs.register',
+      ok: issues.every((issue) => issue.severity !== 'error'),
+      mode,
+      path: normalized,
+      source: state.source,
+      action: issues.some((issue) => issue.severity === 'error') ? 'blocked' : 'already-registered',
+      document: existing,
+      writes: [],
+      issues
+    };
+  }
+
+  const document = issues.some((issue) => issue.severity === 'error') ? null : buildRegisteredDocument(state.registry, {
+    path: normalized,
+    title: options.title,
+    kind: kind ?? inferKind(normalized),
+    status: status ?? 'reference',
+    readWhen: readWhen ?? 'only-when-linked',
+    requiredReading: options.requiredReading ?? false
+  });
+  if (document && mode === 'execute') {
+    const next: DocumentRegistryFile = {
+      ...state.registry,
+      generatedAt: new Date().toISOString(),
+      documents: [...state.registry.documents, document].sort((a, b) => a.path.localeCompare(b.path))
+    };
+    writeRegistry(projectRoot, next);
+  }
+
+  return {
+    schemaVersion: 'hadara.docs.register.v1',
+    command: 'docs.register',
+    ok: issues.every((issue) => issue.severity !== 'error'),
+    mode,
+    path: normalized,
+    source: state.source,
+    action: document ? 'create' : 'blocked',
+    document,
+    writes: document && mode === 'execute' ? [DOCS_REGISTRY_PATH] : [],
     issues
   };
 }
@@ -442,6 +530,16 @@ function parseStatus(value?: string): DocumentStatus | null {
   return VALID_STATUSES.includes(value as DocumentStatus) ? value as DocumentStatus : null;
 }
 
+function parseKind(value?: string): DocumentKind | null {
+  if (value === undefined) return null;
+  const kinds: DocumentKind[] = [
+    'project-context', 'protocol', 'project-state', 'handoff', 'task-board', 'workflow-guide', 'architecture', 'decision-log',
+    'test-strategy', 'security-model', 'roadmap', 'release', 'spec', 'implementation-guide', 'integration-guide', 'task-capsule',
+    'schema-reference', 'historical-plan', 'unknown'
+  ];
+  return kinds.includes(value as DocumentKind) ? value as DocumentKind : null;
+}
+
 function parseReadWhen(value?: string): ReadWhen | null {
   if (value === undefined) return null;
   return VALID_READ_WHEN.includes(value as ReadWhen) ? value as ReadWhen : null;
@@ -469,4 +567,51 @@ function guidanceReason(doc: DocumentRegistryEntry): string {
 
 function normalizePath(value: string): string {
   return value.trim().replace(/\\/g, '/').replace(/^\.?\//, '');
+}
+
+function inferKind(documentPath: string): DocumentKind {
+  if (documentPath.startsWith('docs/specs/')) return 'spec';
+  if (documentPath === 'docs/ARCHITECTURE.md') return 'architecture';
+  if (documentPath === 'docs/DECISIONS.md') return 'decision-log';
+  if (documentPath === 'docs/ROADMAP.md') return 'roadmap';
+  if (documentPath.endsWith('SCHEMAS.md')) return 'schema-reference';
+  return 'unknown';
+}
+
+function buildRegisteredDocument(registry: DocumentRegistryFile, input: {
+  path: string;
+  title?: string;
+  kind: DocumentKind;
+  status: DocumentStatus;
+  readWhen: ReadWhen;
+  requiredReading: boolean;
+}): DocumentRegistryEntry {
+  return {
+    path: input.path,
+    title: input.title ?? titleFromPath(input.path),
+    owner: 'hadara-docs',
+    kind: input.kind,
+    status: input.status,
+    scope: 'project',
+    profiles: registry.projectProfile ? [registry.projectProfile] : ['basic', 'standard', 'governed', 'hadara-dev'],
+    readWhen: [input.readWhen],
+    requiredReading: input.requiredReading,
+    updateOwner: 'human',
+    updatedByCommands: ['docs.register'],
+    managedSections: [],
+    closeSourceRole: input.requiredReading ? 'included' : 'task-dependent',
+    supersedes: []
+  };
+}
+
+function titleFromPath(documentPath: string): string {
+  return path.basename(documentPath).replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
+}
+
+function writeRegistry(projectRoot: string, registry: DocumentRegistryFile): void {
+  const target = path.join(projectRoot, DOCS_REGISTRY_PATH);
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  const temp = `${target}.${process.pid}.tmp`;
+  fs.writeFileSync(temp, registryJson(registry));
+  fs.renameSync(temp, target);
 }

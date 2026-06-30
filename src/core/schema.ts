@@ -23,6 +23,7 @@ import docsExplainSchemaJson from '../schemas/docs-explain.schema.json';
 import docsListSchemaJson from '../schemas/docs-list.schema.json';
 import docsMarkSchemaJson from '../schemas/docs-mark.schema.json';
 import docsPatchPlanSchemaJson from '../schemas/docs-patch-plan.schema.json';
+import docsRegisterSchemaJson from '../schemas/docs-register.schema.json';
 import docsRequiredReadingSchemaJson from '../schemas/docs-required-reading.schema.json';
 import evidenceLintSchemaJson from '../schemas/evidence-lint.schema.json';
 import evidenceListSchemaJson from '../schemas/evidence-list.schema.json';
@@ -133,6 +134,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.docs.list.v1': docsListSchemaJson as JsonObject,
   'hadara.docs.mark.v1': docsMarkSchemaJson as JsonObject,
   'hadara.docs.patchPlan.v1': docsPatchPlanSchemaJson as JsonObject,
+  'hadara.docs.register.v1': docsRegisterSchemaJson as JsonObject,
   'hadara.docs.requiredReading.v1': docsRequiredReadingSchemaJson as JsonObject,
   'hadara.evidence.lint.v1': evidenceLintSchemaJson as JsonObject,
   'hadara.evidence.list.v1': evidenceListSchemaJson as JsonObject,

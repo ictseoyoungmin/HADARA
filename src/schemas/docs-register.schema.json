@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.docs.register.v1",
+  "x-hadara-schema-id": "hadara.docs.register.v1",
+  "title": "HADARA Docs Register Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "mode", "path", "source", "action", "document", "writes", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.docs.register.v1" },
+    "command": { "const": "docs.register" },
+    "ok": { "type": "boolean" },
+    "mode": { "type": "string", "enum": ["dry-run", "execute"] },
+    "path": { "type": "string" },
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["registryPath", "registryPresent", "inferred"],
+      "properties": {
+        "registryPath": { "const": ".hadara/docs-registry.json" },
+        "registryPresent": { "type": "boolean" },
+        "inferred": { "type": "boolean" }
+      }
+    },
+    "action": { "type": "string", "enum": ["create", "already-registered", "blocked"] },
+    "document": { "oneOf": [{ "$ref": "#/$defs/document" }, { "type": "null" }] },
+    "writes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "document": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "title", "kind", "status", "readWhen", "requiredReading", "updateOwner", "updatedByCommands"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "minLength": 1 },
+        "readWhen": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "requiredReading": { "type": "boolean" },
+        "updateOwner": { "type": "string", "minLength": 1 },
+        "updatedByCommands": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

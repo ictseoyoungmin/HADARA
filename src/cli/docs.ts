@@ -1,6 +1,6 @@
 import { getFlag, getRequiredStringOption, getStringOption } from './args';
 import { createDocsArchivePlanReport, createDocsMarkReport, createDocsRequiredReadingReport } from '../services/docs-cleanup';
-import { createDocsDoctorReport, createDocsExplainReport, createDocsListReport } from '../services/docs-registry';
+import { createDocsDoctorReport, createDocsExplainReport, createDocsListReport, createDocsRegisterReport } from '../services/docs-registry';
 import { createDocsPatchPlanReport, createManagedSectionExplainReport, createManagedSectionsListReport } from '../services/managed-sections';
 
 export interface DocsCommandInput {
@@ -27,6 +27,20 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
   if (sub === 'explain') {
     const documentPath = getStringOption(input.args, '--path') ?? input.args[2] ?? '';
     const report = createDocsExplainReport(input.projectRoot, documentPath);
+    printReport(report, input.jsonOutput);
+    return true;
+  }
+  if (sub === 'register') {
+    const report = createDocsRegisterReport(input.projectRoot, {
+      documentPath: getRequiredStringOption(input.args, '--path'),
+      title: getStringOption(input.args, '--title'),
+      kind: getStringOption(input.args, '--kind'),
+      status: getStringOption(input.args, '--status'),
+      readWhen: getStringOption(input.args, '--read-when'),
+      requiredReading: getFlag(input.args, '--required-reading'),
+      requireExists: getFlag(input.args, '--require-exists'),
+      mode: getFlag(input.args, '--execute') ? 'execute' : 'dry-run'
+    });
     printReport(report, input.jsonOutput);
     return true;
   }

@@ -51,6 +51,7 @@ describe('schema fixtures', () => {
       'hadara.docs.list.v1',
       'hadara.docs.mark.v1',
       'hadara.docs.patchPlan.v1',
+      'hadara.docs.register.v1',
       'hadara.docs.requiredReading.v1',
       'hadara.event.v1',
       'hadara.evidence.lint.v1',

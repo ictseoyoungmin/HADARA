@@ -1243,6 +1243,27 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     conflictsWith: []
   }),
   commandEntry({
+    id: 'docs.register',
+    command: 'hadara docs register --path <path> [--title <title>] [--kind <kind>] [--status <status>] [--read-when <read-when>] [--required-reading] [--require-exists] [--execute] [--json]',
+    summary: 'Register one project document in .hadara/docs-registry.json without mutating AGENTS, context, or workflow prose.',
+    canonical: true,
+    appearsInDefaultHelp: false,
+    family: 'docs-governance',
+    scope: 'docs',
+    lifecycleStage: 'work',
+    requiredness: 'conditional',
+    writeBoundary: 'shared-doc-write',
+    readOnly: false,
+    risk: 'medium',
+    actor: 'agent-worker',
+    status: 'experimental',
+    schemaVersion: 'hadara.docs.register.v1',
+    docs: ['docs/HADARA_WORKFLOW.md', 'docs/SCHEMAS.md'],
+    examples: [example('Register a spec document', 'hadara docs register --path docs/specs/example.md --execute --json', 'When adding a project-specific document to the canonical docs registry.')],
+    related: ['docs.list', 'docs.doctor', 'docs.explain', 'init.register-doc'],
+    conflictsWith: []
+  }),
+  commandEntry({
     id: 'docs.managed.list',
     command: 'hadara docs managed list [--json]',
     summary: 'List managed Markdown sections discovered in known HADARA document targets.',
