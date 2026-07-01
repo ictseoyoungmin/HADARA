@@ -6,7 +6,7 @@ import { handleTaskCommand } from '../../src/cli/task';
 import { validateSchema } from '../../src/core/schema';
 import { appendEvidence } from '../../src/evidence/evidence';
 import { createTaskCapsule } from '../../src/task/task-capsule';
-import { createTaskCloseReport } from '../../src/task/task-close';
+import { createTaskCloseReport, executeTaskCloseEvidence } from '../../src/task/task-close';
 import { createTaskCloseRepairPlanReport } from '../../src/task/task-close-repair-plan';
 
 const roots: string[] = [];
@@ -55,7 +55,7 @@ describe('task close repair plan', () => {
     const task = createTaskCapsule(root, 'Repair stale close');
     completeTask(root, task.id, task.dir);
     appendCloseEvidence(root, task.id);
-    fs.appendFileSync(path.join(task.dir, 'PLAN.md'), '| 2 | Drift after close. | Done | Drift. |\n', 'utf8');
+    fs.appendFileSync(path.join(task.dir, 'TASK.md'), '\n| RF-2 | Follow-up | Drift after close. | Open | Drift. |\n', 'utf8');
 
     const report = createTaskCloseRepairPlanReport(root, task.id);
 
@@ -90,7 +90,7 @@ describe('task close repair plan', () => {
     const task = createTaskCapsule(root, 'Repair duplicate close');
     completeTask(root, task.id, task.dir);
     appendCloseEvidence(root, task.id);
-    appendCloseEvidence(root, task.id);
+    appendDuplicateCloseEvidence(task.dir);
 
     const report = createTaskCloseRepairPlanReport(root, task.id);
 
@@ -137,14 +137,17 @@ describe('task close repair plan', () => {
 });
 
 function appendCloseEvidence(root: string, taskId: string): void {
-  const closePlan = createTaskCloseReport(root, taskId, 'dry-run');
-  appendEvidence(root, {
-    taskId,
-    kind: 'command-log',
-    summary: closePlan.closeEvidence.summary,
-    result: 'passed',
-    visibility: 'public'
-  });
+  const closePlan = createTaskCloseReport(root, taskId, 'execute');
+  executeTaskCloseEvidence(root, closePlan);
+}
+
+function appendDuplicateCloseEvidence(taskDir: string): void {
+  const evidencePath = path.join(taskDir, 'evidence.jsonl');
+  const lines = fs.readFileSync(evidencePath, 'utf8').trim().split(/\r?\n/);
+  const latest = JSON.parse(lines.at(-1) ?? '{}') as { id?: string; time?: string };
+  latest.id = `${latest.id ?? 'ev:T-0000:duplicate'}dup`;
+  latest.time = '2026-06-02T00:00:01.000Z';
+  fs.appendFileSync(evidencePath, `${JSON.stringify(latest)}\n`, 'utf8');
 }
 
 function snapshotFiles(root: string): Record<string, string> {

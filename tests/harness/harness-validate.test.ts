@@ -147,6 +147,51 @@ describe('Harness Task Capsule validation', () => {
     );
   });
 
+  it('accepts ergonomic Change Summary line ranges at draft level', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Change line ranges');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace(
+          '| TBD | N/A | TBD | TBD | TBD |',
+          '| src/one.ts | L7 | Single final-state line. | Fixture. | Harness. |\n| src/two.ts | 7-25, L30-L40 | Mixed range syntax. | Fixture. | Harness. |\n| src/new.ts | new-file | New file marker. | Fixture. | Harness. |'
+        ),
+      'utf8'
+    );
+
+    const result = validateTaskCapsule(root, task.id, { level: 'draft' });
+
+    expect(result.ok).toBe(true);
+    expect(result.issues).toEqual([]);
+  });
+
+  it('reports Change Summary line range examples for invalid values', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Bad line range');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace('| TBD | N/A | TBD | TBD | TBD |', '| src/bad.ts | L7- | Invalid range. | Fixture. | Harness. |'),
+      'utf8'
+    );
+
+    const result = validateTaskCapsule(root, task.id, { level: 'draft' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        code: 'CHANGE_SUMMARY_LINE_RANGE_INVALID',
+        example: 'L7-L25, L30-L40',
+        message: expect.stringContaining('comma-separated ranges')
+      })
+    );
+  });
+
   it('reports changed or missing Source Documents when a concrete hash is recorded', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Source doc drift');

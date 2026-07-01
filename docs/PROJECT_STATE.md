@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0466 Next action message summary dedupe |
-| Active Task | Close repair-plan hash drift follow-up or operator decision |
+| Latest Completed Task | T-0467 Close repair diagnostic and change summary UX |
+| Active Task | Mounted task status performance optimization or operator decision |
 
 ## Next Planned Line
 
@@ -29,6 +29,8 @@ T-0464 follow-up note: `task finalize --execute` now emits stage progress lines 
 T-0465 follow-up note: finalize dry-run now reports staged required-write plans as `planStatus: executable-with-deferred-checks` with `deferredChecks` and `partialExecutionRisk`, and required write next actions warn that execute may stop after re-evaluating deferred checks. Focused Docker finalize/schema tests and TypeScript build passed, workspace `dist` was refreshed, and built CLI staged-plan smoke passed. Evidence: `ev:T-0465:5bab047c37bf4178a8c94cb9`, `ev:T-0465:f4e0591df698476c8d583886`, `ev:T-0465:a3639a0719a5477cb621b1d9`. Remaining UX cleanup candidates are next-action `message`/`summary` duplication, Change Summary line-range authoring/parser behavior, and mounted status/finalize performance.
 
 T-0466 follow-up note: lifecycle next actions now emit canonical `summary` without redundant duplicate `message`, close execute next actions use the same helper, and workbench conversion preserves its intentional UX `message` by falling back to lifecycle `summary`. Focused lifecycle tests passed, TypeScript build passed, workspace `dist` was refreshed, and built CLI finalize smoke showed `summary`-only lifecycle next actions. Evidence: `ev:T-0466:a4416987992f42febb201e3c`, `ev:T-0466:4f9f3002cd4444c4a454d6d3`, `ev:T-0466:014bbcd28b074852b9d85fdf`. RF-1 records adjacent `tests/unit/task-close-repair-plan.test.ts` close-source hash classification failures as a follow-up outside the dedupe scope; evidence `ev:T-0466:a5cdbfddcf1f470887af9188` is resolved by `ev:T-0466:35bccc2385c34ee7be1e8d1d`.
+
+T-0467 follow-up note: `task close-repair-plan` is now positioned in registry/docs as a conditional read-only repair diagnostic for stale, invalid, duplicate, or missing close proof, not an ordinary lifecycle loop command. The T-0466 close-repair-plan fixture drift is resolved against current close-source semantics. Change Summary line validation now accepts single lines, ergonomic ranges, comma-separated ranges, and special file markers with clearer examples, and selected-task `task status` now emits read-only `.git`-derived Change Summary candidate rows without writing TASK.md. Focused Docker tests and TypeScript build passed with refreshed `dist`; built CLI status smoke confirmed git-backed candidate rows and recorded a slow mounted status diagnostic. Evidence: `ev:T-0467:e6450a6e21b6450dbaae39ed`, `ev:T-0467:a469046512334522b0bc0418`. Next high-signal follow-up is mounted `task status` performance if agent UX remains slow.
 
 T-0460 follow-up note: agent UX global option parsing now supports known global options before the command token. The CLI entry normalizes leading `--project <path>` and `--json` before dispatch while preserving command-first invocations and strict option-value validation. Built CLI smokes passed for `node dist/cli/main.js --json --project . version` and `node dist/cli/main.js --project /tmp/hadara-t0460-global-init init --profile basic --json`; Docker focused args tests and TypeScript build passed, and workspace `dist` was refreshed. Evidence: `ev:T-0460:708e920cff184178b4a650d5`, `ev:T-0460:4951e6416ffc4c0bad478427`. Broader command-specific option reordering remains out of scope unless another dogfood friction appears.
 

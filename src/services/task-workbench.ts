@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { EvidenceIndexRecord, PersistedEvidenceRecord, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
@@ -69,6 +70,11 @@ export interface TaskAuthoringSuggestions {
     guidance: string[];
     candidateSignals: Array<{ source: string; value?: string; path?: string; suggestedConcern?: string }>;
     draftAcceptanceExamples: Array<{ text: string; confidence: 'low'; source: 'generic-pattern' }>;
+  };
+  changeSummary: {
+    status: 'ok' | 'placeholder' | 'suggested';
+    guidance: string[];
+    candidateRows: Array<{ path: string; lines: string; row: string; source: 'git-diff' | 'git-status'; status: 'ready' | 'new-file' | 'deleted-file' | 'whole-file' }>;
   };
 }
 
@@ -486,14 +492,16 @@ export function createTaskAuthoringSuggestions(projectRoot: string, capsulePath:
   const titleSuggestion = createTitleSuggestion(title);
   const sourceDocuments = createSourceDocumentSuggestions(projectRoot, sourceRows, title);
   const acceptance = createAcceptanceSuggestions(acceptanceRows, title, sourceDocuments.candidateSignals);
-  const status = titleSuggestion.status === 'ok' && sourceDocuments.status === 'ok' && acceptance.status === 'ok' ? 'none' : 'suggested';
+  const changeSummary = createChangeSummarySuggestions(projectRoot, content);
+  const status = titleSuggestion.status === 'ok' && sourceDocuments.status === 'ok' && acceptance.status === 'ok' && changeSummary.status === 'ok' ? 'none' : 'suggested';
   return {
     readOnly: true,
     writesProse: false,
     status,
     title: titleSuggestion,
     sourceDocuments,
-    acceptance
+    acceptance,
+    changeSummary
   };
 }
 
@@ -504,7 +512,8 @@ function createEmptyAuthoringSuggestions(title: string): TaskAuthoringSuggestion
     status: 'none',
     title: { status: 'ok', current: title, guidance: [] },
     sourceDocuments: { status: 'ok', guidance: [], candidateSignals: [], hashRows: [] },
-    acceptance: { status: 'ok', guidance: [], candidateSignals: [], draftAcceptanceExamples: [] }
+    acceptance: { status: 'ok', guidance: [], candidateSignals: [], draftAcceptanceExamples: [] },
+    changeSummary: { status: 'ok', guidance: [], candidateRows: [] }
   };
 }
 
@@ -611,6 +620,102 @@ function createAcceptanceSuggestions(
       }
     ]
   };
+}
+
+function createChangeSummarySuggestions(projectRoot: string, taskContent: string): TaskAuthoringSuggestions['changeSummary'] {
+  const rows = parseMarkdownRowsUnderHeading(taskContent, '## Change Summary').filter((row) => row[0] !== 'Path');
+  const hasPlaceholder = rows.length === 0 || rows.some((row) => row.some((cell) => /^TBD$/i.test(cell)));
+  const candidateRows = createGitChangeSummaryCandidates(projectRoot);
+  return {
+    status: hasPlaceholder ? 'placeholder' : candidateRows.length > 0 ? 'suggested' : 'ok',
+    guidance: [
+      'Change Summary is agent-owned prose; HADARA suggests rows but does not edit TASK.md.',
+      'Line ranges should describe the final file state. Preferred examples: L7, L7-L25, L7-L25, L30-L40.',
+      'Use new-file, deleted-file, whole-file, or N/A when exact final line ranges are not meaningful.'
+    ],
+    candidateRows
+  };
+}
+
+function createGitChangeSummaryCandidates(projectRoot: string): TaskAuthoringSuggestions['changeSummary']['candidateRows'] {
+  if (!fs.existsSync(path.join(projectRoot, '.git'))) return [];
+  const diff = runGit(projectRoot, ['diff', '--unified=0', '--no-ext-diff', '--relative']);
+  const status = runGit(projectRoot, ['status', '--porcelain=v1', '--untracked-files=normal']);
+  if (!diff.ok && !status.ok) return [];
+  const rows = [...parseDiffChangeSummaryRows(diff.stdout), ...parseStatusChangeSummaryRows(status.stdout)];
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    const key = `${row.path}:${row.lines}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function runGit(projectRoot: string, args: string[]): { ok: boolean; stdout: string } {
+  const result = spawnSync('git', ['-C', projectRoot, ...args], { encoding: 'utf8', maxBuffer: 1024 * 1024 });
+  return { ok: result.status === 0, stdout: result.stdout ?? '' };
+}
+
+function parseDiffChangeSummaryRows(diff: string): TaskAuthoringSuggestions['changeSummary']['candidateRows'] {
+  const rows: TaskAuthoringSuggestions['changeSummary']['candidateRows'] = [];
+  let currentPath = '';
+  const rangesByPath = new Map<string, string[]>();
+  for (const line of diff.split(/\r?\n/)) {
+    if (line.startsWith('+++ b/')) {
+      currentPath = line.slice('+++ b/'.length);
+      continue;
+    }
+    if (!currentPath || !line.startsWith('@@')) continue;
+    const match = line.match(/\+(\d+)(?:,(\d+))?/);
+    if (!match) continue;
+    const start = Number(match[1]);
+    const count = match[2] === undefined ? 1 : Number(match[2]);
+    if (count <= 0) continue;
+    const range = count <= 1 ? `L${start}` : `L${start}-L${start + count - 1}`;
+    const ranges = rangesByPath.get(currentPath) ?? [];
+    ranges.push(range);
+    rangesByPath.set(currentPath, ranges);
+  }
+  for (const [pathValue, ranges] of rangesByPath) {
+    const lines = ranges.join(', ');
+    rows.push({
+      path: pathValue,
+      lines,
+      row: `| ${pathValue} | ${lines} | Summarize change. | Git diff candidate; edit this prose before close. | TBD |`,
+      source: 'git-diff',
+      status: 'ready'
+    });
+  }
+  return rows;
+}
+
+function parseStatusChangeSummaryRows(status: string): TaskAuthoringSuggestions['changeSummary']['candidateRows'] {
+  const rows: TaskAuthoringSuggestions['changeSummary']['candidateRows'] = [];
+  for (const line of status.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    const code = line.slice(0, 2);
+    const rawPath = line.slice(3).trim();
+    if (!rawPath || rawPath.includes(' -> ')) continue;
+    if (code === '??') {
+      rows.push({
+        path: rawPath,
+        lines: 'new-file',
+        row: `| ${rawPath} | new-file | Summarize new file. | Git status candidate; edit this prose before close. | TBD |`,
+        source: 'git-status',
+        status: 'new-file'
+      });
+    } else if (code.includes('D')) {
+      rows.push({
+        path: rawPath,
+        lines: 'deleted-file',
+        row: `| ${rawPath} | deleted-file | Summarize deletion. | Git status candidate; edit this prose before close. | TBD |`,
+        source: 'git-status',
+        status: 'deleted-file'
+      });
+    }
+  }
+  return rows;
 }
 
 function normalizeSourcePath(value: string): string {

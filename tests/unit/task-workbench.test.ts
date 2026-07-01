@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -19,6 +20,11 @@ function tempProject(): string {
   fs.writeFileSync(path.join(dir, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\n## Current State\n\n| Area | State | Notes |\n|---|---|---|\n| Active / Next Task | T-0001 | Fixture. |\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'IMPLEMENTATION_SOP.md'), '# IMPLEMENTATION_SOP\n\n## Session Start\n\nRead docs.\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | State. |\n| `docs/AGENT_HANDOFF.md` | Every session | Handoff. |\n| `docs/TASK_BOARD.md` | Every session | Board. |\n| `docs/IMPLEMENTATION_SOP.md` | Every session | SOP. |\n\n## Init Profile Matrix\n\n| Profile | Scale |\n|---|---|\n| governed | Heavy |\n\n## Scaffold Document Structure\n\n| Document | Required Structure |\n|---|---|\n| docs/PROJECT_STATE.md | Product. |\n\n## Implementation\n\nWork.\n\n## Validation\n\nCheck.\n\n## Session End\n\nUpdate.\n\n## Handoff Compaction\n\nCompact.\n', 'utf8');
   return dir;
+}
+
+function runGit(root: string, args: string[]): void {
+  const result = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+  if (result.status !== 0) throw new Error(`git ${args.join(' ')} failed: ${result.stderr}`);
 }
 
 afterEach(() => {
@@ -159,6 +165,36 @@ describe('task workbench status report', () => {
     });
     expect(report.authoringSuggestions.acceptance.guidance).toContain('Replace generic acceptance rows with behavior-specific criteria.');
     expect(report.authoringSuggestions.acceptance.candidateSignals.filter((item) => item.source === 'task-title')).toHaveLength(1);
+    expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
+    expect(snapshotProject(root)).toEqual(before);
+  });
+
+  it('suggests Change Summary rows from git without writing TASK.md', () => {
+    const root = tempProject();
+    runGit(root, ['init']);
+    runGit(root, ['config', 'user.name', 'Hadara Test']);
+    runGit(root, ['config', 'user.email', 'hadara@example.test']);
+    fs.mkdirSync(path.join(root, 'src'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'src', 'changed.ts'), 'export const before = true;\n', 'utf8');
+    runGit(root, ['add', '.']);
+    runGit(root, ['commit', '-m', 'init']);
+    const task = createTaskCapsule(root, 'Change summary suggestions');
+    fs.writeFileSync(path.join(root, 'src', 'changed.ts'), 'export const before = true;\nexport const after = true;\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'src', 'new-file.ts'), 'export const created = true;\n', 'utf8');
+    const before = snapshotProject(root);
+
+    const report = createTaskWorkbenchReport(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
+
+    expect(report.authoringSuggestions.changeSummary).toMatchObject({
+      status: 'placeholder',
+      guidance: expect.arrayContaining([expect.stringContaining('HADARA suggests rows but does not edit TASK.md')])
+    });
+    expect(report.authoringSuggestions.changeSummary.candidateRows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: 'src/changed.ts', lines: 'L2', source: 'git-diff', status: 'ready' }),
+        expect.objectContaining({ path: 'src/new-file.ts', lines: 'new-file', source: 'git-status', status: 'new-file' })
+      ])
+    );
     expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
     expect(snapshotProject(root)).toEqual(before);
   });

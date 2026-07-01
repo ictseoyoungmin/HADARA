@@ -170,14 +170,38 @@
     "authoringSuggestions": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["readOnly", "writesProse", "status", "title", "sourceDocuments", "acceptance"],
+      "required": ["readOnly", "writesProse", "status", "title", "sourceDocuments", "acceptance", "changeSummary"],
       "properties": {
         "readOnly": { "const": true },
         "writesProse": { "const": false },
         "status": { "enum": ["none", "suggested"] },
         "title": { "type": "object", "additionalProperties": true },
         "sourceDocuments": { "type": "object", "additionalProperties": true },
-        "acceptance": { "type": "object", "additionalProperties": true }
+        "acceptance": { "type": "object", "additionalProperties": true },
+        "changeSummary": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["status", "guidance", "candidateRows"],
+          "properties": {
+            "status": { "enum": ["ok", "placeholder", "suggested"] },
+            "guidance": { "type": "array", "items": { "type": "string" } },
+            "candidateRows": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": ["path", "lines", "row", "source", "status"],
+                "properties": {
+                  "path": { "type": "string" },
+                  "lines": { "type": "string" },
+                  "row": { "type": "string" },
+                  "source": { "enum": ["git-diff", "git-status"] },
+                  "status": { "enum": ["ready", "new-file", "deleted-file", "whole-file"] }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "nextActions": {

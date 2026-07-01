@@ -314,7 +314,15 @@ function validateTaskChangeSummaryTable(content: string, relativePath: string, i
     if (!lines) {
       issues.push(taskTableIssue('CHANGE_SUMMARY_LINE_RANGE_MISSING', 'Change Summary rows require a Lines value.', relativePath, heading));
     } else if (!isChangeSummaryLines(lines)) {
-      issues.push(taskTableIssue('CHANGE_SUMMARY_LINE_RANGE_INVALID', `Change Summary Lines value "${lines}" is invalid.`, relativePath, heading));
+      issues.push(
+        taskTableIssue(
+          'CHANGE_SUMMARY_LINE_RANGE_INVALID',
+          `Change Summary Lines value "${lines}" is invalid. Use L7, L7-L25, comma-separated ranges such as L7-L25, L30-L40, whole-file, new-file, deleted-file, or N/A.`,
+          relativePath,
+          heading,
+          'L7-L25, L30-L40'
+        )
+      );
     }
   }
 }
@@ -417,12 +425,13 @@ function isMissingReference(value: string): boolean {
 }
 
 function isChangeSummaryLines(value: string): boolean {
+  const lineToken = '(?:L?\\d+)(?:-L?\\d+)?';
   return (
     value === 'N/A' ||
     value === 'whole-file' ||
     value === 'new-file' ||
     value === 'deleted-file' ||
-    /^L\d+-L\d+(?:,\s*L\d+-L\d+)*$/.test(value)
+    new RegExp(`^${lineToken}(?:\\s*,\\s*${lineToken})*$`).test(value)
   );
 }
 

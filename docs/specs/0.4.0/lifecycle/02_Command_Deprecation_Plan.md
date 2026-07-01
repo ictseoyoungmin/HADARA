@@ -35,6 +35,6 @@ The following commands are not removed and remain normal special-case tools insi
 | `task ready` | Debugging done-level readiness blockers. |
 | `task close` | Debugging close-evidence append behavior. |
 | `task audit-close` | Debugging or repairing close proof after finalize did not already return `closed-valid`. |
-| `task close-repair-plan` | Classifying stale or invalid close proof. |
+| `task close-repair-plan` | Conditional repair diagnostic when status/finalize/audit reports stale, invalid, duplicate, or missing close proof. |
 | `evidence lint/list/summary` | Inspecting evidence ids, metadata, or alignment. |
 | `protocol doctor/remediate` | Repairing protocol drift with dry-run-first guards. |

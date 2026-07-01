@@ -552,7 +552,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   {
     id: 'task.close-repair-plan',
     command: 'hadara task close-repair-plan --task <task-id> [--json]',
-    summary: 'Classify close proof repair state and return exact repair next actions.',
+    summary: 'Diagnose stale, invalid, duplicate, or missing close proof state and return repair next actions.',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'capsule-lifecycle',
@@ -571,7 +571,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     examples: [example('Plan close repair', 'hadara task close-repair-plan --task T-0001 --json', 'When audit-close reports missing, stale, invalid, or duplicate close proof state.')],
     related: ['task.lifecycle', 'task.close', 'task.audit-close'],
     conflictsWith: [],
-    notes: 'This command is read-only and does not append replacement close evidence.'
+    notes: 'Conditional repair diagnostic only. Ordinary capsules should use task status and finalize; this command is read-only and does not append replacement close evidence.'
   },
   {
     id: 'task.finish',

@@ -173,6 +173,8 @@ Allowed `Lines` formats:
 ```text
 L10-L20
 L10-L20, L44-L51
+L10
+10-20
 whole-file
 new-file
 deleted-file
@@ -182,7 +184,7 @@ N/A
 Rules:
 
 ```text
-Line ranges must be final-state line ranges.
+Line ranges must be final-state line ranges. Prefer `L10-L20` / `L10-L20, L44-L51`; `L10` and `10-20` are accepted for operator ergonomics.
 Generated files may use N/A with a reason.
 Deleted files use deleted-file.
 Whole-file rewrites use whole-file.

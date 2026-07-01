@@ -467,3 +467,4 @@
 | T-0464 | Agent UX finalize execute progress output | Done | tasks/T-0464-agent-ux-finalize-execute-progress-output | Adds execute-only finalize progress output on stderr. |
 | T-0465 | Finalize staged plan hardening | Done | tasks/T-0465-finalize-staged-plan-hardening | Makes finalize dry-run expose deferred checks and partial execution risk. |
 | T-0466 | Next action message summary dedupe | Done | tasks/T-0466-next-action-message-summary-dedupe | Removes redundant lifecycle next-action `message` output; RF-1 tracks adjacent close-repair-plan hash drift. |
+| T-0467 | Close repair diagnostic and change summary UX | Done | tasks/T-0467-close-repair-diagnostic-and-change-summary-ux | Clarifies repair-plan as conditional diagnostic and adds Change Summary UX; validation evidence `ev:T-0467:e6450a6e21b6450dbaae39ed`, smoke `ev:T-0467:a469046512334522b0bc0418`. |
