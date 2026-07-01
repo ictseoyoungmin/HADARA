@@ -4,26 +4,27 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0452. |
-| Current Phase | 0.4 implementation budget complete plus 0.3.4 stable readiness pending | T-0452 reconciled final handoff/readiness guidance; 0.4 release-line work remains separate and has not started. |
-| Latest Completed Task | T-0452 T-04A24 Final Review and Documentation Cleanup | Final handoff/readiness docs now route to a separate release-line decision instead of another implementation-budget capsule. |
-| Active / Next Task | 0.4 release-line decision, when explicitly started | Operator should decide whether to start 0.4.0-rc.0 readiness; release readiness, publish, package recycle, and stable release work are outside the completed implementation budget. |
-| Validation Baseline | T-0452 final docs cleanup plus T-0451 workflow polish | T-0452 passed in `ev:T-0452:25accc6961dc44e293b7041f`; T-0451 passed in `ev:T-0451:c977116a0d344e49b78c69a7`, `ev:T-0451:4c3c982e9f2d405489410abe`, and `ev:T-0451:9a87b48cef7e481e8bb3faf1`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, and the agent UX refactor dogfood loop has started with T-0453. |
+| Current Phase | Agent UX refactor dogfood loop plus 0.3.4 stable readiness pending | T-0453 completed the first capsule in the requested 5-15 capsule agent UX optimization line; 0.4 release-line work remains separate and has not started. |
+| Latest Completed Task | T-0453 Agent UX Validation Run Task Sync Decoupling | `validation run` now records evidence without `TASK.md` close-source churn by default; `--update-task` preserves deliberate row sync. |
+| Active / Next Task | Agent UX validation attempt/latest-result modeling | Continue the agent UX refactor loop with first-class validation attempt/latest-result semantics; release readiness, publish, package recycle, and stable release work remain outside this line. |
+| Validation Baseline | T-0453 validation-run task sync decoupling plus T-0452 final docs cleanup | T-0453 passed in `ev:T-0453:6a76b8b335fb4151b6d9f92a`; T-0452 passed in `ev:T-0452:25accc6961dc44e293b7041f`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| 0.4 release-line decision | Next only when the operator explicitly starts release work. T-0452 completed the 24-capsule 0.4 implementation budget; release readiness/publish/recycle work is separate. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
+| Agent UX validation attempt/latest-result modeling | Next capsule in the 5-15 capsule UX refactor loop. Give repeated validation checks a clearer latest-attempt/resolved-attempt model so agents do less evidence bookkeeping. | `tasks/T-0453-agent-ux-validation-run-task-sync-decoupling/HANDOFF.md`, `.hadara/context/MEMORY.md` |
+| 0.4 release-line decision | Deferred until explicitly started. T-0452 completed the 24-capsule 0.4 implementation budget; release readiness/publish/recycle work is separate. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0453 / Agent UX Validation Run Task Sync Decoupling | Made `validation run` evidence-only by default and added `--update-task` for deliberate TASK.md Validation row sync, reducing close-source churn during validation. | `ev:T-0453:facedecf71cf4747adfdd522`, `ev:T-0453:bff69d665fcb466fb9bc910b`, `ev:T-0453:6a76b8b335fb4151b6d9f92a` |
 | T-0452 / T-04A24 Final Review and Documentation Cleanup | Reconciled final 0.4 handoff/readiness docs so `task next` points at T-0452 during the capsule and future guidance moves to a separate release-line decision instead of another generic hardening capsule. | `ev:T-0452:25accc6961dc44e293b7041f` |
 | T-0451 / T-04A23 Validation Run Workflow Polish | Aligned generated 0.4 workflow docs, spec template wording, registry-backed default help, and lifecycle guide so `validation run` is the ordinary validation evidence path and `evidence add-command` is conditional/non-default. | `ev:T-0451:c977116a0d344e49b78c69a7`, `ev:T-0451:4c3c982e9f2d405489410abe`, `ev:T-0451:9a87b48cef7e481e8bb3faf1` |
-| T-0450 / T-04A22 Lifecycle UX Hardening | Added `hadara validation run` for real command execution plus durable evidence/Validation row updates, additive finalize state for `ready-to-close`, and resolved failed-evidence projection display. | `ev:T-0450:91632ae5de42456aa4e2c608`, `ev:T-0450:52e434e359144e9387c5c591` |
 
 ## Current Known Problems
 
@@ -95,13 +96,15 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Decide whether to start the 0.4.0 release line. | T-0452 completed the 24-capsule 0.4 implementation budget; any 0.4.0-rc.0 readiness, publish, package recycle, stable decision, or stable publish work requires a later explicit release-line capsule. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
+| Open the next agent UX capsule for validation attempt/latest-result modeling. | T-0453 removed default `TASK.md` write churn, but repeated validation attempts still need a clearer first-class latest/resolved model to reduce residual evidence bookkeeping. | `tasks/T-0453-agent-ux-validation-run-task-sync-decoupling/HANDOFF.md`, `.hadara/context/MEMORY.md` |
+| Later, decide whether to start the 0.4.0 release line. | T-0452 completed the 24-capsule 0.4 implementation budget; any 0.4.0-rc.0 readiness, publish, package recycle, stable decision, or stable publish work requires a later explicit release-line capsule. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0453 / Agent UX Validation Run Task Sync Decoupling | Focused validation-run/init/lifecycle tests, TypeScript build, done-level harness, evidence lint, and diff check passed after decoupling validation evidence capture from automatic TASK.md row sync. | Evidence `ev:T-0453:facedecf71cf4747adfdd522`, `ev:T-0453:bff69d665fcb466fb9bc910b`, `ev:T-0453:6a76b8b335fb4151b6d9f92a`; next UX capsule should address validation attempt/latest-result semantics. |
 | T-0452 / T-04A24 Final Review and Documentation Cleanup | Final handoff cleanup checks passed; stale generic 0.4 hardening next-step wording is gone, `task next` points at T-0452 while active, and release-line separation remains documented. | Evidence `ev:T-0452:25accc6961dc44e293b7041f`; 0.4 implementation budget is complete pending final close proof. |
 | T-0451 / T-04A23 Validation Run Workflow Polish | Focused init/help/lifecycle/registry tests, TypeScript build, done-level harness, evidence lint, and diff check passed after aligning generated workflow/default help/lifecycle guidance around `validation run`. | Evidence `ev:T-0451:c977116a0d344e49b78c69a7`, `ev:T-0451:4c3c982e9f2d405489410abe`, `ev:T-0451:9a87b48cef7e481e8bb3faf1`; next work is T-04A24 final review/doc cleanup. |
 | T-0450 / T-04A22 Lifecycle UX Hardening | Focused tests, TypeScript build, built CLI smoke, done-level harness, evidence lint, and diff check passed after adding validation-run evidence capture, additive finalize state, and resolved-residual projection display. | Evidence `ev:T-0450:91632ae5de42456aa4e2c608`, `ev:T-0450:ea07a22c3f7e4630a2987e12`, `ev:T-0450:52e434e359144e9387c5c591`; superseded for latest 0.4 source validation baseline by T-0451. |

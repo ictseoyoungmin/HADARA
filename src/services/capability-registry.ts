@@ -704,8 +704,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   },
   {
     id: 'validation.run',
-    command: 'hadara validation run --task <task-id> --check <name> [--resolves <id>] [--supersedes <id>] -- <command...>',
-    summary: 'Run a validation command, append execution evidence, refresh evidence projection, update the matching TASK.md Validation row, and optionally resolve or supersede earlier evidence.',
+    command: 'hadara validation run --task <task-id> --check <name> [--update-task] [--resolves <id>] [--supersedes <id>] -- <command...>',
+    summary: 'Run a validation command, append execution evidence, refresh evidence projection, and optionally sync the matching TASK.md Validation row with --update-task.',
     canonical: true,
     appearsInDefaultHelp: true,
     family: 'capsule-lifecycle',
@@ -722,10 +722,11 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     implementationFiles: ['src/cli/validation.ts', 'src/services/validation-run.ts'],
     testFiles: ['tests/unit/validation-run.test.ts'],
     examples: [
-      example('Run focused validation', 'hadara validation run --task T-0001 --check "Focused tests" -- npm test', 'When a real validation command should become durable evidence and update TASK.md.')
+      example('Run focused validation', 'hadara validation run --task T-0001 --check "Focused tests" -- npm test', 'When a real validation command should become durable evidence without editing TASK.md.'),
+      example('Run and sync TASK.md', 'hadara validation run --task T-0001 --check "Focused tests" --update-task -- npm test', 'When the command should also update the TASK.md Validation row.')
     ],
     related: ['evidence.add-command', 'evidence.project', 'task.finalize'],
-    notes: 'Runs argv directly without shell interpretation; use an explicit shell command such as bash -lc when shell features are required.',
+    notes: 'Runs argv directly without shell interpretation; use an explicit shell command such as bash -lc when shell features are required. TASK.md Validation row updates are opt-in so evidence capture does not create close-source churn by default.',
     conflictsWith: []
   },
   {

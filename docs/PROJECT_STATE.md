@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0452 T-04A24 Final Review and Documentation Cleanup |
-| Active Task | 0.4 release-line decision, when explicitly started |
+| Latest Completed Task | T-0453 Agent UX Validation Run Task Sync Decoupling |
+| Active Task | Agent UX validation attempt/latest-result modeling |
 
 ## Next Planned Line
 
@@ -99,6 +99,8 @@ T-0450 follow-up note: T-04A22 Lifecycle UX Hardening is complete. `hadara valid
 T-0451 follow-up note: T-04A23 Validation Run Workflow Polish is complete. Generated 0.4 `docs/HADARA_WORKFLOW.md`, the 0.4 spec template, registry-backed default help, and lifecycle guide now present `hadara validation run` as the ordinary post-validation evidence path. `evidence add-command` remains canonical but is conditional/non-default for already-run operator-supplied results. Focused init/help/lifecycle/registry tests, TypeScript build, done-level harness, evidence lint, and diff check passed. Evidence: `ev:T-0451:c977116a0d344e49b78c69a7`, `ev:T-0451:4c3c982e9f2d405489410abe`, `ev:T-0451:9a87b48cef7e481e8bb3faf1`. The next 0.4 task is T-04A24 final review and documentation cleanup; release-line work remains separate.
 
 T-0452 follow-up note: T-04A24 Final Review and Documentation Cleanup is complete. Final handoff/readiness guidance was reconciled after T-0451 so the implementation-budget line no longer points to another generic 0.4 hardening/polish capsule. `task next` pointed at T-0452 while active, stale T-0450 next-work wording was removed, and release readiness/publish/package recycle/stable release work remains explicitly outside the completed 24-capsule implementation budget. Evidence: `ev:T-0452:25accc6961dc44e293b7041f`. The next step is an operator decision to start a separate 0.4 release-line capsule if desired.
+
+T-0453 follow-up note: T-0453 starts the requested 5-15 capsule agent UX refactor loop based on direct HADARA dogfood. The scoped first fix is complete: `validation run` records evidence without automatic `TASK.md` Validation row sync by default, with `--update-task` reserved for deliberate close-source prose updates. Focused validation-run/init/lifecycle tests, TypeScript build, done-level harness, evidence lint, and diff check passed. Evidence: `ev:T-0453:facedecf71cf4747adfdd522`, `ev:T-0453:bff69d665fcb466fb9bc910b`, `ev:T-0453:6a76b8b335fb4151b6d9f92a`. The next agent UX capsule should address validation attempt/latest-result semantics. This is not release-line readiness, publish, package recycle, or stable release work.
 
 Phase 8 / 0.3.1 is complete through post-rc1 documentation cleanup. It carried Work Item A and Work Item F into implementation as status token governance, document ownership/write-boundary governance, task handoff close-state clarity, installed-package recycle findings cleanup, state consistency projection, and advisory verification gates. The Phase 8 specs are staged under `docs/specs/0.3.1/`; the first rc1 implementation sequence is staged under `docs/specs/0.3.1/rc1/`. Phase 8.1 through Phase 8.6 are complete through T-0324, T-0325 completed the follow-up CloseState derived-state cleanup after review, T-0326 prepared `hadara@0.3.1-rc.1` release readiness without publish mutation, T-0327 published `hadara@0.3.1-rc.1`, verified npm visibility/tarball contents, hardened future rc publish tags, and corrected npm dist-tags so stable `0.3.0` stays on `latest` while rc1 is available as `next`, T-0328 verified the published rc1 package from installed consumer paths in the `hadara-dev` container, and T-0329 refreshed post-rc1 handoff/release-note wording after reviewer feedback.
 

@@ -32,9 +32,9 @@ hadara task status --task T-XXXX --json
 hadara task create "task title" --json
 hadara task status --task T-XXXX --json
 
-# Do the scoped work.
+# Do the scoped work, then run real validation and record evidence.
 
-hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
+hadara validation run --task T-XXXX --check "Focused tests" -- npm test
 
 # Finalize Task Capsule docs and tracked state docs before closing.
 
@@ -181,6 +181,7 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 | `hadara dev docker-check --focused tests/unit/foo.test.ts --sync-dist --before-hash sha256:... --json` | Run Docker temp-copy validation with optional focused tests and explicit dist sync. | Execute report. | Runs Docker; may write workspace `dist` only with `--sync-dist` and a matching reviewed before-hash. | Requested Docker validation completed and any requested dist sync freshness guard passed. | Task-style failures use 6. |
 | `hadara evidence list --task T-XXXX [--json]` | Discover Task Capsule evidence ids and semantic metadata. | Read-only report. | No. | Evidence list report was generated. | Evidence/task-style failures use 6. |
 | `hadara evidence summary --task T-XXXX [--json]` | Discover compact evidence ids, latest evidence, and latest close evidence. | Read-only report. | No. | Evidence summary report was generated. | Evidence/task-style failures use 6. |
+| `hadara validation run --task T-XXXX --check "..." [--update-task] -- <command>` | Execute a real validation command and record durable evidence. | Execute report. | Yes, appends capsule evidence; updates `TASK.md` Validation only with `--update-task`. | Validation command exited 0 and evidence was recorded. | Evidence/task-style failures use 6. |
 | `hadara evidence add-command --task T-XXXX --summary "..." --result passed [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence unless an explicit idempotency key already exists. | Evidence append succeeded or returned the existing keyed record. | Evidence/task-style failures use 6. |
 | `hadara task finish --task T-XXXX --json` | Preview bounded status bookkeeping for `TASK.md` and `docs/TASK_BOARD.md`. | Dry-run report. | No. | Finish plan has no blocking issues. | Task-style failures use 6. |
 | `hadara task finish --task T-XXXX --execute --json` | Apply bounded status bookkeeping for `TASK.md` and `docs/TASK_BOARD.md`. | Execute after dry-run review. | Yes, bounded to those files. | Planned bookkeeping writes succeeded or no write was needed. | Task-style failures use 6. |

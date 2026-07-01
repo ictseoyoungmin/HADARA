@@ -35,7 +35,7 @@ afterEach(() => {
 });
 
 describe('validation run', () => {
-  it('executes a passing command, appends evidence, refreshes projection, and updates TASK Validation row', () => {
+  it('executes a passing command and appends evidence without TASK.md churn by default', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Validation run pass');
 
@@ -50,15 +50,32 @@ describe('validation run', () => {
       command: 'validation.run',
       ok: true,
       result: 'Passed',
-      taskValidationRow: { updated: true },
+      taskValidationRow: { mode: 'skipped', updated: false },
       acceptanceRows: { updated: false }
     });
     expect(report.evidence?.id).toMatch(new RegExp(`^ev:${task.id}:`));
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
     const taskMd = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
-    expect(taskMd).toContain(`| Focused tests | ${process.execPath} -e process.stdout.write("ok"); process.exit(0) | Yes | Passed | ${report.evidence?.id} |`);
+    expect(taskMd).not.toContain('Focused tests');
     expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain(report.evidence?.id);
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('"category":"validation"');
+  });
+
+  it('updates the TASK Validation row when explicitly requested', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation run task sync');
+
+    const report = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Focused tests',
+      argv: [process.execPath, '-e', 'process.stdout.write("ok"); process.exit(0)'],
+      updateTask: true
+    });
+
+    expect(report.taskValidationRow).toMatchObject({ mode: 'updated', updated: true });
+    const taskMd = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
+    expect(taskMd).toContain(`| Focused tests | ${process.execPath} -e process.stdout.write("ok"); process.exit(0) | Yes | Passed | ${report.evidence?.id} |`);
+    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
   });
 
   it('records failed validation evidence without changing acceptance disposition', () => {
@@ -68,7 +85,8 @@ describe('validation run', () => {
     const report = createValidationRunReport(root, {
       taskId: task.id,
       check: 'Focused tests',
-      argv: [process.execPath, '-e', 'process.exit(2)']
+      argv: [process.execPath, '-e', 'process.exit(2)'],
+      updateTask: true
     });
 
     expect(report.ok).toBe(false);
@@ -108,7 +126,22 @@ describe('validation run', () => {
     try {
       expect(
         handleValidationCommand({
-          args: ['validation', 'run', '--task', task.id, '--check', 'CLI check', '--resolves', 'ev:T-0000:old', '--json', '--', process.execPath, '-e', 'process.exit(0)'],
+          args: [
+            'validation',
+            'run',
+            '--task',
+            task.id,
+            '--check',
+            'CLI check',
+            '--update-task',
+            '--resolves',
+            'ev:T-0000:old',
+            '--json',
+            '--',
+            process.execPath,
+            '-e',
+            'process.exit(0)'
+          ],
           projectRoot: root,
           jsonOutput: true
         })
@@ -119,6 +152,7 @@ describe('validation run', () => {
     const report = JSON.parse(output.join('\n'));
     expect(report.schemaVersion).toBe('hadara.validation.run.v1');
     expect(report.result).toBe('Passed');
+    expect(report.taskValidationRow.updated).toBe(true);
     expect(report.evidence.tags).toContain('resolves:ev:T-0000:old');
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
   });

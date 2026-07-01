@@ -33,9 +33,11 @@ export interface ValidationRunReport {
     markdownAppended: boolean;
   };
   taskValidationRow: {
+    mode: 'skipped' | 'updated';
     updated: boolean;
     appended: boolean;
     path?: string;
+    reason?: string;
   };
   acceptanceRows: {
     updated: false;
@@ -55,6 +57,7 @@ export interface ValidationRunOptions {
   argv: string[];
   tags?: string[];
   timeoutMs?: number;
+  updateTask?: boolean;
 }
 
 export function createValidationRunReport(projectRoot: string, options: ValidationRunOptions): ValidationRunReport {
@@ -109,7 +112,15 @@ export function createValidationRunReport(projectRoot: string, options: Validati
     idempotencyKey: `validation-run:${options.taskId}:${options.check}:${hashText(options.argv.join('\0'))}:${executed.status ?? 'null'}:${executed.signal ?? 'null'}:${hashText((options.tags ?? []).join('\0'))}`
   });
   const evidenceId = evidence.evidence.schemaVersion === 'hadara.evidence.v2' ? evidence.evidence.id : 'evidence.jsonl';
-  const taskValidationRow = updateTaskValidationRow(projectRoot, task.dir, options.check, options.argv.join(' '), result, evidenceId);
+  const taskValidationRow = options.updateTask
+    ? updateTaskValidationRow(projectRoot, task.dir, options.check, options.argv.join(' '), result, evidenceId)
+    : {
+        mode: 'skipped' as const,
+        updated: false,
+        appended: false,
+        path: path.relative(projectRoot, path.join(task.dir, 'TASK.md')).split(path.sep).join('/'),
+        reason: 'TASK.md Validation row sync is opt-in; rerun with --update-task or update task prose deliberately before finalize.'
+      };
 
   return {
     schemaVersion: 'hadara.validation.run.v1',
@@ -164,7 +175,7 @@ function failedInputReport(projectRoot: string, options: ValidationRunOptions, c
       stderrHash: hashText('')
     },
     result: 'Blocked',
-    taskValidationRow: { updated: false, appended: false },
+    taskValidationRow: { mode: 'skipped', updated: false, appended: false, reason: 'Validation command did not run.' },
     acceptanceRows: {
       updated: false,
       reason: 'Validation command did not run.'
@@ -177,7 +188,15 @@ function updateTaskValidationRow(projectRoot: string, taskDir: string, check: st
   const taskPath = path.join(taskDir, 'TASK.md');
   const content = fs.readFileSync(taskPath, 'utf8');
   const bounds = findValidationSectionBounds(content);
-  if (!bounds) return { updated: false, appended: false, path: path.relative(projectRoot, taskPath).split(path.sep).join('/') };
+  if (!bounds) {
+    return {
+      mode: 'updated',
+      updated: false,
+      appended: false,
+      path: path.relative(projectRoot, taskPath).split(path.sep).join('/'),
+      reason: 'TASK.md has no Validation section.'
+    };
+  }
   const section = content.slice(bounds.start, bounds.end);
   const lines = section.split(/\r?\n/);
   const rowIndex = lines.findIndex((line) => {
@@ -196,7 +215,7 @@ function updateTaskValidationRow(projectRoot: string, taskDir: string, check: st
   }
   const next = `${content.slice(0, bounds.start)}${lines.join('\n')}${content.slice(bounds.end)}`;
   fs.writeFileSync(taskPath, next, 'utf8');
-  return { updated: true, appended, path: path.relative(projectRoot, taskPath).split(path.sep).join('/') };
+  return { mode: 'updated', updated: true, appended, path: path.relative(projectRoot, taskPath).split(path.sep).join('/') };
 }
 
 function findValidationSectionBounds(content: string): { start: number; end: number } | null {

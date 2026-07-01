@@ -31,11 +31,13 @@
     "taskValidationRow": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["updated", "appended"],
+      "required": ["mode", "updated", "appended"],
       "properties": {
+        "mode": { "enum": ["skipped", "updated"] },
         "updated": { "type": "boolean" },
         "appended": { "type": "boolean" },
-        "path": { "type": "string" }
+        "path": { "type": "string" },
+        "reason": { "type": "string" }
       }
     },
     "acceptanceRows": {

@@ -17,3 +17,7 @@
 ## 2026-06-30 Basic Profile Dogfood
 
 - Finish task-owned prose and HANDOFF wording before close. If a post-close wording edit is needed, run the repair path and append a fresh close proof; otherwise audit-close correctly reports source-hash drift.
+
+## 2026-07-01 Validation Run Dogfood
+
+- Evidence capture and close-source prose sync should be separate by default. If `validation run` both appends evidence and rewrites `TASK.md`, agents can get trapped in a validate-edit-validate loop right before finalize.

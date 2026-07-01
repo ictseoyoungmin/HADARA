@@ -1,5 +1,5 @@
 import { createValidationRunReport } from '../services/validation-run';
-import { getIntegerOption, getRequiredStringOption } from './args';
+import { getFlag, getIntegerOption, getRequiredStringOption } from './args';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 
 export interface ValidationCommandInput {
@@ -22,13 +22,15 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
     check,
     argv: commandArgs,
     tags: resolutionTagsFromArgs(optionArgs),
-    timeoutMs: getIntegerOption(optionArgs, '--timeout-ms', { min: 1, max: 3_600_000 })
+    timeoutMs: getIntegerOption(optionArgs, '--timeout-ms', { min: 1, max: 3_600_000 }),
+    updateTask: getFlag(optionArgs, '--update-task')
   });
   if (input.jsonOutput) {
     console.log(JSON.stringify(report, null, 2));
   } else {
     console.log(`[HADARA] validation run ${taskId}: ${report.result}`);
     if (report.evidence) console.log(`evidence=${report.evidence.id}`);
+    if (!report.taskValidationRow.updated) console.log(`taskValidationRow=${report.taskValidationRow.mode}`);
     for (const issue of report.issues) console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
   }
   if (!report.ok) process.exitCode = 6;
