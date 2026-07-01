@@ -4,17 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, and the agent UX refactor dogfood loop is complete through T-0457. |
-| Current Phase | Agent UX refactor dogfood loop plus 0.3.4 stable readiness pending | T-0457 is the fifth capsule in the requested 5-15 capsule agent UX optimization line; 0.4 release-line work remains separate and has not started. |
-| Latest Completed Task | T-0457 Agent UX Validation Wrapper Error Semantics | `validation run` launch failures now expose structured failure kind/error metadata and fallback next actions. |
-| Active / Next Task | Agent UX lifecycle progress/latency semantics | Consider a next capsule for long silent `task status` / `task finalize` execution on mounted workspaces; release readiness, publish, package recycle, and stable release work remain outside this line. |
-| Validation Baseline | T-0457 wrapper error semantics plus T-0456 help mutation guard | T-0457 passed in `ev:T-0457:63bc490c0f524cc0b5b748e3`, `ev:T-0457:28fb374a36e641bab90bd53d`, and `ev:T-0457:ded129c4252440a593372c75`; T-0456 remains the command help mutation baseline. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, and the agent UX refactor dogfood loop is complete through T-0458. |
+| Current Phase | Agent UX refactor dogfood loop plus 0.3.4 stable readiness pending | T-0458 is the sixth capsule in the requested 5-15 capsule agent UX optimization line; 0.4 release-line work remains separate and has not started. |
+| Latest Completed Task | T-0458 Agent UX Task Status Lifecycle Cockpit | `task status` now owns next-work selection and selected-capsule loop guidance; `task next` and `task lifecycle` are compatibility commands planned for removal from the default loop. |
+| Active / Next Task | Agent UX session-start status-cockpit alignment | Align `session start` guidance with status-first lifecycle semantics; release readiness, publish, package recycle, and stable release work remain outside this line. |
+| Validation Baseline | T-0458 status cockpit plus T-0457 wrapper error semantics | T-0458 passed in `ev:T-0458:23de043e969f4cfe821911da`, `ev:T-0458:43643f1971ac43a2a6a74e6c`, and `ev:T-0458:904b129902fa47839432ede7`; T-0457 remains the validation wrapper launch-failure baseline. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| Agent UX lifecycle progress/latency semantics | Candidate next capsule in the 5-15 capsule UX refactor loop. T-0456/T-0457 both showed long silent `task status` and `task finalize` execution on the mounted workspace, causing retry/wait ambiguity for agents. | `tasks/T-0457-agent-ux-validation-wrapper-error-semantics/HANDOFF.md`, `tasks/T-0456-agent-ux-evidence-help-mutation-guard/HANDOFF.md`, `.hadara/context/MEMORY.md` |
+| Agent UX session-start status-cockpit alignment | Candidate next capsule in the 5-15 capsule UX refactor loop. T-0458 made `task status` the cockpit, but `session start` still has historical guidance that can point agents toward `task lifecycle` or `task next`. | `tasks/T-0458-agent-ux-task-status-lifecycle-cockpit/HANDOFF.md`, `docs/specs/0.4.0/lifecycle/00_Task_Status_Cockpit.md` |
 | 0.4 release-line decision | Deferred until explicitly started. T-0452 completed the 24-capsule 0.4 implementation budget; release readiness/publish/recycle work is separate. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
@@ -22,9 +22,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0458 / Agent UX Task Status Lifecycle Cockpit | Made `task status --json` the next-work selection cockpit, added selected-capsule loop phase/primary action metadata, and demoted `task next`/`task lifecycle` to compatibility commands in registry/help/docs. | `ev:T-0458:23de043e969f4cfe821911da`, `ev:T-0458:43643f1971ac43a2a6a74e6c`, `ev:T-0458:904b129902fa47839432ede7` |
 | T-0457 / Agent UX Validation Wrapper Error Semantics | Added structured blocked wrapper semantics for validation launch failures, including `failureKind`, `commandStarted`, structured error metadata, and fallback next actions. | `ev:T-0457:63bc490c0f524cc0b5b748e3`, `ev:T-0457:28fb374a36e641bab90bd53d`, `ev:T-0457:ded129c4252440a593372c75` |
 | T-0456 / Agent UX Evidence Help Mutation Guard | Made evidence command help non-mutating before required task parsing and added regression coverage for task-supplied and no-task `add-command --help`. | `ev:T-0456:3575c0472d5b464585261a79`, `ev:T-0456:dbf8b1a1dc8d4707b5d9469c`, `ev:T-0456:2c697ca98ea7410a9a9f23d9` |
-| T-0455 / Agent UX Validation Latest Attempt Projection | Added per-check validation attempt projection to `task status`, including unresolved failed/blocked counts and resolution evidence ids. | `ev:T-0455:ec70182bf0f9491292013cf1`, `ev:T-0455:d17cc01c4fd4444da2e9ace8`, `ev:T-0455:d4b3ea9ddcc549fda9eaeeb5` |
 
 ## Current Known Problems
 
@@ -96,7 +96,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Consider the next agent UX capsule for lifecycle/status/finalize progress or fast-path semantics. | T-0456/T-0457 dogfood showed `task status` and `task finalize` can run for tens of seconds on mounted workspaces without progress, making agents unsure whether to wait or retry. | `tasks/T-0457-agent-ux-validation-wrapper-error-semantics/HANDOFF.md`, `src/services/task-workbench.ts`, `src/task/task-finalize.ts`, `.hadara/context/MEMORY.md` |
+| Open the next agent UX capsule to align `session start` with status-cockpit guidance. | T-0458 made `task status` the lifecycle cockpit, but `session start` still has older guidance paths that can prioritize `task lifecycle` or `task next`. | `tasks/T-0458-agent-ux-task-status-lifecycle-cockpit/HANDOFF.md`, `docs/specs/0.4.0/lifecycle/00_Task_Status_Cockpit.md`, `src/context/session-start.ts` |
 | Later, decide whether to start the 0.4.0 release line. | T-0452 completed the 24-capsule 0.4 implementation budget; any 0.4.0-rc.0 readiness, publish, package recycle, stable decision, or stable publish work requires a later explicit release-line capsule. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
@@ -104,6 +104,7 @@
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0458 / Agent UX Task Status Lifecycle Cockpit | Focused status cockpit tests, TypeScript build, built CLI status smokes, and diff check passed after adding `hadara.task.status.v1`, selected-capsule `loop` metadata, status-first docs, and compatibility classification for `task next`/`task lifecycle`. | Evidence `ev:T-0458:23de043e969f4cfe821911da`, `ev:T-0458:43643f1971ac43a2a6a74e6c`, `ev:T-0458:904b129902fa47839432ede7`; next follow-up is session-start alignment. |
 | T-0457 / Agent UX Validation Wrapper Error Semantics | Focused validation-run tests, TypeScript build, and built CLI blocked-wrapper smoke passed after adding structured launch failure semantics and fallback next actions. | Evidence `ev:T-0457:63bc490c0f524cc0b5b748e3`, `ev:T-0457:28fb374a36e641bab90bd53d`, `ev:T-0457:ded129c4252440a593372c75`; expected blocked smoke `ev:T-0457:7b8c74f89a86445ab2e25e53` is resolved. |
 | T-0456 / Agent UX Evidence Help Mutation Guard | Focused evidence CLI tests, TypeScript build, and built CLI help non-mutation smoke passed after making evidence help resolve before mutation handling. | Evidence `ev:T-0456:3575c0472d5b464585261a79`, `ev:T-0456:dbf8b1a1dc8d4707b5d9469c`, `ev:T-0456:2c697ca98ea7410a9a9f23d9`; built smoke confirmed `evidence.jsonl` and `EVIDENCE.md` were unchanged by help. |
 | T-0455 / Agent UX Validation Latest Attempt Projection | Focused task-workbench tests, TypeScript build, and built CLI smoke passed after adding `sources.evidenceList.validationAttempts` to `task status`. | Evidence `ev:T-0455:ec70182bf0f9491292013cf1`, `ev:T-0455:d17cc01c4fd4444da2e9ace8`, `ev:T-0455:d4b3ea9ddcc549fda9eaeeb5`; built T-0454 status showed `checks=4` and `unresolvedFailedOrBlocked=0`. |

@@ -167,7 +167,7 @@ describe('init profiles', () => {
       '## Task Context',
       '## Exact Source Slices',
       '## Task Capsule Lifecycle',
-      '## Lifecycle Entry Gate',
+      '## Finalize Entry Gate',
       '## Task Document Timing',
       '## Evidence',
       '## Repair and Diagnostics',
@@ -181,7 +181,7 @@ describe('init profiles', () => {
       expect(workflow).toContain(heading);
     }
     expect(workflow).toContain('Agents must not scan the repository');
-    expect(workflow).toContain('Before running `hadara task lifecycle`, all of these must be true');
+    expect(workflow).toContain('Before running `hadara task finalize`, all of these must be true');
     expect(workflow).toContain('Evidence must reflect real execution results');
     expect(workflow).toContain('Agents must not run `task finalize --execute` without inspecting the dry-run output');
     expect(workflow).toContain('Document registration writes registry metadata, not prose rows in entry docs.');

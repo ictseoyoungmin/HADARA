@@ -8,7 +8,7 @@ import { createTaskReadyReport } from '../task/task-ready';
 import { createTaskFinishReport, formatTaskFinishReport } from '../task/task-finish';
 import { createTaskNextReport, formatTaskNextReport } from '../task/task-next';
 import { createTaskUpgradeScaffoldReport, formatTaskUpgradeScaffoldReport } from '../task/task-upgrade-scaffold';
-import { createTaskWorkbenchReport, formatTaskWorkbenchReport } from '../services/task-workbench';
+import { createTaskStatusSelectionReport, createTaskWorkbenchReport, formatTaskStatusSelectionReport, formatTaskWorkbenchReport } from '../services/task-workbench';
 import { getActorContextOption } from './actor';
 import { getFlag, getStringOption } from './args';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
@@ -124,7 +124,16 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
 
   if (sub === 'status') {
     const id = getStringOption(input.args, '--task') ?? input.args[2];
-    if (!id || id.startsWith('--')) throw new Error('task status requires --task <task-id>');
+    if (!id || id.startsWith('--')) {
+      const report = createTaskStatusSelectionReport(input.projectRoot);
+      if (input.jsonOutput) {
+        console.log(JSON.stringify(report, null, 2));
+      } else {
+        console.log(formatTaskStatusSelectionReport(report));
+      }
+      if (!report.ok) process.exitCode = 6;
+      return true;
+    }
     const report = createTaskWorkbenchReport(input.projectRoot, id);
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));

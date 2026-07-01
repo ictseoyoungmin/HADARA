@@ -116,7 +116,7 @@ Ask the CLI for the workflow before choosing commands:
 ```bash
 hadara help
 hadara help lifecycle
-hadara task next --json
+hadara task status --json
 ```
 
 Use structured discovery when an agent or tool needs machine-readable command metadata:
@@ -132,13 +132,12 @@ hadara help command task.close
 The 0.3.4 primary path is intentionally small. Agents should start with compact context and use `task finalize` as the default lifecycle close path:
 
 ```bash
-hadara task next --json
+hadara task status --json
 hadara session start --task T-XXXX --json
 hadara task create "implement a focused change" --json
 hadara task status --task T-XXXX --json
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
 # Finalize Task Capsule docs and tracked state docs before closing.
-hadara task lifecycle --task T-XXXX --json
 hadara task finalize --task T-XXXX --json
 hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 hadara handoff suggest --task T-XXXX --json
@@ -162,8 +161,9 @@ Deferred Evidence v2 scope is explicit: rebuild preview/execute, `check-id`, `su
 Use read-only lifecycle diagnostics when you want a compact current-stage report, next recommended action, or close-proof repair explanation:
 
 ```bash
+hadara task status --task T-XXXX --json
 hadara task complete --task T-XXXX --json
-hadara task lifecycle --task T-XXXX --json
+hadara task lifecycle --task T-XXXX --json # compatibility
 hadara task close-repair-plan --task T-XXXX --json
 ```
 

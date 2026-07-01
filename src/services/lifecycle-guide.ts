@@ -8,15 +8,13 @@ import {
   listCommandRegistryEntries
 } from './capability-registry';
 
-export const PRIMARY_LIFECYCLE_ORDER: LifecycleStage[] = ['discover', 'create', 'inspect', 'evidence', 'phase-check', 'finalize', 'handoff'];
+export const PRIMARY_LIFECYCLE_ORDER: LifecycleStage[] = ['inspect', 'create', 'evidence', 'finalize', 'handoff'];
 
 const PRIMARY_WHEN: Record<string, string> = {
-  'task.next': 'At session start or after completing a task.',
   'task.create': 'When no suitable Task Capsule exists.',
-  'task.status': 'Before editing, validating, or closing a capsule.',
+  'task.status': 'At session start, after creating a capsule, and at meaningful loop boundaries.',
   'validation.run': 'When a real validation command should be executed and recorded as evidence.',
   'evidence.add-command': 'When recording already-run validation or relevant work proof.',
-  'task.lifecycle': 'When the agent needs a compact phase report and next action.',
   'task.finalize': 'After implementation, evidence, capsule docs, and tracked state docs are ready.',
   'handoff.update': 'Before stopping after meaningful task progress or completion.'
 };
@@ -100,10 +98,10 @@ export interface PortfolioAuditReport {
 
 export const PORTFOLIO_AUDIT_DECISIONS: PortfolioAuditDecision[] = [
   {
-    decision: 'Task inspection is separate from lifecycle phase and readiness.',
-    commands: ['task.status', 'task.lifecycle', 'task.finalize', 'task.ready', 'harness.validate'],
-    rule: '`task status` report generation success is not readiness; 0.3.3 agents use `task lifecycle` for phase and `task finalize` for guarded close execution, while low-level readiness remains in `task ready`.',
-    evidence: '0.3.3 finalize-first lifecycle default.'
+    decision: 'Task status is the default lifecycle cockpit.',
+    commands: ['task.status', 'task.next', 'task.lifecycle', 'task.finalize', 'task.ready', 'harness.validate'],
+    rule: '`task status` without `--task` owns next-work selection; `task status --task` owns phase and next-action guidance. `task next` and `task lifecycle` remain compatibility/debugging surfaces until removed.',
+    evidence: '0.4 agent UX lifecycle cockpit refactor.'
   },
   {
     decision: 'Finalize is the default agent close path; finish is low-level bookkeeping.',
@@ -241,13 +239,11 @@ function primaryCommandForEntry(entry: CommandRegistryEntry): string {
     case 'task.create':
       return 'hadara task create "..." --json';
     case 'task.status':
-      return 'hadara task status --task T-XXXX --json';
+      return 'hadara task status [--task T-XXXX] --json';
     case 'validation.run':
       return 'hadara validation run --task T-XXXX --check "Focused tests" -- npm test';
     case 'evidence.add-command':
       return 'hadara evidence add-command --task T-XXXX --summary "..." --result passed --json';
-    case 'task.lifecycle':
-      return 'hadara task lifecycle --task T-XXXX --json';
     case 'task.finalize':
       return 'hadara task finalize --task T-XXXX --json';
     case 'handoff.update':

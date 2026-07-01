@@ -8,9 +8,19 @@ import { parseMarkdownRows } from './markdown-table';
 import { createDocsProtocolConsistencyReport, createProfileProtocolConsistencyReport } from './protocol-consistency';
 import { buildWorkbenchNextActions, WorkbenchNextAction } from './workbench-next-actions';
 import { createTaskAuthoringGuidance, TaskAuthoringGuidance } from '../task/authoring-guidance';
+import { createTaskNextReport, TaskNextRecommendation } from '../task/task-next';
 
 type CloseState = 'not-closed' | 'closed-valid' | 'close-evidence-found-invalid' | 'close-evidence-malformed';
 type ReadinessStatus = 'ready' | 'current-blocked' | 'closed-valid-current-blocked' | 'missing-task';
+type TaskStatusLoopPhase =
+  | 'select-work'
+  | 'author-task'
+  | 'implement'
+  | 'validate-evidence'
+  | 'finalize-dry-run'
+  | 'finalize-execute'
+  | 'closed-valid'
+  | 'blocked';
 
 export interface TaskWorkbenchReadiness {
   status: ReadinessStatus;
@@ -67,6 +77,7 @@ export interface TaskWorkbenchReport {
     evidenceRecords: number;
     nextActions: number;
   };
+  loop: TaskStatusLoopGuidance;
   sources: {
     taskClosePlan: {
       ok: boolean;
@@ -108,6 +119,87 @@ export interface TaskWorkbenchReport {
   nextActions: WorkbenchNextAction[];
 }
 
+export interface TaskStatusSelectionReport {
+  schemaVersion: 'hadara.task.status.v1';
+  command: 'task.status';
+  ok: boolean;
+  generatedAt: string;
+  projectRoot: string;
+  mode: 'select-work';
+  summary: {
+    recommendations: number;
+    nextActions: number;
+  };
+  loop: TaskStatusLoopGuidance;
+  recommendations: TaskNextRecommendation[];
+  sources: {
+    taskNext: ReturnType<typeof createTaskNextReport>;
+  };
+  issues: Array<{ severity: 'warning' | 'error'; code: string; message: string; path?: string }>;
+  nextActions: WorkbenchNextAction[];
+}
+
+export interface TaskStatusLoopGuidance {
+  phase: TaskStatusLoopPhase;
+  summary: string;
+  statusCommand: string;
+  primaryNextAction?: WorkbenchNextAction;
+  deprecatedCommands: Array<{
+    command: string;
+    replacement: string;
+    removal: 'planned';
+    note: string;
+  }>;
+}
+
+export type TaskStatusReport = TaskWorkbenchReport | TaskStatusSelectionReport;
+
+export function createTaskStatusSelectionReport(projectRoot: string, now = new Date()): TaskStatusSelectionReport {
+  const taskNext = createTaskNextReport(projectRoot);
+  const recommendation = taskNext.recommendations[0];
+  const nextActions: WorkbenchNextAction[] = recommendation
+    ? [
+        {
+          id: recommendation.taskCapsulePresent ? 'inspect-recommended-task' : 'create-recommended-task',
+          kind: 'command',
+          required: true,
+          priority: 'now',
+          command: recommendation.taskCapsulePresent && recommendation.taskId !== 'TBD' ? `hadara task status --task ${recommendation.taskId} --json` : recommendation.createCommand ?? 'hadara task create "..." --json',
+          message: recommendation.taskCapsulePresent
+            ? `Inspect recommended Task Capsule ${recommendation.taskId}.`
+            : 'Create a Task Capsule for the recommended work, then rerun task status with the new task id.',
+          sourceIssueCodes: ['TASK_STATUS_SELECT_WORK'],
+          loopBoundary: true
+        }
+      ]
+    : [];
+  return {
+    schemaVersion: 'hadara.task.status.v1',
+    command: 'task.status',
+    ok: taskNext.ok,
+    generatedAt: now.toISOString(),
+    projectRoot,
+    mode: 'select-work',
+    summary: {
+      recommendations: taskNext.recommendations.length,
+      nextActions: nextActions.length
+    },
+    loop: {
+      phase: 'select-work',
+      summary: recommendation
+        ? 'No task was selected; task status is showing the next-work selection view.'
+        : 'No task was selected and no next-work recommendation was found.',
+      statusCommand: 'hadara task status --json',
+      primaryNextAction: nextActions[0],
+      deprecatedCommands: deprecatedStatusCommands()
+    },
+    recommendations: taskNext.recommendations,
+    sources: { taskNext },
+    issues: taskNext.issues,
+    nextActions
+  };
+}
+
 export function createTaskWorkbenchReport(projectRoot: string, taskId: string, now = new Date()): TaskWorkbenchReport {
   const taskShow = createTaskShowReport(projectRoot, taskId);
   if (!taskShow.ok || !taskShow.task) {
@@ -140,8 +232,19 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
     closeEvidenceFound,
     closePlanOk: closePlan.ok,
     evidenceRecords: evidenceList.count,
+    authoringStatus: authoringGuidance.status,
     closeActions: closePlan.nextActions,
     issues
+  });
+  const loop = buildTaskStatusLoopGuidance(taskId, {
+    taskStatus: taskShow.task.status,
+    taskBoardStatus: taskBoard.status,
+    authoringGuidance,
+    evidenceRecords: evidenceList.count,
+    closePlanOk: closePlan.ok,
+    closedValid,
+    issues,
+    nextActions
   });
 
   return {
@@ -174,6 +277,7 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
       evidenceRecords: evidenceList.count,
       nextActions: nextActions.length
     },
+    loop,
     sources: {
       taskClosePlan: {
         ok: closePlan.ok,
@@ -213,6 +317,8 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
 export function formatTaskWorkbenchReport(report: TaskWorkbenchReport): string {
   const lines = [
     `[HADARA] Task Status: ${report.task.id} ${report.task.title}`,
+    `Loop phase: ${report.loop.phase}`,
+    `Next: ${report.loop.primaryNextAction?.command ?? report.loop.primaryNextAction?.message ?? report.loop.summary}`,
     '',
     'State',
     `- Capsule: ${report.task.capsule}`,
@@ -261,6 +367,21 @@ export function formatTaskWorkbenchReport(report: TaskWorkbenchReport): string {
   return lines.join('\n');
 }
 
+export function formatTaskStatusSelectionReport(report: TaskStatusSelectionReport): string {
+  const lines = [
+    '[HADARA] Task Status: select work',
+    `Loop phase: ${report.loop.phase}`,
+    `Next: ${report.loop.primaryNextAction?.command ?? report.loop.primaryNextAction?.message ?? report.loop.summary}`
+  ];
+  for (const recommendation of report.recommendations) {
+    lines.push(`${recommendation.taskId}\t${recommendation.title}\t${recommendation.reason}`);
+    lines.push(`source\t${recommendation.source}`);
+    lines.push(`capsule\t${recommendation.capsule ?? recommendation.createCommand ?? 'missing'}`);
+  }
+  for (const issue of report.issues) lines.push(`[${issue.severity}] ${issue.code}: ${issue.message}`);
+  return lines.join('\n');
+}
+
 function buildMissingTaskReport(projectRoot: string, taskId: string, generatedAt: string, issues: TaskCloseIssue[]): TaskWorkbenchReport {
   return {
     schemaVersion: 'hadara.task.workbench.v1',
@@ -292,6 +413,12 @@ function buildMissingTaskReport(projectRoot: string, taskId: string, generatedAt
       evidenceRecords: 0,
       nextActions: 0
     },
+    loop: {
+      phase: 'select-work',
+      summary: 'Task Capsule was not found; select or create a task before continuing.',
+      statusCommand: 'hadara task status --json',
+      deprecatedCommands: deprecatedStatusCommands()
+    },
     sources: {
       taskClosePlan: { ok: false, mode: 'dry-run', blockers: issues.length, warnings: 0 },
       evidenceLint: { ok: false, issues: 0 },
@@ -310,6 +437,93 @@ function buildMissingTaskReport(projectRoot: string, taskId: string, generatedAt
     issues,
     nextActions: []
   };
+}
+
+function buildTaskStatusLoopGuidance(
+  taskId: string,
+  input: {
+    taskStatus: string;
+    taskBoardStatus: string;
+    authoringGuidance: TaskAuthoringGuidance;
+    evidenceRecords: number;
+    closePlanOk: boolean;
+    closedValid: boolean;
+    issues: TaskCloseIssue[];
+    nextActions: WorkbenchNextAction[];
+  }
+): TaskStatusLoopGuidance {
+  if (input.closedValid) {
+    return {
+      phase: 'closed-valid',
+      summary: 'This Task Capsule has valid close proof. Do not run a separate audit-close unless debugging or repairing close evidence.',
+      statusCommand: `hadara task status --task ${taskId} --json`,
+      deprecatedCommands: deprecatedStatusCommands()
+    };
+  }
+
+  const primaryNextAction = input.nextActions[0];
+  if (input.authoringGuidance.status === 'needs-authoring') {
+    return {
+      phase: 'author-task',
+      summary: 'Author the required TASK.md and HANDOFF.md prose before implementation or lifecycle close work.',
+      statusCommand: `hadara task status --task ${taskId} --json`,
+      primaryNextAction: {
+        id: 'author-task-contract',
+        kind: 'edit',
+        required: true,
+        priority: 'now',
+        message: input.authoringGuidance.summary,
+        path: input.authoringGuidance.items[0]?.path,
+        sourceIssueCodes: ['TASK_STATUS_AUTHORING_REQUIRED']
+      },
+      deprecatedCommands: deprecatedStatusCommands()
+    };
+  }
+  if (input.evidenceRecords === 0) {
+    return {
+      phase: 'validate-evidence',
+      summary: 'Run real validation or record already-run proof before attempting finalize.',
+      statusCommand: `hadara task status --task ${taskId} --json`,
+      primaryNextAction,
+      deprecatedCommands: deprecatedStatusCommands()
+    };
+  }
+  if (input.closePlanOk) {
+    return {
+      phase: input.taskStatus === 'Done' && input.taskBoardStatus === 'Done' ? 'finalize-execute' : 'finalize-dry-run',
+      summary: 'The close preflight is ready; review task finalize dry-run output and execute only with the current plan hash.',
+      statusCommand: `hadara task status --task ${taskId} --json`,
+      primaryNextAction,
+      deprecatedCommands: deprecatedStatusCommands()
+    };
+  }
+  const hasOnlyWarnings = input.issues.length > 0 && input.issues.every((issue) => issue.severity !== 'error');
+  return {
+    phase: hasOnlyWarnings ? 'implement' : 'blocked',
+    summary: hasOnlyWarnings
+      ? 'Continue the known implementation or documentation work; rerun task status at the next loop boundary.'
+      : 'Blocking issues remain before finalize can be reviewed.',
+    statusCommand: `hadara task status --task ${taskId} --json`,
+    primaryNextAction,
+    deprecatedCommands: deprecatedStatusCommands()
+  };
+}
+
+function deprecatedStatusCommands(): TaskStatusLoopGuidance['deprecatedCommands'] {
+  return [
+    {
+      command: 'hadara task next --json',
+      replacement: 'hadara task status --json',
+      removal: 'planned',
+      note: '`task status` owns next-work selection when no task is selected.'
+    },
+    {
+      command: 'hadara task lifecycle --task T-XXXX --json',
+      replacement: 'hadara task status --task T-XXXX --json',
+      removal: 'planned',
+      note: '`task status` owns loop phase and next-action guidance for selected capsules.'
+    }
+  ];
 }
 
 export function buildTaskWorkbenchReadiness(currentReady: boolean, closeProofValid: boolean): TaskWorkbenchReadiness {

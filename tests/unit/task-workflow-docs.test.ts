@@ -14,11 +14,10 @@ describe('task workflow command semantics docs', () => {
     const sop = read('docs/IMPLEMENTATION_SOP.md');
     const readme = read('README.md');
     const commands = [
-      'hadara task next --json',
+      'hadara task status --json',
       'hadara task status --task T-XXXX --json',
       'hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json',
       '# Finalize Task Capsule docs and tracked state docs before closing.',
-      'hadara task lifecycle --task T-XXXX --json',
       'hadara task finalize --task T-XXXX --json',
       'hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json',
     ];
@@ -34,7 +33,6 @@ describe('task workflow command semantics docs', () => {
     expect(readme).toContain('Low-level proof-boundary commands remain available for debugging, recovery, and command implementation work');
 
     for (const doc of [workflow, sop, readme]) {
-      expect(doc.indexOf('hadara task lifecycle --task T-XXXX --json')).toBeLessThan(doc.indexOf('hadara task finalize --task T-XXXX --json'));
       expect(doc.indexOf('hadara task finalize --task T-XXXX --json')).toBeLessThan(doc.indexOf('hadara task finalize --task T-XXXX --execute --plan-hash'));
     }
   });
@@ -60,14 +58,15 @@ describe('task workflow command semantics docs', () => {
       expect(contract).toContain(command);
     }
 
-    expect(workflow).toContain('| `hadara task next --json` | Recommend next work from handoff, roadmap, and board state. | Read-only report. | No. |');
-    expect(workflow).toContain('| `hadara task status --task T-XXXX --json` | Operator console projection for one task. | Read-only report. | No. |');
+    expect(workflow).toContain('| `hadara task status --json` | Select next work when no Task Capsule is selected. | Read-only report. | No. |');
+    expect(workflow).toContain('| `hadara task next --json` | Compatibility next-work recommendation. Planned removal candidate; prefer `task status --json`. | Read-only report. | No. |');
+    expect(workflow).toContain('| `hadara task status --task T-XXXX --json` | Phase-aware operator cockpit for one task. | Read-only report. | No. |');
     expect(workflow).toContain('| `hadara evidence add-command --task T-XXXX --summary "..." --result passed [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence unless an explicit idempotency key already exists. |');
     expect(workflow).toContain('| `hadara task finish --task T-XXXX --execute --json` | Apply bounded status bookkeeping for `TASK.md` and `docs/TASK_BOARD.md`. | Execute after dry-run review. | Yes, bounded to those files. |');
     expect(workflow).toContain('| `hadara task ready --task T-XXXX --level done --json` | Readiness preflight after finish and before close. | Read-only report. | No. |');
     expect(workflow).toContain('| `hadara task close --task T-XXXX --execute --json` | Append canonical close evidence after close preconditions pass. | Execute after dry-run review. | Yes, close evidence only. |');
     expect(workflow).toContain('| `hadara task finalize --task T-XXXX --execute --plan-hash <hash> --json` | Execute a reviewed finalize plan after rechecking the current plan hash. | Execute after dry-run review. | Yes, only through underlying finish and close write boundaries. |');
-    expect(workflow).toContain('`task status` is an operator console; `ok: true` means report generation succeeded.');
+    expect(workflow).toContain('`task status` is an operator cockpit; `ok: true` means report generation succeeded.');
     expect(workflow).toContain('Use `hadara harness validate --task T-XXXX --level done --json` directly when debugging capsule format');
     expect(workflow).toContain('`harness validate` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence.');
     expect(workflow).toContain('Before finalize execute, finish all close-source edits');
@@ -79,7 +78,7 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('After close proof is recorded, close-source document edits intentionally invalidate the previous close proof.');
     expect(workflow).toContain("matching `docs/TASK_BOARD.md` row's command-owned cells");
     expect(workflow).toContain('human/mixed-owned `Notes` and any extra cells');
-    expect(sop).toContain('| `task status` | Read-only | `ok` means report generation succeeded; readiness is in `state.ready`, `summary.blockers`, and `issues`. |');
+    expect(sop).toContain('| `task status` | Read-only | Selects next work without `--task`; reports selected-capsule phase, readiness, blockers, and next actions with `--task`. |');
     expect(sop).toContain('Before running `task finalize --execute`, finish all close-source edits');
     expect(sop).toContain('## Documentation Timing and Write Coordination');
     expect(sop).toContain('Documentation is part of the work, not a post-work report.');
@@ -93,7 +92,8 @@ describe('task workflow command semantics docs', () => {
     expect(agents).toContain('Do not defer all documentation until after implementation.');
     expect(agents).toContain('Parallelize read-only discovery, file inspection, independent validation');
     expect(agents).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes');
-    expect(agents).toContain('agents should use `task lifecycle` and reviewed `task finalize --json` / `task finalize --execute --plan-hash <hash>` as the default close path');
+    expect(agents).toContain('agents should use `task status` for next-work selection, phase checks, and next-action guidance');
+    expect(contract).toContain('| `task status --json` | `hadara.task.status.v1` | Read-only. | Selection report was generated; not that a capsule exists. |');
     expect(contract).toContain('| `task status --task T-XXXX --json` | `hadara.task.workbench.v1` | Read-only. | Report generation succeeded for an existing task; not a readiness gate. |');
   });
 

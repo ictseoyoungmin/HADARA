@@ -430,13 +430,14 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   {
     id: 'task.next',
     command: 'hadara task next [--json]',
-    summary: 'Recommend the next Task Capsule from handoff, slices, board, and backlog state.',
-    canonical: true,
-    appearsInDefaultHelp: true,
+    summary: 'Compatibility next-work recommendation surface; prefer task status without --task.',
+    canonical: false,
+    deprecatedCandidate: true,
+    appearsInDefaultHelp: false,
     family: 'capsule-lifecycle',
     scope: 'task',
     lifecycleStage: 'discover',
-    requiredness: 'primary',
+    requiredness: 'advanced',
     writeBoundary: 'read-only',
     readOnly: true,
     risk: 'low',
@@ -444,14 +445,15 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     schemaVersion: 'hadara.task.next.v1',
     docs: TASK_DOCS,
-    examples: [example('Find next task', 'hadara task next --json', 'At the beginning of a session.')],
+    examples: [example('Find next task through compatibility command', 'hadara task next --json', 'When debugging legacy next-work routing.')],
     related: ['task.list', 'task.status'],
-    conflictsWith: []
+    conflictsWith: [],
+    notes: 'Planned removal candidate. `hadara task status --json` owns default next-work selection.'
   },
   {
     id: 'task.status',
-    command: 'hadara task status --task <task-id> [--json]',
-    summary: 'Read the current Task Capsule workbench/status view.',
+    command: 'hadara task status [--task <task-id>] [--json]',
+    summary: 'Read the phase-aware task cockpit: next-work selection without --task, selected-capsule loop guidance with --task.',
     canonical: true,
     appearsInDefaultHelp: true,
     family: 'capsule-lifecycle',
@@ -465,7 +467,10 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     schemaVersion: 'hadara.task.workbench.v1',
     docs: TASK_DOCS,
-    examples: [example('Inspect capsule status', 'hadara task status --task T-0001 --json', 'Before working or closing a task.')],
+    examples: [
+      example('Select next work', 'hadara task status --json', 'At session start or after a capsule closes.'),
+      example('Inspect capsule status', 'hadara task status --task T-0001 --json', 'At loop boundaries for a selected capsule.')
+    ],
     related: ['task.next', 'evidence.list', 'proof.status'],
     conflictsWith: []
   },
@@ -522,13 +527,14 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   {
     id: 'task.lifecycle',
     command: 'hadara task lifecycle --task <task-id> [--json]',
-    summary: 'Read normalized lifecycle phase, checks, satisfied state, blockers, and next action for one task.',
-    canonical: true,
-    appearsInDefaultHelp: true,
+    summary: 'Compatibility lifecycle phase report; prefer task status for phase and next-action guidance.',
+    canonical: false,
+    deprecatedCandidate: true,
+    appearsInDefaultHelp: false,
     family: 'capsule-lifecycle',
     scope: 'capsule',
     lifecycleStage: 'phase-check',
-    requiredness: 'primary',
+    requiredness: 'advanced',
     writeBoundary: 'read-only',
     readOnly: true,
     risk: 'low',
@@ -538,10 +544,10 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     docs: TASK_DOCS,
     implementationFiles: ['src/cli/task.ts', 'src/task/task-lifecycle.ts'],
     testFiles: ['tests/unit/task-lifecycle.test.ts'],
-    examples: [example('Inspect lifecycle phase', 'hadara task lifecycle --task T-0001 --json', 'When an agent needs one read-only phase report before deciding the next lifecycle command.')],
+    examples: [example('Inspect legacy lifecycle phase', 'hadara task lifecycle --task T-0001 --json', 'When debugging the legacy lifecycle projection.')],
     related: ['task.status', 'task.finish', 'task.ready', 'task.close', 'task.audit-close'],
     conflictsWith: [],
-    notes: 'Default 0.3.3 agent-facing phase report. Low-level finish/ready/close/audit-close proof commands remain available for debugging and recovery.'
+    notes: 'Planned removal candidate. `hadara task status --task <task-id> --json` owns default phase and next-action guidance.'
   },
   {
     id: 'task.close-repair-plan',

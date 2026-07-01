@@ -398,14 +398,21 @@
       "path": "src/schemas/task-next.schema.json",
       "status": "fixture",
       "owner": "task/next",
-      "notes": "Documents read-only next-task recommendation reports from handoff, Development Slices, Task Board fallback, and backlog state."
+      "notes": "Documents compatibility next-task recommendation reports; new agent loops should prefer task status without --task."
+    },
+    {
+      "id": "hadara.task.status.v1",
+      "path": "src/schemas/task-status.schema.json",
+      "status": "fixture",
+      "owner": "task/status",
+      "notes": "Documents read-only task status selection reports when no Task Capsule is selected."
     },
     {
       "id": "hadara.task.workbench.v1",
       "path": "src/schemas/task-workbench.schema.json",
       "status": "fixture",
       "owner": "task/workbench",
-      "notes": "Documents read-only Phase 3 task operator console reports from task status."
+      "notes": "Documents selected-capsule task status workbench reports with loop phase and next-action guidance."
     },
     {
       "id": "hadara.runtime.version.v1",

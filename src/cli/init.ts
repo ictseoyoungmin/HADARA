@@ -1120,7 +1120,7 @@ Use HADARA read models first. Do not manually read broad project files unless a 
 ## Minimal Loop
 
 \`\`\`text
-1. \`hadara task next --json\`
+1. \`hadara task status --json\`
 2. \`hadara session start --task T-XXXX --json\` when resuming or changing tasks
 3. \`hadara task create "task title" --json\` only when no suitable capsule exists
 4. update \`TASK.md\`
@@ -1184,12 +1184,12 @@ Session start is a read model. It does not create tasks, append evidence, warm c
 ## Selecting or Creating Work
 
 \`\`\`bash
-hadara task next --json
+hadara task status --json
 hadara task create "task title" --json
 hadara task status --task T-XXXX --json
 \`\`\`
 
-Use \`task next\` to decide what to work on. Use \`task create\` only when no suitable capsule exists. Use \`task status\` to inspect readiness, blockers, evidence, and suggested next actions for a selected task.
+Use \`task status --json\` to decide what to work on when no task is selected. Use \`task create\` only when no suitable capsule exists. Use \`task status --task T-XXXX --json\` to inspect readiness, blockers, evidence, loop phase, and suggested next actions for a selected task.
 
 ## Task Context
 
@@ -1233,10 +1233,9 @@ audit close proof
 Use the high-level lifecycle path for ordinary work:
 
 \`\`\`bash
-hadara task lifecycle --task T-XXXX --json
+hadara task status --task T-XXXX --json
 hadara task finalize --task T-XXXX --json
 hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
-hadara task audit-close --task T-XXXX --json
 \`\`\`
 
 Low-level lifecycle commands are for debugging, recovery, or command implementation work:
@@ -1248,9 +1247,9 @@ hadara task close --task T-XXXX --json
 hadara task close-repair-plan --task T-XXXX --json
 \`\`\`
 
-## Lifecycle Entry Gate
+## Finalize Entry Gate
 
-Before running \`hadara task lifecycle\`, all of these must be true:
+Before running \`hadara task finalize\`, all of these must be true:
 
 | Gate | Required State |
 |---|---|
@@ -1260,7 +1259,7 @@ Before running \`hadara task lifecycle\`, all of these must be true:
 | Acceptance | \`TASK.md\` Acceptance has the completion criteria. |
 | Validation | At least one validation method is defined, or a documented reason explains why validation is not applicable. |
 
-Do not use lifecycle/finalize to discover that the task contract was never authored.
+Do not use status/finalize to avoid authoring the task contract.
 
 ## Task Document Timing
 
@@ -1315,15 +1314,15 @@ Agents must not run \`task finalize --execute\` without inspecting the dry-run o
 |---|---|---|
 | New HADARA project | \`hadara init --profile <profile> --json\` | Creates scaffold docs and registries. |
 | Check scaffold health | \`hadara init doctor --json\` | Reports missing or inconsistent scaffold files. |
-| Find next work | \`hadara task next --json\` | Read-only recommendation. |
-| Inspect selected task | \`hadara task status --task T-XXXX --json\` | Readiness and next-action projection. |
+| Find next work | \`hadara task status --json\` | Read-only selection cockpit. |
+| Inspect selected task | \`hadara task status --task T-XXXX --json\` | Readiness, loop phase, and next-action projection. |
 | Find task-specific context | \`hadara context pack --task T-XXXX --json\` | Use before broad manual reads. |
 | Read exact source text | \`hadara context slice ... --json\` | Use after a context candidate points to a range. |
 | Run and record validation | \`hadara validation run --task T-XXXX --check "..." -- <command>\` | Executes the command and records evidence without editing \`TASK.md\` by default. |
 | Run, record, and sync task row | \`hadara validation run --task T-XXXX --check "..." --update-task -- <command>\` | Executes the command, records evidence, and updates the matching \`TASK.md\` Validation row. |
 | Record already-run validation | \`hadara evidence add-command ... --json\` | Append-only evidence writer; does not execute commands. |
 | Find evidence ids | \`hadara evidence summary --task T-XXXX --json\` | Compact copy hints. |
-| Review close path | \`hadara task lifecycle --task T-XXXX --json\` | Normal lifecycle state. |
+| Review loop phase | \`hadara task status --task T-XXXX --json\` | Normal lifecycle state and next action. |
 | Close ordinary work | \`hadara task finalize --task T-XXXX --json\` then execute with its \`planHash\` | Default close path. |
 | Diagnose close drift | \`hadara task close-repair-plan --task T-XXXX --json\` | Read-only repair plan. |
 | Register project-specific docs | \`hadara docs register --path <path> --json\` | 0.4 registry surface. Canonical state belongs in \`.hadara/docs-registry.json\`; use registry-backed help for exact options. |
@@ -1736,10 +1735,10 @@ Ownership boundaries follow the lifecycle command model. \`task finalize --execu
 
 ## Standard Task Workflow Loop
 
-The authoritative command semantics live in \`docs/TASK_WORKFLOW_COMMANDS.md\`. From 0.3.4 onward, agents should start from a compact task/context packet, then use lifecycle/finalize for closure instead of starting with low-level proof-boundary commands:
+The authoritative command semantics live in \`docs/TASK_WORKFLOW_COMMANDS.md\`. From 0.4 onward, agents should start from \`task status\`, then use finalize for closure instead of starting with low-level proof-boundary commands:
 
 \`\`\`bash
-hadara task next --json
+hadara task status --json
 
 # If a matching capsule already exists:
 hadara task status --task T-XXXX --json
@@ -1756,17 +1755,16 @@ hadara evidence add-command --task T-XXXX --summary "..." --result passed --cate
 
 # Finalize Task Capsule docs and tracked state docs before closing.
 
-hadara task lifecycle --task T-XXXX --json
 hadara task finalize --task T-XXXX --json
 hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 \`\`\`
 
 | Command | Default Write Behavior | Notes |
 |---|---|---|
-| \`task next\` | Read-only | Recommends work; does not create tasks. |
-| \`task status\` | Read-only | \`ok\` means report generation succeeded; readiness is in \`state.ready\`, \`summary.blockers\`, and \`issues\`. |
+| \`task status\` | Read-only | Without \`--task\`, selects next work. With \`--task\`, \`ok\` means report generation succeeded; readiness is in \`state.ready\`, \`summary.blockers\`, \`issues\`, and \`loop.phase\`. |
+| \`task next\` | Read-only compatibility | Planned removal candidate; prefer \`task status --json\`. |
 | \`evidence add-command\` | Write | Appends command-log evidence; does not execute shell commands; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, and optional \`--idempotency-key\` prevents duplicate same-key records. |
-| \`task lifecycle\` | Read-only | Reports normalized lifecycle phase, checks, blockers, and one next action. |
+| \`task lifecycle\` | Read-only compatibility | Planned removal candidate; prefer \`task status --task T-XXXX --json\`. |
 | \`task close-repair-plan\` | Read-only | Classifies close proof repair state and exact repair command. |
 | \`task finalize\` | Read-only by default; guarded execute requires \`--plan-hash\` | Default agent close path. Rechecks the current plan hash, executes phases serially, stops on blockers, and preserves finish/close write boundaries. |
 | \`task finish\` / \`task ready\` / \`task close\` / \`task audit-close\` | Low-level proof-boundary commands | Use directly for debugging, recovery, or command implementation work. |
@@ -1778,7 +1776,7 @@ Before running \`task finalize --execute\`, finish all close-source edits: Task 
 1. Run relevant tests.
 2. Record meaningful evidence in \`EVIDENCE.md\` and \`evidence.jsonl\`.
 3. Finalize Task Capsule docs and tracked state docs before close so the close source hash remains stable.
-4. Run \`hadara task lifecycle --task <task-id> --json\` when you need a compact phase check.
+4. Run \`hadara task status --task <task-id> --json\` when you need a compact phase check or next action.
 5. Run \`hadara task finalize --task <task-id> --json\`, review the current plan hash and write boundaries, then execute \`hadara task finalize --task <task-id> --execute --plan-hash <hash> --json\`.
 6. Use low-level \`task finish\`, \`task ready\`, \`task close\`, and \`task audit-close\` only when debugging or repairing one proof boundary directly.
 7. Add project-specific integration or deployment smoke checks only after those surfaces exist and are documented for this project.
@@ -1907,7 +1905,7 @@ function createTestStrategyDoc(): string {
 | 1 | Run the relevant suite from the table above. | Task Capsule \`EVIDENCE.md\` |
 | 2 | Record meaningful evidence in the Task Capsule. | Task Capsule \`EVIDENCE.md\` and \`evidence.jsonl\` |
 | 3 | Finalize Task Capsule docs and tracked state docs before close. | Task Capsule docs and tracked state docs |
-| 4 | Run \`hadara task lifecycle --task <task-id> --json\` when you need a compact phase check. | Task Capsule docs and evidence |
+| 4 | Run \`hadara task status --task <task-id> --json\` when you need a compact phase check or next action. | Task Capsule docs and evidence |
 | 5 | Run \`hadara task finalize --task <task-id> --json\`, review the plan hash, then execute \`hadara task finalize --task <task-id> --execute --plan-hash <hash> --json\`. | Task Capsule close evidence |
 | 6 | Use low-level \`task finish\`, \`task ready\`, \`task close\`, and \`task audit-close\` only when debugging or repairing one proof boundary directly. | Task Capsule evidence |
 
@@ -1958,10 +1956,10 @@ HADARA task workflow commands are split by responsibility. Similar-looking comma
 
 ## Standard Task Loop
 
-From 0.3.4 onward, agents should use the context-aware finalize-first loop for ordinary implementation capsules:
+From 0.4 onward, agents should use the status-first finalize loop for ordinary implementation capsules:
 
 \`\`\`bash
-hadara task next --json
+hadara task status --json
 
 # If a matching capsule already exists:
 hadara task status --task T-XXXX --json
@@ -1978,7 +1976,6 @@ hadara evidence add-command --task T-XXXX --summary "..." --result passed --cate
 
 # Finalize Task Capsule docs and tracked state docs before closing.
 
-hadara task lifecycle --task T-XXXX --json
 hadara task finalize --task T-XXXX --json
 hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 \`\`\`
@@ -2078,15 +2075,15 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 
 | Command | Default Write Behavior | Notes |
 |---|---|---|
-| \`task next\` | Read-only | Recommends work; does not create tasks. |
-| \`task status\` | Read-only | \`ok\` means report generation succeeded; readiness is in \`state.ready\`, \`summary.blockers\`, and \`issues\`. |
+| \`task status\` | Read-only | Without \`--task\`, selects next work. With \`--task\`, reports phase, readiness, blockers, evidence, and next actions. |
+| \`task next\` | Read-only compatibility | Planned removal candidate; prefer \`task status --json\`. |
 | \`task create\` | Write | Creates a Draft Task Capsule and Task Board row. It does not imply the task is ready or done. |
 | \`evidence add-command\` | Write | Appends operator-supplied command-log evidence. It does not execute shell commands or capture stdout/stderr; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, and optional \`--idempotency-key\` prevents duplicate same-key records. |
-| \`task lifecycle\` | Read-only | Reports normalized lifecycle phase, checks, blockers, repair metadata, and one next action. |
+| \`task lifecycle\` | Read-only compatibility | Planned removal candidate; prefer \`task status --task T-XXXX --json\`. |
 | \`task close-repair-plan\` | Read-only | Classifies close proof repair state and exact repair command. |
 | \`task finalize\` | Read-only by default; guarded execute requires \`--plan-hash\` | Default agent close path. Rechecks the current plan hash, executes phases serially, stops on blockers, and succeeds only after final audit is \`closed-valid\`. |
 | \`task finish\` / \`task ready\` / \`task close\` / \`task audit-close\` | Low-level proof-boundary commands | Use directly for debugging, recovery, or command implementation work. |
-| \`task complete\` | Legacy read-only workflow compressor | Summarizes the current completion stage and next command; prefer \`task lifecycle\` and \`task finalize\` for 0.3.3 agent flows. |
+| \`task complete\` | Legacy read-only workflow compressor | Summarizes the current completion stage and next command; prefer \`task status\` and \`task finalize\` for current agent flows. |
 
 ## Non-Overlap Rules
 

@@ -6,7 +6,7 @@ import { appendEvidence, appendEvidenceWithResult } from '../../src/evidence/evi
 import { handleTaskCommand } from '../../src/cli/task';
 import { validateSchema } from '../../src/core/schema';
 import * as harnessService from '../../src/services/harness-service';
-import { createTaskWorkbenchReport, formatTaskWorkbenchReport } from '../../src/services/task-workbench';
+import { createTaskStatusSelectionReport, createTaskWorkbenchReport, formatTaskStatusSelectionReport, formatTaskWorkbenchReport } from '../../src/services/task-workbench';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -69,6 +69,13 @@ describe('task workbench status report', () => {
         readOnly: true,
         writesProse: false,
         status: 'needs-authoring'
+      },
+      loop: {
+        phase: 'author-task',
+        deprecatedCommands: expect.arrayContaining([
+          expect.objectContaining({ command: 'hadara task next --json', replacement: 'hadara task status --json' }),
+          expect.objectContaining({ command: 'hadara task lifecycle --task T-XXXX --json', replacement: 'hadara task status --task T-XXXX --json' })
+        ])
       }
     });
     expect(report.authoringGuidance.items).toEqual(
@@ -81,6 +88,7 @@ describe('task workbench status report', () => {
     expect(report.sources.evidenceList.latest).toMatchObject({ kind: 'note', result: 'passed', visibility: 'public' });
     expect(report.nextActions.length).toBeGreaterThan(0);
     expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
+    expect(formatTaskWorkbenchReport(report)).toContain('Loop phase: author-task');
     expect(formatTaskWorkbenchReport(report)).toContain('State\n- Capsule:');
     expect(formatTaskWorkbenchReport(report)).toContain('Readiness note: Current done-level readiness is blocked');
     expect(formatTaskWorkbenchReport(report)).toContain('Evidence\n- Lint: ok');
@@ -89,6 +97,33 @@ describe('task workbench status report', () => {
     expect(formatTaskWorkbenchReport(report)).toContain('Authoring\n- ');
     expect(formatTaskWorkbenchReport(report)).toContain('Suggested next');
     expect(snapshotProject(root)).toEqual(before);
+  });
+
+  it('uses task status without --task as the next-work selection cockpit', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Workbench next selection');
+
+    const report = createTaskStatusSelectionReport(root, new Date('2026-05-31T00:00:00.000Z'));
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.task.status.v1',
+      command: 'task.status',
+      ok: true,
+      mode: 'select-work',
+      loop: {
+        phase: 'select-work',
+        statusCommand: 'hadara task status --json',
+        primaryNextAction: {
+          command: `hadara task status --task ${task.id} --json`
+        },
+        deprecatedCommands: expect.arrayContaining([
+          expect.objectContaining({ command: 'hadara task next --json', replacement: 'hadara task status --json' })
+        ])
+      }
+    });
+    expect(report.recommendations[0]).toMatchObject({ taskId: task.id, taskCapsulePresent: true });
+    expect(validateSchema('hadara.task.status.v1', report).ok).toBe(true);
+    expect(formatTaskStatusSelectionReport(report)).toContain('Task Status: select work');
   });
 
   it('returns ok false and exit code 6 for a missing task through CLI', () => {
@@ -111,6 +146,28 @@ describe('task workbench status report', () => {
       task: { id: 'T-9999', taskStatus: 'Missing', taskBoardStatus: 'Missing', taskBoardPresent: false },
       state: { readiness: { status: 'missing-task', currentReady: false, closeProofValid: false } }
     });
+  });
+
+  it('routes task status without --task through the CLI selection report', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Workbench CLI selection');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleTaskCommand({
+      args: ['task', 'status', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls[0][0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.task.status.v1',
+      command: 'task.status',
+      mode: 'select-work',
+      loop: { phase: 'select-work' }
+    });
+    expect(validateSchema('hadara.task.status.v1', payload).ok).toBe(true);
   });
 
   it('reports Task Board status drift from the actual docs/TASK_BOARD.md row', () => {

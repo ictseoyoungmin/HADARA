@@ -14,11 +14,9 @@ describe('Phase 7.2 lifecycle guide', () => {
     });
     expect(report.primaryPath.map((step) => step.stage)).toEqual(PRIMARY_LIFECYCLE_ORDER);
     expect(report.primaryPath.map((step) => step.commandId)).toEqual([
-      'task.next',
-      'task.create',
       'task.status',
+      'task.create',
       'validation.run',
-      'task.lifecycle',
       'task.finalize',
       'handoff.update'
     ]);
@@ -49,11 +47,11 @@ describe('Phase 7.2 lifecycle guide', () => {
     const output = renderLifecycleHelp();
 
     expect(output).toContain('Primary capsule lifecycle:');
-    expect(output).toContain('1 discover');
-    expect(output).toMatch(/4 evidence\s+hadara validation run/);
-    expect(output).toMatch(/5 phase-check\s+hadara task lifecycle/);
-    expect(output).toMatch(/6 finalize\s+hadara task finalize/);
-    expect(output).toMatch(/7 handoff\s+hadara handoff update/);
+    expect(output).toContain('1 inspect');
+    expect(output).toMatch(/3 evidence\s+hadara validation run/);
+    expect(output).toMatch(/4 finalize\s+hadara task finalize/);
+    expect(output).toMatch(/5 handoff\s+hadara handoff update/);
+    expect(output).not.toContain('task lifecycle --task T-XXXX --json');
     expect(output).not.toContain('task finish --task T-XXXX --execute --json');
     expect(output).not.toContain('task close --task T-XXXX --execute --json');
     expect(output).toContain('Diagnostics when blocked:');
@@ -68,6 +66,7 @@ describe('Phase 7.2 lifecycle guide', () => {
     expect(output).toContain('hadara help lifecycle');
     expect(output).toContain('validation.run');
     expect(output).not.toContain('evidence.add-command');
+    expect(output).not.toContain('hadara task next --json');
     expect(output).toContain('handoff.update');
     expect(output).not.toContain('task.show');
     expect(output).not.toContain('release.publish');

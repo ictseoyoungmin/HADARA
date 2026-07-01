@@ -3,7 +3,7 @@
   "$id": "hadara.task.workbench.v1",
   "x-hadara-schema-id": "hadara.task.workbench.v1",
   "x-hadara-field-classes": {
-    "stable": [
+      "stable": [
       "schemaVersion",
       "command",
       "ok",
@@ -17,9 +17,11 @@
       "state.closeEvidenceFound",
       "state.closedValid",
       "summary.blockers",
-      "summary.warnings",
-      "issues",
-      "nextActions"
+        "summary.warnings",
+        "loop.phase",
+        "loop.primaryNextAction",
+        "issues",
+        "nextActions"
     ],
     "compatibilityAlias": [
       {
@@ -33,6 +35,7 @@
       "sources.*",
       "sources.evidenceList.validationAttempts",
       "authoringGuidance",
+      "loop",
       "nextActions.*"
     ],
     "experimental": [
@@ -42,7 +45,7 @@
   },
   "type": "object",
   "additionalProperties": true,
-  "required": ["schemaVersion", "command", "ok", "generatedAt", "projectRoot", "task", "state", "summary", "sources", "issues", "nextActions"],
+  "required": ["schemaVersion", "command", "ok", "generatedAt", "projectRoot", "task", "state", "summary", "loop", "sources", "issues", "nextActions"],
   "properties": {
     "schemaVersion": { "const": "hadara.task.workbench.v1" },
     "command": { "const": "task.status" },
@@ -98,6 +101,31 @@
         "nextActions": { "type": "number" }
       }
     },
+    "loop": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["phase", "summary", "statusCommand", "deprecatedCommands"],
+      "properties": {
+        "phase": { "enum": ["select-work", "author-task", "implement", "validate-evidence", "finalize-dry-run", "finalize-execute", "closed-valid", "blocked"] },
+        "summary": { "type": "string" },
+        "statusCommand": { "type": "string" },
+        "primaryNextAction": { "type": "object", "additionalProperties": true },
+        "deprecatedCommands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["command", "replacement", "removal", "note"],
+            "properties": {
+              "command": { "type": "string" },
+              "replacement": { "type": "string" },
+              "removal": { "const": "planned" },
+              "note": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
     "sources": {
       "type": "object",
       "additionalProperties": true,
@@ -132,7 +160,7 @@
         "required": ["id", "kind", "required", "priority", "message", "sourceIssueCodes"],
         "properties": {
           "id": { "type": "string" },
-          "kind": { "enum": ["command", "review", "edit", "remediation", "audit"] },
+          "kind": { "enum": ["command", "review", "edit", "remediation", "audit", "continue"] },
           "required": { "type": "boolean" },
           "priority": { "enum": ["now", "soon", "optional"] },
           "command": { "type": "string" },

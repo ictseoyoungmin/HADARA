@@ -158,6 +158,30 @@ function createFastTaskWorkbenchReport(
       evidenceRecords: evidenceList.count,
       nextActions: nextActions.length
     },
+    loop: {
+      phase: closedValid ? 'closed-valid' : closePlanOk ? 'finalize-dry-run' : evidenceList.count === 0 ? 'validate-evidence' : 'blocked',
+      summary: closedValid
+        ? 'This Task Capsule has valid close proof.'
+        : closePlanOk
+          ? 'The fast dashboard projection sees no blockers; review task finalize dry-run before closing.'
+          : 'The fast dashboard projection found blockers or missing evidence.',
+      statusCommand: `hadara task status --task ${taskId} --json`,
+      ...(nextActions[0] ? { primaryNextAction: nextActions[0] } : {}),
+      deprecatedCommands: [
+        {
+          command: 'hadara task next --json',
+          replacement: 'hadara task status --json',
+          removal: 'planned',
+          note: '`task status` owns next-work selection when no task is selected.'
+        },
+        {
+          command: 'hadara task lifecycle --task T-XXXX --json',
+          replacement: 'hadara task status --task T-XXXX --json',
+          removal: 'planned',
+          note: '`task status` owns loop phase and next-action guidance for selected capsules.'
+        }
+      ]
+    },
     sources: {
       taskClosePlan: {
         ok: closePlanOk,

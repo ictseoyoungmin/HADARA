@@ -143,7 +143,9 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('dashboard.serve')).toMatchObject({ family: 'ui', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('validation.run')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
     expect(findCommandRegistryEntry('evidence.add-command')).toMatchObject({ requiredness: 'conditional', appearsInDefaultHelp: false });
-    expect(findCommandRegistryEntry('task.lifecycle')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
+    expect(findCommandRegistryEntry('task.next')).toMatchObject({ canonical: false, deprecatedCandidate: true, requiredness: 'advanced', appearsInDefaultHelp: false });
+    expect(findCommandRegistryEntry('task.lifecycle')).toMatchObject({ canonical: false, deprecatedCandidate: true, requiredness: 'advanced', appearsInDefaultHelp: false });
+    expect(findCommandRegistryEntry('task.status')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
     expect(findCommandRegistryEntry('task.finalize')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
     expect(findCommandRegistryEntry('task.finish')).toMatchObject({ requiredness: 'advanced', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('task.close')).toMatchObject({ requiredness: 'advanced', appearsInDefaultHelp: false });

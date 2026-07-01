@@ -99,7 +99,7 @@ Initial fixtures:
 | `hadara.task.closeRepairPlan.v1` | `src/schemas/task-close-repair-plan.schema.json` | fixture | Documents read-only close repair classifications, causes, hash metadata, and repair next actions. |
 | `hadara.task.complete_flow.v1` | `src/schemas/task-complete-flow.schema.json` | fixture | Documents read-only task completion flow reports with stage, primary next action, lifecycle steps, shared-doc state counts, and conflicts. |
 | `hadara.task.finalize.v1` | `src/schemas/task-finalize.schema.json` | fixture | Documents finalize dry-run plans and guarded execute reports with plan hashes, lifecycle steps, write boundaries, expected write paths, execution metadata, evaluated/skipped report diagnostics, evidence-quality repair hints, and close audit proof. |
-| `hadara.task.lifecycle.v1` | `src/schemas/task-lifecycle.schema.json` | fixture | Documents read-only normalized lifecycle phase reports with checks, satisfied state, blockers, repair metadata, and one primary next action. |
+| `hadara.task.lifecycle.v1` | `src/schemas/task-lifecycle.schema.json` | fixture | Documents compatibility read-only normalized lifecycle phase reports with checks, satisfied state, blockers, repair metadata, and one primary next action. |
 | `hadara.task.create.v1` | `src/schemas/task-create.schema.json` | fixture | Documents task create reports with optional Task Capsule template metadata. |
 | `hadara.handoff.suggestion.v1` | `src/schemas/handoff-suggestion.schema.json` | fixture | Documents read-only Agent Handoff section-fragment suggestions with target before-hash and coordinator/shared-doc boundary metadata. |
 | `hadara.handoff.staleProblems.v1` | `src/schemas/handoff-stale-problems.schema.json` | fixture | Documents read-only Agent Handoff stale known-problem candidate detection. |
@@ -107,8 +107,9 @@ Initial fixtures:
 | `hadara.task.audit_close.v1` | `src/schemas/task-audit-close.schema.json` | fixture | Documents read-only close audit reports for close evidence presence, shape, post-close hash drift, latest non-superseded proof id, superseded proof ids, and duplicate counts. |
 | `hadara.task.ready.v1` | `src/schemas/task-ready.schema.json` | fixture | Documents read-only task readiness preflight reports before close. |
 | `hadara.task.finish.v1` | `src/schemas/task-finish.schema.json` | fixture | Documents dry-run-first bounded Task Capsule finish/status sync reports. |
-| `hadara.task.next.v1` | `src/schemas/task-next.schema.json` | fixture | Documents read-only next-task recommendation reports from handoff, slices, Task Board fallback, and backlog state. |
-| `hadara.task.workbench.v1` | `src/schemas/task-workbench.schema.json` | fixture | Documents read-only Phase 3 task status/workbench reports and normalized next actions. |
+| `hadara.task.next.v1` | `src/schemas/task-next.schema.json` | fixture | Documents compatibility next-task recommendation reports from handoff, slices, Task Board fallback, and backlog state. |
+| `hadara.task.status.v1` | `src/schemas/task-status.schema.json` | fixture | Documents read-only task status selection reports when no Task Capsule is selected. |
+| `hadara.task.workbench.v1` | `src/schemas/task-workbench.schema.json` | fixture | Documents selected-capsule task status workbench reports with loop phase and next-action guidance. |
 | `hadara.runtime.version.v1` | `src/schemas/runtime-version.schema.json` | fixture | Documents read-only CLI origin, package/git/node metadata, and build freshness diagnostics. |
 | `hadara.stateProjection.v1` | `src/schemas/state-projection.schema.json` | fixture | Documents the Phase 8.4 read-only state consistency projection report. |
 | `hadara.dashboard.bootstrap.v1` | `src/schemas/dashboard-bootstrap.schema.json` | fixture | Documents the first-paint Dashboard aggregate over existing read models with disabled cache metadata, optional compact selected-task proof, and no deep evidence payload. |

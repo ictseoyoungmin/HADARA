@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.task.status.v1",
+  "x-hadara-schema-id": "hadara.task.status.v1",
+  "x-hadara-field-classes": {
+    "stable": [
+      "schemaVersion",
+      "command",
+      "ok",
+      "mode",
+      "summary.recommendations",
+      "loop.phase",
+      "loop.primaryNextAction",
+      "recommendations",
+      "issues",
+      "nextActions"
+    ],
+    "additive": [
+      "sources.*",
+      "loop.deprecatedCommands",
+      "nextActions.*"
+    ],
+    "experimental": [
+      "generatedAt"
+    ],
+    "deprecated": []
+  },
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "generatedAt", "projectRoot", "mode", "summary", "loop", "recommendations", "sources", "issues", "nextActions"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.task.status.v1" },
+    "command": { "const": "task.status" },
+    "ok": { "type": "boolean" },
+    "generatedAt": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "mode": { "const": "select-work" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["recommendations", "nextActions"],
+      "properties": {
+        "recommendations": { "type": "number" },
+        "nextActions": { "type": "number" }
+      }
+    },
+    "loop": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["phase", "summary", "statusCommand", "deprecatedCommands"],
+      "properties": {
+        "phase": { "const": "select-work" },
+        "summary": { "type": "string" },
+        "statusCommand": { "type": "string" },
+        "primaryNextAction": { "type": "object", "additionalProperties": true },
+        "deprecatedCommands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["command", "replacement", "removal", "note"],
+            "properties": {
+              "command": { "type": "string" },
+              "replacement": { "type": "string" },
+              "removal": { "const": "planned" },
+              "note": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "recommendations": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "sources": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["taskNext"],
+      "properties": {
+        "taskNext": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "nextActions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "kind", "required", "priority", "message", "sourceIssueCodes"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "enum": ["command", "review", "edit", "remediation", "audit", "continue"] },
+          "required": { "type": "boolean" },
+          "priority": { "enum": ["now", "soon", "optional"] },
+          "command": { "type": "string" },
+          "executeCommand": { "type": "string" },
+          "message": { "type": "string" },
+          "path": { "type": "string" },
+          "sourceIssueCodes": { "type": "array", "items": { "type": "string" } },
+          "loopBoundary": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

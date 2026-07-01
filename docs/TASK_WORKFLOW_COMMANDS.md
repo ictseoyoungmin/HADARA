@@ -20,10 +20,10 @@ The authoritative command inventory is `src/services/capability-registry.ts`. `d
 
 ## Standard Task Loop
 
-From 0.3.3 onward, agents should use the finalize-first loop for ordinary implementation capsules:
+From 0.4 onward, agents should use the status-first finalize loop for ordinary implementation capsules:
 
 ```bash
-hadara task next --json
+hadara task status --json
 
 # If a matching capsule already exists:
 hadara task status --task T-XXXX --json
@@ -35,10 +35,11 @@ hadara task status --task T-XXXX --json
 # Do the scoped work, then run real validation and record evidence.
 
 hadara validation run --task T-XXXX --check "Focused tests" -- npm test
+# Or record an already-run validation result:
+hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
 
 # Finalize Task Capsule docs and tracked state docs before closing.
 
-hadara task lifecycle --task T-XXXX --json
 hadara task finalize --task T-XXXX --json
 hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 ```
@@ -170,10 +171,11 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 
 | Command | Role | Default Mode | Writes? | `ok` Meaning | Failure Exit |
 |---|---|---|---|---|---|
-| `hadara task next --json` | Recommend next work from handoff, roadmap, and board state. | Read-only report. | No. | Recommendation report was generated. | Task-style failures use 6. |
+| `hadara task status --json` | Select next work when no Task Capsule is selected. | Read-only report. | No. | Selection report was generated; not that a capsule exists. | Task-style failures use 6. |
+| `hadara task next --json` | Compatibility next-work recommendation. Planned removal candidate; prefer `task status --json`. | Read-only report. | No. | Recommendation report was generated. | Task-style failures use 6. |
 | `hadara task create --from release-read-model --title "..." --json` | Create a Draft Task Capsule from a known template. | Write command. | Yes, Task Capsule files and one Task Board row. | Capsule was created. | Task-style failures use 6. |
-| `hadara task status --task T-XXXX --json` | Operator console projection for one task. | Read-only report. | No. | Report was generated for an existing task, not that the task is ready. | Task-style failures use 6. |
-| `hadara task lifecycle --task T-XXXX --json` | Report normalized lifecycle phase, checks, satisfied state, blockers, and one next action. | Read-only report. | No. | Report was generated for an existing task. | Task-style failures use 6. |
+| `hadara task status --task T-XXXX --json` | Phase-aware operator cockpit for one task. | Read-only report. | No. | Report was generated for an existing task, not that the task is ready. | Task-style failures use 6. |
+| `hadara task lifecycle --task T-XXXX --json` | Compatibility lifecycle phase report. Planned removal candidate; prefer `task status --task T-XXXX --json`. | Read-only report. | No. | Report was generated for an existing task. | Task-style failures use 6. |
 | `hadara task close-repair-plan --task T-XXXX --json` | Classify close proof repair state and return exact repair next actions. | Read-only report. | No. | Report was generated for an existing task. | Task-style failures use 6. |
 | `hadara task finalize --task T-XXXX --json` | Build a reviewed finish/ready/close/audit plan with step write boundaries and a plan hash. | Read-only report. | No. | All finalize steps are already satisfied. | Task-style failures use 6. |
 | `hadara task finalize --task T-XXXX --execute --plan-hash <hash> --json` | Execute a reviewed finalize plan after rechecking the current plan hash. | Execute after dry-run review. | Yes, only through underlying finish and close write boundaries. | Final audit reaches `closed-valid`. | Task-style failures use 6. |
@@ -192,12 +194,12 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 
 ## Non-Overlap Rules
 
-- `task next` chooses work; it does not create a capsule or infer completion. Handoff-first recommendations may use `taskId: TBD`; consumers must inspect `sourceKind`, `taskCapsulePresent`, `createCommand`, and `backlog`. Handoff meta-guidance that tells the operator to run or select with `task next` is ignored as a work item so the command can fall back to planned slices or Task Board rows instead of recommending a self-referential capsule. Task Board fallback prefers primary open rows over legacy `Partial` rows; `Partial` remains backlog unless no stronger open row exists.
+- `task status --json` chooses work when no task is selected; it does not create a capsule or infer completion. Its selection source embeds the compatibility next-work projection. Handoff-only recommendations may use `taskId: TBD`; consumers must inspect `sourceKind`, `taskCapsulePresent`, `createCommand`, and `backlog`.
 - `task create --from` applies template defaults only at creation time. Templates remain Draft scaffolds: they must not mark acceptance done, attach evidence, run validation, close the task, or imply that expected evidence already exists.
 - `task create` uses bounded local collision retries for sequential task ids. If the selected task directory appears before creation or the Task Board already contains the candidate id, it retries another id; exhausted retries return `TASK_CREATE_COLLISION_RETRIES_EXHAUSTED`. This is a collision guard, not a durable global task allocator.
-- `task status` is an operator console; `ok: true` means report generation succeeded. Readiness lives in `state.ready`, `summary.blockers`, and `issues`.
-- `task complete` is a legacy read-only workflow compressor. It may report `finish-required`, `ready-required`, `close-required`, `audit-required`, `handoff-update-suggested`, or `complete`, but it must not execute or append evidence. `--execute` returns a blocked `hadara.task.complete_flow.v1` report. Prefer `task lifecycle` and `task finalize` for 0.3.3 agent flows.
-- `task lifecycle` is the read-only normalized phase API for agents. It composes existing lifecycle reports into `phase`, `checks`, `satisfied`, `blockers`, optional `repair`, and one primary next action.
+- `task status` is an operator cockpit; `ok: true` means report generation succeeded. Readiness lives in `state.ready`, `summary.blockers`, `issues`, and selected-capsule loop guidance lives in `loop.phase` and `loop.primaryNextAction`.
+- `task complete` is a legacy read-only workflow compressor. It may report `finish-required`, `ready-required`, `close-required`, `audit-required`, `handoff-update-suggested`, or `complete`, but it must not execute or append evidence. `--execute` returns a blocked `hadara.task.complete_flow.v1` report. Prefer `task status` and `task finalize` for current agent flows.
+- `task next` and `task lifecycle` are compatibility commands planned for removal from the default loop. Use `task status --json` for next-work selection and `task status --task T-XXXX --json` for phase/next-action guidance.
 - `task close-repair-plan` is a read-only close-proof repair API. It classifies `not-closed`, `closed-stale`, `closed-invalid`, `duplicate-close-proof`, `closed-valid`, or `unknown` from audit-close state and returns exact next commands without appending evidence.
 - `task finalize` is read-only by default. It reports ordered finish/ready/close/audit steps, write boundaries, expected write paths, and a `planHash`; guarded execute requires the matching current plan hash, runs phases serially, stops on the first blocker, and returns success only after `audit-close` is `closed-valid`.
 - `handoff suggest` is a read-only shared-doc suggestion surface. It reports `docs/AGENT_HANDOFF.md` before-hash and section fragments for coordinator review, but it must not update the handoff or any other state document. `--execute` returns a blocked `hadara.handoff.suggestion.v1` report.

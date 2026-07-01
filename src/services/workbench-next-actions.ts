@@ -2,7 +2,7 @@ import { TaskCloseIssue, TaskCloseNextAction } from '../task/task-close';
 
 export interface WorkbenchNextAction {
   id: string;
-  kind: 'command' | 'review' | 'edit' | 'remediation' | 'audit';
+  kind: 'command' | 'review' | 'edit' | 'remediation' | 'audit' | 'continue';
   required: boolean;
   priority: 'now' | 'soon' | 'optional';
   command?: string;
@@ -19,6 +19,7 @@ export interface WorkbenchNextActionInput {
   closeEvidenceFound?: boolean;
   closePlanOk: boolean;
   evidenceRecords: number;
+  authoringStatus?: 'needs-authoring' | 'current' | 'task-missing';
   closeActions: TaskCloseNextAction[];
   issues: TaskCloseIssue[];
 }
@@ -43,6 +44,17 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
     });
   }
 
+  if (!input.closed && input.authoringStatus === 'current' && input.evidenceRecords > 0 && !input.closePlanOk) {
+    upsert(actions, {
+      id: 'continue-implementation-or-docs',
+      kind: 'continue',
+      required: true,
+      priority: 'now',
+      message: 'Continue implementation or task document updates, then rerun task status when the next loop boundary is reached.',
+      sourceIssueCodes: ['TASK_STATUS_WORK_REQUIRED']
+    });
+  }
+
   if (input.closed || input.closeEvidenceFound) {
     upsert(actions, {
       id: 'audit-close',
@@ -61,13 +73,13 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
 
   if (input.closePlanOk) {
     upsert(actions, {
-      id: 'review-close-plan',
+      id: 'review-finalize-plan',
       kind: 'command',
       required: true,
       priority: 'now',
-      command: `hadara task close --task ${input.taskId} --json`,
-      executeCommand: `hadara task close --task ${input.taskId} --execute --json`,
-      message: 'Review the close plan, then append close audit evidence if it still passes.',
+      command: `hadara task finalize --task ${input.taskId} --json`,
+      executeCommand: `hadara task finalize --task ${input.taskId} --execute --plan-hash <planHash> --json`,
+      message: 'Review the finalize dry-run, inspect the plan hash, then execute the matching finalize plan if it still applies.',
       sourceIssueCodes: ['TASK_CLOSE_READY'],
       loopBoundary: true
     });

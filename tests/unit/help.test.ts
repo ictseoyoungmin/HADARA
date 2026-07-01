@@ -9,7 +9,8 @@ describe('registry-backed help', () => {
 
     expect(output).toContain('HADARA - project-local operating layer');
     expect(output).toContain('hadara help lifecycle');
-    expect(output).toContain('hadara task next --json');
+    expect(output).toContain('hadara task status --json');
+    expect(output).not.toContain('hadara task next --json');
     expect(output).toContain('Primary capsule lifecycle');
     expect(output).toContain('validation.run');
     expect(output).toContain('handoff.update');
@@ -25,8 +26,9 @@ describe('registry-backed help', () => {
     const output = renderLifecycleHelp();
 
     expect(output).toContain('HADARA 0.4 primary task lifecycle');
-    expect(output).toContain('1 discover');
-    expect(output).toContain('task lifecycle --task T-XXXX --json');
+    expect(output).toContain('1 inspect');
+    expect(output).toContain('task status [--task T-XXXX] --json');
+    expect(output).not.toContain('task lifecycle --task T-XXXX --json');
     expect(output).toContain('task finalize --task T-XXXX --json');
     expect(output).toContain('task finalize --task T-XXXX --execute --plan-hash sha256:... --json');
     expect(output).not.toContain('task finish --task T-XXXX --execute --json');
@@ -41,7 +43,8 @@ describe('registry-backed help', () => {
     expect(report.schemaVersion).toBe('hadara.lifecycle.guide.v1');
     expect(report.primaryPath.map((step) => step.commandId)).toContain('validation.run');
     expect(report.primaryPath.map((step) => step.commandId)).not.toContain('evidence.add-command');
-    expect(report.primaryPath.map((step) => step.commandId)).toContain('task.lifecycle');
+    expect(report.primaryPath.map((step) => step.commandId)).toContain('task.status');
+    expect(report.primaryPath.map((step) => step.commandId)).not.toContain('task.lifecycle');
     expect(report.primaryPath.map((step) => step.commandId)).toContain('task.finalize');
     expect(report.primaryPath.map((step) => step.commandId)).toContain('handoff.update');
     expect(report.primaryPath.map((step) => step.commandId)).not.toContain('task.finish');

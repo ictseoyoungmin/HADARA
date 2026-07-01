@@ -98,10 +98,12 @@ describe('schema fixtures', () => {
       'hadara.task.lifecycle.v1',
       'hadara.task.next.v1',
       'hadara.task.ready.v1',
+      'hadara.task.status.v1',
       'hadara.task.upgrade_scaffold.v1',
       'hadara.task.workbench.v1',
       'hadara.taskContext.v1',
       'hadara.tools.list.v1',
+      'hadara.validation.run.v1',
       'hadara.write.preflight.v1'
     ]);
 

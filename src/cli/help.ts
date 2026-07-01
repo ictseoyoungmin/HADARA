@@ -10,7 +10,7 @@ export interface HelpCommandInput {
   args: string[];
 }
 
-const LIFECYCLE_ORDER = ['discover', 'create', 'inspect', 'evidence', 'phase-check', 'finalize', 'handoff'];
+const LIFECYCLE_ORDER = ['inspect', 'create', 'evidence', 'finalize', 'handoff'];
 
 export function handleHelpCommand(input: HelpCommandInput): boolean {
   const topic = input.args[1];
@@ -61,7 +61,7 @@ export function renderDefaultHelp(): string {
     '',
     'Start:',
     '  hadara help lifecycle',
-    '  hadara task next --json',
+    '  hadara task status --json',
     '  hadara task status --task T-XXXX --json',
     '',
     'Primary capsule lifecycle:',

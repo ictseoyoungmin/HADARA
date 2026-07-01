@@ -183,16 +183,17 @@ Ownership boundaries follow the lifecycle command model. `task finalize --execut
 
 ## Standard Task Workflow Loop
 
-The authoritative command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`. From 0.3.3 onward, agents should use this loop for ordinary implementation capsules:
+The authoritative command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`. From 0.4 onward, agents should use this loop for ordinary implementation capsules:
 
 ```bash
-hadara task next --json
+hadara task status --json
 
 # If a matching capsule already exists:
 hadara task status --task T-XXXX --json
 
 # If no matching capsule exists, create one first:
 hadara task create "task title" --json
+hadara task status --task T-XXXX --json
 
 # Do the scoped work.
 
@@ -200,18 +201,17 @@ hadara evidence add-command --task T-XXXX --summary "..." --result passed --cate
 
 # Finalize Task Capsule docs and tracked state docs before closing.
 
-hadara task lifecycle --task T-XXXX --json
 hadara task finalize --task T-XXXX --json
 hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 ```
 
 | Command | Default Write Behavior | Notes |
 |---|---|---|
-| `task next` | Read-only | Recommends work; does not create tasks. |
-| `task status` | Read-only | `ok` means report generation succeeded; readiness is in `state.ready`, `summary.blockers`, and `issues`. |
+| `task status` | Read-only | Selects next work without `--task`; reports selected-capsule phase, readiness, blockers, and next actions with `--task`. |
+| `task next` | Read-only compatibility | Planned removal candidate; prefer `task status --json`. |
 | `evidence summary` | Read-only | Shows compact evidence ids, latest evidence, and latest close evidence for copy/paste into docs or resolution markers. |
 | `evidence add-command` | Write | Appends command-log evidence; does not execute shell commands; optional `--category`/`--outcome`/`--resolves`/`--supersedes` enrich v2 metadata, result/outcome mismatches are rejected, and optional `--idempotency-key` prevents duplicate same-key records. |
-| `task lifecycle` | Read-only | Reports normalized lifecycle phase, checks, blockers, and one next action. |
+| `task lifecycle` | Read-only compatibility | Planned removal candidate; prefer `task status --task T-XXXX --json`. |
 | `task close-repair-plan` | Read-only | Classifies close proof repair state and exact repair command. |
 | `task finalize` | Read-only by default; guarded execute requires `--plan-hash` | Default agent close path. Rechecks the current plan hash, executes phases serially, stops on blockers, and preserves finish/close write boundaries. |
 | `task finish` / `task ready` / `task close` / `task audit-close` | Low-level proof-boundary commands | Use directly for debugging, recovery, or command implementation work. |
@@ -228,7 +228,7 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --json
 hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-hash <summary.beforeHash> --json
 ```
 
-If `task next --json` returns `taskId: "TBD"`, treat it as a handoff work item, not an existing capsule. Review `sourceKind`, `createCommand`, `taskCapsulePresent`, and `backlog`, create the capsule if appropriate, then rerun `task next` or `task status`.
+If `task status --json` returns a recommendation with `taskId: "TBD"`, treat it as a handoff work item, not an existing capsule. Review `sourceKind`, `createCommand`, `taskCapsulePresent`, and `backlog`, create the capsule if appropriate, then rerun `task status`.
 
 ## Reusable Docker Workflow
 
@@ -300,7 +300,7 @@ Then run built-CLI smokes through `node /workspace/dist/cli/main.js ... --projec
 2. Use validation constraints from `docs/AGENT_HANDOFF.md`; for example, prefer Docker-based Node/npm validation when the handoff records host Node/npm problems.
 3. Record meaningful validation evidence in `EVIDENCE.md` and `evidence.jsonl`.
 4. Finalize Task Capsule docs and tracked state docs before close so the close source hash remains stable.
-5. Run `hadara task lifecycle --task <task-id> --json` when you need a compact phase check.
+5. Run `hadara task status --task <task-id> --json` when you need a compact phase check or next action.
 6. Run `hadara task finalize --task <task-id> --json`, review the current plan hash and write boundaries, then execute `hadara task finalize --task <task-id> --execute --plan-hash <hash> --json`.
 7. Use low-level `task finish`, `task ready`, `task close`, and `task audit-close` only when debugging or repairing one proof boundary directly.
 8. Add security, release, install, provider, MCP, dashboard, or deployment smoke checks only after those surfaces exist and are documented for this project.
