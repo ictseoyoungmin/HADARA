@@ -36,6 +36,7 @@
       "sources.evidenceList.validationAttempts",
       "authoringGuidance",
       "authoringSuggestions",
+      "diagnostics",
       "loop",
       "nextActions.*"
     ],
@@ -151,6 +152,19 @@
         "status": { "enum": ["needs-authoring", "current", "task-missing"] },
         "summary": { "type": "string" },
         "items": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+      }
+    },
+    "diagnostics": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["generatedBy", "commandPath", "durationMs", "slowThresholdMs", "slow"],
+      "properties": {
+        "generatedBy": { "const": "cli" },
+        "commandPath": { "type": "string" },
+        "durationMs": { "type": "number" },
+        "slowThresholdMs": { "type": "number" },
+        "slow": { "type": "boolean" },
+        "note": { "type": "string" }
       }
     },
     "authoringSuggestions": {

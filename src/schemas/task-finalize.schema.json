@@ -92,6 +92,19 @@
         }
       }
     },
+    "diagnostics": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["generatedBy", "commandPath", "durationMs", "slowThresholdMs", "slow"],
+      "properties": {
+        "generatedBy": { "const": "cli" },
+        "commandPath": { "type": "string" },
+        "durationMs": { "type": "number" },
+        "slowThresholdMs": { "type": "number" },
+        "slow": { "type": "boolean" },
+        "note": { "type": "string" }
+      }
+    },
     "primaryNextAction": { "type": "object", "additionalProperties": true },
     "nextActions": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "issues": {

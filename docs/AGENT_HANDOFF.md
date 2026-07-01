@@ -4,17 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, and the agent UX refactor dogfood loop is complete through T-0462. |
-| Current Phase | Agent UX refactor dogfood loop plus 0.3.4 stable readiness pending | T-0462 is the tenth capsule in the requested 5-15 capsule agent UX optimization line; 0.4 release-line work remains separate and has not started. |
-| Latest Completed Task | T-0462 Agent UX fresh init quickstart verbosity hardening | Generated `docs/HADARA_WORKFLOW.md` now starts with a compact Quickstart before Minimal Loop while fresh governed init remains 15 files and doctor-clean. |
-| Active / Next Task | T-0463 mounted status/finalize progress diagnostics | Add progress or latency diagnostics for long silent `task status` / `task finalize` runs on mounted workspaces. Release readiness, publish, package recycle, and stable release work remain outside this line. |
-| Validation Baseline | T-0462 fresh init quickstart | Scoped Docker init/schema tests and TypeScript build passed in `ev:T-0462:84b3176bc6cd4cde96c34534`; fresh governed init smoke passed in `ev:T-0462:ca54a04cfc91403f91eb81b5`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, and the agent UX refactor dogfood loop is complete through T-0463. |
+| Current Phase | Agent UX refactor dogfood loop plus 0.3.4 stable readiness pending | T-0463 is the eleventh capsule in the requested 5-15 capsule agent UX optimization line; 0.4 release-line work remains separate and has not started. |
+| Latest Completed Task | T-0463 Agent UX status finalize latency diagnostics | `task status` and `task finalize` now emit additive CLI diagnostics with duration/slow metadata in JSON and text output. |
+| Active / Next Task | T-0464 fifth priority agent UX residual | Pick the highest-value remaining residual: live progress/narrower composition for slow lifecycle commands, or cleanup of repeated validation-fixture friction. Release readiness, publish, package recycle, and stable release work remain outside this line. |
+| Validation Baseline | T-0463 status/finalize diagnostics | Focused Docker status/finalize/schema tests and TypeScript build passed in `ev:T-0463:d7ed90ac429d428eb84ce44a`; direct built CLI diagnostics smokes passed in `ev:T-0463:b8afb3afd6544e5d8ce7319f` and `ev:T-0463:e51a09de51e649ab9d9f1f45`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0463 mounted status/finalize progress diagnostics | T-0462 made fresh init easier to enter. The next UX capsule should address repeated 20-100 second silent intervals in mounted-workspace `task status` and `task finalize` runs. | `tasks/T-0462-agent-ux-fresh-init-quickstart-verbosity-hardening/HANDOFF.md`, `ev:T-0462:84b3176bc6cd4cde96c34534`, `ev:T-0462:ca54a04cfc91403f91eb81b5` |
+| T-0464 fifth priority agent UX residual | T-0463 made status/finalize latency visible after completion. The next capsule should either add live progress/narrower composition or clean up repeated validation-fixture friction, depending on which blocker is more actionable after T-0463. | `tasks/T-0463-agent-ux-status-finalize-latency-diagnostics/HANDOFF.md`, `ev:T-0463:d7ed90ac429d428eb84ce44a`, `ev:T-0463:b8afb3afd6544e5d8ce7319f` |
 | 0.4 release-line decision | Deferred until explicitly started. T-0452 completed the 24-capsule 0.4 implementation budget; release readiness/publish/recycle work is separate. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
@@ -22,9 +22,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0463 / Agent UX status finalize latency diagnostics | Added additive CLI diagnostics to `task status` and `task finalize` output, including `durationMs`, `slowThresholdMs`, `slow`, and slow-run notes, with schema and built CLI smoke coverage. | `ev:T-0463:d7ed90ac429d428eb84ce44a`, `ev:T-0463:b8afb3afd6544e5d8ce7319f`, `ev:T-0463:e51a09de51e649ab9d9f1f45` |
 | T-0462 / Agent UX fresh init quickstart verbosity hardening | Added a compact Quickstart section to generated `docs/HADARA_WORKFLOW.md`, kept it before Minimal Loop, refreshed built CLI output, and verified fresh governed init remains 15 files and doctor-clean. | `ev:T-0462:84b3176bc6cd4cde96c34534`, `ev:T-0462:ca54a04cfc91403f91eb81b5` |
 | T-0461 / Agent UX task status authoring suggestions | Added read-only `authoringSuggestions` to selected-task `task status`, including title cleanup hints, Source Documents/hash-row proposals, conservative acceptance guidance, schema coverage, dashboard compatibility, and duplicate title-signal suppression. | `ev:T-0461:d6486726fd0b4eea8775d3b0`, `ev:T-0461:dd3a7a42646e4e8cae779c1c` |
-| T-0460 / Agent UX CLI global option parsing | Added CLI arg normalization for known leading global options so `--project <path>` and `--json` can appear before the command token; refreshed workspace `dist` and validated built CLI smokes. | `ev:T-0460:708e920cff184178b4a650d5`, `ev:T-0460:4951e6416ffc4c0bad478427` |
 
 ## Current Known Problems
 

@@ -208,8 +208,16 @@ describe('task workbench status report', () => {
       command: 'task.status',
       ok: false,
       task: { id: 'T-9999', taskStatus: 'Missing', taskBoardStatus: 'Missing', taskBoardPresent: false },
-      state: { readiness: { status: 'missing-task', currentReady: false, closeProofValid: false } }
+      state: { readiness: { status: 'missing-task', currentReady: false, closeProofValid: false } },
+      diagnostics: {
+        generatedBy: 'cli',
+        commandPath: 'task.status',
+        slowThresholdMs: 10000,
+        slow: false
+      }
     });
+    expect(payload.diagnostics.durationMs).toEqual(expect.any(Number));
+    expect(validateSchema('hadara.task.workbench.v1', payload).ok).toBe(true);
   });
 
   it('routes task status without --task through the CLI selection report', () => {
@@ -229,8 +237,15 @@ describe('task workbench status report', () => {
       schemaVersion: 'hadara.task.status.v1',
       command: 'task.status',
       mode: 'select-work',
-      loop: { phase: 'select-work' }
+      loop: { phase: 'select-work' },
+      diagnostics: {
+        generatedBy: 'cli',
+        commandPath: 'task.status',
+        slowThresholdMs: 10000,
+        slow: false
+      }
     });
+    expect(payload.diagnostics.durationMs).toEqual(expect.any(Number));
     expect(validateSchema('hadara.task.status.v1', payload).ok).toBe(true);
   });
 

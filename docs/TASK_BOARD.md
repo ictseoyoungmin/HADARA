@@ -463,3 +463,4 @@
 | T-0460 | Consider a small CLI global-option parsing capsule | Done | tasks/T-0460-consider-a-small-cli-global-option-parsing-capsule | |
 | T-0461 | Agent UX task status authoring suggestions | Done | tasks/T-0461-agent-ux-task-status-authoring-suggestions | |
 | T-0462 | Agent UX fresh init quickstart verbosity hardening | Done | tasks/T-0462-agent-ux-fresh-init-quickstart-verbosity-hardening | |
+| T-0463 | Agent UX status finalize latency diagnostics | Done | tasks/T-0463-agent-ux-status-finalize-latency-diagnostics | Adds additive CLI duration/slow diagnostics to `task status` and `task finalize`. |

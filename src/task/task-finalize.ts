@@ -41,6 +41,7 @@ export interface TaskFinalizeReport {
   steps: TaskFinalizeStep[];
   execution?: TaskFinalizeExecution;
   authoringGuidance: TaskAuthoringGuidance;
+  diagnostics?: { generatedBy: 'cli'; commandPath: string; durationMs: number; slowThresholdMs: number; slow: boolean; note?: string };
   primaryNextAction?: HadaraNextAction;
   nextActions: HadaraNextAction[];
   issues: TaskFinalizeIssue[];
@@ -111,6 +112,7 @@ export function createTaskFinalizeReport(projectRoot: string, taskId: string, op
 export function formatTaskFinalizeReport(report: TaskFinalizeReport): string {
   const lines = [`[HADARA] task finalize ${report.taskId}: ${report.mode}`];
   lines.push(`readOnly=${report.readOnly} ok=${report.ok} planHash=${report.planHash ?? 'none'}`);
+  if (report.diagnostics) lines.push(`durationMs=${report.diagnostics.durationMs}${report.diagnostics.slow ? ' slow=true' : ''}`);
   if (report.primaryNextAction) lines.push(`next=${report.primaryNextAction.command ?? report.primaryNextAction.summary ?? report.primaryNextAction.id}`);
   lines.push(`authoring=${report.authoringGuidance.status}\t${report.authoringGuidance.summary}`);
   for (const step of report.steps) lines.push(`${step.status.toUpperCase()}\t${step.id}\t${step.command}`);

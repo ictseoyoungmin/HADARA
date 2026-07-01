@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0462 Agent UX fresh init quickstart verbosity hardening |
-| Active Task | T-0463 mounted status/finalize progress diagnostics |
+| Latest Completed Task | T-0463 Agent UX status finalize latency diagnostics |
+| Active Task | T-0464 fifth priority agent UX residual |
 
 ## Next Planned Line
 
@@ -21,6 +21,8 @@ Evidence v2 current boundary: `evidence add-command` writes explicit v2 `categor
 T-0461 follow-up note: selected-task `task status` now includes additive `authoringSuggestions` with `readOnly:true` and `writesProse:false`. The read model suggests title cleanup for handoff-like titles, Source Documents guidance, hash rows for existing concrete source paths, and conservative generic acceptance guidance without writing task prose or inventing domain-specific criteria. Dashboard fast selected-task detail also includes the additive field. Docker focused workbench/schema/dashboard tests and TypeScript build passed, workspace `dist` was refreshed, and built CLI status smoke confirmed the suggestion payload and duplicate title-signal suppression. Evidence: `ev:T-0461:d6486726fd0b4eea8775d3b0`, `ev:T-0461:dd3a7a42646e4e8cae779c1c`. The next UX capsule should inspect fresh `hadara init` output and reduce verbosity or add a compact quickstart path without weakening generated workflow safety.
 
 T-0462 follow-up note: generated `docs/HADARA_WORKFLOW.md` now starts with a compact Quickstart before Minimal Loop, giving first actions for new project entry, work selection, task creation, routed file reads, and finalize close without adding new scaffold files. Fresh governed init smoke created 15 files, reported Quickstart at line 9 before Minimal Loop at line 21, and `init doctor` returned `ok:true` with no issues. Scoped Docker init/schema tests and TypeScript build passed. Evidence: `ev:T-0462:84b3176bc6cd4cde96c34534`, `ev:T-0462:ca54a04cfc91403f91eb81b5`. A broad focused attempt that included `docs-doctor.test.ts` failed on older docs-doctor fixture assumptions and is recorded as residual evidence `ev:T-0462:e0c87ae662b84f8fa20128cc`; the next UX capsule should target mounted-workspace progress/latency diagnostics for long silent status/finalize runs.
+
+T-0463 follow-up note: `task status` and `task finalize` now attach additive CLI diagnostics to JSON/text output, including command path, elapsed duration, slow threshold, slow flag, and slow-run note. Focused Docker status/finalize/schema tests and TypeScript build passed, workspace `dist` was refreshed, and direct built CLI smokes proved mounted-workspace diagnostics output. Evidence: `ev:T-0463:d7ed90ac429d428eb84ce44a`, `ev:T-0463:b8afb3afd6544e5d8ce7319f`, `ev:T-0463:e51a09de51e649ab9d9f1f45`. This is after-command latency visibility, not live progress; T-0464 should choose between live progress/narrower status composition and cleanup of repeated validation-fixture residuals.
 
 T-0460 follow-up note: agent UX global option parsing now supports known global options before the command token. The CLI entry normalizes leading `--project <path>` and `--json` before dispatch while preserving command-first invocations and strict option-value validation. Built CLI smokes passed for `node dist/cli/main.js --json --project . version` and `node dist/cli/main.js --project /tmp/hadara-t0460-global-init init --profile basic --json`; Docker focused args tests and TypeScript build passed, and workspace `dist` was refreshed. Evidence: `ev:T-0460:708e920cff184178b4a650d5`, `ev:T-0460:4951e6416ffc4c0bad478427`. Broader command-specific option reordering remains out of scope unless another dogfood friction appears.
 

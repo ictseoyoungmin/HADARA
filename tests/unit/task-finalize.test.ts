@@ -273,6 +273,14 @@ describe('task finalize dry-run plan', () => {
     expect(report.command).toBe('task.finalize');
     expect(report.mode).toBe('dry-run');
     expect(report.planHash).toMatch(/^sha256:/);
+    expect(report.diagnostics).toMatchObject({
+      generatedBy: 'cli',
+      commandPath: 'task.finalize',
+      slowThresholdMs: 10000,
+      slow: false
+    });
+    expect(report.diagnostics.durationMs).toEqual(expect.any(Number));
+    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
     expect(process.exitCode).toBe(6);
   });
 });

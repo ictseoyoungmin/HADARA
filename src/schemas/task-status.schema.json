@@ -17,6 +17,7 @@
     ],
     "additive": [
       "sources.*",
+      "diagnostics",
       "loop.deprecatedCommands",
       "nextActions.*"
     ],
@@ -70,6 +71,19 @@
       }
     },
     "recommendations": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "diagnostics": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["generatedBy", "commandPath", "durationMs", "slowThresholdMs", "slow"],
+      "properties": {
+        "generatedBy": { "const": "cli" },
+        "commandPath": { "type": "string" },
+        "durationMs": { "type": "number" },
+        "slowThresholdMs": { "type": "number" },
+        "slow": { "type": "boolean" },
+        "note": { "type": "string" }
+      }
+    },
     "sources": {
       "type": "object",
       "additionalProperties": true,

@@ -20,7 +20,17 @@ export interface TaskCommandInput {
   jsonOutput: boolean;
 }
 
+interface TaskCliDiagnostics {
+  generatedBy: 'cli';
+  commandPath: string;
+  durationMs: number;
+  slowThresholdMs: number;
+  slow: boolean;
+  note?: string;
+}
+
 export function handleTaskCommand(input: TaskCommandInput): boolean {
+  const startedAtMs = Date.now();
   const sub = input.args[1];
   if (sub === 'create') {
     if (blockLegacyMutation(input, 'task.create')) return true;
@@ -126,6 +136,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) {
       const report = createTaskStatusSelectionReport(input.projectRoot);
+      attachCliDiagnostics(report, startedAtMs, 'task.status');
       if (input.jsonOutput) {
         console.log(JSON.stringify(report, null, 2));
       } else {
@@ -135,6 +146,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
       return true;
     }
     const report = createTaskWorkbenchReport(input.projectRoot, id);
+    attachCliDiagnostics(report, startedAtMs, 'task.status');
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {
@@ -167,6 +179,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
       planHash: getStringOption(input.args, '--plan-hash'),
       actor: getActorContextOption(input.args)
     });
+    attachCliDiagnostics(report, startedAtMs, 'task.finalize');
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {
@@ -247,6 +260,21 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   return false;
+}
+
+function attachCliDiagnostics<T extends { diagnostics?: TaskCliDiagnostics }>(report: T, startedAtMs: number, commandPath: string): T {
+  const durationMs = Math.max(0, Date.now() - startedAtMs);
+  const slowThresholdMs = 10000;
+  const slow = durationMs >= slowThresholdMs;
+  report.diagnostics = {
+    generatedBy: 'cli',
+    commandPath,
+    durationMs,
+    slowThresholdMs,
+    slow,
+    ...(slow ? { note: 'This command was slow enough to affect interactive agent UX; prefer narrower diagnostics or progress-aware follow-up work if this repeats.' } : {})
+  };
+  return report;
 }
 
 function blockLegacyMutation(input: TaskCommandInput, command: string): boolean {

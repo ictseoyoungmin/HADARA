@@ -141,6 +141,7 @@ export interface TaskWorkbenchReport {
   };
   authoringGuidance: TaskAuthoringGuidance;
   authoringSuggestions: TaskAuthoringSuggestions;
+  diagnostics?: { generatedBy: 'cli'; commandPath: string; durationMs: number; slowThresholdMs: number; slow: boolean; note?: string };
   issues: TaskCloseIssue[];
   nextActions: WorkbenchNextAction[];
 }
@@ -161,6 +162,7 @@ export interface TaskStatusSelectionReport {
   sources: {
     taskNext: ReturnType<typeof createTaskNextReport>;
   };
+  diagnostics?: { generatedBy: 'cli'; commandPath: string; durationMs: number; slowThresholdMs: number; slow: boolean; note?: string };
   issues: Array<{ severity: 'warning' | 'error'; code: string; message: string; path?: string }>;
   nextActions: WorkbenchNextAction[];
 }
@@ -371,6 +373,12 @@ export function formatTaskWorkbenchReport(report: TaskWorkbenchReport): string {
     }
   }
   lines.push(
+    ...(report.diagnostics ? [
+      '',
+      'Diagnostics',
+      `- Duration: ${report.diagnostics.durationMs} ms${report.diagnostics.slow ? ' (slow)' : ''}`,
+      ...(report.diagnostics.note ? [`- ${report.diagnostics.note}`] : [])
+    ] : []),
     '',
     'Protocol',
     `- Task doctor: ${report.sources.protocolTask.ok ? 'ok' : 'issues'}`,
@@ -402,6 +410,7 @@ export function formatTaskStatusSelectionReport(report: TaskStatusSelectionRepor
     `Loop phase: ${report.loop.phase}`,
     `Next: ${report.loop.primaryNextAction?.command ?? report.loop.primaryNextAction?.message ?? report.loop.summary}`
   ];
+  if (report.diagnostics) lines.push(`Duration: ${report.diagnostics.durationMs} ms${report.diagnostics.slow ? ' (slow)' : ''}`);
   for (const recommendation of report.recommendations) {
     lines.push(`${recommendation.taskId}\t${recommendation.title}\t${recommendation.reason}`);
     lines.push(`source\t${recommendation.source}`);
