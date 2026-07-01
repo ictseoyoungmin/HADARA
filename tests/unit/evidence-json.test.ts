@@ -17,6 +17,7 @@ import type { RedactionPattern } from '../../src/core/redaction';
 import { resolveHadaraPaths } from '../../src/core/paths';
 import { listPrivateEvidenceManifests } from '../../src/evidence/private-manifest';
 import { createTaskCapsule } from '../../src/task/task-capsule';
+import { initProject } from '../../src/cli/init';
 
 const roots: string[] = [];
 
@@ -31,6 +32,7 @@ const mediumDiagnosticPattern: RedactionPattern = {
 
 function tempProject(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-evidence-json-'));
+  initProject(dir, 'basic', { silent: true });
   roots.push(dir);
   return dir;
 }
@@ -157,6 +159,63 @@ describe('CLI evidence JSON reports', () => {
       }
     });
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('"schemaVersion":"hadara.evidence.v2"');
+  });
+
+  it('prints add-command help without appending evidence when task is supplied', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Add command help does not mutate');
+    const evidenceJsonlPath = path.join(task.dir, 'evidence.jsonl');
+    const evidenceMarkdownPath = path.join(task.dir, 'EVIDENCE.md');
+    const beforeJsonl = fs.readFileSync(evidenceJsonlPath, 'utf8');
+    const beforeMarkdown = fs.readFileSync(evidenceMarkdownPath, 'utf8');
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+
+    try {
+      expect(
+        handleEvidenceCommand({
+          args: ['evidence', 'add-command', '--task', task.id, '--help'],
+          projectRoot: root,
+          jsonOutput: false
+        })
+      ).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    expect(output.join('\n')).toContain('Usage:');
+    expect(output.join('\n')).toContain('hadara evidence add-command');
+    expect(fs.readFileSync(evidenceJsonlPath, 'utf8')).toBe(beforeJsonl);
+    expect(fs.readFileSync(evidenceMarkdownPath, 'utf8')).toBe(beforeMarkdown);
+  });
+
+  it('prints add-command help without requiring task', () => {
+    const root = tempProject();
+    const output: string[] = [];
+    const originalLog = console.log;
+    const originalExitCode = process.exitCode;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+
+    try {
+      expect(
+        handleEvidenceCommand({
+          args: ['evidence', 'add-command', '--help'],
+          projectRoot: root,
+          jsonOutput: false
+        })
+      ).toBe(true);
+      expect(process.exitCode).toBe(originalExitCode);
+    } finally {
+      console.log = originalLog;
+      process.exitCode = originalExitCode;
+    }
+
+    expect(output.join('\n')).toContain('Records an already-run command result.');
   });
 
   it('adds command evidence with explicit v2 category, outcome, and resolution tags', () => {
@@ -643,6 +702,7 @@ describe('CLI evidence JSON reports', () => {
     const parent = tempProject();
     const root = path.join(parent, 'repo');
     fs.mkdirSync(root);
+    initProject(root, 'basic', { silent: true });
     const task = createTaskCapsule(root, 'Visibility private evidence');
     const externalPath = path.join(parent, 'visibility-outside.log');
     fs.writeFileSync(externalPath, 'external private content', 'utf8');

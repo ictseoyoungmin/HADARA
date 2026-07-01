@@ -24,6 +24,12 @@ export interface EvidenceCommandInput {
 
 export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
   const sub = input.args[1];
+
+  if (hasHelpFlag(input.args)) {
+    console.log(renderEvidenceCommandHelp(sub));
+    return true;
+  }
+
   if (sub === 'list') {
     const taskId = getRequiredStringOption(input.args, '--task');
     const report = createEvidenceListReport(input.projectRoot, {
@@ -203,6 +209,46 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
   }
 
   return true;
+}
+
+function hasHelpFlag(args: string[]): boolean {
+  return args.includes('--help') || args.includes('-h');
+}
+
+function renderEvidenceCommandHelp(sub: string | undefined): string {
+  if (sub === 'add-command') {
+    return [
+      '[HADARA] evidence add-command',
+      '',
+      'Usage:',
+      '  hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --json',
+      '',
+      'Records an already-run command result. It does not execute shell commands.',
+      'Options:',
+      '  --task <id>                Task Capsule id.',
+      '  --summary <text>          Human-readable result summary.',
+      '  --result <value>          Legacy-compatible result: passed, failed, blocked, unknown.',
+      '  --outcome <value>         Evidence v2 outcome.',
+      '  --category <value>        Evidence v2 category.',
+      '  --resolves <id>           Add a resolves:<id> tag. Repeatable.',
+      '  --supersedes <id>         Add a supersedes:<id> tag. Repeatable.',
+      '  --idempotency-key <key>   Reuse an existing keyed record instead of appending duplicates.',
+      '  --private                 Store as private evidence metadata.'
+    ].join('\n');
+  }
+
+  return [
+    '[HADARA] evidence',
+    '',
+    'Usage:',
+    '  hadara evidence list --task T-XXXX --json',
+    '  hadara evidence lint --task T-XXXX --json',
+    '  hadara evidence summary --task T-XXXX --json',
+    '  hadara evidence project --task T-XXXX [--execute] --json',
+    '  hadara evidence add-command --task T-XXXX --summary "..." --result passed --json',
+    '',
+    'Use `hadara help command evidence.add-command` for registry metadata.'
+  ].join('\n');
 }
 
 function blockLegacyMutation(input: EvidenceCommandInput, command: string): boolean {

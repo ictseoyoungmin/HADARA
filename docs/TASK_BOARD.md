@@ -456,3 +456,4 @@
 | T-0453 | Agent UX Validation Run Task Sync Decoupling | Done | tasks/T-0453-agent-ux-validation-run-task-sync-decoupling | First agent UX refactor capsule after T-0452 dogfood; decouples validation evidence capture from automatic TASK.md row sync. |
 | T-0454 | Agent UX Validation Attempt Auto Resolution | Done | tasks/T-0454-agent-ux-validation-attempt-auto-resolution | Same-check validation retries now auto-resolve earlier failed or blocked attempts with durable evidence tags. |
 | T-0455 | Agent UX Validation Latest Attempt Projection | Done | tasks/T-0455-agent-ux-validation-latest-attempt-projection | `task status` now projects per-check validation attempt state and unresolved failed/blocked counts. |
+| T-0456 | Agent UX Evidence Help Mutation Guard | Done | tasks/T-0456-agent-ux-evidence-help-mutation-guard | `evidence add-command --help` now prints help without appending evidence or requiring `--task`. |

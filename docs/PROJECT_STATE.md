@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0455 Agent UX Validation Latest Attempt Projection |
-| Active Task | Agent UX wrapper/help mutation hazard repair |
+| Latest Completed Task | T-0456 Agent UX Evidence Help Mutation Guard |
+| Active Task | Agent UX validation wrapper error semantics |
 
 ## Next Planned Line
 
@@ -105,6 +105,8 @@ T-0453 follow-up note: T-0453 starts the requested 5-15 capsule agent UX refacto
 T-0454 follow-up note: T-0454 is the second capsule in the requested 5-15 capsule agent UX refactor loop. `validation run` now tags attempts with a stable `validation-check:<key>`, returns attempt metadata in `hadara.validation.run.v1`, and automatically adds `resolves:<id>` tags for earlier unresolved failed or blocked attempts when a later same-check attempt passes. The dogfood probe intentionally failed and then passed the same check; `ev:T-0454:385fa69b38dc4641839a69bb` resolved `ev:T-0454:f3a4b2dfcbdd44b39c90d9f6`. Focused validation-run tests and TypeScript build passed in `ev:T-0454:10fe55713fac48b2907d76b6` and `ev:T-0454:0287e6d080ec411880afc44b`. Final direct done-level harness validation passed in `ev:T-0454:fe8b5a505bd94cbaa6805dc4`, resolving two nested-spawn wrapper blocked records. The next agent UX capsule should project current validation state per check so agents do not have to inspect raw evidence lists for latest-attempt status, and should triage `validation run` nested spawn EPERM handling plus `evidence add-command --help` recording default evidence.
 
 T-0455 follow-up note: T-0455 is the third capsule in the requested 5-15 capsule agent UX refactor loop. `task status --json` now includes `sources.evidenceList.validationAttempts`, grouping validation attempts by stable check key or summary fallback and exposing latest status, unresolved failed/blocked counts, latest evidence ids, and resolution evidence ids. The text status output also shows compact validation check and unresolved counts. Focused workbench tests passed in `ev:T-0455:ec70182bf0f9491292013cf1`, TypeScript build passed in `ev:T-0455:d17cc01c4fd4444da2e9ace8`, and built CLI dogfood against T-0454 reported four validation checks with zero unresolved failed/blocked attempts in `ev:T-0455:d4b3ea9ddcc549fda9eaeeb5`. The next agent UX capsule should repair command hazards from dogfood: `validation run` nested spawn EPERM handling and `evidence add-command --help` recording default evidence.
+
+T-0456 follow-up note: T-0456 is the fourth capsule in the requested 5-15 capsule agent UX refactor loop. `evidence add-command --help` now resolves before mutation guards and required `--task` parsing, so help prints without appending evidence. Focused evidence CLI tests passed in `ev:T-0456:3575c0472d5b464585261a79`, TypeScript build passed in `ev:T-0456:dbf8b1a1dc8d4707b5d9469c`, and built CLI smoke confirmed `evidence add-command --task T-0456 --help` left the capsule `evidence.jsonl` line count and `EVIDENCE.md` hash unchanged in `ev:T-0456:2c697ca98ea7410a9a9f23d9`. The next agent UX capsule should repair `validation run` wrapper error semantics for nested spawn EPERM behavior.
 
 Phase 8 / 0.3.1 is complete through post-rc1 documentation cleanup. It carried Work Item A and Work Item F into implementation as status token governance, document ownership/write-boundary governance, task handoff close-state clarity, installed-package recycle findings cleanup, state consistency projection, and advisory verification gates. The Phase 8 specs are staged under `docs/specs/0.3.1/`; the first rc1 implementation sequence is staged under `docs/specs/0.3.1/rc1/`. Phase 8.1 through Phase 8.6 are complete through T-0324, T-0325 completed the follow-up CloseState derived-state cleanup after review, T-0326 prepared `hadara@0.3.1-rc.1` release readiness without publish mutation, T-0327 published `hadara@0.3.1-rc.1`, verified npm visibility/tarball contents, hardened future rc publish tags, and corrected npm dist-tags so stable `0.3.0` stays on `latest` while rc1 is available as `next`, T-0328 verified the published rc1 package from installed consumer paths in the `hadara-dev` container, and T-0329 refreshed post-rc1 handoff/release-note wording after reviewer feedback.
 
@@ -238,8 +240,9 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0455 Agent UX Validation Latest Attempt Projection.
-- Next work is the next capsule in the 5-15 capsule agent UX refactor dogfood loop: repair validation wrapper/help mutation hazards exposed during T-0454/T-0455.
+- Latest completed task is T-0456 Agent UX Evidence Help Mutation Guard.
+- Next work is the next capsule in the 5-15 capsule agent UX refactor dogfood loop: repair `validation run` wrapper error semantics exposed during T-0454/T-0455.
+- T-0456 made `evidence add-command --help` non-mutating before `--task` parsing. Evidence: `ev:T-0456:3575c0472d5b464585261a79`, `ev:T-0456:dbf8b1a1dc8d4707b5d9469c`, `ev:T-0456:2c697ca98ea7410a9a9f23d9`.
 - T-0455 added `sources.evidenceList.validationAttempts` to `task status` so agents can see per-check validation state without raw evidence inspection. Evidence: `ev:T-0455:ec70182bf0f9491292013cf1`, `ev:T-0455:d17cc01c4fd4444da2e9ace8`, `ev:T-0455:d4b3ea9ddcc549fda9eaeeb5`.
 - T-0454 added stable validation attempt check keys and automatic same-check failed/blocked attempt resolution for `hadara validation run`. Evidence: `ev:T-0454:385fa69b38dc4641839a69bb`, `ev:T-0454:10fe55713fac48b2907d76b6`, `ev:T-0454:0287e6d080ec411880afc44b`, `ev:T-0454:fe8b5a505bd94cbaa6805dc4`; failed/blocked probes are resolved by later passed evidence.
 - T-0453 started the direct HADARA dogfood UX refactor line by decoupling `validation run` evidence capture from default `TASK.md` Validation row writes. Evidence: `ev:T-0453:facedecf71cf4747adfdd522`, `ev:T-0453:bff69d665fcb466fb9bc910b`, `ev:T-0453:6a76b8b335fb4151b6d9f92a`.
