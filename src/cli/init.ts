@@ -1141,6 +1141,18 @@ This document explains when to use HADARA CLI surfaces and when to update HADARA
 
 Use HADARA read models first. Do not manually read broad project files unless a HADARA command points you there or the task explicitly requires it.
 
+## Quickstart
+
+Use this section for the first pass through a new scaffold. Read the detailed sections below only when you reach that situation.
+
+| Situation | First Action |
+|---|---|
+| New project created | Read \`AGENTS.md\`, then \`.hadara/context/HADARA_CONTEXT.md\`, then this Quickstart. |
+| Need work to do | Run \`hadara task status --json\`. |
+| Need a task | Run \`hadara task create "task title" --json\`, then fill \`TASK.md\` Goal, Source Documents, Plan, and Acceptance. |
+| Need files to inspect | Run \`hadara session start --task T-XXXX --json\` or \`hadara context pack --task T-XXXX --json\`, then read only routed files. |
+| Ready to close | Run \`hadara task finalize --task T-XXXX --json\`, inspect the plan hash, then execute finalize with that hash. |
+
 ## Minimal Loop
 
 \`\`\`text

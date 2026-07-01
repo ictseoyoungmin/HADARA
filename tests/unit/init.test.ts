@@ -116,6 +116,7 @@ describe('init profiles', () => {
 
     expect(read(root, '.hadara/context/HADARA_CONTEXT.md')).toContain('docs/HADARA_WORKFLOW.md');
     expect(read(root, 'AGENTS.md')).toContain('docs/HADARA_WORKFLOW.md');
+    expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('## Quickstart');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('## Minimal Loop');
 
     const slotRegistry = JSON.parse(read(root, '.hadara/slot-registry.json'));
@@ -151,6 +152,8 @@ describe('init profiles', () => {
     expect(context).not.toContain('## Task Document Timing');
 
     const workflow = read(root, 'docs/HADARA_WORKFLOW.md');
+    expect(workflow.indexOf('## Quickstart')).toBeLessThan(workflow.indexOf('## Minimal Loop'));
+    expect(workflow.split('\n').slice(0, 40).join('\n')).toContain('Run `hadara task status --json`.');
     expect(workflow).toContain('hadara validation run --task T-XXXX --check "Focused tests" -- npm test');
     expect(workflow).toContain('Use `validation run` for ordinary validation');
     expect(workflow).toContain('Add `--update-task` only when you intentionally want the matching `TASK.md` Validation row updated by the CLI.');
