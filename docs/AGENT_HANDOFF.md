@@ -4,17 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, and the five-capsule agent UX priority batch is complete through T-0464. |
-| Current Phase | Agent UX refactor dogfood loop plus 0.3.4 stable readiness pending | T-0464 is the twelfth capsule in the 5-15 capsule agent UX optimization line and the fifth capsule in the current requested priority batch; 0.4 release-line work remains separate and has not started. |
-| Latest Completed Task | T-0464 Agent UX finalize execute progress output | `task finalize --execute` now emits stage progress lines to stderr while preserving the final JSON report on stdout. |
-| Active / Next Task | Operator decision | The requested five priority capsules are complete; decide whether to continue UX residual work or return to release/readiness lines. |
-| Validation Baseline | T-0464 finalize execute progress | Focused Docker `task-finalize` tests and TypeScript build passed in `ev:T-0464:51c58e7d001d42b8b4b009c2`; disposable built CLI progress smoke passed in `ev:T-0464:c3125378748d4fb79980cfe1`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, and the follow-up finalize correctness hardening is complete through T-0465. |
+| Current Phase | Agent UX refactor dogfood loop plus 0.3.4 stable readiness pending | T-0465 followed the requested five priority capsules to harden finalize dry-run correctness; 0.4 release-line work remains separate and has not started. |
+| Latest Completed Task | T-0465 Finalize staged plan hardening | `task finalize --json` now marks required-write plans as `executable-with-deferred-checks` and exposes `deferredChecks` plus `partialExecutionRisk`. |
+| Active / Next Task | Operator decision | Decide whether to continue UX cleanup, tackle mounted performance, or return to release/readiness lines. |
+| Validation Baseline | T-0465 finalize staged plan hardening | Focused Docker finalize/schema tests and TypeScript build passed in `ev:T-0465:5bab047c37bf4178a8c94cb9`; built CLI staged-plan smoke passed in `ev:T-0465:f4e0591df698476c8d583886`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| Operator decision after five priority capsules | T-0460 through T-0464 handled the requested priority batch. Remaining candidates are root latency optimization for mounted close/audit, narrower `task status` composition, and cleanup of older docs-doctor fixture residuals. | `tasks/T-0464-agent-ux-finalize-execute-progress-output/HANDOFF.md`, `ev:T-0464:51c58e7d001d42b8b4b009c2`, `ev:T-0464:c3125378748d4fb79980cfe1` |
+| Operator decision after finalize staged-plan hardening | T-0465 fixed the finalize dry-run predictability issue raised after T-0464. Remaining candidates are next-action `message`/`summary` duplication, Change Summary line-range UX, mounted status/finalize performance, and older docs-doctor fixture residuals. | `tasks/T-0465-finalize-staged-plan-hardening/HANDOFF.md`, `ev:T-0465:5bab047c37bf4178a8c94cb9`, `ev:T-0465:f4e0591df698476c8d583886` |
 | 0.4 release-line decision | Deferred until explicitly started. T-0452 completed the 24-capsule 0.4 implementation budget; release readiness/publish/recycle work is separate. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
@@ -22,9 +22,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0465 / Finalize staged plan hardening | Added staged finalize plan metadata so required-write dry-runs expose deferred checks and partial execution risk before execute can mutate task state. | `ev:T-0465:5bab047c37bf4178a8c94cb9`, `ev:T-0465:f4e0591df698476c8d583886`, `ev:T-0465:a3639a0719a5477cb621b1d9` |
 | T-0464 / Agent UX finalize execute progress output | Added execute-only finalize progress events and CLI stderr progress lines so long finalize runs are no longer silent while JSON stdout remains the final report channel. | `ev:T-0464:51c58e7d001d42b8b4b009c2`, `ev:T-0464:c3125378748d4fb79980cfe1` |
 | T-0463 / Agent UX status finalize latency diagnostics | Added additive CLI diagnostics to `task status` and `task finalize` output, including `durationMs`, `slowThresholdMs`, `slow`, and slow-run notes, with schema and built CLI smoke coverage. | `ev:T-0463:d7ed90ac429d428eb84ce44a`, `ev:T-0463:b8afb3afd6544e5d8ce7319f`, `ev:T-0463:e51a09de51e649ab9d9f1f45` |
-| T-0462 / Agent UX fresh init quickstart verbosity hardening | Added a compact Quickstart section to generated `docs/HADARA_WORKFLOW.md`, kept it before Minimal Loop, refreshed built CLI output, and verified fresh governed init remains 15 files and doctor-clean. | `ev:T-0462:84b3176bc6cd4cde96c34534`, `ev:T-0462:ca54a04cfc91403f91eb81b5` |
 
 ## Current Known Problems
 
@@ -96,7 +96,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Operator decision after five priority Agent UX capsules. | T-0460 through T-0464 completed the requested priority batch: global option ordering, status authoring suggestions, init quickstart, latency diagnostics, and finalize execute progress. | `ev:T-0460:708e920cff184178b4a650d5`, `ev:T-0461:d6486726fd0b4eea8775d3b0`, `ev:T-0462:84b3176bc6cd4cde96c34534`, `ev:T-0463:d7ed90ac429d428eb84ce44a`, `ev:T-0464:51c58e7d001d42b8b4b009c2` |
+| Operator decision after finalize staged-plan hardening. | T-0465 handled the finalize dry-run predictability gap. Remaining UX cleanup candidates are next-action field duplication, Change Summary line-range guidance/parser behavior, and mounted status/finalize performance. | `ev:T-0465:5bab047c37bf4178a8c94cb9`, `ev:T-0465:f4e0591df698476c8d583886`, `tasks/T-0465-finalize-staged-plan-hardening/HANDOFF.md` |
 | Later, decide whether to start the 0.4.0 release line. | T-0452 completed the 24-capsule 0.4 implementation budget; any 0.4.0-rc.0 readiness, publish, package recycle, stable decision, or stable publish work requires a later explicit release-line capsule. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 

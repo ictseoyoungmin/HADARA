@@ -9,7 +9,7 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0464 Agent UX finalize execute progress output |
+| Latest Completed Task | T-0465 Finalize staged plan hardening |
 | Active Task | Operator decision |
 
 ## Next Planned Line
@@ -25,6 +25,8 @@ T-0462 follow-up note: generated `docs/HADARA_WORKFLOW.md` now starts with a com
 T-0463 follow-up note: `task status` and `task finalize` now attach additive CLI diagnostics to JSON/text output, including command path, elapsed duration, slow threshold, slow flag, and slow-run note. Focused Docker status/finalize/schema tests and TypeScript build passed, workspace `dist` was refreshed, and direct built CLI smokes proved mounted-workspace diagnostics output. Evidence: `ev:T-0463:d7ed90ac429d428eb84ce44a`, `ev:T-0463:b8afb3afd6544e5d8ce7319f`, `ev:T-0463:e51a09de51e649ab9d9f1f45`. This is after-command latency visibility, not live progress; T-0464 should choose between live progress/narrower status composition and cleanup of repeated validation-fixture residuals.
 
 T-0464 follow-up note: `task finalize --execute` now emits stage progress lines to stderr for finish, refresh, ready, close, and audit while keeping the final report on stdout for JSON consumers. Focused Docker `task-finalize` tests and TypeScript build passed, workspace `dist` was refreshed, and a disposable basic-project built CLI smoke proved progress lines appear before the final blocked JSON report. Evidence: `ev:T-0464:51c58e7d001d42b8b4b009c2`, `ev:T-0464:c3125378748d4fb79980cfe1`. The requested five priority capsules are complete; remaining UX decisions should be explicitly selected.
+
+T-0465 follow-up note: finalize dry-run now reports staged required-write plans as `planStatus: executable-with-deferred-checks` with `deferredChecks` and `partialExecutionRisk`, and required write next actions warn that execute may stop after re-evaluating deferred checks. Focused Docker finalize/schema tests and TypeScript build passed, workspace `dist` was refreshed, and built CLI staged-plan smoke passed. Evidence: `ev:T-0465:5bab047c37bf4178a8c94cb9`, `ev:T-0465:f4e0591df698476c8d583886`, `ev:T-0465:a3639a0719a5477cb621b1d9`. Remaining UX cleanup candidates are next-action `message`/`summary` duplication, Change Summary line-range authoring/parser behavior, and mounted status/finalize performance.
 
 T-0460 follow-up note: agent UX global option parsing now supports known global options before the command token. The CLI entry normalizes leading `--project <path>` and `--json` before dispatch while preserving command-first invocations and strict option-value validation. Built CLI smokes passed for `node dist/cli/main.js --json --project . version` and `node dist/cli/main.js --project /tmp/hadara-t0460-global-init init --profile basic --json`; Docker focused args tests and TypeScript build passed, and workspace `dist` was refreshed. Evidence: `ev:T-0460:708e920cff184178b4a650d5`, `ev:T-0460:4951e6416ffc4c0bad478427`. Broader command-specific option reordering remains out of scope unless another dogfood friction appears.
 

@@ -10,8 +10,13 @@
     "command": { "const": "task.finalize" },
     "ok": { "type": "boolean" },
     "state": { "enum": ["blocked", "ready-to-close", "closed-valid", "closed-stale", "in-progress"] },
-    "planStatus": { "enum": ["blocked", "executable", "satisfied", "pending"] },
+    "planStatus": { "enum": ["blocked", "executable", "executable-with-deferred-checks", "satisfied", "pending"] },
     "blockingIssues": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "deferredChecks": {
+      "type": "array",
+      "items": { "enum": ["finish", "ready", "close", "audit-close"] }
+    },
+    "partialExecutionRisk": { "type": "boolean" },
     "pendingWrites": {
       "type": "array",
       "items": {
@@ -41,6 +46,11 @@
         "blocked": { "type": "number" },
         "satisfied": { "type": "number" },
         "executeSupported": { "type": "boolean" },
+        "deferredChecks": {
+          "type": "array",
+          "items": { "enum": ["finish", "ready", "close", "audit-close"] }
+        },
+        "partialExecutionRisk": { "type": "boolean" },
         "evaluatedReports": { "type": "array", "items": { "type": "string" } },
         "skippedReports": { "type": "array", "items": { "type": "string" } }
       }

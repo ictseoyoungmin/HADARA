@@ -38,11 +38,24 @@ describe('task finalize dry-run plan', () => {
       readOnly: true,
       mode: 'dry-run',
       taskId: task.id,
-      summary: { steps: 4, required: 1, blocked: 0, executeSupported: true, evaluatedReports: ['finish'], skippedReports: ['ready', 'close', 'audit-close'] },
+      planStatus: 'executable-with-deferred-checks',
+      deferredChecks: ['ready', 'close', 'audit-close'],
+      partialExecutionRisk: true,
+      summary: {
+        steps: 4,
+        required: 1,
+        blocked: 0,
+        executeSupported: true,
+        deferredChecks: ['ready', 'close', 'audit-close'],
+        partialExecutionRisk: true,
+        evaluatedReports: ['finish'],
+        skippedReports: ['ready', 'close', 'audit-close']
+      },
       primaryNextAction: {
         id: 'finalize-finish',
         command: `hadara task finish --task ${task.id} --execute --json`,
-        writeBoundary: 'task-local'
+        writeBoundary: 'task-local',
+        message: 'Apply bounded finish bookkeeping. Then finalize will re-evaluate ready, close, audit-close and may stop if blockers appear.'
       },
       authoringGuidance: {
         readOnly: true,
@@ -55,6 +68,7 @@ describe('task finalize dry-run plan', () => {
     expect(second.planHash).toBe(report.planHash);
     expect(report.steps.map((step) => step.id)).toEqual(['finish', 'ready', 'close', 'audit-close']);
     expect(report.steps.find((step) => step.id === 'ready')).toMatchObject({ status: 'pending', sourceReport: 'hadara.task.ready.v1' });
+    expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'TASK_FINALIZE_DEFERRED_CHECKS', severity: 'info' })]));
     expect(report.steps.find((step) => step.id === 'finish')).toMatchObject({
       status: 'required',
       mode: 'execute',
@@ -104,7 +118,9 @@ describe('task finalize dry-run plan', () => {
 
     expect(report.ok).toBe(true);
     expect(report.state).toBe('ready-to-close');
-    expect(report.planStatus).toBe('executable');
+    expect(report.planStatus).toBe('executable-with-deferred-checks');
+    expect(report.deferredChecks).toEqual(['audit-close']);
+    expect(report.partialExecutionRisk).toBe(true);
     expect(report.blockingIssues).toEqual([]);
     expect(report.pendingWrites).toEqual([
       {
@@ -113,8 +129,13 @@ describe('task finalize dry-run plan', () => {
         paths: [`tasks/${task.id}-finalize-close/evidence.jsonl`]
       }
     ]);
-    expect(report.summary).toMatchObject({ required: 1, blocked: 0, satisfied: 2 });
-    expect(report.primaryNextAction).toMatchObject({ id: 'finalize-close', command: `hadara task close --task ${task.id} --execute --json`, writeBoundary: 'evidence-append' });
+    expect(report.summary).toMatchObject({ required: 1, blocked: 0, satisfied: 2, deferredChecks: ['audit-close'], partialExecutionRisk: true });
+    expect(report.primaryNextAction).toMatchObject({
+      id: 'finalize-close',
+      command: `hadara task close --task ${task.id} --execute --json`,
+      writeBoundary: 'evidence-append',
+      message: 'Append close evidence after reviewing close dry-run. Then finalize will re-evaluate audit-close and may stop if blockers appear.'
+    });
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_EVIDENCE_MISSING', severity: 'info' }));
     expect(report.steps.find((step) => step.id === 'close')).toMatchObject({
       status: 'required',
@@ -137,9 +158,10 @@ describe('task finalize dry-run plan', () => {
       ok: false,
       readOnly: true,
       mode: 'execute-refused',
-      summary: { executeSupported: true },
-      issues: [{ severity: 'error', code: 'TASK_FINALIZE_PLAN_HASH_REQUIRED' }]
+      summary: { executeSupported: true }
     });
+    expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ severity: 'error', code: 'TASK_FINALIZE_PLAN_HASH_REQUIRED' })]));
+    expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ severity: 'info', code: 'TASK_FINALIZE_DEFERRED_CHECKS' })]));
     expect(report.planHash).toMatch(/^sha256:/);
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
   });
@@ -160,9 +182,10 @@ describe('task finalize dry-run plan', () => {
         requestedPlanHash: 'sha256:0000000000000000000000000000000000000000000000000000000000000000',
         planHashMatched: false,
         executedSteps: []
-      },
-      issues: [{ severity: 'error', code: 'TASK_FINALIZE_PLAN_HASH_MISMATCH' }]
+      }
     });
+    expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ severity: 'error', code: 'TASK_FINALIZE_PLAN_HASH_MISMATCH' })]));
+    expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ severity: 'info', code: 'TASK_FINALIZE_DEFERRED_CHECKS' })]));
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
   });
 

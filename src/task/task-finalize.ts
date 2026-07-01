@@ -16,8 +16,10 @@ export interface TaskFinalizeReport {
   command: 'task.finalize';
   ok: boolean;
   state: 'blocked' | 'ready-to-close' | 'closed-valid' | 'closed-stale' | 'in-progress';
-  planStatus: 'blocked' | 'executable' | 'satisfied' | 'pending';
+  planStatus: 'blocked' | 'executable' | 'executable-with-deferred-checks' | 'satisfied' | 'pending';
   blockingIssues: TaskFinalizeIssue[];
+  deferredChecks: TaskFinalizeStepId[];
+  partialExecutionRisk: boolean;
   pendingWrites: Array<{
     step: TaskFinalizeStepId;
     writeBoundary: TaskFinalizeStep['writeBoundary'];
@@ -35,6 +37,8 @@ export interface TaskFinalizeReport {
     blocked: number;
     satisfied: number;
     executeSupported: boolean;
+    deferredChecks?: TaskFinalizeStepId[];
+    partialExecutionRisk?: boolean;
     evaluatedReports?: string[];
     skippedReports?: string[];
   };
@@ -264,6 +268,7 @@ function createPostExecutionReport(
   const authoringGuidance = createTaskAuthoringGuidance(projectRoot, taskId);
   const state = deriveFinalizeState(steps, issues, reports);
   const blockingIssues = finalizeBlockingIssues(issues);
+  const deferredChecks = deferredChecksForPlan(steps);
   const execution: TaskFinalizeExecution = {
     requestedPlanHash,
     currentPlanHash: reviewedPlanHash,
@@ -278,6 +283,8 @@ function createPostExecutionReport(
     state,
     planStatus: derivePlanStatus(state, steps),
     blockingIssues,
+    deferredChecks,
+    partialExecutionRisk: deferredChecks.length > 0,
     pendingWrites: pendingWrites(steps),
     readOnly: false,
     mode: 'execute',
@@ -311,6 +318,8 @@ function createFinalizeReport(
   const authoringGuidance: TaskAuthoringGuidance = projectRoot ? createTaskAuthoringGuidance(projectRoot, taskId) : missingTaskAuthoringGuidance();
   const state = deriveFinalizeState(steps, issues, reports);
   const blockingIssues = finalizeBlockingIssues(issues);
+  const deferredChecks = deferredChecksForPlan(steps);
+  const allIssues = [...issues, ...deferredCheckIssues(deferredChecks)];
   return {
     schemaVersion: 'hadara.task.finalize.v1',
     command: 'task.finalize',
@@ -318,6 +327,8 @@ function createFinalizeReport(
     state,
     planStatus: derivePlanStatus(state, steps),
     blockingIssues,
+    deferredChecks,
+    partialExecutionRisk: deferredChecks.length > 0,
     pendingWrites: pendingWrites(steps),
     readOnly,
     mode,
@@ -331,7 +342,7 @@ function createFinalizeReport(
     authoringGuidance,
     ...(nextAction ? { primaryNextAction: nextAction } : {}),
     nextActions: nextAction ? [nextAction] : [],
-    issues
+    issues: allIssues
   };
 }
 
@@ -495,9 +506,32 @@ function deriveFinalizeState(steps: TaskFinalizeStep[], issues: TaskFinalizeIssu
 
 function derivePlanStatus(state: TaskFinalizeReport['state'], steps: TaskFinalizeStep[]): TaskFinalizeReport['planStatus'] {
   if (state === 'blocked' || state === 'closed-stale') return 'blocked';
+  if (deferredChecksForPlan(steps).length > 0) return 'executable-with-deferred-checks';
   if (state === 'ready-to-close') return 'executable';
   if (state === 'closed-valid') return 'satisfied';
   return steps.some((step) => step.status === 'required') ? 'executable' : 'pending';
+}
+
+function deferredChecksForPlan(steps: TaskFinalizeStep[]): TaskFinalizeStepId[] {
+  const firstRequiredWriteIndex = steps.findIndex((step) => step.status === 'required' && step.writeBoundary !== 'read-only');
+  if (firstRequiredWriteIndex < 0) return [];
+  return steps
+    .slice(firstRequiredWriteIndex + 1)
+    .filter((step) => step.status === 'pending' || step.status === 'required')
+    .map((step) => step.id);
+}
+
+function deferredCheckIssues(deferredChecks: TaskFinalizeStepId[]): TaskFinalizeIssue[] {
+  if (deferredChecks.length === 0) return [];
+  return [
+    {
+      severity: 'info',
+      code: 'TASK_FINALIZE_DEFERRED_CHECKS',
+      message: `Finalize execute will re-evaluate ${deferredChecks.join(', ')} after the planned write step. Execution can stop after partial writes if those checks find blockers.`,
+      fixHint: 'Review deferredChecks and partialExecutionRisk before running finalize --execute; rerun finalize dry-run after resolving any post-write blockers.',
+      example: 'hadara task finalize --task T-XXXX --json'
+    }
+  ];
 }
 
 function finalizeBlockingIssues(issues: TaskFinalizeIssue[]): TaskFinalizeIssue[] {
@@ -548,12 +582,20 @@ function createPrimaryNextAction(taskId: string, steps: TaskFinalizeStep[], issu
     kind: nextStep.status === 'blocked' ? 'review' : 'command',
     required: true,
     command: nextStep.status === 'blocked' ? undefined : nextStep.command,
-    message: nextStep.summary,
+    message: nextActionMessage(nextStep, steps),
     writeBoundary: nextStep.writeBoundary,
     recommendedActorRole: nextStep.writeBoundary === 'read-only' ? 'reviewer' : 'worker',
     requiresBeforeHash: false,
     stalePlanRisk: nextStep.writeBoundary === 'read-only' ? 'none' : 'low'
   });
+}
+
+function nextActionMessage(nextStep: TaskFinalizeStep, steps: TaskFinalizeStep[]): string {
+  const deferredChecks = deferredChecksForPlan(steps);
+  if (nextStep.status !== 'blocked' && nextStep.writeBoundary !== 'read-only' && deferredChecks.length > 0) {
+    return `${nextStep.summary} Then finalize will re-evaluate ${deferredChecks.join(', ')} and may stop if blockers appear.`;
+  }
+  return nextStep.summary;
 }
 
 function isCloseDriftIssue(issue: TaskFinalizeIssue): boolean {
@@ -563,12 +605,14 @@ function isCloseDriftIssue(issue: TaskFinalizeIssue): boolean {
 function summarizeSteps(steps: TaskFinalizeStep[], reports?: FinalizeReports): TaskFinalizeReport['summary'] {
   const evaluatedReports = evaluatedReportNames(steps, reports);
   const skippedReports = ['finish', 'ready', 'close', 'audit-close'].filter((name) => !evaluatedReports.includes(name));
+  const deferredChecks = deferredChecksForPlan(steps);
   return {
     steps: steps.length,
     required: steps.filter((step) => step.status === 'required').length,
     blocked: steps.filter((step) => step.status === 'blocked').length,
     satisfied: steps.filter((step) => step.status === 'satisfied').length,
     executeSupported: true,
+    ...(deferredChecks.length > 0 ? { deferredChecks, partialExecutionRisk: true } : {}),
     evaluatedReports,
     skippedReports
   };
