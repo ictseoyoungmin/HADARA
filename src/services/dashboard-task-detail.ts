@@ -13,7 +13,7 @@ import {
   DashboardProjectReference,
   disabledDashboardCacheMetadata
 } from './dashboard-cache';
-import { buildTaskWorkbenchReadiness, TaskWorkbenchReport } from './task-workbench';
+import { buildTaskWorkbenchReadiness, createTaskAuthoringSuggestions, TaskWorkbenchReport } from './task-workbench';
 
 export interface DashboardTaskDetailIssue {
   severity: 'warning' | 'error';
@@ -212,6 +212,7 @@ function createFastTaskWorkbenchReport(
       }
     },
     authoringGuidance: createTaskAuthoringGuidance(projectRoot, taskId),
+    authoringSuggestions: createTaskAuthoringSuggestions(projectRoot, task.capsule, task.title),
     issues,
     nextActions
   };

@@ -461,3 +461,4 @@
 | T-0458 | Agent UX Task Status Lifecycle Cockpit | Done | tasks/T-0458-agent-ux-task-status-lifecycle-cockpit | |
 | T-0459 | Agent UX init scaffold and source document hardening | Done | tasks/T-0459-agent-ux-init-scaffold-and-source-document-hardening | |
 | T-0460 | Consider a small CLI global-option parsing capsule | Done | tasks/T-0460-consider-a-small-cli-global-option-parsing-capsule | |
+| T-0461 | Agent UX task status authoring suggestions | Done | tasks/T-0461-agent-ux-task-status-authoring-suggestions | |

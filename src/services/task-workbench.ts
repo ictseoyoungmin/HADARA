@@ -1,10 +1,11 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { EvidenceIndexRecord, PersistedEvidenceRecord, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
 import { createTaskCloseReport, TaskCloseIssue } from '../task/task-close';
 import { createTaskShowReport } from './task-read-model';
 import { createEvidenceListReport } from './evidence-list';
-import { parseMarkdownRows } from './markdown-table';
+import { parseMarkdownRows, parseMarkdownRowsUnderHeading } from './markdown-table';
 import { createDocsProtocolConsistencyReport, createProfileProtocolConsistencyReport } from './protocol-consistency';
 import { buildWorkbenchNextActions, WorkbenchNextAction } from './workbench-next-actions';
 import { createTaskAuthoringGuidance, TaskAuthoringGuidance } from '../task/authoring-guidance';
@@ -45,6 +46,30 @@ export interface TaskWorkbenchValidationAttempts {
   checks: number;
   unresolvedFailedOrBlocked: number;
   latest: TaskWorkbenchValidationAttempt[];
+}
+
+export interface TaskAuthoringSuggestions {
+  readOnly: true;
+  writesProse: false;
+  status: 'none' | 'suggested';
+  title: {
+    status: 'ok' | 'looks-like-handoff-sentence';
+    current: string;
+    suggestedTitle?: string;
+    guidance: string[];
+  };
+  sourceDocuments: {
+    status: 'ok' | 'placeholder' | 'needs-hash' | 'missing';
+    guidance: string[];
+    candidateSignals: Array<{ source: string; value?: string; path?: string; suggestedConcern?: string }>;
+    hashRows: Array<{ path: string; sourceHash: string; row: string; status: 'ready' | 'missing-or-outside-project' }>;
+  };
+  acceptance: {
+    status: 'ok' | 'placeholder' | 'needs-evidence' | 'missing';
+    guidance: string[];
+    candidateSignals: Array<{ source: string; value?: string; path?: string; suggestedConcern?: string }>;
+    draftAcceptanceExamples: Array<{ text: string; confidence: 'low'; source: 'generic-pattern' }>;
+  };
 }
 
 export interface TaskWorkbenchReport {
@@ -115,6 +140,7 @@ export interface TaskWorkbenchReport {
     };
   };
   authoringGuidance: TaskAuthoringGuidance;
+  authoringSuggestions: TaskAuthoringSuggestions;
   issues: TaskCloseIssue[];
   nextActions: WorkbenchNextAction[];
 }
@@ -219,6 +245,7 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
   const closedValid = closeState === 'closed-valid';
   const readiness = buildTaskWorkbenchReadiness(closePlan.ok, closedValid);
   const authoringGuidance = createTaskAuthoringGuidance(projectRoot, taskId);
+  const authoringSuggestions = createTaskAuthoringSuggestions(projectRoot, taskShow.task.capsule, taskShow.task.title);
   const issues = [
     ...closePlan.issues,
     ...buildTaskBoardIssues(taskShow.task.id, taskShow.task.status, taskShow.task.capsule, taskBoard),
@@ -309,6 +336,7 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
       }
     },
     authoringGuidance,
+    authoringSuggestions,
     issues,
     nextActions
   };
@@ -356,6 +384,7 @@ export function formatTaskWorkbenchReport(report: TaskWorkbenchReport): string {
     '',
     'Authoring',
     `- ${report.authoringGuidance.summary}`,
+    `- Suggestions: ${report.authoringSuggestions.status}`,
     '',
     'Suggested next'
   );
@@ -434,9 +463,176 @@ function buildMissingTaskReport(projectRoot: string, taskId: string, generatedAt
       summary: 'Task Capsule was not found; no task-owned prose can be inspected.',
       items: []
     },
+    authoringSuggestions: createEmptyAuthoringSuggestions('Unknown'),
     issues,
     nextActions: []
   };
+}
+
+export function createTaskAuthoringSuggestions(projectRoot: string, capsulePath: string, title: string): TaskAuthoringSuggestions {
+  const taskPath = path.join(projectRoot, capsulePath, 'TASK.md');
+  const content = fs.existsSync(taskPath) ? fs.readFileSync(taskPath, 'utf8') : '';
+  const sourceRows = parseMarkdownRowsUnderHeading(content, '## Source Documents');
+  const acceptanceRows = parseMarkdownRowsUnderHeading(content, '## Acceptance');
+  const titleSuggestion = createTitleSuggestion(title);
+  const sourceDocuments = createSourceDocumentSuggestions(projectRoot, sourceRows, title);
+  const acceptance = createAcceptanceSuggestions(acceptanceRows, title, sourceDocuments.candidateSignals);
+  const status = titleSuggestion.status === 'ok' && sourceDocuments.status === 'ok' && acceptance.status === 'ok' ? 'none' : 'suggested';
+  return {
+    readOnly: true,
+    writesProse: false,
+    status,
+    title: titleSuggestion,
+    sourceDocuments,
+    acceptance
+  };
+}
+
+function createEmptyAuthoringSuggestions(title: string): TaskAuthoringSuggestions {
+  return {
+    readOnly: true,
+    writesProse: false,
+    status: 'none',
+    title: { status: 'ok', current: title, guidance: [] },
+    sourceDocuments: { status: 'ok', guidance: [], candidateSignals: [], hashRows: [] },
+    acceptance: { status: 'ok', guidance: [], candidateSignals: [], draftAcceptanceExamples: [] }
+  };
+}
+
+function createTitleSuggestion(title: string): TaskAuthoringSuggestions['title'] {
+  const stripped = title
+    .replace(/^Consider a small\s+/i, '')
+    .replace(/^Open the next\s+/i, '')
+    .replace(/\s+capsule$/i, '')
+    .trim();
+  if (stripped && stripped !== title) {
+    return {
+      status: 'looks-like-handoff-sentence',
+      current: title,
+      suggestedTitle: titleCaseWords(stripped),
+      guidance: [
+        'Use a concise capability or behavior title, not a handoff sentence.',
+        'Keep rationale in Goal/Notes or HANDOFF, not in the title.'
+      ]
+    };
+  }
+  return {
+    status: 'ok',
+    current: title,
+    guidance: ['Keep the title short and behavior-focused.']
+  };
+}
+
+function createSourceDocumentSuggestions(projectRoot: string, rows: string[][], title: string): TaskAuthoringSuggestions['sourceDocuments'] {
+  const dataRows = rows.filter((row) => row[0] !== 'Path');
+  const concretePaths = dataRows.map((row) => normalizeSourcePath(row[0] ?? '')).filter((value) => value && !/^TBD$/i.test(value));
+  const hashRows = concretePaths.map((sourcePath) => sourceDocumentHashRow(projectRoot, sourcePath));
+  const hasPlaceholder = dataRows.length === 0 || dataRows.some((row) => row.some((cell) => /^TBD$/i.test(cell)));
+  const needsHash = dataRows.some((row) => {
+    const sourcePath = normalizeSourcePath(row[0] ?? '');
+    const hash = row[4] ?? '';
+    return sourcePath && !/^TBD$/i.test(sourcePath) && !/^sha256:[a-f0-9]{64}$/.test(hash);
+  });
+  return {
+    status: needsHash ? 'needs-hash' : hasPlaceholder ? 'placeholder' : concretePaths.length === 0 ? 'missing' : 'ok',
+    guidance: [
+      'Use Source Documents for files or docs that constrain this capsule.',
+      'CLI may suggest hashes for existing rows, but agents must choose the sources.',
+      'Do not add broad repository files only because they were nearby.'
+    ],
+    candidateSignals: [
+      { source: 'task-title', value: title },
+      ...(concretePaths.length > 0
+        ? concretePaths.map((pathValue) => ({ source: 'source-documents', path: pathValue, suggestedConcern: concernForPath(pathValue) }))
+        : [{ source: 'task-contract', suggestedConcern: 'Source Documents are not selected yet; use context pack, read-map, or explicit user constraints.' }])
+    ],
+    hashRows
+  };
+}
+
+function sourceDocumentHashRow(projectRoot: string, sourcePath: string): TaskAuthoringSuggestions['sourceDocuments']['hashRows'][number] {
+  const absolutePath = path.resolve(projectRoot, sourcePath);
+  if (!isProjectRelativePath(projectRoot, absolutePath) || !fs.existsSync(absolutePath) || !fs.statSync(absolutePath).isFile()) {
+    return {
+      path: sourcePath,
+      sourceHash: 'sha256:unavailable',
+      row: `| ${sourcePath} | reference | approved | implemented | TBD | Verify path before close. |`,
+      status: 'missing-or-outside-project'
+    };
+  }
+  const sourceHash = `sha256:${crypto.createHash('sha256').update(fs.readFileSync(absolutePath)).digest('hex')}`;
+  return {
+    path: sourcePath,
+    sourceHash,
+    row: `| ${sourcePath} | reference | approved | implemented | ${sourceHash} | Source document for this capsule. |`,
+    status: 'ready'
+  };
+}
+
+function createAcceptanceSuggestions(
+  rows: string[][],
+  title: string,
+  sourceSignals: TaskAuthoringSuggestions['acceptance']['candidateSignals']
+): TaskAuthoringSuggestions['acceptance'] {
+  const dataRows = rows.filter((row) => row[0] !== 'ID');
+  const criteria = dataRows.map((row) => row[1] ?? '').filter(Boolean);
+  const hasPlaceholder = dataRows.length === 0 || criteria.some((criterion) => /^(Scope is implemented\.|Template-specific scope is implemented\.|Validation evidence is recorded\.|TBD)$/i.test(criterion));
+  const needsEvidence = dataRows.some((row) => /^(TBD|Pending)$/i.test(row[4] ?? '') || /^(Pending|Not Met)$/i.test(row[3] ?? ''));
+  return {
+    status: dataRows.length === 0 ? 'missing' : hasPlaceholder ? 'placeholder' : needsEvidence ? 'needs-evidence' : 'ok',
+    guidance: [
+      'Replace generic acceptance rows with behavior-specific criteria.',
+      'Each required criterion should be verifiable by a command, smoke, or documented review.',
+      'Keep criteria scoped to this capsule; do not include release or broad cleanup unless in scope.'
+    ],
+    candidateSignals: [
+      { source: 'task-title', value: title },
+      ...sourceSignals.filter((signal) => !(signal.source === 'task-title' && signal.value === title))
+    ],
+    draftAcceptanceExamples: [
+      {
+        text: 'The changed behavior is covered by focused tests or an equivalent smoke.',
+        confidence: 'low',
+        source: 'generic-pattern'
+      },
+      {
+        text: 'Existing compatible behavior remains covered or explicitly verified.',
+        confidence: 'low',
+        source: 'generic-pattern'
+      }
+    ]
+  };
+}
+
+function normalizeSourcePath(value: string): string {
+  let result = value.trim();
+  const markdownLink = result.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+  if (markdownLink) result = markdownLink[2]?.trim() ?? result;
+  if (result.startsWith('`') && result.endsWith('`')) result = result.slice(1, -1).trim();
+  if (result.startsWith('<') && result.endsWith('>')) result = result.slice(1, -1).trim();
+  return result;
+}
+
+function isProjectRelativePath(projectRoot: string, absolutePath: string): boolean {
+  const relative = path.relative(projectRoot, absolutePath);
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+function concernForPath(sourcePath: string): string {
+  if (sourcePath.includes('/cli/') || sourcePath.startsWith('src/cli/')) return 'CLI command behavior';
+  if (sourcePath.includes('/harness/') || sourcePath.startsWith('src/harness/')) return 'Harness validation behavior';
+  if (sourcePath.includes('/schemas/') || sourcePath.endsWith('.schema.json')) return 'JSON schema compatibility';
+  if (sourcePath.includes('/tests/') || sourcePath.startsWith('tests/')) return 'Regression coverage';
+  if (sourcePath.startsWith('docs/')) return 'Documented workflow or design constraint';
+  return 'Task-specific implementation or reference constraint';
+}
+
+function titleCaseWords(value: string): string {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word.length > 3 ? `${word.slice(0, 1).toUpperCase()}${word.slice(1)}` : word)
+    .join(' ');
 }
 
 function buildTaskStatusLoopGuidance(

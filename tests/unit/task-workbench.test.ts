@@ -70,6 +70,20 @@ describe('task workbench status report', () => {
         writesProse: false,
         status: 'needs-authoring'
       },
+      authoringSuggestions: {
+        readOnly: true,
+        writesProse: false,
+        status: 'suggested',
+        sourceDocuments: {
+          status: 'placeholder'
+        },
+        acceptance: {
+          status: 'placeholder'
+        },
+        title: {
+          status: 'ok'
+        }
+      },
       loop: {
         phase: 'author-task',
         deprecatedCommands: expect.arrayContaining([
@@ -86,6 +100,12 @@ describe('task workbench status report', () => {
       ])
     );
     expect(report.sources.evidenceList.latest).toMatchObject({ kind: 'note', result: 'passed', visibility: 'public' });
+    expect(report.authoringSuggestions.sourceDocuments.guidance).toContain('CLI may suggest hashes for existing rows, but agents must choose the sources.');
+    expect(report.authoringSuggestions.acceptance.draftAcceptanceExamples[0]).toMatchObject({
+      confidence: 'low',
+      source: 'generic-pattern'
+    });
+    expect(report.authoringSuggestions.acceptance.candidateSignals.filter((item) => item.source === 'task-title')).toHaveLength(1);
     expect(report.nextActions.length).toBeGreaterThan(0);
     expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
     expect(formatTaskWorkbenchReport(report)).toContain('Loop phase: author-task');
@@ -96,6 +116,50 @@ describe('task workbench status report', () => {
     expect(formatTaskWorkbenchReport(report)).toContain('Close\n- Close plan:');
     expect(formatTaskWorkbenchReport(report)).toContain('Authoring\n- ');
     expect(formatTaskWorkbenchReport(report)).toContain('Suggested next');
+    expect(snapshotProject(root)).toEqual(before);
+  });
+
+  it('suggests title cleanup and source document hash rows without writing TASK.md', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'src', 'cli'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'src', 'cli', 'main.ts'), 'export const cli = true;\n', 'utf8');
+    const task = createTaskCapsule(root, 'Consider a small CLI global-option parsing capsule');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    const taskMarkdown = fs.readFileSync(taskPath, 'utf8').replace(
+      '| TBD | reference | exploratory | draft | TBD | TBD |',
+      '| `src/cli/main.ts` | implementation-source | approved | implementing | TBD | CLI entry point. |'
+    );
+    fs.writeFileSync(taskPath, taskMarkdown, 'utf8');
+    const before = snapshotProject(root);
+
+    const report = createTaskWorkbenchReport(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
+
+    expect(report.authoringSuggestions).toMatchObject({
+      readOnly: true,
+      writesProse: false,
+      status: 'suggested',
+      title: {
+        status: 'looks-like-handoff-sentence',
+        suggestedTitle: 'CLI Global-option Parsing'
+      },
+      sourceDocuments: {
+        status: 'needs-hash',
+        hashRows: [
+          expect.objectContaining({
+            path: 'src/cli/main.ts',
+            status: 'ready',
+            sourceHash: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+            row: expect.stringContaining('| src/cli/main.ts | reference | approved | implemented | sha256:')
+          })
+        ],
+        candidateSignals: expect.arrayContaining([
+          expect.objectContaining({ path: 'src/cli/main.ts', suggestedConcern: 'CLI command behavior' })
+        ])
+      }
+    });
+    expect(report.authoringSuggestions.acceptance.guidance).toContain('Replace generic acceptance rows with behavior-specific criteria.');
+    expect(report.authoringSuggestions.acceptance.candidateSignals.filter((item) => item.source === 'task-title')).toHaveLength(1);
+    expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
     expect(snapshotProject(root)).toEqual(before);
   });
 
