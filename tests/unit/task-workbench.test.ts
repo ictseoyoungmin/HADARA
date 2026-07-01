@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { appendEvidence } from '../../src/evidence/evidence';
+import { appendEvidence, appendEvidenceWithResult } from '../../src/evidence/evidence';
 import { handleTaskCommand } from '../../src/cli/task';
 import { validateSchema } from '../../src/core/schema';
 import * as harnessService from '../../src/services/harness-service';
@@ -222,6 +222,97 @@ describe('task workbench status report', () => {
     createTaskWorkbenchReport(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
 
     expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it('projects latest validation attempts by check with resolved failed attempts', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Workbench validation attempts');
+    const failed = appendEvidenceWithResult(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Validation "Focused tests" failed; command: npm test',
+      result: 'failed',
+      visibility: 'public',
+      category: 'validation',
+      outcome: 'failed',
+      tags: ['validation-check:focused123']
+    });
+    const failedId = failed.evidence.schemaVersion === 'hadara.evidence.v2' ? failed.evidence.id : '';
+    const passed = appendEvidenceWithResult(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Validation "Focused tests" passed; command: npm test',
+      result: 'passed',
+      visibility: 'public',
+      category: 'validation',
+      outcome: 'passed',
+      tags: ['validation-check:focused123', `resolves:${failedId}`]
+    });
+    const passedId = passed.evidence.schemaVersion === 'hadara.evidence.v2' ? passed.evidence.id : '';
+
+    const report = createTaskWorkbenchReport(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
+
+    expect(report.sources.evidenceList.validationAttempts).toMatchObject({
+      checks: 1,
+      unresolvedFailedOrBlocked: 0,
+      latest: [
+        {
+          check: 'Focused tests',
+          checkKey: 'focused123',
+          attempts: 2,
+          status: 'passed',
+          latestEvidenceId: passedId,
+          unresolvedFailedOrBlockedEvidenceIds: [],
+          resolutionEvidenceIds: [passedId]
+        }
+      ]
+    });
+    expect(formatTaskWorkbenchReport(report)).toContain('Validation checks: 1 | unresolved: 0');
+    expect(formatTaskWorkbenchReport(report)).toContain('Focused tests: passed');
+    expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
+  });
+
+  it('marks blocked validation attempts as resolved when later explicit evidence resolves them', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Workbench resolved blocked attempt');
+    const blocked = appendEvidenceWithResult(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Validation "Done-level harness validation" blocked; command: hadara harness validate',
+      result: 'blocked',
+      visibility: 'public',
+      category: 'validation',
+      outcome: 'blocked',
+      tags: ['validation-check:harness123']
+    });
+    const blockedId = blocked.evidence.schemaVersion === 'hadara.evidence.v2' ? blocked.evidence.id : '';
+    const resolver = appendEvidenceWithResult(root, {
+      taskId: task.id,
+      kind: 'command-log',
+      summary: 'Direct done-level harness validation passed.',
+      result: 'passed',
+      visibility: 'public',
+      category: 'validation',
+      outcome: 'passed',
+      tags: [`resolves:${blockedId}`]
+    });
+    const resolverId = resolver.evidence.schemaVersion === 'hadara.evidence.v2' ? resolver.evidence.id : '';
+
+    const report = createTaskWorkbenchReport(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
+
+    expect(report.sources.evidenceList.validationAttempts?.latest).toEqual([
+      expect.objectContaining({
+        check: 'Done-level harness validation',
+        checkKey: 'harness123',
+        attempts: 1,
+        status: 'resolved',
+        latestEvidenceId: blockedId,
+        unresolvedFailedOrBlockedEvidenceIds: [],
+        resolutionEvidenceIds: [resolverId]
+      })
+    ]);
+    expect(report.sources.evidenceList.validationAttempts?.unresolvedFailedOrBlocked).toBe(0);
+    expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
   });
 });
 

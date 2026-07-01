@@ -4,17 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, and the agent UX refactor dogfood loop is complete through T-0454. |
-| Current Phase | Agent UX refactor dogfood loop plus 0.3.4 stable readiness pending | T-0454 is the second capsule in the requested 5-15 capsule agent UX optimization line; 0.4 release-line work remains separate and has not started. |
-| Latest Completed Task | T-0454 Agent UX Validation Attempt Auto Resolution | `validation run` now tags attempts with stable check keys and passing same-check retries auto-resolve earlier unresolved failed or blocked attempts. |
-| Active / Next Task | Agent UX validation latest-attempt projection and wrapper/help UX triage | Continue the agent UX refactor loop by projecting current validation state per check in `task status` or a dedicated read model, then triage nested spawn EPERM handling and command help mutation hazards; release readiness, publish, package recycle, and stable release work remain outside this line. |
-| Validation Baseline | T-0454 validation attempt auto-resolution plus T-0453 task sync decoupling | T-0454 passed in `ev:T-0454:10fe55713fac48b2907d76b6`, `ev:T-0454:0287e6d080ec411880afc44b`, dogfood proof `ev:T-0454:385fa69b38dc4641839a69bb`, and final harness proof `ev:T-0454:fe8b5a505bd94cbaa6805dc4`; T-0453 passed in `ev:T-0453:6a76b8b335fb4151b6d9f92a`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, and the agent UX refactor dogfood loop is complete through T-0455. |
+| Current Phase | Agent UX refactor dogfood loop plus 0.3.4 stable readiness pending | T-0455 is the third capsule in the requested 5-15 capsule agent UX optimization line; 0.4 release-line work remains separate and has not started. |
+| Latest Completed Task | T-0455 Agent UX Validation Latest Attempt Projection | `task status` now projects per-check validation attempt state, including unresolved failed/blocked counts and resolution evidence ids. |
+| Active / Next Task | Agent UX wrapper/help mutation hazard repair | Continue the agent UX refactor loop by triaging `validation run` nested spawn EPERM handling and `evidence add-command --help` mutation hazards; release readiness, publish, package recycle, and stable release work remain outside this line. |
+| Validation Baseline | T-0455 task status validation-attempt projection plus T-0454 auto-resolution | T-0455 passed in `ev:T-0455:ec70182bf0f9491292013cf1`, `ev:T-0455:d17cc01c4fd4444da2e9ace8`, and `ev:T-0455:d4b3ea9ddcc549fda9eaeeb5`; T-0454 remains the auto-resolution baseline. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| Agent UX validation latest-attempt projection and wrapper/help UX triage | Next capsule in the 5-15 capsule UX refactor loop. T-0454 reduces repair tagging, but agents still need a compact current validation-state projection; T-0454 also exposed nested spawn EPERM handling and `evidence add-command --help` mutation hazards. | `tasks/T-0454-agent-ux-validation-attempt-auto-resolution/HANDOFF.md`, `tasks/T-0454-agent-ux-validation-attempt-auto-resolution/TASK.md`, `.hadara/context/MEMORY.md` |
+| Agent UX wrapper/help mutation hazard repair | Next capsule in the 5-15 capsule UX refactor loop. T-0454 exposed nested spawn EPERM handling and `evidence add-command --help` mutation hazards; T-0455 solved current validation-state projection but did not repair those command hazards. | `tasks/T-0455-agent-ux-validation-latest-attempt-projection/HANDOFF.md`, `tasks/T-0454-agent-ux-validation-attempt-auto-resolution/HANDOFF.md`, `.hadara/context/MEMORY.md` |
 | 0.4 release-line decision | Deferred until explicitly started. T-0452 completed the 24-capsule 0.4 implementation budget; release readiness/publish/recycle work is separate. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
@@ -22,9 +22,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0455 / Agent UX Validation Latest Attempt Projection | Added per-check validation attempt projection to `task status`, including unresolved failed/blocked counts and resolution evidence ids. | `ev:T-0455:ec70182bf0f9491292013cf1`, `ev:T-0455:d17cc01c4fd4444da2e9ace8`, `ev:T-0455:d4b3ea9ddcc549fda9eaeeb5` |
 | T-0454 / Agent UX Validation Attempt Auto Resolution | Added stable validation check keys, attempt metadata, and automatic same-check failed/blocked attempt resolution on passing retries. | `ev:T-0454:f3a4b2dfcbdd44b39c90d9f6`, `ev:T-0454:385fa69b38dc4641839a69bb`, `ev:T-0454:10fe55713fac48b2907d76b6`, `ev:T-0454:0287e6d080ec411880afc44b`, `ev:T-0454:fe8b5a505bd94cbaa6805dc4` |
 | T-0453 / Agent UX Validation Run Task Sync Decoupling | Made `validation run` evidence-only by default and added `--update-task` for deliberate TASK.md Validation row sync, reducing close-source churn during validation. | `ev:T-0453:facedecf71cf4747adfdd522`, `ev:T-0453:bff69d665fcb466fb9bc910b`, `ev:T-0453:6a76b8b335fb4151b6d9f92a` |
-| T-0452 / T-04A24 Final Review and Documentation Cleanup | Reconciled final 0.4 handoff/readiness docs so `task next` points at T-0452 during the capsule and future guidance moves to a separate release-line decision instead of another generic hardening capsule. | `ev:T-0452:25accc6961dc44e293b7041f` |
 
 ## Current Known Problems
 
@@ -96,7 +96,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Open the next agent UX capsule for validation latest-attempt projection and wrapper/help UX triage. | T-0454 auto-resolves earlier same-check failed/blocked attempts, but agents still need compact current validation state; T-0454 also exposed nested spawn EPERM wrapper handling and `evidence add-command --help` mutation hazards. | `tasks/T-0454-agent-ux-validation-attempt-auto-resolution/HANDOFF.md`, `src/services/task-workbench.ts`, `src/services/evidence-list.ts`, `src/services/validation-run.ts`, `src/cli/evidence.ts`, `.hadara/context/MEMORY.md` |
+| Open the next agent UX capsule for wrapper/help mutation hazard repair. | T-0455 solved compact validation-attempt visibility; T-0454/T-0455 dogfood still show command hazards around nested spawn EPERM handling and `evidence add-command --help` recording default evidence. | `tasks/T-0455-agent-ux-validation-latest-attempt-projection/HANDOFF.md`, `tasks/T-0454-agent-ux-validation-attempt-auto-resolution/HANDOFF.md`, `src/services/validation-run.ts`, `src/cli/evidence.ts`, `.hadara/context/MEMORY.md` |
 | Later, decide whether to start the 0.4.0 release line. | T-0452 completed the 24-capsule 0.4 implementation budget; any 0.4.0-rc.0 readiness, publish, package recycle, stable decision, or stable publish work requires a later explicit release-line capsule. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
@@ -104,6 +104,7 @@
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0455 / Agent UX Validation Latest Attempt Projection | Focused task-workbench tests, TypeScript build, and built CLI smoke passed after adding `sources.evidenceList.validationAttempts` to `task status`. | Evidence `ev:T-0455:ec70182bf0f9491292013cf1`, `ev:T-0455:d17cc01c4fd4444da2e9ace8`, `ev:T-0455:d4b3ea9ddcc549fda9eaeeb5`; built T-0454 status showed `checks=4` and `unresolvedFailedOrBlocked=0`. |
 | T-0454 / Agent UX Validation Attempt Auto Resolution | Focused validation-run tests, TypeScript build, dogfood failed-then-passed same-check validation, and final direct done-level harness validation passed after adding stable validation check keys and automatic same-check resolution tags. | Evidence `ev:T-0454:385fa69b38dc4641839a69bb`, `ev:T-0454:10fe55713fac48b2907d76b6`, `ev:T-0454:0287e6d080ec411880afc44b`, `ev:T-0454:fe8b5a505bd94cbaa6805dc4`; failed/blocked probes are resolved by later passed evidence. |
 | T-0453 / Agent UX Validation Run Task Sync Decoupling | Focused validation-run/init/lifecycle tests, TypeScript build, done-level harness, evidence lint, and diff check passed after decoupling validation evidence capture from automatic TASK.md row sync. | Evidence `ev:T-0453:facedecf71cf4747adfdd522`, `ev:T-0453:bff69d665fcb466fb9bc910b`, `ev:T-0453:6a76b8b335fb4151b6d9f92a`; T-0454 handled the immediate attempt auto-resolution follow-up. |
 | T-0452 / T-04A24 Final Review and Documentation Cleanup | Final handoff cleanup checks passed; stale generic 0.4 hardening next-step wording is gone, `task next` points at T-0452 while active, and release-line separation remains documented. | Evidence `ev:T-0452:25accc6961dc44e293b7041f`; 0.4 implementation budget is complete pending final close proof. |

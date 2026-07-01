@@ -455,3 +455,4 @@
 | T-0452 | T-04A24 Final Review and Documentation Cleanup | Done | tasks/T-0452-t-04a24-final-review-and-documentation-cleanup | Final 0.4 implementation-budget handoff/readiness cleanup passed; release work remains separate. |
 | T-0453 | Agent UX Validation Run Task Sync Decoupling | Done | tasks/T-0453-agent-ux-validation-run-task-sync-decoupling | First agent UX refactor capsule after T-0452 dogfood; decouples validation evidence capture from automatic TASK.md row sync. |
 | T-0454 | Agent UX Validation Attempt Auto Resolution | Done | tasks/T-0454-agent-ux-validation-attempt-auto-resolution | Same-check validation retries now auto-resolve earlier failed or blocked attempts with durable evidence tags. |
+| T-0455 | Agent UX Validation Latest Attempt Projection | Done | tasks/T-0455-agent-ux-validation-latest-attempt-projection | `task status` now projects per-check validation attempt state and unresolved failed/blocked counts. |

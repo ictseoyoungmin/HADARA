@@ -19,6 +19,24 @@ export interface TaskWorkbenchReadiness {
   summary: string;
 }
 
+export interface TaskWorkbenchValidationAttempt {
+  check: string;
+  checkKey: string | null;
+  attempts: number;
+  status: 'passed' | 'failed' | 'blocked' | 'resolved' | 'recorded' | 'unknown' | 'not-applicable';
+  latestEvidenceId: string;
+  latestOutcome: string;
+  latestTime: string;
+  unresolvedFailedOrBlockedEvidenceIds: string[];
+  resolutionEvidenceIds: string[];
+}
+
+export interface TaskWorkbenchValidationAttempts {
+  checks: number;
+  unresolvedFailedOrBlocked: number;
+  latest: TaskWorkbenchValidationAttempt[];
+}
+
 export interface TaskWorkbenchReport {
   schemaVersion: 'hadara.task.workbench.v1';
   command: 'task.status';
@@ -70,6 +88,7 @@ export interface TaskWorkbenchReport {
         visibility: string;
         summary: string;
       };
+      validationAttempts?: TaskWorkbenchValidationAttempts;
     };
     protocolTask: {
       ok: boolean;
@@ -102,6 +121,7 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
   const profileDoctor = createProfileProtocolConsistencyReport(projectRoot, now);
   const taskBoard = readTaskBoardProjection(projectRoot, taskShow.task.id);
   const latestEvidence = evidenceList.records.at(-1);
+  const validationAttempts = summarizeValidationAttempts(evidenceList.records);
   const closeState = getCloseState(evidenceList.records);
   const closeEvidenceFound = closeState !== 'not-closed';
   const closedValid = closeState === 'closed-valid';
@@ -168,7 +188,8 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
       evidenceList: {
         ok: evidenceList.ok,
         records: evidenceList.count,
-        ...(latestEvidence ? { latest: summarizeEvidence(latestEvidence) } : {})
+        ...(latestEvidence ? { latest: summarizeEvidence(latestEvidence) } : {}),
+        ...(validationAttempts.checks > 0 ? { validationAttempts } : {})
       },
       protocolTask: {
         ok: closePlan.protocolDoctor.ok,
@@ -207,6 +228,13 @@ export function formatTaskWorkbenchReport(report: TaskWorkbenchReport): string {
   ];
   if (report.sources.evidenceList.latest) {
     lines.push(`- Latest: ${report.sources.evidenceList.latest.kind} / ${report.sources.evidenceList.latest.result} / ${report.sources.evidenceList.latest.visibility}`);
+  }
+  const validationAttempts = report.sources.evidenceList.validationAttempts;
+  if (validationAttempts && validationAttempts.checks > 0) {
+    lines.push(`- Validation checks: ${validationAttempts.checks} | unresolved: ${validationAttempts.unresolvedFailedOrBlocked}`);
+    for (const attempt of validationAttempts.latest.slice(0, 5)) {
+      lines.push(`  - ${attempt.check}: ${attempt.status} (${attempt.latestEvidenceId})`);
+    }
   }
   lines.push(
     '',
@@ -328,6 +356,118 @@ function summarizeEvidence(record: PersistedEvidenceRecord): NonNullable<TaskWor
     visibility: record.visibility,
     summary: record.summary
   };
+}
+
+function summarizeValidationAttempts(records: PersistedEvidenceRecord[]): TaskWorkbenchValidationAttempts {
+  const groups = new Map<string, { check: string; checkKey: string | null; records: EvidenceAttemptRecord[]; unresolved: string[]; resolvers: string[] }>();
+  const evidenceIdToGroup = new Map<string, string>();
+  const resolutionTags: { resolverId: string; resolvedId: string }[] = [];
+
+  for (const record of records) {
+    const id = evidenceRecordId(record);
+    if (!id) continue;
+    for (const tag of evidenceTags(record)) {
+      if (!tag.startsWith('resolves:') && !tag.startsWith('supersedes:')) continue;
+      resolutionTags.push({ resolverId: id, resolvedId: tag.replace(/^(resolves|supersedes):/, '') });
+    }
+
+    if (evidenceCategory(record) !== 'validation') continue;
+    const identity = validationAttemptIdentity(record);
+    if (!identity) continue;
+    const key = identity.checkKey ?? `legacy:${identity.check.toLowerCase()}`;
+    const group = groups.get(key) ?? { check: identity.check, checkKey: identity.checkKey, records: [], unresolved: [], resolvers: [] };
+    group.records.push({
+      id,
+      time: record.time,
+      outcome: evidenceOutcome(record),
+      summary: record.summary
+    });
+    if (record.summary.length > group.check.length && identity.checkKey) group.check = identity.check;
+    groups.set(key, group);
+    evidenceIdToGroup.set(id, key);
+    const outcome = evidenceOutcome(record);
+    if ((outcome === 'failed' || outcome === 'blocked') && !group.unresolved.includes(id)) group.unresolved.push(id);
+  }
+
+  for (const tag of resolutionTags) {
+    const groupKey = evidenceIdToGroup.get(tag.resolvedId);
+    if (!groupKey) continue;
+    const group = groups.get(groupKey);
+    if (!group) continue;
+    group.unresolved = group.unresolved.filter((id) => id !== tag.resolvedId);
+    if (!group.resolvers.includes(tag.resolverId)) group.resolvers.push(tag.resolverId);
+  }
+
+  const latest = Array.from(groups.values())
+    .map((group): TaskWorkbenchValidationAttempt | null => {
+      const latestRecord = group.records.at(-1);
+      if (!latestRecord) return null;
+      return {
+        check: group.check,
+        checkKey: group.checkKey,
+        attempts: group.records.length,
+        status: validationAttemptStatus(latestRecord.outcome, group.unresolved),
+        latestEvidenceId: latestRecord.id,
+        latestOutcome: latestRecord.outcome,
+        latestTime: latestRecord.time,
+        unresolvedFailedOrBlockedEvidenceIds: [...group.unresolved],
+        resolutionEvidenceIds: [...group.resolvers]
+      };
+    })
+    .filter((item): item is TaskWorkbenchValidationAttempt => item !== null)
+    .sort((a, b) => a.latestTime.localeCompare(b.latestTime));
+
+  return {
+    checks: latest.length,
+    unresolvedFailedOrBlocked: latest.reduce((sum, item) => sum + item.unresolvedFailedOrBlockedEvidenceIds.length, 0),
+    latest
+  };
+}
+
+interface EvidenceAttemptRecord {
+  id: string;
+  time: string;
+  outcome: TaskWorkbenchValidationAttempt['latestOutcome'];
+  summary: string;
+}
+
+function validationAttemptStatus(outcome: string, unresolved: string[]): TaskWorkbenchValidationAttempt['status'] {
+  if (unresolved.length > 0 && (outcome === 'failed' || outcome === 'blocked')) return outcome;
+  if (unresolved.length === 0 && (outcome === 'failed' || outcome === 'blocked')) return 'resolved';
+  if (outcome === 'passed' || outcome === 'recorded' || outcome === 'unknown' || outcome === 'not-applicable') return outcome;
+  return 'unknown';
+}
+
+function validationAttemptIdentity(record: PersistedEvidenceRecord): { check: string; checkKey: string | null } | null {
+  const checkKeyTag = evidenceTags(record).find((tag) => tag.startsWith('validation-check:'));
+  const check = extractValidationCheckFromSummary(record.summary);
+  if (!checkKeyTag && !check) return null;
+  return {
+    check: check ?? checkKeyTag?.replace(/^validation-check:/, '') ?? 'validation check',
+    checkKey: checkKeyTag ? checkKeyTag.replace(/^validation-check:/, '') : null
+  };
+}
+
+function extractValidationCheckFromSummary(summary: string): string | null {
+  return /^Validation "([^"]+)"\s/.exec(summary)?.[1] ?? null;
+}
+
+function evidenceRecordId(record: PersistedEvidenceRecord): string | null {
+  if (record.schemaVersion === 'hadara.evidence.v2') return record.id;
+  return null;
+}
+
+function evidenceTags(record: PersistedEvidenceRecord): string[] {
+  return record.schemaVersion === 'hadara.evidence.v2' ? record.tags : [];
+}
+
+function evidenceCategory(record: PersistedEvidenceRecord): string {
+  if (record.schemaVersion === 'hadara.evidence.v2') return record.category;
+  return persistedEvidenceKind(record) === 'test-log' ? 'validation' : 'operation';
+}
+
+function evidenceOutcome(record: PersistedEvidenceRecord): string {
+  return record.schemaVersion === 'hadara.evidence.v2' ? record.outcome : persistedEvidenceResult(record);
 }
 
 interface TaskBoardProjection {

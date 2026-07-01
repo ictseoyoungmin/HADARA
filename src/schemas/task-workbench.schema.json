@@ -31,6 +31,7 @@
     "additive": [
       "state.readiness",
       "sources.*",
+      "sources.evidenceList.validationAttempts",
       "authoringGuidance",
       "nextActions.*"
     ],
