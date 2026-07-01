@@ -151,6 +151,11 @@ describe('init profiles', () => {
     expect(context).not.toContain('## Task Document Timing');
 
     const workflow = read(root, 'docs/HADARA_WORKFLOW.md');
+    expect(workflow).toContain('hadara validation run --task T-XXXX --check "Focused tests" -- npm test');
+    expect(workflow).toContain('Use `validation run` for ordinary validation');
+    expect(workflow).toContain('Use `evidence add-command` only when recording an already-run result');
+    expect(workflow).toContain('| Run and record validation | `hadara validation run --task T-XXXX --check "..." -- <command>` |');
+    expect(workflow).toContain('| Record already-run validation | `hadara evidence add-command ... --json` | Append-only evidence writer; does not execute commands. |');
     for (const heading of [
       '## Minimal Loop',
       '## Read Authority Rules',

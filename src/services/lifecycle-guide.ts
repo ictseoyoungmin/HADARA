@@ -242,6 +242,8 @@ function primaryCommandForEntry(entry: CommandRegistryEntry): string {
       return 'hadara task create "..." --json';
     case 'task.status':
       return 'hadara task status --task T-XXXX --json';
+    case 'validation.run':
+      return 'hadara validation run --task T-XXXX --check "Focused tests" -- npm test';
     case 'evidence.add-command':
       return 'hadara evidence add-command --task T-XXXX --summary "..." --result passed --json';
     case 'task.lifecycle':

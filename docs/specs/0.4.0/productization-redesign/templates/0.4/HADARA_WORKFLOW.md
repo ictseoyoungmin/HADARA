@@ -160,7 +160,7 @@ HADARA 0.4 Task Capsules contain `TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and `ev
 | Capsule created | `task create`, `task status` | Start `TASK.md` Goal, Source Documents, Plan, and Acceptance. | Define the task before implementation. |
 | Before execution | `context pack`, `context slice` | Refine `TASK.md` Plan, Source Documents, and Acceptance. | Make the work bounded and source-backed. |
 | During execution | `task status` as needed | Update `TASK.md` Plan, Change Summary, Risks / Follow-ups; update `HANDOFF.md` warnings if continuity changes. | Keep docs aligned with actual work. |
-| After validation | `evidence add-command`, `evidence summary`, `evidence project` when available | Update `TASK.md` Validation and Acceptance with evidence ids or residual notes. | Record what was checked and what remains. |
+| After validation | `validation run`, `evidence summary`, `evidence project` when available | Update `TASK.md` Validation and Acceptance with evidence ids or residual notes. | Execute real checks through HADARA when possible and record what remains. |
 | Before finalize dry-run | `task lifecycle` | Finish `TASK.md` Change Summary, Acceptance, Validation, Risks / Follow-ups; update `HANDOFF.md`; update shared state docs when the task changed them. | Stabilize close-source docs before hashing. |
 | Finalize review | `task finalize --json` | Inspect the dry-run output and fix reported blockers before execute. | Review planned writes and the current plan hash. |
 | Finalize execute | `task finalize --execute --plan-hash ...` | Do not edit close-source docs during execute. | Let HADARA perform bounded status bookkeeping and close proof append. |
@@ -171,12 +171,15 @@ Do not hand-edit `evidence.jsonl`. Treat `EVIDENCE.md` as a CLI-generated projec
 ## Evidence
 
 ```bash
+hadara validation run --task T-XXXX --check "Focused tests" -- npm test
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --json
 hadara evidence summary --task T-XXXX --json
 hadara evidence project --task T-XXXX --json
 ```
 
-`evidence add-command` records a command result supplied by the operator. It does not execute shell commands. Use `evidence summary` to find durable evidence ids for docs and resolution markers.
+Use `validation run` for ordinary validation because it executes the command, records durable evidence from the real exit status, refreshes `EVIDENCE.md`, and updates the matching `TASK.md` Validation row.
+
+Use `evidence add-command` only when recording an already-run result supplied by the operator. It does not execute shell commands. Use `evidence summary` to find durable evidence ids for docs and resolution markers.
 
 Evidence must reflect real execution results. Fabricated, assumed, or aspirational results are invalid.
 
@@ -205,7 +208,8 @@ Agents must not run `task finalize --execute` without inspecting the dry-run out
 | Inspect selected task | `hadara task status --task T-XXXX --json` | Readiness and next-action projection. |
 | Find task-specific context | `hadara context pack --task T-XXXX --json` | Use before broad manual reads. |
 | Read exact source text | `hadara context slice ... --json` | Use after a context candidate points to a range. |
-| Record validation | `hadara evidence add-command ... --json` | Append-only evidence writer. |
+| Run and record validation | `hadara validation run --task T-XXXX --check "..." -- <command>` | Executes the command and records evidence. |
+| Record already-run validation | `hadara evidence add-command ... --json` | Append-only evidence writer; does not execute commands. |
 | Find evidence ids | `hadara evidence summary --task T-XXXX --json` | Compact copy hints. |
 | Review close path | `hadara task lifecycle --task T-XXXX --json` | Normal lifecycle state. |
 | Close ordinary work | `hadara task finalize --task T-XXXX --json` then execute with its `planHash` | Default close path. |

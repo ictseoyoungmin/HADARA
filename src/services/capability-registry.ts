@@ -754,13 +754,13 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   {
     id: 'evidence.add-command',
     command: 'hadara evidence add-command --task <task-id> --summary <text> [--result <result>] [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] [--json]',
-    summary: 'Append command-log evidence to a Task Capsule, rejecting incompatible result/outcome metadata.',
+    summary: 'Append already-run command-log evidence to a Task Capsule, rejecting incompatible result/outcome metadata.',
     canonical: true,
-    appearsInDefaultHelp: true,
+    appearsInDefaultHelp: false,
     family: 'capsule-lifecycle',
     scope: 'evidence',
     lifecycleStage: 'evidence',
-    requiredness: 'primary',
+    requiredness: 'conditional',
     writeBoundary: 'evidence-append',
     readOnly: false,
     risk: 'medium',
@@ -769,7 +769,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.evidence.collect.v1',
     docs: ['docs/IMPLEMENTATION_SOP.md'],
     examples: [
-      example('Record command evidence', 'hadara evidence add-command --task T-0001 --summary "npm test passed" --result passed --category validation --json', 'After meaningful validation.')
+      example('Record already-run command evidence', 'hadara evidence add-command --task T-0001 --summary "npm test passed" --result passed --category validation --json', 'When recording a real result that was already executed outside validation run.')
     ],
     related: ['evidence.list', 'evidence.lint', 'task.ready'],
     notes: 'The collect response remains `hadara.evidence.collect.v1` with additive v2 metadata. A new add-command report schema id, check-id, and subject fields are deferred candidate scope.',

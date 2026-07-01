@@ -17,7 +17,7 @@ describe('Phase 7.2 lifecycle guide', () => {
       'task.next',
       'task.create',
       'task.status',
-      'evidence.add-command',
+      'validation.run',
       'task.lifecycle',
       'task.finalize',
       'handoff.update'
@@ -50,7 +50,7 @@ describe('Phase 7.2 lifecycle guide', () => {
 
     expect(output).toContain('Primary capsule lifecycle:');
     expect(output).toContain('1 discover');
-    expect(output).toMatch(/4 evidence\s+hadara evidence add-command/);
+    expect(output).toMatch(/4 evidence\s+hadara validation run/);
     expect(output).toMatch(/5 phase-check\s+hadara task lifecycle/);
     expect(output).toMatch(/6 finalize\s+hadara task finalize/);
     expect(output).toMatch(/7 handoff\s+hadara handoff update/);
@@ -66,7 +66,8 @@ describe('Phase 7.2 lifecycle guide', () => {
     const output = renderDefaultHelp();
 
     expect(output).toContain('hadara help lifecycle');
-    expect(output).toContain('evidence.add-command');
+    expect(output).toContain('validation.run');
+    expect(output).not.toContain('evidence.add-command');
     expect(output).toContain('handoff.update');
     expect(output).not.toContain('task.show');
     expect(output).not.toContain('release.publish');

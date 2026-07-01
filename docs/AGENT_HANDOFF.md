@@ -4,26 +4,26 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0450. |
-| Current Phase | 0.4 dogfood and lifecycle UX hardening complete plus 0.3.4 stable readiness pending | T-0450 added validation-run evidence capture, additive finalize state, and resolved-residual projection polish after basic/governed dogfood. |
-| Latest Completed Task | T-0450 T-04A22 Lifecycle UX Hardening | Lifecycle UX hardening passed focused tests, build, built CLI smoke, done-level harness, evidence lint, and diff check. |
-| Active / Next Task | Next 0.4 hardening/polish capsule | Continue bounded self-review, cleanup, and final documentation readiness from the worker-agent capsule plan; keep release-line work separate. |
-| Validation Baseline | T-0450 lifecycle UX hardening plus T-0449 governed profile dogfood | T-0450 passed in `ev:T-0450:91632ae5de42456aa4e2c608`, `ev:T-0450:ea07a22c3f7e4630a2987e12`, and `ev:T-0450:52e434e359144e9387c5c591`; T-0449 governed dogfood passed in `ev:T-0449:a81f3af0c4ab408eba907092`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, and 0.4 productization implementation is complete through T-0451. |
+| Current Phase | 0.4 dogfood, lifecycle UX hardening, and validation workflow polish complete plus 0.3.4 stable readiness pending | T-0451 aligned generated workflow/default help/lifecycle guidance so `validation run` is the ordinary validation evidence path. |
+| Latest Completed Task | T-0451 T-04A23 Validation Run Workflow Polish | Generated workflow docs, spec template wording, lifecycle guide, and default help now prefer `validation run`; focused tests and build passed. |
+| Active / Next Task | T-04A24 final review and documentation cleanup | Complete the final 0.4 review/doc cleanup capsule; keep release-line work separate. |
+| Validation Baseline | T-0451 workflow polish plus T-0450 lifecycle UX hardening | T-0451 passed in `ev:T-0451:c977116a0d344e49b78c69a7`, `ev:T-0451:4c3c982e9f2d405489410abe`, and `ev:T-0451:9a87b48cef7e481e8bb3faf1`; T-0450 passed in `ev:T-0450:91632ae5de42456aa4e2c608`, `ev:T-0450:ea07a22c3f7e4630a2987e12`, and `ev:T-0450:52e434e359144e9387c5c591`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| Next 0.4 hardening/polish capsule | Next. Continue bounded self-review, cleanup, and final documentation readiness after T-0450 removed the most immediate validation/finalize UX friction. | `ev:T-0450:52e434e359144e9387c5c591` |
+| T-04A24 final review and documentation cleanup | Next. T-0451 removed the remaining validation evidence path ambiguity; final review/doc cleanup is the last 0.4 budget item. | `ev:T-0451:c977116a0d344e49b78c69a7`, `ev:T-0451:4c3c982e9f2d405489410abe`, `ev:T-0451:9a87b48cef7e481e8bb3faf1` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0451 / T-04A23 Validation Run Workflow Polish | Aligned generated 0.4 workflow docs, spec template wording, registry-backed default help, and lifecycle guide so `validation run` is the ordinary validation evidence path and `evidence add-command` is conditional/non-default. | `ev:T-0451:c977116a0d344e49b78c69a7`, `ev:T-0451:4c3c982e9f2d405489410abe`, `ev:T-0451:9a87b48cef7e481e8bb3faf1` |
 | T-0450 / T-04A22 Lifecycle UX Hardening | Added `hadara validation run` for real command execution plus durable evidence/Validation row updates, additive finalize state for `ready-to-close`, and resolved failed-evidence projection display. | `ev:T-0450:91632ae5de42456aa4e2c608`, `ev:T-0450:52e434e359144e9387c5c591` |
 | T-0449 / T-04A21 Governed Profile Dogfood | Validated a disposable governed 0.4 project from init through closed-valid task audit, including docs registry/read-map/context-pack/session-start routing and generated-doc/prose leakage assertions. | `ev:T-0449:a81f3af0c4ab408eba907092` |
-| T-0448 / T-04A20 Basic Profile Dogfood | Validated a disposable basic 0.4 project from init through closed-valid task audit; done-level gates blocked invalid source document values and placeholder handoff rows as expected. | `ev:T-0448:9a048c17494b4a9fa625d603` |
 
 ## Current Known Problems
 

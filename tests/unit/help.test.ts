@@ -39,8 +39,8 @@ describe('registry-backed help', () => {
     const report = createLifecycleGuideReport();
 
     expect(report.schemaVersion).toBe('hadara.lifecycle.guide.v1');
-    expect(report.primaryPath.map((step) => step.commandId)).toContain('evidence.add-command');
     expect(report.primaryPath.map((step) => step.commandId)).toContain('validation.run');
+    expect(report.primaryPath.map((step) => step.commandId)).not.toContain('evidence.add-command');
     expect(report.primaryPath.map((step) => step.commandId)).toContain('task.lifecycle');
     expect(report.primaryPath.map((step) => step.commandId)).toContain('task.finalize');
     expect(report.primaryPath.map((step) => step.commandId)).toContain('handoff.update');
