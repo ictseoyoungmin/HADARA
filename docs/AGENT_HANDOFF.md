@@ -4,17 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, and the agent UX refactor dogfood loop is complete through T-0459. |
-| Current Phase | Agent UX refactor dogfood loop plus 0.3.4 stable readiness pending | T-0459 is the seventh capsule in the requested 5-15 capsule agent UX optimization line; 0.4 release-line work remains separate and has not started. |
-| Latest Completed Task | T-0459 Agent UX init scaffold and source document hardening | Markdown-wrapped Source Documents paths now validate, `session start` teaches `task status`, and `init --help` is read-only. |
-| Active / Next Task | Agent UX CLI global option parsing | Consider supporting command-independent global options such as `hadara --project <path> init`; release readiness, publish, package recycle, and stable release work remain outside this line. |
-| Validation Baseline | T-0459 init/session/source-doc hardening | T-0459 focused Docker validation passed in `ev:T-0459:e70d6bc192f446d7ba8b0a95`; built CLI/fresh init smokes passed in `ev:T-0459:d64e7340878e4e57ac628a3d`; broad sync-build failure is recorded in `ev:T-0459:469f12fd91d04455b1587491` and resolved for this scope by focused validation. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, and the agent UX refactor dogfood loop is complete through T-0460. |
+| Current Phase | Agent UX refactor dogfood loop plus 0.3.4 stable readiness pending | T-0460 is the eighth capsule in the requested 5-15 capsule agent UX optimization line; 0.4 release-line work remains separate and has not started. |
+| Latest Completed Task | T-0460 Agent UX CLI global option parsing | Leading `--project <path>` and `--json` now normalize before command dispatch while command-first invocations remain compatible. |
+| Active / Next Task | Agent UX follow-up selection | No specific new capsule is required from T-0460; consider another small UX capsule only if fresh dogfood friction appears. Release readiness, publish, package recycle, and stable release work remain outside this line. |
+| Validation Baseline | T-0460 global option parsing | Docker focused args test and TypeScript build passed in `ev:T-0460:708e920cff184178b4a650d5`; built CLI smokes passed in `ev:T-0460:4951e6416ffc4c0bad478427`. Host focused/build attempts remain non-baseline because host dependencies are absent. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| Agent UX CLI global option parsing | Candidate next capsule in the 5-15 capsule UX refactor loop. T-0459 found that `hadara init --project <path>` works, but `hadara --project <path> init` falls through to default help because commands must currently be first. | `tasks/T-0459-agent-ux-init-scaffold-and-source-document-hardening/HANDOFF.md`, `src/cli/main.ts` |
+| Agent UX follow-up selection | T-0460 fixed the direct global-option parsing friction. Keep the next capsule small and evidence-backed if another dogfood issue appears; otherwise leave the agent UX line idle while release-line work remains separate. | `tasks/T-0460-consider-a-small-cli-global-option-parsing-capsule/HANDOFF.md`, `ev:T-0460:708e920cff184178b4a650d5`, `ev:T-0460:4951e6416ffc4c0bad478427` |
 | 0.4 release-line decision | Deferred until explicitly started. T-0452 completed the 24-capsule 0.4 implementation budget; release readiness/publish/recycle work is separate. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
@@ -22,9 +22,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0460 / Agent UX CLI global option parsing | Added CLI arg normalization for known leading global options so `--project <path>` and `--json` can appear before the command token; refreshed workspace `dist` and validated built CLI smokes. | `ev:T-0460:708e920cff184178b4a650d5`, `ev:T-0460:4951e6416ffc4c0bad478427` |
 | T-0459 / Agent UX init scaffold and source document hardening | Hardened Source Documents path normalization, Session Start status-first guidance, and read-only init help; fresh governed init was checked for file count, verbosity, stale command guidance, and doctor cleanliness. | `ev:T-0459:469f12fd91d04455b1587491`, `ev:T-0459:e70d6bc192f446d7ba8b0a95`, `ev:T-0459:d64e7340878e4e57ac628a3d` |
 | T-0458 / Agent UX Task Status Lifecycle Cockpit | Made `task status --json` the next-work selection cockpit, added selected-capsule loop phase/primary action metadata, and demoted `task next`/`task lifecycle` to compatibility commands in registry/help/docs. | `ev:T-0458:23de043e969f4cfe821911da`, `ev:T-0458:43643f1971ac43a2a6a74e6c`, `ev:T-0458:904b129902fa47839432ede7` |
-| T-0457 / Agent UX Validation Wrapper Error Semantics | Added structured blocked wrapper semantics for validation launch failures, including `failureKind`, `commandStarted`, structured error metadata, and fallback next actions. | `ev:T-0457:63bc490c0f524cc0b5b748e3`, `ev:T-0457:28fb374a36e641bab90bd53d`, `ev:T-0457:ded129c4252440a593372c75` |
 
 ## Current Known Problems
 

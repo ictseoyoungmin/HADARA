@@ -7,6 +7,7 @@ import {
   rejectMissingValue,
   rejectValueThatLooksLikeFlag
 } from '../../src/cli/args';
+import { normalizeGlobalArgs } from '../../src/cli/main';
 
 describe('CLI args helpers', () => {
   it('reads optional and required string options', () => {
@@ -40,5 +41,25 @@ describe('CLI args helpers', () => {
   it('reads boolean flags', () => {
     expect(getFlag(['doctor', '--json'], '--json')).toBe(true);
     expect(getFlag(['doctor'], '--json')).toBe(false);
+  });
+
+  it('normalizes supported global options before the command token', () => {
+    expect(normalizeGlobalArgs(['--project', '/tmp/demo', 'init', '--profile', 'basic', '--json'])).toEqual([
+      'init',
+      '--profile',
+      'basic',
+      '--json',
+      '--project',
+      '/tmp/demo'
+    ]);
+    expect(normalizeGlobalArgs(['--json', 'task', 'status', '--project', '/tmp/demo'])).toEqual([
+      'task',
+      'status',
+      '--project',
+      '/tmp/demo',
+      '--json'
+    ]);
+    expect(normalizeGlobalArgs(['task', 'status', '--json'])).toEqual(['task', 'status', '--json']);
+    expect(normalizeGlobalArgs(['--unknown', 'task', 'status'])).toEqual(['--unknown', 'task', 'status']);
   });
 });

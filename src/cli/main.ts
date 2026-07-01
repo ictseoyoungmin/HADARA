@@ -4,7 +4,28 @@ import { getFlag, getStringOption } from './args';
 import { cliErrorExitCode, createCliErrorReport } from './errors';
 import { renderDefaultHelp } from './help';
 
-async function main(args = process.argv.slice(2)): Promise<void> {
+const GLOBAL_FLAGS = new Set(['--json']);
+const GLOBAL_OPTIONS_WITH_VALUES = new Set(['--project']);
+
+export function normalizeGlobalArgs(args: string[]): string[] {
+  let commandIndex = -1;
+  for (let index = 0; index < args.length; index += 1) {
+    const value = args[index];
+    if (GLOBAL_FLAGS.has(value) || value === '--help' || value === '-h') continue;
+    if (GLOBAL_OPTIONS_WITH_VALUES.has(value)) {
+      index += 1;
+      continue;
+    }
+    commandIndex = index;
+    break;
+  }
+
+  if (commandIndex <= 0) return args;
+  return [args[commandIndex], ...args.slice(commandIndex + 1), ...args.slice(0, commandIndex)];
+}
+
+export async function main(args = process.argv.slice(2)): Promise<void> {
+  args = normalizeGlobalArgs(args);
   const command = args[0];
 
   if (!command || command === '--help' || command === '-h') {

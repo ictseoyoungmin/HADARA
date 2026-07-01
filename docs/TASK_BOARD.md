@@ -460,3 +460,4 @@
 | T-0457 | Agent UX Validation Wrapper Error Semantics | Done | tasks/T-0457-agent-ux-validation-wrapper-error-semantics | `validation run` launch failures now expose structured failureKind/error metadata and fallback next actions. |
 | T-0458 | Agent UX Task Status Lifecycle Cockpit | Done | tasks/T-0458-agent-ux-task-status-lifecycle-cockpit | |
 | T-0459 | Agent UX init scaffold and source document hardening | Done | tasks/T-0459-agent-ux-init-scaffold-and-source-document-hardening | |
+| T-0460 | Consider a small CLI global-option parsing capsule | Done | tasks/T-0460-consider-a-small-cli-global-option-parsing-capsule | |
