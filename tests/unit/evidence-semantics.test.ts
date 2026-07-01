@@ -223,6 +223,30 @@ describe('evidence semantics', () => {
     expect(findUnexplainedBlockedEvidence([explained])).toEqual([]);
   });
 
+  it('treats exact resolution markers as blocked evidence explanation', () => {
+    const blocked = normalizeEvidenceRecord(
+      v2({
+        id: 'ev:T-0001:blockedblockedblockedx',
+        outcome: 'blocked',
+        summary: 'runner unavailable',
+        legacy: { kind: 'command-log', result: 'blocked' }
+      }),
+      { lineNumber: 1 }
+    );
+    const resolved = normalizeEvidenceRecord(
+      v2({
+        id: 'ev:T-0001:passedpassedpassedpassed',
+        outcome: 'passed',
+        summary: 'rerun passed',
+        tags: [`resolves:${blocked.id}`],
+        legacy: { kind: 'command-log', result: 'passed' }
+      }),
+      { lineNumber: 2 }
+    );
+
+    expect(findUnexplainedBlockedEvidence([blocked, resolved])).toEqual([]);
+  });
+
   it('warns when Done tasks only have private substantive evidence', () => {
     const analysis = analyzeTaskEvidenceSemantics({
       taskId: 'T-0001',

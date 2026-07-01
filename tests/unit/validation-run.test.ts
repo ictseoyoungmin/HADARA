@@ -80,6 +80,23 @@ describe('validation run', () => {
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
   });
 
+  it('records blocked validation evidence with an explanation signal', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation run blocked');
+
+    const report = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Missing command',
+      argv: ['definitely-not-a-real-hadara-test-command']
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.result).toBe('Blocked');
+    const evidenceJsonl = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
+    expect(evidenceJsonl).toContain('blocked because validation command execution error');
+    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+  });
+
   it('routes the CLI validation run command', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Validation CLI');

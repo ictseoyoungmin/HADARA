@@ -85,8 +85,10 @@ export function createValidationRunReport(projectRoot: string, options: Validati
     });
   }
 
+  const blockedReason = result === 'Blocked' ? `blocked because ${timedOut ? 'validation command timed out' : `validation command execution error: ${executed.error?.message ?? 'unknown error'}`}` : null;
   const summary = [
     `Validation "${options.check}" ${result.toLowerCase()}`,
+    ...(blockedReason ? [blockedReason] : []),
     `command: ${options.argv.join(' ')}`,
     `exitCode: ${executed.status ?? 'null'}`,
     `signal: ${executed.signal ?? 'null'}`,

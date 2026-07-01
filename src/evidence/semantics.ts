@@ -142,8 +142,9 @@ export function findUnexplainedBlockedEvidence(
   records: NormalizedEvidenceRecord[],
   taskDocs: AnalyzeTaskEvidenceSemanticsInput['taskDocs'] = {}
 ): NormalizedEvidenceRecord[] {
-  return records.filter((record) => {
+  return records.filter((record, index) => {
     if (record.outcome !== 'blocked') return false;
+    if (records.slice(index + 1).some((candidate) => hasExactResolutionMarker(candidate, record.id))) return false;
     if (/\b(blocked because|blocked:|cannot|deferred|out of scope)\b/i.test(record.summary)) return false;
     if (record.issues.length > 0) return false;
     if (hasBlockedDocumentation(record, taskDocs)) return false;
