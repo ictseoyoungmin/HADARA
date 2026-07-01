@@ -166,7 +166,7 @@ Agents may update design source documents when:
 ```text
 the operator asks for it;
 the registry editPolicy allows it;
-the change is summarized with final-state line ranges;
+the change is summarized with stable areas/modules;
 the docs registry is updated if status, authority, readTier, editPolicy, or drift changes.
 ```
 

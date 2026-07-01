@@ -7,7 +7,8 @@
 | Mode | Schema | Trigger |
 |---|---|---|
 | Selection | `hadara.task.status.v1` | `hadara task status --json` without `--task`. |
-| Workbench | `hadara.task.workbench.v1` | `hadara task status --task T-XXXX --json`. |
+| Workbench fast | `hadara.task.workbench.v1` | `hadara task status --task T-XXXX --json`. |
+| Workbench full | `hadara.task.workbench.v1` | `hadara task status --task T-XXXX --detail full --json`. |
 
 ## Selection Report
 
@@ -26,7 +27,7 @@ Required top-level fields:
 
 ## Workbench Report Additions
 
-`hadara.task.workbench.v1` keeps existing task/status/evidence/readiness fields and adds:
+`hadara.task.workbench.v1` keeps existing task/status/evidence/readiness fields and adds loop guidance. The default CLI workbench path is a fast projection; close-grade readiness and protocol diagnostics may be skipped unless `--detail full` is requested or `task finalize --task T-XXXX --json` is run.
 
 | Field | Meaning |
 |---|---|

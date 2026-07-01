@@ -38,9 +38,9 @@ TBD.
 
 ## Change Summary
 
-Line ranges are recorded against the final implementation state used for finalize review.
+Areas are stable modules, functions, sections, or file-level markers used for finalize review.
 
-| Path | Lines | Change | Reason | Evidence |
+| Path | Area | Change | Reason | Evidence |
 |---|---|---|---|---|
 
 ## Risks / Follow-ups

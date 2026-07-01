@@ -452,8 +452,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   },
   {
     id: 'task.status',
-    command: 'hadara task status [--task <task-id>] [--json]',
-    summary: 'Read the phase-aware task cockpit: next-work selection without --task, selected-capsule loop guidance with --task.',
+    command: 'hadara task status [--task <task-id>] [--detail fast|full] [--json]',
+    summary: 'Read the phase-aware task cockpit: next-work selection without --task, fast selected-capsule loop guidance with --task, or explicit full diagnostics with --detail full.',
     canonical: true,
     appearsInDefaultHelp: true,
     family: 'capsule-lifecycle',
@@ -469,7 +469,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     docs: TASK_DOCS,
     examples: [
       example('Select next work', 'hadara task status --json', 'At session start or after a capsule closes.'),
-      example('Inspect capsule status', 'hadara task status --task T-0001 --json', 'At loop boundaries for a selected capsule.')
+      example('Inspect capsule status', 'hadara task status --task T-0001 --json', 'At loop boundaries for a selected capsule.'),
+      example('Inspect full diagnostics', 'hadara task status --task T-0001 --detail full --json', 'When explicit close/protocol diagnostics are needed without finalize planning.')
     ],
     related: ['task.next', 'evidence.list', 'proof.status'],
     conflictsWith: []

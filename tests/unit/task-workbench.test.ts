@@ -1,5 +1,4 @@
 import fs from 'node:fs';
-import { spawnSync } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -20,11 +19,6 @@ function tempProject(): string {
   fs.writeFileSync(path.join(dir, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\n## Current State\n\n| Area | State | Notes |\n|---|---|---|\n| Active / Next Task | T-0001 | Fixture. |\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'IMPLEMENTATION_SOP.md'), '# IMPLEMENTATION_SOP\n\n## Session Start\n\nRead docs.\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | State. |\n| `docs/AGENT_HANDOFF.md` | Every session | Handoff. |\n| `docs/TASK_BOARD.md` | Every session | Board. |\n| `docs/IMPLEMENTATION_SOP.md` | Every session | SOP. |\n\n## Init Profile Matrix\n\n| Profile | Scale |\n|---|---|\n| governed | Heavy |\n\n## Scaffold Document Structure\n\n| Document | Required Structure |\n|---|---|\n| docs/PROJECT_STATE.md | Product. |\n\n## Implementation\n\nWork.\n\n## Validation\n\nCheck.\n\n## Session End\n\nUpdate.\n\n## Handoff Compaction\n\nCompact.\n', 'utf8');
   return dir;
-}
-
-function runGit(root: string, args: string[]): void {
-  const result = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
-  if (result.status !== 0) throw new Error(`git ${args.join(' ')} failed: ${result.stderr}`);
 }
 
 afterEach(() => {
@@ -169,17 +163,12 @@ describe('task workbench status report', () => {
     expect(snapshotProject(root)).toEqual(before);
   });
 
-  it('suggests Change Summary rows from git without writing TASK.md', () => {
+  it('keeps Change Summary suggestions read-only without git scanning', () => {
     const root = tempProject();
-    runGit(root, ['init']);
-    runGit(root, ['config', 'user.name', 'Hadara Test']);
-    runGit(root, ['config', 'user.email', 'hadara@example.test']);
     fs.mkdirSync(path.join(root, 'src'), { recursive: true });
-    fs.writeFileSync(path.join(root, 'src', 'changed.ts'), 'export const before = true;\n', 'utf8');
-    runGit(root, ['add', '.']);
-    runGit(root, ['commit', '-m', 'init']);
+    fs.mkdirSync(path.join(root, '.git'), { recursive: true });
     const task = createTaskCapsule(root, 'Change summary suggestions');
-    fs.writeFileSync(path.join(root, 'src', 'changed.ts'), 'export const before = true;\nexport const after = true;\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'src', 'changed.ts'), 'export const after = true;\n', 'utf8');
     fs.writeFileSync(path.join(root, 'src', 'new-file.ts'), 'export const created = true;\n', 'utf8');
     const before = snapshotProject(root);
 
@@ -187,14 +176,9 @@ describe('task workbench status report', () => {
 
     expect(report.authoringSuggestions.changeSummary).toMatchObject({
       status: 'placeholder',
-      guidance: expect.arrayContaining([expect.stringContaining('HADARA suggests rows but does not edit TASK.md')])
+      guidance: expect.arrayContaining([expect.stringContaining('HADARA does not infer or write the final rows')])
     });
-    expect(report.authoringSuggestions.changeSummary.candidateRows).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ path: 'src/changed.ts', lines: 'L2', source: 'git-diff', status: 'ready' }),
-        expect.objectContaining({ path: 'src/new-file.ts', lines: 'new-file', source: 'git-status', status: 'new-file' })
-      ])
-    );
+    expect(report.authoringSuggestions.changeSummary.candidateRows).toEqual([]);
     expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
     expect(snapshotProject(root)).toEqual(before);
   });
@@ -283,6 +267,35 @@ describe('task workbench status report', () => {
     });
     expect(payload.diagnostics.durationMs).toEqual(expect.any(Number));
     expect(validateSchema('hadara.task.status.v1', payload).ok).toBe(true);
+  });
+
+  it('uses fast selected-task CLI status by default and full diagnostics only on request', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Workbench CLI detail');
+    const spy = vi.spyOn(harnessService, 'createHarnessValidateReport');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const fastHandled = handleTaskCommand({
+      args: ['task', 'status', '--task', task.id, '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+    const fastPayload = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+
+    const fullHandled = handleTaskCommand({
+      args: ['task', 'status', '--task', task.id, '--detail', 'full', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+    const fullPayload = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+
+    expect(fastHandled).toBe(true);
+    expect(fullHandled).toBe(true);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(fastPayload.state.readiness.summary).toContain('Fast task status skipped done-level readiness checks');
+    expect(fullPayload.state.readiness.summary).toContain('Current done-level readiness is blocked');
+    expect(validateSchema('hadara.task.workbench.v1', fastPayload).ok).toBe(true);
+    expect(validateSchema('hadara.task.workbench.v1', fullPayload).ok).toBe(true);
   });
 
   it('reports Task Board status drift from the actual docs/TASK_BOARD.md row', () => {

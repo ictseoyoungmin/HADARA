@@ -1,5 +1,4 @@
 import crypto from 'node:crypto';
-import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { EvidenceIndexRecord, PersistedEvidenceRecord, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
@@ -72,9 +71,9 @@ export interface TaskAuthoringSuggestions {
     draftAcceptanceExamples: Array<{ text: string; confidence: 'low'; source: 'generic-pattern' }>;
   };
   changeSummary: {
-    status: 'ok' | 'placeholder' | 'suggested';
+    status: 'ok' | 'placeholder';
     guidance: string[];
-    candidateRows: Array<{ path: string; lines: string; row: string; source: 'git-diff' | 'git-status'; status: 'ready' | 'new-file' | 'deleted-file' | 'whole-file' }>;
+    candidateRows: [];
   };
 }
 
@@ -234,49 +233,59 @@ export function createTaskStatusSelectionReport(projectRoot: string, now = new D
   };
 }
 
-export function createTaskWorkbenchReport(projectRoot: string, taskId: string, now = new Date()): TaskWorkbenchReport {
+export interface TaskWorkbenchReportOptions {
+  detail?: 'fast' | 'full';
+}
+
+export function createTaskWorkbenchReport(projectRoot: string, taskId: string, now = new Date(), options: TaskWorkbenchReportOptions = {}): TaskWorkbenchReport {
+  const detail = options.detail ?? 'full';
   const taskShow = createTaskShowReport(projectRoot, taskId);
   if (!taskShow.ok || !taskShow.task) {
     const closePlan = createTaskCloseReport(projectRoot, taskId, 'dry-run');
     return buildMissingTaskReport(projectRoot, taskId, now.toISOString(), closePlan.issues);
   }
 
-  const closePlan = createTaskCloseReport(projectRoot, taskId, 'dry-run');
   const evidenceList = createEvidenceListReport(projectRoot, { taskId });
-  const docsDoctor = createDocsProtocolConsistencyReport(projectRoot, now);
-  const profileDoctor = createProfileProtocolConsistencyReport(projectRoot, now);
   const taskBoard = readTaskBoardProjection(projectRoot, taskShow.task.id);
   const latestEvidence = evidenceList.records.at(-1);
   const validationAttempts = summarizeValidationAttempts(evidenceList.records);
   const closeState = getCloseState(evidenceList.records);
   const closeEvidenceFound = closeState !== 'not-closed';
   const closedValid = closeState === 'closed-valid';
-  const readiness = buildTaskWorkbenchReadiness(closePlan.ok, closedValid);
   const authoringGuidance = createTaskAuthoringGuidance(projectRoot, taskId);
   const authoringSuggestions = createTaskAuthoringSuggestions(projectRoot, taskShow.task.capsule, taskShow.task.title);
+  const useFullChecks = detail === 'full';
+  const closePlan = useFullChecks ? createTaskCloseReport(projectRoot, taskId, 'dry-run') : null;
+  const docsDoctor = useFullChecks ? createDocsProtocolConsistencyReport(projectRoot, now) : null;
+  const profileDoctor = useFullChecks ? createProfileProtocolConsistencyReport(projectRoot, now) : null;
+  const currentReady = closePlan?.ok ?? false;
+  const readiness = useFullChecks ? buildTaskWorkbenchReadiness(currentReady, closedValid) : buildTaskWorkbenchReadinessDeferred(closedValid);
   const issues = [
-    ...closePlan.issues,
+    ...(closePlan?.issues ?? []),
     ...buildTaskBoardIssues(taskShow.task.id, taskShow.task.status, taskShow.task.capsule, taskBoard),
     ...evidenceList.issues.map((issue): TaskCloseIssue => ({ severity: issue.severity, code: `EVIDENCE_LIST_${issue.code}`, message: issue.message })),
-    ...docsDoctor.issues.map((issue): TaskCloseIssue => ({ severity: issue.severity, code: `PROTOCOL_DOCS_${issue.code}`, message: issue.message, path: issue.path })),
-    ...profileDoctor.issues.map((issue): TaskCloseIssue => ({ severity: issue.severity, code: `PROTOCOL_PROFILE_${issue.code}`, message: issue.message, path: issue.path }))
+    ...(docsDoctor?.issues.map((issue): TaskCloseIssue => ({ severity: issue.severity, code: `PROTOCOL_DOCS_${issue.code}`, message: issue.message, path: issue.path })) ?? []),
+    ...(profileDoctor?.issues.map((issue): TaskCloseIssue => ({ severity: issue.severity, code: `PROTOCOL_PROFILE_${issue.code}`, message: issue.message, path: issue.path })) ?? [])
   ];
-  const nextActions = buildWorkbenchNextActions({
-    taskId,
-    closed: closedValid,
-    closeEvidenceFound,
-    closePlanOk: closePlan.ok,
-    evidenceRecords: evidenceList.count,
-    authoringStatus: authoringGuidance.status,
-    closeActions: closePlan.nextActions,
-    issues
-  });
+  const nextActions = useFullChecks
+    ? buildWorkbenchNextActions({
+        taskId,
+        closed: closedValid,
+        closeEvidenceFound,
+        closePlanOk: closePlan?.ok ?? false,
+        evidenceRecords: evidenceList.count,
+        authoringStatus: authoringGuidance.status,
+        closeActions: closePlan?.nextActions ?? [],
+        issues
+      })
+    : buildFastWorkbenchNextActions({ taskId, closedValid, closeEvidenceFound, evidenceRecords: evidenceList.count, authoringGuidance });
   const loop = buildTaskStatusLoopGuidance(taskId, {
     taskStatus: taskShow.task.status,
     taskBoardStatus: taskBoard.status,
     authoringGuidance,
     evidenceRecords: evidenceList.count,
-    closePlanOk: closePlan.ok,
+    closePlanOk: closePlan?.ok ?? false,
+    closePlanEvaluated: useFullChecks,
     closedValid,
     issues,
     nextActions
@@ -299,7 +308,7 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
     },
     state: {
       closeState,
-      ready: closePlan.ok,
+      ready: currentReady,
       readiness,
       closeEvidenceFound,
       closedValid,
@@ -315,14 +324,14 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
     loop,
     sources: {
       taskClosePlan: {
-        ok: closePlan.ok,
+        ok: closePlan?.ok ?? false,
         mode: 'dry-run',
-        blockers: closePlan.summary.blockers,
-        warnings: closePlan.summary.warnings
+        blockers: closePlan?.summary.blockers ?? 0,
+        warnings: closePlan?.summary.warnings ?? 0
       },
       evidenceLint: {
-        ok: closePlan.evidenceLint.ok,
-        issues: closePlan.evidenceLint.issueCount
+        ok: closePlan?.evidenceLint.ok ?? true,
+        issues: closePlan?.evidenceLint.issueCount ?? 0
       },
       evidenceList: {
         ok: evidenceList.ok,
@@ -331,16 +340,16 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
         ...(validationAttempts.checks > 0 ? { validationAttempts } : {})
       },
       protocolTask: {
-        ok: closePlan.protocolDoctor.ok,
-        issues: closePlan.protocolDoctor.issueCount
+        ok: closePlan?.protocolDoctor.ok ?? true,
+        issues: closePlan?.protocolDoctor.issueCount ?? 0
       },
       protocolDocs: {
-        ok: docsDoctor.ok,
-        issues: docsDoctor.issues.length
+        ok: docsDoctor?.ok ?? true,
+        issues: docsDoctor?.issues.length ?? 0
       },
       protocolProfile: {
-        ok: profileDoctor.ok,
-        issues: profileDoctor.issues.length
+        ok: profileDoctor?.ok ?? true,
+        issues: profileDoctor?.issues.length ?? 0
       }
     },
     authoringGuidance,
@@ -484,6 +493,67 @@ function buildMissingTaskReport(projectRoot: string, taskId: string, generatedAt
   };
 }
 
+function buildFastWorkbenchNextActions(input: {
+  taskId: string;
+  closedValid: boolean;
+  closeEvidenceFound: boolean;
+  evidenceRecords: number;
+  authoringGuidance: TaskAuthoringGuidance;
+}): WorkbenchNextAction[] {
+  if (input.closedValid || input.closeEvidenceFound) {
+    return [
+      {
+        id: 'audit-close',
+        kind: 'audit',
+        required: false,
+        priority: 'soon',
+        command: `hadara task audit-close --task ${input.taskId} --json`,
+        message: 'Audit the existing close evidence in a read-only pass.',
+        sourceIssueCodes: ['TASK_CLOSE_EVIDENCE_PRESENT']
+      }
+    ];
+  }
+  if (input.authoringGuidance.status === 'needs-authoring') {
+    return [
+      {
+        id: 'author-task-contract',
+        kind: 'edit',
+        required: true,
+        priority: 'now',
+        message: input.authoringGuidance.summary,
+        path: input.authoringGuidance.items[0]?.path,
+        sourceIssueCodes: ['TASK_STATUS_AUTHORING_REQUIRED']
+      }
+    ];
+  }
+  if (input.evidenceRecords === 0) {
+    return [
+      {
+        id: 'add-command-evidence',
+        kind: 'command',
+        required: true,
+        priority: 'now',
+        command: `hadara evidence add-command --task ${input.taskId} --summary "..." --result passed --json`,
+        message: 'Add at least one canonical command-log evidence record before close.',
+        sourceIssueCodes: ['EVIDENCE_JSONL_EMPTY']
+      }
+    ];
+  }
+  return [
+    {
+      id: 'review-finalize-plan',
+      kind: 'command',
+      required: true,
+      priority: 'now',
+      command: `hadara task finalize --task ${input.taskId} --json`,
+      executeCommand: `hadara task finalize --task ${input.taskId} --execute --plan-hash <planHash> --json`,
+      message: 'Review the finalize dry-run for close-grade checks, inspect the plan hash, then execute the matching finalize plan if it still applies.',
+      sourceIssueCodes: ['TASK_STATUS_FAST_FINALIZE_BOUNDARY'],
+      loopBoundary: true
+    }
+  ];
+}
+
 export function createTaskAuthoringSuggestions(projectRoot: string, capsulePath: string, title: string): TaskAuthoringSuggestions {
   const taskPath = path.join(projectRoot, capsulePath, 'TASK.md');
   const content = fs.existsSync(taskPath) ? fs.readFileSync(taskPath, 'utf8') : '';
@@ -492,7 +562,7 @@ export function createTaskAuthoringSuggestions(projectRoot: string, capsulePath:
   const titleSuggestion = createTitleSuggestion(title);
   const sourceDocuments = createSourceDocumentSuggestions(projectRoot, sourceRows, title);
   const acceptance = createAcceptanceSuggestions(acceptanceRows, title, sourceDocuments.candidateSignals);
-  const changeSummary = createChangeSummarySuggestions(projectRoot, content);
+  const changeSummary = createChangeSummarySuggestions(content);
   const status = titleSuggestion.status === 'ok' && sourceDocuments.status === 'ok' && acceptance.status === 'ok' && changeSummary.status === 'ok' ? 'none' : 'suggested';
   return {
     readOnly: true,
@@ -622,100 +692,18 @@ function createAcceptanceSuggestions(
   };
 }
 
-function createChangeSummarySuggestions(projectRoot: string, taskContent: string): TaskAuthoringSuggestions['changeSummary'] {
+function createChangeSummarySuggestions(taskContent: string): TaskAuthoringSuggestions['changeSummary'] {
   const rows = parseMarkdownRowsUnderHeading(taskContent, '## Change Summary').filter((row) => row[0] !== 'Path');
   const hasPlaceholder = rows.length === 0 || rows.some((row) => row.some((cell) => /^TBD$/i.test(cell)));
-  const candidateRows = createGitChangeSummaryCandidates(projectRoot);
   return {
-    status: hasPlaceholder ? 'placeholder' : candidateRows.length > 0 ? 'suggested' : 'ok',
+    status: hasPlaceholder ? 'placeholder' : 'ok',
     guidance: [
-      'Change Summary is agent-owned prose; HADARA suggests rows but does not edit TASK.md.',
-      'Line ranges should describe the final file state. Preferred examples: L7, L7-L25, L7-L25, L30-L40.',
-      'Use new-file, deleted-file, whole-file, or N/A when exact final line ranges are not meaningful.'
+      'Change Summary is agent-owned prose; HADARA does not infer or write the final rows.',
+      'Use Area for a stable module, function, section, or file-level marker rather than stale line ranges.',
+      'Examples: module:task status, function:createTaskWorkbenchReport, section:Change Summary, whole-file, new-file, deleted-file, or N/A.'
     ],
-    candidateRows
+    candidateRows: []
   };
-}
-
-function createGitChangeSummaryCandidates(projectRoot: string): TaskAuthoringSuggestions['changeSummary']['candidateRows'] {
-  if (!fs.existsSync(path.join(projectRoot, '.git'))) return [];
-  const diff = runGit(projectRoot, ['diff', '--unified=0', '--no-ext-diff', '--relative']);
-  const status = runGit(projectRoot, ['status', '--porcelain=v1', '--untracked-files=normal']);
-  if (!diff.ok && !status.ok) return [];
-  const rows = [...parseDiffChangeSummaryRows(diff.stdout), ...parseStatusChangeSummaryRows(status.stdout)];
-  const seen = new Set<string>();
-  return rows.filter((row) => {
-    const key = `${row.path}:${row.lines}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-function runGit(projectRoot: string, args: string[]): { ok: boolean; stdout: string } {
-  const result = spawnSync('git', ['-C', projectRoot, ...args], { encoding: 'utf8', maxBuffer: 1024 * 1024 });
-  return { ok: result.status === 0, stdout: result.stdout ?? '' };
-}
-
-function parseDiffChangeSummaryRows(diff: string): TaskAuthoringSuggestions['changeSummary']['candidateRows'] {
-  const rows: TaskAuthoringSuggestions['changeSummary']['candidateRows'] = [];
-  let currentPath = '';
-  const rangesByPath = new Map<string, string[]>();
-  for (const line of diff.split(/\r?\n/)) {
-    if (line.startsWith('+++ b/')) {
-      currentPath = line.slice('+++ b/'.length);
-      continue;
-    }
-    if (!currentPath || !line.startsWith('@@')) continue;
-    const match = line.match(/\+(\d+)(?:,(\d+))?/);
-    if (!match) continue;
-    const start = Number(match[1]);
-    const count = match[2] === undefined ? 1 : Number(match[2]);
-    if (count <= 0) continue;
-    const range = count <= 1 ? `L${start}` : `L${start}-L${start + count - 1}`;
-    const ranges = rangesByPath.get(currentPath) ?? [];
-    ranges.push(range);
-    rangesByPath.set(currentPath, ranges);
-  }
-  for (const [pathValue, ranges] of rangesByPath) {
-    const lines = ranges.join(', ');
-    rows.push({
-      path: pathValue,
-      lines,
-      row: `| ${pathValue} | ${lines} | Summarize change. | Git diff candidate; edit this prose before close. | TBD |`,
-      source: 'git-diff',
-      status: 'ready'
-    });
-  }
-  return rows;
-}
-
-function parseStatusChangeSummaryRows(status: string): TaskAuthoringSuggestions['changeSummary']['candidateRows'] {
-  const rows: TaskAuthoringSuggestions['changeSummary']['candidateRows'] = [];
-  for (const line of status.split(/\r?\n/)) {
-    if (!line.trim()) continue;
-    const code = line.slice(0, 2);
-    const rawPath = line.slice(3).trim();
-    if (!rawPath || rawPath.includes(' -> ')) continue;
-    if (code === '??') {
-      rows.push({
-        path: rawPath,
-        lines: 'new-file',
-        row: `| ${rawPath} | new-file | Summarize new file. | Git status candidate; edit this prose before close. | TBD |`,
-        source: 'git-status',
-        status: 'new-file'
-      });
-    } else if (code.includes('D')) {
-      rows.push({
-        path: rawPath,
-        lines: 'deleted-file',
-        row: `| ${rawPath} | deleted-file | Summarize deletion. | Git status candidate; edit this prose before close. | TBD |`,
-        source: 'git-status',
-        status: 'deleted-file'
-      });
-    }
-  }
-  return rows;
 }
 
 function normalizeSourcePath(value: string): string {
@@ -757,6 +745,7 @@ function buildTaskStatusLoopGuidance(
     authoringGuidance: TaskAuthoringGuidance;
     evidenceRecords: number;
     closePlanOk: boolean;
+    closePlanEvaluated: boolean;
     closedValid: boolean;
     issues: TaskCloseIssue[];
     nextActions: WorkbenchNextAction[];
@@ -793,6 +782,15 @@ function buildTaskStatusLoopGuidance(
     return {
       phase: 'validate-evidence',
       summary: 'Run real validation or record already-run proof before attempting finalize.',
+      statusCommand: `hadara task status --task ${taskId} --json`,
+      primaryNextAction,
+      deprecatedCommands: deprecatedStatusCommands()
+    };
+  }
+  if (!input.closePlanEvaluated) {
+    return {
+      phase: 'finalize-dry-run',
+      summary: 'Fast task status skipped close-grade checks; review task finalize dry-run for ready, close, and audit planning.',
       statusCommand: `hadara task status --task ${taskId} --json`,
       primaryNextAction,
       deprecatedCommands: deprecatedStatusCommands()
@@ -860,6 +858,17 @@ export function buildTaskWorkbenchReadiness(currentReady: boolean, closeProofVal
     currentReady,
     closeProofValid,
     summary: 'Current done-level readiness is blocked; inspect blockers before closing or completing the task.'
+  };
+}
+
+function buildTaskWorkbenchReadinessDeferred(closeProofValid: boolean): TaskWorkbenchReadiness {
+  return {
+    status: closeProofValid ? 'closed-valid-current-blocked' : 'current-blocked',
+    currentReady: false,
+    closeProofValid,
+    summary: closeProofValid
+      ? 'Fast task status skipped current done-level readiness checks; existing close proof is valid.'
+      : 'Fast task status skipped done-level readiness checks; run `hadara task status --task T-XXXX --detail full --json` or `hadara task finalize --task T-XXXX --json` before close.'
   };
 }
 

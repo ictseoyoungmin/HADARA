@@ -1225,7 +1225,7 @@ hadara task create "task title" --json
 hadara task status --task T-XXXX --json
 \`\`\`
 
-Use \`task status --json\` to decide what to work on when no task is selected. Use \`task create\` only when no suitable capsule exists. Use \`task status --task T-XXXX --json\` to inspect readiness, blockers, evidence, loop phase, and suggested next actions for a selected task.
+Use \`task status --json\` to decide what to work on when no task is selected. Use \`task create\` only when no suitable capsule exists. Use \`task status --task T-XXXX --json\` as a fast selected-task loop cockpit for evidence, loop phase, and suggested next actions. Use \`task finalize --task T-XXXX --json\` or \`task status --task T-XXXX --detail full --json\` when you need close-grade readiness diagnostics.
 
 ## Task Context
 
@@ -1351,7 +1351,8 @@ Agents must not run \`task finalize --execute\` without inspecting the dry-run o
 | New HADARA project | \`hadara init --profile <profile> --json\` | Creates scaffold docs and registries. |
 | Check scaffold health | \`hadara init doctor --json\` | Reports missing or inconsistent scaffold files. |
 | Find next work | \`hadara task status --json\` | Read-only selection cockpit. |
-| Inspect selected task | \`hadara task status --task T-XXXX --json\` | Readiness, loop phase, and next-action projection. |
+| Inspect selected task | \`hadara task status --task T-XXXX --json\` | Fast loop phase and next-action projection. |
+| Inspect close-grade diagnostics | \`hadara task status --task T-XXXX --detail full --json\` | Heavier readiness/protocol projection for explicit diagnostics. |
 | Find task-specific context | \`hadara context pack --task T-XXXX --json\` | Use before broad manual reads. |
 | Read exact source text | \`hadara context slice ... --json\` | Use after a context candidate points to a range. |
 | Run and record validation | \`hadara validation run --task T-XXXX --check "..." -- <command>\` | Executes the command and records evidence without editing \`TASK.md\` by default. |
@@ -1797,7 +1798,7 @@ hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 
 | Command | Default Write Behavior | Notes |
 |---|---|---|
-| \`task status\` | Read-only | Without \`--task\`, selects next work. With \`--task\`, \`ok\` means report generation succeeded; readiness is in \`state.ready\`, \`summary.blockers\`, \`issues\`, and \`loop.phase\`. |
+| \`task status\` | Read-only | Without \`--task\`, selects next work. With \`--task\`, default output is a fast loop cockpit; use \`--detail full\` or \`task finalize\` for close-grade readiness diagnostics. |
 | \`task next\` | Read-only compatibility | Planned removal candidate; prefer \`task status --json\`. |
 | \`evidence add-command\` | Write | Appends command-log evidence; does not execute shell commands; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, and optional \`--idempotency-key\` prevents duplicate same-key records. |
 | \`task lifecycle\` | Read-only compatibility | Planned removal candidate; prefer \`task status --task T-XXXX --json\`. |
@@ -2111,7 +2112,7 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 
 | Command | Default Write Behavior | Notes |
 |---|---|---|
-| \`task status\` | Read-only | Without \`--task\`, selects next work. With \`--task\`, reports phase, readiness, blockers, evidence, and next actions. |
+| \`task status\` | Read-only | Without \`--task\`, selects next work. With \`--task\`, default output is a fast loop cockpit; use \`--detail full\` or \`task finalize\` for close-grade readiness diagnostics. |
 | \`task next\` | Read-only compatibility | Planned removal candidate; prefer \`task status --json\`. |
 | \`task create\` | Write | Creates a Draft Task Capsule and Task Board row. It does not imply the task is ready or done. |
 | \`evidence add-command\` | Write | Appends operator-supplied command-log evidence. It does not execute shell commands or capture stdout/stderr; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, and optional \`--idempotency-key\` prevents duplicate same-key records. |

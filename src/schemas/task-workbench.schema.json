@@ -183,10 +183,11 @@
           "additionalProperties": true,
           "required": ["status", "guidance", "candidateRows"],
           "properties": {
-            "status": { "enum": ["ok", "placeholder", "suggested"] },
+            "status": { "enum": ["ok", "placeholder"] },
             "guidance": { "type": "array", "items": { "type": "string" } },
             "candidateRows": {
               "type": "array",
+              "maxItems": 0,
               "items": {
                 "type": "object",
                 "additionalProperties": true,

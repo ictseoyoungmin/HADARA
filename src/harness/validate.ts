@@ -307,7 +307,17 @@ function validateTaskValidationTable(content: string, relativePath: string, issu
 function validateTaskChangeSummaryTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
   const heading = '## Change Summary';
   const table = sectionTable(content, heading);
-  if (!requireTableHeader(table.rows, ['Path', 'Lines', 'Change', 'Reason', 'Evidence'], relativePath, heading, issues)) return;
+  if (!requireChangeSummaryHeader(table.rows, relativePath, heading, issues)) return;
+  if (table.header[1] === 'Area') {
+    for (const row of table.dataRows) {
+      if (!row.some(Boolean)) continue;
+      const area = tableCell(row, table.header, 'Area');
+      if (!area) {
+        issues.push(taskTableIssue('CHANGE_SUMMARY_AREA_MISSING', 'Change Summary rows require an Area value.', relativePath, heading, 'module:task status'));
+      }
+    }
+    return;
+  }
   for (const row of table.dataRows) {
     if (!row.some(Boolean)) continue;
     const lines = tableCell(row, table.header, 'Lines');
@@ -325,6 +335,23 @@ function validateTaskChangeSummaryTable(content: string, relativePath: string, i
       );
     }
   }
+}
+
+function requireChangeSummaryHeader(rows: string[][], relativePath: string, heading: string, issues: HarnessValidationIssue[]): boolean {
+  const actual = rows[0] ?? [];
+  const areaHeader = ['Path', 'Area', 'Change', 'Reason', 'Evidence'];
+  const legacyLinesHeader = ['Path', 'Lines', 'Change', 'Reason', 'Evidence'];
+  if (areaHeader.every((cell, index) => actual[index] === cell) || legacyLinesHeader.every((cell, index) => actual[index] === cell)) return true;
+  issues.push(
+    taskTableIssue(
+      'TASK_TABLE_SCHEMA_INVALID',
+      `${heading} table header must be: | ${areaHeader.join(' | ')} |`,
+      relativePath,
+      heading,
+      `| ${areaHeader.join(' | ')} |`
+    )
+  );
+  return false;
 }
 
 function validateTaskRisksTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {

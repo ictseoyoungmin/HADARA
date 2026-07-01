@@ -146,7 +146,9 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
       if (!report.ok) process.exitCode = 6;
       return true;
     }
-    const report = createTaskWorkbenchReport(input.projectRoot, id);
+    const detail = getStringOption(input.args, '--detail');
+    if (detail && detail !== 'fast' && detail !== 'full') throw new Error('task status --detail must be fast or full');
+    const report = createTaskWorkbenchReport(input.projectRoot, id, new Date(), { detail: detail === 'full' ? 'full' : 'fast' });
     attachCliDiagnostics(report, startedAtMs, 'task.status');
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));

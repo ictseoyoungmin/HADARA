@@ -74,7 +74,7 @@ Each implementation capsule should include:
 ```text
 source documents with hashes
 TASK.md controlled values valid
-final-state line ranges in Change Summary
+stable areas/modules in Change Summary
 focused validation evidence
 registry updates if command/docs/schema surfaces change
 handoff update

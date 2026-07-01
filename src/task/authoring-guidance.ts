@@ -42,7 +42,7 @@ export function createTaskAuthoringGuidance(projectRoot: string, taskId: string)
     inspectTaskSection(content, relativeTaskPath, 'plan', 'Plan', 'Keep execution steps current as work moves.'),
     inspectTaskSection(content, relativeTaskPath, 'acceptance', 'Acceptance', 'Define required criteria and mark them with evidence only after validation.'),
     inspectTaskSection(content, relativeTaskPath, 'validation', 'Validation', 'List validation methods before close and update real results after execution.'),
-    inspectTaskSection(content, relativeTaskPath, 'change-summary', 'Change Summary', 'Record changed paths and final line ranges before close.'),
+    inspectTaskSection(content, relativeTaskPath, 'change-summary', 'Change Summary', 'Record changed paths, stable areas/modules, and evidence before close.'),
     inspectTaskSection(content, relativeTaskPath, 'risks-followups', 'Risks / Follow-ups', 'Record real residual risks or explicitly mark none.')
   ];
   const requiredOpen = items.filter((item) => item.required && item.status !== 'current').length;

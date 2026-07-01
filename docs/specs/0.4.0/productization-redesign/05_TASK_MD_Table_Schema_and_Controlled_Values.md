@@ -162,19 +162,18 @@ Not Applicable
 ```md
 ## Change Summary
 
-Line ranges are recorded against the final implementation state used for finalize review.
+Areas are stable human-readable modules, functions, sections, or file-level markers used for finalize review.
 
-| Path | Lines | Change | Reason | Evidence |
+| Path | Area | Change | Reason | Evidence |
 |---|---|---|---|---|
 ```
 
-Allowed `Lines` formats:
+Recommended `Area` formats:
 
 ```text
-L10-L20
-L10-L20, L44-L51
-L10
-10-20
+module:task status
+function:createTaskWorkbenchReport
+section:Change Summary
 whole-file
 new-file
 deleted-file
@@ -184,10 +183,11 @@ N/A
 Rules:
 
 ```text
-Line ranges must be final-state line ranges. Prefer `L10-L20` / `L10-L20, L44-L51`; `L10` and `10-20` are accepted for operator ergonomics.
+Areas should remain useful after later edits to the same file.
 Generated files may use N/A with a reason.
 Deleted files use deleted-file.
 Whole-file rewrites use whole-file.
+Legacy TASK.md files with a Lines column are still accepted for compatibility.
 ```
 
 ## Risks / Follow-ups
@@ -221,6 +221,7 @@ TASK_SOURCE_DOCUMENT_MISSING_HASH
 ACCEPTANCE_STATUS_INVALID_TOKEN
 ACCEPTANCE_DISPOSITION_REFERENCE_MISSING
 VALIDATION_RESULT_INVALID_TOKEN
+CHANGE_SUMMARY_AREA_MISSING
 CHANGE_SUMMARY_LINE_RANGE_MISSING
 CHANGE_SUMMARY_LINE_RANGE_INVALID
 ```

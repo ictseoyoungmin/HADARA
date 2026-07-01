@@ -11,7 +11,8 @@ It replaces the ordinary agent need to call separate next-work and lifecycle-pha
 | Command | Mode | Writes | Use |
 |---|---|---:|---|
 | `hadara task status --json` | next-work selection | No | Start of session, after a task closes, or when no task is selected. |
-| `hadara task status --task T-XXXX --json` | selected-capsule cockpit | No | After capsule creation and at meaningful loop boundaries. |
+| `hadara task status --task T-XXXX --json` | fast selected-capsule cockpit | No | After capsule creation and at meaningful loop boundaries. |
+| `hadara task status --task T-XXXX --detail full --json` | full selected-capsule diagnostics | No | When explicit close/protocol diagnostics are needed without finalize planning. |
 
 ## Default Loop
 
@@ -23,7 +24,7 @@ It replaces the ordinary agent need to call separate next-work and lifecycle-pha
 | 4 | Implement scoped work. | Continue when the next action is known; status is not required after every file edit. |
 | 5 | Validate and record evidence. | Run validation/evidence commands, then status at the evidence boundary. |
 | 6 | Update capsule and shared docs. | Rerun status if close-source or handoff state changed. |
-| 7 | Review finalize dry-run. | Run `task finalize --task T-XXXX --json` only when status says finalize is ready. |
+| 7 | Review finalize dry-run. | Run `task finalize --task T-XXXX --json` when the fast cockpit points to the finalize boundary. |
 | 8 | Execute reviewed finalize. | Run `task finalize --execute --plan-hash <hash>` after inspecting the dry-run. |
 | 9 | Stop or select next work. | If status/finalize reports `closed-valid`, do not run separate `audit-close` unless debugging. |
 
@@ -40,6 +41,8 @@ Use it at loop boundaries:
 - after shared close-source docs change
 - before finalize dry-run
 - after finalize or when blocked/confused
+
+Default selected-task status is optimized for loop routing and may skip close-grade readiness/protocol diagnostics. Use `task finalize --task T-XXXX --json` for close planning or `task status --task T-XXXX --detail full --json` for explicit diagnostics.
 
 ## Compatibility Commands
 

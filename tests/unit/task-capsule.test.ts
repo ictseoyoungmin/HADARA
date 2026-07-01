@@ -33,7 +33,7 @@ describe('Task Capsule scaffold frames', () => {
     expect(taskMarkdown).toContain('## Validation');
     expect(taskMarkdown).toContain('| Check | Command / Method | Required | Latest Result | Evidence |');
     expect(taskMarkdown).toContain('## Change Summary');
-    expect(taskMarkdown).toContain('| Path | Lines | Change | Reason | Evidence |');
+    expect(taskMarkdown).toContain('| Path | Area | Change | Reason | Evidence |');
     expect(taskMarkdown).toContain('## Risks / Follow-ups');
     expect(taskMarkdown).toContain('| ID | Kind | Summary | State | Reference |');
     expect(taskMarkdown).not.toContain('\n## Status\n');

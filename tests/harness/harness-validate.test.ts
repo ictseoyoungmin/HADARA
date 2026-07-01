@@ -147,9 +147,9 @@ describe('Harness Task Capsule validation', () => {
     );
   });
 
-  it('accepts ergonomic Change Summary line ranges at draft level', () => {
+  it('accepts stable Change Summary areas at draft level', () => {
     const root = tempProject();
-    const task = createTaskCapsule(root, 'Change line ranges');
+    const task = createTaskCapsule(root, 'Change areas');
     const taskPath = path.join(task.dir, 'TASK.md');
     fs.writeFileSync(
       taskPath,
@@ -157,7 +157,7 @@ describe('Harness Task Capsule validation', () => {
         .readFileSync(taskPath, 'utf8')
         .replace(
           '| TBD | N/A | TBD | TBD | TBD |',
-          '| src/one.ts | L7 | Single final-state line. | Fixture. | Harness. |\n| src/two.ts | 7-25, L30-L40 | Mixed range syntax. | Fixture. | Harness. |\n| src/new.ts | new-file | New file marker. | Fixture. | Harness. |'
+          '| src/one.ts | function:createTaskWorkbenchReport | Stable function area. | Fixture. | Harness. |\n| src/two.ts | module:task status | Stable module area. | Fixture. | Harness. |\n| src/new.ts | new-file | New file marker. | Fixture. | Harness. |'
         ),
       'utf8'
     );
@@ -168,7 +168,52 @@ describe('Harness Task Capsule validation', () => {
     expect(result.issues).toEqual([]);
   });
 
-  it('reports Change Summary line range examples for invalid values', () => {
+  it('accepts legacy Change Summary line ranges at draft level', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Legacy line ranges');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace('| Path | Area | Change | Reason | Evidence |', '| Path | Lines | Change | Reason | Evidence |')
+        .replace(
+          '| TBD | N/A | TBD | TBD | TBD |',
+          '| src/one.ts | L7 | Single final-state line. | Fixture. | Harness. |\n| src/two.ts | 7-25, L30-L40 | Mixed range syntax. | Fixture. | Harness. |'
+        ),
+      'utf8'
+    );
+
+    const result = validateTaskCapsule(root, task.id, { level: 'draft' });
+
+    expect(result.ok).toBe(true);
+    expect(result.issues).toEqual([]);
+  });
+
+  it('reports Change Summary area examples for missing values', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Missing area');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace('| TBD | N/A | TBD | TBD | TBD |', '| src/bad.ts |  | Missing area. | Fixture. | Harness. |'),
+      'utf8'
+    );
+
+    const result = validateTaskCapsule(root, task.id, { level: 'draft' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        code: 'CHANGE_SUMMARY_AREA_MISSING',
+        example: 'module:task status'
+      })
+    );
+  });
+
+  it('reports Change Summary line range examples for invalid legacy values', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Bad line range');
     const taskPath = path.join(task.dir, 'TASK.md');
@@ -176,6 +221,7 @@ describe('Harness Task Capsule validation', () => {
       taskPath,
       fs
         .readFileSync(taskPath, 'utf8')
+        .replace('| Path | Area | Change | Reason | Evidence |', '| Path | Lines | Change | Reason | Evidence |')
         .replace('| TBD | N/A | TBD | TBD | TBD |', '| src/bad.ts | L7- | Invalid range. | Fixture. | Harness. |'),
       'utf8'
     );
