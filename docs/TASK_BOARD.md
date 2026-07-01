@@ -457,3 +457,4 @@
 | T-0454 | Agent UX Validation Attempt Auto Resolution | Done | tasks/T-0454-agent-ux-validation-attempt-auto-resolution | Same-check validation retries now auto-resolve earlier failed or blocked attempts with durable evidence tags. |
 | T-0455 | Agent UX Validation Latest Attempt Projection | Done | tasks/T-0455-agent-ux-validation-latest-attempt-projection | `task status` now projects per-check validation attempt state and unresolved failed/blocked counts. |
 | T-0456 | Agent UX Evidence Help Mutation Guard | Done | tasks/T-0456-agent-ux-evidence-help-mutation-guard | `evidence add-command --help` now prints help without appending evidence or requiring `--task`. |
+| T-0457 | Agent UX Validation Wrapper Error Semantics | Done | tasks/T-0457-agent-ux-validation-wrapper-error-semantics | `validation run` launch failures now expose structured failureKind/error metadata and fallback next actions. |

@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawnSync, type SpawnSyncOptionsWithStringEncoding, type SpawnSyncReturns } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -22,6 +22,14 @@ export interface ValidationRunReport {
     durationMs: number;
     stdoutHash: string;
     stderrHash: string;
+    commandStarted: boolean;
+    failureKind: 'none' | 'non-zero-exit' | 'timeout' | 'permission-denied' | 'command-not-found' | 'launch-error';
+    error?: {
+      code: string | null;
+      message: string;
+      syscall?: string;
+      path?: string;
+    };
   };
   result: 'Passed' | 'Failed' | 'Blocked';
   attempt: {
@@ -55,6 +63,12 @@ export interface ValidationRunReport {
     message: string;
     path?: string;
   }>;
+  nextActions: Array<{
+    id: string;
+    kind: 'command' | 'guidance';
+    message: string;
+    command?: string;
+  }>;
 }
 
 export interface ValidationRunOptions {
@@ -64,7 +78,10 @@ export interface ValidationRunOptions {
   tags?: string[];
   timeoutMs?: number;
   updateTask?: boolean;
+  spawnSyncFn?: ValidationSpawnSync;
 }
+
+type ValidationSpawnSync = (command: string, args: string[], options: SpawnSyncOptionsWithStringEncoding) => SpawnSyncReturns<string>;
 
 export function createValidationRunReport(projectRoot: string, options: ValidationRunOptions): ValidationRunReport {
   const task = findTaskCapsule(projectRoot, options.taskId);
@@ -77,7 +94,8 @@ export function createValidationRunReport(projectRoot: string, options: Validati
     return failedInputReport(projectRoot, options, 'VALIDATION_COMMAND_REQUIRED', 'validation run requires a command after --.');
   }
 
-  const executed = spawnSync(options.argv[0], options.argv.slice(1), {
+  const spawn: ValidationSpawnSync = options.spawnSyncFn ?? ((command, args, spawnOptions) => spawnSync(command, args, spawnOptions));
+  const executed = spawn(options.argv[0], options.argv.slice(1), {
     cwd: projectRoot,
     encoding: 'utf8',
     timeout: Math.max(1, options.timeoutMs ?? 120_000),
@@ -85,16 +103,17 @@ export function createValidationRunReport(projectRoot: string, options: Validati
   });
   const durationMs = Date.now() - started;
   const timedOut = Boolean(executed.error && (executed.error as NodeJS.ErrnoException).code === 'ETIMEDOUT');
-  const result: ValidationRunReport['result'] = timedOut || executed.error ? 'Blocked' : executed.status === 0 ? 'Passed' : 'Failed';
-  if (executed.error && !timedOut) {
+  const executionSemantics = classifyExecution(executed, timedOut);
+  const result: ValidationRunReport['result'] = executionSemantics.failureKind !== 'none' && executionSemantics.failureKind !== 'non-zero-exit' ? 'Blocked' : executed.status === 0 ? 'Passed' : 'Failed';
+  if (executionSemantics.issueCode) {
     issues.push({
-      severity: 'warning',
-      code: 'VALIDATION_COMMAND_EXECUTION_ERROR',
-      message: executed.error.message
+      severity: 'error',
+      code: executionSemantics.issueCode,
+      message: executionSemantics.issueMessage
     });
   }
 
-  const blockedReason = result === 'Blocked' ? `blocked because ${timedOut ? 'validation command timed out' : `validation command execution error: ${executed.error?.message ?? 'unknown error'}`}` : null;
+  const blockedReason = result === 'Blocked' ? executionSemantics.blockedReason : null;
   const summary = [
     `Validation "${options.check}" ${result.toLowerCase()}`,
     ...(blockedReason ? [blockedReason] : []),
@@ -148,7 +167,10 @@ export function createValidationRunReport(projectRoot: string, options: Validati
       timedOut,
       durationMs,
       stdoutHash: hashText(executed.stdout ?? ''),
-      stderrHash: hashText(executed.stderr ?? '')
+      stderrHash: hashText(executed.stderr ?? ''),
+      commandStarted: executionSemantics.commandStarted,
+      failureKind: executionSemantics.failureKind,
+      ...(executionSemantics.error ? { error: executionSemantics.error } : {})
     },
     result,
     attempt: {
@@ -170,8 +192,95 @@ export function createValidationRunReport(projectRoot: string, options: Validati
       updated: false,
       reason: 'Acceptance rows are not updated unless an explicit validation-to-acceptance mapping exists.'
     },
-    issues
+    issues,
+    nextActions: createValidationRunNextActions(options, result, executionSemantics.failureKind)
   };
+}
+
+interface ExecutionSemantics {
+  commandStarted: boolean;
+  failureKind: ValidationRunReport['execution']['failureKind'];
+  error?: NonNullable<ValidationRunReport['execution']['error']>;
+  issueCode?: string;
+  issueMessage: string;
+  blockedReason: string | null;
+}
+
+function classifyExecution(executed: SpawnSyncReturns<string>, timedOut: boolean): ExecutionSemantics {
+  const error = executed.error as NodeJS.ErrnoException | undefined;
+  if (timedOut) {
+    return {
+      commandStarted: true,
+      failureKind: 'timeout',
+      error: error ? executionError(error) : undefined,
+      issueCode: 'VALIDATION_COMMAND_TIMED_OUT',
+      issueMessage: 'Validation command timed out before returning a result.',
+      blockedReason: 'blocked because validation command timed out'
+    };
+  }
+  if (error) {
+    const code = error.code ?? null;
+    const failureKind = code === 'EPERM' || code === 'EACCES' ? 'permission-denied' : code === 'ENOENT' ? 'command-not-found' : 'launch-error';
+    const issueCode =
+      failureKind === 'permission-denied'
+        ? 'VALIDATION_COMMAND_PERMISSION_DENIED'
+        : failureKind === 'command-not-found'
+          ? 'VALIDATION_COMMAND_NOT_FOUND'
+          : 'VALIDATION_COMMAND_LAUNCH_ERROR';
+    return {
+      commandStarted: false,
+      failureKind,
+      error: executionError(error),
+      issueCode,
+      issueMessage: `Validation command could not be launched: ${error.message}`,
+      blockedReason: `blocked because validation command could not be launched (${code ?? 'unknown'}): ${error.message}`
+    };
+  }
+  if (executed.status !== 0) {
+    return {
+      commandStarted: true,
+      failureKind: 'non-zero-exit',
+      issueMessage: '',
+      blockedReason: null
+    };
+  }
+  return {
+    commandStarted: true,
+    failureKind: 'none',
+    issueMessage: '',
+    blockedReason: null
+  };
+}
+
+function executionError(error: NodeJS.ErrnoException): NonNullable<ValidationRunReport['execution']['error']> {
+  return {
+    code: error.code ?? null,
+    message: error.message,
+    ...(error.syscall ? { syscall: error.syscall } : {}),
+    ...(error.path ? { path: String(error.path) } : {})
+  };
+}
+
+function createValidationRunNextActions(options: ValidationRunOptions, result: ValidationRunReport['result'], failureKind: ValidationRunReport['execution']['failureKind']): ValidationRunReport['nextActions'] {
+  if (result !== 'Blocked') return [];
+  const summary = `Validation "${options.check}" was blocked by ${failureKind}.`;
+  return [
+    {
+      id: 'run-direct-command',
+      kind: 'guidance',
+      message: 'Run the validation command directly in the current environment to distinguish command failure from wrapper launch failure.'
+    },
+    {
+      id: 'record-direct-result',
+      kind: 'command',
+      message: 'Record the direct result without rerunning through validation run; adjust --result and --summary if the direct command passed or failed instead of staying blocked.',
+      command: `hadara evidence add-command --task ${options.taskId} --summary ${shellSingleQuote(summary)} --result blocked --category validation --json`
+    }
+  ];
+}
+
+function shellSingleQuote(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
 function failedInputReport(projectRoot: string, options: ValidationRunOptions, code: string, message: string): ValidationRunReport {
@@ -189,7 +298,9 @@ function failedInputReport(projectRoot: string, options: ValidationRunOptions, c
       timedOut: false,
       durationMs: 0,
       stdoutHash: hashText(''),
-      stderrHash: hashText('')
+      stderrHash: hashText(''),
+      commandStarted: false,
+      failureKind: 'launch-error'
     },
     result: 'Blocked',
     attempt: {
@@ -202,7 +313,8 @@ function failedInputReport(projectRoot: string, options: ValidationRunOptions, c
       updated: false,
       reason: 'Validation command did not run.'
     },
-    issues: [{ severity: 'error', code, message }]
+    issues: [{ severity: 'error', code, message }],
+    nextActions: []
   };
 }
 

@@ -23,7 +23,19 @@
         "timedOut": { "type": "boolean" },
         "durationMs": { "type": "number" },
         "stdoutHash": { "type": "string" },
-        "stderrHash": { "type": "string" }
+        "stderrHash": { "type": "string" },
+        "commandStarted": { "type": "boolean" },
+        "failureKind": { "enum": ["none", "non-zero-exit", "timeout", "permission-denied", "command-not-found", "launch-error"] },
+        "error": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "code": { "type": ["string", "null"] },
+            "message": { "type": "string" },
+            "syscall": { "type": "string" },
+            "path": { "type": "string" }
+          }
+        }
       }
     },
     "result": { "enum": ["Passed", "Failed", "Blocked"] },
@@ -70,6 +82,20 @@
           "code": { "type": "string" },
           "message": { "type": "string" },
           "path": { "type": "string" }
+        }
+      }
+    },
+    "nextActions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "kind", "message"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "enum": ["command", "guidance"] },
+          "message": { "type": "string" },
+          "command": { "type": "string" }
         }
       }
     }

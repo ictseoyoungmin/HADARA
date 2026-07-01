@@ -726,7 +726,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Run and sync TASK.md', 'hadara validation run --task T-0001 --check "Focused tests" --update-task -- npm test', 'When the command should also update the TASK.md Validation row.')
     ],
     related: ['evidence.add-command', 'evidence.project', 'task.finalize'],
-    notes: 'Runs argv directly without shell interpretation; use an explicit shell command such as bash -lc when shell features are required. TASK.md Validation row updates are opt-in so evidence capture does not create close-source churn by default. Passed attempts automatically add resolution tags for earlier failed or blocked attempts with the same check name.',
+    notes: 'Runs argv directly without shell interpretation; use an explicit shell command such as bash -lc when shell features are required. TASK.md Validation row updates are opt-in so evidence capture does not create close-source churn by default. Passed attempts automatically add resolution tags for earlier failed or blocked attempts with the same check name. Launch failures such as ENOENT, EPERM, EACCES, and timeout are reported as blocked wrapper outcomes with structured execution.failureKind and fallback nextActions.',
     conflictsWith: []
   },
   {

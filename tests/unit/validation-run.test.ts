@@ -136,8 +136,64 @@ describe('validation run', () => {
 
     expect(report.ok).toBe(false);
     expect(report.result).toBe('Blocked');
+    expect(report.execution).toMatchObject({
+      commandStarted: false,
+      failureKind: 'command-not-found',
+      error: { code: 'ENOENT' }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'VALIDATION_COMMAND_NOT_FOUND' }));
+    expect(report.nextActions.map((action) => action.id)).toEqual(['run-direct-command', 'record-direct-result']);
     const evidenceJsonl = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
-    expect(evidenceJsonl).toContain('blocked because validation command execution error');
+    expect(evidenceJsonl).toContain('blocked because validation command could not be launched');
+    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+  });
+
+  it('classifies permission-denied launch failures separately from validation failures', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation run permission blocked');
+    const launchError = Object.assign(new Error('spawnSync node EPERM'), {
+      code: 'EPERM',
+      syscall: 'spawnSync node',
+      path: process.execPath
+    });
+
+    const report = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Done-level harness',
+      argv: [process.execPath, 'dist/cli/main.js', 'harness', 'validate', '--task', task.id, '--level', 'done', '--json'],
+      spawnSyncFn: () => ({
+        pid: 0,
+        output: [null, '', ''],
+        stdout: '',
+        stderr: '',
+        status: null,
+        signal: null,
+        error: launchError
+      })
+    });
+
+    expect(report).toMatchObject({
+      ok: false,
+      result: 'Blocked',
+      execution: {
+        commandStarted: false,
+        failureKind: 'permission-denied',
+        error: {
+          code: 'EPERM',
+          message: 'spawnSync node EPERM',
+          syscall: 'spawnSync node',
+          path: process.execPath
+        }
+      }
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({ severity: 'error', code: 'VALIDATION_COMMAND_PERMISSION_DENIED' }));
+    expect(report.nextActions).toContainEqual(
+      expect.objectContaining({
+        id: 'record-direct-result',
+        command: expect.stringContaining(`--summary 'Validation "Done-level harness" was blocked by permission-denied.'`)
+      })
+    );
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('could not be launched (EPERM)');
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
   });
 

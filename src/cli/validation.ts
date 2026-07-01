@@ -32,6 +32,7 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
     if (report.evidence) console.log(`evidence=${report.evidence.id}`);
     if (!report.taskValidationRow.updated) console.log(`taskValidationRow=${report.taskValidationRow.mode}`);
     for (const issue of report.issues) console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
+    for (const action of report.nextActions) console.log(`next=${action.command ?? action.message}`);
   }
   if (!report.ok) process.exitCode = 6;
   return true;
