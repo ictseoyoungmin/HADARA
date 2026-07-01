@@ -34,6 +34,7 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'task.ready',
   'task.close',
   'task.audit-close',
+  'validation.run',
   'evidence.collect',
   'evidence.add-command',
   'evidence.list',

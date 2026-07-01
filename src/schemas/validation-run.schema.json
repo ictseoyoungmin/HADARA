@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.validation.run.v1",
+  "x-hadara-schema-id": "hadara.validation.run.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "taskId", "check", "cwd", "argv", "execution", "result", "taskValidationRow", "acceptanceRows", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.validation.run.v1" },
+    "command": { "const": "validation.run" },
+    "ok": { "type": "boolean" },
+    "taskId": { "type": "string" },
+    "check": { "type": "string" },
+    "cwd": { "type": "string" },
+    "argv": { "type": "array", "items": { "type": "string" } },
+    "execution": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["exitCode", "signal", "timedOut", "durationMs", "stdoutHash", "stderrHash"],
+      "properties": {
+        "exitCode": { "type": ["number", "null"] },
+        "signal": { "type": ["string", "null"] },
+        "timedOut": { "type": "boolean" },
+        "durationMs": { "type": "number" },
+        "stdoutHash": { "type": "string" },
+        "stderrHash": { "type": "string" }
+      }
+    },
+    "result": { "enum": ["Passed", "Failed", "Blocked"] },
+    "evidence": { "type": "object", "additionalProperties": true },
+    "taskValidationRow": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["updated", "appended"],
+      "properties": {
+        "updated": { "type": "boolean" },
+        "appended": { "type": "boolean" },
+        "path": { "type": "string" }
+      }
+    },
+    "acceptanceRows": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["updated", "reason"],
+      "properties": {
+        "updated": { "const": false },
+        "reason": { "type": "string" }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "enum": ["error", "warning", "info"] },
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "path": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -73,6 +73,8 @@ describe('task finalize dry-run plan', () => {
     const report = createTaskFinalizeReport(root, task.id);
 
     expect(report.ok).toBe(false);
+    expect(report.state).toBe('blocked');
+    expect(report.planStatus).toBe('blocked');
     expect(report.summary.evaluatedReports).toEqual(['finish', 'ready', 'close']);
     expect(report.summary.skippedReports).toEqual(['audit-close']);
     expect(report.primaryNextAction).toMatchObject({
@@ -100,9 +102,20 @@ describe('task finalize dry-run plan', () => {
 
     const report = createTaskFinalizeReport(root, task.id);
 
-    expect(report.ok).toBe(false);
+    expect(report.ok).toBe(true);
+    expect(report.state).toBe('ready-to-close');
+    expect(report.planStatus).toBe('executable');
+    expect(report.blockingIssues).toEqual([]);
+    expect(report.pendingWrites).toEqual([
+      {
+        step: 'close',
+        writeBoundary: 'evidence-append',
+        paths: [`tasks/${task.id}-finalize-close/evidence.jsonl`]
+      }
+    ]);
     expect(report.summary).toMatchObject({ required: 1, blocked: 0, satisfied: 2 });
     expect(report.primaryNextAction).toMatchObject({ id: 'finalize-close', command: `hadara task close --task ${task.id} --execute --json`, writeBoundary: 'evidence-append' });
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_EVIDENCE_MISSING', severity: 'info' }));
     expect(report.steps.find((step) => step.id === 'close')).toMatchObject({
       status: 'required',
       mode: 'execute',

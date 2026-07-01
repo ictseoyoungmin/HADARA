@@ -703,6 +703,32 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     conflictsWith: []
   },
   {
+    id: 'validation.run',
+    command: 'hadara validation run --task <task-id> --check <name> [--resolves <id>] [--supersedes <id>] -- <command...>',
+    summary: 'Run a validation command, append execution evidence, refresh evidence projection, update the matching TASK.md Validation row, and optionally resolve or supersede earlier evidence.',
+    canonical: true,
+    appearsInDefaultHelp: true,
+    family: 'capsule-lifecycle',
+    scope: 'evidence',
+    lifecycleStage: 'evidence',
+    requiredness: 'primary',
+    writeBoundary: 'external-subprocess',
+    readOnly: false,
+    risk: 'medium',
+    actor: 'agent-worker',
+    status: 'stable',
+    schemaVersion: 'hadara.validation.run.v1',
+    docs: ['docs/HADARA_WORKFLOW.md', 'docs/IMPLEMENTATION_SOP.md'],
+    implementationFiles: ['src/cli/validation.ts', 'src/services/validation-run.ts'],
+    testFiles: ['tests/unit/validation-run.test.ts'],
+    examples: [
+      example('Run focused validation', 'hadara validation run --task T-0001 --check "Focused tests" -- npm test', 'When a real validation command should become durable evidence and update TASK.md.')
+    ],
+    related: ['evidence.add-command', 'evidence.project', 'task.finalize'],
+    notes: 'Runs argv directly without shell interpretation; use an explicit shell command such as bash -lc when shell features are required.',
+    conflictsWith: []
+  },
+  {
     id: 'evidence.collect',
     command: 'hadara evidence collect --task <task-id> [--kind <kind>] [--path <path>] [--summary <text>] [--result <result>] [--json]',
     summary: 'Compatibility surface for appending evidence records and optional artifacts.',

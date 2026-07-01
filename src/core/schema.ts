@@ -73,6 +73,7 @@ import taskReadySchemaJson from '../schemas/task-ready.schema.json';
 import taskUpgradeScaffoldSchemaJson from '../schemas/task-upgrade-scaffold.schema.json';
 import taskWorkbenchSchemaJson from '../schemas/task-workbench.schema.json';
 import toolsListSchemaJson from '../schemas/tools-list.schema.json';
+import validationRunSchemaJson from '../schemas/validation-run.schema.json';
 import writePreflightSchemaJson from '../schemas/write-preflight.schema.json';
 
 export interface SchemaValidationIssue {
@@ -188,6 +189,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.task.upgrade_scaffold.v1': taskUpgradeScaffoldSchemaJson as JsonObject,
   'hadara.task.workbench.v1': taskWorkbenchSchemaJson as JsonObject,
   'hadara.tools.list.v1': toolsListSchemaJson as JsonObject,
+  'hadara.validation.run.v1': validationRunSchemaJson as JsonObject,
   'hadara.write.preflight.v1': writePreflightSchemaJson as JsonObject
 };
 

@@ -15,6 +15,14 @@ export interface TaskFinalizeReport {
   schemaVersion: 'hadara.task.finalize.v1';
   command: 'task.finalize';
   ok: boolean;
+  state: 'blocked' | 'ready-to-close' | 'closed-valid' | 'closed-stale' | 'in-progress';
+  planStatus: 'blocked' | 'executable' | 'satisfied' | 'pending';
+  blockingIssues: TaskFinalizeIssue[];
+  pendingWrites: Array<{
+    step: TaskFinalizeStepId;
+    writeBoundary: TaskFinalizeStep['writeBoundary'];
+    paths: string[];
+  }>;
   readOnly: boolean;
   mode: TaskFinalizeMode;
   taskId: string;
@@ -217,6 +225,8 @@ function createPostExecutionReport(
   const nextAction = createPrimaryNextAction(taskId, steps, issues);
   const finalAudit = reports.audit?.auditVerdict.verdict === 'closed-valid';
   const authoringGuidance = createTaskAuthoringGuidance(projectRoot, taskId);
+  const state = deriveFinalizeState(steps, issues, reports);
+  const blockingIssues = finalizeBlockingIssues(issues);
   const execution: TaskFinalizeExecution = {
     requestedPlanHash,
     currentPlanHash: reviewedPlanHash,
@@ -227,7 +237,11 @@ function createPostExecutionReport(
   return {
     schemaVersion: 'hadara.task.finalize.v1',
     command: 'task.finalize',
-    ok: finalAudit && issues.every((issue) => issue.severity !== 'error') && steps.every((step) => step.status === 'satisfied'),
+    ok: finalAudit && blockingIssues.length === 0 && steps.every((step) => step.status === 'satisfied'),
+    state,
+    planStatus: derivePlanStatus(state, steps),
+    blockingIssues,
+    pendingWrites: pendingWrites(steps),
     readOnly: false,
     mode: 'execute',
     taskId,
@@ -258,10 +272,16 @@ function createFinalizeReport(
   const nextAction = createPrimaryNextAction(taskId, steps, issues);
   const projectRoot = reports?.finish.projectRoot ?? '';
   const authoringGuidance: TaskAuthoringGuidance = projectRoot ? createTaskAuthoringGuidance(projectRoot, taskId) : missingTaskAuthoringGuidance();
+  const state = deriveFinalizeState(steps, issues, reports);
+  const blockingIssues = finalizeBlockingIssues(issues);
   return {
     schemaVersion: 'hadara.task.finalize.v1',
     command: 'task.finalize',
-    ok: mode === 'execute' ? false : issues.every((issue) => issue.severity !== 'error') && steps.every((step) => step.status === 'satisfied'),
+    ok: mode === 'execute' ? false : state === 'closed-valid' || state === 'ready-to-close',
+    state,
+    planStatus: derivePlanStatus(state, steps),
+    blockingIssues,
+    pendingWrites: pendingWrites(steps),
     readOnly,
     mode,
     taskId,
@@ -392,8 +412,9 @@ function collectIssues(taskId: string, reports: FinalizeReports): TaskFinalizeIs
     const key = `${issue.severity}:${issue.code}:${issue.path ?? ''}:${issue.message}`;
     if (seen.has(key)) continue;
     seen.add(key);
+    const severity = issue.code === 'TASK_CLOSE_EVIDENCE_MISSING' && reports.ready?.ok && reports.close?.ok ? 'info' : issue.severity;
     issues.push({
-      severity: issue.severity,
+      severity,
       code: issue.code,
       message: issue.message,
       ...(issue.path ? { path: issue.path } : {}),
@@ -422,6 +443,38 @@ function collectIssues(taskId: string, reports: FinalizeReports): TaskFinalizeIs
     });
   }
   return issues;
+}
+
+function deriveFinalizeState(steps: TaskFinalizeStep[], issues: TaskFinalizeIssue[], reports?: FinalizeReports): TaskFinalizeReport['state'] {
+  if (finalizeBlockingIssues(issues).length > 0 || steps.some((step) => step.status === 'blocked')) return 'blocked';
+  if (reports?.audit?.auditVerdict.verdict === 'closed-valid' && steps.every((step) => step.status === 'satisfied')) return 'closed-valid';
+  if (reports?.audit?.auditVerdict.closeEvidenceFound && reports.audit.auditVerdict.verdict !== 'closed-valid') return 'closed-stale';
+  const close = steps.find((step) => step.id === 'close');
+  const ready = steps.find((step) => step.id === 'ready');
+  const finish = steps.find((step) => step.id === 'finish');
+  if (finish?.status === 'satisfied' && ready?.status === 'satisfied' && close?.status === 'required') return 'ready-to-close';
+  return 'in-progress';
+}
+
+function derivePlanStatus(state: TaskFinalizeReport['state'], steps: TaskFinalizeStep[]): TaskFinalizeReport['planStatus'] {
+  if (state === 'blocked' || state === 'closed-stale') return 'blocked';
+  if (state === 'ready-to-close') return 'executable';
+  if (state === 'closed-valid') return 'satisfied';
+  return steps.some((step) => step.status === 'required') ? 'executable' : 'pending';
+}
+
+function finalizeBlockingIssues(issues: TaskFinalizeIssue[]): TaskFinalizeIssue[] {
+  return issues.filter((issue) => issue.severity === 'error' && issue.code !== 'TASK_CLOSE_EVIDENCE_MISSING');
+}
+
+function pendingWrites(steps: TaskFinalizeStep[]): TaskFinalizeReport['pendingWrites'] {
+  return steps
+    .filter((step) => step.status === 'required' && step.writeBoundary !== 'read-only')
+    .map((step) => ({
+      step: step.id,
+      writeBoundary: step.writeBoundary,
+      paths: step.expectedWritePaths
+    }));
 }
 
 function createPrimaryNextAction(taskId: string, steps: TaskFinalizeStep[], issues: TaskFinalizeIssue[]): HadaraNextAction | undefined {

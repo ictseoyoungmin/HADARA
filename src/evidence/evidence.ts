@@ -532,7 +532,10 @@ function renderEvidenceProjection(records: PersistedEvidenceRecord[]): string {
     '<!-- hadara:slot evidence.residuals -->',
     '| Evidence ID | Outcome | Summary | Disposition | Reference |',
     '|---|---|---|---|---|',
-    ...residualRows.map((record) => `| ${evidenceProjectionId(record)} | ${evidenceProjectionOutcome(record)} | ${evidenceProjectionSummary(record)} | Unresolved | evidence.jsonl |`),
+    ...residualRows.map((record) => {
+      const resolution = findResidualResolution(record, records);
+      return `| ${evidenceProjectionId(record)} | ${evidenceProjectionOutcome(record)} | ${evidenceProjectionSummary(record)} | ${resolution.disposition} | ${resolution.reference} |`;
+    }),
     '<!-- /hadara:slot -->',
     ''
   ].join('\n');
@@ -565,6 +568,17 @@ function isCloseProofRecord(record: PersistedEvidenceRecord): boolean {
 function isResidualRecord(record: PersistedEvidenceRecord): boolean {
   const outcome = evidenceProjectionOutcome(record);
   return outcome === 'failed' || outcome === 'blocked';
+}
+
+function findResidualResolution(record: PersistedEvidenceRecord, records: PersistedEvidenceRecord[]): { disposition: 'Resolved' | 'Unresolved'; reference: string } {
+  const id = evidenceProjectionId(record);
+  if (!id.startsWith('ev:')) return { disposition: 'Unresolved', reference: 'evidence.jsonl' };
+  const resolver = records.find((candidate) => {
+    if (candidate.schemaVersion !== 'hadara.evidence.v2') return false;
+    if (candidate.outcome !== 'passed' && candidate.outcome !== 'recorded') return false;
+    return candidate.tags.includes(`resolves:${id}`) || candidate.tags.includes(`supersedes:${id}`);
+  });
+  return resolver ? { disposition: 'Resolved', reference: evidenceProjectionId(resolver) } : { disposition: 'Unresolved', reference: 'evidence.jsonl' };
 }
 
 function hashText(content: string): string {

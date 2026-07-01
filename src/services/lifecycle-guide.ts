@@ -14,7 +14,8 @@ const PRIMARY_WHEN: Record<string, string> = {
   'task.next': 'At session start or after completing a task.',
   'task.create': 'When no suitable Task Capsule exists.',
   'task.status': 'Before editing, validating, or closing a capsule.',
-  'evidence.add-command': 'After running project validation or recording relevant work proof.',
+  'validation.run': 'When a real validation command should be executed and recorded as evidence.',
+  'evidence.add-command': 'When recording already-run validation or relevant work proof.',
   'task.lifecycle': 'When the agent needs a compact phase report and next action.',
   'task.finalize': 'After implementation, evidence, capsule docs, and tracked state docs are ready.',
   'handoff.update': 'Before stopping after meaningful task progress or completion.'

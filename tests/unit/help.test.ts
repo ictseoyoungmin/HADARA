@@ -11,7 +11,7 @@ describe('registry-backed help', () => {
     expect(output).toContain('hadara help lifecycle');
     expect(output).toContain('hadara task next --json');
     expect(output).toContain('Primary capsule lifecycle');
-    expect(output).toContain('evidence.add-command');
+    expect(output).toContain('validation.run');
     expect(output).toContain('handoff.update');
     expect(output).toContain('hadara commands --json');
     expect(output).not.toContain('hadara release publish');
@@ -40,6 +40,7 @@ describe('registry-backed help', () => {
 
     expect(report.schemaVersion).toBe('hadara.lifecycle.guide.v1');
     expect(report.primaryPath.map((step) => step.commandId)).toContain('evidence.add-command');
+    expect(report.primaryPath.map((step) => step.commandId)).toContain('validation.run');
     expect(report.primaryPath.map((step) => step.commandId)).toContain('task.lifecycle');
     expect(report.primaryPath.map((step) => step.commandId)).toContain('task.finalize');
     expect(report.primaryPath.map((step) => step.commandId)).toContain('handoff.update');

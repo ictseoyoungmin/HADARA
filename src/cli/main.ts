@@ -70,6 +70,12 @@ async function main(args = process.argv.slice(2)): Promise<void> {
       break;
     }
 
+    case 'validation': {
+      const { handleValidationCommand } = await import('./validation');
+      if (handleValidationCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
+      break;
+    }
+
     case 'proof': {
       const { handleProofCommand } = await import('./proof');
       if (handleProofCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;

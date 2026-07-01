@@ -4,11 +4,27 @@
   "x-hadara-schema-id": "hadara.task.finalize.v1",
   "type": "object",
   "additionalProperties": true,
-  "required": ["schemaVersion", "command", "ok", "readOnly", "mode", "taskId", "generatedAt", "actor", "summary", "steps", "nextActions", "issues"],
+  "required": ["schemaVersion", "command", "ok", "state", "planStatus", "blockingIssues", "pendingWrites", "readOnly", "mode", "taskId", "generatedAt", "actor", "summary", "steps", "nextActions", "issues"],
   "properties": {
     "schemaVersion": { "const": "hadara.task.finalize.v1" },
     "command": { "const": "task.finalize" },
     "ok": { "type": "boolean" },
+    "state": { "enum": ["blocked", "ready-to-close", "closed-valid", "closed-stale", "in-progress"] },
+    "planStatus": { "enum": ["blocked", "executable", "satisfied", "pending"] },
+    "blockingIssues": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "pendingWrites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["step", "writeBoundary", "paths"],
+        "properties": {
+          "step": { "enum": ["finish", "ready", "close", "audit-close"] },
+          "writeBoundary": { "enum": ["read-only", "task-local", "evidence-append"] },
+          "paths": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
     "readOnly": { "type": "boolean" },
     "mode": { "enum": ["dry-run", "execute", "execute-refused"] },
     "taskId": { "type": "string" },

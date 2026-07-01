@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { handleEvidenceCommand } from '../../src/cli/evidence';
-import { appendEvidence, createEvidenceProjectionReport } from '../../src/evidence/evidence';
+import { appendEvidence, appendEvidenceWithResult, createEvidenceProjectionReport } from '../../src/evidence/evidence';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -25,17 +25,20 @@ describe('evidence projection', () => {
     const task = createTaskCapsule(root, 'Projection append');
 
     appendEvidence(root, { taskId: task.id, kind: 'command-log', summary: 'Focused validation passed', result: 'passed', visibility: 'public', category: 'validation' });
-    appendEvidence(root, { taskId: task.id, kind: 'command-log', summary: 'Fixture command failed', result: 'failed', visibility: 'public', category: 'validation' });
+    const failed = appendEvidenceWithResult(root, { taskId: task.id, kind: 'command-log', summary: 'Fixture command failed', result: 'failed', visibility: 'public', category: 'validation' });
     appendEvidence(root, { taskId: task.id, kind: 'command-log', summary: 'Task close validation returned ok:true', result: 'passed', visibility: 'public', category: 'audit', tags: ['close-proof'] });
+    const failedId = failed.evidence.schemaVersion === 'hadara.evidence.v2' ? failed.evidence.id : 'evidence.jsonl';
+    const resolved = appendEvidenceWithResult(root, { taskId: task.id, kind: 'command-log', summary: 'Fixture command rerun passed', result: 'passed', visibility: 'public', category: 'validation', tags: [`resolves:${failedId}`] });
+    const resolvedId = resolved.evidence.schemaVersion === 'hadara.evidence.v2' ? resolved.evidence.id : 'evidence.jsonl';
 
     const evidence = fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8');
     const jsonl = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
 
-    expect(jsonl.trim().split(/\r?\n/)).toHaveLength(3);
+    expect(jsonl.trim().split(/\r?\n/)).toHaveLength(4);
     expect(evidence).toContain('<!-- hadara:slot evidence.validation-summary -->');
     expect(evidence).toContain('| Evidence ID | Outcome | Category | Summary |');
     expect(evidence).toContain('| close evidence | passed | ev:');
-    expect(evidence).toContain('| failed | Fixture command failed | Unresolved | evidence.jsonl |');
+    expect(evidence).toContain(`| ${failedId} | failed | Fixture command failed | Resolved | ${resolvedId} |`);
     expect(evidence).not.toContain('| Time | Kind | Summary | Result | Visibility | JSONL |');
   });
 

@@ -548,6 +548,13 @@
       "notes": "Documents reduced public smoke evidence summaries attached by package-smoke and clean-checkout smoke execution."
     },
     {
+      "id": "hadara.validation.run.v1",
+      "path": "src/schemas/validation-run.schema.json",
+      "status": "fixture",
+      "owner": "validation/run",
+      "notes": "Documents validation command execution reports that append evidence and update TASK.md Validation rows."
+    },
+    {
       "id": "hadara.releaseArtifact.manifest.v1",
       "path": "src/schemas/release-artifact-manifest.schema.json",
       "status": "fixture",
