@@ -55,7 +55,7 @@ describe('task finalize dry-run plan', () => {
         id: 'finalize-finish',
         command: `hadara task finish --task ${task.id} --execute --json`,
         writeBoundary: 'task-local',
-        message: 'Apply bounded finish bookkeeping. Then finalize will re-evaluate ready, close, audit-close and may stop if blockers appear.'
+        summary: 'Apply bounded finish bookkeeping. Then finalize will re-evaluate ready, close, audit-close and may stop if blockers appear.'
       },
       authoringGuidance: {
         readOnly: true,
@@ -69,6 +69,7 @@ describe('task finalize dry-run plan', () => {
     expect(report.steps.map((step) => step.id)).toEqual(['finish', 'ready', 'close', 'audit-close']);
     expect(report.steps.find((step) => step.id === 'ready')).toMatchObject({ status: 'pending', sourceReport: 'hadara.task.ready.v1' });
     expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'TASK_FINALIZE_DEFERRED_CHECKS', severity: 'info' })]));
+    expect(report.primaryNextAction).not.toHaveProperty('message');
     expect(report.steps.find((step) => step.id === 'finish')).toMatchObject({
       status: 'required',
       mode: 'execute',
@@ -134,8 +135,9 @@ describe('task finalize dry-run plan', () => {
       id: 'finalize-close',
       command: `hadara task close --task ${task.id} --execute --json`,
       writeBoundary: 'evidence-append',
-      message: 'Append close evidence after reviewing close dry-run. Then finalize will re-evaluate audit-close and may stop if blockers appear.'
+      summary: 'Append close evidence after reviewing close dry-run. Then finalize will re-evaluate audit-close and may stop if blockers appear.'
     });
+    expect(report.primaryNextAction).not.toHaveProperty('message');
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_EVIDENCE_MISSING', severity: 'info' }));
     expect(report.steps.find((step) => step.id === 'close')).toMatchObject({
       status: 'required',

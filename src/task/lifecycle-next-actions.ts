@@ -3,7 +3,8 @@ import type { HadaraNextAction, HadaraStalePlanRisk, HadaraWriteBoundary } from 
 
 export interface TaskLifecycleNextAction extends HadaraNextAction {
   kind: 'command' | 'review';
-  message: string;
+  /** @deprecated Use summary. Kept optional for older persisted/read model consumers. */
+  message?: string;
   loopBoundary?: boolean;
 }
 
@@ -26,7 +27,6 @@ export function createTaskLifecycleNextAction(options: CreateTaskLifecycleNextAc
     kind: options.kind ?? 'command',
     required: options.required,
     command: options.command,
-    message: options.message,
     summary: options.message,
     writeBoundary: options.writeBoundary,
     recommendedActorRole: options.recommendedActorRole,

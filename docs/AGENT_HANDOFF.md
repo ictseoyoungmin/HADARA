@@ -4,17 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, and the follow-up finalize correctness hardening is complete through T-0465. |
-| Current Phase | Agent UX refactor dogfood loop plus 0.3.4 stable readiness pending | T-0465 followed the requested five priority capsules to harden finalize dry-run correctness; 0.4 release-line work remains separate and has not started. |
-| Latest Completed Task | T-0465 Finalize staged plan hardening | `task finalize --json` now marks required-write plans as `executable-with-deferred-checks` and exposes `deferredChecks` plus `partialExecutionRisk`. |
-| Active / Next Task | Operator decision | Decide whether to continue UX cleanup, tackle mounted performance, or return to release/readiness lines. |
-| Validation Baseline | T-0465 finalize staged plan hardening | Focused Docker finalize/schema tests and TypeScript build passed in `ev:T-0465:5bab047c37bf4178a8c94cb9`; built CLI staged-plan smoke passed in `ev:T-0465:f4e0591df698476c8d583886`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, and the follow-up agent UX cleanup is complete through T-0466. |
+| Current Phase | Agent UX refactor dogfood loop plus 0.3.4 stable readiness pending | T-0466 removed redundant lifecycle next-action `message` output while preserving separate workbench/status UX messages; 0.4 release-line work remains separate and has not started. |
+| Latest Completed Task | T-0466 Next action message summary dedupe | Lifecycle next actions now use canonical `summary` without duplicate `message`; workbench conversion falls back to `summary` for its intentional UX `message` field. |
+| Active / Next Task | Close repair-plan hash drift follow-up or operator decision | T-0466 RF-1 recorded adjacent `task-close-repair-plan` test failures around close-source hash classification; otherwise choose Change Summary line-range UX, mounted performance, or release/readiness work. |
+| Validation Baseline | T-0466 next-action dedupe | Focused lifecycle tests passed in `ev:T-0466:a4416987992f42febb201e3c`; TypeScript build passed in `ev:T-0466:4f9f3002cd4444c4a454d6d3`; CLI smoke passed in `ev:T-0466:014bbcd28b074852b9d85fdf`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| Operator decision after finalize staged-plan hardening | T-0465 fixed the finalize dry-run predictability issue raised after T-0464. Remaining candidates are next-action `message`/`summary` duplication, Change Summary line-range UX, mounted status/finalize performance, and older docs-doctor fixture residuals. | `tasks/T-0465-finalize-staged-plan-hardening/HANDOFF.md`, `ev:T-0465:5bab047c37bf4178a8c94cb9`, `ev:T-0465:f4e0591df698476c8d583886` |
+| Close repair-plan hash drift follow-up | T-0466 completed lifecycle next-action `message`/`summary` dedupe and recorded adjacent close-repair-plan hash classification failures as RF-1. | `tasks/T-0466-next-action-message-summary-dedupe/HANDOFF.md`, `ev:T-0466:a5cdbfddcf1f470887af9188`, `ev:T-0466:35bccc2385c34ee7be1e8d1d` |
 | 0.4 release-line decision | Deferred until explicitly started. T-0452 completed the 24-capsule 0.4 implementation budget; release readiness/publish/recycle work is separate. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
@@ -22,14 +22,15 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0466 / Next action message summary dedupe | Removed redundant lifecycle next-action `message` output, routed close execute actions through the lifecycle helper, and preserved workbench UX `message` via `summary` fallback. | `ev:T-0466:a4416987992f42febb201e3c`, `ev:T-0466:4f9f3002cd4444c4a454d6d3`, `ev:T-0466:014bbcd28b074852b9d85fdf` |
 | T-0465 / Finalize staged plan hardening | Added staged finalize plan metadata so required-write dry-runs expose deferred checks and partial execution risk before execute can mutate task state. | `ev:T-0465:5bab047c37bf4178a8c94cb9`, `ev:T-0465:f4e0591df698476c8d583886`, `ev:T-0465:a3639a0719a5477cb621b1d9` |
 | T-0464 / Agent UX finalize execute progress output | Added execute-only finalize progress events and CLI stderr progress lines so long finalize runs are no longer silent while JSON stdout remains the final report channel. | `ev:T-0464:51c58e7d001d42b8b4b009c2`, `ev:T-0464:c3125378748d4fb79980cfe1` |
-| T-0463 / Agent UX status finalize latency diagnostics | Added additive CLI diagnostics to `task status` and `task finalize` output, including `durationMs`, `slowThresholdMs`, `slow`, and slow-run notes, with schema and built CLI smoke coverage. | `ev:T-0463:d7ed90ac429d428eb84ce44a`, `ev:T-0463:b8afb3afd6544e5d8ce7319f`, `ev:T-0463:e51a09de51e649ab9d9f1f45` |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
+| T-0466 found adjacent `task-close-repair-plan` close-source hash classification failures. | Full unit selections that include `tests/unit/task-close-repair-plan.test.ts` may fail on stale/current close evidence expectations unrelated to lifecycle next-action dedupe. | Open a focused follow-up capsule around close-source/audit hash semantics before treating that test as a current clean baseline. |
 | Stable `0.3.4` readiness has not run after the T-0423 helper residual fix. | `hadara@0.3.4-rc.0` is published and consumer/helper proofs are clean, but stable metadata, release docs, release artifacts, strict gates, dry-runs, and publish dry-run still need a dedicated readiness capsule. | Open a new stable readiness capsule when release work resumes; do not publish stable from T-0423, T-0424, or T-0425. |
 | T-0383 mounted full-profile probes exceeded a 20s workload budget for cache status/warm, graph task, graph include-code, and context pack. | These workloads are not suitable for the default fast smoke loop on mounted filesystems. | Keep `smoke:context-routing` defaulting to fast profile; use `--profile full` explicitly for diagnostic/full-path checks. |
 | Built cache status still took about 19.6s on `/mnt/f` while producing diagnostics. | Diagnostics are clearer, but mounted broad source-manifest cost remains. | T-0385 classified this as an accepted residual for explicit diagnostic/warm/full-profile commands; default Session Start remains bounded/cache-preferential. |
@@ -96,7 +97,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Operator decision after finalize staged-plan hardening. | T-0465 handled the finalize dry-run predictability gap. Remaining UX cleanup candidates are next-action field duplication, Change Summary line-range guidance/parser behavior, and mounted status/finalize performance. | `ev:T-0465:5bab047c37bf4178a8c94cb9`, `ev:T-0465:f4e0591df698476c8d583886`, `tasks/T-0465-finalize-staged-plan-hardening/HANDOFF.md` |
+| Close repair-plan hash drift follow-up or operator decision. | T-0466 handled next-action field duplication. The most concrete follow-up is the adjacent `task-close-repair-plan` hash classification failure; other candidates are Change Summary line-range guidance/parser behavior and mounted status/finalize performance. | `ev:T-0466:a5cdbfddcf1f470887af9188`, `ev:T-0466:35bccc2385c34ee7be1e8d1d`, `tasks/T-0466-next-action-message-summary-dedupe/HANDOFF.md` |
 | Later, decide whether to start the 0.4.0 release line. | T-0452 completed the 24-capsule 0.4 implementation budget; any 0.4.0-rc.0 readiness, publish, package recycle, stable decision, or stable publish work requires a later explicit release-line capsule. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 

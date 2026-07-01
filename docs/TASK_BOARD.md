@@ -466,3 +466,4 @@
 | T-0463 | Agent UX status finalize latency diagnostics | Done | tasks/T-0463-agent-ux-status-finalize-latency-diagnostics | Adds additive CLI duration/slow diagnostics to `task status` and `task finalize`. |
 | T-0464 | Agent UX finalize execute progress output | Done | tasks/T-0464-agent-ux-finalize-execute-progress-output | Adds execute-only finalize progress output on stderr. |
 | T-0465 | Finalize staged plan hardening | Done | tasks/T-0465-finalize-staged-plan-hardening | Makes finalize dry-run expose deferred checks and partial execution risk. |
+| T-0466 | Next action message summary dedupe | Done | tasks/T-0466-next-action-message-summary-dedupe | Removes redundant lifecycle next-action `message` output; RF-1 tracks adjacent close-repair-plan hash drift. |

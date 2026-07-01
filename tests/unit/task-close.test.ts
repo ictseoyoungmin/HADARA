@@ -108,6 +108,7 @@ describe('task close report', () => {
       requiresBeforeHash: false,
       stalePlanRisk: 'low'
     });
+    expect(report.primaryNextAction).not.toHaveProperty('message');
   });
 
   it('reports blockers for tasks that are not done-ready', () => {
@@ -173,6 +174,7 @@ describe('task close report', () => {
     expect(closeRecord.tags).toEqual(expect.arrayContaining(['close-proof', `idempotency:${report.closeEvidenceWrite?.idempotencyKey}`]));
     expect(report.nextActions.map((action) => action.id)).toEqual(['close-evidence-appended', 'audit-close']);
     expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'audit-close', command: `hadara task audit-close --task ${task.id} --json`, writeBoundary: 'read-only', recommendedActorRole: 'reviewer' }));
+    expect(report.nextActions[0]).not.toHaveProperty('message');
   });
 
   it('does not append duplicate close evidence for the same source and report hash', () => {

@@ -178,7 +178,7 @@ function fromCloseAction(taskId: string, action: TaskCloseNextAction): Workbench
       priority: action.required ? 'now' : 'soon',
       command: `hadara task close --task ${taskId} --json`,
       executeCommand: action.command,
-      message: action.message,
+      message: action.message ?? action.summary,
       sourceIssueCodes: ['TASK_CLOSE_READY'],
       loopBoundary: action.loopBoundary
     });
@@ -190,7 +190,7 @@ function fromCloseAction(taskId: string, action: TaskCloseNextAction): Workbench
     required: action.required,
     priority: action.required ? 'now' : 'soon',
     command: action.command,
-    message: action.message,
+    message: action.message ?? action.summary,
     sourceIssueCodes: [action.id],
     loopBoundary: action.loopBoundary
   });

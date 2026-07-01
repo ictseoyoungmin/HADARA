@@ -247,71 +247,66 @@ function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode, clo
     if (ok) {
       if (closeEvidenceWrite?.duplicateAction === 'no-op') {
         return [
-          {
+          createTaskLifecycleNextAction({
             id: 'close-evidence-duplicate-noop',
             kind: 'review',
             required: false,
             message: 'Matching close evidence already exists; no duplicate close evidence was appended.',
-            summary: 'Matching close evidence already exists; no duplicate close evidence was appended.',
             writeBoundary: 'read-only',
             recommendedActorRole: 'reviewer',
             requiresBeforeHash: false,
             stalePlanRisk: 'none',
             loopBoundary: true
-          },
-          {
+          }),
+          createTaskLifecycleNextAction({
             id: 'audit-close',
             required: false,
             command: `hadara task audit-close --task ${taskId} --json`,
             message: 'Optionally audit the existing close record in a later read-only pass.',
-            summary: 'Optionally audit the existing close record in a later read-only pass.',
             writeBoundary: 'read-only',
             recommendedActorRole: 'reviewer',
             requiresBeforeHash: false,
             stalePlanRisk: 'none',
             kind: 'command'
-          }
+          })
         ];
       }
       return [
-        {
+        createTaskLifecycleNextAction({
           id: 'close-evidence-appended',
           kind: 'review',
           required: false,
           message: 'Close audit evidence was appended through the canonical evidence writer.',
-          summary: 'Close audit evidence was appended through the canonical evidence writer.',
           writeBoundary: 'read-only',
           recommendedActorRole: 'reviewer',
           requiresBeforeHash: false,
           stalePlanRisk: 'none',
           loopBoundary: true
-        },
-        {
+        }),
+        createTaskLifecycleNextAction({
           id: 'audit-close',
           required: false,
           command: `hadara task audit-close --task ${taskId} --json`,
           message: 'Optionally audit the close record in a later read-only pass.',
-          summary: 'Optionally audit the close record in a later read-only pass.',
           writeBoundary: 'read-only',
           recommendedActorRole: 'reviewer',
           requiresBeforeHash: false,
           stalePlanRisk: 'none',
           kind: 'command'
-        }
+        })
       ];
     }
     return [
-      {
+      createTaskLifecycleNextAction({
         id: 'resolve-close-blockers',
         kind: 'review',
         required: true,
         message: 'Resolve blocking issues before appending close evidence.',
-        summary: 'Resolve blocking issues before appending close evidence.',
         writeBoundary: 'read-only',
         recommendedActorRole: 'worker',
         requiresBeforeHash: false,
         stalePlanRisk: 'none'
-      }
+      })
     ];
   }
 
