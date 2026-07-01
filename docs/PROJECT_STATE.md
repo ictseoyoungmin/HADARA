@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0453 Agent UX Validation Run Task Sync Decoupling |
-| Active Task | Agent UX validation attempt/latest-result modeling |
+| Latest Completed Task | T-0454 Agent UX Validation Attempt Auto Resolution |
+| Active Task | Agent UX validation latest-attempt projection and wrapper/help UX triage |
 
 ## Next Planned Line
 
@@ -101,6 +101,8 @@ T-0451 follow-up note: T-04A23 Validation Run Workflow Polish is complete. Gener
 T-0452 follow-up note: T-04A24 Final Review and Documentation Cleanup is complete. Final handoff/readiness guidance was reconciled after T-0451 so the implementation-budget line no longer points to another generic 0.4 hardening/polish capsule. `task next` pointed at T-0452 while active, stale T-0450 next-work wording was removed, and release readiness/publish/package recycle/stable release work remains explicitly outside the completed 24-capsule implementation budget. Evidence: `ev:T-0452:25accc6961dc44e293b7041f`. The next step is an operator decision to start a separate 0.4 release-line capsule if desired.
 
 T-0453 follow-up note: T-0453 starts the requested 5-15 capsule agent UX refactor loop based on direct HADARA dogfood. The scoped first fix is complete: `validation run` records evidence without automatic `TASK.md` Validation row sync by default, with `--update-task` reserved for deliberate close-source prose updates. Focused validation-run/init/lifecycle tests, TypeScript build, done-level harness, evidence lint, and diff check passed. Evidence: `ev:T-0453:facedecf71cf4747adfdd522`, `ev:T-0453:bff69d665fcb466fb9bc910b`, `ev:T-0453:6a76b8b335fb4151b6d9f92a`. The next agent UX capsule should address validation attempt/latest-result semantics. This is not release-line readiness, publish, package recycle, or stable release work.
+
+T-0454 follow-up note: T-0454 is the second capsule in the requested 5-15 capsule agent UX refactor loop. `validation run` now tags attempts with a stable `validation-check:<key>`, returns attempt metadata in `hadara.validation.run.v1`, and automatically adds `resolves:<id>` tags for earlier unresolved failed or blocked attempts when a later same-check attempt passes. The dogfood probe intentionally failed and then passed the same check; `ev:T-0454:385fa69b38dc4641839a69bb` resolved `ev:T-0454:f3a4b2dfcbdd44b39c90d9f6`. Focused validation-run tests and TypeScript build passed in `ev:T-0454:10fe55713fac48b2907d76b6` and `ev:T-0454:0287e6d080ec411880afc44b`. Final direct done-level harness validation passed in `ev:T-0454:fe8b5a505bd94cbaa6805dc4`, resolving two nested-spawn wrapper blocked records. The next agent UX capsule should project current validation state per check so agents do not have to inspect raw evidence lists for latest-attempt status, and should triage `validation run` nested spawn EPERM handling plus `evidence add-command --help` recording default evidence.
 
 Phase 8 / 0.3.1 is complete through post-rc1 documentation cleanup. It carried Work Item A and Work Item F into implementation as status token governance, document ownership/write-boundary governance, task handoff close-state clarity, installed-package recycle findings cleanup, state consistency projection, and advisory verification gates. The Phase 8 specs are staged under `docs/specs/0.3.1/`; the first rc1 implementation sequence is staged under `docs/specs/0.3.1/rc1/`. Phase 8.1 through Phase 8.6 are complete through T-0324, T-0325 completed the follow-up CloseState derived-state cleanup after review, T-0326 prepared `hadara@0.3.1-rc.1` release readiness without publish mutation, T-0327 published `hadara@0.3.1-rc.1`, verified npm visibility/tarball contents, hardened future rc publish tags, and corrected npm dist-tags so stable `0.3.0` stays on `latest` while rc1 is available as `next`, T-0328 verified the published rc1 package from installed consumer paths in the `hadara-dev` container, and T-0329 refreshed post-rc1 handoff/release-note wording after reviewer feedback.
 
@@ -234,9 +236,10 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0450 T-04A22 Lifecycle UX Hardening.
-- Next 0.4 task is the next bounded hardening/polish capsule; continue from `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md`.
-- T-0450 added `hadara validation run`, additive finalize state, and resolved-residual projection polish. Evidence: `ev:T-0450:91632ae5de42456aa4e2c608`, `ev:T-0450:ea07a22c3f7e4630a2987e12`, `ev:T-0450:52e434e359144e9387c5c591`.
+- Latest completed task is T-0454 Agent UX Validation Attempt Auto Resolution.
+- Next work is the next capsule in the 5-15 capsule agent UX refactor dogfood loop: project current validation state per check in `task status` or a dedicated read model, then triage validation wrapper/help mutation hazards exposed during T-0454.
+- T-0454 added stable validation attempt check keys and automatic same-check failed/blocked attempt resolution for `hadara validation run`. Evidence: `ev:T-0454:385fa69b38dc4641839a69bb`, `ev:T-0454:10fe55713fac48b2907d76b6`, `ev:T-0454:0287e6d080ec411880afc44b`, `ev:T-0454:fe8b5a505bd94cbaa6805dc4`; failed/blocked probes are resolved by later passed evidence.
+- T-0453 started the direct HADARA dogfood UX refactor line by decoupling `validation run` evidence capture from default `TASK.md` Validation row writes. Evidence: `ev:T-0453:facedecf71cf4747adfdd522`, `ev:T-0453:bff69d665fcb466fb9bc910b`, `ev:T-0453:6a76b8b335fb4151b6d9f92a`.
 - T-0431 implemented read-only `hadara docs read-map --task T-XXXX --json` and `hadara docs inbox --json`, added `hadara.docs.readMap.v1` and `hadara.docs.inbox.v1`, command registry/schema fixtures, focused tests, refreshed workspace `dist`, and built CLI smokes passed in `ev:T-0431:a81383c6d7894693a45a95ed`.
 - T-0430 implemented registry-first `hadara docs register --path <path> --json` over `.hadara/docs-registry.json`, added `hadara.docs.register.v1`, command registry/schema fixtures, focused tests, refreshed workspace `dist`, and built CLI smoke passed in `ev:T-0430:1933b10f80184f8abb9540cb`.
 - T-0429 implemented non-overlapping generated templates: `AGENTS.md` owns Required Reading/safety only, `.hadara/context/HADARA_CONTEXT.md` is routing-only, and `docs/HADARA_WORKFLOW.md` owns lifecycle/context/evidence/document timing guidance. Docker build plus focused init tests passed, workspace `dist` was refreshed, and built governed init/doctor template smoke returned `ok:true` in `ev:T-0429:ab675a5933c84286b8d255fc`.

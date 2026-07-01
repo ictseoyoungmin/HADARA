@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { appendEvidenceWithResult, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
 import { findTaskCapsule } from '../task/task-capsule';
+import { parseEvidenceIndexFile, EvidenceListRecord } from './evidence-list';
 import { formatMarkdownTableRow, isSafeMarkdownTableCell } from './markdown-table';
 
 export interface ValidationRunReport {
@@ -23,6 +24,11 @@ export interface ValidationRunReport {
     stderrHash: string;
   };
   result: 'Passed' | 'Failed' | 'Blocked';
+  attempt: {
+    checkKey: string;
+    previousFailedOrBlockedEvidenceIds: string[];
+    autoResolvedEvidenceIds: string[];
+  };
   evidence?: {
     id: string;
     result: string;
@@ -100,6 +106,12 @@ export function createValidationRunReport(projectRoot: string, options: Validati
     `stderrHash: ${hashText(executed.stderr ?? '')}`
   ].join('; ');
   const legacyResult = result === 'Passed' ? 'passed' : result === 'Failed' ? 'failed' : 'blocked';
+  const checkKey = validationCheckKey(options.check);
+  const previousFailedOrBlockedEvidenceIds = findUnresolvedFailedOrBlockedAttempts(task.dir, options.check, checkKey);
+  const autoResolvedEvidenceIds = result === 'Passed' ? previousFailedOrBlockedEvidenceIds : [];
+  const tags = Array.from(
+    new Set([...(options.tags ?? []), `validation-check:${checkKey}`, ...autoResolvedEvidenceIds.map((id) => `resolves:${id}`)])
+  );
   const evidence = appendEvidenceWithResult(projectRoot, {
     taskId: options.taskId,
     kind: 'command-log',
@@ -107,7 +119,7 @@ export function createValidationRunReport(projectRoot: string, options: Validati
     result: legacyResult,
     category: 'validation',
     outcome: legacyResult,
-    tags: options.tags,
+    tags,
     visibility: 'public',
     idempotencyKey: `validation-run:${options.taskId}:${options.check}:${hashText(options.argv.join('\0'))}:${executed.status ?? 'null'}:${executed.signal ?? 'null'}:${hashText((options.tags ?? []).join('\0'))}`
   });
@@ -139,6 +151,11 @@ export function createValidationRunReport(projectRoot: string, options: Validati
       stderrHash: hashText(executed.stderr ?? '')
     },
     result,
+    attempt: {
+      checkKey,
+      previousFailedOrBlockedEvidenceIds,
+      autoResolvedEvidenceIds
+    },
     evidence: {
       id: evidenceId,
       result: persistedEvidenceResult(evidence.evidence),
@@ -175,6 +192,11 @@ function failedInputReport(projectRoot: string, options: ValidationRunOptions, c
       stderrHash: hashText('')
     },
     result: 'Blocked',
+    attempt: {
+      checkKey: validationCheckKey(options.check),
+      previousFailedOrBlockedEvidenceIds: [],
+      autoResolvedEvidenceIds: []
+    },
     taskValidationRow: { mode: 'skipped', updated: false, appended: false, reason: 'Validation command did not run.' },
     acceptanceRows: {
       updated: false,
@@ -182,6 +204,47 @@ function failedInputReport(projectRoot: string, options: ValidationRunOptions, c
     },
     issues: [{ severity: 'error', code, message }]
   };
+}
+
+function validationCheckKey(check: string): string {
+  return crypto.createHash('sha256').update(check.trim().replace(/\s+/g, ' ').toLowerCase(), 'utf8').digest('hex').slice(0, 16);
+}
+
+function findUnresolvedFailedOrBlockedAttempts(taskDir: string, check: string, checkKey: string): string[] {
+  const parsed = parseEvidenceIndexFile(path.join(taskDir, 'evidence.jsonl'), taskIdFromTaskDir(taskDir));
+  const records = parsed.records;
+  const unresolved: string[] = [];
+  for (const record of records) {
+    if (!isValidationAttemptForCheck(record, check, checkKey)) continue;
+    if (record.outcome === 'passed' || record.outcome === 'recorded') {
+      for (const tag of record.tags) {
+        if (!tag.startsWith('resolves:') && !tag.startsWith('supersedes:')) continue;
+        const resolvedId = tag.replace(/^(resolves|supersedes):/, '');
+        const index = unresolved.indexOf(resolvedId);
+        if (index >= 0) unresolved.splice(index, 1);
+      }
+      continue;
+    }
+    if ((record.outcome === 'failed' || record.outcome === 'blocked') && !unresolved.includes(record.id)) {
+      unresolved.push(record.id);
+    }
+  }
+  return unresolved;
+}
+
+function isValidationAttemptForCheck(record: EvidenceListRecord, check: string, checkKey: string): boolean {
+  if (record.category !== 'validation') return false;
+  if (record.tags.includes(`validation-check:${checkKey}`)) return true;
+  return extractValidationCheckFromSummary(record.summary) === check;
+}
+
+function extractValidationCheckFromSummary(summary: string): string | undefined {
+  return /^Validation "([^"]+)"\s/.exec(summary)?.[1];
+}
+
+function taskIdFromTaskDir(taskDir: string): string {
+  const name = path.basename(taskDir);
+  return /^T-\d+/.exec(name)?.[0] ?? name;
 }
 
 function updateTaskValidationRow(projectRoot: string, taskDir: string, check: string, command: string, result: ValidationRunReport['result'], evidenceId: string): ValidationRunReport['taskValidationRow'] {

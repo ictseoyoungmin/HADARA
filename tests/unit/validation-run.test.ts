@@ -54,11 +54,37 @@ describe('validation run', () => {
       acceptanceRows: { updated: false }
     });
     expect(report.evidence?.id).toMatch(new RegExp(`^ev:${task.id}:`));
+    expect(report.attempt.checkKey).toMatch(/^[a-f0-9]{16}$/);
+    expect(report.evidence?.tags).toContain(`validation-check:${report.attempt.checkKey}`);
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
     const taskMd = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
     expect(taskMd).not.toContain('Focused tests');
     expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain(report.evidence?.id);
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('"category":"validation"');
+  });
+
+  it('auto-resolves earlier failed attempts for the same validation check when a later attempt passes', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation run attempt resolution');
+
+    const failed = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Focused tests',
+      argv: [process.execPath, '-e', 'process.exit(2)']
+    });
+    const passed = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Focused tests',
+      argv: [process.execPath, '-e', 'process.exit(0)']
+    });
+
+    expect(failed.result).toBe('Failed');
+    expect(passed.result).toBe('Passed');
+    expect(passed.attempt.previousFailedOrBlockedEvidenceIds).toEqual([failed.evidence?.id]);
+    expect(passed.attempt.autoResolvedEvidenceIds).toEqual([failed.evidence?.id]);
+    expect(passed.evidence?.tags).toContain(`resolves:${failed.evidence?.id}`);
+    expect(passed.evidence?.tags).toContain(`validation-check:${failed.attempt.checkKey}`);
+    expect(validateSchema('hadara.validation.run.v1', passed).ok).toBe(true);
   });
 
   it('updates the TASK Validation row when explicitly requested', () => {

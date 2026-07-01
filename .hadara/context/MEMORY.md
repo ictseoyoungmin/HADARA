@@ -21,3 +21,5 @@
 ## 2026-07-01 Validation Run Dogfood
 
 - Evidence capture and close-source prose sync should be separate by default. If `validation run` both appends evidence and rewrites `TASK.md`, agents can get trapped in a validate-edit-validate loop right before finalize.
+- Same-check validation retry resolution should be automatic, but agents still need a latest-attempt projection. After T-0454, the raw evidence is cleaner, yet answering "what is the current validation state?" still requires evidence-list inspection unless `task status` or a dedicated read model groups attempts by check.
+- `validation run` can be awkward for wrapping HADARA CLI checks in this sandbox because nested spawn attempts returned `spawnSync node EPERM`/`spawnSync bash EPERM` while direct commands passed. Also, `evidence add-command --task T --help` currently records default evidence instead of showing help. Treat both as agent-UX repair candidates.

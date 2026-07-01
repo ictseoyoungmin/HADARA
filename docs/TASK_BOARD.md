@@ -454,3 +454,4 @@
 | T-0451 | T-04A23 Validation Run Workflow Polish | Done | tasks/T-0451-t-04a23-validation-run-workflow-polish | `validation run` is now the default generated workflow/lifecycle evidence path; `evidence add-command` is an already-run fallback. |
 | T-0452 | T-04A24 Final Review and Documentation Cleanup | Done | tasks/T-0452-t-04a24-final-review-and-documentation-cleanup | Final 0.4 implementation-budget handoff/readiness cleanup passed; release work remains separate. |
 | T-0453 | Agent UX Validation Run Task Sync Decoupling | Done | tasks/T-0453-agent-ux-validation-run-task-sync-decoupling | First agent UX refactor capsule after T-0452 dogfood; decouples validation evidence capture from automatic TASK.md row sync. |
+| T-0454 | Agent UX Validation Attempt Auto Resolution | Done | tasks/T-0454-agent-ux-validation-attempt-auto-resolution | Same-check validation retries now auto-resolve earlier failed or blocked attempts with durable evidence tags. |
