@@ -56,22 +56,17 @@ describe('session start', () => {
     });
     expect(report.contextPack.readFirst.length).toBeLessThanOrEqual(3);
     expect(report.lifecycle.primaryNextCommands).toEqual(expect.arrayContaining([
-      `node dist/cli/main.js task lifecycle --task ${task.id} --json`,
       `node dist/cli/main.js task status --task ${task.id} --json`,
       `node dist/cli/main.js context pack --task ${task.id} --json`,
       `node dist/cli/main.js task ready --task ${task.id} --level done --json`
     ]));
-    expect(report.lifecycle.primaryNextCommands[0]).toBe(`node dist/cli/main.js task lifecycle --task ${task.id} --json`);
+    expect(report.lifecycle.primaryNextCommands[0]).toBe(`node dist/cli/main.js task status --task ${task.id} --json`);
     expect(report.lifecycle.diagnosticCommands).toEqual(expect.arrayContaining([
       'node dist/cli/main.js context cache status --json',
       `node dist/cli/main.js context graph --task ${task.id} --json`,
       'node dist/cli/main.js state verify --json'
     ]));
     expect(report.guidance.commands).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        id: 'task-lifecycle',
-        args: ['task', 'lifecycle', '--task', task.id, '--json']
-      }),
       expect.objectContaining({
         id: 'task-status',
         args: ['task', 'status', '--task', task.id, '--json']
@@ -99,13 +94,13 @@ describe('session start', () => {
     });
     expect(report.docsReadMap?.readFirstCount).toBeGreaterThanOrEqual(report.docsReadMap?.readFirst.length ?? 0);
     expect(report.guidance.primaryAction).toMatchObject({
-      id: 'task-lifecycle',
-      command: `node dist/cli/main.js task lifecycle --task ${task.id} --json`,
-      args: ['task', 'lifecycle', '--task', task.id, '--json'],
+      id: 'task-status',
+      command: `node dist/cli/main.js task status --task ${task.id} --json`,
+      args: ['task', 'status', '--task', task.id, '--json'],
       writeBoundary: 'read-only',
       recommendedActorRole: 'agent-worker'
     });
-    expect(report.guidance.nextCommandArgs).toEqual(['task', 'lifecycle', '--task', task.id, '--json']);
+    expect(report.guidance.nextCommandArgs).toEqual(['task', 'status', '--task', task.id, '--json']);
     expect(report.guidance.whyThisNow).toContain('task id is available');
     expect(report.guidance.avoidForNow).toEqual(expect.arrayContaining([
       expect.stringContaining('Do not run task finalize')
@@ -248,23 +243,23 @@ describe('session start', () => {
 
     expect(report.ok).toBe(true);
     expect(report.summary.degraded).toBe(true);
-    expect(report.lifecycle.primaryNextCommands).toEqual(['node dist/cli/main.js task next --json']);
+    expect(report.lifecycle.primaryNextCommands).toEqual(['node dist/cli/main.js task status --json']);
     expect(report.guidance).toMatchObject({
       mode: 'bounded-no-live',
       primaryNextAction: 'select-task',
       taskRequired: true,
       primaryAction: {
-        id: 'task-next',
-        args: ['task', 'next', '--json'],
+        id: 'task-status',
+        args: ['task', 'status', '--json'],
         writeBoundary: 'read-only',
         recommendedActorRole: 'agent-worker'
       },
-      nextCommandArgs: ['task', 'next', '--json']
+      nextCommandArgs: ['task', 'status', '--json']
     });
     expect(report.guidance.commands).toEqual(expect.arrayContaining([
       expect.objectContaining({
-        id: 'task-next',
-        args: ['task', 'next', '--json']
+        id: 'task-status',
+        args: ['task', 'status', '--json']
       })
     ]));
     expect(report.docsReadMap).toBeUndefined();

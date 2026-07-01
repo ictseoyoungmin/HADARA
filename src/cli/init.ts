@@ -179,6 +179,10 @@ export interface InitCommandInput {
 
 export function handleInitCommand(input: InitCommandInput): boolean {
   const subcommand = input.args[1];
+  if (subcommand === 'help' || getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+    console.log(renderInitHelp());
+    return true;
+  }
   if (subcommand === 'doctor') {
     printInitFollowUpReport(createInitDoctorReport(input.projectRoot), input.jsonOutput);
     return true;
@@ -233,6 +237,26 @@ export function handleInitCommand(input: InitCommandInput): boolean {
   const report = initProject(input.projectRoot, getStringOption(input.args, '--profile', 'standard') ?? 'standard', { silent: input.jsonOutput });
   if (input.jsonOutput) console.log(JSON.stringify(report, null, 2));
   return true;
+}
+
+function renderInitHelp(): string {
+  return `HADARA init
+
+Usage:
+  hadara init [--profile basic|standard|governed] [--json]
+  hadara init doctor [--json]
+  hadara init upgrade --profile <profile> [--execute] [--json]
+  hadara init register-doc --path <path> --when <text> --purpose <text> [--execute] [--json]
+  hadara init enable-integration --integration <name> [--execute] [--json]
+
+Profiles:
+  basic      Core current-state docs, workflow reference, registries, and task directory.
+  standard   Default profile with architecture, roadmap, and decision docs.
+  governed   Standard profile plus handoff and security docs.
+
+Notes:
+  --help is read-only and does not create scaffold files.
+`;
 }
 
 function getInitFollowUpMode(args: string[]): InitFollowUpMode {

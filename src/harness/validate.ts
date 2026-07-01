@@ -205,17 +205,27 @@ function validateTaskSourceDocumentsTable(projectRoot: string, content: string, 
   if (!requireTableHeader(table.rows, ['Path', 'Role', 'Authority', 'Status', 'Source Hash', 'Notes'], relativePath, heading, issues)) return;
   for (const row of table.dataRows) {
     const pathCell = tableCell(row, table.header, 'Path');
-    if (!pathCell || /^TBD$/i.test(pathCell)) continue;
+    const sourcePath = normalizeSourceDocumentPathCell(pathCell);
+    if (!sourcePath || /^TBD$/i.test(sourcePath)) continue;
     checkToken(tableCell(row, table.header, 'Role'), SOURCE_DOCUMENT_ROLE_TOKENS, 'TASK_SOURCE_DOCUMENT_ROLE_INVALID_TOKEN', relativePath, heading, issues);
     checkToken(tableCell(row, table.header, 'Authority'), SOURCE_DOCUMENT_AUTHORITY_TOKENS, 'TASK_SOURCE_DOCUMENT_AUTHORITY_INVALID_TOKEN', relativePath, heading, issues);
     checkToken(tableCell(row, table.header, 'Status'), SOURCE_DOCUMENT_STATUS_TOKENS, 'TASK_SOURCE_DOCUMENT_STATUS_INVALID_TOKEN', relativePath, heading, issues);
     const hash = tableCell(row, table.header, 'Source Hash');
     if (!isSourceHashCell(hash)) {
-      issues.push(taskTableIssue('TASK_SOURCE_DOCUMENT_MISSING_HASH', `Source document "${pathCell}" must use Source Hash "TBD" or "sha256:<hex>".`, relativePath, heading));
+      issues.push(taskTableIssue('TASK_SOURCE_DOCUMENT_MISSING_HASH', `Source document "${sourcePath}" must use Source Hash "TBD" or "sha256:<hex>".`, relativePath, heading));
       continue;
     }
-    validateSourceDocumentHash(projectRoot, pathCell, hash, relativePath, heading, issues, level);
+    validateSourceDocumentHash(projectRoot, sourcePath, hash, relativePath, heading, issues, level);
   }
+}
+
+function normalizeSourceDocumentPathCell(pathCell: string): string {
+  let value = pathCell.trim();
+  const markdownLink = value.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+  if (markdownLink) value = markdownLink[2]?.trim() ?? value;
+  if (value.startsWith('`') && value.endsWith('`')) value = value.slice(1, -1).trim();
+  if (value.startsWith('<') && value.endsWith('>')) value = value.slice(1, -1).trim();
+  return value;
 }
 
 function validateSourceDocumentHash(

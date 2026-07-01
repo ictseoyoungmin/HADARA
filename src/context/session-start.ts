@@ -298,11 +298,10 @@ function buildWarmCachedContextPackReport(input: {
 function lifecycleForSessionStart(taskId: string | undefined, contextPack: ContextPackReport): SessionStartLifecycle {
   const primaryNextCommands = taskId
     ? [
-        `node dist/cli/main.js task lifecycle --task ${taskId} --json`,
         `node dist/cli/main.js task status --task ${taskId} --json`,
         `node dist/cli/main.js context pack --task ${taskId} --json`
       ]
-    : ['node dist/cli/main.js task next --json'];
+    : ['node dist/cli/main.js task status --json'];
 
   for (const suggestion of contextPack.validateWith) {
     if (suggestion.requiredForClose && !primaryNextCommands.includes(suggestion.command)) {
@@ -353,41 +352,35 @@ function guidanceForSessionStart(input: {
 
   if (!taskId) {
     primaryAction = {
-      id: 'task-next',
+      id: 'task-status',
       label: 'Select the next task',
-      command: 'node dist/cli/main.js task next --json',
-      args: ['task', 'next', '--json'],
+      command: 'node dist/cli/main.js task status --json',
+      args: ['task', 'status', '--json'],
       reason: 'No task id is available, so the next useful step is to select a concrete task before reading task-scoped context.',
       writeBoundary: 'read-only',
       recommendedActorRole: 'agent-worker'
     };
     commands.push({
-      id: 'task-next',
-      command: 'node dist/cli/main.js task next --json',
-      args: ['task', 'next', '--json'],
+      id: 'task-status',
+      command: 'node dist/cli/main.js task status --json',
+      args: ['task', 'status', '--json'],
       reason: 'Choose the next task before requesting task-scoped context.'
     });
   } else {
     primaryAction = {
-      id: 'task-lifecycle',
-      label: 'Inspect task lifecycle phase',
-      command: `node dist/cli/main.js task lifecycle --task ${taskId} --json`,
-      args: ['task', 'lifecycle', '--task', taskId, '--json'],
-      reason: 'A task id is available, so the fastest safe first step is to inspect lifecycle phase and blockers before editing files.',
+      id: 'task-status',
+      label: 'Inspect task loop phase',
+      command: `node dist/cli/main.js task status --task ${taskId} --json`,
+      args: ['task', 'status', '--task', taskId, '--json'],
+      reason: 'A task id is available, so the fastest safe first step is to inspect loop phase, blockers, and the primary next action before editing files.',
       writeBoundary: 'read-only',
       recommendedActorRole: 'agent-worker'
     };
     commands.push({
-      id: 'task-lifecycle',
-      command: `node dist/cli/main.js task lifecycle --task ${taskId} --json`,
-      args: ['task', 'lifecycle', '--task', taskId, '--json'],
-      reason: 'Inspect the task phase and the one primary lifecycle next action before editing.'
-    });
-    commands.push({
       id: 'task-status',
       command: `node dist/cli/main.js task status --task ${taskId} --json`,
       args: ['task', 'status', '--task', taskId, '--json'],
-      reason: 'Inspect task readiness, evidence, and lifecycle state.'
+      reason: 'Inspect task readiness, evidence, loop phase, and the primary next action.'
     });
     commands.push({
       id: 'context-pack',
@@ -466,7 +459,7 @@ function buildBoundedContextPackReport(input: {
         severity: 'warning',
         code: 'CONTEXT_PACK_TASK_NOT_FOUND',
         message: 'No task id was supplied. Bounded session start returned task-selection guidance without running live project discovery.',
-        fixHint: 'Run hadara task next --json, then rerun hadara session start --task <task-id> --json.'
+        fixHint: 'Run hadara task status --json, then rerun hadara session start --task <task-id> --json.'
       }];
   const readFirst: ContextPackItem[] = input.taskId
     ? [{

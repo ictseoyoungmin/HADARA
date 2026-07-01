@@ -248,6 +248,17 @@ describe('init profiles', () => {
     });
   });
 
+  it('prints init help without creating scaffold files', () => {
+    const root = tempProject();
+
+    handleInitCommand({ args: ['init', '--help'], projectRoot: root, jsonOutput: false });
+
+    expect(logSpy.mock.calls.at(-1)?.[0]).toContain('HADARA init');
+    expect(exists(root, 'AGENTS.md')).toBe(false);
+    expect(exists(root, 'docs/HADARA_WORKFLOW.md')).toBe(false);
+    expect(exists(root, 'tasks/.gitkeep')).toBe(false);
+  });
+
   it('reports 0.4 scaffold drift with specific doctor codes', () => {
     const root = tempProject();
     initProject(root);

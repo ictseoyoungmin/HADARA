@@ -172,6 +172,30 @@ describe('Harness Task Capsule validation', () => {
     expect(missing.issues).toContainEqual(expect.objectContaining({ code: 'TASK_SOURCE_DOCUMENT_CHANGED' }));
   });
 
+  it('normalizes markdown-wrapped Source Document paths before hash validation', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Markdown source doc path');
+    const sourcePath = path.join(root, 'docs', 'source.md');
+    fs.mkdirSync(path.dirname(sourcePath), { recursive: true });
+    fs.writeFileSync(sourcePath, 'source\n', 'utf8');
+    const recordedHash = hashText('source\n');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace('| TBD | reference | exploratory | draft | TBD | TBD |', `| \`docs/source.md\` | implementation-source | approved | implementing | ${recordedHash} | Fixture source. |`),
+      'utf8'
+    );
+
+    const result = validateTaskCapsule(root, task.id, { level: 'draft' });
+
+    expect(result.issues).not.toContainEqual(expect.objectContaining({
+      code: 'TASK_SOURCE_DOCUMENT_CHANGED',
+      message: expect.stringContaining('`docs/source.md`')
+    }));
+  });
+
   it('requires concrete Source Document hashes at done level', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Source doc missing hash');
