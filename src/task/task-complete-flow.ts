@@ -3,7 +3,7 @@ import type { HadaraNextAction } from '../core/next-action';
 import { createTaskAuditCloseReport, createTaskCloseReport, TaskAuditCloseReport, TaskCloseReport } from './task-close';
 import { createTaskFinishReport, TaskFinishReport } from './task-finish';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor } from './lifecycle-next-actions';
-import { createTaskReadyReport, TaskReadyReport } from './task-ready';
+import { createTaskReadyReportFromClosePlan, TaskReadyReport } from './task-ready';
 
 export type TaskCompleteFlowStage =
   | 'evidence-required'
@@ -87,11 +87,12 @@ export function createTaskCompleteFlowReport(projectRoot: string, taskId: string
     ]);
   }
 
+  const close = createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor });
   const reports: LifecycleReports = {
     finish: createTaskFinishReport(projectRoot, taskId, 'dry-run', { actor }),
-    ready: createTaskReadyReport(projectRoot, taskId, 'done', { actor }),
-    close: createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor }),
-    audit: createTaskAuditCloseReport(projectRoot, taskId, { actor })
+    ready: createTaskReadyReportFromClosePlan(projectRoot, taskId, 'done', close, actor),
+    close,
+    audit: createTaskAuditCloseReport(projectRoot, taskId, { actor, closePlan: close })
   };
 
   const stateDocs = summarizeStateDocs(reports.finish);

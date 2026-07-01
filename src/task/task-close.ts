@@ -9,7 +9,7 @@ import { createTaskProtocolConsistencyReport, ProtocolConsistencyReport } from '
 import type { HadaraActorContext } from '../core/actor-context';
 import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
 import { analyzeAcceptanceReadiness } from './acceptance';
-import { listTaskCapsules } from './task-capsule';
+import { findTaskCapsule } from './task-capsule';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from './lifecycle-next-actions';
 
 export type TaskCloseMode = 'dry-run' | 'execute';
@@ -148,7 +148,7 @@ export interface CloseSourceReport {
 export function createTaskCloseReport(projectRoot: string, taskId: string, mode: TaskCloseMode, options: TaskCloseOptions = {}): TaskCloseReport {
   const actor = options.actor ?? defaultTaskLifecycleActor();
   const issues: TaskCloseIssue[] = [];
-  const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
+  const task = findTaskCapsule(projectRoot, taskId);
   if (!task) {
     issues.push({ severity: 'error', code: 'TASK_NOT_FOUND', message: `Task Capsule not found: ${taskId}` });
     return buildMissingTaskReport(projectRoot, taskId, mode, issues, actor);
@@ -453,7 +453,7 @@ export function closeRelevantSourceRelativePaths(projectRoot: string, taskDir: s
 }
 
 export function createTaskCloseSourceReport(projectRoot: string, taskId: string): CloseSourceReport {
-  const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
+  const task = findTaskCapsule(projectRoot, taskId);
   const issues: TaskCloseIssue[] = [];
   if (!task) {
     issues.push({ severity: 'error', code: 'CLOSE_SOURCE_TASK_MISSING', message: `Task Capsule not found: ${taskId}` });
@@ -639,7 +639,7 @@ export function executeTaskCloseEvidence(projectRoot: string, report: TaskCloseR
     report.closeEvidence.appended = false;
     return;
   }
-  const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === report.taskId);
+  const task = findTaskCapsule(projectRoot, report.taskId);
   const recheckedWrite = task
     ? createCloseEvidenceWritePlan(
         path.join(task.dir, 'evidence.jsonl'),
@@ -759,18 +759,19 @@ export interface TaskAuditCloseVerdict {
 
 export interface TaskAuditCloseOptions {
   actor?: HadaraActorContext;
+  closePlan?: TaskCloseReport;
 }
 
 export function createTaskAuditCloseReport(projectRoot: string, taskId: string, options: TaskAuditCloseOptions = {}): TaskAuditCloseReport {
   const actor = options.actor ?? defaultTaskLifecycleActor();
   const issues: TaskCloseIssue[] = [];
-  const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
+  const task = findTaskCapsule(projectRoot, taskId);
   if (!task) {
     issues.push({ severity: 'error', code: 'TASK_NOT_FOUND', message: `Task Capsule not found: ${taskId}` });
     return buildAuditReport(projectRoot, taskId, 'sha256:missing-task', 'sha256:missing-task', 'sha256:missing-task', undefined, undefined, [], issues, undefined, actor);
   }
 
-  const closePlan = createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor });
+  const closePlan = options.closePlan ?? createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor });
   const evidencePath = path.join(task.dir, 'evidence.jsonl');
   const records = readCloseEvidenceRecords(evidencePath);
   const closeEvidenceAudit = createCloseEvidenceAudit(records, taskId);
@@ -786,7 +787,7 @@ export function createTaskAuditCloseReport(projectRoot: string, taskId: string, 
   const latestHash = latest ? extractReportHash(latest.summary) : undefined;
   const latestSourceHash = latest ? extractSourceHash(latest.summary) : undefined;
   const latestSlotRegistryHash = latest ? extractSlotRegistryHash(latest.summary) : undefined;
-  const currentSnapshot = createCloseEvidenceSnapshot(task.dir);
+  const currentSnapshot = closePlan.closeEvidence.closeEvidenceSnapshot ?? createCloseEvidenceSnapshot(task.dir);
   if (latest && latest.kind !== 'command-log') {
     issues.push({
       severity: 'error',

@@ -6,7 +6,7 @@ import { parseMarkdownRows, readMarkdownSection } from './markdown-table';
 import { createStateProjectionReport, StateProjectionAdvisory, toStateProjectionAdvisory } from './state-projection';
 import { ProtocolRemediationFix } from './protocol-remediation';
 import { analyzeAcceptanceReadiness } from '../task/acceptance';
-import { isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule, TASK_FILES } from '../task/task-capsule';
+import { findTaskCapsule, isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule, TASK_FILES } from '../task/task-capsule';
 
 export type ProtocolConsistencyScope = 'docs' | 'tasks' | 'profile' | 'all';
 export type ProtocolConsistencySeverity = 'error' | 'warning' | 'info';
@@ -88,7 +88,7 @@ const STANDARD_PROJECT_DOCS = ['docs/ARCHITECTURE.md', 'docs/DEVELOPMENT_SLICES.
 const GOVERNED_PROJECT_DOCS = ['docs/SECURITY_MODEL.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md'];
 
 export function createTaskProtocolConsistencyReport(projectRoot: string, taskId: string, now = new Date()): ProtocolConsistencyReport {
-  const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
+  const task = findTaskCapsule(projectRoot, taskId);
   const issues: ProtocolConsistencyIssue[] = [];
   const checkedDocs = new Set<string>();
 

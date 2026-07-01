@@ -68,9 +68,10 @@ interface CloseRepairReports {
 
 export function createTaskCloseRepairPlanReport(projectRoot: string, taskId: string, options: TaskCloseRepairPlanOptions = {}): TaskCloseRepairPlanReport {
   const actor = options.actor ?? defaultTaskLifecycleActor();
+  const close = createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor });
   const reports: CloseRepairReports = {
-    close: createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor }),
-    audit: createTaskAuditCloseReport(projectRoot, taskId, { actor })
+    close,
+    audit: createTaskAuditCloseReport(projectRoot, taskId, { actor, closePlan: close })
   };
   const classification = classifyRepair(reports);
   const causes = collectCauses(reports, classification);

@@ -4,17 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, and the follow-up agent UX cleanup is complete through T-0469. |
-| Current Phase | Agent UX refactor dogfood loop plus 0.3.4 stable readiness pending | T-0469 makes finalize own close-proof repair and makes closed-valid status stop without lifecycle follow-up; 0.4 release-line work remains separate and has not started. |
-| Latest Completed Task | T-0469 Finalize close-boundary repair UX | Stale close proof now repairs through guarded finalize execute, closed-valid status has no next lifecycle action, and public guidance no longer teaches `task close-repair-plan`. |
-| Active / Next Task | Full diagnostics/finalize mounted performance optimization or operator decision | Default status is fast, but explicit full status still took about 31s on the mounted workspace. |
-| Validation Baseline | T-0469 finalize close-boundary repair UX | Focused Docker tests passed in `ev:T-0469:557a38f24fca4928a1893911`; Docker build/dist refresh passed in `ev:T-0469:95dfca9fc3c24f79b75bfec5`; built CLI status/help smokes passed in `ev:T-0469:efd716488ee4420cb7d94697`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, and the follow-up agent UX cleanup is complete through T-0470. |
+| Current Phase | Agent UX refactor dogfood loop plus 0.3.4 stable readiness pending | T-0470 reduced task-scoped close/finalize diagnostics cost; 0.4 release-line work remains separate and has not started. |
+| Latest Completed Task | T-0470 Full diagnostics finalize performance optimization | Task-scoped close/audit/harness/protocol paths now use exact task lookup, and finalize/lifecycle/complete-flow/repair-plan composition reuses close plans where available. |
+| Active / Next Task | Protocol fixture cleanup or global diagnostics performance decision | Explicit full status improved but still spends time in global docs/profile diagnostics; broad `protocol-consistency.test.ts` fixtures also still assume removed legacy task files. |
+| Validation Baseline | T-0470 full diagnostics finalize performance optimization | Focused Docker tests passed in `ev:T-0470:00190a9390e54a3db393d461`; Docker build/dist refresh passed in `ev:T-0470:f5fc721056374e47b4a4ea43`; mounted built CLI performance smoke passed in `ev:T-0470:b0beb3b22fea47f1b51b7c78`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| Full diagnostics/finalize performance follow-up | T-0468 fixed default selected-task status latency and T-0469 fixed close repair UX; explicit full status/finalize remains slow on mounted workspaces. | `tasks/T-0469-finalize-close-boundary-repair-ux/HANDOFF.md`, `ev:T-0469:efd716488ee4420cb7d94697` |
+| Protocol fixture cleanup or global diagnostics performance follow-up | T-0470 improved task-scoped close/finalize paths, but broad protocol fixtures and global docs/profile diagnostics remain separate choices. | `tasks/T-0470-full-diagnostics-finalize-performance-optimization/HANDOFF.md`, `ev:T-0470:b0beb3b22fea47f1b51b7c78` |
 | 0.4 release-line decision | Deferred until explicitly started. T-0452 completed the 24-capsule 0.4 implementation budget; release readiness/publish/recycle work is separate. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
@@ -22,15 +22,16 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0470 / Full diagnostics finalize performance optimization | Task-scoped close/audit/harness/protocol checks now avoid all-task scans, and close-plan data is reused across finalize, lifecycle, complete-flow, and repair-plan composition. | `ev:T-0470:00190a9390e54a3db393d461`, `ev:T-0470:f5fc721056374e47b4a4ea43`, `ev:T-0470:b0beb3b22fea47f1b51b7c78` |
 | T-0469 / Finalize close-boundary repair UX | Finalize now owns close-proof repair, closed-valid status has no lifecycle next action, and public guidance no longer teaches `task close-repair-plan`. | `ev:T-0469:557a38f24fca4928a1893911`, `ev:T-0469:95dfca9fc3c24f79b75bfec5`, `ev:T-0469:efd716488ee4420cb7d94697` |
 | T-0468 / Task status fast path and Change Summary schema cleanup | Default selected-task status is now a fast loop cockpit, full diagnostics are explicit with `--detail full`, git-derived Change Summary candidates were removed, and new task scaffolds use stable Area values. | `ev:T-0468:91055b787fda40469bca06b5`, `ev:T-0468:73df1894fd45461c9d043e28`, `ev:T-0468:ea4c3539ac3144bd8d299aab` |
-| T-0467 / Close repair diagnostic and change summary UX | Resolved close-repair-plan fixture drift, clarified repair-plan as conditional diagnostic, broadened Change Summary line syntax, and added git-backed read-only candidate rows in `task status`. | `ev:T-0467:e6450a6e21b6450dbaae39ed`, `ev:T-0467:a469046512334522b0bc0418` |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| Full diagnostics and finalize remain slow on this workspace. | T-0468 default selected-task status was fast and T-0469 fixed repair UX, but explicit full status/finalize still run close/protocol-grade checks and can be slow on `/mnt/f`. | Open a performance-focused capsule around close/protocol diagnostics if explicit full checks remain painful. |
+| Global docs/profile diagnostics remain broad-scan heavy. | T-0470 reduced task-scoped close/finalize latency, but explicit `task status --detail full` still invokes global docs/profile protocol checks and can remain slow on `/mnt/f`. | Decide whether to optimize global docs/profile diagnostics or keep them explicit-only. |
+| Broad `protocol-consistency.test.ts` has stale legacy-capsule fixture assumptions. | Some tests still expect removed legacy task files such as `FILES.md` and `ACCEPTANCE.md`, so a broad protocol-focused run can fail even when current close/finalize paths pass. | Open a narrow fixture cleanup capsule if broad protocol-consistency validation becomes necessary. |
 | Stable `0.3.4` readiness has not run after the T-0423 helper residual fix. | `hadara@0.3.4-rc.0` is published and consumer/helper proofs are clean, but stable metadata, release docs, release artifacts, strict gates, dry-runs, and publish dry-run still need a dedicated readiness capsule. | Open a new stable readiness capsule when release work resumes; do not publish stable from T-0423, T-0424, or T-0425. |
 | T-0383 mounted full-profile probes exceeded a 20s workload budget for cache status/warm, graph task, graph include-code, and context pack. | These workloads are not suitable for the default fast smoke loop on mounted filesystems. | Keep `smoke:context-routing` defaulting to fast profile; use `--profile full` explicitly for diagnostic/full-path checks. |
 | Built cache status still took about 19.6s on `/mnt/f` while producing diagnostics. | Diagnostics are clearer, but mounted broad source-manifest cost remains. | T-0385 classified this as an accepted residual for explicit diagnostic/warm/full-profile commands; default Session Start remains bounded/cache-preferential. |

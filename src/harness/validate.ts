@@ -4,7 +4,7 @@ import path from 'node:path';
 import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
 import { createEvidenceLintReport } from '../services/evidence-lint';
 import { analyzeAcceptanceReadiness } from '../task/acceptance';
-import { isTaskCapsuleScaffoldContent, listTaskCapsules, TaskCapsule } from '../task/task-capsule';
+import { findTaskCapsule, isTaskCapsuleScaffoldContent, TaskCapsule } from '../task/task-capsule';
 
 export type HarnessValidationSeverity = 'error' | 'warning';
 export type HarnessValidationLevel = 'draft' | 'done';
@@ -146,7 +146,7 @@ export function validateTaskCapsule(projectRoot: string, taskId: string, options
 }
 
 function findTask(projectRoot: string, taskId: string): TaskCapsule | undefined {
-  return listTaskCapsules(projectRoot).find((task) => task.id === taskId);
+  return findTaskCapsule(projectRoot, taskId);
 }
 
 function validateTaskMarkdown(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[], level: HarnessValidationLevel): void {

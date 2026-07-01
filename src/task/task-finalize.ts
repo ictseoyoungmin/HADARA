@@ -381,7 +381,7 @@ function createFinalizeReports(projectRoot: string, taskId: string, actor: Hadar
   const ready = createTaskReadyReportFromClosePlan(projectRoot, taskId, 'done', close, actor);
   if (!ready.ok) return { finish, ready, close };
 
-  const audit = createTaskAuditCloseReport(projectRoot, taskId, { actor });
+  const audit = createTaskAuditCloseReport(projectRoot, taskId, { actor, closePlan: close });
   return { finish, ready, close, audit };
 }
 

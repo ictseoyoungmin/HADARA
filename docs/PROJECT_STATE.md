@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0469 Finalize close-boundary repair UX |
-| Active Task | Full diagnostics/finalize performance optimization or operator decision |
+| Latest Completed Task | T-0470 Full diagnostics finalize performance optimization |
+| Active Task | Protocol fixture cleanup or global diagnostics performance decision |
 
 ## Next Planned Line
 
@@ -35,6 +35,8 @@ T-0467 follow-up note: `task close-repair-plan` is now positioned in registry/do
 T-0468 follow-up note: default selected-task `task status --task T-XXXX --json` is now a fast loop cockpit and skips close/protocol-grade diagnostics unless `--detail full` is explicitly requested. Git-derived Change Summary candidates were removed from default status, and new Task Capsule scaffolds/templates now use `Path / Area / Change / Reason / Evidence`; legacy `Lines` tables remain validator-compatible. Focused Docker tests and TypeScript build passed with refreshed `dist`; built CLI smoke showed T-0468 default status completed fast, `--detail full` remained available for heavy diagnostics, and a fresh init plus task create produced the new Area header. A final fast closed-valid metadata correction passed focused task-workbench tests and build. Evidence: `ev:T-0468:91055b787fda40469bca06b5`, `ev:T-0468:73df1894fd45461c9d043e28`, `ev:T-0468:ea4c3539ac3144bd8d299aab`. Remaining high-signal follow-up is explicit full diagnostics/finalize mounted-workspace performance, not default status latency.
 
 T-0469 follow-up note: `task finalize` now owns stale close-proof repair by turning drift into a guarded finalize close append plan; `task status` and dashboard/workbench next actions return no lifecycle action for `closed-valid`; direct `task close-repair-plan` CLI/registry guidance was removed from the public agent loop while the internal classifier remains for now. Focused Docker tests passed 8 files / 68 tests, Docker build passed with refreshed `dist`, and built CLI status/help smokes passed. Evidence: `ev:T-0469:557a38f24fca4928a1893911`, `ev:T-0469:95dfca9fc3c24f79b75bfec5`, `ev:T-0469:efd716488ee4420cb7d94697`. Remaining high-signal follow-up is still explicit full diagnostics/finalize mounted-workspace performance.
+
+T-0470 follow-up note: task-scoped close/finalize diagnostics now avoid broad task-capsule scans by using exact task lookup in close, harness, and task protocol paths, and close-plan data is reused inside finalize, lifecycle, complete-flow, and the internal repair-plan composition where available. Focused Docker tests passed 8 files / 89 tests plus a targeted task-scoped protocol smoke, Docker build passed with refreshed `dist`, and mounted built CLI smokes showed T-0469 audit-close improving from about 15.6s to about 8.5s and full status from 20749 ms to 12009 ms. Evidence: `ev:T-0470:00190a9390e54a3db393d461`, `ev:T-0470:f5fc721056374e47b4a4ea43`, `ev:T-0470:b0beb3b22fea47f1b51b7c78`. Remaining choices are stale broad protocol fixture cleanup and/or global docs/profile diagnostics performance.
 
 T-0460 follow-up note: agent UX global option parsing now supports known global options before the command token. The CLI entry normalizes leading `--project <path>` and `--json` before dispatch while preserving command-first invocations and strict option-value validation. Built CLI smokes passed for `node dist/cli/main.js --json --project . version` and `node dist/cli/main.js --project /tmp/hadara-t0460-global-init init --profile basic --json`; Docker focused args tests and TypeScript build passed, and workspace `dist` was refreshed. Evidence: `ev:T-0460:708e920cff184178b4a650d5`, `ev:T-0460:4951e6416ffc4c0bad478427`. Broader command-specific option reordering remains out of scope unless another dogfood friction appears.
 

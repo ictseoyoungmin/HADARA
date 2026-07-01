@@ -3,7 +3,7 @@ import type { HadaraNextAction } from '../core/next-action';
 import { createTaskAuditCloseReport, createTaskCloseReport, TaskAuditCloseReport, TaskCloseReport } from './task-close';
 import { createTaskFinishReport, TaskFinishReport } from './task-finish';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor } from './lifecycle-next-actions';
-import { createTaskReadyReport, TaskReadyReport } from './task-ready';
+import { createTaskReadyReportFromClosePlan, TaskReadyReport } from './task-ready';
 import { createTaskAuthoringGuidance, TaskAuthoringGuidance } from './authoring-guidance';
 
 export type TaskLifecyclePhase =
@@ -88,11 +88,12 @@ interface LifecycleReports {
 
 export function createTaskLifecycleReport(projectRoot: string, taskId: string, options: TaskLifecycleOptions = {}): TaskLifecycleReport {
   const actor = options.actor ?? defaultTaskLifecycleActor();
+  const close = createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor });
   const reports: LifecycleReports = {
     finish: createTaskFinishReport(projectRoot, taskId, 'dry-run', { actor }),
-    ready: createTaskReadyReport(projectRoot, taskId, 'done', { actor }),
-    close: createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor }),
-    audit: createTaskAuditCloseReport(projectRoot, taskId, { actor })
+    ready: createTaskReadyReportFromClosePlan(projectRoot, taskId, 'done', close, actor),
+    close,
+    audit: createTaskAuditCloseReport(projectRoot, taskId, { actor, closePlan: close })
   };
   const checks = createChecks(taskId, reports);
   const repair = createRepair(taskId, reports.audit);
