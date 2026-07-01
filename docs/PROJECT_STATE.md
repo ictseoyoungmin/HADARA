@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0448 T-04A20 Basic Profile Dogfood |
-| Active Task | T-04A21 Governed Profile Dogfood (next) |
+| Latest Completed Task | T-0449 T-04A21 Governed Profile Dogfood |
+| Active Task | T-04A22 Self-Review Hardening Batch (next) |
 
 ## Next Planned Line
 
@@ -91,6 +91,8 @@ T-0446 follow-up note: T-04A18 Command Registry, Help, and Schema Alignment is i
 T-0447 follow-up note: T-04A19 Product Default Cleanup is implemented. Product-default leakage detection now flags concrete release/package command guidance in generated scaffold docs while preserving generic safety wording. Generated Markdown across basic, standard, and governed init profiles is statically checked for HADARA-dev, Node/npm, Docker, machine-local path, package-version, and concrete release/package command leakage; fresh governed init remains doctor-clean; and intentional `hadara release publish ...` leakage reports `INIT_PRODUCT_DEFAULT_LEAK`. Docker ext4 build/focused init/docs-registry/command-registry tests passed 3 files / 29 tests, workspace `dist` was refreshed, built CLI smokes passed, and `git diff --check` passed. Evidence: `ev:T-0447:b19bfcb789b64223bb4f4f45`. The next 0.4 task is T-04A20 Basic Profile Dogfood.
 
 T-0448 follow-up note: T-04A20 Basic Profile Dogfood is complete. A disposable `/tmp` basic profile project passed `init --profile basic`, `init doctor`, required/forbidden scaffold file assertions, generated-doc product-default checks, task create, evidence append/projection/summary, context pack, lifecycle, finalize dry-run review, guarded finalize execute, repair close path after authoring drift, final finalize execute, and audit-close `closed-valid`. Done-level validation correctly blocked invalid source-document authority/hash and placeholder HANDOFF rows during dogfood; the practical close-source repair-path note was recorded in `.hadara/context/MEMORY.md`. Evidence: `ev:T-0448:9a048c17494b4a9fa625d603`. The next 0.4 task is T-04A21 Governed Profile Dogfood.
+
+T-0449 follow-up note: T-04A21 Governed Profile Dogfood is complete. A disposable `/tmp` governed profile project passed `init --profile governed`, `init doctor`, governed scaffold file assertions, docs register/read-map/context-pack/session-start routing, task create, evidence append/projection/summary, lifecycle, finalize dry-run review, guarded finalize execute, close-source repair after HANDOFF wording drift, final audit-close `closed-valid`, and generated-doc/prose leakage assertions. A stale pre-finish done-level harness report was expected before finish/finalize and was not a product defect. Evidence: `ev:T-0449:a81f3af0c4ab408eba907092`. The next 0.4 task is T-04A22 Self-Review Hardening Batch.
 
 Phase 8 / 0.3.1 is complete through post-rc1 documentation cleanup. It carried Work Item A and Work Item F into implementation as status token governance, document ownership/write-boundary governance, task handoff close-state clarity, installed-package recycle findings cleanup, state consistency projection, and advisory verification gates. The Phase 8 specs are staged under `docs/specs/0.3.1/`; the first rc1 implementation sequence is staged under `docs/specs/0.3.1/rc1/`. Phase 8.1 through Phase 8.6 are complete through T-0324, T-0325 completed the follow-up CloseState derived-state cleanup after review, T-0326 prepared `hadara@0.3.1-rc.1` release readiness without publish mutation, T-0327 published `hadara@0.3.1-rc.1`, verified npm visibility/tarball contents, hardened future rc publish tags, and corrected npm dist-tags so stable `0.3.0` stays on `latest` while rc1 is available as `next`, T-0328 verified the published rc1 package from installed consumer paths in the `hadara-dev` container, and T-0329 refreshed post-rc1 handoff/release-note wording after reviewer feedback.
 
@@ -224,9 +226,9 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0448 T-04A20 Basic Profile Dogfood.
-- Next 0.4 task is T-04A21 Governed Profile Dogfood; continue from `docs/specs/0.4.0/productization-redesign/01_Project_Scaffold_Model.md`, `docs/specs/0.4.0/productization-redesign/13_Test_Dogfood_and_Release_Plan.md`, and `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md`.
-- T-0448 validated a disposable basic 0.4 project from init through closed-valid task audit; dogfood found no product code defect, but reinforced that post-close prose edits require repair plus fresh close proof. Evidence: `ev:T-0448:9a048c17494b4a9fa625d603`.
+- Latest completed task is T-0449 T-04A21 Governed Profile Dogfood.
+- Next 0.4 task is T-04A22 Self-Review Hardening Batch; continue from `docs/specs/0.4.0/productization-redesign/13_Test_Dogfood_and_Release_Plan.md` and `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md`.
+- T-0449 validated a disposable governed 0.4 project from init through closed-valid task audit; dogfood found no product code defect and confirmed the close-source repair path after HANDOFF wording drift. Evidence: `ev:T-0449:a81f3af0c4ab408eba907092`.
 - T-0431 implemented read-only `hadara docs read-map --task T-XXXX --json` and `hadara docs inbox --json`, added `hadara.docs.readMap.v1` and `hadara.docs.inbox.v1`, command registry/schema fixtures, focused tests, refreshed workspace `dist`, and built CLI smokes passed in `ev:T-0431:a81383c6d7894693a45a95ed`.
 - T-0430 implemented registry-first `hadara docs register --path <path> --json` over `.hadara/docs-registry.json`, added `hadara.docs.register.v1`, command registry/schema fixtures, focused tests, refreshed workspace `dist`, and built CLI smoke passed in `ev:T-0430:1933b10f80184f8abb9540cb`.
 - T-0429 implemented non-overlapping generated templates: `AGENTS.md` owns Required Reading/safety only, `.hadara/context/HADARA_CONTEXT.md` is routing-only, and `docs/HADARA_WORKFLOW.md` owns lifecycle/context/evidence/document timing guidance. Docker build plus focused init tests passed, workspace `dist` was refreshed, and built governed init/doctor template smoke returned `ok:true` in `ev:T-0429:ab675a5933c84286b8d255fc`.
