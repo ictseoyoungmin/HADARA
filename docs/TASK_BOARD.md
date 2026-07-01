@@ -464,3 +464,4 @@
 | T-0461 | Agent UX task status authoring suggestions | Done | tasks/T-0461-agent-ux-task-status-authoring-suggestions | |
 | T-0462 | Agent UX fresh init quickstart verbosity hardening | Done | tasks/T-0462-agent-ux-fresh-init-quickstart-verbosity-hardening | |
 | T-0463 | Agent UX status finalize latency diagnostics | Done | tasks/T-0463-agent-ux-status-finalize-latency-diagnostics | Adds additive CLI duration/slow diagnostics to `task status` and `task finalize`. |
+| T-0464 | Agent UX finalize execute progress output | Done | tasks/T-0464-agent-ux-finalize-execute-progress-output | Adds execute-only finalize progress output on stderr. |

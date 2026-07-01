@@ -86,10 +86,18 @@ export interface TaskFinalizeExecutedStep {
   writeBoundary: 'read-only' | 'task-local' | 'evidence-append';
 }
 
+export interface TaskFinalizeProgressEvent {
+  step: TaskFinalizeStepId | 'refresh';
+  phase: 'start' | 'executed' | 'satisfied' | 'blocked';
+  summary: string;
+  ok?: boolean;
+}
+
 export interface TaskFinalizeOptions {
   executeRequested?: boolean;
   planHash?: string;
   actor?: HadaraActorContext;
+  onProgress?: (event: TaskFinalizeProgressEvent) => void;
 }
 
 interface FinalizeReports {
@@ -105,7 +113,7 @@ export function createTaskFinalizeReport(projectRoot: string, taskId: string, op
   const steps = createSteps(taskId, reports);
   const issues = collectIssues(taskId, reports);
   const planHash = hashPlan(taskId, steps);
-  if (options.executeRequested) return executeFinalizePlan(projectRoot, taskId, actor, reports, steps, issues, planHash, options.planHash);
+  if (options.executeRequested) return executeFinalizePlan(projectRoot, taskId, actor, reports, steps, issues, planHash, options.planHash, options.onProgress);
   return createFinalizeReport(taskId, actor, 'dry-run', true, steps, issues, planHash, undefined, reports);
 }
 
@@ -128,7 +136,8 @@ function executeFinalizePlan(
   initialSteps: TaskFinalizeStep[],
   initialIssues: TaskFinalizeIssue[],
   currentPlanHash: string,
-  requestedPlanHash?: string
+  requestedPlanHash?: string,
+  onProgress?: (event: TaskFinalizeProgressEvent) => void
 ): TaskFinalizeReport {
   if (!requestedPlanHash) return createExecuteRefusal(taskId, actor, 'TASK_FINALIZE_PLAN_HASH_REQUIRED', 'task finalize --execute requires a reviewed --plan-hash from a dry-run report.', currentPlanHash, initialSteps);
   if (requestedPlanHash !== currentPlanHash) {
@@ -174,42 +183,68 @@ function executeFinalizePlan(
   let steps = initialSteps;
   let finishStep = steps.find((step) => step.id === 'finish');
   if (finishStep?.status === 'required') {
+    emitFinalizeProgress(onProgress, finishStep.id, 'start', finishStep.summary);
     const finishReport = createTaskFinishReport(projectRoot, taskId, 'execute', { actor });
     executedSteps.push(createExecutedStep(finishStep, finishReport.ok, finishReport, finishReport.ok ? 'executed' : 'blocked'));
+    emitFinalizeProgress(onProgress, finishStep.id, finishReport.ok ? 'executed' : 'blocked', finishStep.summary, finishReport.ok);
     if (!finishReport.ok) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'finish');
+    emitFinalizeProgress(onProgress, 'refresh', 'start', 'Recomputing finalize state after finish.');
     reports = createFinalizeReports(projectRoot, taskId, actor);
     steps = createSteps(taskId, reports);
+    emitFinalizeProgress(onProgress, 'refresh', 'satisfied', 'Finalize state refreshed after finish.', true);
   } else if (finishStep?.status === 'satisfied') {
     executedSteps.push(createExecutedStep(finishStep, true, reports.finish, 'satisfied'));
+    emitFinalizeProgress(onProgress, finishStep.id, 'satisfied', finishStep.summary, true);
   }
 
   const readyStep = steps.find((step) => step.id === 'ready');
+  emitFinalizeProgress(onProgress, readyStep?.id ?? 'ready', 'start', readyStep?.summary ?? 'Checking done-level readiness.');
   if (readyStep?.status !== 'satisfied') {
     const readyReport = reports.ready;
     executedSteps.push(createExecutedStep(readyStep ?? fallbackStep(taskId, 'ready'), readyReport?.ok ?? false, readyReport, readyReport?.ok ? 'satisfied' : 'blocked'));
+    emitFinalizeProgress(onProgress, readyStep?.id ?? 'ready', readyReport?.ok ? 'satisfied' : 'blocked', readyStep?.summary ?? 'Done-level readiness check finished.', readyReport?.ok ?? false);
     return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'ready');
   }
   executedSteps.push(createExecutedStep(readyStep, true, reports.ready, 'satisfied'));
+  emitFinalizeProgress(onProgress, readyStep.id, 'satisfied', readyStep.summary, true);
 
   const closeStep = steps.find((step) => step.id === 'close');
   if (closeStep?.status === 'required') {
+    emitFinalizeProgress(onProgress, closeStep.id, 'start', closeStep.summary);
     const closeReport = createTaskCloseReport(projectRoot, taskId, 'execute', { actor });
     if (closeReport.ok) executeTaskCloseEvidence(projectRoot, closeReport);
     executedSteps.push(createExecutedStep(closeStep, closeReport.ok, closeReport, closeReport.ok ? 'executed' : 'blocked'));
+    emitFinalizeProgress(onProgress, closeStep.id, closeReport.ok ? 'executed' : 'blocked', closeStep.summary, closeReport.ok);
     if (!closeReport.ok) return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'close');
+    emitFinalizeProgress(onProgress, 'refresh', 'start', 'Recomputing finalize state after close evidence.');
     reports = createFinalizeReports(projectRoot, taskId, actor);
     steps = createSteps(taskId, reports);
+    emitFinalizeProgress(onProgress, 'refresh', 'satisfied', 'Finalize state refreshed after close evidence.', true);
   } else if (closeStep?.status === 'satisfied') {
     executedSteps.push(createExecutedStep(closeStep, true, reports.close, 'satisfied'));
+    emitFinalizeProgress(onProgress, closeStep.id, 'satisfied', closeStep.summary, true);
   } else {
     executedSteps.push(createExecutedStep(closeStep ?? fallbackStep(taskId, 'close'), false, reports.close, 'blocked'));
+    emitFinalizeProgress(onProgress, closeStep?.id ?? 'close', 'blocked', closeStep?.summary ?? 'Close is blocked.', false);
     return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, 'close');
   }
 
   const auditStep = steps.find((step) => step.id === 'audit-close');
+  emitFinalizeProgress(onProgress, auditStep?.id ?? 'audit-close', 'start', auditStep?.summary ?? 'Auditing close evidence.');
   const auditReport = reports.audit;
   executedSteps.push(createExecutedStep(auditStep ?? fallbackStep(taskId, 'audit-close'), auditReport?.ok ?? false, auditReport, auditReport?.ok ? 'satisfied' : 'blocked'));
+  emitFinalizeProgress(onProgress, auditStep?.id ?? 'audit-close', auditReport?.ok ? 'satisfied' : 'blocked', auditStep?.summary ?? 'Close audit finished.', auditReport?.ok ?? false);
   return createPostExecutionReport(projectRoot, taskId, actor, requestedPlanHash, currentPlanHash, executedSteps, auditReport?.ok ? undefined : 'audit-close');
+}
+
+function emitFinalizeProgress(
+  onProgress: ((event: TaskFinalizeProgressEvent) => void) | undefined,
+  step: TaskFinalizeProgressEvent['step'],
+  phase: TaskFinalizeProgressEvent['phase'],
+  summary: string,
+  ok?: boolean
+): void {
+  onProgress?.({ step, phase, summary, ...(ok === undefined ? {} : { ok }) });
 }
 
 function createPostExecutionReport(

@@ -3,6 +3,7 @@ import { createTaskCloseRepairPlanReport, formatTaskCloseRepairPlanReport } from
 import { createTaskCompleteFlowReport, formatTaskCompleteFlowReport } from '../task/task-complete-flow';
 import { createTaskCreateReport, formatTaskCreateReport } from '../task/task-create';
 import { createTaskFinalizeReport, formatTaskFinalizeReport } from '../task/task-finalize';
+import type { TaskFinalizeProgressEvent } from '../task/task-finalize';
 import { createTaskLifecycleReport, formatTaskLifecycleReport } from '../task/task-lifecycle';
 import { createTaskReadyReport } from '../task/task-ready';
 import { createTaskFinishReport, formatTaskFinishReport } from '../task/task-finish';
@@ -174,10 +175,12 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
     if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'task.finalize')) return true;
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) throw new Error('task finalize requires --task <task-id>');
+    const executeRequested = getFlag(input.args, '--execute');
     const report = createTaskFinalizeReport(input.projectRoot, id, {
-      executeRequested: getFlag(input.args, '--execute'),
+      executeRequested,
       planHash: getStringOption(input.args, '--plan-hash'),
-      actor: getActorContextOption(input.args)
+      actor: getActorContextOption(input.args),
+      onProgress: executeRequested ? createTaskFinalizeProgressWriter(id) : undefined
     });
     attachCliDiagnostics(report, startedAtMs, 'task.finalize');
     if (input.jsonOutput) {
@@ -260,6 +263,13 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   return false;
+}
+
+function createTaskFinalizeProgressWriter(taskId: string): (event: TaskFinalizeProgressEvent) => void {
+  return (event) => {
+    const ok = event.ok === undefined ? '' : ` ok=${event.ok}`;
+    process.stderr.write(`[HADARA] task finalize ${taskId}: ${event.step} ${event.phase}${ok} - ${event.summary}\n`);
+  };
 }
 
 function attachCliDiagnostics<T extends { diagnostics?: TaskCliDiagnostics }>(report: T, startedAtMs: number, commandPath: string): T {

@@ -196,8 +196,13 @@ describe('task finalize dry-run plan', () => {
     completeTask(root, task.id, task.dir);
     markStateDocsCurrent(root, task.id);
     const plan = createTaskFinalizeReport(root, task.id);
+    const progress: string[] = [];
 
-    const report = createTaskFinalizeReport(root, task.id, { executeRequested: true, planHash: plan.planHash });
+    const report = createTaskFinalizeReport(root, task.id, {
+      executeRequested: true,
+      planHash: plan.planHash,
+      onProgress: (event) => progress.push(`${event.step}:${event.phase}:${event.ok ?? 'unknown'}`)
+    });
 
     expect(report).toMatchObject({
       ok: true,
@@ -215,6 +220,16 @@ describe('task finalize dry-run plan', () => {
     });
     expect(report.execution?.executedSteps.map((step) => step.id)).toEqual(['finish', 'ready', 'close', 'audit-close']);
     expect(report.execution?.executedSteps.find((step) => step.id === 'close')).toMatchObject({ status: 'executed', ok: true, writeBoundary: 'evidence-append' });
+    expect(progress).toEqual(expect.arrayContaining([
+      'ready:start:unknown',
+      'ready:satisfied:true',
+      'close:start:unknown',
+      'close:executed:true',
+      'refresh:start:unknown',
+      'refresh:satisfied:true',
+      'audit-close:start:unknown',
+      'audit-close:satisfied:true'
+    ]));
     expect(snapshotFiles(root)[`tasks/${task.id}-finalize-execute-close/evidence.jsonl`]).toContain('Task close validation');
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
   });
