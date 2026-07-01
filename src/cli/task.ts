@@ -1,5 +1,4 @@
 import { createTaskAuditCloseReport, createTaskCloseReport, createTaskCloseSourceReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../task/task-close';
-import { createTaskCloseRepairPlanReport, formatTaskCloseRepairPlanReport } from '../task/task-close-repair-plan';
 import { createTaskCompleteFlowReport, formatTaskCompleteFlowReport } from '../task/task-complete-flow';
 import { createTaskCreateReport, formatTaskCreateReport } from '../task/task-create';
 import { createTaskFinalizeReport, formatTaskFinalizeReport } from '../task/task-finalize';
@@ -202,19 +201,6 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
       console.log(JSON.stringify(report, null, 2));
     } else {
       console.log(formatTaskLifecycleReport(report));
-    }
-    if (!report.ok) process.exitCode = 6;
-    return true;
-  }
-
-  if (sub === 'close-repair-plan') {
-    const id = getStringOption(input.args, '--task') ?? input.args[2];
-    if (!id || id.startsWith('--')) throw new Error('task close-repair-plan requires --task <task-id>');
-    const report = createTaskCloseRepairPlanReport(input.projectRoot, id, { actor: getActorContextOption(input.args) });
-    if (input.jsonOutput) {
-      console.log(JSON.stringify(report, null, 2));
-    } else {
-      console.log(formatTaskCloseRepairPlanReport(report));
     }
     if (!report.ok) process.exitCode = 6;
     return true;

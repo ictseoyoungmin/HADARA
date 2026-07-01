@@ -335,26 +335,28 @@ function buildFastWorkbenchNextActions(
       sourceIssueCodes: ['EVIDENCE_JSONL_EMPTY']
     });
   }
-  if (closed || closeEvidenceFound) {
+  if (!closed && closeEvidenceFound) {
     actions.push({
-      id: 'audit-close',
-      kind: 'audit',
-      required: false,
-      priority: 'soon',
-      command: `hadara task audit-close --task ${taskId} --json`,
-      message: 'Audit the existing close evidence in a read-only pass.',
-      sourceIssueCodes: ['TASK_CLOSE_EVIDENCE_PRESENT']
-    });
-  }
-  if (!closed && closePlanOk) {
-    actions.push({
-      id: 'review-close-plan',
+      id: 'review-finalize-repair-plan',
       kind: 'command',
       required: true,
       priority: 'now',
-      command: `hadara task close --task ${taskId} --json`,
-      executeCommand: `hadara task close --task ${taskId} --execute --json`,
-      message: 'Review the close plan, then append close audit evidence if it still passes.',
+      command: `hadara task finalize --task ${taskId} --json`,
+      executeCommand: `hadara task finalize --task ${taskId} --execute --plan-hash <planHash> --json`,
+      message: 'Close evidence exists but is not currently valid. Review finalize dry-run and repair through guarded finalize execute.',
+      sourceIssueCodes: ['TASK_CLOSE_EVIDENCE_REPAIR_REQUIRED'],
+      loopBoundary: true
+    });
+  }
+  if (!closed && !closeEvidenceFound && closePlanOk) {
+    actions.push({
+      id: 'review-finalize-plan',
+      kind: 'command',
+      required: true,
+      priority: 'now',
+      command: `hadara task finalize --task ${taskId} --json`,
+      executeCommand: `hadara task finalize --task ${taskId} --execute --plan-hash <planHash> --json`,
+      message: 'Review the finalize dry-run, inspect the plan hash, then execute the matching finalize plan if it still applies.',
       sourceIssueCodes: ['TASK_CLOSE_READY'],
       loopBoundary: true
     });

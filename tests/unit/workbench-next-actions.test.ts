@@ -46,7 +46,7 @@ describe('workbench next actions', () => {
     expect(validateSchema('hadara.task.workbench.v1', fixtureReport(actions)).ok).toBe(true);
   });
 
-  it('suggests close dry-run with paired execute command when a task is ready', () => {
+  it('suggests finalize dry-run with paired execute command when a task is ready', () => {
     const actions = buildWorkbenchNextActions({
       taskId: 'T-0172',
       closed: false,
@@ -58,15 +58,15 @@ describe('workbench next actions', () => {
 
     expect(actions).toEqual([
       expect.objectContaining({
-        id: 'review-close-plan',
-        command: 'hadara task close --task T-0172 --json',
-        executeCommand: 'hadara task close --task T-0172 --execute --json',
+        id: 'review-finalize-plan',
+        command: 'hadara task finalize --task T-0172 --json',
+        executeCommand: 'hadara task finalize --task T-0172 --execute --plan-hash <planHash> --json',
         loopBoundary: true
       })
     ]);
   });
 
-  it('suggests audit-close for closed tasks', () => {
+  it('does not suggest lifecycle work for closed-valid tasks', () => {
     const actions = buildWorkbenchNextActions({
       taskId: 'T-0172',
       closed: true,
@@ -76,13 +76,7 @@ describe('workbench next actions', () => {
       issues: []
     });
 
-    expect(actions).toEqual([
-      expect.objectContaining({
-        id: 'audit-close',
-        kind: 'audit',
-        command: 'hadara task audit-close --task T-0172 --json'
-      })
-    ]);
+    expect(actions).toEqual([]);
   });
 
   it('does not require handoff refresh for warning-only closed-valid status drift', () => {
@@ -102,12 +96,12 @@ describe('workbench next actions', () => {
       ]
     });
 
-    expect(actions.map((action) => action.id)).toEqual(['audit-close']);
+    expect(actions.map((action) => action.id)).toEqual([]);
     expect(actions.some((action) => action.id === 'update-handoff' || action.required)).toBe(false);
     expect(validateSchema('hadara.task.workbench.v1', fixtureReport(actions)).ok).toBe(true);
   });
 
-  it('keeps error-level handoff issues actionable even after close', () => {
+  it('does not suggest lifecycle work for closed-valid tasks even with handoff issues', () => {
     const actions = buildWorkbenchNextActions({
       taskId: 'T-0172',
       closed: true,
@@ -124,11 +118,10 @@ describe('workbench next actions', () => {
       ]
     });
 
-    expect(actions).toContainEqual(expect.objectContaining({ id: 'update-handoff', required: true }));
-    expect(actions).toContainEqual(expect.objectContaining({ id: 'audit-close', required: false }));
+    expect(actions).toEqual([]);
   });
 
-  it('pairs close execute commands with dry-run commands when converting close actions', () => {
+  it('pairs close actions with finalize commands when converting close actions', () => {
     const actions = buildWorkbenchNextActions({
       taskId: 'T-0172',
       closed: false,
@@ -149,9 +142,9 @@ describe('workbench next actions', () => {
 
     expect(actions).toContainEqual(
       expect.objectContaining({
-        id: 'review-close-plan',
-        command: 'hadara task close --task T-0172 --json',
-        executeCommand: 'hadara task close --task T-0172 --execute --json'
+        id: 'review-finalize-plan',
+        command: 'hadara task finalize --task T-0172 --json',
+        executeCommand: 'hadara task finalize --task T-0172 --execute --plan-hash <planHash> --json'
       })
     );
   });
@@ -174,7 +167,7 @@ describe('workbench next actions', () => {
       issues: []
     });
 
-    expect(actions[0]).toMatchObject({ id: 'review-close-plan' });
+    expect(actions[0]).toMatchObject({ id: 'review-finalize-plan' });
     expect(Object.prototype.hasOwnProperty.call(actions[0], 'loopBoundary')).toBe(false);
     expect(validateSchema('hadara.task.workbench.v1', fixtureReport(actions)).ok).toBe(true);
   });
@@ -200,7 +193,7 @@ describe('workbench next actions', () => {
     expect(validateSchema('hadara.task.workbench.v1', fixtureReport(actions)).ok).toBe(true);
   });
 
-  it('can suggest audit and close actions together when close evidence exists but is not valid', () => {
+  it('suggests finalize repair when close evidence exists but is not valid', () => {
     const actions = buildWorkbenchNextActions({
       taskId: 'T-0172',
       closed: false,
@@ -211,7 +204,7 @@ describe('workbench next actions', () => {
       issues: []
     });
 
-    expect(actions.map((action) => action.id)).toEqual(['review-close-plan', 'audit-close']);
+    expect(actions.map((action) => action.id)).toEqual(['review-finalize-repair-plan']);
     expect(validateSchema('hadara.task.workbench.v1', fixtureReport(actions)).ok).toBe(true);
   });
 });
@@ -253,6 +246,12 @@ function fixtureReport(nextActions: ReturnType<typeof buildWorkbenchNextActions>
       protocolTask: { ok: true, issues: 0 },
       protocolDocs: { ok: true, issues: 0 },
       protocolProfile: { ok: true, issues: 0 }
+    },
+    loop: {
+      phase: 'finalize-dry-run',
+      summary: 'Fixture loop.',
+      statusCommand: 'hadara task status --task T-0172 --json',
+      deprecatedCommands: []
     },
     issues: [],
     nextActions

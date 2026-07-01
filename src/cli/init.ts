@@ -1263,7 +1263,7 @@ record evidence
 finish task docs and shared state
 review finalize plan
 execute finalize with the reviewed plan hash
-audit close proof
+stop when finalize returns closed-valid
 \`\`\`
 
 Use the high-level lifecycle path for ordinary work:
@@ -1280,7 +1280,6 @@ Low-level lifecycle commands are for debugging, recovery, or command implementat
 hadara task finish --task T-XXXX --json
 hadara task ready --task T-XXXX --level done --json
 hadara task close --task T-XXXX --json
-hadara task close-repair-plan --task T-XXXX --json
 \`\`\`
 
 ## Finalize Entry Gate
@@ -1334,13 +1333,12 @@ Evidence must reflect real execution results. Fabricated or assumed results are 
 ## Repair and Diagnostics
 
 \`\`\`bash
-hadara task close-repair-plan --task T-XXXX --json
 hadara task audit-close --task T-XXXX --json
 hadara harness validate --task T-XXXX --level done --json
 hadara init doctor --json
 \`\`\`
 
-Use repair and diagnostic commands when lifecycle or finalize reports blockers. Do not repair close proof by editing evidence files by hand.
+Use finalize dry-run as the ordinary close-proof repair plan. Use diagnostics when finalize reports blockers. Do not repair close proof by editing evidence files by hand.
 
 Agents must not run \`task finalize --execute\` without inspecting the dry-run output and using the current \`planHash\` from that reviewed dry-run.
 
@@ -1361,7 +1359,7 @@ Agents must not run \`task finalize --execute\` without inspecting the dry-run o
 | Find evidence ids | \`hadara evidence summary --task T-XXXX --json\` | Compact copy hints. |
 | Review loop phase | \`hadara task status --task T-XXXX --json\` | Normal lifecycle state and next action. |
 | Close ordinary work | \`hadara task finalize --task T-XXXX --json\` then execute with its \`planHash\` | Default close path. |
-| Diagnose close drift | \`hadara task close-repair-plan --task T-XXXX --json\` | Read-only repair plan. |
+| Repair close drift | \`hadara task finalize --task T-XXXX --json\` then execute with its \`planHash\` | Default repair path for stale close proof. |
 | Register project-specific docs | \`hadara docs register --path <path> --json\` | 0.4 registry surface. Canonical state belongs in \`.hadara/docs-registry.json\`; use registry-backed help for exact options. |
 | Discover command details | \`hadara help lifecycle\`, \`hadara help command <id>\`, \`hadara commands --json\` | Prefer registry-backed help over copied command tables. |
 
@@ -1768,7 +1766,7 @@ Use distinct token families for persistent task state, close proof state, docume
 
 \`DocStatus\` belongs only to the docs registry and uses \`canonical\`, \`active\`, \`reference\`, \`historical\`, \`superseded\`, and \`archived\`. Evidence outcomes are \`passed\`, \`failed\`, \`blocked\`, and \`unknown\`; preserve failed or blocked evidence and append newer corrective evidence instead of rewriting history.
 
-Ownership boundaries follow the lifecycle command model. \`task finalize --execute --plan-hash <hash>\` is the default 0.3.3 agent close path and preserves the underlying write boundaries: \`task finish --execute\` owns bounded status bookkeeping in \`TASK.md\` and command-owned \`docs/TASK_BOARD.md\` cells, and \`task close --execute\` owns only close evidence append. Operators own close-source prose and shared state docs before finalize execute, then rerun finalize or the low-level ready/close/audit sequence after any intentional close-source edit.
+Ownership boundaries follow the lifecycle command model. \`task finalize --execute --plan-hash <hash>\` is the default 0.3.3 agent close and close-proof repair path and preserves the underlying write boundaries: \`task finish --execute\` owns bounded status bookkeeping in \`TASK.md\` and command-owned \`docs/TASK_BOARD.md\` cells, and close execution owns only close evidence append. Operators own close-source prose and shared state docs before finalize execute, then rerun finalize after any intentional close-source edit.
 
 ## Standard Task Workflow Loop
 
@@ -1802,11 +1800,10 @@ hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 | \`task next\` | Read-only compatibility | Planned removal candidate; prefer \`task status --json\`. |
 | \`evidence add-command\` | Write | Appends command-log evidence; does not execute shell commands; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, and optional \`--idempotency-key\` prevents duplicate same-key records. |
 | \`task lifecycle\` | Read-only compatibility | Planned removal candidate; prefer \`task status --task T-XXXX --json\`. |
-| \`task close-repair-plan\` | Read-only | Classifies close proof repair state and exact repair command. |
 | \`task finalize\` | Read-only by default; guarded execute requires \`--plan-hash\` | Default agent close path. Rechecks the current plan hash, executes phases serially, stops on blockers, and preserves finish/close write boundaries. |
 | \`task finish\` / \`task ready\` / \`task close\` / \`task audit-close\` | Low-level proof-boundary commands | Use directly for debugging, recovery, or command implementation work. |
 
-Before running \`task finalize --execute\`, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, \`docs/TASK_BOARD.md\`, and tracked state docs such as \`docs/PROJECT_STATE.md\`, \`docs/AGENT_HANDOFF.md\`, and roadmap/slice docs when they apply. After finalize closes the task, do not edit those close-source documents unless you intend to rerun finalize or the low-level \`task ready\`, \`task close\`, and \`task audit-close\` sequence. Avoid writing volatile close evidence ids into close-source docs; use stable wording such as "close evidence appended; audit returned closed-valid".
+Before running \`task finalize --execute\`, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, \`docs/TASK_BOARD.md\`, and tracked state docs such as \`docs/PROJECT_STATE.md\`, \`docs/AGENT_HANDOFF.md\`, and roadmap/slice docs when they apply. After finalize closes the task, do not edit those close-source documents unless you intend to rerun finalize and execute its fresh repair plan. Avoid writing volatile close evidence ids into close-source docs; use stable wording such as "close evidence appended; audit returned closed-valid".
 
 ## Validation
 
@@ -2117,7 +2114,6 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 | \`task create\` | Write | Creates a Draft Task Capsule and Task Board row. It does not imply the task is ready or done. |
 | \`evidence add-command\` | Write | Appends operator-supplied command-log evidence. It does not execute shell commands or capture stdout/stderr; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, and optional \`--idempotency-key\` prevents duplicate same-key records. |
 | \`task lifecycle\` | Read-only compatibility | Planned removal candidate; prefer \`task status --task T-XXXX --json\`. |
-| \`task close-repair-plan\` | Read-only | Classifies close proof repair state and exact repair command. |
 | \`task finalize\` | Read-only by default; guarded execute requires \`--plan-hash\` | Default agent close path. Rechecks the current plan hash, executes phases serially, stops on blockers, and succeeds only after final audit is \`closed-valid\`. |
 | \`task finish\` / \`task ready\` / \`task close\` / \`task audit-close\` | Low-level proof-boundary commands | Use directly for debugging, recovery, or command implementation work. |
 | \`task complete\` | Legacy read-only workflow compressor | Summarizes the current completion stage and next command; prefer \`task status\` and \`task finalize\` for current agent flows. |
@@ -2130,8 +2126,7 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 - \`harness validate\` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence.
 - \`task complete\` is a legacy read-only workflow compressor. It may report the next lifecycle command, but it must not execute finish, ready, close, or audit commands. Prefer \`task lifecycle\` and \`task finalize\` for 0.3.3 agent flows.
 - \`task lifecycle\` is the read-only normalized phase API for agents.
-- \`task close-repair-plan\` is a read-only close-proof repair classifier.
-- \`task finalize\` is read-only by default. Guarded execute requires a matching current dry-run \`planHash\`, runs phases serially, stops on blockers, and returns success only after \`task audit-close\` is \`closed-valid\`.
+- \`task finalize\` is read-only by default and owns close-proof repair planning. Guarded execute requires a matching current dry-run \`planHash\`, runs phases serially, stops on blockers, and returns success only after the final audit is \`closed-valid\`.
 - \`evidence list\` is the supported evidence id discovery surface. Text output shows \`[id] time | category/outcome | visibility | summary\`; JSON records expose \`id\`, \`idSource\`, \`idStability\`, \`persistedSchemaVersion\`, \`category\`, \`outcome\`, and \`tags\`. Use durable persisted \`ev:\` ids for long-lived \`--resolves\` and \`--supersedes\` references. Legacy compatibility ids are inspection-only and are not the preferred durable reference.
 - \`evidence add-command\` records an operator-supplied command result; it does not run the command. \`--category\` and \`--outcome\` set persisted v2 metadata explicitly, while \`--result\` remains the legacy-compatible command result. When both are supplied, \`--result\` must match \`--outcome\` for \`passed\`, \`failed\`, \`blocked\`, and \`unknown\`; \`recorded\` and \`not-applicable\` require \`--result unknown\` or no explicit \`--result\`. \`--resolves\` and \`--supersedes\` append exact v2 resolution tags from passed or recorded follow-up evidence. \`--idempotency-key\` is optional; when supplied, same-key repeats return the existing record without appending duplicate Markdown or JSONL rows.
 - Evidence v2 deferred scope remains explicit: rebuild preview/execute, \`check-id\`, \`subject\`, and a new add-command report schema id are future candidates. Do not infer those commands or schema changes from the current \`evidence list\` and \`evidence add-command\` ergonomics.

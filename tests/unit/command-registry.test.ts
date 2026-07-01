@@ -27,7 +27,6 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'task.complete',
   'task.finalize',
   'task.lifecycle',
-  'task.close-repair-plan',
   'task.close-source',
   'task.finish',
   'task.upgrade-scaffold',

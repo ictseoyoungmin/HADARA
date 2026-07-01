@@ -52,8 +52,8 @@ describe('task finalize dry-run plan', () => {
         skippedReports: ['ready', 'close', 'audit-close']
       },
       primaryNextAction: {
-        id: 'finalize-finish',
-        command: `hadara task finish --task ${task.id} --execute --json`,
+        id: 'finalize-execute-reviewed-plan',
+        command: `hadara task finalize --task ${task.id} --execute --plan-hash ${report.planHash} --json`,
         writeBoundary: 'task-local',
         summary: 'Apply bounded finish bookkeeping. Then finalize will re-evaluate ready, close, audit-close and may stop if blockers appear.'
       },
@@ -132,10 +132,10 @@ describe('task finalize dry-run plan', () => {
     ]);
     expect(report.summary).toMatchObject({ required: 1, blocked: 0, satisfied: 2, deferredChecks: ['audit-close'], partialExecutionRisk: true });
     expect(report.primaryNextAction).toMatchObject({
-      id: 'finalize-close',
-      command: `hadara task close --task ${task.id} --execute --json`,
+      id: 'finalize-execute-reviewed-plan',
+      command: `hadara task finalize --task ${task.id} --execute --plan-hash ${report.planHash} --json`,
       writeBoundary: 'evidence-append',
-      summary: 'Append close evidence after reviewing close dry-run. Then finalize will re-evaluate audit-close and may stop if blockers appear.'
+      summary: 'Append close evidence through finalize execute. Then finalize will re-evaluate audit-close and may stop if blockers appear.'
     });
     expect(report.primaryNextAction).not.toHaveProperty('message');
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'TASK_CLOSE_EVIDENCE_MISSING', severity: 'info' }));
@@ -259,7 +259,7 @@ describe('task finalize dry-run plan', () => {
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
   });
 
-  it('reports close-source drift as repair-required instead of closed-valid', () => {
+  it('repairs close-source drift through guarded finalize execute', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Finalize drift guidance');
     completeTask(root, task.id, task.dir);
@@ -271,15 +271,28 @@ describe('task finalize dry-run plan', () => {
     fs.appendFileSync(path.join(task.dir, 'HANDOFF.md'), '\nPost-close close-source edit.\n', 'utf8');
     const report = createTaskFinalizeReport(root, task.id);
 
-    expect(report.ok).toBe(false);
-    expect(report.steps.find((step) => step.id === 'audit-close')).toMatchObject({
+    expect(report.ok).toBe(true);
+    expect(report.state).toBe('closed-stale');
+    expect(report.planStatus).toBe('executable-with-deferred-checks');
+    expect(report.pendingWrites).toEqual([
+      {
+        step: 'close',
+        writeBoundary: 'evidence-append',
+        paths: [`tasks/${task.id}-finalize-drift-guidance/evidence.jsonl`]
+      }
+    ]);
+    expect(report.steps.find((step) => step.id === 'close')).toMatchObject({
       status: 'required',
-      summary: 'Close audit found close-source drift; review repair plan, then append fresh close proof.'
+      summary: 'Append fresh close evidence through finalize repair.'
+    });
+    expect(report.steps.find((step) => step.id === 'audit-close')).toMatchObject({
+      status: 'pending',
+      summary: 'Audit waits for close evidence.'
     });
     expect(report.primaryNextAction).toMatchObject({
-      id: 'finalize-review-close-repair-plan',
-      command: `hadara task close-repair-plan --task ${task.id} --json`,
-      writeBoundary: 'read-only'
+      id: 'finalize-repair-close-proof',
+      command: `hadara task finalize --task ${task.id} --execute --plan-hash ${report.planHash} --json`,
+      writeBoundary: 'evidence-append'
     });
     expect(report.issues).toEqual(
       expect.arrayContaining([
@@ -287,11 +300,20 @@ describe('task finalize dry-run plan', () => {
         expect.objectContaining({
           code: 'TASK_FINALIZE_CLOSE_SOURCE_DRIFT_GUIDANCE',
           severity: 'info',
-          example: `hadara task close-repair-plan --task ${task.id} --json`
+          example: `hadara task finalize --task ${task.id} --json`
         })
       ])
     );
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
+
+    const repaired = createTaskFinalizeReport(root, task.id, { executeRequested: true, planHash: report.planHash });
+
+    expect(repaired.ok).toBe(true);
+    expect(repaired.state).toBe('closed-valid');
+    expect(repaired.nextActions).toEqual([]);
+    expect(repaired.execution?.executedSteps.map((step) => step.id)).toEqual(['finish', 'ready', 'close', 'audit-close']);
+    expect(repaired.execution?.executedSteps.find((step) => step.id === 'close')).toMatchObject({ status: 'executed', ok: true });
+    expect(validateSchema('hadara.task.finalize.v1', repaired).ok).toBe(true);
   });
 
   it('routes the CLI task finalize command through the read-only report', () => {

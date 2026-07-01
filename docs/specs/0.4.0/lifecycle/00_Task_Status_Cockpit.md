@@ -26,7 +26,7 @@ It replaces the ordinary agent need to call separate next-work and lifecycle-pha
 | 6 | Update capsule and shared docs. | Rerun status if close-source or handoff state changed. |
 | 7 | Review finalize dry-run. | Run `task finalize --task T-XXXX --json` when the fast cockpit points to the finalize boundary. |
 | 8 | Execute reviewed finalize. | Run `task finalize --execute --plan-hash <hash>` after inspecting the dry-run. |
-| 9 | Stop or select next work. | If status/finalize reports `closed-valid`, do not run separate `audit-close` unless debugging. |
+| 9 | Stop or select next work. | If status/finalize reports `closed-valid`, no further lifecycle action is required. |
 
 ## Operating Rule
 

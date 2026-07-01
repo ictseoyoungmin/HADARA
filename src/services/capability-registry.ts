@@ -501,7 +501,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   {
     id: 'task.finalize',
     command: 'hadara task finalize --task <task-id> [--execute --plan-hash <hash>] [--json]',
-    summary: 'Create a reviewed finalize plan or execute the matching plan through the guarded lifecycle sequence.',
+    summary: 'Create a reviewed finalize or close-repair plan, then execute the matching guarded lifecycle sequence.',
     canonical: true,
     appearsInDefaultHelp: true,
     family: 'capsule-lifecycle',
@@ -518,12 +518,12 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     implementationFiles: ['src/cli/task.ts', 'src/task/task-finalize.ts'],
     testFiles: ['tests/unit/task-finalize.test.ts'],
     examples: [
-      example('Review finalize plan', 'hadara task finalize --task T-0001 --json', 'When an agent wants one reviewed finish/ready/close/audit plan before executing the default close path.'),
-      example('Execute reviewed finalize plan', 'hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json', 'After reviewing a current dry-run plan hash.')
+      example('Review finalize plan', 'hadara task finalize --task T-0001 --json', 'When an agent wants one reviewed finish/ready/close/audit or close-repair plan before executing the default close path.'),
+      example('Execute reviewed finalize plan', 'hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json', 'After reviewing a current dry-run plan hash, including stale close-proof repair plans.')
     ],
     related: ['task.lifecycle', 'task.finish', 'task.ready', 'task.close', 'task.audit-close'],
     conflictsWith: [],
-    notes: 'Default mode is read-only. Execute requires a matching current dry-run plan hash, runs phases serially, preserves the underlying finish/close write boundaries, and stops on the first blocker.'
+    notes: 'Default mode is read-only. Execute requires a matching current dry-run plan hash, runs phases serially, preserves the underlying finish/close write boundaries, repairs stale close proof by appending fresh close evidence when the plan requires it, and stops on the first blocker.'
   },
   {
     id: 'task.lifecycle',
@@ -549,30 +549,6 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     related: ['task.status', 'task.finish', 'task.ready', 'task.close', 'task.audit-close'],
     conflictsWith: [],
     notes: 'Planned removal candidate. `hadara task status --task <task-id> --json` owns default phase and next-action guidance.'
-  },
-  {
-    id: 'task.close-repair-plan',
-    command: 'hadara task close-repair-plan --task <task-id> [--json]',
-    summary: 'Diagnose stale, invalid, duplicate, or missing close proof state and return repair next actions.',
-    canonical: true,
-    appearsInDefaultHelp: false,
-    family: 'capsule-lifecycle',
-    scope: 'capsule',
-    lifecycleStage: 'inspect',
-    requiredness: 'conditional',
-    writeBoundary: 'read-only',
-    readOnly: true,
-    risk: 'low',
-    actor: 'agent-worker',
-    status: 'stable',
-    schemaVersion: 'hadara.task.closeRepairPlan.v1',
-    docs: TASK_DOCS,
-    implementationFiles: ['src/cli/task.ts', 'src/task/task-close-repair-plan.ts'],
-    testFiles: ['tests/unit/task-close-repair-plan.test.ts'],
-    examples: [example('Plan close repair', 'hadara task close-repair-plan --task T-0001 --json', 'When audit-close reports missing, stale, invalid, or duplicate close proof state.')],
-    related: ['task.lifecycle', 'task.close', 'task.audit-close'],
-    conflictsWith: [],
-    notes: 'Conditional repair diagnostic only. Ordinary capsules should use task status and finalize; this command is read-only and does not append replacement close evidence.'
   },
   {
     id: 'task.finish',

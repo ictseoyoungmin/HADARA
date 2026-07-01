@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { handleTaskCommand } from '../../src/cli/task';
 import { validateSchema } from '../../src/core/schema';
 import { appendEvidence } from '../../src/evidence/evidence';
 import { createTaskCapsule } from '../../src/task/task-capsule';
@@ -113,27 +112,6 @@ describe('task close repair plan', () => {
     expect(report.causes).toContainEqual(expect.objectContaining({ code: 'CLOSE_REPAIR_NOT_NEEDED' }));
   });
 
-  it('routes the CLI task close-repair-plan command through the read-only report', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'CLI close repair');
-    completeTask(root, task.id, task.dir);
-    const output: string[] = [];
-    const originalLog = console.log;
-    console.log = (message?: unknown) => {
-      output.push(String(message));
-    };
-    try {
-      expect(handleTaskCommand({ args: ['task', 'close-repair-plan', '--task', task.id, '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-    } finally {
-      console.log = originalLog;
-    }
-
-    const report = JSON.parse(output.join('\n'));
-    expect(report.schemaVersion).toBe('hadara.task.closeRepairPlan.v1');
-    expect(report.command).toBe('task.close-repair-plan');
-    expect(report.classification).toBe('not-closed');
-    expect(process.exitCode).toBeUndefined();
-  });
 });
 
 function appendCloseEvidence(root: string, taskId: string): void {

@@ -366,7 +366,14 @@ describe('task workbench status report', () => {
       closed: false,
       auditable: true
     });
-    expect(report.nextActions).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'audit-close' })]));
+    expect(report.nextActions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'review-finalize-repair-plan',
+          command: `hadara task finalize --task ${task.id} --json`
+        })
+      ])
+    );
     expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
   });
 
@@ -396,6 +403,7 @@ describe('task workbench status report', () => {
       closed: true,
       auditable: true
     });
+    expect(report.nextActions).toEqual([]);
     expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
   });
 

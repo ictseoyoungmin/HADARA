@@ -179,7 +179,7 @@ Use distinct token families for persistent task state, close proof state, docume
 
 `DocStatus` belongs only to the docs registry and uses `canonical`, `active`, `reference`, `historical`, `superseded`, and `archived`. Evidence outcomes are `passed`, `failed`, `blocked`, and `unknown`; preserve failed or blocked evidence and append newer corrective evidence instead of rewriting history.
 
-Ownership boundaries follow the lifecycle command model. `task finalize --execute --plan-hash <hash>` is the default 0.3.3 agent close path and preserves the underlying write boundaries: `task finish --execute` owns bounded status bookkeeping in `TASK.md` and command-owned `docs/TASK_BOARD.md` cells, and `task close --execute` owns only close evidence append. Operators own close-source prose and shared state docs before finalize execute, then rerun finalize or the low-level ready/close/audit sequence after any intentional close-source edit.
+Ownership boundaries follow the lifecycle command model. `task finalize --execute --plan-hash <hash>` is the default 0.3.3 agent close and close-proof repair path and preserves the underlying write boundaries: `task finish --execute` owns bounded status bookkeeping in `TASK.md` and command-owned `docs/TASK_BOARD.md` cells, and close execution owns only close evidence append. Operators own close-source prose and shared state docs before finalize execute, then rerun finalize after any intentional close-source edit.
 
 ## Standard Task Workflow Loop
 
@@ -212,11 +212,10 @@ hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 | `evidence summary` | Read-only | Shows compact evidence ids, latest evidence, and latest close evidence for copy/paste into docs or resolution markers. |
 | `evidence add-command` | Write | Appends command-log evidence; does not execute shell commands; optional `--category`/`--outcome`/`--resolves`/`--supersedes` enrich v2 metadata, result/outcome mismatches are rejected, and optional `--idempotency-key` prevents duplicate same-key records. |
 | `task lifecycle` | Read-only compatibility | Planned removal candidate; prefer `task status --task T-XXXX --json`. |
-| `task close-repair-plan` | Read-only | Classifies close proof repair state and exact repair command. |
-| `task finalize` | Read-only by default; guarded execute requires `--plan-hash` | Default agent close path. Rechecks the current plan hash, executes phases serially, stops on blockers, and preserves finish/close write boundaries. |
+| `task finalize` | Read-only by default; guarded execute requires `--plan-hash` | Default agent close and close-proof repair path. Rechecks the current plan hash, executes phases serially, stops on blockers, and preserves finish/close write boundaries. |
 | `task finish` / `task ready` / `task close` / `task audit-close` | Low-level proof-boundary commands | Use directly for debugging, recovery, or command implementation work. |
 
-Before running `task finalize --execute`, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, `docs/TASK_BOARD.md`, and tracked state docs such as `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, and `docs/DEVELOPMENT_SLICES.md` when they apply. After finalize closes the task, do not edit those close-source documents unless you intend to rerun finalize or the low-level `task ready`, `task close`, and `task audit-close` sequence. Avoid writing volatile close evidence ids into close-source docs; use stable wording such as "close evidence appended; audit returned closed-valid".
+Before running `task finalize --execute`, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, `docs/TASK_BOARD.md`, and tracked state docs such as `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, and `docs/DEVELOPMENT_SLICES.md` when they apply. After finalize closes the task, do not edit those close-source documents unless you intend to rerun finalize and execute its fresh repair plan. Avoid writing volatile close evidence ids into close-source docs; use stable wording such as "close evidence appended; audit returned closed-valid".
 
 For dry-run-first remediation commands outside the ordinary close loop, follow the reviewed-hash pattern:
 
@@ -302,7 +301,7 @@ Then run built-CLI smokes through `node /workspace/dist/cli/main.js ... --projec
 4. Finalize Task Capsule docs and tracked state docs before close so the close source hash remains stable.
 5. Run `hadara task status --task <task-id> --json` when you need a compact phase check or next action.
 6. Run `hadara task finalize --task <task-id> --json`, review the current plan hash and write boundaries, then execute `hadara task finalize --task <task-id> --execute --plan-hash <hash> --json`.
-7. Use low-level `task finish`, `task ready`, `task close`, and `task audit-close` only when debugging or repairing one proof boundary directly.
+7. Use low-level `task finish`, `task ready`, `task close`, and `task audit-close` only when debugging or implementing one proof boundary directly.
 8. Add security, release, install, provider, MCP, dashboard, or deployment smoke checks only after those surfaces exist and are documented for this project.
 9. If a required check cannot run, record the reason and residual risk in `EVIDENCE.md`, `evidence.jsonl`, and `HANDOFF.md`.
 

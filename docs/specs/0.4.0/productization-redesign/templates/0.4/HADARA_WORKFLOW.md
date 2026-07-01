@@ -116,7 +116,7 @@ record evidence
 finish task docs and shared state
 review finalize plan
 execute finalize with the reviewed plan hash
-audit close proof
+stop when finalize returns closed-valid
 ```
 
 Use the high-level lifecycle path for ordinary work:
@@ -134,7 +134,6 @@ Low-level lifecycle commands are for debugging, recovery, or command implementat
 hadara task finish --task T-XXXX --json
 hadara task ready --task T-XXXX --level done --json
 hadara task close --task T-XXXX --json
-hadara task close-repair-plan --task T-XXXX --json
 ```
 
 ## Lifecycle Entry Gate
@@ -188,13 +187,12 @@ Evidence must reflect real execution results. Fabricated, assumed, or aspiration
 ## Repair and Diagnostics
 
 ```bash
-hadara task close-repair-plan --task T-XXXX --json
-hadara task audit-close --task T-XXXX --json
+hadara task finalize --task T-XXXX --json
 hadara harness validate --task T-XXXX --level done --json
 hadara init doctor --json
 ```
 
-Use repair and diagnostic commands when lifecycle or finalize reports blockers. Do not repair close proof by editing evidence files by hand.
+Use finalize dry-run as the ordinary close-proof repair plan. Use diagnostics when finalize reports blockers. Do not repair close proof by editing evidence files by hand.
 
 Agents must not run `task finalize --execute` without inspecting the dry-run output and using the current `planHash` from that reviewed dry-run.
 
@@ -214,7 +212,7 @@ Agents must not run `task finalize --execute` without inspecting the dry-run out
 | Find evidence ids | `hadara evidence summary --task T-XXXX --json` | Compact copy hints. |
 | Review close path | `hadara task lifecycle --task T-XXXX --json` | Normal lifecycle state. |
 | Close ordinary work | `hadara task finalize --task T-XXXX --json` then execute with its `planHash` | Default close path. |
-| Diagnose close drift | `hadara task close-repair-plan --task T-XXXX --json` | Read-only repair plan. |
+| Repair close drift | `hadara task finalize --task T-XXXX --json` then execute with its `planHash` | Default repair path for stale close proof. |
 | Register project-specific docs | `hadara docs register --path <path> --json` | 0.4 registry surface. Canonical state belongs in `.hadara/docs-registry.json`; use registry-backed help for exact options. |
 | Discover command details | `hadara help lifecycle`, `hadara help command <id>`, `hadara commands --json` | Prefer registry-backed help over copied command tables. |
 

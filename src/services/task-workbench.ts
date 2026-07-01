@@ -278,7 +278,7 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
         closeActions: closePlan?.nextActions ?? [],
         issues
       })
-    : buildFastWorkbenchNextActions({ taskId, closedValid, closeEvidenceFound, evidenceRecords: evidenceList.count, authoringGuidance });
+    : buildFastWorkbenchNextActions({ taskId, closedValid, closeEvidenceFound, evidenceRecords: evidenceList.count, authoringGuidance, closeState });
   const loop = buildTaskStatusLoopGuidance(taskId, {
     taskStatus: taskShow.task.status,
     taskBoardStatus: taskBoard.status,
@@ -497,19 +497,23 @@ function buildFastWorkbenchNextActions(input: {
   taskId: string;
   closedValid: boolean;
   closeEvidenceFound: boolean;
+  closeState: CloseState;
   evidenceRecords: number;
   authoringGuidance: TaskAuthoringGuidance;
 }): WorkbenchNextAction[] {
-  if (input.closedValid || input.closeEvidenceFound) {
+  if (input.closedValid) return [];
+  if (input.closeEvidenceFound) {
     return [
       {
-        id: 'audit-close',
-        kind: 'audit',
-        required: false,
-        priority: 'soon',
-        command: `hadara task audit-close --task ${input.taskId} --json`,
-        message: 'Audit the existing close evidence in a read-only pass.',
-        sourceIssueCodes: ['TASK_CLOSE_EVIDENCE_PRESENT']
+        id: 'review-finalize-repair-plan',
+        kind: 'command',
+        required: true,
+        priority: 'now',
+        command: `hadara task finalize --task ${input.taskId} --json`,
+        executeCommand: `hadara task finalize --task ${input.taskId} --execute --plan-hash <planHash> --json`,
+        message: 'Close evidence exists but is not valid in the fast projection. Review finalize dry-run and repair through guarded finalize execute.',
+        sourceIssueCodes: [input.closeState === 'close-evidence-malformed' ? 'TASK_CLOSE_EVIDENCE_MALFORMED' : 'TASK_CLOSE_EVIDENCE_INVALID'],
+        loopBoundary: true
       }
     ];
   }
@@ -754,7 +758,7 @@ function buildTaskStatusLoopGuidance(
   if (input.closedValid) {
     return {
       phase: 'closed-valid',
-      summary: 'This Task Capsule has valid close proof. Do not run a separate audit-close unless debugging or repairing close evidence.',
+      summary: 'This Task Capsule has valid close proof. No further lifecycle action is required.',
       statusCommand: `hadara task status --task ${taskId} --json`,
       deprecatedCommands: deprecatedStatusCommands()
     };

@@ -25,6 +25,8 @@ export interface WorkbenchNextActionInput {
 }
 
 export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): WorkbenchNextAction[] {
+  if (input.closed) return [];
+
   const actions = new Map<string, WorkbenchNextAction>();
 
   for (const issue of input.issues) {
@@ -55,23 +57,21 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
     });
   }
 
-  if (input.closed || input.closeEvidenceFound) {
+  if (!input.closed && input.closeEvidenceFound) {
     upsert(actions, {
-      id: 'audit-close',
-      kind: 'audit',
-      required: false,
-      priority: 'soon',
-      command: `hadara task audit-close --task ${input.taskId} --json`,
-      message: 'Audit the existing close evidence in a read-only pass.',
-      sourceIssueCodes: ['TASK_CLOSE_EVIDENCE_PRESENT']
+      id: 'review-finalize-repair-plan',
+      kind: 'command',
+      required: true,
+      priority: 'now',
+      command: `hadara task finalize --task ${input.taskId} --json`,
+      executeCommand: `hadara task finalize --task ${input.taskId} --execute --plan-hash <planHash> --json`,
+      message: 'Close evidence exists but is not currently valid. Review finalize dry-run and repair through guarded finalize execute.',
+      sourceIssueCodes: ['TASK_CLOSE_EVIDENCE_REPAIR_REQUIRED'],
+      loopBoundary: true
     });
   }
 
-  if (input.closed) {
-    return Array.from(actions.values()).sort(compareActions);
-  }
-
-  if (input.closePlanOk) {
+  if (!input.closeEvidenceFound && input.closePlanOk) {
     upsert(actions, {
       id: 'review-finalize-plan',
       kind: 'command',
@@ -172,13 +172,13 @@ function isIssueForTask(issue: TaskCloseIssue, taskId: string): boolean {
 function fromCloseAction(taskId: string, action: TaskCloseNextAction): WorkbenchNextAction {
   if (action.id === 'append-close-evidence') {
     return createWorkbenchNextAction({
-      id: 'review-close-plan',
+      id: 'review-finalize-plan',
       kind: 'command',
       required: action.required,
       priority: action.required ? 'now' : 'soon',
-      command: `hadara task close --task ${taskId} --json`,
-      executeCommand: action.command,
-      message: action.message ?? action.summary,
+      command: `hadara task finalize --task ${taskId} --json`,
+      executeCommand: `hadara task finalize --task ${taskId} --execute --plan-hash <planHash> --json`,
+      message: 'Review the finalize dry-run, inspect the plan hash, then execute the matching finalize plan if it still applies.',
       sourceIssueCodes: ['TASK_CLOSE_READY'],
       loopBoundary: action.loopBoundary
     });
