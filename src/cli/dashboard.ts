@@ -21,8 +21,8 @@ import { createProjectedDashboardDebtReport, createProjectedDashboardTimelineRep
 import { createEvidenceLintReport } from '../services/evidence-lint';
 import { createEvidenceListReport } from '../services/evidence-list';
 import { createDashboardTimelineReport } from '../services/dashboard-timeline';
-import { createOpsStatusReport } from '../services/operations-status-service';
-import { createTaskListReport } from '../services/task-read-model';
+import { createOpsStatusReport, OpsStatusReport } from '../services/operations-status-service';
+import { createTaskListReport, TaskListReport } from '../services/task-read-model';
 import { createTaskWorkbenchReport } from '../services/task-workbench';
 import { getIntegerOption, getStringOption } from './args';
 
@@ -118,7 +118,7 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
   if (url.pathname === '/api/status') {
     // Dashboard clients fetch operational debt separately; keep the status
     // route cheap so a single slow debt scan cannot block first API paint.
-    return jsonResponse(createOpsStatusReport(projectRoot, { includeDebt: false }), headOnly);
+    return jsonResponse(readCachedOpsStatus(projectRoot, false, url.searchParams.get('cache') === 'bypass'), headOnly);
   }
   if (url.pathname === '/api/dashboard/core') {
     const bypassProjection = url.searchParams.get('cache') === 'bypass';
@@ -148,7 +148,13 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
     const cached = getOrCreateCachedReport(
       key,
       { ttlMs: DASHBOARD_CACHE_TTLS.bootstrap, bypass: url.searchParams.get('cache') === 'bypass' },
-      () => createDashboardBootstrapReport(projectRoot, { tier, ...(selectedTaskId ? { selectedTaskId } : {}) })
+      () =>
+        createDashboardBootstrapReport(projectRoot, {
+          tier,
+          ...(selectedTaskId ? { selectedTaskId } : {}),
+          status: readCachedOpsStatus(projectRoot, tier === 'full', url.searchParams.get('cache') === 'bypass'),
+          tasks: readCachedTaskList(projectRoot, url.searchParams.get('cache') === 'bypass')
+        })
     );
     return jsonResponse(withDashboardCacheMetadata(cached.value, cached.cache), headOnly);
   }
@@ -164,7 +170,7 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
     return jsonResponse(withDashboardCacheMetadata(cached.value, cached.cache), headOnly);
   }
   if (url.pathname === '/api/dashboard/cache/status') return jsonResponse(createDashboardCacheStatusReport(), headOnly);
-  if (url.pathname === '/api/tasks') return jsonResponse(createTaskListReport(projectRoot), headOnly);
+  if (url.pathname === '/api/tasks') return jsonResponse(readCachedTaskList(projectRoot, url.searchParams.get('cache') === 'bypass'), headOnly);
   if (url.pathname === '/api/active-run') return jsonResponse(safeCreateActiveRunProjection(projectRoot), headOnly);
   if (url.pathname === '/api/debt') {
     // Keep the legacy dashboard debt route on the same fast aggregate path as
@@ -201,6 +207,22 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
   }
 
   return notFound();
+}
+
+function readCachedOpsStatus(projectRoot: string, includeDebt: boolean, bypass: boolean): OpsStatusReport {
+  return getOrCreateCachedReport(
+    createDashboardCacheKey(projectRoot, 'status', includeDebt ? 'full' : 'core'),
+    { ttlMs: DASHBOARD_CACHE_TTLS.status, bypass },
+    () => createOpsStatusReport(projectRoot, { includeDebt })
+  ).value;
+}
+
+function readCachedTaskList(projectRoot: string, bypass: boolean): TaskListReport {
+  return getOrCreateCachedReport(
+    createDashboardCacheKey(projectRoot, 'tasks'),
+    { ttlMs: DASHBOARD_CACHE_TTLS.tasks, bypass },
+    () => createTaskListReport(projectRoot)
+  ).value;
 }
 
 function missingTaskId(headOnly: boolean): DashboardStaticResponse {

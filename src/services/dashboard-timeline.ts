@@ -14,7 +14,7 @@ import { createTaskWorkbenchReport } from './task-workbench';
 import type { DashboardCoreReport } from './dashboard-core';
 import { EvidenceIndexRecord, persistedEvidenceKind, persistedEvidencePath, persistedEvidenceResult } from '../evidence/evidence';
 import { normalizeEvidenceRecordsWithSourceLines, NormalizedEvidenceRecord } from '../evidence/normalizer';
-import { listTaskCapsules } from '../task/task-capsule';
+import { findTaskCapsule } from '../task/task-capsule';
 
 export type DashboardTimelineEventKind =
   | 'task'
@@ -293,7 +293,7 @@ function pushOverviewEventsFromCore(
 }
 
 function readNormalizedEvidenceRecords(projectRoot: string, taskId: string): NormalizedEvidenceRecord[] {
-  const task = listTaskCapsules(projectRoot).find((candidate) => candidate.id === taskId);
+  const task = findTaskCapsule(projectRoot, taskId);
   if (!task) return [];
   const indexPath = path.join(task.dir, 'evidence.jsonl');
   if (!fs.existsSync(indexPath)) return [];

@@ -4,17 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, and the follow-up agent UX cleanup is complete through T-0473. |
-| Current Phase | Agent UX refactor dogfood loop plus 0.3.4 stable readiness pending | T-0473 kept default workbench/dashboard status paths fast while preserving explicit full diagnostics; 0.4 release-line work remains separate and has not started. |
-| Latest Completed Task | T-0473 Global docs/profile diagnostics performance | Default selected-task workbench projections now avoid global docs/profile diagnostics unless full detail is explicitly requested. |
-| Active / Next Task | Dashboard API aggregate route latency profiling or compatibility-only sidecar cleanup decision | T-0473 moved selected-task workbench hot paths to fast detail; remaining latency choices are broader dashboard aggregate routes or compatibility-only sidecar cleanup. |
-| Validation Baseline | T-0473 global docs/profile diagnostics performance | Focused workbench/dashboard tests passed in `ev:T-0473:6c0e0c8b66ff402fa51ad313`; Docker build/dist refresh passed in `ev:T-0473:4fdec13ad3af42928d1d71d8`; built CLI fast/full status smoke passed in `ev:T-0473:2dd3fa4b13d04089bf651e34`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, follow-up agent UX cleanup is complete through T-0473, and dashboard aggregate latency cleanup is complete through T-0474. |
+| Current Phase | Pre-release cleanup plus 0.3.4 stable readiness pending | T-0474 reduced dashboard aggregate repeated broad-read cost; 0.4 release-line work remains separate and has not started. |
+| Latest Completed Task | T-0474 Dashboard API aggregate route latency profiling | Timeline task-scoped route avoids broad capsule scan; status/tasks/bootstrap share process cache. |
+| Active / Next Task | Compatibility-only legacy sidecar cleanup | User requested cleanup of historical specs, old fixtures, migration/template/write-preflight compatibility references before release-line work. |
+| Validation Baseline | T-0474 dashboard aggregate latency profiling | Focused dashboard/workbench tests passed in `ev:T-0474:e0d2c6eb9ca448e9858bacb4`; Docker build/dist refresh passed in `ev:T-0474:814e9786faaa41aabd4b0087`; built route timing smoke passed in `ev:T-0474:7878feaa7ef14577b16e08ff`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| Dashboard aggregate latency or compatibility cleanup decision | T-0473 fixed selected-task workbench/dashboard full-diagnostics leakage. Remaining choices are broader dashboard aggregate route profiling or narrow compatibility-only cleanup. | `tasks/T-0473-global-docs-profile-diagnostics-performance-or-compatibility-onl/HANDOFF.md`, `ev:T-0473:2dd3fa4b13d04089bf651e34` |
+| Compatibility-only legacy sidecar cleanup | T-0474 completed dashboard aggregate latency cleanup. Remaining pre-release cleanup is the user-requested historical specs / old fixtures / migration-template-write-preflight sidecar reference audit. | `tasks/T-0474-dashboard-api-aggregate-route-latency-profiling/HANDOFF.md`, `ev:T-0474:7878feaa7ef14577b16e08ff` |
 | 0.4 release-line decision | Deferred until explicitly started. T-0452 completed the 24-capsule 0.4 implementation budget; release readiness/publish/recycle work is separate. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
@@ -22,15 +22,15 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0474 / Dashboard API aggregate route latency profiling | Task-scoped timeline evidence lookup now uses exact task lookup; status/tasks/bootstrap routes share process-cache reports; built timing smoke showed task-scoped timeline bypass at 91ms and bootstrap second hit at 1ms. | `ev:T-0474:e0d2c6eb9ca448e9858bacb4`, `ev:T-0474:814e9786faaa41aabd4b0087`, `ev:T-0474:7878feaa7ef14577b16e08ff` |
 | T-0473 / Global docs/profile diagnostics performance | Default selected-task workbench projections now use fast detail; dashboard task-workbench supports explicit `detail=full`; dashboard bootstrap/timeline selected-task summaries pass fast detail explicitly. | `ev:T-0473:6c0e0c8b66ff402fa51ad313`, `ev:T-0473:4fdec13ad3af42928d1d71d8`, `ev:T-0473:2dd3fa4b13d04089bf651e34` |
 | T-0472 / Legacy sidecar reference audit | Release closeout, state projection, harness plan drift, operational debt, evidence lint, and TUI task detail now prefer current `TASK.md` sections while preserving legacy sidecar compatibility where files exist. | `ev:T-0472:464654f09f824d09ad4e6a4e`, `ev:T-0472:ddf2c1f180054178b95a26a1`, `ev:T-0472:758500c96600471bb12c7bb8`, `ev:T-0472:abb18b6756a440a89fc68fd6` |
-| T-0471 / Protocol consistency legacy fixture cleanup | Task protocol doctor now uses current TASK.md Acceptance as the default source when legacy ACCEPTANCE.md is absent; broad protocol fixtures were aligned to current 0.4 capsules; harness guidance examples now use TASK.md Acceptance rows. | `ev:T-0471:f1ba74206a9c4900a0dc68aa`, `ev:T-0471:f7a1d36929d7422fab03d9b9`, `ev:T-0471:0062866455bb449ebee07c0e`, `ev:T-0471:c9c0dfa110ec49a98e152ba8` |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
-| Compatibility-only legacy sidecar references remain. | Historical specs, older test fixtures, migration/template/upgrade paths, and write-preflight compatibility lists still mention split capsule files. | Leave them unless they affect current generated/user-facing behavior, or open a narrow compatibility-cleanup capsule. |
+| Compatibility-only legacy sidecar references remain. | Historical specs, older test fixtures, migration/template/upgrade paths, and write-preflight compatibility lists still mention split capsule files. | User requested a narrow compatibility-cleanup capsule before release-line work; remove unnecessary legacy references where safe. |
 | Full diagnostics remain broad-scan heavy. | T-0473 keeps default workbench/dashboard paths fast, but explicit `task status --detail full` still invokes close-grade/docs/profile checks and took 9119ms on `/mnt/f`. | Treat full detail as explicit diagnostics; optimize global docs/profile internals only if repeated full-detail work remains painful. |
 | Stable `0.3.4` readiness has not run after the T-0423 helper residual fix. | `hadara@0.3.4-rc.0` is published and consumer/helper proofs are clean, but stable metadata, release docs, release artifacts, strict gates, dry-runs, and publish dry-run still need a dedicated readiness capsule. | Open a new stable readiness capsule when release work resumes; do not publish stable from T-0423, T-0424, or T-0425. |
 | T-0383 mounted full-profile probes exceeded a 20s workload budget for cache status/warm, graph task, graph include-code, and context pack. | These workloads are not suitable for the default fast smoke loop on mounted filesystems. | Keep `smoke:context-routing` defaulting to fast profile; use `--profile full` explicitly for diagnostic/full-path checks. |
@@ -98,7 +98,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Dashboard API aggregate route latency profiling or compatibility-only sidecar cleanup decision. | T-0473 handled selected-task workbench/dashboard full-diagnostics leakage; broader dashboard aggregate route latency and compatibility-only sidecar references are now separate choices. | `tasks/T-0473-global-docs-profile-diagnostics-performance-or-compatibility-onl/HANDOFF.md`, `ev:T-0473:2dd3fa4b13d04089bf651e34` |
+| Compatibility-only legacy sidecar cleanup. | T-0474 handled broader dashboard aggregate route latency; user requested historical specs, old fixtures, migration/template/write-preflight sidecar cleanup before release-line work. | `tasks/T-0474-dashboard-api-aggregate-route-latency-profiling/HANDOFF.md`, `ev:T-0474:7878feaa7ef14577b16e08ff` |
 | Later, decide whether to start the 0.4.0 release line. | T-0452 completed the 24-capsule 0.4 implementation budget; any 0.4.0-rc.0 readiness, publish, package recycle, stable decision, or stable publish work requires a later explicit release-line capsule. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 

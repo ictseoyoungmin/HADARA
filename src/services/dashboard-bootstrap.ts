@@ -8,7 +8,7 @@ import {
   disabledDashboardCacheMetadata
 } from './dashboard-cache';
 import { createOpsStatusReport, OpsStatusReport } from './operations-status-service';
-import { createTaskListReport, TaskJsonSummary } from './task-read-model';
+import { createTaskListReport, TaskJsonSummary, TaskListReport } from './task-read-model';
 import { createTaskWorkbenchReport } from './task-workbench';
 
 export interface DashboardBootstrapIssue {
@@ -92,13 +92,15 @@ export interface DashboardBootstrapInput {
   // paint; the frontend loads debt in the background and merges it. 'full'
   // includes everything and must be requested explicitly.
   tier?: 'core' | 'full';
+  status?: OpsStatusReport;
+  tasks?: TaskListReport;
 }
 
 export function createDashboardBootstrapReport(projectRoot: string, input: DashboardBootstrapInput = {}, now = new Date()): DashboardBootstrapReport {
   const generatedAt = now.toISOString();
   const core = input.tier !== 'full';
-  const status = createOpsStatusReport(projectRoot, { includeDebt: !core });
-  const tasks = createTaskListReport(projectRoot);
+  const status = input.status ?? createOpsStatusReport(projectRoot, { includeDebt: !core });
+  const tasks = input.tasks ?? createTaskListReport(projectRoot);
   // Reuse the already-computed status/tasks so the timeline does not re-run the
   // expensive ops-status and task-list scans a second time (major /mnt/f cost).
   const timeline = createDashboardTimelineReport(projectRoot, {}, now, { status, tasks });
