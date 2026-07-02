@@ -186,7 +186,8 @@ function createDashboardApiResponse(projectRoot: string, requestUrl: string, met
   if (url.pathname === '/api/task-workbench') {
     const taskId = url.searchParams.get('taskId')?.trim();
     if (!taskId) return missingTaskId(headOnly);
-    return jsonResponse(createTaskWorkbenchReport(projectRoot, taskId), headOnly);
+    const detail = url.searchParams.get('detail') === 'full' ? 'full' : 'fast';
+    return jsonResponse(createTaskWorkbenchReport(projectRoot, taskId, new Date(), { detail }), headOnly);
   }
   if (url.pathname === '/api/evidence-lint') {
     const taskId = url.searchParams.get('taskId')?.trim();

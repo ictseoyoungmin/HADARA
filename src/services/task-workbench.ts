@@ -238,7 +238,7 @@ export interface TaskWorkbenchReportOptions {
 }
 
 export function createTaskWorkbenchReport(projectRoot: string, taskId: string, now = new Date(), options: TaskWorkbenchReportOptions = {}): TaskWorkbenchReport {
-  const detail = options.detail ?? 'full';
+  const detail = options.detail ?? 'fast';
   const taskShow = createTaskShowReport(projectRoot, taskId);
   if (!taskShow.ok || !taskShow.task) {
     const closePlan = createTaskCloseReport(projectRoot, taskId, 'dry-run');

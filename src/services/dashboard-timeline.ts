@@ -164,7 +164,7 @@ export function createDashboardTimelineReport(
   }
 
   if (input.taskId) {
-    const workbench = createTaskWorkbenchReport(projectRoot, input.taskId, now);
+    const workbench = createTaskWorkbenchReport(projectRoot, input.taskId, now, { detail: 'fast' });
     push({
       kind: 'task',
       title: `Selected task ${input.taskId}`,

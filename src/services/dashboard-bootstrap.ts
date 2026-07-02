@@ -164,7 +164,7 @@ function createSelectedTaskSummary(
   now: Date,
   aggregateIssues: DashboardBootstrapIssue[]
 ): DashboardBootstrapSelectedTask {
-  const workbench = createTaskWorkbenchReport(projectRoot, taskId, now);
+  const workbench = createTaskWorkbenchReport(projectRoot, taskId, now, { detail: 'fast' });
   const lint = createEvidenceLintReport(projectRoot, taskId);
   const selectedIssues: DashboardBootstrapIssue[] = [
     ...workbench.issues.map((issue) => ({

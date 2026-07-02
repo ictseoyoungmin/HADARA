@@ -110,7 +110,7 @@ describe('task workbench status report', () => {
     expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
     expect(formatTaskWorkbenchReport(report)).toContain('Loop phase: author-task');
     expect(formatTaskWorkbenchReport(report)).toContain('State\n- Capsule:');
-    expect(formatTaskWorkbenchReport(report)).toContain('Readiness note: Current done-level readiness is blocked');
+    expect(formatTaskWorkbenchReport(report)).toContain('Readiness note: Fast task status skipped done-level readiness checks');
     expect(formatTaskWorkbenchReport(report)).toContain('Evidence\n- Lint: ok');
     expect(formatTaskWorkbenchReport(report)).toContain('Protocol\n- Task doctor:');
     expect(formatTaskWorkbenchReport(report)).toContain('Close\n- Close plan:');
@@ -407,12 +407,22 @@ describe('task workbench status report', () => {
     expect(validateSchema('hadara.task.workbench.v1', report).ok).toBe(true);
   });
 
-  it('uses task close dry-run as the single done-level validation source', () => {
+  it('skips task close dry-run on the default fast service path', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Workbench validation count');
     const spy = vi.spyOn(harnessService, 'createHarnessValidateReport');
 
     createTaskWorkbenchReport(root, task.id, new Date('2026-05-31T00:00:00.000Z'));
+
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('uses task close dry-run as the single done-level validation source for full detail', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Workbench validation count');
+    const spy = vi.spyOn(harnessService, 'createHarnessValidateReport');
+
+    createTaskWorkbenchReport(root, task.id, new Date('2026-05-31T00:00:00.000Z'), { detail: 'full' });
 
     expect(spy).toHaveBeenCalledTimes(1);
   });
