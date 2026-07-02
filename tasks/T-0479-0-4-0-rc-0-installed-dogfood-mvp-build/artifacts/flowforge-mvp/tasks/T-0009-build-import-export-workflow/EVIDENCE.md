@@ -17,6 +17,7 @@ Do not hand-edit this file.
 <!-- hadara:slot evidence.close-proof -->
 | Check | Result | Evidence |
 |---|---|---|
+| close evidence | passed | ev:T-0009:b5b55f3d277044d79f3086a5 |
 <!-- /hadara:slot -->
 
 ## Failed / Blocked / Residual Evidence
