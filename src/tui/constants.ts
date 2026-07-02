@@ -19,14 +19,14 @@ export interface TuiDocumentTab {
 
 export const TUI_DOCUMENT_TABS: TuiDocumentTab[] = [
   { label: 'Task', file: 'TASK.md', key: 't', shortLabel: 'TASK' },
-  { label: 'Plan', file: 'PLAN.md', key: 'p', shortLabel: 'PLAN' },
-  { label: 'Decisions', file: 'DECISIONS.md', key: 'd', shortLabel: 'DEC' },
-  { label: 'Acceptance', file: 'ACCEPTANCE.md', key: 'a', shortLabel: 'ACC' },
   { label: 'Evidence', file: 'EVIDENCE.md', key: 'e', shortLabel: 'EVD' },
   { label: 'Handoff', file: 'HANDOFF.md', key: 'h', shortLabel: 'HAND' },
+  { label: 'Plan', file: 'PLAN.md', key: 'p', shortLabel: 'PLAN' },
+  { label: 'Acceptance', file: 'ACCEPTANCE.md', key: 'a', shortLabel: 'ACC' },
   { label: 'Files', file: 'FILES.md', key: 'f', shortLabel: 'FILE' },
   { label: 'Risks', file: 'RISKS.md', key: 'k', shortLabel: 'RISK' },
-  { label: 'Tests', file: 'TESTS.md', key: 's', shortLabel: 'TEST' }
+  { label: 'Tests', file: 'TESTS.md', key: 's', shortLabel: 'TEST' },
+  { label: 'Decisions', file: 'DECISIONS.md', key: 'd', shortLabel: 'DEC' }
 ];
 
 export function resolveTuiPanelId(value: string | undefined, fallback: TuiPanelId = 'overview'): TuiPanelId {

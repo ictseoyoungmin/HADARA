@@ -305,9 +305,11 @@ function readTaskBoardStatus(projectRoot: string, taskId: string): string {
 }
 
 function readTaskDocs(taskDir: string): { acceptance?: string; risks?: string; handoff?: string } {
+  const taskPath = path.join(taskDir, 'TASK.md');
+  const taskContent = readOptionalFile(taskPath);
   return {
-    acceptance: readOptionalFile(path.join(taskDir, 'ACCEPTANCE.md')),
-    risks: readOptionalFile(path.join(taskDir, 'RISKS.md')),
+    acceptance: readOptionalFile(path.join(taskDir, 'ACCEPTANCE.md')) ?? (taskContent ? readMarkdownSection(taskContent, '## Acceptance') : undefined),
+    risks: readOptionalFile(path.join(taskDir, 'RISKS.md')) ?? (taskContent ? readMarkdownSection(taskContent, '## Risks / Follow-ups') : undefined),
     handoff: readOptionalFile(path.join(taskDir, 'HANDOFF.md'))
   };
 }

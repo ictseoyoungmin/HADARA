@@ -292,10 +292,11 @@ function buildTaskProjection(
 ): StateProjectionTask {
   const taskPath = task ? toPortablePath(path.relative(projectRoot, path.join(task.dir, 'TASK.md'))) : '';
   const handoffPath = task ? toPortablePath(path.relative(projectRoot, path.join(task.dir, 'HANDOFF.md'))) : '';
-  const planPath = task ? toPortablePath(path.relative(projectRoot, path.join(task.dir, 'PLAN.md'))) : '';
+  const planSource = task ? taskPlanSource(projectRoot, task.dir) : { path: '', absolutePath: '', heading: undefined as string | undefined, exists: false };
+  const planPath = planSource.path;
   const taskStatus = task ? readTaskStatus(path.join(task.dir, 'TASK.md')) : null;
   const taskHandoff = task && deepCheck ? readTaskHandoff(path.join(task.dir, 'HANDOFF.md')) : { exists: task ? fs.existsSync(path.join(task.dir, 'HANDOFF.md')) : false, taskStatus: null, closeState: null };
-  const plan = task && deepCheck ? readPlanState(path.join(task.dir, 'PLAN.md')) : { exists: task ? fs.existsSync(path.join(task.dir, 'PLAN.md')) : false, totalRows: 0, doneRows: 0, pendingRows: 0, inProgressRows: 0 };
+  const plan = task && deepCheck ? readPlanState(planSource.absolutePath, planSource.heading) : { exists: planSource.exists, totalRows: 0, doneRows: 0, pendingRows: 0, inProgressRows: 0 };
   const closeProof = task && deepCheck ? readCloseProof(projectRoot, task) : { path: task ? toPortablePath(path.relative(projectRoot, path.join(task.dir, 'evidence.jsonl'))) : '', state: 'unknown' as const, sourceHash: null, currentSourceHash: null };
   const capsule = task ? toPortablePath(path.relative(projectRoot, task.dir)) : taskBoard?.capsule ?? '';
 
@@ -324,7 +325,7 @@ function buildTaskProjection(
     }
   }
   if (deepCheck && (isDone(taskStatus) || isDone(taskBoard?.status)) && (plan.pendingRows > 0 || plan.inProgressRows > 0)) {
-    issues.push(warning('STATE_TASK_PLAN_DRIFT', planPath, `Done task ${taskId} has PLAN rows still Pending or In Progress.`, 'Update PLAN.md rows to Done or record an explicit residual-risk decision before closing.', taskId));
+    issues.push(warning('STATE_TASK_PLAN_DRIFT', planPath, `Done task ${taskId} has plan rows still Pending or In Progress.`, 'Update Plan rows to Done or record an explicit residual-risk decision before closing.', taskId));
   }
 
   return {
@@ -375,11 +376,30 @@ function readTaskHandoff(handoffPath: string): { exists: boolean; taskStatus: st
   };
 }
 
-function readPlanState(planPath: string): StateProjectionTask['plan'] {
+function taskPlanSource(projectRoot: string, taskDir: string): { path: string; absolutePath: string; heading?: string; exists: boolean } {
+  const legacyPlanPath = path.join(taskDir, 'PLAN.md');
+  if (fs.existsSync(legacyPlanPath)) {
+    return {
+      path: toPortablePath(path.relative(projectRoot, legacyPlanPath)),
+      absolutePath: legacyPlanPath,
+      exists: true
+    };
+  }
+  const taskPath = path.join(taskDir, 'TASK.md');
+  return {
+    path: toPortablePath(path.relative(projectRoot, taskPath)),
+    absolutePath: taskPath,
+    heading: '## Plan',
+    exists: fs.existsSync(taskPath)
+  };
+}
+
+function readPlanState(planPath: string, heading?: string): StateProjectionTask['plan'] {
   if (!fs.existsSync(planPath)) {
     return { path: '', exists: false, totalRows: 0, doneRows: 0, pendingRows: 0, inProgressRows: 0 };
   }
-  const rows = parseMarkdownRows(fs.readFileSync(planPath, 'utf8')).filter((row) => /^\d+$/.test(row[0] ?? ''));
+  const content = fs.readFileSync(planPath, 'utf8');
+  const rows = parseMarkdownRows(heading ? readMarkdownSection(content, heading) : content).filter((row) => /^\d+$/.test(row[0] ?? ''));
   return {
     path: toPortablePath(planPath),
     exists: true,

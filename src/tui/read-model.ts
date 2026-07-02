@@ -85,16 +85,16 @@ const DEFAULT_EVIDENCE_LIMIT = 20;
 const DEFAULT_WRITE_PREVIEW_TITLE = 'TUI Follow-up';
 const TASK_CAPSULE_FILES = [
   'TASK.md',
+  'EVIDENCE.md',
+  'evidence.jsonl',
+  'HANDOFF.md',
   'PLAN.md',
   'CONTEXT.md',
   'ACCEPTANCE.md',
   'FILES.md',
   'TESTS.md',
   'RISKS.md',
-  'DECISIONS.md',
-  'EVIDENCE.md',
-  'evidence.jsonl',
-  'HANDOFF.md'
+  'DECISIONS.md'
 ];
 
 export function createTuiLoadingReadModel(): TuiReadModel {

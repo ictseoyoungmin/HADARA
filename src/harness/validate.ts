@@ -852,19 +852,20 @@ function validateAcceptanceDone(projectRoot: string, task: TaskCapsule, issues: 
   const checklistIncomplete = checklistLines.length > 0 && checklistLines.some((line) => /^-\s+\[\s\]/.test(line.trim()));
   if ((tableRows.length > 0 && tableIncomplete) || (tableRows.length === 0 && (checklistLines.length === 0 || checklistIncomplete))) {
     const blockerSummary = acceptance.blockers.length > 0 ? ` Blockers: ${acceptance.blockers.map((blocker) => `${blocker.code}(${blocker.row.id})`).join(', ')}.` : '';
+    const acceptanceExample = '| AC-1 | Scope is implemented. | Yes | Met | ev:T-0001:abc123 | Required | TBD |';
     issues.push({
       severity: 'error',
       code: 'ACCEPTANCE_INCOMPLETE',
       message: `Done-level validation requires all acceptance criteria to be complete.${blockerSummary}`,
       path: relativePath,
       heading: 'Acceptance Criteria',
-      fixHint: 'Mark each acceptance criterion complete with concrete evidence, or replace placeholder checklist rows with completed task-specific criteria.',
-      example: '| AC-1 | Scope is implemented. | Done | evidence id or summary |',
+      fixHint: 'Mark each acceptance criterion in TASK.md complete with concrete evidence, or replace placeholder checklist rows with completed task-specific criteria.',
+      example: acceptanceExample,
       remediationHint: {
         path: relativePath,
         heading: 'Acceptance Criteria',
         requiredChange: 'Complete every acceptance criterion with evidence before closing.',
-        example: '| AC-1 | Scope is implemented. | Done | evidence id or summary |',
+        example: acceptanceExample,
         blocking: true
       }
     });
@@ -1138,11 +1139,15 @@ function handoffStatusIssue(relativePath: string, message: string): HarnessValid
 }
 
 function validatePlanStatusDrift(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
-  const planPath = path.join(task.dir, 'PLAN.md');
+  const legacyPlanPath = path.join(task.dir, 'PLAN.md');
+  const taskPath = path.join(task.dir, 'TASK.md');
+  const usesLegacyPlan = fs.existsSync(legacyPlanPath);
+  const planPath = usesLegacyPlan ? legacyPlanPath : taskPath;
   if (!fs.existsSync(planPath)) return;
 
   const relativePath = toPortablePath(path.relative(projectRoot, planPath));
-  const rows = parseMarkdownRows(fs.readFileSync(planPath, 'utf8'));
+  const content = fs.readFileSync(planPath, 'utf8');
+  const rows = parseMarkdownRows(usesLegacyPlan ? content : readMarkdownSection(content, '## Plan'));
   const inProgressRows = rows.filter((cells) => {
     if (/^step$/i.test(cells[0] ?? '')) return false;
     return (cells[2] ?? '').trim().toLowerCase() === 'in progress';
@@ -1152,7 +1157,7 @@ function validatePlanStatusDrift(projectRoot: string, task: TaskCapsule, issues:
   issues.push({
     severity: 'error',
     code: 'TASK_PLAN_STATUS_DRIFT',
-    message: `PLAN.md has ${inProgressRows.length} row(s) still marked In Progress while the task is Done.`,
+    message: `Plan has ${inProgressRows.length} row(s) still marked In Progress while the task is Done.`,
     path: relativePath,
     heading: 'Plan',
     fixHint: 'Before closing a Done task, mark completed plan rows Done or split/defer unfinished work explicitly instead of leaving rows In Progress.',
@@ -1160,7 +1165,7 @@ function validatePlanStatusDrift(projectRoot: string, task: TaskCapsule, issues:
     remediationHint: {
       path: relativePath,
       heading: 'Plan',
-      requiredChange: 'Update PLAN.md rows that are no longer active from In Progress to Done, Blocked, Partial, or a task-specific final status with evidence.',
+      requiredChange: 'Update Plan rows that are no longer active from In Progress to Done, Blocked, Partial, or a task-specific final status with evidence.',
       example: '| 3 | Commit the pre-publish preparation. | Done | `command:T-XXXX:check` |',
       blocking: true
     }
@@ -1358,7 +1363,7 @@ function isIsoDate(value: string): boolean {
 
 function scaffoldHeadingForFile(fileName: string): string | undefined {
   const headings: Record<string, string> = {
-    'TASK.md': 'Goal / Scope / Out of Scope',
+    'TASK.md': 'Goal / Plan / Acceptance / Validation / Change Summary / Risks / Follow-ups',
     'PLAN.md': 'Plan',
     'CONTEXT.md': 'Context',
     'FILES.md': 'Files',
@@ -1384,7 +1389,7 @@ function scaffoldFixHint(fileName: string): string {
 
 function scaffoldExample(fileName: string): string {
   const examples: Record<string, string> = {
-    'TASK.md': '| Preserve Task Board notes. | `task finish` must not erase human-authored cells. |',
+    'TASK.md': '| AC-1 | Scope is implemented. | Yes | Met | ev:T-0001:abc123 | Required | TBD |',
     'PLAN.md': '| 1 | Implement focused fix. | Done | evidence id or summary |',
     'CONTEXT.md': '| docs/TASK_BOARD.md | Task Board source of truth. | Read |',
     'FILES.md': '| src/task/task-close.ts | Modify | Add hints. | Done |',

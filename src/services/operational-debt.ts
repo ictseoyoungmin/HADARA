@@ -6,7 +6,9 @@ import {
   ReleaseEvidenceRecord,
   validateReleaseEvidenceArtifact
 } from './release-evidence';
+import { analyzeAcceptanceReadiness } from '../task/acceptance';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
+import { readMarkdownSection } from './markdown-table';
 
 export interface OperationalDebtRecord {
   id: string;
@@ -795,9 +797,11 @@ function detectPrematureAcceptance(
   const taskPath = path.join(task.dir, 'TASK.md');
   const acceptancePath = path.join(task.dir, 'ACCEPTANCE.md');
   const evidencePath = path.join(task.dir, 'evidence.jsonl');
-  if (!fs.existsSync(taskPath) || !fs.existsSync(acceptancePath)) return [];
+  if (!fs.existsSync(taskPath)) return [];
+  const usesLegacyAcceptance = fs.existsSync(acceptancePath);
+  const sourcePath = usesLegacyAcceptance ? acceptancePath : taskPath;
   const taskStatus = readTaskStatus(taskPath);
-  const acceptance = fs.readFileSync(acceptancePath, 'utf8');
+  const acceptance = usesLegacyAcceptance ? fs.readFileSync(acceptancePath, 'utf8') : readMarkdownSection(fs.readFileSync(taskPath, 'utf8'), '## Acceptance');
   const checkedCount = countCompletedAcceptanceItems(acceptance);
   const evidenceCount = countValidEvidenceRecords(evidencePath);
   if (checkedCount > 0 && (taskStatus !== 'Done' || evidenceCount === 0)) {
@@ -806,7 +810,7 @@ function detectPrematureAcceptance(
         severity: 'warning',
         code: 'PREMATURE_ACCEPTANCE_CHECKED',
         message: `${task.id} has checked acceptance boxes before Done status or evidence records.`,
-        path: toPortablePath(path.relative(projectRoot, acceptancePath))
+        path: toPortablePath(path.relative(projectRoot, sourcePath))
       }
     ];
   }
@@ -830,17 +834,7 @@ function readTaskStatus(taskPath: string): string {
 
 function countCompletedAcceptanceItems(content: string): number {
   const checklistCount = content.match(/-\s+\[[xX]\]/g)?.length ?? 0;
-  const tableCount = content
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => /^\|\s*AC-\d+\s*\|/.test(line))
-    .filter((line) => {
-      const cells = line
-        .slice(1, line.endsWith('|') ? -1 : undefined)
-        .split('|')
-        .map((cell) => cell.trim().toLowerCase());
-      return cells[2] === 'met';
-    }).length;
+  const tableCount = analyzeAcceptanceReadiness(content).rows.filter((row) => row.status === 'Met').length;
   return checklistCount + tableCount;
 }
 

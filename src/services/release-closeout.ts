@@ -58,7 +58,7 @@ const SHARED_FILES: Array<Omit<ReleaseCloseoutSurface, 'status' | 'expectedSigna
   { path: 'docs/DEVELOPMENT_SLICES.md', kind: 'development-slices', role: 'shared-state' }
 ];
 
-const CAPSULE_FILES = ['TASK.md', 'ACCEPTANCE.md', 'TESTS.md', 'EVIDENCE.md', 'HANDOFF.md'];
+const CAPSULE_FILES = ['TASK.md', 'EVIDENCE.md', 'HANDOFF.md'];
 
 export function createReleaseCloseoutReport(projectRoot: string, input: { version?: string | null; taskId?: string | null }): ReleaseCloseoutReport {
   const version = input.version ?? null;

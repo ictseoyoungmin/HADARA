@@ -42,7 +42,7 @@ describe('release closeout read-only plan', () => {
       ok: true,
       readOnly: true,
       input: { version: '0.3.4', taskId: task.id },
-      summary: { files: 11, suggestedFragments: 4 },
+      summary: { files: 9, suggestedFragments: 4 },
       issues: []
     });
     expect(report.surfaces).toContainEqual(expect.objectContaining({ path: 'docs/RELEASE_READINESS.md', status: 'current', role: 'source-readiness' }));
@@ -100,7 +100,7 @@ function write(root: string, relativePath: string, content: string): void {
 }
 
 function completeTask(taskDir: string, taskId: string, version: string): void {
-  for (const fileName of ['TASK.md', 'ACCEPTANCE.md', 'TESTS.md', 'EVIDENCE.md', 'HANDOFF.md']) {
+  for (const fileName of ['TASK.md', 'EVIDENCE.md', 'HANDOFF.md']) {
     const filePath = path.join(taskDir, fileName);
     fs.writeFileSync(filePath, `${taskId} ${version} ${fileName} closeout complete.\n`, 'utf8');
   }

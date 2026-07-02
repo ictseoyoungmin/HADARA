@@ -204,6 +204,38 @@ describe('evidence lint', () => {
     expect(report.summary.semantics).toMatchObject({ legacyRecords: 0 });
   });
 
+  it('uses current TASK.md risks as residual documentation for failed evidence', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Evidence lint task risk residual');
+    markTaskDone(root, task.id, task.dir);
+    const failed = appendEvidenceWithResult(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Optional broad check failed.',
+      result: 'failed',
+      visibility: 'public'
+    });
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Focused required check passed.',
+      result: 'passed',
+      visibility: 'public'
+    });
+    fs.writeFileSync(
+      path.join(task.dir, 'TASK.md'),
+      fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8').replace(
+        '| RF-1 | Follow-up | TBD | Open | TBD |',
+        `| RF-1 | Risk | Accepted risk for ${failed.evidence.id}; optional broad check remains outside required gate. | Accepted | ${failed.evidence.id} |`
+      ),
+      'utf8'
+    );
+
+    const report = createEvidenceLintReport(root, task.id);
+
+    expect(report.issues).not.toContainEqual(expect.objectContaining({ code: 'TASK_DONE_WITH_FAILED_EVIDENCE' }));
+  });
+
   it('does not accept failed exact v2 resolution markers for failed evidence resolution', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Evidence lint failed marker does not resolve');

@@ -435,8 +435,8 @@ function workSummaryLines(
   }
   const docs = detail?.files ?? {};
   const taskText = docs?.['TASK.md'] ?? '';
-  const planText = docs?.['PLAN.md'] ?? '';
-  const acceptanceText = docs?.['ACCEPTANCE.md'] ?? '';
+  const planText = docs?.['PLAN.md'] || markdownSection(taskText, 'Plan');
+  const acceptanceText = docs?.['ACCEPTANCE.md'] || markdownSection(taskText, 'Acceptance');
   const handoffText = docs?.['HANDOFF.md'] ?? '';
   const evidenceText = docs?.['EVIDENCE.md'] ?? '';
   const nextActions = includeResumeActions ? model.activeRun.resume.resumePrompt.nextActions : [];
@@ -466,6 +466,19 @@ function workSummaryLines(
     labelValueLine('Next', 'gold2', next, width, theme),
     labelValueLine('Proof', 'pass', proof, width, theme)
   ];
+}
+
+function markdownSection(content: string, heading: string): string {
+  const match = new RegExp(`^##\\s+${escapeRegExp(heading)}\\s*$`, 'm').exec(content);
+  if (!match || match.index === undefined) return '';
+  const start = match.index + match[0].length;
+  const rest = content.slice(start);
+  const next = rest.search(/\n##\s+/);
+  return next >= 0 ? rest.slice(0, next) : rest;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function summaryTitleLine(label: string, taskId: string, title: string, width: number, theme: TuiThemeName): string {

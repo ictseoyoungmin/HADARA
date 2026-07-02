@@ -146,9 +146,9 @@ describe('TUI snapshot renderer', () => {
     expect(scrolled.text).not.toContain('Viewer line 01');
     expect(scrolled.text).toContain('Viewer line 18');
     expect(scrolled.text).toContain('Document Viewer TASK.md 11-');
-    expect(scrolled.text).toContain(' d DEC ');
     expect(scrolled.text).toContain(' a ACC ');
     expect(scrolled.text).toContain(' e EVD ');
+    expect(scrolled.text).toContain(' h HAND ');
     expect(scrolled.text).toContain(' h HAND ');
     expect(scrolled.lines.every((line) => visibleWidth(line) === 104)).toBe(true);
   });

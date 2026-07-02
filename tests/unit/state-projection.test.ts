@@ -1,4 +1,3 @@
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -7,7 +6,7 @@ import { handleStateCommand } from '../../src/cli/state';
 import { appendEvidence } from '../../src/evidence/evidence';
 import { validateSchema } from '../../src/core/schema';
 import { createStateProjectionReport } from '../../src/services/state-projection';
-import { closeRelevantSourceRelativePaths } from '../../src/task/task-close';
+import { createTaskCloseSourceReport } from '../../src/task/task-close';
 import { createTaskCapsule, TaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -221,9 +220,11 @@ function setTaskStatus(taskDir: string, status: string): void {
 function setTaskHandoff(taskDir: string, taskStatus: string, closeState?: string): void {
   const handoffPath = path.join(taskDir, 'HANDOFF.md');
   const current = fs.readFileSync(handoffPath, 'utf8');
-  let next = current
+  let next = current.includes('| TaskStatus |')
+    ? current
     .replace(/\| TaskStatus \| [^|]+ \|/, `| TaskStatus | ${taskStatus} |`)
-    .replace(/\| CloseState \| [^|]+ \|\r?\n?/g, '');
+    .replace(/\| CloseState \| [^|]+ \|\r?\n?/g, '')
+    : `${current.trimEnd()}\n\n## Current State\n\n| Field | Value |\n|---|---|\n| TaskStatus | ${taskStatus} |\n`;
   if (closeState) {
     next = next.replace(
       new RegExp(`\\| TaskStatus \\| ${escapeRegExp(taskStatus)} \\|\\r?\\n`),
@@ -254,15 +255,8 @@ function appendCloseEvidence(root: string, task: TaskCapsule, sourceHash: string
 }
 
 function currentSourceHash(root: string, taskDir: string): string {
-  const payload = closeRelevantSourceRelativePaths(root, taskDir).map((relativePath) => {
-    const absolutePath = path.join(root, relativePath);
-    return {
-      path: relativePath,
-      exists: fs.existsSync(absolutePath),
-      sha256: fs.existsSync(absolutePath) ? crypto.createHash('sha256').update(fs.readFileSync(absolutePath)).digest('hex') : null
-    };
-  });
-  return `sha256:${crypto.createHash('sha256').update(JSON.stringify(payload), 'utf8').digest('hex')}`;
+  const taskId = path.basename(taskDir).match(/^(T-\d{4})-/)?.[1] ?? '';
+  return createTaskCloseSourceReport(root, taskId).sourceHash;
 }
 
 function snapshotProject(root: string): Record<string, string> {

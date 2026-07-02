@@ -798,9 +798,12 @@ function checkDoneAcceptance(projectRoot: string, task: TaskCapsule, taskLooksDo
   if (!taskLooksDone) return;
 
   const acceptancePath = path.join(task.dir, 'ACCEPTANCE.md');
-  if (!fs.existsSync(acceptancePath)) return;
+  const taskPath = path.join(task.dir, 'TASK.md');
+  if (!fs.existsSync(acceptancePath) && !fs.existsSync(taskPath)) return;
 
-  const content = fs.readFileSync(acceptancePath, 'utf8');
+  const usesLegacySidecar = fs.existsSync(acceptancePath);
+  const sourcePath = usesLegacySidecar ? acceptancePath : taskPath;
+  const content = usesLegacySidecar ? fs.readFileSync(acceptancePath, 'utf8') : readMarkdownSection(fs.readFileSync(taskPath, 'utf8'), '## Acceptance');
   const acceptance = analyzeAcceptanceReadiness(content);
   const checklistPending = content
     .split(/\r?\n/)
@@ -815,8 +818,8 @@ function checkDoneAcceptance(projectRoot: string, task: TaskCapsule, taskLooksDo
       severity: 'error',
       area: 'validation',
       taskId: task.id,
-      path: toPortablePath(path.relative(projectRoot, acceptancePath)),
-      message: `Task is marked Done but ACCEPTANCE.md still has pending, blocked, or in-progress criteria.${blockerSummary}`,
+      path: toPortablePath(path.relative(projectRoot, sourcePath)),
+      message: `Task is marked Done but acceptance criteria still have pending, blocked, or in-progress criteria.${blockerSummary}`,
       expected: 'all acceptance criteria complete',
       actual: 'incomplete criteria found'
     });

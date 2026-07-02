@@ -1275,7 +1275,7 @@ describe('operational debt track', () => {
     const acceptancePath = path.join(task.dir, 'ACCEPTANCE.md');
     fs.writeFileSync(
       acceptancePath,
-      fs.readFileSync(acceptancePath, 'utf8').replace(/- \[ \]/g, '- [x]').replace(/\| Pending \| TBD \|/g, '| Met | Premature evidence claim |'),
+      '- [x] Complete\n',
       'utf8'
     );
 
@@ -1286,6 +1286,25 @@ describe('operational debt track', () => {
       code: 'PREMATURE_ACCEPTANCE_CHECKED',
       message: 'T-0001 has checked acceptance boxes before Done status or evidence records.',
       path: 'tasks/T-0001-premature-acceptance/ACCEPTANCE.md'
+    });
+  });
+
+  it('warns when current TASK.md acceptance is met before evidence exists', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Premature task acceptance');
+    fs.writeFileSync(
+      path.join(task.dir, 'TASK.md'),
+      fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8').replace('| AC-1 | Scope is implemented. | Yes | Pending | TBD | Required | TBD |', '| AC-1 | Scope is implemented. | Yes | Met | Premature evidence claim | Required | TBD |'),
+      'utf8'
+    );
+
+    const report = createOperationalDebtReport(root);
+
+    expect(report.issues).toContainEqual({
+      severity: 'warning',
+      code: 'PREMATURE_ACCEPTANCE_CHECKED',
+      message: 'T-0001 has checked acceptance boxes before Done status or evidence records.',
+      path: 'tasks/T-0001-premature-task-acceptance/TASK.md'
     });
   });
 

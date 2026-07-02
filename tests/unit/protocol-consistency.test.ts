@@ -506,10 +506,10 @@ describe('Task protocol consistency report', () => {
     expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
   });
 
-  it('reports missing files, status drift, stale handoff, and missing evidence index', () => {
+  it('reports missing required task files, status drift, stale handoff, and missing evidence index', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Drift task');
-    fs.rmSync(path.join(task.dir, 'FILES.md'));
+    fs.rmSync(path.join(task.dir, 'HANDOFF.md'));
     fs.rmSync(path.join(task.dir, 'evidence.jsonl'));
     replaceInFile(path.join(task.dir, 'TASK.md'), '| Status | Draft |', '| Status | Active |');
 
@@ -521,7 +521,7 @@ describe('Task protocol consistency report', () => {
     );
     expect(report.issues.find((issue) => issue.code === 'TASK_FILE_MISSING')).toMatchObject({
       severity: 'error',
-      path: `tasks/${task.id}-drift-task/FILES.md`
+      path: `tasks/${task.id}-drift-task/HANDOFF.md`
     });
     expect(report.issues.find((issue) => issue.code === 'TASK_BOARD_STATUS_DRIFT')).toMatchObject({
       severity: 'warning',
@@ -564,11 +564,10 @@ describe('Task protocol consistency report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'In progress acceptance');
     markTaskDone(root, task.id);
-    const acceptancePath = path.join(task.dir, 'ACCEPTANCE.md');
-    fs.writeFileSync(
-      acceptancePath,
-      fs.readFileSync(acceptancePath, 'utf8').replace(/\| Pending \|/g, '| In Progress |'),
-      'utf8'
+    replaceInFile(
+      path.join(task.dir, 'TASK.md'),
+      '| AC-1 | Scope is implemented. | Yes | Pending | TBD | Required | TBD |',
+      '| AC-1 | Scope is implemented. | Yes | In Progress | TBD | Required | TBD |'
     );
 
     const report = createTaskProtocolConsistencyReport(root, task.id, new Date('2026-05-30T00:00:00.000Z'));
