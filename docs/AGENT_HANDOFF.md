@@ -4,17 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, follow-up agent UX cleanup is complete through T-0473, dashboard aggregate latency cleanup is complete through T-0474, and compatibility-only sidecar cleanup is complete through T-0475. |
-| Current Phase | Pre-release cleanup plus 0.3.4 stable readiness pending | T-0475 removed current-surface legacy sidecar defaults; 0.4 release-line work remains separate and has not started. |
-| Latest Completed Task | T-0475 Compatibility-only legacy sidecar cleanup | Template, upgrade-scaffold, write-preflight, and TUI default surfaces now align with current 0.4 Task Capsule files while preserving legacy reads. |
-| Active / Next Task | Final release-line code preflight hardening | Run one final narrow code cleanup/review capsule before explicit 0.4.0 release readiness/publish work. |
-| Validation Baseline | T-0475 compatibility-only legacy sidecar cleanup | Expanded create/write-preflight/TUI/upgrade-scaffold tests passed in `ev:T-0475:0fec147f12bb41c0bd76a38d`; Docker build/dist refresh passed in `ev:T-0475:2f903acccdb647639c859021`; built CLI smoke passed in `ev:T-0475:e93357bbff7d4ea18e287b79`; close audit is current in the capsule `EVIDENCE.md`. |
+| Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, follow-up agent UX cleanup is complete through T-0473, dashboard aggregate latency cleanup is complete through T-0474, compatibility-only sidecar cleanup is complete through T-0475, and final release-line code preflight hardening is complete through T-0476. |
+| Current Phase | Pre-release cleanup plus 0.3.4 stable readiness pending | The requested three pre-release cleanup capsules are complete; 0.4.0 release-line readiness/publish work remains separate and has not started. |
+| Latest Completed Task | T-0476 Final release-line code preflight hardening | Explicit task-scoped CI gate lookup avoids broad task selection, and CI/release fixtures align with current 0.4 Task Capsule docs without removed legacy sidecars. |
+| Active / Next Task | 0.4.0 release-line decision | Decide whether to open a dedicated 0.4.0 release readiness capsule; do not publish or run release mutation without explicit operator approval. |
+| Validation Baseline | T-0476 final release-line code preflight hardening | Focused CI/release tests passed in `ev:T-0476:82360c5c03b346218210b7ba`; Docker build/dist refresh passed in `ev:T-0476:6fe19cde6d3d4b00912d993a`; built CLI task-scoped CI gate smoke passed in `ev:T-0476:719663c6debc4b11b269c3f5`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| Final release-line code preflight hardening | T-0474 handled dashboard aggregate latency and T-0475 removed current-surface legacy sidecar defaults. One final narrow code preflight/hardening capsule remains before explicit release readiness work. | `tasks/T-0475-compatibility-only-legacy-sidecar-cleanup/HANDOFF.md`, `ev:T-0475:e93357bbff7d4ea18e287b79` |
+| 0.4.0 release-line decision | T-0474, T-0475, and T-0476 completed the requested three pre-release cleanup capsules. Release readiness, publish dry-run, actual publish, and recycle work remain separate. | `tasks/T-0476-final-release-line-code-preflight-hardening/HANDOFF.md`, `ev:T-0476:719663c6debc4b11b269c3f5` |
 | 0.4 release-line decision | Deferred until explicitly started. T-0452 completed the 24-capsule 0.4 implementation budget; release readiness/publish/recycle work is separate. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Stable 0.3.4 readiness | Still pending as separate release-line work. Use T-0417 readiness, T-0418 publish, T-0422 installed-package acceptance, and T-0423 package-recycle helper fix as inputs. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0` |
 
@@ -22,9 +22,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0476 / Final release-line code preflight hardening | Explicit task-scoped CI gate lookup uses exact task lookup; CI gate fixtures no longer create removed legacy sidecars; release closeout fixture expectations remain at the current 9-surface model. | `ev:T-0476:82360c5c03b346218210b7ba`, `ev:T-0476:6fe19cde6d3d4b00912d993a`, `ev:T-0476:719663c6debc4b11b269c3f5` |
 | T-0475 / Compatibility-only legacy sidecar cleanup | Task templates no longer carry ignored sidecar factories; task upgrade-scaffold targets current capsule frames; write-preflight task-create predicts only current capsule files plus Task Board; TUI default detail tabs expose TASK/EVIDENCE/HANDOFF only. | `ev:T-0475:0fec147f12bb41c0bd76a38d`, `ev:T-0475:2f903acccdb647639c859021`, `ev:T-0475:e93357bbff7d4ea18e287b79` |
 | T-0474 / Dashboard API aggregate route latency profiling | Task-scoped timeline evidence lookup now uses exact task lookup; status/tasks/bootstrap routes share process-cache reports; built timing smoke showed task-scoped timeline bypass at 91ms and bootstrap second hit at 1ms. | `ev:T-0474:e0d2c6eb9ca448e9858bacb4`, `ev:T-0474:814e9786faaa41aabd4b0087`, `ev:T-0474:7878feaa7ef14577b16e08ff` |
-| T-0473 / Global docs/profile diagnostics performance | Default selected-task workbench projections now use fast detail; dashboard task-workbench supports explicit `detail=full`; dashboard bootstrap/timeline selected-task summaries pass fast detail explicitly. | `ev:T-0473:6c0e0c8b66ff402fa51ad313`, `ev:T-0473:4fdec13ad3af42928d1d71d8`, `ev:T-0473:2dd3fa4b13d04089bf651e34` |
 
 ## Current Known Problems
 
@@ -98,7 +98,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Final release-line code preflight hardening. | T-0474 and T-0475 completed the two concrete pre-release cleanup items; the final requested capsule should do narrow code review/hardening before explicit 0.4.0 release readiness work. | `tasks/T-0475-compatibility-only-legacy-sidecar-cleanup/HANDOFF.md`, `ev:T-0475:e93357bbff7d4ea18e287b79` |
+| Decide whether to open a 0.4.0 release readiness capsule. | T-0474, T-0475, and T-0476 completed the requested three pre-release cleanup capsules; release readiness/publish/recycle remains a separate operator-approved line. | `tasks/T-0476-final-release-line-code-preflight-hardening/HANDOFF.md`, `ev:T-0476:719663c6debc4b11b269c3f5` |
 | Later, decide whether to start the 0.4.0 release line. | T-0452 completed the 24-capsule 0.4 implementation budget; any 0.4.0-rc.0 readiness, publish, package recycle, stable decision, or stable publish work requires a later explicit release-line capsule. | `ev:T-0452:25accc6961dc44e293b7041f`, `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 

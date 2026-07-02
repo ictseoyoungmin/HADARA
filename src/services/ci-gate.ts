@@ -4,7 +4,7 @@ import { createProofStatusReport, ProofStatusReport } from './proof-status';
 import { createEvidenceLintReport } from './evidence-lint';
 import { createAllProtocolConsistencyReport, createTaskProtocolConsistencyReport } from './protocol-consistency';
 import { createStateProjectionReport, StateProjectionAdvisory, toStateProjectionAdvisory } from './state-projection';
-import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
+import { findTaskCapsule, listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 
 export type CiGateMode = 'advisory' | 'strict';
 
@@ -179,8 +179,11 @@ function applyScopeGuard(input: {
 }
 
 function selectTasks(projectRoot: string, taskId?: string): TaskCapsule[] {
+  if (taskId) {
+    const task = findTaskCapsule(projectRoot, taskId);
+    return task ? [task] : [];
+  }
   const tasks = listTaskCapsules(projectRoot);
-  if (taskId) return tasks.filter((task) => task.id === taskId);
   return tasks.filter((task) => taskLooksDone(task.dir));
 }
 

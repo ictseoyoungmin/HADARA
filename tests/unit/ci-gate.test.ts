@@ -25,6 +25,9 @@ describe('ci gate report', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'CI gate ok');
     completeTask(root, task.id, task.dir);
+    for (const legacyFile of LEGACY_SIDECAR_FILES) {
+      expect(fs.existsSync(path.join(task.dir, legacyFile))).toBe(false);
+    }
     appendEvidence(root, { taskId: task.id, kind: 'test-log', summary: 'CI proof validation passed', result: 'passed', visibility: 'public' });
 
     const report = createCiGateReport(root, 'strict', { taskId: task.id });
@@ -118,6 +121,8 @@ describe('ci gate report', () => {
   });
 });
 
+const LEGACY_SIDECAR_FILES = ['PLAN.md', 'CONTEXT.md', 'FILES.md', 'ACCEPTANCE.md', 'TESTS.md', 'RISKS.md', 'DECISIONS.md'];
+
 function completeTask(root: string, taskId: string, taskDir: string): void {
   fs.writeFileSync(
     path.join(taskDir, 'TASK.md'),
@@ -130,7 +135,11 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
       .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Exercise CI gate. | Fixture verifies gate readiness. |')
       .replace('| TBD | TBD |', '| Complete fixture documents. | Needed for done-level validation. |')
       .replace('| TBD | TBD |', '| Broad workflow mutation. | Outside fixture scope. |')
-      .replace('| TBD | Draft | Initial task scaffold. | TBD |', '| 2026-06-09T00:00:00.000Z | Done | Fixture complete. | Evidence. |'),
+      .replace('| AC-1 | Scope is implemented. | Yes | Pending | TBD | Required | TBD |', '| AC-1 | Scope is implemented. | Yes | Met | Evidence attached. | Required | tests/unit/ci-gate.test.ts |')
+      .replace('| AC-2 | Validation evidence is recorded. | Yes | Pending | TBD | Required | TBD |', '| AC-2 | Validation evidence is recorded. | Yes | Met | Evidence attached. | Required | tests/unit/ci-gate.test.ts |')
+      .replace('| TBD | TBD | Yes | Not Run | TBD |', '| Fixture validation | Local fixture setup. | Yes | Passed | Evidence attached. |')
+      .replace('| TBD | N/A | TBD | TBD | TBD |', '| tests/unit/ci-gate.test.ts | test fixture | Complete current capsule docs without legacy sidecars. | Keep CI gate fixtures aligned with current task structure. | Evidence attached. |')
+      .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Follow-up | None. | Closed | Fixture. |'),
     'utf8'
   );
   const taskBoard = path.join(root, 'docs', 'TASK_BOARD.md');
@@ -143,12 +152,5 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
       .join('\n'),
     'utf8'
   );
-  fs.writeFileSync(path.join(taskDir, 'PLAN.md'), '# Plan\n\n| Step | Action | Status | Evidence |\n|---|---|---|---|\n| 1 | Complete fixture. | Done | Fixture. |\n', 'utf8');
-  fs.writeFileSync(path.join(taskDir, 'CONTEXT.md'), '# Context\n\n## Required Reading Used\n\n| Document | Why It Matters | Read Status |\n|---|---|---|\n| docs/TASK_BOARD.md | Fixture. | Read |\n\n## Assumptions\n\n| Assumption | Source | Risk If Wrong |\n|---|---|---|\n| Fixture is complete. | Test | Low. |\n\n## Constraints\n\n| Constraint | Source | Notes |\n|---|---|---|\n| CI gate is read-only. | Test | No writes. |\n', 'utf8');
-  fs.writeFileSync(path.join(taskDir, 'FILES.md'), '# Files\n\n| Path | Action | Reason | Status |\n|---|---|---|---|\n| test | Modify | Test helper. | Done |\n', 'utf8');
-  fs.writeFileSync(path.join(taskDir, 'ACCEPTANCE.md'), '# Acceptance Criteria\n\n| ID | Criterion | Status | Evidence |\n|---|---|---|---|\n| AC-1 | Test acceptance. | Met | Evidence attached. |\n', 'utf8');
-  fs.writeFileSync(path.join(taskDir, 'TESTS.md'), '# Tests\n\n## Routine Checks\n\n| Command | Purpose | Required For Done | Latest Result | Evidence |\n|---|---|---|---|---|\n| Fixture | Exercise CI gate. | Yes | Passed | Evidence. |\n\n## Special Checks\n\n| Check | Required? | Reason | Latest Result | Evidence |\n|---|---|---|---|---|\n| None | No | Fixture. | Not Run | Not applicable. |\n', 'utf8');
-  fs.writeFileSync(path.join(taskDir, 'RISKS.md'), '# Risks\n\n| Risk | Impact | Likelihood | Mitigation | Status |\n|---|---|---|---|---|\n| Fixture drift | Low | Low | Keep local. | Mitigated |\n', 'utf8');
-  fs.writeFileSync(path.join(taskDir, 'DECISIONS.md'), '# Decisions\n\n| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n| D-1 | Use fixture. | Accepted | Test CI gate. | Test. |\n', 'utf8');
   fs.writeFileSync(path.join(taskDir, 'HANDOFF.md'), '# Handoff\n\n## Current State\n\n| Field | Value |\n|---|---|\n| Status | Done |\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| Fixture complete. | Evidence. |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| Continue. | Done. | docs/TASK_BOARD.md |\n', 'utf8');
 }

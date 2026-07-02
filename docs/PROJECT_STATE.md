@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0475 Compatibility-only legacy sidecar cleanup |
-| Active Task | Final release-line code preflight hardening |
+| Latest Completed Task | T-0476 Final release-line code preflight hardening |
+| Active Task | 0.4.0 release-line decision |
 
 ## Next Planned Line
 
