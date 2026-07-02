@@ -24,14 +24,15 @@ describe('Task Capsule harness', () => {
 
     expect(task.id).toBe('T-0001');
     expect(fs.existsSync(path.join(task.dir, 'TASK.md'))).toBe(true);
-    expect(fs.existsSync(path.join(task.dir, 'ACCEPTANCE.md'))).toBe(true);
+    expect(fs.existsSync(path.join(task.dir, 'HANDOFF.md'))).toBe(true);
+    expect(fs.existsSync(path.join(task.dir, 'ACCEPTANCE.md'))).toBe(false);
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe('');
     expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain(
-      '| Time | Kind | Summary | Result | Visibility | JSONL |\n|---|---|---|---|---|---|'
+      '| Evidence ID | Outcome | Category | Summary |\n|---|---|---|---|'
     );
     expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toContain('| Field | Value |');
-    expect(fs.readFileSync(path.join(task.dir, 'PLAN.md'), 'utf8')).toContain('| Step | Action | Status | Evidence |');
-    expect(fs.readFileSync(path.join(task.dir, 'ACCEPTANCE.md'), 'utf8')).toContain('| ID | Criterion | Status | Evidence |');
+    expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toContain('| Step | Action | Status | Evidence |');
+    expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toContain('| ID | Criterion | Required | Status | Evidence | Disposition | Reference |');
     expect(fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8')).toContain(task.id);
   });
 
@@ -49,10 +50,9 @@ describe('Task Capsule harness', () => {
       result: 'passed'
     });
 
-    const evidence = fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8').trim().split('\n');
-    expect(evidence[2]).toBe('| Time | Kind | Summary | Result | Visibility | JSONL |');
-    expect(evidence[3]).toBe('|---|---|---|---|---|---|');
-    expect(evidence[4].split('|')).toHaveLength(8);
+    const evidenceMarkdown = fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8');
+    expect(evidenceMarkdown).toContain('| Evidence ID | Outcome | Category | Summary |');
+    expect(evidenceMarkdown).toContain('| passed | validation | Created evidence row |');
 
     const index = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
     expect(index[0]).toMatchObject({

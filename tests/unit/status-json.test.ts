@@ -462,5 +462,5 @@ function writeGitBranch(root: string, branch: string): void {
 function setTaskStatus(taskDir: string, status: string): void {
   const taskPath = path.join(taskDir, 'TASK.md');
   const content = fs.readFileSync(taskPath, 'utf8');
-  fs.writeFileSync(taskPath, content.replace(/## Status\s*\n\nDraft/, `## Status\n\n${status}`), 'utf8');
+  fs.writeFileSync(taskPath, content.replace(/\| Status \| Draft \|/, `| Status | ${status} |`), 'utf8');
 }

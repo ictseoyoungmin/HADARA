@@ -153,8 +153,9 @@ function parseTaskBoardRows(content: string): TaskBoardRow[] {
 function readTaskStatus(content: string): string | null {
   const sectionStatus = readMarkdownSection(content, '## Status').trim().split(/\r?\n/)[0]?.trim();
   if (sectionStatus) return sectionStatus;
-  const rows = parseMarkdownRowsUnderHeading(content, '## Metadata');
-  return findMarkdownRowByCell(rows, 0, 'Status')?.[1] ?? null;
+  const identityRows = parseMarkdownRowsUnderHeading(content, '## Identity');
+  const metadataRows = parseMarkdownRowsUnderHeading(content, '## Metadata');
+  return findMarkdownRowByCell(identityRows, 0, 'Status')?.[1] ?? findMarkdownRowByCell(metadataRows, 0, 'Status')?.[1] ?? null;
 }
 
 function readTaskHandoffStatus(content: string): string | null {

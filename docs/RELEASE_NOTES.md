@@ -1,5 +1,34 @@
 # RELEASE_NOTES
 
+## 0.4.0-rc.0
+
+Release candidate preparation line for the breaking 0.4 productization protocol after stable `0.3.3`, the published `0.3.4-rc.0` agent UX hardening line, and the completed 0.4 implementation budget.
+
+Highlights:
+
+- Introduces the productized 0.4 project scaffold: compact `AGENTS.md`, routing-only `.hadara/context/HADARA_CONTEXT.md`, workflow-owned `docs/HADARA_WORKFLOW.md`, `.hadara/scaffold.json`, `.hadara/slot-registry.json`, docs registry seed files, and profile-aware 0.4 doctor checks.
+- Makes the default Task Capsule a four-file model: `TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and canonical append-only `evidence.jsonl`; removed legacy sidecar defaults are not generated for new 0.4 capsules.
+- Validates the 0.4 `TASK.md` table schema and controlled values, including TaskStatus, Source Documents, Plan, Acceptance, Validation, Change Summary, Risks/Follow-ups, and close-proof leakage checks.
+- Adds Source Document hash/drift validation so concrete source paths cannot reach Done with stale or placeholder hashes.
+- Adds registry-backed docs registration, docs read maps, docs inbox diagnostics, and read-map integration for `session start` and `context pack`, so agents can read active task/spec context without broad raw spec scans.
+- Adds managed slot v2 registry handling and evidence projection behavior so `EVIDENCE.md` remains a generated projection over `evidence.jsonl` without becoming the canonical evidence source.
+- Adds a normalized 0.4 close-source contract and close proof placement rules: close proof stays out of `TASK.md`/`HANDOFF.md`, task-local `HANDOFF.md` is continuation guidance, and close-source hashing avoids raw evidence and whole Task Board churn.
+- Fails closed on legacy or unsupported projects for 0.4 mutation surfaces, including task mutations, init/register-doc mutation paths, docs register/patch execute, evidence append/migration execute, and release artifact/publish execute.
+- Aligns command registry, structured help, lifecycle docs, and schemas with current 0.4 surfaces while explicitly marking proposed-but-unimplemented 0.4 docs governance commands as planned/disabled.
+- Removes HADARA-dev-specific defaults from generated product docs; static checks reject generated Node/npm/Docker/release/repository history leakage while preserving generic release safety wording.
+- Dogfoods the new product path through disposable basic and governed projects, including init/doctor, docs read-map, context pack/session start, task create, validation/evidence projection, finalize, close-source repair, and final audit-close.
+- Improves the agent execution loop after dogfood: `validation run` records evidence without default `TASK.md` row mutation, same-check validation retries auto-resolve earlier failed/blocked attempts, task status projects latest validation attempt state, and evidence help is non-mutating.
+- Improves long-running agent UX: validation launch failures expose structured error metadata, task status/finalize report duration diagnostics, finalize execute prints stage progress, staged finalize plans expose deferred checks and partial execution risk, lifecycle next actions are deduped, default task status is fast, and finalize owns close-proof repair.
+- Completes final release-line preflight hardening: dashboard aggregate routes avoid broad scans where task-scoped data is available, current user-facing surfaces no longer expose legacy sidecar defaults, and task-scoped CI gate lookup uses exact task lookup.
+
+Boundaries:
+
+- T-0477 prepares source/readiness only for `hadara@0.4.0-rc.0`; it performs no npm publish, GitHub Release creation, Docker image build/push, PyPI publish, registry mutation, installer execution, MCP release/package execution, or token loading.
+- The stable npm package remains `hadara@0.3.3` until the operator completes the approval-gated npm publish for `0.4.0-rc.0`.
+- `0.4.0-rc.0` is a breaking project protocol line. It does not silently migrate or mutate 0.3.x projects; use the 0.3.x package line for old projects or initialize a new 0.4 project.
+- The 0.4 release does not add a full agent runtime, scheduler, background runner, provider execution, vector retrieval, dashboard productization, MCP write expansion by default, evidence rebuild preview/execute, or non-npm publish target execution.
+- Post-publish installed-package recycle, stable 0.4.0 decision, stable readiness, stable publish, and stable recycle remain separate future capsules.
+
 ## 0.3.4-rc.0
 
 Release candidate preparation line for agent UX hardening after stable `0.3.3`.

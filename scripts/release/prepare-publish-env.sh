@@ -20,12 +20,12 @@
 #
 # Before running this script, the operator should have already:
 # 1) Version and release docs already point at the intended package version.
-#    For the current 0.3.1-rc.1 path:
-#    package.json "version": "0.3.1-rc.1"
+#    For the current 0.4.0-rc.0 path:
+#    package.json "version": "0.4.0-rc.0"
 #    docs/RELEASE_READINESS.md:
-#    - Current version is `0.3.1-rc.1`.
+#    - Current version is `0.4.0-rc.0`.
 # 2) Commit the readiness state. Fresh clones only contain committed content.
-# git add -A && git commit -m "T-0326 0.3.1-rc.1 Release Readiness Preparation"
+# git add -A && git commit -m "T-0477 0.4.0-rc.0 release readiness"
 #
 #
 # What it does:
@@ -52,7 +52,7 @@
 #   -h, --help           Show this help.
 #
 # Run it from the host repo root:
-#   bash scripts/release/prepare-publish-env.sh T-0327
+#   bash scripts/release/prepare-publish-env.sh T-0477
 
 set -euo pipefail
 
@@ -82,7 +82,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$TASK_ID" ]]; then
-  echo "TASK_ID is required (the release Task Capsule id, e.g. T-0327)."
+  echo "TASK_ID is required (the release Task Capsule id, e.g. T-0477)."
   usage
   exit 1
 fi

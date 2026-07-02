@@ -206,7 +206,11 @@ function readTaskStatus(task: TaskCapsule): string {
   if (!fs.existsSync(taskPath)) return 'Unknown';
   const content = fs.readFileSync(taskPath, 'utf8');
   const match = content.match(/^## Status\s*\n+([\s\S]*?)(?:\n## |\s*$)/m);
-  return match?.[1]?.trim().split(/\r?\n/)[0]?.trim() || 'Unknown';
+  const sectionStatus = match?.[1]?.trim().split(/\r?\n/)[0]?.trim();
+  if (sectionStatus) return sectionStatus;
+  const identityStatus = findMarkdownRowByCell(parseMarkdownRowsUnderHeading(content, '## Identity'), 0, 'Status')?.[1]?.trim();
+  if (identityStatus) return identityStatus;
+  return findMarkdownRowByCell(parseMarkdownRowsUnderHeading(content, '## Metadata'), 0, 'Status')?.[1]?.trim() || 'Unknown';
 }
 
 function normalizeStatus(status: string): string {

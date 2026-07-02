@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { parseMarkdownRowsUnderHeading } from '../services/markdown-table';
+import { findMarkdownRowByCell, parseMarkdownRowsUnderHeading } from '../services/markdown-table';
 import { listTaskCapsules } from '../task/task-capsule';
 
 export interface HandoffStaleProblemsReport {
@@ -172,7 +172,11 @@ function readTaskStatus(taskDir: string): string | null {
   const taskPath = path.join(taskDir, 'TASK.md');
   if (!fs.existsSync(taskPath)) return null;
   const content = fs.readFileSync(taskPath, 'utf8');
-  return content.match(/^## Status\s*\n+([^\n]+)/m)?.[1]?.trim() ?? null;
+  const sectionStatus = content.match(/^## Status\s*\n+([^\n]+)/m)?.[1]?.trim();
+  if (sectionStatus) return sectionStatus;
+  return findMarkdownRowByCell(parseMarkdownRowsUnderHeading(content, '## Identity'), 0, 'Status')?.[1]?.trim()
+    ?? findMarkdownRowByCell(parseMarkdownRowsUnderHeading(content, '## Metadata'), 0, 'Status')?.[1]?.trim()
+    ?? null;
 }
 
 function readReleaseSources(projectRoot: string): Array<{ path: string; content: string }> {

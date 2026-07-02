@@ -68,10 +68,12 @@ describe('context graph task extractors', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Capsule extractor fixture');
     updateFile(path.join(task.dir, 'TASK.md'), (content) => content
-      .replace('| Status | Draft |', '| Status | In Progress |')
-      .replace('## Status\n\nDraft', '## Status\n\nIn Progress'));
+      .replace('| Status | Draft |', '| Status | In Progress |'));
     updateFile(path.join(task.dir, 'HANDOFF.md'), (content) => content
-      .replace('| TaskStatus | Draft |', '| TaskStatus | In Progress |'));
+      .replace(
+        '## Last Completed',
+        '## Current State\n\n| Field | Value |\n|---|---|\n| TaskStatus | In Progress |\n\n## Last Completed'
+      ));
 
     const result = extractTaskCapsules(root);
 

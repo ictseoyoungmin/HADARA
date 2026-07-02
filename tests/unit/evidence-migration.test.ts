@@ -11,6 +11,12 @@ const roots: string[] = [];
 
 function tempProject(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-evidence-migration-'));
+  fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, '.hadara', 'scaffold.json'),
+    JSON.stringify({ schemaVersion: 'hadara.scaffold.v1', hadaraProtocol: '0.4', profile: 'standard', createdWith: 'hadara@0.4.0' }, null, 2) + '\n',
+    'utf8'
+  );
   roots.push(root);
   return root;
 }

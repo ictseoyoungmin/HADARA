@@ -236,7 +236,6 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
       .replace(/\| Status \| Draft \|/g, '| Status | Done |')
       .replace('| Created | TBD |', '| Created | 2026-06-05 |')
       .replace('| Updated | TBD |', '| Updated | 2026-06-05 |')
-      .replace(/\nDraft\n/, '\nDone\n')
       .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Exercise handoff suggestion. | Fixture verifies read-only suggestions. |')
       .replace('| TBD | TBD |', '| Complete fixture. | Needed for handoff suggestion. |')
       .replace('| TBD | TBD |', '| Handoff write. | Outside suggestion scope. |')

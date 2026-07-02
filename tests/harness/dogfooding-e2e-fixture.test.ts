@@ -243,6 +243,12 @@ function tempProject(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-dogfood-'));
   roots.push(dir);
   fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
+  fs.mkdirSync(path.join(dir, '.hadara'), { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, '.hadara', 'scaffold.json'),
+    JSON.stringify({ schemaVersion: 'hadara.scaffold.v1', hadaraProtocol: '0.4', profile: 'standard', createdWith: 'hadara@0.4.0' }, null, 2) + '\n',
+    'utf8'
+  );
   fs.writeFileSync(path.join(dir, 'AGENTS.md'), '# AGENTS\n\nUse HADARA protocol.\n', 'utf8');
   fs.writeFileSync(
     path.join(dir, 'docs', 'PROJECT_STATE.md'),
@@ -272,7 +278,7 @@ function writeTaskWorkPlan(task: TaskCapsule): void {
     path.join(task.dir, 'TASK.md'),
     `# ${task.id} ${task.title}
 
-## Metadata
+## Identity
 
 | Field | Value |
 |---|---|
@@ -286,29 +292,55 @@ function writeTaskWorkPlan(task: TaskCapsule): void {
 
 Replay a miniature HADARA-on-HADARA workflow.
 
-## Scope
+## Source Documents
 
-- Read context export guidance.
-- Check policy for the validation command.
-- Attach evidence.
-- Update handoff.
-- Pass done-level harness validation.
+| Path | Role | Authority | Status | Source Hash | Notes |
+|---|---|---|---|---|---|
+| docs/IMPLEMENTATION_SOP.md | reference | reference-only | implemented | sha256:3384b856ee90a7d92de62555f6c494699187d7bc7cbc816b7362c147cc5362ac | Evidence and handoff workflow. |
 
-## Out of Scope
+## Goal
 
-- Real shell execution.
-- Provider calls.
-- MCP writes.
+| Goal | Notes |
+|---|---|
+| Replay a miniature HADARA-on-HADARA workflow. | Local-only deterministic fixture. |
 
-## Status
+## Plan
 
-Draft
-
-## Status History
-
-| Time | Status | Reason | Evidence |
+| Step | Action | Status | Evidence |
 |---|---|---|---|
-| 2026-06-02 | Draft | Initial dogfooding fixture task. | Test fixture. |
+| 1 | Read exported HADARA context. | Pending | TBD |
+| 2 | Check policy decisions without executing shell commands. | Pending | TBD |
+| 3 | Attach public evidence and update handoff. | Pending | TBD |
+| 4 | Run done-level harness validation. | Pending | TBD |
+
+## Acceptance
+
+| ID | Criterion | Required | Status | Evidence | Disposition | Reference |
+|---|---|---:|---|---|---|---|
+| AC-1 | Context export was read. | Yes | Pending | TBD | Required | fixture |
+| AC-2 | Policy continuity was checked. | Yes | Pending | TBD | Required | fixture |
+| AC-3 | Evidence was attached. | Yes | Pending | TBD | Required | fixture |
+| AC-4 | Handoff was updated. | Yes | Pending | TBD | Required | fixture |
+| AC-5 | Done-level harness validation passed. | Yes | Pending | TBD | Required | fixture |
+
+## Validation
+
+| Check | Command / Method | Required | Latest Result | Evidence |
+|---|---|---:|---|---|
+| Done-level harness validation | harness validate --level done | Yes | Not Run | TBD |
+
+## Change Summary
+
+| Path | Area | Change | Reason | Evidence |
+|---|---|---|---|---|
+| docs/AGENT_HANDOFF.md | handoff | Update fixture handoff summary. | Record workflow state. | TBD |
+| EVIDENCE.md | evidence | Attach public fixture evidence. | Prove fixture workflow. | TBD |
+
+## Risks / Follow-ups
+
+| ID | Kind | Summary | State | Reference |
+|---|---|---|---|---|
+| RF-1 | Risk | Fixture accidentally implies real execution. | Mitigated | Policy assertions block shell/provider/MCP write/release commands. |
 `,
     'utf8'
   );
@@ -374,7 +406,7 @@ function policyDecisionState(action: string): 'allowed' | 'requested' | 'blocked
 function assertGeneratedCapsuleFiles(input: { root: string; task: TaskCapsule; fixture: DogfoodingFixture; evidencePath?: string }): void {
   const taskMarkdown = fs.readFileSync(path.join(input.task.dir, 'TASK.md'), 'utf8');
   expect(taskMarkdown).toContain('Replay a miniature HADARA-on-HADARA workflow.');
-  expect(taskMarkdown).toContain('## Status\n\nDraft');
+  expect(taskMarkdown).toContain('| Status | Draft |');
 
   const evidenceMarkdown = fs.readFileSync(path.join(input.task.dir, 'EVIDENCE.md'), 'utf8');
   expect(evidenceMarkdown).toContain(input.fixture.evidence.summary);
@@ -399,14 +431,15 @@ function assertGeneratedCapsuleFiles(input: { root: string; task: TaskCapsule; f
 
 function assertCompletedCapsuleFiles(input: { root: string; task: TaskCapsule; fixture: DogfoodingFixture; evidencePath?: string }): void {
   const taskMarkdown = fs.readFileSync(path.join(input.task.dir, 'TASK.md'), 'utf8');
-  expect(taskMarkdown).toContain('## Status\n\nDone');
+  expect(taskMarkdown).toContain('| Status | Done |');
 
   const handoffMarkdown = fs.readFileSync(path.join(input.task.dir, 'HANDOFF.md'), 'utf8');
   expect(handoffMarkdown).toContain(input.fixture.handoff.summary);
   expect(handoffMarkdown).toContain(input.fixture.handoff.next);
 
   const evidenceMarkdown = fs.readFileSync(path.join(input.task.dir, 'EVIDENCE.md'), 'utf8');
-  expect(evidenceMarkdown).toContain(input.evidencePath);
+  expect(evidenceMarkdown).toContain(input.fixture.evidence.summary);
+  expect(evidenceMarkdown).toContain(`ev:${input.task.id}:`);
 
   const evidenceRecord = JSON.parse(fs.readFileSync(path.join(input.task.dir, 'evidence.jsonl'), 'utf8').trim());
   expect(evidenceRecord).toMatchObject({
@@ -443,8 +476,10 @@ function markTaskDone(task: TaskCapsule): void {
   const content = fs
     .readFileSync(taskPath, 'utf8')
     .replace('| Status | Draft |', '| Status | Done |')
-    .replace(/^## Status\s*\n+[\s\S]*?(?=\n## Status History)/m, '## Status\n\nDone\n');
-  fs.writeFileSync(taskPath, `${content.trimEnd()}\n| 2026-06-02 | Done | Fixture completed. | Dogfooding fixture. |\n`, 'utf8');
+    .replace('| Updated | 2026-06-02 |', '| Updated | 2026-06-02 |')
+    .replace('| Pending | TBD | Required | fixture |', '| Met | Dogfooding fixture. | Required | fixture |')
+    .replace('| Not Run | TBD |', '| Passed | Dogfooding fixture. |');
+  fs.writeFileSync(taskPath, `${content.trimEnd()}\n`, 'utf8');
 }
 
 function markTaskBoardDone(projectRoot: string, taskId: string): void {

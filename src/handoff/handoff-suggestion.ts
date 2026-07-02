@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { HadaraActorContext } from '../core/actor-context';
+import { findMarkdownRowByCell, parseMarkdownRowsUnderHeading } from '../services/markdown-table';
 import { defaultTaskLifecycleActor } from '../task/lifecycle-next-actions';
 import { listTaskCapsules } from '../task/task-capsule';
 
@@ -200,7 +201,10 @@ function readTaskStatus(taskDir: string): string | undefined {
   const taskPath = path.join(taskDir, 'TASK.md');
   if (!fs.existsSync(taskPath)) return undefined;
   const content = fs.readFileSync(taskPath, 'utf8');
-  return content.match(/^## Status\s*\n+([^\n]+)/m)?.[1]?.trim();
+  const sectionStatus = content.match(/^## Status\s*\n+([^\n]+)/m)?.[1]?.trim();
+  if (sectionStatus) return sectionStatus;
+  return findMarkdownRowByCell(parseMarkdownRowsUnderHeading(content, '## Identity'), 0, 'Status')?.[1]?.trim()
+    ?? findMarkdownRowByCell(parseMarkdownRowsUnderHeading(content, '## Metadata'), 0, 'Status')?.[1]?.trim();
 }
 
 function readLatestEvidenceSummary(taskDir: string): string | undefined {

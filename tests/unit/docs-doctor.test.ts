@@ -31,7 +31,7 @@ function mutateRegistry(root: string, mutate: (registry: DocumentRegistryFile) =
 function insertAgentsRequiredReadingRow(root: string, row: string): void {
   const filePath = path.join(root, 'AGENTS.md');
   const current = fs.readFileSync(filePath, 'utf8');
-  fs.writeFileSync(filePath, current.replace('|---|---|---|---|\n', `|---|---|---|---|\n${row}\n`), 'utf8');
+  fs.writeFileSync(filePath, current.replace(/^\|---.*\|\n/m, (separator) => `${separator}${row}\n`), 'utf8');
 }
 
 afterEach(() => {
@@ -79,7 +79,7 @@ describe('Phase 7.3 docs doctor', () => {
   it('reports unregistered Required Reading entries', () => {
     const root = tempProject();
     initProject(root, 'standard', { silent: true });
-    insertAgentsRequiredReadingRow(root, '| 99 | `docs/specs/UNREGISTERED.md` | Local work | Local spec. |');
+    insertAgentsRequiredReadingRow(root, '| `docs/specs/UNREGISTERED.md` | Local work | Local spec. |');
 
     const report = createDocsDoctorReport(root, 'required-reading');
 
@@ -177,10 +177,10 @@ describe('Phase 7.3 docs doctor', () => {
     const root = tempProject();
     initProject(root, 'standard', { silent: true });
     fs.appendFileSync(path.join(root, 'AGENTS.md'), '\n| `docs/TASK_BOARD.md` | Local work | Local task board. |\n', 'utf8');
-    fs.appendFileSync(path.join(root, 'AGENTS.md'), '| `docs/DEVELOPMENT_SLICES.md` | Local work | Local roadmap. |\n', 'utf8');
+    fs.appendFileSync(path.join(root, 'AGENTS.md'), '| `docs/PROJECT_STATE.md` | Local work | Local state. |\n', 'utf8');
     mutateRegistry(root, (registry) => {
       registry.documents.find((doc) => doc.path === 'docs/TASK_BOARD.md')!.status = 'superseded';
-      registry.documents.find((doc) => doc.path === 'docs/DEVELOPMENT_SLICES.md')!.status = 'historical';
+      registry.documents.find((doc) => doc.path === 'docs/PROJECT_STATE.md')!.status = 'historical';
     });
 
     const requiredReading = createDocsDoctorReport(root, 'required-reading');
@@ -189,13 +189,13 @@ describe('Phase 7.3 docs doctor', () => {
     expect(requiredReading.ok).toBe(true);
     expect(requiredReading.issues).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: 'DOC_SUPERSEDED_REQUIRED_READING', severity: 'warning', path: 'docs/TASK_BOARD.md' }),
-      expect.objectContaining({ code: 'DOC_HISTORICAL_REQUIRED_READING', severity: 'warning', path: 'docs/DEVELOPMENT_SLICES.md' })
+      expect.objectContaining({ code: 'DOC_HISTORICAL_REQUIRED_READING', severity: 'warning', path: 'docs/PROJECT_STATE.md' })
     ]));
     expect(registry.ok).toBe(false);
     expect(registry.issues).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: 'DOC_SUPERSEDES_MISSING_TARGET', severity: 'error', path: 'docs/TASK_BOARD.md' }),
       expect.objectContaining({ code: 'DOC_ARCHIVE_CANDIDATE', severity: 'warning', path: 'docs/TASK_BOARD.md' }),
-      expect.objectContaining({ code: 'DOC_ARCHIVE_CANDIDATE', severity: 'warning', path: 'docs/DEVELOPMENT_SLICES.md' })
+      expect.objectContaining({ code: 'DOC_ARCHIVE_CANDIDATE', severity: 'warning', path: 'docs/PROJECT_STATE.md' })
     ]));
   });
 });
