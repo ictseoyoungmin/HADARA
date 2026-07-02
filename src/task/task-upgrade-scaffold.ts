@@ -55,71 +55,20 @@ interface FrameBlock {
 
 const FRAME_BLOCKS: Record<string, FrameBlock[]> = {
   'TASK.md': [
-    { id: 'metadata', marker: '## Metadata', block: (task) => readCanonicalSection(task, 'TASK.md', '## Metadata') },
+    { id: 'source-documents', marker: '| Path | Role | Authority | Status | Source Hash | Notes |', ambiguous: /^\|\s*Path\s*\|\s*Role\s*\|\s*Authority\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Source Documents') },
     { id: 'goal', marker: '| Goal | Notes |', ambiguous: /^\|\s*Goal\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Goal') },
-    { id: 'scope', marker: '| In Scope | Reason |', ambiguous: /^\|\s*In Scope\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Scope') },
-    { id: 'out-of-scope', marker: '| Out of Scope | Reason |', ambiguous: /^\|\s*Out of Scope\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Out of Scope') },
-    { id: 'status-history', marker: '| Time | Status | Reason | Evidence |', ambiguous: /^\|\s*Time\s*\|\s*Status\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Status History') }
-  ],
-  'PLAN.md': [
-    {
-      id: 'plan-table',
-      marker: '| Step | Action | Status | Evidence |',
-      ambiguous: /^\|\s*Step\s*\|\s*Action\s*\|/im,
-      block: () => '| Step | Action | Status | Evidence |\n|---|---|---|---|\n'
-    }
-  ],
-  'CONTEXT.md': [
-    { id: 'required-reading', marker: '| Document | Why It Matters | Read Status |', ambiguous: /^\|\s*Document\s*\|/im, block: (task) => readCanonicalSection(task, 'CONTEXT.md', '## Required Reading Used') },
-    { id: 'assumptions', marker: '| Assumption | Source | Risk If Wrong |', ambiguous: /^\|\s*Assumption\s*\|/im, block: (task) => readCanonicalSection(task, 'CONTEXT.md', '## Assumptions') },
-    { id: 'constraints', marker: '| Constraint | Source | Notes |', ambiguous: /^\|\s*Constraint\s*\|/im, block: (task) => readCanonicalSection(task, 'CONTEXT.md', '## Constraints') }
-  ],
-  'FILES.md': [
-    {
-      id: 'files-table',
-      marker: '| Path | Action | Reason | Status |',
-      ambiguous: /^\|\s*Path\s*\|\s*Action\s*\|\s*Reason\s*\|/im,
-      block: () => '| Path | Action | Reason | Status |\n|---|---|---|---|\n'
-    }
-  ],
-  'ACCEPTANCE.md': [
-    {
-      id: 'acceptance-table',
-      marker: '| ID | Criterion | Status | Evidence |',
-      ambiguous: /^\|\s*ID\s*\|\s*Criterion\s*\|/im,
-      block: (task) => readCanonicalSection(task, 'ACCEPTANCE.md', '# Acceptance Criteria')
-    }
-  ],
-  'TESTS.md': [
-    { id: 'routine-checks', marker: '| Command | Purpose | Required For Done | Latest Result | Evidence |', ambiguous: /^\|\s*Command\s*\|\s*Purpose\s*\|/im, block: (task) => readCanonicalSection(task, 'TESTS.md', '## Routine Checks') },
-    { id: 'special-checks', marker: '| Check | Required? | Reason | Latest Result | Evidence |', ambiguous: /^\|\s*Check\s*\|\s*Required\?\s*\|/im, block: (task) => readCanonicalSection(task, 'TESTS.md', '## Special Checks') }
-  ],
-  'RISKS.md': [
-    {
-      id: 'risks-table',
-      marker: '| Risk | Impact | Likelihood | Mitigation | Status |',
-      ambiguous: /^\|\s*Risk\s*\|\s*(Impact\s*\|)?\s*Likelihood\s*\|/im,
-      block: () => '| Risk | Impact | Likelihood | Mitigation | Status |\n|---|---|---|---|---|\n'
-    }
-  ],
-  'DECISIONS.md': [
-    {
-      id: 'decisions-table',
-      marker: '| ID | Decision | Status | Rationale | Evidence |',
-      ambiguous: /^\|\s*ID\s*\|\s*Decision\s*\|/im,
-      block: () => '| ID | Decision | Status | Rationale | Evidence |\n|---|---|---|---|---|\n'
-    }
+    { id: 'plan', marker: '| Step | Action | Status | Evidence |', ambiguous: /^\|\s*Step\s*\|\s*Action\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Plan') },
+    { id: 'acceptance', marker: '| ID | Criterion | Required | Status | Evidence | Disposition | Reference |', ambiguous: /^\|\s*ID\s*\|\s*Criterion\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Acceptance') },
+    { id: 'validation', marker: '| Check | Command / Method | Required | Latest Result | Evidence |', ambiguous: /^\|\s*Check\s*\|\s*Command\s*\/\s*Method\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Validation') },
+    { id: 'change-summary', marker: '| Path | Area | Change | Reason | Evidence |', ambiguous: /^\|\s*Path\s*\|\s*Area\s*\|\s*Change\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Change Summary') },
+    { id: 'risks-followups', marker: '| ID | Kind | Summary | State | Reference |', ambiguous: /^\|\s*ID\s*\|\s*Kind\s*\|\s*Summary\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Risks / Follow-ups') }
   ],
   'EVIDENCE.md': [
-    {
-      id: 'evidence-table',
-      marker: '| Time | Kind | Summary | Result | Visibility | JSONL |',
-      ambiguous: /^\|\s*Time\s*\|\s*Kind\s*\|/im,
-      block: () => '| Time | Kind | Summary | Result | Visibility | JSONL |\n|---|---|---|---|---|---|\n'
-    }
+    { id: 'validation-summary-slot', marker: '<!-- hadara:slot evidence.validation-summary -->', block: (task) => readCanonicalSection(task, 'EVIDENCE.md', '## Validation Evidence') },
+    { id: 'close-proof-slot', marker: '<!-- hadara:slot evidence.close-proof -->', block: (task) => readCanonicalSection(task, 'EVIDENCE.md', '## Close Proof') },
+    { id: 'residuals-slot', marker: '<!-- hadara:slot evidence.residuals -->', block: (task) => readCanonicalSection(task, 'EVIDENCE.md', '## Failed / Blocked / Residual Evidence') }
   ],
   'HANDOFF.md': [
-    { id: 'current-state', marker: '| Field | Value |', ambiguous: /^\|\s*Field\s*\|\s*Value\s*\|/im, block: (task) => readCanonicalSection(task, 'HANDOFF.md', '## Current State') },
     { id: 'last-completed', marker: '| Item | Evidence |', ambiguous: /^\|\s*Item\s*\|\s*Evidence\s*\|/im, block: (task) => readCanonicalSection(task, 'HANDOFF.md', '## Last Completed') },
     { id: 'next-step', marker: '| Step | Reason | Required Reading |', ambiguous: /^\|\s*Step\s*\|\s*Reason\s*\|/im, block: (task) => readCanonicalSection(task, 'HANDOFF.md', '## Next Recommended Step') },
     { id: 'warnings', marker: '| Warning | Impact | Mitigation |', ambiguous: /^\|\s*Warning\s*\|\s*Impact\s*\|/im, block: (task) => readCanonicalSection(task, 'HANDOFF.md', '## Carry Forward Warnings') }

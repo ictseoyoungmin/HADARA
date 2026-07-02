@@ -36,10 +36,7 @@ export const TASK_TEMPLATES: Record<TaskTemplateId, TaskTemplate> = {
     expectedEvidence: ['focused release/schema tests', 'full Docker check', 'built CLI dry-run smoke'],
     outOfScope: releaseOutOfScope,
     files: {
-      'TASK.md': (task) => taskMarkdown(task, 'Implement a release read-model slice.', 'Keep release behavior dry-run/read-model only while making the smallest verifiable release surface change.', ['Release read-model/service change. | Keeps release behavior inspectable without mutation.', 'Schema/docs updates for release output. | Keeps external consumers aligned.'], releaseOutOfScope),
-      'ACCEPTANCE.md': () => acceptance(['Release report/read-model behavior is implemented without publish or registry mutation.', 'Release boundary docs and schema fixtures are updated when output changes.', 'Focused release/schema tests, full Docker check, and built CLI dry-run smoke are recorded.']),
-      'TESTS.md': () => tests(['focused release/schema tests', 'full Docker check', 'built CLI dry-run smoke']),
-      'RISKS.md': () => risks([['Release mutation accidentally enters a read-model slice.', 'Could publish or expose tokens unexpectedly.', 'Keep publish/token/registry actions out of scope and prove dry-run flags in tests.']])
+      'TASK.md': (task) => taskMarkdown(task, 'Implement a release read-model slice.', 'Keep release behavior dry-run/read-model only while making the smallest verifiable release surface change.', ['Release read-model/service change. | Keeps release behavior inspectable without mutation.', 'Schema/docs updates for release output. | Keeps external consumers aligned.'], releaseOutOfScope)
     }
   },
   'evidence-v2': {
@@ -48,9 +45,7 @@ export const TASK_TEMPLATES: Record<TaskTemplateId, TaskTemplate> = {
     expectedEvidence: ['focused evidence compatibility tests', 'full Docker check', 'evidence read-model smoke'],
     outOfScope: ['No broad historical migration', 'No private raw content exposure', 'No automatic EVIDENCE.md rewrite'],
     files: {
-      'TASK.md': (task) => taskMarkdown(task, 'Implement an Evidence v2 compatibility slice.', 'Keep persisted evidence compatibility additive and migration operator-selected.', ['Evidence writer/read-model/migration change. | Advances evidence durability or compatibility.', 'Evidence semantic/docs updates. | Keeps consumers aligned.'], ['No broad historical migration', 'No private raw content exposure', 'No automatic EVIDENCE.md rewrite']),
-      'ACCEPTANCE.md': () => acceptance(['Evidence v1/v2 mixed read compatibility is preserved.', 'Private raw content and private paths remain excluded from public output.', 'Focused evidence tests and full Docker check are recorded.']),
-      'TESTS.md': () => tests(['focused evidence compatibility tests', 'full Docker check', 'evidence read-model smoke'])
+      'TASK.md': (task) => taskMarkdown(task, 'Implement an Evidence v2 compatibility slice.', 'Keep persisted evidence compatibility additive and migration operator-selected.', ['Evidence writer/read-model/migration change. | Advances evidence durability or compatibility.', 'Evidence semantic/docs updates. | Keeps consumers aligned.'], ['No broad historical migration', 'No private raw content exposure', 'No automatic EVIDENCE.md rewrite'])
     }
   },
   'lifecycle-hardening': {
@@ -59,9 +54,7 @@ export const TASK_TEMPLATES: Record<TaskTemplateId, TaskTemplate> = {
     expectedEvidence: ['focused finish/ready/close/audit tests', 'full Docker check', 'built lifecycle CLI smoke'],
     outOfScope: ['No hidden task completion execution', 'No shared-doc writes outside bounded workflow commands', 'No evidence append outside explicit evidence/close commands'],
     files: {
-      'TASK.md': (task) => taskMarkdown(task, 'Implement a task lifecycle hardening slice.', 'Improve finish/ready/close/audit behavior while preserving dry-run-first workflow boundaries.', ['Finish/ready/close/audit behavior. | Lifecycle hardening must stay close to existing workflow commands.', 'Workflow docs and schema updates. | External agents need stable command semantics.'], ['No hidden task completion execution', 'No shared-doc writes outside bounded workflow commands', 'No evidence append outside explicit evidence/close commands']),
-      'ACCEPTANCE.md': () => acceptance(['Finish, ready, close, and audit expectations are explicit in reports or docs.', 'No lifecycle command executes another lifecycle command implicitly.', 'Focused lifecycle tests, full Docker check, and built lifecycle smoke are recorded.']),
-      'TESTS.md': () => tests(['focused finish/ready/close/audit tests', 'full Docker check', 'built lifecycle CLI smoke'])
+      'TASK.md': (task) => taskMarkdown(task, 'Implement a task lifecycle hardening slice.', 'Improve finish/ready/close/audit behavior while preserving dry-run-first workflow boundaries.', ['Finish/ready/close/audit behavior. | Lifecycle hardening must stay close to existing workflow commands.', 'Workflow docs and schema updates. | External agents need stable command semantics.'], ['No hidden task completion execution', 'No shared-doc writes outside bounded workflow commands', 'No evidence append outside explicit evidence/close commands'])
     }
   },
   'operator-workflow': simpleTemplate('operator-workflow', 'Implement an operator workflow compression slice.', ['focused workflow tests', 'full Docker check', 'built CLI workflow smoke'], ['No hidden shared-doc writes', 'No scheduler behavior', 'No multi-agent runtime claims']),
@@ -96,25 +89,11 @@ function simpleTemplate(id: TaskTemplateId, goal: string, expectedEvidence: stri
     expectedEvidence,
     outOfScope,
     files: {
-      'TASK.md': (task) => taskMarkdown(task, goal, 'Use the template defaults as a starting point, then narrow the capsule before implementation.', ['Template-scoped implementation. | Keeps the capsule bounded and reviewable.', 'Docs/tests expected by the template. | Captures the evidence shape up front.'], outOfScope),
-      'ACCEPTANCE.md': () => acceptance(['Template-specific scope is implemented.', 'Template expected evidence is recorded.', 'Out-of-scope boundaries remain true.']),
-      'TESTS.md': () => tests(expectedEvidence)
+      'TASK.md': (task) => taskMarkdown(task, goal, 'Use the template defaults as a starting point, then narrow the capsule before implementation.', ['Template-scoped implementation. | Keeps the capsule bounded and reviewable.', 'Docs/tests expected by the template. | Captures the evidence shape up front.'], outOfScope)
     }
   };
 }
 
 function taskMarkdown(task: TaskCapsule, goal: string, notes: string, scopeRows: string[], outOfScope: string[]): string {
   return `# ${task.id} ${task.title}\n\n## Identity\n\n| Field | Value |\n|---|---|\n| ID | ${task.id} |\n| Title | ${task.title.replace(/\|/g, '/')} |\n| Status | Draft |\n| Created | TBD |\n| Updated | TBD |\n\n## Source Documents\n\n| Path | Role | Authority | Status | Source Hash | Notes |\n|---|---|---|---|---|---|\n| TBD | reference | exploratory | draft | TBD | TBD |\n\n## Goal\n\n| Goal | Notes |\n|---|---|\n| ${goal} | ${notes} |\n\n## Plan\n\n| Step | Action | Status | Evidence |\n|---|---|---|---|\n${scopeRows.map((row, index) => `| ${index + 1} | ${row.replace(/\s*\|\s*/g, ' ')} | Pending | TBD |`).join('\n')}\n| ${scopeRows.length + 1} | Validate and record evidence. | Pending | TBD |\n\n## Acceptance\n\n| ID | Criterion | Required | Status | Evidence | Disposition | Reference |\n|---|---|---:|---|---|---|---|\n| AC-1 | Template-specific scope is implemented. | Yes | Pending | TBD | Required | TBD |\n| AC-2 | Template expected evidence is recorded. | Yes | Pending | TBD | Required | TBD |\n\n## Validation\n\n| Check | Command / Method | Required | Latest Result | Evidence |\n|---|---|---:|---|---|\n| TBD | TBD | Yes | Not Run | TBD |\n\n## Change Summary\n\n| Path | Area | Change | Reason | Evidence |\n|---|---|---|---|---|\n| TBD | N/A | TBD | TBD | TBD |\n\n## Risks / Follow-ups\n\n| ID | Kind | Summary | State | Reference |\n|---|---|---|---|---|\n${outOfScope.map((item, index) => `| RF-${index + 1} | Follow-up | ${item} | Deferred | Template boundary. |`).join('\n')}\n`;
-}
-
-function acceptance(criteria: string[]): string {
-  return `# Acceptance Criteria\n\n| ID | Criterion | Status | Evidence |\n|---|---|---|---|\n${criteria.map((criterion, index) => `| AC-${index + 1} | ${criterion} | Pending | TBD |`).join('\n')}\n| AC-${criteria.length + 1} | Evidence is attached. | Pending | TBD |\n| AC-${criteria.length + 2} | Handoff is updated. | Pending | TBD |\n`;
-}
-
-function tests(expectedEvidence: string[]): string {
-  return `# Tests\n\n## Routine Checks\n\n| Command | Purpose | Required For Done | Latest Result | Evidence |\n|---|---|---|---|---|\n| npm test | Run the default project test suite. | Yes | Not Run | TBD |\n| npm run check | Run the full repository check when available. | Yes | Not Run | TBD |\n\n## Special Checks\n\n| Check | Required? | Reason | Latest Result | Evidence |\n|---|---|---|---|---|\n${expectedEvidence.map((item) => `| ${item} | Yes | Template expected evidence. | Not Run | TBD |`).join('\n')}\n`;
-}
-
-function risks(rows: string[][]): string {
-  return `# Risks\n\n| Risk | Impact | Likelihood | Mitigation | Status |\n|---|---|---|---|---|\n${rows.map(([risk, impact, mitigation]) => `| ${risk} | ${impact} | Medium | ${mitigation} | Open |`).join('\n')}\n`;
 }

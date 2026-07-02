@@ -33,13 +33,6 @@ export interface WritePreflightReport {
 
 const TASK_FILE_NAMES = [
   'TASK.md',
-  'PLAN.md',
-  'CONTEXT.md',
-  'FILES.md',
-  'ACCEPTANCE.md',
-  'TESTS.md',
-  'RISKS.md',
-  'DECISIONS.md',
   'EVIDENCE.md',
   'evidence.jsonl',
   'HANDOFF.md'

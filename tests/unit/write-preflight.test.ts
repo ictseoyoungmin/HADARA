@@ -40,8 +40,13 @@ describe('CLI write boundary preflight', () => {
       issues: []
     });
     expect(report.writes).toContain('tasks/T-0002-next-task/TASK.md');
+    expect(report.writes).toContain('tasks/T-0002-next-task/EVIDENCE.md');
+    expect(report.writes).toContain('tasks/T-0002-next-task/HANDOFF.md');
     expect(report.writes).toContain('tasks/T-0002-next-task/evidence.jsonl');
     expect(report.writes).toContain('docs/TASK_BOARD.md');
+    expect(report.writes).not.toContain('tasks/T-0002-next-task/PLAN.md');
+    expect(report.writes).not.toContain('tasks/T-0002-next-task/ACCEPTANCE.md');
+    expect(report.writes).not.toContain('tasks/T-0002-next-task/TESTS.md');
     expect(after).toEqual(before);
     expect(validateSchema('hadara.write.preflight.v1', report).ok).toBe(true);
   });

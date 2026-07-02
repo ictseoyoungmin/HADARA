@@ -92,18 +92,18 @@ describe('TUI snapshot renderer', () => {
     expect(listProjectFiles(root)).toEqual(before);
   });
 
-  it('renders alternate Task Capsule documents through mockup-style detail tabs', () => {
+  it('renders current Task Capsule documents through mockup-style detail tabs', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Document tab task');
-    fs.writeFileSync(path.join(task.dir, 'PLAN.md'), '# Plan\n\n- [ ] Port mockup renderer\n', 'utf8');
+    fs.writeFileSync(path.join(task.dir, 'HANDOFF.md'), '# Handoff\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| Port mockup renderer. | Fixture. | TASK.md |\n', 'utf8');
     writeProjectDocs(root, task.id);
     const model = createTuiReadModel(root, { selectedTaskId: task.id });
 
-    const snapshot = renderTuiSnapshot(model, { panel: 'detail', document: 'PLAN.md', width: 92, height: 26 });
+    const snapshot = renderTuiSnapshot(model, { panel: 'detail', document: 'HANDOFF.md', width: 92, height: 26 });
 
-    expect(snapshot.text).toContain('Document Viewer PLAN.md');
-    expect(snapshot.text).toContain('[P PLAN]');
-    expect(snapshot.text).toContain('[ ] Port mockup renderer');
+    expect(snapshot.text).toContain('Document Viewer HANDOFF.md');
+    expect(snapshot.text).toContain('[H HAND]');
+    expect(snapshot.text).toContain('Port mockup renderer.');
   });
 
   it('emits renderer-derived hitboxes for panels, task rows, and detail document tabs', () => {
@@ -119,8 +119,9 @@ describe('TUI snapshot renderer', () => {
     expect(tasks.hitboxes).toContainEqual(expect.objectContaining({ action: 'task', payload: second.id }));
 
     const detail = renderTuiSnapshot(model, { panel: 'detail', widthPolicy: 'compact', width: 92, height: 26 });
-    expect(detail.hitboxes).toContainEqual(expect.objectContaining({ action: 'document', payload: 'PLAN.md', y1: 12, y2: 12 }));
-    expect(detail.hitboxes).toContainEqual(expect.objectContaining({ action: 'document', payload: 'ACCEPTANCE.md' }));
+    expect(detail.hitboxes).toContainEqual(expect.objectContaining({ action: 'document', payload: 'TASK.md', y1: 12, y2: 12 }));
+    expect(detail.hitboxes).toContainEqual(expect.objectContaining({ action: 'document', payload: 'EVIDENCE.md' }));
+    expect(detail.hitboxes).toContainEqual(expect.objectContaining({ action: 'document', payload: 'HANDOFF.md' }));
 
     const wide = renderTuiSnapshot(model, { panel: 'tasks', width: 120, height: 28 });
     expect(wide.hitboxes).toContainEqual(expect.objectContaining({ action: 'panel', payload: 'tasks', x1: 1, y1: 8 }));
@@ -146,9 +147,7 @@ describe('TUI snapshot renderer', () => {
     expect(scrolled.text).not.toContain('Viewer line 01');
     expect(scrolled.text).toContain('Viewer line 18');
     expect(scrolled.text).toContain('Document Viewer TASK.md 11-');
-    expect(scrolled.text).toContain(' a ACC ');
     expect(scrolled.text).toContain(' e EVD ');
-    expect(scrolled.text).toContain(' h HAND ');
     expect(scrolled.text).toContain(' h HAND ');
     expect(scrolled.lines.every((line) => visibleWidth(line) === 104)).toBe(true);
   });

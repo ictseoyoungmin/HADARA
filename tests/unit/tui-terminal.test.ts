@@ -122,7 +122,7 @@ describe('TUI terminal shell', () => {
     input.emit('data', Buffer.from('\x1b[<0;30;6M'));
     expect(session.getState().activePanel).toBe('detail');
     input.emit('data', Buffer.from('\x1b[<0;14;12M'));
-    expect(session.getState().documentFile).toBe('PLAN.md');
+    expect(session.getState().documentFile).toBe('EVIDENCE.md');
 
     const beforeResize = output.chunks.length;
     output.emit('resize');

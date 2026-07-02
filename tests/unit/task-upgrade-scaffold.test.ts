@@ -25,8 +25,8 @@ describe('task upgrade scaffold report', () => {
   it('dry-runs missing frame insertion without writing files', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Legacy plan');
-    const planPath = path.join(task.dir, 'PLAN.md');
-    fs.writeFileSync(planPath, '# Plan\n\nLegacy prose stays.\n', 'utf8');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(taskPath, '# Legacy Task\n\nLegacy prose stays.\n', 'utf8');
 
     const report = createTaskUpgradeScaffoldReport(root, task.id, 'dry-run');
 
@@ -37,98 +37,102 @@ describe('task upgrade scaffold report', () => {
       mode: 'dry-run',
       taskId: task.id
     });
-    expect(report.actions.find((action) => action.path.endsWith('/PLAN.md'))).toMatchObject({
+    expect(report.actions.find((action) => action.path.endsWith('/TASK.md'))).toMatchObject({
       status: 'planned',
       expectedBeforeExists: true
     });
     expect(report.summary.beforeHash).toMatch(/^[a-f0-9]{64}$/);
-    expect(fs.readFileSync(planPath, 'utf8')).toBe('# Plan\n\nLegacy prose stays.\n');
+    expect(fs.readFileSync(taskPath, 'utf8')).toBe('# Legacy Task\n\nLegacy prose stays.\n');
     expect(validateSchema('hadara.task.upgrade_scaffold.v1', report).ok).toBe(true);
   });
 
   it('executes non-destructive frame insertion and is idempotent', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Legacy execute');
-    const planPath = path.join(task.dir, 'PLAN.md');
-    fs.writeFileSync(planPath, '# Plan\n\nLegacy prose stays.\n', 'utf8');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(taskPath, '# Legacy Task\n\nLegacy prose stays.\n', 'utf8');
 
     const dryRun = createTaskUpgradeScaffoldReport(root, task.id, 'dry-run');
     const executeReport = createTaskUpgradeScaffoldReport(root, task.id, 'execute', { beforeHash: dryRun.summary.beforeHash ?? undefined });
-    const updated = fs.readFileSync(planPath, 'utf8');
+    const updated = fs.readFileSync(taskPath, 'utf8');
 
     expect(executeReport.summary.changed).toBeGreaterThan(0);
     expect(updated).toContain('Legacy prose stays.');
     expect(updated).toContain('| Step | Action | Status | Evidence |');
 
     const rerun = createTaskUpgradeScaffoldReport(root, task.id, 'execute');
-    expect(rerun.actions.find((action) => action.path.endsWith('/PLAN.md'))).toMatchObject({
+    expect(rerun.actions.find((action) => action.path.endsWith('/TASK.md'))).toMatchObject({
       status: 'skipped'
     });
+    expect(rerun.summary.changed).toBe(0);
     expect(rerun.summary.beforeHash).toBeNull();
-    expect(fs.readFileSync(planPath, 'utf8')).toBe(updated);
+    expect(fs.readFileSync(taskPath, 'utf8')).toBe(updated);
   });
 
   it('refuses execute with planned writes when before-hash is missing or stale', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Guarded execute');
-    const planPath = path.join(task.dir, 'PLAN.md');
-    fs.writeFileSync(planPath, '# Plan\n\nLegacy prose stays.\n', 'utf8');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(taskPath, '# Legacy Task\n\nLegacy prose stays.\n', 'utf8');
 
     const missingHash = createTaskUpgradeScaffoldReport(root, task.id, 'execute');
     expect(missingHash.ok).toBe(false);
     expect(missingHash.issues).toContainEqual(expect.objectContaining({ code: 'TASK_UPGRADE_SCAFFOLD_BEFORE_HASH_REQUIRED', severity: 'error' }));
-    expect(fs.readFileSync(planPath, 'utf8')).toBe('# Plan\n\nLegacy prose stays.\n');
+    expect(fs.readFileSync(taskPath, 'utf8')).toBe('# Legacy Task\n\nLegacy prose stays.\n');
 
     const staleHash = createTaskUpgradeScaffoldReport(root, task.id, 'execute', { beforeHash: '0'.repeat(64) });
     expect(staleHash.ok).toBe(false);
     expect(staleHash.issues).toContainEqual(expect.objectContaining({ code: 'TASK_UPGRADE_SCAFFOLD_BEFORE_HASH_MISMATCH', severity: 'error' }));
-    expect(fs.readFileSync(planPath, 'utf8')).toBe('# Plan\n\nLegacy prose stays.\n');
+    expect(fs.readFileSync(taskPath, 'utf8')).toBe('# Legacy Task\n\nLegacy prose stays.\n');
     expect(validateSchema('hadara.task.upgrade_scaffold.v1', staleHash).ok).toBe(true);
   });
 
-  it('creates missing standard files and empty evidence index only when executing', () => {
+  it('creates missing current capsule files and empty evidence index only when executing', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Missing files');
-    fs.rmSync(path.join(task.dir, 'FILES.md'));
+    fs.rmSync(path.join(task.dir, 'HANDOFF.md'));
+    fs.rmSync(path.join(task.dir, 'EVIDENCE.md'));
     fs.rmSync(path.join(task.dir, 'evidence.jsonl'));
 
     const dryRun = createTaskUpgradeScaffoldReport(root, task.id, 'dry-run');
     expect(dryRun.actions.filter((action) => action.status === 'planned').map((action) => path.basename(action.path))).toEqual(
-      expect.arrayContaining(['FILES.md', 'evidence.jsonl'])
+      expect.arrayContaining(['HANDOFF.md', 'EVIDENCE.md', 'evidence.jsonl'])
     );
-    expect(fs.existsSync(path.join(task.dir, 'FILES.md'))).toBe(false);
+    expect(fs.existsSync(path.join(task.dir, 'HANDOFF.md'))).toBe(false);
+    expect(fs.existsSync(path.join(task.dir, 'EVIDENCE.md'))).toBe(false);
     expect(fs.existsSync(path.join(task.dir, 'evidence.jsonl'))).toBe(false);
 
     const execute = createTaskUpgradeScaffoldReport(root, task.id, 'execute', { beforeHash: dryRun.summary.beforeHash ?? undefined });
     expect(execute.ok).toBe(true);
-    expect(fs.readFileSync(path.join(task.dir, 'FILES.md'), 'utf8')).toContain('| Path | Action | Reason | Status |');
+    expect(fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8')).toContain('| Item | Evidence |');
+    expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain('<!-- hadara:slot evidence.validation-summary -->');
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe('');
   });
 
   it('skips ambiguous non-canonical semantic tables', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Ambiguous table');
-    const acceptancePath = path.join(task.dir, 'ACCEPTANCE.md');
-    fs.writeFileSync(acceptancePath, '# Acceptance Criteria\n\n| ID | Criterion | Status |\n|---|---|---|\n| AC-1 | Keep | Pending |\n', 'utf8');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(taskPath, '# Legacy Task\n\n## Acceptance\n\n| ID | Criterion | Status |\n|---|---|---|\n| AC-1 | Keep | Pending |\n', 'utf8');
 
-    const report = createTaskUpgradeScaffoldReport(root, task.id, 'execute');
+    const report = createTaskUpgradeScaffoldReport(root, task.id, 'dry-run');
 
     expect(report.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           severity: 'warning',
           code: 'TASK_UPGRADE_SCAFFOLD_AMBIGUOUS_FRAME',
-          path: `tasks/${task.id}-ambiguous-table/ACCEPTANCE.md`
+          path: `tasks/${task.id}-ambiguous-table/TASK.md`
         })
       ])
     );
-    expect(fs.readFileSync(acceptancePath, 'utf8')).not.toContain('| ID | Criterion | Status | Evidence |');
+    expect(fs.readFileSync(taskPath, 'utf8')).not.toContain('| ID | Criterion | Required | Status | Evidence | Disposition | Reference |');
   });
 
   it('prints schema-valid JSON through the task command handler', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'CLI upgrade');
-    fs.writeFileSync(path.join(task.dir, 'PLAN.md'), '# Plan\n\nLegacy.\n', 'utf8');
+    fs.writeFileSync(path.join(task.dir, 'TASK.md'), '# Legacy Task\n\nLegacy.\n', 'utf8');
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
     const handled = handleTaskCommand({

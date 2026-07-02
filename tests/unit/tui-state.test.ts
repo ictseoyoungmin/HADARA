@@ -32,12 +32,12 @@ describe('TUI interaction state', () => {
     writeProjectDocs(root);
     const model = createTuiReadModel(root, { selectedTaskId: first.id });
 
-    const state = createTuiInteractionState(model, { panel: 'detail', document: 'PLAN.md' });
+    const state = createTuiInteractionState(model, { panel: 'detail', document: 'HANDOFF.md' });
 
     expect(state).toMatchObject({
       activePanel: 'detail',
       selectedTaskId: first.id,
-      documentFile: 'PLAN.md',
+      documentFile: 'HANDOFF.md',
       documentScroll: 0,
       refreshRequested: false,
       quitRequested: false
@@ -46,7 +46,7 @@ describe('TUI interaction state', () => {
     expect(tuiStateToReadModelOptions(state)).toEqual({ selectedTaskId: first.id });
     expect(tuiStateToSnapshotOptions(state, { width: 90, height: 24 })).toMatchObject({
       panel: 'detail',
-      document: 'PLAN.md',
+      document: 'HANDOFF.md',
       documentScroll: 0,
       taskListScroll: 0,
       taskSearchActive: false,
@@ -136,15 +136,15 @@ describe('TUI interaction state', () => {
     const model = createTuiReadModel(root);
 
     let state = createTuiInteractionState(model, { panel: 'detail' });
-    state = reduceTuiInteractionState(state, model, 'p');
+    state = reduceTuiInteractionState(state, model, 'h');
     state = reduceTuiInteractionState(state, model, 'down');
     state = reduceTuiInteractionState(state, model, 'pagedown');
     state = reduceTuiInteractionState(state, model, 'up');
 
     expect(state.activePanel).toBe('detail');
-    expect(state.documentFile).toBe('PLAN.md');
+    expect(state.documentFile).toBe('HANDOFF.md');
     expect(state.documentScroll).toBe(8);
-    expect(tuiStateToSnapshotOptions(state)).toMatchObject({ document: 'PLAN.md', documentScroll: 8 });
+    expect(tuiStateToSnapshotOptions(state)).toMatchObject({ document: 'HANDOFF.md', documentScroll: 8 });
 
     state = reduceTuiInteractionState(state, model, 'e');
     expect(state.documentFile).toBe('EVIDENCE.md');
