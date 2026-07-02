@@ -6,7 +6,7 @@
 
 <p align="center">
   <img alt="Stable npm release" src="https://img.shields.io/badge/npm-0.3.3-blue">
-  <img alt="Source version" src="https://img.shields.io/badge/source-0.4.0--rc.0-blue">
+  <img alt="Next npm release" src="https://img.shields.io/badge/next-0.4.0--rc.0-blue">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>
@@ -27,7 +27,7 @@ Current stable npm release:
 hadara@0.3.3
 ```
 
-Current source release candidate:
+Current npm release candidate:
 
 ```text
 hadara@0.4.0-rc.0
@@ -41,12 +41,12 @@ hadara@0.3.4-rc.0
 
 The 0.4.0 source line is a breaking productization release candidate after stable 0.3.3 and the published 0.3.4-rc.0 agent UX line. It keeps the context-routing and finalize-first lifecycle baseline, then simplifies new projects around a productized 0.4 scaffold, registry-backed docs read maps, a four-file Task Capsule, generated evidence projection, a normalized close-source contract, and fail-closed legacy mutation boundaries.
 
-Phase labels are internal implementation phases, not npm release-candidate labels. The stable `0.3.3` package is the default install target; `0.4.0-rc.0` is the current source candidate and must not be treated as published until an approval-gated publish capsule completes.
+Phase labels are internal implementation phases, not npm release-candidate labels. The stable `0.3.3` package remains the default install target through the `latest` dist-tag; `0.4.0-rc.0` is published on npm under the `next` dist-tag for explicit release-candidate evaluation.
 
 | Surface | Status |
 |---|---|
 | Current stable | [`hadara@0.3.3`](docs/RELEASE_NOTES.md#033) |
-| Source candidate | [`hadara@0.4.0-rc.0`](docs/RELEASE_NOTES.md#040-rc0) |
+| Current RC | [`hadara@0.4.0-rc.0`](docs/RELEASE_NOTES.md#040-rc0) on `next` |
 | Previous RC | [`hadara@0.3.4-rc.0`](docs/RELEASE_NOTES.md#034-rc0) |
 | Previous stable | [`hadara@0.3.2`](docs/RELEASE_NOTES.md#032) |
 | Historical RCs | See [Release Notes](docs/RELEASE_NOTES.md). |
@@ -55,7 +55,7 @@ Phase labels are internal implementation phases, not npm release-candidate label
 | PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
 | Installer scripts / USB launchers | Deferred. |
 
-No release command should publish, create a GitHub Release, build Docker images, upload artifacts, or load token values unless an operator explicitly approves the mutation path for the active release capsule. Stable `0.3.3` is the npm package line until the `0.4.0-rc.0` publish capsule completes; GitHub Release, Docker/PyPI publish, installer execution, and MCP release/package execution remain separate explicit mutations.
+No release command should publish, create a GitHub Release, build Docker images, upload artifacts, or load token values unless an operator explicitly approves the mutation path for the active release capsule. Stable `0.3.3` remains the default npm package line; `0.4.0-rc.0` is available for explicit RC evaluation through `hadara@next` or the exact version. GitHub Release, Docker/PyPI publish, installer execution, and MCP release/package execution remain separate explicit mutations.
 
 ## Install
 
@@ -76,7 +76,7 @@ npx hadara@0.3.3 help
 npx hadara@0.3.3 doctor --json
 ```
 
-After `0.4.0-rc.0` is published, evaluate it explicitly:
+Evaluate `0.4.0-rc.0` explicitly:
 
 ```bash
 npm install -g hadara@0.4.0-rc.0

@@ -14,6 +14,8 @@ Do not hand-edit this file.
 | ev:T-0477:94932d7e2ded42d1bc00a777 | passed | validation | Release helper shell syntax passed: bash -n scripts/release/manual-publish-rc.sh scripts/release/prepare-publish-env.sh. |
 | ev:T-0477:a65852a1ad8143f4a150758d | passed | validation | git diff --check passed for 0.4.0-rc.0 release readiness changes. |
 | ev:T-0477:d8567a139d9f450797f36c11 | passed | validation | Done-level harness validation passed for T-0477 with no issues. |
+| ev:T-0477:8f87cd1d94cc44be90dfa5ad | passed | release | Published hadara@0.4.0-rc.0 to npm and verified npm view returned version 0.4.0-rc.0 with dist-tags latest=0.3.3 and next=0.4.0-rc.0; GitHub Release draft requested: false. |
+| ev:T-0477:6d8e187600ed4967b22f2c75 | passed | validation | Post-publish documentation cleanup diff hygiene passed: git diff --check reported no whitespace errors after recording hadara@0.4.0-rc.0 publish state. |
 <!-- /hadara:slot -->
 
 ## Close Proof

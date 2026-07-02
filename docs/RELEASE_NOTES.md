@@ -2,7 +2,7 @@
 
 ## 0.4.0-rc.0
 
-Release candidate preparation line for the breaking 0.4 productization protocol after stable `0.3.3`, the published `0.3.4-rc.0` agent UX hardening line, and the completed 0.4 implementation budget.
+Release candidate line for the breaking 0.4 productization protocol after stable `0.3.3`, the published `0.3.4-rc.0` agent UX hardening line, and the completed 0.4 implementation budget. `hadara@0.4.0-rc.0` is published on npm with the `next` dist-tag; `latest` remains `0.3.3`.
 
 Highlights:
 
@@ -23,8 +23,9 @@ Highlights:
 
 Boundaries:
 
-- T-0477 prepares source/readiness only for `hadara@0.4.0-rc.0`; it performs no npm publish, GitHub Release creation, Docker image build/push, PyPI publish, registry mutation, installer execution, MCP release/package execution, or token loading.
-- The stable npm package remains `hadara@0.3.3` until the operator completes the approval-gated npm publish for `0.4.0-rc.0`.
+- T-0477 prepared source/readiness for `hadara@0.4.0-rc.0`; the operator then completed the approval-gated npm publish, and `npm view` verified `version=0.4.0-rc.0`, `next=0.4.0-rc.0`, and `latest=0.3.3`.
+- GitHub Release draft creation was not requested. Docker image build/push, PyPI publish, installer execution, and MCP release/package execution remain out of scope.
+- The stable npm package remains `hadara@0.3.3` on the `latest` dist-tag; use `hadara@next` or `hadara@0.4.0-rc.0` for explicit RC evaluation.
 - `0.4.0-rc.0` is a breaking project protocol line. It does not silently migrate or mutate 0.3.x projects; use the 0.3.x package line for old projects or initialize a new 0.4 project.
 - The 0.4 release does not add a full agent runtime, scheduler, background runner, provider execution, vector retrieval, dashboard productization, MCP write expansion by default, evidence rebuild preview/execute, or non-npm publish target execution.
 - Post-publish installed-package recycle, stable 0.4.0 decision, stable readiness, stable publish, and stable recycle remain separate future capsules.
