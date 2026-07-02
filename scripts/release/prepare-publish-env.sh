@@ -117,11 +117,19 @@ REGISTRY="$HADARA_REGISTRY"
 SKIP_DRY_RUN="$HADARA_SKIP_DRY_RUN"
 
 echo "== 1. Fresh clone from the mounted repo =="
-git config --global --add safe.directory "$WORKSPACE" >/dev/null 2>&1 || true
+add_git_safe_directory() {
+  local directory="$1"
+  git config --global --get-all safe.directory 2>/dev/null | grep -Fxq "$directory" \
+    || git config --global --add safe.directory "$directory" >/dev/null 2>&1 \
+    || true
+}
+
+add_git_safe_directory "$WORKSPACE"
+add_git_safe_directory "$WORKSPACE/.git"
 test -d "$WORKSPACE/.git" || { echo "ERROR: $WORKSPACE/.git not found; is the repo mounted?"; exit 1; }
 rm -rf "$CLONE"
 git clone "$WORKSPACE" "$CLONE"
-git config --global --add safe.directory "$CLONE" >/dev/null 2>&1 || true
+add_git_safe_directory "$CLONE"
 cd "$CLONE"
 echo "HEAD: $(git log --oneline -1)"
 DIRTY="$(git status --porcelain)"

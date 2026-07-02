@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 describe('manual publish release script', () => {
   const scriptPath = path.join(process.cwd(), 'scripts', 'release', 'manual-publish-rc.sh');
+  const prepareScriptPath = path.join(process.cwd(), 'scripts', 'release', 'prepare-publish-env.sh');
 
   it('passes shell syntax validation', () => {
     expect(() => execFileSync('bash', ['-n', scriptPath], { stdio: 'pipe' })).not.toThrow();
@@ -29,5 +30,16 @@ describe('manual publish release script', () => {
     expect(script).toContain("parsed.description.includes('Portable AI-assisted development workbench')");
     expect(script).toContain("['ai', 'agent', 'coding-agent', 'developer-tools', 'hadara']");
     expect(script).toContain('repository metadata is missing');
+  });
+
+  it('marks both mounted workspace paths as git safe directories before cloning', () => {
+    const script = fs.readFileSync(prepareScriptPath, 'utf8');
+
+    expect(script).toContain('add_git_safe_directory "$WORKSPACE"');
+    expect(script).toContain('add_git_safe_directory "$WORKSPACE/.git"');
+    expect(script).toContain('git clone "$WORKSPACE" "$CLONE"');
+    expect(script.indexOf('add_git_safe_directory "$WORKSPACE/.git"')).toBeLessThan(
+      script.indexOf('git clone "$WORKSPACE" "$CLONE"'),
+    );
   });
 });
