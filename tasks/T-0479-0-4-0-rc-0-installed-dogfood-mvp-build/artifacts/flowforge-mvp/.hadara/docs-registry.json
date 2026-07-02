@@ -1,0 +1,241 @@
+{
+  "schemaVersion": "hadara.docsRegistry.v2",
+  "registryVersion": 1,
+  "projectProfile": "governed",
+  "documents": [
+    {
+      "path": ".hadara/context/HADARA_CONTEXT.md",
+      "title": "HADARA_CONTEXT",
+      "owner": "hadara-docs",
+      "kind": "project-context",
+      "status": "canonical",
+      "scope": "project",
+      "profiles": [
+        "basic",
+        "standard",
+        "governed",
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "session-start"
+      ],
+      "requiredReading": true,
+      "updateOwner": "mixed",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "included",
+      "supersedes": [],
+      "generatedBy": "hadara init"
+    },
+    {
+      "path": "AGENTS.md",
+      "title": "AGENTS",
+      "owner": "hadara-docs",
+      "kind": "protocol",
+      "status": "canonical",
+      "scope": "repo",
+      "profiles": [
+        "basic",
+        "standard",
+        "governed",
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "session-start"
+      ],
+      "requiredReading": true,
+      "updateOwner": "mixed",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "included",
+      "supersedes": [],
+      "generatedBy": "hadara init"
+    },
+    {
+      "path": "docs/HADARA_WORKFLOW.md",
+      "title": "HADARA_WORKFLOW",
+      "owner": "hadara-docs",
+      "kind": "workflow-guide",
+      "status": "canonical",
+      "scope": "project",
+      "profiles": [
+        "basic",
+        "standard",
+        "governed",
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "session-start",
+        "task-start"
+      ],
+      "requiredReading": true,
+      "updateOwner": "mixed",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "included",
+      "supersedes": [],
+      "generatedBy": "hadara init"
+    },
+    {
+      "path": "docs/PROJECT_STATE.md",
+      "title": "PROJECT_STATE",
+      "owner": "hadara-docs",
+      "kind": "project-state",
+      "status": "canonical",
+      "scope": "project",
+      "profiles": [
+        "basic",
+        "standard",
+        "governed",
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "session-start"
+      ],
+      "requiredReading": true,
+      "updateOwner": "mixed",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "included",
+      "supersedes": [],
+      "generatedBy": "hadara init"
+    },
+    {
+      "path": "docs/TASK_BOARD.md",
+      "title": "TASK_BOARD",
+      "owner": "hadara-docs",
+      "kind": "task-board",
+      "status": "active",
+      "scope": "project",
+      "profiles": [
+        "basic",
+        "standard",
+        "governed",
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "task-start"
+      ],
+      "requiredReading": true,
+      "updateOwner": "hadara-task",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "included",
+      "supersedes": [],
+      "generatedBy": "hadara init"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "title": "ARCHITECTURE",
+      "owner": "hadara-docs",
+      "kind": "architecture",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "standard",
+        "governed",
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "hadara init"
+    },
+    {
+      "path": "docs/DECISIONS.md",
+      "title": "DECISIONS",
+      "owner": "hadara-docs",
+      "kind": "decision-log",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "standard",
+        "governed",
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "hadara init"
+    },
+    {
+      "path": "docs/ROADMAP.md",
+      "title": "ROADMAP",
+      "owner": "hadara-docs",
+      "kind": "roadmap",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "standard",
+        "governed",
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "hadara init"
+    },
+    {
+      "path": "docs/AGENT_HANDOFF.md",
+      "title": "AGENT_HANDOFF",
+      "owner": "hadara-docs",
+      "kind": "handoff",
+      "status": "canonical",
+      "scope": "project",
+      "profiles": [
+        "governed",
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "session-start"
+      ],
+      "requiredReading": true,
+      "updateOwner": "mixed",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "included",
+      "supersedes": [],
+      "generatedBy": "hadara init"
+    },
+    {
+      "path": "docs/SECURITY_MODEL.md",
+      "title": "SECURITY_MODEL",
+      "owner": "hadara-docs",
+      "kind": "security-model",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "governed",
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "hadara init"
+    }
+  ]
+}

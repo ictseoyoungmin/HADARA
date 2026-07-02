@@ -1,0 +1,12 @@
+T-0001,Define FlowForge product and technical spec
+T-0002,Build file backed data model
+T-0003,Build HTTP API and static server
+T-0004,Build dashboard shell and navigation
+T-0005,Build board and table views
+T-0006,Build item editor and filters
+T-0007,Build timeline and risk matrix
+T-0008,Build readiness report generator
+T-0009,Build import export workflow
+T-0010,Add smoke tests and seeded data
+T-0011,Measure HADARA command UX
+T-0012,Package dogfood report and handoff

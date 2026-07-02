@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FlowForge</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>FlowForge</h1>
+      <p>Local release planning board</p>
+    </div>
+    <nav>
+      <button data-view="board">Board</button>
+      <button data-view="table">Table</button>
+      <button data-view="timeline">Timeline</button>
+      <button data-view="report">Report</button>
+    </nav>
+  </header>
+  <main>
+    <section class="toolbar">
+      <input id="search" placeholder="Search work">
+      <select id="status"></select>
+      <select id="owner"></select>
+      <button id="new-item">New item</button>
+      <button id="export-json">Export</button>
+      <label class="import-label">Import<input id="import-json" type="file" accept="application/json"></label>
+    </section>
+    <section id="summary" class="summary-grid"></section>
+    <section id="workspace"></section>
+  </main>
+  <dialog id="editor">
+    <form method="dialog" id="editor-form">
+      <h2>Edit work item</h2>
+      <input name="title" placeholder="Title" required>
+      <textarea name="description" placeholder="Description"></textarea>
+      <div class="form-grid">
+        <label>Owner<select name="owner"></select></label>
+        <label>Status<select name="status"></select></label>
+        <label>Priority<select name="priority"></select></label>
+        <label>Due<input name="due" type="date"></label>
+        <label>Effort<input name="effort" type="number" min="1" max="21"></label>
+        <label>Confidence<input name="confidence" type="number" min="0" max="100"></label>
+        <label>Risk<input name="risk" type="number" min="0" max="5"></label>
+        <label>Tags<input name="tags" placeholder="tag, tag"></label>
+      </div>
+      <menu>
+        <button value="cancel">Cancel</button>
+        <button id="save-item" value="default">Save</button>
+      </menu>
+    </form>
+  </dialog>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
+

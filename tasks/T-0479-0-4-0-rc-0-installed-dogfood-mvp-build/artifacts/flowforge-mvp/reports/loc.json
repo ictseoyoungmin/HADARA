@@ -1,0 +1,45 @@
+{
+  "total": 5397,
+  "files": [
+    {
+      "file": "package.json",
+      "lines": 11
+    },
+    {
+      "file": "public/app.js",
+      "lines": 152
+    },
+    {
+      "file": "public/index.html",
+      "lines": 57
+    },
+    {
+      "file": "public/styles.css",
+      "lines": 3351
+    },
+    {
+      "file": "scripts/count-loc.js",
+      "lines": 25
+    },
+    {
+      "file": "src/report.js",
+      "lines": 52
+    },
+    {
+      "file": "src/schema.js",
+      "lines": 1592
+    },
+    {
+      "file": "src/server.js",
+      "lines": 54
+    },
+    {
+      "file": "src/store.js",
+      "lines": 70
+    },
+    {
+      "file": "test/smoke.js",
+      "lines": 33
+    }
+  ]
+}

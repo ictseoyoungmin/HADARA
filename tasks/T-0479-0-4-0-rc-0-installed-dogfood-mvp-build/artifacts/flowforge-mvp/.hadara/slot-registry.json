@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "hadara.managedSlot.registry.v1",
+  "registryVersion": 1,
+  "slots": [
+    {
+      "id": "task.identity",
+      "schemaVersion": "hadara.managedSlot.v2",
+      "owner": "task.lifecycle",
+      "allowedPaths": [
+        "tasks/*/TASK.md"
+      ],
+      "closeSourceRole": "included",
+      "kind": "key-value-table",
+      "fields": [
+        {
+          "name": "ID",
+          "required": true,
+          "editable": "cli-only",
+          "pattern": "^T-[0-9]{4,}$"
+        },
+        {
+          "name": "Title",
+          "required": true,
+          "editable": "cli-on-create"
+        },
+        {
+          "name": "Status",
+          "required": true,
+          "editable": "lifecycle-or-constrained-md",
+          "allowedValues": [
+            "Draft",
+            "In Progress",
+            "Blocked",
+            "Done",
+            "Partial",
+            "Superseded",
+            "Archived"
+          ]
+        },
+        {
+          "name": "Created",
+          "required": true,
+          "editable": "cli-only",
+          "pattern": "^\\\\d{4}-\\\\d{2}-\\\\d{2}$"
+        },
+        {
+          "name": "Updated",
+          "required": true,
+          "editable": "cli-or-managed",
+          "pattern": "^\\\\d{4}-\\\\d{2}-\\\\d{2}$"
+        }
+      ]
+    }
+  ],
+  "tableSchemas": [
+    {
+      "id": "task.acceptance",
+      "kind": "markdown-table",
+      "allowedPaths": [
+        "tasks/*/TASK.md"
+      ],
+      "closeSourceRole": "included",
+      "columns": [
+        {
+          "name": "ID",
+          "pattern": "^AC-[0-9]+$",
+          "required": true
+        },
+        {
+          "name": "Criterion",
+          "editable": "agent-derived-prose",
+          "required": true
+        },
+        {
+          "name": "Required",
+          "allowedValues": [
+            "Yes",
+            "No"
+          ],
+          "required": true
+        },
+        {
+          "name": "Status",
+          "allowedValues": [
+            "Pending",
+            "Met",
+            "Not Met",
+            "Blocked",
+            "Not Applicable"
+          ],
+          "required": true
+        },
+        {
+          "name": "Evidence",
+          "pattern": "^(TBD|ev:.*|)$",
+          "required": false
+        },
+        {
+          "name": "Disposition",
+          "allowedValues": [
+            "Required",
+            "Optional",
+            "Deferred",
+            "Accepted Risk",
+            "Not Applicable",
+            "Superseded"
+          ],
+          "required": true
+        },
+        {
+          "name": "Reference",
+          "requiredWhenDispositionIn": [
+            "Deferred",
+            "Accepted Risk",
+            "Superseded"
+          ]
+        }
+      ]
+    }
+  ]
+}

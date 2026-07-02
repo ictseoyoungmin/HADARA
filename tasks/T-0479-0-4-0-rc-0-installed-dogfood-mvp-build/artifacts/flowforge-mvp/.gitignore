@@ -1,0 +1,31 @@
+node_modules/
+dist/
+coverage/
+*.log
+
+# Python and test artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+*.db
+*.sqlite
+*.sqlite3
+
+# HADARA local/private state
+.hadara/local/
+.hadara/tmp/
+.hadara/cache/
+
+# Environment and machine-local files
+.env
+.env.*
+.DS_Store
+Thumbs.db
