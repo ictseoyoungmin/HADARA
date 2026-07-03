@@ -1,6 +1,6 @@
 # 0.4.0 Stable Pre-release Plan
 
-Status: stable readiness decision complete; stable publish preparation is next
+Status: stable publish preparation complete; operator publish execution is next
 Source: T-0479 installed-package dogfood handoff and operator review on 2026-07-02.
 
 ## Goal
@@ -40,6 +40,8 @@ T-0489 completed the stable readiness decision on 2026-07-03. Decision: proceed 
 | Evidence | Each required capsule records command evidence and a close handoff before stable publish. |
 
 T-0489 gate review result: all required gates are sufficient to open the stable publish preparation capsule. Stable publish still requires retargeted package metadata, refreshed release artifacts, release validation, and explicit operator approval.
+
+T-0490 preparation result: package metadata, lockfile, package-facing docs, helper notes, stable GitHub release note artifact, and built `dist` target stable `0.4.0`. Package smoke and clean-checkout smoke passed. The approval-gated publish helper must regenerate release artifact evidence from the clean commit before publishing.
 
 ## Post-stable Candidates
 

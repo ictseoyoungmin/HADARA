@@ -2021,9 +2021,9 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     testFiles: ['tests/unit/package-recycle.test.ts'],
     docs: ['docs/RELEASE_READINESS.md', 'docs/CLI_JSON_CONTRACT.md'],
     examples: [
-      example('Preview installed-package recycle', 'hadara package recycle --package hadara@latest --expected-version 0.3.3 --json', 'Before running registry-backed consumer install validation.'),
-      example('Execute installed-package recycle', 'hadara package recycle --execute --package hadara@latest --expected-version 0.3.3 --task T-XXXX --attach-evidence --json', 'After an npm publish when verifying consumer install paths.'),
-      example('Execute recycle with graph diagnostics', 'hadara package recycle --execute --package hadara@latest --expected-version 0.3.3 --include-graph --json', 'When intentionally running the broader context graph smoke.')
+      example('Preview installed-package recycle', 'hadara package recycle --package hadara@latest --expected-version 0.4.0 --json', 'Before running registry-backed consumer install validation.'),
+      example('Execute installed-package recycle', 'hadara package recycle --execute --package hadara@latest --expected-version 0.4.0 --task T-XXXX --attach-evidence --json', 'After an npm publish when verifying consumer install paths.'),
+      example('Execute recycle with graph diagnostics', 'hadara package recycle --execute --package hadara@latest --expected-version 0.4.0 --include-graph --json', 'When intentionally running the broader context graph smoke.')
     ],
     related: ['package.smoke', 'release.closeout', 'release.publish'],
     conflictsWith: [],

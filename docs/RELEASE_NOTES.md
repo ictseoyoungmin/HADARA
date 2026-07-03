@@ -1,5 +1,25 @@
 # RELEASE_NOTES
 
+## 0.4.0
+
+Stable release for the breaking 0.4 productization protocol after `0.4.0-rc.0` publish verification, installed-package dogfood, and pre-stable friction cleanup.
+
+Highlights:
+
+- Promotes the productized 0.4 project scaffold, docs registry/read-map model, four-file Task Capsule, evidence projection, normalized close-source contract, and fail-closed legacy mutation boundaries from the rc line.
+- Keeps the context-routing, context cache, session-start, and finalize-first lifecycle baseline from stable `0.3.3` while making the new 0.4 project protocol the stable default.
+- Includes the post-rc dogfood hardening line: lean human-readable `TASK.md` v2 scaffolds, top-level JSON `taskId` envelopes, `doctor` install-origin output, monotonic timing fixes, task-id counter hardening, compact `task status --summary-json`, and clearer `validation run` output boundaries.
+- Adds stable package-facing documentation and a stable GitHub release note artifact for the approval-gated publish path.
+
+Boundaries:
+
+- T-0489 selected stable publish preparation after reviewing npm rc metadata, the RC GitHub draft, strict release gate output, and required pre-stable capsule audits.
+- T-0490 prepares source/readiness for `hadara@0.4.0`; npm publish and stable GitHub Release creation remain explicit operator actions.
+- The previous `0.4.0-rc.0` package remains available on `next` for release-candidate evaluation.
+- `0.4.0` does not silently migrate or mutate 0.3.x projects.
+- Docker image build/push, PyPI publish, installer execution, MCP release/package execution, full agent runtime, scheduler/background runner, provider execution, vector retrieval, dashboard productization, and evidence rebuild execute remain out of scope.
+- Stable installed-package recycle remains the next post-publish capsule after npm `latest=0.4.0` is verified.
+
 ## 0.4.0-rc.0
 
 Release candidate line for the breaking 0.4 productization protocol after stable `0.3.3`, the published `0.3.4-rc.0` agent UX hardening line, and the completed 0.4 implementation budget. `hadara@0.4.0-rc.0` is published on npm with the `next` dist-tag; `latest` remains `0.3.3`.
@@ -28,7 +48,7 @@ Boundaries:
 - The stable npm package remains `hadara@0.3.3` on the `latest` dist-tag; use `hadara@next` or `hadara@0.4.0-rc.0` for explicit RC evaluation.
 - `0.4.0-rc.0` is a breaking project protocol line. It does not silently migrate or mutate 0.3.x projects; use the 0.3.x package line for old projects or initialize a new 0.4 project.
 - The 0.4 release does not add a full agent runtime, scheduler, background runner, provider execution, vector retrieval, dashboard productization, MCP write expansion by default, evidence rebuild preview/execute, or non-npm publish target execution.
-- Post-publish installed-package recycle, stable 0.4.0 decision, stable readiness, stable publish, and stable recycle remain separate future capsules.
+- Post-publish installed-package recycle, stable 0.4.0 decision, stable readiness, stable publish preparation, and stable recycle remain separate capsules.
 
 ## 0.3.4-rc.0
 
