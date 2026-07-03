@@ -300,6 +300,49 @@ describe('task workbench status report', () => {
     expect(validateSchema('hadara.task.workbench.v1', fullPayload).ok).toBe(true);
   });
 
+  it('prints compact selected-task status with --summary-json', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Workbench compact status');
+    appendEvidence(root, { taskId: task.id, kind: 'note', summary: 'Fixture evidence', result: 'passed', visibility: 'public' });
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const handled = handleTaskCommand({
+      args: ['task', 'status', '--task', task.id, '--summary-json'],
+      projectRoot: root,
+      jsonOutput: false
+    });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.task.status.summary.v1',
+      command: 'task.status',
+      ok: true,
+      mode: 'selected-task',
+      taskId: task.id,
+      task: {
+        title: 'Workbench compact status',
+        capsule: `tasks/${task.id}-workbench-compact-status`,
+        taskStatus: 'Draft',
+        taskBoardStatus: 'Draft'
+      },
+      phase: 'author-task',
+      counts: {
+        evidenceRecords: 1,
+        validationChecks: 0,
+        unresolvedValidation: 0
+      },
+      diagnostics: {
+        generatedBy: 'cli',
+        commandPath: 'task.status',
+        slow: false
+      }
+    });
+    expect(payload).not.toHaveProperty('sources');
+    expect(payload).not.toHaveProperty('authoringSuggestions');
+    expect(payload).not.toHaveProperty('authoringGuidance');
+  });
+
   it('reports Task Board status drift from the actual docs/TASK_BOARD.md row', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Workbench board drift');

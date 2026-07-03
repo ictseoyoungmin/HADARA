@@ -8,7 +8,7 @@ import { createTaskReadyReport } from '../task/task-ready';
 import { createTaskFinishReport, formatTaskFinishReport } from '../task/task-finish';
 import { createTaskNextReport, formatTaskNextReport } from '../task/task-next';
 import { createTaskUpgradeScaffoldReport, formatTaskUpgradeScaffoldReport } from '../task/task-upgrade-scaffold';
-import { createTaskStatusSelectionReport, createTaskWorkbenchReport, formatTaskStatusSelectionReport, formatTaskWorkbenchReport } from '../services/task-workbench';
+import { createTaskStatusSelectionReport, createTaskWorkbenchReport, formatTaskStatusSelectionReport, formatTaskWorkbenchReport, type TaskStatusSelectionReport, type TaskWorkbenchReport } from '../services/task-workbench';
 import { startMonotonicTimer, type MonotonicTimer } from '../core/timing';
 import { getActorContextOption } from './actor';
 import { getFlag, getStringOption } from './args';
@@ -29,6 +29,51 @@ interface TaskCliDiagnostics {
   slow: boolean;
   note?: string;
 }
+
+type TaskStatusSummaryReport =
+  | {
+      schemaVersion: 'hadara.task.status.summary.v1';
+      command: 'task.status';
+      ok: boolean;
+      mode: 'select-work';
+      taskId?: string;
+      phase: string;
+      recommendations: number;
+      primaryNextAction?: unknown;
+      diagnostics?: TaskCliDiagnostics;
+      issues: TaskStatusSelectionReport['issues'];
+    }
+  | {
+      schemaVersion: 'hadara.task.status.summary.v1';
+      command: 'task.status';
+      ok: boolean;
+      mode: 'selected-task';
+      taskId: string;
+      task: {
+        title: string;
+        capsule: string;
+        taskStatus: string;
+        taskBoardStatus: string;
+      };
+      phase: string;
+      readiness: {
+        status: string;
+        ready: boolean;
+        closeProofValid: boolean;
+        summary: string;
+      };
+      counts: {
+        blockers: number;
+        warnings: number;
+        evidenceRecords: number;
+        validationChecks: number;
+        unresolvedValidation: number;
+        nextActions: number;
+      };
+      primaryNextAction?: unknown;
+      diagnostics?: TaskCliDiagnostics;
+      issues: TaskWorkbenchReport['issues'];
+    };
 
 export function handleTaskCommand(input: TaskCommandInput): boolean {
   const timer = startMonotonicTimer();
@@ -134,11 +179,14 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   if (sub === 'status') {
+    const summaryJsonOutput = getFlag(input.args, '--summary-json');
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) {
       const report = createTaskStatusSelectionReport(input.projectRoot);
       attachCliDiagnostics(report, timer, 'task.status');
-      if (input.jsonOutput) {
+      if (summaryJsonOutput) {
+        console.log(JSON.stringify(createTaskStatusSummaryReport(report), null, 2));
+      } else if (input.jsonOutput) {
         console.log(JSON.stringify(report, null, 2));
       } else {
         console.log(formatTaskStatusSelectionReport(report));
@@ -150,7 +198,9 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
     if (detail && detail !== 'fast' && detail !== 'full') throw new Error('task status --detail must be fast or full');
     const report = createTaskWorkbenchReport(input.projectRoot, id, new Date(), { detail: detail === 'full' ? 'full' : 'fast' });
     attachCliDiagnostics(report, timer, 'task.status');
-    if (input.jsonOutput) {
+    if (summaryJsonOutput) {
+      console.log(JSON.stringify(createTaskStatusSummaryReport(report), null, 2));
+    } else if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {
       console.log(formatTaskWorkbenchReport(report));
@@ -252,6 +302,54 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   return false;
+}
+
+function createTaskStatusSummaryReport(report: TaskStatusSelectionReport | TaskWorkbenchReport): TaskStatusSummaryReport {
+  if (report.schemaVersion === 'hadara.task.status.v1') {
+    return {
+      schemaVersion: 'hadara.task.status.summary.v1',
+      command: 'task.status',
+      ok: report.ok,
+      mode: 'select-work',
+      phase: report.loop.phase,
+      recommendations: report.summary.recommendations,
+      ...(report.loop.primaryNextAction ? { primaryNextAction: report.loop.primaryNextAction } : {}),
+      ...(report.diagnostics ? { diagnostics: report.diagnostics } : {}),
+      issues: report.issues
+    };
+  }
+
+  return {
+    schemaVersion: 'hadara.task.status.summary.v1',
+    command: 'task.status',
+    ok: report.ok,
+    mode: 'selected-task',
+    taskId: report.taskId,
+    task: {
+      title: report.task.title,
+      capsule: report.task.capsule,
+      taskStatus: report.task.taskStatus,
+      taskBoardStatus: report.task.taskBoardStatus
+    },
+    phase: report.loop.phase,
+    readiness: {
+      status: report.state.readiness.status,
+      ready: report.state.ready,
+      closeProofValid: report.state.readiness.closeProofValid,
+      summary: report.state.readiness.summary
+    },
+    counts: {
+      blockers: report.summary.blockers,
+      warnings: report.summary.warnings,
+      evidenceRecords: report.summary.evidenceRecords,
+      validationChecks: report.sources.evidenceList.validationAttempts?.checks ?? 0,
+      unresolvedValidation: report.sources.evidenceList.validationAttempts?.unresolvedFailedOrBlocked ?? 0,
+      nextActions: report.summary.nextActions
+    },
+    ...(report.loop.primaryNextAction ? { primaryNextAction: report.loop.primaryNextAction } : {}),
+    ...(report.diagnostics ? { diagnostics: report.diagnostics } : {}),
+    issues: report.issues
+  };
 }
 
 function createTaskFinalizeProgressWriter(taskId: string): (event: TaskFinalizeProgressEvent) => void {

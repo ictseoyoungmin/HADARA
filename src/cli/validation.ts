@@ -29,10 +29,20 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
     console.log(JSON.stringify(report, null, 2));
   } else {
     console.log(`[HADARA] validation run ${taskId}: ${report.result}`);
-    if (report.evidence) console.log(`evidence=${report.evidence.id}`);
-    if (!report.taskValidationRow.updated) console.log(`taskValidationRow=${report.taskValidationRow.mode}`);
+    console.log(`[HADARA] child command`);
+    console.log(`command=${report.argv.join(' ')}`);
+    console.log(`exitCode=${report.execution.exitCode ?? 'null'} signal=${report.execution.signal ?? 'null'} durationMs=${report.execution.durationMs}`);
+    console.log(`stdoutHash=${report.execution.stdoutHash}`);
+    console.log(`stderrHash=${report.execution.stderrHash}`);
+    console.log(`childOutput=not printed; stdout/stderr hashes are recorded in HADARA evidence`);
+    console.log(`[HADARA] evidence`);
+    if (report.evidence) console.log(`id=${report.evidence.id}`);
+    console.log(`result=${report.result}`);
+    console.log(`taskValidationRow=${report.taskValidationRow.mode}${report.taskValidationRow.updated ? ' updated' : ' not-updated'}`);
+    console.log(`acceptanceRows=not-updated`);
     for (const issue of report.issues) console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
-    for (const action of report.nextActions) console.log(`next=${action.command ?? action.message}`);
+    if (report.nextActions.length > 0) console.log(`[HADARA] next actions`);
+    for (const action of report.nextActions) console.log(`${action.id}=${action.command ?? action.message}`);
   }
   if (!report.ok) process.exitCode = 6;
   return true;
