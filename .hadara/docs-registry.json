@@ -52,78 +52,6 @@
       "generatedBy": "hadara init"
     },
     {
-      "path": "docs/IMPLEMENTATION_SOP.md",
-      "title": "IMPLEMENTATION_SOP",
-      "owner": "hadara-docs",
-      "kind": "protocol",
-      "status": "canonical",
-      "scope": "project",
-      "profiles": [
-        "basic",
-        "standard",
-        "governed",
-        "hadara-dev"
-      ],
-      "readWhen": [
-        "session-start"
-      ],
-      "requiredReading": true,
-      "updateOwner": "mixed",
-      "updatedByCommands": [],
-      "managedSections": [],
-      "closeSourceRole": "included",
-      "supersedes": [],
-      "generatedBy": "hadara init"
-    },
-    {
-      "path": "docs/TASK_WORKFLOW_COMMANDS.md",
-      "title": "TASK_WORKFLOW_COMMANDS",
-      "owner": "hadara-docs",
-      "kind": "workflow-guide",
-      "status": "canonical",
-      "scope": "project",
-      "profiles": [
-        "basic",
-        "standard",
-        "governed",
-        "hadara-dev"
-      ],
-      "readWhen": [
-        "task-start"
-      ],
-      "requiredReading": true,
-      "updateOwner": "mixed",
-      "updatedByCommands": [],
-      "managedSections": [],
-      "closeSourceRole": "included",
-      "supersedes": [],
-      "generatedBy": "hadara init"
-    },
-    {
-      "path": "docs/PROJECT_STATE.md",
-      "title": "PROJECT_STATE",
-      "owner": "hadara-docs",
-      "kind": "project-state",
-      "status": "canonical",
-      "scope": "project",
-      "profiles": [
-        "basic",
-        "standard",
-        "governed",
-        "hadara-dev"
-      ],
-      "readWhen": [
-        "session-start"
-      ],
-      "requiredReading": true,
-      "updateOwner": "mixed",
-      "updatedByCommands": [],
-      "managedSections": [],
-      "closeSourceRole": "included",
-      "supersedes": [],
-      "generatedBy": "hadara init"
-    },
-    {
       "path": "docs/AGENT_HANDOFF.md",
       "title": "AGENT_HANDOFF",
       "owner": "hadara-docs",
@@ -148,34 +76,75 @@
       "generatedBy": "hadara init"
     },
     {
-      "path": "docs/TASK_BOARD.md",
-      "title": "TASK_BOARD",
+      "path": "docs/ARCHITECTURE.md",
+      "title": "ARCHITECTURE",
       "owner": "hadara-docs",
-      "kind": "task-board",
-      "status": "active",
+      "kind": "architecture",
+      "status": "reference",
       "scope": "project",
       "profiles": [
-        "basic",
         "standard",
         "governed",
         "hadara-dev"
       ],
       "readWhen": [
-        "task-start"
+        "only-when-linked"
       ],
-      "requiredReading": true,
-      "updateOwner": "hadara-task",
+      "requiredReading": false,
+      "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "included",
+      "closeSourceRole": "task-dependent",
       "supersedes": [],
       "generatedBy": "hadara init"
     },
     {
-      "path": "docs/ARCHITECTURE.md",
-      "title": "ARCHITECTURE",
+      "path": "docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md",
+      "title": "Context Routing Performance Baseline",
+      "owner": "hadara-dev",
+      "kind": "performance-baseline",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0373"
+    },
+    {
+      "path": "docs/CONTEXT_ROUTING_PERFORMANCE_THRESHOLDS.json",
+      "title": "Context Routing Performance Thresholds",
+      "owner": "hadara-dev",
+      "kind": "performance-thresholds",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0380"
+    },
+    {
+      "path": "docs/DECISIONS.md",
+      "title": "DECISIONS",
       "owner": "hadara-docs",
-      "kind": "architecture",
+      "kind": "decision-log",
       "status": "reference",
       "scope": "project",
       "profiles": [
@@ -218,15 +187,13 @@
       "generatedBy": "hadara init"
     },
     {
-      "path": "docs/DECISIONS.md",
-      "title": "DECISIONS",
+      "path": "docs/GETTING_STARTED.md",
+      "title": "Getting Started",
       "owner": "hadara-docs",
-      "kind": "decision-log",
-      "status": "reference",
+      "kind": "workflow-guide",
+      "status": "active",
       "scope": "project",
       "profiles": [
-        "standard",
-        "governed",
         "hadara-dev"
       ],
       "readWhen": [
@@ -234,44 +201,45 @@
       ],
       "requiredReading": false,
       "updateOwner": "human",
-      "updatedByCommands": [],
+      "updatedByCommands": [
+        "docs.register"
+      ],
       "managedSections": [],
       "closeSourceRole": "task-dependent",
-      "supersedes": [],
-      "generatedBy": "hadara init"
+      "supersedes": []
     },
     {
-      "path": "docs/TEST_STRATEGY.md",
-      "title": "TEST_STRATEGY",
+      "path": "docs/IMPLEMENTATION_SOP.md",
+      "title": "IMPLEMENTATION_SOP",
       "owner": "hadara-docs",
-      "kind": "test-strategy",
-      "status": "reference",
+      "kind": "protocol",
+      "status": "canonical",
       "scope": "project",
       "profiles": [
+        "basic",
         "standard",
         "governed",
         "hadara-dev"
       ],
       "readWhen": [
-        "debugging"
+        "session-start"
       ],
-      "requiredReading": false,
-      "updateOwner": "human",
+      "requiredReading": true,
+      "updateOwner": "mixed",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "included",
       "supersedes": [],
       "generatedBy": "hadara init"
     },
     {
-      "path": "docs/SECURITY_MODEL.md",
-      "title": "SECURITY_MODEL",
+      "path": "docs/LIFECYCLE_QUICKSTART.md",
+      "title": "Lifecycle Quickstart",
       "owner": "hadara-docs",
-      "kind": "security-model",
-      "status": "reference",
+      "kind": "workflow-guide",
+      "status": "active",
       "scope": "project",
       "profiles": [
-        "governed",
         "hadara-dev"
       ],
       "readWhen": [
@@ -279,9 +247,34 @@
       ],
       "requiredReading": false,
       "updateOwner": "human",
-      "updatedByCommands": [],
+      "updatedByCommands": [
+        "docs.register"
+      ],
       "managedSections": [],
       "closeSourceRole": "task-dependent",
+      "supersedes": []
+    },
+    {
+      "path": "docs/PROJECT_STATE.md",
+      "title": "PROJECT_STATE",
+      "owner": "hadara-docs",
+      "kind": "project-state",
+      "status": "canonical",
+      "scope": "project",
+      "profiles": [
+        "basic",
+        "standard",
+        "governed",
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "session-start"
+      ],
+      "requiredReading": true,
+      "updateOwner": "mixed",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "included",
       "supersedes": [],
       "generatedBy": "hadara init"
     },
@@ -312,6 +305,28 @@
       "title": "ROADMAP",
       "owner": "hadara-docs",
       "kind": "roadmap",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "governed",
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "hadara init"
+    },
+    {
+      "path": "docs/SECURITY_MODEL.md",
+      "title": "SECURITY_MODEL",
+      "owner": "hadara-docs",
+      "kind": "security-model",
       "status": "reference",
       "scope": "project",
       "profiles": [
@@ -585,27 +600,6 @@
       "generatedBy": "T-0381"
     },
     {
-      "path": "docs/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md",
-      "title": "Lifecycle Workflow Agent Convenience Spec",
-      "owner": "hadara-dev",
-      "kind": "spec",
-      "status": "reference",
-      "scope": "project",
-      "profiles": [
-        "hadara-dev"
-      ],
-      "readWhen": [
-        "only-when-linked"
-      ],
-      "requiredReading": false,
-      "updateOwner": "human",
-      "updatedByCommands": [],
-      "managedSections": [],
-      "closeSourceRole": "task-dependent",
-      "supersedes": [],
-      "generatedBy": "T-0392"
-    },
-    {
       "path": "docs/specs/0.3.3/dogfood/00_Procedural_Asset_SaaS_Dogfood_Spec.md",
       "title": "Procedural Asset SaaS Dogfood Spec",
       "owner": "hadara-dev",
@@ -627,6 +621,27 @@
       "generatedBy": "T-0403"
     },
     {
+      "path": "docs/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md",
+      "title": "Lifecycle Workflow Agent Convenience Spec",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0392"
+    },
+    {
       "path": "docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md",
       "title": "Agent UX Hardening Spec",
       "owner": "hadara-dev",
@@ -646,69 +661,6 @@
       "closeSourceRole": "task-dependent",
       "supersedes": [],
       "generatedBy": "T-0408"
-    },
-    {
-      "path": "docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md",
-      "title": "Context Routing Performance Baseline",
-      "owner": "hadara-dev",
-      "kind": "performance-baseline",
-      "status": "reference",
-      "scope": "project",
-      "profiles": [
-        "hadara-dev"
-      ],
-      "readWhen": [
-        "only-when-linked"
-      ],
-      "requiredReading": false,
-      "updateOwner": "human",
-      "updatedByCommands": [],
-      "managedSections": [],
-      "closeSourceRole": "task-dependent",
-      "supersedes": [],
-      "generatedBy": "T-0373"
-    },
-    {
-      "path": "docs/CONTEXT_ROUTING_PERFORMANCE_THRESHOLDS.json",
-      "title": "Context Routing Performance Thresholds",
-      "owner": "hadara-dev",
-      "kind": "performance-thresholds",
-      "status": "reference",
-      "scope": "project",
-      "profiles": [
-        "hadara-dev"
-      ],
-      "readWhen": [
-        "only-when-linked"
-      ],
-      "requiredReading": false,
-      "updateOwner": "human",
-      "updatedByCommands": [],
-      "managedSections": [],
-      "closeSourceRole": "task-dependent",
-      "supersedes": [],
-      "generatedBy": "T-0380"
-    },
-    {
-      "path": "docs/specs/0.4.0/productization-redesign/README.md",
-      "title": "HADARA 0.4.0 Productization Redesign Specs",
-      "owner": "hadara-dev",
-      "kind": "spec",
-      "status": "reference",
-      "scope": "project",
-      "profiles": [
-        "hadara-dev"
-      ],
-      "readWhen": [
-        "task-start"
-      ],
-      "requiredReading": false,
-      "updateOwner": "human",
-      "updatedByCommands": [],
-      "managedSections": [],
-      "closeSourceRole": "task-dependent",
-      "supersedes": [],
-      "generatedBy": "T-0427"
     },
     {
       "path": "docs/specs/0.4.0/productization-redesign/00_Decision_and_Productization_Principles.md",
@@ -1047,6 +999,27 @@
       "generatedBy": "T-0427"
     },
     {
+      "path": "docs/specs/0.4.0/productization-redesign/README.md",
+      "title": "HADARA 0.4.0 Productization Redesign Specs",
+      "owner": "hadara-dev",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "task-start"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "T-0427"
+    },
+    {
       "path": "docs/specs/0.4.0/productization-redesign/templates/0.4/AGENTS.md",
       "title": "0.4 AGENTS Template",
       "owner": "hadara-dev",
@@ -1171,6 +1144,78 @@
       "closeSourceRole": "task-dependent",
       "supersedes": [],
       "generatedBy": "T-0427"
+    },
+    {
+      "path": "docs/TASK_BOARD.md",
+      "title": "TASK_BOARD",
+      "owner": "hadara-docs",
+      "kind": "task-board",
+      "status": "active",
+      "scope": "project",
+      "profiles": [
+        "basic",
+        "standard",
+        "governed",
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "task-start"
+      ],
+      "requiredReading": true,
+      "updateOwner": "hadara-task",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "included",
+      "supersedes": [],
+      "generatedBy": "hadara init"
+    },
+    {
+      "path": "docs/TASK_WORKFLOW_COMMANDS.md",
+      "title": "TASK_WORKFLOW_COMMANDS",
+      "owner": "hadara-docs",
+      "kind": "workflow-guide",
+      "status": "canonical",
+      "scope": "project",
+      "profiles": [
+        "basic",
+        "standard",
+        "governed",
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "task-start"
+      ],
+      "requiredReading": true,
+      "updateOwner": "mixed",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "included",
+      "supersedes": [],
+      "generatedBy": "hadara init"
+    },
+    {
+      "path": "docs/TEST_STRATEGY.md",
+      "title": "TEST_STRATEGY",
+      "owner": "hadara-docs",
+      "kind": "test-strategy",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "standard",
+        "governed",
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "debugging"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "generatedBy": "hadara init"
     }
-  ]
+  ],
+  "generatedAt": "2026-07-03T13:49:54.875Z"
 }

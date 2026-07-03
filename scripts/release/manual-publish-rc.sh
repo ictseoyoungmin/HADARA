@@ -21,6 +21,7 @@ scripts/release/manual-publish-rc.sh TASK_ID [options]
 Options:
 --execute          Allow actual npm publish after interactive confirmation.
 --github-draft    After npm publish succeeds, create a GitHub Release draft with assets.
+                  Publishing that draft publicly remains a separate gh release edit command.
 --github-release-note <path>
                    Markdown file to use as the GitHub Release draft notes.
 --github-token-env <name>
@@ -59,6 +60,10 @@ scripts/release/manual-publish-rc.sh T-0477 --execute
 
 scripts/release/manual-publish-rc.sh T-0477 --execute --github-draft \
   --github-release-note tasks/T-0477-0-4-0-rc-0-release-readiness-and-notes/GITHUB_RELEASE_NOTE.md
+
+# Publish a reviewed GitHub Release draft publicly.
+
+gh release edit v0.4.0 --repo ictseoyoungmin/HADARA --draft=false
 EOF
 }
 
@@ -489,6 +494,9 @@ echo "  $0 ${TASK_ID} --execute"
 echo
 echo "To publish and then create a GitHub Release draft:"
 echo "  $0 ${TASK_ID} --execute --github-draft"
+echo
+echo "After reviewing a GitHub draft, publish it publicly with:"
+echo "  gh release edit v${VERSION} --repo ictseoyoungmin/HADARA --draft=false"
 echo "============================================================"
 exit 0
 fi
@@ -551,6 +559,8 @@ if [[ "${CREATE_GITHUB_DRAFT}" != "true" ]]; then
 echo
 echo "Skipping GitHub Release draft."
 echo "Re-run with --execute --github-draft if you want to create a draft release."
+echo "If a reviewed draft already exists, publish it publicly with:"
+echo "  gh release edit v${VERSION} --repo ictseoyoungmin/HADARA --draft=false"
 exit 0
 fi
 
@@ -621,7 +631,8 @@ gh release create "${TAG}" \
 
 echo
 echo "GitHub Release draft created."
-echo "Review it in GitHub UI, then publish the draft manually if everything is correct."
+echo "Review it in GitHub UI, then publish the draft manually if everything is correct:"
+echo "  gh release edit ${TAG} --repo ictseoyoungmin/HADARA --draft=false"
 run_hadara evidence add-command \
   --task "${TASK_ID}" \
   --summary "Created GitHub Release draft ${TAG} with tarball, checksum, and manifest assets after npm publish." \

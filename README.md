@@ -15,47 +15,9 @@
 
 > Unbroken Context, Verified Development.
 
-HADARA binds non-deterministic LLM agent work into a production-oriented workflow through Task Capsules, Session Continuity, Policy Layers, Evidence Logs, and Handoff Protocols.
+HADARA binds non-deterministic LLM agent work into a production-oriented workflow through Task Capsules, evidence logs, and handoff documents.
 
 This repository is both the HADARA source checkout and the HADARA protocol workspace used to build it.
-
-## Release Status
-
-Current stable npm release:
-
-```text
-hadara@0.4.0
-```
-
-Previous npm release candidate:
-
-```text
-hadara@0.4.0-rc.0
-```
-
-Previous agent UX release candidate:
-
-```text
-hadara@0.3.4-rc.0
-```
-
-The 0.4.0 source line is a breaking productization release after stable 0.3.3 and the published 0.3.4-rc.0 agent UX line. It keeps the context-routing and finalize-first lifecycle baseline, then simplifies new projects around a productized 0.4 scaffold, registry-backed docs read maps, a four-file Task Capsule, generated evidence projection, a normalized close-source contract, and fail-closed legacy mutation boundaries.
-
-Phase labels are internal implementation phases, not npm release-candidate labels. The stable `0.4.0` package is the default install target through the `latest` dist-tag after the approval-gated publish completes; `0.4.0-rc.0` remains the previous release candidate on npm under the `next` dist-tag.
-
-| Surface | Status |
-|---|---|
-| Current stable | [`hadara@0.4.0`](docs/RELEASE_NOTES.md#040) |
-| Previous RC | [`hadara@0.4.0-rc.0`](docs/RELEASE_NOTES.md#040-rc0) on `next` |
-| Previous agent UX RC | [`hadara@0.3.4-rc.0`](docs/RELEASE_NOTES.md#034-rc0) |
-| Previous stable | [`hadara@0.3.2`](docs/RELEASE_NOTES.md#032) |
-| Historical RCs | See [Release Notes](docs/RELEASE_NOTES.md). |
-| GitHub Release | Secondary target, approval-gated. |
-| Docker image | Deferred. |
-| PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
-| Installer scripts / USB launchers | Deferred. |
-
-No release command should publish, create a GitHub Release, build Docker images, upload artifacts, or load token values unless an operator explicitly approves the mutation path for the active release capsule. Stable `0.4.0` is the default npm package line after the T-0490 approval-gated publish completes; `0.4.0-rc.0` remains available for explicit RC evaluation through `hadara@next` or the exact version. The `v0.4.0-rc.0` GitHub Release exists as a draft prerelease; Docker/PyPI publish, installer execution, and MCP release/package execution remain separate explicit mutations.
 
 ## Install
 
@@ -76,22 +38,66 @@ npx hadara@0.4.0 help
 npx hadara@0.4.0 doctor --json
 ```
 
-Evaluate the previous `0.4.0-rc.0` explicitly:
+## First Project
+
+Full walkthrough: [Getting Started](docs/GETTING_STARTED.md).
 
 ```bash
-npm install -g hadara@0.4.0-rc.0
-npx hadara@0.4.0-rc.0 help
+mkdir my-workspace
+cd my-workspace
+hadara init --profile standard --json
+hadara doctor --json
 ```
 
-For release or recycle evidence, prefer an isolated prefix install when PATH, global installs, or `npx` cache behavior may be stale:
+Profiles:
+
+| Profile | Use When |
+|---|---|
+| `basic` | Small project, only task/handoff discipline needed. |
+| `standard` | Default multi-session project with planning and validation docs. |
+| `governed` | Long-lived project with security, roadmap, or operational governance needs. |
+
+## First Capsule
+
+Lifecycle walkthrough: [Lifecycle Quickstart](docs/LIFECYCLE_QUICKSTART.md).
+
+Use a Task Capsule for each focused change:
 
 ```bash
-tmp="$(mktemp -d)"
-npm --prefix "$tmp" install hadara@0.4.0
-"$tmp/node_modules/.bin/hadara" version --json
+hadara task status --json
+hadara task create "ship the smallest useful change" --json
+hadara task status --task T-0001 --summary-json
 ```
 
-`npx hadara@0.4.0 ...` remains convenient for normal use. The isolated installed-bin path is stronger proof that the published package installed and executed from the intended package tree.
+Do the work, run a real check, and record evidence:
+
+```bash
+hadara validation run --task T-0001 --check "Smoke test" -- npm test
+# Or record an already-run check:
+hadara evidence add-command --task T-0001 --summary "Smoke test passed" --result passed --category validation --json
+```
+
+Close with the reviewed finalize flow:
+
+```bash
+hadara task finalize --task T-0001 --json
+hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
+```
+
+`task finalize --json` is the dry-run review. It reports the current lifecycle step, write boundaries, expected paths, and the current plan hash. Execute mode rechecks that hash and succeeds only after close audit is valid.
+
+## Release Status
+
+| Surface | Status |
+|---|---|
+| Stable npm | [`hadara@0.4.0`](docs/RELEASE_NOTES.md#040) |
+| GitHub Release | [`v0.4.0`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.0) |
+| Previous RC | [`hadara@0.4.0-rc.0`](docs/RELEASE_NOTES.md#040-rc0) on `next` |
+| Historical releases | [Release Notes](docs/RELEASE_NOTES.md) |
+| Docker image / installer | Deferred |
+| PyPI bridge | `hadara==0.2.0rc1` preview bridge |
+
+Release mutation remains operator-approved. The ordinary user path is install, init, create a capsule, record evidence, and finalize.
 
 ## What HADARA Gives You
 
@@ -109,7 +115,7 @@ npm --prefix "$tmp" install hadara@0.4.0
 
 HADARA is deliberately conservative. Read surfaces are broad; write and release surfaces are narrow, explicit, and evidence-oriented.
 
-## Start Here
+## Command Discovery
 
 Ask the CLI for the workflow before choosing commands:
 
@@ -127,23 +133,7 @@ hadara commands --family capsule-lifecycle --json
 hadara help command task.close
 ```
 
-## Primary Capsule Lifecycle
-
-The 0.4 primary path is intentionally small. Agents should start with compact context and use `task finalize` as the default lifecycle close path:
-
-```bash
-hadara task status --json
-hadara session start --task T-XXXX --json
-hadara task create "implement a focused change" --json
-hadara task status --task T-XXXX --json
-hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
-# Finalize Task Capsule docs and tracked state docs before closing.
-hadara task finalize --task T-XXXX --json
-hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
-hadara handoff suggest --task T-XXXX --json
-```
-
-`task finalize --json` is the reviewed dry-run. It reports the current lifecycle step, write boundaries, expected write paths, and a current `planHash`. `task finalize --execute --plan-hash ...` rechecks that plan hash, executes phases serially, stops on blockers, and succeeds only after final close audit is `closed-valid`.
+## Lifecycle Details
 
 When `evidence add-command` uses both legacy `--result` and v2 `--outcome`, matching outcomes must agree with the legacy result. `recorded` and `not-applicable` outcomes keep legacy result `unknown`; incompatible combinations fail before evidence is appended.
 
@@ -158,13 +148,13 @@ Legacy compatibility ids are inspection-only and are not the preferred durable r
 
 Deferred Evidence v2 scope is explicit: rebuild preview/execute, `check-id`, `subject`, and a new add-command report schema id are future candidates, not current command behavior. Treat `evidence.jsonl` as canonical append-only evidence and `EVIDENCE.md` as a non-canonical human summary.
 
-Use read-only lifecycle diagnostics when you want a compact current-stage report, next recommended action, or close-proof repair explanation:
+Use read-only lifecycle diagnostics when you want a current-stage report, next recommended action, or close-proof explanation:
 
 ```bash
 hadara task status --task T-XXXX --json
+hadara session start --task T-XXXX --json
 hadara task complete --task T-XXXX --json
 hadara task lifecycle --task T-XXXX --json # compatibility
-hadara task close-repair-plan --task T-XXXX --json
 ```
 
 Low-level proof-boundary commands remain available for debugging, recovery, and command implementation work:
@@ -186,8 +176,7 @@ Important boundaries:
 |---|---|
 | `task status` | Read-only operator console. `ok:true` means the report was generated, not that the task is ready. |
 | `task complete` | Optional read-only workflow compressor. It reports the current stage and next action. |
-| `task lifecycle` | Read-only normalized lifecycle phase report for agents. |
-| `task close-repair-plan` | Read-only close-proof repair classifier. |
+| `task lifecycle` | Compatibility lifecycle phase report. |
 | `task finalize` | Default agent close path. Read-only by default; guarded execute requires a matching current `planHash` and preserves underlying write boundaries. |
 | `task finish` / `task ready` / `task close` / `task audit-close` | Low-level proof-boundary commands for debugging and recovery. |
 
@@ -312,22 +301,7 @@ Portable/local state is not committed. Project docs, Task Capsules, and reduced 
 
 ## Development / Contributing
 
-Initialize a project:
-
-```bash
-hadara init                  # default: standard
-hadara init --profile basic
-hadara init --profile standard
-hadara init --profile governed
-```
-
-Every profile generates the 0.4 project scaffold with compact agent entry docs, a docs registry, a workflow guide, and the current context-aware finalize-first lifecycle loop plus low-level proof-boundary reference commands.
-
-| Profile | Use When |
-|---|---|
-| `basic` | Small project, only task/handoff discipline needed. |
-| `standard` | Default multi-session project with planning and validation docs. |
-| `governed` | Long-lived project with security, refactor, roadmap, or operational governance needs. |
+Every init profile generates the 0.4 project scaffold with compact agent entry docs, a docs registry, a workflow guide, and the finalize-first lifecycle loop.
 
 Init maintenance commands dry-run by default unless `--execute` is supplied:
 

@@ -1,6 +1,6 @@
 # 0.4.0 Stable Pre-release Plan
 
-Status: stable npm publish, GitHub Release draft, and installed-package recycle complete
+Status: stable npm publish, public GitHub Release, and installed-package recycle complete
 Source: T-0479 installed-package dogfood handoff and operator review on 2026-07-02.
 
 ## Goal
@@ -43,9 +43,11 @@ T-0489 gate review result: all required gates are sufficient to open the stable 
 
 T-0490 result: package metadata, lockfile, package-facing docs, helper notes, stable GitHub release note artifact, and built `dist` targeted stable `0.4.0`; the clean publish clone regenerated release artifact, package smoke, and clean-checkout evidence; the operator published `hadara@0.4.0` to npm with `latest`; npm registry verification returned `latest=0.4.0` and `next=0.4.0-rc.0`.
 
-T-0491 result: created and verified the GitHub stable release draft `v0.4.0` titled `HADARA 0.4.0`, targeting `205e9aad0e01ea5332dbdca39c10403c00e845be`, with `isDraft=true` and `isPrerelease=false`. The draft remains unpublished pending operator review.
+T-0491 result: created and verified the GitHub stable release draft `v0.4.0` titled `HADARA 0.4.0`, targeting `205e9aad0e01ea5332dbdca39c10403c00e845be`, with `isDraft=true` and `isPrerelease=false`.
 
 T-0492 result: fresh unmounted `node:22-bookworm` container installed `hadara@0.4.0` globally, installed `hadara version --json` reported `packageVersion=0.4.0`, and installed `hadara package recycle --execute --package hadara@latest --expected-version 0.4.0 --json` returned `ok:true` with `latest=0.4.0`, `next=0.4.0-rc.0`, isolated install/init/task/session/context/finalize smokes passed, and disposable cleanup passed.
+
+T-0493 result: operator published the reviewed GitHub stable release; `gh release view v0.4.0` verified `isDraft=false`, `isPrerelease=false`, `tagName=v0.4.0`, target `205e9aad0e01ea5332dbdca39c10403c00e845be`, and public URL `https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.0`.
 
 ## Post-stable Candidates
 

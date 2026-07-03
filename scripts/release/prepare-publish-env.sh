@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Prepare a clean, validated publish environment inside the hadara-dev container,
 # so the operator only has to `npm login` and run `manual-publish-rc.sh <TASK> --execute`.
+# The optional GitHub Release step is still operator-controlled and can be run after npm publish.
 #
 # Why this script exists (the traps it removes):
 # - The mounted /workspace (/mnt/f, DrvFs) cannot run `npm ci`/`npm run build`: the package
@@ -17,6 +18,7 @@
 # cd /root/hadara-publish
 # npm login --registry=https://registry.npmjs.org     # whoami 안 되어 있으면
 # bash scripts/release/manual-publish-rc.sh <TASK_ID> --execute   # 프롬프트에 publish
+# gh release edit vX.Y.Z --repo ictseoyoungmin/HADARA --draft=false   # optional, after review
 #
 # Before running this script, the operator should have already:
 # 1) Version and release docs already point at the intended package version.
@@ -35,7 +37,7 @@
 #   4. Strict release-gate sanity check (no npm auth needed).
 #   5. If npm is logged in: run the official helper dry-run, then re-clean the clone.
 #      If not: skip it (the --execute run performs the full dry-run before publishing).
-#   6. Print the exact container + folder + commands to finish the publish.
+#   6. Print the exact container + folder + commands to finish npm publish and optional GitHub release handling.
 #
 # This script never publishes. Registry mutation stays in `manual-publish-rc.sh --execute`,
 # which the operator runs interactively after `npm login`.
@@ -210,8 +212,21 @@ echo "  npm login --registry=$REGISTRY        # if 'npm whoami' is not already s
 echo "  bash scripts/release/manual-publish-rc.sh $TASK_ID --execute"
 echo "  # then type exactly: publish"
 echo
+echo "Optional GitHub Release flow after npm publish:"
+echo
+echo "  # If a draft already exists and has been reviewed:"
+echo "  gh release edit v\$(node -p \"require('./package.json').version\") --repo ictseoyoungmin/HADARA --draft=false"
+echo
+echo "  # Or create a draft from the source/workspace repo, then review and publish:"
+echo "  gh release create v\$(node -p \"require('./package.json').version\") --repo ictseoyoungmin/HADARA \\"
+echo "    --target \$(git rev-parse HEAD) --title \"HADARA \$(node -p \"require('./package.json').version\")\" \\"
+echo "    --notes-file tasks/$TASK_ID-*/GITHUB_RELEASE_NOTE.md --draft"
+echo "  gh release edit v\$(node -p \"require('./package.json').version\") --repo ictseoyoungmin/HADARA --draft=false"
+echo
 echo "Notes:"
 echo "  - Publish from this clone, not /workspace (the mounted host repo cannot build)."
 echo "  - The 'Published ...' evidence lands in this clone's $TASK_ID capsule, not /workspace."
-echo "  - Do not pass --github-draft here: the clone's origin is $WORKSPACE, not GitHub."
+echo "  - If using --github-draft inside this clone, pass --github-release-note explicitly and verify the"
+echo "    remote/tag target first; this helper clones from $WORKSPACE, so many operators prefer the gh"
+echo "    commands above from the normal source checkout after npm publish."
 echo "============================================================"
