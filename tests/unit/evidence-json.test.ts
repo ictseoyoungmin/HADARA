@@ -364,6 +364,7 @@ describe('CLI evidence JSON reports', () => {
       schemaVersion: 'hadara.evidence.collect.v1',
       command: 'evidence.collect',
       ok: false,
+      taskId: task.id,
       issues: [
         {
           severity: 'error',
@@ -776,6 +777,7 @@ describe('CLI evidence JSON reports', () => {
       schemaVersion: 'hadara.evidence.collect.v1',
       command: 'evidence.collect',
       ok: false,
+      taskId: 'T-9999',
       issues: [
         {
           severity: 'error',
@@ -805,6 +807,7 @@ describe('CLI evidence JSON reports', () => {
       schemaVersion: 'hadara.evidence.collect.v1',
       command: 'evidence.collect',
       ok: false,
+      taskId: task.id,
       issues: [
         {
           severity: 'error',
@@ -836,6 +839,7 @@ describe('CLI evidence JSON reports', () => {
       schemaVersion: 'hadara.evidence.collect.v1',
       command: 'evidence.collect',
       ok: false,
+      taskId: task.id,
       issues: [
         {
           severity: 'error',
@@ -865,6 +869,7 @@ describe('CLI evidence JSON reports', () => {
       schemaVersion: 'hadara.evidence.collect.v1',
       command: 'evidence.collect',
       ok: false,
+      taskId: task.id,
       issues: [
         {
           severity: 'error',

@@ -46,7 +46,7 @@ export function handleReleaseArtifactCommand(input: ReleaseArtifactCommandInput)
       : undefined;
 
   if (input.jsonOutput) {
-    console.log(JSON.stringify(attachment ? { ...report, attachedEvidence: attachment } : report, null, 2));
+    console.log(JSON.stringify(attachment && taskId ? { ...report, taskId, attachedEvidence: attachment } : report, null, 2));
   } else {
     console.log(`${report.ok ? 'passed' : 'failed'} | release artifact | ${report.output.retention}`);
     if (attachment) console.log(`evidence | ${attachment.evidence.taskId} | ${persistedEvidencePath(attachment.evidence) ?? 'no-artifact'}`);

@@ -41,6 +41,7 @@ describe('proof status reports', () => {
       schemaVersion: 'hadara.proof.status.v1',
       command: 'proof.status',
       ok: true,
+      taskId: task.id,
       verdict: 'sufficient',
       freshness: { status: 'fresh', closeVerdict: 'closed-valid' },
       summary: {

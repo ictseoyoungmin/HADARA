@@ -30,6 +30,7 @@ export interface CiGateReport {
   schemaVersion: 'hadara.ci.gate.v1';
   command: 'ci.gate';
   ok: boolean;
+  taskId?: string;
   mode: CiGateMode;
   scope: {
     taskId?: string;
@@ -124,6 +125,7 @@ export function createCiGateReport(projectRoot: string, mode: CiGateMode, option
     schemaVersion: 'hadara.ci.gate.v1',
     command: 'ci.gate',
     ok: mode === 'advisory' ? true : blockers.length === 0,
+    ...(options.taskId ? { taskId: options.taskId } : {}),
     mode,
     scope: { ...(options.taskId ? { taskId: options.taskId } : {}), taskCount: tasks.length, allowEmpty },
     stateConsistency,

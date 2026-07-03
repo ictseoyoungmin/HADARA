@@ -31,6 +31,7 @@ export interface TaskShowReport {
   schemaVersion: 'hadara.task.show.v1';
   command: 'task.show';
   ok: boolean;
+  taskId: string;
   task?: TaskJsonSummary & {
     taskMarkdown: string;
   };
@@ -45,6 +46,7 @@ export interface TaskReadReport {
   schemaVersion: 'hadara.task.read.v1';
   command: 'task.read';
   ok: boolean;
+  taskId: string;
   task?: TaskJsonSummary;
   files?: Record<string, string>;
   evidenceIndex?: PersistedEvidenceRecord[];
@@ -73,6 +75,7 @@ export function createTaskShowReport(projectRoot: string, taskId: string): TaskS
       schemaVersion: 'hadara.task.show.v1',
       command: 'task.show',
       ok: false,
+      taskId,
       issues: [
         {
           severity: 'error',
@@ -87,6 +90,7 @@ export function createTaskShowReport(projectRoot: string, taskId: string): TaskS
     schemaVersion: 'hadara.task.show.v1',
     command: 'task.show',
     ok: true,
+    taskId: task.id,
     task: {
       ...summarizeTask(projectRoot, task),
       taskMarkdown: fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')
@@ -102,6 +106,7 @@ export function createTaskReadReport(projectRoot: string, taskId: string, option
       schemaVersion: 'hadara.task.read.v1',
       command: 'task.read',
       ok: false,
+      taskId,
       issues: [
         {
           severity: 'error',
@@ -126,6 +131,7 @@ export function createTaskReadReport(projectRoot: string, taskId: string, option
     schemaVersion: 'hadara.task.read.v1',
     command: 'task.read',
     ok: !evidenceParse.issues.some((issue) => issue.severity === 'error'),
+    taskId: task.id,
     task: summarizeTask(projectRoot, task),
     files,
     evidenceIndex: evidenceRecords,

@@ -40,6 +40,7 @@ describe('release closeout read-only plan', () => {
       schemaVersion: 'hadara.releaseCloseout.v1',
       command: 'release.closeout',
       ok: true,
+      taskId: task.id,
       readOnly: true,
       input: { version: '0.3.4', taskId: task.id },
       summary: { files: 9, suggestedFragments: 4 },
@@ -89,6 +90,7 @@ describe('release closeout read-only plan', () => {
     const report = JSON.parse(output.join('\n'));
     expect(report.schemaVersion).toBe('hadara.releaseCloseout.v1');
     expect(report.command).toBe('release.closeout');
+    expect(report.taskId).toBe(task.id);
     expect(snapshotFiles(root)).toEqual(before);
   });
 });

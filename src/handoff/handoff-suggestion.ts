@@ -10,6 +10,7 @@ export interface HandoffSuggestionReport {
   schemaVersion: 'hadara.handoff.suggestion.v1';
   command: 'handoff.suggest';
   ok: boolean;
+  taskId: string;
   readOnly: true;
   generatedAt: string;
   actor: HadaraActorContext;
@@ -84,6 +85,7 @@ export function createHandoffSuggestionReport(projectRoot: string, taskId: strin
     schemaVersion: 'hadara.handoff.suggestion.v1',
     command: 'handoff.suggest',
     ok: !issues.some((issue) => issue.severity === 'error'),
+    taskId,
     readOnly: true,
     generatedAt: new Date().toISOString(),
     actor,

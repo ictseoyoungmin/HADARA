@@ -36,6 +36,7 @@ describe('ci gate report', () => {
       schemaVersion: 'hadara.ci.gate.v1',
       command: 'ci.gate',
       ok: true,
+      taskId: task.id,
       mode: 'strict',
       scope: { taskId: task.id, taskCount: 1 },
       blockers: [],

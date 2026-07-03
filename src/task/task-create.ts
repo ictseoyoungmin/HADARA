@@ -7,6 +7,7 @@ export interface TaskCreateReport {
   schemaVersion: 'hadara.task.create.v1';
   command: 'task.create';
   ok: boolean;
+  taskId?: string;
   task?: {
     id: string;
     title: string;
@@ -80,6 +81,7 @@ export function createTaskCreateReport(projectRoot: string, title: string, optio
     schemaVersion: 'hadara.task.create.v1',
     command: 'task.create',
     ok: true,
+    taskId: task.id,
     task: taskSummary(projectRoot, task),
     ...(templateReport ? { template: templateReport } : {}),
     supportedTemplates,

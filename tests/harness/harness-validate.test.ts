@@ -37,6 +37,7 @@ describe('Harness Task Capsule validation', () => {
       schemaVersion: 'hadara.harness.validate.v1',
       command: 'harness.validate',
       ok: true,
+      taskId: task.id,
       level: 'draft',
       task: {
         id: task.id,

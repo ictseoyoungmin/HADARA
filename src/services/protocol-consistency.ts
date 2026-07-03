@@ -54,6 +54,7 @@ export interface ProtocolConsistencyReport {
   schemaVersion: 'hadara.protocol.consistency.v1';
   command: 'protocol.doctor';
   ok: boolean;
+  taskId?: string;
   scope: ProtocolConsistencyScope;
   projectRoot: string;
   generatedAt: string;
@@ -100,7 +101,7 @@ export function createTaskProtocolConsistencyReport(projectRoot: string, taskId:
       taskId,
       message: `Task Capsule not found: ${taskId}`
     });
-    return buildReport(projectRoot, now, issues, checkedDocs, undefined, null);
+    return buildReport(projectRoot, now, issues, checkedDocs, undefined, null, undefined, { taskId });
   }
 
   const capsulePath = toPortablePath(path.relative(projectRoot, task.dir));
@@ -246,6 +247,7 @@ function buildReport(
   },
   options?: {
     scope?: ProtocolConsistencyScope;
+    taskId?: string | null;
     checkedTasks?: number;
     activeTaskId?: string | null;
     detectedProfile?: 'basic' | 'standard' | 'governed' | 'unknown' | 'mixed';
@@ -259,6 +261,7 @@ function buildReport(
     schemaVersion: 'hadara.protocol.consistency.v1',
     command: 'protocol.doctor',
     ok: counts.error === 0,
+    ...(options?.taskId ? { taskId: options.taskId } : task ? { taskId: task.id } : {}),
     scope: options?.scope ?? 'tasks',
     projectRoot,
     generatedAt: now.toISOString(),

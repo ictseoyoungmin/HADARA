@@ -37,6 +37,7 @@ export interface ProtocolMigrationReport {
   schemaVersion: 'hadara.protocol.migration.v1';
   command: 'protocol.migrate';
   ok: boolean;
+  taskId?: string;
   mode: ProtocolMigrationMode;
   target: {
     protocolVersion: ProtocolMigrationTarget;
@@ -123,6 +124,7 @@ export function createProtocolMigrationReport(input: ProtocolMigrationInput): Pr
     schemaVersion: 'hadara.protocol.migration.v1',
     command: 'protocol.migrate',
     ok: issues.every((issue) => issue.severity !== 'error'),
+    ...(input.taskId ? { taskId: input.taskId } : {}),
     mode: input.mode,
     target: { protocolVersion: input.target },
     scope: { kind: input.taskId ? 'task' : 'project', taskId: input.taskId ?? null },

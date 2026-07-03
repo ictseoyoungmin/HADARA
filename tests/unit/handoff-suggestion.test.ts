@@ -38,6 +38,7 @@ describe('handoff suggestion report', () => {
       schemaVersion: 'hadara.handoff.suggestion.v1',
       command: 'handoff.suggest',
       ok: true,
+      taskId: task.id,
       readOnly: true,
       actor: { agentId: 'unknown', runId: 'local', role: 'operator', parentRunId: null },
       target: {

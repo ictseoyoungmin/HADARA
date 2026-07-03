@@ -132,6 +132,7 @@ function createFastTaskWorkbenchReport(
     schemaVersion: 'hadara.task.workbench.v1',
     command: 'task.status',
     ok: task.present && blockers === 0,
+    taskId,
     generatedAt,
     projectRoot,
     task: {

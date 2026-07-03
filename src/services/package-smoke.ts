@@ -18,6 +18,7 @@ export interface PackageSmokeReport {
   schemaVersion: 'hadara.packageSmoke.v1';
   command: 'package.smoke';
   ok: boolean;
+  taskId?: string;
   mode: 'dry-run' | 'local';
   readOnly: boolean;
   provider: {
@@ -140,6 +141,7 @@ export function createPackageSmokeDryRunReport(options: PackageSmokeDryRunOption
     schemaVersion: 'hadara.packageSmoke.v1',
     command: 'package.smoke',
     ok: false,
+    ...(options.taskId ? { taskId: options.taskId } : {}),
     mode: 'dry-run',
     readOnly: true,
     provider: {
@@ -409,6 +411,7 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
     schemaVersion: 'hadara.packageSmoke.v1',
     command: 'package.smoke',
     ok: issues.every((issue) => issue.severity !== 'error') && steps.every((step) => step.status !== 'failed'),
+    ...(options.taskId ? { taskId: options.taskId } : {}),
     mode: 'local',
     readOnly: false,
     provider: {
@@ -482,6 +485,7 @@ function createPythonPackageSmokeDryRunReport(options: PackageSmokeDryRunOptions
     schemaVersion: 'hadara.packageSmoke.v1',
     command: 'package.smoke',
     ok: issues.every((issue) => issue.severity !== 'error'),
+    ...(options.taskId ? { taskId: options.taskId } : {}),
     mode: 'dry-run',
     readOnly: true,
     provider: {
@@ -758,6 +762,7 @@ function createPythonPackageSmokeLocalReport(options: PackageSmokeLocalOptions):
     schemaVersion: 'hadara.packageSmoke.v1',
     command: 'package.smoke',
     ok: issues.every((issue) => issue.severity !== 'error') && steps.every((step) => step.status !== 'failed'),
+    ...(options.taskId ? { taskId: options.taskId } : {}),
     mode: 'local',
     readOnly: false,
     provider: {

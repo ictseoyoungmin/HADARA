@@ -27,6 +27,7 @@ describe('task create templates', () => {
     const report = createTaskCreateReport(root, 'Release dry-run service', { templateId: 'release-read-model' });
 
     expect(report.ok).toBe(true);
+    expect(report.taskId).toBe('T-0001');
     expect(report.template).toMatchObject({
       id: 'release-read-model',
       applied: true,

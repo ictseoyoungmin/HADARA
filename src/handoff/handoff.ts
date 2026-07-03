@@ -13,6 +13,7 @@ export interface HandoffUpdateReport {
   schemaVersion: 'hadara.handoff.update.v1';
   command: 'handoff.update';
   ok: boolean;
+  taskId: string | null;
   target: {
     path: 'docs/AGENT_HANDOFF.md';
     writeBoundary: 'shared-doc';
@@ -69,6 +70,7 @@ Attach test logs, command outputs, and diff summaries under the active Task Caps
     schemaVersion: 'hadara.handoff.update.v1',
     command: 'handoff.update',
     ok: true,
+    taskId: input.taskId ?? null,
     target: {
       path: 'docs/AGENT_HANDOFF.md',
       writeBoundary: 'shared-doc'

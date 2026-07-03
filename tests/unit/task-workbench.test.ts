@@ -40,6 +40,7 @@ describe('task workbench status report', () => {
       schemaVersion: 'hadara.task.workbench.v1',
       command: 'task.status',
       ok: true,
+      taskId: task.id,
       task: {
         id: task.id,
         title: 'Workbench report',
@@ -227,6 +228,7 @@ describe('task workbench status report', () => {
       schemaVersion: 'hadara.task.workbench.v1',
       command: 'task.status',
       ok: false,
+      taskId: 'T-9999',
       task: { id: 'T-9999', taskStatus: 'Missing', taskBoardStatus: 'Missing', taskBoardPresent: false },
       state: { readiness: { status: 'missing-task', currentReady: false, closeProofValid: false } },
       diagnostics: {

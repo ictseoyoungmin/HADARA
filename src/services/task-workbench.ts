@@ -81,6 +81,7 @@ export interface TaskWorkbenchReport {
   schemaVersion: 'hadara.task.workbench.v1';
   command: 'task.status';
   ok: boolean;
+  taskId: string;
   generatedAt: string;
   projectRoot: string;
   task: {
@@ -295,6 +296,7 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
     schemaVersion: 'hadara.task.workbench.v1',
     command: 'task.status',
     ok: true,
+    taskId: taskShow.task.id,
     generatedAt: now.toISOString(),
     projectRoot,
     task: {
@@ -440,6 +442,7 @@ function buildMissingTaskReport(projectRoot: string, taskId: string, generatedAt
     schemaVersion: 'hadara.task.workbench.v1',
     command: 'task.status',
     ok: false,
+    taskId,
     generatedAt,
     projectRoot,
     task: {

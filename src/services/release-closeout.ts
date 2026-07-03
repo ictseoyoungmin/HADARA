@@ -6,6 +6,7 @@ export interface ReleaseCloseoutReport {
   schemaVersion: 'hadara.releaseCloseout.v1';
   command: 'release.closeout';
   ok: boolean;
+  taskId: string | null;
   readOnly: true;
   generatedAt: string;
   input: {
@@ -83,6 +84,7 @@ export function createReleaseCloseoutReport(projectRoot: string, input: { versio
     schemaVersion: 'hadara.releaseCloseout.v1',
     command: 'release.closeout',
     ok: !issues.some((issue) => issue.severity === 'error'),
+    taskId,
     readOnly: true,
     generatedAt: new Date().toISOString(),
     input: { version, taskId },

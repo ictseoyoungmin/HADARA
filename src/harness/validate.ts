@@ -32,6 +32,7 @@ export interface HarnessValidateResult {
   schemaVersion: 'hadara.harness.validate.v1';
   command: 'harness.validate';
   ok: boolean;
+  taskId: string;
   level: HarnessValidationLevel;
   task: {
     id: string;
@@ -88,6 +89,7 @@ export function validateTaskCapsule(projectRoot: string, taskId: string, options
       schemaVersion: 'hadara.harness.validate.v1',
       command: 'harness.validate',
       ok: false,
+      taskId,
       level,
       task: { id: taskId, title: '', capsule: '' },
       checkedFiles: [],
@@ -136,6 +138,7 @@ export function validateTaskCapsule(projectRoot: string, taskId: string, options
     schemaVersion: 'hadara.harness.validate.v1',
     command: 'harness.validate',
     ok: !issues.some((issue) => issue.severity === 'error'),
+    taskId: task.id,
     level,
     task: {
       id: task.id,

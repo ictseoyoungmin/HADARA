@@ -57,8 +57,8 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   if (sub === 'show') {
-    const id = input.args[2];
-    if (!id) throw new Error('task show requires <task-id>');
+    const id = getStringOption(input.args, '--task') ?? input.args[2];
+    if (!id || id.startsWith('--')) throw new Error('task show requires --task <task-id>');
     const report = createTaskShowReport(input.projectRoot, id);
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));

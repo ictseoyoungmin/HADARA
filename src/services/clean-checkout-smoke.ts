@@ -27,6 +27,7 @@ export interface CleanCheckoutSmokeReport {
   schemaVersion: 'hadara.cleanCheckoutSmoke.v1';
   command: 'smoke.cleanCheckout';
   ok: boolean;
+  taskId?: string;
   mode: 'execute';
   execution: {
     sourceCopied: boolean;
@@ -235,6 +236,7 @@ export function createCleanCheckoutSmokeReport(options: CleanCheckoutSmokeOption
     schemaVersion: 'hadara.cleanCheckoutSmoke.v1',
     command: 'smoke.cleanCheckout',
     ok: issues.every((issue) => issue.severity !== 'error') && steps.every((step) => step.status !== 'failed'),
+    ...(options.taskId ? { taskId: options.taskId } : {}),
     mode: 'execute',
     execution,
     workspace: {

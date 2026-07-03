@@ -480,6 +480,7 @@ describe('Task protocol consistency report', () => {
       schemaVersion: 'hadara.protocol.consistency.v1',
       command: 'protocol.doctor',
       ok: true,
+      taskId: task.id,
       scope: 'tasks',
       generatedAt: '2026-05-30T00:00:00.000Z',
       summary: {
@@ -622,6 +623,7 @@ describe('Task protocol consistency report', () => {
     const report = createTaskProtocolConsistencyReport(root, 'T-9999', new Date('2026-05-30T00:00:00.000Z'));
 
     expect(report.ok).toBe(false);
+    expect(report.taskId).toBe('T-9999');
     expect(report.summary.checkedTasks).toBe(0);
     expect(report.issues).toEqual([
       {

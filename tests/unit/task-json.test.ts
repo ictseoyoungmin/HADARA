@@ -4,7 +4,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createTaskListReport, createTaskReadReport, createTaskShowReport, formatTaskListReport } from '../../src/cli/task-json';
 import { createTaskCapsule } from '../../src/task/task-capsule';
-import { extractTaskCreateTitle } from '../../src/cli/task';
+import { extractTaskCreateTitle, handleTaskCommand } from '../../src/cli/task';
 
 const roots: string[] = [];
 
@@ -61,6 +61,7 @@ describe('CLI task JSON reports', () => {
       schemaVersion: 'hadara.task.show.v1',
       command: 'task.show',
       ok: true,
+      taskId: task.id,
       task: {
         id: task.id,
         title: 'Show me',
@@ -106,6 +107,7 @@ describe('CLI task JSON reports', () => {
     const report = createTaskReadReport(root, task.id);
 
     expect(report.ok).toBe(true);
+    expect(report.taskId).toBe(task.id);
     expect(report.evidenceIndex).toEqual([]);
     expect(report.files?.['evidence.jsonl']).toBe('');
     expect(report.issues).toEqual([
@@ -196,6 +198,7 @@ describe('CLI task JSON reports', () => {
       schemaVersion: 'hadara.task.show.v1',
       command: 'task.show',
       ok: false,
+      taskId: 'T-9999',
       issues: [
         {
           severity: 'error',
@@ -203,6 +206,30 @@ describe('CLI task JSON reports', () => {
           message: 'Task Capsule not found: T-9999'
         }
       ]
+    });
+  });
+
+  it('prints task show JSON from --task without treating the flag as the id', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Show flag');
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+    try {
+      expect(handleTaskCommand({ args: ['task', 'show', '--task', task.id, '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    const report = JSON.parse(output.join('\n'));
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.task.show.v1',
+      command: 'task.show',
+      ok: true,
+      taskId: task.id,
+      task: { id: task.id }
     });
   });
 

@@ -28,6 +28,7 @@ export interface EvidenceCollectReport {
   schemaVersion: 'hadara.evidence.collect.v1';
   command: 'evidence.collect';
   ok: boolean;
+  taskId: string;
   evidence?: PersistedEvidenceRecord & {
     markdownPath: string;
     markdownAppended: boolean;
@@ -48,6 +49,7 @@ export function createEvidenceCollectReport(projectRoot: string, input: Evidence
       schemaVersion: 'hadara.evidence.collect.v1',
       command: 'evidence.collect',
       ok: false,
+      taskId: input.taskId,
       issues: [
         {
           severity: 'error',
@@ -84,6 +86,7 @@ export function createEvidenceCollectReport(projectRoot: string, input: Evidence
         schemaVersion: 'hadara.evidence.collect.v1',
         command: 'evidence.collect',
         ok: false,
+        taskId: input.taskId,
         issues: [
           {
             severity: 'error',
@@ -100,6 +103,7 @@ export function createEvidenceCollectReport(projectRoot: string, input: Evidence
     schemaVersion: 'hadara.evidence.collect.v1',
     command: 'evidence.collect',
     ok: true,
+    taskId: input.taskId,
     evidence: {
       ...appendResult.evidence,
       markdownPath: toPortablePath(path.relative(projectRoot, appendResult.markdownPath)),

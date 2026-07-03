@@ -43,6 +43,7 @@ export interface ProofStatusReport {
   schemaVersion: 'hadara.proof.status.v1' | 'hadara.proof.explain.v1';
   command: 'proof.status' | 'proof.explain';
   ok: boolean;
+  taskId: string;
   target: {
     kind: 'task';
     taskId: string;
@@ -75,6 +76,7 @@ export function createProofStatusReport(projectRoot: string, taskId: string, mod
       schemaVersion: mode === 'explain' ? 'hadara.proof.explain.v1' : 'hadara.proof.status.v1',
       command: mode === 'explain' ? 'proof.explain' : 'proof.status',
       ok: false,
+      taskId,
       target: { kind: 'task', taskId },
       claim: 'task-readiness',
       verdict: 'unknown',
@@ -108,6 +110,7 @@ export function createProofStatusReport(projectRoot: string, taskId: string, mod
     schemaVersion: mode === 'explain' ? 'hadara.proof.explain.v1' : 'hadara.proof.status.v1',
     command: mode === 'explain' ? 'proof.explain' : 'proof.status',
     ok: blockers.length === 0,
+    taskId,
     target: { kind: 'task', taskId },
     claim: 'task-readiness',
     verdict,

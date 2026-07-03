@@ -214,6 +214,7 @@ describe('clean checkout smoke', () => {
       attachEvidence: true,
       runner
     });
+    expect(report.taskId).toBe('T-0136');
     const taskDir = path.join(root, 'tasks', 'T-0136-smoke-evidence-integration');
     const evidenceRecord = JSON.parse(fs.readFileSync(path.join(taskDir, 'evidence.jsonl'), 'utf8').trim()) as {
       schemaVersion: string;

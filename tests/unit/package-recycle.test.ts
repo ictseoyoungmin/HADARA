@@ -44,6 +44,7 @@ describe('installed package recycle', () => {
       schemaVersion: 'hadara.packageRecycle.v1',
       command: 'package.recycle',
       ok: true,
+      taskId: 'T-0413',
       mode: 'dry-run',
       readOnly: true,
       package: {

@@ -27,6 +27,7 @@ export interface PackageRecycleReport {
   schemaVersion: 'hadara.packageRecycle.v1';
   command: 'package.recycle';
   ok: boolean;
+  taskId?: string;
   mode: 'dry-run' | 'execute';
   readOnly: boolean;
   package: {
@@ -123,6 +124,7 @@ export function createPackageRecycleDryRunReport(options: PackageRecycleOptions)
     schemaVersion: 'hadara.packageRecycle.v1',
     command: 'package.recycle',
     ok: issues.every((issue) => issue.severity !== 'error'),
+    ...(options.taskId ? { taskId: options.taskId } : {}),
     mode: 'dry-run',
     readOnly: true,
     package: packageInfo,
@@ -295,6 +297,7 @@ export function createPackageRecycleExecuteReport(options: PackageRecycleOptions
     schemaVersion: 'hadara.packageRecycle.v1',
     command: 'package.recycle',
     ok: issues.every((issue) => issue.severity !== 'error') && steps.every((step) => step.status !== 'failed'),
+    ...(options.taskId ? { taskId: options.taskId } : {}),
     mode: 'execute',
     readOnly: false,
     package: packageInfo,

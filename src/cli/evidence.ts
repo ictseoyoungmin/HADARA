@@ -137,6 +137,7 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
         schemaVersion: 'hadara.evidence.collect.v1',
         command: 'evidence.add-command',
         ok: false,
+        taskId,
         issues: [resultOutcomeIssue]
       };
       if (input.jsonOutput) {

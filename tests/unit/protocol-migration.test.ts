@@ -82,6 +82,22 @@ describe('protocol migration service', () => {
     expect(fs.readFileSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'), 'utf8')).toContain('hadara:managed:start required-reading');
   });
 
+  it('exposes top-level taskId for task-scoped migration dry-runs', () => {
+    const root = tempLegacyProject();
+    const task = createTaskCapsule(root, 'Task migration');
+
+    const report = createProtocolMigrationReport({ projectRoot: root, target: '0.3.0', mode: 'dry-run', taskId: task.id });
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.protocol.migration.v1',
+      command: 'protocol.migrate',
+      ok: true,
+      taskId: task.id,
+      scope: { kind: 'task', taskId: task.id }
+    });
+    expect(validateSchema('hadara.protocol.migration.v1', report).ok).toBe(true);
+  });
+
   it('refuses execute when the reviewed before-hash is missing or stale', () => {
     const root = tempLegacyProject();
     const missing = createProtocolMigrationReport({ projectRoot: root, target: '0.3.0', mode: 'execute' });
