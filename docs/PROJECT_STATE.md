@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0493 stable 0.4.0 release publication and README onboarding cleanup |
-| Active Task | Open docs governance command follow-up for `docs.complete-spec`, `docs.mark-drift`, and completed-spec routing lifecycle. |
+| Latest Completed Task | T-0494 docs register controlled value diagnostics |
+| Active Task | Open `0.4.1-rc.0` docs governance follow-up from `docs/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md`. |
 
 ## Next Planned Line
 
@@ -53,6 +53,8 @@ T-0491 follow-up note: stable GitHub Release draft `v0.4.0` is complete. The dra
 T-0492 follow-up note: stable `hadara@0.4.0` installed-package recycle is complete. A fresh unmounted `node:22-bookworm` container installed `hadara@0.4.0` globally, installed `hadara version --json` reported `packageVersion=0.4.0`, and installed `hadara package recycle --execute --package hadara@latest --expected-version 0.4.0 --json` returned `ok:true` with registry `latest=0.4.0`, `next=0.4.0-rc.0`, isolated install/init/task/session/context/finalize smokes, and cleanup passed. Evidence: `ev:T-0492:50c4c3dc78a14861a165ad51`.
 
 T-0493 follow-up note: the operator published the stable GitHub Release `v0.4.0`; evidence `ev:T-0493:51ec29e0b0cb4c2aa2e5de85` records `isDraft=false`, `isPrerelease=false`, target `205e9aad0e01ea5332dbdca39c10403c00e845be`, and public URL `https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.0`. T-0493 also slimmed README onboarding, added `docs/GETTING_STARTED.md` and `docs/LIFECYCLE_QUICKSTART.md` as product-facing linked workflow guides, registered them in `.hadara/docs-registry.json`, and updated release helper guidance for optional GitHub Release draft/publication handling. Validation evidence: `ev:T-0493:3ce5a1fa0f7844bab1387bdf`. Next: implement `docs.complete-spec`, `docs.mark-drift`, completed-spec Required Reading lifecycle, and broader product/internal docs separation in focused follow-up capsules.
+
+T-0494 follow-up note: docs-register controlled-value diagnostics are complete. Invalid `docs register` controlled-token issues now include `field`, `received`, `allowedValues`, and optional `suggestion`; common alias mistakes such as `guide`, `linked`, `project`, and `human-reviewed` suggest the canonical token without auto-correction. `help command docs.register` now prints the controlled values for kind, status, read-when, read-tier, authority, edit-policy, and drift, and `docs register --help` routes to the same registry-backed help before requiring mutation arguments. `docs/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md` records reviewer/dogfood functional debt for `0.4.1-rc.0` and is registered in `.hadara/docs-registry.json`. Evidence: `ev:T-0494:e05199a733814fbe97abda8a`, `ev:T-0494:87f93c47f42448a0a0fcdf27`, `ev:T-0494:26e15e37462143e08ef4d154`. Next: choose a focused `0.4.1-rc.0` docs-governance capsule from that debt document.
 
 T-0461 follow-up note: selected-task `task status` now includes additive `authoringSuggestions` with `readOnly:true` and `writesProse:false`. The read model suggests title cleanup for handoff-like titles, Source Documents guidance, hash rows for existing concrete source paths, and conservative generic acceptance guidance without writing task prose or inventing domain-specific criteria. Dashboard fast selected-task detail also includes the additive field. Docker focused workbench/schema/dashboard tests and TypeScript build passed, workspace `dist` was refreshed, and built CLI status smoke confirmed the suggestion payload and duplicate title-signal suppression. Evidence: `ev:T-0461:d6486726fd0b4eea8775d3b0`, `ev:T-0461:dd3a7a42646e4e8cae779c1c`. The next UX capsule should inspect fresh `hadara init` output and reduce verbosity or add a compact quickstart path without weakening generated workflow safety.
 

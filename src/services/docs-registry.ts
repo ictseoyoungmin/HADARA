@@ -79,6 +79,10 @@ export interface DocsIssue {
   code: string;
   path?: string;
   message: string;
+  field?: string;
+  received?: string;
+  allowedValues?: string[];
+  suggestion?: string;
 }
 
 export interface DocsListReport {
@@ -183,10 +187,65 @@ export interface DocsInboxReport {
 export const DOCS_REGISTRY_PATH = '.hadara/docs-registry.json';
 
 const VALID_STATUSES: DocumentStatus[] = ['canonical', 'active', 'reference', 'historical', 'superseded', 'archived'];
+const VALID_KINDS: DocumentKind[] = [
+  'project-context',
+  'protocol',
+  'project-state',
+  'handoff',
+  'task-board',
+  'workflow-guide',
+  'architecture',
+  'decision-log',
+  'test-strategy',
+  'security-model',
+  'roadmap',
+  'release',
+  'spec',
+  'implementation-guide',
+  'integration-guide',
+  'task-capsule',
+  'schema-reference',
+  'historical-plan',
+  'unknown'
+];
 const VALID_READ_WHEN: ReadWhen[] = ['session-start', 'task-start', 'task-close', 'release-work', 'docs-work', 'debugging', 'integration-work', 'only-when-linked', 'never-default'];
 const VALID_READ_TIERS: DocsReadTier[] = ['bootstrap', 'current-state', 'workflow-reference', 'active-task', 'active-spec', 'conditional-reference', 'implemented-reference', 'drift-review', 'historical', 'excluded'];
 const VALID_AUTHORITIES: DocsAuthority[] = ['exploratory', 'proposed', 'approved', 'normative', 'implementation-source', 'reference-only', 'historical'];
 const VALID_EDIT_POLICIES: DocsEditPolicy[] = ['human-only', 'agent-assisted', 'agent-editable-with-request', 'agent-editable-with-review', 'cli-owned', 'generated-projection'];
+const VALID_DRIFT_RISKS = ['low', 'medium', 'high'] as const;
+export const DOCS_REGISTER_ALLOWED_VALUES = {
+  kind: VALID_KINDS,
+  status: VALID_STATUSES,
+  readWhen: VALID_READ_WHEN,
+  readTier: VALID_READ_TIERS,
+  authority: VALID_AUTHORITIES,
+  editPolicy: VALID_EDIT_POLICIES,
+  driftRisk: VALID_DRIFT_RISKS
+} as const;
+
+const DOC_REGISTER_TOKEN_ALIASES: Record<string, Record<string, string>> = {
+  kind: {
+    guide: 'workflow-guide',
+    doc: 'workflow-guide',
+    documentation: 'workflow-guide'
+  },
+  authority: {
+    project: 'normative',
+    approved: 'approved',
+    reference: 'reference-only'
+  },
+  editPolicy: {
+    'human-reviewed': 'agent-editable-with-review',
+    'human-review': 'agent-editable-with-review',
+    readonly: 'human-only'
+  },
+  readWhen: {
+    linked: 'only-when-linked',
+    task: 'task-start',
+    session: 'session-start',
+    release: 'release-work'
+  }
+};
 const ACTIVE_DOC_DISCOVERY_LIMIT = 200;
 
 export function createSeedDocumentRegistry(
@@ -371,13 +430,13 @@ export function createDocsRegisterReport(projectRoot: string, options: {
   if (path.isAbsolute(options.documentPath) || normalized.startsWith('../') || normalized.includes('/../')) {
     issues.push({ severity: 'error', code: 'DOC_REGISTER_PATH_OUTSIDE_PROJECT', path: normalized, message: 'Document path must be project-relative.' });
   }
-  if (options.kind !== undefined && kind === null) issues.push({ severity: 'error', code: 'DOC_UNKNOWN_KIND', path: normalized, message: `Unknown document kind: ${options.kind}` });
-  if (status === null) issues.push({ severity: 'error', code: 'DOC_UNKNOWN_STATUS', path: normalized, message: `Unknown document status: ${options.status}` });
-  if (readWhen === null) issues.push({ severity: 'error', code: 'DOC_UNKNOWN_READ_WHEN', path: normalized, message: `Unknown read-when value: ${options.readWhen}` });
-  if (options.readTier !== undefined && readTier === null) issues.push({ severity: 'error', code: 'DOC_READ_TIER_INVALID_TOKEN', path: normalized, message: `Invalid readTier: ${options.readTier}` });
-  if (options.authority !== undefined && authority === null) issues.push({ severity: 'error', code: 'DOC_AUTHORITY_INVALID_TOKEN', path: normalized, message: `Invalid authority: ${options.authority}` });
-  if (options.editPolicy !== undefined && editPolicy === null) issues.push({ severity: 'error', code: 'DOC_EDIT_POLICY_INVALID_TOKEN', path: normalized, message: `Invalid editPolicy: ${options.editPolicy}` });
-  if (options.driftRisk !== undefined && driftRisk === null) issues.push({ severity: 'error', code: 'DOC_DRIFT_RISK_INVALID_TOKEN', path: normalized, message: `Invalid drift risk: ${options.driftRisk}` });
+  if (options.kind !== undefined && kind === null) issues.push(invalidControlledValueIssue({ code: 'DOC_UNKNOWN_KIND', path: normalized, field: 'kind', received: options.kind, allowedValues: DOCS_REGISTER_ALLOWED_VALUES.kind }));
+  if (status === null) issues.push(invalidControlledValueIssue({ code: 'DOC_UNKNOWN_STATUS', path: normalized, field: 'status', received: options.status, allowedValues: DOCS_REGISTER_ALLOWED_VALUES.status }));
+  if (readWhen === null) issues.push(invalidControlledValueIssue({ code: 'DOC_UNKNOWN_READ_WHEN', path: normalized, field: 'readWhen', received: options.readWhen, allowedValues: DOCS_REGISTER_ALLOWED_VALUES.readWhen }));
+  if (options.readTier !== undefined && readTier === null) issues.push(invalidControlledValueIssue({ code: 'DOC_READ_TIER_INVALID_TOKEN', path: normalized, field: 'readTier', received: options.readTier, allowedValues: DOCS_REGISTER_ALLOWED_VALUES.readTier }));
+  if (options.authority !== undefined && authority === null) issues.push(invalidControlledValueIssue({ code: 'DOC_AUTHORITY_INVALID_TOKEN', path: normalized, field: 'authority', received: options.authority, allowedValues: DOCS_REGISTER_ALLOWED_VALUES.authority }));
+  if (options.editPolicy !== undefined && editPolicy === null) issues.push(invalidControlledValueIssue({ code: 'DOC_EDIT_POLICY_INVALID_TOKEN', path: normalized, field: 'editPolicy', received: options.editPolicy, allowedValues: DOCS_REGISTER_ALLOWED_VALUES.editPolicy }));
+  if (options.driftRisk !== undefined && driftRisk === null) issues.push(invalidControlledValueIssue({ code: 'DOC_DRIFT_RISK_INVALID_TOKEN', path: normalized, field: 'driftRisk', received: options.driftRisk, allowedValues: DOCS_REGISTER_ALLOWED_VALUES.driftRisk }));
   if (options.requireExists && normalized && !fs.existsSync(path.join(projectRoot, normalized))) {
     issues.push({ severity: 'error', code: 'DOC_REGISTER_FILE_MISSING', path: normalized, message: `${normalized} does not exist.` });
   }
@@ -776,12 +835,7 @@ function parseStatus(value?: string): DocumentStatus | null {
 
 function parseKind(value?: string): DocumentKind | null {
   if (value === undefined) return null;
-  const kinds: DocumentKind[] = [
-    'project-context', 'protocol', 'project-state', 'handoff', 'task-board', 'workflow-guide', 'architecture', 'decision-log',
-    'test-strategy', 'security-model', 'roadmap', 'release', 'spec', 'implementation-guide', 'integration-guide', 'task-capsule',
-    'schema-reference', 'historical-plan', 'unknown'
-  ];
-  return kinds.includes(value as DocumentKind) ? value as DocumentKind : null;
+  return VALID_KINDS.includes(value as DocumentKind) ? value as DocumentKind : null;
 }
 
 function parseReadWhen(value?: string): ReadWhen | null {
@@ -806,7 +860,35 @@ function parseEditPolicy(value?: string): DocsEditPolicy | null {
 
 function parseDriftRisk(value?: string): 'low' | 'medium' | 'high' | null {
   if (value === undefined) return null;
-  return value === 'low' || value === 'medium' || value === 'high' ? value : null;
+  return VALID_DRIFT_RISKS.includes(value as 'low' | 'medium' | 'high') ? value as 'low' | 'medium' | 'high' : null;
+}
+
+function invalidControlledValueIssue(input: {
+  code: string;
+  path: string;
+  field: keyof typeof DOCS_REGISTER_ALLOWED_VALUES;
+  received: string | undefined;
+  allowedValues: readonly string[];
+}): DocsIssue {
+  const suggestion = suggestDocsRegisterToken(input.field, input.received);
+  const allowed = [...input.allowedValues];
+  const received = input.received ?? '';
+  const issue: DocsIssue = {
+    severity: 'error',
+    code: input.code,
+    path: input.path,
+    field: input.field,
+    received,
+    allowedValues: allowed,
+    message: `${input.field} has invalid value: ${received}. Allowed values: ${allowed.join(', ')}.${suggestion ? ` Suggested value: ${suggestion}.` : ''}`
+  };
+  if (suggestion) issue.suggestion = suggestion;
+  return issue;
+}
+
+function suggestDocsRegisterToken(field: keyof typeof DOCS_REGISTER_ALLOWED_VALUES, received: string | undefined): string | undefined {
+  if (!received) return undefined;
+  return DOC_REGISTER_TOKEN_ALIASES[field]?.[received.trim().toLowerCase()];
 }
 
 function parseScope(value: string): DocsDoctorReport['scope'] | null {

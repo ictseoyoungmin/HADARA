@@ -70,6 +70,21 @@ describe('registry-backed help', () => {
     expect(output).toContain('Conflicts: task.finish');
   });
 
+  it('shows docs.register controlled vocabulary in command help', () => {
+    const output = renderCommandHelp('docs.register');
+
+    expect(output).toContain('Controlled values:');
+    expect(output).toContain('--kind:');
+    expect(output).toContain('project-context | protocol | project-state');
+    expect(output).toContain('workflow-guide');
+    expect(output).toContain('--status: canonical | active | reference | historical | superseded | archived');
+    expect(output).toContain('--read-when: session-start | task-start | task-close');
+    expect(output).toContain('--read-tier: bootstrap | current-state | workflow-reference');
+    expect(output).toContain('--authority: exploratory | proposed | approved | normative');
+    expect(output).toContain('--edit-policy: human-only | agent-assisted | agent-editable-with-request | agent-editable-with-review');
+    expect(output).toContain('--drift: low | medium | high');
+  });
+
   it('explains planned 0.4 commands without presenting them as executable current surfaces', () => {
     const output = renderCommandHelp('docs.complete-spec');
 

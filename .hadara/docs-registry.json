@@ -301,6 +301,36 @@
       "generatedBy": "hadara init"
     },
     {
+      "path": "docs/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md",
+      "title": "0.4.1-rc.0 Functional Debt",
+      "owner": "hadara-docs",
+      "kind": "release",
+      "status": "active",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "release-work"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "readTier": "conditional-reference",
+      "authority": "proposed",
+      "editPolicy": "agent-editable-with-review",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": false,
+        "reason": "docs/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md is marked as low drift risk."
+      }
+    },
+    {
       "path": "docs/ROADMAP.md",
       "title": "ROADMAP",
       "owner": "hadara-docs",
@@ -1217,5 +1247,5 @@
       "generatedBy": "hadara init"
     }
   ],
-  "generatedAt": "2026-07-03T13:49:54.875Z"
+  "generatedAt": "2026-07-03T14:06:58.922Z"
 }

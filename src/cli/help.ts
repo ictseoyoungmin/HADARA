@@ -4,6 +4,7 @@ import {
   findCommandRegistryEntry,
   listCommandRegistryEntries
 } from '../services/capability-registry';
+import { DOCS_REGISTER_ALLOWED_VALUES } from '../services/docs-registry';
 import { createLifecycleGuideReport } from '../services/lifecycle-guide';
 
 export interface HelpCommandInput {
@@ -138,6 +139,7 @@ export function renderCommandHelp(id: string): string {
     '',
     'Docs:',
     ...entry.docs.map((doc) => `  ${doc}`),
+    ...renderControlledValues(entry.id),
     '',
     `Related: ${entry.related.length ? entry.related.join(', ') : 'none'}`,
     `Conflicts: ${entry.conflictsWith.length ? entry.conflictsWith.join(', ') : 'none'}`,
@@ -145,6 +147,21 @@ export function renderCommandHelp(id: string): string {
   ]
     .filter((line) => line !== '')
     .join('\n');
+}
+
+function renderControlledValues(id: string): string[] {
+  if (id !== 'docs.register') return [];
+  return [
+    '',
+    'Controlled values:',
+    `  --kind: ${DOCS_REGISTER_ALLOWED_VALUES.kind.join(' | ')}`,
+    `  --status: ${DOCS_REGISTER_ALLOWED_VALUES.status.join(' | ')}`,
+    `  --read-when: ${DOCS_REGISTER_ALLOWED_VALUES.readWhen.join(' | ')}`,
+    `  --read-tier: ${DOCS_REGISTER_ALLOWED_VALUES.readTier.join(' | ')}`,
+    `  --authority: ${DOCS_REGISTER_ALLOWED_VALUES.authority.join(' | ')}`,
+    `  --edit-policy: ${DOCS_REGISTER_ALLOWED_VALUES.editPolicy.join(' | ')}`,
+    `  --drift: ${DOCS_REGISTER_ALLOWED_VALUES.driftRisk.join(' | ')}`
+  ];
 }
 
 export function renderFamilyHelp(family: CommandFamily): string {

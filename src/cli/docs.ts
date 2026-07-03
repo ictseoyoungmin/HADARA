@@ -3,6 +3,7 @@ import { createDocsArchivePlanReport, createDocsMarkReport, createDocsRequiredRe
 import { createDocsDoctorReport, createDocsExplainReport, createDocsInboxReport, createDocsListReport, createDocsReadMapReport, createDocsRegisterReport } from '../services/docs-registry';
 import { createDocsPatchPlanReport, createManagedSectionExplainReport, createManagedSectionsListReport } from '../services/managed-sections';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
+import { renderCommandHelp } from './help';
 
 export interface DocsCommandInput {
   args: string[];
@@ -42,6 +43,10 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
     return true;
   }
   if (sub === 'register') {
+    if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+      console.log(renderCommandHelp('docs.register'));
+      return true;
+    }
     if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'docs.register')) return true;
     const report = createDocsRegisterReport(input.projectRoot, {
       documentPath: getRequiredStringOption(input.args, '--path'),

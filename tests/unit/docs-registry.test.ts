@@ -198,6 +198,97 @@ describe('Phase 7.3 docs registry', () => {
     expect(fs.existsSync(path.join(root, 'docs', 'DOC_REGISTRY.md'))).toBe(false);
   });
 
+  it('returns allowed values and suggestions for invalid docs register controlled tokens', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'guide.md'), '# Guide\n');
+
+    const report = createDocsRegisterReport(root, {
+      documentPath: 'docs/guide.md',
+      kind: 'guide',
+      status: 'ready',
+      readWhen: 'linked',
+      readTier: 'default',
+      authority: 'project',
+      editPolicy: 'human-reviewed',
+      driftRisk: 'severe'
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.action).toBe('blocked');
+    expect(report.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        code: 'DOC_UNKNOWN_KIND',
+        field: 'kind',
+        received: 'guide',
+        allowedValues: expect.arrayContaining(['workflow-guide', 'implementation-guide']),
+        suggestion: 'workflow-guide'
+      }),
+      expect.objectContaining({
+        code: 'DOC_UNKNOWN_STATUS',
+        field: 'status',
+        received: 'ready',
+        allowedValues: expect.arrayContaining(['canonical', 'active', 'reference'])
+      }),
+      expect.objectContaining({
+        code: 'DOC_UNKNOWN_READ_WHEN',
+        field: 'readWhen',
+        received: 'linked',
+        allowedValues: expect.arrayContaining(['session-start', 'only-when-linked']),
+        suggestion: 'only-when-linked'
+      }),
+      expect.objectContaining({
+        code: 'DOC_READ_TIER_INVALID_TOKEN',
+        field: 'readTier',
+        received: 'default',
+        allowedValues: expect.arrayContaining(['current-state', 'conditional-reference'])
+      }),
+      expect.objectContaining({
+        code: 'DOC_AUTHORITY_INVALID_TOKEN',
+        field: 'authority',
+        received: 'project',
+        allowedValues: expect.arrayContaining(['normative', 'reference-only']),
+        suggestion: 'normative'
+      }),
+      expect.objectContaining({
+        code: 'DOC_EDIT_POLICY_INVALID_TOKEN',
+        field: 'editPolicy',
+        received: 'human-reviewed',
+        allowedValues: expect.arrayContaining(['human-only', 'agent-editable-with-review']),
+        suggestion: 'agent-editable-with-review'
+      }),
+      expect.objectContaining({
+        code: 'DOC_DRIFT_RISK_INVALID_TOKEN',
+        field: 'driftRisk',
+        received: 'severe',
+        allowedValues: ['low', 'medium', 'high']
+      })
+    ]));
+    for (const issue of report.issues) {
+      if (issue.field) expect(issue.message).toContain('Allowed values:');
+    }
+    assertSchema('hadara.docs.register.v1', report);
+  });
+
+  it('prints docs register help before requiring mutation arguments', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    try {
+      expect(handleDocsCommand({ args: ['docs', 'register', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
+      const output = logSpy.mock.calls.at(-1)?.[0] as string;
+      expect(output).toContain('docs.register');
+      expect(output).toContain('Controlled values:');
+      expect(output).toContain('--kind:');
+      expect(output).toContain('workflow-guide');
+      expect(output).toContain('--edit-policy:');
+      expect(output).toContain('agent-editable-with-review');
+    } finally {
+      logSpy.mockRestore();
+    }
+  });
+
   it('builds a task-scoped read map with derived metadata axes and drift warnings', () => {
     const root = tempProject();
     initProject(root, 'standard', { silent: true });
