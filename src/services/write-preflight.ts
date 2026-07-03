@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { assertSchema } from '../core/schema';
 import { slugify } from '../core/fs';
+import { nextTaskId } from '../task/task-capsule';
 
 export type WritePreflightCommand =
   | 'task.create'
@@ -108,7 +109,7 @@ export function assertWritePreflightSchema(report: WritePreflightReport): void {
 function taskCreateReport(projectRoot: string, args: string[]): WritePreflightReport {
   const title = extractValueAfterPrefix(args, ['task', 'create']);
   const issues: WritePreflightIssue[] = [];
-  const taskId = nextTaskIdForPreflight(path.join(projectRoot, 'tasks'));
+  const taskId = nextTaskId(path.join(projectRoot, 'tasks'));
   const slug = slugify(title || 'task');
   const capsule = `tasks/${taskId}-${slug}`;
 
@@ -234,18 +235,6 @@ function getOptionValue(args: string[], option: string): string | undefined {
   const value = args[index + 1];
   if (!value || value.startsWith('--')) return undefined;
   return value;
-}
-
-function nextTaskIdForPreflight(tasksDir: string): string {
-  if (!fs.existsSync(tasksDir)) return 'T-0001';
-  const max = fs
-    .readdirSync(tasksDir, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name.match(/^T-(\d{4})-/)?.[1])
-    .filter((value): value is string => Boolean(value))
-    .map(Number)
-    .reduce((acc, value) => Math.max(acc, value), 0);
-  return `T-${String(max + 1).padStart(4, '0')}`;
 }
 
 function findTaskCapsulePath(projectRoot: string, taskId: string): string | null {

@@ -51,6 +51,25 @@ describe('CLI write boundary preflight', () => {
     expect(validateSchema('hadara.write.preflight.v1', report).ok).toBe(true);
   });
 
+  it('predicts task create ids after the highest Task Board row when capsule directories are missing', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Existing Task');
+    fs.appendFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      '| T-0009 | Manually deleted task | Done | tasks/T-0009-manually-deleted-task | historical row |\n',
+      'utf8'
+    );
+
+    const before = fs.readdirSync(path.join(root, 'tasks')).sort();
+    const report = createWritePreflightReport(root, ['task', 'create', 'After Deletion']);
+    const after = fs.readdirSync(path.join(root, 'tasks')).sort();
+
+    expect(report.ok).toBe(true);
+    expect(report.writes).toContain('tasks/T-0010-after-deletion/TASK.md');
+    expect(report.writes).toContain('tasks/T-0010-after-deletion/evidence.jsonl');
+    expect(after).toEqual(before);
+  });
+
   it('reports evidence collect public and private write boundaries', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Evidence Target');

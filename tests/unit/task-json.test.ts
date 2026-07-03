@@ -73,6 +73,23 @@ describe('CLI task JSON reports', () => {
     expect(report.task?.taskMarkdown).toContain(`# ${task.id} Show me`);
   });
 
+  it('allocates task ids after the highest Task Board row when capsule directories are missing', () => {
+    const root = tempProject();
+    createTaskCapsule(root, 'Existing task');
+    fs.appendFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      '| T-0009 | Manually deleted task | Done | tasks/T-0009-manually-deleted-task | historical row |\n',
+      'utf8'
+    );
+
+    const task = createTaskCapsule(root, 'After deletion');
+
+    expect(task.id).toBe('T-0010');
+    expect(task.dir).toBe(path.join(root, 'tasks', 'T-0010-after-deletion'));
+    expect(fs.existsSync(path.join(task.dir, 'TASK.md'))).toBe(true);
+    expect(fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8')).toContain('| T-0010 | After deletion | Draft | tasks/T-0010-after-deletion | |');
+  });
+
   it('normalizes task read embedded evidence records through the evidence list parser', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Read evidence normalization');

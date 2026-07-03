@@ -47,13 +47,7 @@ export function isTaskCapsuleScaffoldContent(task: TaskCapsule, fileName: string
 
 export function nextTaskId(tasksDir: string, blockedIds: Set<string> = new Set()): string {
   ensureDir(tasksDir);
-  const max = fs
-    .readdirSync(tasksDir, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name.match(/^T-(\d{4})-/)?.[1])
-    .filter((value): value is string => Boolean(value))
-    .map(Number)
-    .reduce((acc, value) => Math.max(acc, value), 0);
+  const max = Math.max(maxTaskDirectoryNumber(tasksDir), maxTaskBoardNumber(path.dirname(tasksDir)));
 
   let next = max + 1;
   let id = `T-${String(next).padStart(4, '0')}`;
@@ -62,6 +56,24 @@ export function nextTaskId(tasksDir: string, blockedIds: Set<string> = new Set()
     id = `T-${String(next).padStart(4, '0')}`;
   }
   return id;
+}
+
+function maxTaskDirectoryNumber(tasksDir: string): number {
+  return fs
+    .readdirSync(tasksDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name.match(/^T-(\d{4})-/)?.[1])
+    .filter((value): value is string => Boolean(value))
+    .map(Number)
+    .reduce((acc, value) => Math.max(acc, value), 0);
+}
+
+function maxTaskBoardNumber(projectRoot: string): number {
+  const taskBoard = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
+  if (!fs.existsSync(taskBoard)) return 0;
+  return [...fs.readFileSync(taskBoard, 'utf8').matchAll(/^\|\s*T-(\d{4})\s*\|/gm)]
+    .map((match) => Number(match[1]))
+    .reduce((acc, value) => Math.max(acc, value), 0);
 }
 
 export interface CreateTaskCapsuleOptions {
