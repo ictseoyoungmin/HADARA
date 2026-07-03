@@ -1,6 +1,6 @@
 # 0.4.0 Stable Pre-release Plan
 
-Status: active
+Status: stable readiness decision complete; stable publish preparation is next
 Source: T-0479 installed-package dogfood handoff and operator review on 2026-07-02.
 
 ## Goal
@@ -20,6 +20,8 @@ Promote `hadara@0.4.0-rc.0` to stable only after the high-friction dogfood findi
 | 7 | 0.4.0-rc.0 GitHub Release draft | Create or intentionally skip the GitHub Release draft in a separate release capsule with evidence. |
 | 8 | Stable readiness decision | Review all pre-stable capsules, release notes, npm rc metadata, and residual risks; produce an explicit promote/no-promote decision. |
 
+T-0489 completed the stable readiness decision on 2026-07-03. Decision: proceed to stable publish preparation for `hadara@0.4.0`, but do not publish from current `0.4.0-rc.0` source metadata.
+
 ## Stable Execution Capsules
 
 | Order | Capsule | Outcome Required |
@@ -36,6 +38,8 @@ Promote `hadara@0.4.0-rc.0` to stable only after the high-friction dogfood findi
 | Workflow UX | Fresh `task create` scaffolds read as a human task brief before source bookkeeping. |
 | Release docs | Release notes call out stable changes, residual known issues, and upgrade expectations. |
 | Evidence | Each required capsule records command evidence and a close handoff before stable publish. |
+
+T-0489 gate review result: all required gates are sufficient to open the stable publish preparation capsule. Stable publish still requires retargeted package metadata, refreshed release artifacts, release validation, and explicit operator approval.
 
 ## Post-stable Candidates
 

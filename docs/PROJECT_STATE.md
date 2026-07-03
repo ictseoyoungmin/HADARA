@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0488 0.4.0-rc.0 GitHub Release draft |
-| Active Task | Continue the next 0.4.0 stable pre-release capsule from `docs/STABLE_0_4_0_PRE_RELEASE_PLAN.md`; stable readiness decision is next. |
+| Latest Completed Task | T-0489 0.4.0 stable readiness decision |
+| Active Task | Open the stable `0.4.0` publish preparation capsule from `docs/STABLE_0_4_0_PRE_RELEASE_PLAN.md`. |
 
 ## Next Planned Line
 
@@ -41,6 +41,8 @@ T-0486 follow-up note: task id counter after manual capsule deletion is complete
 T-0487 follow-up note: dogfood output UX pass is complete. `task status --summary-json` now provides compact selection and selected-task payloads for automation/human scanning while preserving existing verbose `--json` compatibility output. Non-JSON `validation run` output now explicitly separates child command metadata, HADARA evidence recording, TASK.md sync state, and next actions. Container ext4 validation passed `npm ci`, focused task status/validation/docs/registry tests with 4 files / 38 tests, TypeScript build, and full `npm run check` with 150 files / 997 tests; workspace `dist` was refreshed from the passing build. Built CLI smoke confirmed compact status output at 54 lines vs 289 full JSON lines and validation text boundary labels. Evidence: `ev:T-0487:7a5ab714f865434782d625c8`. Next pre-stable capsule: skipped `0.4.0-rc.0` GitHub Release draft.
 
 T-0488 follow-up note: the skipped `0.4.0-rc.0` GitHub Release draft is complete. T-0488 prepared final GitHub release-note and command artifacts, verified npm registry metadata for `hadara@0.4.0-rc.0` with `latest=0.3.3`, `next=0.4.0-rc.0`, and tarball shasum `e983a13ccce5acfd4ab58d0a3a8f837bdd06acc4`, then created a GitHub draft prerelease titled `HADARA 0.4.0-rc.0`. `gh release view` verified `tagName=v0.4.0-rc.0`, `isDraft=true`, `isPrerelease=true`, and `targetCommitish=964a8431cc08c2e89460be46560c8a8d98b451e1`; GitHub returned an `untagged-*` draft URL while the draft remains unpublished. Evidence: `ev:T-0488:32d47dcfa9ae4d9894fc02f0`. Next pre-stable capsule: stable readiness decision.
+
+T-0489 follow-up note: stable `0.4.0` readiness decision is complete. T-0489 reviewed npm rc metadata (`next=0.4.0-rc.0`, `latest=0.3.3`, shasum `e983a13ccce5acfd4ab58d0a3a8f837bdd06acc4`), confirmed exact `hadara@0.4.0` remains unpublished, verified the RC GitHub draft prerelease, audited required pre-stable capsules T-0481 through T-0488, and passed strict release gate. Decision: proceed to stable publish preparation, but do not publish from current `0.4.0-rc.0` source metadata; the next capsule must retarget metadata/docs/artifacts to stable `0.4.0`, rerun release validation, and keep publish approval-gated. Evidence: `ev:T-0489:a15c2fd8548c496593c2d31f`.
 
 T-0461 follow-up note: selected-task `task status` now includes additive `authoringSuggestions` with `readOnly:true` and `writesProse:false`. The read model suggests title cleanup for handoff-like titles, Source Documents guidance, hash rows for existing concrete source paths, and conservative generic acceptance guidance without writing task prose or inventing domain-specific criteria. Dashboard fast selected-task detail also includes the additive field. Docker focused workbench/schema/dashboard tests and TypeScript build passed, workspace `dist` was refreshed, and built CLI status smoke confirmed the suggestion payload and duplicate title-signal suppression. Evidence: `ev:T-0461:d6486726fd0b4eea8775d3b0`, `ev:T-0461:dd3a7a42646e4e8cae779c1c`. The next UX capsule should inspect fresh `hadara init` output and reduce verbosity or add a compact quickstart path without weakening generated workflow safety.
 
