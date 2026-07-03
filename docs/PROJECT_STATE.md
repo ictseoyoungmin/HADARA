@@ -9,8 +9,8 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0491 0.4.0 stable GitHub Release draft |
-| Active Task | Open stable `0.4.0` installed-package recycle. |
+| Latest Completed Task | T-0492 stable 0.4.0 installed-package recycle |
+| Active Task | Operator review of the stable GitHub Release draft if public publication is desired. |
 
 ## Next Planned Line
 
@@ -48,7 +48,9 @@ T-0490 preparation note: stable `0.4.0` publish preparation completed before the
 
 T-0490 publish note: the operator ran the approval-gated helper from the prepared ext4 clone and published `hadara@0.4.0` to npm. The helper regenerated release artifact evidence, package smoke evidence, and clean-checkout smoke evidence before publish; npm registry verification returned `version=0.4.0`; independent workspace `npm view` confirmed `latest=0.4.0`, `next=0.4.0-rc.0`, and shasum `6268abfd73f60ca2e1dc3b32d8196e6876065948`. Workspace release dry-run returned ready with blockers 0, and release publish dry-run returned `ok:true` with no mutation executed and token warnings only. Evidence: `ev:T-0490:9bff847b4185492cb51c4345`, `ev:T-0490:80adc8e2a1a74c78a0d08deb`, `ev:T-0490:cd3e8afff47a4fba8f8bb117`, `ev:T-0490:40deeacaa24640d499a498c4`, `ev:T-0490:4d5e44912eae4936ac5faab1`.
 
-T-0491 follow-up note: stable GitHub Release draft `v0.4.0` is complete. The draft is titled `HADARA 0.4.0`, targets `205e9aad0e01ea5332dbdca39c10403c00e845be`, and `gh release view` verified `isDraft=true` and `isPrerelease=false`; the draft remains unpublished pending operator review. Evidence: `ev:T-0491:11c7e0bbbaa348efbb4c4174`. Next: open stable installed-package recycle.
+T-0491 follow-up note: stable GitHub Release draft `v0.4.0` is complete. The draft is titled `HADARA 0.4.0`, targets `205e9aad0e01ea5332dbdca39c10403c00e845be`, and `gh release view` verified `isDraft=true` and `isPrerelease=false`; the draft remains unpublished pending operator review. Evidence: `ev:T-0491:11c7e0bbbaa348efbb4c4174`.
+
+T-0492 follow-up note: stable `hadara@0.4.0` installed-package recycle is complete. A fresh unmounted `node:22-bookworm` container installed `hadara@0.4.0` globally, installed `hadara version --json` reported `packageVersion=0.4.0`, and installed `hadara package recycle --execute --package hadara@latest --expected-version 0.4.0 --json` returned `ok:true` with registry `latest=0.4.0`, `next=0.4.0-rc.0`, isolated install/init/task/session/context/finalize smokes, and cleanup passed. Evidence: `ev:T-0492:50c4c3dc78a14861a165ad51`. The remaining release action is optional operator publication of the prepared GitHub stable draft.
 
 T-0461 follow-up note: selected-task `task status` now includes additive `authoringSuggestions` with `readOnly:true` and `writesProse:false`. The read model suggests title cleanup for handoff-like titles, Source Documents guidance, hash rows for existing concrete source paths, and conservative generic acceptance guidance without writing task prose or inventing domain-specific criteria. Dashboard fast selected-task detail also includes the additive field. Docker focused workbench/schema/dashboard tests and TypeScript build passed, workspace `dist` was refreshed, and built CLI status smoke confirmed the suggestion payload and duplicate title-signal suppression. Evidence: `ev:T-0461:d6486726fd0b4eea8775d3b0`, `ev:T-0461:dd3a7a42646e4e8cae779c1c`. The next UX capsule should inspect fresh `hadara init` output and reduce verbosity or add a compact quickstart path without weakening generated workflow safety.
 
