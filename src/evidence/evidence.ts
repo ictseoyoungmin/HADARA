@@ -3,6 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { ensureDir } from '../core/fs';
 import { createRedactionReport, hasBlockingRedactionFinding, redactSecrets, RedactionPattern, RedactionReport } from '../core/redaction';
+import { startMonotonicTimer } from '../core/timing';
 import { resolveProjectFile } from '../core/workspace';
 import type { HadaraActorContext } from '../core/actor-context';
 import { writePrivateEvidenceManifest } from './private-manifest';
@@ -331,7 +332,7 @@ function withEvidenceAppendLock<T>(projectRoot: string, taskId: string, fn: () =
   ensureDir(lockRoot);
   const lockDir = path.join(lockRoot, `${safeFilePart(taskId)}.lock`);
   const lockPortablePath = toPortablePath(path.relative(projectRoot, lockDir));
-  const started = Date.now();
+  const timer = startMonotonicTimer();
   const timeoutMs = 5000;
 
   while (true) {
@@ -340,7 +341,7 @@ function withEvidenceAppendLock<T>(projectRoot: string, taskId: string, fn: () =
       break;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
-      if (Date.now() - started >= timeoutMs) {
+      if (timer.elapsedMs() >= timeoutMs) {
         throw new EvidenceAppendLockError(
           `Timed out waiting for the evidence append lock for ${taskId}. Lock directory: ${lockPortablePath}. ` +
             `If no HADARA process is writing evidence, the lock is stale (inspect ${lockPortablePath}/lock.json for the owning pid); remove the lock directory and retry.`

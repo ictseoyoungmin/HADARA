@@ -1,13 +1,14 @@
 import type { ReleaseDryRunReport } from './release-dry-run';
+import { startMonotonicTimer, type MonotonicTimer } from '../core/timing';
 
 export function timeStage<T>(timings: ReleaseDryRunReport['diagnostics']['stageTimings'], stage: string, fn: () => T): T {
-  const startedAt = Date.now();
+  const timer = startMonotonicTimer();
   try {
     return fn();
   } finally {
     timings.push({
       stage,
-      durationMs: Date.now() - startedAt,
+      durationMs: timer.elapsedMs(),
       status: 'passed',
       summary: `${stage} completed.`
     });
@@ -29,14 +30,14 @@ export function applyStageStatuses(timings: ReleaseDryRunReport['diagnostics']['
 
 export function createDiagnostics(
   generatedAt: string,
-  startedAt: number,
+  timer: MonotonicTimer,
   stageTimings: ReleaseDryRunReport['diagnostics']['stageTimings'],
   releaseTargetConfiguration: ReleaseDryRunReport['releaseTargetConfiguration']
 ): ReleaseDryRunReport['diagnostics'] {
   const thresholdMs = 5000;
   return {
     generatedAt,
-    durationMs: Date.now() - startedAt,
+    durationMs: timer.elapsedMs(),
     advisories: releaseTargetConfiguration.issues.map((issue) => ({
       area: 'release-target-configuration',
       severity: 'warning',

@@ -2,6 +2,7 @@ import { spawnSync, type SpawnSyncOptionsWithStringEncoding, type SpawnSyncRetur
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { startMonotonicTimer } from '../core/timing';
 import { appendEvidenceWithResult, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
 import { findTaskCapsule } from '../task/task-capsule';
 import { parseEvidenceIndexFile, EvidenceListRecord } from './evidence-list';
@@ -85,7 +86,7 @@ type ValidationSpawnSync = (command: string, args: string[], options: SpawnSyncO
 
 export function createValidationRunReport(projectRoot: string, options: ValidationRunOptions): ValidationRunReport {
   const task = findTaskCapsule(projectRoot, options.taskId);
-  const started = Date.now();
+  const timer = startMonotonicTimer();
   const issues: ValidationRunReport['issues'] = [];
   if (!task) {
     return failedInputReport(projectRoot, options, 'TASK_NOT_FOUND', `Task Capsule not found: ${options.taskId}`);
@@ -101,7 +102,7 @@ export function createValidationRunReport(projectRoot: string, options: Validati
     timeout: Math.max(1, options.timeoutMs ?? 120_000),
     maxBuffer: 1024 * 1024 * 8
   });
-  const durationMs = Date.now() - started;
+  const durationMs = timer.elapsedMs();
   const timedOut = Boolean(executed.error && (executed.error as NodeJS.ErrnoException).code === 'ETIMEDOUT');
   const executionSemantics = classifyExecution(executed, timedOut);
   const result: ValidationRunReport['result'] = executionSemantics.failureKind !== 'none' && executionSemantics.failureKind !== 'non-zero-exit' ? 'Blocked' : executed.status === 0 ? 'Passed' : 'Failed';

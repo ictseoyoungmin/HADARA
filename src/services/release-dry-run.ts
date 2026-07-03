@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { assertSchema } from '../core/schema';
+import { startMonotonicTimer } from '../core/timing';
 import { createReleaseGateReport } from './operational-debt';
 import { createDiagnostics, applyStageStatuses, timeStage } from './release-diagnostics';
 import {
@@ -142,7 +143,7 @@ export interface ReleaseDryRunReport {
 }
 
 export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunReport {
-  const startedAt = Date.now();
+  const timer = startMonotonicTimer();
   const generatedAt = new Date().toISOString();
   const timings: ReleaseDryRunReport['diagnostics']['stageTimings'] = [];
   const targetModel = timeStage(timings, 'release-targets', () => createReleaseTargetModel(projectRoot));
@@ -188,7 +189,7 @@ export function createReleaseDryRunReport(projectRoot: string): ReleaseDryRunRep
     }));
   applyStageStatuses(timings, releaseGate.ok, checks);
   const readiness = createReadinessSummary(checks, evidence, packageMetadata.version, gitCommit, gitFreshness);
-  const diagnostics = createDiagnostics(generatedAt, startedAt, timings, releaseTargetConfiguration);
+  const diagnostics = createDiagnostics(generatedAt, timer, timings, releaseTargetConfiguration);
 
   const report: ReleaseDryRunReport = {
     schemaVersion: 'hadara.releaseDryRun.v1',

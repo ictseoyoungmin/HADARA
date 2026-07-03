@@ -9,6 +9,7 @@ import { createTaskFinishReport, formatTaskFinishReport } from '../task/task-fin
 import { createTaskNextReport, formatTaskNextReport } from '../task/task-next';
 import { createTaskUpgradeScaffoldReport, formatTaskUpgradeScaffoldReport } from '../task/task-upgrade-scaffold';
 import { createTaskStatusSelectionReport, createTaskWorkbenchReport, formatTaskStatusSelectionReport, formatTaskWorkbenchReport } from '../services/task-workbench';
+import { startMonotonicTimer, type MonotonicTimer } from '../core/timing';
 import { getActorContextOption } from './actor';
 import { getFlag, getStringOption } from './args';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
@@ -30,7 +31,7 @@ interface TaskCliDiagnostics {
 }
 
 export function handleTaskCommand(input: TaskCommandInput): boolean {
-  const startedAtMs = Date.now();
+  const timer = startMonotonicTimer();
   const sub = input.args[1];
   if (sub === 'create') {
     if (blockLegacyMutation(input, 'task.create')) return true;
@@ -136,7 +137,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) {
       const report = createTaskStatusSelectionReport(input.projectRoot);
-      attachCliDiagnostics(report, startedAtMs, 'task.status');
+      attachCliDiagnostics(report, timer, 'task.status');
       if (input.jsonOutput) {
         console.log(JSON.stringify(report, null, 2));
       } else {
@@ -148,7 +149,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
     const detail = getStringOption(input.args, '--detail');
     if (detail && detail !== 'fast' && detail !== 'full') throw new Error('task status --detail must be fast or full');
     const report = createTaskWorkbenchReport(input.projectRoot, id, new Date(), { detail: detail === 'full' ? 'full' : 'fast' });
-    attachCliDiagnostics(report, startedAtMs, 'task.status');
+    attachCliDiagnostics(report, timer, 'task.status');
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {
@@ -183,7 +184,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
       actor: getActorContextOption(input.args),
       onProgress: executeRequested ? createTaskFinalizeProgressWriter(id) : undefined
     });
-    attachCliDiagnostics(report, startedAtMs, 'task.finalize');
+    attachCliDiagnostics(report, timer, 'task.finalize');
     if (input.jsonOutput) {
       console.log(JSON.stringify(report, null, 2));
     } else {
@@ -260,8 +261,8 @@ function createTaskFinalizeProgressWriter(taskId: string): (event: TaskFinalizeP
   };
 }
 
-function attachCliDiagnostics<T extends { diagnostics?: TaskCliDiagnostics }>(report: T, startedAtMs: number, commandPath: string): T {
-  const durationMs = Math.max(0, Date.now() - startedAtMs);
+function attachCliDiagnostics<T extends { diagnostics?: TaskCliDiagnostics }>(report: T, timer: MonotonicTimer, commandPath: string): T {
+  const durationMs = timer.elapsedMs();
   const slowThresholdMs = 10000;
   const slow = durationMs >= slowThresholdMs;
   report.diagnostics = {

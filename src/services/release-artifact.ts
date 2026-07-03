@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { ensureDir } from '../core/fs';
 import { HadaraPaths } from '../core/paths';
 import { assertSchema } from '../core/schema';
+import { startMonotonicTimer } from '../core/timing';
 
 export interface ReleaseArtifactIssue {
   severity: 'warning' | 'error';
@@ -566,7 +567,7 @@ function cleanupDirectory(directory: string, cleanup: boolean): void {
 }
 
 function runCommand(command: string, args: string[], options: { cwd: string; timeoutMs: number; env?: NodeJS.ProcessEnv }): ReleaseArtifactCommandResult {
-  const started = Date.now();
+  const timer = startMonotonicTimer();
   const result = spawnSync(command, args, {
     cwd: options.cwd,
     env: options.env,
@@ -579,7 +580,7 @@ function runCommand(command: string, args: string[], options: { cwd: string; tim
     signal: result.signal,
     stdout: result.stdout ?? '',
     stderr: result.stderr ?? '',
-    elapsedMs: Date.now() - started,
+    elapsedMs: timer.elapsedMs(),
     timedOut: result.error?.name === 'TimeoutError' || result.signal === 'SIGTERM'
   };
 }

@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { HadaraActorContext } from '../core/actor-context';
+import { startMonotonicTimer } from '../core/timing';
 import { defaultTaskLifecycleActor } from '../task/lifecycle-next-actions';
 
 export interface DevDockerCheckReport {
@@ -148,9 +149,9 @@ export function createDevDockerCheckReport(projectRoot: string, options: DevDock
       steps.push({ id: step.id, status: 'skipped', summary: step.runWhen ? 'Skipped because an earlier step failed.' : step.summary });
       continue;
     }
-    const started = Date.now();
+    const timer = startMonotonicTimer();
     const result = runner.run('docker', dockerExecArgs(container, step.script), env);
-    const elapsedMs = Date.now() - started;
+    const elapsedMs = timer.elapsedMs();
     if (result.ok) {
       steps.push({ id: step.id, status: 'passed', elapsedMs, summary: step.summary });
       if (step.mark) markExecution(execution, step.mark);

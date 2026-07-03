@@ -16,14 +16,20 @@ json_escape() {
 run_hadara() {
   local label="$1"
   shift
-  local start end rc out_file line_count byte_count command_json label_json
+  local start_ns end_ns duration_ms rc out_file line_count byte_count command_json label_json
   out_file="$(mktemp)"
-  start="$(node -e 'console.log(Date.now())')"
+  start_ns="$(node -e 'console.log(process.hrtime.bigint().toString())')"
   set +e
   "$@" >"$out_file" 2>&1
   rc=$?
   set -e
-  end="$(node -e 'console.log(Date.now())')"
+  end_ns="$(node -e 'console.log(process.hrtime.bigint().toString())')"
+  duration_ms="$(node -e '
+    const start = BigInt(process.argv[1]);
+    const end = BigInt(process.argv[2]);
+    const elapsed = end > start ? end - start : 0n;
+    console.log(Number(elapsed / 1000000n));
+  ' "$start_ns" "$end_ns")"
   line_count="$(wc -l <"$out_file" | tr -d ' ')"
   byte_count="$(wc -c <"$out_file" | tr -d ' ')"
   label_json="$(json_escape "$label")"
@@ -40,7 +46,7 @@ run_hadara() {
       outputBytes: Number(process.argv[6])
     };
     fs.appendFileSync(process.argv[7], JSON.stringify(entry) + "\n");
-  ' "$label_json" "$command_json" "$((end-start))" "$rc" "$line_count" "$byte_count" "$METRICS"
+  ' "$label_json" "$command_json" "$duration_ms" "$rc" "$line_count" "$byte_count" "$METRICS"
   cat "$out_file"
   rm -f "$out_file"
   return "$rc"

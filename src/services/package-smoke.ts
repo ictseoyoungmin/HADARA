@@ -4,6 +4,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { HadaraPaths } from '../core/paths';
 import { assertSchema } from '../core/schema';
+import { startMonotonicTimer } from '../core/timing';
 import { attachReducedSmokeEvidence } from './smoke-evidence';
 import { readPythonProjectPreview } from './release-targets';
 
@@ -1147,7 +1148,7 @@ function cleanupWorkspace(
 }
 
 function runCommand(command: string, args: string[], options: { cwd: string; timeoutMs: number; env?: NodeJS.ProcessEnv }): PackageSmokeCommandResult {
-  const started = Date.now();
+  const timer = startMonotonicTimer();
   const result = spawnSync(command, args, {
     cwd: options.cwd,
     env: options.env ?? process.env,
@@ -1160,7 +1161,7 @@ function runCommand(command: string, args: string[], options: { cwd: string; tim
     signal: result.signal,
     stdout: result.stdout ?? '',
     stderr: result.stderr ?? '',
-    elapsedMs: Date.now() - started,
+    elapsedMs: timer.elapsedMs(),
     timedOut: result.error?.name === 'TimeoutError' || result.signal === 'SIGTERM'
   };
 }
