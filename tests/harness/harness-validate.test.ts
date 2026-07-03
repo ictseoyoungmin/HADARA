@@ -123,8 +123,8 @@ describe('Harness Task Capsule validation', () => {
         .readFileSync(taskPath, 'utf8')
         .replace('| Status | Draft |', '| Status | Ready |')
         .replace('| 1 | Define the task contract. | Pending | TBD |', '| 1 | Define the task contract. | Working | TBD |')
-        .replace('| AC-1 | Scope is implemented. | Yes | Pending | TBD | Required | TBD |', '| AC-1 | Scope is implemented. | Maybe | Started | TBD | Maybe | TBD |')
-        .replace('| TBD | TBD | Yes | Not Run | TBD |', '| TBD | TBD | Maybe | Green | TBD |')
+        .replace('| AC-1 | Scope is implemented. | Must | Pending | TBD | TBD |', '| AC-1 | Scope is implemented. | Maybe | Started | TBD | TBD |')
+        .replace('| TBD | Yes | Not Run | TBD |', '| TBD | Maybe | Green | TBD |')
         .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Decision | TBD | Maybe | TBD |'),
       'utf8'
     );
@@ -136,9 +136,8 @@ describe('Harness Task Capsule validation', () => {
       expect.arrayContaining([
         'TASK_STATUS_INVALID_TOKEN',
         'TASK_PLAN_STATUS_INVALID_TOKEN',
-        'ACCEPTANCE_REQUIRED_INVALID_TOKEN',
+        'ACCEPTANCE_DECISION_INVALID_TOKEN',
         'ACCEPTANCE_STATUS_INVALID_TOKEN',
-        'ACCEPTANCE_DISPOSITION_INVALID_TOKEN',
         'VALIDATION_REQUIRED_INVALID_TOKEN',
         'VALIDATION_RESULT_INVALID_TOKEN',
         'TASK_RISK_KIND_INVALID_TOKEN',
@@ -156,8 +155,8 @@ describe('Harness Task Capsule validation', () => {
       fs
         .readFileSync(taskPath, 'utf8')
         .replace(
-          '| TBD | N/A | TBD | TBD | TBD |',
-          '| src/one.ts | function:createTaskWorkbenchReport | Stable function area. | Fixture. | Harness. |\n| src/two.ts | module:task status | Stable module area. | Fixture. | Harness. |\n| src/new.ts | new-file | New file marker. | Fixture. | Harness. |'
+          '| N/A | TBD | TBD |',
+          '| function:createTaskWorkbenchReport | Stable function area. | Harness. |\n| module:task status | Stable module area. | Harness. |\n| new-file | New file marker. | Harness. |'
         ),
       'utf8'
     );
@@ -176,7 +175,7 @@ describe('Harness Task Capsule validation', () => {
       taskPath,
       fs
         .readFileSync(taskPath, 'utf8')
-        .replace('| Path | Area | Change | Reason | Evidence |', '| Path | Lines | Change | Reason | Evidence |')
+        .replace('## Changes\n\n| Area | Summary | Evidence |\n|---|---|---|\n| N/A | TBD | TBD |', '## Change Summary\n\n| Path | Lines | Change | Reason | Evidence |\n|---|---|---|---|---|\n| TBD | N/A | TBD | TBD | TBD |')
         .replace(
           '| TBD | N/A | TBD | TBD | TBD |',
           '| src/one.ts | L7 | Single final-state line. | Fixture. | Harness. |\n| src/two.ts | 7-25, L30-L40 | Mixed range syntax. | Fixture. | Harness. |'
@@ -198,7 +197,7 @@ describe('Harness Task Capsule validation', () => {
       taskPath,
       fs
         .readFileSync(taskPath, 'utf8')
-        .replace('| TBD | N/A | TBD | TBD | TBD |', '| src/bad.ts |  | Missing area. | Fixture. | Harness. |'),
+        .replace('| N/A | TBD | TBD |', '|  | Missing area. | Harness. |'),
       'utf8'
     );
 
@@ -221,7 +220,7 @@ describe('Harness Task Capsule validation', () => {
       taskPath,
       fs
         .readFileSync(taskPath, 'utf8')
-        .replace('| Path | Area | Change | Reason | Evidence |', '| Path | Lines | Change | Reason | Evidence |')
+        .replace('## Changes\n\n| Area | Summary | Evidence |\n|---|---|---|\n| N/A | TBD | TBD |', '## Change Summary\n\n| Path | Lines | Change | Reason | Evidence |\n|---|---|---|---|---|\n| TBD | N/A | TBD | TBD | TBD |')
         .replace('| TBD | N/A | TBD | TBD | TBD |', '| src/bad.ts | L7- | Invalid range. | Fixture. | Harness. |'),
       'utf8'
     );
@@ -250,7 +249,7 @@ describe('Harness Task Capsule validation', () => {
       taskPath,
       fs
         .readFileSync(taskPath, 'utf8')
-        .replace('| TBD | reference | exploratory | draft | TBD | TBD |', `| docs/source.md | implementation-source | approved | implementing | ${recordedHash} | Fixture source. |`),
+        .replace('| TBD | reference | exploratory | draft | TBD | TBD |', `| docs/source.md | implementation-source | approved | implementing | Fixture source. | ${recordedHash} |`),
       'utf8'
     );
     fs.writeFileSync(sourcePath, 'changed\n', 'utf8');
@@ -275,7 +274,7 @@ describe('Harness Task Capsule validation', () => {
       taskPath,
       fs
         .readFileSync(taskPath, 'utf8')
-        .replace('| TBD | reference | exploratory | draft | TBD | TBD |', `| \`docs/source.md\` | implementation-source | approved | implementing | ${recordedHash} | Fixture source. |`),
+        .replace('| TBD | reference | exploratory | draft | TBD | TBD |', `| \`docs/source.md\` | implementation-source | approved | implementing | Fixture source. | ${recordedHash} |`),
       'utf8'
     );
 
@@ -928,6 +927,7 @@ function markAcceptanceDone(taskDir: string): void {
       taskPath,
       fs
         .readFileSync(taskPath, 'utf8')
+        .replace(/\| AC-(\d+) \| ([^|]+) \| Must \| Pending \| TBD \| TBD \|/g, '| AC-$1 | $2 | Must | Met | Done-level fixture evidence. | Fixture evidence. |')
         .replace(/\| AC-(\d+) \| ([^|]+) \| Yes \| Pending \| TBD \| Required \| TBD \|/g, '| AC-$1 | $2 | Yes | Met | Done-level fixture evidence. | Required | Fixture evidence. |'),
       'utf8'
     );
@@ -952,13 +952,16 @@ function writeCompletedCapsuleDocs(taskDir: string, options: { keepMetadataPlace
   const fixtureSourceHash = hashText('fixture source\n');
   let taskContent = fs
     .readFileSync(taskPath, 'utf8')
-    .replace('| TBD | reference | exploratory | draft | TBD | TBD |', `| docs/fixture-source.md | implementation-source | approved | implementing | ${fixtureSourceHash} | Fixture source. |`)
+    .replace('| TBD | reference | exploratory | draft | TBD | TBD |', `| docs/fixture-source.md | implementation-source | approved | implementing | Fixture source. | ${fixtureSourceHash} |`)
     .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Validate done-level completion gates. | Fixture verifies completed capsule docs. |')
     .replace('| 1 | Define the task contract. | Pending | TBD |', '| 1 | Define the task contract. | Done | Fixture setup. |')
     .replace('| 2 | Implement the smallest useful slice. | Pending | TBD |', '| 2 | Implement the smallest useful slice. | Done | Fixture setup. |')
     .replace('| 3 | Validate and record evidence. | Pending | TBD |', '| 3 | Validate and record evidence. | Done | Fixture setup. |')
+    .replace(/\| AC-(\d+) \| ([^|]+) \| Must \| Pending \| TBD \| TBD \|/g, '| AC-$1 | $2 | Must | Met | Fixture evidence. | Fixture evidence. |')
     .replace(/\| AC-(\d+) \| ([^|]+) \| Yes \| Pending \| TBD \| Required \| TBD \|/g, '| AC-$1 | $2 | Yes | Met | Fixture evidence. | Required | Fixture evidence. |')
+    .replace('| TBD | Yes | Not Run | TBD |', '| Harness done-level fixture | Yes | Passed | Harness result. |')
     .replace('| TBD | TBD | Yes | Not Run | TBD |', '| Harness done-level fixture | validateTaskCapsule(..., done) | Yes | Passed | Harness result. |')
+    .replace('| N/A | TBD | TBD |', '| src/harness/validate.ts | Exercise fixture validation. | Harness result. |')
     .replace('| TBD | N/A | TBD | TBD | TBD |', '| src/harness/validate.ts | L1-L20 | Exercise fixture validation. | Done-level harness coverage. | Harness result. |')
     .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Follow-up | Fixture follow-up. | Closed | Harness result. |')
     .replace('## Goal\n\nTBD.', '## Goal\n\nValidate done-level completion gates.')

@@ -374,12 +374,19 @@ function updateTaskValidationRow(projectRoot: string, taskDir: string, check: st
   }
   const section = content.slice(bounds.start, bounds.end);
   const lines = section.split(/\r?\n/);
+  const headerIndex = lines.findIndex((line) => {
+    const cells = parseRow(line);
+    return cells[0] === 'Check' && (cells[1] === 'Gate' || cells[1] === 'Command / Method');
+  });
+  const header = headerIndex >= 0 ? parseRow(lines[headerIndex]) : [];
   const rowIndex = lines.findIndex((line) => {
     const cells = parseRow(line);
     return cells.length > 0 && cells[0] === check;
   });
   const safeCommand = isSafeMarkdownTableCell(command) ? command : command.replace(/[|\r\n]/g, ' ');
-  const nextRow = formatMarkdownTableRow([check, safeCommand, 'Yes', result, evidenceId]);
+  const nextRow = header[1] === 'Gate'
+    ? formatMarkdownTableRow([check, 'Yes', result, evidenceId])
+    : formatMarkdownTableRow([check, safeCommand, 'Yes', result, evidenceId]);
   let appended = false;
   if (rowIndex >= 0) {
     lines[rowIndex] = nextRow;

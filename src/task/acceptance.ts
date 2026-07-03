@@ -83,21 +83,23 @@ export function analyzeAcceptanceReadiness(content: string): AcceptanceReadiness
 
 export function parseAcceptanceRows(content: string): AcceptanceRow[] {
   const rows = parseMarkdownRows(content);
-  const headerIndex = rows.findIndex((row) => headerIndexFor(row, 'id') >= 0 && headerIndexFor(row, 'status') >= 0);
+  const headerIndex = rows.findIndex((row) => headerIndexFor(row, 'id') >= 0 && (headerIndexFor(row, 'status') >= 0 || headerIndexFor(row, 'state') >= 0));
   const header = headerIndex >= 0 ? rows[headerIndex] : [];
   const dataRows = (headerIndex >= 0 ? rows.slice(headerIndex + 1) : rows).filter((cells) => /^AC-\d+$/i.test(cells[0] ?? ''));
 
   return dataRows.map((cells) => {
     const allText = cells.join(' ');
-    const status = normalizeAcceptanceStatus(cellByHeader(cells, header, 'status') ?? cells[2] ?? '');
+    const statusText = cellByHeaderAny(cells, header, ['status', 'state']) ?? cells[2] ?? '';
+    const status = normalizeAcceptanceStatus(statusText);
+    const decision = cellByHeader(cells, header, 'decision');
     return {
       id: cells[0] ?? '',
       criterion: cellByHeader(cells, header, 'criterion') ?? cells[1] ?? '',
       origin: normalizeAcceptanceOrigin(cellByHeader(cells, header, 'origin')),
-      required: normalizeBooleanCell(cellByHeader(cells, header, 'required'), true),
-      deferrable: normalizeBooleanCell(cellByHeader(cells, header, 'deferrable'), false),
+      required: requiredFromDecision(decision, normalizeBooleanCell(cellByHeader(cells, header, 'required'), true)),
+      deferrable: deferrableFromDecision(decision, normalizeBooleanCell(cellByHeader(cells, header, 'deferrable'), false)),
       status,
-      rawStatus: cellByHeader(cells, header, 'status') ?? cells[2] ?? '',
+      rawStatus: statusText,
       evidenceRefs: extractRefs(allText, /\bev:T-\d{4}:[A-Za-z0-9]+\b/g),
       decisionRefs: extractRefs(allText, /\bD-[A-Za-z0-9._-]+\b/g),
       riskRefs: extractRefs(allText, /\bR-[A-Za-z0-9._-]+\b/g),
@@ -163,6 +165,14 @@ function blockersForAcceptanceRow(row: AcceptanceRow): AcceptanceBlocker[] {
 function cellByHeader(cells: string[], header: string[], name: string): string | undefined {
   const index = headerIndexFor(header, name);
   return index >= 0 ? cells[index] : undefined;
+}
+
+function cellByHeaderAny(cells: string[], header: string[], names: string[]): string | undefined {
+  for (const name of names) {
+    const value = cellByHeader(cells, header, name);
+    if (value !== undefined) return value;
+  }
+  return undefined;
 }
 
 function headerIndexFor(header: string[], name: string): number {
@@ -236,6 +246,18 @@ function normalizeBooleanCell(value: string | undefined, defaultValue: boolean):
   if (['yes', 'y', 'true', '1', 'required'].includes(normalized)) return true;
   if (['no', 'n', 'false', '0', 'optional'].includes(normalized)) return false;
   return defaultValue;
+}
+
+function requiredFromDecision(value: string | undefined, fallback: boolean): boolean {
+  const normalized = (value ?? '').trim().toLowerCase();
+  if (!normalized) return fallback;
+  return ['must', 'required'].includes(normalized);
+}
+
+function deferrableFromDecision(value: string | undefined, fallback: boolean): boolean {
+  const normalized = (value ?? '').trim().toLowerCase().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ');
+  if (!normalized) return fallback;
+  return ['follow up', 'deferred', 'accepted risk', 'not applicable', 'superseded'].includes(normalized);
 }
 
 function extractRefs(value: string, pattern: RegExp): string[] {

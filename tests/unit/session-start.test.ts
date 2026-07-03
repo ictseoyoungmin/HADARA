@@ -280,7 +280,7 @@ describe('session start', () => {
     const taskPath = path.join(task.dir, 'TASK.md');
     const taskMarkdown = fs.readFileSync(taskPath, 'utf8').replace(
       '| TBD | reference | exploratory | draft | TBD | TBD |',
-      `| docs/specs/source.md | implementation-source | implementation-source | approved | ${hash} | Source for drift check. |`
+      `| docs/specs/source.md | implementation-source | implementation-source | approved | Source for drift check. | ${hash} |`
     );
     fs.writeFileSync(taskPath, taskMarkdown, 'utf8');
     fs.writeFileSync(sourcePath, '# Source\n\nAfter\n', 'utf8');

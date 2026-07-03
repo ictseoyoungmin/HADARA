@@ -111,7 +111,7 @@ export function createDashboardBootstrapReport(projectRoot: string, input: Dashb
   const selectedTaskId = input.selectedTaskId?.trim();
   const selectedTask = selectedTaskId ? createSelectedTaskSummary(projectRoot, selectedTaskId, now, issues) : null;
 
-  return {
+  const report: DashboardBootstrapReport = {
     schemaVersion: 'hadara.dashboard.bootstrap.v1',
     command: 'dashboard.bootstrap',
     ok: !issues.some((issue) => issue.severity === 'error'),
@@ -158,6 +158,7 @@ export function createDashboardBootstrapReport(projectRoot: string, input: Dashb
     selectedTask,
     issues
   };
+  return redactArtifactPaths(report);
 }
 
 function createSelectedTaskSummary(
@@ -235,4 +236,17 @@ function proofStatusFrom(
   if (codes.has('TASK_DONE_WITH_PRIVATE_ONLY_EVIDENCE')) return 'private-only';
   if (substantivePositive > 0) return 'sufficient';
   return 'unknown';
+}
+
+function redactArtifactPaths<T>(value: T): T {
+  if (typeof value === 'string') {
+    return value.replace(/\b\S*artifacts\/\S*/g, '[artifact-path-redacted]') as T;
+  }
+  if (Array.isArray(value)) return value.map((item) => redactArtifactPaths(item)) as T;
+  if (value && typeof value === 'object') {
+    const next: Record<string, unknown> = {};
+    for (const [key, child] of Object.entries(value)) next[key] = redactArtifactPaths(child);
+    return next as T;
+  }
+  return value;
 }

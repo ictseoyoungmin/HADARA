@@ -37,12 +37,12 @@ export function createTaskAuthoringGuidance(projectRoot: string, taskId: string)
   const relativeTaskPath = toPortablePath(path.relative(projectRoot, taskPath));
   const content = fs.existsSync(taskPath) ? fs.readFileSync(taskPath, 'utf8') : '';
   const items = [
-    inspectTaskSection(content, relativeTaskPath, 'source-documents', 'Source Documents', 'List source docs or explicitly state that none are required.'),
     inspectTaskSection(content, relativeTaskPath, 'goal', 'Goal', 'Replace scaffold goal text with the smallest verifiable outcome.'),
     inspectTaskSection(content, relativeTaskPath, 'plan', 'Plan', 'Keep execution steps current as work moves.'),
     inspectTaskSection(content, relativeTaskPath, 'acceptance', 'Acceptance', 'Define required criteria and mark them with evidence only after validation.'),
     inspectTaskSection(content, relativeTaskPath, 'validation', 'Validation', 'List validation methods before close and update real results after execution.'),
-    inspectTaskSection(content, relativeTaskPath, 'change-summary', 'Change Summary', 'Record changed paths, stable areas/modules, and evidence before close.'),
+    inspectTaskSection(content, relativeTaskPath, 'source-documents', ['Inputs / Constraints', 'Source Documents'], 'List source docs or explicitly state that none are required.'),
+    inspectTaskSection(content, relativeTaskPath, 'change-summary', ['Changes', 'Change Summary'], 'Record changed areas/modules and evidence before close.'),
     inspectTaskSection(content, relativeTaskPath, 'risks-followups', 'Risks / Follow-ups', 'Record real residual risks or explicitly mark none.')
   ];
   const requiredOpen = items.filter((item) => item.required && item.status !== 'current').length;
@@ -55,13 +55,15 @@ export function createTaskAuthoringGuidance(projectRoot: string, taskId: string)
   };
 }
 
-function inspectTaskSection(content: string, taskPath: string, id: string, section: string, summary: string): TaskAuthoringGuidanceItem {
-  const body = readSection(content, section);
+function inspectTaskSection(content: string, taskPath: string, id: string, section: string | string[], summary: string): TaskAuthoringGuidanceItem {
+  const sections = Array.isArray(section) ? section : [section];
+  const foundSection = sections.find((candidate) => readSection(content, candidate)) ?? sections[0];
+  const body = readSection(content, foundSection);
   const status = sectionStatus(body);
   return {
     id,
     path: taskPath,
-    section,
+    section: foundSection,
     status,
     required: true,
     summary

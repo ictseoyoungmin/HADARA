@@ -127,7 +127,7 @@ describe('task workbench status report', () => {
     const taskPath = path.join(task.dir, 'TASK.md');
     const taskMarkdown = fs.readFileSync(taskPath, 'utf8').replace(
       '| TBD | reference | exploratory | draft | TBD | TBD |',
-      '| `src/cli/main.ts` | implementation-source | approved | implementing | TBD | CLI entry point. |'
+      '| `src/cli/main.ts` | implementation-source | approved | implementing | CLI entry point. | TBD |'
     );
     fs.writeFileSync(taskPath, taskMarkdown, 'utf8');
     const before = snapshotProject(root);
@@ -149,7 +149,7 @@ describe('task workbench status report', () => {
             path: 'src/cli/main.ts',
             status: 'ready',
             sourceHash: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
-            row: expect.stringContaining('| src/cli/main.ts | reference | approved | implemented | sha256:')
+            row: expect.stringMatching(/^\| src\/cli\/main\.ts \| reference \| approved \| implemented \| Source document for this capsule\. \| sha256:/)
           })
         ],
         candidateSignals: expect.arrayContaining([

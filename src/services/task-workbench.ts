@@ -561,7 +561,7 @@ function buildFastWorkbenchNextActions(input: {
 export function createTaskAuthoringSuggestions(projectRoot: string, capsulePath: string, title: string): TaskAuthoringSuggestions {
   const taskPath = path.join(projectRoot, capsulePath, 'TASK.md');
   const content = fs.existsSync(taskPath) ? fs.readFileSync(taskPath, 'utf8') : '';
-  const sourceRows = parseMarkdownRowsUnderHeading(content, '## Source Documents');
+  const sourceRows = parseMarkdownRowsUnderHeadings(content, ['## Inputs / Constraints', '## Source Documents']);
   const acceptanceRows = parseMarkdownRowsUnderHeading(content, '## Acceptance');
   const titleSuggestion = createTitleSuggestion(title);
   const sourceDocuments = createSourceDocumentSuggestions(projectRoot, sourceRows, title);
@@ -616,13 +616,14 @@ function createTitleSuggestion(title: string): TaskAuthoringSuggestions['title']
 }
 
 function createSourceDocumentSuggestions(projectRoot: string, rows: string[][], title: string): TaskAuthoringSuggestions['sourceDocuments'] {
-  const dataRows = rows.filter((row) => row[0] !== 'Path');
+  const hashColumnIndex = rows[0]?.[0] === 'Path / Source' ? 5 : 4;
+  const dataRows = rows.filter((row) => row[0] !== 'Path' && row[0] !== 'Path / Source');
   const concretePaths = dataRows.map((row) => normalizeSourcePath(row[0] ?? '')).filter((value) => value && !/^TBD$/i.test(value));
   const hashRows = concretePaths.map((sourcePath) => sourceDocumentHashRow(projectRoot, sourcePath));
   const hasPlaceholder = dataRows.length === 0 || dataRows.some((row) => row.some((cell) => /^TBD$/i.test(cell)));
   const needsHash = dataRows.some((row) => {
     const sourcePath = normalizeSourcePath(row[0] ?? '');
-    const hash = row[4] ?? '';
+    const hash = row[hashColumnIndex] ?? '';
     return sourcePath && !/^TBD$/i.test(sourcePath) && !/^sha256:[a-f0-9]{64}$/.test(hash);
   });
   return {
@@ -648,7 +649,7 @@ function sourceDocumentHashRow(projectRoot: string, sourcePath: string): TaskAut
     return {
       path: sourcePath,
       sourceHash: 'sha256:unavailable',
-      row: `| ${sourcePath} | reference | approved | implemented | TBD | Verify path before close. |`,
+      row: `| ${sourcePath} | reference | approved | implemented | Verify path before close. | TBD |`,
       status: 'missing-or-outside-project'
     };
   }
@@ -656,7 +657,7 @@ function sourceDocumentHashRow(projectRoot: string, sourcePath: string): TaskAut
   return {
     path: sourcePath,
     sourceHash,
-    row: `| ${sourcePath} | reference | approved | implemented | ${sourceHash} | Source document for this capsule. |`,
+    row: `| ${sourcePath} | reference | approved | implemented | Source document for this capsule. | ${sourceHash} |`,
     status: 'ready'
   };
 }
@@ -697,7 +698,7 @@ function createAcceptanceSuggestions(
 }
 
 function createChangeSummarySuggestions(taskContent: string): TaskAuthoringSuggestions['changeSummary'] {
-  const rows = parseMarkdownRowsUnderHeading(taskContent, '## Change Summary').filter((row) => row[0] !== 'Path');
+  const rows = parseMarkdownRowsUnderHeadings(taskContent, ['## Changes', '## Change Summary']).filter((row) => row[0] !== 'Path' && row[0] !== 'Area');
   const hasPlaceholder = rows.length === 0 || rows.some((row) => row.some((cell) => /^TBD$/i.test(cell)));
   return {
     status: hasPlaceholder ? 'placeholder' : 'ok',
@@ -708,6 +709,14 @@ function createChangeSummarySuggestions(taskContent: string): TaskAuthoringSugge
     ],
     candidateRows: []
   };
+}
+
+function parseMarkdownRowsUnderHeadings(content: string, headings: string[]): string[][] {
+  for (const heading of headings) {
+    const rows = parseMarkdownRowsUnderHeading(content, heading);
+    if (rows.length > 0) return rows;
+  }
+  return [];
 }
 
 function normalizeSourcePath(value: string): string {

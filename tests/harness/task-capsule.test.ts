@@ -30,9 +30,11 @@ describe('Task Capsule harness', () => {
     expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain(
       '| Evidence ID | Outcome | Category | Summary |\n|---|---|---|---|'
     );
-    expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toContain('| Field | Value |');
-    expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toContain('| Step | Action | Status | Evidence |');
-    expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toContain('| ID | Criterion | Required | Status | Evidence | Disposition | Reference |');
+    const taskMarkdown = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
+    expect(taskMarkdown).toContain('| Field | Value |');
+    expect(taskMarkdown.indexOf('## Goal')).toBeLessThan(taskMarkdown.indexOf('## Inputs / Constraints'));
+    expect(taskMarkdown).toContain('| Step | Action | Status | Evidence |');
+    expect(taskMarkdown).toContain('| ID | Criterion | Decision | State | Evidence | Reference |');
     expect(fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8')).toContain(task.id);
   });
 

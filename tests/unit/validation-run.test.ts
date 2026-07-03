@@ -100,7 +100,7 @@ describe('validation run', () => {
 
     expect(report.taskValidationRow).toMatchObject({ mode: 'updated', updated: true });
     const taskMd = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
-    expect(taskMd).toContain(`| Focused tests | ${process.execPath} -e process.stdout.write("ok"); process.exit(0) | Yes | Passed | ${report.evidence?.id} |`);
+    expect(taskMd).toContain(`| Focused tests | Yes | Passed | ${report.evidence?.id} |`);
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
   });
 
@@ -119,8 +119,8 @@ describe('validation run', () => {
     expect(report.result).toBe('Failed');
     expect(report.evidence?.result).toBe('failed');
     const taskMd = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
-    expect(taskMd).toContain(`| Focused tests | ${process.execPath} -e process.exit(2) | Yes | Failed | ${report.evidence?.id} |`);
-    expect(taskMd).toContain('| AC-1 | Scope is implemented. | Yes | Pending | TBD | Required | TBD |');
+    expect(taskMd).toContain(`| Focused tests | Yes | Failed | ${report.evidence?.id} |`);
+    expect(taskMd).toContain('| AC-1 | Scope is implemented. | Must | Pending | TBD | TBD |');
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
   });
 

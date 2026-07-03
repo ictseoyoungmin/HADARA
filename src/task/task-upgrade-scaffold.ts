@@ -55,13 +55,14 @@ interface FrameBlock {
 
 const FRAME_BLOCKS: Record<string, FrameBlock[]> = {
   'TASK.md': [
-    { id: 'source-documents', marker: '| Path | Role | Authority | Status | Source Hash | Notes |', ambiguous: /^\|\s*Path\s*\|\s*Role\s*\|\s*Authority\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Source Documents') },
     { id: 'goal', marker: '| Goal | Notes |', ambiguous: /^\|\s*Goal\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Goal') },
+    { id: 'scope', marker: '| Boundary | Items |', ambiguous: /^\|\s*Boundary\s*\|\s*Items\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Scope') },
     { id: 'plan', marker: '| Step | Action | Status | Evidence |', ambiguous: /^\|\s*Step\s*\|\s*Action\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Plan') },
-    { id: 'acceptance', marker: '| ID | Criterion | Required | Status | Evidence | Disposition | Reference |', ambiguous: /^\|\s*ID\s*\|\s*Criterion\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Acceptance') },
-    { id: 'validation', marker: '| Check | Command / Method | Required | Latest Result | Evidence |', ambiguous: /^\|\s*Check\s*\|\s*Command\s*\/\s*Method\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Validation') },
-    { id: 'change-summary', marker: '| Path | Area | Change | Reason | Evidence |', ambiguous: /^\|\s*Path\s*\|\s*Area\s*\|\s*Change\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Change Summary') },
-    { id: 'risks-followups', marker: '| ID | Kind | Summary | State | Reference |', ambiguous: /^\|\s*ID\s*\|\s*Kind\s*\|\s*Summary\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Risks / Follow-ups') }
+    { id: 'acceptance', marker: '| ID | Criterion | Decision | State | Evidence | Reference |', ambiguous: /^\|\s*ID\s*\|\s*Criterion\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Acceptance') },
+    { id: 'validation', marker: '| Check | Gate | Result | Evidence |', ambiguous: /^\|\s*Check\s*\|(?:\s*Gate\s*\||\s*Command\s*\/\s*Method\s*\|)/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Validation') },
+    { id: 'inputs-constraints', marker: '| Path / Source | Type | Authority | State | Notes | Hash |', ambiguous: /^\|\s*(?:Path\s*\/\s*Source|Path)\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Inputs / Constraints') },
+    { id: 'changes', marker: '| Area | Summary | Evidence |', ambiguous: /^\|\s*(?:Area|Path)\s*\|(?:\s*Summary\s*\||\s*Area\s*\||\s*Lines\s*\|)/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Changes') },
+    { id: 'risks-followups', marker: '| ID | Type | Summary | State | Link |', ambiguous: /^\|\s*ID\s*\|(?:\s*Type\s*\||\s*Kind\s*\|)\s*Summary\s*\|/im, block: (task) => readCanonicalSection(task, 'TASK.md', '## Risks / Follow-ups') }
   ],
   'EVIDENCE.md': [
     { id: 'validation-summary-slot', marker: '<!-- hadara:slot evidence.validation-summary -->', block: (task) => readCanonicalSection(task, 'EVIDENCE.md', '## Validation Evidence') },
