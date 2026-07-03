@@ -55,7 +55,7 @@ Phase labels are internal implementation phases, not npm release-candidate label
 | PyPI/Python package | `hadara==0.2.0rc1` published preview bridge. |
 | Installer scripts / USB launchers | Deferred. |
 
-No release command should publish, create a GitHub Release, build Docker images, upload artifacts, or load token values unless an operator explicitly approves the mutation path for the active release capsule. Stable `0.3.3` remains the default npm package line; `0.4.0-rc.0` is available for explicit RC evaluation through `hadara@next` or the exact version. GitHub Release, Docker/PyPI publish, installer execution, and MCP release/package execution remain separate explicit mutations.
+No release command should publish, create a GitHub Release, build Docker images, upload artifacts, or load token values unless an operator explicitly approves the mutation path for the active release capsule. Stable `0.3.3` remains the default npm package line; `0.4.0-rc.0` is available for explicit RC evaluation through `hadara@next` or the exact version. The `v0.4.0-rc.0` GitHub Release exists as a draft prerelease; Docker/PyPI publish, installer execution, and MCP release/package execution remain separate explicit mutations.
 
 ## Install
 
