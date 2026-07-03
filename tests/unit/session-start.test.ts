@@ -279,8 +279,8 @@ describe('session start', () => {
     const task = createTaskCapsule(root, 'Drift session start task');
     const taskPath = path.join(task.dir, 'TASK.md');
     const taskMarkdown = fs.readFileSync(taskPath, 'utf8').replace(
-      '| TBD | reference | exploratory | draft | TBD | TBD |',
-      `| docs/specs/source.md | implementation-source | implementation-source | approved | Source for drift check. | ${hash} |`
+      '## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | draft | TBD |',
+      `## Inputs / Constraints\n\n| Path / Source | Type | Authority | State | Notes | Hash |\n|---|---|---|---|---|---|\n| docs/specs/source.md | implementation-source | implementation-source | approved | Source for drift check. | ${hash} |`
     );
     fs.writeFileSync(taskPath, taskMarkdown, 'utf8');
     fs.writeFileSync(sourcePath, '# Source\n\nAfter\n', 'utf8');

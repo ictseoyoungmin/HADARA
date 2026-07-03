@@ -100,7 +100,7 @@ describe('task workbench status report', () => {
       ])
     );
     expect(report.sources.evidenceList.latest).toMatchObject({ kind: 'note', result: 'passed', visibility: 'public' });
-    expect(report.authoringSuggestions.sourceDocuments.guidance).toContain('CLI may suggest hashes for existing rows, but agents must choose the sources.');
+    expect(report.authoringSuggestions.sourceDocuments.guidance).toContain('Keep source drift hashes out of the human TASK.md table unless working with a legacy hash-enabled capsule.');
     expect(report.authoringSuggestions.acceptance.draftAcceptanceExamples[0]).toMatchObject({
       confidence: 'low',
       source: 'generic-pattern'
@@ -119,15 +119,15 @@ describe('task workbench status report', () => {
     expect(snapshotProject(root)).toEqual(before);
   });
 
-  it('suggests title cleanup and source document hash rows without writing TASK.md', () => {
+  it('suggests title cleanup and legacy source document hash rows without writing TASK.md', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'src', 'cli'), { recursive: true });
     fs.writeFileSync(path.join(root, 'src', 'cli', 'main.ts'), 'export const cli = true;\n', 'utf8');
     const task = createTaskCapsule(root, 'Consider a small CLI global-option parsing capsule');
     const taskPath = path.join(task.dir, 'TASK.md');
     const taskMarkdown = fs.readFileSync(taskPath, 'utf8').replace(
-      '| TBD | reference | exploratory | draft | TBD | TBD |',
-      '| `src/cli/main.ts` | implementation-source | approved | implementing | CLI entry point. | TBD |'
+      '## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | draft | TBD |',
+      '## Inputs / Constraints\n\n| Path / Source | Type | Authority | State | Notes | Hash |\n|---|---|---|---|---|---|\n| `src/cli/main.ts` | implementation-source | approved | implementing | CLI entry point. | TBD |'
     );
     fs.writeFileSync(taskPath, taskMarkdown, 'utf8');
     const before = snapshotProject(root);

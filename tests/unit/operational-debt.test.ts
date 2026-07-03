@@ -1294,7 +1294,7 @@ describe('operational debt track', () => {
     const task = createTaskCapsule(root, 'Premature task acceptance');
     fs.writeFileSync(
       path.join(task.dir, 'TASK.md'),
-      fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8').replace('| AC-1 | Scope is implemented. | Must | Pending | TBD | TBD |', '| AC-1 | Scope is implemented. | Must | Met | Premature evidence claim | TBD |'),
+      fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8').replace('| AC-1 | Scope is implemented. | Pending | TBD | TBD |', '| AC-1 | Scope is implemented. | Met | Premature evidence claim | TBD |'),
       'utf8'
     );
 

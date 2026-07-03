@@ -108,15 +108,18 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
       .replace(/\| Status \| Draft \|/g, '| Status | Done |')
       .replace('| Created | TBD |', '| Created | 2026-06-30 |')
       .replace('| Updated | TBD |', '| Updated | 2026-06-30 |')
-      .replace('| TBD | reference | exploratory | draft | TBD | TBD |', `| docs/TASK_BOARD.md | reference | approved | implemented | sha256:${taskBoardHash} | Fixture. |`)
+      .replace(
+        '## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | draft | TBD |',
+        `## Inputs / Constraints\n\n| Path / Source | Type | Authority | State | Notes | Hash |\n|---|---|---|---|---|---|\n| docs/TASK_BOARD.md | reference | approved | implemented | Fixture. | sha256:${taskBoardHash} |`
+      )
       .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Exercise close source. | Fixture verifies source units. |')
-      .replace('| 1 | Define the task contract. | Pending | TBD |', '| 1 | Define the task contract. | Done | Fixture. |')
-      .replace('| 2 | Implement the smallest useful slice. | Pending | TBD |', '| 2 | Implement fixture. | Done | Fixture. |')
-      .replace('| 3 | Validate and record evidence. | Pending | TBD |', '| 3 | Validate and record evidence. | Done | Fixture. |')
-      .replace('| AC-1 | Scope is implemented. | Yes | Pending | TBD | Required | TBD |', '| AC-1 | Scope is implemented. | Yes | Met | Fixture. | Required | docs/TASK_BOARD.md |')
-      .replace('| AC-2 | Validation evidence is recorded. | Yes | Pending | TBD | Required | TBD |', '| AC-2 | Validation evidence is recorded. | Yes | Met | Fixture. | Required | docs/TASK_BOARD.md |')
-      .replace('| TBD | TBD | Yes | Not Run | TBD |', '| Fixture | Local fixture validation. | Yes | Passed | Fixture. |')
-      .replace('| TBD | N/A | TBD | TBD | TBD |', '| src/task/task-close.ts | L1-L1 | Fixture. | Fixture. | Fixture. |')
+      .replace('| 1 | Define the task contract. | Pending |', '| 1 | Define the task contract. | Done |')
+      .replace('| 2 | Implement the smallest useful slice. | Pending |', '| 2 | Implement fixture. | Done |')
+      .replace('| 3 | Validate and record evidence. | Pending |', '| 3 | Validate and record evidence. | Done |')
+      .replace('| AC-1 | Scope is implemented. | Pending | TBD | TBD |', '| AC-1 | Scope is implemented. | Met | Fixture. | docs/TASK_BOARD.md |')
+      .replace('| AC-2 | Validation evidence is recorded. | Pending | TBD | TBD |', '| AC-2 | Validation evidence is recorded. | Met | Fixture. | docs/TASK_BOARD.md |')
+      .replace('| TBD | Yes | Not Run | TBD |', '| Fixture | Yes | Passed | Fixture. |')
+      .replace('| N/A | TBD |', '| src/task/task-close.ts | Fixture. |')
       .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Follow-up | None. | Deferred | docs/TASK_BOARD.md |'),
     'utf8'
   );

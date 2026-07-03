@@ -58,7 +58,8 @@ describe('task upgrade scaffold report', () => {
 
     expect(executeReport.summary.changed).toBeGreaterThan(0);
     expect(updated).toContain('Legacy prose stays.');
-    expect(updated).toContain('| Step | Action | Status | Evidence |');
+    expect(updated).toContain('| Step | Action | Status |');
+    expect(updated).toContain('| Date | State | Note |');
 
     const rerun = createTaskUpgradeScaffoldReport(root, task.id, 'execute');
     expect(rerun.actions.find((action) => action.path.endsWith('/TASK.md'))).toMatchObject({

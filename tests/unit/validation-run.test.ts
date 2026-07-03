@@ -120,7 +120,7 @@ describe('validation run', () => {
     expect(report.evidence?.result).toBe('failed');
     const taskMd = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
     expect(taskMd).toContain(`| Focused tests | Yes | Failed | ${report.evidence?.id} |`);
-    expect(taskMd).toContain('| AC-1 | Scope is implemented. | Must | Pending | TBD | TBD |');
+    expect(taskMd).toContain('| AC-1 | Scope is implemented. | Pending | TBD | TBD |');
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
   });
 

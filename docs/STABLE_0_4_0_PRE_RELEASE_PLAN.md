@@ -11,7 +11,7 @@ Promote `hadara@0.4.0-rc.0` to stable only after the high-friction dogfood findi
 
 | Order | Capsule | Outcome Required |
 |---:|---|---|
-| 1 | Task Capsule human-readable schema cleanup | New `TASK.md` scaffolds put Goal/Scope/Plan before inputs, remove duplicate Required/Disposition wording, put Hash after Notes, and keep legacy capsules validator-compatible. |
+| 1 | Task Capsule human-readable schema cleanup | New `TASK.md` scaffolds put Goal/Scope/Plan before inputs, keep Evidence only where it proves Acceptance/Validation, remove hash/source-drift bookkeeping from human Inputs, add manual `History` as `Date / State / Note`, and keep legacy capsules validator-compatible. |
 | 2 | JSON taskId envelope hardening | Every JSON command response that is task-scoped exposes top-level `taskId`; nested-only task ids are removed from shell parsing paths. |
 | 3 | `doctor` install-location output | `hadara doctor` reports the executable path, package root when discoverable, package version, Node path, and registry/install hints without exposing local secrets. |
 | 4 | Timing measurement root cause | Negative dogfood durations are traced to either the harness or CLI; duration collection uses monotonic clocks or records a documented harness-only bug with a fix. |

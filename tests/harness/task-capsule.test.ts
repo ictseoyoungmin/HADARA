@@ -33,8 +33,9 @@ describe('Task Capsule harness', () => {
     const taskMarkdown = fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8');
     expect(taskMarkdown).toContain('| Field | Value |');
     expect(taskMarkdown.indexOf('## Goal')).toBeLessThan(taskMarkdown.indexOf('## Inputs / Constraints'));
-    expect(taskMarkdown).toContain('| Step | Action | Status | Evidence |');
-    expect(taskMarkdown).toContain('| ID | Criterion | Decision | State | Evidence | Reference |');
+    expect(taskMarkdown).toContain('| Step | Action | Status |');
+    expect(taskMarkdown).toContain('| ID | Criterion | State | Evidence | Reference |');
+    expect(taskMarkdown).toContain('| Date | State | Note |');
     expect(fs.readFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), 'utf8')).toContain(task.id);
   });
 

@@ -616,12 +616,14 @@ function createTitleSuggestion(title: string): TaskAuthoringSuggestions['title']
 }
 
 function createSourceDocumentSuggestions(projectRoot: string, rows: string[][], title: string): TaskAuthoringSuggestions['sourceDocuments'] {
-  const hashColumnIndex = rows[0]?.[0] === 'Path / Source' ? 5 : 4;
-  const dataRows = rows.filter((row) => row[0] !== 'Path' && row[0] !== 'Path / Source');
+  const header = rows[0] ?? [];
+  const hashColumnIndex = header.findIndex((cell) => cell === 'Hash' || cell === 'Source Hash');
+  const hasHashColumn = hashColumnIndex >= 0;
+  const dataRows = rows.filter((row) => row[0] !== 'Source' && row[0] !== 'Path' && row[0] !== 'Path / Source');
   const concretePaths = dataRows.map((row) => normalizeSourcePath(row[0] ?? '')).filter((value) => value && !/^TBD$/i.test(value));
-  const hashRows = concretePaths.map((sourcePath) => sourceDocumentHashRow(projectRoot, sourcePath));
+  const hashRows = hasHashColumn ? concretePaths.map((sourcePath) => sourceDocumentHashRow(projectRoot, sourcePath)) : [];
   const hasPlaceholder = dataRows.length === 0 || dataRows.some((row) => row.some((cell) => /^TBD$/i.test(cell)));
-  const needsHash = dataRows.some((row) => {
+  const needsHash = hasHashColumn && dataRows.some((row) => {
     const sourcePath = normalizeSourcePath(row[0] ?? '');
     const hash = row[hashColumnIndex] ?? '';
     return sourcePath && !/^TBD$/i.test(sourcePath) && !/^sha256:[a-f0-9]{64}$/.test(hash);
@@ -629,8 +631,8 @@ function createSourceDocumentSuggestions(projectRoot: string, rows: string[][], 
   return {
     status: needsHash ? 'needs-hash' : hasPlaceholder ? 'placeholder' : concretePaths.length === 0 ? 'missing' : 'ok',
     guidance: [
-      'Use Source Documents for files or docs that constrain this capsule.',
-      'CLI may suggest hashes for existing rows, but agents must choose the sources.',
+      'Use Inputs / Constraints for files, docs, user requests, or constraints that materially shape this capsule.',
+      'Keep source drift hashes out of the human TASK.md table unless working with a legacy hash-enabled capsule.',
       'Do not add broad repository files only because they were nearby.'
     ],
     candidateSignals: [
@@ -667,10 +669,13 @@ function createAcceptanceSuggestions(
   title: string,
   sourceSignals: TaskAuthoringSuggestions['acceptance']['candidateSignals']
 ): TaskAuthoringSuggestions['acceptance'] {
+  const header = rows[0] ?? [];
+  const stateIndex = header.findIndex((cell) => cell === 'State' || cell === 'Status');
+  const evidenceIndex = header.findIndex((cell) => cell === 'Evidence');
   const dataRows = rows.filter((row) => row[0] !== 'ID');
   const criteria = dataRows.map((row) => row[1] ?? '').filter(Boolean);
   const hasPlaceholder = dataRows.length === 0 || criteria.some((criterion) => /^(Scope is implemented\.|Template-specific scope is implemented\.|Validation evidence is recorded\.|TBD)$/i.test(criterion));
-  const needsEvidence = dataRows.some((row) => /^(TBD|Pending)$/i.test(row[4] ?? '') || /^(Pending|Not Met)$/i.test(row[3] ?? ''));
+  const needsEvidence = dataRows.some((row) => /^(TBD|Pending)$/i.test(row[evidenceIndex] ?? '') || /^(Pending|Not Met)$/i.test(row[stateIndex] ?? ''));
   return {
     status: dataRows.length === 0 ? 'missing' : hasPlaceholder ? 'placeholder' : needsEvidence ? 'needs-evidence' : 'ok',
     guidance: [

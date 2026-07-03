@@ -135,13 +135,15 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
       .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Exercise CI gate. | Fixture verifies gate readiness. |')
       .replace('| In | TBD |', '| In | Complete fixture documents. |')
       .replace('| Out | TBD |', '| Out | Broad workflow mutation. |')
+      .replace('| AC-1 | Scope is implemented. | Pending | TBD | TBD |', '| AC-1 | Scope is implemented. | Met | Evidence attached. | tests/unit/ci-gate.test.ts |')
+      .replace('| AC-2 | Validation evidence is recorded. | Pending | TBD | TBD |', '| AC-2 | Validation evidence is recorded. | Met | Evidence attached. | tests/unit/ci-gate.test.ts |')
       .replace('| AC-1 | Scope is implemented. | Must | Pending | TBD | TBD |', '| AC-1 | Scope is implemented. | Must | Met | Evidence attached. | tests/unit/ci-gate.test.ts |')
       .replace('| AC-2 | Validation evidence is recorded. | Must | Pending | TBD | TBD |', '| AC-2 | Validation evidence is recorded. | Must | Met | Evidence attached. | tests/unit/ci-gate.test.ts |')
       .replace('| AC-1 | Scope is implemented. | Yes | Pending | TBD | Required | TBD |', '| AC-1 | Scope is implemented. | Yes | Met | Evidence attached. | Required | tests/unit/ci-gate.test.ts |')
       .replace('| AC-2 | Validation evidence is recorded. | Yes | Pending | TBD | Required | TBD |', '| AC-2 | Validation evidence is recorded. | Yes | Met | Evidence attached. | Required | tests/unit/ci-gate.test.ts |')
       .replace('| TBD | Yes | Not Run | TBD |', '| Fixture validation | Yes | Passed | Evidence attached. |')
       .replace('| TBD | TBD | Yes | Not Run | TBD |', '| Fixture validation | Local fixture setup. | Yes | Passed | Evidence attached. |')
-      .replace('| N/A | TBD | TBD |', '| tests/unit/ci-gate.test.ts | Complete current capsule docs without legacy sidecars. | Evidence attached. |')
+      .replace('| N/A | TBD |', '| tests/unit/ci-gate.test.ts | Complete current capsule docs without legacy sidecars. |')
       .replace('| TBD | N/A | TBD | TBD | TBD |', '| tests/unit/ci-gate.test.ts | test fixture | Complete current capsule docs without legacy sidecars. | Keep CI gate fixtures aligned with current task structure. | Evidence attached. |')
       .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Follow-up | None. | Closed | Fixture. |'),
     'utf8'

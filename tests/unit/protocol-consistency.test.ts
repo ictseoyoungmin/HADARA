@@ -566,8 +566,8 @@ describe('Task protocol consistency report', () => {
     markTaskDone(root, task.id);
     replaceInFile(
       path.join(task.dir, 'TASK.md'),
-      '| AC-1 | Scope is implemented. | Yes | Pending | TBD | Required | TBD |',
-      '| AC-1 | Scope is implemented. | Yes | In Progress | TBD | Required | TBD |'
+      '| AC-1 | Scope is implemented. | Pending | TBD | TBD |',
+      '| AC-1 | Scope is implemented. | In Progress | TBD | TBD |'
     );
 
     const report = createTaskProtocolConsistencyReport(root, task.id, new Date('2026-05-30T00:00:00.000Z'));

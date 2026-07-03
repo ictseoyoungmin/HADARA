@@ -169,6 +169,7 @@ function validateTaskMarkdown(projectRoot: string, task: TaskCapsule, issues: Ha
   validateTaskValidationTable(content, relativePath, issues);
   validateTaskChangeSummaryTable(content, relativePath, issues);
   validateTaskRisksTable(content, relativePath, issues);
+  validateTaskHistoryTable(content, relativePath, issues);
   validateTaskCloseStateBoundaries(content, relativePath, issues);
 }
 
@@ -191,9 +192,10 @@ function validateTaskIdentityTable(content: string, relativePath: string, issues
 function validateTaskSourceDocumentsTable(projectRoot: string, content: string, relativePath: string, issues: HarnessValidationIssue[], level: HarnessValidationLevel): void {
   const heading = sectionHeading(content, ['## Inputs / Constraints', '## Source Documents']);
   const table = sectionTable(content, heading);
-  const v2 = requireAnyTableHeader(
+  const recognizedHeader = requireAnyTableHeader(
     table.rows,
     [
+      ['Source', 'Role', 'State', 'Notes'],
       ['Path / Source', 'Type', 'Authority', 'State', 'Notes', 'Hash'],
       ['Path', 'Role', 'Authority', 'Status', 'Source Hash', 'Notes']
     ],
@@ -201,14 +203,17 @@ function validateTaskSourceDocumentsTable(projectRoot: string, content: string, 
     heading,
     issues
   );
-  if (!v2) return;
+  if (!recognizedHeader) return;
+  const hasHashColumn = table.header.includes('Hash') || table.header.includes('Source Hash');
+  const hasAuthorityColumn = table.header.includes('Authority');
   for (const row of table.dataRows) {
-    const pathCell = tableCellAny(row, table.header, ['Path / Source', 'Path']);
+    const pathCell = tableCellAny(row, table.header, ['Source', 'Path / Source', 'Path']);
     const sourcePath = normalizeSourceDocumentPathCell(pathCell);
     if (!sourcePath || /^TBD$/i.test(sourcePath)) continue;
     checkToken(tableCellAny(row, table.header, ['Type', 'Role']), SOURCE_DOCUMENT_ROLE_TOKENS, 'TASK_SOURCE_DOCUMENT_ROLE_INVALID_TOKEN', relativePath, heading, issues);
-    checkToken(tableCell(row, table.header, 'Authority'), SOURCE_DOCUMENT_AUTHORITY_TOKENS, 'TASK_SOURCE_DOCUMENT_AUTHORITY_INVALID_TOKEN', relativePath, heading, issues);
+    if (hasAuthorityColumn) checkToken(tableCell(row, table.header, 'Authority'), SOURCE_DOCUMENT_AUTHORITY_TOKENS, 'TASK_SOURCE_DOCUMENT_AUTHORITY_INVALID_TOKEN', relativePath, heading, issues);
     checkToken(tableCellAny(row, table.header, ['State', 'Status']), SOURCE_DOCUMENT_STATUS_TOKENS, 'TASK_SOURCE_DOCUMENT_STATUS_INVALID_TOKEN', relativePath, heading, issues);
+    if (!hasHashColumn) continue;
     const hash = tableCellAny(row, table.header, ['Hash', 'Source Hash']);
     if (!isSourceHashCell(hash)) {
       issues.push(taskTableIssue('TASK_SOURCE_DOCUMENT_MISSING_HASH', `Source document "${sourcePath}" must use Source Hash "TBD" or "sha256:<hex>".`, relativePath, heading));
@@ -265,7 +270,7 @@ function hashFile(filePath: string): string {
 function validateTaskPlanTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
   const heading = '## Plan';
   const table = sectionTable(content, heading);
-  if (!requireTableHeader(table.rows, ['Step', 'Action', 'Status', 'Evidence'], relativePath, heading, issues)) return;
+  if (!requireAnyTableHeader(table.rows, [['Step', 'Action', 'Status'], ['Step', 'Action', 'Status', 'Evidence']], relativePath, heading, issues)) return;
   for (const row of table.dataRows) {
     if (!row.some(Boolean)) continue;
     checkToken(tableCell(row, table.header, 'Status'), PLAN_STATUS_TOKENS, 'TASK_PLAN_STATUS_INVALID_TOKEN', relativePath, heading, issues);
@@ -279,6 +284,7 @@ function validateTaskAcceptanceTable(content: string, relativePath: string, issu
     !requireAnyTableHeader(
       table.rows,
       [
+        ['ID', 'Criterion', 'State', 'Evidence', 'Reference'],
         ['ID', 'Criterion', 'Decision', 'State', 'Evidence', 'Reference'],
         ['ID', 'Criterion', 'Required', 'Status', 'Evidence', 'Disposition', 'Reference']
       ],
@@ -293,11 +299,15 @@ function validateTaskAcceptanceTable(content: string, relativePath: string, issu
     if (!/^AC-\d+$/.test(id)) {
       issues.push(taskTableIssue('ACCEPTANCE_ID_INVALID_TOKEN', `Acceptance ID must use AC-1, AC-2, ...; got "${id}".`, relativePath, heading));
     }
+    const hasStateColumn = table.header.includes('State');
+    const hasDecisionColumn = table.header.includes('Decision');
     const decision = tableCell(row, table.header, 'Decision');
-    if (decision) {
-      checkToken(decision, ACCEPTANCE_DECISION_TOKENS, 'ACCEPTANCE_DECISION_INVALID_TOKEN', relativePath, heading, issues);
-      if (ACCEPTANCE_DECISIONS_REQUIRING_REFERENCE.has(decision) && isMissingReference(tableCell(row, table.header, 'Reference'))) {
-        issues.push(taskTableIssue('ACCEPTANCE_DECISION_REFERENCE_MISSING', `${id} decision "${decision}" requires a concrete reference.`, relativePath, heading));
+    if (hasStateColumn) {
+      if (hasDecisionColumn && decision) {
+        checkToken(decision, ACCEPTANCE_DECISION_TOKENS, 'ACCEPTANCE_DECISION_INVALID_TOKEN', relativePath, heading, issues);
+        if (ACCEPTANCE_DECISIONS_REQUIRING_REFERENCE.has(decision) && isMissingReference(tableCell(row, table.header, 'Reference'))) {
+          issues.push(taskTableIssue('ACCEPTANCE_DECISION_REFERENCE_MISSING', `${id} decision "${decision}" requires a concrete reference.`, relativePath, heading));
+        }
       }
       checkToken(tableCell(row, table.header, 'State'), ACCEPTANCE_STATUS_TOKENS, 'ACCEPTANCE_STATUS_INVALID_TOKEN', relativePath, heading, issues);
       continue;
@@ -379,11 +389,13 @@ function validateTaskChangeSummaryTable(content: string, relativePath: string, i
 
 function requireChangeSummaryHeader(rows: string[][], relativePath: string, heading: string, issues: HarnessValidationIssue[]): boolean {
   const actual = rows[0] ?? [];
-  const summaryHeader = ['Area', 'Summary', 'Evidence'];
+  const summaryHeader = ['Area', 'Summary'];
+  const summaryWithEvidenceHeader = ['Area', 'Summary', 'Evidence'];
   const areaHeader = ['Path', 'Area', 'Change', 'Reason', 'Evidence'];
   const legacyLinesHeader = ['Path', 'Lines', 'Change', 'Reason', 'Evidence'];
   if (
     summaryHeader.every((cell, index) => actual[index] === cell) ||
+    summaryWithEvidenceHeader.every((cell, index) => actual[index] === cell) ||
     areaHeader.every((cell, index) => actual[index] === cell) ||
     legacyLinesHeader.every((cell, index) => actual[index] === cell)
   ) return true;
@@ -419,6 +431,13 @@ function validateTaskRisksTable(content: string, relativePath: string, issues: H
     checkToken(tableCellAny(row, table.header, ['Type', 'Kind']), RISK_KIND_TOKENS, 'TASK_RISK_KIND_INVALID_TOKEN', relativePath, heading, issues);
     checkToken(tableCell(row, table.header, 'State'), RISK_STATE_TOKENS, 'TASK_RISK_STATE_INVALID_TOKEN', relativePath, heading, issues);
   }
+}
+
+function validateTaskHistoryTable(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
+  if (!content.includes('## History')) return;
+  const heading = '## History';
+  const table = sectionTable(content, heading);
+  requireTableHeader(table.rows, ['Date', 'State', 'Note'], relativePath, heading, issues);
 }
 
 function validateTaskCloseStateBoundaries(content: string, relativePath: string, issues: HarnessValidationIssue[]): void {
