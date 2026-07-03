@@ -26,14 +26,28 @@ describe('CLI doctor report', () => {
     fs.writeFileSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'), '# HADARA_CONTEXT\n', 'utf8');
 
     const paths = resolveHadaraPaths({ projectRoot: root });
-    const report = createDoctorReport(paths, 'v22.0.0-test');
+    const cliEntry = path.join(process.cwd(), 'src', 'cli', 'doctor.ts');
+    const report = createDoctorReport(paths, 'v22.0.0-test', {
+      cliEntry,
+      nodePath: '/usr/bin/node-test'
+    });
 
     expect(report).toMatchObject({
       schemaVersion: 'hadara.doctor.v1',
       command: 'doctor',
       ok: true,
       runtime: {
-        node: 'v22.0.0-test'
+        node: 'v22.0.0-test',
+        nodePath: '/usr/bin/node-test'
+      },
+      installation: {
+        executablePath: cliEntry,
+        resolvedExecutablePath: expect.any(String),
+        packageRoot: process.cwd(),
+        packageVersion: expect.any(String),
+        registry: 'https://registry.npmjs.org',
+        installCommand: expect.stringMatching(/^npm install -g hadara@/),
+        latestInstallCommand: 'npm install -g hadara'
       },
       paths: {
         portableRoot: path.join(root, '.hadara', 'local', 'portable'),
@@ -51,12 +65,24 @@ describe('CLI doctor report', () => {
   it('marks missing project filesystem checks and keeps text output readable', () => {
     const root = tempProject();
     const paths = resolveHadaraPaths({ projectRoot: root });
-    const report = createDoctorReport(paths, 'v22.0.0-test');
+    const report = createDoctorReport(paths, 'v22.0.0-test', {
+      cliEntry: path.join(root, 'missing-bin.js'),
+      nodePath: '/usr/bin/node-test'
+    });
 
     expect(report.ok).toBe(false);
+    expect(report.installation.executablePath).toBe(path.join(root, 'missing-bin.js'));
+    expect(report.installation.resolvedExecutablePath).toBeNull();
+    expect(report.installation.packageRoot).toBeNull();
     expect(report.checks.map((check) => check.status)).toEqual(['missing', 'missing', 'missing']);
     expect(report.checks[2]?.path).toBe(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'));
     expect(formatDoctorReport(report)).toContain('[HADARA] Doctor');
+    expect(formatDoctorReport(report)).toContain('Node path:    /usr/bin/node-test');
+    expect(formatDoctorReport(report)).toContain('Install:');
+    expect(formatDoctorReport(report)).toContain(`  executable: ${path.join(root, 'missing-bin.js')}`);
+    expect(formatDoctorReport(report)).toContain('  package:    ');
+    expect(formatDoctorReport(report)).toContain('  registry:   https://registry.npmjs.org');
+    expect(formatDoctorReport(report)).toContain('  install:    npm install -g hadara@');
     expect(formatDoctorReport(report)).toContain('docs/:       missing');
     expect(formatDoctorReport(report)).toContain('.hadara/context/HADARA_CONTEXT.md: missing');
   });
