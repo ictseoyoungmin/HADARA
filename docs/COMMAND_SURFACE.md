@@ -86,7 +86,7 @@ Diagnostics such as `harness.validate`, `proof.status`, `proof.explain`, `eviden
 
 ## 0.4 Planned Surfaces
 
-`docs.complete-spec` and `docs.mark-drift` are registry-visible planned 0.4 surfaces, not executable current commands. They use `status: planned` and `requiredness: disabled` in `hadara commands --json` until a future capsule implements their mutation semantics and schemas.
+`docs.complete-spec` is an experimental guarded docs-governance command for moving implemented specs out of active/default routing. `docs.mark-drift` remains a registry-visible planned 0.4 surface with `status: planned` and `requiredness: disabled` until a future capsule implements its mutation semantics and schema.
 
 ## State Consistency
 

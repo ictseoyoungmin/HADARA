@@ -205,6 +205,13 @@
       "notes": "Documents the Phase 7.5 registry-only document cleanup status transition report returned by hadara docs mark --json."
     },
     {
+      "id": "hadara.docs.completeSpec.v1",
+      "path": "src/schemas/docs-complete-spec.schema.json",
+      "status": "fixture",
+      "owner": "services/docs-cleanup",
+      "notes": "Documents the registry-only completed-spec lifecycle report returned by hadara docs complete-spec --json."
+    },
+    {
       "id": "hadara.docs.register.v1",
       "path": "src/schemas/docs-register.schema.json",
       "status": "fixture",

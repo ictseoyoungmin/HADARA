@@ -1,5 +1,5 @@
 import { getFlag, getRequiredStringOption, getStringOption } from './args';
-import { createDocsArchivePlanReport, createDocsMarkReport, createDocsRequiredReadingReport } from '../services/docs-cleanup';
+import { createDocsArchivePlanReport, createDocsCompleteSpecReport, createDocsMarkReport, createDocsRequiredReadingReport } from '../services/docs-cleanup';
 import { createDocsDoctorReport, createDocsExplainReport, createDocsInboxReport, createDocsListReport, createDocsReadMapReport, createDocsRegisterReport } from '../services/docs-registry';
 import { createDocsPatchPlanReport, createManagedSectionExplainReport, createManagedSectionsListReport } from '../services/managed-sections';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
@@ -39,6 +39,22 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
   }
   if (sub === 'inbox') {
     const report = createDocsInboxReport(input.projectRoot);
+    printReport(report, input.jsonOutput);
+    return true;
+  }
+  if (sub === 'complete-spec') {
+    if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+      console.log(renderCommandHelp('docs.complete-spec'));
+      return true;
+    }
+    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'docs.complete-spec')) return true;
+    const report = createDocsCompleteSpecReport(input.projectRoot, {
+      documentPath: getRequiredStringOption(input.args, '--path'),
+      implementedBy: getRequiredStringOption(input.args, '--implemented-by'),
+      reason: getStringOption(input.args, '--reason'),
+      mode: getFlag(input.args, '--execute') ? 'execute' : 'dry-run',
+      beforeHash: getStringOption(input.args, '--before-hash')
+    });
     printReport(report, input.jsonOutput);
     return true;
   }

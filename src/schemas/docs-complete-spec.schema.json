@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.docs.completeSpec.v1",
+  "x-hadara-schema-id": "hadara.docs.completeSpec.v1",
+  "title": "HADARA Docs Complete Spec Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "mode", "ok", "path", "implementedBy", "registryPath", "beforeHash", "action", "before", "after", "writes", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.docs.completeSpec.v1" },
+    "command": { "const": "docs.complete-spec" },
+    "mode": { "type": "string", "enum": ["dry-run", "execute"] },
+    "ok": { "type": "boolean" },
+    "path": { "type": "string", "minLength": 1 },
+    "implementedBy": { "type": "string", "pattern": "^T-[0-9]{4,}$" },
+    "registryPath": { "const": ".hadara/docs-registry.json" },
+    "beforeHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "action": { "type": "string", "enum": ["update", "already-complete", "blocked"] },
+    "before": {
+      "oneOf": [
+        { "$ref": "#/$defs/snapshot" },
+        { "type": "null" }
+      ]
+    },
+    "after": {
+      "oneOf": [
+        { "$ref": "#/$defs/completedSnapshot" },
+        { "type": "null" }
+      ]
+    },
+    "writes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["status", "readWhen", "requiredReading"],
+      "properties": {
+        "status": { "type": "string", "enum": ["canonical", "active", "reference", "historical", "superseded", "archived"] },
+        "readWhen": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "requiredReading": { "type": "boolean" },
+        "readTier": { "type": "string", "minLength": 1 },
+        "activeForTasks": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "completedSnapshot": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["status", "readWhen", "requiredReading", "readTier", "activeForTasks"],
+      "properties": {
+        "status": { "const": "historical" },
+        "readWhen": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "requiredReading": { "const": false },
+        "readTier": { "const": "implemented-reference" },
+        "activeForTasks": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^T-[0-9]{4,}$" }
+        }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

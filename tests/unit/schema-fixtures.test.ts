@@ -47,6 +47,7 @@ describe('schema fixtures', () => {
       'hadara.dashboard.timeline.v1',
       'hadara.dev.docker_check.v1',
       'hadara.docs.archivePlan.v1',
+      'hadara.docs.completeSpec.v1',
       'hadara.docs.doctor.v1',
       'hadara.docs.explain.v1',
       'hadara.docs.inbox.v1',

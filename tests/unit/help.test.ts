@@ -85,13 +85,14 @@ describe('registry-backed help', () => {
     expect(output).toContain('--drift: low | medium | high');
   });
 
-  it('explains planned 0.4 commands without presenting them as executable current surfaces', () => {
+  it('explains docs.complete-spec as an executable guarded docs governance surface', () => {
     const output = renderCommandHelp('docs.complete-spec');
 
     expect(output).toContain('docs.complete-spec');
-    expect(output).toContain('Requiredness: disabled');
-    expect(output).toContain('Status: planned');
-    expect(output).toContain('no CLI handler or schema is implemented');
+    expect(output).toContain('Requiredness: conditional');
+    expect(output).toContain('Status: experimental');
+    expect(output).toContain('Schema: hadara.docs.completeSpec.v1');
+    expect(output).toContain('Execute requires --before-hash');
   });
 
   it('renders one command family without dumping unrelated surfaces', () => {

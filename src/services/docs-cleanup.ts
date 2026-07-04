@@ -59,6 +59,34 @@ export interface DocsRequiredReadingReport {
   issues: DocsIssue[];
 }
 
+export interface DocsCompleteSpecReport {
+  schemaVersion: 'hadara.docs.completeSpec.v1';
+  command: 'docs.complete-spec';
+  mode: 'dry-run' | 'execute';
+  ok: boolean;
+  path: string;
+  implementedBy: string;
+  registryPath: typeof DOCS_REGISTRY_PATH;
+  beforeHash: string;
+  action: 'update' | 'already-complete' | 'blocked';
+  before: {
+    status: DocumentStatus;
+    readWhen: string[];
+    requiredReading: boolean;
+    readTier?: string;
+    activeForTasks?: string[];
+  } | null;
+  after: {
+    status: DocumentStatus;
+    readWhen: string[];
+    requiredReading: boolean;
+    readTier: string;
+    activeForTasks: string[];
+  } | null;
+  writes: string[];
+  issues: DocsIssue[];
+}
+
 export type RequiredReadingTier = 'current-state' | 'task-work' | 'conditional-reference' | 'historical' | 'excluded';
 
 export interface DocsMarkOptions {
@@ -71,8 +99,77 @@ export interface DocsMarkOptions {
   forceCanonical?: boolean;
 }
 
+export interface DocsCompleteSpecOptions {
+  documentPath: string;
+  implementedBy: string;
+  reason?: string;
+  mode: 'dry-run' | 'execute';
+  beforeHash?: string;
+}
+
 const EXCLUDED_REQUIRED_READING_STATUSES = new Set<DocumentStatus>(['historical', 'superseded', 'archived']);
 const ARCHIVE_STATUSES = new Set<DocumentStatus>(['historical', 'superseded']);
+
+export function createDocsCompleteSpecReport(projectRoot: string, options: DocsCompleteSpecOptions): DocsCompleteSpecReport {
+  const state = readRegistry(projectRoot);
+  const normalizedPath = normalizePath(options.documentPath);
+  const implementedBy = options.implementedBy.trim();
+  const issues = [...state.issues];
+  const entry = state.registry?.documents.find((doc) => doc.path === normalizedPath) ?? null;
+  if (!entry) issues.push({ severity: 'error', code: 'DOC_NOT_REGISTERED', path: normalizedPath, message: `${normalizedPath} is not registered.` });
+  if (entry && entry.kind !== 'spec') {
+    issues.push({ severity: 'error', code: 'DOC_COMPLETE_SPEC_KIND_INVALID', path: normalizedPath, message: `docs.complete-spec requires kind spec, not ${entry.kind}.` });
+  }
+  if (!implementedBy) {
+    issues.push({ severity: 'error', code: 'DOC_COMPLETE_SPEC_TASK_REQUIRED', path: normalizedPath, message: '--implemented-by is required.' });
+  } else if (!taskExists(projectRoot, implementedBy)) {
+    issues.push({ severity: 'error', code: 'DOC_COMPLETE_SPEC_TASK_NOT_FOUND', path: normalizedPath, message: `${implementedBy} task capsule was not found.` });
+  }
+  if (options.mode === 'execute' && !options.beforeHash) {
+    issues.push({ severity: 'error', code: 'DOC_COMPLETE_SPEC_BEFORE_HASH_REQUIRED', path: DOCS_REGISTRY_PATH, message: 'Execute mode requires --before-hash from the reviewed dry-run.' });
+  }
+  if (options.mode === 'execute' && options.beforeHash && options.beforeHash !== state.beforeHash) {
+    issues.push({ severity: 'error', code: 'DOC_COMPLETE_SPEC_BEFORE_HASH_MISMATCH', path: DOCS_REGISTRY_PATH, message: `Registry hash ${state.beforeHash} does not match reviewed hash ${options.beforeHash}.` });
+  }
+
+  const before = entry ? completionSnapshot(entry) : null;
+  const after = entry && implementedBy ? completedSpecSnapshot(entry, implementedBy) : null;
+  const alreadyComplete = Boolean(before && after && before.status === after.status && before.requiredReading === after.requiredReading && arrayEqual(before.readWhen, after.readWhen) && before.readTier === after.readTier && arrayEqual(before.activeForTasks ?? [], after.activeForTasks));
+  let ok = issues.every((issue) => issue.severity !== 'error');
+
+  if (options.mode === 'execute' && ok && state.registry && entry && after && !alreadyComplete) {
+    entry.status = after.status;
+    entry.readWhen = after.readWhen as DocumentRegistryEntry['readWhen'];
+    entry.requiredReading = after.requiredReading;
+    entry.readTier = 'implemented-reference';
+    entry.authority = 'historical';
+    entry.editPolicy = entry.editPolicy ?? 'agent-editable-with-review';
+    entry.activeForTasks = after.activeForTasks;
+    entry.notes = appendNote(entry.notes, options.reason ?? `Completed by ${implementedBy}.`);
+    try {
+      atomicWriteTextFile(projectRoot, DOCS_REGISTRY_PATH, registryJson(state.registry));
+    } catch (error) {
+      ok = false;
+      issues.push({ severity: 'error', code: 'DOC_COMPLETE_SPEC_ATOMIC_WRITE_FAILED', path: DOCS_REGISTRY_PATH, message: `Could not write docs registry atomically: ${error instanceof Error ? error.message : String(error)}` });
+    }
+  }
+
+  return {
+    schemaVersion: 'hadara.docs.completeSpec.v1',
+    command: 'docs.complete-spec',
+    mode: options.mode,
+    ok,
+    path: normalizedPath,
+    implementedBy,
+    registryPath: DOCS_REGISTRY_PATH,
+    beforeHash: state.beforeHash,
+    action: ok ? alreadyComplete ? 'already-complete' : 'update' : 'blocked',
+    before,
+    after,
+    writes: ok && options.mode === 'execute' && !alreadyComplete ? [DOCS_REGISTRY_PATH] : [],
+    issues
+  };
+}
 
 export function createDocsMarkReport(projectRoot: string, options: DocsMarkOptions): DocsMarkReport {
   const state = readRegistry(projectRoot);
@@ -269,6 +366,45 @@ function readRegistry(projectRoot: string): { registry: DocumentRegistryFile | n
       issues: [{ severity: 'error', code: 'DOC_REGISTRY_INVALID_JSON', path: DOCS_REGISTRY_PATH, message: `Docs registry JSON could not be parsed: ${error instanceof Error ? error.message : String(error)}` }]
     };
   }
+}
+
+function completionSnapshot(entry: DocumentRegistryEntry): DocsCompleteSpecReport['before'] {
+  return {
+    status: entry.status,
+    readWhen: [...entry.readWhen],
+    requiredReading: entry.requiredReading,
+    ...(entry.readTier ? { readTier: entry.readTier } : {}),
+    ...(entry.activeForTasks ? { activeForTasks: [...entry.activeForTasks] } : {})
+  };
+}
+
+function completedSpecSnapshot(entry: DocumentRegistryEntry, implementedBy: string): DocsCompleteSpecReport['after'] {
+  return {
+    status: 'historical',
+    readWhen: ['only-when-linked'],
+    requiredReading: false,
+    readTier: 'implemented-reference',
+    activeForTasks: unique([...(entry.activeForTasks ?? []), implementedBy])
+  };
+}
+
+function taskExists(projectRoot: string, taskId: string): boolean {
+  if (!/^T-\d{4,}$/.test(taskId)) return false;
+  const tasksDir = path.join(projectRoot, 'tasks');
+  if (!fs.existsSync(tasksDir)) return false;
+  return fs.readdirSync(tasksDir).some((entryName) => entryName.startsWith(`${taskId}-`) && fs.statSync(path.join(tasksDir, entryName)).isDirectory());
+}
+
+function appendNote(current: string | undefined, note: string): string {
+  return current ? `${current} ${note}` : note;
+}
+
+function unique(values: string[]): string[] {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function arrayEqual(left: string[], right: string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
 function parseStatus(value: string): DocumentStatus | null {

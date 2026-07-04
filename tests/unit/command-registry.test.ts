@@ -158,8 +158,9 @@ describe('Phase 7.1 command registry', () => {
     const completeSpec = findCommandRegistryEntry('docs.complete-spec');
     const markDrift = findCommandRegistryEntry('docs.mark-drift');
     expect(completeSpec).toMatchObject({
-      status: 'planned',
-      requiredness: 'disabled',
+      status: 'experimental',
+      requiredness: 'conditional',
+      schemaVersion: 'hadara.docs.completeSpec.v1',
       appearsInDefaultHelp: false
     });
     expect(markDrift).toMatchObject({
@@ -167,7 +168,6 @@ describe('Phase 7.1 command registry', () => {
       requiredness: 'disabled',
       appearsInDefaultHelp: false
     });
-    expect(completeSpec).not.toHaveProperty('schemaVersion');
     expect(markDrift).not.toHaveProperty('schemaVersion');
   });
 

@@ -19,6 +19,7 @@ import dashboardTaskDetailSchemaJson from '../schemas/dashboard-task-detail.sche
 import dashboardTimelineSchemaJson from '../schemas/dashboard-timeline.schema.json';
 import devDockerCheckSchemaJson from '../schemas/dev-docker-check.schema.json';
 import docsArchivePlanSchemaJson from '../schemas/docs-archive-plan.schema.json';
+import docsCompleteSpecSchemaJson from '../schemas/docs-complete-spec.schema.json';
 import docsDoctorSchemaJson from '../schemas/docs-doctor.schema.json';
 import docsExplainSchemaJson from '../schemas/docs-explain.schema.json';
 import docsInboxSchemaJson from '../schemas/docs-inbox.schema.json';
@@ -136,6 +137,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.dashboard.timeline.v1': dashboardTimelineSchemaJson as JsonObject,
   'hadara.dev.docker_check.v1': devDockerCheckSchemaJson as JsonObject,
   'hadara.docs.archivePlan.v1': docsArchivePlanSchemaJson as JsonObject,
+  'hadara.docs.completeSpec.v1': docsCompleteSpecSchemaJson as JsonObject,
   'hadara.docs.doctor.v1': docsDoctorSchemaJson as JsonObject,
   'hadara.docs.explain.v1': docsExplainSchemaJson as JsonObject,
   'hadara.docs.inbox.v1': docsInboxSchemaJson as JsonObject,
