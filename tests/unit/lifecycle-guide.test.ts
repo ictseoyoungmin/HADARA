@@ -17,8 +17,7 @@ describe('Phase 7.2 lifecycle guide', () => {
       'task.status',
       'task.create',
       'validation.run',
-      'task.finalize',
-      'handoff.update'
+      'task.finalize'
     ]);
   });
 
@@ -50,7 +49,7 @@ describe('Phase 7.2 lifecycle guide', () => {
     expect(output).toContain('1 inspect');
     expect(output).toMatch(/3 evidence\s+hadara validation run/);
     expect(output).toMatch(/4 finalize\s+hadara task finalize/);
-    expect(output).toMatch(/5 handoff\s+hadara handoff update/);
+    expect(output).not.toContain('hadara handoff update');
     expect(output).not.toContain('task lifecycle --task T-XXXX --json');
     expect(output).not.toContain('task finish --task T-XXXX --execute --json');
     expect(output).not.toContain('task close --task T-XXXX --execute --json');
@@ -67,7 +66,7 @@ describe('Phase 7.2 lifecycle guide', () => {
     expect(output).toContain('validation.run');
     expect(output).not.toContain('evidence.add-command');
     expect(output).not.toContain('hadara task next --json');
-    expect(output).toContain('handoff.update');
+    expect(output).not.toContain('handoff.update');
     expect(output).not.toContain('task.show');
     expect(output).not.toContain('release.publish');
     expect(output).not.toContain('dashboard serve');

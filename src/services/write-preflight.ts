@@ -7,7 +7,6 @@ import { nextTaskId } from '../task/task-capsule';
 export type WritePreflightCommand =
   | 'task.create'
   | 'evidence.collect'
-  | 'handoff.update'
   | 'run-state.start'
   | 'run-state.update'
   | 'run-state.complete'
@@ -50,9 +49,6 @@ export function createWritePreflightReport(projectRoot: string, targetArgs: stri
       break;
     case 'evidence.collect':
       report = evidenceCollectReport(projectRoot, args);
-      break;
-    case 'handoff.update':
-      report = simpleProjectWriteReport('handoff.update', ['docs/AGENT_HANDOFF.md']);
       break;
     case 'run-state.start':
     case 'run-state.update':
@@ -196,7 +192,6 @@ function identifyCommand(args: string[]): WritePreflightCommand {
   const [root, sub] = args;
   if (root === 'task' && sub === 'create') return 'task.create';
   if (root === 'evidence' && sub === 'collect') return 'evidence.collect';
-  if (root === 'handoff' && sub === 'update') return 'handoff.update';
   if (root === 'run-state' && (sub === 'start' || sub === 'update' || sub === 'complete')) return `run-state.${sub}`;
   if (root === 'debt' && (sub === 'add' || sub === 'update')) return `debt.${sub}`;
   return 'unknown';

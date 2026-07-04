@@ -13,7 +13,7 @@ describe('registry-backed help', () => {
     expect(output).not.toContain('hadara task next --json');
     expect(output).toContain('Primary capsule lifecycle');
     expect(output).toContain('validation.run');
-    expect(output).toContain('handoff.update');
+    expect(output).not.toContain('handoff.update');
     expect(output).toContain('hadara commands --json');
     expect(output).not.toContain('hadara release publish');
     expect(output).not.toContain('hadara dashboard serve');
@@ -46,7 +46,7 @@ describe('registry-backed help', () => {
     expect(report.primaryPath.map((step) => step.commandId)).toContain('task.status');
     expect(report.primaryPath.map((step) => step.commandId)).not.toContain('task.lifecycle');
     expect(report.primaryPath.map((step) => step.commandId)).toContain('task.finalize');
-    expect(report.primaryPath.map((step) => step.commandId)).toContain('handoff.update');
+    expect(report.primaryPath.map((step) => step.commandId)).not.toContain('handoff.update');
     expect(report.primaryPath.map((step) => step.commandId)).not.toContain('task.finish');
     expect(report.primaryPath.map((step) => step.commandId)).not.toContain('task.close');
     expect(report.diagnostics.map((item) => item.commandId)).toContain('harness.validate');

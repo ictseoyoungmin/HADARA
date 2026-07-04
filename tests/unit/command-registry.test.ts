@@ -71,7 +71,6 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'docs.archive',
   'docs.required-reading',
   'tools.list',
-  'handoff.update',
   'handoff.suggest',
   'write.preflight',
   'policy.check-shell',
@@ -148,6 +147,8 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('task.finalize')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
     expect(findCommandRegistryEntry('task.finish')).toMatchObject({ requiredness: 'advanced', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('task.close')).toMatchObject({ requiredness: 'advanced', appearsInDefaultHelp: false });
+    expect(findCommandRegistryEntry('handoff.update')).toBeUndefined();
+    expect(findCommandRegistryEntry('handoff.suggest')).toMatchObject({ requiredness: 'conditional', readOnly: true, writeBoundary: 'shared-doc-suggestion' });
   });
 
   it('classifies 0.4 current and planned command surfaces explicitly', () => {

@@ -1,4 +1,3 @@
-import { updateHandoff } from '../handoff/handoff';
 import { createHandoffStaleProblemsReport, formatHandoffStaleProblemsReport } from '../handoff/handoff-stale-problems';
 import { createHandoffSuggestionReport, formatHandoffSuggestionReport } from '../handoff/handoff-suggestion';
 import { getActorContextOption } from './actor';
@@ -36,16 +35,5 @@ export function handleHandoffCommand(input: HandoffCommandInput): boolean {
     return true;
   }
 
-  if (sub !== 'update') return false;
-
-  const taskId = getStringOption(input.args, '--task');
-  const summary = getStringOption(input.args, '--summary');
-  const nextStep = getStringOption(input.args, '--next');
-  const report = updateHandoff({ projectRoot: input.projectRoot, taskId, summary, nextStep });
-  if (input.jsonOutput) {
-    console.log(JSON.stringify(report, null, 2));
-  } else {
-    console.log(`[HADARA] Handoff updated: ${report.target.path}`);
-  }
-  return true;
+  return false;
 }

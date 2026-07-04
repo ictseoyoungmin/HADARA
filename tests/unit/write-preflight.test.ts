@@ -117,7 +117,12 @@ describe('CLI write boundary preflight', () => {
   it('reports current and deferred CLI-owned write families', () => {
     const root = tempProject();
 
-    expect(createWritePreflightReport(root, ['handoff', 'update', '--task', 'T-0098']).writes).toEqual(['docs/AGENT_HANDOFF.md']);
+    expect(createWritePreflightReport(root, ['handoff', 'update', '--task', 'T-0098'])).toMatchObject({
+      ok: false,
+      command: 'unknown',
+      writes: [],
+      issues: [expect.objectContaining({ code: 'UNSUPPORTED_WRITE_COMMAND' })]
+    });
 
     const runStateReport = createWritePreflightReport(root, ['run-state', 'start', '--task', 'T-0098']);
     expect(runStateReport).toMatchObject({

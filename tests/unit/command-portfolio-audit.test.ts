@@ -8,7 +8,7 @@ const CONFUSABLE_PAIRS = [
   ['task.complete', 'task.finish'],
   ['task.close', 'task.audit-close'],
   ['proof.status', 'ci.gate'],
-  ['handoff.suggest', 'handoff.update'],
+  ['handoff.suggest', 'task.finalize'],
   ['release.gate', 'task.ready']
 ];
 
@@ -43,7 +43,8 @@ describe('Phase 7.2 command portfolio audit', () => {
     expect(content).toContain('`harness.validate`');
     expect(content).toContain('`dev.docker-check`');
     expect(content).toContain('`release.gate`');
-    expect(content).toContain('does not remove commands or add runtime deprecation warnings');
+    expect(content).toContain('documents command roles only');
+    expect(content).toContain('no current CLI command applies them to `docs/AGENT_HANDOFF.md`');
   });
 
   it('keeps the lifecycle guide document aligned with the report primary path', () => {

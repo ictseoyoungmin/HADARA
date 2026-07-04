@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This audit records why overlapping HADARA commands exist and which ones belong in the primary Task Capsule lifecycle. It documents command roles only; it does not remove commands or add runtime deprecation warnings.
+This audit records why overlapping HADARA commands exist and which ones belong in the primary Task Capsule lifecycle. It documents command roles only.
 
 ## Primary Lifecycle Commands
 
@@ -14,7 +14,6 @@ This audit records why overlapping HADARA commands exist and which ones belong i
 | evidence | `evidence.add-command` | Append command-log validation evidence. | `evidence-append` | Command evidence is the current primary proof path. |
 | phase-check | `task.lifecycle` | Read normalized phase and next action. | `read-only` | Agents need one compact phase report before close work. |
 | finalize | `task.finalize` | Review or execute the guarded close path. | `task-status-bookkeeping` | It composes finish, readiness, close, and audit while preserving their write boundaries. |
-| handoff | `handoff.update` | Update next-session handoff state. | `shared-doc-write` | Work should not stop without current handoff state. |
 
 Low-level `task.finish`, `task.ready`, `task.close`, and `task.audit-close` remain canonical proof-boundary commands for debugging, recovery, and command implementation work, but they are hidden from the 0.3.3 primary agent lifecycle.
 
@@ -50,7 +49,7 @@ Low-level `task.finish`, `task.ready`, `task.close`, and `task.audit-close` rema
 | Finalize is the default agent close path; finish is low-level bookkeeping. | `task.finalize`, `task.complete`, `task.finish` | `task finalize` is the default reviewed close path. `task complete` is a legacy read-only workflow compressor; low-level `task finish` may update only bounded task status bookkeeping. | 0.3.3 lifecycle convenience contract. |
 | Close appends proof, audit verifies proof, finalize composes both. | `task.finalize`, `task.close`, `task.audit-close` | `task finalize --execute --plan-hash <hash>` preserves the underlying boundaries: low-level `task close --execute` appends close evidence only and `task audit-close` is read-only post-close verification. | 0.3.3 finalize-first lifecycle default. |
 | Proof and CI gates diagnose, they do not replace close. | `proof.status`, `proof.explain`, `ci.gate`, `task.finalize`, `task.close` | Proof and CI reports explain readiness; they do not append close proof or substitute for finalize/audit. | Phase 7.2 non-overlap rules. |
-| Handoff suggestion is read-only, handoff update writes shared docs. | `handoff.suggest`, `handoff.update` | `handoff suggest` is a coordinator suggestion surface; `handoff update` writes bounded handoff text. | Phase 7.2 confusable command audit. |
+| Handoff suggestion is read-only; shared handoff edits are manual reviewed docs work. | `handoff.suggest`, `task.finalize` | `handoff suggest` may prepare coordinator-reviewed fragments, but no current CLI command applies them to `docs/AGENT_HANDOFF.md`. | T-0496 removed the broken handoff update write surface after stable 0.4.0 dogfood feedback. |
 | Release and dev validation are not ordinary capsule lifecycle steps. | `release.gate`, `task.finalize`, `task.ready`, `dev.docker-check` | Release/dev commands are operator or HADARA-dev validation surfaces and stay hidden from primary lifecycle help. | Phase 7.2 advanced family boundary. |
 
 ## Deprecation Candidates

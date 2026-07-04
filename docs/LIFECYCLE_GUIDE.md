@@ -12,7 +12,6 @@ This guide is the short operational path for ordinary HADARA Task Capsule work. 
 | 4 | evidence-fallback | `evidence.add-command` | `hadara evidence add-command --task T-XXXX --summary "..." --result passed --json` | `evidence-append` | Record already-run operator-supplied validation or work proof. |
 | 5 | finalize-review | `task.finalize` | `hadara task finalize --task T-XXXX --json` | `read-only` | After implementation, evidence, capsule docs, and tracked state docs are ready. |
 | 6 | finalize-execute | `task.finalize` | `hadara task finalize --task T-XXXX --execute --plan-hash <hash> --json` | `task-status-bookkeeping` + `close-evidence-append` | After reviewing the current plan hash and write boundaries. |
-| 7 | handoff | `handoff.update` | `hadara handoff update --task T-XXXX --json` | `shared-doc-write` | Before stopping after meaningful progress or completion. |
 
 ## Diagnostics
 
@@ -64,5 +63,7 @@ Release/package, dev validation, UI, integration, installer, and deterministic a
 Use `validation.run` for ordinary checks; use `evidence.add-command` only when the command already ran outside HADARA.
 
 `task close --execute` appends close evidence only. It does not update Project State, Agent Handoff, or broad docs.
+
+`handoff suggest` is read-only and optional. Shared handoff edits are reviewed documentation work before finalize, not an executable post-finalize lifecycle step.
 
 Release commands and `dev docker-check` are task-context-specific surfaces, not ordinary lifecycle requirements.

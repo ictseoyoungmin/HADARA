@@ -154,11 +154,11 @@ function addIssueAction(actions: Map<string, WorkbenchNextAction>, taskId: strin
   if (issue.code.includes('HANDOFF')) {
     upsert(actions, {
       id: 'update-handoff',
-      kind: 'command',
+      kind: 'edit',
       required: true,
       priority: 'soon',
-      command: `hadara handoff update --task ${taskId} --summary "..." --next "..."`,
-      message: 'Refresh task/project handoff after current evidence is recorded.',
+      command: `hadara handoff suggest --task ${taskId} --json`,
+      message: 'Review handoff suggestions, then update task/project handoff docs manually after current evidence is recorded.',
       path: issue.path,
       sourceIssueCodes: [issue.code]
     });

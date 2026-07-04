@@ -1553,26 +1553,6 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     conflictsWith: []
   }),
   commandEntry({
-    id: 'handoff.update',
-    command: 'hadara handoff update --task <task-id> [--summary <text>] [--next <text>] [--json]',
-    summary: 'Update `docs/AGENT_HANDOFF.md` with task status and next-step text.',
-    canonical: true,
-    appearsInDefaultHelp: true,
-    family: 'capsule-lifecycle',
-    scope: 'docs',
-    lifecycleStage: 'handoff',
-    requiredness: 'primary',
-    writeBoundary: 'shared-doc-write',
-    readOnly: false,
-    risk: 'medium',
-    actor: 'agent-worker',
-    status: 'stable',
-    docs: ['docs/AGENT_HANDOFF.md'],
-    examples: [example('Update handoff', 'hadara handoff update --task T-0001 --summary "Done" --next "Continue" --json', 'Before stopping after meaningful task progress.')],
-    related: ['handoff.suggest', 'task.audit-close'],
-    conflictsWith: []
-  }),
-  commandEntry({
     id: 'handoff.suggest',
     command: 'hadara handoff suggest --task <task-id> [--json]',
     summary: 'Generate read-only handoff section-fragment suggestions.',
@@ -1590,7 +1570,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.handoff.suggestion.v1',
     docs: ['docs/AGENT_HANDOFF.md'],
     examples: [example('Suggest handoff text', 'hadara handoff suggest --task T-0001 --json', 'When preparing handoff changes.')],
-    related: ['handoff.update'],
+    related: ['task.finalize', 'task.audit-close'],
     conflictsWith: []
   }),
   commandEntry({
@@ -1611,7 +1591,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.handoff.staleProblems.v1',
     docs: ['docs/AGENT_HANDOFF.md'],
     examples: [example('Find stale known problems', 'hadara handoff stale-problems --json', 'When reviewing whether handoff known-problem rows were resolved by later tasks or releases.')],
-    related: ['handoff.suggest', 'handoff.update', 'task.audit-close'],
+    related: ['handoff.suggest', 'task.audit-close'],
     conflictsWith: []
   }),
   commandEntry({

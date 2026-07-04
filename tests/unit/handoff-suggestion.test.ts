@@ -105,7 +105,7 @@ describe('handoff suggestion report', () => {
     expect(fs.readFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), 'utf8')).toBe(beforeHandoff);
   });
 
-  it('routes handoff update JSON output while writing the shared handoff doc', () => {
+  it('does not route removed handoff update command', () => {
     const root = tempProject();
     const output: string[] = [];
     const originalLog = console.log;
@@ -113,21 +113,13 @@ describe('handoff suggestion report', () => {
       output.push(String(value));
     };
     try {
-      expect(handleHandoffCommand({ args: ['handoff', 'update', '--task', 'T-0001', '--summary', 'Done.', '--next', 'Continue.', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+      expect(handleHandoffCommand({ args: ['handoff', 'update', '--task', 'T-0001', '--summary', 'Done.', '--next', 'Continue.', '--json'], projectRoot: root, jsonOutput: true })).toBe(false);
     } finally {
       console.log = originalLog;
     }
 
-    const report = JSON.parse(output.join('\n'));
-    expect(report).toMatchObject({
-      schemaVersion: 'hadara.handoff.update.v1',
-      command: 'handoff.update',
-      ok: true,
-      target: { path: 'docs/AGENT_HANDOFF.md', writeBoundary: 'shared-doc' },
-      input: { taskId: 'T-0001', summaryProvided: true, nextStepProvided: true },
-      issues: []
-    });
-    expect(fs.readFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), 'utf8')).toContain('Done.');
+    expect(output).toEqual([]);
+    expect(fs.existsSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'))).toBe(false);
   });
 
   it('threads explicit actor CLI options into handoff suggestion reports', () => {

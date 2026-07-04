@@ -8,15 +8,14 @@ import {
   listCommandRegistryEntries
 } from './capability-registry';
 
-export const PRIMARY_LIFECYCLE_ORDER: LifecycleStage[] = ['inspect', 'create', 'evidence', 'finalize', 'handoff'];
+export const PRIMARY_LIFECYCLE_ORDER: LifecycleStage[] = ['inspect', 'create', 'evidence', 'finalize'];
 
 const PRIMARY_WHEN: Record<string, string> = {
   'task.create': 'When no suitable Task Capsule exists.',
   'task.status': 'At session start, after creating a capsule, and at meaningful loop boundaries.',
   'validation.run': 'When a real validation command should be executed and recorded as evidence.',
   'evidence.add-command': 'When recording already-run validation or relevant work proof.',
-  'task.finalize': 'After implementation, evidence, capsule docs, and tracked state docs are ready.',
-  'handoff.update': 'Before stopping after meaningful task progress or completion.'
+  'task.finalize': 'After implementation, evidence, capsule docs, and tracked state docs are ready.'
 };
 
 const DIAGNOSTIC_USE_WHEN: Record<string, string> = {
@@ -122,10 +121,10 @@ export const PORTFOLIO_AUDIT_DECISIONS: PortfolioAuditDecision[] = [
     evidence: 'Phase 7.2 non-overlap rules.'
   },
   {
-    decision: 'Handoff suggestion is read-only, handoff update writes shared docs.',
-    commands: ['handoff.suggest', 'handoff.update'],
-    rule: '`handoff suggest` is a coordinator suggestion surface; `handoff update` writes bounded handoff text.',
-    evidence: 'Phase 7.2 confusable command audit.'
+    decision: 'Handoff suggestion is read-only; shared handoff edits are manual reviewed docs work.',
+    commands: ['handoff.suggest', 'task.finalize'],
+    rule: '`handoff suggest` may prepare coordinator-reviewed fragments, but no current CLI command applies them to `docs/AGENT_HANDOFF.md`.',
+    evidence: 'T-0496 removed the broken handoff update write surface after stable 0.4.0 dogfood feedback.'
   },
   {
     decision: 'Release and dev validation are not ordinary capsule lifecycle steps.',
@@ -246,8 +245,6 @@ function primaryCommandForEntry(entry: CommandRegistryEntry): string {
       return 'hadara evidence add-command --task T-XXXX --summary "..." --result passed --json';
     case 'task.finalize':
       return 'hadara task finalize --task T-XXXX --json';
-    case 'handoff.update':
-      return 'hadara handoff update --task T-XXXX --json';
     default:
       return entry.command;
   }

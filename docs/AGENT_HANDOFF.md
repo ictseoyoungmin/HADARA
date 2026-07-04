@@ -7,13 +7,14 @@
 | Branch | main | Stable `hadara@0.3.0` was published through T-0316, Phase 8/0.3.1 completed through T-0329, Phase 9 / 0.3.2 completed through T-0341, 0.3.3 context-routing/lifecycle work completed through T-0400, stable `0.3.3` readiness/publish/recycle completed through T-0407, 0.3.4 Agent UX Hardening source/readiness/publish/recycle/helper residual fix is complete through T-0423, 0.4 productization implementation is complete through T-0452, follow-up agent UX cleanup is complete through T-0473, pre-release cleanup is complete through T-0476, 0.4.0-rc.0 source/readiness and npm publish are complete through T-0477, the publish environment safe-directory helper fix is complete through T-0478, installed-package dogfood is complete through T-0479, dogfood artifact status cleanup is complete through T-0480, Task Capsule human-readable schema cleanup is complete through T-0482, JSON taskId envelope hardening is complete through T-0483, doctor install location output is complete through T-0484, timing measurement root cause is complete through T-0485, task id counter cleanup is complete through T-0486, dogfood output UX cleanup is complete through T-0487, the `0.4.0-rc.0` GitHub Release draft is complete through T-0488, stable `0.4.0` readiness decision is complete through T-0489, stable `0.4.0` npm publish is complete through T-0490, the stable `v0.4.0` GitHub Release draft is complete through T-0491, stable `0.4.0` installed-package recycle is complete through T-0492, stable `v0.4.0` GitHub Release publication evidence/onboarding cleanup is complete through T-0493, docs-register controlled-value diagnostics are complete through T-0494, and `docs.complete-spec` lifecycle command work is complete through T-0495. |
 | Current Phase | 0.4.0 stable release line public | npm stable publish, public GitHub Release, and installed-package recycle are complete. |
 | Latest Completed Task | T-0495 docs complete-spec lifecycle command | `docs.complete-spec` is now an experimental schema-backed guarded registry mutation, and stable 0.4.0 use feedback is captured as 0.4.1 debt. |
-| Active / Next Task | Open next `0.4.1-rc.0` debt item. | Choose between `docs.mark-drift` and the high-friction `handoff update` overwrite bug from `docs/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md`. |
-| Validation Baseline | T-0495 focused complete-spec validation | Container ext4 focused tests/build passed; built CLI help/dry-run/stale-hash smokes passed. |
+| Active / Next Task | Open next `0.4.1-rc.0` debt item. | FD-007 is resolved; choose between `docs.mark-drift`, registry correction, TASK.md enum vocabulary, or low-ceremony finalize. |
+| Validation Baseline | T-0496 focused handoff command removal validation | Container ext4 focused tests/build passed; built CLI smokes verified `handoff.update` removal and `handoff.suggest` read-only behavior. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| Remove handoff update command | T-0496 removes the broken shared-doc write command from routing, registry, write-preflight, help/lifecycle, and current docs; `handoff suggest` remains read-only. | `ev:T-0496:6254f6d51840411d97982927`, `ev:T-0496:87aff8ebc8b84437a567dec5`, `ev:T-0496:2805daa8175e40c2beff3283` |
 | Docs complete-spec lifecycle command | T-0495 implements `docs complete-spec` as a guarded registry-only mutation and records stable 0.4.0 feedback debt/positives. | `ev:T-0495:e8d2f59d2c4348f0b2503b9a`, `ev:T-0495:85d467427c3d4142aa709bf7`, `ev:T-0495:a5d3f212ed4b4e1fb80cf421` |
 | Docs register controlled-value diagnostics | T-0494 makes invalid docs-register token failures self-correcting by returning `field`, `received`, `allowedValues`, and suggestions, aligns `docs register --help` with `help command docs.register`, and records `0.4.1-rc.0` functional debt. | `ev:T-0494:e05199a733814fbe97abda8a`, `ev:T-0494:87f93c47f42448a0a0fcdf27`, `ev:T-0494:26e15e37462143e08ef4d154` |
 | Stable 0.4.0 public GitHub Release | T-0493 records the operator-published public `v0.4.0` GitHub Release: `isDraft=false`, `isPrerelease=false`, target `205e9aad0e01ea5332dbdca39c10403c00e845be`. | `ev:T-0493:51ec29e0b0cb4c2aa2e5de85` |
@@ -39,9 +40,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0496 / remove handoff update command | Removed the broken `handoff update` write command and kept `handoff suggest` as the read-only handoff aid. | `ev:T-0496:6254f6d51840411d97982927`, `ev:T-0496:87aff8ebc8b84437a567dec5`, `ev:T-0496:2805daa8175e40c2beff3283` |
 | T-0495 / docs complete-spec lifecycle command | Added guarded schema-backed `docs complete-spec`, updated command/schema docs, and captured stable 0.4.0 feedback debt. | `ev:T-0495:e8d2f59d2c4348f0b2503b9a`, `ev:T-0495:85d467427c3d4142aa709bf7`, `ev:T-0495:a5d3f212ed4b4e1fb80cf421` |
 | T-0494 / docs register controlled value diagnostics | Added structured allowed-token diagnostics and suggestions for `docs.register`, aligned both help surfaces, and recorded `0.4.1-rc.0` functional debt. | `ev:T-0494:e05199a733814fbe97abda8a`, `ev:T-0494:87f93c47f42448a0a0fcdf27`, `ev:T-0494:26e15e37462143e08ef4d154` |
-| T-0493 / stable 0.4.0 release publication and README onboarding cleanup | Recorded public GitHub Release evidence, updated release helper GitHub guidance, slimmed README onboarding, and registered Getting Started/Lifecycle Quickstart docs. | `ev:T-0493:51ec29e0b0cb4c2aa2e5de85`, `ev:T-0493:3ce5a1fa0f7844bab1387bdf` |
 
 ## Current Known Problems
 

@@ -6,7 +6,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createContextExportReport } from '../../src/hermes/context-export';
 import { appendEvidenceTextArtifact } from '../../src/evidence/evidence';
 import { validateTaskCapsule } from '../../src/harness/validate';
-import { updateHandoff } from '../../src/handoff/handoff';
 import { createPolicyCheckReport } from '../../src/services/policy-service';
 import { createTaskCapsule, TaskCapsule } from '../../src/task/task-capsule';
 
@@ -85,12 +84,7 @@ describe('Dogfooding E2E fixture', () => {
     expect(evidencePath).toMatch(/^artifacts\/test-log\/.+-dogfooding-fixture-report\.txt$/);
     assertGeneratedCapsuleFiles({ root, task, fixture, evidencePath: evidencePath ?? '' });
 
-    updateHandoff({
-      projectRoot: root,
-      taskId: task.id,
-      summary: fixture.handoff.summary,
-      nextStep: fixture.handoff.next
-    });
+    writeProjectHandoff(root, task.id, fixture);
     expect(fs.readFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), 'utf8')).toContain(task.id);
 
     markTaskDone(task);
@@ -194,20 +188,16 @@ describe('Dogfooding E2E fixture', () => {
       ]
     });
 
-    const handoffPreflight = runBuiltCliJson(root, executedCommands, ['write', 'preflight', 'handoff', 'update', '--task', task.id, '--json']);
-    expect(handoffPreflight).toMatchObject({
-      schemaVersion: 'hadara.write.preflight.v1',
-      command: 'handoff.update',
+    const handoffSuggestion = runBuiltCliJson(root, executedCommands, ['handoff', 'suggest', '--task', task.id, '--json']);
+    expect(handoffSuggestion).toMatchObject({
+      schemaVersion: 'hadara.handoff.suggestion.v1',
+      command: 'handoff.suggest',
       ok: true,
-      writes: ['docs/AGENT_HANDOFF.md']
+      readOnly: true,
+      taskId: task.id
     });
 
-    updateHandoff({
-      projectRoot: root,
-      taskId: task.id,
-      summary: fixture.handoff.summary,
-      nextStep: fixture.handoff.next
-    });
+    writeProjectHandoff(root, task.id, fixture);
     markTaskDone(task);
     markTaskBoardDone(root, task.id);
     markAcceptanceDone(task.dir);
@@ -228,7 +218,7 @@ describe('Dogfooding E2E fixture', () => {
       ...fixture.policyChecks.map((check) => `policy check-shell ${check.command} --mode ${check.mode} --json`),
       `evidence collect --task ${task.id} --kind ${fixture.evidence.kind} --summary ${fixture.evidence.summary} --result ${fixture.evidence.result} --json`,
       `evidence list --task ${task.id} --json`,
-      `write preflight handoff update --task ${task.id} --json`,
+      `handoff suggest --task ${task.id} --json`,
       `harness validate --task ${task.id} --level done --json`
     ]);
     expect(executedCommands.some((command) => /^(run|mcp|release|dashboard)\b/.test(command))).toBe(false);
@@ -271,6 +261,23 @@ function tempProject(): string {
   fs.writeFileSync(path.join(dir, 'docs', 'SECURITY_MODEL.md'), '# SECURITY_MODEL\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'TEST_STRATEGY.md'), '# TEST_STRATEGY\n', 'utf8');
   return dir;
+}
+
+function writeProjectHandoff(root: string, taskId: string, fixture: DogfoodingFixture): void {
+  fs.writeFileSync(
+    path.join(root, 'docs', 'AGENT_HANDOFF.md'),
+    [
+      '# AGENT_HANDOFF',
+      '',
+      '## Current State',
+      '',
+      `| Task | Summary | Next |`,
+      `|---|---|---|`,
+      `| ${taskId} | ${fixture.handoff.summary} | ${fixture.handoff.next} |`,
+      ''
+    ].join('\n'),
+    'utf8'
+  );
 }
 
 function writeTaskWorkPlan(task: TaskCapsule): void {

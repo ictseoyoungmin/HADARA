@@ -1525,7 +1525,7 @@ ${taskBoardTable}
 function createAgentHandoffDoc(): string {
   const currentStateTable = managedSectionBlock('current-state', {
     schema: 'hadara.managedSection.v1',
-    owner: 'handoff.update',
+    owner: 'human',
     kind: 'markdown-table',
     mode: 'update-row',
     version: 1,

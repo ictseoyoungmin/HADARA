@@ -7,7 +7,6 @@ export * from './providers/mock-provider';
 export * from './providers/provider-preparation';
 export * from './task/task-capsule';
 export * from './evidence/evidence';
-export * from './handoff/handoff';
 export * from './tools/fake-shell';
 export * from './agent/loop';
 export * from './agent/evidence';

@@ -44,7 +44,6 @@ Examples include:
 - `hadara.operational_debt.v1`
 - `hadara.operational_debt.show.v1`
 - `hadara.tools.list.v1`
-- `hadara.handoff.update.v1`
 - `hadara.harness.validate.v1`
 - `hadara.harness.replay.v1`
 - `hadara.agent.loop.v1`
@@ -89,8 +88,6 @@ When audit evidence exists but close-source hashes drift after close, `task fina
 
 `hadara handoff stale-problems --json` returns `hadara.handoff.staleProblems.v1`. It is a read-only advisory report over `docs/AGENT_HANDOFF.md` Current Known Problems rows. It reports the handoff before-hash, row counts, candidate stale rows, matched source docs or completed task capsules, confidence, reasons, and suggested human actions. It must not remove or rewrite handoff rows, update project docs, append evidence, or change Task Board state.
 
-`hadara handoff update --task <id> --summary <text> --next <text> --json` returns `hadara.handoff.update.v1`. It writes `docs/AGENT_HANDOFF.md` through the existing CLI-owned handoff update path, reports the shared-doc write boundary, and summarizes whether task id, summary, and next-step inputs were provided. This is a write command, not a dry-run suggestion surface; use `handoff suggest --json` for read-only coordinator-reviewed fragments.
-
 `hadara dev docker-check [--focused <test...>] [--full] [--sync-dist --before-hash <hash>] --json` returns `hadara.dev.docker_check.v1`. It is the official Phase 6 Docker validation wrapper for reproducible temp-copy validation. It runs Docker as an external subprocess, creates a run-scoped temp workspace with `.git`, `.hadara`, `node_modules`, and `dist` excluded, runs `npm ci`, then focused tests, a full check, or both. `--sync-dist` must be explicit before the wrapper copies Docker-built `dist` back to the workspace, and T-0263 requires the reviewed `--before-hash` to match the current workspace `dist/cli/main.js` hash before the copy executes. If no pre-sync hash exists, operators must use explicit `--allow-missing-before-hash`; otherwise the report returns `HADARA_DIST_SYNC_BEFORE_HASH_REQUIRED` or `HADARA_DIST_SYNC_BEFORE_HASH_MISMATCH` with `distSync.conflictDetected:true` and no output mutation. Reports include dist sync before/after hashes, `reviewedBeforeHash`, `beforeHashMatched`, `allowMissingBeforeHash`, and conflict metadata. T-0261 clarifies mutation fields: compatibility `execution.projectMutation:false` means no project source mutation, `execution.projectSourceMutation:false` says that directly, and `execution.outputMutation:true` means workspace output such as `dist` was changed. JSON output omits raw subprocess logs, private paths, and environment secrets, and includes an evidence-ready summary.
 
 `hadara release closeout --version <version> --task <id> --json` returns `hadara.releaseCloseout.v1`. It is a read-only release closeout planning report over release readiness, release notes, shared state docs, and the selected release capsule docs. It classifies surfaces as `current`, `stale`, or `missing`, reports expected/matched/missing signals and surface roles, and returns suggested Markdown fragments. It must not write files, append evidence, build artifacts, publish packages, or create GitHub releases.
@@ -134,7 +131,6 @@ The task workflow surface is intentionally staged. `docs/TASK_WORKFLOW_COMMANDS.
 | `task complete --task T-XXXX --json` | `hadara.task.complete_flow.v1` | Read-only; no execute mode. | Task is fully closed and audited. |
 | `task lifecycle --task T-XXXX --json` | `hadara.task.lifecycle.v1` | Read-only compatibility phase report. | Report generation succeeded for an existing task. |
 | `task finalize --task T-XXXX --json` | `hadara.task.finalize.v1` | Read-only reviewed lifecycle and close-proof repair plan by default; guarded execute requires matching `--plan-hash`. | The plan is satisfied or executable without current blockers, or guarded execute reaches `closed-valid`. |
-| `handoff update --task T-XXXX ... --json` | `hadara.handoff.update.v1` | Writes `docs/AGENT_HANDOFF.md`. | Handoff update write succeeded. |
 | `handoff suggest --task T-XXXX --json` | `hadara.handoff.suggestion.v1` | Read-only; no execute mode. | Handoff suggestion report was generated without blocking issues. |
 | `handoff stale-problems --json` | `hadara.handoff.staleProblems.v1` | Read-only advisory report; no execute mode. | Stale known-problem candidate report was generated without blocking issues. |
 | `dev docker-check [--focused <test...>] [--full] [--sync-dist --before-hash <hash>] --json` | `hadara.dev.docker_check.v1` | Runs Docker subprocess; writes workspace `dist` only when `--sync-dist` is explicit and the reviewed before-hash guard passes. | Requested Docker validation completed without blocking issues, including any requested dist-sync freshness guard. |

@@ -75,10 +75,11 @@ hadara task status --task T-XXXX --json
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --json
 hadara task finalize --task T-XXXX --json
 hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
-hadara handoff update --task T-XXXX --json
 ```
 
 `task next` and `task lifecycle` remain compatibility commands planned for removal from the default loop. `task finish`, `task ready`, `task close`, and `task audit-close` remain low-level proof-boundary commands for debugging, recovery, and command implementation work. `task close-repair-plan` remains the read-only repair classifier when close proof is stale, invalid, or missing.
+
+`handoff suggest` remains available as a read-only aid for reviewed shared handoff edits, but HADARA no longer exposes a command that writes `docs/AGENT_HANDOFF.md`.
 
 `task next` is read-only. It prefers actionable handoff work, then planned development slices, then Task Board fallback rows. It ignores handoff meta-guidance that merely tells the operator to run or select with `task next`, so consumers do not receive a self-referential `createCommand`. During Task Board fallback it prefers primary open rows before legacy `Partial` rows, leaving `Partial` visible as backlog when stronger open work exists.
 

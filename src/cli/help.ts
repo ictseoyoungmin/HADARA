@@ -11,7 +11,7 @@ export interface HelpCommandInput {
   args: string[];
 }
 
-const LIFECYCLE_ORDER = ['inspect', 'create', 'evidence', 'finalize', 'handoff'];
+const LIFECYCLE_ORDER = ['inspect', 'create', 'evidence', 'finalize'];
 
 export function handleHelpCommand(input: HelpCommandInput): boolean {
   const topic = input.args[1];
