@@ -48,6 +48,8 @@ hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 
 `task finalize --json` is the reviewed dry-run. It reports the current lifecycle step, write boundaries, expected write paths, close-proof repair if needed, and a current `planHash`. `task finalize --execute --plan-hash ...` rechecks that plan hash, runs the underlying phases serially, stops on the first blocker, and succeeds only after the final close audit is `closed-valid`.
 
+For clean known-good capsules, `hadara task finalize --task T-XXXX --execute --auto --json` folds the same round trip into one guarded call: it runs the identical dry-run review internally, refuses with zero writes when blockers exist, then executes against a freshly recomputed plan through the same plan-hash mismatch guard. `--auto` is mutually exclusive with `--plan-hash`; keep the explicit `--plan-hash` flow when a separate reviewer approves the plan.
+
 Low-level proof-boundary commands remain available for debugging, recovery, and command implementation work:
 
 ```bash

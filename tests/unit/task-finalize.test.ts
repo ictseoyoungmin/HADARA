@@ -347,6 +347,96 @@ describe('task finalize dry-run plan', () => {
   });
 });
 
+describe('task finalize --auto (FD-010)', () => {
+  it('reaches closed-valid in a single auto call on a clean capsule', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finalize auto clean');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+
+    const report = createTaskFinalizeReport(root, task.id, { executeRequested: true, auto: true });
+
+    expect(report).toMatchObject({
+      ok: true,
+      readOnly: false,
+      mode: 'execute',
+      state: 'closed-valid',
+      execution: { planHashMatched: true }
+    });
+    expect(report.execution?.executedSteps.map((step) => step.id)).toEqual(['finish', 'ready', 'close', 'audit-close']);
+    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
+  });
+
+  it('refuses with zero writes and dry-run-equivalent blockers when the capsule is blocked', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finalize auto blocked');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(taskPath, fs.readFileSync(taskPath, 'utf8').replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Follow-up | TBD | Resolved | TBD |'), 'utf8');
+    const dryRun = createTaskFinalizeReport(root, task.id);
+    expect(dryRun.blockingIssues.length).toBeGreaterThan(0);
+    const before = snapshotFiles(root);
+
+    const report = createTaskFinalizeReport(root, task.id, { executeRequested: true, auto: true });
+
+    expect(snapshotFiles(root)).toEqual(before);
+    expect(report.mode).toBe('dry-run');
+    expect(report.ok).toBe(false);
+    expect(report.blockingIssues.map((issue) => issue.code)).toEqual(dryRun.blockingIssues.map((issue) => issue.code));
+    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
+  });
+
+  it('aborts through the plan-hash mismatch guard when close-source changes between review and execute', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finalize auto race');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const boardPath = path.join(root, 'docs', 'TASK_BOARD.md');
+
+    const report = createTaskFinalizeReport(root, task.id, {
+      executeRequested: true,
+      auto: true,
+      onAutoReview: () => {
+        fs.writeFileSync(
+          boardPath,
+          fs
+            .readFileSync(boardPath, 'utf8')
+            .split(/\r?\n/)
+            .map((line) => (line.startsWith(`| ${task.id} |`) ? line.replace('| Done |', '| Draft |') : line))
+            .join('\n'),
+          'utf8'
+        );
+      }
+    });
+
+    expect(report).toMatchObject({ ok: false, mode: 'execute-refused', execution: { planHashMatched: false } });
+    expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ severity: 'error', code: 'TASK_FINALIZE_PLAN_HASH_MISMATCH' })]));
+    expect(snapshotFiles(root)[`tasks/${task.id}-finalize-auto-race/evidence.jsonl`]).not.toContain('Task close validation');
+    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
+  });
+
+  it('rejects --auto combined with an explicit --plan-hash without writing', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finalize auto conflict');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const before = snapshotFiles(root);
+
+    const report = createTaskFinalizeReport(root, task.id, {
+      executeRequested: true,
+      auto: true,
+      planHash: 'sha256:0000000000000000000000000000000000000000000000000000000000000000'
+    });
+
+    expect(snapshotFiles(root)).toEqual(before);
+    expect(report.mode).toBe('execute-refused');
+    expect(report.ok).toBe(false);
+    expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ severity: 'error', code: 'TASK_FINALIZE_AUTO_PLAN_HASH_CONFLICT' })]));
+    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
+  });
+});
+
 function snapshotFiles(root: string): Record<string, string> {
   const files: Record<string, string> = {};
   walk(root, (filePath) => {

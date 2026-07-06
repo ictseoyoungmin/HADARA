@@ -499,3 +499,4 @@
 | T-0496 | remove handoff update command | Done | tasks/T-0496-remove-handoff-update-command | Removed broken shared handoff write command; `handoff suggest` remains read-only. |
 | T-0497 | 0.4.1 rc0 vocabulary diagnostics and registry correction | Done | tasks/T-0497-0-4-1-rc0-vocabulary-diagnostics-and-registry-correction | Implements shared controlled vocabulary, `hadara schema`, structured TASK.md/docs token diagnostics, guarded `docs mark --correction`, and rc0/state-first docs registration. |
 | T-0498 | workflow docs consolidate implementation sop removal | Done | tasks/T-0498-workflow-docs-consolidate-implementation-sop-removal | Workflow guidance consolidated on `docs/HADARA_WORKFLOW.md`; root SOP removed. |
+| T-0499 | 0.4.1 rc0 finalize auto and package smoke drift gate | Done | tasks/T-0499-0-4-1-rc0-finalize-auto-and-package-smoke-drift-gate | |

@@ -231,6 +231,7 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
     const report = createTaskFinalizeReport(input.projectRoot, id, {
       executeRequested,
       planHash: getStringOption(input.args, '--plan-hash'),
+      auto: getFlag(input.args, '--auto'),
       actor: getActorContextOption(input.args),
       onProgress: executeRequested ? createTaskFinalizeProgressWriter(id) : undefined
     });

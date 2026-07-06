@@ -522,8 +522,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   },
   {
     id: 'task.finalize',
-    command: 'hadara task finalize --task <task-id> [--execute --plan-hash <hash>] [--json]',
-    summary: 'Create a reviewed finalize or close-repair plan, then execute the matching guarded lifecycle sequence.',
+    command: 'hadara task finalize --task <task-id> [--execute --plan-hash <hash> | --execute --auto] [--json]',
+    summary: 'Create a reviewed finalize or close-repair plan, then execute the matching guarded lifecycle sequence; --auto folds the review and hash check into one guarded call for clean capsules.',
     canonical: true,
     appearsInDefaultHelp: true,
     family: 'capsule-lifecycle',

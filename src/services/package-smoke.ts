@@ -7,6 +7,14 @@ import { assertSchema } from '../core/schema';
 import { startMonotonicTimer } from '../core/timing';
 import { attachReducedSmokeEvidence } from './smoke-evidence';
 import { readPythonProjectPreview } from './release-targets';
+import { listCommandRegistryEntries } from './capability-registry';
+import {
+  diffCommandIds,
+  diffRoutingParity,
+  extractDispatcherCaseTokens,
+  extractRegistryTopLevelVerbs,
+  findInstalledPackageRoot
+} from './command-surface-drift';
 
 export interface PackageSmokeIssue {
   severity: 'warning' | 'error';
@@ -324,6 +332,28 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
           }
           steps.push(doctorStep);
 
+          // FD-011: command-surface drift gate. Compares the installed
+          // artifact's own registry projection against the in-process
+          // source-of-truth registry, and the installed registry's
+          // top-level verbs against routing case tokens parsed from the
+          // installed dispatcher.
+          const surface = runner(installedBin, ['commands', '--json'], {
+            cwd: workspaceSetup.path,
+            timeoutMs,
+            env: commandEnv
+          });
+          const surfaceStep = commandStep(
+            'command-surface-drift',
+            'Command surface drift vs source registry',
+            'hadara commands --json (installed) + installed dist routing parse',
+            surface
+          );
+          const drift = evaluateInstalledCommandSurface(surface, installPrefix);
+          surfaceStep.status = drift.ok ? 'passed' : 'failed';
+          surfaceStep.summary = drift.summary;
+          for (const issue of drift.issues) issues.push(issue);
+          steps.push(surfaceStep);
+
           execution.featureSmokeExecuted = true;
           const smoke = runner(installedBin, ['smoke', 'run', '--profile', 'core', '--json'], {
             cwd: workspaceSetup.path,
@@ -356,6 +386,13 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
               summary: 'Skipped because isolated package install failed.'
             },
             {
+              id: 'command-surface-drift',
+              label: 'Command surface drift vs source registry',
+              command: 'hadara commands --json (installed) + installed dist routing parse',
+              status: 'skipped',
+              summary: 'Skipped because isolated package install failed.'
+            },
+            {
               id: 'feature-smoke-core',
               label: 'Core feature smoke via installed command',
               command: 'hadara smoke run --profile core --json',
@@ -377,6 +414,13 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
             id: 'doctor',
             label: 'Installed HADARA doctor',
             command: 'hadara doctor --json',
+            status: 'skipped',
+            summary: 'Skipped because no package tarball was available.'
+          },
+          {
+            id: 'command-surface-drift',
+            label: 'Command surface drift vs source registry',
+            command: 'hadara commands --json (installed) + installed dist routing parse',
             status: 'skipped',
             summary: 'Skipped because no package tarball was available.'
           },
@@ -904,6 +948,13 @@ function createDryRunSteps(sourceKind: PackageSmokeReport['source']['kind'], opt
       summary: 'Would install into an isolated temporary prefix during a later execution capsule.'
     },
     {
+      id: 'command-surface-drift',
+      label: 'Command surface drift vs source registry',
+      command: 'hadara commands --json (installed) + installed dist routing parse',
+      status: 'planned',
+      summary: 'Would compare the installed registry projection against the source registry and check installed routing parity.'
+    },
+    {
       id: 'feature-smoke-core',
       label: 'Core feature smoke via installed command',
       command: 'hadara smoke run --profile core --json',
@@ -1087,6 +1138,96 @@ function commandStep(id: string, label: string, command: string, result: Package
     exitCode: result.status,
     elapsedMs: result.elapsedMs,
     summary: result.status === 0 && !result.timedOut ? `${label} completed successfully.` : `${label} failed with a reduced exit summary.`
+  };
+}
+
+interface InstalledSurfaceEvaluation {
+  ok: boolean;
+  summary: string;
+  issues: PackageSmokeIssue[];
+}
+
+/**
+ * FD-011 drift gate evaluation. Comparison baseline for registry ids is the
+ * in-process source registry, so a self-consistent stale artifact still
+ * fails against current source; routing parity is checked within the
+ * installed artifact (its registry verbs vs its dispatcher case tokens).
+ */
+function evaluateInstalledCommandSurface(surface: PackageSmokeCommandResult, installPrefix: string): InstalledSurfaceEvaluation {
+  const issues: PackageSmokeIssue[] = [];
+  if (surface.status !== 0 || surface.timedOut) {
+    issues.push({
+      severity: 'error',
+      code: surface.timedOut ? 'PACKAGE_SMOKE_SURFACE_PROBE_TIMEOUT' : 'PACKAGE_SMOKE_SURFACE_PROBE_FAILED',
+      message: 'Installed `hadara commands --json` did not return a usable registry projection.',
+      stepId: 'command-surface-drift'
+    });
+    return { ok: false, summary: 'Installed command registry projection could not be captured.', issues };
+  }
+
+  let installedEntries: Array<{ id: string; command: string }> = [];
+  try {
+    const parsed = JSON.parse(surface.stdout) as { commands?: unknown };
+    if (Array.isArray(parsed.commands)) {
+      installedEntries = parsed.commands
+        .filter((entry): entry is { id: string; command: string } =>
+          typeof (entry as { id?: unknown }).id === 'string' && typeof (entry as { command?: unknown }).command === 'string')
+        .map((entry) => ({ id: entry.id, command: entry.command }));
+    }
+  } catch {
+    installedEntries = [];
+  }
+  if (installedEntries.length === 0) {
+    issues.push({
+      severity: 'error',
+      code: 'PACKAGE_SMOKE_SURFACE_PROBE_FAILED',
+      message: 'Installed `hadara commands --json` output could not be parsed into registry entries.',
+      stepId: 'command-surface-drift'
+    });
+    return { ok: false, summary: 'Installed command registry projection could not be parsed.', issues };
+  }
+
+  const sourceIds = listCommandRegistryEntries().map((entry) => entry.id);
+  const idDiff = diffCommandIds(sourceIds, installedEntries.map((entry) => entry.id));
+  if (!idDiff.ok) {
+    issues.push({
+      severity: 'error',
+      code: 'PACKAGE_SMOKE_SURFACE_REGISTRY_DRIFT',
+      message: `Installed registry command ids differ from the source registry. missingFromInstalled: [${idDiff.missingFromInstalled.join(', ')}]; extraInInstalled: [${idDiff.extraInInstalled.join(', ')}].`,
+      stepId: 'command-surface-drift'
+    });
+  }
+
+  const packageRoot = findInstalledPackageRoot(installPrefix);
+  const mainJsPath = packageRoot ? path.join(packageRoot, 'dist', 'cli', 'main.js') : null;
+  if (!mainJsPath || !fs.existsSync(mainJsPath)) {
+    issues.push({
+      severity: 'error',
+      code: 'PACKAGE_SMOKE_SURFACE_PROBE_FAILED',
+      message: 'Installed package dispatcher dist/cli/main.js could not be located for routing parity.',
+      stepId: 'command-surface-drift'
+    });
+  } else {
+    const dispatcherTokens = extractDispatcherCaseTokens(fs.readFileSync(mainJsPath, 'utf8'));
+    const registryVerbs = extractRegistryTopLevelVerbs(installedEntries.map((entry) => entry.command));
+    const parity = diffRoutingParity(registryVerbs, dispatcherTokens);
+    if (!parity.ok) {
+      issues.push({
+        severity: 'error',
+        code: 'PACKAGE_SMOKE_SURFACE_ROUTING_DRIFT',
+        message: `Installed registry top-level verbs and dispatcher routing tokens differ. registryVerbsWithoutRouting: [${parity.registryVerbsWithoutRouting.join(', ')}]; routedVerbsWithoutRegistry: [${parity.routedVerbsWithoutRegistry.join(', ')}].`,
+        stepId: 'command-surface-drift'
+      });
+    }
+  }
+
+  const ok = issues.length === 0;
+  return {
+    ok,
+    summary: ok
+      ? 'Installed command surface matches the source registry and installed routing parity holds.'
+      : 'Installed command surface drift detected; see command-surface-drift issues.',
+    issues
   };
 }
 

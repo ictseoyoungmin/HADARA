@@ -6,6 +6,7 @@ import { handlePackageCommand } from '../../src/cli/package-smoke';
 import { resolveHadaraPaths } from '../../src/core/paths';
 import { validateSchema } from '../../src/core/schema';
 import { createPackageSmokeDryRunReport, createPackageSmokeLocalReport, PackageSmokeCommandRunner } from '../../src/services/package-smoke';
+import { listCommandRegistryEntries } from '../../src/services/capability-registry';
 
 const roots: string[] = [];
 
@@ -49,6 +50,31 @@ afterEach(() => {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+function commandsRegistryStdout(overrides?: { extraId?: string; dropFirstId?: boolean }): string {
+  let entries = listCommandRegistryEntries().map((entry) => ({ id: entry.id, command: entry.command }));
+  if (overrides?.dropFirstId) entries = entries.slice(1);
+  if (overrides?.extraId) entries = [...entries, { id: overrides.extraId, command: `hadara ${overrides.extraId}` }];
+  return JSON.stringify({ commands: entries });
+}
+
+function installedFixtureFromArgs(args: string[], overrides?: { dropVerb?: string }): void {
+  const prefix = String(args[args.indexOf('--prefix') + 1]);
+  const pkgRoot = path.join(prefix, 'lib', 'node_modules', 'hadara');
+  fs.mkdirSync(path.join(pkgRoot, 'dist', 'cli'), { recursive: true });
+  fs.writeFileSync(path.join(pkgRoot, 'package.json'), JSON.stringify({ name: 'hadara' }), 'utf8');
+  const verbs = new Set<string>();
+  for (const entry of listCommandRegistryEntries()) {
+    const match = /^hadara\s+([a-z][a-z0-9-]*)/.exec(entry.command.trim());
+    if (match) verbs.add(match[1]);
+  }
+  if (overrides?.dropVerb) verbs.delete(overrides.dropVerb);
+  fs.writeFileSync(
+    path.join(pkgRoot, 'dist', 'cli', 'main.js'),
+    [...verbs].map((verb) => `        case '${verb}': {`).join('\n'),
+    'utf8'
+  );
+}
 
 describe('package smoke dry-run', () => {
   it('creates a schema-valid dry-run report without package execution', () => {
@@ -110,6 +136,7 @@ describe('package smoke dry-run', () => {
       'plan-workspace',
       'npm-pack',
       'install-cli',
+      'command-surface-drift',
       'feature-smoke-core',
       'evidence'
     ]);
@@ -346,10 +373,14 @@ describe('package smoke local execution', () => {
         };
       }
       if (args[0] === 'install') {
+        installedFixtureFromArgs(args);
         return { status: 0, stdout: 'added 1 package', stderr: '', elapsedMs: 12 };
       }
       if (args[0] === 'doctor') {
         return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 13 };
+      }
+      if (args[0] === 'commands') {
+        return { status: 0, stdout: commandsRegistryStdout(), stderr: '', elapsedMs: 5 };
       }
       if (args[0] === 'smoke') {
         return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 14 };
@@ -397,6 +428,7 @@ describe('package smoke local execution', () => {
       'npm-pack',
       'install-cli',
       'doctor',
+      'command-surface-drift',
       'feature-smoke-core',
       'cleanup'
     ]);
@@ -414,7 +446,7 @@ describe('package smoke local execution', () => {
     expect(encoded).not.toContain(root);
     expect(encoded).not.toContain(workspace);
     expect(encoded).not.toContain('npm notice');
-    expect(calls.map((call) => call.args[0])).toEqual(['pack', 'install', 'doctor', 'smoke']);
+    expect(calls.map((call) => call.args[0])).toEqual(['pack', 'install', 'doctor', 'commands', 'smoke']);
     expect(calls.find((call) => call.args[0] === 'doctor')?.args).toEqual(['doctor', '--json']);
     expect(calls.find((call) => call.args[0] === 'smoke')?.args).toEqual(['smoke', 'run', '--profile', 'core', '--json']);
     expect(calls.find((call) => call.args[0] === 'doctor')?.env?.HADARA_PROJECT_ROOT).toBe(root);
@@ -484,7 +516,11 @@ describe('package smoke local execution', () => {
         };
       }
       if (args[0] === 'install') {
+        installedFixtureFromArgs(args);
         return { status: 0, stdout: 'added 1 package', stderr: '', elapsedMs: 12 };
+      }
+      if (args[0] === 'commands') {
+        return { status: 0, stdout: commandsRegistryStdout(), stderr: '', elapsedMs: 5 };
       }
       return { status: 0, stdout: '', stderr: '', elapsedMs: 1 };
     };
@@ -506,6 +542,61 @@ describe('package smoke local execution', () => {
         relativePath: 'hadara-0.0.0-bootstrap.tgz'
       })
     );
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
+  it('fails the command-surface-drift step when installed registry ids differ from source (FD-011)', () => {
+    const root = tempProject();
+    const runner: PackageSmokeCommandRunner = (_command, args) => {
+      if (args[0] === 'pack') {
+        const workspace = String(args[args.indexOf('--pack-destination') + 1]);
+        fs.writeFileSync(path.join(workspace, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
+        return { status: 0, stdout: JSON.stringify([{ filename: 'hadara-0.0.0-bootstrap.tgz' }]), stderr: '', elapsedMs: 10 };
+      }
+      if (args[0] === 'install') {
+        installedFixtureFromArgs(args);
+        return { status: 0, stdout: 'installed', stderr: '', elapsedMs: 11 };
+      }
+      if (args[0] === 'commands') {
+        return { status: 0, stdout: commandsRegistryStdout({ extraId: 'ghost.command', dropFirstId: true }), stderr: '', elapsedMs: 5 };
+      }
+      return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 12 };
+    };
+
+    const report = createPackageSmokeLocalReport({ paths: resolveHadaraPaths({ projectRoot: root }), runner, timeoutSeconds: 30 });
+
+    expect(report.ok).toBe(false);
+    expect(report.steps.find((step) => step.id === 'command-surface-drift')).toMatchObject({ status: 'failed' });
+    const drift = report.issues.find((issue) => issue.code === 'PACKAGE_SMOKE_SURFACE_REGISTRY_DRIFT');
+    expect(drift).toBeDefined();
+    expect(drift?.message).toContain('ghost.command');
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
+  it('fails the command-surface-drift step when installed routing loses a registry verb (FD-011)', () => {
+    const root = tempProject();
+    const runner: PackageSmokeCommandRunner = (_command, args) => {
+      if (args[0] === 'pack') {
+        const workspace = String(args[args.indexOf('--pack-destination') + 1]);
+        fs.writeFileSync(path.join(workspace, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
+        return { status: 0, stdout: JSON.stringify([{ filename: 'hadara-0.0.0-bootstrap.tgz' }]), stderr: '', elapsedMs: 10 };
+      }
+      if (args[0] === 'install') {
+        installedFixtureFromArgs(args, { dropVerb: 'doctor' });
+        return { status: 0, stdout: 'installed', stderr: '', elapsedMs: 11 };
+      }
+      if (args[0] === 'commands') {
+        return { status: 0, stdout: commandsRegistryStdout(), stderr: '', elapsedMs: 5 };
+      }
+      return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 12 };
+    };
+
+    const report = createPackageSmokeLocalReport({ paths: resolveHadaraPaths({ projectRoot: root }), runner, timeoutSeconds: 30 });
+
+    expect(report.ok).toBe(false);
+    const drift = report.issues.find((issue) => issue.code === 'PACKAGE_SMOKE_SURFACE_ROUTING_DRIFT');
+    expect(drift).toBeDefined();
+    expect(drift?.message).toContain('doctor');
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
   });
 
@@ -537,7 +628,11 @@ describe('package smoke local execution', () => {
         fs.writeFileSync(path.join(workspace, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
         return { status: 0, stdout: JSON.stringify([{ filename: 'hadara-0.0.0-bootstrap.tgz' }]), stderr: '/private/raw/path', elapsedMs: 10 };
       }
-      if (args[0] === 'install') return { status: 0, stdout: 'installed', stderr: '', elapsedMs: 11 };
+      if (args[0] === 'install') {
+        installedFixtureFromArgs(args);
+        return { status: 0, stdout: 'installed', stderr: '', elapsedMs: 11 };
+      }
+      if (args[0] === 'commands') return { status: 0, stdout: commandsRegistryStdout(), stderr: '', elapsedMs: 5 };
       return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 12 };
     };
 

@@ -8,6 +8,14 @@ import { createTaskReadyReportFromClosePlan, TaskReadyReport } from './task-read
 import { createTaskAuthoringGuidance, TaskAuthoringGuidance } from './authoring-guidance';
 
 export type TaskFinalizeMode = 'dry-run' | 'execute' | 'execute-refused';
+
+// Done-level blockers that the finish step's bounded bookkeeping write is
+// defined to resolve (TASK.md/Task Board status cells). --auto treats these
+// as executable-through, matching the manual dry-run -> execute pattern.
+const FINISH_RESOLVABLE_BLOCKER_CODES = new Set([
+  'HARNESS_TASK_BOARD_STATUS_NOT_DONE',
+  'HARNESS_TASK_BOARD_CAPSULE_MISMATCH'
+]);
 export type TaskFinalizeStepId = 'finish' | 'ready' | 'close' | 'audit-close';
 export type TaskFinalizeStepStatus = 'satisfied' | 'required' | 'blocked' | 'pending' | 'unknown';
 
@@ -100,8 +108,21 @@ export interface TaskFinalizeProgressEvent {
 export interface TaskFinalizeOptions {
   executeRequested?: boolean;
   planHash?: string;
+  /**
+   * FD-010 low-ceremony path: run an internal dry-run review first, refuse
+   * with zero writes when blockers exist, then execute against a freshly
+   * recomputed plan through the existing plan-hash mismatch guard. Mutually
+   * exclusive with an explicit `planHash`.
+   */
+  auto?: boolean;
   actor?: HadaraActorContext;
   onProgress?: (event: TaskFinalizeProgressEvent) => void;
+  /**
+   * Test seam: invoked after the `auto` review pass and before the execute
+   * pass so race fixtures can mutate close-source state in the window the
+   * plan-hash guard must protect. Not used by CLI callers.
+   */
+  onAutoReview?: (review: TaskFinalizeReport) => void;
 }
 
 interface FinalizeReports {
@@ -113,12 +134,59 @@ interface FinalizeReports {
 
 export function createTaskFinalizeReport(projectRoot: string, taskId: string, options: TaskFinalizeOptions = {}): TaskFinalizeReport {
   const actor = options.actor ?? defaultTaskLifecycleActor();
+  if (options.executeRequested && options.auto) {
+    return executeAutoFinalize(projectRoot, taskId, actor, options);
+  }
   const reports = createFinalizeReports(projectRoot, taskId, actor);
   const steps = createSteps(taskId, reports);
   const issues = collectIssues(taskId, reports);
   const planHash = hashPlan(taskId, steps);
   if (options.executeRequested) return executeFinalizePlan(projectRoot, taskId, actor, reports, steps, issues, planHash, options.planHash, options.onProgress);
   return createFinalizeReport(taskId, actor, 'dry-run', true, steps, issues, planHash, undefined, reports);
+}
+
+function executeAutoFinalize(
+  projectRoot: string,
+  taskId: string,
+  actor: HadaraActorContext,
+  options: TaskFinalizeOptions
+): TaskFinalizeReport {
+  if (options.planHash) {
+    const reports = createFinalizeReports(projectRoot, taskId, actor);
+    const steps = createSteps(taskId, reports);
+    const planHash = hashPlan(taskId, steps);
+    return createExecuteRefusal(
+      taskId,
+      actor,
+      'TASK_FINALIZE_AUTO_PLAN_HASH_CONFLICT',
+      'task finalize --execute --auto is mutually exclusive with --plan-hash. Use --auto alone, or review a dry-run and pass its --plan-hash without --auto.',
+      planHash,
+      steps
+    );
+  }
+
+  // Review pass: identical to a manual dry-run. Zero writes.
+  const review = createTaskFinalizeReport(projectRoot, taskId, { actor });
+  options.onAutoReview?.(review);
+  // Board bookkeeping blockers are owned and resolved by the finish step;
+  // the manual flow executes through them, so --auto must not refuse on
+  // them while a required finish step is part of the reviewed plan.
+  const finishRequired = review.steps.some((step) => step.id === 'finish' && step.status === 'required');
+  const unresolvedBlockers = review.blockingIssues.filter(
+    (issue) => !(finishRequired && FINISH_RESOLVABLE_BLOCKER_CODES.has(issue.code))
+  );
+  const hasBlockers = unresolvedBlockers.length > 0 || !review.summary.executeSupported || !review.planHash;
+  if (hasBlockers) return review;
+
+  // Execute pass: recompute the plan from scratch and pass the reviewed hash
+  // through the existing mismatch guard, so any close-source change between
+  // the two passes aborts exactly like a stale manual --plan-hash would.
+  return createTaskFinalizeReport(projectRoot, taskId, {
+    executeRequested: true,
+    planHash: review.planHash,
+    actor,
+    onProgress: options.onProgress
+  });
 }
 
 export function formatTaskFinalizeReport(report: TaskFinalizeReport): string {
