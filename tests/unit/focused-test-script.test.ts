@@ -10,11 +10,11 @@ describe('focused test command UX', () => {
   });
 
   it('documents the focused command instead of overloading test:unit arguments', () => {
-    const sop = fs.readFileSync(path.join(process.cwd(), 'docs', 'IMPLEMENTATION_SOP.md'), 'utf8');
+    const workflow = fs.readFileSync(path.join(process.cwd(), 'docs', 'HADARA_WORKFLOW.md'), 'utf8');
     const strategy = fs.readFileSync(path.join(process.cwd(), 'docs', 'TEST_STRATEGY.md'), 'utf8');
 
-    expect(sop).toContain('npm run test:focused -- tests/unit/<file>.test.ts');
-    expect(sop).toContain('Do not use `npm run test:unit -- tests/unit/<file>.test.ts`');
+    expect(workflow).toContain('npm run test:focused -- tests/unit/<file>.test.ts');
+    expect(workflow).toContain('Do not use `npm run test:unit -- tests/unit/<file>.test.ts`');
     expect(strategy).toContain('| Focused | `npm run test:focused -- tests/unit/<file>.test.ts` |');
   });
 });

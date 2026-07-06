@@ -788,7 +788,7 @@ function entry(
 }
 
 function parseRequiredReading(projectRoot: string): string[] {
-  const files = ['AGENTS.md', 'docs/IMPLEMENTATION_SOP.md'];
+  const files = ['AGENTS.md'];
   const found = new Set<string>();
   for (const file of files) {
     const text = fs.existsSync(path.join(projectRoot, file)) ? fs.readFileSync(path.join(projectRoot, file), 'utf8') : '';

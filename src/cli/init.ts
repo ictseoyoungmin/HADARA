@@ -332,9 +332,9 @@ function createInitDoctorReport(projectRoot: string): InitFollowUpReport {
     issues.push({ severity: 'warning', code: 'INIT_BROAD_DATA_IGNORE', path: '.gitignore', message: 'Top-level data/ is ignored; generated init should only ignore HADARA local/private state.' });
   }
 
-  const sop = readProjectText(projectRoot, 'docs/IMPLEMENTATION_SOP.md');
-  if (sop !== null && mentionsLegacyInitProfile(sop)) {
-    issues.push({ severity: 'warning', code: 'INIT_OLD_PROFILE_NAME', path: 'docs/IMPLEMENTATION_SOP.md', message: 'SOP mentions old init profile names.' });
+  const workflow = readProjectText(projectRoot, 'docs/HADARA_WORKFLOW.md');
+  if (workflow !== null && mentionsLegacyInitProfile(workflow)) {
+    issues.push({ severity: 'warning', code: 'INIT_OLD_PROFILE_NAME', path: 'docs/HADARA_WORKFLOW.md', message: 'Workflow guide mentions old init profile names.' });
   }
 
   issues.push(...detectEntryDocDuplication(projectRoot));
@@ -597,28 +597,28 @@ function createRequiredReadingRegistrationReport(
     };
   }
   const relativePath = pathResult.relativePath;
-  const row = formatTableRow([`\`${relativePath}\``, input.when, input.purpose]);
-  const plan = createSopRowUpdatePlan(projectRoot, {
-    command: 'init.register-doc',
-    mode: input.mode,
-    requireExists: input.requireExists ?? false,
-    row,
-    relativePath,
-    action: 'register-doc',
-    plannedSummary: `${relativePath} would be registered in SOP Required Reading.`,
-    createdSummary: `${relativePath} was registered in SOP Required Reading.`,
-    existsSummary: `${relativePath} is already registered in SOP Required Reading.`
-  });
-  if (input.mode === 'execute' && plan.ok && plan.write !== undefined) {
-    plan.issues.push(...writeFilesAtomically(projectRoot, [plan.write]));
+  const issues: InitIssue[] = [];
+  if ((input.requireExists ?? false) && !fs.existsSync(path.join(projectRoot, relativePath))) {
+    issues.push({
+      severity: 'error',
+      code: 'INIT_REGISTERED_DOC_MISSING',
+      path: relativePath,
+      message: `${relativePath} does not exist yet.`
+    });
   }
   return {
     schemaVersion: 'hadara.init.followup.v1',
     command: 'init.register-doc',
-    ok: plan.issues.every((issue) => issue.severity !== 'error'),
+    ok: issues.every((issue) => issue.severity !== 'error'),
+    summary: 'init.register-doc is a compatibility guide only in 0.4 projects; use `hadara docs register` to update .hadara/docs-registry.json.',
     mode: input.mode,
-    actions: plan.actions,
-    issues: plan.issues
+    actions: [{
+      action: 'register-doc',
+      path: relativePath,
+      status: 'skipped',
+      summary: `Use hadara docs register --path ${relativePath} --json to register project document metadata.`
+    }],
+    issues
   };
 }
 
@@ -632,38 +632,17 @@ function createIntegrationEnableReport(
   const actions: InitAction[] = [];
   const issues: InitIssue[] = [];
   const fullPath = path.join(projectRoot, relativePath);
-  const registration = createSopRowUpdatePlan(projectRoot, {
-    command: 'init.enable-integration',
-    mode: input.mode,
-    allowMissingDocument: true,
-    row: formatTableRow([`\`${relativePath}\``, `${integration.toUpperCase()} integration work only`, `Project-specific optional ${integration.toUpperCase()} integration guidance registration. This does not enable runtime behavior.`]),
-    relativePath,
+  actions.push({
     action: 'enable-integration-registration',
-    plannedSummary: `${relativePath} would be registered in SOP Required Reading.`,
-    createdSummary: `${relativePath} was registered in SOP Required Reading.`,
-    existsSummary: `${relativePath} is already registered in SOP Required Reading.`
+    path: relativePath,
+    status: 'skipped',
+    summary: `Use hadara docs register --path ${relativePath} --json after creating this optional integration guide.`
   });
-
-  if (!registration.ok) {
-    return {
-      schemaVersion: 'hadara.init.followup.v1',
-      command: 'init.enable-integration',
-      ok: false,
-      summary: 'This command registers project guidance only; it does not enable Hermes/MCP runtime behavior.',
-      mode: input.mode,
-      integration,
-      actions: registration.actions,
-      issues: registration.issues
-    };
-  }
 
   if (fs.existsSync(fullPath)) {
     actions.push({ action: 'enable-integration-doc', path: relativePath, status: 'exists', summary: `${relativePath} already exists and will not be overwritten.` });
   } else if (input.mode === 'execute') {
-    issues.push(...writeFilesAtomically(projectRoot, [
-      { path: relativePath, content },
-      ...(registration.write === undefined ? [] : [registration.write])
-    ]));
+    issues.push(...writeFilesAtomically(projectRoot, [{ path: relativePath, content }]));
     actions.push({ action: 'enable-integration-doc', path: relativePath, status: 'created', summary: `${relativePath} was created.` });
   } else {
     actions.push({ action: 'enable-integration-doc', path: relativePath, status: 'planned', summary: `${relativePath} would be created.` });
@@ -672,74 +651,9 @@ function createIntegrationEnableReport(
     schemaVersion: 'hadara.init.followup.v1',
     command: 'init.enable-integration',
     summary: 'This command registers project guidance only; it does not enable Hermes/MCP runtime behavior.',
-    ok: issues.every((issue) => issue.severity !== 'error') && registration.ok,
+    ok: issues.every((issue) => issue.severity !== 'error'),
     mode: input.mode,
     integration,
-    actions: [...actions, ...registration.actions],
-    issues: [...issues, ...registration.issues]
-  };
-}
-
-function createSopRowUpdatePlan(
-  projectRoot: string,
-  input: {
-    command: string;
-    mode: InitFollowUpMode;
-    requireExists?: boolean;
-    allowMissingDocument?: boolean;
-    row: string;
-    relativePath: string;
-    action: string;
-    plannedSummary: string;
-    createdSummary: string;
-    existsSummary: string;
-  }
-): { ok: boolean; actions: InitAction[]; issues: InitIssue[]; write?: InitWriteOperation } {
-  const actions: InitAction[] = [];
-  const issues: InitIssue[] = [];
-  const sopPath = path.join(projectRoot, 'docs', 'IMPLEMENTATION_SOP.md');
-  const sop = fs.existsSync(sopPath) ? fs.readFileSync(sopPath, 'utf8') : null;
-  if (sop === null) {
-    issues.push({
-      severity: 'error',
-      code: 'INIT_SOP_MISSING',
-      path: 'docs/IMPLEMENTATION_SOP.md',
-      message: 'Legacy SOP Required Reading cannot be updated because IMPLEMENTATION_SOP.md is missing. In 0.4 projects, use `hadara docs register` to write .hadara/docs-registry.json metadata instead.'
-    });
-    return { ok: false, actions, issues };
-  }
-  if (!input.allowMissingDocument && !fs.existsSync(path.join(projectRoot, input.relativePath))) {
-    issues.push({
-      severity: input.requireExists ? 'error' : 'warning',
-      code: 'INIT_REGISTERED_DOC_MISSING',
-      path: input.relativePath,
-      message: `${input.relativePath} does not exist yet.`
-    });
-  }
-  if (sop.includes(`\`${input.relativePath}\``)) {
-    actions.push({ action: input.action, path: 'docs/IMPLEMENTATION_SOP.md', status: 'exists', summary: input.existsSummary });
-    return { ok: true, actions, issues };
-  }
-  if (!sop.includes('| Document | When to Read | Purpose |')) {
-    issues.push({ severity: 'error', code: 'INIT_REQUIRED_READING_TABLE_MISSING', path: 'docs/IMPLEMENTATION_SOP.md', message: 'SOP Required Reading table header was not found.' });
-    return { ok: false, actions, issues };
-  }
-  if (issues.some((issue) => issue.severity === 'error')) {
-    return { ok: false, actions, issues };
-  }
-  if (input.mode === 'execute') {
-    actions.push({ action: input.action, path: 'docs/IMPLEMENTATION_SOP.md', status: 'created', summary: input.createdSummary });
-    return {
-      ok: issues.every((issue) => issue.severity !== 'error'),
-      actions,
-      issues,
-      write: { path: 'docs/IMPLEMENTATION_SOP.md', content: insertRequiredReadingRow(sop, input.row) }
-    };
-  } else {
-    actions.push({ action: input.action, path: 'docs/IMPLEMENTATION_SOP.md', status: 'planned', summary: input.plannedSummary });
-  }
-  return {
-    ok: issues.every((issue) => issue.severity !== 'error'),
     actions,
     issues
   };
@@ -751,7 +665,6 @@ const CANONICAL_TABLE_HEADERS: Record<string, string[]> = {
   'docs/AGENT_HANDOFF.md': ['| Area | State | Notes |', '| Task | Summary | Evidence |', '| Issue | Impact | Next Step |', '| Step | Reason | Done Evidence |', '| Check | Latest Evidence | Notes |', '| History Type | Path | When to Use |'],
   'docs/TASK_BOARD.md': ['| ID | Title | Status | Capsule | Notes |'],
   'docs/HADARA_WORKFLOW.md': ['| Order | Authority | Allowed Reads |', '| Gate | Required State |', '| Timing | Update |', '| Situation | Use | Notes |', '| Surface | Human / Operator | Agent | CLI |'],
-  'docs/IMPLEMENTATION_SOP.md': ['| Document | When to Read | Purpose |', '| Profile | Scale | Generated Docs | Intended Use | Special Notes |', '| Document | Required Structure |'],
   'docs/TASK_WORKFLOW_COMMANDS.md': ['| Command | Default Write Behavior | Notes |'],
   'docs/ARCHITECTURE.md': ['| Field | Value |', '| Boundary | Rule | Notes |', '| Component | Path / Surface | Responsibility | Status |'],
   'docs/DEVELOPMENT_SLICES.md': ['| Order | Slice | Capsule | Purpose | Done Evidence |'],
@@ -805,11 +718,6 @@ function createProfileMetadataMerge(projectRoot: string, profile: InitProfile, m
     `docs/ARCHITECTURE.md HADARA profile metadata ${mode === 'execute' ? 'was updated' : 'would be updated'} to ${profile}.`
   );
   planUpdate(
-    'docs/IMPLEMENTATION_SOP.md',
-    mergeSopProfileMetadata(readProjectText(projectRoot, 'docs/IMPLEMENTATION_SOP.md'), profile),
-    `docs/IMPLEMENTATION_SOP.md profile text and Required Reading rows ${mode === 'execute' ? 'were updated' : 'would be updated'} for ${profile}.`
-  );
-  planUpdate(
     'AGENTS.md',
     mergeAgentsRequiredReading(readProjectText(projectRoot, 'AGENTS.md'), profile),
     `AGENTS.md Required Reading rows ${mode === 'execute' ? 'were updated' : 'would be updated'} for ${profile}.`
@@ -824,20 +732,6 @@ function createProfileMetadataMerge(projectRoot: string, profile: InitProfile, m
 function replaceProfileTableValue(content: string | null, profile: InitProfile): string | null {
   if (content === null) return null;
   return content.replace(/\|\s*HADARA Profile\s*\|\s*(basic|standard|governed)\s*\|/g, `| HADARA Profile | ${profile} |`);
-}
-
-function mergeSopProfileMetadata(content: string | null, profile: InitProfile): string | null {
-  if (content === null) return null;
-  let next = content
-    .replace(/This project was initialized with the `(basic|standard|governed)` HADARA profile\./, `This project uses the \`${profile}\` HADARA profile.`)
-    .replace(/This project uses the `(basic|standard|governed)` HADARA profile\./, `This project uses the \`${profile}\` HADARA profile.`);
-  for (const row of sopRequiredReadingRowsForProfile(profile)) {
-    const documentPath = row[0].replace(/`/g, '');
-    if (!next.includes(`\`${documentPath}\``)) {
-      next = insertRequiredReadingRow(next, formatTableRow(row));
-    }
-  }
-  return next;
 }
 
 function mergeAgentsRequiredReading(content: string | null, profile: InitProfile): string | null {
@@ -864,37 +758,12 @@ function mergeAgentsRequiredReading(content: string | null, profile: InitProfile
   return next;
 }
 
-function sopRequiredReadingRowsForProfile(profile: InitProfile): string[][] {
-  const rows = [
-    ['`docs/PROJECT_STATE.md`', 'Every session', 'Current product state and source-of-truth map.'],
-    ['`docs/AGENT_HANDOFF.md`', 'Every session', 'Compact handoff and next recommended step.'],
-    ['`docs/TASK_BOARD.md`', 'Every session', 'Work queue and task status.'],
-    ['`docs/IMPLEMENTATION_SOP.md`', 'Every session', 'Local HADARA workflow rules and project-specific required-reading registry.'],
-    ['`docs/TASK_WORKFLOW_COMMANDS.md`', 'Starting, finishing, closing, auditing, or explaining task workflow commands', 'Standard task loop, dry-run boundaries, and command `ok` semantics.']
-  ];
-  if (profile === 'standard' || profile === 'governed') {
-    rows.push(
-      ['`docs/ARCHITECTURE.md`', 'Architecture, component, or boundary work', 'Current system shape and ownership boundaries.'],
-      ['`docs/DEVELOPMENT_SLICES.md`', 'Starting, completing, or reclassifying slices', 'Roadmap ordering and completion evidence.'],
-      ['`docs/DECISIONS.md`', 'Project-level decision work', 'Durable decisions that affect architecture or workflow.'],
-      ['`docs/TEST_STRATEGY.md`', 'Validation planning or completion checks', 'Routine suites and special-case smoke boundaries.']
-    );
-  }
-  if (profile === 'governed') {
-    rows.push(
-      ['`docs/SECURITY_MODEL.md`', 'Security, secret, permission, or evidence-safety work', 'Project security invariants and special checks.'],
-      ['`docs/ROADMAP.md`', 'Roadmap, milestone, or scope planning', 'Longer-term priorities and deferred work.']
-    );
-  }
-  return rows;
-}
-
 function agentsRequiredReadingRowsForProfile(profile: InitProfile): Array<{ document: string; when: string; purpose: string }> {
   const rows: Array<{ document: string; when: string; purpose: string }> = [
     { document: '`docs/PROJECT_STATE.md`', when: 'Every session', purpose: 'Current product and capability state.' },
     { document: '`docs/AGENT_HANDOFF.md`', when: 'Every session', purpose: 'Compact continuation state.' },
     { document: '`docs/TASK_BOARD.md`', when: 'Every session', purpose: 'Current task queue and status.' },
-    { document: '`docs/IMPLEMENTATION_SOP.md`', when: 'Every session', purpose: 'Local workflow and required-reading registry.' },
+    { document: '`docs/HADARA_WORKFLOW.md`', when: 'Every session', purpose: 'Workflow rules and command-surface routing.' },
     { document: '`docs/TASK_WORKFLOW_COMMANDS.md`', when: 'Starting, finishing, closing, auditing, or explaining task workflow commands', purpose: 'Standard task loop, dry-run boundaries, and command `ok` semantics.' }
   ];
   if (profile === 'standard' || profile === 'governed') {
@@ -976,30 +845,6 @@ function detectProfileMetadataMismatches(projectRoot: string): InitIssue[] {
     });
   }
 
-  const sop = readProjectText(projectRoot, 'docs/IMPLEMENTATION_SOP.md');
-  const sopProfile = sop?.match(/initialized with the `(basic|standard|governed)` HADARA profile/)?.[1] as InitProfile | undefined;
-  if (sopProfile !== undefined && isLowerProfile(sopProfile, inferredProfile)) {
-    issues.push({
-      severity: 'warning',
-      code: 'INIT_PROFILE_METADATA_MISMATCH',
-      path: 'docs/IMPLEMENTATION_SOP.md',
-      message: `SOP says ${sopProfile}, but ${inferredProfile}-level scaffold docs exist.`
-    });
-  }
-  if (sop !== null) {
-    for (const requiredPath of requiredDocsForProfile(inferredProfile)) {
-      if (!sop.includes(`\`${requiredPath}\``)) {
-        issues.push({
-          severity: 'warning',
-          code: 'INIT_PROFILE_METADATA_MISMATCH',
-          path: 'docs/IMPLEMENTATION_SOP.md',
-          message: `SOP Required Reading does not include ${requiredPath}, but ${inferredProfile}-level scaffold docs exist.`
-        });
-        break;
-      }
-    }
-  }
-
   const agents = readProjectText(projectRoot, 'AGENTS.md');
   if (agents !== null) {
     for (const requiredPath of requiredDocsForProfile(inferredProfile)) {
@@ -1060,16 +905,6 @@ function validateTableCells(values: string[]): InitIssue[] {
   return values.flatMap((value) => (/[|\r\n]/.test(value)
     ? [{ severity: 'error' as const, code: 'INIT_INVALID_TABLE_CELL', message: 'Required Reading table cells must not contain | or newline characters.' }]
     : []));
-}
-
-function insertRequiredReadingRow(sop: string, row: string): string {
-  const lines = sop.split('\n');
-  const headerIndex = lines.findIndex((line) => line.trim() === '| Document | When to Read | Purpose |');
-  if (headerIndex < 0) return sop;
-  let insertAt = headerIndex + 2;
-  while (insertAt < lines.length && lines[insertAt].startsWith('|')) insertAt += 1;
-  lines.splice(insertAt, 0, row);
-  return lines.join('\n');
 }
 
 function parseIntegration(value: string): 'hermes' | 'mcp' {
@@ -1427,7 +1262,7 @@ function createHermesIntegrationDoc(): string {
 
 | Boundary | Rule |
 |---|---|
-| Registration | Keep this document registered in \`docs/IMPLEMENTATION_SOP.md\` before agents rely on it. |
+| Registration | Register this document with \`hadara docs register\` before agents rely on it. |
 | Runtime | This document is project guidance registration only; it does not enable Hermes runtime behavior. |
 | Scope | Treat Hermes behavior as project-specific integration work, not generic HADARA init behavior. |
 `;
@@ -1447,7 +1282,7 @@ function createMcpIntegrationDoc(): string {
 
 | Boundary | Rule |
 |---|---|
-| Registration | Keep this document registered in \`docs/IMPLEMENTATION_SOP.md\` before agents rely on it. |
+| Registration | Register this document with \`hadara docs register\` before agents rely on it. |
 | Runtime | This document is project guidance registration only; it does not enable MCP runtime behavior or change capability gates. |
 | Scope | Treat MCP behavior as project-specific integration work, not generic HADARA init behavior. |
 | Writes | Do not add MCP write tools without explicit project approval and safety evidence. |
@@ -1597,249 +1432,6 @@ function createArchitectureDoc(profile: InitProfile): string {
 | Task Capsules | \`tasks/T-*/\` | Task-local scope, evidence, decisions, and handoff. | Active |
 | Evidence records | \`EVIDENCE.md\`, \`evidence.jsonl\` | Validation evidence and artifact references. | Active |
 | Handoff | \`docs/PROJECT_STATE.md\` or \`docs/AGENT_HANDOFF.md\` | Next-session continuation state. | Active |
-`;
-}
-
-function createImplementationSopDoc(spec: InitProfileSpec): string {
-  const sessionStart = [
-    'Read `.hadara/context/HADARA_CONTEXT.md` as the compact project-local context anchor.',
-    'Read `docs/PROJECT_STATE.md`.',
-    'Read `docs/AGENT_HANDOFF.md`.',
-    'Read `docs/TASK_BOARD.md`.',
-    ...(spec.docs.developmentSlices
-      ? ['Read `docs/DEVELOPMENT_SLICES.md` when the work may start, complete, or reclassify a roadmap slice.']
-      : []),
-    'Follow the Historical Index in `docs/AGENT_HANDOFF.md` when older completed-task or validation history is needed.',
-    'Pick or create one Task Capsule. Create new capsules through `hadara task create <title>` by default.',
-    'Read the active Task Capsule files before implementation.',
-    'Read project-specific docs listed in the Required Reading table below.',
-    'Summarize the current state from the required docs.',
-    'Identify the active Task Capsule and explain why it fits the work.',
-    'Propose or choose the smallest useful implementation slice.'
-  ];
-
-  const requiredReadingRows = [
-    ['`.hadara/context/HADARA_CONTEXT.md`', 'Every session', 'Compact project-local context anchor and read-routing guide.'],
-    ['`docs/PROJECT_STATE.md`', 'Every session', 'Current product state and source-of-truth map.'],
-    ['`docs/AGENT_HANDOFF.md`', 'Every session', 'Compact handoff and next recommended step.'],
-    ['`docs/TASK_BOARD.md`', 'Every session', 'Work queue and task status.'],
-    ['`docs/IMPLEMENTATION_SOP.md`', 'Every session', 'Local HADARA workflow rules and project-specific required-reading registry.'],
-    ['`docs/TASK_WORKFLOW_COMMANDS.md`', 'Starting, finishing, closing, auditing, or explaining task workflow commands', 'Standard task loop, dry-run boundaries, and command `ok` semantics.']
-  ];
-  if (spec.docs.architecture) {
-    requiredReadingRows.push(['`docs/ARCHITECTURE.md`', 'Architecture, component, or boundary work', 'Current system shape and ownership boundaries.']);
-  }
-  if (spec.docs.developmentSlices) {
-    requiredReadingRows.push(['`docs/DEVELOPMENT_SLICES.md`', 'Starting, completing, or reclassifying slices', 'Roadmap ordering and completion evidence.']);
-  }
-  if (spec.docs.decisions) {
-    requiredReadingRows.push(['`docs/DECISIONS.md`', 'Project-level decision work', 'Durable decisions that affect architecture or workflow.']);
-  }
-  if (spec.docs.testStrategy) {
-    requiredReadingRows.push(['`docs/TEST_STRATEGY.md`', 'Validation planning or completion checks', 'Routine suites and special-case smoke boundaries.']);
-  }
-  if (spec.docs.securityModel) {
-    requiredReadingRows.push(['`docs/SECURITY_MODEL.md`', 'Security, secret, permission, or evidence-safety work', 'Project security invariants and special checks.']);
-  }
-  if (spec.docs.roadmap) {
-    requiredReadingRows.push(['`docs/ROADMAP.md`', 'Roadmap, milestone, release, or scope planning', 'Longer-term priorities and deferred work.']);
-  }
-  requiredReadingRows.push(
-    ['Active `tasks/T-*/TASK.md`', 'Working a task', 'Task-specific goal, scope, and status.'],
-    ['Active Task Capsule docs', 'Working a task', '`TASK.md`, `HANDOFF.md`, `EVIDENCE.md`, and task-local evidence summaries.']
-  );
-  const requiredReadingTable = managedSectionBlock('required-reading', {
-    schema: 'hadara.managedSection.v1',
-    owner: 'init.register-doc',
-    kind: 'markdown-table',
-    mode: 'insert-row',
-    version: 1,
-    required: true,
-    closeSourceRole: 'included'
-  }, `| Document | When to Read | Purpose |
-|---|---|---|
-${requiredReadingRows.map(formatTableRow).join('\n')}
-`);
-
-  const structureRows = [
-    ['`AGENTS.md`', 'Required Reading and Rules sections.'],
-    ['`docs/PROJECT_STATE.md`', 'Product, Current Phase, Current Status, and Single Source of Truth sections.'],
-    ['`docs/AGENT_HANDOFF.md`', 'Current State, Last 3 Completed Tasks, Current Known Problems, Next Recommended Step, Validation Baseline, and Historical Index sections.'],
-    ['`docs/TASK_BOARD.md`', 'One task table with ID, Title, Status, Capsule, and Notes columns.'],
-    ['`docs/IMPLEMENTATION_SOP.md`', 'Session Start, Required Reading, Project-Specific Documents, Init Profile Matrix, Scaffold Document Structure, Implementation, Standard Task Workflow Loop, Validation, Evidence Records, Session End, and Handoff Compaction sections.'],
-    ['`docs/TASK_WORKFLOW_COMMANDS.md`', 'Standard Task Loop, Command Semantics, Non-Overlap Rules, and State Documents sections.']
-  ];
-  if (spec.docs.architecture) structureRows.push(['`docs/ARCHITECTURE.md`', 'Overview, Boundaries, and Current Components sections.']);
-  if (spec.docs.developmentSlices) structureRows.push(['`docs/DEVELOPMENT_SLICES.md`', 'Evidence-backed slice table with ordering and done evidence.']);
-  if (spec.docs.decisions) structureRows.push(['`docs/DECISIONS.md`', 'Decision table with ID, Date, Decision, Status, Rationale, and Evidence columns.']);
-  if (spec.docs.testStrategy) structureRows.push(['`docs/TEST_STRATEGY.md`', 'Current Validation Environment, Suites, Required Session Checks, and Special-Case Checks sections.']);
-  if (spec.docs.securityModel) structureRows.push(['`docs/SECURITY_MODEL.md`', 'Default Mode, Invariants, and Special Checks sections.']);
-  if (spec.docs.refactorLog) structureRows.push(['`docs/REFACTOR_LOG.md`', 'Format section with Date, Area, Change, Rationale, and Evidence columns.']);
-  if (spec.docs.roadmap) structureRows.push(['`docs/ROADMAP.md`', 'Near Term and Deferred sections.']);
-  const stateTrackingDocs = spec.docs.developmentSlices
-    ? '`docs/TASK_BOARD.md` and `docs/DEVELOPMENT_SLICES.md`'
-    : '`docs/TASK_BOARD.md`';
-
-  return `# IMPLEMENTATION_SOP
-
-This project was initialized with the \`${spec.profile}\` HADARA profile.
-
-## Session Start
-
-${numberedList(sessionStart)}
-
-## Required Reading Tiers
-
-Use semantic tiers to keep session startup compact and deterministic:
-
-| Tier | Meaning | Default Read Behavior |
-|---|---|---|
-| \`current-state\` | Compact docs that establish live project state and route deeper reading, starting with \`.hadara/context/HADARA_CONTEXT.md\`. | Read first at session start or resume. |
-| \`task-work\` | Active Task Capsule docs, \`docs/TASK_BOARD.md\`, and \`docs/TASK_WORKFLOW_COMMANDS.md\`. | Read when selecting, implementing, finishing, closing, or auditing a task. |
-| \`conditional-reference\` | Architecture, security, roadmap, validation, release, or project-specific specs. | Read only when the task type, capsule, or Required Reading row condition applies. |
-| \`historical\` | Completed-task history, older validation records, and previous-state detail. | Never default required reading; read only when investigating history through the handoff Historical Index. |
-| \`excluded\` | Superseded, archived, local-only, or intentionally non-default material. | Never default required reading unless explicitly reclassified. |
-
-\`.hadara/context/HADARA_CONTEXT.md\` is the current-state entry point and read-routing guide. Full historical review of \`docs/PROJECT_STATE.md\` is not mandatory every session; rely on compact current-state docs first and follow \`docs/AGENT_HANDOFF.md\` Historical Index only when older history matters. Historical and superseded docs are never default required reading.
-
-## Required Reading
-
-${requiredReadingTable}
-
-## Project-Specific Documents
-
-When adding project-specific specs, contracts, roadmap files, or human/agent operating notes, register them in the Required Reading table before expecting people or agents to rely on them. Each row must explain when to read the document and what decision or workflow boundary it owns.
-
-\`\`\`bash
-hadara init register-doc --path docs/specs/example.md --when "When changing example behavior" --purpose "Example behavior contract" --json
-hadara init register-doc --path docs/specs/example.md --when "When changing example behavior" --purpose "Example behavior contract" --execute --json
-\`\`\`
-
-Use \`--require-exists\` when the document must already exist before registration. Keep local-only notes out of committed required reading unless they are intentionally part of the project handoff.
-
-## Init Profile Matrix
-
-| Profile | Scale | Generated Docs | Intended Use | Special Notes |
-|---|---|---|---|---|
-| \`basic\` | Small | Core session docs plus task workflow commands | Small projects that need Task Capsules, evidence, and handoff discipline without planning overhead. | SOP required reading references core docs, task workflow docs, and active Task Capsule docs. |
-| \`standard\` | Medium, default | Basic docs plus planning, architecture, decision, and validation docs | Most multi-session projects that need roadmap slices and repeatable validation. | Optional integrations must be registered before agents rely on them. |
-| \`governed\` | Heavy | Standard docs plus security, refactor log, and roadmap docs | Long-lived projects with stronger governance, security boundaries, refactor history, or roadmap-level planning. | Project-specific contracts still must be manually registered in Required Reading. |
-
-## Scaffold Document Structure
-
-Generated HADARA docs should follow a stable structure so agents do not reinterpret the same filename differently across projects.
-
-| Document | Required Structure |
-|---|---|
-${structureRows.map(formatTableRow).join('\n')}
-
-Prefer tables for repeated records and \`##\`/\`###\` headings for durable sections. Do not leave scaffold docs as unstructured prose when a table or named section would make agent interpretation more deterministic.
-
-## Implementation
-
-1. Keep work inside one Task Capsule whenever possible.
-2. Preserve the portable/project store boundary.
-3. Make the smallest coherent change that satisfies acceptance criteria.
-4. Update task-local docs when scope changes.
-
-## Documentation Timing and Write Coordination
-
-Do not defer all documentation until after implementation. Documentation is part of the work, not a post-work report.
-
-Keep capsule docs current as work changes:
-
-| Timing | Documents |
-|---|---|
-| Before execution | \`PLAN.md\` |
-| During execution | \`DECISIONS.md\`, \`RISKS.md\`, and \`FILES.md\` |
-| Immediately after validation | \`TESTS.md\` and \`EVIDENCE.md\` |
-| Before finalize execute | \`ACCEPTANCE.md\`, \`HANDOFF.md\`, and shared state docs |
-| Before close-source hash is captured | \`docs/TASK_BOARD.md\`, \`docs/PROJECT_STATE.md\`, \`docs/AGENT_HANDOFF.md\`, and roadmap/slice docs when applicable |
-
-Parallelize read-only discovery, \`rg\`/file inspection, independent validation commands, package or registry metadata inspection, read-only diagnostics, and draft preparation before writes. Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, \`task finalize --execute\`, low-level \`task finish --execute\`, low-level \`task close --execute\`, and release artifact or publish operations.
-
-## Status Token And Document Ownership Policy
-
-Use distinct token families for persistent task state, close proof state, document registry state, and evidence outcomes. \`TaskStatus\` belongs to Task Capsule metadata, \`TASK.md\` Status/Status History, and command-owned \`docs/TASK_BOARD.md\` cells. Valid persistent task tokens are \`Draft\`, \`In Progress\`, \`Blocked\`, \`Done\`, \`Partial\`, \`Superseded\`, and \`Archived\`.
-
-\`CloseState\` is derived from close evidence and \`task audit-close\`; do not write close proof values as \`TaskStatus\`, and do not persist \`CloseState\` in task-local \`HANDOFF.md\` close-source current-state tables. Canonical close-state tokens are \`not-closed\`, \`closed-valid\`, \`closed-stale\`, \`closed-invalid\`, and \`unknown\`. Compatibility diagnostics such as \`close-evidence-found-invalid\`, \`close-evidence-malformed\`, and \`closed-with-drift-warnings\` are close-state details, not task status.
-
-\`DocStatus\` belongs only to the docs registry and uses \`canonical\`, \`active\`, \`reference\`, \`historical\`, \`superseded\`, and \`archived\`. Evidence outcomes are \`passed\`, \`failed\`, \`blocked\`, and \`unknown\`; preserve failed or blocked evidence and append newer corrective evidence instead of rewriting history.
-
-Ownership boundaries follow the lifecycle command model. \`task finalize --execute --plan-hash <hash>\` is the default 0.3.3 agent close and close-proof repair path and preserves the underlying write boundaries: \`task finish --execute\` owns bounded status bookkeeping in \`TASK.md\` and command-owned \`docs/TASK_BOARD.md\` cells, and close execution owns only close evidence append. Operators own close-source prose and shared state docs before finalize execute, then rerun finalize after any intentional close-source edit.
-
-## Standard Task Workflow Loop
-
-The authoritative command semantics live in \`docs/TASK_WORKFLOW_COMMANDS.md\`. From 0.4 onward, agents should start from \`task status\`, then use finalize for closure instead of starting with low-level proof-boundary commands:
-
-\`\`\`bash
-hadara task status --json
-
-# If a matching capsule already exists:
-hadara task status --task T-XXXX --json
-hadara session start --task T-XXXX --json
-
-# If no matching capsule exists, create one first:
-hadara task create "task title" --json
-hadara task status --task T-XXXX --json
-hadara session start --task T-XXXX --json
-
-# Do the scoped work.
-
-hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
-
-# Finalize Task Capsule docs and tracked state docs before closing.
-
-hadara task finalize --task T-XXXX --json
-hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
-\`\`\`
-
-| Command | Default Write Behavior | Notes |
-|---|---|---|
-| \`task status\` | Read-only | Without \`--task\`, selects next work. With \`--task\`, default output is a fast loop cockpit; use \`--detail full\` or \`task finalize\` for close-grade readiness diagnostics. |
-| \`task next\` | Read-only compatibility | Planned removal candidate; prefer \`task status --json\`. |
-| \`evidence add-command\` | Write | Appends command-log evidence; does not execute shell commands; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, and optional \`--idempotency-key\` prevents duplicate same-key records. |
-| \`task lifecycle\` | Read-only compatibility | Planned removal candidate; prefer \`task status --task T-XXXX --json\`. |
-| \`task finalize\` | Read-only by default; guarded execute requires \`--plan-hash\` | Default agent close path. Rechecks the current plan hash, executes phases serially, stops on blockers, and preserves finish/close write boundaries. |
-| \`task finish\` / \`task ready\` / \`task close\` / \`task audit-close\` | Low-level proof-boundary commands | Use directly for debugging, recovery, or command implementation work. |
-
-Before running \`task finalize --execute\`, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, \`docs/TASK_BOARD.md\`, and tracked state docs such as \`docs/PROJECT_STATE.md\`, \`docs/AGENT_HANDOFF.md\`, and roadmap/slice docs when they apply. After finalize closes the task, do not edit those close-source documents unless you intend to rerun finalize and execute its fresh repair plan. Avoid writing volatile close evidence ids into close-source docs; use stable wording such as "close evidence appended; audit returned closed-valid".
-
-## Validation
-
-1. Run relevant tests.
-2. Record meaningful evidence in \`EVIDENCE.md\` and \`evidence.jsonl\`.
-3. Finalize Task Capsule docs and tracked state docs before close so the close source hash remains stable.
-4. Run \`hadara task status --task <task-id> --json\` when you need a compact phase check or next action.
-5. Run \`hadara task finalize --task <task-id> --json\`, review the current plan hash and write boundaries, then execute \`hadara task finalize --task <task-id> --execute --plan-hash <hash> --json\`.
-6. Use low-level \`task finish\`, \`task ready\`, \`task close\`, and \`task audit-close\` only when debugging or repairing one proof boundary directly.
-7. Add project-specific integration or deployment smoke checks only after those surfaces exist and are documented for this project.
-
-\`task finalize\` and low-level \`task ready\`/\`task close\` include done-level Task Capsule validation. Use \`hadara harness validate --task <task-id> --level done --json\` directly when you need to debug capsule format or done-level validation failures.
-
-## Evidence Records
-
-1. Do not hand-edit Task Capsule \`evidence.jsonl\`.
-2. Append evidence through HADARA commands so schema, visibility, and artifact-safety checks run consistently.
-3. Record failed or blocked checks honestly. Do not replace them later with optimistic summaries; add newer evidence that explains the fix or residual risk.
-4. Use \`hadara evidence list --task <task-id>\` to discover evidence ids and copy durable persisted \`ev:\` ids for long-lived \`--resolves\` or \`--supersedes\` references. Legacy compatibility ids are inspection-only and are not the preferred durable reference.
-5. Use \`hadara evidence add-command --task <task-id> --summary <text> --result passed|failed|blocked|unknown --json\` for command results when no artifact file is attached. Add \`--category <category>\` or \`--outcome <outcome>\` when summary heuristics are not precise enough; if both \`--result\` and \`--outcome\` are supplied, matching outcomes must match the legacy result, while \`recorded\` and \`not-applicable\` require \`--result unknown\` or no explicit result. Use \`--resolves <ev:evidence-id>\` or \`--supersedes <ev:evidence-id>\` for exact v2 resolution markers from passed or recorded follow-up evidence, and \`--idempotency-key <key>\` when rerunning the same logical check should report one durable evidence identity instead of appending duplicates.
-6. Use \`hadara evidence lint --task <task-id> --json\` when evidence drift is suspected or before close if evidence files were touched manually by mistake.
-7. Treat Task Capsule \`evidence.jsonl\` as canonical append-only evidence and \`EVIDENCE.md\` as a non-canonical human summary. \`hadara evidence rebuild\` is not implemented in this scaffold; future rebuild work must define whether \`wouldChange\` means formatting regeneration, managed-section drift, or data inconsistency before preview semantics are safe, and any execute mode must be dry-run-first and before-hash guarded.
-
-## Session End
-
-1. Update Task Capsule status.
-2. Update \`docs/TASK_BOARD.md\`.
-3. Update \`docs/PROJECT_STATE.md\` when capability state changes.
-4. Update \`docs/AGENT_HANDOFF.md\` before stopping.
-
-## Handoff Compaction
-
-1. \`docs/AGENT_HANDOFF.md\` should describe current handoff state, not the full project history.
-2. Keep only recent completed-task summaries in \`docs/AGENT_HANDOFF.md\`.
-3. Move older completed-task and validation history to indexed history documents when the handoff grows too large.
-4. Keep authoritative per-task evidence in Task Capsules and state tracking in ${stateTrackingDocs}.
 `;
 }
 

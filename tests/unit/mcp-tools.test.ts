@@ -304,8 +304,8 @@ describe('MCP read tools', () => {
       issues: []
     });
     expect(payload.content).toContain('# HADARA_CONTEXT');
-    expect(payload.content).toContain('Follow docs/IMPLEMENTATION_SOP.md for implementation, validation, and session-end procedure.');
-    expect(payload.content).toContain('## docs/IMPLEMENTATION_SOP.md');
+    expect(payload.content).toContain('Follow docs/HADARA_WORKFLOW.md for implementation, validation, and session-end procedure.');
+    expect(payload.content).toContain('## docs/HADARA_WORKFLOW.md');
     expect(payload.content).toContain('## docs/ROADMAP.md');
     expect(payload.content).toContain('hadara.project.state.read');
     expect(fs.existsSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'))).toBe(false);

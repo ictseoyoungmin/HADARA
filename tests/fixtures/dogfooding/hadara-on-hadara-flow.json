@@ -3,7 +3,7 @@
   "name": "HADARA-on-HADARA capsule lifecycle",
   "taskTitle": "Dogfood fixture task",
   "contextMustContain": [
-    "docs/IMPLEMENTATION_SOP.md",
+    "docs/HADARA_WORKFLOW.md",
     "Attach evidence before marking work complete.",
     "Use hadara.context.export for in-memory MCP context export"
   ],

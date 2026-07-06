@@ -135,7 +135,7 @@ hadara help command task.close
 
 ## Lifecycle Details
 
-The canonical agent loop, in the same `T-XXXX` form documented in `docs/TASK_WORKFLOW_COMMANDS.md` and `docs/IMPLEMENTATION_SOP.md`:
+The canonical agent loop, in the same `T-XXXX` form documented in `docs/HADARA_WORKFLOW.md` and `docs/TASK_WORKFLOW_COMMANDS.md`:
 
 ```bash
 hadara task status --json

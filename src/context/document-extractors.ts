@@ -38,7 +38,7 @@ const PROJECT_MANAGED_TARGETS = [
   'docs/TASK_BOARD.md',
   'docs/PROJECT_STATE.md',
   'docs/AGENT_HANDOFF.md',
-  'docs/IMPLEMENTATION_SOP.md',
+  'docs/HADARA_WORKFLOW.md',
   'docs/DOC_REGISTRY.md'
 ];
 

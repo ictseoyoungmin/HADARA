@@ -16,11 +16,44 @@ function tempProject(): string {
   fs.writeFileSync(path.join(dir, 'docs', 'AGENT_HANDOFF.md'), '# AGENT_HANDOFF\n\nNo active task yet.\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
   fs.writeFileSync(
-    path.join(dir, 'docs', 'IMPLEMENTATION_SOP.md'),
-    '# IMPLEMENTATION_SOP\n\n## Session Start\n\nRead docs.\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | Current state. |\n| `docs/AGENT_HANDOFF.md` | Every session | Handoff. |\n| `docs/TASK_BOARD.md` | Every session | Work queue. |\n| `docs/IMPLEMENTATION_SOP.md` | Every session | Workflow. |\n\n## Init Profile Matrix\n\n| Profile | Scale |\n|---|---|\n| `basic` | Small |\n\n## Scaffold Document Structure\n\n| Document | Required Structure |\n|---|---|\n| `docs/PROJECT_STATE.md` | Product and status. |\n\n## Implementation\n\nWork in a capsule.\n\n## Validation\n\nRun checks.\n\n## Session End\n\nUpdate evidence.\n\n## Handoff Compaction\n\nKeep handoff compact.\n',
+    path.join(dir, 'docs', 'HADARA_WORKFLOW.md'),
+    workflowDocContent(),
     'utf8'
   );
   return dir;
+}
+
+function workflowDocContent(): string {
+  return [
+    '# HADARA_WORKFLOW',
+    '',
+    '## Quickstart',
+    '',
+    'Start with HADARA read models.',
+    '',
+    '## Minimal Loop',
+    '',
+    'Create a task, implement, validate, record evidence, and finalize.',
+    '',
+    '## Read Authority Rules',
+    '',
+    '| Order | Authority | Allowed Reads |',
+    '|---:|---|---|',
+    '| 1 | HADARA CLI read models | Routed docs and task context. |',
+    '',
+    '## Task Capsule Lifecycle',
+    '',
+    'Use task status and finalize.',
+    '',
+    '## Evidence',
+    '',
+    'Attach evidence before marking work complete.',
+    '',
+    '## Authoring Model',
+    '',
+    'Humans own prose; generated sections are bounded.',
+    ''
+  ].join('\n');
 }
 
 afterEach(() => {

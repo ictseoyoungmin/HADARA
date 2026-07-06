@@ -26,8 +26,8 @@ function tempProject(): string {
   );
   fs.writeFileSync(path.join(dir, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
   fs.writeFileSync(
-    path.join(dir, 'docs', 'IMPLEMENTATION_SOP.md'),
-    '# IMPLEMENTATION_SOP\n\n## Session Start\n\nRead docs.\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | Current state. |\n| `docs/AGENT_HANDOFF.md` | Every session | Handoff. |\n| `docs/TASK_BOARD.md` | Every session | Work queue. |\n| `docs/IMPLEMENTATION_SOP.md` | Every session | Workflow. |\n\n## Init Profile Matrix\n\n| Profile | Scale |\n|---|---|\n| `basic` | Small |\n\n## Scaffold Document Structure\n\n| Document | Required Structure |\n|---|---|\n| `docs/PROJECT_STATE.md` | Product and status. |\n\n## Implementation\n\nWork in a capsule.\n\n## Validation\n\nRun checks.\n\n## Session End\n\nUpdate evidence.\n\n## Handoff Compaction\n\nKeep handoff compact.\n',
+    path.join(dir, 'docs', 'HADARA_WORKFLOW.md'),
+    workflowDocContent(),
     'utf8'
   );
   return dir;
@@ -61,7 +61,7 @@ describe('Docs protocol consistency report', () => {
         detectedProfile: 'basic',
         issueCounts: {
           error: 0,
-          warning: 3,
+          warning: 2,
           info: 0
         }
       }
@@ -171,11 +171,11 @@ describe('Docs protocol consistency report', () => {
       'utf8'
     );
     replaceInFile(
-      path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'),
-      '| `docs/IMPLEMENTATION_SOP.md` | Every session | Workflow. |',
-      '| `docs/IMPLEMENTATION_SOP.md` | Every session | Workflow. |\n| `docs/MISSING_SPEC.md` | Protocol work | Missing fixture. |'
+      path.join(root, 'AGENTS.md'),
+      '# AGENTS\n',
+      '# AGENTS\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/MISSING_SPEC.md` | Protocol work | Missing fixture. |\n'
     );
-    fs.rmSync(path.join(root, 'AGENTS.md'));
+    fs.rmSync(path.join(root, 'docs', 'HADARA_WORKFLOW.md'));
     replaceInFile(
       path.join(root, 'docs', 'TASK_BOARD.md'),
       `| ${activeTask.id} | Active docs task | Draft | tasks/${activeTask.id}-active-docs-task |`,
@@ -197,7 +197,7 @@ describe('Docs protocol consistency report', () => {
     );
     expect(report.issues.find((issue) => issue.code === 'PROJECT_DOC_MISSING')).toMatchObject({
       severity: 'error',
-      path: 'AGENTS.md'
+      path: 'docs/HADARA_WORKFLOW.md'
     });
     expect(report.issues.find((issue) => issue.code === 'PROJECT_TASK_BOARD_CAPSULE_DRIFT')).toMatchObject({
       severity: 'warning',
@@ -208,7 +208,7 @@ describe('Docs protocol consistency report', () => {
     expect(validateSchema('hadara.protocol.consistency.v1', report).ok).toBe(true);
   });
 
-  it('reports expanded project-doc drift for profile, state, slices, decisions, tests, handoff, and SOP structure', () => {
+  it('reports expanded project-doc drift for profile, state, slices, decisions, tests, handoff, and workflow structure', () => {
     const root = tempProject();
     fs.writeFileSync(path.join(root, 'docs', 'SECURITY_MODEL.md'), '# SECURITY_MODEL\n', 'utf8');
     fs.writeFileSync(path.join(root, 'docs', 'ROADMAP.md'), '# ROADMAP\n', 'utf8');
@@ -233,7 +233,7 @@ describe('Docs protocol consistency report', () => {
       'utf8'
     );
     fs.writeFileSync(path.join(root, 'docs', 'TEST_STRATEGY.md'), '# TEST_STRATEGY\n\n## Current Validation Environment\n\nHost checks only.\n', 'utf8');
-    fs.writeFileSync(path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'), '# IMPLEMENTATION_SOP\n\n## Required Reading\n\nNo table.\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'HADARA_WORKFLOW.md'), '# HADARA_WORKFLOW\n\n## Read Authority Rules\n\nNo table.\n', 'utf8');
     const task = createTaskCapsule(root, 'Expanded drift');
 
     const report = createDocsProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
@@ -248,8 +248,8 @@ describe('Docs protocol consistency report', () => {
         'DEVELOPMENT_SLICE_STATUS_DRIFT',
         'DECISION_EVIDENCE_MISSING',
         'TEST_STRATEGY_VALIDATION_BASELINE_STALE',
-        'SOP_SCAFFOLD_SECTION_MISSING',
-        'SOP_REQUIRED_READING_TABLE_MISSING'
+        'WORKFLOW_SCAFFOLD_SECTION_MISSING',
+        'WORKFLOW_READ_AUTHORITY_TABLE_MISSING'
       ])
     );
     expect(report.issues.find((issue) => issue.code === 'PROJECT_STATE_ACTIVE_TASK_STALE')).toMatchObject({
@@ -269,8 +269,8 @@ describe('Profile protocol consistency report', () => {
       'utf8'
     );
     fs.writeFileSync(
-      path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'),
-      '# IMPLEMENTATION_SOP\n\nThis repository was initialized with the `basic` HADARA profile.\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | Current state. |\n| `docs/AGENT_HANDOFF.md` | Every session | Handoff. |\n| `docs/TASK_BOARD.md` | Every session | Work queue. |\n| `docs/IMPLEMENTATION_SOP.md` | Every session | Workflow. |\n',
+      path.join(root, 'AGENTS.md'),
+      '# AGENTS\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| `docs/PROJECT_STATE.md` | Every session | Current state. |\n',
       'utf8'
     );
 
@@ -304,7 +304,7 @@ describe('Profile protocol consistency report', () => {
     expect(remediation).toMatchObject({
       mode: 'manual',
       command: 'hadara init upgrade --profile governed --json',
-      targetPaths: expect.arrayContaining(['docs/PROJECT_STATE.md', 'docs/IMPLEMENTATION_SOP.md', 'AGENTS.md'])
+      targetPaths: expect.arrayContaining(['docs/PROJECT_STATE.md', 'AGENTS.md'])
     });
     expect(remediation?.steps.join('\n')).toContain('docs/PROJECT_STATE.md');
     expect(remediation?.steps.join('\n')).toContain('AGENTS.md');
@@ -425,27 +425,23 @@ describe('Profile protocol consistency report', () => {
     );
   });
 
-  it('reports mixed declarations when PROJECT_STATE and SOP disagree', () => {
+  it('uses PROJECT_STATE as the only profile metadata source', () => {
     const root = tempProject();
     writeProfileDocs(root, 'standard');
-    writeSplitProfileMetadata(root, 'standard', 'governed');
+    writeProfileMetadata(root, 'standard');
 
     const report = createProfileProtocolConsistencyReport(root, new Date('2026-05-30T00:00:00.000Z'));
 
     expect(report.summary.profile).toMatchObject({
-      declared: 'mixed',
+      declared: 'standard',
       detected: 'standard',
       target: 'standard',
       source: 'metadata-and-docset'
     });
     expect(report.issues.map((issue) => issue.code)).toEqual(
-      expect.arrayContaining(['PROFILE_METADATA_DRIFT', 'PROFILE_REQUIRED_READING_DRIFT'])
+      expect.arrayContaining(['PROFILE_REQUIRED_READING_DRIFT'])
     );
-    expect(report.issues.find((issue) => issue.path === 'docs/IMPLEMENTATION_SOP.md')).toMatchObject({
-      code: 'PROFILE_METADATA_DRIFT',
-      expected: 'standard',
-      actual: 'governed'
-    });
+    expect(report.issues.find((issue) => issue.code === 'PROFILE_METADATA_DRIFT')).toBeUndefined();
   });
 
   it('requires AGENTS profile paths inside the Required Reading table', () => {
@@ -454,7 +450,7 @@ describe('Profile protocol consistency report', () => {
     writeProfileMetadata(root, 'governed');
     fs.writeFileSync(
       path.join(root, 'AGENTS.md'),
-      '# AGENTS\n\nMention `docs/ROADMAP.md` in prose only.\n\n## Required Reading\n\n1. `docs/PROJECT_STATE.md`\n2. `docs/AGENT_HANDOFF.md`\n3. `docs/TASK_BOARD.md`\n4. `docs/IMPLEMENTATION_SOP.md`\n',
+      '# AGENTS\n\nMention `docs/ROADMAP.md` in prose only.\n\n## Required Reading\n\n1. `docs/PROJECT_STATE.md`\n2. `docs/AGENT_HANDOFF.md`\n3. `docs/TASK_BOARD.md`\n4. `docs/HADARA_WORKFLOW.md`\n',
       'utf8'
     );
 
@@ -671,17 +667,45 @@ function writeProfileMetadata(root: string, profile: 'basic' | 'standard' | 'gov
   writeSplitProfileMetadata(root, profile, profile);
 }
 
-function writeSplitProfileMetadata(root: string, projectStateProfile: 'basic' | 'standard' | 'governed', sopProfile: 'basic' | 'standard' | 'governed'): void {
+function writeSplitProfileMetadata(root: string, projectStateProfile: 'basic' | 'standard' | 'governed', _workflowProfile: 'basic' | 'standard' | 'governed'): void {
   fs.writeFileSync(
     path.join(root, 'docs', 'PROJECT_STATE.md'),
     `# PROJECT_STATE\n\n| Field | Value |\n|---|---|\n| HADARA Profile | ${projectStateProfile} |\n`,
     'utf8'
   );
-  fs.writeFileSync(
-    path.join(root, 'docs', 'IMPLEMENTATION_SOP.md'),
-    `# IMPLEMENTATION_SOP\n\nThis repository was initialized with the \`${sopProfile}\` HADARA profile.\n\n## Required Reading\n\n| Document | When to Read | Purpose |\n|---|---|---|\n| \`docs/PROJECT_STATE.md\` | Every session | Current state. |\n| \`docs/AGENT_HANDOFF.md\` | Every session | Handoff. |\n| \`docs/TASK_BOARD.md\` | Every session | Work queue. |\n| \`docs/IMPLEMENTATION_SOP.md\` | Every session | Workflow. |\n| \`docs/ARCHITECTURE.md\` | Architecture work | System map. |\n| \`docs/DEVELOPMENT_SLICES.md\` | Slice work | Work order. |\n| \`docs/DECISIONS.md\` | Decision work | Decision log. |\n| \`docs/TEST_STRATEGY.md\` | Validation work | Test baseline. |\n| \`docs/SECURITY_MODEL.md\` | Security work | Security boundary. |\n| \`docs/REFACTOR_LOG.md\` | Refactor work | Refactor log. |\n| \`docs/ROADMAP.md\` | Roadmap work | Roadmap. |\n`,
-    'utf8'
-  );
+}
+
+function workflowDocContent(): string {
+  return [
+    '# HADARA_WORKFLOW',
+    '',
+    '## Quickstart',
+    '',
+    'Start with HADARA read models.',
+    '',
+    '## Minimal Loop',
+    '',
+    'Create a task, implement, validate, record evidence, and finalize.',
+    '',
+    '## Read Authority Rules',
+    '',
+    '| Order | Authority | Allowed Reads |',
+    '|---:|---|---|',
+    '| 1 | HADARA CLI read models | Routed docs and task context. |',
+    '',
+    '## Task Capsule Lifecycle',
+    '',
+    'Use task status and finalize.',
+    '',
+    '## Evidence',
+    '',
+    'Attach evidence before marking work complete.',
+    '',
+    '## Authoring Model',
+    '',
+    'Humans own prose; generated sections are bounded.',
+    ''
+  ].join('\n');
 }
 
 function replaceInFile(filePath: string, before: string, after: string): void {

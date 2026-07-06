@@ -10,7 +10,7 @@ This repository must be developed using the HADARA protocol.
 | `docs/PROJECT_STATE.md` | Every session | Current project state. |
 | `docs/AGENT_HANDOFF.md` | Every session | Compact current-state handoff. |
 | `docs/TASK_BOARD.md` | Every session | Task queue and capsule paths. |
-| `docs/IMPLEMENTATION_SOP.md` | Every session | Workflow rules. |
+| `docs/HADARA_WORKFLOW.md` | Every session | Workflow rules and command-surface routing. |
 | `docs/DEVELOPMENT_SLICES.md` | Starting, completing, or reclassifying a development slice. | Slice order and status. |
 | `docs/ARCHITECTURE.md` | Changing architecture, boundaries, or runtime surfaces. | System structure. |
 | `docs/DECISIONS.md` | Adding or revising decisions. | Decision record. |
@@ -19,7 +19,7 @@ This repository must be developed using the HADARA protocol.
 | `docs/ROADMAP.md` | Changing release, scope, or deferred-work boundaries. | Roadmap and scope boundaries. |
 | `docs/TASK_WORKFLOW_COMMANDS.md` | Starting, finishing, closing, auditing, or explaining task workflow commands. | Standard task loop, read/write boundaries, dry-run rules, and `ok` semantics. |
 | Active `tasks/T-*/TASK.md` | Every implementation session. | Active capsule scope. |
-| Task Capsule files required by `docs/IMPLEMENTATION_SOP.md` | Every implementation session. | Capsule evidence and handoff. |
+| Active Task Capsule docs | Every implementation session. | Capsule evidence and handoff. |
 | Project-specific specs or roadmap documents referenced by the current task | When referenced by the active task. | Task-specific constraints. |
 
 `docs/AGENT_HANDOFF.md` is compact current-state handoff, not full project history. Follow its Historical Index when older completed-task, validation, or refactor history is needed.
@@ -42,7 +42,7 @@ Use semantic tiers to keep session startup compact:
 
 - Keep work inside one Task Capsule whenever possible.
 - If no suitable Task Capsule exists, create one before implementation with `hadara task create <title>` by default.
-- If host Node/npm is unavailable, use the reusable Docker workflow in `docs/IMPLEMENTATION_SOP.md` to run the HADARA CLI against the workspace.
+- If host Node/npm is unavailable, use the reusable Docker workflow in `docs/HADARA_WORKFLOW.md` to run the HADARA CLI against the workspace.
 - For HADARA-dev CLI development, prefer the reusable `hadara-dev` Docker workflow over host-local Node/npm. After changing CLI code, build in Docker and refresh `/workspace/dist` from the Docker build output before running built-CLI smokes or treating the workspace CLI as current. Do not assume the container-global `/usr/local/bin/hadara` is the latest development build.
 - Do not mark work done without evidence. Do not hand-edit `evidence.jsonl`; record failed or blocked checks honestly instead of replacing them with optimistic summaries.
 - Do not defer all documentation until after implementation. Keep `PLAN.md` current before execution; update `DECISIONS.md`, `RISKS.md`, and `FILES.md` during execution; update `TESTS.md` and `EVIDENCE.md` immediately after validation; update `ACCEPTANCE.md`, `HANDOFF.md`, and shared state docs before finalize execute.

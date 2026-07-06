@@ -23,6 +23,7 @@ Use it to decide what to read next.
 | Current project state | `docs/PROJECT_STATE.md` |
 | Current/next agent handoff | `docs/AGENT_HANDOFF.md` |
 | Task list | `docs/TASK_BOARD.md` |
+| Workflow guide | `docs/HADARA_WORKFLOW.md` |
 | Command lifecycle | `docs/TASK_WORKFLOW_COMMANDS.md` |
 | Document registry | `docs/DOC_REGISTRY.md` |
 | Machine-readable docs registry | `.hadara/docs-registry.json` |

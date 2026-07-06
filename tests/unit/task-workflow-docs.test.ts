@@ -9,9 +9,9 @@ function read(relativePath: string): string {
 }
 
 describe('task workflow command semantics docs', () => {
-  it('documents the standard task workflow loop in the workflow contract, SOP, and README', () => {
+  it('documents the standard task workflow loop in the workflow contract, workflow guide, and README', () => {
     const workflow = read('docs/TASK_WORKFLOW_COMMANDS.md');
-    const sop = read('docs/IMPLEMENTATION_SOP.md');
+    const hadaraWorkflow = read('docs/HADARA_WORKFLOW.md');
     const readme = read('README.md');
     const commands = [
       'hadara task status --json',
@@ -24,22 +24,22 @@ describe('task workflow command semantics docs', () => {
 
     for (const command of commands) {
       expect(workflow).toContain(command);
-      expect(sop).toContain(command);
+      expect(hadaraWorkflow).toContain(command);
       expect(readme).toContain(command);
     }
 
     expect(workflow).toContain('Low-level proof-boundary commands remain available for debugging, recovery, and command implementation work');
-    expect(sop).toContain('| `task finish` / `task ready` / `task close` / `task audit-close` | Low-level proof-boundary commands |');
+    expect(hadaraWorkflow).toContain('Low-level lifecycle commands are for debugging, recovery, or command implementation work:');
     expect(readme).toContain('Low-level proof-boundary commands remain available for debugging, recovery, and command implementation work');
 
-    for (const doc of [workflow, sop, readme]) {
+    for (const doc of [workflow, hadaraWorkflow, readme]) {
       expect(doc.indexOf('hadara task finalize --task T-XXXX --json')).toBeLessThan(doc.indexOf('hadara task finalize --task T-XXXX --execute --plan-hash'));
     }
   });
 
   it('keeps read-only, dry-run, write, and ok semantics visible to operators and JSON consumers', () => {
     const workflow = read('docs/TASK_WORKFLOW_COMMANDS.md');
-    const sop = read('docs/IMPLEMENTATION_SOP.md');
+    const hadaraWorkflow = read('docs/HADARA_WORKFLOW.md');
     const agents = read('AGENTS.md');
     const contract = read('docs/CLI_JSON_CONTRACT.md');
 
@@ -78,17 +78,13 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('After close proof is recorded, close-source document edits intentionally invalidate the previous close proof.');
     expect(workflow).toContain("matching `docs/TASK_BOARD.md` row's command-owned cells");
     expect(workflow).toContain('human/mixed-owned `Notes` and any extra cells');
-    expect(sop).toContain('| `task status` | Read-only | Selects next work without `--task`; reports selected-capsule phase, readiness, blockers, and next actions with `--task`. |');
-    expect(sop).toContain('Before running `task finalize --execute`, finish all close-source edits');
-    expect(sop).toContain('## Documentation Timing and Write Coordination');
-    expect(sop).toContain('Documentation is part of the work, not a post-work report.');
-    expect(sop).toContain('| Before execution | `PLAN.md` |');
-    expect(sop).toContain('Parallelize read-only discovery, `rg`/file inspection, independent validation commands');
-    expect(sop).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes');
-    expect(sop).toContain('Avoid writing volatile close evidence ids into close-source docs');
-    expect(sop).toContain('## Evidence Records');
-    expect(sop).toContain('Do not hand-edit Task Capsule `evidence.jsonl`.');
-    expect(sop).toContain('Use `hadara harness validate --task <task-id> --level done --json` directly when you need to debug capsule format or done-level validation failures.');
+    expect(hadaraWorkflow).toContain('| Find next work | `hadara task status --json` | Read-only selection cockpit. |');
+    expect(hadaraWorkflow).toContain('Before running `task finalize --execute`, finish all close-source edits');
+    expect(hadaraWorkflow).toContain('## Task Document Timing');
+    expect(hadaraWorkflow).toContain('Do not hand-edit `evidence.jsonl`.');
+    expect(hadaraWorkflow).toContain('Avoid writing volatile close evidence ids into close-source docs');
+    expect(hadaraWorkflow).toContain('## Evidence');
+    expect(hadaraWorkflow).toContain('hadara harness validate --task T-XXXX --level done --json');
     expect(agents).toContain('Do not defer all documentation until after implementation.');
     expect(agents).toContain('Parallelize read-only discovery, file inspection, independent validation');
     expect(agents).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes');
@@ -99,20 +95,21 @@ describe('task workflow command semantics docs', () => {
 
   it('registers task workflow command guidance as required reading', () => {
     const agents = read('AGENTS.md');
-    const sop = read('docs/IMPLEMENTATION_SOP.md');
+    const hadaraWorkflow = read('docs/HADARA_WORKFLOW.md');
     const readme = read('README.md');
 
     expect(agents).toContain('| `docs/TASK_WORKFLOW_COMMANDS.md` | Starting, finishing, closing, auditing, or explaining task workflow commands. |');
-    expect(sop).toContain('| `docs/TASK_WORKFLOW_COMMANDS.md` | Starting, finishing, closing, auditing, or changing task workflow commands |');
+    expect(agents).toContain('| `docs/HADARA_WORKFLOW.md` | Every session | Workflow rules and command-surface routing. |');
+    expect(hadaraWorkflow).toContain('The authoritative command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`.');
     expect(readme).toContain('The full command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`.');
   });
 
   it('documents required-reading tiers for compact session startup', () => {
     const agents = read('AGENTS.md');
-    const sop = read('docs/IMPLEMENTATION_SOP.md');
+    const hadaraWorkflow = read('docs/HADARA_WORKFLOW.md');
     const workflow = read('docs/TASK_WORKFLOW_COMMANDS.md');
 
-    for (const doc of [agents, sop]) {
+    for (const doc of [agents]) {
       expect(doc).toContain('## Required Reading Tiers');
       expect(doc).toContain('`current-state`');
       expect(doc).toContain('`task-work`');
@@ -124,6 +121,8 @@ describe('task workflow command semantics docs', () => {
       expect(doc).toContain('Historical and superseded docs are never default required reading.');
     }
 
+    expect(hadaraWorkflow).toContain('## Read Authority Rules');
+    expect(hadaraWorkflow).toContain('Agents must follow this read order:');
     expect(workflow).toContain('## Required Reading Tier');
     expect(workflow).toContain('`docs/TASK_WORKFLOW_COMMANDS.md` is `task-work` required reading.');
     expect(workflow).toContain('Start from `.hadara/context/HADARA_CONTEXT.md` and compact state docs');

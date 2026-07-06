@@ -50,7 +50,7 @@ export interface ProtocolProfileSummary {
   source: 'metadata-and-docset';
 }
 
-const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/IMPLEMENTATION_SOP.md'];
+const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
 const STANDARD_PROJECT_DOCS = ['docs/ARCHITECTURE.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/DECISIONS.md', 'docs/TEST_STRATEGY.md'];
 const GOVERNED_PROJECT_DOCS = ['docs/SECURITY_MODEL.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md'];
 
@@ -101,8 +101,7 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
   }
 
   const metadataTargets = [
-    { path: 'docs/PROJECT_STATE.md', actual: metadata.projectState },
-    { path: 'docs/IMPLEMENTATION_SOP.md', actual: metadata.sop }
+    { path: 'docs/PROJECT_STATE.md', actual: metadata.projectState }
   ];
 
   if (targetProfile !== 'unknown') {
@@ -135,20 +134,6 @@ export function createProfileConsistencyDiagnostics(projectRoot: string): Profil
     }
 
     const requiredReadingDocs = requiredReadingDocsForProfile(targetProfile);
-    const sopMissing = missingRequiredReadingPaths(projectRoot, 'docs/IMPLEMENTATION_SOP.md', requiredReadingDocs);
-    if (sopMissing.length > 0) {
-      issues.push({
-        code: 'PROFILE_REQUIRED_READING_DRIFT',
-        severity: 'warning',
-        area: 'required-reading',
-        path: 'docs/IMPLEMENTATION_SOP.md',
-        message: `SOP Required Reading is missing ${targetProfile} profile paths.`,
-        expected: sopMissing.join(', '),
-        actual: 'not listed',
-        remediationId: 'profile-metadata-align'
-      });
-    }
-
     const agentsMissing = missingRequiredReadingPaths(projectRoot, 'AGENTS.md', requiredReadingDocs);
     if (agentsMissing.length > 0) {
       issues.push({
@@ -221,7 +206,6 @@ function buildProfileRemediations(
         steps: [
           `Run \`hadara init upgrade --profile ${targetProfile} --json\` and review the dry-run merge plan.`,
           `In \`docs/PROJECT_STATE.md\`, set the HADARA profile metadata to \`${targetProfile}\`.`,
-          `In \`docs/IMPLEMENTATION_SOP.md\`, update the profile sentence and Required Reading table for \`${targetProfile}\`.`,
           `In \`AGENTS.md\`, add Required Reading entries for the \`${targetProfile}\` profile documents.`,
           'Re-run `hadara protocol doctor --scope profile --json` before using an execute-mode remediation command.'
         ],
@@ -284,15 +268,14 @@ function requiredReadingDocsForProfile(profile: TargetProtocolProfile): string[]
   return requiredDocsForProfile(profile).filter((relativePath) => relativePath !== 'AGENTS.md' && relativePath !== 'docs/REFACTOR_LOG.md');
 }
 
-function readProfileMetadata(projectRoot: string): { projectState: TargetProtocolProfile | null; sop: TargetProtocolProfile | null } {
+function readProfileMetadata(projectRoot: string): { projectState: TargetProtocolProfile | null } {
   return {
-    projectState: readProjectStateProfile(projectRoot),
-    sop: readSopProfile(projectRoot)
+    projectState: readProjectStateProfile(projectRoot)
   };
 }
 
-function inferDeclaredProfile(metadata: { projectState: TargetProtocolProfile | null; sop: TargetProtocolProfile | null }): ProtocolProfile {
-  const declared = [metadata.projectState, metadata.sop].filter((profile): profile is TargetProtocolProfile => Boolean(profile));
+function inferDeclaredProfile(metadata: { projectState: TargetProtocolProfile | null }): ProtocolProfile {
+  const declared = [metadata.projectState].filter((profile): profile is TargetProtocolProfile => Boolean(profile));
   if (declared.length === 0) return 'unknown';
   if (new Set(declared).size > 1) return 'mixed';
   return declared[0];
@@ -307,16 +290,6 @@ function readProjectStateProfile(projectRoot: string): TargetProtocolProfile | n
     return normalizeProfile(row.slice(1).join(' '));
   }
   return normalizeProfile(firstMatch(content, /HADARA\s+Profile\s*[:|]\s*`?(basic|standard|governed)`?/i));
-}
-
-function readSopProfile(projectRoot: string): TargetProtocolProfile | null {
-  const relativePath = 'docs/IMPLEMENTATION_SOP.md';
-  if (!exists(projectRoot, relativePath)) return null;
-  const content = fs.readFileSync(path.join(projectRoot, relativePath), 'utf8');
-  return (
-    normalizeProfile(firstMatch(content, /(?:initialized with|uses|operates as)\s+(?:the\s+)?`?(basic|standard|governed)`?\s+HADARA profile/i)) ??
-    normalizeProfile(firstMatch(content, /HADARA profile\s*[:|]\s*`?(basic|standard|governed)`?/i))
-  );
 }
 
 function missingRequiredReadingPaths(projectRoot: string, relativePath: string, requiredPaths: string[]): string[] {

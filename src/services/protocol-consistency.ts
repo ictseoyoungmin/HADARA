@@ -84,7 +84,7 @@ export interface ProtocolConsistencyReport {
 
 const REQUIRED_TASK_FILES = Object.keys(TASK_FILES);
 const DONE_STATUSES = new Set(['done']);
-const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/IMPLEMENTATION_SOP.md'];
+const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
 const STANDARD_PROJECT_DOCS = ['docs/ARCHITECTURE.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/DECISIONS.md', 'docs/TEST_STRATEGY.md'];
 const GOVERNED_PROJECT_DOCS = ['docs/SECURITY_MODEL.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md'];
 
@@ -139,7 +139,7 @@ export function createDocsProtocolConsistencyReport(projectRoot: string, now = n
   checkDevelopmentSlicesConsistency(projectRoot, tasks, checkedDocs, issues);
   checkDecisionsConsistency(projectRoot, checkedDocs, issues);
   checkTestStrategyConsistency(projectRoot, checkedDocs, issues);
-  checkSopScaffoldStructure(projectRoot, checkedDocs, issues);
+  checkWorkflowScaffoldStructure(projectRoot, checkedDocs, issues);
 
   return buildReport(projectRoot, now, issues, checkedDocs, undefined, null, undefined, {
     scope: 'docs',
@@ -337,8 +337,8 @@ function checkRequiredProjectDocs(projectRoot: string, checkedDocs: Set<string>,
 }
 
 function checkRequiredReadingPaths(projectRoot: string, checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
-  const sopPath = path.join(projectRoot, 'docs', 'IMPLEMENTATION_SOP.md');
-  const relativePath = 'docs/IMPLEMENTATION_SOP.md';
+  const sopPath = path.join(projectRoot, 'AGENTS.md');
+  const relativePath = 'AGENTS.md';
   checkedDocs.add(relativePath);
   if (!fs.existsSync(sopPath)) return;
 
@@ -354,7 +354,7 @@ function checkRequiredReadingPaths(projectRoot: string, checkedDocs: Set<string>
         severity: 'warning',
         area: 'required-reading',
         path: relativePath,
-        message: `SOP Required Reading references a missing document: ${documentPath}`,
+        message: `AGENTS Required Reading references a missing document: ${documentPath}`,
         expected: `${documentPath} present`,
         actual: 'missing'
       });
@@ -653,45 +653,42 @@ function checkTestStrategyConsistency(projectRoot: string, checkedDocs: Set<stri
   }
 }
 
-function checkSopScaffoldStructure(projectRoot: string, checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
-  const sopPath = path.join(projectRoot, 'docs', 'IMPLEMENTATION_SOP.md');
-  const relativePath = 'docs/IMPLEMENTATION_SOP.md';
+function checkWorkflowScaffoldStructure(projectRoot: string, checkedDocs: Set<string>, issues: ProtocolConsistencyIssue[]): void {
+  const sopPath = path.join(projectRoot, 'docs', 'HADARA_WORKFLOW.md');
+  const relativePath = 'docs/HADARA_WORKFLOW.md';
   checkedDocs.add(relativePath);
   if (!fs.existsSync(sopPath)) return;
 
   const content = fs.readFileSync(sopPath, 'utf8');
   const requiredSections = [
-    '## Session Start',
-    '## Required Reading',
-    '## Init Profile Matrix',
-    '## Scaffold Document Structure',
-    '## Implementation',
-    '## Validation',
-    '## Session End',
-    '## Handoff Compaction'
+    '## Quickstart',
+    '## Minimal Loop',
+    '## Read Authority Rules',
+    '## Task Capsule Lifecycle',
+    '## Evidence',
+    '## Authoring Model'
   ];
   for (const heading of requiredSections) {
     if (content.includes(heading)) continue;
     pushIssue(issues, {
-      code: 'SOP_SCAFFOLD_SECTION_MISSING',
+      code: 'WORKFLOW_SCAFFOLD_SECTION_MISSING',
       severity: 'warning',
       area: 'docs',
       path: relativePath,
-      message: `docs/IMPLEMENTATION_SOP.md is missing required section ${heading}.`,
+      message: `docs/HADARA_WORKFLOW.md is missing required section ${heading}.`,
       expected: heading,
       actual: 'missing'
     });
   }
-  const requiredReading = readMarkdownSection(content, '## Required Reading');
-  const requiredReadingRows = parseMarkdownRows(requiredReading);
-  if (!requiredReadingRows.some((row) => row[0] === 'Document' && row[1] === 'When to Read' && row[2] === 'Purpose')) {
+  const readAuthorityRows = parseMarkdownRows(readMarkdownSection(content, '## Read Authority Rules'));
+  if (!readAuthorityRows.some((row) => row[0] === 'Order' && row[1] === 'Authority' && row[2] === 'Allowed Reads')) {
     pushIssue(issues, {
-      code: 'SOP_REQUIRED_READING_TABLE_MISSING',
+      code: 'WORKFLOW_READ_AUTHORITY_TABLE_MISSING',
       severity: 'warning',
-      area: 'required-reading',
+      area: 'docs',
       path: relativePath,
-      message: 'docs/IMPLEMENTATION_SOP.md Required Reading section is missing the canonical table header.',
-      expected: '| Document | When to Read | Purpose |',
+      message: 'docs/HADARA_WORKFLOW.md Read Authority Rules section is missing the canonical table header.',
+      expected: '| Order | Authority | Allowed Reads |',
       actual: 'canonical header not found'
     });
   }

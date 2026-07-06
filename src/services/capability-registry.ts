@@ -273,7 +273,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'stable',
     schemaVersion: 'hadara.doctor.v1',
-    docs: ['docs/IMPLEMENTATION_SOP.md'],
+    docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Check project health', 'hadara doctor --json', 'When validating project bootstrap state.')],
     related: ['protocol.doctor', 'status'],
     conflictsWith: []
@@ -293,7 +293,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     risk: 'medium',
     actor: 'operator',
     status: 'stable',
-    docs: ['docs/IMPLEMENTATION_SOP.md'],
+    docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Initialize governed profile', 'hadara init --profile governed --json', 'When starting a new governed HADARA project.')],
     related: ['init.doctor', 'init.upgrade'],
     conflictsWith: []
@@ -314,7 +314,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'stable',
     schemaVersion: 'hadara.init.followup.v1',
-    docs: ['docs/IMPLEMENTATION_SOP.md'],
+    docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Inspect init drift', 'hadara init doctor --json', 'Before applying init follow-up remediation.')],
     related: ['init.upgrade', 'doctor'],
     conflictsWith: []
@@ -335,7 +335,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'operator',
     status: 'stable',
     schemaVersion: 'hadara.init.followup.v1',
-    docs: ['docs/IMPLEMENTATION_SOP.md'],
+    docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Preview scaffold upgrade', 'hadara init upgrade --profile governed --json', 'When scaffold files may be stale.')],
     related: ['init.doctor', 'init.register-doc'],
     conflictsWith: []
@@ -356,7 +356,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'operator',
     status: 'stable',
     schemaVersion: 'hadara.init.followup.v1',
-    docs: ['docs/IMPLEMENTATION_SOP.md'],
+    docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Preview doc registration', 'hadara init register-doc --path docs/EXAMPLE.md --when "When needed" --purpose "Example" --json', 'When adding project-specific guidance.')],
     related: ['init.upgrade', 'init.enable-integration'],
     conflictsWith: []
@@ -723,7 +723,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'stable',
     schemaVersion: 'hadara.validation.run.v1',
-    docs: ['docs/HADARA_WORKFLOW.md', 'docs/IMPLEMENTATION_SOP.md'],
+    docs: ['docs/HADARA_WORKFLOW.md'],
     implementationFiles: ['src/cli/validation.ts', 'src/services/validation-run.ts'],
     testFiles: ['tests/unit/validation-run.test.ts'],
     examples: [
@@ -752,7 +752,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'stable',
     schemaVersion: 'hadara.evidence.collect.v1',
-    docs: ['docs/IMPLEMENTATION_SOP.md'],
+    docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Append generic evidence', 'hadara evidence collect --task T-0001 --summary "Checked" --result passed --json', 'When attaching non-command evidence.')],
     related: ['evidence.add-command', 'evidence.list', 'evidence.lint'],
     conflictsWith: []
@@ -773,7 +773,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'stable',
     schemaVersion: 'hadara.evidence.collect.v1',
-    docs: ['docs/IMPLEMENTATION_SOP.md'],
+    docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [
       example('Record already-run command evidence', 'hadara evidence add-command --task T-0001 --summary "npm test passed" --result passed --category validation --json', 'When recording a real result that was already executed outside validation run.')
     ],
@@ -797,7 +797,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'stable',
     schemaVersion: 'hadara.evidence.list.v1',
-    docs: ['docs/IMPLEMENTATION_SOP.md'],
+    docs: ['docs/HADARA_WORKFLOW.md'],
     implementationFiles: ['src/cli/evidence.ts', 'src/services/evidence-list.ts'],
     testFiles: ['tests/unit/evidence-list.test.ts', 'tests/unit/evidence-json.test.ts'],
     examples: [example('List evidence ids', 'hadara evidence list --task T-0001', 'Before copying a durable ev: id into --resolves or --supersedes.')],
@@ -820,7 +820,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'stable',
     schemaVersion: 'hadara.evidence.summary.v1',
-    docs: ['docs/IMPLEMENTATION_SOP.md', 'docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md'],
+    docs: ['docs/HADARA_WORKFLOW.md', 'docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md'],
     implementationFiles: ['src/cli/evidence.ts', 'src/services/evidence-summary.ts'],
     testFiles: ['tests/unit/evidence-summary.test.ts', 'tests/unit/evidence-json.test.ts'],
     examples: [example('Copy latest close evidence id', 'hadara evidence summary --task T-0001 --json', 'After finalize or close evidence append.')],
@@ -866,7 +866,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'stable',
     schemaVersion: 'hadara.evidence.lint.v1',
-    docs: ['docs/IMPLEMENTATION_SOP.md'],
+    docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Lint evidence', 'hadara evidence lint --task T-0001 --json', 'When readiness reports evidence blockers.')],
     related: ['task.ready', 'harness.validate'],
     conflictsWith: []
@@ -948,7 +948,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     risk: 'low',
     actor: 'agent-worker',
     status: 'stable',
-    docs: ['docs/IMPLEMENTATION_SOP.md'],
+    docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Run strict CI gate', 'hadara ci gate --mode strict --task T-0001 --json', 'In automated validation paths.')],
     related: ['task.ready', 'proof.status', 'state.verify'],
     conflictsWith: []
@@ -1057,7 +1057,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Read a symbol neighborhood', 'hadara context slice --path src/cli/context.ts --symbol handleContextCommand --json', 'When a worker needs bounded source around one exported symbol.'),
       example('Read keyword windows', 'hadara context slice --path docs/TASK_BOARD.md --keyword T-0001 --window 20 --json', 'When a worker needs bounded context around known text.'),
       example('Read a managed section', 'hadara context slice --path docs/TASK_BOARD.md --managed-section task-board --json', 'When a worker needs marker-bounded managed content.'),
-      example('Read a context-pack candidate', 'hadara context slice --task T-0001 --candidate slice-candidate:1:doc:docs/IMPLEMENTATION_SOP.md --json', 'When a worker wants exact text for a C3 slice candidate.')
+      example('Read a context-pack candidate', 'hadara context slice --task T-0001 --candidate slice-candidate:1:doc:docs/HADARA_WORKFLOW.md --json', 'When a worker wants exact text for a C3 slice candidate.')
     ],
     related: ['context.pack', 'context.graph', 'docs.managed.list'],
     conflictsWith: [],
@@ -1206,7 +1206,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'stable',
     schemaVersion: 'hadara.protocol.consistency.v1',
-    docs: ['docs/IMPLEMENTATION_SOP.md'],
+    docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Run protocol doctor', 'hadara protocol doctor --scope all --json', 'When project protocol files may be inconsistent.')],
     related: ['protocol.remediate', 'doctor', 'state.verify'],
     conflictsWith: []
@@ -1227,7 +1227,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'stable',
     schemaVersion: 'hadara.protocol.remediation.v1',
-    docs: ['docs/IMPLEMENTATION_SOP.md'],
+    docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Preview remediation', 'hadara protocol remediate --fix evidence-jsonl --task T-0001 --json', 'When protocol doctor reports a supported fix.')],
     related: ['protocol.doctor', 'task.upgrade-scaffold'],
     conflictsWith: []
@@ -1249,7 +1249,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     schemaVersion: 'hadara.protocol.migration.v1',
     since: '0.3.0-rc.1',
-    docs: ['docs/specs/0.3.0/rc1/00_Protocol_Migration_for_0_3_Adoption.md', 'docs/IMPLEMENTATION_SOP.md'],
+    docs: ['docs/specs/0.3.0/rc1/00_Protocol_Migration_for_0_3_Adoption.md', 'docs/HADARA_WORKFLOW.md'],
     examples: [
       example('Preview project migration', 'hadara protocol migrate --target 0.3.0 --json', 'When upgrading a pre-0.3 initialized HADARA project.'),
       example('Preview task migration', 'hadara protocol migrate --target 0.3.0 --task T-0001 --json', 'When migrating one selected older Task Capsule.')
@@ -1740,7 +1740,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'stable',
     schemaVersion: 'hadara.dev.docker_check.v1',
-    docs: ['docs/IMPLEMENTATION_SOP.md'],
+    docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Run focused Docker check', 'hadara dev docker-check --focused tests/unit/help.test.ts --json', 'When host Node/npm is not the preferred validation path.')],
     related: ['harness.validate'],
     conflictsWith: []

@@ -66,8 +66,8 @@ describe('CLI Hermes JSON reports', () => {
     createHermesExportContextReport(root);
 
     const output = fs.readFileSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'), 'utf8');
-    expect(output).toContain('Follow docs/IMPLEMENTATION_SOP.md for implementation, validation, and session-end procedure.');
-    expect(output).toContain('## docs/IMPLEMENTATION_SOP.md');
+    expect(output).toContain('Follow docs/HADARA_WORKFLOW.md for implementation, validation, and session-end procedure.');
+    expect(output).toContain('## docs/HADARA_WORKFLOW.md');
     expect(output).toContain('## docs/ROADMAP.md');
     expect(output).toContain('## docs/DEVELOPMENT_SLICES.md');
     expect(output).toContain('hadara.project.state.read');
@@ -104,7 +104,7 @@ describe('CLI Hermes JSON reports', () => {
     });
     expect(report.content).toContain('# HADARA_CONTEXT');
     expect(report.content).toContain('## docs/PROJECT_STATE.md');
-    expect(report.content).toContain('## docs/IMPLEMENTATION_SOP.md');
+    expect(report.content).toContain('## docs/HADARA_WORKFLOW.md');
     expect(fs.existsSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'))).toBe(false);
   });
 

@@ -255,7 +255,7 @@ export function createDocsMarkReport(projectRoot: string, options: DocsMarkOptio
     impact: {
       registryPatchPlanned: Boolean(entry && afterStatus && beforeStatus !== afterStatus),
       defaultRequiredReading: entry?.requiredReading && afterStatus && EXCLUDED_REQUIRED_READING_STATUSES.has(afterStatus) ? 'remove-after-execute' : 'unchanged',
-      managedRequiredReadingPatchAvailable: fs.existsSync(path.join(projectRoot, 'docs/IMPLEMENTATION_SOP.md')) && fs.readFileSync(path.join(projectRoot, 'docs/IMPLEMENTATION_SOP.md'), 'utf8').includes('hadara:managed:start required-reading'),
+      managedRequiredReadingPatchAvailable: fs.existsSync(path.join(projectRoot, 'AGENTS.md')) && fs.readFileSync(path.join(projectRoot, 'AGENTS.md'), 'utf8').includes('hadara:managed:start required-reading'),
       archiveCandidate: afterStatus ? ARCHIVE_STATUSES.has(afterStatus) : false
     },
     issues

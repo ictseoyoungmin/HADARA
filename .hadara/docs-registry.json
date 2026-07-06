@@ -209,10 +209,10 @@
       "supersedes": []
     },
     {
-      "path": "docs/IMPLEMENTATION_SOP.md",
-      "title": "IMPLEMENTATION_SOP",
+      "path": "docs/HADARA_WORKFLOW.md",
+      "title": "HADARA_WORKFLOW",
       "owner": "hadara-docs",
-      "kind": "protocol",
+      "kind": "workflow-guide",
       "status": "canonical",
       "scope": "project",
       "profiles": [
@@ -1294,7 +1294,7 @@
       "title": "TASK_WORKFLOW_COMMANDS",
       "owner": "hadara-docs",
       "kind": "workflow-guide",
-      "status": "canonical",
+      "status": "active",
       "scope": "project",
       "profiles": [
         "basic",

@@ -498,3 +498,4 @@
 | T-0495 | docs complete-spec lifecycle command | Done | tasks/T-0495-docs-complete-spec-lifecycle-command | Implements guarded `docs complete-spec`, activates `hadara.docs.completeSpec.v1`, and records stable 0.4.0 feedback debt. |
 | T-0496 | remove handoff update command | Done | tasks/T-0496-remove-handoff-update-command | Removed broken shared handoff write command; `handoff suggest` remains read-only. |
 | T-0497 | 0.4.1 rc0 vocabulary diagnostics and registry correction | Done | tasks/T-0497-0-4-1-rc0-vocabulary-diagnostics-and-registry-correction | Implements shared controlled vocabulary, `hadara schema`, structured TASK.md/docs token diagnostics, guarded `docs mark --correction`, and rc0/state-first docs registration. |
+| T-0498 | workflow docs consolidate implementation sop removal | Done | tasks/T-0498-workflow-docs-consolidate-implementation-sop-removal | Workflow guidance consolidated on `docs/HADARA_WORKFLOW.md`; root SOP removed. |

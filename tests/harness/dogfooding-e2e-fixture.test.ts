@@ -251,7 +251,7 @@ function tempProject(): string {
     'utf8'
   );
   fs.writeFileSync(path.join(dir, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n', 'utf8');
-  fs.writeFileSync(path.join(dir, 'docs', 'IMPLEMENTATION_SOP.md'), '# IMPLEMENTATION_SOP\n\nAttach evidence before marking work complete.\n', 'utf8');
+  fs.writeFileSync(path.join(dir, 'docs', 'HADARA_WORKFLOW.md'), '# HADARA_WORKFLOW\n\nAttach evidence before marking work complete.\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'ROADMAP.md'), '# ROADMAP\n\n## Current Freeze: v0.3 Operations Layer\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n\n| Order | Slice |\n|---|---|\n', 'utf8');
   fs.writeFileSync(path.join(dir, 'docs', 'CLI_JSON_CONTRACT.md'), '# CLI_JSON_CONTRACT\n', 'utf8');
@@ -303,7 +303,7 @@ Replay a miniature HADARA-on-HADARA workflow.
 
 | Path | Role | Authority | Status | Source Hash | Notes |
 |---|---|---|---|---|---|
-| docs/IMPLEMENTATION_SOP.md | reference | reference-only | implemented | sha256:3384b856ee90a7d92de62555f6c494699187d7bc7cbc816b7362c147cc5362ac | Evidence and handoff workflow. |
+| docs/HADARA_WORKFLOW.md | reference | reference-only | implemented | sha256:8954439e63eb4908133fc59794e66816cc8fa77fc7a1f75852dde1a424e7e63f | Evidence and handoff workflow. |
 
 ## Goal
 
