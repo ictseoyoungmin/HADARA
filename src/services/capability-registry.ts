@@ -216,6 +216,27 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     conflictsWith: []
   }),
   commandEntry({
+    id: 'schema',
+    command: 'hadara schema [--domain <domain>] [--json]',
+    summary: 'Look up controlled token vocabularies (TASK.md tables, evidence records, docs registry) before writing values.',
+    canonical: true,
+    appearsInDefaultHelp: true,
+    family: 'start',
+    scope: 'project',
+    lifecycleStage: 'discover',
+    requiredness: 'diagnostic',
+    writeBoundary: 'read-only',
+    readOnly: true,
+    risk: 'low',
+    actor: 'agent-worker',
+    status: 'experimental',
+    schemaVersion: 'hadara.schema.vocabulary.v1',
+    docs: ['docs/SCHEMAS.md', 'docs/TASK_WORKFLOW_COMMANDS.md'],
+    examples: [example('Look up risk state tokens', 'hadara schema --domain task.risk.state --json', 'Before writing TASK.md Risks / Follow-ups State values.')],
+    related: ['commands', 'harness.validate', 'docs.register'],
+    conflictsWith: []
+  }),
+  commandEntry({
     id: 'version',
     command: 'hadara version [--verbose] [--json]',
     summary: 'Report CLI version and optional runtime/build freshness metadata.',
@@ -1470,8 +1491,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   }),
   commandEntry({
     id: 'docs.mark',
-    command: 'hadara docs mark --path <path> --status <status> [--by <path>] --reason <text> [--execute --before-hash <hash>] [--json]',
-    summary: 'Preview or apply registry-only document cleanup status transitions.',
+    command: 'hadara docs mark --path <path> --status <status> [--correction] [--by <path>] --reason <text> [--execute --before-hash <hash>] [--json]',
+    summary: 'Preview or apply registry-only document cleanup status transitions; --correction allows guarded ordinary metadata corrections such as canonical -> reference.',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'docs-governance',

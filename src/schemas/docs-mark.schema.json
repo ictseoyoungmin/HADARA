@@ -5,18 +5,42 @@
   "title": "HADARA Docs Mark Report",
   "type": "object",
   "additionalProperties": true,
-  "required": ["schemaVersion", "command", "mode", "ok", "path", "beforeStatus", "afterStatus", "reason", "registryPath", "beforeHash", "impact", "issues"],
+  "required": ["schemaVersion", "command", "mode", "ok", "path", "correction", "beforeStatus", "afterStatus", "fieldDiff", "reason", "registryPath", "beforeHash", "impact", "issues"],
   "properties": {
     "schemaVersion": { "const": "hadara.docs.mark.v1" },
     "command": { "const": "docs.mark" },
     "mode": { "type": "string", "enum": ["dry-run", "execute"] },
     "ok": { "type": "boolean" },
     "path": { "type": "string", "minLength": 1 },
+    "correction": { "type": "boolean" },
     "beforeStatus": {
       "oneOf": [
         { "type": "string", "enum": ["canonical", "active", "reference", "historical", "superseded", "archived"] },
         { "type": "null" }
       ]
+    },
+    "fieldDiff": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field", "before", "after"],
+        "properties": {
+          "field": { "type": "string", "enum": ["status", "supersededBy"] },
+          "before": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "null" }
+            ]
+          },
+          "after": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "null" }
+            ]
+          }
+        }
+      }
     },
     "afterStatus": {
       "oneOf": [

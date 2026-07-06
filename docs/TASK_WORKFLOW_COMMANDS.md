@@ -174,6 +174,7 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 | Command | Role | Default Mode | Writes? | `ok` Meaning | Failure Exit |
 |---|---|---|---|---|---|
 | `hadara task status --json` | Select next work when no Task Capsule is selected. | Read-only report. | No. | Selection report was generated; not that a capsule exists. | Task-style failures use 6. |
+| `hadara schema [--domain <domain>] --json` | Look up controlled token vocabularies (TASK.md tables, evidence records, docs registry) before writing values, instead of learning tokens from finalize failures. | Read-only report. | No. | Vocabulary report was generated; unknown domains return `ok:false`. | Unknown domains use 1. |
 | `hadara task next --json` | Compatibility next-work recommendation. Planned removal candidate; prefer `task status --json`. | Read-only report. | No. | Recommendation report was generated. | Task-style failures use 6. |
 | `hadara task create --from release-read-model --title "..." --json` | Create a Draft Task Capsule from a known template. | Write command. | Yes, Task Capsule files and one Task Board row. | Capsule was created. | Task-style failures use 6. |
 | `hadara task status --task T-XXXX --json` | Fast phase-aware operator cockpit for one task. | Read-only report. | No. | Report was generated for an existing task, not that the task is ready. | Task-style failures use 6. |

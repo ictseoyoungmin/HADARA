@@ -116,7 +116,8 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
       by: getStringOption(input.args, '--by'),
       mode: getFlag(input.args, '--execute') ? 'execute' : 'dry-run',
       beforeHash: getStringOption(input.args, '--before-hash'),
-      forceCanonical: getFlag(input.args, '--force-canonical')
+      forceCanonical: getFlag(input.args, '--force-canonical'),
+      correction: getFlag(input.args, '--correction')
     });
     printReport(report, input.jsonOutput);
     return true;

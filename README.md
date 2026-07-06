@@ -135,6 +135,20 @@ hadara help command task.close
 
 ## Lifecycle Details
 
+The canonical agent loop, in the same `T-XXXX` form documented in `docs/TASK_WORKFLOW_COMMANDS.md` and `docs/IMPLEMENTATION_SOP.md`:
+
+```bash
+hadara task status --json
+hadara task status --task T-XXXX --json
+
+hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
+
+# Finalize Task Capsule docs and tracked state docs before closing.
+
+hadara task finalize --task T-XXXX --json
+hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
+```
+
 When `evidence add-command` uses both legacy `--result` and v2 `--outcome`, matching outcomes must agree with the legacy result. `recorded` and `not-applicable` outcomes keep legacy result `unknown`; incompatible combinations fail before evidence is appended.
 
 Use `hadara evidence list --task T-XXXX` to discover evidence ids before writing exact resolution markers. Text output shows `[id] time | category/outcome | visibility | summary`; JSON output includes `id`, `idSource`, `idStability`, `persistedSchemaVersion`, `category`, `outcome`, and `tags`. For long-lived references, copy only durable persisted `ev:` ids:

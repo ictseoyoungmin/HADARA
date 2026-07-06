@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
+import * as vocab from '../services/controlled-vocabulary';
 import { createEvidenceLintReport } from '../services/evidence-lint';
 import { analyzeAcceptanceReadiness } from '../task/acceptance';
 import { findTaskCapsule, isTaskCapsuleScaffoldContent, TaskCapsule } from '../task/task-capsule';
@@ -17,6 +18,9 @@ export interface HarnessValidationIssue {
   heading?: string;
   fixHint?: string;
   example?: string;
+  field?: string;
+  received?: string;
+  allowedValues?: string[];
   remediationHint?: RemediationHint;
 }
 
@@ -50,24 +54,15 @@ const REQUIRED_TASK_FILES = [
   'HANDOFF.md'
 ];
 
-const EVIDENCE_KINDS = new Set(['test-log', 'command-log', 'diff-summary', 'screenshot', 'note']);
-const EVIDENCE_RESULTS = new Set(['passed', 'failed', 'blocked', 'unknown']);
-const EVIDENCE_VISIBILITIES = new Set(['public', 'private']);
-const TASK_STATUS_TOKENS = new Set(['draft', 'in progress', 'blocked', 'done', 'partial', 'superseded', 'archived']);
-const PLAN_STATUS_TOKENS = new Set(['Pending', 'In Progress', 'Done', 'Blocked', 'Skipped']);
-const SOURCE_DOCUMENT_ROLE_TOKENS = new Set(['implementation-source', 'reference', 'constraint', 'decision', 'background']);
-const SOURCE_DOCUMENT_AUTHORITY_TOKENS = new Set(['exploratory', 'proposed', 'approved', 'normative', 'implementation-source', 'reference-only', 'historical']);
-const SOURCE_DOCUMENT_STATUS_TOKENS = new Set(['draft', 'review', 'approved', 'implementing', 'implemented', 'superseded', 'drift-risk', 'archived']);
-const ACCEPTANCE_REQUIRED_TOKENS = new Set(['Yes', 'No']);
-const ACCEPTANCE_DECISION_TOKENS = new Set(['Must', 'Optional', 'Follow-up', 'Accepted Risk', 'Not Applicable', 'Superseded']);
-const ACCEPTANCE_STATUS_TOKENS = new Set(['Pending', 'In Progress', 'Met', 'Not Met', 'Blocked', 'Partial', 'Deferred', 'Follow-up Created', 'Accepted Risk', 'Not Applicable', 'Superseded']);
-const ACCEPTANCE_DISPOSITION_TOKENS = new Set(['Required', 'Optional', 'Deferred', 'Accepted Risk', 'Not Applicable', 'Superseded']);
+// Token vocabularies are shared with the `hadara schema` lookup surface;
+// the canonical definitions live in services/controlled-vocabulary.ts so the
+// validator and the discovery command cannot drift apart (FD-006/FD-009).
+const EVIDENCE_KINDS = new Set<string>(vocab.EVIDENCE_KIND_TOKENS);
+const EVIDENCE_RESULTS = new Set<string>(vocab.EVIDENCE_RESULT_TOKENS);
+const EVIDENCE_VISIBILITIES = new Set<string>(vocab.EVIDENCE_VISIBILITY_TOKENS);
+const TASK_STATUS_TOKENS = new Set<string>(vocab.TASK_STATUS_TOKENS.map((token) => token.toLowerCase()));
 const ACCEPTANCE_DISPOSITIONS_REQUIRING_REFERENCE = new Set(['Deferred', 'Accepted Risk', 'Not Applicable', 'Superseded']);
 const ACCEPTANCE_DECISIONS_REQUIRING_REFERENCE = new Set(['Follow-up', 'Accepted Risk', 'Not Applicable', 'Superseded']);
-const VALIDATION_REQUIRED_TOKENS = new Set(['Yes', 'No']);
-const VALIDATION_RESULT_TOKENS = new Set(['Not Run', 'Passed', 'Failed', 'Blocked', 'Skipped', 'Not Applicable']);
-const RISK_KIND_TOKENS = new Set(['Risk', 'Follow-up', 'Question']);
-const RISK_STATE_TOKENS = new Set(['Open', 'Accepted', 'Mitigated', 'Deferred', 'Closed', 'Superseded', 'Rejected']);
 const STALE_PENDING_CLOSE_PATTERN = /\b(?:done\s+pending\s+lifecycle\s+close|pending\s+lifecycle\s+close)\b/i;
 const DONE_SEMANTIC_EVIDENCE_CODES = new Set([
   'TASK_DONE_WITHOUT_SUBSTANTIVE_EVIDENCE',
@@ -185,7 +180,11 @@ function validateTaskIdentityTable(content: string, relativePath: string, issues
   }
   const status = statusRows[0]?.[1]?.trim();
   if (status && !isTaskStatusToken(status)) {
-    issues.push(taskTableIssue('TASK_STATUS_INVALID_TOKEN', `TASK.md Status uses invalid token "${status}".`, relativePath, '## Identity'));
+    const issue = taskTableIssue('TASK_STATUS_INVALID_TOKEN', `TASK.md Status uses invalid token "${status}". Allowed: ${vocab.TASK_STATUS_TOKENS.join(', ')}.`, relativePath, '## Identity');
+    issue.field = 'Status';
+    issue.received = status;
+    issue.allowedValues = [...vocab.TASK_STATUS_TOKENS];
+    issues.push(issue);
   }
   if (rows.some((row) => normalizeFieldName(row[0] ?? '') === 'layout')) {
     issues.push(taskTableIssue('TASK_TABLE_SCHEMA_INVALID', 'TASK.md Identity must not include a Layout field in 0.4 capsules.', relativePath, '## Identity'));
@@ -213,9 +212,9 @@ function validateTaskSourceDocumentsTable(projectRoot: string, content: string, 
     const pathCell = tableCellAny(row, table.header, ['Source', 'Path / Source', 'Path']);
     const sourcePath = normalizeSourceDocumentPathCell(pathCell);
     if (!sourcePath || /^TBD$/i.test(sourcePath)) continue;
-    checkToken(tableCellAny(row, table.header, ['Type', 'Role']), SOURCE_DOCUMENT_ROLE_TOKENS, 'TASK_SOURCE_DOCUMENT_ROLE_INVALID_TOKEN', relativePath, heading, issues);
-    if (hasAuthorityColumn) checkToken(tableCell(row, table.header, 'Authority'), SOURCE_DOCUMENT_AUTHORITY_TOKENS, 'TASK_SOURCE_DOCUMENT_AUTHORITY_INVALID_TOKEN', relativePath, heading, issues);
-    checkToken(tableCellAny(row, table.header, ['State', 'Status']), SOURCE_DOCUMENT_STATUS_TOKENS, 'TASK_SOURCE_DOCUMENT_STATUS_INVALID_TOKEN', relativePath, heading, issues);
+    checkToken(tableCellAny(row, table.header, ['Type', 'Role']), 'task.source.role', 'TASK_SOURCE_DOCUMENT_ROLE_INVALID_TOKEN', relativePath, heading, issues);
+    if (hasAuthorityColumn) checkToken(tableCell(row, table.header, 'Authority'), 'task.source.authority', 'TASK_SOURCE_DOCUMENT_AUTHORITY_INVALID_TOKEN', relativePath, heading, issues);
+    checkToken(tableCellAny(row, table.header, ['State', 'Status']), 'task.source.state', 'TASK_SOURCE_DOCUMENT_STATUS_INVALID_TOKEN', relativePath, heading, issues);
     if (!hasHashColumn) continue;
     const hash = tableCellAny(row, table.header, ['Hash', 'Source Hash']);
     if (!isSourceHashCell(hash)) {
@@ -276,7 +275,7 @@ function validateTaskPlanTable(content: string, relativePath: string, issues: Ha
   if (!requireAnyTableHeader(table.rows, [['Step', 'Action', 'Status'], ['Step', 'Action', 'Status', 'Evidence']], relativePath, heading, issues)) return;
   for (const row of table.dataRows) {
     if (!row.some(Boolean)) continue;
-    checkToken(tableCell(row, table.header, 'Status'), PLAN_STATUS_TOKENS, 'TASK_PLAN_STATUS_INVALID_TOKEN', relativePath, heading, issues);
+    checkToken(tableCell(row, table.header, 'Status'), 'task.plan.status', 'TASK_PLAN_STATUS_INVALID_TOKEN', relativePath, heading, issues);
   }
 }
 
@@ -307,18 +306,18 @@ function validateTaskAcceptanceTable(content: string, relativePath: string, issu
     const decision = tableCell(row, table.header, 'Decision');
     if (hasStateColumn) {
       if (hasDecisionColumn && decision) {
-        checkToken(decision, ACCEPTANCE_DECISION_TOKENS, 'ACCEPTANCE_DECISION_INVALID_TOKEN', relativePath, heading, issues);
+        checkToken(decision, 'task.acceptance.decision', 'ACCEPTANCE_DECISION_INVALID_TOKEN', relativePath, heading, issues);
         if (ACCEPTANCE_DECISIONS_REQUIRING_REFERENCE.has(decision) && isMissingReference(tableCell(row, table.header, 'Reference'))) {
           issues.push(taskTableIssue('ACCEPTANCE_DECISION_REFERENCE_MISSING', `${id} decision "${decision}" requires a concrete reference.`, relativePath, heading));
         }
       }
-      checkToken(tableCell(row, table.header, 'State'), ACCEPTANCE_STATUS_TOKENS, 'ACCEPTANCE_STATUS_INVALID_TOKEN', relativePath, heading, issues);
+      checkToken(tableCell(row, table.header, 'State'), 'task.acceptance.state', 'ACCEPTANCE_STATUS_INVALID_TOKEN', relativePath, heading, issues);
       continue;
     }
-    checkToken(tableCell(row, table.header, 'Required'), ACCEPTANCE_REQUIRED_TOKENS, 'ACCEPTANCE_REQUIRED_INVALID_TOKEN', relativePath, heading, issues);
-    checkToken(tableCell(row, table.header, 'Status'), ACCEPTANCE_STATUS_TOKENS, 'ACCEPTANCE_STATUS_INVALID_TOKEN', relativePath, heading, issues);
+    checkToken(tableCell(row, table.header, 'Required'), 'task.acceptance.required', 'ACCEPTANCE_REQUIRED_INVALID_TOKEN', relativePath, heading, issues);
+    checkToken(tableCell(row, table.header, 'Status'), 'task.acceptance.state', 'ACCEPTANCE_STATUS_INVALID_TOKEN', relativePath, heading, issues);
     const disposition = tableCell(row, table.header, 'Disposition');
-    checkToken(disposition, ACCEPTANCE_DISPOSITION_TOKENS, 'ACCEPTANCE_DISPOSITION_INVALID_TOKEN', relativePath, heading, issues);
+    checkToken(disposition, 'task.acceptance.disposition', 'ACCEPTANCE_DISPOSITION_INVALID_TOKEN', relativePath, heading, issues);
     if (ACCEPTANCE_DISPOSITIONS_REQUIRING_REFERENCE.has(disposition) && isMissingReference(tableCell(row, table.header, 'Reference'))) {
       issues.push(taskTableIssue('ACCEPTANCE_DISPOSITION_REFERENCE_MISSING', `${id} disposition "${disposition}" requires a concrete reference.`, relativePath, heading));
     }
@@ -342,8 +341,8 @@ function validateTaskValidationTable(content: string, relativePath: string, issu
   ) return;
   for (const row of table.dataRows) {
     if (!row.some(Boolean)) continue;
-    checkToken(tableCellAny(row, table.header, ['Gate', 'Required']), VALIDATION_REQUIRED_TOKENS, 'VALIDATION_REQUIRED_INVALID_TOKEN', relativePath, heading, issues);
-    checkToken(tableCellAny(row, table.header, ['Result', 'Latest Result']), VALIDATION_RESULT_TOKENS, 'VALIDATION_RESULT_INVALID_TOKEN', relativePath, heading, issues);
+    checkToken(tableCellAny(row, table.header, ['Gate', 'Required']), 'task.validation.gate', 'VALIDATION_REQUIRED_INVALID_TOKEN', relativePath, heading, issues);
+    checkToken(tableCellAny(row, table.header, ['Result', 'Latest Result']), 'task.validation.result', 'VALIDATION_RESULT_INVALID_TOKEN', relativePath, heading, issues);
   }
 }
 
@@ -431,8 +430,8 @@ function validateTaskRisksTable(content: string, relativePath: string, issues: H
   ) return;
   for (const row of table.dataRows) {
     if (!row.some(Boolean)) continue;
-    checkToken(tableCellAny(row, table.header, ['Type', 'Kind']), RISK_KIND_TOKENS, 'TASK_RISK_KIND_INVALID_TOKEN', relativePath, heading, issues);
-    checkToken(tableCell(row, table.header, 'State'), RISK_STATE_TOKENS, 'TASK_RISK_STATE_INVALID_TOKEN', relativePath, heading, issues);
+    checkToken(tableCellAny(row, table.header, ['Type', 'Kind']), 'task.risk.kind', 'TASK_RISK_KIND_INVALID_TOKEN', relativePath, heading, issues);
+    checkToken(tableCell(row, table.header, 'State'), 'task.risk.state', 'TASK_RISK_STATE_INVALID_TOKEN', relativePath, heading, issues);
   }
 }
 
@@ -564,14 +563,20 @@ function tableCellAny(row: string[], header: string[], names: string[]): string 
 
 function checkToken(
   value: string,
-  allowed: Set<string>,
+  domainId: string,
   code: string,
   relativePath: string,
   heading: string,
   issues: HarnessValidationIssue[]
 ): void {
-  if (allowed.has(value)) return;
-  issues.push(taskTableIssue(code, `${heading} uses invalid token "${value}". Allowed: ${Array.from(allowed).join(', ')}.`, relativePath, heading));
+  const domain = vocab.findVocabularyDomain(domainId);
+  const allowed = domain?.allowed ?? [];
+  if (allowed.includes(value)) return;
+  const issue = taskTableIssue(code, `${heading} uses invalid token "${value}". Allowed: ${allowed.join(', ')}.`, relativePath, heading);
+  if (domain) issue.field = domain.field;
+  issue.received = value;
+  issue.allowedValues = [...allowed];
+  issues.push(issue);
 }
 
 function taskTableIssue(code: string, message: string, relativePath: string, heading: string, example?: string): HarnessValidationIssue {

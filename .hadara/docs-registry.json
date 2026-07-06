@@ -1176,6 +1176,96 @@
       "generatedBy": "T-0427"
     },
     {
+      "path": "docs/specs/0.4.0/state-first/proposal.md",
+      "title": "0.4.0 state-first proposal",
+      "owner": "hadara-docs",
+      "kind": "spec",
+      "status": "historical",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "only-when-linked"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "agent-editable-with-review",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": false,
+        "reason": "docs/specs/0.4.0/state-first/proposal.md is marked as low drift risk."
+      }
+    },
+    {
+      "path": "docs/specs/0.4.1/rc0-scope.md",
+      "title": "0.4.1 rc0 scope",
+      "owner": "hadara-docs",
+      "kind": "spec",
+      "status": "active",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "task-start"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "readTier": "active-spec",
+      "authority": "approved",
+      "editPolicy": "agent-editable-with-review",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": false,
+        "reason": "docs/specs/0.4.1/rc0-scope.md is marked as low drift risk."
+      }
+    },
+    {
+      "path": "docs/specs/0.5/state-first/RFC.md",
+      "title": "0.5 state-first candidate RFC",
+      "owner": "hadara-docs",
+      "kind": "spec",
+      "status": "reference",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "task-start"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "readTier": "conditional-reference",
+      "authority": "proposed",
+      "editPolicy": "agent-editable-with-review",
+      "drift": {
+        "risk": "medium",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Candidate RFC; adoption is gated by 0.4.1 rc0 slice-state evidence."
+      }
+    },
+    {
       "path": "docs/TASK_BOARD.md",
       "title": "TASK_BOARD",
       "owner": "hadara-docs",
@@ -1247,5 +1337,5 @@
       "generatedBy": "hadara init"
     }
   ],
-  "generatedAt": "2026-07-03T14:06:58.922Z"
+  "generatedAt": "2026-07-06T05:35:31.340Z"
 }

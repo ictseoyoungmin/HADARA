@@ -49,6 +49,12 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
       break;
     }
 
+    case 'schema': {
+      const { handleSchemaCommand } = await import('./schema');
+      if (handleSchemaCommand({ args, jsonOutput })) return;
+      break;
+    }
+
     case 'version': {
       const { handleVersionCommand } = await import('./version');
       if (handleVersionCommand({ args, projectRoot: paths.projectRoot, jsonOutput, cliEntry: process.argv[1] })) return;

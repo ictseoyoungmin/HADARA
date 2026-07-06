@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.schema.vocabulary.v1",
+  "x-hadara-schema-id": "hadara.schema.vocabulary.v1",
+  "title": "HADARA Controlled Vocabulary Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "filter", "domains", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.schema.vocabulary.v1" },
+    "command": { "const": "schema" },
+    "ok": { "type": "boolean" },
+    "filter": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "type": "null" }
+      ]
+    },
+    "domains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["domain", "field", "surface", "issueCode", "allowed"],
+        "properties": {
+          "domain": { "type": "string", "minLength": 1 },
+          "field": { "type": "string", "minLength": 1 },
+          "surface": { "type": "string", "minLength": 1 },
+          "issueCode": {
+            "oneOf": [
+              { "type": "string", "minLength": 1 },
+              { "type": "null" }
+            ]
+          },
+          "allowed": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "minItems": 1
+          }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "enum": ["error", "warning"] },
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "field": { "type": "string" },
+          "received": { "type": "string" },
+          "allowedValues": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

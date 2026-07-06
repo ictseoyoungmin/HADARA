@@ -93,6 +93,8 @@ Use semantic tiers to keep session startup compact and deterministic:
 | `docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md` | Planning or implementing 0.3.4 Agent UX Hardening work | Scope boundaries, observed HADARA-dev friction, and capsule budget for handoff stale checks, release closeout plans, evidence id UX, finalize drift guidance, package recycle scripting, session-start guidance, context-pack actionability, and init docs cleanup |
 | `docs/specs/0.4.0/productization-redesign/README.md` | Starting or reviewing any 0.4 productization redesign implementation capsule | Canonical 0.4 spec package entry point, core decisions, and breaking-line boundaries |
 | `docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md` | Selecting, handing off, or reclassifying 0.4 productization implementation capsules | Accepted T-04A1 through T-04A24 sequence, implementation budget, and release-line deferral boundary |
+| `docs/specs/0.5/state-first/RFC.md` | Reviewing or extending the 0.5 state-first architecture direction (state store, projection tiers, close-safety domains) | State-first architecture RFC; adoption gated by the 0.4.1 slices prototype |
+| `docs/specs/0.4.1/rc0-scope.md` | Selecting, implementing, or reviewing any 0.4.1-rc.0 scope item (FD-006/008/009/010/011/012/013) | Capsule-level contracts (AC and evidence plans) for the six agreed 0.4.1-rc.0 items |
 
 ## Project-Specific Documents
 

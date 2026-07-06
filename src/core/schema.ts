@@ -25,6 +25,7 @@ import docsExplainSchemaJson from '../schemas/docs-explain.schema.json';
 import docsInboxSchemaJson from '../schemas/docs-inbox.schema.json';
 import docsListSchemaJson from '../schemas/docs-list.schema.json';
 import docsMarkSchemaJson from '../schemas/docs-mark.schema.json';
+import schemaVocabularySchemaJson from '../schemas/schema-vocabulary.schema.json';
 import docsPatchPlanSchemaJson from '../schemas/docs-patch-plan.schema.json';
 import docsReadMapSchemaJson from '../schemas/docs-read-map.schema.json';
 import docsRegisterSchemaJson from '../schemas/docs-register.schema.json';
@@ -143,6 +144,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.docs.inbox.v1': docsInboxSchemaJson as JsonObject,
   'hadara.docs.list.v1': docsListSchemaJson as JsonObject,
   'hadara.docs.mark.v1': docsMarkSchemaJson as JsonObject,
+  'hadara.schema.vocabulary.v1': schemaVocabularySchemaJson as JsonObject,
   'hadara.docs.patchPlan.v1': docsPatchPlanSchemaJson as JsonObject,
   'hadara.docs.readMap.v1': docsReadMapSchemaJson as JsonObject,
   'hadara.docs.register.v1': docsRegisterSchemaJson as JsonObject,

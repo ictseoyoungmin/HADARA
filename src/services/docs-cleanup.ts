@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { atomicWriteTextFile } from '../core/fs';
 import {
+  DOCS_REGISTER_ALLOWED_VALUES,
   DOCS_REGISTRY_PATH,
   DocumentRegistryEntry,
   DocumentRegistryFile,
@@ -11,14 +12,18 @@ import {
   registryJson
 } from './docs-registry';
 
+const VALID_STATUS_TOKENS = DOCS_REGISTER_ALLOWED_VALUES.status;
+
 export interface DocsMarkReport {
   schemaVersion: 'hadara.docs.mark.v1';
   command: 'docs.mark';
   mode: 'dry-run' | 'execute';
   ok: boolean;
   path: string;
+  correction: boolean;
   beforeStatus: DocumentStatus | null;
   afterStatus: DocumentStatus | null;
+  fieldDiff: DocsMarkFieldDiff[];
   supersededBy?: string;
   reason: string | null;
   registryPath: typeof DOCS_REGISTRY_PATH;
@@ -30,6 +35,12 @@ export interface DocsMarkReport {
     archiveCandidate: boolean;
   };
   issues: DocsIssue[];
+}
+
+export interface DocsMarkFieldDiff {
+  field: 'status' | 'supersededBy';
+  before: string | null;
+  after: string | null;
 }
 
 export interface DocsArchivePlanReport {
@@ -97,6 +108,7 @@ export interface DocsMarkOptions {
   mode: 'dry-run' | 'execute';
   beforeHash?: string;
   forceCanonical?: boolean;
+  correction?: boolean;
 }
 
 export interface DocsCompleteSpecOptions {
@@ -179,8 +191,31 @@ export function createDocsMarkReport(projectRoot: string, options: DocsMarkOptio
   const entry = state.registry?.documents.find((doc) => doc.path === normalizedPath) ?? null;
   const beforeStatus = entry?.status ?? null;
   if (!entry) issues.push({ severity: 'error', code: 'DOC_NOT_REGISTERED', path: normalizedPath, message: `${normalizedPath} is not registered.` });
-  if (!afterStatus) issues.push({ severity: 'error', code: 'DOC_UNKNOWN_STATUS', path: normalizedPath, message: `Unsupported target status: ${options.status}` });
+  if (!afterStatus) {
+    issues.push({
+      severity: 'error',
+      code: 'DOC_UNKNOWN_STATUS',
+      path: normalizedPath,
+      field: 'status',
+      received: options.status,
+      allowedValues: [...VALID_STATUS_TOKENS],
+      message: `Unsupported target status: ${options.status}. Allowed values: ${VALID_STATUS_TOKENS.join(', ')}.`
+    });
+  }
   if (entry && afterStatus) issues.push(...validateTransition(entry, afterStatus, options));
+  if (entry && afterStatus === 'canonical' && options.correction && state.registry) {
+    const conflicts = state.registry.documents
+      .filter((doc) => doc.path !== entry.path && doc.status === 'canonical' && doc.kind === entry.kind && doc.scope === entry.scope)
+      .map((doc) => doc.path);
+    if (conflicts.length > 0) {
+      issues.push({
+        severity: 'warning',
+        code: 'DOC_CLEANUP_CANONICAL_CONFLICT_WARNING',
+        path: normalizedPath,
+        message: `Marking ${normalizedPath} canonical conflicts with existing canonical ${entry.kind}:${entry.scope} docs: ${conflicts.join(', ')}. Run \`hadara docs doctor --json\` after execute and resolve the duplicate canonical entries.`
+      });
+    }
+  }
   if (afterStatus === 'superseded' && options.by && state.registry && !state.registry.documents.some((doc) => doc.path === normalizePath(options.by ?? ''))) {
     issues.push({ severity: 'error', code: 'DOC_SUPERSEDES_MISSING_TARGET', path: normalizedPath, message: `${normalizePath(options.by)} is not a registered replacement document.` });
   }
@@ -190,6 +225,7 @@ export function createDocsMarkReport(projectRoot: string, options: DocsMarkOptio
   if (options.mode === 'execute' && options.beforeHash && options.beforeHash !== state.beforeHash) {
     issues.push({ severity: 'error', code: 'DOC_CLEANUP_BEFORE_HASH_MISMATCH', path: DOCS_REGISTRY_PATH, message: `Registry hash ${state.beforeHash} does not match reviewed hash ${options.beforeHash}.` });
   }
+  const fieldDiff = createDocsMarkFieldDiff(entry, afterStatus, options);
   let ok = issues.every((issue) => issue.severity !== 'error');
   if (options.mode === 'execute' && ok && state.registry && entry && afterStatus) {
     entry.status = afterStatus;
@@ -208,8 +244,10 @@ export function createDocsMarkReport(projectRoot: string, options: DocsMarkOptio
     mode: options.mode,
     ok,
     path: normalizedPath,
+    correction: options.correction === true,
     beforeStatus,
     afterStatus,
+    fieldDiff,
     ...(afterStatus === 'superseded' && options.by ? { supersededBy: normalizePath(options.by) } : {}),
     reason: options.reason ?? null,
     registryPath: DOCS_REGISTRY_PATH,
@@ -222,6 +260,18 @@ export function createDocsMarkReport(projectRoot: string, options: DocsMarkOptio
     },
     issues
   };
+}
+
+function createDocsMarkFieldDiff(entry: DocumentRegistryEntry | null, afterStatus: DocumentStatus | null, options: DocsMarkOptions): DocsMarkFieldDiff[] {
+  if (!entry || !afterStatus) return [];
+  const diff: DocsMarkFieldDiff[] = [];
+  if (entry.status !== afterStatus) diff.push({ field: 'status', before: entry.status, after: afterStatus });
+  const afterSupersededBy = afterStatus === 'superseded' && options.by ? normalizePath(options.by) : null;
+  const beforeSupersededBy = entry.supersededBy ?? null;
+  if (beforeSupersededBy !== afterSupersededBy && (beforeSupersededBy !== null || afterSupersededBy !== null)) {
+    diff.push({ field: 'supersededBy', before: beforeSupersededBy, after: afterSupersededBy });
+  }
+  return diff;
 }
 
 export function createDocsArchivePlanReport(projectRoot: string, status: string | undefined): DocsArchivePlanReport {
@@ -283,18 +333,24 @@ function requiredReadingTier(doc: DocumentRegistryEntry): RequiredReadingTier {
 
 function validateTransition(entry: DocumentRegistryEntry, afterStatus: DocumentStatus, options: DocsMarkOptions): DocsIssue[] {
   const issues: DocsIssue[] = [];
-  const reasonRequired = afterStatus === 'historical' || afterStatus === 'superseded';
+  // FD-008: `--correction` opens ordinary metadata corrections (for example
+  // canonical -> reference after an over-broad registration) without forcing
+  // registry hand-edits. Guards stay: a reason is always required, superseded
+  // still needs a replacement target, and correction-to-canonical emits a
+  // conflict warning in createDocsMarkReport instead of silently stacking
+  // canonical duplicates.
+  const reasonRequired = options.correction === true || afterStatus === 'historical' || afterStatus === 'superseded';
   if (reasonRequired && !options.reason) {
-    issues.push({ severity: 'error', code: 'DOC_CLEANUP_REASON_REQUIRED', path: entry.path, message: `${afterStatus} transition requires --reason.` });
+    issues.push({ severity: 'error', code: 'DOC_CLEANUP_REASON_REQUIRED', path: entry.path, message: `${options.correction ? 'Correction' : afterStatus} transition requires --reason.` });
   }
   if (afterStatus === 'superseded' && !options.by) {
     issues.push({ severity: 'error', code: 'DOC_SUPERSEDES_MISSING_TARGET', path: entry.path, message: 'Superseded transition requires --by <path>.' });
   }
-  if (entry.status === 'canonical' && afterStatus === 'superseded' && !options.forceCanonical) {
+  if (!options.correction && entry.status === 'canonical' && afterStatus === 'superseded' && !options.forceCanonical) {
     issues.push({ severity: 'error', code: 'DOC_CLEANUP_CANONICAL_REVIEW_REQUIRED', path: entry.path, message: 'Superseding canonical docs requires --force-canonical.' });
   }
-  if (!isAllowedTransition(entry.status, afterStatus, options.forceCanonical === true)) {
-    issues.push({ severity: 'error', code: 'DOC_CLEANUP_INVALID_TRANSITION', path: entry.path, message: `Transition ${entry.status} -> ${afterStatus} is not allowed.` });
+  if (!options.correction && !isAllowedTransition(entry.status, afterStatus, options.forceCanonical === true)) {
+    issues.push({ severity: 'error', code: 'DOC_CLEANUP_INVALID_TRANSITION', path: entry.path, message: `Transition ${entry.status} -> ${afterStatus} is not allowed. Use --correction --reason <text> for ordinary registry metadata corrections.` });
   }
   return issues;
 }

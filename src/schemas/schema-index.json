@@ -205,6 +205,13 @@
       "notes": "Documents the Phase 7.5 registry-only document cleanup status transition report returned by hadara docs mark --json."
     },
     {
+      "id": "hadara.schema.vocabulary.v1",
+      "path": "src/schemas/schema-vocabulary.schema.json",
+      "status": "fixture",
+      "owner": "services/controlled-vocabulary",
+      "notes": "Documents the hadara schema controlled-vocabulary lookup report listing token domains shared with harness and docs validators."
+    },
+    {
       "id": "hadara.docs.completeSpec.v1",
       "path": "src/schemas/docs-complete-spec.schema.json",
       "status": "fixture",

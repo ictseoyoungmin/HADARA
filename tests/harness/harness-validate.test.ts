@@ -7,6 +7,7 @@ import { appendEvidence } from '../../src/evidence/evidence';
 import { validateTaskCapsule } from '../../src/harness/validate';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { parseHarnessValidationLevel } from '../../src/cli/harness';
+import { findVocabularyDomain, RISK_STATE_TOKENS, SOURCE_DOCUMENT_ROLE_TOKENS } from '../../src/services/controlled-vocabulary';
 
 const roots: string[] = [];
 
@@ -144,6 +145,40 @@ describe('Harness Task Capsule validation', () => {
         'TASK_RISK_STATE_INVALID_TOKEN'
       ])
     );
+  });
+
+  it('carries structured field/received/allowedValues on token violations matching the shared vocabulary (FD-009)', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Structured token diagnostics');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Follow-up | TBD | Resolved | TBD |')
+        .replace('| TBD | reference | draft | TBD |', '| docs/EXAMPLE.md | constrains | draft | TBD |'),
+      'utf8'
+    );
+
+    const result = validateTaskCapsule(root, task.id, { level: 'draft' });
+    expect(result.ok).toBe(false);
+
+    const riskIssue = result.issues.find((issue) => issue.code === 'TASK_RISK_STATE_INVALID_TOKEN');
+    expect(riskIssue).toBeDefined();
+    expect(riskIssue).toMatchObject({
+      field: 'State',
+      received: 'Resolved',
+      allowedValues: [...RISK_STATE_TOKENS]
+    });
+    expect(riskIssue?.allowedValues).toEqual([...(findVocabularyDomain('task.risk.state')?.allowed ?? [])]);
+
+    const roleIssue = result.issues.find((issue) => issue.code === 'TASK_SOURCE_DOCUMENT_ROLE_INVALID_TOKEN');
+    expect(roleIssue).toBeDefined();
+    expect(roleIssue).toMatchObject({
+      field: 'Role',
+      received: 'constrains',
+      allowedValues: [...SOURCE_DOCUMENT_ROLE_TOKENS]
+    });
   });
 
   it('accepts stable Change Summary areas at draft level', () => {

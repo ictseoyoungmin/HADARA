@@ -205,4 +205,100 @@ describe('Phase 7.5 docs mark', () => {
     expect(missingTarget.ok).toBe(false);
     expect(missingTarget.issues).toContainEqual(expect.objectContaining({ code: 'DOC_SUPERSEDES_MISSING_TARGET' }));
   });
+
+  it('rejects unknown target status with structured allowed values (FD-008)', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    addDoc(root, { path: 'docs/specs/typo.md' });
+
+    const report = createDocsMarkReport(root, {
+      documentPath: 'docs/specs/typo.md',
+      status: 'referense',
+      reason: 'Typo target status.',
+      mode: 'dry-run'
+    });
+
+    assertSchema('hadara.docs.mark.v1', report);
+    expect(report.ok).toBe(false);
+    const issue = report.issues.find((entry) => entry.code === 'DOC_UNKNOWN_STATUS');
+    expect(issue).toBeDefined();
+    expect(issue).toMatchObject({
+      field: 'status',
+      received: 'referense',
+      allowedValues: ['canonical', 'active', 'reference', 'historical', 'superseded', 'archived']
+    });
+  });
+
+  it('allows canonical -> reference with --correction and a reason, through dry-run and execute (FD-008)', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    addDoc(root, { path: 'docs/specs/over-registered.md', status: 'canonical' });
+
+    const blocked = createDocsMarkReport(root, {
+      documentPath: 'docs/specs/over-registered.md',
+      status: 'reference',
+      reason: 'Registered as canonical by mistake.',
+      mode: 'dry-run'
+    });
+    expect(blocked.ok).toBe(false);
+    expect(blocked.issues).toContainEqual(expect.objectContaining({ code: 'DOC_CLEANUP_INVALID_TRANSITION' }));
+
+    const dryRun = createDocsMarkReport(root, {
+      documentPath: 'docs/specs/over-registered.md',
+      status: 'reference',
+      reason: 'Registered as canonical by mistake.',
+      correction: true,
+      mode: 'dry-run'
+    });
+    assertSchema('hadara.docs.mark.v1', dryRun);
+    expect(dryRun.ok).toBe(true);
+    expect(dryRun).toMatchObject({ correction: true, beforeStatus: 'canonical', afterStatus: 'reference' });
+    expect(dryRun.fieldDiff).toEqual([{ field: 'status', before: 'canonical', after: 'reference' }]);
+
+    const registryBefore = fs.readFileSync(registryPath(root), 'utf8');
+    expect(fs.readFileSync(registryPath(root), 'utf8')).toBe(registryBefore);
+
+    const execute = createDocsMarkReport(root, {
+      documentPath: 'docs/specs/over-registered.md',
+      status: 'reference',
+      reason: 'Registered as canonical by mistake.',
+      correction: true,
+      mode: 'execute',
+      beforeHash: dryRun.beforeHash
+    });
+    expect(execute.ok).toBe(true);
+    expect(execute.fieldDiff).toEqual([{ field: 'status', before: 'canonical', after: 'reference' }]);
+    const updated = readRegistry(root).documents.find((doc) => doc.path === 'docs/specs/over-registered.md');
+    expect(updated?.status).toBe('reference');
+  });
+
+  it('requires a reason for corrections and warns on correction to canonical with a kind/scope conflict (FD-008)', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    addDoc(root, { path: 'docs/specs/canonical-a.md', status: 'canonical' });
+    addDoc(root, { path: 'docs/specs/wants-canonical.md', status: 'reference' });
+
+    const missingReason = createDocsMarkReport(root, {
+      documentPath: 'docs/specs/wants-canonical.md',
+      status: 'active',
+      correction: true,
+      mode: 'dry-run'
+    });
+    expect(missingReason.ok).toBe(false);
+    expect(missingReason.issues).toContainEqual(expect.objectContaining({ code: 'DOC_CLEANUP_REASON_REQUIRED' }));
+
+    const toCanonical = createDocsMarkReport(root, {
+      documentPath: 'docs/specs/wants-canonical.md',
+      status: 'canonical',
+      reason: 'Promote after review.',
+      correction: true,
+      mode: 'dry-run'
+    });
+    expect(toCanonical.ok).toBe(true);
+    const warning = toCanonical.issues.find((entry) => entry.code === 'DOC_CLEANUP_CANONICAL_CONFLICT_WARNING');
+    expect(warning).toBeDefined();
+    expect(warning?.severity).toBe('warning');
+    expect(warning?.message).toContain('docs/specs/canonical-a.md');
+    expect(warning?.message).toContain('docs doctor');
+  });
 });
