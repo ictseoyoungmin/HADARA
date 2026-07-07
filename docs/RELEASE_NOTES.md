@@ -1,5 +1,29 @@
 # RELEASE_NOTES
 
+## 0.4.1-rc.0
+
+Release candidate preparation line after stable `0.4.0`, focused on dogfood-driven command-surface cleanup, generated-document correctness, and lower-ceremony but still guarded Task Capsule closure.
+
+Highlights:
+
+- Adds schema/vocabulary lookup and better controlled-token diagnostics so agents can discover accepted TASK.md, evidence, and docs-registry values before failing finalize or docs commands.
+- Adds guarded docs-registry correction paths and the `docs complete-spec` lifecycle command for completed specs.
+- Removes broken or obsolete public command surfaces behind structured redirects or registry cleanup, including the removed low-level task lifecycle commands, obsolete next/show/collect aliases, stale handoff helpers, and old package-smoke aliases.
+- Adds `task finalize --execute --auto` as the ordinary low-ceremony close path while preserving dry-run review, close-source snapshot hashing, blocker refusal, and stale-plan mismatch protection.
+- Makes `validation run` easier to use in restricted agent environments through direct-result evidence recording after a command was already run directly.
+- Adds package-smoke command-surface drift checks so published packages cannot silently contain CLI surfaces that differ from source registry/routing behavior.
+- Adds generated-project and toy-project dogfood fixes for init docs, help routing, session-start guidance, validation wrapper behavior, and fresh Task Capsule closure.
+- Adds the first bounded state-first prototype for `DEVELOPMENT_SLICES.md`: task-local canonical state stays separate from generated Markdown projection and drift checks.
+- Accepts human-friendly TASK.md aliases where dogfood showed avoidable friction: `Acceptance State=Done` and `Inputs / Constraints State=active`.
+
+Boundaries:
+
+- T-0509 prepares source metadata, release notes, readiness docs, package/release smoke evidence, and the operator publish path for `hadara@0.4.1-rc.0`; it performs no npm publish, GitHub Release publication, Docker image push, PyPI publish, installer execution, or token loading.
+- The intended npm dist-tag is `next`; stable `latest` remains `hadara@0.4.0` until a later stable promotion decision.
+- The `0.4.1-rc.0` line does not adopt the full 0.5 state-first RFC. It keeps the bounded slices prototype and uses its evidence as input for later 0.5 adoption decisions.
+- Removed command stubs are retained for at least one minor release where specified, so automation can read `replacementCommand` instead of receiving an unknown-command failure.
+- GitHub Release draft creation is optional in the publish helper and remains operator-controlled after npm publish verification.
+
 ## 0.4.0
 
 Stable release for the breaking 0.4 productization protocol after `0.4.0-rc.0` publish verification, installed-package dogfood, and pre-stable friction cleanup.

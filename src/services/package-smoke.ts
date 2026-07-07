@@ -337,15 +337,27 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
           // source-of-truth registry, and the installed registry's
           // top-level verbs against routing case tokens parsed from the
           // installed dispatcher.
-          const surface = runner(installedBin, ['commands', '--json'], {
+          let surface = runner(installedBin, ['commands', '--json'], {
             cwd: workspaceSetup.path,
             timeoutMs,
             env: commandEnv
           });
+          let surfaceCommand = 'hadara commands --json (installed) + installed dist routing parse';
+          if (surface.status === 0 && !surface.timedOut && surface.stdout.trim() === '') {
+            const installedMain = installedMainJsPath(installPrefix);
+            if (installedMain) {
+              surface = runner(process.execPath, [installedMain, 'commands', '--json'], {
+                cwd: workspaceSetup.path,
+                timeoutMs,
+                env: commandEnv
+              });
+              surfaceCommand = 'node <installed-package>/dist/cli/main.js commands --json + installed dist routing parse';
+            }
+          }
           const surfaceStep = commandStep(
             'command-surface-drift',
             'Command surface drift vs source registry',
-            'hadara commands --json (installed) + installed dist routing parse',
+            surfaceCommand,
             surface
           );
           const drift = evaluateInstalledCommandSurface(surface, installPrefix);
@@ -1456,6 +1468,13 @@ function normalizePackageSmokeProvider(value: string | undefined): 'npm' | 'pyth
 function installedHadaraCommand(prefix: string): string {
   if (process.platform === 'win32') return path.join(prefix, 'hadara.cmd');
   return path.join(prefix, 'bin', 'hadara');
+}
+
+function installedMainJsPath(prefix: string): string | null {
+  const packageRoot = findInstalledPackageRoot(prefix);
+  if (!packageRoot) return null;
+  const mainJsPath = path.join(packageRoot, 'dist', 'cli', 'main.js');
+  return fs.existsSync(mainJsPath) ? mainJsPath : null;
 }
 
 function installPathEnv(prefix: string, projectRoot?: string): NodeJS.ProcessEnv {

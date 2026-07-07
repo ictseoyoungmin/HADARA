@@ -10,12 +10,13 @@ Current stable metadata preparation mode:
 
 - Package name decision: `hadara`.
 - Historical npm registry observation: `hadara@0.1.0-rc.0` was the first published HADARA release candidate.
-- Current version is `0.4.0`.
-- Current source version is `0.4.0`.
-- Current release target is stable `0.4.0`.
+- Current version is `0.4.1-rc.0`.
+- Current source version is `0.4.1-rc.0`.
+- Current release target is release candidate `0.4.1-rc.0`.
 - Current published stable npm release target is `0.4.0`.
 - Current stable npm publish status: T-0490 completed the approval-gated npm publish for `hadara@0.4.0`; npm registry verification returned `version=0.4.0`, `latest=0.4.0`, `next=0.4.0-rc.0`, and shasum `6268abfd73f60ca2e1dc3b32d8196e6876065948`. Previous stable `hadara@0.3.3` is published on npm through T-0406 and recycled from installed consumer paths through T-0407.
-- Current release-candidate publish status: `hadara@0.4.0-rc.0` is published on npm with dist-tag `next` through T-0477. Registry verification returned `version=0.4.0-rc.0`, `latest=0.3.3`, and `next=0.4.0-rc.0`. T-0488 then created and verified a GitHub draft prerelease for `v0.4.0-rc.0` targeting `964a8431cc08c2e89460be46560c8a8d98b451e1`.
+- Current release-candidate source status: T-0509 prepares `hadara@0.4.1-rc.0` as the next release candidate after the stable `0.4.0` dogfood cleanup line. Intended npm dist-tag is `next`; publish and optional GitHub Release draft remain approval-gated operator actions through `scripts/release/manual-publish-rc.sh`.
+- Previous release-candidate publish status: `hadara@0.4.0-rc.0` is published on npm with dist-tag `next` through T-0477. Registry verification returned `version=0.4.0-rc.0`, `latest=0.3.3`, and `next=0.4.0-rc.0`. T-0488 then created and verified a GitHub draft prerelease for `v0.4.0-rc.0` targeting `964a8431cc08c2e89460be46560c8a8d98b451e1`.
 - Current stable 0.4 decision status: T-0489 reviewed npm rc metadata, confirmed exact `hadara@0.4.0` remains unpublished, verified the RC GitHub draft prerelease, audited required pre-stable cleanup capsules, and passed strict release gate. Decision: proceed to stable `0.4.0` publish preparation, but keep the actual publish in a separate approval-gated capsule after source metadata, release docs, artifacts, and dry-runs are retargeted to stable `0.4.0`.
 - Current stable source status: T-0490 retargeted package metadata, lockfile, README, release notes, release readiness docs, helper notes, stable GitHub release note artifact, and built `dist` to stable `0.4.0` after the T-0427 through T-0452 0.4 productization implementation line, T-0453 through T-0473 agent UX cleanup, T-0474 through T-0476 final pre-release hardening, T-0477 rc publish, T-0479 installed-package dogfood, and T-0481 through T-0489 pre-stable cleanup/decision work. The clean publish clone regenerated release artifact, package smoke, and clean-checkout evidence before npm publish. T-0491 created and verified the stable GitHub Release draft `v0.4.0`; T-0493 published it publicly and verified `isDraft=false` and `isPrerelease=false`.
 - Current stable installed-package status: T-0492 completed consumer-path recycle from a fresh unmounted `node:22-bookworm` container. The container installed `hadara@0.4.0` globally, verified installed `packageVersion=0.4.0`, and ran installed `hadara package recycle --execute --package hadara@latest --expected-version 0.4.0 --json` successfully with `latest=0.4.0`, `next=0.4.0-rc.0`, isolated install/init/task/session/context/finalize smokes, and cleanup passed.

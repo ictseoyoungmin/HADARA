@@ -613,6 +613,44 @@ describe('package smoke local execution', () => {
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
   });
 
+  it('falls back to the installed node entrypoint when shell wrapper stdout capture is empty', () => {
+    const root = tempProject();
+    let fallbackUsed = false;
+    const runner: PackageSmokeCommandRunner = (command, args, options) => {
+      if (args[0] === 'pack') {
+        const workspace = String(args[args.indexOf('--pack-destination') + 1]);
+        fs.writeFileSync(path.join(workspace, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
+        return { status: 0, stdout: JSON.stringify([{ filename: 'hadara-0.0.0-bootstrap.tgz' }]), stderr: '', elapsedMs: 10 };
+      }
+      if (args[0] === 'install') {
+        installedFixtureFromArgs(args);
+        return { status: 0, stdout: 'installed', stderr: '', elapsedMs: 11 };
+      }
+      if (args[0] === 'commands') {
+        return { status: 0, stdout: '', stderr: '', elapsedMs: 5 };
+      }
+      if (command === process.execPath && args[1] === 'commands') {
+        fallbackUsed = true;
+        return { status: 0, stdout: commandsRegistryStdout(), stderr: '', elapsedMs: 5 };
+      }
+      if (args[0] === 'init') {
+        writeGeneratedWorkflowFixture(options.cwd);
+        return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 6 };
+      }
+      return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 12 };
+    };
+
+    const report = createPackageSmokeLocalReport({ paths: resolveHadaraPaths({ projectRoot: root }), runner, timeoutSeconds: 30 });
+
+    expect(fallbackUsed).toBe(true);
+    expect(report.ok).toBe(true);
+    expect(report.steps.find((step) => step.id === 'command-surface-drift')).toMatchObject({
+      status: 'passed',
+      command: 'node <installed-package>/dist/cli/main.js commands --json + installed dist routing parse'
+    });
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
   it('fails the command-surface-drift step when installed routing loses a registry verb (FD-011)', () => {
     const root = tempProject();
     const runner: PackageSmokeCommandRunner = (_command, args, options) => {

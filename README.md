@@ -6,7 +6,7 @@
 
 <p align="center">
   <img alt="Stable npm release" src="https://img.shields.io/badge/npm-0.4.0-blue">
-  <img alt="Next npm release" src="https://img.shields.io/badge/next-0.4.0--rc.0-blue">
+  <img alt="Next npm release" src="https://img.shields.io/badge/next-0.4.1--rc.0-blue">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>
@@ -93,7 +93,7 @@ hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
 |---|---|
 | Stable npm | [`hadara@0.4.0`](docs/RELEASE_NOTES.md#040) |
 | GitHub Release | [`v0.4.0`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.0) |
-| Previous RC | [`hadara@0.4.0-rc.0`](docs/RELEASE_NOTES.md#040-rc0) on `next` |
+| RC candidate | [`hadara@0.4.1-rc.0`](docs/RELEASE_NOTES.md#041-rc0) prepared for `next` |
 | Historical releases | [Release Notes](docs/RELEASE_NOTES.md) |
 | Docker image / installer | Deferred |
 | PyPI bridge | `hadara==0.2.0rc1` preview bridge |
