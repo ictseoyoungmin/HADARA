@@ -510,3 +510,4 @@
 | T-0507 | 0.4.1 rc0 validation wrapper spawn fallback closure | Done | tasks/T-0507-0-4-1-rc0-validation-wrapper-spawn-fallback-closure | Closes T-0505 F-5 with `validation run --direct-result`, fresh `/tmp` dogfood, and full Docker validation; evidence `ev:T-0507:9539808a63394c0095f185cd`, `ev:T-0507:3357d27e0c5c4b93bf30f3ea`, `ev:T-0507:c450d2efdc934318815a3389`. |
 | T-0508 | 0.4.1 rc0 task table token alias cleanup | Done | tasks/T-0508-0-4-1-rc0-task-table-token-alias-cleanup | |
 | T-0509 | 0.4.1 rc0 release readiness and publish preparation | Done | tasks/T-0509-0-4-1-rc0-release-readiness-and-publish-preparation | |
+| T-0510 | 0.4.1 rc0 manual publish helper smoke command fix | Done | tasks/T-0510-0-4-1-rc0-manual-publish-helper-smoke-command-fix | |

@@ -32,6 +32,13 @@ describe('manual publish release script', () => {
     expect(script).toContain('repository metadata is missing');
   });
 
+  it('uses the canonical smoke package command for fresh release evidence', () => {
+    const script = fs.readFileSync(scriptPath, 'utf8');
+
+    expect(script).toContain('run_hadara smoke package --execute --attach-evidence --task "${TASK_ID}" --json');
+    expect(script).not.toContain('run_hadara package smoke --execute');
+  });
+
   it('marks both mounted workspace paths as git safe directories before cloning', () => {
     const script = fs.readFileSync(prepareScriptPath, 'utf8');
 

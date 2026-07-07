@@ -447,7 +447,7 @@ verify_tarball_package_metadata "${TARBALL}" "${PACKAGE_NAME}" "${VERSION}"
 
 echo
 echo "== 3. Fresh release evidence =="
-run_hadara package smoke --execute --attach-evidence --task "${TASK_ID}" --json
+run_hadara smoke package --execute --attach-evidence --task "${TASK_ID}" --json
 run_hadara smoke clean-checkout --execute --attach-evidence --task "${TASK_ID}" --json
 
 echo
