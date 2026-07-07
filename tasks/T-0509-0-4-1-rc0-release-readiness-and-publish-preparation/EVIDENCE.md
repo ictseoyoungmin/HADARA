@@ -10,6 +10,8 @@ Do not hand-edit this file.
 | Evidence ID | Outcome | Category | Summary |
 |---|---|---|---|
 | ev:T-0509:0c312d0668114f02aeebf4b4 | passed | release | Package smoke local passed with reduced public evidence. |
+| ev:T-0509:580e544b0e2e4484b3fdacfb | passed | release | hadara release artifact --execute --attach-evidence --json generated tarball/checksum/manifest metadata, retained public report artifact, and emitted hadara.releaseArtifact.v1. |
+| ev:T-0509:9f1f8cbc00cc405384db41f3 | passed | release | Clean-checkout smoke passed with reduced public evidence. |
 <!-- /hadara:slot -->
 
 ## Close Proof
