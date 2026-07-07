@@ -3,6 +3,7 @@ import { persistedEvidencePath } from '../evidence/evidence';
 import { attachReleaseArtifactEvidence } from '../services/release-artifact-evidence';
 import { createReleaseArtifactReport } from '../services/release-artifact';
 import { getFlag, getIntegerOption, getStringOption } from './args';
+import { renderCommandHelp } from './help';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 
 export interface ReleaseArtifactCommandInput {
@@ -13,6 +14,10 @@ export interface ReleaseArtifactCommandInput {
 
 export function handleReleaseArtifactCommand(input: ReleaseArtifactCommandInput): boolean {
   if (input.args[0] !== 'release' || input.args[1] !== 'artifact') return false;
+  if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+    console.log(renderCommandHelp('release.artifact'));
+    return true;
+  }
   if (getFlag(input.args, '--execute')) {
     const legacyReport = createLegacyMutationBlockedReport(input.paths.projectRoot, 'release.artifact');
     if (legacyReport) {

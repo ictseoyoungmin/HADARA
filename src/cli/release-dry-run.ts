@@ -1,4 +1,6 @@
 import { createReleaseDryRunReport } from '../services/release-dry-run';
+import { getFlag } from './args';
+import { renderCommandHelp } from './help';
 
 export interface ReleaseDryRunCommandInput {
   args: string[];
@@ -8,6 +10,10 @@ export interface ReleaseDryRunCommandInput {
 
 export function handleReleaseDryRunCommand(input: ReleaseDryRunCommandInput): boolean {
   if (input.args[0] !== 'release' || input.args[1] !== 'dry-run') return false;
+  if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+    console.log(renderCommandHelp('release.dry-run'));
+    return true;
+  }
   const report = createReleaseDryRunReport(input.projectRoot);
 
   if (input.jsonOutput) {

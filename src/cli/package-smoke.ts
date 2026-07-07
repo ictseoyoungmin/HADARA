@@ -2,6 +2,7 @@ import { HadaraPaths } from '../core/paths';
 import { createPackageRecycleReport } from '../services/package-recycle';
 import { createPackageSmokeDryRunReport, createPackageSmokeLocalReport } from '../services/package-smoke';
 import { getFlag, getIntegerOption, getStringOption } from './args';
+import { renderCommandHelp } from './help';
 
 export interface PackageCommandInput {
   args: string[];
@@ -13,6 +14,10 @@ export function handlePackageCommand(input: PackageCommandInput): boolean {
   if (input.args[0] !== 'package') return false;
 
   if (input.args[1] === 'recycle') {
+    if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+      console.log(renderCommandHelp('package.recycle'));
+      return true;
+    }
     const report = createPackageRecycleReport({
       paths: input.paths,
       execute: getFlag(input.args, '--execute'),
@@ -44,6 +49,10 @@ export function handlePackageCommand(input: PackageCommandInput): boolean {
   }
 
   if (input.args[1] !== 'smoke') return false;
+  if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+    console.log(renderCommandHelp('package.smoke'));
+    return true;
+  }
 
   const options = {
     paths: input.paths,

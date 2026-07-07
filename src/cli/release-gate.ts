@@ -1,5 +1,6 @@
 import { createReleaseGateReport } from '../services/operational-debt';
-import { getStringOption } from './args';
+import { getFlag, getStringOption } from './args';
+import { renderCommandHelp } from './help';
 
 export interface ReleaseGateCommandInput {
   args: string[];
@@ -9,6 +10,10 @@ export interface ReleaseGateCommandInput {
 
 export function handleReleaseGateCommand(input: ReleaseGateCommandInput): boolean {
   if (input.args[0] !== 'release' || input.args[1] !== 'gate') return false;
+  if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+    console.log(renderCommandHelp('release.gate'));
+    return true;
+  }
   const mode = parseReleaseGateMode(input.args);
   const report = createReleaseGateReport(input.projectRoot, mode);
   if (input.jsonOutput) {

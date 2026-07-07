@@ -2,11 +2,19 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { handleDevCommand } from '../../src/cli/dev';
 import { handleHarnessCommand } from '../../src/cli/harness';
+import { handlePackageCommand } from '../../src/cli/package-smoke';
+import { handleReleaseArtifactCommand } from '../../src/cli/release-artifact';
+import { handleReleaseCloseoutCommand } from '../../src/cli/release-closeout';
+import { handleReleaseDryRunCommand } from '../../src/cli/release-dry-run';
+import { handleReleaseGateCommand } from '../../src/cli/release-gate';
+import { handleReleasePublishCommand } from '../../src/cli/release-publish';
 import { handleSessionCommand } from '../../src/cli/session';
 import { handleSliceCommand } from '../../src/cli/slice';
 import { handleTaskCommand } from '../../src/cli/task';
 import { handleValidationCommand } from '../../src/cli/validation';
+import { resolveHadaraPaths } from '../../src/core/paths';
 
 const roots: string[] = [];
 let logSpy: ReturnType<typeof vi.spyOn>;
@@ -50,6 +58,36 @@ describe('command-level help routing', () => {
 
     expect(handleSessionCommand({ args: ['session', 'start', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
     expect(latestOutput()).toContain('session.start');
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it('prints help before package, release, and dev command reports execute or validate arguments', () => {
+    const root = tempProject();
+    const paths = resolveHadaraPaths({ projectRoot: root });
+
+    expect(handlePackageCommand({ args: ['package', 'smoke', '--help'], paths, jsonOutput: false })).toBe(true);
+    expect(latestOutput()).toContain('package.smoke');
+
+    expect(handlePackageCommand({ args: ['package', 'recycle', '--help'], paths, jsonOutput: false })).toBe(true);
+    expect(latestOutput()).toContain('package.recycle');
+
+    expect(handleDevCommand({ args: ['dev', 'docker-check', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
+    expect(latestOutput()).toContain('dev.docker-check');
+
+    expect(handleReleaseDryRunCommand({ args: ['release', 'dry-run', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
+    expect(latestOutput()).toContain('release.dry-run');
+
+    expect(handleReleaseCloseoutCommand({ args: ['release', 'closeout', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
+    expect(latestOutput()).toContain('release.closeout');
+
+    expect(handleReleasePublishCommand({ args: ['release', 'publish', '--execute', '--help'], paths, jsonOutput: false })).toBe(true);
+    expect(latestOutput()).toContain('release.publish');
+
+    expect(handleReleaseArtifactCommand({ args: ['release', 'artifact', '--execute', '--attach-evidence', '--help'], paths, jsonOutput: false })).toBe(true);
+    expect(latestOutput()).toContain('release.artifact');
+
+    expect(handleReleaseGateCommand({ args: ['release', 'gate', '--mode', 'definitely-invalid', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
+    expect(latestOutput()).toContain('release.gate');
     expect(process.exitCode).toBeUndefined();
   });
 });

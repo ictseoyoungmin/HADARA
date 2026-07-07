@@ -1,5 +1,6 @@
 import { createReleaseCloseoutReport, formatReleaseCloseoutReport } from '../services/release-closeout';
-import { getStringOption } from './args';
+import { getFlag, getStringOption } from './args';
+import { renderCommandHelp } from './help';
 
 export interface ReleaseCloseoutCommandInput {
   args: string[];
@@ -9,6 +10,10 @@ export interface ReleaseCloseoutCommandInput {
 
 export function handleReleaseCloseoutCommand(input: ReleaseCloseoutCommandInput): boolean {
   if (input.args[0] !== 'release' || input.args[1] !== 'closeout') return false;
+  if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+    console.log(renderCommandHelp('release.closeout'));
+    return true;
+  }
   const report = createReleaseCloseoutReport(input.projectRoot, {
     version: getStringOption(input.args, '--version'),
     taskId: getStringOption(input.args, '--task')

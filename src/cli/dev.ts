@@ -1,6 +1,7 @@
 import { createDevDockerCheckReport, formatDevDockerCheckReport } from '../dev/docker-check';
 import { getActorContextOption } from './actor';
 import { getFlag, getStringOption } from './args';
+import { renderCommandHelp } from './help';
 
 export interface DevCommandInput {
   args: string[];
@@ -11,6 +12,10 @@ export interface DevCommandInput {
 export function handleDevCommand(input: DevCommandInput): boolean {
   const sub = input.args[1];
   if (sub !== 'docker-check') return false;
+  if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+    console.log(renderCommandHelp('dev.docker-check'));
+    return true;
+  }
   const report = createDevDockerCheckReport(input.projectRoot, {
     focusedTests: getFocusedTests(input.args),
     syncDist: getFlag(input.args, '--sync-dist'),
