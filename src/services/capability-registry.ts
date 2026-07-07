@@ -623,7 +623,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     testFiles: ['tests/unit/task-finalize.test.ts'],
     examples: [
       example('Review finalize plan', 'hadara task finalize --task T-0001 --json', 'When an agent wants one reviewed finish/ready/close/audit or close-repair plan before executing the default close path.'),
-      example('Execute ordinary guarded finalize', 'hadara task finalize --task T-0001 --execute --auto --json', 'For ordinary clean capsules; the CLI performs the dry-run and current-plan verification internally.'),
+      example('Execute ordinary guarded finalize', 'hadara task finalize --task T-0001 --execute --auto --json', 'For ordinary clean capsules; the CLI performs the dry-run/current-plan verification internally and records readiness evidence before close proof when needed.'),
       example('Execute externally reviewed finalize plan', 'hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json', 'After a human or automation explicitly reviews and carries the current dry-run plan hash.')
     ],
     related: ['task.lifecycle', 'task.finish', 'task.ready', 'task.close', 'task.audit-close'],

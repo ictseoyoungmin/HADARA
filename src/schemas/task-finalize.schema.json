@@ -102,6 +102,20 @@
         }
       }
     },
+    "readinessEvidence": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["attempted", "reason"],
+      "properties": {
+        "attempted": { "type": "boolean" },
+        "reason": { "enum": ["close-required", "blocked"] },
+        "id": { "type": "string" },
+        "existing": { "type": "boolean" },
+        "jsonlAppended": { "type": "boolean" },
+        "markdownAppended": { "type": "boolean" },
+        "summary": { "type": "string" }
+      }
+    },
     "diagnostics": {
       "type": "object",
       "additionalProperties": true,

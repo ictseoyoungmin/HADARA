@@ -245,6 +245,7 @@ describe('task finalize dry-run plan', () => {
     });
     expect(report.execution?.executedSteps.map((step) => step.id)).toEqual(['finish', 'ready', 'close', 'audit-close']);
     expect(report.execution?.executedSteps.find((step) => step.id === 'close')).toMatchObject({ status: 'executed', ok: true, writeBoundary: 'evidence-append' });
+    expect(report.readinessEvidence).toBeUndefined();
     expect(progress).toEqual(expect.arrayContaining([
       'ready:start:unknown',
       'ready:satisfied:true',
@@ -361,9 +362,36 @@ describe('task finalize --auto (FD-010)', () => {
       readOnly: false,
       mode: 'execute',
       state: 'closed-valid',
-      execution: { planHashMatched: true }
+      execution: { planHashMatched: true },
+      readinessEvidence: {
+        attempted: true,
+        reason: 'close-required',
+        existing: false,
+        jsonlAppended: true
+      }
     });
     expect(report.execution?.executedSteps.map((step) => step.id)).toEqual(['finish', 'ready', 'close', 'audit-close']);
+    const evidenceJsonl = snapshotFiles(root)[`tasks/${task.id}-finalize-auto-clean/evidence.jsonl`];
+    expect(evidenceJsonl).toContain('"category":"validation"');
+    expect(evidenceJsonl).toContain('task-finalize-readiness');
+    expect(evidenceJsonl).toContain('Task close validation');
+    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
+  });
+
+  it('does not append readiness evidence when auto finalize is already closed-valid', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finalize auto idempotent');
+    completeTask(root, task.id, task.dir);
+    markStateDocsCurrent(root, task.id);
+    const closed = createTaskFinalizeReport(root, task.id, { executeRequested: true, auto: true });
+    expect(closed.ok).toBe(true);
+    const before = snapshotFiles(root);
+
+    const report = createTaskFinalizeReport(root, task.id, { executeRequested: true, auto: true });
+
+    expect(report).toMatchObject({ ok: true, state: 'closed-valid', planStatus: 'satisfied' });
+    expect(report.readinessEvidence).toBeUndefined();
+    expect(snapshotFiles(root)).toEqual(before);
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
   });
 

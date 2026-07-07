@@ -982,7 +982,7 @@ Use this section for the first pass through a new scaffold. Read the detailed se
 | Need work to do | Run \`hadara task status --json\`. |
 | Need a task | Run \`hadara task create "task title" --json\`, then fill \`TASK.md\` Goal, Source Documents, Plan, and Acceptance. |
 | Need files to inspect | Run \`hadara session start --task T-XXXX --json\` or \`hadara context pack --task T-XXXX --json\`, then read only routed files. |
-| Ready to close | Run \`hadara task finalize --task T-XXXX --json\` for review, then use \`hadara task finalize --task T-XXXX --execute --auto --json\` for the ordinary guarded close path. |
+| Ready to close | Run \`hadara task finalize --task T-XXXX --execute --auto --json\` for the ordinary guarded close path; it records readiness evidence and close proof when needed. Dry-run first only when a separate reviewer needs the plan hash. |
 
 ## Minimal Loop
 
@@ -1182,7 +1182,7 @@ hadara init doctor --json
 
 Use finalize dry-run as the ordinary close-proof repair plan. Use diagnostics when finalize reports blockers. Do not repair close proof by editing evidence files by hand.
 
-Agents should inspect \`task finalize --json\` before close when the result is not already familiar. For ordinary clean capsules, \`task finalize --execute --auto --json\` performs the dry-run and current-plan verification internally. For externally reviewed flows, use the current \`planHash\` from the reviewed dry-run.
+Agents should inspect \`task finalize --json\` before close when the result is not already familiar. For ordinary clean capsules, \`task finalize --execute --auto --json\` performs the dry-run and current-plan verification internally and records idempotent validation-category readiness evidence before close proof when close evidence is still required. For externally reviewed flows, use the current \`planHash\` from the reviewed dry-run.
 
 ## Useful CLI by Situation
 
@@ -1201,7 +1201,7 @@ Agents should inspect \`task finalize --json\` before close when the result is n
 | Record already-run validation | \`hadara evidence add-command ... --json\` | Append-only evidence writer; does not execute commands. |
 | Find evidence ids | \`hadara evidence summary --task T-XXXX --json\` | Compact copy hints. |
 | Review loop phase | \`hadara task status --task T-XXXX --json\` | Normal lifecycle state and next action. |
-| Close ordinary work | \`hadara task finalize --task T-XXXX --execute --auto --json\` | Default guarded close path for clean capsules. |
+| Close ordinary work | \`hadara task finalize --task T-XXXX --execute --auto --json\` | Default guarded close path for clean capsules; records readiness evidence and close proof when needed. |
 | Externally reviewed close | \`hadara task finalize --task T-XXXX --json\` then execute with its \`planHash\` | Use when a human or automation explicitly reviews and carries the dry-run plan. |
 | Repair close drift | \`hadara task finalize --task T-XXXX --json\` then execute with \`--auto\` or the reviewed \`planHash\` | Default repair path for stale close proof. |
 | Register project-specific docs | \`hadara docs register --path <path> --json\` | 0.4 registry surface. Canonical state belongs in \`.hadara/docs-registry.json\`; use registry-backed help for exact options. |
@@ -1634,7 +1634,7 @@ hadara task finalize --task T-XXXX --execute --auto --json
 
 The close model has three separate phases: validation proves readiness, close records the proof, and audit checks the already-recorded close evidence. Close evidence is excluded from the current validation loop because it is appended after validation; requiring it as a same-run precondition would create a fixed-point loop.
 
-\`task finalize\` and \`task status --detail full\` include done-level Task Capsule validation. Use \`hadara harness validate --task T-XXXX --level done --json\` directly when debugging capsule format, status-history, acceptance, evidence, or handoff validation failures.
+\`task finalize\` and \`task status --detail full\` include done-level Task Capsule validation. In the ordinary path, do not run \`validation run -- ... harness validate ...\` only to create a readiness proof: \`task finalize --execute --auto\` records that readiness evidence before appending close proof. Use \`hadara harness validate --task T-XXXX --level done --json\` directly only when debugging capsule format, status-history, acceptance, evidence, or handoff validation failures.
 
 ## Status Token And Ownership Policy
 
@@ -1717,7 +1717,7 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 | \`task create\` | Write | Creates a Draft Task Capsule and Task Board row. It does not imply the task is ready or done. |
 | \`evidence add-command\` | Write | Appends operator-supplied command-log evidence. It does not execute shell commands or capture stdout/stderr; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, and optional \`--idempotency-key\` prevents duplicate same-key records. |
 | \`task lifecycle\` | Removed redirect stub | Prefer \`task status --task T-XXXX --json\`. |
-| \`task finalize\` | Read-only by default; guarded execute uses \`--auto\` or \`--plan-hash\` | Default agent close path. Rechecks the current plan, executes phases serially, stops on blockers, and succeeds only after final audit is \`closed-valid\`. |
+| \`task finalize\` | Read-only by default; guarded execute uses \`--auto\` or \`--plan-hash\` | Default agent close path. Rechecks the current plan, records readiness evidence in the \`--auto\` close path when needed, executes phases serially, stops on blockers, and succeeds only after final audit is \`closed-valid\`. |
 | \`task finish\` / \`task ready\` / \`task close\` / \`task audit-close\` | Removed redirect stubs | Use \`task status --detail full\` for diagnostics and \`task finalize\` for close execution. |
 | \`task complete\` | Removed redirect stub | Prefer \`task status\` and \`task finalize\` for current agent flows. |
 
@@ -1726,7 +1726,7 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 - \`task next\` chooses work; it does not create a capsule or infer completion.
 - \`task status\` is an operator console; \`ok: true\` means report generation succeeded, not that the task is ready.
 - Readiness diagnostics are exposed through \`task status --detail full\` and \`task finalize --json\`.
-- \`harness validate\` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence.
+- \`harness validate\` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence and is not required as a separate evidence wrapper before ordinary \`task finalize --execute --auto\`.
 - \`task complete\` and \`task lifecycle\` are removed redirect stubs. Prefer \`task status\` and \`task finalize\`.
 - \`task finalize\` is read-only by default and owns close-proof repair planning. Guarded execute uses \`--auto\` or a matching current dry-run \`planHash\`, runs phases serially, stops on blockers, and returns success only after the final audit is \`closed-valid\`.
 - \`evidence list\` is the supported evidence id discovery surface. Text output shows \`[id] time | category/outcome | visibility | summary\`; JSON records expose \`id\`, \`idSource\`, \`idStability\`, \`persistedSchemaVersion\`, \`category\`, \`outcome\`, and \`tags\`. Use durable persisted \`ev:\` ids for long-lived \`--resolves\` and \`--supersedes\` references. Legacy compatibility ids are inspection-only and are not the preferred durable reference.

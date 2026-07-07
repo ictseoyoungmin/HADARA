@@ -16,7 +16,7 @@ Use this section for the first pass through a new scaffold. Read the detailed se
 | Need work to do | Run `hadara task status --json`. |
 | Need a task | Run `hadara task create "task title" --json`, then fill `TASK.md` Goal, Source Documents, Plan, and Acceptance. |
 | Need files to inspect | Run `hadara session start --task T-XXXX --json` or `hadara context pack --task T-XXXX --json`, then read only routed files. |
-| Ready to close | Run `hadara task finalize --task T-XXXX --execute --auto --json` for the ordinary guarded close path, or dry-run first when a separate reviewer needs the plan hash. |
+| Ready to close | Run `hadara task finalize --task T-XXXX --execute --auto --json` for the ordinary guarded close path; it records readiness evidence and close proof when needed. Dry-run first only when a separate reviewer needs the plan hash. |
 
 ## Minimal Loop
 
@@ -241,7 +241,7 @@ hadara init doctor --json
 
 Use finalize dry-run as the ordinary close-proof repair plan. Use diagnostics when finalize reports blockers. Do not repair close proof by editing evidence files by hand.
 
-Agents must not run `task finalize --execute` without inspecting the dry-run output and using the current `planHash` from that reviewed dry-run.
+Agents may use `task finalize --execute --auto` for ordinary clean capsules; it performs the dry-run and current-plan verification internally. Use the explicit dry-run plus `--plan-hash` form when a separate reviewer or automation boundary must carry the reviewed plan.
 
 ## Useful CLI by Situation
 
@@ -259,7 +259,7 @@ Agents must not run `task finalize --execute` without inspecting the dry-run out
 | Record already-run validation | `hadara evidence add-command ... --json` | Append-only evidence writer; does not execute commands. |
 | Find evidence ids | `hadara evidence summary --task T-XXXX --json` | Compact copy hints. |
 | Review loop phase | `hadara task status --task T-XXXX --json` | Normal lifecycle state and next action. |
-| Close ordinary work | `hadara task finalize --task T-XXXX --execute --auto --json` | Default guarded close path for clean capsules. |
+| Close ordinary work | `hadara task finalize --task T-XXXX --execute --auto --json` | Default guarded close path for clean capsules; records readiness evidence and close proof when needed. |
 | Externally reviewed close | `hadara task finalize --task T-XXXX --json` then execute with its `planHash` | Use when a human or automation explicitly reviews and carries the dry-run plan. |
 | Repair close drift | `hadara task finalize --task T-XXXX --json` then execute with `--auto` or the reviewed `planHash` | Default repair path for stale close proof. |
 | Register project-specific docs | `hadara docs register --path <path> --json` | 0.4 registry surface. Canonical state belongs in `.hadara/docs-registry.json`; use registry-backed help for exact options. |

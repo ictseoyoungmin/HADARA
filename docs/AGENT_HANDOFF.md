@@ -4,16 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The 0.4.1-rc.0 cleanup line has completed docs-register diagnostics (T-0494), `docs.complete-spec` (T-0495), `handoff update` removal (T-0496), vocabulary diagnostics plus registry correction (T-0497), workflow-doc authority consolidation (T-0498), finalize --auto plus the package-smoke command-surface drift gate (T-0499), slices-state prototype plus lifecycle surface removal (T-0500), fresh generated-project dogfood / Markdown review (T-0501), post-dogfood critical UX hardening (T-0502), and package/release/dev help routing hardening (T-0503). All 6 `docs/specs/0.4.1/rc0-scope.md` items now have capsules; item 5's AC-6 dogfood-count metric is partial. |
+| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The 0.4.1-rc.0 cleanup line has completed docs-register diagnostics (T-0494), `docs.complete-spec` (T-0495), `handoff update` removal (T-0496), vocabulary diagnostics plus registry correction (T-0497), workflow-doc authority consolidation (T-0498), finalize --auto plus the package-smoke command-surface drift gate (T-0499), slices-state prototype plus lifecycle surface removal (T-0500), fresh generated-project dogfood / Markdown review (T-0501), post-dogfood critical UX hardening (T-0502), package/release/dev help routing hardening (T-0503), and finalize readiness evidence UX cleanup (T-0504). All 6 `docs/specs/0.4.1/rc0-scope.md` items now have capsules; item 5's AC-6 dogfood-count metric is partial. |
 | Current Phase | 0.4.0 stable release line public | npm stable publish, public GitHub Release, and installed-package recycle are complete. |
-| Latest Completed Task | T-0503 0.4.1 rc0 package and release help routing hardening | Fixed the T-0502 local feedback residual where package/release/dev release-smoke helper commands could execute reports or validate required args before honoring `--help`. |
-| Active / Next Task | Release-smoke preparation for `0.4.1-rc.0` is the next likely line after T-0503 finalize. | Use T-0497 through T-0503 evidence as inputs; package smoke should use `--timeout 300` unless feature-smoke performance is improved. |
-| Validation Baseline | T-0503 help routing hardening validation | Docker focused tests passed 8 files / 80 tests, TypeScript build passed, and built CLI help smokes passed for package, release, and dev helper surfaces. |
+| Latest Completed Task | T-0504 0.4.1 rc0 finalize readiness evidence UX | `task finalize --execute --auto` now records idempotent validation-category readiness evidence before close proof when close evidence is required, keeping `harness validate` as a diagnostic-only default-loop escape hatch. |
+| Active / Next Task | Release-smoke preparation for `0.4.1-rc.0` is the next likely line after T-0504 finalize. | Use T-0497 through T-0504 evidence as inputs; package smoke should use `--timeout 300` unless feature-smoke performance is improved. |
+| Validation Baseline | T-0504 finalize readiness evidence UX validation | Docker focused tests passed 4 files / 40 tests, TypeScript build passed, and built CLI smoke proved auto readiness evidence append plus closed-valid idempotent rerun. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| 0.4.1 rc0 finalize readiness evidence UX | T-0504 makes `task finalize --execute --auto` record validation-category readiness evidence before close proof when needed, exposes `readinessEvidence` metadata, and updates workflow/init docs so `harness validate` remains diagnostic-only. | `ev:T-0504:76a66b51ccd3435a8875f5a1`, `ev:T-0504:da758ce735d74a35802f3081` |
 | 0.4.1 rc0 package and release help routing hardening | T-0503 adds early registry-backed help routing for package smoke/recycle, dev docker-check, and release helper commands so `--help` exits successfully before dry-run/execute/argument-validation behavior. | `ev:T-0503:d5ceb1ae861c4347bed3fb62`, `ev:T-0503:fd0b99de773b4bc28676d048` |
 | 0.4.1 rc0 post-dogfood critical UX hardening | T-0502 fixes RV-1 through RV-11 from the secondary T-0501 review and adds package-smoke coverage for generated init docs. | `ev:T-0502:13a900a8a63d410f8cdf13a1`, `ev:T-0502:afb73b2121f0488983e51414`, `ev:T-0502:bdd98fcb1aa449038e9c5380`, `ev:T-0502:8cd65df224074988877dd410`, `ev:T-0502:9bd95384fc20448a8a0d2525` |
 | 0.4.1 rc0 generated project dogfood and markdown review | T-0501 dogfooded a fresh governed init through current lifecycle and representative CLI surfaces, reviewed generated Markdown, and fixed generated workflow/profile diagnostics/finalize-status output drift. | `ev:T-0501:001b43dc22cf4c41a4d3de0a`, `ev:T-0501:ec05ac1dad9c49909be2444e` |
@@ -47,9 +48,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0504 / 0.4.1 rc0 finalize readiness evidence UX | Auto finalize now appends validation-category readiness evidence before close proof when needed, reports `readinessEvidence`, and re-finalizing `closed-valid` tasks stays idempotent; focused tests 4 files / 40, build, and built CLI smoke passed. | `ev:T-0504:76a66b51ccd3435a8875f5a1`, `ev:T-0504:da758ce735d74a35802f3081` |
 | T-0503 / 0.4.1 rc0 package and release help routing hardening | Package smoke/recycle, dev docker-check, and release helper `--help` paths now render command help and exit 0 before dry-run/execute/argument-validation behavior; focused tests 8 files / 80, build, and built help smokes passed. | `ev:T-0503:d5ceb1ae861c4347bed3fb62`, `ev:T-0503:fd0b99de773b4bc28676d048` |
 | T-0502 / 0.4.1 rc0 post-dogfood critical UX hardening | Secondary dogfood findings RV-1 through RV-11 fixed; generated init docs now covered by package smoke; focused tests 13 files / 110, build, governed smoke, and package smoke execute passed. | `ev:T-0502:13a900a8a63d410f8cdf13a1`, `ev:T-0502:9bd95384fc20448a8a0d2525` |
-| T-0501 / 0.4.1 rc0 generated project dogfood and markdown review | Fresh governed init, generated Markdown review, lifecycle dogfood to `closed-valid`, representative CLI smoke, and fixes for stale generated/current-surface guidance. | `ev:T-0501:001b43dc22cf4c41a4d3de0a`, `ev:T-0501:ec05ac1dad9c49909be2444e` |
 
 ## Current Known Problems
 

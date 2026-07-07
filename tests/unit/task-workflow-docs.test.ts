@@ -70,8 +70,8 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('Audit-contract migration note');
     expect(contractRemovedNote(read('docs/CLI_JSON_CONTRACT.md'))).toBe(true);
     expect(workflow).toContain('`task status` is an operator cockpit; `ok: true` means report generation succeeded.');
-    expect(workflow).toContain('Use `hadara harness validate --task T-XXXX --level done --json` directly when debugging capsule format');
-    expect(workflow).toContain('`harness validate` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence.');
+    expect(workflow).toContain('In the ordinary path, do not run `validation run -- ... harness validate ...` only to create a readiness proof');
+    expect(workflow).toContain('`harness validate` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence and is not required as a separate evidence wrapper before ordinary `task finalize --execute --auto`.');
     expect(workflow).toContain('Before finalize execute, finish all close-source edits');
     expect(workflow).toContain('## Documentation Timing and Write Coordination');
     expect(workflow).toContain('Do not defer all documentation until after implementation.');
