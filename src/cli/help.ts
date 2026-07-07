@@ -94,10 +94,13 @@ export function renderLifecycleHelp(): string {
 
   for (const step of report.primaryPath) {
     lines.push(`  ${step.order} ${step.stage.padEnd(11)} ${step.command}`);
-    if (step.commandId === 'task.finalize') lines.push('               hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json');
+    if (step.commandId === 'task.finalize') {
+      lines.push('               hadara task finalize --task T-XXXX --execute --auto --json');
+      lines.push('               hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json');
+    }
   }
 
-  lines.push('', 'Low-level proof-boundary commands are available through `hadara help family capsule-lifecycle`.');
+  lines.push('', 'Removed low-level lifecycle commands return structured redirect stubs; use `task status --detail full` and `task finalize`.');
 
   lines.push(
     '',

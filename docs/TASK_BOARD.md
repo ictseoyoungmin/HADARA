@@ -501,3 +501,4 @@
 | T-0498 | workflow docs consolidate implementation sop removal | Done | tasks/T-0498-workflow-docs-consolidate-implementation-sop-removal | Workflow guidance consolidated on `docs/HADARA_WORKFLOW.md`; root SOP removed. |
 | T-0499 | 0.4.1 rc0 finalize auto and package smoke drift gate | Done | tasks/T-0499-0-4-1-rc0-finalize-auto-and-package-smoke-drift-gate | |
 | T-0500 | 0.4.1 rc0 slices state prototype and lifecycle surface removal | Done | tasks/T-0500-0-4-1-rc0-slices-state-prototype-and-lifecycle-surface-removal | Adds `.hadara/state/slices.json` + generated `docs/DEVELOPMENT_SLICES.md` projection with ownership-contract drift guard (FD-012), and removes the standalone `task finish`/`ready`/`close`/`audit-close`/`complete`/`lifecycle` surface behind `hadara.commandRemoved.v1` stubs (FD-013). |
+| T-0501 | 0.4.1 rc0 generated project dogfood and markdown review | Done | tasks/T-0501-0-4-1-rc0-generated-project-dogfood-and-markdown-review | |

@@ -160,7 +160,7 @@ const DEFAULT_READ = {
   risk: 'low'
 } satisfies Omit<CapabilitySurface, 'name'>;
 
-const TASK_DOCS = ['docs/TASK_WORKFLOW_COMMANDS.md'];
+const TASK_DOCS = ['docs/HADARA_WORKFLOW.md'];
 
 function example(title: string, command: string, when: string): CommandRegistryExample {
   return { title, command, when };
@@ -231,7 +231,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'agent-worker',
     status: 'experimental',
     schemaVersion: 'hadara.schema.vocabulary.v1',
-    docs: ['docs/SCHEMAS.md', 'docs/TASK_WORKFLOW_COMMANDS.md'],
+    docs: ['docs/SCHEMAS.md', 'docs/HADARA_WORKFLOW.md'],
     examples: [example('Look up risk state tokens', 'hadara schema --domain task.risk.state --json', 'Before writing TASK.md Risks / Follow-ups State values.')],
     related: ['commands', 'harness.validate', 'docs.register'],
     conflictsWith: []
@@ -623,11 +623,12 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     testFiles: ['tests/unit/task-finalize.test.ts'],
     examples: [
       example('Review finalize plan', 'hadara task finalize --task T-0001 --json', 'When an agent wants one reviewed finish/ready/close/audit or close-repair plan before executing the default close path.'),
-      example('Execute reviewed finalize plan', 'hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json', 'After reviewing a current dry-run plan hash, including stale close-proof repair plans.')
+      example('Execute ordinary guarded finalize', 'hadara task finalize --task T-0001 --execute --auto --json', 'For ordinary clean capsules; the CLI performs the dry-run and current-plan verification internally.'),
+      example('Execute externally reviewed finalize plan', 'hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json', 'After a human or automation explicitly reviews and carries the current dry-run plan hash.')
     ],
     related: ['task.lifecycle', 'task.finish', 'task.ready', 'task.close', 'task.audit-close'],
     conflictsWith: [],
-    notes: 'Default mode is read-only. Execute requires a matching current dry-run plan hash, runs phases serially, preserves the underlying finish/close write boundaries, repairs stale close proof by appending fresh close evidence when the plan requires it, and stops on the first blocker.'
+    notes: 'Default mode is read-only. Execute uses either --auto for one-call guarded close or a matching current dry-run plan hash for externally reviewed flows; both run phases serially, preserve the underlying finish/close write boundaries, repair stale close proof by appending fresh close evidence when the plan requires it, and stop on the first blocker.'
   },
   {
     id: 'task.upgrade-scaffold',
@@ -1667,7 +1668,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     schemaVersion: 'hadara.harness.validate.v1',
     docs: TASK_DOCS,
-    examples: [example('Debug done readiness', 'hadara harness validate --task T-0001 --level done --json', 'When task ready reports blockers.')],
+    examples: [example('Debug done readiness', 'hadara harness validate --task T-0001 --level done --json', 'When task status or finalize reports done-level blockers.')],
     related: ['task.ready', 'protocol.doctor', 'evidence.lint'],
     conflictsWith: []
   }),

@@ -84,9 +84,9 @@ export interface ProtocolConsistencyReport {
 
 const REQUIRED_TASK_FILES = Object.keys(TASK_FILES);
 const DONE_STATUSES = new Set(['done']);
-const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
-const STANDARD_PROJECT_DOCS = ['docs/ARCHITECTURE.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/DECISIONS.md', 'docs/TEST_STRATEGY.md'];
-const GOVERNED_PROJECT_DOCS = ['docs/SECURITY_MODEL.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md'];
+const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
+const STANDARD_PROJECT_DOCS = ['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md'];
+const GOVERNED_PROJECT_DOCS = ['docs/SECURITY_MODEL.md'];
 
 export function createTaskProtocolConsistencyReport(projectRoot: string, taskId: string, now = new Date()): ProtocolConsistencyReport {
   const task = findTaskCapsule(projectRoot, taskId);
@@ -346,7 +346,9 @@ function checkRequiredReadingPaths(projectRoot: string, checkedDocs: Set<string>
   for (const cells of rows) {
     const documentCell = cells[0] ?? '';
     if (!documentCell.includes('`')) continue;
-    const documentPaths = [...documentCell.matchAll(/`([^`]+)`/g)].map((match) => match[1]).filter((value) => value && !value.includes('*'));
+    const documentPaths = [...documentCell.matchAll(/`([^`]+)`/g)]
+      .map((match) => match[1])
+      .filter((value) => value && !value.includes('*') && isRequiredReadingPathToken(value));
     for (const documentPath of documentPaths) {
       if (isExternalReference(documentPath) || fs.existsSync(path.join(projectRoot, documentPath))) continue;
       pushIssue(issues, {
@@ -360,6 +362,10 @@ function checkRequiredReadingPaths(projectRoot: string, checkedDocs: Set<string>
       });
     }
   }
+}
+
+function isRequiredReadingPathToken(value: string): boolean {
+  return value.startsWith('.') || value.includes('/');
 }
 
 function checkTaskBoardAgainstCapsules(
@@ -1137,10 +1143,10 @@ function slugify(value: string): string {
 }
 
 function detectProfile(projectRoot: string): 'basic' | 'standard' | 'governed' | 'unknown' | 'mixed' {
-  const hasStandardDocs = ['ARCHITECTURE.md', 'DEVELOPMENT_SLICES.md', 'DECISIONS.md', 'TEST_STRATEGY.md'].every((file) =>
+  const hasStandardDocs = ['ARCHITECTURE.md', 'DECISIONS.md', 'ROADMAP.md'].every((file) =>
     fs.existsSync(path.join(projectRoot, 'docs', file))
   );
-  const hasGovernedDocs = ['SECURITY_MODEL.md', 'REFACTOR_LOG.md', 'ROADMAP.md'].every((file) => fs.existsSync(path.join(projectRoot, 'docs', file)));
+  const hasGovernedDocs = ['SECURITY_MODEL.md'].every((file) => fs.existsSync(path.join(projectRoot, 'docs', file)));
   if (hasGovernedDocs && hasStandardDocs) return 'governed';
   if (hasGovernedDocs && !hasStandardDocs) return 'mixed';
   if (hasStandardDocs) return 'standard';

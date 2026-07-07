@@ -178,8 +178,8 @@ function createFastTaskWorkbenchReport(
         {
           command: 'hadara task lifecycle --task T-XXXX --json',
           replacement: 'hadara task status --task T-XXXX --json',
-          removal: 'planned',
-          note: '`task status` owns loop phase and next-action guidance for selected capsules.'
+          removal: 'removed',
+          note: '`task lifecycle` was removed in 0.4.1-rc.0; `task status` owns loop phase and next-action guidance for selected capsules.'
         }
       ]
     },

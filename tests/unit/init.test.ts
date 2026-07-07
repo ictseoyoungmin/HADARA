@@ -186,7 +186,7 @@ describe('init profiles', () => {
     expect(workflow).toContain('Agents must not scan the repository');
     expect(workflow).toContain('Before running `hadara task finalize`, all of these must be true');
     expect(workflow).toContain('Evidence must reflect real execution results');
-    expect(workflow).toContain('Agents must not run `task finalize --execute` without inspecting the dry-run output');
+    expect(workflow).toContain('For ordinary clean capsules, `task finalize --execute --auto --json` performs the dry-run and current-plan verification internally.');
     expect(workflow).toContain('Document registration writes registry metadata, not prose rows in entry docs.');
     expect(workflow).toContain('| Surface | Human / Operator | Agent | CLI |');
   });

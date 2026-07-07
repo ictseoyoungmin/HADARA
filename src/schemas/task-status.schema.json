@@ -63,7 +63,7 @@
             "properties": {
               "command": { "type": "string" },
               "replacement": { "type": "string" },
-              "removal": { "const": "planned" },
+              "removal": { "enum": ["planned", "removed"] },
               "note": { "type": "string" }
             }
           }

@@ -50,9 +50,9 @@ export interface ProtocolProfileSummary {
   source: 'metadata-and-docset';
 }
 
-const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
-const STANDARD_PROJECT_DOCS = ['docs/ARCHITECTURE.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/DECISIONS.md', 'docs/TEST_STRATEGY.md'];
-const GOVERNED_PROJECT_DOCS = ['docs/SECURITY_MODEL.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md'];
+const CORE_PROJECT_DOCS = ['AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
+const STANDARD_PROJECT_DOCS = ['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md'];
+const GOVERNED_PROJECT_DOCS = ['docs/SECURITY_MODEL.md'];
 
 export function createProfileConsistencyDiagnostics(projectRoot: string): ProfileDiagnostics {
   const checkedDocs = new Set<string>();

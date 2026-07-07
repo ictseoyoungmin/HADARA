@@ -346,7 +346,7 @@ describe('Profile protocol consistency report', () => {
     expect(remediation).toMatchObject({
       mode: 'manual',
       command: 'hadara init upgrade --profile governed --json',
-      targetPaths: expect.arrayContaining(['docs/ARCHITECTURE.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md'])
+      targetPaths: expect.arrayContaining(['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md'])
     });
   });
 
@@ -369,7 +369,7 @@ describe('Profile protocol consistency report', () => {
     });
     expect(report.remediations.find((candidate) => candidate.id === 'profile-doc-set-complete')).toMatchObject({
       command: 'hadara init upgrade --profile governed --json',
-      targetPaths: expect.arrayContaining(['docs/SECURITY_MODEL.md', 'docs/REFACTOR_LOG.md', 'docs/ROADMAP.md'])
+      targetPaths: expect.arrayContaining(['docs/SECURITY_MODEL.md'])
     });
   });
 
@@ -406,7 +406,7 @@ describe('Profile protocol consistency report', () => {
     );
   });
 
-  it('uses partial governed docs as the target when metadata declares standard', () => {
+  it('uses complete governed docs as the target when metadata declares standard', () => {
     const root = tempProject();
     writeProfileDocs(root, 'standard');
     fs.writeFileSync(path.join(root, 'docs', 'SECURITY_MODEL.md'), '# SECURITY_MODEL\n', 'utf8');
@@ -416,12 +416,12 @@ describe('Profile protocol consistency report', () => {
 
     expect(report.summary.profile).toMatchObject({
       declared: 'standard',
-      detected: 'mixed',
+      detected: 'governed',
       target: 'governed',
       source: 'metadata-and-docset'
     });
     expect(report.issues.map((issue) => issue.code)).toEqual(
-      expect.arrayContaining(['PROFILE_DOC_SET_MIXED', 'PROFILE_METADATA_DRIFT', 'PROFILE_REQUIRED_DOC_MISSING'])
+      expect.arrayContaining(['PROFILE_METADATA_DRIFT'])
     );
   });
 
@@ -651,12 +651,12 @@ function markTaskDone(root: string, taskId: string): void {
 }
 
 function writeProfileDocs(root: string, profile: 'standard' | 'governed'): void {
-  const standardDocs = ['ARCHITECTURE.md', 'DEVELOPMENT_SLICES.md', 'DECISIONS.md', 'TEST_STRATEGY.md'];
+  const standardDocs = ['ARCHITECTURE.md', 'DECISIONS.md', 'ROADMAP.md'];
   for (const file of standardDocs) {
     fs.writeFileSync(path.join(root, 'docs', file), `# ${file.replace(/\.md$/, '')}\n`, 'utf8');
   }
   if (profile === 'governed') {
-    const governedDocs = ['SECURITY_MODEL.md', 'REFACTOR_LOG.md', 'ROADMAP.md'];
+    const governedDocs = ['SECURITY_MODEL.md'];
     for (const file of governedDocs) {
       fs.writeFileSync(path.join(root, 'docs', file), `# ${file.replace(/\.md$/, '')}\n`, 'utf8');
     }

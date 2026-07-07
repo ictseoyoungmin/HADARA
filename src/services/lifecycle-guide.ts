@@ -24,7 +24,7 @@ const DIAGNOSTIC_USE_WHEN: Record<string, string> = {
   'proof.explain': 'Proof status is stale, weak, or confusing.',
   'ci.gate': 'You need an aggregated advisory or strict project/task gate.',
   'protocol.doctor': 'Protocol docs, task board rows, or profile state may be inconsistent.',
-  'harness.validate': 'task finalize or low-level task ready reports format or done-level blockers.'
+  'harness.validate': 'task finalize or task status full diagnostics report format or done-level blockers.'
 };
 
 const ADVANCED_FAMILY_USE_WHEN: Array<{ family: CommandFamily; useWhen: string }> = [
@@ -103,16 +103,16 @@ export const PORTFOLIO_AUDIT_DECISIONS: PortfolioAuditDecision[] = [
     evidence: '0.4 agent UX lifecycle cockpit refactor.'
   },
   {
-    decision: 'Finalize is the default agent close path; finish is low-level bookkeeping.',
+    decision: 'Finalize is the default agent close path.',
     commands: ['task.finalize', 'task.complete', 'task.finish'],
-    rule: '`task finalize` is the default reviewed close path. `task complete` is a legacy read-only workflow compressor; low-level `task finish` may update only bounded task status bookkeeping.',
-    evidence: '0.3.3 lifecycle convenience contract.'
+    rule: '`task finalize --execute --auto` is the ordinary guarded close path. Removed low-level lifecycle command surfaces return structured redirect stubs.',
+    evidence: 'FD-010 and FD-013 0.4.1-rc.0 lifecycle surface consolidation.'
   },
   {
     decision: 'Close appends proof, audit verifies proof, finalize composes both.',
     commands: ['task.finalize', 'task.close', 'task.audit-close'],
-    rule: '`task finalize --execute --plan-hash <hash>` preserves the underlying boundaries: low-level `task close --execute` appends close evidence only and `task audit-close` is read-only post-close verification.',
-    evidence: '0.3.3 finalize-first lifecycle default.'
+    rule: '`task finalize` preserves the proof boundaries internally: finish bookkeeping, done readiness, close evidence append, and post-close audit.',
+    evidence: '0.4.1-rc.0 finalize-first lifecycle default.'
   },
   {
     decision: 'Proof and CI gates diagnose, they do not replace close.',

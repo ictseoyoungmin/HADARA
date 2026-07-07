@@ -53,7 +53,7 @@ describe('task finalize dry-run plan', () => {
       },
       primaryNextAction: {
         id: 'finalize-execute-reviewed-plan',
-        command: `hadara task finalize --task ${task.id} --execute --plan-hash ${report.planHash} --json`,
+        command: `hadara task finalize --task ${task.id} --execute --auto --json`,
         writeBoundary: 'task-local',
         summary: 'Apply bounded finish bookkeeping. Then finalize will re-evaluate ready, close, audit-close and may stop if blockers appear.'
       },
@@ -133,7 +133,7 @@ describe('task finalize dry-run plan', () => {
     expect(report.summary).toMatchObject({ required: 1, blocked: 0, satisfied: 2, deferredChecks: ['audit-close'], partialExecutionRisk: true });
     expect(report.primaryNextAction).toMatchObject({
       id: 'finalize-execute-reviewed-plan',
-      command: `hadara task finalize --task ${task.id} --execute --plan-hash ${report.planHash} --json`,
+      command: `hadara task finalize --task ${task.id} --execute --auto --json`,
       writeBoundary: 'evidence-append',
       summary: 'Append close evidence through finalize execute. Then finalize will re-evaluate audit-close and may stop if blockers appear.'
     });
@@ -291,7 +291,7 @@ describe('task finalize dry-run plan', () => {
     });
     expect(report.primaryNextAction).toMatchObject({
       id: 'finalize-repair-close-proof',
-      command: `hadara task finalize --task ${task.id} --execute --plan-hash ${report.planHash} --json`,
+      command: `hadara task finalize --task ${task.id} --execute --auto --json`,
       writeBoundary: 'evidence-append'
     });
     expect(report.issues).toEqual(
