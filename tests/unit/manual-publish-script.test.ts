@@ -49,4 +49,16 @@ describe('manual publish release script', () => {
       script.indexOf('git clone "$WORKSPACE" "$CLONE"'),
     );
   });
+
+  it('does not run the manual publish helper dry-run by default', () => {
+    const script = fs.readFileSync(prepareScriptPath, 'utf8');
+
+    expect(script).toContain('--run-helper-dry-run');
+    expect(script).toContain('RUN_HELPER_DRY_RUN="${HADARA_RUN_HELPER_DRY_RUN:-0}"');
+    expect(script).toContain('if [ "$RUN_HELPER_DRY_RUN" != "1" ]; then');
+    expect(script).toContain('skipped by default.');
+    expect(script).toContain('manual-publish-rc.sh $TASK --execute');
+    expect(script).not.toContain('auto (only if npm is logged in)');
+    expect(script).not.toContain('HADARA_SKIP_DRY_RUN');
+  });
 });

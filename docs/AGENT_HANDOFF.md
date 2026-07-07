@@ -4,16 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The 0.4.1-rc.0 cleanup/readiness line is complete through T-0510, including T-0509 release readiness and the T-0510 manual publish helper stale-command fix. |
-| Current Phase | 0.4.1-rc.0 publish-ready after helper hotfix, not published | The first operator retry stopped before publish: `gh` missing for `--github-draft`, then stale `package smoke` in the helper. T-0510 fixed the helper; publish remains manual from a fresh clone after this commit. |
-| Latest Completed Task | T-0510 0.4.1 rc0 manual publish helper smoke command fix | `manual-publish-rc.sh` now calls canonical `smoke package`; focused Docker script test and build passed. |
+| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The 0.4.1-rc.0 cleanup/readiness line is complete through T-0511, including T-0509 release readiness, T-0510 manual helper stale-command fix, and T-0511 prepare/manual boundary fix. |
+| Current Phase | 0.4.1-rc.0 publish-ready after helper/prep hotfixes, not published | The first operator retry stopped before publish: `gh` missing for `--github-draft`, then stale `package smoke` in the helper. T-0510 fixed the helper command. T-0511 fixed `prepare-publish-env.sh` so it no longer runs the manual helper dry-run automatically. |
+| Latest Completed Task | T-0511 0.4.1 rc0 publish env preparation boundary fix | `prepare-publish-env.sh` now prepares a clean clone/build/gate environment by default and leaves end-to-end dry-run/release evidence/npm publish to `manual-publish-rc.sh --execute`; helper dry-run is opt-in via `--run-helper-dry-run`. |
 | Active / Next Task | Approval-gated `0.4.1-rc.0` npm publish retry | Rerun `bash scripts/release/prepare-publish-env.sh T-0509` after this commit, then in the prepared clone run `npm login` and `bash scripts/release/manual-publish-rc.sh T-0509 --execute`. Use npm-only flow unless `gh` is installed/authenticated in the publish container. |
-| Validation Baseline | T-0510 helper hotfix plus T-0509 release readiness | T-0510 shell syntax/help checks passed, Docker focused script test passed 1 file / 5 tests, and build passed. T-0509 release readiness remains valid: Docker package smoke, release artifact, clean-checkout smoke, strict release gate, release dry-run, and publish dry-run passed. |
+| Validation Baseline | T-0511 prepare boundary fix plus T-0510 helper hotfix plus T-0509 release readiness | T-0511 script syntax/help, Docker focused script tests (1 file / 6 tests), and build passed. T-0510 shell syntax/help checks passed, Docker focused script test passed 1 file / 5 tests, and build passed. T-0509 release readiness remains valid: Docker package smoke, release artifact, clean-checkout smoke, strict release gate, release dry-run, and publish dry-run passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| 0.4.1 rc0 publish env preparation boundary fix | T-0511 keeps publish prep from stealing the manual helper role: default prepare no longer runs `manual-publish-rc.sh` dry-run when npm login exists; `--run-helper-dry-run` is explicit opt-in. | `ev:T-0511:38e1c8a3228b49b7b8d50905` |
 | 0.4.1 rc0 task table token alias cleanup | T-0508 adds human-friendly TASK.md aliases: `Acceptance State=Done` is accepted and normalized by existing readiness logic, `Inputs / Constraints State=active` is accepted, and new default/template scaffolds use `active`. | `ev:T-0508:145f99b5933d4f1cab7f022c` |
 | 0.4.1 rc0 validation wrapper spawn fallback closure | T-0507 adds `validation run --direct-result passed / failed / blocked --direct-summary "..."` so wrapper launch failures can still record validation evidence, check-key resolution tags, and optional TASK.md row sync through the validation surface. | `ev:T-0507:9539808a63394c0095f185cd`, `ev:T-0507:3357d27e0c5c4b93bf30f3ea`, `ev:T-0507:c450d2efdc934318815a3389` |
 | 0.4.1 rc0 dogfood follow-up command surface cleanup | T-0506 resolved T-0505 findings, removed or redirected obsolete compatibility surfaces (`task show`, `task next`, `evidence collect`, `handoff suggest`, `run-state show`, old `package smoke`, and related aliases), reran fresh `/tmp` dogfood, and passed full Docker validation. | `ev:T-0506:c03f654276be450986c48743`, `ev:T-0506:6bf1c1251fbc4bd3ac621efc`, `ev:T-0506:10d49b029b3a4424921fddd9` |
@@ -52,9 +53,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0508 / 0.4.1 rc0 task table token alias cleanup | `task.acceptance.state` now accepts `Done`; `task.source.state` now accepts `active`; default and template TASK.md scaffold rows now use `active`; focused tests/build/schema/scaffold smokes passed. | `ev:T-0508:145f99b5933d4f1cab7f022c` |
-| T-0507 / 0.4.1 rc0 validation wrapper spawn fallback closure | The remaining T-0505 F-5 wrapper-launch friction is closed at the validation workflow level: `validation run --direct-result` records already-run direct results without spawning, preserves validation-check resolution tags, updates TASK.md rows with `--update-task`, and fresh dogfood closed-valid. | `ev:T-0507:9539808a63394c0095f185cd`, `ev:T-0507:3357d27e0c5c4b93bf30f3ea`, `ev:T-0507:c450d2efdc934318815a3389` |
-| T-0506 / 0.4.1 rc0 dogfood follow-up command surface cleanup | T-0505 findings are resolved or carried as non-blocking feedback; obsolete compatibility surfaces now return structured redirects or are absent from the registry; fresh dogfood, command-surface smoke, and full Docker validation passed. | `ev:T-0506:c03f654276be450986c48743`, `ev:T-0506:6bf1c1251fbc4bd3ac621efc`, `ev:T-0506:10d49b029b3a4424921fddd9` |
+| T-0511 / 0.4.1 rc0 publish env preparation boundary fix | `prepare-publish-env.sh` now skips manual helper dry-run by default, keeps `--skip-dry-run` as compatibility no-op, and exposes explicit `--run-helper-dry-run`; focused release-script test/build passed. | `ev:T-0511:77ba1d73ad6840138ffe9056`, `ev:T-0511:38e1c8a3228b49b7b8d50905`, `ev:T-0511:4494d2cd339e4e4bb362165c` |
+| T-0510 / 0.4.1 rc0 manual publish helper smoke command fix | `manual-publish-rc.sh` now calls canonical `smoke package` for fresh release evidence instead of removed `package smoke`; focused Docker script test and build passed. | `ev:T-0510:14f8ebc85ed5466ab51be7be`, `ev:T-0510:4fd82837a221488dbdc309b3`, `ev:T-0510:85f18464c12c47698a85df05` |
+| T-0509 / 0.4.1 rc0 release readiness and publish preparation | Source/readiness is prepared for npm `next` publish; release artifact, clean-checkout smoke, strict gate, release dry-run, publish dry-run, and unpublished registry check passed before operator publish mutation. | `ev:T-0509:34a2f44b3e3e4918a551415a`, `ev:T-0509:b53a52f365724072a494f4ba` |
 
 ## Current Known Problems
 
@@ -133,14 +134,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Run `0.4.1-rc.0` release smoke/readiness with canonical current command surfaces. | T-0506 closed command-surface/T-0505 blockers and T-0507 closed the remaining validation-wrapper F-5 path; the next line should validate package/release readiness rather than add more dogfood cleanup. | `ev:T-0507:c450d2efdc934318815a3389`, `ev:T-0507:3357d27e0c5c4b93bf30f3ea`, `docs/RELEASE_READINESS.md` |
+| Retry approval-gated `0.4.1-rc.0` npm publish from a fresh prepared clone. | T-0509 release readiness is complete, T-0510 fixed the manual helper stale smoke command, and T-0511 restored the prepare/manual helper boundary. Prepare should only set up the clone; publish starts with `manual-publish-rc.sh T-0509 --execute`. | `ev:T-0511:38e1c8a3228b49b7b8d50905`, `ev:T-0510:4fd82837a221488dbdc309b3`, `docs/RELEASE_READINESS.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| T-0507 / 0.4.1 rc0 validation wrapper spawn fallback closure | Docker `npm run build` plus full `npx vitest run --reporter=dot` passed 158 files / 1044 tests; fresh governed `/tmp` dogfood used `validation run --direct-result`, synced TASK.md Validation, and reached `closed-valid`. | Evidence `ev:T-0507:c450d2efdc934318815a3389`, `ev:T-0507:3357d27e0c5c4b93bf30f3ea`, `ev:T-0507:9539808a63394c0095f185cd`. |
+| T-0511 / 0.4.1 rc0 publish env preparation boundary fix | `bash -n scripts/release/prepare-publish-env.sh`, updated help output, Docker focused release-script tests (1 file / 6 tests), and `npm run build` passed. | Evidence `ev:T-0511:77ba1d73ad6840138ffe9056`, `ev:T-0511:05bc85c32e2a4e52b8b3d09a`, `ev:T-0511:38e1c8a3228b49b7b8d50905`, `ev:T-0511:4494d2cd339e4e4bb362165c`. |
 | T-0506 / 0.4.1 rc0 dogfood follow-up command surface cleanup | Docker `npm run build` plus full `npx vitest run --reporter=dot` passed 158 files / 1043 tests; fresh governed `/tmp` dogfood reached `closed-valid`; command-surface smoke verified removed-command redirects and canonical `smoke package`. | Evidence `ev:T-0506:10d49b029b3a4424921fddd9`, `ev:T-0506:c03f654276be450986c48743`, `ev:T-0506:6bf1c1251fbc4bd3ac621efc`. |
 | T-0493 / stable 0.4.0 public GitHub Release | Operator `gh release view v0.4.0` output verified `isDraft=false`, `isPrerelease=false`, tag `v0.4.0`, target `205e9aad0e01ea5332dbdca39c10403c00e845be`, and public URL. | Evidence `ev:T-0493:51ec29e0b0cb4c2aa2e5de85`. |
 | T-0492 / stable 0.4.0 installed-package recycle | Fresh unmounted `node:22-bookworm` container installed `hadara@0.4.0`; installed `hadara version --json` reported `packageVersion=0.4.0`; installed `hadara package recycle --execute --package hadara@latest --expected-version 0.4.0 --json` returned `ok:true` with registry, isolated install/init/task/session/context/finalize smokes, and cleanup passed. | Evidence `ev:T-0492:50c4c3dc78a14861a165ad51`. |

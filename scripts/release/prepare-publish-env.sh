@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Prepare a clean, validated publish environment inside the hadara-dev container,
-# so the operator only has to `npm login` and run `manual-publish-rc.sh <TASK> --execute`.
+# Prepare a clean publish environment inside the hadara-dev container,
+# so the operator can `npm login` and then run `manual-publish-rc.sh <TASK> --execute`.
+# This script does not run the manual publish helper by default; the helper owns
+# the end-to-end dry-run, release evidence, npm dry-run, and npm publish boundary.
 # The optional GitHub Release step is still operator-controlled and can be run after npm publish.
 #
 # Why this script exists (the traps it removes):
@@ -35,8 +37,8 @@
 #   2. `npm ci` and `npm run build`; verify built dist version == package.json version.
 #   3. Remove the stale global `hadara`.
 #   4. Strict release-gate sanity check (no npm auth needed).
-#   5. If npm is logged in: run the official helper dry-run, then re-clean the clone.
-#      If not: skip it (the --execute run performs the full dry-run before publishing).
+#   5. Skip the manual helper by default and print the exact command the operator runs next.
+#      An explicit --run-helper-dry-run option is available for manual preview only.
 #   6. Print the exact container + folder + commands to finish npm publish and optional GitHub release handling.
 #
 # This script never publishes. Registry mutation stays in `manual-publish-rc.sh --execute`,
@@ -50,7 +52,9 @@
 #   --clone-dir <path>   Clone path inside the container. Default: /root/hadara-publish
 #   --workspace <path>   Mounted repo path inside the container. Default: /workspace
 #   --registry <url>     npm registry. Default: https://registry.npmjs.org
-#   --skip-dry-run       Never run the helper dry-run, even if npm is logged in.
+#   --run-helper-dry-run Run `manual-publish-rc.sh <TASK>` dry-run after prepare.
+#                        Off by default so --execute remains the end-to-end boundary.
+#   --skip-dry-run       Compatibility no-op; helper dry-run is already skipped by default.
 #   -h, --help           Show this help.
 #
 # Run it from the host repo root:
@@ -63,9 +67,9 @@ CONTAINER="${HADARA_DEV_CONTAINER:-hadara-dev}"
 CLONE_DIR="/root/hadara-publish"
 WORKSPACE="/workspace"
 REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org}"
-SKIP_DRY_RUN="0"
+RUN_HELPER_DRY_RUN="${HADARA_RUN_HELPER_DRY_RUN:-0}"
 
-usage() { sed -n '2,45p' "$0"; }
+usage() { sed -n '2,64p' "$0"; }
 
 if [[ $# -gt 0 && "$1" != --* ]]; then
   TASK_ID="$1"; shift
@@ -77,7 +81,8 @@ while [[ $# -gt 0 ]]; do
     --clone-dir) CLONE_DIR="${2:-}"; [[ -n "$CLONE_DIR" ]] || { echo "--clone-dir requires a value"; exit 1; }; shift 2;;
     --workspace) WORKSPACE="${2:-}"; [[ -n "$WORKSPACE" ]] || { echo "--workspace requires a value"; exit 1; }; shift 2;;
     --registry) REGISTRY="${2:-}"; [[ -n "$REGISTRY" ]] || { echo "--registry requires a value"; exit 1; }; shift 2;;
-    --skip-dry-run) SKIP_DRY_RUN="1"; shift;;
+    --run-helper-dry-run) RUN_HELPER_DRY_RUN="1"; shift;;
+    --skip-dry-run) RUN_HELPER_DRY_RUN="0"; shift;;
     -h|--help) usage; exit 0;;
     *) echo "Unknown argument: $1"; usage; exit 1;;
   esac
@@ -101,7 +106,7 @@ echo "Container:  $CONTAINER"
 echo "Clone dir:  $CLONE_DIR (container ext4)"
 echo "Workspace:  $WORKSPACE (mounted repo)"
 echo "Registry:   $REGISTRY"
-echo "Dry-run:    $([[ "$SKIP_DRY_RUN" == "1" ]] && echo "skipped" || echo "auto (only if npm is logged in)")"
+echo "Helper dry-run: $([[ "$RUN_HELPER_DRY_RUN" == "1" ]] && echo "opt-in enabled" || echo "skipped by default")"
 echo
 
 docker exec \
@@ -109,14 +114,14 @@ docker exec \
   -e HADARA_CLONE_DIR="$CLONE_DIR" \
   -e HADARA_WORKSPACE_DIR="$WORKSPACE" \
   -e HADARA_REGISTRY="$REGISTRY" \
-  -e HADARA_SKIP_DRY_RUN="$SKIP_DRY_RUN" \
+  -e HADARA_RUN_HELPER_DRY_RUN="$RUN_HELPER_DRY_RUN" \
   "$CONTAINER" bash -lc '
 set -euo pipefail
 TASK="$HADARA_TASK_ID"
 CLONE="$HADARA_CLONE_DIR"
 WORKSPACE="$HADARA_WORKSPACE_DIR"
 REGISTRY="$HADARA_REGISTRY"
-SKIP_DRY_RUN="$HADARA_SKIP_DRY_RUN"
+RUN_HELPER_DRY_RUN="$HADARA_RUN_HELPER_DRY_RUN"
 
 echo "== 1. Fresh clone from the mounted repo =="
 add_git_safe_directory() {
@@ -169,9 +174,11 @@ if [ "$GATE_OK" != "true" ]; then
 fi
 
 echo
-echo "== 5. Helper dry-run (optional; needs npm login) =="
-if [ "$SKIP_DRY_RUN" = "1" ]; then
-  echo "skipped (--skip-dry-run)."
+echo "== 5. Manual helper dry-run boundary =="
+if [ "$RUN_HELPER_DRY_RUN" != "1" ]; then
+  echo "skipped by default."
+  echo "The end-to-end dry-run, release evidence, npm dry-run, and npm publish stay in:"
+  echo "  bash scripts/release/manual-publish-rc.sh $TASK --execute"
 elif npm whoami --registry="$REGISTRY" >/dev/null 2>&1; then
   echo "npm user: $(npm whoami --registry="$REGISTRY")"
   echo "Running: bash scripts/release/manual-publish-rc.sh $TASK   (dry-run, no --execute)"
@@ -187,7 +194,7 @@ elif npm whoami --registry="$REGISTRY" >/dev/null 2>&1; then
   rm -rf dist-release
 else
   echo "npm is not logged in -> skipping the helper dry-run."
-  echo "Readiness gates already passed; the --execute run performs the full dry-run before publishing."
+  echo "The --execute run performs the full dry-run before publishing."
 fi
 
 echo

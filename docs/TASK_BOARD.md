@@ -511,3 +511,4 @@
 | T-0508 | 0.4.1 rc0 task table token alias cleanup | Done | tasks/T-0508-0-4-1-rc0-task-table-token-alias-cleanup | |
 | T-0509 | 0.4.1 rc0 release readiness and publish preparation | Done | tasks/T-0509-0-4-1-rc0-release-readiness-and-publish-preparation | |
 | T-0510 | 0.4.1 rc0 manual publish helper smoke command fix | Done | tasks/T-0510-0-4-1-rc0-manual-publish-helper-smoke-command-fix | |
+| T-0511 | 0.4.1 rc0 publish env preparation boundary fix | Done | tasks/T-0511-0-4-1-rc0-publish-env-preparation-boundary-fix | |

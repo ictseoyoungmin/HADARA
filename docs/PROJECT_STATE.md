@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0510 0.4.1 rc0 manual publish helper smoke command fix |
-| Active Task | `0.4.1-rc.0` source/readiness is prepared and the manual publish helper stale-command regression is fixed; next step is rerun publish prep from a fresh clone, then approval-gated npm publish. |
+| Latest Completed Task | T-0511 0.4.1 rc0 publish env preparation boundary fix |
+| Active Task | `0.4.1-rc.0` source/readiness is prepared; `prepare-publish-env.sh` now prepares only the clean clone/build/gate environment by default, and approval-gated end-to-end validation/publish remains in `manual-publish-rc.sh --execute`. |
+
+T-0511 follow-up note: `scripts/release/prepare-publish-env.sh` no longer runs `manual-publish-rc.sh <TASK>` dry-run automatically when npm auth is present. The helper dry-run is now explicit opt-in via `--run-helper-dry-run`, while `--skip-dry-run` remains a compatibility no-op because skipping is the default. This preserves the operator boundary: run prepare to create a clean ext4 clone and verify strict release gate, then run `bash scripts/release/manual-publish-rc.sh T-0509 --execute` inside the prepared clone for the full dry-run, release evidence, npm dry-run, and interactive publish. Evidence: `ev:T-0511:77ba1d73ad6840138ffe9056`, `ev:T-0511:05bc85c32e2a4e52b8b3d09a`, `ev:T-0511:38e1c8a3228b49b7b8d50905`, `ev:T-0511:4494d2cd339e4e4bb362165c`.
 
 T-0510 follow-up note: the first operator publish retry did not publish. The `--github-draft` attempt stopped because `gh` was unavailable in the publish container, and the npm-only attempt stopped before publish because `scripts/release/manual-publish-rc.sh` still called the removed `hadara package smoke` surface during fresh evidence refresh. T-0510 replaced it with canonical `hadara smoke package`, added a regression assertion, passed shell syntax/help checks, passed Docker/ext4 focused script tests (1 file / 5 tests), and passed TypeScript build. Evidence: `ev:T-0510:14f8ebc85ed5466ab51be7be`, `ev:T-0510:fb14e919c4a44bc2bd499828`, `ev:T-0510:4fd82837a221488dbdc309b3`, `ev:T-0510:85f18464c12c47698a85df05`. Next publish attempt should use a fresh clone after this commit; GitHub draft still requires `gh` in the publish environment or a separate host-side GitHub Release step.
 
