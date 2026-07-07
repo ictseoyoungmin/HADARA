@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0508 0.4.1 rc0 task table token alias cleanup |
-| Active Task | Proceed to `0.4.1-rc.0` release smoke/readiness using canonical current command surfaces after T-0508 closeout. |
+| Latest Completed Task | T-0509 0.4.1 rc0 release readiness and publish preparation |
+| Active Task | `0.4.1-rc.0` source/readiness is prepared; next step is approval-gated npm publish from the prepared clone path, then GitHub draft/recycle follow-ups. |
+
+T-0509 follow-up note: `hadara@0.4.1-rc.0` source/readiness is prepared for approval-gated npm `next` publish. Package metadata and lockfile target `0.4.1-rc.0`; README keeps stable install guidance at `0.4.0` while surfacing the RC candidate; release notes/readiness docs and `GITHUB_RELEASE_NOTE.md` describe concrete 0.4.1-rc.0 changes and boundaries. Focused finalize/package-smoke tests passed 2 files / 35 tests, TypeScript build passed, built CLI version reported `0.4.1-rc.0`, Docker package smoke passed with command-surface drift and generated-init-doc gates, release artifact and clean-checkout smoke passed, strict release gate passed, release dry-run reported ready with blockers 0 / warnings 0, publish dry-run passed with only token warnings, and `npm view hadara@0.4.1-rc.0` returned E404 confirming no publish has occurred yet. Host package-smoke failures from npm cache EROFS and Node spawn EPERM were recorded and resolved by Docker/ext4 validation; release artifact dirty-worktree refusals were expected guard behavior and resolved by the clean-worktree rerun. Evidence: `ev:T-0509:34a2f44b3e3e4918a551415a`, `ev:T-0509:c6e8cacc44814a249c5da181`, `ev:T-0509:580e544b0e2e4484b3fdacfb`, `ev:T-0509:9f1f8cbc00cc405384db41f3`, `ev:T-0509:8d224267508c4883ae29027a`, `ev:T-0509:5b14389630774f87b9481533`, `ev:T-0509:ff851321183342729b17293e`, `ev:T-0509:b53a52f365724072a494f4ba`.
 
 ## Next Planned Line
 
