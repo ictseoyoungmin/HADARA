@@ -1,11 +1,8 @@
-import { createTaskAuditCloseReport, createTaskCloseReport, createTaskCloseSourceReport, executeTaskCloseEvidence, formatTaskAuditCloseReport } from '../task/task-close';
-import { createTaskCompleteFlowReport, formatTaskCompleteFlowReport } from '../task/task-complete-flow';
+import { createTaskCloseSourceReport } from '../task/task-close';
+import { handleRemovedTaskSubcommand, REMOVED_TASK_SUBCOMMANDS } from './removed-lifecycle';
 import { createTaskCreateReport, formatTaskCreateReport } from '../task/task-create';
 import { createTaskFinalizeReport, formatTaskFinalizeReport } from '../task/task-finalize';
 import type { TaskFinalizeProgressEvent } from '../task/task-finalize';
-import { createTaskLifecycleReport, formatTaskLifecycleReport } from '../task/task-lifecycle';
-import { createTaskReadyReport } from '../task/task-ready';
-import { createTaskFinishReport, formatTaskFinishReport } from '../task/task-finish';
 import { createTaskNextReport, formatTaskNextReport } from '../task/task-next';
 import { createTaskUpgradeScaffoldReport, formatTaskUpgradeScaffoldReport } from '../task/task-upgrade-scaffold';
 import { createTaskStatusSelectionReport, createTaskWorkbenchReport, formatTaskStatusSelectionReport, formatTaskWorkbenchReport, type TaskStatusSelectionReport, type TaskWorkbenchReport } from '../services/task-workbench';
@@ -78,6 +75,9 @@ type TaskStatusSummaryReport =
 export function handleTaskCommand(input: TaskCommandInput): boolean {
   const timer = startMonotonicTimer();
   const sub = input.args[1];
+  // FD-013: removed low-level lifecycle surface answers with a structured
+  // redirect stub instead of an unknown-command failure.
+  if (sub && REMOVED_TASK_SUBCOMMANDS[sub]) return handleRemovedTaskSubcommand(sub, input.jsonOutput);
   if (sub === 'create') {
     if (blockLegacyMutation(input, 'task.create')) return true;
     const title = extractTaskCreateTitle(input.args);
@@ -144,24 +144,6 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
     return true;
   }
 
-  if (sub === 'close') {
-    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'task.close')) return true;
-    const id = getStringOption(input.args, '--task') ?? input.args[2];
-    if (!id || id.startsWith('--')) throw new Error('task close requires --task <task-id>');
-    const actor = getActorContextOption(input.args);
-    const report = createTaskCloseReport(input.projectRoot, id, getFlag(input.args, '--execute') ? 'execute' : 'dry-run', { actor });
-    if (getFlag(input.args, '--execute') && report.ok) executeTaskCloseEvidence(input.projectRoot, report);
-    if (input.jsonOutput) {
-      console.log(JSON.stringify(report, null, 2));
-    } else {
-      console.log(`[HADARA] task close ${id}: ${report.ok ? 'ok' : 'issues'}`);
-      for (const issue of report.issues) console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
-      for (const action of report.nextActions) console.log(`${action.required ? 'REQUIRED' : 'OPTIONAL'}\t${action.id}\t${action.command ?? action.message}`);
-    }
-    if (!report.ok) process.exitCode = 6;
-    return true;
-  }
-
   if (sub === 'close-source') {
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) throw new Error('task close-source requires --task <task-id>');
@@ -209,20 +191,6 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
     return true;
   }
 
-  if (sub === 'complete') {
-    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'task.complete')) return true;
-    const id = getStringOption(input.args, '--task') ?? input.args[2];
-    if (!id || id.startsWith('--')) throw new Error('task complete requires --task <task-id>');
-    const report = createTaskCompleteFlowReport(input.projectRoot, id, { executeRequested: getFlag(input.args, '--execute'), actor: getActorContextOption(input.args) });
-    if (input.jsonOutput) {
-      console.log(JSON.stringify(report, null, 2));
-    } else {
-      console.log(formatTaskCompleteFlowReport(report));
-    }
-    if (!report.ok) process.exitCode = 6;
-    return true;
-  }
-
   if (sub === 'finalize') {
     if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'task.finalize')) return true;
     const id = getStringOption(input.args, '--task') ?? input.args[2];
@@ -240,63 +208,6 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
       console.log(JSON.stringify(report, null, 2));
     } else {
       console.log(formatTaskFinalizeReport(report));
-    }
-    if (!report.ok) process.exitCode = 6;
-    return true;
-  }
-
-  if (sub === 'lifecycle') {
-    const id = getStringOption(input.args, '--task') ?? input.args[2];
-    if (!id || id.startsWith('--')) throw new Error('task lifecycle requires --task <task-id>');
-    const report = createTaskLifecycleReport(input.projectRoot, id, { actor: getActorContextOption(input.args) });
-    if (input.jsonOutput) {
-      console.log(JSON.stringify(report, null, 2));
-    } else {
-      console.log(formatTaskLifecycleReport(report));
-    }
-    if (!report.ok) process.exitCode = 6;
-    return true;
-  }
-
-  if (sub === 'finish') {
-    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'task.finish')) return true;
-    const id = getStringOption(input.args, '--task') ?? input.args[2];
-    if (!id || id.startsWith('--')) throw new Error('task finish requires --task <task-id>');
-    const report = createTaskFinishReport(input.projectRoot, id, getFlag(input.args, '--execute') ? 'execute' : 'dry-run', { actor: getActorContextOption(input.args) });
-    if (input.jsonOutput) {
-      console.log(JSON.stringify(report, null, 2));
-    } else {
-      console.log(formatTaskFinishReport(report));
-    }
-    if (!report.ok) process.exitCode = 6;
-    return true;
-  }
-
-  if (sub === 'audit-close') {
-    const id = getStringOption(input.args, '--task') ?? input.args[2];
-    if (!id || id.startsWith('--')) throw new Error('task audit-close requires --task <task-id>');
-    const report = createTaskAuditCloseReport(input.projectRoot, id, { actor: getActorContextOption(input.args) });
-    if (input.jsonOutput) {
-      console.log(JSON.stringify(report, null, 2));
-    } else {
-      console.log(formatTaskAuditCloseReport(report));
-    }
-    if (!report.ok) process.exitCode = 6;
-    return true;
-  }
-
-  if (sub === 'ready') {
-    const id = getStringOption(input.args, '--task') ?? input.args[2];
-    if (!id || id.startsWith('--')) throw new Error('task ready requires --task <task-id>');
-    const level = getStringOption(input.args, '--level', 'done') ?? 'done';
-    if (level !== 'done') throw new Error(`unsupported task ready level: ${level}`);
-    const report = createTaskReadyReport(input.projectRoot, id, 'done', { actor: getActorContextOption(input.args) });
-    if (input.jsonOutput) {
-      console.log(JSON.stringify(report, null, 2));
-    } else {
-      console.log(`[HADARA] task ready ${id}: ${report.ok ? 'ready' : 'blocked'}`);
-      for (const issue of report.issues) console.log(`[${issue.severity}] ${issue.code}: ${issue.message}`);
-      for (const action of report.nextActions) console.log(`${action.required ? 'REQUIRED' : 'OPTIONAL'}\t${action.id}\t${action.command ?? action.message}`);
     }
     if (!report.ok) process.exitCode = 6;
     return true;

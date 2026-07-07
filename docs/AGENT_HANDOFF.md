@@ -4,16 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The 0.4.1-rc.0 cleanup line has completed docs-register diagnostics (T-0494), `docs.complete-spec` (T-0495), `handoff update` removal (T-0496), vocabulary diagnostics plus registry correction (T-0497), workflow-doc authority consolidation (T-0498), and finalize --auto plus the package-smoke command-surface drift gate (T-0499). |
+| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The 0.4.1-rc.0 cleanup line has completed docs-register diagnostics (T-0494), `docs.complete-spec` (T-0495), `handoff update` removal (T-0496), vocabulary diagnostics plus registry correction (T-0497), workflow-doc authority consolidation (T-0498), finalize --auto plus the package-smoke command-surface drift gate (T-0499), and the slices-state prototype plus lifecycle surface removal (T-0500). All 6 `docs/specs/0.4.1/rc0-scope.md` items now have capsules; item 5's AC-6 dogfood-count metric is partial. |
 | Current Phase | 0.4.0 stable release line public | npm stable publish, public GitHub Release, and installed-package recycle are complete. |
-| Latest Completed Task | T-0499 0.4.1 rc0 finalize auto and package smoke drift gate | Guarded `task finalize --execute --auto` folds the review/hash round trip into one call, and package smoke gains a `command-surface-drift` step against the source registry. |
-| Active / Next Task | Open the final `0.4.1-rc.0` scope capsule. | Remaining rc0 items are FD-012 (DEVELOPMENT_SLICES state/render prototype) and FD-013 (lifecycle surface removal, now unblocked because FD-010 landed in T-0499); contracts live in `docs/specs/0.4.1/rc0-scope.md` items 5-6. |
-| Validation Baseline | T-0499 finalize-auto and drift-gate validation | Docker ext4 full suite passed 1030/1030 and TypeScript build passed; built-CLI smokes verified --auto flag wiring (deferred-check semantics, --plan-hash conflict refusal); the capsule itself was closed with a single `--execute --auto` call. |
+| Latest Completed Task | T-0500 0.4.1 rc0 slices state prototype and lifecycle surface removal | `.hadara/state/slices.json` + generated `DEVELOPMENT_SLICES.md` with an ownership-contract drift guard (FD-012), and `hadara.commandRemoved.v1` deprecation stubs for `task finish`/`ready`/`close`/`audit-close`/`complete`/`lifecycle` (FD-013). |
+| Active / Next Task | `docs/specs/0.4.1/rc0-scope.md`'s implementation budget (items 1-6) is complete; actual `0.4.1-rc.0` release smoke/tagging was out of scope and was not run. Before tagging, resolve FD-012 AC-6 (dogfood 2+ real capsules with slices state, or file an explicit exclusion) — see T-0500 TASK.md RF-1/RF-2. | Contracts live in `docs/specs/0.4.1/rc0-scope.md` 릴리스 판정 section. |
+| Validation Baseline | T-0500 slices-state and lifecycle-removal validation | Docker ext4 full suite passed 1033/1033 and TypeScript build passed; built-CLI smokes verified slice add/set/render/migrate, doctor drift detection, task-next state-first read, and all six removed-command stubs (exit 6, `replacementCommand`). |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| 0.4.1 rc0 slices state prototype and lifecycle surface removal | T-0500 adds `.hadara/state/slices.json` + generated `DEVELOPMENT_SLICES.md` with an ownership-contract drift guard (FD-012), and removes the standalone `task finish`/`ready`/`close`/`audit-close`/`complete`/`lifecycle` surface behind `hadara.commandRemoved.v1` stubs (FD-013). | `ev:T-0500:ef6aa0705a59470099f4de99`, `ev:T-0500:b49ef2fac40b43f080c96671`, `ev:T-0500:250d41efcb9d42c19b6dce6c` |
 | 0.4.1 rc0 finalize auto and package smoke drift gate | T-0499 adds guarded `task finalize --execute --auto` (review fold-in, zero-write blocker refusal, plan-hash race guard preserved) and a package-smoke `command-surface-drift` step comparing installed registry ids to source and installed routing parity. | `ev:T-0499:5f46965124d44ecf95f31f91`, `ev:T-0499:89dc28fd462d45c2b364e3ff`, `ev:T-0499:eabff0dd3bdc40eea1f3f8f9` |
 | Workflow docs consolidate implementation sop removal | T-0498 adds root `docs/HADARA_WORKFLOW.md`, removes root `docs/IMPLEMENTATION_SOP.md`, and updates required reading, docs registry, init, context export, protocol, and tests to use the workflow guide. | `ev:T-0498:b6158a034c4e45e1b0abaa01`, `ev:T-0498:6a1ea7301202461e81728a49`, `ev:T-0498:6dd2380374504875a6dc5cf1` |
 | 0.4.1 rc0 vocabulary diagnostics and registry correction | T-0497 implements shared controlled vocabulary, `hadara schema`, structured TASK.md/docs token diagnostics, guarded `docs mark --correction`, and registers the rc0/state-first docs. | `ev:T-0497:76aba15e03a9492dbb139366` |
@@ -43,14 +44,15 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0500 / 0.4.1 rc0 slices state prototype and lifecycle surface removal | `.hadara/state/slices.json` + generated `DEVELOPMENT_SLICES.md` ownership-contract drift guard; six lifecycle commands removed behind `hadara.commandRemoved.v1` stubs; Docker suite 1033/1033. | `ev:T-0500:ef6aa0705a59470099f4de99`, `ev:T-0500:250d41efcb9d42c19b6dce6c` |
 | T-0499 / 0.4.1 rc0 finalize auto and package smoke drift gate | Guarded single-call `--execute --auto` close path plus the package-smoke command-surface drift gate; Docker suite 1030/1030. | `ev:T-0499:5f46965124d44ecf95f31f91`, `ev:T-0499:eabff0dd3bdc40eea1f3f8f9` |
 | T-0498 / workflow docs consolidate implementation sop removal | Consolidated current workflow authority on `docs/HADARA_WORKFLOW.md`, removed SOP from current surfaces, and validated init/docs/read-map/protocol/dogfooding behavior. | `ev:T-0498:b6158a034c4e45e1b0abaa01`, `ev:T-0498:6a1ea7301202461e81728a49`, `ev:T-0498:6dd2380374504875a6dc5cf1` |
-| T-0497 / 0.4.1 rc0 vocabulary diagnostics and registry correction | Added shared vocab/schema lookup, structured token diagnostics, guarded registry correction, and registered rc0/state-first docs. | `ev:T-0497:76aba15e03a9492dbb139366` |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
+| `hadara slice migrate` derives slice ids from the first token before `:`/`|` in the Slice cell, assuming the new `id: title` convention. | HADARA-dev's own 414-row `docs/DEVELOPMENT_SLICES.md` predates that convention (plain titles), so migrating it directly would produce colliding ids; confirmed via dry-run, not executed. | Add an id-derivation fallback (e.g. slugify the title) before attempting to migrate HADARA-dev's own file; see T-0500 TASK.md RF-1. |
 | Standard sync-build tar can stall after large dogfood artifacts. | `npm run dev:docker-sync-build -- --check-only --no-smoke` entered long I/O wait while tarring the mounted workspace after T-0479 artifacts. | For T-0482, tracked files plus the active capsule were copied to container ext4 `/tmp/hadara-check`; consider excluding large task artifacts from the sync-build tar in a future capsule. |
 | GitHub Release draft for `0.4.0-rc.0` exists but remains a draft. | The RC has public npm visibility and draft GitHub metadata, but the release is not published as a public GitHub Release yet. | Leave it draft unless the operator explicitly publishes the GitHub Release; stable readiness can proceed with the draft proof. |
 | Compatibility-only legacy sidecar references remain in historical specs and explicit fixtures. | T-0475 removed current-surface defaults, but old specs and compatibility tests still mention split capsule files by design. | Do not mass-delete history; only remove legacy paths when they affect current generated/user-facing behavior or are proven dead. |

@@ -279,40 +279,6 @@ describe('task close report', () => {
     });
   });
 
-  it('threads explicit actor CLI options into close and audit reports', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'Close actor CLI');
-    completeTask(root, task.id, task.dir);
-    const output: string[] = [];
-    const originalLog = console.log;
-    console.log = (value?: unknown) => {
-      output.push(String(value));
-    };
-    try {
-      expect(
-        handleTaskCommand({
-          args: ['task', 'close', '--task', task.id, '--agent-id', 'worker-close', '--run-id', 'run-close', '--actor-role', 'worker', '--json'],
-          projectRoot: root,
-          jsonOutput: true
-        })
-      ).toBe(true);
-      expect(
-        handleTaskCommand({
-          args: ['task', 'audit-close', '--task', task.id, '--agent-id', 'reviewer-1', '--run-id', 'run-audit', '--actor-role', 'reviewer', '--json'],
-          projectRoot: root,
-          jsonOutput: true
-        })
-      ).toBe(true);
-    } finally {
-      console.log = originalLog;
-    }
-
-    const closeReport = JSON.parse(output[0]);
-    const auditReport = JSON.parse(output[1]);
-    expect(closeReport.actor).toEqual({ agentId: 'worker-close', runId: 'run-close', role: 'worker', parentRunId: null });
-    expect(auditReport.actor).toEqual({ agentId: 'reviewer-1', runId: 'run-audit', role: 'reviewer', parentRunId: null });
-  });
-
   it('audits close evidence and reports hash drift as a warning', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Close audit evidence');

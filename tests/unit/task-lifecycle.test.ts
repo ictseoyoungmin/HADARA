@@ -120,26 +120,6 @@ describe('task lifecycle read model', () => {
     expect(validateSchema('hadara.task.lifecycle.v1', report).ok).toBe(true);
   });
 
-  it('routes the CLI task lifecycle command through the read-only report', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'CLI lifecycle');
-    const writes: string[] = [];
-    const originalLog = console.log;
-    console.log = (message?: unknown) => {
-      writes.push(String(message));
-    };
-    try {
-      expect(handleTaskCommand({ args: ['task', 'lifecycle', '--task', task.id, '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-    } finally {
-      console.log = originalLog;
-    }
-
-    const report = JSON.parse(writes.join('\n'));
-    expect(report.schemaVersion).toBe('hadara.task.lifecycle.v1');
-    expect(report.command).toBe('task.lifecycle');
-    expect(report.phase).toBe('finish-required');
-    expect(process.exitCode).toBeUndefined();
-  });
 });
 
 function appendCloseEvidence(root: string, taskId: string): void {

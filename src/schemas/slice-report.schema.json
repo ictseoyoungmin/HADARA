@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.slice.report.v1",
+  "x-hadara-schema-id": "hadara.slice.report.v1",
+  "title": "HADARA Slice State Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "mode", "ok", "statePath", "projectionPath", "statePresent", "rev", "slices", "writes", "projection", "issues"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.slice.report.v1" },
+    "command": { "type": "string", "enum": ["slice.add", "slice.set", "slice.list", "slice.migrate", "slice.render"] },
+    "mode": { "type": "string", "enum": ["dry-run", "execute", "read-only"] },
+    "ok": { "type": "boolean" },
+    "statePath": { "const": ".hadara/state/slices.json" },
+    "projectionPath": { "const": "docs/DEVELOPMENT_SLICES.md" },
+    "statePresent": { "type": "boolean" },
+    "rev": { "oneOf": [{ "type": "integer", "minimum": 1 }, { "type": "null" }] },
+    "slices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "title", "order", "capsule", "status", "purpose", "doneEvidence", "depends"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "title": { "type": "string" },
+          "order": { "type": "integer" },
+          "capsule": { "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }] },
+          "status": { "type": "string", "enum": ["not-started", "in-progress", "done", "deferred"] },
+          "purpose": { "type": "string" },
+          "doneEvidence": { "type": "string" },
+          "depends": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "writes": { "type": "array", "items": { "type": "string" } },
+    "projection": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["written", "driftDetected", "renderedHash", "fileHash"],
+      "properties": {
+        "written": { "type": "boolean" },
+        "driftDetected": { "type": "boolean" },
+        "renderedHash": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+        "fileHash": { "oneOf": [{ "type": "string" }, { "type": "null" }] }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "enum": ["error", "warning"] },
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "path": { "type": "string" },
+          "field": { "type": "string" },
+          "received": { "type": "string" },
+          "allowedValues": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

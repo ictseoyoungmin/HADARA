@@ -28,9 +28,9 @@ describe('task workflow command semantics docs', () => {
       expect(readme).toContain(command);
     }
 
-    expect(workflow).toContain('Low-level proof-boundary commands remain available for debugging, recovery, and command implementation work');
+    expect(workflow).toContain('The low-level lifecycle command surface was removed in 0.4.1-rc.0 (FD-013)');
     expect(hadaraWorkflow).toContain('Low-level lifecycle commands are for debugging, recovery, or command implementation work:');
-    expect(readme).toContain('Low-level proof-boundary commands remain available for debugging, recovery, and command implementation work');
+    expect(readme).toContain('Low-level proof-boundary commands were removed from the standalone surface in 0.4.1-rc.0 (FD-013)');
 
     for (const doc of [workflow, hadaraWorkflow, readme]) {
       expect(doc.indexOf('hadara task finalize --task T-XXXX --json')).toBeLessThan(doc.indexOf('hadara task finalize --task T-XXXX --execute --plan-hash'));
@@ -62,10 +62,12 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('| `hadara task next --json` | Compatibility next-work recommendation. Planned removal candidate; prefer `task status --json`. | Read-only report. | No. |');
     expect(workflow).toContain('| `hadara task status --task T-XXXX --json` | Fast phase-aware operator cockpit for one task. | Read-only report. | No. |');
     expect(workflow).toContain('| `hadara evidence add-command --task T-XXXX --summary "..." --result passed [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence unless an explicit idempotency key already exists. |');
-    expect(workflow).toContain('| `hadara task finish --task T-XXXX --execute --json` | Apply bounded status bookkeeping for `TASK.md` and `docs/TASK_BOARD.md`. | Execute after dry-run review. | Yes, bounded to those files. |');
-    expect(workflow).toContain('| `hadara task ready --task T-XXXX --level done --json` | Readiness preflight after finish and before close. | Read-only report. | No. |');
-    expect(workflow).toContain('| `hadara task close --task T-XXXX --execute --json` | Append canonical close evidence after close preconditions pass. | Execute after dry-run review. | Yes, close evidence only. |');
+    expect(workflow).toContain('| `hadara task finish ...` | Removed in 0.4.1-rc.0 (FD-013); returns a `hadara.commandRemoved.v1` stub pointing at `task finalize --execute --auto`. | Stub, no writes. | No. |');
+    expect(workflow).toContain('| `hadara task ready ...` | Removed in 0.4.1-rc.0 (FD-013); readiness lives in the finalize dry-run ready step and `task status --detail full`. | Stub, no writes. | No. |');
+    expect(workflow).toContain('| `hadara task close ...` | Removed in 0.4.1-rc.0 (FD-013); close evidence is appended only through the guarded finalize close step. | Stub, no writes. | No. |');
     expect(workflow).toContain('| `hadara task finalize --task T-XXXX --execute --plan-hash <hash> --json` | Execute a reviewed finalize plan after rechecking the current plan hash. | Execute after dry-run review. | Yes, only through underlying finish and close write boundaries. |');
+    expect(workflow).toContain('Audit-contract migration note');
+    expect(contractRemovedNote(read('docs/CLI_JSON_CONTRACT.md'))).toBe(true);
     expect(workflow).toContain('`task status` is an operator cockpit; `ok: true` means report generation succeeded.');
     expect(workflow).toContain('Use `hadara harness validate --task T-XXXX --level done --json` directly when debugging capsule format');
     expect(workflow).toContain('`harness validate` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence.');
@@ -74,7 +76,7 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('Do not defer all documentation until after implementation.');
     expect(workflow).toContain('Parallelize read-only discovery, `rg`/file inspection, independent validation commands');
     expect(workflow).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes');
-    expect(workflow).toContain('changing those documents changes the close source hash and requires rerunning finalize or the low-level `task ready`, `task close`, and `task audit-close` sequence');
+    expect(workflow).toContain('changing those documents changes the close source hash and requires rerunning finalize (`--execute --auto` or a reviewed `--plan-hash`); the standalone low-level sequence was removed in 0.4.1-rc.0');
     expect(workflow).toContain('After close proof is recorded, close-source document edits intentionally invalidate the previous close proof.');
     expect(workflow).toContain("matching `docs/TASK_BOARD.md` row's command-owned cells");
     expect(workflow).toContain('human/mixed-owned `Notes` and any extra cells');
@@ -128,3 +130,7 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('Start from `.hadara/context/HADARA_CONTEXT.md` and compact state docs');
   });
 });
+
+function contractRemovedNote(contract: string): boolean {
+  return contract.includes('hadara.commandRemoved.v1') && contract.includes('state.closeState');
+}

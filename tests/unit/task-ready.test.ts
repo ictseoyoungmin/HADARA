@@ -100,30 +100,6 @@ describe('task ready report', () => {
     expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'resolve-ready-blockers', required: true }));
   });
 
-  it('threads explicit actor CLI options into task ready reports', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'Ready actor task');
-    completeTask(root, task.id, task.dir);
-    const output: string[] = [];
-    const originalLog = console.log;
-    console.log = (value?: unknown) => {
-      output.push(String(value));
-    };
-    try {
-      expect(
-        handleTaskCommand({
-          args: ['task', 'ready', '--task', task.id, '--agent-id', 'worker-ready', '--run-id', 'run-ready', '--actor-role', 'worker', '--json'],
-          projectRoot: root,
-          jsonOutput: true
-        })
-      ).toBe(true);
-    } finally {
-      console.log = originalLog;
-    }
-
-    const report = JSON.parse(output.join('\n'));
-    expect(report.actor).toEqual({ agentId: 'worker-ready', runId: 'run-ready', role: 'worker', parentRunId: null });
-  });
 });
 
 function completeTask(root: string, taskId: string, taskDir: string): void {

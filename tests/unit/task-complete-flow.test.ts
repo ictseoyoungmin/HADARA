@@ -134,51 +134,6 @@ describe('task complete flow report', () => {
     expect(validateSchema('hadara.task.complete_flow.v1', report).ok).toBe(true);
   });
 
-  it('routes the CLI task complete command through the read-only report', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'CLI complete');
-    const writes: string[] = [];
-    const originalLog = console.log;
-    console.log = (message?: unknown) => {
-      writes.push(String(message));
-    };
-    try {
-      expect(handleTaskCommand({ args: ['task', 'complete', '--task', task.id, '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-    } finally {
-      console.log = originalLog;
-    }
-    const report = JSON.parse(writes.join('\n'));
-
-    expect(report.schemaVersion).toBe('hadara.task.complete_flow.v1');
-    expect(report.command).toBe('task.complete');
-    expect(report.readOnly).toBe(true);
-    expect(report.stage).toBe('finish-required');
-    expect(process.exitCode).toBe(6);
-  });
-
-  it('threads explicit actor CLI options into task complete reports', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'CLI complete actor');
-    const writes: string[] = [];
-    const originalLog = console.log;
-    console.log = (message?: unknown) => {
-      writes.push(String(message));
-    };
-    try {
-      expect(
-        handleTaskCommand({
-          args: ['task', 'complete', '--task', task.id, '--agent-id', 'coord-2', '--run-id', 'run-complete', '--actor-role', 'coordinator', '--json'],
-          projectRoot: root,
-          jsonOutput: true
-        })
-      ).toBe(true);
-    } finally {
-      console.log = originalLog;
-    }
-
-    const report = JSON.parse(writes.join('\n'));
-    expect(report.actor).toEqual({ agentId: 'coord-2', runId: 'run-complete', role: 'coordinator', parentRunId: null });
-  });
 });
 
 function snapshotFiles(root: string): Record<string, string> {

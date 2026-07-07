@@ -2,8 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import packageJson from '../../package.json';
 import { HadaraPaths } from '../core/paths';
+import { readSlicesState, slicesProjectionDrift, SLICES_PROJECTION_PATH } from '../services/slices-state';
 
-export type DoctorCheckStatus = 'ok' | 'missing';
+export type DoctorCheckStatus = 'ok' | 'missing' | 'drift';
 
 export interface DoctorCheck {
   id: string;
@@ -48,6 +49,21 @@ export function createDoctorReport(paths: HadaraPaths, nodeVersion = process.ver
     pathCheck('tasks', paths.projectTasksDir),
     pathCheck('project-context', `${paths.projectContextDir}/HADARA_CONTEXT.md`)
   ];
+  // FD-012 ownership-contract check: the generated slices projection must
+  // match its canonical state; hand edits are surfaced here instead of
+  // being silently overwritten by the next render.
+  const slices = readSlicesState(paths.projectRoot);
+  if (slices.state) {
+    const drift = slicesProjectionDrift(paths.projectRoot, slices.state);
+    checks.push({
+      id: 'slices-projection',
+      status: drift.driftDetected ? 'drift' : 'ok',
+      path: SLICES_PROJECTION_PATH,
+      ...(drift.driftDetected
+        ? { detail: `${SLICES_PROJECTION_PATH} does not match the rendered slices state. Run \`hadara slice render\` to discard the manual edit or \`hadara slice migrate --execute\` to import it into state.` }
+        : {})
+    });
+  }
   const executablePath = normalizeOptionalPath(options.cliEntry ?? process.argv[1] ?? null);
   const resolvedExecutablePath = resolveExecutablePath(executablePath);
   const packageRoot = findPackageRoot([resolvedExecutablePath, executablePath]);

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.commandRemoved.v1",
+  "x-hadara-schema-id": "hadara.commandRemoved.v1",
+  "title": "HADARA Removed Command Stub Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "command", "ok", "code", "removedCommand", "replacementCommand", "message", "removedIn", "stubRemovalPlanned"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.commandRemoved.v1" },
+    "command": { "type": "string", "minLength": 1 },
+    "ok": { "const": false },
+    "code": { "const": "TASK_LIFECYCLE_COMMAND_REMOVED" },
+    "removedCommand": { "type": "string", "minLength": 1 },
+    "replacementCommand": { "type": "string", "minLength": 1 },
+    "diagnosticCommand": { "type": "string", "minLength": 1 },
+    "message": { "type": "string", "minLength": 1 },
+    "removedIn": { "type": "string", "minLength": 1 },
+    "stubRemovalPlanned": { "type": "string", "minLength": 1 }
+  }
+}

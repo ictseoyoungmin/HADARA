@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
 import { listTaskCapsules } from './task-capsule';
+import { readSlicesState } from '../services/slices-state';
 
 export interface TaskNextReport {
   schemaVersion: 'hadara.task.next.v1';
@@ -198,6 +199,26 @@ function createTaskBoardBacklog(boardRows: BoardRow[], capsules: ReturnType<type
 }
 
 function readDevelopmentSlices(projectRoot: string, issues: TaskNextIssue[]): { present: boolean; rows: SliceRow[] } {
+  // FD-012 state-first path: when the canonical slices state exists, read it
+  // directly instead of parsing the generated projection. This also fixes
+  // the historical `rows: 0` failure where valid slice tables with
+  // decorated capsule cells (for example `T-0001 (done)` or `TBD`) never
+  // matched the strict `T-\d{4}` capsule-column regex.
+  const slicesState = readSlicesState(projectRoot);
+  if (slicesState.state) {
+    const rows = [...slicesState.state.slices]
+      .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+      .map((slice) => ({
+        taskId: slice.capsule ?? 'TBD',
+        title: slice.title ? `${slice.id}: ${slice.title}` : slice.id,
+        status: slice.status
+      }));
+    return { present: true, rows };
+  }
+  for (const issue of slicesState.issues) {
+    issues.push({ severity: issue.severity, code: issue.code, message: issue.message, path: issue.path });
+  }
+
   const filePath = path.join(projectRoot, 'docs', 'DEVELOPMENT_SLICES.md');
   if (!fs.existsSync(filePath)) {
     issues.push({ severity: 'warning', code: 'TASK_NEXT_DEVELOPMENT_SLICES_MISSING', message: 'docs/DEVELOPMENT_SLICES.md is missing.', path: 'docs/DEVELOPMENT_SLICES.md' });
@@ -256,7 +277,7 @@ function normalizeHandoffTitle(step: string): string {
 
 function isOpenSliceStatus(status: string): boolean {
   const normalized = status.trim().toLowerCase();
-  return ['planned', 'active', 'draft', 'pending', 'blocked'].some((prefix) => normalized.startsWith(prefix));
+  return ['planned', 'active', 'draft', 'pending', 'blocked', 'not-started', 'in-progress'].some((prefix) => normalized.startsWith(prefix));
 }
 
 function isOpenBoardStatus(status: string): boolean {

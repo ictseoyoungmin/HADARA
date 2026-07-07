@@ -157,13 +157,7 @@ hadara task finalize --task T-XXXX --json
 hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 ```
 
-Low-level lifecycle commands are for debugging, recovery, or command implementation work:
-
-```bash
-hadara task finish --task T-XXXX --json
-hadara task ready --task T-XXXX --level done --json
-hadara task close --task T-XXXX --json
-```
+Low-level lifecycle commands are for debugging, recovery, or command implementation work: as of 0.4.1-rc.0 (FD-013) the standalone `task finish`/`task ready`/`task close`/`task audit-close`/`task complete`/`task lifecycle` surface is removed and answers with a `hadara.commandRemoved.v1` redirect stub. Use `hadara task finalize --task T-XXXX --execute --auto --json` for guarded execution, `hadara task finalize --task T-XXXX --json` for the step-level dry-run report, and `hadara task status --task T-XXXX --detail full --json` for done-level diagnostics including `state.closeState`. Recovery of partially executed finalize runs also completes by rerunning finalize.
 
 ## Finalize Entry Gate
 

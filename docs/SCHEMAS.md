@@ -74,6 +74,8 @@ Initial fixtures:
 | `hadara.docs.list.v1` | `src/schemas/docs-list.schema.json` | fixture | Documents `hadara docs list --json` document registry list and filter reports. |
 | `hadara.docs.mark.v1` | `src/schemas/docs-mark.schema.json` | fixture | Documents `hadara docs mark --json` registry-only cleanup status transition reports. |
 | `hadara.schema.vocabulary.v1` | `src/schemas/schema-vocabulary.schema.json` | fixture | Documents `hadara schema --json` controlled-vocabulary domain lookup reports shared with harness and docs validators. |
+| `hadara.slice.report.v1` | `src/schemas/slice-report.schema.json` | fixture | Documents `hadara slice add|set|list|migrate|render --json` slices state prototype reports (FD-012). |
+| `hadara.commandRemoved.v1` | `src/schemas/command-removed.schema.json` | fixture | Documents the FD-013 removed lifecycle command stub with structured replacementCommand redirects. |
 | `hadara.docs.completeSpec.v1` | `src/schemas/docs-complete-spec.schema.json` | fixture | Documents `hadara docs complete-spec --json` completed-spec lifecycle reports. |
 | `hadara.docs.archivePlan.v1` | `src/schemas/docs-archive-plan.schema.json` | fixture | Documents `hadara docs archive --json` dry-run archive candidate plans without file moves. |
 | `hadara.docs.patchPlan.v1` | `src/schemas/docs-patch-plan.schema.json` | fixture | Documents `hadara docs patch --json` managed section dry-run and hash-guarded execute reports. |

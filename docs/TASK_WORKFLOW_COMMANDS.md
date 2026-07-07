@@ -50,22 +50,22 @@ hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 
 For clean known-good capsules, `hadara task finalize --task T-XXXX --execute --auto --json` folds the same round trip into one guarded call: it runs the identical dry-run review internally, refuses with zero writes when blockers exist, then executes against a freshly recomputed plan through the same plan-hash mismatch guard. `--auto` is mutually exclusive with `--plan-hash`; keep the explicit `--plan-hash` flow when a separate reviewer approves the plan.
 
-Low-level proof-boundary commands remain available for debugging, recovery, and command implementation work:
+The low-level lifecycle command surface was removed in 0.4.1-rc.0 (FD-013). Each removed command answers with a structured `hadara.commandRemoved.v1` stub carrying a machine-readable `replacementCommand` (kept for at least one minor release), instead of an unknown-command failure. The internal finish/ready/close/audit modules remain the engine of `task finalize`; only the standalone surface is gone.
 
-```bash
-hadara task finish --task T-XXXX --json
-hadara task finish --task T-XXXX --execute --json
-hadara task ready --task T-XXXX --level done --json
-hadara task close --task T-XXXX --json
-hadara task close --task T-XXXX --execute --json
-hadara task audit-close --task T-XXXX --json
-```
+| Removed command | Replacement | Read-only diagnostic |
+|---|---|---|
+| `hadara task finish` | `hadara task finalize --task T-XXXX --execute --auto --json` (guarded finish step) | `hadara task finalize --task T-XXXX --json` |
+| `hadara task ready` | `hadara task finalize --task T-XXXX --json` (ready step report) | `hadara task status --task T-XXXX --detail full --json` |
+| `hadara task close` | `hadara task finalize --task T-XXXX --execute --auto --json` (guarded close step) | `hadara task finalize --task T-XXXX --json` |
+| `hadara task audit-close` | `hadara task finalize --task T-XXXX --json` (audit-close step report and `state`) | `hadara task status --task T-XXXX --detail full --json` (`state.closeState`) |
+| `hadara task complete` | `hadara task status --task T-XXXX --json` | — |
+| `hadara task lifecycle` | `hadara task status --task T-XXXX --json` | — |
 
-`task finish`, `task ready`, `task close`, and `task audit-close` are canonical proof boundaries under `task finalize`, but they are not the default agent-facing cycle. `finish` synchronizes bounded status bookkeeping first. `ready` then validates the Done-level state. `close` records close evidence after validation succeeds. `audit-close` checks the resulting close evidence after the write.
+Audit-contract migration note: consumers that read the `task audit-close` verdict must read `state` (`closed-valid`/`closed-stale`/`closed-invalid`/`not-closed`) from `task finalize --task T-XXXX --json` or `state.closeState` from `task status --task T-XXXX --detail full --json`. Recovery flows (including partially executed finalize runs) complete by rerunning `task finalize`; no standalone step command is needed.
 
 The close model has three separate phases: validation proves readiness, close records the proof, and audit checks the already-recorded close evidence. Close evidence is excluded from the current validation loop because it is appended after validation; requiring it as a same-run precondition would create a fixed-point loop.
 
-`task finalize` and low-level `task ready`/`task close` include done-level Task Capsule validation. Use `hadara harness validate --task T-XXXX --level done --json` directly when debugging capsule format, status-history, acceptance, evidence, or handoff validation failures.
+`task finalize` includes done-level Task Capsule validation through its internal ready/close steps. Use `hadara harness validate --task T-XXXX --level done --json` directly when debugging capsule format, status-history, acceptance, evidence, or handoff validation failures.
 
 ## Status Token And Ownership Policy
 
@@ -131,7 +131,7 @@ Evidence outcome tokens are `passed`, `failed`, `blocked`, `unknown`, `recorded`
 
 Evidence rebuild is intentionally outside the 0.3.2 workflow command surface. Treat Task Capsule `evidence.jsonl` as canonical append-only evidence and `EVIDENCE.md` as a non-canonical human summary. Future rebuild preview must define whether `wouldChange` means formatting regeneration, managed-section drift, or data inconsistency before it reports changes; any future execute mode must be dry-run-first and before-hash guarded.
 
-Before finalize execute, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, `docs/TASK_BOARD.md`, and tracked state docs such as `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, and `docs/DEVELOPMENT_SLICES.md` when they apply. After `task finalize --execute --plan-hash ...` reaches close proof, changing those documents changes the close source hash and requires rerunning finalize or the low-level `task ready`, `task close`, and `task audit-close` sequence. Do not paste volatile close evidence ids into close-source docs; prefer stable wording such as "close evidence appended; audit returned closed-valid".
+Before finalize execute, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, `docs/TASK_BOARD.md`, and tracked state docs such as `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, and `docs/DEVELOPMENT_SLICES.md` when they apply. After `task finalize --execute --plan-hash ...` reaches close proof, changing those documents changes the close source hash and requires rerunning finalize (`--execute --auto` or a reviewed `--plan-hash`); the standalone low-level sequence was removed in 0.4.1-rc.0. Do not paste volatile close evidence ids into close-source docs; prefer stable wording such as "close evidence appended; audit returned closed-valid".
 
 ## Documentation Timing and Write Coordination
 
@@ -192,10 +192,10 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 | `hadara validation run --task T-XXXX --check "..." [--update-task] -- <command>` | Execute a real validation command and record durable evidence. | Execute report. | Yes, appends capsule evidence; updates `TASK.md` Validation only with `--update-task`. | Validation command exited 0 and evidence was recorded. | Evidence/task-style failures use 6. |
 | `hadara evidence add-command --task T-XXXX --summary "..." --result passed [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence unless an explicit idempotency key already exists. | Evidence append succeeded or returned the existing keyed record. | Evidence/task-style failures use 6. |
 | `hadara task finish --task T-XXXX --json` | Preview bounded status bookkeeping for `TASK.md` and `docs/TASK_BOARD.md`. | Dry-run report. | No. | Finish plan has no blocking issues. | Task-style failures use 6. |
-| `hadara task finish --task T-XXXX --execute --json` | Apply bounded status bookkeeping for `TASK.md` and `docs/TASK_BOARD.md`. | Execute after dry-run review. | Yes, bounded to those files. | Planned bookkeeping writes succeeded or no write was needed. | Task-style failures use 6. |
-| `hadara task ready --task T-XXXX --level done --json` | Readiness preflight after finish and before close. | Read-only report. | No. | Requested readiness level passed. | Task-style failures use 6. |
+| `hadara task finish ...` | Removed in 0.4.1-rc.0 (FD-013); returns a `hadara.commandRemoved.v1` stub pointing at `task finalize --execute --auto`. | Stub, no writes. | No. | Planned bookkeeping writes succeeded or no write was needed. | Task-style failures use 6. |
+| `hadara task ready ...` | Removed in 0.4.1-rc.0 (FD-013); readiness lives in the finalize dry-run ready step and `task status --detail full`. | Stub, no writes. | No. | Requested readiness level passed. | Task-style failures use 6. |
 | `hadara task close --task T-XXXX --json` | Preview close validation and close-evidence append. | Dry-run report. | No. | Close preconditions passed. | Task-style failures use 6. |
-| `hadara task close --task T-XXXX --execute --json` | Append canonical close evidence after close preconditions pass. | Execute after dry-run review. | Yes, close evidence only. | Close evidence append succeeded. | Task-style failures use 6. |
+| `hadara task close ...` | Removed in 0.4.1-rc.0 (FD-013); close evidence is appended only through the guarded finalize close step. | Stub, no writes. | No. | Close evidence append succeeded. | Task-style failures use 6. |
 | `hadara task audit-close --task T-XXXX --json` | Verify close evidence after close. | Read-only report. | No. | Valid close evidence exists and no audit blockers remain. | Task-style failures use 6. |
 
 ## Non-Overlap Rules

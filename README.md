@@ -167,34 +167,19 @@ Use read-only lifecycle diagnostics when you want a current-stage report, next r
 ```bash
 hadara task status --task T-XXXX --json
 hadara session start --task T-XXXX --json
-hadara task complete --task T-XXXX --json
-hadara task lifecycle --task T-XXXX --json # compatibility
 ```
 
-Low-level proof-boundary commands remain available for debugging, recovery, and command implementation work:
-
-```bash
-hadara task finish --task T-XXXX --json
-hadara task finish --task T-XXXX --execute --json
-hadara task ready --task T-XXXX --level done --json
-hadara task close --task T-XXXX --json
-hadara task close --task T-XXXX --execute --json
-hadara task audit-close --task T-XXXX --json
-```
-
-Those commands are canonical proof boundaries under the wrapper, but they are no longer the default agent-facing cycle.
+Low-level proof-boundary commands were removed from the standalone surface in 0.4.1-rc.0 (FD-013). `task finish`, `task ready`, `task close`, `task audit-close`, `task complete`, and `task lifecycle` now answer with a structured `hadara.commandRemoved.v1` redirect stub whose `replacementCommand` points at `task finalize` (`--execute --auto` for guarded execution, dry-run for step-level readiness/audit reports) or `task status --task T-XXXX --detail full --json` for diagnostics. The internal proof-boundary modules remain the engine under `task finalize`.
 
 Important boundaries:
 
 | Command | Boundary |
 |---|---|
-| `task status` | Read-only operator console. `ok:true` means the report was generated, not that the task is ready. |
-| `task complete` | Optional read-only workflow compressor. It reports the current stage and next action. |
-| `task lifecycle` | Compatibility lifecycle phase report. |
-| `task finalize` | Default agent close path. Read-only by default; guarded execute requires a matching current `planHash` and preserves underlying write boundaries. |
-| `task finish` / `task ready` / `task close` / `task audit-close` | Low-level proof-boundary commands for debugging and recovery. |
+| `task status` | Read-only operator console. `ok:true` means the report was generated, not that the task is ready. `--detail full` includes done-level diagnostics and `state.closeState`. |
+| `task finalize` | Default agent close path. Read-only by default; `--execute --plan-hash <hash>` executes a reviewed plan and `--execute --auto` folds review and hash check into one guarded call. |
+| `task finish` / `task ready` / `task close` / `task audit-close` / `task complete` / `task lifecycle` | Removed in 0.4.1-rc.0 (FD-013); each returns a `hadara.commandRemoved.v1` redirect stub. |
 
-Before executing `task finalize`, finish Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, Task Board updates, and tracked state docs. After final close proof, changing close-source docs intentionally invalidates the previous close proof and requires rerunning finalize or the low-level ready/close/audit sequence.
+Before executing `task finalize`, finish Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, Task Board updates, and tracked state docs. After final close proof, changing close-source docs intentionally invalidates the previous close proof and requires rerunning finalize.
 
 The full command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`.
 

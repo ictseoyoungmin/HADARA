@@ -24,15 +24,9 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'task.show',
   'task.next',
   'task.status',
-  'task.complete',
   'task.finalize',
-  'task.lifecycle',
   'task.close-source',
-  'task.finish',
   'task.upgrade-scaffold',
-  'task.ready',
-  'task.close',
-  'task.audit-close',
   'validation.run',
   'evidence.collect',
   'evidence.add-command',
@@ -142,11 +136,14 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('validation.run')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
     expect(findCommandRegistryEntry('evidence.add-command')).toMatchObject({ requiredness: 'conditional', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('task.next')).toMatchObject({ canonical: false, deprecatedCandidate: true, requiredness: 'advanced', appearsInDefaultHelp: false });
-    expect(findCommandRegistryEntry('task.lifecycle')).toMatchObject({ canonical: false, deprecatedCandidate: true, requiredness: 'advanced', appearsInDefaultHelp: false });
+    expect(findCommandRegistryEntry('task.lifecycle')).toBeUndefined();
     expect(findCommandRegistryEntry('task.status')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
     expect(findCommandRegistryEntry('task.finalize')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
-    expect(findCommandRegistryEntry('task.finish')).toMatchObject({ requiredness: 'advanced', appearsInDefaultHelp: false });
-    expect(findCommandRegistryEntry('task.close')).toMatchObject({ requiredness: 'advanced', appearsInDefaultHelp: false });
+    expect(findCommandRegistryEntry('task.finish')).toBeUndefined();
+    expect(findCommandRegistryEntry('task.ready')).toBeUndefined();
+    expect(findCommandRegistryEntry('task.close')).toBeUndefined();
+    expect(findCommandRegistryEntry('task.audit-close')).toBeUndefined();
+    expect(findCommandRegistryEntry('task.complete')).toBeUndefined();
     expect(findCommandRegistryEntry('handoff.update')).toBeUndefined();
     expect(findCommandRegistryEntry('handoff.suggest')).toMatchObject({ requiredness: 'conditional', readOnly: true, writeBoundary: 'shared-doc-suggestion' });
   });
@@ -192,10 +189,6 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('context.cache.warm')).toMatchObject({
       implementationFiles: ['src/cli/context.ts', 'src/context/context-cache-store.ts', 'src/context/source-manifest.ts'],
       testFiles: ['tests/unit/context-cache-store.test.ts', 'tests/unit/context-graph-cli.test.ts']
-    });
-    expect(findCommandRegistryEntry('task.close')).toMatchObject({
-      implementationFiles: ['src/cli/task.ts', 'src/task/task-close.ts'],
-      testFiles: ['tests/unit/task-close.test.ts']
     });
   });
 

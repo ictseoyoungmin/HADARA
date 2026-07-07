@@ -53,21 +53,14 @@ describe('registry-backed help', () => {
   });
 
   it('explains a command with registry metadata', () => {
-    const output = renderCommandHelp('task.close');
-    const entry = findCommandRegistryEntry('task.close');
+    const output = renderCommandHelp('task.finalize');
+    const entry = findCommandRegistryEntry('task.finalize');
 
     expect(entry).toBeDefined();
-    expect(output).toContain('task.close');
+    expect(output).toContain('task.finalize');
     expect(output).toContain('Family: capsule-lifecycle');
-    expect(output).toContain('Scope: capsule');
-    expect(output).toContain('Lifecycle stage: close');
-    expect(output).toContain('Requiredness: advanced');
-    expect(output).toContain('Status: stable');
-    expect(output).toContain('Write boundary: close-evidence-append');
     expect(output).toContain('Examples:');
-    expect(output).toContain('docs/TASK_WORKFLOW_COMMANDS.md');
-    expect(output).toContain('Related: task.ready, task.audit-close, proof.status');
-    expect(output).toContain('Conflicts: task.finish');
+    expect(output).toContain('--auto');
   });
 
   it('shows docs.register controlled vocabulary in command help', () => {

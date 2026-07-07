@@ -1,6 +1,6 @@
 # 0.4.1-rc.0 Scope: State-First 합의분 캡슐 계약
 
-- 상태: 승인 대기 스코프 문서
+- 상태: 구현 완료 (항목 1~6, T-0497/T-0499/T-0500). 항목 5 AC-6은 부분 상태 — 아래 릴리스 판정 참조.
 - 작성일: 2026-07-05
 - 상위 문서: `docs/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md` (rc0 전체 스코프의 소유자는 FD 큐다)
 - 관련 RFC: `docs/specs/0.5/state-first/RFC.md`
@@ -168,6 +168,8 @@ hadara task finalize --task T-X --execute --auto
 
 **실패 시 처리**: rc0 릴리스에서 이 항목만 제외 가능하도록 다른 항목들과 코드 경계를 분리해 구현한다. 실패 지표는 그대로 evidence로 남겨 0.5 RFC 개정/기각의 근거로 쓴다.
 
+**구현 결과 (T-0500)**: AC-1~AC-5는 Met. AC-6(도그푸딩 캡슐 2개 이상에서 slice 관련 수동 문서 동기화 0회)은 **Partial** — 쓰기 경로/소유권 드리프트 가드는 대표 픽스처로 증명됐지만, HADARA-dev 자신은 이번 캡슐에서 slices state를 실제로 채택하지 않았다. 이유: `slice migrate`의 id 도출 규칙(Slice 셀의 첫 토큰, `:`/`|` 앞)은 신규 `id: title` 관례를 전제하는데, HADARA-dev의 실제 414행 `docs/DEVELOPMENT_SLICES.md`는 이 관례 이전 형식(평문 제목)이라 마이그레이션 시 id 충돌이 발생한다(dry-run으로 확인, 실행하지 않음). T-0500 TASK.md RF-1/RF-2에 후속 과제로 기록. Evidence: `ev:T-0500:250d41efcb9d42c19b6dce6c`, `ev:T-0500:525c1b2552ce4726af350b63`.
+
 ---
 
 ## 항목 6 — 저수준 라이프사이클 커맨드 표면 제거
@@ -207,13 +209,15 @@ hadara task finalize --task T-X --execute --auto
 
 **Out of scope**: 내부 라이프사이클 모듈 리팩터, 아래 부록의 여타 compat 후보 제거 (command-portfolio RFC).
 
+**구현 결과 (T-0500)**: AC-1~AC-6 전부 Met. 사용자 지시로 `task lifecycle`을 여섯 번째 제거 대상에 추가(표면 제거에 status/finalize 흡수 포함). Evidence: `ev:T-0500:ef6aa0705a59470099f4de99`(Docker 1033/1033, AC-2/AC-3/AC-4 회귀 테스트 포함), `ev:T-0500:250d41efcb9d42c19b6dce6c`(빌트 CLI 스텁 스모크).
+
 ---
 
 ## 릴리스 판정
 
-- 항목 1~4, 6: 전부 Done이어야 rc0 태깅 (항목 6은 항목 4 Done 이후 착수)
-- 항목 5: Done 또는 "실패 evidence와 함께 명시적 제외" 중 하나면 rc0 태깅 가능
-- FD-011/FD-012/FD-013은 `docs/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md` Debt Queue에 등록됨; 캡슐 open/close 시 해당 표의 Target/Resolution을 갱신한다
+- 항목 1~4, 6: 전부 Done — T-0497(항목 2/3/일부 6 선행), T-0499(항목 1/4), T-0500(항목 6) 완료
+- 항목 5: Done 또는 "실패 evidence와 함께 명시적 제외" 중 하나면 rc0 태깅 가능 — 현재 **Partial**: 인프라(AC-1~AC-5)는 Met, 도그푸딩 카운트 지표(AC-6)만 미충족. rc0 태깅 전 다음 중 하나 필요: (a) HADARA-dev 자체를 slices state로 전환해 2개 이상 캡슐에서 실사용 도그푸딩을 완료하거나, (b) AC-6을 명시적으로 "실패 evidence와 함께 제외"로 재분류. 상세는 `docs/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md` FD-012 행과 T-0500 TASK.md RF-1/RF-2 참조.
+- FD-011/FD-012/FD-013은 `docs/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md` Debt Queue에 등록됨; 캡슐 open/close 시 해당 표의 Target/Resolution을 갱신한다 — 셋 다 Done으로 갱신됨(T-0499/T-0500)
 
 ---
 
