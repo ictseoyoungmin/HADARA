@@ -33,6 +33,7 @@ describe('registry-backed help', () => {
     expect(output).toContain('task finalize --task T-XXXX --execute --plan-hash sha256:... --json');
     expect(output).not.toContain('task finish --task T-XXXX --execute --json');
     expect(output).not.toContain('task close --task T-XXXX --execute --json');
+    expect(output).not.toContain('Low-level proof-boundary commands are available');
     expect(output).toContain('Diagnostics when blocked');
     expect(output).toContain('harness.validate');
   });

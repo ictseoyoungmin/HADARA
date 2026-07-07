@@ -1,4 +1,5 @@
 import { getFlag, getRequiredStringOption, getStringOption } from './args';
+import { renderCommandHelp } from './help';
 import {
   createSliceAddReport,
   createSliceListReport,
@@ -16,6 +17,10 @@ export interface SliceCommandInput {
 
 export function handleSliceCommand(input: SliceCommandInput): boolean {
   const sub = input.args[1];
+  if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+    console.log(renderCommandHelp(sub ? `slice.${sub}` : 'slice.list'));
+    return true;
+  }
   if (sub === 'list') {
     printReport(createSliceListReport(input.projectRoot), input.jsonOutput);
     return true;

@@ -76,6 +76,30 @@ function installedFixtureFromArgs(args: string[], overrides?: { dropVerb?: strin
   );
 }
 
+function writeGeneratedWorkflowFixture(cwd: string, options?: { stale?: boolean }): void {
+  fs.mkdirSync(path.join(cwd, 'docs'), { recursive: true });
+  const current = [
+    '# HADARA_WORKFLOW',
+    '',
+    '## Task Capsule Lifecycle',
+    'hadara task finalize --task T-XXXX --json',
+    'hadara task finalize --task T-XXXX --execute --auto --json',
+    '',
+    '## Slice State',
+    'hadara slice add --id M1 --title "First slice" --status not-started --json',
+    'hadara slice render --json',
+    ''
+  ].join('\n');
+  const stale = [
+    '# HADARA_WORKFLOW',
+    '',
+    'Low-level lifecycle commands are for debugging, recovery, or command implementation work:',
+    'hadara task audit-close --task T-XXXX --json',
+    ''
+  ].join('\n');
+  fs.writeFileSync(path.join(cwd, 'docs', 'HADARA_WORKFLOW.md'), options?.stale ? stale : current, 'utf8');
+}
+
 describe('package smoke dry-run', () => {
   it('creates a schema-valid dry-run report without package execution', () => {
     const root = tempProject();
@@ -137,6 +161,7 @@ describe('package smoke dry-run', () => {
       'npm-pack',
       'install-cli',
       'command-surface-drift',
+      'generated-init-docs',
       'feature-smoke-core',
       'evidence'
     ]);
@@ -382,6 +407,10 @@ describe('package smoke local execution', () => {
       if (args[0] === 'commands') {
         return { status: 0, stdout: commandsRegistryStdout(), stderr: '', elapsedMs: 5 };
       }
+      if (args[0] === 'init') {
+        writeGeneratedWorkflowFixture(options.cwd);
+        return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 6 };
+      }
       if (args[0] === 'smoke') {
         return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 14 };
       }
@@ -429,6 +458,7 @@ describe('package smoke local execution', () => {
       'install-cli',
       'doctor',
       'command-surface-drift',
+      'generated-init-docs',
       'feature-smoke-core',
       'cleanup'
     ]);
@@ -446,17 +476,19 @@ describe('package smoke local execution', () => {
     expect(encoded).not.toContain(root);
     expect(encoded).not.toContain(workspace);
     expect(encoded).not.toContain('npm notice');
-    expect(calls.map((call) => call.args[0])).toEqual(['pack', 'install', 'doctor', 'commands', 'smoke']);
+    expect(calls.map((call) => call.args[0])).toEqual(['pack', 'install', 'doctor', 'commands', 'init', 'smoke']);
     expect(calls.find((call) => call.args[0] === 'doctor')?.args).toEqual(['doctor', '--json']);
+    expect(calls.find((call) => call.args[0] === 'init')?.args).toEqual(['init', '--profile', 'standard', '--json']);
     expect(calls.find((call) => call.args[0] === 'smoke')?.args).toEqual(['smoke', 'run', '--profile', 'core', '--json']);
     expect(calls.find((call) => call.args[0] === 'doctor')?.env?.HADARA_PROJECT_ROOT).toBe(root);
+    expect(calls.find((call) => call.args[0] === 'init')?.env?.HADARA_PROJECT_ROOT).toBeUndefined();
     expect(calls.find((call) => call.args[0] === 'smoke')?.env?.HADARA_PROJECT_ROOT).toBe(root);
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
   });
 
   it('returns reduced failure details when isolated install fails', () => {
     const root = tempProject();
-    const runner: PackageSmokeCommandRunner = (_command, args) => {
+    const runner: PackageSmokeCommandRunner = (_command, args, options) => {
       if (args[0] === 'pack') {
         const workspace = String(args[args.indexOf('--pack-destination') + 1]);
         fs.writeFileSync(path.join(workspace, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
@@ -504,7 +536,7 @@ describe('package smoke local execution', () => {
 
   it('uses the single workspace tarball when npm pack returns no JSON stdout', () => {
     const root = tempProject();
-    const runner: PackageSmokeCommandRunner = (_command, args) => {
+    const runner: PackageSmokeCommandRunner = (_command, args, options) => {
       if (args[0] === 'pack') {
         const workspace = String(args[args.indexOf('--pack-destination') + 1]);
         fs.writeFileSync(path.join(workspace, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
@@ -521,6 +553,10 @@ describe('package smoke local execution', () => {
       }
       if (args[0] === 'commands') {
         return { status: 0, stdout: commandsRegistryStdout(), stderr: '', elapsedMs: 5 };
+      }
+      if (args[0] === 'init') {
+        writeGeneratedWorkflowFixture(options.cwd);
+        return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 6 };
       }
       return { status: 0, stdout: '', stderr: '', elapsedMs: 1 };
     };
@@ -547,7 +583,7 @@ describe('package smoke local execution', () => {
 
   it('fails the command-surface-drift step when installed registry ids differ from source (FD-011)', () => {
     const root = tempProject();
-    const runner: PackageSmokeCommandRunner = (_command, args) => {
+    const runner: PackageSmokeCommandRunner = (_command, args, options) => {
       if (args[0] === 'pack') {
         const workspace = String(args[args.indexOf('--pack-destination') + 1]);
         fs.writeFileSync(path.join(workspace, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
@@ -559,6 +595,10 @@ describe('package smoke local execution', () => {
       }
       if (args[0] === 'commands') {
         return { status: 0, stdout: commandsRegistryStdout({ extraId: 'ghost.command', dropFirstId: true }), stderr: '', elapsedMs: 5 };
+      }
+      if (args[0] === 'init') {
+        writeGeneratedWorkflowFixture(options.cwd);
+        return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 6 };
       }
       return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 12 };
     };
@@ -575,7 +615,7 @@ describe('package smoke local execution', () => {
 
   it('fails the command-surface-drift step when installed routing loses a registry verb (FD-011)', () => {
     const root = tempProject();
-    const runner: PackageSmokeCommandRunner = (_command, args) => {
+    const runner: PackageSmokeCommandRunner = (_command, args, options) => {
       if (args[0] === 'pack') {
         const workspace = String(args[args.indexOf('--pack-destination') + 1]);
         fs.writeFileSync(path.join(workspace, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
@@ -588,6 +628,10 @@ describe('package smoke local execution', () => {
       if (args[0] === 'commands') {
         return { status: 0, stdout: commandsRegistryStdout(), stderr: '', elapsedMs: 5 };
       }
+      if (args[0] === 'init') {
+        writeGeneratedWorkflowFixture(options.cwd);
+        return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 6 };
+      }
       return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 12 };
     };
 
@@ -597,6 +641,36 @@ describe('package smoke local execution', () => {
     const drift = report.issues.find((issue) => issue.code === 'PACKAGE_SMOKE_SURFACE_ROUTING_DRIFT');
     expect(drift).toBeDefined();
     expect(drift?.message).toContain('doctor');
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
+  it('fails the generated-init-docs step when generated workflow guidance is stale', () => {
+    const root = tempProject();
+    const runner: PackageSmokeCommandRunner = (_command, args, options) => {
+      if (args[0] === 'pack') {
+        const workspace = String(args[args.indexOf('--pack-destination') + 1]);
+        fs.writeFileSync(path.join(workspace, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
+        return { status: 0, stdout: JSON.stringify([{ filename: 'hadara-0.0.0-bootstrap.tgz' }]), stderr: '', elapsedMs: 10 };
+      }
+      if (args[0] === 'install') {
+        installedFixtureFromArgs(args);
+        return { status: 0, stdout: 'installed', stderr: '', elapsedMs: 11 };
+      }
+      if (args[0] === 'commands') {
+        return { status: 0, stdout: commandsRegistryStdout(), stderr: '', elapsedMs: 5 };
+      }
+      if (args[0] === 'init') {
+        writeGeneratedWorkflowFixture(options.cwd, { stale: true });
+        return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 6 };
+      }
+      return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 12 };
+    };
+
+    const report = createPackageSmokeLocalReport({ paths: resolveHadaraPaths({ projectRoot: root }), runner, timeoutSeconds: 30 });
+
+    expect(report.ok).toBe(false);
+    expect(report.steps.find((step) => step.id === 'generated-init-docs')).toMatchObject({ status: 'failed' });
+    expect(report.issues.some((issue) => issue.code === 'PACKAGE_SMOKE_INIT_DOCS_STALE_LIFECYCLE_GUIDANCE')).toBe(true);
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
   });
 
@@ -622,7 +696,7 @@ describe('package smoke local execution', () => {
 
   it('attaches reduced public package-smoke evidence when requested', () => {
     const root = tempProject();
-    const runner: PackageSmokeCommandRunner = (_command, args) => {
+    const runner: PackageSmokeCommandRunner = (_command, args, options) => {
       if (args[0] === 'pack') {
         const workspace = String(args[args.indexOf('--pack-destination') + 1]);
         fs.writeFileSync(path.join(workspace, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
@@ -633,6 +707,10 @@ describe('package smoke local execution', () => {
         return { status: 0, stdout: 'installed', stderr: '', elapsedMs: 11 };
       }
       if (args[0] === 'commands') return { status: 0, stdout: commandsRegistryStdout(), stderr: '', elapsedMs: 5 };
+      if (args[0] === 'init') {
+        writeGeneratedWorkflowFixture(options.cwd);
+        return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 6 };
+      }
       return { status: 0, stdout: JSON.stringify({ ok: true }), stderr: '', elapsedMs: 12 };
     };
 

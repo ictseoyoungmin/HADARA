@@ -260,7 +260,7 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
   const docsDoctor = useFullChecks ? createDocsProtocolConsistencyReport(projectRoot, now) : null;
   const profileDoctor = useFullChecks ? createProfileProtocolConsistencyReport(projectRoot, now) : null;
   const currentReady = closePlan?.ok ?? false;
-  const readiness = useFullChecks ? buildTaskWorkbenchReadiness(currentReady, closedValid) : buildTaskWorkbenchReadinessDeferred(closedValid);
+  const readiness = useFullChecks ? buildTaskWorkbenchReadiness(currentReady, closedValid) : buildTaskWorkbenchReadinessDeferred(closedValid, taskId);
   const issues = [
     ...(closePlan?.issues ?? []),
     ...buildTaskBoardIssues(taskShow.task.id, taskShow.task.status, taskShow.task.capsule, taskBoard),
@@ -372,13 +372,13 @@ export function formatTaskWorkbenchReport(report: TaskWorkbenchReport): string {
     `- TASK.md status: ${report.task.taskStatus}`,
     `- Task Board status: ${report.task.taskBoardPresent ? report.task.taskBoardStatus : 'missing'}`,
     `- Close state: ${report.state.closeState}`,
-    `- Ready for Done: ${report.state.ready ? 'yes' : 'no'}`,
     `- Readiness note: ${report.state.readiness.summary}`,
     '',
     'Evidence',
     `- Lint: ${report.sources.evidenceLint.ok ? 'ok' : 'issues'}`,
     `- Records: ${report.sources.evidenceList.records}`
   ];
+  if (report.state.closeState !== 'closed-valid') lines.splice(9, 0, `- Ready for Done: ${report.state.ready ? 'yes' : 'no'}`);
   if (report.sources.evidenceList.latest) {
     lines.push(`- Latest: ${report.sources.evidenceList.latest.kind} / ${report.sources.evidenceList.latest.result} / ${report.sources.evidenceList.latest.visibility}`);
   }
@@ -882,14 +882,14 @@ export function buildTaskWorkbenchReadiness(currentReady: boolean, closeProofVal
   };
 }
 
-function buildTaskWorkbenchReadinessDeferred(closeProofValid: boolean): TaskWorkbenchReadiness {
+function buildTaskWorkbenchReadinessDeferred(closeProofValid: boolean, taskId: string): TaskWorkbenchReadiness {
   return {
     status: closeProofValid ? 'closed-valid-current-blocked' : 'current-blocked',
     currentReady: false,
     closeProofValid,
     summary: closeProofValid
       ? 'Fast task status skipped current done-level readiness checks; existing close proof is valid.'
-      : 'Fast task status skipped done-level readiness checks; run `hadara task status --task T-XXXX --detail full --json` or `hadara task finalize --task T-XXXX --json` before close.'
+      : `Fast task status skipped done-level readiness checks; run \`hadara task status --task ${taskId} --detail full --json\` or \`hadara task finalize --task ${taskId} --json\` before close.`
   };
 }
 

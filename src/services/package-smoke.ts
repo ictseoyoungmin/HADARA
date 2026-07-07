@@ -354,6 +354,23 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
           for (const issue of drift.issues) issues.push(issue);
           steps.push(surfaceStep);
 
+          const initDocs = runner(installedBin, ['init', '--profile', 'standard', '--json'], {
+            cwd: workspaceSetup.path,
+            timeoutMs,
+            env: installPathEnv(installPrefix)
+          });
+          const initDocsStep = commandStep(
+            'generated-init-docs',
+            'Generated init docs current UX check',
+            'hadara init --profile standard --json + generated docs sanity checks',
+            initDocs
+          );
+          const initDocsEvaluation = evaluateGeneratedInitDocs(initDocs, workspaceSetup.path);
+          initDocsStep.status = initDocsEvaluation.ok ? 'passed' : 'failed';
+          initDocsStep.summary = initDocsEvaluation.summary;
+          for (const issue of initDocsEvaluation.issues) issues.push(issue);
+          steps.push(initDocsStep);
+
           execution.featureSmokeExecuted = true;
           const smoke = runner(installedBin, ['smoke', 'run', '--profile', 'core', '--json'], {
             cwd: workspaceSetup.path,
@@ -393,6 +410,13 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
               summary: 'Skipped because isolated package install failed.'
             },
             {
+              id: 'generated-init-docs',
+              label: 'Generated init docs current UX check',
+              command: 'hadara init --profile standard --json + generated docs sanity checks',
+              status: 'skipped',
+              summary: 'Skipped because isolated package install failed.'
+            },
+            {
               id: 'feature-smoke-core',
               label: 'Core feature smoke via installed command',
               command: 'hadara smoke run --profile core --json',
@@ -421,6 +445,13 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
             id: 'command-surface-drift',
             label: 'Command surface drift vs source registry',
             command: 'hadara commands --json (installed) + installed dist routing parse',
+            status: 'skipped',
+            summary: 'Skipped because no package tarball was available.'
+          },
+          {
+            id: 'generated-init-docs',
+            label: 'Generated init docs current UX check',
+            command: 'hadara init --profile standard --json + generated docs sanity checks',
             status: 'skipped',
             summary: 'Skipped because no package tarball was available.'
           },
@@ -955,6 +986,13 @@ function createDryRunSteps(sourceKind: PackageSmokeReport['source']['kind'], opt
       summary: 'Would compare the installed registry projection against the source registry and check installed routing parity.'
     },
     {
+      id: 'generated-init-docs',
+      label: 'Generated init docs current UX check',
+      command: 'hadara init --profile standard --json + generated docs sanity checks',
+      status: 'planned',
+      summary: 'Would initialize a disposable project and verify generated workflow docs expose current lifecycle and slice commands.'
+    },
+    {
       id: 'feature-smoke-core',
       label: 'Core feature smoke via installed command',
       command: 'hadara smoke run --profile core --json',
@@ -1120,6 +1158,13 @@ function pushSkippedExecutionSteps(steps: PackageSmokeReport['steps']): void {
       summary: 'Skipped because package-smoke setup failed.'
     },
     {
+      id: 'generated-init-docs',
+      label: 'Generated init docs current UX check',
+      command: 'hadara init --profile standard --json + generated docs sanity checks',
+      status: 'skipped',
+      summary: 'Skipped because package-smoke setup failed.'
+    },
+    {
       id: 'feature-smoke-core',
       label: 'Core feature smoke via installed command',
       command: 'hadara smoke run --profile core --json',
@@ -1142,6 +1187,12 @@ function commandStep(id: string, label: string, command: string, result: Package
 }
 
 interface InstalledSurfaceEvaluation {
+  ok: boolean;
+  summary: string;
+  issues: PackageSmokeIssue[];
+}
+
+interface GeneratedInitDocsEvaluation {
   ok: boolean;
   summary: string;
   issues: PackageSmokeIssue[];
@@ -1227,6 +1278,73 @@ function evaluateInstalledCommandSurface(surface: PackageSmokeCommandResult, ins
     summary: ok
       ? 'Installed command surface matches the source registry and installed routing parity holds.'
       : 'Installed command surface drift detected; see command-surface-drift issues.',
+    issues
+  };
+}
+
+function evaluateGeneratedInitDocs(initResult: PackageSmokeCommandResult, workspace: string): GeneratedInitDocsEvaluation {
+  const issues: PackageSmokeIssue[] = [];
+  const stepId = 'generated-init-docs';
+  if (initResult.status !== 0 || initResult.timedOut || !isOkOrEmptyCapturedJsonReport(initResult)) {
+    issues.push({
+      severity: 'error',
+      code: initResult.timedOut ? 'PACKAGE_SMOKE_INIT_DOCS_TIMEOUT' : 'PACKAGE_SMOKE_INIT_DOCS_FAILED',
+      message: initResult.timedOut ? 'Installed `hadara init` timed out.' : 'Installed `hadara init --profile standard --json` failed or did not return an ok JSON report.',
+      stepId
+    });
+    return { ok: false, summary: 'Generated init docs could not be created for inspection.', issues };
+  }
+
+  const workflowPath = path.join(workspace, 'docs', 'HADARA_WORKFLOW.md');
+  let workflow = '';
+  try {
+    workflow = fs.readFileSync(workflowPath, 'utf8');
+  } catch {
+    issues.push({
+      severity: 'error',
+      code: 'PACKAGE_SMOKE_INIT_WORKFLOW_MISSING',
+      message: 'Generated docs/HADARA_WORKFLOW.md was missing after installed init.',
+      stepId
+    });
+    return { ok: false, summary: 'Generated workflow document was missing after init.', issues };
+  }
+
+  const requiredSnippets = [
+    'hadara task finalize --task T-XXXX --execute --auto --json',
+    '## Slice State',
+    'hadara slice add --id M1',
+    'hadara slice render --json'
+  ];
+  for (const snippet of requiredSnippets) {
+    if (workflow.includes(snippet)) continue;
+    issues.push({
+      severity: 'error',
+      code: 'PACKAGE_SMOKE_INIT_DOCS_MISSING_CURRENT_GUIDANCE',
+      message: `Generated workflow docs are missing current guidance snippet: ${snippet}.`,
+      stepId
+    });
+  }
+
+  const staleSnippets = [
+    'Low-level lifecycle commands are for debugging',
+    'hadara task audit-close --task T-XXXX --json'
+  ];
+  for (const snippet of staleSnippets) {
+    if (!workflow.includes(snippet)) continue;
+    issues.push({
+      severity: 'error',
+      code: 'PACKAGE_SMOKE_INIT_DOCS_STALE_LIFECYCLE_GUIDANCE',
+      message: `Generated workflow docs still contain stale lifecycle guidance snippet: ${snippet}.`,
+      stepId
+    });
+  }
+
+  const ok = issues.length === 0;
+  return {
+    ok,
+    summary: ok
+      ? 'Generated init workflow docs expose current finalize --auto and slice guidance without stale removed-command instructions.'
+      : 'Generated init docs drift detected; see generated-init-docs issues.',
     issues
   };
 }

@@ -19,6 +19,7 @@ describe('task workflow command semantics docs', () => {
       'hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json',
       '# Finalize Task Capsule docs and tracked state docs before closing.',
       'hadara task finalize --task T-XXXX --json',
+      'hadara task finalize --task T-XXXX --execute --auto --json',
       'hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json',
     ];
 
@@ -29,7 +30,7 @@ describe('task workflow command semantics docs', () => {
     }
 
     expect(workflow).toContain('The low-level lifecycle command surface was removed in 0.4.1-rc.0 (FD-013)');
-    expect(hadaraWorkflow).toContain('Low-level lifecycle commands are for debugging, recovery, or command implementation work:');
+    expect(hadaraWorkflow).toContain('Standalone low-level lifecycle command surfaces');
     expect(readme).toContain('Low-level proof-boundary commands were removed from the standalone surface in 0.4.1-rc.0 (FD-013)');
 
     for (const doc of [workflow, hadaraWorkflow, readme]) {

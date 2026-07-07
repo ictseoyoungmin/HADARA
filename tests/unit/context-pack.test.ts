@@ -79,7 +79,7 @@ describe('context pack', () => {
       degraded: true,
       graphSourceHash: 'sha256:graph'
     }));
-    expect(report.validateWith.some((item) => item.command.includes(`task ready --task ${taskId}`))).toBe(true);
+    expect(report.validateWith.some((item) => item.command.includes(`task status --task ${taskId} --detail full`))).toBe(true);
     expect(report.writeBoundaries).toContainEqual(expect.objectContaining({
       path: `tasks/${taskId}-fixture/TASK.md`,
       boundary: 'dry-run-first'
@@ -109,7 +109,7 @@ describe('context pack', () => {
     }));
     expect(report.agentActions).toContainEqual(expect.objectContaining({
       kind: 'validate',
-      command: `node dist/cli/main.js task ready --task ${taskId} --level done --json`,
+      command: `hadara task status --task ${taskId} --detail full --json`,
       writeBoundary: 'read-only'
     }));
     assertSchema('hadara.contextPack.v1', report);

@@ -77,3 +77,23 @@ No generated `docs/IMPLEMENTATION_SOP.md` or `docs/TASK_WORKFLOW_COMMANDS.md` ap
 |---|---|---|
 | FU-1 | Improve stateConsistency missing-slices wording to suggest `hadara slice add` or `hadara slice migrate --execute`, not generic restore/init remediation. | 0.4.1 cleanup |
 | FU-2 | Investigate why `validation run` child process spawn returned `EPERM` in the Codex/tool environment while direct command execution passed. | Environment or validation wrapper hardening |
+
+## Secondary Reviewer Addendum
+
+After the initial T-0501 close, a second reviewer independently exercised the candidate and reported additional UX and command-surface issues. Some findings overlap with fixes already made during T-0501, but they are retained here because they define the regression surface for the next capsule.
+
+| ID | Severity | Observation | T-0502 Handling |
+|---|---|---|---|
+| RV-1 | Critical | Generated `docs/HADARA_WORKFLOW.md` from `init` can contradict removed lifecycle surfaces by teaching `task finish`, `task ready`, `task close`, and `task audit-close` as normal guidance. | Verify current T-0501 fix in both init template blocks and add generated-doc regression coverage so removed commands cannot reappear as primary guidance. |
+| RV-2 | Critical | Generated docs under-expose `task finalize --execute --auto` and `hadara slice`, making FD-010 and FD-012 invisible to new projects. | Add explicit generated workflow guidance and tests for `--auto` and slice state commands. |
+| RV-3 | Critical | `help lifecycle` says low-level proof-boundary commands are available through a help family even though those commands were removed from the agent-facing surface. | Remove or reword the false promise; verify help output points to `task status --detail full` and `task finalize`. |
+| RV-4 | High | Session-start guidance can leak `node dist/cli/main.js ...` developer command forms to installed users. | Audit session-start report/guidance command strings and replace product-facing copyable commands with `hadara ...`, preserving source-checkout-only docs where appropriate. |
+| RV-5 | High | `validation run` records failed child evidence but returns wrapper exit code 0, which can hide failures in shell chaining and CI. | Make wrapper exit non-zero when the child command fails or launch fails, while preserving evidence append semantics and JSON report shape. |
+| RV-6 | High | `--help` is inconsistent: several commands validate required args or execute before showing help. | Add a central or shared early-help path and regression tests for validation, finalize, slice, harness, and session commands. |
+| RV-7 | High | Handoff-first selected-work guidance can get stuck on scaffold text such as "Create or select first Task Capsule", even after task creation/close, and can propose that sentence as a task title. | Harden task-next/status selection against scaffold/meta handoff text and prefer concrete active/open work or release-gate guidance. |
+| RV-8 | Minor | Task status readiness notes can keep `T-XXXX` placeholders even when the selected task id is known. | Replace selected-task placeholders in emitted guidance where task id is available. |
+| RV-9 | Minor | `closed-valid` status can still show "Ready for Done: no", which reads contradictory even if caused by a fast-path skip. | Clarify closed-valid readiness copy or omit the ready-for-done line in closed-valid fast status. |
+| RV-10 | Minor | `task create` scaffolds `Created`/`Updated` as `TBD` even though the CLI knows the date, and generated TASK.md lacks schema/token hints. | Fill known dates at create time and add compact schema/vocabulary hint where it helps without bloating the scaffold. |
+| RV-11 | Minor | `state verify` can return `ok:true` with `consistent:false`, which is internally consistent but confusing for first-time users. | Clarify JSON/text semantics so `ok` means report generation and `consistent` means state health. |
+
+Next capsule owner: `T-0502 0.4.1 rc0 post-dogfood critical UX hardening`.

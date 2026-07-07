@@ -40,6 +40,10 @@ describe('state consistency projection', () => {
       schemaVersion: 'hadara.stateProjection.v1',
       command: 'state.projection',
       ok: true,
+      semantics: {
+        ok: 'report-generated',
+        consistent: 'no-error-or-warning-issues'
+      },
       summary: {
         consistent: true,
         latestDoneTaskId: task.id,
@@ -111,6 +115,10 @@ describe('state consistency projection', () => {
     const codes = report.issues.map((issue) => issue.code);
 
     expect(report.ok).toBe(true);
+    expect(report.semantics).toEqual({
+      ok: 'report-generated',
+      consistent: 'no-error-or-warning-issues'
+    });
     expect(report.summary.consistent).toBe(false);
     expect(codes).toEqual(expect.arrayContaining([
       'STATE_SOURCE_MISSING',
@@ -137,6 +145,10 @@ describe('state consistency projection', () => {
     expect(payload).toMatchObject({
       schemaVersion: 'hadara.stateProjection.v1',
       command: 'state.projection',
+      semantics: {
+        ok: 'report-generated',
+        consistent: 'no-error-or-warning-issues'
+      },
       summary: {
         consistent: true,
         latestDoneTaskId: task.id

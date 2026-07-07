@@ -85,6 +85,27 @@ describe('task next recommendation', () => {
     expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
   });
 
+  it('prefers an existing open Task Board row over stale handoff prose without a task id', () => {
+    const root = tempProject({
+      handoffNextStep: 'Create or select first Task Capsule.',
+      developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
+    });
+    const active = createTaskCapsule(root, 'Actual Active Work');
+    updateTaskBoardStatus(root, active.id, 'In Progress');
+
+    const report = createTaskNextReport(root);
+
+    expect(report.recommendations[0]).toMatchObject({
+      taskId: active.id,
+      title: 'Actual Active Work',
+      source: 'docs/TASK_BOARD.md',
+      sourceKind: 'task-board-fallback',
+      createCommand: null
+    });
+    expect(report.recommendations[0].title).not.toBe('Create or select first Task Capsule');
+    expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
+  });
+
   it('recommends the first incomplete Development Slices row with existing capsule metadata', () => {
     const root = tempProject();
     const done = createTaskCapsule(root, 'Already Done');

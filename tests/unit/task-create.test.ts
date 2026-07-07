@@ -21,6 +21,21 @@ afterEach(() => {
 });
 
 describe('task create templates', () => {
+  it('fills known scaffold dates and points authors to schema tokens', () => {
+    const root = tempProject();
+
+    const report = createTaskCreateReport(root, 'Default scaffold');
+
+    expect(report.ok).toBe(true);
+    const taskMd = fs.readFileSync(path.join(root, report.task?.capsule ?? '', 'TASK.md'), 'utf8');
+    const today = new Date().toISOString().slice(0, 10);
+    expect(taskMd).toContain(`| Created | ${today} |`);
+    expect(taskMd).toContain(`| Updated | ${today} |`);
+    expect(taskMd).toContain('Schema hint: use `hadara schema --json`');
+    expect(taskMd).not.toContain('| Created | TBD |');
+    expect(validateSchema('hadara.task.create.v1', report).ok).toBe(true);
+  });
+
   it('creates a release-read-model capsule with release boundaries and schema-valid metadata', () => {
     const root = tempProject();
 

@@ -81,10 +81,11 @@ Close with the reviewed finalize flow:
 
 ```bash
 hadara task finalize --task T-0001 --json
+hadara task finalize --task T-0001 --execute --auto --json
 hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
 ```
 
-`task finalize --json` is the dry-run review. It reports the current lifecycle step, write boundaries, expected paths, and the current plan hash. Execute mode rechecks that hash and succeeds only after close audit is valid.
+`task finalize --json` is the dry-run review. `--execute --auto` is the ordinary guarded close path: it performs the same review internally, rechecks the current plan, and succeeds only after close audit is valid. Use the explicit `--plan-hash` form when a separate human or automation flow reviews and carries the dry-run plan.
 
 ## Release Status
 
@@ -146,6 +147,7 @@ hadara evidence add-command --task T-XXXX --summary "..." --result passed --cate
 # Finalize Task Capsule docs and tracked state docs before closing.
 
 hadara task finalize --task T-XXXX --json
+hadara task finalize --task T-XXXX --execute --auto --json
 hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 ```
 

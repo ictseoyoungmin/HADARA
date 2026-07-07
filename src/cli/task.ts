@@ -9,6 +9,7 @@ import { createTaskStatusSelectionReport, createTaskWorkbenchReport, formatTaskS
 import { startMonotonicTimer, type MonotonicTimer } from '../core/timing';
 import { getActorContextOption } from './actor';
 import { getFlag, getStringOption } from './args';
+import { renderCommandHelp } from './help';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 import { createTaskListReport, createTaskShowReport, formatTaskListReport } from './task-json';
 
@@ -192,6 +193,10 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   if (sub === 'finalize') {
+    if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+      console.log(renderCommandHelp('task.finalize'));
+      return true;
+    }
     if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'task.finalize')) return true;
     const id = getStringOption(input.args, '--task') ?? input.args[2];
     if (!id || id.startsWith('--')) throw new Error('task finalize requires --task <task-id>');

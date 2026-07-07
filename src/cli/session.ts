@@ -1,6 +1,7 @@
 import { getFlag, getIntegerOption, getStringOption } from './args';
 import { buildSessionStartReport } from '../context/session-start';
 import type { ContextBudget } from '../context/context-pack';
+import { renderCommandHelp } from './help';
 
 export interface SessionCommandInput {
   args: string[];
@@ -11,6 +12,10 @@ export interface SessionCommandInput {
 export function handleSessionCommand(input: SessionCommandInput): boolean {
   const sub = input.args[1];
   if (sub !== 'start') return false;
+  if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+    console.log(renderCommandHelp('session.start'));
+    return true;
+  }
 
   const budget = sessionStartBudgetFromArgs(input.args);
   const report = buildSessionStartReport({

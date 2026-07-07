@@ -236,7 +236,7 @@ describe('context graph CLI', () => {
     expect(payload.readFirst).toEqual(expect.arrayContaining([
       expect.objectContaining({ id: `task:${task.id}`, type: 'Task', required: true })
     ]));
-    expect(payload.validateWith.some((item: { command: string }) => item.command.includes(`task ready --task ${task.id}`))).toBe(true);
+    expect(payload.validateWith.some((item: { command: string }) => item.command.includes(`task status --task ${task.id} --detail full`))).toBe(true);
     expect(validateSchema('hadara.contextPack.v1', payload).ok).toBe(true);
     expect(snapshotProject(root)).toEqual(before);
   });
@@ -276,7 +276,7 @@ describe('context graph CLI', () => {
     });
     expect(payload.contextPack.readFirst.length).toBeLessThanOrEqual(3);
     expect(payload.lifecycle.primaryNextCommands).toEqual(expect.arrayContaining([
-      `node dist/cli/main.js task status --task ${task.id} --json`
+      `hadara task status --task ${task.id} --json`
     ]));
     expect(payload.guidance.commands).toEqual(expect.arrayContaining([
       expect.objectContaining({

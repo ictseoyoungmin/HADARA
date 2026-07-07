@@ -122,6 +122,17 @@ export interface BuildSessionStartReportOptions {
   contextPack?: ContextPackReport;
 }
 
+function hadaraCommand(command: string): string {
+  return `hadara ${command}`;
+}
+
+function normalizeUserCommand(command: string): string {
+  return command
+    .replace(/^node dist\/cli\/main\.js\s+/, 'hadara ')
+    .replace(/^dist\/cli\/main\.js\s+/, 'hadara ')
+    .replace(/^hadara task ready --task ([^\s]+) --level done --json$/, 'hadara task status --task $1 --detail full --json');
+}
+
 export function buildSessionStartReport(input: BuildSessionStartReportOptions): SessionStartReport {
   const generatedAt = input.generatedAt ?? new Date().toISOString();
   const contextPack = input.contextPack ?? (input.allowLiveContextPack
@@ -200,7 +211,7 @@ function createSessionStartDocsReadMap(projectRoot: string, taskId: string, maxR
     }));
   return {
     taskId: readMap.taskId,
-    command: `node dist/cli/main.js docs read-map --task ${taskId} --json`,
+    command: hadaraCommand(`docs read-map --task ${taskId} --json`),
     source: readMap.source,
     task: readMap.task,
     readFirstCount: readMap.readFirst.length,
@@ -298,26 +309,27 @@ function buildWarmCachedContextPackReport(input: {
 function lifecycleForSessionStart(taskId: string | undefined, contextPack: ContextPackReport): SessionStartLifecycle {
   const primaryNextCommands = taskId
     ? [
-        `node dist/cli/main.js task status --task ${taskId} --json`,
-        `node dist/cli/main.js context pack --task ${taskId} --json`
+        hadaraCommand(`task status --task ${taskId} --json`),
+        hadaraCommand(`context pack --task ${taskId} --json`)
       ]
-    : ['node dist/cli/main.js task status --json'];
+    : [hadaraCommand('task status --json')];
 
   for (const suggestion of contextPack.validateWith) {
-    if (suggestion.requiredForClose && !primaryNextCommands.includes(suggestion.command)) {
-      primaryNextCommands.push(suggestion.command);
+    const command = normalizeUserCommand(suggestion.command);
+    if (suggestion.requiredForClose && !primaryNextCommands.includes(command)) {
+      primaryNextCommands.push(command);
     }
   }
 
   const diagnosticCommands = [
-    'node dist/cli/main.js context cache status --json',
+    hadaraCommand('context cache status --json'),
     taskId
-      ? `node dist/cli/main.js context graph --task ${taskId} --json`
-      : 'node dist/cli/main.js context graph --json',
+      ? hadaraCommand(`context graph --task ${taskId} --json`)
+      : hadaraCommand('context graph --json'),
     taskId
-      ? `node dist/cli/main.js session start --task ${taskId} --live --json`
-      : 'node dist/cli/main.js session start --live --json',
-    'node dist/cli/main.js state verify --json'
+      ? hadaraCommand(`session start --task ${taskId} --live --json`)
+      : hadaraCommand('session start --live --json'),
+    hadaraCommand('state verify --json')
   ];
 
   return {
@@ -354,7 +366,7 @@ function guidanceForSessionStart(input: {
     primaryAction = {
       id: 'task-status',
       label: 'Select the next task',
-      command: 'node dist/cli/main.js task status --json',
+      command: hadaraCommand('task status --json'),
       args: ['task', 'status', '--json'],
       reason: 'No task id is available, so the next useful step is to select a concrete task before reading task-scoped context.',
       writeBoundary: 'read-only',
@@ -362,7 +374,7 @@ function guidanceForSessionStart(input: {
     };
     commands.push({
       id: 'task-status',
-      command: 'node dist/cli/main.js task status --json',
+      command: hadaraCommand('task status --json'),
       args: ['task', 'status', '--json'],
       reason: 'Choose the next task before requesting task-scoped context.'
     });
@@ -370,7 +382,7 @@ function guidanceForSessionStart(input: {
     primaryAction = {
       id: 'task-status',
       label: 'Inspect task loop phase',
-      command: `node dist/cli/main.js task status --task ${taskId} --json`,
+      command: hadaraCommand(`task status --task ${taskId} --json`),
       args: ['task', 'status', '--task', taskId, '--json'],
       reason: 'A task id is available, so the fastest safe first step is to inspect loop phase, blockers, and the primary next action before editing files.',
       writeBoundary: 'read-only',
@@ -378,19 +390,19 @@ function guidanceForSessionStart(input: {
     };
     commands.push({
       id: 'task-status',
-      command: `node dist/cli/main.js task status --task ${taskId} --json`,
+      command: hadaraCommand(`task status --task ${taskId} --json`),
       args: ['task', 'status', '--task', taskId, '--json'],
       reason: 'Inspect task readiness, evidence, loop phase, and the primary next action.'
     });
     commands.push({
       id: 'context-pack',
-      command: `node dist/cli/main.js context pack --task ${taskId} --json`,
+      command: hadaraCommand(`context pack --task ${taskId} --json`),
       args: ['context', 'pack', '--task', taskId, '--json'],
       reason: 'Inspect the bounded task read plan without slicing raw source text.'
     });
     commands.push({
       id: 'docs-read-map',
-      command: `node dist/cli/main.js docs read-map --task ${taskId} --json`,
+      command: hadaraCommand(`docs read-map --task ${taskId} --json`),
       args: ['docs', 'read-map', '--task', taskId, '--json'],
       reason: 'Inspect registry-backed task reading guidance and drift warnings before broad manual reads.'
     });
@@ -398,7 +410,7 @@ function guidanceForSessionStart(input: {
 
   commands.push({
     id: 'cache-warm',
-    command: 'node dist/cli/main.js context cache warm --json',
+    command: hadaraCommand('context cache warm --json'),
     args: ['context', 'cache', 'warm', '--json'],
     reason: 'Preview stale cache shards without writing cache.'
   });
@@ -406,8 +418,8 @@ function guidanceForSessionStart(input: {
   commands.push({
     id: 'session-start-live',
     command: taskId
-      ? `node dist/cli/main.js session start --task ${taskId} --live --json`
-      : 'node dist/cli/main.js session start --live --json',
+      ? hadaraCommand(`session start --task ${taskId} --live --json`)
+      : hadaraCommand('session start --live --json'),
     args: taskId
       ? ['session', 'start', '--task', taskId, '--live', '--json']
       : ['session', 'start', '--live', '--json'],
@@ -485,7 +497,7 @@ function buildBoundedContextPackReport(input: {
     doNotReadByDefault: [],
     validateWith: input.taskId
       ? [{
-          command: `node dist/cli/main.js task ready --task ${input.taskId} --level done --json`,
+          command: hadaraCommand(`task status --task ${input.taskId} --detail full --json`),
           reason: 'Done-level readiness is required before closing this task.',
           requiredForClose: true,
           source: 'evidence-history'

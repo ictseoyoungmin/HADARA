@@ -15,6 +15,18 @@
     "ok": {
       "type": "boolean"
     },
+    "semantics": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "ok": {
+          "const": "report-generated"
+        },
+        "consistent": {
+          "const": "no-error-or-warning-issues"
+        }
+      }
+    },
     "generatedAt": {
       "type": "string"
     },

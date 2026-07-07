@@ -43,6 +43,7 @@ hadara evidence add-command --task T-XXXX --summary "..." --result passed --cate
 # Finalize Task Capsule docs and tracked state docs before closing.
 
 hadara task finalize --task T-XXXX --json
+hadara task finalize --task T-XXXX --execute --auto --json
 hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 ```
 
@@ -80,16 +81,16 @@ HADARA uses separate token families for persistent state, derived proof state, d
 | `Draft` | Task capsule exists but implementation is not started or not yet ready for done-level validation. | `task create`, worker docs |
 | `In Progress` | Work is actively being performed. | Worker docs |
 | `Blocked` | Work cannot proceed without a recorded blocker. | Worker docs |
-| `Done` | Scoped work is implemented and ready for done-level validation/close. | `task finish --execute` |
+| `Done` | Scoped work is implemented and ready for done-level validation/close. | `task finalize --execute --auto` |
 | `Partial` | Deliberate partial completion with remaining scope deferred or split. | Worker/coordinator docs |
 | `Superseded` | Task has been replaced by another task or line. | Worker/coordinator docs |
 | `Archived` | Task is no longer active state and is retained only for history. | Worker/coordinator docs |
 
-Reserved non-TaskStatus strings include `Closed`, `Ready`, `Approved`, `Complete`, `closed-valid`, `not-closed`, and phrases such as `Done pending lifecycle close`. Use `TaskStatus: Done`; get close proof state from `task status`, `task audit-close`, proof status, or `state verify` read models.
+Reserved non-TaskStatus strings include `Closed`, `Ready`, `Approved`, `Complete`, `closed-valid`, `not-closed`, and phrases such as `Done pending lifecycle close`. Use `TaskStatus: Done`; get close proof state from `task status --detail full`, `task finalize`, proof status, or `state verify` read models.
 
 ### CloseState
 
-`CloseState` is derived proof state from close evidence and `task audit-close`; it is not written as persistent `TaskStatus` and should not be stored in task-local `HANDOFF.md` current-state tables.
+`CloseState` is derived proof state from close evidence and the audit step inside `task finalize`; it is not written as persistent `TaskStatus` and should not be stored in task-local `HANDOFF.md` current-state tables.
 
 | Canonical Token | Meaning |
 |---|---|
@@ -123,7 +124,7 @@ Evidence outcome tokens are `passed`, `failed`, `blocked`, `unknown`, `recorded`
 | Surface | Ownership |
 |---|---|
 | `TASK.md` status metadata, `## Status`, and Status History | Command-owned for finish bookkeeping; worker-owned before finish. |
-| `docs/TASK_BOARD.md` ID/title/status/capsule cells | Command-owned by `task finish`; Notes and extra cells are mixed/human-owned. |
+| `docs/TASK_BOARD.md` ID/title/status/capsule cells | Command-owned by `task finalize`; Notes and extra cells are mixed/human-owned. |
 | `EVIDENCE.md` and `evidence.jsonl` | Evidence writer-owned; do not hand-edit `evidence.jsonl`. |
 | `HANDOFF.md` managed current-state table | Managed/mixed; persist `TaskStatus` only. `CloseState` is derived by status/audit/proof/state read models and should not be written into close-source handoff tables. |
 | Shared state docs | Mixed/human-owned; update before close when they are close-source relevant. |
@@ -139,7 +140,7 @@ Do not defer all documentation until after implementation. Keep `PLAN.md` curren
 
 Parallelize read-only discovery, `rg`/file inspection, independent validation commands, package or registry metadata inspection, read-only diagnostics, and draft preparation before writes.
 
-Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, `task finalize --execute`, low-level `task finish --execute`, low-level `task close --execute`, and release artifact or publish operations.
+Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, `task finalize --execute`, and release artifact or publish operations.
 
 Dry-run-first remediation commands use a separate guard: when `task upgrade-scaffold` or `protocol remediate` reports planned writes, the dry-run report includes `summary.beforeHash`. Execute mode requires `--before-hash <hash>` from that reviewed dry-run before it will apply those writes. This extra copy step is intentional UX friction: old execute-only commands fail closed so operators review the current plan before any scaffold/remediation write.
 
@@ -184,6 +185,7 @@ hadara protocol remediate --fix evidence-jsonl --task T-XXXX --execute --before-
 | `hadara task status --task T-XXXX --detail full --json` | Full selected-task cockpit with close/protocol diagnostics. | Read-only report. | No. | Full report was generated for an existing task, not that the task is ready. | Task-style failures use 6. |
 | `hadara task lifecycle --task T-XXXX --json` | Compatibility lifecycle phase report. Planned removal candidate; prefer `task status --task T-XXXX --json`. | Read-only report. | No. | Report was generated for an existing task. | Task-style failures use 6. |
 | `hadara task finalize --task T-XXXX --json` | Build a reviewed finish/ready/close/audit or close-proof repair plan with step write boundaries and a plan hash. | Read-only report. | No. | The plan is satisfied or executable without current blockers. | Task-style failures use 6. |
+| `hadara task finalize --task T-XXXX --execute --auto --json` | Execute the ordinary guarded close path by internally running the dry-run and current-plan recheck. | Execute with internal review. | Yes, only through underlying finish and close write boundaries. | Final audit reaches `closed-valid`. | Task-style failures use 6. |
 | `hadara task finalize --task T-XXXX --execute --plan-hash <hash> --json` | Execute a reviewed finalize plan after rechecking the current plan hash. | Execute after dry-run review. | Yes, only through underlying finish and close write boundaries. | Final audit reaches `closed-valid`. | Task-style failures use 6. |
 | `hadara handoff suggest --task T-XXXX --json` | Suggest coordinator-reviewed handoff section fragments for a task. | Read-only report. | No. | Suggestion report generated without blocking issues. | Task-style failures use 6. |
 | `hadara dev docker-check --focused tests/unit/foo.test.ts --sync-dist --before-hash sha256:... --json` | Run Docker temp-copy validation with optional focused tests and explicit dist sync. | Execute report. | Runs Docker; may write workspace `dist` only with `--sync-dist` and a matching reviewed before-hash. | Requested Docker validation completed and any requested dist sync freshness guard passed. | Task-style failures use 6. |

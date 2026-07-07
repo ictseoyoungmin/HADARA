@@ -65,6 +65,10 @@ export interface StateProjectionReport {
   schemaVersion: 'hadara.stateProjection.v1';
   command: 'state.projection';
   ok: true;
+  semantics: {
+    ok: 'report-generated';
+    consistent: 'no-error-or-warning-issues';
+  };
   generatedAt: string;
   projectRoot: string;
   summary: {
@@ -162,6 +166,10 @@ export function createStateProjectionReport(projectRoot: string, now = new Date(
     schemaVersion: 'hadara.stateProjection.v1',
     command: 'state.projection',
     ok: true,
+    semantics: {
+      ok: 'report-generated',
+      consistent: 'no-error-or-warning-issues'
+    },
     generatedAt: now.toISOString(),
     projectRoot,
     summary: {
@@ -227,6 +235,7 @@ export function formatStateProjectionReport(report: StateProjectionReport, issue
   const counts = `errors ${advisory.issueCounts.error}, warnings ${advisory.issueCounts.warning}, info ${advisory.issueCounts.info}`;
   const lines = [
     '[HADARA] State verify',
+    'ok: report generated; consistent: state health verdict',
     `consistent: ${advisory.consistent}`,
     `issues: ${counts}`,
     `latestDoneTaskId: ${advisory.latestDoneTaskId ?? 'none'}`,
@@ -252,7 +261,12 @@ function readSources(projectRoot: string, issues: StateProjectionIssue[]): {
   const taskBoard = readSource(projectRoot, 'docs/TASK_BOARD.md');
   const developmentSlices = readSource(projectRoot, 'docs/DEVELOPMENT_SLICES.md');
   for (const source of [projectState, agentHandoff, taskBoard, developmentSlices]) {
-    if (!source.exists) issues.push(warning('STATE_SOURCE_MISSING', source.path, `${source.path} is missing.`, `Restore ${source.path} or run the relevant HADARA init/profile remediation.`));
+    if (!source.exists) {
+      const fixHint = source.path === 'docs/DEVELOPMENT_SLICES.md'
+        ? 'Bootstrap slice state with `hadara slice add ... --json` or import a legacy slice table with `hadara slice migrate --execute --json`.'
+        : `Restore ${source.path} or run the relevant HADARA init/profile remediation.`;
+      issues.push(warning('STATE_SOURCE_MISSING', source.path, `${source.path} is missing.`, fixHint));
+    }
   }
   return { projectState, agentHandoff, taskBoard, developmentSlices };
 }
@@ -310,7 +324,7 @@ function buildTaskProjection(
     issues.push(warning('STATE_TASK_BOARD_CAPSULE_DRIFT', 'docs/TASK_BOARD.md', `Task Board capsule for ${taskId} is ${taskBoard.capsule || '(empty)'}, expected ${capsule}.`, `Update the Task Board capsule cell for ${taskId}.`, taskId, capsule, taskBoard.capsule || '(empty)'));
   }
   if (taskStatus && taskBoard?.status && taskStatus !== taskBoard.status) {
-    issues.push(warning('STATE_TASK_BOARD_STATUS_DRIFT', 'docs/TASK_BOARD.md', `Task Board status for ${taskId} is ${taskBoard.status}, but TASK.md status is ${taskStatus}.`, `Run hadara task finish --task ${taskId} --execute --json after the capsule is complete, or align the status source intentionally.`, taskId, taskStatus, taskBoard.status));
+    issues.push(warning('STATE_TASK_BOARD_STATUS_DRIFT', 'docs/TASK_BOARD.md', `Task Board status for ${taskId} is ${taskBoard.status}, but TASK.md status is ${taskStatus}.`, `Align docs/TASK_BOARD.md deliberately before running hadara task finalize --task ${taskId} --execute --auto --json.`, taskId, taskStatus, taskBoard.status));
   }
   if (deepCheck && taskHandoff.taskStatus && !TASK_STATUS_TOKENS.has(taskHandoff.taskStatus)) {
     issues.push(warning('STATE_TASK_HANDOFF_STATUS_INVALID', handoffPath, `Task handoff TaskStatus for ${taskId} is not a canonical task status token: ${taskHandoff.taskStatus}.`, 'Use a canonical TaskStatus token; close proof state belongs in audit-close/proof/status read models.', taskId));
@@ -508,11 +522,11 @@ function checkLatestCloseProof(projectedTasks: StateProjectionTask[], latestDone
   if (!task) return;
   if (task.closeProof.state === 'closed-valid') return;
   if (task.closeProof.state === 'not-closed') {
-    issues.push(warning('STATE_LATEST_CLOSE_PROOF_MISSING', task.closeProof.path, `Latest Done task ${latestDoneTaskId} has no close proof.`, `Run hadara task ready --task ${latestDoneTaskId} --level done --json, then task close/audit-close.`, latestDoneTaskId));
+    issues.push(warning('STATE_LATEST_CLOSE_PROOF_MISSING', task.closeProof.path, `Latest Done task ${latestDoneTaskId} has no close proof.`, `Run hadara task finalize --task ${latestDoneTaskId} --json, resolve blockers, then execute with --auto.`, latestDoneTaskId));
     return;
   }
   if (task.closeProof.state === 'closed-stale') {
-    issues.push(warning('STATE_LATEST_CLOSE_PROOF_STALE', task.closeProof.path, `Latest Done task ${latestDoneTaskId} has stale close proof.`, `Rerun hadara task ready --task ${latestDoneTaskId} --level done --json, then task close/audit-close after intentional close-source edits.`, latestDoneTaskId, task.closeProof.currentSourceHash ?? undefined, task.closeProof.sourceHash ?? undefined));
+    issues.push(warning('STATE_LATEST_CLOSE_PROOF_STALE', task.closeProof.path, `Latest Done task ${latestDoneTaskId} has stale close proof.`, `Rerun hadara task finalize --task ${latestDoneTaskId} --json after intentional close-source edits, then execute with --auto when ready.`, latestDoneTaskId, task.closeProof.currentSourceHash ?? undefined, task.closeProof.sourceHash ?? undefined));
     return;
   }
   issues.push(warning('STATE_LATEST_CLOSE_PROOF_INVALID', task.closeProof.path, `Latest Done task ${latestDoneTaskId} close proof is ${task.closeProof.state}.`, `Rerun task close/audit-close for ${latestDoneTaskId} after resolving validation blockers.`, latestDoneTaskId));

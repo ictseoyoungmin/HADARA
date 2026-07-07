@@ -1,7 +1,8 @@
 import { HarnessValidationLevel } from '../harness/validate';
 import { replayScenario } from '../harness/replay';
 import { createHarnessValidateReport } from '../services/harness-service';
-import { getRequiredStringOption, getStringOption } from './args';
+import { getFlag, getRequiredStringOption, getStringOption } from './args';
+import { renderCommandHelp } from './help';
 
 export interface HarnessCommandInput {
   args: string[];
@@ -12,6 +13,10 @@ export interface HarnessCommandInput {
 export async function handleHarnessCommand(input: HarnessCommandInput): Promise<boolean> {
   const sub = input.args[1];
   if (sub === 'validate') {
+    if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+      console.log(renderCommandHelp('harness.validate'));
+      return true;
+    }
     const taskId = getRequiredStringOption(input.args, '--task');
     const level = parseHarnessValidationLevel(getStringOption(input.args, '--level', 'draft') ?? 'draft');
     const result = createHarnessValidateReport(input.projectRoot, taskId, { level });

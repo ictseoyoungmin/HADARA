@@ -239,6 +239,31 @@ describe('validation run', () => {
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
   });
 
+  it('sets a non-zero wrapper exit code when the child command fails', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation CLI failure exit');
+    const output: string[] = [];
+    const originalLog = console.log;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+    try {
+      expect(
+        handleValidationCommand({
+          args: ['validation', 'run', '--task', task.id, '--check', 'CLI failing check', '--json', '--', process.execPath, '-e', 'process.exit(3)'],
+          projectRoot: root,
+          jsonOutput: true
+        })
+      ).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+    const report = JSON.parse(output.join('\n'));
+    expect(report.result).toBe('Failed');
+    expect(report.execution.exitCode).toBe(3);
+    expect(process.exitCode).toBe(6);
+  });
+
   it('prints child command and HADARA evidence boundaries in text output', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Validation text boundaries');

@@ -596,7 +596,7 @@ function validationSuggestionsForTask(taskId: string | undefined, graphReport: C
   const suggestions = new Map<string, ValidationSuggestion>();
   if (taskId) {
     suggestions.set(`ready:${taskId}`, {
-      command: `node dist/cli/main.js task ready --task ${taskId} --level done --json`,
+      command: `hadara task status --task ${taskId} --detail full --json`,
       reason: 'Done-level readiness is required before closing this task.',
       requiredForClose: true,
       source: 'evidence-history'

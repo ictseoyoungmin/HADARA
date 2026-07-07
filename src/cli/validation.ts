@@ -1,5 +1,6 @@
 import { createValidationRunReport } from '../services/validation-run';
 import { getFlag, getIntegerOption, getRequiredStringOption } from './args';
+import { renderCommandHelp } from './help';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 
 export interface ValidationCommandInput {
@@ -11,6 +12,10 @@ export interface ValidationCommandInput {
 export function handleValidationCommand(input: ValidationCommandInput): boolean {
   const sub = input.args[1];
   if (sub !== 'run') return false;
+  if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+    console.log(renderCommandHelp('validation.run'));
+    return true;
+  }
   if (blockLegacyMutation(input, 'validation.run')) return true;
   const separator = input.args.indexOf('--');
   const commandArgs = separator >= 0 ? input.args.slice(separator + 1) : [];
@@ -44,7 +49,7 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
     if (report.nextActions.length > 0) console.log(`[HADARA] next actions`);
     for (const action of report.nextActions) console.log(`${action.id}=${action.command ?? action.message}`);
   }
-  if (!report.ok) process.exitCode = 6;
+  if (!report.ok || report.result !== 'Passed') process.exitCode = 6;
   return true;
 }
 

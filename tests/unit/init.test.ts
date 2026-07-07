@@ -169,6 +169,7 @@ describe('init profiles', () => {
       '## Selecting or Creating Work',
       '## Task Context',
       '## Exact Source Slices',
+      '## Slice State',
       '## Task Capsule Lifecycle',
       '## Finalize Entry Gate',
       '## Task Document Timing',
@@ -187,6 +188,9 @@ describe('init profiles', () => {
     expect(workflow).toContain('Before running `hadara task finalize`, all of these must be true');
     expect(workflow).toContain('Evidence must reflect real execution results');
     expect(workflow).toContain('For ordinary clean capsules, `task finalize --execute --auto --json` performs the dry-run and current-plan verification internally.');
+    expect(workflow).toContain('hadara slice add --id M1 --title "First slice" --status not-started --json');
+    expect(workflow).toContain('`.hadara/state/slices.json` is canonical once it exists.');
+    expect(workflow).not.toContain('Low-level lifecycle commands are for debugging');
     expect(workflow).toContain('Document registration writes registry metadata, not prose rows in entry docs.');
     expect(workflow).toContain('| Surface | Human / Operator | Agent | CLI |');
   });

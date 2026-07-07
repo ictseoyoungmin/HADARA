@@ -79,7 +79,9 @@ export function createTaskNextReport(projectRoot: string): TaskNextReport {
 
   const nextSlice = slices.rows.find((row) => isOpenSliceStatus(row.status));
   const handoffRecommendation = handoff.nextRecommendedStep ? recommendationFromHandoff(projectRoot, handoff.nextRecommendedStep, board.rows, capsules) : null;
-  const recommendation = handoffRecommendation ?? (nextSlice ? recommendationFromSlice(projectRoot, nextSlice, board.rows, capsules) : recommendationFromTaskBoard(board.rows, capsules));
+  const taskBoardRecommendation = recommendationFromTaskBoard(board.rows, capsules);
+  const defaultRecommendation = nextSlice ? recommendationFromSlice(projectRoot, nextSlice, board.rows, capsules) : taskBoardRecommendation;
+  const recommendation = handoffRecommendation ?? defaultRecommendation;
   const recommendations = recommendation ? [recommendation] : [];
   const backlog = createTaskBoardBacklog(board.rows, capsules, recommendation?.taskId ?? null);
   if (!recommendation) {
@@ -257,6 +259,7 @@ function isActionableHandoffStep(step: string): boolean {
   const normalized = step.trim().toLowerCase();
   if (!normalized || normalized === 'step' || normalized === 'tbd') return false;
   if (isTaskNextMetaGuidance(normalized)) return false;
+  if (normalized.includes('create or select first task capsule')) return false;
   if (normalized.startsWith('migrate selected historical evidence only when explicitly requested')) return false;
   return true;
 }

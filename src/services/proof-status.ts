@@ -179,7 +179,7 @@ function selectVerdict(input: {
 function createNextActions(taskId: string, verdict: ProofVerdict, blockers: ProofIssue[], freshnessStatus: ProofFreshnessStatus): ProofNextAction[] {
   const actions: ProofNextAction[] = [];
   if (blockers.length > 0) actions.push({ id: 'inspect-evidence-lint', command: `hadara evidence lint --task ${taskId} --json`, message: 'Inspect semantic evidence blockers.' });
-  if (freshnessStatus !== 'fresh') actions.push({ id: 'refresh-close-proof', command: `hadara task close --task ${taskId} --json`, message: 'Review close proof freshness and append a fresh close proof when appropriate.' });
+  if (freshnessStatus !== 'fresh') actions.push({ id: 'refresh-close-proof', command: `hadara task finalize --task ${taskId} --json`, message: 'Review close proof freshness and rerun guarded finalize when appropriate.' });
   if (verdict === 'insufficient') actions.push({ id: 'add-substantive-evidence', command: `hadara evidence add-command --task ${taskId} --summary "..." --result passed --json`, message: 'Record substantive public evidence for the readiness claim.' });
   return actions;
 }

@@ -56,15 +56,15 @@ describe('session start', () => {
     });
     expect(report.contextPack.readFirst.length).toBeLessThanOrEqual(3);
     expect(report.lifecycle.primaryNextCommands).toEqual(expect.arrayContaining([
-      `node dist/cli/main.js task status --task ${task.id} --json`,
-      `node dist/cli/main.js context pack --task ${task.id} --json`,
-      `node dist/cli/main.js task ready --task ${task.id} --level done --json`
+      `hadara task status --task ${task.id} --json`,
+      `hadara context pack --task ${task.id} --json`,
+      `hadara task status --task ${task.id} --detail full --json`
     ]));
-    expect(report.lifecycle.primaryNextCommands[0]).toBe(`node dist/cli/main.js task status --task ${task.id} --json`);
+    expect(report.lifecycle.primaryNextCommands[0]).toBe(`hadara task status --task ${task.id} --json`);
     expect(report.lifecycle.diagnosticCommands).toEqual(expect.arrayContaining([
-      'node dist/cli/main.js context cache status --json',
-      `node dist/cli/main.js context graph --task ${task.id} --json`,
-      'node dist/cli/main.js state verify --json'
+      'hadara context cache status --json',
+      `hadara context graph --task ${task.id} --json`,
+      'hadara state verify --json'
     ]));
     expect(report.guidance.commands).toEqual(expect.arrayContaining([
       expect.objectContaining({
@@ -86,7 +86,7 @@ describe('session start', () => {
     ]));
     expect(report.docsReadMap).toMatchObject({
       taskId: task.id,
-      command: `node dist/cli/main.js docs read-map --task ${task.id} --json`,
+      command: `hadara docs read-map --task ${task.id} --json`,
       task: {
         capsulePresent: true,
         title: 'Session start task'
@@ -95,7 +95,7 @@ describe('session start', () => {
     expect(report.docsReadMap?.readFirstCount).toBeGreaterThanOrEqual(report.docsReadMap?.readFirst.length ?? 0);
     expect(report.guidance.primaryAction).toMatchObject({
       id: 'task-status',
-      command: `node dist/cli/main.js task status --task ${task.id} --json`,
+      command: `hadara task status --task ${task.id} --json`,
       args: ['task', 'status', '--task', task.id, '--json'],
       writeBoundary: 'read-only',
       recommendedActorRole: 'agent-worker'
@@ -243,7 +243,7 @@ describe('session start', () => {
 
     expect(report.ok).toBe(true);
     expect(report.summary.degraded).toBe(true);
-    expect(report.lifecycle.primaryNextCommands).toEqual(['node dist/cli/main.js task status --json']);
+    expect(report.lifecycle.primaryNextCommands).toEqual(['hadara task status --json']);
     expect(report.guidance).toMatchObject({
       mode: 'bounded-no-live',
       primaryNextAction: 'select-task',

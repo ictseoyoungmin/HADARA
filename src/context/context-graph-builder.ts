@@ -413,7 +413,7 @@ function metadataBoolean(node: ContextGraphNode, key: string): boolean | undefin
 function validationSuggestions(taskId: string): string[] {
   return [
     'npm run test:focused -- tests/unit/context-graph-builder.test.ts',
-    `node dist/cli/main.js task ready --task ${taskId} --level done --json`
+    `hadara task status --task ${taskId} --detail full --json`
   ];
 }
 

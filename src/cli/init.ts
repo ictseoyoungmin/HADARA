@@ -1081,6 +1081,19 @@ hadara context slice --task T-XXXX --candidate <candidate-id> --json
 
 Use context slice only after a read model points to a specific file or range.
 
+## Slice State
+
+Use slice state when the project has roadmap/development slices that need a generated \`docs/DEVELOPMENT_SLICES.md\` projection.
+
+\`\`\`bash
+hadara slice list --json
+hadara slice add --id M1 --title "First slice" --status not-started --json
+hadara slice set --id M1 --status done --done-evidence ev:T-XXXX:... --json
+hadara slice render --json
+\`\`\`
+
+\`.hadara/state/slices.json\` is canonical once it exists. \`docs/DEVELOPMENT_SLICES.md\` is a generated projection; do not hand-edit it to repair state drift. Use \`hadara slice render --json\` to discard projection drift or \`hadara slice migrate --execute --json\` to import a legacy Markdown slice table deliberately.
+
 ## Task Capsule Lifecycle
 
 The normal task lifecycle is:
@@ -1182,6 +1195,7 @@ Agents should inspect \`task finalize --json\` before close when the result is n
 | Inspect close-grade diagnostics | \`hadara task status --task T-XXXX --detail full --json\` | Heavier readiness/protocol projection for explicit diagnostics. |
 | Find task-specific context | \`hadara context pack --task T-XXXX --json\` | Use before broad manual reads. |
 | Read exact source text | \`hadara context slice ... --json\` | Use after a context candidate points to a range. |
+| Update slice state | \`hadara slice add/set/render ... --json\` | Use when roadmap/development slice state applies. |
 | Run and record validation | \`hadara validation run --task T-XXXX --check "..." -- <command>\` | Executes the command and records evidence without editing \`TASK.md\` by default. |
 | Run, record, and sync task row | \`hadara validation run --task T-XXXX --check "..." --update-task -- <command>\` | Executes the command, records evidence, and updates the matching \`TASK.md\` Validation row. |
 | Record already-run validation | \`hadara evidence add-command ... --json\` | Append-only evidence writer; does not execute commands. |
@@ -1592,6 +1606,10 @@ hadara task status --task T-XXXX --json
 hadara session start --task T-XXXX --json
 
 # Do the scoped work.
+
+# If this task changes roadmap/development slice state:
+hadara slice list --json
+hadara slice set --id M1 --status done --done-evidence ev:T-XXXX:... --json
 
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
 

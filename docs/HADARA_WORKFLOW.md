@@ -16,7 +16,7 @@ Use this section for the first pass through a new scaffold. Read the detailed se
 | Need work to do | Run `hadara task status --json`. |
 | Need a task | Run `hadara task create "task title" --json`, then fill `TASK.md` Goal, Source Documents, Plan, and Acceptance. |
 | Need files to inspect | Run `hadara session start --task T-XXXX --json` or `hadara context pack --task T-XXXX --json`, then read only routed files. |
-| Ready to close | Run `hadara task finalize --task T-XXXX --json`, inspect the plan hash, then execute finalize with that hash. |
+| Ready to close | Run `hadara task finalize --task T-XXXX --execute --auto --json` for the ordinary guarded close path, or dry-run first when a separate reviewer needs the plan hash. |
 
 ## Minimal Loop
 
@@ -29,8 +29,8 @@ Use this section for the first pass through a new scaffold. Read the detailed se
 6. run real validation
 7. record evidence
 8. update task/global docs
-9. review `task finalize --json`
-10. execute finalize only with the reviewed plan hash
+9. review `task finalize --json` when the close needs external review
+10. execute finalize with `--execute --auto` for ordinary clean work, or with a reviewed `--plan-hash` when an external review flow requires it
 ```
 
 ## Read Authority Rules
@@ -128,6 +128,19 @@ hadara context slice --task T-XXXX --candidate <candidate-id> --json
 
 Use context slice only after a read model points to a specific file or range.
 
+## Slice State
+
+Use slice state when the project tracks roadmap or milestone slices.
+
+```bash
+hadara slice list --json
+hadara slice add --id M1 --title "First slice" --status not-started --json
+hadara slice set --id M1 --status done --done-evidence ev:T-XXXX:... --json
+hadara slice render --json
+```
+
+`.hadara/state/slices.json` is the canonical slice state. `docs/DEVELOPMENT_SLICES.md` is the generated projection. Edit slice state through `hadara slice`; if the Markdown projection drifts, run `hadara slice render --execute --json` after reviewing the dry-run.
+
 ## Task Capsule Lifecycle
 
 The authoritative command semantics live in `docs/TASK_WORKFLOW_COMMANDS.md`.
@@ -154,10 +167,13 @@ hadara task status --task T-XXXX --json
 # Finalize Task Capsule docs and tracked state docs before closing.
 
 hadara task finalize --task T-XXXX --json
+hadara task finalize --task T-XXXX --execute --auto --json
 hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 ```
 
-Low-level lifecycle commands are for debugging, recovery, or command implementation work: as of 0.4.1-rc.0 (FD-013) the standalone `task finish`/`task ready`/`task close`/`task audit-close`/`task complete`/`task lifecycle` surface is removed and answers with a `hadara.commandRemoved.v1` redirect stub. Use `hadara task finalize --task T-XXXX --execute --auto --json` for guarded execution, `hadara task finalize --task T-XXXX --json` for the step-level dry-run report, and `hadara task status --task T-XXXX --detail full --json` for done-level diagnostics including `state.closeState`. Recovery of partially executed finalize runs also completes by rerunning finalize.
+Use `--execute --auto` for the ordinary guarded close path. Use the explicit `--plan-hash` form only when a reviewed dry-run plan crosses a human or external automation boundary.
+
+Standalone low-level lifecycle command surfaces (`task finish`, `task ready`, `task close`, `task audit-close`, `task complete`, and `task lifecycle`) were removed in 0.4.1-rc.0 and answer with `hadara.commandRemoved.v1` redirect stubs. Use `hadara task finalize --task T-XXXX --json` for the step-level dry-run report, `hadara task finalize --task T-XXXX --execute --auto --json` for guarded execution, and `hadara task status --task T-XXXX --detail full --json` for done-level diagnostics including `state.closeState`. Recovery of partially executed finalize runs also completes by rerunning finalize.
 
 ## Finalize Entry Gate
 
@@ -217,7 +233,8 @@ Evidence must reflect real execution results. Fabricated or assumed results are 
 ## Repair and Diagnostics
 
 ```bash
-hadara task audit-close --task T-XXXX --json
+hadara task status --task T-XXXX --detail full --json
+hadara task finalize --task T-XXXX --json
 hadara harness validate --task T-XXXX --level done --json
 hadara init doctor --json
 ```
@@ -242,8 +259,9 @@ Agents must not run `task finalize --execute` without inspecting the dry-run out
 | Record already-run validation | `hadara evidence add-command ... --json` | Append-only evidence writer; does not execute commands. |
 | Find evidence ids | `hadara evidence summary --task T-XXXX --json` | Compact copy hints. |
 | Review loop phase | `hadara task status --task T-XXXX --json` | Normal lifecycle state and next action. |
-| Close ordinary work | `hadara task finalize --task T-XXXX --json` then execute with its `planHash` | Default close path. |
-| Repair close drift | `hadara task finalize --task T-XXXX --json` then execute with its `planHash` | Default repair path for stale close proof. |
+| Close ordinary work | `hadara task finalize --task T-XXXX --execute --auto --json` | Default guarded close path for clean capsules. |
+| Externally reviewed close | `hadara task finalize --task T-XXXX --json` then execute with its `planHash` | Use when a human or automation explicitly reviews and carries the dry-run plan. |
+| Repair close drift | `hadara task finalize --task T-XXXX --json` then execute with `--auto` or the reviewed `planHash` | Default repair path for stale close proof. |
 | Register project-specific docs | `hadara docs register --path <path> --json` | 0.4 registry surface. Canonical state belongs in `.hadara/docs-registry.json`; use registry-backed help for exact options. |
 | Discover command details | `hadara help lifecycle`, `hadara help command <id>`, `hadara commands --json` | Prefer registry-backed help over copied command tables. |
 
