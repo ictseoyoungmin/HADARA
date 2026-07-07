@@ -156,7 +156,7 @@ describe('Harness Task Capsule validation', () => {
       fs
         .readFileSync(taskPath, 'utf8')
         .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Follow-up | TBD | Resolved | TBD |')
-        .replace('| TBD | reference | draft | TBD |', '| docs/EXAMPLE.md | constrains | draft | TBD |'),
+        .replace('| TBD | reference | active | TBD |', '| docs/EXAMPLE.md | constrains | active | TBD |'),
       'utf8'
     );
 
@@ -179,6 +179,25 @@ describe('Harness Task Capsule validation', () => {
       received: 'constrains',
       allowedValues: [...SOURCE_DOCUMENT_ROLE_TOKENS]
     });
+  });
+
+  it('accepts Done acceptance state and active input constraint state as human-friendly aliases', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Task table token aliases');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace('| AC-1 | Scope is implemented. | Pending | TBD | TBD |', '| AC-1 | Scope is implemented. | Done | ev:T-0001:test | Fixture. |')
+        .replace('| TBD | reference | active | TBD |', '| docs/EXAMPLE.md | constraint | active | Current task constraint. |'),
+      'utf8'
+    );
+
+    const result = validateTaskCapsule(root, task.id, { level: 'draft' });
+
+    expect(result.ok).toBe(true);
+    expect(result.issues).toEqual([]);
   });
 
   it('accepts stable Change Summary areas at draft level', () => {
@@ -285,7 +304,7 @@ describe('Harness Task Capsule validation', () => {
       fs
         .readFileSync(taskPath, 'utf8')
         .replace(
-          '## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | draft | TBD |',
+          '## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | active | TBD |',
           `## Inputs / Constraints\n\n| Path / Source | Type | Authority | State | Notes | Hash |\n|---|---|---|---|---|---|\n| docs/source.md | implementation-source | approved | implementing | Fixture source. | ${recordedHash} |`
         ),
       'utf8'
@@ -313,7 +332,7 @@ describe('Harness Task Capsule validation', () => {
       fs
         .readFileSync(taskPath, 'utf8')
         .replace(
-          '## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | draft | TBD |',
+          '## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | active | TBD |',
           `## Inputs / Constraints\n\n| Path / Source | Type | Authority | State | Notes | Hash |\n|---|---|---|---|---|---|\n| \`docs/source.md\` | implementation-source | approved | implementing | Fixture source. | ${recordedHash} |`
         ),
       'utf8'
@@ -339,7 +358,7 @@ describe('Harness Task Capsule validation', () => {
       fs
         .readFileSync(taskPath, 'utf8')
         .replace(
-          '## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | draft | TBD |',
+          '## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | active | TBD |',
           '## Inputs / Constraints\n\n| Path / Source | Type | Authority | State | Notes | Hash |\n|---|---|---|---|---|---|\n| docs/source.md | implementation-source | approved | implementing | Fixture source. | TBD |'
         ),
       'utf8'
@@ -1005,7 +1024,7 @@ function writeCompletedCapsuleDocs(taskDir: string, options: { keepMetadataPlace
   let taskContent = fs
     .readFileSync(taskPath, 'utf8')
     .replace(
-      '## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | draft | TBD |',
+      '## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | active | TBD |',
       `## Inputs / Constraints\n\n| Path / Source | Type | Authority | State | Notes | Hash |\n|---|---|---|---|---|---|\n| docs/fixture-source.md | implementation-source | approved | implementing | Fixture source. | ${fixtureSourceHash} |`
     )
     .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Validate done-level completion gates. | Fixture verifies completed capsule docs. |')

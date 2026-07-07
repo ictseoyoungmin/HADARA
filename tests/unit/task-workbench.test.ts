@@ -126,7 +126,7 @@ describe('task workbench status report', () => {
     const task = createTaskCapsule(root, 'Consider a small CLI global-option parsing capsule');
     const taskPath = path.join(task.dir, 'TASK.md');
     const taskMarkdown = fs.readFileSync(taskPath, 'utf8').replace(
-      '## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | draft | TBD |',
+      '## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | active | TBD |',
       '## Inputs / Constraints\n\n| Path / Source | Type | Authority | State | Notes | Hash |\n|---|---|---|---|---|---|\n| `src/cli/main.ts` | implementation-source | approved | implementing | CLI entry point. | TBD |'
     );
     fs.writeFileSync(taskPath, taskMarkdown, 'utf8');

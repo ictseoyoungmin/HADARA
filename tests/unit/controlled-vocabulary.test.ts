@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { assertSchema } from '../../src/core/schema';
 import {
+  ACCEPTANCE_STATUS_TOKENS,
   createVocabularyReport,
   findVocabularyDomain,
+  SOURCE_DOCUMENT_STATUS_TOKENS,
   VOCABULARY_DOMAINS
 } from '../../src/services/controlled-vocabulary';
 import { DOCS_REGISTER_ALLOWED_VALUES } from '../../src/services/docs-registry';
@@ -38,6 +40,13 @@ describe('controlled vocabulary (FD-006 / FD-009)', () => {
     expect(report.ok).toBe(true);
     expect(report.domains).toHaveLength(1);
     expect(report.domains[0].allowed).toEqual(['Open', 'Accepted', 'Mitigated', 'Deferred', 'Closed', 'Superseded', 'Rejected']);
+  });
+
+  it('exposes human-friendly TASK.md aliases for acceptance and input state', () => {
+    expect(ACCEPTANCE_STATUS_TOKENS).toContain('Done');
+    expect(SOURCE_DOCUMENT_STATUS_TOKENS).toContain('active');
+    expect(createVocabularyReport('task.acceptance.state').domains[0].allowed).toContain('Done');
+    expect(createVocabularyReport('task.source.state').domains[0].allowed).toContain('active');
   });
 
   it('rejects an unknown domain with structured allowed values (dogfoods the diagnostics pattern)', () => {

@@ -109,7 +109,7 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
       .replace('| Created | TBD |', '| Created | 2026-06-30 |')
       .replace('| Updated | TBD |', '| Updated | 2026-06-30 |')
       .replace(
-        '## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | draft | TBD |',
+        '## Inputs / Constraints\n\n| Source | Role | State | Notes |\n|---|---|---|---|\n| TBD | reference | active | TBD |',
         `## Inputs / Constraints\n\n| Path / Source | Type | Authority | State | Notes | Hash |\n|---|---|---|---|---|---|\n| docs/TASK_BOARD.md | reference | approved | implemented | Fixture. | sha256:${taskBoardHash} |`
       )
       .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Exercise close source. | Fixture verifies source units. |')
