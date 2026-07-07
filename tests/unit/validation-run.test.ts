@@ -168,10 +168,60 @@ describe('validation run', () => {
       error: { code: 'ENOENT' }
     });
     expect(report.issues).toContainEqual(expect.objectContaining({ code: 'VALIDATION_COMMAND_NOT_FOUND' }));
-    expect(report.nextActions.map((action) => action.id)).toEqual(['run-direct-command', 'record-direct-result']);
+    expect(report.nextActions.map((action) => action.id)).toEqual(['run-direct-command', 'record-direct-validation-result', 'record-direct-result']);
     const evidenceJsonl = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
     expect(evidenceJsonl).toContain('blocked because validation command could not be launched');
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+  });
+
+  it('records an operator-supplied direct result without spawning a child process', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation run direct result');
+
+    const blocked = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Focused tests',
+      argv: ['npm', 'test'],
+      spawnSyncFn: () => ({
+        pid: 0,
+        output: [null, '', ''],
+        stdout: '',
+        stderr: '',
+        status: null,
+        signal: null,
+        error: Object.assign(new Error('spawnSync npm EPERM'), { code: 'EPERM', syscall: 'spawnSync npm' })
+      })
+    });
+    const passed = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'Focused tests',
+      argv: ['npm', 'test'],
+      directResult: 'Passed',
+      directSummary: 'npm test passed directly after wrapper launch failure.',
+      updateTask: true,
+      spawnSyncFn: () => {
+        throw new Error('direct-result mode must not spawn');
+      }
+    });
+
+    expect(blocked.result).toBe('Blocked');
+    expect(passed).toMatchObject({
+      ok: true,
+      result: 'Passed',
+      execution: {
+        exitCode: 0,
+        commandStarted: false,
+        failureKind: 'none',
+        directResult: true,
+        directSummary: 'npm test passed directly after wrapper launch failure.'
+      },
+      taskValidationRow: { mode: 'updated', updated: true }
+    });
+    expect(passed.attempt.previousFailedOrBlockedEvidenceIds).toEqual([blocked.evidence?.id]);
+    expect(passed.evidence?.tags).toContain(`resolves:${blocked.evidence?.id}`);
+    expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toContain(`| Focused tests | Yes | Passed | ${passed.evidence?.id} |`);
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('from direct result');
+    expect(validateSchema('hadara.validation.run.v1', passed).ok).toBe(true);
   });
 
   it('classifies permission-denied launch failures separately from validation failures', () => {
@@ -244,6 +294,10 @@ describe('validation run', () => {
             '--update-task',
             '--resolves',
             'ev:T-0000:old',
+            '--direct-result',
+            'passed',
+            '--direct-summary',
+            'CLI check passed directly.',
             '--json',
             '--',
             process.execPath,
@@ -260,6 +314,7 @@ describe('validation run', () => {
     const report = JSON.parse(output.join('\n'));
     expect(report.schemaVersion).toBe('hadara.validation.run.v1');
     expect(report.result).toBe('Passed');
+    expect(report.execution.directResult).toBe(true);
     expect(report.taskValidationRow.updated).toBe(true);
     expect(report.evidence.tags).toContain('resolves:ev:T-0000:old');
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);

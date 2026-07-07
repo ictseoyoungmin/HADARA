@@ -587,7 +587,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   },
   {
     id: 'validation.run',
-    command: 'hadara validation run --task <task-id> --check <name> [--update-task] [--resolves <id>] [--supersedes <id>] -- <command...>',
+    command: 'hadara validation run --task <task-id> --check <name> [--update-task] [--direct-result passed|failed|blocked] [--direct-summary <text>] [--resolves <id>] [--supersedes <id>] -- <command...>',
     summary: 'Run a validation command, append execution evidence, refresh evidence projection, auto-resolve earlier failed attempts for the same check, and optionally sync the matching TASK.md Validation row with --update-task.',
     canonical: true,
     appearsInDefaultHelp: true,
@@ -606,10 +606,11 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     testFiles: ['tests/unit/validation-run.test.ts'],
     examples: [
       example('Run focused validation', 'hadara validation run --task T-0001 --check "Focused tests" -- npm test', 'When a real validation command should become durable evidence without editing TASK.md.'),
-      example('Run and sync TASK.md', 'hadara validation run --task T-0001 --check "Focused tests" --update-task -- npm test', 'When the command should also update the TASK.md Validation row.')
+      example('Run and sync TASK.md', 'hadara validation run --task T-0001 --check "Focused tests" --update-task -- npm test', 'When the command should also update the TASK.md Validation row.'),
+      example('Record direct validation result', 'hadara validation run --task T-0001 --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly" --update-task --json', 'When the wrapper cannot launch child processes in the current tool environment but the same command was run directly.')
     ],
     related: ['evidence.add-command', 'evidence.project', 'task.finalize'],
-    notes: 'Runs argv directly without shell interpretation; use an explicit shell command such as bash -lc when shell features are required. TASK.md Validation row updates are opt-in so evidence capture does not create close-source churn by default. Passed attempts automatically add resolution tags for earlier failed or blocked attempts with the same check name. Launch failures such as ENOENT, EPERM, EACCES, and timeout are reported as blocked wrapper outcomes with structured execution.failureKind and fallback nextActions.',
+    notes: 'Runs argv directly without shell interpretation; use an explicit shell command such as bash -lc when shell features are required. TASK.md Validation row updates are opt-in so evidence capture does not create close-source churn by default. Passed attempts automatically add resolution tags for earlier failed or blocked attempts with the same check name. Launch failures such as ENOENT, EPERM, EACCES, and timeout are reported as blocked wrapper outcomes with structured execution.failureKind and fallback nextActions. Use --direct-result only after the command was run directly outside the wrapper; it records the supplied result without spawning a child process.',
     conflictsWith: []
   },
   {

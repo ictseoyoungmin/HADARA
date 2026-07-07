@@ -214,6 +214,7 @@ Do not hand-edit `evidence.jsonl`. Treat `EVIDENCE.md` as a CLI-generated projec
 ```bash
 hadara validation run --task T-XXXX --check "Focused tests" -- npm test
 hadara validation run --task T-XXXX --check "Focused tests" -- npm run test:focused -- tests/unit/<file>.test.ts
+hadara validation run --task T-XXXX --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly" --update-task --json
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --json
 hadara evidence summary --task T-XXXX --json
@@ -222,10 +223,10 @@ hadara evidence project --task T-XXXX --json
 
 Use `validation run` for ordinary validation because it executes the command, records durable evidence from the real exit status, and refreshes `EVIDENCE.md`. Add `--update-task` only when you intentionally want the matching `TASK.md` Validation row updated by the CLI.
 
-If the wrapper cannot launch a command in the current tool environment (for example `EPERM`, `EACCES`, or `ENOENT`) but the same command runs directly, record the direct result instead of rerunning through the wrapper:
+If the wrapper cannot launch a command in the current tool environment (for example `EPERM`, `EACCES`, or `ENOENT`) but the same command runs directly, record the direct result through `validation run` so validation-check resolution tags and optional TASK.md row sync remain consistent:
 
 ```bash
-hadara evidence add-command --task T-XXXX --summary "npm test passed directly after validation wrapper launch failure" --result passed --category validation --json
+hadara validation run --task T-XXXX --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly after validation wrapper launch failure" --update-task --json
 ```
 
 For focused Vitest checks, use `npm run test:focused -- tests/unit/<file>.test.ts`. Do not use `npm run test:unit -- tests/unit/<file>.test.ts`; `test:unit` already supplies the broad unit suite path.
@@ -262,6 +263,7 @@ Agents may use `task finalize --execute --auto` for ordinary clean capsules; it 
 | Read exact source text | `hadara context slice ... --json` | Use after a context candidate points to a range. |
 | Run and record validation | `hadara validation run --task T-XXXX --check "..." -- <command>` | Executes the command and records evidence without editing `TASK.md` by default. |
 | Run, record, and sync task row | `hadara validation run --task T-XXXX --check "..." --update-task -- <command>` | Executes the command, records evidence, and updates the matching `TASK.md` Validation row. |
+| Record direct validation result | `hadara validation run --task T-XXXX --check "..." --direct-result passed --direct-summary "..." --update-task --json` | Records an already-run direct result when wrapper launch is blocked by the tool environment. |
 | Record already-run validation | `hadara evidence add-command ... --json` | Append-only evidence writer; does not execute commands. |
 | Find evidence ids | `hadara evidence summary --task T-XXXX --json` | Compact copy hints. |
 | Review loop phase | `hadara task status --task T-XXXX --json` | Normal lifecycle state and next action. |

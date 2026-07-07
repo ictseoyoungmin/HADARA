@@ -1151,6 +1151,7 @@ Do not hand-edit \`evidence.jsonl\`. Treat \`EVIDENCE.md\` as a CLI-generated pr
 
 \`\`\`bash
 hadara validation run --task T-XXXX --check "Focused tests" -- npm test
+hadara validation run --task T-XXXX --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly" --update-task --json
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --json
 hadara evidence summary --task T-XXXX --json
 hadara evidence project --task T-XXXX --json
@@ -1158,10 +1159,10 @@ hadara evidence project --task T-XXXX --json
 
 Use \`validation run\` for ordinary validation because it executes the command, records durable evidence from the real exit status, and refreshes \`EVIDENCE.md\`. Add \`--update-task\` only when you intentionally want the matching \`TASK.md\` Validation row updated by the CLI.
 
-If the wrapper cannot launch a command in the current tool environment (for example \`EPERM\`, \`EACCES\`, or \`ENOENT\`) but the same command runs directly, record the direct result instead of rerunning through the wrapper:
+If the wrapper cannot launch a command in the current tool environment (for example \`EPERM\`, \`EACCES\`, or \`ENOENT\`) but the same command runs directly, record the direct result through \`validation run\` so validation-check resolution tags and optional TASK.md row sync remain consistent:
 
 \`\`\`bash
-hadara evidence add-command --task T-XXXX --summary "npm test passed directly after validation wrapper launch failure" --result passed --category validation --json
+hadara validation run --task T-XXXX --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly after validation wrapper launch failure" --update-task --json
 \`\`\`
 
 Use \`evidence add-command\` only when recording an already-run result supplied by the operator. It does not execute shell commands. Use \`evidence summary\` to find durable evidence ids for docs and resolution markers.
@@ -1197,6 +1198,7 @@ Agents should inspect \`task finalize --json\` before close when the result is n
 | Update slice state | \`hadara slice add/set/render ... --json\` | Use when roadmap/development slice state applies. |
 | Run and record validation | \`hadara validation run --task T-XXXX --check "..." -- <command>\` | Executes the command and records evidence without editing \`TASK.md\` by default. |
 | Run, record, and sync task row | \`hadara validation run --task T-XXXX --check "..." --update-task -- <command>\` | Executes the command, records evidence, and updates the matching \`TASK.md\` Validation row. |
+| Record direct validation result | \`hadara validation run --task T-XXXX --check "..." --direct-result passed --direct-summary "..." --update-task --json\` | Records an already-run direct result when wrapper launch is blocked by the tool environment. |
 | Record already-run validation | \`hadara evidence add-command ... --json\` | Append-only evidence writer; does not execute commands. |
 | Find evidence ids | \`hadara evidence summary --task T-XXXX --json\` | Compact copy hints. |
 | Review loop phase | \`hadara task status --task T-XXXX --json\` | Normal lifecycle state and next action. |
@@ -1714,7 +1716,7 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 | \`task status\` | Read-only | Without \`--task\`, selects next work. With \`--task\`, default output is a fast loop cockpit; use \`--detail full\` or \`task finalize\` for close-grade readiness diagnostics. |
 | \`task create\` | Write | Creates a Draft Task Capsule and Task Board row. It does not imply the task is ready or done. |
 | \`evidence add-command\` | Write | Appends operator-supplied command-log evidence. It does not execute shell commands or capture stdout/stderr; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, and optional \`--idempotency-key\` prevents duplicate same-key records. |
-| \`validation run\` | Execute + evidence append | Runs a real command and records validation evidence. If the wrapper cannot launch the command in the current environment, run the command directly and record the direct result with \`evidence add-command\`. |
+| \`validation run\` | Execute + evidence append | Runs a real command and records validation evidence. If the wrapper cannot launch the command in the current environment, run the command directly and record the direct result with \`validation run --direct-result\`. |
 | \`task next\` / \`task show\` | Removed redirect stubs | Prefer \`task status --json\` and \`task status --task T-XXXX --json\`. |
 | \`task lifecycle\` | Removed redirect stub | Prefer \`task status --task T-XXXX --json\`. |
 | \`task finalize\` | Read-only by default; guarded execute uses \`--auto\` or \`--plan-hash\` | Default agent close path. Rechecks the current plan, records readiness evidence in the \`--auto\` close path when needed, executes phases serially, stops on blockers, and succeeds only after final audit is \`closed-valid\`. |

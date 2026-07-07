@@ -1,5 +1,5 @@
 import { createValidationRunReport } from '../services/validation-run';
-import { getFlag, getIntegerOption, getRequiredStringOption } from './args';
+import { CliArgsError, getFlag, getIntegerOption, getRequiredStringOption, getStringOption } from './args';
 import { renderCommandHelp } from './help';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 
@@ -22,13 +22,16 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
   const optionArgs = separator >= 0 ? input.args.slice(0, separator) : input.args;
   const taskId = getRequiredStringOption(optionArgs, '--task');
   const check = getRequiredStringOption(optionArgs, '--check');
+  const directResult = parseDirectResult(getStringOption(optionArgs, '--direct-result'));
   const report = createValidationRunReport(input.projectRoot, {
     taskId,
     check,
     argv: commandArgs,
     tags: resolutionTagsFromArgs(optionArgs),
     timeoutMs: getIntegerOption(optionArgs, '--timeout-ms', { min: 1, max: 3_600_000 }),
-    updateTask: getFlag(optionArgs, '--update-task')
+    updateTask: getFlag(optionArgs, '--update-task'),
+    directResult,
+    directSummary: getStringOption(optionArgs, '--direct-summary')
   });
   if (input.jsonOutput) {
     console.log(JSON.stringify(report, null, 2));
@@ -51,6 +54,15 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
   }
   if (!report.ok || report.result !== 'Passed') process.exitCode = 6;
   return true;
+}
+
+function parseDirectResult(value: string | undefined): 'Passed' | 'Failed' | 'Blocked' | undefined {
+  if (value === undefined) return undefined;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'passed' || normalized === 'pass') return 'Passed';
+  if (normalized === 'failed' || normalized === 'fail') return 'Failed';
+  if (normalized === 'blocked' || normalized === 'block') return 'Blocked';
+  throw new CliArgsError('CLI_OPTION_INVALID_VALUE', '--direct-result must be passed, failed, or blocked');
 }
 
 function blockLegacyMutation(input: ValidationCommandInput, command: string): boolean {

@@ -79,6 +79,8 @@ export interface ValidationRunOptions {
   tags?: string[];
   timeoutMs?: number;
   updateTask?: boolean;
+  directResult?: ValidationRunReport['result'];
+  directSummary?: string;
   spawnSyncFn?: ValidationSpawnSync;
 }
 
@@ -91,21 +93,24 @@ export function createValidationRunReport(projectRoot: string, options: Validati
   if (!task) {
     return failedInputReport(projectRoot, options, 'TASK_NOT_FOUND', `Task Capsule not found: ${options.taskId}`);
   }
-  if (options.argv.length === 0) {
+  if (options.argv.length === 0 && !options.directResult) {
     return failedInputReport(projectRoot, options, 'VALIDATION_COMMAND_REQUIRED', 'validation run requires a command after --.');
   }
 
+  const directExecution = options.directResult ? directResultExecution(options.directResult) : null;
   const spawn: ValidationSpawnSync = options.spawnSyncFn ?? ((command, args, spawnOptions) => spawnSync(command, args, spawnOptions));
-  const executed = spawn(options.argv[0], options.argv.slice(1), {
-    cwd: projectRoot,
-    encoding: 'utf8',
-    timeout: Math.max(1, options.timeoutMs ?? 120_000),
-    maxBuffer: 1024 * 1024 * 8
-  });
+  const executed =
+    directExecution ??
+    spawn(options.argv[0], options.argv.slice(1), {
+      cwd: projectRoot,
+      encoding: 'utf8',
+      timeout: Math.max(1, options.timeoutMs ?? 120_000),
+      maxBuffer: 1024 * 1024 * 8
+    });
   const durationMs = timer.elapsedMs();
-  const timedOut = Boolean(executed.error && (executed.error as NodeJS.ErrnoException).code === 'ETIMEDOUT');
-  const executionSemantics = classifyExecution(executed, timedOut);
-  const result: ValidationRunReport['result'] = executionSemantics.failureKind !== 'none' && executionSemantics.failureKind !== 'non-zero-exit' ? 'Blocked' : executed.status === 0 ? 'Passed' : 'Failed';
+  const timedOut = !directExecution && Boolean(executed.error && (executed.error as NodeJS.ErrnoException).code === 'ETIMEDOUT');
+  const executionSemantics = directExecution ? classifyDirectExecution(options.directResult ?? 'Blocked') : classifyExecution(executed, timedOut);
+  const result: ValidationRunReport['result'] = options.directResult ?? (executionSemantics.failureKind !== 'none' && executionSemantics.failureKind !== 'non-zero-exit' ? 'Blocked' : executed.status === 0 ? 'Passed' : 'Failed');
   if (executionSemantics.issueCode) {
     issues.push({
       severity: 'error',
@@ -116,9 +121,10 @@ export function createValidationRunReport(projectRoot: string, options: Validati
 
   const blockedReason = result === 'Blocked' ? executionSemantics.blockedReason : null;
   const summary = [
-    `Validation "${options.check}" ${result.toLowerCase()}`,
+    `Validation "${options.check}" ${result.toLowerCase()}${options.directResult ? ' from direct result' : ''}`,
+    ...(options.directSummary ? [options.directSummary] : []),
     ...(blockedReason ? [blockedReason] : []),
-    `command: ${options.argv.join(' ')}`,
+    `command: ${options.argv.length > 0 ? options.argv.join(' ') : 'direct-result'}`,
     `exitCode: ${executed.status ?? 'null'}`,
     `signal: ${executed.signal ?? 'null'}`,
     `durationMs: ${durationMs}`,
@@ -171,6 +177,7 @@ export function createValidationRunReport(projectRoot: string, options: Validati
       stderrHash: hashText(executed.stderr ?? ''),
       commandStarted: executionSemantics.commandStarted,
       failureKind: executionSemantics.failureKind,
+      ...(options.directResult ? { directResult: true, directSummary: options.directSummary ?? null } : {}),
       ...(executionSemantics.error ? { error: executionSemantics.error } : {})
     },
     result,
@@ -253,6 +260,43 @@ function classifyExecution(executed: SpawnSyncReturns<string>, timedOut: boolean
   };
 }
 
+function directResultExecution(result: ValidationRunReport['result']): SpawnSyncReturns<string> {
+  return {
+    pid: 0,
+    output: [null, '', ''],
+    stdout: '',
+    stderr: '',
+    status: result === 'Passed' ? 0 : result === 'Failed' ? 1 : null,
+    signal: null
+  };
+}
+
+function classifyDirectExecution(result: ValidationRunReport['result']): ExecutionSemantics {
+  if (result === 'Failed') {
+    return {
+      commandStarted: false,
+      failureKind: 'non-zero-exit',
+      issueMessage: '',
+      blockedReason: null
+    };
+  }
+  if (result === 'Blocked') {
+    return {
+      commandStarted: false,
+      failureKind: 'launch-error',
+      issueCode: 'VALIDATION_DIRECT_RESULT_BLOCKED',
+      issueMessage: 'Validation direct result was recorded as blocked.',
+      blockedReason: 'blocked by operator-supplied direct result'
+    };
+  }
+  return {
+    commandStarted: false,
+    failureKind: 'none',
+    issueMessage: '',
+    blockedReason: null
+  };
+}
+
 function executionError(error: NodeJS.ErrnoException): NonNullable<ValidationRunReport['execution']['error']> {
   return {
     code: error.code ?? null,
@@ -270,6 +314,12 @@ function createValidationRunNextActions(options: ValidationRunOptions, result: V
       id: 'run-direct-command',
       kind: 'guidance',
       message: 'Run the validation command directly in the current environment to distinguish command failure from wrapper launch failure.'
+    },
+    {
+      id: 'record-direct-validation-result',
+      kind: 'command',
+      message: 'Record an already-run direct result through validation run so TASK.md row sync and validation-check resolution tags remain consistent.',
+      command: `hadara validation run --task ${options.taskId} --check ${shellSingleQuote(options.check)} --direct-result passed --direct-summary ${shellSingleQuote('Direct command passed after wrapper launch failure.')} --json`
     },
     {
       id: 'record-direct-result',
