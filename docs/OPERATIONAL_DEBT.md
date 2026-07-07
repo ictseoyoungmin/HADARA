@@ -47,7 +47,7 @@ Read-only surfaces:
 - `hadara debt show <id> --json`
 - MCP `hadara.debt.list`
 - MCP `hadara.debt.show`
-- `hadara ops status --json` includes debt aggregate counts.
+- `hadara status --json` includes debt aggregate counts.
 - `hadara release gate --mode advisory --json` is the default current release gate. Open high-severity debt would emit a warning check and `ok: true`.
 - `hadara release gate --mode strict --json` is a read-only blocking readiness report. Open high-severity debt would emit an error check and `ok: false`; with OD-0003 and OD-0008 mitigated, strict mode can pass when all other documented readiness checks pass.
 

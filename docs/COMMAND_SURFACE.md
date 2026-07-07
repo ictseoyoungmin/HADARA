@@ -77,17 +77,15 @@ hadara task finalize --task T-XXXX --json
 hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 ```
 
-`task next` and `task lifecycle` remain compatibility commands planned for removal from the default loop. `task finish`, `task ready`, `task close`, and `task audit-close` remain low-level proof-boundary commands for debugging, recovery, and command implementation work. `task close-repair-plan` remains the read-only repair classifier when close proof is stale, invalid, or missing.
+Removed compatibility surfaces now return `hadara.commandRemoved.v1` redirect stubs with `replacementCommand`: `task next`, `task show`, `task upgrade-scaffold`, `task lifecycle`, `task finish`, `task ready`, `task close`, `task audit-close`, `task complete`, `handoff suggest`, `handoff stale-problems`, `evidence collect`, `write preflight`, `policy check-shell`, `ops status`, `init register-doc`, `docs archive`, `harness replay`, `run`, `run scaffold`, `run-state show`, `run-state resume`, and `package smoke`. New users should not see these in registry/help output.
 
-`handoff suggest` remains available as a read-only aid for reviewed shared handoff edits, but HADARA no longer exposes a command that writes `docs/AGENT_HANDOFF.md`.
-
-`task next` is read-only. It prefers actionable handoff work, then planned development slices, then Task Board fallback rows. It ignores handoff meta-guidance that merely tells the operator to run or select with `task next`, so consumers do not receive a self-referential `createCommand`. During Task Board fallback it prefers primary open rows before legacy `Partial` rows, leaving `Partial` visible as backlog when stronger open work exists.
+No current CLI command writes or generates `docs/AGENT_HANDOFF.md` fragments. Shared handoff edits are deliberate documentation work before `task finalize`; use `task status` and `task finalize --json` for phase/readiness guidance.
 
 Diagnostics such as `harness.validate`, `proof.status`, `proof.explain`, `evidence.lint`, `protocol.doctor`, and `state.verify` explain blockers or drift. They do not replace the primary finalize loop.
 
 ## 0.4 Planned Surfaces
 
-`docs.complete-spec` is an experimental guarded docs-governance command for moving implemented specs out of active/default routing. `docs.mark-drift` remains a registry-visible planned 0.4 surface with `status: planned` and `requiredness: disabled` until a future capsule implements its mutation semantics and schema.
+`docs.complete-spec` is an experimental guarded docs-governance command for moving implemented specs out of active/default routing. Drift metadata is handled through docs registry fields and guarded docs-register/mark flows; no standalone `docs mark-drift` command is exposed.
 
 ## State Consistency
 
@@ -111,7 +109,7 @@ State consistency rollout is advisory in `0.3.1-rc.1`: `ci gate --mode strict` p
 
 ## Advanced Surfaces
 
-Release/package, dev validation, integrations, dashboard/TUI, installer planning, and deterministic agent-loop harness commands remain available through `hadara commands --json` and `hadara help family <family>`. They are intentionally hidden from default help because ordinary worker agents should not infer release, UI, integration, or harness actions as part of every capsule.
+Release/package, dev validation, integrations, dashboard/TUI, and installer planning commands remain available through `hadara commands --json` and `hadara help family <family>`. Package smoke validation is canonical as `hadara smoke package ...`; the old `hadara package smoke` route is a redirect stub. Deterministic agent-loop harness commands are no longer public worker CLI surfaces. Advanced surfaces are intentionally hidden from default help because ordinary worker agents should not infer release, UI, integration, or harness actions as part of every capsule.
 
 ## Adding Commands
 

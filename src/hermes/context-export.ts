@@ -76,7 +76,7 @@ Agents must:
 5. Respect policy decisions for shell/file/git operations.
 6. Treat AGENT_HANDOFF.md as compact current state and follow its Historical Index for older history.
 7. Prefer stable HADARA read surfaces before scraping raw files: use hadara.project.state.read or hadara status --json for project state.
-8. Use hadara.task.list and hadara.task.read, or hadara task list --json and hadara task show <task-id> --json, for task state.
+8. Use hadara.task.list and hadara.task.read, or hadara task list --json and hadara task status --task <task-id> --json, for task state.
 9. Use hadara.handoff.read, hadara.policy.evaluate, and hadara.harness.validate, or their CLI JSON equivalents, for handoff, policy, and validation state.
 10. Use hadara.context.export for in-memory MCP context export; only hadara hermes export-context writes .hadara/context/HADARA_CONTEXT.md.
 11. Treat MCP default mode as read-only; do not assume MCP task mutation, file writes, shell execution, or release/package execution exists.

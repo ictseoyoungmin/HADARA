@@ -104,6 +104,32 @@ describe('validation run', () => {
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
   });
 
+  it('matches inline-code TASK Validation check labels when updating rows', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation run task sync markdown label');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs.readFileSync(taskPath, 'utf8').replace('| TBD | Yes | Not Run | TBD |', '| `npm test` | Yes | Not Run | TBD |'),
+      'utf8'
+    );
+
+    const report = createValidationRunReport(root, {
+      taskId: task.id,
+      check: 'npm test',
+      argv: [process.execPath, '-e', 'process.exit(0)'],
+      updateTask: true
+    });
+
+    expect(report.taskValidationRow).toMatchObject({ mode: 'updated', updated: true, appended: false });
+    const validationRows = fs
+      .readFileSync(taskPath, 'utf8')
+      .split(/\r?\n/)
+      .filter((line) => line.includes('npm test'));
+    expect(validationRows).toEqual([`| npm test | Yes | Passed | ${report.evidence?.id} |`]);
+    expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+  });
+
   it('records failed validation evidence without changing acceptance disposition', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Validation run fail');

@@ -204,7 +204,7 @@ describe('task next recommendation', () => {
     expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
   });
 
-  it('prints JSON through the task next CLI route', () => {
+  it('redirects the removed task next CLI route', () => {
     const root = tempProject();
     writeDevelopmentSlices(root, ['| 1 | CLI Next | T-0199 | Continue. | Planned. |']);
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -213,8 +213,14 @@ describe('task next recommendation', () => {
 
     expect(handled).toBe(true);
     const payload = JSON.parse(String(log.mock.calls[0][0]));
-    expect(payload).toMatchObject({ schemaVersion: 'hadara.task.next.v1', command: 'task.next', ok: true });
-    expect(validateSchema('hadara.task.next.v1', payload).ok).toBe(true);
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.commandRemoved.v1',
+      command: 'task.next',
+      ok: false,
+      replacementCommand: 'hadara task status --json'
+    });
+    expect(validateSchema('hadara.commandRemoved.v1', payload).ok).toBe(true);
+    expect(process.exitCode).toBe(6);
   });
 });
 

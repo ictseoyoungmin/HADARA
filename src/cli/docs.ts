@@ -1,9 +1,10 @@
 import { getFlag, getRequiredStringOption, getStringOption } from './args';
-import { createDocsArchivePlanReport, createDocsCompleteSpecReport, createDocsMarkReport, createDocsRequiredReadingReport } from '../services/docs-cleanup';
+import { createDocsCompleteSpecReport, createDocsMarkReport, createDocsRequiredReadingReport } from '../services/docs-cleanup';
 import { createDocsDoctorReport, createDocsExplainReport, createDocsInboxReport, createDocsListReport, createDocsReadMapReport, createDocsRegisterReport } from '../services/docs-registry';
 import { createDocsPatchPlanReport, createManagedSectionExplainReport, createManagedSectionsListReport } from '../services/managed-sections';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 import { renderCommandHelp } from './help';
+import { printCommandRemovedReport } from './removed-command';
 
 export interface DocsCommandInput {
   args: string[];
@@ -109,6 +110,10 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
     return true;
   }
   if (sub === 'mark') {
+    if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+      console.log(renderCommandHelp('docs.mark'));
+      return true;
+    }
     const report = createDocsMarkReport(input.projectRoot, {
       documentPath: getRequiredStringOption(input.args, '--path'),
       status: getRequiredStringOption(input.args, '--status'),
@@ -123,8 +128,16 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
     return true;
   }
   if (sub === 'archive') {
-    printReport(createDocsArchivePlanReport(input.projectRoot, getStringOption(input.args, '--status')), input.jsonOutput);
-    return true;
+    return printCommandRemovedReport(
+      {
+        commandId: 'docs.archive',
+        removedCommand: 'hadara docs archive',
+        replacementCommand: 'hadara docs list --status <status> --json',
+        diagnosticCommand: 'hadara docs doctor --json',
+        note: 'Archive-candidate inspection is covered by docs list/doctor and registry status correction flows.'
+      },
+      input.jsonOutput
+    );
   }
   if (sub === 'required-reading') {
     printReport(createDocsRequiredReadingReport(input.projectRoot), input.jsonOutput);

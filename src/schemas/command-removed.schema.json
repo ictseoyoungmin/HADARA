@@ -10,7 +10,7 @@
     "schemaVersion": { "const": "hadara.commandRemoved.v1" },
     "command": { "type": "string", "minLength": 1 },
     "ok": { "const": false },
-    "code": { "const": "TASK_LIFECYCLE_COMMAND_REMOVED" },
+    "code": { "enum": ["TASK_LIFECYCLE_COMMAND_REMOVED", "COMMAND_SURFACE_REMOVED"] },
     "removedCommand": { "type": "string", "minLength": 1 },
     "replacementCommand": { "type": "string", "minLength": 1 },
     "diagnosticCommand": { "type": "string", "minLength": 1 },

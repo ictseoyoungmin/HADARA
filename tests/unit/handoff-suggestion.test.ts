@@ -82,7 +82,7 @@ describe('handoff suggestion report', () => {
     expect(validateSchema('hadara.handoff.suggestion.v1', report).ok).toBe(true);
   });
 
-  it('routes CLI JSON output without writing AGENT_HANDOFF.md', () => {
+  it('routes CLI suggestion requests to the removed-command stub without writing AGENT_HANDOFF.md', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'CLI handoff suggest');
     writeFixtureHandoff(root);
@@ -99,9 +99,9 @@ describe('handoff suggestion report', () => {
     }
 
     const report = JSON.parse(output.join('\n'));
-    expect(report.schemaVersion).toBe('hadara.handoff.suggestion.v1');
+    expect(report.schemaVersion).toBe('hadara.commandRemoved.v1');
     expect(report.command).toBe('handoff.suggest');
-    expect(report.target.writeBoundary).toBe('shared-doc');
+    expect(report.replacementCommand).toBe('hadara task status --task <task-id> --json');
     expect(fs.readFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), 'utf8')).toBe(beforeHandoff);
   });
 
@@ -122,7 +122,7 @@ describe('handoff suggestion report', () => {
     expect(fs.existsSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'))).toBe(false);
   });
 
-  it('threads explicit actor CLI options into handoff suggestion reports', () => {
+  it('keeps explicit actor CLI options read-only when suggestion route is removed', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'CLI handoff actor');
     writeFixtureHandoff(root);
@@ -144,7 +144,11 @@ describe('handoff suggestion report', () => {
     }
 
     const report = JSON.parse(output.join('\n'));
-    expect(report.actor).toEqual({ agentId: 'coord-handoff', runId: 'run-handoff', role: 'coordinator', parentRunId: null });
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.commandRemoved.v1',
+      command: 'handoff.suggest',
+      ok: false
+    });
   });
 });
 
@@ -187,7 +191,7 @@ describe('handoff stale known-problem report', () => {
     expect(validateSchema('hadara.handoff.staleProblems.v1', report).ok).toBe(true);
   });
 
-  it('routes CLI stale-problems JSON output as a read-only handoff command', () => {
+  it('routes CLI stale-problems requests to the removed-command stub without writing handoff', () => {
     const root = tempProject();
     writeFixtureHandoff(root, [['0.3.4 publish/recycle still pending.', 'Release state is confusing.', 'Review after release.']]);
     fs.writeFileSync(path.join(root, 'docs', 'RELEASE_NOTES.md'), '# Release Notes\n\n0.3.4 published, verified, and recycled from installed-package paths.\n', 'utf8');
@@ -204,9 +208,9 @@ describe('handoff stale known-problem report', () => {
     }
 
     const report = JSON.parse(output.join('\n'));
-    expect(report.schemaVersion).toBe('hadara.handoff.staleProblems.v1');
+    expect(report.schemaVersion).toBe('hadara.commandRemoved.v1');
     expect(report.command).toBe('handoff.stale-problems');
-    expect(report.summary.candidates).toBe(1);
+    expect(report.replacementCommand).toBe('hadara state verify --json');
     expect(fs.readFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), 'utf8')).toBe(beforeHandoff);
   });
 

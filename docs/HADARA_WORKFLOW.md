@@ -222,6 +222,12 @@ hadara evidence project --task T-XXXX --json
 
 Use `validation run` for ordinary validation because it executes the command, records durable evidence from the real exit status, and refreshes `EVIDENCE.md`. Add `--update-task` only when you intentionally want the matching `TASK.md` Validation row updated by the CLI.
 
+If the wrapper cannot launch a command in the current tool environment (for example `EPERM`, `EACCES`, or `ENOENT`) but the same command runs directly, record the direct result instead of rerunning through the wrapper:
+
+```bash
+hadara evidence add-command --task T-XXXX --summary "npm test passed directly after validation wrapper launch failure" --result passed --category validation --json
+```
+
 For focused Vitest checks, use `npm run test:focused -- tests/unit/<file>.test.ts`. Do not use `npm run test:unit -- tests/unit/<file>.test.ts`; `test:unit` already supplies the broad unit suite path.
 
 Use `evidence add-command` only when recording an already-run result supplied by the operator. It does not execute shell commands. Use `evidence summary` to find durable evidence ids for docs and resolution markers.

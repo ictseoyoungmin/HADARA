@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { assertSchema } from '../../src/core/schema';
+import { handleDocsCommand } from '../../src/cli/docs';
 import { initProject } from '../../src/cli/init';
 import { createDocsMarkReport } from '../../src/services/docs-cleanup';
 import {
@@ -57,6 +58,19 @@ afterEach(() => {
 });
 
 describe('Phase 7.5 docs mark', () => {
+  it('prints docs mark help before requiring mutation arguments', () => {
+    const root = tempProject();
+    const output: string[] = [];
+    vi.spyOn(console, 'log').mockImplementation((value?: unknown) => {
+      output.push(String(value));
+    });
+
+    expect(handleDocsCommand({ args: ['docs', 'mark', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
+
+    expect(output.join('\n')).toContain('docs.mark');
+    expect(output.join('\n')).toContain('Command: hadara docs mark --path <path>');
+  });
+
   it('previews supersede impact without mutating registry or files', () => {
     const root = tempProject();
     initProject(root, 'standard', { silent: true });

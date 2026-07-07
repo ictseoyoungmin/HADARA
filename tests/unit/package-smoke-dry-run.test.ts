@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { handlePackageCommand } from '../../src/cli/package-smoke';
+import { handleSmokeCommand } from '../../src/cli/smoke';
 import { resolveHadaraPaths } from '../../src/core/paths';
 import { validateSchema } from '../../src/core/schema';
 import { createPackageSmokeDryRunReport, createPackageSmokeLocalReport, PackageSmokeCommandRunner } from '../../src/services/package-smoke';
@@ -252,12 +252,12 @@ describe('package smoke dry-run', () => {
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
   });
 
-  it('prints JSON through the package smoke CLI handler', () => {
+  it('prints JSON through the smoke package CLI handler', () => {
     const root = tempProject();
     const spy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
-    const handled = handlePackageCommand({
-      args: ['package', 'smoke', '--dry-run', '--task', 'T-0133', '--json'],
+    const handled = handleSmokeCommand({
+      args: ['smoke', 'package', '--dry-run', '--task', 'T-0133', '--json'],
       paths: resolveHadaraPaths({ projectRoot: root }),
       jsonOutput: true
     });
@@ -277,8 +277,8 @@ describe('package smoke dry-run', () => {
     const root = tempProject();
     const spy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
-    const handled = handlePackageCommand({
-      args: ['package', 'smoke', '--json'],
+    const handled = handleSmokeCommand({
+      args: ['smoke', 'package', '--json'],
       paths: resolveHadaraPaths({ projectRoot: root }),
       jsonOutput: true
     });
@@ -356,13 +356,13 @@ describe('package smoke dry-run', () => {
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
   });
 
-  it('prints Python provider dry-run JSON through the CLI handler', () => {
+  it('prints Python provider dry-run JSON through the smoke package CLI handler', () => {
     const root = tempProject();
     writePyproject(root);
     const spy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
-    const handled = handlePackageCommand({
-      args: ['package', 'smoke', '--provider', 'python', '--json'],
+    const handled = handleSmokeCommand({
+      args: ['smoke', 'package', '--provider', 'python', '--json'],
       paths: resolveHadaraPaths({ projectRoot: root }),
       jsonOutput: true
     });

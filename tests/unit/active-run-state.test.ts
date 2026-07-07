@@ -298,7 +298,7 @@ describe('single active run state', () => {
     });
   });
 
-  it('prints active run projection JSON through run-state show', () => {
+  it('redirects run-state show to status after public surface removal', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Run state show');
     fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\n## Current State\n\n- ${task.id} is active.\n`, 'utf8');
@@ -324,11 +324,9 @@ describe('single active run state', () => {
     }
 
     expect(JSON.parse(output.join('\n'))).toMatchObject({
-      schemaVersion: 'hadara.active_run.projection.v1',
-      command: 'active-run.projection',
-      activeRun: {
-        taskId: task.id
-      }
+      schemaVersion: 'hadara.commandRemoved.v1',
+      command: 'run-state.show',
+      replacementCommand: 'hadara status --json'
     });
   });
 });

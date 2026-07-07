@@ -67,11 +67,13 @@ export interface RoutingParityDiff {
   routedVerbsWithoutRegistry: string[];
 }
 
+const REMOVED_TOP_LEVEL_STUB_VERBS = new Set(['handoff', 'ops', 'run', 'run-state', 'write']);
+
 export function diffRoutingParity(registryVerbs: readonly string[], dispatcherTokens: readonly string[]): RoutingParityDiff {
   const routed = new Set(dispatcherTokens);
   const registered = new Set(registryVerbs);
   const registryVerbsWithoutRouting = [...registered].filter((verb) => !routed.has(verb)).sort();
-  const routedVerbsWithoutRegistry = [...routed].filter((verb) => !registered.has(verb)).sort();
+  const routedVerbsWithoutRegistry = [...routed].filter((verb) => !registered.has(verb) && !REMOVED_TOP_LEVEL_STUB_VERBS.has(verb)).sort();
   return {
     ok: registryVerbsWithoutRouting.length === 0 && routedVerbsWithoutRegistry.length === 0,
     registryVerbsWithoutRouting,

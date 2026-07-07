@@ -15,6 +15,7 @@ import { createEvidenceMigrationPreviewReport } from '../services/evidence-migra
 import { createEvidenceSummaryReport, EvidenceSummaryRecord } from '../services/evidence-summary';
 import { getFlag, getIntegerOption, getRequiredStringOption, getStringOption } from './args';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
+import { printCommandRemovedReport } from './removed-command';
 
 export interface EvidenceCommandInput {
   args: string[];
@@ -178,38 +179,16 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
   }
 
   if (sub !== 'collect') return false;
-  if (blockLegacyMutation(input, 'evidence.collect')) return true;
-
-  const taskId = getRequiredStringOption(input.args, '--task');
-  const kind = parseEvidenceKind(getStringOption(input.args, '--kind', 'note') ?? 'note');
-  const summary = getStringOption(input.args, '--summary') ?? 'Manual evidence collection placeholder.';
-  const result = parseEvidenceResult(getStringOption(input.args, '--result', 'unknown') ?? 'unknown');
-  const evidenceFile = getStringOption(input.args, '--path');
-  const visibility = parseEvidenceVisibility(getStringOption(input.args, '--visibility', 'public') ?? 'public', getFlag(input.args, '--private'));
-  const idempotencyKey = getStringOption(input.args, '--idempotency-key');
-
-  if (input.jsonOutput) {
-    const report = createEvidenceCollectReport(input.projectRoot, {
-      taskId,
-      kind,
-      path: evidenceFile,
-      summary,
-      result,
-      visibility,
-      idempotencyKey
-    });
-    console.log(JSON.stringify(report, null, 2));
-    if (!report.ok) process.exitCode = 6;
-  } else {
-    const appendResult = appendEvidenceWithResult(input.projectRoot, { taskId, kind, path: evidenceFile, summary, result, visibility, idempotencyKey });
-    if (appendResult.existing) {
-      console.log(`[HADARA] Evidence already exists: ${persistedEvidenceId(appendResult.evidence)}`);
-    } else {
-      console.log(`[HADARA] Evidence recorded: ${appendResult.markdownPath}`);
-    }
-  }
-
-  return true;
+  return printCommandRemovedReport(
+    {
+      commandId: 'evidence.collect',
+      removedCommand: 'hadara evidence collect',
+      replacementCommand: 'hadara evidence add-command --task <task-id> --summary "..." --result passed --json',
+      diagnosticCommand: 'hadara validation run --task <task-id> --check "..." -- <command>',
+      note: 'Evidence writes are consolidated into validation run for commands and evidence add-command for already-run results.'
+    },
+    input.jsonOutput
+  );
 }
 
 function hasHelpFlag(args: string[]): boolean {

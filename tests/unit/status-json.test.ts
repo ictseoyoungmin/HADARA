@@ -345,7 +345,7 @@ describe('Operations Status JSON', () => {
     expect(report.handoff.nextRecommendedStep).not.toContain('Step · Reason · Done Evidence');
   });
 
-  it('prints JSON for both status command forms', () => {
+  it('prints JSON for status and a removed-command redirect for the old ops alias', () => {
     const root = tempProject();
     writeProjectDocs(root);
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -356,18 +356,15 @@ describe('Operations Status JSON', () => {
     const first = JSON.parse(String(log.mock.calls[0]?.[0]));
     const second = JSON.parse(String(log.mock.calls[1]?.[0]));
     expect(first.schemaVersion).toBe('hadara.ops.status.v1');
-    expect(second.schemaVersion).toBe('hadara.ops.status.v1');
+    expect(second.schemaVersion).toBe('hadara.commandRemoved.v1');
     expect(first.command).toBe('ops.status');
     expect(second.command).toBe('ops.status');
+    expect(second.replacementCommand).toBe('hadara status --json');
     expect(first.stateConsistency).toMatchObject({
       mode: 'advisory',
       strictBlocking: false,
       issueCounts: expect.any(Object),
       issues: expect.any(Array)
-    });
-    expect(second.stateConsistency).toMatchObject({
-      mode: 'advisory',
-      strictBlocking: false
     });
   });
 

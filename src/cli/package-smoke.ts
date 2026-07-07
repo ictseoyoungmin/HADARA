@@ -1,8 +1,8 @@
 import { HadaraPaths } from '../core/paths';
 import { createPackageRecycleReport } from '../services/package-recycle';
-import { createPackageSmokeDryRunReport, createPackageSmokeLocalReport } from '../services/package-smoke';
 import { getFlag, getIntegerOption, getStringOption } from './args';
 import { renderCommandHelp } from './help';
+import { printCommandRemovedReport } from './removed-command';
 
 export interface PackageCommandInput {
   args: string[];
@@ -49,39 +49,14 @@ export function handlePackageCommand(input: PackageCommandInput): boolean {
   }
 
   if (input.args[1] !== 'smoke') return false;
-  if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
-    console.log(renderCommandHelp('package.smoke'));
-    return true;
-  }
-
-  const options = {
-    paths: input.paths,
-    dryRun: !getFlag(input.args, '--execute'),
-    provider: getStringOption(input.args, '--provider'),
-    networkPolicy: getStringOption(input.args, '--network-policy'),
-    from: getStringOption(input.args, '--from'),
-    workspace: getStringOption(input.args, '--workspace'),
-    taskId: getStringOption(input.args, '--task'),
-    attachEvidence: getFlag(input.args, '--attach-evidence'),
-    noEvidence: getFlag(input.args, '--no-evidence'),
-    keepTemp: getFlag(input.args, '--keep-temp'),
-    privateLogs: getFlag(input.args, '--private-logs'),
-    timeoutSeconds: getIntegerOption(input.args, '--timeout', { min: 1 })
-  };
-  const report = getFlag(input.args, '--execute') ? createPackageSmokeLocalReport(options) : createPackageSmokeDryRunReport(options);
-
-  if (input.jsonOutput) {
-    console.log(JSON.stringify(report, null, 2));
-  } else {
-    console.log(`${report.ok ? 'passed' : 'failed'} | package smoke | ${report.mode}`);
-    for (const step of report.steps) {
-      console.log(`${step.status} | ${step.label} | ${step.summary}`);
-    }
-    for (const issue of report.issues) {
-      console.log(`${issue.severity} | ${issue.code} | ${issue.message}`);
-    }
-  }
-
-  if (!report.ok) process.exitCode = 6;
-  return true;
+  return printCommandRemovedReport(
+    {
+      commandId: 'package.smoke',
+      removedCommand: 'hadara package smoke',
+      replacementCommand: 'hadara smoke package [--dry-run|--execute] [--from <tarball|dir>] --json',
+      diagnosticCommand: 'hadara help command smoke.package',
+      note: 'Package smoke validation moved into the smoke command family; the release validation behavior is unchanged.'
+    },
+    input.jsonOutput
+  );
 }

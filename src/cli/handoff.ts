@@ -1,7 +1,4 @@
-import { createHandoffStaleProblemsReport, formatHandoffStaleProblemsReport } from '../handoff/handoff-stale-problems';
-import { createHandoffSuggestionReport, formatHandoffSuggestionReport } from '../handoff/handoff-suggestion';
-import { getActorContextOption } from './actor';
-import { getFlag, getStringOption } from './args';
+import { printCommandRemovedReport } from './removed-command';
 
 export interface HandoffCommandInput {
   args: string[];
@@ -12,27 +9,29 @@ export interface HandoffCommandInput {
 export function handleHandoffCommand(input: HandoffCommandInput): boolean {
   const sub = input.args[1];
   if (sub === 'stale-problems') {
-    const report = createHandoffStaleProblemsReport(input.projectRoot);
-    if (input.jsonOutput) {
-      console.log(JSON.stringify(report, null, 2));
-    } else {
-      console.log(formatHandoffStaleProblemsReport(report));
-    }
-    if (!report.ok) process.exitCode = 6;
-    return true;
+    return printCommandRemovedReport(
+      {
+        commandId: 'handoff.stale-problems',
+        removedCommand: 'hadara handoff stale-problems',
+        replacementCommand: 'hadara state verify --json',
+        diagnosticCommand: 'hadara task status --json',
+        note: 'Handoff stale-problem review is folded into state/status diagnostics and manual handoff editing.'
+      },
+      input.jsonOutput
+    );
   }
 
   if (sub === 'suggest') {
-    const taskId = getStringOption(input.args, '--task') ?? input.args[2];
-    if (!taskId || taskId.startsWith('--')) throw new Error('handoff suggest requires --task <task-id>');
-    const report = createHandoffSuggestionReport(input.projectRoot, taskId, { executeRequested: getFlag(input.args, '--execute'), actor: getActorContextOption(input.args) });
-    if (input.jsonOutput) {
-      console.log(JSON.stringify(report, null, 2));
-    } else {
-      console.log(formatHandoffSuggestionReport(report));
-    }
-    if (!report.ok) process.exitCode = 6;
-    return true;
+    return printCommandRemovedReport(
+      {
+        commandId: 'handoff.suggest',
+        removedCommand: 'hadara handoff suggest',
+        replacementCommand: 'hadara task status --task <task-id> --json',
+        diagnosticCommand: 'hadara task finalize --task <task-id> --json',
+        note: 'Read-only handoff fragments were stale and duplicated task status/finalize guidance; shared handoff docs are now edited deliberately before finalize.'
+      },
+      input.jsonOutput
+    );
   }
 
   return false;

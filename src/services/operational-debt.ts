@@ -351,14 +351,14 @@ function checkCleanCheckoutPolicy(
   mode: ReleaseGateReport['mode']
 ): ReleaseGateReport['checks'][number] {
   const ok =
-    includesAll(v1Schemas, ['npm ci', 'npm run check', 'doctor --json', 'ops status --json']) &&
+    includesAll(v1Schemas, ['npm ci', 'npm run check', 'doctor --json', 'status --json']) &&
     includesAny(developmentSlices, ['clean checkout smoke', 'clean-checkout smoke']) &&
     includesAll(testStrategy, [
       'Clean Checkout Package Smoke Plan',
       'npm ci',
       'npm run build',
       'node dist/cli/main.js doctor --json',
-      'node dist/cli/main.js ops status --json',
+      'node dist/cli/main.js status --json',
       'node dist/cli/main.js release gate --mode strict --json',
       'no packaging or release execution'
     ]);
@@ -398,23 +398,23 @@ function checkPackageSmokeCommandSurface(testStrategy: string | null, mode: Rele
   const ok =
     includesAll(testStrategy, [
       'Package Smoke Command Surface',
-      'hadara package smoke --dry-run --json',
-      'hadara package smoke --task <task-id> --json',
-      'hadara package smoke --workspace /tmp/hadara-package-smoke/<run-id> --json',
-      'hadara package smoke --keep-temp --json',
+      'hadara smoke package --dry-run --json',
+      'hadara smoke package --task <task-id> --json',
+      'hadara smoke package --workspace /tmp/hadara-package-smoke/<run-id> --json',
+      'hadara smoke package --keep-temp --json',
       'Do not use `hadara release smoke` as the primary command surface',
       '`--timeout <seconds>`',
       '`--attach-evidence`',
       '`--private-logs`',
       'Package smoke must not be callable from MCP by default',
-      'The release gate must not call `hadara package smoke`'
+      'The release gate must not call `hadara smoke package`'
     ]) && hasVersionedHadaraTarballExample(testStrategy);
   return {
     code: 'PACKAGE_SMOKE_COMMAND_SURFACE',
     name: 'Package smoke command surface',
     status: ok ? 'passed' : readinessFailureStatus(mode),
     summary: ok
-      ? '`hadara package smoke` command naming, flags, approval, cleanup, failure, evidence, and MCP boundaries are documented.'
+      ? '`hadara smoke package` command naming, flags, approval, cleanup, failure, evidence, and MCP boundaries are documented.'
       : 'Package-smoke command naming, flags, approval, cleanup, failure, evidence, and MCP boundaries must be documented before implementation.'
   };
 }
@@ -478,7 +478,7 @@ function checkPackageMetadataReadiness(
 }
 
 function hasVersionedHadaraTarballExample(text: string | null): boolean {
-  return text !== null && /hadara package smoke --from \.\/dist-release\/hadara-[^\s/]+\.tgz --json/.test(text);
+  return text !== null && /hadara smoke package --from \.\/dist-release\/hadara-[^\s/]+\.tgz --json/.test(text);
 }
 
 function checkInstallerSurfaceAndSchema(releaseReadiness: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {

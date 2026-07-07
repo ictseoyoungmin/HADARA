@@ -153,7 +153,7 @@ export function createStateProjectionReport(projectRoot: string, now = new Date(
   const releaseReadiness = readSource(projectRoot, 'docs/RELEASE_READINESS.md');
 
   if (!releaseReadiness.exists) {
-    issues.push(warning('STATE_RELEASE_READINESS_MISSING', releaseReadiness.path, 'docs/RELEASE_READINESS.md is missing.', 'Create or register release readiness docs before release work depends on this projection.'));
+    issues.push(info('STATE_RELEASE_READINESS_MISSING', releaseReadiness.path, 'docs/RELEASE_READINESS.md is missing.', 'Create or register release readiness docs before release work depends on this projection.'));
   }
 
   compareLatestTask('STATE_PROJECT_STATE_LATEST_MISMATCH', 'docs/PROJECT_STATE.md', projectState.latestCompletedTaskId, latestDoneTaskId, issues);
@@ -262,10 +262,16 @@ function readSources(projectRoot: string, issues: StateProjectionIssue[]): {
   const developmentSlices = readSource(projectRoot, 'docs/DEVELOPMENT_SLICES.md');
   for (const source of [projectState, agentHandoff, taskBoard, developmentSlices]) {
     if (!source.exists) {
-      const fixHint = source.path === 'docs/DEVELOPMENT_SLICES.md'
-        ? 'Bootstrap slice state with `hadara slice add ... --json` or import a legacy slice table with `hadara slice migrate --execute --json`.'
-        : `Restore ${source.path} or run the relevant HADARA init/profile remediation.`;
-      issues.push(warning('STATE_SOURCE_MISSING', source.path, `${source.path} is missing.`, fixHint));
+      if (source.path === 'docs/DEVELOPMENT_SLICES.md') {
+        issues.push(info(
+          'STATE_DEVELOPMENT_SLICES_MISSING',
+          source.path,
+          'docs/DEVELOPMENT_SLICES.md is missing.',
+          'Bootstrap slice state with `hadara slice add ... --json` or import a legacy slice table with `hadara slice migrate --execute --json` when slice tracking is needed.'
+        ));
+      } else {
+        issues.push(warning('STATE_SOURCE_MISSING', source.path, `${source.path} is missing.`, `Restore ${source.path} or run the relevant HADARA init/profile remediation.`));
+      }
     }
   }
   return { projectState, agentHandoff, taskBoard, developmentSlices };
@@ -578,6 +584,16 @@ function warning(code: string, pathValue: string, message: string, fixHint: stri
     message,
     ...(expected ? { expected } : {}),
     ...(actual ? { actual } : {}),
+    fixHint
+  };
+}
+
+function info(code: string, pathValue: string, message: string, fixHint: string): StateProjectionIssue {
+  return {
+    severity: 'info',
+    code,
+    path: pathValue,
+    message,
     fixHint
   };
 }

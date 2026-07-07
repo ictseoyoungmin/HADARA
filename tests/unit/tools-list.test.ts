@@ -31,7 +31,7 @@ describe('tools list read model', () => {
           risk: 'medium'
         }),
         expect.objectContaining({
-          name: 'hadara evidence collect --task <task-id> [--kind <kind>] [--path <path>] [--summary <text>] [--result <result>] [--json]',
+          name: 'hadara evidence add-command --task <task-id> --summary <text> [--result <result>] [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] [--json]',
           category: 'write',
           readOnly: false,
           schemaVersion: 'hadara.evidence.collect.v1'
@@ -52,17 +52,6 @@ describe('tools list read model', () => {
           readOnly: true
         }),
         expect.objectContaining({
-          name: 'hadara run scaffold --task <task-id> --command <command> [--json]',
-          category: 'write',
-          readOnly: false
-        }),
-        expect.objectContaining({
-          name: 'hadara run-state show [--json]',
-          category: 'read',
-          readOnly: true,
-          schemaVersion: 'hadara.active_run.projection.v1'
-        }),
-        expect.objectContaining({
           name: 'hadara install plan [--platform <platform>] [--source <path>] [--target <path>] [--json]',
           category: 'read',
           readOnly: true,
@@ -75,7 +64,7 @@ describe('tools list read model', () => {
           schemaVersion: 'hadara.featureSmoke.v1'
         }),
         expect.objectContaining({
-          name: 'hadara package smoke --dry-run --json',
+          name: 'hadara smoke package --dry-run --json',
           category: 'read',
           readOnly: true,
           schemaVersion: 'hadara.packageSmoke.v1'

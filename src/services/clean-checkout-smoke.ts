@@ -300,8 +300,8 @@ function builtCliSteps(): Array<{ id: string; label: string; command: string; ar
     {
       id: 'ops-status',
       label: 'Built CLI operations status',
-      command: 'node dist/cli/main.js ops status --json --project <redacted-clean-checkout>',
-      args: ['dist/cli/main.js', 'ops', 'status', '--json', '--project', '.']
+      command: 'node dist/cli/main.js status --json --project <redacted-clean-checkout>',
+      args: ['dist/cli/main.js', 'status', '--json', '--project', '.']
     },
     {
       id: 'release-gate-strict',
@@ -354,7 +354,7 @@ function pushSkippedExecutionAfterCopy(steps: CleanCheckoutSmokeStep[]): void {
     skippedStep('build', 'Build clean checkout', 'npm run build', 'Skipped because source copy failed.'),
     skippedStep('check', 'Check clean checkout', 'npm run check', 'Skipped because source copy failed.'),
     skippedStep('doctor', 'Built CLI doctor', 'node dist/cli/main.js doctor --json --project <redacted-clean-checkout>', 'Skipped because source copy failed.'),
-    skippedStep('ops-status', 'Built CLI operations status', 'node dist/cli/main.js ops status --json --project <redacted-clean-checkout>', 'Skipped because source copy failed.'),
+    skippedStep('ops-status', 'Built CLI operations status', 'node dist/cli/main.js status --json --project <redacted-clean-checkout>', 'Skipped because source copy failed.'),
     skippedStep('release-gate-strict', 'Built CLI strict release gate', 'node dist/cli/main.js release gate --mode strict --json --project <redacted-clean-checkout>', 'Skipped because source copy failed.')
   );
 }

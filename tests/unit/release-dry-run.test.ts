@@ -212,7 +212,7 @@ describe('release dry-run', () => {
     expect(report.readiness.nextActions).toContainEqual(
       expect.objectContaining({
         id: 'refresh-package-smoke-evidence',
-        command: 'hadara package smoke --execute --attach-evidence --task <task-id> --json'
+        command: 'hadara smoke package --execute --attach-evidence --task <task-id> --json'
       })
     );
   });
@@ -252,7 +252,7 @@ describe('release dry-run', () => {
         time: '2026-05-28T10:00:00Z',
         taskId: 'T-0001',
         kind: 'command-log',
-        summary: 'hadara package smoke --execute --attach-evidence hadara.packageSmoke.v1',
+        summary: 'hadara smoke package --execute --attach-evidence hadara.packageSmoke.v1',
         result: 'passed',
         visibility: 'public'
       }) + '\n',
@@ -277,7 +277,7 @@ describe('release dry-run', () => {
     expect(report.readiness.nextActions).toContainEqual(
       expect.objectContaining({
         id: 'refresh-package-smoke-evidence',
-        command: 'hadara package smoke --execute --attach-evidence --task <task-id> --json'
+        command: 'hadara smoke package --execute --attach-evidence --task <task-id> --json'
       })
     );
   });
@@ -774,7 +774,7 @@ function writeReleaseReadinessFiles(root: string): void {
   fs.mkdirSync(path.join(root, '.github', 'workflows'), { recursive: true });
   fs.writeFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'uses: actions/setup-node@v4\nnode-version: 22\nrun: npm ci\nrun: npm run check\n', 'utf8');
   fs.writeFileSync(path.join(root, 'LICENSE'), 'MIT\n', 'utf8');
-  fs.writeFileSync(path.join(root, 'docs', 'V1_0_IMPLEMENTATION_SCHEMAS.md'), 'npm ci\nnpm run check\nnode dist/cli/main.js doctor --json\nnode dist/cli/main.js ops status --json\n', 'utf8');
+  fs.writeFileSync(path.join(root, 'docs', 'V1_0_IMPLEMENTATION_SCHEMAS.md'), 'npm ci\nnpm run check\nnode dist/cli/main.js doctor --json\nnode dist/cli/main.js status --json\n', 'utf8');
   fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), 'clean checkout smoke\nwithout writing generated context files\n', 'utf8');
   fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), 'contextPath: null\n.hadara/local/tui/\nread-only local API routes\n', 'utf8');
   fs.writeFileSync(
@@ -789,7 +789,7 @@ function writeReleaseReadinessFiles(root: string): void {
       'npm ci',
       'npm run build',
       'node dist/cli/main.js doctor --json',
-      'node dist/cli/main.js ops status --json',
+      'node dist/cli/main.js status --json',
       'node dist/cli/main.js release gate --mode strict --json',
       'no packaging or release execution',
       'Executable Package Smoke Artifact Boundary',
@@ -802,17 +802,17 @@ function writeReleaseReadinessFiles(root: string): void {
       'hadara.packageSmoke.v1',
       'performs no package-smoke execution',
       'Package Smoke Command Surface',
-      'hadara package smoke --dry-run --json',
-      'hadara package smoke --task <task-id> --json',
-      'hadara package smoke --workspace /tmp/hadara-package-smoke/<run-id> --json',
-      'hadara package smoke --from ./dist-release/hadara-0.1.0-rc.0.tgz --json',
-      'hadara package smoke --keep-temp --json',
+      'hadara smoke package --dry-run --json',
+      'hadara smoke package --task <task-id> --json',
+      'hadara smoke package --workspace /tmp/hadara-package-smoke/<run-id> --json',
+      'hadara smoke package --from ./dist-release/hadara-0.1.0-rc.0.tgz --json',
+      'hadara smoke package --keep-temp --json',
       'Do not use `hadara release smoke` as the primary command surface',
       '`--timeout <seconds>`',
       '`--attach-evidence`',
       '`--private-logs`',
       'Package smoke must not be callable from MCP by default',
-      'The release gate must not call `hadara package smoke`',
+      'The release gate must not call `hadara smoke package`',
       'Package Metadata Release Readiness',
       'Package name decision: `hadara`',
       'npm registry observation:',

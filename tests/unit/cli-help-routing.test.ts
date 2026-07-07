@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { handleDevCommand } from '../../src/cli/dev';
 import { handleHarnessCommand } from '../../src/cli/harness';
 import { handlePackageCommand } from '../../src/cli/package-smoke';
+import { handleSmokeCommand } from '../../src/cli/smoke';
 import { handleReleaseArtifactCommand } from '../../src/cli/release-artifact';
 import { handleReleaseCloseoutCommand } from '../../src/cli/release-closeout';
 import { handleReleaseDryRunCommand } from '../../src/cli/release-dry-run';
@@ -65,8 +66,8 @@ describe('command-level help routing', () => {
     const root = tempProject();
     const paths = resolveHadaraPaths({ projectRoot: root });
 
-    expect(handlePackageCommand({ args: ['package', 'smoke', '--help'], paths, jsonOutput: false })).toBe(true);
-    expect(latestOutput()).toContain('package.smoke');
+    expect(handleSmokeCommand({ args: ['smoke', 'package', '--help'], paths, jsonOutput: false })).toBe(true);
+    expect(latestOutput()).toContain('smoke.package');
 
     expect(handlePackageCommand({ args: ['package', 'recycle', '--help'], paths, jsonOutput: false })).toBe(true);
     expect(latestOutput()).toContain('package.recycle');

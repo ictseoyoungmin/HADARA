@@ -176,7 +176,7 @@ describe('CLI write boundary preflight', () => {
     });
   });
 
-  it('prints JSON through the write preflight CLI handler', () => {
+  it('prints a removed-command redirect through the write preflight CLI handler', () => {
     const root = tempProject();
     const output: string[] = [];
     vi.spyOn(console, 'log').mockImplementation((value: string) => output.push(value));
@@ -185,10 +185,10 @@ describe('CLI write boundary preflight', () => {
 
     const parsed = JSON.parse(output[0]);
     expect(parsed).toMatchObject({
-      schemaVersion: 'hadara.write.preflight.v1',
-      ok: true,
-      command: 'task.create'
+      schemaVersion: 'hadara.commandRemoved.v1',
+      ok: false,
+      command: 'write.preflight',
+      replacementCommand: 'hadara policy preflight-shell <command> --json'
     });
-    expect(parsed.writes).toContain('tasks/T-0001-cli-task/TASK.md');
   });
 });

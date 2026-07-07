@@ -98,8 +98,8 @@ export interface PortfolioAuditReport {
 export const PORTFOLIO_AUDIT_DECISIONS: PortfolioAuditDecision[] = [
   {
     decision: 'Task status is the default lifecycle cockpit.',
-    commands: ['task.status', 'task.next', 'task.lifecycle', 'task.finalize', 'task.ready', 'harness.validate'],
-    rule: '`task status` without `--task` owns next-work selection; `task status --task` owns phase and next-action guidance. `task next` and `task lifecycle` remain compatibility/debugging surfaces until removed.',
+    commands: ['task.status', 'task.finalize', 'task.ready', 'harness.validate'],
+    rule: '`task status` without `--task` owns next-work selection; `task status --task` owns phase and next-action guidance. Removed lifecycle and next-work compatibility surfaces return structured redirect stubs.',
     evidence: '0.4 agent UX lifecycle cockpit refactor.'
   },
   {
@@ -121,10 +121,10 @@ export const PORTFOLIO_AUDIT_DECISIONS: PortfolioAuditDecision[] = [
     evidence: 'Phase 7.2 non-overlap rules.'
   },
   {
-    decision: 'Handoff suggestion is read-only; shared handoff edits are manual reviewed docs work.',
-    commands: ['handoff.suggest', 'task.finalize'],
-    rule: '`handoff suggest` may prepare coordinator-reviewed fragments, but no current CLI command applies them to `docs/AGENT_HANDOFF.md`.',
-    evidence: 'T-0496 removed the broken handoff update write surface after stable 0.4.0 dogfood feedback.'
+    decision: 'Shared handoff edits are manual reviewed docs work.',
+    commands: ['task.status', 'task.finalize'],
+    rule: 'No current CLI command writes or generates handoff fragments; use task status/finalize diagnostics and edit shared handoff docs deliberately before close.',
+    evidence: 'T-0496 removed the broken handoff update write surface; T-0506 removed the stale handoff suggestion surface.'
   },
   {
     decision: 'Release and dev validation are not ordinary capsule lifecycle steps.',

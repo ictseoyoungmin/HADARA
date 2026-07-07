@@ -95,7 +95,7 @@ describe('clean checkout smoke', () => {
       'run build',
       'run check',
       'dist/cli/main.js doctor --json --project .',
-      'dist/cli/main.js ops status --json --project .',
+      'dist/cli/main.js status --json --project .',
       'dist/cli/main.js release gate --mode strict --json --project .'
     ]);
     expect(fs.existsSync(checkout)).toBe(false);

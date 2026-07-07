@@ -226,7 +226,7 @@ describe('CLI task JSON reports', () => {
     });
   });
 
-  it('prints task show JSON from --task without treating the flag as the id', () => {
+  it('prints a removed-command redirect for task show without treating --task as the id', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Show flag');
     const output: string[] = [];
@@ -242,11 +242,10 @@ describe('CLI task JSON reports', () => {
 
     const report = JSON.parse(output.join('\n'));
     expect(report).toMatchObject({
-      schemaVersion: 'hadara.task.show.v1',
+      schemaVersion: 'hadara.commandRemoved.v1',
       command: 'task.show',
-      ok: true,
-      taskId: task.id,
-      task: { id: task.id }
+      ok: false,
+      replacementCommand: 'hadara task status --task <task-id> --json'
     });
   });
 

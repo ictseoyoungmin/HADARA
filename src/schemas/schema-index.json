@@ -223,7 +223,7 @@
       "path": "src/schemas/command-removed.schema.json",
       "status": "fixture",
       "owner": "cli/removed-lifecycle",
-      "notes": "Documents the FD-013 deprecation stub returned when removed low-level lifecycle commands are invoked, including the machine-readable replacementCommand."
+      "notes": "Documents structured redirect stubs returned when removed CLI commands are invoked, including the machine-readable replacementCommand."
     },
     {
       "id": "hadara.docs.completeSpec.v1",

@@ -382,7 +382,7 @@ function updateTaskValidationRow(projectRoot: string, taskDir: string, check: st
   const header = headerIndex >= 0 ? parseRow(lines[headerIndex]) : [];
   const rowIndex = lines.findIndex((line) => {
     const cells = parseRow(line);
-    return cells.length > 0 && cells[0] === check;
+    return cells.length > 0 && normalizeValidationCheckLabel(cells[0]) === normalizeValidationCheckLabel(check);
   });
   const safeCommand = isSafeMarkdownTableCell(command) ? command : command.replace(/[|\r\n]/g, ' ');
   const nextRow = header[1] === 'Gate'
@@ -417,6 +417,12 @@ function parseRow(line: string): string[] {
   const trimmed = line.trim();
   if (!trimmed.startsWith('|') || !trimmed.endsWith('|') || /^\|\s*:?-+/.test(trimmed)) return [];
   return trimmed.slice(1, -1).split('|').map((cell) => cell.trim());
+}
+
+function normalizeValidationCheckLabel(value: string): string {
+  let normalized = value.trim();
+  if (/^`[^`]+`$/.test(normalized)) normalized = normalized.slice(1, -1).trim();
+  return normalized.replace(/\s+/g, ' ').toLowerCase();
 }
 
 function hashText(value: string): string {

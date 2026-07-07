@@ -10,28 +10,9 @@
  * the standalone CLI surface is removed.
  */
 
-export interface CommandRemovedReport {
-  schemaVersion: 'hadara.commandRemoved.v1';
-  command: string;
-  ok: false;
-  code: 'TASK_LIFECYCLE_COMMAND_REMOVED';
-  removedCommand: string;
-  replacementCommand: string;
-  diagnosticCommand?: string;
-  message: string;
-  removedIn: string;
-  stubRemovalPlanned: string;
-}
+import { createCommandRemovedReport as createGenericCommandRemovedReport, printCommandRemovedReport, type CommandRemovedReport, type RemovedCommandSpec } from './removed-command';
 
-interface RemovedSubcommand {
-  commandId: string;
-  removedCommand: string;
-  replacementCommand: string;
-  diagnosticCommand?: string;
-  note: string;
-}
-
-export const REMOVED_TASK_SUBCOMMANDS: Record<string, RemovedSubcommand> = {
+export const REMOVED_TASK_SUBCOMMANDS: Record<string, RemovedCommandSpec> = {
   finish: {
     commandId: 'task.finish',
     removedCommand: 'hadara task finish',
@@ -74,29 +55,9 @@ export const REMOVED_TASK_SUBCOMMANDS: Record<string, RemovedSubcommand> = {
 
 export function createCommandRemovedReport(sub: string): CommandRemovedReport {
   const entry = REMOVED_TASK_SUBCOMMANDS[sub];
-  return {
-    schemaVersion: 'hadara.commandRemoved.v1',
-    command: entry.commandId,
-    ok: false,
-    code: 'TASK_LIFECYCLE_COMMAND_REMOVED',
-    removedCommand: entry.removedCommand,
-    replacementCommand: entry.replacementCommand,
-    ...(entry.diagnosticCommand ? { diagnosticCommand: entry.diagnosticCommand } : {}),
-    message: `${entry.removedCommand} was removed in 0.4.1-rc.0 (FD-013). ${entry.note} Use: ${entry.replacementCommand}`,
-    removedIn: '0.4.1-rc.0',
-    stubRemovalPlanned: 'one minor release after 0.4.1'
-  };
+  return createGenericCommandRemovedReport({ ...entry, code: 'TASK_LIFECYCLE_COMMAND_REMOVED' });
 }
 
 export function handleRemovedTaskSubcommand(sub: string, jsonOutput: boolean): boolean {
-  const report = createCommandRemovedReport(sub);
-  if (jsonOutput) {
-    console.log(JSON.stringify(report, null, 2));
-  } else {
-    console.error(`[HADARA] ${report.removedCommand}: removed in ${report.removedIn} (${report.code})`);
-    console.error(report.message);
-    if (report.diagnosticCommand) console.error(`diagnostic: ${report.diagnosticCommand}`);
-  }
-  process.exitCode = 6;
-  return true;
+  return printCommandRemovedReport({ ...REMOVED_TASK_SUBCOMMANDS[sub], code: 'TASK_LIFECYCLE_COMMAND_REMOVED' }, jsonOutput);
 }

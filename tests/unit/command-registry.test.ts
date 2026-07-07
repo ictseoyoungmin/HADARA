@@ -17,18 +17,13 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'init',
   'init.doctor',
   'init.upgrade',
-  'init.register-doc',
   'init.enable-integration',
   'task.create',
   'task.list',
-  'task.show',
-  'task.next',
   'task.status',
   'task.finalize',
   'task.close-source',
-  'task.upgrade-scaffold',
   'validation.run',
-  'evidence.collect',
   'evidence.add-command',
   'evidence.list',
   'evidence.summary',
@@ -57,41 +52,30 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'docs.inbox',
   'docs.register',
   'docs.complete-spec',
-  'docs.mark-drift',
   'docs.managed.list',
   'docs.managed.explain',
   'docs.patch',
   'docs.mark',
-  'docs.archive',
   'docs.required-reading',
   'tools.list',
-  'handoff.suggest',
-  'write.preflight',
-  'policy.check-shell',
   'policy.preflight-shell',
   'harness.validate',
-  'harness.replay',
   'dev.docker-check',
   'hermes.detect',
   'hermes.export-context',
   'mcp.serve',
   'status',
-  'ops.status',
-  'run-state.show',
-  'run-state.resume',
   'install.plan',
   'smoke.run',
   'smoke.clean-checkout',
-  'package.smoke',
+  'smoke.package',
   'package.recycle',
   'release.dry-run',
   'release.publish',
   'release.artifact',
   'release.gate',
   'dashboard.serve',
-  'tui',
-  'run.scaffold',
-  'run'
+  'tui'
 ];
 
 describe('Phase 7.1 command registry', () => {
@@ -124,18 +108,18 @@ describe('Phase 7.1 command registry', () => {
   });
 
   it('classifies binding Phase 7.1 canonical reduction decisions', () => {
-    expect(findCommandRegistryEntry('task.show')).toMatchObject({ canonical: false, aliasFor: 'task.status', deprecatedCandidate: true });
-    expect(findCommandRegistryEntry('evidence.collect')).toMatchObject({ canonical: false, aliasFor: 'evidence.add-command' });
-    expect(findCommandRegistryEntry('ops.status')).toMatchObject({ canonical: false, aliasFor: 'status' });
-    expect(findCommandRegistryEntry('policy.check-shell')).toMatchObject({ canonical: false, aliasFor: 'policy.preflight-shell' });
-    expect(findCommandRegistryEntry('write.preflight')).toMatchObject({ canonical: false, aliasFor: 'policy.preflight-shell' });
+    expect(findCommandRegistryEntry('task.show')).toBeUndefined();
+    expect(findCommandRegistryEntry('evidence.collect')).toBeUndefined();
+    expect(findCommandRegistryEntry('ops.status')).toBeUndefined();
+    expect(findCommandRegistryEntry('policy.check-shell')).toBeUndefined();
+    expect(findCommandRegistryEntry('write.preflight')).toBeUndefined();
     expect(findCommandRegistryEntry('harness.validate')).toMatchObject({ requiredness: 'diagnostic', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('dev.docker-check')).toMatchObject({ requiredness: 'dev-only', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('release.publish')).toMatchObject({ requiredness: 'release-only', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('dashboard.serve')).toMatchObject({ family: 'ui', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('validation.run')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
     expect(findCommandRegistryEntry('evidence.add-command')).toMatchObject({ requiredness: 'conditional', appearsInDefaultHelp: false });
-    expect(findCommandRegistryEntry('task.next')).toMatchObject({ canonical: false, deprecatedCandidate: true, requiredness: 'advanced', appearsInDefaultHelp: false });
+    expect(findCommandRegistryEntry('task.next')).toBeUndefined();
     expect(findCommandRegistryEntry('task.lifecycle')).toBeUndefined();
     expect(findCommandRegistryEntry('task.status')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
     expect(findCommandRegistryEntry('task.finalize')).toMatchObject({ requiredness: 'primary', appearsInDefaultHelp: true });
@@ -145,7 +129,18 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('task.audit-close')).toBeUndefined();
     expect(findCommandRegistryEntry('task.complete')).toBeUndefined();
     expect(findCommandRegistryEntry('handoff.update')).toBeUndefined();
-    expect(findCommandRegistryEntry('handoff.suggest')).toMatchObject({ requiredness: 'conditional', readOnly: true, writeBoundary: 'shared-doc-suggestion' });
+    expect(findCommandRegistryEntry('handoff.suggest')).toBeUndefined();
+    expect(findCommandRegistryEntry('handoff.stale-problems')).toBeUndefined();
+    expect(findCommandRegistryEntry('init.register-doc')).toBeUndefined();
+    expect(findCommandRegistryEntry('task.upgrade-scaffold')).toBeUndefined();
+    expect(findCommandRegistryEntry('docs.archive')).toBeUndefined();
+    expect(findCommandRegistryEntry('harness.replay')).toBeUndefined();
+    expect(findCommandRegistryEntry('run-state.show')).toBeUndefined();
+    expect(findCommandRegistryEntry('run-state.resume')).toBeUndefined();
+    expect(findCommandRegistryEntry('run.scaffold')).toBeUndefined();
+    expect(findCommandRegistryEntry('run')).toBeUndefined();
+    expect(findCommandRegistryEntry('package.smoke')).toBeUndefined();
+    expect(findCommandRegistryEntry('smoke.package')).toMatchObject({ requiredness: 'release-only', appearsInDefaultHelp: false });
   });
 
   it('classifies 0.4 current and planned command surfaces explicitly', () => {
@@ -154,19 +149,13 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('docs.register')).toMatchObject({ status: 'experimental', schemaVersion: 'hadara.docs.register.v1' });
     expect(findCommandRegistryEntry('evidence.project')).toMatchObject({ status: 'stable', schemaVersion: 'hadara.evidence.projection.v1' });
     const completeSpec = findCommandRegistryEntry('docs.complete-spec');
-    const markDrift = findCommandRegistryEntry('docs.mark-drift');
     expect(completeSpec).toMatchObject({
       status: 'experimental',
       requiredness: 'conditional',
       schemaVersion: 'hadara.docs.completeSpec.v1',
       appearsInDefaultHelp: false
     });
-    expect(markDrift).toMatchObject({
-      status: 'planned',
-      requiredness: 'disabled',
-      appearsInDefaultHelp: false
-    });
-    expect(markDrift).not.toHaveProperty('schemaVersion');
+    expect(findCommandRegistryEntry('docs.mark-drift')).toBeUndefined();
   });
 
   it('exposes explicit code index implementation and test file hints where available', () => {

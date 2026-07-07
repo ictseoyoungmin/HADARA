@@ -42,7 +42,7 @@ function createNextActions(
     actions.push({
       id: 'refresh-package-smoke-evidence',
       required: true,
-      command: 'hadara package smoke --execute --attach-evidence --task <task-id> --json',
+      command: 'hadara smoke package --execute --attach-evidence --task <task-id> --json',
       reason: 'PACKAGE_SMOKE_EVIDENCE_NOT_READY',
       summary: 'Refresh package smoke evidence with a schema-valid public reduced artifact.'
     });

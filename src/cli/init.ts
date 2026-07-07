@@ -4,6 +4,7 @@ import { resolveHadaraPaths } from '../core/paths';
 import { ensureDir, writeFileIfMissing } from '../core/fs';
 import { getFlag, getRequiredStringOption, getStringOption } from './args';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
+import { printCommandRemovedReport } from './removed-command';
 import { DOCS_REGISTRY_PATH, createHadaraContextDoc, createSeedDocumentRegistry, registryJson } from '../services/docs-registry';
 import { managedSectionBlock } from '../services/managed-sections';
 import type { DocumentRegistryFile } from '../services/docs-registry';
@@ -200,23 +201,16 @@ export function handleInitCommand(input: InitCommandInput): boolean {
     return true;
   }
   if (subcommand === 'register-doc') {
-    if (getFlag(input.args, '--execute') === true) {
-      const legacyReport = createLegacyMutationBlockedReport(input.projectRoot, 'init.register-doc');
-      if (legacyReport) {
-        printLegacyMutationBlockedReport(legacyReport, input.jsonOutput === true);
-        process.exitCode = 6;
-        return true;
-      }
-    }
-    const report = createRequiredReadingRegistrationReport(input.projectRoot, {
-      documentPath: getRequiredStringOption(input.args, '--path'),
-      when: getRequiredStringOption(input.args, '--when'),
-      purpose: getRequiredStringOption(input.args, '--purpose'),
-      mode: getInitFollowUpMode(input.args),
-      requireExists: getFlag(input.args, '--require-exists')
-    });
-    printInitFollowUpReport(report, input.jsonOutput);
-    return true;
+    return printCommandRemovedReport(
+      {
+        commandId: 'init.register-doc',
+        removedCommand: 'hadara init register-doc',
+        replacementCommand: 'hadara docs register --path <path> --json',
+        diagnosticCommand: 'hadara docs register --help',
+        note: 'Document registration is consolidated under the docs registry command family.'
+      },
+      input.jsonOutput === true
+    );
   }
   if (subcommand === 'enable-integration') {
     if (getFlag(input.args, '--execute') === true) {
@@ -246,7 +240,6 @@ Usage:
   hadara init [--profile basic|standard|governed] [--json]
   hadara init doctor [--json]
   hadara init upgrade --profile <profile> [--execute] [--json]
-  hadara init register-doc --path <path> --when <text> --purpose <text> [--execute] [--json]
   hadara init enable-integration --integration <name> [--execute] [--json]
 
 Profiles:
@@ -1165,6 +1158,12 @@ hadara evidence project --task T-XXXX --json
 
 Use \`validation run\` for ordinary validation because it executes the command, records durable evidence from the real exit status, and refreshes \`EVIDENCE.md\`. Add \`--update-task\` only when you intentionally want the matching \`TASK.md\` Validation row updated by the CLI.
 
+If the wrapper cannot launch a command in the current tool environment (for example \`EPERM\`, \`EACCES\`, or \`ENOENT\`) but the same command runs directly, record the direct result instead of rerunning through the wrapper:
+
+\`\`\`bash
+hadara evidence add-command --task T-XXXX --summary "npm test passed directly after validation wrapper launch failure" --result passed --category validation --json
+\`\`\`
+
 Use \`evidence add-command\` only when recording an already-run result supplied by the operator. It does not execute shell commands. Use \`evidence summary\` to find durable evidence ids for docs and resolution markers.
 
 Evidence must reflect real execution results. Fabricated or assumed results are invalid.
@@ -1713,9 +1712,10 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 | Command | Default Write Behavior | Notes |
 |---|---|---|
 | \`task status\` | Read-only | Without \`--task\`, selects next work. With \`--task\`, default output is a fast loop cockpit; use \`--detail full\` or \`task finalize\` for close-grade readiness diagnostics. |
-| \`task next\` | Read-only compatibility | Planned removal candidate; prefer \`task status --json\`. |
 | \`task create\` | Write | Creates a Draft Task Capsule and Task Board row. It does not imply the task is ready or done. |
 | \`evidence add-command\` | Write | Appends operator-supplied command-log evidence. It does not execute shell commands or capture stdout/stderr; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, and optional \`--idempotency-key\` prevents duplicate same-key records. |
+| \`validation run\` | Execute + evidence append | Runs a real command and records validation evidence. If the wrapper cannot launch the command in the current environment, run the command directly and record the direct result with \`evidence add-command\`. |
+| \`task next\` / \`task show\` | Removed redirect stubs | Prefer \`task status --json\` and \`task status --task T-XXXX --json\`. |
 | \`task lifecycle\` | Removed redirect stub | Prefer \`task status --task T-XXXX --json\`. |
 | \`task finalize\` | Read-only by default; guarded execute uses \`--auto\` or \`--plan-hash\` | Default agent close path. Rechecks the current plan, records readiness evidence in the \`--auto\` close path when needed, executes phases serially, stops on blockers, and succeeds only after final audit is \`closed-valid\`. |
 | \`task finish\` / \`task ready\` / \`task close\` / \`task audit-close\` | Removed redirect stubs | Use \`task status --detail full\` for diagnostics and \`task finalize\` for close execution. |
@@ -1723,7 +1723,7 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 
 ## Non-Overlap Rules
 
-- \`task next\` chooses work; it does not create a capsule or infer completion.
+- \`task status --json\` chooses work; it does not create a capsule or infer completion.
 - \`task status\` is an operator console; \`ok: true\` means report generation succeeded, not that the task is ready.
 - Readiness diagnostics are exposed through \`task status --detail full\` and \`task finalize --json\`.
 - \`harness validate\` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence and is not required as a separate evidence wrapper before ordinary \`task finalize --execute --auto\`.

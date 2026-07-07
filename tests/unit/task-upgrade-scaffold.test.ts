@@ -130,7 +130,7 @@ describe('task upgrade scaffold report', () => {
     expect(fs.readFileSync(taskPath, 'utf8')).not.toContain('| ID | Criterion | Required | Status | Evidence | Disposition | Reference |');
   });
 
-  it('prints schema-valid JSON through the task command handler', () => {
+  it('prints a removed-command redirect through the task command handler', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'CLI upgrade');
     fs.writeFileSync(path.join(task.dir, 'TASK.md'), '# Legacy Task\n\nLegacy.\n', 'utf8');
@@ -145,11 +145,10 @@ describe('task upgrade scaffold report', () => {
     expect(handled).toBe(true);
     const payload = JSON.parse(String(log.mock.calls[0][0]));
     expect(payload).toMatchObject({
-      schemaVersion: 'hadara.task.upgrade_scaffold.v1',
+      schemaVersion: 'hadara.commandRemoved.v1',
       command: 'task.upgrade-scaffold',
-      mode: 'dry-run',
-      ok: true
+      ok: false,
+      replacementCommand: 'hadara protocol remediate --fix <fix-id> --task <task-id> --json'
     });
-    expect(validateSchema('hadara.task.upgrade_scaffold.v1', payload).ok).toBe(true);
   });
 });

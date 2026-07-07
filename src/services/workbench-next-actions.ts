@@ -157,8 +157,7 @@ function addIssueAction(actions: Map<string, WorkbenchNextAction>, taskId: strin
       kind: 'edit',
       required: true,
       priority: 'soon',
-      command: `hadara handoff suggest --task ${taskId} --json`,
-      message: 'Review handoff suggestions, then update task/project handoff docs manually after current evidence is recorded.',
+      message: 'Update task/project handoff docs manually after current evidence is recorded; use task status and finalize dry-run for phase guidance.',
       path: issue.path,
       sourceIssueCodes: [issue.code]
     });

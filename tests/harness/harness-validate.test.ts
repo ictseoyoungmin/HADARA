@@ -382,6 +382,14 @@ describe('Harness Task Capsule validation', () => {
     markTaskBoardDone(root, task.id);
     markAcceptanceDone(task.dir);
     writeCompletedCapsuleDocs(task.dir, { keepMetadataPlaceholders: true });
+    fs.writeFileSync(
+      path.join(task.dir, 'TASK.md'),
+      fs
+        .readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')
+        .replace(/\| Created \| [^|]+ \|/, '| Created | TBD |')
+        .replace(/\| Updated \| [^|]+ \|/, '| Updated | TBD |'),
+      'utf8'
+    );
     writeHandoffDone(task.dir);
     appendEvidence(root, {
       taskId: task.id,

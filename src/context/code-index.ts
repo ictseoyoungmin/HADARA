@@ -1390,25 +1390,17 @@ function inferCommandImplementationFiles(entry: CommandRegistryEntry): string[] 
     'docs.managed.explain': ['src/cli/docs.ts'],
     'docs.required-reading': ['src/cli/docs.ts'],
     'evidence.add-command': ['src/cli/evidence.ts'],
-    'evidence.collect': ['src/cli/evidence.ts'],
     'install.plan': ['src/cli/install.ts'],
     'mcp.serve': ['src/cli/mcp.ts'],
-    'ops.status': ['src/cli/status.ts'],
-    'package.smoke': ['src/cli/package-smoke.ts'],
-    'policy.check-shell': ['src/cli/policy.ts'],
     'policy.preflight-shell': ['src/cli/policy.ts'],
     'release.artifact': ['src/cli/release-artifact.ts'],
     'release.dry-run': ['src/cli/release-dry-run.ts'],
     'release.gate': ['src/cli/release-gate.ts'],
     'release.publish': ['src/cli/release-publish.ts'],
-    'run.scaffold': ['src/cli/run-scaffold.ts'],
-    'run-state.resume': ['src/cli/run-state.ts'],
-    'run-state.show': ['src/cli/run-state.ts'],
     'smoke.clean-checkout': ['src/cli/smoke.ts'],
+    'smoke.package': ['src/cli/smoke.ts'],
     'smoke.run': ['src/cli/smoke.ts'],
-    'task.audit-close': ['src/cli/task.ts'],
-    'task.upgrade-scaffold': ['src/cli/task.ts'],
-    'write.preflight': ['src/cli/write-preflight.ts']
+    'status': ['src/cli/status.ts']
   };
   if (exact[entry.id]) return exact[entry.id];
   const familyPrefix = entry.id.split('.')[0] ?? entry.id;

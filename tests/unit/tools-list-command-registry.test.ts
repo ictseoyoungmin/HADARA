@@ -17,8 +17,8 @@ describe('tools list command registry projection', () => {
   it('preserves compatibility capability variants for mode-sensitive surfaces', () => {
     const names = createToolsListReport().surfaces.cli.map((surface) => surface.name);
 
-    expect(names).toContain('hadara package smoke --dry-run --json');
-    expect(names).toContain('hadara package smoke --execute --json');
+    expect(names).toContain('hadara smoke package --dry-run --json');
+    expect(names).toContain('hadara smoke package --execute --json');
     expect(names).toContain('hadara package recycle --json');
     expect(names).toContain('hadara package recycle --execute --json');
     expect(names).toContain('hadara release publish --mode dry-run --json');
@@ -28,10 +28,10 @@ describe('tools list command registry projection', () => {
   it('keeps command registry ids separate from compatibility capability variants', () => {
     const commandIds = HADARA_COMMAND_REGISTRY.map((entry) => entry.id);
 
-    expect(commandIds).toContain('package.smoke');
+    expect(commandIds).toContain('smoke.package');
     expect(commandIds).toContain('package.recycle');
     expect(commandIds).toContain('release.publish');
-    expect(commandIds.filter((id) => id === 'package.smoke')).toHaveLength(1);
+    expect(commandIds.filter((id) => id === 'smoke.package')).toHaveLength(1);
     expect(commandIds.filter((id) => id === 'package.recycle')).toHaveLength(1);
     expect(commandIds.filter((id) => id === 'release.publish')).toHaveLength(1);
   });

@@ -107,7 +107,7 @@ describe('state consistency projection', () => {
     expect(validateSchema('hadara.stateProjection.v1', report).ok).toBe(true);
   });
 
-  it('degrades missing optional sources to warnings instead of throwing', () => {
+  it('degrades missing optional sources to non-throwing diagnostics', () => {
     const root = tempProject();
     createTaskCapsule(root, 'Projection partial project');
 
@@ -122,6 +122,7 @@ describe('state consistency projection', () => {
     expect(report.summary.consistent).toBe(false);
     expect(codes).toEqual(expect.arrayContaining([
       'STATE_SOURCE_MISSING',
+      'STATE_DEVELOPMENT_SLICES_MISSING',
       'STATE_DOCS_REGISTRY_MISSING',
       'STATE_RELEASE_READINESS_MISSING'
     ]));

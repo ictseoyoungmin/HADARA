@@ -128,10 +128,10 @@ describe('Dogfooding E2E fixture', () => {
       }
     });
 
-    const taskReport = runBuiltCliJson(root, executedCommands, ['task', 'show', task.id, '--json']);
+    const taskReport = runBuiltCliJson(root, executedCommands, ['task', 'status', '--task', task.id, '--json']);
     expect(taskReport).toMatchObject({
-      schemaVersion: 'hadara.task.show.v1',
-      command: 'task.show',
+      schemaVersion: 'hadara.task.workbench.v1',
+      command: 'task.status',
       ok: true,
       task: {
         id: task.id,
@@ -140,7 +140,7 @@ describe('Dogfooding E2E fixture', () => {
     });
 
     for (const check of fixture.policyChecks) {
-      const policyReport = runBuiltCliJson(root, executedCommands, ['policy', 'check-shell', ...check.command.split(' '), '--mode', check.mode, '--json']);
+      const policyReport = runBuiltCliJson(root, executedCommands, ['policy', 'preflight-shell', ...check.command.split(' '), '--mode', check.mode, '--json']);
       expect(policyDecisionState(policyReport.decision.action)).toBe(check.expectedState);
       expect(policyReport.decision.action).toBe(check.expectedAction);
       expect(policyReport.ok).toBe(check.expectedOk);
@@ -148,11 +148,9 @@ describe('Dogfooding E2E fixture', () => {
 
     const evidenceReport = runBuiltCliJson(root, executedCommands, [
       'evidence',
-      'collect',
+      'add-command',
       '--task',
       task.id,
-      '--kind',
-      fixture.evidence.kind,
       '--summary',
       fixture.evidence.summary,
       '--result',
@@ -161,11 +159,11 @@ describe('Dogfooding E2E fixture', () => {
     ]);
     expect(evidenceReport).toMatchObject({
       schemaVersion: 'hadara.evidence.collect.v1',
-      command: 'evidence.collect',
+      command: 'evidence.add-command',
       ok: true,
       evidence: {
         taskId: task.id,
-        legacy: { kind: fixture.evidence.kind, result: fixture.evidence.result },
+        legacy: { kind: 'command-log', result: fixture.evidence.result },
         outcome: fixture.evidence.result,
         visibility: 'public'
       },
@@ -181,20 +179,11 @@ describe('Dogfooding E2E fixture', () => {
         {
           schemaVersion: 'hadara.evidence.v2',
           taskId: task.id,
-          legacy: { kind: fixture.evidence.kind, result: fixture.evidence.result },
+          legacy: { kind: 'command-log', result: fixture.evidence.result },
           outcome: fixture.evidence.result,
           visibility: 'public'
         }
       ]
-    });
-
-    const handoffSuggestion = runBuiltCliJson(root, executedCommands, ['handoff', 'suggest', '--task', task.id, '--json']);
-    expect(handoffSuggestion).toMatchObject({
-      schemaVersion: 'hadara.handoff.suggestion.v1',
-      command: 'handoff.suggest',
-      ok: true,
-      readOnly: true,
-      taskId: task.id
     });
 
     writeProjectHandoff(root, task.id, fixture);
@@ -214,11 +203,10 @@ describe('Dogfooding E2E fixture', () => {
 
     expect(executedCommands).toEqual([
       'hermes export-context --json',
-      `task show ${task.id} --json`,
-      ...fixture.policyChecks.map((check) => `policy check-shell ${check.command} --mode ${check.mode} --json`),
-      `evidence collect --task ${task.id} --kind ${fixture.evidence.kind} --summary ${fixture.evidence.summary} --result ${fixture.evidence.result} --json`,
+      `task status --task ${task.id} --json`,
+      ...fixture.policyChecks.map((check) => `policy preflight-shell ${check.command} --mode ${check.mode} --json`),
+      `evidence add-command --task ${task.id} --summary ${fixture.evidence.summary} --result ${fixture.evidence.result} --json`,
       `evidence list --task ${task.id} --json`,
-      `handoff suggest --task ${task.id} --json`,
       `harness validate --task ${task.id} --level done --json`
     ]);
     expect(executedCommands.some((command) => /^(run|mcp|release|dashboard)\b/.test(command))).toBe(false);

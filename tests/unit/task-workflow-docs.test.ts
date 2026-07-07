@@ -60,7 +60,7 @@ describe('task workflow command semantics docs', () => {
     }
 
     expect(workflow).toContain('| `hadara task status --json` | Select next work when no Task Capsule is selected. | Read-only report. | No. |');
-    expect(workflow).toContain('| `hadara task next --json` | Compatibility next-work recommendation. Planned removal candidate; prefer `task status --json`. | Read-only report. | No. |');
+    expect(workflow).toContain('| `hadara task next --json` | Removed in 0.4.1-rc.0; returns a `hadara.commandRemoved.v1` stub pointing at `task status --json`. | Stub, no writes. | No. |');
     expect(workflow).toContain('| `hadara task status --task T-XXXX --json` | Fast phase-aware operator cockpit for one task. | Read-only report. | No. |');
     expect(workflow).toContain('| `hadara evidence add-command --task T-XXXX --summary "..." --result passed [--outcome <outcome>] [--category <category>] [--resolves <id>] [--supersedes <id>] [--idempotency-key <key>] --json` | Record command-log evidence supplied by the operator. | Write command. | Yes, appends capsule evidence unless an explicit idempotency key already exists. |');
     expect(workflow).toContain('| `hadara task finish ...` | Removed in 0.4.1-rc.0 (FD-013); returns a `hadara.commandRemoved.v1` stub pointing at `task finalize --execute --auto`. | Stub, no writes. | No. |');
@@ -70,6 +70,7 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('Audit-contract migration note');
     expect(contractRemovedNote(read('docs/CLI_JSON_CONTRACT.md'))).toBe(true);
     expect(workflow).toContain('`task status` is an operator cockpit; `ok: true` means report generation succeeded.');
+    expect(workflow).toContain('`handoff suggest` is a removed redirect stub.');
     expect(workflow).toContain('In the ordinary path, do not run `validation run -- ... harness validate ...` only to create a readiness proof');
     expect(workflow).toContain('`harness validate` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence and is not required as a separate evidence wrapper before ordinary `task finalize --execute --auto`.');
     expect(workflow).toContain('Before finalize execute, finish all close-source edits');

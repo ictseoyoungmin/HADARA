@@ -35,7 +35,8 @@ describe('Phase 7.2 lifecycle guide', () => {
     const primaryIds = report.primaryPath.map((step) => step.commandId);
     const advancedFamilies = report.advanced.map((item) => item.family);
 
-    expect(advancedFamilies).toEqual(expect.arrayContaining(['release-package', 'dev-validation', 'ui', 'integrations', 'agent-loop']));
+    expect(advancedFamilies).toEqual(expect.arrayContaining(['release-package', 'dev-validation', 'ui', 'integrations']));
+    expect(advancedFamilies).not.toContain('agent-loop');
     expect(primaryIds).not.toContain('release.gate');
     expect(primaryIds).not.toContain('dev.docker-check');
     expect(primaryIds).not.toContain('dashboard.serve');

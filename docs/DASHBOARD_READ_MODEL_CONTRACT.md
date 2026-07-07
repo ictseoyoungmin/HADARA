@@ -14,11 +14,7 @@ Primary source:
 hadara status --json
 ```
 
-Equivalent source:
-
-```bash
-hadara ops status --json
-```
+The old `hadara ops status --json` alias now returns a structured removed-command redirect to `hadara status --json`.
 
 Sample fixture:
 

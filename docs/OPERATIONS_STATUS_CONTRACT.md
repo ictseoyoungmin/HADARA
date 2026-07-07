@@ -10,13 +10,9 @@ Primary command:
 hadara status --json
 ```
 
-Alias:
+The old `hadara ops status --json` alias now returns a structured removed-command redirect to `hadara status --json`.
 
-```bash
-hadara ops status --json
-```
-
-Text output is intentionally minimal in T-0053. External agents and dashboards should use JSON mode.
+Text output is intentionally minimal. External agents and dashboards should use JSON mode.
 
 ## Schema
 

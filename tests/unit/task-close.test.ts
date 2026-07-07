@@ -248,7 +248,7 @@ describe('task close report', () => {
     executeTaskCloseEvidence(root, firstReport);
     const firstRecord = JSON.parse(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8').trim().split(/\r?\n/).at(-1) ?? '{}');
 
-    fs.writeFileSync(path.join(task.dir, 'TASK.md'), fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8').replace('| Updated | 2026-06-02 |', '| Updated | 2026-06-03 |'), 'utf8');
+    fs.appendFileSync(path.join(task.dir, 'TASK.md'), '\n<!-- close-source drift for supersede fixture -->\n', 'utf8');
     const secondReport = createTaskCloseReport(root, task.id, 'execute');
     executeTaskCloseEvidence(root, secondReport);
     const records = fs
@@ -337,7 +337,7 @@ describe('task close report', () => {
     expect(formatTaskAuditCloseReport(audit)).toContain('- Blockers: 0');
     expect(formatTaskAuditCloseReport(audit)).toContain('Suggested next');
 
-    fs.writeFileSync(path.join(task.dir, 'TASK.md'), fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8').replace('| Updated | 2026-06-02 |', '| Updated | 2026-06-03 |'), 'utf8');
+    fs.appendFileSync(path.join(task.dir, 'TASK.md'), '\n<!-- close-source drift for audit fixture -->\n', 'utf8');
     const drift = createTaskAuditCloseReport(root, task.id);
     expect(drift.ok).toBe(true);
     expect(drift.auditVerdict).toMatchObject({

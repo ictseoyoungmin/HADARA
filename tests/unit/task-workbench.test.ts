@@ -88,7 +88,6 @@ describe('task workbench status report', () => {
       loop: {
         phase: 'author-task',
         deprecatedCommands: expect.arrayContaining([
-          expect.objectContaining({ command: 'hadara task next --json', replacement: 'hadara task status --json' }),
           expect.objectContaining({ command: 'hadara task lifecycle --task T-XXXX --json', replacement: 'hadara task status --task T-XXXX --json' })
         ])
       }
@@ -201,8 +200,8 @@ describe('task workbench status report', () => {
         primaryNextAction: {
           command: `hadara task status --task ${task.id} --json`
         },
-        deprecatedCommands: expect.arrayContaining([
-          expect.objectContaining({ command: 'hadara task next --json', replacement: 'hadara task status --json' })
+        deprecatedCommands: expect.not.arrayContaining([
+          expect.objectContaining({ command: 'hadara task next --json' })
         ])
       }
     });

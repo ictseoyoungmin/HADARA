@@ -1,4 +1,5 @@
 import { createOpsStatusReport, formatOpsStatusReport } from '../services/operations-status-service';
+import { printCommandRemovedReport } from './removed-command';
 
 export interface StatusCommandInput {
   args: string[];
@@ -14,8 +15,15 @@ export function handleStatusCommand(input: StatusCommandInput): boolean {
 
 export function handleOpsCommand(input: StatusCommandInput): boolean {
   if (input.args[0] !== 'ops' || input.args[1] !== 'status') return false;
-  printStatus(input.projectRoot, input.jsonOutput);
-  return true;
+  return printCommandRemovedReport(
+    {
+      commandId: 'ops.status',
+      removedCommand: 'hadara ops status',
+      replacementCommand: 'hadara status --json',
+      note: 'Operations status is consolidated under the top-level status command.'
+    },
+    input.jsonOutput
+  );
 }
 
 function printStatus(projectRoot: string, jsonOutput: boolean): void {

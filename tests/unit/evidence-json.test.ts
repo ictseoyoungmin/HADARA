@@ -705,8 +705,6 @@ describe('CLI evidence JSON reports', () => {
     fs.mkdirSync(root);
     initProject(root, 'basic', { silent: true });
     const task = createTaskCapsule(root, 'Visibility private evidence');
-    const externalPath = path.join(parent, 'visibility-outside.log');
-    fs.writeFileSync(externalPath, 'external private content', 'utf8');
     const output: string[] = [];
     const originalLog = console.log;
     console.log = (value?: unknown) => {
@@ -718,13 +716,9 @@ describe('CLI evidence JSON reports', () => {
         handleEvidenceCommand({
           args: [
             'evidence',
-            'collect',
+            'add-command',
             '--task',
             task.id,
-            '--kind',
-            'command-log',
-            '--path',
-            externalPath,
             '--summary',
             'Visibility private evidence',
             '--result',
@@ -744,7 +738,7 @@ describe('CLI evidence JSON reports', () => {
     const report = JSON.parse(output.join('\n'));
     expect(report).toMatchObject({
       schemaVersion: 'hadara.evidence.collect.v1',
-      command: 'evidence.collect',
+      command: 'evidence.add-command',
       ok: true,
       evidence: {
         visibility: 'private',

@@ -64,6 +64,6 @@ Use `validation.run` for ordinary checks; use `evidence.add-command` only when t
 
 `task close --execute` appends close evidence only. It does not update Project State, Agent Handoff, or broad docs.
 
-`handoff suggest` is read-only and optional. Shared handoff edits are reviewed documentation work before finalize, not an executable post-finalize lifecycle step.
+Shared handoff edits are reviewed documentation work before finalize, not an executable post-finalize lifecycle step. The old `handoff suggest` helper now returns a structured redirect stub; use `task status` and `task finalize --json` for phase/readiness guidance, then edit handoff docs deliberately.
 
 Release commands and `dev docker-check` are task-context-specific surfaces, not ordinary lifecycle requirements.

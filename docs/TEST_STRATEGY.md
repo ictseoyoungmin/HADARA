@@ -125,7 +125,7 @@ npm ci
 npm run build
 npm run check
 node dist/cli/main.js doctor --json
-node dist/cli/main.js ops status --json
+node dist/cli/main.js status --json
 node dist/cli/main.js release gate --mode strict --json
 ```
 
@@ -189,14 +189,14 @@ The future executable package-smoke command must define approval, cleanup, and f
 The future executable package-smoke surface is:
 
 ```bash
-hadara package smoke --dry-run --json
-hadara package smoke --task <task-id> --json
-hadara package smoke --workspace /tmp/hadara-package-smoke/<run-id> --json
-hadara package smoke --from ./dist-release/hadara-0.1.0-rc.0.tgz --json
-hadara package smoke --keep-temp --json
+hadara smoke package --dry-run --json
+hadara smoke package --task <task-id> --json
+hadara smoke package --workspace /tmp/hadara-package-smoke/<run-id> --json
+hadara smoke package --from ./dist-release/hadara-0.1.0-rc.0.tgz --json
+hadara smoke package --keep-temp --json
 ```
 
-Use `hadara package smoke` as the primary command name. Do not use `hadara release smoke` as the primary command surface because release wording implies publish/deploy behavior.
+Use `hadara smoke package` as the primary command name. `hadara package smoke` is a removed redirect stub. Do not use `hadara release smoke` as the primary command surface because release wording implies publish/deploy behavior.
 
 Required flags and semantics:
 
@@ -216,7 +216,7 @@ Approval and boundary rules:
 - Dry-run planning may run in normal assisted/dev mode.
 - Real package-smoke execution must require an explicit user command in a later implementation capsule.
 - Package smoke must not be callable from MCP by default; any future MCP package-smoke surface must be opt-in, approval-gated, and privately audited.
-- The release gate must not call `hadara package smoke`; it may only read documented markers and later evidence records.
+- The release gate must not call `hadara smoke package`; it may only read documented markers and later evidence records.
 - On success, disposable workspace cleanup should be the default. On failure, raw package/install artifacts should be removed unless `--keep-temp` is set, and public output should remain reduced and redacted.
 
 ## Release Install Package Smoke Plan

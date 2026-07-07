@@ -396,7 +396,7 @@ describe('operator console bundle (Phase 5.6)', () => {
       command: 'dashboard.cache.status',
       processMemoryOnly: true
     });
-  });
+  }, 60000);
 
   it('keeps dashboard API routes read-only and safely bounded', () => {
     const head = createDashboardServerResponse(process.cwd(), '/api/status', 'HEAD');

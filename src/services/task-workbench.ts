@@ -841,12 +841,6 @@ function buildTaskStatusLoopGuidance(
 function deprecatedStatusCommands(): TaskStatusLoopGuidance['deprecatedCommands'] {
   return [
     {
-      command: 'hadara task next --json',
-      replacement: 'hadara task status --json',
-      removal: 'planned',
-      note: '`task status` owns next-work selection when no task is selected.'
-    },
-    {
       command: 'hadara task lifecycle --task T-XXXX --json',
       replacement: 'hadara task status --task T-XXXX --json',
       removal: 'removed',

@@ -223,7 +223,6 @@ function readDevelopmentSlices(projectRoot: string, issues: TaskNextIssue[]): { 
 
   const filePath = path.join(projectRoot, 'docs', 'DEVELOPMENT_SLICES.md');
   if (!fs.existsSync(filePath)) {
-    issues.push({ severity: 'warning', code: 'TASK_NEXT_DEVELOPMENT_SLICES_MISSING', message: 'docs/DEVELOPMENT_SLICES.md is missing.', path: 'docs/DEVELOPMENT_SLICES.md' });
     return { present: false, rows: [] };
   }
   const rows = parseMarkdownRows(fs.readFileSync(filePath, 'utf8'))

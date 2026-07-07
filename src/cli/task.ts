@@ -1,17 +1,16 @@
 import { createTaskCloseSourceReport } from '../task/task-close';
+import { printCommandRemovedReport } from './removed-command';
 import { handleRemovedTaskSubcommand, REMOVED_TASK_SUBCOMMANDS } from './removed-lifecycle';
 import { createTaskCreateReport, formatTaskCreateReport } from '../task/task-create';
 import { createTaskFinalizeReport, formatTaskFinalizeReport } from '../task/task-finalize';
 import type { TaskFinalizeProgressEvent } from '../task/task-finalize';
-import { createTaskNextReport, formatTaskNextReport } from '../task/task-next';
-import { createTaskUpgradeScaffoldReport, formatTaskUpgradeScaffoldReport } from '../task/task-upgrade-scaffold';
 import { createTaskStatusSelectionReport, createTaskWorkbenchReport, formatTaskStatusSelectionReport, formatTaskWorkbenchReport, type TaskStatusSelectionReport, type TaskWorkbenchReport } from '../services/task-workbench';
 import { startMonotonicTimer, type MonotonicTimer } from '../core/timing';
 import { getActorContextOption } from './actor';
 import { getFlag, getStringOption } from './args';
 import { renderCommandHelp } from './help';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
-import { createTaskListReport, createTaskShowReport, formatTaskListReport } from './task-json';
+import { createTaskListReport, formatTaskListReport } from './task-json';
 
 export interface TaskCommandInput {
   args: string[];
@@ -104,45 +103,40 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
   }
 
   if (sub === 'show') {
-    const id = getStringOption(input.args, '--task') ?? input.args[2];
-    if (!id || id.startsWith('--')) throw new Error('task show requires --task <task-id>');
-    const report = createTaskShowReport(input.projectRoot, id);
-    if (input.jsonOutput) {
-      console.log(JSON.stringify(report, null, 2));
-    } else if (report.ok && report.task) {
-      console.log(report.task.taskMarkdown);
-    } else {
-      console.log(`[HADARA] Task not found: ${id}`);
-    }
-    if (!report.ok) process.exitCode = 6;
-    return true;
+    return printCommandRemovedReport(
+      {
+        commandId: 'task.show',
+        removedCommand: 'hadara task show',
+        replacementCommand: 'hadara task status --task <task-id> --json',
+        note: 'Task read/status output is consolidated under task status.'
+      },
+      input.jsonOutput
+    );
   }
 
   if (sub === 'next') {
-    const report = createTaskNextReport(input.projectRoot);
-    if (input.jsonOutput) {
-      console.log(JSON.stringify(report, null, 2));
-    } else {
-      console.log(formatTaskNextReport(report));
-    }
-    if (!report.ok) process.exitCode = 6;
-    return true;
+    return printCommandRemovedReport(
+      {
+        commandId: 'task.next',
+        removedCommand: 'hadara task next',
+        replacementCommand: 'hadara task status --json',
+        note: 'Next-work selection is consolidated under task status without --task.'
+      },
+      input.jsonOutput
+    );
   }
 
   if (sub === 'upgrade-scaffold') {
-    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'task.upgrade-scaffold')) return true;
-    const id = getStringOption(input.args, '--task') ?? input.args[2];
-    if (!id || id.startsWith('--')) throw new Error('task upgrade-scaffold requires --task <task-id>');
-    const report = createTaskUpgradeScaffoldReport(input.projectRoot, id, getFlag(input.args, '--execute') ? 'execute' : 'dry-run', {
-      beforeHash: getStringOption(input.args, '--before-hash')
-    });
-    if (input.jsonOutput) {
-      console.log(JSON.stringify(report, null, 2));
-    } else {
-      console.log(formatTaskUpgradeScaffoldReport(report));
-    }
-    if (!report.ok) process.exitCode = 6;
-    return true;
+    return printCommandRemovedReport(
+      {
+        commandId: 'task.upgrade-scaffold',
+        removedCommand: 'hadara task upgrade-scaffold',
+        replacementCommand: 'hadara protocol remediate --fix <fix-id> --task <task-id> --json',
+        diagnosticCommand: 'hadara protocol doctor --task <task-id> --json',
+        note: 'Task scaffold repair is consolidated under protocol doctor/remediate.'
+      },
+      input.jsonOutput
+    );
   }
 
   if (sub === 'close-source') {
@@ -250,10 +244,13 @@ function createTaskStatusSummaryReport(report: TaskStatusSelectionReport | TaskW
     },
     phase: report.loop.phase,
     readiness: {
-      status: report.state.readiness.status,
-      ready: report.state.ready,
+      status: report.state.readiness.closeProofValid && report.loop.phase === 'closed-valid' ? 'closed-valid' : report.state.readiness.status,
+      ready: report.state.readiness.closeProofValid && report.loop.phase === 'closed-valid' ? true : report.state.ready,
       closeProofValid: report.state.readiness.closeProofValid,
-      summary: report.state.readiness.summary
+      summary:
+        report.state.readiness.closeProofValid && report.loop.phase === 'closed-valid'
+          ? 'A valid close proof exists; compact status treats this capsule as complete without re-running done-level diagnostics.'
+          : report.state.readiness.summary
     },
     counts: {
       blockers: report.summary.blockers,
