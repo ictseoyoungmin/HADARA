@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { withInvocationFsMemo } from '../core/invocation-fs-memo';
 import { EvidenceIndexRecord, PersistedEvidenceRecord, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
 import { createTaskCloseReport, TaskCloseIssue } from '../task/task-close';
 import { createTaskShowReport } from './task-read-model';
@@ -189,6 +190,10 @@ export interface TaskStatusLoopGuidance {
 export type TaskStatusReport = TaskWorkbenchReport | TaskStatusSelectionReport;
 
 export function createTaskStatusSelectionReport(projectRoot: string, now = new Date()): TaskStatusSelectionReport {
+  return withInvocationFsMemo(() => createTaskStatusSelectionReportUnmemoized(projectRoot, now));
+}
+
+function createTaskStatusSelectionReportUnmemoized(projectRoot: string, now: Date): TaskStatusSelectionReport {
   const taskNext = createTaskNextReport(projectRoot);
   const recommendation = taskNext.recommendations[0];
   const nextActions: WorkbenchNextAction[] = recommendation
@@ -239,6 +244,10 @@ export interface TaskWorkbenchReportOptions {
 }
 
 export function createTaskWorkbenchReport(projectRoot: string, taskId: string, now = new Date(), options: TaskWorkbenchReportOptions = {}): TaskWorkbenchReport {
+  return withInvocationFsMemo(() => createTaskWorkbenchReportUnmemoized(projectRoot, taskId, now, options));
+}
+
+function createTaskWorkbenchReportUnmemoized(projectRoot: string, taskId: string, now: Date, options: TaskWorkbenchReportOptions): TaskWorkbenchReport {
   const detail = options.detail ?? 'fast';
   const taskShow = createTaskShowReport(projectRoot, taskId);
   if (!taskShow.ok || !taskShow.task) {

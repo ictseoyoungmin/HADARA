@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0526 make status expected docs profile aware |
-| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction is continuing; T-0526 made top-level status missing-doc warnings profile/registry-aware so normal basic/standard projects are not degraded for absent governed/HADARA-dev-only docs. |
+| Latest Completed Task | T-0527 speed up task status with invocation snapshot |
+| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction is continuing; T-0527 made selected-task full status use read-only invocation-local fs memoization, bringing mounted full-status smoke under 3s without persistent cache files. |
+
+T-0527 follow-up note: selected-task `hadara task status --task <id> --detail full` now wraps its read-only report construction in invocation-local fs memoization. The memo layer patches sync `fs` reads only during one status invocation, restores the original methods afterward, and is not used for write/finalize mutation boundaries. No cache files are written under `.hadara/local/cache`. Local mounted smoke for `T-0527` improved from 10162ms to 2550ms; Docker sync-build passed `npm ci`, TypeScript build, full Vitest 156 files / 1049 tests, refreshed workspace `dist`, and Docker-built full-status smoke completed in 2340ms. Evidence: `ev:T-0527:9ac796c7294d4a0e93fe1437`, `ev:T-0527:95f839350b804768846e724e`, `ev:T-0527:7786e0e4e1a04aa1ab6840e5`.
 
 T-0526 follow-up note: top-level `hadara status --json` now determines expected source documents from `.hadara/docs-registry.json`, `.hadara/scaffold.json`, and `docs/PROJECT_STATE.md` profile metadata. Basic/standard projects no longer receive `AGENT_HANDOFF_MISSING`, `DEVELOPMENT_SLICES_MISSING`, or validation-baseline degradation merely because those profile-optional docs are absent, while governed projects and docs-registry-explicit entries still warn when expected docs are missing. Focused status tests passed 17 tests, TypeScript build passed, Docker `dev:docker-sync-build` passed full Vitest 155 files / 1047 tests, refreshed workspace `dist`, and built `status --summary-json` smoke returned `health:"ok"`. Evidence: `ev:T-0526:78ff387430f3462ea3c8c919`, `ev:T-0526:80cd4a6dfba041e0b622b0a5`.
 

@@ -527,3 +527,4 @@
 | T-0524 | speed up status json default | Done | tasks/T-0524-speed-up-status-json-default | Default `status --json` now skips broad scans; explicit full/summary/state-only variants preserve heavier diagnostics. |
 | T-0525 | repair status current recommendation and docker dist validation | Done | tasks/T-0525-repair-status-current-recommendation-and-docker-dist-validation | Status now recommends current Task Board work before stale handoff prose; Docker sync-build refreshed `dist`. |
 | T-0526 | make status expected docs profile aware | Done | tasks/T-0526-make-status-expected-docs-profile-aware | Status missing-doc warnings now follow profile/docs-registry expectations; Docker sync-build refreshed `dist`. |
+| T-0527 | speed up task status with invocation snapshot | Done | tasks/T-0527-speed-up-task-status-with-invocation-snapshot | Selected-task full status now uses read-only invocation-local fs memoization and stays under 3s in mounted/Docker smokes. |
