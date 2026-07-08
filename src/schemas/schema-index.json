@@ -394,11 +394,11 @@
       "notes": "Documents dry-run-first bounded Task Capsule finish/status sync reports."
     },
     {
-      "id": "hadara.task.next.v1",
-      "path": "src/schemas/task-next.schema.json",
+      "id": "hadara.task.selection.v1",
+      "path": "src/schemas/task-selection.schema.json",
       "status": "fixture",
-      "owner": "task/next",
-      "notes": "Documents compatibility next-task recommendation reports; new agent loops should prefer task status without --task."
+      "owner": "task/selection",
+      "notes": "Documents the internal task-selection projection consumed by task status without --task."
     },
     {
       "id": "hadara.task.status.v1",

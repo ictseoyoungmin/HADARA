@@ -4,9 +4,9 @@ import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-tab
 import { listTaskCapsules } from './task-capsule';
 import { readSlicesState } from '../services/slices-state';
 
-export interface TaskNextReport {
-  schemaVersion: 'hadara.task.next.v1';
-  command: 'task.next';
+export interface TaskSelectionReport {
+  schemaVersion: 'hadara.task.selection.v1';
+  command: 'task.selection';
   ok: boolean;
   projectRoot: string;
   summary: {
@@ -14,17 +14,17 @@ export interface TaskNextReport {
     source: string;
     policy?: 'handoff-first';
   };
-  recommendations: TaskNextRecommendation[];
-  backlog?: TaskNextBacklogItem[];
+  recommendations: TaskSelectionRecommendation[];
+  backlog?: TaskSelectionBacklogItem[];
   sources: {
     developmentSlices: { path: string; present: boolean; rows: number };
     taskBoard: { path: string; present: boolean; rows: number };
     agentHandoff: { path: string; present: boolean; activeNext: string | null; nextRecommendedStep?: string | null };
   };
-  issues: TaskNextIssue[];
+  issues: TaskSelectionIssue[];
 }
 
-export interface TaskNextRecommendation {
+export interface TaskSelectionRecommendation {
   taskId: string;
   title: string;
   reason: string;
@@ -38,7 +38,7 @@ export interface TaskNextRecommendation {
   createCommand: string | null;
 }
 
-export interface TaskNextBacklogItem {
+export interface TaskSelectionBacklogItem {
   taskId: string;
   title: string;
   status: string;
@@ -48,7 +48,7 @@ export interface TaskNextBacklogItem {
   reason: string;
 }
 
-export interface TaskNextIssue {
+export interface TaskSelectionIssue {
   severity: 'warning' | 'error';
   code: string;
   message: string;
@@ -70,8 +70,8 @@ interface BoardRow {
 
 const REQUIRED_READING = ['docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/TASK_BOARD.md'];
 
-export function createTaskNextReport(projectRoot: string): TaskNextReport {
-  const issues: TaskNextIssue[] = [];
+export function createTaskSelectionReport(projectRoot: string): TaskSelectionReport {
+  const issues: TaskSelectionIssue[] = [];
   const slices = readDevelopmentSlices(projectRoot, issues);
   const board = readTaskBoard(projectRoot, issues);
   const handoff = readAgentHandoff(projectRoot);
@@ -87,14 +87,14 @@ export function createTaskNextReport(projectRoot: string): TaskNextReport {
   if (!recommendation) {
     issues.push({
       severity: 'warning',
-      code: 'TASK_NEXT_NO_RECOMMENDATION',
+      code: 'TASK_SELECTION_NO_RECOMMENDATION',
       message: 'No incomplete Development Slices or Task Board rows were found.'
     });
   }
 
   return {
-    schemaVersion: 'hadara.task.next.v1',
-    command: 'task.next',
+    schemaVersion: 'hadara.task.selection.v1',
+    command: 'task.selection',
     ok: !issues.some((issue) => issue.severity === 'error'),
     projectRoot,
     summary: {
@@ -113,8 +113,8 @@ export function createTaskNextReport(projectRoot: string): TaskNextReport {
   };
 }
 
-export function formatTaskNextReport(report: TaskNextReport): string {
-  const lines = [`[HADARA] task next: ${report.recommendations.length} recommendation(s)`];
+export function formatTaskSelectionReport(report: TaskSelectionReport): string {
+  const lines = [`[HADARA] task selection: ${report.recommendations.length} recommendation(s)`];
   for (const recommendation of report.recommendations) {
     lines.push(`${recommendation.taskId}\t${recommendation.title}\t${recommendation.reason}`);
     lines.push(`source\t${recommendation.source}`);
@@ -124,7 +124,7 @@ export function formatTaskNextReport(report: TaskNextReport): string {
   return lines.join('\n');
 }
 
-function recommendationFromSlice(projectRoot: string, slice: SliceRow, boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskNextRecommendation {
+function recommendationFromSlice(projectRoot: string, slice: SliceRow, boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskSelectionRecommendation {
   const boardRow = boardRows.find((row) => row.taskId === slice.taskId);
   const capsule = capsules.find((task) => task.id === slice.taskId);
   const capsulePath = capsule ? toPortablePath(path.relative(projectRoot, capsule.dir)) : boardRow?.capsule ?? null;
@@ -143,7 +143,7 @@ function recommendationFromSlice(projectRoot: string, slice: SliceRow, boardRows
   };
 }
 
-function recommendationFromHandoff(projectRoot: string, step: string, boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskNextRecommendation {
+function recommendationFromHandoff(projectRoot: string, step: string, boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskSelectionRecommendation {
   const knownTaskId = step.match(/\bT-\d{4}\b/)?.[0] ?? null;
   const boardRow = knownTaskId ? boardRows.find((row) => row.taskId === knownTaskId) : undefined;
   const capsule = knownTaskId ? capsules.find((task) => task.id === knownTaskId) : undefined;
@@ -163,7 +163,7 @@ function recommendationFromHandoff(projectRoot: string, step: string, boardRows:
   };
 }
 
-function recommendationFromTaskBoard(boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskNextRecommendation | null {
+function recommendationFromTaskBoard(boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskSelectionRecommendation | null {
   const row = boardRows.find((candidate) => isPrimaryOpenBoardStatus(candidate.status)) ?? boardRows.find((candidate) => isOpenBoardStatus(candidate.status));
   if (!row) return null;
   const capsule = capsules.find((task) => task.id === row.taskId);
@@ -182,7 +182,7 @@ function recommendationFromTaskBoard(boardRows: BoardRow[], capsules: ReturnType
   };
 }
 
-function createTaskBoardBacklog(boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>, primaryTaskId: string | null): TaskNextBacklogItem[] {
+function createTaskBoardBacklog(boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>, primaryTaskId: string | null): TaskSelectionBacklogItem[] {
   return boardRows
     .filter((row) => isOpenBoardStatus(row.status))
     .filter((row) => row.taskId !== primaryTaskId)
@@ -200,7 +200,7 @@ function createTaskBoardBacklog(boardRows: BoardRow[], capsules: ReturnType<type
     });
 }
 
-function readDevelopmentSlices(projectRoot: string, issues: TaskNextIssue[]): { present: boolean; rows: SliceRow[] } {
+function readDevelopmentSlices(projectRoot: string, issues: TaskSelectionIssue[]): { present: boolean; rows: SliceRow[] } {
   // FD-012 state-first path: when the canonical slices state exists, read it
   // directly instead of parsing the generated projection. This also fixes
   // the historical `rows: 0` failure where valid slice tables with
@@ -231,10 +231,10 @@ function readDevelopmentSlices(projectRoot: string, issues: TaskNextIssue[]): { 
   return { present: true, rows };
 }
 
-function readTaskBoard(projectRoot: string, issues: TaskNextIssue[]): { present: boolean; rows: BoardRow[] } {
+function readTaskBoard(projectRoot: string, issues: TaskSelectionIssue[]): { present: boolean; rows: BoardRow[] } {
   const filePath = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
   if (!fs.existsSync(filePath)) {
-    issues.push({ severity: 'warning', code: 'TASK_NEXT_TASK_BOARD_MISSING', message: 'docs/TASK_BOARD.md is missing.', path: 'docs/TASK_BOARD.md' });
+    issues.push({ severity: 'warning', code: 'TASK_SELECTION_TASK_BOARD_MISSING', message: 'docs/TASK_BOARD.md is missing.', path: 'docs/TASK_BOARD.md' });
     return { present: false, rows: [] };
   }
   const rows = parseMarkdownRows(fs.readFileSync(filePath, 'utf8'))
@@ -257,15 +257,15 @@ function readAgentHandoff(projectRoot: string): { present: boolean; activeNext: 
 function isActionableHandoffStep(step: string): boolean {
   const normalized = step.trim().toLowerCase();
   if (!normalized || normalized === 'step' || normalized === 'tbd') return false;
-  if (isTaskNextMetaGuidance(normalized)) return false;
+  if (isTaskSelectionMetaGuidance(normalized)) return false;
   if (normalized.includes('create or select first task capsule')) return false;
   if (normalized.startsWith('migrate selected historical evidence only when explicitly requested')) return false;
   return true;
 }
 
-function isTaskNextMetaGuidance(normalizedStep: string): boolean {
+function isTaskSelectionMetaGuidance(normalizedStep: string): boolean {
   const compact = normalizedStep.replace(/[`*_]/g, '').replace(/\s+/g, ' ');
-  return /\b(hadara\s+)?task\s+next\b/.test(compact) && /\b(run|select|choose|create)\b/.test(compact);
+  return /\b(hadara\s+)?task\s+(next|selection)\b/.test(compact) && /\b(run|select|choose|create)\b/.test(compact);
 }
 
 function normalizeHandoffTitle(step: string): string {

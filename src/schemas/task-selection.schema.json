@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "hadara.task.next.v1",
-  "x-hadara-schema-id": "hadara.task.next.v1",
+  "$id": "hadara.task.selection.v1",
+  "x-hadara-schema-id": "hadara.task.selection.v1",
   "type": "object",
   "additionalProperties": true,
   "required": ["schemaVersion", "command", "ok", "projectRoot", "summary", "recommendations", "sources", "issues"],
   "properties": {
-    "schemaVersion": { "const": "hadara.task.next.v1" },
-    "command": { "const": "task.next" },
+    "schemaVersion": { "const": "hadara.task.selection.v1" },
+    "command": { "const": "task.selection" },
     "ok": { "type": "boolean" },
     "projectRoot": { "type": "string" },
     "summary": {

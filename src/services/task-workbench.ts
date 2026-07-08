@@ -11,7 +11,7 @@ import { parseMarkdownRows, parseMarkdownRowsUnderHeading } from './markdown-tab
 import { createDocsProtocolConsistencyReport, createProfileProtocolConsistencyReport } from './protocol-consistency';
 import { buildWorkbenchNextActions, WorkbenchNextAction } from './workbench-next-actions';
 import { createTaskAuthoringGuidance, TaskAuthoringGuidance } from '../task/authoring-guidance';
-import { createTaskNextReport, TaskNextRecommendation } from '../task/task-next';
+import { createTaskSelectionReport, TaskSelectionRecommendation } from '../task/task-selection';
 
 type CloseState = 'not-closed' | 'closed-valid' | 'close-evidence-found-invalid' | 'close-evidence-malformed';
 type ReadinessStatus = 'ready' | 'current-blocked' | 'closed-valid-current-blocked' | 'missing-task';
@@ -166,9 +166,9 @@ export interface TaskStatusSelectionReport {
     nextActions: number;
   };
   loop: TaskStatusLoopGuidance;
-  recommendations: TaskNextRecommendation[];
+  recommendations: TaskSelectionRecommendation[];
   sources: {
-    taskNext: ReturnType<typeof createTaskNextReport>;
+    taskSelection: ReturnType<typeof createTaskSelectionReport>;
   };
   diagnostics?: { generatedBy: 'cli'; commandPath: string; durationMs: number; slowThresholdMs: number; slow: boolean; note?: string };
   issues: Array<{ severity: 'warning' | 'error'; code: string; message: string; path?: string }>;
@@ -195,8 +195,8 @@ export function createTaskStatusSelectionReport(projectRoot: string, now = new D
 }
 
 function createTaskStatusSelectionReportUnmemoized(projectRoot: string, now: Date): TaskStatusSelectionReport {
-  const taskNext = createTaskNextReport(projectRoot);
-  const recommendation = taskNext.recommendations[0];
+  const taskSelection = createTaskSelectionReport(projectRoot);
+  const recommendation = taskSelection.recommendations[0];
   const nextActions: WorkbenchNextAction[] = recommendation
     ? [
         {
@@ -216,12 +216,12 @@ function createTaskStatusSelectionReportUnmemoized(projectRoot: string, now: Dat
   return {
     schemaVersion: 'hadara.task.status.v1',
     command: 'task.status',
-    ok: taskNext.ok,
+    ok: taskSelection.ok,
     generatedAt: now.toISOString(),
     projectRoot,
     mode: 'select-work',
     summary: {
-      recommendations: taskNext.recommendations.length,
+      recommendations: taskSelection.recommendations.length,
       nextActions: nextActions.length
     },
     loop: {
@@ -233,9 +233,9 @@ function createTaskStatusSelectionReportUnmemoized(projectRoot: string, now: Dat
       primaryNextAction: nextActions[0],
       deprecatedCommands: deprecatedStatusCommands()
     },
-    recommendations: taskNext.recommendations,
-    sources: { taskNext },
-    issues: taskNext.issues,
+    recommendations: taskSelection.recommendations,
+    sources: { taskSelection },
+    issues: taskSelection.issues,
     nextActions
   };
 }

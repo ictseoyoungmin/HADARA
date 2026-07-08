@@ -87,9 +87,9 @@
     "sources": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["taskNext"],
+      "required": ["taskSelection"],
       "properties": {
-        "taskNext": { "type": "object", "additionalProperties": true }
+        "taskSelection": { "type": "object", "additionalProperties": true }
       }
     },
     "issues": { "type": "array", "items": { "type": "object", "additionalProperties": true } },

@@ -1705,7 +1705,7 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 | \`task create\` | Write | Creates a Draft Task Capsule and Task Board row. It does not imply the task is ready or done. |
 | \`evidence add-command\` | Write | Appends operator-supplied command-log evidence. It does not execute shell commands or capture stdout/stderr; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, and optional \`--idempotency-key\` prevents duplicate same-key records. |
 | \`validation run\` | Execute + evidence append | Runs a real command and records validation evidence. If the wrapper cannot launch the command in the current environment, run the command directly and record the direct result with \`validation run --direct-result\`. |
-| \`task next\` / \`task show\` | Removed redirect stubs | Prefer \`task status --json\` and \`task status --task T-XXXX --json\`. |
+| \`task next\` / \`task show\` | Fully removed public commands | Prefer \`task status --json\` and \`task status --task T-XXXX --json\`. |
 | \`task lifecycle\` | Removed redirect stub | Prefer \`task status --task T-XXXX --json\`. |
 | \`task finalize\` | Read-only by default; guarded execute uses \`--auto\` or \`--plan-hash\` | Default agent close path. Rechecks the current plan, records readiness evidence in the \`--auto\` close path when needed, executes phases serially, stops on blockers, and succeeds only after final audit is \`closed-valid\`. |
 | \`task finish\` / \`task ready\` / \`task close\` / \`task audit-close\` | Removed redirect stubs | Use \`task status --detail full\` for diagnostics and \`task finalize\` for close execution. |

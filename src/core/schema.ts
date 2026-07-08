@@ -69,7 +69,7 @@ import taskCreateSchemaJson from '../schemas/task-create.schema.json';
 import taskFinalizeSchemaJson from '../schemas/task-finalize.schema.json';
 import taskFinishSchemaJson from '../schemas/task-finish.schema.json';
 import taskLifecycleSchemaJson from '../schemas/task-lifecycle.schema.json';
-import taskNextSchemaJson from '../schemas/task-next.schema.json';
+import taskSelectionSchemaJson from '../schemas/task-selection.schema.json';
 import taskReadySchemaJson from '../schemas/task-ready.schema.json';
 import taskStatusSchemaJson from '../schemas/task-status.schema.json';
 import taskWorkbenchSchemaJson from '../schemas/task-workbench.schema.json';
@@ -186,7 +186,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.task.finalize.v1': taskFinalizeSchemaJson as JsonObject,
   'hadara.task.finish.v1': taskFinishSchemaJson as JsonObject,
   'hadara.task.lifecycle.v1': taskLifecycleSchemaJson as JsonObject,
-  'hadara.task.next.v1': taskNextSchemaJson as JsonObject,
+  'hadara.task.selection.v1': taskSelectionSchemaJson as JsonObject,
   'hadara.task.ready.v1': taskReadySchemaJson as JsonObject,
   'hadara.task.status.v1': taskStatusSchemaJson as JsonObject,
   'hadara.task.workbench.v1': taskWorkbenchSchemaJson as JsonObject,

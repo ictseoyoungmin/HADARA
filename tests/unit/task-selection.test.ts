@@ -4,7 +4,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { validateSchema } from '../../src/core/schema';
 import { createTaskCapsule } from '../../src/task/task-capsule';
-import { createTaskNextReport, formatTaskNextReport } from '../../src/task/task-next';
+import { createTaskSelectionReport, formatTaskSelectionReport } from '../../src/task/task-selection';
 
 const roots: string[] = [];
 
@@ -13,7 +13,7 @@ afterEach(() => {
   process.exitCode = undefined;
 });
 
-describe('task next recommendation', () => {
+describe('task selection recommendation', () => {
   it('prefers actionable handoff next step and keeps legacy Task Board rows as backlog', () => {
     const root = tempProject({
       handoffNextStep: 'Continue with task capsule upgrade/remediation dry-run hardening.',
@@ -22,7 +22,7 @@ describe('task next recommendation', () => {
     const legacy = createTaskCapsule(root, 'Legacy Partial Work');
     updateTaskBoardStatus(root, legacy.id, 'Partial');
 
-    const report = createTaskNextReport(root);
+    const report = createTaskSelectionReport(root);
 
     expect(report).toMatchObject({
       summary: { recommendations: 1, source: 'docs/AGENT_HANDOFF.md', policy: 'handoff-first' },
@@ -53,16 +53,16 @@ describe('task next recommendation', () => {
       ]
     });
     expect(report.recommendations[0].taskId).not.toBe(legacy.id);
-    expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
-  it('ignores self-referential handoff task-next guidance and falls back to planned slices', () => {
+  it('ignores self-referential handoff selection guidance and falls back to planned slices', () => {
     const root = tempProject({
-      handoffNextStep: 'Run `task next --json` or select the next release/readiness capsule.',
+      handoffNextStep: 'Run `task selection --json` or select the next release/readiness capsule.',
       developmentRows: ['| 1 | Planned Follow-up | T-0190 | Continue. | Planned after current. |']
     });
 
-    const report = createTaskNextReport(root);
+    const report = createTaskSelectionReport(root);
 
     expect(report).toMatchObject({
       summary: { recommendations: 1, source: 'docs/DEVELOPMENT_SLICES.md', policy: 'handoff-first' },
@@ -80,7 +80,7 @@ describe('task next recommendation', () => {
         })
       }
     });
-    expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
   it('prefers an existing open Task Board row over stale handoff prose without a task id', () => {
@@ -91,7 +91,7 @@ describe('task next recommendation', () => {
     const active = createTaskCapsule(root, 'Actual Active Work');
     updateTaskBoardStatus(root, active.id, 'In Progress');
 
-    const report = createTaskNextReport(root);
+    const report = createTaskSelectionReport(root);
 
     expect(report.recommendations[0]).toMatchObject({
       taskId: active.id,
@@ -101,7 +101,7 @@ describe('task next recommendation', () => {
       createCommand: null
     });
     expect(report.recommendations[0].title).not.toBe('Create or select first Task Capsule');
-    expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
   it('recommends the first incomplete Development Slices row with existing capsule metadata', () => {
@@ -115,11 +115,11 @@ describe('task next recommendation', () => {
       '| 4 | Later Slice | T-9999 | Later. | Planned later. |'
     ]);
 
-    const report = createTaskNextReport(root);
+    const report = createTaskSelectionReport(root);
 
     expect(report).toMatchObject({
-      schemaVersion: 'hadara.task.next.v1',
-      command: 'task.next',
+      schemaVersion: 'hadara.task.selection.v1',
+      command: 'task.selection',
       ok: true,
       summary: { recommendations: 1, source: 'docs/DEVELOPMENT_SLICES.md' },
       recommendations: [
@@ -140,15 +140,15 @@ describe('task next recommendation', () => {
       'docs/DEVELOPMENT_SLICES.md',
       'docs/TASK_BOARD.md'
     ]);
-    expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
-    expect(formatTaskNextReport(report)).toContain(`${next.id}\tNext Slice`);
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
+    expect(formatTaskSelectionReport(report)).toContain(`${next.id}\tNext Slice`);
   });
 
   it('returns a shell-quoted create command when the planned slice has no capsule yet', () => {
     const root = tempProject();
     writeDevelopmentSlices(root, [`| 1 | Missing "Quoted" Capsule | T-0188 | Create me. | Planned after current. |`]);
 
-    const report = createTaskNextReport(root);
+    const report = createTaskSelectionReport(root);
 
     expect(report.recommendations[0]).toMatchObject({
       taskId: 'T-0188',
@@ -157,7 +157,7 @@ describe('task next recommendation', () => {
       capsule: null,
       createCommand: `hadara task create 'Missing "Quoted" Capsule'`
     });
-    expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
   it('falls back to the first incomplete Task Board row when slices are complete', () => {
@@ -165,7 +165,7 @@ describe('task next recommendation', () => {
     const task = createTaskCapsule(root, 'Board Fallback');
     writeDevelopmentSlices(root, [`| 1 | Completed | T-0001 | Done. | Done: complete. |`]);
 
-    const report = createTaskNextReport(root);
+    const report = createTaskSelectionReport(root);
 
     expect(report.recommendations[0]).toMatchObject({
       taskId: task.id,
@@ -174,7 +174,7 @@ describe('task next recommendation', () => {
       source: 'docs/TASK_BOARD.md',
       sourceKind: 'task-board-fallback'
     });
-    expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
   it('keeps legacy Partial Task Board rows behind primary open rows during fallback', () => {
@@ -184,7 +184,7 @@ describe('task next recommendation', () => {
     const active = createTaskCapsule(root, 'Active Draft');
     writeDevelopmentSlices(root, [`| 1 | Completed | T-0001 | Done. | Done: complete. |`]);
 
-    const report = createTaskNextReport(root);
+    const report = createTaskSelectionReport(root);
 
     expect(report.recommendations[0]).toMatchObject({
       taskId: active.id,
@@ -199,13 +199,13 @@ describe('task next recommendation', () => {
         status: 'Partial'
       })
     ]));
-    expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
 });
 
 function tempProject(options: { handoffNextStep?: string; developmentRows?: string[] } = {}): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-task-next-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-task-selection-'));
   roots.push(root);
   fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
   fs.writeFileSync(
