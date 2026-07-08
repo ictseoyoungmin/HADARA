@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0511 0.4.1 rc0 publish env preparation boundary fix |
-| Active Task | `0.4.1-rc.0` source/readiness is prepared; `prepare-publish-env.sh` now prepares only the clean clone/build/gate environment by default, and approval-gated end-to-end validation/publish remains in `manual-publish-rc.sh --execute`. |
+| Latest Completed Task | T-0512 0.4.1 rc0 post publish evidence sync |
+| Active Task | `hadara@0.4.1-rc.0` is published to npm with `next` and GitHub Release `v0.4.1-rc.0` is public prerelease; next release-line work is installed-package recycle from a fresh environment. |
+
+T-0512 follow-up note: the operator completed npm publish for `hadara@0.4.1-rc.0` and published the GitHub prerelease. Workspace verification confirmed npm `version=0.4.1-rc.0`, `next=0.4.1-rc.0`, `latest=0.4.0`, shasum `8ced2baaf6bbc6e7d407fb9525cf6080109daa8f`, and GitHub Release `v0.4.1-rc.0` with `isDraft=false`, `isPrerelease=true`, target `5380df586c8deec1c4a2e504a6203e4a2b028500`, URL `https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.1-rc.0`. Evidence: `ev:T-0512:873cb873d9a74a2eb374d829`, `ev:T-0512:8de1c6fc2c0442fdbcbf65cc`. Next: run installed-package recycle for `hadara@0.4.1-rc.0` from a fresh unmounted environment.
 
 T-0511 follow-up note: `scripts/release/prepare-publish-env.sh` no longer runs `manual-publish-rc.sh <TASK>` dry-run automatically when npm auth is present. The helper dry-run is now explicit opt-in via `--run-helper-dry-run`, while `--skip-dry-run` remains a compatibility no-op because skipping is the default. This preserves the operator boundary: run prepare to create a clean ext4 clone and verify strict release gate, then run `bash scripts/release/manual-publish-rc.sh T-0509 --execute` inside the prepared clone for the full dry-run, release evidence, npm dry-run, and interactive publish. Evidence: `ev:T-0511:77ba1d73ad6840138ffe9056`, `ev:T-0511:05bc85c32e2a4e52b8b3d09a`, `ev:T-0511:38e1c8a3228b49b7b8d50905`, `ev:T-0511:4494d2cd339e4e4bb362165c`.
 

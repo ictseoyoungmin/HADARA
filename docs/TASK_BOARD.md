@@ -512,3 +512,4 @@
 | T-0509 | 0.4.1 rc0 release readiness and publish preparation | Done | tasks/T-0509-0-4-1-rc0-release-readiness-and-publish-preparation | |
 | T-0510 | 0.4.1 rc0 manual publish helper smoke command fix | Done | tasks/T-0510-0-4-1-rc0-manual-publish-helper-smoke-command-fix | |
 | T-0511 | 0.4.1 rc0 publish env preparation boundary fix | Done | tasks/T-0511-0-4-1-rc0-publish-env-preparation-boundary-fix | |
+| T-0512 | 0.4.1 rc0 post publish evidence sync | Done | tasks/T-0512-0-4-1-rc0-post-publish-evidence-sync | |
