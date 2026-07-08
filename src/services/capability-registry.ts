@@ -1688,7 +1688,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
         availability: 'default',
         risk: 'medium',
         schemaVersion: 'hadara.packageRecycle.v1',
-        notes: 'Explicit npm registry and isolated-prefix consumer package validation. The default smoke profile is the fast installed-agent UX path; broad context graph diagnostics require --include-graph.'
+        notes: 'Explicit npm registry and isolated-prefix consumer package validation. The smoke reads the installed command surface, prefers current task status, and keeps broad context graph diagnostics behind --include-graph.'
       }
     ]
   }),

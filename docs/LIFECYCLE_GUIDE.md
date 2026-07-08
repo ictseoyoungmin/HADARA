@@ -54,7 +54,7 @@ Release/package, dev validation, UI, integration, installer, and deterministic a
 
 ## Rules
 
-`task status` success is not readiness. Use `task lifecycle` or `task finalize` for agent-facing lifecycle state.
+`task status` success is not readiness. Use `task status --detail full` for diagnostics and `task finalize` for agent-facing lifecycle planning and close execution.
 
 `task complete` is a read-only workflow compressor. It must not execute lifecycle steps.
 

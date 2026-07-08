@@ -514,3 +514,4 @@
 | T-0511 | 0.4.1 rc0 publish env preparation boundary fix | Done | tasks/T-0511-0-4-1-rc0-publish-env-preparation-boundary-fix | |
 | T-0512 | 0.4.1 rc0 post publish evidence sync | Done | tasks/T-0512-0-4-1-rc0-post-publish-evidence-sync | |
 | T-0513 | 0.4.1 rc0 installed package recycle | Done | tasks/T-0513-0-4-1-rc0-installed-package-recycle | |
+| T-0514 | 0.4.1 rc0 package recycle command surface adaptive refactor | Done | tasks/T-0514-0-4-1-rc0-package-recycle-command-surface-adaptive-refactor | Package recycle now reads installed command surface and prefers current task status, with legacy fallback only when needed. |

@@ -4,16 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle line is complete through T-0513. |
-| Current Phase | `0.4.1-rc.0` published and recycled from installed consumer paths | npm exposes `hadara@0.4.1-rc.0` on `next` while `latest` remains `0.4.0`; GitHub Release `v0.4.1-rc.0` is public prerelease; installed-package recycle passed after helper stale-command fix. |
-| Latest Completed Task | T-0513 0.4.1 rc0 installed package recycle | Installed `hadara@next` resolved to `0.4.1-rc.0` and passed installed version/init/task status/session/finalize/context pack/context slice smokes from an isolated consumer workspace. |
-| Active / Next Task | Operator decision: additional RC dogfood or stable `0.4.1` planning | The required post-publish recycle proof is complete. Decide whether to run broader external dogfood before stable promotion planning. |
-| Validation Baseline | T-0513 installed-package recycle plus T-0512 public release verification | T-0513 passed registry metadata, package recycle focused tests, build, and installed-package recycle. T-0512 verified npm registry and GitHub Release metadata. |
+| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle line is complete through T-0514. |
+| Current Phase | `0.4.1-rc.0` published, recycled, and recycle-helper hardened | npm exposes `hadara@0.4.1-rc.0` on `next` while `latest` remains `0.4.0`; GitHub Release `v0.4.1-rc.0` is public prerelease; installed-package recycle passed and the source helper now adapts to installed command-surface differences. |
+| Latest Completed Task | T-0514 0.4.1 rc0 package recycle command surface adaptive refactor | Package recycle reads installed `commands --json`, prefers current `task status`, and falls back to legacy `task lifecycle` only when the installed package lacks `task.status`. |
+| Active / Next Task | Operator decision: additional RC dogfood or stable `0.4.1` planning | The required post-publish recycle proof and source helper hardening are complete. Decide whether to run broader external dogfood before stable promotion planning. |
+| Validation Baseline | T-0514 focused helper tests/build/dry-run plus T-0513 installed-package recycle | T-0514 passed package recycle/schema tests, build, and built CLI dry-run; T-0513 passed registry metadata, package recycle focused tests, build, and installed-package recycle. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| 0.4.1 rc0 package recycle command-surface adaptive refactor | T-0514 makes `package recycle` inspect the installed CLI command registry, prefer `task status`, preserve legacy fallback only when needed, and documents the updated JSON contract. | `ev:T-0514:1083145ebdba460894fab691`, `ev:T-0514:dd3b69febfc54c98aeeb4741`, `ev:T-0514:8c6f62d144b74da281d7880f` |
 | 0.4.1 rc0 installed package recycle | T-0513 verified `hadara@next` installs as `0.4.1-rc.0` from npm and passes installed consumer workflow smokes; it also fixed package recycle's stale call to removed `task lifecycle`. | `ev:T-0513:55abd88e46ce40d88a5942fb`, `ev:T-0513:43a25a83247d4823aad8475a` |
 | 0.4.1 rc0 post publish evidence sync | T-0512 records final external release evidence: npm `0.4.1-rc.0` is on `next`, stable `latest` remains `0.4.0`, and GitHub `v0.4.1-rc.0` is public prerelease. | `ev:T-0512:873cb873d9a74a2eb374d829`, `ev:T-0512:8de1c6fc2c0442fdbcbf65cc` |
 | 0.4.1 rc0 publish env preparation boundary fix | T-0511 keeps publish prep from stealing the manual helper role: default prepare no longer runs `manual-publish-rc.sh` dry-run when npm login exists; `--run-helper-dry-run` is explicit opt-in. | `ev:T-0511:38e1c8a3228b49b7b8d50905` |
@@ -55,9 +56,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0514 / 0.4.1 rc0 package recycle command surface adaptive refactor | Source recycle helper now reads installed command surface, uses current `task status` when available, preserves legacy fallback only for older installed packages, and validates the updated schema/contract. | `ev:T-0514:1083145ebdba460894fab691`, `ev:T-0514:dd3b69febfc54c98aeeb4741`, `ev:T-0514:8c6f62d144b74da281d7880f` |
 | T-0513 / 0.4.1 rc0 installed package recycle | `hadara@next` installed as `0.4.1-rc.0`; installed package recycle passed after changing the helper smoke from removed `task lifecycle` to `task status`. | `ev:T-0513:55abd88e46ce40d88a5942fb`, `ev:T-0513:7a391266ff654f32a823d2b7`, `ev:T-0513:43a25a83247d4823aad8475a` |
 | T-0512 / 0.4.1 rc0 post publish evidence sync | npm registry and GitHub Release metadata were verified after operator publication. | `ev:T-0512:873cb873d9a74a2eb374d829`, `ev:T-0512:8de1c6fc2c0442fdbcbf65cc` |
-| T-0511 / 0.4.1 rc0 publish env preparation boundary fix | `prepare-publish-env.sh` now skips manual helper dry-run by default, keeps `--skip-dry-run` as compatibility no-op, and exposes explicit `--run-helper-dry-run`; focused release-script test/build passed. | `ev:T-0511:77ba1d73ad6840138ffe9056`, `ev:T-0511:38e1c8a3228b49b7b8d50905`, `ev:T-0511:4494d2cd339e4e4bb362165c` |
 
 ## Current Known Problems
 

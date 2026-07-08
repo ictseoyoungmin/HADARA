@@ -59,8 +59,10 @@ describe('installed package recycle', () => {
         npmDistTagExecuted: false,
         packageInstallExecuted: false,
         installedVersionExecuted: false,
+        commandSurfaceExecuted: false,
         lifecycleHelpExecuted: false,
         initExecuted: false,
+        taskStatusExecuted: false,
         taskLifecycleExecuted: false,
         contextSmokeExecuted: false,
         releaseMutationExecuted: false,
@@ -81,6 +83,7 @@ describe('installed package recycle', () => {
       'npm-dist-tags',
       'install-package',
       'installed-version',
+      'command-surface',
       'help-lifecycle',
       'init-project',
       'task-create',
@@ -109,6 +112,7 @@ describe('installed package recycle', () => {
       if (joined === 'dist-tag ls hadara') return passed('latest: 0.3.3\nnext: 0.3.3-rc.0\n');
       if (joined.startsWith('install -g --prefix')) return passed('');
       if (joined === 'version --json') return passed(JSON.stringify({ ok: true, packageVersion: '0.3.3' }));
+      if (joined === 'commands --json') return passed(commandsJson(['task.status', 'task.finalize']));
       if (joined === 'help lifecycle --json') return passed(JSON.stringify({ ok: true, schemaVersion: 'hadara.lifecycleGuide.v1' }));
       if (joined === 'init --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task create Installed package recycle smoke --json') return passed(JSON.stringify({ ok: true, task: { id: 'T-0001' } }));
@@ -143,16 +147,20 @@ describe('installed package recycle', () => {
       npmDistTagExecuted: true,
       packageInstallExecuted: true,
       installedVersionExecuted: true,
+      commandSurfaceExecuted: true,
       lifecycleHelpExecuted: true,
       initExecuted: true,
-      taskLifecycleExecuted: true,
+      taskStatusExecuted: true,
+      taskLifecycleExecuted: false,
       contextSmokeExecuted: true,
       releaseMutationExecuted: false,
       publishExecuted: false
     });
     expect(calls).toContain('npm view hadara@latest version --json');
+    expect(calls.some((call) => call.includes('commands --json'))).toBe(true);
     expect(calls.some((call) => call.includes('context graph --json'))).toBe(false);
     expect(calls.some((call) => call.includes('task finalize --task T-0001 --json'))).toBe(true);
+    expect(calls.some((call) => call.includes('task lifecycle'))).toBe(false);
     expect(projectRoots.every((value) => value === undefined)).toBe(true);
     expect(encoded).not.toContain(root);
     expect(encoded).not.toContain('node_modules');
@@ -175,6 +183,7 @@ describe('installed package recycle', () => {
       if (joined === 'dist-tag ls hadara') return passed('latest: 0.3.3\nnext: 0.3.3-rc.0\n');
       if (joined.startsWith('install -g --prefix')) return passed('');
       if (joined === 'version --json') return passed(JSON.stringify({ ok: true, packageVersion: '0.3.3' }));
+      if (joined === 'commands --json') return passed(commandsJson(['task.status']));
       if (joined === 'help lifecycle --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'init --json') return passed(JSON.stringify({ ok: true }));
       if (joined === 'task create Installed package recycle smoke --json') return passed(JSON.stringify({ ok: true, task: { id: 'T-0001' } }));
@@ -196,6 +205,46 @@ describe('installed package recycle', () => {
 
     expect(report.ok).toBe(true);
     expect(calls.some((call) => call.includes('context graph --json'))).toBe(true);
+    expect(validateSchema('hadara.packageRecycle.v1', report).ok).toBe(true);
+  });
+
+  it('falls back to legacy task lifecycle only when installed task status is unavailable', () => {
+    const root = tempProject();
+    const calls: string[] = [];
+    const runner: PackageRecycleCommandRunner = (command, args) => {
+      calls.push([command, ...args].join(' '));
+      const joined = args.join(' ');
+      if (joined === 'view hadara@latest version --json') return passed('"0.3.3"');
+      if (joined === 'dist-tag ls hadara') return passed('latest: 0.3.3\n');
+      if (joined.startsWith('install -g --prefix')) return passed('');
+      if (joined === 'version --json') return passed(JSON.stringify({ ok: true, packageVersion: '0.3.3' }));
+      if (joined === 'commands --json') return passed(commandsJson(['task.lifecycle', 'task.finalize']));
+      if (joined === 'help lifecycle --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'init --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'task create Installed package recycle smoke --json') return passed(JSON.stringify({ ok: true, task: { id: 'T-0001' } }));
+      if (joined === 'task lifecycle --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'session start --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'task finalize --task T-0001 --json') return { status: 6, stdout: JSON.stringify({ schemaVersion: 'hadara.task.finalize.v1', mode: 'dry-run', ok: false }), stderr: '', elapsedMs: 1 };
+      if (joined === 'context pack --task T-0001 --json') return passed(JSON.stringify({ ok: true }));
+      if (joined === 'context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json') return passed(JSON.stringify({ ok: true }));
+      return failed();
+    };
+
+    const report = createPackageRecycleExecuteReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      expectedVersion: '0.3.3',
+      runner
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.steps.map((step) => step.id)).toContain('task-lifecycle');
+    expect(report.steps.map((step) => step.id)).not.toContain('task-status');
+    expect(report.execution).toMatchObject({
+      commandSurfaceExecuted: true,
+      taskStatusExecuted: false,
+      taskLifecycleExecuted: true
+    });
+    expect(calls.some((call) => call.includes('task lifecycle --task T-0001 --json'))).toBe(true);
     expect(validateSchema('hadara.packageRecycle.v1', report).ok).toBe(true);
   });
 
@@ -267,4 +316,14 @@ function failed() {
     stderr: 'failed',
     elapsedMs: 1
   };
+}
+
+function commandsJson(ids: string[]) {
+  return JSON.stringify({
+    ok: true,
+    commands: ids.map((id) => ({
+      id,
+      command: `hadara ${id.replace('.', ' ')} [--json]`
+    }))
+  });
 }

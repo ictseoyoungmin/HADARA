@@ -49,8 +49,10 @@ export interface PackageRecycleReport {
     npmDistTagExecuted: boolean;
     packageInstallExecuted: boolean;
     installedVersionExecuted: boolean;
+    commandSurfaceExecuted: boolean;
     lifecycleHelpExecuted: boolean;
     initExecuted: boolean;
+    taskStatusExecuted: boolean;
     taskLifecycleExecuted: boolean;
     contextSmokeExecuted: boolean;
     releaseMutationExecuted: false;
@@ -112,6 +114,21 @@ export type PackageRecycleCommandRunner = (
 ) => PackageRecycleCommandResult;
 
 const DEFAULT_PACKAGE_SPECIFIER = 'hadara@latest';
+
+type InstalledCommandSurface = {
+  commandIds: Set<string>;
+  commandText: Set<string>;
+  available: boolean;
+};
+
+type TaskReadSmoke = {
+  id: 'task-status' | 'task-lifecycle';
+  label: string;
+  command: string;
+  args: (taskId: string) => string[];
+  summary: string;
+  compatibility: 'current' | 'legacy';
+};
 
 export function createPackageRecycleReport(options: PackageRecycleOptions): PackageRecycleReport {
   return options.execute ? createPackageRecycleExecuteReport(options) : createPackageRecycleDryRunReport(options);
@@ -382,6 +399,9 @@ function runInstalledSmokes(input: {
   }
   input.steps.push(versionStep);
 
+  input.execution.commandSurfaceExecuted = true;
+  const commandSurface = readInstalledCommandSurface(input);
+
   input.execution.lifecycleHelpExecuted = true;
   pushJsonSmokeStep(input, {
     id: 'help-lifecycle',
@@ -390,6 +410,7 @@ function runInstalledSmokes(input: {
     args: ['help', 'lifecycle', '--json']
   });
 
+  const taskReadSmoke = selectTaskReadSmoke(commandSurface);
   const disposableProject = path.join(input.workspacePath, 'consumer-project');
   fs.mkdirSync(disposableProject, { recursive: true });
   input.execution.initExecuted = true;
@@ -401,7 +422,6 @@ function runInstalledSmokes(input: {
     cwd: disposableProject
   });
 
-  input.execution.taskLifecycleExecuted = true;
   const createTask = input.runner(input.installedBin, ['task', 'create', 'Installed package recycle smoke', '--json'], {
     cwd: disposableProject,
     timeoutMs: input.timeoutMs,
@@ -418,15 +438,20 @@ function runInstalledSmokes(input: {
       stepId: createTaskStep.id
     });
     input.steps.push(createTaskStep);
-    input.steps.push(skippedStep('task-status', 'Verify task status read model', 'hadara task status --task <task-id> --json', 'Skipped because task creation failed.'));
+    input.steps.push(skippedStep(taskReadSmoke.id, taskReadSmoke.label, taskReadSmoke.command, 'Skipped because task creation failed.'));
   } else {
     createTaskStep.summary = `Disposable task ${taskId} was created.`;
     input.steps.push(createTaskStep);
+    if (taskReadSmoke.compatibility === 'current') {
+      input.execution.taskStatusExecuted = true;
+    } else {
+      input.execution.taskLifecycleExecuted = true;
+    }
     pushJsonSmokeStep(input, {
-      id: 'task-status',
-      label: 'Verify task status read model',
-      command: 'hadara task status --task <task-id> --json',
-      args: ['task', 'status', '--task', taskId, '--json'],
+      id: taskReadSmoke.id,
+      label: taskReadSmoke.label,
+      command: taskReadSmoke.command,
+      args: taskReadSmoke.args(taskId),
       cwd: disposableProject
     });
     pushJsonSmokeStep(input, {
@@ -555,8 +580,10 @@ function createExecutionFlags(): PackageRecycleReport['execution'] {
     npmDistTagExecuted: false,
     packageInstallExecuted: false,
     installedVersionExecuted: false,
+    commandSurfaceExecuted: false,
     lifecycleHelpExecuted: false,
     initExecuted: false,
+    taskStatusExecuted: false,
     taskLifecycleExecuted: false,
     contextSmokeExecuted: false,
     releaseMutationExecuted: false,
@@ -650,6 +677,13 @@ function createPlannedSteps(packageInfo: PackageRecycleReport['package'], option
       summary: 'Would verify the installed CLI reports the expected packageVersion.'
     },
     {
+      id: 'command-surface',
+      label: 'Read installed CLI command surface',
+      command: 'hadara commands --json',
+      status: 'planned',
+      summary: 'Would read the installed CLI command registry to choose current or legacy lifecycle smokes.'
+    },
+    {
       id: 'help-lifecycle',
       label: 'Verify lifecycle help from installed CLI',
       command: 'hadara help lifecycle --json',
@@ -737,6 +771,7 @@ function createSkippedExecutionSteps(): PackageRecycleStep[] {
 function createSkippedInstalledSteps(): PackageRecycleStep[] {
   return [
     skippedStep('installed-version', 'Verify installed CLI version', 'hadara version --json', 'Skipped because package install failed.'),
+    skippedStep('command-surface', 'Read installed CLI command surface', 'hadara commands --json', 'Skipped because package install failed.'),
     skippedStep('help-lifecycle', 'Verify lifecycle help from installed CLI', 'hadara help lifecycle --json', 'Skipped because package install failed.'),
     skippedStep('init-project', 'Initialize disposable project with installed CLI', 'hadara init --json', 'Skipped because package install failed.'),
     skippedStep('task-create', 'Create disposable task with installed CLI', 'hadara task create <title> --json', 'Skipped because package install failed.'),
@@ -746,6 +781,72 @@ function createSkippedInstalledSteps(): PackageRecycleStep[] {
     skippedStep('context-pack', 'Verify context pack read model', 'hadara context pack --task <task-id> --json', 'Skipped because package install failed.'),
     skippedStep('context-slice', 'Verify context slice raw adapter', 'hadara context slice --path docs/PROJECT_STATE.md --from 1 --to 20 --json', 'Skipped because package install failed.')
   ];
+}
+
+function readInstalledCommandSurface(input: {
+  runner: PackageRecycleCommandRunner;
+  installedBin: string;
+  installPrefix: string;
+  workspacePath: string;
+  timeoutMs: number;
+  issues: PackageRecycleIssue[];
+  steps: PackageRecycleStep[];
+}): InstalledCommandSurface {
+  const result = input.runner(input.installedBin, ['commands', '--json'], {
+    cwd: input.workspacePath,
+    timeoutMs: input.timeoutMs,
+    env: installPathEnv(input.installPrefix)
+  });
+  const step = commandStep('command-surface', 'Read installed CLI command surface', 'hadara commands --json', result);
+  const surface = parseInstalledCommandSurface(result.stdout);
+  if (result.status !== 0 || !surface.available) {
+    failStep(step, result.timedOut ? 'Installed command-surface read timed out.' : 'Installed command-surface read failed or returned no commands.');
+    input.issues.push({
+      severity: 'warning',
+      code: result.timedOut ? 'PACKAGE_RECYCLE_COMMAND_SURFACE_TIMEOUT' : 'PACKAGE_RECYCLE_COMMAND_SURFACE_UNAVAILABLE',
+      message: 'Installed command surface could not be read; package recycle will use the current task status smoke.',
+      stepId: step.id
+    });
+    input.steps.push(step);
+    return emptyCommandSurface();
+  }
+
+  step.summary = `Installed command surface exposed ${surface.commandIds.size} command ids.`;
+  input.steps.push(step);
+  return surface;
+}
+
+function selectTaskReadSmoke(surface: InstalledCommandSurface): TaskReadSmoke {
+  if (hasInstalledCommand(surface, 'task.status', 'hadara task status')) {
+    return {
+      id: 'task-status',
+      label: 'Verify task status read model',
+      command: 'hadara task status --task <task-id> --json',
+      args: (taskId: string) => ['task', 'status', '--task', taskId, '--json'],
+      summary: 'Selected current task status smoke from installed command surface.',
+      compatibility: 'current'
+    };
+  }
+
+  if (hasInstalledCommand(surface, 'task.lifecycle', 'hadara task lifecycle')) {
+    return {
+      id: 'task-lifecycle',
+      label: 'Verify legacy task lifecycle read model',
+      command: 'hadara task lifecycle --task <task-id> --json',
+      args: (taskId: string) => ['task', 'lifecycle', '--task', taskId, '--json'],
+      summary: 'Selected legacy task lifecycle smoke because installed command surface does not expose task.status.',
+      compatibility: 'legacy'
+    };
+  }
+
+  return {
+    id: 'task-status',
+    label: 'Verify task status read model',
+    command: 'hadara task status --task <task-id> --json',
+    args: (taskId: string) => ['task', 'status', '--task', taskId, '--json'],
+    summary: 'Selected current task status smoke because installed command surface was unavailable or incomplete.',
+    compatibility: 'current'
+  };
 }
 
 function skippedStep(id: string, label: string, command: string, summary: string): PackageRecycleStep {
@@ -905,6 +1006,40 @@ function parseTaskId(stdout: string): string | null {
   } catch {
     return null;
   }
+}
+
+function parseInstalledCommandSurface(stdout: string): InstalledCommandSurface {
+  const parsed = parseJsonObject(stdout);
+  const commands = Array.isArray(parsed?.commands) ? parsed.commands : [];
+  const commandIds = new Set<string>();
+  const commandText = new Set<string>();
+  for (const entry of commands) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+    const record = entry as Record<string, unknown>;
+    if (typeof record.id === 'string' && record.id.trim()) commandIds.add(record.id.trim());
+    if (typeof record.command === 'string' && record.command.trim()) commandText.add(record.command.trim());
+  }
+  return {
+    commandIds,
+    commandText,
+    available: commandIds.size > 0 || commandText.size > 0
+  };
+}
+
+function emptyCommandSurface(): InstalledCommandSurface {
+  return {
+    commandIds: new Set(),
+    commandText: new Set(),
+    available: false
+  };
+}
+
+function hasInstalledCommand(surface: InstalledCommandSurface, id: string, commandPrefix: string): boolean {
+  if (surface.commandIds.has(id)) return true;
+  for (const command of surface.commandText) {
+    if (command === commandPrefix || command.startsWith(`${commandPrefix} `)) return true;
+  }
+  return false;
 }
 
 function isOkJson(result: PackageRecycleCommandResult): boolean {
