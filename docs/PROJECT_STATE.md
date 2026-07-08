@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0529 rename internal task next projection |
-| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction is continuing; T-0529 renamed the internal next-work projection away from the removed public `task next` command name. |
+| Latest Completed Task | T-0530 split init implementation by ownership boundary |
+| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction is continuing; T-0530 split the large init implementation into ownership modules while preserving generated scaffold behavior. |
+
+T-0530 follow-up note: `src/cli/init.ts` is now a thin CLI-facing router that preserves the existing `initProject` and `parseInitProfile` compatibility exports, while profile policy, project initialization, scaffold assembly, generated templates, doctor diagnostics, upgrade planning, shared file helpers, and report printing live under `src/init/**`. This capsule intentionally did not change generated Markdown wording, profile behavior, command surfaces, registry schemas, or runtime dependencies. Direct TypeScript build passed after the local validation wrapper hit a resolved npm spawn EPERM, focused init/docs/legacy/package-smoke tests passed 4 files / 48 tests, built governed init plus init doctor smoke passed in `/tmp/hadara-t0530-init-smoke`, `git diff --check` passed, and Docker sync-build passed `npm ci`, TypeScript build, full Vitest 154 files / 1036 tests, refreshed workspace `dist`, and ran built `init doctor --json` with existing HADARA-dev warnings only. Evidence: `ev:T-0530:add0563b2b744306b93d5716`, `ev:T-0530:c12315aa60ef43f1b3a15616`, `ev:T-0530:f8a04f134be34f3281c2aa67`, `ev:T-0530:d8d7c9cb370d4a6daef61942`.
 
 T-0529 follow-up note: the internal next-work selection read model now uses `src/task/task-selection.ts`, `src/schemas/task-selection.schema.json`, schema id `hadara.task.selection.v1`, command marker `task.selection`, and `task status --json` source key `sources.taskSelection`. Current code/tests/docs no longer expose internal `task-next`, `TaskNext`, `hadara.task.next.v1`, or `sources.taskNext` names; historical records remain unchanged. Focused validation passed TypeScript build, 10 Vitest files / 86 tests, built `task status --json` smoke with `sources.taskSelection`, and built `task next --json` default-help exit 1 proving public routing remains absent. Docker sync-build passed `npm ci`, TypeScript build, full Vitest 154 files / 1036 tests, refreshed workspace `dist`, and final status smoke no longer recommended completed T-0521 from stale handoff text. Evidence: `ev:T-0529:c6c93453bfc04f939193a923`, `ev:T-0529:941cfef9cd80400f94ef3e08`.
 
@@ -382,8 +384,8 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0529 rename internal task next projection.
-- The command portfolio reduction line has removed duplicate proof/evidence/state surfaces and the clear retired compatibility surfaces through T-0528, then renamed the surviving internal next-work projection through T-0529.
+- Latest completed task is T-0530 split init implementation by ownership boundary.
+- The command portfolio reduction line has removed duplicate proof/evidence/state surfaces and the clear retired compatibility surfaces through T-0528, renamed the surviving internal next-work projection through T-0529, and split the large init implementation into ownership modules through T-0530.
 - Next candidate work is a reviewed decision on deferred compatibility surfaces (`write preflight`, `policy check-shell`, old `package smoke`, and lifecycle migration stubs).
 - T-0457 made `validation run` launch failures agent-readable through structured `execution.failureKind`, `commandStarted`, `execution.error`, and fallback `nextActions`. Evidence: `ev:T-0457:63bc490c0f524cc0b5b748e3`, `ev:T-0457:28fb374a36e641bab90bd53d`, `ev:T-0457:ded129c4252440a593372c75`.
 - T-0456 made `evidence add-command --help` non-mutating before `--task` parsing. Evidence: `ev:T-0456:3575c0472d5b464585261a79`, `ev:T-0456:dbf8b1a1dc8d4707b5d9469c`, `ev:T-0456:2c697ca98ea7410a9a9f23d9`.

@@ -4,16 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, command portfolio inventory is complete through T-0521, and reduction/performance/status-profile slices are complete through T-0529. |
-| Current Phase | Command portfolio reduction implementation | T-0522/T-0523/T-0528 removed duplicate and retired public command surfaces; T-0529 renamed the remaining internal next-work projection away from the removed public `task next` command name. |
-| Latest Completed Task | T-0529 rename internal task next projection | Internal selection read model now uses `task-selection`, `hadara.task.selection.v1`, and `sources.taskSelection`; public `task.next` remains absent. |
-| Active / Next Task | T-0529 complete; next command portfolio reduction slice | Continue with deferred candidates only after deciding whether they still need migration stubs: `write preflight`, `policy check-shell`, old `package smoke`, and lifecycle stubs. |
-| Validation Baseline | T-0529 Docker sync-build | Docker `dev:docker-sync-build` passed `npm ci`, TypeScript build, full Vitest 154 files / 1036 tests, refreshed workspace `dist`, and built `task status --json` smoke exposed `sources.taskSelection`. |
+| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, command portfolio inventory is complete through T-0521, and reduction/performance/status-profile/init-structure slices are complete through T-0530. |
+| Current Phase | Command portfolio reduction and structure cleanup | T-0522/T-0523/T-0528 removed duplicate and retired public command surfaces; T-0529 renamed the remaining internal next-work projection away from the removed public `task next` command name; T-0530 split init implementation ownership boundaries without behavior changes. |
+| Latest Completed Task | T-0530 split init implementation by ownership boundary | `src/cli/init.ts` is now a thin router; init profile/project/scaffold/templates/doctor/upgrade/file/report logic lives under `src/init/**`. |
+| Active / Next Task | T-0530 complete; next command portfolio reduction slice | Continue with deferred candidates only after deciding whether they still need migration stubs: `write preflight`, `policy check-shell`, old `package smoke`, and lifecycle stubs. |
+| Validation Baseline | T-0530 Docker sync-build | Docker `dev:docker-sync-build` passed `npm ci`, TypeScript build, full Vitest 154 files / 1036 tests, refreshed workspace `dist`, and built `init doctor --json` smoke returned `ok:true` with existing HADARA-dev warnings. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| split init implementation by ownership boundary | T-0530 reduces `src/cli/init.ts` to CLI orchestration and compatibility exports, moving init profile policy, project setup, scaffold assembly, templates, doctor, upgrade, file helpers, and report printing under `src/init/**`; no generated-doc copy or behavior changes were intended. | `ev:T-0530:add0563b2b744306b93d5716`, `ev:T-0530:c12315aa60ef43f1b3a15616`, `ev:T-0530:f8a04f134be34f3281c2aa67`, `ev:T-0530:d8d7c9cb370d4a6daef61942` |
 | rename internal task next projection | T-0529 renames the internal selection projection to `task-selection` / `hadara.task.selection.v1` / `sources.taskSelection` while keeping public `task.next` removed; Docker sync-build refreshed `dist`. | `ev:T-0529:c6c93453bfc04f939193a923`, `ev:T-0529:941cfef9cd80400f94ef3e08` |
 | remove retired command compatibility surfaces | T-0528 fully removes eight retired public compatibility surfaces, deletes dead dedicated schemas/services/tests where no internal consumer remains, and refreshes Docker-built `dist`; T-0529 later renamed the surviving internal selection projection. | `ev:T-0528:c1a644032e3e419c9d1d5ea8`, `ev:T-0528:71dea0c06e9047c3be8f1a2e` |
 | speed up task status with invocation snapshot | T-0527 adds read-only invocation-local fs memoization to `task status` report construction; no `.hadara/local/cache` files are used, and write/finalize paths remain fresh-read boundaries. | `ev:T-0527:9ac796c7294d4a0e93fe1437`, `ev:T-0527:95f839350b804768846e724e`, `ev:T-0527:7786e0e4e1a04aa1ab6840e5` |
@@ -71,9 +72,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0530 / split init implementation by ownership boundary | `src/cli/init.ts` is now a thin router and init internals are split under `src/init/**`; focused tests, built init smoke, diff check, and Docker sync-build passed. | `ev:T-0530:add0563b2b744306b93d5716`, `ev:T-0530:c12315aa60ef43f1b3a15616`, `ev:T-0530:d8d7c9cb370d4a6daef61942` |
 | T-0529 / rename internal task next projection | Internal next-work selection read model now uses `task-selection`, `hadara.task.selection.v1`, and `sources.taskSelection`; public `task.next` remains removed. | `ev:T-0529:c6c93453bfc04f939193a923`, `ev:T-0529:941cfef9cd80400f94ef3e08` |
 | T-0528 / remove retired command compatibility surfaces | Fully removed eight retired public compatibility surfaces and dead dedicated schemas/services/tests; Docker sync-build passed and refreshed workspace `dist`. | `ev:T-0528:c1a644032e3e419c9d1d5ea8`, `ev:T-0528:71dea0c06e9047c3be8f1a2e` |
-| T-0527 / speed up task status with invocation snapshot | Selected-task full status now shares sync file reads within one read-only invocation and stays under 3s in mounted and Docker-built smokes. | `ev:T-0527:9ac796c7294d4a0e93fe1437`, `ev:T-0527:95f839350b804768846e724e`, `ev:T-0527:7786e0e4e1a04aa1ab6840e5` |
 
 ## Current Known Problems
 
@@ -154,13 +155,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Decide the next deferred command portfolio reduction slice. | T-0529 completed the internal task-selection rename; remaining candidates need an explicit migration-stub decision before removal. | `tasks/T-0521-command-portfolio-reduction-inventory/COMMAND_PORTFOLIO.md`, `docs/COMMAND_SURFACE.md` |
+| Decide the next deferred command portfolio reduction slice. | T-0530 completed the init implementation split; remaining command portfolio candidates need an explicit migration-stub decision before removal. | `tasks/T-0521-command-portfolio-reduction-inventory/COMMAND_PORTFOLIO.md`, `docs/COMMAND_SURFACE.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0530 / init implementation ownership split | Docker `dev:docker-sync-build` passed `npm ci`, TypeScript build, full Vitest 154 files / 1036 tests, refreshed workspace `dist`, and built `init doctor --json` smoke returned `ok:true` with existing HADARA-dev warnings. | Evidence `ev:T-0530:d8d7c9cb370d4a6daef61942`; focused init tests and built fresh governed init smoke also passed. |
 | T-0525 / status current recommendation and Docker dist validation | Docker `dev:docker-sync-build` passed `npm ci`, TypeScript build, full Vitest 155 files / 1045 tests, refreshed workspace `dist`, and built `status --summary-json` smoke recommended command portfolio reduction handoff instead of stale release guidance or old Partial T-0006. | Evidence `ev:T-0525:b8caed6d249e4120bea191ca`; use Docker-built `dist` for subsequent built CLI smokes. |
 | T-0523 / state.verify public command removal | Focused Vitest passed 8 files / 65 tests, TypeScript build passed, built registry smoke reported 68 current command ids with `state.verify` absent, and status/protocol replacement smokes exposed `stateConsistency`. | Evidence `ev:T-0523:1ff663c8467b4e31b71002cc`; internal `hadara.stateProjection.v1` remains supported. |
 | T-0522 / command surface duplicate diagnostic removal | Focused Vitest passed 6 files / 29 tests, TypeScript build passed, built registry smoke reported 69 commands with removed ids absent, and help/evidence smokes no longer expose `proof.status`, `proof.explain`, `evidence.summary`, or `ci.gate`. | Evidence `ev:T-0522:9f87a75fe15649e9bd445710`; historical docs may still mention removed commands as history. |

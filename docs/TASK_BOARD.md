@@ -530,3 +530,4 @@
 | T-0527 | speed up task status with invocation snapshot | Done | tasks/T-0527-speed-up-task-status-with-invocation-snapshot | Selected-task full status now uses read-only invocation-local fs memoization and stays under 3s in mounted/Docker smokes. |
 | T-0528 | remove retired command compatibility surfaces | Done | tasks/T-0528-remove-retired-command-compatibility-surfaces | Removed eight retired public compatibility surfaces and dead dedicated schemas/services/tests; Docker sync-build refreshed `dist`. |
 | T-0529 | rename internal task next projection | Done | tasks/T-0529-rename-internal-task-next-projection | Renamed internal next-work projection to `task-selection` / `hadara.task.selection.v1` / `sources.taskSelection`; public `task.next` remains removed. |
+| T-0530 | split init implementation by ownership boundary | Done | tasks/T-0530-split-init-implementation-by-ownership-boundary | |
