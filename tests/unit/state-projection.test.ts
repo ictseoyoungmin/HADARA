@@ -1,10 +1,11 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { handleStateCommand } from '../../src/cli/state';
+import { afterEach, describe, expect, it } from 'vitest';
 import { appendEvidence } from '../../src/evidence/evidence';
 import { validateSchema } from '../../src/core/schema';
+import { createOpsStatusReport } from '../../src/services/operations-status-service';
+import { createAllProtocolConsistencyReport } from '../../src/services/protocol-consistency';
 import { createStateProjectionReport } from '../../src/services/state-projection';
 import { createTaskCloseSourceReport } from '../../src/task/task-close';
 import { createTaskCapsule, TaskCapsule } from '../../src/task/task-capsule';
@@ -129,7 +130,7 @@ describe('state consistency projection', () => {
     expect(validateSchema('hadara.stateProjection.v1', report).ok).toBe(true);
   });
 
-  it('prints full projection JSON through state verify', () => {
+  it('exposes projection advisory through status and protocol doctor surfaces', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Projection CLI task');
     completeTask(root, task);
@@ -137,19 +138,79 @@ describe('state consistency projection', () => {
     writeDocsRegistry(root);
     fs.writeFileSync(path.join(root, 'docs', 'RELEASE_READINESS.md'), '# RELEASE_READINESS\n\nReady.\n', 'utf8');
     appendCloseEvidence(root, task, currentSourceHash(root, task.dir));
-    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
-    const handled = handleStateCommand({ args: ['state', 'verify', '--json'], projectRoot: root, jsonOutput: true });
+    const statusReport = createOpsStatusReport(root, { includeStateConsistency: true });
+    const protocolReport = createAllProtocolConsistencyReport(root, new Date('2026-06-15T00:00:00.000Z'));
 
-    expect(handled).toBe(true);
-    const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
+    expect(statusReport.stateConsistency).toMatchObject({
+      mode: 'advisory',
+      strictBlocking: false,
+      consistent: true,
+      latestDoneTaskId: task.id,
+      issues: []
+    });
+    expect(protocolReport.stateConsistency).toMatchObject({
+      mode: 'advisory',
+      strictBlocking: false,
+      consistent: true,
+      latestDoneTaskId: task.id,
+      issues: []
+    });
+    expect(validateSchema('hadara.protocol.consistency.v1', protocolReport).ok).toBe(true);
+  });
+
+  it('keeps drift issue codes, paths, and fix hints in status advisory', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Projection advisory drift task');
+    setTaskStatus(task.dir, 'Done');
+    setTaskHandoff(task.dir, 'Done pending lifecycle close', 'almost-closed');
+    replaceTaskBoardRow(root, task.id, `| ${task.id} | Projection advisory drift task | Draft | tasks/${task.id}-wrong | |`);
+    writeSharedState(root, 'T-0000');
+    writeDocsRegistry(root);
+    fs.writeFileSync(path.join(root, 'docs', 'RELEASE_READINESS.md'), '# RELEASE_READINESS\n\nReady.\n', 'utf8');
+    appendCloseEvidence(root, task, 'sha256:0000000000000000000000000000000000000000000000000000000000000000');
+
+    const statusReport = createOpsStatusReport(root, { includeStateConsistency: true });
+    const advisory = statusReport.stateConsistency;
+
+    expect(advisory).toMatchObject({
+      mode: 'advisory',
+      strictBlocking: false,
+      consistent: false,
+      latestDoneTaskId: task.id
+    });
+    expect(advisory?.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        code: 'STATE_TASK_BOARD_STATUS_DRIFT',
+        path: 'docs/TASK_BOARD.md',
+        fixHint: expect.any(String)
+      }),
+      expect.objectContaining({
+        code: 'STATE_TASK_HANDOFF_STATUS_CLOSE_STATE_MIXED',
+        path: expect.stringContaining('HANDOFF.md'),
+        fixHint: expect.any(String)
+      })
+    ]));
+    expect(statusReport).toMatchObject({
+      schemaVersion: 'hadara.ops.status.v1',
+      command: 'ops.status',
+      ok: true
+    });
+  });
+
+  it('keeps the internal full projection schema available for context/status services', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Projection internal schema task');
+    completeTask(root, task);
+    writeSharedState(root, task.id);
+    writeDocsRegistry(root);
+    fs.writeFileSync(path.join(root, 'docs', 'RELEASE_READINESS.md'), '# RELEASE_READINESS\n\nReady.\n', 'utf8');
+    appendCloseEvidence(root, task, currentSourceHash(root, task.dir));
+
+    const payload = createStateProjectionReport(root, new Date('2026-06-15T00:00:00.000Z'));
     expect(payload).toMatchObject({
       schemaVersion: 'hadara.stateProjection.v1',
       command: 'state.projection',
-      semantics: {
-        ok: 'report-generated',
-        consistent: 'no-error-or-warning-issues'
-      },
       summary: {
         consistent: true,
         latestDoneTaskId: task.id

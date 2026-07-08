@@ -58,7 +58,7 @@ Low-level `task.finish`, `task.ready`, `task.close`, `task.audit-close`, `task.c
 | `policy.check-shell` | Overlaps `policy.preflight-shell`. | Removed redirect stub. | Replacement: `policy preflight-shell`. |
 | `write.preflight` | Overlaps `policy.preflight-shell`. | Removed redirect stub. | Replacement: `policy preflight-shell`. |
 | `ops.status` | Overlaps `status`. | Removed redirect stub. | Replacement: `status --json`. |
-| `handoff.suggest` / `handoff.stale-problems` | Stale generated fragments and niche handoff diagnostics. | Removed redirect stubs. | Replacement: `task status`, `task finalize --json`, `state verify`, and manual handoff edits. |
+| `handoff.suggest` / `handoff.stale-problems` | Stale generated fragments and niche handoff diagnostics. | Removed redirect stubs. | Replacement: `task status`, `task finalize --json`, `status --json`, and manual handoff edits. |
 | `init.register-doc` | Overlaps `docs.register`. | Removed redirect stub. | Replacement: `docs register`. |
 | `task.upgrade-scaffold` | Overlaps `protocol doctor/remediate`. | Removed redirect stub. | Replacement: `protocol remediate`. |
 | `docs.archive` | Archive candidate inspection overlaps docs list/doctor/mark flows. | Removed redirect stub. | Replacement: `docs list --status ...` and `docs doctor`. |

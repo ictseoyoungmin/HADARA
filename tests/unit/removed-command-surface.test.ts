@@ -96,7 +96,7 @@ describe('removed compatibility command surfaces', () => {
       },
       {
         command: 'handoff.stale-problems',
-        replacement: 'hadara state verify --json',
+        replacement: 'hadara status --json',
         run: () => handleHandoffCommand({ args: ['handoff', 'stale-problems', '--json'], projectRoot: root, jsonOutput: true })
       },
       {

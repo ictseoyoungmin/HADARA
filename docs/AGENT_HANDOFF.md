@@ -4,17 +4,18 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, command portfolio inventory is complete through T-0521, and the first reduction slice is complete through T-0522. |
-| Current Phase | Command portfolio reduction implementation | T-0522 removed the first duplicate proof/evidence/CI diagnostics and reduced the current registry surface from 73 to 69 command ids. |
-| Latest Completed Task | T-0522 remove duplicate proof and evidence summary commands | `proof.status`, `proof.explain`, `evidence.summary`, and `ci.gate` are removed from public routing, registry, schemas, docs, and focused tests. |
-| Active / Next Task | Next command portfolio reduction slice | Use T-0521's command inventory to choose the next low-risk deletion candidate; keep primary lifecycle and evidence-write surfaces intact. |
-| Validation Baseline | T-0522 focused registry/schema/help/build validation | T-0522 passed focused Vitest coverage, TypeScript build, built registry smoke for removed ids, and help/evidence routing smokes. |
+| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, command portfolio inventory is complete through T-0521, and reduction slices are complete through T-0523. |
+| Current Phase | Command portfolio reduction implementation | T-0522 and T-0523 reduced the current registry surface from 73 to 68 command ids while preserving replacement read models. |
+| Latest Completed Task | T-0523 remove state verify public command | Public `state.verify` is removed; `status --json` and `protocol doctor --scope all --json` remain the public state-consistency advisory surfaces. |
+| Active / Next Task | Next command portfolio reduction slice | Use T-0521's command inventory to choose the next low-risk deletion candidate; keep internal shared read models intact when removing public aliases. |
+| Validation Baseline | T-0523 focused replacement/removal validation | T-0523 passed focused Vitest coverage, TypeScript build, built registry smoke for `state.verify` removal, and replacement status/protocol smokes. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| remove duplicate proof and evidence summary commands | T-0522 removes public `proof.status`, `proof.explain`, `evidence.summary`, and `ci.gate` surfaces, leaving `task status --detail full`, `task finalize`, `evidence list`, `state verify`, and release-specific gates as the current replacements. | `ev:T-0522:9f87a75fe15649e9bd445710` |
+| remove state verify public command | T-0523 removes public `state.verify` after confirming `status --json` and `protocol doctor --scope all --json` expose stateConsistency advisory issue data; internal state projection service/schema remains. | `ev:T-0523:1ff663c8467b4e31b71002cc` |
+| remove duplicate proof and evidence summary commands | T-0522 removes public `proof.status`, `proof.explain`, `evidence.summary`, and `ci.gate` surfaces, leaving `task status --detail full`, `task finalize`, `evidence list`, `status`, `protocol doctor`, and release-specific gates as the current replacements. | `ev:T-0522:9f87a75fe15649e9bd445710` |
 | command portfolio reduction inventory | T-0521 inventories all 73 command ids, classifies family/requiredness/importance/default-help/action/rationale, and identifies first reduction slices around duplicate proof/evidence/docs diagnostics. | `ev:T-0521:87352953be5d4b8c8bf5e13c` |
 | 0.4.1 stable installed package recycle | T-0520 verifies `hadara@latest` installs as `0.4.1` and passes installed consumer workflow smokes; first sandboxed registry lookup failure was classified as environment friction and resolved by approved network rerun. | `ev:T-0520:2b4b928b65344d03ad44a53d`, `ev:T-0520:705485eda380456583f41294` |
 | 0.4.1 stable post-publish evidence sync | T-0519 records completed public npm/GitHub publication: npm version `0.4.1`, dist-tags `latest=0.4.1` and `next=0.4.1-rc.0`, and GitHub Release `v0.4.1` public stable target `682af904cc2e74dab90f10b8b037fa685eb9cf72`. | `ev:T-0519:1aaf3a7a96f548c6accae710`, `ev:T-0519:0e29abe05a824a629936af35`, `ev:T-0519:ab35e58cb8dd4809a97242b6` |
@@ -64,9 +65,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0523 / remove state verify public command | Removed public `state.verify`; replacement state consistency diagnostics are exposed through `status --json` and `protocol doctor --scope all --json`. | `ev:T-0523:1ff663c8467b4e31b71002cc` |
 | T-0522 / remove duplicate proof and evidence summary commands | Removed `proof.status`, `proof.explain`, `evidence.summary`, and `ci.gate` from the current public command surface, registry, schemas, docs, and tests. | `ev:T-0522:9f87a75fe15649e9bd445710` |
 | T-0521 / command portfolio reduction inventory | Full command portfolio table completed for 73 current registry entries; next implementation should continue with low-risk duplicate diagnostics and dead-end helpers. | `ev:T-0521:87352953be5d4b8c8bf5e13c` |
-| T-0520 / 0.4.1 stable installed package recycle | Public installed-package recycle passed for `hadara@latest` expected `0.4.1`, including installed version, command surface, fresh init/task/status/session/finalize/context smokes, and cleanup. | `ev:T-0520:2b4b928b65344d03ad44a53d`, `ev:T-0520:705485eda380456583f41294` |
 
 ## Current Known Problems
 
@@ -153,6 +154,7 @@
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0523 / state.verify public command removal | Focused Vitest passed 8 files / 65 tests, TypeScript build passed, built registry smoke reported 68 current command ids with `state.verify` absent, and status/protocol replacement smokes exposed `stateConsistency`. | Evidence `ev:T-0523:1ff663c8467b4e31b71002cc`; internal `hadara.stateProjection.v1` remains supported. |
 | T-0522 / command surface duplicate diagnostic removal | Focused Vitest passed 6 files / 29 tests, TypeScript build passed, built registry smoke reported 69 commands with removed ids absent, and help/evidence smokes no longer expose `proof.status`, `proof.explain`, `evidence.summary`, or `ci.gate`. | Evidence `ev:T-0522:9f87a75fe15649e9bd445710`; historical docs may still mention removed commands as history. |
 | T-0513 / 0.4.1 rc0 installed package recycle | Registry metadata returned `version=0.4.1-rc.0`, `next=0.4.1-rc.0`, `latest=0.4.0`; installed recycle installed `hadara@next`, verified `packageVersion=0.4.1-rc.0`, created disposable task `T-0001`, and passed task status/session/finalize/context pack/context slice smokes. | Evidence `ev:T-0513:55abd88e46ce40d88a5942fb`, `ev:T-0513:43a25a83247d4823aad8475a`; resolver `ev:T-0513:7a391266ff654f32a823d2b7` closes the DNS/stale-command attempts. |
 | T-0506 / 0.4.1 rc0 dogfood follow-up command surface cleanup | Docker `npm run build` plus full `npx vitest run --reporter=dot` passed 158 files / 1043 tests; fresh governed `/tmp` dogfood reached `closed-valid`; command-surface smoke verified removed-command redirects and canonical `smoke package`. | Evidence `ev:T-0506:10d49b029b3a4424921fddd9`, `ev:T-0506:c03f654276be450986c48743`, `ev:T-0506:6bf1c1251fbc4bd3ac621efc`. |

@@ -339,7 +339,7 @@ function buildTaskProjection(
     issues.push(warning('STATE_TASK_HANDOFF_STATUS_CLOSE_STATE_MIXED', handoffPath, `Task handoff TaskStatus for ${taskId} appears to mix task status and close proof state.`, 'Use TaskStatus: Done only; derive CloseState from task status/finalize/state read models.', taskId));
   }
   if (deepCheck && taskHandoff.closeState) {
-    issues.push(warning('STATE_TASK_HANDOFF_CLOSE_STATE_PERSISTED', handoffPath, `Task handoff persists derived CloseState for ${taskId}: ${taskHandoff.closeState}.`, 'Remove CloseState from task-local HANDOFF.md; use task status --detail full, task finalize, or state verify read models for derived close state.', taskId));
+    issues.push(warning('STATE_TASK_HANDOFF_CLOSE_STATE_PERSISTED', handoffPath, `Task handoff persists derived CloseState for ${taskId}: ${taskHandoff.closeState}.`, 'Remove CloseState from task-local HANDOFF.md; use task status --detail full, task finalize, status, or protocol doctor read models for derived close state.', taskId));
     if (!CLOSE_STATE_TOKENS.has(taskHandoff.closeState)) {
       issues.push(warning('STATE_TASK_HANDOFF_CLOSE_STATE_INVALID', handoffPath, `Task handoff CloseState for ${taskId} is not canonical: ${taskHandoff.closeState}.`, 'Remove the CloseState row from task-local HANDOFF.md.', taskId));
     }

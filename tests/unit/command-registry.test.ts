@@ -29,7 +29,6 @@ const REQUIRED_PUBLIC_COMMAND_IDS = [
   'evidence.project',
   'evidence.lint',
   'evidence.migrate',
-  'state.verify',
   'context.graph',
   'context.pack',
   'context.slice',
@@ -114,6 +113,7 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('proof.explain')).toBeUndefined();
     expect(findCommandRegistryEntry('evidence.summary')).toBeUndefined();
     expect(findCommandRegistryEntry('ci.gate')).toBeUndefined();
+    expect(findCommandRegistryEntry('state.verify')).toBeUndefined();
     expect(findCommandRegistryEntry('dev.docker-check')).toMatchObject({ requiredness: 'dev-only', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('release.publish')).toMatchObject({ requiredness: 'release-only', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('dashboard.serve')).toMatchObject({ family: 'ui', appearsInDefaultHelp: false });

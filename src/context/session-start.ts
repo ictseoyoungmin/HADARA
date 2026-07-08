@@ -329,7 +329,7 @@ function lifecycleForSessionStart(taskId: string | undefined, contextPack: Conte
     taskId
       ? hadaraCommand(`session start --task ${taskId} --live --json`)
       : hadaraCommand('session start --live --json'),
-    hadaraCommand('state verify --json')
+    hadaraCommand('status --json')
   ];
 
   return {

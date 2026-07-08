@@ -81,7 +81,7 @@ Removed compatibility surfaces now return `hadara.commandRemoved.v1` redirect st
 
 No current CLI command writes or generates `docs/AGENT_HANDOFF.md` fragments. Shared handoff edits are deliberate documentation work before `task finalize`; use `task status` and `task finalize --json` for phase/readiness guidance.
 
-Diagnostics such as `harness.validate`, `evidence.lint`, `protocol.doctor`, and `state.verify` explain blockers or drift. They do not replace the primary finalize loop.
+Diagnostics such as `harness.validate`, `evidence.lint`, `protocol.doctor`, and `status` explain blockers or drift. They do not replace the primary finalize loop.
 
 ## 0.4 Planned Surfaces
 
@@ -89,7 +89,7 @@ Diagnostics such as `harness.validate`, `evidence.lint`, `protocol.doctor`, and 
 
 ## State Consistency
 
-`hadara state verify --json` emits the read-only `hadara.stateProjection.v1` report. `hadara status --json` and `hadara protocol doctor --scope all --json` expose compact state consistency summaries so workers can see Task Board, Task Capsule, handoff, shared-state, docs-registry, and close-proof drift before close.
+`hadara status --json` and `hadara protocol doctor --scope all --json` expose compact state consistency summaries derived from the internal `hadara.stateProjection.v1` read model, so workers can see Task Board, Task Capsule, handoff, shared-state, docs-registry, and close-proof drift before close.
 
 State consistency rollout is advisory in `0.3.1-rc.1`; state projection issues remain diagnostic unless a specific close or release gate promotes them.
 

@@ -87,7 +87,7 @@ HADARA uses separate token families for persistent state, derived proof state, d
 | `Superseded` | Task has been replaced by another task or line. | Worker/coordinator docs |
 | `Archived` | Task is no longer active state and is retained only for history. | Worker/coordinator docs |
 
-Reserved non-TaskStatus strings include `Closed`, `Ready`, `Approved`, `Complete`, `closed-valid`, `not-closed`, and phrases such as `Done pending lifecycle close`. Use `TaskStatus: Done`; get close proof state from `task status --detail full`, `task finalize`, or `state verify` read models.
+Reserved non-TaskStatus strings include `Closed`, `Ready`, `Approved`, `Complete`, `closed-valid`, `not-closed`, and phrases such as `Done pending lifecycle close`. Use `TaskStatus: Done`; get close proof state from `task status --detail full`, `task finalize`, `status`, or `protocol doctor` read models.
 
 ### CloseState
 

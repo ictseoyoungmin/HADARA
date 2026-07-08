@@ -13,9 +13,9 @@ export function handleHandoffCommand(input: HandoffCommandInput): boolean {
       {
         commandId: 'handoff.stale-problems',
         removedCommand: 'hadara handoff stale-problems',
-        replacementCommand: 'hadara state verify --json',
+        replacementCommand: 'hadara status --json',
         diagnosticCommand: 'hadara task status --json',
-        note: 'Handoff stale-problem review is folded into state/status diagnostics and manual handoff editing.'
+        note: 'Handoff stale-problem review is folded into status/protocol diagnostics and manual handoff editing.'
       },
       input.jsonOutput
     );

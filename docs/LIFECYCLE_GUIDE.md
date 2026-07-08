@@ -21,7 +21,7 @@ Diagnostics explain blockers. They do not replace the primary lifecycle.
 |---|---|
 | `evidence.lint` | Evidence records or semantic proof are unclear. |
 | `protocol.doctor` | Protocol docs, task board rows, or profile state may be inconsistent. |
-| `state.verify` | Shared task/state projection looks inconsistent or needs concise drift evidence. |
+| `status` | Shared task/state projection looks inconsistent or needs concise drift evidence. |
 | `harness.validate` | `task finalize` or low-level `task ready` reports format or done-level blockers. |
 
 ## Low-Level Proof Boundaries

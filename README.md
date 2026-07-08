@@ -194,7 +194,7 @@ hadara evidence lint --task T-0001 --json
 hadara evidence list --task T-0001 --json
 hadara task status --task T-0001 --detail full --json
 hadara task finalize --task T-0001 --json
-hadara state verify --json
+hadara status --json
 hadara protocol doctor --json
 ```
 

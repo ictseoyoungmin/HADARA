@@ -558,7 +558,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Execute ordinary guarded finalize', 'hadara task finalize --task T-0001 --execute --auto --json', 'For ordinary clean capsules; the CLI performs the dry-run/current-plan verification internally and records readiness evidence before close proof when needed.'),
       example('Execute externally reviewed finalize plan', 'hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json', 'After a human or automation explicitly reviews and carries the current dry-run plan hash.')
     ],
-    related: ['task.status', 'task.close-source', 'state.verify'],
+    related: ['task.status', 'task.close-source', 'protocol.doctor'],
     conflictsWith: [],
     notes: 'Default mode is read-only. Execute uses either --auto for one-call guarded close or a matching current dry-run plan hash for externally reviewed flows; both run phases serially, preserve the underlying finish/close write boundaries, repair stale close proof by appending fresh close evidence when the plan requires it, and stop on the first blocker.'
   },
@@ -582,7 +582,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     implementationFiles: ['src/cli/task.ts', 'src/task/task-close.ts'],
     testFiles: ['tests/unit/task-close-source.test.ts'],
     examples: [example('Inspect close source', 'hadara task close-source --task T-0001 --json', 'When reviewing close-source drift boundaries.')],
-    related: ['task.finalize', 'state.verify'],
+    related: ['task.finalize', 'status'],
     conflictsWith: []
   },
   {
@@ -726,27 +726,6 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     notes: 'This is an operator-selected JSONL migration surface, not evidence rebuild. 0.3.2 does not register or implement `hadara evidence rebuild`; `EVIDENCE.md` remains a non-canonical human summary.',
     conflictsWith: []
   },
-  {
-    id: 'state.verify',
-    command: 'hadara state verify [--json]',
-    summary: 'Read the state consistency projection and concise drift issues.',
-    canonical: true,
-    appearsInDefaultHelp: false,
-    family: 'proof-diagnostics',
-    scope: 'project',
-    lifecycleStage: 'ready',
-    requiredness: 'diagnostic',
-    writeBoundary: 'read-only',
-    readOnly: true,
-    risk: 'low',
-    actor: 'agent-worker',
-    status: 'stable',
-    schemaVersion: 'hadara.stateProjection.v1',
-    docs: ['docs/COMMAND_SURFACE.md', 'docs/SCHEMAS.md'],
-    examples: [example('Verify state drift', 'hadara state verify --json', 'Before close or when shared-doc state looks inconsistent.')],
-    related: ['status', 'protocol.doctor', 'task.status'],
-    conflictsWith: []
-  },
   commandEntry({
     id: 'context.graph',
     command: 'hadara context graph [--task <task-id>] [--include-code] --json',
@@ -772,7 +751,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Read task context graph', 'hadara context graph --task T-0001 --json', 'When a worker needs task-scoped docs, evidence, commands, and known problems.'),
       example('Read code-aware context graph', 'hadara context graph --include-code --json', 'When a worker needs source, test, symbol, and code relation candidates.')
     ],
-    related: ['state.verify', 'docs.required-reading', 'task.status'],
+    related: ['status', 'docs.required-reading', 'task.status'],
     conflictsWith: [],
     notes: 'Read-only projection; persistent cache support is not implemented yet.'
   }),
@@ -801,7 +780,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Read code-aware context pack', 'hadara context pack --task T-0001 --include-code --json', 'When source, test, and symbol candidates should be included.'),
       example('Read smaller context pack', 'hadara context pack --task T-0001 --max-read-first 3 --max-items 12 --json', 'When a worker needs a tighter bounded read plan.')
     ],
-    related: ['context.graph', 'state.verify', 'docs.required-reading', 'task.status'],
+    related: ['context.graph', 'status', 'docs.required-reading', 'task.status'],
     conflictsWith: [],
     notes: 'Read-only C3 projection; C4 slicing and persistent C6 cache writes are not implemented by this command.'
   }),
@@ -889,7 +868,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     examples: [
       example('Read context cache status', 'hadara context cache status --json', 'Before relying on C6 cache-backed context routing performance.')
     ],
-    related: ['context.graph', 'context.pack', 'state.verify'],
+    related: ['context.graph', 'context.pack', 'status'],
     conflictsWith: [],
     notes: 'Read-only status command; it does not create or update cache files. Use context.cache.warm for explicit source-manifest cache writes.'
   }),
@@ -981,7 +960,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.protocol.consistency.v1',
     docs: ['docs/HADARA_WORKFLOW.md'],
     examples: [example('Run protocol doctor', 'hadara protocol doctor --scope all --json', 'When project protocol files may be inconsistent.')],
-    related: ['protocol.remediate', 'doctor', 'state.verify'],
+    related: ['protocol.remediate', 'doctor', 'status'],
     conflictsWith: []
   }),
   commandEntry({
@@ -1446,7 +1425,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.ops.status.v1',
     docs: ['docs/PROJECT_STATE.md'],
     examples: [example('Read status', 'hadara status --json', 'When checking project health and active task signals.')],
-    related: ['doctor', 'state.verify'],
+    related: ['doctor', 'status'],
     conflictsWith: []
   }),
   commandEntry({

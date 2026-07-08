@@ -210,7 +210,7 @@ describe('handoff stale known-problem report', () => {
     const report = JSON.parse(output.join('\n'));
     expect(report.schemaVersion).toBe('hadara.commandRemoved.v1');
     expect(report.command).toBe('handoff.stale-problems');
-    expect(report.replacementCommand).toBe('hadara state verify --json');
+    expect(report.replacementCommand).toBe('hadara status --json');
     expect(fs.readFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), 'utf8')).toBe(beforeHandoff);
   });
 
