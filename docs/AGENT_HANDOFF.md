@@ -4,16 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish line is complete through T-0512. |
-| Current Phase | `0.4.1-rc.0` published to npm and GitHub prerelease | npm exposes `hadara@0.4.1-rc.0` on `next` while `latest` remains `0.4.0`; GitHub Release `v0.4.1-rc.0` is public and marked prerelease. |
-| Latest Completed Task | T-0512 0.4.1 rc0 post publish evidence sync | Workspace evidence records npm registry verification and GitHub Release verification after operator publication. |
-| Active / Next Task | Installed-package recycle for `hadara@0.4.1-rc.0` | Verify the published package from a fresh unmounted environment with installed CLI version/init/task/finalize/package recycle smokes. |
-| Validation Baseline | T-0512 public release verification plus T-0511/T-0510/T-0509 release readiness | T-0512 verified npm registry and GitHub Release metadata. T-0511 fixed prepare/manual boundaries, T-0510 fixed manual helper stale command, and T-0509 release readiness passed package/release gates before publish. |
+| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle line is complete through T-0513. |
+| Current Phase | `0.4.1-rc.0` published and recycled from installed consumer paths | npm exposes `hadara@0.4.1-rc.0` on `next` while `latest` remains `0.4.0`; GitHub Release `v0.4.1-rc.0` is public prerelease; installed-package recycle passed after helper stale-command fix. |
+| Latest Completed Task | T-0513 0.4.1 rc0 installed package recycle | Installed `hadara@next` resolved to `0.4.1-rc.0` and passed installed version/init/task status/session/finalize/context pack/context slice smokes from an isolated consumer workspace. |
+| Active / Next Task | Operator decision: additional RC dogfood or stable `0.4.1` planning | The required post-publish recycle proof is complete. Decide whether to run broader external dogfood before stable promotion planning. |
+| Validation Baseline | T-0513 installed-package recycle plus T-0512 public release verification | T-0513 passed registry metadata, package recycle focused tests, build, and installed-package recycle. T-0512 verified npm registry and GitHub Release metadata. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| 0.4.1 rc0 installed package recycle | T-0513 verified `hadara@next` installs as `0.4.1-rc.0` from npm and passes installed consumer workflow smokes; it also fixed package recycle's stale call to removed `task lifecycle`. | `ev:T-0513:55abd88e46ce40d88a5942fb`, `ev:T-0513:43a25a83247d4823aad8475a` |
 | 0.4.1 rc0 post publish evidence sync | T-0512 records final external release evidence: npm `0.4.1-rc.0` is on `next`, stable `latest` remains `0.4.0`, and GitHub `v0.4.1-rc.0` is public prerelease. | `ev:T-0512:873cb873d9a74a2eb374d829`, `ev:T-0512:8de1c6fc2c0442fdbcbf65cc` |
 | 0.4.1 rc0 publish env preparation boundary fix | T-0511 keeps publish prep from stealing the manual helper role: default prepare no longer runs `manual-publish-rc.sh` dry-run when npm login exists; `--run-helper-dry-run` is explicit opt-in. | `ev:T-0511:38e1c8a3228b49b7b8d50905` |
 | 0.4.1 rc0 task table token alias cleanup | T-0508 adds human-friendly TASK.md aliases: `Acceptance State=Done` is accepted and normalized by existing readiness logic, `Inputs / Constraints State=active` is accepted, and new default/template scaffolds use `active`. | `ev:T-0508:145f99b5933d4f1cab7f022c` |
@@ -54,9 +55,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0512 / 0.4.1 rc0 post publish evidence sync | npm registry and GitHub Release metadata were verified after operator publication; next release-line work is installed-package recycle. | `ev:T-0512:873cb873d9a74a2eb374d829`, `ev:T-0512:8de1c6fc2c0442fdbcbf65cc` |
+| T-0513 / 0.4.1 rc0 installed package recycle | `hadara@next` installed as `0.4.1-rc.0`; installed package recycle passed after changing the helper smoke from removed `task lifecycle` to `task status`. | `ev:T-0513:55abd88e46ce40d88a5942fb`, `ev:T-0513:7a391266ff654f32a823d2b7`, `ev:T-0513:43a25a83247d4823aad8475a` |
+| T-0512 / 0.4.1 rc0 post publish evidence sync | npm registry and GitHub Release metadata were verified after operator publication. | `ev:T-0512:873cb873d9a74a2eb374d829`, `ev:T-0512:8de1c6fc2c0442fdbcbf65cc` |
 | T-0511 / 0.4.1 rc0 publish env preparation boundary fix | `prepare-publish-env.sh` now skips manual helper dry-run by default, keeps `--skip-dry-run` as compatibility no-op, and exposes explicit `--run-helper-dry-run`; focused release-script test/build passed. | `ev:T-0511:77ba1d73ad6840138ffe9056`, `ev:T-0511:38e1c8a3228b49b7b8d50905`, `ev:T-0511:4494d2cd339e4e4bb362165c` |
-| T-0510 / 0.4.1 rc0 manual publish helper smoke command fix | `manual-publish-rc.sh` now calls canonical `smoke package` for fresh release evidence instead of removed `package smoke`; focused Docker script test and build passed. | `ev:T-0510:14f8ebc85ed5466ab51be7be`, `ev:T-0510:4fd82837a221488dbdc309b3`, `ev:T-0510:85f18464c12c47698a85df05` |
 
 ## Current Known Problems
 
@@ -135,14 +136,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Run installed-package recycle for `hadara@0.4.1-rc.0`. | npm and GitHub publication are complete; the next proof should verify the installed package from a fresh unmounted consumer environment. | `ev:T-0512:873cb873d9a74a2eb374d829`, `ev:T-0512:8de1c6fc2c0442fdbcbf65cc`, `docs/RELEASE_READINESS.md` |
+| Decide whether `0.4.1-rc.0` needs broader external dogfood or can move to stable `0.4.1` planning. | npm publish, GitHub prerelease, and installed-package recycle are complete; any remaining work is product confidence/dogfood or stable promotion planning, not release mutation recovery. | `ev:T-0513:55abd88e46ce40d88a5942fb`, `ev:T-0513:43a25a83247d4823aad8475a`, `docs/RELEASE_READINESS.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
-| T-0512 / 0.4.1 rc0 post publish evidence sync | npm registry verification returned `version=0.4.1-rc.0`, `next=0.4.1-rc.0`, `latest=0.4.0`, shasum `8ced2baaf6bbc6e7d407fb9525cf6080109daa8f`; GitHub Release verification returned `isDraft=false`, `isPrerelease=true`, target `5380df586c8deec1c4a2e504a6203e4a2b028500`. | Evidence `ev:T-0512:873cb873d9a74a2eb374d829`, `ev:T-0512:8de1c6fc2c0442fdbcbf65cc`. |
+| T-0513 / 0.4.1 rc0 installed package recycle | Registry metadata returned `version=0.4.1-rc.0`, `next=0.4.1-rc.0`, `latest=0.4.0`; installed recycle installed `hadara@next`, verified `packageVersion=0.4.1-rc.0`, created disposable task `T-0001`, and passed task status/session/finalize/context pack/context slice smokes. | Evidence `ev:T-0513:55abd88e46ce40d88a5942fb`, `ev:T-0513:43a25a83247d4823aad8475a`; resolver `ev:T-0513:7a391266ff654f32a823d2b7` closes the DNS/stale-command attempts. |
 | T-0506 / 0.4.1 rc0 dogfood follow-up command surface cleanup | Docker `npm run build` plus full `npx vitest run --reporter=dot` passed 158 files / 1043 tests; fresh governed `/tmp` dogfood reached `closed-valid`; command-surface smoke verified removed-command redirects and canonical `smoke package`. | Evidence `ev:T-0506:10d49b029b3a4424921fddd9`, `ev:T-0506:c03f654276be450986c48743`, `ev:T-0506:6bf1c1251fbc4bd3ac621efc`. |
 | T-0493 / stable 0.4.0 public GitHub Release | Operator `gh release view v0.4.0` output verified `isDraft=false`, `isPrerelease=false`, tag `v0.4.0`, target `205e9aad0e01ea5332dbdca39c10403c00e845be`, and public URL. | Evidence `ev:T-0493:51ec29e0b0cb4c2aa2e5de85`. |
 | T-0492 / stable 0.4.0 installed-package recycle | Fresh unmounted `node:22-bookworm` container installed `hadara@0.4.0`; installed `hadara version --json` reported `packageVersion=0.4.0`; installed `hadara package recycle --execute --package hadara@latest --expected-version 0.4.0 --json` returned `ok:true` with registry, isolated install/init/task/session/context/finalize smokes, and cleanup passed. | Evidence `ev:T-0492:50c4c3dc78a14861a165ad51`. |

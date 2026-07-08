@@ -418,15 +418,15 @@ function runInstalledSmokes(input: {
       stepId: createTaskStep.id
     });
     input.steps.push(createTaskStep);
-    input.steps.push(skippedStep('task-lifecycle', 'Verify task lifecycle read model', 'hadara task lifecycle --task <task-id> --json', 'Skipped because task creation failed.'));
+    input.steps.push(skippedStep('task-status', 'Verify task status read model', 'hadara task status --task <task-id> --json', 'Skipped because task creation failed.'));
   } else {
     createTaskStep.summary = `Disposable task ${taskId} was created.`;
     input.steps.push(createTaskStep);
     pushJsonSmokeStep(input, {
-      id: 'task-lifecycle',
-      label: 'Verify task lifecycle read model',
-      command: 'hadara task lifecycle --task <task-id> --json',
-      args: ['task', 'lifecycle', '--task', taskId, '--json'],
+      id: 'task-status',
+      label: 'Verify task status read model',
+      command: 'hadara task status --task <task-id> --json',
+      args: ['task', 'status', '--task', taskId, '--json'],
       cwd: disposableProject
     });
     pushJsonSmokeStep(input, {
@@ -671,11 +671,11 @@ function createPlannedSteps(packageInfo: PackageRecycleReport['package'], option
       summary: 'Would create a task capsule in the disposable project.'
     },
     {
-      id: 'task-lifecycle',
-      label: 'Verify task lifecycle read model',
-      command: 'hadara task lifecycle --task <task-id> --json',
+      id: 'task-status',
+      label: 'Verify task status read model',
+      command: 'hadara task status --task <task-id> --json',
       status: 'planned',
-      summary: 'Would verify the task lifecycle read model for the disposable task.'
+      summary: 'Would verify the task status read model for the disposable task.'
     },
     {
       id: 'session-start',
@@ -740,7 +740,7 @@ function createSkippedInstalledSteps(): PackageRecycleStep[] {
     skippedStep('help-lifecycle', 'Verify lifecycle help from installed CLI', 'hadara help lifecycle --json', 'Skipped because package install failed.'),
     skippedStep('init-project', 'Initialize disposable project with installed CLI', 'hadara init --json', 'Skipped because package install failed.'),
     skippedStep('task-create', 'Create disposable task with installed CLI', 'hadara task create <title> --json', 'Skipped because package install failed.'),
-    skippedStep('task-lifecycle', 'Verify task lifecycle read model', 'hadara task lifecycle --task <task-id> --json', 'Skipped because package install failed.'),
+    skippedStep('task-status', 'Verify task status read model', 'hadara task status --task <task-id> --json', 'Skipped because package install failed.'),
     skippedStep('session-start', 'Verify session start read model', 'hadara session start --task <task-id> --json', 'Skipped because package install failed.'),
     skippedStep('task-finalize', 'Verify task finalize dry-run report', 'hadara task finalize --task <task-id> --json', 'Skipped because package install failed.'),
     skippedStep('context-pack', 'Verify context pack read model', 'hadara context pack --task <task-id> --json', 'Skipped because package install failed.'),
