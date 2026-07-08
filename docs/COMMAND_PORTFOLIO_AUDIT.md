@@ -21,9 +21,6 @@ Low-level `task.finish`, `task.ready`, `task.close`, `task.audit-close`, `task.c
 |---|---|---|---|
 | `harness.validate` | `task.finalize`, `task.ready` | Direct done-level capsule validation. | It explains/isolates blockers; `task finalize` is the default close path. |
 | `evidence.lint` | `task.finalize`, `task.ready` | Evidence syntax and semantic proof diagnostics. | It checks one subsystem, not full readiness. |
-| `proof.status` | `task.finalize`, `task.ready`, `task.close` | Compact task proof/readiness read model. | It does not append close proof or run the close loop. |
-| `proof.explain` | `proof.status` | Detailed proof blocker explanation. | It is explanatory and does not change lifecycle state. |
-| `ci.gate` | `task.finalize`, `task.ready`, `release.gate` | Aggregated advisory/strict task/project gate. | It is a diagnostic gate, not a capsule close command. |
 | `protocol.doctor` | `doctor`, `task.finalize`, `task.ready` | Protocol consistency diagnostics. | It reports drift and does not substitute for readiness/close. |
 
 ## Project/Release/Dev/UI/Integration Commands
@@ -46,7 +43,7 @@ Low-level `task.finish`, `task.ready`, `task.close`, `task.audit-close`, `task.c
 | Task status is the default lifecycle cockpit. | `task.status`, `task.finalize`, `task.ready`, `harness.validate` | `task status` without `--task` owns next-work selection; `task status --task` owns phase and next-action guidance. Removed lifecycle and next-work compatibility surfaces return structured redirect stubs. | 0.4 agent UX lifecycle cockpit refactor. |
 | Finalize is the default agent close path. | `task.finalize`, `task.complete`, `task.finish` | `task finalize --execute --auto` is the ordinary guarded close path. Removed low-level lifecycle command surfaces return structured redirect stubs. | FD-010 and FD-013 0.4.1-rc.0 lifecycle surface consolidation. |
 | Close appends proof, audit verifies proof, finalize composes both. | `task.finalize`, `task.close`, `task.audit-close` | `task finalize` preserves the proof boundaries internally: finish bookkeeping, done readiness, close evidence append, and post-close audit. | 0.4.1-rc.0 finalize-first lifecycle default. |
-| Proof and CI gates diagnose, they do not replace close. | `proof.status`, `proof.explain`, `ci.gate`, `task.finalize`, `task.close` | Proof and CI reports explain readiness; they do not append close proof or substitute for finalize/audit. | Phase 7.2 non-overlap rules. |
+| Status and finalize diagnose readiness; they do not replace close execution. | `task.status`, `task.finalize`, `task.close` | Status and finalize dry-run reports explain readiness; close proof is appended only through guarded finalize execute. | T-0522 command-surface reduction. |
 | Shared handoff edits are manual reviewed docs work. | `task.status`, `task.finalize` | No current CLI command writes or generates handoff fragments; use task status/finalize diagnostics and edit shared handoff docs deliberately before close. | T-0496 removed the broken handoff update write surface; T-0506 removed the stale handoff suggestion surface. |
 | Release and dev validation are not ordinary capsule lifecycle steps. | `release.gate`, `task.finalize`, `task.ready`, `dev.docker-check` | Release/dev commands are operator or HADARA-dev validation surfaces and stay hidden from primary lifecycle help. | Phase 7.2 advanced family boundary. |
 

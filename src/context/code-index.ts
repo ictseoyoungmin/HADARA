@@ -1383,7 +1383,6 @@ function createRegistryLineMap(content: string): Map<string, number> {
 
 function inferCommandImplementationFiles(entry: CommandRegistryEntry): string[] {
   const exact: Record<string, string[]> = {
-    'ci.gate': ['src/cli/ci.ts'],
     'context.graph': ['src/cli/context.ts'],
     'dev.docker-check': ['src/cli/dev.ts'],
     'docs.managed.list': ['src/cli/docs.ts'],

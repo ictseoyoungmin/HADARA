@@ -51,13 +51,6 @@
       "notes": "Shared by CLI evidence list and read-only MCP hadara.evidence.list."
     },
     {
-      "id": "hadara.evidence.summary.v1",
-      "path": "src/schemas/evidence-summary.schema.json",
-      "status": "fixture",
-      "owner": "services/evidence-summary",
-      "notes": "Compact read-only evidence id summary for agent copy/paste and close-proof discovery."
-    },
-    {
       "id": "hadara.evidence.projection.v1",
       "path": "src/schemas/evidence-projection.schema.json",
       "status": "fixture",

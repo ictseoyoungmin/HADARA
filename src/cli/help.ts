@@ -56,6 +56,9 @@ export function handleHelpCommand(input: HelpCommandInput): boolean {
 export function renderDefaultHelp(): string {
   const primary = listCommandRegistryEntries({ family: 'capsule-lifecycle', requiredness: 'primary' }).filter((entry) => entry.appearsInDefaultHelp);
   const diagnostics = listCommandRegistryEntries({ family: 'proof-diagnostics' }).filter((entry) => entry.appearsInDefaultHelp);
+  const diagnosticLines = diagnostics.length > 0
+    ? ['', 'Core diagnostics:', ...diagnostics.map((entry) => `  ${entry.command}  ${entry.summary}`)]
+    : [];
 
   return [
     'HADARA - project-local operating layer for evidence-backed agent work',
@@ -67,9 +70,7 @@ export function renderDefaultHelp(): string {
     '',
     'Primary capsule lifecycle:',
     `  ${formatLifecycle(primary)}`,
-    '',
-    'Core diagnostics:',
-    ...diagnostics.map((entry) => `  ${entry.command}  ${entry.summary}`),
+    ...diagnosticLines,
     '',
     'Use:',
     '  hadara help lifecycle       Show the canonical task loop.',

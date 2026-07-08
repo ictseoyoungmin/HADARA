@@ -217,7 +217,7 @@ hadara validation run --task T-XXXX --check "Focused tests" -- npm run test:focu
 hadara validation run --task T-XXXX --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly" --update-task --json
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --idempotency-key "command:T-XXXX:check" --json
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --json
-hadara evidence summary --task T-XXXX --json
+hadara evidence list --task T-XXXX --json
 hadara evidence project --task T-XXXX --json
 ```
 
@@ -231,7 +231,7 @@ hadara validation run --task T-XXXX --check "Focused tests" --direct-result pass
 
 For focused Vitest checks, use `npm run test:focused -- tests/unit/<file>.test.ts`. Do not use `npm run test:unit -- tests/unit/<file>.test.ts`; `test:unit` already supplies the broad unit suite path.
 
-Use `evidence add-command` only when recording an already-run result supplied by the operator. It does not execute shell commands. Use `evidence summary` to find durable evidence ids for docs and resolution markers.
+Use `evidence add-command` only when recording an already-run result supplied by the operator. It does not execute shell commands. Use `evidence list` to find durable evidence ids for docs and resolution markers.
 
 Evidence must reflect real execution results. Fabricated or assumed results are invalid.
 
@@ -265,7 +265,7 @@ Agents may use `task finalize --execute --auto` for ordinary clean capsules; it 
 | Run, record, and sync task row | `hadara validation run --task T-XXXX --check "..." --update-task -- <command>` | Executes the command, records evidence, and updates the matching `TASK.md` Validation row. |
 | Record direct validation result | `hadara validation run --task T-XXXX --check "..." --direct-result passed --direct-summary "..." --update-task --json` | Records an already-run direct result when wrapper launch is blocked by the tool environment. |
 | Record already-run validation | `hadara evidence add-command ... --json` | Append-only evidence writer; does not execute commands. |
-| Find evidence ids | `hadara evidence summary --task T-XXXX --json` | Compact copy hints. |
+| Find evidence ids | `hadara evidence list --task T-XXXX --json` | Durable id discovery. |
 | Review loop phase | `hadara task status --task T-XXXX --json` | Normal lifecycle state and next action. |
 | Close ordinary work | `hadara task finalize --task T-XXXX --execute --auto --json` | Default guarded close path for clean capsules; records readiness evidence and close proof when needed. |
 | Externally reviewed close | `hadara task finalize --task T-XXXX --json` then execute with its `planHash` | Use when a human or automation explicitly reviews and carries the dry-run plan. |

@@ -7,7 +7,6 @@ const CONFUSABLE_PAIRS = [
   ['task.ready', 'harness.validate'],
   ['task.complete', 'task.finish'],
   ['task.close', 'task.audit-close'],
-  ['proof.status', 'ci.gate'],
   ['task.status', 'task.finalize'],
   ['release.gate', 'task.ready']
 ];

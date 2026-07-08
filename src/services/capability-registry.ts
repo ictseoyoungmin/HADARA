@@ -531,7 +531,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Inspect compact capsule status', 'hadara task status --task T-0001 --summary-json', 'When shell automation or humans only need phase, readiness, counts, and next action.'),
       example('Inspect full diagnostics', 'hadara task status --task T-0001 --detail full --json', 'When explicit close/protocol diagnostics are needed without finalize planning.')
     ],
-    related: ['task.status', 'evidence.list', 'proof.status'],
+    related: ['task.status', 'evidence.list', 'task.finalize'],
     conflictsWith: []
   },
   {
@@ -558,7 +558,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Execute ordinary guarded finalize', 'hadara task finalize --task T-0001 --execute --auto --json', 'For ordinary clean capsules; the CLI performs the dry-run/current-plan verification internally and records readiness evidence before close proof when needed.'),
       example('Execute externally reviewed finalize plan', 'hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json', 'After a human or automation explicitly reviews and carries the current dry-run plan hash.')
     ],
-    related: ['task.status', 'task.close-source', 'proof.status'],
+    related: ['task.status', 'task.close-source', 'state.verify'],
     conflictsWith: [],
     notes: 'Default mode is read-only. Execute uses either --auto for one-call guarded close or a matching current dry-run plan hash for externally reviewed flows; both run phases serially, preserve the underlying finish/close write boundaries, repair stale close proof by appending fresh close evidence when the plan requires it, and stop on the first blocker.'
   },
@@ -582,7 +582,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     implementationFiles: ['src/cli/task.ts', 'src/task/task-close.ts'],
     testFiles: ['tests/unit/task-close-source.test.ts'],
     examples: [example('Inspect close source', 'hadara task close-source --task T-0001 --json', 'When reviewing close-source drift boundaries.')],
-    related: ['task.finalize', 'proof.status'],
+    related: ['task.finalize', 'state.verify'],
     conflictsWith: []
   },
   {
@@ -661,29 +661,6 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     conflictsWith: []
   },
   {
-    id: 'evidence.summary',
-    command: 'hadara evidence summary --task <task-id> [--limit <n>] [--include-private] [--json]',
-    summary: 'Show compact evidence ids, latest evidence, and latest close evidence for copy/paste into docs and resolution markers.',
-    canonical: true,
-    appearsInDefaultHelp: false,
-    family: 'capsule-lifecycle',
-    scope: 'evidence',
-    lifecycleStage: 'evidence',
-    requiredness: 'conditional',
-    writeBoundary: 'read-only',
-    readOnly: true,
-    risk: 'low',
-    actor: 'agent-worker',
-    status: 'stable',
-    schemaVersion: 'hadara.evidence.summary.v1',
-    docs: ['docs/HADARA_WORKFLOW.md', 'docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md'],
-    implementationFiles: ['src/cli/evidence.ts', 'src/services/evidence-summary.ts'],
-    testFiles: ['tests/unit/evidence-summary.test.ts', 'tests/unit/evidence-json.test.ts'],
-    examples: [example('Copy latest close evidence id', 'hadara evidence summary --task T-0001 --json', 'After finalize or close evidence append.')],
-    related: ['evidence.list', 'evidence.add-command', 'task.finalize'],
-    conflictsWith: []
-  },
-  {
     id: 'evidence.project',
     command: 'hadara evidence project --task <task-id> [--execute] [--json]',
     summary: 'Regenerate the EVIDENCE.md projection file from canonical evidence.jsonl without rewriting evidence records.',
@@ -750,66 +727,6 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     conflictsWith: []
   },
   {
-    id: 'proof.status',
-    command: 'hadara proof status --task <task-id> [--json]',
-    summary: 'Summarize proof/readiness state for a Task Capsule.',
-    canonical: true,
-    appearsInDefaultHelp: true,
-    family: 'proof-diagnostics',
-    scope: 'proof',
-    lifecycleStage: 'ready',
-    requiredness: 'diagnostic',
-    writeBoundary: 'read-only',
-    readOnly: true,
-    risk: 'low',
-    actor: 'agent-worker',
-    status: 'stable',
-    docs: TASK_DOCS,
-    examples: [example('Check proof status', 'hadara proof status --task T-0001 --json', 'When investigating readiness or close state.')],
-    related: ['proof.explain', 'task.finalize'],
-    conflictsWith: []
-  },
-  {
-    id: 'proof.explain',
-    command: 'hadara proof explain --task <task-id> [--json]',
-    summary: 'Explain proof blockers and evidence gaps for a Task Capsule.',
-    canonical: true,
-    appearsInDefaultHelp: false,
-    family: 'proof-diagnostics',
-    scope: 'proof',
-    lifecycleStage: 'ready',
-    requiredness: 'diagnostic',
-    writeBoundary: 'read-only',
-    readOnly: true,
-    risk: 'low',
-    actor: 'agent-worker',
-    status: 'stable',
-    docs: TASK_DOCS,
-    examples: [example('Explain proof', 'hadara proof explain --task T-0001 --json', 'When proof status is unclear.')],
-    related: ['proof.status', 'evidence.lint'],
-    conflictsWith: []
-  },
-  {
-    id: 'ci.gate',
-    command: 'hadara ci gate [--mode advisory|strict] [--task <task-id>] [--allow-empty] [--json]',
-    summary: 'Evaluate CI-style task proof gates with advisory state consistency signals.',
-    canonical: true,
-    appearsInDefaultHelp: false,
-    family: 'proof-diagnostics',
-    scope: 'proof',
-    lifecycleStage: 'ready',
-    requiredness: 'diagnostic',
-    writeBoundary: 'read-only',
-    readOnly: true,
-    risk: 'low',
-    actor: 'agent-worker',
-    status: 'stable',
-    docs: ['docs/HADARA_WORKFLOW.md'],
-    examples: [example('Run strict CI gate', 'hadara ci gate --mode strict --task T-0001 --json', 'In automated validation paths.')],
-    related: ['task.finalize', 'proof.status', 'state.verify'],
-    conflictsWith: []
-  },
-  {
     id: 'state.verify',
     command: 'hadara state verify [--json]',
     summary: 'Read the state consistency projection and concise drift issues.',
@@ -827,7 +744,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     schemaVersion: 'hadara.stateProjection.v1',
     docs: ['docs/COMMAND_SURFACE.md', 'docs/SCHEMAS.md'],
     examples: [example('Verify state drift', 'hadara state verify --json', 'Before close or when shared-doc state looks inconsistent.')],
-    related: ['status', 'protocol.doctor', 'ci.gate'],
+    related: ['status', 'protocol.doctor', 'task.status'],
     conflictsWith: []
   },
   commandEntry({

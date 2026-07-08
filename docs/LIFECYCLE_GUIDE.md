@@ -20,9 +20,6 @@ Diagnostics explain blockers. They do not replace the primary lifecycle.
 | Command ID | Use When |
 |---|---|
 | `evidence.lint` | Evidence records or semantic proof are unclear. |
-| `proof.status` | You need a compact proof/readiness summary for one task. |
-| `proof.explain` | Proof status is stale, weak, or confusing. |
-| `ci.gate` | You need an aggregated advisory or strict project/task gate. |
 | `protocol.doctor` | Protocol docs, task board rows, or profile state may be inconsistent. |
 | `state.verify` | Shared task/state projection looks inconsistent or needs concise drift evidence. |
 | `harness.validate` | `task finalize` or low-level `task ready` reports format or done-level blockers. |

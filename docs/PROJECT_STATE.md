@@ -9,10 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0521 command portfolio reduction inventory |
-| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction inventory is complete, and the next recommended implementation slice is low-risk read-model consolidation around proof/evidence duplicate diagnostics. |
+| Latest Completed Task | T-0522 remove duplicate proof and evidence summary commands |
+| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction inventory is complete, and T-0522 completed the first duplicate proof/evidence/CI diagnostic removal from the public command surface. |
 
-T-0521 follow-up note: command portfolio reduction inventory is complete. The current registry has 73 command ids, with 10 default-help commands, 57 stable commands, 16 experimental commands, 6 primary commands, 26 diagnostic commands, 19 conditional commands, 7 release-only commands, 5 integration-only commands, 3 dev-only commands, and 7 advanced commands. `COMMAND_PORTFOLIO.md` in the T-0521 capsule includes every registry id with family, requiredness, importance, default-help exposure, action recommendation, and rationale. The safest first implementation slice is read-only duplicate diagnostics: `proof.status`, `proof.explain`, `ci.gate`, and `evidence.summary`. Evidence: `ev:T-0521:87352953be5d4b8c8bf5e13c`.
+T-0522 follow-up note: the first command-surface reduction implementation is complete. Public `proof.status`, `proof.explain`, `ci.gate`, and `evidence.summary` surfaces were removed from routing, registry metadata, schemas, current docs, generated init workflow guidance, and focused tests. Current replacements are `task status --detail full`, `task finalize --json`, `evidence list`, `state verify`, and release-specific `release gate`. The registry smoke now reports 69 current command ids. Evidence: `ev:T-0522:9f87a75fe15649e9bd445710`.
 
 T-0520 follow-up note: stable installed-package recycle passed for `hadara@latest` expected `0.4.1`. The approved network execution verified registry version `0.4.1`, dist-tags `latest=0.4.1` and `next=0.4.1-rc.0`, isolated registry install, installed CLI `packageVersion=0.4.1`, installed command surface with 73 command ids, lifecycle help, fresh init, task create/status, session start, finalize dry-run, context pack, context slice, and cleanup. The first sandboxed execute attempt failed after child npm registry lookups timed out around 70s each; direct `npm view` and the approved rerun passed, so it is classified as environment child-process/network friction. Evidence: `ev:T-0520:2b4b928b65344d03ad44a53d`, `ev:T-0520:705485eda380456583f41294`.
 

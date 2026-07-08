@@ -1251,7 +1251,7 @@ function validateHandoffCurrentStateTokens(projectRoot: string, task: TaskCapsul
       message: `HANDOFF.md persists derived CloseState value "${closeState}".`,
       path: relativePath,
       heading: 'Current State',
-      fixHint: 'Remove the CloseState row from task-local HANDOFF.md; use task status, audit-close, proof status, or state verify read models for derived close state.',
+      fixHint: 'Remove the CloseState row from task-local HANDOFF.md; use task status --detail full, task finalize, or state verify read models for derived close state.',
       example: '| TaskStatus | Done |',
       remediationHint: {
         path: relativePath,

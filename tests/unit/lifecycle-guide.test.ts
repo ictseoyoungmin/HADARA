@@ -26,7 +26,10 @@ describe('Phase 7.2 lifecycle guide', () => {
     const primaryIds = report.primaryPath.map((step) => step.commandId);
     const diagnosticIds = report.diagnostics.map((item) => item.commandId);
 
-    expect(diagnosticIds).toEqual(expect.arrayContaining(['evidence.lint', 'proof.status', 'proof.explain', 'ci.gate', 'protocol.doctor', 'harness.validate']));
+    expect(diagnosticIds).toEqual(expect.arrayContaining(['evidence.lint', 'protocol.doctor', 'harness.validate']));
+    expect(diagnosticIds).not.toContain('proof.status');
+    expect(diagnosticIds).not.toContain('proof.explain');
+    expect(diagnosticIds).not.toContain('ci.gate');
     for (const diagnostic of diagnosticIds) expect(primaryIds).not.toContain(diagnostic);
   });
 

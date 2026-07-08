@@ -20,9 +20,6 @@ const PRIMARY_WHEN: Record<string, string> = {
 
 const DIAGNOSTIC_USE_WHEN: Record<string, string> = {
   'evidence.lint': 'Evidence records or semantic proof are unclear.',
-  'proof.status': 'You need a compact proof/readiness summary for one task.',
-  'proof.explain': 'Proof status is stale, weak, or confusing.',
-  'ci.gate': 'You need an aggregated advisory or strict project/task gate.',
   'protocol.doctor': 'Protocol docs, task board rows, or profile state may be inconsistent.',
   'harness.validate': 'task finalize or task status full diagnostics report format or done-level blockers.'
 };
@@ -115,10 +112,10 @@ export const PORTFOLIO_AUDIT_DECISIONS: PortfolioAuditDecision[] = [
     evidence: '0.4.1-rc.0 finalize-first lifecycle default.'
   },
   {
-    decision: 'Proof and CI gates diagnose, they do not replace close.',
-    commands: ['proof.status', 'proof.explain', 'ci.gate', 'task.finalize', 'task.close'],
-    rule: 'Proof and CI reports explain readiness; they do not append close proof or substitute for finalize/audit.',
-    evidence: 'Phase 7.2 non-overlap rules.'
+    decision: 'Status and finalize diagnose readiness; they do not replace close execution.',
+    commands: ['task.status', 'task.finalize', 'task.close'],
+    rule: '`task status --detail full` and `task finalize --json` explain readiness; they do not append close proof until guarded finalize execute runs.',
+    evidence: 'T-0522 removed standalone proof status/explain and ci gate commands after finalize/status/state surfaces absorbed their public role.'
   },
   {
     decision: 'Shared handoff edits are manual reviewed docs work.',

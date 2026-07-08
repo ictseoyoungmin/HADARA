@@ -1153,7 +1153,7 @@ Do not hand-edit \`evidence.jsonl\`. Treat \`EVIDENCE.md\` as a CLI-generated pr
 hadara validation run --task T-XXXX --check "Focused tests" -- npm test
 hadara validation run --task T-XXXX --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly" --update-task --json
 hadara evidence add-command --task T-XXXX --summary "..." --result passed --category validation --json
-hadara evidence summary --task T-XXXX --json
+hadara evidence list --task T-XXXX --json
 hadara evidence project --task T-XXXX --json
 \`\`\`
 
@@ -1165,7 +1165,7 @@ If the wrapper cannot launch a command in the current tool environment (for exam
 hadara validation run --task T-XXXX --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly after validation wrapper launch failure" --update-task --json
 \`\`\`
 
-Use \`evidence add-command\` only when recording an already-run result supplied by the operator. It does not execute shell commands. Use \`evidence summary\` to find durable evidence ids for docs and resolution markers.
+Use \`evidence add-command\` only when recording an already-run result supplied by the operator. It does not execute shell commands. Use \`evidence list\` to find durable evidence ids for docs and resolution markers.
 
 Evidence must reflect real execution results. Fabricated or assumed results are invalid.
 
@@ -1200,7 +1200,7 @@ Agents should inspect \`task finalize --json\` before close when the result is n
 | Run, record, and sync task row | \`hadara validation run --task T-XXXX --check "..." --update-task -- <command>\` | Executes the command, records evidence, and updates the matching \`TASK.md\` Validation row. |
 | Record direct validation result | \`hadara validation run --task T-XXXX --check "..." --direct-result passed --direct-summary "..." --update-task --json\` | Records an already-run direct result when wrapper launch is blocked by the tool environment. |
 | Record already-run validation | \`hadara evidence add-command ... --json\` | Append-only evidence writer; does not execute commands. |
-| Find evidence ids | \`hadara evidence summary --task T-XXXX --json\` | Compact copy hints. |
+| Find evidence ids | \`hadara evidence list --task T-XXXX --json\` | Durable id discovery. |
 | Review loop phase | \`hadara task status --task T-XXXX --json\` | Normal lifecycle state and next action. |
 | Close ordinary work | \`hadara task finalize --task T-XXXX --execute --auto --json\` | Default guarded close path for clean capsules; records readiness evidence and close proof when needed. |
 | Externally reviewed close | \`hadara task finalize --task T-XXXX --json\` then execute with its \`planHash\` | Use when a human or automation explicitly reviews and carries the dry-run plan. |
@@ -1655,7 +1655,7 @@ HADARA uses separate token families for persistent state, derived proof state, d
 | \`Superseded\` | Task has been replaced by another task or line. | Worker/coordinator docs |
 | \`Archived\` | Task is no longer active state and is retained only for history. | Worker/coordinator docs |
 
-Reserved non-TaskStatus strings include \`Closed\`, \`Ready\`, \`Approved\`, \`Complete\`, \`closed-valid\`, \`not-closed\`, and phrases such as \`Done pending lifecycle close\`. Use \`TaskStatus: Done\`; get close proof state from \`task status\`, proof status, or \`state verify\` read models.
+Reserved non-TaskStatus strings include \`Closed\`, \`Ready\`, \`Approved\`, \`Complete\`, \`closed-valid\`, \`not-closed\`, and phrases such as \`Done pending lifecycle close\`. Use \`TaskStatus: Done\`; get close proof state from \`task status --detail full\`, \`task finalize\`, or \`state verify\` read models.
 
 ### CloseState
 
@@ -1695,7 +1695,7 @@ Evidence outcome tokens are \`passed\`, \`failed\`, \`blocked\`, and \`unknown\`
 | \`TASK.md\` status metadata, \`## Status\`, and Status History | Command-owned for finalize bookkeeping; worker-owned before finalize. |
 | \`docs/TASK_BOARD.md\` ID/title/status/capsule cells | Command-owned by \`task finalize\`; Notes and extra cells are mixed/human-owned. |
 | \`EVIDENCE.md\` and \`evidence.jsonl\` | Evidence writer-owned; do not hand-edit \`evidence.jsonl\`. Treat \`evidence.jsonl\` as canonical and \`EVIDENCE.md\` as a non-canonical human summary; evidence rebuild is not implemented in this scaffold and any future execute mode must be dry-run-first and before-hash guarded. |
-| \`HANDOFF.md\` managed current-state table | Managed/mixed; persist \`TaskStatus\` only. \`CloseState\` is derived by status/audit/proof/state read models and should not be written into close-source handoff tables. |
+| \`HANDOFF.md\` managed current-state table | Managed/mixed; persist \`TaskStatus\` only. \`CloseState\` is derived by status/finalize/state read models and should not be written into close-source handoff tables. |
 | Shared state docs | Mixed/human-owned; update before close when they are close-source relevant. |
 | \`.hadara/docs-registry.json\` and \`docs/DOC_REGISTRY.md\` | Docs registry-owned; registry mutations should stay dry-run-first or explicitly scoped. |
 

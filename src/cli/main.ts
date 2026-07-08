@@ -109,18 +109,6 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
       break;
     }
 
-    case 'proof': {
-      const { handleProofCommand } = await import('./proof');
-      if (handleProofCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
-      break;
-    }
-
-    case 'ci': {
-      const { handleCiCommand } = await import('./ci');
-      if (handleCiCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
-      break;
-    }
-
     case 'tools': {
       const { handleToolsCommand } = await import('./tools');
       if (handleToolsCommand({ args, jsonOutput })) return;

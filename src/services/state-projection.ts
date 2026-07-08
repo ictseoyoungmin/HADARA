@@ -333,13 +333,13 @@ function buildTaskProjection(
     issues.push(warning('STATE_TASK_BOARD_STATUS_DRIFT', 'docs/TASK_BOARD.md', `Task Board status for ${taskId} is ${taskBoard.status}, but TASK.md status is ${taskStatus}.`, `Align docs/TASK_BOARD.md deliberately before running hadara task finalize --task ${taskId} --execute --auto --json.`, taskId, taskStatus, taskBoard.status));
   }
   if (deepCheck && taskHandoff.taskStatus && !TASK_STATUS_TOKENS.has(taskHandoff.taskStatus)) {
-    issues.push(warning('STATE_TASK_HANDOFF_STATUS_INVALID', handoffPath, `Task handoff TaskStatus for ${taskId} is not a canonical task status token: ${taskHandoff.taskStatus}.`, 'Use a canonical TaskStatus token; close proof state belongs in audit-close/proof/status read models.', taskId));
+    issues.push(warning('STATE_TASK_HANDOFF_STATUS_INVALID', handoffPath, `Task handoff TaskStatus for ${taskId} is not a canonical task status token: ${taskHandoff.taskStatus}.`, 'Use a canonical TaskStatus token; close proof state belongs in task status/finalize/state read models.', taskId));
   }
   if (deepCheck && taskHandoff.taskStatus && /pending lifecycle close|closed-valid|not-closed/i.test(taskHandoff.taskStatus)) {
-    issues.push(warning('STATE_TASK_HANDOFF_STATUS_CLOSE_STATE_MIXED', handoffPath, `Task handoff TaskStatus for ${taskId} appears to mix task status and close proof state.`, 'Use TaskStatus: Done only; derive CloseState from audit-close/proof/status read models.', taskId));
+    issues.push(warning('STATE_TASK_HANDOFF_STATUS_CLOSE_STATE_MIXED', handoffPath, `Task handoff TaskStatus for ${taskId} appears to mix task status and close proof state.`, 'Use TaskStatus: Done only; derive CloseState from task status/finalize/state read models.', taskId));
   }
   if (deepCheck && taskHandoff.closeState) {
-    issues.push(warning('STATE_TASK_HANDOFF_CLOSE_STATE_PERSISTED', handoffPath, `Task handoff persists derived CloseState for ${taskId}: ${taskHandoff.closeState}.`, 'Remove CloseState from task-local HANDOFF.md; use audit-close/proof/status read models for derived close state.', taskId));
+    issues.push(warning('STATE_TASK_HANDOFF_CLOSE_STATE_PERSISTED', handoffPath, `Task handoff persists derived CloseState for ${taskId}: ${taskHandoff.closeState}.`, 'Remove CloseState from task-local HANDOFF.md; use task status --detail full, task finalize, or state verify read models for derived close state.', taskId));
     if (!CLOSE_STATE_TOKENS.has(taskHandoff.closeState)) {
       issues.push(warning('STATE_TASK_HANDOFF_CLOSE_STATE_INVALID', handoffPath, `Task handoff CloseState for ${taskId} is not canonical: ${taskHandoff.closeState}.`, 'Remove the CloseState row from task-local HANDOFF.md.', taskId));
     }
