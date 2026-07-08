@@ -107,9 +107,12 @@ const EMPTY_DEBT_AGGREGATE: OperationalDebtAggregate = {
 export function createOpsStatusReport(projectRoot: string, options: OpsStatusOptions = {}): OpsStatusReport {
   const includeDebt = options.includeDebt !== false;
   const sources = readProjectSources(projectRoot);
+  const taskBoardRows = parseTaskBoardRows(sources.taskBoard.content);
+  const taskCapsules = options.taskStatusSource === 'task-board' ? [] : listTaskCapsules(projectRoot);
+  const recommendationRows = options.taskStatusSource === 'task-board' ? taskBoardRows : taskCapsules.map(taskCapsuleToStatusRow);
   const taskCounts = options.taskStatusSource === 'task-board'
-    ? countTaskBoardStatuses(parseTaskBoardRows(sources.taskBoard.content))
-    : countTaskStatuses(listTaskCapsules(projectRoot));
+    ? countTaskBoardStatuses(taskBoardRows)
+    : countTaskStatuses(taskCapsules);
   const handoffSections = {
     currentState: truncateList(extractHandoffSectionValues(sources.handoff.content, '## Current State'), options.maxTextLength),
     knownProblems: options.includeKnownProblems === false
@@ -124,6 +127,7 @@ export function createOpsStatusReport(projectRoot: string, options: OpsStatusOpt
     ? toStateProjectionAdvisory(createStateProjectionReport(projectRoot), options.stateIssueLimit ?? 10)
     : undefined;
   const issues = [...collectIssues(sources, validation), ...activeRun.issues];
+  const nextRecommended = selectNextRecommendedTask(recommendationRows, handoffSections.nextRecommendedStep[0] ?? null);
 
   return {
     schemaVersion: 'hadara.ops.status.v1',
@@ -139,7 +143,7 @@ export function createOpsStatusReport(projectRoot: string, options: OpsStatusOpt
       rawStatusCounts: taskCounts.rawStatusCounts,
       normalizedStatusCounts: taskCounts.normalizedStatusCounts,
       lastCompleted: extractLastCompletedTaskIds(sources.handoff.content),
-      nextRecommended: handoffSections.nextRecommendedStep[0] ?? null
+      nextRecommended: nextRecommended ? truncateText(nextRecommended, options.maxTextLength) : null
     },
     handoff: handoffSections,
     validation,
@@ -266,13 +270,29 @@ function countTaskStatuses(tasks: TaskCapsule[]): {
 
 interface TaskBoardStatusRow {
   id: string;
+  title: string;
   status: string;
+  capsule: string;
 }
 
 function parseTaskBoardRows(content: string): TaskBoardStatusRow[] {
   return parseMarkdownRows(content)
     .filter((row) => /^T-\d{4}$/.test(row[0] ?? ''))
-    .map((row) => ({ id: row[0], status: row[2] || 'Unknown' }));
+    .map((row) => ({
+      id: row[0],
+      title: row[1] || '',
+      status: row[2] || 'Unknown',
+      capsule: row[3] || ''
+    }));
+}
+
+function taskCapsuleToStatusRow(task: TaskCapsule): TaskBoardStatusRow {
+  return {
+    id: task.id,
+    title: task.title,
+    status: readTaskStatus(task),
+    capsule: path.relative(path.dirname(path.dirname(task.dir)), task.dir).replace(/\\/g, '/')
+  };
 }
 
 function countTaskBoardStatuses(rows: TaskBoardStatusRow[]): {
@@ -298,6 +318,23 @@ function countTaskBoardStatuses(rows: TaskBoardStatusRow[]): {
     normalizedStatusCounts[normalizedStatus] = (normalizedStatusCounts[normalizedStatus] ?? 0) + 1;
   }
   return { counts, rawStatusCounts, normalizedStatusCounts };
+}
+
+function selectNextRecommendedTask(rows: TaskBoardStatusRow[], fallback: string | null): string | null {
+  const active = rows.find((row) => aggregateStatus(normalizeStatus(row.status)) === 'inProgress');
+  if (active) return formatTaskRecommendation('Continue', active);
+  const draft = rows.find((row) => aggregateStatus(normalizeStatus(row.status)) === 'draft');
+  if (draft) return formatTaskRecommendation('Start', draft);
+  if (fallback) return fallback;
+  const partial = rows.find((row) => aggregateStatus(normalizeStatus(row.status)) === 'partial');
+  if (partial) return formatTaskRecommendation('Resume partial', partial);
+  return null;
+}
+
+function formatTaskRecommendation(action: string, row: TaskBoardStatusRow): string {
+  const title = row.title ? ` ${row.title}` : '';
+  const capsule = row.capsule ? ` (${row.capsule})` : '';
+  return `${action} ${row.id}${title}${capsule}.`;
 }
 
 function readTaskStatus(task: TaskCapsule): string {

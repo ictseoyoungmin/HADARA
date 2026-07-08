@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0524 speed up status json default |
-| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction is continuing; T-0524 makes top-level project status fast by default while preserving explicit full/state diagnostics. |
+| Latest Completed Task | T-0525 repair status current recommendation and docker dist validation |
+| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction is continuing; T-0525 repaired top-level status current-work recommendation and restored Docker/dist validation discipline after T-0524. |
+
+T-0525 follow-up note: top-level `hadara status` now prefers current Task Board work before falling back to shared handoff prose: `In Progress`, then `Draft`, then handoff next-step, and only then `Partial` when no handoff recommendation exists. This prevents stale handoff release guidance from overriding live capsules while also preventing old partial rows from overriding current handoff guidance. T-0525 also corrected the T-0524 validation gap by running the HADARA-dev Docker workflow: `npm run dev:docker-sync-build -- --smoke-command "status --summary-json"` passed `npm ci`, TypeScript build, full Vitest 155 files / 1045 tests, refreshed workspace `dist` from Docker build output, and the Docker-built CLI smoke recommended command portfolio reduction handoff instead of stale release guidance or old Partial T-0006. Evidence: `ev:T-0525:b8caed6d249e4120bea191ca`.
 
 T-0524 follow-up note: top-level `hadara status --json` is now fast by default. It keeps the `hadara.ops.status.v1` envelope but skips broad operational-debt, known-problem, Task Capsule, and state-consistency scans unless requested. Explicit variants are `hadara status --detail full --json` for the former broad operations payload, `hadara status --summary-json` for compact automation, and `hadara status --state-only --json` for state-consistency advisory. Focused Vitest coverage passed 6 files / 41 tests, TypeScript build passed, and built CLI smoke showed fast/summary around 1.1s, state-only around 10.2s, and full detail around 40.5s on the mounted workspace. A full host Vitest attempt was blocked by environment `spawnSync node/bash EPERM` after 148 files passed; Docker/ext4 remains the better spawn-heavy validation path. Evidence: `ev:T-0524:27c4be39ca554616b854a12e`, `ev:T-0524:4baa7e47eb454beaa70dfe06`.
 

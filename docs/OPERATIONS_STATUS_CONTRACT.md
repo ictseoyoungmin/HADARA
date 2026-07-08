@@ -116,7 +116,7 @@ Example:
 - `tasks.rawStatusCounts` preserves original source status labels for diagnostics.
 - `tasks.normalizedStatusCounts` preserves normalized source status values for programmatic diagnostics.
 - `tasks.lastCompleted` is derived from `docs/AGENT_HANDOFF.md`.
-- `tasks.nextRecommended` is derived from the handoff next-step section when available.
+- `tasks.nextRecommended` prefers current Task Board work in this order: `In Progress`, then `Draft`. It then falls back to the handoff next-step section. `Partial` rows are used only when no handoff recommendation exists, because old partial rows can represent historical residual work rather than the next active capsule.
 - `handoff.*` arrays are compact excerpts from `docs/AGENT_HANDOFF.md`; default fast status omits `knownProblems`, while full-detail status includes it.
 - `validation.*` fields are compact latest validation summaries from `docs/AGENT_HANDOFF.md`, falling back to `docs/VALIDATION_HISTORY.md` when needed.
 - `activeRun` is a read projection of `.hadara/local/state/active-run.json`; it is local project state and must not imply queues, worker lanes, or concurrent multi-agent execution.

@@ -69,7 +69,7 @@ describe('Operations Status JSON', () => {
           superseded: 1
         },
         lastCompleted: ['T-0050', 'T-0051', 'T-0052'],
-        nextRecommended: 'Do T-0053 Operations Status JSON before dashboard implementation.'
+        nextRecommended: 'Start T-0002 Draft task (tasks/T-0002-draft-task).'
       },
       handoff: {
         currentState: ['MCP guard layer is complete.'],
@@ -448,6 +448,48 @@ describe('Operations Status JSON', () => {
       'In Progress': 1,
       'Needs Review': 1
     });
+  });
+
+  it('prefers current Task Board work over stale handoff recommendations', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      [
+        '# TASK_BOARD',
+        '',
+        '| ID | Title | Status | Path | Notes |',
+        '|---|---|---|---|---|',
+        '| T-0001 | Completed task | Done | tasks/T-0001-completed-task | Closed. |',
+        '| T-0002 | Current repair | Draft | tasks/T-0002-current-repair | Active capsule. |'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const report = createOpsStatusSummaryReport(root);
+
+    expect(report.tasks.nextRecommended).toBe('Start T-0002 Current repair (tasks/T-0002-current-repair).');
+    expect(report.tasks.nextRecommended).not.toContain('T-0053 Operations Status JSON');
+  });
+
+  it('uses handoff guidance before old partial Task Board rows', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      [
+        '# TASK_BOARD',
+        '',
+        '| ID | Title | Status | Path | Notes |',
+        '|---|---|---|---|---|',
+        '| T-0001 | Historical partial | Partial | tasks/T-0001-historical-partial | Old residual. |'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const report = createOpsStatusSummaryReport(root);
+
+    expect(report.tasks.nextRecommended).toBe('Do T-0053 Operations Status JSON before dashboard implementation.');
   });
 
   it('builds a compact summary report without debt, known problems, or state checks by default', () => {
