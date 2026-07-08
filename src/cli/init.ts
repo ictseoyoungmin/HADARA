@@ -4,7 +4,6 @@ import { resolveHadaraPaths } from '../core/paths';
 import { ensureDir, writeFileIfMissing } from '../core/fs';
 import { getFlag, getRequiredStringOption, getStringOption } from './args';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
-import { printCommandRemovedReport } from './removed-command';
 import { DOCS_REGISTRY_PATH, createHadaraContextDoc, createSeedDocumentRegistry, registryJson } from '../services/docs-registry';
 import { managedSectionBlock } from '../services/managed-sections';
 import type { DocumentRegistryFile } from '../services/docs-registry';
@@ -200,18 +199,6 @@ export function handleInitCommand(input: InitCommandInput): boolean {
     printInitFollowUpReport(report, input.jsonOutput);
     return true;
   }
-  if (subcommand === 'register-doc') {
-    return printCommandRemovedReport(
-      {
-        commandId: 'init.register-doc',
-        removedCommand: 'hadara init register-doc',
-        replacementCommand: 'hadara docs register --path <path> --json',
-        diagnosticCommand: 'hadara docs register --help',
-        note: 'Document registration is consolidated under the docs registry command family.'
-      },
-      input.jsonOutput === true
-    );
-  }
   if (subcommand === 'enable-integration') {
     if (getFlag(input.args, '--execute') === true) {
       const legacyReport = createLegacyMutationBlockedReport(input.projectRoot, 'init.enable-integration');
@@ -228,6 +215,7 @@ export function handleInitCommand(input: InitCommandInput): boolean {
     printInitFollowUpReport(report, input.jsonOutput);
     return true;
   }
+  if (subcommand && !subcommand.startsWith('-')) return false;
   const report = initProject(input.projectRoot, getStringOption(input.args, '--profile', 'standard') ?? 'standard', { silent: input.jsonOutput });
   if (input.jsonOutput) console.log(JSON.stringify(report, null, 2));
   return true;

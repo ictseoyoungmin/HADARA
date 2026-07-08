@@ -193,12 +193,6 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
       break;
     }
 
-    case 'ops': {
-      const { handleOpsCommand } = await import('./status');
-      if (handleOpsCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
-      break;
-    }
-
     case 'run': {
       const { handleRunCommand } = await import('./run');
       if (await handleRunCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;

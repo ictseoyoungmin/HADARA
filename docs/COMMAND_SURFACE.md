@@ -77,7 +77,9 @@ hadara task finalize --task T-XXXX --json
 hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 ```
 
-Removed compatibility surfaces now return `hadara.commandRemoved.v1` redirect stubs with `replacementCommand`: `task next`, `task show`, `task upgrade-scaffold`, `task lifecycle`, `task finish`, `task ready`, `task close`, `task audit-close`, `task complete`, `handoff suggest`, `handoff stale-problems`, `evidence collect`, `write preflight`, `policy check-shell`, `ops status`, `init register-doc`, `docs archive`, `harness replay`, `run`, `run scaffold`, `run-state show`, `run-state resume`, and `package smoke`. New users should not see these in registry/help output.
+Retired compatibility surfaces fully removed from public routing: `task next`, `task show`, `task upgrade-scaffold`, `handoff stale-problems`, `evidence collect`, `ops status`, `init register-doc`, and `docs archive`.
+
+Remaining migration stubs return `hadara.commandRemoved.v1` redirect reports with `replacementCommand`: `task lifecycle`, `task finish`, `task ready`, `task close`, `task audit-close`, `task complete`, `handoff suggest`, `write preflight`, `policy check-shell`, `harness replay`, `run`, `run scaffold`, `run-state show`, `run-state resume`, and `package smoke`. New users should not see these in registry/help output.
 
 No current CLI command writes or generates `docs/AGENT_HANDOFF.md` fragments. Shared handoff edits are deliberate documentation work before `task finalize`; use `task status` and `task finalize --json` for phase/readiness guidance.
 

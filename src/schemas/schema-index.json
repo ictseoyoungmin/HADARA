@@ -233,13 +233,6 @@
       "notes": "Documents the 0.4 registry-first document registration report returned by hadara docs register --json."
     },
     {
-      "id": "hadara.docs.archivePlan.v1",
-      "path": "src/schemas/docs-archive-plan.schema.json",
-      "status": "fixture",
-      "owner": "services/docs-cleanup",
-      "notes": "Documents the Phase 7.5 dry-run archive candidate plan returned by hadara docs archive --json without moving files."
-    },
-    {
       "id": "hadara.docs.requiredReading.v1",
       "path": "src/schemas/docs-required-reading.schema.json",
       "status": "fixture",
@@ -280,13 +273,6 @@
       "status": "fixture",
       "owner": "handoff/suggestion",
       "notes": "Documents read-only Agent Handoff section-fragment suggestions with shared-doc before-hash metadata."
-    },
-    {
-      "id": "hadara.handoff.staleProblems.v1",
-      "path": "src/schemas/handoff-stale-problems.schema.json",
-      "status": "fixture",
-      "owner": "handoff/stale-problems",
-      "notes": "Documents read-only Agent Handoff stale known-problem candidate detection."
     },
     {
       "id": "hadara.dev.docker_check.v1",
@@ -336,13 +322,6 @@
       "status": "fixture",
       "owner": "protocol/migration",
       "notes": "Documents dry-run-first 0.3 protocol migration plans for existing project and selected Task Capsule scopes."
-    },
-    {
-      "id": "hadara.task.upgrade_scaffold.v1",
-      "path": "src/schemas/task-upgrade-scaffold.schema.json",
-      "status": "fixture",
-      "owner": "task/upgrade-scaffold",
-      "notes": "Documents dry-run-first non-destructive Task Capsule scaffold frame upgrade reports with before-hash execute guards."
     },
     {
       "id": "hadara.task.close.v1",

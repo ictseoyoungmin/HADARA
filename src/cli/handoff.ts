@@ -8,19 +8,6 @@ export interface HandoffCommandInput {
 
 export function handleHandoffCommand(input: HandoffCommandInput): boolean {
   const sub = input.args[1];
-  if (sub === 'stale-problems') {
-    return printCommandRemovedReport(
-      {
-        commandId: 'handoff.stale-problems',
-        removedCommand: 'hadara handoff stale-problems',
-        replacementCommand: 'hadara status --json',
-        diagnosticCommand: 'hadara task status --json',
-        note: 'Handoff stale-problem review is folded into status/protocol diagnostics and manual handoff editing.'
-      },
-      input.jsonOutput
-    );
-  }
-
   if (sub === 'suggest') {
     return printCommandRemovedReport(
       {

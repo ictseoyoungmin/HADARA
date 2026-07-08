@@ -4,16 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, command portfolio inventory is complete through T-0521, and reduction/performance/status-profile slices are complete through T-0527. |
-| Current Phase | Command portfolio reduction implementation | T-0522 and T-0523 reduced the current registry surface from 73 to 68 command ids; T-0524 made top-level status fast, T-0525 made it current-work aware, T-0526 made expected-doc warnings profile/registry-aware, and T-0527 made selected-task full status use invocation-local fs memoization. |
-| Latest Completed Task | T-0527 speed up task status with invocation snapshot | `task status --task T-0527 --detail full --summary-json` improved from 10162ms to 2550ms on the mounted workspace and 2340ms through Docker-built dist, without persistent cache files. |
-| Active / Next Task | T-0527 complete; next command portfolio reduction slice | Use T-0521's command inventory to choose the next low-risk deletion candidate; only open async read-model parallelization if status latency remains painful after memoization. |
-| Validation Baseline | T-0527 Docker sync-build | Docker `dev:docker-sync-build` passed `npm ci`, TypeScript build, full Vitest 156 files / 1049 tests, refreshed workspace `dist`, and built `task status --task T-0527 --detail full --summary-json` smoke completed in 2340ms. |
+| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, command portfolio inventory is complete through T-0521, and reduction/performance/status-profile slices are complete through T-0528. |
+| Current Phase | Command portfolio reduction implementation | T-0522/T-0523/T-0528 removed duplicate and retired public command surfaces; T-0524 made top-level status fast, T-0525 made it current-work aware, T-0526 made expected-doc warnings profile/registry-aware, and T-0527 made selected-task full status use invocation-local fs memoization. |
+| Latest Completed Task | T-0528 remove retired command compatibility surfaces | Fully removed public routing for `task next`, `task show`, `task upgrade-scaffold`, `evidence collect`, `init register-doc`, `docs archive`, `handoff stale-problems`, and `ops status`; Docker sync-build refreshed `dist`. |
+| Active / Next Task | T-0528 complete; next command portfolio reduction slice | Continue with deferred candidates only after deciding whether they still need migration stubs: `write preflight`, `policy check-shell`, old `package smoke`, and lifecycle stubs. |
+| Validation Baseline | T-0528 Docker sync-build | Docker `dev:docker-sync-build` passed `npm ci`, TypeScript build, full Vitest 154 files / 1036 tests, refreshed workspace `dist`, and built `task status --task T-0528 --summary-json` smoke passed. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| remove retired command compatibility surfaces | T-0528 fully removes eight retired public compatibility surfaces, deletes dead dedicated schemas/services/tests where no internal consumer remains, preserves internal next-work projection for `task status`, and refreshes Docker-built `dist`. | `ev:T-0528:c1a644032e3e419c9d1d5ea8`, `ev:T-0528:71dea0c06e9047c3be8f1a2e` |
 | speed up task status with invocation snapshot | T-0527 adds read-only invocation-local fs memoization to `task status` report construction; no `.hadara/local/cache` files are used, and write/finalize paths remain fresh-read boundaries. | `ev:T-0527:9ac796c7294d4a0e93fe1437`, `ev:T-0527:95f839350b804768846e724e`, `ev:T-0527:7786e0e4e1a04aa1ab6840e5` |
 | make status expected docs profile aware | T-0526 makes top-level `status` derive expected source docs from scaffold/docs-registry/profile metadata so basic/standard users are not warned about absent governed/HADARA-dev-only docs. | `ev:T-0526:78ff387430f3462ea3c8c919`, `ev:T-0526:80cd4a6dfba041e0b622b0a5` |
 | repair status current recommendation and docker dist validation | T-0525 makes top-level `status` prefer current Task Board work over stale handoff next-step prose, prevents old Partial rows from overriding handoff, and restores Docker sync-build/dist refresh validation after T-0524. | `ev:T-0525:b8caed6d249e4120bea191ca` |
@@ -69,9 +70,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0528 / remove retired command compatibility surfaces | Fully removed eight retired public compatibility surfaces and dead dedicated schemas/services/tests; Docker sync-build passed and refreshed workspace `dist`. | `ev:T-0528:c1a644032e3e419c9d1d5ea8`, `ev:T-0528:71dea0c06e9047c3be8f1a2e` |
 | T-0527 / speed up task status with invocation snapshot | Selected-task full status now shares sync file reads within one read-only invocation and stays under 3s in mounted and Docker-built smokes. | `ev:T-0527:9ac796c7294d4a0e93fe1437`, `ev:T-0527:95f839350b804768846e724e`, `ev:T-0527:7786e0e4e1a04aa1ab6840e5` |
 | T-0526 / make status expected docs profile aware | Top-level `status` no longer treats AGENT_HANDOFF or DEVELOPMENT_SLICES as universally required; profile/registry expectations decide missing-doc warnings. | `ev:T-0526:78ff387430f3462ea3c8c919`, `ev:T-0526:80cd4a6dfba041e0b622b0a5` |
-| T-0525 / repair status current recommendation and docker dist validation | Top-level `status` now prefers current Task Board work before stale handoff prose and old Partial rows; Docker sync-build passed and refreshed workspace `dist`. | `ev:T-0525:b8caed6d249e4120bea191ca` |
 
 ## Current Known Problems
 

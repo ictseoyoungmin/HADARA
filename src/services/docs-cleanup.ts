@@ -43,24 +43,6 @@ export interface DocsMarkFieldDiff {
   after: string | null;
 }
 
-export interface DocsArchivePlanReport {
-  schemaVersion: 'hadara.docs.archivePlan.v1';
-  command: 'docs.archive';
-  mode: 'dry-run';
-  ok: boolean;
-  filters: { status: DocumentStatus | null };
-  candidates: Array<{
-    path: string;
-    currentStatus: DocumentStatus;
-    suggestedArchivePath: string;
-    referencedByActiveDocs: string[];
-    referencedByTaskEvidence: string[];
-    risk: 'low' | 'active-doc-reference' | 'evidence-link-reference';
-    executeSupported: false;
-  }>;
-  issues: DocsIssue[];
-}
-
 export interface DocsRequiredReadingReport {
   schemaVersion: 'hadara.docs.requiredReading.v1';
   command: 'docs.required-reading';
@@ -121,7 +103,6 @@ export interface DocsCompleteSpecOptions {
 
 const EXCLUDED_REQUIRED_READING_STATUSES = new Set<DocumentStatus>(['historical', 'superseded', 'archived']);
 const ARCHIVE_STATUSES = new Set<DocumentStatus>(['historical', 'superseded']);
-
 export function createDocsCompleteSpecReport(projectRoot: string, options: DocsCompleteSpecOptions): DocsCompleteSpecReport {
   const state = readRegistry(projectRoot);
   const normalizedPath = normalizePath(options.documentPath);
@@ -274,27 +255,6 @@ function createDocsMarkFieldDiff(entry: DocumentRegistryEntry | null, afterStatu
   return diff;
 }
 
-export function createDocsArchivePlanReport(projectRoot: string, status: string | undefined): DocsArchivePlanReport {
-  const state = readRegistry(projectRoot);
-  const filterStatus = status ? parseStatus(status) : 'superseded';
-  const issues = [...state.issues];
-  if (!filterStatus || !ARCHIVE_STATUSES.has(filterStatus)) {
-    issues.push({ severity: 'error', code: 'DOC_CLEANUP_INVALID_TRANSITION', message: `Archive planning supports historical or superseded status, not ${status ?? 'unknown'}.` });
-  }
-  const candidates = state.registry && filterStatus
-    ? state.registry.documents.filter((doc) => doc.status === filterStatus).map((doc) => archiveCandidate(projectRoot, state.registry!, doc))
-    : [];
-  return {
-    schemaVersion: 'hadara.docs.archivePlan.v1',
-    command: 'docs.archive',
-    mode: 'dry-run',
-    ok: issues.every((issue) => issue.severity !== 'error'),
-    filters: { status: filterStatus },
-    candidates,
-    issues
-  };
-}
-
 export function createDocsRequiredReadingReport(projectRoot: string): DocsRequiredReadingReport {
   const state = readRegistry(projectRoot);
   const issues = [...state.issues];
@@ -362,45 +322,6 @@ function isAllowedTransition(before: DocumentStatus, after: DocumentStatus, forc
   if (before === 'historical' || before === 'superseded') return after === 'archived';
   if (before === 'canonical' && forceCanonical) return after === 'superseded';
   return false;
-}
-
-function archiveCandidate(projectRoot: string, registry: DocumentRegistryFile, doc: DocumentRegistryEntry): DocsArchivePlanReport['candidates'][number] {
-  const activeRefs = registry.documents
-    .filter((candidate) => candidate.path !== doc.path && candidate.status !== 'historical' && candidate.status !== 'superseded' && candidate.status !== 'archived')
-    .filter((candidate) => fileMentions(projectRoot, candidate.path, doc.path))
-    .map((candidate) => candidate.path);
-  const evidenceRefs = findTaskEvidenceReferences(projectRoot, doc.path);
-  return {
-    path: doc.path,
-    currentStatus: doc.status,
-    suggestedArchivePath: `docs/archive/${doc.path.replace(/^docs\//, '')}`,
-    referencedByActiveDocs: activeRefs,
-    referencedByTaskEvidence: evidenceRefs,
-    risk: activeRefs.length > 0 ? 'active-doc-reference' : evidenceRefs.length > 0 ? 'evidence-link-reference' : 'low',
-    executeSupported: false
-  };
-}
-
-function fileMentions(projectRoot: string, documentPath: string, target: string): boolean {
-  const absolutePath = path.join(projectRoot, documentPath);
-  return fs.existsSync(absolutePath) && fs.readFileSync(absolutePath, 'utf8').includes(target);
-}
-
-function findTaskEvidenceReferences(projectRoot: string, target: string): string[] {
-  const tasksDir = path.join(projectRoot, 'tasks');
-  if (!fs.existsSync(tasksDir)) return [];
-  const found: string[] = [];
-  for (const dirName of fs.readdirSync(tasksDir)) {
-    const dir = path.join(tasksDir, dirName);
-    if (!fs.statSync(dir).isDirectory()) continue;
-    for (const name of ['EVIDENCE.md', 'evidence.jsonl']) {
-      const evidencePath = path.join(dir, name);
-      if (fs.existsSync(evidencePath) && fs.readFileSync(evidencePath, 'utf8').includes(target)) {
-        found.push(`tasks/${dirName}/${name}`);
-      }
-    }
-  }
-  return found;
 }
 
 function readRegistry(projectRoot: string): { registry: DocumentRegistryFile | null; beforeHash: string; issues: DocsIssue[] } {

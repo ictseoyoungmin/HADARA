@@ -6,7 +6,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { validateSchema } from '../../src/core/schema';
 import { appendEvidence } from '../../src/evidence/evidence';
 import { handleHandoffCommand } from '../../src/cli/handoff';
-import { createHandoffStaleProblemsReport } from '../../src/handoff/handoff-stale-problems';
 import { createHandoffSuggestionReport } from '../../src/handoff/handoff-suggestion';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
@@ -150,78 +149,22 @@ describe('handoff suggestion report', () => {
       ok: false
     });
   });
-});
 
-describe('handoff stale known-problem report', () => {
-  it('reports advisory stale candidates for completed task and release rows without writing handoff', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'Resolve stale handoff');
-    completeTask(root, task.id, task.dir);
-    writeFixtureHandoff(root, [
-      [`${task.id} still needs closeout.`, 'Agents may keep retrying done work.', `Remove after ${task.id} is Done.`],
-      ['0.3.4 publish/recycle still pending.', 'Release state is confusing.', 'Remove after npm view and recycle pass.']
-    ]);
-    fs.writeFileSync(path.join(root, 'docs', 'RELEASE_READINESS.md'), '# Release Readiness\n\n0.3.4 published and installed-package recycled. npm view verified latest.\n', 'utf8');
-    const before = snapshotFiles(root);
-
-    const report = createHandoffStaleProblemsReport(root);
-
-    expect(snapshotFiles(root)).toEqual(before);
-    expect(report).toMatchObject({
-      schemaVersion: 'hadara.handoff.staleProblems.v1',
-      command: 'handoff.stale-problems',
-      ok: true,
-      readOnly: true,
-      target: { path: 'docs/AGENT_HANDOFF.md', writeBoundary: 'read-only' },
-      summary: { knownProblemRows: 2, candidates: 2 },
-      issues: []
-    });
-    expect(report.candidates).toEqual([
-      expect.objectContaining({
-        confidence: 'high',
-        reason: expect.stringContaining(`${task.id}`),
-        suggestedAction: expect.stringContaining('Review this row')
-      }),
-      expect.objectContaining({
-        confidence: 'high',
-        reason: expect.stringContaining('0.3.4'),
-        matchedSources: expect.arrayContaining([expect.objectContaining({ path: 'docs/RELEASE_READINESS.md' })])
-      })
-    ]);
-    expect(validateSchema('hadara.handoff.staleProblems.v1', report).ok).toBe(true);
-  });
-
-  it('routes CLI stale-problems requests to the removed-command stub without writing handoff', () => {
+  it('does not route retired stale-problems command', () => {
     const root = tempProject();
     writeFixtureHandoff(root, [['0.3.4 publish/recycle still pending.', 'Release state is confusing.', 'Review after release.']]);
-    fs.writeFileSync(path.join(root, 'docs', 'RELEASE_NOTES.md'), '# Release Notes\n\n0.3.4 published, verified, and recycled from installed-package paths.\n', 'utf8');
-    const beforeHandoff = fs.readFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), 'utf8');
     const output: string[] = [];
     const originalLog = console.log;
     console.log = (value?: unknown) => {
       output.push(String(value));
     };
     try {
-      expect(handleHandoffCommand({ args: ['handoff', 'stale-problems', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+      expect(handleHandoffCommand({ args: ['handoff', 'stale-problems', '--json'], projectRoot: root, jsonOutput: true })).toBe(false);
     } finally {
       console.log = originalLog;
     }
 
-    const report = JSON.parse(output.join('\n'));
-    expect(report.schemaVersion).toBe('hadara.commandRemoved.v1');
-    expect(report.command).toBe('handoff.stale-problems');
-    expect(report.replacementCommand).toBe('hadara status --json');
-    expect(fs.readFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), 'utf8')).toBe(beforeHandoff);
-  });
-
-  it('reports missing AGENT_HANDOFF.md as an error without throwing', () => {
-    const root = tempProject();
-
-    const report = createHandoffStaleProblemsReport(root);
-
-    expect(report.ok).toBe(false);
-    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'AGENT_HANDOFF_MISSING' }));
-    expect(validateSchema('hadara.handoff.staleProblems.v1', report).ok).toBe(true);
+    expect(output).toEqual([]);
   });
 });
 

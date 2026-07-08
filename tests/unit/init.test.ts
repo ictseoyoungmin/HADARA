@@ -266,6 +266,17 @@ describe('init profiles', () => {
     expect(exists(root, 'tasks/.gitkeep')).toBe(false);
   });
 
+  it('does not treat retired init register-doc as a plain init invocation', () => {
+    const root = tempProject();
+
+    const handled = handleInitCommand({ args: ['init', 'register-doc', '--path', 'docs/EXAMPLE.md', '--json'], projectRoot: root, jsonOutput: true });
+
+    expect(handled).toBe(false);
+    expect(exists(root, 'AGENTS.md')).toBe(false);
+    expect(exists(root, 'docs/HADARA_WORKFLOW.md')).toBe(false);
+    expect(exists(root, 'tasks/.gitkeep')).toBe(false);
+  });
+
   it('reports 0.4 scaffold drift with specific doctor codes', () => {
     const root = tempProject();
     initProject(root);

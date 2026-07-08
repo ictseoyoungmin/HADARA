@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0527 speed up task status with invocation snapshot |
-| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction is continuing; T-0527 made selected-task full status use read-only invocation-local fs memoization, bringing mounted full-status smoke under 3s without persistent cache files. |
+| Latest Completed Task | T-0528 remove retired command compatibility surfaces |
+| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction is continuing; T-0528 removed the clear retired public compatibility surfaces and refreshed Docker-built `dist`. |
+
+T-0528 follow-up note: public routing/stubs were fully removed for `task next`, `task show`, `task upgrade-scaffold`, `evidence collect`, `init register-doc`, `docs archive`, `handoff stale-problems`, and `ops status`. Dedicated dead services/schemas/tests for `docs archive`, `handoff stale-problems`, and `task upgrade-scaffold` were deleted; `init register-doc` no longer falls through to plain `init`; docs/tests distinguish fully removed commands from retained migration stubs. The internal next-work projection remains because `task status --json` consumes it. Focused build/tests and built deletion smokes passed, and Docker sync-build passed `npm ci`, TypeScript build, full Vitest 154 files / 1036 tests, refreshed workspace `dist`, and built `task status --task T-0528 --summary-json` smoke passed. Evidence: `ev:T-0528:c1a644032e3e419c9d1d5ea8`, `ev:T-0528:71dea0c06e9047c3be8f1a2e`.
 
 T-0527 follow-up note: selected-task `hadara task status --task <id> --detail full` now wraps its read-only report construction in invocation-local fs memoization. The memo layer patches sync `fs` reads only during one status invocation, restores the original methods afterward, and is not used for write/finalize mutation boundaries. No cache files are written under `.hadara/local/cache`. Local mounted smoke for `T-0527` improved from 10162ms to 2550ms; Docker sync-build passed `npm ci`, TypeScript build, full Vitest 156 files / 1049 tests, refreshed workspace `dist`, and Docker-built full-status smoke completed in 2340ms. Evidence: `ev:T-0527:9ac796c7294d4a0e93fe1437`, `ev:T-0527:95f839350b804768846e724e`, `ev:T-0527:7786e0e4e1a04aa1ab6840e5`.
 
@@ -378,9 +380,9 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0457 Agent UX Validation Wrapper Error Semantics.
-- The requested agent UX refactor dogfood loop has reached five completed capsules: T-0453 through T-0457.
-- Next candidate work is lifecycle/status/finalize progress or fast-path semantics for long silent mounted-workspace runs.
+- Latest completed task is T-0528 remove retired command compatibility surfaces.
+- The command portfolio reduction line has removed duplicate proof/evidence/state surfaces and the clear retired compatibility surfaces through T-0528.
+- Next candidate work is a reviewed decision on deferred compatibility surfaces (`write preflight`, `policy check-shell`, old `package smoke`, and lifecycle migration stubs).
 - T-0457 made `validation run` launch failures agent-readable through structured `execution.failureKind`, `commandStarted`, `execution.error`, and fallback `nextActions`. Evidence: `ev:T-0457:63bc490c0f524cc0b5b748e3`, `ev:T-0457:28fb374a36e641bab90bd53d`, `ev:T-0457:ded129c4252440a593372c75`.
 - T-0456 made `evidence add-command --help` non-mutating before `--task` parsing. Evidence: `ev:T-0456:3575c0472d5b464585261a79`, `ev:T-0456:dbf8b1a1dc8d4707b5d9469c`, `ev:T-0456:2c697ca98ea7410a9a9f23d9`.
 - T-0455 added `sources.evidenceList.validationAttempts` to `task status` so agents can see per-check validation state without raw evidence inspection. Evidence: `ev:T-0455:ec70182bf0f9491292013cf1`, `ev:T-0455:d17cc01c4fd4444da2e9ace8`, `ev:T-0455:d4b3ea9ddcc549fda9eaeeb5`.

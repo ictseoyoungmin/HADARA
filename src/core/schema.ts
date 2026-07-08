@@ -18,7 +18,6 @@ import dashboardCoreSchemaJson from '../schemas/dashboard-core.schema.json';
 import dashboardTaskDetailSchemaJson from '../schemas/dashboard-task-detail.schema.json';
 import dashboardTimelineSchemaJson from '../schemas/dashboard-timeline.schema.json';
 import devDockerCheckSchemaJson from '../schemas/dev-docker-check.schema.json';
-import docsArchivePlanSchemaJson from '../schemas/docs-archive-plan.schema.json';
 import docsCompleteSpecSchemaJson from '../schemas/docs-complete-spec.schema.json';
 import docsDoctorSchemaJson from '../schemas/docs-doctor.schema.json';
 import docsExplainSchemaJson from '../schemas/docs-explain.schema.json';
@@ -39,7 +38,6 @@ import evidenceProjectionSchemaJson from '../schemas/evidence-projection.schema.
 import eventSchemaJson from '../schemas/event.schema.json';
 import featureSmokeSchemaJson from '../schemas/feature-smoke.schema.json';
 import harnessValidateSchemaJson from '../schemas/harness-validate.schema.json';
-import handoffStaleProblemsSchemaJson from '../schemas/handoff-stale-problems.schema.json';
 import handoffSuggestionSchemaJson from '../schemas/handoff-suggestion.schema.json';
 import installPlanSchemaJson from '../schemas/install-plan.schema.json';
 import nextActionSchemaJson from '../schemas/next-action.schema.json';
@@ -74,7 +72,6 @@ import taskLifecycleSchemaJson from '../schemas/task-lifecycle.schema.json';
 import taskNextSchemaJson from '../schemas/task-next.schema.json';
 import taskReadySchemaJson from '../schemas/task-ready.schema.json';
 import taskStatusSchemaJson from '../schemas/task-status.schema.json';
-import taskUpgradeScaffoldSchemaJson from '../schemas/task-upgrade-scaffold.schema.json';
 import taskWorkbenchSchemaJson from '../schemas/task-workbench.schema.json';
 import toolsListSchemaJson from '../schemas/tools-list.schema.json';
 import validationRunSchemaJson from '../schemas/validation-run.schema.json';
@@ -138,7 +135,6 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.dashboard.task_detail.v1': dashboardTaskDetailSchemaJson as JsonObject,
   'hadara.dashboard.timeline.v1': dashboardTimelineSchemaJson as JsonObject,
   'hadara.dev.docker_check.v1': devDockerCheckSchemaJson as JsonObject,
-  'hadara.docs.archivePlan.v1': docsArchivePlanSchemaJson as JsonObject,
   'hadara.docs.completeSpec.v1': docsCompleteSpecSchemaJson as JsonObject,
   'hadara.docs.doctor.v1': docsDoctorSchemaJson as JsonObject,
   'hadara.docs.explain.v1': docsExplainSchemaJson as JsonObject,
@@ -159,7 +155,6 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.event.v1': eventSchemaJson as JsonObject,
   'hadara.featureSmoke.v1': featureSmokeSchemaJson as JsonObject,
   'hadara.harness.validate.v1': harnessValidateSchemaJson as JsonObject,
-  'hadara.handoff.staleProblems.v1': handoffStaleProblemsSchemaJson as JsonObject,
   'hadara.handoff.suggestion.v1': handoffSuggestionSchemaJson as JsonObject,
   'hadara.install.plan.v1': installPlanSchemaJson as JsonObject,
   'hadara.next_action.v1': nextActionSchemaJson as JsonObject,
@@ -194,7 +189,6 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.task.next.v1': taskNextSchemaJson as JsonObject,
   'hadara.task.ready.v1': taskReadySchemaJson as JsonObject,
   'hadara.task.status.v1': taskStatusSchemaJson as JsonObject,
-  'hadara.task.upgrade_scaffold.v1': taskUpgradeScaffoldSchemaJson as JsonObject,
   'hadara.task.workbench.v1': taskWorkbenchSchemaJson as JsonObject,
   'hadara.tools.list.v1': toolsListSchemaJson as JsonObject,
   'hadara.validation.run.v1': validationRunSchemaJson as JsonObject,

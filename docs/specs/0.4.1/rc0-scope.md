@@ -148,7 +148,7 @@ hadara task finalize --task T-X --execute --auto
 2. `hadara slice add|set|list` — write-time 검증 (허용 status 토큰은 항목 2의 schema 도메인으로 등록)
 3. `hadara render --slices` (또는 slice 쓰기 시 자동) — `docs/DEVELOPMENT_SLICES.md`를 **완전 생성 문서(Tier 1)**로 재생성. 파일 머리에 generated 주석 1줄
 4. `hadara migrate slices` — 기존 DEVELOPMENT_SLICES.md 테이블을 임포트 (실패 행 전량 보고)
-5. `task next`/`task status`의 slice 소비 경로를 slices.json으로 전환 (`rows: 0` 파싱 버그가 자연 해소)
+5. `task status`의 next-work/slice 소비 경로를 slices.json으로 전환 (`rows: 0` 파싱 버그가 자연 해소)
 6. `hadara doctor`에 렌더 드리프트 검사 추가: 렌더 파일이 직접 편집된 경우 감지, **조용한 덮어쓰기 금지**, "import 또는 discard" 안내
 
 **Acceptance** (= 0.5 RFC §9의 게이트 지표를 캡슐 AC로 그대로):
@@ -159,7 +159,7 @@ hadara task finalize --task T-X --execute --auto
 | AC-2 | 기존 DEVELOPMENT_SLICES.md → import → render 왕복이 무손실 (필드 단위 비교 테스트) |
 | AC-3 | slices.json을 close-source에 추가한 뒤에도 기존 캡슐 finalize/audit-close가 회귀 없이 통과 |
 | AC-4 | 렌더 파일 직접 편집 시 doctor가 드리프트를 감지하고, 이후 render가 조용히 덮어쓰지 않는다 (소유권 계약의 테스트 고정) |
-| AC-5 | `task next` 계열이 slices.json에서 next-work를 추천한다 (기존 `TASK_NEXT_DEVELOPMENT_SLICES_MISSING`/`rows: 0` 경로 대체) |
+| AC-5 | `task status --json`의 next-work projection이 slices.json에서 추천한다 (기존 `TASK_NEXT_DEVELOPMENT_SLICES_MISSING`/`rows: 0` 경로 대체) |
 | AC-6 | 도그푸딩 캡슐 2개 이상에서 slice 관련 수동 문서 동기화 0회 달성 (evidence로 기록) |
 
 **Evidence 계획**: AC별 focused test + HADARA-dev 자체 slice(예: 이 rc0 스코프 5개 항목 자체를 slice로 등록)로 도그푸딩 + AC-1의 diff 측정 결과를 evidence 아티팩트로 첨부. **성공/실패 판정 결과를 0.5 RFC §9 게이트의 공식 evidence로 인용한다.**
@@ -221,21 +221,21 @@ hadara task finalize --task T-X --execute --auto
 
 ---
 
-## 부록: 추가 제거 후보 (본 스코프 범위 밖 — command-portfolio RFC 대상)
+## 부록: 추가 제거 후보와 처리 상태 (command-portfolio RFC 대상)
 
-레지스트리(`capability-registry.ts`)가 이미 `deprecatedCandidate: true`로 표시한 compat 표면과 중복 표면. rc0에 넣지 않는 이유: 항목 6과 달리 순서 의존이 없고 개별 판단이 필요하므로, 사용 계측과 함께 portfolio RFC에서 일괄 결정하는 것이 맞다.
+레지스트리(`capability-registry.ts`)가 이미 `deprecatedCandidate: true`로 표시한 compat 표면과 중복 표면. T-0528은 이 중 대체가 명확하고 public routing 유지 가치가 낮은 후보를 완전 제거했다.
 
-| 후보 | 근거 | 대체 |
-|---|---|---|
-| `task next` | deprecatedCandidate; task status 출력에 이미 deprecation 공지 포함 | `task status` (select-work 모드) |
-| `task lifecycle` | deprecatedCandidate; 동일 공지 존재 | `task status --task` |
-| `task show` | deprecatedCandidate ("Compatibility surface") | `task status --task` |
-| `evidence collect` | deprecatedCandidate ("Compatibility surface") | `evidence add-command` / `validation run` |
-| `write preflight` | deprecatedCandidate ("Compatibility alias") | policy preflight 계열 |
-| `policy check-shell` | deprecatedCandidate ("Compatibility shell policy check") | policy preflight |
-| `ops status` | deprecatedCandidate ("Compatibility alias") | `status` / `doctor` |
-| `package smoke` (reduced) | deprecatedCandidate — 단, 항목 1이 확장할 스모크가 release 패밀리 full smoke인지 이 축소판인지 spike에서 먼저 확정할 것 | release 패밀리 스모크 |
-| `init register-doc` | `docs register`와 등록 경로 이중화 (docs-governance에 등록 커맨드 2개) | `docs register`로 통합 |
-| `handoff stale-problems` | 니치 read-only 진단 | `doctor` 흡수 검토 |
-| `docs archive` | dry-run 계획 전용 니치 진단 | `doctor`/`docs list` 필터 흡수 검토 |
-| `task upgrade-scaffold` | deprecatedCandidate; `protocol remediate`와 역할 중첩 검토 필요 | `protocol remediate` |
+| 후보 | 상태 | 근거 | 대체 |
+|---|---|---|---|
+| `task next` | Removed in T-0528 | deprecatedCandidate; `task status`가 select-work를 담당 | `task status` (select-work 모드) |
+| `task lifecycle` | Stub retained | deprecatedCandidate; 동일 공지 존재 | `task status --task` |
+| `task show` | Removed in T-0528 | deprecatedCandidate ("Compatibility surface") | `task status --task` |
+| `evidence collect` | Removed in T-0528 | deprecatedCandidate ("Compatibility surface") | `evidence add-command` / `validation run` |
+| `write preflight` | Deferred | deprecatedCandidate ("Compatibility alias") | policy preflight 계열 |
+| `policy check-shell` | Deferred | deprecatedCandidate ("Compatibility shell policy check") | policy preflight |
+| `ops status` | Removed in T-0528 | deprecatedCandidate ("Compatibility alias") | `status` / `doctor` |
+| `package smoke` (reduced) | Stub retained | deprecatedCandidate; canonical surface is `smoke package` | release 패밀리 스모크 |
+| `init register-doc` | Removed in T-0528 | `docs register`와 등록 경로 이중화 (docs-governance에 등록 커맨드 2개) | `docs register`로 통합 |
+| `handoff stale-problems` | Removed in T-0528 | 니치 read-only 진단 | `status` / manual handoff review |
+| `docs archive` | Removed in T-0528 | dry-run 계획 전용 니치 진단 | `docs list` / `docs doctor` |
+| `task upgrade-scaffold` | Removed in T-0528 | deprecatedCandidate; `protocol remediate`와 역할 중첩 | `protocol remediate` |

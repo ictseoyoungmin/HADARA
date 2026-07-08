@@ -1,5 +1,4 @@
 import { createTaskCloseSourceReport } from '../task/task-close';
-import { printCommandRemovedReport } from './removed-command';
 import { handleRemovedTaskSubcommand, REMOVED_TASK_SUBCOMMANDS } from './removed-lifecycle';
 import { createTaskCreateReport, formatTaskCreateReport } from '../task/task-create';
 import { createTaskFinalizeReport, formatTaskFinalizeReport } from '../task/task-finalize';
@@ -100,43 +99,6 @@ export function handleTaskCommand(input: TaskCommandInput): boolean {
       console.log(formatTaskListReport(report));
     }
     return true;
-  }
-
-  if (sub === 'show') {
-    return printCommandRemovedReport(
-      {
-        commandId: 'task.show',
-        removedCommand: 'hadara task show',
-        replacementCommand: 'hadara task status --task <task-id> --json',
-        note: 'Task read/status output is consolidated under task status.'
-      },
-      input.jsonOutput
-    );
-  }
-
-  if (sub === 'next') {
-    return printCommandRemovedReport(
-      {
-        commandId: 'task.next',
-        removedCommand: 'hadara task next',
-        replacementCommand: 'hadara task status --json',
-        note: 'Next-work selection is consolidated under task status without --task.'
-      },
-      input.jsonOutput
-    );
-  }
-
-  if (sub === 'upgrade-scaffold') {
-    return printCommandRemovedReport(
-      {
-        commandId: 'task.upgrade-scaffold',
-        removedCommand: 'hadara task upgrade-scaffold',
-        replacementCommand: 'hadara protocol remediate --fix <fix-id> --task <task-id> --json',
-        diagnosticCommand: 'hadara protocol doctor --task <task-id> --json',
-        note: 'Task scaffold repair is consolidated under protocol doctor/remediate.'
-      },
-      input.jsonOutput
-    );
   }
 
   if (sub === 'close-source') {

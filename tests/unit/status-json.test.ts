@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { handleOpsCommand, handleStatusCommand } from '../../src/cli/status';
+import { handleStatusCommand } from '../../src/cli/status';
 import {
   createOpsStatusReport,
   createOpsStatusSummaryReport
@@ -442,19 +442,6 @@ describe('Operations Status JSON', () => {
       }
     });
     expect(summary.stateConsistency).toBeUndefined();
-  });
-
-  it('prints a removed-command redirect for the old ops alias', () => {
-    const root = tempProject();
-    writeProjectDocs(root);
-    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-
-    expect(handleOpsCommand({ args: ['ops', 'status', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-
-    const report = JSON.parse(String(log.mock.calls[0]?.[0]));
-    expect(report.schemaVersion).toBe('hadara.commandRemoved.v1');
-    expect(report.command).toBe('ops.status');
-    expect(report.replacementCommand).toBe('hadara status --json');
   });
 
   it('can count task board statuses without scanning task capsules', () => {

@@ -219,10 +219,11 @@ Docs cleanup is metadata-first:
 
 ```bash
 hadara docs mark --path docs/specs/old.md --status superseded --by docs/specs/new.md --reason "Replaced" --json
-hadara docs archive --status superseded --json
+hadara docs list --status superseded --json
+hadara docs doctor --json
 ```
 
-`docs mark --execute` is hash-guarded and writes only `.hadara/docs-registry.json`. `docs archive` is dry-run planning only in the current implementation; it does not move or delete historical files.
+`docs mark --execute` is hash-guarded and writes only `.hadara/docs-registry.json`. Historical file movement is deliberate repository work, not a standalone HADARA CLI mutation.
 
 ## Managed Markdown Safety
 
@@ -310,7 +311,7 @@ Init maintenance commands dry-run by default unless `--execute` is supplied:
 ```bash
 hadara init doctor --json
 hadara init upgrade --profile governed --json
-hadara init register-doc --path docs/specs/LOCAL.md --when "Local work" --purpose "Local spec" --json
+hadara docs register --path docs/specs/LOCAL.md --title "Local spec" --kind spec --status active --read-when task-start --json
 hadara init enable-integration --integration mcp --json
 ```
 

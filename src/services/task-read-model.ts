@@ -27,21 +27,6 @@ export interface TaskListReport {
   tasks: TaskJsonSummary[];
 }
 
-export interface TaskShowReport {
-  schemaVersion: 'hadara.task.show.v1';
-  command: 'task.show';
-  ok: boolean;
-  taskId: string;
-  task?: TaskJsonSummary & {
-    taskMarkdown: string;
-  };
-  issues: Array<{
-    severity: 'error';
-    code: string;
-    message: string;
-  }>;
-}
-
 export interface TaskReadReport {
   schemaVersion: 'hadara.task.read.v1';
   command: 'task.read';
@@ -65,37 +50,6 @@ export function createTaskListReport(projectRoot: string): TaskListReport {
     ok: true,
     count: tasks.length,
     tasks
-  };
-}
-
-export function createTaskShowReport(projectRoot: string, taskId: string): TaskShowReport {
-  const task = findTaskCapsule(projectRoot, taskId);
-  if (!task) {
-    return {
-      schemaVersion: 'hadara.task.show.v1',
-      command: 'task.show',
-      ok: false,
-      taskId,
-      issues: [
-        {
-          severity: 'error',
-          code: 'TASK_NOT_FOUND',
-          message: `Task Capsule not found: ${taskId}`
-        }
-      ]
-    };
-  }
-
-  return {
-    schemaVersion: 'hadara.task.show.v1',
-    command: 'task.show',
-    ok: true,
-    taskId: task.id,
-    task: {
-      ...summarizeTask(projectRoot, task),
-      taskMarkdown: fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')
-    },
-    issues: []
   };
 }
 
@@ -148,7 +102,7 @@ function formatEvidenceIndexFile(records: PersistedEvidenceRecord[]): string {
   return `${records.map((record) => JSON.stringify(record)).join('\n')}\n`;
 }
 
-function summarizeTask(projectRoot: string, task: TaskCapsule): TaskJsonSummary {
+export function summarizeTask(projectRoot: string, task: TaskCapsule): TaskJsonSummary {
   return {
     id: task.id,
     title: task.title,

@@ -14,7 +14,6 @@ import { createEvidenceListReport, EvidenceListRecord } from '../services/eviden
 import { createEvidenceMigrationPreviewReport } from '../services/evidence-migration';
 import { getFlag, getIntegerOption, getRequiredStringOption, getStringOption } from './args';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
-import { printCommandRemovedReport } from './removed-command';
 
 export interface EvidenceCommandInput {
   args: string[];
@@ -155,17 +154,7 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
     return true;
   }
 
-  if (sub !== 'collect') return false;
-  return printCommandRemovedReport(
-    {
-      commandId: 'evidence.collect',
-      removedCommand: 'hadara evidence collect',
-      replacementCommand: 'hadara evidence add-command --task <task-id> --summary "..." --result passed --json',
-      diagnosticCommand: 'hadara validation run --task <task-id> --check "..." -- <command>',
-      note: 'Evidence writes are consolidated into validation run for commands and evidence add-command for already-run results.'
-    },
-    input.jsonOutput
-  );
+  return false;
 }
 
 function hasHelpFlag(args: string[]): boolean {

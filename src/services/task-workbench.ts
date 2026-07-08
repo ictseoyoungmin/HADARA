@@ -4,7 +4,8 @@ import path from 'node:path';
 import { withInvocationFsMemo } from '../core/invocation-fs-memo';
 import { EvidenceIndexRecord, PersistedEvidenceRecord, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
 import { createTaskCloseReport, TaskCloseIssue } from '../task/task-close';
-import { createTaskShowReport } from './task-read-model';
+import { findTaskCapsule } from '../task/task-capsule';
+import { summarizeTask } from './task-read-model';
 import { createEvidenceListReport } from './evidence-list';
 import { parseMarkdownRows, parseMarkdownRowsUnderHeading } from './markdown-table';
 import { createDocsProtocolConsistencyReport, createProfileProtocolConsistencyReport } from './protocol-consistency';
@@ -249,21 +250,22 @@ export function createTaskWorkbenchReport(projectRoot: string, taskId: string, n
 
 function createTaskWorkbenchReportUnmemoized(projectRoot: string, taskId: string, now: Date, options: TaskWorkbenchReportOptions): TaskWorkbenchReport {
   const detail = options.detail ?? 'fast';
-  const taskShow = createTaskShowReport(projectRoot, taskId);
-  if (!taskShow.ok || !taskShow.task) {
+  const taskCapsule = findTaskCapsule(projectRoot, taskId);
+  if (!taskCapsule) {
     const closePlan = createTaskCloseReport(projectRoot, taskId, 'dry-run');
     return buildMissingTaskReport(projectRoot, taskId, now.toISOString(), closePlan.issues);
   }
+  const task = summarizeTask(projectRoot, taskCapsule);
 
   const evidenceList = createEvidenceListReport(projectRoot, { taskId });
-  const taskBoard = readTaskBoardProjection(projectRoot, taskShow.task.id);
+  const taskBoard = readTaskBoardProjection(projectRoot, task.id);
   const latestEvidence = evidenceList.records.at(-1);
   const validationAttempts = summarizeValidationAttempts(evidenceList.records);
   const closeState = getCloseState(evidenceList.records);
   const closeEvidenceFound = closeState !== 'not-closed';
   const closedValid = closeState === 'closed-valid';
   const authoringGuidance = createTaskAuthoringGuidance(projectRoot, taskId);
-  const authoringSuggestions = createTaskAuthoringSuggestions(projectRoot, taskShow.task.capsule, taskShow.task.title);
+  const authoringSuggestions = createTaskAuthoringSuggestions(projectRoot, task.capsule, task.title);
   const useFullChecks = detail === 'full';
   const closePlan = useFullChecks ? createTaskCloseReport(projectRoot, taskId, 'dry-run') : null;
   const docsDoctor = useFullChecks ? createDocsProtocolConsistencyReport(projectRoot, now) : null;
@@ -272,7 +274,7 @@ function createTaskWorkbenchReportUnmemoized(projectRoot: string, taskId: string
   const readiness = useFullChecks ? buildTaskWorkbenchReadiness(currentReady, closedValid) : buildTaskWorkbenchReadinessDeferred(closedValid, taskId);
   const issues = [
     ...(closePlan?.issues ?? []),
-    ...buildTaskBoardIssues(taskShow.task.id, taskShow.task.status, taskShow.task.capsule, taskBoard),
+    ...buildTaskBoardIssues(task.id, task.status, task.capsule, taskBoard),
     ...evidenceList.issues.map((issue): TaskCloseIssue => ({ severity: issue.severity, code: `EVIDENCE_LIST_${issue.code}`, message: issue.message })),
     ...(docsDoctor?.issues.map((issue): TaskCloseIssue => ({ severity: issue.severity, code: `PROTOCOL_DOCS_${issue.code}`, message: issue.message, path: issue.path })) ?? []),
     ...(profileDoctor?.issues.map((issue): TaskCloseIssue => ({ severity: issue.severity, code: `PROTOCOL_PROFILE_${issue.code}`, message: issue.message, path: issue.path })) ?? [])
@@ -290,7 +292,7 @@ function createTaskWorkbenchReportUnmemoized(projectRoot: string, taskId: string
       })
     : buildFastWorkbenchNextActions({ taskId, closedValid, closeEvidenceFound, evidenceRecords: evidenceList.count, authoringGuidance, closeState });
   const loop = buildTaskStatusLoopGuidance(taskId, {
-    taskStatus: taskShow.task.status,
+    taskStatus: task.status,
     taskBoardStatus: taskBoard.status,
     authoringGuidance,
     evidenceRecords: evidenceList.count,
@@ -305,14 +307,14 @@ function createTaskWorkbenchReportUnmemoized(projectRoot: string, taskId: string
     schemaVersion: 'hadara.task.workbench.v1',
     command: 'task.status',
     ok: true,
-    taskId: taskShow.task.id,
+    taskId: task.id,
     generatedAt: now.toISOString(),
     projectRoot,
     task: {
-      id: taskShow.task.id,
-      title: taskShow.task.title,
-      capsule: taskShow.task.capsule,
-      taskStatus: taskShow.task.status,
+      id: task.id,
+      title: task.title,
+      capsule: task.capsule,
+      taskStatus: task.status,
       taskBoardStatus: taskBoard.status,
       taskBoardPath: taskBoard.path,
       taskBoardPresent: taskBoard.present

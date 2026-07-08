@@ -2,17 +2,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { handleEvidenceCommand } from '../../src/cli/evidence';
 import { handleHandoffCommand } from '../../src/cli/handoff';
 import { handleHarnessCommand } from '../../src/cli/harness';
-import { handleInitCommand } from '../../src/cli/init';
 import { handlePackageCommand } from '../../src/cli/package-smoke';
 import { handlePolicyCommand } from '../../src/cli/policy';
 import { handleRunCommand } from '../../src/cli/run';
 import { handleRunStateCommand } from '../../src/cli/run-state';
-import { handleDocsCommand } from '../../src/cli/docs';
-import { handleStatusCommand, handleOpsCommand } from '../../src/cli/status';
-import { handleTaskCommand } from '../../src/cli/task';
+import { handleStatusCommand } from '../../src/cli/status';
 import { handleWriteCommand } from '../../src/cli/write-preflight';
 import { resolveHadaraPaths } from '../../src/core/paths';
 import { validateSchema } from '../../src/core/schema';
@@ -55,49 +51,14 @@ async function captureJson(run: () => boolean | Promise<boolean>): Promise<Recor
 }
 
 describe('removed compatibility command surfaces', () => {
-  it('redirects obsolete task/evidence/handoff/policy/write/status commands with replacementCommand', async () => {
+  it('redirects still-supported compatibility stubs with replacementCommand', async () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Removed command route');
     const cases: Array<{ command: string; replacement: string; run: () => boolean | Promise<boolean> }> = [
       {
-        command: 'task.show',
-        replacement: 'hadara task status --task <task-id> --json',
-        run: () => handleTaskCommand({ args: ['task', 'show', task.id, '--json'], projectRoot: root, jsonOutput: true })
-      },
-      {
-        command: 'task.next',
-        replacement: 'hadara task status --json',
-        run: () => handleTaskCommand({ args: ['task', 'next', '--json'], projectRoot: root, jsonOutput: true })
-      },
-      {
-        command: 'task.upgrade-scaffold',
-        replacement: 'hadara protocol remediate --fix <fix-id> --task <task-id> --json',
-        run: () => handleTaskCommand({ args: ['task', 'upgrade-scaffold', '--task', task.id, '--json'], projectRoot: root, jsonOutput: true })
-      },
-      {
-        command: 'init.register-doc',
-        replacement: 'hadara docs register --path <path> --json',
-        run: () => handleInitCommand({ args: ['init', 'register-doc', '--path', 'docs/EXAMPLE.md', '--json'], projectRoot: root, jsonOutput: true })
-      },
-      {
-        command: 'docs.archive',
-        replacement: 'hadara docs list --status <status> --json',
-        run: () => handleDocsCommand({ args: ['docs', 'archive', '--status', 'historical', '--json'], projectRoot: root, jsonOutput: true })
-      },
-      {
-        command: 'evidence.collect',
-        replacement: 'hadara evidence add-command --task <task-id> --summary "..." --result passed --json',
-        run: () => handleEvidenceCommand({ args: ['evidence', 'collect', '--task', task.id, '--json'], projectRoot: root, jsonOutput: true })
-      },
-      {
         command: 'handoff.suggest',
         replacement: 'hadara task status --task <task-id> --json',
         run: () => handleHandoffCommand({ args: ['handoff', 'suggest', '--task', task.id, '--json'], projectRoot: root, jsonOutput: true })
-      },
-      {
-        command: 'handoff.stale-problems',
-        replacement: 'hadara status --json',
-        run: () => handleHandoffCommand({ args: ['handoff', 'stale-problems', '--json'], projectRoot: root, jsonOutput: true })
       },
       {
         command: 'write.preflight',
@@ -108,11 +69,6 @@ describe('removed compatibility command surfaces', () => {
         command: 'policy.check-shell',
         replacement: 'hadara policy preflight-shell <command> --json',
         run: () => handlePolicyCommand({ args: ['policy', 'check-shell', 'npm test', '--json'], jsonOutput: true })
-      },
-      {
-        command: 'ops.status',
-        replacement: 'hadara status --json',
-        run: () => handleOpsCommand({ args: ['ops', 'status', '--json'], projectRoot: root, jsonOutput: true })
       },
       {
         command: 'harness.replay',

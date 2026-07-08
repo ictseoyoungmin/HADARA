@@ -4,7 +4,6 @@ import { createDocsDoctorReport, createDocsExplainReport, createDocsInboxReport,
 import { createDocsPatchPlanReport, createManagedSectionExplainReport, createManagedSectionsListReport } from '../services/managed-sections';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 import { renderCommandHelp } from './help';
-import { printCommandRemovedReport } from './removed-command';
 
 export interface DocsCommandInput {
   args: string[];
@@ -126,18 +125,6 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
     });
     printReport(report, input.jsonOutput);
     return true;
-  }
-  if (sub === 'archive') {
-    return printCommandRemovedReport(
-      {
-        commandId: 'docs.archive',
-        removedCommand: 'hadara docs archive',
-        replacementCommand: 'hadara docs list --status <status> --json',
-        diagnosticCommand: 'hadara docs doctor --json',
-        note: 'Archive-candidate inspection is covered by docs list/doctor and registry status correction flows.'
-      },
-      input.jsonOutput
-    );
   }
   if (sub === 'required-reading') {
     printReport(createDocsRequiredReadingReport(input.projectRoot), input.jsonOutput);

@@ -1,8 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { handleTaskCommand } from '../../src/cli/task';
+import { afterEach, describe, expect, it } from 'vitest';
 import { validateSchema } from '../../src/core/schema';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { createTaskNextReport, formatTaskNextReport } from '../../src/task/task-next';
@@ -11,7 +10,6 @@ const roots: string[] = [];
 
 afterEach(() => {
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
-  vi.restoreAllMocks();
   process.exitCode = undefined;
 });
 
@@ -204,24 +202,6 @@ describe('task next recommendation', () => {
     expect(validateSchema('hadara.task.next.v1', report).ok).toBe(true);
   });
 
-  it('redirects the removed task next CLI route', () => {
-    const root = tempProject();
-    writeDevelopmentSlices(root, ['| 1 | CLI Next | T-0199 | Continue. | Planned. |']);
-    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-
-    const handled = handleTaskCommand({ args: ['task', 'next', '--json'], projectRoot: root, jsonOutput: true });
-
-    expect(handled).toBe(true);
-    const payload = JSON.parse(String(log.mock.calls[0][0]));
-    expect(payload).toMatchObject({
-      schemaVersion: 'hadara.commandRemoved.v1',
-      command: 'task.next',
-      ok: false,
-      replacementCommand: 'hadara task status --json'
-    });
-    expect(validateSchema('hadara.commandRemoved.v1', payload).ok).toBe(true);
-    expect(process.exitCode).toBe(6);
-  });
 });
 
 function tempProject(options: { handoffNextStep?: string; developmentRows?: string[] } = {}): string {

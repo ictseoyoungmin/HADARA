@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createTaskListReport, createTaskReadReport, createTaskShowReport, formatTaskListReport } from '../../src/cli/task-json';
+import { createTaskListReport, createTaskReadReport, formatTaskListReport } from '../../src/cli/task-json';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { extractTaskCreateTitle, handleTaskCommand } from '../../src/cli/task';
 
@@ -49,28 +49,6 @@ describe('CLI task JSON reports', () => {
       ]
     });
     expect(formatTaskListReport(report)).toContain('T-0001\tFirst task\ttasks/T-0001-first-task');
-  });
-
-  it('returns TASK.md content for task show JSON', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'Show me');
-
-    const report = createTaskShowReport(root, task.id);
-
-    expect(report).toMatchObject({
-      schemaVersion: 'hadara.task.show.v1',
-      command: 'task.show',
-      ok: true,
-      taskId: task.id,
-      task: {
-        id: task.id,
-        title: 'Show me',
-        status: 'Draft',
-        capsule: `tasks/${task.id}-show-me`
-      },
-      issues: []
-    });
-    expect(report.task?.taskMarkdown).toContain(`# ${task.id} Show me`);
   });
 
   it('allocates task ids after the highest Task Board row when capsule directories are missing', () => {
@@ -206,27 +184,7 @@ describe('CLI task JSON reports', () => {
     expect(JSON.stringify(privateReport)).not.toContain('absolutePath');
   });
 
-  it('returns a stable missing task envelope', () => {
-    const root = tempProject();
-
-    const report = createTaskShowReport(root, 'T-9999');
-
-    expect(report).toEqual({
-      schemaVersion: 'hadara.task.show.v1',
-      command: 'task.show',
-      ok: false,
-      taskId: 'T-9999',
-      issues: [
-        {
-          severity: 'error',
-          code: 'TASK_NOT_FOUND',
-          message: 'Task Capsule not found: T-9999'
-        }
-      ]
-    });
-  });
-
-  it('prints a removed-command redirect for task show without treating --task as the id', () => {
+  it('does not route retired task show command', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Show flag');
     const output: string[] = [];
@@ -235,18 +193,12 @@ describe('CLI task JSON reports', () => {
       output.push(String(value));
     };
     try {
-      expect(handleTaskCommand({ args: ['task', 'show', '--task', task.id, '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+      expect(handleTaskCommand({ args: ['task', 'show', '--task', task.id, '--json'], projectRoot: root, jsonOutput: true })).toBe(false);
     } finally {
       console.log = originalLog;
     }
 
-    const report = JSON.parse(output.join('\n'));
-    expect(report).toMatchObject({
-      schemaVersion: 'hadara.commandRemoved.v1',
-      command: 'task.show',
-      ok: false,
-      replacementCommand: 'hadara task status --task <task-id> --json'
-    });
+    expect(output).toEqual([]);
   });
 
   it('extracts task create title without global flags', () => {
