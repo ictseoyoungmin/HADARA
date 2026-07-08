@@ -171,7 +171,7 @@ hadara task status --task T-XXXX --json
 hadara session start --task T-XXXX --json
 ```
 
-Low-level proof-boundary commands were removed from the standalone surface in 0.4.1-rc.0 (FD-013). `task finish`, `task ready`, `task close`, `task audit-close`, `task complete`, and `task lifecycle` now answer with a structured `hadara.commandRemoved.v1` redirect stub whose `replacementCommand` points at `task finalize` (`--execute --auto` for guarded execution, dry-run for step-level readiness/audit reports) or `task status --task T-XXXX --detail full --json` for diagnostics. The internal proof-boundary modules remain the engine under `task finalize`.
+Low-level proof-boundary commands were removed from the standalone surface in 0.4.1-rc.0 (FD-013). `task finish`, `task ready`, `task close`, `task audit-close`, `task complete`, and `task lifecycle` are no longer public routes. Use `task finalize` (`--execute --auto` for guarded execution, dry-run for step-level readiness/audit reports) or `task status --task T-XXXX --detail full --json` for diagnostics. The internal proof-boundary modules remain the engine under `task finalize`.
 
 Important boundaries:
 
@@ -179,7 +179,7 @@ Important boundaries:
 |---|---|
 | `task status` | Read-only operator console. `ok:true` means the report was generated, not that the task is ready. `--detail full` includes done-level diagnostics and `state.closeState`. |
 | `task finalize` | Default agent close path. Read-only by default; `--execute --plan-hash <hash>` executes a reviewed plan and `--execute --auto` folds review and hash check into one guarded call. |
-| `task finish` / `task ready` / `task close` / `task audit-close` / `task complete` / `task lifecycle` | Removed in 0.4.1-rc.0 (FD-013); each returns a `hadara.commandRemoved.v1` redirect stub. |
+| `task finish` / `task ready` / `task close` / `task audit-close` / `task complete` / `task lifecycle` | Fully removed public routes; use `task status` and `task finalize`. |
 
 Before executing `task finalize`, finish Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, Task Board updates, and tracked state docs. After final close proof, changing close-source docs intentionally invalidates the previous close proof and requires rerunning finalize.
 
@@ -243,8 +243,8 @@ Managed patch reports describe target hashes, section hashes, planned operations
 Release/package commands are release-only surfaces, not ordinary lifecycle steps:
 
 ```bash
-hadara package smoke --dry-run --json
-hadara package smoke --execute --attach-evidence --task T-0001 --json
+hadara smoke package --dry-run --json
+hadara smoke package --execute --attach-evidence --task T-0001 --json
 hadara smoke clean-checkout --execute --attach-evidence --task T-0001 --json
 hadara release artifact --execute --json --output dist-release --attach-evidence --task T-0001
 hadara release gate --mode strict --json
@@ -252,7 +252,7 @@ hadara release dry-run --json
 hadara release publish --mode dry-run --json
 ```
 
-`package smoke --execute`, `smoke clean-checkout --execute`, and `release artifact --execute` create local validation artifacts and reduced public evidence only. They must not publish packages, create GitHub Releases, build Docker images, push images, or load publish token values.
+`smoke package --execute`, `smoke clean-checkout --execute`, and `release artifact --execute` create local validation artifacts and reduced public evidence only. They must not publish packages, create GitHub Releases, build Docker images, push images, or load publish token values.
 
 `release publish --mode dry-run` reports readiness, token presence by name, approval requirements, and mutation privacy flags without running `npm publish`. Any publish execution must happen only in a separate approval-gated release capsule with explicit operator confirmation.
 

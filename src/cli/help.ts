@@ -101,7 +101,7 @@ export function renderLifecycleHelp(): string {
     }
   }
 
-  lines.push('', 'Removed low-level lifecycle commands return structured redirect stubs; use `task status --detail full` and `task finalize`.');
+  lines.push('', 'Removed low-level lifecycle commands are no longer public routes; use `task status --detail full` and `task finalize`.');
 
   lines.push(
     '',

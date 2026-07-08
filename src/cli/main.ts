@@ -127,18 +127,6 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
       break;
     }
 
-    case 'handoff': {
-      const { handleHandoffCommand } = await import('./handoff');
-      if (handleHandoffCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
-      break;
-    }
-
-    case 'write': {
-      const { handleWriteCommand } = await import('./write-preflight');
-      if (handleWriteCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
-      break;
-    }
-
     case 'policy': {
       const { handlePolicyCommand } = await import('./policy');
       if (handlePolicyCommand({ args, jsonOutput })) return;
@@ -190,18 +178,6 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
     case 'tui': {
       const { handleTuiCommand } = await import('./tui');
       if (handleTuiCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
-      break;
-    }
-
-    case 'run': {
-      const { handleRunCommand } = await import('./run');
-      if (await handleRunCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
-      break;
-    }
-
-    case 'run-state': {
-      const { handleRunStateCommand } = await import('./run-state');
-      if (handleRunStateCommand({ args, projectRoot: paths.projectRoot, jsonOutput })) return;
       break;
     }
 

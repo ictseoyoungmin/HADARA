@@ -214,7 +214,7 @@ hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 
 Use the explicit \`--plan-hash\` form only when a reviewed dry-run plan needs to cross a human or external automation boundary. The ordinary path is \`--execute --auto\`; it still performs the dry-run, folds in the current plan hash internally, and aborts if the close-source world changes before the write.
 
-Low-level lifecycle command surfaces (\`task finish\`, \`task ready\`, \`task close\`, \`task audit-close\`, \`task complete\`, and \`task lifecycle\`) were removed in 0.4.1-rc.0. They now return structured redirect stubs with replacement commands. Use \`task status --task T-XXXX --detail full --json\` for diagnostics and \`task finalize\` for close execution.
+Low-level lifecycle command surfaces (\`task finish\`, \`task ready\`, \`task close\`, \`task audit-close\`, \`task complete\`, and \`task lifecycle\`) were removed from public routing. Use \`task status --task T-XXXX --detail full --json\` for diagnostics and \`task finalize\` for close execution.
 
 ## Finalize Entry Gate
 
@@ -723,7 +723,7 @@ hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 
 \`task finalize --json\` is the reviewed dry-run. It reports the current lifecycle step, write boundaries, expected write paths, and a current \`planHash\`. \`task finalize --execute --auto\` performs that review and current-plan verification internally for the ordinary clean path. \`task finalize --execute --plan-hash ...\` is still available when a human or external automation explicitly carries a reviewed dry-run plan.
 
-Low-level proof-boundary command surfaces were removed in 0.4.1-rc.0 and now return structured redirect stubs:
+Low-level proof-boundary command surfaces were removed from public routing:
 
 \`\`\`bash
 hadara task status --task T-XXXX --detail full --json
@@ -818,10 +818,10 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 | \`evidence add-command\` | Write | Appends operator-supplied command-log evidence. It does not execute shell commands or capture stdout/stderr; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, and optional \`--idempotency-key\` prevents duplicate same-key records. |
 | \`validation run\` | Execute + evidence append | Runs a real command and records validation evidence. If the wrapper cannot launch the command in the current environment, run the command directly and record the direct result with \`validation run --direct-result\`. |
 | \`task next\` / \`task show\` | Fully removed public commands | Prefer \`task status --json\` and \`task status --task T-XXXX --json\`. |
-| \`task lifecycle\` | Removed redirect stub | Prefer \`task status --task T-XXXX --json\`. |
+| \`task lifecycle\` | Fully removed public command | Prefer \`task status --task T-XXXX --json\`. |
 | \`task finalize\` | Read-only by default; guarded execute uses \`--auto\` or \`--plan-hash\` | Default agent close path. Rechecks the current plan, records readiness evidence in the \`--auto\` close path when needed, executes phases serially, stops on blockers, and succeeds only after final audit is \`closed-valid\`. |
-| \`task finish\` / \`task ready\` / \`task close\` / \`task audit-close\` | Removed redirect stubs | Use \`task status --detail full\` for diagnostics and \`task finalize\` for close execution. |
-| \`task complete\` | Removed redirect stub | Prefer \`task status\` and \`task finalize\` for current agent flows. |
+| \`task finish\` / \`task ready\` / \`task close\` / \`task audit-close\` | Fully removed public commands | Use \`task status --detail full\` for diagnostics and \`task finalize\` for close execution. |
+| \`task complete\` | Fully removed public command | Prefer \`task status\` and \`task finalize\` for current agent flows. |
 
 ## Non-Overlap Rules
 
@@ -829,7 +829,7 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 - \`task status\` is an operator console; \`ok: true\` means report generation succeeded, not that the task is ready.
 - Readiness diagnostics are exposed through \`task status --detail full\` and \`task finalize --json\`.
 - \`harness validate\` is a direct diagnostic for Task Capsule structure and done-level gates; it is not a replacement for close evidence and is not required as a separate evidence wrapper before ordinary \`task finalize --execute --auto\`.
-- \`task complete\` and \`task lifecycle\` are removed redirect stubs. Prefer \`task status\` and \`task finalize\`.
+- \`task complete\` and \`task lifecycle\` are fully removed public commands. Prefer \`task status\` and \`task finalize\`.
 - \`task finalize\` is read-only by default and owns close-proof repair planning. Guarded execute uses \`--auto\` or a matching current dry-run \`planHash\`, runs phases serially, stops on blockers, and returns success only after the final audit is \`closed-valid\`.
 - \`evidence list\` is the supported evidence id discovery surface. Text output shows \`[id] time | category/outcome | visibility | summary\`; JSON records expose \`id\`, \`idSource\`, \`idStability\`, \`persistedSchemaVersion\`, \`category\`, \`outcome\`, and \`tags\`. Use durable persisted \`ev:\` ids for long-lived \`--resolves\` and \`--supersedes\` references. Legacy compatibility ids are inspection-only and are not the preferred durable reference.
 - \`evidence add-command\` records an operator-supplied command result; it does not run the command. \`--category\` and \`--outcome\` set persisted v2 metadata explicitly, while \`--result\` remains the legacy-compatible command result. When both are supplied, \`--result\` must match \`--outcome\` for \`passed\`, \`failed\`, \`blocked\`, and \`unknown\`; \`recorded\` and \`not-applicable\` require \`--result unknown\` or no explicit \`--result\`. \`--resolves\` and \`--supersedes\` append exact v2 resolution tags from passed or recorded follow-up evidence. \`--idempotency-key\` is optional; when supplied, same-key repeats return the existing record without appending duplicate Markdown or JSONL rows.

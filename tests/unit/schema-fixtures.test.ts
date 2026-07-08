@@ -30,7 +30,6 @@ describe('schema fixtures', () => {
       'hadara.cleanCheckoutSmoke.v1',
       'hadara.closeSource.v1',
       'hadara.codeIndex.v1',
-      'hadara.commandRemoved.v1',
       'hadara.command_help.v1',
       'hadara.command_portfolio_audit.v1',
       'hadara.commands.registry.v1',

@@ -11,7 +11,6 @@ import {
   safeCreateActiveRunProjection,
   writeActiveRunManifest
 } from '../../src/services/active-run-state';
-import { handleRunStateCommand } from '../../src/cli/run-state';
 import { validateSchema } from '../../src/core/schema';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
@@ -298,35 +297,4 @@ describe('single active run state', () => {
     });
   });
 
-  it('redirects run-state show to status after public surface removal', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'Run state show');
-    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF\n\n## Current State\n\n- ${task.id} is active.\n`, 'utf8');
-    writeActiveRunManifest(
-      root,
-      createActiveRunManifest(root, {
-        runId: 'run-show',
-        taskId: task.id,
-        startedAt: '2026-05-24T02:10:00Z',
-        summary: 'Show active state.'
-      })
-    );
-    const output: string[] = [];
-    const originalLog = console.log;
-    console.log = (value?: unknown) => {
-      output.push(String(value));
-    };
-
-    try {
-      expect(handleRunStateCommand({ args: ['run-state', 'show', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-    } finally {
-      console.log = originalLog;
-    }
-
-    expect(JSON.parse(output.join('\n'))).toMatchObject({
-      schemaVersion: 'hadara.commandRemoved.v1',
-      command: 'run-state.show',
-      replacementCommand: 'hadara status --json'
-    });
-  });
 });

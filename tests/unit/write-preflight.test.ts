@@ -4,7 +4,6 @@ import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { validateSchema } from '../../src/core/schema';
 import { createTaskCapsule } from '../../src/task/task-capsule';
-import { handleWriteCommand } from '../../src/cli/write-preflight';
 import { createWritePreflightReport } from '../../src/services/write-preflight';
 
 const roots: string[] = [];
@@ -176,19 +175,4 @@ describe('CLI write boundary preflight', () => {
     });
   });
 
-  it('prints a removed-command redirect through the write preflight CLI handler', () => {
-    const root = tempProject();
-    const output: string[] = [];
-    vi.spyOn(console, 'log').mockImplementation((value: string) => output.push(value));
-
-    expect(handleWriteCommand({ args: ['write', 'preflight', 'task', 'create', 'CLI Task', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-
-    const parsed = JSON.parse(output[0]);
-    expect(parsed).toMatchObject({
-      schemaVersion: 'hadara.commandRemoved.v1',
-      ok: false,
-      command: 'write.preflight',
-      replacementCommand: 'hadara policy preflight-shell <command> --json'
-    });
-  });
 });

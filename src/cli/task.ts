@@ -1,5 +1,4 @@
 import { createTaskCloseSourceReport } from '../task/task-close';
-import { handleRemovedTaskSubcommand, REMOVED_TASK_SUBCOMMANDS } from './removed-lifecycle';
 import { createTaskCreateReport, formatTaskCreateReport } from '../task/task-create';
 import { createTaskFinalizeReport, formatTaskFinalizeReport } from '../task/task-finalize';
 import type { TaskFinalizeProgressEvent } from '../task/task-finalize';
@@ -74,9 +73,6 @@ type TaskStatusSummaryReport =
 export function handleTaskCommand(input: TaskCommandInput): boolean {
   const timer = startMonotonicTimer();
   const sub = input.args[1];
-  // FD-013: removed low-level lifecycle surface answers with a structured
-  // redirect stub instead of an unknown-command failure.
-  if (sub && REMOVED_TASK_SUBCOMMANDS[sub]) return handleRemovedTaskSubcommand(sub, input.jsonOutput);
   if (sub === 'create') {
     if (blockLegacyMutation(input, 'task.create')) return true;
     const title = extractTaskCreateTitle(input.args);

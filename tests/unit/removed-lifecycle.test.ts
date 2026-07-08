@@ -2,9 +2,6 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { handleTaskCommand } from '../../src/cli/task';
-import { REMOVED_TASK_SUBCOMMANDS } from '../../src/cli/removed-lifecycle';
-import { validateSchema } from '../../src/core/schema';
 import { appendEvidence } from '../../src/evidence/evidence';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { createTaskFinalizeReport } from '../../src/task/task-finalize';
@@ -24,41 +21,7 @@ afterEach(() => {
   process.exitCode = undefined;
 });
 
-function captureJson(args: string[], root: string): Record<string, unknown> {
-  const output: string[] = [];
-  const originalLog = console.log;
-  console.log = (value?: unknown) => {
-    output.push(String(value));
-  };
-  try {
-    expect(handleTaskCommand({ args, projectRoot: root, jsonOutput: true })).toBe(true);
-  } finally {
-    console.log = originalLog;
-  }
-  return JSON.parse(output.join('\n')) as Record<string, unknown>;
-}
-
 describe('FD-013 removed lifecycle surface', () => {
-  it('answers every removed subcommand with a structured redirect stub and no writes', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'Removed surface stub');
-    const before = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
-
-    for (const sub of Object.keys(REMOVED_TASK_SUBCOMMANDS)) {
-      const report = captureJson(['task', sub, '--task', task.id, '--json'], root);
-      expect(validateSchema('hadara.commandRemoved.v1', report).ok).toBe(true);
-      expect(report).toMatchObject({
-        schemaVersion: 'hadara.commandRemoved.v1',
-        ok: false,
-        code: 'TASK_LIFECYCLE_COMMAND_REMOVED'
-      });
-      expect(String(report.replacementCommand)).toMatch(/hadara task (finalize|status)/);
-      expect(process.exitCode).toBe(6);
-      process.exitCode = undefined;
-    }
-    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe(before);
-  });
-
   it('keeps field-level ready diagnostics inside task status --detail full (parity, rc0 item 6 AC-3)', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Ready parity fixture');

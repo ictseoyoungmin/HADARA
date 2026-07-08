@@ -4,28 +4,6 @@ import { AgentLoopResult } from '../agent/loop';
 import { resolveProjectFile } from '../core/workspace';
 import { ScriptedProviderStep } from '../providers/scripted-provider';
 import { FakeShellFixtures } from '../tools/fake-shell';
-import { printCommandRemovedReport } from './removed-command';
-
-export interface RunCommandInput {
-  args: string[];
-  projectRoot: string;
-  jsonOutput: boolean;
-}
-
-export async function handleRunCommand(input: RunCommandInput): Promise<boolean> {
-  if (input.args[0] !== 'run') return false;
-  const sub = input.args[1];
-  return printCommandRemovedReport(
-    {
-      commandId: sub === 'scaffold' ? 'run.scaffold' : 'run',
-      removedCommand: sub === 'scaffold' ? 'hadara run scaffold' : 'hadara run',
-      replacementCommand: 'hadara validation run --task <task-id> --check <name> -- <command>',
-      diagnosticCommand: 'hadara evidence add-command --task <task-id> --summary "..." --result passed --json',
-      note: 'The deterministic agent-loop harness is no longer part of the public worker CLI surface; task work should record real validation/evidence directly.'
-    },
-    input.jsonOutput
-  );
-}
 
 export function attachRunEvidence(projectRoot: string, result: AgentLoopResult): AgentLoopResult {
   try {

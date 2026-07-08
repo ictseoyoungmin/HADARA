@@ -197,7 +197,7 @@ hadara smoke package --from ./dist-release/hadara-0.1.0-rc.0.tgz --json
 hadara smoke package --keep-temp --json
 ```
 
-Use `hadara smoke package` as the primary command name. `hadara package smoke` is a removed redirect stub. Do not use `hadara release smoke` as the primary command surface because release wording implies publish/deploy behavior.
+Use `hadara smoke package` as the primary command name. `hadara package smoke` is no longer public routing. Do not use `hadara release smoke` as the primary command surface because release wording implies publish/deploy behavior.
 
 Required flags and semantics:
 

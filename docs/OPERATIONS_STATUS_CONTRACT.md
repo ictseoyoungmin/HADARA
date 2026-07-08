@@ -22,7 +22,7 @@ hadara status --state-only --json
 
 `--detail full` preserves the complete `hadara.ops.status.v1` operations payload, including debt, known problems, capsule status counts, and state-consistency advisory. `--summary-json` emits `hadara.ops.statusSummary.v1`. `--state-only --json` emits `hadara.ops.statusState.v1` and is the public state-consistency replacement after `state.verify` removal.
 
-The old `hadara ops status --json` alias now returns a structured removed-command redirect to `hadara status --json`.
+The old `hadara ops status --json` alias is fully removed from public routing; use `hadara status --json`.
 
 Text output is intentionally minimal. External agents and dashboards should use JSON mode.
 

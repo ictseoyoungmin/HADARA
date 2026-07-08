@@ -2,7 +2,6 @@ import { HarnessValidationLevel } from '../harness/validate';
 import { createHarnessValidateReport } from '../services/harness-service';
 import { getFlag, getRequiredStringOption, getStringOption } from './args';
 import { renderCommandHelp } from './help';
-import { printCommandRemovedReport } from './removed-command';
 
 export interface HarnessCommandInput {
   args: string[];
@@ -32,19 +31,6 @@ export async function handleHarnessCommand(input: HarnessCommandInput): Promise<
     }
     if (!result.ok) process.exitCode = 6;
     return true;
-  }
-
-  if (sub === 'replay') {
-    return printCommandRemovedReport(
-      {
-        commandId: 'harness.replay',
-        removedCommand: 'hadara harness replay',
-        replacementCommand: 'hadara validation run --task <task-id> --check <name> -- <command>',
-        diagnosticCommand: 'hadara harness validate --task <task-id> --level done --json',
-        note: 'Scenario replay was a development harness surface; ordinary validation should use validation run and task-scoped evidence.'
-      },
-      input.jsonOutput
-    );
   }
 
   return false;

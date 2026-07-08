@@ -173,7 +173,7 @@ hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 
 Use `--execute --auto` for the ordinary guarded close path. Use the explicit `--plan-hash` form only when a reviewed dry-run plan crosses a human or external automation boundary.
 
-Standalone low-level lifecycle command surfaces (`task finish`, `task ready`, `task close`, `task audit-close`, `task complete`, and `task lifecycle`) were removed in 0.4.1-rc.0 and answer with `hadara.commandRemoved.v1` redirect stubs. Use `hadara task finalize --task T-XXXX --json` for the step-level dry-run report, `hadara task finalize --task T-XXXX --execute --auto --json` for guarded execution, and `hadara task status --task T-XXXX --detail full --json` for done-level diagnostics including `state.closeState`. Recovery of partially executed finalize runs also completes by rerunning finalize.
+Standalone low-level lifecycle command surfaces (`task finish`, `task ready`, `task close`, `task audit-close`, `task complete`, and `task lifecycle`) were removed from public routing. Use `hadara task finalize --task T-XXXX --json` for the step-level dry-run report, `hadara task finalize --task T-XXXX --execute --auto --json` for guarded execution, and `hadara task status --task T-XXXX --detail full --json` for done-level diagnostics including `state.closeState`. Recovery of partially executed finalize runs also completes by rerunning finalize.
 
 ## Finalize Entry Gate
 

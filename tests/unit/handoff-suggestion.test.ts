@@ -5,7 +5,6 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { validateSchema } from '../../src/core/schema';
 import { appendEvidence } from '../../src/evidence/evidence';
-import { handleHandoffCommand } from '../../src/cli/handoff';
 import { createHandoffSuggestionReport } from '../../src/handoff/handoff-suggestion';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
@@ -81,91 +80,6 @@ describe('handoff suggestion report', () => {
     expect(validateSchema('hadara.handoff.suggestion.v1', report).ok).toBe(true);
   });
 
-  it('routes CLI suggestion requests to the removed-command stub without writing AGENT_HANDOFF.md', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'CLI handoff suggest');
-    writeFixtureHandoff(root);
-    const beforeHandoff = fs.readFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), 'utf8');
-    const output: string[] = [];
-    const originalLog = console.log;
-    console.log = (value?: unknown) => {
-      output.push(String(value));
-    };
-    try {
-      expect(handleHandoffCommand({ args: ['handoff', 'suggest', '--task', task.id, '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-    } finally {
-      console.log = originalLog;
-    }
-
-    const report = JSON.parse(output.join('\n'));
-    expect(report.schemaVersion).toBe('hadara.commandRemoved.v1');
-    expect(report.command).toBe('handoff.suggest');
-    expect(report.replacementCommand).toBe('hadara task status --task <task-id> --json');
-    expect(fs.readFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), 'utf8')).toBe(beforeHandoff);
-  });
-
-  it('does not route removed handoff update command', () => {
-    const root = tempProject();
-    const output: string[] = [];
-    const originalLog = console.log;
-    console.log = (value?: unknown) => {
-      output.push(String(value));
-    };
-    try {
-      expect(handleHandoffCommand({ args: ['handoff', 'update', '--task', 'T-0001', '--summary', 'Done.', '--next', 'Continue.', '--json'], projectRoot: root, jsonOutput: true })).toBe(false);
-    } finally {
-      console.log = originalLog;
-    }
-
-    expect(output).toEqual([]);
-    expect(fs.existsSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'))).toBe(false);
-  });
-
-  it('keeps explicit actor CLI options read-only when suggestion route is removed', () => {
-    const root = tempProject();
-    const task = createTaskCapsule(root, 'CLI handoff actor');
-    writeFixtureHandoff(root);
-    const output: string[] = [];
-    const originalLog = console.log;
-    console.log = (value?: unknown) => {
-      output.push(String(value));
-    };
-    try {
-      expect(
-        handleHandoffCommand({
-          args: ['handoff', 'suggest', '--task', task.id, '--agent-id', 'coord-handoff', '--run-id', 'run-handoff', '--actor-role', 'coordinator', '--json'],
-          projectRoot: root,
-          jsonOutput: true
-        })
-      ).toBe(true);
-    } finally {
-      console.log = originalLog;
-    }
-
-    const report = JSON.parse(output.join('\n'));
-    expect(report).toMatchObject({
-      schemaVersion: 'hadara.commandRemoved.v1',
-      command: 'handoff.suggest',
-      ok: false
-    });
-  });
-
-  it('does not route retired stale-problems command', () => {
-    const root = tempProject();
-    writeFixtureHandoff(root, [['0.3.4 publish/recycle still pending.', 'Release state is confusing.', 'Review after release.']]);
-    const output: string[] = [];
-    const originalLog = console.log;
-    console.log = (value?: unknown) => {
-      output.push(String(value));
-    };
-    try {
-      expect(handleHandoffCommand({ args: ['handoff', 'stale-problems', '--json'], projectRoot: root, jsonOutput: true })).toBe(false);
-    } finally {
-      console.log = originalLog;
-    }
-
-    expect(output).toEqual([]);
-  });
 });
 
 function completeTask(root: string, taskId: string, taskDir: string): void {

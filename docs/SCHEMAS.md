@@ -75,7 +75,6 @@ Initial fixtures:
 | `hadara.docs.mark.v1` | `src/schemas/docs-mark.schema.json` | fixture | Documents `hadara docs mark --json` registry-only cleanup status transition reports. |
 | `hadara.schema.vocabulary.v1` | `src/schemas/schema-vocabulary.schema.json` | fixture | Documents `hadara schema --json` controlled-vocabulary domain lookup reports shared with harness and docs validators. |
 | `hadara.slice.report.v1` | `src/schemas/slice-report.schema.json` | fixture | Documents `hadara slice add|set|list|migrate|render --json` slices state prototype reports (FD-012). |
-| `hadara.commandRemoved.v1` | `src/schemas/command-removed.schema.json` | fixture | Documents the FD-013 removed lifecycle command stub with structured replacementCommand redirects. |
 | `hadara.docs.completeSpec.v1` | `src/schemas/docs-complete-spec.schema.json` | fixture | Documents `hadara docs complete-spec --json` completed-spec lifecycle reports. |
 | `hadara.docs.patchPlan.v1` | `src/schemas/docs-patch-plan.schema.json` | fixture | Documents `hadara docs patch --json` managed section dry-run and hash-guarded execute reports. |
 | `hadara.docs.readMap.v1` | `src/schemas/docs-read-map.schema.json` | fixture | Documents `hadara docs read-map --json` task-scoped read guidance and drift warnings. |

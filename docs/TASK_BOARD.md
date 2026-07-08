@@ -532,3 +532,4 @@
 | T-0529 | rename internal task next projection | Done | tasks/T-0529-rename-internal-task-next-projection | Renamed internal next-work projection to `task-selection` / `hadara.task.selection.v1` / `sources.taskSelection`; public `task.next` remains removed. |
 | T-0530 | split init implementation by ownership boundary | Done | tasks/T-0530-split-init-implementation-by-ownership-boundary | |
 | T-0531 | preflight finalize auto task table tokens before finish | Done | tasks/T-0531-preflight-finalize-auto-task-table-tokens-before-finish | |
+| T-0532 | remove legacy command redirect stubs | Done | tasks/T-0532-remove-legacy-command-redirect-stubs | Removed remaining registry-absent redirect stubs and `hadara.commandRemoved.v1` current schema/docs contract; Docker sync-build refreshed `dist`. |

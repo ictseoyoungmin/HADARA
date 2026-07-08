@@ -1355,7 +1355,7 @@ function evaluateGeneratedInitDocs(initResult: PackageSmokeCommandResult, worksp
   return {
     ok,
     summary: ok
-      ? 'Generated init workflow docs expose current finalize --auto and slice guidance without stale removed-command instructions.'
+      ? 'Generated init workflow docs expose current finalize --auto and slice guidance without stale removed command instructions.'
       : 'Generated init docs drift detected; see generated-init-docs issues.',
     issues
   };

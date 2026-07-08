@@ -96,13 +96,13 @@ export const PORTFOLIO_AUDIT_DECISIONS: PortfolioAuditDecision[] = [
   {
     decision: 'Task status is the default lifecycle cockpit.',
     commands: ['task.status', 'task.finalize', 'task.ready', 'harness.validate'],
-    rule: '`task status` without `--task` owns next-work selection; `task status --task` owns phase and next-action guidance. Removed lifecycle and next-work compatibility surfaces return structured redirect stubs.',
+    rule: '`task status` without `--task` owns next-work selection; `task status --task` owns phase and next-action guidance. Removed lifecycle and next-work compatibility surfaces are no longer public routes.',
     evidence: '0.4 agent UX lifecycle cockpit refactor.'
   },
   {
     decision: 'Finalize is the default agent close path.',
     commands: ['task.finalize', 'task.complete', 'task.finish'],
-    rule: '`task finalize --execute --auto` is the ordinary guarded close path. Removed low-level lifecycle command surfaces return structured redirect stubs.',
+    rule: '`task finalize --execute --auto` is the ordinary guarded close path. Removed low-level lifecycle command surfaces are no longer public routes.',
     evidence: 'FD-010 and FD-013 0.4.1-rc.0 lifecycle surface consolidation.'
   },
   {

@@ -2,7 +2,6 @@ import { HadaraPaths } from '../core/paths';
 import { createPackageRecycleReport } from '../services/package-recycle';
 import { getFlag, getIntegerOption, getStringOption } from './args';
 import { renderCommandHelp } from './help';
-import { printCommandRemovedReport } from './removed-command';
 
 export interface PackageCommandInput {
   args: string[];
@@ -48,15 +47,5 @@ export function handlePackageCommand(input: PackageCommandInput): boolean {
     return true;
   }
 
-  if (input.args[1] !== 'smoke') return false;
-  return printCommandRemovedReport(
-    {
-      commandId: 'package.smoke',
-      removedCommand: 'hadara package smoke',
-      replacementCommand: 'hadara smoke package [--dry-run|--execute] [--from <tarball|dir>] --json',
-      diagnosticCommand: 'hadara help command smoke.package',
-      note: 'Package smoke validation moved into the smoke command family; the release validation behavior is unchanged.'
-    },
-    input.jsonOutput
-  );
+  return false;
 }

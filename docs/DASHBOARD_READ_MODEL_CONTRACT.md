@@ -14,7 +14,7 @@ Primary source:
 hadara status --detail full --json
 ```
 
-The default `hadara status --json` is a fast operator snapshot and intentionally skips broad debt, known-problem, capsule, and state-consistency scans. Dashboards that need the full `hadara.ops.status.v1` payload should request `--detail full`. The old `hadara ops status --json` alias now returns a structured removed-command redirect to `hadara status --json`.
+The default `hadara status --json` is a fast operator snapshot and intentionally skips broad debt, known-problem, capsule, and state-consistency scans. Dashboards that need the full `hadara.ops.status.v1` payload should request `--detail full`. The old `hadara ops status --json` alias is fully removed from public routing; use `hadara status --json`.
 
 Sample fixture:
 

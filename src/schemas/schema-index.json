@@ -212,13 +212,6 @@
       "notes": "Documents the FD-012 slices state prototype reports for hadara slice add/set/list/migrate/render over .hadara/state/slices.json and the generated DEVELOPMENT_SLICES.md projection."
     },
     {
-      "id": "hadara.commandRemoved.v1",
-      "path": "src/schemas/command-removed.schema.json",
-      "status": "fixture",
-      "owner": "cli/removed-lifecycle",
-      "notes": "Documents structured redirect stubs returned when removed CLI commands are invoked, including the machine-readable replacementCommand."
-    },
-    {
       "id": "hadara.docs.completeSpec.v1",
       "path": "src/schemas/docs-complete-spec.schema.json",
       "status": "fixture",

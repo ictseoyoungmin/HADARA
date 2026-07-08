@@ -2,7 +2,6 @@ import { parsePermissionMode } from '../policy/policy';
 import { createPolicyEvaluateReport } from '../services/policy-service';
 import { getStringOption } from './args';
 import { extractPolicyCommandText } from './policy-json';
-import { printCommandRemovedReport } from './removed-command';
 
 export interface PolicyCommandInput {
   args: string[];
@@ -11,18 +10,6 @@ export interface PolicyCommandInput {
 
 export function handlePolicyCommand(input: PolicyCommandInput): boolean {
   const sub = input.args[1];
-  if (sub === 'check-shell') {
-    return printCommandRemovedReport(
-      {
-        commandId: 'policy.check-shell',
-        removedCommand: 'hadara policy check-shell',
-        replacementCommand: 'hadara policy preflight-shell <command> --json',
-        note: 'Shell policy reads are consolidated under policy preflight-shell.'
-      },
-      input.jsonOutput
-    );
-  }
-
   if (sub === 'preflight-shell') {
     const mode = parsePermissionMode(getStringOption(input.args, '--mode', 'assisted') ?? 'assisted');
     const commandText = extractPolicyCommandText(input.args, mode);

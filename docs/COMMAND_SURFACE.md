@@ -77,9 +77,9 @@ hadara task finalize --task T-XXXX --json
 hadara task finalize --task T-XXXX --execute --plan-hash sha256:... --json
 ```
 
-Retired compatibility surfaces fully removed from public routing: `task next`, `task show`, `task upgrade-scaffold`, `handoff stale-problems`, `evidence collect`, `ops status`, `init register-doc`, and `docs archive`.
+Retired compatibility surfaces fully removed from public routing: `task next`, `task show`, `task upgrade-scaffold`, `handoff stale-problems`, `handoff suggest`, `evidence collect`, `ops status`, `init register-doc`, `docs archive`, `task lifecycle`, `task finish`, `task ready`, `task close`, `task audit-close`, `task complete`, `write preflight`, `policy check-shell`, `harness replay`, `run`, `run scaffold`, `run-state show`, `run-state resume`, and `package smoke`.
 
-Remaining migration stubs return `hadara.commandRemoved.v1` redirect reports with `replacementCommand`: `task lifecycle`, `task finish`, `task ready`, `task close`, `task audit-close`, `task complete`, `handoff suggest`, `write preflight`, `policy check-shell`, `harness replay`, `run`, `run scaffold`, `run-state show`, `run-state resume`, and `package smoke`. New users should not see these in registry/help output.
+Removed compatibility surfaces are not command registry entries and do not have a stable JSON response contract. Current replacements are `task status`, `task finalize`, `validation run`, `evidence add-command`, `policy preflight-shell`, `status`, `docs register/list/doctor/mark`, `smoke package`, and `protocol remediate`.
 
 No current CLI command writes or generates `docs/AGENT_HANDOFF.md` fragments. Shared handoff edits are deliberate documentation work before `task finalize`; use `task status` and `task finalize --json` for phase/readiness guidance.
 
@@ -111,7 +111,7 @@ State consistency rollout is advisory in `0.3.1-rc.1`; state projection issues r
 
 ## Advanced Surfaces
 
-Release/package, dev validation, integrations, dashboard/TUI, and installer planning commands remain available through `hadara commands --json` and `hadara help family <family>`. Package smoke validation is canonical as `hadara smoke package ...`; the old `hadara package smoke` route is a redirect stub. Deterministic agent-loop harness commands are no longer public worker CLI surfaces. Advanced surfaces are intentionally hidden from default help because ordinary worker agents should not infer release, UI, integration, or harness actions as part of every capsule.
+Release/package, dev validation, integrations, dashboard/TUI, and installer planning commands remain available through `hadara commands --json` and `hadara help family <family>`. Package smoke validation is canonical as `hadara smoke package ...`; the old `hadara package smoke` route is no longer public routing. Deterministic agent-loop harness commands are no longer public worker CLI surfaces. Advanced surfaces are intentionally hidden from default help because ordinary worker agents should not infer release, UI, integration, or harness actions as part of every capsule.
 
 ## Adding Commands
 
