@@ -119,6 +119,10 @@ The task workflow surface is intentionally staged. `docs/TASK_WORKFLOW_COMMANDS.
 
 | Command | JSON Schema | Write Policy | `ok` Semantics |
 |---|---|---|---|
+| `status --json` | `hadara.ops.status.v1` | Read-only fast project-status snapshot; skips debt, known-problem, broad capsule, and state-consistency scans by default. | Project status report was generated. Missing source docs are warning issues, not command failure. |
+| `status --detail full --json` | `hadara.ops.status.v1` | Read-only full operations-status snapshot including debt, known problems, capsule status counts, and state-consistency advisory. | Full operations status report was generated. |
+| `status --summary-json` | `hadara.ops.statusSummary.v1` | Read-only compact project-status snapshot. | Summary status report was generated. |
+| `status --state-only --json` | `hadara.ops.statusState.v1` | Read-only state-consistency advisory; no lifecycle writes. | State advisory report was generated; `ok:true` does not mean `consistent:true`. |
 | `task status --json` | `hadara.task.status.v1` | Read-only. | Selection report was generated; not that a capsule exists. |
 | `task next --json` | `hadara.commandRemoved.v1` | Removed redirect stub. | Redirect report was generated. |
 | `task create <title> [--from <template-id>] --json` | `hadara.task.create.v1` | Writes a Draft Task Capsule and Task Board row only. | Capsule creation succeeded. |

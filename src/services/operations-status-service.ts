@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ActiveRunProjection, safeCreateActiveRunProjection } from './active-run-state';
 import { extractHandoffSectionValues, extractValidationBaselineSummary } from './handoff-summary-parser';
-import { findMarkdownRowByCell, parseMarkdownRowsUnderHeading } from './markdown-table';
+import { findMarkdownRowByCell, parseMarkdownRows, parseMarkdownRowsUnderHeading } from './markdown-table';
 import { createOperationalDebtReport, OperationalDebtAggregate } from './operational-debt';
 import { extractSection, ProjectReadSources, readProjectSources } from './project-read-model';
 import { createStateProjectionReport, StateProjectionAdvisory, toStateProjectionAdvisory } from './state-projection';
@@ -59,13 +59,39 @@ export interface OpsStatusReport {
   }>;
 }
 
+export interface OpsStatusSummaryReport {
+  schemaVersion: 'hadara.ops.statusSummary.v1';
+  command: 'status.summary';
+  ok: boolean;
+  health: OpsStatusReport['health'];
+  project: OpsStatusReport['project'];
+  tasks: {
+    counts: OpsStatusReport['tasks']['counts'];
+    lastCompleted: string[];
+    nextRecommended: string | null;
+  };
+  validation: OpsStatusReport['validation'];
+  stateConsistency?: StateProjectionAdvisory;
+  issues: OpsStatusReport['issues'];
+}
+
+export interface OpsStatusStateReport {
+  schemaVersion: 'hadara.ops.statusState.v1';
+  command: 'status.state';
+  ok: true;
+  stateConsistency: StateProjectionAdvisory;
+}
+
 export interface OpsStatusOptions {
   // When false, skip the operational-debt computation (the dominant cost on
   // large/slow filesystems) and return a zeroed debt aggregate. Used by the
   // dashboard "core" tier, which loads debt separately in the background.
   includeDebt?: boolean;
+  includeKnownProblems?: boolean;
   includeStateConsistency?: boolean;
   stateIssueLimit?: number;
+  taskStatusSource?: 'capsules' | 'task-board';
+  maxTextLength?: number;
 }
 
 const EMPTY_DEBT_AGGREGATE: OperationalDebtAggregate = {
@@ -81,12 +107,15 @@ const EMPTY_DEBT_AGGREGATE: OperationalDebtAggregate = {
 export function createOpsStatusReport(projectRoot: string, options: OpsStatusOptions = {}): OpsStatusReport {
   const includeDebt = options.includeDebt !== false;
   const sources = readProjectSources(projectRoot);
-  const tasks = listTaskCapsules(projectRoot);
-  const taskCounts = countTaskStatuses(tasks);
+  const taskCounts = options.taskStatusSource === 'task-board'
+    ? countTaskBoardStatuses(parseTaskBoardRows(sources.taskBoard.content))
+    : countTaskStatuses(listTaskCapsules(projectRoot));
   const handoffSections = {
-    currentState: extractHandoffSectionValues(sources.handoff.content, '## Current State'),
-    knownProblems: extractHandoffSectionValues(sources.handoff.content, '## Current Known Problems'),
-    nextRecommendedStep: extractHandoffSectionValues(sources.handoff.content, '## Next Recommended Step')
+    currentState: truncateList(extractHandoffSectionValues(sources.handoff.content, '## Current State'), options.maxTextLength),
+    knownProblems: options.includeKnownProblems === false
+      ? []
+      : truncateList(extractHandoffSectionValues(sources.handoff.content, '## Current Known Problems'), options.maxTextLength),
+    nextRecommendedStep: truncateList(extractHandoffSectionValues(sources.handoff.content, '## Next Recommended Step'), options.maxTextLength)
   };
   const validation = extractValidationBaselineSummary(sources.handoff.content, sources.validationHistory.content);
   const activeRun = safeCreateActiveRunProjection(projectRoot);
@@ -103,7 +132,7 @@ export function createOpsStatusReport(projectRoot: string, options: OpsStatusOpt
     health: issues.some((issue) => issue.severity === 'error') ? 'error' : issues.length > 0 ? 'degraded' : 'ok',
     project: {
       branch: readGitBranch(projectRoot),
-      phase: extractProjectPhase(sources.projectState.content)
+      phase: truncateText(extractProjectPhase(sources.projectState.content), options.maxTextLength)
     },
     tasks: {
       counts: taskCounts.counts,
@@ -127,6 +156,40 @@ export function createOpsStatusReport(projectRoot: string, options: OpsStatusOpt
       }
     },
     issues
+  };
+}
+
+export function createOpsStatusSummaryReport(projectRoot: string, options: OpsStatusOptions = {}): OpsStatusSummaryReport {
+  const report = createOpsStatusReport(projectRoot, {
+    includeDebt: false,
+    includeKnownProblems: false,
+    taskStatusSource: 'task-board',
+    maxTextLength: 240,
+    ...options
+  });
+  return {
+    schemaVersion: 'hadara.ops.statusSummary.v1',
+    command: 'status.summary',
+    ok: report.ok,
+    health: report.health,
+    project: report.project,
+    tasks: {
+      counts: report.tasks.counts,
+      lastCompleted: report.tasks.lastCompleted,
+      nextRecommended: report.tasks.nextRecommended
+    },
+    validation: report.validation,
+    ...(report.stateConsistency ? { stateConsistency: report.stateConsistency } : {}),
+    issues: report.issues
+  };
+}
+
+export function createOpsStatusStateReport(projectRoot: string, issueLimit = 10): OpsStatusStateReport {
+  return {
+    schemaVersion: 'hadara.ops.statusState.v1',
+    command: 'status.state',
+    ok: true,
+    stateConsistency: toStateProjectionAdvisory(createStateProjectionReport(projectRoot), issueLimit)
   };
 }
 
@@ -201,6 +264,42 @@ function countTaskStatuses(tasks: TaskCapsule[]): {
   return { counts, rawStatusCounts, normalizedStatusCounts };
 }
 
+interface TaskBoardStatusRow {
+  id: string;
+  status: string;
+}
+
+function parseTaskBoardRows(content: string): TaskBoardStatusRow[] {
+  return parseMarkdownRows(content)
+    .filter((row) => /^T-\d{4}$/.test(row[0] ?? ''))
+    .map((row) => ({ id: row[0], status: row[2] || 'Unknown' }));
+}
+
+function countTaskBoardStatuses(rows: TaskBoardStatusRow[]): {
+  counts: OpsStatusReport['tasks']['counts'];
+  rawStatusCounts: Record<string, number>;
+  normalizedStatusCounts: Record<string, number>;
+} {
+  const counts: OpsStatusReport['tasks']['counts'] = {
+    done: 0,
+    draft: 0,
+    partial: 0,
+    superseded: 0,
+    inProgress: 0,
+    unknown: 0
+  };
+  const rawStatusCounts: Record<string, number> = {};
+  const normalizedStatusCounts: Record<string, number> = {};
+  for (const row of rows) {
+    const normalizedStatus = normalizeStatus(row.status);
+    const aggregate = aggregateStatus(normalizedStatus);
+    counts[aggregate] += 1;
+    rawStatusCounts[row.status] = (rawStatusCounts[row.status] ?? 0) + 1;
+    normalizedStatusCounts[normalizedStatus] = (normalizedStatusCounts[normalizedStatus] ?? 0) + 1;
+  }
+  return { counts, rawStatusCounts, normalizedStatusCounts };
+}
+
 function readTaskStatus(task: TaskCapsule): string {
   const taskPath = path.join(task.dir, 'TASK.md');
   if (!fs.existsSync(taskPath)) return 'Unknown';
@@ -254,4 +353,13 @@ function warning(code: string, message: string): OpsStatusReport['issues'][numbe
     code,
     message
   };
+}
+
+function truncateList(values: string[], maxLength: number | undefined): string[] {
+  return values.map((value) => truncateText(value, maxLength));
+}
+
+function truncateText(value: string, maxLength: number | undefined): string {
+  if (!maxLength || value.length <= maxLength) return value;
+  return `${value.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
 }

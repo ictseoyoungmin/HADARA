@@ -4,16 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, command portfolio inventory is complete through T-0521, and reduction slices are complete through T-0523. |
-| Current Phase | Command portfolio reduction implementation | T-0522 and T-0523 reduced the current registry surface from 73 to 68 command ids while preserving replacement read models. |
-| Latest Completed Task | T-0523 remove state verify public command | Public `state.verify` is removed; `status --json` and `protocol doctor --scope all --json` remain the public state-consistency advisory surfaces. |
+| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, command portfolio inventory is complete through T-0521, and reduction/performance slices are complete through T-0524. |
+| Current Phase | Command portfolio reduction implementation | T-0522 and T-0523 reduced the current registry surface from 73 to 68 command ids; T-0524 keeps the top-level project status surface but makes its default path fast. |
+| Latest Completed Task | T-0524 speed up status json default | `hadara status --json` now skips broad scans by default; use `--detail full`, `--summary-json`, or `--state-only --json` for explicit heavier/compact diagnostics. |
 | Active / Next Task | Next command portfolio reduction slice | Use T-0521's command inventory to choose the next low-risk deletion candidate; keep internal shared read models intact when removing public aliases. |
-| Validation Baseline | T-0523 focused replacement/removal validation | T-0523 passed focused Vitest coverage, TypeScript build, built registry smoke for `state.verify` removal, and replacement status/protocol smokes. |
+| Validation Baseline | T-0524 focused status validation | Focused status/registry/docs/smoke tests passed 6 files / 41 tests, TypeScript build passed, built CLI status smokes passed; full host suite is blocked by environment spawn EPERM. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| speed up status json default | T-0524 makes `hadara status --json` fast by default, adds explicit `--detail full`, `--summary-json`, and `--state-only --json` variants, and updates status contracts/docs/tests. | `ev:T-0524:27c4be39ca554616b854a12e`, `ev:T-0524:4baa7e47eb454beaa70dfe06` |
 | remove state verify public command | T-0523 removes public `state.verify` after confirming `status --json` and `protocol doctor --scope all --json` expose stateConsistency advisory issue data; internal state projection service/schema remains. | `ev:T-0523:1ff663c8467b4e31b71002cc` |
 | remove duplicate proof and evidence summary commands | T-0522 removes public `proof.status`, `proof.explain`, `evidence.summary`, and `ci.gate` surfaces, leaving `task status --detail full`, `task finalize`, `evidence list`, `status`, `protocol doctor`, and release-specific gates as the current replacements. | `ev:T-0522:9f87a75fe15649e9bd445710` |
 | command portfolio reduction inventory | T-0521 inventories all 73 command ids, classifies family/requiredness/importance/default-help/action/rationale, and identifies first reduction slices around duplicate proof/evidence/docs diagnostics. | `ev:T-0521:87352953be5d4b8c8bf5e13c` |
@@ -65,14 +66,15 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0524 / speed up status json default | Default `hadara status --json` now avoids broad scans; explicit full/summary/state-only modes preserve the previous heavy diagnostics and smaller automation contracts. | `ev:T-0524:27c4be39ca554616b854a12e`, `ev:T-0524:4baa7e47eb454beaa70dfe06` |
 | T-0523 / remove state verify public command | Removed public `state.verify`; replacement state consistency diagnostics are exposed through `status --json` and `protocol doctor --scope all --json`. | `ev:T-0523:1ff663c8467b4e31b71002cc` |
 | T-0522 / remove duplicate proof and evidence summary commands | Removed `proof.status`, `proof.explain`, `evidence.summary`, and `ci.gate` from the current public command surface, registry, schemas, docs, and tests. | `ev:T-0522:9f87a75fe15649e9bd445710` |
-| T-0521 / command portfolio reduction inventory | Full command portfolio table completed for 73 current registry entries; next implementation should continue with low-risk duplicate diagnostics and dead-end helpers. | `ev:T-0521:87352953be5d4b8c8bf5e13c` |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
+| Full host Vitest suite can fail under spawn restrictions. | T-0524 full-suite attempt passed 148 files then failed in 6 files / 13 tests because test helpers could not launch host `node`/`bash` (`spawnSync ... EPERM`); status-specific validation passed. | Use Docker/ext4 for spawn-heavy release-grade validation, or run direct focused checks when host child-process launch is restricted. |
 | Sandboxed package recycle registry lookup can fail slowly before network-approved rerun. | T-0515 first `package recycle --execute` attempt spent about 70s each on `npm view` and `npm dist-tag` before failing; approved network rerun passed quickly. | Run live package recycle in an environment with npm registry access; consider progress output or shorter lookup timeout in a future UX capsule. |
 | Package smoke feature-smoke-core can exceed 180s in this environment. | A 180s final retry timed out once, while `--timeout 300` passed with feature-smoke-core around 108s. | Use canonical `node dist/cli/main.js smoke package --execute --timeout 300 --json` for release validation unless performance is improved. |
 | Host/tool `child_process` launch can return `EPERM` while direct shell commands pass. | Ordinary `validation run -- <command>` may be blocked by the environment rather than by the validation command itself. | Use `validation run --direct-result passed / failed / blocked --direct-summary "..." --update-task --json` after running the command directly; T-0507 fresh dogfood proved this recovery path. |
@@ -80,7 +82,7 @@
 | Standard sync-build tar can stall after large dogfood artifacts. | `npm run dev:docker-sync-build -- --check-only --no-smoke` entered long I/O wait while tarring the mounted workspace after T-0479 artifacts. | For T-0482, tracked files plus the active capsule were copied to container ext4 `/tmp/hadara-check`; consider excluding large task artifacts from the sync-build tar in a future capsule. |
 | GitHub Release draft for `0.4.0-rc.0` exists but remains a draft. | The RC has public npm visibility and draft GitHub metadata, but the release is not published as a public GitHub Release yet. | Leave it draft unless the operator explicitly publishes the GitHub Release; stable readiness can proceed with the draft proof. |
 | Compatibility-only legacy sidecar references remain in historical specs and explicit fixtures. | T-0475 removed current-surface defaults, but old specs and compatibility tests still mention split capsule files by design. | Do not mass-delete history; only remove legacy paths when they affect current generated/user-facing behavior or are proven dead. |
-| Full diagnostics remain broad-scan heavy. | T-0473 keeps default workbench/dashboard paths fast, but explicit `task status --detail full` still invokes close-grade/docs/profile checks and took 9119ms on `/mnt/f`. | Treat full detail as explicit diagnostics; optimize global docs/profile internals only if repeated full-detail work remains painful. |
+| Full diagnostics remain broad-scan heavy. | T-0524 makes default top-level `status --json` fast, but explicit `status --detail full --json` still took about 40.5s on `/mnt/f` and `task status --detail full` remains intentionally diagnostic-heavy. | Treat full detail as explicit diagnostics; optimize global docs/profile internals or CLI startup only if repeated full-detail work remains painful. |
 | Stable `0.3.4` readiness has not run after the T-0423 helper residual fix. | `hadara@0.3.4-rc.0` is published and consumer/helper proofs are clean, but stable metadata, release docs, release artifacts, strict gates, dry-runs, and publish dry-run still need a dedicated readiness capsule. | Open a new stable readiness capsule when release work resumes; do not publish stable from T-0423, T-0424, or T-0425. |
 | T-0383 mounted full-profile probes exceeded a 20s workload budget for cache status/warm, graph task, graph include-code, and context pack. | These workloads are not suitable for the default fast smoke loop on mounted filesystems. | Keep `smoke:context-routing` defaulting to fast profile; use `--profile full` explicitly for diagnostic/full-path checks. |
 | Built cache status still took about 19.6s on `/mnt/f` while producing diagnostics. | Diagnostics are clearer, but mounted broad source-manifest cost remains. | T-0385 classified this as an accepted residual for explicit diagnostic/warm/full-profile commands; default Session Start remains bounded/cache-preferential. |

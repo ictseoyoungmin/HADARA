@@ -126,6 +126,7 @@ npm run build
 npm run check
 node dist/cli/main.js doctor --json
 node dist/cli/main.js status --json
+node dist/cli/main.js status --state-only --json
 node dist/cli/main.js release gate --mode strict --json
 ```
 

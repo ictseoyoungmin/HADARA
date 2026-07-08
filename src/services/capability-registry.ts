@@ -1409,8 +1409,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   }),
   commandEntry({
     id: 'status',
-    command: 'hadara status [--json]',
-    summary: 'Read operations status for the project.',
+    command: 'hadara status [--json|--summary-json] [--detail fast|full] [--state-only] [--state-issue-limit <n>]',
+    summary: 'Read fast project status by default, full operations status on request, or state-consistency advisory only.',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'project-health',
@@ -1424,7 +1424,12 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     schemaVersion: 'hadara.ops.status.v1',
     docs: ['docs/PROJECT_STATE.md'],
-    examples: [example('Read status', 'hadara status --json', 'When checking project health and active task signals.')],
+    examples: [
+      example('Read fast status', 'hadara status --json', 'When checking project health and active task signals without broad scans.'),
+      example('Read compact status', 'hadara status --summary-json', 'When automation needs the smallest status payload.'),
+      example('Read state advisory', 'hadara status --state-only --json', 'When checking state consistency after state.verify removal.'),
+      example('Read full operations status', 'hadara status --detail full --json', 'When dashboard-style debt, known-problem, and full state diagnostics are needed.')
+    ],
     related: ['doctor', 'status'],
     conflictsWith: []
   }),

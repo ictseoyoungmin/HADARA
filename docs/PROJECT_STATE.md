@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0523 remove state verify public command |
-| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction inventory is complete, and T-0523 completed the next public diagnostic surface reduction. |
+| Latest Completed Task | T-0524 speed up status json default |
+| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction is continuing; T-0524 makes top-level project status fast by default while preserving explicit full/state diagnostics. |
+
+T-0524 follow-up note: top-level `hadara status --json` is now fast by default. It keeps the `hadara.ops.status.v1` envelope but skips broad operational-debt, known-problem, Task Capsule, and state-consistency scans unless requested. Explicit variants are `hadara status --detail full --json` for the former broad operations payload, `hadara status --summary-json` for compact automation, and `hadara status --state-only --json` for state-consistency advisory. Focused Vitest coverage passed 6 files / 41 tests, TypeScript build passed, and built CLI smoke showed fast/summary around 1.1s, state-only around 10.2s, and full detail around 40.5s on the mounted workspace. A full host Vitest attempt was blocked by environment `spawnSync node/bash EPERM` after 148 files passed; Docker/ext4 remains the better spawn-heavy validation path. Evidence: `ev:T-0524:27c4be39ca554616b854a12e`, `ev:T-0524:4baa7e47eb454beaa70dfe06`.
 
 T-0523 follow-up note: public `state.verify` was removed after confirming `status --json` and `protocol doctor --scope all --json` already expose `stateConsistency` advisory data with issue codes, paths, and fix hints. The internal `state-projection` service and `hadara.stateProjection.v1` schema remain because status, protocol, and context surfaces still consume them. Focused Vitest replacement/removal coverage passed 8 files / 65 tests, TypeScript build passed, built CLI registry smoke reported 68 current command ids with `state.verify` absent, and built `state verify --json` now falls through to default help as an unknown command. Evidence: `ev:T-0523:1ff663c8467b4e31b71002cc`.
 

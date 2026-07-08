@@ -57,7 +57,7 @@ Low-level `task.finish`, `task.ready`, `task.close`, `task.audit-close`, `task.c
 | `evidence.collect` | Generic compatibility surface overlaps current command-log path. | Removed redirect stub. | Replacement: `validation run` or `evidence add-command`. |
 | `policy.check-shell` | Overlaps `policy.preflight-shell`. | Removed redirect stub. | Replacement: `policy preflight-shell`. |
 | `write.preflight` | Overlaps `policy.preflight-shell`. | Removed redirect stub. | Replacement: `policy preflight-shell`. |
-| `ops.status` | Overlaps `status`. | Removed redirect stub. | Replacement: `status --json`. |
+| `ops.status` | Overlaps `status`. | Removed redirect stub. | Replacement: `status --json` for fast project status, `status --detail full --json` for the former broad operations payload. |
 | `handoff.suggest` / `handoff.stale-problems` | Stale generated fragments and niche handoff diagnostics. | Removed redirect stubs. | Replacement: `task status`, `task finalize --json`, `status --json`, and manual handoff edits. |
 | `init.register-doc` | Overlaps `docs.register`. | Removed redirect stub. | Replacement: `docs register`. |
 | `task.upgrade-scaffold` | Overlaps `protocol doctor/remediate`. | Removed redirect stub. | Replacement: `protocol remediate`. |

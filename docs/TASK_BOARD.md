@@ -524,3 +524,4 @@
 | T-0521 | command portfolio reduction inventory | Done | tasks/T-0521-command-portfolio-reduction-inventory | |
 | T-0522 | remove duplicate proof and evidence summary commands | Done | tasks/T-0522-remove-duplicate-proof-and-evidence-summary-commands | Removed duplicate `proof.status`, `proof.explain`, `evidence.summary`, and `ci.gate` surfaces. |
 | T-0523 | remove state verify public command | Done | tasks/T-0523-remove-state-verify-public-command | Removed public `state.verify`; replacements are `status` and `protocol doctor`. |
+| T-0524 | speed up status json default | Done | tasks/T-0524-speed-up-status-json-default | Default `status --json` now skips broad scans; explicit full/summary/state-only variants preserve heavier diagnostics. |

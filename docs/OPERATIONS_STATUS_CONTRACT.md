@@ -10,6 +10,18 @@ Primary command:
 hadara status --json
 ```
 
+Default `hadara status --json` is the fast operator snapshot. It reads compact project state, handoff next-step, validation baseline, active-run projection, and Task Board status counts, while intentionally skipping broad operational-debt, known-problem, capsule-status, and state-consistency scans.
+
+Use the explicit variants when a consumer needs a heavier or smaller contract:
+
+```bash
+hadara status --detail full --json
+hadara status --summary-json
+hadara status --state-only --json
+```
+
+`--detail full` preserves the complete `hadara.ops.status.v1` operations payload, including debt, known problems, capsule status counts, and state-consistency advisory. `--summary-json` emits `hadara.ops.statusSummary.v1`. `--state-only --json` emits `hadara.ops.statusState.v1` and is the public state-consistency replacement after `state.verify` removal.
+
 The old `hadara ops status --json` alias now returns a structured removed-command redirect to `hadara status --json`.
 
 Text output is intentionally minimal. External agents and dashboards should use JSON mode.
@@ -100,17 +112,35 @@ Example:
 - `project.branch` is read from the local Git metadata when available; otherwise it is `unknown`.
 - `project.phase` is derived from `docs/PROJECT_STATE.md`; explicit `Phase: ...` markers or a simple `## Current Phase` value are preferred.
 - `tasks.counts` keeps stable dashboard-facing keys: `done`, `draft`, `partial`, `superseded`, `inProgress`, and `unknown`.
+- Default fast status counts tasks from `docs/TASK_BOARD.md`. Full-detail status counts from Task Capsule metadata.
 - `tasks.rawStatusCounts` preserves original source status labels for diagnostics.
 - `tasks.normalizedStatusCounts` preserves normalized source status values for programmatic diagnostics.
 - `tasks.lastCompleted` is derived from `docs/AGENT_HANDOFF.md`.
 - `tasks.nextRecommended` is derived from the handoff next-step section when available.
-- `handoff.*` arrays are compact excerpts from `docs/AGENT_HANDOFF.md`.
+- `handoff.*` arrays are compact excerpts from `docs/AGENT_HANDOFF.md`; default fast status omits `knownProblems`, while full-detail status includes it.
 - `validation.*` fields are compact latest validation summaries from `docs/AGENT_HANDOFF.md`, falling back to `docs/VALIDATION_HISTORY.md` when needed.
 - `activeRun` is a read projection of `.hadara/local/state/active-run.json`; it is local project state and must not imply queues, worker lanes, or concurrent multi-agent execution.
 - `activeRun.handoff.fresh` is false when an active run exists but `docs/AGENT_HANDOFF.md` does not mention the active task id.
 - `mcp.evidenceAttach` documents configured operational guard state. It is not live MCP server process inspection.
 - `issues` may include warnings when source documents are missing or validation baseline details are unavailable. Warning-only reports keep `ok: true` and set `health: "degraded"` so dashboards can render degraded snapshots.
 - Future evidence/debt/dashboard read models should follow the T-0070 robustness rule: local mutable state or malformed optional indexes should degrade with structured warnings instead of crashing the whole read report.
+
+## Summary and State-Only Variants
+
+`hadara.ops.statusSummary.v1` keeps only health, project, task counts, last completed, next recommendation, validation, optional state consistency, and issues. It is intended for shell automation that does not need dashboard panels.
+
+`hadara.ops.statusState.v1` contains only:
+
+```json
+{
+  "schemaVersion": "hadara.ops.statusState.v1",
+  "command": "status.state",
+  "ok": true,
+  "stateConsistency": {}
+}
+```
+
+Use `--state-issue-limit <n>` with `--state-only` or `--detail full` when a consumer needs bounded state advisory output.
 
 ## Health Semantics
 

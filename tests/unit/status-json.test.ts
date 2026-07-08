@@ -3,7 +3,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleOpsCommand, handleStatusCommand } from '../../src/cli/status';
-import { createOpsStatusReport } from '../../src/services/operations-status-service';
+import {
+  createOpsStatusReport,
+  createOpsStatusSummaryReport
+} from '../../src/services/operations-status-service';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const roots: string[] = [];
@@ -345,27 +348,132 @@ describe('Operations Status JSON', () => {
     expect(report.handoff.nextRecommendedStep).not.toContain('Step · Reason · Done Evidence');
   });
 
-  it('prints JSON for status and a removed-command redirect for the old ops alias', () => {
+  it('prints fast JSON for status by default and keeps full/state-only diagnostics explicit', () => {
     const root = tempProject();
     writeProjectDocs(root);
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
     expect(handleStatusCommand({ args: ['status', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
-    expect(handleOpsCommand({ args: ['ops', 'status', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+    expect(handleStatusCommand({ args: ['status', '--detail', 'full', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+    expect(handleStatusCommand({ args: ['status', '--state-only', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+    expect(handleStatusCommand({ args: ['status', '--summary-json'], projectRoot: root, jsonOutput: false })).toBe(true);
 
     const first = JSON.parse(String(log.mock.calls[0]?.[0]));
-    const second = JSON.parse(String(log.mock.calls[1]?.[0]));
+    const full = JSON.parse(String(log.mock.calls[1]?.[0]));
+    const stateOnly = JSON.parse(String(log.mock.calls[2]?.[0]));
+    const summary = JSON.parse(String(log.mock.calls[3]?.[0]));
     expect(first.schemaVersion).toBe('hadara.ops.status.v1');
-    expect(second.schemaVersion).toBe('hadara.commandRemoved.v1');
     expect(first.command).toBe('ops.status');
-    expect(second.command).toBe('ops.status');
-    expect(second.replacementCommand).toBe('hadara status --json');
-    expect(first.stateConsistency).toMatchObject({
+    expect(first.stateConsistency).toBeUndefined();
+    expect(first.handoff.knownProblems).toEqual([]);
+    expect(first.debt).toMatchObject({
+      total: 0,
+      open: 0,
+      highOpen: 0
+    });
+    expect(full.schemaVersion).toBe('hadara.ops.status.v1');
+    expect(full.stateConsistency).toMatchObject({
       mode: 'advisory',
       strictBlocking: false,
       issueCounts: expect.any(Object),
       issues: expect.any(Array)
     });
+    expect(full.handoff.knownProblems).toEqual(['Docker is the working validation path for now.']);
+    expect(stateOnly).toMatchObject({
+      schemaVersion: 'hadara.ops.statusState.v1',
+      command: 'status.state',
+      ok: true,
+      stateConsistency: {
+        mode: 'advisory',
+        strictBlocking: false,
+        issueCounts: expect.any(Object),
+        issues: expect.any(Array)
+      }
+    });
+    expect(summary).toMatchObject({
+      schemaVersion: 'hadara.ops.statusSummary.v1',
+      command: 'status.summary',
+      ok: true,
+      tasks: {
+        counts: expect.any(Object),
+        lastCompleted: ['T-0050', 'T-0051', 'T-0052'],
+        nextRecommended: 'Do T-0053 Operations Status JSON before dashboard implementation.'
+      }
+    });
+    expect(summary.stateConsistency).toBeUndefined();
+  });
+
+  it('prints a removed-command redirect for the old ops alias', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    expect(handleOpsCommand({ args: ['ops', 'status', '--json'], projectRoot: root, jsonOutput: true })).toBe(true);
+
+    const report = JSON.parse(String(log.mock.calls[0]?.[0]));
+    expect(report.schemaVersion).toBe('hadara.commandRemoved.v1');
+    expect(report.command).toBe('ops.status');
+    expect(report.replacementCommand).toBe('hadara status --json');
+  });
+
+  it('can count task board statuses without scanning task capsules', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      [
+        '# TASK_BOARD',
+        '',
+        '| ID | Title | Status | Path | Notes |',
+        '|---|---|---|---|---|',
+        '| T-0001 | Done task | Done | tasks/T-0001-done-task | Closed. |',
+        '| T-0002 | Active task | In Progress | tasks/T-0002-active-task | Active. |',
+        '| T-0003 | Weird task | Needs Review | tasks/T-0003-weird-task | Custom. |'
+      ].join('\n'),
+      'utf8'
+    );
+
+    const report = createOpsStatusReport(root, { taskStatusSource: 'task-board', includeDebt: false, includeKnownProblems: false });
+
+    expect(report.tasks.counts).toEqual({
+      done: 1,
+      draft: 0,
+      partial: 0,
+      superseded: 0,
+      inProgress: 1,
+      unknown: 1
+    });
+    expect(report.tasks.rawStatusCounts).toEqual({
+      Done: 1,
+      'In Progress': 1,
+      'Needs Review': 1
+    });
+  });
+
+  it('builds a compact summary report without debt, known problems, or state checks by default', () => {
+    const root = tempProject();
+    writeProjectDocs(root);
+
+    const report = createOpsStatusSummaryReport(root);
+
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.ops.statusSummary.v1',
+      command: 'status.summary',
+      ok: true,
+      health: 'ok',
+      project: {
+        phase: 'bootstrap-development'
+      },
+      tasks: {
+        lastCompleted: ['T-0050', 'T-0051', 'T-0052'],
+        nextRecommended: 'Do T-0053 Operations Status JSON before dashboard implementation.'
+      },
+      validation: {
+        latestDoneLevelValidation: 'T-0052 ok'
+      },
+      issues: []
+    });
+    expect(report.stateConsistency).toBeUndefined();
   });
 
   it('keeps the dashboard sample fixture aligned with the status schema', () => {

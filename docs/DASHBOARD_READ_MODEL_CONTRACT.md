@@ -11,10 +11,10 @@ Phase 5 dashboard work should move the static/sample-backed dashboard toward a l
 Primary source:
 
 ```bash
-hadara status --json
+hadara status --detail full --json
 ```
 
-The old `hadara ops status --json` alias now returns a structured removed-command redirect to `hadara status --json`.
+The default `hadara status --json` is a fast operator snapshot and intentionally skips broad debt, known-problem, capsule, and state-consistency scans. Dashboards that need the full `hadara.ops.status.v1` payload should request `--detail full`. The old `hadara ops status --json` alias now returns a structured removed-command redirect to `hadara status --json`.
 
 Sample fixture:
 
