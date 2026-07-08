@@ -35,7 +35,10 @@ describe('manual publish release script', () => {
   it('uses the canonical smoke package command for fresh release evidence', () => {
     const script = fs.readFileSync(scriptPath, 'utf8');
 
-    expect(script).toContain('run_hadara smoke package --execute --attach-evidence --task "${TASK_ID}" --json');
+    expect(script).toContain('PACKAGE_SMOKE_TIMEOUT="${PACKAGE_SMOKE_TIMEOUT:-300}"');
+    expect(script).toContain('Package smoke timeout: ${PACKAGE_SMOKE_TIMEOUT}s');
+    expect(script).toContain('Timeout in seconds for `hadara smoke package --execute`.');
+    expect(script).toContain('run_hadara smoke package --execute --attach-evidence --task "${TASK_ID}" --timeout "${PACKAGE_SMOKE_TIMEOUT}" --json');
     expect(script).not.toContain('run_hadara package smoke --execute');
   });
 

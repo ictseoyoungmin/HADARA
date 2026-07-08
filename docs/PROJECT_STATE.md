@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0517 0.4.1 stable publish helper package smoke timeout |
-| Active Task | Stable `hadara@0.4.1` source/readiness is prepared and the publish helper package-smoke timeout is fixed to 300s. Next release-line work is approval-gated npm publish from a fresh clean ext4 clone, public GitHub Release `v0.4.1`, then installed-package recycle for `hadara@latest` expected `0.4.1`. |
+| Latest Completed Task | T-0518 manual publish script timeout test expectation update |
+| Active Task | Stable `hadara@0.4.1` source/readiness is prepared, the publish helper package-smoke timeout is fixed to 300s, and the helper test expectation now matches that contract. Next release-line work is approval-gated npm publish from a fresh clean ext4 clone, public GitHub Release `v0.4.1`, then installed-package recycle for `hadara@latest` expected `0.4.1`. |
+
+T-0518 follow-up note: the manual publish helper unit test expectation is updated for T-0517's timeout contract. The test now asserts `PACKAGE_SMOKE_TIMEOUT="${PACKAGE_SMOKE_TIMEOUT:-300}"`, helper help text, timeout logging, and `run_hadara smoke package --execute --attach-evidence --task "${TASK_ID}" --timeout "${PACKAGE_SMOKE_TIMEOUT}" --json`. Direct `bash -n` and timeout wiring checks passed. Local focused Vitest remains blocked by this tool environment's `execFileSync('bash') EPERM`; this is recorded and resolved by direct checks. Evidence: `ev:T-0518:117c66c7a27d47458cddff7a`, `ev:T-0518:015ca50115d84a83ae2e130a`, `ev:T-0518:8270c73684da4874bbe64571`.
 
 T-0517 follow-up note: the first stable `0.4.1` publish-helper attempt regenerated the release artifact successfully, then timed out in the package-smoke `feature-smoke-core` step at the implicit 120s default. T-0517 updates `scripts/release/manual-publish-rc.sh` to set `PACKAGE_SMOKE_TIMEOUT="${PACKAGE_SMOKE_TIMEOUT:-300}"`, print the configured timeout, document the environment override, and pass `--timeout "${PACKAGE_SMOKE_TIMEOUT}"` to `hadara smoke package --execute`. Shell syntax, helper help, and timeout wiring checks passed. Evidence: `ev:T-0517:9f92cecc551b4ca3a46fdc0d`, `ev:T-0517:ea5ed0e4f19c447f9ae3e0c2`, `ev:T-0517:37f7154855e14156aed06c4c`.
 

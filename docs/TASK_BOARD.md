@@ -518,3 +518,4 @@
 | T-0515 | 0.4.1 rc0 post recycle adaptive dogfood | Done | tasks/T-0515-0-4-1-rc0-post-recycle-adaptive-dogfood | Fresh `/tmp` lifecycle dogfood and adaptive package recycle passed; sandboxed npm lookup friction recorded. |
 | T-0516 | 0.4.1 stable release readiness and publish preparation | Done | tasks/T-0516-0-4-1-stable-release-readiness-and-publish-preparation | |
 | T-0517 | 0.4.1 stable publish helper package smoke timeout | Done | tasks/T-0517-0-4-1-stable-publish-helper-package-smoke-timeout | |
+| T-0518 | manual publish script timeout test expectation update | Done | tasks/T-0518-manual-publish-script-timeout-test-expectation-update | |
