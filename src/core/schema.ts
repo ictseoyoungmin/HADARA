@@ -37,7 +37,6 @@ import evidenceProjectionSchemaJson from '../schemas/evidence-projection.schema.
 import eventSchemaJson from '../schemas/event.schema.json';
 import featureSmokeSchemaJson from '../schemas/feature-smoke.schema.json';
 import harnessValidateSchemaJson from '../schemas/harness-validate.schema.json';
-import handoffSuggestionSchemaJson from '../schemas/handoff-suggestion.schema.json';
 import installPlanSchemaJson from '../schemas/install-plan.schema.json';
 import nextActionSchemaJson from '../schemas/next-action.schema.json';
 import packageRecycleSchemaJson from '../schemas/package-recycle.schema.json';
@@ -61,13 +60,10 @@ import smokeEvidenceSummarySchemaJson from '../schemas/smoke-evidence-summary.sc
 import stateProjectionSchemaJson from '../schemas/state-projection.schema.json';
 import taskAuditCloseSchemaJson from '../schemas/task-audit-close.schema.json';
 import taskCloseSchemaJson from '../schemas/task-close.schema.json';
-import taskCloseRepairPlanSchemaJson from '../schemas/task-close-repair-plan.schema.json';
-import taskCompleteFlowSchemaJson from '../schemas/task-complete-flow.schema.json';
 import taskContextSchemaJson from '../schemas/task-context.schema.json';
 import taskCreateSchemaJson from '../schemas/task-create.schema.json';
 import taskFinalizeSchemaJson from '../schemas/task-finalize.schema.json';
 import taskFinishSchemaJson from '../schemas/task-finish.schema.json';
-import taskLifecycleSchemaJson from '../schemas/task-lifecycle.schema.json';
 import taskSelectionSchemaJson from '../schemas/task-selection.schema.json';
 import taskReadySchemaJson from '../schemas/task-ready.schema.json';
 import taskStatusSchemaJson from '../schemas/task-status.schema.json';
@@ -153,7 +149,6 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.event.v1': eventSchemaJson as JsonObject,
   'hadara.featureSmoke.v1': featureSmokeSchemaJson as JsonObject,
   'hadara.harness.validate.v1': harnessValidateSchemaJson as JsonObject,
-  'hadara.handoff.suggestion.v1': handoffSuggestionSchemaJson as JsonObject,
   'hadara.install.plan.v1': installPlanSchemaJson as JsonObject,
   'hadara.next_action.v1': nextActionSchemaJson as JsonObject,
   'hadara.packageRecycle.v1': packageRecycleSchemaJson as JsonObject,
@@ -177,13 +172,10 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.stateProjection.v1': stateProjectionSchemaJson as JsonObject,
   'hadara.task.audit_close.v1': taskAuditCloseSchemaJson as JsonObject,
   'hadara.task.close.v1': taskCloseSchemaJson as JsonObject,
-  'hadara.task.closeRepairPlan.v1': taskCloseRepairPlanSchemaJson as JsonObject,
-  'hadara.task.complete_flow.v1': taskCompleteFlowSchemaJson as JsonObject,
   'hadara.taskContext.v1': taskContextSchemaJson as JsonObject,
   'hadara.task.create.v1': taskCreateSchemaJson as JsonObject,
   'hadara.task.finalize.v1': taskFinalizeSchemaJson as JsonObject,
   'hadara.task.finish.v1': taskFinishSchemaJson as JsonObject,
-  'hadara.task.lifecycle.v1': taskLifecycleSchemaJson as JsonObject,
   'hadara.task.selection.v1': taskSelectionSchemaJson as JsonObject,
   'hadara.task.ready.v1': taskReadySchemaJson as JsonObject,
   'hadara.task.status.v1': taskStatusSchemaJson as JsonObject,

@@ -48,6 +48,8 @@ cd "$HADARA_TMP_WORKDIR"
 npm ci
 npm run check
 if [[ "$HADARA_CHECK_ONLY" != "1" ]]; then
+  rm -rf "$HADARA_WORKSPACE/dist"
+  mkdir -p "$HADARA_WORKSPACE/dist"
   cp -R dist/. "$HADARA_WORKSPACE/dist/"
 fi
 if [[ "$HADARA_RUN_SMOKE" == "1" ]]; then

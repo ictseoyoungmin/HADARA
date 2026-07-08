@@ -14,9 +14,6 @@
       "enum": [
         "task.create",
         "evidence.collect",
-        "run-state.start",
-        "run-state.update",
-        "run-state.complete",
         "debt.add",
         "debt.update",
         "unknown"

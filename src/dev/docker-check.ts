@@ -265,8 +265,8 @@ function buildSteps(focusedTests: string[], runFullCheck: boolean, syncDistReque
     },
     {
       id: 'dist-sync',
-      summary: 'Copied Docker-built dist output back to the workspace after explicit --sync-dist.',
-      script: 'mkdir -p "$HADARA_WORKSPACE/dist" && cp -R "$HADARA_TMP_WORKDIR/dist/." "$HADARA_WORKSPACE/dist/"',
+      summary: 'Replaced workspace dist with Docker-built output after explicit --sync-dist.',
+      script: 'rm -rf "$HADARA_WORKSPACE/dist" && mkdir -p "$HADARA_WORKSPACE/dist" && cp -R "$HADARA_TMP_WORKDIR/dist/." "$HADARA_WORKSPACE/dist/"',
       mark: 'distSyncExecuted',
       runWhen: syncDistRequested && syncDistAllowed
     }

@@ -261,13 +261,6 @@
       "notes": "Documents CLI/MCP capability discovery, availability metadata, and disabled surfaces."
     },
     {
-      "id": "hadara.handoff.suggestion.v1",
-      "path": "src/schemas/handoff-suggestion.schema.json",
-      "status": "fixture",
-      "owner": "handoff/suggestion",
-      "notes": "Documents read-only Agent Handoff section-fragment suggestions with shared-doc before-hash metadata."
-    },
-    {
       "id": "hadara.dev.docker_check.v1",
       "path": "src/schemas/dev-docker-check.schema.json",
       "status": "fixture",
@@ -324,32 +317,11 @@
       "notes": "Documents task close plan and execute reports with close-evidence loop-boundary metadata."
     },
     {
-      "id": "hadara.task.closeRepairPlan.v1",
-      "path": "src/schemas/task-close-repair-plan.schema.json",
-      "status": "fixture",
-      "owner": "task/close-repair-plan",
-      "notes": "Documents read-only close proof repair classifications and next actions."
-    },
-    {
-      "id": "hadara.task.complete_flow.v1",
-      "path": "src/schemas/task-complete-flow.schema.json",
-      "status": "fixture",
-      "owner": "task/complete-flow",
-      "notes": "Documents read-only task completion flow reports that compose finish, ready, close, and audit guidance."
-    },
-    {
       "id": "hadara.task.finalize.v1",
       "path": "src/schemas/task-finalize.schema.json",
       "status": "fixture",
       "owner": "task/finalize",
       "notes": "Documents read-only finalize dry-run plans with plan hashes, lifecycle steps, write boundaries, and execute refusal metadata."
-    },
-    {
-      "id": "hadara.task.lifecycle.v1",
-      "path": "src/schemas/task-lifecycle.schema.json",
-      "status": "fixture",
-      "owner": "task/lifecycle",
-      "notes": "Documents read-only normalized lifecycle phase reports that compose finish, ready, close, and audit state."
     },
     {
       "id": "hadara.taskContext.v1",

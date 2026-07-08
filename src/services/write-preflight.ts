@@ -7,9 +7,6 @@ import { nextTaskId } from '../task/task-capsule';
 export type WritePreflightCommand =
   | 'task.create'
   | 'evidence.collect'
-  | 'run-state.start'
-  | 'run-state.update'
-  | 'run-state.complete'
   | 'debt.add'
   | 'debt.update'
   | 'unknown';
@@ -49,17 +46,6 @@ export function createWritePreflightReport(projectRoot: string, targetArgs: stri
       break;
     case 'evidence.collect':
       report = evidenceCollectReport(projectRoot, args);
-      break;
-    case 'run-state.start':
-    case 'run-state.update':
-    case 'run-state.complete':
-      report = simpleProjectWriteReport(command, ['.hadara/local/state/active-run.json'], [
-        {
-          severity: 'warning',
-          code: 'WRITE_COMMAND_DEFERRED',
-          message: `${command} is a planned CLI-owned write boundary; the mutation command is not implemented yet.`
-        }
-      ]);
       break;
     case 'debt.add':
     case 'debt.update':
@@ -192,7 +178,6 @@ function identifyCommand(args: string[]): WritePreflightCommand {
   const [root, sub] = args;
   if (root === 'task' && sub === 'create') return 'task.create';
   if (root === 'evidence' && sub === 'collect') return 'evidence.collect';
-  if (root === 'run-state' && (sub === 'start' || sub === 'update' || sub === 'complete')) return `run-state.${sub}`;
   if (root === 'debt' && (sub === 'add' || sub === 'update')) return `debt.${sub}`;
   return 'unknown';
 }

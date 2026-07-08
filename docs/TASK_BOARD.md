@@ -534,3 +534,4 @@
 | T-0531 | preflight finalize auto task table tokens before finish | Done | tasks/T-0531-preflight-finalize-auto-task-table-tokens-before-finish | |
 | T-0532 | remove legacy command redirect stubs | Done | tasks/T-0532-remove-legacy-command-redirect-stubs | Removed remaining registry-absent redirect stubs and `hadara.commandRemoved.v1` current schema/docs contract; Docker sync-build refreshed `dist`. |
 | T-0533 | evidence append serialization diagnostics | Done | tasks/T-0533-evidence-append-serialization-diagnostics | Evidence append responses now expose response-only append-lock diagnostics; docs/templates warn against parallel same-task evidence writes. |
+| T-0534 | Remove post-0.4.1 dead command code | Done | tasks/T-0534-remove-post-0-4-1-dead-command-code | |

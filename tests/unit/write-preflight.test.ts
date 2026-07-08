@@ -113,7 +113,7 @@ describe('CLI write boundary preflight', () => {
     expect(privateReport.writes).toContain('.hadara/local/portable/data/audit/audit.jsonl');
   });
 
-  it('reports current and deferred CLI-owned write families', () => {
+  it('reports current CLI-owned write families and rejects removed targets', () => {
     const root = tempProject();
 
     expect(createWritePreflightReport(root, ['handoff', 'update', '--task', 'T-0098'])).toMatchObject({
@@ -123,17 +123,11 @@ describe('CLI write boundary preflight', () => {
       issues: [expect.objectContaining({ code: 'UNSUPPORTED_WRITE_COMMAND' })]
     });
 
-    const runStateReport = createWritePreflightReport(root, ['run-state', 'start', '--task', 'T-0098']);
-    expect(runStateReport).toMatchObject({
-      ok: true,
-      command: 'run-state.start',
-      writes: ['.hadara/local/state/active-run.json'],
-      issues: [
-        {
-          severity: 'warning',
-          code: 'WRITE_COMMAND_DEFERRED'
-        }
-      ]
+    expect(createWritePreflightReport(root, ['run-state', 'start', '--task', 'T-0098'])).toMatchObject({
+      ok: false,
+      command: 'unknown',
+      writes: [],
+      issues: [expect.objectContaining({ code: 'UNSUPPORTED_WRITE_COMMAND' })]
     });
 
     const debtReport = createWritePreflightReport(root, ['debt', 'update', 'OD-0001']);

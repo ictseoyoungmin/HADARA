@@ -21,6 +21,7 @@ describe('Docker dev sync-build script', () => {
     expect(content).toContain('--exclude=.git');
     expect(content).toContain('--exclude=.hadara');
     expect(content).toContain('npm run check');
+    expect(content).toContain('rm -rf "$HADARA_WORKSPACE/dist"');
     expect(content).toContain('cp -R dist/. "$HADARA_WORKSPACE/dist/"');
     expect(content).toContain('version --verbose --json');
   });
