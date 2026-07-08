@@ -4,16 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle line is complete through T-0514. |
-| Current Phase | `0.4.1-rc.0` published, recycled, and recycle-helper hardened | npm exposes `hadara@0.4.1-rc.0` on `next` while `latest` remains `0.4.0`; GitHub Release `v0.4.1-rc.0` is public prerelease; installed-package recycle passed and the source helper now adapts to installed command-surface differences. |
-| Latest Completed Task | T-0514 0.4.1 rc0 package recycle command surface adaptive refactor | Package recycle reads installed `commands --json`, prefers current `task status`, and falls back to legacy `task lifecycle` only when the installed package lacks `task.status`. |
-| Active / Next Task | Operator decision: additional RC dogfood or stable `0.4.1` planning | The required post-publish recycle proof and source helper hardening are complete. Decide whether to run broader external dogfood before stable promotion planning. |
-| Validation Baseline | T-0514 focused helper tests/build/dry-run plus T-0513 installed-package recycle | T-0514 passed package recycle/schema tests, build, and built CLI dry-run; T-0513 passed registry metadata, package recycle focused tests, build, and installed-package recycle. |
+| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515. |
+| Current Phase | `0.4.1-rc.0` published, recycled, recycle-helper hardened, and post-refactor dogfooded | npm exposes `hadara@0.4.1-rc.0` on `next` while `latest` remains `0.4.0`; GitHub Release `v0.4.1-rc.0` is public prerelease; T-0515 found no product blocker after T-0514. |
+| Latest Completed Task | T-0515 0.4.1 rc0 post recycle adaptive dogfood | Fresh `/tmp` lifecycle dogfood passed and live package recycle verified `commandSurfaceExecuted:true`, `taskStatusExecuted:true`, `taskLifecycleExecuted:false`. |
+| Active / Next Task | Operator decision: broader RC dogfood or stable `0.4.1` planning | The required post-publish recycle proof, source helper hardening, and post-refactor dogfood are complete. Remaining friction is sandboxed npm lookup latency/failure before approved network rerun. |
+| Validation Baseline | T-0515 dogfood/recycle plus T-0514 focused helper tests/build/dry-run | T-0515 passed fresh `/tmp` toy lifecycle, package recycle dry-run, and approved live package recycle; T-0514 passed package recycle/schema tests, build, and built CLI dry-run. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| 0.4.1 rc0 post recycle adaptive dogfood | T-0515 dogfooded a fresh governed `/tmp` toy project through current lifecycle and verified live package recycle uses installed command-surface discovery plus `task status`, not removed `task lifecycle`. | `ev:T-0515:a20385b3ade94850976abe9c`, `ev:T-0515:0886f8668a314f6c83be452f`, `ev:T-0515:d2ff92a938974a5983536eac`, `ev:T-0515:6a518f6681b248139ea1f343` |
 | 0.4.1 rc0 package recycle command-surface adaptive refactor | T-0514 makes `package recycle` inspect the installed CLI command registry, prefer `task status`, preserve legacy fallback only when needed, and documents the updated JSON contract. | `ev:T-0514:1083145ebdba460894fab691`, `ev:T-0514:dd3b69febfc54c98aeeb4741`, `ev:T-0514:8c6f62d144b74da281d7880f` |
 | 0.4.1 rc0 installed package recycle | T-0513 verified `hadara@next` installs as `0.4.1-rc.0` from npm and passes installed consumer workflow smokes; it also fixed package recycle's stale call to removed `task lifecycle`. | `ev:T-0513:55abd88e46ce40d88a5942fb`, `ev:T-0513:43a25a83247d4823aad8475a` |
 | 0.4.1 rc0 post publish evidence sync | T-0512 records final external release evidence: npm `0.4.1-rc.0` is on `next`, stable `latest` remains `0.4.0`, and GitHub `v0.4.1-rc.0` is public prerelease. | `ev:T-0512:873cb873d9a74a2eb374d829`, `ev:T-0512:8de1c6fc2c0442fdbcbf65cc` |
@@ -56,14 +57,15 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0515 / 0.4.1 rc0 post recycle adaptive dogfood | Fresh `/tmp` governed toy lifecycle passed; package recycle dry-run and approved live recycle passed, with adaptive flags proving current `task status` selection. | `ev:T-0515:a20385b3ade94850976abe9c`, `ev:T-0515:0886f8668a314f6c83be452f`, `ev:T-0515:d2ff92a938974a5983536eac`, `ev:T-0515:6a518f6681b248139ea1f343` |
 | T-0514 / 0.4.1 rc0 package recycle command surface adaptive refactor | Source recycle helper now reads installed command surface, uses current `task status` when available, preserves legacy fallback only for older installed packages, and validates the updated schema/contract. | `ev:T-0514:1083145ebdba460894fab691`, `ev:T-0514:dd3b69febfc54c98aeeb4741`, `ev:T-0514:8c6f62d144b74da281d7880f` |
 | T-0513 / 0.4.1 rc0 installed package recycle | `hadara@next` installed as `0.4.1-rc.0`; installed package recycle passed after changing the helper smoke from removed `task lifecycle` to `task status`. | `ev:T-0513:55abd88e46ce40d88a5942fb`, `ev:T-0513:7a391266ff654f32a823d2b7`, `ev:T-0513:43a25a83247d4823aad8475a` |
-| T-0512 / 0.4.1 rc0 post publish evidence sync | npm registry and GitHub Release metadata were verified after operator publication. | `ev:T-0512:873cb873d9a74a2eb374d829`, `ev:T-0512:8de1c6fc2c0442fdbcbf65cc` |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
+| Sandboxed package recycle registry lookup can fail slowly before network-approved rerun. | T-0515 first `package recycle --execute` attempt spent about 70s each on `npm view` and `npm dist-tag` before failing; approved network rerun passed quickly. | Run live package recycle in an environment with npm registry access; consider progress output or shorter lookup timeout in a future UX capsule. |
 | Package smoke feature-smoke-core can exceed 180s in this environment. | A 180s final retry timed out once, while `--timeout 300` passed with feature-smoke-core around 108s. | Use canonical `node dist/cli/main.js smoke package --execute --timeout 300 --json` for release validation unless performance is improved. |
 | Host/tool `child_process` launch can return `EPERM` while direct shell commands pass. | Ordinary `validation run -- <command>` may be blocked by the environment rather than by the validation command itself. | Use `validation run --direct-result passed / failed / blocked --direct-summary "..." --update-task --json` after running the command directly; T-0507 fresh dogfood proved this recovery path. |
 | `hadara slice migrate` derives slice ids from the first token before `:`/`|` in the Slice cell, assuming the new `id: title` convention. | HADARA-dev's own 414-row `docs/DEVELOPMENT_SLICES.md` predates that convention (plain titles), so migrating it directly would produce colliding ids; confirmed via dry-run, not executed. | Add an id-derivation fallback (e.g. slugify the title) before attempting to migrate HADARA-dev's own file; see T-0500 TASK.md RF-1. |
