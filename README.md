@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img alt="Stable npm release" src="https://img.shields.io/badge/npm-0.4.0-blue">
+  <img alt="Stable npm release" src="https://img.shields.io/badge/npm-0.4.1-blue">
   <img alt="Next npm release" src="https://img.shields.io/badge/next-0.4.1--rc.0-blue">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
@@ -26,7 +26,7 @@ Requires Node.js 22.
 Install the stable release:
 
 ```bash
-npm install -g hadara@0.4.0
+npm install -g hadara@0.4.1
 hadara help
 hadara doctor --json
 ```
@@ -34,8 +34,8 @@ hadara doctor --json
 Run without a global install:
 
 ```bash
-npx hadara@0.4.0 help
-npx hadara@0.4.0 doctor --json
+npx hadara@0.4.1 help
+npx hadara@0.4.1 doctor --json
 ```
 
 ## First Project
@@ -91,9 +91,9 @@ hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
 
 | Surface | Status |
 |---|---|
-| Stable npm | [`hadara@0.4.0`](docs/RELEASE_NOTES.md#040) |
-| GitHub Release | [`v0.4.0`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.0) |
-| RC candidate | [`hadara@0.4.1-rc.0`](docs/RELEASE_NOTES.md#041-rc0) prepared for `next` |
+| Stable npm | [`hadara@0.4.1`](docs/RELEASE_NOTES.md#041) |
+| GitHub Release | [`v0.4.1`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.1) |
+| RC candidate | [`hadara@0.4.1-rc.0`](docs/RELEASE_NOTES.md#041-rc0) retained on `next` |
 | Historical releases | [Release Notes](docs/RELEASE_NOTES.md) |
 | Docker image / installer | Deferred |
 | PyPI bridge | `hadara==0.2.0rc1` preview bridge |
@@ -258,7 +258,7 @@ Dashboard, TUI, Hermes, MCP, installer, package, release, and run commands stay 
 
 ## Safety Boundaries
 
-HADARA 0.4.0 is not:
+HADARA 0.4.x is not:
 
 - a full agent runtime;
 - Rack/enterprise behavior;
@@ -298,7 +298,7 @@ Portable/local state is not committed. Project docs, Task Capsules, and reduced 
 
 `evidence.jsonl` is the canonical Task Capsule evidence source. `EVIDENCE.md` is a non-canonical human summary that can help review validation history, but it must not be treated as the source of truth for rebuild, migration, or resolution logic.
 
-0.4.0 does not implement `hadara evidence rebuild --json` or an execute mode. Future rebuild work must first define whether a difference is formatting regeneration, managed-section drift, or data inconsistency before reporting `wouldChange`. Any later write-capable rebuild flow must be dry-run-first, reviewed, and before-hash guarded before it rewrites derived Markdown.
+0.4.x does not implement `hadara evidence rebuild --json` or an execute mode. Future rebuild work must first define whether a difference is formatting regeneration, managed-section drift, or data inconsistency before reporting `wouldChange`. Any later write-capable rebuild flow must be dry-run-first, reviewed, and before-hash guarded before it rewrites derived Markdown.
 
 ## Development / Contributing
 

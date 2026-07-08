@@ -1427,13 +1427,15 @@ function runCommand(command: string, args: string[], options: { cwd: string; tim
     timeout: options.timeoutMs,
     maxBuffer: 1024 * 1024 * 4
   });
+  const timedOut = result.error?.name === 'TimeoutError' || result.signal === 'SIGTERM';
+  const spawnFailed = Boolean(result.error) && !timedOut;
   return {
-    status: typeof result.status === 'number' ? result.status : null,
+    status: spawnFailed ? null : (typeof result.status === 'number' ? result.status : null),
     signal: result.signal,
     stdout: result.stdout ?? '',
-    stderr: result.stderr ?? '',
+    stderr: result.stderr ?? (spawnFailed ? String(result.error?.message ?? result.error) : ''),
     elapsedMs: timer.elapsedMs(),
-    timedOut: result.error?.name === 'TimeoutError' || result.signal === 'SIGTERM'
+    timedOut
   };
 }
 

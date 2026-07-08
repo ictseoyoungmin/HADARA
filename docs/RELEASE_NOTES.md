@@ -1,5 +1,25 @@
 # RELEASE_NOTES
 
+## 0.4.1
+
+Stable release for the 0.4.1 dogfood hardening line after `0.4.1-rc.0` npm/GitHub prerelease publication, installed-package recycle, helper refactor, and post-recycle adaptive dogfood.
+
+Highlights:
+
+- Promotes the 0.4.1 command-surface cleanup and generated-document fixes from the RC line, including structured redirects for removed lifecycle surfaces and corrected init/help/session guidance.
+- Promotes `task finalize --execute --auto` as the ordinary guarded close path while preserving dry-run review, close-source snapshot hashing, blocker refusal, and stale-plan mismatch protection.
+- Promotes schema/vocabulary lookup, better controlled-token diagnostics, and docs-registry correction paths so agents can discover accepted values and repair registry metadata without hand-editing.
+- Promotes direct-result validation recording for restricted agent environments and package-smoke command-surface drift checks for published packages.
+- Promotes the bounded `DEVELOPMENT_SLICES.md` state/projection prototype and refreshed package recycle helper that adapts to the installed command surface.
+- Includes installed-package RC recycle and post-refactor adaptive recycle dogfood through T-0513 and T-0515 before stable source preparation.
+
+Boundaries:
+
+- T-0516 prepares source metadata, stable release notes, readiness docs, helper notes, package/release smoke evidence, and the operator publish path for `hadara@0.4.1`; it performs no npm publish, GitHub Release publication, Docker image push, PyPI publish, installer execution, or token loading.
+- The intended npm dist-tag is `latest`; `hadara@0.4.1-rc.0` remains available on `next` for release-candidate history unless an operator changes dist-tags after stable publication.
+- Removed command redirect stubs remain in place for the compatibility window described by FD-013.
+- The 0.5 state-first RFC remains candidate scope. This stable release only ships the bounded slices prototype and supporting diagnostics already validated in the RC line.
+
 ## 0.4.1-rc.0
 
 Release candidate preparation line after stable `0.4.0`, focused on dogfood-driven command-surface cleanup, generated-document correctness, and lower-ceremony but still guarded Task Capsule closure.
