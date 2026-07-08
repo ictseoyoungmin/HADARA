@@ -6,14 +6,15 @@
 |---|---|---|
 | Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, and T-0516 prepares stable `0.4.1` source/readiness. |
 | Current Phase | Stable `0.4.1` source/readiness prepared; npm/GitHub publish pending operator action | Source metadata, README, release notes/readiness, helper examples, and stable GitHub note now target `0.4.1`; npm `hadara@0.4.1` was not published at prep time. |
-| Latest Completed Task | T-0516 0.4.1 stable release readiness and publish preparation | Stable source prep passed build, version smoke, package-smoke/command-surface tests, and strict release gate; clean publish clone remains responsible for release artifact/package smoke regeneration before npm publish. |
-| Active / Next Task | Approval-gated stable `0.4.1` npm publish and GitHub Release | Run `prepare-publish-env.sh T-0516`, then `manual-publish-rc.sh T-0516 --execute` from the clean ext4 clone; after npm verification publish GitHub Release `v0.4.1`, then run installed-package recycle. |
-| Validation Baseline | T-0516 stable prep plus T-0515 dogfood/recycle | T-0516 passed stable source checks and fixed package-smoke spawn error reporting; T-0515 proved adaptive installed recycle against `hadara@next`. |
+| Latest Completed Task | T-0517 0.4.1 stable publish helper package smoke timeout | Manual publish helper now passes `--timeout "${PACKAGE_SMOKE_TIMEOUT}"` to package smoke with default 300s, after the first T-0516 publish attempt timed out at the previous 120s default. |
+| Active / Next Task | Approval-gated stable `0.4.1` npm publish and GitHub Release | Re-run `prepare-publish-env.sh T-0516` for a fresh clone, then `manual-publish-rc.sh T-0516 --execute`; after npm verification publish GitHub Release `v0.4.1`, then run installed-package recycle. |
+| Validation Baseline | T-0517 helper syntax/help/wiring plus T-0516 stable prep | T-0517 passed helper shell syntax, help, and timeout wiring checks; T-0516 passed stable source checks and strict release gate. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| 0.4.1 stable publish helper package smoke timeout | T-0517 raises the manual publish helper package-smoke timeout from implicit 120s to explicit default 300s via `PACKAGE_SMOKE_TIMEOUT`, without reducing release smoke coverage. | `ev:T-0517:9f92cecc551b4ca3a46fdc0d`, `ev:T-0517:ea5ed0e4f19c447f9ae3e0c2`, `ev:T-0517:37f7154855e14156aed06c4c` |
 | 0.4.1 stable release readiness and publish preparation | T-0516 retargets source/docs/helpers to stable `0.4.1`, adds a stable GitHub release note, confirms `hadara@0.4.1` is unpublished before prep, and records the clean publish-clone boundary for final release artifact/package smoke/npm publish. | `ev:T-0516:c350db29604743c1909bc809`, `ev:T-0516:5845854cb8b545559afe4dd6`, `ev:T-0516:d6c585f30bc54e9bbd5617e2`, `ev:T-0516:7726f03afc544b34b823340a` |
 | 0.4.1 rc0 post recycle adaptive dogfood | T-0515 dogfooded a fresh governed `/tmp` toy project through current lifecycle and verified live package recycle uses installed command-surface discovery plus `task status`, not removed `task lifecycle`. | `ev:T-0515:a20385b3ade94850976abe9c`, `ev:T-0515:0886f8668a314f6c83be452f`, `ev:T-0515:d2ff92a938974a5983536eac`, `ev:T-0515:6a518f6681b248139ea1f343` |
 | 0.4.1 rc0 package recycle command-surface adaptive refactor | T-0514 makes `package recycle` inspect the installed CLI command registry, prefer `task status`, preserve legacy fallback only when needed, and documents the updated JSON contract. | `ev:T-0514:1083145ebdba460894fab691`, `ev:T-0514:dd3b69febfc54c98aeeb4741`, `ev:T-0514:8c6f62d144b74da281d7880f` |
@@ -58,9 +59,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0517 / 0.4.1 stable publish helper package smoke timeout | Publish helper package-smoke timeout now defaults to 300s and is operator-overridable with `PACKAGE_SMOKE_TIMEOUT`. | `ev:T-0517:9f92cecc551b4ca3a46fdc0d`, `ev:T-0517:ea5ed0e4f19c447f9ae3e0c2`, `ev:T-0517:37f7154855e14156aed06c4c` |
 | T-0516 / 0.4.1 stable release readiness and publish preparation | Source/readiness retargeted to stable `0.4.1`; local build/version/package-smoke tests/strict gate passed; release artifact/package smoke execution is intentionally deferred to the clean publish clone after commit. | `ev:T-0516:c350db29604743c1909bc809`, `ev:T-0516:5845854cb8b545559afe4dd6`, `ev:T-0516:d6c585f30bc54e9bbd5617e2`, `ev:T-0516:7726f03afc544b34b823340a` |
 | T-0515 / 0.4.1 rc0 post recycle adaptive dogfood | Fresh `/tmp` governed toy lifecycle passed; package recycle dry-run and approved live recycle passed, with adaptive flags proving current `task status` selection. | `ev:T-0515:a20385b3ade94850976abe9c`, `ev:T-0515:0886f8668a314f6c83be452f`, `ev:T-0515:d2ff92a938974a5983536eac`, `ev:T-0515:6a518f6681b248139ea1f343` |
-| T-0514 / 0.4.1 rc0 package recycle command surface adaptive refactor | Source recycle helper now reads installed command surface, uses current `task status` when available, preserves legacy fallback only for older installed packages, and validates the updated schema/contract. | `ev:T-0514:1083145ebdba460894fab691`, `ev:T-0514:dd3b69febfc54c98aeeb4741`, `ev:T-0514:8c6f62d144b74da281d7880f` |
 
 ## Current Known Problems
 
@@ -140,7 +141,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Publish stable `0.4.1` from the clean ext4 clone, then publish GitHub Release `v0.4.1` and open installed-package recycle. | T-0516 prepared source/readiness but intentionally did not run npm/GitHub mutation. The publish helper must regenerate release artifact/package smoke evidence after the readiness commit. | `ev:T-0516:7726f03afc544b34b823340a`, `docs/RELEASE_READINESS.md` |
+| Publish stable `0.4.1` from a fresh clean ext4 clone, then publish GitHub Release `v0.4.1` and open installed-package recycle. | T-0517 fixed the helper timeout after the first attempt timed out at 120s; use a fresh clone so the helper contains the 300s default. | `ev:T-0517:37f7154855e14156aed06c4c`, `docs/RELEASE_READINESS.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline

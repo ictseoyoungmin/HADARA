@@ -7,6 +7,7 @@ CREATE_GITHUB_DRAFT="false"
 REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org}"
 PACKAGE_NAME="hadara"
 DIST_DIR="dist-release"
+PACKAGE_SMOKE_TIMEOUT="${PACKAGE_SMOKE_TIMEOUT:-300}"
 NPM_TAG="${NPM_TAG:-}"
 GITHUB_RELEASE_NOTE=""
 GITHUB_TOKEN_ENV=""
@@ -35,6 +36,11 @@ Options:
 --package <name>  npm package name. Default: hadara
 --npm-tag <tag>   npm dist-tag for publish. Default: next for rc versions, latest otherwise.
 -h, --help         Show this help.
+
+Environment:
+PACKAGE_SMOKE_TIMEOUT
+                   Timeout in seconds for `hadara smoke package --execute`.
+                   Default: 300.
 
 Examples:
 
@@ -353,6 +359,7 @@ echo "GitHub token env: ${GITHUB_TOKEN_ENV:-<gh existing auth or GH_TOKEN>}"
 echo "Registry: ${REGISTRY}"
 echo "Package: ${PACKAGE_NAME}"
 echo "Dist dir: ${DIST_DIR}"
+echo "Package smoke timeout: ${PACKAGE_SMOKE_TIMEOUT}s"
 echo "Approval actor: ${APPROVAL_ACTOR}"
 echo "Approval reason: ${APPROVAL_REASON}"
 echo
@@ -447,7 +454,7 @@ verify_tarball_package_metadata "${TARBALL}" "${PACKAGE_NAME}" "${VERSION}"
 
 echo
 echo "== 3. Fresh release evidence =="
-run_hadara smoke package --execute --attach-evidence --task "${TASK_ID}" --json
+run_hadara smoke package --execute --attach-evidence --task "${TASK_ID}" --timeout "${PACKAGE_SMOKE_TIMEOUT}" --json
 run_hadara smoke clean-checkout --execute --attach-evidence --task "${TASK_ID}" --json
 
 echo
