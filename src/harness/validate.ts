@@ -947,7 +947,7 @@ function validateTaskStatusDone(projectRoot: string, task: TaskCapsule, issues: 
       message: 'Done-level validation requires TASK.md status to be Done.',
       path: relativePath,
       heading: 'Identity',
-      fixHint: 'Run `hadara task finish --task <task-id> --execute --json` or set the TASK.md Identity status row to Done after the capsule is actually complete.',
+      fixHint: 'Run `hadara task finalize --task <task-id> --execute --auto --json` after the capsule is complete, or set the TASK.md Identity status row to Done when repairing a partially completed finalize.',
       example: '| Status | Done |',
       remediationHint: {
         path: relativePath,
@@ -975,13 +975,13 @@ function validateTaskStatusHistoryDone(projectRoot: string, task: TaskCapsule, i
       message: 'Done-level validation requires TASK.md Status History to end with Done.',
       path: relativePath,
       heading: 'Status History',
-      fixHint: 'Run `hadara task finish --task <task-id> --execute --json` so Status History ends with a Done row.',
-      example: '| 2026-06-12 | Done | Finished task capsule. | `hadara task finish --execute` |',
+      fixHint: 'Run `hadara task finalize --task <task-id> --execute --auto --json` so finish bookkeeping records Done, or repair the latest Status History row when working with a legacy capsule.',
+      example: '| 2026-06-12 | Done | Finished task capsule. | `hadara task finalize --execute --auto` |',
       remediationHint: {
         path: relativePath,
         heading: 'Status History',
         requiredChange: 'Append or repair the latest Status History row so it records Done.',
-        example: '| 2026-06-12 | Done | Finished task capsule. | `hadara task finish --execute` |',
+        example: '| 2026-06-12 | Done | Finished task capsule. | `hadara task finalize --execute --auto` |',
         blocking: true
       }
     });
@@ -1406,7 +1406,7 @@ function validateTaskBoardDone(projectRoot: string, task: TaskCapsule, issues: H
       message: `Done-level validation requires docs/TASK_BOARD.md status for ${task.id} to be Done.`,
       path: relativePath,
       heading: 'TASK_BOARD',
-      fixHint: `Run \`hadara task finish --task ${task.id} --execute --json\` or update the Task Board status cell for ${task.id} to Done.`,
+      fixHint: `Run \`hadara task finalize --task ${task.id} --execute --auto --json\` after the capsule is complete, or update the Task Board status cell for ${task.id} to Done when repairing a partially completed finalize.`,
       example: `| ${task.id} | ${row.title} | Done | ${row.capsule} | ${row.notes} |`,
       remediationHint: {
         path: relativePath,

@@ -457,9 +457,10 @@ describe('Harness Task Capsule validation', () => {
         message: 'Done-level validation requires TASK.md Status History to end with Done.',
         path: `tasks/${task.id}-history-missing-done/TASK.md`,
         heading: 'Status History',
-        fixHint: expect.stringContaining('task finish')
+        fixHint: expect.stringContaining('task finalize')
       })
     );
+    expect(result.issues.find((issue) => issue.code === 'TASK_STATUS_HISTORY_NOT_DONE')?.fixHint).not.toContain('task finish');
   });
 
   it('accepts done-level validation for completed capsules', () => {

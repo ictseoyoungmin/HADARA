@@ -44,8 +44,8 @@ export function createTaskReadyReportFromClosePlan(projectRoot: string, taskId: 
         createTaskLifecycleNextAction({
           id: 'run-task-close',
           required: false,
-          command: `hadara task close --task ${taskId} --json`,
-          message: 'Review the close plan before appending close evidence.',
+          command: `hadara task finalize --task ${taskId} --json`,
+          message: 'Review the finalize plan before appending close evidence.',
           writeBoundary: 'read-only',
           recommendedActorRole: 'worker',
           requiresBeforeHash: false,
@@ -85,8 +85,8 @@ function createBlockedReadyActions(taskId: string, closeActions: TaskCloseNextAc
       createTaskLifecycleNextAction({
         id: 'finish-first',
         required: true,
-        command: `hadara task finish --task ${taskId} --json`,
-        message: 'Preview finish writes before checking done-level readiness.',
+        command: `hadara task finalize --task ${taskId} --execute --auto --json`,
+        message: 'Run guarded finalize so finish bookkeeping is applied before done-level readiness is rechecked.',
         writeBoundary: 'task-local',
         recommendedActorRole: 'worker',
         requiresBeforeHash: false,

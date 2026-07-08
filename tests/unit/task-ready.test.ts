@@ -39,7 +39,7 @@ describe('task ready report', () => {
     });
     expect(report.primaryNextAction).toMatchObject({
       id: 'run-task-close',
-      command: `hadara task close --task ${task.id} --json`,
+      command: `hadara task finalize --task ${task.id} --json`,
       writeBoundary: 'read-only',
       recommendedActorRole: 'worker',
       requiresBeforeHash: false,
@@ -58,7 +58,7 @@ describe('task ready report', () => {
     expect(report.summary.blockers).toBeGreaterThan(0);
     expect(report.primaryNextAction).toMatchObject({
       id: 'finish-first',
-      command: `hadara task finish --task ${task.id} --json`,
+      command: `hadara task finalize --task ${task.id} --execute --auto --json`,
       writeBoundary: 'task-local',
       recommendedActorRole: 'worker',
       stalePlanRisk: 'low'

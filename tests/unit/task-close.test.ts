@@ -81,17 +81,17 @@ describe('task close report', () => {
       nextPhaseAfterSuccess: 'close-execute',
       validationPhase: {
         role: 'prove-readiness',
-        command: `hadara task close --task ${task.id} --json`,
+        command: `hadara task finalize --task ${task.id} --json`,
         includesCloseEvidenceAppend: false
       },
       closePhase: {
         role: 'record-proof',
-        command: `hadara task close --task ${task.id} --execute --json`,
+        command: `hadara task finalize --task ${task.id} --execute --auto --json`,
         writes: 'close-evidence-only'
       },
       auditPhase: {
         role: 'check-close-record',
-        command: `hadara task audit-close --task ${task.id} --json`,
+        command: `hadara task status --task ${task.id} --detail full --json`,
         writes: 'none'
       },
       closeEvidenceLoopBoundary: {
@@ -102,7 +102,7 @@ describe('task close report', () => {
     expect(report.primaryNextAction).toMatchObject({
       id: 'append-close-evidence',
       loopBoundary: true,
-      command: `hadara task close --task ${task.id} --execute --json`,
+      command: `hadara task finalize --task ${task.id} --execute --auto --json`,
       writeBoundary: 'evidence-append',
       recommendedActorRole: 'worker',
       requiresBeforeHash: false,
@@ -155,7 +155,7 @@ describe('task close report', () => {
       reportPhase: 'close-execute',
       nextPhaseAfterSuccess: 'post-close-audit',
       closePhase: { writes: 'close-evidence-only' },
-      auditPhase: { command: `hadara task audit-close --task ${task.id} --json`, writes: 'none' }
+      auditPhase: { command: `hadara task status --task ${task.id} --detail full --json`, writes: 'none' }
     });
     expect(report.closeEvidence.sourceHash).toBe(report.validation.validatedBeforeCloseEvidenceSourceHash);
     expect(after.split(/\r?\n/).filter(Boolean).length).toBe(before.split(/\r?\n/).filter(Boolean).length + 1);
@@ -173,7 +173,7 @@ describe('task close report', () => {
     expect(report.closeEvidenceWrite?.executeRecheck).toEqual({ performed: true, duplicateFound: false, action: 'append' });
     expect(closeRecord.tags).toEqual(expect.arrayContaining(['close-proof', `idempotency:${report.closeEvidenceWrite?.idempotencyKey}`]));
     expect(report.nextActions.map((action) => action.id)).toEqual(['close-evidence-appended', 'audit-close']);
-    expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'audit-close', command: `hadara task audit-close --task ${task.id} --json`, writeBoundary: 'read-only', recommendedActorRole: 'reviewer' }));
+    expect(report.nextActions).toContainEqual(expect.objectContaining({ id: 'audit-close', command: `hadara task status --task ${task.id} --detail full --json`, writeBoundary: 'read-only', recommendedActorRole: 'reviewer' }));
     expect(report.nextActions[0]).not.toHaveProperty('message');
   });
 
@@ -394,7 +394,7 @@ describe('task close report', () => {
     });
     expect(audit.primaryNextAction).toMatchObject({
       id: 'close-first',
-      command: `hadara task close --task ${task.id} --json`,
+      command: `hadara task finalize --task ${task.id} --json`,
       writeBoundary: 'read-only',
       recommendedActorRole: 'worker',
       requiresBeforeHash: false,

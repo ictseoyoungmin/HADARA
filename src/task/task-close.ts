@@ -261,8 +261,8 @@ function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode, clo
           createTaskLifecycleNextAction({
             id: 'audit-close',
             required: false,
-            command: `hadara task audit-close --task ${taskId} --json`,
-            message: 'Optionally audit the existing close record in a later read-only pass.',
+            command: `hadara task status --task ${taskId} --detail full --json`,
+            message: 'Optionally inspect the existing close record in a later read-only status pass.',
             writeBoundary: 'read-only',
             recommendedActorRole: 'reviewer',
             requiresBeforeHash: false,
@@ -286,8 +286,8 @@ function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode, clo
         createTaskLifecycleNextAction({
           id: 'audit-close',
           required: false,
-          command: `hadara task audit-close --task ${taskId} --json`,
-          message: 'Optionally audit the close record in a later read-only pass.',
+          command: `hadara task status --task ${taskId} --detail full --json`,
+          message: 'Optionally inspect the close record in a later read-only status pass.',
           writeBoundary: 'read-only',
           recommendedActorRole: 'reviewer',
           requiresBeforeHash: false,
@@ -316,8 +316,8 @@ function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode, clo
         createTaskLifecycleNextAction({
           id: 'audit-close',
           required: false,
-          command: `hadara task audit-close --task ${taskId} --json`,
-          message: 'Matching close evidence already exists; audit the existing close record.',
+          command: `hadara task status --task ${taskId} --detail full --json`,
+          message: 'Matching close evidence already exists; inspect the existing close record.',
           writeBoundary: 'read-only',
           recommendedActorRole: 'reviewer',
           requiresBeforeHash: false,
@@ -329,8 +329,8 @@ function createNextActions(taskId: string, ok: boolean, mode: TaskCloseMode, clo
       createTaskLifecycleNextAction({
         id: 'append-close-evidence',
         required: true,
-        command: `hadara task close --task ${taskId} --execute --json`,
-        message: 'Append close audit evidence after reviewing this dry-run plan.',
+        command: `hadara task finalize --task ${taskId} --execute --auto --json`,
+        message: 'Append close evidence through guarded finalize after reviewing this dry-run plan.',
         writeBoundary: 'evidence-append',
         recommendedActorRole: 'worker',
         requiresBeforeHash: false,
@@ -416,17 +416,17 @@ function createCloseLifecycleGuidance(taskId: string, mode: TaskCloseMode): Task
     nextPhaseAfterSuccess: mode === 'execute' ? 'post-close-audit' : 'close-execute',
     validationPhase: {
       role: 'prove-readiness',
-      command: `hadara task close --task ${taskId} --json`,
+      command: `hadara task finalize --task ${taskId} --json`,
       includesCloseEvidenceAppend: false
     },
     closePhase: {
       role: 'record-proof',
-      command: `hadara task close --task ${taskId} --execute --json`,
+      command: `hadara task finalize --task ${taskId} --execute --auto --json`,
       writes: 'close-evidence-only'
     },
     auditPhase: {
       role: 'check-close-record',
-      command: `hadara task audit-close --task ${taskId} --json`,
+      command: `hadara task status --task ${taskId} --detail full --json`,
       writes: 'none'
     },
     closeEvidenceLoopBoundary: {
@@ -910,7 +910,7 @@ export function formatTaskAuditCloseReport(report: TaskAuditCloseReport): string
   if (report.ok) {
     lines.push('- No immediate actions.');
   } else {
-    lines.push(`1. hadara task close --task ${report.taskId} --json`);
+    lines.push(`1. hadara task finalize --task ${report.taskId} --json`);
   }
   if (report.issues.length > 0) {
     lines.push('', 'Issues');
@@ -990,8 +990,8 @@ function createAuditNextActions(taskId: string, closeMissing: boolean): TaskClos
     createTaskLifecycleNextAction({
       id: 'close-first',
       required: true,
-      command: `hadara task close --task ${taskId} --json`,
-      message: 'Preview close evidence before audit-close.',
+      command: `hadara task finalize --task ${taskId} --json`,
+      message: 'Review finalize close evidence planning before inspecting close proof.',
       writeBoundary: 'read-only',
       recommendedActorRole: 'worker',
       requiresBeforeHash: false,
