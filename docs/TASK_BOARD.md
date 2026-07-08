@@ -521,3 +521,4 @@
 | T-0518 | manual publish script timeout test expectation update | Done | tasks/T-0518-manual-publish-script-timeout-test-expectation-update | |
 | T-0519 | 0.4.1 stable post-publish evidence sync | Done | tasks/T-0519-0-4-1-stable-post-publish-evidence-sync | |
 | T-0520 | 0.4.1 stable installed package recycle | Done | tasks/T-0520-0-4-1-stable-installed-package-recycle | |
+| T-0521 | command portfolio reduction inventory | Done | tasks/T-0521-command-portfolio-reduction-inventory | |

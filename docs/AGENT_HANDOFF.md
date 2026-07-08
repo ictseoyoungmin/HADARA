@@ -4,16 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, and stable `0.4.1` npm/GitHub/recycle is verified through T-0520. |
-| Current Phase | Stable `0.4.1` release line complete | npm `hadara@0.4.1` is published on `latest`, GitHub Release `v0.4.1` is public/non-prerelease, and installed-package recycle passed for `hadara@latest` expected `0.4.1`. |
-| Latest Completed Task | T-0520 0.4.1 stable installed package recycle | Public installed package validation passed from isolated registry install through fresh consumer workflow smokes. |
-| Active / Next Task | Await next explicit scope | No remaining mandatory `0.4.1` stable release-line step is open; future work should start from a new selected capsule. |
-| Validation Baseline | T-0520 installed-package recycle plus T-0519 public publish verification | T-0520 verified installed `packageVersion=0.4.1`, current command surface, fresh init/task/status/session/finalize/context smokes; T-0519 verified npm/GitHub public state. |
+| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, and command portfolio inventory is complete through T-0521. |
+| Current Phase | Command portfolio reduction planning complete | T-0521 classified all 73 current command ids and identified low-risk merge/deprecation slices before 0.5.x implementation work. |
+| Latest Completed Task | T-0521 command portfolio reduction inventory | Full command inventory and reduction recommendations are recorded in the capsule-local `COMMAND_PORTFOLIO.md`. |
+| Active / Next Task | First command-surface reduction implementation capsule | Start with read-only duplicate diagnostics: `proof.status`, `proof.explain`, `ci.gate`, and `evidence.summary`; keep primary lifecycle commands intact. |
+| Validation Baseline | T-0521 registry coverage check plus T-0520 installed-package recycle | T-0521 verified all 73 registry ids are included in the inventory; T-0520 verified stable `0.4.1` installed-package recycle. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| command portfolio reduction inventory | T-0521 inventories all 73 command ids, classifies family/requiredness/importance/default-help/action/rationale, and identifies first reduction slices around duplicate proof/evidence/docs diagnostics. | `ev:T-0521:87352953be5d4b8c8bf5e13c` |
 | 0.4.1 stable installed package recycle | T-0520 verifies `hadara@latest` installs as `0.4.1` and passes installed consumer workflow smokes; first sandboxed registry lookup failure was classified as environment friction and resolved by approved network rerun. | `ev:T-0520:2b4b928b65344d03ad44a53d`, `ev:T-0520:705485eda380456583f41294` |
 | 0.4.1 stable post-publish evidence sync | T-0519 records completed public npm/GitHub publication: npm version `0.4.1`, dist-tags `latest=0.4.1` and `next=0.4.1-rc.0`, and GitHub Release `v0.4.1` public stable target `682af904cc2e74dab90f10b8b037fa685eb9cf72`. | `ev:T-0519:1aaf3a7a96f548c6accae710`, `ev:T-0519:0e29abe05a824a629936af35`, `ev:T-0519:ab35e58cb8dd4809a97242b6` |
 | Manual publish script timeout test expectation update | T-0518 updates `manual-publish-script.test.ts` so it expects the T-0517 `PACKAGE_SMOKE_TIMEOUT` default and `--timeout` pass-through; local focused Vitest is blocked by tool sandbox `execFileSync('bash') EPERM` and resolved by direct checks. | `ev:T-0518:117c66c7a27d47458cddff7a`, `ev:T-0518:015ca50115d84a83ae2e130a`, `ev:T-0518:8270c73684da4874bbe64571` |
@@ -62,9 +63,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0521 / command portfolio reduction inventory | Full command portfolio table completed for 73 current registry entries; next implementation should start with low-risk duplicate diagnostics. | `ev:T-0521:87352953be5d4b8c8bf5e13c` |
 | T-0520 / 0.4.1 stable installed package recycle | Public installed-package recycle passed for `hadara@latest` expected `0.4.1`, including installed version, command surface, fresh init/task/status/session/finalize/context smokes, and cleanup. | `ev:T-0520:2b4b928b65344d03ad44a53d`, `ev:T-0520:705485eda380456583f41294` |
 | T-0519 / 0.4.1 stable post-publish evidence sync | Public npm and GitHub Release verification is complete for stable `0.4.1`; next release-line step is installed-package recycle against `hadara@latest`. | `ev:T-0519:1aaf3a7a96f548c6accae710`, `ev:T-0519:0e29abe05a824a629936af35`, `ev:T-0519:ab35e58cb8dd4809a97242b6` |
-| T-0518 / manual publish script timeout test expectation update | Test expectation now matches T-0517 helper timeout behavior; direct syntax/wiring checks passed and local Vitest EPERM is documented. | `ev:T-0518:117c66c7a27d47458cddff7a`, `ev:T-0518:015ca50115d84a83ae2e130a`, `ev:T-0518:8270c73684da4874bbe64571` |
 
 ## Current Known Problems
 

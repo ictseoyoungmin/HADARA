@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0520 0.4.1 stable installed package recycle |
-| Active Task | Stable `hadara@0.4.1` release line is complete: npm publish, GitHub Release `v0.4.1`, and installed-package recycle for `hadara@latest` expected `0.4.1` are verified. |
+| Latest Completed Task | T-0521 command portfolio reduction inventory |
+| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction inventory is complete, and the next recommended implementation slice is low-risk read-model consolidation around proof/evidence duplicate diagnostics. |
+
+T-0521 follow-up note: command portfolio reduction inventory is complete. The current registry has 73 command ids, with 10 default-help commands, 57 stable commands, 16 experimental commands, 6 primary commands, 26 diagnostic commands, 19 conditional commands, 7 release-only commands, 5 integration-only commands, 3 dev-only commands, and 7 advanced commands. `COMMAND_PORTFOLIO.md` in the T-0521 capsule includes every registry id with family, requiredness, importance, default-help exposure, action recommendation, and rationale. The safest first implementation slice is read-only duplicate diagnostics: `proof.status`, `proof.explain`, `ci.gate`, and `evidence.summary`. Evidence: `ev:T-0521:87352953be5d4b8c8bf5e13c`.
 
 T-0520 follow-up note: stable installed-package recycle passed for `hadara@latest` expected `0.4.1`. The approved network execution verified registry version `0.4.1`, dist-tags `latest=0.4.1` and `next=0.4.1-rc.0`, isolated registry install, installed CLI `packageVersion=0.4.1`, installed command surface with 73 command ids, lifecycle help, fresh init, task create/status, session start, finalize dry-run, context pack, context slice, and cleanup. The first sandboxed execute attempt failed after child npm registry lookups timed out around 70s each; direct `npm view` and the approved rerun passed, so it is classified as environment child-process/network friction. Evidence: `ev:T-0520:2b4b928b65344d03ad44a53d`, `ev:T-0520:705485eda380456583f41294`.
 
