@@ -150,6 +150,9 @@ export function handleEvidenceCommand(input: EvidenceCommandInput): boolean {
       } else {
         console.log(`[HADARA] Command evidence recorded: ${appendResult.markdownPath}`);
       }
+      if (appendResult.appendLock.contended) {
+        console.log(`[HADARA] evidence append lock waited ${appendResult.appendLock.waitedMs}ms at ${appendResult.appendLock.path}`);
+      }
     }
     return true;
   }
@@ -179,7 +182,9 @@ function renderEvidenceCommandHelp(sub: string | undefined): string {
       '  --resolves <id>           Add a resolves:<id> tag. Repeatable.',
       '  --supersedes <id>         Add a supersedes:<id> tag. Repeatable.',
       '  --idempotency-key <key>   Reuse an existing keyed record instead of appending duplicates.',
-      '  --private                 Store as private evidence metadata.'
+      '  --private                 Store as private evidence metadata.',
+      '',
+      'Evidence appends are task-scoped and serialized; JSON output includes evidence.appendLock diagnostics when lock contention occurs.'
     ].join('\n');
   }
 

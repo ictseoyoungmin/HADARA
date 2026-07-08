@@ -113,6 +113,14 @@ export interface EvidenceAppendResult {
   markdownAppended: boolean;
   jsonlAppended: boolean;
   existing: boolean;
+  appendLock: EvidenceAppendLockDiagnostics;
+}
+
+export interface EvidenceAppendLockDiagnostics {
+  path: string;
+  waitedMs: number;
+  contended: boolean;
+  timeoutMs: number;
 }
 
 export interface EvidenceProjectionReport {
@@ -327,13 +335,14 @@ export function persistedEvidenceIdempotencyKey(record: PersistedEvidenceRecord)
   return tag ? tag.replace(/^idempotency:/, '') : undefined;
 }
 
-function withEvidenceAppendLock<T>(projectRoot: string, taskId: string, fn: () => T): T {
+function withEvidenceAppendLock<T>(projectRoot: string, taskId: string, fn: () => T): { value: T; appendLock: EvidenceAppendLockDiagnostics } {
   const lockRoot = path.join(projectRoot, '.hadara', 'local', 'locks', 'evidence');
   ensureDir(lockRoot);
   const lockDir = path.join(lockRoot, `${safeFilePart(taskId)}.lock`);
   const lockPortablePath = toPortablePath(path.relative(projectRoot, lockDir));
   const timer = startMonotonicTimer();
   const timeoutMs = 5000;
+  let contended = false;
 
   while (true) {
     try {
@@ -341,6 +350,7 @@ function withEvidenceAppendLock<T>(projectRoot: string, taskId: string, fn: () =
       break;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+      contended = true;
       if (timer.elapsedMs() >= timeoutMs) {
         throw new EvidenceAppendLockError(
           `Timed out waiting for the evidence append lock for ${taskId}. Lock directory: ${lockPortablePath}. ` +
@@ -352,8 +362,14 @@ function withEvidenceAppendLock<T>(projectRoot: string, taskId: string, fn: () =
   }
 
   writeLockMetadata(lockDir, taskId);
+  const appendLock = {
+    path: lockPortablePath,
+    waitedMs: timer.elapsedMs(),
+    contended,
+    timeoutMs
+  };
   try {
-    return fn();
+    return { value: fn(), appendLock };
   } finally {
     try {
       fs.rmSync(lockDir, { recursive: true, force: true });
@@ -399,7 +415,7 @@ function appendEvidenceRecord(input: {
   const summary = redactSecrets(input.record.summary.replace(/\|/g, '/'));
   const markdownPath = path.join(input.taskDir, 'EVIDENCE.md');
 
-  return withEvidenceAppendLock(input.projectRoot, input.record.taskId, () => {
+  const locked = withEvidenceAppendLock(input.projectRoot, input.record.taskId, () => {
     const idempotencyKey = input.record.idempotencyKey;
     if (idempotencyKey) {
       const existing = readEvidenceIndex(input.taskDir).find((record) => persistedEvidenceIdempotencyKey(record) === idempotencyKey);
@@ -452,6 +468,8 @@ function appendEvidenceRecord(input: {
       existing: false
     };
   });
+
+  return { ...locked.value, appendLock: locked.appendLock };
 }
 
 export function createEvidenceProjectionReport(projectRoot: string, taskId: string, execute = false): EvidenceProjectionReport {

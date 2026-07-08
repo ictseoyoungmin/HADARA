@@ -34,6 +34,7 @@ export interface EvidenceCollectReport {
     markdownAppended: boolean;
     jsonlAppended: boolean;
     existing: boolean;
+    appendLock: ReturnType<typeof appendEvidenceWithResult>['appendLock'];
   };
   issues: Array<{
     severity: 'error';
@@ -109,7 +110,8 @@ export function createEvidenceCollectReport(projectRoot: string, input: Evidence
       markdownPath: toPortablePath(path.relative(projectRoot, appendResult.markdownPath)),
       markdownAppended: appendResult.markdownAppended,
       jsonlAppended: appendResult.jsonlAppended,
-      existing: appendResult.existing
+      existing: appendResult.existing,
+      appendLock: appendResult.appendLock
     },
     issues: []
   };

@@ -78,6 +78,7 @@ describe('task workflow command semantics docs', () => {
     expect(workflow).toContain('Do not defer all documentation until after implementation.');
     expect(workflow).toContain('Parallelize read-only discovery, `rg`/file inspection, independent validation commands');
     expect(workflow).toContain('Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes');
+    expect(workflow).toContain('JSON evidence responses include `evidence.appendLock` with `contended`, `waitedMs`, `timeoutMs`, and the lock path.');
     expect(workflow).toContain('changing those documents changes the close source hash and requires rerunning finalize (`--execute --auto` or a reviewed `--plan-hash`); the standalone low-level sequence was removed in 0.4.1-rc.0');
     expect(workflow).toContain('After close proof is recorded, close-source document edits intentionally invalidate the previous close proof.');
     expect(workflow).toContain("matching `docs/TASK_BOARD.md` row's command-owned cells");

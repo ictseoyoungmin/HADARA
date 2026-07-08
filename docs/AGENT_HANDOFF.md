@@ -4,16 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, command portfolio inventory is complete through T-0521, and reduction/performance/status-profile/init-structure/finalize-UX/legacy-stub slices are complete through T-0532. |
-| Current Phase | Command portfolio reduction and structure cleanup | T-0522/T-0523/T-0528 removed duplicate and retired public command surfaces; T-0529 renamed the remaining internal next-work projection away from the removed public `task next` command name; T-0530 split init implementation ownership boundaries; T-0531 hardened auto-finalize against partial finish writes; T-0532 removed remaining legacy redirect stubs. |
-| Latest Completed Task | T-0532 remove legacy command redirect stubs | Registry-absent retired commands now fall through to ordinary default-help/unknown behavior; `hadara.commandRemoved.v1` is no longer a current schema contract. |
-| Active / Next Task | T-0532 complete; next command portfolio reduction should target active command ids only | Remaining reductions need product decisions against commands still present in `hadara commands --json`, not cleanup of migration stubs. |
-| Validation Baseline | T-0532 Docker sync-build | Docker `dev:docker-sync-build` passed `npm ci`, TypeScript build, full Vitest 154 files / 1032 tests, refreshed workspace `dist`, and built CLI legacy-route smokes returned default help/exit 1 with retired ids absent from registry output. |
+| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, command portfolio inventory is complete through T-0521, and reduction/performance/status-profile/init-structure/finalize-UX/legacy-stub/evidence-UX slices are complete through T-0533. |
+| Current Phase | Command portfolio reduction and structure cleanup | T-0522/T-0523/T-0528 removed duplicate and retired public command surfaces; T-0529 renamed the remaining internal next-work projection away from the removed public `task next` command name; T-0530 split init implementation ownership boundaries; T-0531 hardened auto-finalize against partial finish writes; T-0532 removed remaining legacy redirect stubs; T-0533 surfaced evidence append lock waits. |
+| Latest Completed Task | T-0533 evidence append serialization diagnostics | Evidence append responses expose response-only append-lock diagnostics, and workflow/init docs now warn against parallel same-task evidence writes. |
+| Active / Next Task | T-0533 complete; next command portfolio reduction should target active command ids only | Remaining reductions need product decisions against commands still present in `hadara commands --json`, not cleanup of migration stubs. |
+| Validation Baseline | T-0533 Docker sync-build | Docker `dev:docker-sync-build` passed `npm ci`, TypeScript build, full Vitest 154 files / 1033 tests, refreshed workspace `dist`, and covered validation-run plus evidence parallel append tests. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| evidence append serialization diagnostics | T-0533 adds response-only `appendLock` diagnostics to evidence append results and validation evidence responses, while docs/templates warn that evidence writes must remain serialized. | `ev:T-0533:98cc1f9ad1d84b8c8ff7f6a0`, `ev:T-0533:32a794348e834d1fbec93bb8`, `ev:T-0533:ad3a9be3436e4e16941e3365` |
 | remove legacy command redirect stubs | T-0532 removes the remaining `hadara.commandRemoved.v1` public redirect stubs from routing/schema/current docs while preserving internal services used by `task finalize`, `task status`, package recycle, and tests. | `ev:T-0532:4ae792591df14134ac3fc56d`, `ev:T-0532:7fe349e74ca84badbc96c6f5`, `ev:T-0532:d1a6f5e679bc411f9b98d2f3`, `ev:T-0532:7c4d6212107b4a19b3d73071` |
 | preflight finalize auto task table tokens before finish | T-0531 makes auto finalize run a read-only close-plan preflight when finish is required, blocking invalid TASK.md table tokens, plan drift, evidence, or protocol errors before any finish write; focused tests, build, and Docker sync-build passed. | `ev:T-0531:a8b776840d10489194038558`, `ev:T-0531:155195d5cd3d48128966d6e5`, `ev:T-0531:6e504ac328ae492d92a2d874` |
 | split init implementation by ownership boundary | T-0530 reduces `src/cli/init.ts` to CLI orchestration and compatibility exports, moving init profile policy, project setup, scaffold assembly, templates, doctor, upgrade, file helpers, and report printing under `src/init/**`; no generated-doc copy or behavior changes were intended. | `ev:T-0530:add0563b2b744306b93d5716`, `ev:T-0530:c12315aa60ef43f1b3a15616`, `ev:T-0530:f8a04f134be34f3281c2aa67`, `ev:T-0530:d8d7c9cb370d4a6daef61942` |
@@ -74,9 +75,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0533 / evidence append serialization diagnostics | Evidence append responses expose response-only `appendLock` diagnostics and generated/root workflow docs warn against parallel same-task evidence writes; Docker sync-build passed. | `ev:T-0533:98cc1f9ad1d84b8c8ff7f6a0`, `ev:T-0533:32a794348e834d1fbec93bb8`, `ev:T-0533:ad3a9be3436e4e16941e3365` |
+| T-0532 / remove legacy command redirect stubs | Registry-absent retired commands now fall through to ordinary default-help/unknown behavior; `hadara.commandRemoved.v1` is no longer current. | `ev:T-0532:4ae792591df14134ac3fc56d`, `ev:T-0532:7fe349e74ca84badbc96c6f5`, `ev:T-0532:d1a6f5e679bc411f9b98d2f3`, `ev:T-0532:7c4d6212107b4a19b3d73071` |
 | T-0531 / preflight finalize auto task table tokens before finish | Auto finalize now refuses before finish writes when non-finish-resolvable done-level blockers are already detectable; focused tests, build, and Docker sync-build passed. | `ev:T-0531:a8b776840d10489194038558`, `ev:T-0531:155195d5cd3d48128966d6e5`, `ev:T-0531:6e504ac328ae492d92a2d874` |
-| T-0530 / split init implementation by ownership boundary | `src/cli/init.ts` is now a thin router and init internals are split under `src/init/**`; focused tests, built init smoke, diff check, and Docker sync-build passed. | `ev:T-0530:add0563b2b744306b93d5716`, `ev:T-0530:c12315aa60ef43f1b3a15616`, `ev:T-0530:d8d7c9cb370d4a6daef61942` |
-| T-0529 / rename internal task next projection | Internal next-work selection read model now uses `task-selection`, `hadara.task.selection.v1`, and `sources.taskSelection`; public `task.next` remains removed. | `ev:T-0529:c6c93453bfc04f939193a923`, `ev:T-0529:941cfef9cd80400f94ef3e08` |
 
 ## Current Known Problems
 

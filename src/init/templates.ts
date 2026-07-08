@@ -267,6 +267,8 @@ hadara validation run --task T-XXXX --check "Focused tests" --direct-result pass
 
 Use \`evidence add-command\` only when recording an already-run result supplied by the operator. It does not execute shell commands. Use \`evidence list\` to find durable evidence ids for docs and resolution markers.
 
+Evidence appends are task-scoped and serialized by a local lock. Do not start multiple \`validation run\` or \`evidence add-command\` writes for the same task in parallel; JSON evidence responses include \`evidence.appendLock\` so lock contention and wait time are visible when it happens.
+
 Evidence must reflect real execution results. Fabricated or assumed results are invalid.
 
 \`evidence project\` is the 0.4 projection refresh surface. It refreshes the generated \`EVIDENCE.md\` projection file without rewriting canonical evidence.
@@ -807,7 +809,7 @@ Do not defer all documentation until after implementation. Keep \`PLAN.md\` curr
 
 Parallelize read-only discovery, \`rg\`/file inspection, independent validation commands, package or registry metadata inspection, read-only diagnostics, and draft preparation before writes.
 
-Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, \`task finalize --execute\`, and release artifact or publish operations.
+Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board writes, Project State writes, Agent Handoff writes, before-hash execute operations, \`task finalize --execute\`, and release artifact or publish operations. Evidence appends are also protected by a task-scoped local lock; JSON evidence responses include \`evidence.appendLock\` with \`contended\`, \`waitedMs\`, \`timeoutMs\`, and the lock path.
 
 ## Command Semantics
 
@@ -815,7 +817,7 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 |---|---|---|
 | \`task status\` | Read-only | Without \`--task\`, selects next work. With \`--task\`, default output is a fast loop cockpit; use \`--detail full\` or \`task finalize\` for close-grade readiness diagnostics. |
 | \`task create\` | Write | Creates a Draft Task Capsule and Task Board row. It does not imply the task is ready or done. |
-| \`evidence add-command\` | Write | Appends operator-supplied command-log evidence. It does not execute shell commands or capture stdout/stderr; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, and optional \`--idempotency-key\` prevents duplicate same-key records. |
+| \`evidence add-command\` | Write | Appends operator-supplied command-log evidence. It does not execute shell commands or capture stdout/stderr; optional \`--category\`/\`--outcome\`/\`--resolves\`/\`--supersedes\` enrich v2 metadata, result/outcome mismatches are rejected, optional \`--idempotency-key\` prevents duplicate same-key records, and JSON responses expose \`evidence.appendLock\` wait diagnostics. |
 | \`validation run\` | Execute + evidence append | Runs a real command and records validation evidence. If the wrapper cannot launch the command in the current environment, run the command directly and record the direct result with \`validation run --direct-result\`. |
 | \`task next\` / \`task show\` | Fully removed public commands | Prefer \`task status --json\` and \`task status --task T-XXXX --json\`. |
 | \`task lifecycle\` | Fully removed public command | Prefer \`task status --task T-XXXX --json\`. |
@@ -832,7 +834,7 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 - \`task complete\` and \`task lifecycle\` are fully removed public commands. Prefer \`task status\` and \`task finalize\`.
 - \`task finalize\` is read-only by default and owns close-proof repair planning. Guarded execute uses \`--auto\` or a matching current dry-run \`planHash\`, runs phases serially, stops on blockers, and returns success only after the final audit is \`closed-valid\`.
 - \`evidence list\` is the supported evidence id discovery surface. Text output shows \`[id] time | category/outcome | visibility | summary\`; JSON records expose \`id\`, \`idSource\`, \`idStability\`, \`persistedSchemaVersion\`, \`category\`, \`outcome\`, and \`tags\`. Use durable persisted \`ev:\` ids for long-lived \`--resolves\` and \`--supersedes\` references. Legacy compatibility ids are inspection-only and are not the preferred durable reference.
-- \`evidence add-command\` records an operator-supplied command result; it does not run the command. \`--category\` and \`--outcome\` set persisted v2 metadata explicitly, while \`--result\` remains the legacy-compatible command result. When both are supplied, \`--result\` must match \`--outcome\` for \`passed\`, \`failed\`, \`blocked\`, and \`unknown\`; \`recorded\` and \`not-applicable\` require \`--result unknown\` or no explicit \`--result\`. \`--resolves\` and \`--supersedes\` append exact v2 resolution tags from passed or recorded follow-up evidence. \`--idempotency-key\` is optional; when supplied, same-key repeats return the existing record without appending duplicate Markdown or JSONL rows.
+- \`evidence add-command\` records an operator-supplied command result; it does not run the command. \`--category\` and \`--outcome\` set persisted v2 metadata explicitly, while \`--result\` remains the legacy-compatible command result. When both are supplied, \`--result\` must match \`--outcome\` for \`passed\`, \`failed\`, \`blocked\`, and \`unknown\`; \`recorded\` and \`not-applicable\` require \`--result unknown\` or no explicit \`--result\`. \`--resolves\` and \`--supersedes\` append exact v2 resolution tags from passed or recorded follow-up evidence. \`--idempotency-key\` is optional; when supplied, same-key repeats return the existing record without appending duplicate Markdown or JSONL rows. Evidence append responses include \`evidence.appendLock\`; if \`contended\` is true, another process held the task-scoped append lock before this write.
 - Evidence v2 deferred scope remains explicit: rebuild preview/execute, \`check-id\`, \`subject\`, and a new add-command report schema id are future candidates. Do not infer those commands or schema changes from the current \`evidence list\` and \`evidence add-command\` ergonomics.
 - Finalize may update only the bounded Task Capsule status bookkeeping, the matching \`docs/TASK_BOARD.md\` row's command-owned cells, and close evidence append. It must not update handoff, Project State, roadmap docs, or arbitrary evidence after the close-source hash is captured.
 - After close proof is recorded, close-source document edits intentionally invalidate the previous close proof. Make those edits before finalize execute, or rerun finalize if the edit is unavoidable.

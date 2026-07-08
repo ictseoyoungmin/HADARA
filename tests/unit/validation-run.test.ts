@@ -54,6 +54,11 @@ describe('validation run', () => {
       acceptanceRows: { updated: false }
     });
     expect(report.evidence?.id).toMatch(new RegExp(`^ev:${task.id}:`));
+    expect(report.evidence?.appendLock).toMatchObject({
+      path: `.hadara/local/locks/evidence/${task.id}.lock`,
+      contended: false,
+      timeoutMs: 5000
+    });
     expect(report.attempt.checkKey).toMatch(/^[a-f0-9]{16}$/);
     expect(report.evidence?.tags).toContain(`validation-check:${report.attempt.checkKey}`);
     expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);

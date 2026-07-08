@@ -49,7 +49,23 @@
         "autoResolvedEvidenceIds": { "type": "array", "items": { "type": "string" } }
       }
     },
-    "evidence": { "type": "object", "additionalProperties": true },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "appendLock": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["path", "waitedMs", "contended", "timeoutMs"],
+          "properties": {
+            "path": { "type": "string" },
+            "waitedMs": { "type": "number" },
+            "contended": { "type": "boolean" },
+            "timeoutMs": { "type": "number" }
+          }
+        }
+      }
+    },
     "taskValidationRow": {
       "type": "object",
       "additionalProperties": true,

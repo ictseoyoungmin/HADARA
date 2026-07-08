@@ -610,7 +610,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Record direct validation result', 'hadara validation run --task T-0001 --check "Focused tests" --direct-result passed --direct-summary "npm test passed directly" --update-task --json', 'When the wrapper cannot launch child processes in the current tool environment but the same command was run directly.')
     ],
     related: ['evidence.add-command', 'evidence.project', 'task.finalize'],
-    notes: 'Runs argv directly without shell interpretation; use an explicit shell command such as bash -lc when shell features are required. TASK.md Validation row updates are opt-in so evidence capture does not create close-source churn by default. Passed attempts automatically add resolution tags for earlier failed or blocked attempts with the same check name. Launch failures such as ENOENT, EPERM, EACCES, and timeout are reported as blocked wrapper outcomes with structured execution.failureKind and fallback nextActions. Use --direct-result only after the command was run directly outside the wrapper; it records the supplied result without spawning a child process.',
+    notes: 'Runs argv directly without shell interpretation; use an explicit shell command such as bash -lc when shell features are required. TASK.md Validation row updates are opt-in so evidence capture does not create close-source churn by default. Passed attempts automatically add resolution tags for earlier failed or blocked attempts with the same check name. Launch failures such as ENOENT, EPERM, EACCES, and timeout are reported as blocked wrapper outcomes with structured execution.failureKind and fallback nextActions. Use --direct-result only after the command was run directly outside the wrapper; it records the supplied result without spawning a child process. The evidence response includes appendLock diagnostics for task-scoped append-lock waits.',
     conflictsWith: []
   },
   {
@@ -634,7 +634,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
       example('Record already-run command evidence', 'hadara evidence add-command --task T-0001 --summary "npm test passed" --result passed --category validation --json', 'When recording a real result that was already executed outside validation run.')
     ],
     related: ['evidence.list', 'evidence.lint', 'task.finalize'],
-    notes: 'The collect response remains `hadara.evidence.collect.v1` with additive v2 metadata. A new add-command report schema id, check-id, and subject fields are deferred candidate scope.',
+    notes: 'The collect response remains `hadara.evidence.collect.v1` with additive v2 metadata and appendLock diagnostics for task-scoped append-lock waits. A new add-command report schema id, check-id, and subject fields are deferred candidate scope.',
     conflictsWith: []
   },
   {

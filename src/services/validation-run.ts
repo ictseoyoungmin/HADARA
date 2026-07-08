@@ -46,6 +46,7 @@ export interface ValidationRunReport {
     markdownPath: string;
     jsonlAppended: boolean;
     markdownAppended: boolean;
+    appendLock: ReturnType<typeof appendEvidenceWithResult>['appendLock'];
   };
   taskValidationRow: {
     mode: 'skipped' | 'updated';
@@ -193,7 +194,8 @@ export function createValidationRunReport(projectRoot: string, options: Validati
       tags: evidence.evidence.schemaVersion === 'hadara.evidence.v2' ? evidence.evidence.tags : [],
       markdownPath: evidence.markdownPath,
       jsonlAppended: evidence.jsonlAppended,
-      markdownAppended: evidence.markdownAppended
+      markdownAppended: evidence.markdownAppended,
+      appendLock: evidence.appendLock
     },
     taskValidationRow,
     acceptanceRows: {

@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -155,10 +156,55 @@ describe('CLI evidence JSON reports', () => {
         visibility: 'public',
         markdownAppended: true,
         jsonlAppended: true,
-        existing: false
+        existing: false,
+        appendLock: {
+          path: `.hadara/local/locks/evidence/${task.id}.lock`,
+          contended: false,
+          timeoutMs: 5000
+        }
       }
     });
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('"schemaVersion":"hadara.evidence.v2"');
+  });
+
+  it('reports append lock contention without persisting diagnostics into evidence records', async () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Append lock diagnostics');
+    const lockDir = path.join(root, '.hadara', 'local', 'locks', 'evidence', `${task.id}.lock`);
+    fs.mkdirSync(lockDir, { recursive: true });
+    fs.writeFileSync(path.join(lockDir, 'lock.json'), `${JSON.stringify({ pid: 12345, taskId: task.id, command: 'test-holder' })}\n`, 'utf8');
+    const releaser = spawn(
+      process.execPath,
+      [
+        '-e',
+        'setTimeout(() => require("node:fs").rmSync(process.argv[1], { recursive: true, force: true }), 75)',
+        lockDir
+      ],
+      { stdio: 'ignore' }
+    );
+    const releaserExit = new Promise<void>((resolve) => releaser.once('close', () => resolve()));
+
+    try {
+      const result = appendEvidenceWithResult(root, {
+        taskId: task.id,
+        kind: 'command-log',
+        summary: 'Append waited for held lock',
+        result: 'passed',
+        visibility: 'public'
+      });
+
+      expect(result.appendLock).toMatchObject({
+        path: `.hadara/local/locks/evidence/${task.id}.lock`,
+        contended: true,
+        timeoutMs: 5000
+      });
+      expect(result.appendLock.waitedMs).toBeGreaterThanOrEqual(25);
+      const persisted = JSON.parse(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8').trim());
+      expect(persisted.appendLock).toBeUndefined();
+    } finally {
+      fs.rmSync(lockDir, { recursive: true, force: true });
+      await releaserExit;
+    }
   });
 
   it('prints add-command help without appending evidence when task is supplied', () => {

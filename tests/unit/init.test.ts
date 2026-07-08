@@ -158,6 +158,7 @@ describe('init profiles', () => {
     expect(workflow).toContain('Use `validation run` for ordinary validation');
     expect(workflow).toContain('Add `--update-task` only when you intentionally want the matching `TASK.md` Validation row updated by the CLI.');
     expect(workflow).toContain('Use `evidence add-command` only when recording an already-run result');
+    expect(workflow).toContain('JSON evidence responses include `evidence.appendLock` so lock contention and wait time are visible when it happens.');
     expect(workflow).toContain('| Run and record validation | `hadara validation run --task T-XXXX --check "..." -- <command>` | Executes the command and records evidence without editing `TASK.md` by default. |');
     expect(workflow).toContain('| Run, record, and sync task row | `hadara validation run --task T-XXXX --check "..." --update-task -- <command>` |');
     expect(workflow).toContain('| Record already-run validation | `hadara evidence add-command ... --json` | Append-only evidence writer; does not execute commands. |');

@@ -45,6 +45,7 @@ export function handleValidationCommand(input: ValidationCommandInput): boolean 
     console.log(`childOutput=not printed; stdout/stderr hashes are recorded in HADARA evidence`);
     console.log(`[HADARA] evidence`);
     if (report.evidence) console.log(`id=${report.evidence.id}`);
+    if (report.evidence?.appendLock.contended) console.log(`appendLock=waited ${report.evidence.appendLock.waitedMs}ms at ${report.evidence.appendLock.path}`);
     console.log(`result=${report.result}`);
     console.log(`taskValidationRow=${report.taskValidationRow.mode}${report.taskValidationRow.updated ? ' updated' : ' not-updated'}`);
     console.log(`acceptanceRows=not-updated`);
