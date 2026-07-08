@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0519 0.4.1 stable post-publish evidence sync |
-| Active Task | Stable `hadara@0.4.1` is published to npm and GitHub Release `v0.4.1` is public. Next release-line work is installed-package recycle for `hadara@latest` expected `0.4.1`. |
+| Latest Completed Task | T-0520 0.4.1 stable installed package recycle |
+| Active Task | Stable `hadara@0.4.1` release line is complete: npm publish, GitHub Release `v0.4.1`, and installed-package recycle for `hadara@latest` expected `0.4.1` are verified. |
+
+T-0520 follow-up note: stable installed-package recycle passed for `hadara@latest` expected `0.4.1`. The approved network execution verified registry version `0.4.1`, dist-tags `latest=0.4.1` and `next=0.4.1-rc.0`, isolated registry install, installed CLI `packageVersion=0.4.1`, installed command surface with 73 command ids, lifecycle help, fresh init, task create/status, session start, finalize dry-run, context pack, context slice, and cleanup. The first sandboxed execute attempt failed after child npm registry lookups timed out around 70s each; direct `npm view` and the approved rerun passed, so it is classified as environment child-process/network friction. Evidence: `ev:T-0520:2b4b928b65344d03ad44a53d`, `ev:T-0520:705485eda380456583f41294`.
 
 T-0519 follow-up note: the operator completed npm publish for `hadara@0.4.1` and published GitHub Release `v0.4.1`. Workspace verification confirmed `npm view hadara@0.4.1 version` returns `0.4.1`, npm dist-tags are `latest=0.4.1` and `next=0.4.1-rc.0`, and GitHub Release `v0.4.1` is public with `isDraft=false`, `isPrerelease=false`, target `682af904cc2e74dab90f10b8b037fa685eb9cf72`, URL `https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.1`. Evidence: `ev:T-0519:1aaf3a7a96f548c6accae710`, `ev:T-0519:0e29abe05a824a629936af35`, `ev:T-0519:ab35e58cb8dd4809a97242b6`.
 
