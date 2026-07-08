@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0518 manual publish script timeout test expectation update |
-| Active Task | Stable `hadara@0.4.1` source/readiness is prepared, the publish helper package-smoke timeout is fixed to 300s, and the helper test expectation now matches that contract. Next release-line work is approval-gated npm publish from a fresh clean ext4 clone, public GitHub Release `v0.4.1`, then installed-package recycle for `hadara@latest` expected `0.4.1`. |
+| Latest Completed Task | T-0519 0.4.1 stable post-publish evidence sync |
+| Active Task | Stable `hadara@0.4.1` is published to npm and GitHub Release `v0.4.1` is public. Next release-line work is installed-package recycle for `hadara@latest` expected `0.4.1`. |
+
+T-0519 follow-up note: the operator completed npm publish for `hadara@0.4.1` and published GitHub Release `v0.4.1`. Workspace verification confirmed `npm view hadara@0.4.1 version` returns `0.4.1`, npm dist-tags are `latest=0.4.1` and `next=0.4.1-rc.0`, and GitHub Release `v0.4.1` is public with `isDraft=false`, `isPrerelease=false`, target `682af904cc2e74dab90f10b8b037fa685eb9cf72`, URL `https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.1`. Evidence: `ev:T-0519:1aaf3a7a96f548c6accae710`, `ev:T-0519:0e29abe05a824a629936af35`, `ev:T-0519:ab35e58cb8dd4809a97242b6`.
 
 T-0518 follow-up note: the manual publish helper unit test expectation is updated for T-0517's timeout contract. The test now asserts `PACKAGE_SMOKE_TIMEOUT="${PACKAGE_SMOKE_TIMEOUT:-300}"`, helper help text, timeout logging, and `run_hadara smoke package --execute --attach-evidence --task "${TASK_ID}" --timeout "${PACKAGE_SMOKE_TIMEOUT}" --json`. Direct `bash -n` and timeout wiring checks passed. Local focused Vitest remains blocked by this tool environment's `execFileSync('bash') EPERM`; this is recorded and resolved by direct checks. Evidence: `ev:T-0518:117c66c7a27d47458cddff7a`, `ev:T-0518:015ca50115d84a83ae2e130a`, `ev:T-0518:8270c73684da4874bbe64571`.
 
