@@ -99,16 +99,24 @@ describe('FD-013 removed lifecycle surface', () => {
     expect(['not-closed', 'closed-valid', 'closed-stale', 'closed-invalid', 'unknown']).toContain(workbench.state.closeState);
   });
 
-  it('recovers a partially executed finalize run by rerunning finalize alone (rc0 item 6 AC-2)', () => {
+  it('prevents partial finalize writes and closes after rerunning finalize alone (rc0 item 6 AC-2)', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Recovery fixture');
     completeRecoveryFixture(root, task.id, task.dir);
-    // First auto run executes finish (write) then blocks at ready because the
+    // First auto run preflights ready blockers before finish writes because the
     // handoff is still a scaffold placeholder.
     const first = createTaskFinalizeReport(root, task.id, { executeRequested: true, auto: true });
     expect(first.ok).toBe(false);
-    expect(first.execution?.executedSteps.map((step) => step.id)).toContain('finish');
-    expect(first.execution?.stoppedAt).toBe('ready');
+    expect(first.mode).toBe('dry-run');
+    expect(first.execution).toBeUndefined();
+    expect(first.pendingWrites).toEqual([]);
+    expect(first.steps).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'finish', status: 'pending', writeBoundary: 'read-only' }),
+        expect.objectContaining({ id: 'ready', status: 'blocked' })
+      ])
+    );
+    expect(fs.readFileSync(path.join(task.dir, 'TASK.md'), 'utf8')).toContain('| Status | In Progress |');
 
     // Repair the blocker, then a single finalize rerun must reach closed-valid
     // with no standalone low-level command involved.
@@ -129,8 +137,8 @@ function completeRecoveryFixture(root: string, taskId: string, taskDir: string):
     fs
       .readFileSync(path.join(taskDir, 'TASK.md'), 'utf8')
       // Status intentionally stays pre-Done: the finalize finish step owns
-      // the Done flip, so done-level handoff blockers only surface at the
-      // ready step after finish has already written (the AC-2 partial state).
+      // the Done flip, and auto preflight must surface non-finish blockers
+      // before any finish write creates a partial state.
       .replace(/\| Status \| Draft \|/g, '| Status | In Progress |')
       .replace('| Created | TBD |', '| Created | 2026-07-06 |')
       .replace('| Updated | TBD |', '| Updated | 2026-07-06 |')

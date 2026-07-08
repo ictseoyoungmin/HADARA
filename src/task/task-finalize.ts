@@ -14,6 +14,8 @@ export type TaskFinalizeMode = 'dry-run' | 'execute' | 'execute-refused';
 // defined to resolve (TASK.md/Task Board status cells). --auto treats these
 // as executable-through, matching the manual dry-run -> execute pattern.
 const FINISH_RESOLVABLE_BLOCKER_CODES = new Set([
+  'HARNESS_TASK_STATUS_NOT_DONE',
+  'HARNESS_TASK_STATUS_HISTORY_NOT_DONE',
   'HARNESS_TASK_BOARD_STATUS_NOT_DONE',
   'HARNESS_TASK_BOARD_CAPSULE_MISMATCH'
 ]);
@@ -185,6 +187,9 @@ function executeAutoFinalize(
   // the manual flow executes through them, so --auto must not refuse on
   // them while a required finish step is part of the reviewed plan.
   const finishRequired = review.steps.some((step) => step.id === 'finish' && step.status === 'required');
+  const preflightBlockers = finishRequired ? createAutoFinalizePreflightBlockers(projectRoot, taskId, actor) : [];
+  if (preflightBlockers.length > 0) return createAutoPreflightBlockedReport(taskId, review, preflightBlockers);
+
   const unresolvedBlockers = review.blockingIssues.filter(
     (issue) => !(finishRequired && FINISH_RESOLVABLE_BLOCKER_CODES.has(issue.code))
   );
@@ -201,6 +206,79 @@ function executeAutoFinalize(
     actor,
     onProgress: options.onProgress
   });
+}
+
+function createAutoFinalizePreflightBlockers(projectRoot: string, taskId: string, actor: HadaraActorContext): TaskFinalizeIssue[] {
+  const closePlan = createTaskCloseReport(projectRoot, taskId, 'dry-run', { actor });
+  return closePlan.issues
+    .filter((issue) => issue.severity === 'error' && !FINISH_RESOLVABLE_BLOCKER_CODES.has(issue.code))
+    .map((issue) => ({
+      severity: issue.severity,
+      code: issue.code,
+      message: issue.message,
+      ...(issue.path ? { path: issue.path } : {}),
+      ...(issue.fixHint ? { fixHint: issue.fixHint } : {}),
+      ...(issue.example ? { example: issue.example } : {})
+    }));
+}
+
+function createAutoPreflightBlockedReport(taskId: string, review: TaskFinalizeReport, preflightBlockers: TaskFinalizeIssue[]): TaskFinalizeReport {
+  const mergedIssues = mergeFinalizeIssues(
+    review.issues.filter((issue) => issue.code !== 'TASK_FINALIZE_DEFERRED_CHECKS' && !FINISH_RESOLVABLE_BLOCKER_CODES.has(issue.code)),
+    preflightBlockers
+  );
+  const steps = review.steps.map((step): TaskFinalizeStep => {
+    if (step.id === 'finish' && step.status === 'required') {
+      return {
+        ...step,
+        status: 'pending',
+        summary: 'Finish waits for preflight blockers to be resolved.',
+        command: `hadara task status --task ${taskId} --detail full --json`,
+        mode: 'read-only',
+        writeBoundary: 'read-only',
+        expectedWritePaths: []
+      };
+    }
+    if (step.id === 'ready' && step.status === 'pending') {
+      return {
+        ...step,
+        status: 'blocked',
+        summary: 'Resolve done-level preflight blockers before finish writes.',
+        command: `hadara task status --task ${taskId} --detail full --json`
+      };
+    }
+    return step;
+  });
+  const nextAction = createPrimaryNextAction(taskId, steps, mergedIssues, review.planHash);
+  const blockedReport: TaskFinalizeReport = {
+    ...review,
+    ok: false,
+    state: 'blocked',
+    planStatus: 'blocked',
+    blockingIssues: finalizeBlockingIssues(mergedIssues),
+    deferredChecks: [],
+    partialExecutionRisk: false,
+    pendingWrites: [],
+    summary: summarizeSteps(steps),
+    steps,
+    issues: mergedIssues,
+    nextActions: nextAction ? [nextAction] : []
+  };
+  delete blockedReport.primaryNextAction;
+  if (nextAction) blockedReport.primaryNextAction = nextAction;
+  return blockedReport;
+}
+
+function mergeFinalizeIssues(first: TaskFinalizeIssue[], second: TaskFinalizeIssue[]): TaskFinalizeIssue[] {
+  const seen = new Set<string>();
+  const merged: TaskFinalizeIssue[] = [];
+  for (const issue of [...first, ...second]) {
+    const key = `${issue.severity}:${issue.code}:${issue.path ?? ''}:${issue.message}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(issue);
+  }
+  return merged;
 }
 
 export function formatTaskFinalizeReport(report: TaskFinalizeReport): string {
