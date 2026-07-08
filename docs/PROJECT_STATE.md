@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0525 repair status current recommendation and docker dist validation |
-| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction is continuing; T-0525 repaired top-level status current-work recommendation and restored Docker/dist validation discipline after T-0524. |
+| Latest Completed Task | T-0526 make status expected docs profile aware |
+| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction is continuing; T-0526 made top-level status missing-doc warnings profile/registry-aware so normal basic/standard projects are not degraded for absent governed/HADARA-dev-only docs. |
+
+T-0526 follow-up note: top-level `hadara status --json` now determines expected source documents from `.hadara/docs-registry.json`, `.hadara/scaffold.json`, and `docs/PROJECT_STATE.md` profile metadata. Basic/standard projects no longer receive `AGENT_HANDOFF_MISSING`, `DEVELOPMENT_SLICES_MISSING`, or validation-baseline degradation merely because those profile-optional docs are absent, while governed projects and docs-registry-explicit entries still warn when expected docs are missing. Focused status tests passed 17 tests, TypeScript build passed, Docker `dev:docker-sync-build` passed full Vitest 155 files / 1047 tests, refreshed workspace `dist`, and built `status --summary-json` smoke returned `health:"ok"`. Evidence: `ev:T-0526:78ff387430f3462ea3c8c919`, `ev:T-0526:80cd4a6dfba041e0b622b0a5`.
 
 T-0525 follow-up note: top-level `hadara status` now prefers current Task Board work before falling back to shared handoff prose: `In Progress`, then `Draft`, then handoff next-step, and only then `Partial` when no handoff recommendation exists. This prevents stale handoff release guidance from overriding live capsules while also preventing old partial rows from overriding current handoff guidance. T-0525 also corrected the T-0524 validation gap by running the HADARA-dev Docker workflow: `npm run dev:docker-sync-build -- --smoke-command "status --summary-json"` passed `npm ci`, TypeScript build, full Vitest 155 files / 1045 tests, refreshed workspace `dist` from Docker build output, and the Docker-built CLI smoke recommended command portfolio reduction handoff instead of stale release guidance or old Partial T-0006. Evidence: `ev:T-0525:b8caed6d249e4120bea191ca`.
 

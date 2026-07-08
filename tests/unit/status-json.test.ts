@@ -166,6 +166,47 @@ describe('Operations Status JSON', () => {
     ]);
   });
 
+  it('does not require governed-only handoff docs for basic profile status', () => {
+    const root = tempProject();
+    writeProfileProjectDocs(root, 'basic');
+
+    const report = createOpsStatusReport(root, { includeDebt: false, taskStatusSource: 'task-board' });
+
+    expect(report.health).toBe('ok');
+    expect(report.handoff.currentState).toEqual([]);
+    expect(report.validation).toEqual({
+      latestFullCheck: null,
+      latestDoneLevelValidation: null
+    });
+    expect(report.issues).toEqual([]);
+  });
+
+  it('requires AGENT_HANDOFF only when the profile or registry expects it', () => {
+    const governed = tempProject();
+    writeProfileProjectDocs(governed, 'governed');
+
+    const governedReport = createOpsStatusReport(governed, { includeDebt: false, taskStatusSource: 'task-board' });
+
+    expect(governedReport.health).toBe('degraded');
+    expect(governedReport.issues).toContainEqual({
+      severity: 'warning',
+      code: 'AGENT_HANDOFF_MISSING',
+      message: 'docs/AGENT_HANDOFF.md is missing.'
+    });
+    expect(governedReport.issues).not.toContainEqual(expect.objectContaining({ code: 'DEVELOPMENT_SLICES_MISSING' }));
+
+    const standardWithRegisteredHandoff = tempProject();
+    writeProfileProjectDocs(standardWithRegisteredHandoff, 'standard', ['docs/AGENT_HANDOFF.md']);
+
+    const registeredReport = createOpsStatusReport(standardWithRegisteredHandoff, { includeDebt: false, taskStatusSource: 'task-board' });
+
+    expect(registeredReport.issues).toContainEqual({
+      severity: 'warning',
+      code: 'AGENT_HANDOFF_MISSING',
+      message: 'docs/AGENT_HANDOFF.md is missing.'
+    });
+  });
+
   it('degrades instead of failing when active run local state is malformed', () => {
     const root = tempProject();
     writeProjectDocs(root);
@@ -599,6 +640,48 @@ Phase 0 / Phase 1 boundary.
   );
   fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
   fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), '# DEVELOPMENT_SLICES\n', 'utf8');
+}
+
+function writeProfileProjectDocs(root: string, profile: 'basic' | 'standard' | 'governed', extraRegisteredDocs: string[] = []): void {
+  fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
+  fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, '.hadara', 'scaffold.json'),
+    `${JSON.stringify({ schemaVersion: 'hadara.scaffold.v1', hadaraProtocol: '0.4', profile }, null, 2)}\n`,
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(root, '.hadara', 'docs-registry.json'),
+    `${JSON.stringify({
+      schemaVersion: 'hadara.docsRegistry.v2',
+      registryVersion: 1,
+      projectProfile: profile,
+      documents: [
+        { path: 'docs/PROJECT_STATE.md', status: 'canonical' },
+        { path: 'docs/TASK_BOARD.md', status: 'canonical' },
+        ...extraRegisteredDocs.map((docPath) => ({ path: docPath, status: 'canonical' }))
+      ]
+    }, null, 2)}\n`,
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(root, 'docs', 'PROJECT_STATE.md'),
+    [
+      '# PROJECT_STATE',
+      '',
+      '## Metadata',
+      '',
+      '| Field | Value |',
+      '|---|---|',
+      `| HADARA Profile | ${profile} |`,
+      '',
+      '## Current Phase',
+      '',
+      'Phase: initialized'
+    ].join('\n'),
+    'utf8'
+  );
+  fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n', 'utf8');
 }
 
 function writeGitBranch(root: string, branch: string): void {

@@ -115,14 +115,14 @@ Example:
 - Default fast status counts tasks from `docs/TASK_BOARD.md`. Full-detail status counts from Task Capsule metadata.
 - `tasks.rawStatusCounts` preserves original source status labels for diagnostics.
 - `tasks.normalizedStatusCounts` preserves normalized source status values for programmatic diagnostics.
-- `tasks.lastCompleted` is derived from `docs/AGENT_HANDOFF.md`.
+- `tasks.lastCompleted` is derived from `docs/AGENT_HANDOFF.md` when that document exists.
 - `tasks.nextRecommended` prefers current Task Board work in this order: `In Progress`, then `Draft`. It then falls back to the handoff next-step section. `Partial` rows are used only when no handoff recommendation exists, because old partial rows can represent historical residual work rather than the next active capsule.
-- `handoff.*` arrays are compact excerpts from `docs/AGENT_HANDOFF.md`; default fast status omits `knownProblems`, while full-detail status includes it.
-- `validation.*` fields are compact latest validation summaries from `docs/AGENT_HANDOFF.md`, falling back to `docs/VALIDATION_HISTORY.md` when needed.
+- `handoff.*` arrays are compact excerpts from `docs/AGENT_HANDOFF.md` when that document exists; default fast status omits `knownProblems`, while full-detail status includes it.
+- `validation.*` fields are compact latest validation summaries from `docs/AGENT_HANDOFF.md`, falling back to `docs/VALIDATION_HISTORY.md` when needed. Projects whose init profile does not generate those docs do not receive a missing-baseline warning until a validation source is present or registered.
 - `activeRun` is a read projection of `.hadara/local/state/active-run.json`; it is local project state and must not imply queues, worker lanes, or concurrent multi-agent execution.
 - `activeRun.handoff.fresh` is false when an active run exists but `docs/AGENT_HANDOFF.md` does not mention the active task id.
 - `mcp.evidenceAttach` documents configured operational guard state. It is not live MCP server process inspection.
-- `issues` may include warnings when source documents are missing or validation baseline details are unavailable. Warning-only reports keep `ok: true` and set `health: "degraded"` so dashboards can render degraded snapshots.
+- `issues` may include warnings when expected source documents are missing or validation baseline details are unavailable. Expected documents are profile/registry-aware: `docs/AGENT_HANDOFF.md` is required for governed and HADARA-dev projects, or when the docs registry explicitly lists it; `docs/DEVELOPMENT_SLICES.md` is required only when the project registry/profile expects it. Warning-only reports keep `ok: true` and set `health: "degraded"` so dashboards can render degraded snapshots.
 - Future evidence/debt/dashboard read models should follow the T-0070 robustness rule: local mutable state or malformed optional indexes should degrade with structured warnings instead of crashing the whole read report.
 
 ## Summary and State-Only Variants
@@ -155,10 +155,10 @@ Use `--state-issue-limit <n>` with `--state-only` or `--detail full` when a cons
 | Code | Meaning |
 |---|---|
 | `PROJECT_STATE_MISSING` | `docs/PROJECT_STATE.md` was not found. |
-| `AGENT_HANDOFF_MISSING` | `docs/AGENT_HANDOFF.md` was not found. |
+| `AGENT_HANDOFF_MISSING` | `docs/AGENT_HANDOFF.md` was expected by the project profile or docs registry but was not found. |
 | `TASK_BOARD_MISSING` | `docs/TASK_BOARD.md` was not found. |
-| `DEVELOPMENT_SLICES_MISSING` | `docs/DEVELOPMENT_SLICES.md` was not found. |
-| `VALIDATION_BASELINE_MISSING` | No latest validation baseline was found in handoff or validation history. |
+| `DEVELOPMENT_SLICES_MISSING` | `docs/DEVELOPMENT_SLICES.md` was expected by the project profile or docs registry but was not found. |
+| `VALIDATION_BASELINE_MISSING` | No latest validation baseline was found even though a validation source was present or expected. |
 
 ## MCP Runtime Boundary
 

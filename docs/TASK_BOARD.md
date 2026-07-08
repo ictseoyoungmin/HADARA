@@ -526,3 +526,4 @@
 | T-0523 | remove state verify public command | Done | tasks/T-0523-remove-state-verify-public-command | Removed public `state.verify`; replacements are `status` and `protocol doctor`. |
 | T-0524 | speed up status json default | Done | tasks/T-0524-speed-up-status-json-default | Default `status --json` now skips broad scans; explicit full/summary/state-only variants preserve heavier diagnostics. |
 | T-0525 | repair status current recommendation and docker dist validation | Done | tasks/T-0525-repair-status-current-recommendation-and-docker-dist-validation | Status now recommends current Task Board work before stale handoff prose; Docker sync-build refreshed `dist`. |
+| T-0526 | make status expected docs profile aware | Done | tasks/T-0526-make-status-expected-docs-profile-aware | Status missing-doc warnings now follow profile/docs-registry expectations; Docker sync-build refreshed `dist`. |

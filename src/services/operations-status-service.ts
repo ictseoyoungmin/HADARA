@@ -121,12 +121,13 @@ export function createOpsStatusReport(projectRoot: string, options: OpsStatusOpt
     nextRecommendedStep: truncateList(extractHandoffSectionValues(sources.handoff.content, '## Next Recommended Step'), options.maxTextLength)
   };
   const validation = extractValidationBaselineSummary(sources.handoff.content, sources.validationHistory.content);
+  const expectedSources = determineExpectedStatusSources(projectRoot, sources);
   const activeRun = safeCreateActiveRunProjection(projectRoot);
   const debtAggregate = includeDebt ? createOperationalDebtReport(projectRoot).aggregate : EMPTY_DEBT_AGGREGATE;
   const stateConsistency = options.includeStateConsistency
     ? toStateProjectionAdvisory(createStateProjectionReport(projectRoot), options.stateIssueLimit ?? 10)
     : undefined;
-  const issues = [...collectIssues(sources, validation), ...activeRun.issues];
+  const issues = [...collectIssues(sources, validation, expectedSources), ...activeRun.issues];
   const nextRecommended = selectNextRecommendedTask(recommendationRows, handoffSections.nextRecommendedStep[0] ?? null);
 
   return {
@@ -371,17 +372,124 @@ function extractLastCompletedTaskIds(handoff: string): string[] {
 
 function collectIssues(
   sources: ProjectReadSources,
-  validation: OpsStatusReport['validation']
+  validation: OpsStatusReport['validation'],
+  expected: ExpectedStatusSources
 ): OpsStatusReport['issues'] {
   const issues: OpsStatusReport['issues'] = [];
-  if (!sources.projectState.exists) issues.push(warning('PROJECT_STATE_MISSING', 'docs/PROJECT_STATE.md is missing.'));
-  if (!sources.handoff.exists) issues.push(warning('AGENT_HANDOFF_MISSING', 'docs/AGENT_HANDOFF.md is missing.'));
-  if (!sources.taskBoard.exists) issues.push(warning('TASK_BOARD_MISSING', 'docs/TASK_BOARD.md is missing.'));
-  if (!sources.developmentSlices.exists) issues.push(warning('DEVELOPMENT_SLICES_MISSING', 'docs/DEVELOPMENT_SLICES.md is missing.'));
-  if (!validation.latestFullCheck && !validation.latestDoneLevelValidation) {
+  if (expected.projectState && !sources.projectState.exists) issues.push(warning('PROJECT_STATE_MISSING', 'docs/PROJECT_STATE.md is missing.'));
+  if (expected.handoff && !sources.handoff.exists) issues.push(warning('AGENT_HANDOFF_MISSING', 'docs/AGENT_HANDOFF.md is missing.'));
+  if (expected.taskBoard && !sources.taskBoard.exists) issues.push(warning('TASK_BOARD_MISSING', 'docs/TASK_BOARD.md is missing.'));
+  if (expected.developmentSlices && !sources.developmentSlices.exists) issues.push(warning('DEVELOPMENT_SLICES_MISSING', 'docs/DEVELOPMENT_SLICES.md is missing.'));
+  if (expected.validationBaseline && !validation.latestFullCheck && !validation.latestDoneLevelValidation) {
     issues.push(warning('VALIDATION_BASELINE_MISSING', 'No latest validation baseline was found in handoff or validation history.'));
   }
   return issues;
+}
+
+type StatusProjectProfile = 'basic' | 'standard' | 'governed' | 'hadara-dev' | 'unknown';
+
+interface StatusSourceMetadata {
+  profile: StatusProjectProfile;
+  registeredActiveDocs: Set<string>;
+  hasScaffold: boolean;
+  hasRegistry: boolean;
+}
+
+interface ExpectedStatusSources {
+  projectState: boolean;
+  handoff: boolean;
+  taskBoard: boolean;
+  developmentSlices: boolean;
+  validationBaseline: boolean;
+}
+
+function determineExpectedStatusSources(projectRoot: string, sources: ProjectReadSources): ExpectedStatusSources {
+  const metadata = readStatusSourceMetadata(projectRoot, sources);
+  const hasAnyStatusContext = metadata.hasScaffold ||
+    metadata.hasRegistry ||
+    sources.projectState.exists ||
+    sources.handoff.exists ||
+    sources.taskBoard.exists ||
+    sources.developmentSlices.exists ||
+    sources.validationHistory.exists;
+  if (!hasAnyStatusContext) {
+    return {
+      projectState: true,
+      handoff: true,
+      taskBoard: true,
+      developmentSlices: true,
+      validationBaseline: true
+    };
+  }
+
+  const registered = metadata.registeredActiveDocs;
+  const handoffExpected = metadata.profile === 'governed' ||
+    metadata.profile === 'hadara-dev' ||
+    registered.has('docs/AGENT_HANDOFF.md');
+  const developmentSlicesExpected = metadata.profile === 'hadara-dev' ||
+    registered.has('docs/DEVELOPMENT_SLICES.md');
+  const validationBaselineExpected = handoffExpected ||
+    sources.handoff.exists ||
+    sources.validationHistory.exists ||
+    registered.has('docs/VALIDATION_HISTORY.md');
+
+  return {
+    projectState: true,
+    handoff: handoffExpected,
+    taskBoard: true,
+    developmentSlices: developmentSlicesExpected,
+    validationBaseline: validationBaselineExpected
+  };
+}
+
+function readStatusSourceMetadata(projectRoot: string, sources: ProjectReadSources): StatusSourceMetadata {
+  const registryPath = path.join(projectRoot, '.hadara', 'docs-registry.json');
+  const scaffoldPath = path.join(projectRoot, '.hadara', 'scaffold.json');
+  const registry = readJsonObject(registryPath);
+  const scaffold = readJsonObject(scaffoldPath);
+  const profile = normalizeStatusProjectProfile(registry?.projectProfile) ??
+    normalizeStatusProjectProfile(scaffold?.profile) ??
+    readProjectStateProfile(sources.projectState.content) ??
+    'unknown';
+  return {
+    profile,
+    registeredActiveDocs: readRegisteredActiveDocs(registry),
+    hasScaffold: fs.existsSync(scaffoldPath),
+    hasRegistry: fs.existsSync(registryPath)
+  };
+}
+
+function readJsonObject(filePath: string): Record<string, unknown> | null {
+  if (!fs.existsSync(filePath)) return null;
+  try {
+    const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8')) as unknown;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, unknown> : null;
+  } catch {
+    return null;
+  }
+}
+
+function readRegisteredActiveDocs(registry: Record<string, unknown> | null): Set<string> {
+  const paths = new Set<string>();
+  if (!registry || !Array.isArray(registry.documents)) return paths;
+  for (const rawDoc of registry.documents) {
+    if (!rawDoc || typeof rawDoc !== 'object' || Array.isArray(rawDoc)) continue;
+    const doc = rawDoc as Record<string, unknown>;
+    if (typeof doc.path !== 'string') continue;
+    if (doc.status === 'historical' || doc.status === 'superseded' || doc.status === 'archived') continue;
+    paths.add(doc.path);
+  }
+  return paths;
+}
+
+function readProjectStateProfile(projectState: string): StatusProjectProfile | null {
+  const value = findMarkdownRowByCell(parseMarkdownRowsUnderHeading(projectState, '## Metadata'), 0, 'HADARA Profile')?.[1]?.trim();
+  return normalizeStatusProjectProfile(value);
+}
+
+function normalizeStatusProjectProfile(value: unknown): StatusProjectProfile | null {
+  if (value === 'basic' || value === 'standard' || value === 'governed' || value === 'hadara-dev') return value;
+  return null;
 }
 
 function warning(code: string, message: string): OpsStatusReport['issues'][number] {
