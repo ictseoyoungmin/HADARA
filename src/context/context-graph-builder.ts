@@ -19,6 +19,7 @@ import {
 } from './context-cache-store';
 import {
   createTaskNodeId,
+  hashContextGraphText,
   mergeGraphExtractionResults,
   summarizeContextGraphExtraction
 } from './extractor-contract';
@@ -44,7 +45,10 @@ export interface BuildContextGraphReportInput {
   cache?: ContextCacheMetadata;
   includeCode?: boolean;
   cacheStrategy?: 'read-only' | 'disabled';
+  codeStrategy?: ContextCodeStrategy;
 }
+
+export type ContextCodeStrategy = 'live-fallback' | 'fresh-cache-only';
 
 interface CollectContextGraphExtractionsResult {
   extractionResults: GraphExtractionResult[];
@@ -83,7 +87,7 @@ export function collectContextGraphExtractions(projectRoot: string, options: { i
 
 export function collectContextGraphExtractionsWithCache(
   projectRoot: string,
-  options: { includeCode?: boolean; generatedAt?: string; cacheStrategy?: 'read-only' | 'disabled' } = {}
+  options: { includeCode?: boolean; generatedAt?: string; cacheStrategy?: 'read-only' | 'disabled'; codeStrategy?: ContextCodeStrategy } = {}
 ): CollectContextGraphExtractionsResult {
   if (options.cacheStrategy === 'disabled') {
     return {
@@ -104,7 +108,8 @@ export function collectContextGraphExtractionsWithCache(
     const code = options.includeCode
       ? collectCodeGraphExtractionWithCache(projectRoot, {
         manifest: analysis.currentManifest,
-        generatedAt
+        generatedAt,
+        strategy: options.codeStrategy ?? 'live-fallback'
       })
       : undefined;
     if (code) results.push(code.result);
@@ -147,7 +152,8 @@ export function collectContextGraphExtractionsWithCache(
   const code = options.includeCode
     ? collectCodeGraphExtractionWithCache(projectRoot, {
       manifest: analysis.currentManifest,
-      generatedAt
+      generatedAt,
+      strategy: options.codeStrategy ?? 'live-fallback'
     })
     : undefined;
   if (code) results.push(code.result);
@@ -165,7 +171,7 @@ export function collectContextGraphExtractionsWithCache(
 
 function collectCodeGraphExtractionWithCache(
   projectRoot: string,
-  input: { manifest: Parameters<typeof readContextCodeIndexShard>[0]['manifest']; generatedAt: string }
+  input: { manifest: Parameters<typeof readContextCodeIndexShard>[0]['manifest']; generatedAt: string; strategy: ContextCodeStrategy }
 ): CodeGraphExtractionWithCache {
   const read = readContextCodeIndexShard({ projectRoot, manifest: input.manifest });
   if (read.hit && read.result) {
@@ -189,6 +195,26 @@ function collectCodeGraphExtractionWithCache(
     };
   }
 
+  if (input.strategy === 'fresh-cache-only') {
+    return {
+      result: emptyCodeGraphExtractionResult(read.path),
+      cache: {
+        used: true,
+        hit: false,
+        mode: `graph-core+code-index-${read.status}`,
+        manifestHash: input.manifest.manifestHash,
+        readShardCount: 1,
+        hitShardCount: 0,
+        missShardCount: read.status === 'missing' ? 1 : 0,
+        staleShardCount: read.status === 'stale' ? 1 : 0,
+        corruptShardCount: read.status === 'corrupt' ? 1 : 0,
+        schemaMismatchShardCount: read.status === 'schema-mismatch' ? 1 : 0,
+        shardPaths: [read.path],
+        staleExtractorKeys: read.status === 'stale' ? ['codeIndex'] : []
+      }
+    };
+  }
+
   return {
     result: extractCodeIndexGraph(projectRoot, input.generatedAt),
     cache: {
@@ -208,13 +234,31 @@ function collectCodeGraphExtractionWithCache(
   };
 }
 
+function emptyCodeGraphExtractionResult(shardPath: string): GraphExtractionResult {
+  return {
+    source: {
+      extractor: 'extractCodeIndexGraph',
+      paths: [shardPath],
+      sourceHash: hashContextGraphText(`code-index-unavailable:${shardPath}`)
+    },
+    nodes: [],
+    edges: [],
+    stateSources: [],
+    issues: []
+  };
+}
+
 function mergeCodeCacheMetadata(base: ContextCacheMetadata, code?: ContextCacheMetadata): ContextCacheMetadata {
   if (!code) return base;
   return {
     ...base,
     used: base.used || code.used,
     hit: base.hit || code.hit,
-    mode: code.hit ? 'extractor-shards+code-index' : 'extractor-shards+live-code',
+    mode: code.hit
+      ? 'extractor-shards+code-index'
+      : code.mode?.startsWith('graph-core+code-index-')
+        ? code.mode.replace('graph-core', 'extractor-shards')
+        : 'extractor-shards+live-code',
     readShardCount: (base.readShardCount ?? 0) + (code.readShardCount ?? 0),
     hitShardCount: (base.hitShardCount ?? 0) + (code.hitShardCount ?? 0),
     missShardCount: (base.missShardCount ?? 0) + (code.missShardCount ?? 0),
@@ -233,7 +277,8 @@ export function buildContextGraphReport(input: BuildContextGraphReportInput): Co
   const collected = input.extractionResults ? undefined : collectContextGraphExtractionsWithCache(input.projectRoot, {
     includeCode: input.includeCode,
     generatedAt,
-    cacheStrategy: input.cacheStrategy
+    cacheStrategy: input.cacheStrategy,
+    codeStrategy: input.codeStrategy
   });
   const extractionResults = input.extractionResults ?? collected?.extractionResults ?? [];
   const merged = mergeGraphExtractionResults(extractionResults);

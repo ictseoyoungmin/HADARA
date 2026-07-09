@@ -39,7 +39,7 @@ function handleContextGraphCommand(input: ContextCommandInput): boolean {
 
 function handleContextPackCommand(input: ContextCommandInput): boolean {
   const taskId = getStringOption(input.args, '--task');
-  const includeCode = getFlag(input.args, '--include-code');
+  const includeCode = input.args.includes('--include-code') ? true : undefined;
   const live = getFlag(input.args, '--live');
   const budget = contextPackBudgetFromArgs(input.args);
   const report = !taskId && !live
@@ -49,7 +49,7 @@ function handleContextPackCommand(input: ContextCommandInput): boolean {
     })
     : buildContextPackReport({
       projectRoot: input.projectRoot,
-      includeCode,
+      ...(includeCode !== undefined ? { includeCode } : {}),
       ...(taskId ? { taskId } : {}),
       ...(Object.keys(budget).length > 0 ? { budget } : {})
     });

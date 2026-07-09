@@ -553,3 +553,4 @@
 | T-0550 | Implement current-state projection cleanup | Done | tasks/T-0550-implement-current-state-projection-cleanup | |
 | T-0551 | Implement known-problem and handoff extraction cleanup | Done | tasks/T-0551-implement-known-problem-and-handoff-extraction-cleanup | |
 | T-0552 | Implement cache and extractor freshness cleanup | Done | tasks/T-0552-implement-cache-and-extractor-freshness-cleanup | |
+| T-0553 | Implement code-index and docs registry routing cleanup | Done | tasks/T-0553-implement-code-index-and-docs-registry-routing-cleanup | |

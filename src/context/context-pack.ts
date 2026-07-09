@@ -239,10 +239,12 @@ export function buildTaskRequiredContextPackReport(input: BuildTaskRequiredConte
 export function buildContextPackReport(input: BuildContextPackReportOptions): ContextPackReport {
   const generatedAt = input.generatedAt ?? new Date().toISOString();
   const budget = normalizeContextBudget(input.budget);
+  const includeCode = input.includeCode ?? true;
   const graphReport = input.graphReport ?? buildContextGraphReport({
     projectRoot: input.projectRoot,
     generatedAt,
-    includeCode: input.includeCode,
+    includeCode,
+    codeStrategy: input.includeCode ? 'live-fallback' : 'fresh-cache-only',
     ...(input.taskId ? { taskId: input.taskId, mode: 'task' } : { mode: 'full' })
   });
   const taskId = input.taskId ?? graphReport.taskId ?? graphReport.stateProjection.summary.activeTask;
@@ -279,7 +281,7 @@ export function buildContextPackReport(input: BuildContextPackReportOptions): Co
       severity: 'warning',
       code: 'CONTEXT_PACK_CODE_INDEX_UNAVAILABLE',
       message: 'Code-aware context pack was requested, but code index output is unavailable.',
-      fixHint: 'Build the graph with includeCode enabled after C2 code index support is available.'
+      fixHint: 'Run hadara context cache warm --execute --json to refresh the code-index shard, or use hadara context graph --include-code --json when explicit live code extraction is acceptable.'
     });
   }
 

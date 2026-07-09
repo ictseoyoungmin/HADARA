@@ -247,6 +247,43 @@ describe('context graph builder', () => {
       fs.rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it('keeps fresh-cache-only code extraction bounded when the code-index shard is stale', () => {
+    const root = createCodeGraphProject();
+    try {
+      createContextCacheWarmReport({
+        projectRoot: root,
+        execute: true,
+        generatedAt
+      });
+      write(root, 'src/context/helper.ts', 'export const helper = 12345;\n');
+
+      const before = snapshotProject(root);
+      const report = buildContextGraphReport({
+        projectRoot: root,
+        generatedAt: '2026-06-18T12:01:00.000Z',
+        includeCode: true,
+        codeStrategy: 'fresh-cache-only'
+      });
+
+      expect(report.cache).toMatchObject({
+        used: true,
+        hit: true,
+        mode: 'graph-core+code-index-stale',
+        readShardCount: 2,
+        hitShardCount: 1,
+        staleShardCount: 1
+      });
+      expect(report.cache.staleExtractorKeys).toContain('codeIndex');
+      expect(report.nodes).not.toEqual(expect.arrayContaining([
+        expect.objectContaining({ id: 'file:src/context/helper.ts', type: 'SourceFile' })
+      ]));
+      assertSchema('hadara.contextGraph.v1', report);
+      expect(snapshotProject(root)).toEqual(before);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 function fixtureExtractionResult(): GraphExtractionResult {

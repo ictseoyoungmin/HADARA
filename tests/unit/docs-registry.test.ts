@@ -300,6 +300,7 @@ describe('Phase 7.3 docs registry', () => {
     fs.writeFileSync(path.join(taskDir, 'CONTEXT.md'), '# Legacy Context\n');
     fs.mkdirSync(path.join(root, 'docs', 'specs'), { recursive: true });
     fs.writeFileSync(path.join(root, 'docs', 'specs', 'read-map-drift.md'), '# Read Map Drift\n');
+    fs.writeFileSync(path.join(root, 'docs', 'specs', 'read-map-drift-reference.md'), '# Read Map Drift Reference\n');
     fs.mkdirSync(path.join(root, 'docs', 'specs', '0.4.0', 'nested'), { recursive: true });
     fs.writeFileSync(path.join(root, 'docs', 'specs', '0.4.0', 'nested', 'unregistered.md'), '# Unregistered\n');
     fs.mkdirSync(path.join(root, 'docs', 'specs', 'temp_plan'), { recursive: true });
@@ -308,6 +309,21 @@ describe('Phase 7.3 docs registry', () => {
     registry.documents.push({
       path: 'docs/specs/read-map-drift.md',
       title: 'Read Map Drift',
+      owner: 'hadara-docs',
+      kind: 'spec',
+      status: 'active',
+      scope: 'project',
+      profiles: ['standard'],
+      readWhen: ['only-when-linked'],
+      requiredReading: false,
+      updateOwner: 'human',
+      updatedByCommands: ['docs.register'],
+      managedSections: [],
+      closeSourceRole: 'task-dependent',
+      supersedes: []
+    }, {
+      path: 'docs/specs/read-map-drift-reference.md',
+      title: 'Read Map Drift Reference',
       owner: 'hadara-docs',
       kind: 'spec',
       status: 'reference',
@@ -337,6 +353,7 @@ describe('Phase 7.3 docs registry', () => {
       'tasks/T-0001-docs-read-map-and-drift/EVIDENCE.md',
       'docs/specs/read-map-drift.md'
     ]));
+    expect(report.readFirst.map((entry) => entry.path)).not.toContain('docs/specs/read-map-drift-reference.md');
     expect(report.readFirst.map((entry) => entry.path)).not.toContain('tasks/T-0001-docs-read-map-and-drift/CONTEXT.md');
     expect(report.readIfNeeded.find((entry) => entry.path === 'tasks/T-0001-docs-read-map-and-drift/CONTEXT.md')).toMatchObject({
       readTier: 'conditional-reference',
@@ -346,6 +363,10 @@ describe('Phase 7.3 docs registry', () => {
       readTier: 'active-spec',
       authority: 'implementation-source',
       editPolicy: 'agent-editable-with-review'
+    });
+    expect(report.readIfNeeded.find((entry) => entry.path === 'docs/specs/read-map-drift-reference.md')).toMatchObject({
+      readTier: 'conditional-reference',
+      authority: 'reference-only'
     });
     expect(report.doNotReadByDefault.find((entry) => entry.path === 'docs/specs/0.4.0/nested/unregistered.md')).toMatchObject({
       readTier: 'excluded',

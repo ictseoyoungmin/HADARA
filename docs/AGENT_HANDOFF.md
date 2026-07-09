@@ -5,15 +5,16 @@
 | Area | State | Notes |
 |---|---|---|
 | Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, and command portfolio reduction/performance/status-profile/init-structure/finalize-UX/legacy-stub/evidence-UX/dead-code/dogfood/fixHint/session-start/dogfood/release-readiness/publish-sync/recycle/toy-dogfood/stable-preflight/stable-source-prep/post-publish/recycle cleanup is complete through T-0547. |
-| Current Phase | 0.4.2 stable release line complete; context pack cleanup sequence in progress | Stable `0.4.2` npm publication, GitHub Release, and installed-package recycle are complete. T-0549 completed no-task context-pack fail-fast cleanup, T-0550 completed current-state projection cleanup, T-0551 completed known-problem/handoff extraction cleanup, and T-0552 completed cache/extractor freshness cleanup. |
-| Latest Completed Task | T-0552 Implement cache and extractor freshness cleanup | `context cache warm --execute --json` now reports post-write cache freshness, and source manifest fast-path recovery handles this environment's usable-stdout `spawnSync git EPERM` case. |
-| Active / Next Task | Code-index and docs registry routing cleanup | Continue the requested order 1 -> 3 -> 4 -> 2 -> 5; item 5 should restore code-index/context routing signal and tighten docs registry routing. |
-| Validation Baseline | T-0552 cache and extractor freshness cleanup | Evidence `ev:T-0552:f32bf15e94a04cc8bf897923`, `ev:T-0552:ec0b91ff9cf741068157ca91`, `ev:T-0552:6c73cf25a3a34fce98a23bf8`. |
+| Current Phase | 0.4.2 stable release line complete; context pack cleanup sequence complete | Stable `0.4.2` npm publication, GitHub Release, and installed-package recycle are complete. T-0549 through T-0553 completed the T-0548 context-pack cleanup sequence. |
+| Latest Completed Task | T-0553 Implement code-index and docs registry routing cleanup | Default task-scoped context pack now uses fresh cached code-index signal without stale/missing live fallback, and docs registry active-spec inference no longer promotes reference specs by token overlap alone. |
+| Active / Next Task | None selected after T-0553 | T-0548's five requested cleanup follow-ups are complete; select the next capsule from fresh dogfood, release planning, or operator priority. |
+| Validation Baseline | T-0553 code-index and docs registry routing cleanup | Evidence `ev:T-0553:9dfcaa17c78d494c84aac8b6`, `ev:T-0553:b990814a52c44d89b38b499f`, `ev:T-0553:06af419d19144bab937b06cb`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| code-index and docs registry routing cleanup | T-0553 makes default task-scoped context pack read fresh cached code-index shards with `fresh-cache-only` semantics, preserves explicit `--include-code` live fallback, restricts token-overlap active-spec inference to active docs, refreshes Docker-built `dist`, and proves built context pack/read-map output. | `ev:T-0553:9dfcaa17c78d494c84aac8b6`, `ev:T-0553:b990814a52c44d89b38b499f`, `ev:T-0553:06af419d19144bab937b06cb` |
 | cache and extractor freshness cleanup | T-0552 adds post-write cache freshness reporting to `context cache warm --execute --json`, recovers usable git stdout from this environment's EPERM-like spawn failures to preserve source-manifest fastPath, refreshes Docker-built `dist`, and proves built cache status/context pack use fresh cache with zero stale extractor keys. | `ev:T-0552:f32bf15e94a04cc8bf897923`, `ev:T-0552:ec0b91ff9cf741068157ca91`, `ev:T-0552:6c73cf25a3a34fce98a23bf8` |
 | known-problem and handoff extraction cleanup | T-0551 makes `extractAgentHandoff` filter stateful `Current Known Problems` rows to active/current/open/watch states, splits current and historical known-problem tables in `docs/AGENT_HANDOFF.md`, refreshes Docker-built `dist`, and proves built context-pack output carries 4 active known-problem nodes with current/consistent projection state. | `ev:T-0551:8b2c9ddd3af9492aaa8e400b`, `ev:T-0551:3089ff9c45d5430f871777d6`, `ev:T-0551:daa5ba4a617844c5872de48e` |
 | current-state projection cleanup | T-0550 makes release-readiness extraction classify completed current stable release status as `current`, makes state projection prefer current completed release readiness over old blocked counts, downgrades historical/deferred missing evidence to info, refreshes Docker-built `dist`, and proves built context-pack state projection returns `releaseState:"current"` with zero state issues. | `ev:T-0550:fa1bc6efeca64c8bbd36589d`, `ev:T-0550:d587386a0b944079bbdd8e4b`, `ev:T-0550:d8a8ff99f4424237a302763e` |
@@ -103,14 +104,14 @@
 | Issue | State | Impact | Next Step |
 |---|---|---|---|
 | Explicit live `context pack` and full `context graph` remain heavier than bounded session/status paths on mounted workspaces. | Watch | T-0552 restored warm-cache freshness and git fast-path reporting, but broad graph-backed paths can still be expensive when cache is cold or intentionally bypassed. | Keep bounded `session start`/`task status` as default; run `context cache warm --execute --json` before explicit graph-backed diagnostics. |
-| Code graph nodes are absent from context graph/pack by default. | Active | Code-change routing remains mostly docs/task/evidence oriented until code-index integration is restored or explicitly scoped. | Handle in the requested code index / docs registry routing cleanup capsule. |
-| Docs registry can still route completed or overly broad specs into task-scoped context packs. | Active | Agents may read stale design docs when a narrower current source would be enough. | Handle in the requested docs registry lifecycle/routing cleanup capsule. |
 | Host/tool `child_process` launch can return `EPERM` while direct shell commands pass. | Active | Ordinary validation wrappers or local smoke wrappers may fail because of the tool environment, not because the underlying command failed. | Use direct commands plus `validation run --direct-result ...` when needed; keep Docker/ext4 as the release-grade validation path. |
 
 ## Historical Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
+| Code graph nodes were absent from default context pack. | Before T-0553, default task-scoped context pack ignored fresh code-index shards unless `--include-code` was explicit, so code-change routing stayed mostly docs/task/evidence oriented. | Resolved by T-0553: default pack now uses fresh cached code-index signal while avoiding stale/missing live fallback. |
+| Docs registry routed completed or overly broad reference specs into task-scoped readFirst. | Before T-0553, token overlap could promote reference specs such as older context-routing docs into active-spec readFirst entries. | Resolved by T-0553: token-overlap active-spec inference requires `status: active`, while reference specs remain conditional unless explicitly marked active-spec or activeForTasks. |
 | Fresh consumer `context pack` can emit HADARA-dev/source-checkout warnings. | T-0538 fresh project context pack returned warnings for `src/services/capability-registry.ts` and `docs/RELEASE_READINESS.md`, which are not expected in ordinary consumer projects. | Fix context-pack/source-summary defaults before stable if the warning leaks into common consumer flows; tracked in `.hadara/local/feedback/T-0538-fresh-project-context-pack-internal-warnings.md`. |
 | Fresh consumer `status --summary-json` can show `done=1` while `lastCompleted=[]`. | After T-0538 toy task closure, status correctly counted the done task but still fell back to initial handoff-style next guidance because generated handoff text was untouched. | Consider deriving `lastCompleted` from Task Board when handoff history is still scaffold text. |
 | Full host Vitest suite can fail under spawn restrictions. | T-0524 full-suite attempt passed 148 files then failed in 6 files / 13 tests because test helpers could not launch host `node`/`bash` (`spawnSync ... EPERM`); status-specific validation passed. | Use Docker/ext4 for spawn-heavy release-grade validation, or run direct focused checks when host child-process launch is restricted. |
@@ -188,7 +189,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Implement code-index and docs registry routing cleanup. | T-0552 completed item 2. The final requested item is T-0548 item 5: restore useful code-index/context routing signal and reduce stale or overly broad docs registry routing. | `tasks/T-0548-context-pack-freshness-diagnostic/CONTEXT_PACK_DIAGNOSTIC.md`, `ev:T-0552:6c73cf25a3a34fce98a23bf8` |
+| Select the next capsule from operator priority or fresh diagnostic evidence. | T-0548's context pack cleanup sequence is complete through T-0553. | `ev:T-0553:06af419d19144bab937b06cb` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline

@@ -227,9 +227,14 @@ describe('context graph CLI', () => {
       ok: true,
       taskId: task.id,
       projectRoot: root,
-      cache: { used: false, hit: false },
+      cache: {
+        used: true,
+        hit: false,
+        mode: 'extractor-shards+code-index-missing'
+      },
       sourceSummary: expect.objectContaining({
         graphAvailable: true,
+        codeIndexAvailable: false,
         stateProjectionAvailable: true
       })
     });

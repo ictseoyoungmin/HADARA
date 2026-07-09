@@ -445,7 +445,7 @@ describe('context pack', () => {
     assertSchema('hadara.contextPack.v1', report);
   });
 
-  it('uses a fresh graph-core cache shard when building a live context pack', () => {
+  it('uses fresh graph-core and code-index cache shards when building the default task context pack', () => {
     const root = tempProject();
     write(root, 'docs/TASK_BOARD.md', [
       '# TASK_BOARD',
@@ -490,8 +490,11 @@ describe('context pack', () => {
     expect(report.cache).toMatchObject({
       used: true,
       hit: true,
-      mode: 'graph-core'
+      mode: 'graph-core+code-index',
+      readShardCount: 2,
+      hitShardCount: 2
     });
+    expect(report.sourceSummary.codeIndexAvailable).toBe(true);
     expect(report.readFirst[0]).toEqual(expect.objectContaining({
       id: `task:${taskId}`,
       type: 'Task'

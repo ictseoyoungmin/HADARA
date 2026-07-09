@@ -955,6 +955,7 @@ function matchesActiveSpec(doc: DocumentRegistryEntry, taskId: string, taskTitle
   const raw = doc as DocumentRegistryEntry & { activeForTasks?: string[] };
   if (raw.activeForTasks?.includes(taskId)) return true;
   if (doc.kind !== 'spec' && doc.kind !== 'implementation-guide') return false;
+  if (doc.status !== 'active') return false;
   const taskTokens = tokens(`${taskId} ${taskTitle ?? ''}`);
   if (taskTokens.size === 0) return false;
   let overlap = 0;
