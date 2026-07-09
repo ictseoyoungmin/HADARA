@@ -4,16 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, and command portfolio reduction/performance/status-profile/init-structure/finalize-UX/legacy-stub/evidence-UX/dead-code/dogfood/fixHint/session-start/dogfood/release-readiness cleanup is complete through T-0539. |
-| Current Phase | 0.4.2 rc0 publish boundary | T-0539 prepared `hadara@0.4.2-rc.0` source/readiness. The next operator step is clean publish-clone preparation and approval-gated npm publish to `next`; GitHub prerelease publication and installed-package recycle remain separate follow-ups. |
-| Latest Completed Task | T-0539 0.4.2 rc0 release readiness and publish preparation | Package metadata, lockfile, release notes/readiness, README release status, GitHub release note artifact, and built `dist` now target `0.4.2-rc.0`; publish remains operator-controlled. |
-| Active / Next Task | Prepare clean publish clone for T-0539 | Run `bash scripts/release/prepare-publish-env.sh T-0539`, then in `/root/hadara-publish` run `bash scripts/release/manual-publish-rc.sh T-0539 --execute`; use `--github-draft` if a draft GitHub prerelease should be created by the helper. |
-| Validation Baseline | T-0539 Docker sync-build and release readiness checks | Evidence `ev:T-0539:707dc09b46744269b33f47b9`; Docker sync-build passed full Vitest 148 files / 1002 tests, refreshed `dist`, built version reports `0.4.2-rc.0`, and strict release gate passed. |
+| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, and command portfolio reduction/performance/status-profile/init-structure/finalize-UX/legacy-stub/evidence-UX/dead-code/dogfood/fixHint/session-start/dogfood/release-readiness/publish-sync cleanup is complete through T-0540. |
+| Current Phase | 0.4.2 rc0 post-publish recycle | `hadara@0.4.2-rc.0` is published to npm with `next`, and GitHub Release `v0.4.2-rc.0` is public prerelease. Installed-package recycle remains the next release follow-up. |
+| Latest Completed Task | T-0540 0.4.2 rc0 post publish evidence sync | Workspace npm verification returned `version=0.4.2-rc.0`, `next=0.4.2-rc.0`, `latest=0.4.1`; operator GitHub verification returned public prerelease `v0.4.2-rc.0` targeting `bb2c10f6f2dc001cac214f35746070f06c389ca5`. |
+| Active / Next Task | Installed-package recycle for `hadara@next` expected `0.4.2-rc.0` | Open a recycle capsule and run consumer-path installed package verification after publication. |
+| Validation Baseline | T-0540 npm/GitHub post-publish evidence | Evidence `ev:T-0540:7332a4b680584955b8bdad4a`, `ev:T-0540:9b8f98569d7f4c13acb08bb0`; T-0539 remains the source/readiness baseline. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| 0.4.2 rc0 post publish evidence sync | T-0540 records the completed external npm/GitHub publication: npm `hadara@0.4.2-rc.0` is on `next`, stable `latest` remains `0.4.1`, and GitHub `v0.4.2-rc.0` is public prerelease. | `ev:T-0540:7332a4b680584955b8bdad4a`, `ev:T-0540:9b8f98569d7f4c13acb08bb0` |
 | 0.4.2 rc0 release readiness and publish preparation | T-0539 retargets metadata/docs to `0.4.2-rc.0`, adds RC GitHub note artifact, verifies unpublished npm version, refreshes Docker-built `dist`, passes strict release gate, and records clean-publish-clone artifact regeneration as the release mutation boundary. | `ev:T-0539:707dc09b46744269b33f47b9` |
 | 0.4.2 rc0 pre-release dogfood | T-0538 refreshed development `dist`, initialized fresh governed `/tmp/hadara-t0538-dogfood-KwAVqu`, closed toy `T-0001` through validation/direct-result recovery and `task finalize --execute --auto`, checked generated docs and removed routes, and recorded RC readiness residuals in `DOGFOOD_REPORT.md`. | `ev:T-0538:2c1048d705db4f6fbbb873ff` |
 | fix session start read map count parity | T-0537 makes session-start `docsReadMap` preview count fields match the returned arrays while preserving full totals via additive total fields; Docker sync-build refreshed `dist`. | `ev:T-0537:2eade83b52764d7d962d8456` |
@@ -81,9 +82,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0539 / 0.4.2 rc0 release readiness and publish preparation | Source metadata/docs now target `0.4.2-rc.0`; Docker sync-build and strict release gate passed; clean publish clone remains responsible for current artifact/package smoke regeneration before npm publish. | `ev:T-0539:707dc09b46744269b33f47b9` |
+| T-0540 / 0.4.2 rc0 post publish evidence sync | npm `hadara@0.4.2-rc.0` is published on `next`, stable `latest` remains `0.4.1`, and GitHub `v0.4.2-rc.0` is public prerelease. | `ev:T-0540:7332a4b680584955b8bdad4a`, `ev:T-0540:9b8f98569d7f4c13acb08bb0` |
+| T-0539 / 0.4.2 rc0 release readiness and publish preparation | Source metadata/docs now target `0.4.2-rc.0`; Docker sync-build and strict release gate passed; clean publish clone handled current artifact/package smoke regeneration before npm publish. | `ev:T-0539:707dc09b46744269b33f47b9` |
 | T-0538 / 0.4.2 rc0 pre-release dogfood | Current development `dist` passed Docker sync-build, fresh governed `/tmp` dogfood closed a toy task through current lifecycle, and generated-doc/removed-route checks found no functional RC blocker. | `ev:T-0538:2c1048d705db4f6fbbb873ff` |
-| T-0537 / fix session start read map count parity | Session-start docs read-map preview count fields now match returned arrays, with additive total fields preserving full counts; Docker sync-build passed. | `ev:T-0537:2eade83b52764d7d962d8456` |
 
 ## Current Known Problems
 
@@ -166,8 +167,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Prepare and run the `0.4.2-rc.0` clean publish clone. | T-0539 source/readiness is complete. The clean clone must regenerate release artifact, package smoke, clean-checkout smoke, strict gate, release dry-run, and publish dry-run evidence before npm publish. | `ev:T-0539:707dc09b46744269b33f47b9`, `tasks/T-0539-0-4-2-rc0-release-readiness-and-publish-preparation/HANDOFF.md` |
-| After npm/GitHub publication, open post-publish evidence sync and installed-package recycle for `hadara@next` expected `0.4.2-rc.0`. | Publish mutation and consumer recycle are intentionally outside T-0539. | `docs/RELEASE_READINESS.md`, `docs/RELEASE_NOTES.md` |
+| Open installed-package recycle for `hadara@next` expected `0.4.2-rc.0`. | T-0540 records npm/GitHub publication; consumer-path verification remains the RC follow-up. | `ev:T-0540:7332a4b680584955b8bdad4a`, `ev:T-0540:9b8f98569d7f4c13acb08bb0`, `docs/RELEASE_READINESS.md` |
 | Decide the next deferred command portfolio reduction slice. | T-0530 completed the init implementation split; remaining command portfolio candidates need an explicit migration-stub decision before removal. | `tasks/T-0521-command-portfolio-reduction-inventory/COMMAND_PORTFOLIO.md`, `docs/COMMAND_SURFACE.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
@@ -175,6 +175,7 @@
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0540 / 0.4.2 rc0 post-publish npm and GitHub verification | npm registry returned `version=0.4.2-rc.0`, dist-tags `next=0.4.2-rc.0` and `latest=0.4.1`; operator `gh release view` output verified `v0.4.2-rc.0` is public prerelease targeting `bb2c10f6f2dc001cac214f35746070f06c389ca5`. | Evidence `ev:T-0540:7332a4b680584955b8bdad4a`, `ev:T-0540:9b8f98569d7f4c13acb08bb0`; installed-package recycle is still pending. |
 | T-0539 / 0.4.2 rc0 release readiness | Docker sync-build passed `npm ci`, TypeScript build, full Vitest 148 files / 1002 tests, refreshed workspace `dist`, and built `version --json` smoke returned `packageVersion:"0.4.2-rc.0"` with `distLooksStale:false`; strict release gate passed. | Evidence `ev:T-0539:707dc09b46744269b33f47b9`; `release dry-run` and publish dry-run correctly block until current-version release artifact evidence is regenerated in the clean publish clone. |
 | T-0538 / 0.4.2 rc0 pre-release dogfood | Docker sync-build passed `npm ci`, TypeScript build, full Vitest 148 files / 1002 tests, refreshed workspace `dist`, and built `version --json` smoke returned `distLooksStale:false`; fresh governed `/tmp` project dogfood closed toy task `T-0001` through current lifecycle. | Evidence `ev:T-0538:2c1048d705db4f6fbbb873ff`; residuals DF-1 through DF-4 are documented in `tasks/T-0538-0-4-2-rc0-pre-release-dogfood/DOGFOOD_REPORT.md` and are non-blocking for RC readiness. |
 | T-0530 / init implementation ownership split | Docker `dev:docker-sync-build` passed `npm ci`, TypeScript build, full Vitest 154 files / 1036 tests, refreshed workspace `dist`, and built `init doctor --json` smoke returned `ok:true` with existing HADARA-dev warnings. | Evidence `ev:T-0530:d8d7c9cb370d4a6daef61942`; focused init tests and built fresh governed init smoke also passed. |

@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0539 0.4.2 rc0 release readiness and publish preparation |
-| Active Task | `hadara@0.4.2-rc.0` source/readiness is prepared. Next operator step is clean publish-clone preparation and approval-gated npm/GitHub prerelease publication; installed-package recycle remains post-publish. |
+| Latest Completed Task | T-0540 0.4.2 rc0 post publish evidence sync |
+| Active Task | `hadara@0.4.2-rc.0` is published on npm with `next` and GitHub Release `v0.4.2-rc.0` is public prerelease. Next task is installed-package recycle for `hadara@next` expected `0.4.2-rc.0`. |
+
+T-0540 follow-up note: the operator completed approval-gated npm publish for `hadara@0.4.2-rc.0` and published GitHub Release `v0.4.2-rc.0`. Workspace npm verification returned `version=0.4.2-rc.0`, dist-tags `next=0.4.2-rc.0` and `latest=0.4.1`. Operator GitHub verification returned `isDraft=false`, `isPrerelease=true`, title `HADARA 0.4.2-rc.0`, target `bb2c10f6f2dc001cac214f35746070f06c389ca5`, and URL `https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.2-rc.0`. Publish-helper evidence from the clean publish clone was reported as `ev:T-0539:818caf27a85f4c9299830988`; T-0540 records the workspace post-publish sync evidence. Evidence: `ev:T-0540:7332a4b680584955b8bdad4a`, `ev:T-0540:9b8f98569d7f4c13acb08bb0`.
 
 T-0539 follow-up note: source metadata and release-facing docs now target `hadara@0.4.2-rc.0` while README stable install examples remain on `hadara@0.4.1`. `npm view hadara@0.4.2-rc.0 version` returned E404 before preparation; Docker sync-build passed `npm ci`, TypeScript build, full Vitest 148 files / 1002 tests, refreshed workspace `dist`, and built version smoke reported `packageVersion:"0.4.2-rc.0"` with `distLooksStale:false`. Strict release gate passed. Release dry-run and publish dry-run correctly block until current-version release artifact evidence is regenerated in the clean publish clone; a dirty-worktree release artifact execute refusal was recorded and resolved as expected source-prep safety. Evidence: `ev:T-0539:707dc09b46744269b33f47b9`; expected dirty-worktree refusal: `ev:T-0539:327561d3464641b7b8322685`.
 

@@ -540,3 +540,4 @@
 | T-0537 | Fix session start read map count parity | Done | tasks/T-0537-fix-session-start-read-map-count-parity | |
 | T-0538 | 0.4.2 rc0 pre-release dogfood | Done | tasks/T-0538-0-4-2-rc0-pre-release-dogfood | |
 | T-0539 | 0.4.2 rc0 release readiness and publish preparation | Done | tasks/T-0539-0-4-2-rc0-release-readiness-and-publish-preparation | |
+| T-0540 | 0.4.2 rc0 post publish evidence sync | Done | tasks/T-0540-0-4-2-rc0-post-publish-evidence-sync | |
