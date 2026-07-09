@@ -84,9 +84,11 @@ export interface SessionStartDocsReadMap {
   source: { registryPath: '.hadara/docs-registry.json'; registryPresent: boolean; inferred: boolean };
   task: { capsulePath: string | null; capsulePresent: boolean; title: string | null };
   readFirstCount: number;
+  readFirstTotalCount: number;
   readIfNeededCount: number;
   doNotReadByDefaultCount: number;
   driftWarningCount: number;
+  driftWarningTotalCount: number;
   sourceDocumentDriftCount: number;
   readFirst: Array<Pick<DocsReadMapEntry, 'path' | 'readTier' | 'authority' | 'reason'>>;
   driftWarnings: DocsDriftWarning[];
@@ -200,6 +202,13 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
 
 function createSessionStartDocsReadMap(projectRoot: string, taskId: string, maxReadFirst: number): SessionStartDocsReadMap {
   const readMap = createDocsReadMapReport(projectRoot, taskId);
+  const readFirst = readMap.readFirst.slice(0, maxReadFirst).map((entry) => ({
+    path: entry.path,
+    readTier: entry.readTier,
+    authority: entry.authority,
+    reason: entry.reason
+  }));
+  const driftWarnings = readMap.driftWarnings.slice(0, 10);
   const sourceValidation = validateTaskCapsule(projectRoot, taskId, { level: 'done' });
   const sourceDocumentDrift = sourceValidation.issues
     .filter((issue) => issue.code === 'TASK_SOURCE_DOCUMENT_CHANGED' || issue.code === 'TASK_SOURCE_DOCUMENT_MISSING_HASH')
@@ -214,18 +223,15 @@ function createSessionStartDocsReadMap(projectRoot: string, taskId: string, maxR
     command: hadaraCommand(`docs read-map --task ${taskId} --json`),
     source: readMap.source,
     task: readMap.task,
-    readFirstCount: readMap.readFirst.length,
+    readFirstCount: readFirst.length,
+    readFirstTotalCount: readMap.readFirst.length,
     readIfNeededCount: readMap.readIfNeeded.length,
     doNotReadByDefaultCount: readMap.doNotReadByDefault.length,
-    driftWarningCount: readMap.driftWarnings.length,
+    driftWarningCount: driftWarnings.length,
+    driftWarningTotalCount: readMap.driftWarnings.length,
     sourceDocumentDriftCount: sourceDocumentDrift.length,
-    readFirst: readMap.readFirst.slice(0, maxReadFirst).map((entry) => ({
-      path: entry.path,
-      readTier: entry.readTier,
-      authority: entry.authority,
-      reason: entry.reason
-    })),
-    driftWarnings: readMap.driftWarnings.slice(0, 10),
+    readFirst,
+    driftWarnings,
     sourceDocumentDrift,
     issues: readMap.issues.map((issue) => ({
       severity: issue.severity,

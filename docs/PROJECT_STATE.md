@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0536 fix stale status full lifecycle fix hints |
-| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction is continuing; T-0536 fixed the stale removed-command lifecycle hints found by T-0535 dogfood. |
+| Latest Completed Task | T-0537 fix session start read map count parity |
+| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction is continuing; T-0537 fixed the session-start docs read-map count/list mismatch found by T-0535 dogfood. |
+
+T-0537 follow-up note: `hadara session start --task <id> --json` docs read-map counts now distinguish preview lengths from full registry totals. `docsReadMap.readFirstCount` equals the returned `readFirst.length`, while additive `readFirstTotalCount` preserves the full read-first total; `driftWarningCount` now equals the returned `driftWarnings.length`, while `driftWarningTotalCount` preserves the full drift total. Focused session-start Vitest passed 6 tests, TypeScript build passed, built session-start smoke returned `readFirstCount=7`, `readFirstTotalCount=17`, `readFirst.length=7`, `driftWarningCount=10`, and `driftWarningTotalCount=78`, and Docker sync-build passed full Vitest 148 files / 1002 tests while refreshing `dist`. Evidence: `ev:T-0537:2eade83b52764d7d962d8456`.
 
 T-0536 follow-up note: stale `task status --detail full` and related ready/finish/close report guidance that pointed agents at removed low-level lifecycle commands is fixed. Done-level status and Task Board fix hints now point at `task finalize --execute --auto`; ready, finish, close, and audit report next-command guidance now uses current `task finalize` and `task status --detail full` surfaces while preserving the internal finish/ready/close/audit engines. Focused lifecycle hint tests passed 5 files / 72 tests, TypeScript build passed, targeted stale-command scan over the touched hint/report files found no removed lifecycle command suggestions, and Docker sync-build passed `npm ci`, TypeScript build, full Vitest 148 files / 1002 tests, refreshed workspace `dist`, and built `task status --task T-0536 --summary-json` smoke. Evidence: `ev:T-0536:ddbc62ab30dc4f8dbc48048e`, `ev:T-0536:da34805fe34a42b8a68673a5`, `ev:T-0536:c6d62cf0831846479adc9438`, `ev:T-0536:a9ddd04930314c1c9289f643`.
 

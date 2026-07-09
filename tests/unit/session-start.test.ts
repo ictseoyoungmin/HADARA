@@ -92,7 +92,10 @@ describe('session start', () => {
         title: 'Session start task'
       }
     });
-    expect(report.docsReadMap?.readFirstCount).toBeGreaterThanOrEqual(report.docsReadMap?.readFirst.length ?? 0);
+    expect(report.docsReadMap?.readFirstCount).toBe(report.docsReadMap?.readFirst.length ?? 0);
+    expect(report.docsReadMap?.readFirstTotalCount).toBeGreaterThanOrEqual(report.docsReadMap?.readFirstCount ?? 0);
+    expect(report.docsReadMap?.driftWarningCount).toBe(report.docsReadMap?.driftWarnings.length ?? 0);
+    expect(report.docsReadMap?.driftWarningTotalCount).toBeGreaterThanOrEqual(report.docsReadMap?.driftWarningCount ?? 0);
     expect(report.guidance.primaryAction).toMatchObject({
       id: 'task-status',
       command: `hadara task status --task ${task.id} --json`,

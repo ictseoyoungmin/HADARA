@@ -131,6 +131,50 @@
         }
       }
     },
+    "docsReadMap": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "taskId",
+        "command",
+        "source",
+        "task",
+        "readFirstCount",
+        "readFirstTotalCount",
+        "readIfNeededCount",
+        "doNotReadByDefaultCount",
+        "driftWarningCount",
+        "driftWarningTotalCount",
+        "sourceDocumentDriftCount",
+        "readFirst",
+        "driftWarnings",
+        "sourceDocumentDrift",
+        "issues"
+      ],
+      "properties": {
+        "taskId": { "type": "string", "minLength": 1 },
+        "command": { "type": "string", "minLength": 1 },
+        "source": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "task": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "readFirstCount": { "type": "number" },
+        "readFirstTotalCount": { "type": "number" },
+        "readIfNeededCount": { "type": "number" },
+        "doNotReadByDefaultCount": { "type": "number" },
+        "driftWarningCount": { "type": "number" },
+        "driftWarningTotalCount": { "type": "number" },
+        "sourceDocumentDriftCount": { "type": "number" },
+        "readFirst": { "type": "array" },
+        "driftWarnings": { "type": "array" },
+        "sourceDocumentDrift": { "type": "array" },
+        "issues": { "type": "array" }
+      }
+    },
     "knownProblems": { "type": "array" },
     "sourceSummary": {
       "type": "object",
