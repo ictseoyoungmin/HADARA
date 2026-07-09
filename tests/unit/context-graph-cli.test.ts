@@ -241,6 +241,47 @@ describe('context graph CLI', () => {
     expect(snapshotProject(root)).toEqual(before);
   });
 
+  it('prints a fast task-required context pack report without live graph discovery when no task is supplied', () => {
+    const root = tempProject();
+    const before = snapshotProject(root);
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const previousExitCode = process.exitCode;
+
+    const handled = handleContextCommand({
+      args: ['context', 'pack', '--json'],
+      projectRoot: root,
+      jsonOutput: true
+    });
+
+    expect(handled).toBe(true);
+    const payload = JSON.parse(String(log.mock.calls[0]?.[0]));
+    expect(payload).toMatchObject({
+      schemaVersion: 'hadara.contextPack.v1',
+      command: 'context.pack',
+      ok: false,
+      projectRoot: root,
+      cache: {
+        used: false,
+        hit: false,
+        mode: 'task-required-fast-path',
+        sourceManifestFastPath: 'skipped'
+      },
+      sourceSummary: expect.objectContaining({
+        graphAvailable: false,
+        sourcesRead: 0
+      })
+    });
+    expect(payload.issues).toContainEqual(expect.objectContaining({
+      severity: 'error',
+      code: 'CONTEXT_PACK_TASK_NOT_FOUND',
+      fixHint: expect.stringContaining('task status --json')
+    }));
+    expect(payload.readFirst).toEqual([]);
+    expect(validateSchema('hadara.contextPack.v1', payload).ok).toBe(true);
+    expect(snapshotProject(root)).toEqual(before);
+    process.exitCode = previousExitCode;
+  });
+
   it('prints a schema-valid session start report for a task without writing files', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'CLI session start');

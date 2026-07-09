@@ -159,6 +159,8 @@ hadara context pack --task T-XXXX --json
 
 Use context pack when starting implementation, resuming after a gap, deciding which files to inspect, or avoiding broad manual repo reads. Context pack is reading guidance, not validation.
 
+\`context pack\` is task-scoped by default. If no task id is supplied, it returns task-selection guidance without running live project-wide graph discovery. Use \`hadara task status --json\` first, then rerun \`hadara context pack --task T-XXXX --json\`. Use \`hadara context pack --live --json\` only when the slower project-wide graph path is explicitly acceptable.
+
 After context pack:
 
 1. Select only relevant files or candidates from the report.

@@ -1,7 +1,7 @@
 import { getFlag, getIntegerOption, getStringOption } from './args';
 import { createContextCacheStatusReport, createContextCacheWarmReport } from '../context/context-cache-store';
 import { buildContextGraphReport } from '../context/context-graph-builder';
-import { buildContextPackReport, type ContextBudget } from '../context/context-pack';
+import { buildContextPackReport, buildTaskRequiredContextPackReport, type ContextBudget } from '../context/context-pack';
 import { buildContextSliceReport } from '../context/context-slice';
 
 export interface ContextCommandInput {
@@ -40,13 +40,19 @@ function handleContextGraphCommand(input: ContextCommandInput): boolean {
 function handleContextPackCommand(input: ContextCommandInput): boolean {
   const taskId = getStringOption(input.args, '--task');
   const includeCode = getFlag(input.args, '--include-code');
+  const live = getFlag(input.args, '--live');
   const budget = contextPackBudgetFromArgs(input.args);
-  const report = buildContextPackReport({
-    projectRoot: input.projectRoot,
-    includeCode,
-    ...(taskId ? { taskId } : {}),
-    ...(Object.keys(budget).length > 0 ? { budget } : {})
-  });
+  const report = !taskId && !live
+    ? buildTaskRequiredContextPackReport({
+      projectRoot: input.projectRoot,
+      ...(Object.keys(budget).length > 0 ? { budget } : {})
+    })
+    : buildContextPackReport({
+      projectRoot: input.projectRoot,
+      includeCode,
+      ...(taskId ? { taskId } : {}),
+      ...(Object.keys(budget).length > 0 ? { budget } : {})
+    });
 
   if (input.jsonOutput) {
     console.log(JSON.stringify(report, null, 2));

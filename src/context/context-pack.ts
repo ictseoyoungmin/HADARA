@@ -173,11 +173,67 @@ export interface BuildContextPackReportOptions {
   docsReadMap?: DocsReadMapReport;
 }
 
+export interface BuildTaskRequiredContextPackReportOptions {
+  projectRoot: string;
+  generatedAt?: string;
+  budget?: Partial<ContextBudget>;
+}
+
 interface RankedNode {
   node: ContextGraphNode;
   reason: string;
   confidence: ContextConfidence;
   score: number;
+}
+
+export function buildTaskRequiredContextPackReport(input: BuildTaskRequiredContextPackReportOptions): ContextPackReport {
+  const generatedAt = input.generatedAt ?? new Date().toISOString();
+  const budget = normalizeContextBudget(input.budget);
+  return {
+    schemaVersion: CONTEXT_PACK_SCHEMA_ID,
+    command: CONTEXT_PACK_COMMAND,
+    ok: false,
+    generatedAt,
+    projectRoot: input.projectRoot,
+    budget,
+    readFirst: [],
+    readIfNeeded: [],
+    doNotReadByDefault: [],
+    validateWith: [],
+    writeBoundaries: [],
+    sliceCandidates: [],
+    agentActions: [],
+    knownProblems: [],
+    stateProjection: {
+      stateConsistency: 'unknown',
+      issues: []
+    },
+    sourceSummary: {
+      graphAvailable: false,
+      codeIndexAvailable: false,
+      stateProjectionAvailable: false,
+      docsRegistryAvailable: false,
+      commandRegistryAvailable: false,
+      degraded: true,
+      sourcesRead: 0,
+      docsReadMapAvailable: false,
+      docsReadMapReadFirstCount: 0,
+      docsReadMapDoNotReadByDefaultCount: 0
+    },
+    cache: {
+      used: false,
+      hit: false,
+      mode: 'task-required-fast-path',
+      sourceManifestFastPath: 'skipped',
+      sourceManifestFastPathReason: 'No task id was supplied; context pack skipped live graph extraction.'
+    },
+    issues: [{
+      severity: 'error',
+      code: 'CONTEXT_PACK_TASK_NOT_FOUND',
+      message: 'Context pack requires --task <task-id> for the default compact path; live project-wide discovery was skipped.',
+      fixHint: 'Run hadara task status --json to select work, then rerun hadara context pack --task <task-id> --json. Use --live only when project-wide graph discovery is explicitly acceptable.'
+    }]
+  };
 }
 
 export function buildContextPackReport(input: BuildContextPackReportOptions): ContextPackReport {

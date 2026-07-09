@@ -758,7 +758,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   commandEntry({
     id: 'context.pack',
     command: 'hadara context pack --task <task-id> [--include-code] [--budget <tokens>] [--max-items <count>] [--max-read-first <count>] --json',
-    summary: 'Emit the bounded task-scoped context pack read plan from the current context graph.',
+    summary: 'Emit the bounded task-scoped context pack read plan from the current context graph; without --task, the default path fails fast and points to task status instead of scanning the project.',
     canonical: true,
     appearsInDefaultHelp: false,
     family: 'project-health',
@@ -778,7 +778,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     examples: [
       example('Read task context pack', 'hadara context pack --task T-0001 --json', 'When a worker needs the bounded first-read plan for a task.'),
       example('Read code-aware context pack', 'hadara context pack --task T-0001 --include-code --json', 'When source, test, and symbol candidates should be included.'),
-      example('Read smaller context pack', 'hadara context pack --task T-0001 --max-read-first 3 --max-items 12 --json', 'When a worker needs a tighter bounded read plan.')
+      example('Read smaller context pack', 'hadara context pack --task T-0001 --max-read-first 3 --max-items 12 --json', 'When a worker needs a tighter bounded read plan.'),
+      example('Opt into live no-task discovery', 'hadara context pack --live --json', 'Only when slower project-wide graph discovery is explicitly acceptable.')
     ],
     related: ['context.graph', 'status', 'docs.required-reading', 'task.status'],
     conflictsWith: [],
