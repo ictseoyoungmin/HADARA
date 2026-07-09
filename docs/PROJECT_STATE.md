@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0547 0.4.2 stable installed package recycle |
-| Active Task | Stable `0.4.2` npm/GitHub publication and installed-package recycle are complete; next work can return to ordinary backlog or explicitly selected command portfolio reductions. |
+| Latest Completed Task | T-0548 context pack freshness diagnostic |
+| Active Task | Stable `0.4.2` npm/GitHub publication and installed-package recycle are complete. T-0548 found that live context pack/graph need freshness and latency cleanup before they can be trusted as the primary current-state diagnostic path. |
+
+T-0548 follow-up note: context pack freshness was diagnosed after the stable `0.4.2` line. Bounded `session start --task` and `task status --task` remain usable, but live `context pack --json` without a task spent about 99s on a broad degraded scan before `CONTEXT_PACK_TASK_NOT_FOUND`; task-scoped live pack and full graph took about 52s each and reported stale extractor shards, cache/source-manifest misses, no code-index nodes, historical missing-evidence warnings, over-broad known-problem extraction, and stale `releaseState:"blocked"` projection. The next high-signal capsule is context pack fail-fast and compact default cleanup. Evidence: `ev:T-0548:d32094ea16a5424891611b6d`, `ev:T-0548:bf4ef3ba3d184736bc9aea71`, `ev:T-0548:53f7e42d877e43e29fd8a236`, `ev:T-0548:fd8fa39a8d8f4a9bb6c46936`.
 
 T-0547 follow-up note: stable `0.4.2` installed-package recycle is complete. The first sandboxed execute attempt failed at npm metadata lookup after about 70s per lookup and was resolved by the approved network rerun. The passing recycle verified `hadara@latest` resolves to `0.4.2`, dist-tags `latest=0.4.2` and `next=0.4.2-rc.0`, isolated registry install, installed CLI `packageVersion=0.4.2`, installed command surface with 68 command ids, lifecycle help, fresh init, task create/status, session start, finalize dry-run, context pack, context slice, public reduced evidence attachment, and cleanup. Evidence: failed sandbox attempt `ev:T-0547:61981a0f8eef4ceeb2dadf02`, passing recycle `ev:T-0547:bb537cb84fd6482192255ecf`, resolver `ev:T-0547:ef3570370ab749aabb92b37d`.
 

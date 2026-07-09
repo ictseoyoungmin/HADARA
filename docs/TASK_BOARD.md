@@ -548,3 +548,4 @@
 | T-0545 | 0.4.2 stable release readiness and publish preparation | Done | tasks/T-0545-0-4-2-stable-release-readiness-and-publish-preparation | Prepared stable `0.4.2` metadata/docs/release note/helper guidance, refreshed Docker-built `dist`, passed full Docker validation and strict release gate, and confirmed release dry-run blocks until current-version release artifact evidence is regenerated in the clean publish clone. Evidence `ev:T-0545:c0615e6dadba492ba83a0610`. |
 | T-0546 | 0.4.2 stable post-publish evidence sync | Done | tasks/T-0546-0-4-2-stable-post-publish-evidence-sync | |
 | T-0547 | 0.4.2 stable installed package recycle | Done | tasks/T-0547-0-4-2-stable-installed-package-recycle | |
+| T-0548 | context pack freshness diagnostic | Done | tasks/T-0548-context-pack-freshness-diagnostic | |

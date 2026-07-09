@@ -5,15 +5,16 @@
 | Area | State | Notes |
 |---|---|---|
 | Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, and command portfolio reduction/performance/status-profile/init-structure/finalize-UX/legacy-stub/evidence-UX/dead-code/dogfood/fixHint/session-start/dogfood/release-readiness/publish-sync/recycle/toy-dogfood/stable-preflight/stable-source-prep/post-publish/recycle cleanup is complete through T-0547. |
-| Current Phase | 0.4.2 stable release line complete | Stable `0.4.2` npm publication, GitHub Release, and installed-package recycle are complete. |
-| Latest Completed Task | T-0547 0.4.2 stable installed package recycle | Verified `hadara@latest` installs as `0.4.2` from consumer paths and passes installed CLI recycle smokes; sandbox registry timeout was resolved by approved network rerun. |
-| Active / Next Task | Select the next backlog item deliberately | Release-line work for stable `0.4.2` is complete; next work can return to ordinary backlog or explicitly selected command portfolio reductions. |
-| Validation Baseline | T-0547 stable `0.4.2` installed-package recycle | Evidence `ev:T-0547:bb537cb84fd6482192255ecf`, resolver `ev:T-0547:ef3570370ab749aabb92b37d`. |
+| Current Phase | 0.4.2 stable release line complete; context pack freshness cleanup next | Stable `0.4.2` npm publication, GitHub Release, and installed-package recycle are complete. T-0548 diagnosed stale/slow live context-pack surfaces. |
+| Latest Completed Task | T-0548 context pack freshness diagnostic | Bounded `session start --task` remains usable, but live `context pack`/`context graph` need fail-fast, cache freshness, known-problem, release-state, and code-index cleanup. |
+| Active / Next Task | Context pack fail-fast and compact default cleanup | Start with `context pack --json` no-task behavior: it should not do a broad 99s degraded scan before reporting that no task is selected. |
+| Validation Baseline | T-0548 context pack freshness diagnostic | Evidence `ev:T-0548:d32094ea16a5424891611b6d`, `ev:T-0548:bf4ef3ba3d184736bc9aea71`, `ev:T-0548:53f7e42d877e43e29fd8a236`, `ev:T-0548:fd8fa39a8d8f4a9bb6c46936`. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| context pack freshness diagnostic | T-0548 diagnosed the post-0.4.2 context pack stack. `session start --task` is the healthy bounded entry path, but live pack/graph are slow and degraded: no-task pack fails late, extractor shards/cache/source fingerprints are stale, code graph nodes are absent, historical missing evidence and handoff prose pollute current state, and release-state projection is stale. | `ev:T-0548:d32094ea16a5424891611b6d`, `ev:T-0548:bf4ef3ba3d184736bc9aea71`, `ev:T-0548:53f7e42d877e43e29fd8a236`, `ev:T-0548:fd8fa39a8d8f4a9bb6c46936` |
 | 0.4.2 stable installed package recycle | T-0547 verifies `hadara@latest` installs as `0.4.2`, registry dist-tags are `latest=0.4.2` and `next=0.4.2-rc.0`, installed command surface has 68 ids, and installed init/task/session/finalize/context smokes plus cleanup pass. | `ev:T-0547:bb537cb84fd6482192255ecf`, `ev:T-0547:ef3570370ab749aabb92b37d` |
 | 0.4.2 stable post-publish evidence sync | T-0546 records completed public npm/GitHub publication: npm version `0.4.2`, dist-tags `latest=0.4.2` and `next=0.4.2-rc.0`, and GitHub Release `v0.4.2` public stable target `e1865a71056564fe0bb1cee79fcdf50726e922a8`. | `ev:T-0546:3c8c27ba0ba649a492a80c65`, `ev:T-0546:64796a1c07f44c3888f00f0f` |
 | 0.4.2 stable release readiness and publish preparation | T-0545 prepared stable `0.4.2` source/readiness, updated package metadata/docs/helper examples/GitHub release note, passed Docker sync-build full validation and strict release gate, and left release artifact/package smoke/npm publish to the clean publish clone. | `ev:T-0545:c0615e6dadba492ba83a0610` |
@@ -174,13 +175,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Decide the next deferred command portfolio reduction slice. | T-0530 completed the init implementation split; remaining command portfolio candidates need an explicit migration-stub decision before removal. | `tasks/T-0521-command-portfolio-reduction-inventory/COMMAND_PORTFOLIO.md`, `docs/COMMAND_SURFACE.md` |
+| Implement context pack fail-fast and compact default cleanup. | T-0548 found that `context pack --json` without a task runs a broad degraded scan for about 99s before failing; this is the sharpest context-pack freshness/UX issue. | `tasks/T-0548-context-pack-freshness-diagnostic/CONTEXT_PACK_DIAGNOSTIC.md`, `ev:T-0548:d32094ea16a5424891611b6d` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0548 / context pack freshness diagnostic | No-task context pack reproduced late failure after broad degraded scan; task-scoped live pack and full graph reproduced stale cache/extractor/code-index/current-state degradation; bounded session-start path remained usable. | Evidence `ev:T-0548:d32094ea16a5424891611b6d`, `ev:T-0548:bf4ef3ba3d184736bc9aea71`, `ev:T-0548:53f7e42d877e43e29fd8a236`, `ev:T-0548:fd8fa39a8d8f4a9bb6c46936`; follow-up report `tasks/T-0548-context-pack-freshness-diagnostic/CONTEXT_PACK_DIAGNOSTIC.md`. |
 | T-0547 / 0.4.2 stable installed-package recycle | Approved network recycle verified `hadara@latest` resolves to `0.4.2`, dist-tags `latest=0.4.2` and `next=0.4.2-rc.0`, isolated install, installed CLI `packageVersion=0.4.2`, 68 installed command ids, lifecycle help, fresh init, task create/status, session start, finalize dry-run, context pack, context slice, and cleanup. | Evidence `ev:T-0547:bb537cb84fd6482192255ecf`; sandboxed failure `ev:T-0547:61981a0f8eef4ceeb2dadf02` is resolved by `ev:T-0547:ef3570370ab749aabb92b37d`. |
 | T-0546 / 0.4.2 stable post-publish npm and GitHub verification | npm registry returned `version=0.4.2`, dist-tags `latest=0.4.2` and `next=0.4.2-rc.0`; `gh release view` verified `v0.4.2` is public stable targeting `e1865a71056564fe0bb1cee79fcdf50726e922a8`. | Evidence `ev:T-0546:3c8c27ba0ba649a492a80c65`, `ev:T-0546:64796a1c07f44c3888f00f0f`; T-0547 completes the installed-package recycle follow-up. |
 | T-0545 / 0.4.2 stable source readiness | Docker sync-build passed `npm ci`, TypeScript build, full Vitest 148 files / 1014 tests, refreshed workspace `dist`, and built/local version smokes returned `packageVersion:"0.4.2"` with `distLooksStale:false`; strict release gate and helper syntax passed; release dry-run blocked only on expected current-version release artifact regeneration. | Evidence `ev:T-0545:c0615e6dadba492ba83a0610`. |
