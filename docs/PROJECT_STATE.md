@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0541 0.4.2 rc0 installed package recycle |
-| Active Task | `hadara@0.4.2-rc.0` npm/GitHub publication and installed-package recycle are complete. Next decision is whether to keep observing the RC or open stable `0.4.2` readiness. |
+| Latest Completed Task | T-0542 0.4.2 rc0 installed toy project dogfood across init profiles |
+| Active Task | `hadara@0.4.2-rc.0` npm/GitHub publication, installed-package recycle, and three-profile toy-project dogfood are complete. Next decision is whether to fix T-0542 findings before stable `0.4.2` readiness. |
+
+T-0542 follow-up note: installed-package dogfood used `hadara@next` resolving to `0.4.2-rc.0` from an isolated `/tmp` prefix, initialized `basic`, `standard`, and `governed` profiles, completed a governed Taskflow Toy MVP through T-0001/T-0002/T-0003 using generated workflow docs, and copied the structured report to `tasks/T-0542-0-4-2-rc0-installed-toy-project-dogfood-across-init-profiles/artifacts/DOGFOOD_REPORT.md`. Core loop and generated docs were healthy, but the report flags installed-package `context pack` source-checkout leakage, empty-project first-task guidance gaps, and handoff recommendation title matching as follow-ups. Evidence: `ev:T-0542:7c7aae7945b94710821bcd45`.
 
 T-0541 follow-up note: installed-package recycle passed for `hadara@next` expected `0.4.2-rc.0`. The approved network execution verified registry `observedVersion=0.4.2-rc.0`, dist-tags `next=0.4.2-rc.0` and `latest=0.4.1`, isolated registry install, installed CLI `packageVersion=0.4.2-rc.0`, installed command surface with 68 command ids, lifecycle help, fresh init, task create/status, session start, finalize dry-run, context pack, context slice, and cleanup. The first sandboxed execute attempt failed at npm metadata lookup after about 70s per lookup and is resolved as environment/network friction by the approved rerun. Evidence: `ev:T-0541:ca5a53ca899f48ad89cea0db`, resolver `ev:T-0541:9c836efa7ae74f339bdbb3d8`.
 

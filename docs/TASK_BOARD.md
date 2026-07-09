@@ -542,3 +542,4 @@
 | T-0539 | 0.4.2 rc0 release readiness and publish preparation | Done | tasks/T-0539-0-4-2-rc0-release-readiness-and-publish-preparation | |
 | T-0540 | 0.4.2 rc0 post publish evidence sync | Done | tasks/T-0540-0-4-2-rc0-post-publish-evidence-sync | |
 | T-0541 | 0.4.2 rc0 installed package recycle | Done | tasks/T-0541-0-4-2-rc0-installed-package-recycle | |
+| T-0542 | 0.4.2 rc0 installed toy project dogfood across init profiles | Done | tasks/T-0542-0-4-2-rc0-installed-toy-project-dogfood-across-init-profiles | Installed-package dogfood completed across basic/standard/governed profiles; report captured context-pack source leakage and first-task guidance follow-ups. |
