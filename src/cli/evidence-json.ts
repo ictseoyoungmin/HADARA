@@ -37,7 +37,7 @@ export interface EvidenceCollectReport {
     appendLock: ReturnType<typeof appendEvidenceWithResult>['appendLock'];
   };
   issues: Array<{
-    severity: 'error';
+    severity: 'error' | 'warning';
     code: string;
     message: string;
   }>;
@@ -100,6 +100,15 @@ export function createEvidenceCollectReport(projectRoot: string, input: Evidence
     throw error;
   }
 
+  const issues: EvidenceCollectReport['issues'] = [];
+  if (appendResult.appendLock.contended) {
+    issues.push({
+      severity: 'warning',
+      code: 'EVIDENCE_APPEND_LOCK_CONTENDED',
+      message: `Evidence append waited ${appendResult.appendLock.waitedMs}ms for the task-scoped lock at ${appendResult.appendLock.path}. Serialize same-task evidence writes to avoid contention.`
+    });
+  }
+
   return {
     schemaVersion: 'hadara.evidence.collect.v1',
     command: 'evidence.collect',
@@ -113,7 +122,7 @@ export function createEvidenceCollectReport(projectRoot: string, input: Evidence
       existing: appendResult.existing,
       appendLock: appendResult.appendLock
     },
-    issues: []
+    issues
   };
 }
 

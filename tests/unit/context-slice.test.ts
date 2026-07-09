@@ -52,6 +52,24 @@ describe('context slice report', () => {
     expect(validateSchema('hadara.contextSlice.v1', report).ok).toBe(true);
   });
 
+  it('does not mark file-end range clamping as output truncation', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'docs', 'short.md'), 'one\ntwo\nthree\n', 'utf8');
+
+    const report = buildContextSliceReport({
+      projectRoot: root,
+      path: 'docs/short.md',
+      from: 1,
+      to: 80
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.slices[0]).toMatchObject({ startLine: 1, endLine: 3 });
+    expect(report.summary).toMatchObject({ totalLines: 3, truncated: false });
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'CONTEXT_SLICE_RANGE_CLAMPED' }));
+    expect(validateSchema('hadara.contextSlice.v1', report).ok).toBe(true);
+  });
+
   it('clamps tail windows to the bounded C4 line budget', () => {
     const root = tempProject();
     fs.writeFileSync(path.join(root, 'docs', 'tail.md'), Array.from({ length: 520 }, (_, index) => `line ${index + 1}`).join('\n'), 'utf8');

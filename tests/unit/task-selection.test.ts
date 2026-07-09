@@ -104,6 +104,54 @@ describe('task selection recommendation', () => {
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
+  it('reuses a similar open Task Board row instead of creating a duplicate handoff task', () => {
+    const root = tempProject({
+      handoffNextStep: 'Create final polish and dogfood report.'
+    });
+    const existing = createTaskCapsule(root, 'Finalize taskflow toy dogfood report');
+
+    const report = createTaskSelectionReport(root);
+
+    expect(report.recommendations[0]).toMatchObject({
+      taskId: existing.id,
+      title: 'Finalize taskflow toy dogfood report',
+      source: 'docs/AGENT_HANDOFF.md',
+      sourceKind: 'handoff',
+      taskBoardStatus: 'Draft',
+      taskCapsulePresent: true,
+      createCommand: null
+    });
+    expect(report.recommendations[0].reason).toContain('closely matches');
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
+  });
+
+  it('suggests creating a first Task Capsule in an empty project', () => {
+    const root = tempProject();
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      ['# TASK_BOARD', '', '| ID | Title | Status | Capsule | Notes |', '|---|---|---|---|---|', ''].join('\n'),
+      'utf8'
+    );
+
+    const report = createTaskSelectionReport(root);
+
+    expect(report).toMatchObject({
+      summary: { recommendations: 1, source: 'project-scaffold', policy: 'handoff-first' },
+      recommendations: [
+        expect.objectContaining({
+          taskId: 'TBD',
+          title: 'Create first Task Capsule',
+          source: 'project-scaffold',
+          sourceKind: 'task-board-fallback',
+          taskCapsulePresent: false,
+          createCommand: "hadara task create 'Create first Task Capsule'"
+        })
+      ],
+      issues: []
+    });
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
+  });
+
   it('recommends the first incomplete Development Slices row with existing capsule metadata', () => {
     const root = tempProject();
     const done = createTaskCapsule(root, 'Already Done');

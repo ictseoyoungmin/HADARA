@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0542 0.4.2 rc0 installed toy project dogfood across init profiles |
-| Active Task | `hadara@0.4.2-rc.0` npm/GitHub publication, installed-package recycle, and three-profile toy-project dogfood are complete. Next decision is whether to fix T-0542 findings before stable `0.4.2` readiness. |
+| Latest Completed Task | T-0543 0.4.2 stable preflight dogfood finding fixes |
+| Active Task | T-0542 stable-preflight findings are fixed in source and built `dist`; next step is stable `0.4.2` release readiness/publish preparation, followed by post-publish installed-package recycle. |
+
+T-0543 follow-up note: stable-preflight fixes from the `0.4.2-rc.0` installed dogfood are complete in source and built CLI. Installed/consumer `context pack` no longer emits HADARA-dev source/release-readiness missing-file warnings, empty projects get a first-task create recommendation from `task status --json`, similar handoff recommendations bind to existing open Task Board rows, EOF range clamps no longer set `context slice` `summary.truncated:true`, validation direct-result recovery preserves `--update-task`, and evidence/validation JSON reports warn on append-lock contention. Docker direct validation passed TypeScript build, focused Vitest 8 files / 85 tests, and built version smoke with `distLooksStale:false`; fresh `/tmp` consumer smoke passed for init, first-task guidance, task create, context pack, and context slice. Evidence: `ev:T-0543:517b75fb0f7e40d494f38758`, `ev:T-0543:44ab2482aafe493d8c25f304`, `ev:T-0543:0d80024ae7f5495da975cdda`, `ev:T-0543:8fffcd9e3c044972b8719191`.
 
 T-0542 follow-up note: installed-package dogfood used `hadara@next` resolving to `0.4.2-rc.0` from an isolated `/tmp` prefix, initialized `basic`, `standard`, and `governed` profiles, completed a governed Taskflow Toy MVP through T-0001/T-0002/T-0003 using generated workflow docs, and copied the structured report to `tasks/T-0542-0-4-2-rc0-installed-toy-project-dogfood-across-init-profiles/artifacts/DOGFOOD_REPORT.md`. Core loop and generated docs were healthy, but the report flags installed-package `context pack` source-checkout leakage, empty-project first-task guidance gaps, and handoff recommendation title matching as follow-ups. Evidence: `ev:T-0542:7c7aae7945b94710821bcd45`.
 

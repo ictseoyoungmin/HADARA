@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
 import { afterEach, describe, expect, it } from 'vitest';
 import { handleValidationCommand } from '../../src/cli/validation';
 import { validateSchema } from '../../src/core/schema';
@@ -66,6 +67,49 @@ describe('validation run', () => {
     expect(taskMd).not.toContain('Focused tests');
     expect(fs.readFileSync(path.join(task.dir, 'EVIDENCE.md'), 'utf8')).toContain(report.evidence?.id);
     expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toContain('"category":"validation"');
+  });
+
+  it('reports evidence append lock contention as a warning issue', async () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Validation lock diagnostics');
+    const lockDir = path.join(root, '.hadara', 'local', 'locks', 'evidence', `${task.id}.lock`);
+    fs.mkdirSync(lockDir, { recursive: true });
+    fs.writeFileSync(path.join(lockDir, 'lock.json'), `${JSON.stringify({ pid: 12345, taskId: task.id, command: 'test-holder' })}\n`, 'utf8');
+    const releaser = spawn(
+      process.execPath,
+      [
+        '-e',
+        'setTimeout(() => require("node:fs").rmSync(process.argv[1], { recursive: true, force: true }), 75)',
+        lockDir
+      ],
+      { stdio: 'ignore' }
+    );
+    const releaserExit = new Promise<void>((resolve) => releaser.once('close', () => resolve()));
+
+    try {
+      const report = createValidationRunReport(root, {
+        taskId: task.id,
+        check: 'Focused tests',
+        argv: [process.execPath, '-e', 'process.exit(0)']
+      });
+
+      expect(report.ok).toBe(true);
+      expect(report.evidence?.appendLock).toMatchObject({
+        path: `.hadara/local/locks/evidence/${task.id}.lock`,
+        contended: true,
+        timeoutMs: 5000
+      });
+      expect(report.issues).toContainEqual(
+        expect.objectContaining({
+          severity: 'warning',
+          code: 'EVIDENCE_APPEND_LOCK_CONTENDED'
+        })
+      );
+      expect(validateSchema('hadara.validation.run.v1', report).ok).toBe(true);
+    } finally {
+      fs.rmSync(lockDir, { recursive: true, force: true });
+      await releaserExit;
+    }
   });
 
   it('auto-resolves earlier failed attempts for the same validation check when a later attempt passes', () => {
@@ -242,6 +286,7 @@ describe('validation run', () => {
       taskId: task.id,
       check: 'Done-level harness',
       argv: [process.execPath, 'dist/cli/main.js', 'harness', 'validate', '--task', task.id, '--level', 'done', '--json'],
+      updateTask: true,
       spawnSyncFn: () => ({
         pid: 0,
         output: [null, '', ''],
@@ -268,6 +313,12 @@ describe('validation run', () => {
       }
     });
     expect(report.issues).toContainEqual(expect.objectContaining({ severity: 'error', code: 'VALIDATION_COMMAND_PERMISSION_DENIED' }));
+    expect(report.nextActions).toContainEqual(
+      expect.objectContaining({
+        id: 'record-direct-validation-result',
+        command: expect.stringContaining('--update-task')
+      })
+    );
     expect(report.nextActions).toContainEqual(
       expect.objectContaining({
         id: 'record-direct-result',

@@ -140,4 +140,26 @@ describe('context graph registry extractors', () => {
     expect(result.source.paths).toEqual(['src/services/capability-registry.ts']);
     expect(result.issues).toEqual([]);
   });
+
+  it('does not warn about missing command registry source in installed consumer projects', () => {
+    const root = tempProject();
+
+    const result = extractCommandRegistry(root);
+
+    expect(result.nodes.some((node) => node.id === 'command:help')).toBe(true);
+    expect(result.issues).toEqual([]);
+  });
+
+  it('warns about missing command registry source in HADARA source checkouts', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'package.json'), `${JSON.stringify({ name: 'hadara' })}\n`, 'utf8');
+
+    const result = extractCommandRegistry(root);
+
+    expect(result.nodes.some((node) => node.id === 'command:help')).toBe(true);
+    expect(result.issues).toContainEqual(expect.objectContaining({
+      code: 'CONTEXT_GRAPH_COMMAND_REGISTRY_MISSING',
+      path: 'src/services/capability-registry.ts'
+    }));
+  });
 });

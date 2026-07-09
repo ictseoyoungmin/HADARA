@@ -151,6 +151,13 @@ export function createValidationRunReport(projectRoot: string, options: Validati
     idempotencyKey: `validation-run:${options.taskId}:${options.check}:${hashText(options.argv.join('\0'))}:${executed.status ?? 'null'}:${executed.signal ?? 'null'}:${hashText((options.tags ?? []).join('\0'))}`
   });
   const evidenceId = evidence.evidence.schemaVersion === 'hadara.evidence.v2' ? evidence.evidence.id : 'evidence.jsonl';
+  if (evidence.appendLock.contended) {
+    issues.push({
+      severity: 'warning',
+      code: 'EVIDENCE_APPEND_LOCK_CONTENDED',
+      message: `Evidence append waited ${evidence.appendLock.waitedMs}ms for the task-scoped lock at ${evidence.appendLock.path}. Serialize same-task evidence writes to avoid contention.`
+    });
+  }
   const taskValidationRow = options.updateTask
     ? updateTaskValidationRow(projectRoot, task.dir, options.check, options.argv.join(' '), result, evidenceId)
     : {
@@ -321,7 +328,7 @@ function createValidationRunNextActions(options: ValidationRunOptions, result: V
       id: 'record-direct-validation-result',
       kind: 'command',
       message: 'Record an already-run direct result through validation run so TASK.md row sync and validation-check resolution tags remain consistent.',
-      command: `hadara validation run --task ${options.taskId} --check ${shellSingleQuote(options.check)} --direct-result passed --direct-summary ${shellSingleQuote('Direct command passed after wrapper launch failure.')} --json`
+      command: `hadara validation run --task ${options.taskId} --check ${shellSingleQuote(options.check)} --direct-result passed --direct-summary ${shellSingleQuote('Direct command passed after wrapper launch failure.')}${options.updateTask ? ' --update-task' : ''} --json`
     },
     {
       id: 'record-direct-result',

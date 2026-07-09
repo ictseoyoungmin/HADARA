@@ -207,6 +207,50 @@ describe('CLI evidence JSON reports', () => {
     }
   });
 
+  it('reports append lock contention in evidence collect JSON issues', async () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Collect lock diagnostics');
+    const lockDir = path.join(root, '.hadara', 'local', 'locks', 'evidence', `${task.id}.lock`);
+    fs.mkdirSync(lockDir, { recursive: true });
+    fs.writeFileSync(path.join(lockDir, 'lock.json'), `${JSON.stringify({ pid: 12345, taskId: task.id, command: 'test-holder' })}\n`, 'utf8');
+    const releaser = spawn(
+      process.execPath,
+      [
+        '-e',
+        'setTimeout(() => require("node:fs").rmSync(process.argv[1], { recursive: true, force: true }), 75)',
+        lockDir
+      ],
+      { stdio: 'ignore' }
+    );
+    const releaserExit = new Promise<void>((resolve) => releaser.once('close', () => resolve()));
+
+    try {
+      const report = createEvidenceCollectReport(root, {
+        taskId: task.id,
+        kind: 'command-log',
+        summary: 'Append waited for held lock',
+        result: 'passed',
+        visibility: 'public'
+      });
+
+      expect(report.ok).toBe(true);
+      expect(report.evidence?.appendLock).toMatchObject({
+        path: `.hadara/local/locks/evidence/${task.id}.lock`,
+        contended: true,
+        timeoutMs: 5000
+      });
+      expect(report.issues).toContainEqual(
+        expect.objectContaining({
+          severity: 'warning',
+          code: 'EVIDENCE_APPEND_LOCK_CONTENDED'
+        })
+      );
+    } finally {
+      fs.rmSync(lockDir, { recursive: true, force: true });
+      await releaserExit;
+    }
+  });
+
   it('prints add-command help without appending evidence when task is supplied', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Add command help does not mutate');

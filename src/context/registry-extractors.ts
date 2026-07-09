@@ -12,6 +12,7 @@ import {
 } from './extractor-contract';
 import { DOCS_REGISTRY_PATH, type DocumentRegistryEntry, type DocumentRegistryFile } from '../services/docs-registry';
 import { listCommandRegistryEntries, type CommandRegistryEntry } from '../services/capability-registry';
+import { isHadaraSourceCheckout } from './project-kind';
 
 const COMMAND_REGISTRY_SOURCE_PATH = 'src/services/capability-registry.ts';
 
@@ -57,7 +58,7 @@ export function extractCommandRegistry(projectRoot: string): GraphExtractionResu
   const content = readOptionalText(absolutePath);
   const result = createEmptyExtractionResult('extractCommandRegistry', [{ path: COMMAND_REGISTRY_SOURCE_PATH, content }]);
   const sourceHash = content == null ? undefined : hashContextGraphText(content);
-  if (content == null) {
+  if (content == null && isHadaraSourceCheckout(projectRoot)) {
     result.issues.push({
       severity: 'warning',
       code: 'CONTEXT_GRAPH_COMMAND_REGISTRY_MISSING',

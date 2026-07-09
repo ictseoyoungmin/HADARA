@@ -16,6 +16,7 @@ import {
 import { createContextCacheWarmReport } from '../../src/context/context-cache-store';
 import { hashContextGraphText } from '../../src/context/extractor-contract';
 import { createDocsReadMapReport } from '../../src/services/docs-registry';
+import { createTaskCapsule } from '../../src/task/task-capsule';
 
 const generatedAt = '2026-06-18T13:00:00.000Z';
 const taskId = 'T-0003';
@@ -112,6 +113,63 @@ describe('context pack', () => {
       command: `hadara task status --task ${taskId} --detail full --json`,
       writeBoundary: 'read-only'
     }));
+    assertSchema('hadara.contextPack.v1', report);
+  });
+
+  it('does not leak source-checkout warnings in installed-package consumer projects', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-context-pack-consumer-'));
+    roots.push(root);
+    fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'docs-registry.json'), `${JSON.stringify({
+      schemaVersion: 'hadara.docs.registry.v1',
+      registryVersion: 1,
+      projectProfile: 'basic',
+      documents: [
+        {
+          path: 'docs/PROJECT_STATE.md',
+          title: 'PROJECT_STATE',
+          owner: 'hadara-docs',
+          kind: 'project-state',
+          status: 'canonical',
+          scope: 'project',
+          profiles: ['basic'],
+          readWhen: ['session-start'],
+          requiredReading: true,
+          updateOwner: 'mixed',
+          updatedByCommands: [],
+          managedSections: [],
+          closeSourceRole: 'included',
+          supersedes: []
+        },
+        {
+          path: 'docs/TASK_BOARD.md',
+          title: 'TASK_BOARD',
+          owner: 'hadara-docs',
+          kind: 'task-board',
+          status: 'active',
+          scope: 'project',
+          profiles: ['basic'],
+          readWhen: ['task-start'],
+          requiredReading: true,
+          updateOwner: 'hadara-task',
+          updatedByCommands: [],
+          managedSections: [],
+          closeSourceRole: 'included',
+          supersedes: []
+        }
+      ]
+    })}\n`, 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n\nConsumer project.\n', 'utf8');
+    const task = createTaskCapsule(root, 'Consumer context pack task');
+
+    const report = buildContextPackReport({ projectRoot: root, taskId: task.id, generatedAt });
+    const stateIssueCodes = report.stateProjection.issues.map((issue) => issue.code);
+    const stateIssuePaths = report.stateProjection.issues.flatMap((issue) => issue.paths ?? []);
+
+    expect(stateIssueCodes).not.toContain('STATE_RELEASE_EVIDENCE_STALE');
+    expect(stateIssuePaths).not.toContain('src/services/capability-registry.ts');
+    expect(stateIssuePaths).not.toContain('docs/RELEASE_READINESS.md');
     assertSchema('hadara.contextPack.v1', report);
   });
 

@@ -119,8 +119,21 @@ The release gate must not execute package smoke, release artifact, or publish op
     }));
   });
 
-  it('degrades missing release readiness docs to a source-missing issue', () => {
+  it('does not warn about missing release readiness docs in installed consumer projects', () => {
     const root = tempProject();
+    fs.rmSync(path.join(root, 'docs', 'RELEASE_READINESS.md'), { force: true });
+
+    const result = extractReleaseReadiness(root);
+
+    expect(result.nodes).toEqual([]);
+    expect(result.edges).toEqual([]);
+    expect(result.stateSources).toEqual([]);
+    expect(result.issues).toEqual([]);
+  });
+
+  it('degrades missing release readiness docs to a source-missing issue in HADARA source checkouts', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'package.json'), `${JSON.stringify({ name: 'hadara' })}\n`, 'utf8');
     fs.rmSync(path.join(root, 'docs', 'RELEASE_READINESS.md'), { force: true });
 
     const result = extractReleaseReadiness(root);

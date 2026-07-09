@@ -76,15 +76,6 @@ function stateSourceConsistencyIssues(stateSources: StateSource[]): StateConsist
       'Update active task state in PROJECT_STATE, AGENT_HANDOFF, and Task Board, or clear it when no concrete task is active.'
     ));
   }
-  if (!stateSources.some((source) => source.kind === 'release-readiness')) {
-    issues.push(issue(
-      'warning',
-      'STATE_RELEASE_EVIDENCE_STALE',
-      'Release readiness state source is missing from context extraction.',
-      ['docs/RELEASE_READINESS.md'],
-      'Run or include release readiness extraction before relying on release-state context routing.'
-    ));
-  }
   return issues;
 }
 

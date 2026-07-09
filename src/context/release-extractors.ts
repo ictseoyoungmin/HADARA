@@ -13,6 +13,7 @@ import {
   normalizeContextGraphPath
 } from './extractor-contract';
 import { listCommandRegistryEntries, type CommandRegistryEntry } from '../services/capability-registry';
+import { isHadaraSourceCheckout } from './project-kind';
 
 interface ReleaseReadinessSection {
   title: string;
@@ -34,6 +35,7 @@ export function extractReleaseReadiness(projectRoot: string): GraphExtractionRes
   const content = readOptionalText(path.join(projectRoot, RELEASE_READINESS_PATH));
   const result = createEmptyExtractionResult('extractReleaseReadiness', [{ path: RELEASE_READINESS_PATH, content }]);
   if (content == null) {
+    if (!isHadaraSourceCheckout(projectRoot)) return result;
     result.issues.push({
       severity: 'warning',
       code: 'CONTEXT_GRAPH_SOURCE_MISSING',

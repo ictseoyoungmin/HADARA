@@ -107,8 +107,7 @@ describe('context state projection', () => {
       'STATE_ACTIVE_TASK_MISMATCH',
       'STATE_TASK_CAPSULE_MISSING',
       'STATE_TASK_BOARD_MISSING_ROW',
-      'STATE_CLOSE_PROOF_STALE',
-      'STATE_RELEASE_EVIDENCE_STALE'
+      'STATE_CLOSE_PROOF_STALE'
     ]));
     expect(report.issues.every((issue) => issue.paths.length > 0 && issue.fixHint)).toBe(true);
   });

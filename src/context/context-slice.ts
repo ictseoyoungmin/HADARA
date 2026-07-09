@@ -564,9 +564,15 @@ function enforceSlicePayloadBudget(
       sliceCount: slices.length,
       totalLines,
       totalBytes,
-      truncated: issues.some((issue) => issue.code === 'CONTEXT_SLICE_RANGE_CLAMPED' || issue.code === 'CONTEXT_SLICE_TOO_LARGE')
+      truncated: issues.some(isOutputTruncationIssue)
     }
   };
+}
+
+function isOutputTruncationIssue(issue: ContextSliceIssue): boolean {
+  if (issue.code === 'CONTEXT_SLICE_TOO_LARGE') return true;
+  if (issue.code !== 'CONTEXT_SLICE_RANGE_CLAMPED') return false;
+  return !issue.message.startsWith('Range end was clamped to file line count ');
 }
 
 function mergeRanges(ranges: Range[]): Range[] {

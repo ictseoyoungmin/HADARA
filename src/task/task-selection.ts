@@ -80,8 +80,9 @@ export function createTaskSelectionReport(projectRoot: string): TaskSelectionRep
   const nextSlice = slices.rows.find((row) => isOpenSliceStatus(row.status));
   const handoffRecommendation = handoff.nextRecommendedStep ? recommendationFromHandoff(projectRoot, handoff.nextRecommendedStep, board.rows, capsules) : null;
   const taskBoardRecommendation = recommendationFromTaskBoard(board.rows, capsules);
+  const firstTaskRecommendation = recommendationForEmptyProject(board.rows, capsules);
   const defaultRecommendation = nextSlice ? recommendationFromSlice(projectRoot, nextSlice, board.rows, capsules) : taskBoardRecommendation;
-  const recommendation = handoffRecommendation ?? defaultRecommendation;
+  const recommendation = handoffRecommendation ?? defaultRecommendation ?? firstTaskRecommendation;
   const recommendations = recommendation ? [recommendation] : [];
   const backlog = createTaskBoardBacklog(board.rows, capsules, recommendation?.taskId ?? null);
   if (!recommendation) {
@@ -145,13 +146,20 @@ function recommendationFromSlice(projectRoot: string, slice: SliceRow, boardRows
 
 function recommendationFromHandoff(projectRoot: string, step: string, boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskSelectionRecommendation {
   const knownTaskId = step.match(/\bT-\d{4}\b/)?.[0] ?? null;
-  const boardRow = knownTaskId ? boardRows.find((row) => row.taskId === knownTaskId) : undefined;
-  const capsule = knownTaskId ? capsules.find((task) => task.id === knownTaskId) : undefined;
   const title = normalizeHandoffTitle(step);
+  const fuzzyBoardRow = knownTaskId ? undefined : findSimilarOpenBoardRow(title, boardRows);
+  const taskId = knownTaskId ?? fuzzyBoardRow?.taskId ?? 'TBD';
+  const boardRow = knownTaskId
+    ? boardRows.find((row) => row.taskId === knownTaskId)
+    : fuzzyBoardRow;
+  const capsule = taskId !== 'TBD' ? capsules.find((task) => task.id === taskId) : undefined;
+  const resolvedTitle = boardRow?.title ?? title;
   return {
-    taskId: knownTaskId ?? 'TBD',
-    title,
-    reason: 'Current next recommended step from docs/AGENT_HANDOFF.md.',
+    taskId,
+    title: resolvedTitle,
+    reason: boardRow && !knownTaskId
+      ? 'Existing open Task Board row closely matches docs/AGENT_HANDOFF.md next recommended step.'
+      : 'Current next recommended step from docs/AGENT_HANDOFF.md.',
     source: 'docs/AGENT_HANDOFF.md',
     sourceKind: 'handoff',
     taskBoardStatus: boardRow?.status ?? null,
@@ -159,7 +167,7 @@ function recommendationFromHandoff(projectRoot: string, step: string, boardRows:
     taskCapsulePresent: Boolean(capsule),
     capsule: capsule ? toPortablePath(path.relative(projectRoot, capsule.dir)) : boardRow?.capsule || null,
     requiredReading: REQUIRED_READING,
-    createCommand: capsule ? null : `hadara task create ${shellQuote(title)}`
+    createCommand: capsule || boardRow ? null : `hadara task create ${shellQuote(title)}`
   };
 }
 
@@ -198,6 +206,49 @@ function createTaskBoardBacklog(boardRows: BoardRow[], capsules: ReturnType<type
         reason: `Non-primary open Task Board row with status ${row.status || 'empty'}.`
       };
     });
+}
+
+function recommendationForEmptyProject(boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskSelectionRecommendation | null {
+  if (boardRows.length > 0 || capsules.length > 0) return null;
+  const title = 'Create first Task Capsule';
+  return {
+    taskId: 'TBD',
+    title,
+    reason: 'No Task Board rows or Task Capsules exist yet; start by creating the first scoped task.',
+    source: 'project-scaffold',
+    sourceKind: 'task-board-fallback',
+    taskBoardStatus: null,
+    taskBoardPath: null,
+    taskCapsulePresent: false,
+    capsule: null,
+    requiredReading: REQUIRED_READING,
+    createCommand: `hadara task create ${shellQuote(title)}`
+  };
+}
+
+function findSimilarOpenBoardRow(title: string, boardRows: BoardRow[]): BoardRow | undefined {
+  const titleTokens = normalizedTitleTokens(title);
+  if (titleTokens.length === 0) return undefined;
+  let best: { row: BoardRow; score: number; overlap: number } | null = null;
+  for (const row of boardRows.filter((candidate) => isOpenBoardStatus(candidate.status))) {
+    const rowTokens = normalizedTitleTokens(row.title);
+    const overlap = rowTokens.filter((token) => titleTokens.includes(token)).length;
+    const union = new Set([...titleTokens, ...rowTokens]).size;
+    const score = union === 0 ? 0 : overlap / union;
+    if (!best || score > best.score) best = { row, score, overlap };
+  }
+  return best && best.overlap >= 2 && best.score >= 0.4 ? best.row : undefined;
+}
+
+function normalizedTitleTokens(value: string): string[] {
+  return Array.from(new Set(value
+    .toLowerCase()
+    .replace(/[`*_.,:;()[\]{}]/g, ' ')
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 3)
+    .map((token) => token.replace(/^(finalize|finalise|finalizing)$/, 'final'))
+    .filter((token) => !['and', 'task', 'capsule', 'create', 'select', 'first', 'with', 'next', 'work'].includes(token))));
 }
 
 function readDevelopmentSlices(projectRoot: string, issues: TaskSelectionIssue[]): { present: boolean; rows: SliceRow[] } {
