@@ -551,3 +551,4 @@
 | T-0548 | context pack freshness diagnostic | Done | tasks/T-0548-context-pack-freshness-diagnostic | |
 | T-0549 | Implement context pack fail-fast and compact default cleanup | Done | tasks/T-0549-implement-context-pack-fail-fast-and-compact-default-cleanup | |
 | T-0550 | Implement current-state projection cleanup | Done | tasks/T-0550-implement-current-state-projection-cleanup | |
+| T-0551 | Implement known-problem and handoff extraction cleanup | Done | tasks/T-0551-implement-known-problem-and-handoff-extraction-cleanup | |

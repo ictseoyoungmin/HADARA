@@ -332,14 +332,28 @@ function parseDecisionHeadingRecords(content: string): DecisionRecord[] {
 
 function parseKnownProblems(content: string): KnownProblemRecord[] {
   const rows = parseMarkdownRowsUnderHeading(content, '## Current Known Problems');
+  const header = rows.find((row) => row.some((cell) => normalizeHeader(cell) === 'issue'));
+  const issueIndex = header ? header.findIndex((cell) => normalizeHeader(cell) === 'issue') : 0;
+  const impactIndex = header ? header.findIndex((cell) => normalizeHeader(cell) === 'impact') : 1;
+  const nextStepIndex = header ? header.findIndex((cell) => normalizeHeader(cell) === 'nextstep') : 2;
+  const stateIndex = header ? header.findIndex((cell) => normalizeHeader(cell) === 'state') : -1;
   return rows
-    .filter((row) => row[0] && row[0] !== 'Issue')
+    .filter((row) => row[issueIndex] && normalizeHeader(row[issueIndex]) !== 'issue')
+    .filter((row) => stateIndex < 0 || isCurrentKnownProblemState(row[stateIndex]))
     .map((row) => ({
-      issue: row[0],
-      impact: row[1],
-      nextStep: row[2],
-      line: findLineContaining(content, row[0])
+      issue: row[issueIndex],
+      impact: impactIndex >= 0 ? row[impactIndex] : undefined,
+      nextStep: nextStepIndex >= 0 ? row[nextStepIndex] : undefined,
+      line: findLineContaining(content, row[issueIndex])
     }));
+}
+
+function normalizeHeader(value: string | undefined): string {
+  return (value ?? '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function isCurrentKnownProblemState(value: string | undefined): boolean {
+  return /^(active|current|open|watch)$/i.test((value ?? '').trim());
 }
 
 function listManagedSectionTargets(projectRoot: string): string[] {

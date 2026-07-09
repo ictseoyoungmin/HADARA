@@ -155,6 +155,31 @@ Reason:
     expect(result.issues).toEqual([]);
   });
 
+  it('extracts only explicitly current known-problem rows when a State column exists', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF
+
+## Current Known Problems
+
+| Issue | State | Impact | Next Step |
+|---|---|---|---|
+| Active context-pack warning. | Active | Current context can be noisy. | Tighten extraction. |
+| Historical release blocker. | Historical | Old release note. | Keep as history. |
+| Resolved cache warning. | Resolved | Already fixed. | No action. |
+`, 'utf8');
+
+    const result = extractAgentHandoff(root);
+
+    expect(result.nodes.map((node) => node.label)).toEqual(['Active context-pack warning.']);
+    expect(result.nodes[0]).toEqual(expect.objectContaining({
+      metadata: {
+        impact: 'Current context can be noisy.',
+        nextStep: 'Tighten extraction.'
+      }
+    }));
+    expect(result.stateSources?.[0].extracted.knownProblems).toBe(1);
+  });
+
   it('does not warn when basic or standard profiles omit Agent Handoff', () => {
     for (const profile of ['basic', 'standard']) {
       const root = tempProject();
