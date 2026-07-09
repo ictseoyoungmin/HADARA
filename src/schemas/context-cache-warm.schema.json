@@ -30,6 +30,7 @@
     "manifest": { "$ref": "#/$defs/manifestStatus" },
     "write": { "$ref": "#/$defs/write" },
     "shards": { "$ref": "#/$defs/shards" },
+    "after": { "$ref": "#/$defs/after" },
     "diagnostics": { "$ref": "#/$defs/diagnostics" },
     "issues": {
       "type": "array",
@@ -54,6 +55,12 @@
         "shardStaleCount": { "type": "number" },
         "shardCorruptCount": { "type": "number" },
         "shardSchemaMismatchCount": { "type": "number" },
+        "postWriteCacheFresh": { "type": "boolean" },
+        "postWriteShardFreshCount": { "type": "number" },
+        "postWriteStaleExtractorKeys": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
         "degraded": { "type": "boolean" },
         "staleExtractorKeys": {
           "type": "array",
@@ -145,6 +152,34 @@
         "beforeCacheKey": { "type": "string" },
         "afterCacheKey": { "type": "string" },
         "skippedReason": { "enum": ["cache-fresh"] }
+      }
+    },
+    "after": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["cacheFresh", "operatorSummary", "manifestStatus", "manifestHash", "staleExtractorKeys", "shardSummary"],
+      "properties": {
+        "cacheFresh": { "type": "boolean" },
+        "operatorSummary": { "type": "string" },
+        "manifestStatus": { "enum": ["missing", "fresh", "stale", "corrupt", "schema-mismatch"] },
+        "manifestHash": { "type": "string" },
+        "staleExtractorKeys": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "shardSummary": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["total", "fresh", "missing", "stale", "corrupt", "schemaMismatch"],
+          "properties": {
+            "total": { "type": "number" },
+            "fresh": { "type": "number" },
+            "missing": { "type": "number" },
+            "stale": { "type": "number" },
+            "corrupt": { "type": "number" },
+            "schemaMismatch": { "type": "number" }
+          }
+        }
       }
     },
     "issue": {

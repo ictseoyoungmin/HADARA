@@ -157,6 +157,9 @@ export interface ContextCacheWarmReport {
     shardStaleCount: number;
     shardCorruptCount: number;
     shardSchemaMismatchCount: number;
+    postWriteCacheFresh?: boolean;
+    postWriteShardFreshCount?: number;
+    postWriteStaleExtractorKeys?: string[];
     degraded: boolean;
     staleExtractorKeys: string[];
   };
@@ -193,8 +196,25 @@ export interface ContextCacheWarmReport {
     executed: boolean;
     items: ContextGraphExtractorShardWarmItem[];
   };
+  after?: ContextCacheAfterWriteReport;
   diagnostics: ContextCacheDiagnostics;
   issues: ContextCacheIssue[];
+}
+
+export interface ContextCacheAfterWriteReport {
+  cacheFresh: boolean;
+  operatorSummary: string;
+  manifestStatus: 'missing' | 'fresh' | 'stale' | 'corrupt' | 'schema-mismatch';
+  manifestHash: string;
+  staleExtractorKeys: string[];
+  shardSummary: {
+    total: number;
+    fresh: number;
+    missing: number;
+    stale: number;
+    corrupt: number;
+    schemaMismatch: number;
+  };
 }
 
 export interface ContextCacheDiagnostics {
@@ -881,6 +901,12 @@ export function createContextCacheWarmReport(input: { projectRoot: string; execu
     writeContextSourceManifestCache(input.projectRoot, analysis.currentManifest);
     writeExecuted = true;
   }
+  const after = execute && (writeExecuted || shardWriteExecuted)
+    ? createContextCacheAfterWriteReport({
+      projectRoot: input.projectRoot,
+      manifest: analysis.currentManifest
+    })
+    : undefined;
 
   return {
     schemaVersion: CONTEXT_CACHE_WARM_SCHEMA_ID,
@@ -904,6 +930,11 @@ export function createContextCacheWarmReport(input: { projectRoot: string; execu
       shardStaleCount: shardItems.filter((item) => item.beforeStatus === 'stale').length,
       shardCorruptCount: shardItems.filter((item) => item.beforeStatus === 'corrupt').length,
       shardSchemaMismatchCount: shardItems.filter((item) => item.beforeStatus === 'schema-mismatch').length,
+      ...(after ? {
+        postWriteCacheFresh: after.cacheFresh,
+        postWriteShardFreshCount: after.shardSummary.fresh,
+        postWriteStaleExtractorKeys: after.staleExtractorKeys
+      } : {}),
       degraded: analysis.degraded,
       staleExtractorKeys: analysis.staleExtractorKeys
     },
@@ -923,12 +954,72 @@ export function createContextCacheWarmReport(input: { projectRoot: string; execu
       executed: shardWriteExecuted,
       items: shardItems
     },
+    ...(after ? { after } : {}),
     diagnostics: createContextCacheDiagnostics({
       projectRoot: input.projectRoot,
       analysis,
       shardItems
     }),
     issues: analysis.issues
+  };
+}
+
+function createContextCacheAfterWriteReport(input: {
+  projectRoot: string;
+  manifest: ContextSourceManifest;
+}): ContextCacheAfterWriteReport {
+  const sourceManifest = readContextSourceManifestCache(input.projectRoot);
+  const manifestStatus: ContextCacheAfterWriteReport['manifestStatus'] = sourceManifest.status === 'valid'
+    ? sourceManifest.manifest?.manifestHash === input.manifest.manifestHash ? 'fresh' : 'stale'
+    : sourceManifest.status;
+  const shardReads = [
+    ...CONTEXT_GRAPH_EXTRACTOR_SHARD_KEYS.map((extractorKey) =>
+      readContextGraphExtractorShard({
+        projectRoot: input.projectRoot,
+        manifest: input.manifest,
+        extractorKey
+      })
+    ),
+    {
+      extractorKey: 'graphCore' as const,
+      ...readContextGraphCoreShard({
+        projectRoot: input.projectRoot,
+        manifest: input.manifest
+      })
+    },
+    {
+      extractorKey: 'codeIndex' as const,
+      ...readContextCodeIndexShard({
+        projectRoot: input.projectRoot,
+        manifest: input.manifest
+      })
+    }
+  ];
+  const staleExtractorKeys = shardReads
+    .filter((read) => read.status === 'stale')
+    .map((read) => read.extractorKey)
+    .sort();
+  const shardSummary = {
+    total: shardReads.length,
+    fresh: shardReads.filter((read) => read.status === 'fresh').length,
+    missing: shardReads.filter((read) => read.status === 'missing').length,
+    stale: shardReads.filter((read) => read.status === 'stale').length,
+    corrupt: shardReads.filter((read) => read.status === 'corrupt').length,
+    schemaMismatch: shardReads.filter((read) => read.status === 'schema-mismatch').length
+  };
+  return {
+    cacheFresh: manifestStatus === 'fresh'
+      && shardSummary.fresh === shardSummary.total
+      && staleExtractorKeys.length === 0,
+    operatorSummary: manifestStatus === 'fresh'
+      && shardSummary.fresh === shardSummary.total
+      && staleExtractorKeys.length === 0
+      ? 'Post-write context cache is fresh and all warm shards are available.'
+      : 'Post-write context cache still needs attention; inspect manifestStatus and shardSummary.',
+    manifestStatus,
+    manifestHash: input.manifest.manifestHash,
+    staleExtractorKeys,
+    shardSummary
   };
 }
 

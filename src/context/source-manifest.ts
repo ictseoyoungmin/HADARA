@@ -488,12 +488,10 @@ function listGitContextSourceCandidatePaths(root: string): string[] | undefined 
       stdio: ['ignore', 'pipe', 'ignore'],
       timeout: 5000
     });
-    return Array.from(new Set(output
-      .split('\0')
-      .map((entry) => normalizeContextGraphPath(entry))
-      .filter((entry) => entry && !shouldIgnoreContextSourcePath(entry))))
-      .sort((a, b) => a.localeCompare(b));
-  } catch {
+    return contextSourceCandidatePathsFromGitOutput(output);
+  } catch (error) {
+    const output = recoverExecStdout(error);
+    if (output !== undefined) return contextSourceCandidatePathsFromGitOutput(output);
     return undefined;
   }
 }
@@ -533,9 +531,27 @@ function readGitOutput(root: string, args: string[]): string | undefined {
       stdio: ['ignore', 'pipe', 'ignore'],
       timeout: 5000
     });
-  } catch {
+  } catch (error) {
+    const output = recoverExecStdout(error);
+    if (output !== undefined) return output;
     return undefined;
   }
+}
+
+function contextSourceCandidatePathsFromGitOutput(output: string): string[] {
+  return Array.from(new Set(output
+    .split('\0')
+    .map((entry) => normalizeContextGraphPath(entry))
+    .filter((entry) => entry && !shouldIgnoreContextSourcePath(entry))))
+    .sort((a, b) => a.localeCompare(b));
+}
+
+function recoverExecStdout(error: unknown): string | undefined {
+  if (!error || typeof error !== 'object') return undefined;
+  const output = 'stdout' in error ? (error as { stdout?: unknown }).stdout : undefined;
+  if (typeof output === 'string' && output.length > 0) return output;
+  if (Buffer.isBuffer(output) && output.length > 0) return output.toString('utf8');
+  return undefined;
 }
 
 function createDirtyContextSourceMetadataHash(root: string, gitStatus: string): string | undefined {

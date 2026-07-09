@@ -142,7 +142,25 @@ describe('context cache store', () => {
     expect(report.summary).toMatchObject({
       cacheMode: 'miss',
       writePlanned: true,
-      writeExecuted: true
+      writeExecuted: true,
+      postWriteCacheFresh: true,
+      postWriteShardFreshCount: 5,
+      postWriteStaleExtractorKeys: []
+    });
+    expect(report.after).toMatchObject({
+      cacheFresh: true,
+      operatorSummary: 'Post-write context cache is fresh and all warm shards are available.',
+      manifestStatus: 'fresh',
+      manifestHash: report.write.afterManifestHash,
+      staleExtractorKeys: [],
+      shardSummary: {
+        total: 5,
+        fresh: 5,
+        missing: 0,
+        stale: 0,
+        corrupt: 0,
+        schemaMismatch: 0
+      }
     });
     expect(report.write).toMatchObject({
       policy: 'execute',
@@ -610,7 +628,24 @@ describe('context cache store', () => {
       cachePresent: true,
       cacheFresh: false,
       writePlanned: true,
-      writeExecuted: true
+      writeExecuted: true,
+      postWriteCacheFresh: true,
+      postWriteShardFreshCount: 5,
+      postWriteStaleExtractorKeys: []
+    });
+    expect(report.after).toMatchObject({
+      cacheFresh: true,
+      operatorSummary: 'Post-write context cache is fresh and all warm shards are available.',
+      manifestStatus: 'fresh',
+      staleExtractorKeys: [],
+      shardSummary: {
+        total: 5,
+        fresh: 5,
+        missing: 0,
+        stale: 0,
+        corrupt: 0,
+        schemaMismatch: 0
+      }
     });
     expect(report.manifest.changedPaths).toEqual(['docs/TASK_BOARD.md']);
     expect(report.write.beforeManifestHash).toBe(manifest.manifestHash);
