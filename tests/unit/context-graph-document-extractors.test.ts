@@ -155,6 +155,34 @@ Reason:
     expect(result.issues).toEqual([]);
   });
 
+  it('does not warn when basic or standard profiles omit Agent Handoff', () => {
+    for (const profile of ['basic', 'standard']) {
+      const root = tempProject();
+      fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
+      fs.writeFileSync(path.join(root, '.hadara', 'scaffold.json'), JSON.stringify({ schemaVersion: 'hadara.projectScaffold.v1', profile }), 'utf8');
+
+      const result = extractAgentHandoff(root);
+
+      expect(result.issues).toEqual([]);
+      expect(result.stateSources).toEqual([]);
+      expect(result.nodes).toEqual([]);
+    }
+  });
+
+  it('warns when governed profiles omit Agent Handoff', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'scaffold.json'), JSON.stringify({ schemaVersion: 'hadara.projectScaffold.v1', profile: 'governed' }), 'utf8');
+
+    const result = extractAgentHandoff(root);
+
+    expect(result.issues).toEqual([expect.objectContaining({
+      severity: 'warning',
+      code: 'CONTEXT_GRAPH_SOURCE_MISSING',
+      path: 'docs/AGENT_HANDOFF.md'
+    })]);
+  });
+
   it('extracts Project State and Agent Handoff state sources', () => {
     const root = tempProject();
     fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), `# PROJECT_STATE

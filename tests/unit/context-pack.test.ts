@@ -121,6 +121,10 @@ describe('context pack', () => {
     roots.push(root);
     fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'scaffold.json'), `${JSON.stringify({
+      schemaVersion: 'hadara.projectScaffold.v1',
+      profile: 'basic'
+    })}\n`, 'utf8');
     fs.writeFileSync(path.join(root, '.hadara', 'docs-registry.json'), `${JSON.stringify({
       schemaVersion: 'hadara.docs.registry.v1',
       registryVersion: 1,
@@ -170,6 +174,7 @@ describe('context pack', () => {
     expect(stateIssueCodes).not.toContain('STATE_RELEASE_EVIDENCE_STALE');
     expect(stateIssuePaths).not.toContain('src/services/capability-registry.ts');
     expect(stateIssuePaths).not.toContain('docs/RELEASE_READINESS.md');
+    expect(stateIssuePaths).not.toContain('docs/AGENT_HANDOFF.md');
     assertSchema('hadara.contextPack.v1', report);
   });
 

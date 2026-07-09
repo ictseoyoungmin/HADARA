@@ -119,6 +119,7 @@ export function extractAgentHandoff(projectRoot: string): GraphExtractionResult 
   const content = readOptionalText(path.join(projectRoot, relativePath));
   const result = createEmptyExtractionResult('extractAgentHandoff', [{ path: relativePath, content }]);
   if (content == null) {
+    if (!expectsAgentHandoff(projectRoot)) return result;
     result.issues.push({
       severity: 'warning',
       code: 'CONTEXT_GRAPH_SOURCE_MISSING',
@@ -145,6 +146,20 @@ export function extractAgentHandoff(projectRoot: string): GraphExtractionResult 
   }
 
   return result;
+}
+
+function expectsAgentHandoff(projectRoot: string): boolean {
+  const scaffoldPath = path.join(projectRoot, '.hadara', 'scaffold.json');
+  const content = readOptionalText(scaffoldPath);
+  if (content == null) return true;
+  try {
+    const parsed = JSON.parse(content) as { profile?: unknown };
+    if (parsed.profile === 'basic' || parsed.profile === 'standard') return false;
+    if (parsed.profile === 'governed') return true;
+  } catch {
+    return true;
+  }
+  return true;
 }
 
 function projectStateSource(relativePath: string, sourceHash: string, hints: SharedStateHints): StateSource {

@@ -68,7 +68,7 @@ interface BoardRow {
   capsule: string;
 }
 
-const REQUIRED_READING = ['docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/TASK_BOARD.md'];
+const REQUIRED_READING_CANDIDATES = ['docs/PROJECT_STATE.md', 'docs/AGENT_HANDOFF.md', 'docs/DEVELOPMENT_SLICES.md', 'docs/TASK_BOARD.md'];
 
 export function createTaskSelectionReport(projectRoot: string): TaskSelectionReport {
   const issues: TaskSelectionIssue[] = [];
@@ -79,8 +79,8 @@ export function createTaskSelectionReport(projectRoot: string): TaskSelectionRep
 
   const nextSlice = slices.rows.find((row) => isOpenSliceStatus(row.status));
   const handoffRecommendation = handoff.nextRecommendedStep ? recommendationFromHandoff(projectRoot, handoff.nextRecommendedStep, board.rows, capsules) : null;
-  const taskBoardRecommendation = recommendationFromTaskBoard(board.rows, capsules);
-  const firstTaskRecommendation = recommendationForEmptyProject(board.rows, capsules);
+  const taskBoardRecommendation = recommendationFromTaskBoard(projectRoot, board.rows, capsules);
+  const firstTaskRecommendation = recommendationForEmptyProject(projectRoot, board.rows, capsules);
   const defaultRecommendation = nextSlice ? recommendationFromSlice(projectRoot, nextSlice, board.rows, capsules) : taskBoardRecommendation;
   const recommendation = handoffRecommendation ?? defaultRecommendation ?? firstTaskRecommendation;
   const recommendations = recommendation ? [recommendation] : [];
@@ -139,7 +139,7 @@ function recommendationFromSlice(projectRoot: string, slice: SliceRow, boardRows
     taskBoardPath: boardRow ? 'docs/TASK_BOARD.md' : null,
     taskCapsulePresent: Boolean(capsule),
     capsule: capsulePath,
-    requiredReading: REQUIRED_READING,
+    requiredReading: requiredReadingForProject(projectRoot),
     createCommand: capsule ? null : `hadara task create ${shellQuote(slice.title)}`
   };
 }
@@ -166,12 +166,12 @@ function recommendationFromHandoff(projectRoot: string, step: string, boardRows:
     taskBoardPath: boardRow ? 'docs/TASK_BOARD.md' : null,
     taskCapsulePresent: Boolean(capsule),
     capsule: capsule ? toPortablePath(path.relative(projectRoot, capsule.dir)) : boardRow?.capsule || null,
-    requiredReading: REQUIRED_READING,
+    requiredReading: requiredReadingForProject(projectRoot),
     createCommand: capsule || boardRow ? null : `hadara task create ${shellQuote(title)}`
   };
 }
 
-function recommendationFromTaskBoard(boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskSelectionRecommendation | null {
+function recommendationFromTaskBoard(projectRoot: string, boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskSelectionRecommendation | null {
   const row = boardRows.find((candidate) => isPrimaryOpenBoardStatus(candidate.status)) ?? boardRows.find((candidate) => isOpenBoardStatus(candidate.status));
   if (!row) return null;
   const capsule = capsules.find((task) => task.id === row.taskId);
@@ -185,7 +185,7 @@ function recommendationFromTaskBoard(boardRows: BoardRow[], capsules: ReturnType
     taskBoardPath: 'docs/TASK_BOARD.md',
     taskCapsulePresent: Boolean(capsule),
     capsule: capsule ? row.capsule : row.capsule || null,
-    requiredReading: REQUIRED_READING,
+    requiredReading: requiredReadingForProject(projectRoot),
     createCommand: capsule ? null : `hadara task create ${shellQuote(row.title)}`
   };
 }
@@ -208,7 +208,7 @@ function createTaskBoardBacklog(boardRows: BoardRow[], capsules: ReturnType<type
     });
 }
 
-function recommendationForEmptyProject(boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskSelectionRecommendation | null {
+function recommendationForEmptyProject(projectRoot: string, boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskSelectionRecommendation | null {
   if (boardRows.length > 0 || capsules.length > 0) return null;
   const title = 'Create first Task Capsule';
   return {
@@ -221,9 +221,13 @@ function recommendationForEmptyProject(boardRows: BoardRow[], capsules: ReturnTy
     taskBoardPath: null,
     taskCapsulePresent: false,
     capsule: null,
-    requiredReading: REQUIRED_READING,
+    requiredReading: requiredReadingForProject(projectRoot),
     createCommand: `hadara task create ${shellQuote(title)}`
   };
+}
+
+function requiredReadingForProject(projectRoot: string): string[] {
+  return REQUIRED_READING_CANDIDATES.filter((relativePath) => fs.existsSync(path.join(projectRoot, relativePath)));
 }
 
 function findSimilarOpenBoardRow(title: string, boardRows: BoardRow[]): BoardRow | undefined {

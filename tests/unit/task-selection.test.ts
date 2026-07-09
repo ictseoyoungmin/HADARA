@@ -183,13 +183,31 @@ describe('task selection recommendation', () => {
       ]
     });
     expect(report.recommendations[0].requiredReading).toEqual([
-      'docs/PROJECT_STATE.md',
       'docs/AGENT_HANDOFF.md',
       'docs/DEVELOPMENT_SLICES.md',
       'docs/TASK_BOARD.md'
     ]);
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
     expect(formatTaskSelectionReport(report)).toContain(`${next.id}\tNext Slice`);
+  });
+
+  it('limits required reading recommendations to docs that exist in the project profile', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-task-selection-basic-'));
+    roots.push(root);
+    fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.hadara', 'scaffold.json'), JSON.stringify({ schemaVersion: 'hadara.projectScaffold.v1', profile: 'basic' }), 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# PROJECT_STATE\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# TASK_BOARD\n\n| ID | Title | Status | Capsule | Notes |\n|---|---|---|---|---|\n', 'utf8');
+
+    const report = createTaskSelectionReport(root);
+
+    expect(report.recommendations[0]).toEqual(expect.objectContaining({
+      taskId: 'TBD',
+      createCommand: "hadara task create 'Create first Task Capsule'",
+      requiredReading: ['docs/PROJECT_STATE.md', 'docs/TASK_BOARD.md']
+    }));
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
   it('returns a shell-quoted create command when the planned slice has no capsule yet', () => {
