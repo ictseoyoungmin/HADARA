@@ -4,16 +4,17 @@
 
 | Area | State | Notes |
 |---|---|---|
-| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, and command portfolio reduction/performance/status-profile/init-structure/finalize-UX/legacy-stub/evidence-UX/dead-code/dogfood/fixHint/session-start cleanup is complete through T-0537. |
-| Current Phase | Command portfolio reduction and structure cleanup | T-0522/T-0523/T-0528 removed duplicate and retired public command surfaces; T-0529 renamed the remaining internal next-work projection away from the removed public `task next` command name; T-0530 split init implementation ownership boundaries; T-0531 hardened auto-finalize against partial finish writes; T-0532 removed remaining legacy redirect stubs; T-0533 surfaced evidence append lock waits; T-0534 removed dead command-era modules/schemas/tests; T-0535 dogfooded the refreshed development `dist`; T-0536 fixed stale removed-command lifecycle hints; T-0537 fixed session-start docs read-map preview count parity. |
-| Latest Completed Task | T-0537 fix session start read map count parity | `docsReadMap.readFirstCount` and `driftWarningCount` now match returned preview array lengths; additive total fields preserve full counts. |
-| Active / Next Task | Select next Task Board item | T-0537 closes the T-0535 session-start count/list follow-up. Use `task status --json` and the Task Board to select the next scoped cleanup capsule. |
-| Validation Baseline | T-0537 Docker sync-build | Evidence `ev:T-0537:2eade83b52764d7d962d8456`; focused session-start tests/build/built smoke passed and Docker sync-build refreshed `dist` after full Vitest 148 files / 1002 tests. |
+| Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, and command portfolio reduction/performance/status-profile/init-structure/finalize-UX/legacy-stub/evidence-UX/dead-code/dogfood/fixHint/session-start/dogfood cleanup is complete through T-0538. |
+| Current Phase | 0.4.2 rc0 readiness preparation | T-0538 dogfooded the current development `dist` in a fresh governed `/tmp` project after T-0537 and found no functional RC blocker. The next scoped capsule should prepare `0.4.2-rc.0` source/release readiness, then publish/recycle only through the release helper boundary. |
+| Latest Completed Task | T-0538 0.4.2 rc0 pre-release dogfood | Fresh project init/docs/task lifecycle/status/session/context/removed-route checks passed; residuals are documented as non-blocking dogfood follow-ups. |
+| Active / Next Task | Open 0.4.2 rc0 release readiness capsule | Bump/release-note/readiness work should be separate from T-0538 dogfood; installed-package recycle remains post-publish. |
+| Validation Baseline | T-0538 Docker sync-build and fresh project dogfood | Evidence `ev:T-0538:2c1048d705db4f6fbbb873ff`; Docker sync-build passed full Vitest 148 files / 1002 tests and refreshed `dist`; fresh governed `/tmp` toy task closed through current lifecycle. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| 0.4.2 rc0 pre-release dogfood | T-0538 refreshed development `dist`, initialized fresh governed `/tmp/hadara-t0538-dogfood-KwAVqu`, closed toy `T-0001` through validation/direct-result recovery and `task finalize --execute --auto`, checked generated docs and removed routes, and recorded RC readiness residuals in `DOGFOOD_REPORT.md`. | `ev:T-0538:2c1048d705db4f6fbbb873ff` |
 | fix session start read map count parity | T-0537 makes session-start `docsReadMap` preview count fields match the returned arrays while preserving full totals via additive total fields; Docker sync-build refreshed `dist`. | `ev:T-0537:2eade83b52764d7d962d8456` |
 | fix stale status full lifecycle fix hints | T-0536 replaces stale agent-facing `task finish`/`task close`/`task audit-close` guidance in done-level fix hints and internal reports with current `task finalize`/`task status --detail full` surfaces; Docker sync-build refreshed `dist`. | `ev:T-0536:ddbc62ab30dc4f8dbc48048e`, `ev:T-0536:da34805fe34a42b8a68673a5`, `ev:T-0536:c6d62cf0831846479adc9438`, `ev:T-0536:a9ddd04930314c1c9289f643` |
 | post-dead-code fresh tmp dogfood | T-0535 refreshed development `dist`, initialized fresh governed `/tmp/hadara-t0535-dogfood-XzmP7N`, closed toy `T-0001` through current lifecycle, and recorded stale status-full `task finish` fix hints as the next UX follow-up. | `ev:T-0535:790f953ae3674eeda652dbf2`, `ev:T-0535:229bd625b59d4eeea0007435`, `ev:T-0535:ce3a1f50232c4a7388216e72` |
@@ -79,14 +80,16 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0538 / 0.4.2 rc0 pre-release dogfood | Current development `dist` passed Docker sync-build, fresh governed `/tmp` dogfood closed a toy task through current lifecycle, and generated-doc/removed-route checks found no functional RC blocker. | `ev:T-0538:2c1048d705db4f6fbbb873ff` |
 | T-0537 / fix session start read map count parity | Session-start docs read-map preview count fields now match returned arrays, with additive total fields preserving full counts; Docker sync-build passed. | `ev:T-0537:2eade83b52764d7d962d8456` |
 | T-0536 / fix stale status full lifecycle fix hints | Done-level status/Task Board fix hints now route to `task finalize --execute --auto`; ready/finish/close/audit next-command guidance uses current finalize/status surfaces. | `ev:T-0536:ddbc62ab30dc4f8dbc48048e`, `ev:T-0536:da34805fe34a42b8a68673a5`, `ev:T-0536:c6d62cf0831846479adc9438`, `ev:T-0536:a9ddd04930314c1c9289f643` |
-| T-0535 / post-dead-code fresh tmp dogfood | Fresh governed `/tmp` dogfood closed a toy task through current lifecycle and surfaced the T-0536/T-0537 UX follow-ups. | `ev:T-0535:790f953ae3674eeda652dbf2`, `ev:T-0535:229bd625b59d4eeea0007435`, `ev:T-0535:ce3a1f50232c4a7388216e72` |
 
 ## Current Known Problems
 
 | Issue | Impact | Next Step |
 |---|---|---|
+| Fresh consumer `context pack` can emit HADARA-dev/source-checkout warnings. | T-0538 fresh project context pack returned warnings for `src/services/capability-registry.ts` and `docs/RELEASE_READINESS.md`, which are not expected in ordinary consumer projects. | Fix context-pack/source-summary defaults before stable if the warning leaks into common consumer flows; tracked in `.hadara/local/feedback/T-0538-fresh-project-context-pack-internal-warnings.md`. |
+| Fresh consumer `status --summary-json` can show `done=1` while `lastCompleted=[]`. | After T-0538 toy task closure, status correctly counted the done task but still fell back to initial handoff-style next guidance because generated handoff text was untouched. | Consider deriving `lastCompleted` from Task Board when handoff history is still scaffold text. |
 | Full host Vitest suite can fail under spawn restrictions. | T-0524 full-suite attempt passed 148 files then failed in 6 files / 13 tests because test helpers could not launch host `node`/`bash` (`spawnSync ... EPERM`); status-specific validation passed. | Use Docker/ext4 for spawn-heavy release-grade validation, or run direct focused checks when host child-process launch is restricted. |
 | Sandboxed package recycle registry lookup can fail slowly before network-approved rerun. | T-0515 first `package recycle --execute` attempt spent about 70s each on `npm view` and `npm dist-tag` before failing; approved network rerun passed quickly. | Run live package recycle in an environment with npm registry access; consider progress output or shorter lookup timeout in a future UX capsule. |
 | Package smoke feature-smoke-core can exceed 180s in this environment. | A 180s final retry timed out once, while `--timeout 300` passed with feature-smoke-core around 108s. | Use canonical `node dist/cli/main.js smoke package --execute --timeout 300 --json` for release validation unless performance is improved. |
@@ -162,6 +165,7 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
+| Open `0.4.2-rc.0` release readiness capsule. | T-0538 found no functional RC blocker in fresh-project dogfood; release readiness should now bump metadata/docs, generate release notes, run package/release smokes, and keep npm/GitHub mutation for the release helper/operator boundary. | `ev:T-0538:2c1048d705db4f6fbbb873ff`, `tasks/T-0538-0-4-2-rc0-pre-release-dogfood/DOGFOOD_REPORT.md` |
 | Decide the next deferred command portfolio reduction slice. | T-0530 completed the init implementation split; remaining command portfolio candidates need an explicit migration-stub decision before removal. | `tasks/T-0521-command-portfolio-reduction-inventory/COMMAND_PORTFOLIO.md`, `docs/COMMAND_SURFACE.md` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
@@ -169,6 +173,7 @@
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0538 / 0.4.2 rc0 pre-release dogfood | Docker sync-build passed `npm ci`, TypeScript build, full Vitest 148 files / 1002 tests, refreshed workspace `dist`, and built `version --json` smoke returned `distLooksStale:false`; fresh governed `/tmp` project dogfood closed toy task `T-0001` through current lifecycle. | Evidence `ev:T-0538:2c1048d705db4f6fbbb873ff`; residuals DF-1 through DF-4 are documented in `tasks/T-0538-0-4-2-rc0-pre-release-dogfood/DOGFOOD_REPORT.md` and are non-blocking for RC readiness. |
 | T-0530 / init implementation ownership split | Docker `dev:docker-sync-build` passed `npm ci`, TypeScript build, full Vitest 154 files / 1036 tests, refreshed workspace `dist`, and built `init doctor --json` smoke returned `ok:true` with existing HADARA-dev warnings. | Evidence `ev:T-0530:d8d7c9cb370d4a6daef61942`; focused init tests and built fresh governed init smoke also passed. |
 | T-0525 / status current recommendation and Docker dist validation | Docker `dev:docker-sync-build` passed `npm ci`, TypeScript build, full Vitest 155 files / 1045 tests, refreshed workspace `dist`, and built `status --summary-json` smoke recommended command portfolio reduction handoff instead of stale release guidance or old Partial T-0006. | Evidence `ev:T-0525:b8caed6d249e4120bea191ca`; use Docker-built `dist` for subsequent built CLI smokes. |
 | T-0523 / state.verify public command removal | Focused Vitest passed 8 files / 65 tests, TypeScript build passed, built registry smoke reported 68 current command ids with `state.verify` absent, and status/protocol replacement smokes exposed `stateConsistency`. | Evidence `ev:T-0523:1ff663c8467b4e31b71002cc`; internal `hadara.stateProjection.v1` remains supported. |

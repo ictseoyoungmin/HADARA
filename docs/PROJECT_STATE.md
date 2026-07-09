@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0537 fix session start read map count parity |
-| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction is continuing; T-0537 fixed the session-start docs read-map count/list mismatch found by T-0535 dogfood. |
+| Latest Completed Task | T-0538 0.4.2 rc0 pre-release dogfood |
+| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction is continuing; T-0538 dogfooded the current development `dist` before `0.4.2-rc.0` release readiness and found no functional RC blocker. |
+
+T-0538 follow-up note: current development `dist` was refreshed with Docker sync-build, passing full Vitest 148 files / 1002 tests and a built `version --json` smoke with `distLooksStale:false`. A fresh governed `/tmp/hadara-t0538-dogfood-KwAVqu` project initialized cleanly, generated docs avoided stale removed-command routing, toy task `T-0001` closed through validation/direct-result recovery and `task finalize --execute --auto`, removed-route spot checks fell through to ordinary default help, and docs/doctor/schema/context surfaces were exercised. `DOGFOOD_REPORT.md` recommends proceeding to a dedicated `0.4.2-rc.0` release-readiness capsule, with non-blocking residuals DF-1 through DF-4 covering fresh-project context-pack source/release warnings, status `lastCompleted` freshness, validation wrapper EPERM recovery, and slow mounted Docker tar copy. Evidence: `ev:T-0538:2c1048d705db4f6fbbb873ff`.
 
 T-0537 follow-up note: `hadara session start --task <id> --json` docs read-map counts now distinguish preview lengths from full registry totals. `docsReadMap.readFirstCount` equals the returned `readFirst.length`, while additive `readFirstTotalCount` preserves the full read-first total; `driftWarningCount` now equals the returned `driftWarnings.length`, while `driftWarningTotalCount` preserves the full drift total. Focused session-start Vitest passed 6 tests, TypeScript build passed, built session-start smoke returned `readFirstCount=7`, `readFirstTotalCount=17`, `readFirst.length=7`, `driftWarningCount=10`, and `driftWarningTotalCount=78`, and Docker sync-build passed full Vitest 148 files / 1002 tests while refreshing `dist`. Evidence: `ev:T-0537:2eade83b52764d7d962d8456`.
 

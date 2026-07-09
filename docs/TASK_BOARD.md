@@ -538,3 +538,4 @@
 | T-0535 | Post-dead-code fresh tmp dogfood | Done | tasks/T-0535-post-dead-code-fresh-tmp-dogfood | |
 | T-0536 | Fix stale status full lifecycle fix hints | Done | tasks/T-0536-fix-stale-status-full-lifecycle-fix-hints | |
 | T-0537 | Fix session start read map count parity | Done | tasks/T-0537-fix-session-start-read-map-count-parity | |
+| T-0538 | 0.4.2 rc0 pre-release dogfood | Done | tasks/T-0538-0-4-2-rc0-pre-release-dogfood | |
