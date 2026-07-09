@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0538 0.4.2 rc0 pre-release dogfood |
-| Active Task | Stable `hadara@0.4.1` release line is complete. Command portfolio reduction is continuing; T-0538 dogfooded the current development `dist` before `0.4.2-rc.0` release readiness and found no functional RC blocker. |
+| Latest Completed Task | T-0539 0.4.2 rc0 release readiness and publish preparation |
+| Active Task | `hadara@0.4.2-rc.0` source/readiness is prepared. Next operator step is clean publish-clone preparation and approval-gated npm/GitHub prerelease publication; installed-package recycle remains post-publish. |
+
+T-0539 follow-up note: source metadata and release-facing docs now target `hadara@0.4.2-rc.0` while README stable install examples remain on `hadara@0.4.1`. `npm view hadara@0.4.2-rc.0 version` returned E404 before preparation; Docker sync-build passed `npm ci`, TypeScript build, full Vitest 148 files / 1002 tests, refreshed workspace `dist`, and built version smoke reported `packageVersion:"0.4.2-rc.0"` with `distLooksStale:false`. Strict release gate passed. Release dry-run and publish dry-run correctly block until current-version release artifact evidence is regenerated in the clean publish clone; a dirty-worktree release artifact execute refusal was recorded and resolved as expected source-prep safety. Evidence: `ev:T-0539:707dc09b46744269b33f47b9`; expected dirty-worktree refusal: `ev:T-0539:327561d3464641b7b8322685`.
 
 T-0538 follow-up note: current development `dist` was refreshed with Docker sync-build, passing full Vitest 148 files / 1002 tests and a built `version --json` smoke with `distLooksStale:false`. A fresh governed `/tmp/hadara-t0538-dogfood-KwAVqu` project initialized cleanly, generated docs avoided stale removed-command routing, toy task `T-0001` closed through validation/direct-result recovery and `task finalize --execute --auto`, removed-route spot checks fell through to ordinary default help, and docs/doctor/schema/context surfaces were exercised. `DOGFOOD_REPORT.md` recommends proceeding to a dedicated `0.4.2-rc.0` release-readiness capsule, with non-blocking residuals DF-1 through DF-4 covering fresh-project context-pack source/release warnings, status `lastCompleted` freshness, validation wrapper EPERM recovery, and slow mounted Docker tar copy. Evidence: `ev:T-0538:2c1048d705db4f6fbbb873ff`.
 

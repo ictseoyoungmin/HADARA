@@ -1,5 +1,28 @@
 # RELEASE_NOTES
 
+## 0.4.2-rc.0
+
+Release candidate preparation line after stable `0.4.1`, focused on command-surface reduction, status/read-model performance, init implementation structure, finalize/evidence UX hardening, and fresh-project dogfood before the next stable decision.
+
+Highlights:
+
+- Removes retired public command surfaces instead of keeping compatibility clutter: duplicate proof/evidence/status commands, old state verification, obsolete task-next/show/upgrade/docs/archive/init aliases, legacy redirect stubs, and command-era dead modules/tests/schemas that no current route consumes.
+- Renames the remaining internal next-work projection to task selection so source names no longer imply the removed public `task next` route.
+- Makes top-level status profile-aware and faster by default, while keeping explicit `--detail full`, `--summary-json`, and `--state-only --json` paths for broader diagnostics.
+- Adds invocation-local read memoization for selected-task full status reports without writing persistent cache files or weakening write/finalize freshness boundaries.
+- Splits the large init CLI implementation into clearer init submodules while preserving generated Markdown wording and external behavior.
+- Hardens `task finalize --execute --auto` so close-plan blockers are detected before partial finish writes, and updates stale lifecycle fix hints to current `task finalize` / `task status --detail full` guidance.
+- Surfaces task-scoped evidence append-lock diagnostics in JSON responses while keeping canonical evidence records and fingerprints stable.
+- Fixes session-start docs read-map preview count parity by separating returned preview counts from full registry totals.
+- Dogfoods the current development `dist` in a fresh governed `/tmp` project through init, generated docs review, task create, validation/direct-result recovery, `task finalize --execute --auto`, removed-route checks, docs doctor, doctor, schema, and context surfaces.
+
+Boundaries:
+
+- T-0539 prepares source metadata, release notes, readiness docs, package/release validation evidence, and the operator publish path for `hadara@0.4.2-rc.0`; it performs no npm publish, GitHub Release publication, Docker image push, PyPI publish, installer execution, token loading, or installed-package recycle.
+- The intended npm dist-tag is `next`; stable `latest` remains `hadara@0.4.1` until a later stable promotion decision.
+- Fresh-project dogfood residuals DF-1 through DF-4 from T-0538 are documented as non-blocking for RC readiness: context-pack source/release warnings in consumer projects, status `lastCompleted` freshness, validation wrapper EPERM recovery, and slow mounted Docker tar copy.
+- Post-publish installed-package recycle for `hadara@next` expected `0.4.2-rc.0` remains a separate follow-up capsule after npm/GitHub publication.
+
 ## 0.4.1
 
 Stable release for the 0.4.1 dogfood hardening line after `0.4.1-rc.0` npm/GitHub prerelease publication, installed-package recycle, helper refactor, and post-recycle adaptive dogfood.
