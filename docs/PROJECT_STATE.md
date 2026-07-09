@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0545 0.4.2 stable release readiness and publish preparation |
-| Active Task | Stable `0.4.2` source/readiness is prepared; next step is the approval-gated clean-clone npm/GitHub publish flow, followed by post-publish evidence sync and installed-package recycle. |
+| Latest Completed Task | T-0546 0.4.2 stable post-publish evidence sync |
+| Active Task | Stable `0.4.2` npm/GitHub publication is complete; next step is installed-package recycle for `hadara@latest` expected `0.4.2`. |
+
+T-0546 follow-up note: the operator completed stable `hadara@0.4.2` npm publication and published GitHub Release `v0.4.2` publicly. Workspace npm verification returned `version=0.4.2`, dist-tags `latest=0.4.2` and `next=0.4.2-rc.0`; workspace GitHub verification returned `isDraft=false`, `isPrerelease=false`, title `HADARA 0.4.2`, target `e1865a71056564fe0bb1cee79fcdf50726e922a8`, and URL `https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.2`. Next release-line follow-up: installed-package recycle for `hadara@latest` expected `0.4.2`. Evidence: `ev:T-0546:3c8c27ba0ba649a492a80c65`, `ev:T-0546:64796a1c07f44c3888f00f0f`.
 
 T-0545 follow-up note: stable `0.4.2` source/readiness is prepared. Package metadata and lockfile now target `0.4.2`; README, release notes, release readiness, release helper examples, and the T-0545 GitHub Release note artifact describe stable `0.4.2` while preserving `0.4.2-rc.0` as release-candidate history. `npm view hadara@0.4.2 version` returned E404 before source preparation. Docker sync-build passed `npm ci`, TypeScript build, full Vitest 148 files / 1014 tests, refreshed workspace `dist`, and built version smoke reported `packageVersion:"0.4.2"` with `distLooksStale:false`. Local built version smoke, strict release gate, and release helper syntax passed. Release dry-run correctly blocks until current-version release artifact evidence is regenerated in the clean publish clone. Evidence: `ev:T-0545:c0615e6dadba492ba83a0610`.
 
