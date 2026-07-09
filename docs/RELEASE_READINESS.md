@@ -10,10 +10,12 @@ Current stable metadata preparation mode:
 
 - Package name decision: `hadara`.
 - Historical npm registry observation: `hadara@0.1.0-rc.0` was the first published HADARA release candidate.
-- Current version is `0.4.2-rc.0`.
-- Current source version is `0.4.2-rc.0`.
-- Current release target is release candidate `0.4.2-rc.0`.
-- Current published stable npm release target is `0.4.1`.
+- Current version is `0.4.2`.
+- Current source version is `0.4.2`.
+- Current release target is stable `0.4.2`.
+- Current published stable npm release target is `0.4.1` until the approval-gated `0.4.2` publish completes.
+- Current stable 0.4.2 source status: T-0545 retargets package metadata, lockfile, README release status, release notes, release readiness docs, helper examples, and a stable GitHub release note artifact to `0.4.2` after the published `0.4.2-rc.0` line, installed-package recycle, installed toy-project dogfood, T-0543 stable-preflight fixes, and T-0544 fresh profile dogfood rerun. `npm view hadara@0.4.2 version` returned no published match before this source preparation.
+- Current stable 0.4.2 decision status: T-0544 reran fresh `/tmp` dogfood across `basic`, `standard`, and `governed`, confirmed the T-0542 findings fixed by T-0543 stayed fixed, closed a governed toy task through `validation run --direct-result` and `task finalize --execute --auto`, and fixed the remaining profile-specific context/status guidance issues found before stable. Decision: proceed to stable `0.4.2` publish preparation, with npm/GitHub mutation and installed-package recycle remaining separate operator-controlled follow-ups.
 - Current 0.4.2 release-candidate source status: T-0539 retargeted package metadata, lockfile, README release status, release notes, release readiness docs, and a GitHub prerelease note artifact to `0.4.2-rc.0` after the T-0521 through T-0538 command-surface reduction, status performance, init structure, finalize/evidence UX, dead-code cleanup, session-start parity, and fresh pre-release dogfood line. `npm view hadara@0.4.2-rc.0 version` returned no published match before this source preparation.
 - Current 0.4.2 release-candidate publish status: T-0540 records completed external publication. npm registry verification returned `version=0.4.2-rc.0`, dist-tags `next=0.4.2-rc.0` and `latest=0.4.1`; operator GitHub verification returned public prerelease `v0.4.2-rc.0` with `isDraft=false`, `isPrerelease=true`, target `bb2c10f6f2dc001cac214f35746070f06c389ca5`, and URL `https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.2-rc.0`.
 - Current 0.4.2 release-candidate installed-package status: T-0541 completed consumer-path recycle for `hadara@next` expected `0.4.2-rc.0`. The approved network recycle verified registry `observedVersion=0.4.2-rc.0`, dist-tags `next=0.4.2-rc.0` and `latest=0.4.1`, isolated registry install, installed CLI `packageVersion=0.4.2-rc.0`, installed command surface with 68 command ids, lifecycle help, fresh init, task create/status, session start, finalize dry-run, context pack, context slice, and cleanup. The first sandboxed execute attempt failed at npm metadata lookup after about 70s per lookup and is resolved as environment/network friction by the approved rerun.

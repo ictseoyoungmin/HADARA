@@ -1,5 +1,26 @@
 # RELEASE_NOTES
 
+## 0.4.2
+
+Stable release for the 0.4.2 command-surface reduction, status performance, init structure, and stable-preflight dogfood line after `0.4.2-rc.0` npm/GitHub prerelease publication, installed-package recycle, installed toy-project dogfood, and source-built stable-preflight rerun.
+
+Highlights:
+
+- Promotes the 0.4.2 command portfolio cleanup from the RC line: retired public commands and stale redirect stubs stay removed, while current lifecycle guidance is concentrated on `task status`, `task finalize`, `validation run`, and evidence list/add-command surfaces.
+- Promotes status/read-model performance work, including faster default `status --json`, explicit full/detail modes, and selected-task invocation-local read memoization without persistent cache writes.
+- Promotes the init implementation split and current generated-workflow guidance without changing the public init profiles.
+- Keeps `task finalize --execute --auto` as the ordinary guarded close path and preserves close-plan blocker detection before partial finish writes.
+- Promotes response-only evidence append-lock diagnostics and validation direct-result recovery for restricted agent environments.
+- Fixes stable-preflight dogfood findings from the published RC line: consumer `context pack` no longer leaks HADARA-dev source/release readiness warnings, empty projects get first-task guidance, similar handoff text binds to open tasks instead of creating duplicates, EOF `context slice` clamps are not reported as truncation, and validation recovery keeps `--update-task`.
+- Adds final profile-aware cleanup from T-0544: `basic` and `standard` projects no longer warn about optional missing `docs/AGENT_HANDOFF.md`, and task-selection required-reading recommendations include only docs that exist in the project profile.
+
+Boundaries:
+
+- T-0545 prepares source metadata, stable release notes, readiness docs, helper examples, release validation evidence, and the operator publish path for `hadara@0.4.2`; it performs no npm publish, GitHub Release publication, Docker image push, PyPI publish, installer execution, or token loading.
+- The intended npm dist-tag is `latest`; `hadara@0.4.2-rc.0` remains available on `next` for release-candidate history unless an operator changes dist-tags after stable publication.
+- Post-publish installed-package recycle for `hadara@latest` expected `0.4.2` remains a separate follow-up capsule after npm/GitHub publication.
+- The full 0.5 state-first RFC remains candidate scope. This release ships only bounded 0.4.x state/projection and command-surface cleanup already validated through the RC and stable-preflight dogfood lines.
+
 ## 0.4.2-rc.0
 
 Release candidate preparation line after stable `0.4.1`, focused on command-surface reduction, status/read-model performance, init implementation structure, finalize/evidence UX hardening, and fresh-project dogfood before the next stable decision.

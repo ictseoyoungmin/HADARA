@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0544 0.4.2 stable preflight dogfood rerun |
-| Active Task | Source-built stable-preflight dogfood passed after T-0544 profile-specific fixes; next step is stable `0.4.2` release readiness/publish preparation, followed by post-publish installed-package recycle. |
+| Latest Completed Task | T-0545 0.4.2 stable release readiness and publish preparation |
+| Active Task | Stable `0.4.2` source/readiness is prepared; next step is the approval-gated clean-clone npm/GitHub publish flow, followed by post-publish evidence sync and installed-package recycle. |
+
+T-0545 follow-up note: stable `0.4.2` source/readiness is prepared. Package metadata and lockfile now target `0.4.2`; README, release notes, release readiness, release helper examples, and the T-0545 GitHub Release note artifact describe stable `0.4.2` while preserving `0.4.2-rc.0` as release-candidate history. `npm view hadara@0.4.2 version` returned E404 before source preparation. Docker sync-build passed `npm ci`, TypeScript build, full Vitest 148 files / 1014 tests, refreshed workspace `dist`, and built version smoke reported `packageVersion:"0.4.2"` with `distLooksStale:false`. Local built version smoke, strict release gate, and release helper syntax passed. Release dry-run correctly blocks until current-version release artifact evidence is regenerated in the clean publish clone. Evidence: `ev:T-0545:c0615e6dadba492ba83a0610`.
 
 T-0544 follow-up note: fresh `/tmp` dogfood was rerun from current built `dist` across `basic`, `standard`, and `governed` profiles. The T-0542 findings fixed by T-0543 stayed fixed: consumer `context pack` no longer leaked HADARA-dev source/release-readiness files, first-task guidance is present, handoff/open-task matching reuses similar open tasks, and EOF `context slice` clamps are not marked as truncation. The governed toy task validated with direct-result evidence and closed through `task finalize --execute --auto`. T-0544 found and fixed two profile-specific issues before close: `context pack` no longer warns about missing optional `docs/AGENT_HANDOFF.md` in `basic`/`standard` scaffolds, and task-selection required-reading recommendations now include only docs that exist in the project profile. Evidence: `ev:T-0544:a004da2bfd5f48b390477f2c`, `ev:T-0544:e44e395885524fb8802c6756`.
 
