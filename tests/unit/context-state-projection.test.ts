@@ -140,6 +140,40 @@ describe('context state projection', () => {
     expect(report.issues.map((issue) => issue.code)).not.toContain('STATE_TASK_BOARD_MISSING_ROW');
   });
 
+  it('treats current release status as current even when deferred or blocked historical release text exists', () => {
+    const report = createContextStateProjectionReport({
+      generatedAt: '2026-06-18T10:01:45.000Z',
+      extractionResults: [result({
+        stateSources: [
+          stateSource('state-source:release-readiness', 'docs/RELEASE_READINESS.md', 'release-readiness', {
+            checks: 3,
+            statusCounts: { current: 1, blocked: 1, deferred: 1 }
+          })
+        ]
+      })]
+    });
+
+    expect(report.summary.releaseState).toBe('current');
+  });
+
+  it('does not convert informational historical extraction issues into state warnings', () => {
+    const report = createContextStateProjectionReport({
+      generatedAt: '2026-06-18T10:01:50.000Z',
+      extractionResults: [result({
+        issues: [{
+          severity: 'info',
+          code: 'CONTEXT_GRAPH_EVIDENCE_READ_FAILED',
+          path: 'tasks/T-0001-historical/evidence.jsonl',
+          message: 'Historical task evidence is missing.',
+          fixHint: 'Restore only if historical routing is required.'
+        }]
+      })]
+    });
+
+    expect(report.summary.stateConsistency).toBe('consistent');
+    expect(report.issues).toEqual([]);
+  });
+
   it('converts extraction warnings into bounded state issues', () => {
     const report = createContextStateProjectionReport({
       generatedAt: '2026-06-18T10:02:00.000Z',

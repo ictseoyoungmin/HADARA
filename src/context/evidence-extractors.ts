@@ -29,7 +29,7 @@ export function extractEvidence(projectRoot: string): GraphExtractionResult {
     const relativePath = toProjectRelativeContextPath(projectRoot, evidencePath);
     const content = readOptionalText(evidencePath);
     if (content == null) {
-      result.issues.push(evidenceReadFailedIssue(relativePath, `Task Capsule ${task.id} is missing evidence.jsonl.`));
+      result.issues.push(evidenceReadFailedIssue(relativePath, taskStatus(task), `Task Capsule ${task.id} is missing evidence.jsonl.`));
       continue;
     }
 
@@ -183,14 +183,27 @@ function readOptionalText(absolutePath: string): string | null {
   return fs.existsSync(absolutePath) ? fs.readFileSync(absolutePath, 'utf8') : null;
 }
 
-function evidenceReadFailedIssue(relativePath: string, message: string): ContextGraphIssue {
+function evidenceReadFailedIssue(relativePath: string, taskStatusValue: string | null, message: string): ContextGraphIssue {
+  const historical = taskStatusValue != null && /^(done|partial|superseded|archived)$/i.test(taskStatusValue.trim());
   return {
-    severity: 'warning',
+    severity: historical ? 'info' : 'warning',
     code: 'CONTEXT_GRAPH_EVIDENCE_READ_FAILED',
     path: relativePath,
     message,
-    fixHint: `Restore ${relativePath} or run the scoped evidence remediation workflow before relying on evidence context routing.`
+    fixHint: historical
+      ? `Historical capsule ${relativePath} is missing evidence; restore it only if historical evidence routing is required.`
+      : `Restore ${relativePath} or run the scoped evidence remediation workflow before relying on evidence context routing.`
   };
+}
+
+function taskStatus(task: TaskCapsule): string | null {
+  const taskMd = path.join(task.dir, 'TASK.md');
+  const content = readOptionalText(taskMd);
+  if (!content) return null;
+  const identityMatch = content.match(/^\|\s*Status\s*\|\s*([^|]+?)\s*\|/m);
+  if (identityMatch?.[1]) return identityMatch[1].trim();
+  const statusSectionMatch = content.match(/^## Status\s*\n+([^\n]+)/m);
+  return statusSectionMatch?.[1]?.trim() ?? null;
 }
 
 function parseFailedIssue(relativePath: string, lineNumber: number, message: string): ContextGraphIssue {

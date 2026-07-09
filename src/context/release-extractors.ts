@@ -179,10 +179,17 @@ function normalizeCommandText(command: string): string {
 
 function deriveSectionStatus(text: string): string {
   const lowered = text.toLowerCase();
+  if (hasCompletedCurrentStableRelease(lowered)) return 'current';
+  if (/\b(complete|completed|passed|published)\b/.test(lowered) && /\b(current|stable|release target)\b/.test(lowered)) return 'current';
   if (/\b(deferred|reserved)\b/.test(lowered)) return 'deferred';
   if (/\b(blocked|blocking)\b/.test(lowered)) return 'blocked';
   if (/\b(complete|completed|passed|published)\b/.test(lowered)) return 'current';
   return 'documented';
+}
+
+function hasCompletedCurrentStableRelease(text: string): boolean {
+  return /current stable .*publish status:.*(?:completed|published|public stable)/s.test(text)
+    && /current stable .*installed-package status:.*(?:completed|verified|recycle)/s.test(text);
 }
 
 function firstMeaningfulLine(text: string): string | null {

@@ -550,3 +550,4 @@
 | T-0547 | 0.4.2 stable installed package recycle | Done | tasks/T-0547-0-4-2-stable-installed-package-recycle | |
 | T-0548 | context pack freshness diagnostic | Done | tasks/T-0548-context-pack-freshness-diagnostic | |
 | T-0549 | Implement context pack fail-fast and compact default cleanup | Done | tasks/T-0549-implement-context-pack-fail-fast-and-compact-default-cleanup | |
+| T-0550 | Implement current-state projection cleanup | Done | tasks/T-0550-implement-current-state-projection-cleanup | |

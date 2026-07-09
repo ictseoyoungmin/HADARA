@@ -166,6 +166,41 @@ describe('context graph evidence extractors', () => {
       path: `tasks/${task.id}-${task.slug}/evidence.jsonl`
     })]);
   });
+
+  it('reports missing evidence for closed or partial historical capsules as informational', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Historical missing evidence fixture');
+    const taskMd = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(taskMd, fs.readFileSync(taskMd, 'utf8').replace('| Status | Draft |', '| Status | Done |'), 'utf8');
+    fs.rmSync(path.join(task.dir, 'evidence.jsonl'));
+
+    const result = extractEvidence(root);
+
+    expect(result.nodes).toEqual([]);
+    expect(result.stateSources).toEqual([]);
+    expect(result.issues).toEqual([expect.objectContaining({
+      severity: 'info',
+      code: 'CONTEXT_GRAPH_EVIDENCE_READ_FAILED',
+      path: `tasks/${task.id}-${task.slug}/evidence.jsonl`,
+      fixHint: expect.stringContaining('Historical capsule')
+    })]);
+  });
+
+  it('reports missing evidence for partial deferred capsules as informational', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Partial missing evidence fixture');
+    const taskMd = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(taskMd, fs.readFileSync(taskMd, 'utf8').replace('| Status | Draft |', '| Status | Partial |'), 'utf8');
+    fs.rmSync(path.join(task.dir, 'evidence.jsonl'));
+
+    const result = extractEvidence(root);
+
+    expect(result.issues).toEqual([expect.objectContaining({
+      severity: 'info',
+      code: 'CONTEXT_GRAPH_EVIDENCE_READ_FAILED',
+      path: `tasks/${task.id}-${task.slug}/evidence.jsonl`
+    })]);
+  });
 });
 
 function writeEvidence(taskDir: string, records: unknown[]): void {

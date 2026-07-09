@@ -119,6 +119,28 @@ The release gate must not execute package smoke, release artifact, or publish op
     }));
   });
 
+  it('classifies completed current stable release sections as current despite historical blocked wording', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'docs', 'RELEASE_READINESS.md'), `# RELEASE_READINESS
+
+## Package Metadata Release Readiness
+
+- Current version is \`0.4.2\`.
+- Current stable 0.4.2 publish status: T-0546 records completed external publication. npm registry verification returned \`version=0.4.2\`, and GitHub Release \`v0.4.2\` is public stable.
+- Current stable 0.4.2 installed-package status: T-0547 completed consumer-path recycle for \`hadara@latest\` expected \`0.4.2\`.
+- Previous source status was blocked until publish evidence existed.
+- Future Docker publishing is deferred.
+`, 'utf8');
+
+    const result = extractReleaseReadiness(root);
+
+    expect(result.nodes[0]).toEqual(expect.objectContaining({
+      id: 'release-check:package-metadata-release-readiness',
+      status: 'current'
+    }));
+    expect(result.stateSources?.[0].extracted.statusCounts).toEqual({ current: 1 });
+  });
+
   it('does not warn about missing release readiness docs in installed consumer projects', () => {
     const root = tempProject();
     fs.rmSync(path.join(root, 'docs', 'RELEASE_READINESS.md'), { force: true });

@@ -196,8 +196,8 @@ function releaseState(stateSources: StateSource[]): string {
   const checks = Number(source.extracted.checks ?? 0);
   if (checks <= 0) return 'unknown';
   const statusCounts = source.extracted.statusCounts;
-  if (isRecord(statusCounts) && Number(statusCounts.blocked ?? 0) > 0) return 'blocked';
   if (isRecord(statusCounts) && Number(statusCounts.current ?? 0) > 0) return 'current';
+  if (isRecord(statusCounts) && Number(statusCounts.blocked ?? 0) > 0) return 'blocked';
   return 'documented';
 }
 
