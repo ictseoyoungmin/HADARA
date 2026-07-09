@@ -541,3 +541,4 @@
 | T-0538 | 0.4.2 rc0 pre-release dogfood | Done | tasks/T-0538-0-4-2-rc0-pre-release-dogfood | |
 | T-0539 | 0.4.2 rc0 release readiness and publish preparation | Done | tasks/T-0539-0-4-2-rc0-release-readiness-and-publish-preparation | |
 | T-0540 | 0.4.2 rc0 post publish evidence sync | Done | tasks/T-0540-0-4-2-rc0-post-publish-evidence-sync | |
+| T-0541 | 0.4.2 rc0 installed package recycle | Done | tasks/T-0541-0-4-2-rc0-installed-package-recycle | |

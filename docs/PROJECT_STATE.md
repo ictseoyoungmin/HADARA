@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0540 0.4.2 rc0 post publish evidence sync |
-| Active Task | `hadara@0.4.2-rc.0` is published on npm with `next` and GitHub Release `v0.4.2-rc.0` is public prerelease. Next task is installed-package recycle for `hadara@next` expected `0.4.2-rc.0`. |
+| Latest Completed Task | T-0541 0.4.2 rc0 installed package recycle |
+| Active Task | `hadara@0.4.2-rc.0` npm/GitHub publication and installed-package recycle are complete. Next decision is whether to keep observing the RC or open stable `0.4.2` readiness. |
+
+T-0541 follow-up note: installed-package recycle passed for `hadara@next` expected `0.4.2-rc.0`. The approved network execution verified registry `observedVersion=0.4.2-rc.0`, dist-tags `next=0.4.2-rc.0` and `latest=0.4.1`, isolated registry install, installed CLI `packageVersion=0.4.2-rc.0`, installed command surface with 68 command ids, lifecycle help, fresh init, task create/status, session start, finalize dry-run, context pack, context slice, and cleanup. The first sandboxed execute attempt failed at npm metadata lookup after about 70s per lookup and is resolved as environment/network friction by the approved rerun. Evidence: `ev:T-0541:ca5a53ca899f48ad89cea0db`, resolver `ev:T-0541:9c836efa7ae74f339bdbb3d8`.
 
 T-0540 follow-up note: the operator completed approval-gated npm publish for `hadara@0.4.2-rc.0` and published GitHub Release `v0.4.2-rc.0`. Workspace npm verification returned `version=0.4.2-rc.0`, dist-tags `next=0.4.2-rc.0` and `latest=0.4.1`. Operator GitHub verification returned `isDraft=false`, `isPrerelease=true`, title `HADARA 0.4.2-rc.0`, target `bb2c10f6f2dc001cac214f35746070f06c389ca5`, and URL `https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.2-rc.0`. Publish-helper evidence from the clean publish clone was reported as `ev:T-0539:818caf27a85f4c9299830988`; T-0540 records the workspace post-publish sync evidence. Evidence: `ev:T-0540:7332a4b680584955b8bdad4a`, `ev:T-0540:9b8f98569d7f4c13acb08bb0`.
 
