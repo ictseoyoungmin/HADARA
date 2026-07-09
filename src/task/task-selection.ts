@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
-import { listTaskCapsules } from './task-capsule';
+import { findTaskCapsule } from './task-capsule';
 import { readSlicesState } from '../services/slices-state';
 
 export interface TaskSelectionReport {
@@ -75,16 +75,15 @@ export function createTaskSelectionReport(projectRoot: string): TaskSelectionRep
   const slices = readDevelopmentSlices(projectRoot, issues);
   const board = readTaskBoard(projectRoot, issues);
   const handoff = readAgentHandoff(projectRoot);
-  const capsules = listTaskCapsules(projectRoot);
 
   const nextSlice = slices.rows.find((row) => isOpenSliceStatus(row.status));
-  const handoffRecommendation = handoff.nextRecommendedStep ? recommendationFromHandoff(projectRoot, handoff.nextRecommendedStep, board.rows, capsules) : null;
-  const taskBoardRecommendation = recommendationFromTaskBoard(projectRoot, board.rows, capsules);
-  const firstTaskRecommendation = recommendationForEmptyProject(projectRoot, board.rows, capsules);
-  const defaultRecommendation = nextSlice ? recommendationFromSlice(projectRoot, nextSlice, board.rows, capsules) : taskBoardRecommendation;
+  const handoffRecommendation = handoff.nextRecommendedStep ? recommendationFromHandoff(projectRoot, handoff.nextRecommendedStep, board.rows) : null;
+  const taskBoardRecommendation = recommendationFromTaskBoard(projectRoot, board.rows);
+  const firstTaskRecommendation = recommendationForEmptyProject(projectRoot, board.rows);
+  const defaultRecommendation = nextSlice ? recommendationFromSlice(projectRoot, nextSlice, board.rows) : taskBoardRecommendation;
   const recommendation = handoffRecommendation ?? defaultRecommendation ?? firstTaskRecommendation;
   const recommendations = recommendation ? [recommendation] : [];
-  const backlog = createTaskBoardBacklog(board.rows, capsules, recommendation?.taskId ?? null);
+  const backlog = createTaskBoardBacklog(projectRoot, board.rows, recommendation?.taskId ?? null);
   if (!recommendation) {
     issues.push({
       severity: 'warning',
@@ -125,9 +124,9 @@ export function formatTaskSelectionReport(report: TaskSelectionReport): string {
   return lines.join('\n');
 }
 
-function recommendationFromSlice(projectRoot: string, slice: SliceRow, boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskSelectionRecommendation {
+function recommendationFromSlice(projectRoot: string, slice: SliceRow, boardRows: BoardRow[]): TaskSelectionRecommendation {
   const boardRow = boardRows.find((row) => row.taskId === slice.taskId);
-  const capsule = capsules.find((task) => task.id === slice.taskId);
+  const capsule = findTaskCapsule(projectRoot, slice.taskId);
   const capsulePath = capsule ? toPortablePath(path.relative(projectRoot, capsule.dir)) : boardRow?.capsule ?? null;
   return {
     taskId: slice.taskId,
@@ -144,7 +143,7 @@ function recommendationFromSlice(projectRoot: string, slice: SliceRow, boardRows
   };
 }
 
-function recommendationFromHandoff(projectRoot: string, step: string, boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskSelectionRecommendation {
+function recommendationFromHandoff(projectRoot: string, step: string, boardRows: BoardRow[]): TaskSelectionRecommendation {
   const knownTaskId = step.match(/\bT-\d{4}\b/)?.[0] ?? null;
   const title = normalizeHandoffTitle(step);
   const fuzzyBoardRow = knownTaskId ? undefined : findSimilarOpenBoardRow(title, boardRows);
@@ -152,7 +151,7 @@ function recommendationFromHandoff(projectRoot: string, step: string, boardRows:
   const boardRow = knownTaskId
     ? boardRows.find((row) => row.taskId === knownTaskId)
     : fuzzyBoardRow;
-  const capsule = taskId !== 'TBD' ? capsules.find((task) => task.id === taskId) : undefined;
+  const capsule = taskId !== 'TBD' ? findTaskCapsule(projectRoot, taskId) : undefined;
   const resolvedTitle = boardRow?.title ?? title;
   return {
     taskId,
@@ -171,10 +170,10 @@ function recommendationFromHandoff(projectRoot: string, step: string, boardRows:
   };
 }
 
-function recommendationFromTaskBoard(projectRoot: string, boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskSelectionRecommendation | null {
+function recommendationFromTaskBoard(projectRoot: string, boardRows: BoardRow[]): TaskSelectionRecommendation | null {
   const row = boardRows.find((candidate) => isPrimaryOpenBoardStatus(candidate.status)) ?? boardRows.find((candidate) => isOpenBoardStatus(candidate.status));
   if (!row) return null;
-  const capsule = capsules.find((task) => task.id === row.taskId);
+  const capsule = findTaskCapsule(projectRoot, row.taskId);
   return {
     taskId: row.taskId,
     title: row.title,
@@ -190,12 +189,12 @@ function recommendationFromTaskBoard(projectRoot: string, boardRows: BoardRow[],
   };
 }
 
-function createTaskBoardBacklog(boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>, primaryTaskId: string | null): TaskSelectionBacklogItem[] {
+function createTaskBoardBacklog(projectRoot: string, boardRows: BoardRow[], primaryTaskId: string | null): TaskSelectionBacklogItem[] {
   return boardRows
     .filter((row) => isOpenBoardStatus(row.status))
     .filter((row) => row.taskId !== primaryTaskId)
     .map((row) => {
-      const capsule = capsules.find((task) => task.id === row.taskId);
+      const capsule = findTaskCapsule(projectRoot, row.taskId);
       return {
         taskId: row.taskId,
         title: row.title,
@@ -208,8 +207,8 @@ function createTaskBoardBacklog(boardRows: BoardRow[], capsules: ReturnType<type
     });
 }
 
-function recommendationForEmptyProject(projectRoot: string, boardRows: BoardRow[], capsules: ReturnType<typeof listTaskCapsules>): TaskSelectionRecommendation | null {
-  if (boardRows.length > 0 || capsules.length > 0) return null;
+function recommendationForEmptyProject(projectRoot: string, boardRows: BoardRow[]): TaskSelectionRecommendation | null {
+  if (boardRows.length > 0 || hasAnyTaskCapsule(projectRoot)) return null;
   const title = 'Create first Task Capsule';
   return {
     taskId: 'TBD',
@@ -312,6 +311,7 @@ function readAgentHandoff(projectRoot: string): { present: boolean; activeNext: 
 function isActionableHandoffStep(step: string): boolean {
   const normalized = step.trim().toLowerCase();
   if (!normalized || normalized === 'step' || normalized === 'tbd') return false;
+  if (/^(later|eventually|future|deferred)\b/.test(normalized)) return false;
   if (isTaskSelectionMetaGuidance(normalized)) return false;
   if (normalized.includes('create or select first task capsule')) return false;
   if (normalized.startsWith('migrate selected historical evidence only when explicitly requested')) return false;
@@ -320,7 +320,15 @@ function isActionableHandoffStep(step: string): boolean {
 
 function isTaskSelectionMetaGuidance(normalizedStep: string): boolean {
   const compact = normalizedStep.replace(/[`*_]/g, '').replace(/\s+/g, ' ');
-  return /\b(hadara\s+)?task\s+(next|selection)\b/.test(compact) && /\b(run|select|choose|create)\b/.test(compact);
+  if (/\b(hadara\s+)?task\s+(next|selection)\b/.test(compact) && /\b(run|select|choose|create)\b/.test(compact)) return true;
+  if (/\bselect the next capsule\b/.test(compact) && /\b(operator priority|fresh diagnostic evidence)\b/.test(compact)) return true;
+  return false;
+}
+
+function hasAnyTaskCapsule(projectRoot: string): boolean {
+  const tasksDir = path.join(projectRoot, 'tasks');
+  if (!fs.existsSync(tasksDir)) return false;
+  return fs.readdirSync(tasksDir, { withFileTypes: true }).some((entry) => entry.isDirectory() && /^T-\d{4}-/.test(entry.name));
 }
 
 function normalizeHandoffTitle(step: string): string {

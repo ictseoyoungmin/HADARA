@@ -284,6 +284,109 @@ describe('context graph builder', () => {
       fs.rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it('uses bounded stale graph-core for a known task when only state metadata changed', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-context-graph-stale-core-'));
+    try {
+      write(root, 'docs/TASK_BOARD.md', [
+        '# TASK_BOARD',
+        '',
+        '| ID | Title | Status | Capsule | Notes |',
+        '|---|---|---|---|---|',
+        `| ${taskId} | Stale core fixture | In Progress | tasks/${taskId}-stale-core-fixture | |`,
+        ''
+      ].join('\n'));
+      write(root, `tasks/${taskId}-stale-core-fixture/TASK.md`, `# ${taskId} Stale core fixture\n\n## Identity\n\n| Field | Value |\n|---|---|\n| ID | ${taskId} |\n| Title | Stale core fixture |\n| Status | In Progress |\n`);
+      write(root, 'docs/PROJECT_STATE.md', [
+        '# PROJECT_STATE',
+        '',
+        '## Current State',
+        '',
+        '| Field | Value |',
+        '|---|---|',
+        `| Active Task | ${taskId} |`,
+        ''
+      ].join('\n'));
+      write(root, 'docs/AGENT_HANDOFF.md', [
+        '# AGENT_HANDOFF',
+        '',
+        '## Current State',
+        '',
+        '| Field | Value |',
+        '|---|---|',
+        `| Active Task | ${taskId} |`,
+        ''
+      ].join('\n'));
+
+      createContextCacheWarmReport({
+        projectRoot: root,
+        execute: true,
+        generatedAt: '2026-06-18T12:20:00.000Z'
+      });
+      write(root, 'docs/TASK_BOARD.md', [
+        '# TASK_BOARD',
+        '',
+        '| ID | Title | Status | Capsule | Notes |',
+        '|---|---|---|---|---|',
+        `| ${taskId} | Stale core fixture | In Progress | tasks/${taskId}-stale-core-fixture | updated note |`,
+        ''
+      ].join('\n'));
+      write(root, 'docs/PROJECT_STATE.md', [
+        '# PROJECT_STATE',
+        '',
+        '## Current State',
+        '',
+        '| Field | Value |',
+        '|---|---|',
+        '| Active Task | None selected after T-0001. |',
+        ''
+      ].join('\n'));
+      write(root, 'docs/AGENT_HANDOFF.md', [
+        '# AGENT_HANDOFF',
+        '',
+        '## Current State',
+        '',
+        '| Field | Value |',
+        '|---|---|',
+        '| Active Task | None selected after T-0001. |',
+        ''
+      ].join('\n'));
+      write(root, 'tasks/T-9999-other-task/TASK.md', '# T-9999 Other task\n');
+
+      const report = buildContextGraphReport({
+        projectRoot: root,
+        generatedAt: '2026-06-18T12:21:00.000Z',
+        taskId,
+        includeCode: true,
+        codeStrategy: 'fresh-cache-only'
+      });
+
+      expect(report.cache).toMatchObject({
+        used: true,
+        hit: false,
+        mode: 'graph-core-stale-bounded+code-index',
+        staleExtractorKeys: [
+          'extractAgentHandoff',
+          'extractManagedSections',
+          'extractProjectState',
+          'extractTaskBoard',
+          'extractTaskCapsules'
+        ]
+      });
+      expect(report.taskContext?.task?.id).toBe(`task:${taskId}`);
+      expect(report.stateProjection.sources.find((source) => source.kind === 'project-state')?.extracted).toMatchObject({
+        activeTask: null,
+        latestCompletedTask: null
+      });
+      expect(report.stateProjection.sources.find((source) => source.kind === 'agent-handoff')?.extracted).toMatchObject({
+        activeTask: null,
+        knownProblems: 0
+      });
+      assertSchema('hadara.contextGraph.v1', report);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 function fixtureExtractionResult(): GraphExtractionResult {

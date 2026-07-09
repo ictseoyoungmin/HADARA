@@ -371,7 +371,7 @@ export function buildContextPackReport(input: BuildContextPackReportOptions): Co
     knownProblems,
     stateProjection: {
       ...graphReport.stateProjection.summary,
-      issues: graphReport.stateProjection.issues
+      issues: stateProjectionIssuesForPack(graphReport.stateProjection.issues, taskId)
     },
     sourceSummary: {
       graphAvailable: true,
@@ -389,6 +389,13 @@ export function buildContextPackReport(input: BuildContextPackReportOptions): Co
     cache,
     issues
   };
+}
+
+function stateProjectionIssuesForPack(issues: StateConsistencyIssue[], taskId: string | undefined): StateConsistencyIssue[] {
+  if (!taskId) return issues;
+  return issues.filter((issue) =>
+    issue.message.includes(taskId) || issue.paths.some((issuePath) => issuePath.includes(taskId))
+  );
 }
 
 function resolveDocsReadMap(input: BuildContextPackReportOptions, taskId: string | undefined): DocsReadMapReport | undefined {

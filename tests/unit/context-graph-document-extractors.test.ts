@@ -259,4 +259,35 @@ Reason:
       }
     })]);
   });
+
+  it('does not extract historical task ids from non-active current-state prose', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), `# PROJECT_STATE
+
+## Metadata
+
+| Field | Value |
+|---|---|
+| Latest Completed Task | T-0553 Implement code-index and docs registry routing cleanup |
+| Active Task | Stable 0.4.2 is complete. The T-0548 context-pack cleanup sequence is complete through T-0553. |
+`, 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), `# AGENT_HANDOFF
+
+## Current State
+
+| Area | State | Notes |
+|---|---|---|
+| Latest Completed Task | T-0553 Implement code-index and docs registry routing cleanup | Fixture. |
+| Active / Next Task | None selected after T-0553 | Fixture. |
+`, 'utf8');
+
+    expect(extractProjectState(root).stateSources?.[0]?.extracted).toEqual(expect.objectContaining({
+      latestCompletedTask: 'T-0553',
+      activeTask: null
+    }));
+    expect(extractAgentHandoff(root).stateSources?.[0]?.extracted).toEqual(expect.objectContaining({
+      latestCompletedTask: 'T-0553',
+      activeTask: null
+    }));
+  });
 });

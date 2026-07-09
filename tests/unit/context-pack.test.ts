@@ -178,6 +178,36 @@ describe('context pack', () => {
     assertSchema('hadara.contextPack.v1', report);
   });
 
+  it('keeps task-scoped state projection issues compact and relevant', () => {
+    const graph = sampleGraphReport();
+    graph.stateProjection.issues = [{
+      severity: 'warning',
+      code: 'STATE_TASK_BOARD_MISSING_ROW',
+      message: `Task Capsule ${taskId} exists, but no matching Task Board row was extracted.`,
+      paths: ['docs/TASK_BOARD.md', `tasks/${taskId}-fixture/TASK.md`],
+      fixHint: `Add or repair the Task Board row for ${taskId}.`
+    }, {
+      severity: 'warning',
+      code: 'STATE_TASK_BOARD_MISSING_ROW',
+      message: 'Task Capsule T-9999 exists, but no matching Task Board row was extracted.',
+      paths: ['docs/TASK_BOARD.md', 'tasks/T-9999-other/TASK.md'],
+      fixHint: 'Add or repair the Task Board row for T-9999.'
+    }];
+
+    const report = buildContextPackReport({
+      projectRoot: '/workspace',
+      generatedAt,
+      taskId,
+      graphReport: graph,
+      budget: { maxReadFirstItems: 2, maxItems: 10 }
+    });
+
+    expect(report.stateProjection.issues.map((issue) => issue.message)).toEqual([
+      `Task Capsule ${taskId} exists, but no matching Task Board row was extracted.`
+    ]);
+    assertSchema('hadara.contextPack.v1', report);
+  });
+
   it('ranks task-local context before broad required docs and explains why', () => {
     const graph = sampleGraphReport({ includeCode: false });
     graph.nodes.push(documentNode(`tasks/${taskId}-fixture/CONTEXT.md`, {

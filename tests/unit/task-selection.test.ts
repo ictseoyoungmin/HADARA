@@ -83,6 +83,47 @@ describe('task selection recommendation', () => {
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
+  it('ignores generic operator-priority handoff guidance instead of using it as a task title', () => {
+    const root = tempProject({
+      handoffNextStep: 'Select the next capsule from operator priority or fresh diagnostic evidence.',
+      developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
+    });
+    const concrete = createTaskCapsule(root, 'Concrete Follow-up Work');
+
+    const report = createTaskSelectionReport(root);
+
+    expect(report.recommendations[0]).toMatchObject({
+      taskId: concrete.id,
+      title: 'Concrete Follow-up Work',
+      source: 'docs/TASK_BOARD.md',
+      sourceKind: 'task-board-fallback',
+      createCommand: null
+    });
+    expect(report.sources.agentHandoff.nextRecommendedStep).toBeNull();
+    expect(report.recommendations[0].title).not.toContain('Select the next capsule');
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
+  });
+
+  it('ignores deferred handoff recommendations and selects concrete open work', () => {
+    const root = tempProject({
+      handoffNextStep: 'Later, open a new stable `0.3.4` readiness capsule when release work resumes.',
+      developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
+    });
+    const concrete = createTaskCapsule(root, 'Immediate Draft Work');
+
+    const report = createTaskSelectionReport(root);
+
+    expect(report.recommendations[0]).toMatchObject({
+      taskId: concrete.id,
+      title: 'Immediate Draft Work',
+      source: 'docs/TASK_BOARD.md',
+      sourceKind: 'task-board-fallback'
+    });
+    expect(report.sources.agentHandoff.nextRecommendedStep).toBeNull();
+    expect(report.recommendations[0].title).not.toContain('Later');
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
+  });
+
   it('prefers an existing open Task Board row over stale handoff prose without a task id', () => {
     const root = tempProject({
       handoffNextStep: 'Create or select first Task Capsule.',

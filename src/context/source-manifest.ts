@@ -23,6 +23,8 @@ export const CONTEXT_SOURCE_MANIFEST_IGNORED_PATHS = Array.from(new Set([
   '.dashboard-visual'
 ])).sort();
 
+const CONTEXT_SOURCE_MANIFEST_GIT_TIMEOUT_MS = 15000;
+
 export type ContextSourceManifestSchemaVersion = typeof CONTEXT_SOURCE_MANIFEST_SCHEMA_ID;
 export type ContextSourceKind =
   | 'task-board'
@@ -486,7 +488,7 @@ function listGitContextSourceCandidatePaths(root: string): string[] | undefined 
       encoding: 'utf8',
       maxBuffer: 50 * 1024 * 1024,
       stdio: ['ignore', 'pipe', 'ignore'],
-      timeout: 5000
+      timeout: CONTEXT_SOURCE_MANIFEST_GIT_TIMEOUT_MS
     });
     return contextSourceCandidatePathsFromGitOutput(output);
   } catch (error) {
@@ -529,7 +531,7 @@ function readGitOutput(root: string, args: string[]): string | undefined {
       encoding: 'utf8',
       maxBuffer: 50 * 1024 * 1024,
       stdio: ['ignore', 'pipe', 'ignore'],
-      timeout: 5000
+      timeout: CONTEXT_SOURCE_MANIFEST_GIT_TIMEOUT_MS
     });
   } catch (error) {
     const output = recoverExecStdout(error);

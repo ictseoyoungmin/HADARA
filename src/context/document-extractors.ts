@@ -198,7 +198,7 @@ function extractProjectStateHints(content: string): SharedStateHints {
   const activeRaw = findMarkdownRowByCell(rows, 0, 'Active Task')?.[1] ?? null;
   return {
     latestCompletedTask: normalizeTaskHint(latestRaw),
-    activeTask: normalizeTaskHint(activeRaw),
+    activeTask: normalizeActiveTaskHint(activeRaw),
     latestCompletedRaw: latestRaw ?? null,
     activeRaw: activeRaw ?? null
   };
@@ -210,7 +210,7 @@ function extractAgentHandoffHints(content: string): SharedStateHints {
   const activeRaw = findMarkdownRowByCell(rows, 0, 'Active / Next Task')?.[1] ?? findMarkdownRowByCell(rows, 0, 'Active Task')?.[1] ?? null;
   return {
     latestCompletedTask: normalizeTaskHint(latestRaw),
-    activeTask: normalizeTaskHint(activeRaw),
+    activeTask: normalizeActiveTaskHint(activeRaw),
     latestCompletedRaw: latestRaw,
     activeRaw: activeRaw
   };
@@ -220,6 +220,13 @@ function normalizeTaskHint(value: string | null | undefined): string | null {
   if (!value) return null;
   if (/^(none|n\/a|tbd)\b/i.test(value.trim())) return null;
   return value.match(/\bT-\d{4}\b/)?.[0] ?? null;
+}
+
+function normalizeActiveTaskHint(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (/^(none|n\/a|tbd|no active|none selected)\b/i.test(trimmed)) return null;
+  return trimmed.match(/^`?(T-\d{4})\b/)?.[1] ?? null;
 }
 
 function findLineValue(content: string, pattern: RegExp): string | null {

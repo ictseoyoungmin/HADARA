@@ -554,3 +554,4 @@
 | T-0551 | Implement known-problem and handoff extraction cleanup | Done | tasks/T-0551-implement-known-problem-and-handoff-extraction-cleanup | |
 | T-0552 | Implement cache and extractor freshness cleanup | Done | tasks/T-0552-implement-cache-and-extractor-freshness-cleanup | |
 | T-0553 | Implement code-index and docs registry routing cleanup | Done | tasks/T-0553-implement-code-index-and-docs-registry-routing-cleanup | |
+| T-0554 | Improve context status and pack interactive UX | Done | tasks/T-0554-improve-context-status-and-pack-interactive-ux | Fixes generic next-task recommendations, stale active-task extraction, and bounded task-scoped context-pack output/cache behavior; closed-valid via finalize auto. |
