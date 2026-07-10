@@ -197,9 +197,11 @@ export interface ContextCacheMetadata {
   corruptFileSummaryCount?: number;
   schemaMismatchFileSummaryCount?: number;
   sourceManifestCacheFresh?: boolean;
-  sourceManifestFastPath?: 'hit' | 'miss' | 'skipped';
+  sourceManifestFastPath?: 'hit' | 'miss' | 'skipped' | 'assumed-hot';
   sourceManifestFastPathReason?: string;
   sourceManifestFastPathStrategy?: string;
+  sourceManifestTrust?: 'verified' | 'assumed';
+  sourceManifestFullManifestBuilt?: boolean;
 }
 
 export interface ContextGraphReport {

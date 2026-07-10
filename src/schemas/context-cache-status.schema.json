@@ -123,9 +123,10 @@
           "properties": {
             "mountedWorkspace": { "type": "boolean" },
             "fullManifestBuilt": { "type": "boolean" },
-            "fastPath": { "enum": ["hit", "miss", "skipped"] },
+            "fastPath": { "enum": ["hit", "miss", "skipped", "assumed-hot"] },
             "reason": { "type": "string" },
-            "strategy": { "type": "string" }
+            "strategy": { "type": "string" },
+            "trust": { "enum": ["verified", "assumed"] }
           }
         },
         "manifestChanges": {

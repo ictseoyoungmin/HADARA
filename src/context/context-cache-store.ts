@@ -5,11 +5,13 @@ import { validateSchema } from '../core/schema';
 import {
   buildContextSourceManifest,
   checkContextSourceManifestFastFreshness,
+  classifyContextSourcePath,
   compareContextSourceManifests,
   CONTEXT_SOURCE_MANIFEST_CACHE_PATH,
   CONTEXT_SOURCE_MANIFEST_CACHE_ROOT,
   CONTEXT_SOURCE_MANIFEST_SCHEMA_ID,
   createContextSourceSubsetHash,
+  extractorKeysForContextSource,
   type ContextSourceManifest
 } from './source-manifest';
 import type { ContextCacheMetadata, GraphExtractionResult } from './context-graph';
@@ -38,6 +40,8 @@ export type ContextCacheIssueCode =
   | 'CONTEXT_CACHE_STALE'
   | 'CONTEXT_CACHE_CORRUPT'
   | 'CONTEXT_CACHE_SCHEMA_MISMATCH';
+
+export type ContextSourceManifestCacheFastPath = 'hit' | 'miss' | 'skipped' | 'assumed-hot';
 
 export type ContextGraphExtractorShardKey =
   | 'extractTaskBoard'
@@ -109,7 +113,7 @@ export interface ContextCacheStatusReport {
     mode: 'miss' | 'hit' | 'stale' | 'corrupt';
     cachePresent: boolean;
     cacheFresh: boolean;
-    fastPath?: 'hit' | 'miss' | 'skipped';
+    fastPath?: ContextSourceManifestCacheFastPath;
     degraded: boolean;
     staleExtractorKeys: string[];
   };
@@ -127,7 +131,7 @@ export interface ContextCacheStatusReport {
     changedPaths: string[];
     unchangedSourceCount: number;
     staleExtractorKeys: string[];
-    fastPath?: 'hit' | 'miss' | 'skipped';
+    fastPath?: ContextSourceManifestCacheFastPath;
     fastPathReason?: string;
     fastPathStrategy?: string;
   };
@@ -147,7 +151,7 @@ export interface ContextCacheWarmReport {
     cacheMode: 'miss' | 'fresh' | 'stale' | 'corrupt';
     cachePresent: boolean;
     cacheFresh: boolean;
-    fastPath?: 'hit' | 'miss' | 'skipped';
+    fastPath?: ContextSourceManifestCacheFastPath;
     writePlanned: boolean;
     writeExecuted: boolean;
     shardWritePlanned: boolean;
@@ -177,7 +181,7 @@ export interface ContextCacheWarmReport {
     changedPaths: string[];
     unchangedSourceCount: number;
     staleExtractorKeys: string[];
-    fastPath?: 'hit' | 'miss' | 'skipped';
+    fastPath?: ContextSourceManifestCacheFastPath;
     fastPathReason?: string;
     fastPathStrategy?: string;
   };
@@ -225,9 +229,10 @@ export interface ContextCacheDiagnostics {
   slowPath: {
     mountedWorkspace: boolean;
     fullManifestBuilt: boolean;
-    fastPath: 'hit' | 'miss' | 'skipped';
+    fastPath: ContextSourceManifestCacheFastPath;
     reason?: string;
     strategy?: string;
+    trust?: 'verified' | 'assumed';
   };
   manifestChanges: {
     addedPathCount: number;
@@ -311,9 +316,11 @@ export interface ContextSourceManifestCacheAnalysis {
   comparison: ReturnType<typeof compareContextSourceManifests>;
   staleExtractorKeys: string[];
   cacheFresh: boolean;
-  fastPath: 'hit' | 'miss' | 'skipped';
+  fastPath: ContextSourceManifestCacheFastPath;
   fastPathReason?: string;
   fastPathStrategy?: string;
+  fullManifestBuilt: boolean;
+  trust: 'verified' | 'assumed';
   degraded: boolean;
   issues: ContextCacheIssue[];
 }
@@ -845,7 +852,8 @@ export function createContextCacheStatusReport(input: { projectRoot: string; gen
   const analysis = createSourceManifestCacheAnalysis({
     projectRoot: input.projectRoot,
     generatedAt: input.generatedAt,
-    generatedByCommand: CONTEXT_CACHE_STATUS_COMMAND
+    generatedByCommand: CONTEXT_CACHE_STATUS_COMMAND,
+    allowAssumedHotOnFingerprintMismatch: true
   });
   const shardItems = createContextGraphExtractorShardWarmItems({
     projectRoot: input.projectRoot,
@@ -1057,10 +1065,11 @@ function createContextCacheDiagnostics(input: {
     } : {}),
     slowPath: {
       mountedWorkspace: input.projectRoot.startsWith('/mnt/'),
-      fullManifestBuilt: input.analysis.fastPath !== 'hit',
+      fullManifestBuilt: input.analysis.fullManifestBuilt,
       fastPath: input.analysis.fastPath,
       ...(input.analysis.fastPathReason ? { reason: input.analysis.fastPathReason } : {}),
-      ...(input.analysis.fastPathStrategy ? { strategy: input.analysis.fastPathStrategy } : {})
+      ...(input.analysis.fastPathStrategy ? { strategy: input.analysis.fastPathStrategy } : {}),
+      trust: input.analysis.trust
     },
     manifestChanges: {
       addedPathCount: input.analysis.comparison.addedPaths.length,
@@ -1229,7 +1238,12 @@ function withCodeIndexCacheHitMetadata(report: CodeIndexReport, record: ContextC
   };
 }
 
-export function createSourceManifestCacheAnalysis(input: { projectRoot: string; generatedAt?: string; generatedByCommand: string }): ContextSourceManifestCacheAnalysis {
+export function createSourceManifestCacheAnalysis(input: {
+  projectRoot: string;
+  generatedAt?: string;
+  generatedByCommand: string;
+  allowAssumedHotOnFingerprintMismatch?: boolean;
+}): ContextSourceManifestCacheAnalysis {
   const generatedAt = input.generatedAt ?? new Date().toISOString();
   const cached = readContextSourceManifestCache(input.projectRoot);
   const fastFreshness = cached.status === 'valid' && cached.manifest
@@ -1253,8 +1267,38 @@ export function createSourceManifestCacheAnalysis(input: { projectRoot: string; 
         fastPath: 'hit',
         fastPathReason: fastFreshness.reason,
         fastPathStrategy: fastFreshness.strategy,
+        fullManifestBuilt: false,
+        trust: 'verified',
         degraded: cached.manifest.issues.some((issue) => issue.severity === 'warning' || issue.severity === 'error'),
         issues: [...cached.issues]
+      };
+    }
+    if (
+      input.allowAssumedHotOnFingerprintMismatch
+      && fastFreshness?.reason === 'fingerprint-mismatch'
+      && fastFreshness.relevantStatusEntries
+    ) {
+      const comparison = compareCachedManifestWithGitStatusEntries(cached.manifest, fastFreshness.relevantStatusEntries);
+      const issues: ContextCacheIssue[] = [...cached.issues, contextCacheIssue(
+        'warning',
+        'CONTEXT_CACHE_STALE',
+        'Source manifest cache freshness used a metadata-only assumed-hot path; run context cache warm for full verification.',
+        CONTEXT_SOURCE_MANIFEST_CACHE_PATH
+      )];
+      return {
+        generatedAt,
+        cached,
+        currentManifest: cached.manifest,
+        comparison,
+        staleExtractorKeys: comparison.staleExtractorKeys,
+        cacheFresh: false,
+        fastPath: 'assumed-hot',
+        fastPathReason: 'fingerprint-mismatch-metadata-only',
+        fastPathStrategy: fastFreshness.strategy,
+        fullManifestBuilt: false,
+        trust: 'assumed',
+        degraded: true,
+        issues
       };
     }
   }
@@ -1292,8 +1336,48 @@ export function createSourceManifestCacheAnalysis(input: { projectRoot: string; 
       fastPathReason: fastFreshness.reason,
       ...(fastFreshness.strategy ? { fastPathStrategy: fastFreshness.strategy } : {})
     } : {}),
+    fullManifestBuilt: true,
+    trust: 'verified',
     degraded,
     issues
+  };
+}
+
+function compareCachedManifestWithGitStatusEntries(
+  manifest: ContextSourceManifest,
+  entries: Array<{ status: string; path: string }>
+): ReturnType<typeof compareContextSourceManifests> {
+  const cachedByPath = new Map(manifest.sources.map((source) => [source.path, source]));
+  const addedPaths = new Set<string>();
+  const removedPaths = new Set<string>();
+  const changedPaths = new Set<string>();
+  const staleExtractorKeys = new Set<string>();
+
+  for (const entry of entries) {
+    const cached = cachedByPath.get(entry.path);
+    const deleted = entry.status.includes('D');
+    if (cached && deleted) {
+      removedPaths.add(entry.path);
+      cached.extractorKeys.forEach((key) => staleExtractorKeys.add(key));
+      continue;
+    }
+    if (cached) {
+      changedPaths.add(entry.path);
+      cached.extractorKeys.forEach((key) => staleExtractorKeys.add(key));
+      continue;
+    }
+    addedPaths.add(entry.path);
+    const kind = classifyContextSourcePath(entry.path);
+    if (kind) extractorKeysForContextSource(entry.path, kind).forEach((key) => staleExtractorKeys.add(key));
+  }
+
+  const dirtyPaths = new Set([...addedPaths, ...removedPaths, ...changedPaths]);
+  return {
+    addedPaths: Array.from(addedPaths).sort(),
+    removedPaths: Array.from(removedPaths).sort(),
+    changedPaths: Array.from(changedPaths).sort(),
+    unchangedPaths: manifest.sources.map((source) => source.path).filter((sourcePath) => !dirtyPaths.has(sourcePath)).sort(),
+    staleExtractorKeys: Array.from(staleExtractorKeys).sort()
   };
 }
 

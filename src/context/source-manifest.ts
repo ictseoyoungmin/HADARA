@@ -140,6 +140,7 @@ export interface ContextSourceManifestFastFreshnessResult {
     | 'fingerprint-mismatch'
     | 'fingerprint-unavailable';
   currentFingerprint?: ContextSourceManifestFingerprint;
+  relevantStatusEntries?: Array<{ status: string; path: string }>;
 }
 
 const DEFAULT_EXTRACTOR_VERSIONS: Record<string, string> = {
@@ -334,13 +335,14 @@ export function checkContextSourceManifestFastFreshness(
   if (!manifest.fingerprint) {
     return { ok: false, reason: 'missing-fingerprint' };
   }
-  const currentFingerprint = createContextSourceManifestFingerprint({
+  const current = createContextSourceManifestFingerprintReport({
     projectRoot,
     projectFingerprint: manifest.projectFingerprint,
     cacheVersion: manifest.cacheVersion,
     ignoreConfigHash: manifest.ignoreConfigHash,
     extractorVersions: manifest.extractorVersions
   });
+  const currentFingerprint = current?.fingerprint;
   if (!currentFingerprint) {
     return { ok: false, reason: 'fingerprint-unavailable' };
   }
@@ -356,7 +358,8 @@ export function checkContextSourceManifestFastFreshness(
     ok: false,
     strategy: currentFingerprint.strategy,
     reason: 'fingerprint-mismatch',
-    currentFingerprint
+    currentFingerprint,
+    relevantStatusEntries: current?.relevantStatusEntries
   };
 }
 
@@ -505,6 +508,16 @@ function createContextSourceManifestFingerprint(input: {
   ignoreConfigHash: string;
   extractorVersions: Record<string, string>;
 }): ContextSourceManifestFingerprint | undefined {
+  return createContextSourceManifestFingerprintReport(input)?.fingerprint;
+}
+
+function createContextSourceManifestFingerprintReport(input: {
+  projectRoot: string;
+  projectFingerprint: string;
+  cacheVersion: string;
+  ignoreConfigHash: string;
+  extractorVersions: Record<string, string>;
+}): { fingerprint: ContextSourceManifestFingerprint; relevantStatusEntries: Array<{ status: string; path: string }> } | undefined {
   if (!fs.existsSync(path.join(input.projectRoot, '.git'))) return undefined;
   const gitHead = readGitOutput(input.projectRoot, ['rev-parse', 'HEAD']) ?? 'UNBORN';
   const gitStatus = readGitOutput(input.projectRoot, ['status', '--porcelain=v1', '-z', '--untracked-files=all']);
@@ -514,14 +527,17 @@ function createContextSourceManifestFingerprint(input: {
   const dirtyMetadataHash = createDirtyContextSourceMetadataHash(input.projectRoot, gitStatus);
   if (!dirtyMetadataHash) return undefined;
   return {
-    strategy: 'git-worktree-v1',
-    projectFingerprint: input.projectFingerprint,
-    cacheVersion: input.cacheVersion,
-    ignoreConfigHash: input.ignoreConfigHash,
-    extractorVersionsHash: hashContextGraphJson(input.extractorVersions),
-    gitHead,
-    gitStatusHash: hashContextGraphJson(relevantStatusEntries),
-    dirtyContextSourceMetadataHash: dirtyMetadataHash
+    fingerprint: {
+      strategy: 'git-worktree-v1',
+      projectFingerprint: input.projectFingerprint,
+      cacheVersion: input.cacheVersion,
+      ignoreConfigHash: input.ignoreConfigHash,
+      extractorVersionsHash: hashContextGraphJson(input.extractorVersions),
+      gitHead,
+      gitStatusHash: hashContextGraphJson(relevantStatusEntries),
+      dirtyContextSourceMetadataHash: dirtyMetadataHash
+    },
+    relevantStatusEntries
   };
 }
 

@@ -12,15 +12,17 @@ import {
 } from './extractor-contract';
 import type { PersistedEvidenceRecord } from '../evidence/evidence';
 import { normalizeEvidenceRecord, type NormalizedEvidenceRecord } from '../evidence/normalizer';
-import { listTaskCapsules, type TaskCapsule } from '../task/task-capsule';
+import { findTaskCapsule, listTaskCapsules, type TaskCapsule } from '../task/task-capsule';
 
 interface EvidenceJsonlEntry {
   record: PersistedEvidenceRecord;
   lineNumber: number;
 }
 
-export function extractEvidence(projectRoot: string): GraphExtractionResult {
-  const capsules = listTaskCapsules(projectRoot);
+export function extractEvidence(projectRoot: string, options: { taskIds?: string[] } = {}): GraphExtractionResult {
+  const capsules = options.taskIds && options.taskIds.length > 0
+    ? taskCapsulesById(projectRoot, options.taskIds)
+    : listTaskCapsules(projectRoot);
   const sources = capsules.map((task) => readEvidenceSource(projectRoot, task));
   const result = createEmptyExtractionResult('extractEvidence', sources);
 
@@ -51,6 +53,18 @@ export function extractEvidence(projectRoot: string): GraphExtractionResult {
   }
 
   return result;
+}
+
+function taskCapsulesById(projectRoot: string, taskIds: string[]): TaskCapsule[] {
+  const seen = new Set<string>();
+  const capsules: TaskCapsule[] = [];
+  for (const taskId of taskIds) {
+    if (seen.has(taskId)) continue;
+    seen.add(taskId);
+    const capsule = findTaskCapsule(projectRoot, taskId);
+    if (capsule) capsules.push(capsule);
+  }
+  return capsules.sort((a, b) => a.id.localeCompare(b.id));
 }
 
 function evidenceNode(record: NormalizedEvidenceRecord, source: ReturnType<typeof createContextGraphSourceRef>): ContextGraphNode {

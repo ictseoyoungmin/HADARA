@@ -100,18 +100,28 @@ export function collectContextGraphExtractionsWithCache(
   const analysis = createSourceManifestCacheAnalysis({
     projectRoot,
     generatedAt,
-    generatedByCommand: 'context.graph'
+    generatedByCommand: 'context.graph',
+    allowAssumedHotOnFingerprintMismatch: Boolean(options.taskId)
   });
   const graphCore = readContextGraphCoreShard({ projectRoot, manifest: analysis.currentManifest });
   if (shouldUseBoundedStaleGraphCore({
     graphCore,
     staleExtractorKeys: analysis.staleExtractorKeys,
     stalePaths: [...analysis.comparison.addedPaths, ...analysis.comparison.changedPaths, ...analysis.comparison.removedPaths],
-    taskId: options.taskId
+    taskId: options.taskId,
+    assumedHot: analysis.fastPath === 'assumed-hot'
   })) {
     const graphCoreRecord = graphCore.record!;
     const results = [
-      ...boundedLiveOverlayExtractions(projectRoot, analysis.staleExtractorKeys),
+      ...boundedLiveOverlayExtractions(projectRoot, {
+        staleExtractorKeys: analysis.staleExtractorKeys,
+        stalePaths: [
+          ...analysis.comparison.addedPaths,
+          ...analysis.comparison.changedPaths,
+          ...analysis.comparison.removedPaths
+        ],
+        taskId: options.taskId
+      }),
       graphCoreRecord.payload
     ];
     const code = options.includeCode
@@ -142,7 +152,9 @@ export function collectContextGraphExtractionsWithCache(
         sourceManifestCacheFresh: analysis.cacheFresh,
         sourceManifestFastPath: analysis.fastPath,
         ...(analysis.fastPathReason ? { sourceManifestFastPathReason: analysis.fastPathReason } : {}),
-        ...(analysis.fastPathStrategy ? { sourceManifestFastPathStrategy: analysis.fastPathStrategy } : {})
+        ...(analysis.fastPathStrategy ? { sourceManifestFastPathStrategy: analysis.fastPathStrategy } : {}),
+        sourceManifestTrust: analysis.trust,
+        sourceManifestFullManifestBuilt: analysis.fullManifestBuilt
       }
     };
   }
@@ -175,7 +187,9 @@ export function collectContextGraphExtractionsWithCache(
         sourceManifestCacheFresh: analysis.cacheFresh,
         sourceManifestFastPath: analysis.fastPath,
         ...(analysis.fastPathReason ? { sourceManifestFastPathReason: analysis.fastPathReason } : {}),
-        ...(analysis.fastPathStrategy ? { sourceManifestFastPathStrategy: analysis.fastPathStrategy } : {})
+        ...(analysis.fastPathStrategy ? { sourceManifestFastPathStrategy: analysis.fastPathStrategy } : {}),
+        sourceManifestTrust: analysis.trust,
+        sourceManifestFullManifestBuilt: analysis.fullManifestBuilt
       }
     };
   }
@@ -207,7 +221,9 @@ export function collectContextGraphExtractionsWithCache(
       sourceManifestCacheFresh: analysis.cacheFresh,
       sourceManifestFastPath: analysis.fastPath,
       ...(analysis.fastPathReason ? { sourceManifestFastPathReason: analysis.fastPathReason } : {}),
-      ...(analysis.fastPathStrategy ? { sourceManifestFastPathStrategy: analysis.fastPathStrategy } : {})
+      ...(analysis.fastPathStrategy ? { sourceManifestFastPathStrategy: analysis.fastPathStrategy } : {}),
+      sourceManifestTrust: analysis.trust,
+      sourceManifestFullManifestBuilt: analysis.fullManifestBuilt
     }
   };
 }
@@ -362,9 +378,11 @@ function shouldUseBoundedStaleGraphCore(input: {
   staleExtractorKeys: string[];
   stalePaths: string[];
   taskId?: string;
+  assumedHot?: boolean;
 }): input is typeof input & { graphCore: ReturnType<typeof readContextGraphCoreShard> & { record: NonNullable<ReturnType<typeof readContextGraphCoreShard>['record']> } } {
   const taskId = input.taskId;
-  if (!taskId || input.graphCore.status !== 'stale' || !input.graphCore.record) return false;
+  const staleOrAssumed = input.graphCore.status === 'stale' || (input.assumedHot && input.graphCore.hit);
+  if (!taskId || !staleOrAssumed || !input.graphCore.record) return false;
   const boundedStaleKeys = new Set([
     'extractAgentHandoff',
     'extractManagedSections',
@@ -375,18 +393,35 @@ function shouldUseBoundedStaleGraphCore(input: {
     'codeIndex'
   ]);
   if (!input.staleExtractorKeys.length || input.staleExtractorKeys.some((key) => !boundedStaleKeys.has(key))) return false;
-  if (input.stalePaths.some((stalePath) => stalePath.startsWith(`tasks/${taskId}-`))) return false;
-  return input.graphCore.record.payload.nodes.some((node) => node.id === createTaskNodeId(taskId));
+  return input.graphCore.record.payload.nodes.some((node) => node.id === createTaskNodeId(taskId))
+    || input.stalePaths.some((stalePath) => stalePath.startsWith(`tasks/${taskId}-`));
 }
 
-function boundedLiveOverlayExtractions(projectRoot: string, staleExtractorKeys: string[]): GraphExtractionResult[] {
-  const stale = new Set(staleExtractorKeys);
+function boundedLiveOverlayExtractions(projectRoot: string, input: {
+  staleExtractorKeys: string[];
+  stalePaths: string[];
+  taskId?: string;
+}): GraphExtractionResult[] {
+  const stale = new Set(input.staleExtractorKeys);
+  const taskIds = boundedOverlayTaskIds(input.taskId, input.stalePaths);
   const results: GraphExtractionResult[] = [];
   if (stale.has('extractTaskBoard')) results.push(extractTaskBoard(projectRoot));
+  if (stale.has('extractTaskCapsules')) results.push(extractTaskCapsules(projectRoot, { taskIds }));
   if (stale.has('extractProjectState')) results.push(extractProjectState(projectRoot));
   if (stale.has('extractAgentHandoff')) results.push(extractAgentHandoff(projectRoot));
   if (stale.has('extractManagedSections')) results.push(extractManagedSections(projectRoot));
+  if (stale.has('extractEvidence')) results.push(extractEvidence(projectRoot, { taskIds }));
   return results;
+}
+
+function boundedOverlayTaskIds(taskId: string | undefined, stalePaths: string[]): string[] {
+  const ids = new Set<string>();
+  if (taskId) ids.add(taskId);
+  for (const sourcePath of stalePaths) {
+    const match = sourcePath.match(/^tasks\/(T-\d{4})-[^/]+\//);
+    if (match?.[1]) ids.add(match[1]);
+  }
+  return Array.from(ids).sort();
 }
 
 export function createTaskContextReport(input: CreateTaskContextReportInput): TaskContextReport {

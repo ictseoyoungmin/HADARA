@@ -10,7 +10,7 @@ import {
   toProjectRelativeContextPath
 } from './extractor-contract';
 import { findMarkdownRowByCell, parseMarkdownRowsUnderHeading, readMarkdownSection } from '../services/markdown-table';
-import { listTaskCapsules, type TaskCapsule } from '../task/task-capsule';
+import { findTaskCapsule, listTaskCapsules, type TaskCapsule } from '../task/task-capsule';
 
 interface TaskBoardRow {
   id: string;
@@ -37,8 +37,10 @@ export function extractTaskBoard(projectRoot: string): GraphExtractionResult {
   return result;
 }
 
-export function extractTaskCapsules(projectRoot: string): GraphExtractionResult {
-  const capsules = listTaskCapsules(projectRoot);
+export function extractTaskCapsules(projectRoot: string, options: { taskIds?: string[] } = {}): GraphExtractionResult {
+  const capsules = options.taskIds && options.taskIds.length > 0
+    ? taskCapsulesById(projectRoot, options.taskIds)
+    : listTaskCapsules(projectRoot);
   const sources = capsules.flatMap((task) => [
     readSourceInput(projectRoot, path.join(task.dir, 'TASK.md')),
     readSourceInput(projectRoot, path.join(task.dir, 'HANDOFF.md'))
@@ -96,6 +98,18 @@ export function extractTaskCapsules(projectRoot: string): GraphExtractionResult 
 
   result.stateSources?.push(...stateSources);
   return result;
+}
+
+function taskCapsulesById(projectRoot: string, taskIds: string[]): TaskCapsule[] {
+  const seen = new Set<string>();
+  const capsules: TaskCapsule[] = [];
+  for (const taskId of taskIds) {
+    if (seen.has(taskId)) continue;
+    seen.add(taskId);
+    const capsule = findTaskCapsule(projectRoot, taskId);
+    if (capsule) capsules.push(capsule);
+  }
+  return capsules.sort((a, b) => a.id.localeCompare(b.id));
 }
 
 function taskBoardNode(row: TaskBoardRow, sourceHash: string): ContextGraphNode {

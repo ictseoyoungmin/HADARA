@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { assertSchema } from '../../src/core/schema';
 import type {
@@ -317,6 +318,7 @@ describe('context graph builder', () => {
         `| Active Task | ${taskId} |`,
         ''
       ].join('\n'));
+      initGitRepository(root);
 
       createContextCacheWarmReport({
         projectRoot: root,
@@ -351,7 +353,7 @@ describe('context graph builder', () => {
         '| Active Task | None selected after T-0001. |',
         ''
       ].join('\n'));
-      write(root, 'tasks/T-9999-other-task/TASK.md', '# T-9999 Other task\n');
+      write(root, 'tasks/T-9999-other-task/TASK.md', '# T-9999 Other task\n\n## Identity\n\n| Field | Value |\n|---|---|\n| ID | T-9999 |\n| Title | Other task |\n| Status | Draft |\n');
 
       const report = buildContextGraphReport({
         projectRoot: root,
@@ -365,6 +367,10 @@ describe('context graph builder', () => {
         used: true,
         hit: false,
         mode: 'graph-core-stale-bounded+code-index',
+        sourceManifestFastPath: 'assumed-hot',
+        sourceManifestFastPathReason: 'fingerprint-mismatch-metadata-only',
+        sourceManifestTrust: 'assumed',
+        sourceManifestFullManifestBuilt: false,
         staleExtractorKeys: [
           'extractAgentHandoff',
           'extractManagedSections',
@@ -587,6 +593,12 @@ function write(root: string, relativePath: string, content: string): void {
   const absolutePath = path.join(root, relativePath);
   fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
   fs.writeFileSync(absolutePath, content, 'utf8');
+}
+
+function initGitRepository(root: string): void {
+  execFileSync('git', ['-C', root, 'init'], { stdio: 'ignore' });
+  execFileSync('git', ['-C', root, 'add', '.'], { stdio: 'ignore' });
+  execFileSync('git', ['-C', root, '-c', 'user.name=Hadara Test', '-c', 'user.email=hadara@example.test', 'commit', '-m', 'init'], { stdio: 'ignore' });
 }
 
 function snapshotProject(root: string): Record<string, string> {

@@ -567,10 +567,28 @@ describe('context cache store', () => {
     expect(stale.summary).toMatchObject({
       mode: 'stale',
       cacheFresh: false,
-      fastPath: 'miss'
+      fastPath: 'assumed-hot'
     });
     expect(stale.manifest.changedPaths).toEqual(['docs/TASK_BOARD.md']);
-    expect(stale.manifest.fastPathReason).toBe('fingerprint-mismatch');
+    expect(stale.manifest.fastPathReason).toBe('fingerprint-mismatch-metadata-only');
+    expect(stale.diagnostics.slowPath).toMatchObject({
+      fullManifestBuilt: false,
+      fastPath: 'assumed-hot',
+      trust: 'assumed'
+    });
+    assertSchema('hadara.context.cacheStatus.v1', stale);
+
+    const strictWarm = createContextCacheWarmReport({
+      projectRoot: root,
+      generatedAt: '2026-06-18T15:02:56.000Z'
+    });
+    expect(strictWarm.summary).toMatchObject({
+      cacheMode: 'stale',
+      cacheFresh: false,
+      fastPath: 'miss'
+    });
+    expect(strictWarm.manifest.changedPaths).toEqual(['docs/TASK_BOARD.md']);
+    expect(strictWarm.manifest.fastPathReason).toBe('fingerprint-mismatch');
   });
 
   it('marks stale cache by changed source metadata and returns extractor invalidation keys', () => {
