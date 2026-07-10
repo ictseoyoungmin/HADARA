@@ -558,3 +558,4 @@
 | T-0555 | Optimize mounted context pack fingerprint hot path | Done | tasks/T-0555-optimize-mounted-context-pack-fingerprint-hot-path | Added assumed-hot source-manifest diagnostics and bounded selected/dirty task overlays; built mounted stale path improved from ~20.01s/67.67s to 8.30s/9.50s. |
 | T-0556 | Require Done history before finalize | Done | tasks/T-0556-require-done-history-before-finalize | Added v2 History Done-row done-level validation and pre-close authoring guidance so agents see the required final History row before finalize blocks. |
 | T-0557 | Currentness integrity and stale guidance hardening | Done | tasks/T-0557-currentness-integrity-and-stale-guidance-hardening | |
+| T-0558 | Current-state ownership and compact projection | Done | tasks/T-0558-current-state-ownership-and-compact-projection | Compact ownership, historical snapshots, routing regression, Docker 149/1034, and governed toy closed-valid. |

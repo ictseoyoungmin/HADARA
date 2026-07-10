@@ -20,8 +20,8 @@ Use it to decide what to read next.
 
 | Need | Read |
 |---|---|
-| Current project state | `docs/PROJECT_STATE.md` |
-| Current/next agent handoff | `docs/AGENT_HANDOFF.md` |
+| Current product/release/phase/task facts | `docs/PROJECT_STATE.md` |
+| Next-agent continuity, next action, and live warnings | `docs/AGENT_HANDOFF.md` |
 | Task list | `docs/TASK_BOARD.md` |
 | Workflow guide | `docs/HADARA_WORKFLOW.md` |
 | Command lifecycle | `docs/TASK_WORKFLOW_COMMANDS.md` |
@@ -43,3 +43,5 @@ Use it to decide what to read next.
 HADARA-dev is the governed development repository for the HADARA CLI and docs protocol.
 
 Do not store credentials, private logs, raw model transcripts, private user data, machine-local absolute paths, or large design documents here.
+
+Historical snapshots under `docs/history/` are never default reading. Use the Historical Index in current state/handoff only when investigating older decisions, validation, or carried-forward context.
