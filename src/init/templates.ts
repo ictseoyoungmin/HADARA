@@ -131,9 +131,10 @@ After init, review:
 |---|---|---|
 | 1 | \`AGENTS.md\` | Entry rules and required reading. |
 | 2 | \`.hadara/context/HADARA_CONTEXT.md\` | Compact read routing. |
-| 3 | \`docs/PROJECT_STATE.md\` | Initial project state and next recommended step. |
-| 4 | \`docs/TASK_BOARD.md\` | Task index. |
-| 5 | \`docs/HADARA_WORKFLOW.md\` | How to work with HADARA from this point forward. |
+| 3 | \`.hadara/state/current.json\` | Structured current release, task continuity, next intent, problems, and validation baseline. |
+| 4 | \`docs/PROJECT_STATE.md\` | Human-readable product and phase projection. |
+| 5 | \`docs/TASK_BOARD.md\` | Task index. |
+| 6 | \`docs/HADARA_WORKFLOW.md\` | How to work with HADARA from this point forward. |
 
 Use project-specific docs only after they are created and routed through the docs registry, a read-map, or the active task.
 
@@ -146,7 +147,7 @@ hadara session start --json
 hadara session start --task T-XXXX --json
 \`\`\`
 
-Session start is a read model. It does not create tasks, append evidence, warm caches, validate completion, or close work.
+Session start is a read model. It does not create tasks, append evidence, warm caches, validate completion, or close work. When the structured current-state canon exists, Session Start exposes it directly so a new session can resume without reconstructing project history.
 
 ## Selecting or Creating Work
 
@@ -832,8 +833,9 @@ Serialize same-file writes, evidence append, Task Capsule doc writes, Task Board
 
 export function createAgentsDoc(spec: InitProfileSpec): string {
   const requiredReadingRows = [
+    ['`.hadara/state/current.json`', 'Every session unless session start already exposed it', 'Structured release, active/latest task, next intent, current problems, and validation baseline.'],
     ['`.hadara/context/HADARA_CONTEXT.md`', 'Every session', 'Compact project-local context anchor and read-routing guide.'],
-    ['`docs/PROJECT_STATE.md`', 'Every session', 'Current state, active work, known problems, and next recommended step.'],
+    ['`docs/PROJECT_STATE.md`', 'Every session', 'Human-readable product and phase projection.'],
     ['`docs/TASK_BOARD.md`', 'Every session', 'Task queue, task status, and capsule paths.'],
     ['`docs/HADARA_WORKFLOW.md`', 'Every session; whenever using HADARA CLI workflow commands', 'Project start, task lifecycle, evidence, context, document timing, repair, and useful CLI guidance.']
   ];

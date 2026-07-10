@@ -8,10 +8,10 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.2 | Portable project state. |
-| Latest Completed Task | T-0562 0.4.3 currentness verdict and semantic drift contract | Most recent completed capsule. |
+| Latest Completed Task | T-0563 0.4.3 seven-metric workflow measurement | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
-| Next Operator Intent | Complete the v0.4.3 seven-metric primary workflow measurement harness across init profiles. | Immediate continuation target. |
-| Validation Baseline | Docker 152 files / 1048 tests; docs doctor clean/warning/drifted currentness and semantic state drift contract passed. | ev:T-0560:a9119e06127c423e93a5b5c0, ev:T-0560:421bacf7fa7f4a3185d4ad9c, ev:T-0561:c91062958d2344d8bae89643, ev:T-0562:f3c88bbcbbc1461e9fa75015 |
+| Next Operator Intent | Align v0.4.3 positioning, onboarding, and release-facing documentation around local-first evidence control and fast session resume. | Immediate continuation target. |
+| Validation Baseline | Docker 152 files / 1049 tests; seven-metric basic/standard/governed workflow matrix closed-valid with zero stale references. | ev:T-0560:a9119e06127c423e93a5b5c0, ev:T-0560:421bacf7fa7f4a3185d4ad9c, ev:T-0561:c91062958d2344d8bae89643, ev:T-0562:f3c88bbcbbc1461e9fa75015, ev:T-0563:c2961dbcf55a491c8bf2ddd7, ev:T-0563:f91b077b38c848879b1fd749, ev:T-0563:6ecd43540a0c4fc9947762fa |
 
 ### Current Known Problems
 

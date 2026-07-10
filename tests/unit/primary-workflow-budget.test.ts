@@ -29,11 +29,25 @@ describe('primary workflow budget', () => {
   it('keeps the measurement harness on the six-step built-CLI contract', () => {
     const source = fs.readFileSync(path.join(process.cwd(), 'scripts', 'primary-workflow-measurement.mjs'), 'utf8');
 
-    expect(source).toContain('hadara.primaryWorkflow.measurement.v1');
+    expect(source).toContain('hadara.primaryWorkflow.measurement.v2');
     expect(source).toContain("maxInvocations: 6");
-    expect(source).toContain("execution.state === 'closed-valid'");
+    expect(source).toContain("finalState === 'closed-valid'");
     for (const step of ['inspect-empty', 'create', 'inspect-task', 'validate', 'finalize-review', 'finalize-execute']) {
       expect(source).toContain(`'${step}'`);
     }
+    for (const metric of ['installationToFirstCapsule', 'firstCorrectFile', 'cliCallsToCleanClose', 'manualDocumentEdits', 'staleReferences', 'profileDropout', 'recommendationBehavior']) {
+      expect(source).toContain(metric);
+    }
+    expect(source).toContain('generated-instruction-following-simulation');
+    expect(source).toContain('PRIMARY_WORKFLOW_DROPOUT');
+  });
+
+  it('documents all seven metrics and installed-package completion boundary', () => {
+    const content = fs.readFileSync(path.join(process.cwd(), 'docs', 'PRIMARY_WORKFLOW_BUDGET.md'), 'utf8');
+
+    for (const phrase of ['installation/available-CLI start to first capsule', 'first correct current-state file', 'manual document edit count', 'stale command/version/current-state references', 'profile dropout stage', 'recommendation accepted/ignored/corrected']) {
+      expect(content).toContain(phrase);
+    }
+    expect(content).toContain('--installation-mode installed-package --installation-duration-ms <ms>');
   });
 });

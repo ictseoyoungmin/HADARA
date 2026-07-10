@@ -33,12 +33,19 @@ The ordinary path budget is `<= 6` invocations after init. Recovery calls caused
 
 ## Measurement contract
 
-`node scripts/primary-workflow-measurement.mjs` creates a disposable standard-profile project in the OS temp directory and executes the six-invocation path using the built CLI. Its JSON report records:
+`node scripts/primary-workflow-measurement.mjs` creates a disposable project in the OS temp directory and executes the six-invocation path using the selected CLI. The v2 JSON report records seven product metrics:
 
-- exact invocation count and command ids;
-- duration for each invocation and the total measured lifecycle;
-- final lifecycle state;
-- the disposable project path for inspection.
+1. installation/available-CLI start to first capsule;
+2. generated-instruction routing time to the first correct current-state file;
+3. primary CLI calls to clean close, separated from setup and measurement probes;
+4. manual document edit count and paths;
+5. stale command/version/current-state references from `docs doctor`;
+6. the first profile dropout stage, or `null` on completion;
+7. command recommendation accepted/ignored/corrected counts and acceptance rate.
+
+The first-file metric is an explicit generated-instruction-following simulation, not a claim about human reading speed. The default built-CLI run reports `includesPackageInstallation:false`; release readiness must repeat the measurement with an installed package and pass its real install duration via `--installation-mode installed-package --installation-duration-ms <ms>`.
+
+Setup (`init`) and the post-close `docs doctor` measurement probe appear in `cliCalls` but do not consume the six-call primary lifecycle budget. Manual edits count operator/agent-authored Task Capsule documents; CLI-owned evidence, Task Board, structured state, and managed projections are not mislabeled as manual edits.
 
 The initial observational target on a local temp filesystem is `<= 15,000 ms` total for the six CLI calls and `closed-valid` on the first clean finalize execution. Mounted-workspace timings are environment signals, not correctness gates.
 
@@ -52,8 +59,12 @@ New behavior should first fit an existing command, a conditional diagnostic, or 
 
 | Metric | Healthy signal |
 |---|---|
-| Time to first safe action | The first `task.status` returns one explicit next action. |
-| Calls to clean close | Six or fewer post-init invocations. |
-| Blocker clarity | A failed invocation names the issue and next action without raw-log archaeology. |
-| Proof completion | A clean measured toy reaches `closed-valid`. |
-| Surface growth | Four unique primary lifecycle command ids. |
+| Installation to first capsule | Installed-package run records the real install duration and reaches the first capsule without intervention. |
+| First correct file | Generated instructions route first to `.hadara/state/current.json`; method and elapsed time are explicit. |
+| Calls to clean close | Six or fewer primary post-init invocations; setup/probes are reported separately. |
+| Manual document edits | Ordinary clean work edits only task-owned `TASK.md` and `HANDOFF.md`; shared current facts remain CLI-projected. |
+| Stale references | `currentnessIssues:0`, `semanticDriftIssues:0`, and `currentnessVerdict:clean`. |
+| Profile dropout | `point:null`; failures preserve the first failed stage and completed-stage list. |
+| Recommendation behavior | Every observed command recommendation records accepted, ignored, or corrected; ordinary clean toys target 100% accepted. |
+
+Blocker clarity, proof completion, and surface growth remain release invariants: failed stages emit a structured dropout issue, a clean toy reaches `closed-valid`, and the public primary surface remains four command ids.

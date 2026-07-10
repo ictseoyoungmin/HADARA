@@ -4,6 +4,30 @@
   "projectProfile": "hadara-dev",
   "documents": [
     {
+      "path": ".hadara/state/current.json",
+      "title": "CURRENT_STATE",
+      "owner": "hadara-docs",
+      "kind": "schema-reference",
+      "status": "canonical",
+      "scope": "project",
+      "profiles": [
+        "basic",
+        "standard",
+        "governed",
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "session-start"
+      ],
+      "requiredReading": true,
+      "updateOwner": "hadara-init",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "included",
+      "supersedes": [],
+      "generatedBy": "hadara init"
+    },
+    {
       "path": ".hadara/context/HADARA_CONTEXT.md",
       "title": "HADARA_CONTEXT",
       "owner": "hadara-docs",

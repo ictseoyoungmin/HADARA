@@ -8,10 +8,10 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.2 |
-| Latest Completed Task | T-0562 0.4.3 currentness verdict and semantic drift contract |
+| Latest Completed Task | T-0563 0.4.3 seven-metric workflow measurement |
 | Active Task | None |
-| Next Operator Intent | Complete the v0.4.3 seven-metric primary workflow measurement harness across init profiles. |
-| Validation Baseline | Docker 152 files / 1048 tests; docs doctor clean/warning/drifted currentness and semantic state drift contract passed. |
+| Next Operator Intent | Align v0.4.3 positioning, onboarding, and release-facing documentation around local-first evidence control and fast session resume. |
+| Validation Baseline | Docker 152 files / 1049 tests; seven-metric basic/standard/governed workflow matrix closed-valid with zero stale references. |
 
 ### Current Known Problems
 

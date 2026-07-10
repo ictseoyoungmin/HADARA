@@ -11,76 +11,186 @@ const repoRoot = process.cwd();
 const cliPath = path.resolve(readOption('--cli') ?? path.join(repoRoot, 'dist', 'cli', 'main.js'));
 const profile = readOption('--profile') ?? 'standard';
 const requestedProject = readOption('--project');
-const projectRoot = requestedProject
-  ? path.resolve(requestedProject)
-  : fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-primary-workflow-'));
+const projectRoot = requestedProject ? path.resolve(requestedProject) : fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-primary-workflow-'));
 const totalTargetMs = Number(readOption('--target-ms') ?? 15000);
-const measurements = [];
+const installationMode = readOption('--installation-mode') ?? 'preinstalled-built-cli';
+const installationDurationMs = Number(readOption('--installation-duration-ms') ?? 0);
+const primaryMeasurements = [];
+const cliCalls = [];
+const recommendationEvents = [];
+const manualDocumentEdits = [];
+const completedStages = [];
+let dropoutPoint = 'init';
+let taskId = null;
+let capsule = null;
+let firstCorrectFile = null;
+let firstCapsuleElapsedMs = null;
+const workflowStarted = performance.now();
 
-const init = runCli(['init', '--profile', profile, '--project', projectRoot, '--json']);
-assertOk('init', init);
+try {
+  const init = invokeCli('init', 'setup', ['init', '--profile', profile, '--project', projectRoot, '--json']);
+  assertOk('init', init);
+  completedStages.push('init');
 
-measure('inspect-empty', 'task.status', ['task', 'status', '--project', projectRoot, '--json']);
-const created = measure('create', 'task.create', ['task', 'create', 'Measured primary workflow', '--project', projectRoot, '--json']);
-const taskId = created.taskId;
-const capsule = created.task?.capsule;
-if (!taskId || !capsule) throw new Error('task.create did not return taskId and capsule.');
+  dropoutPoint = 'first-correct-file';
+  firstCorrectFile = measureFirstCorrectFile();
+  completedStages.push('first-correct-file');
 
-measure('inspect-task', 'task.status', ['task', 'status', '--task', taskId, '--project', projectRoot, '--json']);
-const validation = measure('validate', 'validation.run', [
-  'validation', 'run', '--task', taskId, '--check', 'Measured primary workflow',
-  '--direct-result', 'passed', '--direct-summary', 'Disposable workflow authoring and CLI routing passed.',
-  '--update-task', '--project', projectRoot, '--json'
-]);
-const evidenceId = validation.evidence?.id;
-if (!evidenceId) throw new Error('validation.run did not return an evidence id.');
+  dropoutPoint = 'inspect-empty';
+  const emptyStatus = measurePrimary('inspect-empty', 'task.status', ['task', 'status', '--project', projectRoot, '--json']);
+  completedStages.push('inspect-empty');
 
-authorDisposableCapsule({ projectRoot, capsule, taskId, evidenceId, profile });
-const review = measure(
-  'finalize-review',
-  'task.finalize',
-  ['task', 'finalize', '--task', taskId, '--project', projectRoot, '--json'],
-  (result) => result.summary?.executeSupported === true && result.primaryNextAction?.id === 'finalize-execute-reviewed-plan'
-);
-const execution = measure('finalize-execute', 'task.finalize', [
-  'task', 'finalize', '--task', taskId, '--execute', '--auto', '--project', projectRoot, '--json'
-]);
+  dropoutPoint = 'create';
+  const created = measurePrimary('create', 'task.create', ['task', 'create', 'Measured primary workflow', '--project', projectRoot, '--json']);
+  taskId = created.taskId;
+  capsule = created.task?.capsule;
+  if (!taskId || !capsule) throw new Error('task.create did not return taskId and capsule.');
+  firstCapsuleElapsedMs = round(installationDurationMs + performance.now() - workflowStarted);
+  recordRecommendation('inspect-empty', emptyStatus, 'task.create');
+  completedStages.push('create');
 
-const totalDurationMs = round(measurements.reduce((sum, item) => sum + item.durationMs, 0));
-const report = {
-  schemaVersion: 'hadara.primaryWorkflow.measurement.v1',
-  command: 'primary.workflow.measurement',
-  ok: measurements.length === 6 && execution.state === 'closed-valid',
-  profile,
-  projectRoot,
-  taskId,
-  budget: {
-    uniquePrimaryCommandIds: ['task.status', 'task.create', 'validation.run', 'task.finalize'],
-    maxInvocations: 6,
-    actualInvocations: measurements.length,
-    totalTargetMs,
-    withinTarget: totalDurationMs <= totalTargetMs
-  },
-  totalDurationMs,
-  finalState: execution.state ?? 'unknown',
-  measurements,
-  issues: [
-    ...(measurements.length === 6 ? [] : [{ severity: 'error', code: 'PRIMARY_INVOCATION_BUDGET_DRIFT', message: `Expected 6 invocations, observed ${measurements.length}.` }]),
-    ...(execution.state === 'closed-valid' ? [] : [{ severity: 'error', code: 'PRIMARY_FINAL_STATE_INVALID', message: `Expected closed-valid, observed ${execution.state ?? 'unknown'}.` }]),
-    ...(totalDurationMs <= totalTargetMs ? [] : [{ severity: 'warning', code: 'PRIMARY_TOTAL_TARGET_EXCEEDED', message: `Observed ${totalDurationMs} ms, above the ${totalTargetMs} ms observational target.` }])
-  ]
-};
+  dropoutPoint = 'inspect-task';
+  const inspectedTask = measurePrimary('inspect-task', 'task.status', ['task', 'status', '--task', taskId, '--project', projectRoot, '--json']);
+  recordNonCommandRecommendation('inspect-task', inspectedTask);
+  completedStages.push('inspect-task');
 
-process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
-if (!report.ok) process.exitCode = 1;
+  dropoutPoint = 'validate';
+  const validation = measurePrimary('validate', 'validation.run', [
+    'validation', 'run', '--task', taskId, '--check', 'Measured primary workflow',
+    '--direct-result', 'passed', '--direct-summary', 'Disposable workflow authoring and CLI routing passed.',
+    '--update-task', '--project', projectRoot, '--json'
+  ]);
+  const evidenceId = validation.evidence?.id;
+  if (!evidenceId) throw new Error('validation.run did not return an evidence id.');
+  completedStages.push('validate');
 
-function measure(step, commandId, commandArgs, accepts = (result) => result.exitCode === 0 && result.ok === true) {
+  dropoutPoint = 'author-capsule';
+  manualDocumentEdits.push(...authorDisposableCapsule({ projectRoot, capsule, taskId, evidenceId, profile }));
+  completedStages.push('author-capsule');
+
+  dropoutPoint = 'finalize-review';
+  const review = measurePrimary(
+    'finalize-review',
+    'task.finalize',
+    ['task', 'finalize', '--task', taskId, '--project', projectRoot, '--json'],
+    (result) => result.summary?.executeSupported === true && result.primaryNextAction?.id === 'finalize-execute-reviewed-plan'
+  );
+  completedStages.push('finalize-review');
+
+  dropoutPoint = 'finalize-execute';
+  const execution = measurePrimary('finalize-execute', 'task.finalize', [
+    'task', 'finalize', '--task', taskId, '--execute', '--auto', '--project', projectRoot, '--json'
+  ]);
+  recordRecommendation('finalize-review', review, 'task.finalize');
+  completedStages.push('finalize-execute');
+
+  dropoutPoint = 'currentness-probe';
+  const docsDoctor = invokeCli('docs-doctor', 'measurement-probe', ['docs', 'doctor', '--project', projectRoot, '--json']);
+  assertOk('docs-doctor', docsDoctor);
+  completedStages.push('currentness-probe');
+
+  const report = buildReport({ execution, docsDoctor, error: null });
+  process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+  if (!report.ok) process.exitCode = 1;
+} catch (error) {
+  const report = buildReport({ execution: null, docsDoctor: null, error });
+  process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+  process.exitCode = 1;
+}
+
+function buildReport({ execution, docsDoctor, error }) {
+  const totalDurationMs = round(primaryMeasurements.reduce((sum, item) => sum + item.durationMs, 0));
+  const accepted = recommendationEvents.filter((event) => event.outcome === 'accepted').length;
+  const ignored = recommendationEvents.filter((event) => event.outcome === 'ignored').length;
+  const corrected = recommendationEvents.filter((event) => event.outcome === 'corrected').length;
+  const observed = accepted + ignored + corrected;
+  const staleReferenceCount = docsDoctor?.summary?.currentnessIssues ?? null;
+  const semanticDriftCount = docsDoctor?.summary?.semanticDriftIssues ?? null;
+  const finalState = execution?.state ?? 'unknown';
+  const ok = !error && primaryMeasurements.length === 6 && finalState === 'closed-valid' && staleReferenceCount === 0;
+  return {
+    schemaVersion: 'hadara.primaryWorkflow.measurement.v2',
+    command: 'primary.workflow.measurement',
+    ok,
+    profile,
+    projectRoot,
+    taskId,
+    budget: {
+      uniquePrimaryCommandIds: ['task.status', 'task.create', 'validation.run', 'task.finalize'],
+      maxInvocations: 6,
+      actualInvocations: primaryMeasurements.length,
+      totalTargetMs,
+      withinTarget: totalDurationMs <= totalTargetMs
+    },
+    totalDurationMs,
+    finalState,
+    measurements: primaryMeasurements,
+    metrics: {
+      installationToFirstCapsule: {
+        durationMs: firstCapsuleElapsedMs,
+        installationMode,
+        installationDurationMs,
+        includesPackageInstallation: installationMode !== 'preinstalled-built-cli'
+      },
+      firstCorrectFile: firstCorrectFile ?? {
+        path: null,
+        durationMs: null,
+        method: 'generated-instruction-following-simulation',
+        correct: false
+      },
+      cliCallsToCleanClose: {
+        primaryInvocations: primaryMeasurements.length,
+        setupInvocations: cliCalls.filter((call) => call.kind === 'setup').length,
+        measurementProbeInvocations: cliCalls.filter((call) => call.kind === 'measurement-probe').length,
+        withinPrimaryBudget: primaryMeasurements.length <= 6
+      },
+      manualDocumentEdits: {
+        count: manualDocumentEdits.length,
+        edits: manualDocumentEdits
+      },
+      staleReferences: {
+        count: staleReferenceCount,
+        semanticDriftCount,
+        verdict: docsDoctor?.summary?.currentnessVerdict ?? 'unknown'
+      },
+      profileDropout: {
+        point: error ? dropoutPoint : null,
+        completedStages
+      },
+      recommendationBehavior: {
+        observed,
+        accepted,
+        ignored,
+        corrected,
+        acceptanceRate: observed > 0 ? round(accepted / observed) : null,
+        events: recommendationEvents
+      }
+    },
+    cliCalls,
+    issues: [
+      ...(error ? [{ severity: 'error', code: 'PRIMARY_WORKFLOW_DROPOUT', message: error instanceof Error ? error.message : String(error), stage: dropoutPoint }] : []),
+      ...(primaryMeasurements.length === 6 ? [] : [{ severity: 'error', code: 'PRIMARY_INVOCATION_BUDGET_DRIFT', message: `Expected 6 invocations, observed ${primaryMeasurements.length}.` }]),
+      ...(finalState === 'closed-valid' ? [] : [{ severity: 'error', code: 'PRIMARY_FINAL_STATE_INVALID', message: `Expected closed-valid, observed ${finalState}.` }]),
+      ...(staleReferenceCount === null || staleReferenceCount === 0 ? [] : [{ severity: 'error', code: 'PRIMARY_STALE_REFERENCE_DRIFT', message: `Observed ${staleReferenceCount} currentness issue(s).` }]),
+      ...(totalDurationMs <= totalTargetMs ? [] : [{ severity: 'warning', code: 'PRIMARY_TOTAL_TARGET_EXCEEDED', message: `Observed ${totalDurationMs} ms, above the ${totalTargetMs} ms observational target.` }]),
+      ...(installationMode === 'preinstalled-built-cli' ? [{ severity: 'warning', code: 'PRIMARY_PACKAGE_INSTALL_NOT_INCLUDED', message: 'This run starts from an available built CLI; run an installed-package measurement before release readiness.' }] : [])
+    ]
+  };
+}
+
+function measurePrimary(step, commandId, commandArgs, accepts = (result) => result.exitCode === 0 && result.ok === true) {
+  const result = invokeCli(step, 'primary', commandArgs);
+  if (!accepts(result)) assertOk(step, result);
+  primaryMeasurements.push({ order: primaryMeasurements.length + 1, step, commandId, durationMs: result.__durationMs, ok: true });
+  return result;
+}
+
+function invokeCli(step, kind, commandArgs) {
   const started = performance.now();
   const result = runCli(commandArgs);
   const durationMs = round(performance.now() - started);
-  if (!accepts(result)) assertOk(step, result);
-  measurements.push({ order: measurements.length + 1, step, commandId, durationMs, ok: true });
-  return result;
+  cliCalls.push({ order: cliCalls.length + 1, step, kind, durationMs, exitCode: result.exitCode });
+  return { ...result, __durationMs: durationMs };
 }
 
 function runCli(commandArgs) {
@@ -92,19 +202,68 @@ function runCli(commandArgs) {
   if (result.error) throw result.error;
   const output = result.stdout.trim();
   const jsonStart = output.indexOf('{');
-  let parsed;
   try {
-    parsed = JSON.parse(jsonStart >= 0 ? output.slice(jsonStart) : output);
+    return { ...JSON.parse(jsonStart >= 0 ? output.slice(jsonStart) : output), exitCode: result.status ?? 1 };
   } catch (error) {
     throw new Error(`Could not parse CLI JSON for ${commandArgs.join(' ')}: ${error.message}\n${output}\n${result.stderr}`);
   }
-  return { ...parsed, exitCode: result.status ?? 1 };
 }
 
 function assertOk(step, result) {
   if (result.exitCode !== 0 || result.ok !== true) {
     throw new Error(`${step} failed with exit=${result.exitCode}: ${JSON.stringify(result.issues ?? result.blockingIssues ?? [])}`);
   }
+}
+
+function measureFirstCorrectFile() {
+  const started = performance.now();
+  const agents = fs.readFileSync(path.join(projectRoot, 'AGENTS.md'), 'utf8');
+  const expected = '.hadara/state/current.json';
+  const listedPaths = [...agents.matchAll(/`([^`]+)`/g)].map((match) => match[1]);
+  const pathValue = listedPaths.find((candidate) => candidate === expected || candidate === '.hadara/context/HADARA_CONTEXT.md' || candidate === 'docs/PROJECT_STATE.md') ?? null;
+  const correct = pathValue === expected && fs.existsSync(path.join(projectRoot, expected));
+  if (!correct) throw new Error(`Generated onboarding did not route the first current-state read to ${expected}; observed ${pathValue ?? 'none'}.`);
+  fs.readFileSync(path.join(projectRoot, pathValue), 'utf8');
+  return {
+    path: pathValue,
+    durationMs: round(performance.now() - started),
+    method: 'generated-instruction-following-simulation',
+    correct
+  };
+}
+
+function recordRecommendation(sourceStep, report, nextCommandId) {
+  const recommendation = report.primaryNextAction ?? report.loop?.primaryNextAction;
+  const command = recommendation?.command ?? null;
+  if (!command) return;
+  const recommendedCommandId = commandIdFrom(command);
+  recommendationEvents.push({
+    sourceStep,
+    recommendationId: recommendation.id ?? null,
+    recommendedCommandId,
+    actualCommandId: nextCommandId,
+    outcome: recommendedCommandId === nextCommandId ? 'accepted' : 'corrected'
+  });
+}
+
+function recordNonCommandRecommendation(sourceStep, report) {
+  const recommendation = report.primaryNextAction ?? report.loop?.primaryNextAction;
+  if (!recommendation || recommendation.command) return;
+  recommendationEvents.push({
+    sourceStep,
+    recommendationId: recommendation.id ?? null,
+    recommendedCommandId: null,
+    actualCommandId: null,
+    outcome: 'non-command-guidance'
+  });
+}
+
+function commandIdFrom(command) {
+  if (/\btask create\b/.test(command)) return 'task.create';
+  if (/\btask status\b/.test(command)) return 'task.status';
+  if (/\bvalidation run\b/.test(command)) return 'validation.run';
+  if (/\btask finalize\b/.test(command)) return 'task.finalize';
+  return 'unknown';
 }
 
 function authorDisposableCapsule({ projectRoot, capsule, taskId, evidenceId, profile }) {
@@ -202,30 +361,10 @@ function authorDisposableCapsule({ projectRoot, capsule, taskId, evidenceId, pro
 |---|---|---|
 | None. | None. | N/A |
 `);
-
-  replaceInFile(path.join(projectRoot, 'docs', 'PROJECT_STATE.md'), [
-    ['| Name | TBD |', '| Name | Primary workflow measurement toy |'],
-    ['| Purpose | Describe the project in one or two sentences. |', '| Purpose | Measure the ordinary HADARA lifecycle in a disposable project. |'],
-    ['| Active Task | TBD |', `| Active Task | ${taskId} Measured primary workflow |`],
-    ['| Task Capsule | Not selected | Create or select the first Task Capsule. |', `| Task Capsule | Ready to finalize | ${taskId} measurement capsule is authored and validated. |`]
-  ]);
-  const handoffPath = path.join(projectRoot, 'docs', 'AGENT_HANDOFF.md');
-  if (fs.existsSync(handoffPath)) {
-    replaceInFile(handoffPath, [
-      ['| Required Reading | Pending | Read `PROJECT_STATE`, `AGENT_HANDOFF`, `TASK_BOARD`, and `HADARA_WORKFLOW` before starting. |', `| Required Reading | Complete | ${taskId} uses the generated current-state route. |`],
-      ['|---|---|---|\n\n## Current Known Problems', `|---|---|---|\n| ${taskId} | Primary workflow measurement readiness. | ${evidenceId} |\n\n## Current Known Problems`],
-      ['| Create or select first Task Capsule | Establish one bounded unit of work. | Task Capsule exists and is referenced from `docs/TASK_BOARD.md`. |', `| Finalize ${taskId}. | Complete the disposable measurement. | ${evidenceId} |`],
-      ['|---|---|---|\n\n## Historical Index', `|---|---|---|\n| Primary workflow | ${evidenceId} | Disposable measurement readiness. |\n\n## Historical Index`],
-      ['| Completed tasks | TBD | Add when handoff grows too large. |', '| Completed tasks | `docs/TASK_BOARD.md` | Disposable task index. |'],
-      ['| Validation history | TBD | Add when validation notes grow too large. |', '| Validation history | `tasks/T-*/evidence.jsonl` | Canonical disposable evidence. |']
-    ]);
-  }
-}
-
-function replaceInFile(filePath, replacements) {
-  let content = fs.readFileSync(filePath, 'utf8');
-  for (const [from, to] of replacements) content = content.replace(from, to);
-  fs.writeFileSync(filePath, content);
+  return [
+    { path: `${capsule}/TASK.md`, reason: 'task contract and completion evidence' },
+    { path: `${capsule}/HANDOFF.md`, reason: 'task continuation and closure handoff' }
+  ];
 }
 
 function readOption(name) {

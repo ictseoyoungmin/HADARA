@@ -563,3 +563,4 @@
 | T-0560 | Historical docs archive and multi-profile dogfood | Done | tasks/T-0560-historical-docs-archive-and-multi-profile-dogfood | 75→0 docs warnings; archive never-default; all profiles closed-valid; Docker 151/1041. |
 | T-0561 | 0.4.3 structured current-state canon and projection | Done | tasks/T-0561-0-4-3-structured-current-state-canon-and-projection | v0.4.3 structured canon, migration, and projection work. |
 | T-0562 | 0.4.3 currentness verdict and semantic drift contract | Done | tasks/T-0562-0-4-3-currentness-verdict-and-semantic-drift-contract | Additive docs doctor currentness contract. |
+| T-0563 | 0.4.3 seven-metric workflow measurement | Done | tasks/T-0563-0-4-3-seven-metric-workflow-measurement | Seven product metrics and all-profile matrix. |
