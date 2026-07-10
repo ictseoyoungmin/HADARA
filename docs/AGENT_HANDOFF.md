@@ -8,10 +8,10 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.3 | Portable project state. |
-| Latest Completed Task | T-0564 0.4.3 positioning onboarding and session resume | Most recent completed capsule. |
-| Active Task | T-0565 0.4.3 non-deployment release readiness | Resume this capsule first. |
-| Next Operator Intent | Prepare hadara@0.4.3 source metadata and complete non-deployment release readiness, installed-package measurement, and disposable consumer smokes. | Immediate continuation target. |
-| Validation Baseline | Docker 153 files / 1052 tests; local-first evidence-control positioning and fast-resume onboarding validated with docs currentness clean. | ev:T-0560:a9119e06127c423e93a5b5c0, ev:T-0560:421bacf7fa7f4a3185d4ad9c, ev:T-0561:c91062958d2344d8bae89643, ev:T-0562:f3c88bbcbbc1461e9fa75015, ev:T-0563:c2961dbcf55a491c8bf2ddd7, ev:T-0563:f91b077b38c848879b1fd749, ev:T-0563:6ecd43540a0c4fc9947762fa, ev:T-0564:f044cd06cd674977a473c5c9, ev:T-0564:fe7f2a90beb045e793a8a63d |
+| Latest Completed Task | T-0565 0.4.3 non-deployment release readiness | Most recent completed capsule. |
+| Active Task | None | Resume this capsule first. |
+| Next Operator Intent | Keep npm/GitHub publication operator-controlled; otherwise begin v0.4.4 external-repository validation planning and run post-publish recycle only after publication. | Immediate continuation target. |
+| Validation Baseline | hadara@0.4.3: Docker 153 files / 1052 tests; installed local-tarball workflow closed-valid; artifact/package/clean-checkout smokes, strict gate, release dry-run, and docs currentness passed. | ev:T-0560:a9119e06127c423e93a5b5c0, ev:T-0560:421bacf7fa7f4a3185d4ad9c, ev:T-0561:c91062958d2344d8bae89643, ev:T-0562:f3c88bbcbbc1461e9fa75015, ev:T-0563:c2961dbcf55a491c8bf2ddd7, ev:T-0563:f91b077b38c848879b1fd749, ev:T-0563:6ecd43540a0c4fc9947762fa, ev:T-0564:f044cd06cd674977a473c5c9, ev:T-0564:fe7f2a90beb045e793a8a63d, ev:T-0565:910e72184029437fb97f5c7e, ev:T-0565:e9c78040f1b2478eb6d695fd, ev:T-0565:674c57cb80c84c4c92887880, ev:T-0565:b14bfda248e844179027f134, ev:T-0565:c6cfa0b13ff44604aec81d05, ev:T-0565:f241c2bd2f384a98988f66d4 |
 
 ### Current Known Problems
 
@@ -20,6 +20,7 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Task-scoped context pack is about 8-10s on the mounted WSL repository. | watch | Prefer bounded status/session paths; revisit performance only with an explicit trust/cache design. |
 | Explicit live graph and context reads remain filesystem-sensitive. | watch | Warm cache first and opt into broad live diagnostics deliberately. |
 | Tool-host child process launch can return EPERM while direct commands pass. | active | Run the command directly, then record it through validation run --direct-result. |
+| Release artifact git-status preflight can exceed its 10-second limit on the mounted WSL workspace. | watch | Build release artifacts from a clean ext4 worktree so commit metadata and package contents remain aligned. |
 <!-- hadara:managed:end current-state-canon -->
 
 ## Ownership

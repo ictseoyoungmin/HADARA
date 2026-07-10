@@ -1,17 +1,14 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 14,
+  "rev": 16,
   "profile": "governed",
   "currentRelease": "0.4.3",
   "latestCompletedTask": {
-    "id": "T-0564",
-    "title": "0.4.3 positioning onboarding and session resume"
-  },
-  "activeTask": {
     "id": "T-0565",
     "title": "0.4.3 non-deployment release readiness"
   },
-  "nextOperatorIntent": "Prepare hadara@0.4.3 source metadata and complete non-deployment release readiness, installed-package measurement, and disposable consumer smokes.",
+  "activeTask": null,
+  "nextOperatorIntent": "Keep npm/GitHub publication operator-controlled; otherwise begin v0.4.4 external-repository validation planning and run post-publish recycle only after publication.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
@@ -27,10 +24,15 @@
       "summary": "Tool-host child process launch can return EPERM while direct commands pass.",
       "state": "active",
       "guidance": "Run the command directly, then record it through validation run --direct-result."
+    },
+    {
+      "summary": "Release artifact git-status preflight can exceed its 10-second limit on the mounted WSL workspace.",
+      "state": "watch",
+      "guidance": "Build release artifacts from a clean ext4 worktree so commit metadata and package contents remain aligned."
     }
   ],
   "validationBaseline": {
-    "summary": "Docker 153 files / 1052 tests; local-first evidence-control positioning and fast-resume onboarding validated with docs currentness clean.",
+    "summary": "hadara@0.4.3: Docker 153 files / 1052 tests; installed local-tarball workflow closed-valid; artifact/package/clean-checkout smokes, strict gate, release dry-run, and docs currentness passed.",
     "evidence": [
       "ev:T-0560:a9119e06127c423e93a5b5c0",
       "ev:T-0560:421bacf7fa7f4a3185d4ad9c",
@@ -40,7 +42,13 @@
       "ev:T-0563:f91b077b38c848879b1fd749",
       "ev:T-0563:6ecd43540a0c4fc9947762fa",
       "ev:T-0564:f044cd06cd674977a473c5c9",
-      "ev:T-0564:fe7f2a90beb045e793a8a63d"
+      "ev:T-0564:fe7f2a90beb045e793a8a63d",
+      "ev:T-0565:910e72184029437fb97f5c7e",
+      "ev:T-0565:e9c78040f1b2478eb6d695fd",
+      "ev:T-0565:674c57cb80c84c4c92887880",
+      "ev:T-0565:b14bfda248e844179027f134",
+      "ev:T-0565:c6cfa0b13ff44604aec81d05",
+      "ev:T-0565:f241c2bd2f384a98988f66d4"
     ]
   }
 }

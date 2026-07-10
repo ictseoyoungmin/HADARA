@@ -10,6 +10,7 @@ Current stable metadata preparation mode:
 
 - Package name decision: `hadara`.
 - Current 0.4.3 source-preparation status: T-0561 through T-0564 establish the structured current-state canon and projections, currentness/semantic-drift verdict, seven-metric all-profile workflow harness, and local-first evidence-control positioning. T-0565 retargets source metadata to `0.4.3` and owns local installed-tarball measurement, artifact/package/clean-checkout smokes, strict gate, and release dry-run without deployment mutation.
+- Current stable 0.4.3 source readiness: T-0565 built the final clean-worktree tarball (264 files, 428060 bytes, SHA-256 `c83d3e45a5b958025e1441f3d2bfd5eaf2c9772b3c3e40ff808ee1b9524f0436`), passed installed package doctor/command-parity/init/core smoke, passed clean-checkout npm ci/build/153-file 1052-test check/doctor/status/strict gate, and returned release dry-run `ready` with zero blockers or warnings. Local tarball install took 1082ms and installation-to-first-capsule took 1334.44ms; the standard toy closed-valid in six primary calls with currentness clean. npm/GitHub publication, credentials, dist-tags, and deployment helpers did not run.
 - Historical npm registry observation: `hadara@0.1.0-rc.0` was the first published HADARA release candidate.
 - Current version is `0.4.3`.
 - Current source version is `0.4.3`.

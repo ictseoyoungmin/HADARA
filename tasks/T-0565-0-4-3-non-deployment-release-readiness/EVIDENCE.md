@@ -19,6 +19,7 @@ Do not hand-edit this file.
 | ev:T-0565:974b9b78995a42bc9fee14c0 | passed | validation | Validation "Artifact/package/clean-checkout smoke" passed from direct result; Final source artifact hadara-0.4.3.tgz passed contents verification (264 files, sha256 c83d3e45...f0436); package smoke passed isolated install/doctor/command parity/init/core smoke; clean-checkout passed npm ci/build/check/doctor/status/strict gate with cleanup.; command: direct-result; exitCode: 0; signal: null; durationMs: 0; stdoutHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855; stderrHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
 | ev:T-0565:f241c2bd2f384a98988f66d4 | passed | validation | Validation "Strict gate, release dry-run, and currentness audit" passed from direct result; Strict release gate passed every check; release dry-run is ready with zero blockers/warnings and all publish/GitHub/Docker actions willExecute=false; docs doctor reports currentness clean and semantic drift zero.; command: direct-result; exitCode: 0; signal: null; durationMs: 0; stdoutHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855; stderrHash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
 | ev:T-0565:1b7ab102bdd640a4b16a08e9 | passed | release | Final clean ext4 artifact and clean-checkout passes resolve the two mounted-workspace git-status timeouts and the stale Project State release-gate failure; final evidence ids are ev:T-0565:674c57cb80c84c4c92887880 and ev:T-0565:c6cfa0b13ff44604aec81d05. |
+| ev:T-0565:f2c126c841db41d3af3406c9 | passed | validation | Task finalize done-level readiness for T-0565 passed before close evidence append; harnessOk=true; evidenceLintOk=true; protocolDoctorOk=true; validationReportHash=sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash=sha256:04226a7a36a855fcfa9bbe631db0690818bd09e25a148d747572a91fc6ac0275 |
 <!-- /hadara:slot -->
 
 ## Close Proof
@@ -26,6 +27,7 @@ Do not hand-edit this file.
 <!-- hadara:slot evidence.close-proof -->
 | Check | Result | Evidence |
 |---|---|---|
+| close evidence | passed | ev:T-0565:3c69a22a9bff466a93bcb03d |
 <!-- /hadara:slot -->
 
 ## Failed / Blocked / Residual Evidence

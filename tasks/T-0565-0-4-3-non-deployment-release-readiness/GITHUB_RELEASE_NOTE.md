@@ -12,9 +12,9 @@ Highlights:
 
 Validation summary:
 
-- Full Docker suite and dist freshness: recorded in T-0565 release-readiness evidence.
-- Local tarball install and installed-package workflow measurement: recorded in T-0565.
-- Release artifact, package smoke, clean-checkout smoke, strict gate, and release dry-run: recorded in T-0565.
+- Full Docker suite passed 153 files / 1052 tests with 0.4.3 dist current.
+- The local tarball installed in 1082ms; installation-to-first-capsule took 1334.44ms and the standard six-call workflow closed-valid.
+- Final artifact contents (264 files), package smoke, clean-checkout smoke, strict gate, release dry-run, and docs currentness passed.
 
 Publication boundary:
 

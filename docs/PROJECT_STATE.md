@@ -8,10 +8,10 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.3 |
-| Latest Completed Task | T-0564 0.4.3 positioning onboarding and session resume |
-| Active Task | T-0565 0.4.3 non-deployment release readiness |
-| Next Operator Intent | Prepare hadara@0.4.3 source metadata and complete non-deployment release readiness, installed-package measurement, and disposable consumer smokes. |
-| Validation Baseline | Docker 153 files / 1052 tests; local-first evidence-control positioning and fast-resume onboarding validated with docs currentness clean. |
+| Latest Completed Task | T-0565 0.4.3 non-deployment release readiness |
+| Active Task | None |
+| Next Operator Intent | Keep npm/GitHub publication operator-controlled; otherwise begin v0.4.4 external-repository validation planning and run post-publish recycle only after publication. |
+| Validation Baseline | hadara@0.4.3: Docker 153 files / 1052 tests; installed local-tarball workflow closed-valid; artifact/package/clean-checkout smokes, strict gate, release dry-run, and docs currentness passed. |
 
 ### Current Known Problems
 
@@ -20,6 +20,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Task-scoped context pack is about 8-10s on the mounted WSL repository. | watch | Prefer bounded status/session paths; revisit performance only with an explicit trust/cache design. |
 | Explicit live graph and context reads remain filesystem-sensitive. | watch | Warm cache first and opt into broad live diagnostics deliberately. |
 | Tool-host child process launch can return EPERM while direct commands pass. | active | Run the command directly, then record it through validation run --direct-result. |
+| Release artifact git-status preflight can exceed its 10-second limit on the mounted WSL workspace. | watch | Build release artifacts from a clean ext4 worktree so commit metadata and package contents remain aligned. |
 <!-- hadara:managed:end current-state-canon -->
 
 ## Ownership
@@ -40,7 +41,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.3 state integrity, measurement, positioning, and release preparation after stable 0.4.2.
+v0.4.3 source/package readiness complete without deployment; v0.4.4 external validation is next unless an operator chooses publication.
 
 | Stage | State | Purpose |
 |---|---|---|
