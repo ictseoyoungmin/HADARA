@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.3 |
-| Latest Completed Task | T-0569 Fix fresh init dogfood UX regressions |
+| Latest Completed Task | T-0570 0.4.3 stable release readiness and publish preparation |
 | Active Task | None |
 | Next Work | v0.4.4 external-repository validation planning |
 | Next Work State | candidate |
 | Operator Guidance | Keep npm/GitHub publication operator-controlled. Run post-publish recycle only after publication. |
-| Validation Baseline | hadara@0.4.3: Docker 153 files / 1052 tests; installed local-tarball workflow closed-valid; artifact/package/clean-checkout smokes, strict gate, release dry-run, and docs currentness passed. |
+| Validation Baseline | hadara@0.4.3: Docker 153 files / 1058 tests; installed local-tarball workflow closed-valid; artifact/package/clean-checkout smokes, strict gate, release dry-run, docs currentness, and stable publish-preparation checks passed. |
 
 ### Current Known Problems
 

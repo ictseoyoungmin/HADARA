@@ -56,20 +56,20 @@ gh auth login
 
 # Safe default: validation + artifact + npm publish dry-run only.
 
-scripts/release/manual-publish-rc.sh T-0545
+scripts/release/manual-publish-rc.sh T-0570
 
 # Actual npm publish after typing "publish".
 
-scripts/release/manual-publish-rc.sh T-0545 --execute
+scripts/release/manual-publish-rc.sh T-0570 --execute
 
 # Actual npm publish, then GitHub Release draft after typing "github-draft".
 
-scripts/release/manual-publish-rc.sh T-0545 --execute --github-draft \
-  --github-release-note tasks/T-0545-0-4-2-stable-release-readiness-and-publish-preparation/GITHUB_RELEASE_NOTE.md
+scripts/release/manual-publish-rc.sh T-0570 --execute --github-draft \
+  --github-release-note tasks/T-0570-0-4-3-stable-release-readiness-and-publish-preparation/GITHUB_RELEASE_NOTE.md
 
 # Publish a reviewed GitHub Release draft publicly.
 
-gh release edit v0.4.2 --repo ictseoyoungmin/HADARA --draft=false
+gh release edit v$(node -p "require('./package.json').version") --repo ictseoyoungmin/HADARA --draft=false
 EOF
 }
 

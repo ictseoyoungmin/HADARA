@@ -8,16 +8,21 @@ Highlights:
 
 - Adds `.hadara/state/current.json` as the compact source for release, latest/active task, next intent, current problems, and validation baseline, with managed Project State and Agent Handoff projections.
 - Lets a new agent session resume from structured current state and `session start` without reconstructing the entire project from historical prose.
+- Replaces loose `nextOperatorIntent` prose with a structured next-work contract so status/session recommendations can distinguish candidate work from operator guidance.
 - Extends `docs doctor --json` with an explicit `summary.currentnessVerdict` of `clean`, `warning`, or `drifted`, while preserving compatibility `health` semantics.
 - Detects semantic drift between the structured canon, Markdown projections, and Task Board, plus stale onboarding install versions and removed-command references.
 - Measures seven product signals across basic, standard, and governed profiles: install-to-capsule, first-correct-file routing, close calls, manual doc edits, stale references, profile dropout, and recommendation acceptance/correction.
 - Keeps the primary workflow frozen at four command ids and six post-init calls; all three built-CLI profile toys closed valid under the 15-second budget with zero stale references.
+- Fixes fresh-init dogfood regressions found after source readiness: stale first-task recommendations now disappear after any task exists, consumer `context pack` no longer leaks HADARA-dev validation commands, read-first ranges cover full generated `TASK.md` files, and finish-only task status points at `task finalize --execute --auto`.
 - Sharpens the product boundary to a local-first evidence control plane for trustworthy agentic development; full controller, provider runtime, cloud queue, and broad write surfaces remain deferred.
 
 Boundaries:
 
 - T-0565 retargets package/version metadata and completes local installed-tarball measurement, artifact/package/clean-checkout smokes, and final read-only release gates.
+- T-0566 through T-0569 complete the current-state task-selection/session contract cleanup, structured next-work contract, fresh-init dogfood, and post-dogfood UX regression fixes before stable publication.
+- T-0570 prepares stable release notes, readiness docs, helper examples, and GitHub Release notes for `hadara@0.4.3`.
 - npm publish, GitHub Release publication, Docker/PyPI publication, token loading, and other deployment mutation are not performed by this source-preparation line.
+- The intended npm dist-tag is `latest`; published `hadara@0.4.2` remains the stable line until the operator runs the approval-gated publish helper.
 - External validation across three non-HADARA repositories and non-author workers is the v0.4.4 evidence target, not a 0.4.3 completion claim.
 
 ## 0.4.2
