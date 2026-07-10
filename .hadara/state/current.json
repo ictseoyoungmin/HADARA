@@ -1,11 +1,11 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 21,
+  "rev": 23,
   "profile": "governed",
   "currentRelease": "0.4.3",
   "latestCompletedTask": {
-    "id": "T-0567",
-    "title": "Structured next work current-state contract"
+    "id": "T-0568",
+    "title": "Fresh init dogfood from temporary project"
   },
   "activeTask": null,
   "nextWork": {

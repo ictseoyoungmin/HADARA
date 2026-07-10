@@ -568,3 +568,4 @@
 | T-0565 | 0.4.3 non-deployment release readiness | Done | tasks/T-0565-0-4-3-non-deployment-release-readiness | Stable source/package/readiness proof without publish or deployment. |
 | T-0566 | Current-state task selection and session contract cleanup | Done | tasks/T-0566-current-state-task-selection-and-session-contract-cleanup | |
 | T-0567 | Structured next work current-state contract | Done | tasks/T-0567-structured-next-work-current-state-contract | |
+| T-0568 | Fresh init dogfood from temporary project | Done | tasks/T-0568-fresh-init-dogfood-from-temporary-project | |
