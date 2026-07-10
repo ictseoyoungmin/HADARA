@@ -65,9 +65,10 @@ After init, review:
 |---|---|---|
 | 1 | `AGENTS.md` | Entry rules and required reading. |
 | 2 | `.hadara/context/HADARA_CONTEXT.md` | Compact read routing. |
-| 3 | `docs/PROJECT_STATE.md` | Initial project state and next recommended step. |
-| 4 | `docs/TASK_BOARD.md` | Task index. |
-| 5 | `docs/HADARA_WORKFLOW.md` | How to work with HADARA from this point forward. |
+| 3 | `.hadara/state/current.json` | Structured current release, task continuity, next intent, problems, and validation baseline. |
+| 4 | `docs/PROJECT_STATE.md` | Human-readable product/phase projection. |
+| 5 | `docs/TASK_BOARD.md` | Task index. |
+| 6 | `docs/HADARA_WORKFLOW.md` | How to work with HADARA from this point forward. |
 
 Use project-specific docs only after they are created and routed through the docs registry, a read-map, or the active task.
 
@@ -94,6 +95,7 @@ hadara session start --task T-XXXX --json
 ```
 
 Session start is a read model. It does not create tasks, append evidence, warm caches, validate completion, or close work.
+When `.hadara/state/current.json` exists, session start exposes its active/latest task, release, next operator intent, validation baseline, and current known problems directly. This is the default fast-resume path for a new agent session; historical prose is not required to rediscover where work stopped.
 
 ## Selecting or Creating Work
 
@@ -167,6 +169,7 @@ Use the high-level lifecycle path for ordinary work:
 hadara task status --task T-XXXX --json
 
 # Finalize Task Capsule docs and tracked state docs before closing.
+# Active/latest task facts in the structured canon are synchronized by task finalize; separately authored product/phase context must already be current.
 
 hadara task finalize --task T-XXXX --json
 hadara task finalize --task T-XXXX --execute --auto --json

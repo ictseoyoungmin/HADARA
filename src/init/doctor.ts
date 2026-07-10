@@ -199,7 +199,7 @@ function productDefaultLeakToken(content: string): string | null {
 const CANONICAL_TABLE_HEADERS: Record<string, string[]> = {
   'AGENTS.md': ['| Document | When to Read | Purpose |'],
   'docs/PROJECT_STATE.md': ['| Field | Value |', '| Area | Status | Notes |', '| Source | Path | Purpose |'],
-  'docs/AGENT_HANDOFF.md': ['| Area | State | Notes |', '| Task | Summary | Evidence |', '| Issue | Impact | Next Step |', '| Step | Reason | Done Evidence |', '| Check | Latest Evidence | Notes |', '| History Type | Path | When to Use |'],
+  'docs/AGENT_HANDOFF.md': ['| Area | State | Notes |', '| History Type | Path | When to Use |'],
   'docs/TASK_BOARD.md': ['| ID | Title | Status | Capsule | Notes |'],
   'docs/HADARA_WORKFLOW.md': ['| Order | Authority | Allowed Reads |', '| Gate | Required State |', '| Timing | Update |', '| Situation | Use | Notes |', '| Surface | Human / Operator | Agent | CLI |'],
   'docs/ARCHITECTURE.md': ['| Field | Value |', '| Boundary | Rule | Notes |', '| Component | Path / Surface | Responsibility | Status |'],

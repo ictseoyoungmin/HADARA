@@ -34,7 +34,10 @@
         "activeTask": { "type": "string" },
         "latestCompletedTask": { "type": "string" },
         "recommendedNextTask": { "type": "string" },
-        "releaseState": { "type": "string" }
+        "releaseState": { "type": "string" },
+        "nextOperatorIntent": { "type": "string" },
+        "validationBaseline": { "type": "string" },
+        "source": { "enum": [".hadara/state/current.json", "markdown-compatibility"] }
       }
     },
     "contextPack": {

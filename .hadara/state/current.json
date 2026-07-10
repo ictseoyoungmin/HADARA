@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "hadara.projectCurrentState.v1",
+  "rev": 3,
+  "profile": "governed",
+  "currentRelease": "0.4.2",
+  "latestCompletedTask": {
+    "id": "T-0561",
+    "title": "0.4.3 structured current-state canon and projection"
+  },
+  "activeTask": null,
+  "nextOperatorIntent": "Complete the v0.4.3 currentness verdict and semantic drift health contract without adding a public command.",
+  "currentKnownProblems": [
+    {
+      "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
+      "state": "watch",
+      "guidance": "Prefer bounded status/session paths; revisit performance only with an explicit trust/cache design."
+    },
+    {
+      "summary": "Explicit live graph and context reads remain filesystem-sensitive.",
+      "state": "watch",
+      "guidance": "Warm cache first and opt into broad live diagnostics deliberately."
+    },
+    {
+      "summary": "Tool-host child process launch can return EPERM while direct commands pass.",
+      "state": "active",
+      "guidance": "Run the command directly, then record it through validation run --direct-result."
+    }
+  ],
+  "validationBaseline": {
+    "summary": "Docker 152 files / 1046 tests; structured current-state init, migration, lifecycle synchronization, and session resume passed.",
+    "evidence": [
+      "ev:T-0560:a9119e06127c423e93a5b5c0",
+      "ev:T-0560:421bacf7fa7f4a3185d4ad9c",
+      "ev:T-0561:c91062958d2344d8bae89643"
+    ]
+  }
+}

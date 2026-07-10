@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.projectCurrentState.v1",
+  "x-hadara-schema-id": "hadara.projectCurrentState.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "rev", "profile", "currentRelease", "latestCompletedTask", "activeTask", "nextOperatorIntent", "currentKnownProblems", "validationBaseline"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.projectCurrentState.v1" },
+    "rev": { "type": "integer", "minimum": 1 },
+    "profile": { "enum": ["basic", "standard", "governed"] },
+    "currentRelease": { "type": "string", "minLength": 1 },
+    "latestCompletedTask": { "$ref": "#/$defs/taskRefOrNull" },
+    "activeTask": { "$ref": "#/$defs/taskRefOrNull" },
+    "nextOperatorIntent": { "type": "string", "minLength": 1 },
+    "currentKnownProblems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["summary", "state", "guidance"],
+        "properties": {
+          "summary": { "type": "string", "minLength": 1 },
+          "state": { "enum": ["watch", "active", "blocked"] },
+          "guidance": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "validationBaseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "evidence"],
+      "properties": {
+        "summary": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "$defs": {
+    "taskRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^T-[0-9]{4}$" },
+        "title": { "type": "string", "minLength": 1 }
+      }
+    },
+    "taskRefOrNull": {
+      "anyOf": [
+        { "$ref": "#/$defs/taskRef" },
+        { "type": "null" }
+      ]
+    }
+  }
+}

@@ -5,6 +5,13 @@ import { createTaskCloseSourceReport } from '../task/task-close';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
 import { parseEvidenceIndexFile } from './evidence-list';
 import { findMarkdownRowByCell, parseMarkdownRows, parseMarkdownRowsUnderHeading, readMarkdownSection } from './markdown-table';
+import {
+  HANDOFF_STATE_SECTION_ID,
+  PROJECT_CURRENT_STATE_PATH,
+  PROJECT_STATE_SECTION_ID,
+  projectCurrentStateDocument,
+  readProjectCurrentState
+} from './project-current-state';
 
 export type StateProjectionSeverity = 'error' | 'warning' | 'info';
 
@@ -79,6 +86,12 @@ export interface StateProjectionReport {
     checkedTasks: number;
   };
   sources: {
+    currentState: StateProjectionSourceValue & {
+      rev: number | null;
+      currentRelease: string | null;
+      latestCompletedTaskId: string | null;
+      activeTaskId: string | null;
+    };
     projectState: StateProjectionSourceValue & {
       latestCompletedTaskId: string | null;
       activeTaskId: string | null;
@@ -129,6 +142,10 @@ const CLOSE_STATE_TOKENS = new Set(['not-closed', 'closed-valid', 'closed-stale'
 
 export function createStateProjectionReport(projectRoot: string, now = new Date()): StateProjectionReport {
   const issues: StateProjectionIssue[] = [];
+  const currentStateRead = readProjectCurrentState(projectRoot);
+  for (const issue of currentStateRead.issues) {
+    issues.push({ ...issue, fixHint: `Repair ${PROJECT_CURRENT_STATE_PATH} before relying on projected current state.` });
+  }
   const sourceTexts = readSources(projectRoot, issues);
   const taskBoardRows = parseTaskBoardRows(sourceTexts.taskBoard.content);
   const tasks = listTaskCapsules(projectRoot);
@@ -140,7 +157,10 @@ export function createStateProjectionReport(projectRoot: string, now = new Date(
     taskBoardStatus: taskBoardRows.find((row) => row.id === taskId)?.status ?? null
   }));
   const latestDoneTaskId = latestTaskId(basicTaskStates.filter((task) => isDone(task.taskStatus) || isDone(task.taskBoardStatus)).map((task) => task.id));
-  const activeTaskIds = basicTaskStates.filter((task) => isActive(task.taskBoardStatus)).map((task) => task.id);
+  const taskBoardActiveTaskIds = basicTaskStates.filter((task) => isActive(task.taskBoardStatus)).map((task) => task.id);
+  const activeTaskIds = currentStateRead.state?.activeTask
+    ? [currentStateRead.state.activeTask.id]
+    : taskBoardActiveTaskIds;
   const deepCheckTaskIds = new Set([latestDoneTaskId, ...activeTaskIds].filter((value): value is string => Boolean(value)));
   const projectedTasks = [...taskIds]
     .sort()
@@ -151,6 +171,12 @@ export function createStateProjectionReport(projectRoot: string, now = new Date(
   const developmentSlices = extractDevelopmentSlices(sourceTexts.developmentSlices);
   const docsRegistry = extractDocsRegistry(projectRoot, issues);
   const releaseReadiness = readSource(projectRoot, 'docs/RELEASE_READINESS.md');
+
+  if (currentStateRead.state) {
+    compareLatestTask('STATE_CURRENT_CANON_LATEST_MISMATCH', PROJECT_CURRENT_STATE_PATH, currentStateRead.state.latestCompletedTask?.id ?? null, latestDoneTaskId, issues);
+    checkCurrentStateProjectionDrift(sourceTexts.projectState, 'project-state', PROJECT_STATE_SECTION_ID, currentStateRead.state, issues);
+    if (sourceTexts.agentHandoff.exists) checkCurrentStateProjectionDrift(sourceTexts.agentHandoff, 'handoff', HANDOFF_STATE_SECTION_ID, currentStateRead.state, issues);
+  }
 
   if (!releaseReadiness.exists) {
     issues.push(info('STATE_RELEASE_READINESS_MISSING', releaseReadiness.path, 'docs/RELEASE_READINESS.md is missing.', 'Create or register release readiness docs before release work depends on this projection.'));
@@ -180,6 +206,14 @@ export function createStateProjectionReport(projectRoot: string, now = new Date(
       checkedTasks: projectedTasks.length
     },
     sources: {
+      currentState: {
+        path: PROJECT_CURRENT_STATE_PATH,
+        exists: currentStateRead.present,
+        rev: currentStateRead.state?.rev ?? null,
+        currentRelease: currentStateRead.state?.currentRelease ?? null,
+        latestCompletedTaskId: currentStateRead.state?.latestCompletedTask?.id ?? null,
+        activeTaskId: currentStateRead.state?.activeTask?.id ?? null
+      },
       projectState: {
         path: sourceTexts.projectState.path,
         exists: sourceTexts.projectState.exists,
@@ -444,7 +478,8 @@ function readCloseProof(projectRoot: string, task: TaskCapsule): StateProjection
 }
 
 function extractProjectState(source: SourceText): { latestCompletedTaskId: string | null; activeTaskId: string | null } {
-  const rows = parseMarkdownRowsUnderHeading(source.content, '## Metadata');
+  const canonicalRows = parseMarkdownRowsUnderHeading(source.content, '## Canonical Current State');
+  const rows = canonicalRows.length > 0 ? canonicalRows : parseMarkdownRowsUnderHeading(source.content, '## Metadata');
   return {
     latestCompletedTaskId: extractTaskId(findMarkdownRowByCell(rows, 0, 'Latest Completed Task')?.[1] ?? ''),
     activeTaskId: extractTaskId(findMarkdownRowByCell(rows, 0, 'Active Task')?.[1] ?? '')
@@ -452,9 +487,10 @@ function extractProjectState(source: SourceText): { latestCompletedTaskId: strin
 }
 
 function extractAgentHandoff(source: SourceText): { latestCompletedTaskId: string | null; activeTaskId: string | null } {
-  const currentRows = parseMarkdownRowsUnderHeading(source.content, '## Current State');
+  const canonicalRows = parseMarkdownRowsUnderHeading(source.content, '## Canonical Continuation State');
+  const currentRows = canonicalRows.length > 0 ? canonicalRows : parseMarkdownRowsUnderHeading(source.content, '## Current State');
   const latest = findMarkdownRowByCell(currentRows, 0, 'Latest Completed Task')?.[1] ?? '';
-  const active = findMarkdownRowByCell(currentRows, 0, 'Active / Next Task')?.[1] ?? '';
+  const active = findMarkdownRowByCell(currentRows, 0, 'Active Task')?.[1] ?? findMarkdownRowByCell(currentRows, 0, 'Active / Next Task')?.[1] ?? '';
   const lastThreeRows = parseMarkdownRowsUnderHeading(source.content, '## Last 3 Completed Tasks');
   return {
     latestCompletedTaskId: extractTaskId(latest) ?? extractTaskId(lastThreeRows.find((row) => /^T-\d{4}/.test(row[0] ?? ''))?.[0] ?? ''),
@@ -504,6 +540,23 @@ function compareLatestTask(
 ): void {
   if (!actual || !expected || actual === expected) return;
   issues.push(warning(code, sourcePath, `${sourcePath} points to latest completed task ${actual}, but the projected latest Done task is ${expected}.`, `Update ${sourcePath} latest completed task state to ${expected} or correct the Done task source.`, undefined, expected, actual));
+}
+
+function checkCurrentStateProjectionDrift(
+  source: SourceText,
+  kind: 'project-state' | 'handoff',
+  sectionId: string,
+  state: import('./project-current-state').ProjectCurrentState,
+  issues: StateProjectionIssue[]
+): void {
+  const expected = projectCurrentStateDocument(source.content, kind, state);
+  if (expected === source.content) return;
+  issues.push(warning(
+    'STATE_CURRENT_CANON_PROJECTION_DRIFT',
+    source.path,
+    `${source.path} managed section ${sectionId} does not match ${PROJECT_CURRENT_STATE_PATH}.`,
+    'Review hadara init upgrade --profile <profile> --json, then execute the reviewed upgrade to regenerate the managed projection.'
+  ));
 }
 
 function compareActiveTasks(projectActive: string | null, handoffActive: string | null, activeTaskIds: string[], issues: StateProjectionIssue[]): void {

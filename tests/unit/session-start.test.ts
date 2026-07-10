@@ -8,6 +8,7 @@ import { buildSessionStartReport } from '../../src/context/session-start';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { createContextCacheWarmReport } from '../../src/context/context-cache-store';
 import { initProject } from '../../src/cli/init';
+import { createTaskCreateReport } from '../../src/task/task-create';
 
 const roots: string[] = [];
 
@@ -23,6 +24,26 @@ afterEach(() => {
 });
 
 describe('session start', () => {
+  it('prefers the structured current-state canon for fast session resume', () => {
+    const root = tempProject();
+    initProject(root, 'governed', { silent: true });
+    const created = createTaskCreateReport(root, 'Structured resume task');
+
+    const report = buildSessionStartReport({
+      projectRoot: root,
+      generatedAt: '2026-07-10T00:00:00.000Z'
+    });
+
+    expect(report.currentState).toMatchObject({
+      activeTask: created.taskId,
+      recommendedNextTask: created.taskId,
+      nextOperatorIntent: 'Create or select the first bounded Task Capsule.',
+      source: '.hadara/state/current.json'
+    });
+    expect(report.guidance.primaryAction.args).toEqual(['task', 'status', '--task', created.taskId, '--json']);
+    expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
+  });
+
   it('builds a schema-valid bounded packet from context pack without writing files', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Session start task');

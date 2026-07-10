@@ -107,3 +107,13 @@ Reason:
 - Work Item A and Work Item F both address state coherence: canonical status tokens, document ownership/write boundaries, handoff close-state clarity, installed-package findings cleanup, state consistency projection, and advisory verification.
 - The implementation order should lock vocabulary and write ownership before introducing projection or gate surfaces; otherwise projections will encode the same ambiguous status strings they are meant to detect.
 - Evidence: `docs/archive/specs/0.3.1/00_HADARA_0_3_1_Phase_8_State_Governance_Program.md`, `docs/archive/specs/0.3.1/rc1/00_HADARA_0_3_1_rc1_Status_Governance_Implementation_Plan.md`, and T-0318.
+
+## D-0014: 0.4.3 current continuity is structured and Markdown-projected
+
+Reason:
+- Release, latest/active task, next operator intent, current known problems, and validation baseline changed at different rates in duplicated prose and could point at different moments.
+- `.hadara/state/current.json` is the portable project-owned canon for those six facts; PROJECT_STATE and AGENT_HANDOFF keep human context but render managed projections instead of owning duplicate prose.
+- `session start`, status, and project/handoff reads prefer the structured canon, allowing a new session to resume without reconstructing the entire project history.
+- Existing 0.4.2 projects retain Markdown fallback and migrate through reviewed `init upgrade`; unrelated project-authored prose is not overwritten.
+- Task create and task finish synchronize active/latest task facts only when the canon is present, preserving compatibility and the four-command primary workflow budget.
+- Evidence: T-0561.

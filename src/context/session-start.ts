@@ -17,6 +17,7 @@ import { checkContextSourceManifestFastFreshness } from './source-manifest';
 import { codeIndexReportToGraphExtraction } from './code-graph-extractor';
 import { validateTaskCapsule } from '../harness/validate';
 import { createDocsReadMapReport, type DocsDriftWarning, type DocsReadMapEntry } from '../services/docs-registry';
+import { PROJECT_CURRENT_STATE_PATH, readProjectCurrentState } from '../services/project-current-state';
 
 export const SESSION_START_SCHEMA_ID = 'hadara.sessionStart.v1' as const;
 export const SESSION_START_COMMAND = 'session.start' as const;
@@ -29,6 +30,9 @@ export interface SessionStartCurrentState {
   latestCompletedTask?: string;
   recommendedNextTask?: string;
   releaseState?: string;
+  nextOperatorIntent?: string;
+  validationBaseline?: string;
+  source?: typeof PROJECT_CURRENT_STATE_PATH | 'markdown-compatibility';
 }
 
 export interface SessionStartLifecycle {
@@ -158,7 +162,8 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
         budget: input.budget
       }));
   const stateProjection = contextPack.stateProjection;
-  const taskId = contextPack.taskId ?? input.taskId ?? stateProjection.activeTask;
+  const structuredState = readProjectCurrentState(input.projectRoot).state;
+  const taskId = contextPack.taskId ?? input.taskId ?? structuredState?.activeTask?.id ?? stateProjection.activeTask;
   const issues = [...contextPack.issues];
   const lifecycle = lifecycleForSessionStart(taskId, contextPack);
   const guidance = guidanceForSessionStart({
@@ -168,6 +173,16 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
     allowLiveContextPack: Boolean(input.allowLiveContextPack)
   });
   const docsReadMap = taskId ? createSessionStartDocsReadMap(input.projectRoot, taskId, input.budget?.maxReadFirstItems ?? 7) : undefined;
+  const canonicalKnownProblems: ContextPackItem[] = (structuredState?.currentKnownProblems ?? []).map((problem, index) => ({
+    id: `project-current-state-known-problem:${index + 1}`,
+    type: 'KnownProblem',
+    path: PROJECT_CURRENT_STATE_PATH,
+    title: problem.summary,
+    reason: problem.guidance,
+    confidence: 'explicit',
+    required: problem.state === 'active' || problem.state === 'blocked'
+  }));
+  const knownProblems = canonicalKnownProblems.length > 0 ? canonicalKnownProblems : contextPack.knownProblems;
 
   return {
     schemaVersion: SESSION_START_SCHEMA_ID,
@@ -176,16 +191,21 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
     generatedAt,
     projectRoot: input.projectRoot,
     currentState: {
-      ...(stateProjection.activeTask ? { activeTask: stateProjection.activeTask } : {}),
-      ...(stateProjection.latestCompletedTask ? { latestCompletedTask: stateProjection.latestCompletedTask } : {}),
+      ...(structuredState?.activeTask?.id || stateProjection.activeTask ? { activeTask: structuredState?.activeTask?.id ?? stateProjection.activeTask } : {}),
+      ...(structuredState?.latestCompletedTask?.id || stateProjection.latestCompletedTask ? { latestCompletedTask: structuredState?.latestCompletedTask?.id ?? stateProjection.latestCompletedTask } : {}),
       ...(taskId ? { recommendedNextTask: taskId } : {}),
-      ...(stateProjection.releaseState ? { releaseState: stateProjection.releaseState } : {})
+      ...(structuredState?.currentRelease || stateProjection.releaseState ? { releaseState: structuredState?.currentRelease ?? stateProjection.releaseState } : {}),
+      ...(structuredState ? {
+        nextOperatorIntent: structuredState.nextOperatorIntent,
+        validationBaseline: structuredState.validationBaseline.summary,
+        source: PROJECT_CURRENT_STATE_PATH
+      } : { source: 'markdown-compatibility' })
     },
     contextPack,
     lifecycle,
     guidance,
     ...(docsReadMap ? { docsReadMap } : {}),
-    knownProblems: contextPack.knownProblems,
+    knownProblems,
     sourceSummary: contextPack.sourceSummary,
     cache: contextPack.cache,
     summary: {
@@ -193,7 +213,7 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
       readFirstCount: contextPack.readFirst.length,
       readIfNeededCount: contextPack.readIfNeeded.length,
       sliceCandidateCount: contextPack.sliceCandidates.length,
-      knownProblemCount: contextPack.knownProblems.length,
+      knownProblemCount: knownProblems.length,
       issueCount: issues.length
     },
     issues

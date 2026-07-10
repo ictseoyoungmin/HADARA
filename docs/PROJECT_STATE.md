@@ -1,9 +1,31 @@
 # PROJECT_STATE
 
+<!-- hadara:managed:start current-state-canon {"schema":"hadara.managedSection.v1","owner":"current-state.projection","kind":"single-block","mode":"replace","version":1,"required":true,"closeSourceRole":"included"} -->
+## Canonical Current State
+
+This section is projected from `.hadara/state/current.json`. Edit the structured state, then use the existing init-upgrade projection path; do not hand-edit this block.
+
+| Field | Value |
+|---|---|
+| Current Release | 0.4.2 |
+| Latest Completed Task | T-0561 0.4.3 structured current-state canon and projection |
+| Active Task | None |
+| Next Operator Intent | Complete the v0.4.3 currentness verdict and semantic drift health contract without adding a public command. |
+| Validation Baseline | Docker 152 files / 1046 tests; structured current-state init, migration, lifecycle synchronization, and session resume passed. |
+
+### Current Known Problems
+
+| Issue | State | Operator Guidance |
+|---|---|---|
+| Task-scoped context pack is about 8-10s on the mounted WSL repository. | watch | Prefer bounded status/session paths; revisit performance only with an explicit trust/cache design. |
+| Explicit live graph and context reads remain filesystem-sensitive. | watch | Warm cache first and opt into broad live diagnostics deliberately. |
+| Tool-host child process launch can return EPERM while direct commands pass. | active | Run the command directly, then record it through validation run --direct-result. |
+<!-- hadara:managed:end current-state-canon -->
+
 ## Ownership
 
-This document is the compact source for current product, release, phase, and active-task facts.
-It is not a completed-task log or validation archive. Use the Historical Index for older detail.
+This document is the compact human projection for product and phase context.
+The six current-state facts live in `.hadara/state/current.json`; this document is not their prose source or a completed-task log.
 
 ## Product
 
@@ -14,22 +36,18 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Stable Version | 0.4.2 |
 | Branch | main |
-| Latest Completed Task | T-0560 Historical docs archive and multi-profile dogfood |
-| Active Task | None; P0-P3 consolidation complete |
-| Validation Baseline | Docker 151 files / 1041 tests; all profiles closed-valid in six calls and under 10.1s |
 
 ## Current Phase
 
-P0-P3 product consolidation after stable 0.4.2.
+v0.4.3 state integrity, measurement, positioning, and release preparation after stable 0.4.2.
 
 | Stage | State | Purpose |
 |---|---|---|
 | P0 Currentness integrity | Done | Align next-work selection, active docs, and validation fixtures. |
 | P1 Current-state ownership | Done | Separate compact current facts from historical narrative. |
 | P2 Product compression | Done | Freeze capability growth and measure the primary workflow. |
-| P3 External-style validation | Done | Dogfood all profiles and archive stale documents/specs. |
+| P3 Profile toy validation | Done | Dogfood all profiles and archive stale documents/specs; real external-repository validation remains planned for v0.4.4. |
 
 ## Current Capabilities
 
@@ -43,29 +61,6 @@ P0-P3 product consolidation after stable 0.4.2.
 | Integrations | Read-only MCP by default; narrow approval-recorded evidence attach; Hermes context export. |
 | Release | Package/clean-checkout smoke, artifact, gate, dry-run, and approval-gated publish planning. |
 | Deferred | Full agent controller, real provider default execution, broad MCP writes/shell, cloud workers, private evidence encryption. |
-
-## Current Status
-
-- Stable `hadara@0.4.2` and GitHub `v0.4.2` are published and consumer-recycled.
-- T-0557 stopped historical `Partial` capsules from becoming primary next-work recommendations.
-- Active-document currentness diagnostics cover stale install versions and removed command examples.
-- The clean source baseline is 151 test files / 1041 tests with Docker-refreshed `dist`.
-- T-0558 established bounded state ownership and preserved pre-compaction snapshots under `docs/history/`.
-- T-0559 froze the ordinary lifecycle at four unique commands and six post-init invocations; the standard measured toy closed-valid in 13.13 seconds.
-- T-0560 reduced active-looking docs warnings from 75 to 0, made archive routing never-default, and closed basic/standard/governed toys in 10.09s/9.14s/8.99s.
-
-## Current Known Constraints
-
-| Issue | State | Operator Guidance |
-|---|---|---|
-| Task-scoped context pack is about 8-10s on the mounted WSL repository. | Watch | Prefer bounded status/session paths; treat sub-3s reads as a future explicit trust/cache decision. |
-| Explicit live graph/context reads remain filesystem-sensitive. | Watch | Warm cache first and run broad live diagnostics only when needed. |
-| Tool-host child process launch can return `EPERM` while direct commands pass. | Active | Run the command directly, then record through `validation run --direct-result`. |
-
-## Next Planned Line
-
-1. Review P0-P3 evidence and choose the next capsule from real operator/adoption friction.
-2. Resume release/provider/runtime expansion only when that evidence justifies it.
 
 ## Historical Index
 
@@ -84,8 +79,9 @@ P0-P3 product consolidation after stable 0.4.2.
 
 | Concern | Source |
 |---|---|
-| Current product/release/phase/task facts | `docs/PROJECT_STATE.md` |
-| Next-agent continuity and live warnings | `docs/AGENT_HANDOFF.md` |
+| Release/task continuity, next intent, current problems, validation baseline | `.hadara/state/current.json` |
+| Product and phase projection | `docs/PROJECT_STATE.md` |
+| Next-agent continuity projection | `docs/AGENT_HANDOFF.md` |
 | Task queue | `docs/TASK_BOARD.md` |
 | Active task contract | `tasks/T-*/TASK.md` |
 | Canonical task evidence | `tasks/T-*/evidence.jsonl` |

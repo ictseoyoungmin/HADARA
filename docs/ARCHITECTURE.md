@@ -50,6 +50,7 @@ Implemented:
 - Release artifact, package smoke, clean-checkout smoke, release gate, dry-run, and approval-gated publish planning surfaces
 - Context graph, code index, context pack/slice, session-start routing, and local cache read models
 - Document registry, read maps, managed section patch plans, and protocol consistency diagnostics
+- Portable structured current-state canon with managed PROJECT_STATE/HANDOFF projections and session-start fast resume
 
 Partially implemented:
 
@@ -75,7 +76,9 @@ Not implemented:
 
 ### Project Store
 
-`docs/`, `tasks/`, `.hadara/context`, and agent context files belong to the project repository.
+`docs/`, `tasks/`, `.hadara/context`, `.hadara/state`, and agent context files belong to the project repository.
+
+`.hadara/state/current.json` owns the compact current release, latest/active task, next operator intent, current known problems, and validation baseline. `docs/PROJECT_STATE.md` and `docs/AGENT_HANDOFF.md` retain human-authored product/phase/history context but project those six current facts through managed sections. New-session read models prefer the structured canon and retain a 0.4.2 Markdown fallback for unmigrated projects.
 
 ### TUI Boundary
 

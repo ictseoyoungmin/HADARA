@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { readMarkdownSection } from './markdown-table';
+import { readProjectCurrentState, type ProjectCurrentState } from './project-current-state';
 
 export interface ProjectFileRead {
   path: string;
@@ -25,6 +26,7 @@ export interface HandoffReadReport {
     history: string | null;
     validationHistory: string | null;
   };
+  structuredCurrentState?: ProjectCurrentState;
   issues: [];
 }
 
@@ -45,6 +47,7 @@ export interface ProjectStateReadReport {
     included: boolean;
   }>;
   issues: [];
+  structuredCurrentState?: ProjectCurrentState;
 }
 
 export function readProjectFile(projectRoot: string, relativePath: string): ProjectFileRead {
@@ -75,6 +78,7 @@ export function createHandoffReadReport(
   }
 ): HandoffReadReport {
   const sources = readProjectSources(projectRoot);
+  const structuredCurrentState = readProjectCurrentState(projectRoot).state;
   return {
     schemaVersion: 'hadara.handoff.read.v1',
     command: 'handoff.read',
@@ -84,6 +88,7 @@ export function createHandoffReadReport(
       history: options.includeHistory ? tailLines(readProjectFile(projectRoot, 'docs/HANDOFF_HISTORY.md').content, options.historyLimit) : null,
       validationHistory: options.includeHistory ? tailLines(sources.validationHistory.content, options.historyLimit) : null
     },
+    ...(structuredCurrentState ? { structuredCurrentState } : {}),
     issues: []
   };
 }
@@ -96,6 +101,7 @@ export function createProjectStateReadReport(
   }
 ): ProjectStateReadReport {
   const sources = readProjectSources(projectRoot);
+  const structuredCurrentState = readProjectCurrentState(projectRoot).state;
 
   if (options.summaryOnly) {
     return {
@@ -103,10 +109,13 @@ export function createProjectStateReadReport(
       command: 'project.state.read',
       ok: true,
       summary: {
-        projectState: extractSection(sources.projectState.content, '## Current Status'),
+        projectState: structuredCurrentState
+          ? JSON.stringify(structuredCurrentState)
+          : extractSection(sources.projectState.content, '## Current Status'),
         taskBoardTail: tailLines(sources.taskBoard.content, 20),
         developmentSlicesTail: tailLines(sources.developmentSlices.content, 12)
       },
+      ...(structuredCurrentState ? { structuredCurrentState } : {}),
       issues: []
     };
   }
@@ -121,6 +130,7 @@ export function createProjectStateReadReport(
         { path: sources.taskBoard.path, included: false },
         { path: sources.developmentSlices.path, included: false }
       ],
+      ...(structuredCurrentState ? { structuredCurrentState } : {}),
       issues: []
     };
   }
@@ -132,6 +142,7 @@ export function createProjectStateReadReport(
     projectState: sources.projectState.content,
     taskBoard: sources.taskBoard.content,
     developmentSlices: sources.developmentSlices.content,
+    ...(structuredCurrentState ? { structuredCurrentState } : {}),
     issues: []
   };
 }

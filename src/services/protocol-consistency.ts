@@ -468,7 +468,7 @@ function checkProjectStateConsistency(
   if (!fs.existsSync(projectStatePath)) return;
 
   const content = fs.readFileSync(projectStatePath, 'utf8');
-  const currentStatus = readMarkdownSection(content, '## Current Status');
+  const currentStatus = readMarkdownSection(content, '## Canonical Current State') || readMarkdownSection(content, '## Current Status');
   if (activeTaskId && hasTaskStateMarker(content, 'active') && !currentStatus.includes(activeTaskId)) {
     pushIssue(issues, {
       code: 'PROJECT_STATE_ACTIVE_TASK_STALE',
@@ -477,8 +477,8 @@ function checkProjectStateConsistency(
       taskId: activeTaskId,
       path: relativePath,
       message: `docs/PROJECT_STATE.md active/current task markers do not mention ${activeTaskId}.`,
-      expected: `Current Status mentions ${activeTaskId}`,
-      actual: 'task id not found in Current Status'
+      expected: `Canonical Current State or Current Status mentions ${activeTaskId}`,
+      actual: 'task id not found in the current-state projection'
     });
   }
   if (latestDoneTask && hasTaskStateMarker(content, 'latest') && !currentStatus.includes(latestDoneTask.id)) {
@@ -489,8 +489,8 @@ function checkProjectStateConsistency(
       taskId: latestDoneTask.id,
       path: relativePath,
       message: `docs/PROJECT_STATE.md latest completed markers do not mention ${latestDoneTask.id}.`,
-      expected: `Current Status mentions ${latestDoneTask.id}`,
-      actual: 'task id not found in Current Status'
+      expected: `Canonical Current State or Current Status mentions ${latestDoneTask.id}`,
+      actual: 'task id not found in the current-state projection'
     });
   }
 }
@@ -508,10 +508,10 @@ function checkProjectHandoffConsistency(
   if (!fs.existsSync(handoffPath)) return;
 
   const content = fs.readFileSync(handoffPath, 'utf8');
-  const currentState = readMarkdownSection(content, '## Current State');
+  const currentState = readMarkdownSection(content, '## Canonical Continuation State') || readMarkdownSection(content, '## Current State');
   const fields = readKeyValueRows(currentState);
   const latestCell = fields.get('latest completed task') ?? '';
-  const activeCell = fields.get('active / next task') ?? '';
+  const activeCell = fields.get('active task') ?? fields.get('active / next task') ?? '';
 
   if (latestDoneTask && !latestCell.includes(latestDoneTask.id)) {
     pushIssue(issues, {

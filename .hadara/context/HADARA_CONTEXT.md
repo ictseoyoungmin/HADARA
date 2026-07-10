@@ -20,7 +20,8 @@ Use it to decide what to read next.
 
 | Need | Read |
 |---|---|
-| Current product/release/phase/task facts | `docs/PROJECT_STATE.md` |
+| Current release/task/intent/problem/validation facts | `.hadara/state/current.json` (also exposed by `session start`) |
+| Product/phase projection and deeper routing | `docs/PROJECT_STATE.md` |
 | Next-agent continuity, next action, and live warnings | `docs/AGENT_HANDOFF.md` |
 | Task list | `docs/TASK_BOARD.md` |
 | Workflow guide | `docs/HADARA_WORKFLOW.md` |
@@ -40,7 +41,7 @@ Use it to decide what to read next.
 
 ## Project-Specific Notes
 
-HADARA-dev is the governed development repository for the HADARA CLI and docs protocol.
+HADARA-dev is the governed development repository for the HADARA CLI and docs protocol. The structured current-state canon lets a new session resume active work without reconstructing the project from historical prose.
 
 Do not store credentials, private logs, raw model transcripts, private user data, machine-local absolute paths, or large design documents here.
 

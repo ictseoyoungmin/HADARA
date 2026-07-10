@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import type { HadaraActorContext } from '../core/actor-context';
 import { readMarkdownSection, readMarkdownSectionWithHeading } from '../services/markdown-table';
+import { planCompletedProjectCurrentStateWrites } from '../services/project-current-state';
 import { createTaskLifecycleNextAction, defaultTaskLifecycleActor, selectPrimaryNextAction, TaskLifecycleNextAction } from './lifecycle-next-actions';
 import { findTaskCapsule, TaskCapsule } from './task-capsule';
 
@@ -45,13 +46,14 @@ export type TaskFinishNextAction = TaskLifecycleNextAction;
 export interface TaskFinishWrite {
   path: string;
   action: 'update' | 'insert';
-  field: 'task-status' | 'task-board-row';
+  field: 'task-status' | 'task-board-row' | 'current-state' | 'project-state-projection' | 'handoff-projection';
   before: string | null;
   after: string;
   expectedBeforeExists: boolean;
   expectedBeforeHash: string;
   afterHash: string;
   applied: boolean;
+  contentAfter?: string;
 }
 
 export interface TaskFinishAdvisory {
@@ -109,6 +111,31 @@ export function createTaskFinishReport(projectRoot: string, taskId: string, mode
   const statusHistoryStatus = readLatestStatusHistoryStatus(task);
   const board = readTaskBoard(projectRoot, task.id);
   const writes = planWrites(projectRoot, task, capsule, taskStatus, statusHistoryStatus, board, issues);
+  const currentStatePlan = planCompletedProjectCurrentStateWrites(projectRoot, { id: task.id, title: task.title });
+  issues.push(...currentStatePlan.issues.map((issue) => ({
+    severity: issue.severity,
+    code: issue.code,
+    message: issue.message,
+    path: issue.path
+  })));
+  for (const write of currentStatePlan.writes) {
+    writes.push({
+      path: write.path,
+      action: write.before === null ? 'insert' : 'update',
+      field: write.path === '.hadara/state/current.json'
+        ? 'current-state'
+        : write.path === 'docs/PROJECT_STATE.md'
+          ? 'project-state-projection'
+          : 'handoff-projection',
+      before: write.before,
+      after: write.after,
+      expectedBeforeExists: write.before !== null,
+      expectedBeforeHash: hashContent(write.before ?? ''),
+      afterHash: hashContent(write.after),
+      applied: false,
+      contentAfter: write.after
+    });
+  }
   const stateDocs = createStateDocAdvisories(projectRoot, task);
   if (mode === 'execute' && !issues.some((issue) => issue.severity === 'error')) {
     applyWrites(projectRoot, writes, issues);
@@ -509,6 +536,7 @@ function readStatusTableValue(content: string): string | null {
 }
 
 function nextWriteContent(current: string, write: TaskFinishWrite): string {
+  if (write.contentAfter !== undefined) return write.contentAfter;
   if (write.field === 'task-status') return normalizeAtomicTextDocument(replaceTaskStatus(current, write.after));
   if (write.action === 'insert') return normalizeAtomicTextDocument(appendTaskBoardRow(current || defaultTaskBoard(), write.after));
   const taskId = write.after.match(/^\|\s*(T-\d{4})\s*\|/)?.[1];

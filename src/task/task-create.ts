@@ -2,6 +2,7 @@ import path from 'node:path';
 import type { TaskCapsule } from './task-capsule';
 import { createTaskCapsule, TaskCapsuleCreateCollisionError, type CreateTaskCapsuleOptions } from './task-capsule';
 import { getTaskTemplate, supportedTaskTemplateIds, templateSummary, type TaskTemplateSummary } from './task-templates';
+import { activateProjectCurrentTask } from '../services/project-current-state';
 
 export interface TaskCreateReport {
   schemaVersion: 'hadara.task.create.v1';
@@ -56,6 +57,7 @@ export function createTaskCreateReport(projectRoot: string, title: string, optio
   }
 
   let task: TaskCapsule;
+  const issues: TaskCreateReport['issues'] = [];
   try {
     task = createTaskCapsule(projectRoot, title, { templateId: template?.id, maxCreateRetries: options.maxCreateRetries, onBeforeCreateAttempt: options.onBeforeCreateAttempt });
   } catch (error) {
@@ -77,6 +79,13 @@ export function createTaskCreateReport(projectRoot: string, title: string, optio
     }
     throw error;
   }
+  for (const issue of activateProjectCurrentTask(projectRoot, { id: task.id, title: task.title })) {
+    issues.push({
+      severity: 'warning',
+      code: 'TASK_CREATE_CURRENT_STATE_SYNC_FAILED',
+      message: `${issue.message} The Task Capsule was created; repair current-state drift before relying on session continuation.`
+    });
+  }
   return {
     schemaVersion: 'hadara.task.create.v1',
     command: 'task.create',
@@ -85,7 +94,7 @@ export function createTaskCreateReport(projectRoot: string, title: string, optio
     task: taskSummary(projectRoot, task),
     ...(templateReport ? { template: templateReport } : {}),
     supportedTemplates,
-    issues: []
+    issues
   };
 }
 

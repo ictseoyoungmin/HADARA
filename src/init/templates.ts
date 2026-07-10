@@ -1,4 +1,11 @@
 import { managedSectionBlock } from '../services/managed-sections';
+import {
+  createInitialProjectCurrentState,
+  PROJECT_CURRENT_STATE_PATH,
+  renderHandoffCanonSection,
+  renderProjectStateCanonSection,
+  type ProjectCurrentState
+} from '../services/project-current-state';
 import type { InitProfile, InitProfileSpec } from './types';
 
 export function createScaffoldJson(profile: InitProfile): string {
@@ -405,7 +412,8 @@ export function createMcpIntegrationDoc(): string {
 `;
 }
 
-export function createProjectStateDoc(profile: InitProfile): string {
+export function createProjectStateDoc(profile: InitProfile, providedState?: ProjectCurrentState): string {
+  const currentState = providedState ?? createInitialProjectCurrentState(profile);
   const handoffRow = profile === 'governed'
     ? '| Next-session handoff | `docs/AGENT_HANDOFF.md` | Compact continuation state. |\n'
     : '';
@@ -425,6 +433,8 @@ export function createProjectStateDoc(profile: InitProfile): string {
 `);
   return `# PROJECT_STATE
 
+${renderProjectStateCanonSection(currentState)}
+
 ## Product
 
 ${productTable}
@@ -435,20 +445,19 @@ ${productTable}
 |---|---|
 | Phase | bootstrap-development |
 | Status | initialized |
-| Active Task | TBD |
 
 ## Current Status
 
 | Area | Status | Notes |
 |---|---|---|
-| Scaffold | Initialized | HADARA protocol scaffold is initialized. |
-| Task Capsule | Not selected | Create or select the first Task Capsule. |
+| Continuation | Canonical projection above | Use the structured state and active Task Capsule instead of reconstructing status from prose. |
 
 ## Single Source of Truth
 
 | Source | Path | Purpose |
 |---|---|---|
-| Current state | \`docs/PROJECT_STATE.md\` | Product and capability state. |
+| Structured current state | \`${PROJECT_CURRENT_STATE_PATH}\` | Release, task continuity, next intent, current problems, and validation baseline. |
+| Current-state projection | \`docs/PROJECT_STATE.md\` | Human-readable product and capability projection. |
 | Work queue | \`docs/TASK_BOARD.md\` | Task status and queue. |
 ${handoffRow}| Workflow | \`docs/HADARA_WORKFLOW.md\` | Generic HADARA lifecycle and evidence rules. |
 | Task details | \`tasks/T-*/\` | Task-local evidence and decisions. |
@@ -473,45 +482,15 @@ ${taskBoardTable}
 `;
 }
 
-export function createAgentHandoffDoc(): string {
-  const currentStateTable = managedSectionBlock('current-state', {
-    schema: 'hadara.managedSection.v1',
-    owner: 'human',
-    kind: 'markdown-table',
-    mode: 'update-row',
-    version: 1,
-    required: true,
-    closeSourceRole: 'included'
-  }, `| Area | State | Notes |
-|---|---|---|
-| Scaffold | Initialized | HADARA protocol scaffold is initialized. |
-| Required Reading | Pending | Read \`PROJECT_STATE\`, \`AGENT_HANDOFF\`, \`TASK_BOARD\`, and \`HADARA_WORKFLOW\` before starting. |
-`);
+export function createAgentHandoffDoc(providedState?: ProjectCurrentState): string {
+  const currentState = providedState ?? createInitialProjectCurrentState('governed');
   return `# AGENT_HANDOFF
 
-## Current State
-
-${currentStateTable}
+${renderHandoffCanonSection(currentState)}
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
-|---|---|---|
-
-## Current Known Problems
-
-| Issue | Impact | Next Step |
-|---|---|---|
-
-## Next Recommended Step
-
-| Step | Reason | Done Evidence |
-|---|---|---|
-| Create or select first Task Capsule | Establish one bounded unit of work. | Task Capsule exists and is referenced from \`docs/TASK_BOARD.md\`. |
-
-## Validation Baseline
-
-| Check | Latest Evidence | Notes |
 |---|---|---|
 
 ## Historical Index

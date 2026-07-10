@@ -2,6 +2,13 @@
   "schemaVersion": "hadara.schema.index.v1",
   "schemas": [
     {
+      "id": "hadara.projectCurrentState.v1",
+      "path": "src/schemas/project-current-state.schema.json",
+      "status": "fixture",
+      "owner": "services/project-current-state",
+      "notes": "Portable structured canon for release, task continuity, next intent, current problems, and validation baseline."
+    },
+    {
       "id": "hadara.actor_context.v1",
       "path": "src/schemas/actor-context.schema.json",
       "status": "fixture",

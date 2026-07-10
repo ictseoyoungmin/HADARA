@@ -7,6 +7,7 @@ import { createOperationalDebtReport, OperationalDebtAggregate } from './operati
 import { extractSection, ProjectReadSources, readProjectSources } from './project-read-model';
 import { createStateProjectionReport, StateProjectionAdvisory, toStateProjectionAdvisory } from './state-projection';
 import { listTaskCapsules, TaskCapsule } from '../task/task-capsule';
+import { readProjectCurrentState } from './project-current-state';
 
 export interface OpsStatusReport {
   schemaVersion: 'hadara.ops.status.v1';
@@ -107,20 +108,34 @@ const EMPTY_DEBT_AGGREGATE: OperationalDebtAggregate = {
 export function createOpsStatusReport(projectRoot: string, options: OpsStatusOptions = {}): OpsStatusReport {
   const includeDebt = options.includeDebt !== false;
   const sources = readProjectSources(projectRoot);
+  const structuredState = readProjectCurrentState(projectRoot).state;
   const taskBoardRows = parseTaskBoardRows(sources.taskBoard.content);
   const taskCapsules = options.taskStatusSource === 'task-board' ? [] : listTaskCapsules(projectRoot);
   const recommendationRows = options.taskStatusSource === 'task-board' ? taskBoardRows : taskCapsules.map(taskCapsuleToStatusRow);
   const taskCounts = options.taskStatusSource === 'task-board'
     ? countTaskBoardStatuses(taskBoardRows)
     : countTaskStatuses(taskCapsules);
-  const handoffSections = {
+  const handoffSections = structuredState ? {
+    currentState: truncateList([
+      `Release: ${structuredState.currentRelease}`,
+      `Latest completed: ${structuredState.latestCompletedTask?.id ?? 'none'}`,
+      `Active: ${structuredState.activeTask?.id ?? 'none'}`
+    ], options.maxTextLength),
+    knownProblems: options.includeKnownProblems === false
+      ? []
+      : truncateList(structuredState.currentKnownProblems.map((problem) => `${problem.state}: ${problem.summary} · ${problem.guidance}`), options.maxTextLength),
+    nextRecommendedStep: truncateList([structuredState.nextOperatorIntent], options.maxTextLength)
+  } : {
     currentState: truncateList(extractHandoffSectionValues(sources.handoff.content, '## Current State'), options.maxTextLength),
     knownProblems: options.includeKnownProblems === false
       ? []
       : truncateList(extractHandoffSectionValues(sources.handoff.content, '## Current Known Problems'), options.maxTextLength),
     nextRecommendedStep: truncateList(extractHandoffSectionValues(sources.handoff.content, '## Next Recommended Step'), options.maxTextLength)
   };
-  const validation = extractValidationBaselineSummary(sources.handoff.content, sources.validationHistory.content);
+  const validation = structuredState ? {
+    latestFullCheck: structuredState.validationBaseline.summary,
+    latestDoneLevelValidation: structuredState.validationBaseline.evidence.at(-1) ?? structuredState.validationBaseline.summary
+  } : extractValidationBaselineSummary(sources.handoff.content, sources.validationHistory.content);
   const expectedSources = determineExpectedStatusSources(projectRoot, sources);
   const activeRun = safeCreateActiveRunProjection(projectRoot);
   const debtAggregate = includeDebt ? createOperationalDebtReport(projectRoot).aggregate : EMPTY_DEBT_AGGREGATE;
@@ -128,7 +143,7 @@ export function createOpsStatusReport(projectRoot: string, options: OpsStatusOpt
     ? toStateProjectionAdvisory(createStateProjectionReport(projectRoot), options.stateIssueLimit ?? 10)
     : undefined;
   const issues = [...collectIssues(sources, validation, expectedSources), ...activeRun.issues];
-  const nextRecommended = selectNextRecommendedTask(recommendationRows, handoffSections.nextRecommendedStep[0] ?? null);
+  const nextRecommended = structuredState?.activeTask?.id ?? selectNextRecommendedTask(recommendationRows, handoffSections.nextRecommendedStep[0] ?? null);
 
   return {
     schemaVersion: 'hadara.ops.status.v1',
@@ -143,7 +158,7 @@ export function createOpsStatusReport(projectRoot: string, options: OpsStatusOpt
       counts: taskCounts.counts,
       rawStatusCounts: taskCounts.rawStatusCounts,
       normalizedStatusCounts: taskCounts.normalizedStatusCounts,
-      lastCompleted: extractLastCompletedTaskIds(sources.handoff.content),
+      lastCompleted: structuredState?.latestCompletedTask?.id ? [structuredState.latestCompletedTask.id] : extractLastCompletedTaskIds(sources.handoff.content),
       nextRecommended: nextRecommended ? truncateText(nextRecommended, options.maxTextLength) : null
     },
     handoff: handoffSections,
