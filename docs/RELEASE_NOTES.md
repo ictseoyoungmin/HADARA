@@ -1,5 +1,25 @@
 # RELEASE_NOTES
 
+## 0.4.3 (source preparation)
+
+Patch release focused on making HADARA's local evidence-control workflow current, resumable, and measurable without adding public commands.
+
+Highlights:
+
+- Adds `.hadara/state/current.json` as the compact source for release, latest/active task, next intent, current problems, and validation baseline, with managed Project State and Agent Handoff projections.
+- Lets a new agent session resume from structured current state and `session start` without reconstructing the entire project from historical prose.
+- Extends `docs doctor --json` with an explicit `summary.currentnessVerdict` of `clean`, `warning`, or `drifted`, while preserving compatibility `health` semantics.
+- Detects semantic drift between the structured canon, Markdown projections, and Task Board, plus stale onboarding install versions and removed-command references.
+- Measures seven product signals across basic, standard, and governed profiles: install-to-capsule, first-correct-file routing, close calls, manual doc edits, stale references, profile dropout, and recommendation acceptance/correction.
+- Keeps the primary workflow frozen at four command ids and six post-init calls; all three built-CLI profile toys closed valid under the 15-second budget with zero stale references.
+- Sharpens the product boundary to a local-first evidence control plane for trustworthy agentic development; full controller, provider runtime, cloud queue, and broad write surfaces remain deferred.
+
+Boundaries:
+
+- Package/version retargeting, installed-package measurement, artifact/package/clean-checkout smokes, and final release gates belong to the dedicated 0.4.3 readiness capsule.
+- npm publish, GitHub Release publication, Docker/PyPI publication, token loading, and other deployment mutation are not performed by this source-preparation line.
+- External validation across three non-HADARA repositories and non-author workers is the v0.4.4 evidence target, not a 0.4.3 completion claim.
+
 ## 0.4.2
 
 Stable release for the 0.4.2 command-surface reduction, status performance, init structure, and stable-preflight dogfood line after `0.4.2-rc.0` npm/GitHub prerelease publication, installed-package recycle, installed toy-project dogfood, and source-built stable-preflight rerun.

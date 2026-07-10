@@ -80,7 +80,7 @@ describe('release artifact builder', () => {
       expect(options.env?.npm_config_cache).toBe(options.env?.NPM_CONFIG_CACHE);
       fs.writeFileSync(path.join(outputDir, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
       expect(stagedPackage.description).not.toContain('bootstrap skeleton');
-      expect(stagedPackage.description).toBe('Portable AI-assisted development workbench for evidence-backed task capsules, handoffs, and release gates.');
+      expect(stagedPackage.description).toBe('Local-first evidence control plane for trustworthy agentic development, resumable task capsules, and release gates.');
       expect(stagedPackage.keywords).toContain('ai');
       expect(stagedPackage.keywords).toContain('coding-agent');
       expect(stagedPackage.keywords).toContain('hadara');

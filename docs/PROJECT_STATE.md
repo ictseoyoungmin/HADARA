@@ -8,10 +8,10 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.2 |
-| Latest Completed Task | T-0563 0.4.3 seven-metric workflow measurement |
+| Latest Completed Task | T-0564 0.4.3 positioning onboarding and session resume |
 | Active Task | None |
-| Next Operator Intent | Align v0.4.3 positioning, onboarding, and release-facing documentation around local-first evidence control and fast session resume. |
-| Validation Baseline | Docker 152 files / 1049 tests; seven-metric basic/standard/governed workflow matrix closed-valid with zero stale references. |
+| Next Operator Intent | Prepare hadara@0.4.3 source metadata and complete non-deployment release readiness, installed-package measurement, and disposable consumer smokes. |
+| Validation Baseline | Docker 153 files / 1052 tests; local-first evidence-control positioning and fast-resume onboarding validated with docs currentness clean. |
 
 ### Current Known Problems
 
@@ -29,7 +29,7 @@ The six current-state facts live in `.hadara/state/current.json`; this document 
 
 ## Product
 
-HADARA - Portable Agentic Development Workbench
+HADARA — Local-first evidence control plane for trustworthy agentic development
 
 ## Metadata
 

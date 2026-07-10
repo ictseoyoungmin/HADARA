@@ -1,21 +1,24 @@
 # ARCHITECTURE
 
+## Product Boundary
+
+HADARA is a local-first evidence control plane for trustworthy agentic development. It owns the project-local facts and proof that let operators answer: what is active, what changed, what was validated, what can close, and what the next session should do.
+
+It is not positioned as a full agent controller, provider runtime, cloud queue, or general shell-execution platform. Those broader surfaces remain deferred because the current product advantage is portable state, bounded context, evidence integrity, and guarded workflow transitions across whatever coding agent or human operator a project chooses.
+
 ## Layers
 
 ```text
-[CLI / Dashboard / TUI]
-       ↓
-[Agent Controller]
-       ↓
-[Provider Adapter]
-       ↓
-[Tool Runtime]
-       ↓
-[Policy Layer]
-       ↓
-[State Store]
-       ↓
-[Harness & Testkit]
+[Human Operators / Coding Agents]
+              ↓
+[CLI / Dashboard / TUI / read-only MCP]
+              ↓
+[Task / Current State / Evidence / Docs / Policy Services]
+              ↓
+[Portable Project Store + Harness / Release Gates]
+
+Optional or deferred adapters:
+[Bounded Agent Loop / Provider Adapters / Tool Runtime]
 ```
 
 ## Current Bootstrap Scope

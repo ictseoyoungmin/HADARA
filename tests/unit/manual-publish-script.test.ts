@@ -27,7 +27,7 @@ describe('manual publish release script', () => {
 
     expect(script).toContain('verify_tarball_package_metadata "${TARBALL}" "${PACKAGE_NAME}" "${VERSION}"');
     expect(script).toContain('Release tarball package.json metadata validation failed');
-    expect(script).toContain("parsed.description.includes('Portable AI-assisted development workbench')");
+    expect(script).toContain("parsed.description.includes('Local-first evidence control plane')");
     expect(script).toContain("['ai', 'agent', 'coding-agent', 'developer-tools', 'hadara']");
     expect(script).toContain('repository metadata is missing');
   });

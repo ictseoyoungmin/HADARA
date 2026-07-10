@@ -1,14 +1,14 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 9,
+  "rev": 12,
   "profile": "governed",
   "currentRelease": "0.4.2",
   "latestCompletedTask": {
-    "id": "T-0563",
-    "title": "0.4.3 seven-metric workflow measurement"
+    "id": "T-0564",
+    "title": "0.4.3 positioning onboarding and session resume"
   },
   "activeTask": null,
-  "nextOperatorIntent": "Align v0.4.3 positioning, onboarding, and release-facing documentation around local-first evidence control and fast session resume.",
+  "nextOperatorIntent": "Prepare hadara@0.4.3 source metadata and complete non-deployment release readiness, installed-package measurement, and disposable consumer smokes.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
@@ -27,7 +27,7 @@
     }
   ],
   "validationBaseline": {
-    "summary": "Docker 152 files / 1049 tests; seven-metric basic/standard/governed workflow matrix closed-valid with zero stale references.",
+    "summary": "Docker 153 files / 1052 tests; local-first evidence-control positioning and fast-resume onboarding validated with docs currentness clean.",
     "evidence": [
       "ev:T-0560:a9119e06127c423e93a5b5c0",
       "ev:T-0560:421bacf7fa7f4a3185d4ad9c",
@@ -35,7 +35,9 @@
       "ev:T-0562:f3c88bbcbbc1461e9fa75015",
       "ev:T-0563:c2961dbcf55a491c8bf2ddd7",
       "ev:T-0563:f91b077b38c848879b1fd749",
-      "ev:T-0563:6ecd43540a0c4fc9947762fa"
+      "ev:T-0563:6ecd43540a0c4fc9947762fa",
+      "ev:T-0564:f044cd06cd674977a473c5c9",
+      "ev:T-0564:fe7f2a90beb045e793a8a63d"
     ]
   }
 }

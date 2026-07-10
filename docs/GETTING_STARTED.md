@@ -28,6 +28,24 @@ hadara doctor --json
 
 Use `basic` for small projects and `governed` for long-lived projects with roadmap, security, or release governance needs.
 
+## Resume Without Reconstructing History
+
+HADARA stores the small set of live continuation facts in `.hadara/state/current.json`: the current release, latest and active task, next operator intent, current known problems, and validation baseline. Generated instructions route a new worker or agent there before longer prose.
+
+At the start of a later session, run:
+
+```bash
+hadara session start --json
+```
+
+If the report identifies an active capsule, continue with its bounded status packet:
+
+```bash
+hadara task status --task T-XXXX --json
+```
+
+This is the normal fast-resume path. Read historical indexes only when the active task or current-state packet routes you there.
+
 ## Create The First Capsule
 
 ```bash

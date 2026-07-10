@@ -306,7 +306,7 @@ const issues = [];
 
 if (parsed.name !== expectedName) issues.push(`name expected ${expectedName}, got ${parsed.name}`);
 if (parsed.version !== expectedVersion) issues.push(`version expected ${expectedVersion}, got ${parsed.version}`);
-if (typeof parsed.description !== 'string' || !parsed.description.includes('Portable AI-assisted development workbench')) {
+if (typeof parsed.description !== 'string' || !parsed.description.includes('Local-first evidence control plane')) {
   issues.push('description is missing the release discovery wording');
 }
 for (const keyword of ['ai', 'agent', 'coding-agent', 'developer-tools', 'hadara']) {

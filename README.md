@@ -11,11 +11,13 @@
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>
 
-**HADARA** is a portable agentic development workbench for keeping long-running AI-assisted software work inspectable, resumable, and evidence-backed.
+**HADARA** is a local-first evidence control plane for trustworthy agentic development.
 
 > Unbroken Context, Verified Development.
 
-HADARA binds non-deterministic LLM agent work into a production-oriented workflow through Task Capsules, evidence logs, and handoff documents.
+It turns non-deterministic agent work into inspectable Task Capsules, append-only evidence, explicit current state, and guarded handoffs—without requiring a cloud service or a full agent runtime.
+
+The live release, task, intent, problem, and validation facts stay in `.hadara/state/current.json`. A new agent session can therefore resume with `hadara session start --json` instead of reconstructing the whole project from historical prose.
 
 This repository is both the HADARA source checkout and the HADARA protocol workspace used to build it.
 
@@ -30,6 +32,17 @@ npm install -g hadara@0.4.2
 hadara help
 hadara doctor --json
 ```
+
+## Resume A Session
+
+Start from the bounded current-state packet rather than rereading the repository:
+
+```bash
+hadara session start --json
+hadara task status --task T-XXXX --json
+```
+
+`session start` reads the structured current-state canon first and routes only the active files needed to continue. Historical docs remain available through the indexes when a task actually needs them.
 
 Run without a global install:
 
@@ -107,6 +120,7 @@ Release mutation remains operator-approved. The ordinary user path is install, i
 | Task Capsules | Keep each unit of work scoped, evidenced, and resumable. |
 | Evidence Logs | Record public, reduced proof of validation without raw private logs. |
 | Handoff Protocol | Preserve current state for the next operator or agent. |
+| Structured Current State | Let a new session recover the active task, intent, problems, and validation baseline without replaying project history. |
 | Structured Help | Separate primary lifecycle commands from diagnostics, advanced, release, UI, and integration surfaces. |
 | Document Governance | Classify canonical, active, reference, historical, superseded, and archived docs. |
 | Managed Markdown Safety | Patch declared generated sections with dry-run and hash guards. |

@@ -9,6 +9,7 @@ This document is the dedicated tracked source for release, install, installer, p
 Current stable metadata preparation mode:
 
 - Package name decision: `hadara`.
+- Current 0.4.3 source-preparation status: T-0561 through T-0564 establish the structured current-state canon and projections, currentness/semantic-drift verdict, seven-metric all-profile workflow harness, and local-first evidence-control positioning. Package metadata remains `0.4.2` until the dedicated readiness capsule performs the version retarget, installed-package measurement, artifact/package/clean-checkout smokes, strict gate, and release dry-run without deployment mutation.
 - Historical npm registry observation: `hadara@0.1.0-rc.0` was the first published HADARA release candidate.
 - Current version is `0.4.2`.
 - Current source version is `0.4.2`.

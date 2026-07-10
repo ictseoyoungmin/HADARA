@@ -41,7 +41,7 @@ Use it to decide what to read next.
 
 ## Project-Specific Notes
 
-HADARA-dev is the governed development repository for the HADARA CLI and docs protocol. The structured current-state canon lets a new session resume active work without reconstructing the project from historical prose.
+HADARA-dev builds HADARA, the local-first evidence control plane for trustworthy agentic development. Its structured current-state canon lets a new session resume active work without reconstructing the project from historical prose.
 
 Do not store credentials, private logs, raw model transcripts, private user data, machine-local absolute paths, or large design documents here.
 

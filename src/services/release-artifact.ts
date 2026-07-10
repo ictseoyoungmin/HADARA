@@ -94,7 +94,7 @@ export type ReleaseArtifactCommandRunner = (
   options: { cwd: string; timeoutMs: number; env?: NodeJS.ProcessEnv }
 ) => ReleaseArtifactCommandResult;
 
-const RELEASE_PACKAGE_DESCRIPTION = 'Portable AI-assisted development workbench for evidence-backed task capsules, handoffs, and release gates.';
+const RELEASE_PACKAGE_DESCRIPTION = 'Local-first evidence control plane for trustworthy agentic development, resumable task capsules, and release gates.';
 const RELEASE_PACKAGE_KEYWORDS = [
   'ai',
   'agent',
