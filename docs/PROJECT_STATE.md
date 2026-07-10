@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.3 |
-| Latest Completed Task | T-0570 0.4.3 stable release readiness and publish preparation |
+| Latest Completed Task | T-0571 0.4.3 post-publish installed-package recycle |
 | Active Task | None |
 | Next Work | v0.4.4 external-repository validation planning |
 | Next Work State | candidate |
-| Operator Guidance | Keep npm/GitHub publication operator-controlled. Run post-publish recycle only after publication. |
-| Validation Baseline | hadara@0.4.3: Docker 153 files / 1058 tests; installed local-tarball workflow closed-valid; artifact/package/clean-checkout smokes, strict gate, release dry-run, docs currentness, and stable publish-preparation checks passed. |
+| Operator Guidance | 0.4.3 npm/GitHub publication and installed-package recycle are complete. Begin v0.4.4 external-repository validation planning. |
+| Validation Baseline | hadara@0.4.3: Docker 153 files / 1058 tests; source readiness, stable publish-preparation, npm/GitHub publication, and installed-package recycle for hadara@latest passed. |
 
 ### Current Known Problems
 
@@ -43,7 +43,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.3 source/package readiness complete without deployment; v0.4.4 external validation is next unless an operator chooses publication.
+v0.4.3 npm/GitHub publication and installed-package recycle are complete; v0.4.4 external validation is next.
 
 | Stage | State | Purpose |
 |---|---|---|

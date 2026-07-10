@@ -6,7 +6,7 @@
 
 <p align="center">
   <img alt="Source release" src="https://img.shields.io/badge/source-0.4.3-blue">
-  <img alt="Published npm release" src="https://img.shields.io/badge/npm-0.4.2-lightgrey">
+  <img alt="Published npm release" src="https://img.shields.io/badge/npm-0.4.3-lightgrey">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>
@@ -104,9 +104,9 @@ hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
 
 | Surface | Status |
 |---|---|
-| Prepared source | [`hadara@0.4.3`](docs/RELEASE_NOTES.md#043), validated locally without publish/deployment mutation |
-| Published stable npm | `hadara@0.4.2` until an operator publishes 0.4.3 |
-| Published GitHub Release | [`v0.4.2`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.2) until an operator publishes 0.4.3 |
+| Prepared source | [`hadara@0.4.3`](docs/RELEASE_NOTES.md#043), validated locally before publication |
+| Published stable npm | `hadara@0.4.3` |
+| Published GitHub Release | [`v0.4.3`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.3) |
 | RC history | [`hadara@0.4.2-rc.0`](docs/RELEASE_NOTES.md#042-rc0) remains the prerelease history for this stable line |
 | Historical releases | [Release Notes](docs/RELEASE_NOTES.md) |
 | Docker image / installer | Deferred |
