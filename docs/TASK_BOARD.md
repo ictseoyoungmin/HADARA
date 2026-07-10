@@ -572,3 +572,4 @@
 | T-0569 | Fix fresh init dogfood UX regressions | Done | tasks/T-0569-fix-fresh-init-dogfood-ux-regressions | |
 | T-0570 | 0.4.3 stable release readiness and publish preparation | Done | tasks/T-0570-0-4-3-stable-release-readiness-and-publish-preparation | |
 | T-0571 | 0.4.3 post-publish installed-package recycle | Done | tasks/T-0571-0-4-3-post-publish-installed-package-recycle | |
+| T-0572 | v0.4.4 external-repository validation planning | Done | tasks/T-0572-v0-4-4-external-repository-validation-planning | |

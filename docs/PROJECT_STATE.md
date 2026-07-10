@@ -8,11 +8,11 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.3 |
-| Latest Completed Task | T-0571 0.4.3 post-publish installed-package recycle |
+| Latest Completed Task | T-0572 v0.4.4 external-repository validation planning |
 | Active Task | None |
-| Next Work | v0.4.4 external-repository validation planning |
+| Next Work | v0.4.4 R1 basic-profile external repository pilot |
 | Next Work State | candidate |
-| Operator Guidance | 0.4.3 npm/GitHub publication and installed-package recycle are complete. Begin v0.4.4 external-repository validation planning. |
+| Operator Guidance | Use the T-0572 plan. Start with R1: a small non-HADARA library or CLI using the basic profile. |
 | Validation Baseline | hadara@0.4.3: Docker 153 files / 1058 tests; source readiness, stable publish-preparation, npm/GitHub publication, and installed-package recycle for hadara@latest passed. |
 
 ### Current Known Problems
@@ -43,7 +43,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.3 npm/GitHub publication and installed-package recycle are complete; v0.4.4 external validation is next.
+v0.4.3 npm/GitHub publication and installed-package recycle are complete; v0.4.4 external validation planning is complete and R1 basic-profile pilot is next.
 
 | Stage | State | Purpose |
 |---|---|---|

@@ -2,7 +2,7 @@
 
 ## Current Baseline: v0.4.3 Local-first Evidence Control Plane
 
-Source `hadara@0.4.3` consolidates the published and consumer-recycled 0.4.2 baseline around structured current state, semantic currentness, measured workflow friction, and fast session resume. npm/GitHub publication remains a separate operator-controlled mutation after local readiness proof.
+Published and consumer-recycled `hadara@0.4.3` consolidates the 0.4.2 baseline around structured current state, semantic currentness, measured workflow friction, and fast session resume.
 
 The immediate roadmap is consolidation rather than capability expansion. HADARA's product boundary is portable current state and evidence integrity across human and agent sessions; a full controller, default real-provider runtime, cloud queue, and broad write-capable MCP remain outside the current release line.
 
