@@ -1,20 +1,20 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 34,
+  "rev": 37,
   "profile": "governed",
   "currentRelease": "0.4.3",
   "latestCompletedTask": {
-    "id": "T-0572",
-    "title": "v0.4.4 external-repository validation planning"
+    "id": "T-0573",
+    "title": "v0.4.4 R1 delegated-agent basic-profile dogfood pilot"
   },
   "activeTask": null,
   "nextWork": {
-    "title": "v0.4.4 R1 basic-profile external repository pilot",
+    "title": "v0.4.4 R1 delegated dogfood UX findings cleanup",
     "state": "candidate",
-    "operatorGuidance": "Use the T-0572 plan. Start with R1: a small non-HADARA library or CLI using the basic profile.",
+    "operatorGuidance": "Use T-0573 R1_DELEGATED_DOGFOOD_REPORT.md. Prioritize version flags and installed-package stale-warning leakage before R2.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Run the v0.4.4 R1 basic-profile external repository pilot from the T-0572 plan.",
+  "nextOperatorIntent": "Fix or triage the T-0573 delegated R1 dogfood UX findings before moving to R2.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
@@ -35,10 +35,20 @@
       "summary": "Release artifact git-status preflight can exceed its 10-second limit on the mounted WSL workspace.",
       "state": "watch",
       "guidance": "Build release artifacts from a clean ext4 worktree so commit metadata and package contents remain aligned."
+    },
+    {
+      "summary": "External dogfood found hadara --version/-v print help and exit 1 while hadara version works.",
+      "state": "active",
+      "guidance": "Add conventional version aliases or document the intentional behavior before v0.4.4."
+    },
+    {
+      "summary": "External installed-package dogfood saw DIST_LOOKS_STALE from hadara version --json in an ordinary toy project.",
+      "state": "active",
+      "guidance": "Scope stale-dist diagnostics to HADARA-dev/source checkout contexts so user projects do not see dev-build warnings."
     }
   ],
   "validationBaseline": {
-    "summary": "hadara@0.4.3: Docker 153 files / 1058 tests; source readiness, stable publish-preparation, npm/GitHub publication, and installed-package recycle for hadara@latest passed.",
+    "summary": "hadara@0.4.3: Docker 153 files / 1058 tests; source readiness, stable publish-preparation, npm/GitHub publication, installed-package recycle, and R1 delegated external basic-profile dogfood passed.",
     "evidence": [
       "ev:T-0560:a9119e06127c423e93a5b5c0",
       "ev:T-0560:421bacf7fa7f4a3185d4ad9c",
@@ -56,7 +66,8 @@
       "ev:T-0565:c6cfa0b13ff44604aec81d05",
       "ev:T-0565:f241c2bd2f384a98988f66d4",
       "ev:T-0570:d90a468d16094acca7740b00",
-      "ev:T-0571:bbf49f83f20249a38a846f06"
+      "ev:T-0571:bbf49f83f20249a38a846f06",
+      "ev:T-0573:5474641e8e7b43d6897a34d6"
     ]
   }
 }
