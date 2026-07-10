@@ -775,8 +775,11 @@ function writeReleaseReadinessFiles(root: string): void {
   fs.writeFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'uses: actions/setup-node@v4\nnode-version: 22\nrun: npm ci\nrun: npm run check\n', 'utf8');
   fs.writeFileSync(path.join(root, 'LICENSE'), 'MIT\n', 'utf8');
   fs.writeFileSync(path.join(root, 'docs', 'V1_0_IMPLEMENTATION_SCHEMAS.md'), 'npm ci\nnpm run check\nnode dist/cli/main.js doctor --json\nnode dist/cli/main.js status --json\n', 'utf8');
-  fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), 'clean checkout smoke\nwithout writing generated context files\n', 'utf8');
-  fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), 'contextPath: null\n.hadara/local/tui/\nread-only local API routes\n', 'utf8');
+  fs.writeFileSync(path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'), 'clean checkout smoke\ncontextPath: null\nwithout writing generated context files\n', 'utf8');
+  fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), 'Compact current release, task, intent, problem, and validation projection.\n', 'utf8');
+  fs.writeFileSync(path.join(root, 'docs', 'ARCHITECTURE.md'), 'TUI cache is ignored machine-local state under .hadara/local/tui/.\n', 'utf8');
+  fs.mkdirSync(path.join(root, 'docs', 'design'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'docs', 'design', 'DASHBOARD_DESIGN_NOTES.md'), 'The Dashboard is served through read-only local API routes.\n', 'utf8');
   fs.writeFileSync(
     path.join(root, 'docs', 'VALIDATION_HISTORY.md'),
     'GitHub Actions CI run succeeded: https://github.com/example/project/actions/runs/123\nhadara.packageSmoke.v1 evidence recorded\n',

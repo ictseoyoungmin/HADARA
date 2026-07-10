@@ -241,7 +241,8 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
   const ciWorkflow = readOptionalText(path.join(projectRoot, '.github', 'workflows', 'ci.yml'));
   const v1Schemas = readOptionalText(path.join(projectRoot, 'docs', 'V1_0_IMPLEMENTATION_SCHEMAS.md'));
   const developmentSlices = readOptionalText(path.join(projectRoot, 'docs', 'DEVELOPMENT_SLICES.md'));
-  const projectState = readOptionalText(path.join(projectRoot, 'docs', 'PROJECT_STATE.md'));
+  const architecture = readOptionalText(path.join(projectRoot, 'docs', 'ARCHITECTURE.md'));
+  const dashboardDesign = readOptionalText(path.join(projectRoot, 'docs', 'design', 'DASHBOARD_DESIGN_NOTES.md'));
   const testStrategy = readOptionalText(path.join(projectRoot, 'docs', 'TEST_STRATEGY.md'));
   const releaseReadiness = readOptionalText(path.join(projectRoot, 'docs', 'RELEASE_READINESS.md'));
   const validationHistory = readOptionalText(path.join(projectRoot, 'docs', 'VALIDATION_HISTORY.md'));
@@ -264,7 +265,7 @@ function createReleaseReadinessChecks(projectRoot: string, mode: ReleaseGateRepo
     checkCleanCheckoutSmokeEvidence(evidence, mode),
     checkReleaseArtifactEvidence(evidence, mode),
     checkInstallMatrixSmokeEvidence(),
-    checkGeneratedArtifactPolicy(projectState, developmentSlices, mode),
+    checkGeneratedArtifactPolicy(architecture, developmentSlices, dashboardDesign, mode),
     checkRemoteCiObservation(testStrategy, validationHistory, mode)
   ];
   const issues = checks
@@ -660,8 +661,16 @@ function createEvidenceCheck(
   };
 }
 
-function checkGeneratedArtifactPolicy(projectState: string | null, developmentSlices: string | null, mode: ReleaseGateReport['mode']): ReleaseGateReport['checks'][number] {
-  const ok = includesAll(projectState, ['contextPath: null', '.hadara/local/tui/', 'read-only local API routes']) && includesAll(developmentSlices, ['without writing generated context files']);
+function checkGeneratedArtifactPolicy(
+  architecture: string | null,
+  developmentSlices: string | null,
+  dashboardDesign: string | null,
+  mode: ReleaseGateReport['mode']
+): ReleaseGateReport['checks'][number] {
+  const ok =
+    includesAll(developmentSlices, ['contextPath: null', 'without writing generated context files']) &&
+    includesAll(architecture, ['.hadara/local/tui/']) &&
+    includesAll(dashboardDesign, ['read-only local API routes']);
   return {
     code: 'GENERATED_ARTIFACT_POLICY_UNCLEAR',
     name: 'Generated artifact policy',

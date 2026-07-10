@@ -64,12 +64,23 @@ function writeReleaseReadinessFiles(root: string, version = '0.2.0-rc.0'): void 
   );
   fs.writeFileSync(
     path.join(root, 'docs', 'DEVELOPMENT_SLICES.md'),
-    ['clean checkout smoke', 'without writing generated context files'].join('\n'),
+    ['clean checkout smoke', 'contextPath: null', 'without writing generated context files'].join('\n'),
     'utf8'
   );
   fs.writeFileSync(
     path.join(root, 'docs', 'PROJECT_STATE.md'),
-    ['contextPath: null', '.hadara/local/tui/', 'read-only local API routes'].join('\n'),
+    'Compact current release, task, intent, problem, and validation projection.\n',
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(root, 'docs', 'ARCHITECTURE.md'),
+    'TUI cache is ignored machine-local state under .hadara/local/tui/.\n',
+    'utf8'
+  );
+  fs.mkdirSync(path.join(root, 'docs', 'design'), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, 'docs', 'design', 'DASHBOARD_DESIGN_NOTES.md'),
+    'The Dashboard is served through read-only local API routes.\n',
     'utf8'
   );
   fs.writeFileSync(
