@@ -213,6 +213,8 @@ hadara docs explain --path docs/PROJECT_STATE.md --json
 hadara docs required-reading --json
 ```
 
+`docs doctor --json` separates command success from document currentness. `ok` reports whether the doctor completed without error-severity issues, the legacy `health` field remains compatible, and `summary.currentnessVerdict` reports `clean`, `warning`, or `drifted`. Semantic drift includes stale install/removed-command guidance and mismatches between `.hadara/state/current.json`, its Markdown projections, and Task Board task state.
+
 The document registry distinguishes canonical, active, reference, historical, superseded, and archived docs. `docs required-reading` reports the effective default reading set and excludes historical, superseded, and archived docs.
 
 Docs cleanup is metadata-first:

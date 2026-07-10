@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { InitProfile } from '../cli/init';
 import { managedSectionBlock } from './managed-sections';
 import { readMarkdownSection } from './markdown-table';
+import { inspectProjectCurrentStateSemantics } from './project-current-state';
 
 export type DocumentStatus = 'canonical' | 'active' | 'reference' | 'historical' | 'superseded' | 'archived';
 export type DocumentKind =
@@ -100,8 +101,14 @@ export interface DocsDoctorReport {
   command: 'docs.doctor';
   ok: boolean;
   scope: 'registry' | 'profile' | 'required-reading' | 'links' | 'all';
+  semantics: {
+    ok: 'command-completed-without-error-issues';
+    health: 'compatibility-document-health';
+    currentnessVerdict: 'clean-warning-or-semantic-drift';
+  };
   summary: {
     health: 'healthy' | 'warning' | 'drifted';
+    currentnessVerdict: 'clean' | 'warning' | 'drifted';
     registryPresent: boolean;
     registeredDocuments: number;
     missingRegisteredDocuments: number;
@@ -109,6 +116,7 @@ export interface DocsDoctorReport {
     requiredReadingIssues: number;
     canonicalConflicts: number;
     currentnessIssues: number;
+    semanticDriftIssues: number;
   };
   issues: DocsIssue[];
 }
@@ -360,30 +368,59 @@ export function createDocsDoctorReport(projectRoot: string, scope: string = 'all
   const issues = [
     ...state.issues,
     ...validateRegistry(projectRoot, state.registry),
-    ...validateActiveDocumentCurrentness(projectRoot, state.registry)
+    ...validateActiveDocumentCurrentness(projectRoot, state.registry),
+    ...semanticStateDriftIssues(projectRoot)
   ];
   const invalidScopeIssue: DocsIssue = { severity: 'error', code: 'DOC_DOCTOR_SCOPE_INVALID', message: `Unsupported docs doctor scope: ${scope}` };
   const visibleIssues = normalizedScope === null ? [invalidScopeIssue, ...issues] : filterIssuesByScope(issues, normalizedScope);
+  const semanticDriftIssues = visibleIssues.filter(isSemanticCurrentnessIssue).length;
+  const hasErrors = visibleIssues.some((issue) => issue.severity === 'error');
   const summary = {
     health: visibleIssues.some((issue) => issue.severity === 'error')
       ? 'drifted' as const
       : visibleIssues.length > 0 ? 'warning' as const : 'healthy' as const,
+    currentnessVerdict: hasErrors || semanticDriftIssues > 0
+      ? 'drifted' as const
+      : visibleIssues.length > 0 ? 'warning' as const : 'clean' as const,
     registryPresent: state.source.registryPresent,
     registeredDocuments: state.registry.documents.length,
     missingRegisteredDocuments: issues.filter((issue) => issue.code === 'DOC_REGISTERED_FILE_MISSING').length,
     unregisteredActiveLookingDocuments: issues.filter((issue) => issue.code === 'DOC_UNREGISTERED_ACTIVE_LOOKING').length,
     requiredReadingIssues: issues.filter((issue) => issue.code === 'DOC_UNREGISTERED_REQUIRED_READING' || issue.code === 'DOC_SUPERSEDED_REQUIRED_READING' || issue.code === 'DOC_HISTORICAL_REQUIRED_READING').length,
     canonicalConflicts: issues.filter((issue) => issue.code === 'DOC_CANONICAL_CONFLICT').length,
-    currentnessIssues: issues.filter((issue) => issue.code === 'DOC_STALE_INSTALL_VERSION' || issue.code === 'DOC_REMOVED_COMMAND_EXAMPLE').length
+    currentnessIssues: visibleIssues.filter(isSemanticCurrentnessIssue).length,
+    semanticDriftIssues
   };
   return {
     schemaVersion: 'hadara.docs.doctor.v1',
     command: 'docs.doctor',
     ok: normalizedScope !== null && visibleIssues.every((issue) => issue.severity !== 'error'),
     scope: normalizedScope ?? 'all',
+    semantics: {
+      ok: 'command-completed-without-error-issues',
+      health: 'compatibility-document-health',
+      currentnessVerdict: 'clean-warning-or-semantic-drift'
+    },
     summary,
     issues: visibleIssues
   };
+}
+
+function semanticStateDriftIssues(projectRoot: string): DocsIssue[] {
+  return inspectProjectCurrentStateSemantics(projectRoot)
+    .map((issue) => ({
+      severity: issue.severity,
+      code: `DOC_SEMANTIC_${issue.code}`,
+      ...(issue.path ? { path: issue.path } : {}),
+      message: issue.message,
+      suggestion: issue.suggestion
+    }));
+}
+
+function isSemanticCurrentnessIssue(issue: DocsIssue): boolean {
+  return issue.code === 'DOC_STALE_INSTALL_VERSION' ||
+    issue.code === 'DOC_REMOVED_COMMAND_EXAMPLE' ||
+    issue.code.startsWith('DOC_SEMANTIC_');
 }
 
 const REMOVED_COMMAND_EXAMPLE_PATTERNS = [
@@ -971,7 +1008,7 @@ function filterIssuesByScope(issues: DocsIssue[], scope: DocsDoctorReport['scope
   if (scope === 'all') return issues;
   if (scope === 'registry') return issues.filter((issue) => issue.code.startsWith('DOC_REGISTRY') || issue.code === 'DOC_REGISTERED_FILE_MISSING' || issue.code === 'DOC_CANONICAL_CONFLICT' || issue.code === 'DOC_UNKNOWN_STATUS' || issue.code === 'DOC_SUPERSEDES_MISSING_TARGET' || issue.code === 'DOC_ARCHIVE_CANDIDATE');
   if (scope === 'required-reading') return issues.filter((issue) => issue.code.includes('REQUIRED_READING'));
-  if (scope === 'links') return issues.filter((issue) => issue.code === 'DOC_UNREGISTERED_ACTIVE_LOOKING' || issue.code === 'DOC_STALE_INSTALL_VERSION' || issue.code === 'DOC_REMOVED_COMMAND_EXAMPLE');
+  if (scope === 'links') return issues.filter((issue) => issue.code === 'DOC_UNREGISTERED_ACTIVE_LOOKING' || issue.code === 'DOC_STALE_INSTALL_VERSION' || issue.code === 'DOC_REMOVED_COMMAND_EXAMPLE' || issue.code.startsWith('DOC_SEMANTIC_'));
   if (scope === 'profile') return issues.filter((issue) => issue.code === 'DOC_INIT_PROFILE_DRIFT');
   return [];
 }

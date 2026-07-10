@@ -39,6 +39,7 @@ export interface ProjectCurrentStateIssue {
   code: string;
   message: string;
   path: string;
+  suggestion?: string;
 }
 
 export interface ProjectCurrentStateRead {
@@ -107,6 +108,56 @@ export function readProjectCurrentState(projectRoot: string): ProjectCurrentStat
       }]
     };
   }
+}
+
+export function inspectProjectCurrentStateSemantics(projectRoot: string): ProjectCurrentStateIssue[] {
+  const read = readProjectCurrentState(projectRoot);
+  if (!read.present) return [];
+  if (!read.state) return read.issues;
+  const issues: ProjectCurrentStateIssue[] = [];
+  for (const [relativePath, kind] of [
+    ['docs/PROJECT_STATE.md', 'project-state'],
+    ['docs/AGENT_HANDOFF.md', 'handoff']
+  ] as const) {
+    const content = readOptional(projectRoot, relativePath);
+    if (content === null) continue;
+    if (projectCurrentStateDocument(content, kind, read.state) !== content) {
+      issues.push({
+        severity: 'warning',
+        code: 'STATE_CURRENT_CANON_PROJECTION_DRIFT',
+        path: relativePath,
+        message: `${relativePath} managed current-state projection does not match ${PROJECT_CURRENT_STATE_PATH}.`,
+        suggestion: 'Review init upgrade dry-run, then execute it to regenerate the managed projection.'
+      });
+    }
+  }
+
+  const boardContent = readOptional(projectRoot, 'docs/TASK_BOARD.md');
+  if (boardContent === null) return issues;
+  const rows = boardContent.split(/\r?\n/).map(taskFromBoardRow).filter((row): row is NonNullable<typeof row> => Boolean(row));
+  const latestDone = rows.filter((row) => row.status === 'Done').sort((a, b) => a.task.id.localeCompare(b.task.id)).at(-1)?.task ?? null;
+  if ((read.state.latestCompletedTask?.id ?? null) !== (latestDone?.id ?? null)) {
+    issues.push({
+      severity: 'warning',
+      code: 'STATE_CURRENT_CANON_LATEST_MISMATCH',
+      path: PROJECT_CURRENT_STATE_PATH,
+      message: `${PROJECT_CURRENT_STATE_PATH} latest completed task is ${read.state.latestCompletedTask?.id ?? 'none'}, but Task Board latest Done is ${latestDone?.id ?? 'none'}.`,
+      suggestion: 'Align the structured latestCompletedTask with the Task Board Done state.'
+    });
+  }
+  if (read.state.activeTask) {
+    const activeRow = rows.find((row) => row.task.id === read.state!.activeTask!.id);
+    if (!activeRow || (activeRow.status !== 'Draft' && activeRow.status !== 'In Progress')) {
+      issues.push({
+        severity: 'warning',
+        code: 'STATE_CURRENT_CANON_ACTIVE_MISMATCH',
+        path: PROJECT_CURRENT_STATE_PATH,
+        message: `${PROJECT_CURRENT_STATE_PATH} active task ${read.state.activeTask.id} is not a Draft or In Progress Task Board row.`,
+        suggestion: 'Select an open Task Board task or clear activeTask.'
+      });
+    }
+  }
+  return issues;
 }
 
 export function renderProjectStateCanonSection(state: ProjectCurrentState): string {

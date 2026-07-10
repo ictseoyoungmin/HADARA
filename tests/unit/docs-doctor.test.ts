@@ -50,7 +50,14 @@ describe('Phase 7.3 docs doctor', () => {
       command: 'docs.doctor',
       ok: true,
       scope: 'all',
+      semantics: {
+        ok: 'command-completed-without-error-issues',
+        health: 'compatibility-document-health',
+        currentnessVerdict: 'clean-warning-or-semantic-drift'
+      },
       summary: {
+        health: 'healthy',
+        currentnessVerdict: 'clean',
         registryPresent: true,
         missingRegisteredDocuments: 0,
         requiredReadingIssues: 0,
@@ -183,12 +190,53 @@ describe('Phase 7.3 docs doctor', () => {
     const report = createDocsDoctorReport(root, 'links');
 
     expect(report.ok).toBe(true);
-    expect(report.summary).toMatchObject({ health: 'warning', currentnessIssues: 2 });
+    expect(report.summary).toMatchObject({
+      health: 'warning',
+      currentnessVerdict: 'drifted',
+      currentnessIssues: 2,
+      semanticDriftIssues: 2
+    });
     expect(report.issues).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: 'DOC_STALE_INSTALL_VERSION', path: 'README.md' }),
       expect.objectContaining({ code: 'DOC_REMOVED_COMMAND_EXAMPLE', path: 'docs/HADARA_WORKFLOW.md' })
     ]));
     assertSchema('hadara.docs.doctor.v1', report);
+  });
+
+  it('reports canon-to-Markdown semantic drift with a drifted currentness verdict', () => {
+    const root = tempProject();
+    initProject(root, 'governed', { silent: true });
+    const projectStatePath = path.join(root, 'docs', 'PROJECT_STATE.md');
+    fs.writeFileSync(projectStatePath, fs.readFileSync(projectStatePath, 'utf8').replace('| Current Release |', '| Current Release Drifted |'), 'utf8');
+
+    const report = createDocsDoctorReport(root, 'links');
+
+    expect(report.ok).toBe(true);
+    expect(report.summary).toMatchObject({
+      health: 'warning',
+      currentnessVerdict: 'drifted',
+      semanticDriftIssues: 1
+    });
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'DOC_SEMANTIC_STATE_CURRENT_CANON_PROJECTION_DRIFT',
+      path: 'docs/PROJECT_STATE.md'
+    }));
+    assertSchema('hadara.docs.doctor.v1', report);
+  });
+
+  it('distinguishes non-currentness warnings from semantic drift', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    fs.mkdirSync(path.join(root, 'docs', 'specs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'specs', 'ACTIVE_PLAN.md'), '# Active plan\n', 'utf8');
+
+    const report = createDocsDoctorReport(root, 'links');
+
+    expect(report.summary).toMatchObject({
+      health: 'warning',
+      currentnessVerdict: 'warning',
+      semanticDriftIssues: 0
+    });
   });
 
   it('reports stale required-reading docs and missing superseded targets', () => {

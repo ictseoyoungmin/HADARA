@@ -8,10 +8,10 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.2 | Portable project state. |
-| Latest Completed Task | T-0561 0.4.3 structured current-state canon and projection | Most recent completed capsule. |
+| Latest Completed Task | T-0562 0.4.3 currentness verdict and semantic drift contract | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
-| Next Operator Intent | Complete the v0.4.3 currentness verdict and semantic drift health contract without adding a public command. | Immediate continuation target. |
-| Validation Baseline | Docker 152 files / 1046 tests; structured current-state init, migration, lifecycle synchronization, and session resume passed. | ev:T-0560:a9119e06127c423e93a5b5c0, ev:T-0560:421bacf7fa7f4a3185d4ad9c, ev:T-0561:c91062958d2344d8bae89643 |
+| Next Operator Intent | Complete the v0.4.3 seven-metric primary workflow measurement harness across init profiles. | Immediate continuation target. |
+| Validation Baseline | Docker 152 files / 1048 tests; docs doctor clean/warning/drifted currentness and semantic state drift contract passed. | ev:T-0560:a9119e06127c423e93a5b5c0, ev:T-0560:421bacf7fa7f4a3185d4ad9c, ev:T-0561:c91062958d2344d8bae89643, ev:T-0562:f3c88bbcbbc1461e9fa75015 |
 
 ### Current Known Problems
 

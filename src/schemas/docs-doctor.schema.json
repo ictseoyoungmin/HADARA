@@ -5,25 +5,37 @@
   "title": "HADARA Docs Doctor Report",
   "type": "object",
   "additionalProperties": true,
-  "required": ["schemaVersion", "command", "ok", "scope", "summary", "issues"],
+  "required": ["schemaVersion", "command", "ok", "scope", "semantics", "summary", "issues"],
   "properties": {
     "schemaVersion": { "const": "hadara.docs.doctor.v1" },
     "command": { "const": "docs.doctor" },
     "ok": { "type": "boolean" },
     "scope": { "type": "string", "enum": ["registry", "profile", "required-reading", "links", "all"] },
+    "semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ok", "health", "currentnessVerdict"],
+      "properties": {
+        "ok": { "const": "command-completed-without-error-issues" },
+        "health": { "const": "compatibility-document-health" },
+        "currentnessVerdict": { "const": "clean-warning-or-semantic-drift" }
+      }
+    },
     "summary": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["health", "registryPresent", "registeredDocuments", "missingRegisteredDocuments", "unregisteredActiveLookingDocuments", "requiredReadingIssues", "canonicalConflicts", "currentnessIssues"],
+      "required": ["health", "currentnessVerdict", "registryPresent", "registeredDocuments", "missingRegisteredDocuments", "unregisteredActiveLookingDocuments", "requiredReadingIssues", "canonicalConflicts", "currentnessIssues", "semanticDriftIssues"],
       "properties": {
         "health": { "type": "string", "enum": ["healthy", "warning", "drifted"] },
+        "currentnessVerdict": { "type": "string", "enum": ["clean", "warning", "drifted"] },
         "registryPresent": { "type": "boolean" },
         "registeredDocuments": { "type": "integer", "minimum": 0 },
         "missingRegisteredDocuments": { "type": "integer", "minimum": 0 },
         "unregisteredActiveLookingDocuments": { "type": "integer", "minimum": 0 },
         "requiredReadingIssues": { "type": "integer", "minimum": 0 },
         "canonicalConflicts": { "type": "integer", "minimum": 0 },
-        "currentnessIssues": { "type": "integer", "minimum": 0 }
+        "currentnessIssues": { "type": "integer", "minimum": 0 },
+        "semanticDriftIssues": { "type": "integer", "minimum": 0 }
       }
     },
     "issues": {
