@@ -49,7 +49,7 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 | Check | Gate | Result | Evidence |
 |---|---|---|---|
 | 0.4.3 source metadata and full Docker | Yes | Passed | ev:T-0565:910e72184029437fb97f5c7e |
-| Installed tarball measurement and consumer toy | Yes | Not Run | TBD |
+| Installed tarball measurement and consumer toy | Yes | Passed | ev:T-0565:e9c78040f1b2478eb6d695fd |
 | Artifact/package/clean-checkout smoke | Yes | Not Run | TBD |
 | Strict gate, release dry-run, and currentness audit | Yes | Not Run | TBD |
 

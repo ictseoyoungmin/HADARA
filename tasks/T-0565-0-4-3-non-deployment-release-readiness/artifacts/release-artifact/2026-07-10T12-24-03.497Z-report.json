@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "hadara.releaseArtifact.v1",
+  "command": "release.artifact",
+  "ok": true,
+  "mode": "execute",
+  "execution": {
+    "stagingCreated": true,
+    "npmPackExecuted": true,
+    "checksumGenerated": true,
+    "manifestGenerated": true,
+    "packageContentsVerified": true,
+    "publishExecuted": false,
+    "githubReleaseCreated": false,
+    "dockerImageBuilt": false
+  },
+  "output": {
+    "kind": "explicit",
+    "displayPath": "<redacted-release-artifact-output>",
+    "pathRedacted": true,
+    "retention": "explicit-output"
+  },
+  "package": {
+    "name": "hadara",
+    "version": "0.4.3",
+    "private": false,
+    "filesWhitelistApplied": true
+  },
+  "artifacts": [
+    {
+      "kind": "tarball",
+      "visibility": "local",
+      "fileName": "hadara-0.4.3.tgz",
+      "pathRedacted": true,
+      "byteLength": 428013,
+      "hash": "sha256:f385135086ea57f5e14f2574d25beef71143e0d71d0999133302485498f1616e",
+      "rawContentIncluded": false
+    },
+    {
+      "kind": "checksum",
+      "visibility": "local",
+      "fileName": "hadara-0.4.3.tgz.sha256",
+      "pathRedacted": true,
+      "byteLength": 83,
+      "hash": "sha256:c90ad1696749e25281003e15075c9d5f4424a42edd3afe21b3be8b77cb5dbd7b",
+      "rawContentIncluded": false
+    },
+    {
+      "kind": "manifest",
+      "visibility": "local",
+      "fileName": "hadara-0.4.3.tgz.manifest.json",
+      "pathRedacted": true,
+      "byteLength": 23972,
+      "hash": "sha256:6acc60629475b4d508464ce2aa7115391dfb660fe1fc44c093ab99b8df0175a8",
+      "rawContentIncluded": false
+    }
+  ],
+  "packageContents": {
+    "verified": true,
+    "fileCount": 264,
+    "allowedRoots": [
+      "dist/",
+      "README.md",
+      "LICENSE",
+      "package.json"
+    ],
+    "requiredFiles": [
+      "package.json",
+      "README.md",
+      "LICENSE",
+      "dist/cli/main.js"
+    ],
+    "forbiddenMatches": []
+  },
+  "privacy": {
+    "rawLogsIncluded": false,
+    "packageContentsIncluded": false,
+    "privatePathsIncluded": false,
+    "environmentSecretsIncluded": false,
+    "privateStorePathsIncluded": false
+  },
+  "issues": [],
+  "evidence": {
+    "time": "2026-07-10T12:24:03.496Z",
+    "taskId": "T-0565"
+  }
+}
