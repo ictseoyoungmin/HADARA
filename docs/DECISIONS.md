@@ -83,14 +83,14 @@ Reason:
 ## D-0011: Dashboard UI/UX reset (Phase 5.6) builds a Preact single-asset bundle on the Phase 5.5 read models
 
 Reason:
-- Phase 5.5 (`T-0197`–`T-0206`) made the dashboard fast, cached, observable, and governed, but optimized backend latency/provenance rather than perceived product quality; the served surface still read as a read-model inspector. See `docs/specs/dashboard/HADARA_Dashboard_Phase5_6_UIUX_Reset_Proposal.md`.
+- Phase 5.5 (`T-0197`–`T-0206`) made the dashboard fast, cached, observable, and governed, but optimized backend latency/provenance rather than perceived product quality; the served surface still read as a read-model inspector. See `docs/archive/specs/dashboard/HADARA_Dashboard_Phase5_6_UIUX_Reset_Proposal.md`.
 - Phase 5.6 is a visual/interaction layer only: it consumes the existing `hadara.dashboard.bootstrap.v1` and `hadara.dashboard.task_detail.v1` aggregates and adds no backend authority and no mutation.
 - Decision (T-0208 spike): chose Option B — author the console in Preact + a CSS token system and build to a single self-contained static asset, over Option A (hand-refactored vanilla). Rationale: the "commercial-grade" bar needs a real component/token system; a single inlined bundle preserves the existing CSP (self-only, no CDN), the `dashboard serve` static route, and the read-only model.
 - Build runs out of the workspace `node_modules` because NTFS-mounted workspaces cannot host an npm install (EPERM); `dashboard/build.mjs` resolves esbuild/preact via `DASH_DEPS`, and `scripts/dashboard-build.sh` runs it in `node:22-bookworm`. Output is the generated `docs/design/dashboard/index.html`.
 - Boundaries carried forward and verified: read-only, copy-only commands, no localStorage/sessionStorage/indexedDB/cookies, no WebSocket/EventSource/interval-timer streaming, private-only remains an auditability warning, project root stays redacted/fingerprinted. A stalled read now degrades via an AbortController timeout instead of freezing the console.
 - Validation: full Docker `npm ci && npm run build && vitest` passed (84 files / 562 tests) with the rewritten `dashboard-static.test.ts`; `scripts/dashboard-visual-check.sh` (Playwright + axe-core) passed home/detail/empty/degraded with no critical/serious a11y violations.
 - Not yet locked: this is uncommitted reviewer work; capsules `T-0207`–`T-0214` are not closed and may be revised or rolled back after review.
-- 2026-06-02 fix pass (post hands-on UX review, `docs/specs/dashboard/HADARA_Dashboard_Phase5_6_UX_Diagnosis.md`): sidebar tabs now render distinct per-view content (no dead tabs); the data layer separates **live** reads (`loadLiveRuntime`: bootstrap→status) from **non-live fallback** (`loadFallbackRuntime`: fixture→inline) so a refresh that loses live retains the last good live view and raises the degraded banner instead of silently showing stale sample data; loading is optimized (per-source timeout 6s→2.5s, instant inline preview at 350 ms, `syncing` indicator); proof gains an evidence drill link; offline empty states are labelled "Unavailable offline"; mobile uses a compact horizontal nav strip. Re-validated: Docker 84 files / 562 tests, dashboard visual+a11y gate all pass.
+- 2026-06-02 fix pass (post hands-on UX review, `docs/archive/specs/dashboard/HADARA_Dashboard_Phase5_6_UX_Diagnosis.md`): sidebar tabs now render distinct per-view content (no dead tabs); the data layer separates **live** reads (`loadLiveRuntime`: bootstrap→status) from **non-live fallback** (`loadFallbackRuntime`: fixture→inline) so a refresh that loses live retains the last good live view and raises the degraded banner instead of silently showing stale sample data; loading is optimized (per-source timeout 6s→2.5s, instant inline preview at 350 ms, `syncing` indicator); proof gains an evidence drill link; offline empty states are labelled "Unavailable offline"; mobile uses a compact horizontal nav strip. Re-validated: Docker 84 files / 562 tests, dashboard visual+a11y gate all pass.
 
 ## D-0012: 0.3.0 surface refactor uses Phase 7.x internal implementation labels
 
@@ -98,7 +98,7 @@ Reason:
 - The project already has Phase 6 and Phase 6.1 planning/history, so reusing rc4-rc9 as internal implementation phase labels would confuse implementation sequencing with external npm prerelease labels.
 - Phase 7.x labels are internal Task Capsule implementation phases only; they do not authorize per-phase external publishing.
 - The next external 0.3.0 release may be prepared only after all required Phase 7.x slices pass Phase 7.6 release hardening and installed-package recycle.
-- Evidence: `docs/specs/0.3.0/00_HADARA_0_3_0_Phase_7_Surface_Refactor_Program.md` and T-0290.
+- Evidence: `docs/archive/specs/0.3.0/00_HADARA_0_3_0_Phase_7_Surface_Refactor_Program.md` and T-0290.
 
 ## D-0013: Work Item A/F form the 0.3.1 Phase 8 state governance line
 
@@ -106,4 +106,4 @@ Reason:
 - Stable `hadara@0.3.0` publish and consumer recycle are complete, so follow-up status/document consistency work should not extend the 0.3.0 release-hardening line.
 - Work Item A and Work Item F both address state coherence: canonical status tokens, document ownership/write boundaries, handoff close-state clarity, installed-package findings cleanup, state consistency projection, and advisory verification.
 - The implementation order should lock vocabulary and write ownership before introducing projection or gate surfaces; otherwise projections will encode the same ambiguous status strings they are meant to detect.
-- Evidence: `docs/specs/0.3.1/00_HADARA_0_3_1_Phase_8_State_Governance_Program.md`, `docs/specs/0.3.1/rc1/00_HADARA_0_3_1_rc1_Status_Governance_Implementation_Plan.md`, and T-0318.
+- Evidence: `docs/archive/specs/0.3.1/00_HADARA_0_3_1_Phase_8_State_Governance_Program.md`, `docs/archive/specs/0.3.1/rc1/00_HADARA_0_3_1_rc1_Status_Governance_Implementation_Plan.md`, and T-0318.

@@ -560,3 +560,4 @@
 | T-0557 | Currentness integrity and stale guidance hardening | Done | tasks/T-0557-currentness-integrity-and-stale-guidance-hardening | |
 | T-0558 | Current-state ownership and compact projection | Done | tasks/T-0558-current-state-ownership-and-compact-projection | Compact ownership, historical snapshots, routing regression, Docker 149/1034, and governed toy closed-valid. |
 | T-0559 | Primary workflow budget and capability freeze | Done | tasks/T-0559-primary-workflow-budget-and-capability-freeze | Four-command freeze; six-call standard toy closed-valid in 13.13s; Docker 150/1037. |
+| T-0560 | Historical docs archive and multi-profile dogfood | Done | tasks/T-0560-historical-docs-archive-and-multi-profile-dogfood | 75→0 docs warnings; archive never-default; all profiles closed-valid; Docker 151/1041. |

@@ -216,4 +216,33 @@ describe('Phase 7.3 docs doctor', () => {
       expect.objectContaining({ code: 'DOC_ARCHIVE_CANDIDATE', severity: 'warning', path: 'docs/PROJECT_STATE.md' })
     ]));
   });
+
+  it('does not recommend already archived or snapshotted documents for archive again', () => {
+    const root = tempProject();
+    initProject(root, 'governed', { silent: true });
+    const archivePath = path.join(root, 'docs', 'archive', 'history');
+    fs.mkdirSync(archivePath, { recursive: true });
+    fs.writeFileSync(path.join(archivePath, 'REFACTOR_LOG.md'), '# Archived refactor log\n', 'utf8');
+    mutateRegistry(root, (registry) => {
+      const reference = registry.documents.find((doc) => doc.path === 'docs/PROJECT_STATE.md')!;
+      registry.documents.push({
+        ...reference,
+        path: 'docs/archive/history/REFACTOR_LOG.md',
+        title: 'Archived refactor log',
+        kind: 'historical-plan',
+        status: 'historical',
+        readWhen: ['never-default'],
+        requiredReading: false,
+        readTier: 'historical',
+        authority: 'historical'
+      });
+    });
+
+    const report = createDocsDoctorReport(root, 'registry');
+
+    expect(report.issues).not.toContainEqual(expect.objectContaining({
+      code: 'DOC_ARCHIVE_CANDIDATE',
+      path: 'docs/archive/history/REFACTOR_LOG.md'
+    }));
+  });
 });

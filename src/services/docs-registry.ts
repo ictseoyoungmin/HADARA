@@ -758,7 +758,7 @@ function validateRegistry(projectRoot: string, registry: DocumentRegistryFile): 
     if (doc.status === 'superseded' && (!doc.supersededBy || !registry.documents.some((candidate) => candidate.path === doc.supersededBy))) {
       issues.push({ severity: 'error', code: 'DOC_SUPERSEDES_MISSING_TARGET', path: doc.path, message: `${doc.path} is superseded but does not point to a registered replacement.` });
     }
-    if (doc.status === 'superseded' || doc.status === 'historical') {
+    if ((doc.status === 'superseded' || doc.status === 'historical') && !isArchivePath(doc.path)) {
       issues.push({ severity: 'warning', code: 'DOC_ARCHIVE_CANDIDATE', path: doc.path, message: `${doc.path} can be considered for dry-run archive planning.` });
     }
   }
@@ -778,6 +778,11 @@ function validateRegistry(projectRoot: string, registry: DocumentRegistryFile): 
     }
   }
   return issues;
+}
+
+function isArchivePath(documentPath: string): boolean {
+  const normalized = normalizePath(documentPath);
+  return normalized.startsWith('docs/archive/') || normalized.startsWith('docs/history/');
 }
 
 function validateRegistryMetadata(registry: DocumentRegistryFile): DocsIssue[] {

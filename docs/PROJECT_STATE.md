@@ -16,9 +16,9 @@ HADARA - Portable Agentic Development Workbench
 | HADARA Profile | governed |
 | Stable Version | 0.4.2 |
 | Branch | main |
-| Latest Completed Task | T-0559 Primary workflow budget and capability freeze |
-| Active Task | None; create P3 capsule next |
-| Validation Baseline | Docker 150 files / 1037 tests; standard P2 measured toy closed-valid in 6 calls / 13.13s |
+| Latest Completed Task | T-0560 Historical docs archive and multi-profile dogfood |
+| Active Task | None; P0-P3 consolidation complete |
+| Validation Baseline | Docker 151 files / 1041 tests; all profiles closed-valid in six calls and under 10.1s |
 
 ## Current Phase
 
@@ -29,7 +29,7 @@ P0-P3 product consolidation after stable 0.4.2.
 | P0 Currentness integrity | Done | Align next-work selection, active docs, and validation fixtures. |
 | P1 Current-state ownership | Done | Separate compact current facts from historical narrative. |
 | P2 Product compression | Done | Freeze capability growth and measure the primary workflow. |
-| P3 External-style validation | Next | Dogfood all profiles and archive stale documents/specs. |
+| P3 External-style validation | Done | Dogfood all profiles and archive stale documents/specs. |
 
 ## Current Capabilities
 
@@ -49,9 +49,10 @@ P0-P3 product consolidation after stable 0.4.2.
 - Stable `hadara@0.4.2` and GitHub `v0.4.2` are published and consumer-recycled.
 - T-0557 stopped historical `Partial` capsules from becoming primary next-work recommendations.
 - Active-document currentness diagnostics cover stale install versions and removed command examples.
-- The clean source baseline is 149 test files / 1034 tests with Docker-refreshed `dist`.
+- The clean source baseline is 151 test files / 1041 tests with Docker-refreshed `dist`.
 - T-0558 established bounded state ownership and preserved pre-compaction snapshots under `docs/history/`.
 - T-0559 froze the ordinary lifecycle at four unique commands and six post-init invocations; the standard measured toy closed-valid in 13.13 seconds.
+- T-0560 reduced active-looking docs warnings from 75 to 0, made archive routing never-default, and closed basic/standard/governed toys in 10.09s/9.14s/8.99s.
 
 ## Current Known Constraints
 
@@ -60,12 +61,11 @@ P0-P3 product consolidation after stable 0.4.2.
 | Task-scoped context pack is about 8-10s on the mounted WSL repository. | Watch | Prefer bounded status/session paths; treat sub-3s reads as a future explicit trust/cache decision. |
 | Explicit live graph/context reads remain filesystem-sensitive. | Watch | Warm cache first and run broad live diagnostics only when needed. |
 | Tool-host child process launch can return `EPERM` while direct commands pass. | Active | Run the command directly, then record through `validation run --direct-result`. |
-| `docs doctor --scope links` still sees historical specs as active-looking. | Active | P3 owns archive/classification cleanup; do not treat those warnings as current implementation work. |
 
 ## Next Planned Line
 
-1. Create P3 external-style multi-profile dogfood and stale-doc archive capsule.
-2. Resume release/provider/runtime expansion only from new operator evidence.
+1. Review P0-P3 evidence and choose the next capsule from real operator/adoption friction.
+2. Resume release/provider/runtime expansion only when that evidence justifies it.
 
 ## Historical Index
 
@@ -73,6 +73,7 @@ P0-P3 product consolidation after stable 0.4.2.
 |---|---|---|
 | Pre-P1 project state snapshot | `docs/history/PROJECT_STATE_PRE_T0558.md` | Full pre-compaction project narrative through T-0557. |
 | Pre-P1 handoff snapshot | `docs/history/AGENT_HANDOFF_PRE_T0558.md` | Full pre-compaction handoff, known-problem, and validation tables. |
+| Documentation archive map | `docs/archive/README.md` | Completed specs, historical logs, and old-to-new path mapping. |
 | Completed task handoff history | `docs/HANDOFF_HISTORY.md` | Older completed-task summaries. |
 | Validation history | `docs/VALIDATION_HISTORY.md` | Older accumulated validation observations. |
 | Task queue | `docs/TASK_BOARD.md` | Status and capsule path for every task. |

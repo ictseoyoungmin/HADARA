@@ -1002,7 +1002,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'stable',
     schemaVersion: 'hadara.protocol.migration.v1',
     since: '0.3.0-rc.1',
-    docs: ['docs/specs/0.3.0/rc1/00_Protocol_Migration_for_0_3_Adoption.md', 'docs/HADARA_WORKFLOW.md'],
+    docs: ['docs/archive/specs/0.3.0/rc1/00_Protocol_Migration_for_0_3_Adoption.md', 'docs/HADARA_WORKFLOW.md'],
     examples: [
       example('Preview project migration', 'hadara protocol migrate --target 0.3.0 --json', 'When upgrading a pre-0.3 initialized HADARA project.'),
       example('Preview task migration', 'hadara protocol migrate --target 0.3.0 --task T-0001 --json', 'When migrating one selected older Task Capsule.')
@@ -1153,7 +1153,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'experimental',
     since: '0.4.1-rc.0',
     schemaVersion: 'hadara.docs.completeSpec.v1',
-    docs: ['docs/specs/0.4.0/productization-redesign/12_CLI_JSON_Contracts_and_Diagnostics.md', 'docs/specs/0.4.0/productization-redesign/15_Current_CLI_Surface_Audit.md'],
+    docs: ['docs/archive/specs/0.4.0/productization-redesign/12_CLI_JSON_Contracts_and_Diagnostics.md', 'docs/archive/specs/0.4.0/productization-redesign/15_Current_CLI_Surface_Audit.md'],
     examples: [example('Preview spec completion', 'hadara docs complete-spec --path docs/specs/example.md --implemented-by T-0001 --json', 'When a registered spec has been implemented and should stop being active default reading.')],
     related: ['docs.register', 'docs.read-map', 'docs.inbox', 'docs.mark'],
     conflictsWith: [],

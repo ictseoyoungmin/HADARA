@@ -365,7 +365,7 @@
       "generatedBy": "hadara init"
     },
     {
-      "path": "docs/REFACTOR_LOG.md",
+      "path": "docs/archive/history/REFACTOR_LOG.md",
       "title": "REFACTOR_LOG",
       "owner": "hadara-docs",
       "kind": "historical-plan",
@@ -382,9 +382,17 @@
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "hadara init"
+      "generatedBy": "hadara init",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
       "path": "docs/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md",
@@ -461,808 +469,1112 @@
       "generatedBy": "hadara init"
     },
     {
-      "path": "docs/specs/0.3.1/00_HADARA_0_3_1_Phase_8_State_Governance_Program.md",
+      "path": "docs/archive/specs/0.3.1/00_HADARA_0_3_1_Phase_8_State_Governance_Program.md",
       "title": "HADARA 0.3.1 Phase 8 State Governance Program",
       "owner": "hadara-dev",
       "kind": "roadmap",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [
-        "docs/specs/tmp_dir_hadara_work_items_architecture_specs/work_items/A_Stable_Recycle_Findings_Cleanup_and_Status_Governance.md",
-        "docs/specs/tmp_dir_hadara_work_items_architecture_specs/work_items/F_State_Consistency_Projection.md"
+        "docs/archive/specs/tmp_dir_hadara_work_items_architecture_specs/work_items/A_Stable_Recycle_Findings_Cleanup_and_Status_Governance.md",
+        "docs/archive/specs/tmp_dir_hadara_work_items_architecture_specs/work_items/F_State_Consistency_Projection.md"
       ],
-      "generatedBy": "T-0318"
+      "generatedBy": "T-0318",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.3.1/rc1/00_HADARA_0_3_1_rc1_Status_Governance_Implementation_Plan.md",
+      "path": "docs/archive/specs/0.3.1/rc1/00_HADARA_0_3_1_rc1_Status_Governance_Implementation_Plan.md",
       "title": "HADARA 0.3.1 rc1 Status Governance Implementation Plan",
       "owner": "hadara-dev",
       "kind": "roadmap",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0318"
+      "generatedBy": "T-0318",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md",
+      "path": "docs/archive/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md",
       "title": "Context Routing Architecture Overview",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0342"
+      "generatedBy": "T-0342",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md",
+      "path": "docs/archive/specs/0.3.3/context-routing/01_Project_Context_Graph_Foundation_and_State_Projection_Spec.md",
       "title": "Project Context Graph Foundation and State Projection Spec",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0342"
+      "generatedBy": "T-0342",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md",
+      "path": "docs/archive/specs/0.3.3/context-routing/02_Code_Link_Layer_Spec.md",
       "title": "Code Link Layer Spec",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0342"
+      "generatedBy": "T-0342",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.3.3/context-routing/03_Context_Pack_and_Session_Start_Spec.md",
+      "path": "docs/archive/specs/0.3.3/context-routing/03_Context_Pack_and_Session_Start_Spec.md",
       "title": "Context Pack and Session Start Spec",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0342"
+      "generatedBy": "T-0342",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.3.3/context-routing/04_Deterministic_Context_Slice_Raw_Adapter_Spec.md",
+      "path": "docs/archive/specs/0.3.3/context-routing/04_Deterministic_Context_Slice_Raw_Adapter_Spec.md",
       "title": "Deterministic Context Slice Raw Adapter Spec",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0342"
+      "generatedBy": "T-0342",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.3.3/context-routing/05_Indexing_Cache_Invalidation_and_Performance_Spec.md",
+      "path": "docs/archive/specs/0.3.3/context-routing/05_Indexing_Cache_Invalidation_and_Performance_Spec.md",
       "title": "Indexing, Cache, Invalidation, and Performance Spec",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0342"
+      "generatedBy": "T-0342",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md",
+      "path": "docs/archive/specs/0.3.3/context-routing/06_Worker_Agent_Implementation_Plan.md",
       "title": "Worker Agent Implementation Plan",
       "owner": "hadara-dev",
       "kind": "implementation-guide",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0342"
+      "generatedBy": "T-0342",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.3.3/context-routing/07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md",
+      "path": "docs/archive/specs/0.3.3/context-routing/07_C6_Fast_Context_Cache_and_Performance_Implementation_Spec.md",
       "title": "C6 Fast Context Cache and Performance Implementation Spec",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0360"
+      "generatedBy": "T-0360",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.3.3/context-routing/08_C6_Speed_First_Graph_Build_and_Warm_Path_Spec.md",
+      "path": "docs/archive/specs/0.3.3/context-routing/08_C6_Speed_First_Graph_Build_and_Warm_Path_Spec.md",
       "title": "C6 Speed-First Graph Build and Warm Path Spec",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0371"
+      "generatedBy": "T-0371",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.3.3/context-routing/09_Context_Routing_Implementation_Completion_Audit.md",
+      "path": "docs/archive/specs/0.3.3/context-routing/09_Context_Routing_Implementation_Completion_Audit.md",
       "title": "Context Routing Implementation Completion Audit",
       "owner": "hadara-dev",
       "kind": "implementation-audit",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0381"
+      "generatedBy": "T-0381",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.3.3/dogfood/00_Procedural_Asset_SaaS_Dogfood_Spec.md",
+      "path": "docs/archive/specs/0.3.3/dogfood/00_Procedural_Asset_SaaS_Dogfood_Spec.md",
       "title": "Procedural Asset SaaS Dogfood Spec",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0403"
+      "generatedBy": "T-0403",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md",
+      "path": "docs/archive/specs/0.3.3/lifecycle/00_Lifecycle_Workflow_Agent_Convenience_Spec.md",
       "title": "Lifecycle Workflow Agent Convenience Spec",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0392"
+      "generatedBy": "T-0392",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md",
+      "path": "docs/archive/specs/0.3.4/agent-ux/00_Agent_UX_Hardening_Spec.md",
       "title": "Agent UX Hardening Spec",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0408"
+      "generatedBy": "T-0408",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/00_Decision_and_Productization_Principles.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/00_Decision_and_Productization_Principles.md",
       "title": "0.4 Decision and Productization Principles",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/01_Project_Scaffold_Model.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/01_Project_Scaffold_Model.md",
       "title": "0.4 Project Scaffold Model",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/02_Agent_Entry_and_Workflow_Document.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/02_Agent_Entry_and_Workflow_Document.md",
       "title": "0.4 Agent Entry and Workflow Document",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/03_Design_Source_Documents_Read_Map_and_Drift.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/03_Design_Source_Documents_Read_Map_and_Drift.md",
       "title": "0.4 Design Source Documents Read Map and Drift",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/04_Task_Capsule_Schema.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/04_Task_Capsule_Schema.md",
       "title": "0.4 Task Capsule Schema",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/05_TASK_MD_Table_Schema_and_Controlled_Values.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/05_TASK_MD_Table_Schema_and_Controlled_Values.md",
       "title": "0.4 TASK.md Table Schema and Controlled Values",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/06_Managed_Slot_v2_and_Schema_Registry.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/06_Managed_Slot_v2_and_Schema_Registry.md",
       "title": "0.4 Managed Slot v2 and Schema Registry",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/07_Evidence_Plane_and_Close_Proof_Projection.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/07_Evidence_Plane_and_Close_Proof_Projection.md",
       "title": "0.4 Evidence Plane and Close Proof Projection",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/08_Project_State_Task_Board_and_Handoff.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/08_Project_State_Task_Board_and_Handoff.md",
       "title": "0.4 Project State Task Board and Handoff",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/09_Close_Source_Contract.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/09_Close_Source_Contract.md",
       "title": "0.4 Close Source Contract",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/10_Context_Routing_and_Session_Start_Integration.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/10_Context_Routing_and_Session_Start_Integration.md",
       "title": "0.4 Context Routing and Session Start Integration",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/11_Legacy_Project_Boundary.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/11_Legacy_Project_Boundary.md",
       "title": "0.4 Legacy Project Boundary",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/12_CLI_JSON_Contracts_and_Diagnostics.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/12_CLI_JSON_Contracts_and_Diagnostics.md",
       "title": "0.4 CLI JSON Contracts and Diagnostics",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/13_Test_Dogfood_and_Release_Plan.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/13_Test_Dogfood_and_Release_Plan.md",
       "title": "0.4 Test Dogfood and Release Plan",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/14_Worker_Agent_Capsule_Plan.md",
       "title": "0.4 Worker Agent Capsule Plan",
       "owner": "hadara-dev",
       "kind": "implementation-guide",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "task-start"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/15_Current_CLI_Surface_Audit.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/15_Current_CLI_Surface_Audit.md",
       "title": "0.4 Current CLI Surface Audit",
       "owner": "hadara-dev",
       "kind": "implementation-guide",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/README.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/README.md",
       "title": "HADARA 0.4.0 Productization Redesign Specs",
       "owner": "hadara-dev",
       "kind": "spec",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "task-start"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/templates/0.4/AGENTS.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/templates/0.4/AGENTS.md",
       "title": "0.4 AGENTS Template",
       "owner": "hadara-dev",
       "kind": "protocol",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/templates/0.4/EVIDENCE.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/templates/0.4/EVIDENCE.md",
       "title": "0.4 EVIDENCE Projection Template",
       "owner": "hadara-dev",
       "kind": "task-capsule",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/templates/0.4/HADARA_CONTEXT.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/templates/0.4/HADARA_CONTEXT.md",
       "title": "0.4 HADARA_CONTEXT Template",
       "owner": "hadara-dev",
       "kind": "project-context",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/templates/0.4/HADARA_WORKFLOW.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/templates/0.4/HADARA_WORKFLOW.md",
       "title": "0.4 HADARA_WORKFLOW Template",
       "owner": "hadara-dev",
       "kind": "workflow-guide",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/templates/0.4/HANDOFF.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/templates/0.4/HANDOFF.md",
       "title": "0.4 HANDOFF Template",
       "owner": "hadara-dev",
       "kind": "task-capsule",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/productization-redesign/templates/0.4/TASK.md",
+      "path": "docs/archive/specs/0.4.0/productization-redesign/templates/0.4/TASK.md",
       "title": "0.4 TASK Template",
       "owner": "hadara-dev",
       "kind": "task-capsule",
-      "status": "reference",
+      "status": "historical",
       "scope": "project",
       "profiles": [
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
       "updatedByCommands": [],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
-      "generatedBy": "T-0427"
+      "generatedBy": "T-0427",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     },
     {
-      "path": "docs/specs/0.4.0/state-first/proposal.md",
+      "path": "docs/archive/specs/0.4.0/state-first/proposal.md",
       "title": "0.4.0 state-first proposal",
       "owner": "hadara-docs",
       "kind": "spec",
@@ -1272,7 +1584,7 @@
         "hadara-dev"
       ],
       "readWhen": [
-        "only-when-linked"
+        "never-default"
       ],
       "requiredReading": false,
       "updateOwner": "human",
@@ -1280,15 +1592,15 @@
         "docs.register"
       ],
       "managedSections": [],
-      "closeSourceRole": "task-dependent",
+      "closeSourceRole": "excluded",
       "supersedes": [],
       "readTier": "historical",
       "authority": "historical",
-      "editPolicy": "agent-editable-with-review",
+      "editPolicy": "human-only",
       "drift": {
         "risk": "low",
-        "reviewRequiredBeforeUse": false,
-        "reason": "docs/specs/0.4.0/state-first/proposal.md is marked as low drift risk."
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
       }
     },
     {
@@ -1421,6 +1733,36 @@
       "closeSourceRole": "task-dependent",
       "supersedes": [],
       "generatedBy": "hadara init"
+    },
+    {
+      "path": "docs/archive/README.md",
+      "title": "Documentation Archive Map",
+      "owner": "hadara-docs",
+      "kind": "historical-plan",
+      "status": "historical",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "never-default"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "excluded",
+      "supersedes": [],
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Archived source; consult only for historical investigation."
+      }
     }
   ],
   "generatedAt": "2026-07-10T10:07:38.322Z"
