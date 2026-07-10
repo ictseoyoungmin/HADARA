@@ -50,7 +50,7 @@ export function createRuntimeVersionReport(projectRoot: string, options: Runtime
     });
   }
 
-  const sourceMtime = readLatestSourceMtime(projectRoot);
+  const sourceMtime = cliEntryIsProjectLocal(projectRoot, cliEntry) ? readLatestSourceMtime(projectRoot) : null;
   const distLooksStale = Boolean(distMtime && sourceMtime && sourceMtime.getTime() > distMtime.getTime() + 1000);
   if (distLooksStale) {
     issues.push({
@@ -118,6 +118,12 @@ function readLatestSourceMtime(projectRoot: string): Date | null {
     latest = maxDate(latest, readLatestMtime(root));
   }
   return latest;
+}
+
+function cliEntryIsProjectLocal(projectRoot: string, cliEntry: string): boolean {
+  if (!projectRoot || !cliEntry) return false;
+  const relative = path.relative(path.resolve(projectRoot), path.resolve(cliEntry));
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
 function readLatestMtime(targetPath: string): Date | null {

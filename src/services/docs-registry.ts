@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { InitProfile } from '../cli/init';
 import { managedSectionBlock } from './managed-sections';
-import { readMarkdownSection } from './markdown-table';
+import { parseMarkdownRows, readMarkdownSection } from './markdown-table';
 import { inspectProjectCurrentStateSemantics } from './project-current-state';
 
 export type DocumentStatus = 'canonical' | 'active' | 'reference' | 'historical' | 'superseded' | 'archived';
@@ -371,6 +371,7 @@ export function createDocsDoctorReport(projectRoot: string, scope: string = 'all
     ...state.issues,
     ...validateRegistry(projectRoot, state.registry),
     ...validateActiveDocumentCurrentness(projectRoot, state.registry),
+    ...validateProjectMetadataPlaceholders(projectRoot),
     ...semanticStateDriftIssues(projectRoot)
   ];
   const invalidScopeIssue: DocsIssue = { severity: 'error', code: 'DOC_DOCTOR_SCOPE_INVALID', message: `Unsupported docs doctor scope: ${scope}` };
@@ -419,9 +420,43 @@ function semanticStateDriftIssues(projectRoot: string): DocsIssue[] {
     }));
 }
 
+function validateProjectMetadataPlaceholders(projectRoot: string): DocsIssue[] {
+  if (!projectHasCompletedTask(projectRoot)) return [];
+  const relativePath = 'docs/PROJECT_STATE.md';
+  const absolutePath = path.join(projectRoot, relativePath);
+  if (!fs.existsSync(absolutePath)) return [];
+  const productSection = readMarkdownSection(fs.readFileSync(absolutePath, 'utf8'), '## Product');
+  if (!productSection.trim()) return [];
+  const rows = parseMarkdownRows(productSection);
+  const placeholders = rows
+    .filter((cells) => !/^field$/i.test(cells[0] ?? ''))
+    .filter((cells) => {
+      const field = (cells[0] ?? '').trim().toLowerCase();
+      const value = (cells[1] ?? '').trim().toLowerCase();
+      return (field === 'name' && value === 'tbd') ||
+        (field === 'purpose' && value.startsWith('describe the project'));
+    });
+  if (placeholders.length === 0) return [];
+  return [{
+    severity: 'warning',
+    code: 'DOC_PROJECT_METADATA_PLACEHOLDER',
+    path: relativePath,
+    message: `Project metadata still contains ${placeholders.length} bootstrap placeholder value(s) after completed task history exists.`,
+    suggestion: 'Replace Product Name/Purpose placeholders in docs/PROJECT_STATE.md once the project has a real task history.'
+  }];
+}
+
+function projectHasCompletedTask(projectRoot: string): boolean {
+  const taskBoard = path.join(projectRoot, 'docs', 'TASK_BOARD.md');
+  if (!fs.existsSync(taskBoard)) return false;
+  return parseMarkdownRows(fs.readFileSync(taskBoard, 'utf8'))
+    .some((cells) => /^T-\d{4}$/.test(cells[0] ?? '') && cells.some((cell) => cell.trim() === 'Done'));
+}
+
 function isSemanticCurrentnessIssue(issue: DocsIssue): boolean {
   return issue.code === 'DOC_STALE_INSTALL_VERSION' ||
     issue.code === 'DOC_REMOVED_COMMAND_EXAMPLE' ||
+    issue.code === 'DOC_PROJECT_METADATA_PLACEHOLDER' ||
     issue.code.startsWith('DOC_SEMANTIC_');
 }
 
@@ -1020,7 +1055,7 @@ function filterIssuesByScope(issues: DocsIssue[], scope: DocsDoctorReport['scope
   if (scope === 'all') return issues;
   if (scope === 'registry') return issues.filter((issue) => issue.code.startsWith('DOC_REGISTRY') || issue.code === 'DOC_REGISTERED_FILE_MISSING' || issue.code === 'DOC_CANONICAL_CONFLICT' || issue.code === 'DOC_UNKNOWN_STATUS' || issue.code === 'DOC_SUPERSEDES_MISSING_TARGET' || issue.code === 'DOC_ARCHIVE_CANDIDATE');
   if (scope === 'required-reading') return issues.filter((issue) => issue.code.includes('REQUIRED_READING'));
-  if (scope === 'links') return issues.filter((issue) => issue.code === 'DOC_UNREGISTERED_ACTIVE_LOOKING' || issue.code === 'DOC_STALE_INSTALL_VERSION' || issue.code === 'DOC_REMOVED_COMMAND_EXAMPLE' || issue.code.startsWith('DOC_SEMANTIC_'));
+  if (scope === 'links') return issues.filter((issue) => issue.code === 'DOC_UNREGISTERED_ACTIVE_LOOKING' || issue.code === 'DOC_STALE_INSTALL_VERSION' || issue.code === 'DOC_REMOVED_COMMAND_EXAMPLE' || issue.code === 'DOC_PROJECT_METADATA_PLACEHOLDER' || issue.code.startsWith('DOC_SEMANTIC_'));
   if (scope === 'profile') return issues.filter((issue) => issue.code === 'DOC_INIT_PROFILE_DRIFT');
   return [];
 }

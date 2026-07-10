@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { main } from '../../src/cli/main';
 import { handleVersionCommand } from '../../src/cli/version';
 import { validateSchema } from '../../src/core/schema';
 import { createRuntimeVersionReport } from '../../src/services/runtime-version';
@@ -64,6 +65,26 @@ describe('runtime version report', () => {
     expect(validateSchema('hadara.runtime.version.v1', report).ok).toBe(true);
   });
 
+  it('does not compare installed CLI entry mtimes against an external target project', () => {
+    const root = tempProject();
+    const installedRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-installed-cli-'));
+    roots.push(installedRoot);
+    const cliEntry = path.join(installedRoot, 'node_modules', 'hadara', 'dist', 'cli', 'main.js');
+    fs.mkdirSync(path.dirname(cliEntry), { recursive: true });
+    fs.writeFileSync(cliEntry, 'console.log("installed");\n', 'utf8');
+    const oldTime = new Date('2026-05-31T00:00:00.000Z');
+    const newTime = new Date('2026-05-31T00:00:05.000Z');
+    fs.utimesSync(cliEntry, oldTime, oldTime);
+    fs.utimesSync(path.join(root, 'src', 'cli', 'main.ts'), newTime, newTime);
+
+    const report = createRuntimeVersionReport(root, { cliEntry, cwd: root });
+
+    expect(report.build.sourceMtime).toBe(null);
+    expect(report.build.distLooksStale).toBe(false);
+    expect(report.issues).not.toContainEqual(expect.objectContaining({ code: 'DIST_LOOKS_STALE' }));
+    expect(validateSchema('hadara.runtime.version.v1', report).ok).toBe(true);
+  });
+
   it('prints JSON for version --verbose --json', () => {
     const root = process.cwd();
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -79,5 +100,16 @@ describe('runtime version report', () => {
     const payload = JSON.parse(String(log.mock.calls[0][0]));
     expect(payload.schemaVersion).toBe('hadara.runtime.version.v1');
     expect(validateSchema('hadara.runtime.version.v1', payload).ok).toBe(true);
+  });
+
+  it('routes --version and -v aliases to the version command', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    await main(['--version']);
+    await main(['-v']);
+
+    expect(log.mock.calls).toHaveLength(2);
+    expect(String(log.mock.calls[0][0])).toMatch(/^\d+\.\d+\.\d+/);
+    expect(log.mock.calls[1][0]).toBe(log.mock.calls[0][0]);
   });
 });

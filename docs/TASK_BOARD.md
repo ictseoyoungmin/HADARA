@@ -575,3 +575,4 @@
 | T-0572 | v0.4.4 external-repository validation planning | Done | tasks/T-0572-v0-4-4-external-repository-validation-planning | |
 | T-0573 | v0.4.4 R1 delegated-agent basic-profile dogfood pilot | Done | tasks/T-0573-v0-4-4-r1-delegated-agent-basic-profile-dogfood-pilot | |
 | T-0574 | v0.4.4 R1 dogfood generated docs audit | Done | tasks/T-0574-v0-4-4-r1-dogfood-generated-docs-audit | |
+| T-0575 | v0.4.4 R1 dogfood UX findings cleanup | Done | tasks/T-0575-v0-4-4-r1-dogfood-ux-findings-cleanup | |

@@ -28,6 +28,13 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
   args = normalizeGlobalArgs(args);
   const command = args[0];
 
+  if (command === '--version' || command === '-v') {
+    const paths = resolveHadaraPaths({ projectRoot: getStringOption(args, '--project') });
+    const jsonOutput = getFlag(args, '--json');
+    const { handleVersionCommand } = await import('./version');
+    if (handleVersionCommand({ args: ['version', ...args.slice(1)], projectRoot: paths.projectRoot, jsonOutput, cliEntry: process.argv[1] })) return;
+  }
+
   if (!command || command === '--help' || command === '-h') {
     console.log(renderDefaultHelp());
     return;

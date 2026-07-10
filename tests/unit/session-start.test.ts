@@ -38,17 +38,48 @@ describe('session start', () => {
       activeTask: created.taskId,
       recommendedNextTask: created.taskId,
       currentRelease: expect.any(String),
-      nextWork: {
-        title: 'Create first Task Capsule',
-        state: 'candidate',
-        operatorGuidance: 'Create or select the first bounded Task Capsule.',
-        createCommandAllowed: true
-      },
-      nextOperatorIntent: 'Create or select the first bounded Task Capsule.',
+      nextWork: null,
+      nextOperatorIntent: 'No next work selected. Run `hadara task status --json` for current task-selection guidance.',
       source: '.hadara/state/current.json'
     });
     expect(report.currentState.releaseState).not.toBe(report.currentState.currentRelease);
     expect(report.guidance.primaryAction.args).toEqual(['task', 'status', '--task', created.taskId, '--json']);
+    expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
+  });
+
+  it('hides stale bootstrap next-work from session start once task history exists', () => {
+    const root = tempProject();
+    initProject(root, 'basic', { silent: true });
+    const created = createTaskCreateReport(root, 'Historical task');
+    fs.writeFileSync(
+      path.join(root, '.hadara', 'state', 'current.json'),
+      `${JSON.stringify({
+        schemaVersion: 'hadara.projectCurrentState.v1',
+        rev: 2,
+        profile: 'basic',
+        currentRelease: '0.0.0',
+        latestCompletedTask: { id: created.taskId, title: 'Historical task' },
+        activeTask: null,
+        nextWork: {
+          title: 'Create first Task Capsule',
+          state: 'candidate',
+          operatorGuidance: 'Create or select the first bounded Task Capsule.',
+          createCommandAllowed: true
+        },
+        nextOperatorIntent: 'Create first Task Capsule',
+        currentKnownProblems: [],
+        validationBaseline: { summary: 'No validation baseline has been recorded yet.', evidence: [] }
+      }, null, 2)}\n`,
+      'utf8'
+    );
+
+    const report = buildSessionStartReport({
+      projectRoot: root,
+      generatedAt: '2026-07-10T00:00:00.000Z'
+    });
+
+    expect(report.currentState.nextWork).toBe(null);
+    expect(report.currentState.nextOperatorIntent).toBe('No next work selected. Run `hadara task status --json` for current task-selection guidance.');
     expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
   });
 

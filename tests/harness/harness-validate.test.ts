@@ -642,7 +642,7 @@ describe('Harness Task Capsule validation', () => {
     );
   });
 
-  it('rejects done-level capsules whose plan rows are still In Progress', () => {
+  it('rejects done-level capsules whose plan rows are still Pending or In Progress', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Plan status drift');
     markTaskDone(root, task.id);
@@ -650,6 +650,7 @@ describe('Harness Task Capsule validation', () => {
     markAcceptanceDone(task.dir);
     writeCompletedCapsuleDocs(task.dir);
     writeHandoffDone(task.dir);
+    fs.appendFileSync(path.join(task.dir, 'PLAN.md'), '| 2 | Prepare the release notes. | Pending | Not updated. |\n', 'utf8');
     fs.appendFileSync(path.join(task.dir, 'PLAN.md'), '| 3 | Commit the preparation. | In Progress | git commit pending. |\n', 'utf8');
     appendEvidence(root, {
       taskId: task.id,
@@ -667,7 +668,42 @@ describe('Harness Task Capsule validation', () => {
         code: 'TASK_PLAN_STATUS_DRIFT',
         path: `tasks/${task.id}-plan-status-drift/PLAN.md`,
         heading: 'Plan',
-        fixHint: expect.stringContaining('In Progress')
+        fixHint: expect.stringContaining('Pending or In Progress')
+      })
+    );
+  });
+
+  it('rejects done-level handoff rows with placeholder evidence ids', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Placeholder handoff evidence');
+    markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
+    markAcceptanceDone(task.dir);
+    writeCompletedCapsuleDocs(task.dir);
+    writeHandoffDone(task.dir);
+    fs.writeFileSync(
+      path.join(task.dir, 'HANDOFF.md'),
+      fs.readFileSync(path.join(task.dir, 'HANDOFF.md'), 'utf8')
+        .replace('Harness result.', `ev:${task.id}:pending`),
+      'utf8'
+    );
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Done-level validation evidence',
+      result: 'passed'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'error',
+        code: 'HANDOFF_PLACEHOLDER_EVIDENCE',
+        path: `tasks/${task.id}-placeholder-handoff-evidence/HANDOFF.md`,
+        heading: 'Last Completed',
+        fixHint: expect.stringContaining('placeholder evidence')
       })
     );
   });

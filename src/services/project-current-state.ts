@@ -274,7 +274,7 @@ export function activateProjectCurrentTask(projectRoot: string, task: ProjectCur
 }
 
 export function completeProjectCurrentTask(projectRoot: string, task: ProjectCurrentTaskRef): ProjectCurrentStateIssue[] {
-  return mutateProjectCurrentState(projectRoot, (current) => ({
+  return mutateProjectCurrentState(projectRoot, (current) => retireBootstrapNextWork({
     ...current,
     rev: current.rev + 1,
     latestCompletedTask: task,
@@ -289,15 +289,15 @@ export function planCompletedProjectCurrentStateWrites(projectRoot: string, task
   const read = readProjectCurrentState(projectRoot);
   if (!read.present) return { writes: [], issues: [] };
   if (!read.state) return { writes: [], issues: read.issues };
-  if (read.state.latestCompletedTask?.id === task.id && read.state.activeTask?.id !== task.id) {
+  if (read.state.latestCompletedTask?.id === task.id && read.state.activeTask?.id !== task.id && !hasBootstrapNextWork(read.state)) {
     return { writes: [], issues: [] };
   }
-  const next: ProjectCurrentState = {
+  const next: ProjectCurrentState = retireBootstrapNextWork({
     ...read.state,
     rev: read.state.rev + 1,
     latestCompletedTask: task,
     activeTask: read.state.activeTask?.id === task.id ? null : read.state.activeTask
-  };
+  });
   return { writes: planProjectCurrentStateWrites(projectRoot, next), issues: [] };
 }
 
@@ -434,6 +434,23 @@ function normalizeLegacyIntentTitle(intent: string): string {
     .replace(/^(?:continue with|begin|create|select|open)\s+/i, (prefix) => prefix[0]?.toUpperCase() + prefix.slice(1).toLowerCase())
     .replace(/[.]+$/, '')
     .trim() || 'Create first Task Capsule';
+}
+
+function retireBootstrapNextWork(state: ProjectCurrentState): ProjectCurrentState {
+  if (!hasBootstrapNextWork(state)) return state;
+  return {
+    ...state,
+    nextWork: null,
+    nextOperatorIntent: 'No next work selected. Run `hadara task status --json` for current task-selection guidance.'
+  };
+}
+
+function hasBootstrapNextWork(state: ProjectCurrentState): boolean {
+  return isBootstrapFirstTaskNextWork(state.nextWork?.title) || isBootstrapFirstTaskNextWork(state.nextOperatorIntent);
+}
+
+function isBootstrapFirstTaskNextWork(value: string | null | undefined): boolean {
+  return (value ?? '').trim().toLowerCase() === 'create first task capsule';
 }
 
 function planWrite(writes: ProjectCurrentStateWrite[], projectRoot: string, relativePath: string, after: string): void {

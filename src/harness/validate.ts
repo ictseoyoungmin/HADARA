@@ -1245,6 +1245,28 @@ function validateHandoffDone(projectRoot: string, task: TaskCapsule, issues: Har
       }
     });
   }
+  const placeholderEvidenceRows = parseMarkdownRows(lastCompleted).filter((cells) => {
+    if (/^(?:task|---)$/i.test(cells[0] ?? '')) return false;
+    return cells.some((cell) => /\bev:[^|\s`]*pending\b/i.test(cell) || /\bpending evidence\b/i.test(cell));
+  });
+  if (placeholderEvidenceRows.length > 0) {
+    issues.push({
+      severity: 'error',
+      code: 'HANDOFF_PLACEHOLDER_EVIDENCE',
+      message: `Done-level validation requires concrete evidence references in HANDOFF.md; found ${placeholderEvidenceRows.length} placeholder evidence row(s).`,
+      path: relativePath,
+      heading: 'Last Completed',
+      fixHint: 'Replace placeholder evidence references such as ev:T-XXXX:pending with a durable evidence id or a concrete artifact path.',
+      example: '| T-0002 | Implemented routing cleanup. | ev:T-0002:abc123def4567890abc12345 |',
+      remediationHint: {
+        path: relativePath,
+        heading: 'Last Completed',
+        requiredChange: 'Replace placeholder evidence references with durable evidence ids or concrete artifact paths.',
+        example: '| T-0002 | Implemented routing cleanup. | ev:T-0002:abc123def4567890abc12345 |',
+        blocking: true
+      }
+    });
+  }
 }
 
 function validateHandoffCurrentStateTokens(projectRoot: string, task: TaskCapsule, issues: HarnessValidationIssue[]): void {
@@ -1342,24 +1364,25 @@ function validatePlanStatusDrift(projectRoot: string, task: TaskCapsule, issues:
   const relativePath = toPortablePath(path.relative(projectRoot, planPath));
   const content = fs.readFileSync(planPath, 'utf8');
   const rows = parseMarkdownRows(usesLegacyPlan ? content : readMarkdownSection(content, '## Plan'));
-  const inProgressRows = rows.filter((cells) => {
+  const unfinishedRows = rows.filter((cells) => {
     if (/^step$/i.test(cells[0] ?? '')) return false;
-    return (cells[2] ?? '').trim().toLowerCase() === 'in progress';
+    const status = (cells[2] ?? '').trim().toLowerCase();
+    return status === 'pending' || status === 'in progress';
   });
-  if (inProgressRows.length === 0) return;
+  if (unfinishedRows.length === 0) return;
 
   issues.push({
     severity: 'error',
     code: 'TASK_PLAN_STATUS_DRIFT',
-    message: `Plan has ${inProgressRows.length} row(s) still marked In Progress while the task is Done.`,
+    message: `Plan has ${unfinishedRows.length} row(s) still marked Pending or In Progress while the task is Done.`,
     path: relativePath,
     heading: 'Plan',
-    fixHint: 'Before closing a Done task, mark completed plan rows Done or split/defer unfinished work explicitly instead of leaving rows In Progress.',
+    fixHint: 'Before closing a Done task, mark completed plan rows Done or split/defer unfinished work explicitly instead of leaving rows Pending or In Progress.',
     example: '| 3 | Commit the pre-publish preparation. | Done | `command:T-XXXX:check` |',
     remediationHint: {
       path: relativePath,
       heading: 'Plan',
-      requiredChange: 'Update Plan rows that are no longer active from In Progress to Done, Blocked, Partial, or a task-specific final status with evidence.',
+      requiredChange: 'Update Plan rows that are no longer active from Pending or In Progress to Done, Blocked, Partial, or a task-specific final status with evidence.',
       example: '| 3 | Commit the pre-publish preparation. | Done | `command:T-XXXX:check` |',
       blocking: true
     }

@@ -68,6 +68,27 @@ describe('Phase 7.3 docs doctor', () => {
     assertSchema('hadara.docs.doctor.v1', report);
   });
 
+  it('warns when project product metadata remains placeholder after completed task history exists', () => {
+    const root = tempProject();
+    initProject(root, 'basic', { silent: true });
+    fs.appendFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      '\n| T-0001 | First finished task | Done | 2026-07-10 | |\n',
+      'utf8'
+    );
+
+    const report = createDocsDoctorReport(root);
+
+    expect(report.ok).toBe(true);
+    expect(report.summary.health).toBe('warning');
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      severity: 'warning',
+      code: 'DOC_PROJECT_METADATA_PLACEHOLDER',
+      path: 'docs/PROJECT_STATE.md'
+    }));
+    assertSchema('hadara.docs.doctor.v1', report);
+  });
+
   it('reports missing registered files', () => {
     const root = tempProject();
     initProject(root, 'standard', { silent: true });

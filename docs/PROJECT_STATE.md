@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.3 |
-| Latest Completed Task | T-0574 v0.4.4 R1 dogfood generated docs audit |
+| Latest Completed Task | T-0575 v0.4.4 R1 dogfood UX findings cleanup |
 | Active Task | None |
-| Next Work | v0.4.4 R1 delegated dogfood UX findings cleanup |
+| Next Work | v0.4.4 R2 external dogfood validation |
 | Next Work State | candidate |
-| Operator Guidance | Use T-0573 and T-0574 reports. Prioritize version flags, stale installed-package warning, bootstrap nextWork retirement, Product metadata placeholders, Done+Pending Plan validation, and handoff placeholder evidence before R2. |
-| Validation Baseline | hadara@0.4.3: Docker 153 files / 1058 tests; source readiness, stable publish-preparation, npm/GitHub publication, installed-package recycle, R1 delegated external basic-profile dogfood, and R1 generated-doc audit passed. |
+| Operator Guidance | Run the next external/delegated dogfood pass with the T-0575 fixed CLI surface before v0.4.4 release readiness. |
+| Validation Baseline | hadara@0.4.3 plus T-0575 R1 UX cleanup: Docker sync build/full suite passed (153 files / 1063 tests), focused R1 regressions passed, and built-CLI R1 smoke checks passed. |
 
 ### Current Known Problems
 
@@ -23,10 +23,6 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Explicit live graph and context reads remain filesystem-sensitive. | watch | Warm cache first and opt into broad live diagnostics deliberately. |
 | Tool-host child process launch can return EPERM while direct commands pass. | active | Run the command directly, then record it through validation run --direct-result. |
 | Release artifact git-status preflight can exceed its 10-second limit on the mounted WSL workspace. | watch | Build release artifacts from a clean ext4 worktree so commit metadata and package contents remain aligned. |
-| External dogfood found hadara --version/-v print help and exit 1 while hadara version works. | active | Add conventional version aliases or document the intentional behavior before v0.4.4. |
-| External installed-package dogfood saw DIST_LOOKS_STALE from hadara version --json in an ordinary toy project. | active | Scope stale-dist diagnostics to HADARA-dev/source checkout contexts so user projects do not see dev-build warnings. |
-| R1 generated docs retained scaffold Product metadata and bootstrap nextWork after five closed capsules. | active | Warn or retire scaffold metadata/current-state defaults once real task history exists. |
-| R1 closed-valid capsules allowed Pending Plan rows and placeholder handoff evidence. | active | Promote these from non-blocking authoring guidance to validation issues or clearer post-close polish diagnostics. |
 <!-- hadara:managed:end current-state-canon -->
 
 ## Ownership
@@ -47,7 +43,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.3 npm/GitHub publication and installed-package recycle are complete; v0.4.4 external validation planning, R1 delegated basic-profile dogfood, and R1 generated-doc audit are complete, with R1 UX findings queued before R2.
+v0.4.3 npm/GitHub publication and installed-package recycle are complete; v0.4.4 external validation planning, R1 delegated basic-profile dogfood, R1 generated-doc audit, and R1 UX cleanup are complete; R2 external validation is next before v0.4.4 release readiness.
 
 | Stage | State | Purpose |
 |---|---|---|
