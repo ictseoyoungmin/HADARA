@@ -3,6 +3,7 @@ import path from 'node:path';
 import { parseMarkdownRows, readMarkdownSection } from '../services/markdown-table';
 import { findTaskCapsule } from './task-capsule';
 import { readSlicesState } from '../services/slices-state';
+import { PROJECT_CURRENT_STATE_PATH, readProjectCurrentState, type ProjectCurrentState } from '../services/project-current-state';
 
 export interface TaskSelectionReport {
   schemaVersion: 'hadara.task.selection.v1';
@@ -17,6 +18,7 @@ export interface TaskSelectionReport {
   recommendations: TaskSelectionRecommendation[];
   backlog?: TaskSelectionBacklogItem[];
   sources: {
+    currentState: { path: string; present: boolean; activeTask: string | null; nextOperatorIntent: string | null };
     developmentSlices: { path: string; present: boolean; rows: number };
     taskBoard: { path: string; present: boolean; rows: number };
     agentHandoff: { path: string; present: boolean; activeNext: string | null; nextRecommendedStep?: string | null };
@@ -29,7 +31,7 @@ export interface TaskSelectionRecommendation {
   title: string;
   reason: string;
   source: string;
-  sourceKind?: 'handoff' | 'development-slices' | 'task-board-fallback';
+  sourceKind?: 'current-state' | 'handoff' | 'development-slices' | 'task-board-fallback';
   taskBoardStatus: string | null;
   taskBoardPath: string | null;
   taskCapsulePresent: boolean;
@@ -72,16 +74,18 @@ const REQUIRED_READING_CANDIDATES = ['docs/PROJECT_STATE.md', 'docs/AGENT_HANDOF
 
 export function createTaskSelectionReport(projectRoot: string): TaskSelectionReport {
   const issues: TaskSelectionIssue[] = [];
+  const currentState = readCurrentState(projectRoot, issues);
   const slices = readDevelopmentSlices(projectRoot, issues);
   const board = readTaskBoard(projectRoot, issues);
   const handoff = readAgentHandoff(projectRoot);
 
   const nextSlice = slices.rows.find((row) => isOpenSliceStatus(row.status));
+  const currentStateRecommendation = currentState.state ? recommendationFromCurrentState(projectRoot, currentState.state, board.rows) : null;
   const handoffRecommendation = handoff.nextRecommendedStep ? recommendationFromHandoff(projectRoot, handoff.nextRecommendedStep, board.rows) : null;
   const taskBoardRecommendation = recommendationFromTaskBoard(projectRoot, board.rows);
   const firstTaskRecommendation = recommendationForEmptyProject(projectRoot, board.rows);
   const defaultRecommendation = nextSlice ? recommendationFromSlice(projectRoot, nextSlice, board.rows) : taskBoardRecommendation;
-  const recommendation = handoffRecommendation ?? defaultRecommendation ?? firstTaskRecommendation;
+  const recommendation = currentStateRecommendation ?? handoffRecommendation ?? defaultRecommendation ?? firstTaskRecommendation;
   const recommendations = recommendation ? [recommendation] : [];
   const backlog = createTaskBoardBacklog(projectRoot, board.rows, recommendation?.taskId ?? null);
   if (!recommendation) {
@@ -105,12 +109,31 @@ export function createTaskSelectionReport(projectRoot: string): TaskSelectionRep
     recommendations,
     backlog,
     sources: {
+      currentState: {
+        path: PROJECT_CURRENT_STATE_PATH,
+        present: currentState.present,
+        activeTask: currentState.state?.activeTask?.id ?? null,
+        nextOperatorIntent: currentState.state?.nextOperatorIntent ?? null
+      },
       developmentSlices: { path: 'docs/DEVELOPMENT_SLICES.md', present: slices.present, rows: slices.rows.length },
       taskBoard: { path: 'docs/TASK_BOARD.md', present: board.present, rows: board.rows.length },
       agentHandoff: { path: 'docs/AGENT_HANDOFF.md', present: handoff.present, activeNext: handoff.activeNext, nextRecommendedStep: handoff.nextRecommendedStep }
     },
     issues
   };
+}
+
+function readCurrentState(projectRoot: string, issues: TaskSelectionIssue[]): { present: boolean; state: ProjectCurrentState | null } {
+  const read = readProjectCurrentState(projectRoot);
+  for (const issue of read.issues) {
+    issues.push({
+      severity: issue.severity === 'error' ? 'error' : 'warning',
+      code: issue.code,
+      message: issue.message,
+      path: issue.path
+    });
+  }
+  return { present: read.present, state: read.state };
 }
 
 export function formatTaskSelectionReport(report: TaskSelectionReport): string {
@@ -168,6 +191,59 @@ function recommendationFromHandoff(projectRoot: string, step: string, boardRows:
     requiredReading: requiredReadingForProject(projectRoot),
     createCommand: capsule || boardRow ? null : `hadara task create ${shellQuote(title)}`
   };
+}
+
+function recommendationFromCurrentState(projectRoot: string, state: ProjectCurrentState, boardRows: BoardRow[]): TaskSelectionRecommendation | null {
+  if (state.activeTask) {
+    const boardRow = boardRows.find((row) => row.taskId === state.activeTask?.id);
+    const capsule = findTaskCapsule(projectRoot, state.activeTask.id);
+    return {
+      taskId: state.activeTask.id,
+      title: boardRow?.title ?? state.activeTask.title,
+      reason: `Structured current-state canon names ${state.activeTask.id} as the active task.`,
+      source: PROJECT_CURRENT_STATE_PATH,
+      sourceKind: 'current-state',
+      taskBoardStatus: boardRow?.status ?? null,
+      taskBoardPath: boardRow ? 'docs/TASK_BOARD.md' : null,
+      taskCapsulePresent: Boolean(capsule),
+      capsule: capsule ? toPortablePath(path.relative(projectRoot, capsule.dir)) : boardRow?.capsule || null,
+      requiredReading: requiredReadingForProject(projectRoot),
+      createCommand: null
+    };
+  }
+
+  const intent = state.nextOperatorIntent.trim();
+  if (!isActionableHandoffStep(intent)) return null;
+  const taskIntent = actionableTaskIntent(intent);
+  const knownTaskId = taskIntent.match(/\bT-\d{4}\b/)?.[0] ?? null;
+  const title = normalizeHandoffTitle(taskIntent);
+  const fuzzyBoardRow = knownTaskId ? undefined : findSimilarOpenBoardRow(title, boardRows);
+  const taskId = knownTaskId ?? fuzzyBoardRow?.taskId ?? 'TBD';
+  const boardRow = knownTaskId
+    ? boardRows.find((row) => row.taskId === knownTaskId)
+    : fuzzyBoardRow;
+  const capsule = taskId !== 'TBD' ? findTaskCapsule(projectRoot, taskId) : undefined;
+  const resolvedTitle = boardRow?.title ?? title;
+  return {
+    taskId,
+    title: resolvedTitle,
+    reason: boardRow && !knownTaskId
+      ? 'Existing open Task Board row closely matches the structured current-state next operator intent.'
+      : 'Next operator intent from the structured current-state canon.',
+    source: PROJECT_CURRENT_STATE_PATH,
+    sourceKind: 'current-state',
+    taskBoardStatus: boardRow?.status ?? null,
+    taskBoardPath: boardRow ? 'docs/TASK_BOARD.md' : null,
+    taskCapsulePresent: Boolean(capsule),
+    capsule: capsule ? toPortablePath(path.relative(projectRoot, capsule.dir)) : boardRow?.capsule || null,
+    requiredReading: requiredReadingForProject(projectRoot),
+    createCommand: capsule || boardRow ? null : `hadara task create ${shellQuote(title)}`
+  };
+}
+
+function actionableTaskIntent(intent: string): string {
+  const otherwiseMatch = intent.match(/\botherwise\s+(.+)$/i);
+  return (otherwiseMatch?.[1] ?? intent).trim();
 }
 
 function recommendationFromTaskBoard(projectRoot: string, boardRows: BoardRow[]): TaskSelectionRecommendation | null {

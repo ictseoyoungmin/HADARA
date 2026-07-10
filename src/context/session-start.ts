@@ -29,6 +29,7 @@ export interface SessionStartCurrentState {
   activeTask?: string;
   latestCompletedTask?: string;
   recommendedNextTask?: string;
+  currentRelease?: string;
   releaseState?: string;
   nextOperatorIntent?: string;
   validationBaseline?: string;
@@ -194,7 +195,8 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
       ...(structuredState?.activeTask?.id || stateProjection.activeTask ? { activeTask: structuredState?.activeTask?.id ?? stateProjection.activeTask } : {}),
       ...(structuredState?.latestCompletedTask?.id || stateProjection.latestCompletedTask ? { latestCompletedTask: structuredState?.latestCompletedTask?.id ?? stateProjection.latestCompletedTask } : {}),
       ...(taskId ? { recommendedNextTask: taskId } : {}),
-      ...(structuredState?.currentRelease || stateProjection.releaseState ? { releaseState: structuredState?.currentRelease ?? stateProjection.releaseState } : {}),
+      ...(structuredState?.currentRelease ? { currentRelease: structuredState.currentRelease } : {}),
+      ...(stateProjection.releaseState ? { releaseState: stateProjection.releaseState } : {}),
       ...(structuredState ? {
         nextOperatorIntent: structuredState.nextOperatorIntent,
         validationBaseline: structuredState.validationBaseline.summary,

@@ -37,9 +37,11 @@ describe('session start', () => {
     expect(report.currentState).toMatchObject({
       activeTask: created.taskId,
       recommendedNextTask: created.taskId,
+      currentRelease: expect.any(String),
       nextOperatorIntent: 'Create or select the first bounded Task Capsule.',
       source: '.hadara/state/current.json'
     });
+    expect(report.currentState.releaseState).not.toBe(report.currentState.currentRelease);
     expect(report.guidance.primaryAction.args).toEqual(['task', 'status', '--task', created.taskId, '--json']);
     expect(validateSchema('hadara.sessionStart.v1', report).ok).toBe(true);
   });

@@ -446,7 +446,7 @@ function validateActiveDocumentCurrentness(projectRoot: string, registry: Docume
     if (!fs.existsSync(absolutePath) || !fs.statSync(absolutePath).isFile()) continue;
     const lines = fs.readFileSync(absolutePath, 'utf8').split(/\r?\n/);
     for (const [index, line] of lines.entries()) {
-      const command = line.trim();
+      const command = normalizeCurrentnessExampleLine(line);
       if (REMOVED_COMMAND_EXAMPLE_PATTERNS.some((pattern) => pattern.test(command))) {
         issues.push({
           severity: 'warning',
@@ -469,6 +469,15 @@ function validateActiveDocumentCurrentness(projectRoot: string, registry: Docume
     }
   }
   return issues;
+}
+
+function normalizeCurrentnessExampleLine(line: string): string {
+  let command = line.trim();
+  command = command.replace(/^(?:[-*+]\s+|\d+[.)]\s+)/, '');
+  command = command.replace(/^(?:[$#>]\s*)+/, '');
+  command = command.replace(/^[^\s]+@[^$#>]+[$#>]\s*/, '');
+  command = command.replace(/^>\s*/, '');
+  return command.trim();
 }
 
 function readHadaraPackageVersion(projectRoot: string): string | null {

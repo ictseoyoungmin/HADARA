@@ -14,6 +14,72 @@ afterEach(() => {
 });
 
 describe('task selection recommendation', () => {
+  it('prefers structured current-state active task over handoff prose', () => {
+    const root = tempProject({
+      handoffNextStep: 'Continue with stale handoff work.',
+      developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
+    });
+    const active = createTaskCapsule(root, 'Structured Active Work');
+    writeCurrentState(root, {
+      activeTask: { id: active.id, title: active.title },
+      nextOperatorIntent: 'Continue with structured active work.'
+    });
+
+    const report = createTaskSelectionReport(root);
+
+    expect(report).toMatchObject({
+      summary: { recommendations: 1, source: '.hadara/state/current.json', policy: 'handoff-first' },
+      recommendations: [
+        expect.objectContaining({
+          taskId: active.id,
+          title: 'Structured Active Work',
+          source: '.hadara/state/current.json',
+          sourceKind: 'current-state',
+          taskCapsulePresent: true,
+          createCommand: null
+        })
+      ],
+      sources: {
+        currentState: expect.objectContaining({
+          present: true,
+          activeTask: active.id,
+          nextOperatorIntent: 'Continue with structured active work.'
+        })
+      }
+    });
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
+  });
+
+  it('uses structured current-state next operator intent when no active task exists', () => {
+    const root = tempProject({
+      developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
+    });
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      ['# TASK_BOARD', '', '| ID | Title | Status | Capsule | Notes |', '|---|---|---|---|---|', ''].join('\n'),
+      'utf8'
+    );
+    writeCurrentState(root, {
+      activeTask: null,
+      nextOperatorIntent: 'Keep publication operator-controlled; otherwise begin v0.4.4 external repository validation planning.'
+    });
+
+    const report = createTaskSelectionReport(root);
+
+    expect(report.recommendations[0]).toMatchObject({
+      taskId: 'TBD',
+      title: 'Begin v0.4.4 external repository validation planning',
+      source: '.hadara/state/current.json',
+      sourceKind: 'current-state',
+      taskCapsulePresent: false,
+      createCommand: "hadara task create 'Begin v0.4.4 external repository validation planning'"
+    });
+    expect(report.issues).not.toContainEqual(expect.objectContaining({
+      code: 'TASK_SELECTION_NO_RECOMMENDATION'
+    }));
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
+  });
+
   it('prefers actionable handoff next step and keeps legacy Task Board rows as backlog', () => {
     const root = tempProject({
       handoffNextStep: 'Continue with task capsule upgrade/remediation dry-run hardening.',
@@ -367,6 +433,30 @@ function tempProject(options: { handoffNextStep?: string; developmentRows?: stri
   );
   if (options.developmentRows) writeDevelopmentSlices(root, options.developmentRows);
   return root;
+}
+
+function writeCurrentState(
+  root: string,
+  overrides: {
+    activeTask: { id: string; title: string } | null;
+    nextOperatorIntent: string;
+  }
+): void {
+  fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.hadara', 'state', 'current.json'), JSON.stringify({
+    schemaVersion: 'hadara.projectCurrentState.v1',
+    rev: 1,
+    profile: 'governed',
+    currentRelease: '0.4.3',
+    latestCompletedTask: null,
+    activeTask: overrides.activeTask,
+    nextOperatorIntent: overrides.nextOperatorIntent,
+    currentKnownProblems: [],
+    validationBaseline: {
+      summary: 'Fixture validation baseline.',
+      evidence: []
+    }
+  }, null, 2), 'utf8');
 }
 
 function writeDevelopmentSlices(root: string, rows: string[]): void {

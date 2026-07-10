@@ -34,6 +34,7 @@
         "activeTask": { "type": "string" },
         "latestCompletedTask": { "type": "string" },
         "recommendedNextTask": { "type": "string" },
+        "currentRelease": { "type": "string" },
         "releaseState": { "type": "string" },
         "nextOperatorIntent": { "type": "string" },
         "validationBaseline": { "type": "string" },

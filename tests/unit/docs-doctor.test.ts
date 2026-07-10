@@ -184,8 +184,8 @@ describe('Phase 7.3 docs doctor', () => {
     const root = tempProject();
     initProject(root, 'standard', { silent: true });
     fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: 'hadara', version: '0.4.2' }), 'utf8');
-    fs.writeFileSync(path.join(root, 'README.md'), '# Install\n\n```bash\nnpm install -g hadara@0.4.0\n```\n', 'utf8');
-    fs.appendFileSync(path.join(root, 'docs', 'HADARA_WORKFLOW.md'), '\n```bash\nhadara task audit-close --task T-0001 --json\n```\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'README.md'), '# Install\n\n```bash\n$ npm install -g hadara@0.4.0\n```\n', 'utf8');
+    fs.appendFileSync(path.join(root, 'docs', 'HADARA_WORKFLOW.md'), '\n```bash\n- hadara task audit-close --task T-0001 --json\n```\n', 'utf8');
 
     const report = createDocsDoctorReport(root, 'links');
 

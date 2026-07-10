@@ -1,11 +1,11 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 16,
+  "rev": 18,
   "profile": "governed",
   "currentRelease": "0.4.3",
   "latestCompletedTask": {
-    "id": "T-0565",
-    "title": "0.4.3 non-deployment release readiness"
+    "id": "T-0566",
+    "title": "Current-state task selection and session contract cleanup"
   },
   "activeTask": null,
   "nextOperatorIntent": "Keep npm/GitHub publication operator-controlled; otherwise begin v0.4.4 external-repository validation planning and run post-publish recycle only after publication.",
