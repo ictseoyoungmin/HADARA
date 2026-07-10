@@ -1,8 +1,8 @@
 # ROADMAP
 
-## Current Baseline: v0.4.2 Local-first Evidence Control Plane
+## Current Baseline: v0.4.3 Local-first Evidence Control Plane
 
-Stable `hadara@0.4.2` is published and consumer-recycled. Task Capsule lifecycle, Evidence v2 writes/read models, context routing, document governance, status/finalize workflow, read-only MCP, Dashboard/TUI observation, and release/package readiness surfaces are implemented.
+Source `hadara@0.4.3` consolidates the published and consumer-recycled 0.4.2 baseline around structured current state, semantic currentness, measured workflow friction, and fast session resume. npm/GitHub publication remains a separate operator-controlled mutation after local readiness proof.
 
 The immediate roadmap is consolidation rather than capability expansion. HADARA's product boundary is portable current state and evidence integrity across human and agent sessions; a full controller, default real-provider runtime, cloud queue, and broad write-capable MCP remain outside the current release line.
 

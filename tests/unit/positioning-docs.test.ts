@@ -33,7 +33,7 @@ describe('0.4.3 product positioning and continuation docs', () => {
     expect(roadmap).toContain('| v0.4.3 |');
     expect(roadmap).toContain('| v0.4.4 |');
     expect(roadmap).toContain('Three external repositories of different shapes');
-    expect(releaseNotes).toContain('## 0.4.3 (source preparation)');
+    expect(releaseNotes).toContain('## 0.4.3');
     expect(releaseNotes).toContain('External validation across three non-HADARA repositories');
   });
 });

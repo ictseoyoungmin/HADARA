@@ -9,11 +9,11 @@ This document is the dedicated tracked source for release, install, installer, p
 Current stable metadata preparation mode:
 
 - Package name decision: `hadara`.
-- Current 0.4.3 source-preparation status: T-0561 through T-0564 establish the structured current-state canon and projections, currentness/semantic-drift verdict, seven-metric all-profile workflow harness, and local-first evidence-control positioning. Package metadata remains `0.4.2` until the dedicated readiness capsule performs the version retarget, installed-package measurement, artifact/package/clean-checkout smokes, strict gate, and release dry-run without deployment mutation.
+- Current 0.4.3 source-preparation status: T-0561 through T-0564 establish the structured current-state canon and projections, currentness/semantic-drift verdict, seven-metric all-profile workflow harness, and local-first evidence-control positioning. T-0565 retargets source metadata to `0.4.3` and owns local installed-tarball measurement, artifact/package/clean-checkout smokes, strict gate, and release dry-run without deployment mutation.
 - Historical npm registry observation: `hadara@0.1.0-rc.0` was the first published HADARA release candidate.
-- Current version is `0.4.2`.
-- Current source version is `0.4.2`.
-- Current release target is stable `0.4.2`.
+- Current version is `0.4.3`.
+- Current source version is `0.4.3`.
+- Current release target is stable `0.4.3`.
 - Current published stable npm release target is `0.4.2`.
 - Current stable 0.4.2 publish status: T-0546 records completed external publication. npm registry verification returned `version=0.4.2`, dist-tags `latest=0.4.2` and `next=0.4.2-rc.0`; GitHub Release `v0.4.2` is public stable with `isDraft=false`, `isPrerelease=false`, target `e1865a71056564fe0bb1cee79fcdf50726e922a8`, and URL `https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.2`.
 - Current stable 0.4.2 installed-package status: T-0547 completed consumer-path recycle for `hadara@latest` expected `0.4.2`. The approved network recycle verified registry `observedVersion=0.4.2`, dist-tags `latest=0.4.2` and `next=0.4.2-rc.0`, isolated registry install, installed CLI `packageVersion=0.4.2`, installed command surface with 68 command ids, lifecycle help, fresh init, task create/status, session start, finalize dry-run, context pack, context slice, and cleanup. The first sandboxed execute attempt failed at npm metadata lookup after about 70s per lookup and is resolved as environment/network friction by the approved rerun.

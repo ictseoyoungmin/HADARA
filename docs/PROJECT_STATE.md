@@ -7,9 +7,9 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 
 | Field | Value |
 |---|---|
-| Current Release | 0.4.2 |
+| Current Release | 0.4.3 |
 | Latest Completed Task | T-0564 0.4.3 positioning onboarding and session resume |
-| Active Task | None |
+| Active Task | T-0565 0.4.3 non-deployment release readiness |
 | Next Operator Intent | Prepare hadara@0.4.3 source metadata and complete non-deployment release readiness, installed-package measurement, and disposable consumer smokes. |
 | Validation Baseline | Docker 153 files / 1052 tests; local-first evidence-control positioning and fast-resume onboarding validated with docs currentness clean. |
 

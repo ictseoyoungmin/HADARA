@@ -565,3 +565,4 @@
 | T-0562 | 0.4.3 currentness verdict and semantic drift contract | Done | tasks/T-0562-0-4-3-currentness-verdict-and-semantic-drift-contract | Additive docs doctor currentness contract. |
 | T-0563 | 0.4.3 seven-metric workflow measurement | Done | tasks/T-0563-0-4-3-seven-metric-workflow-measurement | Seven product metrics and all-profile matrix. |
 | T-0564 | 0.4.3 positioning onboarding and session resume | Done | tasks/T-0564-0-4-3-positioning-onboarding-and-session-resume | Local-first evidence control plane and fast-resume product narrative. |
+| T-0565 | 0.4.3 non-deployment release readiness | In Progress | tasks/T-0565-0-4-3-non-deployment-release-readiness | Stable source/package/readiness proof without publish or deployment. |

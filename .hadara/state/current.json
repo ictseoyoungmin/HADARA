@@ -1,13 +1,16 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 12,
+  "rev": 14,
   "profile": "governed",
-  "currentRelease": "0.4.2",
+  "currentRelease": "0.4.3",
   "latestCompletedTask": {
     "id": "T-0564",
     "title": "0.4.3 positioning onboarding and session resume"
   },
-  "activeTask": null,
+  "activeTask": {
+    "id": "T-0565",
+    "title": "0.4.3 non-deployment release readiness"
+  },
   "nextOperatorIntent": "Prepare hadara@0.4.3 source metadata and complete non-deployment release readiness, installed-package measurement, and disposable consumer smokes.",
   "currentKnownProblems": [
     {

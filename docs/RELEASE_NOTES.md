@@ -1,6 +1,6 @@
 # RELEASE_NOTES
 
-## 0.4.3 (source preparation)
+## 0.4.3
 
 Patch release focused on making HADARA's local evidence-control workflow current, resumable, and measurable without adding public commands.
 
@@ -16,7 +16,7 @@ Highlights:
 
 Boundaries:
 
-- Package/version retargeting, installed-package measurement, artifact/package/clean-checkout smokes, and final release gates belong to the dedicated 0.4.3 readiness capsule.
+- T-0565 retargets package/version metadata and completes local installed-tarball measurement, artifact/package/clean-checkout smokes, and final read-only release gates.
 - npm publish, GitHub Release publication, Docker/PyPI publication, token loading, and other deployment mutation are not performed by this source-preparation line.
 - External validation across three non-HADARA repositories and non-author workers is the v0.4.4 evidence target, not a 0.4.3 completion claim.
 
