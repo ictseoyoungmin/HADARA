@@ -8,9 +8,11 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.3 |
-| Latest Completed Task | T-0566 Current-state task selection and session contract cleanup |
+| Latest Completed Task | T-0567 Structured next work current-state contract |
 | Active Task | None |
-| Next Operator Intent | Keep npm/GitHub publication operator-controlled; otherwise begin v0.4.4 external-repository validation planning and run post-publish recycle only after publication. |
+| Next Work | v0.4.4 external-repository validation planning |
+| Next Work State | candidate |
+| Operator Guidance | Keep npm/GitHub publication operator-controlled. Run post-publish recycle only after publication. |
 | Validation Baseline | hadara@0.4.3: Docker 153 files / 1052 tests; installed local-tarball workflow closed-valid; artifact/package/clean-checkout smokes, strict gate, release dry-run, and docs currentness passed. |
 
 ### Current Known Problems

@@ -19,6 +19,15 @@ export interface ProjectKnownProblem {
   guidance: string;
 }
 
+export type ProjectNextWorkState = 'candidate' | 'active' | 'blocked' | 'waiting-for-operator' | 'none';
+
+export interface ProjectNextWork {
+  title: string;
+  state: ProjectNextWorkState;
+  operatorGuidance: string;
+  createCommandAllowed: boolean;
+}
+
 export interface ProjectCurrentState {
   schemaVersion: 'hadara.projectCurrentState.v1';
   rev: number;
@@ -26,6 +35,8 @@ export interface ProjectCurrentState {
   currentRelease: string;
   latestCompletedTask: ProjectCurrentTaskRef | null;
   activeTask: ProjectCurrentTaskRef | null;
+  nextWork: ProjectNextWork | null;
+  /** @deprecated Compatibility summary. Use nextWork for task-selection semantics. */
   nextOperatorIntent: string;
   currentKnownProblems: ProjectKnownProblem[];
   validationBaseline: {
@@ -72,6 +83,12 @@ export function createInitialProjectCurrentState(profile: ProjectCurrentState['p
     currentRelease: packageJson.version,
     latestCompletedTask: null,
     activeTask: null,
+    nextWork: {
+      title: 'Create first Task Capsule',
+      state: 'candidate',
+      operatorGuidance: 'Create or select the first bounded Task Capsule.',
+      createCommandAllowed: true
+    },
     nextOperatorIntent: 'Create or select the first bounded Task Capsule.',
     currentKnownProblems: [],
     validationBaseline: {
@@ -89,7 +106,7 @@ export function readProjectCurrentState(projectRoot: string): ProjectCurrentStat
   const absolutePath = path.join(projectRoot, PROJECT_CURRENT_STATE_PATH);
   if (!fs.existsSync(absolutePath)) return { present: false, state: null, issues: [] };
   try {
-    const parsed = JSON.parse(fs.readFileSync(absolutePath, 'utf8')) as unknown;
+    const parsed = normalizeProjectCurrentState(JSON.parse(fs.readFileSync(absolutePath, 'utf8')) as unknown);
     const issues = validateProjectCurrentState(parsed);
     return {
       present: true,
@@ -108,6 +125,17 @@ export function readProjectCurrentState(projectRoot: string): ProjectCurrentStat
       }]
     };
   }
+}
+
+function normalizeProjectCurrentState(value: unknown): unknown {
+  if (!value || typeof value !== 'object') return value;
+  const state = value as Partial<ProjectCurrentState>;
+  if (state.schemaVersion !== 'hadara.projectCurrentState.v1') return value;
+  if (state.nextWork !== undefined || typeof state.nextOperatorIntent !== 'string') return value;
+  return {
+    ...state,
+    nextWork: nextWorkFromLegacyIntent(state.nextOperatorIntent)
+  };
 }
 
 export function inspectProjectCurrentStateSemantics(projectRoot: string): ProjectCurrentStateIssue[] {
@@ -170,7 +198,9 @@ This section is projected from \`${PROJECT_CURRENT_STATE_PATH}\`. Edit the struc
 | Current Release | ${tableCell(state.currentRelease)} |
 | Latest Completed Task | ${taskCell(state.latestCompletedTask)} |
 | Active Task | ${taskCell(state.activeTask)} |
-| Next Operator Intent | ${tableCell(state.nextOperatorIntent)} |
+| Next Work | ${nextWorkTitleCell(state.nextWork)} |
+| Next Work State | ${state.nextWork?.state ?? 'none'} |
+| Operator Guidance | ${tableCell(nextWorkGuidance(state))} |
 | Validation Baseline | ${tableCell(state.validationBaseline.summary)} |
 
 ### Current Known Problems
@@ -189,7 +219,9 @@ This section is projected from \`${PROJECT_CURRENT_STATE_PATH}\` so a new sessio
 | Current Release | ${tableCell(state.currentRelease)} | Portable project state. |
 | Latest Completed Task | ${taskCell(state.latestCompletedTask)} | Most recent completed capsule. |
 | Active Task | ${taskCell(state.activeTask)} | Resume this capsule first. |
-| Next Operator Intent | ${tableCell(state.nextOperatorIntent)} | Immediate continuation target. |
+| Next Work | ${nextWorkTitleCell(state.nextWork)} | Structured continuation title; not operator prose. |
+| Next Work State | ${state.nextWork?.state ?? 'none'} | Controls whether task creation guidance is emitted. |
+| Operator Guidance | ${tableCell(nextWorkGuidance(state))} | Human constraints; never used as a task title. |
 | Validation Baseline | ${tableCell(state.validationBaseline.summary)} | ${tableCell(state.validationBaseline.evidence.join(', ') || 'No evidence ids recorded.')} |
 
 ### Current Known Problems
@@ -330,12 +362,14 @@ function deriveLegacyProjectCurrentState(projectRoot: string, profile: ProjectCu
   const boardRows = taskBoard.split(/\r?\n/).filter((line) => /^\|\s*T-\d{4}\s*\|/.test(line));
   const boardActive = boardRows.map(taskFromBoardRow).find((candidate) => candidate?.status === 'In Progress')?.task ?? null;
   const boardDone = boardRows.map(taskFromBoardRow).filter((candidate) => candidate?.status === 'Done').at(-1)?.task ?? null;
+  const nextOperatorIntent = firstIntent(handoff) ?? firstIntent(projectState) ?? initial.nextOperatorIntent;
   return {
     ...initial,
     currentRelease: release,
     latestCompletedTask: parseTaskRef(latestText) ?? boardDone,
     activeTask: parseTaskRef(activeText) ?? boardActive,
-    nextOperatorIntent: firstIntent(handoff) ?? firstIntent(projectState) ?? initial.nextOperatorIntent,
+    nextWork: nextWorkFromLegacyIntent(nextOperatorIntent),
+    nextOperatorIntent,
     validationBaseline: {
       summary: tableValue(projectState, ['Validation Baseline']) ?? handoffValidation(handoff) ?? initial.validationBaseline.summary,
       evidence: []
@@ -352,6 +386,7 @@ function validateProjectCurrentState(value: unknown): ProjectCurrentStateIssue[]
   if (state.profile !== 'basic' && state.profile !== 'standard' && state.profile !== 'governed') return issue('profile must be basic, standard, or governed.');
   if (typeof state.currentRelease !== 'string' || !state.currentRelease.trim()) return issue('currentRelease must be a non-empty string.');
   if (!validTaskRef(state.latestCompletedTask) || !validTaskRef(state.activeTask)) return issue('Task references must be null or { id: T-XXXX, title }.');
+  if (!validNextWork(state.nextWork)) return issue('nextWork must be null or { title, state, operatorGuidance, createCommandAllowed }.');
   if (typeof state.nextOperatorIntent !== 'string' || !state.nextOperatorIntent.trim()) return issue('nextOperatorIntent must be a non-empty string.');
   if (!Array.isArray(state.currentKnownProblems) || !state.currentKnownProblems.every(validProblem)) return issue('currentKnownProblems contains an invalid entry.');
   if (!state.validationBaseline || typeof state.validationBaseline.summary !== 'string' || !Array.isArray(state.validationBaseline.evidence) || !state.validationBaseline.evidence.every((item) => typeof item === 'string')) return issue('validationBaseline must contain summary and evidence strings.');
@@ -373,6 +408,34 @@ function validProblem(value: unknown): boolean {
     typeof problem.guidance === 'string' && problem.guidance.trim().length > 0;
 }
 
+function validNextWork(value: unknown): boolean {
+  if (value === null) return true;
+  if (!value || typeof value !== 'object') return false;
+  const nextWork = value as Partial<ProjectNextWork>;
+  return typeof nextWork.title === 'string' && nextWork.title.trim().length > 0 &&
+    (nextWork.state === 'candidate' || nextWork.state === 'active' || nextWork.state === 'blocked' || nextWork.state === 'waiting-for-operator' || nextWork.state === 'none') &&
+    typeof nextWork.operatorGuidance === 'string' &&
+    typeof nextWork.createCommandAllowed === 'boolean';
+}
+
+function nextWorkFromLegacyIntent(intent: string): ProjectNextWork {
+  return {
+    title: normalizeLegacyIntentTitle(intent),
+    state: 'candidate',
+    operatorGuidance: intent,
+    createCommandAllowed: true
+  };
+}
+
+function normalizeLegacyIntentTitle(intent: string): string {
+  const otherwiseMatch = intent.match(/\botherwise\s+(.+)$/i);
+  const actionable = (otherwiseMatch?.[1] ?? intent).trim();
+  return actionable
+    .replace(/^(?:continue with|begin|create|select|open)\s+/i, (prefix) => prefix[0]?.toUpperCase() + prefix.slice(1).toLowerCase())
+    .replace(/[.]+$/, '')
+    .trim() || 'Create first Task Capsule';
+}
+
 function planWrite(writes: ProjectCurrentStateWrite[], projectRoot: string, relativePath: string, after: string): void {
   const before = readOptional(projectRoot, relativePath);
   if (before !== after) writes.push({ path: relativePath, before, after });
@@ -392,6 +455,14 @@ function knownProblemsTable(problems: ProjectKnownProblem[]): string {
 
 function taskCell(task: ProjectCurrentTaskRef | null): string {
   return task ? `${task.id} ${tableCell(task.title)}` : 'None';
+}
+
+function nextWorkTitleCell(nextWork: ProjectNextWork | null): string {
+  return nextWork ? tableCell(nextWork.title) : 'None';
+}
+
+function nextWorkGuidance(state: ProjectCurrentState): string {
+  return state.nextWork?.operatorGuidance || state.nextOperatorIntent;
 }
 
 function tableCell(value: string): string {

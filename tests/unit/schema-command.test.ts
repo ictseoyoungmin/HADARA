@@ -18,6 +18,7 @@ describe('schema command (FD-006)', () => {
     expect(report.ok).toBe(true);
     expect(report.filter).toBeNull();
     expect(report.domains.some((entry: { domain: string }) => entry.domain === 'task.risk.state')).toBe(true);
+    expect(report.domains.some((entry: { domain: string }) => entry.domain === 'project.nextWork.state')).toBe(true);
     expect(process.exitCode).toBeUndefined();
   });
 
@@ -31,6 +32,17 @@ describe('schema command (FD-006)', () => {
     expect(report.filter).toBe('task.risk.state');
     expect(report.domains).toHaveLength(1);
     expect(report.domains[0].allowed).toEqual(['Open', 'Accepted', 'Mitigated', 'Deferred', 'Closed', 'Superseded', 'Rejected']);
+  });
+
+  it('exposes the structured current-state next work state tokens', () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    handleSchemaCommand({ args: ['schema', '--domain', 'project.nextWork.state', '--json'], jsonOutput: true });
+
+    const report = JSON.parse(String(log.mock.calls[0][0]));
+    expect(report.ok).toBe(true);
+    expect(report.filter).toBe('project.nextWork.state');
+    expect(report.domains[0].allowed).toEqual(['candidate', 'active', 'blocked', 'waiting-for-operator', 'none']);
   });
 
   it('returns structured allowed values and nonzero exit for an unknown JSON domain', () => {

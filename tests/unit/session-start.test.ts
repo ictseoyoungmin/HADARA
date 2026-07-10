@@ -38,6 +38,12 @@ describe('session start', () => {
       activeTask: created.taskId,
       recommendedNextTask: created.taskId,
       currentRelease: expect.any(String),
+      nextWork: {
+        title: 'Create first Task Capsule',
+        state: 'candidate',
+        operatorGuidance: 'Create or select the first bounded Task Capsule.',
+        createCommandAllowed: true
+      },
       nextOperatorIntent: 'Create or select the first bounded Task Capsule.',
       source: '.hadara/state/current.json'
     });

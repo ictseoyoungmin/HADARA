@@ -43,6 +43,7 @@ describe('task selection recommendation', () => {
         currentState: expect.objectContaining({
           present: true,
           activeTask: active.id,
+          nextWork: expect.objectContaining({ title: 'Continue with structured active work' }),
           nextOperatorIntent: 'Continue with structured active work.'
         })
       }
@@ -50,7 +51,7 @@ describe('task selection recommendation', () => {
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
-  it('uses structured current-state next operator intent when no active task exists', () => {
+  it('uses structured current-state next work when no active task exists', () => {
     const root = tempProject({
       developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
     });
@@ -61,6 +62,12 @@ describe('task selection recommendation', () => {
     );
     writeCurrentState(root, {
       activeTask: null,
+      nextWork: {
+        title: 'v0.4.4 external repository validation planning',
+        state: 'candidate',
+        operatorGuidance: 'Keep publication operator-controlled.',
+        createCommandAllowed: true
+      },
       nextOperatorIntent: 'Keep publication operator-controlled; otherwise begin v0.4.4 external repository validation planning.'
     });
 
@@ -68,15 +75,50 @@ describe('task selection recommendation', () => {
 
     expect(report.recommendations[0]).toMatchObject({
       taskId: 'TBD',
-      title: 'Begin v0.4.4 external repository validation planning',
+      title: 'v0.4.4 external repository validation planning',
       source: '.hadara/state/current.json',
       sourceKind: 'current-state',
       taskCapsulePresent: false,
-      createCommand: "hadara task create 'Begin v0.4.4 external repository validation planning'"
+      createCommand: "hadara task create 'v0.4.4 external repository validation planning'",
+      operatorGuidance: 'Keep publication operator-controlled.',
+      createCommandAllowed: true
     });
     expect(report.issues).not.toContainEqual(expect.objectContaining({
       code: 'TASK_SELECTION_NO_RECOMMENDATION'
     }));
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
+  });
+
+  it('does not turn operator guidance into a task create command when structured next work is gated', () => {
+    const root = tempProject({
+      developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
+    });
+    fs.writeFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      ['# TASK_BOARD', '', '| ID | Title | Status | Capsule | Notes |', '|---|---|---|---|---|', ''].join('\n'),
+      'utf8'
+    );
+    writeCurrentState(root, {
+      activeTask: null,
+      nextWork: {
+        title: 'stable publication operator checkpoint',
+        state: 'waiting-for-operator',
+        operatorGuidance: 'Do not create a task until npm and GitHub publication are complete.',
+        createCommandAllowed: false
+      },
+      nextOperatorIntent: 'Do not create a task until publication is complete.'
+    });
+
+    const report = createTaskSelectionReport(root);
+
+    expect(report.recommendations[0]).toMatchObject({
+      taskId: 'TBD',
+      title: 'stable publication operator checkpoint',
+      sourceKind: 'current-state',
+      createCommand: null,
+      operatorGuidance: 'Do not create a task until npm and GitHub publication are complete.',
+      createCommandAllowed: false
+    });
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
@@ -439,6 +481,12 @@ function writeCurrentState(
   root: string,
   overrides: {
     activeTask: { id: string; title: string } | null;
+    nextWork?: {
+      title: string;
+      state: 'candidate' | 'active' | 'blocked' | 'waiting-for-operator' | 'none';
+      operatorGuidance: string;
+      createCommandAllowed: boolean;
+    } | null;
     nextOperatorIntent: string;
   }
 ): void {
@@ -450,6 +498,12 @@ function writeCurrentState(
     currentRelease: '0.4.3',
     latestCompletedTask: null,
     activeTask: overrides.activeTask,
+    nextWork: overrides.nextWork ?? {
+      title: overrides.nextOperatorIntent.replace(/[.]+$/, ''),
+      state: 'candidate',
+      operatorGuidance: overrides.nextOperatorIntent,
+      createCommandAllowed: true
+    },
     nextOperatorIntent: overrides.nextOperatorIntent,
     currentKnownProblems: [],
     validationBaseline: {

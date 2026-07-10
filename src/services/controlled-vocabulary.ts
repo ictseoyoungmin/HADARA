@@ -35,6 +35,7 @@ export const EVIDENCE_KIND_TOKENS = ['test-log', 'command-log', 'diff-summary', 
 export const EVIDENCE_RESULT_TOKENS = ['passed', 'failed', 'blocked', 'unknown'] as const;
 export const EVIDENCE_VISIBILITY_TOKENS = ['public', 'private'] as const;
 export const SLICE_STATUS_TOKENS = ['not-started', 'in-progress', 'done', 'deferred'] as const;
+export const PROJECT_NEXT_WORK_STATE_TOKENS = ['candidate', 'active', 'blocked', 'waiting-for-operator', 'none'] as const;
 
 export const VOCABULARY_DOMAINS: readonly VocabularyDomain[] = [
   { domain: 'task.status', field: 'Status', surface: 'TASK.md ## Identity Status row (case-insensitive)', issueCode: 'TASK_STATUS_INVALID_TOKEN', allowed: TASK_STATUS_TOKENS },
@@ -54,6 +55,7 @@ export const VOCABULARY_DOMAINS: readonly VocabularyDomain[] = [
   { domain: 'evidence.result', field: 'result', surface: 'evidence.jsonl record result', issueCode: 'EVIDENCE_INDEX_INVALID', allowed: EVIDENCE_RESULT_TOKENS },
   { domain: 'evidence.visibility', field: 'visibility', surface: 'evidence.jsonl record visibility', issueCode: 'EVIDENCE_INDEX_INVALID', allowed: EVIDENCE_VISIBILITY_TOKENS },
   { domain: 'slices.status', field: 'status', surface: 'slices state entry status (hadara slice add/set --status)', issueCode: 'SLICE_STATUS_INVALID_TOKEN', allowed: SLICE_STATUS_TOKENS },
+  { domain: 'project.nextWork.state', field: 'nextWork.state', surface: '.hadara/state/current.json structured continuation state', issueCode: 'PROJECT_CURRENT_STATE_INVALID', allowed: PROJECT_NEXT_WORK_STATE_TOKENS },
   { domain: 'docs.kind', field: 'kind', surface: 'docs registry entry kind (`docs register --kind`)', issueCode: 'DOC_UNKNOWN_KIND', allowed: DOCS_REGISTER_ALLOWED_VALUES.kind },
   { domain: 'docs.status', field: 'status', surface: 'docs registry entry status (`docs register --status`, `docs mark --status`)', issueCode: 'DOC_UNKNOWN_STATUS', allowed: DOCS_REGISTER_ALLOWED_VALUES.status },
   { domain: 'docs.readWhen', field: 'readWhen', surface: 'docs registry entry readWhen (`docs register --read-when`)', issueCode: 'DOC_UNKNOWN_READ_WHEN', allowed: DOCS_REGISTER_ALLOWED_VALUES.readWhen },

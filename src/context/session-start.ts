@@ -17,7 +17,7 @@ import { checkContextSourceManifestFastFreshness } from './source-manifest';
 import { codeIndexReportToGraphExtraction } from './code-graph-extractor';
 import { validateTaskCapsule } from '../harness/validate';
 import { createDocsReadMapReport, type DocsDriftWarning, type DocsReadMapEntry } from '../services/docs-registry';
-import { PROJECT_CURRENT_STATE_PATH, readProjectCurrentState } from '../services/project-current-state';
+import { PROJECT_CURRENT_STATE_PATH, readProjectCurrentState, type ProjectNextWork } from '../services/project-current-state';
 
 export const SESSION_START_SCHEMA_ID = 'hadara.sessionStart.v1' as const;
 export const SESSION_START_COMMAND = 'session.start' as const;
@@ -31,6 +31,7 @@ export interface SessionStartCurrentState {
   recommendedNextTask?: string;
   currentRelease?: string;
   releaseState?: string;
+  nextWork?: ProjectNextWork | null;
   nextOperatorIntent?: string;
   validationBaseline?: string;
   source?: typeof PROJECT_CURRENT_STATE_PATH | 'markdown-compatibility';
@@ -198,6 +199,7 @@ export function buildSessionStartReport(input: BuildSessionStartReportOptions): 
       ...(structuredState?.currentRelease ? { currentRelease: structuredState.currentRelease } : {}),
       ...(stateProjection.releaseState ? { releaseState: stateProjection.releaseState } : {}),
       ...(structuredState ? {
+        nextWork: structuredState.nextWork,
         nextOperatorIntent: structuredState.nextOperatorIntent,
         validationBaseline: structuredState.validationBaseline.summary,
         source: PROJECT_CURRENT_STATE_PATH

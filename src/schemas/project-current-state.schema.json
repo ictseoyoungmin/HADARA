@@ -4,7 +4,7 @@
   "x-hadara-schema-id": "hadara.projectCurrentState.v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "rev", "profile", "currentRelease", "latestCompletedTask", "activeTask", "nextOperatorIntent", "currentKnownProblems", "validationBaseline"],
+  "required": ["schemaVersion", "rev", "profile", "currentRelease", "latestCompletedTask", "activeTask", "nextWork", "nextOperatorIntent", "currentKnownProblems", "validationBaseline"],
   "properties": {
     "schemaVersion": { "const": "hadara.projectCurrentState.v1" },
     "rev": { "type": "integer", "minimum": 1 },
@@ -12,6 +12,12 @@
     "currentRelease": { "type": "string", "minLength": 1 },
     "latestCompletedTask": { "$ref": "#/$defs/taskRefOrNull" },
     "activeTask": { "$ref": "#/$defs/taskRefOrNull" },
+    "nextWork": {
+      "anyOf": [
+        { "$ref": "#/$defs/nextWork" },
+        { "type": "null" }
+      ]
+    },
     "nextOperatorIntent": { "type": "string", "minLength": 1 },
     "currentKnownProblems": {
       "type": "array",
@@ -37,6 +43,17 @@
     }
   },
   "$defs": {
+    "nextWork": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "state", "operatorGuidance", "createCommandAllowed"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "state": { "enum": ["candidate", "active", "blocked", "waiting-for-operator", "none"] },
+        "operatorGuidance": { "type": "string" },
+        "createCommandAllowed": { "type": "boolean" }
+      }
+    },
     "taskRef": {
       "type": "object",
       "additionalProperties": false,

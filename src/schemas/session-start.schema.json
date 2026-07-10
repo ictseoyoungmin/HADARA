@@ -36,6 +36,22 @@
         "recommendedNextTask": { "type": "string" },
         "currentRelease": { "type": "string" },
         "releaseState": { "type": "string" },
+        "nextWork": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": true,
+              "required": ["title", "state", "operatorGuidance", "createCommandAllowed"],
+              "properties": {
+                "title": { "type": "string" },
+                "state": { "type": "string" },
+                "operatorGuidance": { "type": "string" },
+                "createCommandAllowed": { "type": "boolean" }
+              }
+            },
+            { "type": "null" }
+          ]
+        },
         "nextOperatorIntent": { "type": "string" },
         "validationBaseline": { "type": "string" },
         "source": { "enum": [".hadara/state/current.json", "markdown-compatibility"] }

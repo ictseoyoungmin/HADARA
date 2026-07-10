@@ -18,7 +18,13 @@ export interface TaskSelectionReport {
   recommendations: TaskSelectionRecommendation[];
   backlog?: TaskSelectionBacklogItem[];
   sources: {
-    currentState: { path: string; present: boolean; activeTask: string | null; nextOperatorIntent: string | null };
+    currentState: {
+      path: string;
+      present: boolean;
+      activeTask: string | null;
+      nextWork: ProjectCurrentState['nextWork'] | null;
+      nextOperatorIntent: string | null;
+    };
     developmentSlices: { path: string; present: boolean; rows: number };
     taskBoard: { path: string; present: boolean; rows: number };
     agentHandoff: { path: string; present: boolean; activeNext: string | null; nextRecommendedStep?: string | null };
@@ -38,6 +44,8 @@ export interface TaskSelectionRecommendation {
   capsule: string | null;
   requiredReading: string[];
   createCommand: string | null;
+  operatorGuidance?: string;
+  createCommandAllowed?: boolean;
 }
 
 export interface TaskSelectionBacklogItem {
@@ -113,6 +121,7 @@ export function createTaskSelectionReport(projectRoot: string): TaskSelectionRep
         path: PROJECT_CURRENT_STATE_PATH,
         present: currentState.present,
         activeTask: currentState.state?.activeTask?.id ?? null,
+        nextWork: currentState.state?.nextWork ?? null,
         nextOperatorIntent: currentState.state?.nextOperatorIntent ?? null
       },
       developmentSlices: { path: 'docs/DEVELOPMENT_SLICES.md', present: slices.present, rows: slices.rows.length },
@@ -212,11 +221,11 @@ function recommendationFromCurrentState(projectRoot: string, state: ProjectCurre
     };
   }
 
-  const intent = state.nextOperatorIntent.trim();
-  if (!isActionableHandoffStep(intent)) return null;
-  const taskIntent = actionableTaskIntent(intent);
-  const knownTaskId = taskIntent.match(/\bT-\d{4}\b/)?.[0] ?? null;
-  const title = normalizeHandoffTitle(taskIntent);
+  const nextWork = state.nextWork;
+  if (!nextWork || nextWork.state === 'none') return null;
+  if (!isActionableHandoffStep(nextWork.title)) return null;
+  const knownTaskId = nextWork.title.match(/\bT-\d{4}\b/)?.[0] ?? null;
+  const title = normalizeNextWorkTitle(nextWork.title);
   const fuzzyBoardRow = knownTaskId ? undefined : findSimilarOpenBoardRow(title, boardRows);
   const taskId = knownTaskId ?? fuzzyBoardRow?.taskId ?? 'TBD';
   const boardRow = knownTaskId
@@ -228,8 +237,8 @@ function recommendationFromCurrentState(projectRoot: string, state: ProjectCurre
     taskId,
     title: resolvedTitle,
     reason: boardRow && !knownTaskId
-      ? 'Existing open Task Board row closely matches the structured current-state next operator intent.'
-      : 'Next operator intent from the structured current-state canon.',
+      ? 'Existing open Task Board row closely matches the structured current-state next work.'
+      : 'Next work from the structured current-state canon.',
     source: PROJECT_CURRENT_STATE_PATH,
     sourceKind: 'current-state',
     taskBoardStatus: boardRow?.status ?? null,
@@ -237,13 +246,14 @@ function recommendationFromCurrentState(projectRoot: string, state: ProjectCurre
     taskCapsulePresent: Boolean(capsule),
     capsule: capsule ? toPortablePath(path.relative(projectRoot, capsule.dir)) : boardRow?.capsule || null,
     requiredReading: requiredReadingForProject(projectRoot),
-    createCommand: capsule || boardRow ? null : `hadara task create ${shellQuote(title)}`
+    createCommand: capsule || boardRow || !nextWork.createCommandAllowed ? null : `hadara task create ${shellQuote(title)}`,
+    operatorGuidance: nextWork.operatorGuidance,
+    createCommandAllowed: nextWork.createCommandAllowed
   };
 }
 
-function actionableTaskIntent(intent: string): string {
-  const otherwiseMatch = intent.match(/\botherwise\s+(.+)$/i);
-  return (otherwiseMatch?.[1] ?? intent).trim();
+function normalizeNextWorkTitle(title: string): string {
+  return title.replace(/[.]+$/, '').trim();
 }
 
 function recommendationFromTaskBoard(projectRoot: string, boardRows: BoardRow[]): TaskSelectionRecommendation | null {

@@ -124,7 +124,11 @@ export function createOpsStatusReport(projectRoot: string, options: OpsStatusOpt
     knownProblems: options.includeKnownProblems === false
       ? []
       : truncateList(structuredState.currentKnownProblems.map((problem) => `${problem.state}: ${problem.summary} · ${problem.guidance}`), options.maxTextLength),
-    nextRecommendedStep: truncateList([structuredState.nextOperatorIntent], options.maxTextLength)
+    nextRecommendedStep: truncateList([
+      structuredState.nextWork
+        ? `${structuredState.nextWork.title}${structuredState.nextWork.operatorGuidance ? ` · ${structuredState.nextWork.operatorGuidance}` : ''}`
+        : structuredState.nextOperatorIntent
+    ], options.maxTextLength)
   } : {
     currentState: truncateList(extractHandoffSectionValues(sources.handoff.content, '## Current State'), options.maxTextLength),
     knownProblems: options.includeKnownProblems === false

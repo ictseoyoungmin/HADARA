@@ -197,22 +197,7 @@ export function createTaskStatusSelectionReport(projectRoot: string, now = new D
 function createTaskStatusSelectionReportUnmemoized(projectRoot: string, now: Date): TaskStatusSelectionReport {
   const taskSelection = createTaskSelectionReport(projectRoot);
   const recommendation = taskSelection.recommendations[0];
-  const nextActions: WorkbenchNextAction[] = recommendation
-    ? [
-        {
-          id: recommendation.taskCapsulePresent ? 'inspect-recommended-task' : 'create-recommended-task',
-          kind: 'command',
-          required: true,
-          priority: 'now',
-          command: recommendation.taskCapsulePresent && recommendation.taskId !== 'TBD' ? `hadara task status --task ${recommendation.taskId} --json` : recommendation.createCommand ?? 'hadara task create "..." --json',
-          message: recommendation.taskCapsulePresent
-            ? `Inspect recommended Task Capsule ${recommendation.taskId}.`
-            : 'Create a Task Capsule for the recommended work, then rerun task status with the new task id.',
-          sourceIssueCodes: ['TASK_STATUS_SELECT_WORK'],
-          loopBoundary: true
-        }
-      ]
-    : [];
+  const nextActions: WorkbenchNextAction[] = recommendation ? [selectionNextAction(recommendation)] : [];
   return {
     schemaVersion: 'hadara.task.status.v1',
     command: 'task.status',
@@ -237,6 +222,43 @@ function createTaskStatusSelectionReportUnmemoized(projectRoot: string, now: Dat
     sources: { taskSelection },
     issues: taskSelection.issues,
     nextActions
+  };
+}
+
+function selectionNextAction(recommendation: TaskSelectionRecommendation): WorkbenchNextAction {
+  if (recommendation.taskCapsulePresent && recommendation.taskId !== 'TBD') {
+    return {
+      id: 'inspect-recommended-task',
+      kind: 'command',
+      required: true,
+      priority: 'now',
+      command: `hadara task status --task ${recommendation.taskId} --json`,
+      message: `Inspect recommended Task Capsule ${recommendation.taskId}.`,
+      sourceIssueCodes: ['TASK_STATUS_SELECT_WORK'],
+      loopBoundary: true
+    };
+  }
+  if (recommendation.createCommand) {
+    return {
+      id: 'create-recommended-task',
+      kind: 'command',
+      required: true,
+      priority: 'now',
+      command: recommendation.createCommand,
+      message: 'Create a Task Capsule for the recommended work, then rerun task status with the new task id.',
+      sourceIssueCodes: ['TASK_STATUS_SELECT_WORK'],
+      loopBoundary: true
+    };
+  }
+  return {
+    id: 'review-next-work-guidance',
+    kind: 'review',
+    required: true,
+    priority: 'now',
+    command: 'hadara task status --json',
+    message: recommendation.operatorGuidance || 'Review current-state next-work guidance before creating or selecting a Task Capsule.',
+    sourceIssueCodes: ['TASK_STATUS_SELECT_WORK'],
+    loopBoundary: true
   };
 }
 
