@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.3 |
-| Latest Completed Task | T-0573 v0.4.4 R1 delegated-agent basic-profile dogfood pilot |
+| Latest Completed Task | T-0574 v0.4.4 R1 dogfood generated docs audit |
 | Active Task | None |
 | Next Work | v0.4.4 R1 delegated dogfood UX findings cleanup |
 | Next Work State | candidate |
-| Operator Guidance | Use T-0573 R1_DELEGATED_DOGFOOD_REPORT.md. Prioritize version flags and installed-package stale-warning leakage before R2. |
-| Validation Baseline | hadara@0.4.3: Docker 153 files / 1058 tests; source readiness, stable publish-preparation, npm/GitHub publication, installed-package recycle, and R1 delegated external basic-profile dogfood passed. |
+| Operator Guidance | Use T-0573 and T-0574 reports. Prioritize version flags, stale installed-package warning, bootstrap nextWork retirement, Product metadata placeholders, Done+Pending Plan validation, and handoff placeholder evidence before R2. |
+| Validation Baseline | hadara@0.4.3: Docker 153 files / 1058 tests; source readiness, stable publish-preparation, npm/GitHub publication, installed-package recycle, R1 delegated external basic-profile dogfood, and R1 generated-doc audit passed. |
 
 ### Current Known Problems
 
@@ -25,6 +25,8 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Release artifact git-status preflight can exceed its 10-second limit on the mounted WSL workspace. | watch | Build release artifacts from a clean ext4 worktree so commit metadata and package contents remain aligned. |
 | External dogfood found hadara --version/-v print help and exit 1 while hadara version works. | active | Add conventional version aliases or document the intentional behavior before v0.4.4. |
 | External installed-package dogfood saw DIST_LOOKS_STALE from hadara version --json in an ordinary toy project. | active | Scope stale-dist diagnostics to HADARA-dev/source checkout contexts so user projects do not see dev-build warnings. |
+| R1 generated docs retained scaffold Product metadata and bootstrap nextWork after five closed capsules. | active | Warn or retire scaffold metadata/current-state defaults once real task history exists. |
+| R1 closed-valid capsules allowed Pending Plan rows and placeholder handoff evidence. | active | Promote these from non-blocking authoring guidance to validation issues or clearer post-close polish diagnostics. |
 <!-- hadara:managed:end current-state-canon -->
 
 ## Ownership
@@ -45,7 +47,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.3 npm/GitHub publication and installed-package recycle are complete; v0.4.4 external validation planning and R1 delegated basic-profile dogfood are complete, with R1 UX findings queued before R2.
+v0.4.3 npm/GitHub publication and installed-package recycle are complete; v0.4.4 external validation planning, R1 delegated basic-profile dogfood, and R1 generated-doc audit are complete, with R1 UX findings queued before R2.
 
 | Stage | State | Purpose |
 |---|---|---|
