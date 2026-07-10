@@ -14,14 +14,16 @@
     "summary": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["registryPresent", "registeredDocuments", "missingRegisteredDocuments", "unregisteredActiveLookingDocuments", "requiredReadingIssues", "canonicalConflicts"],
+      "required": ["health", "registryPresent", "registeredDocuments", "missingRegisteredDocuments", "unregisteredActiveLookingDocuments", "requiredReadingIssues", "canonicalConflicts", "currentnessIssues"],
       "properties": {
+        "health": { "type": "string", "enum": ["healthy", "warning", "drifted"] },
         "registryPresent": { "type": "boolean" },
         "registeredDocuments": { "type": "integer", "minimum": 0 },
         "missingRegisteredDocuments": { "type": "integer", "minimum": 0 },
         "unregisteredActiveLookingDocuments": { "type": "integer", "minimum": 0 },
         "requiredReadingIssues": { "type": "integer", "minimum": 0 },
-        "canonicalConflicts": { "type": "integer", "minimum": 0 }
+        "canonicalConflicts": { "type": "integer", "minimum": 0 },
+        "currentnessIssues": { "type": "integer", "minimum": 0 }
       }
     },
     "issues": {

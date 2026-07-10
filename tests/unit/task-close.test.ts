@@ -421,7 +421,7 @@ function completeTask(root: string, taskId: string, taskDir: string): void {
       .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Exercise task close planning. | Fixture verifies close readiness. |')
       .replace('| TBD | TBD |', '| Complete fixture documents. | Needed for done-level validation. |')
       .replace('| TBD | TBD |', '| Broad workflow mutation. | Outside fixture scope. |')
-      .replace('| TBD | Draft | Initial task scaffold. | TBD |', '| 2026-05-31T00:00:00.000Z | Done | Fixture complete. | Evidence. |'),
+      .replace(/\| \d{4}-\d{2}-\d{2} \| Draft \| Initial task scaffold\. \|/, '| 2026-06-02 | Done | Fixture complete. |'),
     'utf8'
   );
   updateTaskBoardDone(root, taskId);

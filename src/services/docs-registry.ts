@@ -101,12 +101,14 @@ export interface DocsDoctorReport {
   ok: boolean;
   scope: 'registry' | 'profile' | 'required-reading' | 'links' | 'all';
   summary: {
+    health: 'healthy' | 'warning' | 'drifted';
     registryPresent: boolean;
     registeredDocuments: number;
     missingRegisteredDocuments: number;
     unregisteredActiveLookingDocuments: number;
     requiredReadingIssues: number;
     canonicalConflicts: number;
+    currentnessIssues: number;
   };
   issues: DocsIssue[];
 }
@@ -355,16 +357,24 @@ export function createDocsListReport(projectRoot: string, filters: { status?: st
 export function createDocsDoctorReport(projectRoot: string, scope: string = 'all'): DocsDoctorReport {
   const normalizedScope = parseScope(scope);
   const state = loadRegistryOrInfer(projectRoot);
-  const issues = [...state.issues, ...validateRegistry(projectRoot, state.registry)];
+  const issues = [
+    ...state.issues,
+    ...validateRegistry(projectRoot, state.registry),
+    ...validateActiveDocumentCurrentness(projectRoot, state.registry)
+  ];
   const invalidScopeIssue: DocsIssue = { severity: 'error', code: 'DOC_DOCTOR_SCOPE_INVALID', message: `Unsupported docs doctor scope: ${scope}` };
   const visibleIssues = normalizedScope === null ? [invalidScopeIssue, ...issues] : filterIssuesByScope(issues, normalizedScope);
   const summary = {
+    health: visibleIssues.some((issue) => issue.severity === 'error')
+      ? 'drifted' as const
+      : visibleIssues.length > 0 ? 'warning' as const : 'healthy' as const,
     registryPresent: state.source.registryPresent,
     registeredDocuments: state.registry.documents.length,
     missingRegisteredDocuments: issues.filter((issue) => issue.code === 'DOC_REGISTERED_FILE_MISSING').length,
     unregisteredActiveLookingDocuments: issues.filter((issue) => issue.code === 'DOC_UNREGISTERED_ACTIVE_LOOKING').length,
     requiredReadingIssues: issues.filter((issue) => issue.code === 'DOC_UNREGISTERED_REQUIRED_READING' || issue.code === 'DOC_SUPERSEDED_REQUIRED_READING' || issue.code === 'DOC_HISTORICAL_REQUIRED_READING').length,
-    canonicalConflicts: issues.filter((issue) => issue.code === 'DOC_CANONICAL_CONFLICT').length
+    canonicalConflicts: issues.filter((issue) => issue.code === 'DOC_CANONICAL_CONFLICT').length,
+    currentnessIssues: issues.filter((issue) => issue.code === 'DOC_STALE_INSTALL_VERSION' || issue.code === 'DOC_REMOVED_COMMAND_EXAMPLE').length
   };
   return {
     schemaVersion: 'hadara.docs.doctor.v1',
@@ -374,6 +384,63 @@ export function createDocsDoctorReport(projectRoot: string, scope: string = 'all
     summary,
     issues: visibleIssues
   };
+}
+
+const REMOVED_COMMAND_EXAMPLE_PATTERNS = [
+  /^hadara task (?:next|show|lifecycle|finish|ready|close|audit-close|complete)\b/,
+  /^hadara (?:proof (?:status|explain)|evidence summary|ci gate|state verify|package smoke)\b/,
+  /^hadara help command (?:task\.(?:next|show|lifecycle|finish|ready|close|audit-close|complete)|proof\.(?:status|explain)|evidence\.summary|ci\.gate|state\.verify|package\.smoke)\b/
+];
+
+function validateActiveDocumentCurrentness(projectRoot: string, registry: DocumentRegistryFile): DocsIssue[] {
+  const issues: DocsIssue[] = [];
+  const activePaths = new Set(
+    registry.documents
+      .filter((doc) => doc.status === 'canonical' || doc.status === 'active')
+      .map((doc) => doc.path)
+  );
+  if (fs.existsSync(path.join(projectRoot, 'README.md'))) activePaths.add('README.md');
+
+  const packageVersion = readHadaraPackageVersion(projectRoot);
+  for (const documentPath of activePaths) {
+    const absolutePath = path.join(projectRoot, documentPath);
+    if (!fs.existsSync(absolutePath) || !fs.statSync(absolutePath).isFile()) continue;
+    const lines = fs.readFileSync(absolutePath, 'utf8').split(/\r?\n/);
+    for (const [index, line] of lines.entries()) {
+      const command = line.trim();
+      if (REMOVED_COMMAND_EXAMPLE_PATTERNS.some((pattern) => pattern.test(command))) {
+        issues.push({
+          severity: 'warning',
+          code: 'DOC_REMOVED_COMMAND_EXAMPLE',
+          path: documentPath,
+          message: `${documentPath}:${index + 1} presents a removed public command as an executable example.`
+        });
+      }
+
+      if (!packageVersion || (documentPath !== 'README.md' && documentPath !== 'docs/GETTING_STARTED.md')) continue;
+      const installMatch = command.match(/^(?:npm install -g|npx)\s+hadara@(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)(?:\s|$)/);
+      if (installMatch && installMatch[1] !== packageVersion) {
+        issues.push({
+          severity: 'warning',
+          code: 'DOC_STALE_INSTALL_VERSION',
+          path: documentPath,
+          message: `${documentPath}:${index + 1} installs hadara@${installMatch[1]}, but package.json declares ${packageVersion}.`
+        });
+      }
+    }
+  }
+  return issues;
+}
+
+function readHadaraPackageVersion(projectRoot: string): string | null {
+  const packagePath = path.join(projectRoot, 'package.json');
+  if (!fs.existsSync(packagePath)) return null;
+  try {
+    const manifest = JSON.parse(fs.readFileSync(packagePath, 'utf8')) as { name?: unknown; version?: unknown };
+    return manifest.name === 'hadara' && typeof manifest.version === 'string' ? manifest.version : null;
+  } catch {
+    return null;
+  }
 }
 
 export function createDocsExplainReport(projectRoot: string, documentPath: string): DocsExplainReport {
@@ -899,7 +966,7 @@ function filterIssuesByScope(issues: DocsIssue[], scope: DocsDoctorReport['scope
   if (scope === 'all') return issues;
   if (scope === 'registry') return issues.filter((issue) => issue.code.startsWith('DOC_REGISTRY') || issue.code === 'DOC_REGISTERED_FILE_MISSING' || issue.code === 'DOC_CANONICAL_CONFLICT' || issue.code === 'DOC_UNKNOWN_STATUS' || issue.code === 'DOC_SUPERSEDES_MISSING_TARGET' || issue.code === 'DOC_ARCHIVE_CANDIDATE');
   if (scope === 'required-reading') return issues.filter((issue) => issue.code.includes('REQUIRED_READING'));
-  if (scope === 'links') return issues.filter((issue) => issue.code === 'DOC_UNREGISTERED_ACTIVE_LOOKING');
+  if (scope === 'links') return issues.filter((issue) => issue.code === 'DOC_UNREGISTERED_ACTIVE_LOOKING' || issue.code === 'DOC_STALE_INSTALL_VERSION' || issue.code === 'DOC_REMOVED_COMMAND_EXAMPLE');
   if (scope === 'profile') return issues.filter((issue) => issue.code === 'DOC_INIT_PROFILE_DRIFT');
   return [];
 }

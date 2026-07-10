@@ -173,6 +173,24 @@ describe('Phase 7.3 docs doctor', () => {
     }));
   });
 
+  it('reports stale install versions and removed command examples in active guidance', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: 'hadara', version: '0.4.2' }), 'utf8');
+    fs.writeFileSync(path.join(root, 'README.md'), '# Install\n\n```bash\nnpm install -g hadara@0.4.0\n```\n', 'utf8');
+    fs.appendFileSync(path.join(root, 'docs', 'HADARA_WORKFLOW.md'), '\n```bash\nhadara task audit-close --task T-0001 --json\n```\n', 'utf8');
+
+    const report = createDocsDoctorReport(root, 'links');
+
+    expect(report.ok).toBe(true);
+    expect(report.summary).toMatchObject({ health: 'warning', currentnessIssues: 2 });
+    expect(report.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'DOC_STALE_INSTALL_VERSION', path: 'README.md' }),
+      expect.objectContaining({ code: 'DOC_REMOVED_COMMAND_EXAMPLE', path: 'docs/HADARA_WORKFLOW.md' })
+    ]));
+    assertSchema('hadara.docs.doctor.v1', report);
+  });
+
   it('reports stale required-reading docs and missing superseded targets', () => {
     const root = tempProject();
     initProject(root, 'standard', { silent: true });

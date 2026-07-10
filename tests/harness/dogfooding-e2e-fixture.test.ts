@@ -473,7 +473,8 @@ function markTaskDone(task: TaskCapsule): void {
     .replace('| Status | Draft |', '| Status | Done |')
     .replace('| Updated | 2026-06-02 |', '| Updated | 2026-06-02 |')
     .replace('| Pending | TBD | Required | fixture |', '| Met | Dogfooding fixture. | Required | fixture |')
-    .replace('| Not Run | TBD |', '| Passed | Dogfooding fixture. |');
+    .replace('| Not Run | TBD |', '| Passed | Dogfooding fixture. |')
+    .concat('\n## History\n\n| Date | State | Note |\n|---|---|---|\n| 2026-06-02 | Done | Dogfooding fixture completed. |\n');
   fs.writeFileSync(taskPath, `${content.trimEnd()}\n`, 'utf8');
 }
 

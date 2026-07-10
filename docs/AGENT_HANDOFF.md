@@ -5,15 +5,16 @@
 | Area | State | Notes |
 |---|---|---|
 | Branch | main | Stable `hadara@0.4.0` npm/GitHub/recycle work is complete through T-0493. The `0.4.1-rc.0` cleanup/readiness/publish/recycle/dogfood line is complete through T-0515, stable `0.4.1` npm/GitHub/recycle is verified through T-0520, and command portfolio reduction/performance/status-profile/init-structure/finalize-UX/legacy-stub/evidence-UX/dead-code/dogfood/fixHint/session-start/dogfood/release-readiness/publish-sync/recycle/toy-dogfood/stable-preflight/stable-source-prep/post-publish/recycle cleanup is complete through T-0547. |
-| Current Phase | Post-0.4.2 lifecycle/documentation hardening | Stable `0.4.2` npm publication, GitHub Release, installed-package recycle, context-pack cleanup sequence, mounted hot-path latency cleanup, and final History-row close guidance are complete through T-0556. |
-| Latest Completed Task | T-0556 Require Done history before finalize | Done-level validation now requires v2 `TASK.md ## History` to end with `Done`, and status/finalize guidance tells agents to append that row before close execution. |
-| Active / Next Task | None selected after T-0556 | Choose the next capsule from operator priority, fresh context-pack/dogfood evidence, or a future explicit trust/cache design if sub-3s mounted context reads are required. |
-| Validation Baseline | T-0556 Done-history close guidance | Evidence `ev:T-0556:f260d2562365467ea77ef880`, `ev:T-0556:c42a93b05147431d9942345e`, `ev:T-0556:73b956d053c3452f96d3fe7d`, `ev:T-0556:a2060c65544e4af98834e0b5`. |
+| Current Phase | P0-P3 product consolidation | P0 currentness integrity is complete through T-0557; P1 current-state ownership and compact projection is next. |
+| Latest Completed Task | T-0557 Currentness integrity and stale guidance hardening | Historical Partial tasks stay backlog-only, active-doc currentness diagnostics are implemented, active docs are aligned, and the full suite is clean. |
+| Active / Next Task | None selected after T-0557 | Create the P1 current-state canonicalization and compact projection capsule. |
+| Validation Baseline | T-0557 currentness integrity | Docker sync-build passed 148 files / 1031 tests with refreshed `dist`; disposable standard-profile toy lifecycle closed-valid. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
+| currentness integrity and stale guidance hardening | T-0557 prevents historical Partial fallback selection, adds semantic active-doc currentness diagnostics, aligns active docs, repairs T-0556 fixture drift, and proves the standard toy lifecycle. | `ev:T-0557:5979f12a38234a989563372d`, `ev:T-0557:09506d560d374230b2d29399`, `ev:T-0557:57062741eb8e4fa7a27302a3` |
 | require Done history before finalize | T-0556 adds v2 History Done-row done-level validation, status/finalize authoring guidance before close blockers, current/generated workflow documentation, focused regression coverage, and Docker-built dist smoke. | `ev:T-0556:f260d2562365467ea77ef880`, `ev:T-0556:c42a93b05147431d9942345e`, `ev:T-0556:73b956d053c3452f96d3fe7d`, `ev:T-0556:a2060c65544e4af98834e0b5` |
 | mounted context pack fingerprint hot path | T-0555 adds explicit `assumed-hot` source-manifest analysis for read-only context cache/pack surfaces, preserves strict verification for warm/rebuild, bounds task/evidence overlays to the selected and dirty task ids, refreshes Docker-built `dist`, and reduces the dirty mounted stale path from ~20.01s/67.67s to 8.30s/9.50s. | `ev:T-0555:7e6433054c7a4792bf00d694`, `ev:T-0555:b66f86723e4049ccb4c9d568`, `ev:T-0555:33d5e8e3e5f841aeb6a41b40` |
 | context status and pack interactive UX | T-0554 makes `task status --json` ignore generic handoff/selection prose, tightens active-task extraction so `None selected after T-XXXX` is not projected as current work, and keeps task-scoped context-pack output bounded with live state overlays and selected-task issue filtering. | `ev:T-0554:10594b2ff93742b9b590f537`, `ev:T-0554:93ee6190489f47aa9e67f32e`, `ev:T-0554:251cd4d8d68949b5a81f4a59` |
@@ -98,9 +99,9 @@
 
 | Task | Summary | Evidence |
 |---|---|---|
-| T-0541 / 0.4.2 rc0 installed package recycle | Published `hadara@next` installs as `0.4.2-rc.0` and passes installed consumer smokes; sandboxed npm lookup failure was resolved by approved network rerun. | `ev:T-0541:ca5a53ca899f48ad89cea0db`, `ev:T-0541:9c836efa7ae74f339bdbb3d8` |
-| T-0540 / 0.4.2 rc0 post publish evidence sync | npm `hadara@0.4.2-rc.0` is published on `next`, stable `latest` remains `0.4.1`, and GitHub `v0.4.2-rc.0` is public prerelease. | `ev:T-0540:7332a4b680584955b8bdad4a`, `ev:T-0540:9b8f98569d7f4c13acb08bb0` |
-| T-0539 / 0.4.2 rc0 release readiness and publish preparation | Source metadata/docs now target `0.4.2-rc.0`; Docker sync-build and strict release gate passed; clean publish clone handled current artifact/package smoke regeneration before npm publish. | `ev:T-0539:707dc09b46744269b33f47b9` |
+| T-0556 / Done-history close guidance | Done-level validation requires the final v2 History row to be `Done`, and status/finalize surface the authoring requirement before execute. | `ev:T-0556:f260d2562365467ea77ef880`, `ev:T-0556:a2060c65544e4af98834e0b5` |
+| T-0555 / mounted context-pack fingerprint hot path | Assumed-hot fingerprint metadata and bounded selected/dirty task overlays reduced mounted stale cache/pack reads to about 8.3s/9.5s. | `ev:T-0555:7e6433054c7a4792bf00d694`, `ev:T-0555:33d5e8e3e5f841aeb6a41b40` |
+| T-0554 / context status and pack interactive UX | Task selection, no-task fail-fast context, cache-backed bounded pack output, and selected-task issue filtering were hardened. | `ev:T-0554:10594b2ff93742b9b590f537`, `ev:T-0554:251cd4d8d68949b5a81f4a59` |
 
 ## Current Known Problems
 
@@ -193,13 +194,14 @@
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Select the next capsule from operator priority. | T-0556 closed the missing final History-row UX gap; remaining historical capsule History repairs should be explicit close-source refresh work, not incidental edits. | `ev:T-0556:f260d2562365467ea77ef880`, `ev:T-0556:a2060c65544e4af98834e0b5` |
+| Create the P1 current-state canonicalization and compact projection capsule. | P0 currentness integrity is closed; the next planned boundary is separating compact current state from historical narrative. | `ev:T-0557:09506d560d374230b2d29399`, `ev:T-0557:57062741eb8e4fa7a27302a3` |
 | Later, open a new stable `0.3.4` readiness capsule when release work resumes. | `0.3.4-rc.0` is published, installed-package consumer checks passed, and the package-recycle helper residual is fixed; stable readiness should run source metadata/readiness validation before any approval-gated publish. | `ev:T-0422:f32c692a502c49d494970f4d`, `ev:T-0423:b1c67ff5ac4540b5930c3d5f`, `ev:T-0423:cd03a65c043f42848901fab0`, `docs/TASK_WORKFLOW_COMMANDS.md` |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0557 / currentness integrity | Focused currentness tests passed 2 files / 23 tests; Docker sync-build passed 148 files / 1031 tests and refreshed `dist`; standard-profile toy init/docs doctor/validation/finalize reached closed-valid. | Evidence `ev:T-0557:5979f12a38234a989563372d`, `ev:T-0557:09506d560d374230b2d29399`, `ev:T-0557:57062741eb8e4fa7a27302a3`; first full run failure `ev:T-0557:84513f8214c244f3b90c30e2` is resolved. |
 | T-0556 / Done-history close guidance | Focused harness/finalize/workbench/docs/init tests passed 5 files / 89 tests; TypeScript build passed; Docker `hadara-dev` mounted workspace build refreshed `dist` and version smoke returned `distLooksStale:false`; built `task status --detail full` surfaced pending History authoring guidance before close blockers. | Evidence `ev:T-0556:f260d2562365467ea77ef880`, `ev:T-0556:c42a93b05147431d9942345e`, `ev:T-0556:73b956d053c3452f96d3fe7d`, `ev:T-0556:a2060c65544e4af98834e0b5`; `dev:docker-sync-build` tar-copy latency recorded as local feedback. |
 | T-0555 / mounted context pack fingerprint hot path | Focused context cache/source-manifest tests passed 3 files / 33 tests; Docker sync-build passed 148 files / 1027 tests and refreshed `dist`; built mounted smokes returned `context cache status --json` 8.30s and `context pack --task T-0554` 9.50s with `sourceManifestFastPath:"assumed-hot"`, `sourceManifestTrust:"assumed"`, and `sourceManifestFullManifestBuilt:false`. | Evidence `ev:T-0555:7e6433054c7a4792bf00d694`, `ev:T-0555:b66f86723e4049ccb4c9d568`, `ev:T-0555:33d5e8e3e5f841aeb6a41b40`; raw WSL-mounted Git status remains about 6-9s. |
 | T-0554 / context status and pack interactive UX | Focused task-selection/state/context tests passed; Docker sync-build passed 148 files / 1027 tests and refreshed `dist`; built CLI status/context smokes proved concrete task recommendation, fast no-task fail-fast pack, cache warm/status freshness, bounded task-scoped pack with selected-task issue filtering, and source fingerprint preservation after warm. | Evidence `ev:T-0554:10594b2ff93742b9b590f537`, `ev:T-0554:93ee6190489f47aa9e67f32e`, `ev:T-0554:251cd4d8d68949b5a81f4a59`; residual mounted hot path remains about 10s. |

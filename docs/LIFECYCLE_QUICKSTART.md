@@ -61,6 +61,12 @@ If the plan is correct, execute it with the reported hash:
 hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
 ```
 
+For ordinary clean work without a separate reviewer, use the guarded automatic path:
+
+```bash
+hadara task finalize --task T-0001 --execute --auto --json
+```
+
 Finalize runs the underlying finish, ready, close, and audit boundaries in order. It succeeds only when close audit reaches `closed-valid`.
 
 ## Diagnostics
@@ -71,7 +77,7 @@ These are useful when the default loop needs explanation:
 hadara task status --task T-0001 --json
 hadara evidence list --task T-0001 --json
 hadara harness validate --task T-0001 --level done --json
-hadara task audit-close --task T-0001 --json
+hadara task status --task T-0001 --detail full --json
 ```
 
-Low-level lifecycle commands remain available for debugging, but ordinary work should use `task status` and `task finalize`.
+Standalone low-level lifecycle commands are removed. Use `task status --detail full` for diagnostics and `task finalize` for finish, readiness, close, audit, and recovery.

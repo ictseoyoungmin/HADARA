@@ -9,8 +9,10 @@ HADARA - Portable Agentic Development Workbench
 | Field | Value |
 |---|---|
 | HADARA Profile | governed |
-| Latest Completed Task | T-0556 Require Done history before finalize |
-| Active Task | None selected after T-0556. Choose the next capsule from operator priority or fresh context-pack/dogfood evidence. |
+| Latest Completed Task | T-0557 Currentness integrity and stale guidance hardening |
+| Active Task | None selected after T-0557. Create the P1 current-state canonicalization capsule next. |
+
+T-0557 follow-up note: historical `Partial` Task Board rows are now backlog-only and cannot become the primary next-work fallback; docs doctor reports active-document currentness through `summary.health`, `summary.currentnessIssues`, stale install-version warnings, and removed-command example warnings; active onboarding/high-level docs are aligned with 0.4.2. The first Docker full check exposed 11 stale T-0556 History fixtures and was recorded honestly; after fixture alignment the full Docker sync-build passed 148 files / 1031 tests, refreshed `dist`, and returned `distLooksStale:false`. A disposable standard-profile toy project passed init, healthy docs doctor, direct validation recovery, and finalize `closed-valid`. Evidence: `ev:T-0557:5979f12a38234a989563372d`, failed/resolved `ev:T-0557:84513f8214c244f3b90c30e2` / `ev:T-0557:09506d560d374230b2d29399`, toy `ev:T-0557:57062741eb8e4fa7a27302a3`.
 
 T-0556 follow-up note: v2 Task Capsules now require the final manual `TASK.md ## History` row to end in `Done` for done-level validation. `task status --detail full` and `task finalize --json` surface the pending History authoring guidance before execute, and current/generated workflow docs tell agents to append the final History row before finalize because `TASK.md` is close-source. Focused harness/finalize/workbench/docs/init tests passed 5 files / 89 tests, TypeScript build passed, and Docker `hadara-dev` mounted workspace build plus dist version smoke passed with `distLooksStale:false`. Evidence: `ev:T-0556:f260d2562365467ea77ef880`, `ev:T-0556:c42a93b05147431d9942345e`, `ev:T-0556:73b956d053c3452f96d3fe7d`, `ev:T-0556:a2060c65544e4af98834e0b5`. Residual: historical closed capsules may still lack a v2 History Done row; repair them only through a dedicated close-source refresh.
 
@@ -436,9 +438,9 @@ T-0283 documented the dogfooding-backed rc3 proof reliability plan under `docs/s
 
 ## Current Status
 
-- Latest completed task is T-0530 split init implementation by ownership boundary.
-- The command portfolio reduction line has removed duplicate proof/evidence/state surfaces and the clear retired compatibility surfaces through T-0528, renamed the surviving internal next-work projection through T-0529, and split the large init implementation into ownership modules through T-0530.
-- Next candidate work is a reviewed decision on deferred compatibility surfaces (`write preflight`, `policy check-shell`, old `package smoke`, and lifecycle migration stubs).
+- Latest completed task is T-0556 Require Done history before finalize; T-0557 is the active currentness-integrity capsule.
+- Stable `hadara@0.4.2`, installed-package recycle, context-pack correctness/cache cleanup, mounted hot-path optimization, and final Done-history close guidance are complete through T-0556.
+- Current work prioritizes semantic currentness and workflow consolidation before new provider/runtime/UI capability expansion.
 - T-0457 made `validation run` launch failures agent-readable through structured `execution.failureKind`, `commandStarted`, `execution.error`, and fallback `nextActions`. Evidence: `ev:T-0457:63bc490c0f524cc0b5b748e3`, `ev:T-0457:28fb374a36e641bab90bd53d`, `ev:T-0457:ded129c4252440a593372c75`.
 - T-0456 made `evidence add-command --help` non-mutating before `--task` parsing. Evidence: `ev:T-0456:3575c0472d5b464585261a79`, `ev:T-0456:dbf8b1a1dc8d4707b5d9469c`, `ev:T-0456:2c697ca98ea7410a9a9f23d9`.
 - T-0455 added `sources.evidenceList.validationAttempts` to `task status` so agents can see per-check validation state without raw evidence inspection. Evidence: `ev:T-0455:ec70182bf0f9491292013cf1`, `ev:T-0455:d17cc01c4fd4444da2e9ace8`, `ev:T-0455:d4b3ea9ddcc549fda9eaeeb5`.

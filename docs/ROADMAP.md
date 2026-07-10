@@ -1,6 +1,12 @@
 # ROADMAP
 
-## Current Freeze: v0.3 Operations Layer
+## Current Baseline: v0.4.2 Evidence-Backed Workbench
+
+Stable `hadara@0.4.2` is published and consumer-recycled. Task Capsule lifecycle, Evidence v2 writes/read models, context routing, document governance, status/finalize workflow, read-only MCP, Dashboard/TUI observation, and release/package readiness surfaces are implemented.
+
+The immediate roadmap is consolidation rather than capability expansion: semantic currentness, compact current-state ownership, primary-workflow measurement, external-style dogfood, and bounded mounted-filesystem latency. The versioned sections below preserve the capability tracks that led to the current baseline; they are historical planning context, not current release sequencing.
+
+## Historical Freeze: v0.3 Operations Layer
 
 ### Goal
 

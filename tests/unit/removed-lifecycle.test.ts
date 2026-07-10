@@ -88,8 +88,10 @@ describe('FD-013 removed lifecycle surface', () => {
       '# Handoff\n\n## Current State\n\n| Field | Value |\n|---|---|\n| Status | Done |\n\n## Last Completed\n\n| Item | Evidence |\n|---|---|\n| Recovery fixture complete. | Evidence. |\n\n## Next Recommended Step\n\n| Step | Reason | Required Reading |\n|---|---|---|\n| Continue. | Done. | docs/TASK_BOARD.md |\n',
       'utf8'
     );
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.appendFileSync(taskPath, '| 2026-07-06 | Done | Recovery fixture completed before finalize. |\n', 'utf8');
     const second = createTaskFinalizeReport(root, task.id, { executeRequested: true, auto: true });
-    expect(second.ok).toBe(true);
+    expect(second.ok, JSON.stringify(second.issues, null, 2)).toBe(true);
     expect(second.state).toBe('closed-valid');
   });
 });
@@ -109,7 +111,7 @@ function completeRecoveryFixture(root: string, taskId: string, taskDir: string):
       .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Exercise recovery. | Fixture verifies finalize recovery. |')
       .replace('| TBD | TBD |', '| Complete fixture capsule. | Needed for done-level validation. |')
       .replace('| TBD | TBD |', '| Broad workflow mutation. | Outside fixture scope. |')
-      .replace('| TBD | Draft | Initial task scaffold. | TBD |', '| 2026-07-06T00:00:00.000Z | In Progress | Fixture in progress. | Evidence. |'),
+      .replace(/\| \d{4}-\d{2}-\d{2} \| Draft \| Initial task scaffold\. \|/, '| 2026-07-06 | In Progress | Fixture in progress. |'),
     'utf8'
   );
   fs.writeFileSync(path.join(taskDir, 'PLAN.md'), '# Plan\n\n| Step | Action | Status | Evidence |\n|---|---|---|---|\n| 1 | Complete fixture. | Done | Fixture. |\n', 'utf8');

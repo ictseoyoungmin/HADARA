@@ -7,14 +7,14 @@ This is the shortest path from install to a usable HADARA project.
 HADARA requires Node.js 22.
 
 ```bash
-npm install -g hadara@0.4.0
+npm install -g hadara@0.4.2
 hadara doctor --json
 ```
 
 Without a global install:
 
 ```bash
-npx hadara@0.4.0 doctor --json
+npx hadara@0.4.2 doctor --json
 ```
 
 ## Create A Project
@@ -51,9 +51,10 @@ hadara evidence add-command --task T-0001 --summary "Smoke test passed" --result
 
 ```bash
 hadara task finalize --task T-0001 --json
+hadara task finalize --task T-0001 --execute --auto --json
 hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
 ```
 
-Review the dry-run first. Execute only with the current plan hash.
+Use `--execute --auto` for ordinary clean work. Use the explicit plan hash when a separate human or automation boundary reviews the dry-run.
 
 For more detail, see `docs/LIFECYCLE_QUICKSTART.md`.

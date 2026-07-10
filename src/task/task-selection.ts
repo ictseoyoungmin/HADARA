@@ -171,7 +171,10 @@ function recommendationFromHandoff(projectRoot: string, step: string, boardRows:
 }
 
 function recommendationFromTaskBoard(projectRoot: string, boardRows: BoardRow[]): TaskSelectionRecommendation | null {
-  const row = boardRows.find((candidate) => isPrimaryOpenBoardStatus(candidate.status)) ?? boardRows.find((candidate) => isOpenBoardStatus(candidate.status));
+  // `Partial` is a deliberate terminal/deferred status, not an active queue
+  // signal. Keep those rows visible in backlog, but never revive an old
+  // capsule merely because no Draft/In Progress work exists.
+  const row = boardRows.find((candidate) => isPrimaryOpenBoardStatus(candidate.status));
   if (!row) return null;
   const capsule = findTaskCapsule(projectRoot, row.taskId);
   return {

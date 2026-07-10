@@ -131,7 +131,7 @@ Use structured discovery when an agent or tool needs machine-readable command me
 ```bash
 hadara commands --json
 hadara commands --family capsule-lifecycle --json
-hadara help command task.close
+hadara help command task.finalize
 ```
 
 ## Lifecycle Details

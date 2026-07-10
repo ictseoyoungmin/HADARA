@@ -309,6 +309,32 @@ describe('task selection recommendation', () => {
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
+  it('keeps a historical Partial row backlog-only when no current work is queued', () => {
+    const root = tempProject({
+      handoffNextStep: 'Select the next capsule from operator priority or fresh diagnostic evidence.',
+      developmentRows: ['| 1 | Completed | T-0001 | Done. | Done: complete. |']
+    });
+    const legacy = createTaskCapsule(root, 'Historical Partial');
+    updateTaskBoardStatus(root, legacy.id, 'Partial');
+
+    const report = createTaskSelectionReport(root);
+
+    expect(report.recommendations).toEqual([]);
+    expect(report.summary).toMatchObject({ recommendations: 0, source: 'none', policy: 'handoff-first' });
+    expect(report.backlog).toEqual([
+      expect.objectContaining({
+        taskId: legacy.id,
+        title: 'Historical Partial',
+        status: 'Partial'
+      })
+    ]);
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_SELECTION_NO_RECOMMENDATION',
+      severity: 'warning'
+    }));
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
+  });
+
 });
 
 function tempProject(options: { handoffNextStep?: string; developmentRows?: string[] } = {}): string {
