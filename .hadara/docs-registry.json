@@ -233,6 +233,62 @@
       "generatedBy": "hadara init"
     },
     {
+      "path": "docs/history/AGENT_HANDOFF_PRE_T0558.md",
+      "title": "AGENT_HANDOFF pre-T0558 snapshot",
+      "owner": "hadara-docs",
+      "kind": "handoff",
+      "status": "historical",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "never-default"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "excluded",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Frozen pre-T0558 handoff snapshot; use only for historical investigation."
+      },
+      "supersedes": []
+    },
+    {
+      "path": "docs/history/PROJECT_STATE_PRE_T0558.md",
+      "title": "PROJECT_STATE pre-T0558 snapshot",
+      "owner": "hadara-docs",
+      "kind": "project-state",
+      "status": "historical",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "never-default"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [],
+      "managedSections": [],
+      "closeSourceRole": "excluded",
+      "readTier": "historical",
+      "authority": "historical",
+      "editPolicy": "human-only",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Frozen pre-T0558 project-state snapshot; use only for historical investigation."
+      },
+      "supersedes": []
+    },
+    {
       "path": "docs/LIFECYCLE_QUICKSTART.md",
       "title": "Lifecycle Quickstart",
       "owner": "hadara-docs",
@@ -253,6 +309,36 @@
       "managedSections": [],
       "closeSourceRole": "task-dependent",
       "supersedes": []
+    },
+    {
+      "path": "docs/PRIMARY_WORKFLOW_BUDGET.md",
+      "title": "Primary Workflow Budget",
+      "owner": "hadara-docs",
+      "kind": "implementation-guide",
+      "status": "canonical",
+      "scope": "project",
+      "profiles": [
+        "hadara-dev"
+      ],
+      "readWhen": [
+        "docs-work"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "readTier": "workflow-reference",
+      "authority": "normative",
+      "editPolicy": "agent-editable-with-review",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": true,
+        "reason": "Primary lifecycle growth and invocation budget changes require explicit review."
+      }
     },
     {
       "path": "docs/PROJECT_STATE.md",
@@ -1335,63 +1421,7 @@
       "closeSourceRole": "task-dependent",
       "supersedes": [],
       "generatedBy": "hadara init"
-    },
-    {
-      "path": "docs/history/PROJECT_STATE_PRE_T0558.md",
-      "title": "PROJECT_STATE pre-T0558 snapshot",
-      "owner": "hadara-docs",
-      "kind": "project-state",
-      "status": "historical",
-      "scope": "project",
-      "profiles": [
-        "hadara-dev"
-      ],
-      "readWhen": [
-        "never-default"
-      ],
-      "requiredReading": false,
-      "updateOwner": "human",
-      "updatedByCommands": [],
-      "managedSections": [],
-      "closeSourceRole": "excluded",
-      "readTier": "historical",
-      "authority": "historical",
-      "editPolicy": "human-only",
-      "drift": {
-        "risk": "low",
-        "reviewRequiredBeforeUse": true,
-        "reason": "Frozen pre-T0558 project-state snapshot; use only for historical investigation."
-      },
-      "supersedes": []
-    },
-    {
-      "path": "docs/history/AGENT_HANDOFF_PRE_T0558.md",
-      "title": "AGENT_HANDOFF pre-T0558 snapshot",
-      "owner": "hadara-docs",
-      "kind": "handoff",
-      "status": "historical",
-      "scope": "project",
-      "profiles": [
-        "hadara-dev"
-      ],
-      "readWhen": [
-        "never-default"
-      ],
-      "requiredReading": false,
-      "updateOwner": "human",
-      "updatedByCommands": [],
-      "managedSections": [],
-      "closeSourceRole": "excluded",
-      "readTier": "historical",
-      "authority": "historical",
-      "editPolicy": "human-only",
-      "drift": {
-        "risk": "low",
-        "reviewRequiredBeforeUse": true,
-        "reason": "Frozen pre-T0558 handoff snapshot; use only for historical investigation."
-      },
-      "supersedes": []
     }
   ],
-  "generatedAt": "2026-07-06T05:35:31.340Z"
+  "generatedAt": "2026-07-10T10:07:38.322Z"
 }

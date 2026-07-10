@@ -10,24 +10,24 @@ Current product/release facts belong to `docs/PROJECT_STATE.md`; completed histo
 | Area | State | Notes |
 |---|---|---|
 | Branch | main | Stable 0.4.2 source line. |
-| Current Phase | P2 product compression next | Freeze capability growth and measure the six-command primary path. |
-| Latest Completed Task | T-0558 Current-state ownership and compact projection | Compact ownership, historical snapshots, routing tests, and governed toy dogfood are complete. |
-| Active / Next Task | Create P2 capsule | Define a primary workflow budget and executable measurement without adding a public command. |
-| Validation Baseline | T-0558 Docker 149 files / 1034 tests | `distLooksStale:false`; P1 governed toy lifecycle reached `closed-valid`. |
+| Current Phase | P3 external-style validation next | Archive stale docs and dogfood basic/standard/governed profiles. |
+| Latest Completed Task | T-0559 Primary workflow budget and capability freeze | Four primary command ids, six-invocation budget, measurement harness, and lifecycle docs are aligned. |
+| Active / Next Task | Create P3 capsule | Reduce 75 active-looking historical warnings and run multi-profile dogfood. |
+| Validation Baseline | T-0559 Docker 150 files / 1037 tests | `distLooksStale:false`; standard measured toy reached `closed-valid` in 6 calls / 13.13s. |
 
 ## Active Work
 
 | Task | Summary | Evidence |
 |---|---|---|
-| None | T-0558 is ready to finalize; create P2 after close. | `ev:T-0558:a0106f42bca342ca8341a17c`, `ev:T-0558:c5b24e7f72c143dd89e22d7c` |
+| None | T-0559 is ready to finalize; create P3 after close. | `ev:T-0559:4f9b167c4ca24aec8f4d007d`, `ev:T-0559:7ad5dab1394b4be584b73235` |
 
 ## Last 3 Completed Tasks
 
 | Task | Summary | Evidence |
 |---|---|---|
+| T-0559 Primary workflow budget | Four unique primary commands and six post-init invocations are frozen and measured; standard toy closed-valid in 13.13s. | `ev:T-0559:4f9b167c4ca24aec8f4d007d`, `ev:T-0559:ace8a95f299341b8b6fc1773`, `ev:T-0559:7ad5dab1394b4be584b73235` |
 | T-0558 Current-state ownership | Project State and Handoff now have bounded, non-overlapping ownership; pre-P1 snapshots are historical/never-default. | `ev:T-0558:2189cb84302145689de0f8cc`, `ev:T-0558:8ac7eeb68db34f7a824f944b`, `ev:T-0558:a0106f42bca342ca8341a17c` |
 | T-0557 Currentness integrity | Historical Partial rows are backlog-only; docs doctor currentness diagnostics exist; active docs and T-0556 fixtures are aligned. | `ev:T-0557:5979f12a38234a989563372d`, `ev:T-0557:09506d560d374230b2d29399`, `ev:T-0557:57062741eb8e4fa7a27302a3` |
-| T-0556 Done-history gate | Done-level validation requires the final v2 TASK History row to be Done. | `ev:T-0556:f260d2562365467ea77ef880`, `ev:T-0556:a2060c65544e4af98834e0b5` |
 
 ## Current Known Problems
 
@@ -42,16 +42,16 @@ Current product/release facts belong to `docs/PROJECT_STATE.md`; completed histo
 
 | Step | Reason | Done Evidence |
 |---|---|---|
-| Create the P2 product-compression and primary-workflow measurement capsule. | P1 established compact ownership; P2 should freeze growth and measure the six-command primary path. | New P2 capsule and measurement evidence. |
+| Create the P3 stale-doc archive and multi-profile external-style dogfood capsule. | P2 established the budget; P3 should remove historical routing noise and validate profile portability. | New P3 capsule, archive map, and profile matrix evidence. |
 
 ## Validation Baseline
 
 | Check | Latest Evidence | Notes |
 |---|---|---|
+| T-0559 full Docker sync-build | `ev:T-0559:7ad5dab1394b4be584b73235` | 150 files / 1037 tests passed; `dist` refreshed. |
+| T-0559 primary workflow regression | `ev:T-0559:ace8a95f299341b8b6fc1773` | Four focused files / 20 tests passed. |
+| T-0559 measured standard toy | `ev:T-0559:4f9b167c4ca24aec8f4d007d` | Six invocations / 13.13s / `closed-valid`. |
 | T-0558 full Docker sync-build | `ev:T-0558:a0106f42bca342ca8341a17c` | 149 files / 1034 tests passed; `dist` refreshed. |
-| T-0558 focused compact-state regression | `ev:T-0558:2189cb84302145689de0f8cc` | Four files / 28 tests passed. |
-| T-0558 governed toy lifecycle | `ev:T-0558:c5b24e7f72c143dd89e22d7c` | Current-state routing and finalize reached `closed-valid`. |
-| T-0557 full Docker sync-build | `ev:T-0557:09506d560d374230b2d29399` | 148 files / 1031 tests passed; `dist` refreshed. |
 
 ## Historical Index
 

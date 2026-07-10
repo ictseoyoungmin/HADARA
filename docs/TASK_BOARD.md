@@ -559,3 +559,4 @@
 | T-0556 | Require Done history before finalize | Done | tasks/T-0556-require-done-history-before-finalize | Added v2 History Done-row done-level validation and pre-close authoring guidance so agents see the required final History row before finalize blocks. |
 | T-0557 | Currentness integrity and stale guidance hardening | Done | tasks/T-0557-currentness-integrity-and-stale-guidance-hardening | |
 | T-0558 | Current-state ownership and compact projection | Done | tasks/T-0558-current-state-ownership-and-compact-projection | Compact ownership, historical snapshots, routing regression, Docker 149/1034, and governed toy closed-valid. |
+| T-0559 | Primary workflow budget and capability freeze | Done | tasks/T-0559-primary-workflow-budget-and-capability-freeze | Four-command freeze; six-call standard toy closed-valid in 13.13s; Docker 150/1037. |

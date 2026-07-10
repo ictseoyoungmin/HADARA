@@ -16,9 +16,9 @@ HADARA - Portable Agentic Development Workbench
 | HADARA Profile | governed |
 | Stable Version | 0.4.2 |
 | Branch | main |
-| Latest Completed Task | T-0558 Current-state ownership and compact projection |
-| Active Task | None; create P2 capsule next |
-| Validation Baseline | Docker 149 files / 1034 tests; governed P1 toy lifecycle closed-valid |
+| Latest Completed Task | T-0559 Primary workflow budget and capability freeze |
+| Active Task | None; create P3 capsule next |
+| Validation Baseline | Docker 150 files / 1037 tests; standard P2 measured toy closed-valid in 6 calls / 13.13s |
 
 ## Current Phase
 
@@ -28,8 +28,8 @@ P0-P3 product consolidation after stable 0.4.2.
 |---|---|---|
 | P0 Currentness integrity | Done | Align next-work selection, active docs, and validation fixtures. |
 | P1 Current-state ownership | Done | Separate compact current facts from historical narrative. |
-| P2 Product compression | Next | Freeze capability growth and measure the primary workflow. |
-| P3 External-style validation | Planned | Dogfood all profiles and archive stale documents/specs. |
+| P2 Product compression | Done | Freeze capability growth and measure the primary workflow. |
+| P3 External-style validation | Next | Dogfood all profiles and archive stale documents/specs. |
 
 ## Current Capabilities
 
@@ -51,6 +51,7 @@ P0-P3 product consolidation after stable 0.4.2.
 - Active-document currentness diagnostics cover stale install versions and removed command examples.
 - The clean source baseline is 149 test files / 1034 tests with Docker-refreshed `dist`.
 - T-0558 established bounded state ownership and preserved pre-compaction snapshots under `docs/history/`.
+- T-0559 froze the ordinary lifecycle at four unique commands and six post-init invocations; the standard measured toy closed-valid in 13.13 seconds.
 
 ## Current Known Constraints
 
@@ -63,9 +64,8 @@ P0-P3 product consolidation after stable 0.4.2.
 
 ## Next Planned Line
 
-1. Create P2 product-compression and primary-workflow measurement capsule.
-2. Create P3 external-style multi-profile dogfood and stale-doc archive capsule.
-3. Resume release/provider/runtime expansion only from new operator evidence.
+1. Create P3 external-style multi-profile dogfood and stale-doc archive capsule.
+2. Resume release/provider/runtime expansion only from new operator evidence.
 
 ## Historical Index
 
@@ -89,3 +89,4 @@ P0-P3 product consolidation after stable 0.4.2.
 | Active task contract | `tasks/T-*/TASK.md` |
 | Canonical task evidence | `tasks/T-*/evidence.jsonl` |
 | Document classification and routing | `.hadara/docs-registry.json` |
+| Primary lifecycle growth/invocation budget | `docs/PRIMARY_WORKFLOW_BUDGET.md` |

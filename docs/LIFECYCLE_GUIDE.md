@@ -1,66 +1,47 @@
 # LIFECYCLE_GUIDE
 
-This guide is the short operational path for ordinary HADARA Task Capsule work. It uses the command vocabulary from `src/services/capability-registry.ts`; `hadara help lifecycle --json` is the machine-readable projection.
+This guide is the short operational path for ordinary HADARA 0.4.2 Task Capsule work. The machine-readable projection is `hadara help lifecycle --json`; the normative growth and invocation limit is `docs/PRIMARY_WORKFLOW_BUDGET.md`.
 
 ## Primary Lifecycle
 
 | Order | Stage | Command ID | Command | Write Boundary | When |
 |---|---|---|---|---|---|
-| 1 | inspect | `task.status` | `hadara task status [--task T-XXXX] --json` | `read-only` | At session start, after creating a capsule, and at meaningful loop boundaries. |
-| 2 | create | `task.create` | `hadara task create "..." --json` | `task-capsule-create` | When no suitable Task Capsule exists. |
-| 3 | validation | `validation.run` | `hadara validation run --task T-XXXX --check "..." -- <command>` | `evidence-append` | Run meaningful validation and record durable evidence from the real exit status. |
-| 4 | evidence-fallback | `evidence.add-command` | `hadara evidence add-command --task T-XXXX --summary "..." --result passed --json` | `evidence-append` | Record already-run operator-supplied validation or work proof. |
-| 5 | finalize-review | `task.finalize` | `hadara task finalize --task T-XXXX --json` | `read-only` | After implementation, evidence, capsule docs, and tracked state docs are ready. |
-| 6 | finalize-execute | `task.finalize` | `hadara task finalize --task T-XXXX --execute --plan-hash <hash> --json` | `task-status-bookkeeping` + `close-evidence-append` | After reviewing the current plan hash and write boundaries. |
+| 1 | inspect | `task.status` | `hadara task status --json` | `read-only` | At session start, select the next bounded action. |
+| 2 | create | `task.create` | `hadara task create "..." --json` | `task-capsule-create` | When no suitable capsule exists. |
+| 3 | inspect | `task.status` | `hadara task status --task T-XXXX --json` | `read-only` | After selecting or creating a capsule and at meaningful loop boundaries. |
+| 4 | validation | `validation.run` | `hadara validation run --task T-XXXX --check "..." -- <command>` | `external-subprocess` | Execute meaningful validation and record durable evidence. |
+| 5 | finalize-review | `task.finalize` | `hadara task finalize --task T-XXXX --json` | `read-only` | Review actionable blockers, deferred checks, plan hash, and pending writes; a clean authored task may still show bounded Task Board finish work. |
+| 6 | finalize-execute | `task.finalize` | `hadara task finalize --task T-XXXX --execute --auto --json` | bounded bookkeeping + evidence append | Execute the current guarded close sequence. |
+
+The registry-backed surface contains four unique primary command ids: `task.status`, `task.create`, `validation.run`, and `task.finalize`. The clean post-init invocation budget is six.
+
+## Conditional Evidence Fallback
+
+Use `hadara evidence add-command` only to record an already-run operator-supplied result. It is not the ordinary command-executing validation path.
 
 ## Diagnostics
 
-Diagnostics explain blockers. They do not replace the primary lifecycle.
+Diagnostics explain blockers; they do not replace the primary lifecycle.
 
 | Command ID | Use When |
 |---|---|
-| `evidence.lint` | Evidence records or semantic proof are unclear. |
+| `evidence.lint` | Evidence syntax or semantic proof is unclear. |
 | `protocol.doctor` | Protocol docs, task board rows, or profile state may be inconsistent. |
-| `status` | Shared task/state projection looks inconsistent or needs concise drift evidence. |
-| `harness.validate` | `task finalize` or low-level `task ready` reports format or done-level blockers. |
+| `status` | Shared task/state projection needs concise drift evidence. |
+| `harness.validate` | Full task/finalize diagnostics need isolated done-level explanation. |
 
-## Low-Level Proof Boundaries
+## Removed Lifecycle Surfaces
 
-`task finalize` is the default 0.3.3 agent-facing close path. The underlying proof-boundary commands remain available for debugging, recovery, and command implementation work:
-
-| Command ID | Boundary |
-|---|---|
-| `task.finish` | Bounded `TASK.md` and `docs/TASK_BOARD.md` status bookkeeping. |
-| `task.ready` | Done-level readiness check with no writes. |
-| `task.close` | Close evidence dry-run/append only. |
-| `task.audit-close` | Read-only close evidence audit. |
+Low-level public lifecycle commands and the old next/show/complete routes were removed from public routing. Current agents use `task status` and `task finalize`; historical command names belong only in migration and audit records.
 
 ## Advanced Families
 
-Release/package, dev validation, UI, integration, installer, and deterministic agent-loop commands are not part of ordinary capsule work. Use `hadara help family <family>` or `hadara commands --json` when a task explicitly needs one of those surfaces.
-
-| Family | Boundary |
-|---|---|
-| `release-package` | Release/package capsules only. |
-| `dev-validation` | HADARA-dev validation or replay work only. |
-| `ui` | Operator console or TUI observation work only. |
-| `integrations` | Hermes/MCP/tool-discovery integration work only. |
-| `agent-loop` | Deterministic harness or local agent-loop work only. |
-| `install` | Installer planning work only. |
-| `advanced` | Low-level compatibility or remediation work only. |
+Release/package, dev validation, UI, integration, installer, and low-level remediation commands are task-specific surfaces. Discover them with `hadara help family <family>` or `hadara commands --json` only when the selected capsule needs them.
 
 ## Rules
 
-`task status` success is not readiness. Use `task status --detail full` for diagnostics and `task finalize` for agent-facing lifecycle planning and close execution.
-
-`task complete` is a read-only workflow compressor. It must not execute lifecycle steps.
-
-`task finish` may update only bounded task status bookkeeping unless a future managed-section phase explicitly expands it.
-
-Use `validation.run` for ordinary checks; use `evidence.add-command` only when the command already ran outside HADARA.
-
-`task close --execute` appends close evidence only. It does not update Project State, Agent Handoff, or broad docs.
-
-Shared handoff edits are reviewed documentation work before finalize, not an executable post-finalize lifecycle step. The old `handoff suggest` helper now returns a structured redirect stub; use `task status` and `task finalize --json` for phase/readiness guidance, then edit handoff docs deliberately.
-
-Release commands and `dev docker-check` are task-context-specific surfaces, not ordinary lifecycle requirements.
+- `task status` success is not readiness; it is the phase-aware cockpit.
+- Finish Task Capsule prose, evidence summaries, Task Board, and tracked state docs before finalize execution.
+- Finalize dry-run is read-only. Finalize execute preserves bounded bookkeeping and proof append boundaries.
+- Shared handoff and project-state edits are deliberate documentation work before close.
+- Adding another stable/default-help lifecycle command requires the capability-freeze exception evidence defined in `PRIMARY_WORKFLOW_BUDGET.md`.

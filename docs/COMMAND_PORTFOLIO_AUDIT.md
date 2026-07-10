@@ -2,16 +2,18 @@
 
 ## Purpose
 
-This audit records why overlapping HADARA commands exist and which ones belong in the primary Task Capsule lifecycle. It documents command roles only.
+This audit records why overlapping HADARA commands exist and which ones belong in the primary Task Capsule lifecycle. It documents command roles only. The growth and invocation limits are normative in `docs/PRIMARY_WORKFLOW_BUDGET.md`.
 
 ## Primary Lifecycle Commands
 
 | Stage | Command ID | Role | Write Boundary | Why Primary |
 |---|---|---|---|---|
-| create | `task.create` | Create a Task Capsule when needed. | `task-capsule-create` | Implementation work must live in a capsule. |
 | inspect | `task.status` | Select next work or read current capsule state. | `read-only` | It is the canonical task cockpit. |
-| evidence | `evidence.add-command` | Append command-log validation evidence. | `evidence-append` | Command evidence is the current primary proof path. |
+| create | `task.create` | Create a Task Capsule when needed. | `task-capsule-create` | Implementation work must live in a capsule. |
+| evidence | `validation.run` | Execute or honestly record validation and append command-log evidence. | `external-subprocess` | It is the ordinary validation proof path. |
 | finalize | `task.finalize` | Review or execute the guarded close path. | `task-status-bookkeeping` | It composes finish, readiness, close, and audit while preserving their write boundaries. |
+
+These are four unique command ids. The ordinary clean path uses six invocations because status and finalize each appear twice. `evidence.add-command` is a conditional fallback for an already-run result, not a fifth primary command.
 
 Low-level `task.finish`, `task.ready`, `task.close`, `task.audit-close`, `task.complete`, and `task.lifecycle` were removed from the public command surface in 0.4.1-rc.0 behind structured redirect stubs. `task.next` and `task.show` were removed the same way after T-0505 dogfood showed the extra compatibility surface was still leaking into guidance.
 
