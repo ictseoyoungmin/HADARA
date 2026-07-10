@@ -469,6 +469,31 @@ describe('task finalize --auto (FD-010)', () => {
     expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
   });
 
+  it('surfaces missing v2 History Done row before execute', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Finalize missing history done');
+    completeTask(root, task.id, task.dir, 'passed', { keepHistoryDraft: true });
+    markStateDocsCurrent(root, task.id);
+    const before = snapshotFiles(root);
+
+    const report = createTaskFinalizeReport(root, task.id, { executeRequested: true, auto: true });
+
+    expect(snapshotFiles(root)).toEqual(before);
+    expect(report).toMatchObject({ ok: false, mode: 'dry-run', state: 'blocked', planStatus: 'blocked' });
+    expect(report.authoringGuidance.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'history',
+        status: 'pending',
+        required: true,
+        summary: expect.stringContaining('Before finalize execute')
+      })
+    ]));
+    expect(report.blockingIssues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ severity: 'error', code: 'HARNESS_TASK_HISTORY_NOT_DONE' })
+    ]));
+    expect(validateSchema('hadara.task.finalize.v1', report).ok).toBe(true);
+  });
+
   it('aborts through the plan-hash mismatch guard when close-source changes between review and execute', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Finalize auto race');
@@ -535,7 +560,13 @@ function walk(dir: string, visit: (filePath: string) => void): void {
   }
 }
 
-function completeTask(root: string, taskId: string, taskDir: string, evidenceResult: 'passed' | 'failed' | 'blocked' | 'unknown' = 'passed'): void {
+function completeTask(
+  root: string,
+  taskId: string,
+  taskDir: string,
+  evidenceResult: 'passed' | 'failed' | 'blocked' | 'unknown' = 'passed',
+  options: { keepHistoryDraft?: boolean } = {}
+): void {
   fs.writeFileSync(
     path.join(taskDir, 'TASK.md'),
     fs
@@ -547,7 +578,8 @@ function completeTask(root: string, taskId: string, taskDir: string, evidenceRes
       .replace('| TBD | Replace with the smallest verifiable outcome. |', '| Exercise finalize planning. | Fixture verifies finalize plan. |')
       .replace('| TBD | TBD |', '| Complete fixture capsule. | Needed for done-level validation. |')
       .replace('| TBD | TBD |', '| Broad workflow mutation. | Outside fixture scope. |')
-      .replace('| TBD | Draft | Initial task scaffold. | TBD |', '| 2026-06-07T00:00:00.000Z | Done | Fixture complete. | Evidence. |'),
+      .replace(/\| \d{4}-\d{2}-\d{2} \| Draft \| Initial task scaffold\. \|/, options.keepHistoryDraft ? '| 2026-06-07 | In Progress | Fixture still active. |' : '| 2026-06-07 | Done | Fixture complete. |')
+      .replace('| TBD | Draft | Initial task scaffold. | TBD |', options.keepHistoryDraft ? '| 2026-06-07T00:00:00.000Z | In Progress | Fixture still active. | Evidence. |' : '| 2026-06-07T00:00:00.000Z | Done | Fixture complete. | Evidence. |'),
     'utf8'
   );
   fs.writeFileSync(

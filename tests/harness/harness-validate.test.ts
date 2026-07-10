@@ -463,6 +463,36 @@ describe('Harness Task Capsule validation', () => {
     expect(result.issues.find((issue) => issue.code === 'TASK_STATUS_HISTORY_NOT_DONE')?.fixHint).not.toContain('task finish');
   });
 
+  it('rejects done-level capsules whose v2 History does not end with Done', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'V2 history missing done');
+    markTaskDone(root, task.id);
+    markTaskBoardDone(root, task.id);
+    markAcceptanceDone(task.dir);
+    writeCompletedCapsuleDocs(task.dir, { keepHistoryDraft: true });
+    writeHandoffDone(task.dir);
+    appendEvidence(root, {
+      taskId: task.id,
+      kind: 'test-log',
+      summary: 'Done-level validation evidence',
+      result: 'passed'
+    });
+
+    const result = validateTaskCapsule(root, task.id, { level: 'done' });
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        severity: 'error',
+        code: 'TASK_HISTORY_NOT_DONE',
+        message: 'Done-level validation requires TASK.md History to end with Done.',
+        path: `tasks/${task.id}-v2-history-missing-done/TASK.md`,
+        heading: 'History',
+        fixHint: expect.stringContaining('before running finalize execute')
+      })
+    );
+  });
+
   it('accepts done-level validation for completed capsules', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Completed capsule');
@@ -1015,7 +1045,7 @@ function markAcceptanceDone(taskDir: string): void {
   );
 }
 
-function writeCompletedCapsuleDocs(taskDir: string, options: { keepMetadataPlaceholders?: boolean; keepStatusHistoryDraft?: boolean } = {}): void {
+function writeCompletedCapsuleDocs(taskDir: string, options: { keepMetadataPlaceholders?: boolean; keepStatusHistoryDraft?: boolean; keepHistoryDraft?: boolean } = {}): void {
   const taskPath = path.join(taskDir, 'TASK.md');
   const projectRoot = path.dirname(path.dirname(taskDir));
   const fixtureSourcePath = path.join(projectRoot, 'docs', 'fixture-source.md');
@@ -1040,7 +1070,8 @@ function writeCompletedCapsuleDocs(taskDir: string, options: { keepMetadataPlace
     .replace('| N/A | TBD |', '| src/harness/validate.ts | Exercise fixture validation. |')
     .replace('| TBD | N/A | TBD | TBD | TBD |', '| src/harness/validate.ts | L1-L20 | Exercise fixture validation. | Done-level harness coverage. | Harness result. |')
     .replace('| RF-1 | Follow-up | TBD | Open | TBD |', '| RF-1 | Follow-up | Fixture follow-up. | Closed | Harness result. |')
-    .replace('| TBD | Draft | Initial task scaffold. |', '| 2026-06-02 | Done | Fixture completed. |')
+    .replace(/\| \d{4}-\d{2}-\d{2} \| Draft \| Initial task scaffold\. \|/, options.keepHistoryDraft ? '| 2026-06-02 | In Progress | Fixture still active. |' : '| 2026-06-02 | Done | Fixture completed. |')
+    .replace('| TBD | Draft | Initial task scaffold. |', options.keepHistoryDraft ? '| 2026-06-02 | In Progress | Fixture still active. |' : '| 2026-06-02 | Done | Fixture completed. |')
     .replace('## Goal\n\nTBD.', '## Goal\n\nValidate done-level completion gates.')
     .replace('## Scope\n\nTBD.', '## Scope\n\n- Exercise task-specific completed capsule documentation.')
     .replace('## Out of Scope\n\nTBD.', '## Out of Scope\n\n- Broad workflow changes.');
@@ -1048,6 +1079,7 @@ function writeCompletedCapsuleDocs(taskDir: string, options: { keepMetadataPlace
     taskContent = taskContent.replace('| Created | TBD |', '| Created | 2026-06-02 |').replace('| Updated | TBD |', '| Updated | 2026-06-02 |');
   }
   if (options.keepStatusHistoryDraft) {
+    taskContent = taskContent.replace(/\n## History\n[\s\S]*$/m, '');
     taskContent = `${taskContent.trimEnd()}\n\n## Status History\n\n| Time | Status | Note | Evidence |\n|---|---|---|---|\n| 2026-06-02 | Draft | Legacy fixture. | Harness fixture. |\n`;
   }
   fs.writeFileSync(taskPath, taskContent, 'utf8');

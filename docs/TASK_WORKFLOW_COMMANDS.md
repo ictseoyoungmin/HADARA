@@ -135,6 +135,8 @@ Evidence rebuild is intentionally outside the 0.3.2 workflow command surface. Tr
 
 Before finalize execute, finish all close-source edits: Task Capsule docs, acceptance/tests/handoff notes, evidence summaries, `docs/TASK_BOARD.md`, and tracked state docs such as `docs/PROJECT_STATE.md`, `docs/AGENT_HANDOFF.md`, and `docs/DEVELOPMENT_SLICES.md` when they apply. After `task finalize --execute --plan-hash ...` reaches close proof, changing those documents changes the close source hash and requires rerunning finalize (`--execute --auto` or a reviewed `--plan-hash`); the standalone low-level sequence was removed in 0.4.1-rc.0. Do not paste volatile close evidence ids into close-source docs; prefer stable wording such as "close evidence appended; audit returned closed-valid".
 
+For current v2 `TASK.md`, the manual `## History` table is part of that close-source set. Before finalize execute, append a final row such as `| 2026-06-12 | Done | Finished task capsule. |`. `task status` and `task finalize --json` surface this as authoring guidance before close; done-level validation blocks a `TASK.md` whose persistent status is `Done` but whose latest History row is not `Done`.
+
 ## Documentation Timing and Write Coordination
 
 Do not defer all documentation until after implementation. Keep `PLAN.md` current before execution; update `DECISIONS.md`, `RISKS.md`, and `FILES.md` during execution; update `TESTS.md` and `EVIDENCE.md` immediately after validation; update `ACCEPTANCE.md`, `HANDOFF.md`, and shared state docs before finalize execute; and update shared close-source docs before the close-source hash is captured.

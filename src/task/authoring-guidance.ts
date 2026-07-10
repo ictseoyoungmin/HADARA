@@ -43,7 +43,8 @@ export function createTaskAuthoringGuidance(projectRoot: string, taskId: string)
     inspectTaskSection(content, relativeTaskPath, 'validation', 'Validation', 'List validation methods before close and update real results after execution.'),
     inspectTaskSection(content, relativeTaskPath, 'source-documents', ['Inputs / Constraints', 'Source Documents'], 'List source docs or explicitly state that none are required.'),
     inspectTaskSection(content, relativeTaskPath, 'change-summary', ['Changes', 'Change Summary'], 'Record changed areas/modules and evidence before close.'),
-    inspectTaskSection(content, relativeTaskPath, 'risks-followups', 'Risks / Follow-ups', 'Record real residual risks or explicitly mark none.')
+    inspectTaskSection(content, relativeTaskPath, 'risks-followups', 'Risks / Follow-ups', 'Record real residual risks or explicitly mark none.'),
+    inspectHistorySection(content, relativeTaskPath)
   ];
   const requiredOpen = items.filter((item) => item.required && item.status !== 'current').length;
   return {
@@ -52,6 +53,23 @@ export function createTaskAuthoringGuidance(projectRoot: string, taskId: string)
     status: requiredOpen > 0 ? 'needs-authoring' : 'current',
     summary: requiredOpen > 0 ? `${requiredOpen} task authoring section(s) need agent-owned prose or table updates.` : 'Task-owned prose sections look current.',
     items
+  };
+}
+
+function inspectHistorySection(content: string, taskPath: string): TaskAuthoringGuidanceItem {
+  const taskStatus = readIdentityStatus(content);
+  const latestState = latestHistoryState(content) ?? latestStatusHistoryState(content);
+  const doneRecorded = latestState === 'Done';
+  const required = taskStatus === 'Done' && !doneRecorded;
+  return {
+    id: 'history',
+    path: taskPath,
+    section: content.includes('## Status History') && !content.includes('## History') ? 'Status History' : 'History',
+    status: doneRecorded ? 'current' : content.includes('## History') || content.includes('## Status History') ? 'pending' : 'missing',
+    required,
+    summary: doneRecorded
+      ? 'History records the final Done state.'
+      : 'Before finalize execute, append a final `Done` row to TASK.md History; close proof hashes TASK.md, so this close-source note must be written before close.'
   };
 }
 
@@ -84,6 +102,34 @@ function sectionStatus(body: string): TaskAuthoringGuidanceItem['status'] {
   if (body.includes('TBD') || lower.includes('replace with') || lower.includes('scaffold placeholder')) return 'placeholder';
   if (body.includes('| Pending |') || body.includes('| Not Run |')) return 'pending';
   return 'current';
+}
+
+function readIdentityStatus(content: string): string {
+  const rows = readTableRows(readSection(content, 'Identity'));
+  return rows.find((row) => row[0] === 'Status')?.[1]?.trim() ?? '';
+}
+
+function latestHistoryState(content: string): string | null {
+  const rows = readTableRows(readSection(content, 'History')).filter((row) => row[0] !== 'Date');
+  return rows.at(-1)?.[1]?.trim() ?? null;
+}
+
+function latestStatusHistoryState(content: string): string | null {
+  const rows = readTableRows(readSection(content, 'Status History')).filter((row) => row[0] !== 'Time');
+  return rows.at(-1)?.[1]?.trim() ?? null;
+}
+
+function readTableRows(body: string): string[][] {
+  return body
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('|') && !/^\|\s*:?-+/.test(line))
+    .map((line) =>
+      line
+        .slice(1, line.endsWith('|') ? -1 : undefined)
+        .split('|')
+        .map((cell) => cell.trim())
+    );
 }
 
 function toPortablePath(value: string): string {

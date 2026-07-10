@@ -288,6 +288,8 @@ Use finalize dry-run as the ordinary close-proof repair plan. Use diagnostics wh
 
 Agents should inspect \`task finalize --json\` before close when the result is not already familiar. For ordinary clean capsules, \`task finalize --execute --auto --json\` performs the dry-run and current-plan verification internally and records idempotent validation-category readiness evidence before close proof when close evidence is still required. For externally reviewed flows, use the current \`planHash\` from the reviewed dry-run.
 
+Before finalize execute, finish all close-source text, including the manual \`TASK.md ## History\` table. Append a final row such as \`| 2026-06-12 | Done | Finished task capsule. |\`; done-level validation blocks \`TASK.md\` when its persistent status is \`Done\` but the latest History row is not \`Done\`.
+
 ## Useful CLI by Situation
 
 | Situation | Use | Notes |
@@ -740,6 +742,8 @@ hadara task finalize --task T-XXXX --execute --auto --json
 The close model has three separate phases: validation proves readiness, close records the proof, and audit checks the already-recorded close evidence. Close evidence is excluded from the current validation loop because it is appended after validation; requiring it as a same-run precondition would create a fixed-point loop.
 
 \`task finalize\` and \`task status --detail full\` include done-level Task Capsule validation. In the ordinary path, do not run \`validation run -- ... harness validate ...\` only to create a readiness proof: \`task finalize --execute --auto\` records that readiness evidence before appending close proof. Use \`hadara harness validate --task T-XXXX --level done --json\` directly only when debugging capsule format, status-history, acceptance, evidence, or handoff validation failures.
+
+For current v2 \`TASK.md\`, the manual \`## History\` table is close-source. Before finalize execute, append a final row such as \`| 2026-06-12 | Done | Finished task capsule. |\`. \`task status\` and \`task finalize --json\` surface this as authoring guidance before close; done-level validation blocks a \`TASK.md\` whose persistent status is \`Done\` but whose latest History row is not \`Done\`.
 
 ## Status Token And Ownership Policy
 

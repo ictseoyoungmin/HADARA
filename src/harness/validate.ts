@@ -966,7 +966,47 @@ function validateTaskStatusHistoryDone(projectRoot: string, task: TaskCapsule, i
 
   const relativePath = toPortablePath(path.relative(projectRoot, taskPath));
   const content = fs.readFileSync(taskPath, 'utf8');
-  if (!content.includes('## Status History')) return;
+  if (content.includes('## History')) {
+    const latestState = latestTaskHistoryState(content);
+    if (latestState !== 'Done') {
+      issues.push({
+        severity: 'error',
+        code: 'TASK_HISTORY_NOT_DONE',
+        message: 'Done-level validation requires TASK.md History to end with Done.',
+        path: relativePath,
+        heading: 'History',
+        fixHint: 'Append a final `Done` row to TASK.md ## History before running finalize execute; close proof hashes TASK.md, so this must be written before close.',
+        example: '| 2026-06-12 | Done | Finished task capsule. |',
+        remediationHint: {
+          path: relativePath,
+          heading: 'History',
+          requiredChange: 'Append or repair the latest History row so it records Done.',
+          example: '| 2026-06-12 | Done | Finished task capsule. |',
+          blocking: true
+        }
+      });
+    }
+    return;
+  }
+  if (!content.includes('## Status History')) {
+    issues.push({
+      severity: 'error',
+      code: 'TASK_HISTORY_NOT_DONE',
+      message: 'Done-level validation requires TASK.md History to end with Done.',
+      path: relativePath,
+      heading: 'History',
+      fixHint: 'Add TASK.md ## History with Date / State / Note columns and append a final Done row before finalize execute.',
+      example: '| 2026-06-12 | Done | Finished task capsule. |',
+      remediationHint: {
+        path: relativePath,
+        heading: 'History',
+        requiredChange: 'Add a History table whose latest row records Done.',
+        example: '| Date | State | Note |\n|---|---|---|\n| 2026-06-12 | Done | Finished task capsule. |',
+        blocking: true
+      }
+    });
+    return;
+  }
   const latestStatus = latestStatusHistoryStatus(content);
   if (latestStatus !== 'Done') {
     issues.push({
@@ -1498,6 +1538,20 @@ function latestStatusHistoryStatus(content: string): string | null {
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line.startsWith('|') && !/^\|\s*-+/.test(line) && !/^\|\s*Time\s*\|/i.test(line));
+  const latest = rows.at(-1);
+  if (!latest) return null;
+  const cells = latest
+    .slice(1, latest.endsWith('|') ? -1 : undefined)
+    .split('|')
+    .map((cell) => cell.trim());
+  return cells[1] || null;
+}
+
+function latestTaskHistoryState(content: string): string | null {
+  const rows = readMarkdownSection(content, '## History')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('|') && !/^\|\s*-+/.test(line) && !/^\|\s*Date\s*\|/i.test(line));
   const latest = rows.at(-1);
   if (!latest) return null;
   const cells = latest
