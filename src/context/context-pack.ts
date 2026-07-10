@@ -660,14 +660,17 @@ function estimateTokensForPath(relativePath: string, title: string): number {
 function validationSuggestionsForTask(taskId: string | undefined, graphReport: ContextGraphReport): ValidationSuggestion[] {
   const suggestions = new Map<string, ValidationSuggestion>();
   if (taskId) {
-    suggestions.set(`ready:${taskId}`, {
-      command: `hadara task status --task ${taskId} --detail full --json`,
+    const readinessCommand = `hadara task status --task ${taskId} --detail full --json`;
+    suggestions.set(readinessCommand, {
+      command: readinessCommand,
       reason: 'Done-level readiness is required before closing this task.',
       requiredForClose: true,
       source: 'evidence-history'
     });
   }
   for (const suggestion of graphReport.taskContext?.validationSuggestions ?? []) {
+    const existing = suggestions.get(suggestion);
+    if (existing?.requiredForClose) continue;
     const source = suggestion.includes('npm run') || suggestion.includes('test')
       ? 'task-tests'
       : suggestion.includes('release')
@@ -758,9 +761,13 @@ function agentActionsForContextPack(
 
   const firstSliceableItem = readFirst.find((item) => item.path && item.sourceAccess?.rawSlice === 'sliceable');
   if (firstSliceableItem?.path) {
+    const lineStart = firstSliceableItem.lineStart ?? 1;
+    const lineEnd = firstSliceableItem.lineEnd && firstSliceableItem.lineEnd > lineStart
+      ? firstSliceableItem.lineEnd
+      : lineStart + 80;
     const args = suggestedSliceCommandArgs(firstSliceableItem.path, 'explicit-range', undefined, {
-      lineStart: firstSliceableItem.lineStart ?? 1,
-      lineEnd: firstSliceableItem.lineEnd ?? Math.max(firstSliceableItem.lineStart ?? 1, (firstSliceableItem.lineStart ?? 1) + 80)
+      lineStart,
+      lineEnd
     });
     pushAgentAction(actions, seenCommands, {
       id: 'agent-action:read-first:1',

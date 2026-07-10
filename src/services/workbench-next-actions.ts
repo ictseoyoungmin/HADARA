@@ -46,15 +46,30 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
     });
   }
 
-  if (!input.closed && input.authoringStatus === 'current' && input.evidenceRecords > 0 && !input.closePlanOk) {
+  if (!input.closed && input.authoringStatus === 'current' && input.evidenceRecords > 0 && !input.closePlanOk && hasOnlyFinishBookkeepingBlockers(input.issues)) {
     upsert(actions, {
-      id: 'continue-implementation-or-docs',
-      kind: 'continue',
+      id: 'finalize-auto-finish-bookkeeping',
+      kind: 'command',
       required: true,
       priority: 'now',
-      message: 'Continue implementation or task document updates, then rerun task status when the next loop boundary is reached.',
-      sourceIssueCodes: ['TASK_STATUS_WORK_REQUIRED']
+      command: `hadara task finalize --task ${input.taskId} --execute --auto --json`,
+      message: 'Only finish bookkeeping remains; run guarded finalize auto to sync task status, Task Board, readiness evidence, and close proof.',
+      sourceIssueCodes: ['HARNESS_TASK_BOARD_STATUS_NOT_DONE'],
+      loopBoundary: true
     });
+  }
+
+  if (!input.closed && input.authoringStatus === 'current' && input.evidenceRecords > 0 && !input.closePlanOk) {
+    if (!hasOnlyFinishBookkeepingBlockers(input.issues)) {
+      upsert(actions, {
+        id: 'continue-implementation-or-docs',
+        kind: 'continue',
+        required: true,
+        priority: 'now',
+        message: 'Continue implementation or task document updates, then rerun task status when the next loop boundary is reached.',
+        sourceIssueCodes: ['TASK_STATUS_WORK_REQUIRED']
+      });
+    }
   }
 
   if (!input.closed && input.closeEvidenceFound) {
@@ -90,6 +105,11 @@ export function buildWorkbenchNextActions(input: WorkbenchNextActionInput): Work
   }
 
   return Array.from(actions.values()).sort(compareActions);
+}
+
+function hasOnlyFinishBookkeepingBlockers(issues: TaskCloseIssue[]): boolean {
+  const errors = issues.filter((issue) => issue.severity === 'error');
+  return errors.length > 0 && errors.every((issue) => issue.code === 'HARNESS_TASK_BOARD_STATUS_NOT_DONE');
 }
 
 function addIssueAction(actions: Map<string, WorkbenchNextAction>, taskId: string, issue: TaskCloseIssue): void {

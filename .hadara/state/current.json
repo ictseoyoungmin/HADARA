@@ -1,11 +1,11 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 23,
+  "rev": 25,
   "profile": "governed",
   "currentRelease": "0.4.3",
   "latestCompletedTask": {
-    "id": "T-0568",
-    "title": "Fresh init dogfood from temporary project"
+    "id": "T-0569",
+    "title": "Fix fresh init dogfood UX regressions"
   },
   "activeTask": null,
   "nextWork": {

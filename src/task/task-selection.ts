@@ -224,6 +224,7 @@ function recommendationFromCurrentState(projectRoot: string, state: ProjectCurre
   const nextWork = state.nextWork;
   if (!nextWork || nextWork.state === 'none') return null;
   if (!isActionableHandoffStep(nextWork.title)) return null;
+  if (isBootstrapFirstTaskNextWork(nextWork.title) && (boardRows.length > 0 || hasAnyTaskCapsule(projectRoot))) return null;
   const knownTaskId = nextWork.title.match(/\bT-\d{4}\b/)?.[0] ?? null;
   const title = normalizeNextWorkTitle(nextWork.title);
   const fuzzyBoardRow = knownTaskId ? undefined : findSimilarOpenBoardRow(title, boardRows);
@@ -254,6 +255,10 @@ function recommendationFromCurrentState(projectRoot: string, state: ProjectCurre
 
 function normalizeNextWorkTitle(title: string): string {
   return title.replace(/[.]+$/, '').trim();
+}
+
+function isBootstrapFirstTaskNextWork(title: string): boolean {
+  return normalizeNextWorkTitle(title).toLowerCase() === 'create first task capsule';
 }
 
 function recommendationFromTaskBoard(projectRoot: string, boardRows: BoardRow[]): TaskSelectionRecommendation | null {

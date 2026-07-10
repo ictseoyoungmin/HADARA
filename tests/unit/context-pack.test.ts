@@ -81,6 +81,8 @@ describe('context pack', () => {
       graphSourceHash: 'sha256:graph'
     }));
     expect(report.validateWith.some((item) => item.command.includes(`task status --task ${taskId} --detail full`))).toBe(true);
+    expect(report.validateWith.some((item) => item.command.includes('tests/unit/context-graph-builder.test.ts'))).toBe(false);
+    expect(report.validateWith.filter((item) => item.command === `hadara task status --task ${taskId} --detail full --json`)).toHaveLength(1);
     expect(report.writeBoundaries).toContainEqual(expect.objectContaining({
       path: `tasks/${taskId}-fixture/TASK.md`,
       boundary: 'dry-run-first'
@@ -683,7 +685,7 @@ function taskNode(id: string): ContextGraphNode {
     path: `tasks/${id}-fixture/TASK.md`,
     status: 'In Progress',
     kind: 'task-capsule',
-    source
+    source: { ...source, line: 1 }
   };
 }
 

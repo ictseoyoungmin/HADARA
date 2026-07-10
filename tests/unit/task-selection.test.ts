@@ -301,6 +301,30 @@ describe('task selection recommendation', () => {
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
+  it('suppresses scaffold first-task nextWork after any task exists', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Already Closed First Task');
+    updateTaskBoardStatus(root, task.id, 'Done');
+    writeCurrentState(root, {
+      activeTask: null,
+      nextWork: {
+        title: 'Create first Task Capsule',
+        state: 'candidate',
+        operatorGuidance: 'Create the first scoped task.',
+        createCommandAllowed: true
+      },
+      nextOperatorIntent: 'Create the first scoped task.'
+    });
+
+    const report = createTaskSelectionReport(root);
+
+    expect(report.recommendations).toEqual([]);
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'TASK_SELECTION_NO_RECOMMENDATION'
+    }));
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
+  });
+
   it('recommends the first incomplete Development Slices row with existing capsule metadata', () => {
     const root = tempProject();
     const done = createTaskCapsule(root, 'Already Done');

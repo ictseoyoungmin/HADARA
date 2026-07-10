@@ -207,6 +207,38 @@ describe('workbench next actions', () => {
     expect(actions.map((action) => action.id)).toEqual(['review-finalize-repair-plan']);
     expect(validateSchema('hadara.task.workbench.v1', fixtureReport(actions)).ok).toBe(true);
   });
+
+  it('routes finish-only blockers to guarded finalize auto instead of generic continue guidance', () => {
+    const actions = buildWorkbenchNextActions({
+      taskId: 'T-0001',
+      closed: false,
+      closeEvidenceFound: false,
+      closePlanOk: false,
+      evidenceRecords: 1,
+      authoringStatus: 'current',
+      closeActions: [],
+      issues: [
+        {
+          severity: 'error',
+          code: 'HARNESS_TASK_BOARD_STATUS_NOT_DONE',
+          message: 'Done-level validation requires docs/TASK_BOARD.md status for T-0001 to be Done.'
+        },
+        {
+          severity: 'warning',
+          code: 'WORKBENCH_TASK_BOARD_STATUS_DRIFT',
+          message: 'Task Board status drift.'
+        }
+      ]
+    });
+
+    expect(actions[0]).toMatchObject({
+      id: 'finalize-auto-finish-bookkeeping',
+      kind: 'command',
+      command: 'hadara task finalize --task T-0001 --execute --auto --json',
+      loopBoundary: true
+    });
+    expect(actions.map((action) => action.id)).not.toContain('continue-implementation-or-docs');
+  });
 });
 
 function fixtureReport(nextActions: ReturnType<typeof buildWorkbenchNextActions>): object {

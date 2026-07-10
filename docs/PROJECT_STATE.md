@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.3 |
-| Latest Completed Task | T-0568 Fresh init dogfood from temporary project |
+| Latest Completed Task | T-0569 Fix fresh init dogfood UX regressions |
 | Active Task | None |
 | Next Work | v0.4.4 external-repository validation planning |
 | Next Work State | candidate |

@@ -102,7 +102,8 @@ describe('context graph builder', () => {
     expect(context.relatedEvidence.map((item) => item.id)).toEqual(['ev:T-0002:aaaaaaaaaaaaaaaaaaaaaaaa']);
     expect(context.relatedCommands.map((item) => item.id)).toEqual(['command:task.ready']);
     expect(context.knownProblems.map((item) => item.id)).toEqual(['known-problem:fixture']);
-    expect(context.validationSuggestions).toContain('npm run test:focused -- tests/unit/context-graph-builder.test.ts');
+    expect(context.validationSuggestions).not.toContain('npm run test:focused -- tests/unit/context-graph-builder.test.ts');
+    expect(context.validationSuggestions).toContain(`hadara task status --task ${taskId} --detail full --json`);
     assertSchema('hadara.taskContext.v1', context);
   });
 
