@@ -1,20 +1,20 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 43,
+  "rev": 45,
   "profile": "governed",
   "currentRelease": "0.4.3",
   "latestCompletedTask": {
-    "id": "T-0575",
-    "title": "v0.4.4 R1 dogfood UX findings cleanup"
+    "id": "T-0576",
+    "title": "v0.4.4 R2 external dogfood validation"
   },
   "activeTask": null,
   "nextWork": {
-    "title": "v0.4.4 R2 external dogfood validation",
+    "title": "v0.4.4 R3 external dogfood validation",
     "state": "candidate",
-    "operatorGuidance": "Run the next external/delegated dogfood pass with the T-0575 fixed CLI surface before v0.4.4 release readiness.",
+    "operatorGuidance": "Run the next external validation pass or explicitly decide to proceed to v0.4.4 release readiness after R2.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Run R2 external/delegated dogfood validation with the fixed CLI before v0.4.4 release readiness.",
+  "nextOperatorIntent": "Run R3 external validation or make the v0.4.4 release-readiness decision after R2 passed.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
@@ -38,11 +38,11 @@
     }
   ],
   "validationBaseline": {
-    "summary": "hadara@0.4.3 plus T-0575 R1 UX cleanup: Docker sync build/full suite passed (153 files / 1063 tests), focused R1 regressions passed, and built-CLI R1 smoke checks passed.",
+    "summary": "hadara@0.4.3 plus T-0576 R2 external dogfood: runtime-version regression passed, Docker sync build/full suite passed (153 files / 1064 tests), and 8 standard-profile external capsules finalized with direct validation fallback for host EPERM.",
     "evidence": [
-      "ev:T-0575:ded5c44171ac4a719dec415b",
-      "ev:T-0575:91c5965a97ff4e5c9ad86db2",
-      "ev:T-0575:a8e689410ea74b439ad6922e"
+      "ev:T-0576:95e147a95ff943b9bf3cdb7b",
+      "ev:T-0576:e47e8f11c2e04ab2a09bdece",
+      "ev:T-0576:3d56c22eddb3403e952b6b13"
     ]
   }
 }

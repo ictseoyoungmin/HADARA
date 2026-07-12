@@ -576,3 +576,4 @@
 | T-0573 | v0.4.4 R1 delegated-agent basic-profile dogfood pilot | Done | tasks/T-0573-v0-4-4-r1-delegated-agent-basic-profile-dogfood-pilot | |
 | T-0574 | v0.4.4 R1 dogfood generated docs audit | Done | tasks/T-0574-v0-4-4-r1-dogfood-generated-docs-audit | |
 | T-0575 | v0.4.4 R1 dogfood UX findings cleanup | Done | tasks/T-0575-v0-4-4-r1-dogfood-ux-findings-cleanup | |
+| T-0576 | v0.4.4 R2 external dogfood validation | Done | tasks/T-0576-v0-4-4-r2-external-dogfood-validation | R2 standard-profile external dogfood completed; no new v0.4.4 blocker. |

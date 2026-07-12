@@ -50,7 +50,7 @@ export function createRuntimeVersionReport(projectRoot: string, options: Runtime
     });
   }
 
-  const sourceMtime = cliEntryIsProjectLocal(projectRoot, cliEntry) ? readLatestSourceMtime(projectRoot) : null;
+  const sourceMtime = shouldCheckProjectSourceFreshness(projectRoot, cliEntry) ? readLatestSourceMtime(projectRoot) : null;
   const distLooksStale = Boolean(distMtime && sourceMtime && sourceMtime.getTime() > distMtime.getTime() + 1000);
   if (distLooksStale) {
     issues.push({
@@ -118,6 +118,21 @@ function readLatestSourceMtime(projectRoot: string): Date | null {
     latest = maxDate(latest, readLatestMtime(root));
   }
   return latest;
+}
+
+function shouldCheckProjectSourceFreshness(projectRoot: string, cliEntry: string): boolean {
+  return projectLooksLikeHadaraSourceCheckout(projectRoot) && cliEntryIsProjectLocal(projectRoot, cliEntry);
+}
+
+function projectLooksLikeHadaraSourceCheckout(projectRoot: string): boolean {
+  const packagePath = path.join(projectRoot, 'package.json');
+  if (!fs.existsSync(packagePath) || !fs.existsSync(path.join(projectRoot, 'src', 'cli', 'main.ts'))) return false;
+  try {
+    const parsed = JSON.parse(fs.readFileSync(packagePath, 'utf8')) as { name?: unknown };
+    return parsed.name === 'hadara';
+  } catch {
+    return false;
+  }
 }
 
 function cliEntryIsProjectLocal(projectRoot: string, cliEntry: string): boolean {

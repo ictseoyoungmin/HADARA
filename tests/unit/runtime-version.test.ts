@@ -16,7 +16,7 @@ function tempProject(): string {
   fs.mkdirSync(path.join(root, 'dist', 'cli'), { recursive: true });
   fs.writeFileSync(path.join(root, 'src', 'cli', 'main.ts'), 'console.log("source");\n', 'utf8');
   fs.writeFileSync(path.join(root, 'dist', 'cli', 'main.js'), 'console.log("dist");\n', 'utf8');
-  fs.writeFileSync(path.join(root, 'package.json'), '{"version":"0.0.0"}\n', 'utf8');
+  fs.writeFileSync(path.join(root, 'package.json'), '{"name":"hadara","version":"0.0.0"}\n', 'utf8');
   fs.writeFileSync(path.join(root, 'tsconfig.json'), '{}\n', 'utf8');
   return root;
 }
@@ -72,6 +72,25 @@ describe('runtime version report', () => {
     const cliEntry = path.join(installedRoot, 'node_modules', 'hadara', 'dist', 'cli', 'main.js');
     fs.mkdirSync(path.dirname(cliEntry), { recursive: true });
     fs.writeFileSync(cliEntry, 'console.log("installed");\n', 'utf8');
+    const oldTime = new Date('2026-05-31T00:00:00.000Z');
+    const newTime = new Date('2026-05-31T00:00:05.000Z');
+    fs.utimesSync(cliEntry, oldTime, oldTime);
+    fs.utimesSync(path.join(root, 'src', 'cli', 'main.ts'), newTime, newTime);
+
+    const report = createRuntimeVersionReport(root, { cliEntry, cwd: root });
+
+    expect(report.build.sourceMtime).toBe(null);
+    expect(report.build.distLooksStale).toBe(false);
+    expect(report.issues).not.toContainEqual(expect.objectContaining({ code: 'DIST_LOOKS_STALE' }));
+    expect(validateSchema('hadara.runtime.version.v1', report).ok).toBe(true);
+  });
+
+  it('does not compare node_modules bin mtimes against a non-HADARA project source tree', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'package.json'), '{"name":"external-service","version":"1.0.0"}\n', 'utf8');
+    const cliEntry = path.join(root, 'node_modules', '.bin', 'hadara');
+    fs.mkdirSync(path.dirname(cliEntry), { recursive: true });
+    fs.writeFileSync(cliEntry, '#!/usr/bin/env node\n', 'utf8');
     const oldTime = new Date('2026-05-31T00:00:00.000Z');
     const newTime = new Date('2026-05-31T00:00:05.000Z');
     fs.utimesSync(cliEntry, oldTime, oldTime);

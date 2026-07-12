@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.3 |
-| Latest Completed Task | T-0575 v0.4.4 R1 dogfood UX findings cleanup |
+| Latest Completed Task | T-0576 v0.4.4 R2 external dogfood validation |
 | Active Task | None |
-| Next Work | v0.4.4 R2 external dogfood validation |
+| Next Work | v0.4.4 R3 external dogfood validation |
 | Next Work State | candidate |
-| Operator Guidance | Run the next external/delegated dogfood pass with the T-0575 fixed CLI surface before v0.4.4 release readiness. |
-| Validation Baseline | hadara@0.4.3 plus T-0575 R1 UX cleanup: Docker sync build/full suite passed (153 files / 1063 tests), focused R1 regressions passed, and built-CLI R1 smoke checks passed. |
+| Operator Guidance | Run the next external validation pass or explicitly decide to proceed to v0.4.4 release readiness after R2. |
+| Validation Baseline | hadara@0.4.3 plus T-0576 R2 external dogfood: runtime-version regression passed, Docker sync build/full suite passed (153 files / 1064 tests), and 8 standard-profile external capsules finalized with direct validation fallback for host EPERM. |
 
 ### Current Known Problems
 
@@ -43,7 +43,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.3 npm/GitHub publication and installed-package recycle are complete; v0.4.4 external validation planning, R1 delegated basic-profile dogfood, R1 generated-doc audit, and R1 UX cleanup are complete; R2 external validation is next before v0.4.4 release readiness.
+v0.4.3 npm/GitHub publication and installed-package recycle are complete; v0.4.4 external validation planning, R1 delegated basic-profile dogfood, R1 generated-doc audit, R1 UX cleanup, and R2 standard-profile external validation are complete; R3 external validation or v0.4.4 release readiness is next.
 
 | Stage | State | Purpose |
 |---|---|---|
