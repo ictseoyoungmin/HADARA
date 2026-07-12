@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.3 |
-| Latest Completed Task | T-0576 v0.4.4 R2 external dogfood validation |
+| Latest Completed Task | T-0577 v0.4.4 R3 delegated Claude external dogfood validation |
 | Active Task | None |
-| Next Work | v0.4.4 R3 external dogfood validation |
+| Next Work | v0.4.4 release readiness |
 | Next Work State | candidate |
-| Operator Guidance | Run the next external validation pass or explicitly decide to proceed to v0.4.4 release readiness after R2. |
-| Validation Baseline | hadara@0.4.3 plus T-0576 R2 external dogfood: runtime-version regression passed, Docker sync build/full suite passed (153 files / 1064 tests), and 8 standard-profile external capsules finalized with direct validation fallback for host EPERM. |
+| Operator Guidance | Prepare v0.4.4 release readiness; optionally run a final delegated candidate-tarball smoke first. |
+| Validation Baseline | hadara@0.4.3 plus T-0577 delegated R3 dogfood: Claude Code independently finalized 8 governed-profile capsules; current candidate focused regressions passed for current-state, task-selection, session-start, runtime-version, and docs doctor coverage. |
 
 ### Current Known Problems
 
@@ -43,7 +43,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.3 npm/GitHub publication and installed-package recycle are complete; v0.4.4 external validation planning, R1 delegated basic-profile dogfood, R1 generated-doc audit, R1 UX cleanup, and R2 standard-profile external validation are complete; R3 external validation or v0.4.4 release readiness is next.
+v0.4.3 npm/GitHub publication and installed-package recycle are complete; v0.4.4 external validation planning, R1 delegated basic-profile dogfood, R1 generated-doc audit, R1 UX cleanup, R2 standard-profile external validation, and R3 delegated Claude governed-profile validation are complete; v0.4.4 release readiness is next.
 
 | Stage | State | Purpose |
 |---|---|---|

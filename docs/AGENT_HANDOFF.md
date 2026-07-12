@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.3 | Portable project state. |
-| Latest Completed Task | T-0576 v0.4.4 R2 external dogfood validation | Most recent completed capsule. |
+| Latest Completed Task | T-0577 v0.4.4 R3 delegated Claude external dogfood validation | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
-| Next Work | v0.4.4 R3 external dogfood validation | Structured continuation title; not operator prose. |
+| Next Work | v0.4.4 release readiness | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | Run the next external validation pass or explicitly decide to proceed to v0.4.4 release readiness after R2. | Human constraints; never used as a task title. |
-| Validation Baseline | hadara@0.4.3 plus T-0576 R2 external dogfood: runtime-version regression passed, Docker sync build/full suite passed (153 files / 1064 tests), and 8 standard-profile external capsules finalized with direct validation fallback for host EPERM. | ev:T-0576:95e147a95ff943b9bf3cdb7b, ev:T-0576:e47e8f11c2e04ab2a09bdece, ev:T-0576:3d56c22eddb3403e952b6b13 |
+| Operator Guidance | Prepare v0.4.4 release readiness; optionally run a final delegated candidate-tarball smoke first. | Human constraints; never used as a task title. |
+| Validation Baseline | hadara@0.4.3 plus T-0577 delegated R3 dogfood: Claude Code independently finalized 8 governed-profile capsules; current candidate focused regressions passed for current-state, task-selection, session-start, runtime-version, and docs doctor coverage. | ev:T-0577:c2cbfbd77f1d415bb306c352, ev:T-0577:86df1cd8b70943c9aa6632a9, ev:T-0577:fba2ca49eac2444cb301283c |
 
 ### Current Known Problems
 

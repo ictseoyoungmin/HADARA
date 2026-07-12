@@ -1,20 +1,20 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 45,
+  "rev": 47,
   "profile": "governed",
   "currentRelease": "0.4.3",
   "latestCompletedTask": {
-    "id": "T-0576",
-    "title": "v0.4.4 R2 external dogfood validation"
+    "id": "T-0577",
+    "title": "v0.4.4 R3 delegated Claude external dogfood validation"
   },
   "activeTask": null,
   "nextWork": {
-    "title": "v0.4.4 R3 external dogfood validation",
+    "title": "v0.4.4 release readiness",
     "state": "candidate",
-    "operatorGuidance": "Run the next external validation pass or explicitly decide to proceed to v0.4.4 release readiness after R2.",
+    "operatorGuidance": "Prepare v0.4.4 release readiness; optionally run a final delegated candidate-tarball smoke first.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Run R3 external validation or make the v0.4.4 release-readiness decision after R2 passed.",
+  "nextOperatorIntent": "Prepare v0.4.4 release readiness after R3 delegated Claude dogfood.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
@@ -38,11 +38,11 @@
     }
   ],
   "validationBaseline": {
-    "summary": "hadara@0.4.3 plus T-0576 R2 external dogfood: runtime-version regression passed, Docker sync build/full suite passed (153 files / 1064 tests), and 8 standard-profile external capsules finalized with direct validation fallback for host EPERM.",
+    "summary": "hadara@0.4.3 plus T-0577 delegated R3 dogfood: Claude Code independently finalized 8 governed-profile capsules; current candidate focused regressions passed for current-state, task-selection, session-start, runtime-version, and docs doctor coverage.",
     "evidence": [
-      "ev:T-0576:95e147a95ff943b9bf3cdb7b",
-      "ev:T-0576:e47e8f11c2e04ab2a09bdece",
-      "ev:T-0576:3d56c22eddb3403e952b6b13"
+      "ev:T-0577:c2cbfbd77f1d415bb306c352",
+      "ev:T-0577:86df1cd8b70943c9aa6632a9",
+      "ev:T-0577:fba2ca49eac2444cb301283c"
     ]
   }
 }
