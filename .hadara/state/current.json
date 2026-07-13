@@ -1,11 +1,11 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 91,
+  "rev": 93,
   "profile": "governed",
   "currentRelease": "0.4.4",
   "latestCompletedTask": {
-    "id": "T-0594",
-    "title": "0.4.5 brownfield managed adoption writer"
+    "id": "T-0595",
+    "title": "0.4.5 adoption doctor and idempotency cleanup"
   },
   "activeTask": null,
   "nextWork": {

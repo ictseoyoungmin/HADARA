@@ -379,6 +379,11 @@ describe('init profiles', () => {
     ]));
     expect(exists(root, 'tasks/.gitkeep')).toBe(false);
     expect(process.exitCode).toBeUndefined();
+
+    handleInitCommand({ args: ['init', 'doctor', '--json'], projectRoot: root, jsonOutput: true });
+    const doctor = jsonLog();
+    expect(doctor.ok).toBe(true);
+    expect(doctor.issues).toEqual([]);
   });
 
   it('does not reinitialize an already-current HADARA project', () => {

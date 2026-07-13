@@ -62,7 +62,9 @@ export function createInitDoctorReport(projectRoot: string): InitFollowUpReport 
   issues.push(...detectProductDefaultLeaks(projectRoot));
   issues.push(...detectProfileMetadataMismatches(projectRoot));
 
+  const projectAuthoredPaths = projectAuthoredRegistryPaths(projectRoot);
   for (const [relativePath, headers] of Object.entries(CANONICAL_TABLE_HEADERS)) {
+    if (projectAuthoredPaths.has(relativePath)) continue;
     const content = readProjectText(projectRoot, relativePath);
     if (content === null) continue;
     for (const header of headers) {
@@ -214,6 +216,7 @@ const CANONICAL_TABLE_HEADERS: Record<string, string[]> = {
 function detectProfileMetadataMismatches(projectRoot: string): InitIssue[] {
   const inferredProfile = inferProfileFromGeneratedDocs(projectRoot);
   const issues: InitIssue[] = [];
+  const projectAuthoredPaths = projectAuthoredRegistryPaths(projectRoot);
   const projectState = readProjectText(projectRoot, 'docs/PROJECT_STATE.md');
   const projectStateProfile = projectState?.match(/\|\s*HADARA Profile\s*\|\s*(basic|standard|governed)\s*\|/)?.[1] as InitProfile | undefined;
   if (projectStateProfile !== undefined && isLowerProfile(projectStateProfile, inferredProfile)) {
@@ -226,7 +229,7 @@ function detectProfileMetadataMismatches(projectRoot: string): InitIssue[] {
   }
 
   const agents = readProjectText(projectRoot, 'AGENTS.md');
-  if (agents !== null) {
+  if (agents !== null && !projectAuthoredPaths.has('AGENTS.md')) {
     for (const requiredPath of requiredDocsForProfile(inferredProfile)) {
       if (!agents.includes(`\`${requiredPath}\``)) {
         issues.push({
@@ -243,6 +246,22 @@ function detectProfileMetadataMismatches(projectRoot: string): InitIssue[] {
 }
 
 function inferProfileFromGeneratedDocs(projectRoot: string): InitProfile {
+  const registry = readDocsRegistryForDoctor(projectRoot);
+  if (registry?.project?.hadaraProfile === 'basic' || registry?.project?.hadaraProfile === 'standard' || registry?.project?.hadaraProfile === 'governed') {
+    return registry.project.hadaraProfile;
+  }
+  if (registry?.projectProfile === 'basic' || registry?.projectProfile === 'standard' || registry?.projectProfile === 'governed') {
+    return registry.projectProfile;
+  }
+  const scaffold = readProjectText(projectRoot, '.hadara/scaffold.json');
+  if (scaffold !== null) {
+    try {
+      const parsed = JSON.parse(scaffold) as { profile?: unknown };
+      if (parsed.profile === 'basic' || parsed.profile === 'standard' || parsed.profile === 'governed') return parsed.profile;
+    } catch {
+      // Protocol parse errors are reported by the main doctor path.
+    }
+  }
   if (['docs/SECURITY_MODEL.md', 'docs/AGENT_HANDOFF.md'].some((relativePath) => fs.existsSync(path.join(projectRoot, relativePath)))) {
     return 'governed';
   }
@@ -250,4 +269,13 @@ function inferProfileFromGeneratedDocs(projectRoot: string): InitProfile {
     return 'standard';
   }
   return 'basic';
+}
+
+function projectAuthoredRegistryPaths(projectRoot: string): Set<string> {
+  const registry = readDocsRegistryForDoctor(projectRoot);
+  const paths = new Set<string>();
+  for (const document of registry?.documents ?? []) {
+    if (document.owner === 'project' || document.origin?.type === 'project-authored') paths.add(document.path);
+  }
+  return paths;
 }
