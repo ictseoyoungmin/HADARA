@@ -8,11 +8,11 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.4 | Portable project state. |
-| Latest Completed Task | T-0584 v0.4.4 operator publish and installed-package recycle | Most recent completed capsule. |
+| Latest Completed Task | T-0585 0.4.5 docs registry and init cleanup design | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
-| Next Work | v0.4.5 planning and post-release issue watch | Structured continuation title; not operator prose. |
+| Next Work | 0.4.5 init upgrade project identity and gitkeep cleanup | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | Stable 0.4.4 is published and recycled; watch for post-release package issues, then select the next improvement capsule deliberately. | Human constraints; never used as a task title. |
+| Operator Guidance | Implement the first 0.4.5 staged capsule from the registered design: preserve project identity during init upgrade and stop generating tasks/.gitkeep. | Human constraints; never used as a task title. |
 | Validation Baseline | Stable 0.4.4 publication and recycle passed: operator completed npm publish and public GitHub Release v0.4.4; npm view returned 0.4.4 for both hadara@0.4.4 and hadara@latest; GitHub Release is non-draft/non-prerelease; installed-package recycle for hadara@latest expected 0.4.4 passed consumer init/task/session/finalize/context smokes. | ev:T-0584:8ffea7cd42504ea5a177a54f, ev:T-0584:36991318909d46e59d2fce17, ev:T-0584:2058d34afba84221849ae6ab |
 
 ### Current Known Problems

@@ -1,20 +1,20 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 68,
+  "rev": 70,
   "profile": "governed",
   "currentRelease": "0.4.4",
   "latestCompletedTask": {
-    "id": "T-0584",
-    "title": "v0.4.4 operator publish and installed-package recycle"
+    "id": "T-0585",
+    "title": "0.4.5 docs registry and init cleanup design"
   },
   "activeTask": null,
   "nextWork": {
-    "title": "v0.4.5 planning and post-release issue watch",
+    "title": "0.4.5 init upgrade project identity and gitkeep cleanup",
     "state": "candidate",
-    "operatorGuidance": "Stable 0.4.4 is published and recycled; watch for post-release package issues, then select the next improvement capsule deliberately.",
+    "operatorGuidance": "Implement the first 0.4.5 staged capsule from the registered design: preserve project identity during init upgrade and stop generating tasks/.gitkeep.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Treat stable 0.4.4 as published after T-0584 closes; next work should be post-release observation or 0.4.5 planning, not another 0.4.4 publish step.",
+  "nextOperatorIntent": "Begin 0.4.5 implementation with the bounded init upgrade identity/gitkeep cleanup before docsRegistry v3 migration work.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",

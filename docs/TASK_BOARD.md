@@ -585,3 +585,4 @@
 | T-0582 | v0.4.4 major CLI dogfood before stable | Done | tasks/T-0582-v0-4-4-major-cli-dogfood-before-stable | |
 | T-0583 | v0.4.4 stable source and release preparation | Done | tasks/T-0583-v0-4-4-stable-source-and-release-preparation | |
 | T-0584 | v0.4.4 operator publish and installed-package recycle | Done | tasks/T-0584-v0-4-4-operator-publish-and-installed-package-recycle | |
+| T-0585 | 0.4.5 docs registry and init cleanup design | Done | tasks/T-0585-init-upgrade-project-identity-and-gitkeep-hotfix | |

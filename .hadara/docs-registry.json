@@ -1646,6 +1646,36 @@
       }
     },
     {
+      "path": "docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md",
+      "title": "0.4.5 docs registry v3 and init cleanup design",
+      "owner": "hadara-docs",
+      "kind": "spec",
+      "status": "active",
+      "scope": "project",
+      "profiles": [
+        "governed"
+      ],
+      "readWhen": [
+        "docs-work"
+      ],
+      "requiredReading": false,
+      "updateOwner": "human",
+      "updatedByCommands": [
+        "docs.register"
+      ],
+      "managedSections": [],
+      "closeSourceRole": "task-dependent",
+      "supersedes": [],
+      "readTier": "active-spec",
+      "authority": "approved",
+      "editPolicy": "agent-editable-with-review",
+      "drift": {
+        "risk": "low",
+        "reviewRequiredBeforeUse": false,
+        "reason": "0.4.5 implementation source design; update through task-scoped review."
+      }
+    },
+    {
       "path": "docs/specs/0.5/state-first/RFC.md",
       "title": "0.5 state-first candidate RFC",
       "owner": "hadara-docs",

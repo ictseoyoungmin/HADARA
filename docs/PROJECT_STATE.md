@@ -8,11 +8,11 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.4 |
-| Latest Completed Task | T-0584 v0.4.4 operator publish and installed-package recycle |
+| Latest Completed Task | T-0585 0.4.5 docs registry and init cleanup design |
 | Active Task | None |
-| Next Work | v0.4.5 planning and post-release issue watch |
+| Next Work | 0.4.5 init upgrade project identity and gitkeep cleanup |
 | Next Work State | candidate |
-| Operator Guidance | Stable 0.4.4 is published and recycled; watch for post-release package issues, then select the next improvement capsule deliberately. |
+| Operator Guidance | Implement the first 0.4.5 staged capsule from the registered design: preserve project identity during init upgrade and stop generating tasks/.gitkeep. |
 | Validation Baseline | Stable 0.4.4 publication and recycle passed: operator completed npm publish and public GitHub Release v0.4.4; npm view returned 0.4.4 for both hadara@0.4.4 and hadara@latest; GitHub Release is non-draft/non-prerelease; installed-package recycle for hadara@latest expected 0.4.4 passed consumer init/task/session/finalize/context smokes. |
 
 ### Current Known Problems
