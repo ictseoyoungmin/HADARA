@@ -31,8 +31,7 @@ export function createGeneratedScaffoldFiles(profile: InitProfile, metadata: Ini
     { path: 'docs/TASK_BOARD.md', content: createTaskBoardDoc() },
     { path: 'docs/HADARA_WORKFLOW.md', content: createHadaraWorkflowDoc() },
     { path: 'AGENTS.md', content: createAgentsDoc(spec) },
-    { path: '.gitignore', content: createGitignoreDoc() },
-    { path: 'tasks/.gitkeep', content: '' }
+    { path: '.gitignore', content: createGitignoreDoc() }
   ];
   if (spec.docs.architecture) files.push({ path: 'docs/ARCHITECTURE.md', content: createArchitectureDoc(profile) });
   if (spec.docs.decisions) files.push({ path: 'docs/DECISIONS.md', content: createDecisionsDoc() });

@@ -97,7 +97,8 @@ function createDocsRegistryProfileMerge(projectRoot: string, profile: InitProfil
   const seed = createSeedDocumentRegistry(profile);
   const existingPaths = new Set(registry.documents.map((doc) => doc.path));
   const missing = seed.documents.filter((doc) => !existingPaths.has(doc.path));
-  const profileMatches = registry.projectProfile === profile;
+  const nextProjectProfile = registry.projectProfile === 'hadara-dev' ? registry.projectProfile : profile;
+  const profileMatches = nextProjectProfile === registry.projectProfile;
   if (missing.length === 0 && profileMatches) {
     return {
       actions: [{
@@ -112,7 +113,7 @@ function createDocsRegistryProfileMerge(projectRoot: string, profile: InitProfil
   }
   const merged: DocumentRegistryFile = {
     ...registry,
-    projectProfile: profile,
+    projectProfile: nextProjectProfile,
     documents: [...registry.documents, ...missing]
   };
   return {

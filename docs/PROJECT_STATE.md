@@ -8,11 +8,11 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.4 |
-| Latest Completed Task | T-0585 0.4.5 docs registry and init cleanup design |
+| Latest Completed Task | T-0586 0.4.5 init upgrade project identity and gitkeep cleanup |
 | Active Task | None |
-| Next Work | 0.4.5 init upgrade project identity and gitkeep cleanup |
+| Next Work | 0.4.5 docsRegistry v3 schema and read model |
 | Next Work State | candidate |
-| Operator Guidance | Implement the first 0.4.5 staged capsule from the registered design: preserve project identity during init upgrade and stop generating tasks/.gitkeep. |
+| Operator Guidance | Implement staged capsule 2 from docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md: add v3 types, normalizer, migration read path, schema fixtures, and docs doctor diagnostics while keeping v1/v2 compatibility. |
 | Validation Baseline | Stable 0.4.4 publication and recycle passed: operator completed npm publish and public GitHub Release v0.4.4; npm view returned 0.4.4 for both hadara@0.4.4 and hadara@latest; GitHub Release is non-draft/non-prerelease; installed-package recycle for hadara@latest expected 0.4.4 passed consumer init/task/session/finalize/context smokes. |
 
 ### Current Known Problems

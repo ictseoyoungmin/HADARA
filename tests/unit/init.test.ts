@@ -62,10 +62,11 @@ describe('init profiles', () => {
       'docs/ARCHITECTURE.md',
       'docs/ROADMAP.md',
       'docs/DECISIONS.md',
-      'tasks/.gitkeep'
+      'tasks'
     ]) {
       expect(exists(root, file), file).toBe(true);
     }
+    expect(exists(root, 'tasks/.gitkeep')).toBe(false);
 
     for (const file of [
       'docs/AGENT_HANDOFF.md',
@@ -423,6 +424,36 @@ describe('init profiles', () => {
 
     expect(read(root, 'docs/ARCHITECTURE.md')).toBe('# Custom architecture\n');
     expect(read(root, '.gitignore')).toBe('custom\n');
+  });
+
+  it('upgrades governed scaffold entries without rewriting hadara-dev registry identity or creating task gitkeep', () => {
+    const root = tempProject();
+    initProject(root, 'standard');
+    const registryPath = path.join(root, '.hadara', 'docs-registry.json');
+    const registry = JSON.parse(read(root, '.hadara/docs-registry.json'));
+    registry.projectProfile = 'hadara-dev';
+    registry.documents = registry.documents.filter((doc: any) => doc.path !== 'docs/SECURITY_MODEL.md' && doc.path !== 'docs/AGENT_HANDOFF.md');
+    fs.writeFileSync(registryPath, `${JSON.stringify(registry, null, 2)}\n`, 'utf8');
+
+    handleInitCommand({ args: ['init', 'upgrade', '--profile', 'governed', '--execute', '--json'], projectRoot: root, jsonOutput: true });
+
+    const report = jsonLog();
+    expect(report).toMatchObject({
+      schemaVersion: 'hadara.init.followup.v1',
+      command: 'init.upgrade',
+      ok: true,
+      mode: 'execute',
+      profile: 'governed'
+    });
+    const upgradedRegistry = JSON.parse(read(root, '.hadara/docs-registry.json'));
+    expect(upgradedRegistry.projectProfile).toBe('hadara-dev');
+    expect(upgradedRegistry.documents.map((doc: any) => doc.path)).toEqual(expect.arrayContaining([
+      'docs/SECURITY_MODEL.md',
+      'docs/AGENT_HANDOFF.md'
+    ]));
+    expect(exists(root, 'docs/SECURITY_MODEL.md')).toBe(true);
+    expect(exists(root, 'docs/AGENT_HANDOFF.md')).toBe(true);
+    expect(exists(root, 'tasks/.gitkeep')).toBe(false);
   });
 });
 

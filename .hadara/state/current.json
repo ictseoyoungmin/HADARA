@@ -1,20 +1,20 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 70,
+  "rev": 72,
   "profile": "governed",
   "currentRelease": "0.4.4",
   "latestCompletedTask": {
-    "id": "T-0585",
-    "title": "0.4.5 docs registry and init cleanup design"
+    "id": "T-0586",
+    "title": "0.4.5 init upgrade project identity and gitkeep cleanup"
   },
   "activeTask": null,
   "nextWork": {
-    "title": "0.4.5 init upgrade project identity and gitkeep cleanup",
+    "title": "0.4.5 docsRegistry v3 schema and read model",
     "state": "candidate",
-    "operatorGuidance": "Implement the first 0.4.5 staged capsule from the registered design: preserve project identity during init upgrade and stop generating tasks/.gitkeep.",
+    "operatorGuidance": "Implement staged capsule 2 from docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md: add v3 types, normalizer, migration read path, schema fixtures, and docs doctor diagnostics while keeping v1/v2 compatibility.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Begin 0.4.5 implementation with the bounded init upgrade identity/gitkeep cleanup before docsRegistry v3 migration work.",
+  "nextOperatorIntent": "Start the 0.4.5 docsRegistry v3 schema/read-model capsule after T-0586 closes.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",

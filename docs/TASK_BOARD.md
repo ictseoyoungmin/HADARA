@@ -586,3 +586,4 @@
 | T-0583 | v0.4.4 stable source and release preparation | Done | tasks/T-0583-v0-4-4-stable-source-and-release-preparation | |
 | T-0584 | v0.4.4 operator publish and installed-package recycle | Done | tasks/T-0584-v0-4-4-operator-publish-and-installed-package-recycle | |
 | T-0585 | 0.4.5 docs registry and init cleanup design | Done | tasks/T-0585-init-upgrade-project-identity-and-gitkeep-hotfix | |
+| T-0586 | 0.4.5 init upgrade project identity and gitkeep cleanup | Done | tasks/T-0586-0-4-5-init-upgrade-project-identity-and-gitkeep-cleanup | |
