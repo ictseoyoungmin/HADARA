@@ -594,3 +594,4 @@
 | T-0591 | 0.4.5 docs mutation safety and contract hardening | Done | tasks/T-0591-0-4-5-docs-mutation-safety-and-contract-hardening | |
 | T-0592 | 0.4.5 brownfield init adoption contract | Done | tasks/T-0592-0-4-5-brownfield-init-adoption-contract | |
 | T-0593 | 0.4.5 brownfield detector and dry-run planner | Done | tasks/T-0593-0-4-5-brownfield-detector-and-dry-run-planner | |
+| T-0594 | 0.4.5 brownfield managed adoption writer | Done | tasks/T-0594-0-4-5-brownfield-managed-adoption-writer | |

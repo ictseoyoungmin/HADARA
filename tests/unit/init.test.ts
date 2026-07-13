@@ -304,8 +304,7 @@ describe('init profiles', () => {
     expect(report.mode).toBe('execute');
     expect(report.writes).toEqual([]);
     expect(report.issues).toEqual(expect.arrayContaining([
-      expect.objectContaining({ code: 'INIT_ADOPTION_PLAN_HASH_REQUIRED' }),
-      expect.objectContaining({ code: 'INIT_ADOPTION_EXECUTE_NOT_IMPLEMENTED' })
+      expect.objectContaining({ code: 'INIT_ADOPTION_PLAN_HASH_REQUIRED' })
     ]));
     expect(exists(root, 'AGENTS.md')).toBe(false);
     expect(process.exitCode).toBe(6);
@@ -328,6 +327,58 @@ describe('init profiles', () => {
     ]));
     expect(exists(root, 'AGENTS.md')).toBe(false);
     expect(process.exitCode).toBe(6);
+  });
+
+  it('executes a reviewed brownfield adoption plan without changing project-owned content outside managed blocks', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'package.json'), `${JSON.stringify({ name: 'brownfield-app', version: '2.3.4' }, null, 2)}\n`, 'utf8');
+    fs.writeFileSync(path.join(root, '.gitignore'), 'dist\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'AGENTS.md'), '# Existing rules\n\nKeep custom guidance.\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'ARCHITECTURE.md'), '# Existing architecture\n', 'utf8');
+
+    handleInitCommand({ args: ['init', '--profile', 'standard', '--json'], projectRoot: root, jsonOutput: true });
+    const dryRun = jsonLog();
+    process.exitCode = undefined;
+
+    handleInitCommand({ args: ['init', '--profile', 'standard', '--adopt', '--execute', '--plan-hash', dryRun.planHash, '--json'], projectRoot: root, jsonOutput: true });
+    const report = jsonLog();
+
+    assertSchema('hadara.init.adoption.v1', report);
+    expect(report.ok).toBe(true);
+    expect(report.mode).toBe('execute');
+    expect(report.writes).toEqual(expect.arrayContaining([
+      '.hadara/docs-registry.json',
+      '.hadara/scaffold.json',
+      '.hadara/state/current.json',
+      'AGENTS.md',
+      '.gitignore',
+      'tasks'
+    ]));
+    expect(read(root, '.gitignore')).toContain('dist\n');
+    expect(read(root, '.gitignore')).toContain('# hadara:managed:start local-state');
+    expect(read(root, 'AGENTS.md')).toContain('Keep custom guidance.');
+    expect(read(root, 'AGENTS.md')).toContain('hadara:managed:start agent-entry');
+    expect(read(root, 'docs/ARCHITECTURE.md')).toBe('# Existing architecture\n');
+    const state = JSON.parse(read(root, '.hadara/state/current.json'));
+    expect(state.currentRelease).toBe('2.3.4');
+    expect(state.nextWork.title).toBe('Establish HADARA adoption baseline');
+    const scaffold = JSON.parse(read(root, '.hadara/scaffold.json'));
+    expect(scaffold).toMatchObject({
+      docsRegistrySchema: 'hadara.docsRegistry.v3',
+      initializationMode: 'brownfield',
+      projectId: 'brownfield-app',
+      adoptionPlanHash: dryRun.planHash
+    });
+    const registry = JSON.parse(read(root, '.hadara/docs-registry.json'));
+    assertSchema('hadara.docsRegistry.v3', registry);
+    expect(registry.project).toMatchObject({ id: 'brownfield-app', name: 'brownfield-app', hadaraProfile: 'standard' });
+    expect(registry.documents).toEqual(expect.arrayContaining([
+      expect.objectContaining({ path: 'docs/ARCHITECTURE.md', owner: 'project', origin: { type: 'project-authored' } }),
+      expect.objectContaining({ path: 'AGENTS.md', owner: 'project', origin: { type: 'project-authored' } })
+    ]));
+    expect(exists(root, 'tasks/.gitkeep')).toBe(false);
+    expect(process.exitCode).toBeUndefined();
   });
 
   it('does not reinitialize an already-current HADARA project', () => {
