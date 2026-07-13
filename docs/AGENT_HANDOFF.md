@@ -7,13 +7,13 @@ This section is projected from `.hadara/state/current.json` so a new session can
 
 | Area | State | Notes |
 |---|---|---|
-| Current Release | 0.4.4-rc.0 | Portable project state. |
+| Current Release | 0.4.4 | Portable project state. |
 | Latest Completed Task | T-0582 v0.4.4 major CLI dogfood before stable | Most recent completed capsule. |
-| Active Task | None | Resume this capsule first. |
-| Next Work | v0.4.4 stable source and release preparation | Structured continuation title; not operator prose. |
+| Active Task | T-0583 v0.4.4 stable source and release preparation | Resume this capsule first. |
+| Next Work | v0.4.4 operator publish and installed-package recycle | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | Use T-0582 major CLI dogfood evidence plus T-0581 stability evidence to prepare stable 0.4.4 source/release docs in a separate capsule; keep npm/GitHub publish mutation operator-controlled. | Human constraints; never used as a task title. |
-| Validation Baseline | T-0582 major CLI dogfood passed: repo read models, fresh basic/standard/governed init, and governed toy lifecycle worked; one Development Slices currentness false positive was fixed and Docker sync-build passed 153 files / 1068 tests. | ev:T-0582:ae7325887a9e4a90b0db176e, ev:T-0582:305a0964bd6c4b6c8071713b |
+| Operator Guidance | After T-0583 closes, run the approval-gated publish helper from a clean ext4 publish clone, publish GitHub Release v0.4.4 after review, then verify installed-package recycle for hadara@latest expected 0.4.4. | Human constraints; never used as a task title. |
+| Validation Baseline | T-0583 stable source/readiness baseline is in progress: package metadata and docs target 0.4.4; Docker sync-build passed 153 files / 1068 tests; package smoke and clean-checkout smoke passed; release artifact must be regenerated after the source-prep commit. | ev:T-0583:5518f956424c431a96f9206a, ev:T-0583:7124c5762ff64ec5b166cb69 |
 
 ### Current Known Problems
 

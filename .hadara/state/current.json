@@ -1,20 +1,23 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 61,
+  "rev": 63,
   "profile": "governed",
-  "currentRelease": "0.4.4-rc.0",
+  "currentRelease": "0.4.4",
   "latestCompletedTask": {
     "id": "T-0582",
     "title": "v0.4.4 major CLI dogfood before stable"
   },
-  "activeTask": null,
+  "activeTask": {
+    "id": "T-0583",
+    "title": "v0.4.4 stable source and release preparation"
+  },
   "nextWork": {
-    "title": "v0.4.4 stable source and release preparation",
+    "title": "v0.4.4 operator publish and installed-package recycle",
     "state": "candidate",
-    "operatorGuidance": "Use T-0582 major CLI dogfood evidence plus T-0581 stability evidence to prepare stable 0.4.4 source/release docs in a separate capsule; keep npm/GitHub publish mutation operator-controlled.",
+    "operatorGuidance": "After T-0583 closes, run the approval-gated publish helper from a clean ext4 publish clone, publish GitHub Release v0.4.4 after review, then verify installed-package recycle for hadara@latest expected 0.4.4.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Prepare stable 0.4.4 source/readiness after T-0582 found no remaining release-blocking major CLI issue.",
+  "nextOperatorIntent": "Publish stable 0.4.4 through the operator-controlled npm/GitHub boundary after T-0583 source readiness closes.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
@@ -38,10 +41,10 @@
     }
   ],
   "validationBaseline": {
-    "summary": "T-0582 major CLI dogfood passed: repo read models, fresh basic/standard/governed init, and governed toy lifecycle worked; one Development Slices currentness false positive was fixed and Docker sync-build passed 153 files / 1068 tests.",
+    "summary": "T-0583 stable source/readiness baseline is in progress: package metadata and docs target 0.4.4; Docker sync-build passed 153 files / 1068 tests; package smoke and clean-checkout smoke passed; release artifact must be regenerated after the source-prep commit.",
     "evidence": [
-      "ev:T-0582:ae7325887a9e4a90b0db176e",
-      "ev:T-0582:305a0964bd6c4b6c8071713b"
+      "ev:T-0583:5518f956424c431a96f9206a",
+      "ev:T-0583:7124c5762ff64ec5b166cb69"
     ]
   }
 }

@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img alt="Source release" src="https://img.shields.io/badge/source-0.4.4--rc.0-blue">
+  <img alt="Source release" src="https://img.shields.io/badge/source-0.4.4-blue">
   <img alt="Published npm release" src="https://img.shields.io/badge/npm-0.4.3-lightgrey">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
@@ -28,7 +28,7 @@ Requires Node.js 22.
 Install the stable release:
 
 ```bash
-npm install -g hadara@0.4.3
+npm install -g hadara@0.4.4
 hadara help
 hadara doctor --json
 ```
@@ -47,8 +47,8 @@ hadara task status --task T-XXXX --json
 Run the stable release without a global install:
 
 ```bash
-npx hadara@0.4.3 help
-npx hadara@0.4.3 doctor --json
+npx hadara@0.4.4 help
+npx hadara@0.4.4 doctor --json
 ```
 
 ## First Project
@@ -104,12 +104,12 @@ hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
 
 | Surface | Status |
 |---|---|
-| Prepared source | [`hadara@0.4.4-rc.0`](docs/RELEASE_NOTES.md#044-rc0), validated locally before prerelease publication |
-| Published stable npm | `hadara@0.4.3` |
-| Published GitHub Release | [`v0.4.3`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.3) |
+| Prepared source | [`hadara@0.4.4`](docs/RELEASE_NOTES.md#044), validated locally before stable publication |
+| Published stable npm | `hadara@0.4.3` until the operator publishes `0.4.4` |
+| Published GitHub Release | [`v0.4.3`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.3) until `v0.4.4` is published |
 | Published RC npm | `hadara@0.4.4-rc.0` on `next` |
 | Published RC GitHub Release | [`v0.4.4-rc.0`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.4-rc.0), public prerelease |
-| Stable promotion decision | `0.4.4` source/release preparation is next after RC stability verification |
+| Stable promotion decision | Stable `0.4.4` source/readiness prepared after RC stability verification and major CLI dogfood |
 | RC history | [`hadara@0.4.2-rc.0`](docs/RELEASE_NOTES.md#042-rc0) remains previous prerelease history |
 | Historical releases | [Release Notes](docs/RELEASE_NOTES.md) |
 | Docker image / installer | Deferred |

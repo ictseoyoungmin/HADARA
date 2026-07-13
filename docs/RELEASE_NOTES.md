@@ -1,5 +1,27 @@
 # RELEASE_NOTES
 
+## 0.4.4
+
+Stable release for the external/delegated dogfood and generated-document currentness line after `0.4.4-rc.0` npm/GitHub prerelease publication, installed-package recycle, stable-promotion verification, and final major CLI dogfood.
+
+Highlights:
+
+- Promotes the 0.4.4 RC line validated by R1 basic-profile delegated dogfood, R2 standard-profile external validation, and R3 governed-profile Claude Code dogfood.
+- Keeps the 0.4.4 fresh-project UX fixes from the RC: conventional version aliases, installed-package stale diagnostics in non-HADARA roots, bootstrap next-work retirement, generated read ranges, consumer context-pack guidance, finish-only status hints, and cleaner governed handoff scaffolds.
+- Uses existing `package.json` `name` and `description` during `hadara init` to populate Product metadata while preserving `docs doctor` warnings for projects that leave product metadata unset after completed task history exists.
+- Preserves the structured current-state and next-work model introduced in 0.4.3, including `.hadara/state/current.json`, managed Project State/Handoff projections, and currentness diagnostics.
+- Adds the final T-0582 major CLI dogfood fix: legacy `docs/DEVELOPMENT_SLICES.md` is no longer treated as latest-task currentness authority unless canonical `.hadara/state/slices.json` exists.
+- Confirms the stable path with repo read models, fresh `basic`/`standard`/`governed` init, governed toy lifecycle, `docs doctor`, `status --state-only`, focused state-projection tests, TypeScript build, and Docker full suite.
+
+Boundaries:
+
+- T-0580 records completed `0.4.4-rc.0` npm/GitHub publication and installed-package recycle from `hadara@next`.
+- T-0581 records stable-promotion verification: npm/GitHub RC metadata stayed correct, installed-package recycle passed again, and docs currentness was clean.
+- T-0582 records final major CLI dogfood before stable and fixes the only release-blocking issue it found.
+- T-0583 prepares source metadata, release notes, readiness docs, helper examples, validation evidence, and the operator publish path for `hadara@0.4.4`; it performs no npm publish, GitHub Release publication, Docker image push, PyPI publish, installer execution, token loading, or post-publish installed-package recycle.
+- The intended npm dist-tag is `latest`; `hadara@0.4.4-rc.0` remains available on `next` as prerelease history unless an operator changes dist-tags after stable publication.
+- Post-publish installed-package recycle for `hadara@latest` expected `0.4.4` remains a separate follow-up capsule after npm/GitHub publication.
+
 ## 0.4.4-rc.0
 
 Release candidate preparation line after stable `0.4.3`, focused on external/delegated dogfood, generated-document currentness, and pre-release continuation-state UX hardening.

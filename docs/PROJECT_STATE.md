@@ -7,13 +7,13 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 
 | Field | Value |
 |---|---|
-| Current Release | 0.4.4-rc.0 |
+| Current Release | 0.4.4 |
 | Latest Completed Task | T-0582 v0.4.4 major CLI dogfood before stable |
-| Active Task | None |
-| Next Work | v0.4.4 stable source and release preparation |
+| Active Task | T-0583 v0.4.4 stable source and release preparation |
+| Next Work | v0.4.4 operator publish and installed-package recycle |
 | Next Work State | candidate |
-| Operator Guidance | Use T-0582 major CLI dogfood evidence plus T-0581 stability evidence to prepare stable 0.4.4 source/release docs in a separate capsule; keep npm/GitHub publish mutation operator-controlled. |
-| Validation Baseline | T-0582 major CLI dogfood passed: repo read models, fresh basic/standard/governed init, and governed toy lifecycle worked; one Development Slices currentness false positive was fixed and Docker sync-build passed 153 files / 1068 tests. |
+| Operator Guidance | After T-0583 closes, run the approval-gated publish helper from a clean ext4 publish clone, publish GitHub Release v0.4.4 after review, then verify installed-package recycle for hadara@latest expected 0.4.4. |
+| Validation Baseline | T-0583 stable source/readiness baseline is in progress: package metadata and docs target 0.4.4; Docker sync-build passed 153 files / 1068 tests; package smoke and clean-checkout smoke passed; release artifact must be regenerated after the source-prep commit. |
 
 ### Current Known Problems
 
