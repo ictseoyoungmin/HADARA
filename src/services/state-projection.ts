@@ -12,6 +12,7 @@ import {
   projectCurrentStateDocument,
   readProjectCurrentState
 } from './project-current-state';
+import { SLICES_STATE_PATH } from './slices-state';
 
 export type StateProjectionSeverity = 'error' | 'warning' | 'info';
 
@@ -184,7 +185,9 @@ export function createStateProjectionReport(projectRoot: string, now = new Date(
 
   compareLatestTask('STATE_PROJECT_STATE_LATEST_MISMATCH', 'docs/PROJECT_STATE.md', projectState.latestCompletedTaskId, latestDoneTaskId, issues);
   compareLatestTask('STATE_HANDOFF_LATEST_MISMATCH', 'docs/AGENT_HANDOFF.md', agentHandoff.latestCompletedTaskId, latestDoneTaskId, issues);
-  compareLatestTask('STATE_DEVELOPMENT_SLICES_LATEST_MISMATCH', 'docs/DEVELOPMENT_SLICES.md', developmentSlices.latestDoneTaskId, latestDoneTaskId, issues);
+  if (fs.existsSync(path.join(projectRoot, SLICES_STATE_PATH))) {
+    compareLatestTask('STATE_DEVELOPMENT_SLICES_LATEST_MISMATCH', 'docs/DEVELOPMENT_SLICES.md', developmentSlices.latestDoneTaskId, latestDoneTaskId, issues);
+  }
   compareActiveTasks(projectState.activeTaskId, agentHandoff.activeTaskId, activeTaskIds, issues);
 
   const counts = countIssues(issues);

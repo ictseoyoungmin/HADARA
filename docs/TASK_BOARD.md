@@ -582,3 +582,4 @@
 | T-0579 | v0.4.4-rc.0 release readiness and publish preparation | Done | tasks/T-0579-v0-4-4-rc-0-release-readiness-and-publish-preparation | |
 | T-0580 | v0.4.4-rc.0 operator publish and installed-package recycle | Done | tasks/T-0580-v0-4-4-rc-0-operator-publish-and-installed-package-recycle | |
 | T-0581 | v0.4.4 stable promotion decision | Done | tasks/T-0581-v0-4-4-stable-promotion-decision | |
+| T-0582 | v0.4.4 major CLI dogfood before stable | Done | tasks/T-0582-v0-4-4-major-cli-dogfood-before-stable | |

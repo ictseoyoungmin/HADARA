@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.4-rc.0 |
-| Latest Completed Task | T-0581 v0.4.4 stable promotion decision |
+| Latest Completed Task | T-0582 v0.4.4 major CLI dogfood before stable |
 | Active Task | None |
 | Next Work | v0.4.4 stable source and release preparation |
 | Next Work State | candidate |
-| Operator Guidance | Use T-0581 stability evidence to prepare stable 0.4.4 source/release docs in a separate capsule; keep npm/GitHub publish mutation operator-controlled. |
-| Validation Baseline | T-0581 stable-promotion check passed: npm still resolves hadara@0.4.4-rc.0 with latest=0.4.3 and next=0.4.4-rc.0, GitHub Release v0.4.4-rc.0 is public prerelease, installed-package recycle from hadara@next passed, and docs doctor remained clean. |
+| Operator Guidance | Use T-0582 major CLI dogfood evidence plus T-0581 stability evidence to prepare stable 0.4.4 source/release docs in a separate capsule; keep npm/GitHub publish mutation operator-controlled. |
+| Validation Baseline | T-0582 major CLI dogfood passed: repo read models, fresh basic/standard/governed init, and governed toy lifecycle worked; one Development Slices currentness false positive was fixed and Docker sync-build passed 153 files / 1068 tests. |
 
 ### Current Known Problems
 

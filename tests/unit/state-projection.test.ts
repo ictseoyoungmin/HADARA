@@ -82,6 +82,7 @@ describe('state consistency projection', () => {
     setTaskHandoff(task.dir, 'Done pending lifecycle close', 'almost-closed');
     replaceTaskBoardRow(root, task.id, `| ${task.id} | Projection drift task | Draft | tasks/${task.id}-wrong | |`);
     writeSharedState(root, 'T-0000');
+    writeSlicesState(root);
     writeDocsRegistry(root);
     fs.writeFileSync(path.join(root, 'docs', 'RELEASE_READINESS.md'), '# RELEASE_READINESS\n\nReady.\n', 'utf8');
     appendCloseEvidence(root, task, 'sha256:0000000000000000000000000000000000000000000000000000000000000000');
@@ -257,6 +258,15 @@ function writeSharedState(root: string, latestTaskId: string): void {
 |---|---|---|---|---|
 | 1 | Projection fixture | ${latestTaskId} | Fixture. | Done: fixture. |
 `, 'utf8');
+}
+
+function writeSlicesState(root: string): void {
+  fs.mkdirSync(path.join(root, '.hadara', 'state'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.hadara', 'state', 'slices.json'), JSON.stringify({
+    schemaVersion: 'hadara.slicesState.v1',
+    rev: 1,
+    slices: []
+  }, null, 2), 'utf8');
 }
 
 function writeDocsRegistry(root: string): void {

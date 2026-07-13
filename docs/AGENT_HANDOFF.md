@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.4-rc.0 | Portable project state. |
-| Latest Completed Task | T-0581 v0.4.4 stable promotion decision | Most recent completed capsule. |
+| Latest Completed Task | T-0582 v0.4.4 major CLI dogfood before stable | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
 | Next Work | v0.4.4 stable source and release preparation | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | Use T-0581 stability evidence to prepare stable 0.4.4 source/release docs in a separate capsule; keep npm/GitHub publish mutation operator-controlled. | Human constraints; never used as a task title. |
-| Validation Baseline | T-0581 stable-promotion check passed: npm still resolves hadara@0.4.4-rc.0 with latest=0.4.3 and next=0.4.4-rc.0, GitHub Release v0.4.4-rc.0 is public prerelease, installed-package recycle from hadara@next passed, and docs doctor remained clean. | ev:T-0581:c12cc972684444f2b9023b91, ev:T-0581:db4d2427123447558a5b5a8f, ev:T-0581:2fa7e82f776f4d3082838e71, ev:T-0581:19f58deba6a2488fac943120 |
+| Operator Guidance | Use T-0582 major CLI dogfood evidence plus T-0581 stability evidence to prepare stable 0.4.4 source/release docs in a separate capsule; keep npm/GitHub publish mutation operator-controlled. | Human constraints; never used as a task title. |
+| Validation Baseline | T-0582 major CLI dogfood passed: repo read models, fresh basic/standard/governed init, and governed toy lifecycle worked; one Development Slices currentness false positive was fixed and Docker sync-build passed 153 files / 1068 tests. | ev:T-0582:ae7325887a9e4a90b0db176e, ev:T-0582:305a0964bd6c4b6c8071713b |
 
 ### Current Known Problems
 
