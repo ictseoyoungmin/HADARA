@@ -2,12 +2,20 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ensureDir, writeFileIfMissing } from '../core/fs';
 import { resolveHadaraPaths } from '../core/paths';
+import { createInitAdoptionReport, shouldUseAdoptionPlan } from './adoption';
 import { parseInitProfile } from './profile';
 import { createGeneratedScaffoldFiles } from './scaffold';
-import type { InitAction, InitProjectMetadata, InitProjectOptions, InitReport } from './types';
+import type { InitAction, InitAdoptionReport, InitProjectMetadata, InitProjectOptions, InitReport } from './types';
 
-export function initProject(projectRoot: string, profile = 'standard', options: InitProjectOptions = {}): InitReport {
+export function initProject(projectRoot: string, profile = 'standard', options: InitProjectOptions = {}): InitReport | InitAdoptionReport {
   const normalizedProfile = parseInitProfile(profile);
+  if (options.adopt || shouldUseAdoptionPlan(projectRoot)) {
+    return createInitAdoptionReport(projectRoot, {
+      profile: normalizedProfile,
+      mode: options.execute ? 'execute' : 'dry-run',
+      planHash: options.planHash
+    });
+  }
   const paths = resolveHadaraPaths({ projectRoot });
   ensureDir(paths.projectDocsDir);
   ensureDir(paths.projectTasksDir);

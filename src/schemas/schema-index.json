@@ -499,6 +499,13 @@
       "notes": "Documents Task Capsule draft/done validation reports with additive remediation hints."
     },
     {
+      "id": "hadara.init.adoption.v1",
+      "path": "src/schemas/init-adoption.schema.json",
+      "status": "fixture",
+      "owner": "init/adoption",
+      "notes": "Documents zero-write brownfield init adoption plans, repository-state classification, path dispositions, plan hashes, and guarded execute blockers."
+    },
+    {
       "id": "hadara.cleanCheckoutSmoke.v1",
       "path": "src/schemas/clean-checkout-smoke.schema.json",
       "status": "fixture",

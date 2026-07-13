@@ -39,6 +39,7 @@ import evidenceProjectionSchemaJson from '../schemas/evidence-projection.schema.
 import eventSchemaJson from '../schemas/event.schema.json';
 import featureSmokeSchemaJson from '../schemas/feature-smoke.schema.json';
 import harnessValidateSchemaJson from '../schemas/harness-validate.schema.json';
+import initAdoptionSchemaJson from '../schemas/init-adoption.schema.json';
 import installPlanSchemaJson from '../schemas/install-plan.schema.json';
 import nextActionSchemaJson from '../schemas/next-action.schema.json';
 import packageRecycleSchemaJson from '../schemas/package-recycle.schema.json';
@@ -154,6 +155,7 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.event.v1': eventSchemaJson as JsonObject,
   'hadara.featureSmoke.v1': featureSmokeSchemaJson as JsonObject,
   'hadara.harness.validate.v1': harnessValidateSchemaJson as JsonObject,
+  'hadara.init.adoption.v1': initAdoptionSchemaJson as JsonObject,
   'hadara.install.plan.v1': installPlanSchemaJson as JsonObject,
   'hadara.next_action.v1': nextActionSchemaJson as JsonObject,
   'hadara.packageRecycle.v1': packageRecycleSchemaJson as JsonObject,

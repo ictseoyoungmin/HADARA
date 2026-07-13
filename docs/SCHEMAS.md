@@ -114,6 +114,7 @@ Initial fixtures:
 | `hadara.dashboard.task_detail.v1` | `src/schemas/dashboard-task-detail.schema.json` | fixture | Documents selected-task Dashboard detail aggregate over workbench, evidence lint/list, timeline, proof summary, and copyable read-only command guidance. |
 | `hadara.dashboard.timeline.v1` | `src/schemas/dashboard-timeline.schema.json` | fixture | Documents deterministic Dashboard timeline events with read-only event metadata and normalized evidence identity fields where available. |
 | `hadara.write.preflight.v1` | `src/schemas/write-preflight.schema.json` | fixture | Documents read-only CLI write-boundary preflight reports. |
+| `hadara.init.adoption.v1` | `src/schemas/init-adoption.schema.json` | fixture | Documents zero-write brownfield `hadara init` adoption plans with repository-state classification, path dispositions, plan hashes, and guarded execute blockers. |
 | `hadara.install.plan.v1` | `src/schemas/install-plan.schema.json` | fixture | Documents future installer dry-run planning reports without performing install mutation; target paths are redacted public path-reference objects instead of raw strings. |
 | `hadara.featureSmoke.v1` | `src/schemas/feature-smoke.schema.json` | fixture | Documents reduced read-only core feature smoke reports for the `core` profile and deferred `release-readiness` profile; installed binary and launcher checks are explicitly false in the current report. |
 | `hadara.packageSmoke.v1` | `src/schemas/package-smoke.schema.json` | fixture | Documents reduced npm package-smoke reports, provider metadata, redacted path references, execution markers, artifact metadata, and privacy booleans. |
@@ -180,6 +181,8 @@ Schema validation should distinguish three strictness levels:
 The current `additionalProperties: true` posture is only a fixture-level policy. Do not treat the initial fixtures as release gates until a later capsule defines core-field strictness, required/enum enforcement, and unknown-field handling.
 
 `hadara.install.plan.v1` is intentionally a little stricter for public path fields: `target.prefix` and `target.launcher` are objects with `displayPath` and `pathRedacted: true`, not raw path strings. `mode: execute` is reserved in the schema for future compatibility, but the current dry-run implementation keeps execution disabled and reports `INSTALL_EXECUTION_DISABLED` until a later capsule explicitly authorizes installer mutation.
+
+`hadara.init.adoption.v1` is the safe brownfield-init envelope. In a non-empty repository, bare `hadara init --json` must produce a zero-write dry-run adoption plan instead of scaffolding over project files. Execute mode is guarded by `--plan-hash` and remains blocked until the managed merge/writer capsule implements the reviewed write path.
 
 ## Runtime API
 

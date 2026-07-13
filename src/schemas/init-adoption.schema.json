@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.init.adoption.v1",
+  "x-hadara-schema-id": "hadara.init.adoption.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "command",
+    "ok",
+    "mode",
+    "repositoryState",
+    "profile",
+    "project",
+    "detectedManifests",
+    "actions",
+    "preservedPaths",
+    "managedPatches",
+    "registeredExistingDocs",
+    "blockers",
+    "warnings",
+    "snapshotHash",
+    "planHash",
+    "writes",
+    "issues"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.init.adoption.v1" },
+    "command": { "const": "init" },
+    "ok": { "type": "boolean" },
+    "mode": { "enum": ["dry-run", "execute"] },
+    "repositoryState": {
+      "enum": ["greenfield", "brownfield", "hadara-current", "hadara-partial", "hadara-legacy", "unsafe"]
+    },
+    "profile": { "enum": ["basic", "standard", "governed"] },
+    "project": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "name", "currentRelease"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "currentRelease": { "type": "string", "minLength": 1 }
+      }
+    },
+    "detectedManifests": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/signal" }
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/action" }
+    },
+    "preservedPaths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "managedPatches": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/action" }
+    },
+    "registeredExistingDocs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/action" }
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    },
+    "snapshotHash": { "$ref": "#/$defs/sha256" },
+    "planHash": { "$ref": "#/$defs/sha256" },
+    "executeCommand": { "type": "string", "minLength": 1 },
+    "writes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "signal": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "kind", "type", "size", "hash"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "kind": {
+          "enum": ["hadara-state", "agent-entry", "ignore-rules", "hadara-target-doc", "task-area", "manifest", "source-root"]
+        },
+        "type": { "enum": ["file", "directory", "symlink", "other", "missing"] },
+        "size": { "type": ["number", "null"] },
+        "hash": { "type": ["string", "null"] }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "role", "existingType", "ownership", "disposition", "beforeHash", "preservesExistingContent", "reason"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "role": { "type": "string", "minLength": 1 },
+        "existingType": { "enum": ["file", "directory", "symlink", "other", "missing"] },
+        "ownership": { "enum": ["project", "hadara", "unknown"] },
+        "disposition": {
+          "enum": ["create", "preserve", "patch-managed-section", "register-existing", "already-managed", "block"]
+        },
+        "beforeHash": { "type": ["string", "null"] },
+        "preservesExistingContent": { "type": "boolean" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

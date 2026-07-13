@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.4 |
-| Latest Completed Task | T-0592 0.4.5 brownfield init adoption contract |
+| Latest Completed Task | T-0593 0.4.5 brownfield detector and dry-run planner |
 | Active Task | None |
 | Next Work | 0.4.5 release readiness and publish preparation |
 | Next Work State | candidate |

@@ -65,6 +65,7 @@ describe('schema fixtures', () => {
       'hadara.evidence.projection.v1',
       'hadara.featureSmoke.v1',
       'hadara.harness.validate.v1',
+      'hadara.init.adoption.v1',
       'hadara.install.plan.v1',
       'hadara.lifecycle.guide.v1',
       'hadara.next_action.v1',

@@ -50,8 +50,14 @@ export function handleInitCommand(input: InitCommandInput): boolean {
     return true;
   }
   if (subcommand && !subcommand.startsWith('-')) return false;
-  const report = initProject(input.projectRoot, getStringOption(input.args, '--profile', 'standard') ?? 'standard', { silent: input.jsonOutput });
+  const report = initProject(input.projectRoot, getStringOption(input.args, '--profile', 'standard') ?? 'standard', {
+    silent: input.jsonOutput,
+    adopt: getFlag(input.args, '--adopt'),
+    execute: getFlag(input.args, '--execute'),
+    planHash: getStringOption(input.args, '--plan-hash')
+  });
   if (input.jsonOutput) console.log(JSON.stringify(report, null, 2));
+  if (!report.ok) process.exitCode = 6;
   return true;
 }
 
@@ -60,6 +66,7 @@ function renderInitHelp(): string {
 
 Usage:
   hadara init [--profile basic|standard|governed] [--json]
+  hadara init --profile basic|standard|governed --adopt --execute --plan-hash <hash> --json
   hadara init doctor [--json]
   hadara init upgrade --profile <profile> [--execute] [--json]
   hadara init enable-integration --integration <name> [--execute] [--json]
@@ -71,6 +78,7 @@ Profiles:
 
 Notes:
   --help is read-only and does not create scaffold files.
+  Existing repositories return a zero-write adoption plan unless reviewed --adopt execute is requested.
 `;
 }
 

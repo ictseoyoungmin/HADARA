@@ -385,8 +385,8 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   }),
   {
     id: 'init',
-    command: 'hadara init [--project <path>] [--profile basic|standard|governed] [--json]',
-    summary: 'Bootstrap HADARA protocol files into a project.',
+    command: 'hadara init [--project <path>] [--profile basic|standard|governed] [--adopt --execute --plan-hash <hash>] [--json]',
+    summary: 'Bootstrap HADARA protocol files or produce a zero-write brownfield adoption plan.',
     canonical: true,
     appearsInDefaultHelp: true,
     family: 'start',
@@ -399,7 +399,11 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     actor: 'operator',
     status: 'stable',
     docs: ['docs/HADARA_WORKFLOW.md'],
-    examples: [example('Initialize governed profile', 'hadara init --profile governed --json', 'When starting a new governed HADARA project.')],
+    schemaVersion: 'hadara.init.adoption.v1',
+    examples: [
+      example('Initialize governed profile', 'hadara init --profile governed --json', 'When starting a new empty governed HADARA project.'),
+      example('Review brownfield adoption', 'hadara init --profile standard --json', 'In an existing project, returns a zero-write adoption plan before any scaffold mutation.')
+    ],
     related: ['init.doctor', 'init.upgrade'],
     conflictsWith: []
   },

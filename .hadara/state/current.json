@@ -1,11 +1,11 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 87,
+  "rev": 89,
   "profile": "governed",
   "currentRelease": "0.4.4",
   "latestCompletedTask": {
-    "id": "T-0592",
-    "title": "0.4.5 brownfield init adoption contract"
+    "id": "T-0593",
+    "title": "0.4.5 brownfield detector and dry-run planner"
   },
   "activeTask": null,
   "nextWork": {
