@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.5 | Portable project state. |
-| Latest Completed Task | T-0598 0.4.5 brownfield adoption safety gap closure | Most recent completed capsule. |
+| Latest Completed Task | T-0599 0.4.5 installed-candidate multi-shape brownfield dogfood | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
-| Next Work | 0.4.5 installed-candidate multi-shape brownfield dogfood | Structured continuation title; not operator prose. |
+| Next Work | 0.4.5 release readiness recycle | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | Before restoring release readiness, install the candidate tarball and dogfood brownfield adoption across TypeScript, Python/data, and web/monorepo shapes with baseline capsule close. | Human constraints; never used as a task title. |
-| Validation Baseline | T-0598 closed 0.4.5 brownfield adoption safety blockers: explicit --adopt execute confirmation, partial-state fail-closed behavior, broad root-entry brownfield detection, symlink/type/marker/owner/task-collision blockers, project-authored core-doc ownership, and dynamic scaffold createdWith. | ev:T-0598:fb26285cf9694d9db8108e45, ev:T-0598:0f0db9fa78814ee3b6443004, ev:T-0598:d5619e3b362d48fd9e96c6bc |
+| Operator Guidance | Recycle 0.4.5 release readiness from current source after T-0598 runtime hardening and T-0599 installed-candidate dogfood. Do not publish from stale T-0597 evidence. | Human constraints; never used as a task title. |
+| Validation Baseline | T-0599 verified the 0.4.5 installed candidate across TypeScript service, Python/data, and governed web monorepo brownfield fixtures: dry-run adoption, explicit reviewed execute, docs doctor, baseline validation evidence, and finalize closed-valid all passed. | ev:T-0599:ba42d06b508a4792bca030ea, ev:T-0599:84e1144bdfb34d60a5e78132 |
 
 ### Current Known Problems
 

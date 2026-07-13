@@ -1,20 +1,20 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 99,
+  "rev": 101,
   "profile": "governed",
   "currentRelease": "0.4.5",
   "latestCompletedTask": {
-    "id": "T-0598",
-    "title": "0.4.5 brownfield adoption safety gap closure"
+    "id": "T-0599",
+    "title": "0.4.5 installed-candidate multi-shape brownfield dogfood"
   },
   "activeTask": null,
   "nextWork": {
-    "title": "0.4.5 installed-candidate multi-shape brownfield dogfood",
+    "title": "0.4.5 release readiness recycle",
     "state": "candidate",
-    "operatorGuidance": "Before restoring release readiness, install the candidate tarball and dogfood brownfield adoption across TypeScript, Python/data, and web/monorepo shapes with baseline capsule close.",
+    "operatorGuidance": "Recycle 0.4.5 release readiness from current source after T-0598 runtime hardening and T-0599 installed-candidate dogfood. Do not publish from stale T-0597 evidence.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Run installed-candidate multi-shape brownfield dogfood before recycling 0.4.5 release readiness.",
+  "nextOperatorIntent": "Run 0.4.5 release readiness recycle before any npm or GitHub publication.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
@@ -38,11 +38,10 @@
     }
   ],
   "validationBaseline": {
-    "summary": "T-0598 closed 0.4.5 brownfield adoption safety blockers: explicit --adopt execute confirmation, partial-state fail-closed behavior, broad root-entry brownfield detection, symlink/type/marker/owner/task-collision blockers, project-authored core-doc ownership, and dynamic scaffold createdWith.",
+    "summary": "T-0599 verified the 0.4.5 installed candidate across TypeScript service, Python/data, and governed web monorepo brownfield fixtures: dry-run adoption, explicit reviewed execute, docs doctor, baseline validation evidence, and finalize closed-valid all passed.",
     "evidence": [
-      "ev:T-0598:fb26285cf9694d9db8108e45",
-      "ev:T-0598:0f0db9fa78814ee3b6443004",
-      "ev:T-0598:d5619e3b362d48fd9e96c6bc"
+      "ev:T-0599:ba42d06b508a4792bca030ea",
+      "ev:T-0599:84e1144bdfb34d60a5e78132"
     ]
   }
 }

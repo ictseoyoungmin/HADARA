@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.5 |
-| Latest Completed Task | T-0598 0.4.5 brownfield adoption safety gap closure |
+| Latest Completed Task | T-0599 0.4.5 installed-candidate multi-shape brownfield dogfood |
 | Active Task | None |
-| Next Work | 0.4.5 installed-candidate multi-shape brownfield dogfood |
+| Next Work | 0.4.5 release readiness recycle |
 | Next Work State | candidate |
-| Operator Guidance | Before restoring release readiness, install the candidate tarball and dogfood brownfield adoption across TypeScript, Python/data, and web/monorepo shapes with baseline capsule close. |
-| Validation Baseline | T-0598 closed 0.4.5 brownfield adoption safety blockers: explicit --adopt execute confirmation, partial-state fail-closed behavior, broad root-entry brownfield detection, symlink/type/marker/owner/task-collision blockers, project-authored core-doc ownership, and dynamic scaffold createdWith. |
+| Operator Guidance | Recycle 0.4.5 release readiness from current source after T-0598 runtime hardening and T-0599 installed-candidate dogfood. Do not publish from stale T-0597 evidence. |
+| Validation Baseline | T-0599 verified the 0.4.5 installed candidate across TypeScript service, Python/data, and governed web monorepo brownfield fixtures: dry-run adoption, explicit reviewed execute, docs doctor, baseline validation evidence, and finalize closed-valid all passed. |
 
 ### Current Known Problems
 
@@ -43,7 +43,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.5 release readiness is paused after reviewer feedback. T-0598 closes brownfield adoption safety gaps; T-0599 must dogfood the installed candidate across multiple brownfield project shapes before T-0600 recycles release readiness.
+v0.4.5 release readiness is paused after reviewer feedback. T-0598 closed brownfield adoption safety gaps and T-0599 passed installed-candidate dogfood across multiple brownfield project shapes; T-0600 must now recycle release readiness from current source.
 
 | Stage | State | Purpose |
 |---|---|---|
