@@ -208,7 +208,15 @@ describe('Phase 7.3 docs registry', () => {
       ok: true,
       mode: 'dry-run',
       action: 'create',
-      document: { path: 'docs/specs/example.md', kind: 'spec', status: 'reference', readWhen: ['only-when-linked'] },
+      document: {
+        path: 'docs/specs/example.md',
+        owner: 'project',
+        kind: 'spec',
+        status: 'reference',
+        origin: { type: 'project-authored' },
+        editPolicy: 'agent-editable-with-review',
+        readWhen: ['only-when-linked']
+      },
       writes: []
     });
     expect(fs.readFileSync(path.join(root, DOCS_REGISTRY_PATH), 'utf8')).toBe(beforeRegistry);
@@ -216,6 +224,36 @@ describe('Phase 7.3 docs registry', () => {
     expect(fs.readFileSync(path.join(root, '.hadara', 'context', 'HADARA_CONTEXT.md'), 'utf8')).toBe(beforeContext);
     expect(fs.readFileSync(path.join(root, 'docs', 'HADARA_WORKFLOW.md'), 'utf8')).toBe(beforeWorkflow);
     expect(fs.existsSync(path.join(root, 'docs', 'DOC_REGISTRY.md'))).toBe(false);
+    assertSchema('hadara.docs.register.v1', report);
+  });
+
+  it('executes project-authored docs register entries without making them look scaffold-owned', () => {
+    const root = tempProject();
+    initProject(root, 'governed', { silent: true });
+    const guidePath = path.join(root, 'docs', 'GAMEPLAY.md');
+    fs.writeFileSync(guidePath, '# Gameplay\n');
+
+    const report = createDocsRegisterReport(root, {
+      documentPath: 'docs/GAMEPLAY.md',
+      title: 'Gameplay',
+      mode: 'execute',
+      requireExists: true
+    });
+
+    const registered = readRegistry(root).documents.find((doc) => doc.path === 'docs/GAMEPLAY.md');
+    expect(report.ok).toBe(true);
+    expect(registered).toMatchObject({
+      owner: 'project',
+      origin: { type: 'project-authored' },
+      updateOwner: 'human',
+      updatedByCommands: ['docs.register'],
+      editPolicy: 'agent-editable-with-review'
+    });
+    expect(registered).not.toHaveProperty('generatedBy');
+    expect(readRegistry(root).documents.find((doc) => doc.path === 'docs/HADARA_WORKFLOW.md')).toMatchObject({
+      owner: 'hadara-docs',
+      generatedBy: 'hadara init'
+    });
     assertSchema('hadara.docs.register.v1', report);
   });
 

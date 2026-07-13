@@ -1684,22 +1684,23 @@ function buildRegisteredDocument(registry: DocumentRegistryFile, input: {
   const document: DocumentRegistryEntry = {
     path: input.path,
     title: input.title ?? titleFromPath(input.path),
-    owner: 'hadara-docs',
+    owner: 'project',
     kind: input.kind,
     status: input.status,
     scope: 'project',
     profiles: profilesForRegistryProject(registry),
+    origin: { type: 'project-authored' },
     readWhen: [input.readWhen],
     requiredReading: input.requiredReading,
     updateOwner: 'human',
     updatedByCommands: ['docs.register'],
     managedSections: [],
     closeSourceRole: input.requiredReading ? 'included' : 'task-dependent',
-    supersedes: []
+    supersedes: [],
+    editPolicy: input.editPolicy ?? 'agent-editable-with-review'
   };
   if (input.readTier) document.readTier = input.readTier;
   if (input.authority) document.authority = input.authority;
-  if (input.editPolicy) document.editPolicy = input.editPolicy;
   if (input.activeForTasks && input.activeForTasks.length > 0) document.activeForTasks = input.activeForTasks;
   if (input.drift) document.drift = input.drift;
   return document;

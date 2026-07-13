@@ -1,20 +1,20 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 77,
+  "rev": 80,
   "profile": "governed",
   "currentRelease": "0.4.4",
   "latestCompletedTask": {
-    "id": "T-0588",
-    "title": "0.4.5 docs registry mutation commands"
+    "id": "T-0589",
+    "title": "0.4.5 docs register project-authored defaults"
   },
   "activeTask": null,
   "nextWork": {
-    "title": "0.4.5 docs register project-authored defaults",
+    "title": "0.4.5 docs registry dogfood and migration cleanup",
     "state": "candidate",
-    "operatorGuidance": "Implement staged capsule 4 from docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md: make arbitrary docs register entries default to project ownership and explicit project-authored origin while preserving HADARA scaffold/projection ownership.",
+    "operatorGuidance": "Implement staged capsule 5 from docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md: dogfood fresh init/upgrade and use registry mutation commands for targeted cleanup so docs doctor stays clean.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Start the 0.4.5 docs register project-authored defaults capsule after T-0588 closes.",
+  "nextOperatorIntent": "Start the 0.4.5 docs registry dogfood and migration cleanup capsule after T-0589 closes.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",

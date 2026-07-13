@@ -8,11 +8,11 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.4 |
-| Latest Completed Task | T-0588 0.4.5 docs registry mutation commands |
+| Latest Completed Task | T-0589 0.4.5 docs register project-authored defaults |
 | Active Task | None |
-| Next Work | 0.4.5 docs register project-authored defaults |
+| Next Work | 0.4.5 docs registry dogfood and migration cleanup |
 | Next Work State | candidate |
-| Operator Guidance | Implement staged capsule 4 from docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md: make arbitrary docs register entries default to project ownership and explicit project-authored origin while preserving HADARA scaffold/projection ownership. |
+| Operator Guidance | Implement staged capsule 5 from docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md: dogfood fresh init/upgrade and use registry mutation commands for targeted cleanup so docs doctor stays clean. |
 | Validation Baseline | Stable 0.4.4 publication and recycle passed: operator completed npm publish and public GitHub Release v0.4.4; npm view returned 0.4.4 for both hadara@0.4.4 and hadara@latest; GitHub Release is non-draft/non-prerelease; installed-package recycle for hadara@latest expected 0.4.4 passed consumer init/task/session/finalize/context smokes. |
 
 ### Current Known Problems
