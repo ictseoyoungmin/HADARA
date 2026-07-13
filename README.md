@@ -109,6 +109,7 @@ hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
 | Published GitHub Release | [`v0.4.3`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.3) |
 | Published RC npm | `hadara@0.4.4-rc.0` on `next` |
 | Published RC GitHub Release | [`v0.4.4-rc.0`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.4-rc.0), public prerelease |
+| Stable promotion decision | `0.4.4` source/release preparation is next after RC stability verification |
 | RC history | [`hadara@0.4.2-rc.0`](docs/RELEASE_NOTES.md#042-rc0) remains previous prerelease history |
 | Historical releases | [Release Notes](docs/RELEASE_NOTES.md) |
 | Docker image / installer | Deferred |

@@ -1,20 +1,20 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 55,
+  "rev": 58,
   "profile": "governed",
   "currentRelease": "0.4.4-rc.0",
   "latestCompletedTask": {
-    "id": "T-0580",
-    "title": "v0.4.4-rc.0 operator publish and installed-package recycle"
+    "id": "T-0581",
+    "title": "v0.4.4 stable promotion decision"
   },
   "activeTask": null,
   "nextWork": {
-    "title": "v0.4.4 stable promotion decision",
+    "title": "v0.4.4 stable source and release preparation",
     "state": "candidate",
-    "operatorGuidance": "Use T-0580 npm/GitHub publication and installed-package recycle evidence to decide whether to prepare stable 0.4.4 or run additional RC dogfood first.",
+    "operatorGuidance": "Use T-0581 stability evidence to prepare stable 0.4.4 source/release docs in a separate capsule; keep npm/GitHub publish mutation operator-controlled.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Decide stable 0.4.4 promotion after observing v0.4.4-rc.0 publication and installed-package recycle evidence.",
+  "nextOperatorIntent": "Prepare stable 0.4.4 source/readiness after T-0581 found no stable-blocking RC issue.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
@@ -38,11 +38,12 @@
     }
   ],
   "validationBaseline": {
-    "summary": "hadara@0.4.4-rc.0 publication through T-0580: npm next resolves to 0.4.4-rc.0 while latest remains 0.4.3, GitHub Release v0.4.4-rc.0 is public prerelease, and installed-package recycle from hadara@next passed.",
+    "summary": "T-0581 stable-promotion check passed: npm still resolves hadara@0.4.4-rc.0 with latest=0.4.3 and next=0.4.4-rc.0, GitHub Release v0.4.4-rc.0 is public prerelease, installed-package recycle from hadara@next passed, and docs doctor remained clean.",
     "evidence": [
-      "ev:T-0580:27a8f81a98ab49b28f8c87d2",
-      "ev:T-0580:82f354a6e17a4fe08b737138",
-      "ev:T-0580:aab1eee8f7b449148907312c"
+      "ev:T-0581:c12cc972684444f2b9023b91",
+      "ev:T-0581:db4d2427123447558a5b5a8f",
+      "ev:T-0581:2fa7e82f776f4d3082838e71",
+      "ev:T-0581:19f58deba6a2488fac943120"
     ]
   }
 }

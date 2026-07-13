@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.4-rc.0 |
-| Latest Completed Task | T-0580 v0.4.4-rc.0 operator publish and installed-package recycle |
+| Latest Completed Task | T-0581 v0.4.4 stable promotion decision |
 | Active Task | None |
-| Next Work | v0.4.4 stable promotion decision |
+| Next Work | v0.4.4 stable source and release preparation |
 | Next Work State | candidate |
-| Operator Guidance | Use T-0580 npm/GitHub publication and installed-package recycle evidence to decide whether to prepare stable 0.4.4 or run additional RC dogfood first. |
-| Validation Baseline | hadara@0.4.4-rc.0 publication through T-0580: npm next resolves to 0.4.4-rc.0 while latest remains 0.4.3, GitHub Release v0.4.4-rc.0 is public prerelease, and installed-package recycle from hadara@next passed. |
+| Operator Guidance | Use T-0581 stability evidence to prepare stable 0.4.4 source/release docs in a separate capsule; keep npm/GitHub publish mutation operator-controlled. |
+| Validation Baseline | T-0581 stable-promotion check passed: npm still resolves hadara@0.4.4-rc.0 with latest=0.4.3 and next=0.4.4-rc.0, GitHub Release v0.4.4-rc.0 is public prerelease, installed-package recycle from hadara@next passed, and docs doctor remained clean. |
 
 ### Current Known Problems
 
@@ -43,7 +43,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.3 npm/GitHub publication and installed-package recycle are complete; v0.4.4 external validation planning, R1 delegated basic-profile dogfood, R1 generated-doc audit, R1 UX cleanup, R2 standard-profile external validation, R3 delegated Claude governed-profile validation, v0.4.4-rc.0 source readiness, npm/GitHub prerelease publication, and installed-package recycle are complete through T-0580. The next candidate step is deciding whether to prepare stable `0.4.4` or run more RC observation/dogfood.
+v0.4.3 npm/GitHub publication and installed-package recycle are complete; v0.4.4 external validation planning, R1 delegated basic-profile dogfood, R1 generated-doc audit, R1 UX cleanup, R2 standard-profile external validation, R3 delegated Claude governed-profile validation, v0.4.4-rc.0 source readiness, npm/GitHub prerelease publication, installed-package recycle, and stable-promotion verification are complete through T-0581. The next candidate step is preparing stable `0.4.4` source/readiness while keeping npm/GitHub mutation in a separate operator-controlled publish step.
 
 | Stage | State | Purpose |
 |---|---|---|

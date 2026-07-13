@@ -18,9 +18,9 @@ Boundaries:
 - T-0572 defined the external-repository validation plan and release gates for v0.4.4.
 - T-0573 through T-0577 ran delegated/external dogfood across basic, standard, and governed profiles, including an independent Claude Code run that completed 8 governed-profile capsules.
 - T-0575 and T-0578 fixed release-candidate UX issues found by dogfood before this release-readiness capsule.
-- T-0579 prepared source metadata, release notes, readiness docs, helper examples, validation evidence, and the operator publish path for `hadara@0.4.4-rc.0`; T-0580 records npm/GitHub publication and installed-package recycle.
+- T-0579 prepared source metadata, release notes, readiness docs, helper examples, validation evidence, and the operator publish path for `hadara@0.4.4-rc.0`; T-0580 records npm/GitHub publication and installed-package recycle; T-0581 rechecked RC stability and selected stable `0.4.4` source/release preparation as the next step.
 - The npm dist-tag is `next`; stable `latest` remains `hadara@0.4.3` until a later stable promotion decision.
-- Post-publish installed-package recycle for `hadara@next` expected `0.4.4-rc.0` passed in T-0580 from consumer paths.
+- Post-publish installed-package recycle for `hadara@next` expected `0.4.4-rc.0` passed in T-0580 from consumer paths and passed again during T-0581 stable-promotion verification.
 
 ## 0.4.3
 
