@@ -18,6 +18,11 @@ Do not hand-edit this file.
 | ev:T-0583:5723e0f57f404a2cab627cef | passed | validation | Docs registry profile hotfix validation passed: document profiles are now limited to basic/standard/governed, docs list/doctor reject hadara-dev in entry profiles, focused docs/init tests passed, and Docker sync-build full suite passed 153 files / 1069 tests with dist refreshed. |
 | ev:T-0583:f0ed9b5cb09f429198437689 | passed | release | Package smoke local passed with reduced public evidence. |
 | ev:T-0583:308d82caa20f47a59cbc9415 | passed | release | Approved package smoke rerun resolved the sandbox npm-pack failure after the docs-registry profile hotfix; installed package smoke passed with init docs sanity and command-surface drift checks. |
+| ev:T-0583:6ef3051d7e7948d4a614c11e | passed | release | hadara release artifact --execute --attach-evidence --json generated tarball/checksum/manifest metadata, retained public report artifact, and emitted hadara.releaseArtifact.v1. |
+| ev:T-0583:21cef95476e142c49e884b63 | passed | release | Clean-checkout smoke passed with reduced public evidence. |
+| ev:T-0583:7b86c5b10f054f9d9a8be71d | passed | release | Final stable 0.4.4 readiness after docs-registry profile hotfix passed: package smoke, clean-checkout smoke, release artifact, release dry-run, publish dry-run, strict release gate, and docs doctor all passed on commit 4db58a4a; npm/GitHub publication remains operator-controlled. |
+| ev:T-0583:6ca7e2bbf8e4461993b2d5e4 | passed | validation | Task finalize done-level readiness for T-0583 passed before close evidence append; harnessOk=true; evidenceLintOk=true; protocolDoctorOk=true; validationReportHash=sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash=sha256:3b7721a23ec6e8986e0aa1727af5fd796ace12c81e094d350f150d7f4b06d5df |
+| ev:T-0583:f0a2f330a2824878b26d0643 | passed | validation | Task finalize done-level readiness for T-0583 passed before close evidence append; harnessOk=true; evidenceLintOk=true; protocolDoctorOk=true; validationReportHash=sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash=sha256:7c559daae10ee210b9abdf76a5415c9d8abe647b7261fab4ff99c4b9505bcc20 |
 <!-- /hadara:slot -->
 
 ## Close Proof
@@ -25,6 +30,8 @@ Do not hand-edit this file.
 <!-- hadara:slot evidence.close-proof -->
 | Check | Result | Evidence |
 |---|---|---|
+| close evidence | passed | ev:T-0583:d025448895ed457c9d31a74d |
+| close evidence | passed | ev:T-0583:b08c25c37c324093a1e1ba60 |
 <!-- /hadara:slot -->
 
 ## Failed / Blocked / Residual Evidence

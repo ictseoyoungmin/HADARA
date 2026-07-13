@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.4 |
-| Latest Completed Task | T-0582 v0.4.4 major CLI dogfood before stable |
-| Active Task | T-0583 v0.4.4 stable source and release preparation |
+| Latest Completed Task | T-0583 v0.4.4 stable source and release preparation |
+| Active Task | None |
 | Next Work | v0.4.4 operator publish and installed-package recycle |
 | Next Work State | candidate |
 | Operator Guidance | After T-0583 closes, run the approval-gated publish helper from a clean ext4 publish clone, publish GitHub Release v0.4.4 after review, then verify installed-package recycle for hadara@latest expected 0.4.4. |
-| Validation Baseline | T-0583 stable source/readiness baseline is in progress: package metadata and docs target 0.4.4; Docker sync-build passed 153 files / 1068 tests; package smoke and clean-checkout smoke passed; release artifact must be regenerated after the source-prep commit. |
+| Validation Baseline | T-0583 stable 0.4.4 source readiness passed after docs-registry profile hotfix: Docker full suite passed 153 files / 1069 tests with dist refreshed; package smoke, clean-checkout smoke, release artifact, release dry-run, publish dry-run, strict release gate, and docs doctor passed on commit 4db58a4a; npm/GitHub publication remains operator-controlled. |
 
 ### Current Known Problems
 
