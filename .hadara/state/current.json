@@ -1,11 +1,11 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 93,
+  "rev": 95,
   "profile": "governed",
   "currentRelease": "0.4.4",
   "latestCompletedTask": {
-    "id": "T-0595",
-    "title": "0.4.5 adoption doctor and idempotency cleanup"
+    "id": "T-0596",
+    "title": "0.4.5 fresh and brownfield init dogfood"
   },
   "activeTask": null,
   "nextWork": {

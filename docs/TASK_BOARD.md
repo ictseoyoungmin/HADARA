@@ -596,3 +596,4 @@
 | T-0593 | 0.4.5 brownfield detector and dry-run planner | Done | tasks/T-0593-0-4-5-brownfield-detector-and-dry-run-planner | |
 | T-0594 | 0.4.5 brownfield managed adoption writer | Done | tasks/T-0594-0-4-5-brownfield-managed-adoption-writer | |
 | T-0595 | 0.4.5 adoption doctor and idempotency cleanup | Done | tasks/T-0595-0-4-5-adoption-doctor-and-idempotency-cleanup | |
+| T-0596 | 0.4.5 fresh and brownfield init dogfood | Done | tasks/T-0596-0-4-5-fresh-and-brownfield-init-dogfood | |

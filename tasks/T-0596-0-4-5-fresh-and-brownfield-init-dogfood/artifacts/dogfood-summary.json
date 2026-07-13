@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "hadara.dogfood.summary.v1",
+  "ok": true,
+  "base": "/tmp/hadara-t0596-dogfood-x0ALIx",
+  "checks": [
+    {
+      "name": "fresh basic init and doctors",
+      "ok": true,
+      "initSchema": "hadara.init.v1",
+      "initDoctorIssues": 0,
+      "docsDoctorIssues": 0,
+      "taskStatusPhase": "select-work"
+    },
+    {
+      "name": "fresh standard init and doctors",
+      "ok": true,
+      "initSchema": "hadara.init.v1",
+      "initDoctorIssues": 0,
+      "docsDoctorIssues": 0,
+      "taskStatusPhase": "select-work"
+    },
+    {
+      "name": "fresh governed init and doctors",
+      "ok": true,
+      "initSchema": "hadara.init.v1",
+      "initDoctorIssues": 0,
+      "docsDoctorIssues": 0,
+      "taskStatusPhase": "select-work"
+    },
+    {
+      "name": "fresh governed lifecycle close",
+      "ok": true,
+      "state": "closed-valid"
+    },
+    {
+      "name": "brownfield zero-write dry-run and execute",
+      "ok": true,
+      "dryRunWrites": 0,
+      "executeWrites": 13,
+      "registry": "hadara.docsRegistry.v3",
+      "currentRelease": "3.2.1"
+    },
+    {
+      "name": "brownfield plan mismatch and missing hash fail closed",
+      "ok": true,
+      "missingHashStatus": 6,
+      "mismatchStatus": 6
+    },
+    {
+      "name": "partial and unsafe repositories fail closed",
+      "ok": true,
+      "partialState": "hadara-partial",
+      "unsafeState": "unsafe"
+    }
+  ]
+}
