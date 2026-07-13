@@ -9,14 +9,14 @@ HADARA requires Node.js 22.
 Install the current stable release:
 
 ```bash
-npm install -g hadara@0.4.4
+npm install -g hadara@0.4.5
 hadara doctor --json
 ```
 
 Without a global install, use the same stable release:
 
 ```bash
-npx hadara@0.4.4 doctor --json
+npx hadara@0.4.5 doctor --json
 ```
 
 ## Create A Project

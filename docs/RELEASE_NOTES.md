@@ -1,5 +1,29 @@
 # RELEASE_NOTES
 
+## 0.4.5
+
+Stable preparation line for safe brownfield adoption and docs-registry cleanup after `0.4.4`.
+
+Highlights:
+
+- Adds docs-registry v3 so document classification separates lifecycle state, role, origin, and profile applicability instead of overloading scaffold profile tokens.
+- Adds safe brownfield `hadara init` adoption: existing non-HADARA projects get a zero-write adoption plan by default and require `--adopt --execute --plan-hash <hash>` before HADARA writes managed protocol files.
+- Preserves existing project docs during adoption. Project-authored files such as an existing `AGENTS.md` or `docs/ARCHITECTURE.md` remain project-owned; HADARA adds managed blocks and registry metadata without treating those files as scaffold-owned templates.
+- Removes new-project `tasks/.gitkeep` generation and keeps init-created docs aligned with the current public command surface.
+- Adds docs-registry mutation hardening so failed docs update/archive/supersede/unregister paths fail with non-zero exits instead of returning `ok:false` with process success.
+- Hardens `init doctor` and `docs doctor` for registry v3 origin/profile semantics and verifies adopted brownfield projects do not emit false scaffold-drift findings.
+- Dogfoods the release candidate locally across fresh `basic`, `standard`, and `governed` projects, a governed task lifecycle close, brownfield dry-run/execute adoption, plan-hash mismatch refusal, partial `.hadara` refusal, and unsafe symlink refusal.
+
+Boundaries:
+
+- T-0585 defines the 0.4.5 docs-registry and init-cleanup design.
+- T-0586 through T-0592 implement registry v3, mutation commands, project-authored defaults, migration cleanup, docs mutation safety, and the brownfield adoption contract.
+- T-0593 through T-0595 implement the brownfield detector, guarded writer, and adoption doctor/idempotency cleanup.
+- T-0596 validates fresh and brownfield behavior from `/tmp` using the built CLI.
+- T-0597 prepares source metadata, release notes, readiness docs, GitHub Release notes, and release validation evidence for `hadara@0.4.5`; it performs no npm publish, GitHub Release publication, Docker image push, PyPI publish, installer execution, token loading, or post-publish installed-package recycle.
+- The intended npm dist-tag is `latest`; `hadara@0.4.4` remains the published stable line until the operator runs the approval-gated publish helper.
+- Post-publish installed-package recycle for `hadara@latest` expected `0.4.5` remains a separate follow-up capsule after npm/GitHub publication.
+
 ## 0.4.4
 
 Stable release for the external/delegated dogfood and generated-document currentness line after `0.4.4-rc.0` npm/GitHub prerelease publication, installed-package recycle, stable-promotion verification, and final major CLI dogfood.

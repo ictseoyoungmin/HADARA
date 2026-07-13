@@ -7,13 +7,13 @@ This section is projected from `.hadara/state/current.json` so a new session can
 
 | Area | State | Notes |
 |---|---|---|
-| Current Release | 0.4.4 | Portable project state. |
-| Latest Completed Task | T-0596 0.4.5 fresh and brownfield init dogfood | Most recent completed capsule. |
+| Current Release | 0.4.5 | Portable project state. |
+| Latest Completed Task | T-0597 0.4.5 release readiness and publish preparation | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
-| Next Work | 0.4.5 release readiness and publish preparation | Structured continuation title; not operator prose. |
+| Next Work | 0.4.5 operator publish and installed-package recycle | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | Prepare 0.4.5 release readiness after docs registry/init cleanup: verify docs doctor, release notes, package smoke, and publish scripts before operator npm/GitHub publish. | Human constraints; never used as a task title. |
-| Validation Baseline | Stable 0.4.4 publication and recycle passed: operator completed npm publish and public GitHub Release v0.4.4; npm view returned 0.4.4 for both hadara@0.4.4 and hadara@latest; GitHub Release is non-draft/non-prerelease; installed-package recycle for hadara@latest expected 0.4.4 passed consumer init/task/session/finalize/context smokes. | ev:T-0584:8ffea7cd42504ea5a177a54f, ev:T-0584:36991318909d46e59d2fce17, ev:T-0584:2058d34afba84221849ae6ab |
+| Operator Guidance | After the T-0597 source-preparation commit, run prepare-publish-env, perform the approval-gated npm/GitHub publication, then verify installed hadara@latest resolves to 0.4.5. | Human constraints; never used as a task title. |
+| Validation Baseline | 0.4.5 source/readiness passed through T-0597: package metadata and release docs target 0.4.5, docs doctor is clean, Docker package smoke passed with attached T-0597 evidence, strict release gate passed, and final release artifact generation remains assigned to the clean publish clone. | ev:T-0597:087815326dff48f6b8a3e647, ev:T-0597:60d4ee55202944daab3308bd, ev:T-0597:5b632fde757b47afa34191e5 |
 
 ### Current Known Problems
 

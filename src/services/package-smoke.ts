@@ -233,6 +233,7 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
   let tarballPath = source.kind === 'source-checkout' ? undefined : resolveInputPath(options.paths.projectRoot, options.from);
   const runner = options.runner ?? runCommand;
   const timeoutMs = (options.timeoutSeconds ?? 120) * 1000;
+  const npmEnv = workspaceNpmEnv(workspaceSetup.path);
 
   try {
     if (issues.some((issue) => issue.severity === 'error') || !workspaceSetup.ok) {
@@ -242,7 +243,8 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
         execution.npmPackExecuted = true;
         const pack = runner(npmCommand(), ['pack', '--json', '--pack-destination', workspaceSetup.path], {
           cwd: options.paths.projectRoot,
-          timeoutMs
+          timeoutMs,
+          env: npmEnv
         });
         const packStep = commandStep('npm-pack', 'npm pack', 'npm pack --json --pack-destination <redacted-workspace>', pack);
         tarballPath = parsePackTarball(pack.stdout, workspaceSetup.path);
@@ -283,7 +285,8 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
         fs.mkdirSync(installPrefix, { recursive: true });
         const install = runner(npmCommand(), ['install', '-g', '--prefix', installPrefix, '--no-audit', '--no-fund', tarballPath], {
           cwd: workspaceSetup.path,
-          timeoutMs
+          timeoutMs,
+          env: npmEnv
         });
         const installStep = commandStep('install-cli', 'Install package into isolated prefix', 'npm install -g --prefix <redacted-prefix> <redacted-package-source>', install);
         if (install.status !== 0) {
@@ -1485,6 +1488,13 @@ function installPathEnv(prefix: string, projectRoot?: string): NodeJS.ProcessEnv
     ...process.env,
     ...(projectRoot ? { HADARA_PROJECT_ROOT: projectRoot } : {}),
     PATH: `${binDir}${path.delimiter}${process.env.PATH ?? ''}`
+  };
+}
+
+function workspaceNpmEnv(workspace: string): NodeJS.ProcessEnv {
+  return {
+    ...process.env,
+    NPM_CONFIG_CACHE: process.env.NPM_CONFIG_CACHE ?? path.join(workspace, 'npm-cache')
   };
 }
 

@@ -480,6 +480,8 @@ describe('package smoke local execution', () => {
     expect(calls.find((call) => call.args[0] === 'doctor')?.args).toEqual(['doctor', '--json']);
     expect(calls.find((call) => call.args[0] === 'init')?.args).toEqual(['init', '--profile', 'standard', '--json']);
     expect(calls.find((call) => call.args[0] === 'smoke')?.args).toEqual(['smoke', 'run', '--profile', 'core', '--json']);
+    expect(calls.find((call) => call.args[0] === 'pack')?.env?.NPM_CONFIG_CACHE).toContain('npm-cache');
+    expect(calls.find((call) => call.args[0] === 'install')?.env?.NPM_CONFIG_CACHE).toContain('npm-cache');
     expect(calls.find((call) => call.args[0] === 'doctor')?.env?.HADARA_PROJECT_ROOT).toBe(root);
     expect(calls.find((call) => call.args[0] === 'init')?.env?.HADARA_PROJECT_ROOT).toBeUndefined();
     expect(calls.find((call) => call.args[0] === 'smoke')?.env?.HADARA_PROJECT_ROOT).toBe(root);

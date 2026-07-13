@@ -7,13 +7,13 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 
 | Field | Value |
 |---|---|
-| Current Release | 0.4.4 |
-| Latest Completed Task | T-0596 0.4.5 fresh and brownfield init dogfood |
+| Current Release | 0.4.5 |
+| Latest Completed Task | T-0597 0.4.5 release readiness and publish preparation |
 | Active Task | None |
-| Next Work | 0.4.5 release readiness and publish preparation |
+| Next Work | 0.4.5 operator publish and installed-package recycle |
 | Next Work State | candidate |
-| Operator Guidance | Prepare 0.4.5 release readiness after docs registry/init cleanup: verify docs doctor, release notes, package smoke, and publish scripts before operator npm/GitHub publish. |
-| Validation Baseline | Stable 0.4.4 publication and recycle passed: operator completed npm publish and public GitHub Release v0.4.4; npm view returned 0.4.4 for both hadara@0.4.4 and hadara@latest; GitHub Release is non-draft/non-prerelease; installed-package recycle for hadara@latest expected 0.4.4 passed consumer init/task/session/finalize/context smokes. |
+| Operator Guidance | After the T-0597 source-preparation commit, run prepare-publish-env, perform the approval-gated npm/GitHub publication, then verify installed hadara@latest resolves to 0.4.5. |
+| Validation Baseline | 0.4.5 source/readiness passed through T-0597: package metadata and release docs target 0.4.5, docs doctor is clean, Docker package smoke passed with attached T-0597 evidence, strict release gate passed, and final release artifact generation remains assigned to the clean publish clone. |
 
 ### Current Known Problems
 
@@ -43,14 +43,14 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.4 npm/GitHub publication and installed-package recycle are complete through T-0584. The next candidate step is post-release issue watch or deliberate 0.4.5 planning, not another 0.4.4 publish action.
+v0.4.5 source/readiness is complete through T-0597 after docs-registry v3, safe brownfield init adoption, and fresh/brownfield dogfood. npm/GitHub publication and installed-package recycle are the next operator-approved follow-up.
 
 | Stage | State | Purpose |
 |---|---|---|
 | P0 Currentness integrity | Done | Align next-work selection, active docs, and validation fixtures. |
 | P1 Current-state ownership | Done | Separate compact current facts from historical narrative. |
 | P2 Product compression | Done | Freeze capability growth and measure the primary workflow. |
-| P3 Profile toy validation | Done | Dogfood all profiles and archive stale documents/specs; real external-repository validation remains planned for v0.4.4. |
+| P3 Profile toy validation | Done | Dogfood all profiles and archive stale documents/specs; external/delegated validation was completed for v0.4.4. |
 
 ## Current Capabilities
 
