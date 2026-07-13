@@ -1,20 +1,20 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 52,
+  "rev": 55,
   "profile": "governed",
   "currentRelease": "0.4.4-rc.0",
   "latestCompletedTask": {
-    "id": "T-0579",
-    "title": "v0.4.4-rc.0 release readiness and publish preparation"
+    "id": "T-0580",
+    "title": "v0.4.4-rc.0 operator publish and installed-package recycle"
   },
   "activeTask": null,
   "nextWork": {
-    "title": "v0.4.4-rc.0 operator publish and installed-package recycle",
+    "title": "v0.4.4 stable promotion decision",
     "state": "candidate",
-    "operatorGuidance": "After committing T-0579, run the approval-gated publish helper for hadara@0.4.4-rc.0 with dist-tag next, then run a separate installed-package recycle capsule against hadara@next expected 0.4.4-rc.0.",
+    "operatorGuidance": "Use T-0580 npm/GitHub publication and installed-package recycle evidence to decide whether to prepare stable 0.4.4 or run additional RC dogfood first.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Publish v0.4.4-rc.0 only after T-0579 is committed, then verify the installed package from npm next in a follow-up recycle capsule.",
+  "nextOperatorIntent": "Decide stable 0.4.4 promotion after observing v0.4.4-rc.0 publication and installed-package recycle evidence.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
@@ -38,13 +38,11 @@
     }
   ],
   "validationBaseline": {
-    "summary": "hadara@0.4.4-rc.0 source readiness through T-0579: exact npm version is unpublished, Docker /workspace build plus full check passed 153 files and 1068 tests, built CLI reports packageVersion 0.4.4-rc.0 with fresh dist, docs doctor currentness is clean, and strict release gate passes.",
+    "summary": "hadara@0.4.4-rc.0 publication through T-0580: npm next resolves to 0.4.4-rc.0 while latest remains 0.4.3, GitHub Release v0.4.4-rc.0 is public prerelease, and installed-package recycle from hadara@next passed.",
     "evidence": [
-      "ev:T-0579:ec780f1860244bdcac80bc0b",
-      "ev:T-0579:99e9627ede96433f97a13ab1",
-      "ev:T-0579:1e85fffe14f2401b88aa8211",
-      "ev:T-0579:370b652d038c4ec6a01c42cb",
-      "ev:T-0579:e57bc1d6ce8f429d98d5eda8"
+      "ev:T-0580:27a8f81a98ab49b28f8c87d2",
+      "ev:T-0580:82f354a6e17a4fe08b737138",
+      "ev:T-0580:aab1eee8f7b449148907312c"
     ]
   }
 }

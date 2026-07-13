@@ -107,8 +107,9 @@ hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
 | Prepared source | [`hadara@0.4.4-rc.0`](docs/RELEASE_NOTES.md#044-rc0), validated locally before prerelease publication |
 | Published stable npm | `hadara@0.4.3` |
 | Published GitHub Release | [`v0.4.3`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.3) |
-| Current RC publish target | `hadara@0.4.4-rc.0` on `next` after operator approval |
-| RC history | [`hadara@0.4.2-rc.0`](docs/RELEASE_NOTES.md#042-rc0) remains published prerelease history until `0.4.4-rc.0` is published |
+| Published RC npm | `hadara@0.4.4-rc.0` on `next` |
+| Published RC GitHub Release | [`v0.4.4-rc.0`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.4-rc.0), public prerelease |
+| RC history | [`hadara@0.4.2-rc.0`](docs/RELEASE_NOTES.md#042-rc0) remains previous prerelease history |
 | Historical releases | [Release Notes](docs/RELEASE_NOTES.md) |
 | Docker image / installer | Deferred |
 | PyPI bridge | `hadara==0.2.0rc1` preview bridge |

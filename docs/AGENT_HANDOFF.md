@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.4-rc.0 | Portable project state. |
-| Latest Completed Task | T-0579 v0.4.4-rc.0 release readiness and publish preparation | Most recent completed capsule. |
+| Latest Completed Task | T-0580 v0.4.4-rc.0 operator publish and installed-package recycle | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
-| Next Work | v0.4.4-rc.0 operator publish and installed-package recycle | Structured continuation title; not operator prose. |
+| Next Work | v0.4.4 stable promotion decision | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | After committing T-0579, run the approval-gated publish helper for hadara@0.4.4-rc.0 with dist-tag next, then run a separate installed-package recycle capsule against hadara@next expected 0.4.4-rc.0. | Human constraints; never used as a task title. |
-| Validation Baseline | hadara@0.4.4-rc.0 source readiness through T-0579: exact npm version is unpublished, Docker /workspace build plus full check passed 153 files and 1068 tests, built CLI reports packageVersion 0.4.4-rc.0 with fresh dist, docs doctor currentness is clean, and strict release gate passes. | ev:T-0579:ec780f1860244bdcac80bc0b, ev:T-0579:99e9627ede96433f97a13ab1, ev:T-0579:1e85fffe14f2401b88aa8211, ev:T-0579:370b652d038c4ec6a01c42cb, ev:T-0579:e57bc1d6ce8f429d98d5eda8 |
+| Operator Guidance | Use T-0580 npm/GitHub publication and installed-package recycle evidence to decide whether to prepare stable 0.4.4 or run additional RC dogfood first. | Human constraints; never used as a task title. |
+| Validation Baseline | hadara@0.4.4-rc.0 publication through T-0580: npm next resolves to 0.4.4-rc.0 while latest remains 0.4.3, GitHub Release v0.4.4-rc.0 is public prerelease, and installed-package recycle from hadara@next passed. | ev:T-0580:27a8f81a98ab49b28f8c87d2, ev:T-0580:82f354a6e17a4fe08b737138, ev:T-0580:aab1eee8f7b449148907312c |
 
 ### Current Known Problems
 
