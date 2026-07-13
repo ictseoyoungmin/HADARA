@@ -67,6 +67,26 @@ describe('Phase 7.3 docs registry', () => {
       expect.arrayContaining(['docs/AGENT_HANDOFF.md', 'docs/SECURITY_MODEL.md', 'docs/ROADMAP.md'])
     );
     expect(readRegistry(governed).documents.map((doc) => doc.path)).not.toContain('docs/REFACTOR_LOG.md');
+    for (const registry of [readRegistry(basic), readRegistry(standard), readRegistry(governed)]) {
+      expect(registry.documents.flatMap((doc) => doc.profiles)).not.toContain('hadara-dev');
+    }
+  });
+
+  it('reports hadara-dev as an invalid document profile token', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    const registry = readRegistry(root);
+    registry.documents[0].profiles = ['hadara-dev' as any];
+    writeRegistry(root, registry);
+
+    const report = createDocsListReport(root);
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({
+      code: 'DOC_PROFILE_INVALID_TOKEN',
+      field: 'profiles',
+      allowedValues: ['basic', 'standard', 'governed']
+    }));
   });
 
   it('lists registry entries with status and read-time filters', () => {

@@ -98,6 +98,7 @@ describe('init profiles', () => {
 
     const registry = JSON.parse(read(root, '.hadara/docs-registry.json'));
     expect(registry.schemaVersion).toBe('hadara.docsRegistry.v2');
+    expect(registry.documents.flatMap((doc: any) => doc.profiles)).not.toContain('hadara-dev');
     expect(registry.documents.map((doc: any) => doc.path)).toEqual(expect.arrayContaining([
       '.hadara/context/HADARA_CONTEXT.md',
       'AGENTS.md',

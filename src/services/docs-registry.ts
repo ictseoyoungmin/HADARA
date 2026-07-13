@@ -45,7 +45,7 @@ export interface DocumentRegistryEntry {
   kind: DocumentKind;
   status: DocumentStatus;
   scope: 'project' | 'task' | 'release' | 'integration' | 'repo' | 'local';
-  profiles: Array<InitProfile | 'hadara-dev'>;
+  profiles: InitProfile[];
   readWhen: ReadWhen[];
   requiredReading: boolean;
   updateOwner: 'human' | 'hadara-init' | 'hadara-task' | 'hadara-docs' | 'release-operator' | 'mixed';
@@ -345,7 +345,7 @@ export function createDocsListReport(projectRoot: string, filters: { status?: st
   const state = loadRegistryOrInfer(projectRoot);
   const status = parseStatus(filters.status);
   const readWhen = parseReadWhen(filters.readWhen);
-  const issues = [...state.issues];
+  const issues = [...state.issues, ...validateRegistryMetadata(state.registry)];
   if (filters.status !== undefined && status === null) issues.push({ severity: 'error', code: 'DOC_UNKNOWN_STATUS', message: `Unknown document status: ${filters.status}` });
   if (filters.readWhen !== undefined && readWhen === null) issues.push({ severity: 'error', code: 'DOC_UNKNOWN_READ_WHEN', message: `Unknown read-when value: ${filters.readWhen}` });
   const documents = state.registry.documents.filter((doc) => {
@@ -880,7 +880,19 @@ function isArchivePath(documentPath: string): boolean {
 function validateRegistryMetadata(registry: DocumentRegistryFile): DocsIssue[] {
   const issues: DocsIssue[] = [];
   for (const doc of registry.documents) {
-    const raw = doc as DocumentRegistryEntry & { authority?: string; readTier?: string; editPolicy?: string };
+    const raw = doc as DocumentRegistryEntry & { authority?: string; readTier?: string; editPolicy?: string; profiles?: unknown };
+    if (!Array.isArray(raw.profiles) || raw.profiles.some((profile) => profile !== 'basic' && profile !== 'standard' && profile !== 'governed')) {
+      issues.push({
+        severity: 'error',
+        code: 'DOC_PROFILE_INVALID_TOKEN',
+        path: doc.path,
+        message: `${doc.path} has invalid profiles; document profiles are init scaffold profiles only.`,
+        field: 'profiles',
+        received: Array.isArray(raw.profiles) ? raw.profiles.join(', ') : String(raw.profiles),
+        allowedValues: ['basic', 'standard', 'governed'],
+        suggestion: 'Use owner/scope/readTier/status for internal or historical routing; do not use hadara-dev as a document profile.'
+      });
+    }
     if (raw.authority !== undefined && !VALID_AUTHORITIES.includes(raw.authority as DocsAuthority)) {
       issues.push({ severity: 'error', code: 'DOC_AUTHORITY_INVALID_TOKEN', path: doc.path, message: `${doc.path} has invalid authority: ${raw.authority}` });
     }
@@ -895,9 +907,9 @@ function validateRegistryMetadata(registry: DocumentRegistryFile): DocsIssue[] {
 }
 
 function seedEntries(profile: InitProfile | 'hadara-dev'): DocumentRegistryEntry[] {
-  const coreProfiles: DocumentRegistryEntry['profiles'] = ['basic', 'standard', 'governed', 'hadara-dev'];
-  const standardProfiles: DocumentRegistryEntry['profiles'] = ['standard', 'governed', 'hadara-dev'];
-  const governedProfiles: DocumentRegistryEntry['profiles'] = ['governed', 'hadara-dev'];
+  const coreProfiles: DocumentRegistryEntry['profiles'] = ['basic', 'standard', 'governed'];
+  const standardProfiles: DocumentRegistryEntry['profiles'] = ['standard', 'governed'];
+  const governedProfiles: DocumentRegistryEntry['profiles'] = ['governed'];
   const entries: DocumentRegistryEntry[] = [
     entry('.hadara/state/current.json', 'CURRENT_STATE', 'schema-reference', 'canonical', ['session-start'], true, 'hadara-init', coreProfiles),
     entry('.hadara/context/HADARA_CONTEXT.md', 'HADARA_CONTEXT', 'project-context', 'canonical', ['session-start'], true, 'mixed', coreProfiles),
@@ -1218,7 +1230,7 @@ function buildRegisteredDocument(registry: DocumentRegistryFile, input: {
     kind: input.kind,
     status: input.status,
     scope: 'project',
-    profiles: registry.projectProfile ? [registry.projectProfile] : ['basic', 'standard', 'governed', 'hadara-dev'],
+    profiles: profilesForRegistryProject(registry.projectProfile),
     readWhen: [input.readWhen],
     requiredReading: input.requiredReading,
     updateOwner: 'human',
@@ -1233,6 +1245,12 @@ function buildRegisteredDocument(registry: DocumentRegistryFile, input: {
   if (input.activeForTasks && input.activeForTasks.length > 0) document.activeForTasks = input.activeForTasks;
   if (input.drift) document.drift = input.drift;
   return document;
+}
+
+function profilesForRegistryProject(profile: DocumentRegistryFile['projectProfile']): InitProfile[] {
+  if (profile === 'basic' || profile === 'standard' || profile === 'governed') return [profile];
+  if (profile === 'hadara-dev') return ['governed'];
+  return ['basic', 'standard', 'governed'];
 }
 
 function titleFromPath(documentPath: string): string {
