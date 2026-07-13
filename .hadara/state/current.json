@@ -1,20 +1,20 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 72,
+  "rev": 74,
   "profile": "governed",
   "currentRelease": "0.4.4",
   "latestCompletedTask": {
-    "id": "T-0586",
-    "title": "0.4.5 init upgrade project identity and gitkeep cleanup"
+    "id": "T-0587",
+    "title": "0.4.5 docsRegistry v3 schema and read model"
   },
   "activeTask": null,
   "nextWork": {
-    "title": "0.4.5 docsRegistry v3 schema and read model",
+    "title": "0.4.5 docs registry mutation commands",
     "state": "candidate",
-    "operatorGuidance": "Implement staged capsule 2 from docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md: add v3 types, normalizer, migration read path, schema fixtures, and docs doctor diagnostics while keeping v1/v2 compatibility.",
+    "operatorGuidance": "Implement staged capsule 3 from docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md: add dry-run-first docs update/archive/supersede/unregister/render surfaces with guarded execute behavior.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Start the 0.4.5 docsRegistry v3 schema/read-model capsule after T-0586 closes.",
+  "nextOperatorIntent": "Start the 0.4.5 docs registry mutation commands capsule after T-0587 closes.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",

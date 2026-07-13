@@ -30,6 +30,20 @@ export type ReadWhen = 'session-start' | 'task-start' | 'task-close' | 'release-
 export type DocsReadTier = 'bootstrap' | 'current-state' | 'workflow-reference' | 'active-task' | 'active-spec' | 'conditional-reference' | 'implemented-reference' | 'drift-review' | 'historical' | 'excluded';
 export type DocsAuthority = 'exploratory' | 'proposed' | 'approved' | 'normative' | 'implementation-source' | 'reference-only' | 'historical';
 export type DocsEditPolicy = 'human-only' | 'agent-assisted' | 'agent-editable-with-request' | 'agent-editable-with-review' | 'cli-owned' | 'generated-projection';
+export type DocsOriginType = 'hadara-scaffold' | 'hadara-projection' | 'task-generated' | 'project-authored' | 'imported';
+
+export interface DocumentRegistryProject {
+  id: string;
+  name?: string;
+  hadaraProfile: InitProfile;
+}
+
+export interface DocumentOrigin {
+  type: DocsOriginType;
+  generator?: string;
+  template?: string;
+  taskId?: string;
+}
 
 export interface ManagedSectionRef {
   id: string;
@@ -46,6 +60,8 @@ export interface DocumentRegistryEntry {
   status: DocumentStatus;
   scope: 'project' | 'task' | 'release' | 'integration' | 'repo' | 'local';
   profiles: InitProfile[];
+  applicableProfiles?: InitProfile[];
+  origin?: DocumentOrigin;
   readWhen: ReadWhen[];
   requiredReading: boolean;
   updateOwner: 'human' | 'hadara-init' | 'hadara-task' | 'hadara-docs' | 'release-operator' | 'mixed';
@@ -68,8 +84,9 @@ export interface DocumentRegistryEntry {
 }
 
 export interface DocumentRegistryFile {
-  schemaVersion: 'hadara.docs.registry.v1' | 'hadara.docsRegistry.v2';
+  schemaVersion: 'hadara.docs.registry.v1' | 'hadara.docsRegistry.v2' | 'hadara.docsRegistry.v3';
   registryVersion: number;
+  project?: DocumentRegistryProject;
   projectProfile?: InitProfile | 'hadara-dev';
   generatedAt?: string;
   documents: DocumentRegistryEntry[];
@@ -778,6 +795,55 @@ export function registryJson(registry: DocumentRegistryFile): string {
   return `${JSON.stringify(registry, null, 2)}\n`;
 }
 
+export function normalizeDocumentRegistryFile(input: DocumentRegistryFile): DocumentRegistryFile {
+  const hadaraProfile = registryHadaraProfile(input);
+  const project = input.project ?? {
+    id: input.projectProfile === 'hadara-dev' ? 'hadara-dev' : 'project',
+    hadaraProfile
+  };
+  return {
+    ...input,
+    project,
+    documents: input.documents.map((document) => normalizeDocumentRegistryEntry(document, hadaraProfile))
+  };
+}
+
+function normalizeDocumentRegistryEntry(document: DocumentRegistryEntry, fallbackProfile: InitProfile): DocumentRegistryEntry {
+  const raw = document as DocumentRegistryEntry & { applicableProfiles?: unknown; profiles?: unknown; generatedBy?: string };
+  const applicableProfiles = normalizeProfiles(raw.applicableProfiles);
+  const explicitProfiles = Array.isArray(raw.profiles) ? raw.profiles as InitProfile[] : null;
+  const profiles = explicitProfiles ?? applicableProfiles ?? [fallbackProfile];
+  const origin = document.origin ?? inferDocumentOrigin(document);
+  return {
+    ...document,
+    profiles,
+    ...(applicableProfiles ? { applicableProfiles } : {}),
+    ...(origin ? { origin } : {})
+  };
+}
+
+function normalizeProfiles(value: unknown): InitProfile[] | null {
+  if (!Array.isArray(value)) return null;
+  const profiles = value.filter((profile): profile is InitProfile => profile === 'basic' || profile === 'standard' || profile === 'governed');
+  return profiles.length > 0 && profiles.length === value.length ? profiles : null;
+}
+
+function inferDocumentOrigin(document: DocumentRegistryEntry): DocumentOrigin | undefined {
+  if (document.generatedBy === 'hadara init') return { type: 'hadara-scaffold', generator: 'hadara init' };
+  const taskMatch = document.generatedBy?.match(/^(T-\d{4})$/);
+  if (taskMatch) return { type: 'task-generated', taskId: taskMatch[1] };
+  return undefined;
+}
+
+function registryHadaraProfile(registry: Pick<DocumentRegistryFile, 'project' | 'projectProfile'>): InitProfile {
+  if (registry.project?.hadaraProfile === 'basic' || registry.project?.hadaraProfile === 'standard' || registry.project?.hadaraProfile === 'governed') {
+    return registry.project.hadaraProfile;
+  }
+  if (registry.projectProfile === 'basic' || registry.projectProfile === 'standard' || registry.projectProfile === 'governed') return registry.projectProfile;
+  if (registry.projectProfile === 'hadara-dev') return 'governed';
+  return 'standard';
+}
+
 function loadRegistryOrInfer(projectRoot: string): {
   registry: DocumentRegistryFile;
   issues: DocsIssue[];
@@ -793,7 +859,7 @@ function loadRegistryOrInfer(projectRoot: string): {
   }
   try {
     const parsed = JSON.parse(fs.readFileSync(registryPath, 'utf8')) as DocumentRegistryFile;
-    return { registry: parsed, issues: [], source: { registryPath: DOCS_REGISTRY_PATH, registryPresent: true, inferred: false } };
+    return { registry: normalizeDocumentRegistryFile(parsed), issues: [], source: { registryPath: DOCS_REGISTRY_PATH, registryPresent: true, inferred: false } };
   } catch (error) {
     return {
       registry: inferRegistry(projectRoot),
@@ -813,7 +879,7 @@ function inferRegistry(projectRoot: string): DocumentRegistryFile {
 
 function validateRegistry(projectRoot: string, registry: DocumentRegistryFile): DocsIssue[] {
   const issues: DocsIssue[] = [];
-  if (registry.schemaVersion !== 'hadara.docsRegistry.v2' && registry.schemaVersion !== 'hadara.docs.registry.v1') {
+  if (registry.schemaVersion !== 'hadara.docsRegistry.v3' && registry.schemaVersion !== 'hadara.docsRegistry.v2' && registry.schemaVersion !== 'hadara.docs.registry.v1') {
     issues.push({
       severity: 'error',
       code: 'DOC_REGISTRY_SCHEMA_UNSUPPORTED',
@@ -821,7 +887,8 @@ function validateRegistry(projectRoot: string, registry: DocumentRegistryFile): 
       message: `${DOCS_REGISTRY_PATH} has unsupported schemaVersion: ${String(registry.schemaVersion)}.`
     });
   }
-  const expectedSeed = registry.projectProfile ? createSeedDocumentRegistry(registry.projectProfile).documents : [];
+  const hadaraProfile = registryHadaraProfile(registry);
+  const expectedSeed = createSeedDocumentRegistry(hadaraProfile).documents;
   const registeredPaths = new Set(registry.documents.map((doc) => doc.path));
   const seenCanonical = new Map<string, string>();
   for (const expected of expectedSeed) {
@@ -830,7 +897,7 @@ function validateRegistry(projectRoot: string, registry: DocumentRegistryFile): 
         severity: 'warning',
         code: 'DOC_INIT_PROFILE_DRIFT',
         path: expected.path,
-        message: `${expected.path} exists for profile ${registry.projectProfile} but is missing from the docs registry.`
+        message: `${expected.path} exists for profile ${hadaraProfile} but is missing from the docs registry.`
       });
     }
   }
@@ -879,6 +946,17 @@ function isArchivePath(documentPath: string): boolean {
 
 function validateRegistryMetadata(registry: DocumentRegistryFile): DocsIssue[] {
   const issues: DocsIssue[] = [];
+  if (registry.project && !normalizeProfiles([registry.project.hadaraProfile])) {
+    issues.push({
+      severity: 'error',
+      code: 'DOC_PROJECT_HADARA_PROFILE_INVALID_TOKEN',
+      path: DOCS_REGISTRY_PATH,
+      message: `project.hadaraProfile has invalid value: ${String(registry.project.hadaraProfile)}.`,
+      field: 'project.hadaraProfile',
+      received: String(registry.project.hadaraProfile),
+      allowedValues: ['basic', 'standard', 'governed']
+    });
+  }
   for (const doc of registry.documents) {
     const raw = doc as DocumentRegistryEntry & { authority?: string; readTier?: string; editPolicy?: string; profiles?: unknown };
     if (!Array.isArray(raw.profiles) || raw.profiles.some((profile) => profile !== 'basic' && profile !== 'standard' && profile !== 'governed')) {
@@ -1230,7 +1308,7 @@ function buildRegisteredDocument(registry: DocumentRegistryFile, input: {
     kind: input.kind,
     status: input.status,
     scope: 'project',
-    profiles: profilesForRegistryProject(registry.projectProfile),
+    profiles: profilesForRegistryProject(registry),
     readWhen: [input.readWhen],
     requiredReading: input.requiredReading,
     updateOwner: 'human',
@@ -1247,10 +1325,8 @@ function buildRegisteredDocument(registry: DocumentRegistryFile, input: {
   return document;
 }
 
-function profilesForRegistryProject(profile: DocumentRegistryFile['projectProfile']): InitProfile[] {
-  if (profile === 'basic' || profile === 'standard' || profile === 'governed') return [profile];
-  if (profile === 'hadara-dev') return ['governed'];
-  return ['basic', 'standard', 'governed'];
+function profilesForRegistryProject(registry: Pick<DocumentRegistryFile, 'project' | 'projectProfile'>): InitProfile[] {
+  return [registryHadaraProfile(registry)];
 }
 
 function titleFromPath(documentPath: string): string {

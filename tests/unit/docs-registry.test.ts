@@ -8,6 +8,7 @@ import { handleDocsCommand } from '../../src/cli/docs';
 import {
   DOCS_REGISTRY_PATH,
   DocumentRegistryFile,
+  createDocsDoctorReport,
   createDocsExplainReport,
   createDocsInboxReport,
   createDocsListReport,
@@ -87,6 +88,48 @@ describe('Phase 7.3 docs registry', () => {
       field: 'profiles',
       allowedValues: ['basic', 'standard', 'governed']
     }));
+  });
+
+  it('normalizes docsRegistry v3 project identity and applicable profiles into the existing read model', () => {
+    const root = tempProject();
+    initProject(root, 'governed', { silent: true });
+    const registry = readRegistry(root);
+    const v3 = {
+      schemaVersion: 'hadara.docsRegistry.v3',
+      registryVersion: 3,
+      project: {
+        id: 'hadara-dev',
+        name: 'HADARA',
+        hadaraProfile: 'governed'
+      },
+      documents: registry.documents.map((doc) => {
+        const { profiles: _profiles, generatedBy, ...rest } = doc;
+        return {
+          ...rest,
+          applicableProfiles: doc.profiles,
+          origin: generatedBy === 'hadara init'
+            ? { type: 'hadara-scaffold', generator: 'hadara init' }
+            : { type: 'project-authored' }
+        };
+      })
+    };
+    fs.writeFileSync(path.join(root, DOCS_REGISTRY_PATH), `${JSON.stringify(v3, null, 2)}\n`);
+
+    const list = createDocsListReport(root);
+    const doctor = createDocsDoctorReport(root);
+    const readMap = createDocsReadMapReport(root, 'T-0001');
+
+    expect(list.ok).toBe(true);
+    expect(list.documents.find((doc) => doc.path === 'docs/SECURITY_MODEL.md')).toMatchObject({
+      profiles: ['governed'],
+      applicableProfiles: ['governed'],
+      origin: { type: 'hadara-scaffold', generator: 'hadara init' }
+    });
+    expect(doctor).toMatchObject({
+      ok: true,
+      summary: expect.objectContaining({ registryPresent: true })
+    });
+    expect(readMap.readFirst.map((entry) => entry.path)).toContain('docs/AGENT_HANDOFF.md');
   });
 
   it('lists registry entries with status and read-time filters', () => {

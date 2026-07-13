@@ -587,3 +587,4 @@
 | T-0584 | v0.4.4 operator publish and installed-package recycle | Done | tasks/T-0584-v0-4-4-operator-publish-and-installed-package-recycle | |
 | T-0585 | 0.4.5 docs registry and init cleanup design | Done | tasks/T-0585-init-upgrade-project-identity-and-gitkeep-hotfix | |
 | T-0586 | 0.4.5 init upgrade project identity and gitkeep cleanup | Done | tasks/T-0586-0-4-5-init-upgrade-project-identity-and-gitkeep-cleanup | |
+| T-0587 | 0.4.5 docsRegistry v3 schema and read model | Done | tasks/T-0587-0-4-5-docsregistry-v3-schema-and-read-model | |
