@@ -495,7 +495,7 @@ function validateActiveDocumentCurrentness(projectRoot: string, registry: Docume
 
       if (!packageVersion || (documentPath !== 'README.md' && documentPath !== 'docs/GETTING_STARTED.md')) continue;
       const installMatch = command.match(/^(?:npm install -g|npx)\s+hadara@(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)(?:\s|$)/);
-      if (installMatch && installMatch[1] !== packageVersion) {
+      if (installMatch && installMatch[1] !== packageVersion && !isAllowedStableInstallExample(packageVersion, installMatch[1], lines, index)) {
         issues.push({
           severity: 'warning',
           code: 'DOC_STALE_INSTALL_VERSION',
@@ -506,6 +506,13 @@ function validateActiveDocumentCurrentness(projectRoot: string, registry: Docume
     }
   }
   return issues;
+}
+
+function isAllowedStableInstallExample(sourceVersion: string, installVersion: string, lines: string[], lineIndex: number): boolean {
+  if (!/^\d+\.\d+\.\d+-/.test(sourceVersion)) return false;
+  if (!/^\d+\.\d+\.\d+$/.test(installVersion)) return false;
+  const nearbyText = lines.slice(Math.max(0, lineIndex - 5), lineIndex + 1).join(' ').toLowerCase();
+  return /\bstable\b/.test(nearbyText);
 }
 
 function normalizeCurrentnessExampleLine(line: string): string {

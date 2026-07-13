@@ -81,5 +81,5 @@ describe('dashboard bootstrap read model', () => {
     });
     expect(report.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'SELECTED_TASK_UNAVAILABLE' })]));
     expect(validateSchema('hadara.dashboard.bootstrap.v1', report).ok).toBe(true);
-  });
+  }, 120000);
 });

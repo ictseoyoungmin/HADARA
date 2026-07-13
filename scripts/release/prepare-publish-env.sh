@@ -24,12 +24,12 @@
 #
 # Before running this script, the operator should have already:
 # 1) Version and release docs already point at the intended package version.
-#    For the current stable 0.4.3 path:
-#    package.json "version": "0.4.3"
+#    For the current 0.4.4-rc.0 path:
+#    package.json "version": "0.4.4-rc.0"
 #    docs/RELEASE_READINESS.md:
-#    - Current version is `0.4.3`.
+#    - Current version is `0.4.4-rc.0`.
 # 2) Commit the readiness state. Fresh clones only contain committed content.
-# git add -A && git commit -m "T-0570 0.4.3 stable release readiness and publish preparation"
+# git add -A && git commit -m "T-0579 v0.4.4-rc.0 release readiness and publish preparation"
 #
 #
 # What it does:
@@ -58,7 +58,7 @@
 #   -h, --help           Show this help.
 #
 # Run it from the host repo root:
-#   bash scripts/release/prepare-publish-env.sh T-0570
+#   bash scripts/release/prepare-publish-env.sh T-0579
 
 set -euo pipefail
 
@@ -89,7 +89,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$TASK_ID" ]]; then
-  echo "TASK_ID is required (the release Task Capsule id, e.g. T-0570)."
+  echo "TASK_ID is required (the release Task Capsule id, e.g. T-0579)."
   usage
   exit 1
 fi

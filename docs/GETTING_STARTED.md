@@ -6,12 +6,14 @@ This is the shortest path from install to a usable HADARA project.
 
 HADARA requires Node.js 22.
 
+Install the current stable release:
+
 ```bash
 npm install -g hadara@0.4.3
 hadara doctor --json
 ```
 
-Without a global install:
+Without a global install, use the same stable release:
 
 ```bash
 npx hadara@0.4.3 doctor --json

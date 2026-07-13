@@ -579,3 +579,4 @@
 | T-0576 | v0.4.4 R2 external dogfood validation | Done | tasks/T-0576-v0-4-4-r2-external-dogfood-validation | R2 standard-profile external dogfood completed; no new v0.4.4 blocker. |
 | T-0577 | v0.4.4 R3 delegated Claude external dogfood validation | Done | tasks/T-0577-v0-4-4-r3-delegated-claude-external-dogfood-validation | Claude Code independently completed 8 governed-profile capsules; candidate regressions verified. |
 | T-0578 | v0.4.4 pre-release delegated dogfood UX cleanup | Done | tasks/T-0578-v0-4-4-pre-release-delegated-dogfood-ux-cleanup | |
+| T-0579 | v0.4.4-rc.0 release readiness and publish preparation | Done | tasks/T-0579-v0-4-4-rc-0-release-readiness-and-publish-preparation | |

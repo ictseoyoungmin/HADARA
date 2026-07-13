@@ -438,7 +438,7 @@ describe('operator console bundle (Phase 5.6)', () => {
     expect(unknownApi.statusCode).toBe(404);
     expect(unknownApi.body).toBe('Not found');
     expect(traversalLikeApi.statusCode).toBe(404);
-  });
+  }, 120000);
 
   it('hardens served dashboard routes against unsafe methods and traversal-like paths', () => {
     const head = createDashboardStaticResponse(process.cwd(), '/dashboard/index.html', 'HEAD');

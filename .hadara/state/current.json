@@ -1,20 +1,20 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 49,
+  "rev": 52,
   "profile": "governed",
-  "currentRelease": "0.4.3",
+  "currentRelease": "0.4.4-rc.0",
   "latestCompletedTask": {
-    "id": "T-0578",
-    "title": "v0.4.4 pre-release delegated dogfood UX cleanup"
+    "id": "T-0579",
+    "title": "v0.4.4-rc.0 release readiness and publish preparation"
   },
   "activeTask": null,
   "nextWork": {
-    "title": "v0.4.4 release readiness",
+    "title": "v0.4.4-rc.0 operator publish and installed-package recycle",
     "state": "candidate",
-    "operatorGuidance": "Prepare v0.4.4 release readiness; optionally run a final delegated candidate-tarball smoke first.",
+    "operatorGuidance": "After committing T-0579, run the approval-gated publish helper for hadara@0.4.4-rc.0 with dist-tag next, then run a separate installed-package recycle capsule against hadara@next expected 0.4.4-rc.0.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Prepare v0.4.4 release readiness after R3 delegated Claude dogfood.",
+  "nextOperatorIntent": "Publish v0.4.4-rc.0 only after T-0579 is committed, then verify the installed package from npm next in a follow-up recycle capsule.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
@@ -32,17 +32,19 @@
       "guidance": "Run the command directly, then record it through validation run --direct-result."
     },
     {
-      "summary": "Release artifact git-status preflight can exceed its 10-second limit on the mounted WSL workspace.",
+      "summary": "Release artifact git-status preflight and full dev Docker workspace copy can exceed useful latency on the mounted WSL workspace.",
       "state": "watch",
-      "guidance": "Build release artifacts from a clean ext4 worktree so commit metadata and package contents remain aligned."
+      "guidance": "Use the clean publish ext4 worktree for release artifacts and treat the direct /workspace Docker build path as the fallback when sync-copy stalls."
     }
   ],
   "validationBaseline": {
-    "summary": "hadara@0.4.3 plus T-0577 delegated R3 dogfood: Claude Code independently finalized 8 governed-profile capsules; current candidate focused regressions passed for current-state, task-selection, session-start, runtime-version, and docs doctor coverage.",
+    "summary": "hadara@0.4.4-rc.0 source readiness through T-0579: exact npm version is unpublished, Docker /workspace build plus full check passed 153 files and 1068 tests, built CLI reports packageVersion 0.4.4-rc.0 with fresh dist, docs doctor currentness is clean, and strict release gate passes.",
     "evidence": [
-      "ev:T-0577:c2cbfbd77f1d415bb306c352",
-      "ev:T-0577:86df1cd8b70943c9aa6632a9",
-      "ev:T-0577:fba2ca49eac2444cb301283c"
+      "ev:T-0579:ec780f1860244bdcac80bc0b",
+      "ev:T-0579:99e9627ede96433f97a13ab1",
+      "ev:T-0579:1e85fffe14f2401b88aa8211",
+      "ev:T-0579:370b652d038c4ec6a01c42cb",
+      "ev:T-0579:e57bc1d6ce8f429d98d5eda8"
     ]
   }
 }

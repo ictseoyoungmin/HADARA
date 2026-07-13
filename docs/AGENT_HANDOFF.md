@@ -7,13 +7,13 @@ This section is projected from `.hadara/state/current.json` so a new session can
 
 | Area | State | Notes |
 |---|---|---|
-| Current Release | 0.4.3 | Portable project state. |
-| Latest Completed Task | T-0578 v0.4.4 pre-release delegated dogfood UX cleanup | Most recent completed capsule. |
+| Current Release | 0.4.4-rc.0 | Portable project state. |
+| Latest Completed Task | T-0579 v0.4.4-rc.0 release readiness and publish preparation | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
-| Next Work | v0.4.4 release readiness | Structured continuation title; not operator prose. |
+| Next Work | v0.4.4-rc.0 operator publish and installed-package recycle | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | Prepare v0.4.4 release readiness; optionally run a final delegated candidate-tarball smoke first. | Human constraints; never used as a task title. |
-| Validation Baseline | hadara@0.4.3 plus T-0577 delegated R3 dogfood: Claude Code independently finalized 8 governed-profile capsules; current candidate focused regressions passed for current-state, task-selection, session-start, runtime-version, and docs doctor coverage. | ev:T-0577:c2cbfbd77f1d415bb306c352, ev:T-0577:86df1cd8b70943c9aa6632a9, ev:T-0577:fba2ca49eac2444cb301283c |
+| Operator Guidance | After committing T-0579, run the approval-gated publish helper for hadara@0.4.4-rc.0 with dist-tag next, then run a separate installed-package recycle capsule against hadara@next expected 0.4.4-rc.0. | Human constraints; never used as a task title. |
+| Validation Baseline | hadara@0.4.4-rc.0 source readiness through T-0579: exact npm version is unpublished, Docker /workspace build plus full check passed 153 files and 1068 tests, built CLI reports packageVersion 0.4.4-rc.0 with fresh dist, docs doctor currentness is clean, and strict release gate passes. | ev:T-0579:ec780f1860244bdcac80bc0b, ev:T-0579:99e9627ede96433f97a13ab1, ev:T-0579:1e85fffe14f2401b88aa8211, ev:T-0579:370b652d038c4ec6a01c42cb, ev:T-0579:e57bc1d6ce8f429d98d5eda8 |
 
 ### Current Known Problems
 
@@ -22,7 +22,7 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Task-scoped context pack is about 8-10s on the mounted WSL repository. | watch | Prefer bounded status/session paths; revisit performance only with an explicit trust/cache design. |
 | Explicit live graph and context reads remain filesystem-sensitive. | watch | Warm cache first and opt into broad live diagnostics deliberately. |
 | Tool-host child process launch can return EPERM while direct commands pass. | active | Run the command directly, then record it through validation run --direct-result. |
-| Release artifact git-status preflight can exceed its 10-second limit on the mounted WSL workspace. | watch | Build release artifacts from a clean ext4 worktree so commit metadata and package contents remain aligned. |
+| Release artifact git-status preflight and full dev Docker workspace copy can exceed useful latency on the mounted WSL workspace. | watch | Use the clean publish ext4 worktree for release artifacts and treat the direct /workspace Docker build path as the fallback when sync-copy stalls. |
 <!-- hadara:managed:end current-state-canon -->
 
 ## Ownership

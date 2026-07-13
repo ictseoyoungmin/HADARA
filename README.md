@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img alt="Source release" src="https://img.shields.io/badge/source-0.4.3-blue">
+  <img alt="Source release" src="https://img.shields.io/badge/source-0.4.4--rc.0-blue">
   <img alt="Published npm release" src="https://img.shields.io/badge/npm-0.4.3-lightgrey">
   <img alt="Node.js" src="https://img.shields.io/badge/node-%3E%3D22-brightgreen">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
@@ -44,7 +44,7 @@ hadara task status --task T-XXXX --json
 
 `session start` reads the structured current-state canon first and routes only the active files needed to continue. Historical docs remain available through the indexes when a task actually needs them.
 
-Run without a global install:
+Run the stable release without a global install:
 
 ```bash
 npx hadara@0.4.3 help
@@ -104,10 +104,11 @@ hadara task finalize --task T-0001 --execute --plan-hash sha256:... --json
 
 | Surface | Status |
 |---|---|
-| Prepared source | [`hadara@0.4.3`](docs/RELEASE_NOTES.md#043), validated locally before publication |
+| Prepared source | [`hadara@0.4.4-rc.0`](docs/RELEASE_NOTES.md#044-rc0), validated locally before prerelease publication |
 | Published stable npm | `hadara@0.4.3` |
 | Published GitHub Release | [`v0.4.3`](https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.3) |
-| RC history | [`hadara@0.4.2-rc.0`](docs/RELEASE_NOTES.md#042-rc0) remains the prerelease history for this stable line |
+| Current RC publish target | `hadara@0.4.4-rc.0` on `next` after operator approval |
+| RC history | [`hadara@0.4.2-rc.0`](docs/RELEASE_NOTES.md#042-rc0) remains published prerelease history until `0.4.4-rc.0` is published |
 | Historical releases | [Release Notes](docs/RELEASE_NOTES.md) |
 | Docker image / installer | Deferred |
 | PyPI bridge | `hadara==0.2.0rc1` preview bridge |

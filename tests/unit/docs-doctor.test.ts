@@ -246,6 +246,22 @@ describe('Phase 7.3 docs doctor', () => {
     assertSchema('hadara.docs.doctor.v1', report);
   });
 
+  it('allows explicit stable install guidance while source metadata is prerelease', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: 'hadara', version: '0.4.4-rc.0' }), 'utf8');
+    fs.writeFileSync(path.join(root, 'README.md'), '# Install\n\nInstall the stable release:\n\n```bash\nnpm install -g hadara@0.4.3\n```\n', 'utf8');
+
+    const report = createDocsDoctorReport(root, 'links');
+
+    expect(report.ok).toBe(true);
+    expect(report.issues).not.toContainEqual(expect.objectContaining({
+      code: 'DOC_STALE_INSTALL_VERSION',
+      path: 'README.md'
+    }));
+    assertSchema('hadara.docs.doctor.v1', report);
+  });
+
   it('reports canon-to-Markdown semantic drift with a drifted currentness verdict', () => {
     const root = tempProject();
     initProject(root, 'governed', { silent: true });

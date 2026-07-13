@@ -79,7 +79,7 @@ describe('validation run', () => {
       process.execPath,
       [
         '-e',
-        'setTimeout(() => require("node:fs").rmSync(process.argv[1], { recursive: true, force: true }), 75)',
+        'setTimeout(() => require("node:fs").rmSync(process.argv[1], { recursive: true, force: true }), 750)',
         lockDir
       ],
       { stdio: 'ignore' }

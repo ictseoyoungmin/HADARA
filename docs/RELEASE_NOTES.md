@@ -1,5 +1,27 @@
 # RELEASE_NOTES
 
+## 0.4.4-rc.0
+
+Release candidate preparation line after stable `0.4.3`, focused on external/delegated dogfood, generated-document currentness, and pre-release continuation-state UX hardening.
+
+Highlights:
+
+- Validates the published 0.4.3 workflow against non-HADARA projects before cutting the 0.4.4 RC: R1 basic-profile delegated dogfood, R2 standard-profile external validation, and R3 governed-profile Claude Code dogfood all completed ordinary Task Capsule lifecycles.
+- Fixes R1/R2/R3 dogfood findings that affected fresh-project agent UX: conventional version aliases, installed-package stale diagnostics in non-HADARA roots, bootstrap next-work retirement, generated read ranges, consumer context-pack guidance, and finish-only status hints.
+- Keeps structured current-state guidance from 0.4.3 while hardening the generated governed handoff: new governed projects no longer start with an empty `Last 3 Completed Tasks` table or `TBD` historical index rows.
+- Uses existing `package.json` `name` and `description` during `hadara init` to populate Product metadata, while `docs doctor` still warns when a project keeps unset metadata after real completed task history exists.
+- Clarifies selected-task readiness output for closed-valid tasks: the fast path now reports `closed-valid-current-not-checked` when close proof is valid and current done-level checks were intentionally skipped, rather than reading like an active blocker.
+- Preserves the primary release boundary: source/readiness work prepares npm `next` publication, while npm publish, GitHub Release publication, and installed-package recycle remain separate operator-controlled steps.
+
+Boundaries:
+
+- T-0572 defined the external-repository validation plan and release gates for v0.4.4.
+- T-0573 through T-0577 ran delegated/external dogfood across basic, standard, and governed profiles, including an independent Claude Code run that completed 8 governed-profile capsules.
+- T-0575 and T-0578 fixed release-candidate UX issues found by dogfood before this release-readiness capsule.
+- T-0579 prepares source metadata, release notes, readiness docs, helper examples, validation evidence, and the operator publish path for `hadara@0.4.4-rc.0`; it performs no npm publish, GitHub Release publication, Docker image push, PyPI publish, installer execution, token loading, or installed-package recycle.
+- The intended npm dist-tag is `next`; stable `latest` remains `hadara@0.4.3` until a later stable promotion decision.
+- Post-publish installed-package recycle for `hadara@next` expected `0.4.4-rc.0` remains a separate follow-up capsule after npm/GitHub publication.
+
 ## 0.4.3
 
 Patch release focused on making HADARA's local evidence-control workflow current, resumable, and measurable without adding public commands.
