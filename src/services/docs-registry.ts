@@ -434,7 +434,9 @@ function validateProjectMetadataPlaceholders(projectRoot: string): DocsIssue[] {
       const field = (cells[0] ?? '').trim().toLowerCase();
       const value = (cells[1] ?? '').trim().toLowerCase();
       return (field === 'name' && value === 'tbd') ||
-        (field === 'purpose' && value.startsWith('describe the project'));
+        (field === 'name' && value === 'project name not set') ||
+        (field === 'purpose' && value.startsWith('describe the project')) ||
+        (field === 'purpose' && value === 'project purpose not set');
     });
   if (placeholders.length === 0) return [];
   return [{
@@ -442,7 +444,7 @@ function validateProjectMetadataPlaceholders(projectRoot: string): DocsIssue[] {
     code: 'DOC_PROJECT_METADATA_PLACEHOLDER',
     path: relativePath,
     message: `Project metadata still contains ${placeholders.length} bootstrap placeholder value(s) after completed task history exists.`,
-    suggestion: 'Replace Product Name/Purpose placeholders in docs/PROJECT_STATE.md once the project has a real task history.'
+    suggestion: 'Set Product Name/Purpose in docs/PROJECT_STATE.md. New init scaffolds infer these from package.json name/description when available.'
   }];
 }
 

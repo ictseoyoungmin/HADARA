@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.3 |
-| Latest Completed Task | T-0577 v0.4.4 R3 delegated Claude external dogfood validation |
+| Latest Completed Task | T-0578 v0.4.4 pre-release delegated dogfood UX cleanup |
 | Active Task | None |
 | Next Work | v0.4.4 release readiness |
 | Next Work State | candidate |

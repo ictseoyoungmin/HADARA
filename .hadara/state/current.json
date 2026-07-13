@@ -1,11 +1,11 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 47,
+  "rev": 49,
   "profile": "governed",
   "currentRelease": "0.4.3",
   "latestCompletedTask": {
-    "id": "T-0577",
-    "title": "v0.4.4 R3 delegated Claude external dogfood validation"
+    "id": "T-0578",
+    "title": "v0.4.4 pre-release delegated dogfood UX cleanup"
   },
   "activeTask": null,
   "nextWork": {

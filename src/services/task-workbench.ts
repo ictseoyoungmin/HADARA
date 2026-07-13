@@ -14,7 +14,7 @@ import { createTaskAuthoringGuidance, TaskAuthoringGuidance } from '../task/auth
 import { createTaskSelectionReport, TaskSelectionRecommendation } from '../task/task-selection';
 
 type CloseState = 'not-closed' | 'closed-valid' | 'close-evidence-found-invalid' | 'close-evidence-malformed';
-type ReadinessStatus = 'ready' | 'current-blocked' | 'closed-valid-current-blocked' | 'missing-task';
+type ReadinessStatus = 'ready' | 'current-blocked' | 'closed-valid-current-blocked' | 'closed-valid-current-not-checked' | 'missing-task';
 type TaskStatusLoopPhase =
   | 'select-work'
   | 'author-task'
@@ -911,7 +911,7 @@ export function buildTaskWorkbenchReadiness(currentReady: boolean, closeProofVal
 
 function buildTaskWorkbenchReadinessDeferred(closeProofValid: boolean, taskId: string): TaskWorkbenchReadiness {
   return {
-    status: closeProofValid ? 'closed-valid-current-blocked' : 'current-blocked',
+    status: closeProofValid ? 'closed-valid-current-not-checked' : 'current-blocked',
     currentReady: false,
     closeProofValid,
     summary: closeProofValid

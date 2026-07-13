@@ -89,6 +89,28 @@ describe('Phase 7.3 docs doctor', () => {
     assertSchema('hadara.docs.doctor.v1', report);
   });
 
+  it('does not warn about project metadata when init can infer product name and purpose', () => {
+    const root = tempProject();
+    fs.writeFileSync(
+      path.join(root, 'package.json'),
+      JSON.stringify({ name: 'checkout-pricing', description: 'Checkout pricing rules for order totals.' }),
+      'utf8'
+    );
+    initProject(root, 'basic', { silent: true });
+    fs.appendFileSync(
+      path.join(root, 'docs', 'TASK_BOARD.md'),
+      '\n| T-0001 | First finished task | Done | tasks/T-0001-first-finished-task | |\n',
+      'utf8'
+    );
+
+    const report = createDocsDoctorReport(root);
+
+    expect(report.issues).not.toContainEqual(expect.objectContaining({
+      code: 'DOC_PROJECT_METADATA_PLACEHOLDER'
+    }));
+    assertSchema('hadara.docs.doctor.v1', report);
+  });
+
   it('reports missing registered files', () => {
     const root = tempProject();
     initProject(root, 'standard', { silent: true });

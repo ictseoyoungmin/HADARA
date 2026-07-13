@@ -80,7 +80,7 @@
           "additionalProperties": true,
           "required": ["status", "currentReady", "closeProofValid", "summary"],
           "properties": {
-            "status": { "enum": ["ready", "current-blocked", "closed-valid-current-blocked", "missing-task"] },
+            "status": { "enum": ["ready", "current-blocked", "closed-valid-current-blocked", "closed-valid-current-not-checked", "missing-task"] },
             "currentReady": { "type": "boolean" },
             "closeProofValid": { "type": "boolean" },
             "summary": { "type": "string" }

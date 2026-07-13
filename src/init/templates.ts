@@ -6,7 +6,7 @@ import {
   renderProjectStateCanonSection,
   type ProjectCurrentState
 } from '../services/project-current-state';
-import type { InitProfile, InitProfileSpec } from './types';
+import type { InitProfile, InitProfileSpec, InitProjectMetadata } from './types';
 
 export function createScaffoldJson(profile: InitProfile): string {
   return `${JSON.stringify({
@@ -413,8 +413,10 @@ export function createMcpIntegrationDoc(): string {
 `;
 }
 
-export function createProjectStateDoc(profile: InitProfile, providedState?: ProjectCurrentState): string {
+export function createProjectStateDoc(profile: InitProfile, providedState?: ProjectCurrentState, metadata: InitProjectMetadata = {}): string {
   const currentState = providedState ?? createInitialProjectCurrentState(profile);
+  const productName = metadata.name?.trim() || 'Project name not set';
+  const productPurpose = metadata.purpose?.trim() || 'Project purpose not set';
   const handoffRow = profile === 'governed'
     ? '| Next-session handoff | `docs/AGENT_HANDOFF.md` | Compact continuation state. |\n'
     : '';
@@ -428,8 +430,8 @@ export function createProjectStateDoc(profile: InitProfile, providedState?: Proj
     closeSourceRole: 'included'
   }, `| Field | Value |
 |---|---|
-| Name | TBD |
-| Purpose | Describe the project in one or two sentences. |
+| Name | ${escapeTableCell(productName)} |
+| Purpose | ${escapeTableCell(productPurpose)} |
 | HADARA Profile | ${profile} |
 `);
   return `# PROJECT_STATE
@@ -489,18 +491,19 @@ export function createAgentHandoffDoc(providedState?: ProjectCurrentState): stri
 
 ${renderHandoffCanonSection(currentState)}
 
-## Last 3 Completed Tasks
-
-| Task | Summary | Evidence |
-|---|---|---|
-
 ## Historical Index
 
 | History Type | Path | When to Use |
 |---|---|---|
-| Completed tasks | TBD | Add when handoff grows too large. |
-| Validation history | TBD | Add when validation notes grow too large. |
+| Task queue | \`docs/TASK_BOARD.md\` | Locate open and completed capsules. |
+| Task handoffs | \`tasks/T-*/HANDOFF.md\` | Review a specific capsule outcome. |
+| Task evidence | \`tasks/T-*/evidence.jsonl\` | Audit canonical evidence records. |
+| Validation summaries | \`tasks/T-*/EVIDENCE.md\` | Review human-readable validation summaries. |
 `;
+}
+
+function escapeTableCell(value: string): string {
+  return value.replace(/\r?\n/g, ' ').replace(/\|/g, '\\|').trim();
 }
 
 export function createArchitectureDoc(profile: InitProfile): string {

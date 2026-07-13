@@ -61,6 +61,11 @@ export interface GeneratedScaffoldFile {
   content: string;
 }
 
+export interface InitProjectMetadata {
+  name?: string;
+  purpose?: string;
+}
+
 export interface InitWriteOperation {
   path: string;
   content: string;

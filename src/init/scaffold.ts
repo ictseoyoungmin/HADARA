@@ -1,7 +1,7 @@
 import { createHadaraContextDoc, createSeedDocumentRegistry, registryJson } from '../services/docs-registry';
 import { createInitialProjectCurrentState, PROJECT_CURRENT_STATE_PATH, serializeProjectCurrentState } from '../services/project-current-state';
 import { INIT_PROFILE_SPECS } from './profile';
-import type { GeneratedScaffoldFile, InitProfile } from './types';
+import type { GeneratedScaffoldFile, InitProfile, InitProjectMetadata } from './types';
 import {
   createAgentHandoffDoc,
   createAgentsDoc,
@@ -17,7 +17,7 @@ import {
   createTaskBoardDoc
 } from './templates';
 
-export function createGeneratedScaffoldFiles(profile: InitProfile): GeneratedScaffoldFile[] {
+export function createGeneratedScaffoldFiles(profile: InitProfile, metadata: InitProjectMetadata = {}): GeneratedScaffoldFile[] {
   const spec = INIT_PROFILE_SPECS[profile];
   const docsRegistry = createSeedDocumentRegistry(profile);
   const currentState = createInitialProjectCurrentState(profile);
@@ -27,7 +27,7 @@ export function createGeneratedScaffoldFiles(profile: InitProfile): GeneratedSca
     { path: '.hadara/docs-registry.json', content: registryJson(docsRegistry) },
     { path: '.hadara/slot-registry.json', content: createSlotRegistryJson() },
     { path: PROJECT_CURRENT_STATE_PATH, content: serializeProjectCurrentState(currentState) },
-    { path: 'docs/PROJECT_STATE.md', content: createProjectStateDoc(profile, currentState) },
+    { path: 'docs/PROJECT_STATE.md', content: createProjectStateDoc(profile, currentState, metadata) },
     { path: 'docs/TASK_BOARD.md', content: createTaskBoardDoc() },
     { path: 'docs/HADARA_WORKFLOW.md', content: createHadaraWorkflowDoc() },
     { path: 'AGENTS.md', content: createAgentsDoc(spec) },

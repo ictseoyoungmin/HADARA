@@ -438,7 +438,7 @@ describe('task workbench status report', () => {
       closeState: 'closed-valid',
       ready: false,
       readiness: {
-        status: 'closed-valid-current-blocked',
+        status: 'closed-valid-current-not-checked',
         currentReady: false,
         closeProofValid: true
       },

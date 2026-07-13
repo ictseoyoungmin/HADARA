@@ -224,6 +224,37 @@ describe('init profiles', () => {
     expect(JSON.parse(read(governed, '.hadara/scaffold.json')).profile).toBe('governed');
   });
 
+  it('uses existing package metadata in the generated project state when available', () => {
+    const root = tempProject();
+    fs.writeFileSync(
+      path.join(root, 'package.json'),
+      `${JSON.stringify({ name: 'checkout-pricing', description: 'Checkout pricing rules for order totals.' }, null, 2)}\n`,
+      'utf8'
+    );
+
+    initProject(root, 'governed');
+
+    const projectState = read(root, 'docs/PROJECT_STATE.md');
+    expect(projectState).toContain('| Name | checkout-pricing |');
+    expect(projectState).toContain('| Purpose | Checkout pricing rules for order totals. |');
+    expect(projectState).not.toContain('| Name | TBD |');
+    expect(projectState).not.toContain('Describe the project in one or two sentences.');
+  });
+
+  it('routes governed handoff history to task-local sources instead of empty placeholder tables', () => {
+    const root = tempProject();
+
+    initProject(root, 'governed');
+
+    const handoff = read(root, 'docs/AGENT_HANDOFF.md');
+    expect(handoff).not.toContain('## Last 3 Completed Tasks');
+    expect(handoff).not.toContain('| Completed tasks | TBD |');
+    expect(handoff).not.toContain('| Validation history | TBD |');
+    expect(handoff).toContain('| Task queue | `docs/TASK_BOARD.md` |');
+    expect(handoff).toContain('| Task handoffs | `tasks/T-*/HANDOFF.md` |');
+    expect(handoff).toContain('| Task evidence | `tasks/T-*/evidence.jsonl` |');
+  });
+
   it('keeps generated 0.4 docs free of product-specific defaults', () => {
     for (const profile of ['basic', 'standard', 'governed'] as const) {
       const root = tempProject();
