@@ -1,4 +1,5 @@
 import { managedSectionBlock } from '../services/managed-sections';
+import packageJson from '../../package.json';
 import {
   createInitialProjectCurrentState,
   PROJECT_CURRENT_STATE_PATH,
@@ -16,7 +17,7 @@ export function createScaffoldJson(profile: InitProfile): string {
     taskCapsuleSchema: 'hadara.taskCapsule.v1',
     docsRegistrySchema: 'hadara.docsRegistry.v2',
     managedSlotSchema: 'hadara.managedSlot.v2',
-    createdWith: 'hadara@0.4.0',
+    createdWith: `hadara@${packageJson.version}`,
     docsRegistryPath: '.hadara/docs-registry.json',
     slotRegistryPath: '.hadara/slot-registry.json'
   }, null, 2)}\n`;

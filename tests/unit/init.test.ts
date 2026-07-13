@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { handleInitCommand, initProject, parseInitProfile } from '../../src/cli/init';
 import { assertSchema } from '../../src/core/schema';
+import packageJson from '../../package.json';
 
 const roots: string[] = [];
 let logSpy: ReturnType<typeof vi.spyOn>;
@@ -92,7 +93,7 @@ describe('init profiles', () => {
       taskCapsuleSchema: 'hadara.taskCapsule.v1',
       docsRegistrySchema: 'hadara.docsRegistry.v2',
       managedSlotSchema: 'hadara.managedSlot.v2',
-      createdWith: 'hadara@0.4.0',
+      createdWith: `hadara@${packageJson.version}`,
       docsRegistryPath: '.hadara/docs-registry.json',
       slotRegistryPath: '.hadara/slot-registry.json'
     });
@@ -310,6 +311,27 @@ describe('init profiles', () => {
     expect(process.exitCode).toBe(6);
   });
 
+  it('blocks brownfield execute without explicit --adopt even when plan hash matches', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'README.md'), '# Existing project\n', 'utf8');
+
+    handleInitCommand({ args: ['init', '--profile', 'basic', '--json'], projectRoot: root, jsonOutput: true });
+    const dryRun = jsonLog();
+    process.exitCode = undefined;
+
+    handleInitCommand({ args: ['init', '--profile', 'basic', '--execute', '--plan-hash', dryRun.planHash, '--json'], projectRoot: root, jsonOutput: true });
+    const report = jsonLog();
+
+    assertSchema('hadara.init.adoption.v1', report);
+    expect(report.ok).toBe(false);
+    expect(report.writes).toEqual([]);
+    expect(report.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'INIT_ADOPTION_CONFIRMATION_REQUIRED' })
+    ]));
+    expect(exists(root, 'AGENTS.md')).toBe(false);
+    expect(process.exitCode).toBe(6);
+  });
+
   it('blocks brownfield execute when the reviewed plan hash is stale', () => {
     const root = tempProject();
     fs.writeFileSync(path.join(root, 'README.md'), '# Existing project\n', 'utf8');
@@ -327,6 +349,120 @@ describe('init profiles', () => {
     ]));
     expect(exists(root, 'AGENTS.md')).toBe(false);
     expect(process.exitCode).toBe(6);
+  });
+
+  it('fails closed for partial HADARA state instead of reporting ok true', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, '.hadara'), { recursive: true });
+
+    handleInitCommand({ args: ['init', '--profile', 'standard', '--json'], projectRoot: root, jsonOutput: true });
+    const report = jsonLog();
+
+    assertSchema('hadara.init.adoption.v1', report);
+    expect(report.ok).toBe(false);
+    expect(report.repositoryState).toBe('hadara-partial');
+    expect(report.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'INIT_ADOPTION_PARTIAL_STATE' })
+    ]));
+    expect(process.exitCode).toBe(6);
+  });
+
+  it('treats a meaningful single-file root as brownfield and writes nothing by default', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'main.py'), 'print("hello")\n', 'utf8');
+
+    handleInitCommand({ args: ['init', '--profile', 'basic', '--json'], projectRoot: root, jsonOutput: true });
+    const report = jsonLog();
+
+    assertSchema('hadara.init.adoption.v1', report);
+    expect(report.ok).toBe(true);
+    expect(report.repositoryState).toBe('brownfield');
+    expect(report.writes).toEqual([]);
+    expect(report.detectedManifests).toEqual([]);
+    expect(report.actions).toEqual(expect.arrayContaining([
+      expect.objectContaining({ path: 'main.py', disposition: 'preserve' })
+    ]));
+    expect(exists(root, 'AGENTS.md')).toBe(false);
+    process.exitCode = undefined;
+
+    handleInitCommand({ args: ['init', '--profile', 'basic', '--adopt', '--execute', '--plan-hash', report.planHash, '--json'], projectRoot: root, jsonOutput: true });
+    const execute = jsonLog();
+    expect(execute.ok).toBe(true);
+    const registry = JSON.parse(read(root, '.hadara/docs-registry.json'));
+    expect(registry.documents).toEqual(expect.arrayContaining([
+      expect.objectContaining({ path: 'AGENTS.md', owner: 'hadara-docs', origin: { type: 'hadara-scaffold', generator: 'hadara init' } })
+    ]));
+  });
+
+  it('blocks adoption when a write parent is a symlink', () => {
+    const root = tempProject();
+    const outside = tempProject();
+    fs.writeFileSync(path.join(root, 'package.json'), `${JSON.stringify({ name: 'symlink-parent' }, null, 2)}\n`, 'utf8');
+    fs.symlinkSync(outside, path.join(root, 'docs'), 'dir');
+
+    handleInitCommand({ args: ['init', '--profile', 'standard', '--json'], projectRoot: root, jsonOutput: true });
+    const report = jsonLog();
+
+    assertSchema('hadara.init.adoption.v1', report);
+    expect(report.ok).toBe(false);
+    expect(report.repositoryState).toBe('unsafe');
+    expect(report.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'INIT_ADOPTION_TARGET_SYMLINK', path: 'docs' })
+    ]));
+    expect(process.exitCode).toBe(6);
+  });
+
+  it('blocks malformed hash managed markers instead of appending another block', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'package.json'), `${JSON.stringify({ name: 'bad-marker' }, null, 2)}\n`, 'utf8');
+    fs.writeFileSync(path.join(root, '.gitignore'), 'dist\n# hadara:managed:start local-state\n.hadara/local/\n', 'utf8');
+
+    handleInitCommand({ args: ['init', '--profile', 'basic', '--json'], projectRoot: root, jsonOutput: true });
+    const report = jsonLog();
+
+    assertSchema('hadara.init.adoption.v1', report);
+    expect(report.ok).toBe(false);
+    expect(report.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'INIT_ADOPTION_MANAGED_SECTION_INVALID', path: '.gitignore' })
+    ]));
+  });
+
+  it('blocks foreign owner managed-section collisions', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'package.json'), `${JSON.stringify({ name: 'foreign-owner' }, null, 2)}\n`, 'utf8');
+    fs.writeFileSync(path.join(root, 'AGENTS.md'), [
+      '# Existing',
+      '',
+      '<!-- hadara:managed:start agent-entry {"schema":"hadara.managedSection.v1","owner":"other-protocol","kind":"single-block","mode":"replace","version":1,"required":true} -->',
+      'Other content',
+      '<!-- hadara:managed:end agent-entry -->',
+      ''
+    ].join('\n'), 'utf8');
+
+    handleInitCommand({ args: ['init', '--profile', 'basic', '--json'], projectRoot: root, jsonOutput: true });
+    const report = jsonLog();
+
+    assertSchema('hadara.init.adoption.v1', report);
+    expect(report.ok).toBe(false);
+    expect(report.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'INIT_ADOPTION_MANAGED_SECTION_OWNER_COLLISION', path: 'AGENTS.md' })
+    ]));
+  });
+
+  it('blocks non-HADARA tasks/T-* directory collisions', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'package.json'), `${JSON.stringify({ name: 'task-collision' }, null, 2)}\n`, 'utf8');
+    fs.mkdirSync(path.join(root, 'tasks', 'T-0001-old-notes'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'tasks', 'T-0001-old-notes', 'README.md'), 'not a capsule\n', 'utf8');
+
+    handleInitCommand({ args: ['init', '--profile', 'basic', '--json'], projectRoot: root, jsonOutput: true });
+    const report = jsonLog();
+
+    assertSchema('hadara.init.adoption.v1', report);
+    expect(report.ok).toBe(false);
+    expect(report.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'INIT_ADOPTION_TASK_ID_COLLISION', path: 'tasks/T-0001-old-notes' })
+    ]));
   });
 
   it('executes a reviewed brownfield adoption plan without changing project-owned content outside managed blocks', () => {
@@ -384,6 +520,33 @@ describe('init profiles', () => {
     const doctor = jsonLog();
     expect(doctor.ok).toBe(true);
     expect(doctor.issues).toEqual([]);
+  });
+
+  it('keeps existing core projection docs project-authored when only managed sections are patched', () => {
+    const root = tempProject();
+    fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'package.json'), `${JSON.stringify({ name: 'project-docs-app', version: '1.0.0' }, null, 2)}\n`, 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'PROJECT_STATE.md'), '# Existing project state\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'TASK_BOARD.md'), '# Existing task board\n', 'utf8');
+    fs.writeFileSync(path.join(root, 'docs', 'AGENT_HANDOFF.md'), '# Existing handoff\n', 'utf8');
+
+    handleInitCommand({ args: ['init', '--profile', 'governed', '--json'], projectRoot: root, jsonOutput: true });
+    const dryRun = jsonLog();
+    process.exitCode = undefined;
+    handleInitCommand({ args: ['init', '--profile', 'governed', '--adopt', '--execute', '--plan-hash', dryRun.planHash, '--json'], projectRoot: root, jsonOutput: true });
+    const report = jsonLog();
+
+    assertSchema('hadara.init.adoption.v1', report);
+    expect(report.ok).toBe(true);
+    expect(read(root, 'docs/TASK_BOARD.md').match(/^# .+$/gm)).toEqual(['# Existing task board']);
+    const registry = JSON.parse(read(root, '.hadara/docs-registry.json'));
+    for (const docPath of ['docs/PROJECT_STATE.md', 'docs/TASK_BOARD.md', 'docs/AGENT_HANDOFF.md']) {
+      expect(registry.documents).toContainEqual(expect.objectContaining({
+        path: docPath,
+        owner: 'project',
+        origin: { type: 'project-authored' }
+      }));
+    }
   });
 
   it('does not reinitialize an already-current HADARA project', () => {

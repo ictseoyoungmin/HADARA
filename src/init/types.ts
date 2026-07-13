@@ -38,7 +38,7 @@ export interface InitIssue {
 
 export interface InitAdoptionSignal {
   path: string;
-  kind: 'hadara-state' | 'agent-entry' | 'ignore-rules' | 'hadara-target-doc' | 'task-area' | 'manifest' | 'source-root';
+  kind: 'hadara-state' | 'agent-entry' | 'ignore-rules' | 'hadara-target-doc' | 'task-area' | 'manifest' | 'source-root' | 'root-entry';
   type: 'file' | 'directory' | 'symlink' | 'other' | 'missing';
   size: number | null;
   hash: string | null;

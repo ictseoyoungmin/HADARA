@@ -598,3 +598,4 @@
 | T-0595 | 0.4.5 adoption doctor and idempotency cleanup | Done | tasks/T-0595-0-4-5-adoption-doctor-and-idempotency-cleanup | |
 | T-0596 | 0.4.5 fresh and brownfield init dogfood | Done | tasks/T-0596-0-4-5-fresh-and-brownfield-init-dogfood | |
 | T-0597 | 0.4.5 release readiness and publish preparation | Done | tasks/T-0597-0-4-5-release-readiness-and-publish-preparation | |
+| T-0598 | 0.4.5 brownfield adoption safety gap closure | Done | tasks/T-0598-0-4-5-brownfield-adoption-safety-gap-closure | |

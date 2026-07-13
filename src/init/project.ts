@@ -13,7 +13,8 @@ export function initProject(projectRoot: string, profile = 'standard', options: 
     return createInitAdoptionReport(projectRoot, {
       profile: normalizedProfile,
       mode: options.execute ? 'execute' : 'dry-run',
-      planHash: options.planHash
+      planHash: options.planHash,
+      adoptConfirmed: options.adopt === true
     });
   }
   const paths = resolveHadaraPaths({ projectRoot });

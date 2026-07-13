@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.5 |
-| Latest Completed Task | T-0597 0.4.5 release readiness and publish preparation |
+| Latest Completed Task | T-0598 0.4.5 brownfield adoption safety gap closure |
 | Active Task | None |
-| Next Work | 0.4.5 operator publish and installed-package recycle |
+| Next Work | 0.4.5 installed-candidate multi-shape brownfield dogfood |
 | Next Work State | candidate |
-| Operator Guidance | After the T-0597 source-preparation commit, run prepare-publish-env, perform the approval-gated npm/GitHub publication, then verify installed hadara@latest resolves to 0.4.5. |
-| Validation Baseline | 0.4.5 source/readiness passed through T-0597: package metadata and release docs target 0.4.5, docs doctor is clean, Docker package smoke passed with attached T-0597 evidence, strict release gate passed, and final release artifact generation remains assigned to the clean publish clone. |
+| Operator Guidance | Before restoring release readiness, install the candidate tarball and dogfood brownfield adoption across TypeScript, Python/data, and web/monorepo shapes with baseline capsule close. |
+| Validation Baseline | T-0598 closed 0.4.5 brownfield adoption safety blockers: explicit --adopt execute confirmation, partial-state fail-closed behavior, broad root-entry brownfield detection, symlink/type/marker/owner/task-collision blockers, project-authored core-doc ownership, and dynamic scaffold createdWith. |
 
 ### Current Known Problems
 
@@ -43,7 +43,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.5 source/readiness is complete through T-0597 after docs-registry v3, safe brownfield init adoption, and fresh/brownfield dogfood. npm/GitHub publication and installed-package recycle are the next operator-approved follow-up.
+v0.4.5 release readiness is paused after reviewer feedback. T-0598 closes brownfield adoption safety gaps; T-0599 must dogfood the installed candidate across multiple brownfield project shapes before T-0600 recycles release readiness.
 
 | Stage | State | Purpose |
 |---|---|---|

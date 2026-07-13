@@ -50,6 +50,13 @@ const MANIFEST_PATHS = [
 ] as const;
 
 const SOURCE_ROOTS = ['src', 'app', 'lib', 'packages'] as const;
+const MEANINGFUL_ROOT_ENTRY_IGNORES = new Set([
+  '.',
+  '..',
+  '.git',
+  '.DS_Store',
+  'node_modules'
+]);
 const PROJECT_REFERENCE_DOCS = new Set(['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md', 'docs/SECURITY_MODEL.md']);
 const CORE_PATCH_DOCS = new Set(['.gitignore', 'AGENTS.md', 'docs/PROJECT_STATE.md', 'docs/TASK_BOARD.md', 'docs/AGENT_HANDOFF.md']);
 
@@ -57,22 +64,27 @@ export function createInitAdoptionReport(projectRoot: string, input: {
   profile: InitProfile;
   mode?: 'dry-run' | 'execute';
   planHash?: string;
+  adoptConfirmed?: boolean;
 }): InitAdoptionReport {
   const mode = input.mode ?? 'dry-run';
   const signals = collectSignals(projectRoot);
   const blockers = collectSafetyBlockers(projectRoot, signals);
   const repositoryState = classifyRepository(projectRoot, signals, blockers);
+  blockers.push(...collectRepositoryStateBlockers(repositoryState));
   const project = inferProject(projectRoot);
   const actions = planActions(signals, repositoryState, input.profile);
   const warnings = collectWarnings(repositoryState);
-  const actionBlockers = actions
+  const actionBlockers = [
+    ...actions
     .filter((action) => action.disposition === 'block')
     .map((action): InitIssue => ({
       severity: 'error',
       code: 'INIT_ADOPTION_ACTION_BLOCKED',
       path: action.path,
       message: action.reason
-    }));
+    })),
+    ...collectActionBlockers(projectRoot, actions)
+  ];
   const snapshotHash = hashJson({
     signals: signals.filter((signal) => signal.type !== 'missing'),
     repositoryState,
@@ -91,6 +103,13 @@ export function createInitAdoptionReport(projectRoot: string, input: {
   const executeIssues: InitIssue[] = [];
   let executeWrites: string[] = [];
   if (mode === 'execute') {
+    if (!input.adoptConfirmed) {
+      executeIssues.push({
+        severity: 'error',
+        code: 'INIT_ADOPTION_CONFIRMATION_REQUIRED',
+        message: 'Brownfield adoption execute requires explicit --adopt confirmation.'
+      });
+    }
     if (!input.planHash) {
       executeIssues.push({
         severity: 'error',
@@ -159,7 +178,24 @@ function collectSignals(projectRoot: string): InitAdoptionSignal[] {
     ...MANIFEST_PATHS.map((signal): [string, InitAdoptionSignal['kind']] => [signal, 'manifest']),
     ...SOURCE_ROOTS.map((signal): [string, InitAdoptionSignal['kind']] => [signal, 'source-root'])
   ];
+  const seen = new Set(rawSignals.map(([relativePath]) => relativePath));
+  for (const entry of readMeaningfulRootEntries(projectRoot)) {
+    if (seen.has(entry)) continue;
+    rawSignals.push([entry, 'root-entry']);
+    seen.add(entry);
+  }
   return rawSignals.map(([relativePath, kind]) => inspectSignal(projectRoot, relativePath, kind));
+}
+
+function readMeaningfulRootEntries(projectRoot: string): string[] {
+  try {
+    return fs.readdirSync(projectRoot)
+      .filter((entry) => !MEANINGFUL_ROOT_ENTRY_IGNORES.has(entry))
+      .filter((entry) => !entry.startsWith('.npm'))
+      .sort();
+  } catch {
+    return [];
+  }
 }
 
 function inspectSignal(projectRoot: string, relativePath: string, kind: InitAdoptionSignal['kind']): InitAdoptionSignal {
@@ -189,6 +225,13 @@ function collectSafetyBlockers(projectRoot: string, signals: InitAdoptionSignal[
       blockers.push({ severity: 'error', code: 'INIT_ADOPTION_TARGET_SYMLINK', path: signal.path, message: `${signal.path} is a symlink and cannot be safely adopted.` });
     } else if (signal.type === 'other') {
       blockers.push({ severity: 'error', code: 'INIT_ADOPTION_TARGET_UNSUPPORTED_TYPE', path: signal.path, message: `${signal.path} is not a regular file or directory.` });
+    } else if (signal.type !== 'missing' && !signalMatchesExpectedType(signal)) {
+      blockers.push({
+        severity: 'error',
+        code: 'INIT_ADOPTION_PATH_TYPE_MISMATCH',
+        path: signal.path,
+        message: `${signal.path} has type ${signal.type}, which does not match the expected HADARA adoption path type.`
+      });
     }
   }
   for (const jsonPath of ['.hadara/scaffold.json', '.hadara/docs-registry.json', '.hadara/state/current.json']) {
@@ -209,6 +252,139 @@ function collectSafetyBlockers(projectRoot: string, signals: InitAdoptionSignal[
   return blockers;
 }
 
+function signalMatchesExpectedType(signal: InitAdoptionSignal): boolean {
+  if (signal.path === '.hadara' || signal.path === 'tasks') return signal.type === 'directory';
+  if (SOURCE_ROOTS.includes(signal.path as typeof SOURCE_ROOTS[number])) return signal.type === 'directory';
+  if (
+    signal.kind === 'manifest' ||
+    signal.kind === 'agent-entry' ||
+    signal.kind === 'ignore-rules' ||
+    signal.kind === 'hadara-target-doc'
+  ) return signal.type === 'file';
+  if (signal.path.startsWith('.hadara/')) return signal.type === 'file';
+  return true;
+}
+
+function collectRepositoryStateBlockers(repositoryState: InitRepositoryState): InitIssue[] {
+  if (repositoryState !== 'hadara-partial') return [];
+  return [{
+    severity: 'error',
+    code: 'INIT_ADOPTION_PARTIAL_STATE',
+    message: 'A partial HADARA state was detected. Adoption fails closed until .hadara state is repaired or removed intentionally.'
+  }];
+}
+
+function collectActionBlockers(projectRoot: string, actions: InitAdoptionAction[]): InitIssue[] {
+  const blockers: InitIssue[] = [];
+  for (const action of actions) {
+    if (action.disposition === 'create' || action.disposition === 'patch-managed-section') {
+      blockers.push(...collectWritePathBlockers(projectRoot, action.path));
+    }
+    if (action.disposition === 'patch-managed-section') {
+      blockers.push(...collectManagedPatchBlockers(projectRoot, action.path));
+    }
+    if (action.path === 'tasks' && action.existingType === 'directory') {
+      blockers.push(...collectTaskDirectoryCollisionBlockers(projectRoot));
+    }
+  }
+  return blockers;
+}
+
+function collectWritePathBlockers(projectRoot: string, relativePath: string): InitIssue[] {
+  const blockers: InitIssue[] = [];
+  const parts = relativePath.split('/').filter(Boolean);
+  let current = projectRoot;
+  for (const part of parts.slice(0, -1)) {
+    current = path.join(current, part);
+    if (!fs.existsSync(current)) continue;
+    const stat = fs.lstatSync(current);
+    if (stat.isSymbolicLink()) {
+      blockers.push({
+        severity: 'error',
+        code: 'INIT_ADOPTION_PARENT_SYMLINK',
+        path: path.relative(projectRoot, current).split(path.sep).join('/'),
+        message: `Parent path for ${relativePath} is a symlink and cannot be safely written through.`
+      });
+    } else if (!stat.isDirectory()) {
+      blockers.push({
+        severity: 'error',
+        code: 'INIT_ADOPTION_PARENT_UNSUPPORTED_TYPE',
+        path: path.relative(projectRoot, current).split(path.sep).join('/'),
+        message: `Parent path for ${relativePath} is not a directory.`
+      });
+    }
+  }
+  const target = path.join(projectRoot, relativePath);
+  if (fs.existsSync(target)) {
+    const stat = fs.lstatSync(target);
+    if (stat.isSymbolicLink()) {
+      blockers.push({
+        severity: 'error',
+        code: 'INIT_ADOPTION_TARGET_SYMLINK',
+        path: relativePath,
+        message: `${relativePath} is a symlink and cannot be safely adopted.`
+      });
+    }
+  }
+  return blockers;
+}
+
+function collectManagedPatchBlockers(projectRoot: string, relativePath: string): InitIssue[] {
+  if (relativePath === '.gitignore') {
+    const content = fs.readFileSync(path.join(projectRoot, relativePath), 'utf8');
+    const start = '# hadara:managed:start local-state';
+    const end = '# hadara:managed:end local-state';
+    if ((content.includes(start)) !== (content.includes(end))) {
+      return [{
+        severity: 'error',
+        code: 'INIT_ADOPTION_MANAGED_SECTION_INVALID',
+        path: relativePath,
+        message: `${relativePath} contains a malformed HADARA managed block marker.`
+      }];
+    }
+    return [];
+  }
+  const section = managedPatchSection(relativePath, new Map(), 'standard', { id: 'project', name: 'project', currentRelease: 'unversioned' });
+  if (!section) return [];
+  const parsed = parseManagedSections(fs.readFileSync(path.join(projectRoot, relativePath), 'utf8'), relativePath);
+  const errors = parsed.issues.filter((issue) => issue.severity === 'error');
+  if (errors.length > 0) {
+    return errors.map((issue) => ({
+      severity: 'error',
+      code: 'INIT_ADOPTION_MANAGED_SECTION_INVALID',
+      path: relativePath,
+      message: issue.message
+    }));
+  }
+  const existing = parsed.sections.find((candidate) => candidate.id === section.id);
+  if (existing && existing.metadata.owner !== section.metadata.owner) {
+    return [{
+      severity: 'error',
+      code: 'INIT_ADOPTION_MANAGED_SECTION_OWNER_COLLISION',
+      path: relativePath,
+      message: `${relativePath} contains managed section ${section.id} owned by ${existing.metadata.owner}; HADARA will not replace a foreign-owned section.`
+    }];
+  }
+  return [];
+}
+
+function collectTaskDirectoryCollisionBlockers(projectRoot: string): InitIssue[] {
+  const tasksDir = path.join(projectRoot, 'tasks');
+  try {
+    return fs.readdirSync(tasksDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && /^T-\d+/.test(entry.name))
+      .filter((entry) => !fs.existsSync(path.join(tasksDir, entry.name, 'TASK.md')))
+      .map((entry) => ({
+        severity: 'error' as const,
+        code: 'INIT_ADOPTION_TASK_ID_COLLISION',
+        path: `tasks/${entry.name}`,
+        message: `${entry.name} looks like a Task Capsule id but does not contain TASK.md; adoption fails closed to avoid future task id collisions.`
+      }));
+  } catch {
+    return [];
+  }
+}
+
 function classifyRepository(projectRoot: string, signals: InitAdoptionSignal[], blockers: InitIssue[]): InitRepositoryState {
   if (blockers.length > 0) return 'unsafe';
   const scaffoldSignal = signals.find((signal) => signal.path === '.hadara/scaffold.json');
@@ -226,6 +402,7 @@ function classifyRepository(projectRoot: string, signals: InitAdoptionSignal[], 
     signal.type !== 'missing' && (
       signal.kind === 'manifest' ||
       signal.kind === 'source-root' ||
+      signal.kind === 'root-entry' ||
       signal.kind === 'agent-entry' ||
       signal.kind === 'ignore-rules' ||
       signal.kind === 'hadara-target-doc' ||
@@ -283,6 +460,7 @@ function applyBrownfieldAdoption(
   planHash: string
 ): { writes: string[]; issues: InitIssue[] } {
   const generated = createBrownfieldGeneratedFiles(profile, project, planHash);
+  generated.set('.hadara/docs-registry.json', createBrownfieldRegistryJson(profile, project, actions));
   const writes: InitWriteOperation[] = [];
   const writtenPaths: string[] = [];
   const issues: InitIssue[] = [];
@@ -322,7 +500,6 @@ function createBrownfieldGeneratedFiles(profile: InitProfile, project: InitAdopt
   files.set('docs/PROJECT_STATE.md', createProjectStateDoc(profile, state, { name: project.name }));
   files.set('docs/AGENT_HANDOFF.md', createAgentHandoffDoc(state));
   files.set('.hadara/scaffold.json', createBrownfieldScaffoldJson(profile, project, planHash));
-  files.set('.hadara/docs-registry.json', createBrownfieldRegistryJson(profile, project));
   return files;
 }
 
@@ -357,8 +534,9 @@ function createBrownfieldScaffoldJson(profile: InitProfile, project: InitAdoptio
   }, null, 2)}\n`;
 }
 
-function createBrownfieldRegistryJson(profile: InitProfile, project: InitAdoptionProject): string {
+function createBrownfieldRegistryJson(profile: InitProfile, project: InitAdoptionProject, actions: InitAdoptionAction[]): string {
   const seed = normalizeDocumentRegistryFile(createSeedDocumentRegistry(profile, 'hadara.docsRegistry.v3'));
+  const actionByPath = new Map(actions.map((action) => [action.path, action]));
   const registry: DocumentRegistryFile = {
     schemaVersion: 'hadara.docsRegistry.v3',
     registryVersion: 3,
@@ -368,14 +546,19 @@ function createBrownfieldRegistryJson(profile: InitProfile, project: InitAdoptio
       hadaraProfile: profile
     },
     generatedAt: new Date().toISOString(),
-    documents: seed.documents.map((document) => normalizeBrownfieldRegistryEntry(document))
+    documents: seed.documents.map((document) => normalizeBrownfieldRegistryEntry(document, actionByPath.get(document.path)))
   };
   return registryJson(registry);
 }
 
-function normalizeBrownfieldRegistryEntry(document: DocumentRegistryEntry): DocumentRegistryEntry {
-  const projectAuthored = PROJECT_REFERENCE_DOCS.has(document.path) || document.path === 'AGENTS.md';
+function normalizeBrownfieldRegistryEntry(document: DocumentRegistryEntry, action: InitAdoptionAction | undefined): DocumentRegistryEntry {
+  const projectAuthored = action?.disposition === 'patch-managed-section' || action?.disposition === 'register-existing' || (action?.disposition === 'preserve' && PROJECT_REFERENCE_DOCS.has(document.path));
   const projection = document.path === PROJECT_CURRENT_STATE_PATH || document.path === 'docs/PROJECT_STATE.md' || document.path === 'docs/TASK_BOARD.md' || document.path === 'docs/AGENT_HANDOFF.md';
+  const managedSections = projectAuthored && action?.disposition === 'patch-managed-section'
+    ? managedSectionsForPatchedPath(document.path)
+    : document.path === 'AGENTS.md'
+      ? [{ id: 'agent-entry', owner: 'init.adoption', kind: 'single-block', required: true }]
+      : document.managedSections;
   return {
     ...document,
     owner: projectAuthored ? 'project' : document.owner,
@@ -385,10 +568,16 @@ function normalizeBrownfieldRegistryEntry(document: DocumentRegistryEntry): Docu
       : projection
         ? { type: 'hadara-projection', generator: 'hadara init' }
         : { type: 'hadara-scaffold', generator: 'hadara init' },
-    managedSections: document.path === 'AGENTS.md'
-      ? [{ id: 'agent-entry', owner: 'init.adoption', kind: 'single-block', required: true }]
-      : document.managedSections
+    managedSections
   };
+}
+
+function managedSectionsForPatchedPath(relativePath: string): DocumentRegistryEntry['managedSections'] {
+  if (relativePath === 'AGENTS.md') return [{ id: 'agent-entry', owner: 'init.adoption', kind: 'single-block', required: true }];
+  if (relativePath === 'docs/PROJECT_STATE.md') return [{ id: 'current-state-canon', owner: 'current-state.projection', kind: 'single-block', required: true }];
+  if (relativePath === 'docs/AGENT_HANDOFF.md') return [{ id: 'current-state-canon', owner: 'current-state.projection', kind: 'single-block', required: true }];
+  if (relativePath === 'docs/TASK_BOARD.md') return [{ id: 'task-board', owner: 'task.board.projection', kind: 'single-block', required: true }];
+  return [];
 }
 
 function createManagedPatch(
@@ -454,9 +643,7 @@ Before starting work:
   if (relativePath === 'docs/TASK_BOARD.md') return {
     id: 'task-board',
     metadata: metadata('task-board', 'task.board.projection'),
-    body: `# TASK_BOARD
-
-| ID | Title | Status | Capsule | Notes |
+    body: `| ID | Title | Status | Capsule | Notes |
 |---|---|---|---|---|
 `
   };
@@ -540,6 +727,13 @@ function collectWarnings(repositoryState: InitRepositoryState): InitIssue[] {
       severity: 'warning',
       code: 'INIT_ADOPTION_ALREADY_CURRENT',
       message: 'A current HADARA scaffold was detected; init did not reinitialize the project.'
+    }];
+  }
+  if (repositoryState === 'hadara-legacy') {
+    return [{
+      severity: 'warning',
+      code: 'INIT_ADOPTION_LEGACY_HADARA_STATE',
+      message: 'A legacy HADARA scaffold was detected; use the protocol migration or upgrade path instead of brownfield adoption.'
     }];
   }
   return [];

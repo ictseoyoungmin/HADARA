@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.5 | Portable project state. |
-| Latest Completed Task | T-0597 0.4.5 release readiness and publish preparation | Most recent completed capsule. |
+| Latest Completed Task | T-0598 0.4.5 brownfield adoption safety gap closure | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
-| Next Work | 0.4.5 operator publish and installed-package recycle | Structured continuation title; not operator prose. |
+| Next Work | 0.4.5 installed-candidate multi-shape brownfield dogfood | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | After the T-0597 source-preparation commit, run prepare-publish-env, perform the approval-gated npm/GitHub publication, then verify installed hadara@latest resolves to 0.4.5. | Human constraints; never used as a task title. |
-| Validation Baseline | 0.4.5 source/readiness passed through T-0597: package metadata and release docs target 0.4.5, docs doctor is clean, Docker package smoke passed with attached T-0597 evidence, strict release gate passed, and final release artifact generation remains assigned to the clean publish clone. | ev:T-0597:087815326dff48f6b8a3e647, ev:T-0597:60d4ee55202944daab3308bd, ev:T-0597:5b632fde757b47afa34191e5 |
+| Operator Guidance | Before restoring release readiness, install the candidate tarball and dogfood brownfield adoption across TypeScript, Python/data, and web/monorepo shapes with baseline capsule close. | Human constraints; never used as a task title. |
+| Validation Baseline | T-0598 closed 0.4.5 brownfield adoption safety blockers: explicit --adopt execute confirmation, partial-state fail-closed behavior, broad root-entry brownfield detection, symlink/type/marker/owner/task-collision blockers, project-authored core-doc ownership, and dynamic scaffold createdWith. | ev:T-0598:fb26285cf9694d9db8108e45, ev:T-0598:0f0db9fa78814ee3b6443004, ev:T-0598:d5619e3b362d48fd9e96c6bc |
 
 ### Current Known Problems
 

@@ -95,7 +95,7 @@
       "properties": {
         "path": { "type": "string", "minLength": 1 },
         "kind": {
-          "enum": ["hadara-state", "agent-entry", "ignore-rules", "hadara-target-doc", "task-area", "manifest", "source-root"]
+          "enum": ["hadara-state", "agent-entry", "ignore-rules", "hadara-target-doc", "task-area", "manifest", "source-root", "root-entry"]
         },
         "type": { "enum": ["file", "directory", "symlink", "other", "missing"] },
         "size": { "type": ["number", "null"] },
