@@ -8,11 +8,11 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.4 | Portable project state. |
-| Latest Completed Task | T-0587 0.4.5 docsRegistry v3 schema and read model | Most recent completed capsule. |
+| Latest Completed Task | T-0588 0.4.5 docs registry mutation commands | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
-| Next Work | 0.4.5 docs registry mutation commands | Structured continuation title; not operator prose. |
+| Next Work | 0.4.5 docs register project-authored defaults | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | Implement staged capsule 3 from docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md: add dry-run-first docs update/archive/supersede/unregister/render surfaces with guarded execute behavior. | Human constraints; never used as a task title. |
+| Operator Guidance | Implement staged capsule 4 from docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md: make arbitrary docs register entries default to project ownership and explicit project-authored origin while preserving HADARA scaffold/projection ownership. | Human constraints; never used as a task title. |
 | Validation Baseline | Stable 0.4.4 publication and recycle passed: operator completed npm publish and public GitHub Release v0.4.4; npm view returned 0.4.4 for both hadara@0.4.4 and hadara@latest; GitHub Release is non-draft/non-prerelease; installed-package recycle for hadara@latest expected 0.4.4 passed consumer init/task/session/finalize/context smokes. | ev:T-0584:8ffea7cd42504ea5a177a54f, ev:T-0584:36991318909d46e59d2fce17, ev:T-0584:2058d34afba84221849ae6ab |
 
 ### Current Known Problems

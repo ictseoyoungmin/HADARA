@@ -1,6 +1,6 @@
 import { getFlag, getRequiredStringOption, getStringOption } from './args';
 import { createDocsCompleteSpecReport, createDocsMarkReport, createDocsRequiredReadingReport } from '../services/docs-cleanup';
-import { createDocsDoctorReport, createDocsExplainReport, createDocsInboxReport, createDocsListReport, createDocsReadMapReport, createDocsRegisterReport } from '../services/docs-registry';
+import { createDocsArchiveReport, createDocsDoctorReport, createDocsExplainReport, createDocsInboxReport, createDocsListReport, createDocsReadMapReport, createDocsRegisterReport, createDocsRenderReport, createDocsSupersedeReport, createDocsUnregisterReport, createDocsUpdateReport } from '../services/docs-registry';
 import { createDocsPatchPlanReport, createManagedSectionExplainReport, createManagedSectionsListReport } from '../services/managed-sections';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
 import { renderCommandHelp } from './help';
@@ -84,6 +84,60 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
     printReport(report, input.jsonOutput);
     return true;
   }
+  if (sub === 'update') {
+    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'docs.update')) return true;
+    const report = createDocsUpdateReport(input.projectRoot, {
+      documentPath: getRequiredStringOption(input.args, '--path'),
+      set: getAllStringOptions(input.args, '--set'),
+      mode: getFlag(input.args, '--execute') ? 'execute' : 'dry-run',
+      beforeHash: getStringOption(input.args, '--before-hash')
+    });
+    printReport(report, input.jsonOutput);
+    return true;
+  }
+  if (sub === 'archive') {
+    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'docs.archive')) return true;
+    const report = createDocsArchiveReport(input.projectRoot, {
+      documentPath: getRequiredStringOption(input.args, '--path'),
+      reason: getStringOption(input.args, '--reason'),
+      mode: getFlag(input.args, '--execute') ? 'execute' : 'dry-run',
+      beforeHash: getStringOption(input.args, '--before-hash')
+    });
+    printReport(report, input.jsonOutput);
+    return true;
+  }
+  if (sub === 'supersede') {
+    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'docs.supersede')) return true;
+    const report = createDocsSupersedeReport(input.projectRoot, {
+      documentPath: getRequiredStringOption(input.args, '--path'),
+      by: getRequiredStringOption(input.args, '--by'),
+      reason: getStringOption(input.args, '--reason'),
+      mode: getFlag(input.args, '--execute') ? 'execute' : 'dry-run',
+      beforeHash: getStringOption(input.args, '--before-hash')
+    });
+    printReport(report, input.jsonOutput);
+    return true;
+  }
+  if (sub === 'unregister') {
+    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'docs.unregister')) return true;
+    const report = createDocsUnregisterReport(input.projectRoot, {
+      documentPath: getRequiredStringOption(input.args, '--path'),
+      reason: getStringOption(input.args, '--reason'),
+      mode: getFlag(input.args, '--execute') ? 'execute' : 'dry-run',
+      beforeHash: getStringOption(input.args, '--before-hash')
+    });
+    printReport(report, input.jsonOutput);
+    return true;
+  }
+  if (sub === 'render') {
+    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'docs.render')) return true;
+    const report = createDocsRenderReport(input.projectRoot, {
+      mode: getFlag(input.args, '--execute') ? 'execute' : 'dry-run',
+      beforeHash: getStringOption(input.args, '--before-hash')
+    });
+    printReport(report, input.jsonOutput);
+    return true;
+  }
   if (sub === 'managed') {
     const managedSub = input.args[2];
     if (managedSub === 'list') {
@@ -153,4 +207,15 @@ function splitCsv(value: string | undefined): string[] | undefined {
   if (value === undefined) return undefined;
   const items = value.split(',').map((item) => item.trim()).filter(Boolean);
   return items.length > 0 ? items : undefined;
+}
+
+function getAllStringOptions(args: string[], name: string): string[] {
+  const values: string[] = [];
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === name && args[index + 1] !== undefined) {
+      values.push(args[index + 1]);
+      index += 1;
+    }
+  }
+  return values;
 }

@@ -13,7 +13,12 @@ import {
   createDocsInboxReport,
   createDocsListReport,
   createDocsReadMapReport,
-  createDocsRegisterReport
+  createDocsRegisterReport,
+  createDocsUpdateReport,
+  createDocsArchiveReport,
+  createDocsSupersedeReport,
+  createDocsUnregisterReport,
+  createDocsRenderReport
 } from '../../src/services/docs-registry';
 
 const roots: string[] = [];
@@ -259,6 +264,99 @@ describe('Phase 7.3 docs registry', () => {
       updatedByCommands: ['docs.register']
     });
     expect(fs.existsSync(path.join(root, 'docs', 'DOC_REGISTRY.md'))).toBe(false);
+  });
+
+  it('updates registry fields only through reviewed before-hash execute', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+
+    const dryRun = createDocsUpdateReport(root, {
+      documentPath: 'docs/ARCHITECTURE.md',
+      set: ['status=active', 'owner=project']
+    });
+    expect(dryRun).toMatchObject({
+      schemaVersion: 'hadara.docs.registryMutation.v1',
+      command: 'docs.update',
+      mode: 'dry-run',
+      ok: true,
+      action: 'update',
+      writes: []
+    });
+    expect(dryRun.changedFields.map((field) => field.field)).toEqual(expect.arrayContaining(['owner', 'status']));
+    expect(createDocsUpdateReport(root, {
+      documentPath: 'docs/ARCHITECTURE.md',
+      set: ['status=active'],
+      mode: 'execute'
+    }).issues).toContainEqual(expect.objectContaining({ code: 'DOC_MUTATION_BEFORE_HASH_REQUIRED' }));
+
+    const executed = createDocsUpdateReport(root, {
+      documentPath: 'docs/ARCHITECTURE.md',
+      set: ['status=active', 'owner=project'],
+      mode: 'execute',
+      beforeHash: dryRun.beforeHash
+    });
+    const updated = readRegistry(root).documents.find((doc) => doc.path === 'docs/ARCHITECTURE.md')!;
+    expect(executed.ok).toBe(true);
+    expect(executed.writes).toEqual([DOCS_REGISTRY_PATH]);
+    expect(updated).toMatchObject({ status: 'active', owner: 'project' });
+  });
+
+  it('archives, supersedes, unregisters, and renders registry desired state through explicit commands', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    fs.mkdirSync(path.join(root, 'docs', 'specs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'specs', 'old.md'), '# Old\n');
+    fs.writeFileSync(path.join(root, 'docs', 'specs', 'new.md'), '# New\n');
+    createDocsRegisterReport(root, { documentPath: 'docs/specs/old.md', title: 'Old', mode: 'execute', requireExists: true });
+    createDocsRegisterReport(root, { documentPath: 'docs/specs/new.md', title: 'New', mode: 'execute', requireExists: true });
+
+    const supersedeDryRun = createDocsSupersedeReport(root, {
+      documentPath: 'docs/specs/old.md',
+      by: 'docs/specs/new.md',
+      reason: 'Replaced by new spec.'
+    });
+    const supersede = createDocsSupersedeReport(root, {
+      documentPath: 'docs/specs/old.md',
+      by: 'docs/specs/new.md',
+      reason: 'Replaced by new spec.',
+      mode: 'execute',
+      beforeHash: supersedeDryRun.beforeHash
+    });
+    expect(supersede.ok).toBe(true);
+    expect(readRegistry(root).documents.find((doc) => doc.path === 'docs/specs/old.md')).toMatchObject({
+      status: 'superseded',
+      supersededBy: 'docs/specs/new.md',
+      requiredReading: false
+    });
+
+    const archiveDryRun = createDocsArchiveReport(root, { documentPath: 'docs/specs/old.md', reason: 'No longer current.' });
+    const archive = createDocsArchiveReport(root, {
+      documentPath: 'docs/specs/old.md',
+      reason: 'No longer current.',
+      mode: 'execute',
+      beforeHash: archiveDryRun.beforeHash
+    });
+    expect(archive.ok).toBe(true);
+    expect(readRegistry(root).documents.find((doc) => doc.path === 'docs/specs/old.md')).toMatchObject({
+      status: 'archived',
+      readWhen: ['never-default'],
+      closeSourceRole: 'excluded'
+    });
+
+    const unregisterDryRun = createDocsUnregisterReport(root, { documentPath: 'docs/specs/old.md', reason: 'Entry removed from desired state.' });
+    const unregister = createDocsUnregisterReport(root, {
+      documentPath: 'docs/specs/old.md',
+      reason: 'Entry removed from desired state.',
+      mode: 'execute',
+      beforeHash: unregisterDryRun.beforeHash
+    });
+    expect(unregister.ok).toBe(true);
+    expect(readRegistry(root).documents.map((doc) => doc.path)).not.toContain('docs/specs/old.md');
+
+    const renderDryRun = createDocsRenderReport(root);
+    const render = createDocsRenderReport(root, { mode: 'execute', beforeHash: renderDryRun.beforeHash });
+    expect(render.ok).toBe(true);
+    expect(fs.readFileSync(path.join(root, 'docs', 'DOC_REGISTRY.md'), 'utf8')).toContain('# DOC_REGISTRY');
   });
 
   it('returns allowed values and suggestions for invalid docs register controlled tokens', () => {

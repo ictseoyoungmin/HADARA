@@ -133,7 +133,7 @@ describe('Phase 7.1 command registry', () => {
     expect(findCommandRegistryEntry('handoff.stale-problems')).toBeUndefined();
     expect(findCommandRegistryEntry('init.register-doc')).toBeUndefined();
     expect(findCommandRegistryEntry('task.upgrade-scaffold')).toBeUndefined();
-    expect(findCommandRegistryEntry('docs.archive')).toBeUndefined();
+    expect(findCommandRegistryEntry('docs.archive')).toMatchObject({ requiredness: 'conditional', appearsInDefaultHelp: false });
     expect(findCommandRegistryEntry('harness.replay')).toBeUndefined();
     expect(findCommandRegistryEntry('run-state.show')).toBeUndefined();
     expect(findCommandRegistryEntry('run-state.resume')).toBeUndefined();

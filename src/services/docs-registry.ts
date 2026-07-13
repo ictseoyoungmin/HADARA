@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { InitProfile } from '../cli/init';
@@ -164,6 +165,23 @@ export interface DocsRegisterReport {
   document: DocumentRegistryEntry | null;
   writes: string[];
   issues: DocsIssue[];
+}
+
+export interface DocsRegistryMutationReport {
+  schemaVersion: 'hadara.docs.registryMutation.v1';
+  command: 'docs.update' | 'docs.archive' | 'docs.supersede' | 'docs.unregister' | 'docs.render';
+  ok: boolean;
+  mode: 'dry-run' | 'execute';
+  action: 'update' | 'archive' | 'supersede' | 'unregister' | 'render' | 'already-current' | 'already-unregistered' | 'blocked';
+  path: string;
+  registryPath: typeof DOCS_REGISTRY_PATH;
+  beforeHash: string;
+  before: unknown;
+  after: unknown;
+  changedFields: Array<{ field: string; before: unknown; after: unknown }>;
+  writes: string[];
+  issues: DocsIssue[];
+  executeCommand?: string;
 }
 
 export interface DocsReadMapEntry {
@@ -671,6 +689,368 @@ export function createDocsRegisterReport(projectRoot: string, options: {
     writes: document && mode === 'execute' ? [DOCS_REGISTRY_PATH] : [],
     issues
   };
+}
+
+export function createDocsUpdateReport(projectRoot: string, options: {
+  documentPath: string;
+  set: string[];
+  mode?: 'dry-run' | 'execute';
+  beforeHash?: string;
+}): DocsRegistryMutationReport {
+  const state = readRegistryForMutation(projectRoot);
+  const mode = options.mode ?? 'dry-run';
+  const normalized = normalizePath(options.documentPath);
+  const issues = [...state.issues];
+  const entry = state.registry?.documents.find((doc) => doc.path === normalized) ?? null;
+  if (!entry) issues.push({ severity: 'error', code: 'DOC_NOT_REGISTERED', path: normalized, message: `${normalized} is not registered.` });
+  const updates = parseDocumentFieldUpdates(normalized, options.set, issues);
+  if (options.set.length === 0) issues.push({ severity: 'error', code: 'DOC_UPDATE_SET_REQUIRED', path: normalized, message: 'docs update requires at least one --set field=value.' });
+  validateMutationExecuteGuard(mode, options.beforeHash, state.beforeHash, issues);
+  const before = entry ? cloneJson(entry) : null;
+  const after = entry ? applyDocumentFieldUpdates(cloneJson(entry) as unknown as Record<string, unknown>, updates) : null;
+  const changedFields = before && after ? diffObjects(before, after) : [];
+  const action = issues.some((issue) => issue.severity === 'error') ? 'blocked' : changedFields.length === 0 ? 'already-current' : 'update';
+  if (mode === 'execute' && action === 'update' && state.registry && entry && after) {
+    Object.assign(entry, after);
+    writeRegistry(projectRoot, state.registry);
+  }
+  return mutationReport({
+    command: 'docs.update',
+    mode,
+    action,
+    path: normalized,
+    beforeHash: state.beforeHash,
+    before,
+    after,
+    changedFields,
+    writes: mode === 'execute' && action === 'update' ? [DOCS_REGISTRY_PATH] : [],
+    issues,
+    executeArgs: `docs update --path ${shellQuote(normalized)} ${options.set.map((value) => `--set ${shellQuote(value)}`).join(' ')}`
+  });
+}
+
+export function createDocsArchiveReport(projectRoot: string, options: {
+  documentPath: string;
+  reason?: string;
+  mode?: 'dry-run' | 'execute';
+  beforeHash?: string;
+}): DocsRegistryMutationReport {
+  const reason = options.reason?.trim() ?? '';
+  const updates = [
+    ['status', 'archived'],
+    ['readWhen', ['never-default']],
+    ['requiredReading', false],
+    ['closeSourceRole', 'excluded'],
+    ['readTier', 'excluded'],
+    ['authority', 'historical'],
+    ['editPolicy', 'human-only']
+  ] as Array<[string, unknown]>;
+  return mutateDocument(projectRoot, {
+    command: 'docs.archive',
+    action: 'archive',
+    documentPath: options.documentPath,
+    reason,
+    reasonRequiredCode: 'DOC_ARCHIVE_REASON_REQUIRED',
+    mode: options.mode ?? 'dry-run',
+    beforeHash: options.beforeHash,
+    updates,
+    notePrefix: 'Archive reason',
+    executeArgs: `docs archive --path ${shellQuote(normalizePath(options.documentPath))} --reason ${shellQuote(reason)}`
+  });
+}
+
+export function createDocsSupersedeReport(projectRoot: string, options: {
+  documentPath: string;
+  by: string;
+  reason?: string;
+  mode?: 'dry-run' | 'execute';
+  beforeHash?: string;
+}): DocsRegistryMutationReport {
+  const replacement = normalizePath(options.by);
+  const reason = options.reason?.trim() ?? '';
+  const updates = [
+    ['status', 'superseded'],
+    ['supersededBy', replacement],
+    ['readWhen', ['never-default']],
+    ['requiredReading', false],
+    ['closeSourceRole', 'excluded'],
+    ['readTier', 'historical'],
+    ['authority', 'historical'],
+    ['editPolicy', 'human-only']
+  ] as Array<[string, unknown]>;
+  const report = mutateDocument(projectRoot, {
+    command: 'docs.supersede',
+    action: 'supersede',
+    documentPath: options.documentPath,
+    reason,
+    reasonRequiredCode: 'DOC_SUPERSEDE_REASON_REQUIRED',
+    mode: options.mode ?? 'dry-run',
+    beforeHash: options.beforeHash,
+    updates,
+    notePrefix: 'Supersede reason',
+    executeArgs: `docs supersede --path ${shellQuote(normalizePath(options.documentPath))} --by ${shellQuote(replacement)} --reason ${shellQuote(reason)}`,
+    extraValidate: (registry, issues) => {
+      if (!replacement) issues.push({ severity: 'error', code: 'DOC_SUPERSEDES_MISSING_TARGET', path: normalizePath(options.documentPath), message: 'docs supersede requires --by <path>.' });
+      if (replacement && !registry.documents.some((doc) => doc.path === replacement)) {
+        issues.push({ severity: 'error', code: 'DOC_SUPERSEDES_MISSING_TARGET', path: normalizePath(options.documentPath), message: `${replacement} is not a registered replacement document.` });
+      }
+    }
+  });
+  return report;
+}
+
+export function createDocsUnregisterReport(projectRoot: string, options: {
+  documentPath: string;
+  reason?: string;
+  mode?: 'dry-run' | 'execute';
+  beforeHash?: string;
+}): DocsRegistryMutationReport {
+  const state = readRegistryForMutation(projectRoot);
+  const mode = options.mode ?? 'dry-run';
+  const normalized = normalizePath(options.documentPath);
+  const reason = options.reason?.trim() ?? '';
+  const issues = [...state.issues];
+  if (!reason) issues.push({ severity: 'error', code: 'DOC_UNREGISTER_REASON_REQUIRED', path: normalized, message: 'docs unregister requires --reason.' });
+  validateMutationExecuteGuard(mode, options.beforeHash, state.beforeHash, issues);
+  const index = state.registry?.documents.findIndex((doc) => doc.path === normalized) ?? -1;
+  const before = index >= 0 && state.registry ? cloneJson(state.registry.documents[index]) : null;
+  const after = null;
+  const action = issues.some((issue) => issue.severity === 'error') ? 'blocked' : index < 0 ? 'already-unregistered' : 'unregister';
+  if (mode === 'execute' && action === 'unregister' && state.registry) {
+    state.registry.documents.splice(index, 1);
+    state.registry.generatedAt = new Date().toISOString();
+    writeRegistry(projectRoot, state.registry);
+  }
+  return mutationReport({
+    command: 'docs.unregister',
+    mode,
+    action,
+    path: normalized,
+    beforeHash: state.beforeHash,
+    before,
+    after,
+    changedFields: before ? [{ field: 'documents', before: normalized, after: null }] : [],
+    writes: mode === 'execute' && action === 'unregister' ? [DOCS_REGISTRY_PATH] : [],
+    issues,
+    executeArgs: `docs unregister --path ${shellQuote(normalized)} --reason ${shellQuote(reason)}`
+  });
+}
+
+export function createDocsRenderReport(projectRoot: string, options: {
+  mode?: 'dry-run' | 'execute';
+  beforeHash?: string;
+} = {}): DocsRegistryMutationReport {
+  const state = readRegistryForMutation(projectRoot);
+  const mode = options.mode ?? 'dry-run';
+  const issues = [...state.issues];
+  validateMutationExecuteGuard(mode, options.beforeHash, state.beforeHash, issues);
+  const beforePath = path.join(projectRoot, 'docs/DOC_REGISTRY.md');
+  const before = fs.existsSync(beforePath) ? fs.readFileSync(beforePath, 'utf8') : null;
+  const after = state.registry ? renderDocRegistryMarkdown(normalizeDocumentRegistryFile(state.registry)) : null;
+  const changedFields = before !== after ? [{ field: 'docs/DOC_REGISTRY.md', before: before === null ? null : 'present', after: after === null ? null : 'rendered' }] : [];
+  const action = issues.some((issue) => issue.severity === 'error') ? 'blocked' : changedFields.length === 0 ? 'already-current' : 'render';
+  if (mode === 'execute' && action === 'render' && after !== null) {
+    fs.mkdirSync(path.dirname(beforePath), { recursive: true });
+    const temp = `${beforePath}.${process.pid}.tmp`;
+    fs.writeFileSync(temp, after, 'utf8');
+    fs.renameSync(temp, beforePath);
+  }
+  return mutationReport({
+    command: 'docs.render',
+    mode,
+    action,
+    path: 'docs/DOC_REGISTRY.md',
+    beforeHash: state.beforeHash,
+    before: before === null ? null : { path: 'docs/DOC_REGISTRY.md', present: true },
+    after: after === null ? null : { path: 'docs/DOC_REGISTRY.md', bytes: after.length },
+    changedFields,
+    writes: mode === 'execute' && action === 'render' ? ['docs/DOC_REGISTRY.md'] : [],
+    issues,
+    executeArgs: 'docs render'
+  });
+}
+
+function mutateDocument(projectRoot: string, input: {
+  command: DocsRegistryMutationReport['command'];
+  action: DocsRegistryMutationReport['action'];
+  documentPath: string;
+  reason: string;
+  reasonRequiredCode: string;
+  mode: 'dry-run' | 'execute';
+  beforeHash?: string;
+  updates: Array<[string, unknown]>;
+  notePrefix: string;
+  executeArgs: string;
+  extraValidate?: (registry: DocumentRegistryFile, issues: DocsIssue[]) => void;
+}): DocsRegistryMutationReport {
+  const state = readRegistryForMutation(projectRoot);
+  const normalized = normalizePath(input.documentPath);
+  const issues = [...state.issues];
+  const entry = state.registry?.documents.find((doc) => doc.path === normalized) ?? null;
+  if (!entry) issues.push({ severity: 'error', code: 'DOC_NOT_REGISTERED', path: normalized, message: `${normalized} is not registered.` });
+  if (!input.reason) issues.push({ severity: 'error', code: input.reasonRequiredCode, path: normalized, message: `${input.command} requires --reason.` });
+  if (state.registry && input.extraValidate) input.extraValidate(state.registry, issues);
+  validateMutationExecuteGuard(input.mode, input.beforeHash, state.beforeHash, issues);
+  const before = entry ? cloneJson(entry) : null;
+  const after = entry ? applyDocumentFieldUpdates(cloneJson(entry) as unknown as Record<string, unknown>, [
+    ...input.updates,
+    ['notes', appendRegistryNote(entry.notes, `${input.notePrefix}: ${input.reason}`)]
+  ]) : null;
+  const changedFields = before && after ? diffObjects(before, after) : [];
+  const action = issues.some((issue) => issue.severity === 'error') ? 'blocked' : changedFields.length === 0 ? 'already-current' : input.action;
+  if (input.mode === 'execute' && action === input.action && state.registry && entry && after) {
+    Object.assign(entry, after);
+    state.registry.generatedAt = new Date().toISOString();
+    writeRegistry(projectRoot, state.registry);
+  }
+  return mutationReport({
+    command: input.command,
+    mode: input.mode,
+    action,
+    path: normalized,
+    beforeHash: state.beforeHash,
+    before,
+    after,
+    changedFields,
+    writes: input.mode === 'execute' && action === input.action ? [DOCS_REGISTRY_PATH] : [],
+    issues,
+    executeArgs: input.executeArgs
+  });
+}
+
+function readRegistryForMutation(projectRoot: string): { registry: DocumentRegistryFile | null; beforeHash: string; issues: DocsIssue[] } {
+  const target = path.join(projectRoot, DOCS_REGISTRY_PATH);
+  if (!fs.existsSync(target)) {
+    return {
+      registry: null,
+      beforeHash: hashText(''),
+      issues: [{ severity: 'error', code: 'DOC_REGISTRY_MISSING', path: DOCS_REGISTRY_PATH, message: 'Docs registry is required for mutation commands.' }]
+    };
+  }
+  const content = fs.readFileSync(target, 'utf8');
+  try {
+    return { registry: JSON.parse(content) as DocumentRegistryFile, beforeHash: hashText(content), issues: [] };
+  } catch (error) {
+    return {
+      registry: null,
+      beforeHash: hashText(content),
+      issues: [{ severity: 'error', code: 'DOC_REGISTRY_INVALID_JSON', path: DOCS_REGISTRY_PATH, message: `Docs registry JSON could not be parsed: ${error instanceof Error ? error.message : String(error)}` }]
+    };
+  }
+}
+
+function validateMutationExecuteGuard(mode: 'dry-run' | 'execute', requestedHash: string | undefined, beforeHash: string, issues: DocsIssue[]): void {
+  if (mode !== 'execute') return;
+  if (!requestedHash) {
+    issues.push({ severity: 'error', code: 'DOC_MUTATION_BEFORE_HASH_REQUIRED', path: DOCS_REGISTRY_PATH, message: 'Execute mode requires --before-hash from the reviewed dry-run.' });
+  } else if (requestedHash !== beforeHash) {
+    issues.push({ severity: 'error', code: 'DOC_MUTATION_BEFORE_HASH_MISMATCH', path: DOCS_REGISTRY_PATH, message: `Registry hash ${beforeHash} does not match reviewed hash ${requestedHash}.` });
+  }
+}
+
+function parseDocumentFieldUpdates(documentPath: string, sets: string[], issues: DocsIssue[]): Array<[string, unknown]> {
+  const updates: Array<[string, unknown]> = [];
+  for (const item of sets) {
+    const index = item.indexOf('=');
+    if (index <= 0) {
+      issues.push({ severity: 'error', code: 'DOC_UPDATE_SET_INVALID', path: documentPath, message: `Invalid --set value: ${item}. Expected field=value.` });
+      continue;
+    }
+    const field = item.slice(0, index).trim();
+    const rawValue = item.slice(index + 1).trim();
+    const parsed = parseDocumentFieldValue(documentPath, field, rawValue, issues);
+    if (parsed.ok) updates.push([field, parsed.value]);
+  }
+  return updates;
+}
+
+function parseDocumentFieldValue(documentPath: string, field: string, rawValue: string, issues: DocsIssue[]): { ok: true; value: unknown } | { ok: false } {
+  if (field === 'title' || field === 'owner' || field === 'notes' || field === 'supersededBy') return { ok: true, value: rawValue };
+  if (field === 'requiredReading') return { ok: true, value: rawValue === 'true' || rawValue === 'yes' };
+  if (field === 'readWhen') {
+    const values = rawValue.split(',').map((value) => value.trim()).filter(Boolean);
+    const invalid = values.filter((value) => !VALID_READ_WHEN.includes(value as ReadWhen));
+    if (invalid.length > 0 || values.length === 0) {
+      issues.push({ severity: 'error', code: 'DOC_UPDATE_READ_WHEN_INVALID_TOKEN', path: documentPath, field, received: rawValue, allowedValues: [...VALID_READ_WHEN], message: `Invalid readWhen value: ${rawValue}.` });
+      return { ok: false };
+    }
+    return { ok: true, value: values };
+  }
+  const enumChecks: Record<string, readonly string[]> = {
+    kind: VALID_KINDS,
+    status: VALID_STATUSES,
+    readTier: VALID_READ_TIERS,
+    authority: VALID_AUTHORITIES,
+    editPolicy: VALID_EDIT_POLICIES,
+    closeSourceRole: ['included', 'excluded', 'task-dependent', 'unknown'],
+    updateOwner: ['human', 'hadara-init', 'hadara-task', 'hadara-docs', 'release-operator', 'mixed']
+  };
+  const allowed = enumChecks[field];
+  if (allowed) {
+    if (!allowed.includes(rawValue)) {
+      issues.push({ severity: 'error', code: 'DOC_UPDATE_FIELD_INVALID_TOKEN', path: documentPath, field, received: rawValue, allowedValues: [...allowed], message: `${field} has invalid value: ${rawValue}.` });
+      return { ok: false };
+    }
+    return { ok: true, value: rawValue };
+  }
+  issues.push({ severity: 'error', code: 'DOC_UPDATE_FIELD_UNSUPPORTED', path: documentPath, field, received: field, message: `docs update does not support field: ${field}.` });
+  return { ok: false };
+}
+
+function applyDocumentFieldUpdates(document: Record<string, unknown>, updates: Array<[string, unknown]>): Record<string, unknown> {
+  for (const [field, value] of updates) document[field] = value;
+  return document;
+}
+
+function diffObjects(beforeValue: unknown, afterValue: unknown): Array<{ field: string; before: unknown; after: unknown }> {
+  const before = isRecord(beforeValue) ? beforeValue : {};
+  const after = isRecord(afterValue) ? afterValue : {};
+  const keys = [...new Set([...Object.keys(before), ...Object.keys(after)])].sort();
+  return keys
+    .filter((key) => JSON.stringify(before[key]) !== JSON.stringify(after[key]))
+    .map((key) => ({ field: key, before: before[key] ?? null, after: after[key] ?? null }));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function cloneJson<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function appendRegistryNote(current: string | undefined, note: string): string {
+  return current ? `${current} ${note}` : note;
+}
+
+function mutationReport(input: Omit<DocsRegistryMutationReport, 'schemaVersion' | 'registryPath' | 'executeCommand' | 'ok'> & { executeArgs: string }): DocsRegistryMutationReport {
+  const report: DocsRegistryMutationReport = {
+    schemaVersion: 'hadara.docs.registryMutation.v1',
+    registryPath: DOCS_REGISTRY_PATH,
+    command: input.command,
+    ok: input.issues.every((issue) => issue.severity !== 'error'),
+    mode: input.mode,
+    action: input.action,
+    path: input.path,
+    beforeHash: input.beforeHash,
+    before: input.before,
+    after: input.after,
+    changedFields: input.changedFields,
+    writes: input.writes,
+    issues: input.issues
+  };
+  if (report.mode === 'dry-run' && report.ok && report.action !== 'already-current' && report.action !== 'already-unregistered') {
+    report.executeCommand = `hadara ${input.executeArgs} --execute --before-hash ${input.beforeHash} --json`;
+  }
+  return report;
+}
+
+function hashText(content: string): string {
+  return `sha256:${crypto.createHash('sha256').update(content, 'utf8').digest('hex')}`;
+}
+
+function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
 export function createDocsReadMapReport(projectRoot: string, taskId: string): DocsReadMapReport {

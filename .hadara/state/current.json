@@ -1,20 +1,20 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 74,
+  "rev": 77,
   "profile": "governed",
   "currentRelease": "0.4.4",
   "latestCompletedTask": {
-    "id": "T-0587",
-    "title": "0.4.5 docsRegistry v3 schema and read model"
+    "id": "T-0588",
+    "title": "0.4.5 docs registry mutation commands"
   },
   "activeTask": null,
   "nextWork": {
-    "title": "0.4.5 docs registry mutation commands",
+    "title": "0.4.5 docs register project-authored defaults",
     "state": "candidate",
-    "operatorGuidance": "Implement staged capsule 3 from docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md: add dry-run-first docs update/archive/supersede/unregister/render surfaces with guarded execute behavior.",
+    "operatorGuidance": "Implement staged capsule 4 from docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md: make arbitrary docs register entries default to project ownership and explicit project-authored origin while preserving HADARA scaffold/projection ownership.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Start the 0.4.5 docs registry mutation commands capsule after T-0587 closes.",
+  "nextOperatorIntent": "Start the 0.4.5 docs register project-authored defaults capsule after T-0588 closes.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
