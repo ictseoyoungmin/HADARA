@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.docsRegistry.v3",
+  "x-hadara-schema-id": "hadara.docsRegistry.v3",
+  "title": "HADARA Docs Registry v3",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "registryVersion", "project", "documents"],
+  "properties": {
+    "schemaVersion": { "const": "hadara.docsRegistry.v3" },
+    "registryVersion": { "const": 3 },
+    "generatedAt": { "type": "string" },
+    "project": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "hadaraProfile"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string" },
+        "hadaraProfile": { "type": "string", "enum": ["basic", "standard", "governed"] }
+      }
+    },
+    "documents": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/document" }
+    }
+  },
+  "$defs": {
+    "document": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "title", "kind", "status", "readWhen", "requiredReading"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "minLength": 1 },
+        "readWhen": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "requiredReading": { "type": "boolean" },
+        "applicableProfiles": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["basic", "standard", "governed"] }
+        },
+        "origin": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "type": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    }
+  }
+}

@@ -79,12 +79,17 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
       driftReason: getStringOption(input.args, '--drift-reason'),
       requiredReading: getFlag(input.args, '--required-reading'),
       requireExists: getFlag(input.args, '--require-exists'),
-      mode: getFlag(input.args, '--execute') ? 'execute' : 'dry-run'
+      mode: getFlag(input.args, '--execute') ? 'execute' : 'dry-run',
+      beforeHash: getStringOption(input.args, '--before-hash')
     });
     printReport(report, input.jsonOutput);
     return true;
   }
   if (sub === 'update') {
+    if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+      console.log(renderCommandHelp('docs.update'));
+      return true;
+    }
     if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'docs.update')) return true;
     const report = createDocsUpdateReport(input.projectRoot, {
       documentPath: getRequiredStringOption(input.args, '--path'),
@@ -96,6 +101,10 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
     return true;
   }
   if (sub === 'archive') {
+    if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+      console.log(renderCommandHelp('docs.archive'));
+      return true;
+    }
     if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'docs.archive')) return true;
     const report = createDocsArchiveReport(input.projectRoot, {
       documentPath: getRequiredStringOption(input.args, '--path'),
@@ -107,6 +116,10 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
     return true;
   }
   if (sub === 'supersede') {
+    if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+      console.log(renderCommandHelp('docs.supersede'));
+      return true;
+    }
     if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'docs.supersede')) return true;
     const report = createDocsSupersedeReport(input.projectRoot, {
       documentPath: getRequiredStringOption(input.args, '--path'),
@@ -119,6 +132,10 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
     return true;
   }
   if (sub === 'unregister') {
+    if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+      console.log(renderCommandHelp('docs.unregister'));
+      return true;
+    }
     if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'docs.unregister')) return true;
     const report = createDocsUnregisterReport(input.projectRoot, {
       documentPath: getRequiredStringOption(input.args, '--path'),
@@ -130,6 +147,10 @@ export function handleDocsCommand(input: DocsCommandInput): boolean {
     return true;
   }
   if (sub === 'render') {
+    if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+      console.log(renderCommandHelp('docs.render'));
+      return true;
+    }
     if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'docs.render')) return true;
     const report = createDocsRenderReport(input.projectRoot, {
       mode: getFlag(input.args, '--execute') ? 'execute' : 'dry-run',
@@ -196,11 +217,16 @@ function blockLegacyMutation(input: DocsCommandInput, command: string): boolean 
 }
 
 function printReport(report: unknown, jsonOutput: boolean): void {
+  if (isFailedReport(report)) process.exitCode = 6;
   if (jsonOutput) {
     console.log(JSON.stringify(report, null, 2));
     return;
   }
   console.log(JSON.stringify(report, null, 2));
+}
+
+function isFailedReport(report: unknown): report is { ok: false } {
+  return typeof report === 'object' && report !== null && 'ok' in report && (report as { ok?: unknown }).ok === false;
 }
 
 function splitCsv(value: string | undefined): string[] | undefined {

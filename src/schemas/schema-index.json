@@ -233,6 +233,20 @@
       "notes": "Documents the 0.4 registry-first document registration report returned by hadara docs register --json."
     },
     {
+      "id": "hadara.docs.registryMutation.v1",
+      "path": "src/schemas/docs-registry-mutation.schema.json",
+      "status": "fixture",
+      "owner": "services/docs-registry",
+      "notes": "Documents the 0.4.5 guarded docs registry mutation report returned by docs update/archive/supersede/unregister/render --json."
+    },
+    {
+      "id": "hadara.docsRegistry.v3",
+      "path": "src/schemas/docs-registry-v3.schema.json",
+      "status": "fixture",
+      "owner": "services/docs-registry",
+      "notes": "Documents the docs registry v3 desired-state file shape with project identity and explicit document origins."
+    },
+    {
       "id": "hadara.docs.requiredReading.v1",
       "path": "src/schemas/docs-required-reading.schema.json",
       "status": "fixture",

@@ -1,11 +1,11 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 83,
+  "rev": 85,
   "profile": "governed",
   "currentRelease": "0.4.4",
   "latestCompletedTask": {
-    "id": "T-0590",
-    "title": "0.4.5 docs registry dogfood and migration cleanup"
+    "id": "T-0591",
+    "title": "0.4.5 docs mutation safety and contract hardening"
   },
   "activeTask": null,
   "nextWork": {

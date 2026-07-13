@@ -5,13 +5,14 @@
   "title": "HADARA Docs Register Report",
   "type": "object",
   "additionalProperties": true,
-  "required": ["schemaVersion", "command", "ok", "mode", "path", "source", "action", "document", "writes", "issues"],
+  "required": ["schemaVersion", "command", "ok", "mode", "path", "source", "beforeHash", "action", "document", "writes", "issues"],
   "properties": {
     "schemaVersion": { "const": "hadara.docs.register.v1" },
     "command": { "const": "docs.register" },
     "ok": { "type": "boolean" },
     "mode": { "type": "string", "enum": ["dry-run", "execute"] },
     "path": { "type": "string" },
+    "beforeHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
     "source": {
       "type": "object",
       "additionalProperties": true,

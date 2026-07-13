@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { handleDevCommand } from '../../src/cli/dev';
+import { handleDocsCommand } from '../../src/cli/docs';
 import { handleHarnessCommand } from '../../src/cli/harness';
 import { handlePackageCommand } from '../../src/cli/package-smoke';
 import { handleSmokeCommand } from '../../src/cli/smoke';
@@ -59,6 +60,16 @@ describe('command-level help routing', () => {
 
     expect(handleSessionCommand({ args: ['session', 'start', '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
     expect(latestOutput()).toContain('session.start');
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it('prints docs mutation help before required-argument validation', () => {
+    const root = tempProject();
+
+    for (const subcommand of ['update', 'archive', 'supersede', 'unregister', 'render']) {
+      expect(handleDocsCommand({ args: ['docs', subcommand, '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
+      expect(latestOutput()).toContain(`docs.${subcommand}`);
+    }
     expect(process.exitCode).toBeUndefined();
   });
 

@@ -1117,7 +1117,7 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
   }),
   commandEntry({
     id: 'docs.register',
-    command: 'hadara docs register --path <path> [--title <title>] [--kind <kind>] [--status <status>] [--read-when <read-when>] [--read-tier <tier>] [--authority <authority>] [--edit-policy <policy>] [--active-for-task <ids>] [--drift <risk>] [--drift-review-required] [--drift-reason <text>] [--required-reading] [--require-exists] [--execute] [--json]',
+    command: 'hadara docs register --path <path> [--title <title>] [--kind <kind>] [--status <status>] [--read-when <read-when>] [--read-tier <tier>] [--authority <authority>] [--edit-policy <policy>] [--active-for-task <ids>] [--drift <risk>] [--drift-review-required] [--drift-reason <text>] [--required-reading] [--require-exists] [--execute --before-hash <hash>] [--json]',
     summary: 'Register one project document in .hadara/docs-registry.json without mutating AGENTS, context, or workflow prose.',
     canonical: true,
     appearsInDefaultHelp: false,
@@ -1132,9 +1132,10 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     status: 'experimental',
     schemaVersion: 'hadara.docs.register.v1',
     docs: ['docs/HADARA_WORKFLOW.md', 'docs/SCHEMAS.md'],
-    examples: [example('Register a spec document', 'hadara docs register --path docs/specs/example.md --execute --json', 'When adding a project-specific document to the canonical docs registry.')],
+    examples: [example('Preview spec registration', 'hadara docs register --path docs/specs/example.md --json', 'When adding a project-specific document to the canonical docs registry.')],
     related: ['docs.list', 'docs.doctor', 'docs.explain'],
-    conflictsWith: []
+    conflictsWith: [],
+    notes: 'Dry-run first. Execute requires --before-hash from the reviewed dry-run and writes only .hadara/docs-registry.json.'
   }),
   commandEntry({
     id: 'docs.complete-spec',

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hadara.docs.registryMutation.v1",
+  "x-hadara-schema-id": "hadara.docs.registryMutation.v1",
+  "title": "HADARA Docs Registry Mutation Report",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "command",
+    "ok",
+    "mode",
+    "action",
+    "path",
+    "registryPath",
+    "beforeHash",
+    "before",
+    "after",
+    "changedFields",
+    "writes",
+    "issues"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "hadara.docs.registryMutation.v1" },
+    "command": {
+      "type": "string",
+      "enum": ["docs.update", "docs.archive", "docs.supersede", "docs.unregister", "docs.render"]
+    },
+    "ok": { "type": "boolean" },
+    "mode": { "type": "string", "enum": ["dry-run", "execute"] },
+    "action": {
+      "type": "string",
+      "enum": ["update", "archive", "supersede", "unregister", "render", "already-current", "already-unregistered", "blocked"]
+    },
+    "path": { "type": "string", "minLength": 1 },
+    "registryPath": { "const": ".hadara/docs-registry.json" },
+    "beforeHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "before": {},
+    "after": {},
+    "changedFields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["field", "before", "after"],
+        "properties": {
+          "field": { "type": "string", "minLength": 1 },
+          "before": {},
+          "after": {}
+        }
+      }
+    },
+    "writes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    },
+    "executeCommand": { "type": "string", "minLength": 1 }
+  },
+  "$defs": {
+    "issue": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["severity", "code", "message"],
+      "properties": {
+        "severity": { "type": "string", "enum": ["warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "field": { "type": "string", "minLength": 1 },
+        "received": {},
+        "allowedValues": {
+          "type": "array",
+          "items": {}
+        },
+        "suggestion": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

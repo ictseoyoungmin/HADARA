@@ -28,6 +28,8 @@ import schemaVocabularySchemaJson from '../schemas/schema-vocabulary.schema.json
 import sliceReportSchemaJson from '../schemas/slice-report.schema.json';
 import docsPatchPlanSchemaJson from '../schemas/docs-patch-plan.schema.json';
 import docsReadMapSchemaJson from '../schemas/docs-read-map.schema.json';
+import docsRegistryMutationSchemaJson from '../schemas/docs-registry-mutation.schema.json';
+import docsRegistryV3SchemaJson from '../schemas/docs-registry-v3.schema.json';
 import docsRegisterSchemaJson from '../schemas/docs-register.schema.json';
 import docsRequiredReadingSchemaJson from '../schemas/docs-required-reading.schema.json';
 import evidenceLintSchemaJson from '../schemas/evidence-lint.schema.json';
@@ -141,6 +143,8 @@ const registeredSchemas: Record<string, JsonObject> = {
   'hadara.slice.report.v1': sliceReportSchemaJson as JsonObject,
   'hadara.docs.patchPlan.v1': docsPatchPlanSchemaJson as JsonObject,
   'hadara.docs.readMap.v1': docsReadMapSchemaJson as JsonObject,
+  'hadara.docs.registryMutation.v1': docsRegistryMutationSchemaJson as JsonObject,
+  'hadara.docsRegistry.v3': docsRegistryV3SchemaJson as JsonObject,
   'hadara.docs.register.v1': docsRegisterSchemaJson as JsonObject,
   'hadara.docs.requiredReading.v1': docsRequiredReadingSchemaJson as JsonObject,
   'hadara.evidence.lint.v1': evidenceLintSchemaJson as JsonObject,

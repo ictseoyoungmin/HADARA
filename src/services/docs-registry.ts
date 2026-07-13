@@ -161,10 +161,12 @@ export interface DocsRegisterReport {
   mode: 'dry-run' | 'execute';
   path: string;
   source: { registryPath: '.hadara/docs-registry.json'; registryPresent: boolean; inferred: boolean };
+  beforeHash: string;
   action: 'create' | 'already-registered' | 'blocked';
   document: DocumentRegistryEntry | null;
   writes: string[];
   issues: DocsIssue[];
+  executeCommand?: string;
 }
 
 export interface DocsRegistryMutationReport {
@@ -608,10 +610,12 @@ export function createDocsRegisterReport(projectRoot: string, options: {
   requiredReading?: boolean;
   requireExists?: boolean;
   mode?: 'dry-run' | 'execute';
+  beforeHash?: string;
 }): DocsRegisterReport {
   const mode = options.mode ?? 'dry-run';
   const normalized = normalizePath(options.documentPath);
   const state = loadRegistryOrInfer(projectRoot);
+  const mutationState = readRegistryForMutation(projectRoot);
   const issues = [...state.issues];
   const kind = parseKind(options.kind);
   const status = parseStatus(options.status ?? 'reference');
@@ -644,6 +648,7 @@ export function createDocsRegisterReport(projectRoot: string, options: {
       mode,
       path: normalized,
       source: state.source,
+      beforeHash: mutationState.beforeHash,
       action: issues.some((issue) => issue.severity === 'error') ? 'blocked' : 'already-registered',
       document: existing,
       writes: [],
@@ -651,6 +656,7 @@ export function createDocsRegisterReport(projectRoot: string, options: {
     };
   }
 
+  validateMutationExecuteGuard(mode, options.beforeHash, mutationState.beforeHash, issues);
   const document = issues.some((issue) => issue.severity === 'error') ? null : buildRegisteredDocument(state.registry, {
     path: normalized,
     title: options.title,
@@ -668,7 +674,7 @@ export function createDocsRegisterReport(projectRoot: string, options: {
     } : undefined,
     requiredReading: options.requiredReading ?? false
   });
-  if (document && mode === 'execute') {
+  if (document && mode === 'execute' && issues.every((issue) => issue.severity !== 'error')) {
     const next: DocumentRegistryFile = {
       ...state.registry,
       generatedAt: new Date().toISOString(),
@@ -677,18 +683,23 @@ export function createDocsRegisterReport(projectRoot: string, options: {
     writeRegistry(projectRoot, next);
   }
 
-  return {
+  const report: DocsRegisterReport = {
     schemaVersion: 'hadara.docs.register.v1',
     command: 'docs.register',
     ok: issues.every((issue) => issue.severity !== 'error'),
     mode,
     path: normalized,
     source: state.source,
+    beforeHash: mutationState.beforeHash,
     action: document ? 'create' : 'blocked',
     document,
-    writes: document && mode === 'execute' ? [DOCS_REGISTRY_PATH] : [],
+    writes: document && mode === 'execute' && issues.every((issue) => issue.severity !== 'error') ? [DOCS_REGISTRY_PATH] : [],
     issues
   };
+  if (report.mode === 'dry-run' && report.ok && report.action === 'create') {
+    report.executeCommand = `hadara docs register --path ${shellQuote(normalized)} --execute --before-hash ${mutationState.beforeHash} --json`;
+  }
+  return report;
 }
 
 export function createDocsUpdateReport(projectRoot: string, options: {
@@ -703,6 +714,7 @@ export function createDocsUpdateReport(projectRoot: string, options: {
   const issues = [...state.issues];
   const entry = state.registry?.documents.find((doc) => doc.path === normalized) ?? null;
   if (!entry) issues.push({ severity: 'error', code: 'DOC_NOT_REGISTERED', path: normalized, message: `${normalized} is not registered.` });
+  if (entry) validateProtectedRegistryEntry(state.registry, entry, 'docs.update', issues);
   const updates = parseDocumentFieldUpdates(normalized, options.set, issues);
   if (options.set.length === 0) issues.push({ severity: 'error', code: 'DOC_UPDATE_SET_REQUIRED', path: normalized, message: 'docs update requires at least one --set field=value.' });
   validateMutationExecuteGuard(mode, options.beforeHash, state.beforeHash, issues);
@@ -791,6 +803,9 @@ export function createDocsSupersedeReport(projectRoot: string, options: {
     executeArgs: `docs supersede --path ${shellQuote(normalizePath(options.documentPath))} --by ${shellQuote(replacement)} --reason ${shellQuote(reason)}`,
     extraValidate: (registry, issues) => {
       if (!replacement) issues.push({ severity: 'error', code: 'DOC_SUPERSEDES_MISSING_TARGET', path: normalizePath(options.documentPath), message: 'docs supersede requires --by <path>.' });
+      if (replacement && replacement === normalizePath(options.documentPath)) {
+        issues.push({ severity: 'error', code: 'DOC_SUPERSEDE_SELF_REFERENCE', path: normalizePath(options.documentPath), message: 'docs supersede cannot point a document at itself.' });
+      }
       if (replacement && !registry.documents.some((doc) => doc.path === replacement)) {
         issues.push({ severity: 'error', code: 'DOC_SUPERSEDES_MISSING_TARGET', path: normalizePath(options.documentPath), message: `${replacement} is not a registered replacement document.` });
       }
@@ -814,6 +829,7 @@ export function createDocsUnregisterReport(projectRoot: string, options: {
   validateMutationExecuteGuard(mode, options.beforeHash, state.beforeHash, issues);
   const index = state.registry?.documents.findIndex((doc) => doc.path === normalized) ?? -1;
   const before = index >= 0 && state.registry ? cloneJson(state.registry.documents[index]) : null;
+  if (index >= 0 && state.registry) validateProtectedRegistryEntry(state.registry, state.registry.documents[index], 'docs.unregister', issues);
   const after = null;
   const action = issues.some((issue) => issue.severity === 'error') ? 'blocked' : index < 0 ? 'already-unregistered' : 'unregister';
   if (mode === 'execute' && action === 'unregister' && state.registry) {
@@ -888,6 +904,7 @@ function mutateDocument(projectRoot: string, input: {
   const issues = [...state.issues];
   const entry = state.registry?.documents.find((doc) => doc.path === normalized) ?? null;
   if (!entry) issues.push({ severity: 'error', code: 'DOC_NOT_REGISTERED', path: normalized, message: `${normalized} is not registered.` });
+  if (entry) validateProtectedRegistryEntry(state.registry, entry, input.command, issues);
   if (!input.reason) issues.push({ severity: 'error', code: input.reasonRequiredCode, path: normalized, message: `${input.command} requires --reason.` });
   if (state.registry && input.extraValidate) input.extraValidate(state.registry, issues);
   validateMutationExecuteGuard(input.mode, input.beforeHash, state.beforeHash, issues);
@@ -948,6 +965,22 @@ function validateMutationExecuteGuard(mode: 'dry-run' | 'execute', requestedHash
   }
 }
 
+function validateProtectedRegistryEntry(registry: DocumentRegistryFile | null, entry: DocumentRegistryEntry, command: DocsRegistryMutationReport['command'], issues: DocsIssue[]): void {
+  const protectedReasons: string[] = [];
+  if (entry.status === 'canonical') protectedReasons.push('canonical');
+  if (entry.requiredReading) protectedReasons.push('requiredReading');
+  if (entry.origin?.type === 'hadara-scaffold' || entry.origin?.type === 'hadara-projection') protectedReasons.push(`origin:${entry.origin.type}`);
+  if (entry.generatedBy === 'hadara init') protectedReasons.push('generatedBy:hadara init');
+  if (registry && seedEntries(registryHadaraProfile(registry)).some((seed) => seed.path === entry.path)) protectedReasons.push('profile-seed');
+  if (protectedReasons.length === 0) return;
+  issues.push({
+    severity: 'error',
+    code: 'DOC_PROTECTED_ENTRY_MUTATION_BLOCKED',
+    path: entry.path,
+    message: `${command} cannot mutate protected registry entry ${entry.path} (${[...new Set(protectedReasons)].join(', ')}). Change the scaffold/profile contract or use a dedicated correction path.`
+  });
+}
+
 function parseDocumentFieldUpdates(documentPath: string, sets: string[], issues: DocsIssue[]): Array<[string, unknown]> {
   const updates: Array<[string, unknown]> = [];
   for (const item of sets) {
@@ -966,7 +999,13 @@ function parseDocumentFieldUpdates(documentPath: string, sets: string[], issues:
 
 function parseDocumentFieldValue(documentPath: string, field: string, rawValue: string, issues: DocsIssue[]): { ok: true; value: unknown } | { ok: false } {
   if (field === 'title' || field === 'owner' || field === 'notes' || field === 'supersededBy') return { ok: true, value: rawValue };
-  if (field === 'requiredReading') return { ok: true, value: rawValue === 'true' || rawValue === 'yes' };
+  if (field === 'requiredReading') {
+    const normalized = rawValue.toLowerCase();
+    if (normalized === 'true' || normalized === 'yes') return { ok: true, value: true };
+    if (normalized === 'false' || normalized === 'no') return { ok: true, value: false };
+    issues.push({ severity: 'error', code: 'DOC_UPDATE_BOOLEAN_INVALID_TOKEN', path: documentPath, field, received: rawValue, allowedValues: ['true', 'false', 'yes', 'no'], message: `Invalid boolean value for ${field}: ${rawValue}.` });
+    return { ok: false };
+  }
   if (field === 'readWhen') {
     const values = rawValue.split(',').map((value) => value.trim()).filter(Boolean);
     const invalid = values.filter((value) => !VALID_READ_WHEN.includes(value as ReadWhen));

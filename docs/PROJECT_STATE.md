@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.4 |
-| Latest Completed Task | T-0590 0.4.5 docs registry dogfood and migration cleanup |
+| Latest Completed Task | T-0591 0.4.5 docs mutation safety and contract hardening |
 | Active Task | None |
 | Next Work | 0.4.5 release readiness and publish preparation |
 | Next Work State | candidate |

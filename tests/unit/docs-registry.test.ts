@@ -37,7 +37,24 @@ function writeRegistry(root: string, registry: DocumentRegistryFile): void {
   fs.writeFileSync(path.join(root, DOCS_REGISTRY_PATH), `${JSON.stringify(registry, null, 2)}\n`);
 }
 
+function registerProjectDoc(root: string, documentPath: string, title: string): ReturnType<typeof createDocsRegisterReport> {
+  const dryRun = createDocsRegisterReport(root, {
+    documentPath,
+    title,
+    mode: 'dry-run',
+    requireExists: true
+  });
+  return createDocsRegisterReport(root, {
+    documentPath,
+    title,
+    mode: 'execute',
+    beforeHash: dryRun.beforeHash,
+    requireExists: true
+  });
+}
+
 afterEach(() => {
+  process.exitCode = undefined;
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -118,6 +135,7 @@ describe('Phase 7.3 docs registry', () => {
         };
       })
     };
+    assertSchema('hadara.docsRegistry.v3', v3);
     fs.writeFileSync(path.join(root, DOCS_REGISTRY_PATH), `${JSON.stringify(v3, null, 2)}\n`);
 
     const list = createDocsListReport(root);
@@ -233,10 +251,17 @@ describe('Phase 7.3 docs registry', () => {
     const guidePath = path.join(root, 'docs', 'GAMEPLAY.md');
     fs.writeFileSync(guidePath, '# Gameplay\n');
 
+    const dryRun = createDocsRegisterReport(root, {
+      documentPath: 'docs/GAMEPLAY.md',
+      title: 'Gameplay',
+      mode: 'dry-run',
+      requireExists: true
+    });
     const report = createDocsRegisterReport(root, {
       documentPath: 'docs/GAMEPLAY.md',
       title: 'Gameplay',
       mode: 'execute',
+      beforeHash: dryRun.beforeHash,
       requireExists: true
     });
 
@@ -254,6 +279,26 @@ describe('Phase 7.3 docs registry', () => {
       owner: 'hadara-docs',
       generatedBy: 'hadara init'
     });
+    assertSchema('hadara.docs.register.v1', report);
+  });
+
+  it('blocks docs register execute without a reviewed before-hash', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    fs.writeFileSync(path.join(root, 'docs', 'BLOCKED.md'), '# Blocked\n');
+
+    const report = createDocsRegisterReport(root, {
+      documentPath: 'docs/BLOCKED.md',
+      title: 'Blocked',
+      mode: 'execute',
+      requireExists: true
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.action).toBe('blocked');
+    expect(report.writes).toEqual([]);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'DOC_MUTATION_BEFORE_HASH_REQUIRED' }));
+    expect(readRegistry(root).documents.map((doc) => doc.path)).not.toContain('docs/BLOCKED.md');
     assertSchema('hadara.docs.register.v1', report);
   });
 
@@ -275,8 +320,27 @@ describe('Phase 7.3 docs registry', () => {
           '--active-for-task', 'T-04A13,T-04A14',
           '--drift', 'medium',
           '--drift-review-required',
+          '--drift-reason', 'Reviewer requested a fresh read before use.'
+        ],
+        projectRoot: root,
+        jsonOutput: true
+      })).toBe(true);
+      const dryRun = JSON.parse(logSpy.mock.calls.at(-1)?.[0] as string);
+      expect(dryRun).toMatchObject({ ok: true, mode: 'dry-run', action: 'create', writes: [] });
+      expect(handleDocsCommand({
+        args: [
+          'docs', 'register',
+          '--path', 'docs/specs/cli.md',
+          '--title', 'CLI Spec',
+          '--read-tier', 'active-spec',
+          '--authority', 'implementation-source',
+          '--edit-policy', 'agent-editable-with-review',
+          '--active-for-task', 'T-04A13,T-04A14',
+          '--drift', 'medium',
+          '--drift-review-required',
           '--drift-reason', 'Reviewer requested a fresh read before use.',
-          '--execute'
+          '--execute',
+          '--before-hash', dryRun.beforeHash
         ],
         projectRoot: root,
         jsonOutput: true
@@ -307,10 +371,13 @@ describe('Phase 7.3 docs registry', () => {
   it('updates registry fields only through reviewed before-hash execute', () => {
     const root = tempProject();
     initProject(root, 'standard', { silent: true });
+    fs.mkdirSync(path.join(root, 'docs', 'specs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'specs', 'update.md'), '# Update\n');
+    registerProjectDoc(root, 'docs/specs/update.md', 'Update');
 
     const dryRun = createDocsUpdateReport(root, {
-      documentPath: 'docs/ARCHITECTURE.md',
-      set: ['status=active', 'owner=project']
+      documentPath: 'docs/specs/update.md',
+      set: ['status=active', 'notes=Reviewed for active use.']
     });
     expect(dryRun).toMatchObject({
       schemaVersion: 'hadara.docs.registryMutation.v1',
@@ -320,23 +387,24 @@ describe('Phase 7.3 docs registry', () => {
       action: 'update',
       writes: []
     });
-    expect(dryRun.changedFields.map((field) => field.field)).toEqual(expect.arrayContaining(['owner', 'status']));
+    expect(dryRun.changedFields.map((field) => field.field)).toEqual(expect.arrayContaining(['notes', 'status']));
     expect(createDocsUpdateReport(root, {
-      documentPath: 'docs/ARCHITECTURE.md',
+      documentPath: 'docs/specs/update.md',
       set: ['status=active'],
       mode: 'execute'
     }).issues).toContainEqual(expect.objectContaining({ code: 'DOC_MUTATION_BEFORE_HASH_REQUIRED' }));
 
     const executed = createDocsUpdateReport(root, {
-      documentPath: 'docs/ARCHITECTURE.md',
-      set: ['status=active', 'owner=project'],
+      documentPath: 'docs/specs/update.md',
+      set: ['status=active', 'notes=Reviewed for active use.'],
       mode: 'execute',
       beforeHash: dryRun.beforeHash
     });
-    const updated = readRegistry(root).documents.find((doc) => doc.path === 'docs/ARCHITECTURE.md')!;
+    const updated = readRegistry(root).documents.find((doc) => doc.path === 'docs/specs/update.md')!;
     expect(executed.ok).toBe(true);
     expect(executed.writes).toEqual([DOCS_REGISTRY_PATH]);
-    expect(updated).toMatchObject({ status: 'active', owner: 'project' });
+    expect(updated).toMatchObject({ status: 'active', notes: 'Reviewed for active use.' });
+    assertSchema('hadara.docs.registryMutation.v1', executed);
   });
 
   it('archives, supersedes, unregisters, and renders registry desired state through explicit commands', () => {
@@ -345,8 +413,8 @@ describe('Phase 7.3 docs registry', () => {
     fs.mkdirSync(path.join(root, 'docs', 'specs'), { recursive: true });
     fs.writeFileSync(path.join(root, 'docs', 'specs', 'old.md'), '# Old\n');
     fs.writeFileSync(path.join(root, 'docs', 'specs', 'new.md'), '# New\n');
-    createDocsRegisterReport(root, { documentPath: 'docs/specs/old.md', title: 'Old', mode: 'execute', requireExists: true });
-    createDocsRegisterReport(root, { documentPath: 'docs/specs/new.md', title: 'New', mode: 'execute', requireExists: true });
+    registerProjectDoc(root, 'docs/specs/old.md', 'Old');
+    registerProjectDoc(root, 'docs/specs/new.md', 'New');
 
     const supersedeDryRun = createDocsSupersedeReport(root, {
       documentPath: 'docs/specs/old.md',
@@ -361,6 +429,7 @@ describe('Phase 7.3 docs registry', () => {
       beforeHash: supersedeDryRun.beforeHash
     });
     expect(supersede.ok).toBe(true);
+    assertSchema('hadara.docs.registryMutation.v1', supersede);
     expect(readRegistry(root).documents.find((doc) => doc.path === 'docs/specs/old.md')).toMatchObject({
       status: 'superseded',
       supersededBy: 'docs/specs/new.md',
@@ -395,6 +464,92 @@ describe('Phase 7.3 docs registry', () => {
     const render = createDocsRenderReport(root, { mode: 'execute', beforeHash: renderDryRun.beforeHash });
     expect(render.ok).toBe(true);
     expect(fs.readFileSync(path.join(root, 'docs', 'DOC_REGISTRY.md'), 'utf8')).toContain('# DOC_REGISTRY');
+  });
+
+  it('blocks protected canonical/profile seed registry mutations by default', () => {
+    const root = tempProject();
+    initProject(root, 'governed', { silent: true });
+
+    const archive = createDocsArchiveReport(root, {
+      documentPath: 'docs/PROJECT_STATE.md',
+      reason: 'incorrect cleanup'
+    });
+    const unregister = createDocsUnregisterReport(root, {
+      documentPath: 'docs/HADARA_WORKFLOW.md',
+      reason: 'incorrect cleanup'
+    });
+    const update = createDocsUpdateReport(root, {
+      documentPath: 'AGENTS.md',
+      set: ['requiredReading=false']
+    });
+
+    for (const report of [archive, unregister, update]) {
+      expect(report.ok).toBe(false);
+      expect(report.issues).toContainEqual(expect.objectContaining({ code: 'DOC_PROTECTED_ENTRY_MUTATION_BLOCKED' }));
+      assertSchema('hadara.docs.registryMutation.v1', report);
+    }
+  });
+
+  it('blocks self-supersede mutations', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    fs.mkdirSync(path.join(root, 'docs', 'specs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'specs', 'same.md'), '# Same\n');
+    registerProjectDoc(root, 'docs/specs/same.md', 'Same');
+
+    const report = createDocsSupersedeReport(root, {
+      documentPath: 'docs/specs/same.md',
+      by: 'docs/specs/same.md',
+      reason: 'self replacement'
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContainEqual(expect.objectContaining({ code: 'DOC_SUPERSEDE_SELF_REFERENCE' }));
+    assertSchema('hadara.docs.registryMutation.v1', report);
+  });
+
+  it('strictly validates docs update boolean values', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    fs.mkdirSync(path.join(root, 'docs', 'specs'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs', 'specs', 'boolean.md'), '# Boolean\n');
+    registerProjectDoc(root, 'docs/specs/boolean.md', 'Boolean');
+
+    const invalid = createDocsUpdateReport(root, {
+      documentPath: 'docs/specs/boolean.md',
+      set: ['requiredReading=treu']
+    });
+    expect(invalid.ok).toBe(false);
+    expect(invalid.issues).toContainEqual(expect.objectContaining({
+      code: 'DOC_UPDATE_BOOLEAN_INVALID_TOKEN',
+      field: 'requiredReading',
+      received: 'treu'
+    }));
+
+    const valid = createDocsUpdateReport(root, {
+      documentPath: 'docs/specs/boolean.md',
+      set: ['requiredReading=yes']
+    });
+    expect(valid.ok).toBe(true);
+    expect(valid.changedFields).toContainEqual(expect.objectContaining({ field: 'requiredReading', after: true }));
+  });
+
+  it('sets a nonzero exit code when docs mutation reports fail', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    try {
+      expect(handleDocsCommand({
+        args: ['docs', 'unregister', '--path', 'docs/OLD.md', '--reason', 'cleanup', '--execute'],
+        projectRoot: root,
+        jsonOutput: true
+      })).toBe(true);
+      const report = JSON.parse(logSpy.mock.calls.at(-1)?.[0] as string);
+      expect(report.ok).toBe(false);
+      expect(process.exitCode).toBe(6);
+    } finally {
+      logSpy.mockRestore();
+    }
   });
 
   it('returns allowed values and suggestions for invalid docs register controlled tokens', () => {
@@ -483,6 +638,22 @@ describe('Phase 7.3 docs registry', () => {
       expect(output).toContain('workflow-guide');
       expect(output).toContain('--edit-policy:');
       expect(output).toContain('agent-editable-with-review');
+    } finally {
+      logSpy.mockRestore();
+    }
+  });
+
+  it('prints docs mutation help before requiring mutation arguments', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    try {
+      for (const subcommand of ['update', 'archive', 'supersede', 'unregister', 'render']) {
+        process.exitCode = undefined;
+        expect(handleDocsCommand({ args: ['docs', subcommand, '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
+        expect(logSpy.mock.calls.at(-1)?.[0]).toContain(`docs.${subcommand}`);
+        expect(process.exitCode).toBeUndefined();
+      }
     } finally {
       logSpy.mockRestore();
     }

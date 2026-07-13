@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.4 | Portable project state. |
-| Latest Completed Task | T-0590 0.4.5 docs registry dogfood and migration cleanup | Most recent completed capsule. |
+| Latest Completed Task | T-0591 0.4.5 docs mutation safety and contract hardening | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
 | Next Work | 0.4.5 release readiness and publish preparation | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |

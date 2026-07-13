@@ -591,3 +591,4 @@
 | T-0588 | 0.4.5 docs registry mutation commands | Done | tasks/T-0588-0-4-5-docs-registry-mutation-commands | |
 | T-0589 | 0.4.5 docs register project-authored defaults | Done | tasks/T-0589-0-4-5-docs-register-project-authored-defaults | |
 | T-0590 | 0.4.5 docs registry dogfood and migration cleanup | Done | tasks/T-0590-0-4-5-docs-registry-dogfood-and-migration-cleanup | |
+| T-0591 | 0.4.5 docs mutation safety and contract hardening | Done | tasks/T-0591-0-4-5-docs-mutation-safety-and-contract-hardening | |
