@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.4 | Portable project state. |
-| Latest Completed Task | T-0583 v0.4.4 stable source and release preparation | Most recent completed capsule. |
+| Latest Completed Task | T-0584 v0.4.4 operator publish and installed-package recycle | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
-| Next Work | v0.4.4 operator publish and installed-package recycle | Structured continuation title; not operator prose. |
+| Next Work | v0.4.5 planning and post-release issue watch | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | After T-0583 closes, run the approval-gated publish helper from a clean ext4 publish clone, publish GitHub Release v0.4.4 after review, then verify installed-package recycle for hadara@latest expected 0.4.4. | Human constraints; never used as a task title. |
-| Validation Baseline | T-0583 stable 0.4.4 source readiness passed after docs-registry profile hotfix: Docker full suite passed 153 files / 1069 tests with dist refreshed; package smoke, clean-checkout smoke, release artifact, release dry-run, publish dry-run, strict release gate, and docs doctor passed on commit 4db58a4a; npm/GitHub publication remains operator-controlled. | ev:T-0583:5723e0f57f404a2cab627cef, ev:T-0583:f0ed9b5cb09f429198437689, ev:T-0583:6ef3051d7e7948d4a614c11e, ev:T-0583:21cef95476e142c49e884b63, ev:T-0583:7b86c5b10f054f9d9a8be71d |
+| Operator Guidance | Stable 0.4.4 is published and recycled; watch for post-release package issues, then select the next improvement capsule deliberately. | Human constraints; never used as a task title. |
+| Validation Baseline | Stable 0.4.4 publication and recycle passed: operator completed npm publish and public GitHub Release v0.4.4; npm view returned 0.4.4 for both hadara@0.4.4 and hadara@latest; GitHub Release is non-draft/non-prerelease; installed-package recycle for hadara@latest expected 0.4.4 passed consumer init/task/session/finalize/context smokes. | ev:T-0584:8ffea7cd42504ea5a177a54f, ev:T-0584:36991318909d46e59d2fce17, ev:T-0584:2058d34afba84221849ae6ab |
 
 ### Current Known Problems
 
