@@ -8,11 +8,11 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.4 | Portable project state. |
-| Latest Completed Task | T-0589 0.4.5 docs register project-authored defaults | Most recent completed capsule. |
+| Latest Completed Task | T-0590 0.4.5 docs registry dogfood and migration cleanup | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
-| Next Work | 0.4.5 docs registry dogfood and migration cleanup | Structured continuation title; not operator prose. |
+| Next Work | 0.4.5 release readiness and publish preparation | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | Implement staged capsule 5 from docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md: dogfood fresh init/upgrade and use registry mutation commands for targeted cleanup so docs doctor stays clean. | Human constraints; never used as a task title. |
+| Operator Guidance | Prepare 0.4.5 release readiness after docs registry/init cleanup: verify docs doctor, release notes, package smoke, and publish scripts before operator npm/GitHub publish. | Human constraints; never used as a task title. |
 | Validation Baseline | Stable 0.4.4 publication and recycle passed: operator completed npm publish and public GitHub Release v0.4.4; npm view returned 0.4.4 for both hadara@0.4.4 and hadara@latest; GitHub Release is non-draft/non-prerelease; installed-package recycle for hadara@latest expected 0.4.4 passed consumer init/task/session/finalize/context smokes. | ev:T-0584:8ffea7cd42504ea5a177a54f, ev:T-0584:36991318909d46e59d2fce17, ev:T-0584:2058d34afba84221849ae6ab |
 
 ### Current Known Problems

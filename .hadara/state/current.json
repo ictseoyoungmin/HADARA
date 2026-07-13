@@ -1,20 +1,20 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 80,
+  "rev": 83,
   "profile": "governed",
   "currentRelease": "0.4.4",
   "latestCompletedTask": {
-    "id": "T-0589",
-    "title": "0.4.5 docs register project-authored defaults"
+    "id": "T-0590",
+    "title": "0.4.5 docs registry dogfood and migration cleanup"
   },
   "activeTask": null,
   "nextWork": {
-    "title": "0.4.5 docs registry dogfood and migration cleanup",
+    "title": "0.4.5 release readiness and publish preparation",
     "state": "candidate",
-    "operatorGuidance": "Implement staged capsule 5 from docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md: dogfood fresh init/upgrade and use registry mutation commands for targeted cleanup so docs doctor stays clean.",
+    "operatorGuidance": "Prepare 0.4.5 release readiness after docs registry/init cleanup: verify docs doctor, release notes, package smoke, and publish scripts before operator npm/GitHub publish.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Start the 0.4.5 docs registry dogfood and migration cleanup capsule after T-0589 closes.",
+  "nextOperatorIntent": "Start the 0.4.5 release readiness and publish preparation capsule after T-0590 closes.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
