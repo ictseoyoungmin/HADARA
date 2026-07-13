@@ -40,6 +40,7 @@ That is compatible, but not the final model.
 | Avoid raw JSON edits for normal work | CLI should support common registry mutation operations. |
 | Preserve compatibility | Existing v1/v2 registries remain readable and migratable. |
 | Keep 0.4.5 bounded | Implement in staged capsules with small, testable behavior changes. |
+| Support safe brownfield adoption | Existing repositories must be classified and planned before init writes. |
 
 ## Non-Goals
 
@@ -49,6 +50,7 @@ That is compatible, but not the final model.
 | Broad document cleanup in the migration capsule | Cleanup needs policy decisions per entry. |
 | Replacing docs registry with a historical event log | Desired state should stay compact and current. |
 | Changing Task Capsule close-proof semantics | Registry design is independent of task close proof. |
+| Dead-code compression | Command portfolio cleanup is deferred to 0.4.6 or 0.5.0 so 0.4.5 can focus on init/adoption safety. |
 
 ## Registry v3 Shape
 
@@ -131,7 +133,23 @@ That is compatible, but not the final model.
 | `generatedBy: "T-XXXX"` | `origin.type = "task-generated"`, `origin.taskId = "T-XXXX"` |
 | missing provenance | choose `project-authored` for active project docs, `imported` for archived/historical paths |
 
-Compatibility readers must continue to accept v1/v2. Writers should emit v3 after migration.
+Compatibility readers must continue to accept v1/v2. Greenfield and brownfield writers should emit v3 once the adoption writer lands; v1/v2 become read and upgrade compatibility formats.
+
+## Brownfield Init Adoption
+
+Safe existing-repository adoption is specified in `docs/specs/0.4.5/brownfield-init-adoption.md`.
+
+The short contract is:
+
+| Topic | Decision |
+|---|---|
+| Bare init in brownfield | `hadara init --profile <profile> --json` writes 0 files and returns `hadara.init.adoption.v1`. |
+| Execute path | `hadara init --profile <profile> --adopt --execute --plan-hash <hash> --json`. |
+| Repository states | `greenfield`, `brownfield`, `hadara-current`, `hadara-partial`, `hadara-legacy`, `unsafe`. |
+| Existing project docs | Register as `owner: project`, `origin.type: project-authored`; do not label them HADARA scaffold docs. |
+| Managed merge | Existing `.gitignore`, `AGENTS.md`, `PROJECT_STATE`, `TASK_BOARD`, and `AGENT_HANDOFF` are patched only through bounded managed sections. |
+| Project version | Infer from explicit option or project manifest; do not use HADARA package version as project release. |
+| Release gate | 0.4.5 release readiness waits for brownfield implementation and dogfood. |
 
 ## Registry Mutation CLI
 
@@ -201,8 +219,10 @@ Implementation should remove `tasks/.gitkeep` from scaffold file lists and repla
 | 3. Registry mutation commands | Add update/archive/supersede/unregister/render with dry-run-first write guards. | Common cleanup no longer requires raw JSON edits. |
 | 4. docs register defaults | Make user-authored docs default to project ownership and explicit origin. | New project documents no longer look like HADARA scaffold docs. |
 | 5. Dogfood and migration cleanup | Run fresh init/upgrade and registry cleanup dogfood on `/tmp` projects and HADARA-dev. | No document/profile drift; docs doctor passes; generated docs are clear. |
+| 6. Brownfield adoption contract | Add repository classification, zero-write dry-run, adoption report schema, plan hash, managed merge, project version split, and fail-closed rules. | Existing repositories are not mutated or semantically reclassified by bare init. |
+| 7. Brownfield implementation and dogfood | Implement classifier/planner/writer/doctor cleanup, then validate on multiple external-style repositories. | Existing source/config changes 0; managed-section outside changes 0; project-authored docs keep project ownership. |
 
-Capsule 1 can land before full v3 because it prevents immediate recurrence. Capsules 2 through 4 should land before broad registry cleanup.
+Capsule 1 can land before full v3 because it prevents immediate recurrence. Capsules 2 through 4 should land before broad registry cleanup. Capsules 6 and 7 block 0.4.5 release readiness.
 
 ## Validation Plan
 
@@ -212,6 +232,9 @@ Capsule 1 can land before full v3 because it prevents immediate recurrence. Caps
 | Unit tests for v1/v2/v3 registry normalization | Docs registry tests |
 | Command tests for docs mutation dry-run/execute guards | CLI unit tests |
 | Fresh init dogfood for `basic`, `standard`, `governed` | `/tmp` smoke |
+| Brownfield bare init zero-write behavior | `/tmp` existing-repo smoke |
+| Brownfield adoption execute plan-hash mismatch | Unit and CLI smoke |
+| Brownfield managed-section preservation | Byte-for-byte fixture test outside managed blocks |
 | HADARA-dev registry migration dry-run | Task evidence |
 | Docs doctor all-scope pass | `hadara docs doctor --scope all --json` |
 
@@ -231,4 +254,5 @@ Proceed with 0.4.5 as a small registry semantics and init cleanup line:
 1. prevent immediate recurrence in init upgrade
 2. introduce docsRegistry v3 without breaking v1/v2
 3. replace raw JSON cleanup with dry-run-first registry mutation commands
-4. dogfood fresh projects before any stable publish
+4. implement safe brownfield init adoption before release readiness
+5. dogfood fresh and brownfield projects before any stable publish

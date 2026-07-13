@@ -5,26 +5,13 @@ Schema: `hadara.docs.registry.v1`
 <!-- hadara:managed:start doc-registry-summary {"schema":"hadara.managedSection.v1","owner":"docs.registry","kind":"markdown-table","mode":"replace","version":1,"required":true,"closeSourceRole":"included"} -->
 | Path | Kind | Status | Read When | Required | Owner |
 |---|---|---|---|---|---|
-| `.hadara/state/current.json` | schema-reference | canonical | session-start | yes | hadara-docs |
 | `.hadara/context/HADARA_CONTEXT.md` | project-context | canonical | session-start | yes | hadara-docs |
+| `.hadara/state/current.json` | schema-reference | canonical | session-start | yes | hadara-docs |
 | `AGENTS.md` | protocol | canonical | session-start | yes | hadara-docs |
 | `docs/AGENT_HANDOFF.md` | handoff | canonical | session-start | yes | hadara-docs |
 | `docs/ARCHITECTURE.md` | architecture | reference | only-when-linked | no | hadara-docs |
-| `docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md` | performance-baseline | reference | only-when-linked | no | hadara-dev |
-| `docs/CONTEXT_ROUTING_PERFORMANCE_THRESHOLDS.json` | performance-thresholds | reference | only-when-linked | no | hadara-dev |
-| `docs/DECISIONS.md` | decision-log | reference | only-when-linked | no | hadara-docs |
-| `docs/DEVELOPMENT_SLICES.md` | roadmap | active | task-start | yes | hadara-docs |
-| `docs/GETTING_STARTED.md` | workflow-guide | active | only-when-linked | no | hadara-docs |
-| `docs/HADARA_WORKFLOW.md` | workflow-guide | canonical | session-start | yes | hadara-docs |
-| `docs/history/AGENT_HANDOFF_PRE_T0558.md` | handoff | historical | never-default | no | hadara-docs |
-| `docs/history/PROJECT_STATE_PRE_T0558.md` | project-state | historical | never-default | no | hadara-docs |
-| `docs/LIFECYCLE_QUICKSTART.md` | workflow-guide | active | only-when-linked | no | hadara-docs |
-| `docs/PRIMARY_WORKFLOW_BUDGET.md` | implementation-guide | canonical | docs-work | no | hadara-docs |
-| `docs/PROJECT_STATE.md` | project-state | canonical | session-start | yes | hadara-docs |
 | `docs/archive/history/REFACTOR_LOG.md` | historical-plan | historical | never-default | no | hadara-docs |
-| `docs/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md` | release | active | release-work | no | hadara-docs |
-| `docs/ROADMAP.md` | roadmap | reference | only-when-linked | no | hadara-docs |
-| `docs/SECURITY_MODEL.md` | security-model | reference | only-when-linked | no | hadara-docs |
+| `docs/archive/README.md` | historical-plan | historical | never-default | no | hadara-docs |
 | `docs/archive/specs/0.3.1/00_HADARA_0_3_1_Phase_8_State_Governance_Program.md` | roadmap | historical | never-default | no | hadara-dev |
 | `docs/archive/specs/0.3.1/rc1/00_HADARA_0_3_1_rc1_Status_Governance_Implementation_Plan.md` | roadmap | historical | never-default | no | hadara-dev |
 | `docs/archive/specs/0.3.3/context-routing/00_Context_Routing_Architecture_Overview.md` | spec | historical | never-default | no | hadara-dev |
@@ -64,11 +51,25 @@ Schema: `hadara.docs.registry.v1`
 | `docs/archive/specs/0.4.0/productization-redesign/templates/0.4/HANDOFF.md` | task-capsule | historical | never-default | no | hadara-dev |
 | `docs/archive/specs/0.4.0/productization-redesign/templates/0.4/TASK.md` | task-capsule | historical | never-default | no | hadara-dev |
 | `docs/archive/specs/0.4.0/state-first/proposal.md` | spec | historical | never-default | no | hadara-docs |
+| `docs/CONTEXT_ROUTING_PERFORMANCE_BASELINE.md` | performance-baseline | reference | only-when-linked | no | hadara-dev |
+| `docs/CONTEXT_ROUTING_PERFORMANCE_THRESHOLDS.json` | performance-thresholds | reference | only-when-linked | no | hadara-dev |
+| `docs/DECISIONS.md` | decision-log | reference | only-when-linked | no | hadara-docs |
+| `docs/DEVELOPMENT_SLICES.md` | roadmap | active | task-start | yes | hadara-docs |
+| `docs/GETTING_STARTED.md` | workflow-guide | active | only-when-linked | no | hadara-docs |
+| `docs/HADARA_WORKFLOW.md` | workflow-guide | canonical | session-start | yes | hadara-docs |
+| `docs/history/AGENT_HANDOFF_PRE_T0558.md` | handoff | historical | never-default | no | hadara-docs |
+| `docs/history/PROJECT_STATE_PRE_T0558.md` | project-state | historical | never-default | no | hadara-docs |
+| `docs/LIFECYCLE_QUICKSTART.md` | workflow-guide | active | only-when-linked | no | hadara-docs |
+| `docs/PRIMARY_WORKFLOW_BUDGET.md` | implementation-guide | canonical | docs-work | no | hadara-docs |
+| `docs/PROJECT_STATE.md` | project-state | canonical | session-start | yes | hadara-docs |
+| `docs/RELEASE_0_4_1_RC0_FUNCTIONAL_DEBT.md` | release | active | release-work | no | hadara-docs |
+| `docs/ROADMAP.md` | roadmap | reference | only-when-linked | no | hadara-docs |
+| `docs/SECURITY_MODEL.md` | security-model | reference | only-when-linked | no | hadara-docs |
 | `docs/specs/0.4.1/rc0-scope.md` | spec | active | task-start | no | hadara-docs |
+| `docs/specs/0.4.5/brownfield-init-adoption.md` | spec | active | docs-work | no | project |
 | `docs/specs/0.4.5/docs-registry-v3-and-init-cleanup.md` | spec | active | docs-work | no | hadara-docs |
 | `docs/specs/0.5/state-first/RFC.md` | spec | reference | task-start | no | hadara-docs |
 | `docs/TASK_BOARD.md` | task-board | active | task-start | yes | hadara-docs |
 | `docs/TASK_WORKFLOW_COMMANDS.md` | workflow-guide | active | task-start | yes | hadara-docs |
 | `docs/TEST_STRATEGY.md` | test-strategy | reference | debugging | no | hadara-docs |
-| `docs/archive/README.md` | historical-plan | historical | never-default | no | hadara-docs |
 <!-- hadara:managed:end doc-registry-summary -->
