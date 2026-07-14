@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 132,
+  "rev": 134,
   "profile": "governed",
   "currentRelease": "0.4.5",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0612",
-    "title": "0.4.6 current-state contract hardening after latest-basis review"
+    "id": "T-0613",
+    "title": "0.4.6 current-state validation baseline wording and task-id ordering polish"
   },
   "activeTask": null,
   "nextWork": {

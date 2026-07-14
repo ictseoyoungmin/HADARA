@@ -125,7 +125,21 @@ function highestTaskRef(
   completed: ProjectCurrentTaskRef
 ): ProjectCurrentTaskRef {
   if (!current) return completed;
-  return current.id.localeCompare(completed.id) >= 0 ? current : completed;
+  return compareTaskIds(current.id, completed.id) >= 0 ? current : completed;
+}
+
+function compareTaskIds(left: string, right: string): number {
+  const leftNumber = taskIdNumber(left);
+  const rightNumber = taskIdNumber(right);
+  if (leftNumber !== null && rightNumber !== null) return leftNumber - rightNumber;
+  return left.localeCompare(right);
+}
+
+function taskIdNumber(id: string): number | null {
+  const match = /^T-(\d+)$/.exec(id);
+  if (!match) return null;
+  const value = Number(match[1]);
+  return Number.isSafeInteger(value) ? value : null;
 }
 
 export function readProjectCurrentState(projectRoot: string): ProjectCurrentStateRead {
@@ -230,7 +244,7 @@ This section is projected from \`${PROJECT_CURRENT_STATE_PATH}\`. Edit the struc
 | Next Work | ${nextWorkTitleCell(state.nextWork)} |
 | Next Work State | ${state.nextWork?.state ?? 'none'} |
 | Operator Guidance | ${tableCell(nextWorkGuidance(state))} |
-| Validation Baseline | ${tableCell(state.validationBaseline.summary)} |
+| Current Trusted Validation Baseline | ${tableCell(state.validationBaseline.summary)} |
 
 ### Current Known Problems
 
@@ -252,7 +266,7 @@ This section is projected from \`${PROJECT_CURRENT_STATE_PATH}\` so a new sessio
 | Next Work | ${nextWorkTitleCell(state.nextWork)} | Structured continuation title; not operator prose. |
 | Next Work State | ${state.nextWork?.state ?? 'none'} | Controls whether task creation guidance is emitted. |
 | Operator Guidance | ${tableCell(nextWorkGuidance(state))} | Human constraints; never used as a task title. |
-| Validation Baseline | ${tableCell(state.validationBaseline.summary)} | ${tableCell(state.validationBaseline.evidence.join(', ') || 'No evidence ids recorded.')} |
+| Current Trusted Validation Baseline | ${tableCell(state.validationBaseline.summary)} | ${tableCell(state.validationBaseline.evidence.join(', ') || 'No evidence ids recorded.')} |
 
 ### Current Known Problems
 
@@ -409,7 +423,7 @@ function deriveLegacyProjectCurrentState(projectRoot: string, profile: ProjectCu
     nextWork: nextWorkFromLegacyIntent(nextOperatorIntent),
     nextOperatorIntent,
     validationBaseline: {
-      summary: tableValue(projectState, ['Validation Baseline']) ?? handoffValidation(handoff) ?? initial.validationBaseline.summary,
+      summary: tableValue(projectState, ['Current Trusted Validation Baseline', 'Validation Baseline']) ?? handoffValidation(handoff) ?? initial.validationBaseline.summary,
       evidence: []
     }
   };
@@ -436,7 +450,7 @@ function validTaskRef(value: unknown): boolean {
   if (value === null) return true;
   if (!value || typeof value !== 'object') return false;
   const ref = value as Partial<ProjectCurrentTaskRef>;
-  return typeof ref.id === 'string' && /^T-\d{4}$/.test(ref.id) && typeof ref.title === 'string' && ref.title.trim().length > 0;
+  return typeof ref.id === 'string' && /^T-\d{4,}$/.test(ref.id) && typeof ref.title === 'string' && ref.title.trim().length > 0;
 }
 
 function validProblem(value: unknown): boolean {

@@ -42,6 +42,7 @@ describe('project current-state canon', () => {
     expect(fs.readFileSync(path.join(root, 'docs/AGENT_HANDOFF.md'), 'utf8')).toContain(renderHandoffCanonSection(read.state!));
     expect(fs.readFileSync(path.join(root, 'docs/AGENT_HANDOFF.md'), 'utf8')).toContain('| Active Task | None | No active task; use next-work selection guidance. |');
     expect(fs.readFileSync(path.join(root, 'docs/AGENT_HANDOFF.md'), 'utf8')).toContain('| Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |');
+    expect(fs.readFileSync(path.join(root, 'docs/AGENT_HANDOFF.md'), 'utf8')).toContain('| Current Trusted Validation Baseline | No validation baseline has been recorded yet. | No evidence ids recorded. |');
   });
 
   it('renders active task handoff notes based on whether a task is selected', () => {
@@ -116,6 +117,29 @@ describe('project current-state canon', () => {
 
     const plan = planCompletedProjectCurrentStateWrites(root, { id: first.taskId!, title: 'First out-of-order fixture' });
     expect(plan).toEqual({ writes: [], issues: [] });
+  });
+
+  it('orders current-state task refs by numeric suffix beyond four digits', () => {
+    const root = tempRoot();
+    initProject(root, 'governed', { silent: true });
+    const currentPath = path.join(root, PROJECT_CURRENT_STATE_PATH);
+    const current = readProjectCurrentState(root).state!;
+    fs.writeFileSync(
+      currentPath,
+      `${JSON.stringify({
+        ...current,
+        latestCompletedTask: { id: 'T-9999', title: 'Pre-five-digit task' },
+        activeTask: { id: 'T-10000', title: 'Five-digit task' }
+      }, null, 2)}\n`,
+      'utf8'
+    );
+
+    expect(validateSchema('hadara.projectCurrentState.v1', readProjectCurrentState(root).state).ok).toBe(true);
+    expect(completeProjectCurrentTask(root, { id: 'T-10000', title: 'Five-digit task' })).toEqual([]);
+    expect(readProjectCurrentState(root).state?.latestCompletedTask).toEqual({
+      id: 'T-10000',
+      title: 'Five-digit task'
+    });
   });
 
   it('keeps legacy v1 current-state JSON schema-compatible while readers normalize latest basis', () => {

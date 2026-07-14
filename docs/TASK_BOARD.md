@@ -613,3 +613,4 @@
 | T-0610 | 0.4.6 bootstrap next-work cleanup after first close | Done | tasks/T-0610-0-4-6-bootstrap-next-work-cleanup-after-first-close | |
 | T-0611 | 0.4.6 current-state latest semantics and evidence vocabulary cleanup | Done | tasks/T-0611-0-4-6-current-state-latest-semantics-and-evidence-vocabulary-cle | |
 | T-0612 | 0.4.6 current-state contract hardening after latest-basis review | Done | tasks/T-0612-0-4-6-current-state-contract-hardening-after-latest-basis-review | |
+| T-0613 | 0.4.6 current-state validation baseline wording and task-id ordering polish | Done | tasks/T-0613-0-4-6-current-state-validation-baseline-wording-and-task-id-orde | |
