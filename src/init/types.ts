@@ -58,6 +58,7 @@ export interface InitAdoptionAction {
 export interface InitAdoptionProject {
   id: string;
   name: string;
+  purpose?: string;
   currentRelease: string;
 }
 

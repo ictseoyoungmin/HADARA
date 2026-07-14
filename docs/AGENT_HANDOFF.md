@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.5 | Portable project state. |
-| Latest Completed Task | T-0600 0.4.5 release readiness recycle | Most recent completed capsule. |
+| Latest Completed Task | T-0601 Fix 0.4.5 clean-clone test regressions | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
 | Next Work | 0.4.5 operator publish and installed-package recycle | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | Commit T-0600, then run the operator-controlled 0.4.5 npm/GitHub publish flow from a clean ext4 clone and follow with installed-package recycle against hadara@0.4.5. | Human constraints; never used as a task title. |
-| Validation Baseline | T-0600 recycled 0.4.5 release readiness from current source after T-0598/T-0599: build, Docker build, docs/init doctor, installed-candidate dogfood recycle, package-smoke regression, package smoke, and strict release gate all passed. | ev:T-0600:91d4e74557ff4b69b7148f37, ev:T-0600:e54a559333a9420fb59138f7, ev:T-0600:76d390dc31cb49d097da4169, ev:T-0600:16464638954d4ed0b7e80a06, ev:T-0600:5ce736f726224041853a063e |
+| Operator Guidance | Commit T-0601, then run the operator-controlled 0.4.5 npm/GitHub publish flow from a clean ext4 clone and follow with installed-package recycle against hadara@0.4.5. | Human constraints; never used as a task title. |
+| Validation Baseline | T-0601 fixed the post-T-0600 clean-clone test regressions and Docker validation passed: build, focused clean-clone regressions, and full 153-file/1096-test suite. | ev:T-0601:5b2a2ce79b1e4da992bee548, ev:T-0601:fed96a7bc69f41c4bc76f889, ev:T-0601:d294bf75d06e47e89ed0fdfb, ev:T-0601:8907aba9189441969d45d6c5 |
 
 ### Current Known Problems
 

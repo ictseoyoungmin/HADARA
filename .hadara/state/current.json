@@ -1,20 +1,20 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 104,
+  "rev": 106,
   "profile": "governed",
   "currentRelease": "0.4.5",
   "latestCompletedTask": {
-    "id": "T-0600",
-    "title": "0.4.5 release readiness recycle"
+    "id": "T-0601",
+    "title": "Fix 0.4.5 clean-clone test regressions"
   },
   "activeTask": null,
   "nextWork": {
     "title": "0.4.5 operator publish and installed-package recycle",
     "state": "candidate",
-    "operatorGuidance": "Commit T-0600, then run the operator-controlled 0.4.5 npm/GitHub publish flow from a clean ext4 clone and follow with installed-package recycle against hadara@0.4.5.",
+    "operatorGuidance": "Commit T-0601, then run the operator-controlled 0.4.5 npm/GitHub publish flow from a clean ext4 clone and follow with installed-package recycle against hadara@0.4.5.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Commit T-0600, publish hadara@0.4.5 from a clean clone, then run post-publish installed-package recycle.",
+  "nextOperatorIntent": "Commit T-0601, publish hadara@0.4.5 from a clean clone, then run post-publish installed-package recycle.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
@@ -38,13 +38,12 @@
     }
   ],
   "validationBaseline": {
-    "summary": "T-0600 recycled 0.4.5 release readiness from current source after T-0598/T-0599: build, Docker build, docs/init doctor, installed-candidate dogfood recycle, package-smoke regression, package smoke, and strict release gate all passed.",
+    "summary": "T-0601 fixed the post-T-0600 clean-clone test regressions and Docker validation passed: build, focused clean-clone regressions, and full 153-file/1096-test suite.",
     "evidence": [
-      "ev:T-0600:91d4e74557ff4b69b7148f37",
-      "ev:T-0600:e54a559333a9420fb59138f7",
-      "ev:T-0600:76d390dc31cb49d097da4169",
-      "ev:T-0600:16464638954d4ed0b7e80a06",
-      "ev:T-0600:5ce736f726224041853a063e"
+      "ev:T-0601:5b2a2ce79b1e4da992bee548",
+      "ev:T-0601:fed96a7bc69f41c4bc76f889",
+      "ev:T-0601:d294bf75d06e47e89ed0fdfb",
+      "ev:T-0601:8907aba9189441969d45d6c5"
     ]
   }
 }

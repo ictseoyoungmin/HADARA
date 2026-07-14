@@ -398,18 +398,34 @@ function classifyRepository(projectRoot: string, signals: InitAdoptionSignal[], 
     return 'hadara-partial';
   }
   if (hadaraDir?.type !== 'missing' || registrySignal?.type === 'file' || currentStateSignal?.type === 'file') return 'hadara-partial';
-  const hasProjectSignals = signals.some((signal) =>
-    signal.type !== 'missing' && (
-      signal.kind === 'manifest' ||
-      signal.kind === 'source-root' ||
-      signal.kind === 'root-entry' ||
-      signal.kind === 'agent-entry' ||
-      signal.kind === 'ignore-rules' ||
-      signal.kind === 'hadara-target-doc' ||
-      signal.kind === 'task-area'
-    )
-  );
+  const hasProjectSignals = signals.some((signal) => signalMeansBrownfield(projectRoot, signal));
   return hasProjectSignals ? 'brownfield' : 'greenfield';
+}
+
+function signalMeansBrownfield(projectRoot: string, signal: InitAdoptionSignal): boolean {
+  if (signal.type === 'missing') return false;
+  if (signal.kind === 'task-area') return directoryHasEntries(projectRoot, signal.path);
+  if (signal.kind === 'root-entry' && (signal.path === 'docs' || signal.path === 'tasks')) {
+    return directoryHasEntries(projectRoot, signal.path);
+  }
+  return (
+    signal.kind === 'manifest' ||
+    signal.kind === 'source-root' ||
+    signal.kind === 'root-entry' ||
+    signal.kind === 'agent-entry' ||
+    signal.kind === 'ignore-rules' ||
+    signal.kind === 'hadara-target-doc'
+  );
+}
+
+function directoryHasEntries(projectRoot: string, relativePath: string): boolean {
+  try {
+    const absolutePath = path.join(projectRoot, relativePath);
+    const stat = fs.lstatSync(absolutePath);
+    return stat.isDirectory() && fs.readdirSync(absolutePath).some((entry) => !MEANINGFUL_ROOT_ENTRY_IGNORES.has(entry));
+  } catch {
+    return false;
+  }
 }
 
 function planActions(signals: InitAdoptionSignal[], repositoryState: InitRepositoryState, profile: InitProfile): InitAdoptionAction[] {
@@ -495,9 +511,10 @@ function applyBrownfieldAdoption(
 
 function createBrownfieldGeneratedFiles(profile: InitProfile, project: InitAdoptionProject, planHash: string): Map<string, string> {
   const state = createBrownfieldCurrentState(profile, project);
-  const files = new Map(createGeneratedScaffoldFiles(profile, { name: project.name }).map((file) => [file.path, file.content]));
+  const metadata = { name: project.name, purpose: project.purpose };
+  const files = new Map(createGeneratedScaffoldFiles(profile, metadata).map((file) => [file.path, file.content]));
   files.set(PROJECT_CURRENT_STATE_PATH, serializeProjectCurrentState(state));
-  files.set('docs/PROJECT_STATE.md', createProjectStateDoc(profile, state, { name: project.name }));
+  files.set('docs/PROJECT_STATE.md', createProjectStateDoc(profile, state, metadata));
   files.set('docs/AGENT_HANDOFF.md', createAgentHandoffDoc(state));
   files.set('.hadara/scaffold.json', createBrownfieldScaffoldJson(profile, project, planHash));
   return files;
@@ -638,7 +655,7 @@ Before starting work:
 `
     };
   }
-  if (relativePath === 'docs/PROJECT_STATE.md') return { id: 'current-state-canon', metadata: metadata('current-state-canon', 'current-state.projection'), body: managedBody(generated.get(relativePath) ?? createProjectStateDoc(profile, createBrownfieldCurrentState(profile, project), { name: project.name }), 'current-state-canon') };
+  if (relativePath === 'docs/PROJECT_STATE.md') return { id: 'current-state-canon', metadata: metadata('current-state-canon', 'current-state.projection'), body: managedBody(generated.get(relativePath) ?? createProjectStateDoc(profile, createBrownfieldCurrentState(profile, project), { name: project.name, purpose: project.purpose }), 'current-state-canon') };
   if (relativePath === 'docs/AGENT_HANDOFF.md') return { id: 'current-state-canon', metadata: metadata('current-state-canon', 'current-state.projection'), body: managedBody(generated.get(relativePath) ?? createAgentHandoffDoc(createBrownfieldCurrentState(profile, project)), 'current-state-canon') };
   if (relativePath === 'docs/TASK_BOARD.md') return {
     id: 'task-board',
@@ -743,10 +760,12 @@ function inferProject(projectRoot: string): InitAdoptionProject {
   const packageJson = readJsonObject(path.join(projectRoot, 'package.json'));
   const directoryName = path.basename(path.resolve(projectRoot));
   const packageName = typeof packageJson?.name === 'string' && packageJson.name.trim() ? packageJson.name.trim() : undefined;
+  const packageDescription = typeof packageJson?.description === 'string' && packageJson.description.trim() ? packageJson.description.trim() : undefined;
   const version = typeof packageJson?.version === 'string' && packageJson.version.trim() ? packageJson.version.trim() : 'unversioned';
   return {
     id: slug(packageName ?? directoryName),
     name: packageName ?? directoryName,
+    purpose: packageDescription,
     currentRelease: version
   };
 }

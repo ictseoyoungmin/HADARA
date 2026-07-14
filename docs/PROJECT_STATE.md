@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.5 |
-| Latest Completed Task | T-0600 0.4.5 release readiness recycle |
+| Latest Completed Task | T-0601 Fix 0.4.5 clean-clone test regressions |
 | Active Task | None |
 | Next Work | 0.4.5 operator publish and installed-package recycle |
 | Next Work State | candidate |
-| Operator Guidance | Commit T-0600, then run the operator-controlled 0.4.5 npm/GitHub publish flow from a clean ext4 clone and follow with installed-package recycle against hadara@0.4.5. |
-| Validation Baseline | T-0600 recycled 0.4.5 release readiness from current source after T-0598/T-0599: build, Docker build, docs/init doctor, installed-candidate dogfood recycle, package-smoke regression, package smoke, and strict release gate all passed. |
+| Operator Guidance | Commit T-0601, then run the operator-controlled 0.4.5 npm/GitHub publish flow from a clean ext4 clone and follow with installed-package recycle against hadara@0.4.5. |
+| Validation Baseline | T-0601 fixed the post-T-0600 clean-clone test regressions and Docker validation passed: build, focused clean-clone regressions, and full 153-file/1096-test suite. |
 
 ### Current Known Problems
 
@@ -43,7 +43,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.5 source readiness is current after T-0598 closed brownfield adoption safety gaps, T-0599 passed installed-candidate dogfood across multiple brownfield project shapes, and T-0600 recycled build, docs/init, package smoke, installed-candidate dogfood, and release gate evidence. The next step is operator-controlled npm/GitHub publication followed by installed-package recycle against `hadara@0.4.5`.
+v0.4.5 source readiness is current after T-0598 closed brownfield adoption safety gaps, T-0599 passed installed-candidate dogfood across multiple brownfield project shapes, T-0600 recycled release readiness, and T-0601 fixed the clean-clone test regressions found before publish. The next step is operator-controlled npm/GitHub publication followed by installed-package recycle against `hadara@0.4.5`.
 
 | Stage | State | Purpose |
 |---|---|---|

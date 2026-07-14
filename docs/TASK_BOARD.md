@@ -601,3 +601,4 @@
 | T-0598 | 0.4.5 brownfield adoption safety gap closure | Done | tasks/T-0598-0-4-5-brownfield-adoption-safety-gap-closure | |
 | T-0599 | 0.4.5 installed-candidate multi-shape brownfield dogfood | Done | tasks/T-0599-0-4-5-installed-candidate-multi-shape-brownfield-dogfood | |
 | T-0600 | 0.4.5 release readiness recycle | Done | tasks/T-0600-0-4-5-release-readiness-recycle | |
+| T-0601 | Fix 0.4.5 clean-clone test regressions | Done | tasks/T-0601-fix-0-4-5-clean-clone-test-regressions | |

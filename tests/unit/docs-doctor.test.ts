@@ -96,7 +96,9 @@ describe('Phase 7.3 docs doctor', () => {
       JSON.stringify({ name: 'checkout-pricing', description: 'Checkout pricing rules for order totals.' }),
       'utf8'
     );
-    initProject(root, 'basic', { silent: true });
+    const plan = initProject(root, 'basic', { silent: true });
+    if (!('planHash' in plan)) throw new Error('Expected package.json fixture to use brownfield adoption.');
+    initProject(root, 'basic', { silent: true, adopt: true, execute: true, planHash: plan.planHash });
     fs.appendFileSync(
       path.join(root, 'docs', 'TASK_BOARD.md'),
       '\n| T-0001 | First finished task | Done | tasks/T-0001-first-finished-task | |\n',

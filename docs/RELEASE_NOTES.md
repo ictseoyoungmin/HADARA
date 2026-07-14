@@ -25,6 +25,7 @@ Boundaries:
 - T-0598 closes reviewer release blockers in brownfield adoption safety: explicit `--adopt`, partial-state fail-closed behavior, root-entry detection, symlink/type/marker/owner/task-collision blockers, project-authored core-doc ownership, and dynamic scaffold `createdWith`.
 - T-0599 validates the installed candidate across TypeScript service, Python/data, and governed web/monorepo brownfield fixtures from init through baseline capsule close.
 - T-0600 recycles release readiness from current source, refreshes package-smoke evidence, fixes package-smoke empty-stdout fallback handling, and refreshes the GitHub Release note artifact.
+- T-0601 fixes clean-clone test regressions found after T-0600 by keeping empty scaffold parent directories greenfield-safe and propagating `package.json` description into adopted brownfield Project State metadata.
 - The 0.4.5 source-preparation line performs no npm publish, GitHub Release publication, Docker image push, PyPI publish, installer execution, token loading, or post-publish installed-package recycle.
 - The intended npm dist-tag is `latest`; `hadara@0.4.4` remains the published stable line until the operator runs the approval-gated publish helper.
 - Post-publish installed-package recycle for `hadara@latest` expected `0.4.5` remains a separate follow-up capsule after npm/GitHub publication.
