@@ -8,8 +8,8 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.5 | Portable project state. |
-| Latest Completed Task | T-0606 0.4.6 Antigravity delegated onboarding dogfood | Most recent completed capsule. |
-| Active Task | None | Resume this capsule first. |
+| Latest Completed Task | T-0608 0.4.6 delegated onboarding UX hardening | Most recent completed capsule. |
+| Active Task | None | No active task; use next-work selection guidance. |
 | Next Work | 0.4.6 first-user onboarding and brownfield quickstart | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
 | Operator Guidance | T-0604/T-0605 close the small residual trust and evidence-category friction gaps; next high-value scope is first-user onboarding and brownfield quickstart polish without expanding the command surface. | Human constraints; never used as a task title. |

@@ -200,6 +200,34 @@ describe('Harness Task Capsule validation', () => {
     expect(result.issues).toEqual([]);
   });
 
+  it('accepts common source role aliases while keeping canonical vocabulary stable', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Source role aliases');
+    const taskPath = path.join(task.dir, 'TASK.md');
+    fs.writeFileSync(
+      taskPath,
+      fs
+        .readFileSync(taskPath, 'utf8')
+        .replace(
+          '| TBD | reference | active | TBD |',
+          [
+            '| package.json | project manifest | active | Manifest metadata. |',
+            '| index.js | implementation target | active | Main code target. |',
+            '| test.js | validation target | active | Test target. |',
+            '| docs/HADARA_WORKFLOW.md | workflow constraint | active | Workflow constraint. |',
+            '| User request | task driver | active | User-provided direction. |'
+          ].join('\n')
+        ),
+      'utf8'
+    );
+
+    const result = validateTaskCapsule(root, task.id, { level: 'draft' });
+
+    expect(result.ok).toBe(true);
+    expect(result.issues).toEqual([]);
+    expect(SOURCE_DOCUMENT_ROLE_TOKENS).toEqual(['implementation-source', 'reference', 'constraint', 'decision', 'background']);
+  });
+
   it('accepts stable Change Summary areas at draft level', () => {
     const root = tempProject();
     const task = createTaskCapsule(root, 'Change areas');

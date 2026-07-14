@@ -427,7 +427,7 @@ describe('task finalize --auto (FD-010)', () => {
       taskPath,
       fs
         .readFileSync(taskPath, 'utf8')
-        .replace('| TBD | reference | active | TBD |', '| docs/TASK_BOARD.md | implementation | active | Invalid role fixture. |'),
+        .replace('| TBD | reference | active | TBD |', '| docs/TASK_BOARD.md | constrains | active | Invalid role fixture. |'),
       'utf8'
     );
     fs.writeFileSync(

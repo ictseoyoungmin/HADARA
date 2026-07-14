@@ -37,6 +37,20 @@ describe('project current-state canon', () => {
     expect(validateSchema('hadara.projectCurrentState.v1', read.state).ok).toBe(true);
     expect(fs.readFileSync(path.join(root, 'docs/PROJECT_STATE.md'), 'utf8')).toContain(renderProjectStateCanonSection(read.state!));
     expect(fs.readFileSync(path.join(root, 'docs/AGENT_HANDOFF.md'), 'utf8')).toContain(renderHandoffCanonSection(read.state!));
+    expect(fs.readFileSync(path.join(root, 'docs/AGENT_HANDOFF.md'), 'utf8')).toContain('| Active Task | None | No active task; use next-work selection guidance. |');
+  });
+
+  it('renders active task handoff notes based on whether a task is selected', () => {
+    const root = tempRoot();
+    initProject(root, 'governed', { silent: true });
+
+    const initial = readProjectCurrentState(root).state!;
+    expect(renderHandoffCanonSection(initial)).toContain('| Active Task | None | No active task; use next-work selection guidance. |');
+
+    const created = createTaskCreateReport(root, 'Active handoff note fixture');
+    const active = readProjectCurrentState(root).state!;
+    expect(active.activeTask).toEqual({ id: created.taskId, title: 'Active handoff note fixture' });
+    expect(renderHandoffCanonSection(active)).toContain(`| Active Task | ${created.taskId} Active handoff note fixture | Resume this capsule first. |`);
   });
 
   it('synchronizes active and latest task facts through create and finish without a new command', () => {

@@ -218,7 +218,7 @@ This section is projected from \`${PROJECT_CURRENT_STATE_PATH}\` so a new sessio
 |---|---|---|
 | Current Release | ${tableCell(state.currentRelease)} | Portable project state. |
 | Latest Completed Task | ${taskCell(state.latestCompletedTask)} | Most recent completed capsule. |
-| Active Task | ${taskCell(state.activeTask)} | Resume this capsule first. |
+| Active Task | ${taskCell(state.activeTask)} | ${activeTaskNote(state)} |
 | Next Work | ${nextWorkTitleCell(state.nextWork)} | Structured continuation title; not operator prose. |
 | Next Work State | ${state.nextWork?.state ?? 'none'} | Controls whether task creation guidance is emitted. |
 | Operator Guidance | ${tableCell(nextWorkGuidance(state))} | Human constraints; never used as a task title. |
@@ -228,6 +228,13 @@ This section is projected from \`${PROJECT_CURRENT_STATE_PATH}\` so a new sessio
 
 ${knownProblemsTable(state.currentKnownProblems)}
 `);
+}
+
+function activeTaskNote(state: ProjectCurrentState): string {
+  if (state.activeTask) return 'Resume this capsule first.';
+  if (state.nextWork?.createCommandAllowed) return 'No active task; use next-work selection guidance.';
+  if (state.nextWork) return 'No active task; review next-work operator guidance.';
+  return 'No active task is selected.';
 }
 
 export function projectCurrentStateDocument(content: string, kind: 'project-state' | 'handoff', state: ProjectCurrentState): string {

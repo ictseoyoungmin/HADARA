@@ -21,6 +21,20 @@ export interface VocabularyDomain {
 export const TASK_STATUS_TOKENS = ['Draft', 'In Progress', 'Blocked', 'Done', 'Partial', 'Superseded', 'Archived'] as const;
 export const PLAN_STATUS_TOKENS = ['Pending', 'In Progress', 'Done', 'Blocked', 'Skipped'] as const;
 export const SOURCE_DOCUMENT_ROLE_TOKENS = ['implementation-source', 'reference', 'constraint', 'decision', 'background'] as const;
+export const SOURCE_DOCUMENT_ROLE_ALIASES: Readonly<Record<string, typeof SOURCE_DOCUMENT_ROLE_TOKENS[number]>> = {
+  'implementation target': 'implementation-source',
+  'implementation source': 'implementation-source',
+  implementation: 'implementation-source',
+  'source file': 'implementation-source',
+  'validation target': 'implementation-source',
+  'test target': 'implementation-source',
+  'project manifest': 'reference',
+  manifest: 'reference',
+  'workflow constraint': 'constraint',
+  'task driver': 'background',
+  request: 'background',
+  'user request': 'background'
+};
 export const SOURCE_DOCUMENT_AUTHORITY_TOKENS = ['exploratory', 'proposed', 'approved', 'normative', 'implementation-source', 'reference-only', 'historical'] as const;
 export const SOURCE_DOCUMENT_STATUS_TOKENS = ['active', 'draft', 'review', 'approved', 'implementing', 'implemented', 'superseded', 'drift-risk', 'archived'] as const;
 export const ACCEPTANCE_REQUIRED_TOKENS = ['Yes', 'No'] as const;
@@ -71,6 +85,12 @@ export const VOCABULARY_DOMAINS: readonly VocabularyDomain[] = [
 
 export function findVocabularyDomain(domain: string): VocabularyDomain | undefined {
   return VOCABULARY_DOMAINS.find((entry) => entry.domain === domain);
+}
+
+export function normalizeVocabularyToken(domain: string, value: string): string {
+  const trimmed = value.trim();
+  if (domain === 'task.source.role') return SOURCE_DOCUMENT_ROLE_ALIASES[trimmed.toLowerCase()] ?? trimmed;
+  return trimmed;
 }
 
 export interface VocabularyIssue {

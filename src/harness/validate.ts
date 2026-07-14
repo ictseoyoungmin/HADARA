@@ -571,7 +571,8 @@ function checkToken(
 ): void {
   const domain = vocab.findVocabularyDomain(domainId);
   const allowed = domain?.allowed ?? [];
-  if (allowed.includes(value)) return;
+  const normalized = vocab.normalizeVocabularyToken(domainId, value);
+  if (allowed.includes(normalized)) return;
   const issue = taskTableIssue(code, `${heading} uses invalid token "${value}". Allowed: ${allowed.join(', ')}.`, relativePath, heading);
   if (domain) issue.field = domain.field;
   issue.received = value;

@@ -1,11 +1,11 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 119,
+  "rev": 122,
   "profile": "governed",
   "currentRelease": "0.4.5",
   "latestCompletedTask": {
-    "id": "T-0606",
-    "title": "0.4.6 Antigravity delegated onboarding dogfood"
+    "id": "T-0608",
+    "title": "0.4.6 delegated onboarding UX hardening"
   },
   "activeTask": null,
   "nextWork": {
