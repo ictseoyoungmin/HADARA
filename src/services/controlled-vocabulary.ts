@@ -49,6 +49,10 @@ export const EVIDENCE_KIND_TOKENS = ['test-log', 'command-log', 'diff-summary', 
 export const EVIDENCE_RESULT_TOKENS = ['passed', 'failed', 'blocked', 'unknown'] as const;
 export const EVIDENCE_VISIBILITY_TOKENS = ['public', 'private'] as const;
 export const EVIDENCE_CATEGORY_TOKENS = ['validation', 'implementation', 'release', 'security', 'policy', 'operation', 'decision', 'handoff', 'audit', 'note', 'observation'] as const;
+export const EVIDENCE_CATEGORY_ALIASES: Readonly<Record<string, typeof EVIDENCE_CATEGORY_TOKENS[number]>> = {
+  test: 'validation',
+  tests: 'validation'
+};
 export const EVIDENCE_OUTCOME_TOKENS = ['passed', 'failed', 'blocked', 'unknown', 'recorded', 'not-applicable'] as const;
 export const SLICE_STATUS_TOKENS = ['not-started', 'in-progress', 'done', 'deferred'] as const;
 export const PROJECT_NEXT_WORK_STATE_TOKENS = ['candidate', 'active', 'blocked', 'waiting-for-operator', 'none'] as const;

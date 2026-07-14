@@ -1,11 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 127,
+  "rev": 129,
   "profile": "governed",
   "currentRelease": "0.4.5",
+  "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0610",
-    "title": "0.4.6 bootstrap next-work cleanup after first close"
+    "id": "T-0611",
+    "title": "0.4.6 current-state latest semantics and evidence vocabulary cleanup"
   },
   "activeTask": null,
   "nextWork": {

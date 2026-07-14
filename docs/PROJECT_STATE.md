@@ -8,7 +8,8 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.5 |
-| Latest Completed Task | T-0610 0.4.6 bootstrap next-work cleanup after first close |
+| Latest Completed Task | T-0611 0.4.6 current-state latest semantics and evidence vocabulary cleanup |
+| Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | 0.4.6 first-user onboarding and brownfield quickstart |
 | Next Work State | candidate |

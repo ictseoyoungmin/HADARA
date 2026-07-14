@@ -542,7 +542,15 @@ function compareLatestTask(
   issues: StateProjectionIssue[]
 ): void {
   if (!actual || !expected || actual === expected) return;
-  issues.push(warning(code, sourcePath, `${sourcePath} points to latest completed task ${actual}, but the projected latest Done task is ${expected}.`, `Update ${sourcePath} latest completed task state to ${expected} or correct the Done task source.`, undefined, expected, actual));
+  issues.push(warning(
+    code,
+    sourcePath,
+    `${sourcePath} points to latest completed task ${actual}, but the projected highest Done task id is ${expected}.`,
+    `Update ${sourcePath} latest completed task state to ${expected} or correct the Done task source. Close timestamp chronology is not tracked by this projection.`,
+    undefined,
+    expected,
+    actual
+  ));
 }
 
 function checkCurrentStateProjectionDrift(

@@ -31,6 +31,7 @@ describe('project current-state canon', () => {
       schemaVersion: 'hadara.projectCurrentState.v1',
       rev: 1,
       profile: 'governed',
+      latestCompletedTaskBasis: 'highest-done-task-id',
       latestCompletedTask: null,
       activeTask: null
     });
@@ -38,6 +39,7 @@ describe('project current-state canon', () => {
     expect(fs.readFileSync(path.join(root, 'docs/PROJECT_STATE.md'), 'utf8')).toContain(renderProjectStateCanonSection(read.state!));
     expect(fs.readFileSync(path.join(root, 'docs/AGENT_HANDOFF.md'), 'utf8')).toContain(renderHandoffCanonSection(read.state!));
     expect(fs.readFileSync(path.join(root, 'docs/AGENT_HANDOFF.md'), 'utf8')).toContain('| Active Task | None | No active task; use next-work selection guidance. |');
+    expect(fs.readFileSync(path.join(root, 'docs/AGENT_HANDOFF.md'), 'utf8')).toContain('| Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |');
   });
 
   it('renders active task handoff notes based on whether a task is selected', () => {

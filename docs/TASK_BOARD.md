@@ -611,3 +611,4 @@
 | T-0608 | 0.4.6 delegated onboarding UX hardening | Done | tasks/T-0608-0-4-6-delegated-onboarding-ux-hardening | |
 | T-0609 | 0.4.6 validation execution capture hardening | Done | tasks/T-0609-0-4-6-validation-execution-capture-hardening | |
 | T-0610 | 0.4.6 bootstrap next-work cleanup after first close | Done | tasks/T-0610-0-4-6-bootstrap-next-work-cleanup-after-first-close | |
+| T-0611 | 0.4.6 current-state latest semantics and evidence vocabulary cleanup | Done | tasks/T-0611-0-4-6-current-state-latest-semantics-and-evidence-vocabulary-cle | |

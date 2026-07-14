@@ -4,12 +4,16 @@
   "x-hadara-schema-id": "hadara.projectCurrentState.v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "rev", "profile", "currentRelease", "latestCompletedTask", "activeTask", "nextWork", "nextOperatorIntent", "currentKnownProblems", "validationBaseline"],
+  "required": ["schemaVersion", "rev", "profile", "currentRelease", "latestCompletedTaskBasis", "latestCompletedTask", "activeTask", "nextWork", "nextOperatorIntent", "currentKnownProblems", "validationBaseline"],
   "properties": {
     "schemaVersion": { "const": "hadara.projectCurrentState.v1" },
     "rev": { "type": "integer", "minimum": 1 },
     "profile": { "enum": ["basic", "standard", "governed"] },
     "currentRelease": { "type": "string", "minLength": 1 },
+    "latestCompletedTaskBasis": {
+      "const": "highest-done-task-id",
+      "description": "latestCompletedTask is the highest Task Board Done task id. It is not close timestamp chronology."
+    },
     "latestCompletedTask": { "$ref": "#/$defs/taskRefOrNull" },
     "activeTask": { "$ref": "#/$defs/taskRefOrNull" },
     "nextWork": {

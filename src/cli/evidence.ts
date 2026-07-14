@@ -14,12 +14,7 @@ import { createEvidenceListReport, EvidenceListRecord } from '../services/eviden
 import { createEvidenceMigrationPreviewReport } from '../services/evidence-migration';
 import { getFlag, getIntegerOption, getRequiredStringOption, getStringOption } from './args';
 import { createLegacyMutationBlockedReport, printLegacyMutationBlockedReport } from './legacy-boundary';
-
-const EVIDENCE_CATEGORY_TOKENS = ['validation', 'implementation', 'release', 'security', 'policy', 'operation', 'decision', 'handoff', 'audit', 'note', 'observation'] as const;
-const EVIDENCE_CATEGORY_ALIASES = {
-  test: 'validation',
-  tests: 'validation'
-} as const satisfies Record<string, EvidenceCategory>;
+import { EVIDENCE_CATEGORY_ALIASES, EVIDENCE_CATEGORY_TOKENS } from '../services/controlled-vocabulary';
 
 type EvidenceCategoryAlias = {
   input: string;
@@ -313,7 +308,7 @@ function parseOptionalEvidenceCategoryInput(value: string | undefined): {
 } {
   if (!value) return {};
   if ((EVIDENCE_CATEGORY_TOKENS as readonly string[]).includes(value)) return { category: value as EvidenceCategory };
-  const normalized = EVIDENCE_CATEGORY_ALIASES[value as keyof typeof EVIDENCE_CATEGORY_ALIASES];
+  const normalized = EVIDENCE_CATEGORY_ALIASES[value];
   if (normalized) return { category: normalized, alias: { input: value, normalized } };
   return {
     issue: {
@@ -321,8 +316,8 @@ function parseOptionalEvidenceCategoryInput(value: string | undefined): {
       code: 'EVIDENCE_CATEGORY_UNSUPPORTED',
       message: `unsupported evidence category: ${value}`,
       inputCategory: value,
-      allowedCategoryTokens: [...EVIDENCE_CATEGORY_TOKENS],
-      aliases: { ...EVIDENCE_CATEGORY_ALIASES },
+      allowedCategoryTokens: [...EVIDENCE_CATEGORY_TOKENS] as EvidenceCategory[],
+      aliases: { ...EVIDENCE_CATEGORY_ALIASES } as Record<string, EvidenceCategory>,
       hint: 'Run: hadara schema --domain evidence.category --json'
     }
   };

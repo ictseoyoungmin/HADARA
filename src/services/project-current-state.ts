@@ -33,6 +33,7 @@ export interface ProjectCurrentState {
   rev: number;
   profile: 'basic' | 'standard' | 'governed';
   currentRelease: string;
+  latestCompletedTaskBasis: 'highest-done-task-id';
   latestCompletedTask: ProjectCurrentTaskRef | null;
   activeTask: ProjectCurrentTaskRef | null;
   nextWork: ProjectNextWork | null;
@@ -81,6 +82,7 @@ export function createInitialProjectCurrentState(profile: ProjectCurrentState['p
     rev: 1,
     profile,
     currentRelease: packageJson.version,
+    latestCompletedTaskBasis: 'highest-done-task-id',
     latestCompletedTask: null,
     activeTask: null,
     nextWork: {
@@ -99,7 +101,23 @@ export function createInitialProjectCurrentState(profile: ProjectCurrentState['p
 }
 
 export function serializeProjectCurrentState(state: ProjectCurrentState): string {
-  return `${JSON.stringify(state, null, 2)}\n`;
+  return `${JSON.stringify(canonicalProjectCurrentState(state), null, 2)}\n`;
+}
+
+function canonicalProjectCurrentState(state: ProjectCurrentState): ProjectCurrentState {
+  return {
+    schemaVersion: state.schemaVersion,
+    rev: state.rev,
+    profile: state.profile,
+    currentRelease: state.currentRelease,
+    latestCompletedTaskBasis: state.latestCompletedTaskBasis,
+    latestCompletedTask: state.latestCompletedTask,
+    activeTask: state.activeTask,
+    nextWork: state.nextWork,
+    nextOperatorIntent: state.nextOperatorIntent,
+    currentKnownProblems: state.currentKnownProblems,
+    validationBaseline: state.validationBaseline
+  };
 }
 
 export function readProjectCurrentState(projectRoot: string): ProjectCurrentStateRead {
@@ -131,10 +149,12 @@ function normalizeProjectCurrentState(value: unknown): unknown {
   if (!value || typeof value !== 'object') return value;
   const state = value as Partial<ProjectCurrentState>;
   if (state.schemaVersion !== 'hadara.projectCurrentState.v1') return value;
-  if (state.nextWork !== undefined || typeof state.nextOperatorIntent !== 'string') return value;
   return {
     ...state,
-    nextWork: nextWorkFromLegacyIntent(state.nextOperatorIntent)
+    latestCompletedTaskBasis: state.latestCompletedTaskBasis ?? 'highest-done-task-id',
+    ...(state.nextWork === undefined && typeof state.nextOperatorIntent === 'string'
+      ? { nextWork: nextWorkFromLegacyIntent(state.nextOperatorIntent) }
+      : {})
   };
 }
 
@@ -169,8 +189,8 @@ export function inspectProjectCurrentStateSemantics(projectRoot: string): Projec
       severity: 'warning',
       code: 'STATE_CURRENT_CANON_LATEST_MISMATCH',
       path: PROJECT_CURRENT_STATE_PATH,
-      message: `${PROJECT_CURRENT_STATE_PATH} latest completed task is ${read.state.latestCompletedTask?.id ?? 'none'}, but Task Board latest Done is ${latestDone?.id ?? 'none'}.`,
-      suggestion: 'Align the structured latestCompletedTask with the Task Board Done state.'
+      message: `${PROJECT_CURRENT_STATE_PATH} latestCompletedTask is ${read.state.latestCompletedTask?.id ?? 'none'}, but latestCompletedTaskBasis=highest-done-task-id expects Task Board highest Done id ${latestDone?.id ?? 'none'}.`,
+      suggestion: 'Align latestCompletedTask with the highest Done task id in the Task Board. Out-of-order close chronology is not tracked in this field.'
     });
   }
   if (read.state.activeTask) {
@@ -197,6 +217,7 @@ This section is projected from \`${PROJECT_CURRENT_STATE_PATH}\`. Edit the struc
 |---|---|
 | Current Release | ${tableCell(state.currentRelease)} |
 | Latest Completed Task | ${taskCell(state.latestCompletedTask)} |
+| Latest Completed Task Basis | ${state.latestCompletedTaskBasis} |
 | Active Task | ${taskCell(state.activeTask)} |
 | Next Work | ${nextWorkTitleCell(state.nextWork)} |
 | Next Work State | ${state.nextWork?.state ?? 'none'} |
@@ -217,7 +238,8 @@ This section is projected from \`${PROJECT_CURRENT_STATE_PATH}\` so a new sessio
 | Area | State | Notes |
 |---|---|---|
 | Current Release | ${tableCell(state.currentRelease)} | Portable project state. |
-| Latest Completed Task | ${taskCell(state.latestCompletedTask)} | Most recent completed capsule. |
+| Latest Completed Task | ${taskCell(state.latestCompletedTask)} | Highest Done task id, not close timestamp. |
+| Latest Completed Task Basis | ${state.latestCompletedTaskBasis} | Out-of-order close chronology is not tracked here. |
 | Active Task | ${taskCell(state.activeTask)} | ${activeTaskNote(state)} |
 | Next Work | ${nextWorkTitleCell(state.nextWork)} | Structured continuation title; not operator prose. |
 | Next Work State | ${state.nextWork?.state ?? 'none'} | Controls whether task creation guidance is emitted. |
@@ -392,6 +414,7 @@ function validateProjectCurrentState(value: unknown): ProjectCurrentStateIssue[]
   if (!Number.isInteger(state.rev) || (state.rev ?? 0) < 1) return issue('rev must be a positive integer.');
   if (state.profile !== 'basic' && state.profile !== 'standard' && state.profile !== 'governed') return issue('profile must be basic, standard, or governed.');
   if (typeof state.currentRelease !== 'string' || !state.currentRelease.trim()) return issue('currentRelease must be a non-empty string.');
+  if (state.latestCompletedTaskBasis !== 'highest-done-task-id') return issue('latestCompletedTaskBasis must be highest-done-task-id.');
   if (!validTaskRef(state.latestCompletedTask) || !validTaskRef(state.activeTask)) return issue('Task references must be null or { id: T-XXXX, title }.');
   if (!validNextWork(state.nextWork)) return issue('nextWork must be null or { title, state, operatorGuidance, createCommandAllowed }.');
   if (typeof state.nextOperatorIntent !== 'string' || !state.nextOperatorIntent.trim()) return issue('nextOperatorIntent must be a non-empty string.');
