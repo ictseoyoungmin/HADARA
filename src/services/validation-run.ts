@@ -258,8 +258,7 @@ function spawnSyncWithFileCapture(command: string, args: string[], options: Spaw
         mode: 'file',
         stdoutBytes: Buffer.byteLength(stdout, 'utf8'),
         stderrBytes: Buffer.byteLength(stderr, 'utf8'),
-        fallbackUsed: true,
-        fallbackReason: 'file-backed stdio capture avoids pipe capture loss in delegated tool environments'
+        fallbackUsed: false
       }
     };
   } finally {

@@ -8,13 +8,13 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.5 | Portable project state. |
-| Latest Completed Task | T-0611 0.4.6 current-state latest semantics and evidence vocabulary cleanup | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0612 0.4.6 current-state contract hardening after latest-basis review | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task; use next-work selection guidance. |
 | Next Work | 0.4.6 first-user onboarding and brownfield quickstart | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
 | Operator Guidance | T-0604/T-0605 close the small residual trust and evidence-category friction gaps; next high-value scope is first-user onboarding and brownfield quickstart polish without expanding the command surface. | Human constraints; never used as a task title. |
-| Validation Baseline | T-0605 closed evidence category UX friction and Go module /vN inference polish for the 0.4.6 line: test/tests category aliases persist validation, invalid category errors expose allowed tokens and schema hints, focused tests and host/Docker builds passed. | ev:T-0605:af322c3ca9b74660b779a72c, ev:T-0605:7f55c4f94bd14f8abc1875ce, ev:T-0605:fd5bde394aab4b578533ef98, ev:T-0605:5f11394fd2054660bb82a227, ev:T-0605:1b0fb3e455914aaead83d486 |
+| Validation Baseline | T-0611 validated the current-state latest semantics and evidence vocabulary cleanup with focused tests, TypeScript build, Docker full suite, dist freshness, and post-close serializer-order delta validation. | ev:T-0611:d8394da2a5dd40099d23d53a, ev:T-0611:780770a1aa32481f94af6597, ev:T-0611:c19fcab0e7bb4a01b340f836 |
 
 ### Current Known Problems
 

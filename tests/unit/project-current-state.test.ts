@@ -6,7 +6,9 @@ import { validateSchema } from '../../src/core/schema';
 import { initProject } from '../../src/init/project';
 import { createInitUpgradeReport } from '../../src/init/upgrade';
 import {
+  completeProjectCurrentTask,
   PROJECT_CURRENT_STATE_PATH,
+  planCompletedProjectCurrentStateWrites,
   readProjectCurrentState,
   renderHandoffCanonSection,
   renderProjectStateCanonSection
@@ -89,6 +91,45 @@ describe('project current-state canon', () => {
     expect(completed.latestCompletedTask).toEqual({ id: created.taskId, title: 'Canon lifecycle fixture' });
     expect(completed.activeTask).toBeNull();
     expect(fs.readFileSync(path.join(root, 'docs/PROJECT_STATE.md'), 'utf8')).toContain(`| Latest Completed Task | ${created.taskId} Canon lifecycle fixture |`);
+  });
+
+  it('keeps latestCompletedTask on the highest Done task id when older tasks close later', () => {
+    const root = tempRoot();
+    initProject(root, 'governed', { silent: true });
+
+    const first = createTaskCreateReport(root, 'First out-of-order fixture');
+    const second = createTaskCreateReport(root, 'Second out-of-order fixture');
+
+    expect(completeProjectCurrentTask(root, { id: second.taskId!, title: 'Second out-of-order fixture' })).toEqual([]);
+    expect(readProjectCurrentState(root).state?.latestCompletedTask).toEqual({
+      id: second.taskId,
+      title: 'Second out-of-order fixture'
+    });
+
+    expect(completeProjectCurrentTask(root, { id: first.taskId!, title: 'First out-of-order fixture' })).toEqual([]);
+    const completed = readProjectCurrentState(root).state!;
+    expect(completed.latestCompletedTask).toEqual({
+      id: second.taskId,
+      title: 'Second out-of-order fixture'
+    });
+    expect(completed.activeTask).toBeNull();
+
+    const plan = planCompletedProjectCurrentStateWrites(root, { id: first.taskId!, title: 'First out-of-order fixture' });
+    expect(plan).toEqual({ writes: [], issues: [] });
+  });
+
+  it('keeps legacy v1 current-state JSON schema-compatible while readers normalize latest basis', () => {
+    const root = tempRoot();
+    initProject(root, 'governed', { silent: true });
+    const currentPath = path.join(root, PROJECT_CURRENT_STATE_PATH);
+    const legacy = JSON.parse(fs.readFileSync(currentPath, 'utf8'));
+    delete legacy.latestCompletedTaskBasis;
+    fs.writeFileSync(currentPath, `${JSON.stringify(legacy, null, 2)}\n`, 'utf8');
+
+    expect(validateSchema('hadara.projectCurrentState.v1', legacy).ok).toBe(true);
+    const read = readProjectCurrentState(root);
+    expect(read.issues).toEqual([]);
+    expect(read.state?.latestCompletedTaskBasis).toBe('highest-done-task-id');
   });
 
   it('migrates a legacy project through reviewed init upgrade while preserving unrelated prose', () => {

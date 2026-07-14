@@ -8,13 +8,13 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.5 |
-| Latest Completed Task | T-0611 0.4.6 current-state latest semantics and evidence vocabulary cleanup |
+| Latest Completed Task | T-0612 0.4.6 current-state contract hardening after latest-basis review |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | 0.4.6 first-user onboarding and brownfield quickstart |
 | Next Work State | candidate |
 | Operator Guidance | T-0604/T-0605 close the small residual trust and evidence-category friction gaps; next high-value scope is first-user onboarding and brownfield quickstart polish without expanding the command surface. |
-| Validation Baseline | T-0605 closed evidence category UX friction and Go module /vN inference polish for the 0.4.6 line: test/tests category aliases persist validation, invalid category errors expose allowed tokens and schema hints, focused tests and host/Docker builds passed. |
+| Validation Baseline | T-0611 validated the current-state latest semantics and evidence vocabulary cleanup with focused tests, TypeScript build, Docker full suite, dist freshness, and post-close serializer-order delta validation. |
 
 ### Current Known Problems
 

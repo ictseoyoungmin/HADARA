@@ -612,3 +612,4 @@
 | T-0609 | 0.4.6 validation execution capture hardening | Done | tasks/T-0609-0-4-6-validation-execution-capture-hardening | |
 | T-0610 | 0.4.6 bootstrap next-work cleanup after first close | Done | tasks/T-0610-0-4-6-bootstrap-next-work-cleanup-after-first-close | |
 | T-0611 | 0.4.6 current-state latest semantics and evidence vocabulary cleanup | Done | tasks/T-0611-0-4-6-current-state-latest-semantics-and-evidence-vocabulary-cle | |
+| T-0612 | 0.4.6 current-state contract hardening after latest-basis review | Done | tasks/T-0612-0-4-6-current-state-contract-hardening-after-latest-basis-review | |

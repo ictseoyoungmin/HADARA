@@ -120,6 +120,14 @@ function canonicalProjectCurrentState(state: ProjectCurrentState): ProjectCurren
   };
 }
 
+function highestTaskRef(
+  current: ProjectCurrentTaskRef | null,
+  completed: ProjectCurrentTaskRef
+): ProjectCurrentTaskRef {
+  if (!current) return completed;
+  return current.id.localeCompare(completed.id) >= 0 ? current : completed;
+}
+
 export function readProjectCurrentState(projectRoot: string): ProjectCurrentStateRead {
   const absolutePath = path.join(projectRoot, PROJECT_CURRENT_STATE_PATH);
   if (!fs.existsSync(absolutePath)) return { present: false, state: null, issues: [] };
@@ -306,7 +314,7 @@ export function completeProjectCurrentTask(projectRoot: string, task: ProjectCur
   return mutateProjectCurrentState(projectRoot, (current) => retireBootstrapNextWork({
     ...current,
     rev: current.rev + 1,
-    latestCompletedTask: task,
+    latestCompletedTask: highestTaskRef(current.latestCompletedTask, task),
     activeTask: current.activeTask?.id === task.id ? null : current.activeTask
   }));
 }
@@ -318,13 +326,14 @@ export function planCompletedProjectCurrentStateWrites(projectRoot: string, task
   const read = readProjectCurrentState(projectRoot);
   if (!read.present) return { writes: [], issues: [] };
   if (!read.state) return { writes: [], issues: read.issues };
-  if (read.state.latestCompletedTask?.id === task.id && read.state.activeTask?.id !== task.id && !hasBootstrapNextWork(read.state)) {
+  const latestCompletedTask = highestTaskRef(read.state.latestCompletedTask, task);
+  if (read.state.latestCompletedTask?.id === latestCompletedTask.id && read.state.activeTask?.id !== task.id && !hasBootstrapNextWork(read.state)) {
     return { writes: [], issues: [] };
   }
   const next: ProjectCurrentState = retireBootstrapNextWork({
     ...read.state,
     rev: read.state.rev + 1,
-    latestCompletedTask: task,
+    latestCompletedTask,
     activeTask: read.state.activeTask?.id === task.id ? null : read.state.activeTask
   });
   return { writes: planProjectCurrentStateWrites(projectRoot, next), issues: [] };

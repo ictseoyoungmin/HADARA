@@ -56,7 +56,7 @@ describe('validation run', () => {
           mode: 'file',
           stdoutBytes: 2,
           stderrBytes: 0,
-          fallbackUsed: true
+          fallbackUsed: false
         }
       },
       taskValidationRow: { mode: 'skipped', updated: false },

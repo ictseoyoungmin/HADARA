@@ -4,7 +4,7 @@
   "x-hadara-schema-id": "hadara.projectCurrentState.v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "rev", "profile", "currentRelease", "latestCompletedTaskBasis", "latestCompletedTask", "activeTask", "nextWork", "nextOperatorIntent", "currentKnownProblems", "validationBaseline"],
+  "required": ["schemaVersion", "rev", "profile", "currentRelease", "latestCompletedTask", "activeTask", "nextWork", "nextOperatorIntent", "currentKnownProblems", "validationBaseline"],
   "properties": {
     "schemaVersion": { "const": "hadara.projectCurrentState.v1" },
     "rev": { "type": "integer", "minimum": 1 },
