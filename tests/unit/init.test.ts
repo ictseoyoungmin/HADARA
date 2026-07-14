@@ -266,6 +266,48 @@ describe('init profiles', () => {
     expect(exists(root, 'docs/PROJECT_STATE.md')).toBe(false);
   });
 
+  it('infers brownfield project identity and version from common non-npm manifests', () => {
+    const pythonRoot = tempProject();
+    fs.writeFileSync(path.join(pythonRoot, 'pyproject.toml'), [
+      '[project]',
+      'name = "forecast-lab"',
+      'version = "4.5.6"',
+      ''
+    ].join('\n'), 'utf8');
+
+    const pythonReport = initProject(pythonRoot, 'basic');
+    expect(pythonReport.project).toMatchObject({
+      id: 'forecast-lab',
+      name: 'forecast-lab',
+      currentRelease: '4.5.6'
+    });
+
+    const rustRoot = tempProject();
+    fs.writeFileSync(path.join(rustRoot, 'Cargo.toml'), [
+      '[package]',
+      'name = "signal-core"',
+      'version = "0.9.1"',
+      ''
+    ].join('\n'), 'utf8');
+
+    const rustReport = initProject(rustRoot, 'basic');
+    expect(rustReport.project).toMatchObject({
+      id: 'signal-core',
+      name: 'signal-core',
+      currentRelease: '0.9.1'
+    });
+
+    const goRoot = tempProject();
+    fs.writeFileSync(path.join(goRoot, 'go.mod'), 'module github.com/example/edge-router\n\ngo 1.22\n', 'utf8');
+
+    const goReport = initProject(goRoot, 'basic');
+    expect(goReport.project).toMatchObject({
+      id: 'edge-router',
+      name: 'edge-router',
+      currentRelease: 'unversioned'
+    });
+  });
+
   it('classifies existing project docs into patch, registration, and preserve dispositions without writes', () => {
     const root = tempProject();
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
@@ -425,6 +467,31 @@ describe('init profiles', () => {
     expect(report.issues).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: 'INIT_ADOPTION_MANAGED_SECTION_INVALID', path: '.gitignore' })
     ]));
+  });
+
+  it('blocks duplicate .gitignore local-state managed blocks instead of replacing only the first block', () => {
+    const root = tempProject();
+    fs.writeFileSync(path.join(root, 'package.json'), `${JSON.stringify({ name: 'duplicate-marker' }, null, 2)}\n`, 'utf8');
+    fs.writeFileSync(path.join(root, '.gitignore'), [
+      'dist',
+      '# hadara:managed:start local-state',
+      '.hadara/local/',
+      '# hadara:managed:end local-state',
+      '# hadara:managed:start local-state',
+      '.hadara/private/',
+      '# hadara:managed:end local-state',
+      ''
+    ].join('\n'), 'utf8');
+
+    handleInitCommand({ args: ['init', '--profile', 'basic', '--json'], projectRoot: root, jsonOutput: true });
+    const report = jsonLog();
+
+    assertSchema('hadara.init.adoption.v1', report);
+    expect(report.ok).toBe(false);
+    expect(report.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'INIT_ADOPTION_MANAGED_SECTION_DUPLICATE', path: '.gitignore' })
+    ]));
+    expect(read(root, '.gitignore')).toContain('.hadara/private/');
   });
 
   it('blocks foreign owner managed-section collisions', () => {

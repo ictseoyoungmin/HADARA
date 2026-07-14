@@ -1,5 +1,20 @@
 # RELEASE_NOTES
 
+## 0.4.6
+
+Brownfield trust and first-user polish line after stable `0.4.5`.
+
+Highlights:
+
+- Fails closed when brownfield `.gitignore` contains duplicate HADARA `local-state` managed blocks, instead of replacing only the first block and leaving stale duplicates behind.
+- Adds package-smoke fallback observability for environments where installed commands exit 0 but stdout capture is empty. Reports now include warning issues plus step-level `fallbackUsed` and `fallbackReason` metadata.
+- Extends brownfield project identity/version inference beyond `package.json`: `pyproject.toml` and `Cargo.toml` provide name/version when present, while `go.mod` can provide a module-derived project name with `unversioned` release.
+
+Boundaries:
+
+- T-0604 is the first 0.4.6 capsule and addresses residual review findings left after 0.4.5 publication/recycle.
+- Broader first-user onboarding, external validation, and public contract freeze remain separate follow-up scopes.
+
 ## 0.4.5
 
 Stable preparation line for safe brownfield adoption and docs-registry cleanup after `0.4.4`.

@@ -67,6 +67,8 @@ export interface PackageSmokeReport {
     exitCode?: number | null;
     elapsedMs?: number;
     summary: string;
+    fallbackUsed?: boolean;
+    fallbackReason?: string;
   }>;
   artifacts: Array<{
     kind: 'summary' | 'command-log' | 'package-artifact' | 'install-tree';
@@ -332,6 +334,9 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
             doctorStep.summary = doctor.stdout.trim() === ''
               ? 'Installed hadara doctor exited successfully; stdout capture was empty in this environment.'
               : 'Installed hadara doctor returned an ok reduced JSON report.';
+            if (doctor.stdout.trim() === '') {
+              markEmptyStdoutFallback(doctorStep, issues, 'doctor', 'Installed doctor exited successfully but stdout capture was empty.');
+            }
           }
           steps.push(doctorStep);
 
@@ -366,6 +371,10 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
           const drift = evaluateInstalledCommandSurface(surface, installPrefix);
           surfaceStep.status = drift.ok ? 'passed' : 'failed';
           surfaceStep.summary = drift.summary;
+          if (drift.fallbackUsed) {
+            surfaceStep.fallbackUsed = true;
+            surfaceStep.fallbackReason = drift.fallbackReason;
+          }
           for (const issue of drift.issues) issues.push(issue);
           steps.push(surfaceStep);
 
@@ -385,6 +394,10 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
           const initDocsEvaluation = evaluateGeneratedInitDocs(initDocs, initDocsWorkspace, installPrefix);
           initDocsStep.status = initDocsEvaluation.ok ? 'passed' : 'failed';
           initDocsStep.summary = initDocsEvaluation.summary;
+          if (initDocsEvaluation.fallbackUsed) {
+            initDocsStep.fallbackUsed = true;
+            initDocsStep.fallbackReason = initDocsEvaluation.fallbackReason;
+          }
           for (const issue of initDocsEvaluation.issues) issues.push(issue);
           steps.push(initDocsStep);
 
@@ -408,6 +421,9 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
             smokeStep.summary = smoke.stdout.trim() === ''
               ? 'Installed command-form core feature smoke exited successfully; stdout capture was empty in this environment.'
               : 'Installed command-form core feature smoke returned an ok reduced JSON report.';
+            if (smoke.stdout.trim() === '') {
+              markEmptyStdoutFallback(smokeStep, issues, 'feature-smoke-core', 'Installed core feature smoke exited successfully but stdout capture was empty.');
+            }
           }
           steps.push(smokeStep);
         } else {
@@ -1207,12 +1223,16 @@ interface InstalledSurfaceEvaluation {
   ok: boolean;
   summary: string;
   issues: PackageSmokeIssue[];
+  fallbackUsed?: boolean;
+  fallbackReason?: string;
 }
 
 interface GeneratedInitDocsEvaluation {
   ok: boolean;
   summary: string;
   issues: PackageSmokeIssue[];
+  fallbackUsed?: boolean;
+  fallbackReason?: string;
 }
 
 /**
@@ -1223,6 +1243,8 @@ interface GeneratedInitDocsEvaluation {
  */
 function evaluateInstalledCommandSurface(surface: PackageSmokeCommandResult, installPrefix: string): InstalledSurfaceEvaluation {
   const issues: PackageSmokeIssue[] = [];
+  let fallbackUsed = false;
+  let fallbackReason: string | undefined;
   if (surface.status !== 0 || surface.timedOut) {
     issues.push({
       severity: 'error',
@@ -1236,6 +1258,9 @@ function evaluateInstalledCommandSurface(surface: PackageSmokeCommandResult, ins
   let installedEntries: Array<{ id: string; command: string }> = [];
   const sourceEntries = listCommandRegistryEntries().map((entry) => ({ id: entry.id, command: entry.command }));
   if (surface.stdout.trim() === '') {
+    fallbackUsed = true;
+    fallbackReason = 'Installed command registry stdout capture was empty; source registry ids were used while installed dispatcher routing parity was still checked.';
+    issues.push(emptyStdoutFallbackIssue('command-surface-drift', fallbackReason));
     installedEntries = sourceEntries;
   } else {
     try {
@@ -1294,7 +1319,7 @@ function evaluateInstalledCommandSurface(surface: PackageSmokeCommandResult, ins
     }
   }
 
-  const ok = issues.length === 0;
+  const ok = issues.every((issue) => issue.severity !== 'error');
   return {
     ok,
     summary: ok
@@ -1302,13 +1327,17 @@ function evaluateInstalledCommandSurface(surface: PackageSmokeCommandResult, ins
         ? 'Installed command surface stdout capture was empty; source registry ids and installed routing parity hold.'
         : 'Installed command surface matches the source registry and installed routing parity holds.'
       : 'Installed command surface drift detected; see command-surface-drift issues.',
-    issues
+    issues,
+    fallbackUsed,
+    fallbackReason
   };
 }
 
 function evaluateGeneratedInitDocs(initResult: PackageSmokeCommandResult, workspace: string, installPrefix: string): GeneratedInitDocsEvaluation {
   const issues: PackageSmokeIssue[] = [];
   const stepId = 'generated-init-docs';
+  let fallbackUsed = false;
+  let fallbackReason: string | undefined;
   if (initResult.status !== 0 || initResult.timedOut || !isOkOrEmptyCapturedJsonReport(initResult)) {
     issues.push({
       severity: 'error',
@@ -1326,6 +1355,9 @@ function evaluateGeneratedInitDocs(initResult: PackageSmokeCommandResult, worksp
   } catch {
     const templateFallback = readInstalledInitTemplateBundle(installPrefix);
     if (initResult.stdout.trim() === '' && templateFallback) {
+      fallbackUsed = true;
+      fallbackReason = 'Installed init stdout capture was empty; installed template bundle was inspected instead of generated docs.';
+      issues.push(emptyStdoutFallbackIssue(stepId, fallbackReason));
       workflow = templateFallback;
     } else {
       issues.push({
@@ -1368,7 +1400,7 @@ function evaluateGeneratedInitDocs(initResult: PackageSmokeCommandResult, worksp
     });
   }
 
-  const ok = issues.length === 0;
+  const ok = issues.every((issue) => issue.severity !== 'error');
   return {
     ok,
     summary: ok
@@ -1376,7 +1408,29 @@ function evaluateGeneratedInitDocs(initResult: PackageSmokeCommandResult, worksp
         ? 'Generated init workflow docs expose current finalize --auto and slice guidance without stale removed command instructions.'
         : 'Installed init stdout capture was empty; installed template bundle exposes current finalize --auto and slice guidance without stale removed command instructions.'
       : 'Generated init docs drift detected; see generated-init-docs issues.',
-    issues
+    issues,
+    fallbackUsed,
+    fallbackReason
+  };
+}
+
+function markEmptyStdoutFallback(
+  step: PackageSmokeReport['steps'][number],
+  issues: PackageSmokeIssue[],
+  stepId: string,
+  reason: string
+): void {
+  step.fallbackUsed = true;
+  step.fallbackReason = reason;
+  issues.push(emptyStdoutFallbackIssue(stepId, reason));
+}
+
+function emptyStdoutFallbackIssue(stepId: string, reason: string): PackageSmokeIssue {
+  return {
+    severity: 'warning',
+    code: 'PACKAGE_SMOKE_EMPTY_STDOUT_FALLBACK_USED',
+    message: reason,
+    stepId
   };
 }
 

@@ -622,13 +622,23 @@ describe('package smoke local execution', () => {
     expect(report.steps).toContainEqual(expect.objectContaining({
       id: 'command-surface-drift',
       status: 'passed',
-      summary: 'Installed command surface stdout capture was empty; source registry ids and installed routing parity hold.'
+      summary: 'Installed command surface stdout capture was empty; source registry ids and installed routing parity hold.',
+      fallbackUsed: true,
+      fallbackReason: 'Installed command registry stdout capture was empty; source registry ids were used while installed dispatcher routing parity was still checked.'
     }));
     expect(report.steps).toContainEqual(expect.objectContaining({
       id: 'generated-init-docs',
       status: 'passed',
-      summary: 'Installed init stdout capture was empty; installed template bundle exposes current finalize --auto and slice guidance without stale removed command instructions.'
+      summary: 'Installed init stdout capture was empty; installed template bundle exposes current finalize --auto and slice guidance without stale removed command instructions.',
+      fallbackUsed: true,
+      fallbackReason: 'Installed init stdout capture was empty; installed template bundle was inspected instead of generated docs.'
     }));
+    expect(report.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ severity: 'warning', code: 'PACKAGE_SMOKE_EMPTY_STDOUT_FALLBACK_USED', stepId: 'doctor' }),
+      expect.objectContaining({ severity: 'warning', code: 'PACKAGE_SMOKE_EMPTY_STDOUT_FALLBACK_USED', stepId: 'command-surface-drift' }),
+      expect.objectContaining({ severity: 'warning', code: 'PACKAGE_SMOKE_EMPTY_STDOUT_FALLBACK_USED', stepId: 'generated-init-docs' }),
+      expect.objectContaining({ severity: 'warning', code: 'PACKAGE_SMOKE_EMPTY_STDOUT_FALLBACK_USED', stepId: 'feature-smoke-core' })
+    ]));
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
   });
 

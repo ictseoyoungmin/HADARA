@@ -604,3 +604,4 @@
 | T-0601 | Fix 0.4.5 clean-clone test regressions | Done | tasks/T-0601-fix-0-4-5-clean-clone-test-regressions | |
 | T-0602 | Fix package smoke generated-init workspace isolation | Done | tasks/T-0602-fix-package-smoke-generated-init-workspace-isolation | |
 | T-0603 | 0.4.5 operator publish and installed-package recycle | Done | tasks/T-0603-0-4-5-operator-publish-and-installed-package-recycle | |
+| T-0604 | 0.4.6 brownfield trust polish residuals | Done | tasks/T-0604-0-4-6-brownfield-trust-polish-residuals | |

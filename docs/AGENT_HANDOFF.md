@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.5 | Portable project state. |
-| Latest Completed Task | T-0603 0.4.5 operator publish and installed-package recycle | Most recent completed capsule. |
+| Latest Completed Task | T-0604 0.4.6 brownfield trust polish residuals | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
-| Next Work | Select next 0.4.x improvement scope | Structured continuation title; not operator prose. |
+| Next Work | 0.4.6 first-user onboarding and brownfield quickstart | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | 0.4.5 npm/GitHub publication and installed-package recycle are complete; choose the next scoped improvement deliberately. | Human constraints; never used as a task title. |
-| Validation Baseline | T-0603 verified the published hadara@0.4.5 package from npm: install/version passed, fresh basic/standard/governed docs doctor passed, governed toy lifecycle closed-valid, and installed core feature smoke passed. | ev:T-0603:6448691495c54d078e1414b4 |
+| Operator Guidance | T-0604 closes the small residual trust gaps; next high-value scope is first-user onboarding and brownfield quickstart polish without expanding the command surface. | Human constraints; never used as a task title. |
+| Validation Baseline | T-0604 closed 0.4.5 residual trust gaps for the 0.4.6 line: duplicate .gitignore local-state markers fail closed, package-smoke empty-stdout fallbacks are explicit warnings, pyproject/Cargo/go.mod inference is covered, focused tests and host/Docker builds passed. | ev:T-0604:583168193c644e67a58be80c, ev:T-0604:ae3fe7b9f57d4a8b89828e92, ev:T-0604:c2ff2dd7b37d4729a64e4f8b |
 
 ### Current Known Problems
 

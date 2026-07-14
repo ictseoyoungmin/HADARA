@@ -334,12 +334,22 @@ function collectManagedPatchBlockers(projectRoot: string, relativePath: string):
     const content = fs.readFileSync(path.join(projectRoot, relativePath), 'utf8');
     const start = '# hadara:managed:start local-state';
     const end = '# hadara:managed:end local-state';
-    if ((content.includes(start)) !== (content.includes(end))) {
+    const startCount = countOccurrences(content, start);
+    const endCount = countOccurrences(content, end);
+    if (startCount !== endCount) {
       return [{
         severity: 'error',
         code: 'INIT_ADOPTION_MANAGED_SECTION_INVALID',
         path: relativePath,
         message: `${relativePath} contains a malformed HADARA managed block marker.`
+      }];
+    }
+    if (startCount > 1 || endCount > 1) {
+      return [{
+        severity: 'error',
+        code: 'INIT_ADOPTION_MANAGED_SECTION_DUPLICATE',
+        path: relativePath,
+        message: `${relativePath} contains duplicate HADARA local-state managed block markers.`
       }];
     }
     return [];
@@ -758,16 +768,74 @@ function collectWarnings(repositoryState: InitRepositoryState): InitIssue[] {
 
 function inferProject(projectRoot: string): InitAdoptionProject {
   const packageJson = readJsonObject(path.join(projectRoot, 'package.json'));
+  const pyproject = readTomlProjectLike(path.join(projectRoot, 'pyproject.toml'), ['project', 'tool.poetry']);
+  const cargo = readTomlProjectLike(path.join(projectRoot, 'Cargo.toml'), ['package']);
+  const goModule = readGoModuleName(path.join(projectRoot, 'go.mod'));
   const directoryName = path.basename(path.resolve(projectRoot));
   const packageName = typeof packageJson?.name === 'string' && packageJson.name.trim() ? packageJson.name.trim() : undefined;
   const packageDescription = typeof packageJson?.description === 'string' && packageJson.description.trim() ? packageJson.description.trim() : undefined;
-  const version = typeof packageJson?.version === 'string' && packageJson.version.trim() ? packageJson.version.trim() : 'unversioned';
+  const inferredName = packageName ?? pyproject.name ?? cargo.name ?? goModule ?? directoryName;
+  const version = stringValue(packageJson?.version) ?? pyproject.version ?? cargo.version ?? 'unversioned';
   return {
-    id: slug(packageName ?? directoryName),
-    name: packageName ?? directoryName,
+    id: slug(inferredName),
+    name: inferredName,
     purpose: packageDescription,
     currentRelease: version
   };
+}
+
+function countOccurrences(content: string, needle: string): number {
+  if (needle.length === 0) return 0;
+  let count = 0;
+  let offset = 0;
+  while (true) {
+    const next = content.indexOf(needle, offset);
+    if (next === -1) return count;
+    count += 1;
+    offset = next + needle.length;
+  }
+}
+
+function stringValue(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function readTomlProjectLike(filePath: string, sections: string[]): { name?: string; version?: string } {
+  try {
+    if (!fs.existsSync(filePath)) return {};
+    const content = fs.readFileSync(filePath, 'utf8');
+    const result: { name?: string; version?: string } = {};
+    const allowedSections = new Set(sections);
+    let currentSection = '';
+    for (const rawLine of content.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      const section = line.match(/^\[([^\]]+)\]$/);
+      if (section) {
+        currentSection = section[1].trim();
+        continue;
+      }
+      if (!allowedSections.has(currentSection)) continue;
+      const match = line.match(/^(name|version)\s*=\s*["']([^"']+)["']/);
+      if (!match) continue;
+      if (match[1] === 'name' && !result.name) result.name = match[2].trim();
+      if (match[1] === 'version' && !result.version) result.version = match[2].trim();
+    }
+    return result;
+  } catch {
+    return {};
+  }
+}
+
+function readGoModuleName(filePath: string): string | undefined {
+  try {
+    if (!fs.existsSync(filePath)) return undefined;
+    const content = fs.readFileSync(filePath, 'utf8');
+    const match = content.match(/^module\s+(\S+)/m);
+    if (!match) return undefined;
+    return match[1].trim().split('/').filter(Boolean).pop();
+  } catch {
+    return undefined;
+  }
 }
 
 function readJsonObject(filePath: string): Record<string, unknown> | null {
