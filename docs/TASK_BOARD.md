@@ -610,3 +610,4 @@
 | T-0607 | 0.4.6 Codex delegated onboarding dogfood | Done | tasks/T-0607-0-4-6-codex-delegated-onboarding-dogfood | |
 | T-0608 | 0.4.6 delegated onboarding UX hardening | Done | tasks/T-0608-0-4-6-delegated-onboarding-ux-hardening | |
 | T-0609 | 0.4.6 validation execution capture hardening | Done | tasks/T-0609-0-4-6-validation-execution-capture-hardening | |
+| T-0610 | 0.4.6 bootstrap next-work cleanup after first close | Done | tasks/T-0610-0-4-6-bootstrap-next-work-cleanup-after-first-close | |

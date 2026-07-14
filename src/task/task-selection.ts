@@ -234,10 +234,18 @@ function recommendationFromCurrentState(projectRoot: string, state: ProjectCurre
     : fuzzyBoardRow;
   const capsule = taskId !== 'TBD' ? findTaskCapsule(projectRoot, taskId) : undefined;
   const resolvedTitle = boardRow?.title ?? title;
+  const existingTaskHistory = boardRows.length > 0 || hasAnyTaskCapsule(projectRoot);
+  const adoptionBaselineReviewOnly = isBootstrapAdoptionBaselineNextWork(nextWork.title) && existingTaskHistory;
+  const createCommandAllowed = adoptionBaselineReviewOnly ? false : nextWork.createCommandAllowed;
+  const operatorGuidance = adoptionBaselineReviewOnly
+    ? `${nextWork.operatorGuidance} Existing task history is present; review whether the adoption baseline is still needed before creating another capsule.`
+    : nextWork.operatorGuidance;
   return {
     taskId,
     title: resolvedTitle,
-    reason: boardRow && !knownTaskId
+    reason: adoptionBaselineReviewOnly
+      ? 'Structured current-state canon names the brownfield adoption baseline, but task history already exists; review before creating another capsule.'
+      : boardRow && !knownTaskId
       ? 'Existing open Task Board row closely matches the structured current-state next work.'
       : 'Next work from the structured current-state canon.',
     source: PROJECT_CURRENT_STATE_PATH,
@@ -247,9 +255,9 @@ function recommendationFromCurrentState(projectRoot: string, state: ProjectCurre
     taskCapsulePresent: Boolean(capsule),
     capsule: capsule ? toPortablePath(path.relative(projectRoot, capsule.dir)) : boardRow?.capsule || null,
     requiredReading: requiredReadingForProject(projectRoot),
-    createCommand: capsule || boardRow || !nextWork.createCommandAllowed ? null : `hadara task create ${shellQuote(title)}`,
-    operatorGuidance: nextWork.operatorGuidance,
-    createCommandAllowed: nextWork.createCommandAllowed
+    createCommand: capsule || boardRow || !createCommandAllowed ? null : `hadara task create ${shellQuote(title)}`,
+    operatorGuidance,
+    createCommandAllowed
   };
 }
 
@@ -259,6 +267,10 @@ function normalizeNextWorkTitle(title: string): string {
 
 function isBootstrapFirstTaskNextWork(title: string): boolean {
   return normalizeNextWorkTitle(title).toLowerCase() === 'create first task capsule';
+}
+
+function isBootstrapAdoptionBaselineNextWork(title: string): boolean {
+  return normalizeNextWorkTitle(title).toLowerCase() === 'establish hadara adoption baseline';
 }
 
 function recommendationFromTaskBoard(projectRoot: string, boardRows: BoardRow[]): TaskSelectionRecommendation | null {

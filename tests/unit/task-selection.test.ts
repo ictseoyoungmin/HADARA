@@ -325,6 +325,36 @@ describe('task selection recommendation', () => {
     expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
   });
 
+  it('downgrades brownfield adoption baseline to review-only after task history exists', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Already Closed Feature Task');
+    updateTaskBoardStatus(root, task.id, 'Done');
+    writeCurrentState(root, {
+      activeTask: null,
+      nextWork: {
+        title: 'Establish HADARA adoption baseline',
+        state: 'candidate',
+        operatorGuidance: 'Review existing project docs before normal feature work.',
+        createCommandAllowed: true
+      },
+      nextOperatorIntent: 'Review existing project docs before normal feature work.'
+    });
+
+    const report = createTaskSelectionReport(root);
+
+    expect(report.recommendations[0]).toMatchObject({
+      taskId: 'TBD',
+      title: 'Establish HADARA adoption baseline',
+      source: '.hadara/state/current.json',
+      sourceKind: 'current-state',
+      createCommand: null,
+      createCommandAllowed: false,
+      reason: 'Structured current-state canon names the brownfield adoption baseline, but task history already exists; review before creating another capsule.'
+    });
+    expect(report.recommendations[0].operatorGuidance).toContain('Existing task history is present');
+    expect(validateSchema('hadara.task.selection.v1', report).ok).toBe(true);
+  });
+
   it('recommends the first incomplete Development Slices row with existing capsule metadata', () => {
     const root = tempProject();
     const done = createTaskCapsule(root, 'Already Done');

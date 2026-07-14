@@ -1,11 +1,11 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 125,
+  "rev": 127,
   "profile": "governed",
   "currentRelease": "0.4.5",
   "latestCompletedTask": {
-    "id": "T-0609",
-    "title": "0.4.6 validation execution capture hardening"
+    "id": "T-0610",
+    "title": "0.4.6 bootstrap next-work cleanup after first close"
   },
   "activeTask": null,
   "nextWork": {
