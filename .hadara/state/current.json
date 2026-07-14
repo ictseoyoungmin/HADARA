@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 134,
+  "rev": 137,
   "profile": "governed",
-  "currentRelease": "0.4.5",
+  "currentRelease": "0.4.6-rc.0",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0613",
-    "title": "0.4.6 current-state validation baseline wording and task-id ordering polish"
+    "id": "T-0614",
+    "title": "0.4.6-rc.0 release readiness and publish preparation"
   },
   "activeTask": null,
   "nextWork": {
@@ -39,11 +39,12 @@
     }
   ],
   "validationBaseline": {
-    "summary": "T-0611 validated the current-state latest semantics and evidence vocabulary cleanup with focused tests, TypeScript build, Docker full suite, dist freshness, and post-close serializer-order delta validation.",
+    "summary": "T-0614 prepared 0.4.6-rc.0 source/readiness: npm exact-version availability check passed as unpublished, build/version smoke passed, package smoke and strict release gate passed, and Docker full suite passed with dist freshness.",
     "evidence": [
-      "ev:T-0611:d8394da2a5dd40099d23d53a",
-      "ev:T-0611:780770a1aa32481f94af6597",
-      "ev:T-0611:c19fcab0e7bb4a01b340f836"
+      "ev:T-0614:32b52d29237f4b44bf5ff288",
+      "ev:T-0614:53e4f099939a499092e13ac4",
+      "ev:T-0614:0420632db26e43098bbbe235",
+      "ev:T-0614:99b32b5930ea41539c4d4138"
     ]
   }
 }

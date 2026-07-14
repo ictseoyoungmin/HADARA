@@ -7,14 +7,14 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 
 | Field | Value |
 |---|---|
-| Current Release | 0.4.5 |
-| Latest Completed Task | T-0613 0.4.6 current-state validation baseline wording and task-id ordering polish |
+| Current Release | 0.4.6-rc.0 |
+| Latest Completed Task | T-0614 0.4.6-rc.0 release readiness and publish preparation |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | 0.4.6 first-user onboarding and brownfield quickstart |
 | Next Work State | candidate |
 | Operator Guidance | T-0604/T-0605 close the small residual trust and evidence-category friction gaps; next high-value scope is first-user onboarding and brownfield quickstart polish without expanding the command surface. |
-| Current Trusted Validation Baseline | T-0611 validated the current-state latest semantics and evidence vocabulary cleanup with focused tests, TypeScript build, Docker full suite, dist freshness, and post-close serializer-order delta validation. |
+| Current Trusted Validation Baseline | T-0614 prepared 0.4.6-rc.0 source/readiness: npm exact-version availability check passed as unpublished, build/version smoke passed, package smoke and strict release gate passed, and Docker full suite passed with dist freshness. |
 
 ### Current Known Problems
 

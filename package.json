@@ -1,6 +1,6 @@
 {
   "name": "hadara",
-  "version": "0.4.5",
+  "version": "0.4.6-rc.0",
   "private": false,
   "license": "MIT",
   "description": "Local-first evidence control plane for trustworthy agentic development, resumable task capsules, and release gates.",

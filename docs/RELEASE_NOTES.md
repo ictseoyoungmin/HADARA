@@ -1,8 +1,8 @@
 # RELEASE_NOTES
 
-## 0.4.6
+## 0.4.6-rc.0
 
-Brownfield trust and first-user polish line after stable `0.4.5`.
+Release candidate line after stable `0.4.5`, focused on brownfield trust residuals, first-user/delegated onboarding friction, validation capture reliability, and current-state contract cleanup.
 
 Highlights:
 
@@ -10,12 +10,20 @@ Highlights:
 - Adds package-smoke fallback observability for environments where installed commands exit 0 but stdout capture is empty. Reports now include warning issues plus step-level `fallbackUsed` and `fallbackReason` metadata.
 - Extends brownfield project identity/version inference beyond `package.json`: best-effort `pyproject.toml` and `Cargo.toml` parsing provides name/version when present, while `go.mod` can provide a module-derived project name with `unversioned` release and skips semantic import version suffixes such as `/v2`.
 - Smooths evidence capture ergonomics for common test-result wording: `evidence add-command --category test` and `--category tests` are CLI-only aliases that persist canonical `category=validation`; unsupported category errors now include allowed tokens, aliases, and a schema lookup hint.
+- Hardens validation execution capture for delegated tool environments: file-backed capture is the default strategy, direct-result recovery remains available, and capture metadata no longer labels the default file path as a fallback.
+- Retires stale bootstrap next-work after first close, so fresh projects do not keep recommending the initial capsule after real task history exists.
+- Clarifies current-state semantics: `latestCompletedTask` is explicitly the highest Done task id, not close timestamp chronology, and completion writes preserve that contract even when older tasks close later.
+- Clarifies `validationBaseline` as the current trusted validation baseline, not necessarily evidence from the latest completed task.
+- Keeps current-state task-id ordering numeric so future five-digit task ids rank correctly in the current-state latest-task contract.
 
 Boundaries:
 
 - T-0604 is the first 0.4.6 capsule and addresses residual review findings left after 0.4.5 publication/recycle.
 - T-0605 keeps the persisted evidence vocabulary stable while improving first-user CLI diagnostics and closes the Go module `/vN` inference edge.
-- Broader first-user onboarding, external validation, and public contract freeze remain separate follow-up scopes.
+- T-0606 and T-0607 record delegated Antigravity/Codex onboarding dogfood; T-0608 through T-0613 close the release-candidate blockers and currentness polish found from those runs and subsequent review.
+- T-0614 prepares source metadata, release notes, readiness docs, GitHub Release note artifact, and release validation evidence for `hadara@0.4.6-rc.0`; it performs no npm publish, GitHub Release publication, Docker image push, PyPI publish, installer execution, token loading, or post-publish installed-package recycle.
+- The intended npm dist-tag is `next`; stable `latest` remains `hadara@0.4.5` until a later stable promotion.
+- Post-publish installed-package recycle for `hadara@next` expected `0.4.6-rc.0` remains a separate follow-up capsule after npm/GitHub publication.
 
 ## 0.4.5
 

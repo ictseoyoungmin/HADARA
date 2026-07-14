@@ -7,14 +7,14 @@ This section is projected from `.hadara/state/current.json` so a new session can
 
 | Area | State | Notes |
 |---|---|---|
-| Current Release | 0.4.5 | Portable project state. |
-| Latest Completed Task | T-0613 0.4.6 current-state validation baseline wording and task-id ordering polish | Highest Done task id, not close timestamp. |
+| Current Release | 0.4.6-rc.0 | Portable project state. |
+| Latest Completed Task | T-0614 0.4.6-rc.0 release readiness and publish preparation | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task; use next-work selection guidance. |
 | Next Work | 0.4.6 first-user onboarding and brownfield quickstart | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
 | Operator Guidance | T-0604/T-0605 close the small residual trust and evidence-category friction gaps; next high-value scope is first-user onboarding and brownfield quickstart polish without expanding the command surface. | Human constraints; never used as a task title. |
-| Current Trusted Validation Baseline | T-0611 validated the current-state latest semantics and evidence vocabulary cleanup with focused tests, TypeScript build, Docker full suite, dist freshness, and post-close serializer-order delta validation. | ev:T-0611:d8394da2a5dd40099d23d53a, ev:T-0611:780770a1aa32481f94af6597, ev:T-0611:c19fcab0e7bb4a01b340f836 |
+| Current Trusted Validation Baseline | T-0614 prepared 0.4.6-rc.0 source/readiness: npm exact-version availability check passed as unpublished, build/version smoke passed, package smoke and strict release gate passed, and Docker full suite passed with dist freshness. | ev:T-0614:32b52d29237f4b44bf5ff288, ev:T-0614:53e4f099939a499092e13ac4, ev:T-0614:0420632db26e43098bbbe235, ev:T-0614:99b32b5930ea41539c4d4138 |
 
 ### Current Known Problems
 
