@@ -16,6 +16,8 @@ Do not hand-edit this file.
 | ev:T-0614:a06039dd27464e73b4c6a10b | passed | validation | Task finalize done-level readiness for T-0614 passed before close evidence append; harnessOk=true; evidenceLintOk=true; protocolDoctorOk=true; validationReportHash=sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash=sha256:e9ef6b1d046e3924f271e2ba07f2c83bbd4800c5c86b51290acd6435b571dc65 |
 | ev:T-0614:9cd821818d604e0f9fe395da | passed | validation | Post-finalize docs doctor --scope all returned healthy/clean with zero currentness or semantic drift issues for 0.4.6-rc.0 readiness state. |
 | ev:T-0614:1d89a80dba384058af8fd56e | passed | validation | Task finalize done-level readiness for T-0614 passed before close evidence append; harnessOk=true; evidenceLintOk=true; protocolDoctorOk=true; validationReportHash=sha256:8e365d1287a2846c148bbfe5ef22a9fa8477c1b4eaee3d5488c0ef5319a9e3da; sourceHash=sha256:f79d9b5cd96d8a7fd033cfdd3254375c8507787b04b0a2fdf4fbf3f71dee13c9 |
+| ev:T-0614:350ea60f690840f8811b0f89 | passed | release | Operator published hadara@0.4.6-rc.0 to npm with dist-tag next and verified npm view returned 0.4.6-rc.0; original publish evidence id from clean clone was ev:T-0614:cacad8c52a7c42e3a03c42c0. |
+| ev:T-0614:aa750d59b3bf42df89777808 | passed | release | Operator created and published GitHub Release v0.4.6-rc.0 for ictseoyoungmin/HADARA using the T-0614 release note; GitHub returned https://github.com/ictseoyoungmin/HADARA/releases/tag/v0.4.6-rc.0. |
 <!-- /hadara:slot -->
 
 ## Close Proof
