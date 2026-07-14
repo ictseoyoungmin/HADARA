@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.5 | Portable project state. |
-| Latest Completed Task | T-0602 Fix package smoke generated-init workspace isolation | Most recent completed capsule. |
+| Latest Completed Task | T-0603 0.4.5 operator publish and installed-package recycle | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
-| Next Work | 0.4.5 operator publish and installed-package recycle | Structured continuation title; not operator prose. |
+| Next Work | Select next 0.4.x improvement scope | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | Commit T-0602, then run the operator-controlled 0.4.5 npm/GitHub publish flow from a clean ext4 clone and follow with installed-package recycle against hadara@0.4.5. | Human constraints; never used as a task title. |
-| Validation Baseline | T-0602 fixed package-smoke generated-init workspace isolation; package smoke passed with --timeout 300 and strict release gate recognized latest T-0602 package-smoke evidence. | ev:T-0602:07de22930b074abcaaa6ae6c, ev:T-0602:3cb6ad5f2ee14d86bacdd9f5, ev:T-0602:8d13919a682141f6b4c335ea, ev:T-0602:4d6cb16158b8456187b1856b, ev:T-0602:1915a8a924d34fb99f14290c |
+| Operator Guidance | 0.4.5 npm/GitHub publication and installed-package recycle are complete; choose the next scoped improvement deliberately. | Human constraints; never used as a task title. |
+| Validation Baseline | T-0603 verified the published hadara@0.4.5 package from npm: install/version passed, fresh basic/standard/governed docs doctor passed, governed toy lifecycle closed-valid, and installed core feature smoke passed. | ev:T-0603:6448691495c54d078e1414b4 |
 
 ### Current Known Problems
 

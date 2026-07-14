@@ -1,20 +1,20 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 108,
+  "rev": 111,
   "profile": "governed",
   "currentRelease": "0.4.5",
   "latestCompletedTask": {
-    "id": "T-0602",
-    "title": "Fix package smoke generated-init workspace isolation"
+    "id": "T-0603",
+    "title": "0.4.5 operator publish and installed-package recycle"
   },
   "activeTask": null,
   "nextWork": {
-    "title": "0.4.5 operator publish and installed-package recycle",
+    "title": "Select next 0.4.x improvement scope",
     "state": "candidate",
-    "operatorGuidance": "Commit T-0602, then run the operator-controlled 0.4.5 npm/GitHub publish flow from a clean ext4 clone and follow with installed-package recycle against hadara@0.4.5.",
+    "operatorGuidance": "0.4.5 npm/GitHub publication and installed-package recycle are complete; choose the next scoped improvement deliberately.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Commit T-0602, publish hadara@0.4.5 from a clean clone, then run post-publish installed-package recycle.",
+  "nextOperatorIntent": "0.4.5 is published and recycled. Select the next scoped improvement before starting implementation.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
@@ -38,13 +38,9 @@
     }
   ],
   "validationBaseline": {
-    "summary": "T-0602 fixed package-smoke generated-init workspace isolation; package smoke passed with --timeout 300 and strict release gate recognized latest T-0602 package-smoke evidence.",
+    "summary": "T-0603 verified the published hadara@0.4.5 package from npm: install/version passed, fresh basic/standard/governed docs doctor passed, governed toy lifecycle closed-valid, and installed core feature smoke passed.",
     "evidence": [
-      "ev:T-0602:07de22930b074abcaaa6ae6c",
-      "ev:T-0602:3cb6ad5f2ee14d86bacdd9f5",
-      "ev:T-0602:8d13919a682141f6b4c335ea",
-      "ev:T-0602:4d6cb16158b8456187b1856b",
-      "ev:T-0602:1915a8a924d34fb99f14290c"
+      "ev:T-0603:6448691495c54d078e1414b4"
     ]
   }
 }

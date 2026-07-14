@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.5 |
-| Latest Completed Task | T-0602 Fix package smoke generated-init workspace isolation |
+| Latest Completed Task | T-0603 0.4.5 operator publish and installed-package recycle |
 | Active Task | None |
-| Next Work | 0.4.5 operator publish and installed-package recycle |
+| Next Work | Select next 0.4.x improvement scope |
 | Next Work State | candidate |
-| Operator Guidance | Commit T-0602, then run the operator-controlled 0.4.5 npm/GitHub publish flow from a clean ext4 clone and follow with installed-package recycle against hadara@0.4.5. |
-| Validation Baseline | T-0602 fixed package-smoke generated-init workspace isolation; package smoke passed with --timeout 300 and strict release gate recognized latest T-0602 package-smoke evidence. |
+| Operator Guidance | 0.4.5 npm/GitHub publication and installed-package recycle are complete; choose the next scoped improvement deliberately. |
+| Validation Baseline | T-0603 verified the published hadara@0.4.5 package from npm: install/version passed, fresh basic/standard/governed docs doctor passed, governed toy lifecycle closed-valid, and installed core feature smoke passed. |
 
 ### Current Known Problems
 
@@ -43,7 +43,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.5 source readiness is current after T-0598 closed brownfield adoption safety gaps, T-0599 passed installed-candidate dogfood across multiple brownfield project shapes, T-0600 recycled release readiness, T-0601 fixed clean-clone test regressions, and T-0602 fixed package-smoke generated-init workspace isolation found before publish. The next step is operator-controlled npm/GitHub publication followed by installed-package recycle against `hadara@0.4.5`.
+v0.4.5 is published and recycled after T-0598 closed brownfield adoption safety gaps, T-0599 passed installed-candidate dogfood across multiple brownfield project shapes, T-0600 recycled release readiness, T-0601 fixed clean-clone test regressions, T-0602 fixed package-smoke generated-init workspace isolation found before publish, and T-0603 verified the public npm package in fresh installed-package dogfood. The next step is to select the next scoped 0.4.x improvement deliberately.
 
 | Stage | State | Purpose |
 |---|---|---|
