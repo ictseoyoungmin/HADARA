@@ -51,6 +51,14 @@ describe('validation run', () => {
       command: 'validation.run',
       ok: true,
       result: 'Passed',
+      execution: {
+        capture: {
+          mode: 'file',
+          stdoutBytes: 2,
+          stderrBytes: 0,
+          fallbackUsed: true
+        }
+      },
       taskValidationRow: { mode: 'skipped', updated: false },
       acceptanceRows: { updated: false }
     });
@@ -261,6 +269,10 @@ describe('validation run', () => {
         exitCode: 0,
         commandStarted: false,
         failureKind: 'none',
+        capture: {
+          mode: 'direct',
+          fallbackUsed: false
+        },
         directResult: true,
         directSummary: 'npm test passed directly after wrapper launch failure.'
       },
@@ -304,6 +316,10 @@ describe('validation run', () => {
       execution: {
         commandStarted: false,
         failureKind: 'permission-denied',
+        capture: {
+          mode: 'injected',
+          fallbackUsed: false
+        },
         error: {
           code: 'EPERM',
           message: 'spawnSync node EPERM',

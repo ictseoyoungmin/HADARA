@@ -1,11 +1,11 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 123,
+  "rev": 125,
   "profile": "governed",
   "currentRelease": "0.4.5",
   "latestCompletedTask": {
-    "id": "T-0607",
-    "title": "0.4.6 Codex delegated onboarding dogfood"
+    "id": "T-0609",
+    "title": "0.4.6 validation execution capture hardening"
   },
   "activeTask": null,
   "nextWork": {

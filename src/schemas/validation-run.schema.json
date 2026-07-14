@@ -26,6 +26,18 @@
         "stderrHash": { "type": "string" },
         "commandStarted": { "type": "boolean" },
         "failureKind": { "enum": ["none", "non-zero-exit", "timeout", "permission-denied", "command-not-found", "launch-error"] },
+        "capture": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["mode", "stdoutBytes", "stderrBytes", "fallbackUsed"],
+          "properties": {
+            "mode": { "enum": ["file", "injected", "direct"] },
+            "stdoutBytes": { "type": "number" },
+            "stderrBytes": { "type": "number" },
+            "fallbackUsed": { "type": "boolean" },
+            "fallbackReason": { "type": "string" }
+          }
+        },
         "error": {
           "type": "object",
           "additionalProperties": true,

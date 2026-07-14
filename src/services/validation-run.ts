@@ -1,6 +1,7 @@
 import { spawnSync, type SpawnSyncOptionsWithStringEncoding, type SpawnSyncReturns } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { startMonotonicTimer } from '../core/timing';
 import { appendEvidenceWithResult, persistedEvidenceKind, persistedEvidenceResult } from '../evidence/evidence';
@@ -25,6 +26,13 @@ export interface ValidationRunReport {
     stderrHash: string;
     commandStarted: boolean;
     failureKind: 'none' | 'non-zero-exit' | 'timeout' | 'permission-denied' | 'command-not-found' | 'launch-error';
+    capture: {
+      mode: 'file' | 'injected' | 'direct';
+      stdoutBytes: number;
+      stderrBytes: number;
+      fallbackUsed: boolean;
+      fallbackReason?: string;
+    };
     error?: {
       code: string | null;
       message: string;
@@ -86,6 +94,7 @@ export interface ValidationRunOptions {
 }
 
 type ValidationSpawnSync = (command: string, args: string[], options: SpawnSyncOptionsWithStringEncoding) => SpawnSyncReturns<string>;
+type ValidationSpawnResult = SpawnSyncReturns<string> & { hadaraCapture?: ValidationRunReport['execution']['capture'] };
 
 export function createValidationRunReport(projectRoot: string, options: ValidationRunOptions): ValidationRunReport {
   const task = findTaskCapsule(projectRoot, options.taskId);
@@ -99,15 +108,17 @@ export function createValidationRunReport(projectRoot: string, options: Validati
   }
 
   const directExecution = options.directResult ? directResultExecution(options.directResult) : null;
-  const spawn: ValidationSpawnSync = options.spawnSyncFn ?? ((command, args, spawnOptions) => spawnSync(command, args, spawnOptions));
-  const executed =
+  const injectedSpawn = Boolean(options.spawnSyncFn);
+  const spawn: ValidationSpawnSync = options.spawnSyncFn ?? spawnSyncWithFileCapture;
+  const executed = (
     directExecution ??
     spawn(options.argv[0], options.argv.slice(1), {
       cwd: projectRoot,
       encoding: 'utf8',
       timeout: Math.max(1, options.timeoutMs ?? 120_000),
       maxBuffer: 1024 * 1024 * 8
-    });
+    })
+  ) as ValidationSpawnResult;
   const durationMs = timer.elapsedMs();
   const timedOut = !directExecution && Boolean(executed.error && (executed.error as NodeJS.ErrnoException).code === 'ETIMEDOUT');
   const executionSemantics = directExecution ? classifyDirectExecution(options.directResult ?? 'Blocked') : classifyExecution(executed, timedOut);
@@ -185,6 +196,7 @@ export function createValidationRunReport(projectRoot: string, options: Validati
       stderrHash: hashText(executed.stderr ?? ''),
       commandStarted: executionSemantics.commandStarted,
       failureKind: executionSemantics.failureKind,
+      capture: executionCapture(executed, { direct: Boolean(directExecution), injected: injectedSpawn }),
       ...(options.directResult ? { directResult: true, directSummary: options.directSummary ?? null } : {}),
       ...(executionSemantics.error ? { error: executionSemantics.error } : {})
     },
@@ -211,6 +223,72 @@ export function createValidationRunReport(projectRoot: string, options: Validati
     },
     issues,
     nextActions: createValidationRunNextActions(options, result, executionSemantics.failureKind)
+  };
+}
+
+function spawnSyncWithFileCapture(command: string, args: string[], options: SpawnSyncOptionsWithStringEncoding): ValidationSpawnResult {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hadara-validation-capture-'));
+  const stdoutPath = path.join(tempDir, 'stdout.txt');
+  const stderrPath = path.join(tempDir, 'stderr.txt');
+  let stdoutFd: number | null = null;
+  let stderrFd: number | null = null;
+  try {
+    stdoutFd = fs.openSync(stdoutPath, 'w');
+    stderrFd = fs.openSync(stderrPath, 'w');
+    const result = spawnSync(command, args, {
+      ...options,
+      stdio: ['ignore', stdoutFd, stderrFd]
+    } as SpawnSyncOptionsWithStringEncoding) as ValidationSpawnResult;
+    if (stdoutFd !== null) {
+      fs.closeSync(stdoutFd);
+      stdoutFd = null;
+    }
+    if (stderrFd !== null) {
+      fs.closeSync(stderrFd);
+      stderrFd = null;
+    }
+    const stdout = readCaptureFile(stdoutPath);
+    const stderr = readCaptureFile(stderrPath);
+    return {
+      ...result,
+      stdout,
+      stderr,
+      output: [null, stdout, stderr],
+      hadaraCapture: {
+        mode: 'file',
+        stdoutBytes: Buffer.byteLength(stdout, 'utf8'),
+        stderrBytes: Buffer.byteLength(stderr, 'utf8'),
+        fallbackUsed: true,
+        fallbackReason: 'file-backed stdio capture avoids pipe capture loss in delegated tool environments'
+      }
+    };
+  } finally {
+    if (stdoutFd !== null) fs.closeSync(stdoutFd);
+    if (stderrFd !== null) fs.closeSync(stderrFd);
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
+function readCaptureFile(filePath: string): string {
+  try {
+    return fs.readFileSync(filePath, 'utf8');
+  } catch {
+    return '';
+  }
+}
+
+function executionCapture(executed: ValidationSpawnResult, modes: { direct: boolean; injected: boolean }): ValidationRunReport['execution']['capture'] {
+  if (modes.direct) {
+    return { mode: 'direct', stdoutBytes: 0, stderrBytes: 0, fallbackUsed: false };
+  }
+  if (executed.hadaraCapture) return executed.hadaraCapture;
+  const stdout = executed.stdout ?? '';
+  const stderr = executed.stderr ?? '';
+  return {
+    mode: modes.injected ? 'injected' : 'file',
+    stdoutBytes: Buffer.byteLength(stdout, 'utf8'),
+    stderrBytes: Buffer.byteLength(stderr, 'utf8'),
+    fallbackUsed: false
   };
 }
 
@@ -360,7 +438,8 @@ function failedInputReport(projectRoot: string, options: ValidationRunOptions, c
       stdoutHash: hashText(''),
       stderrHash: hashText(''),
       commandStarted: false,
-      failureKind: 'launch-error'
+      failureKind: 'launch-error',
+      capture: { mode: 'direct', stdoutBytes: 0, stderrBytes: 0, fallbackUsed: false }
     },
     result: 'Blocked',
     attempt: {
