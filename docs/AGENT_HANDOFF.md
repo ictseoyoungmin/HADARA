@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.5 | Portable project state. |
-| Latest Completed Task | T-0599 0.4.5 installed-candidate multi-shape brownfield dogfood | Most recent completed capsule. |
+| Latest Completed Task | T-0600 0.4.5 release readiness recycle | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
-| Next Work | 0.4.5 release readiness recycle | Structured continuation title; not operator prose. |
+| Next Work | 0.4.5 operator publish and installed-package recycle | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | Recycle 0.4.5 release readiness from current source after T-0598 runtime hardening and T-0599 installed-candidate dogfood. Do not publish from stale T-0597 evidence. | Human constraints; never used as a task title. |
-| Validation Baseline | T-0599 verified the 0.4.5 installed candidate across TypeScript service, Python/data, and governed web monorepo brownfield fixtures: dry-run adoption, explicit reviewed execute, docs doctor, baseline validation evidence, and finalize closed-valid all passed. | ev:T-0599:ba42d06b508a4792bca030ea, ev:T-0599:84e1144bdfb34d60a5e78132 |
+| Operator Guidance | Commit T-0600, then run the operator-controlled 0.4.5 npm/GitHub publish flow from a clean ext4 clone and follow with installed-package recycle against hadara@0.4.5. | Human constraints; never used as a task title. |
+| Validation Baseline | T-0600 recycled 0.4.5 release readiness from current source after T-0598/T-0599: build, Docker build, docs/init doctor, installed-candidate dogfood recycle, package-smoke regression, package smoke, and strict release gate all passed. | ev:T-0600:91d4e74557ff4b69b7148f37, ev:T-0600:e54a559333a9420fb59138f7, ev:T-0600:76d390dc31cb49d097da4169, ev:T-0600:16464638954d4ed0b7e80a06, ev:T-0600:5ce736f726224041853a063e |
 
 ### Current Known Problems
 

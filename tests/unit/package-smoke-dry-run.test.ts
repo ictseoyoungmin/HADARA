@@ -62,6 +62,7 @@ function installedFixtureFromArgs(args: string[], overrides?: { dropVerb?: strin
   const prefix = String(args[args.indexOf('--prefix') + 1]);
   const pkgRoot = path.join(prefix, 'lib', 'node_modules', 'hadara');
   fs.mkdirSync(path.join(pkgRoot, 'dist', 'cli'), { recursive: true });
+  fs.mkdirSync(path.join(pkgRoot, 'dist', 'init'), { recursive: true });
   fs.writeFileSync(path.join(pkgRoot, 'package.json'), JSON.stringify({ name: 'hadara' }), 'utf8');
   const verbs = new Set<string>();
   for (const entry of listCommandRegistryEntries()) {
@@ -72,6 +73,16 @@ function installedFixtureFromArgs(args: string[], overrides?: { dropVerb?: strin
   fs.writeFileSync(
     path.join(pkgRoot, 'dist', 'cli', 'main.js'),
     [...verbs].map((verb) => `        case '${verb}': {`).join('\n'),
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(pkgRoot, 'dist', 'init', 'templates.js'),
+    [
+      'hadara task finalize --task T-XXXX --execute --auto --json',
+      '## Slice State',
+      'hadara slice add --id M1',
+      'hadara slice render --json'
+    ].join('\n'),
     'utf8'
   );
 }
@@ -580,6 +591,41 @@ describe('package smoke local execution', () => {
         relativePath: 'hadara-0.0.0-bootstrap.tgz'
       })
     );
+    expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
+  });
+
+  it('falls back to installed files when child stdout capture is empty despite zero exit', () => {
+    const root = tempProject();
+    const runner: PackageSmokeCommandRunner = (_command, args) => {
+      if (args[0] === 'pack') {
+        const workspace = String(args[args.indexOf('--pack-destination') + 1]);
+        fs.writeFileSync(path.join(workspace, 'hadara-0.0.0-bootstrap.tgz'), 'package bytes', 'utf8');
+        return { status: 0, stdout: '', stderr: '', elapsedMs: 10 };
+      }
+      if (args[0] === 'install') {
+        installedFixtureFromArgs(args);
+        return { status: 0, stdout: '', stderr: '', elapsedMs: 12 };
+      }
+      return { status: 0, stdout: '', stderr: '', elapsedMs: 1 };
+    };
+
+    const report = createPackageSmokeLocalReport({
+      paths: resolveHadaraPaths({ projectRoot: root }),
+      runner,
+      timeoutSeconds: 30
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.steps).toContainEqual(expect.objectContaining({
+      id: 'command-surface-drift',
+      status: 'passed',
+      summary: 'Installed command surface stdout capture was empty; source registry ids and installed routing parity hold.'
+    }));
+    expect(report.steps).toContainEqual(expect.objectContaining({
+      id: 'generated-init-docs',
+      status: 'passed',
+      summary: 'Installed init stdout capture was empty; installed template bundle exposes current finalize --auto and slice guidance without stale removed command instructions.'
+    }));
     expect(validateSchema('hadara.packageSmoke.v1', report).ok).toBe(true);
   });
 

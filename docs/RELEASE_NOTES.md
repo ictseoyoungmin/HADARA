@@ -12,7 +12,8 @@ Highlights:
 - Removes new-project `tasks/.gitkeep` generation and keeps init-created docs aligned with the current public command surface.
 - Adds docs-registry mutation hardening so failed docs update/archive/supersede/unregister paths fail with non-zero exits instead of returning `ok:false` with process success.
 - Hardens `init doctor` and `docs doctor` for registry v3 origin/profile semantics and verifies adopted brownfield projects do not emit false scaffold-drift findings.
-- Dogfoods the release candidate locally across fresh `basic`, `standard`, and `governed` projects, a governed task lifecycle close, brownfield dry-run/execute adoption, plan-hash mismatch refusal, partial `.hadara` refusal, and unsafe symlink refusal.
+- Dogfoods the release candidate locally across fresh `basic`, `standard`, and `governed` projects, a governed task lifecycle close, brownfield dry-run/execute adoption, plan-hash mismatch refusal, partial `.hadara` refusal, unsafe symlink refusal, and installed-candidate adoption across TypeScript, Python/data, and web/monorepo brownfield shapes.
+- Hardens package smoke for tool environments where child processes return a successful exit status while stdout capture is empty, using installed files as a reduced fallback for command-surface and init-doc checks.
 
 Boundaries:
 
@@ -20,7 +21,11 @@ Boundaries:
 - T-0586 through T-0592 implement registry v3, mutation commands, project-authored defaults, migration cleanup, docs mutation safety, and the brownfield adoption contract.
 - T-0593 through T-0595 implement the brownfield detector, guarded writer, and adoption doctor/idempotency cleanup.
 - T-0596 validates fresh and brownfield behavior from `/tmp` using the built CLI.
-- T-0597 prepares source metadata, release notes, readiness docs, GitHub Release notes, and release validation evidence for `hadara@0.4.5`; it performs no npm publish, GitHub Release publication, Docker image push, PyPI publish, installer execution, token loading, or post-publish installed-package recycle.
+- T-0597 prepares initial source metadata, release notes, readiness docs, GitHub Release notes, and release validation evidence for `hadara@0.4.5`.
+- T-0598 closes reviewer release blockers in brownfield adoption safety: explicit `--adopt`, partial-state fail-closed behavior, root-entry detection, symlink/type/marker/owner/task-collision blockers, project-authored core-doc ownership, and dynamic scaffold `createdWith`.
+- T-0599 validates the installed candidate across TypeScript service, Python/data, and governed web/monorepo brownfield fixtures from init through baseline capsule close.
+- T-0600 recycles release readiness from current source, refreshes package-smoke evidence, fixes package-smoke empty-stdout fallback handling, and refreshes the GitHub Release note artifact.
+- The 0.4.5 source-preparation line performs no npm publish, GitHub Release publication, Docker image push, PyPI publish, installer execution, token loading, or post-publish installed-package recycle.
 - The intended npm dist-tag is `latest`; `hadara@0.4.4` remains the published stable line until the operator runs the approval-gated publish helper.
 - Post-publish installed-package recycle for `hadara@latest` expected `0.4.5` remains a separate follow-up capsule after npm/GitHub publication.
 

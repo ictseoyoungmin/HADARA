@@ -1,20 +1,20 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 101,
+  "rev": 104,
   "profile": "governed",
   "currentRelease": "0.4.5",
   "latestCompletedTask": {
-    "id": "T-0599",
-    "title": "0.4.5 installed-candidate multi-shape brownfield dogfood"
+    "id": "T-0600",
+    "title": "0.4.5 release readiness recycle"
   },
   "activeTask": null,
   "nextWork": {
-    "title": "0.4.5 release readiness recycle",
+    "title": "0.4.5 operator publish and installed-package recycle",
     "state": "candidate",
-    "operatorGuidance": "Recycle 0.4.5 release readiness from current source after T-0598 runtime hardening and T-0599 installed-candidate dogfood. Do not publish from stale T-0597 evidence.",
+    "operatorGuidance": "Commit T-0600, then run the operator-controlled 0.4.5 npm/GitHub publish flow from a clean ext4 clone and follow with installed-package recycle against hadara@0.4.5.",
     "createCommandAllowed": true
   },
-  "nextOperatorIntent": "Run 0.4.5 release readiness recycle before any npm or GitHub publication.",
+  "nextOperatorIntent": "Commit T-0600, publish hadara@0.4.5 from a clean clone, then run post-publish installed-package recycle.",
   "currentKnownProblems": [
     {
       "summary": "Task-scoped context pack is about 8-10s on the mounted WSL repository.",
@@ -38,10 +38,13 @@
     }
   ],
   "validationBaseline": {
-    "summary": "T-0599 verified the 0.4.5 installed candidate across TypeScript service, Python/data, and governed web monorepo brownfield fixtures: dry-run adoption, explicit reviewed execute, docs doctor, baseline validation evidence, and finalize closed-valid all passed.",
+    "summary": "T-0600 recycled 0.4.5 release readiness from current source after T-0598/T-0599: build, Docker build, docs/init doctor, installed-candidate dogfood recycle, package-smoke regression, package smoke, and strict release gate all passed.",
     "evidence": [
-      "ev:T-0599:ba42d06b508a4792bca030ea",
-      "ev:T-0599:84e1144bdfb34d60a5e78132"
+      "ev:T-0600:91d4e74557ff4b69b7148f37",
+      "ev:T-0600:e54a559333a9420fb59138f7",
+      "ev:T-0600:76d390dc31cb49d097da4169",
+      "ev:T-0600:16464638954d4ed0b7e80a06",
+      "ev:T-0600:5ce736f726224041853a063e"
     ]
   }
 }

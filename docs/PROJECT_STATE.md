@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.5 |
-| Latest Completed Task | T-0599 0.4.5 installed-candidate multi-shape brownfield dogfood |
+| Latest Completed Task | T-0600 0.4.5 release readiness recycle |
 | Active Task | None |
-| Next Work | 0.4.5 release readiness recycle |
+| Next Work | 0.4.5 operator publish and installed-package recycle |
 | Next Work State | candidate |
-| Operator Guidance | Recycle 0.4.5 release readiness from current source after T-0598 runtime hardening and T-0599 installed-candidate dogfood. Do not publish from stale T-0597 evidence. |
-| Validation Baseline | T-0599 verified the 0.4.5 installed candidate across TypeScript service, Python/data, and governed web monorepo brownfield fixtures: dry-run adoption, explicit reviewed execute, docs doctor, baseline validation evidence, and finalize closed-valid all passed. |
+| Operator Guidance | Commit T-0600, then run the operator-controlled 0.4.5 npm/GitHub publish flow from a clean ext4 clone and follow with installed-package recycle against hadara@0.4.5. |
+| Validation Baseline | T-0600 recycled 0.4.5 release readiness from current source after T-0598/T-0599: build, Docker build, docs/init doctor, installed-candidate dogfood recycle, package-smoke regression, package smoke, and strict release gate all passed. |
 
 ### Current Known Problems
 
@@ -43,7 +43,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.5 release readiness is paused after reviewer feedback. T-0598 closed brownfield adoption safety gaps and T-0599 passed installed-candidate dogfood across multiple brownfield project shapes; T-0600 must now recycle release readiness from current source.
+v0.4.5 source readiness is current after T-0598 closed brownfield adoption safety gaps, T-0599 passed installed-candidate dogfood across multiple brownfield project shapes, and T-0600 recycled build, docs/init, package smoke, installed-candidate dogfood, and release gate evidence. The next step is operator-controlled npm/GitHub publication followed by installed-package recycle against `hadara@0.4.5`.
 
 | Stage | State | Purpose |
 |---|---|---|

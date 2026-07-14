@@ -29,7 +29,7 @@
 #    docs/RELEASE_READINESS.md:
 #    - Current version is `0.4.5`.
 # 2) Commit the readiness state. Fresh clones only contain committed content.
-# git add -A && git commit -m "T-0597 0.4.5 release readiness and publish preparation"
+# git add -A && git commit -m "T-0600 0.4.5 release readiness recycle"
 #
 #
 # What it does:
@@ -58,7 +58,7 @@
 #   -h, --help           Show this help.
 #
 # Run it from the host repo root:
-#   bash scripts/release/prepare-publish-env.sh T-0597
+#   bash scripts/release/prepare-publish-env.sh T-0600
 
 set -euo pipefail
 
