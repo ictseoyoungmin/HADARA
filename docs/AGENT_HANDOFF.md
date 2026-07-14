@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.5 | Portable project state. |
-| Latest Completed Task | T-0601 Fix 0.4.5 clean-clone test regressions | Most recent completed capsule. |
+| Latest Completed Task | T-0602 Fix package smoke generated-init workspace isolation | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
 | Next Work | 0.4.5 operator publish and installed-package recycle | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | Commit T-0601, then run the operator-controlled 0.4.5 npm/GitHub publish flow from a clean ext4 clone and follow with installed-package recycle against hadara@0.4.5. | Human constraints; never used as a task title. |
-| Validation Baseline | T-0601 fixed the post-T-0600 clean-clone test regressions and Docker validation passed: build, focused clean-clone regressions, and full 153-file/1096-test suite. | ev:T-0601:5b2a2ce79b1e4da992bee548, ev:T-0601:fed96a7bc69f41c4bc76f889, ev:T-0601:d294bf75d06e47e89ed0fdfb, ev:T-0601:8907aba9189441969d45d6c5 |
+| Operator Guidance | Commit T-0602, then run the operator-controlled 0.4.5 npm/GitHub publish flow from a clean ext4 clone and follow with installed-package recycle against hadara@0.4.5. | Human constraints; never used as a task title. |
+| Validation Baseline | T-0602 fixed package-smoke generated-init workspace isolation; package smoke passed with --timeout 300 and strict release gate recognized latest T-0602 package-smoke evidence. | ev:T-0602:07de22930b074abcaaa6ae6c, ev:T-0602:3cb6ad5f2ee14d86bacdd9f5, ev:T-0602:8d13919a682141f6b4c335ea, ev:T-0602:4d6cb16158b8456187b1856b, ev:T-0602:1915a8a924d34fb99f14290c |
 
 ### Current Known Problems
 

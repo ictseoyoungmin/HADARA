@@ -369,8 +369,10 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
           for (const issue of drift.issues) issues.push(issue);
           steps.push(surfaceStep);
 
+          const initDocsWorkspace = path.join(workspaceSetup.path, 'init-docs-project');
+          fs.mkdirSync(initDocsWorkspace, { recursive: true });
           const initDocs = runner(installedBin, ['init', '--profile', 'standard', '--json'], {
-            cwd: workspaceSetup.path,
+            cwd: initDocsWorkspace,
             timeoutMs,
             env: installPathEnv(installPrefix)
           });
@@ -380,7 +382,7 @@ export function createPackageSmokeLocalReport(options: PackageSmokeLocalOptions)
             'hadara init --profile standard --json + generated docs sanity checks',
             initDocs
           );
-          const initDocsEvaluation = evaluateGeneratedInitDocs(initDocs, workspaceSetup.path, installPrefix);
+          const initDocsEvaluation = evaluateGeneratedInitDocs(initDocs, initDocsWorkspace, installPrefix);
           initDocsStep.status = initDocsEvaluation.ok ? 'passed' : 'failed';
           initDocsStep.summary = initDocsEvaluation.summary;
           for (const issue of initDocsEvaluation.issues) issues.push(issue);

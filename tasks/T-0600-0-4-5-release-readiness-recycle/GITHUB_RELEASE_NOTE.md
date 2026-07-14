@@ -13,6 +13,7 @@ HADARA 0.4.5 focuses on safe brownfield adoption, docs-registry cleanup, and rel
 - Hardens docs-registry mutation commands so failed mutations exit non-zero.
 - Validates fresh `basic`/`standard`/`governed` init, governed lifecycle close, installed-candidate brownfield adoption across TypeScript, Python/data, and web/monorepo shapes, plus fail-closed adoption safety paths.
 - Fixes the final clean-clone test regressions found before publish: empty scaffold parent directories stay greenfield-safe, and adopted `package.json` descriptions populate Project State purpose metadata.
+- Fixes package-smoke generated-init validation so packaging artifacts do not make the installed `hadara init` docs check fall into brownfield zero-write mode.
 
 ## Boundaries
 
