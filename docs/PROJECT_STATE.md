@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.5 |
-| Latest Completed Task | T-0604 0.4.6 brownfield trust polish residuals |
+| Latest Completed Task | T-0605 0.4.6 evidence category UX hints and manifest inference polish |
 | Active Task | None |
 | Next Work | 0.4.6 first-user onboarding and brownfield quickstart |
 | Next Work State | candidate |
-| Operator Guidance | T-0604 closes the small residual trust gaps; next high-value scope is first-user onboarding and brownfield quickstart polish without expanding the command surface. |
-| Validation Baseline | T-0604 closed 0.4.5 residual trust gaps for the 0.4.6 line: duplicate .gitignore local-state markers fail closed, package-smoke empty-stdout fallbacks are explicit warnings, pyproject/Cargo/go.mod inference is covered, focused tests and host/Docker builds passed. |
+| Operator Guidance | T-0604/T-0605 close the small residual trust and evidence-category friction gaps; next high-value scope is first-user onboarding and brownfield quickstart polish without expanding the command surface. |
+| Validation Baseline | T-0605 closed evidence category UX friction and Go module /vN inference polish for the 0.4.6 line: test/tests category aliases persist validation, invalid category errors expose allowed tokens and schema hints, focused tests and host/Docker builds passed. |
 
 ### Current Known Problems
 
@@ -43,7 +43,7 @@ HADARA — Local-first evidence control plane for trustworthy agentic developmen
 
 ## Current Phase
 
-v0.4.5 is published and recycled after T-0598 closed brownfield adoption safety gaps, T-0599 passed installed-candidate dogfood across multiple brownfield project shapes, T-0600 recycled release readiness, T-0601 fixed clean-clone test regressions, T-0602 fixed package-smoke generated-init workspace isolation found before publish, and T-0603 verified the public npm package in fresh installed-package dogfood. T-0604 starts the 0.4.6 line by closing residual brownfield trust gaps; the next high-value scope is first-user onboarding and brownfield quickstart polish.
+v0.4.5 is published and recycled after T-0598 closed brownfield adoption safety gaps, T-0599 passed installed-candidate dogfood across multiple brownfield project shapes, T-0600 recycled release readiness, T-0601 fixed clean-clone test regressions, T-0602 fixed package-smoke generated-init workspace isolation found before publish, and T-0603 verified the public npm package in fresh installed-package dogfood. T-0604 started the 0.4.6 line by closing residual brownfield trust gaps, and T-0605 closes evidence category UX friction plus Go `/vN` inference polish. The next high-value scope is first-user onboarding and brownfield quickstart polish.
 
 | Stage | State | Purpose |
 |---|---|---|

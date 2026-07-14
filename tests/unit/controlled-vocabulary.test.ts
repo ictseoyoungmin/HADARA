@@ -49,6 +49,13 @@ describe('controlled vocabulary (FD-006 / FD-009)', () => {
     expect(createVocabularyReport('task.source.state').domains[0].allowed).toContain('active');
   });
 
+  it('exposes canonical evidence category tokens without CLI-only aliases', () => {
+    const report = createVocabularyReport('evidence.category');
+    expect(report.ok).toBe(true);
+    expect(report.domains[0].allowed).toEqual(['validation', 'implementation', 'release', 'security', 'policy', 'operation', 'decision', 'handoff', 'audit', 'note', 'observation']);
+    expect(report.domains[0].allowed).not.toContain('test');
+  });
+
   it('rejects an unknown domain with structured allowed values (dogfoods the diagnostics pattern)', () => {
     const report = createVocabularyReport('task.bogus');
     assertSchema('hadara.schema.vocabulary.v1', report);

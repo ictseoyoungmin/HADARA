@@ -8,12 +8,12 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.5 | Portable project state. |
-| Latest Completed Task | T-0604 0.4.6 brownfield trust polish residuals | Most recent completed capsule. |
+| Latest Completed Task | T-0605 0.4.6 evidence category UX hints and manifest inference polish | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
 | Next Work | 0.4.6 first-user onboarding and brownfield quickstart | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
-| Operator Guidance | T-0604 closes the small residual trust gaps; next high-value scope is first-user onboarding and brownfield quickstart polish without expanding the command surface. | Human constraints; never used as a task title. |
-| Validation Baseline | T-0604 closed 0.4.5 residual trust gaps for the 0.4.6 line: duplicate .gitignore local-state markers fail closed, package-smoke empty-stdout fallbacks are explicit warnings, pyproject/Cargo/go.mod inference is covered, focused tests and host/Docker builds passed. | ev:T-0604:583168193c644e67a58be80c, ev:T-0604:ae3fe7b9f57d4a8b89828e92, ev:T-0604:c2ff2dd7b37d4729a64e4f8b |
+| Operator Guidance | T-0604/T-0605 close the small residual trust and evidence-category friction gaps; next high-value scope is first-user onboarding and brownfield quickstart polish without expanding the command surface. | Human constraints; never used as a task title. |
+| Validation Baseline | T-0605 closed evidence category UX friction and Go module /vN inference polish for the 0.4.6 line: test/tests category aliases persist validation, invalid category errors expose allowed tokens and schema hints, focused tests and host/Docker builds passed. | ev:T-0605:af322c3ca9b74660b779a72c, ev:T-0605:7f55c4f94bd14f8abc1875ce, ev:T-0605:fd5bde394aab4b578533ef98, ev:T-0605:5f11394fd2054660bb82a227, ev:T-0605:1b0fb3e455914aaead83d486 |
 
 ### Current Known Problems
 

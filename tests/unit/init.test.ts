@@ -306,6 +306,16 @@ describe('init profiles', () => {
       name: 'edge-router',
       currentRelease: 'unversioned'
     });
+
+    const goV2Root = tempProject();
+    fs.writeFileSync(path.join(goV2Root, 'go.mod'), 'module github.com/example/edge-router/v2\n\ngo 1.22\n', 'utf8');
+
+    const goV2Report = initProject(goV2Root, 'basic');
+    expect(goV2Report.project).toMatchObject({
+      id: 'edge-router',
+      name: 'edge-router',
+      currentRelease: 'unversioned'
+    });
   });
 
   it('classifies existing project docs into patch, registration, and preserve dispositions without writes', () => {

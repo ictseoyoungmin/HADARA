@@ -832,7 +832,10 @@ function readGoModuleName(filePath: string): string | undefined {
     const content = fs.readFileSync(filePath, 'utf8');
     const match = content.match(/^module\s+(\S+)/m);
     if (!match) return undefined;
-    return match[1].trim().split('/').filter(Boolean).pop();
+    const segments = match[1].trim().split('/').filter(Boolean);
+    const last = segments.at(-1);
+    if (/^v\d+$/.test(last ?? '') && segments.length > 1) return segments.at(-2);
+    return last;
   } catch {
     return undefined;
   }

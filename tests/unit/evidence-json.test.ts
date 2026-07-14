@@ -17,6 +17,7 @@ import {
 import type { RedactionPattern } from '../../src/core/redaction';
 import { resolveHadaraPaths } from '../../src/core/paths';
 import { listPrivateEvidenceManifests } from '../../src/evidence/private-manifest';
+import { createEvidenceLintReport } from '../../src/services/evidence-lint';
 import { createTaskCapsule } from '../../src/task/task-capsule';
 import { initProject } from '../../src/cli/init';
 
@@ -359,6 +360,120 @@ describe('CLI evidence JSON reports', () => {
       outcome: 'recorded',
       tags: [`resolves:ev:${task.id}:aaaaaaaaaaaaaaaaaaaaaaaa`, `supersedes:ev:${task.id}:bbbbbbbbbbbbbbbbbbbbbbbb`]
     });
+  });
+
+  it('normalizes human test category aliases to validation without expanding persisted schema', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Normalize test category aliases');
+    const firstOutput: string[] = [];
+    const secondOutput: string[] = [];
+    const originalLog = console.log;
+    try {
+      console.log = (value?: unknown) => {
+        firstOutput.push(String(value));
+      };
+      expect(handleEvidenceCommand({
+        args: ['evidence', 'add-command', '--task', task.id, '--summary', 'Focused tests passed', '--result', 'passed', '--category', 'test', '--json'],
+        projectRoot: root,
+        jsonOutput: true
+      })).toBe(true);
+
+      console.log = (value?: unknown) => {
+        secondOutput.push(String(value));
+      };
+      expect(handleEvidenceCommand({
+        args: ['evidence', 'add-command', '--task', task.id, '--summary', 'Additional tests passed', '--result', 'passed', '--category', 'tests', '--json'],
+        projectRoot: root,
+        jsonOutput: true
+      })).toBe(true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    const first = JSON.parse(firstOutput.join('\n'));
+    const second = JSON.parse(secondOutput.join('\n'));
+    expect(first).toMatchObject({
+      ok: true,
+      categoryAlias: { input: 'test', normalized: 'validation' },
+      evidence: { category: 'validation' }
+    });
+    expect(second).toMatchObject({
+      ok: true,
+      categoryAlias: { input: 'tests', normalized: 'validation' },
+      evidence: { category: 'validation' }
+    });
+    const persisted = fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8');
+    expect(persisted).toContain('"category":"validation"');
+    expect(persisted).not.toContain('"category":"test"');
+  });
+
+  it('returns structured category diagnostics for unsupported evidence category input', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Unsupported category diagnostics');
+    const output: string[] = [];
+    const originalLog = console.log;
+    const originalExitCode = process.exitCode;
+    console.log = (value?: unknown) => {
+      output.push(String(value));
+    };
+
+    try {
+      expect(handleEvidenceCommand({
+        args: ['evidence', 'add-command', '--task', task.id, '--summary', 'Bad category should fail', '--result', 'passed', '--category', 'testt', '--json'],
+        projectRoot: root,
+        jsonOutput: true
+      })).toBe(true);
+      expect(process.exitCode).toBe(6);
+    } finally {
+      console.log = originalLog;
+      process.exitCode = originalExitCode;
+    }
+
+    expect(JSON.parse(output.join('\n'))).toMatchObject({
+      schemaVersion: 'hadara.evidence.collect.v1',
+      command: 'evidence.add-command',
+      ok: false,
+      taskId: task.id,
+      issues: [
+        {
+          severity: 'error',
+          code: 'EVIDENCE_CATEGORY_UNSUPPORTED',
+          inputCategory: 'testt',
+          allowedCategoryTokens: expect.arrayContaining(['validation', 'release', 'audit']),
+          aliases: { test: 'validation', tests: 'validation' },
+          hint: 'Run: hadara schema --domain evidence.category --json'
+        }
+      ]
+    });
+    expect(fs.readFileSync(path.join(task.dir, 'evidence.jsonl'), 'utf8')).toBe('');
+  });
+
+  it('keeps raw persisted test category invalid for evidence lint', () => {
+    const root = tempProject();
+    const task = createTaskCapsule(root, 'Reject raw test category');
+    fs.writeFileSync(path.join(task.dir, 'evidence.jsonl'), `${JSON.stringify({
+      schemaVersion: 'hadara.evidence.v2',
+      id: `ev:${task.id}:aaaaaaaaaaaaaaaaaaaaaaaa`,
+      fingerprint: `sha256:${'a'.repeat(64)}`,
+      idSource: 'persisted',
+      idStability: 'durable',
+      time: new Date().toISOString(),
+      taskId: task.id,
+      category: 'test',
+      outcome: 'passed',
+      visibility: 'public',
+      summary: 'Invalid raw category',
+      artifacts: [],
+      tags: [],
+      legacy: { kind: 'command-log', result: 'passed' }
+    })}\n`, 'utf8');
+
+    const report = createEvidenceLintReport(root, task.id);
+
+    expect(report.ok).toBe(false);
+    expect(report.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'EVIDENCE_INDEX_CATEGORY_INVALID' })
+    ]));
   });
 
   it('rejects conflicting explicit command result and outcome values', () => {

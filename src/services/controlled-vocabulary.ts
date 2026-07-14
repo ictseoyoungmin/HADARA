@@ -34,6 +34,8 @@ export const RISK_STATE_TOKENS = ['Open', 'Accepted', 'Mitigated', 'Deferred', '
 export const EVIDENCE_KIND_TOKENS = ['test-log', 'command-log', 'diff-summary', 'screenshot', 'note'] as const;
 export const EVIDENCE_RESULT_TOKENS = ['passed', 'failed', 'blocked', 'unknown'] as const;
 export const EVIDENCE_VISIBILITY_TOKENS = ['public', 'private'] as const;
+export const EVIDENCE_CATEGORY_TOKENS = ['validation', 'implementation', 'release', 'security', 'policy', 'operation', 'decision', 'handoff', 'audit', 'note', 'observation'] as const;
+export const EVIDENCE_OUTCOME_TOKENS = ['passed', 'failed', 'blocked', 'unknown', 'recorded', 'not-applicable'] as const;
 export const SLICE_STATUS_TOKENS = ['not-started', 'in-progress', 'done', 'deferred'] as const;
 export const PROJECT_NEXT_WORK_STATE_TOKENS = ['candidate', 'active', 'blocked', 'waiting-for-operator', 'none'] as const;
 
@@ -54,6 +56,8 @@ export const VOCABULARY_DOMAINS: readonly VocabularyDomain[] = [
   { domain: 'evidence.kind', field: 'kind', surface: 'evidence.jsonl record kind', issueCode: 'EVIDENCE_INDEX_INVALID', allowed: EVIDENCE_KIND_TOKENS },
   { domain: 'evidence.result', field: 'result', surface: 'evidence.jsonl record result', issueCode: 'EVIDENCE_INDEX_INVALID', allowed: EVIDENCE_RESULT_TOKENS },
   { domain: 'evidence.visibility', field: 'visibility', surface: 'evidence.jsonl record visibility', issueCode: 'EVIDENCE_INDEX_INVALID', allowed: EVIDENCE_VISIBILITY_TOKENS },
+  { domain: 'evidence.category', field: 'category', surface: 'evidence.jsonl v2 record category', issueCode: 'EVIDENCE_INDEX_CATEGORY_INVALID', allowed: EVIDENCE_CATEGORY_TOKENS },
+  { domain: 'evidence.outcome', field: 'outcome', surface: 'evidence.jsonl v2 record outcome', issueCode: 'EVIDENCE_INDEX_OUTCOME_INVALID', allowed: EVIDENCE_OUTCOME_TOKENS },
   { domain: 'slices.status', field: 'status', surface: 'slices state entry status (hadara slice add/set --status)', issueCode: 'SLICE_STATUS_INVALID_TOKEN', allowed: SLICE_STATUS_TOKENS },
   { domain: 'project.nextWork.state', field: 'nextWork.state', surface: '.hadara/state/current.json structured continuation state', issueCode: 'PROJECT_CURRENT_STATE_INVALID', allowed: PROJECT_NEXT_WORK_STATE_TOKENS },
   { domain: 'docs.kind', field: 'kind', surface: 'docs registry entry kind (`docs register --kind`)', issueCode: 'DOC_UNKNOWN_KIND', allowed: DOCS_REGISTER_ALLOWED_VALUES.kind },

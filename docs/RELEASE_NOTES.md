@@ -8,11 +8,13 @@ Highlights:
 
 - Fails closed when brownfield `.gitignore` contains duplicate HADARA `local-state` managed blocks, instead of replacing only the first block and leaving stale duplicates behind.
 - Adds package-smoke fallback observability for environments where installed commands exit 0 but stdout capture is empty. Reports now include warning issues plus step-level `fallbackUsed` and `fallbackReason` metadata.
-- Extends brownfield project identity/version inference beyond `package.json`: `pyproject.toml` and `Cargo.toml` provide name/version when present, while `go.mod` can provide a module-derived project name with `unversioned` release.
+- Extends brownfield project identity/version inference beyond `package.json`: best-effort `pyproject.toml` and `Cargo.toml` parsing provides name/version when present, while `go.mod` can provide a module-derived project name with `unversioned` release and skips semantic import version suffixes such as `/v2`.
+- Smooths evidence capture ergonomics for common test-result wording: `evidence add-command --category test` and `--category tests` are CLI-only aliases that persist canonical `category=validation`; unsupported category errors now include allowed tokens, aliases, and a schema lookup hint.
 
 Boundaries:
 
 - T-0604 is the first 0.4.6 capsule and addresses residual review findings left after 0.4.5 publication/recycle.
+- T-0605 keeps the persisted evidence vocabulary stable while improving first-user CLI diagnostics and closes the Go module `/vN` inference edge.
 - Broader first-user onboarding, external validation, and public contract freeze remain separate follow-up scopes.
 
 ## 0.4.5
