@@ -6,7 +6,7 @@
 |---|---|
 | ID | T-0607 |
 | Title | 0.4.6 Codex delegated onboarding dogfood |
-| Status | Draft |
+| Status | Done |
 | Created | 2026-07-14 |
 | Updated | 2026-07-14 |
 
@@ -46,9 +46,9 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 
 | Check | Gate | Result | Evidence |
 |---|---|---|---|
-| Delegated Codex dogfood | Yes | Passed with findings | `ev:T-0607:2981bf28318f4915817f5acb` |
+| Delegated Codex dogfood with recorded findings | Yes | Passed | `ev:T-0607:2981bf28318f4915817f5acb` |
 | Reviewer rerun: `/tmp/hadara-codex-onboarding-v2 npm test` | Yes | Passed | `ev:T-0607:2981bf28318f4915817f5acb` |
-| Reviewer check: delegated task status | Yes | Passed, closed-valid | `ev:T-0607:2981bf28318f4915817f5acb` |
+| Reviewer check: delegated task status closed-valid | Yes | Passed | `ev:T-0607:2981bf28318f4915817f5acb` |
 
 ## Inputs / Constraints
 
@@ -79,3 +79,4 @@ Schema hint: use `hadara schema --json` or `hadara schema --domain <domain-id> -
 |---|---|---|
 | 2026-07-14 | Draft | Initial task scaffold. |
 | 2026-07-14 | In Progress | Delegated Codex dogfood completed and findings recorded; capsule intentionally left open for review. |
+| 2026-07-14 | Done | Closed after review; follow-up implementation moved to T-0608 and subsequent hardening. |

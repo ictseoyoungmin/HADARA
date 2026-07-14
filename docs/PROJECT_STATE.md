@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.5 |
-| Latest Completed Task | T-0608 0.4.6 delegated onboarding UX hardening |
+| Latest Completed Task | T-0607 0.4.6 Codex delegated onboarding dogfood |
 | Active Task | None |
 | Next Work | 0.4.6 first-user onboarding and brownfield quickstart |
 | Next Work State | candidate |
