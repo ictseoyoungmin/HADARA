@@ -1,11 +1,11 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 117,
+  "rev": 119,
   "profile": "governed",
   "currentRelease": "0.4.5",
   "latestCompletedTask": {
-    "id": "T-0605",
-    "title": "0.4.6 evidence category UX hints and manifest inference polish"
+    "id": "T-0606",
+    "title": "0.4.6 Antigravity delegated onboarding dogfood"
   },
   "activeTask": null,
   "nextWork": {

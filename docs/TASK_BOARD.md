@@ -606,3 +606,4 @@
 | T-0603 | 0.4.5 operator publish and installed-package recycle | Done | tasks/T-0603-0-4-5-operator-publish-and-installed-package-recycle | |
 | T-0604 | 0.4.6 brownfield trust polish residuals | Done | tasks/T-0604-0-4-6-brownfield-trust-polish-residuals | |
 | T-0605 | 0.4.6 evidence category UX hints and manifest inference polish | Done | tasks/T-0605-0-4-6-evidence-category-ux-hints-and-manifest-inference-polish | |
+| T-0606 | 0.4.6 Antigravity delegated onboarding dogfood | Done | tasks/T-0606-0-4-6-antigravity-delegated-onboarding-dogfood | |

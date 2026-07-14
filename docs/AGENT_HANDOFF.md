@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.5 | Portable project state. |
-| Latest Completed Task | T-0605 0.4.6 evidence category UX hints and manifest inference polish | Most recent completed capsule. |
+| Latest Completed Task | T-0606 0.4.6 Antigravity delegated onboarding dogfood | Most recent completed capsule. |
 | Active Task | None | Resume this capsule first. |
 | Next Work | 0.4.6 first-user onboarding and brownfield quickstart | Structured continuation title; not operator prose. |
 | Next Work State | candidate | Controls whether task creation guidance is emitted. |
