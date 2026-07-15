@@ -1,12 +1,12 @@
 {
   "schemaVersion": "hadara.projectCurrentState.v1",
-  "rev": 144,
+  "rev": 146,
   "profile": "governed",
   "currentRelease": "0.4.6-rc.0",
   "latestCompletedTaskBasis": "highest-done-task-id",
   "latestCompletedTask": {
-    "id": "T-0617",
-    "title": "0.4.6 first-user onboarding and brownfield quickstart"
+    "id": "T-0618",
+    "title": "0.4.6 minimal init docs and optional docs add workflow"
   },
   "activeTask": null,
   "nextWork": null,

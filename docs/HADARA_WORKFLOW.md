@@ -16,6 +16,7 @@ Use this section for the first pass through a new scaffold. Read the detailed se
 | Need work to do | Run `hadara task status --json`. |
 | Need a task | Run `hadara task create "task title" --json`, then fill `TASK.md` Goal, Source Documents, Plan, and Acceptance. |
 | Need files to inspect | Run `hadara session start --task T-XXXX --json` or `hadara context pack --task T-XXXX --json`, then read only routed files. |
+| Need project-specific docs | Use `hadara docs add <type> --json`, or create a Markdown file directly and register it with `hadara docs register`. |
 | Ready to close | Run `hadara task finalize --task T-XXXX --execute --auto --json` for the ordinary guarded close path; it records readiness evidence and close proof when needed. Dry-run first only when a separate reviewer needs the plan hash. |
 
 ## Minimal Loop
@@ -28,7 +29,7 @@ Use this section for the first pass through a new scaffold. Read the detailed se
 5. implement the scoped change
 6. run real validation
 7. record evidence
-8. update task/global docs
+8. update task docs and any generated `docs/` files whose subject changed
 9. review `task finalize --json` when the close needs external review
 10. execute finalize with `--execute --auto` for ordinary clean work, or with a reviewed `--plan-hash` when an external review flow requires it
 ```
@@ -71,6 +72,34 @@ After init, review:
 | 6 | `docs/HADARA_WORKFLOW.md` | How to work with HADARA from this point forward. |
 
 Use project-specific docs only after they are created and routed through the docs registry, a read-map, or the active task.
+
+## Generated Docs Completion
+
+`hadara init` creates the minimum docs needed for safe task work. Generated docs are not decorative placeholders. They are current-state surfaces that agents must keep aligned when the task changes their subject.
+
+| Document | Update When |
+|---|---|
+| `docs/PROJECT_STATE.md` | Product identity, current release, phase, current problems, or validation baseline changes. |
+| `docs/TASK_BOARD.md` | Task status changes. Prefer HADARA lifecycle commands when possible. |
+| `docs/AGENT_HANDOFF.md` | The governed profile uses this for compact continuation guidance; update it before stopping when active/latest work, risks, or next-step guidance changes. |
+| Optional project docs | Architecture, decisions, roadmap, security, test strategy, or agent guidance changes after those docs have been added. |
+
+Do not leave generated docs in scaffold form after the first real capability exists. If a generated or registered doc is no longer useful, update its registry state with `hadara docs update`, `hadara docs archive`, `hadara docs supersede`, or `hadara docs unregister` instead of silently ignoring it.
+
+## Optional Project Docs
+
+Use `docs add` when the project needs a project-owned doc that init did not create:
+
+```bash
+hadara docs add architecture --json
+hadara docs add decisions --json
+hadara docs add roadmap --json
+hadara docs add security-model --json
+hadara docs add test-strategy --json
+hadara docs add agent-guide --json
+```
+
+`docs add` is dry-run-first. Review its `beforeHash`, then execute with the reported command. It creates the Markdown file only when missing and registers it in `.hadara/docs-registry.json`. If you create a custom Markdown file directly, register it with `hadara docs register --path <path> --json` so read maps and doctor checks can route it.
 
 ## HADARA-dev Docker Workflow
 
@@ -273,6 +302,7 @@ Agents may use `task finalize --execute --auto` for ordinary clean capsules; it 
 | Record direct validation result | `hadara validation run --task T-XXXX --check "..." --direct-result passed --direct-summary "..." --update-task --json` | Records an already-run direct result when wrapper launch is blocked by the tool environment. |
 | Record already-run validation | `hadara evidence add-command ... --json` | Append-only evidence writer; does not execute commands. |
 | Find evidence ids | `hadara evidence list --task T-XXXX --json` | Durable id discovery. |
+| Add optional project doc | `hadara docs add <type> --json` | Dry-run-first creator/registrar for architecture, decisions, roadmap, security model, test strategy, and agent guide docs. |
 | Review loop phase | `hadara task status --task T-XXXX --json` | Normal lifecycle state and next action. |
 | Close ordinary work | `hadara task finalize --task T-XXXX --execute --auto --json` | Default guarded close path for clean capsules; records readiness evidence and close proof when needed. |
 | Externally reviewed close | `hadara task finalize --task T-XXXX --json` then execute with its `planHash` | Use when a human or automation explicitly reviews and carries the dry-run plan. |

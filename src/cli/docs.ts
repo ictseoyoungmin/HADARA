@@ -1,4 +1,5 @@
 import { getFlag, getRequiredStringOption, getStringOption } from './args';
+import { createDocsAddReport } from '../services/docs-add';
 import { createDocsCompleteSpecReport, createDocsMarkReport, createDocsRequiredReadingReport } from '../services/docs-cleanup';
 import { createDocsArchiveReport, createDocsDoctorReport, createDocsExplainReport, createDocsInboxReport, createDocsListReport, createDocsReadMapReport, createDocsRegisterReport, createDocsRenderReport, createDocsSupersedeReport, createDocsUnregisterReport, createDocsUpdateReport } from '../services/docs-registry';
 import { createDocsPatchPlanReport, createManagedSectionExplainReport, createManagedSectionsListReport } from '../services/managed-sections';
@@ -13,6 +14,20 @@ export interface DocsCommandInput {
 
 export function handleDocsCommand(input: DocsCommandInput): boolean {
   const sub = input.args[1];
+  if (sub === 'add') {
+    if (getFlag(input.args, '--help') || getFlag(input.args, '-h')) {
+      console.log(renderCommandHelp('docs.add'));
+      return true;
+    }
+    if (getFlag(input.args, '--execute') && blockLegacyMutation(input, 'docs.add')) return true;
+    const report = createDocsAddReport(input.projectRoot, {
+      type: input.args[2] ?? getRequiredStringOption(input.args, '--type'),
+      mode: getFlag(input.args, '--execute') ? 'execute' : 'dry-run',
+      beforeHash: getStringOption(input.args, '--before-hash')
+    });
+    printReport(report, input.jsonOutput);
+    return true;
+  }
   if (sub === 'list') {
     const report = createDocsListReport(input.projectRoot, {
       status: getStringOption(input.args, '--status'),

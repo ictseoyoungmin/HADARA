@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json` so a new session can
 | Area | State | Notes |
 |---|---|---|
 | Current Release | 0.4.6-rc.0 | Portable project state. |
-| Latest Completed Task | T-0617 0.4.6 first-user onboarding and brownfield quickstart | Highest Done task id, not close timestamp. |
+| Latest Completed Task | T-0618 0.4.6 minimal init docs and optional docs add workflow | Highest Done task id, not close timestamp. |
 | Latest Completed Task Basis | highest-done-task-id | Out-of-order close chronology is not tracked here. |
 | Active Task | None | No active task is selected. |
 | Next Work | None | Structured continuation title; not operator prose. |

@@ -82,6 +82,7 @@ Use this section for the first pass through a new scaffold. Read the detailed se
 | New project created | Read \`AGENTS.md\`, then \`.hadara/context/HADARA_CONTEXT.md\`, then this Quickstart. |
 | Need work to do | Run \`hadara task status --json\`. |
 | Need a task | Run \`hadara task create "task title" --json\`, then fill \`TASK.md\` Goal, Source Documents, Plan, and Acceptance. |
+| Need project-specific docs | Use \`hadara docs add <type> --json\`, or create a Markdown file directly and register it with \`hadara docs register\`. |
 | Need files to inspect | Run \`hadara session start --task T-XXXX --json\` or \`hadara context pack --task T-XXXX --json\`, then read only routed files. |
 | Ready to close | Run \`hadara task finalize --task T-XXXX --execute --auto --json\` for the ordinary guarded close path; it records readiness evidence and close proof when needed. Dry-run first only when a separate reviewer needs the plan hash. |
 
@@ -95,7 +96,7 @@ Use this section for the first pass through a new scaffold. Read the detailed se
 5. implement the scoped change
 6. run real validation
 7. record evidence
-8. update task/global docs
+8. update task docs and any generated \`docs/\` files whose subject changed
 9. review \`task finalize --json\`
 10. execute finalize with \`--execute --auto\` for ordinary clean work, or with a reviewed \`--plan-hash\` when an external review flow requires it
 \`\`\`
@@ -138,6 +139,36 @@ After init, review:
 | 6 | \`docs/HADARA_WORKFLOW.md\` | How to work with HADARA from this point forward. |
 
 Use project-specific docs only after they are created and routed through the docs registry, a read-map, or the active task.
+
+## Generated Docs Completion
+
+\`hadara init\` creates the minimum docs needed for safe work. Generated docs are not decorative placeholders. When a task changes the product, architecture, workflow, validation, security boundary, roadmap, or agent operating model, update the matching generated or project-owned \`docs/\` file before finalize.
+
+At minimum:
+
+| Document | Update When |
+|---|---|
+| \`docs/PROJECT_STATE.md\` | Product name, purpose, current phase, or capability state changes. |
+| \`docs/TASK_BOARD.md\` | Task lifecycle changes; normally \`task create\` and \`task finalize\` own this. |
+| \`docs/AGENT_HANDOFF.md\` | Present in governed projects and continuation state or warnings change. |
+| Optional docs | Their subject changes after they are added. |
+
+Do not leave generated docs in scaffold form after completing the first real capability. If a document is no longer useful, remove it from desired state with docs registry commands instead of letting stale prose remain authoritative.
+
+## Optional Project Docs
+
+Do not create broad planning docs just because a profile exists. Add them only when the project has real content to maintain.
+
+\`\`\`bash
+hadara docs add architecture --json
+hadara docs add decisions --json
+hadara docs add roadmap --json
+hadara docs add security-model --json
+hadara docs add test-strategy --json
+hadara docs add agent-guide --json
+\`\`\`
+
+\`docs add\` is dry-run-first. Review the returned \`executeCommand\`, then run it when the file should become part of the project. If you write a custom Markdown file directly, register it with \`hadara docs register --path <path> --json\` and execute the reviewed registry update.
 
 ## Session Start
 
@@ -604,7 +635,7 @@ export function createSecurityModelDoc(): string {
 `;
 }
 
-function createTestStrategyDoc(): string {
+export function createTestStrategyDoc(): string {
   return `# TEST_STRATEGY
 
 ## Current Validation Environment
@@ -668,6 +699,38 @@ export function createRoadmapDoc(): string {
 
 | Item | Reason Deferred | Revisit When |
 |---|---|---|
+`;
+}
+
+export function createAgentGuideDoc(): string {
+  return `# AGENT_GUIDE
+
+## Purpose
+
+Describe how coding agents should work with this project beyond the generic HADARA workflow.
+
+## Project Modules
+
+| Path | Purpose | Notes |
+|---|---|---|
+| TBD | TBD | Replace with project-specific entry points. |
+
+## Working Rules
+
+1. Keep changes inside the active Task Capsule scope.
+2. Prefer deterministic local validation.
+3. Record project-specific constraints here only when they help future agents avoid mistakes.
+
+## Common Commands
+
+| Need | Command |
+|---|---|
+| Run the primary validation check | TBD |
+| Start the local app or tool | TBD |
+
+## Extension Notes
+
+Add concise guidance for new modules, templates, integrations, or domain-specific conventions as they become real.
 `;
 }
 
@@ -887,6 +950,7 @@ ${requiredReadingRows.map(formatTableRow).join('\n')}
 - Do not hand-edit canonical evidence logs.
 - Do not mark work done without evidence.
 - Keep Task Capsule docs current as work changes; do not defer all documentation until after implementation.
+- Keep generated or project-owned \`docs/\` files current when a task changes their subject. Use \`hadara docs add <type>\` for optional docs, or create Markdown directly and register it with \`hadara docs register\`.
 - Do not execute destructive commands.
 - Do not run release, publish, package, installer, or other external mutation workflows without explicit operator approval.
 

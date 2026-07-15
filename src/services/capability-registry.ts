@@ -1120,6 +1120,31 @@ export const HADARA_COMMAND_REGISTRY: CommandRegistryEntry[] = [
     conflictsWith: []
   }),
   commandEntry({
+    id: 'docs.add',
+    command: 'hadara docs add <architecture|decisions|roadmap|security-model|test-strategy|agent-guide> [--execute --before-hash <hash>] [--json]',
+    summary: 'Create an optional project-owned docs file and register it in .hadara/docs-registry.json.',
+    canonical: true,
+    appearsInDefaultHelp: false,
+    family: 'docs-governance',
+    scope: 'docs',
+    lifecycleStage: 'work',
+    requiredness: 'conditional',
+    writeBoundary: 'shared-doc-write',
+    readOnly: false,
+    risk: 'medium',
+    actor: 'agent-worker',
+    status: 'experimental',
+    schemaVersion: 'hadara.docs.add.v1',
+    docs: ['docs/HADARA_WORKFLOW.md'],
+    examples: [
+      example('Add an agent guide', 'hadara docs add agent-guide --json', 'When a project needs domain-specific guidance for future agents.'),
+      example('Add decisions log', 'hadara docs add decisions --json', 'When a durable project decision exists.')
+    ],
+    related: ['docs.register', 'docs.update', 'docs.doctor'],
+    conflictsWith: [],
+    notes: 'Dry-run first. Execute requires --before-hash from the reviewed dry-run. Existing files are not overwritten; they are registered instead.'
+  }),
+  commandEntry({
     id: 'docs.register',
     command: 'hadara docs register --path <path> [--title <title>] [--kind <kind>] [--status <status>] [--read-when <read-when>] [--read-tier <tier>] [--authority <authority>] [--edit-policy <policy>] [--active-for-task <ids>] [--drift <risk>] [--drift-review-required] [--drift-reason <text>] [--required-reading] [--require-exists] [--execute --before-hash <hash>] [--json]',
     summary: 'Register one project document in .hadara/docs-registry.json without mutating AGENTS, context, or workflow prose.',

@@ -196,7 +196,7 @@ describe('Phase 7.3 docs doctor', () => {
     const root = tempProject();
     initProject(root, 'governed', { silent: true });
     mutateRegistry(root, (registry) => {
-      registry.documents = registry.documents.filter((doc) => doc.path !== 'docs/SECURITY_MODEL.md');
+      registry.documents = registry.documents.filter((doc) => doc.path !== 'docs/AGENT_HANDOFF.md');
     });
 
     const report = createDocsDoctorReport(root, 'profile');
@@ -205,7 +205,7 @@ describe('Phase 7.3 docs doctor', () => {
     expect(report.issues).toContainEqual(expect.objectContaining({
       code: 'DOC_INIT_PROFILE_DRIFT',
       severity: 'warning',
-      path: 'docs/SECURITY_MODEL.md'
+      path: 'docs/AGENT_HANDOFF.md'
     }));
   });
 

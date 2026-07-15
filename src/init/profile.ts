@@ -19,33 +19,33 @@ export const INIT_PROFILE_SPECS: Record<InitProfile, InitProfileSpec> = {
   },
   standard: {
     profile: 'standard',
-    generatedDocsDescription: 'Core scaffold plus architecture, roadmap, and decision docs',
+    generatedDocsDescription: 'Core current-state docs, workflow reference, registries, and task directory',
     intendedUse: 'Most multi-session projects that need lightweight planning and decision context.',
-    specialNotes: 'Default profile. Optional integrations must be registered before agents rely on them.',
+    specialNotes: 'Default profile. Add architecture, decisions, roadmap, security, test, or agent guide docs only when the project needs them.',
     docs: {
-      architecture: true,
+      architecture: false,
       developmentSlices: false,
-      decisions: true,
+      decisions: false,
       refactorLog: false,
       securityModel: false,
       testStrategy: false,
-      roadmap: true,
+      roadmap: false,
       agentHandoff: false
     }
   },
   governed: {
     profile: 'governed',
-    generatedDocsDescription: 'Standard scaffold plus handoff and security docs',
+    generatedDocsDescription: 'Core scaffold plus compact next-session handoff',
     intendedUse: 'Long-lived projects with stronger governance, security boundaries, refactor history, or roadmap-level planning.',
-    specialNotes: 'Governed projects generate AGENT_HANDOFF for compact continuation state.',
+    specialNotes: 'Governed projects generate AGENT_HANDOFF for compact continuation state. Add reference docs only when they are project-owned and maintained.',
     docs: {
-      architecture: true,
+      architecture: false,
       developmentSlices: false,
-      decisions: true,
+      decisions: false,
       refactorLog: false,
-      securityModel: true,
+      securityModel: false,
       testStrategy: false,
-      roadmap: true,
+      roadmap: false,
       agentHandoff: true
     }
   }
@@ -58,11 +58,8 @@ export function parseInitProfile(value: string): InitProfile {
 
 export function requiredDocsForProfile(profile: InitProfile): string[] {
   const docs = ['docs/PROJECT_STATE.md', 'docs/TASK_BOARD.md', 'docs/HADARA_WORKFLOW.md'];
-  if (profile === 'standard' || profile === 'governed') {
-    docs.push('docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md');
-  }
   if (profile === 'governed') {
-    docs.push('docs/AGENT_HANDOFF.md', 'docs/SECURITY_MODEL.md');
+    docs.push('docs/AGENT_HANDOFF.md');
   }
   return docs;
 }

@@ -8,7 +8,7 @@ This section is projected from `.hadara/state/current.json`. Edit the structured
 | Field | Value |
 |---|---|
 | Current Release | 0.4.6-rc.0 |
-| Latest Completed Task | T-0617 0.4.6 first-user onboarding and brownfield quickstart |
+| Latest Completed Task | T-0618 0.4.6 minimal init docs and optional docs add workflow |
 | Latest Completed Task Basis | highest-done-task-id |
 | Active Task | None |
 | Next Work | None |

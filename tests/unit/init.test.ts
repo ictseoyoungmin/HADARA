@@ -61,9 +61,6 @@ describe('init profiles', () => {
       'docs/PROJECT_STATE.md',
       'docs/TASK_BOARD.md',
       'docs/HADARA_WORKFLOW.md',
-      'docs/ARCHITECTURE.md',
-      'docs/ROADMAP.md',
-      'docs/DECISIONS.md',
       'tasks'
     ]) {
       expect(exists(root, file), file).toBe(true);
@@ -72,6 +69,9 @@ describe('init profiles', () => {
 
     for (const file of [
       'docs/AGENT_HANDOFF.md',
+      'docs/ARCHITECTURE.md',
+      'docs/ROADMAP.md',
+      'docs/DECISIONS.md',
       'docs/IMPLEMENTATION_SOP.md',
       'docs/TASK_WORKFLOW_COMMANDS.md',
       'docs/DOC_REGISTRY.md',
@@ -107,7 +107,9 @@ describe('init profiles', () => {
       'AGENTS.md',
       'docs/HADARA_WORKFLOW.md',
       'docs/PROJECT_STATE.md',
-      'docs/TASK_BOARD.md',
+      'docs/TASK_BOARD.md'
+    ]));
+    expect(registry.documents.map((doc: any) => doc.path)).not.toEqual(expect.arrayContaining([
       'docs/ARCHITECTURE.md',
       'docs/ROADMAP.md',
       'docs/DECISIONS.md'
@@ -122,6 +124,8 @@ describe('init profiles', () => {
     expect(read(root, 'AGENTS.md')).toContain('docs/HADARA_WORKFLOW.md');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('## Quickstart');
     expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('## Minimal Loop');
+    expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('## Generated Docs Completion');
+    expect(read(root, 'docs/HADARA_WORKFLOW.md')).toContain('hadara docs add agent-guide --json');
 
     const slotRegistry = JSON.parse(read(root, '.hadara/slot-registry.json'));
     expect(slotRegistry).toMatchObject({
@@ -197,6 +201,8 @@ describe('init profiles', () => {
     expect(workflow).toContain('`.hadara/state/slices.json` is canonical once it exists.');
     expect(workflow).not.toContain('Low-level lifecycle commands are for debugging');
     expect(workflow).toContain('Document registration writes registry metadata, not prose rows in entry docs.');
+    expect(workflow).toContain('Generated docs are not decorative placeholders.');
+    expect(workflow).toContain('hadara docs add decisions --json');
     expect(workflow).toContain('| Surface | Human / Operator | Agent | CLI |');
   });
 
@@ -214,14 +220,11 @@ describe('init profiles', () => {
     const governed = tempProject();
     initProject(governed, 'governed');
 
-    for (const file of [
-      'docs/AGENT_HANDOFF.md',
-      'docs/ARCHITECTURE.md',
-      'docs/ROADMAP.md',
-      'docs/DECISIONS.md',
-      'docs/SECURITY_MODEL.md'
-    ]) {
+    for (const file of ['docs/AGENT_HANDOFF.md']) {
       expect(exists(governed, file), file).toBe(true);
+    }
+    for (const file of ['docs/ARCHITECTURE.md', 'docs/ROADMAP.md', 'docs/DECISIONS.md', 'docs/SECURITY_MODEL.md']) {
+      expect(exists(governed, file), file).toBe(false);
     }
     expect(exists(governed, 'docs/IMPLEMENTATION_SOP.md')).toBe(false);
     expect(exists(governed, 'docs/TASK_WORKFLOW_COMMANDS.md')).toBe(false);
@@ -587,16 +590,18 @@ describe('init profiles', () => {
     assertSchema('hadara.docsRegistry.v3', registry);
     expect(registry.project).toMatchObject({ id: 'brownfield-app', name: 'brownfield-app', hadaraProfile: 'standard' });
     expect(registry.documents).toEqual(expect.arrayContaining([
-      expect.objectContaining({ path: 'docs/ARCHITECTURE.md', owner: 'project', origin: { type: 'project-authored' } }),
       expect.objectContaining({ path: 'AGENTS.md', owner: 'project', origin: { type: 'project-authored' } })
     ]));
+    expect(registry.documents.map((doc: any) => doc.path)).not.toContain('docs/ARCHITECTURE.md');
     expect(exists(root, 'tasks/.gitkeep')).toBe(false);
     expect(process.exitCode).toBeUndefined();
 
     handleInitCommand({ args: ['init', 'doctor', '--json'], projectRoot: root, jsonOutput: true });
     const doctor = jsonLog();
     expect(doctor.ok).toBe(true);
-    expect(doctor.issues).toEqual([]);
+    expect(doctor.issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ severity: 'warning', path: 'docs/ARCHITECTURE.md' })
+    ]));
   });
 
   it('keeps existing core projection docs project-authored when only managed sections are patched', () => {
@@ -867,10 +872,10 @@ describe('init profiles', () => {
     const upgradedRegistry = JSON.parse(read(root, '.hadara/docs-registry.json'));
     expect(upgradedRegistry.projectProfile).toBe('hadara-dev');
     expect(upgradedRegistry.documents.map((doc: any) => doc.path)).toEqual(expect.arrayContaining([
-      'docs/SECURITY_MODEL.md',
       'docs/AGENT_HANDOFF.md'
     ]));
-    expect(exists(root, 'docs/SECURITY_MODEL.md')).toBe(true);
+    expect(upgradedRegistry.documents.map((doc: any) => doc.path)).not.toContain('docs/SECURITY_MODEL.md');
+    expect(exists(root, 'docs/SECURITY_MODEL.md')).toBe(false);
     expect(exists(root, 'docs/AGENT_HANDOFF.md')).toBe(true);
     expect(exists(root, 'tasks/.gitkeep')).toBe(false);
   });

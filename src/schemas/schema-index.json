@@ -233,6 +233,13 @@
       "notes": "Documents the 0.4 registry-first document registration report returned by hadara docs register --json."
     },
     {
+      "id": "hadara.docs.add.v1",
+      "path": "src/schemas/docs-add.schema.json",
+      "status": "fixture",
+      "owner": "services/docs-add",
+      "notes": "Documents the dry-run-first optional project document creator and registry updater returned by hadara docs add --json."
+    },
+    {
       "id": "hadara.docs.registryMutation.v1",
       "path": "src/schemas/docs-registry-mutation.schema.json",
       "status": "fixture",

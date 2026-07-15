@@ -20,6 +20,7 @@ import {
   createDocsUnregisterReport,
   createDocsRenderReport
 } from '../../src/services/docs-registry';
+import { createDocsAddReport } from '../../src/services/docs-add';
 
 const roots: string[] = [];
 
@@ -80,19 +81,58 @@ describe('Phase 7.3 docs registry', () => {
     });
     expect(readRegistry(basic).schemaVersion).toBe('hadara.docsRegistry.v2');
     expect(readRegistry(basic).documents.map((doc) => doc.path)).not.toContain('docs/ARCHITECTURE.md');
-    expect(readRegistry(standard).documents.map((doc) => doc.path)).toEqual(
+    expect(readRegistry(standard).documents.map((doc) => doc.path)).not.toEqual(
       expect.arrayContaining(['docs/ARCHITECTURE.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md'])
     );
     expect(readRegistry(standard).documents.map((doc) => doc.path)).not.toEqual(
       expect.arrayContaining(['docs/DEVELOPMENT_SLICES.md', 'docs/TEST_STRATEGY.md', 'docs/SECURITY_MODEL.md'])
     );
     expect(readRegistry(governed).documents.map((doc) => doc.path)).toEqual(
-      expect.arrayContaining(['docs/AGENT_HANDOFF.md', 'docs/SECURITY_MODEL.md', 'docs/ROADMAP.md'])
+      expect.arrayContaining(['docs/AGENT_HANDOFF.md'])
+    );
+    expect(readRegistry(governed).documents.map((doc) => doc.path)).not.toEqual(
+      expect.arrayContaining(['docs/SECURITY_MODEL.md', 'docs/ROADMAP.md'])
     );
     expect(readRegistry(governed).documents.map((doc) => doc.path)).not.toContain('docs/REFACTOR_LOG.md');
     for (const registry of [readRegistry(basic), readRegistry(standard), readRegistry(governed)]) {
       expect(registry.documents.flatMap((doc) => doc.profiles)).not.toContain('hadara-dev');
     }
+  });
+
+  it('adds optional project docs through a dry-run-first command', () => {
+    const root = tempProject();
+    initProject(root, 'standard', { silent: true });
+
+    const dryRun = createDocsAddReport(root, { type: 'agent-guide' });
+
+    expect(dryRun).toMatchObject({
+      schemaVersion: 'hadara.docs.add.v1',
+      command: 'docs.add',
+      ok: true,
+      mode: 'dry-run',
+      type: 'agent-guide',
+      path: 'docs/AGENT_GUIDE.md',
+      action: 'create',
+      writes: []
+    });
+    expect(dryRun.executeCommand).toContain('hadara docs add agent-guide --execute --before-hash');
+    expect(fs.existsSync(path.join(root, 'docs/AGENT_GUIDE.md'))).toBe(false);
+
+    const executed = createDocsAddReport(root, {
+      type: 'agent-guide',
+      mode: 'execute',
+      beforeHash: dryRun.beforeHash
+    });
+
+    expect(executed.ok).toBe(true);
+    expect(executed.writes).toEqual(['docs/AGENT_GUIDE.md', DOCS_REGISTRY_PATH]);
+    expect(fs.readFileSync(path.join(root, 'docs/AGENT_GUIDE.md'), 'utf8')).toContain('# AGENT_GUIDE');
+    expect(readRegistry(root).documents.find((doc) => doc.path === 'docs/AGENT_GUIDE.md')).toMatchObject({
+      kind: 'implementation-guide',
+      status: 'reference',
+      readWhen: ['only-when-linked'],
+      requiredReading: false
+    });
   });
 
   it('reports hadara-dev as an invalid document profile token', () => {
@@ -143,7 +183,7 @@ describe('Phase 7.3 docs registry', () => {
     const readMap = createDocsReadMapReport(root, 'T-0001');
 
     expect(list.ok).toBe(true);
-    expect(list.documents.find((doc) => doc.path === 'docs/SECURITY_MODEL.md')).toMatchObject({
+    expect(list.documents.find((doc) => doc.path === 'docs/AGENT_HANDOFF.md')).toMatchObject({
       profiles: ['governed'],
       applicableProfiles: ['governed'],
       origin: { type: 'hadara-scaffold', generator: 'hadara init' }

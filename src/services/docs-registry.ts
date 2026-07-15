@@ -1405,7 +1405,6 @@ function validateRegistryMetadata(registry: DocumentRegistryFile): DocsIssue[] {
 
 function seedEntries(profile: InitProfile | 'hadara-dev'): DocumentRegistryEntry[] {
   const coreProfiles: DocumentRegistryEntry['profiles'] = ['basic', 'standard', 'governed'];
-  const standardProfiles: DocumentRegistryEntry['profiles'] = ['standard', 'governed'];
   const governedProfiles: DocumentRegistryEntry['profiles'] = ['governed'];
   const entries: DocumentRegistryEntry[] = [
     entry('.hadara/state/current.json', 'CURRENT_STATE', 'schema-reference', 'canonical', ['session-start'], true, 'hadara-init', coreProfiles),
@@ -1415,17 +1414,9 @@ function seedEntries(profile: InitProfile | 'hadara-dev'): DocumentRegistryEntry
     entry('docs/PROJECT_STATE.md', 'PROJECT_STATE', 'project-state', 'canonical', ['session-start'], true, 'mixed', coreProfiles),
     entry('docs/TASK_BOARD.md', 'TASK_BOARD', 'task-board', 'active', ['task-start'], true, 'hadara-task', coreProfiles)
   ];
-  if (profile !== 'basic') {
-    entries.push(
-      entry('docs/ARCHITECTURE.md', 'ARCHITECTURE', 'architecture', 'reference', ['only-when-linked'], false, 'human', standardProfiles),
-      entry('docs/DECISIONS.md', 'DECISIONS', 'decision-log', 'reference', ['only-when-linked'], false, 'human', standardProfiles),
-      entry('docs/ROADMAP.md', 'ROADMAP', 'roadmap', 'reference', ['only-when-linked'], false, 'human', standardProfiles)
-    );
-  }
   if (profile === 'governed' || profile === 'hadara-dev') {
     entries.push(
-      entry('docs/AGENT_HANDOFF.md', 'AGENT_HANDOFF', 'handoff', 'canonical', ['session-start'], true, 'mixed', governedProfiles),
-      entry('docs/SECURITY_MODEL.md', 'SECURITY_MODEL', 'security-model', 'reference', ['only-when-linked'], false, 'human', governedProfiles)
+      entry('docs/AGENT_HANDOFF.md', 'AGENT_HANDOFF', 'handoff', 'canonical', ['session-start'], true, 'mixed', governedProfiles)
     );
   }
   return entries;

@@ -618,3 +618,4 @@
 | T-0615 | 0.4.6-rc.0 installed package multi-scenario delegated dogfood | Done | tasks/T-0615-0-4-6-rc-0-installed-package-multi-scenario-delegated-dogfood | |
 | T-0616 | Serialize task create allocation and managed board writes | Done | tasks/T-0616-serialize-task-create-allocation-and-managed-board-writes | |
 | T-0617 | 0.4.6 first-user onboarding and brownfield quickstart | Done | tasks/T-0617-0-4-6-first-user-onboarding-and-brownfield-quickstart | |
+| T-0618 | 0.4.6 minimal init docs and optional docs add workflow | Done | tasks/T-0618-0-4-6-minimal-init-docs-and-optional-docs-add-workflow | |

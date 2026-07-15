@@ -70,7 +70,7 @@ describe('command-level help routing', () => {
   it('prints docs mutation help before required-argument validation', () => {
     const root = tempProject();
 
-    for (const subcommand of ['update', 'archive', 'supersede', 'unregister', 'render']) {
+    for (const subcommand of ['add', 'update', 'archive', 'supersede', 'unregister', 'render']) {
       expect(handleDocsCommand({ args: ['docs', subcommand, '--help'], projectRoot: root, jsonOutput: false })).toBe(true);
       expect(latestOutput()).toContain(`docs.${subcommand}`);
     }
